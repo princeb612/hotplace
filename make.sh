@@ -13,9 +13,6 @@
       valgrind (linux)
     * make
       $ ./make.sh
-      e.g.
-        ./make.sh cmake debug pch
-        ./make.sh cmake debug pch msvc
 
 COMMENTS
 
@@ -38,6 +35,8 @@ COMMENTS
   test           - run examples
 
   gcc
+    ./make.sh cmake debug pch
+
     static build example
       mingw64
         source env.ubuntu && install_packages
@@ -52,6 +51,9 @@ COMMENTS
       ubuntu
         source env.mingw64 && install_packages && export_path
         ./make.sh debug pch disable_static shared
+
+  MSVC
+    ./make.sh cmake debug pch msvc
 
 HELP
 

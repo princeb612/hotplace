@@ -8,7 +8,7 @@ set (module jose)
 file (GLOB SOURCE_FILES *.cpp)
 
 file (GLOB DATA_FILES *.json *.jwe *.jwk *.jws *.pem)
-file (COPY ${DATA_FILES} DESTINATION ${PROJECT_SOURCE_DIR}/build/test/${module}/)
+file (COPY ${DATA_FILES} DESTINATION ${PROJECT_SOURCE_DIR}/${SET_BUILDDIR}/test/${module}/)
 
 
 maketest (${module} SOURCE_FILES PROJECT_SDK_MODULE_DEPENDENCIES PROJECT_SDK_PLATFORM_DEPENDENCIES 1)

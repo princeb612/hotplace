@@ -42,12 +42,12 @@ return_t trace_backtrace(return_t errorcode) {
                 dbs.println("0x%08x:%s:%s", errorcode, errcode.c_str(), errmsg.c_str());
 
                 // PDB
-                CONTEXT rtlcontext;
-                debug_trace dbg;
-                dbg.open(&handle);
-                dbg.capture(&rtlcontext);
-                ret = dbg.trace(handle, &rtlcontext, &dbs);
-                dbg.close(handle);
+                // CONTEXT rtlcontext;
+                // debug_trace dbg;
+                // dbg.open(&handle);
+                // dbg.capture(&rtlcontext);
+                // ret = dbg.trace(handle, &rtlcontext, &dbs);
+                // dbg.close(handle);
             });
         }
     }

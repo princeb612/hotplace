@@ -65,7 +65,7 @@ return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys
                 dump_test_data("diagnostic #1", diagnostic);
             }
 
-            _test_case.assert((bin == expect), __FUNCTION__, "check1.cborcheck %s", text ? text : "");
+            _test_case.assert((bin == expect), __FUNCTION__, "check1.cborcheck %s", text);
 
             // parse
             basic_stream bs_diagnostic_lv1;
@@ -93,7 +93,7 @@ return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys
                     dump_test_data("cbor #2", bin_cbor_lv1);
                 }
 
-                _test_case.assert((bin_cbor_lv1 == expect), __FUNCTION__, "check2.cborparse %s", text ? text : "");
+                _test_case.assert((bin_cbor_lv1 == expect), __FUNCTION__, "check2.cborparse %s", text);
 
                 // parsed cbor_object* to diagnostic
                 basic_stream bs_diagnostic_lv2;
@@ -110,7 +110,7 @@ return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys
                     dump_test_data("cbor #3", bin_cbor_lv2);
                 }
 
-                _test_case.assert((bin_cbor_lv2 == expect), __FUNCTION__, "check3.cborparse %s", text ? text : "");
+                _test_case.assert((bin_cbor_lv2 == expect), __FUNCTION__, "check3.cborparse %s", text);
 
                 {
                     test_case_notimecheck notimecheck(_test_case);
@@ -130,7 +130,7 @@ return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys
                         publisher.publish(cbor_newone, &bs_diagnostic_composed);
                         dump_test_data("compose", bs_diagnostic_composed);
 
-                        _test_case.assert(false == bin_untagged.empty(), __FUNCTION__, "check.compose %s", text ? text : "");
+                        _test_case.assert(false == bin_untagged.empty(), __FUNCTION__, "check.compose %s", text);
 
                         cbor_newone->release();
                     }
@@ -149,7 +149,7 @@ return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys
                 case cbor_tag_t::cose_tag_sign:
                 case cbor_tag_t::cose_tag_sign1:
                     ret = cose.verify(cose_handle, cose_keys, bin, result);
-                    _test_case.test(ret, __FUNCTION__, "check4.verify %s", text ? text : "");
+                    _test_case.test(ret, __FUNCTION__, "check4.verify %s", text);
                     break;
                 case cbor_tag_t::cose_tag_encrypt:
                 case cbor_tag_t::cose_tag_encrypt0:
@@ -159,12 +159,12 @@ return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys
                             _logger->dump(decrypted, 16, 4);
                         }
                     }
-                    _test_case.test(ret, __FUNCTION__, "check4.decrypt %s", text ? text : "");
+                    _test_case.test(ret, __FUNCTION__, "check4.decrypt %s", text);
                     break;
                 case cbor_tag_t::cose_tag_mac:
                 case cbor_tag_t::cose_tag_mac0:
                     ret = cose.verify(cose_handle, cose_keys, bin, result);
-                    _test_case.test(ret, __FUNCTION__, "check4.verify %s", text ? text : "");
+                    _test_case.test(ret, __FUNCTION__, "check4.verify %s", text);
                     break;
                 default:
                     break;
@@ -222,7 +222,7 @@ void do_test_cbor_file(const char* expect_file, const char* text) {
 
         root->release();
 
-        _test_case.assert((bin_cbor == expect), __FUNCTION__, text ? text : "");
+        _test_case.assert((bin_cbor == expect), __FUNCTION__, text);
     }
     __finally2 {}
 }
@@ -873,11 +873,11 @@ void do_test_cbor_key(const char* file, const char* text) {
 
         ret = cwk.load(&key, cbor);
         key.for_each(dump_crypto_key, nullptr);
-        _test_case.test(ret, __FUNCTION__, "step.load %s", text ? text : "");
+        _test_case.test(ret, __FUNCTION__, "step.load %s", text);
 
         binary_t cbor_written;
         ret = cwk.write(&key, cbor_written);
-        _test_case.test(ret, __FUNCTION__, "step.write %s", text ? text : "");
+        _test_case.test(ret, __FUNCTION__, "step.write %s", text);
 
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
@@ -903,7 +903,7 @@ void do_test_cbor_key(const char* file, const char* text) {
             reader.close(handle);
         }
     }
-    _test_case.test(ret, __FUNCTION__, text ? text : "");
+    _test_case.test(ret, __FUNCTION__, text);
 }
 
 void test_rfc8152_read_cbor() {
@@ -933,7 +933,7 @@ void test_rfc8152_read_cbor() {
     do_test_cbor_file("rfc9338_a_3_1.cbor", "RFC 9338 A.3.1.  Countersignature on Encrypted Content");
     do_test_cbor_file("rfc9338_a_4_1.cbor", "RFC 9338 A.4.1.  Countersignature on Encrypted Content");
     do_test_cbor_file("rfc9338_a_5_1.cbor", "RFC 9338 A.5.1.  Countersignature on MAC Content");
-    do_test_cbor_file("rfc9338_a_6_1.cbor", "RFC 9338 A.6.1.  Countersignature on MAC0 Content");  // typo ? not 159 bytes, but 139 bytes
+    do_test_cbor_file("rfc9338_a_6_1.cbor", "RFC 9338 A.6.1.  Countersignature on MAC0 Content");
     do_test_cbor_key("rfc8152_c_7_1.cbor", "RFC 8152 C.7.1.  Public Keys");
     do_test_cbor_key("rfc8152_c_7_2.cbor", "RFC 8152 C.7.2.  Private Keys");
 }

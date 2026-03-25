@@ -19,6 +19,7 @@ set (CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
 set (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
 set (SET_STDCPP c++11)
+set (SET_BUILDDIR build)
 set (SUPPORT_DEBUG 0)
 set (SUPPORT_ODBC 0)   # 
 set (SUPPORT_PCH 0)    # cmake 2.x
@@ -86,6 +87,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set (SET_THIRDPARTY_DIR ${PROJECT_SOURCE_DIR}/thirdparty/gcc)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     set (SET_STDCPP c++17) # C7525
+    set (SET_BUILDDIR build_msvc)
     # debug iterator
     # compiler | default  | desc
     # gcc      | disabled | turn on  : -D_GLIBCXX_DEBUG
@@ -96,7 +98,8 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     endif ()
     # set(CMAKE_GENERATOR_PLATFORM x64 CACHE STRING "Target Architecture" FORCE)
     add_compile_definitions(_$ENV{PROCESSOR_ARCHITECTURE}_ __x86_64__ _CRT_SECURE_NO_DEPRECATE _CRT_NONSTDC_NO_WARNINGS _ITERATOR_DEBUG_LEVEL=0 NOMINMAX)
-    add_compile_options(/utf-8)
+    # https://learn.microsoft.com/ko-kr/cpp/build/reference/zc-cplusplus?view=msvc-170
+    add_compile_options(/Zc:__cplusplus /std:${SET_STDCPP} /utf-8)
     set (SET_THIRDPARTY_DIR ${PROJECT_SOURCE_DIR}/thirdparty/msvc)
 endif ()
 
@@ -230,7 +233,7 @@ link_directories (${SET_THIRDPARTY_DIR}/lib)
 # mkdir xxx
 file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 # copy test.sh to xxx/build/test/
-file (COPY ${PROJECT_SOURCE_DIR}/test/test.sh DESTINATION ${PROJECT_SOURCE_DIR}/build/test/)
+file (COPY ${PROJECT_SOURCE_DIR}/test/test.sh DESTINATION ${PROJECT_SOURCE_DIR}/${SET_BUILDDIR}/test/)
 
 # copy header files
 copy_headers_with_hierarchy(${PROJECT_SOURCE_DIR}/sdk ${PROJECT_SOURCE_DIR}/include/hotplace/sdk)

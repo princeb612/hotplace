@@ -14,7 +14,7 @@ void test_exception() {
     _test_case.begin("exception");
     return_t rc = errorcode_t::success;
     std::string reason;
-    __try {
+    try {
         throw exception(not_specified);
     } catch (exception e) {
         rc = e.get_errorcode();

@@ -110,33 +110,32 @@ cd module
     - [ ] int128, uint128
   - [ ] test
     - [ ] asn1
-    - [ ] authenticode
+    - [x] authenticode
     - [x] base
     - [x] bufferio
     - [x] cbor
     - [x] cmdline
-    - [ ] cose
+    - [x] cose
     - [x] crypto
     - [x] datetime
-    - [ ] dtlsserver
+    - [x] dtlsserver
     - [x] encode
     - [x] graph
-    - [ ] hash
+    - [x] hash
     - [x] hpack
     - [ ] httpaltsvc
-    - [ ] httpauth
-    - [ ] httpserver1
-    - [ ] httpserver2
-    - [ ] httpserver3
+    - [x] httpauth
+    - [x] httpserver1
+    - [x] httpserver2
     - [ ] httptest
     - [x] ieee754
     - [ ] ipaddr
-    - [ ] jose
+    - [x] jose
     - [x] kdf
     - [x] key
     - [x] mlfq
     - [ ] netclient
-    - [ ] nostd
+    - [x] nostd
     - [x] parser
     - [x] pattern
     - [x] payload
@@ -147,12 +146,12 @@ cd module
     - [x] sign
     - [x] stream
     - [x] string
-    - [ ] tcpserver1
-    - [ ] tcpserver2
+    - [x] tcpserver1
+    - [x] tcpserver2
     - [x] thread
     - [x] tls
-    - [ ] tlsserver
+    - [x] tlsserver
     - [ ] udpserver1
-    - [ ] udpserver2
-    - [ ] unittest
+    - [x] udpserver2
+    - [x] unittest
     - [ ] windows

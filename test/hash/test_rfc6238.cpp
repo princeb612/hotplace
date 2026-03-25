@@ -103,7 +103,7 @@ uint32 test_totp_rfc6238(hash_algorithm_t algorithm) {
     }
     __finally2 {
         const char* alg = advisor->nameof_md(algorithm);
-        _test_case.test(ret, __FUNCTION__, "RFC6238 TOTP algorithm %s + 6 test vectors tested", alg ? alg : "");
+        _test_case.test(ret, __FUNCTION__, "RFC6238 TOTP algorithm %s + 6 test vectors tested", alg);
     }
 
     return ret;

@@ -23,19 +23,11 @@ typedef struct _variant_conversion_t {
     const char* formatter;
 } variant_conversion_t;
 
-#if __cplusplus >= 201103L  // c++11
-#define VARIANT_CONVERSION_ITEM(t, f) \
-    {                                 \
-        .type = t,                    \
-        .formatter = f,               \
-    }
-#else
 #define VARIANT_CONVERSION_ITEM(t, f) \
     {                                 \
         t,                            \
         f,                            \
     }
-#endif
 
 static variant_conversion_t type_formatter[] = {
     VARIANT_CONVERSION_ITEM(TYPE_CHAR, "%c"),   VARIANT_CONVERSION_ITEM(TYPE_BYTE, "%c"),    VARIANT_CONVERSION_ITEM(TYPE_SHORT, "%i"),
