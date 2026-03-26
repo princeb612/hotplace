@@ -53,8 +53,8 @@ constexpr char constexpr_tag[] = "tag";
 
 quic_packet_initial::quic_packet_initial(tls_session* session) : quic_packet(quic_packet_type_initial, session), _length(0), _sizeof_length(0) {}
 
-quic_packet_initial::quic_packet_initial(const quic_packet_initial& rhs)
-    : quic_packet(rhs), _token(rhs._token), _length(rhs._length), _sizeof_length(rhs._sizeof_length) {}
+quic_packet_initial::quic_packet_initial(const quic_packet_initial& other)
+    : quic_packet(other), _token(other._token), _length(other._length), _sizeof_length(other._sizeof_length) {}
 
 quic_packet_initial::~quic_packet_initial() {}
 

@@ -23,7 +23,7 @@ namespace net {
 class quic_packet_handshake : public quic_packet {
    public:
     quic_packet_handshake(tls_session* session);
-    quic_packet_handshake(const quic_packet_handshake& rhs);
+    quic_packet_handshake(const quic_packet_handshake& other);
     virtual ~quic_packet_handshake();
 
     uint64 get_bodysize();

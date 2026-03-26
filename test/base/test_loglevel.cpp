@@ -22,53 +22,51 @@ void test_loglevel() {
     table.insert({loglevel_fatal, "fatal"});
     table.insert({loglevel_notice, "notice"});
 
-    std::list<loglevel_t> case1;
-    std::list<loglevel_t> case2;
-    case1.push_back(loglevel_trace);
-    case2.push_back(loglevel_trace);
-    case1.push_back(loglevel_debug);
-    case2.push_back(loglevel_debug);
-    case1.push_back(loglevel_info);
-    case2.push_back(loglevel_info);
-    case1.push_back(loglevel_warn);
-    case2.push_back(loglevel_warn);
-    case1.push_back(loglevel_error);
-    case2.push_back(loglevel_error);
-    case1.push_back(loglevel_fatal);
-    case2.push_back(loglevel_fatal);
-    case1.push_back(loglevel_notice);
-    case2.push_back(loglevel_notice);
+    std::list<loglevel_t> cases;
+    for (auto lvl : table) {
+        cases.push_back(lvl.first);
+    }
 
-    auto dolog = [&](loglevel_t lvl, loglevel_t imp) -> void {
-        _logger->set_loglevel(lvl).set_implicit_loglevel(imp);
-
-        const std::string &lvlstr = table[lvl];
-        const std::string &impstr = table[imp];
-        std::string oper;
-        if (lvl > imp) {
-            oper = " > ";
-        } else if (lvl == imp) {
-            oper = " = ";
-        } else {
-            oper = " < ";
-        }
-
-        _logger->writeln(loglevel_notice, "level:%s %s implicit:%s", lvlstr.c_str(), oper.c_str(), impstr.c_str());
-        _logger->writeln("> loglevel:implicit");
-        _logger->writeln(loglevel_trace, "> loglevel:trace");
-        _logger->writeln(loglevel_debug, "> loglevel:debug");
-        _logger->writeln(loglevel_info, "> loglevel:info");
-        _logger->writeln(loglevel_warn, "> loglevel:warn");
-        _logger->writeln(loglevel_error, "> loglevel:error");
-        _logger->writeln(loglevel_fatal, "> loglevel:fatal");
-        _logger->writeln(loglevel_notice, "> loglevel:notice");
+    auto dologlevel = [&](loglevel_t level, const char* message) -> void {
+        bool islogged = false;
+        _logger->writeln(level, [&](basic_stream& dbs) -> void {
+            dbs = message;
+            islogged = true;
+        });
+        _test_case.assert(islogged == (level >= _logger->get_loglevel()), __FUNCTION__, message);
+    };
+    auto doimplicitloglevel = [&](const char* message) -> void {
+        bool islogged = false;
+        _logger->writeln([&](basic_stream& bs) -> void {
+            bs = message;
+            islogged = true;
+        });
+        _test_case.assert(islogged == (_logger->get_implicit_loglevel() >= _logger->get_loglevel()), __FUNCTION__, message);
     };
 
-    for (auto lvl : case1) {
-        for (auto imp : case2) {
-            dolog(lvl, imp);
+    _logger->set_loglevel(loglevel_trace).set_implicit_loglevel(loglevel_trace);  // reset
+
+    for (auto glevel : cases) {
+        _logger->writeln(loglevel_notice, "set log level %s", table[glevel].c_str());
+        _logger->set_loglevel(glevel);
+
+        for (auto lvl : cases) {
+            basic_stream bs;
+            bs.printf("> current loglevel [%s] do [%s] expect [%s]", table[glevel].c_str(), table[lvl].c_str(),
+                      (lvl >= _logger->get_loglevel()) ? "true" : "false");
+            dologlevel(lvl, bs.c_str());
+        }
+
+        for (auto ilevel : cases) {
+            _logger->writeln(loglevel_notice, "set log implicit level %s", table[ilevel].c_str());
+            _logger->set_implicit_loglevel(ilevel);
+
+            basic_stream bs;
+            bs.printf("> current loglevel [%s] implicit loglevel [%s] expect [%s]", table[glevel].c_str(), table[ilevel].c_str(),
+                      (_logger->get_implicit_loglevel() >= _logger->get_loglevel()) ? "true" : "false");
+            doimplicitloglevel(bs.c_str());
         }
     }
 
-    _logger->set_loglevel(loglevel_trace).set_implicit_loglevel(loglevel_trace);
+    _logger->set_loglevel(loglevel_trace).set_implicit_loglevel(loglevel_trace);  // reset
 }

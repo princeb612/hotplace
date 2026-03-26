@@ -29,14 +29,14 @@ openssl_tls_context::openssl_tls_context(uint32 flag, const char* cert_file, con
     openssl_tls_context_open(&_ctx, flag, cert_file, key_file, password, chain_file);
 }
 
-openssl_tls_context::openssl_tls_context(const openssl_tls_context& rhs) : _ctx(rhs._ctx) {
+openssl_tls_context::openssl_tls_context(const openssl_tls_context& other) : _ctx(other._ctx) {
     if (nullptr == _ctx) {
         throw exception(not_specified);
     }
     SSL_CTX_up_ref(_ctx);
 }
 
-openssl_tls_context::openssl_tls_context(openssl_tls_context&& rhs) : _ctx(std::move(rhs._ctx)) {
+openssl_tls_context::openssl_tls_context(openssl_tls_context&& other) : _ctx(std::move(other._ctx)) {
     if (nullptr == _ctx) {
         throw exception(not_specified);
     }

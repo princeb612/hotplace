@@ -38,8 +38,8 @@ class http_dynamic_table {
     /**
      * @brief   compare
      */
-    bool operator==(const http_dynamic_table& rhs);
-    bool operator!=(const http_dynamic_table& rhs);
+    bool operator==(const http_dynamic_table& other);
+    bool operator!=(const http_dynamic_table& other);
     /**
      * @brief   match
      * @param   uint32 flags [in]

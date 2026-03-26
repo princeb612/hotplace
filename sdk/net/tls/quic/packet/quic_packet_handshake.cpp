@@ -56,7 +56,8 @@ constexpr char constexpr_tag[] = "tag";
 
 quic_packet_handshake::quic_packet_handshake(tls_session* session) : quic_packet(quic_packet_type_handshake, session), _length(0), _sizeof_length(0) {}
 
-quic_packet_handshake::quic_packet_handshake(const quic_packet_handshake& rhs) : quic_packet(rhs), _length(rhs._length), _sizeof_length(rhs._sizeof_length) {}
+quic_packet_handshake::quic_packet_handshake(const quic_packet_handshake& other)
+    : quic_packet(other), _length(other._length), _sizeof_length(other._sizeof_length) {}
 
 quic_packet_handshake::~quic_packet_handshake() {}
 

@@ -69,8 +69,8 @@ namespace net {
 class quic_encoded : public payload_encoded {
    public:
     quic_encoded();
-    quic_encoded(const quic_encoded& rhs);
-    quic_encoded(quic_encoded&& rhs);
+    quic_encoded(const quic_encoded& other);
+    quic_encoded(quic_encoded&& other);
     /**
      * @brief   integers in the range 0 to 2^62-1
      */

@@ -40,8 +40,8 @@ namespace net {
 class protection_context {
    public:
     protection_context();
-    protection_context(const protection_context& rhs);
-    protection_context(protection_context&& rhs);
+    protection_context(const protection_context& other);
+    protection_context(protection_context&& other);
 
     return_t negotiate(tls_session* session, uint16& cs, uint16& tlsver);
     return_t negotiate(tls_session* session, uint16 minspec, uint16 maxspec, uint16& cs, uint16& tlsver);
@@ -67,7 +67,7 @@ class protection_context {
     void for_each_ec_point_formats(std::function<void(uint8, bool*)> fn) const;
     void for_each_keyshare_groups(std::function<void(uint16, bool*)> fn) const;
 
-    return_t select_from(const protection_context& rhs, tls_session* session, uint16 minspec = tls_12, uint16 maxspec = tls_13);
+    return_t select_from(const protection_context& other, tls_session* session, uint16 minspec = tls_12, uint16 maxspec = tls_13);
 
     void set_cipher_suite(uint16 cs);
     uint16 get_cipher_suite(uint16 cs);

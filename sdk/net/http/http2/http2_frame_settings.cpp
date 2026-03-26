@@ -18,7 +18,7 @@ namespace net {
 
 http2_frame_settings::http2_frame_settings() : http2_frame(h2_frame_t::h2_frame_settings) {}
 
-http2_frame_settings::http2_frame_settings(const http2_frame_settings& rhs) : http2_frame(rhs) { _settings = rhs._settings; }
+http2_frame_settings::http2_frame_settings(const http2_frame_settings& other) : http2_frame(other) { _settings = other._settings; }
 
 http2_frame_settings::~http2_frame_settings() {}
 

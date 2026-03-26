@@ -134,6 +134,8 @@ class logger {
      */
     logger& set_loglevel(loglevel_t level);
     logger& set_implicit_loglevel(loglevel_t level);
+    loglevel_t get_loglevel();
+    loglevel_t get_implicit_loglevel();
 
     logger& consoleln(const char* fmt, ...);
     logger& consoleln(const std::string& msg);

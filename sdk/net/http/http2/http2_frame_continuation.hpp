@@ -24,7 +24,7 @@ namespace net {
 class http2_frame_continuation : public http2_frame {
    public:
     http2_frame_continuation();
-    http2_frame_continuation(const http2_frame_continuation& rhs);
+    http2_frame_continuation(const http2_frame_continuation& other);
     virtual ~http2_frame_continuation();
 
     virtual void dump(stream_t* s);

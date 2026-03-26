@@ -19,7 +19,7 @@ namespace net {
 
 http2_frame_continuation::http2_frame_continuation() : http2_frame(h2_frame_t::h2_frame_continuation) {}
 
-http2_frame_continuation::http2_frame_continuation(const http2_frame_continuation& rhs) : http2_frame(rhs) { _fragment = rhs._fragment; }
+http2_frame_continuation::http2_frame_continuation(const http2_frame_continuation& other) : http2_frame(other) { _fragment = other._fragment; }
 
 http2_frame_continuation::~http2_frame_continuation() {}
 

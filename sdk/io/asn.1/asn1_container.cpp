@@ -24,8 +24,8 @@ asn1_container::asn1_container(asn1_tag* tag) : asn1_object("", asn1_type_primit
 
 asn1_container::asn1_container(const std::string& name, asn1_tag* tag) : asn1_object(name, asn1_type_primitive, tag) {}
 
-asn1_container::asn1_container(const asn1_container& rhs) : asn1_object(rhs) {
-    for (auto item : rhs._list) {
+asn1_container::asn1_container(const asn1_container& other) : asn1_object(other) {
+    for (auto item : other._list) {
         *this << item->clone();
     }
 }
@@ -36,10 +36,10 @@ asn1_container::~asn1_container() {
     }
 }
 
-asn1_container& asn1_container::operator<<(asn1_object* rhs) {
-    if (rhs) {
-        _list.push_back(rhs);
-        rhs->set_parent(this);
+asn1_container& asn1_container::operator<<(asn1_object* other) {
+    if (other) {
+        _list.push_back(other);
+        other->set_parent(this);
     }
     return *this;
 }

@@ -24,7 +24,7 @@ namespace net {
 class http2_frame_push_promise : public http2_frame {
    public:
     http2_frame_push_promise();
-    http2_frame_push_promise(const http2_frame_push_promise& rhs);
+    http2_frame_push_promise(const http2_frame_push_promise& other);
     virtual ~http2_frame_push_promise();
 
     virtual void dump(stream_t* s);

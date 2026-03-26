@@ -29,5 +29,6 @@ void test_mapinsert();
 void test_binary();
 void test_loglevel();
 void test_merge();
+void test_bignumber();
 
 #endif

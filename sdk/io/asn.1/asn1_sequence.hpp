@@ -32,7 +32,7 @@ class asn1_sequence : public asn1_container {
    public:
     asn1_sequence(asn1_tag* tag = nullptr);
     asn1_sequence(const std::string& name, asn1_tag* tag = nullptr);
-    asn1_sequence(const asn1_sequence& rhs);
+    asn1_sequence(const asn1_sequence& other);
     asn1_sequence(int count, ...);
     asn1_sequence(asn1_tag* tag, int count, ...);
 
@@ -50,7 +50,7 @@ class asn1_sequence_of : public asn1_container {
    public:
     asn1_sequence_of(asn1_tag* tag = nullptr);
     asn1_sequence_of(const std::string& name, asn1_tag* tag = nullptr);
-    asn1_sequence_of(const asn1_sequence_of& rhs);
+    asn1_sequence_of(const asn1_sequence_of& other);
 
     virtual asn1_object* clone();
 

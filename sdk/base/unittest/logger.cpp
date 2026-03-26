@@ -49,6 +49,10 @@ logger& logger::set_implicit_loglevel(loglevel_t level) {
     return *this;
 }
 
+loglevel_t logger::get_loglevel() { return _log_level; }
+
+loglevel_t logger::get_implicit_loglevel() { return _implicit_level; }
+
 void logger::clear() {
     stop_consumer();
 

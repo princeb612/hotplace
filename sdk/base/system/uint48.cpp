@@ -59,7 +59,7 @@ return_t i64_b48(byte_t* p, uint8 len, uint64 value) {
 
 uint48_t::uint48_t() : t_uint_custom_t<uint64, 6>() {}
 
-uint48_t::uint48_t(const uint48_t& rhs) : t_uint_custom_t<uint64, 6>(rhs) {}
+uint48_t::uint48_t(const uint48_t& other) : t_uint_custom_t<uint64, 6>(other) {}
 
 uint48_t::uint48_t(const byte_t* p, size_t size) : t_uint_custom_t<uint64, 6>(p, size) {}
 

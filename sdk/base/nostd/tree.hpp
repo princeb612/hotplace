@@ -44,12 +44,12 @@ class t_btree {
     typedef typename std::function<void(key_t &t)> visitor;
 
     t_btree() : _root(nullptr), _size(0) {}
-    t_btree(const t_btree &rhs) : _root(nullptr), _size(0) { _root = clone(rhs._root); }
-    t_btree(t_btree &&rhs) : _root(nullptr), _size(0) {
-        _root = rhs._root;
-        _size = rhs._size;
-        rhs._root = nullptr;
-        rhs._size = 0;
+    t_btree(const t_btree &other) : _root(nullptr), _size(0) { _root = clone(other._root); }
+    t_btree(t_btree &&other) : _root(nullptr), _size(0) {
+        _root = other._root;
+        _size = other._size;
+        other._root = nullptr;
+        other._size = 0;
     }
     ~t_btree() { clear(); }
 
@@ -63,16 +63,16 @@ class t_btree {
     void insert(key_t &&x, visitor visit = nullptr) { insert(std::move(x), _root, visit); }
     void remove(const key_t &x) { remove(x, _root); }
 
-    t_btree &operator=(const t_btree &rhs) {
+    t_btree &operator=(const t_btree &other) {
         clear();
-        _root = clone(rhs._root);
+        _root = clone(other._root);
     }
-    t_btree &operator=(t_btree &&rhs) {
+    t_btree &operator=(t_btree &&other) {
         clear();
-        _root = rhs._root;
-        _size = rhs._size;
-        rhs._root = nullptr;
-        rhs._size = 0;
+        _root = other._root;
+        _size = other._size;
+        other._root = nullptr;
+        other._size = 0;
     }
 
    private:
@@ -229,12 +229,12 @@ class t_avltree {
     typedef typename std::function<void(key_t &t)> visitor;
 
     t_avltree() : _root(nullptr), _size(0) {}
-    t_avltree(const t_avltree &rhs) : _root(nullptr), _size(0) { _root = clone(rhs._root); }
-    t_avltree(t_avltree &&rhs) : _root(nullptr), _size(0) {
-        _root = rhs._root;
-        _size = rhs._size;
-        rhs._root = nullptr;
-        rhs._size = 0;
+    t_avltree(const t_avltree &other) : _root(nullptr), _size(0) { _root = clone(other._root); }
+    t_avltree(t_avltree &&other) : _root(nullptr), _size(0) {
+        _root = other._root;
+        _size = other._size;
+        other._root = nullptr;
+        other._size = 0;
     }
     ~t_avltree() { clear(); }
 
@@ -248,16 +248,16 @@ class t_avltree {
     void insert(key_t &&x, visitor visit = nullptr) { insert(x, _root, visit); }
     void remove(const key_t &x) { remove(x, _root); }
 
-    t_avltree &operator=(const t_avltree &rhs) {
+    t_avltree &operator=(const t_avltree &other) {
         clear();
-        _root = clone(rhs._root);
+        _root = clone(other._root);
     }
-    t_avltree &operator=(t_avltree &&rhs) {
+    t_avltree &operator=(t_avltree &&other) {
         clear();
-        _root = rhs._root;
-        _size = rhs._size;
-        rhs._root = nullptr;
-        rhs._size = 0;
+        _root = other._root;
+        _size = other._size;
+        other._root = nullptr;
+        other._size = 0;
     }
 
    private:

@@ -53,8 +53,8 @@ template <typename TYPE_PTR, typename ENTITY_TYPE>
 class t_tls_container {
    public:
     t_tls_container(uint32 flags = 0) : _flags(flags) {}
-    t_tls_container(const t_tls_container& rhs) { *this = rhs; }
-    t_tls_container(t_tls_container&& rhs) { *this = std::move(rhs); }
+    t_tls_container(const t_tls_container& other) { *this = other; }
+    t_tls_container(t_tls_container&& other) { *this = std::move(other); }
     virtual ~t_tls_container() { clear(); }
 
     return_t add(TYPE_PTR item, bool upref = false) {
@@ -163,19 +163,19 @@ class t_tls_container {
      */
     void set_flags(uint32 flags) { _flags = flags; }
 
-    t_tls_container& operator=(const t_tls_container& rhs) {
-        _flags = rhs._flags;
-        _members = rhs._members;
+    t_tls_container& operator=(const t_tls_container& other) {
+        _flags = other._flags;
+        _members = other._members;
         for (auto& member : _members) {
             member->addref();
         }
-        _dictionary = rhs._dictionary;
+        _dictionary = other._dictionary;
         return *this;
     }
-    t_tls_container& operator=(t_tls_container&& rhs) {
-        _flags = std::move(rhs._flags);
-        _members = std::move(rhs._members);
-        _dictionary = std::move(rhs._dictionary);
+    t_tls_container& operator=(t_tls_container&& other) {
+        _flags = std::move(other._flags);
+        _members = std::move(other._members);
+        _dictionary = std::move(other._dictionary);
         return *this;
     }
 

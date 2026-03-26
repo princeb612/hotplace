@@ -25,35 +25,35 @@ namespace hotplace {
 class binary {
    public:
     binary();
-    binary(const binary& rhs);
-    binary(binary&& rhs);
+    binary(const binary& other);
+    binary(binary&& other);
 
-    binary(char rhs);
-    binary(byte_t rhs);
-    binary(int16 rhs);
-    binary(uint16 rhs);
-    binary(int32 rhs);
-    binary(uint32 rhs);
-    binary(int64 rhs);
-    binary(uint64 rhs);
+    binary(char value);
+    binary(byte_t value);
+    binary(int16 value);
+    binary(uint16 value);
+    binary(int32 value);
+    binary(uint32 value);
+    binary(int64 value);
+    binary(uint64 value);
 #if defined __SIZEOF_INT128__
-    binary(int128 rhs);
-    binary(uint128 rhs);
+    binary(int128 value);
+    binary(uint128 value);
 #endif
-    binary(float rhs);
-    binary(double rhs);
-    binary(const std::string& rhs);
-    binary(const char* rhs);
+    binary(float value);
+    binary(double value);
+    binary(const std::string& value);
+    binary(const char* value);
     binary(const byte_t* buf, size_t size);
 
-    binary(const binary_t& rhs);
-    binary(binary_t&& rhs);
+    binary(const binary_t& value);
+    binary(binary_t&& value);
 
-    binary& set(const binary& rhs);
-    binary& set(const binary_t& rhs);
-    binary& set(binary_t&& rhs);
+    binary& set(const binary& other);
+    binary& set(const binary_t& value);
+    binary& set(binary_t&& value);
 
-    binary& push_back(byte_t rhs);
+    binary& push_back(byte_t value);
 
     /*
      * @brief   append
@@ -176,7 +176,7 @@ class binary {
  *          // 00000000 : 00 00 00 00 00 00 00 00 01 23 45 67 89 AB CD EF | .........#Eg....
  *
  */
-return_t binary_push(binary_t& target, byte_t rhs);
+return_t binary_push(binary_t& target, byte_t value);
 
 template <typename T>
 return_t t_binary_append(binary_t& target, T value, std::function<T(const T&)> func = nullptr) {
@@ -203,10 +203,10 @@ return_t binary_append(binary_t& target, uint128 value, std::function<uint128(co
 #endif
 return_t binary_append(binary_t& target, float value, std::function<uint32(const uint32&)> func = nullptr);
 return_t binary_append(binary_t& target, double value, std::function<uint64(const uint64&)> func = nullptr);
-return_t binary_append(binary_t& target, const std::string& rhs);
-return_t binary_append(binary_t& target, const binary_t& rhs);
-return_t binary_append(binary_t& target, const binary& rhs);
-return_t binary_append(binary_t& target, const char* rhs);
+return_t binary_append(binary_t& target, const std::string& value);
+return_t binary_append(binary_t& target, const binary_t& value);
+return_t binary_append(binary_t& target, const binary& other);
+return_t binary_append(binary_t& target, const char* buf);
 return_t binary_append(binary_t& target, const char* buf, size_t size);
 return_t binary_append(binary_t& target, const byte_t* buf, size_t size);
 return_t binary_append(binary_t& target, const byte_t* buf, size_t from, size_t to);

@@ -40,9 +40,9 @@ void test_mapinsert() {
 
         copyitem_t() : i(0) { _logger->writeln("ctor"); }
         copyitem_t(int v) : i(v) { _logger->writeln("ctor1"); }
-        copyitem_t(const copyitem_t& rhs) : i(rhs.i) { _logger->writeln("copy"); }
+        copyitem_t(const copyitem_t& other) : i(other.i) { _logger->writeln("copy"); }
         ~copyitem_t() { _logger->writeln("dtor"); }
-        const copyitem_t& operator=(const copyitem_t& rhs) {
+        const copyitem_t& operator=(const copyitem_t& other) {
             _logger->writeln("copy1");
             return *this;
         }
@@ -64,12 +64,12 @@ void test_mapinsert() {
          */
         moveitem_t(const moveitem_t&) = delete;
         moveitem_t& operator=(const moveitem_t&) = delete;
-        moveitem_t(moveitem_t&& rhs) {
-            i = rhs.i;
+        moveitem_t(moveitem_t&& other) {
+            i = other.i;
             _logger->writeln("move");
         }
-        moveitem_t& operator=(moveitem_t&& rhs) {
-            i = rhs.i;
+        moveitem_t& operator=(moveitem_t&& other) {
+            i = other.i;
             _logger->writeln("move1");
             return *this;
         }
@@ -146,9 +146,9 @@ void test_mapinsert() {
 
         testitem_t() : i(0) { _logger->writeln("ctor"); }
         testitem_t(int v) : i(v) { _logger->writeln("ctor1"); }
-        testitem_t(const testitem_t& rhs) : i(rhs.i) { _logger->writeln("copy"); }
+        testitem_t(const testitem_t& other) : i(other.i) { _logger->writeln("copy"); }
         ~testitem_t() { _logger->writeln("dtor"); }
-        const testitem_t& operator=(const testitem_t& rhs) {
+        const testitem_t& operator=(const testitem_t& other) {
             _logger->writeln("copy1");
             return *this;
         }

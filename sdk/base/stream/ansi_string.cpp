@@ -27,22 +27,22 @@ ansi_string::ansi_string(const char* data) {
     _bio.write(_handle, data, strlen(data));
 }
 
-ansi_string::ansi_string(const ansi_string& rhs) {
+ansi_string::ansi_string(const ansi_string& other) {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
 
     _bio.open(&_handle, allocsize, sizeof(char), bufferio_context_flag_t::memzero_free);
     byte_t* data = nullptr;
     size_t size = 0;
 
-    _bio.get(rhs._handle, &data, &size);
+    _bio.get(other._handle, &data, &size);
     write((void*)data, size);
 }
 
-ansi_string::ansi_string(ansi_string&& rhs) {
+ansi_string::ansi_string(ansi_string&& other) {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
     _bio.open(&_handle, allocsize, sizeof(char), bufferio_context_flag_t::memzero_free);
 
-    std::swap(_handle, rhs._handle);
+    std::swap(_handle, other._handle);
 }
 
 ansi_string::~ansi_string() { _bio.close(_handle); }
@@ -284,15 +284,15 @@ ansi_string& ansi_string::operator=(double buf) {
     return *this;
 }
 
-ansi_string& ansi_string::operator=(const ansi_string& rhs) {
+ansi_string& ansi_string::operator=(const ansi_string& other) {
     clear();
-    write(rhs.data(), rhs.size());
+    write(other.data(), other.size());
     return *this;
 }
 
-ansi_string& ansi_string::operator=(ansi_string&& rhs) {
+ansi_string& ansi_string::operator=(ansi_string&& other) {
     clear();
-    std::swap(_handle, rhs._handle);
+    std::swap(_handle, other._handle);
     return *this;
 }
 
@@ -426,29 +426,29 @@ ansi_string& ansi_string::operator<<(uint128 buf) {
 }
 #endif
 
-int ansi_string::compare(const ansi_string& rhs) { return strcmp(c_str(), rhs.c_str()); }
+int ansi_string::compare(const ansi_string& other) { return strcmp(c_str(), other.c_str()); }
 
 int ansi_string::compare(const ansi_string& lhs, const ansi_string& rhs) { return strcmp(lhs.c_str(), rhs.c_str()); }
 
-bool ansi_string::operator<(const ansi_string& rhs) const { return 0 > strcmp(c_str(), rhs.c_str()); }
+bool ansi_string::operator<(const ansi_string& other) const { return 0 > strcmp(c_str(), other.c_str()); }
 
-bool ansi_string::operator>(const ansi_string& rhs) const { return 0 < strcmp(c_str(), rhs.c_str()); }
+bool ansi_string::operator>(const ansi_string& other) const { return 0 < strcmp(c_str(), other.c_str()); }
 
-bool ansi_string::operator==(const ansi_string& rhs) const {
+bool ansi_string::operator==(const ansi_string& other) const {
     bool ret = false;
 
-    if (size() == rhs.size()) {
-        int cmp = memcmp(data(), rhs.data(), size());
+    if (size() == other.size()) {
+        int cmp = memcmp(data(), other.data(), size());
         ret = (0 == cmp);
     }
     return ret;
 }
 
-bool ansi_string::operator!=(const ansi_string& rhs) const {
+bool ansi_string::operator!=(const ansi_string& other) const {
     bool ret = true;
 
-    if (size() == rhs.size()) {
-        int cmp = memcmp(data(), rhs.data(), size());
+    if (size() == other.size()) {
+        int cmp = memcmp(data(), other.data(), size());
         ret = (0 != cmp);
     }
     return ret;

@@ -85,8 +85,8 @@ class openssl_tls_context {
      * @param   const char* chain_file [inopt]
      */
     openssl_tls_context(uint32 flag, const char* cert_file, const char* key_file, const char* password = nullptr, const char* chain_file = nullptr);
-    openssl_tls_context(const openssl_tls_context& rhs);
-    openssl_tls_context(openssl_tls_context&& rhs);
+    openssl_tls_context(const openssl_tls_context& other);
+    openssl_tls_context(openssl_tls_context&& other);
     openssl_tls_context(openssl_tls* tls);
     openssl_tls_context(SSL_CTX* ctx);
     ~openssl_tls_context();

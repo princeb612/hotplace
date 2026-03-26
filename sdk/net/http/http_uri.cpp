@@ -151,11 +151,11 @@ return_t http_uri::to_keyvalue(const std::string& value, skey_value& kv) {
 
 skey_value& http_uri::get_query_keyvalue() { return _query_kv; }
 
-http_uri& http_uri::operator=(const http_uri& rhs) {
-    _uri = rhs._uri;
-    _uripath = rhs._uripath;
-    _query = rhs._query;
-    _query_kv = rhs._query_kv;
+http_uri& http_uri::operator=(const http_uri& other) {
+    _uri = other._uri;
+    _uripath = other._uripath;
+    _query = other._query;
+    _query_kv = other._query_kv;
     return *this;
 }
 

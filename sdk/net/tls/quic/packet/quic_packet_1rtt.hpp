@@ -27,7 +27,7 @@ namespace net {
 class quic_packet_1rtt : public quic_packet {
    public:
     quic_packet_1rtt(tls_session* session);
-    quic_packet_1rtt(const quic_packet_1rtt& rhs);
+    quic_packet_1rtt(const quic_packet_1rtt& other);
     virtual ~quic_packet_1rtt();
 
     virtual size_t estimate_overhead();

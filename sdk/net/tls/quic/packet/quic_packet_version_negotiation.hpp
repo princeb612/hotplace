@@ -23,7 +23,7 @@ namespace net {
 class quic_packet_version_negotiation : public quic_packet {
    public:
     quic_packet_version_negotiation(tls_session* session);
-    quic_packet_version_negotiation(const quic_packet_version_negotiation& rhs);
+    quic_packet_version_negotiation(const quic_packet_version_negotiation& other);
     virtual ~quic_packet_version_negotiation();
 
    protected:

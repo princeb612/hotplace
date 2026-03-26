@@ -66,10 +66,12 @@ logger& logger::consoleln(stream_t* s) {
 }
 
 logger& logger::consoleln(std::function<void(basic_stream& bs)> f) {
-    if (f) {
-        basic_stream bs;
-        f(bs);
-        colorln(bs);
+    if (test_loglevel()) {
+        if (f) {
+            basic_stream bs;
+            f(bs);
+            colorln(bs);
+        }
     }
     return *this;
 }
@@ -106,10 +108,12 @@ logger& logger::consoleln(loglevel_t level, stream_t* s) {
 }
 
 logger& logger::consoleln(loglevel_t level, std::function<void(basic_stream& bs)> f) {
-    if (f) {
-        basic_stream bs;
-        f(bs);
-        colorln(bs);
+    if (test_loglevel(level)) {
+        if (f) {
+            basic_stream bs;
+            f(bs);
+            colorln(bs);
+        }
     }
     return *this;
 }
@@ -177,19 +181,23 @@ logger& logger::write(loglevel_t level, stream_t* s) {
 }
 
 logger& logger::write(std::function<void(basic_stream& bs)> f) {
-    if (f) {
-        basic_stream bs;
-        f(bs);
-        write(bs);
+    if (test_loglevel()) {
+        if (f) {
+            basic_stream bs;
+            f(bs);
+            write(bs);
+        }
     }
     return *this;
 }
 
 logger& logger::write(loglevel_t level, std::function<void(basic_stream& bs)> f) {
-    if (f) {
-        basic_stream bs;
-        f(bs);
-        write(level, bs);
+    if (test_loglevel(level)) {
+        if (f) {
+            basic_stream bs;
+            f(bs);
+            write(level, bs);
+        }
     }
     return *this;
 }
@@ -257,28 +265,34 @@ logger& logger::writeln(loglevel_t level, stream_t* s) {
 }
 
 logger& logger::writeln(std::function<void(basic_stream& bs)> f) {
-    if (f) {
-        basic_stream bs;
-        f(bs);
-        writeln(bs);
+    if (test_loglevel()) {
+        if (f) {
+            basic_stream bs;
+            f(bs);
+            writeln(bs);
+        }
     }
     return *this;
 }
 
 logger& logger::writeln(loglevel_t level, std::function<void(basic_stream& bs)> f) {
-    if (f) {
-        basic_stream bs;
-        f(bs);
-        writeln(level, bs);
+    if (test_loglevel(level)) {
+        if (f) {
+            basic_stream bs;
+            f(bs);
+            writeln(level, bs);
+        }
     }
     return *this;
 }
 
 logger& logger::colorln(const char* fmt, ...) {
-    va_list ap;
-    va_start(ap, fmt);
-    do_color_write_vprintf(fmt, ap, true);
-    va_end(ap);
+    if (test_loglevel()) {
+        va_list ap;
+        va_start(ap, fmt);
+        do_color_write_vprintf(fmt, ap, true);
+        va_end(ap);
+    }
     return *this;
 }
 
@@ -289,10 +303,12 @@ logger& logger::colorln(const basic_stream& msg) { return do_color_write_raw(msg
 logger& logger::colorln(stream_t* s) { return do_color_write_stream(s, true); }
 
 logger& logger::colorln(std::function<void(basic_stream& bs)> f) {
-    if (f) {
-        basic_stream bs;
-        f(bs);
-        colorln(bs);
+    if (test_loglevel()) {
+        if (f) {
+            basic_stream bs;
+            f(bs);
+            colorln(bs);
+        }
     }
     return *this;
 }

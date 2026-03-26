@@ -29,8 +29,8 @@ asn1_tag::asn1_tag(int cnumber, int tmode, asn1_tag* tag)
 asn1_tag::asn1_tag(int ctype, int cnumber, int tmode, asn1_tag* tag)
     : asn1_object(asn1_type_tagged, tag), _class_type(ctype), _class_number(cnumber), _tag_mode(tmode), _suppress(false) {}
 
-asn1_tag::asn1_tag(const asn1_tag& rhs)
-    : asn1_object(rhs), _class_type(rhs._class_type), _class_number(rhs._class_number), _tag_mode(rhs._tag_mode), _suppress(rhs._suppress) {}
+asn1_tag::asn1_tag(const asn1_tag& other)
+    : asn1_object(other), _class_type(other._class_type), _class_number(other._class_number), _tag_mode(other._tag_mode), _suppress(other._suppress) {}
 
 asn1_object* asn1_tag::clone() { return new asn1_tag(*this); }
 

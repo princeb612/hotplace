@@ -24,7 +24,7 @@ namespace net {
 class http2_frame_goaway : public http2_frame {
    public:
     http2_frame_goaway();
-    http2_frame_goaway(const http2_frame_goaway& rhs);
+    http2_frame_goaway(const http2_frame_goaway& other);
     virtual ~http2_frame_goaway();
 
     virtual void dump(stream_t* s);

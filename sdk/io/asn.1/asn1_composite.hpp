@@ -24,7 +24,7 @@ class asn1_composite : public asn1_object {
      * asn1_type_t type MUST be asn1_type_primitive or asn1_type_constructed
      */
     asn1_composite(asn1_type_t type, asn1_object* obj, asn1_tag* tag = nullptr);
-    asn1_composite(const asn1_composite& rhs);
+    asn1_composite(const asn1_composite& other);
     virtual ~asn1_composite();
 
     virtual asn1_object* clone();

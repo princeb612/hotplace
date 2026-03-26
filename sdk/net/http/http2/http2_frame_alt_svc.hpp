@@ -24,7 +24,7 @@ namespace net {
 class http2_frame_alt_svc : public http2_frame {
    public:
     http2_frame_alt_svc();
-    http2_frame_alt_svc(const http2_frame_alt_svc& rhs);
+    http2_frame_alt_svc(const http2_frame_alt_svc& other);
     virtual ~http2_frame_alt_svc();
 
     virtual void dump(stream_t* s);

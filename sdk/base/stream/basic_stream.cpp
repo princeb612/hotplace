@@ -32,22 +32,22 @@ basic_stream::basic_stream(const char* data, ...) : _handle(nullptr) {
     va_end(ap);
 }
 
-basic_stream::basic_stream(const basic_stream& rhs) : _handle(nullptr) {
+basic_stream::basic_stream(const basic_stream& other) : _handle(nullptr) {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
 
     _bio.open(&_handle, allocsize, 1);
     byte_t* data = nullptr;
     size_t size = 0;
 
-    _bio.get(rhs._handle, &data, &size);
+    _bio.get(other._handle, &data, &size);
     write((void*)data, size);
 }
 
-basic_stream::basic_stream(basic_stream&& rhs) : _handle(nullptr) {
+basic_stream::basic_stream(basic_stream&& other) : _handle(nullptr) {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
     _bio.open(&_handle, allocsize, 1);
 
-    std::swap(_handle, rhs._handle);
+    std::swap(_handle, other._handle);
 }
 
 basic_stream::~basic_stream() { _bio.close(_handle); }
@@ -184,35 +184,35 @@ return_t basic_stream::vprintf(const char* fmt, valist ap) {
     return ret;
 }
 
-basic_stream& basic_stream::operator=(const basic_stream& rhs) {
+basic_stream& basic_stream::operator=(const basic_stream& other) {
     clear();
-    write(rhs.data(), rhs.size());
+    write(other.data(), other.size());
     return *this;
 }
 
-basic_stream& basic_stream::operator=(basic_stream&& rhs) {
+basic_stream& basic_stream::operator=(basic_stream&& other) {
     clear();
-    std::swap(_handle, rhs._handle);
+    std::swap(_handle, other._handle);
     return *this;
 }
 
-basic_stream& basic_stream::operator=(const std::string& rhs) {
+basic_stream& basic_stream::operator=(const std::string& other) {
     clear();
-    printf(rhs.c_str());
+    printf(other.c_str());
     return *this;
 }
 
-basic_stream& basic_stream::operator=(const char* rhs) {
+basic_stream& basic_stream::operator=(const char* other) {
     clear();
-    if (rhs) {
-        printf(rhs);
+    if (other) {
+        printf(other);
     }
     return *this;
 }
 
-basic_stream& basic_stream::operator<<(const char* rhs) {
-    if (rhs) {
-        printf(rhs);
+basic_stream& basic_stream::operator<<(const char* other) {
+    if (other) {
+        printf(other);
     }
     return *this;
 }
@@ -294,20 +294,20 @@ basic_stream& basic_stream::operator<<(const binary_t& value) {
     return *this;
 }
 
-int basic_stream::compare(const basic_stream& rhs) { return strcmp((*this).c_str(), rhs.c_str()); }
+int basic_stream::compare(const basic_stream& other) { return strcmp((*this).c_str(), other.c_str()); }
 
 int basic_stream::compare(const basic_stream& lhs, const basic_stream& rhs) { return strcmp(lhs.c_str(), rhs.c_str()); }
 
-bool basic_stream::operator<(const basic_stream& rhs) const { return 0 > strcmp((*this).c_str(), rhs.c_str()); }
+bool basic_stream::operator<(const basic_stream& other) const { return 0 > strcmp((*this).c_str(), other.c_str()); }
 
-bool basic_stream::operator>(const basic_stream& rhs) const { return 0 < strcmp((*this).c_str(), rhs.c_str()); }
+bool basic_stream::operator>(const basic_stream& other) const { return 0 < strcmp((*this).c_str(), other.c_str()); }
 
-bool basic_stream::operator==(const basic_stream& rhs) const { return 0 == strcmp((*this).c_str(), rhs.c_str()); }
+bool basic_stream::operator==(const basic_stream& other) const { return 0 == strcmp((*this).c_str(), other.c_str()); }
 
-bool basic_stream::operator==(const char* rhs) const {
+bool basic_stream::operator==(const char* other) const {
     bool ret = false;
-    if (rhs) {
-        ret = (0 == strcmp((*this).c_str(), rhs));
+    if (other) {
+        ret = (0 == strcmp((*this).c_str(), other));
     }
     return ret;
 }

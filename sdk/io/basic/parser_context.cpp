@@ -357,15 +357,15 @@ parser::search_result parser::context::wsearch(parser* obj, const basic_stream& 
     return wsearch(obj, pattern.c_str(), pattern.size(), pos);
 }
 
-bool parser::context::compare(parser* obj, const parser::context& rhs) const {
+bool parser::context::compare(parser* obj, const parser::context& other) const {
     bool ret = false;
-    if ((_parser == obj) && (_parser == rhs._parser)) {
+    if ((_parser == obj) && (_parser == other._parser)) {
         size_t size = _tokens.size();
-        if (size == rhs._tokens.size()) {
+        if (size == other._tokens.size()) {
             size_t idx = 0;
             for (idx = 0; idx != size; idx++) {
                 parser::token* token_lhs = _tokens[idx];
-                parser::token* token_rhs = rhs._tokens[idx];
+                parser::token* token_rhs = other._tokens[idx];
                 if (token_lhs->get_index() != token_lhs->get_index()) {
                     break;
                 }

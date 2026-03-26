@@ -17,7 +17,7 @@ struct pattern_search_sample_data {
     pattern_search_sample_data(std::string s, int v) : dummy(s), value(v) {}
     pattern_search_sample_data(int v) : value(v) {}
 
-    friend bool operator==(const pattern_search_sample_data& lhs, const pattern_search_sample_data& rhs) { return lhs.value == rhs.value; }
+    friend bool operator==(const pattern_search_sample_data& other, const pattern_search_sample_data& rhs) { return other.value == rhs.value; }
 };
 
 void test_kmp() {
@@ -82,7 +82,7 @@ void test_kmp() {
         prepare(data2, data);
         prepare(pattern2, pattern);
         t_kmp<pattern_search_sample_data*> kmp;
-        auto comparator = [](const pattern_search_sample_data* lhs, const pattern_search_sample_data* rhs) -> bool { return (lhs->value == rhs->value); };
+        auto comparator = [](const pattern_search_sample_data* other, const pattern_search_sample_data* rhs) -> bool { return (other->value == rhs->value); };
         int idx = kmp.search(&data2[0], data2.size(), &pattern2[0], pattern2.size(), 0, comparator);
         _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<struct*> %i using comparator", idx);
         clean(data2);

@@ -55,7 +55,7 @@ struct t_uint_custom_t {
     byte_t data[N];
 
     t_uint_custom_t() { memset(data, 0, N); }
-    t_uint_custom_t(const t_uint_custom_t &rhs) { memcpy(data, rhs.data, N); }
+    t_uint_custom_t(const t_uint_custom_t &other) { memcpy(data, other.data, N); }
     t_uint_custom_t(const byte_t *p, size_t size) {
         if (p && (size >= N)) {
             memcpy(data, p, N);
@@ -91,7 +91,7 @@ return_t i32_b24(byte_t *p, uint8 len, uint32 value);
 /* TLS handshake length */
 struct uint24_t : t_uint_custom_t<uint32, 3> {
     uint24_t();
-    uint24_t(const uint24_t &rhs);
+    uint24_t(const uint24_t &other);
     uint24_t(const byte_t *p, size_t size);
     uint24_t(uint32 v);
 
@@ -108,7 +108,7 @@ return_t i64_b48(byte_t *p, uint8 len, uint64 value);
 
 struct uint48_t : t_uint_custom_t<uint64, 6> {
     uint48_t();
-    uint48_t(const uint48_t &rhs);
+    uint48_t(const uint48_t &other);
     uint48_t(const byte_t *p, size_t size);
     uint48_t(uint64 v);
 

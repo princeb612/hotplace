@@ -24,7 +24,7 @@ namespace net {
 class http2_frame_headers : public http2_frame {
    public:
     http2_frame_headers();
-    http2_frame_headers(const http2_frame_headers& rhs);
+    http2_frame_headers(const http2_frame_headers& other);
     virtual ~http2_frame_headers();
 
     virtual void dump(stream_t* s);

@@ -18,7 +18,7 @@ namespace net {
 
 http2_frame_ping::http2_frame_ping() : http2_frame(h2_frame_t::h2_frame_ping), _opaque(0) {}
 
-http2_frame_ping::http2_frame_ping(const http2_frame_ping& rhs) : http2_frame(rhs), _opaque(rhs._opaque) {}
+http2_frame_ping::http2_frame_ping(const http2_frame_ping& other) : http2_frame(other), _opaque(other._opaque) {}
 
 http2_frame_ping::~http2_frame_ping() {}
 

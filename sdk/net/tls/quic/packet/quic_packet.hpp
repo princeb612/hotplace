@@ -41,7 +41,7 @@ class quic_packet {
    public:
     quic_packet(tls_session* session);
     quic_packet(quic_packet_t type, tls_session* session);
-    quic_packet(const quic_packet& rhs);
+    quic_packet(const quic_packet& other);
     virtual ~quic_packet();
 
     /**

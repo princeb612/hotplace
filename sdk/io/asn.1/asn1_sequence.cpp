@@ -22,7 +22,7 @@ asn1_sequence::asn1_sequence(asn1_tag* tag) : asn1_container(tag) { set_type(asn
 
 asn1_sequence::asn1_sequence(const std::string& name, asn1_tag* tag) : asn1_container(name, tag) { set_type(asn1_type_sequence); }
 
-asn1_sequence::asn1_sequence(const asn1_sequence& rhs) : asn1_container(rhs) { set_type(asn1_type_sequence); }
+asn1_sequence::asn1_sequence(const asn1_sequence& other) : asn1_container(other) { set_type(asn1_type_sequence); }
 
 asn1_sequence::asn1_sequence(int count, ...) : asn1_container(nullptr) {
     set_type(asn1_type_sequence);
@@ -54,7 +54,7 @@ asn1_sequence_of::asn1_sequence_of(asn1_tag* tag) : asn1_container(tag) { set_ty
 
 asn1_sequence_of::asn1_sequence_of(const std::string& name, asn1_tag* tag) : asn1_container(name, tag) { set_type(asn1_type_sequence_of); }
 
-asn1_sequence_of::asn1_sequence_of(const asn1_sequence_of& rhs) : asn1_container(rhs) { set_type(asn1_type_sequence_of); }
+asn1_sequence_of::asn1_sequence_of(const asn1_sequence_of& other) : asn1_container(other) { set_type(asn1_type_sequence_of); }
 
 asn1_object* asn1_sequence_of::clone() { return new asn1_sequence_of(*this); }
 

@@ -74,15 +74,15 @@ class t_graph {
         vertex(const T& d = T()) : _data(d) {}
         vertex(T&& d) : _data(std::move(d)) {}
 
-        vertex(const vertex& rhs) : _data(rhs._data) {}
-        vertex(vertex&& rhs) : _data(std::move(rhs._data)) {}
+        vertex(const vertex& other) : _data(other._data) {}
+        vertex(vertex&& other) : _data(std::move(other._data)) {}
 
-        vertex& operator=(const vertex& rhs) {
-            _data = rhs._data;
+        vertex& operator=(const vertex& other) {
+            _data = other._data;
             return *this;
         }
-        vertex& operator=(vertex&& rhs) {
-            _data = std::move(rhs._data);
+        vertex& operator=(vertex&& other) {
+            _data = std::move(other._data);
             return *this;
         }
 
@@ -112,8 +112,8 @@ class t_graph {
             adjust();
         }
 
-        edge(const edge& rhs) : _from(rhs._from), _to(rhs._to), _weight(rhs._weight), _direction(rhs._direction) {}
-        edge(edge&& rhs) : _from(std::move(rhs._from)), _to(std::move(rhs._to)), _weight(rhs._weight), _direction(rhs._direction) {}
+        edge(const edge& other) : _from(other._from), _to(other._to), _weight(other._weight), _direction(other._direction) {}
+        edge(edge&& other) : _from(std::move(other._from)), _to(std::move(other._to)), _weight(other._weight), _direction(other._direction) {}
 
         void set_weight(int weight) { _weight = weight; }
         int get_weight() { return _weight; }
@@ -140,7 +140,7 @@ class t_graph {
         int _distance;
 
         tag() : _label(label_unvisited), _weight(0), _distance(0) {}
-        tag(const tag& rhs) : _label(rhs._label), _weight(rhs._weight), _distance(rhs._distance) {}
+        tag(const tag& other) : _label(other._label), _weight(other._weight), _distance(other._distance) {}
 
         void set_label(label_t tag) { _label = tag; }
         label_t get_label() { return _label; }

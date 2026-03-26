@@ -12,7 +12,7 @@
       openssl libssl-dev libjansson-dev zlib1g-dev (ubuntu)
       valgrind (linux)
     * make
-      $ ./make.sh
+      $ ./make.sh cmake debug pch
 
 COMMENTS
 

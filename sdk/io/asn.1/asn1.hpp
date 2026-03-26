@@ -23,7 +23,7 @@ namespace io {
 class asn1 {
    public:
     asn1();
-    asn1(const asn1& rhs);
+    asn1(const asn1& other);
     virtual ~asn1();
 
     asn1* clone();

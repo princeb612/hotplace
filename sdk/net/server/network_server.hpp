@@ -45,7 +45,7 @@ enum netserver_config_t {
 class server_conf : public t_key_value<netserver_config_t, uint16> {
    public:
     server_conf();
-    server_conf(const server_conf& rhs);
+    server_conf(const server_conf& other);
 };
 
 enum netserver_cb_type_t {

@@ -25,31 +25,31 @@ template <typename T>
 class t_vector {
    public:
     explicit t_vector(size_t size = 0) : _size(size), _capacity(size + const_vector_spare) { _items = new T[_capacity]; }
-    t_vector(const t_vector& rhs) : _size(rhs._size), _capacity(rhs._capacity), _items(nullptr) {
+    t_vector(const t_vector& other) : _size(other._size), _capacity(other._capacity), _items(nullptr) {
         _items = new T[_capacity];
         for (size_t i = 0; i < _size; i++) {
-            _items[i] = rhs._items[i];
+            _items[i] = other._items[i];
         }
     }
-    t_vector(t_vector&& rhs) : _size(rhs._size), _capacity(rhs._capacity), _items(rhs._items) {
-        rhs._items = nullptr;
-        rhs.clear();
+    t_vector(t_vector&& other) : _size(other._size), _capacity(other._capacity), _items(other._items) {
+        other._items = nullptr;
+        other.clear();
     }
     ~t_vector() { clear(); }
 
-    t_vector& operator=(const t_vector& rhs) {
-        t_vector o = rhs;
+    t_vector& operator=(const t_vector& other) {
+        t_vector o = other;
         std::swap(*this, o);
         return *this;
     }
-    t_vector& operator=(t_vector&& rhs) {
+    t_vector& operator=(t_vector&& other) {
         clear();
-        _size = rhs._size;
-        _capacity = rhs._capacity;
-        _items = rhs._items;
-        rhs._items = nullptr;
-        rhs._size = 0;
-        rhs._capacity = 0;
+        _size = other._size;
+        _capacity = other._capacity;
+        _items = other._items;
+        other._items = nullptr;
+        other._size = 0;
+        other._capacity = 0;
         return *this;
     }
     void resize(size_t size) {

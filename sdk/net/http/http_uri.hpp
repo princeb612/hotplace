@@ -83,7 +83,7 @@ class http_uri {
      */
     skey_value& get_query_keyvalue();
 
-    http_uri& operator=(const http_uri& rhs);
+    http_uri& operator=(const http_uri& other);
 
     void addref();
     void release();

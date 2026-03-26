@@ -38,9 +38,9 @@ struct keydesc {
     keydesc(const std::string& k, crypto_use_t u) : use(u) { set_kid(k); }
     keydesc(crypto_use_t u) : use(u) {}
     /* copy */
-    keydesc(const keydesc& rhs) : kid(rhs.kid), alg(rhs.alg), use(rhs.use) {}
+    keydesc(const keydesc& other) : kid(other.kid), alg(other.alg), use(other.use) {}
     /* move */
-    keydesc(keydesc&& rhs) : kid(std::move(rhs.kid)), alg(std::move(rhs.alg)), use(rhs.use) {}
+    keydesc(keydesc&& other) : kid(std::move(other.kid)), alg(std::move(other.alg)), use(other.use) {}
 
     keydesc& set_kid(const char* k) {
         if (k) {
@@ -78,10 +78,10 @@ struct keydesc {
         use &= (~crypto_use_t::use_enc & crypto_use_t::use_sig);
         return *this;
     }
-    keydesc& operator=(const keydesc& rhs) {
-        kid = rhs.kid;
-        alg = rhs.alg;
-        use = rhs.use;
+    keydesc& operator=(const keydesc& other) {
+        kid = other.kid;
+        alg = other.alg;
+        use = other.use;
         return *this;
     }
 
@@ -101,7 +101,7 @@ class crypto_key_object {
     crypto_key_object(const EVP_PKEY* key, const X509* x509, crypto_use_t use, const char* kid = nullptr, const char* alg = nullptr) : _pkey(key), _x509(x509) {
         _desc.set_kid(kid).set_alg(alg).set_use(use);
     }
-    crypto_key_object(const crypto_key_object& rhs) : _pkey(rhs._pkey), _x509(rhs._x509), _desc(rhs._desc) {}
+    crypto_key_object(const crypto_key_object& other) : _pkey(other._pkey), _x509(other._x509), _desc(other._desc) {}
     crypto_key_object(const EVP_PKEY* key, const keydesc& desc) : _pkey(key), _x509(nullptr), _desc(desc) {}
     crypto_key_object(const EVP_PKEY* key, const X509* x509, const keydesc& desc) : _pkey(key), _x509(x509), _desc(desc) {}
 

@@ -26,7 +26,7 @@ struct ack_range_t {
 
     ack_range_t() : gap(0), ack_range_length(0) {}
     ack_range_t(uint32 g, uint32 l) : gap(g), ack_range_length(l) {}
-    bool operator==(const ack_range_t& rhs) const { return (gap == rhs.gap) && (ack_range_length == rhs.ack_range_length); }
+    bool operator==(const ack_range_t& other) const { return (gap == other.gap) && (ack_range_length == other.ack_range_length); }
 };
 /**
  * @example
@@ -55,8 +55,8 @@ struct ack_t {
         first_ack_range = 0;
         ack_ranges.clear();
     }
-    bool operator==(const ack_t& rhs) const {
-        return ((largest_ack == rhs.largest_ack) && (first_ack_range == rhs.first_ack_range) && (ack_ranges == rhs.ack_ranges));
+    bool operator==(const ack_t& other) const {
+        return ((largest_ack == other.largest_ack) && (first_ack_range == other.first_ack_range) && (ack_ranges == other.ack_ranges));
     }
 
     friend ack_t& operator<<(ack_t& ack, t_ovl_points<uint32>& part) {

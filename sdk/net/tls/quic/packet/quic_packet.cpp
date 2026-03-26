@@ -54,12 +54,12 @@ quic_packet::quic_packet(quic_packet_t type, tls_session* session) : _type(type)
     _shared.make_share(this);
 }
 
-quic_packet::quic_packet(const quic_packet& rhs)
-    : _type(rhs._type), _session(nullptr), _ht(rhs._ht), _version(rhs._version), _dcid(rhs._dcid), _scid(rhs._scid), _pn(rhs._pn) {
-    if (nullptr == rhs._session) {
+quic_packet::quic_packet(const quic_packet& other)
+    : _type(other._type), _session(nullptr), _ht(other._ht), _version(other._version), _dcid(other._dcid), _scid(other._scid), _pn(other._pn) {
+    if (nullptr == other._session) {
         throw no_session;
     }
-    set_session(rhs._session);
+    set_session(other._session);
     set_version();
     _frames.set_session(_frames.get_session());
     _shared.make_share(this);

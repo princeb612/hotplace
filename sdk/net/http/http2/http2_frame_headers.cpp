@@ -19,9 +19,9 @@ namespace net {
 
 http2_frame_headers::http2_frame_headers() : http2_frame(h2_frame_t::h2_frame_headers), _padlen(0), _exclusive(false), _dependency(0), _weight(0) {}
 
-http2_frame_headers::http2_frame_headers(const http2_frame_headers& rhs)
-    : http2_frame(rhs), _padlen(rhs._padlen), _exclusive(rhs._exclusive), _dependency(rhs._dependency), _weight(rhs._weight) {
-    _fragment = rhs._fragment;
+http2_frame_headers::http2_frame_headers(const http2_frame_headers& other)
+    : http2_frame(other), _padlen(other._padlen), _exclusive(other._exclusive), _dependency(other._dependency), _weight(other._weight) {
+    _fragment = other._fragment;
 }
 
 http2_frame_headers::~http2_frame_headers() {}

@@ -19,9 +19,9 @@ namespace net {
 
 http2_frame_alt_svc::http2_frame_alt_svc() : http2_frame(h2_frame_t::h2_frame_altsvc) {}
 
-http2_frame_alt_svc::http2_frame_alt_svc(const http2_frame_alt_svc& rhs) : http2_frame(rhs) {
-    _origin = rhs._origin;
-    _altsvc = rhs._altsvc;
+http2_frame_alt_svc::http2_frame_alt_svc(const http2_frame_alt_svc& other) : http2_frame(other) {
+    _origin = other._origin;
+    _altsvc = other._altsvc;
 }
 
 http2_frame_alt_svc::~http2_frame_alt_svc() {}

@@ -18,7 +18,7 @@ namespace net {
 
 http2_frame_window_update::http2_frame_window_update() : http2_frame(h2_frame_t::h2_frame_window_update), _increment(0) {}
 
-http2_frame_window_update::http2_frame_window_update(const http2_frame_window_update& rhs) : http2_frame(rhs), _increment(rhs._increment) {}
+http2_frame_window_update::http2_frame_window_update(const http2_frame_window_update& other) : http2_frame(other), _increment(other._increment) {}
 
 http2_frame_window_update::~http2_frame_window_update() {}
 

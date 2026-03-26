@@ -87,7 +87,7 @@ class http_request {
 
     virtual std::string get_version_str();
 
-    http_request& operator=(const http_request& rhs);
+    http_request& operator=(const http_request& other);
 
     http_request& add_content(const char* buf, size_t bufsize);
     http_request& add_content(const binary_t& bin);

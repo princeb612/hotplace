@@ -20,7 +20,7 @@ asn1_set::asn1_set(asn1_tag* tag) : asn1_container(tag) { set_type(asn1_type_set
 
 asn1_set::asn1_set(const std::string& name, asn1_tag* tag) : asn1_container(name, tag) { set_type(asn1_type_set); }
 
-asn1_set::asn1_set(const asn1_set& rhs) : asn1_container(rhs) { set_type(asn1_type_set); }
+asn1_set::asn1_set(const asn1_set& other) : asn1_container(other) { set_type(asn1_type_set); }
 
 asn1_object* asn1_set::clone() { return new asn1_set(*this); }
 
@@ -30,7 +30,7 @@ asn1_set_of::asn1_set_of(asn1_tag* tag) : asn1_container(tag) { set_type(asn1_ty
 
 asn1_set_of::asn1_set_of(const std::string& name, asn1_tag* tag) : asn1_container(name, tag) { set_type(asn1_type_set_of); }
 
-asn1_set_of::asn1_set_of(const asn1_set_of& rhs) : asn1_container(rhs) { set_type(asn1_type_set_of); }
+asn1_set_of::asn1_set_of(const asn1_set_of& other) : asn1_container(other) { set_type(asn1_type_set_of); }
 
 asn1_object* asn1_set_of::clone() { return new asn1_set_of(*this); }
 

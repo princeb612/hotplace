@@ -27,7 +27,7 @@ namespace net {
 class tls_extension {
    public:
     tls_extension(tls_handshake* hs);
-    tls_extension(const tls_extension& rhs);
+    tls_extension(const tls_extension& other);
     tls_extension(uint16 type, tls_handshake* hs);
     virtual ~tls_extension();
 

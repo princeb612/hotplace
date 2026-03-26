@@ -175,7 +175,7 @@ class parser {
     class token {
        public:
         token();
-        token(const token& rhs);
+        token(const token& other);
 
         token& init();
         token& increase();
@@ -233,7 +233,7 @@ class parser {
         /**
          * @brief   word-level comparison
          */
-        bool compare(parser* obj, const parser::context& rhs) const;
+        bool compare(parser* obj, const parser::context& other) const;
 
         /**
          * @brief   pattern-level search

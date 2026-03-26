@@ -32,7 +32,7 @@ namespace crypto {
 class transcript_hash {
    public:
     transcript_hash(hash_algorithm_t alg);
-    transcript_hash(const transcript_hash& rhs);
+    transcript_hash(const transcript_hash& other);
     ~transcript_hash();
 
     transcript_hash* dup();

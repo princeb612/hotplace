@@ -25,7 +25,7 @@ namespace net {
 class http2_frame_rst_stream : public http2_frame {
    public:
     http2_frame_rst_stream();
-    http2_frame_rst_stream(const http2_frame_rst_stream& rhs);
+    http2_frame_rst_stream(const http2_frame_rst_stream& other);
     virtual ~http2_frame_rst_stream();
 
     virtual void dump(stream_t* s);

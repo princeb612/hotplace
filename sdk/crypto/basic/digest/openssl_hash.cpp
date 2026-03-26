@@ -37,34 +37,34 @@ struct openssl_hash_context_t : public hash_context_t {
     binary_t _key;                  // CMAC, HMAC
 
     openssl_hash_context_t() : _signature(0), _flags(0), _md_context(nullptr), _cmac_context(nullptr), _hmac_context(nullptr) {}
-    openssl_hash_context_t(const openssl_hash_context_t& rhs)
-        : _signature(rhs._signature),
-          _hash_type(rhs._hash_type),
-          _flags(rhs._flags),
-          _evp_cipher(rhs._evp_cipher),
-          _evp_md(rhs._evp_md),
-          _key(rhs._key),
+    openssl_hash_context_t(const openssl_hash_context_t& other)
+        : _signature(other._signature),
+          _hash_type(other._hash_type),
+          _flags(other._flags),
+          _evp_cipher(other._evp_cipher),
+          _evp_md(other._evp_md),
+          _key(other._key),
           _md_context(nullptr),
           _cmac_context(nullptr),
           _hmac_context(nullptr) {
-        if (rhs._md_context) {
+        if (other._md_context) {
             _md_context = EVP_MD_CTX_create();
-            EVP_MD_CTX_copy(_md_context, rhs._md_context);
+            EVP_MD_CTX_copy(_md_context, other._md_context);
         }
-        if (rhs._cmac_context) {
+        if (other._cmac_context) {
             _cmac_context = CMAC_CTX_new();
-            CMAC_CTX_copy(_cmac_context, rhs._cmac_context);
+            CMAC_CTX_copy(_cmac_context, other._cmac_context);
         }
-        if (rhs._hmac_context) {
+        if (other._hmac_context) {
             _hmac_context = HMAC_CTX_new();
-            HMAC_CTX_copy(_hmac_context, rhs._hmac_context);
+            HMAC_CTX_copy(_hmac_context, other._hmac_context);
         }
     }
-    void swap(openssl_hash_context_t* rhs) {
-        if (rhs) {
-            std::swap<EVP_MD_CTX*>(_md_context, rhs->_md_context);
-            std::swap<CMAC_CTX*>(_cmac_context, rhs->_cmac_context);
-            std::swap<HMAC_CTX*>(_hmac_context, rhs->_hmac_context);
+    void swap(openssl_hash_context_t* other) {
+        if (other) {
+            std::swap<EVP_MD_CTX*>(_md_context, other->_md_context);
+            std::swap<CMAC_CTX*>(_cmac_context, other->_cmac_context);
+            std::swap<HMAC_CTX*>(_hmac_context, other->_hmac_context);
         }
     }
 };
@@ -534,8 +534,8 @@ return_t openssl_hash::dup(hash_context_t** duplicated, hash_context_t* handle) 
             __leave2;
         }
 
-        openssl_hash_context_t* rhs = (openssl_hash_context_t*)handle;
-        __try_new_catch(context, new openssl_hash_context_t(*rhs), ret, __leave2);
+        openssl_hash_context_t* other = (openssl_hash_context_t*)handle;
+        __try_new_catch(context, new openssl_hash_context_t(*other), ret, __leave2);
 
         *duplicated = context;
     }

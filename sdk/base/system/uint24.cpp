@@ -59,7 +59,7 @@ return_t i32_b24(byte_t* p, uint8 len, uint32 value) {
 
 uint24_t::uint24_t() : t_uint_custom_t<uint32, 3>() {}
 
-uint24_t::uint24_t(const uint24_t& rhs) : t_uint_custom_t<uint32, 3>(rhs) {}
+uint24_t::uint24_t(const uint24_t& other) : t_uint_custom_t<uint32, 3>(other) {}
 
 uint24_t::uint24_t(const byte_t* p, size_t size) : t_uint_custom_t<uint32, 3>(p, size) {}
 

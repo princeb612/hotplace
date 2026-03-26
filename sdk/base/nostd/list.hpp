@@ -58,8 +58,8 @@ class t_list {
             --(*this);
             return old;
         }
-        bool operator==(const const_iterator& rhs) const { return _current == rhs._current; }
-        bool operator!=(const const_iterator& rhs) const { return (false == (*this == rhs)); }
+        bool operator==(const const_iterator& other) const { return _current == other._current; }
+        bool operator!=(const const_iterator& other) const { return (false == (*this == other)); }
 
         void isvalid() const {
             if (nullptr == _list || nullptr == _current || _current == _list->_head) {
@@ -148,29 +148,29 @@ class t_list {
 
    public:
     t_list() { init(); }
-    t_list(const t_list& rhs) {
+    t_list(const t_list& other) {
         init();
-        for (auto& x : rhs) {
+        for (auto& x : other) {
             push_back(x);
         }
     }
-    t_list(t_list&& rhs) : _size(rhs._size), _head(rhs._head), _tail(rhs._tail) { rhs.init(); }
+    t_list(t_list&& other) : _size(other._size), _head(other._head), _tail(other._tail) { other.init(); }
     ~t_list() {
         clear();
         delete _head;
         delete _tail;
     }
 
-    t_list& operator=(const t_list& rhs) {
-        t_list temp = rhs;
+    t_list& operator=(const t_list& other) {
+        t_list temp = other;
         std::swap(*this, temp);
         return *this;
     }
-    t_list& operator=(t_list&& rhs) {
+    t_list& operator=(t_list&& other) {
         clear();
-        std::swap(_size, rhs._size);
-        std::swap(_head, rhs._head);
-        std::swap(_tail, rhs._tail);
+        std::swap(_size, other._size);
+        std::swap(_head, other._head);
+        std::swap(_tail, other._tail);
         return *this;
     }
 

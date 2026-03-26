@@ -23,7 +23,7 @@ namespace net {
 class quic_packet_0rtt : public quic_packet {
    public:
     quic_packet_0rtt(tls_session* session);
-    quic_packet_0rtt(const quic_packet_0rtt& rhs);
+    quic_packet_0rtt(const quic_packet_0rtt& other);
     virtual ~quic_packet_0rtt();
 
     virtual return_t write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag);

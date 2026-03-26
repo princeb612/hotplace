@@ -24,11 +24,11 @@ transcript_hash::transcript_hash(hash_algorithm_t alg) : _handle(nullptr) {
     hash.init(_handle);
 }
 
-transcript_hash::transcript_hash(const transcript_hash& rhs) {
+transcript_hash::transcript_hash(const transcript_hash& other) {
     _shared.make_share(this);
 
     openssl_hash hash;
-    hash.dup(&_handle, rhs._handle);
+    hash.dup(&_handle, other._handle);
 }
 
 transcript_hash::~transcript_hash() {

@@ -23,7 +23,7 @@ class http2_frame {
    public:
     http2_frame();
     http2_frame(h2_frame_t type);
-    http2_frame(const http2_frame& rhs);
+    http2_frame(const http2_frame& other);
     virtual ~http2_frame();
 
     uint32 get_frame_size();

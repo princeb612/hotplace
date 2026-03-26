@@ -19,9 +19,9 @@ namespace net {
 
 http2_frame_push_promise::http2_frame_push_promise() : http2_frame(h2_frame_t::h2_frame_push_promise), _padlen(0), _promised_id(0) {}
 
-http2_frame_push_promise::http2_frame_push_promise(const http2_frame_push_promise& rhs)
-    : http2_frame(rhs), _padlen(rhs._padlen), _promised_id(rhs._promised_id) {
-    _fragment = rhs._fragment;
+http2_frame_push_promise::http2_frame_push_promise(const http2_frame_push_promise& other)
+    : http2_frame(other), _padlen(other._padlen), _promised_id(other._promised_id) {
+    _fragment = other._fragment;
 }
 
 http2_frame_push_promise::~http2_frame_push_promise() {}

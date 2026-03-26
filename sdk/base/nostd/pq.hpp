@@ -26,10 +26,10 @@ template <typename T>
 class t_binary_heap {
    public:
     explicit t_binary_heap() : _array(10), _size(0) {}
-    explicit t_binary_heap(const t_binary_heap& rhs) : _array(rhs._array), _size(rhs._size) {}
-    explicit t_binary_heap(const t_vector<T>& rhs) : _array(rhs.size() + 10), _size(rhs.size()) {
-        for (size_t i = 0; i < rhs.size(); ++i) {
-            _array[i + 1] = rhs[i];
+    explicit t_binary_heap(const t_binary_heap& other) : _array(other._array), _size(other._size) {}
+    explicit t_binary_heap(const t_vector<T>& other) : _array(other.size() + 10), _size(other.size()) {
+        for (size_t i = 0; i < other.size(); ++i) {
+            _array[i + 1] = other[i];
         }
         build_heap();
     }

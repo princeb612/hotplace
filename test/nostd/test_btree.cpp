@@ -60,19 +60,19 @@ void test_btree() {
             std::string value;
 
             basedata(uint32 k, const std::string& v) : key(k), value(v) {}
-            basedata(const basedata& rhs) : key(rhs.key), value(rhs.value) {}
+            basedata(const basedata& other) : key(other.key), value(other.value) {}
         };
         // 1 2 3 ...
         struct testdata1 : basedata {
             testdata1(uint32 k, const std::string& v) : basedata(k, v) {}
-            testdata1(const testdata1& rhs) : basedata(rhs) {}
+            testdata1(const testdata1& other) : basedata(other) {}
 
-            bool operator<(const testdata1& rhs) const {
+            bool operator<(const testdata1& other) const {
                 bool test = false;
-                if (key < rhs.key) {
+                if (key < other.key) {
                     return true;
-                } else if (key == rhs.key) {
-                    return value < rhs.value;
+                } else if (key == other.key) {
+                    return value < other.value;
                 } else {
                     return false;
                 }
@@ -81,14 +81,14 @@ void test_btree() {
         // a b c ...
         struct testdata2 : basedata {
             testdata2(uint32 k, const std::string& v) : basedata(k, v) {}
-            testdata2(const testdata2& rhs) : basedata(rhs) {}
+            testdata2(const testdata2& other) : basedata(other) {}
 
-            bool operator<(const testdata2& rhs) const {
+            bool operator<(const testdata2& other) const {
                 bool test = false;
-                if (value < rhs.value) {
+                if (value < other.value) {
                     return true;
-                } else if (value == rhs.value) {
-                    return key < rhs.key;
+                } else if (value == other.value) {
+                    return key < other.key;
                 } else {
                     return false;
                 }
@@ -140,9 +140,9 @@ void test_btree() {
 
             testdata() : symbol(0), weight(0) {}
             testdata(byte_t b) : symbol(b), weight(0) {}
-            testdata(const testdata& rhs) : symbol(rhs.symbol), weight(rhs.weight) {}
+            testdata(const testdata& other) : symbol(other.symbol), weight(other.weight) {}
 
-            // bool operator<(const testdata& rhs) const { return symbol < rhs.symbol;
+            // bool operator<(const testdata& other) const { return symbol < other.symbol;
             // }
         };
 

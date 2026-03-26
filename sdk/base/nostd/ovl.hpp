@@ -46,21 +46,21 @@ class t_merge_ovl_intervals {
         interval(T start, T end) : s(std::min(start, end)), e(std::max(start, end)), t(TAGTYPE()) {}
         interval(T start, T end, const TAGTYPE& tag) : s(std::min(start, end)), e(std::max(start, end)), t(tag) {}
         interval(T start, T end, TAGTYPE&& tag) : s(std::min(start, end)), e(std::max(start, end)), t(std::move(tag)) {}
-        interval(const interval& rhs) : s(rhs.s), e(rhs.e), t(rhs.t) {}
-        interval(interval&& rhs) : s(rhs.s), e(rhs.e), t(std::move(rhs.t)) {}
-        interval& operator=(const interval& rhs) {
-            s = rhs.s;
-            e = rhs.e;
-            t = rhs.t;
+        interval(const interval& other) : s(other.s), e(other.e), t(other.t) {}
+        interval(interval&& other) : s(other.s), e(other.e), t(std::move(other.t)) {}
+        interval& operator=(const interval& other) {
+            s = other.s;
+            e = other.e;
+            t = other.t;
             return *this;
         }
-        interval& operator=(interval&& rhs) {
-            s = rhs.s;
-            e = rhs.e;
-            t = std::move(rhs.t);
+        interval& operator=(interval&& other) {
+            s = other.s;
+            e = other.e;
+            t = std::move(other.t);
             return *this;
         }
-        bool operator==(const interval& rhs) const { return (s == rhs.s) && (e == rhs.e) && (t == rhs.t); }
+        bool operator==(const interval& other) const { return (s == other.s) && (e == other.e) && (t == other.t); }
     };
 
     static bool compare(const interval& lhs, const interval& rhs) { return lhs.s < rhs.s; }
@@ -122,9 +122,9 @@ class t_merge_ovl_intervals {
         }
         return *this;
     }
-    t_merge_ovl_intervals& subtract(t_merge_ovl_intervals& rhs) {
-        // do not hold _lock while calling rhs.merge() to avoid deadlock if rhs == *this or cross-lock.
-        auto temp = rhs.merge();
+    t_merge_ovl_intervals& subtract(t_merge_ovl_intervals& other) {
+        // do not hold _lock while calling other.merge() to avoid deadlock if other == *this or cross-lock.
+        auto temp = other.merge();
         for (const auto& item : temp) {
             subtract(item.s, item.e);
         }
@@ -159,10 +159,10 @@ class t_merge_ovl_intervals {
     }
     size_t size() const { return _arr.size(); }
 
-    bool operator==(t_merge_ovl_intervals& rhs) {
+    bool operator==(t_merge_ovl_intervals& other) {
         // avoid holding both locks; merge() acquires its own lock per object.
         auto l = merge();
-        auto r = rhs.merge();
+        auto r = other.merge();
         return l == r;
     }
 
@@ -201,19 +201,19 @@ class t_ovl_points {
         interval() : s(0), e(0) {}
         interval(T p) : s(p), e(p) {}
         interval(T start, T end) : s(std::min(start, end)), e(std::max(start, end)) {}
-        interval(const interval& rhs) : s(rhs.s), e(rhs.e) {}
-        interval(interval&& rhs) : s(rhs.s), e(rhs.e) {}
-        interval& operator=(const interval& rhs) {
-            s = rhs.s;
-            e = rhs.e;
+        interval(const interval& other) : s(other.s), e(other.e) {}
+        interval(interval&& other) : s(other.s), e(other.e) {}
+        interval& operator=(const interval& other) {
+            s = other.s;
+            e = other.e;
             return *this;
         }
-        interval& operator=(interval&& rhs) {
-            s = rhs.s;
-            e = rhs.e;
+        interval& operator=(interval&& other) {
+            s = other.s;
+            e = other.e;
             return *this;
         }
-        bool operator==(const interval& rhs) const { return (s == rhs.s) && (e == rhs.e); }
+        bool operator==(const interval& other) const { return (s == other.s) && (e == other.e); }
     };
 
     static bool compare(const interval& lhs, const interval& rhs) { return lhs.s < rhs.s; }
@@ -281,8 +281,8 @@ class t_ovl_points {
         }
         return *this;
     }
-    t_ovl_points& subtract(t_ovl_points& rhs) {
-        auto temp = rhs.merge();
+    t_ovl_points& subtract(t_ovl_points& other) {
+        auto temp = other.merge();
         for (const auto& item : temp) {
             subtract(item.s, item.e);
         }
@@ -316,9 +316,9 @@ class t_ovl_points {
     }
     size_t size() const { return _arr.size(); }
 
-    bool operator==(t_ovl_points<T>& rhs) {
+    bool operator==(t_ovl_points<T>& other) {
         auto l = merge();
-        auto r = rhs.merge();
+        auto r = other.merge();
         return l == r;
     }
 

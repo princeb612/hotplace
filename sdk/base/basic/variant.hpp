@@ -172,47 +172,47 @@ struct variant_t {
     uint16 flag;
 
     variant_t() : type(TYPE_NULL), size(0), flag(0) { memset(&data, 0, sizeof(data)); }
-    variant_t(const variant_t& rhs) : type(TYPE_NULL), size(0), flag(0) { *this = rhs; }
-    variant_t(variant_t&& rhs) : type(TYPE_NULL), size(0), flag(0) { *this = std::move(rhs); }
+    variant_t(const variant_t& other) : type(TYPE_NULL), size(0), flag(0) { *this = other; }
+    variant_t(variant_t&& other) : type(TYPE_NULL), size(0), flag(0) { *this = std::move(other); }
     ~variant_t() { clear(); }
 
-    variant_t& operator=(const variant_t& rhs) {
+    variant_t& operator=(const variant_t& other) {
         clear();
 
-        type = rhs.type;
-        if (variant_flag_t::flag_free & rhs.flag) {
-            switch (rhs.type) {
+        type = other.type;
+        if (variant_flag_t::flag_free & other.flag) {
+            switch (other.type) {
                 case TYPE_BINARY:
                 case TYPE_NSTRING:
-                    data.bstr = (unsigned char*)malloc(rhs.size + 1);
-                    memcpy(data.bstr, rhs.data.bstr, rhs.size);
+                    data.bstr = (unsigned char*)malloc(other.size + 1);
+                    memcpy(data.bstr, other.data.bstr, other.size);
                     break;
                 case TYPE_STRING:
-                    data.str = strdup(rhs.data.str);
+                    data.str = strdup(other.data.str);
                     break;
                 case TYPE_DATETIME:
                     data.dt = (datetime_t*)malloc(sizeof(datetime_t));
-                    memcpy(data.dt, rhs.data.dt, sizeof(datetime_t));
+                    memcpy(data.dt, other.data.dt, sizeof(datetime_t));
                     break;
                 default:
                     break;
             }
         } else {
-            memcpy(&data, &rhs.data, sizeof(data));
+            memcpy(&data, &other.data, sizeof(data));
         }
-        size = rhs.size;
-        flag = rhs.flag;
+        size = other.size;
+        flag = other.flag;
 
         return *this;
     }
-    variant_t& operator=(variant_t&& rhs) {
+    variant_t& operator=(variant_t&& other) {
         clear();
 
-        type = rhs.type;
-        memcpy(&data, &rhs.data, sizeof(data));
-        size = rhs.size;
-        flag = rhs.flag;
-        rhs.reset();
+        type = other.type;
+        memcpy(&data, &other.data, sizeof(data));
+        size = other.size;
+        flag = other.flag;
+        other.reset();
 
         return *this;
     }
@@ -246,9 +246,9 @@ class variant {
     variant(const char* value);
     variant(const char* value, size_t n);
     variant(const unsigned char* value, size_t n);
-    variant(const std::string& rhs);
-    variant(const binary_t& rhs);
-    variant(const stream_t* rhs);
+    variant(const std::string& value);
+    variant(const binary_t& value);
+    variant(const stream_t* value);
     variant(bool value);
     variant(int8 value);
     variant(uint8 value);
@@ -267,10 +267,10 @@ class variant {
     variant(float value);
     variant(double value);
     variant(const datetime_t& value);
-    variant(const variant_t& rhs);
-    variant(variant_t&& rhs);
-    variant(const variant& rhs);
-    variant(variant&& rhs);
+    variant(const variant_t& value);
+    variant(variant_t&& value);
+    variant(const variant& value);
+    variant(variant&& value);
     ~variant();
 
     const variant_t& content() const;

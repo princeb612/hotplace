@@ -40,9 +40,9 @@ void http_dynamic_table::for_each(std::function<void(size_t, size_t, const std::
 
 void http_dynamic_table::dump(const std::string& desc, std::function<void(const char*, size_t)> f) {}
 
-bool http_dynamic_table::operator==(const http_dynamic_table& rhs) { return (_type == rhs._type) && (_dynamic_map == rhs._dynamic_map); }
+bool http_dynamic_table::operator==(const http_dynamic_table& other) { return (_type == other._type) && (_dynamic_map == other._dynamic_map); }
 
-bool http_dynamic_table::operator!=(const http_dynamic_table& rhs) { return (_type != rhs._type) || (_dynamic_map != rhs._dynamic_map); }
+bool http_dynamic_table::operator!=(const http_dynamic_table& other) { return (_type != other._type) || (_dynamic_map != other._dynamic_map); }
 
 match_result_t http_dynamic_table::match(uint32 flags, const std::string& name, const std::string& value, size_t& index) {
     match_result_t state = match_result_t::not_matched;

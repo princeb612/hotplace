@@ -25,7 +25,7 @@ namespace net {
 class http2_frame_priority : public http2_frame {
    public:
     http2_frame_priority();
-    http2_frame_priority(const http2_frame_priority& rhs);
+    http2_frame_priority(const http2_frame_priority& other);
     virtual ~http2_frame_priority();
 
     virtual void dump(stream_t* s);

@@ -32,7 +32,7 @@ namespace hotplace {
 
 datetime::datetime() { update(); }
 
-datetime::datetime(const datetime& rhs) { memcpy(&_timespec, &rhs._timespec, sizeof(struct timespec)); }
+datetime::datetime(const datetime& other) { memcpy(&_timespec, &other._timespec, sizeof(struct timespec)); }
 
 datetime::datetime(const time_t& t, long* nsec) {
     _timespec.tv_sec = t;
@@ -224,48 +224,48 @@ bool datetime::operator!=(const datetime& rh) const {
     return ret;
 }
 
-bool datetime::operator>=(const datetime& rhs) const {
+bool datetime::operator>=(const datetime& other) const {
     bool ret = false;
 
-    if (_timespec.tv_sec > rhs._timespec.tv_sec) {
+    if (_timespec.tv_sec > other._timespec.tv_sec) {
         ret = true;
-    } else if ((_timespec.tv_sec == rhs._timespec.tv_sec) && (_timespec.tv_nsec >= rhs._timespec.tv_nsec)) {
+    } else if ((_timespec.tv_sec == other._timespec.tv_sec) && (_timespec.tv_nsec >= other._timespec.tv_nsec)) {
         ret = true;
     }
 
     return ret;
 }
 
-bool datetime::operator>(const datetime& rhs) const {
+bool datetime::operator>(const datetime& other) const {
     bool ret = false;
 
-    if (_timespec.tv_sec > rhs._timespec.tv_sec) {
+    if (_timespec.tv_sec > other._timespec.tv_sec) {
         ret = true;
-    } else if ((_timespec.tv_sec == rhs._timespec.tv_sec) && (_timespec.tv_nsec > rhs._timespec.tv_nsec)) {
+    } else if ((_timespec.tv_sec == other._timespec.tv_sec) && (_timespec.tv_nsec > other._timespec.tv_nsec)) {
         ret = true;
     }
 
     return ret;
 }
 
-bool datetime::operator<=(const datetime& rhs) const {
+bool datetime::operator<=(const datetime& other) const {
     bool ret = false;
 
-    if (_timespec.tv_sec < rhs._timespec.tv_sec) {
+    if (_timespec.tv_sec < other._timespec.tv_sec) {
         ret = true;
-    } else if ((_timespec.tv_sec == rhs._timespec.tv_sec) && (_timespec.tv_nsec <= rhs._timespec.tv_nsec)) {
+    } else if ((_timespec.tv_sec == other._timespec.tv_sec) && (_timespec.tv_nsec <= other._timespec.tv_nsec)) {
         ret = true;
     }
 
     return ret;
 }
 
-bool datetime::operator<(const datetime& rhs) const {
+bool datetime::operator<(const datetime& other) const {
     bool ret = false;
 
-    if (_timespec.tv_sec < rhs._timespec.tv_sec) {
+    if (_timespec.tv_sec < other._timespec.tv_sec) {
         ret = true;
-    } else if ((_timespec.tv_sec == rhs._timespec.tv_sec) && (_timespec.tv_nsec < rhs._timespec.tv_nsec)) {
+    } else if ((_timespec.tv_sec == other._timespec.tv_sec) && (_timespec.tv_nsec < other._timespec.tv_nsec)) {
         ret = true;
     }
 

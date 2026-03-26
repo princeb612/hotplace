@@ -39,10 +39,10 @@ class basic_stream : public stream_t {
     basic_stream(const char* data, ...);
     /**
      * @brief   constructor
-     * @param   const basic_stream& rhs [in]
+     * @param   const basic_stream& other [in]
      */
-    basic_stream(const basic_stream& rhs);
-    basic_stream(basic_stream&& rhs);
+    basic_stream(const basic_stream& other);
+    basic_stream(basic_stream&& other);
     /**
      * @brief   destructor
      */
@@ -124,16 +124,16 @@ class basic_stream : public stream_t {
      * @brief   operator =
      * @param   basic_stream obj [in]
      */
-    basic_stream& operator=(const basic_stream& rhs);
-    basic_stream& operator=(basic_stream&& rhs);
+    basic_stream& operator=(const basic_stream& other);
+    basic_stream& operator=(basic_stream&& other);
     basic_stream& operator=(const std::string& str);
     basic_stream& operator=(const char* str);
 
     /**
      * @brief   compare
-     * @param   basic_stream rhs [in]
+     * @param   basic_stream other [in]
      */
-    int compare(const basic_stream& rhs);
+    int compare(const basic_stream& other);
     /**
      * @brief   compare
      * @param   basic_stream lhs [in]
@@ -142,17 +142,17 @@ class basic_stream : public stream_t {
     static int compare(const basic_stream& lhs, const basic_stream& rhs);
     /**
      * @brief   operator <
-     * @param   basic_stream rhs [in]
+     * @param   basic_stream other [in]
      */
-    bool operator<(const basic_stream& rhs) const;
+    bool operator<(const basic_stream& other) const;
     /**
      * @brief   operator <
-     * @param   basic_stream rhs [in]
+     * @param   basic_stream other [in]
      */
-    bool operator>(const basic_stream& rhs) const;
+    bool operator>(const basic_stream& other) const;
 
-    bool operator==(const basic_stream& rhs) const;
-    bool operator==(const char* rhs) const;
+    bool operator==(const basic_stream& other) const;
+    bool operator==(const char* other) const;
 
     friend std::string& operator+=(std::string& lhs, const basic_stream& rhs);
     friend std::string& operator<<(std::string& lhs, const basic_stream& rhs);

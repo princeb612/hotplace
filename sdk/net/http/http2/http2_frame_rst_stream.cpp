@@ -18,7 +18,7 @@ namespace net {
 
 http2_frame_rst_stream::http2_frame_rst_stream() : http2_frame(h2_frame_t::h2_frame_rst_stream), _errorcode(0) {}
 
-http2_frame_rst_stream::http2_frame_rst_stream(const http2_frame_rst_stream& rhs) : http2_frame(rhs), _errorcode(rhs._errorcode) {}
+http2_frame_rst_stream::http2_frame_rst_stream(const http2_frame_rst_stream& other) : http2_frame(other), _errorcode(other._errorcode) {}
 
 http2_frame_rst_stream::~http2_frame_rst_stream() {}
 

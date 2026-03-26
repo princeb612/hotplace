@@ -24,7 +24,7 @@ namespace net {
 class http2_frame_window_update : public http2_frame {
    public:
     http2_frame_window_update();
-    http2_frame_window_update(const http2_frame_window_update& rhs);
+    http2_frame_window_update(const http2_frame_window_update& other);
     virtual ~http2_frame_window_update();
 
     virtual void dump(stream_t* s);

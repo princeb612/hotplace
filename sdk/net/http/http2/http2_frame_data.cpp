@@ -19,7 +19,7 @@ namespace net {
 
 http2_frame_data::http2_frame_data() : http2_frame(h2_frame_t::h2_frame_data), _padlen(0) {}
 
-http2_frame_data::http2_frame_data(const http2_frame_data& rhs) : http2_frame(rhs), _padlen(rhs._padlen) { _data = rhs._data; }
+http2_frame_data::http2_frame_data(const http2_frame_data& other) : http2_frame(other), _padlen(other._padlen) { _data = other._data; }
 
 http2_frame_data::~http2_frame_data() {}
 

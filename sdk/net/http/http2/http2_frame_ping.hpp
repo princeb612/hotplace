@@ -24,7 +24,7 @@ namespace net {
 class http2_frame_ping : public http2_frame {
    public:
     http2_frame_ping();
-    http2_frame_ping(const http2_frame_ping& rhs);
+    http2_frame_ping(const http2_frame_ping& other);
     virtual ~http2_frame_ping();
 
     virtual void dump(stream_t* s);

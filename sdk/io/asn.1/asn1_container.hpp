@@ -28,7 +28,7 @@ class asn1_container : public asn1_object {
     virtual void represent(stream_t* s);
     virtual void represent(binary_t* b);
 
-    asn1_container& operator<<(asn1_object* rhs);
+    asn1_container& operator<<(asn1_object* other);
 
     void addref();
     void release();
@@ -36,7 +36,7 @@ class asn1_container : public asn1_object {
    protected:
     asn1_container(asn1_tag* tag);
     asn1_container(const std::string& name, asn1_tag* tag);
-    asn1_container(const asn1_container& rhs);
+    asn1_container(const asn1_container& other);
 
    private:
     std::list<asn1_object*> _list;

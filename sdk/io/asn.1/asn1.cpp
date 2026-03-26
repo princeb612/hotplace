@@ -24,9 +24,9 @@ asn1::asn1() {
     // get_parser().add_token("::=", token_assign).add_token("--", token_comments);
 }
 
-asn1::asn1(const asn1& rhs) {
+asn1::asn1(const asn1& other) {
     _ref.make_share(this);
-    for (auto item : rhs._types) {
+    for (auto item : other._types) {
         add_type(item->clone());
     }
 }

@@ -28,7 +28,7 @@ class asn1_tag : public asn1_object {
     asn1_tag(int cnumber, asn1_tag* tag = nullptr);
     asn1_tag(int cnumber, int tmode, asn1_tag* tag = nullptr);
     asn1_tag(int ctype, int cnumber, int tmode, asn1_tag* tag = nullptr);
-    asn1_tag(const asn1_tag& rhs);
+    asn1_tag(const asn1_tag& other);
 
     virtual asn1_object* clone();
 

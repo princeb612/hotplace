@@ -27,7 +27,7 @@ constexpr char constexpr_tag[] = "tag";
 
 quic_packet_1rtt::quic_packet_1rtt(tls_session* session) : quic_packet(quic_packet_type_1_rtt, session) {}
 
-quic_packet_1rtt::quic_packet_1rtt(const quic_packet_1rtt& rhs) : quic_packet(rhs) {}
+quic_packet_1rtt::quic_packet_1rtt(const quic_packet_1rtt& other) : quic_packet(other) {}
 
 quic_packet_1rtt::~quic_packet_1rtt() {}
 

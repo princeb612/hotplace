@@ -40,8 +40,8 @@ class t_cmdarg_t {
 
    public:
     t_cmdarg_t(const std::string& token, const std::string& desc, std::function<void(T&, char*)> f);
-    t_cmdarg_t(const t_cmdarg_t& rhs);
-    t_cmdarg_t(t_cmdarg_t&& rhs);
+    t_cmdarg_t(const t_cmdarg_t& other);
+    t_cmdarg_t(t_cmdarg_t&& other);
     ~t_cmdarg_t();
 
     /*
@@ -81,10 +81,11 @@ t_cmdarg_t<T>::t_cmdarg_t(const std::string& token, const std::string& desc, std
     : _token(token), _desc(desc), _func(f), _flag(0) {}
 
 template <typename T>
-t_cmdarg_t<T>::t_cmdarg_t(const t_cmdarg_t& rhs) : _token(rhs._token), _desc(rhs._desc), _func(rhs._func), _flag(rhs._flag) {}
+t_cmdarg_t<T>::t_cmdarg_t(const t_cmdarg_t& other) : _token(other._token), _desc(other._desc), _func(other._func), _flag(other._flag) {}
 
 template <typename T>
-t_cmdarg_t<T>::t_cmdarg_t(t_cmdarg_t&& rhs) : _token(std::move(rhs._token)), _desc(std::move(rhs._desc)), _func(std::move(rhs._func)), _flag(rhs._flag) {}
+t_cmdarg_t<T>::t_cmdarg_t(t_cmdarg_t&& other)
+    : _token(std::move(other._token)), _desc(std::move(other._desc)), _func(std::move(other._func)), _flag(other._flag) {}
 
 template <typename T>
 t_cmdarg_t<T>::~t_cmdarg_t() {}

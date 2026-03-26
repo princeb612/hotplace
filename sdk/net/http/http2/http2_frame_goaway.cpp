@@ -19,8 +19,8 @@ namespace net {
 
 http2_frame_goaway::http2_frame_goaway() : http2_frame(h2_frame_t::h2_frame_goaway), _last_id(0), _errorcode(0) {}
 
-http2_frame_goaway::http2_frame_goaway(const http2_frame_goaway& rhs) : http2_frame(rhs), _last_id(rhs._last_id), _errorcode(rhs._errorcode) {
-    _debug = rhs._debug;
+http2_frame_goaway::http2_frame_goaway(const http2_frame_goaway& other) : http2_frame(other), _last_id(other._last_id), _errorcode(other._errorcode) {
+    _debug = other._debug;
 }
 
 http2_frame_goaway::~http2_frame_goaway() {}

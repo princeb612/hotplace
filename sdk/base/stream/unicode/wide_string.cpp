@@ -25,22 +25,22 @@ wide_string::wide_string(const wchar_t* data) {
     _bio.write(_handle, data, wcslen(data) * sizeof(wchar_t));
 }
 
-wide_string::wide_string(const wide_string& rhs) {
+wide_string::wide_string(const wide_string& other) {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
 
     _bio.open(&_handle, allocsize, sizeof(wchar_t), bufferio_context_flag_t::memzero_free);
     byte_t* data = nullptr;
     size_t size = 0;
 
-    _bio.get(rhs._handle, &data, &size);
+    _bio.get(other._handle, &data, &size);
     write((void*)data, size);
 }
 
-wide_string::wide_string(wide_string&& rhs) {
+wide_string::wide_string(wide_string&& other) {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
     _bio.open(&_handle, allocsize, sizeof(wchar_t), bufferio_context_flag_t::memzero_free);
 
-    std::swap(_handle, rhs._handle);
+    std::swap(_handle, other._handle);
 }
 
 wide_string::~wide_string() { _bio.close(_handle); }
@@ -284,15 +284,15 @@ wide_string& wide_string::operator=(double buf) {
     return *this;
 }
 
-wide_string& wide_string::operator=(const wide_string& rhs) {
+wide_string& wide_string::operator=(const wide_string& other) {
     clear();
-    write(rhs.data(), rhs.size());
+    write(other.data(), other.size());
     return *this;
 }
 
-wide_string& wide_string::operator=(wide_string&& rhs) {
+wide_string& wide_string::operator=(wide_string&& other) {
     clear();
-    std::swap(_handle, rhs._handle);
+    std::swap(_handle, other._handle);
     return *this;
 }
 
@@ -418,29 +418,29 @@ wide_string& wide_string::operator<<(const wide_string& buf) {
     return *this;
 }
 
-int wide_string::compare(const wide_string& rhs) { return wcscmp(c_str(), rhs.c_str()); }
+int wide_string::compare(const wide_string& other) { return wcscmp(c_str(), other.c_str()); }
 
 int wide_string::compare(const wide_string& lhs, const wide_string& rhs) { return wcscmp(lhs.c_str(), rhs.c_str()); }
 
-bool wide_string::operator<(const wide_string& rhs) const { return 0 > wcscmp(c_str(), rhs.c_str()); }
+bool wide_string::operator<(const wide_string& other) const { return 0 > wcscmp(c_str(), other.c_str()); }
 
-bool wide_string::operator>(const wide_string& rhs) const { return 0 < wcscmp(c_str(), rhs.c_str()); }
+bool wide_string::operator>(const wide_string& other) const { return 0 < wcscmp(c_str(), other.c_str()); }
 
-bool wide_string::operator==(const wide_string& rhs) const {
+bool wide_string::operator==(const wide_string& other) const {
     bool ret = false;
 
-    if (size() == rhs.size()) {
-        int cmp = memcmp(data(), rhs.data(), size());
+    if (size() == other.size()) {
+        int cmp = memcmp(data(), other.data(), size());
         ret = (0 == cmp);
     }
     return ret;
 }
 
-bool wide_string::operator!=(const wide_string& rhs) const {
+bool wide_string::operator!=(const wide_string& other) const {
     bool ret = true;
 
-    if (size() == rhs.size()) {
-        int cmp = memcmp(data(), rhs.data(), size());
+    if (size() == other.size()) {
+        int cmp = memcmp(data(), other.data(), size());
         ret = (0 != cmp);
     }
     return ret;

@@ -22,27 +22,27 @@ namespace net {
 
 protection_context::protection_context() : _cipher_suite(0) {}
 
-protection_context::protection_context(const protection_context& rhs) {
-    _cipher_suites = rhs._cipher_suites;
-    _signature_algorithms = rhs._signature_algorithms;
-    _supported_groups = rhs._supported_groups;
-    _supported_versions = rhs._supported_versions;
-    _ec_point_formats = rhs._ec_point_formats;
-    _keyshare_groups = rhs._keyshare_groups;
-    _keyshare_groups2 = rhs._keyshare_groups2;
-    _cipher_suite = rhs._cipher_suite;
+protection_context::protection_context(const protection_context& other) {
+    _cipher_suites = other._cipher_suites;
+    _signature_algorithms = other._signature_algorithms;
+    _supported_groups = other._supported_groups;
+    _supported_versions = other._supported_versions;
+    _ec_point_formats = other._ec_point_formats;
+    _keyshare_groups = other._keyshare_groups;
+    _keyshare_groups2 = other._keyshare_groups2;
+    _cipher_suite = other._cipher_suite;
 }
 
-protection_context::protection_context(protection_context&& rhs) {
+protection_context::protection_context(protection_context&& other) {
     clear();
-    _cipher_suites = std::move(rhs._cipher_suites);
-    _signature_algorithms = std::move(rhs._signature_algorithms);
-    _supported_groups = std::move(rhs._supported_groups);
-    _supported_versions = std::move(rhs._supported_versions);
-    _ec_point_formats = std::move(rhs._ec_point_formats);
-    _keyshare_groups = std::move(rhs._keyshare_groups);
-    _keyshare_groups2 = std::move(rhs._keyshare_groups2);
-    _cipher_suite = rhs._cipher_suite;
+    _cipher_suites = std::move(other._cipher_suites);
+    _signature_algorithms = std::move(other._signature_algorithms);
+    _supported_groups = std::move(other._supported_groups);
+    _supported_versions = std::move(other._supported_versions);
+    _ec_point_formats = std::move(other._ec_point_formats);
+    _keyshare_groups = std::move(other._keyshare_groups);
+    _keyshare_groups2 = std::move(other._keyshare_groups2);
+    _cipher_suite = other._cipher_suite;
 }
 
 return_t protection_context::negotiate(tls_session* session, uint16 minspec, uint16 maxspec, uint16& cs, uint16& tlsver) {
@@ -165,7 +165,7 @@ void protection_context::clear() {
     clear_keyshare_groups();
 }
 
-return_t protection_context::select_from(const protection_context& rhs, tls_session* session, uint16 minspec, uint16 maxspec) {
+return_t protection_context::select_from(const protection_context& other, tls_session* session, uint16 minspec, uint16 maxspec) {
     return_t ret = errorcode_t::success;
     __try2 {
         clear();
@@ -206,7 +206,7 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
         {
             uint16 candidate = 0;
 
-            for (auto cs : rhs._cipher_suites) {  // request
+            for (auto cs : other._cipher_suites) {  // request
                 auto hint = tlsadvisor->hintof_cipher_suite(cs);
                 if (hint && (tls_flag_support & hint->flags)) {
                     {
@@ -298,13 +298,13 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
 
         {
             // copy
-            _signature_algorithms = rhs._signature_algorithms;
+            _signature_algorithms = other._signature_algorithms;
         }
 
         {
             // _supported_groups
 
-            rhs.for_each_supported_groups([&](uint16 group, bool*) -> void {
+            other.for_each_supported_groups([&](uint16 group, bool*) -> void {
                 auto hint = advisor->hintof_tls_group(group);
                 if (hint && (tls_flag_support & hint->flags)) {
                     bool cond = true;
@@ -328,7 +328,7 @@ return_t protection_context::select_from(const protection_context& rhs, tls_sess
 
         {
             // deselect GREASE
-            rhs.for_each_keyshare_groups([&](uint16 group, bool*) -> void {
+            other.for_each_keyshare_groups([&](uint16 group, bool*) -> void {
                 auto hint = advisor->hintof_tls_group(group);
                 if (hint && (tls_flag_support & hint->flags)) {
                     if (tls_flag_secure & hint->flags) {

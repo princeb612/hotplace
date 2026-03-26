@@ -23,7 +23,7 @@ namespace net {
 class quic_packet_retry : public quic_packet {
    public:
     quic_packet_retry(tls_session* session);
-    quic_packet_retry(const quic_packet_retry& rhs);
+    quic_packet_retry(const quic_packet_retry& other);
     virtual ~quic_packet_retry();
 
     virtual return_t write(tls_direction_t dir, binary_t& packet);

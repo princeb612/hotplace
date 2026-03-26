@@ -248,8 +248,8 @@ class t_stringkey_value {
 
     /**
      * @brief   copy
-     * @param   t_stringkey_value&      rhs   [IN]
-     * @param   int             mode  [IN]
+     * @param   t_stringkey_value& other   [IN]
+     * @param   int mode  [IN]
      * @return  error code (see error.hpp)
      * @remarks
      *          kv1 [ ("key1", "value1"), ("key2", "value2") ]
@@ -259,11 +259,11 @@ class t_stringkey_value {
      *          result of kv1.copy (kv2, key_value_mode_t::kv_update) is kv1 [ ("key1", "value1"), ("key2", "item2"), ("key3", "item3") ]
      *          result of kv1.copy (kv2, key_value_mode_t::kv_keep)   is kv1 [ ("key1", "value1"), ("key2", "value2"), ("key3", "item3") ]
      */
-    return_t copy(t_stringkey_value<value_t> &rhs, int mode = key_value_mode_t::kv_update) {
+    return_t copy(t_stringkey_value<value_t> &other, int mode = key_value_mode_t::kv_update) {
         return_t ret = errorcode_t::success;
 
-        critical_section_guard guard(rhs._lock);
-        keyvalue_map_t &source = rhs._keyvalues;
+        critical_section_guard guard(other._lock);
+        keyvalue_map_t &source = other._keyvalues;
 
         ret = copyfrom(source, mode);
         return ret;
@@ -312,12 +312,12 @@ class t_stringkey_value {
 
     /**
      * @brief   operator <<
-     * @param   t_stringkey_value& rhs [in]
+     * @param   t_stringkey_value& other [in]
      * @return  t_stringkey_value&
      * @remarks copy with key_value_mode_t::kv_update
      */
-    t_stringkey_value<value_t> &operator<<(t_stringkey_value<value_t> &rhs) {
-        copy(rhs, key_value_mode_t::kv_update);
+    t_stringkey_value<value_t> &operator<<(t_stringkey_value<value_t> &other) {
+        copy(other, key_value_mode_t::kv_update);
         return *this;
     }
 
@@ -353,7 +353,7 @@ class t_key_value {
     typedef std::pair<typename keyvalue_map_t::iterator, bool> keyvalue_map_pib_t;
 
     t_key_value<key_t, value_t>() {}
-    t_key_value<key_t, value_t>(const t_key_value<key_t, value_t> &rhs) { _keyvalue_map = rhs._keyvalue_map; }
+    t_key_value<key_t, value_t>(const t_key_value<key_t, value_t> &other) { _keyvalue_map = other._keyvalue_map; }
 
     t_key_value<key_t, value_t> &set(key_t key, const value_t &value) {
         return_t ret = errorcode_t::success;
@@ -387,20 +387,20 @@ class t_key_value {
             _keyvalue_map.erase(iter);
         }
     }
-    t_key_value<key_t, value_t> &operator=(const t_key_value<key_t, value_t> &rhs) {
+    t_key_value<key_t, value_t> &operator=(const t_key_value<key_t, value_t> &other) {
         critical_section_guard guard(_lock);
         _keyvalue_map.clear();
-        _keyvalue_map = rhs._keyvalue_map;
+        _keyvalue_map = other._keyvalue_map;
         return *this;
     }
-    return_t copyfrom(const t_key_value<key_t, value_t> *rhs) {
+    return_t copyfrom(const t_key_value<key_t, value_t> *other) {
         return_t ret = errorcode_t::success;
-        if (nullptr == rhs) {
+        if (nullptr == other) {
             ret = errorcode_t::invalid_parameter;
         } else {
             critical_section_guard guard(_lock);
             _keyvalue_map.clear();
-            _keyvalue_map = rhs->_keyvalue_map;
+            _keyvalue_map = other->_keyvalue_map;
         }
         return ret;
     }

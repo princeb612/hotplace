@@ -52,8 +52,8 @@ constexpr char constexpr_retry_integrity_tag[] = "retry integrity tag";
 
 quic_packet_retry::quic_packet_retry(tls_session* session) : quic_packet(quic_packet_type_retry, session) {}
 
-quic_packet_retry::quic_packet_retry(const quic_packet_retry& rhs)
-    : quic_packet(rhs), _retry_token(rhs._retry_token), _retry_integrity_tag(rhs._retry_integrity_tag) {}
+quic_packet_retry::quic_packet_retry(const quic_packet_retry& other)
+    : quic_packet(other), _retry_token(other._retry_token), _retry_integrity_tag(other._retry_integrity_tag) {}
 
 quic_packet_retry::~quic_packet_retry() {}
 

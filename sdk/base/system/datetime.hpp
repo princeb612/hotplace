@@ -85,7 +85,7 @@ class datetime {
      * @brief constructor
      */
     datetime();
-    datetime(const datetime& rhs);
+    datetime(const datetime& other);
     datetime(const time_t& t, long* nsec = nullptr);
     datetime(const struct timespec& ts);
     datetime(const datetime_t& dt, long* nsec = nullptr);
@@ -135,12 +135,12 @@ class datetime {
     /**
      * @brief compare
      */
-    bool operator==(const datetime& rhs) const;
-    bool operator!=(const datetime& rhs) const;
-    bool operator>=(const datetime& rhs) const;
-    bool operator>(const datetime& rhs) const;
-    bool operator<=(const datetime& rhs) const;
-    bool operator<(const datetime& rhs) const;
+    bool operator==(const datetime& other) const;
+    bool operator!=(const datetime& other) const;
+    bool operator>=(const datetime& other) const;
+    bool operator>(const datetime& other) const;
+    bool operator<=(const datetime& other) const;
+    bool operator<(const datetime& other) const;
 
     datetime& operator+=(const timespan_t& ts);
     datetime& operator-=(const timespan_t& ts);

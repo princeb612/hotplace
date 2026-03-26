@@ -188,11 +188,11 @@ class t_shared_instance {
         }
         return *this;
     }
-    t_shared_instance& operator=(const t_shared_instance& rhs) {
+    t_shared_instance& operator=(const t_shared_instance& other) {
         delref();
 
-        _counter = rhs._counter;
-        _object = rhs._object;
+        _counter = other._counter;
+        _object = other._object;
         atomic_increment(_counter);
         return *this;
     }

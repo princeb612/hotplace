@@ -24,7 +24,7 @@ namespace net {
 class http2_frame_settings : public http2_frame {
    public:
     http2_frame_settings();
-    http2_frame_settings(const http2_frame_settings& rhs);
+    http2_frame_settings(const http2_frame_settings& other);
     virtual ~http2_frame_settings();
 
     http2_frame_settings& add(uint16 id, uint32 value);

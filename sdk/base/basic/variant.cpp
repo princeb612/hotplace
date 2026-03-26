@@ -33,11 +33,11 @@ variant::variant(const char *value, size_t n) { set_strn_new(value, n); }
 
 variant::variant(const unsigned char *value, size_t n) { set_bstr_new(value, n); }
 
-variant::variant(const std::string &rhs) { set_strn_new(rhs.c_str(), rhs.size()); }
+variant::variant(const std::string &value) { set_strn_new(value.c_str(), value.size()); }
 
-variant::variant(const binary_t &rhs) { set_bstr_new(rhs.empty() ? nullptr : &rhs[0], rhs.size()); }
+variant::variant(const binary_t &value) { set_bstr_new(value.empty() ? nullptr : &value[0], value.size()); }
 
-variant::variant(const stream_t *rhs) { set_bstr_new(rhs); }
+variant::variant(const stream_t *value) { set_bstr_new(value); }
 
 variant::variant(bool value) { set_bool(value); }
 
@@ -73,13 +73,13 @@ variant::variant(double value) { set_double(value); }
 
 variant::variant(const datetime_t &value) { set_datetime(value); }
 
-variant::variant(const variant_t &rhs) : _vt(rhs) {}
+variant::variant(const variant_t &value) : _vt(value) {}
 
-variant::variant(variant_t &&rhs) : _vt(std::move(rhs)) {}
+variant::variant(variant_t &&value) : _vt(std::move(value)) {}
 
-variant::variant(const variant &rhs) : _vt(rhs._vt) {}
+variant::variant(const variant &value) : _vt(value._vt) {}
 
-variant::variant(variant &&rhs) : _vt(std::move(rhs._vt)) {}
+variant::variant(variant &&value) : _vt(std::move(value._vt)) {}
 
 variant::~variant() { _vt.clear(); }
 
@@ -706,13 +706,13 @@ return_t variant::to_string(std::string &target) const {
     return ret;
 }
 
-variant &variant::operator=(const variant &rhs) {
-    _vt = rhs._vt;
+variant &variant::operator=(const variant &other) {
+    _vt = other._vt;
     return *this;
 }
 
-variant &variant::operator=(variant &&rhs) {
-    _vt = std::move(rhs._vt);
+variant &variant::operator=(variant &&other) {
+    _vt = std::move(other._vt);
     return *this;
 }
 

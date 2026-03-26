@@ -32,7 +32,7 @@ class asn1_set : public asn1_container {
    public:
     asn1_set(asn1_tag* tag = nullptr);
     asn1_set(const std::string& name, asn1_tag* tag = nullptr);
-    asn1_set(const asn1_set& rhs);
+    asn1_set(const asn1_set& other);
 
     asn1_object* clone();
 
@@ -48,7 +48,7 @@ class asn1_set_of : public asn1_container {
    public:
     asn1_set_of(asn1_tag* tag = nullptr);
     asn1_set_of(const std::string& name, asn1_tag* tag = nullptr);
-    asn1_set_of(const asn1_set_of& rhs);
+    asn1_set_of(const asn1_set_of& other);
 
     asn1_object* clone();
 

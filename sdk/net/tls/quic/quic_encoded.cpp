@@ -16,11 +16,11 @@ namespace net {
 
 quic_encoded::quic_encoded() : payload_encoded(), _datalink(true), _value(0), _sizeof_value(0) {}
 
-quic_encoded::quic_encoded(const quic_encoded& rhs)
-    : payload_encoded(), _datalink(rhs._datalink), _value(rhs._value), _sizeof_value(rhs._sizeof_value), _data(rhs._data) {}
+quic_encoded::quic_encoded(const quic_encoded& other)
+    : payload_encoded(), _datalink(other._datalink), _value(other._value), _sizeof_value(other._sizeof_value), _data(other._data) {}
 
-quic_encoded::quic_encoded(quic_encoded&& rhs)
-    : payload_encoded(), _datalink(rhs._datalink), _value(rhs._value), _sizeof_value(rhs._sizeof_value), _data(rhs._data) {}
+quic_encoded::quic_encoded(quic_encoded&& other)
+    : payload_encoded(), _datalink(other._datalink), _value(other._value), _sizeof_value(other._sizeof_value), _data(other._data) {}
 
 quic_encoded::quic_encoded(uint64 data) : payload_encoded(), _datalink(false), _value(data), _sizeof_value(0) {}
 

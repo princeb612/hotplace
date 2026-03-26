@@ -55,9 +55,9 @@ cbor_data::cbor_data(const variant_t& vt) : cbor_object(cbor_type_t::cbor_type_d
 
 cbor_data::cbor_data(variant_t&& vt) : cbor_object(cbor_type_t::cbor_type_data), _vt(std::move(vt)) {}
 
-cbor_data::cbor_data(const variant& rhs) : _vt(rhs) {}
+cbor_data::cbor_data(const variant& other) : _vt(other) {}
 
-cbor_data::cbor_data(variant&& rhs) : cbor_object(cbor_type_t::cbor_type_data), _vt(std::move(rhs)) {}
+cbor_data::cbor_data(variant&& other) : cbor_object(cbor_type_t::cbor_type_data), _vt(std::move(other)) {}
 
 cbor_data::~cbor_data() {}
 

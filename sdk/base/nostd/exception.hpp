@@ -27,8 +27,8 @@ class exception {
    public:
     exception(errorcode_t err);
     exception(errorcode_t err, const std::string& desc);
-    exception(const exception& rhs);
-    exception(exception&& rhs);
+    exception(const exception& other);
+    exception(exception&& other);
 
     errorcode_t get_errorcode() const;
     std::string get_error_message() const;

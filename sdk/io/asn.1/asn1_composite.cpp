@@ -27,9 +27,9 @@ asn1_composite::asn1_composite(asn1_type_t type, asn1_object* obj, asn1_tag* tag
     }
 }
 
-asn1_composite::asn1_composite(const asn1_composite& rhs) : asn1_object(rhs), _object(nullptr) {
-    if (rhs._object) {
-        _object = rhs._object->clone();
+asn1_composite::asn1_composite(const asn1_composite& other) : asn1_object(other), _object(nullptr) {
+    if (other._object) {
+        _object = other._object->clone();
     }
 }
 

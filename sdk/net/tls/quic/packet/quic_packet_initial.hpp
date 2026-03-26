@@ -23,7 +23,7 @@ namespace net {
 class quic_packet_initial : public quic_packet {
    public:
     quic_packet_initial(tls_session* session);
-    quic_packet_initial(const quic_packet_initial& rhs);
+    quic_packet_initial(const quic_packet_initial& other);
     virtual ~quic_packet_initial();
 
     quic_packet_initial& set_token(const binary_t& token);

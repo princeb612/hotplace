@@ -36,14 +36,14 @@ asn1_object::asn1_object(const std::string& name, asn1_object* object, asn1_tag*
     _ref.make_share(this);
 }
 
-asn1_object::asn1_object(const asn1_object& rhs)
-    : _name(rhs._name), _type(rhs._type), _tag(nullptr), _component_type(rhs._component_type), _parent(nullptr), _object(nullptr) {
+asn1_object::asn1_object(const asn1_object& other)
+    : _name(other._name), _type(other._type), _tag(nullptr), _component_type(other._component_type), _parent(nullptr), _object(nullptr) {
     _ref.make_share(this);
-    if (rhs._tag) {
-        _tag = (asn1_tag*)rhs._tag->clone();
+    if (other._tag) {
+        _tag = (asn1_tag*)other._tag->clone();
     }
-    if (rhs._object) {
-        _object = rhs._object->clone();
+    if (other._object) {
+        _object = other._object->clone();
     }
 }
 

@@ -48,12 +48,12 @@ http2_frame::http2_frame() : _payload_size(0), _type(0), _flags(0), _stream_id(0
 
 http2_frame::http2_frame(h2_frame_t type) : _payload_size(0), _type(type), _flags(0), _stream_id(0), _hpack_dyntable(nullptr) { _shared.make_share(this); }
 
-http2_frame::http2_frame(const http2_frame& rhs) {
-    _payload_size = rhs._payload_size;
-    _type = rhs._type;
-    _flags = rhs._flags;
-    _stream_id = rhs._stream_id;
-    _hpack_dyntable = rhs._hpack_dyntable;
+http2_frame::http2_frame(const http2_frame& other) {
+    _payload_size = other._payload_size;
+    _type = other._type;
+    _flags = other._flags;
+    _stream_id = other._stream_id;
+    _hpack_dyntable = other._hpack_dyntable;
     _shared.make_share(this);
 }
 

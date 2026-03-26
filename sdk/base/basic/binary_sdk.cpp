@@ -17,8 +17,8 @@
 
 namespace hotplace {
 
-return_t binary_push(binary_t& target, byte_t rhs) {
-    target.push_back(rhs);
+return_t binary_push(binary_t& target, byte_t value) {
+    target.push_back(value);
     return errorcode_t::success;
 }
 

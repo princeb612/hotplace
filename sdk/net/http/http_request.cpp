@@ -262,12 +262,12 @@ std::string http_request::get_version_str() {
     return (1 == _version) ? ver1 : ver2;
 }
 
-http_request& http_request::operator=(const http_request& rhs) {
-    _method = rhs._method;
-    _content = rhs._content;
+http_request& http_request::operator=(const http_request& other) {
+    _method = other._method;
+    _content = other._content;
 
-    _header = rhs._header;
-    _uri = rhs._uri;
+    _header = other._header;
+    _uri = other._uri;
 
     return *this;
 }

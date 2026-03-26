@@ -18,8 +18,8 @@ namespace net {
 
 http2_frame_priority::http2_frame_priority() : http2_frame(h2_frame_t::h2_frame_priority), _exclusive(false), _dependency(0), _weight(0) {}
 
-http2_frame_priority::http2_frame_priority(const http2_frame_priority& rhs)
-    : http2_frame(rhs), _exclusive(rhs._exclusive), _dependency(rhs._dependency), _weight(rhs._weight) {}
+http2_frame_priority::http2_frame_priority(const http2_frame_priority& other)
+    : http2_frame(other), _exclusive(other._exclusive), _dependency(other._dependency), _weight(other._weight) {}
 
 http2_frame_priority::~http2_frame_priority() {}
 

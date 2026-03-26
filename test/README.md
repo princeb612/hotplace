@@ -107,11 +107,12 @@ cd module
 
 ### MSVC
 - [ ] issues
-  - [ ] compatibility
+  - compatibility
     - [ ] int128/uint128
     - [x] __builtin_clzll
     - [x] clock_gettime
-  - [x] fix
+    - [x] ANSI escape code
+  - fix
     - [x] backtrace
     - [x] byte_capacity_signed
   - MSVC-specific
@@ -120,7 +121,8 @@ cd module
     - [x] __cplusplus preprocessor macro
     - [x] debug iterator (turn off)
     - [x] VLA (Variable Length Array workaround)
-  - [x] build
+    - [ ] windows application manifest
+  - build
     - [x] space (separated according to gcc/msvc)
     - [x] thirdparty (openssl manual build required)
 - [ ] test

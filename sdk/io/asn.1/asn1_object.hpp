@@ -44,7 +44,7 @@ class asn1_object {
     asn1_object(asn1_type_t type, asn1_tag* tag = nullptr);
     asn1_object(const std::string& name, asn1_type_t type, asn1_tag* tag = nullptr);
     asn1_object(const std::string& name, asn1_object* object, asn1_tag* tag = nullptr);
-    asn1_object(const asn1_object& rhs);
+    asn1_object(const asn1_object& other);
     virtual ~asn1_object();
 
     virtual asn1_object* clone();

@@ -17,63 +17,63 @@ namespace hotplace {
 
 binary::binary() : _be(false) {}
 
-binary::binary(const binary& rhs) : _be(rhs._be), _bin(rhs._bin) {}
+binary::binary(const binary& other) : _be(other._be), _bin(other._bin) {}
 
-binary::binary(binary&& rhs) : _be(rhs._be), _bin(std::move(rhs._bin)) {}
+binary::binary(binary&& other) : _be(other._be), _bin(std::move(other._bin)) {}
 
-binary::binary(char rhs) : _be(false) { push_back(rhs); }
+binary::binary(char value) : _be(false) { push_back(value); }
 
-binary::binary(byte_t rhs) : _be(false) { push_back(rhs); }
+binary::binary(byte_t value) : _be(false) { push_back(value); }
 
-binary::binary(int16 rhs) : _be(false) { append(rhs); }
+binary::binary(int16 value) : _be(false) { append(value); }
 
-binary::binary(uint16 rhs) : _be(false) { append(rhs); }
+binary::binary(uint16 value) : _be(false) { append(value); }
 
-binary::binary(int32 rhs) : _be(false) { append(rhs); }
+binary::binary(int32 value) : _be(false) { append(value); }
 
-binary::binary(uint32 rhs) : _be(false) { append(rhs); }
+binary::binary(uint32 value) : _be(false) { append(value); }
 
-binary::binary(int64 rhs) : _be(false) { append(rhs); }
+binary::binary(int64 value) : _be(false) { append(value); }
 
-binary::binary(uint64 rhs) : _be(false) { append(rhs); }
+binary::binary(uint64 value) : _be(false) { append(value); }
 
 #if defined __SIZEOF_INT128__
-binary::binary(int128 rhs) : _be(false) { append(rhs); }
+binary::binary(int128 value) : _be(false) { append(value); }
 
-binary::binary(uint128 rhs) : _be(false) { append(rhs); }
+binary::binary(uint128 value) : _be(false) { append(value); }
 #endif
 
-binary::binary(float rhs) : _be(false) { append(rhs); }
+binary::binary(float value) : _be(false) { append(value); }
 
-binary::binary(double rhs) : _be(false) { append(rhs); }
+binary::binary(double value) : _be(false) { append(value); }
 
-binary::binary(const std::string& rhs) : _be(false) { append(rhs); }
+binary::binary(const std::string& value) : _be(false) { append(value); }
 
-binary::binary(const char* rhs) : _be(false) { append(rhs); }
+binary::binary(const char* buf) : _be(false) { append(buf); }
 
 binary::binary(const byte_t* buf, size_t size) : _be(false) { append(buf, size); }
 
-binary::binary(const binary_t& rhs) : _be(false), _bin(rhs) {}
+binary::binary(const binary_t& value) : _be(false), _bin(value) {}
 
-binary::binary(binary_t&& rhs) : _be(false), _bin(std::move(rhs)) {}
+binary::binary(binary_t&& value) : _be(false), _bin(std::move(value)) {}
 
-binary& binary::set(const binary& rhs) {
-    _bin = rhs.get();
+binary& binary::set(const binary& other) {
+    _bin = other.get();
     return *this;
 }
 
-binary& binary::set(const binary_t& rhs) {
-    _bin = rhs;
+binary& binary::set(const binary_t& value) {
+    _bin = value;
     return *this;
 }
 
-binary& binary::set(binary_t&& rhs) {
-    _bin = std::move(rhs);
+binary& binary::set(binary_t&& value) {
+    _bin = std::move(value);
     return *this;
 }
 
-binary& binary::push_back(byte_t rhs) {
-    _bin.push_back(rhs);
+binary& binary::push_back(byte_t value) {
+    _bin.push_back(value);
     return *this;
 }
 

@@ -25,16 +25,16 @@ struct t_range_t {
     T end;
     t_range_t() : begin(0), end(0) {}
     t_range_t(size_t b, size_t e) : begin(std::min(b, e)), end(std::max(b, e)) {}
-    bool operator<(const t_range_t& rhs) const {
+    bool operator<(const t_range_t& other) const {
         bool ret = false;
-        if (begin < rhs.begin) {
+        if (begin < other.begin) {
             ret = true;
-        } else if (begin == rhs.begin) {
-            ret = (end < rhs.end);
+        } else if (begin == other.begin) {
+            ret = (end < other.end);
         }
         return ret;
     }
-    bool operator==(const t_range_t& rhs) const { return (begin == rhs.begin) && (end == rhs.end); }
+    bool operator==(const t_range_t& other) const { return (begin == other.begin) && (end == other.end); }
     size_t width() {
         size_t ret_value = 0;
         if (begin <= end) {
@@ -106,7 +106,7 @@ template <typename T>
 class t_sampling_range {
    public:
     t_sampling_range() { reset(); }
-    t_sampling_range(const t_sampling_range<T>& rhs) : _min(rhs._min), _max(rhs._max), _flag(rhs._flag) {}
+    t_sampling_range(const t_sampling_range<T>& other) : _min(other._min), _max(other._max), _flag(other._flag) {}
 
     void sampling(const T& value) {
         if (0 == _flag) {

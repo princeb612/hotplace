@@ -36,7 +36,7 @@ tls_extension::tls_extension(tls_handshake* hs) : _hs(hs), _type(0), _bodysize(0
     _shared.make_share(this);
 }
 
-tls_extension::tls_extension(const tls_extension& rhs) : _hs(rhs._hs), _type(rhs._type), _bodysize(rhs._bodysize), _size(rhs._size) {
+tls_extension::tls_extension(const tls_extension& other) : _hs(other._hs), _type(other._type), _bodysize(other._bodysize), _size(other._size) {
     auto hs = get_handshake();
     if (nullptr == hs) {
         throw exception(errorcode_t::no_session);

@@ -20,7 +20,7 @@ server_conf::server_conf() : t_key_value<netserver_config_t, uint16>() {
         .set(netserver_config_t::serverconf_concurrent_consume, 2);
 }
 
-server_conf::server_conf(const server_conf& rhs) : t_key_value<netserver_config_t, uint16>(rhs) {}
+server_conf::server_conf(const server_conf& other) : t_key_value<netserver_config_t, uint16>(other) {}
 
 }  // namespace net
 }  // namespace hotplace
