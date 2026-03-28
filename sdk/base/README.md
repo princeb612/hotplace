@@ -84,3 +84,5 @@ mindmap
     * https://programmerspatch.blogspot.com/2013/02/ukkonens-suffix-tree-algorithm.html
   * wildcard
     * https://www.geeksforgeeks.org/wildcard-pattern-matching/?ref=lbp
+  * bignumber
+    * https://www.calculator.net/big-number-calculator.html

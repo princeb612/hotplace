@@ -4,8 +4,8 @@
 * ![cmake workflow](https://github.com/princeb612/hotplace/actions/workflows/build.yml/badge.svg)
 * powered by
   * ![openssl](https://img.shields.io/badge/openssl-1.1.1/3.0/3.2/3.3/3.4/3.5-green)
-  * ![jansson](https://img.shields.io/badge/jansson-2.14-green)
-  * ![zlib](https://img.shields.io/badge/zlb-1.3.1-green)
+  * ![jansson](https://img.shields.io/badge/jansson-2.15-green)
+  * ![zlib](https://img.shields.io/badge/zlb-1.3.2-green)
 * language
   * ![c++](https://img.shields.io/badge/c++-c++11-green)
   * ![gcc](https://img.shields.io/badge/gcc->=4.7-green)

@@ -14,12 +14,17 @@
 
 void test_byte_capacity_unsigned() {
     _test_case.begin("byte capacity");
-    struct testvector {
+
 #ifdef __SIZEOF_INT128__
-        uint128 x;
+    typedef uint128 signed_t;
+    int bits = 16;
 #else
-        uint64 x;
+    typedef uint64 signed_t;
+    int bits = 8;
 #endif
+
+    struct testvector {
+        signed_t x;
         int expect;
     } _table[] = {
         TESTVECTOR_ENTRY(0x1, 1),
@@ -65,7 +70,7 @@ void test_byte_capacity_unsigned() {
         int bytesize = byte_capacity(entry.x);
 #ifdef __SIZEOF_INT128__
         _logger->writeln("%032I128x -> %i", entry.x, bytesize);
-        _test_case.assert(bytesize == entry.expect, __FUNCTION__, "(%2i) byte capacity %032I128x %I128i", bytesize, entry.x, entry.x);
+        _test_case.assert(bytesize == entry.expect, __FUNCTION__, "(%2i) byte capacity %032I128x %I128u", bytesize, entry.x, entry.x);
 #else
         _logger->writeln("%016I64x -> %i", entry.x, bytesize);
         _test_case.assert(bytesize == entry.expect, __FUNCTION__, "(%2i) byte capacity %016I64x %I64i", bytesize, entry.x, entry.x);

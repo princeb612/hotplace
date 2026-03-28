@@ -41,9 +41,11 @@ typedef __int64 int64;
 typedef __int64 sint64;
 typedef unsigned __int64 uint64;
 #if defined __SIZEOF_INT128__
+#if defined __GNUC__
 typedef __int128 int128;
 typedef __int128 sint128;
 typedef unsigned __int128 uint128;
+#endif
 #endif
 
 #ifdef __x86_64__
