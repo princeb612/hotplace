@@ -61,11 +61,11 @@ class bignumber {
     bool operator==(const bignumber &other) const;
     bool operator!=(const bignumber &other) const;
 
-    bignumber operator<<(unsigned int k) const;
-    bignumber &operator<<=(unsigned int k);
+    bignumber operator<<(unsigned int shift) const;
+    bignumber &operator<<=(unsigned int shift);
 
-    bignumber operator>>(unsigned int k) const;
-    bignumber &operator>>=(unsigned int k);
+    bignumber operator>>(unsigned int shift) const;
+    bignumber &operator>>=(unsigned int shift);
 
     bignumber add(const bignumber &lhs, const bignumber &rhs) const;
     bignumber sub(const bignumber &lhs, const bignumber &rhs) const;
@@ -87,14 +87,14 @@ class bignumber {
 
     int compare(const bignumber &lhs, const bignumber &rhs) const;
 
-    bignumber leftshift(unsigned int k) const;
-    bignumber rightshift(unsigned int k) const;
+    bignumber leftshift(const bignumber &v, unsigned int shift) const;
+    bignumber rightshift(const bignumber &v, unsigned int shift) const;
 
     void trim();
 
-    static int abscmp(const bignumber &a, const bignumber &b);
-    static bignumber absadd(const bignumber &a, const bignumber &b);
-    static bignumber abssub(const bignumber &a, const bignumber &b);
+    static int abscmp(const bignumber &lhs, const bignumber &rhs);
+    static bignumber absadd(const bignumber &lhs, const bignumber &rhs);
+    static bignumber abssub(const bignumber &lhs, const bignumber &rhs);
 
     void normalize();
 

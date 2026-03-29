@@ -153,6 +153,7 @@ class basic_stream : public stream_t {
 
     bool operator==(const basic_stream& other) const;
     bool operator==(const char* other) const;
+    bool operator==(const std::string& other) const;
 
     friend std::string& operator+=(std::string& lhs, const basic_stream& rhs);
     friend std::string& operator<<(std::string& lhs, const basic_stream& rhs);

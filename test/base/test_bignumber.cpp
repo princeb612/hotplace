@@ -3,14 +3,6 @@
 void test_bignumber() {
     _test_case.begin("bignumber");
 
-    {
-        bignumber a(1);
-        a <<= 32;
-        a.dump([](binary_t& bin) -> void {
-            // debug
-        });
-    }
-
     struct {
         const char* text;
         int64 n1;
@@ -109,6 +101,51 @@ void test_bignumber() {
         _logger->writeln("b = %s", b.str().c_str());
         _test_case.assert(b.str() == "1", __FUNCTION__, "7 mod -3");
     }
+
+#ifdef __SIZEOF_INT128__
+    {
+        openssl_prng prng;
+        for (auto i = 0; i < 100; i++) {
+            int128 ia = prng.rand64();
+            int128 ib = prng.rand64();
+            int128 ir = 0;
+            bignumber ba = ia;
+            bignumber bb = ib;
+            bignumber br;
+            basic_stream bs;
+
+            bs.clear();
+            ir = ia + ib;
+            br = ba + bb;
+            bs.printf("%I128i", ir);
+            _test_case.assert(bs == br.str(), __FUNCTION__, "%I128i + %I128i = %s (expect %I128i)", ia, ib, br.str().c_str(), ir);
+
+            bs.clear();
+            ir = ia - ib;
+            br = ba - bb;
+            bs.printf("%I128i", ir);
+            _test_case.assert(bs == br.str(), __FUNCTION__, "%I128i - %I128i = %s (expect %I128i)", ia, ib, br.str().c_str(), ir);
+
+            bs.clear();
+            ir = ia * ib;
+            br = ba * bb;
+            bs.printf("%I128i", ir);
+            _test_case.assert(bs == br.str(), __FUNCTION__, "%I128i * %I128i = %s (expect %I128i)", ia, ib, br.str().c_str(), ir);
+
+            bs.clear();
+            ir = ia / ib;
+            br = ba / bb;
+            bs.printf("%I128i", ir);
+            _test_case.assert(bs == br.str(), __FUNCTION__, "%I128i / %I128i = %s (expect %I128i)", ia, ib, br.str().c_str(), ir);
+
+            bs.clear();
+            ir = ia % ib;
+            br = ba % bb;
+            bs.printf("%I128i", ir);
+            _test_case.assert(bs == br.str(), __FUNCTION__, "%I128i mod %I128i = %s (expect %I128i)", ia, ib, br.str().c_str(), ir);
+        }
+    }
+#endif
 
 #ifndef __SIZEOF_INT128__
     {

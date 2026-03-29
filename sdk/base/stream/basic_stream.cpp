@@ -312,6 +312,8 @@ bool basic_stream::operator==(const char* other) const {
     return ret;
 }
 
+bool basic_stream::operator==(const std::string& other) const { return *this == other.c_str(); }
+
 std::string& operator+=(std::string& lhs, const basic_stream& rhs) {
     lhs += rhs.c_str();
     return lhs;

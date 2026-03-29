@@ -12,13 +12,10 @@
 
 namespace hotplace {
 
-#if 0
-// test failed
-// div, lshift, rshift
+#if 1
 #define bn_intuitive 1
 #define base base2p32
 #else
-// test passed
 #define bn_intuitive 0
 #define base base1e9
 #endif
@@ -51,38 +48,23 @@ bignumber &bignumber::operator=(largeint value) {
 
 bignumber bignumber::operator+(const bignumber &other) const { return add(*this, other); }
 
-bignumber &bignumber::operator+=(const bignumber &other) {
-    *this = add(*this, other);
-    return *this;
-}
+bignumber &bignumber::operator+=(const bignumber &other) { return *this = add(*this, other); }
 
 bignumber bignumber::operator-(const bignumber &other) const { return sub(*this, other); }
 
-bignumber &bignumber::operator-=(const bignumber &other) {
-    *this = sub(*this, other);
-    return *this;
-}
+bignumber &bignumber::operator-=(const bignumber &other) { return *this = sub(*this, other); }
 
 bignumber bignumber::operator*(const bignumber &other) const { return mult(*this, other); }
 
-bignumber &bignumber::operator*=(const bignumber &other) {
-    *this = mult(*this, other);
-    return *this;
-}
+bignumber &bignumber::operator*=(const bignumber &other) { return *this = mult(*this, other); }
 
 bignumber bignumber::operator/(const bignumber &other) const { return div(*this, other); }
 
-bignumber &bignumber::operator/=(const bignumber &other) {
-    *this = div(*this, other);
-    return *this;
-}
+bignumber &bignumber::operator/=(const bignumber &other) { return *this = div(*this, other); }
 
 bignumber bignumber::operator%(const bignumber &other) const { return mod(*this, other); }
 
-bignumber &bignumber::operator%=(const bignumber &other) {
-    *this = mod(*this, other);
-    return *this;
-}
+bignumber &bignumber::operator%=(const bignumber &other) { return *this = mod(*this, other); }
 
 bool bignumber::operator<(const bignumber &other) const { return compare(*this, other) < 0; }
 
@@ -96,19 +78,13 @@ bool bignumber::operator==(const bignumber &other) const { return compare(*this,
 
 bool bignumber::operator!=(const bignumber &other) const { return compare(*this, other) != 0; }
 
-bignumber bignumber::operator<<(unsigned int k) const { return leftshift(k); }
+bignumber bignumber::operator<<(unsigned int k) const { return leftshift(*this, k); }
 
-bignumber &bignumber::operator<<=(unsigned int k) {
-    *this = leftshift(k);
-    return *this;
-}
+bignumber &bignumber::operator<<=(unsigned int k) { return *this = leftshift(*this, k); }
 
-bignumber bignumber::operator>>(unsigned int k) const { return rightshift(k); }
+bignumber bignumber::operator>>(unsigned int shift) const { return rightshift(*this, shift); }
 
-bignumber &bignumber::operator>>=(unsigned int k) {
-    *this = rightshift(k);
-    return *this;
-}
+bignumber &bignumber::operator>>=(unsigned int shift) { return *this = rightshift(*this, shift); }
 
 bignumber &bignumber::set(largeint value) {
     if (value > 0) {
@@ -189,23 +165,23 @@ bignumber bignumber::mult_simple(const bignumber &lhs, const bignumber &rhs) con
 bignumber bignumber::mult(const bignumber &lhs, const bignumber &rhs) const {
     // karatsuba O(n^1.58)
     bignumber res;
-    auto n = _limbs.size();
+    auto n = lhs._limbs.size();
     if (n < 32) {
-        res = mult_simple(*this, rhs);
+        res = mult_simple(lhs, rhs);
     } else {
         int k = n / 2;
 
         bignumber a1, a2, b1, b2;
 
-        a1._limbs = std::vector<uint32>(_limbs.begin(), _limbs.begin() + k);
-        a2._limbs = std::vector<uint32>(_limbs.begin() + k, _limbs.end());
+        a1._limbs = std::vector<uint32>(lhs._limbs.begin(), lhs._limbs.begin() + k);
+        a2._limbs = std::vector<uint32>(lhs._limbs.begin() + k, lhs._limbs.end());
 
         b1._limbs = std::vector<uint32>(rhs._limbs.begin(), rhs._limbs.begin() + std::min((int)rhs._limbs.size(), k));
         b2._limbs = std::vector<uint32>(rhs._limbs.begin() + std::min((int)rhs._limbs.size(), k), rhs._limbs.end());
 
-        bignumber z0 = a1.mult(*this, b1);
-        bignumber z2 = a2.mult(*this, b2);
-        bignumber z1 = (a1 + a2).mult(*this, b1 + b2) - z0 - z2;
+        bignumber z0 = mult(a1, b1);
+        bignumber z2 = mult(a2, b2);
+        bignumber z1 = mult(a1 + a2, b1 + b2) - z0 - z2;
 
         res._limbs.resize(n * 2);
 
@@ -226,43 +202,50 @@ bignumber bignumber::mult(const bignumber &lhs, const bignumber &rhs) const {
 
 bignumber bignumber::div(const bignumber &lhs, const bignumber &rhs) const {
     // knuth algorithm O(n^2)
-    bignumber a = lhs;
-    bignumber b = rhs;
     bignumber res;
-    bignumber cur;
+    if (rhs == 0) {
+        // division by zero
+        // throw exception
+    } else if (abscmp(rhs, 1) == 0) {
+        if (lhs._sign == 1) {
+            res = lhs;
+        } else {
+            res._sign = -res._sign;
+        }
+    } else {
+        bignumber a = lhs;
+        bignumber b = rhs;
+        bignumber r;
 
-    res._sign = lhs._sign * rhs._sign;
-    a._sign = b._sign = 1;
+        res._sign = lhs._sign * rhs._sign;
+        res._limbs.resize(a._limbs.size());
 
-    res._limbs.resize(a._limbs.size());
+        a._sign = b._sign = 1;
 
-    for (int i = (int)a._limbs.size() - 1; i >= 0; i--) {
-        cur._limbs.insert(cur._limbs.begin(), a._limbs[i]);
-        cur.trim();
+        for (int i = (int)a._limbs.size() - 1; i >= 0; i--) {
+            r._limbs.insert(r._limbs.begin(), a._limbs[i]);
+            r.trim();
 
-        uint32 x = 0;
-        uint32 l = 0;
-        uint32 r = base - 1;
-#if (bn_intuitive == 0)
-        while (l <= r) {
-#else
-        while (l <= r && 1 != l) {
-#endif
-            uint32 m = (l + r) / 2;
-            bignumber t = b * m;
-            if (abscmp(t, cur) <= 0) {
-                x = m;
-                l = m + 1;
-            } else {
-                r = m - 1;
+            uint32 x = 0;
+            uint32 l = 0;
+            uint32 h = base - 1;
+            while (l <= h) {
+                uint32 m = (l + h) >> 1;
+                bignumber t = b * m;
+                if (t <= r) {
+                    x = m;
+                    l = m + 1;
+                } else {
+                    h = m - 1;
+                }
             }
+
+            res._limbs[i] = x;
+            r = r - b * x;
         }
 
-        res._limbs[i] = x;
-        cur = cur - b * x;
+        res.trim();
     }
-
-    res.trim();
     return res;
 }
 
@@ -273,11 +256,7 @@ bignumber bignumber::mod(const bignumber &lhs, const bignumber &rhs) { return lh
 bignumber bignumber::gcd(const bignumber &lhs, const bignumber &rhs) {
     bignumber a = lhs;
     bignumber b = rhs;
-#if (bn_intuitive == 0)
     while (false == b._limbs.empty()) {
-#else
-    while ((false == b._limbs.empty()) && (b != 1)) {
-#endif
         a %= b;
         std::swap(a, b);
     }
@@ -361,66 +340,74 @@ int bignumber::compare(const bignumber &lhs, const bignumber &rhs) const {
     return 0;
 }
 
-bignumber bignumber::leftshift(unsigned int shift) const {
+bignumber bignumber::leftshift(const bignumber &v, unsigned int shift) const {
 #if (bn_intuitive == 0)
     // O(shift * n^2)
-    bignumber res = *this;
+    bignumber res = v;
     bignumber two(2);
     while (shift--) {
         res = res * two;
     }
     return res;
 #else
-    bignumber res;
-    int limb_shift = shift / 32;
-    int bit_shift = shift % 32;
+    // O(n)
+    bignumber res = 0;
+    if (v._limbs.empty()) {
+    } else {
+        int limb_shift = shift / 32;
+        int bit_shift = shift % 32;
 
-    res._limbs.assign(limb_shift, 0);
+        res._sign = v._sign;
+        res._limbs.assign(limb_shift, 0);
 
-    uint32 carry = 0;
-    for (uint32 x : _limbs) {
-        uint64 cur = ((uint64)x << bit_shift) | carry;
-        res._limbs.push_back((uint32)cur);
-        carry = cur >> 32;
-    }
+        uint64 carry = 0;
+        for (uint32 x : v._limbs) {
+            uint64 cur = ((uint64)x << bit_shift) | carry;
+            res._limbs.push_back((uint32)cur);
+            carry = cur >> 32;
+        }
 
-    if (carry) {
-        res._limbs.push_back((uint32)carry);
+        if (carry) {
+            res._limbs.push_back((uint32)carry);
+        }
     }
     return res;
 #endif
 }
 
-bignumber bignumber::rightshift(unsigned int k) const {
+bignumber bignumber::rightshift(const bignumber &v, unsigned int shift) const {
 #if (bn_intuitive == 0)
-    // O(k * n^2)
-    bignumber res = *this;
+    // O(shift * n^2)
+    bignumber res = v;
     bignumber two(2);
-    while (k--) {
+    while (shift--) {
         res = res / two;
     }
     return res;
 #else
-    bignumber res;
-    int limb_shift = k / 32;
-    int bit_shift = k % 32;
+    // O(n);
+    bignumber res = 0;
+    if (v._limbs.empty()) {
+    } else {
+        int limb_shift = shift / 32;
+        int bit_shift = shift % 32;
 
-    if ((int)_limbs.size() <= limb_shift) {
-        return res;
+        if ((int)v._limbs.size() <= limb_shift) {
+        } else {
+            res._sign = v._sign;
+            res._limbs.resize(v._limbs.size() - limb_shift);
+
+            uint32 carry = 0;
+            for (int i = (int)v._limbs.size() - 1; i >= limb_shift; --i) {
+                uint32 cur = v._limbs[i];
+
+                res._limbs[i - limb_shift] = (cur >> bit_shift) | ((uint64)carry << (32 - bit_shift));
+                carry = cur & ((1u << bit_shift) - 1);
+            }
+
+            res.trim();
+        }
     }
-
-    uint64 carry = 0;
-
-    for (int i = (int)_limbs.size() - 1; i >= limb_shift; i--) {
-        uint64 cur = _limbs[i];
-        cur = (cur << 32) | carry;
-
-        res._limbs.push_back((uint32)(cur >> bit_shift));
-        carry = _limbs[i];
-    }
-
-    std::reverse(res._limbs.begin(), res._limbs.end());
-    res.normalize();
     return res;
 #endif
 }
@@ -434,14 +421,14 @@ void bignumber::trim() {
     }
 }
 
-int bignumber::abscmp(const bignumber &a, const bignumber &b) {
+int bignumber::abscmp(const bignumber &lhs, const bignumber &rhs) {
     int ret = 0;
-    if (a._limbs.size() != b._limbs.size()) {
-        ret = a._limbs.size() < b._limbs.size() ? -1 : 1;
+    if (lhs._limbs.size() != rhs._limbs.size()) {
+        ret = lhs._limbs.size() < rhs._limbs.size() ? -1 : 1;
     } else {
-        for (int i = (int)a._limbs.size() - 1; i >= 0; --i) {
-            if (a._limbs[i] != b._limbs[i]) {
-                ret = a._limbs[i] < b._limbs[i] ? -1 : 1;
+        for (int i = (int)lhs._limbs.size() - 1; i >= 0; --i) {
+            if (lhs._limbs[i] != rhs._limbs[i]) {
+                ret = lhs._limbs[i] < rhs._limbs[i] ? -1 : 1;
                 break;
             }
         }
@@ -449,20 +436,20 @@ int bignumber::abscmp(const bignumber &a, const bignumber &b) {
     return ret;
 }
 
-bignumber bignumber::absadd(const bignumber &a, const bignumber &b) {
+bignumber bignumber::absadd(const bignumber &lhs, const bignumber &rhs) {
     // O(n)
     bignumber res;
     int64 carry = 0;
-    size_t n = std::max(a._limbs.size(), b._limbs.size());
+    size_t n = std::max(lhs._limbs.size(), rhs._limbs.size());
     res._limbs.resize(n);
 
     for (size_t i = 0; i < n; i++) {
         int64 sum = carry;
-        if (i < a._limbs.size()) {
-            sum += a._limbs[i];
+        if (i < lhs._limbs.size()) {
+            sum += lhs._limbs[i];
         }
-        if (i < b._limbs.size()) {
-            sum += b._limbs[i];
+        if (i < rhs._limbs.size()) {
+            sum += rhs._limbs[i];
         }
         res._limbs[i] = sum % base;
         carry = sum / base;
@@ -473,17 +460,17 @@ bignumber bignumber::absadd(const bignumber &a, const bignumber &b) {
     return res;
 }
 
-bignumber bignumber::abssub(const bignumber &a, const bignumber &b) {
-    // |a| >= |b|
+bignumber bignumber::abssub(const bignumber &lhs, const bignumber &rhs) {
+    // |lhs| >= |rhs|
     // O(n)
     bignumber res;
-    res._limbs.resize(a._limbs.size());
+    res._limbs.resize(lhs._limbs.size());
     int64 carry = 0;
 
-    for (size_t i = 0; i < a._limbs.size(); i++) {
-        int64 cur = (int64)a._limbs[i] - carry;
-        if (i < b._limbs.size()) {
-            cur -= b._limbs[i];
+    for (size_t i = 0; i < lhs._limbs.size(); i++) {
+        int64 cur = (int64)lhs._limbs[i] - carry;
+        if (i < rhs._limbs.size()) {
+            cur -= rhs._limbs[i];
         }
         if (cur < 0) {
             cur += base;
@@ -491,7 +478,7 @@ bignumber bignumber::abssub(const bignumber &a, const bignumber &b) {
         } else {
             carry = 0;
         }
-        res._limbs[i] = cur;
+        res._limbs[i] = (uint32)cur;
     }
     res.trim();
     return res;

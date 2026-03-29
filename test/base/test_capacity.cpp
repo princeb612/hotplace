@@ -73,7 +73,7 @@ void test_byte_capacity_unsigned() {
         _test_case.assert(bytesize == entry.expect, __FUNCTION__, "(%2i) byte capacity %032I128x %I128u", bytesize, entry.x, entry.x);
 #else
         _logger->writeln("%016I64x -> %i", entry.x, bytesize);
-        _test_case.assert(bytesize == entry.expect, __FUNCTION__, "(%2i) byte capacity %016I64x %I64i", bytesize, entry.x, entry.x);
+        _test_case.assert(bytesize == entry.expect, __FUNCTION__, "(%2i) byte capacity %016I64x %I64u", bytesize, entry.x, entry.x);
 #endif
     }
 }
