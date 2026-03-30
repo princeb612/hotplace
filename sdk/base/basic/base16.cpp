@@ -422,4 +422,24 @@ binary_t base16_decode_rfc(const char* source) {
     return base16_decode_rfc(input);
 }
 
+bool base16_compare(const std::string& lhs, const std::string& rhs) { return base16_compare(lhs.c_str(), rhs.c_str()); }
+
+bool base16_compare(const char* lhs, const char* rhs) {
+    bool ret = false;
+    binary_t lbin = base16_decode_rfc(lhs);
+    binary_t rbin = base16_decode_rfc(rhs);
+    while (false == lbin.empty()) {
+        if (0 == lbin.front()) {
+            lbin.erase(lbin.begin());
+        }
+    }
+    while (false == rbin.empty()) {
+        if (0 == rbin.front()) {
+            rbin.erase(rbin.begin());
+        }
+    }
+    ret = (lbin == rbin);
+    return ret;
+}
+
 }  // namespace hotplace

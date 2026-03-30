@@ -26,5 +26,6 @@ void test_group();
 void test_payload_uint24();
 void test_quic_integer();
 void test_uint48();
+void test_bignumber();
 
 #endif

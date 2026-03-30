@@ -232,6 +232,9 @@ binary_t base16_decode_rfc(const std::string& source);
  */
 binary_t base16_decode_rfc(const char* source);
 
+bool base16_compare(const std::string& lhs, const std::string& rhs);
+bool base16_compare(const char* lhs, const char* rhs);
+
 }  // namespace hotplace
 
 #endif

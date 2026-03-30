@@ -19,6 +19,8 @@
 #include <hotplace/sdk/base/stream.hpp>
 #include <hotplace/sdk/base/stream/bufferio.hpp>
 #include <hotplace/sdk/base/syntax.hpp>
+#include <hotplace/sdk/base/system/bigint.hpp>
+#include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/base/types.hpp>
 #include <iostream>
 #include <ostream>
@@ -119,6 +121,7 @@ class basic_stream : public stream_t {
     basic_stream& operator<<(const basic_stream& value);
     basic_stream& operator<<(const std::string& value);
     basic_stream& operator<<(const binary_t& value);
+    basic_stream& operator<<(const bignumber& value);
 
     /**
      * @brief   operator =

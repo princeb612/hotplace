@@ -29,71 +29,92 @@ namespace hotplace {
  * uint128  0 ~ 340282366920938463463374607431768211455
  */
 template <uint32 BITS = 256, bool SIGNED = true>
-class bigint {
+class t_bigint {
    public:
-    bigint() {}
-    bigint(const bigint &other) { _bn = other._bn; }
-    bigint(bigint &&other) { _bn = std::move(other._bn); }
-    bigint(const bignumber &other) { _bn = other; }
-    bigint(bignumber &&other) { _bn = std::move(other); }
-    bigint(int64 value) {
+    t_bigint() {}
+    t_bigint(const t_bigint &other) { _bn = other._bn; }
+    t_bigint(t_bigint &&other) { _bn = std::move(other._bn); }
+    t_bigint(const bignumber &other) { _bn = other; }
+    t_bigint(bignumber &&other) { _bn = std::move(other); }
+    t_bigint(int64 value) {
         _bn = value;
         normalize();
     }
 
-    bigint &operator=(const bigint &other) {
+    t_bigint &operator=(const t_bigint &other) {
         _bn = other._bn;
         normalize();
         return *this;
     }
-    bigint operator+(const bigint &other) const {
-        bigint i(_bn + other._bn);
+    t_bigint operator+(const t_bigint &other) const {
+        t_bigint i(_bn + other._bn);
         i.normalize();
         return i;
     }
-    bigint &operator+=(const bigint &other) { return *this = (_bn + other._bn); }
-    bigint operator-(const bigint &other) const {
-        bigint i(_bn - other._bn);
+    t_bigint &operator+=(const t_bigint &other) { return *this = (_bn + other._bn); }
+    t_bigint operator-(const t_bigint &other) const {
+        t_bigint i(_bn - other._bn);
         i.normalize();
         return i;
     }
-    bigint &operator-=(const bigint &other) { return *this = _bn - other._bn; }
-    bigint operator*(const bigint &other) const {
-        bigint i(_bn * other._bn);
+    t_bigint &operator-=(const t_bigint &other) { return *this = _bn - other._bn; }
+    t_bigint operator*(const t_bigint &other) const {
+        t_bigint i(_bn * other._bn);
         i.normalize();
         return i;
     }
-    bigint &operator*=(const bigint &other) { return *this = _bn * other._bn; }
-    bigint operator/(const bigint &other) const {
-        bigint i(_bn / other._bn);
+    t_bigint &operator*=(const t_bigint &other) { return *this = _bn * other._bn; }
+    t_bigint operator/(const t_bigint &other) const {
+        t_bigint i(_bn / other._bn);
         i.normalize();
         return i;
     }
-    bigint &operator/=(const bigint &other) { return *this = _bn / other._bn; }
-    bigint operator%(const bigint &other) const {
-        bigint i(_bn % other._bn);
+    t_bigint &operator/=(const t_bigint &other) { return *this = _bn / other._bn; }
+    t_bigint operator%(const t_bigint &other) const {
+        t_bigint i(_bn % other._bn);
         i.normalize();
         return i;
     }
-    bigint &operator%=(const bigint &other) { return *this = _bn % other._bn; }
-    bool operator<(const bigint &other) const { return _bn < other._bn; }
-    bool operator<=(const bigint &other) const { return _bn <= other._bn; }
-    bool operator>(const bigint &other) const { return _bn > other._bn; }
-    bool operator>=(const bigint &other) const { return _bn >= other._bn; }
-    bigint operator<<(unsigned int k) const {
-        bigint i(_bn << k);
+    t_bigint &operator%=(const t_bigint &other) { return *this = _bn % other._bn; }
+
+    t_bigint operator&(const t_bigint &other) const {
+        t_bigint i(_bn & other._bn);
         i.normalize();
         return i;
     }
-    bigint &operator<<=(unsigned int k) { return *this = _bn << k; }
-    bigint operator>>(unsigned int k) const {
-        bigint i(_bn >> k);
+    t_bigint &operator&=(const t_bigint &other) { return *this = _bn & other._bn; }
+    t_bigint operator|(const t_bigint &other) const {
+        t_bigint i(_bn | other._bn);
         i.normalize();
         return i;
     }
-    bigint &operator>>=(unsigned int k) { return *this = _bn >> k; }
+    t_bigint &operator|=(const t_bigint &other) { return *this = _bn | other._bn; }
+    t_bigint operator^(const t_bigint &other) const {
+        t_bigint i(_bn ^ other._bn);
+        i.normalize();
+        return i;
+    }
+    t_bigint &operator^=(const t_bigint &other) { return *this = _bn ^ other._bn; }
+
+    bool operator<(const t_bigint &other) const { return _bn < other._bn; }
+    bool operator<=(const t_bigint &other) const { return _bn <= other._bn; }
+    bool operator>(const t_bigint &other) const { return _bn > other._bn; }
+    bool operator>=(const t_bigint &other) const { return _bn >= other._bn; }
+    t_bigint operator<<(unsigned int k) const {
+        t_bigint i(_bn << k);
+        i.normalize();
+        return i;
+    }
+    t_bigint &operator<<=(unsigned int k) { return *this = _bn << k; }
+    t_bigint operator>>(unsigned int k) const {
+        t_bigint i(_bn >> k);
+        i.normalize();
+        return i;
+    }
+    t_bigint &operator>>=(unsigned int k) { return *this = _bn >> k; }
 
     std::string str() { return _bn.str(); }
+    bignumber &get_bn() { return _bn; }
 
    protected:
     static const bignumber &MOD() {
@@ -121,9 +142,9 @@ class bigint {
     bignumber _bn;
 };
 
-// typedef bigint<256> int256_t;
-// typedef bigint<512> int512_t;
-// typedef bigint<1024> int1024_t;
+// typedef t_bigint<256> int256_t;
+// typedef t_bigint<512> int512_t;
+// typedef t_bigint<1024> int1024_t;
 
 }  // namespace hotplace
 

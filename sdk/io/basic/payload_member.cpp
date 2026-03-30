@@ -102,6 +102,12 @@ payload_member::payload_member(payload_encoded* value, const char* name, const c
     set_name(name).set_group(group);
 }
 
+payload_member::payload_member(const bignumber& value, const char* name, const char* group)
+    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
+    set_name(name).set_group(group);
+    get_variant().set_bn(value);
+}
+
 payload_member::~payload_member() {
     if (_vl) {
         _vl->release();
@@ -316,6 +322,10 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                         break;
                     case TYPE_BINARY:
                         v.clear().set_bstr_new(rebase, size);
+                        *size_read = size;
+                        break;
+                    case TYPE_BASE16STREAM:
+                        v.clear().set_bn(rebase, size);
                         *size_read = size;
                         break;
                     default:

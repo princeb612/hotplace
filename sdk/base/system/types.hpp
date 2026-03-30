@@ -46,6 +46,7 @@ class datetime;
 class semaphore;
 class signalwait_threads;
 class thread;
+class bignumber;
 
 }  // namespace hotplace
 

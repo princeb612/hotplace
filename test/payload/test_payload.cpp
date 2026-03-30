@@ -340,3 +340,32 @@ void test_uint48() {
         _test_case.assert(0x61 == len, __FUNCTION__, "len %u", len);
     }
 }
+
+void test_bignumber() {
+    _test_case.begin("bignumber");
+
+    binary_t bin;
+    bignumber bn_int256max = (bignumber(1) << 255) - bignumber(1);  // int256.max
+    {
+        payload pl;
+        bignumber bn = bn_int256max;
+        pl << new payload_member(uint32(256 >> 3), true, "bnlen")  //
+           << new payload_member(bn, "bn");
+        pl.write(bin);
+        _logger->hdump("dump", bin, 16, 3);
+    }
+
+    {
+        payload pl;
+        pl << new payload_member(uint32(0), true, "bnlen")  //
+           << new payload_member(bignumber(0), "bn");
+        pl.set_reference_value("bn", "bnlen");
+        pl.read(bin);
+        binary_t bn_value;
+        pl.get_binary("bn", bn_value);
+        _logger->hdump("bn", bn_value, 16, 3);
+
+        bignumber bn(bn_value);
+        _test_case.assert(bn == bn_int256max, __FUNCTION__, "bignumber");
+    }
+}

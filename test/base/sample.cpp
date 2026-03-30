@@ -72,6 +72,7 @@ int main(int argc, char **argv) {
     test_mapinsert();
     test_binary();
     test_loglevel();
+    test_variant();
     test_bignumber();
 
     _logger->flush();

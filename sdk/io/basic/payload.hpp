@@ -110,6 +110,7 @@ class payload_member {
     payload_member(const std::string& value, const char* name = nullptr, const char* group = nullptr);
     payload_member(const stream_t* value, const char* name = nullptr, const char* group = nullptr);
     payload_member(payload_encoded* value, const char* name = nullptr, const char* group = nullptr);
+    payload_member(const bignumber& value, const char* name = nullptr, const char* group = nullptr);
     ~payload_member();
 
     bool get_change_endian();

@@ -19,8 +19,28 @@
 namespace hotplace {
 
 /*
- * int128(MSVC), bigint, int512, ...
- * refer ChatGPT
+ * @brief   big number
+ * @remarks
+ *          int128(MSVC), bigint, int512, ...
+ *          sizeof(limb) = 4
+ *
+ *          std::vector<uint32> stream;
+ *          bignumber value;
+ *          while(value > 0) {
+ *              stream.push_back(value % base2p32);
+ *              value /= base2p32;
+ *          }
+ *          sign = (stream.back() < 0x80000000) ? 1 : -1;
+ *
+ *          // example
+ *          // bignumber b = (bignumber(1) << 63) - bignumber(1);
+ *          // 9223372036854775807 (0x7fffffffffffffff)
+ *          // std::vector<uint32> _limbs;
+ *          // _limbs[0] = 0xffffffff;
+ *          // _limbs[1] = 0x7fffffff;
+ *          // _sign = 1;
+ *
+ * @refer   ChatGPT
  */
 class bignumber {
 #ifdef __SIZEOF_INT128__
@@ -32,10 +52,15 @@ class bignumber {
     bignumber(largeint value = 0);
     bignumber(const bignumber &other);
     bignumber(bignumber &&other);
+    bignumber(const binary_t &base16hexstream);
+    bignumber(const std::string &base16hexstream);
     ~bignumber();
 
     bignumber &operator=(const bignumber &other);
+    bignumber &operator=(bignumber &&other);
     bignumber &operator=(largeint value);
+    bignumber &operator=(const binary_t &base16hexstream);
+    bignumber &operator=(const std::string &base16hexstream);
 
     bignumber operator+(const bignumber &other) const;
     bignumber &operator+=(const bignumber &other);
@@ -52,6 +77,17 @@ class bignumber {
     bignumber operator%(const bignumber &other) const;
     bignumber &operator%=(const bignumber &other);
 
+    bignumber operator&(const bignumber &other) const;
+    bignumber &operator&=(const bignumber &other);
+
+    bignumber operator|(const bignumber &other) const;
+    bignumber &operator|=(const bignumber &other);
+
+    bignumber operator^(const bignumber &other) const;
+    bignumber &operator^=(const bignumber &other);
+
+    bignumber operator~() const;
+
     bool operator<(const bignumber &other) const;
     bool operator<=(const bignumber &other) const;
 
@@ -67,11 +103,17 @@ class bignumber {
     bignumber operator>>(unsigned int shift) const;
     bignumber &operator>>=(unsigned int shift);
 
+    bignumber &set(largeint value);
+
     bignumber add(const bignumber &lhs, const bignumber &rhs) const;
     bignumber sub(const bignumber &lhs, const bignumber &rhs) const;
     bignumber mult_simple(const bignumber &lhs, const bignumber &rhs) const;
     bignumber mult(const bignumber &lhs, const bignumber &rhs) const;
     bignumber div(const bignumber &lhs, const bignumber &rhs) const;
+    bignumber bitwise_and(const bignumber &lhs, const bignumber &rhs) const;
+    bignumber bitwise_or(const bignumber &lhs, const bignumber &rhs) const;
+    bignumber bitwise_xor(const bignumber &lhs, const bignumber &rhs) const;
+    bignumber bitwise_not(const bignumber &other) const;
 
     static bignumber mod(const bignumber &lhs, const bignumber &rhs);
     static bignumber gcd(const bignumber &lhs, const bignumber &rhs);
@@ -79,12 +121,34 @@ class bignumber {
     static bignumber modpow(bignumber base, bignumber exp, const bignumber &m);
     static bignumber sqrt(const bignumber &other);
 
+    bignumber &add(const bignumber &other);
+    bignumber &sub(const bignumber &other);
+    bignumber &mult(const bignumber &other);
+    bignumber &div(const bignumber &other);
+    bignumber &mod(const bignumber &other);
+    bignumber &neg();
+    bignumber &bitwise_and(const bignumber &other);
+    bignumber &bitwise_or(const bignumber &other);
+    bignumber &bitwise_xor(const bignumber &other);
+    bignumber &bitwise_not();
+
     std::string str() const;
-    void dump(std::function<void(binary_t &)> func);
+    size_t capacity() const;
+    void dump(std::function<void(const binary_t &)> func) const;
+    /**
+     * @brief base16 hexdecimal stream
+     * @param binary_t &base16hexstream [out]
+     * @param bool trimzero [inopt] true
+     * @return sign 1 positive, -1 negative
+     */
+    int get(binary_t &base16hexstream, bool trimzero = true) const;
+
+    friend binary_t &operator<<(binary_t &lhs, const bignumber &rhs);
+    friend std::string &operator<<(std::string &lhs, const bignumber &rhs);
+    friend binary_t &operator>>(const bignumber &lhs, binary_t &rhs);
+    friend std::string &operator>>(const bignumber &lhs, std::string &rhs);
 
    protected:
-    bignumber &set(largeint value);
-
     int compare(const bignumber &lhs, const bignumber &rhs) const;
 
     bignumber leftshift(const bignumber &v, unsigned int shift) const;
@@ -96,12 +160,10 @@ class bignumber {
     static bignumber absadd(const bignumber &lhs, const bignumber &rhs);
     static bignumber abssub(const bignumber &lhs, const bignumber &rhs);
 
-    void normalize();
-
    private:
     static const uint64 base2p32 = 0x100000000;  // intuitive 2^32
     static const uint32 base1e9 = 1000000000;    // printf-friendly (setw(9) << limb)
-    std::vector<uint32> _limbs;                  // limb
+    std::vector<uint32> _units;
     int _sign;
 };
 

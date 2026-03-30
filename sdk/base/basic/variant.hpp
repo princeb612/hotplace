@@ -109,18 +109,20 @@ enum vartype_t {
     TYPE_INT48 = 39,  /* ex. DTLS record sequence */
     TYPE_UINT48 = 40, /* ex. DTLS record sequence */
 
+    TYPE_BASE16STREAM = 41,  // see bignumber
+
     TYPE_RESERVED = 0x1000,
 
     TYPE_USER = 0x10000,
 };
 
 enum variant_control_t {
-    variant_trunc = (1 << 16),
-    variant_convendian = (1 << 17),
+    variant_trunc = (1 << 16),       // truncate
+    variant_convendian = (1 << 17),  // endian conversion
 };
 
 enum variant_flag_t {
-    flag_free = 1 << 0,
+    flag_free = 1 << 0,  // free
 
     // fast check
     flag_bool = 1 << 1,     // bool
@@ -174,6 +176,7 @@ struct variant_t {
     variant_t() : type(TYPE_NULL), size(0), flag(0) { memset(&data, 0, sizeof(data)); }
     variant_t(const variant_t& other) : type(TYPE_NULL), size(0), flag(0) { *this = other; }
     variant_t(variant_t&& other) : type(TYPE_NULL), size(0), flag(0) { *this = std::move(other); }
+    variant_t(const bignumber& other) { *this = other; }
     ~variant_t() { clear(); }
 
     variant_t& operator=(const variant_t& other) {
@@ -184,6 +187,7 @@ struct variant_t {
             switch (other.type) {
                 case TYPE_BINARY:
                 case TYPE_NSTRING:
+                case TYPE_BASE16STREAM:
                     data.bstr = (unsigned char*)malloc(other.size + 1);
                     memcpy(data.bstr, other.data.bstr, other.size);
                     break;
@@ -214,6 +218,18 @@ struct variant_t {
         flag = other.flag;
         other.reset();
 
+        return *this;
+    }
+    variant_t& operator=(const bignumber& other) {
+        clear();
+
+        binary_t bin;
+        other >> bin;
+        type = TYPE_BASE16STREAM;
+        size = bin.size();
+        data.bstr = (unsigned char*)malloc(size + 1);
+        memcpy(data.bstr, bin.empty() ? nullptr : &bin[0], size);
+        flag = variant_flag_t::flag_free;
         return *this;
     }
 
@@ -271,6 +287,7 @@ class variant {
     variant(variant_t&& value);
     variant(const variant& value);
     variant(variant&& value);
+    variant(const bignumber& value);
     ~variant();
 
     const variant_t& content() const;
@@ -329,6 +346,10 @@ class variant {
     variant& set_nstr_new(const char* value, size_t n);
     variant& set_binary_new(const binary_t& bin);
 
+    variant& set_bn(const bignumber& value);
+    variant& set_bn(const std::string& b16hexstream);
+    variant& set_bn(const unsigned char* p, size_t n);
+
     /**
      * @brief   to string
      */
@@ -358,10 +379,11 @@ class variant {
      */
     return_t to_string(std::string& target) const;
 
-    variant& operator=(const variant& source);
-    variant& operator=(variant&& source);
-    variant& operator=(const variant_t& source);
-    variant& operator=(variant_t&& source);
+    variant& operator=(const variant& other);
+    variant& operator=(variant&& other);
+    variant& operator=(const variant_t& other);
+    variant& operator=(variant_t&& other);
+    variant& operator=(const bignumber& other);
 
    protected:
    private:

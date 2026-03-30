@@ -81,6 +81,8 @@ variant::variant(const variant &value) : _vt(value._vt) {}
 
 variant::variant(variant &&value) : _vt(std::move(value._vt)) {}
 
+variant::variant(const bignumber &value) : _vt(value) {}
+
 variant::~variant() { _vt.clear(); }
 
 const variant_t &variant::content() const { return _vt; }
@@ -479,6 +481,22 @@ variant &variant::set_binary_new(const binary_t &bin) {
     return *this;
 }
 
+variant &variant::set_bn(const bignumber &value) {
+    _vt = value;
+    return *this;
+}
+
+variant &variant::set_bn(const std::string &b16hexstream) {
+    _vt = b16hexstream;
+    return *this;
+}
+
+variant &variant::set_bn(const unsigned char *p, size_t n) {
+    std::string b16hexstream = base16_encode(p, n);
+    _vt = b16hexstream;
+    return *this;
+}
+
 const std::string variant::to_str() const {
     std::string ret_value;
     to_string(ret_value);
@@ -582,6 +600,7 @@ return_t variant::to_binary(binary_t &target, uint32 flags) const {
             break;
         case TYPE_BINARY:
         case TYPE_NSTRING:
+        case TYPE_BASE16STREAM:
             binary_append(target, _vt.data.bstr, _vt.size);
             break;
         default:
@@ -685,7 +704,8 @@ return_t variant::to_string(std::string &target) const {
                 target.assign(_vt.data.str, _vt.size);
             }
             break;
-        case TYPE_BINARY: {
+        case TYPE_BINARY:
+        case TYPE_BASE16STREAM: {
             if (_vt.data.str) {
                 target.clear();
                 uint32 i = 0;
@@ -713,6 +733,21 @@ variant &variant::operator=(const variant &other) {
 
 variant &variant::operator=(variant &&other) {
     _vt = std::move(other._vt);
+    return *this;
+}
+
+variant &variant::operator=(const variant_t &other) {
+    _vt = other;
+    return *this;
+}
+
+variant &variant::operator=(variant_t &&other) {
+    _vt = std::move(other);
+    return *this;
+}
+
+variant &variant::operator=(const bignumber &other) {
+    _vt = other;
     return *this;
 }
 

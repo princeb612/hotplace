@@ -60,6 +60,7 @@ int main(int argc, char** argv) {
     test_group();
     test_quic_integer();
     test_uint48();
+    test_bignumber();
 
     _logger->flush();
 

@@ -294,6 +294,11 @@ basic_stream& basic_stream::operator<<(const binary_t& value) {
     return *this;
 }
 
+basic_stream& basic_stream::operator<<(const bignumber& value) {
+    printf("%s", value.str().c_str());
+    return *this;
+}
+
 int basic_stream::compare(const basic_stream& other) { return strcmp((*this).c_str(), other.c_str()); }
 
 int basic_stream::compare(const basic_stream& lhs, const basic_stream& rhs) { return strcmp(lhs.c_str(), rhs.c_str()); }
