@@ -43,22 +43,41 @@ namespace hotplace {
  * @refer   ChatGPT
  */
 class bignumber {
-#ifdef __SIZEOF_INT128__
-    using largeint = int128;  // gcc
-#else
-    using largeint = int64;  // MSVC
-#endif
    public:
-    bignumber(largeint value = 0);
+    bignumber();
+    bignumber(int8 value);
+    bignumber(uint8 value);
+    bignumber(int16 value);
+    bignumber(uint16 value);
+    bignumber(int32 value);
+    bignumber(uint32 value);
+    bignumber(int64 value);
+    bignumber(uint64 value);
+#ifdef __SIZEOF_INT128__
+    bignumber(int128 value);
+    bignumber(uint128 value);
+#endif
     bignumber(const bignumber &other);
     bignumber(bignumber &&other);
+    bignumber(const byte_t *p, size_t n);
     bignumber(const binary_t &base16hexstream);
     bignumber(const std::string &base16hexstream);
     ~bignumber();
 
     bignumber &operator=(const bignumber &other);
     bignumber &operator=(bignumber &&other);
-    bignumber &operator=(largeint value);
+    bignumber &operator=(int8 value);
+    bignumber &operator=(uint8 value);
+    bignumber &operator=(int16 value);
+    bignumber &operator=(uint16 value);
+    bignumber &operator=(int32 value);
+    bignumber &operator=(uint32 value);
+    bignumber &operator=(int64 value);
+    bignumber &operator=(uint64 value);
+#ifdef __SIZEOF_INT128__
+    bignumber &operator=(int128 value);
+    bignumber &operator=(uint128 value);
+#endif
     bignumber &operator=(const binary_t &base16hexstream);
     bignumber &operator=(const std::string &base16hexstream);
 
@@ -103,7 +122,16 @@ class bignumber {
     bignumber operator>>(unsigned int shift) const;
     bignumber &operator>>=(unsigned int shift);
 
-    bignumber &set(largeint value);
+#ifdef __SIZEOF_INT128__
+    bignumber &set(int128 value);
+    bignumber &setu(uint128 value);
+#else
+    bignumber &set(int64 value);
+    bignumber &setu(uint64 value);
+#endif
+    bignumber &set(const std::string &base16hexstream);
+    bignumber &set(const byte_t *p, size_t n);
+    bignumber &set(const binary_t &base16hexstream);
 
     bignumber add(const bignumber &lhs, const bignumber &rhs) const;
     bignumber sub(const bignumber &lhs, const bignumber &rhs) const;
@@ -133,6 +161,7 @@ class bignumber {
     bignumber &bitwise_not();
 
     std::string str() const;
+    std::string hex() const;
     size_t capacity() const;
     void dump(std::function<void(const binary_t &)> func) const;
     /**

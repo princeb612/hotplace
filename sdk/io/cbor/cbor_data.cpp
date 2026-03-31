@@ -11,6 +11,7 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
+#include <hotplace/sdk/base/system/bigint.hpp>
 #include <hotplace/sdk/io/cbor/cbor_bignum.hpp>
 #include <hotplace/sdk/io/cbor/cbor_data.hpp>
 #include <hotplace/sdk/io/cbor/cbor_encode.hpp>
@@ -59,6 +60,8 @@ cbor_data::cbor_data(const variant& other) : _vt(other) {}
 
 cbor_data::cbor_data(variant&& other) : cbor_object(cbor_type_t::cbor_type_data), _vt(std::move(other)) {}
 
+cbor_data::cbor_data(const bignumber& value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_bn(value); }
+
 cbor_data::~cbor_data() {}
 
 variant& cbor_data::data() { return _vt; }
@@ -72,11 +75,13 @@ void cbor_data::represent(stream_t* s) {
 
             switch (tag) {
                 case cbor_tag_t::cbor_tag_positive_bignum:
-                case cbor_tag_t::cbor_tag_negative_bignum:
-#if defined __SIZEOF_INT128__
+                case cbor_tag_t::cbor_tag_negative_bignum: {
                     // RFC 8949 Concise Binary Object Representation (CBOR)
                     // 3.4.3.  Bignums
                     // Decoders that understand these tags MUST be able to decode bignums that do have leading zeroes.
+
+#if defined __SIZEOF_INT128__
+                    // GCC tested
                     if ((TYPE_BINARY == vt.type) && (vt.size <= 16)) {
                         cbor_bignum_int128 bn;
                         int128 temp = bn.load(vt.data.bstr, vt.size).value();
@@ -91,9 +96,23 @@ void cbor_data::represent(stream_t* s) {
                         vtprintf(s, vt, vtprintf_style_t::vtprintf_style_cbor);
                     }
 #else
-                    vtprintf(s, vt, vtprintf_style_t::vtprintf_style_cbor);
+                    // MSVC, GCC tested
+                    if ((TYPE_BINARY == vt.type) && (vt.size <= 16)) {
+                        bignumber bn(vt.data.bstr, vt.size);
+                        if (cbor_tag_t::cbor_tag_positive_bignum == tag) {
+                            // do nothing
+                        } else if (cbor_tag_t::cbor_tag_negative_bignum == tag) {
+                            bn += 1;
+                            bn.neg();
+                        }
+                        variant vt_bignum;
+                        vt_bignum = bn;
+                        vtprintf(s, vt_bignum, vtprintf_style_t::vtprintf_style_cbor);
+                    } else {
+                        vtprintf(s, vt, vtprintf_style_t::vtprintf_style_cbor);
+                    }
 #endif
-                    break;
+                } break;
                 default:
                     vtprintf(s, vt, vtprintf_style_t::vtprintf_style_cbor);
                     break;

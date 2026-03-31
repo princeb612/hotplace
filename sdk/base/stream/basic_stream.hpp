@@ -19,8 +19,7 @@
 #include <hotplace/sdk/base/stream.hpp>
 #include <hotplace/sdk/base/stream/bufferio.hpp>
 #include <hotplace/sdk/base/syntax.hpp>
-#include <hotplace/sdk/base/system/bigint.hpp>
-#include <hotplace/sdk/base/system/bignumber.hpp>
+#include <hotplace/sdk/base/system/types.hpp>
 #include <hotplace/sdk/base/types.hpp>
 #include <iostream>
 #include <ostream>

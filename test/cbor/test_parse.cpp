@@ -83,18 +83,20 @@ void test_parse() {
     do_test_parse_routine("1a000f4240", "1000000");
     // 1000000000000
     do_test_parse_routine("1b000000e8d4a51000", "1000000000000");
-#ifdef __SIZEOF_INT128__
-    // 18446744073709551615
+#if defined __SIZEOF_INT128__
+    // 18446744073709551615 uint64.max
     do_test_parse_routine("1bffffffffffffffff", "18446744073709551615");
-    // 18446744073709551616
+#endif
+    // 18446744073709551616 cbor_tag_positive_bignum
     do_test_parse_routine("c249010000000000000000", "18446744073709551616", "2(18446744073709551616)");
+#if defined __SIZEOF_INT128__
     // -18446744073709551615
     do_test_parse_routine("3bfffffffffffffffe", "-18446744073709551615");
     // -18446744073709551616
     do_test_parse_routine("3bffffffffffffffff", "-18446744073709551616");
-    // -18446744073709551617
-    do_test_parse_routine("c349010000000000000000", "-18446744073709551617", "3(-18446744073709551617)");
 #endif
+    // -18446744073709551617 cbor_tag_negative_bignum
+    do_test_parse_routine("c349010000000000000000", "-18446744073709551617", "3(-18446744073709551617)");
     // -1
     do_test_parse_routine("20", "-1");
     // -10

@@ -366,6 +366,9 @@ void test_bignumber() {
         _logger->hdump("bn", bn_value, 16, 3);
 
         bignumber bn(bn_value);
+
+        _logger->writeln("bignumber %s", bn.str().c_str());
+        _logger->writeln("base16    %s", bn.hex().c_str());
         _test_case.assert(bn == bn_int256max, __FUNCTION__, "bignumber");
     }
 }

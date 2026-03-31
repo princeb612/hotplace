@@ -47,8 +47,8 @@ void test_bn1() {
     // mod : verified only positive big numbers
 
     for (auto item : table) {
-        bignumber n1 = item.n1;
-        bignumber n2 = item.n2;
+        bignumber n1(item.n1);
+        bignumber n2(item.n2);
 
 #ifdef __SIZEOF_INT128__
         // gcc verification
@@ -202,7 +202,7 @@ void test_bn5() {
     while (loop--) {
         int256_t i1 = prng.rand64();
         int256_t i2 = prng.rand64();
-        int256_t i = 0;
+        int256_t i = uint64(0);
         i = i1 + i2;
         _logger->writeln("%s + %s = %s", i1.str().c_str(), i2.str().c_str(), i.str().c_str());
         i = i1 - i2;
@@ -303,14 +303,17 @@ void test_bn6() {
         bigint_t intmax = (bignumber(1) << (item.bits - 1)) - bignumber(1);
         bigint_t uintmax = (bignumber(1) << item.bits) - bignumber(1);
 
-        intmin.get_bn().dump([&](const binary_t& bin) -> void { _logger->hdump("int.min", bin, 16, 3); });
+        // intmin.get_bn().dump([&](const binary_t& bin) -> void { _logger->hdump("int.min", bin, 16, 3); });
+        _logger->writeln([&](basic_stream& bs) -> void { bs << "int" << item.bits << ".min 0x" << intmin.hex(); });
         _logger->writeln([&](basic_stream& bs) -> void { bs << "int" << item.bits << ".min " << intmin.str(); });
-        intmax.get_bn().dump([&](const binary_t& bin) -> void { _logger->hdump("int.max", bin, 16, 3); });
+        // intmax.get_bn().dump([&](const binary_t& bin) -> void { _logger->hdump("int.max", bin, 16, 3); });
+        _logger->writeln([&](basic_stream& bs) -> void { bs << "int" << item.bits << ".max 0x" << intmax.hex(); });
         _logger->writeln([&](basic_stream& bs) -> void { bs << "int" << item.bits << ".max " << intmax.str(); });
         auto test = (intmin.str() == std::string(item.minvalue)) && (intmax.str() == std::string(item.maxvalue));
         _test_case.assert(test, __FUNCTION__, "check int%i.min ~ int%i.max", item.bits, item.bits);
 
-        uintmax.get_bn().dump([&](const binary_t& bin) -> void { _logger->hdump("uint.max", bin, 16, 3); });
+        // uintmax.get_bn().dump([&](const binary_t& bin) -> void { _logger->hdump("uint.max", bin, 16, 3); });
+        _logger->writeln([&](basic_stream& bs) -> void { bs << "uint" << item.bits << ".max 0x" << uintmax.hex(); });
         _logger->writeln([&](basic_stream& bs) -> void { bs << "uint" << item.bits << ".max " << uintmax.str(); });
         auto utest = (uintmax.str() == std::string(item.umaxvalue));
         _test_case.assert(utest, __FUNCTION__, "check uint%i.max", item.bits);
@@ -344,6 +347,37 @@ void test_bn7() {
 }
 
 void test_bn8() {
+    struct testvector {
+        uint64 i1;
+        uint64 i2;
+    } table[]{
+        {0xc4fe9903b76d6c72ULL, 0x8e6781062bd05a82ULL}, {0xe8556865b15e621ULL, 0x894da65e198e0e8bULL}, {0x5dd523de7ca877ecULL, 0xe2c900ef8c975e5cULL},
+        {0x1a72c958dda70797ULL, 0xbbaf38760fb4ff55ULL}, {0xb6a22bb40f07c9a0ULL, 0xd2c5ab685c2dcb4ULL}, {0xdc5c66b4bfb3312fULL, 0xb3c5b881db04af9bULL},
+        {0x8ee394be324ce02fULL, 0x93d8c0e7925e2833ULL},
+    };
+    openssl_prng prng;
+    for (const auto& item : table) {
+        bignumber b1;
+        bignumber b2;
+
+        b1 = item.i1;
+        b2 = item.i2;
+
+        auto bit_and = item.i1 & item.i2;
+        auto bit_or = item.i1 | item.i2;
+        auto bit_xor = item.i1 ^ item.i2;
+
+        auto bn_and = b1 & b2;
+        auto bn_or = b1 | b2;
+        auto bn_xor = b1 ^ b2;
+
+        _test_case.assert(bignumber(bit_and) == bn_and, __FUNCTION__, "%I64x AND %I64x = %I64x (%s)", item.i1, item.i2, bit_and, bn_and.hex().c_str());
+        _test_case.assert(bignumber(bit_or) == bn_or, __FUNCTION__, "%I64x OR %I64x = %I64x (%s)", item.i1, item.i2, bit_or, bn_or.hex().c_str());
+        _test_case.assert(bignumber(bit_xor) == bn_xor, __FUNCTION__, "%I64x XOR %I64x = %I64x (%s)", item.i1, item.i2, bit_xor, bn_xor.hex().c_str());
+    }
+}
+
+void test_bn9() {
     openssl_prng prng;
     uint64 i1 = 0;
     uint64 i2 = 0;
@@ -351,9 +385,6 @@ void test_bn8() {
     bignumber b1;
     bignumber b2;
     bignumber br;
-    binary_t bin1;
-    binary_t bin2;
-    std::string b16str;
     int loop = 10;
 
     while (loop--) {
@@ -362,38 +393,22 @@ void test_bn8() {
         b1 = i1;
         b2 = i2;
 
-        bin1.clear();
+        _logger->writeln("sample %I64x %I64x", i1, i2);
+
         ir = i1 & i2;
         br = b1 & b2;
-        binary_append(bin1, ir, hton64);
-        br >> bin2;
-        br >> b16str;
-        _logger->hdump("bin1", bin1, 16, 3);
-        _logger->hdump("bin2", bin2, 16, 3);
-        _logger->writeln("%I64x & %I64x = %s (expected %I64x)", i1, i2, b16str.c_str(), ir);
-        _test_case.assert(bin1 == bin2, __FUNCTION__, "%I64x & %I64x", i2, i2);
+        _logger->writeln("%I64x & %I64x = %s (expected %I64x)", i1, i2, br.hex().c_str(), ir);
+        _test_case.assert(bignumber(ir) == br, __FUNCTION__, "%I64x & %I64x = %I64x (%s)", i1, i2, ir, br.hex().c_str());
 
-        bin1.clear();
         ir = i1 | i2;
         br = b1 | b2;
-        binary_append(bin1, ir, hton64);
-        br >> bin2;
-        br >> b16str;
-        _logger->hdump("bin1", bin1, 16, 3);
-        _logger->hdump("bin2", bin2, 16, 3);
-        _logger->writeln("%I64x | %I64x = %s (expected %I64x)", i1, i2, b16str.c_str(), ir);
-        _test_case.assert(bin1 == bin2, __FUNCTION__, "%I64x | %I64x", i2, i2);
+        _logger->writeln("%I64x | %I64x = %s (expected %I64x)", i1, i2, br.hex().c_str(), ir);
+        _test_case.assert(bignumber(ir) == br, __FUNCTION__, "%I64x | %I64x = %I64x (%s)", i1, i2, ir, br.hex().c_str());
 
-        bin1.clear();
         ir = i1 ^ i2;
         br = b1 ^ b2;
-        binary_append(bin1, ir, hton64);
-        br >> bin2;
-        br >> b16str;
-        _logger->hdump("bin1", bin1, 16, 3);
-        _logger->hdump("bin2", bin2, 16, 3);
-        _logger->writeln("%I64x ^ %I64x = %s (expected %I64x)", i1, i2, b16str.c_str(), ir);
-        _test_case.assert(bin1 == bin2, __FUNCTION__, "%I64x ^ %I64x", i2, i2);
+        _logger->writeln("%I64x ^ %I64x = %s (expected %I64x)", i1, i2, br.hex().c_str(), ir);
+        _test_case.assert(bignumber(ir) == br, __FUNCTION__, "%I64x ^ %I64x = %I64x (%s)", i1, i2, ir, br.hex().c_str());
     }
 }
 
@@ -408,4 +423,5 @@ void test_bignumber() {
     test_bn6();
     test_bn7();
     test_bn8();
+    test_bn9();
 }

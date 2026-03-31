@@ -338,6 +338,17 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                         break;
                 }
             } break;
+            case TYPE_BASE16STREAM: {
+                bignumber bn(vt.data.bstr, vt.size);
+                switch (style) {
+                    case vtprintf_style_debugmode:
+                        stream->printf("%s (%s%s)", bn.hex().c_str(), (variant_flag_t::flag_negative & vt.flag) ? "-" : "", bn.str().c_str());
+                        break;
+                    default:
+                        stream->printf("%s%s", (variant_flag_t::flag_negative & vt.flag) ? "-" : "", bn.str().c_str());
+                        break;
+                }
+            } break;
             default:
                 break;
         }

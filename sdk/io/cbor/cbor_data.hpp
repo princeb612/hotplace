@@ -49,6 +49,7 @@ class cbor_data : public cbor_object {
     cbor_data(variant_t&& vt);
     cbor_data(const variant& vt);
     cbor_data(variant&& vt);
+    cbor_data(const bignumber& value);
     virtual ~cbor_data();
 
     variant& data();

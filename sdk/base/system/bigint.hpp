@@ -37,7 +37,11 @@ class t_bigint {
     t_bigint(const bignumber &other) { _bn = other; }
     t_bigint(bignumber &&other) { _bn = std::move(other); }
     t_bigint(int64 value) {
-        _bn = value;
+        _bn.set(value);
+        normalize();
+    }
+    t_bigint(uint64 value) {
+        _bn.set(value);
         normalize();
     }
 
@@ -114,6 +118,7 @@ class t_bigint {
     t_bigint &operator>>=(unsigned int k) { return *this = _bn >> k; }
 
     std::string str() { return _bn.str(); }
+    std::string hex() { return _bn.hex(); }
     bignumber &get_bn() { return _bn; }
 
    protected:

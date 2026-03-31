@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/base/system/types.hpp>
 #include <hotplace/sdk/base/system/uint.hpp>
@@ -133,6 +134,8 @@ enum variant_flag_t {
     flag_pointer = 1 << 6,  // pointer
     flag_user_type = 1 << 7,
     flag_datetime = 1 << 8,  // datetime
+
+    flag_negative = 1 << 9,  // bignumber
 };
 
 union vartype_union {
@@ -228,8 +231,13 @@ struct variant_t {
         type = TYPE_BASE16STREAM;
         size = bin.size();
         data.bstr = (unsigned char*)malloc(size + 1);
-        memcpy(data.bstr, bin.empty() ? nullptr : &bin[0], size);
+        if (false == bin.empty()) {
+            memcpy(data.bstr, &bin[0], size);
+        }
         flag = variant_flag_t::flag_free;
+        if (other < 0) {
+            flag |= variant_flag_t::flag_negative;
+        }
         return *this;
     }
 
