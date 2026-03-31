@@ -29,7 +29,7 @@
     * CBOR
 
 * details
-  * Revision 922
+  * Revision 923
   * Revision 907
     * [tested] valgrind
   * Revision 905

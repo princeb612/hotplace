@@ -153,8 +153,8 @@ void test_bn4() {
     {
         typedef t_bigint<128> int128_t;
 
-        int128_t a(9223372036854775807LL);
-        int128_t b(2147483647LL);
+        int128_t a(int64(9223372036854775807));
+        int128_t b(int64(2147483647));
         int128_t c;
         _logger->writeln("int128_t a = %s", a.str().c_str());
         _logger->writeln("int128_t b = %s", b.str().c_str());
