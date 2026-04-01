@@ -324,7 +324,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                         v.clear().set_bstr_new(rebase, size);
                         *size_read = size;
                         break;
-                    case TYPE_BASE16STREAM:
+                    case TYPE_BIGNUMBER:
                         v.clear().set_bn(rebase, size);
                         *size_read = size;
                         break;

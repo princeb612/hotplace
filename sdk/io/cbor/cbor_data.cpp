@@ -11,8 +11,7 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
-#include <hotplace/sdk/base/system/bigint.hpp>
-#include <hotplace/sdk/io/cbor/cbor_bignum.hpp>
+#include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/io/cbor/cbor_data.hpp>
 #include <hotplace/sdk/io/cbor/cbor_encode.hpp>
 #include <hotplace/sdk/io/stream/stream.hpp>
@@ -80,23 +79,6 @@ void cbor_data::represent(stream_t* s) {
                     // 3.4.3.  Bignums
                     // Decoders that understand these tags MUST be able to decode bignums that do have leading zeroes.
 
-#if defined __SIZEOF_INT128__
-                    // GCC tested
-                    if ((TYPE_BINARY == vt.type) && (vt.size <= 16)) {
-                        cbor_bignum_int128 bn;
-                        int128 temp = bn.load(vt.data.bstr, vt.size).value();
-                        variant vt_bignum;
-                        if (cbor_tag_t::cbor_tag_positive_bignum == tag) {
-                            vt_bignum.set_int128(temp);
-                        } else if (cbor_tag_t::cbor_tag_negative_bignum == tag) {
-                            vt_bignum.set_int128(-(temp + 1));
-                        }
-                        vtprintf(s, vt_bignum.content(), vtprintf_style_t::vtprintf_style_cbor);
-                    } else {
-                        vtprintf(s, vt, vtprintf_style_t::vtprintf_style_cbor);
-                    }
-#else
-                    // MSVC, GCC tested
                     if ((TYPE_BINARY == vt.type) && (vt.size <= 16)) {
                         bignumber bn(vt.data.bstr, vt.size);
                         if (cbor_tag_t::cbor_tag_positive_bignum == tag) {
@@ -105,13 +87,12 @@ void cbor_data::represent(stream_t* s) {
                             bn += 1;
                             bn.neg();
                         }
-                        variant vt_bignum;
-                        vt_bignum = bn;
+
+                        variant vt_bignum(bn);
                         vtprintf(s, vt_bignum, vtprintf_style_t::vtprintf_style_cbor);
                     } else {
                         vtprintf(s, vt, vtprintf_style_t::vtprintf_style_cbor);
                     }
-#endif
                 } break;
                 default:
                     vtprintf(s, vt, vtprintf_style_t::vtprintf_style_cbor);

@@ -70,7 +70,6 @@
 #include <hotplace/sdk/base/stream/split.hpp>
 #include <hotplace/sdk/base/stream/tstring.hpp>
 #include <hotplace/sdk/base/stream/types.hpp>
-#include <hotplace/sdk/base/system/bigint.hpp>
 #include <hotplace/sdk/base/system/bignumber.hpp>
 
 /* string */

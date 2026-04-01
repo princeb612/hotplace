@@ -140,7 +140,7 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const byte_t* data, s
 #if defined __SIZEOF_INT128__
             int128 value = lead_value;
 #else
-            int64 value = lead_value;
+            bignumber value = lead_value;
 #endif
             flags = 0;
 
@@ -238,9 +238,6 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const binary_t& expre
 
 #if defined __SIZEOF_INT128__
 return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, int128 data, uint32 flags) {
-#else
-return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, int64 data, uint32 flags) {
-#endif
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -286,6 +283,55 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, int64 data
     __finally2 {}
     return ret;
 }
+#else
+return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, const bignumber& data, uint32 flags) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (cbor_major_t::cbor_major_uint == type) {
+            cbor_data* temp = nullptr;
+            __try_new_catch(temp, new cbor_data(data), ret, __leave2);
+            temp->tag(handle->temp.tag_value);
+            insert(handle, temp);
+        } else if (cbor_major_t::cbor_major_nint == type) {
+            cbor_data* temp = nullptr;
+            __try_new_catch(temp, new cbor_data(data), ret, __leave2);
+            temp->tag(handle->temp.tag_value);
+            insert(handle, temp);
+        } else if (cbor_major_t::cbor_major_array == type) {
+            cbor_array* temp = nullptr;
+            __try_new_catch(temp, new cbor_array(flags), ret, __leave2);
+            temp->tag(handle->temp.tag_value);
+            if (0 == flags) {
+                auto n = data.bntoi<uint64>(data);
+                temp->reserve(n);
+            }
+            insert(handle, temp);
+        } else if (cbor_major_t::cbor_major_map == type) {
+            cbor_map* temp = nullptr;
+            __try_new_catch(temp, new cbor_map(flags), ret, __leave2);
+            temp->tag(handle->temp.tag_value);
+            if (0 == flags) {
+                auto n = data.bntoi<uint64>(data);
+                temp->reserve(n);
+            }
+            insert(handle, temp);
+        } else if (cbor_major_t::cbor_major_tag == type) {
+        } else if (cbor_major_t::cbor_major_simple == type) {
+            cbor_simple* temp = nullptr;
+            __try_new_catch(temp, new cbor_simple(data), ret, __leave2);
+            temp->tag(handle->temp.tag_value);
+            insert(handle, temp);
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+#endif
 
 return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, const char* data, size_t size, uint32 flags) {
     return_t ret = errorcode_t::success;

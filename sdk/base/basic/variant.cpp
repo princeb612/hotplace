@@ -600,7 +600,7 @@ return_t variant::to_binary(binary_t &target, uint32 flags) const {
             break;
         case TYPE_BINARY:
         case TYPE_NSTRING:
-        case TYPE_BASE16STREAM:
+        case TYPE_BIGNUMBER:
             binary_append(target, _vt.data.bstr, _vt.size);
             break;
         default:
@@ -705,7 +705,7 @@ return_t variant::to_string(std::string &target) const {
             }
             break;
         case TYPE_BINARY:
-        case TYPE_BASE16STREAM: {
+        case TYPE_BIGNUMBER: {
             if (_vt.data.str) {
                 target.clear();
                 uint32 i = 0;

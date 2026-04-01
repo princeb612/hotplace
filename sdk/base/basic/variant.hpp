@@ -110,7 +110,7 @@ enum vartype_t {
     TYPE_INT48 = 39,  /* ex. DTLS record sequence */
     TYPE_UINT48 = 40, /* ex. DTLS record sequence */
 
-    TYPE_BASE16STREAM = 41,  // see bignumber
+    TYPE_BIGNUMBER = 41,  // see bignumber
 
     TYPE_RESERVED = 0x1000,
 
@@ -179,7 +179,7 @@ struct variant_t {
     variant_t() : type(TYPE_NULL), size(0), flag(0) { memset(&data, 0, sizeof(data)); }
     variant_t(const variant_t& other) : type(TYPE_NULL), size(0), flag(0) { *this = other; }
     variant_t(variant_t&& other) : type(TYPE_NULL), size(0), flag(0) { *this = std::move(other); }
-    variant_t(const bignumber& other) { *this = other; }
+    variant_t(const bignumber& other) : type(TYPE_NULL), size(0), flag(0) { *this = other; }
     ~variant_t() { clear(); }
 
     variant_t& operator=(const variant_t& other) {
@@ -190,7 +190,7 @@ struct variant_t {
             switch (other.type) {
                 case TYPE_BINARY:
                 case TYPE_NSTRING:
-                case TYPE_BASE16STREAM:
+                case TYPE_BIGNUMBER:
                     data.bstr = (unsigned char*)malloc(other.size + 1);
                     memcpy(data.bstr, other.data.bstr, other.size);
                     break;
@@ -228,14 +228,14 @@ struct variant_t {
 
         binary_t bin;
         other >> bin;
-        type = TYPE_BASE16STREAM;
+        type = TYPE_BIGNUMBER;
         size = bin.size();
         data.bstr = (unsigned char*)malloc(size + 1);
         if (false == bin.empty()) {
             memcpy(data.bstr, &bin[0], size);
         }
         flag = variant_flag_t::flag_free;
-        if (other < 0) {
+        if (other < bignumber(0)) {
             flag |= variant_flag_t::flag_negative;
         }
         return *this;

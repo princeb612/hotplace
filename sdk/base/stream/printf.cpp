@@ -338,7 +338,7 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                         break;
                 }
             } break;
-            case TYPE_BASE16STREAM: {
+            case TYPE_BIGNUMBER: {
                 bignumber bn(vt.data.bstr, vt.size);
                 switch (style) {
                     case vtprintf_style_debugmode:

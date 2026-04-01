@@ -12,9 +12,11 @@
 #define __HOTPLACE_SDK_BASE_SYSTEM_BIGNUMBER__
 
 #include <functional>
+#include <hotplace/sdk/base/system/endian.hpp>
 #include <hotplace/sdk/base/system/types.hpp>
 #include <iomanip>
 #include <sstream>
+#include <type_traits>
 
 namespace hotplace {
 
@@ -40,7 +42,7 @@ namespace hotplace {
  *          // _limbs[1] = 0x7fffffff;
  *          // _sign = 1;
  *
- * @refer   ChatGPT
+ * @refer   ChatGPT (+, -, *, /, mod, gcd, modinv, modpow, sqrt, <<. >>)
  */
 class bignumber {
    public:
@@ -109,7 +111,6 @@ class bignumber {
 
     bool operator<(const bignumber &other) const;
     bool operator<=(const bignumber &other) const;
-
     bool operator>(const bignumber &other) const;
     bool operator>=(const bignumber &other) const;
 
@@ -121,6 +122,12 @@ class bignumber {
 
     bignumber operator>>(unsigned int shift) const;
     bignumber &operator>>=(unsigned int shift);
+
+    bignumber &operator++();
+    bignumber &operator--();
+
+    bignumber operator++(int);
+    bignumber operator--(int);
 
 #ifdef __SIZEOF_INT128__
     bignumber &set(int128 value);
@@ -138,16 +145,17 @@ class bignumber {
     bignumber mult_simple(const bignumber &lhs, const bignumber &rhs) const;
     bignumber mult(const bignumber &lhs, const bignumber &rhs) const;
     bignumber div(const bignumber &lhs, const bignumber &rhs) const;
+    bignumber mod(const bignumber &lhs, const bignumber &rhs) const;
+    std::pair<bignumber, bignumber> divide(const bignumber &lhs, const bignumber &rhs) const;
     bignumber bitwise_and(const bignumber &lhs, const bignumber &rhs) const;
     bignumber bitwise_or(const bignumber &lhs, const bignumber &rhs) const;
     bignumber bitwise_xor(const bignumber &lhs, const bignumber &rhs) const;
     bignumber bitwise_not(const bignumber &other) const;
 
-    static bignumber mod(const bignumber &lhs, const bignumber &rhs);
-    static bignumber gcd(const bignumber &lhs, const bignumber &rhs);
-    static bignumber modinv(bignumber a, bignumber m);
-    static bignumber modpow(bignumber base, bignumber exp, const bignumber &m);
-    static bignumber sqrt(const bignumber &other);
+    bignumber gcd(const bignumber &lhs, const bignumber &rhs) const;
+    bignumber modinv(bignumber a, bignumber m) const;
+    bignumber modpow(bignumber base, bignumber exp, const bignumber &m) const;
+    bignumber sqrt(const bignumber &other) const;
 
     bignumber &add(const bignumber &other);
     bignumber &sub(const bignumber &other);
@@ -177,6 +185,34 @@ class bignumber {
     friend binary_t &operator>>(const bignumber &lhs, binary_t &rhs);
     friend std::string &operator>>(const bignumber &lhs, std::string &rhs);
 
+    template <typename T>
+    T bntoi(const bignumber &other) const {
+        size_t tsize = sizeof(T);
+        bignumber bn = std::move(normalize(other, tsize >> 3, std::is_signed<T>::value));
+
+        T value = 0;
+        binary_t bin;
+        other >> bin;  // base16, BE
+        size_t size = bin.size();
+        if (size > tsize) {
+            bin.erase(bin.begin(), bin.begin() + size - tsize);
+        } else if (size < tsize) {
+            int n = tsize - size;
+            while (n--) {
+                bin.insert(bin.begin(), 0);
+            }
+        }
+        if (is_big_endian()) {
+            value = *(T *)&bin[0];
+        } else if (is_little_endian()) {
+            value = *(T *)&bin[0];
+            if (tsize > 1) {
+                value = convert_endian(value);
+            }
+        }
+        return value;
+    }
+
    protected:
     int compare(const bignumber &lhs, const bignumber &rhs) const;
 
@@ -189,10 +225,18 @@ class bignumber {
     static bignumber absadd(const bignumber &lhs, const bignumber &rhs);
     static bignumber abssub(const bignumber &lhs, const bignumber &rhs);
 
+#ifdef __SIZEOF_INT128__
+    bignumber bn_mod(uint128 bits) const;
+    bignumber bn_half(uint128 bits) const;
+    bignumber normalize(const bignumber &other, uint128 bits, bool sign) const;
+#else
+    bignumber bn_mod(uint64 bits) const;
+    bignumber bn_half(uint64 bits) const;
+    bignumber normalize(const bignumber &other, uint64 bits, bool sign) const;
+#endif
+
    private:
-    static const uint64 base2p32 = 0x100000000;  // intuitive 2^32
-    static const uint32 base1e9 = 1000000000;    // printf-friendly (setw(9) << limb)
-    std::vector<uint32> _units;
+    std::vector<uint32> _v;
     int _sign;
 };
 

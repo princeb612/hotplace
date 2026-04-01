@@ -27,7 +27,6 @@
 /* CBOR */
 #include <hotplace/sdk/io/cbor/cbor.hpp>
 #include <hotplace/sdk/io/cbor/cbor_array.hpp>
-#include <hotplace/sdk/io/cbor/cbor_bignum.hpp>
 #include <hotplace/sdk/io/cbor/cbor_bstrings.hpp>
 #include <hotplace/sdk/io/cbor/cbor_data.hpp>
 #include <hotplace/sdk/io/cbor/cbor_encode.hpp>

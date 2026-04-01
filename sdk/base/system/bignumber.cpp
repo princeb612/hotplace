@@ -21,28 +21,40 @@ namespace hotplace {
 // #define bn_intuitive 0
 // #define base base1e9
 
+static const uint64 base2p32 = 0x100000000;  // intuitive 2^32
+static const uint32 base1e9 = 1000000000;    // printf-friendly (setw(9) << limb)
+
 bignumber::bignumber() { set(0); }
 
 bignumber::bignumber(int8 value) { set(value); }
+
 bignumber::bignumber(uint8 value) { setu(value); }
+
 bignumber::bignumber(int16 value) { set(value); }
+
 bignumber::bignumber(uint16 value) { setu(value); }
+
 bignumber::bignumber(int32 value) { set(value); }
+
 bignumber::bignumber(uint32 value) { setu(value); }
+
 bignumber::bignumber(int64 value) { set(value); }
+
 bignumber::bignumber(uint64 value) { setu(value); }
+
 #ifdef __SIZEOF_INT128__
 bignumber::bignumber(int128 value) { set(value); }
+
 bignumber::bignumber(uint128 value) { setu(value); }
 #endif
 
 bignumber::bignumber(const bignumber &other) {
-    _units = other._units;
+    _v = other._v;
     _sign = other._sign;
 }
 
 bignumber::bignumber(bignumber &&other) {
-    _units = std::move(other._units);
+    _v = std::move(other._v);
     _sign = other._sign;
     other._sign = 1;
 }
@@ -56,13 +68,13 @@ bignumber::bignumber(const std::string &base16hexstream) { *this = base16hexstre
 bignumber::~bignumber() {}
 
 bignumber &bignumber::operator=(const bignumber &other) {
-    _units = other._units;
+    _v = other._v;
     _sign = other._sign;
     return *this;
 }
 
 bignumber &bignumber::operator=(bignumber &&other) {
-    _units = std::move(other._units);
+    _v = std::move(other._v);
     _sign = other._sign;
     return *this;
 }
@@ -147,25 +159,40 @@ bignumber bignumber::operator>>(unsigned int shift) const { return rightshift(*t
 
 bignumber &bignumber::operator>>=(unsigned int shift) { return *this = rightshift(*this, shift); }
 
+bignumber &bignumber::operator++() { return *this += 1; }
+
+bignumber &bignumber::operator--() { return *this -= 1; }
+
+bignumber bignumber::operator++(int) {
+    bignumber res(*this);
+    res += 1;
+    return res;
+}
+
+bignumber bignumber::operator--(int) {
+    bignumber res(*this);
+    res -= 1;
+    return res;
+}
+
 #ifdef __SIZEOF_INT128__
 bignumber &bignumber::set(int128 value)
 #else
 bignumber &bignumber::set(int64 value)
 #endif
 {
-
     if (value >= 0) {
         _sign = 1;
     } else {
         _sign = -1;
         value = -value;
     }
-    _units.clear();
+    _v.clear();
     while (value) {
-        _units.push_back(value % base);
+        _v.push_back(value % base);
         value /= base;
     }
-    if (_units.empty()) {
+    if (_v.empty()) {
         _sign = 1;
     }
     return *this;
@@ -178,9 +205,9 @@ bignumber &bignumber::setu(uint64 value)
 #endif
 {
     _sign = 1;
-    _units.clear();
+    _v.clear();
     while (value) {
-        _units.push_back(value % base);
+        _v.push_back(value % base);
         value /= base;
     }
     return *this;
@@ -188,7 +215,7 @@ bignumber &bignumber::setu(uint64 value)
 
 bignumber &bignumber::set(const std::string &base16hexstream) {
     _sign = 1;
-    _units.clear();
+    _v.clear();
 #if (bn_intuitive == 1)
     if (false == base16hexstream.empty()) {
         binary_t bin;
@@ -203,7 +230,7 @@ bignumber &bignumber::set(const std::string &base16hexstream) {
 
 bignumber &bignumber::set(const byte_t *p, size_t n) {
     _sign = 1;
-    _units.clear();
+    _v.clear();
 #if (bn_intuitive == 1)
     if (p) {
         binary_t bin;
@@ -219,7 +246,7 @@ bignumber &bignumber::set(const byte_t *p, size_t n) {
         }
         while (false == bin.empty()) {
             uint32 t = hton32(*(uint32 *)&bin[0]);
-            _units.insert(_units.begin(), t);
+            _v.insert(_v.begin(), t);
             bin.erase(bin.begin(), bin.begin() + 4);
         }
         trim();
@@ -230,7 +257,7 @@ bignumber &bignumber::set(const byte_t *p, size_t n) {
 
 bignumber &bignumber::set(const binary_t &base16hexstream) {
     _sign = 1;
-    _units.clear();
+    _v.clear();
 #if (bn_intuitive == 1)
     if (false == base16hexstream.empty()) {
         binary_t bin = base16hexstream;
@@ -244,7 +271,7 @@ bignumber &bignumber::set(const binary_t &base16hexstream) {
         }
         while (false == bin.empty()) {
             uint32 t = hton32(*(uint32 *)&bin[0]);
-            _units.insert(_units.begin(), t);
+            _v.insert(_v.begin(), t);
             bin.erase(bin.begin(), bin.begin() + 4);
         }
         trim();
@@ -296,14 +323,14 @@ bignumber bignumber::mult_simple(const bignumber &lhs, const bignumber &rhs) con
     // schoolbook O(n^2)
     bignumber res;
     res._sign = lhs._sign * rhs._sign;
-    res._units.assign(lhs._units.size() + rhs._units.size(), 0);
+    res._v.assign(lhs._v.size() + rhs._v.size(), 0);
 
-    for (size_t i = 0; i < lhs._units.size(); i++) {
+    for (size_t i = 0; i < lhs._v.size(); i++) {
         int64 carry = 0;
-        for (size_t j = 0; j < rhs._units.size() || carry; j++) {
-            int64 cur = res._units[i + j] + (int64)lhs._units[i] * (j < rhs._units.size() ? rhs._units[j] : 0) + carry;
+        for (size_t j = 0; j < rhs._v.size() || carry; j++) {
+            int64 cur = res._v[i + j] + (int64)lhs._v[i] * (j < rhs._v.size() ? rhs._v[j] : 0) + carry;
 
-            res._units[i + j] = cur % base;
+            res._v[i + j] = cur % base;
             carry = cur / base;
         }
     }
@@ -314,34 +341,37 @@ bignumber bignumber::mult_simple(const bignumber &lhs, const bignumber &rhs) con
 bignumber bignumber::mult(const bignumber &lhs, const bignumber &rhs) const {
     // karatsuba O(n^1.58)
     bignumber res;
-    auto n = lhs._units.size();
+    auto n = lhs._v.size();
     if (n < 32) {
         res = mult_simple(lhs, rhs);
     } else {
         int k = n / 2;
 
-        bignumber a1, a2, b1, b2;
+        bignumber a1;
+        bignumber a2;
+        bignumber b1;
+        bignumber b2;
 
-        a1._units = std::vector<uint32>(lhs._units.begin(), lhs._units.begin() + k);
-        a2._units = std::vector<uint32>(lhs._units.begin() + k, lhs._units.end());
+        a1._v = std::vector<uint32>(lhs._v.begin(), lhs._v.begin() + k);
+        a2._v = std::vector<uint32>(lhs._v.begin() + k, lhs._v.end());
 
-        b1._units = std::vector<uint32>(rhs._units.begin(), rhs._units.begin() + std::min((int)rhs._units.size(), k));
-        b2._units = std::vector<uint32>(rhs._units.begin() + std::min((int)rhs._units.size(), k), rhs._units.end());
+        b1._v = std::vector<uint32>(rhs._v.begin(), rhs._v.begin() + std::min((int)rhs._v.size(), k));
+        b2._v = std::vector<uint32>(rhs._v.begin() + std::min((int)rhs._v.size(), k), rhs._v.end());
 
         bignumber z0 = mult(a1, b1);
         bignumber z2 = mult(a2, b2);
         bignumber z1 = mult(a1 + a2, b1 + b2) - z0 - z2;
 
-        res._units.resize(n * 2);
+        res._v.resize(n * 2);
 
-        for (size_t i = 0; i < z0._units.size(); i++) {
-            res._units[i] += z0._units[i];
+        for (size_t i = 0; i < z0._v.size(); i++) {
+            res._v[i] += z0._v[i];
         }
-        for (size_t i = 0; i < z1._units.size(); i++) {
-            res._units[i + k] += z1._units[i];
+        for (size_t i = 0; i < z1._v.size(); i++) {
+            res._v[i + k] += z1._v[i];
         }
-        for (size_t i = 0; i < z2._units.size(); i++) {
-            res._units[i + 2 * k] += z2._units[i];
+        for (size_t i = 0; i < z2._v.size(); i++) {
+            res._v[i + 2 * k] += z2._v[i];
         }
 
         res.trim();
@@ -350,50 +380,66 @@ bignumber bignumber::mult(const bignumber &lhs, const bignumber &rhs) const {
 }
 
 bignumber bignumber::div(const bignumber &lhs, const bignumber &rhs) const {
-    // knuth algorithm O(n^2)
-    bignumber res;
+    auto res = divide(lhs, rhs);
+    return res.first;
+}
+
+// c++ style remainder
+// -7 % 3 = -1, 7 % -3 = 1
+bignumber bignumber::mod(const bignumber &lhs, const bignumber &rhs) const { return lhs - (lhs / rhs) * rhs; }
+
+std::pair<bignumber, bignumber> bignumber::divide(const bignumber &lhs, const bignumber &rhs) const {
+    std::pair<bignumber, bignumber> res = {{{0}}, {{0}}};
+    bignumber quotient;
+    bignumber remainder;
+
     if (rhs == 0) {
         // division by zero
         // throw exception
     } else if (abscmp(rhs, 1) == 0) {
-        if (lhs._sign == 1) {
-            res = lhs;
-        } else {
-            res._sign = -res._sign;
-        }
+        quotient = lhs;
+        quotient._sign = lhs._sign * rhs._sign;
+        res = {quotient, {{0}}};
+    } else if (abscmp(lhs, rhs) < 0) {
+        res = {{{0}}, lhs};
     } else {
-        bignumber a = lhs;
-        bignumber b = rhs;
-        bignumber r;
+        auto a = lhs;
+        auto b = rhs;
 
-        res._sign = lhs._sign * rhs._sign;
-        res._units.resize(a._units.size());
+        quotient._sign = a._sign * b._sign;
+        quotient._v.resize(a._v.size());
 
         a._sign = b._sign = 1;
 
-        for (int i = (int)a._units.size() - 1; i >= 0; i--) {
-            r._units.insert(r._units.begin(), a._units[i]);
-            r.trim();
+        for (int i = a._v.size() - 1; i >= 0; i--) {
+            remainder._v.insert(remainder._v.begin(), a._v[i]);
+            remainder.trim();
 
+            uint32 limit = base - 1;
             uint32 x = 0;
-            uint32 l = 0;
-            uint32 h = base - 1;
-            while (l <= h) {
-                uint32 m = (l + h) >> 1;
-                bignumber t = b * m;
-                if (t <= r) {
-                    x = m;
-                    l = m + 1;
+            uint32 low = 0;
+            uint32 high = limit;
+
+            while (low <= high) {
+                uint32 mid = ((uint64)low + high) >> 1;
+                bignumber t = b * mid;
+
+                if (t <= remainder) {
+                    x = mid;
+                    low = mid + 1;
                 } else {
-                    h = m - 1;
+                    high = mid - 1;
                 }
             }
 
-            res._units[i] = x;
-            r = r - b * x;
+            quotient._v[i] = x;
+            remainder = remainder - (b * x);
         }
 
-        res.trim();
+        quotient.trim();
+        remainder.trim();
+
+        res = {quotient, remainder};
     }
     return res;
 }
@@ -401,14 +447,14 @@ bignumber bignumber::div(const bignumber &lhs, const bignumber &rhs) const {
 bignumber bignumber::bitwise_and(const bignumber &lhs, const bignumber &rhs) const {
     bignumber res;
 #if (bn_intuitive == 1)
-    auto lsize = lhs._units.size();
-    auto rsize = rhs._units.size();
+    auto lsize = lhs._v.size();
+    auto rsize = rhs._v.size();
     auto h = std::max(lsize, rsize);
     auto l = std::min(lsize, rsize);
     for (auto i = 0; i < h; i++) {
-        uint32 lval = (i < lsize) ? lhs._units[i] : 0;
-        uint32 rval = (i < rsize) ? rhs._units[i] : 0;
-        res._units.push_back(lval & rval);
+        uint32 lval = (i < lsize) ? lhs._v[i] : 0;
+        uint32 rval = (i < rsize) ? rhs._v[i] : 0;
+        res._v.push_back(lval & rval);
     }
 #endif
     return res;
@@ -417,14 +463,14 @@ bignumber bignumber::bitwise_and(const bignumber &lhs, const bignumber &rhs) con
 bignumber bignumber::bitwise_or(const bignumber &lhs, const bignumber &rhs) const {
     bignumber res;
 #if (bn_intuitive == 1)
-    auto lsize = lhs._units.size();
-    auto rsize = rhs._units.size();
+    auto lsize = lhs._v.size();
+    auto rsize = rhs._v.size();
     auto h = std::max(lsize, rsize);
     auto l = std::min(lsize, rsize);
     for (auto i = 0; i < h; i++) {
-        uint32 lval = (i < lsize) ? lhs._units[i] : 0;
-        uint32 rval = (i < rsize) ? rhs._units[i] : 0;
-        res._units.push_back(lval | rval);
+        uint32 lval = (i < lsize) ? lhs._v[i] : 0;
+        uint32 rval = (i < rsize) ? rhs._v[i] : 0;
+        res._v.push_back(lval | rval);
     }
 #endif
     return res;
@@ -433,14 +479,14 @@ bignumber bignumber::bitwise_or(const bignumber &lhs, const bignumber &rhs) cons
 bignumber bignumber::bitwise_xor(const bignumber &lhs, const bignumber &rhs) const {
     bignumber res;
 #if (bn_intuitive == 1)
-    auto lsize = lhs._units.size();
-    auto rsize = rhs._units.size();
+    auto lsize = lhs._v.size();
+    auto rsize = rhs._v.size();
     auto h = std::max(lsize, rsize);
     auto l = std::min(lsize, rsize);
     for (auto i = 0; i < h; i++) {
-        uint32 lval = (i < lsize) ? lhs._units[i] : 0;
-        uint32 rval = (i < rsize) ? rhs._units[i] : 0;
-        res._units.push_back(lval ^ rval);
+        uint32 lval = (i < lsize) ? lhs._v[i] : 0;
+        uint32 rval = (i < rsize) ? rhs._v[i] : 0;
+        res._v.push_back(lval ^ rval);
     }
 #endif
     return res;
@@ -449,28 +495,24 @@ bignumber bignumber::bitwise_xor(const bignumber &lhs, const bignumber &rhs) con
 bignumber bignumber::bitwise_not(const bignumber &other) const {
     bignumber res;
 #if (bn_intuitive == 1)
-    for (uint32 item : other._units) {
-        res._units.push_back(!item);
+    for (uint32 item : other._v) {
+        res._v.push_back(!item);
     }
 #endif
     return res;
 }
 
-// c++ style remainder
-// -7 % 3 = -1, 7 % -3 = 1
-bignumber bignumber::mod(const bignumber &lhs, const bignumber &rhs) { return lhs - (lhs / rhs) * rhs; }
-
-bignumber bignumber::gcd(const bignumber &lhs, const bignumber &rhs) {
+bignumber bignumber::gcd(const bignumber &lhs, const bignumber &rhs) const {
     bignumber a = lhs;
     bignumber b = rhs;
-    while (false == b._units.empty()) {
+    while (false == b._v.empty()) {
         a %= b;
         std::swap(a, b);
     }
     return a;
 }
 
-bignumber bignumber::modinv(bignumber a, bignumber m) {
+bignumber bignumber::modinv(bignumber a, bignumber m) const {
     bignumber m0 = m;
     bignumber x0 = 0;
     bignumber x1 = 1;
@@ -491,20 +533,20 @@ bignumber bignumber::modinv(bignumber a, bignumber m) {
     return x1;
 }
 
-bignumber bignumber::modpow(bignumber b, bignumber exp, const bignumber &m) {
+bignumber bignumber::modpow(bignumber b, bignumber exp, const bignumber &m) const {
     bignumber res = 1;
     b = mod(b, m);
 
-    while (!exp._units.empty()) {
-        if (exp._units[0] & 1) res = mod(res * b, m);
+    while (!exp._v.empty()) {
+        if (exp._v[0] & 1) res = mod(res * b, m);
 
         b = mod(b * b, m);
 
         // exp /= 2
         uint64 carry = 0;
-        for (auto i = exp._units.size() - 1; i >= 0; i--) {
-            uint64 cur = exp._units[i] + carry * base;
-            exp._units[i] = cur / 2;
+        for (auto i = exp._v.size() - 1; i >= 0; i--) {
+            uint64 cur = exp._v[i] + carry * base;
+            exp._v[i] = cur / 2;
             carry = cur % 2;
         }
         exp.trim();
@@ -512,7 +554,7 @@ bignumber bignumber::modpow(bignumber b, bignumber exp, const bignumber &m) {
     return res;
 }
 
-bignumber bignumber::sqrt(const bignumber &other) {
+bignumber bignumber::sqrt(const bignumber &other) const {
     bignumber x = other;
     bignumber y = (x + 1) / 2;
     while (y < x) {
@@ -527,20 +569,20 @@ int bignumber::compare(const bignumber &lhs, const bignumber &rhs) const {
         return lhs._sign < rhs._sign ? -1 : 1;
     }
 
-    if (lhs._units.size() != rhs._units.size()) {
+    if (lhs._v.size() != rhs._v.size()) {
         if (lhs._sign == 1) {
-            return lhs._units.size() < rhs._units.size() ? -1 : 1;
+            return lhs._v.size() < rhs._v.size() ? -1 : 1;
         } else {
-            return lhs._units.size() < rhs._units.size() ? 1 : -1;
+            return lhs._v.size() < rhs._v.size() ? 1 : -1;
         }
     }
 
-    for (int i = (int)lhs._units.size() - 1; i >= 0; i--) {
-        if (lhs._units[i] != rhs._units[i]) {
+    for (int i = (int)lhs._v.size() - 1; i >= 0; i--) {
+        if (lhs._v[i] != rhs._v[i]) {
             if (lhs._sign == 1) {
-                return lhs._units[i] < rhs._units[i] ? -1 : 1;
+                return lhs._v[i] < rhs._v[i] ? -1 : 1;
             } else {
-                return lhs._units[i] < rhs._units[i] ? 1 : -1;
+                return lhs._v[i] < rhs._v[i] ? 1 : -1;
             }
         }
     }
@@ -559,23 +601,23 @@ bignumber bignumber::leftshift(const bignumber &v, unsigned int shift) const {
 #else
     // O(n)
     bignumber res;
-    if (v._units.empty()) {
+    if (v._v.empty()) {
     } else {
         int limb_shift = shift / 32;
         int bit_shift = shift % 32;
 
         res._sign = v._sign;
-        res._units.assign(limb_shift, 0);
+        res._v.assign(limb_shift, 0);
 
         uint64 carry = 0;
-        for (uint32 x : v._units) {
+        for (uint32 x : v._v) {
             uint64 cur = ((uint64)x << bit_shift) | carry;
-            res._units.push_back((uint32)cur);
+            res._v.push_back((uint32)cur);
             carry = cur >> 32;
         }
 
         if (carry) {
-            res._units.push_back((uint32)carry);
+            res._v.push_back((uint32)carry);
         }
     }
     return res;
@@ -594,21 +636,21 @@ bignumber bignumber::rightshift(const bignumber &v, unsigned int shift) const {
 #else
     // O(n);
     bignumber res;
-    if (v._units.empty()) {
+    if (v._v.empty()) {
     } else {
         int limb_shift = shift / 32;
         int bit_shift = shift % 32;
 
-        if ((int)v._units.size() <= limb_shift) {
+        if ((int)v._v.size() <= limb_shift) {
         } else {
             res._sign = v._sign;
-            res._units.resize(v._units.size() - limb_shift);
+            res._v.resize(v._v.size() - limb_shift);
 
             uint32 carry = 0;
-            for (int i = (int)v._units.size() - 1; i >= limb_shift; --i) {
-                uint32 cur = v._units[i];
+            for (int i = (int)v._v.size() - 1; i >= limb_shift; --i) {
+                uint32 cur = v._v[i];
 
-                res._units[i - limb_shift] = (cur >> bit_shift) | ((uint64)carry << (32 - bit_shift));
+                res._v[i - limb_shift] = (cur >> bit_shift) | ((uint64)carry << (32 - bit_shift));
                 carry = cur & ((1u << bit_shift) - 1);
             }
 
@@ -620,22 +662,22 @@ bignumber bignumber::rightshift(const bignumber &v, unsigned int shift) const {
 }
 
 void bignumber::trim() {
-    while ((false == _units.empty()) && (0 == _units.back())) {
-        _units.pop_back();
+    while ((false == _v.empty()) && (0 == _v.back())) {
+        _v.pop_back();
     }
-    if (_units.empty()) {
+    if (_v.empty()) {
         _sign = 1;
     }
 }
 
 int bignumber::abscmp(const bignumber &lhs, const bignumber &rhs) {
     int ret = 0;
-    if (lhs._units.size() != rhs._units.size()) {
-        ret = lhs._units.size() < rhs._units.size() ? -1 : 1;
+    if (lhs._v.size() != rhs._v.size()) {
+        ret = lhs._v.size() < rhs._v.size() ? -1 : 1;
     } else {
-        for (int i = (int)lhs._units.size() - 1; i >= 0; --i) {
-            if (lhs._units[i] != rhs._units[i]) {
-                ret = lhs._units[i] < rhs._units[i] ? -1 : 1;
+        for (int i = (int)lhs._v.size() - 1; i >= 0; --i) {
+            if (lhs._v[i] != rhs._v[i]) {
+                ret = lhs._v[i] < rhs._v[i] ? -1 : 1;
                 break;
             }
         }
@@ -647,22 +689,16 @@ bignumber bignumber::absadd(const bignumber &lhs, const bignumber &rhs) {
     // O(n)
     bignumber res;
     int64 carry = 0;
-    size_t n = std::max(lhs._units.size(), rhs._units.size());
-    res._units.resize(n);
+    size_t n = std::max(lhs._v.size(), rhs._v.size());
+    res._v.resize(n);
 
     for (size_t i = 0; i < n; i++) {
-        int64 sum = carry;
-        if (i < lhs._units.size()) {
-            sum += lhs._units[i];
-        }
-        if (i < rhs._units.size()) {
-            sum += rhs._units[i];
-        }
-        res._units[i] = sum % base;
+        int64 sum = carry + (i < lhs._v.size() ? lhs._v[i] : 0) + (i < rhs._v.size() ? rhs._v[i] : 0);
+        res._v[i] = sum % base;
         carry = sum / base;
     }
     if (carry) {
-        res._units.push_back(carry);
+        res._v.push_back(carry);
     }
     return res;
 }
@@ -671,23 +707,65 @@ bignumber bignumber::abssub(const bignumber &lhs, const bignumber &rhs) {
     // |lhs| >= |rhs|
     // O(n)
     bignumber res;
-    res._units.resize(lhs._units.size());
-    int64 carry = 0;
+    res._v.resize(lhs._v.size());
+    int64 borrow = 0;
 
-    for (size_t i = 0; i < lhs._units.size(); i++) {
-        int64 cur = (int64)lhs._units[i] - carry;
-        if (i < rhs._units.size()) {
-            cur -= rhs._units[i];
-        }
-        if (cur < 0) {
-            cur += base;
-            carry = 1;
+    for (size_t i = 0; i < lhs._v.size(); i++) {
+        int64 x = (int64)lhs._v[i] - borrow - (i < rhs._v.size() ? rhs._v[i] : 0);
+        if (x < 0) {
+            x += base;
+            borrow = 1;
         } else {
-            carry = 0;
+            borrow = 0;
         }
-        res._units[i] = (uint32)cur;
+        res._v[i] = (uint32)x;
     }
     res.trim();
+    return res;
+}
+
+#ifdef __SIZEOF_INT128__
+bignumber bignumber::bn_mod(uint128 bits) const
+#else
+bignumber bignumber::bn_mod(uint64 bits) const
+#endif
+{
+    bignumber res(1);
+    return res <<= bits;
+}
+
+#ifdef __SIZEOF_INT128__
+bignumber bignumber::bn_half(uint128 bits) const
+#else
+bignumber bignumber::bn_half(uint64 bits) const
+#endif
+{
+    bignumber res(1);
+    return res << (bits - 1);
+}
+
+#ifdef __SIZEOF_INT128__
+bignumber bignumber::normalize(const bignumber &other, uint128 bits, bool sign) const
+#else
+bignumber bignumber::normalize(const bignumber &other, uint64 bits, bool sign) const
+#endif
+{
+    bignumber res(*this);
+    auto m = std::move(bn_mod(8));
+    auto h = std::move(bn_half(8));
+    res %= m;
+    if (sign) {
+        if (res < 0) {
+            res += m;
+        }
+        if (res >= h) {
+            res -= m;
+        }
+    }
+    auto n = ((bits + 7) & 7) / 4;  // 4 sizeof(uint32)
+    if (res._v.size() > n) {
+        res._v.resize(n);  // vector<uint32> low ... high
+    }
     return res;
 }
 
@@ -714,41 +792,41 @@ bignumber &bignumber::bitwise_xor(const bignumber &other) { return *this = bitwi
 
 bignumber &bignumber::bitwise_not() { return *this = bitwise_not(*this); }
 
-size_t bignumber::capacity() const { return _units.size(); }
+size_t bignumber::capacity() const { return _v.size(); }
 
 std::string bignumber::str() const {
 #if (bn_intuitive == 0)
     std::stringstream ss;
     // base
-    if (_units.empty()) {
+    if (_v.empty()) {
         ss << '0';
     } else {
         if (-1 == _sign) {
             ss << '-';
         }
-        ss << _units.back();
+        ss << _v.back();
 
-        for (int i = (int)_units.size() - 2; i >= 0; i--) {
-            ss << std::setw(9) << std::setfill('0') << _units[i];
+        for (int i = (int)_v.size() - 2; i >= 0; i--) {
+            ss << std::setw(9) << std::setfill('0') << _v[i];
         }
     }
     return ss.str();
 #else
     std::string res;
     bignumber tmp = *this;
-    if (tmp._units.empty()) {
+    if (tmp._v.empty()) {
         res = "0";
     } else {
-        while (false == tmp._units.empty()) {
+        while (false == tmp._v.empty()) {
             uint64 carry = 0;
-            for (int i = (int)tmp._units.size() - 1; i >= 0; i--) {
-                uint64 cur = (carry << 32) | tmp._units[i];
-                tmp._units[i] = (uint32)(cur / 10);
+            for (int i = (int)tmp._v.size() - 1; i >= 0; i--) {
+                uint64 cur = (carry << 32) | tmp._v[i];
+                tmp._v[i] = (uint32)(cur / 10);
                 carry = cur % 10;
             }
             res.push_back('0' + carry);
-            while (false == tmp._units.empty() && 0 == tmp._units.back()) {
-                tmp._units.pop_back();
+            while (false == tmp._v.empty() && 0 == tmp._v.back()) {
+                tmp._v.pop_back();
             }
         }
         if (-1 == _sign) {
@@ -770,8 +848,8 @@ std::string bignumber::hex() const {
 void bignumber::dump(std::function<void(const binary_t &)> func) const {
 #if (bn_intuitive == 1)
     binary_t out;
-    for (int i = (int)_units.size() - 1; i >= 0; i--) {
-        auto x = _units[i];
+    for (int i = (int)_v.size() - 1; i >= 0; i--) {
+        auto x = _v[i];
         if (is_little_endian()) {
             x = hton32(x);
         }
@@ -788,7 +866,7 @@ void bignumber::dump(std::function<void(const binary_t &)> func) const {
 int bignumber::get(binary_t &base16hexstream, bool trimzero) const {
 #if (bn_intuitive == 1)
     base16hexstream.clear();
-    for (auto rit = _units.rbegin(); rit != _units.rend(); rit++) {
+    for (auto rit = _v.rbegin(); rit != _v.rend(); rit++) {
         binary_append(base16hexstream, *rit, ntoh32);
     }
     if (trimzero) {

@@ -84,8 +84,6 @@ void test_bn1() {
         _test_case.assert(lshift1 == item.lshift1, __FUNCTION__, "%s lshift1 %s", item.text, lshift1.c_str());
         auto rshift1 = (n1 >> 1).str();
         _test_case.assert(rshift1 == item.rshift1, __FUNCTION__, "%s rshift1 %s", item.text, rshift1.c_str());
-        auto g = bignumber::gcd(n1, n2).str();
-        _test_case.assert(g == item.gcd, __FUNCTION__, "%s gcd %s", item.text, g.c_str());
     }
 }
 
@@ -151,58 +149,52 @@ void test_bn3() {
 
 void test_bn4() {
     {
-        typedef t_bigint<128> int128_t;
-
-        int128_t a(int64(9223372036854775807));
-        int128_t b(int64(2147483647));
-        int128_t c;
-        _logger->writeln("int128_t a = %s", a.str().c_str());
-        _logger->writeln("int128_t b = %s", b.str().c_str());
+        bignumber a(int64(9223372036854775807));
+        bignumber b(int64(2147483647));
+        bignumber c;
+        _logger->writeln("bignumber a = %s", a.str().c_str());
+        _logger->writeln("bignumber b = %s", b.str().c_str());
 
         c = a + b;
-        _test_case.assert(c.str() == "9223372039002259454", __FUNCTION__, "int128_t a + b = %s", c.str().c_str());
+        _test_case.assert(c.str() == "9223372039002259454", __FUNCTION__, "bignumber a + b = %s", c.str().c_str());
         c = a - b;
-        _test_case.assert(c.str() == "9223372034707292160", __FUNCTION__, "int128_t a - b = %s", c.str().c_str());
+        _test_case.assert(c.str() == "9223372034707292160", __FUNCTION__, "bignumber a - b = %s", c.str().c_str());
         c = a * b;
-        _test_case.assert(c.str() == "19807040619342712359383728129", __FUNCTION__, "int128_t a * b = %s", c.str().c_str());
+        _test_case.assert(c.str() == "19807040619342712359383728129", __FUNCTION__, "bignumber a * b = %s", c.str().c_str());
         c = a / b;
-        _test_case.assert(c.str() == "4294967298", __FUNCTION__, "int128_t a / b = %s", c.str().c_str());
+        _test_case.assert(c.str() == "4294967298", __FUNCTION__, "bignumber a / b = %s", c.str().c_str());
     }
 
     {
-        typedef t_bigint<128, false> uint128_t;
-
-        uint128_t a;
+        bignumber a;
         a = (bignumber(1) << 64) - 1;  // 18446744073709551615LL (2^64 - 1)
-        _logger->writeln("uint128_t a = %s", a.str().c_str());
+        _logger->writeln("bignumber a = %s", a.str().c_str());
         _test_case.assert(a.str() == "18446744073709551615", __FUNCTION__, "int128.max");
     }
 }
 
 void test_bn5() {
-    typedef t_bigint<256> int256_t;
-
-    int256_t a(bignumber(1) << 128);  // 340282366920938463463374607431768211456
-    int256_t b(bignumber(1) << 64);   // 18446744073709551616
-    int256_t c;
-    _logger->writeln("int256_t a = %s", a.str().c_str());
-    _logger->writeln("int256_t b = %s", b.str().c_str());
+    bignumber a(bignumber(1) << 128);  // 340282366920938463463374607431768211456
+    bignumber b(bignumber(1) << 64);   // 18446744073709551616
+    bignumber c;
+    _logger->writeln("bignumber a = %s", a.str().c_str());
+    _logger->writeln("bignumber b = %s", b.str().c_str());
 
     c = a + b;
-    _test_case.assert(c.str() == "340282366920938463481821351505477763072", __FUNCTION__, "int256_t a + b = %s", c.str().c_str());
+    _test_case.assert(c.str() == "340282366920938463481821351505477763072", __FUNCTION__, "bignumber a + b = %s", c.str().c_str());
     c = a - b;
-    _test_case.assert(c.str() == "340282366920938463444927863358058659840", __FUNCTION__, "int256_t a - b = %s", c.str().c_str());
+    _test_case.assert(c.str() == "340282366920938463444927863358058659840", __FUNCTION__, "bignumber a - b = %s", c.str().c_str());
     c = a * b;
-    _test_case.assert(c.str() == "6277101735386680763835789423207666416102355444464034512896", __FUNCTION__, "int256_t a * b = %s", c.str().c_str());
+    _test_case.assert(c.str() == "6277101735386680763835789423207666416102355444464034512896", __FUNCTION__, "bignumber a * b = %s", c.str().c_str());
     c = a / b;
-    _test_case.assert(c.str() == "18446744073709551616", __FUNCTION__, "int256_t a / b = %s", c.str().c_str());
+    _test_case.assert(c.str() == "18446744073709551616", __FUNCTION__, "bignumber a / b = %s", c.str().c_str());
 
     openssl_prng prng;
     int loop = 10;
     while (loop--) {
-        int256_t i1 = prng.rand64();
-        int256_t i2 = prng.rand64();
-        int256_t i = uint64(0);
+        bignumber i1 = prng.rand64();
+        bignumber i2 = prng.rand64();
+        bignumber i = uint64(0);
         i = i1 + i2;
         _logger->writeln("%s + %s = %s", i1.str().c_str(), i2.str().c_str(), i.str().c_str());
         i = i1 - i2;
@@ -219,8 +211,6 @@ void test_bn5() {
 }
 
 void test_bn6() {
-    typedef t_bigint<4096> bigint_t;
-
     struct testvector {
         int bits;
         const char* minvalue;
@@ -299,9 +289,9 @@ void test_bn6() {
     };
 
     for (auto item : table) {
-        bigint_t intmin = (bignumber(1) << (item.bits - 1)).neg();
-        bigint_t intmax = (bignumber(1) << (item.bits - 1)) - bignumber(1);
-        bigint_t uintmax = (bignumber(1) << item.bits) - bignumber(1);
+        bignumber intmin = (bignumber(1) << (item.bits - 1)).neg();
+        bignumber intmax = (bignumber(1) << (item.bits - 1)) - bignumber(1);
+        bignumber uintmax = (bignumber(1) << item.bits) - bignumber(1);
 
         // intmin.get_bn().dump([&](const binary_t& bin) -> void { _logger->hdump("int.min", bin, 16, 3); });
         _logger->writeln([&](basic_stream& bs) -> void { bs << "int" << item.bits << ".min 0x" << intmin.hex(); });
@@ -412,6 +402,60 @@ void test_bn9() {
     }
 }
 
+void test_bn10() {
+    std::string sample = std::string("0x0123456789abcdef0123456789abcdef");
+#ifdef __SIZEOF_INT128__
+    int128 signed_sample = t_htoi<int128>(sample.c_str());
+    uint128 unsigned_sample = t_htoi<uint128>(sample.c_str());
+#else
+    int64 signed_sample = t_htoi<int64>(sample.c_str());
+    uint64 unsigned_sample = t_htoi<uint64>(sample.c_str());
+#endif
+    bignumber bn = sample;
+
+    auto i8 = bn.bntoi<int8>(bn);
+    _logger->writeln("int8 %i", i8);
+    _test_case.assert(i8 == int8(signed_sample), __FUNCTION__, "to.int8 %i", int8(signed_sample));
+
+    auto ui8 = bn.bntoi<uint8>(bn);
+    _logger->writeln("uint8 %u", ui8);
+    _test_case.assert(ui8 == uint8(unsigned_sample), __FUNCTION__, "to.uint8 %u", uint8(unsigned_sample));
+
+    auto i16 = bn.bntoi<int16>(bn);
+    _logger->writeln("int16 %i", i16);
+    _test_case.assert(i16 == int16(signed_sample), __FUNCTION__, "to.int16 %i", int16(signed_sample));
+
+    auto ui16 = bn.bntoi<uint16>(bn);
+    _logger->writeln("uint16 %u", ui16);
+    _test_case.assert(ui16 == uint16(unsigned_sample), __FUNCTION__, "to.uint16 %u", uint16(unsigned_sample));
+
+    auto i32 = bn.bntoi<int32>(bn);
+    _logger->writeln("int32 %i", i32);
+    _test_case.assert(i32 == int32(signed_sample), __FUNCTION__, "to.int32 %i", int32(signed_sample));
+
+    auto ui32 = bn.bntoi<uint32>(bn);
+    _logger->writeln("uint32 %u", ui32);
+    _test_case.assert(ui32 == uint32(unsigned_sample), __FUNCTION__, "to.uint32 %u", uint32(unsigned_sample));
+
+    auto i64 = bn.bntoi<int64>(bn);
+    _logger->writeln("int64 %I64i", i64);
+    _test_case.assert(i64 == int64(signed_sample), __FUNCTION__, "to.int64 %I64i", int64(signed_sample));
+
+    auto ui64 = bn.bntoi<uint64>(bn);
+    _logger->writeln("uint64 %I64u", ui64);
+    _test_case.assert(ui64 == uint64(unsigned_sample), __FUNCTION__, "to.uint64 %I64u", uint64(unsigned_sample));
+
+#ifdef __SIZEOF_INT128__
+    auto i128 = bn.bntoi<int128>(bn);
+    _logger->writeln("int128 %I128i", i128);
+    _test_case.assert(i128 == int128(signed_sample), __FUNCTION__, "to.int128 %I64i", signed_sample);
+
+    auto ui128 = bn.bntoi<uint128>(bn);
+    _logger->writeln("uint128 %I128u", ui128);
+    _test_case.assert(ui128 == uint128(unsigned_sample), __FUNCTION__, "to.uint128 %I64u", signed_sample);
+#endif
+}
+
 void test_bignumber() {
     _test_case.begin("bignumber");
 
@@ -424,4 +468,5 @@ void test_bignumber() {
     test_bn7();
     test_bn8();
     test_bn9();
+    test_bn10();
 }
