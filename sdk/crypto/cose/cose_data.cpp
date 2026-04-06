@@ -41,31 +41,31 @@ cose_data& cose_data::set_owner(cose_recipient* layer) {
 cose_recipient* cose_data::get_owner() { return _layer; }
 
 cose_data& cose_data::add_bool(int key, bool value) {
-    variant var;
-    _data_map.insert(std::make_pair(key, std::move(var.set_bool(value))));
+    variant var(value);
+    _data_map.insert(std::make_pair(key, std::move(var)));
     _order.push_back(key);
     return *this;
 }
 
 cose_data& cose_data::add(int key, int32 value) {
-    variant var;
-    _data_map.insert(std::make_pair(key, std::move(var.set_int32(value))));
+    variant var(value);
+    _data_map.insert(std::make_pair(key, std::move(var)));
     _order.push_back(key);
     return *this;
 }
 
 cose_data& cose_data::add(int key, const char* value) {
     if (value) {
-        variant var;
-        _data_map.insert(std::make_pair(key, std::move(var.set_bstr_new((unsigned char*)value, strlen(value)))));
+        variant var(value);
+        _data_map.insert(std::make_pair(key, std::move(var)));
         _order.push_back(key);
     }
     return *this;
 }
 
 cose_data& cose_data::add(int key, const unsigned char* value, size_t size) {
-    variant var;
-    _data_map.insert(std::make_pair(key, std::move(var.set_bstr_new(value, size))));
+    variant var(value, size);
+    _data_map.insert(std::make_pair(key, std::move(var)));
     _order.push_back(key);
     return *this;
 }
@@ -73,12 +73,11 @@ cose_data& cose_data::add(int key, const unsigned char* value, size_t size) {
 cose_data& cose_data::replace(int key, const unsigned char* value, size_t size) {
     cose_variantmap_t::iterator iter = _data_map.find(key);
     if (_data_map.end() != iter) {
-        variant var;
-        var.set_bstr_new(value, size);
+        variant var(value, size);
         iter->second = std::move(var);
     } else {
-        variant var;
-        _data_map.insert(std::make_pair(key, std::move(var.set_bstr_new(value, size))));
+        variant var(value, size);
+        _data_map.insert(std::make_pair(key, std::move(var)));
         _order.push_back(key);
     }
     return *this;
@@ -194,8 +193,8 @@ cose_data& cose_data::add(cose_recipient* countersign) {
 
 cose_data& cose_data::add(int key, vartype_t vty, void* p) {
     if (p) {
-        variant vt;
-        _data_map.insert(std::make_pair(key, std::move(vt.set_user_type(vty, p))));
+        variant vt(vty, p);
+        _data_map.insert(std::make_pair(key, std::move(vt)));
         _order.push_back(key);
     }
     return *this;

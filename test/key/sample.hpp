@@ -13,7 +13,11 @@
 #include <hotplace/sdk/sdk.hpp>
 #include <hotplace/test/test.hpp>
 
-struct OPTION : public CMDLINEOPTION {};
+struct OPTION : public CMDLINEOPTION {
+    int test_ffdhe;
+
+    OPTION() : CMDLINEOPTION(), test_ffdhe(0) {}
+};
 
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;

@@ -15,7 +15,8 @@ crypto_key rfc8152_privkeys;
 crypto_key rfc8152_pubkeys;
 crypto_key rfc8152_privkeys_c4;
 
-return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, cbor_object* root, const char* expect_file, const char* text) {
+return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, cbor_object* root, const char* expect_file, const char* text,
+                              bool dountag = true) {
     return_t ret = errorcode_t::success;
     return_t test = errorcode_t::success;
     const OPTION& option = _cmdline->value();
@@ -112,7 +113,7 @@ return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys
 
                 _test_case.assert((bin_cbor_lv2 == expect), __FUNCTION__, "check3.cborparse %s", text);
 
-                {
+                if (dountag) {
                     test_case_notimecheck notimecheck(_test_case);
                     cose_composer composer;
                     binary_t bin_untagged;
@@ -130,7 +131,7 @@ return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys
                         publisher.publish(cbor_newone, &bs_diagnostic_composed);
                         dump_test_data("compose", bs_diagnostic_composed);
 
-                        _test_case.assert(false == bin_untagged.empty(), __FUNCTION__, "check.compose %s", text);
+                        _test_case.assert(0 == memcmp(&bin[2], &bin_untagged[0], bin_untagged.size()), __FUNCTION__, "check.compose %s", text);
 
                         cbor_newone->release();
                     }
@@ -386,7 +387,7 @@ void test_rfc8152_c_2_1() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    do_test_cose_example(cose_handle, &rfc8152_pubkeys, root, "rfc8152_c_2_1.cbor", "RFC 8152 C.2.1.  Single ECDSA Signature");
+    do_test_cose_example(cose_handle, &rfc8152_pubkeys, root, "rfc8152_c_2_1.cbor", "RFC 8152 C.2.1.  Single ECDSA Signature", false);
     cose.close(cose_handle);
 
     root->release();
@@ -529,7 +530,7 @@ void test_rfc8152_c_4_1() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    do_test_cose_example(cose_handle, &rfc8152_privkeys_c4, root, "rfc8152_c_4_1.cbor", "RFC 8152 C.4.1.  Simple Encrypted Message");
+    do_test_cose_example(cose_handle, &rfc8152_privkeys_c4, root, "rfc8152_c_4_1.cbor", "RFC 8152 C.4.1.  Simple Encrypted Message", false);
     cose.close(cose_handle);
 
     root->release();
@@ -551,7 +552,7 @@ void test_rfc8152_c_4_2() {
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
     cose.set(cose_handle, cose_param_t::cose_unsent_iv, base16_decode("89F52F65A1C5809300000061A7"));
-    do_test_cose_example(cose_handle, &rfc8152_privkeys_c4, root, "rfc8152_c_4_2.cbor", "RFC 8152 C.4.2.  Encrypted Message with a Partial IV");
+    do_test_cose_example(cose_handle, &rfc8152_privkeys_c4, root, "rfc8152_c_4_2.cbor", "RFC 8152 C.4.2.  Encrypted Message with a Partial IV", false);
     cose.close(cose_handle);
 
     root->release();
@@ -685,7 +686,7 @@ void test_rfc8152_c_6_1() {
     cbor_object_signing_encryption cose;
     cose_context_t* cose_handle = nullptr;
     cose.open(&cose_handle);
-    do_test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_6_1.cbor", "RFC 8152 C.6.1.  Shared Secret Direct MAC");
+    do_test_cose_example(cose_handle, &rfc8152_privkeys, root, "rfc8152_c_6_1.cbor", "RFC 8152 C.6.1.  Shared Secret Direct MAC", false);
     cose.close(cose_handle);
 
     root->release();

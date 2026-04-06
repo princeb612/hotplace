@@ -23,6 +23,17 @@ namespace hotplace {
 /*
  * @brief   big number
  * @remarks
+ *          int8     -128 ~ 127
+ *          int16    -32768 ~ 32767
+ *          int32    -2147483648 ~ 2147483647
+ *          int64    -9223372036854775808 ~ 9223372036854775807
+ *          int128   -170141183460469231731687303715884105728 ~ 170141183460469231731687303715884105727
+ *          uint8    0 ~ 255
+ *          uint16   0 ~ 65535
+ *          uint32   0 ~ 4294967295
+ *          uint64   0 ~ 18446744073709551615
+ *          uint128  0 ~ 340282366920938463463374607431768211455
+ *
  *          int128(MSVC), bigint, int512, ...
  *          sizeof(limb) = 4
  *
@@ -61,9 +72,27 @@ class bignumber {
 #endif
     bignumber(const bignumber &other);
     bignumber(bignumber &&other);
+    /**
+     * @brief   big-endian byte order stream
+     */
     bignumber(const byte_t *p, size_t n);
+    /**
+     * @brief   base16 hex-stream
+     */
     bignumber(const binary_t &base16hexstream);
-    bignumber(const std::string &base16hexstream);
+    /**
+     * @brief   numeric, hexdecimal string
+     * @example
+     *          bignumber bn("1");
+     *          bignumber bn("18446744073709551615");
+     *          bignumber bn("0x7fffffffffffffff");
+     *          bignumber bn("0xffffffffffffffff");  // uint128.max
+     *
+     *          // larger than c++ types
+     *          bignumber bn("340282366920938463463374607431768211456");
+     *          bignumber bn("0x10000000000000000");
+     */
+    bignumber(const std::string &value);
     ~bignumber();
 
     bignumber &operator=(const bignumber &other);
@@ -81,7 +110,8 @@ class bignumber {
     bignumber &operator=(uint128 value);
 #endif
     bignumber &operator=(const binary_t &base16hexstream);
-    bignumber &operator=(const std::string &base16hexstream);
+    bignumber &operator=(const char *value);
+    bignumber &operator=(const std::string &value);
 
     bignumber operator+(const bignumber &other) const;
     bignumber &operator+=(const bignumber &other);
@@ -136,9 +166,10 @@ class bignumber {
     bignumber &set(int64 value);
     bignumber &setu(uint64 value);
 #endif
-    bignumber &set(const std::string &base16hexstream);
     bignumber &set(const byte_t *p, size_t n);
-    bignumber &set(const binary_t &base16hexstream);
+    bignumber &sethex(const binary_t &base16hexstream);
+    bignumber &setstring(const char *value);
+    bignumber &setstring(const std::string &value);
 
     bignumber add(const bignumber &lhs, const bignumber &rhs) const;
     bignumber sub(const bignumber &lhs, const bignumber &rhs) const;
@@ -185,14 +216,21 @@ class bignumber {
     friend binary_t &operator>>(const bignumber &lhs, binary_t &rhs);
     friend std::string &operator>>(const bignumber &lhs, std::string &rhs);
 
+    /*
+     * @return T
+     * @example
+     *          bn.bntoi<int8>();
+     *          bn.bntoi<int128>();
+     * @sa      str(), hex()
+     */
     template <typename T>
-    T bntoi(const bignumber &other) const {
+    T bntoi() const {
         size_t tsize = sizeof(T);
-        bignumber bn = std::move(normalize(other, tsize >> 3, std::is_signed<T>::value));
+        bignumber bn = std::move(normalize(*this, tsize << 3, std::is_signed<T>::value));
 
         T value = 0;
         binary_t bin;
-        other >> bin;  // base16, BE
+        bn >> bin;  // base16, BE
         size_t size = bin.size();
         if (size > tsize) {
             bin.erase(bin.begin(), bin.begin() + size - tsize);
@@ -209,6 +247,9 @@ class bignumber {
             if (tsize > 1) {
                 value = convert_endian(value);
             }
+        }
+        if (bn < 0) {
+            value = -value;
         }
         return value;
     }

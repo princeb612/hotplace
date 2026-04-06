@@ -109,6 +109,7 @@ int main(int argc, char** argv) {
         test_rfc8152_read_cbor();
     }
 
+#if 1  // check cose_composer
     // part 1 .. following cases
     // encode and decode
     // Test Vector comparison
@@ -183,6 +184,7 @@ int main(int argc, char** argv) {
 
     // part 5 CWT
     test_cwt_rfc8392();
+#endif
 
     openssl_cleanup();
 

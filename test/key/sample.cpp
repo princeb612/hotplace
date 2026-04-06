@@ -29,7 +29,8 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("--debug", "trace level [debug]", [](OPTION& o, char* param) -> void { o.enable_trace(loglevel_debug); }).optional()
 #endif
                 << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional();
+                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-ffdhe", "test ffdhe", [](OPTION& o, char* param) -> void { o.test_ffdhe = 1; }).optional();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
@@ -57,8 +58,10 @@ int main(int argc, char** argv) {
         test_crypto_key();
         test_rsa();
         test_eckey_compressed();
-        test_ffdhe();
-        test_ffdhe_dh();
+        if (option.test_ffdhe) {
+            test_ffdhe();
+            test_ffdhe_dh();
+        }
         test_der();
         test_dsa();
         test_dh_rfc7748();

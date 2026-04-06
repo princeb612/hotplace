@@ -6,6 +6,7 @@
  *
  * Revision History
  * Date         Name                Description
+ *
  */
 
 #include <hotplace/sdk/base/basic/base16.hpp>
@@ -61,9 +62,9 @@ bignumber::bignumber(bignumber &&other) {
 
 bignumber::bignumber(const byte_t *p, size_t n) { set(p, n); }
 
-bignumber::bignumber(const binary_t &base16hexstream) { *this = base16hexstream; }
+bignumber::bignumber(const binary_t &base16hexstream) { sethex(base16hexstream); }
 
-bignumber::bignumber(const std::string &base16hexstream) { *this = base16hexstream; }
+bignumber::bignumber(const std::string &value) { setstring(value); }
 
 bignumber::~bignumber() {}
 
@@ -101,9 +102,11 @@ bignumber &bignumber::operator=(int128 value) { return set(value); }
 bignumber &bignumber::operator=(uint128 value) { return setu(value); }
 #endif
 
-bignumber &bignumber::operator=(const binary_t &base16hexstream) { return set(base16hexstream); }
+bignumber &bignumber::operator=(const binary_t &base16hexstream) { return sethex(base16hexstream); }
 
-bignumber &bignumber::operator=(const std::string &base16hexstream) { return set(base16hexstream); }
+bignumber &bignumber::operator=(const char *value) { return setstring(value); }
+
+bignumber &bignumber::operator=(const std::string &value) { return setstring(value); }
 
 bignumber bignumber::operator+(const bignumber &other) const { return add(*this, other); }
 
@@ -213,21 +216,6 @@ bignumber &bignumber::setu(uint64 value)
     return *this;
 }
 
-bignumber &bignumber::set(const std::string &base16hexstream) {
-    _sign = 1;
-    _v.clear();
-#if (bn_intuitive == 1)
-    if (false == base16hexstream.empty()) {
-        binary_t bin;
-        base16_decode(base16hexstream, bin);
-        *this = bin;
-    }
-#else
-    // not supported
-#endif
-    return *this;
-}
-
 bignumber &bignumber::set(const byte_t *p, size_t n) {
     _sign = 1;
     _v.clear();
@@ -255,7 +243,7 @@ bignumber &bignumber::set(const byte_t *p, size_t n) {
     return *this;
 }
 
-bignumber &bignumber::set(const binary_t &base16hexstream) {
+bignumber &bignumber::sethex(const binary_t &base16hexstream) {
     _sign = 1;
     _v.clear();
 #if (bn_intuitive == 1)
@@ -279,6 +267,62 @@ bignumber &bignumber::set(const binary_t &base16hexstream) {
 #endif
     return *this;
 }
+
+bignumber &bignumber::setstring(const char *value) {
+    _sign = 1;
+    _v.clear();
+#if (bn_intuitive == 1)
+    if (value) {
+        auto len = strlen(value);
+        // 0x prefixed hexadecimal
+        if ((len >= 2) && (strncmp(value, "0x", 2) == 0)) {
+            binary_t bin = base16_decode(value);
+            if (false == bin.empty()) {
+                auto size = bin.size();
+                auto pad = (4 - (size & 3)) & 3;  // (4 - (size % 4)) & 3
+                if (pad) {
+                    bin.reserve(size + pad);
+                    while (pad--) {
+                        bin.insert(bin.begin(), 0);
+                    }
+                }
+                while (false == bin.empty()) {
+                    uint32 t = hton32(*(uint32 *)&bin[0]);
+                    _v.insert(_v.begin(), t);
+                    bin.erase(bin.begin(), bin.begin() + 4);
+                }
+                trim();
+            }
+        } else {
+            // "numeric", "-numeric"
+
+            const char *p = value;
+            if (*p == '-') {
+                _sign = -1;
+                ++p;
+            }
+            _v.push_back(0);
+            while (*p) {
+                uint32 digit = *p - '0';
+                uint64 carry = digit;
+                for (auto i = 0; i < _v.size(); ++i) {
+                    uint64 x = _v[i] * 10ULL + carry;
+                    _v[i] = (x & 0xffffffff);
+                    carry = x >> 32;
+                }
+                while (carry) {
+                    _v.push_back(carry & 0xffffffff);
+                    carry >>= 32;
+                }
+                ++p;
+            };
+        }
+    }
+#endif
+    return *this;
+}
+
+bignumber &bignumber::setstring(const std::string &value) { return setstring(value.c_str()); }
 
 bignumber bignumber::add(const bignumber &lhs, const bignumber &rhs) const {
     bignumber res;
@@ -750,9 +794,9 @@ bignumber bignumber::normalize(const bignumber &other, uint128 bits, bool sign) 
 bignumber bignumber::normalize(const bignumber &other, uint64 bits, bool sign) const
 #endif
 {
-    bignumber res(*this);
-    auto m = std::move(bn_mod(8));
-    auto h = std::move(bn_half(8));
+    bignumber res(other);
+    auto m = std::move(bn_mod(bits));
+    auto h = std::move(bn_half(bits));
     res %= m;
     if (sign) {
         if (res < 0) {
@@ -762,10 +806,7 @@ bignumber bignumber::normalize(const bignumber &other, uint64 bits, bool sign) c
             res -= m;
         }
     }
-    auto n = ((bits + 7) & 7) / 4;  // 4 sizeof(uint32)
-    if (res._v.size() > n) {
-        res._v.resize(n);  // vector<uint32> low ... high
-    }
+    res.trim();
     return res;
 }
 
@@ -866,6 +907,7 @@ void bignumber::dump(std::function<void(const binary_t &)> func) const {
 int bignumber::get(binary_t &base16hexstream, bool trimzero) const {
 #if (bn_intuitive == 1)
     base16hexstream.clear();
+
     for (auto rit = _v.rbegin(); rit != _v.rend(); rit++) {
         binary_append(base16hexstream, *rit, ntoh32);
     }

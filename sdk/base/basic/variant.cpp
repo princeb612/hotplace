@@ -17,11 +17,85 @@
 #include <hotplace/sdk/base/nostd/integer.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
+#include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
 #include <hotplace/sdk/base/system/types.hpp>
 #include <ostream>
 
 namespace hotplace {
+
+variant_t::variant_t() : type(TYPE_NULL), size(0), flag(0) { memset(&data, 0, sizeof(data)); }
+
+variant_t::variant_t(const variant_t &other) : type(TYPE_NULL), size(0), flag(0) { *this = other; }
+
+variant_t::variant_t(variant_t &&other) : type(TYPE_NULL), size(0), flag(0) { *this = std::move(other); }
+
+variant_t::~variant_t() { clear(); }
+
+variant_t &variant_t::operator=(const variant_t &other) {
+    clear();
+
+    type = other.type;
+    if (variant_flag_t::flag_free & other.flag) {
+        switch (other.type) {
+            case TYPE_BINARY:
+            case TYPE_NSTRING:
+            case TYPE_BIGNUMBER:
+                data.bstr = (unsigned char *)malloc(other.size + 1);
+                memcpy(data.bstr, other.data.bstr, other.size);
+                break;
+            case TYPE_STRING:
+                data.str = strdup(other.data.str);
+                break;
+            case TYPE_DATETIME:
+                data.dt = (datetime_t *)malloc(sizeof(datetime_t));
+                memcpy(data.dt, other.data.dt, sizeof(datetime_t));
+                break;
+            default:
+                break;
+        }
+    } else {
+        memcpy(&data, &other.data, sizeof(data));
+    }
+    size = other.size;
+    flag = other.flag;
+
+    return *this;
+}
+
+variant_t &variant_t::operator=(variant_t &&other) {
+    clear();
+
+    type = other.type;
+    memcpy(&data, &other.data, sizeof(data));
+    size = other.size;
+    flag = other.flag;
+    other.reset();
+
+    return *this;
+}
+
+variant_t &variant_t::reset() {
+    type = TYPE_NULL;
+    memset(&data, 0, sizeof(data));
+    size = 0;
+    flag = 0;
+
+    return *this;
+}
+
+variant_t &variant_t::clear() {
+    if (variant_flag_t::flag_free & flag) {
+        free(data.p);
+    }
+
+    type = TYPE_NULL;
+    memset(&data, 0, sizeof(data));
+    size = 0;
+    flag = 0;
+
+    return *this;
+}
 
 variant::variant() {}
 
@@ -73,6 +147,8 @@ variant::variant(double value) { set_double(value); }
 
 variant::variant(const datetime_t &value) { set_datetime(value); }
 
+variant::variant(vartype_t vtype, void *value) { set_user_type(vtype, value); }
+
 variant::variant(const variant_t &value) : _vt(value) {}
 
 variant::variant(variant_t &&value) : _vt(std::move(value)) {}
@@ -81,11 +157,13 @@ variant::variant(const variant &value) : _vt(value._vt) {}
 
 variant::variant(variant &&value) : _vt(std::move(value._vt)) {}
 
-variant::variant(const bignumber &value) : _vt(value) {}
+variant::variant(const bignumber &value) { set_bn(value); }
 
 variant::~variant() { _vt.clear(); }
 
 const variant_t &variant::content() const { return _vt; }
+
+variant_t &variant::get() { return _vt; }
 
 vartype_t variant::type() const { return _vt.type; }
 
@@ -110,12 +188,12 @@ variant &variant::clear() {
     return *this;
 }
 
-variant &variant::set_flag(uint8 flag) {
+variant &variant::set_flag(uint16 flag) {
     _vt.flag |= flag;
     return *this;
 }
 
-variant &variant::unset_flag(uint8 flag) {
+variant &variant::unset_flag(uint16 flag) {
     _vt.flag &= ~flag;
     return *this;
 }
@@ -482,20 +560,25 @@ variant &variant::set_binary_new(const binary_t &bin) {
 }
 
 variant &variant::set_bn(const bignumber &value) {
-    _vt = value;
+    binary_t bin;
+    value >> bin;
+
+    _vt.type = TYPE_BIGNUMBER;
+    auto size = bin.size();
+    if (false == bin.empty()) {
+        _vt.data.bstr = (unsigned char *)malloc(size + 1);
+        memcpy(_vt.data.bstr, &bin[0], size);
+        _vt.size = size;
+        _vt.flag = variant_flag_t::flag_free;
+    }
+    if (value < 0) {
+        _vt.flag |= variant_flag_t::flag_negative;
+    }
+
     return *this;
 }
 
-variant &variant::set_bn(const std::string &b16hexstream) {
-    _vt = b16hexstream;
-    return *this;
-}
-
-variant &variant::set_bn(const unsigned char *p, size_t n) {
-    std::string b16hexstream = base16_encode(p, n);
-    _vt = b16hexstream;
-    return *this;
-}
+variant &variant::set_bn(const unsigned char *p, size_t n) { return set_bn(bignumber(p, n)); }
 
 const std::string variant::to_str() const {
     std::string ret_value;
@@ -746,9 +829,6 @@ variant &variant::operator=(variant_t &&other) {
     return *this;
 }
 
-variant &variant::operator=(const bignumber &other) {
-    _vt = other;
-    return *this;
-}
+variant &variant::operator=(const bignumber &other) { return set_bn(other); }
 
 }  // namespace hotplace

@@ -18,9 +18,9 @@ void do_test_parse_routine(const char* input, const char* diagnostic, const char
     binary_t bin;
 
     reader.open(&handle);
-    reader.parse(handle, input);
-    reader.publish(handle, &bs);
-    reader.publish(handle, &bin);
+    reader.parse(handle, input);   // read
+    reader.publish(handle, &bs);   // diagnostic
+    reader.publish(handle, &bin);  // concise
     reader.close(handle);
 
     bool test = false;
@@ -83,16 +83,16 @@ void test_parse() {
     do_test_parse_routine("1a000f4240", "1000000");
     // 1000000000000
     do_test_parse_routine("1b000000e8d4a51000", "1000000000000");
-    // 18446744073709551615 uint64.max
+    // 18446744073709551615 cbor_major_uint 0xffffffffffffffff cbor_uint(18446744073709551615)
     do_test_parse_routine("1bffffffffffffffff", "18446744073709551615");
     // 18446744073709551616 cbor_tag_positive_bignum
-    do_test_parse_routine("c249010000000000000000", "18446744073709551616", "2(18446744073709551616)");
-    // -18446744073709551615
+    do_test_parse_routine("c249010000000000000000", "18446744073709551616", "18446744073709551616");
+    // -18446744073709551615 cbor_major_nint 0xfffffffffffffffe cbor_nint(18446744073709551615)
     do_test_parse_routine("3bfffffffffffffffe", "-18446744073709551615");
-    // -18446744073709551616
+    // -18446744073709551616 cbor_major_nint 0xffffffffffffffff cbor_nint(18446744073709551616)
     do_test_parse_routine("3bffffffffffffffff", "-18446744073709551616");
     // -18446744073709551617 cbor_tag_negative_bignum
-    do_test_parse_routine("c349010000000000000000", "-18446744073709551617", "3(-18446744073709551617)");
+    do_test_parse_routine("c349010000000000000000", "-18446744073709551617", "-18446744073709551617");
     // -1
     do_test_parse_routine("20", "-1");
     // -10

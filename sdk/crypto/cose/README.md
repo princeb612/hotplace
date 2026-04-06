@@ -1,3 +1,18 @@
+#### message
+
+````
+                      protected  unprotected      payload     singleitem/multiitems
+                      [0]        [1]              [2]         [3]             [4]
+ cose_tag_encrypt     protected, unprotected_map, ciphertext, [+recipient]
+ cose_tag_encrypt0    protected, unprotected_map, ciphertext
+ cose_tag_mac         protected, unprotected_map, payload,    tag,            [+recipient]
+ cose_tag_mac0        protected, unprotected_map, payload,    tag
+ cose_tag_sign        protected, unprotected_map, payload,    [+signature]
+ cose_tag_sign1       protected, unprotected_map, payload,    signature
+````
+
+#### algorithm
+
 - party : apu-id/nonce/other, apv-id/nonce/other
 - epk   : ephemeral key
 - s-key : static key

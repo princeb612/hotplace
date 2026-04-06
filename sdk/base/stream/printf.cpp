@@ -15,6 +15,7 @@
 #include <hotplace/sdk/base/stream/printf.hpp>
 #include <hotplace/sdk/base/stream/tstring.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
+#include <hotplace/sdk/base/system/bignumber.hpp>
 
 namespace hotplace {
 
@@ -187,6 +188,14 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 break;
             case TYPE_UINT8:
                 switch (style) {
+                    case vtprintf_style_cbor: {
+                        bignumber bn(vt.data.ui8);
+                        if (vt.flag & flag_negative) {
+                            bn += 1;
+                            bn.neg();
+                        }
+                        stream->printf("%s", bn.str().c_str());
+                    } break;
                     case vtprintf_style_debugmode:
                         stream->printf("0x%02x (%u)", vt.data.ui8, vt.data.ui8);
                         break;
@@ -207,6 +216,14 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 break;
             case TYPE_UINT16:
                 switch (style) {
+                    case vtprintf_style_cbor: {
+                        bignumber bn(vt.data.ui16);
+                        if (vt.flag & flag_negative) {
+                            bn += 1;
+                            bn.neg();
+                        }
+                        stream->printf("%s", bn.str().c_str());
+                    } break;
                     case vtprintf_style_debugmode:
                         stream->printf("0x%04x (%u)", vt.data.ui16, vt.data.ui16);
                         break;
@@ -227,6 +244,14 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 break;
             case TYPE_UINT32:
                 switch (style) {
+                    case vtprintf_style_cbor: {
+                        bignumber bn(vt.data.ui32);
+                        if (vt.flag & flag_negative) {
+                            bn += 1;
+                            bn.neg();
+                        }
+                        stream->printf("%s", bn.str().c_str());
+                    } break;
                     case vtprintf_style_debugmode:
                         stream->printf("0x%08x (%u)", vt.data.ui32, vt.data.ui32);
                         break;
@@ -247,6 +272,14 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 break;
             case TYPE_UINT64:
                 switch (style) {
+                    case vtprintf_style_cbor: {
+                        bignumber bn(vt.data.ui64);
+                        if (vt.flag & flag_negative) {
+                            bn += 1;
+                            bn.neg();
+                        }
+                        stream->printf("%s", bn.str().c_str());
+                    } break;
                     case vtprintf_style_debugmode:
                         stream->printf("0x%0I64x (%I64u)", vt.data.ui64, vt.data.ui64);
                         break;
@@ -268,6 +301,14 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 break;
             case TYPE_UINT128:
                 switch (style) {
+                    case vtprintf_style_cbor: {
+                        bignumber bn(vt.data.ui128);
+                        if (vt.flag & flag_negative) {
+                            bn += 1;
+                            bn.neg();
+                        }
+                        stream->printf("%s", bn.str().c_str());
+                    } break;
                     case vtprintf_style_debugmode:
                         stream->printf("0x%0I128x (%I128u)", vt.data.ui128, vt.data.ui128);
                         break;
@@ -341,11 +382,17 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
             case TYPE_BIGNUMBER: {
                 bignumber bn(vt.data.bstr, vt.size);
                 switch (style) {
+                    case vtprintf_style_cbor:
+                        if (flag_negative & vt.flag) {
+                            bn += 1;
+                        }
+                        stream->printf("%s%s", (flag_negative & vt.flag) ? "-" : "", bn.str().c_str());
+                        break;
                     case vtprintf_style_debugmode:
-                        stream->printf("%s (%s%s)", bn.hex().c_str(), (variant_flag_t::flag_negative & vt.flag) ? "-" : "", bn.str().c_str());
+                        stream->printf("%s (%s%s)", bn.hex().c_str(), (flag_negative & vt.flag) ? "-" : "", bn.str().c_str());
                         break;
                     default:
-                        stream->printf("%s%s", (variant_flag_t::flag_negative & vt.flag) ? "-" : "", bn.str().c_str());
+                        stream->printf("%s%s", (flag_negative & vt.flag) ? "-" : "", bn.str().c_str());
                         break;
                 }
             } break;

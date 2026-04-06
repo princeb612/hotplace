@@ -70,8 +70,6 @@ void cbor_data::represent(stream_t* s) {
     if (s) {
         if (tagged()) {
             cbor_tag_t tag = tag_value();
-            s->printf("%I64i(", (uint64)tag);
-
             switch (tag) {
                 case cbor_tag_t::cbor_tag_positive_bignum:
                 case cbor_tag_t::cbor_tag_negative_bignum: {
@@ -84,7 +82,6 @@ void cbor_data::represent(stream_t* s) {
                         if (cbor_tag_t::cbor_tag_positive_bignum == tag) {
                             // do nothing
                         } else if (cbor_tag_t::cbor_tag_negative_bignum == tag) {
-                            bn += 1;
                             bn.neg();
                         }
 
@@ -94,12 +91,13 @@ void cbor_data::represent(stream_t* s) {
                         vtprintf(s, vt, vtprintf_style_t::vtprintf_style_cbor);
                     }
                 } break;
-                default:
+                default: {
+                    s->printf("%I64i(", (uint64)tag);
                     vtprintf(s, vt, vtprintf_style_t::vtprintf_style_cbor);
-                    break;
+                    s->printf(")");
+                } break;
             }
 
-            s->printf(")");
         } else {
             vtprintf(s, vt, vtprintf_style_t::vtprintf_style_cbor);
         }

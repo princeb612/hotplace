@@ -33,9 +33,8 @@ void do_encode_test(variant& vt, binary_t& bin, std::string expect) {
         }
 
         if (option.verbose) {
-            basic_stream bs;
-            dump_memory(bin, &bs);
-            _logger->writeln("encoded %s\n%s", hex.c_str(), bs.c_str());
+            _logger->writeln("encoded %s", hex.c_str());
+            _logger->dump(bin);
         }
     }
 
@@ -76,42 +75,6 @@ void do_cbor_test(cbor_object* root, const char* expected) {
     __finally2 {}
 }
 
-void do_test_cbor_int(int8 value, const char* expect) {
-    binary_t bin;
-    variant vt;
-
-    vt.set_int8(value);
-    do_encode_test(vt, bin, expect);
-
-    cbor_data* cbor = new cbor_data(value);
-    do_cbor_test(cbor, expect);
-    cbor->release();
-}
-
-void do_test_cbor_int(int16 value, const char* expect) {
-    binary_t bin;
-    variant vt;
-
-    vt.set_int16(value);
-    do_encode_test(vt, bin, expect);
-
-    cbor_data* cbor = new cbor_data(value);
-    do_cbor_test(cbor, expect);
-    cbor->release();
-}
-
-void do_test_cbor_int(int32 value, const char* expect) {
-    binary_t bin;
-    variant vt;
-
-    vt.set_int32(value);
-    do_encode_test(vt, bin, expect);
-
-    cbor_data* cbor = new cbor_data(value);
-    do_cbor_test(cbor, expect);
-    cbor->release();
-}
-
 void do_test_cbor_int(int64 value, const char* expect) {
     binary_t bin;
     variant vt;
@@ -119,20 +82,42 @@ void do_test_cbor_int(int64 value, const char* expect) {
     vt.set_int64(value);
     do_encode_test(vt, bin, expect);
 
-    cbor_data* cbor = new cbor_data(value);
+    cbor_data* cbor = new cbor_data(vt);
     do_cbor_test(cbor, expect);
     cbor->release();
 }
 
-#ifdef __SIZEOF_INT128__
-void do_test_cbor_int(int128 value, const char* expect) {
+void do_test_cbor_uint(uint64 value, const char* expect) {
     binary_t bin;
     variant vt;
 
-    vt.set_int128(value);
+    vt.set_uint64(value);
     do_encode_test(vt, bin, expect);
 
-    cbor_data* cbor = new cbor_data(value);
+    cbor_data* cbor = new cbor_data(vt);
+    do_cbor_test(cbor, expect);
+    cbor->release();
+}
+
+void do_test_cbor_nint(uint64 value, const char* expect) {
+    binary_t bin;
+    variant vt;
+
+    vt.set_uint64(value).set_flag(flag_negative);
+    do_encode_test(vt, bin, expect);
+
+    cbor_data* cbor = new cbor_data(vt);
+    do_cbor_test(cbor, expect);
+    cbor->release();
+}
+
+#if defined __SIZEOF_INT128__
+void do_test_cbor_intstring(const char* value, const char* expect) {
+    binary_t bin;
+    variant vt;
+
+    auto n = t_atoi_n<int128>(value, strlen(value));
+    cbor_data* cbor = new cbor_data(n);
     do_cbor_test(cbor, expect);
     cbor->release();
 }
@@ -223,7 +208,7 @@ void do_test_cbor_bstr_tag(const binary_t& value, cbor_tag_t tag, const char* ex
     cbor->release();
 }
 
-void do_test_cbor_int_tag(int8 value, cbor_tag_t tag, const char* expect) {
+void do_test_cbor_uint_tag(int8 value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
     cbor->tag(tag);
@@ -231,7 +216,7 @@ void do_test_cbor_int_tag(int8 value, cbor_tag_t tag, const char* expect) {
     cbor->release();
 }
 
-void do_test_cbor_int_tag(int16 value, cbor_tag_t tag, const char* expect) {
+void do_test_cbor_uint_tag(int16 value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
     cbor->tag(tag);
@@ -239,7 +224,7 @@ void do_test_cbor_int_tag(int16 value, cbor_tag_t tag, const char* expect) {
     cbor->release();
 }
 
-void do_test_cbor_int_tag(int32 value, cbor_tag_t tag, const char* expect) {
+void do_test_cbor_uint_tag(int32 value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
     cbor->tag(tag);
@@ -247,23 +232,13 @@ void do_test_cbor_int_tag(int32 value, cbor_tag_t tag, const char* expect) {
     cbor->release();
 }
 
-void do_test_cbor_int_tag(int64 value, cbor_tag_t tag, const char* expect) {
+void do_test_cbor_uint_tag(int64 value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
 
     cbor->tag(tag);
     do_cbor_test(cbor, expect);
     cbor->release();
 }
-
-#ifdef __SIZEOF_INT128__
-void do_test_cbor_int_tag(int128 value, cbor_tag_t tag, const char* expect) {
-    cbor_data* cbor = new cbor_data(value);
-
-    cbor->tag(tag);
-    do_cbor_test(cbor, expect);
-    cbor->release();
-}
-#endif
 
 void do_test_cbor_float_tag(float value, cbor_tag_t tag, const char* expect) {
     cbor_data* cbor = new cbor_data(value);
@@ -287,23 +262,24 @@ void test_rfc7049_table4_1() {
     binary_t bin;
     variant_t vt;
 
-    do_test_cbor_int(0, "00");
-    do_test_cbor_int(1, "01");
-    do_test_cbor_int(10, "0a");
-    do_test_cbor_int(23, "17");
-    do_test_cbor_int(24, "1818");
-    do_test_cbor_int(25, "1819");
-    do_test_cbor_int(100, "1864");
-    do_test_cbor_int(1000, "1903e8");
-    do_test_cbor_int(1000000, "1a000f4240");
+    do_test_cbor_uint(0, "00");
+    do_test_cbor_uint(1, "01");
+    do_test_cbor_uint(10, "0a");
+    do_test_cbor_uint(23, "17");
+    do_test_cbor_uint(24, "1818");
+    do_test_cbor_uint(25, "1819");
+    do_test_cbor_uint(100, "1864");
+    do_test_cbor_uint(1000, "1903e8");
+    do_test_cbor_uint(1000000, "1a000f4240");
+
+    do_test_cbor_uint(1000000000000, "1b000000e8d4a51000");
+    do_test_cbor_uint(18446744073709551615ULL, "1bffffffffffffffff");  // uint64.max
 
 #if defined __SIZEOF_INT128__
-    do_test_cbor_int(1000000000000, "1b000000e8d4a51000");
-    do_test_cbor_int(atoi128("18446744073709551615"), "1bffffffffffffffff");
-    do_test_cbor_int(atoi128("18446744073709551616"), "c249010000000000000000");
-
-    do_test_cbor_int(atoi128("-18446744073709551616"), "3bffffffffffffffff");
-    do_test_cbor_int(atoi128("-18446744073709551617"), "c349010000000000000000");
+    // uint64   0 ~ 18446744073709551615
+    do_test_cbor_intstring("18446744073709551616", "c249010000000000000000");  // cbor_tag_positive_bignum
+    do_test_cbor_intstring("-18446744073709551616", "3bffffffffffffffff");
+    do_test_cbor_intstring("-18446744073709551617", "c349010000000000000000");
 #endif
 
     do_test_cbor_int(-1, "20");
@@ -358,7 +334,7 @@ void test_rfc7049_table4_1() {
     do_test_cbor_simple(255, "f8ff");
 
     do_test_cbor_tstr_tag("2013-03-21T20:04:00Z", cbor_tag_t::cbor_tag_std_datetime, "c074323031332d30332d32315432303a30343a30305a");
-    do_test_cbor_int_tag(1363896240, cbor_tag_t::cbor_tag_epoch_datetime, "c11a514b67b0");
+    do_test_cbor_uint_tag(1363896240, cbor_tag_t::cbor_tag_epoch_datetime, "c11a514b67b0");
     do_test_cbor_double_tag(1363896240.5, cbor_tag_t::cbor_tag_epoch_datetime, "c1fb41d452d9ec200000");
     do_test_cbor_bstr_tag(base16_decode("01020304"), cbor_tag_t::cbor_tag_base16, "d74401020304");
     do_test_cbor_bstr_tag(base16_decode("6449455446"), cbor_tag_t::cbor_tag_encoded, "d818456449455446");

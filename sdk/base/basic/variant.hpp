@@ -14,7 +14,6 @@
 #include <string.h>
 
 #include <hotplace/sdk/base/basic/types.hpp>
-#include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/base/system/types.hpp>
 #include <hotplace/sdk/base/system/uint.hpp>
@@ -135,7 +134,7 @@ enum variant_flag_t {
     flag_user_type = 1 << 7,
     flag_datetime = 1 << 8,  // datetime
 
-    flag_negative = 1 << 9,  // bignumber
+    flag_negative = 1 << 9,  // CBOR
 };
 
 union vartype_union {
@@ -176,91 +175,16 @@ struct variant_t {
     uint16 size;
     uint16 flag;
 
-    variant_t() : type(TYPE_NULL), size(0), flag(0) { memset(&data, 0, sizeof(data)); }
-    variant_t(const variant_t& other) : type(TYPE_NULL), size(0), flag(0) { *this = other; }
-    variant_t(variant_t&& other) : type(TYPE_NULL), size(0), flag(0) { *this = std::move(other); }
-    variant_t(const bignumber& other) : type(TYPE_NULL), size(0), flag(0) { *this = other; }
-    ~variant_t() { clear(); }
+    variant_t();
+    variant_t(const variant_t& other);
+    variant_t(variant_t&& other);
+    ~variant_t();
 
-    variant_t& operator=(const variant_t& other) {
-        clear();
+    variant_t& operator=(const variant_t& other);
+    variant_t& operator=(variant_t&& other);
 
-        type = other.type;
-        if (variant_flag_t::flag_free & other.flag) {
-            switch (other.type) {
-                case TYPE_BINARY:
-                case TYPE_NSTRING:
-                case TYPE_BIGNUMBER:
-                    data.bstr = (unsigned char*)malloc(other.size + 1);
-                    memcpy(data.bstr, other.data.bstr, other.size);
-                    break;
-                case TYPE_STRING:
-                    data.str = strdup(other.data.str);
-                    break;
-                case TYPE_DATETIME:
-                    data.dt = (datetime_t*)malloc(sizeof(datetime_t));
-                    memcpy(data.dt, other.data.dt, sizeof(datetime_t));
-                    break;
-                default:
-                    break;
-            }
-        } else {
-            memcpy(&data, &other.data, sizeof(data));
-        }
-        size = other.size;
-        flag = other.flag;
-
-        return *this;
-    }
-    variant_t& operator=(variant_t&& other) {
-        clear();
-
-        type = other.type;
-        memcpy(&data, &other.data, sizeof(data));
-        size = other.size;
-        flag = other.flag;
-        other.reset();
-
-        return *this;
-    }
-    variant_t& operator=(const bignumber& other) {
-        clear();
-
-        binary_t bin;
-        other >> bin;
-        type = TYPE_BIGNUMBER;
-        size = bin.size();
-        data.bstr = (unsigned char*)malloc(size + 1);
-        if (false == bin.empty()) {
-            memcpy(data.bstr, &bin[0], size);
-        }
-        flag = variant_flag_t::flag_free;
-        if (other < bignumber(0)) {
-            flag |= variant_flag_t::flag_negative;
-        }
-        return *this;
-    }
-
-    variant_t& reset() {
-        type = TYPE_NULL;
-        memset(&data, 0, sizeof(data));
-        size = 0;
-        flag = 0;
-
-        return *this;
-    }
-    variant_t& clear() {
-        if (variant_flag_t::flag_free & flag) {
-            free(data.p);
-        }
-
-        type = TYPE_NULL;
-        memset(&data, 0, sizeof(data));
-        size = 0;
-        flag = 0;
-
-        return *this;
-    }
+    variant_t& reset();  // do not free
+    variant_t& clear();  // free if flag_free is set
 };
 
 class variant {
@@ -291,14 +215,17 @@ class variant {
     variant(float value);
     variant(double value);
     variant(const datetime_t& value);
+    variant(vartype_t vtype, void* value);
     variant(const variant_t& value);
     variant(variant_t&& value);
     variant(const variant& value);
     variant(variant&& value);
     variant(const bignumber& value);
+    variant(bignumber&& value);
     ~variant();
 
     const variant_t& content() const;
+    variant_t& get();
     vartype_t type() const;
     uint16 size() const;
     uint16 flag() const;
@@ -310,8 +237,8 @@ class variant {
      */
     variant& clear();
 
-    variant& set_flag(uint8 flag);
-    variant& unset_flag(uint8 flag);
+    variant& set_flag(uint16 flag);
+    variant& unset_flag(uint16 flag);
 
     variant& set_pointer(const void* value);
     variant& set_bool(bool value);
@@ -355,7 +282,6 @@ class variant {
     variant& set_binary_new(const binary_t& bin);
 
     variant& set_bn(const bignumber& value);
-    variant& set_bn(const std::string& b16hexstream);
     variant& set_bn(const unsigned char* p, size_t n);
 
     /**

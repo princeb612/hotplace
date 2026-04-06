@@ -28,8 +28,8 @@ void test_variant() {
     b16stream = base16_encode(bin);
     _test_case.assert(b16stream == "0000000123456789", __FUNCTION__, "base16");
 
-    bignumber bn("123456789abcdef");  // base16;
-    bn.get(bin);
+    bignumber bn("0x123456789abcdef");  // base16;
+    bn >> bin;
     _test_case.assert(base16_encode(bin) == "0123456789abcdef", __FUNCTION__, "bignumber");
 
     vt.set_bn(bn);

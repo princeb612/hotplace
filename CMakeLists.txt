@@ -68,9 +68,9 @@ if (NOT "$ENV{SET_STDCPP}" STREQUAL "")
 endif ()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    # if (SUPPORT_DEBUG)
-    #     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g")
-    # endif ()
+    if (SUPPORT_DEBUG)
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g")
+    endif ()
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
         set (PROJECT_SDK_USE_STD_REGEX 0) # thirdparty
     endif()

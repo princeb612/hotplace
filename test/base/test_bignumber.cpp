@@ -312,7 +312,7 @@ void test_bn6() {
 
 void test_bn7() {
     struct testvector {
-        std::string hexvalue;
+        const char* hexvalue;
         std::string decvalue;
         std::string b16encoded;
     } table[] = {
@@ -411,49 +411,58 @@ void test_bn10() {
     int64 signed_sample = t_htoi<int64>(sample.c_str());
     uint64 unsigned_sample = t_htoi<uint64>(sample.c_str());
 #endif
-    bignumber bn = sample;
+    bignumber bn(sample);
 
-    auto i8 = bn.bntoi<int8>(bn);
+    auto i8 = bn.bntoi<int8>();
     _logger->writeln("int8 %i", i8);
     _test_case.assert(i8 == int8(signed_sample), __FUNCTION__, "to.int8 %i", int8(signed_sample));
 
-    auto ui8 = bn.bntoi<uint8>(bn);
+    auto ui8 = bn.bntoi<uint8>();
     _logger->writeln("uint8 %u", ui8);
     _test_case.assert(ui8 == uint8(unsigned_sample), __FUNCTION__, "to.uint8 %u", uint8(unsigned_sample));
 
-    auto i16 = bn.bntoi<int16>(bn);
+    auto i16 = bn.bntoi<int16>();
     _logger->writeln("int16 %i", i16);
     _test_case.assert(i16 == int16(signed_sample), __FUNCTION__, "to.int16 %i", int16(signed_sample));
 
-    auto ui16 = bn.bntoi<uint16>(bn);
+    auto ui16 = bn.bntoi<uint16>();
     _logger->writeln("uint16 %u", ui16);
     _test_case.assert(ui16 == uint16(unsigned_sample), __FUNCTION__, "to.uint16 %u", uint16(unsigned_sample));
 
-    auto i32 = bn.bntoi<int32>(bn);
+    auto i32 = bn.bntoi<int32>();
     _logger->writeln("int32 %i", i32);
     _test_case.assert(i32 == int32(signed_sample), __FUNCTION__, "to.int32 %i", int32(signed_sample));
 
-    auto ui32 = bn.bntoi<uint32>(bn);
+    auto ui32 = bn.bntoi<uint32>();
     _logger->writeln("uint32 %u", ui32);
     _test_case.assert(ui32 == uint32(unsigned_sample), __FUNCTION__, "to.uint32 %u", uint32(unsigned_sample));
 
-    auto i64 = bn.bntoi<int64>(bn);
+    auto i64 = bn.bntoi<int64>();
     _logger->writeln("int64 %I64i", i64);
     _test_case.assert(i64 == int64(signed_sample), __FUNCTION__, "to.int64 %I64i", int64(signed_sample));
 
-    auto ui64 = bn.bntoi<uint64>(bn);
+    auto ui64 = bn.bntoi<uint64>();
     _logger->writeln("uint64 %I64u", ui64);
     _test_case.assert(ui64 == uint64(unsigned_sample), __FUNCTION__, "to.uint64 %I64u", uint64(unsigned_sample));
 
 #ifdef __SIZEOF_INT128__
-    auto i128 = bn.bntoi<int128>(bn);
+    auto i128 = bn.bntoi<int128>();
     _logger->writeln("int128 %I128i", i128);
     _test_case.assert(i128 == int128(signed_sample), __FUNCTION__, "to.int128 %I64i", signed_sample);
 
-    auto ui128 = bn.bntoi<uint128>(bn);
+    auto ui128 = bn.bntoi<uint128>();
     _logger->writeln("uint128 %I128u", ui128);
     _test_case.assert(ui128 == uint128(unsigned_sample), __FUNCTION__, "to.uint128 %I64u", signed_sample);
 #endif
+}
+
+void test_bn11() {
+    bignumber bn("340282366920938463463374607431768211456");  // uint128.max + 1
+    _logger->writeln("%s (%s)", bn.str().c_str(), bn.hex().c_str());
+    _test_case.assert(bn.str() == "340282366920938463463374607431768211456", __FUNCTION__, "bignumber from numeric string (greater than int128)");
+
+    bignumber bn2("0x100000000000000000000000000000000");
+    _test_case.assert(bn == bn2, __FUNCTION__, "compare");
 }
 
 void test_bignumber() {
@@ -469,4 +478,5 @@ void test_bignumber() {
     test_bn8();
     test_bn9();
     test_bn10();
+    test_bn11();
 }

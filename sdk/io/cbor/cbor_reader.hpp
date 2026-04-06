@@ -110,7 +110,7 @@ class cbor_reader {
 #if defined __SIZEOF_INT128__
     return_t push(cbor_reader_context_t* handle, uint8 type, int128 data, uint32 flags);
 #else
-    return_t push(cbor_reader_context_t* handle, uint8 type, const bignumber& data, uint32 flags);
+    return_t push(cbor_reader_context_t* handle, uint8 type, int64 data, uint32 flags);
 #endif
     return_t push(cbor_reader_context_t* handle, uint8 type, const char* data, size_t size, uint32 flags);
     return_t push(cbor_reader_context_t* handle, uint8 type, const byte_t* data, size_t size, uint32 flags);
