@@ -12,6 +12,8 @@
  */
 
 #include <hotplace/sdk/base/basic/base16.hpp>
+#include <hotplace/sdk/base/system/bignumber.hpp>
+#include <hotplace/sdk/base/unittest/trace.hpp>
 #include <hotplace/sdk/io/cbor/cbor_array.hpp>
 #include <hotplace/sdk/io/cbor/cbor_bstrings.hpp>
 #include <hotplace/sdk/io/cbor/cbor_data.hpp>
@@ -137,11 +139,7 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const byte_t* data, s
             cur = *(data + i);
             byte_t lead_type = (cur & 0xe0) >> 5;
             byte_t lead_value = (cur & 0x1f);
-#if defined __SIZEOF_INT128__
-            int128 value = lead_value;
-#else
-            int64 value = lead_value;
-#endif
+            uint64 value = lead_value;
             flags = 0;
 
             // cbor_simple_t::cbor_simple_break
@@ -177,17 +175,25 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const byte_t* data, s
             if (cbor_major_t::cbor_major_uint == lead_type) {
                 push(handle, lead_type, value, 0);
             } else if (cbor_major_t::cbor_major_nint == lead_type) {
-#if defined __SIZEOF_INT128__
-                push(handle, lead_type, -((int128)value + 1), 0);
-#else
-                push(handle, lead_type, -((int64)value + 1), 0);
-#endif
+                push(handle, lead_type, value, 0);
             } else if (cbor_major_t::cbor_major_bstr == lead_type) {
+                if (0 == (cbor_flag_t::cbor_indef & flags)) {
+                    if (i + 1 + value > size) {
+                        ret = errorcode_t::bad_format;
+                        break;
+                    }
+                }
                 push(handle, lead_type, (byte_t*)data + i + 1, value, flags);
                 if (0 == (cbor_flag_t::cbor_indef & flags)) {
                     i += value;
                 }
             } else if (cbor_major_t::cbor_major_tstr == lead_type) {
+                if (0 == (cbor_flag_t::cbor_indef & flags)) {
+                    if (i + 1 + value > size) {
+                        ret = errorcode_t::bad_format;
+                        break;
+                    }
+                }
                 push(handle, lead_type, (char*)data + i + 1, value, flags);
                 if (0 == (cbor_flag_t::cbor_indef & flags)) {
                     i += value;
@@ -230,18 +236,20 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const binary_t& expre
             __leave2;
         }
 
-        ret = parse(handle, &expression[0], expression.size());
+        if (expression.empty()) {
+            ret = errorcode_t::empty;
+            __leave2;
+        }
+
+        auto e = &expression[0];
+        auto n = expression.size();
+        ret = parse(handle, e, n);
     }
     __finally2 {}
     return ret;
 }
 
-#if defined __SIZEOF_INT128__
-return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, int128 data, uint32 flags)
-#else
-return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, int64 data, uint32 flags)
-#endif
-{
+return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, uint64 data, uint32 flags) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -252,12 +260,12 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, int64 data
 
         if (cbor_major_t::cbor_major_uint == type) {
             cbor_data* temp = nullptr;
-            __try_new_catch(temp, new cbor_data(data), ret, __leave2);
+            __try_new_catch(temp, new cbor_data(data, 0), ret, __leave2);
             temp->tag(handle->temp.tag_value);
             insert(handle, temp);
         } else if (cbor_major_t::cbor_major_nint == type) {
             cbor_data* temp = nullptr;
-            __try_new_catch(temp, new cbor_data(data), ret, __leave2);
+            __try_new_catch(temp, new cbor_data(data, cbor_data_flag_nint), ret, __leave2);
             temp->tag(handle->temp.tag_value);
             insert(handle, temp);
         } else if (cbor_major_t::cbor_major_array == type) {
@@ -329,8 +337,18 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, const byte
                 __try_new_catch(temp, new cbor_bstrings(), ret, __leave2);
                 insert(handle, temp);
             } else {
+                // RFC 8949 Concise Binary Object Representation (CBOR)
+                // 3.4.3.  Bignums
+                // Decoders that understand these tags MUST be able to decode bignums that do have leading zeroes.
+
                 cbor_data* temp = nullptr;
-                __try_new_catch(temp, new cbor_data(data, size), ret, __leave2);
+                if (cbor_tag_positive_bignum == handle->temp.tag_value) {
+                    __try_new_catch(temp, new cbor_data(bignumber(data, size), 0), ret, __leave2);
+                } else if (cbor_tag_negative_bignum == handle->temp.tag_value) {
+                    __try_new_catch(temp, new cbor_data(bignumber(data, size), cbor_data_flag_nint), ret, __leave2);
+                } else {
+                    __try_new_catch(temp, new cbor_data(data, size), ret, __leave2);
+                }
                 temp->tag(handle->temp.tag_value);
                 insert(handle, temp);
             }

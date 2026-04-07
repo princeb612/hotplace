@@ -24,7 +24,8 @@ return_t dump_test_data(const char* text, basic_stream& diagnostic) {
 return_t dump_test_data(const char* text, const binary_t& cbor) {
     return_t ret = errorcode_t::success;
     basic_stream bs;
-    _logger->hdump(text ? text : "diagnostic", cbor, 32, 4);
+    _logger->hdump(text ? text : "cbor", cbor, 32, 4);
+    _logger->writeln("cbor %s", base16_encode(cbor).c_str());
     return ret;
 }
 

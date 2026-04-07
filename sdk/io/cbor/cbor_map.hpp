@@ -61,21 +61,20 @@ class cbor_map : public cbor_object {
      */
 
     template <typename K, typename V>
-    cbor_map& add(K value, std::function<void(V* object)> f, uint32 flags = 0);
+    cbor_map& add(K value, std::function<void(V* object)> f, uint32 flags = 0) {
+        if (f) {
+            auto obj = new V(flags);
+            f(obj);
+            *this << new cbor_pair(value, obj);
+        }
+        return *this;
+    }
 
-#if defined __SIZEOF_INT128__
-    cbor_map& add(int128 value, cbor_data* object);
-    cbor_map& add(int128 value, cbor_map* object);
-    cbor_map& add(int128 value, cbor_array* object);
-    cbor_map& add(int128 value, std::function<void(cbor_map*)> f, uint32 flags = 0);
-    cbor_map& add(int128 value, std::function<void(cbor_array*)> f, uint32 flags = 0);
-#else
-    cbor_map& add(int64 value, cbor_data* object);
-    cbor_map& add(int64 value, cbor_map* object);
-    cbor_map& add(int64 value, cbor_array* object);
-    cbor_map& add(int64 value, std::function<void(cbor_map*)> f, uint32 flags = 0);
-    cbor_map& add(int64 value, std::function<void(cbor_array*)> f, uint32 flags = 0);
-#endif
+    cbor_map& add(const bignumber& value, cbor_data* object);
+    cbor_map& add(const bignumber& value, cbor_map* object);
+    cbor_map& add(const bignumber& value, cbor_array* object);
+    cbor_map& add(const bignumber& value, std::function<void(cbor_map*)> f, uint32 flag = 0);
+    cbor_map& add(const bignumber& value, std::function<void(cbor_array*)> f, uint32 flag = 0);
     cbor_map& add(const char* key, cbor_data* object);
     cbor_map& add(const char* key, cbor_map* object);
     cbor_map& add(const char* key, cbor_array* object);

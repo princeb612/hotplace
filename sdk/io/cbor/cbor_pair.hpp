@@ -35,15 +35,9 @@ class cbor_pair : public cbor_object {
     friend class cbor_diagnostic_visitor;
 
    public:
-#if defined __SIZEOF_INT128__
-    cbor_pair(int128 value, cbor_data* object);
-    cbor_pair(int128 value, cbor_map* object);
-    cbor_pair(int128 value, cbor_array* object);
-#else
-    cbor_pair(int64 value, cbor_data* object);
-    cbor_pair(int64 value, cbor_map* object);
-    cbor_pair(int64 value, cbor_array* object);
-#endif
+    cbor_pair(const bignumber& value, cbor_data* object);
+    cbor_pair(const bignumber& value, cbor_map* object);
+    cbor_pair(const bignumber& value, cbor_array* object);
     cbor_pair(const char* key, cbor_data* object);
     cbor_pair(const char* key, cbor_map* object);
     cbor_pair(const char* key, cbor_array* object);

@@ -13,6 +13,7 @@
 
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/ieee754.hpp>
+#include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/io/cbor/cbor_encode.hpp>
 #include <hotplace/sdk/io/cbor/cbor_object.hpp>
 #include <hotplace/sdk/io/stream/stream.hpp>
@@ -35,34 +36,26 @@ return_t cbor_encode::encode(binary_t& bin, variant_t vt) {
                 encode(bin, vt.data.i8);
                 break;
             case TYPE_UINT8:
-                encode(bin, cbor_major_t::cbor_major_uint, vt.data.ui8);
+                encode(bin, (vt.flag & flag_negative) ? cbor_major_nint : cbor_major_uint, vt.data.ui8);
                 break;
             case TYPE_INT16:
                 encode(bin, vt.data.i16);
                 break;
             case TYPE_UINT16:
-                encode(bin, cbor_major_t::cbor_major_uint, vt.data.ui16);
+                encode(bin, (vt.flag & flag_negative) ? cbor_major_nint : cbor_major_uint, vt.data.ui16);
                 break;
             case TYPE_INT32:
                 encode(bin, vt.data.i32);
                 break;
             case TYPE_UINT32:
-                encode(bin, cbor_major_t::cbor_major_uint, vt.data.ui32);
+                encode(bin, (vt.flag & flag_negative) ? cbor_major_nint : cbor_major_uint, vt.data.ui32);
                 break;
             case TYPE_INT64:
                 encode(bin, vt.data.i64);
                 break;
             case TYPE_UINT64:
-                encode(bin, cbor_major_t::cbor_major_uint, vt.data.ui64);
+                encode(bin, (vt.flag & flag_negative) ? cbor_major_nint : cbor_major_uint, vt.data.ui64);
                 break;
-#if defined __SIZEOF_INT128__
-            case TYPE_INT128:
-                encode(bin, vt.data.i128);
-                break;
-            case TYPE_UINT128:
-                encode(bin, cbor_major_t::cbor_major_uint, vt.data.ui128);
-                break;
-#endif
             case TYPE_FP16:
                 encodefp16(bin, vt.data.ui16);
                 break;
@@ -82,6 +75,21 @@ return_t cbor_encode::encode(binary_t& bin, variant_t vt) {
             case TYPE_BINARY:
                 encode(bin, vt.data.bstr, vt.size);
                 break;
+            case TYPE_BIGNUMBER: {
+                bignumber bn(vt.data.bstr, vt.size);
+                binary_t bnbin;
+                bn.get(bnbin, true);
+                if (bn.capacity() > 2) {
+                    // RFC 8949 Concise Binary Object Representation (CBOR)
+                    // Appendix A.  Examples of Encoded CBOR Data Items
+                    // In the diagnostic notation provided for bignums, their intended numeric value is shown as a decimal number (such as 18446744073709551616)
+                    // instead of a tagged byte string (such as 2(h'010000000000000000')).
+                    encode(bin, bnbin);
+                } else {
+                    auto ui64 = bn.bntoi<uint64>();
+                    encode(bin, (vt.flag & flag_negative) ? cbor_major_nint : cbor_major_uint, ui64);
+                }
+            } break;
             default:
                 break;
         }
@@ -301,98 +309,6 @@ return_t cbor_encode::encode(binary_t& target, cbor_major_t major, uint64 value)
     __finally2 {}
     return ret;
 }
-
-#if defined __SIZEOF_INT128__
-static uint8 contents_byte_length(uint128 data) {
-    uint8 i = 0;
-
-    for (i = 16; i > 0; i--) {
-        if (data >> (8 * (i - 1))) {
-            break;
-        }
-    }
-    return i;
-}
-
-return_t cbor_encode::encode(binary_t& target, int128 value) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        uint8 major = 0;
-        uint8 valueoftag = 0;
-
-        if (value >= 0) {
-            major = cbor_major_t::cbor_major_uint;
-            valueoftag = cbor_tag_t::cbor_tag_positive_bignum;
-        } else {
-            major = cbor_major_t::cbor_major_nint;
-            valueoftag = cbor_tag_t::cbor_tag_negative_bignum;
-            value += 1;
-            value = -value;
-        }
-        bool bignum = false;
-        if (value >> 64) {
-            bignum = true;
-        }
-
-        if (bignum) {
-            uint8 len = contents_byte_length(value);  // 128 / 8 = 16 always less than 24
-            binary_push(target, (cbor_major_t::cbor_major_tag << 5) | valueoftag);
-            binary_push(target, (cbor_major_t::cbor_major_bstr << 5) | len);
-            binary_append2(target, len, value, hton128);
-        } else {
-            if (value < 24) {
-                binary_push(target, (major << 5) | value);
-            } else if (value < 0x100) {
-                binary_push(target, (major << 5) | 24);
-                binary_push(target, value);
-            } else if (value < 0x10000) {
-                binary_push(target, (major << 5) | 25);
-                binary_append(target, (uint16)value, hton16);
-            } else if (value < 0x100000000) {
-                binary_push(target, (major << 5) | 26);
-                binary_append(target, (uint32)value, hton32);
-            } else {
-                binary_push(target, (major << 5) | 27);
-                binary_append(target, (uint64)value, hton64);
-            }
-        }
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t cbor_encode::encode(binary_t& target, cbor_major_t major, uint128 value) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (value >> 64) {
-            uint8 len = contents_byte_length(value);  // 128 / 8 = 16 always less than 24
-            binary_push(target, (cbor_major_t::cbor_major_tag << 5) | cbor_tag_t::cbor_tag_positive_bignum);
-            binary_push(target, (cbor_major_t::cbor_major_bstr << 5) | len);
-            binary_append2(target, len, value, hton128);
-        } else {
-            if (value < 24) {
-                binary_push(target, (major << 5) | value);
-            } else if (value < 0x100) {
-                binary_push(target, (major << 5) | 24);
-                binary_push(target, value);
-            } else if (value < 0x10000) {
-                binary_push(target, (major << 5) | 25);
-                binary_append(target, (uint16)value, hton16);
-            } else if (value < 0x100000000) {
-                binary_push(target, (major << 5) | 26);
-                binary_append(target, (uint32)value, hton32);
-            } else {
-                binary_push(target, (major << 5) | 27);
-                binary_append(target, (uint64)value, hton64);
-            }
-        }
-    }
-    __finally2 {}
-    return ret;
-}
-#endif
 
 return_t cbor_encode::encodefp16(binary_t& target, uint16 value) {
     return_t ret = errorcode_t::success;

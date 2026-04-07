@@ -21,18 +21,7 @@
 namespace hotplace {
 namespace io {
 
-#if defined __SIZEOF_INT128__
-cbor_pair::cbor_pair(int128 value, cbor_data* object)
-    : cbor_object(cbor_type_t::cbor_type_pair),
-      _lhs(nullptr),
-      _rhs(object)
-#else
-cbor_pair::cbor_pair(int64 value, cbor_data* object)
-    : cbor_object(cbor_type_t::cbor_type_pair),
-      _lhs(nullptr),
-      _rhs(object)
-#endif
-{
+cbor_pair::cbor_pair(const bignumber& value, cbor_data* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -44,18 +33,7 @@ cbor_pair::cbor_pair(int64 value, cbor_data* object)
     __finally2 {}
 }
 
-#if defined __SIZEOF_INT128__
-cbor_pair::cbor_pair(int128 value, cbor_map* object)
-    : cbor_object(cbor_type_t::cbor_type_pair),
-      _lhs(nullptr),
-      _rhs(object)
-#else
-cbor_pair::cbor_pair(int64 value, cbor_map* object)
-    : cbor_object(cbor_type_t::cbor_type_pair),
-      _lhs(nullptr),
-      _rhs(object)
-#endif
-{
+cbor_pair::cbor_pair(const bignumber& value, cbor_map* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -67,18 +45,7 @@ cbor_pair::cbor_pair(int64 value, cbor_map* object)
     __finally2 {}
 }
 
-#if defined __SIZEOF_INT128__
-cbor_pair::cbor_pair(int128 value, cbor_array* object)
-    : cbor_object(cbor_type_t::cbor_type_pair),
-      _lhs(nullptr),
-      _rhs(object)
-#else
-cbor_pair::cbor_pair(int64 value, cbor_array* object)
-    : cbor_object(cbor_type_t::cbor_type_pair),
-      _lhs(nullptr),
-      _rhs(object)
-#endif
-{
+cbor_pair::cbor_pair(const bignumber& value, cbor_array* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
     return_t ret = errorcode_t::success;
 
     __try2 {

@@ -109,6 +109,10 @@ T t_to_int(const variant_t& vt, return_t& errorcode) {
         default:
             break;
     }
+    if ((i >= 0) && (flag_negative & vt.flag)) {
+        i += 1;
+        i = -i;
+    }
     if (vsize > tsize) {
         errorcode = errorcode_t::narrow_type;
     }

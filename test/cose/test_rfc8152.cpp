@@ -62,6 +62,7 @@ return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys
                 reader.publish(handle, &diagnostic);
                 reader.close(handle);
 
+                _logger->writeln("publish %s", base16_encode(bin).c_str());
                 dump_test_data("test vector #1", expect);
                 dump_test_data("diagnostic #1", diagnostic);
             }
@@ -131,7 +132,7 @@ return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys
                         publisher.publish(cbor_newone, &bs_diagnostic_composed);
                         dump_test_data("compose", bs_diagnostic_composed);
 
-                        _test_case.assert(0 == memcmp(&bin[2], &bin_untagged[0], bin_untagged.size()), __FUNCTION__, "check.compose %s", text);
+                        _test_case.assert(0 == memcmp(&bin[2], &bin_untagged[0], bin_untagged.size()), __FUNCTION__, "check4.compose %s", text);
 
                         cbor_newone->release();
                     }
@@ -150,7 +151,7 @@ return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys
                 case cbor_tag_t::cose_tag_sign:
                 case cbor_tag_t::cose_tag_sign1:
                     ret = cose.verify(cose_handle, cose_keys, bin, result);
-                    _test_case.test(ret, __FUNCTION__, "check4.verify %s", text);
+                    _test_case.test(ret, __FUNCTION__, "check5.verify %s", text);
                     break;
                 case cbor_tag_t::cose_tag_encrypt:
                 case cbor_tag_t::cose_tag_encrypt0:
@@ -160,12 +161,12 @@ return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys
                             _logger->dump(decrypted, 16, 4);
                         }
                     }
-                    _test_case.test(ret, __FUNCTION__, "check4.decrypt %s", text);
+                    _test_case.test(ret, __FUNCTION__, "check5.decrypt %s", text);
                     break;
                 case cbor_tag_t::cose_tag_mac:
                 case cbor_tag_t::cose_tag_mac0:
                     ret = cose.verify(cose_handle, cose_keys, bin, result);
-                    _test_case.test(ret, __FUNCTION__, "check4.verify %s", text);
+                    _test_case.test(ret, __FUNCTION__, "check5.verify %s", text);
                     break;
                 default:
                     break;

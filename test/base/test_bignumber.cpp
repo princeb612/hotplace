@@ -465,6 +465,26 @@ void test_bn11() {
     _test_case.assert(bn == bn2, __FUNCTION__, "compare");
 }
 
+void test_bn12() {
+    bignumber bn(1);
+    bignumber bn2;
+    bn = -bn;
+    _logger->writeln("bignumber = %s", bn.str().c_str());
+    _test_case.assert(bn == -1, __FUNCTION__, "bignumber = -1");
+
+    bn = "0xffffffffffffffff";  // uint64.max
+    bn = -bn;
+    bn2 = "-18446744073709551615";
+    _logger->writeln("bignumber = %s", bn.str().c_str());
+    _test_case.assert(bn == bn2, __FUNCTION__, "bignumber = -uint64.max");
+
+    bn = "0xffffffffffffffffffffffffffffffff";  // uint128.max
+    bn = -bn;
+    bn2 = "-340282366920938463463374607431768211455";
+    _logger->writeln("bignumber = %s", bn.str().c_str());
+    _test_case.assert(bn == bn2, __FUNCTION__, "bignumber = -uint128.max");
+}
+
 void test_bignumber() {
     _test_case.begin("bignumber");
 
@@ -479,4 +499,5 @@ void test_bignumber() {
     test_bn9();
     test_bn10();
     test_bn11();
+    test_bn12();
 }

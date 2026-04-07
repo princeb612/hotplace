@@ -166,6 +166,8 @@ bignumber &bignumber::operator++() { return *this += 1; }
 
 bignumber &bignumber::operator--() { return *this -= 1; }
 
+bignumber &bignumber::operator-() { return neg(); }
+
 bignumber bignumber::operator++(int) {
     bignumber res(*this);
     res += 1;

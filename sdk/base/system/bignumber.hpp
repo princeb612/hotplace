@@ -153,6 +153,8 @@ class bignumber {
     bignumber operator>>(unsigned int shift) const;
     bignumber &operator>>=(unsigned int shift);
 
+    bignumber &operator-();
+
     bignumber &operator++();
     bignumber &operator--();
 

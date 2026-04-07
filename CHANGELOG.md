@@ -29,8 +29,8 @@
     * CBOR
 
 * details
-  * Revision 925
-    * [postpone] rollback CBOR/COSE refactor
+  * Revision 926
+    * [tested] CBOR/COSE refactoring
   * Revision 907
     * [tested] valgrind
   * Revision 905

@@ -94,10 +94,6 @@ class cbor_encode {
     return_t encode(binary_t& bin, cbor_major_t major, uint32 value);
     return_t encode(binary_t& bin, int64 value);
     return_t encode(binary_t& bin, cbor_major_t major, uint64 value);
-#if defined __SIZEOF_INT128__
-    return_t encode(binary_t& bin, int128 value);
-    return_t encode(binary_t& bin, cbor_major_t major, uint128 value);
-#endif
     return_t encode(binary_t& bin, uint8 major);
     return_t encodefp16(binary_t& bin, uint16 value);
     return_t encode(binary_t& bin, float value);

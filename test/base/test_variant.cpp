@@ -41,4 +41,8 @@ void test_variant() {
     vtprintf(&bs, vt, vtprintf_style_debugmode);
     _logger->writeln(bs);
     _test_case.assert(bs == "0123456789abcdef (81985529216486895)", __FUNCTION__, "vtprintf variant.bignumber");
+
+    vt.set_uint32(0).set_flag(flag_negative);  // CBOR style
+    auto neg = t_to_int<int32>(vt);
+    _test_case.assert(neg == -1, __FUNCTION__, "negative");
 }

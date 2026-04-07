@@ -34,9 +34,11 @@ class cbor_data : public cbor_object {
     cbor_data(int16 value);
     cbor_data(int32 value);
     cbor_data(int64 value);
-#if defined __SIZEOF_INT128__
-    cbor_data(int128 value);
-#endif
+    cbor_data(uint8 value, uint32 flags = 0);
+    cbor_data(uint16 value, uint32 flags = 0);
+    cbor_data(uint32 value, uint32 flags = 0);
+    cbor_data(uint64 value, uint32 flags = 0);
+    cbor_data(const bignumber& bn, uint32 flags = 0);
     cbor_data(const byte_t* bstr, size_t size);
     cbor_data(const binary_t& bin);
     cbor_data(const char* tstr);
@@ -49,10 +51,14 @@ class cbor_data : public cbor_object {
     cbor_data(variant_t&& vt);
     cbor_data(const variant& vt);
     cbor_data(variant&& vt);
-    cbor_data(const bignumber& value);
     virtual ~cbor_data();
 
     variant& data();
+
+    cbor_data& set_bn(const bignumber& value, uint32 flags = 0);
+
+    static cbor_data* generate(const char* value);
+    static cbor_data* generate(const std::string& value);
 
    protected:
     virtual void represent(stream_t* s);

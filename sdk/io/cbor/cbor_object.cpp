@@ -23,6 +23,10 @@ cbor_object::cbor_object(cbor_type_t type, uint32 flags) : _type(type), _flags(f
     _shared.make_share(this);
 }
 
+cbor_object::cbor_object(const cbor_object& other) : _type(other._type), _flags(other._flags), _tag(other._tag), _reserved_size(other._reserved_size) {
+    _shared.make_share(this);
+}
+
 cbor_object::~cbor_object() {}
 
 return_t cbor_object::join(cbor_object* object, cbor_object* extra) { return errorcode_t::not_available; }
@@ -35,6 +39,8 @@ cbor_object& cbor_object::add(cbor_object* object, cbor_object* extra) {
 cbor_type_t cbor_object::type() { return _type; }
 
 size_t cbor_object::size() { return 1; }
+
+void cbor_object::set_flags(uint32 flags) { _flags = flags; }
 
 uint32 cbor_object::get_flags() { return _flags; }
 

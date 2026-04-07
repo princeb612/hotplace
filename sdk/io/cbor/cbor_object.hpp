@@ -19,6 +19,10 @@
 namespace hotplace {
 namespace io {
 
+enum cbor_flag : uint8 {
+    cbor_data_flag_nint = 1 << 0,  // see cbor_data
+};
+
 /*
  *  cbor_object
  *  \_ cbor_data
@@ -46,6 +50,7 @@ class cbor_object {
    public:
     cbor_object();
     cbor_object(cbor_type_t type, uint32 flags = 0);
+    cbor_object(const cbor_object& other);
     virtual ~cbor_object();
 
     /*
@@ -60,6 +65,7 @@ class cbor_object {
 
     cbor_type_t type();
     virtual size_t size();
+    void set_flags(uint32 flags);
     uint32 get_flags();
 
     void tag(cbor_tag_t tag);

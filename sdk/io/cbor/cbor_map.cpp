@@ -182,55 +182,24 @@ void cbor_map::represent(binary_t* b) {
     }
 }
 
-template <typename K, typename V>
-cbor_map& cbor_map::add(K value, std::function<void(V* object)> f, uint32 flags) {
-    if (f) {
-        auto obj = new V(flags);
-        f(obj);
-        *this << new cbor_pair(value, obj);
-    }
-    return *this;
-}
-
-#if defined __SIZEOF_INT128__
-cbor_map& cbor_map::add(int128 value, cbor_data* object) {
+cbor_map& cbor_map::add(const bignumber& value, cbor_data* object) {
     *this << new cbor_pair(value, object);
     return *this;
 }
 
-cbor_map& cbor_map::add(int128 value, cbor_map* object) {
+cbor_map& cbor_map::add(const bignumber& value, cbor_map* object) {
     *this << new cbor_pair(value, object);
     return *this;
 }
 
-cbor_map& cbor_map::add(int128 value, cbor_array* object) {
+cbor_map& cbor_map::add(const bignumber& value, cbor_array* object) {
     *this << new cbor_pair(value, object);
     return *this;
 }
 
-cbor_map& cbor_map::add(int128 value, std::function<void(cbor_map* object)> f, uint32 flags) { return add<int128, cbor_map>(value, f, flags); }
+cbor_map& cbor_map::add(const bignumber& value, std::function<void(cbor_map* object)> f, uint32 flags) { return add<bignumber, cbor_map>(value, f, flags); }
 
-cbor_map& cbor_map::add(int128 value, std::function<void(cbor_array* object)> f, uint32 flags) { return add<int128, cbor_array>(value, f, flags); }
-#else
-cbor_map& cbor_map::add(int64 value, cbor_data* object) {
-    *this << new cbor_pair(value, object);
-    return *this;
-}
-
-cbor_map& cbor_map::add(int64 value, cbor_map* object) {
-    *this << new cbor_pair(value, object);
-    return *this;
-}
-
-cbor_map& cbor_map::add(int64 value, cbor_array* object) {
-    *this << new cbor_pair(value, object);
-    return *this;
-}
-
-cbor_map& cbor_map::add(int64 value, std::function<void(cbor_map* object)> f, uint32 flags) { return add<int64, cbor_map>(value, f, flags); }
-
-cbor_map& cbor_map::add(int64 value, std::function<void(cbor_array* object)> f, uint32 flags) { return add<int64, cbor_array>(value, f, flags); }
-#endif
+cbor_map& cbor_map::add(const bignumber& value, std::function<void(cbor_array* object)> f, uint32 flags) { return add<bignumber, cbor_array>(value, f, flags); }
 
 cbor_map& cbor_map::add(const char* key, cbor_data* object) {
     *this << new cbor_pair(key, object);

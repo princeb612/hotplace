@@ -28,4 +28,12 @@ void test_rfc7049_table4_2();
 
 void test_parse();
 
+struct test_vector_parse {
+    const char* text;
+    const char* cbor;
+    const char* diag;
+};
+extern const struct test_vector_parse _test_vector_parse[];
+extern const size_t sizeof_test_vector_parse;
+
 #endif

@@ -99,29 +99,11 @@ void do_test_cbor_uint(uint64 value, const char* expect) {
     cbor->release();
 }
 
-void do_test_cbor_nint(uint64 value, const char* expect) {
-    binary_t bin;
-    variant vt;
-
-    vt.set_uint64(value).set_flag(flag_negative);
-    do_encode_test(vt, bin, expect);
-
-    cbor_data* cbor = new cbor_data(vt);
-    do_cbor_test(cbor, expect);
-    cbor->release();
-}
-
-#if defined __SIZEOF_INT128__
 void do_test_cbor_intstring(const char* value, const char* expect) {
-    binary_t bin;
-    variant vt;
-
-    auto n = t_atoi_n<int128>(value, strlen(value));
-    cbor_data* cbor = new cbor_data(n);
+    cbor_data* cbor = new cbor_data(bignumber(value));
     do_cbor_test(cbor, expect);
     cbor->release();
 }
-#endif
 
 void do_test_cbor_fp16(uint16 value, const char* expect) {
     binary_t bin;
@@ -274,18 +256,23 @@ void test_rfc7049_table4_1() {
 
     do_test_cbor_uint(1000000000000, "1b000000e8d4a51000");
     do_test_cbor_uint(18446744073709551615ULL, "1bffffffffffffffff");  // uint64.max
+    do_test_cbor_intstring("18446744073709551615", "1bffffffffffffffff");
+    do_test_cbor_intstring("0xffffffffffffffff", "1bffffffffffffffff");
 
-#if defined __SIZEOF_INT128__
     // uint64   0 ~ 18446744073709551615
     do_test_cbor_intstring("18446744073709551616", "c249010000000000000000");  // cbor_tag_positive_bignum
+    do_test_cbor_intstring("0x10000000000000000", "c249010000000000000000");
     do_test_cbor_intstring("-18446744073709551616", "3bffffffffffffffff");
     do_test_cbor_intstring("-18446744073709551617", "c349010000000000000000");
-#endif
 
     do_test_cbor_int(-1, "20");
     do_test_cbor_int(-10, "29");
     do_test_cbor_int(-100, "3863");
     do_test_cbor_int(-1000, "3903e7");
+    do_test_cbor_intstring("-1", "20");
+    do_test_cbor_intstring("-10", "29");
+    do_test_cbor_intstring("-100", "3863");
+    do_test_cbor_intstring("-1000", "3903e7");
 
     do_test_cbor_float(0.0, "f90000");      // fa00000000
     do_test_cbor_double(0.0, "f90000");     // fb0000000000000000
@@ -520,6 +507,33 @@ void test_rfc7049_table4_2() {
         cbor_map* root = new cbor_map(cbor_flag_t::cbor_indef);
         *root << new cbor_pair("Fun", new cbor_data(true)) << new cbor_pair("Amt", new cbor_data(-2));
         do_cbor_test(root, "bf6346756ef563416d7421ff");
+        root->release();
+    }
+
+    // bignumber
+    {
+        // [18446744073709551615,18446744073709551616,18446744073709551617]
+        cbor_array* root = new cbor_array();
+        *root << new cbor_data(bignumber("18446744073709551615")) << new cbor_data(bignumber("18446744073709551616"))
+              << new cbor_data(bignumber("18446744073709551617"));
+        do_cbor_test(root, "831bffffffffffffffffc249010000000000000000c249010000000000000001");
+        root->release();
+    }
+    {
+        // [-18446744073709551615,-18446744073709551616,-18446744073709551617]
+        cbor_array* root = new cbor_array();
+        *root << new cbor_data(bignumber("-18446744073709551615")) << new cbor_data(bignumber("-18446744073709551616"))
+              << new cbor_data(bignumber("-18446744073709551617"));
+        do_cbor_test(root, "833bfffffffffffffffe3bffffffffffffffffc349010000000000000000");
+        root->release();
+    }
+    {
+        // [int128.min,int128.max,uint128.max]
+        // [-170141183460469231731687303715884105728,170141183460469231731687303715884105727,340282366920938463463374607431768211455]
+        cbor_array* root = new cbor_array();
+        *root << new cbor_data(bignumber("-170141183460469231731687303715884105728")) << new cbor_data(bignumber("170141183460469231731687303715884105727"))
+              << new cbor_data(bignumber("340282366920938463463374607431768211455"));
+        do_cbor_test(root, "83c3507fffffffffffffffffffffffffffffffc2507fffffffffffffffffffffffffffffffc250ffffffffffffffffffffffffffffffff");
         root->release();
     }
 }
