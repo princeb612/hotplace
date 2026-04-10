@@ -68,7 +68,7 @@ return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const b
             __leave2;
         }
 
-        const byte_t* stream = &bin[0];
+        const byte_t* stream = bin.data();
         size_t size = bin.size();
         size_t pos = 0;
         auto ret = read(session, dir, stream, size, pos);

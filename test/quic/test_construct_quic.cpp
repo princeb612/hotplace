@@ -577,7 +577,7 @@ void test_construct_quic() {
             {
                 auto lambda_alpn = [&](tls_session* session, const char* text) -> void {
                     auto& alpn = session->get_tls_protection().get_secrets().get(tls_context_alpn);
-                    auto test = alpn.empty() ? false : (0 == memcmp(&alpn[0], "\x2h3", 3));
+                    auto test = alpn.empty() ? false : (0 == memcmp(alpn.data(), "\x2h3", 3));
                     _test_case.assert(test, __FUNCTION__, text);
                 };
                 lambda_alpn(&session_client, "ALPN of session client");

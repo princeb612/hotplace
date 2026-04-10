@@ -32,7 +32,7 @@ void test_aead_ccm() {
 
         auto hint = advisor->hintof_cipher(scheme);
 
-        crypt.open(&handle, typeof_alg(hint), typeof_mode(hint), &key[0], key.size(), &iv[0], iv.size());
+        crypt.open(&handle, typeof_alg(hint), typeof_mode(hint), key.data(), key.size(), iv.data(), iv.size());
 
         crypt.set(handle, crypt_ctrl_nsize, hint->nsize);  // IV
         crypt.set(handle, crypt_ctrl_tsize, hint->tsize);  // TAG
@@ -48,7 +48,7 @@ void test_aead_ccm() {
             _test_case.test(ret, __FUNCTION__, "%s #encrypt", text);
         }
 
-        ret = crypt.decrypt(handle, &ciphertext[0], ciphertext.size(), plaintext, aad, tag);
+        ret = crypt.decrypt(handle, ciphertext.data(), ciphertext.size(), plaintext, aad, tag);
         {
             _logger->hdump("> plaintext", plaintext, 16, 3);
             _test_case.test(ret, __FUNCTION__, "%s #decrypt", text);

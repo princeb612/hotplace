@@ -18,9 +18,14 @@ void test_ieee754() {
             uint16 half;
             ieee754_typeof_t type;
         } _table[] = {
-            {0x0000, ieee754_typeof_t::ieee754_zero},    {0x8000, ieee754_typeof_t::ieee754_zero},    {0x3c00, ieee754_typeof_t::ieee754_half_precision},
-            {fp16_pinf, ieee754_typeof_t::ieee754_pinf}, {fp16_ninf, ieee754_typeof_t::ieee754_ninf}, {fp16_nan, ieee754_typeof_t::ieee754_nan},
-            {fp16_qnan, ieee754_typeof_t::ieee754_nan},  {fp16_snan, ieee754_typeof_t::ieee754_nan},
+            {0x0000, ieee754_typeof_t::ieee754_zero},            // 0.000000
+            {0x8000, ieee754_typeof_t::ieee754_zero},            // -0.000000
+            {0x3c00, ieee754_typeof_t::ieee754_half_precision},  // 1.000000
+            {fp16_pinf, ieee754_typeof_t::ieee754_pinf},         // inf
+            {fp16_ninf, ieee754_typeof_t::ieee754_ninf},         // -inf
+            {fp16_nan, ieee754_typeof_t::ieee754_nan},           // nan
+            {fp16_qnan, ieee754_typeof_t::ieee754_nan},          // nan
+            {fp16_snan, ieee754_typeof_t::ieee754_nan},          // nan
         };
 
         for (auto item : _table) {
@@ -33,14 +38,14 @@ void test_ieee754() {
             float f;
             ieee754_typeof_t type;
         } _table[] = {
-            {0.0, ieee754_typeof_t::ieee754_zero},
-            {-0.0, ieee754_typeof_t::ieee754_zero},
-            {1.0, ieee754_typeof_t::ieee754_single_precision},
-            {fp32_from_binary32(fp32_pinf), ieee754_typeof_t::ieee754_pinf},
-            {fp32_from_binary32(fp32_ninf), ieee754_typeof_t::ieee754_ninf},
-            {fp32_from_binary32(fp32_nan), ieee754_typeof_t::ieee754_nan},
-            {fp32_from_binary32(fp32_qnan), ieee754_typeof_t::ieee754_nan},
-            {fp32_from_binary32(fp32_snan), ieee754_typeof_t::ieee754_nan},
+            {0.0, ieee754_typeof_t::ieee754_zero},                            // 0.000000
+            {-0.0, ieee754_typeof_t::ieee754_zero},                           // -0.000000
+            {1.0, ieee754_typeof_t::ieee754_single_precision},                // 1.000000
+            {fp32_from_binary32(fp32_pinf), ieee754_typeof_t::ieee754_pinf},  // inf
+            {fp32_from_binary32(fp32_ninf), ieee754_typeof_t::ieee754_ninf},  // -inf
+            {fp32_from_binary32(fp32_nan), ieee754_typeof_t::ieee754_nan},    // nan
+            {fp32_from_binary32(fp32_qnan), ieee754_typeof_t::ieee754_nan},   // nan
+            {fp32_from_binary32(fp32_snan), ieee754_typeof_t::ieee754_nan},   // nan
         };
 
         for (auto item : _table) {
@@ -53,14 +58,14 @@ void test_ieee754() {
             double d;
             ieee754_typeof_t type;
         } _table[] = {
-            {0.0, ieee754_typeof_t::ieee754_zero},
-            {-0.0, ieee754_typeof_t::ieee754_zero},
-            {1.0, ieee754_typeof_t::ieee754_double_precision},
-            {fp64_from_binary64(fp64_pinf), ieee754_typeof_t::ieee754_pinf},
-            {fp64_from_binary64(fp64_ninf), ieee754_typeof_t::ieee754_ninf},
-            {fp64_from_binary64(fp64_nan), ieee754_typeof_t::ieee754_nan},
-            {fp64_from_binary64(fp64_qnan), ieee754_typeof_t::ieee754_nan},
-            {fp64_from_binary64(fp64_snan), ieee754_typeof_t::ieee754_nan},
+            {0.0, ieee754_typeof_t::ieee754_zero},                            // 0.000000
+            {-0.0, ieee754_typeof_t::ieee754_zero},                           // -0.000000
+            {1.0, ieee754_typeof_t::ieee754_double_precision},                // 1.000000
+            {fp64_from_binary64(fp64_pinf), ieee754_typeof_t::ieee754_pinf},  // inf
+            {fp64_from_binary64(fp64_ninf), ieee754_typeof_t::ieee754_ninf},  // -inf
+            {fp64_from_binary64(fp64_nan), ieee754_typeof_t::ieee754_nan},    // nan
+            {fp64_from_binary64(fp64_qnan), ieee754_typeof_t::ieee754_nan},   // nan
+            {fp64_from_binary64(fp64_snan), ieee754_typeof_t::ieee754_nan},   // nan
         };
 
         for (auto item : _table) {
@@ -108,7 +113,7 @@ void test_basic_stream() {
     {
         struct testvector {
             float f;
-            basic_stream bs;
+            const char* print;
         } _table[] = {
             {0.0, "0.000000"},
             {-0.0, "-0.000000"},
@@ -119,17 +124,17 @@ void test_basic_stream() {
             {fp32_from_binary32(fp32_snan), "nan"},
         };
 
-        for (auto item : _table) {
+        for (const auto& item : _table) {
             basic_stream bs;
             bs.printf("%f", item.f);
             _logger->writeln(bs);
-            _test_case.assert(item.bs == bs, __FUNCTION__, "float %s", item.bs.c_str());
+            _test_case.assert(bs == item.print, __FUNCTION__, "float %f", item.f);
         }
     }
     {
         struct testvector {
             double f;
-            basic_stream bs;
+            const char* print;
         } _table[] = {
             {0.0, "0.000000"},
             {-0.0, "-0.000000"},
@@ -140,11 +145,11 @@ void test_basic_stream() {
             {fp64_from_binary64(fp64_snan), "nan"},
         };
 
-        for (auto item : _table) {
+        for (const auto& item : _table) {
             basic_stream bs;
             bs.printf("%lf", item.f);
             _logger->writeln(bs);
-            _test_case.assert(item.bs == bs, __FUNCTION__, "double %s", item.bs.c_str());
+            _test_case.assert(bs == item.print, __FUNCTION__, "double %lf", item.f);
         }
     }
 }

@@ -57,7 +57,7 @@ return_t cbor_web_key::load_b16(crypto_key* cryptokey, const char* buffer, size_
         }
 
         binary_t bin = std::move(base16_decode(buffer, size));
-        ret = load(cryptokey, &bin[0], bin.size(), flag);
+        ret = load(cryptokey, bin.data(), bin.size(), flag);
     }
     __finally2 {}
     return ret;
@@ -107,7 +107,7 @@ return_t cbor_web_key::load(crypto_key* cryptokey, const binary_t& buffer, int f
             __leave2;
         }
 
-        ret = load(cryptokey, &buffer[0], buffer.size(), flag);
+        ret = load(cryptokey, buffer.data(), buffer.size(), flag);
     }
     __finally2 {}
     return ret;
@@ -240,7 +240,7 @@ return_t cbor_web_key::write(crypto_key* cryptokey, stream_t* stream, int flag) 
             __leave2;
         }
 
-        stream->write(&cbor[0], cbor.size());  // binary
+        stream->write(cbor.data(), cbor.size());  // binary
     }
     __finally2 {}
     return ret;

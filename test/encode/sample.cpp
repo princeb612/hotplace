@@ -110,7 +110,7 @@ void whatsthis() {
 
         if (o.filename.size() && o.content.size()) {
             std::ofstream file(o.filename.c_str(), std::ios::trunc);
-            file.write((const char*)&what[0], what.size());
+            file.write((const char*)what.data(), what.size());
             file.close();
         }
 

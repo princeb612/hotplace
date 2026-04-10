@@ -28,7 +28,7 @@ void test_aho_corasick_simple() {
         unsigned patid = item.second;
         std::vector<char> pat;
         ac.get_pattern(patid, pat);
-        _logger->writeln(R"(pos [%zi] pattern[%i] "%.*s")", begin, patid, pat.size(), &pat[0]);
+        _logger->writeln(R"(pos [%zi] pattern[%i] "%.*s")", begin, patid, pat.size(), pat.data());
     }
     _test_case.assert(result == expect, __FUNCTION__, "Aho Corasick algorithm");
 }

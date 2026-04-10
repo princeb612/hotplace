@@ -150,7 +150,7 @@ void test_rfc7516_A1_test() {
     crypt.decrypt(pkey, encrypted_key_data, decrypted_key_data, crypt_enc_t::rsa_oaep);
     dump2("decrypted_key", decrypted_key_data);
 
-    if ((decrypted_key_data.size() == RTL_NUMBER_OF(cek)) && (0 == memcmp(&decrypted_key_data[0], cek, RTL_NUMBER_OF(cek)))) {
+    if ((decrypted_key_data.size() == RTL_NUMBER_OF(cek)) && (0 == memcmp(decrypted_key_data.data(), cek, RTL_NUMBER_OF(cek)))) {
         result = true;
     } else {
         result = false;
@@ -177,14 +177,14 @@ void test_rfc7516_A1_test() {
     crypt.encrypt(crypt_handle, (byte_t*)input.c_str(), input.size(), data, aad_data, tag_gen);
     dump2("data", data);
     dump2("tag", tag_gen);
-    if ((tag_gen.size() == RTL_NUMBER_OF(tag)) && (0 == memcmp(&tag_gen[0], tag, RTL_NUMBER_OF(tag)))) {
+    if ((tag_gen.size() == RTL_NUMBER_OF(tag)) && (0 == memcmp(tag_gen.data(), tag, RTL_NUMBER_OF(tag)))) {
         result = true;
     } else {
         result = false;
     }
     _test_case.test(result ? errorcode_t::success : errorcode_t::internal_error, __FUNCTION__,
                     "RFC 7516 Appendix A - A.1.  Example JWE using RSAES-OAEP and AES GCM (A.1.6, tag)");
-    if ((data.size() == RTL_NUMBER_OF(ciphertext)) && (0 == memcmp(&data[0], ciphertext, RTL_NUMBER_OF(ciphertext)))) {
+    if ((data.size() == RTL_NUMBER_OF(ciphertext)) && (0 == memcmp(data.data(), ciphertext, RTL_NUMBER_OF(ciphertext)))) {
         result = true;
     } else {
         result = false;
@@ -497,7 +497,7 @@ void test_rfc7516_B() {
         dump2("concat (rfc sample)", concat_sample, RTL_NUMBER_OF(concat_sample));
         // B.6
         hash.open(&hash_handle, hash_algorithm_t::sha2_256, key, 16);
-        hash.hash(hash_handle, &concat[0], concat.size(), hmac_value);
+        hash.hash(hash_handle, concat.data(), concat.size(), hmac_value);
 
         dump2("hmac_value", hmac_value);
 
@@ -507,10 +507,10 @@ void test_rfc7516_B() {
 
         // B.7
         binary_t trunc;
-        trunc.insert(trunc.end(), &hmac_value[0], &hmac_value[0] + 16);
+        trunc.insert(trunc.end(), hmac_value.data(), hmac_value.data() + 16);
         dump2("trunc", trunc);
 
-        if ((RTL_NUMBER_OF(tag) == trunc.size()) && (0 == memcmp(&trunc[0], tag, trunc.size()))) {
+        if ((RTL_NUMBER_OF(tag) == trunc.size()) && (0 == memcmp(trunc.data(), tag, trunc.size()))) {
             // do nothing
         } else {
             ret = errorcode_t::internal_error;

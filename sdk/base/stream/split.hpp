@@ -201,7 +201,7 @@ return_t splitter<DESCRIPTOR_T>::run(std::function<void(uint32, const byte_t*, s
             blockstream = item.stream;
             blocksize = item.size;
         } else {
-            blockstream = item.bin.empty() ? nullptr : &item.bin[0];
+            blockstream = item.bin.data();
             blocksize = item.bin.size();
         }
         auto lambda = [&](const byte_t* stream, size_t size, size_t fragoffset, size_t fragsize) -> void {

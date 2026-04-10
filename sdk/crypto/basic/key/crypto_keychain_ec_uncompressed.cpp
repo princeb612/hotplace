@@ -16,8 +16,7 @@ namespace hotplace {
 namespace crypto {
 
 return_t crypto_keychain::add_ec_uncompressed(crypto_key* cryptokey, uint32 nid, const binary_t& pubkey, const binary_t& privkey, const keydesc& desc) {
-    return add_ec_uncompressed(cryptokey, nid, pubkey.empty() ? nullptr : &pubkey[0], pubkey.size(), privkey.empty() ? nullptr : &privkey[0], privkey.size(),
-                               desc);
+    return add_ec_uncompressed(cryptokey, nid, pubkey.data(), pubkey.size(), privkey.data(), privkey.size(), desc);
 }
 
 return_t crypto_keychain::add_ec_uncompressed(crypto_key* cryptokey, uint32 nid, const byte_t* pubkey, size_t pubsize, const byte_t* privkey, size_t privsize,

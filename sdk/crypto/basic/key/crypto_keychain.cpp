@@ -268,11 +268,11 @@ return_t crypto_keychain::write_pem(crypto_key* cryptokey, stream_t* stream, int
         buf.resize(64);
         int len = 0;
         while (1) {
-            len = BIO_read(out, &buf[0], buf.size());
+            len = BIO_read(out, buf.data(), buf.size());
             if (0 >= len) {
                 break;
             }
-            stream->write(&buf[0], len);
+            stream->write(buf.data(), len);
         }
     }
     __finally2 {
@@ -306,12 +306,12 @@ return_t crypto_keychain::t_write_der(const X509* x509, TYPE& buffer, std::funct
         buf.resize(64);
         int len = 0;
         while (1) {
-            len = BIO_read(out, &buf[0], buf.size());
+            len = BIO_read(out, buf.data(), buf.size());
             if (0 >= len) {
                 break;
             }
 
-            func(&buf[0], len, buffer);
+            func(buf.data(), len, buffer);
         }
     }
     __finally2 {

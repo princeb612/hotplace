@@ -104,7 +104,7 @@ return_t http2_serverpush::push_promise(http_request *request, http_server *serv
 
             do_push_promise(promise, ++stream_id, request, server, session, stream);
         }
-        session->send(&stream[0], stream.size());
+        session->send(stream.data(), stream.size());
     }
     __finally2 {}
     return ret;

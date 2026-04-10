@@ -78,7 +78,7 @@ return_t openssl_kdf::hkdf_expand_aes_rfc8152(binary_t& okm, const char* alg, si
                 t_block.resize(blocksize);
             }
 
-            EVP_CipherInit_ex(context, cipher, nullptr, &prk[0], &iv[0], 1);
+            EVP_CipherInit_ex(context, cipher, nullptr, prk.data(), iv.data(), 1);
 
             int size_update = 0;
             size_t size_input = content.size();
@@ -86,10 +86,10 @@ return_t openssl_kdf::hkdf_expand_aes_rfc8152(binary_t& okm, const char* alg, si
                 int remain = size_input - j;
                 int size = (remain < blocksize) ? remain : blocksize;
                 if (remain > blocksize) {
-                    EVP_CipherUpdate(context, &t_block[0], &size_update, &content[j], blocksize);
+                    EVP_CipherUpdate(context, t_block.data(), &size_update, &content[j], blocksize);
                 } else {
-                    EVP_CipherUpdate(context, &t_block[0], &size_update, &content[j], remain);
-                    EVP_CipherUpdate(context, &t_block[0], &size_update, &iv[0], blocksize - remain);
+                    EVP_CipherUpdate(context, t_block.data(), &size_update, &content[j], remain);
+                    EVP_CipherUpdate(context, t_block.data(), &size_update, iv.data(), blocksize - remain);
                 }
             }
 

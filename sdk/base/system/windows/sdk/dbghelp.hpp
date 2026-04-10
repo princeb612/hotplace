@@ -176,7 +176,7 @@ typedef PVOID(__stdcall *SYMFUNCTIONTABLEACCESS64)(HANDLE hProcess, DWORD64 Addr
  */
 typedef BOOL(__stdcall *SYMGETLINEFROMADDR)(HANDLE hProcess, DWORD dwAddr, PDWORD pdwDisplacement, PIMAGEHLP_LINE Line);
 
-typedef BOOL(__stdcall *SYMGETLINEFROMADDR64)(HANDLE hProcess, DWORD64 dwAddr, PDWORD64 pdwDisplacement, PIMAGEHLP_LINE64 Line);
+typedef BOOL(__stdcall *SYMGETLINEFROMADDR64)(HANDLE hProcess, DWORD64 dwAddr, PDWORD pdwDisplacement, PIMAGEHLP_LINE64 Line);
 
 /* @brief
     Retrieves the base address of the module that contains the specified address.

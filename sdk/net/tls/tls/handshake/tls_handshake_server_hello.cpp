@@ -175,7 +175,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
                     protection.reset_transcript_hash(session);
 
                     const binary_t& client_hello = secrets.get(tls_context_client_hello);
-                    protection.update_transcript_hash(session, client_hello.empty() ? nullptr : &client_hello[0], client_hello.size());  // client_hello
+                    protection.update_transcript_hash(session, client_hello.data(), client_hello.size());  // client_hello
                 } break;
                 case tls_flow_0rtt:
                 case tls_flow_hello_retry_request: {
@@ -238,7 +238,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
 
                 // client_hello
                 const binary_t& client_hello = secrets.get(tls_context_client_hello);
-                protection.calc_transcript_hash(session, &client_hello[0], client_hello.size(), handshake_hash);
+                protection.calc_transcript_hash(session, client_hello.data(), client_hello.size(), handshake_hash);
 
                 // uint8(FE) || uint24(hash.size) || hash
                 binary message_hash;
@@ -247,7 +247,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
 
                 protection.reset_transcript_hash(session);
 
-                protection.update_transcript_hash(session, &synthetic_handshake_message[0], synthetic_handshake_message.size());
+                protection.update_transcript_hash(session, synthetic_handshake_message.data(), synthetic_handshake_message.size());
 
                 // server_hello
                 protection.calc_transcript_hash(session, stream + hspos, size_header_body, hello_hash);

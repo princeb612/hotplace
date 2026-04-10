@@ -15,8 +15,9 @@
 
 struct OPTION : public CMDLINEOPTION {
     bool test_slow_kdf;
+    bool test_argon2;
 
-    OPTION() : CMDLINEOPTION(), test_slow_kdf(false) {}
+    OPTION() : CMDLINEOPTION(), test_slow_kdf(false), test_argon2(false) {}
 };
 
 extern test_case _test_case;

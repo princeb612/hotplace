@@ -54,10 +54,10 @@ int main(int argc, char **argv) {
     test_dumpmemory();
     test_i128();
     test_sprintf();
-    test_vprintf();
+    test_vprintf();  // [APVR]
     test_stream();
     test_stream_getline();
-    test_stream_stdmap();
+    test_stream_stdmap();  // [APVR]
     test_vtprintf();
     test_autoindent();
     test_split();

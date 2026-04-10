@@ -75,7 +75,7 @@ return_t do_test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_c
             __leave2;
         } else {
             /* MAC_KEY = initial MAC_KEY_LEN bytes of K */
-            mac_key.insert(mac_key.end(), &k[0], &k[0] + digestsize);
+            mac_key.insert(mac_key.end(), k.data(), k.data() + digestsize);
             /* ENC_KEY = final ENC_KEY_LEN bytes of K */
             size_t pos = k.size() - keysize;
             enc_key.insert(enc_key.end(), &k[pos], &k[pos] + keysize);

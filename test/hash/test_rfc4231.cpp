@@ -96,7 +96,7 @@ void test_hmacsha_rfc4231() {
     return_t ret = errorcode_t::success;
     openssl_hash openssl_hash;
     binary_t bin_key, bin_data, bin_expect_sha224, bin_expect_sha256, bin_expect_sha384, bin_expect_sha512;
-    for (int i = 0; i < sizeof(testvector) / sizeof(testvector[0]); i++) {
+    for (int i = 0; i < RTL_NUMBER_OF(testvector); i++) {
         struct _testvector& item = testvector[i];
 
         base16_decode(item.key, strlen(item.key), bin_key);

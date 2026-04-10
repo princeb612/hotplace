@@ -60,7 +60,6 @@ void test_kdf_argon_rfc9106() {
 
     for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
         binary_t derived;
-
         auto test = kdf.argon2(derived, vector[i].mode, 32, base16_decode(vector[i].password), base16_decode(vector[i].salt), base16_decode(vector[i].ad),
                                base16_decode(vector[i].secret));
 

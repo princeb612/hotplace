@@ -84,7 +84,7 @@ return_t openssl_pqc::decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** 
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        ret = decode(libctx, name, pkey, &keydata[0], keydata.size(), encoding, passphrase);
+        ret = decode(libctx, name, pkey, keydata.data(), keydata.size(), encoding, passphrase);
     }
     __finally2 {}
     return ret;
@@ -150,7 +150,7 @@ return_t openssl_pqc::encapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, bina
         keycapsule.resize(keycapsule_len);
         sharedsecret.resize(sharedsecret_len);
 
-        test = EVP_PKEY_encapsulate(pkey_ctx, &keycapsule[0], &keycapsule_len, &sharedsecret[0], &sharedsecret_len);
+        test = EVP_PKEY_encapsulate(pkey_ctx, keycapsule.data(), &keycapsule_len, sharedsecret.data(), &sharedsecret_len);
         if (test <= 0) {
             ret = errorcode_t::internal_error;
             __leave2;
@@ -170,7 +170,7 @@ return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, cons
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        ret = decapsule(libctx, pkey, &keycapsule[0], keycapsule.size(), sharedsecret);
+        ret = decapsule(libctx, pkey, keycapsule.data(), keycapsule.size(), sharedsecret);
     }
     __finally2 {}
     return ret;
@@ -207,7 +207,7 @@ return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, cons
 
         sharedsecret.resize(sharedsecret_len);
 
-        test = EVP_PKEY_decapsulate(pkey_ctx, &sharedsecret[0], &sharedsecret_len, capsulekeystream, capsulekeysize);
+        test = EVP_PKEY_decapsulate(pkey_ctx, sharedsecret.data(), &sharedsecret_len, capsulekeystream, capsulekeysize);
         if (test <= 0) {
             ret = errorcode_t::internal_error;
             __leave2;
@@ -256,7 +256,7 @@ return_t openssl_pqc::sign(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t* s
         }
 
         signature.resize(dgstsize);
-        EVP_DigestSignFinal(md_context, &signature[0], &dgstsize);
+        EVP_DigestSignFinal(md_context, signature.data(), &dgstsize);
 
         signature.resize(dgstsize);
     }
@@ -301,7 +301,7 @@ return_t openssl_pqc::verify(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t*
             __leave2_trace_openssl(ret);
         }
 
-        rc = EVP_DigestVerifyFinal(md_context, &signature[0], signature.size());
+        rc = EVP_DigestVerifyFinal(md_context, signature.data(), signature.size());
         if (rc < 1) {
             ret = errorcode_t::error_verify;
             __leave2_trace_openssl(ret);

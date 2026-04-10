@@ -381,7 +381,7 @@ bool parser::context::compare(parser* obj, const parser::context& other) const {
 void parser::context::add_pattern(parser* obj) {
     if (obj) {
         auto ac = obj->_ac;
-        ac->insert(&_tokens[0], _tokens.size());
+        ac->insert(_tokens.data(), _tokens.size());
     }
 }
 
@@ -390,7 +390,7 @@ std::multimap<range_t, unsigned> parser::context::psearch(parser* obj) const {
     if (obj) {
         auto ac = obj->_ac;
         ac->build();
-        result = ac->search(&_tokens[0], _tokens.size());
+        result = ac->search(_tokens.data(), _tokens.size());
     }
     return result;
 }
@@ -400,7 +400,7 @@ std::multimap<range_t, unsigned> parser::context::psearchex(parser* obj) const {
     if (obj) {
         auto ac = obj->_ac;
         ac->build();
-        auto acres = ac->search(&_tokens[0], _tokens.size());
+        auto acres = ac->search(_tokens.data(), _tokens.size());
 
         t_merge_ovl_intervals<unsigned int, int> moi;  // unsigned int pos, int patternid
         search_result r;

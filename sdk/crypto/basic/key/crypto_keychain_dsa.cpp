@@ -88,9 +88,9 @@ return_t crypto_keychain::add_dsa(crypto_key* cryptokey, uint32 nid, const binar
         BIGNUM* bn_p = nullptr;
         BIGNUM* bn_q = nullptr;
         BIGNUM* bn_g = nullptr;
-        bn_p = BN_bin2bn(&p[0], p.size(), nullptr);
-        bn_q = BN_bin2bn(&q[0], q.size(), nullptr);
-        bn_g = BN_bin2bn(&g[0], g.size(), nullptr);
+        bn_p = BN_bin2bn(p.data(), p.size(), nullptr);
+        bn_q = BN_bin2bn(q.data(), q.size(), nullptr);
+        bn_g = BN_bin2bn(g.data(), g.size(), nullptr);
         ret_openssl = DSA_set0_pqg(dsa, bn_p, bn_q, bn_g);
         if (ret_openssl < 0) {
             ret = errorcode_t::internal_error;
@@ -99,10 +99,10 @@ return_t crypto_keychain::add_dsa(crypto_key* cryptokey, uint32 nid, const binar
         BIGNUM* bn_pub = nullptr;
         BIGNUM* bn_priv = nullptr;
         if (pub.size()) {
-            bn_pub = BN_bin2bn(&pub[0], pub.size(), nullptr);
+            bn_pub = BN_bin2bn(pub.data(), pub.size(), nullptr);
         }
         if (priv.size()) {
-            bn_priv = BN_bin2bn(&priv[0], priv.size(), nullptr);
+            bn_priv = BN_bin2bn(priv.data(), priv.size(), nullptr);
         }
         ret_openssl = DSA_set0_key(dsa, bn_pub, bn_priv);
         if (ret_openssl < 0) {

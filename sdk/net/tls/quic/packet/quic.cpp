@@ -146,7 +146,7 @@ return_t quic_read_packet(uint8& type, tls_session* session, tls_direction_t dir
 
 return_t quic_read_packet(uint8& type, tls_session* session, tls_direction_t dir, const binary_t& packet) {
     size_t pos = 0;
-    return quic_read_packet(type, session, dir, &packet[0], packet.size(), pos);
+    return quic_read_packet(type, session, dir, packet.data(), packet.size(), pos);
 }
 
 uint32 estimate_quic_packet_size(uint8 type, uint8 dcidlen, uint8 scidlen, uint8 tokenlen, uint8 pnl, uint16 payload, uint8 taglen) {

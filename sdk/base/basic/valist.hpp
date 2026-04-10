@@ -96,7 +96,9 @@ class valist {
      */
     valist& assign(const valist& object);
     valist& assign(const std::vector<variant_t>& args);
-
+    /**
+     * @brief add
+     */
     valist& operator<<(bool value);
     valist& operator<<(char value);
     valist& operator<<(unsigned char value);

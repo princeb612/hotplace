@@ -65,7 +65,7 @@ return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, con
 }
 
 return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, const binary_t& bin) {
-    const byte_t* stream = &bin[0];
+    const byte_t* stream = bin.data();
     size_t size = bin.size();
     size_t pos = 0;
     return read(handshake, dir, stream, size, pos);

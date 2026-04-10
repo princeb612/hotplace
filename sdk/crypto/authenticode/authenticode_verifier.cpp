@@ -302,7 +302,7 @@ return_t authenticode_verifier::verify(authenticode_context_t* handle, const cha
         if (handle->gender) {
             file_stream bin;
             bin.open(format("%s.der", file_name).c_str(), filestream_flag_t::open_create_always);
-            bin.write(&binary[0], binary.size());
+            bin.write(binary.data(), binary.size());
             bin.close();
         }
 
@@ -310,7 +310,7 @@ return_t authenticode_verifier::verify(authenticode_context_t* handle, const cha
         BIO* in = nullptr;
         __try2 {
             in = BIO_new(BIO_s_mem());
-            BIO_write(in, &binary[0], binary.size());
+            BIO_write(in, binary.data(), binary.size());
             /*
              * openssl asn1parse -inform der -i -in bCerficiate.saved
              * openssl pkcs7 -inform DER -print_certs -text -in bCerficiate.saved
@@ -754,8 +754,8 @@ return_t authenticode_verifier::verify_pkcs7(authenticode_context_t* handle, voi
             for (const auto& pair : handle->trusted_cert) {
                 const std::string& cert_file = pair.first;
                 const std::string& cert_path = pair.second;
-                // X509_STORE_load_locations (store, cert_file.empty () ? nullptr : cert_file.c_str (),
-                //                           cert_path.empty () ? nullptr : cert_path.c_str ());
+                // X509_STORE_load_locations (store, (char*)cert_file.data(),
+                //                           (char*)cert_path.data());
                 // load cert wo path
                 if (cert_file.size()) {
                     X509_LOOKUP* lookup = X509_STORE_add_lookup(store, X509_LOOKUP_file());

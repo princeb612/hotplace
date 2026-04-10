@@ -18,7 +18,7 @@ namespace hotplace {
 namespace crypto {
 
 return_t openssl_sign::sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, binary_t& signature, uint32 flags) {
-    return sign_ecdsa(pkey, alg, &input[0], input.size(), signature, flags);
+    return sign_ecdsa(pkey, alg, input.data(), input.size(), signature, flags);
 }
 
 return_t openssl_sign::sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) {
@@ -67,7 +67,7 @@ return_t openssl_sign::sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, co
          * the supplied private key and returns the created signature.
          */
         // openssl 3.0 EVP_PKEY_get0 family return const key pointer
-        ecdsa_sig = ECDSA_do_sign(&hash_value[0], hash_value.size(), ec_key);
+        ecdsa_sig = ECDSA_do_sign(hash_value.data(), hash_value.size(), ec_key);
         if (nullptr == ecdsa_sig) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
@@ -111,7 +111,7 @@ return_t openssl_sign::sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, co
 }
 
 return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, const binary_t& signature, uint32 flags) {
-    return verify_ecdsa(pkey, alg, &input[0], input.size(), signature, flags);
+    return verify_ecdsa(pkey, alg, input.data(), input.size(), signature, flags);
 }
 
 return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) {
@@ -159,11 +159,11 @@ return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, 
             auto unitsize = advisor->unitsizeof_ecdsa(alg);
             der2sig(signature, unitsize, temp);
             size_t signature_size = temp.size();
-            bn_r = BN_bin2bn(&temp[0], signature_size / 2, nullptr);
+            bn_r = BN_bin2bn(temp.data(), signature_size / 2, nullptr);
             bn_s = BN_bin2bn(&temp[signature_size / 2], signature_size / 2, nullptr);
         } else {
             size_t signature_size = signature.size();
-            bn_r = BN_bin2bn(&signature[0], signature_size / 2, nullptr);
+            bn_r = BN_bin2bn(signature.data(), signature_size / 2, nullptr);
             bn_s = BN_bin2bn(&signature[signature_size / 2], signature_size / 2, nullptr);
         }
 
@@ -172,7 +172,7 @@ return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, 
         /* Verifies that the supplied signature is a valid ECDSA
          * signature of the supplied hash value using the supplied public key.
          */
-        ret_openssl = ECDSA_do_verify(&hash_value[0], hash_value.size(), ecdsa_sig, ec_key);
+        ret_openssl = ECDSA_do_verify(hash_value.data(), hash_value.size(), ecdsa_sig, ec_key);
         if (1 != ret_openssl) {
             ret = errorcode_t::error_verify;
             __leave2_trace_openssl(ret);

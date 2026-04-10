@@ -31,7 +31,10 @@ void test_replace();
 void test_scan();
 void test_scan2();
 void test_split();
-void test_string();
+void test_ansi_string();
+#if defined _WIN32 || defined _WIN64
+void test_wide_string();
+#endif
 void test_tokenize();
 
 #endif

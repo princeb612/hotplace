@@ -148,7 +148,7 @@ uint32 hmac_otp::get(otp_context_t* handle, uint32 counter, uint32& code) {
     binary_t input;
 
     input.resize(sizeof(c));
-    memcpy(&input[0], &c, input.size());
+    memcpy(input.data(), &c, input.size());
     return get(handle, input, code);
 }
 
@@ -174,7 +174,7 @@ uint32 hmac_otp::get(otp_context_t* handle, binary_t counter, uint32& code) {
 
         hash.init(context->_hmac_context);
 
-        ret = hash.update(context->_hmac_context, &counter[0], counter.size());
+        ret = hash.update(context->_hmac_context, counter.data(), counter.size());
         if (errorcode_t::success != ret) {
             __leave2;
         }

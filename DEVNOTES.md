@@ -203,6 +203,10 @@ flowchart LR
 | KDF     | OSSL_set_max_threads       | openssl 3.2~    |
 | MLKEM   |                            | openssl 3.5~    |
 
+### MSVC
+- windbg symbol path
+  - srv*C:\home\symbols*https://msdl.microsoft.com/download/symbols
+
 ## TODO
 
 - [ ] HTTP/3

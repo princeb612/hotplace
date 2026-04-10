@@ -39,8 +39,9 @@ uint32 test_hotp_rfc4226() {
     uint32 sha1_hotp_result[10] = {
         755224, 287082, 359152, 969429, 338314, 254676, 287922, 162583, 399871, 520489,
     };
-    if (0 != memcmp(&output[0], &sha1_hotp_result[0], 10 * sizeof(uint32))) {
-        ret = errorcode_t::internal_error;
+    auto results = RTL_NUMBER_OF(sha1_hotp_result);
+    if ((results != output.size()) || (0 != memcmp(output.data(), &sha1_hotp_result[0], results * sizeof(uint32)))) {
+        ret = errorcode_t::mismatch;
     }
 
     _test_case.test(ret, __FUNCTION__, "RFC4226 HOTP algoritm sha1 + 10 test vectors tested");

@@ -18,10 +18,8 @@ void test_transcript_hash() {
 
     const char* stream1 = "client hello";
     const char* stream2 = "server hello";
-    const char* stream3 = "stream3";
-    const char* stream4 = "stream4";
 
-    // case1
+    // case1 update(stream1).update(stream2).finalize(hash2)
     binary_t case1_hash_stream2;
     {
         hash.open(&handle, "sha256");
@@ -33,7 +31,7 @@ void test_transcript_hash() {
         _logger->hdump("stream1+stream2", case1_hash_stream2);
     }
 
-    // case2
+    // case2 update(stream1, hash1).update(stream2, hash2)
     binary_t case2_hash_stream1;
     binary_t case2_hash_stream2;
     {
@@ -46,7 +44,8 @@ void test_transcript_hash() {
         _logger->hdump("stream1+stream2", case2_hash_stream2);
     }
     _test_case.assert(case2_hash_stream2 == case1_hash_stream2, __FUNCTION__, "transcript_hash");
-    // case3
+
+    // case3 digest(stream1, hash1).digest(stream2, hash2)
     binary_t case3_hash_stream1;
     binary_t case3_hash_stream2;
     {

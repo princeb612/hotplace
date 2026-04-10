@@ -32,9 +32,9 @@ return_t crypto_keychain::add_ec_compressed(crypto_key* cryptokey, uint32 nid, c
             __leave2;
         }
 
-        bn_x = BN_bin2bn(&x[0], x.size(), nullptr);
+        bn_x = BN_bin2bn(x.data(), x.size(), nullptr);
         if (d.size() > 0) {
-            bn_d = BN_bin2bn(&d[0], d.size(), nullptr);
+            bn_d = BN_bin2bn(d.data(), d.size(), nullptr);
         }
 
         if (nullptr == bn_x) {

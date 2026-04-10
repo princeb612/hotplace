@@ -754,7 +754,7 @@ return_t tls_advisor::negotiate_alpn(tls_handshake* handshake, const byte_t* alp
         t_aho_corasick<byte_t> ac;
         std::multimap<unsigned, range_t> rearranged;
 
-        ac.insert(&_prot[0], _prot.size());  // pattern [0]
+        ac.insert(_prot.data(), _prot.size());  // pattern [0]
         ac.build();
 
         auto result = ac.search(alpn, size);

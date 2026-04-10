@@ -170,7 +170,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
             pl.set_reference_value(constexpr_certificate, constexpr_certificate_len);
             pl.set_reference_value(constexpr_certificate_extensions, constexpr_certificate_extensions_len);
 
-            pl.read(&certificates[0], certificates.size(), cpos);
+            pl.read(certificates.data(), certificates.size(), cpos);
 
             binary_t cert;
 
@@ -197,12 +197,12 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
 #endif
 
             if (0 == idx) {
-                keychain.load_der(&servercert, &cert[0], cert.size(), desc);
+                keychain.load_der(&servercert, cert.data(), cert.size(), desc);
             } else {
 #if defined DEBUG
                 if (istraceable(trace_category_net, loglevel_debug)) {
                     crypto_key temp;
-                    keychain.load_der(&temp, &cert[0], cert.size(), desc);
+                    keychain.load_der(&temp, cert.data(), cert.size(), desc);
                 }
 #endif
             }

@@ -30,7 +30,8 @@ int main(int argc, char** argv) {
 #endif
                 << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-s", "test slow pbkdf2/scrypt", [](OPTION& o, char* param) -> void { o.test_slow_kdf = true; }).optional();
+                << t_cmdarg_t<OPTION>("-s", "test slow pbkdf2/scrypt", [](OPTION& o, char* param) -> void { o.test_slow_kdf = true; }).optional()
+                << t_cmdarg_t<OPTION>("-argon2", "test argon2d, argon2i, argon2id", [](OPTION& o, char* param) -> void { o.test_argon2 = true; }).optional();
 
     _cmdline->parse(argc, argv);
 
@@ -64,7 +65,9 @@ int main(int argc, char** argv) {
             test_kdf_pbkdf2_rfc7914();
             test_kdf_scrypt_rfc7914();
         }
-        test_kdf_argon_rfc9106();
+        if (option.test_argon2) {
+            test_kdf_argon_rfc9106();  // [APVR]
+        }
 
         test_kdf_extract_expand_rfc5869();
         test_ckdf_rfc4615();

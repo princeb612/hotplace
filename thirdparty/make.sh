@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash +x
 :<<COMMENTS
 @author Soo Han, Kim (princeb612.kr@gmail.com)
 @remarks
@@ -27,7 +27,7 @@ if [ -z ${HOTPLACE_HOME} ]; then
 fi
 
 args=("$@")
-target=Debug
+target=Release
 base=gcc
 generator='Unix Makefiles'
 builddir=build
@@ -39,6 +39,10 @@ if [ ${#args[@]} -ne 0 ]; then
             base=msvc
             builddir=build_msvc
             generator='Visual Studio 18 2026'
+        elif [ $arg = 'release' ]; then
+            target=Release
+        elif [ $arg = 'debug' ]; then
+            target=Debug
         fi
     done
 fi

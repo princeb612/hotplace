@@ -138,9 +138,9 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
                     uint8 last_byte = *plaintext.rbegin();
                     if (tls_content_type_alert == last_byte) {
                         tls_record_alert alert(session);
-                        alert.read_plaintext(dir, &plaintext[0], plainsize - 1, tpos);
+                        alert.read_plaintext(dir, plaintext.data(), plainsize - 1, tpos);
                     } else if (tls_content_type_handshake == last_byte) {
-                        ret = get_handshakes().read(session, dir, &plaintext[0], plainsize - 1, tpos);
+                        ret = get_handshakes().read(session, dir, plaintext.data(), plainsize - 1, tpos);
                     } else if (tls_content_type_application_data == last_byte) {
                         auto flow = protection.get_flow();
                         if (tls_flow_1rtt == flow) {
@@ -226,7 +226,7 @@ return_t tls_record_application_data::get_application_data(binary_t& message, bo
     auto lambda = [&](const binary_t& msg, uint8 trail) -> void {
         if (msg.size() > trail) {
             _bin.clear();
-            binary_append(_bin, &msg[0], msg.size() - trail);
+            binary_append(_bin, msg.data(), msg.size() - trail);
         }
     };
 

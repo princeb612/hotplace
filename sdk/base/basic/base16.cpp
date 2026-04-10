@@ -142,13 +142,13 @@ return_t base16_encode(const byte_t* source, size_t size, stream_t* stream, uint
 
 return_t base16_encode(const binary_t& source, char* buf, size_t* buflen) {
     return_t ret = errorcode_t::success;
-    ret = base16_encode(source.empty() ? nullptr : source.data(), source.size(), buf, buflen);
+    ret = base16_encode(source.data(), source.size(), buf, buflen);
     return ret;
 }
 
 return_t base16_encode(const binary_t& source, std::string& outpart, uint32 flags) {
     return_t ret = errorcode_t::success;
-    ret = base16_encode(source.empty() ? nullptr : source.data(), source.size(), outpart, flags);
+    ret = base16_encode(source.data(), source.size(), outpart, flags);
     return ret;
 }
 
@@ -158,9 +158,7 @@ std::string base16_encode(const binary_t& source) {
     return outpart;
 }
 
-return_t base16_encode(const binary_t& source, stream_t* stream, uint32 flags) {
-    return base16_encode(source.empty() ? nullptr : source.data(), source.size(), stream, flags);
-}
+return_t base16_encode(const binary_t& source, stream_t* stream, uint32 flags) { return base16_encode(source.data(), source.size(), stream, flags); }
 
 std::string base16_encode(const char* source) {
     std::string outpart;

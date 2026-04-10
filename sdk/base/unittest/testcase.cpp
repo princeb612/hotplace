@@ -208,11 +208,7 @@ void test_case::vassert(bool expect, const char* test_function, const char* mess
         ret = errorcode_t::assert_failed;
     }
 
-    basic_stream tltle;
-    if (message) {
-        tltle.vprintf(message, ap);
-    }
-    test(ret, test_function, tltle.c_str());
+    vtest(ret, test_function, message, ap);
 }
 
 void test_case::nassert(bool expect, const char* test_function, const char* message, ...) {
@@ -224,11 +220,11 @@ void test_case::nassert(bool expect, const char* test_function, const char* mess
 
 void test_case::vnassert(bool expect, const char* test_function, const char* message, va_list ap) {
     return_t ret = (false == expect) ? expect_failure : unexpected;
-    basic_stream tltle;
+    basic_stream title;
     if (message) {
-        tltle.vprintf(message, ap);
+        title.vprintf(message, ap);
     }
-    test(ret, test_function, tltle.c_str());
+    test(ret, test_function, title.c_str());
 }
 
 void test_case::test(return_t result, const char* test_function, const char* message, ...) {
@@ -247,9 +243,9 @@ void test_case::vtest(return_t result, const char* test_function, const char* me
     __try2 {
         check_time(elapsed);
 
-        basic_stream tltle;
+        basic_stream title;
         if (message) {
-            tltle.vprintf(message, ap);
+            title.vprintf(message, ap);
         }
 
         critical_section_guard guard(_lock);
@@ -263,7 +259,7 @@ void test_case::vtest(return_t result, const char* test_function, const char* me
         if (test_function) {
             item._test_function = test_function;
         }
-        item._message = tltle.c_str();
+        item._message = title.c_str();
 
         topic = _testcase_per_threads[tid];
 
@@ -313,7 +309,7 @@ void test_case::vtest(return_t result, const char* test_function, const char* me
 
         basic_stream stream;
         stream.printf(ANSI_ESCAPE "1;%im[%08x]" ANSI_ESCAPE "33m[%s] %s" ANSI_ESCAPE "0m", CONSOLE_COLOR_FG + color, result, test_function ? test_function : "",
-                      tltle.c_str());
+                      title.c_str());
 
         if (_logger) {
             _logger->writeln(stream);

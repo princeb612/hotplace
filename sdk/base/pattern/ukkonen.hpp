@@ -54,7 +54,7 @@ class t_ukkonen {
     }
     virtual ~t_ukkonen() { delete _root; }
 
-    t_ukkonen<BT, T>& add(const std::vector<T>& pattern) { return add(&pattern[0], pattern.size()); }
+    t_ukkonen<BT, T>& add(const std::vector<T>& pattern) { return add(pattern.data(), pattern.size()); }
     t_ukkonen<BT, T>& add(const T* pattern, size_t size) {
         if (pattern) {
             reset();
@@ -72,7 +72,7 @@ class t_ukkonen {
         return *this;
     }
 
-    std::set<int> search(const std::vector<T>& pattern) { return search(&pattern[0], pattern.size()); }
+    std::set<int> search(const std::vector<T>& pattern) { return search(pattern.data(), pattern.size()); }
     std::set<int> search(const T* pattern, size_t size) {
         std::set<int> result;
         int pos = -1;

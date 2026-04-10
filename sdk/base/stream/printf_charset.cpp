@@ -428,13 +428,9 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
     /* The initialization of 'size' is to suppress a warning that
        'size' might be used unitialized.  It seems gcc can't
        quite grok this spaghetti code ... */
-    size_t size = 0; /* size of converted field or string */
-    TCHAR buf[BUF] = {
-        0,
-    }; /* space for %c, %[diouxX], %[eEfgG] */
-    TCHAR ox[2] = {
-        0,
-    }; /* space for 0x hex-prefix */
+    size_t size = 0;      /* size of converted field or string */
+    TCHAR buf[BUF] = {0}; /* space for %c, %[diouxX], %[eEfgG] */
+    TCHAR ox[2] = {0};    /* space for 0x hex-prefix */
 
     ieee754_typeof_t ieee754_type = ieee754_typeof_t::ieee754_finite;
 

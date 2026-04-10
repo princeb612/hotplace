@@ -162,7 +162,7 @@ class payload_member {
  *
  *          std::string data = "data";
  *          binary_t bin_stream = std::move(base16_decode("0x046461746110000102030405060708090a0b0c0d0e0f"));
- *          const byte_t* stream = &bin_stream[0];
+ *          const byte_t* stream = bin_stream.data();
  *          size_t streamsize = bin_stream.size();
  *
  *          my_variant_length_data v(data);                 // 04 64 61 74 61 | .data
@@ -291,7 +291,7 @@ class payload {
      *          // sample #1
      *          const char* case = "01 00 05 64 61 74 61 31 00 05 64 61 74 61 32";
      *          binary_t bin = std::move(base16_decode_rfc(case));
-     *          byte_t* stream = &bin[0];
+     *          byte_t* stream = bin.data();
      *          size_t size = stream.size();
      *          size_t pos = 0;
      *

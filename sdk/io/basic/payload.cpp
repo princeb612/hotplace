@@ -77,7 +77,7 @@ return_t payload::read(const byte_t* p, size_t size) {
     return read(p, size, pos);
 }
 
-return_t payload::read(const binary_t& bin, size_t& pos) { return read((byte_t*)&bin[0], bin.size(), pos); }
+return_t payload::read(const binary_t& bin, size_t& pos) { return read((byte_t*)bin.data(), bin.size(), pos); }
 
 return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;

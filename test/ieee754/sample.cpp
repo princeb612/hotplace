@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 
     test_ieee754();
     test_frexp();
-    test_basic_stream();
+    test_basic_stream();  // [APVR]
     test_as_small_as_possible();
 
     _logger->flush();

@@ -2,6 +2,7 @@
 
 * Research on personal interests
 * ![cmake workflow](https://github.com/princeb612/hotplace/actions/workflows/build.yml/badge.svg)
+* ![codeql workflow](https://github.com/princeb612/hotplace/actions/workflows/codeql.yml/badge.svg)
 * powered by
   * ![openssl](https://img.shields.io/badge/openssl-1.1.1/3.0/3.2/3.3/3.4/3.5-green)
   * ![jansson](https://img.shields.io/badge/jansson-2.15-green)
@@ -10,12 +11,12 @@
   * ![c++](https://img.shields.io/badge/c++-c++11-green)
   * ![gcc](https://img.shields.io/badge/gcc->=4.7-green)
   * ![cmake](https://img.shields.io/badge/cmake->=2.6-green)
-  * ![MSVC](https://img.shields.io/badge/MSVC-Community-magenta)
+  * ![MSVC](https://img.shields.io/badge/MSVC-Community-green)
 * platform
   * ![MSYS2](https://img.shields.io/badge/MSYS2-MINGW64-green)
   * ![UBUNTU](https://img.shields.io/badge/UBUNTU->=20-green)
   * ![RHEL](https://img.shields.io/badge/RHEL->=7-green)
-  * ![Windows](https://img.shields.io/badge/Windows-10-magenta)
+  * ![Windows](https://img.shields.io/badge/Windows-10-green)
 * status
   * JOSE ![implemented](https://img.shields.io/badge/implemented+SDK-green)
   * CBOR,COSE ![implemented](https://img.shields.io/badge/implemented+SDK-green)

@@ -16,7 +16,7 @@ namespace crypto {
 cipher_encrypt::cipher_encrypt(crypt_algorithm_t alg, crypt_mode_t mode) : _alg(alg), _mode(mode) { _shared.make_share(this); }
 
 return_t cipher_encrypt::encrypt(const binary_t& key, const binary_t& iv, const binary_t& plaintext, binary_t& ciphertext) {
-    return encrypt(key, iv, &plaintext[0], plaintext.size(), ciphertext);
+    return encrypt(key, iv, plaintext.data(), plaintext.size(), ciphertext);
 }
 
 return_t cipher_encrypt::encrypt(const binary_t& key, const binary_t& iv, const byte_t* stream, size_t size, binary_t& ciphertext) {
@@ -32,7 +32,7 @@ return_t cipher_encrypt::encrypt(const binary_t& key, const binary_t& iv, const 
 }
 
 return_t cipher_encrypt::decrypt(const binary_t& key, const binary_t& iv, const binary_t& ciphertext, binary_t& plaintext) {
-    return decrypt(key, iv, &ciphertext[0], ciphertext.size(), plaintext);
+    return decrypt(key, iv, ciphertext.data(), ciphertext.size(), plaintext);
 }
 
 return_t cipher_encrypt::decrypt(const binary_t& key, const binary_t& iv, const byte_t* stream, size_t size, binary_t& plaintext) {

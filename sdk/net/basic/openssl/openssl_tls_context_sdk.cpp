@@ -339,7 +339,7 @@ int set_cookie_generate_callback_routine(SSL* ssl, unsigned char* cookie, unsign
     binary_t bin;
     dtls_cookie_dgram_peer_sockaddr(bin, ssl);
 
-    memcpy(cookie, &bin[0], bin.size());
+    memcpy(cookie, bin.data(), bin.size());
     *cookie_len = bin.size();
 
     return 1;

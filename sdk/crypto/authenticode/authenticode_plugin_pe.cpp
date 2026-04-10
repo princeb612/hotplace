@@ -198,7 +198,7 @@ return_t authenticode_plugin_pe::read_authenticode(file_stream* filestream, bina
                 size_t blob_start = FIELD_OFFSET(WIN_CERTIFICATE, bCertificate);
                 size_t blob_size = win_certificate->dwLength - blob_start;
                 data.resize(blob_size);
-                memcpy(&data[0], stream_data + authenticode_begin + blob_start, blob_size);
+                memcpy(data.data(), stream_data + authenticode_begin + blob_start, blob_size);
             } else {
                 ret = errorcode_t::bad_format;
                 __leave2;
@@ -294,7 +294,7 @@ return_t authenticode_plugin_pe::write_authenticode(file_stream* filestream, bin
                 // win_certificate->wRevision = WIN_CERT_REVISION_2_0;
                 // win_certificate->wCertificateType = WIN_CERT_TYPE_PKCS_SIGNED_DATA;
 
-                memcpy(stream_data + authenticode_begin + blob_start, &data[0], data.size());
+                memcpy(stream_data + authenticode_begin + blob_start, data.data(), data.size());
             } else {
                 ret = errorcode_t::bad_format;
                 __leave2;

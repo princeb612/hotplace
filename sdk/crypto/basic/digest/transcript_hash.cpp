@@ -43,7 +43,7 @@ void transcript_hash::reset() {
     hash.init(_handle);
 }
 
-return_t transcript_hash::update(const binary_t& message) { return update(&message[0], message.size()); }
+return_t transcript_hash::update(const binary_t& message) { return update(message.data(), message.size()); }
 
 return_t transcript_hash::update(const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
@@ -52,7 +52,7 @@ return_t transcript_hash::update(const byte_t* stream, size_t size) {
     return ret;
 }
 
-return_t transcript_hash::digest(const binary_t& message, binary_t& result) { return digest(&message[0], message.size(), result); }
+return_t transcript_hash::digest(const binary_t& message, binary_t& result) { return digest(message.data(), message.size(), result); }
 
 return_t transcript_hash::digest(const byte_t* stream, size_t size, binary_t& result) {
     return_t ret = errorcode_t::success;

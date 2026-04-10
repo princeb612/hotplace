@@ -232,13 +232,13 @@ return_t crypto_keyexchange::keystore(tls_group_t group, crypto_key* storage, co
                 ret = keychain.add_dh(storage, nid, share, bin_privkey, desc);
             } break;
             case kty_ec: {
-                ret = keychain.add_ec_uncompressed(storage, nid, &share[0], keysize, nullptr, 0, desc);
+                ret = keychain.add_ec_uncompressed(storage, nid, share.data(), keysize, nullptr, 0, desc);
             } break;
             case kty_okp: {
-                ret = keychain.add_okp(storage, nid, &share[0], keysize, nullptr, 0, desc);
+                ret = keychain.add_okp(storage, nid, share.data(), keysize, nullptr, 0, desc);
             } break;
             case kty_mlkem: {
-                ret = keychain.add_mlkem_pub(storage, nid, &share[0], keysize, key_encoding_pub_raw, desc);
+                ret = keychain.add_mlkem_pub(storage, nid, share.data(), keysize, key_encoding_pub_raw, desc);
             } break;
             default: {
                 ret = bad_request;
@@ -496,10 +496,10 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
         switch (first.kty) {
             case kty_mlkem: {
                 auto pkey = key->find_nid(kid, first.nid);
-                ret = pqc.decapsule(nullptr, pkey, &share[0], capsulesize, ss);
+                ret = pqc.decapsule(nullptr, pkey, share.data(), capsulesize, ss);
             } break;
             case kty_ec: {
-                ret = keychain.add_ec_uncompressed(&ephemeral, first.nid, &share[0], keysize, nullptr, 0, desc);
+                ret = keychain.add_ec_uncompressed(&ephemeral, first.nid, share.data(), keysize, nullptr, 0, desc);
             } break;
             default: {
                 ret = not_supported;

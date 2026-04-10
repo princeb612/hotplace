@@ -69,14 +69,13 @@ return_t json_object_encryption::composer::compose_encryption(jose_context_t *ha
         const auto &member_ciphertext = encryption.datamap[crypt_item_t::item_ciphertext];
 
         base64_encode((byte_t *)encryption.header.c_str(), encryption.header.size(), b64_header, encoding_t::encoding_base64url);
-        base64_encode(member_iv.empty() ? nullptr : &member_iv[0], member_iv.size(), b64_iv, encoding_t::encoding_base64url);
-        base64_encode(member_tag.empty() ? nullptr : &member_tag[0], member_tag.size(), b64_tag, encoding_t::encoding_base64url);
-        base64_encode(member_ciphertext.empty() ? nullptr : &member_ciphertext[0], member_ciphertext.size(), b64_ciphertext, encoding_t::encoding_base64url);
+        base64_encode(member_iv.data(), member_iv.size(), b64_iv, encoding_t::encoding_base64url);
+        base64_encode(member_tag.data(), member_tag.size(), b64_tag, encoding_t::encoding_base64url);
+        base64_encode(member_ciphertext.data(), member_ciphertext.size(), b64_ciphertext, encoding_t::encoding_base64url);
 
         if (jose_serialization_t::jose_compact == type) {
             const auto member_encryptedkey = recipient.datamap[crypt_item_t::item_encryptedkey];
-            base64_encode(member_encryptedkey.empty() ? nullptr : &member_encryptedkey[0], member_encryptedkey.size(), b64_encryptedkey,
-                          encoding_t::encoding_base64url);
+            base64_encode(member_encryptedkey.data(), member_encryptedkey.size(), b64_encryptedkey, encoding_t::encoding_base64url);
 
             output += b64_header;
             output += ".";
@@ -89,8 +88,7 @@ return_t json_object_encryption::composer::compose_encryption(jose_context_t *ha
             output += b64_tag;
         } else if (jose_serialization_t::jose_flatjson == type) {
             const auto member_encryptedkey = recipient.datamap[crypt_item_t::item_encryptedkey];
-            base64_encode(member_encryptedkey.empty() ? nullptr : &member_encryptedkey[0], member_encryptedkey.size(), b64_encryptedkey,
-                          encoding_t::encoding_base64url);
+            base64_encode(member_encryptedkey.data(), member_encryptedkey.size(), b64_encryptedkey, encoding_t::encoding_base64url);
 
             json_t *json_serialization = nullptr;
             __try2 {
@@ -164,13 +162,11 @@ return_t json_object_encryption::composer::compose_encryption(jose_context_t *ha
 
                                     json_object_set_new(json_epk, "kty", json_string(kty.c_str()));
                                     json_object_set_new(json_epk, "crv", json_string(curve_name.c_str()));
-                                    json_object_set_new(
-                                        json_epk, "x",
-                                        json_string(base64_encode(pub1.empty() ? nullptr : &pub1[0], pub1.size(), encoding_t::encoding_base64url).c_str()));
+                                    json_object_set_new(json_epk, "x",
+                                                        json_string(base64_encode(pub1.data(), pub1.size(), encoding_t::encoding_base64url).c_str()));
                                     if (pub2.size()) {
-                                        json_object_set_new(
-                                            json_epk, "y",
-                                            json_string(base64_encode(pub2.empty() ? nullptr : &pub2[0], pub2.size(), encoding_t::encoding_base64url).c_str()));
+                                        json_object_set_new(json_epk, "y",
+                                                            json_string(base64_encode(pub2.data(), pub2.size(), encoding_t::encoding_base64url).c_str()));
                                     }
                                     json_object_set_new(header, "epk", json_epk);
                                 }
@@ -179,14 +175,14 @@ return_t json_object_encryption::composer::compose_encryption(jose_context_t *ha
                                 std::string b64_tag;
                                 const auto &member_iv = recipient.datamap[crypt_item_t::item_iv];
                                 const auto &member_tag = recipient.datamap[crypt_item_t::item_tag];
-                                base64_encode(member_iv.empty() ? nullptr : &member_iv[0], member_iv.size(), b64_iv, encoding_t::encoding_base64url);
-                                base64_encode(member_tag.empty() ? nullptr : &member_tag[0], member_tag.size(), b64_tag, encoding_t::encoding_base64url);
+                                base64_encode(member_iv.data(), member_iv.size(), b64_iv, encoding_t::encoding_base64url);
+                                base64_encode(member_tag.data(), member_tag.size(), b64_tag, encoding_t::encoding_base64url);
                                 json_object_set_new(header, "iv", json_string(b64_iv.c_str()));
                                 json_object_set_new(header, "tag", json_string(b64_tag.c_str()));
                             } else if (jwa_group_t::jwa_group_pbes_hs_aeskw == alg_group) {
                                 std::string b64_p2s;
                                 const auto &member_p2s = recipient.datamap[crypt_item_t::item_p2s];
-                                base64_encode(member_p2s.empty() ? nullptr : &member_p2s[0], member_p2s.size(), b64_p2s, encoding_t::encoding_base64url);
+                                base64_encode(member_p2s.data(), member_p2s.size(), b64_p2s, encoding_t::encoding_base64url);
                                 json_object_set_new(header, "p2s", json_string(b64_p2s.c_str()));
                                 json_object_set_new(header, "p2c", json_integer(recipient.p2c));
                             }
@@ -195,8 +191,7 @@ return_t json_object_encryption::composer::compose_encryption(jose_context_t *ha
                         }
 
                         const auto &member_encryptedkey = recipient.datamap[crypt_item_t::item_encryptedkey];
-                        base64_encode(member_encryptedkey.empty() ? nullptr : &member_encryptedkey[0], member_encryptedkey.size(), b64_encryptedkey,
-                                      encoding_t::encoding_base64url);
+                        base64_encode(member_encryptedkey.data(), member_encryptedkey.size(), b64_encryptedkey, encoding_t::encoding_base64url);
                         json_object_set_new(json_recipient, "encrypted_key", json_string(b64_encryptedkey.c_str()));
 
                         json_array_append_new(json_recipients, json_recipient);
@@ -245,7 +240,7 @@ return_t json_object_encryption::composer::compose_encryption_aead_header(const 
         if (alg_value) {
             if ((nullptr == tag_value) || (tag_value && (0 == strlen(tag_value)))) {
                 std::string tag_encoded;
-                base64_encode(tag.empty() ? nullptr : &tag[0], tag.size(), tag_encoded, encoding_t::encoding_base64url);
+                base64_encode(tag.data(), tag.size(), tag_encoded, encoding_t::encoding_base64url);
 
                 json_object_set_new(json_header, "tag", json_string(tag_encoded.c_str()));
                 char *contents = json_dumps(json_header, JOSE_JSON_FORMAT);
@@ -336,18 +331,16 @@ return_t json_object_encryption::composer::compose_encryption_dorandom(jose_cont
                 docompose_encryption_header_parameter(protected_header, enc, alg, jose_compose_t::jose_enc_alg, kid, datamap, variantmap, handle->flags);
                 docompose_encryption_header_parameter(header, jwe_t::jwe_unknown, alg, jose_compose_t::jose_alg_only, kid, datamap, variantmap);
 
-                item.header.assign(protected_header.empty() ? nullptr : (char *)&protected_header[0], protected_header.size());
-                base64_encode(protected_header.empty() ? nullptr : &protected_header[0], protected_header.size(), item.datamap[crypt_item_t::item_aad],
-                              encoding_t::encoding_base64url);
+                item.header.assign((char *)protected_header.data(), protected_header.size());
+                base64_encode(protected_header.data(), protected_header.size(), item.datamap[crypt_item_t::item_aad], encoding_t::encoding_base64url);
 
-                recipient.header = std::string(header.empty() ? nullptr : (char *)&header[0], header.size());
+                recipient.header = std::string((char *)header.data(), header.size());
                 recipient.kid = kid;
                 item.recipients.insert(std::make_pair(alg, recipient));
             } else if (algs.size() > 1) {
                 docompose_protected_header(protected_header, enc, jwa_t::jwa_unknown, jose_compose_t::jose_enc_only, "", handle->flags);
-                item.header.assign(protected_header.empty() ? nullptr : (char *)&protected_header[0], protected_header.size());
-                base64_encode(protected_header.empty() ? nullptr : &protected_header[0], protected_header.size(), item.datamap[crypt_item_t::item_aad],
-                              encoding_t::encoding_base64url);
+                item.header.assign((char *)protected_header.data(), protected_header.size());
+                base64_encode(protected_header.data(), protected_header.size(), item.datamap[crypt_item_t::item_aad], encoding_t::encoding_base64url);
 
                 for (const jwa_t &alg : algs) {
                     // const hint_jose_encryption_t* alg_hint =
@@ -364,7 +357,7 @@ return_t json_object_encryption::composer::compose_encryption_dorandom(jose_cont
 
                     binary_t header;
                     docompose_encryption_header_parameter(header, jwe_t::jwe_unknown, alg, jose_compose_t::jose_alg_only, kid, datamap, variantmap);
-                    recipient.header = std::string(header.empty() ? nullptr : (char *)&header[0], header.size());
+                    recipient.header = std::string((char *)header.data(), header.size());
                     item.recipients.insert(std::make_pair(alg, recipient));
                 }
             }
@@ -441,11 +434,9 @@ return_t json_object_encryption::composer::docompose_encryption_header_parameter
 
                     json_object_set_new(json_epk, "kty", json_string(kty.c_str()));
                     json_object_set_new(json_epk, "crv", json_string(curve_name.c_str()));
-                    json_object_set_new(json_epk, "x",
-                                        json_string(base64_encode(pub1.empty() ? nullptr : &pub1[0], pub1.size(), encoding_t::encoding_base64url).c_str()));
+                    json_object_set_new(json_epk, "x", json_string(base64_encode(pub1.data(), pub1.size(), encoding_t::encoding_base64url).c_str()));
                     if (pub2.size()) {
-                        json_object_set_new(json_epk, "y",
-                                            json_string(base64_encode(pub2.empty() ? nullptr : &pub2[0], pub2.size(), encoding_t::encoding_base64url).c_str()));
+                        json_object_set_new(json_epk, "y", json_string(base64_encode(pub2.data(), pub2.size(), encoding_t::encoding_base64url).c_str()));
                     }
                     json_object_set_new(json_header, "epk", json_epk);
                 }
@@ -453,16 +444,13 @@ return_t json_object_encryption::composer::docompose_encryption_header_parameter
                 // iv, tag
                 binary_t iv1 = datamap[crypt_item_t::item_iv];
                 binary_t tag1 = datamap[crypt_item_t::item_tag];
-                json_object_set_new(json_header, "iv",
-                                    json_string(base64_encode(iv1.empty() ? nullptr : &iv1[0], iv1.size(), encoding_t::encoding_base64url).c_str()));
-                json_object_set_new(json_header, "tag",
-                                    json_string(base64_encode(tag1.empty() ? nullptr : &tag1[0], tag1.size(), encoding_t::encoding_base64url).c_str()));
+                json_object_set_new(json_header, "iv", json_string(base64_encode(iv1.data(), iv1.size(), encoding_t::encoding_base64url).c_str()));
+                json_object_set_new(json_header, "tag", json_string(base64_encode(tag1.data(), tag1.size(), encoding_t::encoding_base64url).c_str()));
             } else if (jwa_group_t::jwa_group_pbes_hs_aeskw == alg_group) {
                 // p2s, p2c
                 binary_t p2s = datamap[crypt_item_t::item_p2s];
                 uint32 p2c = variantmap[crypt_item_t::item_p2c].data.i32;
-                json_object_set_new(json_header, "p2s",
-                                    json_string(base64_encode(p2s.empty() ? nullptr : &p2s[0], p2s.size(), encoding_t::encoding_base64url).c_str()));
+                json_object_set_new(json_header, "p2s", json_string(base64_encode(p2s.data(), p2s.size(), encoding_t::encoding_base64url).c_str()));
                 json_object_set_new(json_header, "p2c", json_integer(p2c));
             }
         }

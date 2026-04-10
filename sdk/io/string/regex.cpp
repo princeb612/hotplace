@@ -71,7 +71,7 @@ void regex_token(const std::string& input, const std::string& expr, size_t& pos,
             const char* subj = input.c_str() + pos;
             size_t subjlen = input.size() - pos;
 
-            rc = pcre_exec(re, nullptr, subj, subjlen, 0, PCRE_NOTEMPTY, &ovector[0], ovector.size());
+            rc = pcre_exec(re, nullptr, subj, subjlen, 0, PCRE_NOTEMPTY, ovector.data(), ovector.size());
 
             if (PCRE_ERROR_NOMATCH == rc) {
                 break;
@@ -79,7 +79,7 @@ void regex_token(const std::string& input, const std::string& expr, size_t& pos,
                 break;
             } else {
                 for (int i = 0; i < rc; i++) {
-                    pcre_get_substring(subj, &ovector[0], rc, i, &sub);
+                    pcre_get_substring(subj, ovector.data(), rc, i, &sub);
                     if (sub) {
                         tokens.push_back(sub);
                         pos += ovector[i + 1];

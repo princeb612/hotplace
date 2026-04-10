@@ -92,7 +92,7 @@ return_t http3_frame::do_read_frame(const byte_t* stream, size_t size, size_t& p
 #endif
 
         size_t ppos = 0;
-        ret = do_read_payload(frame_payload.empty() ? nullptr : &frame_payload[0], frame_payload.size(), ppos);
+        ret = do_read_payload(frame_payload.data(), frame_payload.size(), ppos);
     }
     __finally2 {
         if (errorcode_t::success != ret) {

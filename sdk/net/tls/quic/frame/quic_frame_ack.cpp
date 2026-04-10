@@ -158,7 +158,7 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_quic_frame, &dbs);
+            trace_debug_event_stream(trace_category_net, trace_event_quic_frame, &dbs);
         }
 #endif
     }

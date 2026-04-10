@@ -241,7 +241,7 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const binary_t& expre
             __leave2;
         }
 
-        auto e = &expression[0];
+        auto e = expression.data();
         auto n = expression.size();
         ret = parse(handle, e, n);
     }

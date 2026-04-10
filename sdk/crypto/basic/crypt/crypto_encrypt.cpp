@@ -16,7 +16,7 @@ namespace crypto {
 crypto_encrypt::crypto_encrypt(crypt_enc_t enc) : _enc(enc) { _shared.make_share(this); }
 
 return_t crypto_encrypt::encrypt(const EVP_PKEY* pkey, const binary_t& plaintext, binary_t& ciphertext) {
-    return encrypt(pkey, &plaintext[0], plaintext.size(), ciphertext);
+    return encrypt(pkey, plaintext.data(), plaintext.size(), ciphertext);
 }
 
 return_t crypto_encrypt::encrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& ciphertext) {
@@ -27,7 +27,7 @@ return_t crypto_encrypt::encrypt(const EVP_PKEY* pkey, const byte_t* stream, siz
 }
 
 return_t crypto_encrypt::decrypt(const EVP_PKEY* pkey, const binary_t& ciphertext, binary_t& plaintext) {
-    return decrypt(pkey, &ciphertext[0], ciphertext.size(), plaintext);
+    return decrypt(pkey, ciphertext.data(), ciphertext.size(), plaintext);
 }
 
 return_t crypto_encrypt::decrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& plaintext) {

@@ -223,7 +223,7 @@ return_t crypto_key::get_asn1public_key(const EVP_PKEY* pkey, binary_t& pub) {
                 __leave2;
             }
             pub.resize(len);
-            byte_t* p = &pub[0];
+            byte_t* p = pub.data();
             len = i2d_PUBKEY((EVP_PKEY*)pkey, &p);
         } else {
             crypto_keychain keychain;

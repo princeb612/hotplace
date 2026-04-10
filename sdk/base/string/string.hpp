@@ -134,7 +134,7 @@ return_t getline(const wchar_t* stream, size_t sizestream, size_t startpos, size
  *  binary_t data;
  *  for (size_t i = 0; i < count; i++) {
  *      split_get (handle, i, data);
- *      printf ("[%i] (%zi) %.*s\n", i, data.size (), data.size (), &data [0]);
+ *      printf ("[%i] (%zi) %.*s\n", i, data.size (), data.size (), data.data());
  *  }
  *  split_end (handle);
  */

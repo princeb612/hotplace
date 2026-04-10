@@ -19,7 +19,7 @@ openssl_crypt::openssl_crypt() {}
 openssl_crypt::~openssl_crypt() {}
 
 return_t openssl_crypt::open(crypt_context_t **handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const binary_t &key, const binary_t &iv) {
-    return open(handle, algorithm, mode, key.empty() ? nullptr : &key[0], key.size(), iv.empty() ? nullptr : &iv[0], iv.size());
+    return open(handle, algorithm, mode, key.data(), key.size(), iv.data(), iv.size());
 }
 
 return_t openssl_crypt::open(crypt_context_t **handle, const char *cipher, const unsigned char *key, size_t size_key, const unsigned char *iv, size_t size_iv) {
@@ -95,7 +95,7 @@ return_t openssl_crypt::encrypt(crypt_context_t *handle, const unsigned char *pl
         size_t size_len = plainsize + EVP_MAX_BLOCK_LENGTH;
         ciphertext.resize(size_len);
 
-        ret = encrypt_internal(handle, plaintext, plainsize, &ciphertext[0], &size_len);
+        ret = encrypt_internal(handle, plaintext, plainsize, ciphertext.data(), &size_len);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -112,7 +112,7 @@ return_t openssl_crypt::encrypt(crypt_context_t *handle, const unsigned char *pl
 }
 
 return_t openssl_crypt::encrypt(crypt_context_t *handle, const binary_t &plaintext, binary_t &ciphertext) {
-    return encrypt(handle, plaintext.empty() ? nullptr : &plaintext[0], plaintext.size(), ciphertext);
+    return encrypt(handle, plaintext.data(), plaintext.size(), ciphertext);
 }
 
 return_t openssl_crypt::encrypt(crypt_context_t *handle, const unsigned char *plaintext, size_t plainsize, binary_t &ciphertext, const binary_t &aad,
@@ -123,7 +123,7 @@ return_t openssl_crypt::encrypt(crypt_context_t *handle, const unsigned char *pl
         size_t size_len = plainsize + EVP_MAX_BLOCK_LENGTH;
         ciphertext.resize(size_len);
 
-        ret = encrypt_internal(handle, plaintext, plainsize, &ciphertext[0], &size_len, &aad, &tag);
+        ret = encrypt_internal(handle, plaintext, plainsize, ciphertext.data(), &size_len, &aad, &tag);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -140,7 +140,7 @@ return_t openssl_crypt::encrypt(crypt_context_t *handle, const unsigned char *pl
 }
 
 return_t openssl_crypt::encrypt(crypt_context_t *handle, const binary_t &plaintext, binary_t &ciphertext, const binary_t &aad, binary_t &tag) {
-    return encrypt(handle, plaintext.empty() ? nullptr : &plaintext[0], plaintext.size(), ciphertext, aad, tag);
+    return encrypt(handle, plaintext.data(), plaintext.size(), ciphertext, aad, tag);
 }
 
 return_t openssl_crypt::decrypt(crypt_context_t *handle, const unsigned char *ciphertext, size_t ciphersize, unsigned char **plaintext, size_t *plainsize) {
@@ -184,7 +184,7 @@ return_t openssl_crypt::decrypt(crypt_context_t *handle, const unsigned char *ci
         size_t size_len = ciphersize + EVP_MAX_BLOCK_LENGTH;
         plaintext.resize(size_len);
 
-        ret = decrypt_internal(handle, ciphertext, ciphersize, &plaintext[0], &size_len);
+        ret = decrypt_internal(handle, ciphertext, ciphersize, plaintext.data(), &size_len);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -201,7 +201,7 @@ return_t openssl_crypt::decrypt(crypt_context_t *handle, const unsigned char *ci
 }
 
 return_t openssl_crypt::decrypt(crypt_context_t *handle, const binary_t &ciphertext, binary_t &plaintext) {
-    return decrypt(handle, ciphertext.empty() ? nullptr : &ciphertext[0], ciphertext.size(), plaintext);
+    return decrypt(handle, ciphertext.data(), ciphertext.size(), plaintext);
 }
 
 return_t openssl_crypt::decrypt(crypt_context_t *handle, const unsigned char *ciphertext, size_t ciphersize, binary_t &plaintext, const binary_t &aad,
@@ -212,7 +212,7 @@ return_t openssl_crypt::decrypt(crypt_context_t *handle, const unsigned char *ci
         size_t size_len = ciphersize + EVP_MAX_BLOCK_LENGTH;
         plaintext.resize(size_len);
 
-        ret = decrypt_internal(handle, ciphertext, ciphersize, &plaintext[0], &size_len, &aad, &tag);
+        ret = decrypt_internal(handle, ciphertext, ciphersize, plaintext.data(), &size_len, &aad, &tag);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -229,7 +229,7 @@ return_t openssl_crypt::decrypt(crypt_context_t *handle, const unsigned char *ci
 }
 
 return_t openssl_crypt::decrypt(crypt_context_t *handle, const binary_t &ciphertext, binary_t &plaintext, const binary_t &aad, const binary_t &tag) {
-    return decrypt(handle, ciphertext.empty() ? nullptr : &ciphertext[0], ciphertext.size(), plaintext, aad, tag);
+    return decrypt(handle, ciphertext.data(), ciphertext.size(), plaintext, aad, tag);
 }
 
 return_t openssl_crypt::free_data(unsigned char *data) {

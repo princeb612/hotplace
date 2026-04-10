@@ -56,7 +56,7 @@ return_t tls_records::read(tls_session* session, tls_direction_t dir, const bina
             __leave2;
         }
 
-        const byte_t* stream = &bin[0];
+        const byte_t* stream = bin.data();
         size_t size = bin.size();
         size_t pos = 0;
         ret = read(session, dir, stream, size, pos);

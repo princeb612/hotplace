@@ -230,7 +230,7 @@ return_t is_private_key(const EVP_PKEY* pkey, bool& result) {
                 binary_t bin_d;
                 size_t len_d = 256;
                 bin_d.resize(len_d);
-                int check = EVP_PKEY_get_raw_private_key(pkey, &bin_d[0], &len_d);
+                int check = EVP_PKEY_get_raw_private_key(pkey, bin_d.data(), &len_d);
                 bin_d.resize(len_d);
                 if (1 == check) {
                     result = true;
@@ -293,7 +293,7 @@ return_t bn2bin(const BIGNUM* bn, binary_t& bin) {
             __leave2;
         }
         bin.resize(BN_num_bytes(bn));
-        BN_bn2bin(bn, &bin[0]);
+        BN_bn2bin(bn, bin.data());
     }
     __finally2 {}
     return ret;
@@ -308,7 +308,7 @@ return_t bin2bn(const binary_t& bin, BIGNUM** bn) {
         }
 
         if (bin.size()) {
-            *bn = BN_bin2bn(&bin[0], bin.size(), nullptr);
+            *bn = BN_bin2bn(bin.data(), bin.size(), nullptr);
         }
     }
     __finally2 {}

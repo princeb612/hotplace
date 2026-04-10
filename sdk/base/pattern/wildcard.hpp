@@ -66,7 +66,7 @@ class t_wildcards {
     t_wildcards(const BT& wild_single, const BT& wild_any, memberof_t memberof = memberof_defhandler<BT, T>)
         : _wild_single(wild_single), _wild_any(wild_any), _memberof(memberof) {}
 
-    bool match(const std::vector<T>& source, const std::vector<T>& pattern) { return match(&source[0], source.size(), &pattern[0], pattern.size()); }
+    bool match(const std::vector<T>& source, const std::vector<T>& pattern) { return match(source.data(), source.size(), pattern.data(), pattern.size()); }
     bool match(const T* source, size_t n, const T* pattern, size_t m) {
         bool ret = false;
         int i = 0;

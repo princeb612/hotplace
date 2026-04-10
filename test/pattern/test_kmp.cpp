@@ -42,7 +42,7 @@ void test_kmp() {
     {
         // contiguous memory space
         t_kmp<byte_t> kmp;
-        int idx = kmp.search(&data.get()[0], data.get().size(), &pattern.get()[0], pattern.get().size());
+        int idx = kmp.search(data.get().data(), data.get().size(), pattern.get().data(), pattern.get().size());
         _logger->hdump("data", data);
         _logger->hdump("pattern", pattern);
         _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<byte_t> %i", idx);
@@ -61,7 +61,7 @@ void test_kmp() {
         prepare(pattern2, pattern);
 
         t_kmp<pattern_search_sample_data> kmp;
-        int idx = kmp.search(&data2[0], data2.size(), &pattern2[0], pattern2.size());
+        int idx = kmp.search(data2.data(), data2.size(), pattern2.data(), pattern2.size());
         _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<struct> %i", idx);
     }
 
@@ -83,7 +83,7 @@ void test_kmp() {
         prepare(pattern2, pattern);
         t_kmp<pattern_search_sample_data*> kmp;
         auto comparator = [](const pattern_search_sample_data* other, const pattern_search_sample_data* rhs) -> bool { return (other->value == rhs->value); };
-        int idx = kmp.search(&data2[0], data2.size(), &pattern2[0], pattern2.size(), 0, comparator);
+        int idx = kmp.search(data2.data(), data2.size(), pattern2.data(), pattern2.size(), 0, comparator);
         _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<struct*> %i using comparator", idx);
         clean(data2);
         clean(pattern2);

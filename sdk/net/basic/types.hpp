@@ -99,12 +99,12 @@ struct netbuffer_t {
     netbuffer_t() { set_bufsize(DEFAULT_NET_BUFFER_SIZE); }
     void init() {
 #if defined __linux__
-        buffer = &bin[0];
+        buffer = bin.data();
         buflen = bin.size();
 #elif defined _WIN32 || defined _WIN64
         memset(&overlapped, 0, sizeof(OVERLAPPED));
         wsabuf.len = bin.size();
-        wsabuf.buf = &bin[0];
+        wsabuf.buf = bin.data();
 #endif
     }
     void set_bufsize(uint16 size) {

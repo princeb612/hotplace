@@ -117,7 +117,7 @@ return_t quic_packet_handshake::do_read(tls_direction_t dir, const byte_t* strea
         dump();
 
         size_t tpos = 0;
-        ret = get_quic_frames().read(dir, &_payload[0], _payload.size(), tpos);
+        ret = get_quic_frames().read(dir, _payload.data(), _payload.size(), tpos);
         if (errorcode_t::success != ret) {
             __leave2;
         }

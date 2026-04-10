@@ -30,7 +30,7 @@ return_t quic_dump_frame(tls_session* session, const byte_t* stream, size_t size
 }
 
 return_t quic_dump_frame(tls_session* session, const binary_t frame, size_t& pos, tls_direction_t dir) {
-    return quic_dump_frame(session, &frame[0], frame.size(), pos);
+    return quic_dump_frame(session, frame.data(), frame.size(), pos);
 }
 
 }  // namespace net

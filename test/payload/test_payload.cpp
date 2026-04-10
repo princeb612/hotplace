@@ -120,12 +120,12 @@ void test_uint24() {
     binary_t bin = std::move(base16_decode_rfc(sample));
 
     uint32 ui32 = 0;
-    b24_i32(&bin[0], bin.size(), ui32);
+    b24_i32(bin.data(), bin.size(), ui32);
     _test_case.assert(0x0328 == ui32, __FUNCTION__, "b24_i32");
 
     byte_t buf[3];
     i32_b24(buf, 3, ui32);
-    _test_case.assert(0 == memcmp(buf, &bin[0], 3), __FUNCTION__, "i32_b24");
+    _test_case.assert(0 == memcmp(buf, bin.data(), 3), __FUNCTION__, "i32_b24");
 }
 
 //  test_payload_uint24
@@ -223,7 +223,7 @@ void test_group(const char* input, bool expect) {
         pl.set_reference_value(constexpr_data1, constexpr_len1);
         pl.set_reference_value(constexpr_data2, constexpr_len2);
 
-        pl.read(&bin[0], bin.size(), pos);
+        pl.read(bin.data(), bin.size(), pos);
 
         cond_group2 = pl.get_group_condition(constexpr_group2);
 
@@ -312,7 +312,7 @@ void test_uint48() {
         };
         pl.set_condition(constexpr_record_version, lambda_check_dtls);
         size_t pos = 0;
-        pl.read(&bin[0], bin.size(), pos);
+        pl.read(bin.data(), bin.size(), pos);
     }
 
     {

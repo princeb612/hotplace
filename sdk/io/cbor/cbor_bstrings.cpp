@@ -57,7 +57,7 @@ cbor_bstrings& cbor_bstrings::add(const byte_t* bstr, size_t size) {
 }
 
 cbor_bstrings& cbor_bstrings::operator<<(binary_t bin) {
-    join(new cbor_data(&bin[0], bin.size()));
+    join(new cbor_data(bin.data(), bin.size()));
     return *this;
 }
 

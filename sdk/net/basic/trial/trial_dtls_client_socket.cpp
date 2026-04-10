@@ -55,7 +55,7 @@ return_t trial_dtls_client_socket::sendto(const char* ptr_data, size_t size_data
         }
 
         size_t sent = 0;
-        ret = client_socket_prosumer::sendto((char*)&bin[0], bin.size(), &sent, addr, addrlen);
+        ret = client_socket_prosumer::sendto((char*)bin.data(), bin.size(), &sent, addr, addrlen);
         if (errorcode_t::success == ret) {
             *cbsent = size_data;
         }
@@ -70,7 +70,7 @@ return_t trial_dtls_client_socket::do_send(binary_t& bin) {
         ret = errorcode_t::empty;
     } else {
         size_t cbsent = 0;
-        ret = client_socket_prosumer::sendto((char*)&bin[0], bin.size(), &cbsent, (sockaddr*)&_sa, sizeof(_sa));
+        ret = client_socket_prosumer::sendto((char*)bin.data(), bin.size(), &cbsent, (sockaddr*)&_sa, sizeof(_sa));
     }
     return ret;
 }

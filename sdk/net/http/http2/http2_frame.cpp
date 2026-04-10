@@ -265,7 +265,7 @@ void http2_frame::read_compressed_header(const byte_t* buf, size_t size, std::fu
 }
 
 void http2_frame::read_compressed_header(const binary_t& b, std::function<void(const std::string&, const std::string&)> v) {
-    read_compressed_header(&b[0], b.size(), v);
+    read_compressed_header(b.data(), b.size(), v);
 }
 
 return_t http2_frame::write_compressed_header(binary_t& frag, const std::string& name, const std::string& value, uint32 flags) {

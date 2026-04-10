@@ -26,11 +26,11 @@ namespace hotplace {
 namespace io {
 
 return_t zlib_deflate(zlib_windowbits_t windowbits, const binary_t& input, binary_t& output) {
-    return zlib_deflate(windowbits, &input[0], input.size(), output);
+    return zlib_deflate(windowbits, input.data(), input.size(), output);
 }
 
 return_t zlib_inflate(zlib_windowbits_t windowbits, const binary_t& input, binary_t& output) {
-    return zlib_inflate(windowbits, &input[0], input.size(), output);
+    return zlib_inflate(windowbits, input.data(), input.size(), output);
 }
 
 return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t size, binary_t& output) {
@@ -71,13 +71,13 @@ return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
         deflateInit2(&defstream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, wbit, 8, Z_DEFAULT_STRATEGY);
         do {
             defstream.avail_out = buffer.size();
-            defstream.next_out = &buffer[0];
+            defstream.next_out = buffer.data();
 
             rc = deflate(&defstream, Z_FINISH);
 
             uint32 size = output.size();
             if (size < defstream.total_out) {
-                output.insert(output.end(), &buffer[0], &buffer[0] + defstream.total_out - size);
+                output.insert(output.end(), buffer.data(), buffer.data() + defstream.total_out - size);
             }
             // cooltime = zlib_get_cooltime ();
             // if (cooltime) {
@@ -129,13 +129,13 @@ return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
         inflateInit2(&infstream, wbit);
         do {
             infstream.avail_out = buffer.size();
-            infstream.next_out = &buffer[0];
+            infstream.next_out = buffer.data();
 
             rc = inflate(&infstream, Z_NO_FLUSH);
 
             uint32 size = output.size();
             if (size < infstream.total_out) {
-                output.insert(output.end(), &buffer[0], &buffer[0] + infstream.total_out - size);
+                output.insert(output.end(), buffer.data(), buffer.data() + infstream.total_out - size);
             }
             // cooltime = zlib_get_cooltime ();
             // if (cooltime) {
@@ -150,11 +150,11 @@ return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
 }
 
 return_t zlib_deflate(zlib_windowbits_t windowbits, const binary_t& input, stream_t* output) {
-    return zlib_deflate(windowbits, &input[0], input.size(), output);
+    return zlib_deflate(windowbits, input.data(), input.size(), output);
 }
 
 return_t zlib_inflate(zlib_windowbits_t windowbits, const binary_t& input, stream_t* output) {
-    return zlib_inflate(windowbits, &input[0], input.size(), output);
+    return zlib_inflate(windowbits, input.data(), input.size(), output);
 }
 
 return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t size, stream_t* output) {
@@ -195,13 +195,13 @@ return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
         deflateInit2(&defstream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, wbit, 8, Z_DEFAULT_STRATEGY);
         do {
             defstream.avail_out = buffer.size();
-            defstream.next_out = &buffer[0];
+            defstream.next_out = buffer.data();
 
             rc = deflate(&defstream, Z_FINISH);
 
             uint32 size = output->size();
             if (size < defstream.total_out) {
-                output->write(&buffer[0], defstream.total_out - size);
+                output->write(buffer.data(), defstream.total_out - size);
             }
             // cooltime = zlib_get_cooltime ();
             // if (cooltime) {
@@ -253,13 +253,13 @@ return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
         inflateInit2(&infstream, wbit);
         do {
             infstream.avail_out = buffer.size();
-            infstream.next_out = &buffer[0];
+            infstream.next_out = buffer.data();
 
             rc = inflate(&infstream, Z_NO_FLUSH);
 
             uint32 size = output->size();
             if (size < infstream.total_out) {
-                output->write(&buffer[0], infstream.total_out - size);
+                output->write(buffer.data(), infstream.total_out - size);
             }
             // cooltime = zlib_get_cooltime ();
             // if (cooltime) {

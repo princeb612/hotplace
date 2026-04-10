@@ -28,7 +28,7 @@ void do_test_http2_frame(http2_frame* frame1, http2_frame* frame2, const char* t
 
     // read from bytestream
     size_t pos = 0;
-    frame2->read(&bin_expect[0], bin_expect.size(), pos);
+    frame2->read(bin_expect.data(), bin_expect.size(), pos);
     frame2->write(bin_f2);
 
     _logger->hdump("dump", bin_f2, 16, 3);

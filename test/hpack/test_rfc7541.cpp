@@ -37,7 +37,7 @@ void do_test_rfc7541_c_1_routine(uint8 prefix, size_t i, const char* expect, con
     size_t pos = 0;
 
     encoder->encode_int(bin, 0x00, prefix, i);
-    encoder->decode_int(&bin[0], pos, 0x00, prefix, value);
+    encoder->decode_int(bin.data(), pos, 0x00, prefix, value);
 
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
@@ -94,7 +94,7 @@ void test_rfc7541_c_2() {
         _test_case.assert(bin == base16_decode_rfc(expect1), __FUNCTION__, "%s #encode", text1);
 
         pos = 0;
-        encoder->decode_header(&hpack_dyntable, &bin[0], bin.size(), pos, name, value);
+        encoder->decode_header(&hpack_dyntable, bin.data(), bin.size(), pos, name, value);
 
         hpack_dyntable.dump("dynamic table", dump_hpack_session_routine);
         _test_case.assert(1 == hpack_dyntable.get_entries(), __FUNCTION__, "%s #entry size", text1);
@@ -119,7 +119,7 @@ void test_rfc7541_c_2() {
         _test_case.assert(bin == base16_decode_rfc(expect2), __FUNCTION__, "%s #encode", text2);
 
         pos = 0;
-        encoder->decode_header(&hpack_dyntable, &bin[0], bin.size(), pos, name, value);
+        encoder->decode_header(&hpack_dyntable, bin.data(), bin.size(), pos, name, value);
 
         hpack_dyntable.dump("dynamic table", dump_hpack_session_routine);
         _test_case.assert(0 == hpack_dyntable.get_entries(), __FUNCTION__, "%s #entry size", text2);
@@ -152,7 +152,7 @@ void test_rfc7541_c_2() {
         _test_case.assert(0 == hpack_dyntable.get_tablesize(), __FUNCTION__, "%s #table size", text3);
 
         pos = 0;
-        encoder->decode_header(&hpack_dyntable, &bin[0], bin.size(), pos, name, value);
+        encoder->decode_header(&hpack_dyntable, bin.data(), bin.size(), pos, name, value);
 
         _test_case.assert(("password" == name) && ("secret" == value), __FUNCTION__, "%s #decode", text3);
     }
@@ -177,7 +177,7 @@ void test_rfc7541_c_2() {
         _test_case.assert(0 == hpack_dyntable.get_tablesize(), __FUNCTION__, "%s #table size", text4);
 
         pos = 0;
-        encoder->decode_header(&hpack_dyntable, &bin[0], bin.size(), pos, name, value);
+        encoder->decode_header(&hpack_dyntable, bin.data(), bin.size(), pos, name, value);
 
         _test_case.assert((":method" == name) && ("GET" == value), __FUNCTION__, "%s #decode", text4);
     }
@@ -197,7 +197,7 @@ void do_decode(const binary_t& bin, hpack_dynamic_table* hpack_dyntable, hpack_d
 
     hp.set_dyntable(hpack_dyntable);
     while (pos < bin.size()) {
-        hp.decode_header(&bin[0], bin.size(), pos, name, value);
+        hp.decode_header(bin.data(), bin.size(), pos, name, value);
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
             _logger->writeln("  > %s: %s", name.c_str(), value.c_str());

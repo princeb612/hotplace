@@ -154,7 +154,7 @@ return_t split(const binary_t& source, size_t& sizeof_ciphertext, binary_t& tag,
     tag.clear();
     size_t size = source.size();
     if (size > tagsize) {
-        const byte_t* ptr = &source[0];
+        const byte_t* ptr = source.data();
         tag.insert(tag.end(), ptr + (size - tagsize), ptr + (size));
         sizeof_ciphertext = (size - tagsize);
     } else {
@@ -225,7 +225,7 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
             // 2.  XOR the padded Partial IV with the context IV.
             size_t ivsize = iv.size();
             // binary_t aligned_partial_iv;
-            // binary_load(aligned_partial_iv, ivsize, &partial_iv[0], partial_iv.size());
+            // binary_load(aligned_partial_iv, ivsize, partial_iv.data(), partial_iv.size());
             // for (size_t i = 0; i < ivsize; i++) {
             //     iv[i] ^= aligned_partial_iv[i];
             // }
@@ -257,7 +257,7 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
                 split(payload, enc_size, tag, hint->enc.tsize);
 
                 // RFC 8152 10.1.  AES GCM
-                ret = crypt.decrypt(hint->enc.algname, cek, iv, &payload[0], enc_size, output, aad, tag);
+                ret = crypt.decrypt(hint->enc.algname, cek, iv, payload.data(), enc_size, output, aad, tag);
             }
         } else if (cose_group_t::cose_group_enc_aesccm == group) {
             // RFC 8152 10.2.  AES CCM - explains about L and M parameters
@@ -272,7 +272,7 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
                 size_t enc_size = 0;
                 split(payload, enc_size, tag, hint->enc.tsize);
 
-                ret = crypt.decrypt(hint->enc.algname, cek, iv, &payload[0], enc_size, output, aad, tag, options);
+                ret = crypt.decrypt(hint->enc.algname, cek, iv, payload.data(), enc_size, output, aad, tag, options);
             }
         } else if (cose_group_t::cose_group_enc_chacha20_poly1305 == group) {
             // RFC 7539 ChaCha20 and Poly1305 for IETF Protocols

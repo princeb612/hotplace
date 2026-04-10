@@ -55,7 +55,7 @@ return_t crypto_keychain::add_mlkem(crypto_key* cryptokey, uint32 nid, const key
 }
 
 return_t crypto_keychain::add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const binary_t& pub, key_encoding_t encoding, const keydesc& desc) {
-    return add_mlkem_pub(cryptokey, nid, &pub[0], pub.size(), encoding, desc);
+    return add_mlkem_pub(cryptokey, nid, pub.data(), pub.size(), encoding, desc);
 }
 
 return_t crypto_keychain::add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const byte_t* pub, size_t pubsize, key_encoding_t encoding, const keydesc& desc) {

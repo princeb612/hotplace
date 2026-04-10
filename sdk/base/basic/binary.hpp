@@ -411,7 +411,7 @@ T t_binary_to_integer(const byte_t* bstr, size_t size) {
 
 template <typename T>
 T t_binary_to_integer(const binary_t& bin, return_t& errorcode) {
-    return t_binary_to_integer<T>((true == bin.empty()) ? nullptr : bin.data(), bin.size(), errorcode);
+    return t_binary_to_integer<T>(bin.data(), bin.size(), errorcode);
 }
 
 template <typename T>

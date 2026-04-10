@@ -106,15 +106,19 @@ cd module
 - [x] windows
 
 ### MSVC
-- [ ] issues
+- issues
   - compatibility
     - [ ] int128/uint128
+    - [x] bignumber
     - [x] __builtin_clzll
     - [x] clock_gettime
     - [x] ANSI escape code
   - fix
     - [x] backtrace
     - [x] byte_capacity_signed
+  - application verifier
+    - [ ] basics
+      - [ ] heaps
   - MSVC-specific
     - [x] source file encoding (utf-8 character set)
     - [x] variable arguments ambiguity ('v' prefix)
@@ -125,7 +129,7 @@ cd module
   - build
     - [x] space (separated according to gcc/msvc)
     - [x] thirdparty (openssl manual build required)
-- [ ] test
+- test
   - [ ] asn1
   - [x] authenticode
   - [x] base

@@ -86,7 +86,7 @@ return_t cbor_encode::encode(binary_t& bin, variant_t vt) {
                     // instead of a tagged byte string (such as 2(h'010000000000000000')).
                     encode(bin, bnbin);
                 } else {
-                    auto ui64 = bn.bntoi<uint64>();
+                    auto ui64 = bn.t_bntoi<uint64>();
                     encode(bin, (vt.flag & flag_negative) ? cbor_major_nint : cbor_major_uint, ui64);
                 }
             } break;
@@ -392,7 +392,7 @@ return_t cbor_encode::encode(binary_t& bin, const byte_t* value, size_t size) {
     return ret;
 }
 
-return_t cbor_encode::encode(binary_t& bin, const binary_t& value) { return encode(bin, &value[0], value.size()); }
+return_t cbor_encode::encode(binary_t& bin, const binary_t& value) { return encode(bin, value.data(), value.size()); }
 
 return_t cbor_encode::encode(binary_t& bin, char* value) {
     return_t ret = errorcode_t::success;

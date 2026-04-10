@@ -37,7 +37,7 @@ void test_hash_hmac_sign() {
         openssl_hash hash;
         hash_context_t* hash_context = nullptr;
         hash.open(&hash_context, hash_algorithm_t::sha2_256);
-        ret = hash.hash(hash_context, &bin_in[0], bin_in.size(), result_hash);
+        ret = hash.hash(hash_context, bin_in.data(), bin_in.size(), result_hash);
         hash.close(hash_context);
 
         if (option.verbose) {
@@ -50,7 +50,7 @@ void test_hash_hmac_sign() {
     {
         unsigned int size = 32;
         result_digest.resize(size);
-        EVP_Digest(&bin_in[0], bin_in.size(), &result_digest[0], &size, EVP_sha256(), nullptr);
+        EVP_Digest(bin_in.data(), bin_in.size(), result_digest.data(), &size, EVP_sha256(), nullptr);
         result_digest.resize(size);
 
         if (option.verbose) {
@@ -64,8 +64,8 @@ void test_hash_hmac_sign() {
         binary_t result_hmac;
         openssl_hash hash;
         hash_context_t* hmac_context = nullptr;
-        hash.open(&hmac_context, hash_algorithm_t::sha2_256, &bin_key[0], bin_key.size());
-        ret = hash.hash(hmac_context, &bin_in[0], bin_in.size(), result_hmac);
+        hash.open(&hmac_context, hash_algorithm_t::sha2_256, bin_key.data(), bin_key.size());
+        ret = hash.hash(hmac_context, bin_in.data(), bin_in.size(), result_hmac);
         hash.close(hmac_context);
 
         if (option.verbose) {

@@ -44,13 +44,13 @@ return_t openssl_kdf::scrypt(binary_t& derived, size_t dlen, const std::string& 
 
         EVP_PKEY_derive_init(ctx);
         EVP_PKEY_CTX_set1_pbe_pass(ctx, password.c_str(), password.size());
-        EVP_PKEY_CTX_set1_scrypt_salt(ctx, &salt[0], salt.size());
+        EVP_PKEY_CTX_set1_scrypt_salt(ctx, salt.data(), salt.size());
         EVP_PKEY_CTX_set_scrypt_N(ctx, n);
         EVP_PKEY_CTX_set_scrypt_r(ctx, r);
         EVP_PKEY_CTX_set_scrypt_p(ctx, p);
 
         derived.resize(dlen);
-        ret_openssl = EVP_PKEY_derive(ctx, &derived[0], &dlen);
+        ret_openssl = EVP_PKEY_derive(ctx, derived.data(), &dlen);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);

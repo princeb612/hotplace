@@ -95,7 +95,7 @@ return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stre
         }
 
         size_t hpos = 0;
-        while (errorcode_t::success == tls_dump_handshake(session, dir, &crypto_data[0], crypto_data.size(), hpos)) {
+        while (errorcode_t::success == tls_dump_handshake(session, dir, crypto_data.data(), crypto_data.size(), hpos)) {
             /**
              * about refeeding the tls_context_fragment
              *   see tls_handshake errorcode_t::fragmented

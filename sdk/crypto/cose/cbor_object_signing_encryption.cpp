@@ -778,8 +778,8 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
             openssl_kdf kdf;
             openssl_prng prng;
 
-            kwiv.resize(8);
-            memset(&kwiv[0], 0xa6, kwiv.size());
+            kwiv.resize(8, 0xa6);
+            // memset(kwiv.data(), 0xa6, kwiv.size());
 
             uint16 dgst_klen = 0;
             if (hint) {

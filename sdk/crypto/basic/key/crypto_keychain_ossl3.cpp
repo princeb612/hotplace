@@ -95,7 +95,7 @@ return_t crypto_keychain::pkey_encode_format(OSSL_LIB_CTX* libctx, const EVP_PKE
             }
 
             keydata.resize(buf->length);
-            memcpy(&keydata[0], buf->data, buf->length);
+            memcpy(keydata.data(), buf->data, buf->length);
         } else {
             ret = failed;
         }
@@ -117,7 +117,7 @@ return_t crypto_keychain::pkey_decode_format(OSSL_LIB_CTX* libctx, EVP_PKEY** pk
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        ret = pkey_decode_format(libctx, pkey, &keydata[0], keydata.size(), encoding, passphrase);
+        ret = pkey_decode_format(libctx, pkey, keydata.data(), keydata.size(), encoding, passphrase);
     }
     __finally2 {}
     return ret;
@@ -198,13 +198,13 @@ return_t crypto_keychain::pkey_encode_raw(OSSL_LIB_CTX* libctx, const EVP_PKEY* 
             case key_encoding_priv_raw: {
                 EVP_PKEY_get_raw_private_key(pkey, nullptr, &len);
                 keydata.resize(len);
-                EVP_PKEY_get_raw_private_key(pkey, len ? &keydata[0] : nullptr, &len);
+                EVP_PKEY_get_raw_private_key(pkey, keydata.data(), &len);
                 keydata.resize(len);
             } break;
             case key_encoding_pub_raw: {
                 EVP_PKEY_get_raw_public_key(pkey, nullptr, &len);
                 keydata.resize(len);
-                EVP_PKEY_get_raw_public_key(pkey, len ? &keydata[0] : nullptr, &len);
+                EVP_PKEY_get_raw_public_key(pkey, keydata.data(), &len);
                 keydata.resize(len);
             } break;
         }
@@ -221,7 +221,7 @@ return_t crypto_keychain::pkey_decode(OSSL_LIB_CTX* libctx, const char* name, EV
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        ret = pkey_decode(libctx, name, pkey, &keydata[0], keydata.size(), encoding, passphrase);
+        ret = pkey_decode(libctx, name, pkey, keydata.data(), keydata.size(), encoding, passphrase);
     }
     __finally2 {}
     return ret;
@@ -261,7 +261,7 @@ return_t crypto_keychain::pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        ret = pkey_decode_raw(libctx, name, pkey, &keydata[0], keydata.size(), encoding);
+        ret = pkey_decode_raw(libctx, name, pkey, keydata.data(), keydata.size(), encoding);
     }
     __finally2 {}
     return ret;
@@ -347,7 +347,7 @@ return_t crypto_keychain::pkey_decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, con
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        ret = pkey_decode(libctx, pkey, &keydata[0], keydata.size(), encoding, passphrase);
+        ret = pkey_decode(libctx, pkey, keydata.data(), keydata.size(), encoding, passphrase);
     }
     __finally2 {}
     return ret;

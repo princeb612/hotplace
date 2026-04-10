@@ -137,7 +137,7 @@ return_t tls_extension_quic_transport_parameters::read_quic_params(const byte_t*
                 default: {
                     size_t epos = 0;
                     uint64 value = 0;
-                    quic_read_vle_int(param.empty() ? nullptr : &param[0], param.size(), epos, value);
+                    quic_read_vle_int(param.data(), param.size(), epos, value);
 
                     variant vt(value);
                     params.push_back({param_id, std::move(vt)});

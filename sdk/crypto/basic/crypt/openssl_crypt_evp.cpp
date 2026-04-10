@@ -21,7 +21,7 @@ namespace hotplace {
 namespace crypto {
 
 return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const binary_t &plaintext, binary_t &ciphertext, crypt_enc_t mode) {
-    return encrypt(pkey, &plaintext[0], plaintext.size(), ciphertext, mode);
+    return encrypt(pkey, plaintext.data(), plaintext.size(), ciphertext, mode);
 }
 
 return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const byte_t *stream, size_t size, binary_t &ciphertext, crypt_enc_t mode) {
@@ -106,7 +106,7 @@ return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const byte_t *stream, size
         }
 
         ciphertext.resize(bufsize);
-        ret_openssl = EVP_PKEY_encrypt(pkey_context, &ciphertext[0], &bufsize, stream, size);
+        ret_openssl = EVP_PKEY_encrypt(pkey_context, ciphertext.data(), &bufsize, stream, size);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
@@ -121,7 +121,7 @@ return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const byte_t *stream, size
 }
 
 return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const binary_t &ciphertext, binary_t &plaintext, crypt_enc_t mode) {
-    return decrypt(pkey, &ciphertext[0], ciphertext.size(), plaintext, mode);
+    return decrypt(pkey, ciphertext.data(), ciphertext.size(), plaintext, mode);
 }
 
 return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const byte_t *stream, size_t size, binary_t &plaintext, crypt_enc_t mode) {
@@ -205,7 +205,7 @@ return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const byte_t *stream, size
         }
 
         plaintext.resize(bufsize);
-        ret_openssl = EVP_PKEY_decrypt(pkey_context, &plaintext[0], &bufsize, stream, size);
+        ret_openssl = EVP_PKEY_decrypt(pkey_context, plaintext.data(), &bufsize, stream, size);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);

@@ -368,7 +368,7 @@ static inline return_t memxor(byte_t* target, const byte_t* mask, size_t len) {
     return ret;
 }
 
-static inline return_t memxor(binary_t& target, const binary_t& mask, size_t len) { return memxor(&target[0], &mask[0], len); }
+static inline return_t memxor(binary_t& target, const binary_t& mask, size_t len) { return memxor(target.data(), mask.data(), len); }
 
 }  // namespace hotplace
 

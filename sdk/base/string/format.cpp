@@ -27,7 +27,7 @@ std::string format(const char* fmt, ...) {
 
     while (true) {
         va_start(ap, fmt);
-        ret = vsnprintf_inline(&buf[0], buf.size(), fmt, ap);
+        ret = vsnprintf_inline(buf.data(), buf.size(), fmt, ap);
         va_end(ap);
         if ((ret < 0) || (ret >= needed)) {
             needed *= 2;
@@ -37,7 +37,7 @@ std::string format(const char* fmt, ...) {
         }
     }
 
-    return std::string(&buf[0]);
+    return std::string(buf.empty() ? "" : buf.data());
 }
 
 std::string format(const char* fmt, va_list ap) {
@@ -51,7 +51,7 @@ std::string format(const char* fmt, va_list ap) {
 
     va_copy(vl, ap);  // c++99
     while (true) {
-        ret = vsnprintf_inline(&buf[0], buf.size(), fmt, vl);
+        ret = vsnprintf_inline(buf.data(), buf.size(), fmt, vl);
         if ((ret < 0) || (ret >= needed)) {
             needed *= 2;
             buf.resize(needed + 1);
@@ -61,7 +61,7 @@ std::string format(const char* fmt, va_list ap) {
     }
     va_end(vl);
 
-    return std::string(&buf[0]);
+    return std::string(buf.empty() ? "" : buf.data());
 }
 
 }  // namespace hotplace

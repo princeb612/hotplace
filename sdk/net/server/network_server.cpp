@@ -819,7 +819,7 @@ return_t network_server::producer_routine(uint32 type, uint32 data_count, void* 
         network_session* dgram_session = nullptr;
         context->session_manager.get_dgram_session(&dgram_session, (handle_t)context->listen_handle->fd, context->svr_socket, nullptr);
         if (dgram_session) {
-            byte_t* buffer = (byte_t*)&dgram_session->get_buffer()->bin[0];
+            byte_t* buffer = (byte_t*)dgram_session->get_buffer()->bin.data();
             sockaddr_storage_t* addr = &dgram_session->socket_info()->cli_addr;  // the address space is bound to dgram_session
             if (context->svr_socket->support_tls()) {
                 // dtls_session is bound to addr

@@ -131,7 +131,7 @@ void test_dhkem_ossl_example() {
             size_t publen = 512;
             pub.resize(publen);
 
-            rc = OSSL_HPKE_keygen(hpke_suite, &pub[0], &publen, &priv, nullptr, 0, nullptr, nullptr);
+            rc = OSSL_HPKE_keygen(hpke_suite, pub.data(), &publen, &priv, nullptr, 0, nullptr, nullptr);
             if (1 != rc) {
                 ret = failed;
                 __leave2;
@@ -155,7 +155,7 @@ void test_dhkem_ossl_example() {
                 ret = failed;
                 __leave2;
             }
-            rc = OSSL_HPKE_encap(seal_ctx, &encap[0], &encaplen, &pub[0], pub.size(), &info[0], info.size());
+            rc = OSSL_HPKE_encap(seal_ctx, encap.data(), &encaplen, pub.data(), pub.size(), info.data(), info.size());
             if (1 != rc) {
                 ret = failed;
                 __leave2;
@@ -164,7 +164,7 @@ void test_dhkem_ossl_example() {
             _logger->hdump("encap", encap, 16, 3);
 
             // encrypt data
-            rc = OSSL_HPKE_seal(seal_ctx, &ct[0], &ctlen, &aad[0], aad.size(), &pt[0], pt.size());
+            rc = OSSL_HPKE_seal(seal_ctx, ct.data(), &ctlen, aad.data(), aad.size(), pt.data(), pt.size());
             if (1 != rc) {
                 ret = failed;
                 __leave2;
@@ -183,12 +183,12 @@ void test_dhkem_ossl_example() {
                 ret = failed;
                 __leave2;
             }
-            rc = OSSL_HPKE_decap(open_ctx, &encap[0], encap.size(), priv, &info[0], info.size());
+            rc = OSSL_HPKE_decap(open_ctx, encap.data(), encap.size(), priv, info.data(), info.size());
             if (1 != rc) {
                 ret = failed;
                 __leave2;
             }
-            rc = OSSL_HPKE_open(open_ctx, &clear[0], &clearlen, &aad[0], aad.size(), &ct[0], ct.size());
+            rc = OSSL_HPKE_open(open_ctx, clear.data(), &clearlen, aad.data(), aad.size(), ct.data(), ct.size());
             if (1 != rc) {
                 ret = failed;
                 __leave2;

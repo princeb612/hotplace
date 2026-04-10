@@ -75,7 +75,7 @@ void test_ossl_hybrid_kem() {
         binary_t sharedsecret_mlkem_bob;
         binary_t sharedsecret_bob;
         {
-            ret = pqc.decode(nullptr, "ML-KEM-768", &pubkey_mlkem768_alice, &keyshare_alice[0], 1184, key_encoding_pub_raw);
+            ret = pqc.decode(nullptr, "ML-KEM-768", &pubkey_mlkem768_alice, keyshare_alice.data(), 1184, key_encoding_pub_raw);
             _logger->write([&](basic_stream& dbs) -> void { dump_key(pubkey_mlkem768_alice, &dbs); });
             _test_case.test(ret, __FUNCTION__, "part of ML-KEM-768");
 
@@ -121,7 +121,7 @@ void test_ossl_hybrid_kem() {
         binary_t sharedsecret_alice;
         {
             // decaps
-            pqc.decapsule(nullptr, keypair_mlkem_alice, &keyshare_bob[0], 1088, sharedsecret_mlkem_alice);
+            pqc.decapsule(nullptr, keypair_mlkem_alice, keyshare_bob.data(), 1088, sharedsecret_mlkem_alice);
             pqc.decode(nullptr, "x25519", &pubkey_x25519_bob, &keyshare_bob[1088], 32, key_encoding_pub_raw);
             dh_key_agreement(keypair_x25519_alice, pubkey_x25519_bob, sharedsecret_x25519_alice);
 

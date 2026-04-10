@@ -476,7 +476,7 @@ return_t network_session::dgram_get_sockaddr(sockaddr_storage_t* addr) {
         socklen_t addrlen = sizeof(sockaddr_storage_t);
         size_t cbread = _session.buf.bin.size();
         int mode = read_socket_recv | peek_msg;
-        ret = get_server_socket()->recvfrom(_session.netsock.event_handle, mode, &_session.buf.bin[0], _session.buf.bin.size(), &cbread, (sockaddr*)addr,
+        ret = get_server_socket()->recvfrom(_session.netsock.event_handle, mode, _session.buf.bin.data(), _session.buf.bin.size(), &cbread, (sockaddr*)addr,
                                             &addrlen);
     }
     __finally2 {}

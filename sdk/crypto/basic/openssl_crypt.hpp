@@ -49,9 +49,9 @@ typedef struct _encrypt_option_t {
  *
  *          // block cipher
  *          {
- *              crypt.open (&handle, crypt_algorithm_t::aes256, crypt_mode_t::cbc, &key[0], key.size (), &iv[0], iv.size ());
+ *              crypt.open (&handle, crypt_algorithm_t::aes256, crypt_mode_t::cbc, key.data(), key.size (), iv.data(), iv.size ());
  *              crypt.encrypt (handle, text, plainsize, ciphertext);
- *              crypt.decrypt (handle, &ciphertext[0], ciphertext.size (), plaintext);
+ *              crypt.decrypt (handle, ciphertext.data(), ciphertext.size (), plaintext);
  *              crypt.close (handle);
  *          }
  *
@@ -61,9 +61,9 @@ typedef struct _encrypt_option_t {
  *              binary_t tag;
  *              openssl_prng rand;
  *              rand.random (aad, 32);
- *              crypt.open (&handle, crypt_algorithm_t::aes256, crypt_mode_t::gcm, &key[0], key.size (), &iv[0], iv.size ());
+ *              crypt.open (&handle, crypt_algorithm_t::aes256, crypt_mode_t::gcm, key.data(), key.size (), iv.data(), iv.size ());
  *              crypt.encrypt (handle, text, plainsize, ciphertext, &aad, &tag);
- *              crypt.decrypt (handle, &ciphertext[0], ciphertext.size (), plaintext, &aad, &tag);
+ *              crypt.decrypt (handle, ciphertext.data(), ciphertext.size (), plaintext, &aad, &tag);
  *              crypt.close (handle);
  *          }
  */

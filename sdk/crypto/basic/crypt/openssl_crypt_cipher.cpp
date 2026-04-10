@@ -144,25 +144,25 @@ return_t openssl_crypt::open(crypt_context_t **handle, crypt_algorithm_t algorit
         internal_size_key = EVP_CIPHER_CTX_key_length(context->encrypt_context);
         adjust_range(internal_size_key, 0, EVP_MAX_KEY_LENGTH);
         temp_key.resize(internal_size_key);
-        memcpy(&temp_key[0], key, (size_key > internal_size_key ? internal_size_key : size_key));
+        memcpy(temp_key.data(), key, (size_key > internal_size_key ? internal_size_key : size_key));
 
         // EVP_CIPHER_get_iv_length { return cipher(nullptr)->iv_len; }
         internal_size_iv = EVP_MAX_IV_LENGTH;
         adjust_range(internal_size_iv, 0, EVP_MAX_IV_LENGTH);
         temp_iv.resize(internal_size_iv);
-        memcpy(&temp_iv[0], iv, (size_iv > internal_size_iv ? internal_size_iv : size_iv));
+        memcpy(temp_iv.data(), iv, (size_iv > internal_size_iv ? internal_size_iv : size_iv));
 
         context->datamap.insert(std::make_pair(crypt_item_t::item_cek, temp_key));
         context->datamap.insert(std::make_pair(crypt_item_t::item_iv, temp_iv));
 
         /* key, iv */
         /* encrypt and decrypt re-initialize iv */
-        ret_init = EVP_CipherInit_ex(context->encrypt_context, cipher, nullptr, &temp_key[0], nullptr, 1);
+        ret_init = EVP_CipherInit_ex(context->encrypt_context, cipher, nullptr, temp_key.data(), nullptr, 1);
         if (1 != ret_init) {
             ret = errorcode_t::error_cipher;
             __leave2_trace_openssl(ret);
         }
-        ret_init = EVP_CipherInit_ex(context->decrypt_context, cipher, nullptr, &temp_key[0], nullptr, 0);
+        ret_init = EVP_CipherInit_ex(context->decrypt_context, cipher, nullptr, temp_key.data(), nullptr, 0);
         if (1 != ret_init) {
             ret = errorcode_t::error_cipher;
             __leave2_trace_openssl(ret);
@@ -286,7 +286,7 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
         int tag_size = 0;
         binary_t &iv = context->datamap[crypt_item_t::item_iv];
 
-        EVP_CipherInit(context->encrypt_context, nullptr, nullptr, &iv[0], 1);
+        EVP_CipherInit(context->encrypt_context, nullptr, nullptr, iv.data(), 1);
 
         switch (context->mode) {
             case crypt_mode_t::ccm:
@@ -361,7 +361,7 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
 
                 if (crypt_mode_t::ccm == context->mode) {
                     binary_t &key = context->datamap[crypt_item_t::item_cek];
-                    EVP_CipherInit_ex(context->encrypt_context, nullptr, nullptr, &key[0], &iv[0], 1);
+                    EVP_CipherInit_ex(context->encrypt_context, nullptr, nullptr, key.data(), iv.data(), 1);
 
                     ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, nullptr, plainsize);
                     if (ret_cipher < 1) {
@@ -371,7 +371,7 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
                 }
 
                 const auto &a = *aad;
-                ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, a.empty() ? nullptr : &a[0], a.size());
+                ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, a.data(), a.size());
                 if (ret_cipher < 1) {
                     ret = errorcode_t::error_cipher;
                     break;
@@ -445,7 +445,7 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
             case crypt_mode_t::ccm:
             case crypt_mode_t::mode_poly1305: {
                 (*tag).resize(tag_size);
-                ret_cipher = EVP_CIPHER_CTX_ctrl(context->encrypt_context, EVP_CTRL_AEAD_GET_TAG, tag_size, &(*tag)[0]);
+                ret_cipher = EVP_CIPHER_CTX_ctrl(context->encrypt_context, EVP_CTRL_AEAD_GET_TAG, tag_size, (*tag).data());
                 if (ret_cipher < 1) {
                     ret = errorcode_t::error_cipher;
                     break;
@@ -505,7 +505,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
         int tag_size = 0;
         binary_t &iv = context->datamap[crypt_item_t::item_iv];
 
-        EVP_CipherInit(context->decrypt_context, nullptr, nullptr, &iv[0], 0);
+        EVP_CipherInit(context->decrypt_context, nullptr, nullptr, iv.data(), 0);
 
         switch (context->mode) {
             case crypt_mode_t::gcm:
@@ -521,7 +521,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
                     ret = errorcode_t::error_verify;
                     break;
                 }
-                EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_AEAD_SET_TAG, tag_size, (void *)&(*tag)[0]);
+                EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_AEAD_SET_TAG, tag_size, (void *)(*tag).data());
 
                 uint16 iv_size = 0;
                 uint16 nonce_size = 0;
@@ -538,7 +538,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
 
                 if (crypt_mode_t::ccm == context->mode) {
                     binary_t &key = context->datamap[crypt_item_t::item_cek];
-                    EVP_CipherInit_ex(context->decrypt_context, nullptr, nullptr, &key[0], &iv[0], 0);
+                    EVP_CipherInit_ex(context->decrypt_context, nullptr, nullptr, key.data(), iv.data(), 0);
 
                     ret_cipher = EVP_CipherUpdate(context->decrypt_context, nullptr, &size_update, nullptr, ciphersize);
                     if (ret_cipher < 1) {
@@ -548,7 +548,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
                 }
 
                 const auto &a = *aad;
-                ret_cipher = EVP_CipherUpdate(context->decrypt_context, nullptr, &size_update, a.empty() ? (byte_t *)"" : &a[0], a.size());
+                ret_cipher = EVP_CipherUpdate(context->decrypt_context, nullptr, &size_update, a.empty() ? (byte_t *)"" : a.data(), a.size());
                 if (ret_cipher < 1) {
                     ret = errorcode_t::error_cipher;
                     break;

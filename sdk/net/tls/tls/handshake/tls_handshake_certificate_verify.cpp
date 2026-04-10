@@ -303,8 +303,8 @@ static return_t construct_certificate_verify_message(tls_session* session, tls_d
         } else {
             message << constexpr_context_client;
         }
-        message.fill(1, 0x00);                                     // single 0 byte
-        message.write(&transcripthash[0], transcripthash.size());  // content to be signed
+        message.fill(1, 0x00);                                        // single 0 byte
+        message.write(transcripthash.data(), transcripthash.size());  // content to be signed
     }
     __finally2 {}
     return ret;

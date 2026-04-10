@@ -49,7 +49,7 @@ void test_der() {
     const char* kid = "der";
     crypto_key key;
     crypto_keychain keychain;
-    ret = keychain.load_der(&key, &bin_sample[0], bin_sample.size(), keydesc(kid));
+    ret = keychain.load_der(&key, bin_sample.data(), bin_sample.size(), keydesc(kid));
     _logger->hdump("DER", bin_sample, 16, 3);
     _test_case.test(ret, __FUNCTION__, "RFC 8448 3. server certificate");
 

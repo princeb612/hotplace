@@ -84,7 +84,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
         consume(buf, bufsize, request, bin_resp);
 
         if (false == bin_resp.empty()) {
-            session->send(&bin_resp[0], bin_resp.size());
+            session->send(bin_resp.data(), bin_resp.size());
         }
     }
     __finally2 {}

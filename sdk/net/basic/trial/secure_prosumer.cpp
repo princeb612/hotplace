@@ -90,7 +90,7 @@ return_t secure_prosumer::do_produce(tls_session* session, tls_direction_t dir, 
                 auto test = arrange.consume(addr, socklen, packet);
                 if (success == test) {
                     pos = 0;
-                    ret = do_produce(session, dir, &packet[0], packet.size(), pos, addr, addrlen);
+                    ret = do_produce(session, dir, packet.data(), packet.size(), pos, addr, addrlen);
                 } else {
                     break;  // empty, not_ready
                 }

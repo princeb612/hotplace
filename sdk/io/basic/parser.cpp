@@ -234,7 +234,7 @@ bool parser::rlookup(int index, std::string& word) {
     std::vector<char> arr;
     ret = _dictionary.lookup(index, arr);
     if (ret) {
-        word.assign(&arr[0], arr.size());
+        word.assign(arr.data(), arr.size());
     }
     return ret;
 }

@@ -94,7 +94,7 @@ return_t crypto_cbc_hmac::split_key(const binary_t key, binary_t& enckey, binary
             __leave2;
         } else {
             /* MAC_KEY = initial MAC_KEY_LEN bytes of K */
-            mackey.insert(mackey.end(), &key[0], &key[0] + digestsize);
+            mackey.insert(mackey.end(), key.data(), key.data() + digestsize);
             /* ENC_KEY = final ENC_KEY_LEN bytes of K */
             size_t pos = key.size() - keysize;
             enckey.insert(enckey.end(), &key[pos], &key[pos] + keysize);
@@ -111,7 +111,7 @@ return_t crypto_cbc_hmac::split_key(const binary_t key, binary_t& enckey, binary
 return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const binary_t& plaintext,
                                   binary_t& ciphertext) {
     return_t ret = errorcode_t::success;
-    ret = encrypt(enckey, mackey, iv, aad, &plaintext[0], plaintext.size(), ciphertext);
+    ret = encrypt(enckey, mackey, iv, aad, plaintext.data(), plaintext.size(), ciphertext);
     return ret;
 }
 
@@ -236,7 +236,7 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
 return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const binary_t& ciphertext,
                                   binary_t& plaintext) {
     return_t ret = errorcode_t::success;
-    ret = decrypt(enckey, mackey, iv, aad, &ciphertext[0], ciphertext.size(), plaintext);
+    ret = decrypt(enckey, mackey, iv, aad, ciphertext.data(), ciphertext.size(), plaintext);
     return ret;
 }
 
@@ -354,7 +354,7 @@ return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey
 return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const binary_t& plaintext,
                                   binary_t& ciphertext, binary_t& tag) {
     return_t ret = errorcode_t::success;
-    ret = encrypt(enckey, mackey, iv, aad, &plaintext[0], plaintext.size(), ciphertext, tag);
+    ret = encrypt(enckey, mackey, iv, aad, plaintext.data(), plaintext.size(), ciphertext, tag);
     return ret;
 }
 
@@ -435,7 +435,7 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
 return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const binary_t& ciphertext,
                                   binary_t& plaintext, const binary_t& tag) {
     return_t ret = errorcode_t::success;
-    ret = decrypt(enckey, mackey, iv, aad, &ciphertext[0], ciphertext.size(), plaintext, tag);
+    ret = decrypt(enckey, mackey, iv, aad, ciphertext.data(), ciphertext.size(), plaintext, tag);
     return ret;
 }
 

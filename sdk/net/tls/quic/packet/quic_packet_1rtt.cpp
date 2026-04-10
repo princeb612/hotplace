@@ -81,7 +81,7 @@ return_t quic_packet_1rtt::do_read(tls_direction_t dir, const byte_t* stream, si
         dump();
 
         size_t tpos = 0;
-        get_quic_frames().read(dir, &_payload[0], _payload.size(), tpos);
+        get_quic_frames().read(dir, _payload.data(), _payload.size(), tpos);
 
         session->get_quic_session().get_pkns(protection_application).add(get_pn());  // including ACK packet
     }

@@ -23,8 +23,8 @@ return_t A2W(wide_string& target, const char* source, uint32 codepage) {
         int sizeNeed = MultiByteToWideChar(codepage, 0, source, -1, nullptr, 0);
         if (sizeNeed > 0) {
             buffer.resize(sizeNeed);  // including null pad
-            MultiByteToWideChar(codepage, 0, source, -1, &buffer[0], sizeNeed);
-            target = &buffer[0];
+            MultiByteToWideChar(codepage, 0, source, -1, buffer.data(), sizeNeed);
+            target = buffer.data();
         }
     }
     __finally2 {}

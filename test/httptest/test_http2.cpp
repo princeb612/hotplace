@@ -27,8 +27,8 @@ void test_http2() {
         binary_t frame = std::move(base16_decode_rfc(item->frame));
 
         // network_server::producer_routine
-        // session.produce(&event_queue, &frame[0], frame.size());
-        session.getstream()->produce(&frame[0], frame.size());
+        // session.produce(&event_queue, frame.data(), frame.size());
+        session.getstream()->produce(frame.data(), frame.size());
 
         // network_server::consumer_routine
         network_stream_data* buffer_object = nullptr;

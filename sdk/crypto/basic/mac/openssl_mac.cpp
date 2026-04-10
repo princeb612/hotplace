@@ -21,7 +21,7 @@ namespace crypto {
 openssl_mac::openssl_mac() {}
 
 return_t openssl_mac::hmac(const char* alg, const binary_t& key, const binary_t& input, binary_t& output) {
-    return hmac(alg, key, input.empty() ? nullptr : &input[0], input.size(), output);
+    return hmac(alg, key, input.data(), input.size(), output);
 }
 
 return_t openssl_mac::hmac(const char* alg, const binary_t& key, const byte_t* stream, size_t size, binary_t& output) {
@@ -35,7 +35,7 @@ return_t openssl_mac::hmac(const char* alg, const binary_t& key, const byte_t* s
             __leave2;
         }
 
-        ret = hash.open(&handle, alg, key.empty() ? nullptr : &key[0], key.size());
+        ret = hash.open(&handle, alg, key.data(), key.size());
         if (errorcode_t::success == ret) {
             ret = hash.hash(handle, stream, size, output);
         }
@@ -47,7 +47,7 @@ return_t openssl_mac::hmac(const char* alg, const binary_t& key, const byte_t* s
 }
 
 return_t openssl_mac::hmac(hash_algorithm_t alg, const binary_t& key, const binary_t& input, binary_t& output) {
-    return hmac(alg, key, &input[0], input.size(), output);
+    return hmac(alg, key, input.data(), input.size(), output);
 }
 
 return_t openssl_mac::hmac(hash_algorithm_t alg, const binary_t& key, const byte_t* stream, size_t size, binary_t& output) {
@@ -61,7 +61,7 @@ return_t openssl_mac::hmac(hash_algorithm_t alg, const binary_t& key, const byte
             __leave2;
         }
 
-        ret = hash.open(&handle, alg, &key[0], key.size());
+        ret = hash.open(&handle, alg, key.data(), key.size());
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -147,7 +147,7 @@ return_t openssl_mac::cbc_mac_rfc3610(const char* alg, const binary_t& key, cons
             __leave2;
         }
 
-        EVP_CipherInit_ex(context, cipher, nullptr, &key[0], &iv[0], 1);
+        EVP_CipherInit_ex(context, cipher, nullptr, key.data(), iv.data(), 1);
         EVP_CIPHER_CTX_set_padding(context, 1);
 
         int size_update = 0;
@@ -158,7 +158,7 @@ return_t openssl_mac::cbc_mac_rfc3610(const char* alg, const binary_t& key, cons
         for (size_t i = 0; i < size_input; i += blocksize) {
             int remain = size_input - i;
             int size = (remain < blocksize) ? remain : blocksize;
-            EVP_CipherUpdate(context, &tag[0], &size_update, &input[i], size);
+            EVP_CipherUpdate(context, tag.data(), &size_update, &input[i], size);
             size_process += size_update;
         }
         tag.resize(tagsize);
@@ -200,7 +200,7 @@ return_t openssl_mac::cbc_mac(const char* alg, const binary_t& key, const binary
             __leave2;
         }
 
-        EVP_CipherInit_ex(context, cipher, nullptr, &key[0], &iv[0], 1);
+        EVP_CipherInit_ex(context, cipher, nullptr, key.data(), iv.data(), 1);
         EVP_CIPHER_CTX_set_padding(context, 1);
 
         int size_update = 0;
@@ -210,10 +210,10 @@ return_t openssl_mac::cbc_mac(const char* alg, const binary_t& key, const binary
             int remain = size_input - i;
             int size = (remain < blocksize) ? remain : blocksize;
             if (remain > blocksize) {
-                EVP_CipherUpdate(context, &tag[0], &size_update, &input[i], blocksize);
+                EVP_CipherUpdate(context, tag.data(), &size_update, &input[i], blocksize);
             } else {
-                EVP_CipherUpdate(context, &tag[0], &size_update, &input[i], remain);
-                EVP_CipherUpdate(context, &tag[0], &size_update, &iv[0], blocksize - remain);
+                EVP_CipherUpdate(context, tag.data(), &size_update, &input[i], remain);
+                EVP_CipherUpdate(context, tag.data(), &size_update, iv.data(), blocksize - remain);
             }
         }
         tag.resize(tagsize);

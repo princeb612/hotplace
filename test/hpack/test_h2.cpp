@@ -31,7 +31,7 @@ void test_h2_header_frame() {
         std::string name;
         std::string value;
         while (pos < bin.size()) {
-            encoder->decode_header(sess, &bin[0], bin.size(), pos, name, value);
+            encoder->decode_header(sess, bin.data(), bin.size(), pos, name, value);
             kv.set(name, value);
             _logger->writeln("> %s: %s", name.c_str(), value.c_str());
             sess->commit();

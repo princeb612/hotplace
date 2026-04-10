@@ -64,8 +64,8 @@ return_t debug_trace(stream_t* stream) {
 
         std::vector<void*> callstack;
         callstack.resize(256);
-        int nptrs = backtrace(&callstack[0], callstack.size());
-        char** symbols = backtrace_symbols(&callstack[0], nptrs);
+        int nptrs = backtrace(callstack.data(), callstack.size());
+        char** symbols = backtrace_symbols(callstack.data(), nptrs);
         if (nullptr != symbols) {
             for (int i = 0; i < nptrs; i++) {
                 stream->printf(constexpr_calltack, i, callstack[i]);

@@ -15,7 +15,7 @@ namespace crypto {
 
 crypto_hash::crypto_hash(hash_algorithm_t alg) : _alg(alg) { _shared.make_share(this); }
 
-return_t crypto_hash::digest(const binary_t& message, binary_t& result) { return digest(&message[0], message.size(), result); }
+return_t crypto_hash::digest(const binary_t& message, binary_t& result) { return digest(message.data(), message.size(), result); }
 
 return_t crypto_hash::digest(const byte_t* stream, size_t size, binary_t& result) {
     return_t ret = errorcode_t::success;

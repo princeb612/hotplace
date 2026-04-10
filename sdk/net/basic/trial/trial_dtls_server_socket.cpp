@@ -86,7 +86,7 @@ return_t trial_dtls_server_socket::dtls_handshake(netsession_t* sess) {
             }
 #endif
             size_t sent = 0;
-            naive_udp_server_socket::sendto(ctx, bin.empty() ? nullptr : (char*)&bin[0], bin.size(), &sent, (sockaddr*)&sa, sizeof(sa));
+            naive_udp_server_socket::sendto(ctx, (char*)bin.data(), bin.size(), &sent, (sockaddr*)&sa, sizeof(sa));
         };
         auto lambda = [&](tls_session* session, uint32 status) -> void {
             session->get_tls_composer()->session_status_changed(status, from_server, 1000, lambda_send);
@@ -169,7 +169,7 @@ return_t trial_dtls_server_socket::sendto(socket_context_t* handle, const char* 
             int debug = 1;
         } else {
             size_t sent = 0;
-            naive_udp_server_socket::sendto(handle, (char*)&bin[0], bin.size(), &sent, addr, addrlen);
+            naive_udp_server_socket::sendto(handle, (char*)bin.data(), bin.size(), &sent, addr, addrlen);
         }
     }
     __finally2 {}

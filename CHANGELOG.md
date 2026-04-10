@@ -7,8 +7,10 @@
   * [study] CBOR/COSE (RFC 7049, 8949, 8152)
 
 * understanding
-  * Revision 910-
-    * MSVC environment (alpha status)
+  * Revision 927-
+    * MSVC environment (beta status) - application verifier (basics)
+  * Revision 910-926
+    * MSVC environment (alpha status) - build and run
   * Revision 876-904
     * ML-KEM Post-Quantum Key Agreement for TLS 1.3
   * Revision 777-804
@@ -29,6 +31,8 @@
     * CBOR
 
 * details
+  * Revision 927
+    * [testing] valgrind, application verifier
   * Revision 926
     * [tested] CBOR/COSE refactoring
   * Revision 907

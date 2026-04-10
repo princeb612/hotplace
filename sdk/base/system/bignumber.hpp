@@ -22,6 +22,7 @@ namespace hotplace {
 
 /*
  * @brief   big number
+ * @refer   ChatGPT (+, -, *, /, mod, gcd, modinv, modpow, sqrt, <<. >>)
  * @remarks
  *          int8     -128 ~ 127
  *          int16    -32768 ~ 32767
@@ -52,12 +53,45 @@ namespace hotplace {
  *          // _limbs[0] = 0xffffffff;
  *          // _limbs[1] = 0x7fffffff;
  *          // _sign = 1;
+ * @example
+ *          // operator + - * / %
+ *          {
+ *              bignumber n1(123456789012345678LL);
+ *              bignumber n2(9876543210LL);
+ *              _test_case.assert((n1 + n2).str() == "123456798888888888", __FUNCTION__, "add");
+ *              _test_case.assert((n1 - n2).str() == "123456779135802468", __FUNCTION__, "sub");
+ *              _test_case.assert((n1 * n2).str() == "1219326311248285312223746380", __FUNCTION__, "mult");
+ *              _test_case.assert((n1 / n2).str() == "12499999", __FUNCTION__, "div");
+ *              _test_case.assert((n1 % n2).str() == "8763888888", __FUNCTION__, "mod");
+ *          }
  *
- * @refer   ChatGPT (+, -, *, /, mod, gcd, modinv, modpow, sqrt, <<. >>)
+ *          // bitshift
+ *          {
+ *              bits = 256;
+ *              bignumber intmin = -(bignumber(1) << (bits - 1));                 // int256.min
+ *              bignumber intmax =  (bignumber(1) << (bits - 1)) - bignumber(1);  // int256.max
+ *              bignumber uintmax = (bignumber(1) << bits) - bignumber(1);        // uint256.max
+ *              _logger->writeln("int256.min = %s",   intmin.str().c_str());
+ *              _logger->writeln("int256.max = %s",   intmax.str().c_str());
+ *              _logger->writeln("uint256.max = %s", uintmin.str().c_str());
+ *          }
+ *
+ *          // bitwise AND OR XOR
+ *          {
+ *              auto bit_and = n1 & n2;
+ *              auto bit_or  = n1 | n2;
+ *              auto bit_xor = n1 ^ n2;
+ *              _logger->writeln("AND %s, bit_and.hex().c_str());
+ *              _logger->writeln("OR  %s, bit_or .hex().c_str());
+ *              _logger->writeln("XOR %s, bit_xor.hex().c_str());
+ *          }
  */
 class bignumber {
    public:
     bignumber();
+    bignumber(const bignumber &other);
+    bignumber(bignumber &&other);
+
     bignumber(int8 value);
     bignumber(uint8 value);
     bignumber(int16 value);
@@ -70,8 +104,6 @@ class bignumber {
     bignumber(int128 value);
     bignumber(uint128 value);
 #endif
-    bignumber(const bignumber &other);
-    bignumber(bignumber &&other);
     /**
      * @brief   big-endian byte order stream
      */
@@ -113,32 +145,66 @@ class bignumber {
     bignumber &operator=(const char *value);
     bignumber &operator=(const std::string &value);
 
+    /**
+     * @brief   add
+     */
     bignumber operator+(const bignumber &other) const;
     bignumber &operator+=(const bignumber &other);
 
+    /**
+     * @brief   subtract
+     */
     bignumber operator-(const bignumber &other) const;
     bignumber &operator-=(const bignumber &other);
 
+    /**
+     * @brief   multiply
+     */
     bignumber operator*(const bignumber &other) const;
     bignumber &operator*=(const bignumber &other);
 
+    /**
+     * @brief   divide
+     */
     bignumber operator/(const bignumber &other) const;
     bignumber &operator/=(const bignumber &other);
 
+    /**
+     * @brief   module
+     */
     bignumber operator%(const bignumber &other) const;
     bignumber &operator%=(const bignumber &other);
 
+    /**
+     * @brief   AND
+     */
     bignumber operator&(const bignumber &other) const;
     bignumber &operator&=(const bignumber &other);
 
+    /**
+     * @brief   OR
+     */
     bignumber operator|(const bignumber &other) const;
     bignumber &operator|=(const bignumber &other);
 
+    /**
+     * @brief   XOR
+     */
     bignumber operator^(const bignumber &other) const;
     bignumber &operator^=(const bignumber &other);
 
+    /**
+     * @brief   NOT
+     */
     bignumber operator~() const;
 
+    /**
+     * @brief   compare
+     * @example
+     *          bignumber bn("340282366920938463463374607431768211456");  // uint128.max + 1
+     *          bignumber bn2("0x100000000000000000000000000000000");
+     *          _test_case.assert(bn == bn2, __FUNCTION__, "compare");
+     */
     bool operator<(const bignumber &other) const;
     bool operator<=(const bignumber &other) const;
     bool operator>(const bignumber &other) const;
@@ -147,17 +213,29 @@ class bignumber {
     bool operator==(const bignumber &other) const;
     bool operator!=(const bignumber &other) const;
 
+    /**
+     * @brief   bitshift
+     */
     bignumber operator<<(unsigned int shift) const;
     bignumber &operator<<=(unsigned int shift);
 
     bignumber operator>>(unsigned int shift) const;
     bignumber &operator>>=(unsigned int shift);
 
+    /**
+     * @example
+     *          bn = -bn;
+     */
     bignumber &operator-();
 
+    /**
+     * @brief   ++bn, --bn
+     */
     bignumber &operator++();
     bignumber &operator--();
-
+    /**
+     * @brief   bn++, bn--
+     */
     bignumber operator++(int);
     bignumber operator--(int);
 
@@ -201,18 +279,41 @@ class bignumber {
     bignumber &bitwise_xor(const bignumber &other);
     bignumber &bitwise_not();
 
+    /**
+     * @brief   decimal string
+     * @example
+     *          bignumber bn("0xffffffffffffffffffffffffffffffff");  // uint128.max
+     *          bn = -bn;
+     *          bn.str(); // "-340282366920938463463374607431768211455"
+     */
     std::string str() const;
+    /**
+     * @brief   hexdecimal string
+     * @example
+     *          bignumber bn("340282366920938463463374607431768211456");  // uint128.max + 1
+     *          bn.hex(); // "0x100000000000000000000000000000000"
+     */
     std::string hex() const;
+    /**
+     * @brief   capacity
+     * @remarks number of internal limb (uint32)
+     */
     size_t capacity() const;
+    /**
+     * @brief   dump (debugging purpose)
+     */
     void dump(std::function<void(const binary_t &)> func) const;
     /**
-     * @brief base16 hexdecimal stream
-     * @param binary_t &base16hexstream [out]
-     * @param bool trimzero [inopt] true
-     * @return sign 1 positive, -1 negative
+     * @brief   base16 hexdecimal stream
+     * @param   binary_t &base16hexstream [out]
+     * @param   bool trimzero [inopt] true
+     * @return  sign 1 positive, -1 negative
      */
     int get(binary_t &base16hexstream, bool trimzero = true) const;
 
+    /**
+     * @brief   bignumber to bytestream (BE) and vice versa.
+     */
     friend binary_t &operator<<(binary_t &lhs, const bignumber &rhs);
     friend std::string &operator<<(std::string &lhs, const bignumber &rhs);
     friend binary_t &operator>>(const bignumber &lhs, binary_t &rhs);
@@ -221,12 +322,12 @@ class bignumber {
     /*
      * @return T
      * @example
-     *          bn.bntoi<int8>();
-     *          bn.bntoi<int128>();
+     *          auto i8 = bn.t_bntoi<int8>();
+     *          auto i128 = bn.t_bntoi<int128>();
      * @sa      str(), hex()
      */
     template <typename T>
-    T bntoi() const {
+    T t_bntoi() const {
         size_t tsize = sizeof(T);
         bignumber bn = std::move(normalize(*this, tsize << 3, std::is_signed<T>::value));
 
@@ -243,9 +344,9 @@ class bignumber {
             }
         }
         if (is_big_endian()) {
-            value = *(T *)&bin[0];
+            value = *(T *)bin.data();
         } else if (is_little_endian()) {
-            value = *(T *)&bin[0];
+            value = *(T *)bin.data();
             if (tsize > 1) {
                 value = convert_endian(value);
             }

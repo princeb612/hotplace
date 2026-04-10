@@ -186,7 +186,7 @@ return_t json_object_encryption::decrypt(jose_context_t *handle, const std::stri
                     } else {
                         ret_test = dodecrypt(handle, enc, alg, kid.c_str(), item.datamap[crypt_item_t::item_ciphertext], output);
                     }
-                    if ((errorcode_t::success == ret_test) && zip.size() && (0 == memcmp(&zip[0], "DEF", 3))) {
+                    if ((errorcode_t::success == ret_test) && zip.size() && (0 == memcmp(zip.data(), "DEF", 3))) {
                         // RFC 7520 5.9.  Compressed Content
                         binary_t inflated;
                         zlib_inflate(zlib_windowbits_t::windowbits_deflate, output, inflated);
@@ -259,8 +259,8 @@ return_t json_object_encryption::doencrypt(jose_context_t *handle, jwe_t enc, jw
              * iv 0xa6 ...
              */
             binary_t kw_iv;
-            kw_iv.resize(8);
-            memset(&kw_iv[0], 0xa6, kw_iv.size());
+            kw_iv.resize(8, 0xa6);
+            // memset(kw_iv.data(), 0xa6, kw_iv.size());
 
             std::string kid;
             const EVP_PKEY *pkey = handle->key->select(kid, alg, crypto_use_t::use_enc);
@@ -483,8 +483,8 @@ return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jw
              * iv 0xa6 ...
              */
             binary_t kw_iv;
-            kw_iv.resize(8);
-            memset(&kw_iv[0], 0xa6, kw_iv.size());
+            kw_iv.resize(8, 0xa6);
+            // memset(kw_iv.data(), 0xa6, kw_iv.size());
 
             const EVP_PKEY *pkey = nullptr;
             if (kid) {

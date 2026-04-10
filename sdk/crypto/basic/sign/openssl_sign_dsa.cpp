@@ -19,7 +19,7 @@ namespace crypto {
 
 return_t openssl_sign::sign_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, binary_t& r, binary_t& s) {
     return_t ret = errorcode_t::success;
-    ret = sign_dsa(pkey, hashalg, &input[0], input.size(), r, s);
+    ret = sign_dsa(pkey, hashalg, input.data(), input.size(), r, s);
     return ret;
 }
 
@@ -43,7 +43,7 @@ return_t openssl_sign::sign_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, 
         }
 
         {
-            DSA_SIG* sig = DSA_do_sign(&digest[0], digest.size(), (DSA*)dsa);
+            DSA_SIG* sig = DSA_do_sign(digest.data(), digest.size(), (DSA*)dsa);
             if (sig) {
                 const BIGNUM* bn_r = nullptr;
                 const BIGNUM* bn_s = nullptr;
@@ -60,7 +60,7 @@ return_t openssl_sign::sign_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, 
 
 return_t openssl_sign::verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& r, const binary_t& s) {
     return_t ret = errorcode_t::success;
-    ret = verify_dsa(pkey, hashalg, &input[0], input.size(), r, s);
+    ret = verify_dsa(pkey, hashalg, input.data(), input.size(), r, s);
     return ret;
 }
 
@@ -91,7 +91,7 @@ return_t openssl_sign::verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg
         bin2bn(s, &bn_s);
         sig = DSA_SIG_new();
         DSA_SIG_set0(sig, bn_r, bn_s);
-        ret_openssl = DSA_do_verify(&digest[0], digest.size(), sig, (DSA*)dsa);
+        ret_openssl = DSA_do_verify(digest.data(), digest.size(), sig, (DSA*)dsa);
         if (ret_openssl < 1) {
             ret = errorcode_t::error_verify;
         }
@@ -113,7 +113,7 @@ return_t openssl_sign::verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg
 
 return_t openssl_sign::sign_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
-    ret = sign_dsa(pkey, hashalg, &input[0], input.size(), signature, flags);
+    ret = sign_dsa(pkey, hashalg, input.data(), input.size(), signature, flags);
     return ret;
 }
 
@@ -149,7 +149,7 @@ return_t openssl_sign::sign_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, 
 
 return_t openssl_sign::verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
-    ret = verify_dsa(pkey, hashalg, &input[0], input.size(), signature, flags);
+    ret = verify_dsa(pkey, hashalg, input.data(), input.size(), signature, flags);
     return ret;
 }
 

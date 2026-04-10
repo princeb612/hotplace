@@ -97,7 +97,7 @@ uint32 test_totp_rfc6238(hash_algorithm_t algorithm) {
             totp.close(handle);
         }
 
-        if (0 != memcmp(&output[0], test_data->result, 6 * sizeof(uint32))) {
+        if (0 != memcmp(output.data(), test_data->result, 6 * sizeof(uint32))) {
             ret = errorcode_t::internal_error;
         }
     }

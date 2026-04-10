@@ -13,19 +13,19 @@
 
 namespace hotplace {
 
-wide_string::wide_string() {
+wide_string::wide_string() : _handle(nullptr) {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
     _bio.open(&_handle, allocsize, sizeof(wchar_t), bufferio_context_flag_t::memzero_free);
 }
 
-wide_string::wide_string(const wchar_t* data) {
+wide_string::wide_string(const wchar_t* data) : _handle(nullptr) {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
 
     _bio.open(&_handle, allocsize, sizeof(wchar_t), bufferio_context_flag_t::memzero_free);
     _bio.write(_handle, data, wcslen(data) * sizeof(wchar_t));
 }
 
-wide_string::wide_string(const wide_string& other) {
+wide_string::wide_string(const wide_string& other) : _handle(nullptr) {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
 
     _bio.open(&_handle, allocsize, sizeof(wchar_t), bufferio_context_flag_t::memzero_free);
@@ -36,11 +36,9 @@ wide_string::wide_string(const wide_string& other) {
     write((void*)data, size);
 }
 
-wide_string::wide_string(wide_string&& other) {
-    size_t allocsize = stream_policy::get_instance()->get_allocsize();
-    _bio.open(&_handle, allocsize, sizeof(wchar_t), bufferio_context_flag_t::memzero_free);
-
+wide_string::wide_string(wide_string&& other) : _handle(nullptr) {
     std::swap(_handle, other._handle);
+    other._handle = nullptr;
 }
 
 wide_string::~wide_string() { _bio.close(_handle); }
@@ -451,8 +449,9 @@ bool wide_string::operator==(const wchar_t* input) {
 
     if (input) {
         size_t len = wcslen(input);
+        len *= sizeof(wchar_t);
         if (size() == len) {
-            int cmp = memcmp(data(), input, len * sizeof(wchar_t));
+            int cmp = memcmp(data(), input, len);
             ret = (0 == cmp);
         }
     }
@@ -464,8 +463,9 @@ bool wide_string::operator!=(const wchar_t* input) {
 
     if (input) {
         size_t len = wcslen(input);
+        len *= sizeof(wchar_t);
         if (size() == len) {
-            int cmp = memcmp(data(), input, len * sizeof(wchar_t));
+            int cmp = memcmp(data(), input, len);
             ret = (0 != cmp);
         }
     }

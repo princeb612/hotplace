@@ -18,13 +18,13 @@ static std::map<trace_category_t, bool> _debug_category_filter;
 
 void set_trace_debug(std::function<void(trace_category_t category, uint32 event, stream_t* s)> f) { _internal_debug = f; }
 
-void trace_debug_event(trace_category_t category, uint32 event, stream_t* s) {
+void trace_debug_event_stream(trace_category_t category, uint32 event, stream_t* s) {
     if (s && (trace_debug & get_trace_option()) && trace_debug_filtered(category) && _internal_debug) {
         _internal_debug(category, event, s);
     }
 }
 
-void trace_debug_event(trace_category_t category, uint32 event, const char* fmt, ...) {
+void trace_debug_event_printf(trace_category_t category, uint32 event, const char* fmt, ...) {
     if (fmt && trace_debug_filtered(category)) {
         basic_stream bs;
         va_list ap;
@@ -33,7 +33,7 @@ void trace_debug_event(trace_category_t category, uint32 event, const char* fmt,
         bs.vprintf(fmt, ap);
         va_end(ap);
 
-        trace_debug_event(category, event, &bs);
+        trace_debug_event_stream(category, event, &bs);
     }
 }
 
@@ -41,7 +41,7 @@ void trace_debug_event(trace_category_t category, uint32 event, std::function<vo
     if (f && trace_debug_filtered(category)) {
         basic_stream bs;
         f(bs);
-        trace_debug_event(category, event, &bs);
+        trace_debug_event_stream(category, event, &bs);  // MSVC
     }
 }
 

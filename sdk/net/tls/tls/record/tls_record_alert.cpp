@@ -58,7 +58,7 @@ return_t tls_record_alert::do_read_body(tls_direction_t dir, const byte_t* strea
                 ret = protection.decrypt(session, dir, stream, limit, recpos, plaintext);
                 if (errorcode_t::success == ret) {
                     tpos = 0;
-                    ret = read_plaintext(dir, &plaintext[0], plaintext.size(), tpos);
+                    ret = read_plaintext(dir, plaintext.data(), plaintext.size(), tpos);
                 }
             } else {
                 tpos = pos;

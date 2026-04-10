@@ -52,7 +52,7 @@ return_t trial_tls_server_socket::tls_accept(socket_context_t **handle, socket_t
                 }
 #endif
                 size_t sent = 0;
-                naive_tcp_server_socket::send(ctx, bin.empty() ? nullptr : (char *)&bin[0], bin.size(), &sent);
+                naive_tcp_server_socket::send(ctx, (char *)bin.data(), bin.size(), &sent);
             };
             auto lambda = [&](tls_session *sess, uint32 status) -> void {
                 sess->get_tls_composer()->session_status_changed(status, from_server, 1000, lambda_send);
@@ -131,7 +131,7 @@ return_t trial_tls_server_socket::send(socket_context_t *handle, const char *ptr
         record.write(dir, bin);
 
         size_t sent = 0;
-        naive_tcp_server_socket::send(handle, (char *)&bin[0], bin.size(), &sent);
+        naive_tcp_server_socket::send(handle, (char *)bin.data(), bin.size(), &sent);
     }
     __finally2 {}
     return ret;

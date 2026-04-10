@@ -240,6 +240,14 @@ class variant {
     variant& set_flag(uint16 flag);
     variant& unset_flag(uint16 flag);
 
+    /**
+     * @brief   setter
+     * @remarks call clear before setter
+     * @example
+     *          vt.clear().set_bstr_new(p, 10);
+     *          // do something
+     *          vt.clear().set_uint32(1);
+     */
     variant& set_pointer(const void* value);
     variant& set_bool(bool value);
     variant& set_int8(int8 value);

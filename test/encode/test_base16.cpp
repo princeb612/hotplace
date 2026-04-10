@@ -41,8 +41,8 @@ void test_base16_func() {
     std::vector<char> buf;
     base16_encode(text, RTL_NUMBER_OF(text), nullptr, &size);
     buf.resize(size);
-    ret = base16_encode(text, RTL_NUMBER_OF(text), &buf[0], &size);
-    _logger->dump(&buf[0], buf.size());
+    ret = base16_encode(text, RTL_NUMBER_OF(text), buf.data(), &size);
+    _logger->dump(buf.data(), buf.size());
     _test_case.test(ret, __FUNCTION__, "case1");
 
     /* return_t base16_encode (const byte_t* source, size_t size, std::string& outpart) */
@@ -70,7 +70,7 @@ void test_base16_decode() {
         test_case_notimecheck notimecheck(_test_case);
 
         basic_stream bs;
-        dump_memory(&decoded[0], decoded.size(), &bs);
+        dump_memory(decoded.data(), decoded.size(), &bs);
         _logger->writeln("%s", bs.c_str());
     }
 

@@ -18,7 +18,7 @@ namespace hotplace {
 namespace crypto {
 
 return_t openssl_sign::sign_eddsa(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, binary_t& signature, uint32 flags) {
-    return sign_eddsa(pkey, alg, &input[0], input.size(), signature, flags);
+    return sign_eddsa(pkey, alg, input.data(), input.size(), signature, flags);
 }
 
 return_t openssl_sign::sign_eddsa(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) {
@@ -49,7 +49,7 @@ return_t openssl_sign::sign_eddsa(const EVP_PKEY* pkey, hash_algorithm_t alg, co
 
         size_t dgstsize = 256;
         signature.resize(dgstsize);
-        ret_test = EVP_DigestSign(ctx, &signature[0], &dgstsize, stream, size);
+        ret_test = EVP_DigestSign(ctx, signature.data(), &dgstsize, stream, size);
         if (1 != ret_test) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
@@ -65,7 +65,7 @@ return_t openssl_sign::sign_eddsa(const EVP_PKEY* pkey, hash_algorithm_t alg, co
 }
 
 return_t openssl_sign::verify_eddsa(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, const binary_t& signature, uint32 flags) {
-    return verify_eddsa(pkey, alg, &input[0], input.size(), signature, flags);
+    return verify_eddsa(pkey, alg, input.data(), input.size(), signature, flags);
 }
 
 return_t openssl_sign::verify_eddsa(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) {
@@ -94,7 +94,7 @@ return_t openssl_sign::verify_eddsa(const EVP_PKEY* pkey, hash_algorithm_t alg, 
             __leave2_trace_openssl(ret);
         }
 
-        ret_test = EVP_DigestVerify(ctx, &signature[0], signature.size(), stream, size);
+        ret_test = EVP_DigestVerify(ctx, signature.data(), signature.size(), stream, size);
         if (1 != ret_test) {
             ret = errorcode_t::error_verify;
             __leave2_trace_openssl(ret);

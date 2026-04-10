@@ -43,7 +43,7 @@ logger& logger::dump(const char* addr, size_t size, unsigned hexpart, unsigned i
 
 logger& logger::dump(const binary_t& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel()) {
-        do_dump(msg.empty() ? nullptr : &msg[0], msg.size(), hexpart, indent);
+        do_dump(msg.data(), msg.size(), hexpart, indent);
     }
     return *this;
 }
@@ -51,7 +51,7 @@ logger& logger::dump(const binary_t& msg, unsigned hexpart, unsigned indent) {
 logger& logger::dump(const binary& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel()) {
         const auto& m = msg.get();
-        do_dump(m.empty() ? nullptr : &m[0], m.size(), hexpart, indent);
+        do_dump(m.data(), m.size(), hexpart, indent);
     }
     return *this;
 }
@@ -86,7 +86,7 @@ logger& logger::dump(loglevel_t level, const char* addr, size_t size, unsigned h
 
 logger& logger::dump(loglevel_t level, const binary_t& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel(level)) {
-        do_dump(msg.empty() ? nullptr : &msg[0], msg.size(), hexpart, indent);
+        do_dump(msg.data(), msg.size(), hexpart, indent);
     }
     return *this;
 }
@@ -94,7 +94,7 @@ logger& logger::dump(loglevel_t level, const binary_t& msg, unsigned hexpart, un
 logger& logger::dump(loglevel_t level, const binary& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel(level)) {
         const auto& m = msg.get();
-        do_dump(m.empty() ? nullptr : &m[0], m.size(), hexpart, indent);
+        do_dump(m.data(), m.size(), hexpart, indent);
     }
     return *this;
 }
@@ -129,7 +129,7 @@ logger& logger::hdump(const std::string& header, const char* addr, size_t size, 
 
 logger& logger::hdump(const std::string& header, const binary_t& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel()) {
-        do_hdump(header, msg.empty() ? nullptr : &msg[0], msg.size(), hexpart, indent);
+        do_hdump(header, msg.data(), msg.size(), hexpart, indent);
     }
     return *this;
 }
@@ -137,7 +137,7 @@ logger& logger::hdump(const std::string& header, const binary_t& msg, unsigned h
 logger& logger::hdump(const std::string& header, const binary& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel()) {
         const auto& m = msg.get();
-        do_hdump(header, m.empty() ? nullptr : &m[0], m.size(), hexpart, indent);
+        do_hdump(header, m.data(), m.size(), hexpart, indent);
     }
     return *this;
 }
@@ -172,7 +172,7 @@ logger& logger::hdump(loglevel_t level, const std::string& header, const char* a
 
 logger& logger::hdump(loglevel_t level, const std::string& header, const binary_t& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel(level)) {
-        do_hdump(header, msg.empty() ? nullptr : &msg[0], msg.size(), hexpart, indent);
+        do_hdump(header, msg.data(), msg.size(), hexpart, indent);
     }
     return *this;
 }
@@ -180,7 +180,7 @@ logger& logger::hdump(loglevel_t level, const std::string& header, const binary_
 logger& logger::hdump(loglevel_t level, const std::string& header, const binary& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel(level)) {
         const auto& m = msg.get();
-        do_hdump(header, m.empty() ? nullptr : &m[0], m.size(), hexpart, indent);
+        do_hdump(header, m.data(), m.size(), hexpart, indent);
     }
     return *this;
 }

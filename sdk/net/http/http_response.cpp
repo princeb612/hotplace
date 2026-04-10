@@ -220,7 +220,7 @@ http_response& http_response::compose(int status_code, const std::string& conten
     close();
 
     _content_type = content_type;
-    _content.write(&bin[0], bin.size());
+    _content.write(bin.data(), bin.size());
     _statuscode = status_code;
     return *this;
 }
@@ -240,7 +240,7 @@ return_t http_response::respond(network_session* session) {
         } else if (2 == _version) {
             binary_t bin;
             get_response_h2(bin);
-            session->send(&bin[0], bin.size());
+            session->send(bin.data(), bin.size());
         }
     }
     __finally2 {}

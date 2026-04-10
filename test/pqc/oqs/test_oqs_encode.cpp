@@ -33,7 +33,7 @@ void do_encode(oqs_context* context, const std::string& alg, key_encoding_t enco
     ret = pqc.encode(context, pkey, key_encoded, encoding, passphrase);
     if (option.dump_keys) {
         if (KEY_ENCODING_PEM & encoding) {
-            _logger->writeln("%.*s", (int)key_encoded.size(), (char*)&key_encoded[0]);
+            _logger->writeln("%.*s", (int)key_encoded.size(), (char*)key_encoded.data());
         } else {
             _logger->writeln("key %s", base16_encode(key_encoded).c_str());
         }

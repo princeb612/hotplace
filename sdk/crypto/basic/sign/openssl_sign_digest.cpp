@@ -17,7 +17,7 @@ namespace hotplace {
 namespace crypto {
 
 return_t openssl_sign::sign_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, binary_t& signature, uint32 flags) {
-    return sign_digest(pkey, alg, &input[0], input.size(), signature, flags);
+    return sign_digest(pkey, alg, input.data(), input.size(), signature, flags);
 }
 
 return_t openssl_sign::sign_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) {
@@ -64,7 +64,7 @@ return_t openssl_sign::sign_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, c
         }
 
         signature.resize(dgstsize);
-        EVP_DigestSignFinal(md_context, &signature[0], &dgstsize);
+        EVP_DigestSignFinal(md_context, signature.data(), &dgstsize);
     }
     __finally2 {
         if (nullptr != md_context) {
@@ -75,7 +75,7 @@ return_t openssl_sign::sign_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, c
 }
 
 return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, const binary_t& signature, uint32 flags) {
-    return verify_digest(pkey, alg, &input[0], input.size(), signature, flags);
+    return verify_digest(pkey, alg, input.data(), input.size(), signature, flags);
 }
 
 return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) {
@@ -118,7 +118,7 @@ return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t alg,
             __leave2_trace_openssl(ret);
         }
 
-        ret_openssl = EVP_DigestVerifyFinal(md_context, &signature[0], signature.size());
+        ret_openssl = EVP_DigestVerifyFinal(md_context, signature.data(), signature.size());
         if (ret_openssl < 1) {
             ret = errorcode_t::error_verify;
             __leave2_trace_openssl(ret);

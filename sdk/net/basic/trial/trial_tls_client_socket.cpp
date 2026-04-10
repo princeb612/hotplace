@@ -43,7 +43,7 @@ return_t trial_tls_client_socket::send(const char* ptr_data, size_t size_data, s
         record.write(from_client, bin);
 
         size_t sent = 0;
-        ret = client_socket_prosumer::send((char*)&bin[0], bin.size(), &sent);
+        ret = client_socket_prosumer::send((char*)bin.data(), bin.size(), &sent);
         if (errorcode_t::success == ret) {
             *cbsent = size_data;
         }
@@ -58,7 +58,7 @@ return_t trial_tls_client_socket::do_send(binary_t& bin) {
         ret = errorcode_t::empty;
     } else {
         size_t sent = 0;
-        ret = secure_client_socket::send((char*)&bin[0], bin.size(), &sent);
+        ret = secure_client_socket::send((char*)bin.data(), bin.size(), &sent);
     }
     return ret;
 }

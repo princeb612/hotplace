@@ -104,10 +104,10 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, const binar
         BIGNUM* bn_e = nullptr;
         BIGNUM* bn_d = nullptr;
 
-        bn_n = BN_bin2bn(&n[0], n.size(), nullptr);
-        bn_e = BN_bin2bn(&e[0], e.size(), nullptr);
+        bn_n = BN_bin2bn(n.data(), n.size(), nullptr);
+        bn_e = BN_bin2bn(e.data(), e.size(), nullptr);
         if (0 != d.size()) {
-            bn_d = BN_bin2bn(&d[0], d.size(), nullptr);
+            bn_d = BN_bin2bn(d.data(), d.size(), nullptr);
         }
 
         RSA_set0_key(rsa, bn_n, bn_e, bn_d);
@@ -183,26 +183,26 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, const binar
         BIGNUM* bn_dmq1 = nullptr;
         BIGNUM* bn_iqmp = nullptr;
 
-        bn_n = BN_bin2bn(&n[0], n.size(), nullptr);
-        bn_e = BN_bin2bn(&e[0], e.size(), nullptr);
+        bn_n = BN_bin2bn(n.data(), n.size(), nullptr);
+        bn_e = BN_bin2bn(e.data(), e.size(), nullptr);
         if (0 != d.size()) {
-            bn_d = BN_bin2bn(&d[0], d.size(), nullptr);
+            bn_d = BN_bin2bn(d.data(), d.size(), nullptr);
         }
 
         if (0 != p.size()) {
-            bn_p = BN_bin2bn(&p[0], p.size(), nullptr);
+            bn_p = BN_bin2bn(p.data(), p.size(), nullptr);
         }
         if (0 != q.size()) {
-            bn_q = BN_bin2bn(&q[0], q.size(), nullptr);
+            bn_q = BN_bin2bn(q.data(), q.size(), nullptr);
         }
         if (0 != dp.size()) {
-            bn_dmp1 = BN_bin2bn(&dp[0], dp.size(), nullptr);
+            bn_dmp1 = BN_bin2bn(dp.data(), dp.size(), nullptr);
         }
         if (0 != dq.size()) {
-            bn_dmq1 = BN_bin2bn(&dq[0], dq.size(), nullptr);
+            bn_dmq1 = BN_bin2bn(dq.data(), dq.size(), nullptr);
         }
         if (0 != qi.size()) {
-            bn_iqmp = BN_bin2bn(&qi[0], qi.size(), nullptr);
+            bn_iqmp = BN_bin2bn(qi.data(), qi.size(), nullptr);
         }
 
         RSA_set0_key(rsa, bn_n, bn_e, bn_d);

@@ -27,7 +27,7 @@ crypto_hmac::~crypto_hmac() {
     }
 }
 
-return_t crypto_hmac::mac(const binary_t& input, binary_t& output) { return mac(&input[0], input.size(), output); }
+return_t crypto_hmac::mac(const binary_t& input, binary_t& output) { return mac(input.data(), input.size(), output); }
 
 return_t crypto_hmac::mac(const byte_t* stream, size_t size, binary_t& output) {
     return_t ret = errorcode_t::success;

@@ -35,8 +35,9 @@ return_t openssl_kdf::argon2(binary_t& derived, argon2_t mode, size_t dlen, cons
     EVP_KDF* kdf = nullptr;
     EVP_KDF_CTX* ctx = nullptr;
     OSSL_LIB_CTX* lib_context = nullptr;
-    OSSL_PARAM params[9], *p = params;
-    unsigned int threads = 0;
+    OSSL_PARAM params[10] = {0};
+    OSSL_PARAM* p = params;
+    unsigned int threads = parallel_cost;
 
     __try2 {
         const char* id = nullptr;
@@ -58,11 +59,11 @@ return_t openssl_kdf::argon2(binary_t& derived, argon2_t mode, size_t dlen, cons
             __leave2;
         }
 
-        lib_context = OSSL_LIB_CTX_new();
-        if (nullptr == lib_context) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
+        // lib_context = OSSL_LIB_CTX_new();
+        // if (nullptr == lib_context) {
+        //     ret = errorcode_t::internal_error;
+        //     __leave2;
+        // }
         kdf = EVP_KDF_fetch(lib_context, id, nullptr);
         if (nullptr == kdf) {
             ret = errorcode_t::internal_error;
@@ -74,33 +75,44 @@ return_t openssl_kdf::argon2(binary_t& derived, argon2_t mode, size_t dlen, cons
             __leave2;
         }
 
-        threads = parallel_cost;
         ret_openssl = OSSL_set_max_threads(lib_context, parallel_cost);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
+        uint32_t itr_cost = iteration_cost;
+        uint32_t mem_cost = memory_cost;
+        uint32_t prl_cost = parallel_cost;
+
         /* Set password */
-        *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_PASSWORD, (void*)&password[0], password.size());
+        *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_PASSWORD, (void*)password.data(), password.size());
         /* Set salt */
-        *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SALT, (void*)&salt[0], salt.size());
+        *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SALT, (void*)salt.data(), salt.size());
         /* Set optional additional data */
-        *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_ARGON2_AD, (void*)&ad[0], ad.size());
+        if (false == ad.empty()) {
+            *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_ARGON2_AD, (void*)ad.data(), ad.size());
+        }
         /* Set optional secret */
-        *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SECRET, (void*)&secret[0], secret.size());
+        if (false == secret.empty()) {
+            *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SECRET, (void*)secret.data(), secret.size());
+        }
         /* Set iteration count */
-        *p++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_ITER, (uint32_t*)&iteration_cost);
+        *p++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_ITER, &itr_cost);
         /* Set threads performing derivation (can be decreased) */
         *p++ = OSSL_PARAM_construct_uint(OSSL_KDF_PARAM_THREADS, &threads);
         /* Set parallel cost */
-        *p++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_ARGON2_LANES, (uint32_t*)&parallel_cost);
+        *p++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_ARGON2_LANES, &prl_cost);
         /* Set memory requirement */
-        *p++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_ARGON2_MEMCOST, (uint32_t*)&memory_cost);
+        *p++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_ARGON2_MEMCOST, &mem_cost);
         *p = OSSL_PARAM_construct_end();
 
         derived.resize(dlen);
-        ret_openssl = EVP_KDF_derive(ctx, &derived[0], dlen, params);
+        ret_openssl = EVP_KDF_derive(ctx, derived.data(), dlen, params);  // [APVR]
+        if (ret_openssl < 1) {
+            ret = errorcode_t::internal_error;
+            __leave2_trace_openssl(ret);
+        }
     }
     __finally2 {
         if (ctx) {
@@ -109,9 +121,9 @@ return_t openssl_kdf::argon2(binary_t& derived, argon2_t mode, size_t dlen, cons
         if (kdf) {
             EVP_KDF_free(kdf);
         }
-        if (lib_context) {
-            OSSL_LIB_CTX_free(lib_context);
-        }
+        // if (lib_context) {
+        //     OSSL_LIB_CTX_free(lib_context);
+        // }
     }
 #else
     ret = errorcode_t::not_supported;

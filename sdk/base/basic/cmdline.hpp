@@ -208,7 +208,7 @@ t_cmdline_t<T>& t_cmdline_t<T>::operator<<(const t_cmdarg_t<T>& cmd) {
 
 template <typename T>
 t_cmdline_t<T>& t_cmdline_t<T>::operator<<(t_cmdarg_t<T>&& cmd) {
-    const std::string token = cmd._token;
+    const std::string& token = cmd._token;
     cmdline_args_map_pib_t pib = _args.emplace(token, std::move(cmd));
 
     if (pib.second) {

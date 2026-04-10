@@ -143,7 +143,7 @@ return_t quic_frame_http3_stream::do_read_body(tls_direction_t dir, const byte_t
                     qpack_encoder encoder;
                     std::list<http_compression_decode_t> kv;
                     auto& dyntable = session->get_quic_session().get_dynamic_table();
-                    ret = encoder.decode(&dyntable, bin.empty() ? nullptr : &bin[0], bin.size(), pos, kv, qpack_quic_stream_decoder);
+                    ret = encoder.decode(&dyntable, bin.data(), bin.size(), pos, kv, qpack_quic_stream_decoder);
                     return ret;
                 };
                 auto lambda_encoder = [&](const binary_t& bin, size_t& pos) -> return_t {
@@ -151,13 +151,13 @@ return_t quic_frame_http3_stream::do_read_body(tls_direction_t dir, const byte_t
                     qpack_encoder encoder;
                     std::list<http_compression_decode_t> kv;
                     auto& dyntable = session->get_quic_session().get_dynamic_table();
-                    ret = encoder.decode(&dyntable, bin.empty() ? nullptr : &bin[0], bin.size(), pos, kv, qpack_quic_stream_encoder);
+                    ret = encoder.decode(&dyntable, bin.data(), bin.size(), pos, kv, qpack_quic_stream_encoder);
                     return ret;
                 };
                 auto lambda_control = [&](const binary_t& bin, size_t& pos) -> return_t {
                     return_t ret = errorcode_t::success;
                     http3_frames frames;
-                    ret = frames.read(session, bin.empty() ? nullptr : &bin[0], bin.size(), pos);
+                    ret = frames.read(session, bin.data(), bin.size(), pos);
                     return ret;
                 };
 
@@ -186,7 +186,7 @@ return_t quic_frame_http3_stream::do_read_body(tls_direction_t dir, const byte_t
                     auto& dyntable = session->get_quic_session().get_dynamic_table();
                     qpack_encoder encstream;
                     std::list<http_compression_decode_t> kv;
-                    encstream.decode(&dyntable, &stream_data[0], stream_data.size(), pos, kv, qpack_quic_stream_encoder);
+                    encstream.decode(&dyntable, stream_data.data(), stream_data.size(), pos, kv, qpack_quic_stream_encoder);
                 }
             } break;
             case h3_qpack_decoder_stream: {
@@ -194,7 +194,7 @@ return_t quic_frame_http3_stream::do_read_body(tls_direction_t dir, const byte_t
                     auto& dyntable = session->get_quic_session().get_dynamic_table();
                     qpack_encoder encstream;
                     std::list<http_compression_decode_t> kv;
-                    encstream.decode(&dyntable, &stream_data[0], stream_data.size(), pos, kv, qpack_quic_stream_decoder);
+                    encstream.decode(&dyntable, stream_data.data(), stream_data.size(), pos, kv, qpack_quic_stream_decoder);
                 }
             } break;
         }

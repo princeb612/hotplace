@@ -32,7 +32,7 @@ return_t generate_cookie_sockaddr(binary_t& cookie, const sockaddr* addr, sockle
 
         openssl_hash hash;
         hash_context_t* handle = nullptr;
-        hash.open(&handle, "sha256", &key[0], key.size());
+        hash.open(&handle, "sha256", key.data(), key.size());
         hash.init(handle);
         hash.update(handle, (byte_t*)addr, addrlen);
         hash.finalize(handle, cookie);

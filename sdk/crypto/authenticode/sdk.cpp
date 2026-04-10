@@ -159,7 +159,7 @@ return_t pkcs7_digest_info(PKCS7 *pkcs7, std::string &md, binary_t &digest) {
                     // const EVP_MD *evp_md = EVP_get_digestbynid (mdtype);
                     md = OBJ_nid2sn(mdtype);
                     digest.resize(idc->messageDigest->digest->length);
-                    memcpy(&digest[0], idc->messageDigest->digest->data, idc->messageDigest->digest->length);
+                    memcpy(digest.data(), idc->messageDigest->digest->data, idc->messageDigest->digest->length);
                 }
                 SpcIndirectDataContent_free(idc);
             }

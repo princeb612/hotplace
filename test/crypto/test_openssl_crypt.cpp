@@ -89,7 +89,7 @@ void do_test_crypt_routine(crypt_algorithm_t algorithm, crypt_mode_t mode, unsig
 
                 ret = crypt.encrypt(crypt_handle, data, size, encrypted, aad, tag);
                 if (errorcode_t::success == ret) {
-                    ret = crypt.decrypt(crypt_handle, &encrypted[0], encrypted.size(), decrypted, aad, tag);
+                    ret = crypt.decrypt(crypt_handle, encrypted.data(), encrypted.size(), decrypted, aad, tag);
                     if (errorcode_t::success == ret) {
                         if (option.verbose) {
                             test_case_notimecheck notimecheck(_test_case);
@@ -100,7 +100,7 @@ void do_test_crypt_routine(crypt_algorithm_t algorithm, crypt_mode_t mode, unsig
 
                         if (size != decrypted.size()) {
                             ret = errorcode_t::internal_error;
-                        } else if (memcmp(data, &decrypted[0], size)) {
+                        } else if (memcmp(data, decrypted.data(), size)) {
                             ret = errorcode_t::internal_error;
                         }
                     }

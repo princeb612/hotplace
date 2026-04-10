@@ -102,7 +102,7 @@ void test_quic_integer() {
         payload pl;
         pl << new payload_member(new quic_encoded(binary_t()), constexpr_input);
         size_t pos = 0;
-        pl.read(&bin_input[0], bin_input.size(), pos);
+        pl.read(bin_input.data(), bin_input.size(), pos);
         binary_t bin_data;
         auto encoded = pl.select(constexpr_input)->get_payload_encoded();
         auto value = encoded->value();

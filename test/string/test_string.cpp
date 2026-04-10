@@ -162,7 +162,7 @@ void test_obfuscate_string() {
         _logger->dump(bin);
     }
 
-    test = bin.empty() ? false : (0 == memcmp(helloworld, &bin[0], bin.size()));
+    test = bin.empty() ? false : (0 == memcmp(helloworld, bin.data(), bin.size()));
     _test_case.assert(test, __FUNCTION__, "binary_t << obfuscate");
 
     str << obf;
@@ -278,14 +278,14 @@ void test_split() {
     binary_t data;
     for (size_t i = 0; i < count; i++) {
         split_get(handle, i, data);
-        printf("[%zi] (%zi) %.*s\n", i, data.size(), (unsigned)data.size(), data.empty() ? nullptr : &data[0]);
+        printf("[%zi] (%zi) %.*s\n", i, data.size(), (unsigned)data.size(), data.data());
     }
     split_end(handle);
 
     _test_case.assert(true, __FUNCTION__, "split");
 }
 
-void test_string() {
+void test_ansi_string() {
     _test_case.begin("ansi_string");
     _test_case.reset_time();
 
@@ -296,10 +296,91 @@ void test_string() {
 #endif
          << (uint16)1 << " " << 1.1f;
 
-    _logger->writeln(astr.c_str());
+    _logger->writeln("lhs %s", astr.c_str());
 
-    _test_case.assert(true, __FUNCTION__, "ansi_string");
+    ansi_string astr2;
+    astr2 << "sample "
+#if defined _WIN32 || defined _WIN64
+          << "unicode "
+#endif
+          << (uint16)1 << " " << 1.1f;
+
+    _test_case.assert(astr == astr2, __FUNCTION__, "ansi_string operator==");
+    _test_case.assert(astr == astr2.c_str(), __FUNCTION__, "ansi_string operator==");
+
+    astr2 << " dummy";
+
+    _logger->writeln("rhs %s", astr2.c_str());
+
+    _test_case.assert(astr != astr2, __FUNCTION__, "ansi_string operator!=");
+    _test_case.assert(astr != astr2.c_str(), __FUNCTION__, "ansi_string operator!=");
+    _test_case.assert(astr < astr2, __FUNCTION__, "ansi_string operator<");
+    _test_case.assert(astr2 > astr, __FUNCTION__, "ansi_string operator>");
+
+#if defined _WIN32 || defined _WIN64
+    {
+        // application verifier - check memory access violation
+        std::map<ansi_string, ansi_string> m;
+        m.emplace("apple", "red");
+        m.emplace("banana", "yellow");
+        m.emplace("grape", "violet");
+        m.emplace("melon", "green");
+        m.emplace("strawberry", "red");
+        m.emplace("tomato", "red");
+
+        for (const auto& item : m) {
+            _logger->writeln("%s %s", item.first.c_str(), item.second.c_str());
+        }
+        _test_case.assert(true, __FUNCTION__, ANSI_ESCAPE "1;33msee application verifier log" ANSI_ESCAPE "0m");
+    }
+#endif
 }
+
+#if defined _WIN32 || defined _WIN64
+void test_wide_string() {
+    _test_case.begin("wide_string");
+    _test_case.reset_time();
+
+    wide_string wstr;
+    wstr << L"sample " << "ansi " << (uint16)1 << " " << 1.1f;
+    _logger->hdump("lhs", wstr.data(), wstr.size(), 16, 3);
+
+    wide_string wstr2(L"sample ansi 1 1.100000");
+    _test_case.assert(wstr == wstr2, __FUNCTION__, "wide_string operator==");
+    _test_case.assert(wstr == wstr2.c_str(), __FUNCTION__, "wide_string operator==");
+
+    wstr2 << L" dummy";
+
+    _logger->hdump("rhs", wstr2.data(), wstr2.size(), 16, 3);
+
+    _test_case.assert(wstr != wstr2, __FUNCTION__, "wide_string operator!=");
+    _test_case.assert(wstr != wstr2.c_str(), __FUNCTION__, "wide_string operator!=");
+    _test_case.assert(wstr < wstr2, __FUNCTION__, "wide_string operator<");
+    _test_case.assert(wstr2 > wstr, __FUNCTION__, "wide_string operator>");
+
+#if defined _WIN32 || defined _WIN64
+    {
+        // application verifier - check memory access violation
+        std::map<wide_string, wide_string> m;
+        m.emplace(L"apple", L"red");
+        m.emplace(L"banana", L"yellow");
+        m.emplace(L"grape", L"violet");
+        m.emplace(L"melon", L"green");
+        m.emplace(L"strawberry", L"red");
+        m.emplace(L"tomato", L"red");
+
+        for (const auto& item : m) {
+            ansi_string first;
+            ansi_string second;
+            first << item.first.c_str();
+            second << item.second.c_str();
+            _logger->writeln("%s %s", first.c_str(), second.c_str());
+        }
+        _test_case.assert(true, __FUNCTION__, ANSI_ESCAPE "1;33msee application verifier log" ANSI_ESCAPE "0m");
+    }
+#endif
+}
+#endif
 
 void test_tokenize() {
     _test_case.begin("tokenize");

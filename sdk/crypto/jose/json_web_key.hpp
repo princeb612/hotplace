@@ -64,9 +64,9 @@ class json_web_key : public crypto_keychain {
      *          json_web_key jwk;
      *          size_t size = 0;
      *          std::vector<char> bin;
-     *          jwk.write (&privkey, &bin[0], &size);
+     *          jwk.write (&privkey, bin.data(), &size);
      *          bin.resize (size);
-     *          jwk.write (&privkey, &bin[0], &size);
+     *          jwk.write (&privkey, bin.data(), &size);
      */
     virtual return_t write(crypto_key* cryptokey, keyflag_t mode, stream_t* stream, int flags = public_key);
     /**

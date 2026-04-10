@@ -286,7 +286,7 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
         inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
 
         _traffic.shuffle();
-        auto lambda = [&](const binary_t& bin) { arrange.produce((sockaddr*)&addr, sizeof(addr), &bin[0], bin.size()); };
+        auto lambda = [&](const binary_t& bin) { arrange.produce((sockaddr*)&addr, sizeof(addr), bin.data(), bin.size()); };
         _traffic.consume(lambda);
 
         bool has_fatal = false;

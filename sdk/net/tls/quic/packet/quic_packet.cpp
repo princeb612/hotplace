@@ -127,7 +127,7 @@ return_t quic_packet::read(tls_direction_t dir, const byte_t* stream, size_t siz
     return ret;
 }
 
-return_t quic_packet::read(tls_direction_t dir, const binary_t& bin, size_t& pos) { return read(dir, &bin[0], bin.size(), pos); }
+return_t quic_packet::read(tls_direction_t dir, const binary_t& bin, size_t& pos) { return read(dir, bin.data(), bin.size(), pos); }
 
 return_t quic_packet::write(tls_direction_t dir, binary_t& packet) {
     return_t ret = errorcode_t::success;
@@ -273,8 +273,7 @@ return_t quic_packet::do_unprotect(tls_direction_t dir, const byte_t* stream, si
         binary_t bin_plaintext;
         {
             size_t tpos = 0;
-            ret = protection.decrypt(session, dir, _payload.empty() ? nullptr : &_payload[0], _payload.size(), tpos, bin_plaintext, bin_unprotected_header,
-                                     _tag, space);
+            ret = protection.decrypt(session, dir, _payload.data(), _payload.size(), tpos, bin_plaintext, bin_unprotected_header, _tag, space);
             if (errorcode_t::success == ret) {
                 _payload = std::move(bin_plaintext);
             } else {
@@ -394,7 +393,7 @@ return_t quic_packet::header_protect(tls_direction_t dir, protection_space_t spa
         }
 
         auto adj = 4 - pn_length;
-        binary_append(bin_pn, &bin_ciphertext[0], adj);
+        binary_append(bin_pn, bin_ciphertext.data(), adj);
 
         // calcurate mask
         binary_t bin_mask;
@@ -408,7 +407,7 @@ return_t quic_packet::header_protect(tls_direction_t dir, protection_space_t spa
         } else {
             hdr ^= bin_mask[0] & 0x1f;
         }
-        memxor(&bin_pn[0], &bin_mask[1], 4);
+        memxor(bin_pn.data(), &bin_mask[1], 4);
 
         // encode packet length
         bin_protected_header[0] = hdr;
@@ -453,8 +452,8 @@ return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream
         // stream
         //   ... | PN1 PN2 PN3 PN4 | PL1 PL2 ...
         binary_t bin_pn;
-        binary_append(bin_pn, &_payload[0], 4);
-        memxor(&bin_pn[0], &bin_mask[1], 4);
+        binary_append(bin_pn, _payload.data(), 4);
+        memxor(bin_pn.data(), &bin_mask[1], 4);
         bin_pn.resize(pn_length);
         pn = t_binary_to_integer<uint32>(bin_pn);
 
@@ -466,7 +465,7 @@ return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream
                 dbs.println(" > packet number length %i", pn_length);
 
                 binary_t bin_protected_pn;
-                binary_append(bin_protected_pn, &bin_payload[0], pn_length);
+                binary_append(bin_protected_pn, bin_payload.data(), pn_length);
                 uint32 protected_pn = t_binary_to_integer<uint32>(bin_protected_pn);
 
                 dbs.println(" > protected   packet number 0x%08x", protected_pn);

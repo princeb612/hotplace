@@ -78,11 +78,11 @@ return_t test_hash_routine(hash_algorithm_t algorithm, binary_t key, binary_t da
     size_t digest_size = 0;
 
     __try2 {
-        ret = dgst.open(&hash_handle, algorithm, &key[0], key.size());
+        ret = dgst.open(&hash_handle, algorithm, key.data(), key.size());
         if (errorcode_t::success == ret) {
             binary_t hashed;
             dgst.init(hash_handle);
-            ret = dgst.update(hash_handle, &data[0], data.size());
+            ret = dgst.update(hash_handle, data.data(), data.size());
             if (errorcode_t::success == ret) {
                 ret = dgst.finalize(hash_handle, hashed);
                 digest_size = hashed.size();
@@ -93,7 +93,7 @@ return_t test_hash_routine(hash_algorithm_t algorithm, binary_t key, binary_t da
                         _logger->hdump("hmac", hashed);
                     }
 
-                    if ((hashed.size() == expect.size()) && (0 == memcmp(&hashed[0], &expect[0], expect.size()))) {
+                    if ((hashed.size() == expect.size()) && (0 == memcmp(hashed.data(), expect.data(), expect.size()))) {
                         // do nothing
                     } else {
                         ret = errorcode_t::mismatch;

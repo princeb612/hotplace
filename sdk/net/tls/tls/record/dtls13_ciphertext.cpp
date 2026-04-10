@@ -230,7 +230,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
                     if (check_trace_level(loglevel_debug)) {
                         switch (type) {
                             case tls_content_type_application_data: {
-                                dump_memory(&plaintext[0], plaintext.size() - 1, &dbs, 16, 3, 0x0, dump_notrunc);
+                                dump_memory(plaintext.data(), plaintext.size() - 1, &dbs, 16, 3, 0x0, dump_notrunc);
                             } break;
                         }
                     }
@@ -241,17 +241,17 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
             switch (type) {
                 case tls_content_type_alert: {
                     tls_record_alert alert(session);
-                    ret = alert.read_plaintext(dir, &plaintext[0], plaintext.size() - 1, tpos);
+                    ret = alert.read_plaintext(dir, plaintext.data(), plaintext.size() - 1, tpos);
                 } break;
                 case tls_content_type_handshake: {
-                    auto handshake = tls_handshake::read(session, dir, &plaintext[0], plaintext.size() - 1, tpos);
+                    auto handshake = tls_handshake::read(session, dir, plaintext.data(), plaintext.size() - 1, tpos);
                     get_handshakes().add(handshake);
                 } break;
                 case tls_content_type_application_data: {
                 } break;
                 case tls_content_type_ack: {
                     tls_record_ack ack(session);
-                    ret = ack.do_read_body(dir, &plaintext[0], plaintext.size() - 1, tpos);
+                    ret = ack.do_read_body(dir, plaintext.data(), plaintext.size() - 1, tpos);
                 } break;
             }
         }
@@ -333,7 +333,7 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
         uint16 recno = 0;
         uint16 rec_enc = 0;
         binary_t protmask;
-        ret = protection.protection_mask(session, dir, &block[0], block.size(), protmask, 2);
+        ret = protection.protection_mask(session, dir, block.data(), block.size(), protmask, 2);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -367,7 +367,7 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
                 dbs.println("> header");
                 dump_memory(header, &dbs, 16, 3, 0x0, dump_notrunc);
                 dbs.println("> header masked (sequence)");
-                dump_memory(&bin[0], header.size(), &dbs, 16, 3, 0x0, dump_notrunc);
+                dump_memory(bin.data(), header.size(), &dbs, 16, 3, 0x0, dump_notrunc);
             });
         }
 #endif

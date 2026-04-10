@@ -181,7 +181,7 @@ class tls_session {
      *          record.write(dir, bin);
      *      };
      *      session->get_alert(dir, lambda);
-     *       // tcpsession->send(&bin[0], bin.size());
+     *       // tcpsession->send(bin.data(), bin.size());
      */
     void push_alert(tls_direction_t dir, uint8 level, uint8 desc);
     void get_alert(tls_direction_t dir, std::function<void(uint8, uint8)> func, uint8 flags = 0);

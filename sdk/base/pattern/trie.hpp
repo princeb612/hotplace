@@ -117,11 +117,11 @@ class t_trie {
      *
      *              std::vector<char> arr;
      *              trie.lookup(index, arr);
-     *              auto rc = strncmp("hello", &arr[0], arr.size()); // 0
+     *              auto rc = strncmp("hello", arr.data(), arr.size()); // 0
      *          }
      */
     t_trie<BT, T, TP>& add(const std::vector<T>& pattern, TP* tag = nullptr) {
-        insert(&pattern[0], pattern.size(), -1, tag);
+        insert(pattern.data(), pattern.size(), -1, tag);
         return *this;
     }
     t_trie<BT, T, TP>& add(const T* pattern, size_t size, TP* tag = nullptr) {
@@ -132,7 +132,7 @@ class t_trie {
      * @brief add (with index)
      */
     t_trie<BT, T, TP>& add(const std::vector<T>& pattern, int index, TP* tag = nullptr) {
-        insert(&pattern[0], pattern.size(), index, tag);
+        insert(pattern.data(), pattern.size(), index, tag);
         return *this;
     }
     t_trie<BT, T, TP>& add(const T* pattern, size_t size, int index, TP* tag = nullptr) {
@@ -144,7 +144,7 @@ class t_trie {
      * @return  trienode*
      * @sa      add
      */
-    const trienode* insert(const std::vector<T>& pattern, int index = -1, TP* tag = nullptr) { return insert(&pattern[0], pattern.size(), index, tag); }
+    const trienode* insert(const std::vector<T>& pattern, int index = -1, TP* tag = nullptr) { return insert(pattern.data(), pattern.size(), index, tag); }
     const trienode* insert(const T* pattern, size_t size, int index = -1, TP* tag = nullptr) {
         trienode* current = _root;
         if (pattern) {
@@ -184,7 +184,7 @@ class t_trie {
      * @return  true/false
      * @sa      find
      */
-    bool search(const std::vector<T>& pattern, TP** tag = nullptr) const { return search(&pattern[0], pattern.size(), tag); }
+    bool search(const std::vector<T>& pattern, TP** tag = nullptr) const { return search(pattern.data(), pattern.size(), tag); }
     bool search(const T* pattern, size_t size, TP** tag = nullptr) const {
         bool ret = false;
         if (pattern) {
@@ -207,7 +207,7 @@ class t_trie {
      * @return  index (-1 if not found)
      * @sa      search
      */
-    int find(const std::vector<T>& input, TP** tag = nullptr) const { return find(&input[0], input.size(), tag); }
+    int find(const std::vector<T>& input, TP** tag = nullptr) const { return find(input.data(), input.size(), tag); }
     int find(const T* input, size_t size, TP** tag = nullptr) const {
         int index = -1;
         if (input) {
@@ -282,7 +282,7 @@ class t_trie {
      * @brief   prefix
      * @return  true/false
      */
-    bool prefix(const std::vector<T>& input) const { return prefix(&input[0], input.size()); }
+    bool prefix(const std::vector<T>& input) const { return prefix(input.data(), input.size()); }
     bool prefix(const T* input, size_t size, bool* eow = nullptr, TP** tag = nullptr) const {
         bool ret = true;
         if (input) {
@@ -374,7 +374,7 @@ class t_trie {
     /**
      * @brief   erase
      */
-    void erase(const std::vector<T>& pattern) { erase(&pattern[0], pattern.size()); }
+    void erase(const std::vector<T>& pattern) { erase(pattern.data(), pattern.size()); }
     void erase(const T* pattern, size_t size) {
         if (pattern) {
             trienode* current = _root;
@@ -414,7 +414,7 @@ class t_trie {
         _rlookup.clear();
     }
 
-    bool suggest(const std::vector<T>& input, dump_handler handler) const { return suggest(&input[0], input.size(), handler); }
+    bool suggest(const std::vector<T>& input, dump_handler handler) const { return suggest(input.data(), input.size(), handler); }
     bool suggest(const T* input, size_t size, dump_handler handler) const {
         bool ret = true;
         if (input && handler) {
@@ -477,7 +477,7 @@ class t_trie {
                 std::vector<BT> v;
                 v.insert(v.end(), pattern, pattern + size);
                 v.insert(v.end(), item.first);
-                dump(item.second, &v[0], v.size(), handler);
+                dump(item.second, v.data(), v.size(), handler);
             }
         }
     }

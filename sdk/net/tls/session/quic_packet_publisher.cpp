@@ -541,7 +541,7 @@ return_t quic_packet_publisher::consume(quic_packet* packet, size_t paid, std::f
                 auto capacity = entry.bin.size() - entry.pos;
 
                 segment_t segment;
-                segment.stream = entry.bin.empty() ? nullptr : &entry.bin[0];
+                segment.stream = entry.bin.data();
                 segment.size = entry.bin.size();
                 segment.limit = payload_space;
                 segment.pos = entry.pos;

@@ -112,13 +112,13 @@ http_client& http_client::do_request_and_response(const url_info_t& url_info, ht
             size_t sizeread = 0;
             buf.resize(bufsize);
 
-            ret = client->read(&buf[0], bufsize, &sizeread);
+            ret = client->read(buf.data(), bufsize, &sizeread);
 
-            stream_read.produce((byte_t*)&buf[0], sizeread);
+            stream_read.produce((byte_t*)buf.data(), sizeread);
             while (errorcode_t::more_data == ret) {
-                ret = client->more(&buf[0], bufsize, &sizeread);
+                ret = client->more(buf.data(), bufsize, &sizeread);
 
-                stream_read.produce((byte_t*)&buf[0], sizeread);
+                stream_read.produce((byte_t*)buf.data(), sizeread);
             }
 
             stream_read.write(&group, &stream_interpreted);

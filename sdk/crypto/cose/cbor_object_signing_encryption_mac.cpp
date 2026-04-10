@@ -200,7 +200,7 @@ return_t cbor_object_signing_encryption::domac(cose_context_t* handle, crypto_ke
 
             // size_t ivsize = iv.size();
             // binary_t aligned_partial_iv;
-            // binary_load(aligned_partial_iv, ivsize, &partial_iv[0], partial_iv.size());
+            // binary_load(aligned_partial_iv, ivsize, partial_iv.data(), partial_iv.size());
             // for (size_t i = 0; i < ivsize; i++) {
             //     iv[i] ^= aligned_partial_iv[i];
             // }

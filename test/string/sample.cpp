@@ -62,7 +62,10 @@ int main(int argc, char **argv) {
     test_scan();
     test_scan2();
     test_split();
-    test_string();
+    test_ansi_string();  // [APVR]
+#if defined _WIN32 || defined _WIN64
+    test_wide_string();  // [APVR]
+#endif
     test_tokenize();
 
     _logger->flush();

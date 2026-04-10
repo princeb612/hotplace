@@ -95,7 +95,7 @@ class t_aho_corasick {
     /**
      * @brief   insert a pattern into the trie
      */
-    void insert(const std::vector<T>& pattern) { doinsert(&pattern[0], pattern.size()); }
+    void insert(const std::vector<T>& pattern) { doinsert(pattern.data(), pattern.size()); }
     void insert(const T* pattern, size_t size) { doinsert(pattern, size); }
     /**
      * @brief   build the Aho-Corasick finite state machine
@@ -110,7 +110,7 @@ class t_aho_corasick {
         std::map<size_t, std::set<unsigned>> ordered;
         std::multimap<range_t, unsigned> result;
         auto size = source.size();
-        dosearch(&source[0], size, ordered);
+        dosearch(source.data(), size, ordered);
         get_result(ordered, result, size);
         return result;
     }

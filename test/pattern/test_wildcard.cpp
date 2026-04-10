@@ -35,7 +35,7 @@ std::string get_lcp(std::string ar[], size_t n) {
 void test_lcp() {
     _test_case.begin("LCP");
     std::string ar[] = {"geeksforgeeks", "geeks", "geek", "geezer"};
-    int n = sizeof(ar) / sizeof(ar[0]);
+    int n = RTL_NUMBER_OF(ar);
     std::string result = get_lcp(ar, n);
 
     _logger->writeln([&](basic_stream& bs) -> void { bs << "The longest common prefix is: " << result; });

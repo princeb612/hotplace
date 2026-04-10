@@ -279,7 +279,7 @@ http_request& http_request::add_content(const char* buf, size_t bufsize) {
     return *this;
 }
 
-http_request& http_request::add_content(const binary_t& bin) { return add_content((char*)&bin[0], bin.size()); }
+http_request& http_request::add_content(const binary_t& bin) { return add_content((char*)bin.data(), bin.size()); }
 
 http_request& http_request::clear_content() {
     _content.clear();

@@ -59,7 +59,7 @@ void whatsthis() {
             bin_input = std::move(base16_decode_rfc(option.content));
             size_t pos = 0;
             uint64 i64_decoded = 0;
-            quic_read_vle_int(&bin_input[0], bin_input.size(), pos, i64_decoded);
+            quic_read_vle_int(bin_input.data(), bin_input.size(), pos, i64_decoded);
 
             bs.printf("> decode\n");
             bs.printf("  %s -> 0x%I64x (%I64i)\n", base16_encode(bin_input).c_str(), i64_decoded, i64_decoded);
@@ -242,7 +242,7 @@ void test_rfc_9001_send_initial(testvector_initial_packet* item, tls_session* se
         quic_packet_initial initial(session);
 
         pos = 0;
-        ret = initial.read(dir, &bin_expect_result[0], bin_expect_result.size(), pos);
+        ret = initial.read(dir, bin_expect_result.data(), bin_expect_result.size(), pos);
 
         _test_case.test(ret, func, "%s #read", text);
         _test_case.assert(quic_packet_type_initial == initial.get_type(), func, "%s #initial packet", text);
@@ -295,7 +295,7 @@ void test_rfc_9001_retry(testvector_retry_packet* item, tls_session* session) {
     {
         size_t pos = 0;
         quic_packet_retry retry(session);
-        retry.read(dir, &bin_result[0], bin_result.size(), pos);
+        retry.read(dir, bin_result.data(), bin_result.size(), pos);
 
         _test_case.assert(bin_dcid == retry.get_dcid(), func, "RFC 9001 A.4.  Retry #dcid");
         _test_case.assert(bin_scid == retry.get_scid(), func, "RFC 9001 A.4.  Retry #scid");

@@ -20,8 +20,8 @@ std::string W2A(const wchar_t* source, uint32 codepage) {
     int sizeNeed = WideCharToMultiByte(codepage, 0, source, -1, nullptr, 0, nullptr, nullptr);
 
     buffer.resize(sizeNeed);  // including null pad
-    WideCharToMultiByte(codepage, 0, source, -1, &buffer[0], sizeNeed, nullptr, nullptr);
-    value = &buffer[0];
+    WideCharToMultiByte(codepage, 0, source, -1, buffer.data(), sizeNeed, nullptr, nullptr);
+    value = buffer.data();
     return value;
 }
 
@@ -34,8 +34,8 @@ return_t W2A(std::string& target, const wchar_t* source, uint32 codepage) {
         int sizeNeed = WideCharToMultiByte(codepage, 0, source, -1, nullptr, 0, nullptr, nullptr);
 
         buffer.resize(sizeNeed);  // including null pad
-        WideCharToMultiByte(codepage, 0, source, -1, &buffer[0], sizeNeed, nullptr, nullptr);
-        target = &buffer[0];
+        WideCharToMultiByte(codepage, 0, source, -1, buffer.data(), sizeNeed, nullptr, nullptr);
+        target = buffer.data();
     } else {
         ret = errorcode_t::invalid_parameter;
     }

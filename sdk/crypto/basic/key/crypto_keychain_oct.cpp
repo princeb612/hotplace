@@ -29,7 +29,7 @@ return_t crypto_keychain::add_oct(crypto_key* cryptokey, size_t size, const keyd
         openssl_prng r;
         binary_t temp;
         r.random(temp, size);
-        pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, nullptr, &temp[0], size);
+        pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, nullptr, temp.data(), size);
         if (nullptr == pkey) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
@@ -48,9 +48,7 @@ return_t crypto_keychain::add_oct(crypto_key* cryptokey, size_t size, const keyd
     return ret;
 }
 
-return_t crypto_keychain::add_oct(crypto_key* cryptokey, const binary_t& k, const keydesc& desc) {
-    return add_oct(cryptokey, k.empty() ? nullptr : &k[0], k.size(), desc);
-}
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, const binary_t& k, const keydesc& desc) { return add_oct(cryptokey, k.data(), k.size(), desc); }
 
 return_t crypto_keychain::add_oct(crypto_key* cryptokey, const byte_t* k, size_t size, const keydesc& desc) {
     return_t ret = errorcode_t::success;

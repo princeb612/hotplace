@@ -16,7 +16,7 @@
  *          std::cout << hex << std::endl;
  *          base16_decode (hex, bin);
  *          basic_stream bs;
- *          dump_memory (&bin[0], bin.size (), &bs);
+ *          dump_memory (bin.data(), bin.size (), &bs);
  *          printf ("%s\n", bs.c_str ());
  *
  *          const char* encoded1 = "01020304";
@@ -46,9 +46,9 @@ enum base16_flag_t {
  * @example
  *          binary_t source = std::move(str2bin ("hello world"));
  *          size_t size = 0;
- *          base16_encode (&source[0], source.size, nullptr, &size);
+ *          base16_encode (source.data(), source.size, nullptr, &size);
  *          char* buf = (char*) malloc (size);
- *          base16_encode (&source[0], source.size, buf, &size);
+ *          base16_encode (source.data(), source.size, buf, &size);
  *          free (buf);
  */
 return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buflen);
@@ -61,7 +61,7 @@ return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buf
  * @example
  *          binary_t source = std::move(str2bin ("hello world"));
  *          std::string encoded;
- *          base16_encode (&source[0], source.size, encoded);
+ *          base16_encode (source.data(), source.size, encoded);
  */
 return_t base16_encode(const byte_t* source, size_t size, std::string& outpart, uint32 flags = 0);
 /*
@@ -73,7 +73,7 @@ return_t base16_encode(const byte_t* source, size_t size, std::string& outpart, 
  * @example
  *          binary_t source = std::move(str2bin ("hello world"));
  *          basic_stream encoded;
- *          base16_encode (&source[0], source.size, &encoded);
+ *          base16_encode (source.data(), source.size, &encoded);
  */
 return_t base16_encode(const byte_t* source, size_t size, stream_t* stream, uint32 flags = 0);
 /*

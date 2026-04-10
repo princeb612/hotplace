@@ -71,7 +71,7 @@ class t_binaries {
      * @param   const binary_t& bin [in]
      * @param   uint32 flags [inopt]
      */
-    void assign(T id, const binary_t& bin, uint32 flags = 0) { assign(id, bin.empty() ? nullptr : &bin[0], bin.size(), flags); }
+    void assign(T id, const binary_t& bin, uint32 flags = 0) { assign(id, bin.data(), bin.size(), flags); }
 
     /**
      * @brief   append
@@ -97,7 +97,7 @@ class t_binaries {
      * @param   T id [in]
      * @param   const binary_t& bin [in]
      */
-    void append(T id, const binary_t& bin) { append(id, bin.empty() ? nullptr : &bin[0], bin.size()); }
+    void append(T id, const binary_t& bin) { append(id, bin.data(), bin.size()); }
 
     /**
      * @brief   write
@@ -133,7 +133,7 @@ class t_binaries {
      * @param   const binary_t& bin [in]
      * @param   uint32 flags [inopt]
      */
-    return_t write(T id, size_t offset, const binary_t& bin, uint32 flags = 0) { return write(id, offset, bin.empty() ? nullptr : &bin[0], bin.size(), flags); }
+    return_t write(T id, size_t offset, const binary_t& bin, uint32 flags = 0) { return write(id, offset, bin.data(), bin.size(), flags); }
 
     /**
      * @brief   get
@@ -235,9 +235,7 @@ class t_binaries {
      * @param   const binary_t& bin [in]
      * @param   uint32 flags [inopt] bin_trunc, bin_set_fin
      */
-    return_t produce(T id, size_t offset, const binary_t& bin, uint32 flags = 0) {
-        return write(id, offset, bin.empty() ? nullptr : &bin[0], bin.size(), flags);
-    }
+    return_t produce(T id, size_t offset, const binary_t& bin, uint32 flags = 0) { return write(id, offset, bin.data(), bin.size(), flags); }
     /**
      * @brief   peek
      * @param   T id [in]

@@ -241,7 +241,7 @@ return_t debug_trace::open(debug_trace_context_t** handle) {
         options &= ~SYMOPT_UNDNAME;
         context->mssdk.lpfnSymSetOptions(options);
 
-        enum_modules(GetCurrentProcess(), enum_modules_handler, context);
+        // enum_modules(GetCurrentProcess(), enum_modules_handler, context);  // application verifier
 
         context->imagehlp_handle = imagehlp_handle;
         *handle = context;
@@ -415,7 +415,8 @@ return_t debug_trace::trace(debug_trace_context_t* handle, CONTEXT* rtlcontext, 
                     // ...
                 }
 
-                bRet = context->mssdk.lpfnSymGetLineFromAddr(process_handle, frame.AddrPC.Offset, &dwOffsetFromSymbol, &Line);
+                DWORD displace = 0;
+                bRet = context->mssdk.lpfnSymGetLineFromAddr(process_handle, frame.AddrPC.Offset, &displace, &Line);
                 if (TRUE == bRet) {
                     stream->printf(constexpr_line, Line.FileName, Line.LineNumber);
                 } else {

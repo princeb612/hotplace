@@ -119,7 +119,7 @@ return_t json_object_signing::sign(jose_context_t* handle, std::list<std::string
 
             item.header = header_encoded;
             item.payload = claims_encoded;
-            item.signature = std::move(base64_encode(&signature[0], signature.size(), encoding_t::encoding_base64url));
+            item.signature = std::move(base64_encode(signature.data(), signature.size(), encoding_t::encoding_base64url));
 
             item.kid = kid;
             item.sig = sig;

@@ -31,7 +31,7 @@ void do_test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {
 
     ret = crypt.open(&handle, alg, crypt_mode_t::wrap, kek, iv);
     if (errorcode_t::success == ret) {
-        crypt.encrypt(handle, &key[0], key.size(), out_kw);
+        crypt.encrypt(handle, key.data(), key.size(), out_kw);
 
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
@@ -45,7 +45,7 @@ void do_test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {
             _logger->hdump("keywrap", out_kw);
         }
 
-        crypt.decrypt(handle, &out_kw[0], out_kw.size(), out_kuw);
+        crypt.decrypt(handle, out_kw.data(), out_kw.size(), out_kuw);
 
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
@@ -59,7 +59,7 @@ void do_test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {
 
     ret = crypt.open(&handle, algname, kek, iv);
     if (errorcode_t::success == ret) {
-        crypt.encrypt(handle, &key[0], key.size(), out_kw);
+        crypt.encrypt(handle, key.data(), key.size(), out_kw);
 
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
@@ -73,7 +73,7 @@ void do_test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {
             _logger->hdump("keywrap", out_kw);
         }
 
-        crypt.decrypt(handle, &out_kw[0], out_kw.size(), out_kuw);
+        crypt.decrypt(handle, out_kw.data(), out_kw.size(), out_kuw);
 
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);

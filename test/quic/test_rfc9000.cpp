@@ -19,7 +19,7 @@ void test_rfc_9000_a1() {
         binary_t bin = std::move(base16_decode_rfc(input));
         size_t pos = 0;
         uint64 value = 0;
-        quic_read_vle_int(&bin[0], bin.size(), pos, value);
+        quic_read_vle_int(bin.data(), bin.size(), pos, value);
         _logger->writeln(R"(> decode/read %s -> %I64i (0x%I64x))", input, value, value);
         _test_case.assert(expect == value, __FUNCTION__, R"(RFC 9000 A.1. expect "%s" -> %I64i)", input, expect);
     };

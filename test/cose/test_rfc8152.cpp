@@ -132,7 +132,7 @@ return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys
                         publisher.publish(cbor_newone, &bs_diagnostic_composed);
                         dump_test_data("compose", bs_diagnostic_composed);
 
-                        _test_case.assert(0 == memcmp(&bin[2], &bin_untagged[0], bin_untagged.size()), __FUNCTION__, "check4.compose %s", text);
+                        _test_case.assert(0 == memcmp(&bin[2], bin_untagged.data(), bin_untagged.size()), __FUNCTION__, "check4.compose %s", text);
 
                         cbor_newone->release();
                     }

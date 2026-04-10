@@ -152,7 +152,7 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
 
             assemble.insert(assemble.begin(), (byte_t*)&header, (byte_t*)&header + sizeof(header));
 
-            ret = read(dir, &assemble[0], assemble.size(), tpos);
+            ret = read(dir, assemble.data(), assemble.size(), tpos);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
@@ -206,7 +206,7 @@ return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
 
         do_write_header(dir, bin, body);
 
-        const byte_t* stream = &bin[0];
+        const byte_t* stream = bin.data();
         size_t size = bin.size();
 
         ret = do_postprocess(dir, stream, size);

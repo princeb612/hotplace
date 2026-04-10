@@ -90,7 +90,7 @@ return_t der2rs(const binary_t& asn1der, uint16 unitsize, binary_t& r, binary_t&
         pl.set_reference_value(constexpr_r, constexpr_rlen);
         pl.set_reference_value(constexpr_s, constexpr_slen);
 
-        pl.read(&asn1der[0], asn1der.size());
+        pl.read(asn1der.data(), asn1der.size());
 
         uint8 sequence = pl.t_value_of<uint8>(constexpr_sequence);
         uint8 rlen = pl.t_value_of<uint8>(constexpr_rlen);
@@ -149,7 +149,7 @@ return_t rs2sig(const binary_t& r, const binary_t& s, uint16 unitsize, binary_t&
         }
 
         if (r_ltrim) {
-            binary_append(signature, &r[0] + r_ltrim, unitsize);
+            binary_append(signature, r.data() + r_ltrim, unitsize);
         } else if (r_lpad) {
             while (r_lpad--) {
                 binary_append(signature, uint8(0));
@@ -160,7 +160,7 @@ return_t rs2sig(const binary_t& r, const binary_t& s, uint16 unitsize, binary_t&
         }
 
         if (s_ltrim) {
-            binary_append(signature, &s[0] + s_ltrim, unitsize);
+            binary_append(signature, s.data() + s_ltrim, unitsize);
         } else if (s_lpad) {
             while (s_lpad--) {
                 binary_append(signature, uint8(0));

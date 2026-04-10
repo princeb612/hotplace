@@ -47,7 +47,7 @@ class cose_composer {
      *          signature.get_unprotected().add(cose_key_t::cose_kid, "11");
      *          signature.get_payload().set_b16("e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a");
      *          composer.compose(&root, true); // true for tagged message , false for untagged message
-     *          // ...
+     *          // ... (see cbor_publisher)
      *          root->release();
      */
     return_t compose(cbor_array** object, bool tagged = true);
@@ -95,16 +95,10 @@ class cose_composer {
 
    protected:
     void clear();
-    // return_t compose_enc_structure(binary_t& authenticated_data);
 
    private:
     cbor_tag_t _cbor_tag;
 
-    // cose_protected _protected;
-    // cose_unprotected _unprotected;
-    // cose_binary _payload;
-    // cose_binary _singleitem;
-    // cose_recipients _recipients;
     cose_layer _layer;
     cose_unsent _unsent;
 };

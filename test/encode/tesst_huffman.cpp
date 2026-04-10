@@ -60,10 +60,10 @@ void test_huffman_codes() {
 
     basic_stream dbs;
 
-    ret = huff.decode(&dbs, &enc[0], enc.size());
+    ret = huff.decode(&dbs, enc.data(), enc.size());
     _test_case.assert(success != ret, __FUNCTION__, "error detected");
 
-    ret = huff.decode(&dbs, &enc[0], enc.size(), manual_decode);
+    ret = huff.decode(&dbs, enc.data(), enc.size(), manual_decode);
     _test_case.test(ret, __FUNCTION__, "error ignored");
 
     dbs.resize(samplesize);

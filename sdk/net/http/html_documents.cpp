@@ -136,7 +136,7 @@ return_t html_documents::compose(const std::string& uri, http_response* response
         binary_t content;
         ret = load(uri, content_type, content);
         if (errorcode_t::success == ret) {
-            response->compose(200, content_type, "%.*s", (unsigned)content.size(), &content[0]);
+            response->compose(200, content_type, "%.*s", (unsigned)content.size(), content.data());
         }
     } else {
         ret = errorcode_t::not_available;

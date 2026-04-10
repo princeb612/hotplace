@@ -109,7 +109,7 @@ variant::variant(const unsigned char *value, size_t n) { set_bstr_new(value, n);
 
 variant::variant(const std::string &value) { set_strn_new(value.c_str(), value.size()); }
 
-variant::variant(const binary_t &value) { set_bstr_new(value.empty() ? nullptr : &value[0], value.size()); }
+variant::variant(const binary_t &value) { set_bstr_new(value.data(), value.size()); }
 
 variant::variant(const stream_t *value) { set_bstr_new(value); }
 
@@ -549,7 +549,7 @@ variant &variant::set_binary_new(const binary_t &bin) {
     if (n) {
         p = (unsigned char *)malloc(n + 1);
         if (p) {
-            memcpy(p, &bin[0], n);
+            memcpy(p, bin.data(), n);
             *(p + n) = 0;
             _vt.size = n;
             _vt.flag |= variant_flag_t::flag_free;
@@ -567,7 +567,7 @@ variant &variant::set_bn(const bignumber &value) {
     auto size = bin.size();
     if (false == bin.empty()) {
         _vt.data.bstr = (unsigned char *)malloc(size + 1);
-        memcpy(_vt.data.bstr, &bin[0], size);
+        memcpy(_vt.data.bstr, bin.data(), size);
         _vt.size = size;
         _vt.flag = variant_flag_t::flag_free;
     }

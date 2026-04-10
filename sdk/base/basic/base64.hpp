@@ -35,9 +35,9 @@ namespace hotplace {
  * @example
  *          binary_t buffer;
  *          size_t size = 0;
- *          bse64_encode(source, source_size, &buffer[0], &size); // size in=0 out=56
+ *          bse64_encode(source, source_size, buffer.data(), &size); // size in=0 out=56
  *          buffer.resize(size);
- *          bse64_encode(source, source_size, &buffer[0], &size); // size in=56 out=56
+ *          bse64_encode(source, source_size, buffer.data(), &size); // size in=56 out=56
  *          buffer.resize(size);
  */
 return_t base64_encode(const byte_t* source, size_t source_size, byte_t* buffer, size_t* buffer_size, int encoding = encoding_t::encoding_base64);
@@ -89,9 +89,9 @@ std::string base64_encode(const std::string& source, int encoding = encoding_t::
  * @example
  *          binary_t buffer;
  *          size_t size = 0;
- *          bse64_decode(source, source_size, &buffer[0], &size, encoding_t::encoding_base64url); // size in=0 out=42
+ *          bse64_decode(source, source_size, buffer.data(), &size, encoding_t::encoding_base64url); // size in=0 out=42
  *          buffer.resize(size);
- *          bse64_decode(source, source_size, &buffer[0], &size, encoding_t::encoding_base64url); // size out=42 out=40
+ *          bse64_decode(source, source_size, buffer.data(), &size, encoding_t::encoding_base64url); // size out=42 out=40
  *          buffer.resize(size);
  */
 return_t base64_decode(const byte_t* source, size_t source_size, byte_t* buffer, size_t* buffer_size, int encoding = encoding_t::encoding_base64);

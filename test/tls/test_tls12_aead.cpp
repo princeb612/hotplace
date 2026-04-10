@@ -75,7 +75,7 @@ void test_tls12_aead_aes128gcm() {
         binary_t ciphertext = std::move(base16_decode("1603030028f1b1d2e278b9f2345dd173bbf2f37cef1f1e54c5afbb79b6b0e2f803e99840943c28518b1db18fa8"));
         binary_t plaintext;
 
-        ret = protection.decrypt(&session, dir, &ciphertext[0], ciphertext.size(), 0, plaintext);
+        ret = protection.decrypt(&session, dir, ciphertext.data(), ciphertext.size(), 0, plaintext);
 
         _test_case.test(ret, __FUNCTION__, "decrypt");
     }
@@ -127,7 +127,7 @@ void test_tls12_aead_chacha20poly1305() {
         binary_t ciphertext = std::move(base16_decode("1603030020bef578abc85933503ccf800791fe3c78e2af2c60e7f44bc7ea3321c59df90236"));
         binary_t plaintext;
 
-        ret = protection.decrypt(&session, from_client, &ciphertext[0], ciphertext.size(), 0, plaintext);
+        ret = protection.decrypt(&session, from_client, ciphertext.data(), ciphertext.size(), 0, plaintext);
 
         constexpr char expect[] = "1400000c06d57e2441096bd4dd68343f";
         _test_case.assert(base16_decode_rfc(expect) == plaintext, __FUNCTION__, "client_finished");
@@ -142,7 +142,7 @@ void test_tls12_aead_chacha20poly1305() {
         binary_t ciphertext = std::move(base16_decode("1603030020fc964259c21bce2a8575b5a8cea0c571ec99dd7347b4152a1c2ef7c37d345e64"));
         binary_t plaintext;
 
-        ret = protection.decrypt(&session, from_server, &ciphertext[0], ciphertext.size(), 0, plaintext);
+        ret = protection.decrypt(&session, from_server, ciphertext.data(), ciphertext.size(), 0, plaintext);
 
         constexpr char expect[] = "1400000c1416a0981f02d6cd6b0b84b1";
         _test_case.assert(base16_decode_rfc(expect) == plaintext, __FUNCTION__, "server_finished");

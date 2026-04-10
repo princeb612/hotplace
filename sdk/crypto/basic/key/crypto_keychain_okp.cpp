@@ -86,7 +86,7 @@ return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const keyde
 }
 
 return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& d, const keydesc& desc) {
-    return add_okp(cryptokey, nid, x.empty() ? nullptr : &x[0], x.size(), d.empty() ? nullptr : &d[0], d.size(), desc);
+    return add_okp(cryptokey, nid, x.data(), x.size(), d.data(), d.size(), desc);
 }
 
 return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const byte_t* x, size_t pubsize, const byte_t* d, size_t privsize, const keydesc& desc) {

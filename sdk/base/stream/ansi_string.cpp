@@ -15,19 +15,19 @@
 
 namespace hotplace {
 
-ansi_string::ansi_string() {
+ansi_string::ansi_string() : _handle(nullptr) {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
     _bio.open(&_handle, allocsize, sizeof(char), bufferio_context_flag_t::memzero_free);
 }
 
-ansi_string::ansi_string(const char* data) {
+ansi_string::ansi_string(const char* data) : _handle(nullptr) {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
 
     _bio.open(&_handle, allocsize, sizeof(char), bufferio_context_flag_t::memzero_free);
     _bio.write(_handle, data, strlen(data));
 }
 
-ansi_string::ansi_string(const ansi_string& other) {
+ansi_string::ansi_string(const ansi_string& other) : _handle(nullptr) {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
 
     _bio.open(&_handle, allocsize, sizeof(char), bufferio_context_flag_t::memzero_free);
@@ -38,11 +38,9 @@ ansi_string::ansi_string(const ansi_string& other) {
     write((void*)data, size);
 }
 
-ansi_string::ansi_string(ansi_string&& other) {
-    size_t allocsize = stream_policy::get_instance()->get_allocsize();
-    _bio.open(&_handle, allocsize, sizeof(char), bufferio_context_flag_t::memzero_free);
-
+ansi_string::ansi_string(ansi_string&& other) : _handle(nullptr) {
     std::swap(_handle, other._handle);
+    other._handle = nullptr;
 }
 
 ansi_string::~ansi_string() { _bio.close(_handle); }

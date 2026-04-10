@@ -87,7 +87,7 @@ return_t dh_key_agreement(const EVP_PKEY* pkey, const EVP_PKEY* pkey_pub, binary
             __leave2_trace_openssl(ret);
         }
         secret.resize(size_secret);
-        ret_test = EVP_PKEY_derive(pkey_context, &secret[0], &size_secret);
+        ret_test = EVP_PKEY_derive(pkey_context, secret.data(), &size_secret);
         if (1 > ret_test) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
@@ -190,14 +190,14 @@ return_t concat_kdf(binary_t dh_secret, binary_t otherinfo, unsigned int keylen,
             hash.resize(hashlen);
 
             unsigned int alloca_size = hashlen;
-            if (1 != EVP_DigestInit_ex(ctx, dgst, nullptr) || 1 != EVP_DigestUpdate(ctx, &counter[0], counter.size()) ||
-                1 != EVP_DigestUpdate(ctx, &dh_secret[0], dh_secret.size()) || 1 != EVP_DigestUpdate(ctx, &otherinfo[0], otherinfo.size()) ||
-                1 != EVP_DigestFinal_ex(ctx, &hash[0], &alloca_size)) {
+            if (1 != EVP_DigestInit_ex(ctx, dgst, nullptr) || 1 != EVP_DigestUpdate(ctx, counter.data(), counter.size()) ||
+                1 != EVP_DigestUpdate(ctx, dh_secret.data(), dh_secret.size()) || 1 != EVP_DigestUpdate(ctx, otherinfo.data(), otherinfo.size()) ||
+                1 != EVP_DigestFinal_ex(ctx, hash.data(), &alloca_size)) {
                 ret = errorcode_t::internal_error;
                 break;
             }
 
-            memcpy(&derived[offset], &hash[0], std::min(hashlen, amt));
+            memcpy(&derived[offset], hash.data(), std::min(hashlen, amt));
             offset += hashlen;
             amt -= hashlen;
         }

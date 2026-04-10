@@ -27,6 +27,17 @@ static const uint32 base1e9 = 1000000000;    // printf-friendly (setw(9) << limb
 
 bignumber::bignumber() { set(0); }
 
+bignumber::bignumber(const bignumber &other) {
+    _v = other._v;
+    _sign = other._sign;
+}
+
+bignumber::bignumber(bignumber &&other) {
+    _v = std::move(other._v);
+    _sign = other._sign;
+    other._sign = 1;
+}
+
 bignumber::bignumber(int8 value) { set(value); }
 
 bignumber::bignumber(uint8 value) { setu(value); }
@@ -48,17 +59,6 @@ bignumber::bignumber(int128 value) { set(value); }
 
 bignumber::bignumber(uint128 value) { setu(value); }
 #endif
-
-bignumber::bignumber(const bignumber &other) {
-    _v = other._v;
-    _sign = other._sign;
-}
-
-bignumber::bignumber(bignumber &&other) {
-    _v = std::move(other._v);
-    _sign = other._sign;
-    other._sign = 1;
-}
 
 bignumber::bignumber(const byte_t *p, size_t n) { set(p, n); }
 
@@ -235,7 +235,7 @@ bignumber &bignumber::set(const byte_t *p, size_t n) {
             }
         }
         while (false == bin.empty()) {
-            uint32 t = hton32(*(uint32 *)&bin[0]);
+            uint32 t = hton32(*(uint32 *)bin.data());
             _v.insert(_v.begin(), t);
             bin.erase(bin.begin(), bin.begin() + 4);
         }
@@ -260,7 +260,7 @@ bignumber &bignumber::sethex(const binary_t &base16hexstream) {
             }
         }
         while (false == bin.empty()) {
-            uint32 t = hton32(*(uint32 *)&bin[0]);
+            uint32 t = hton32(*(uint32 *)bin.data());
             _v.insert(_v.begin(), t);
             bin.erase(bin.begin(), bin.begin() + 4);
         }
@@ -289,7 +289,7 @@ bignumber &bignumber::setstring(const char *value) {
                     }
                 }
                 while (false == bin.empty()) {
-                    uint32 t = hton32(*(uint32 *)&bin[0]);
+                    uint32 t = hton32(*(uint32 *)bin.data());
                     _v.insert(_v.begin(), t);
                     bin.erase(bin.begin(), bin.begin() + 4);
                 }

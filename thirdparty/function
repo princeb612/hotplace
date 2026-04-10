@@ -52,12 +52,14 @@ function inflate ()
 function build_openssl ()
 {
     if [ ${base} = "msvc" ]; then
-        echo install perl (strawberry)
-        echo run cmd
-        echo - "c:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars64.bat"
-        echo - perl Configure VC-WIN64A --prefix="${install_dir}" --with-rand-seed=os no-egd -d shared
-        echo - nmake
-        echo - nmake install
+        echo 'install Visual Studio Community (latest free version https://visualstudio.microsoft.com/ko/vs/community/)'
+        echo 'install Perl for MS Windows (https://strawberryperl.com/)'
+        echo 'run cmd'
+        echo '> cd "'$(cygpath -w $(pwd))'"'
+        echo '> "c:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars64.bat"'
+        echo '> perl Configure VC-WIN64A --prefix="'$(cygpath -w ${install_dir})'" --with-rand-seed=os no-egd -d shared'
+        echo '> nmake'
+        echo '> nmake install_sw install_ssldirs'
         return 0
     fi
 

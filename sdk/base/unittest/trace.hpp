@@ -95,8 +95,8 @@ enum trace_event_net_t {
  *          set_trace_debug(handler);
  */
 void set_trace_debug(std::function<void(trace_category_t category, uint32 event, stream_t* s)> f);
-void trace_debug_event(trace_category_t category, uint32 event, stream_t* s);
-void trace_debug_event(trace_category_t category, uint32 event, const char* fmt, ...);
+void trace_debug_event_stream(trace_category_t category, uint32 event, stream_t* s);
+void trace_debug_event_printf(trace_category_t category, uint32 event, const char* fmt, ...);
 void trace_debug_event(trace_category_t category, uint32 event, std::function<void(basic_stream& bs)> f);
 void trace_debug_filter(trace_category_t category, bool filter);
 bool trace_debug_filtered(trace_category_t category);

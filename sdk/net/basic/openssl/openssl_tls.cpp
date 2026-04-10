@@ -799,14 +799,14 @@ return_t openssl_tls::send(socket_context_t* handle, int mode, const char* data,
             std::vector<char> buf;
             buf.resize(written);
 
-            ret_read = BIO_read(wbio, &buf[0], buf.size());
+            ret_read = BIO_read(wbio, buf.data(), buf.size());
             if (ret_read < 1) {
                 ret = get_opensslerror(ret_read);
                 __leave2; /* too many traces here */
             }
 
             if (tls_io_flag_t::send_socket_send & mode) {
-                ::send(handle->fd, &buf[0], ret_read, 0);
+                ::send(handle->fd, buf.data(), ret_read, 0);
             }
         }
     }
@@ -849,14 +849,14 @@ return_t openssl_tls::sendto(socket_context_t* handle, int mode, const char* dat
             std::vector<char> buf;
             buf.resize(written);
 
-            ret_read = BIO_read(wbio, &buf[0], buf.size());
+            ret_read = BIO_read(wbio, buf.data(), buf.size());
             if (ret_read < 1) {
                 ret = get_opensslerror(ret_read);
                 __leave2; /* too many traces here */
             }
 
             if (tls_io_flag_t::send_socket_send & mode) {
-                ::sendto(handle->fd, &buf[0], ret_read, 0, addr, addrlen);
+                ::sendto(handle->fd, buf.data(), ret_read, 0, addr, addrlen);
             }
         }
     }

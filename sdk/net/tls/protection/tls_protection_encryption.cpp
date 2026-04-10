@@ -66,7 +66,7 @@ return_t tls_protection::build_tls12_aad_from_record(tls_session *session, binar
         };
         pl.set_condition(constexpr_record_version, lambda_check_dtls);
         size_t apos = 0;
-        pl.read(&record_header[0], record_header.size(), apos);
+        pl.read(record_header.data(), record_header.size(), apos);
 
         content_type = pl.t_value_of<uint8>(constexpr_content_type);
         record_version = pl.t_value_of<uint16>(constexpr_record_version);
@@ -656,7 +656,7 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
             record_no = session->get_recordno(dir, true);
         }
         binary_append(aad, uint64(record_no), hton64);  // sequence
-        binary_append(aad, &additional[0], 3);          // rechdr (content_type, version)
+        binary_append(aad, additional.data(), 3);       // rechdr (content_type, version)
         size_t plainsize = 0;
 
         crypto_cbc_hmac cbchmac;

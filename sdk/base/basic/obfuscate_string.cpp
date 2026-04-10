@@ -42,7 +42,7 @@ obfuscate_string& obfuscate_string::assign(const char* source, size_t size) {
         _contents.resize(size);
 
         byte_t* psrc = (byte_t*)source;
-        byte_t* pdest = &_contents[0];
+        byte_t* pdest = _contents.data();
         while (size--) {
             *pdest++ = (*psrc++) + _factor;
         }
@@ -191,7 +191,7 @@ void obfuscate_string::startup() {
 
 void obfuscate_string::cleanup() {
     if (false == _contents.empty()) {
-        memset(&_contents[0], 0, _contents.size());
+        memset(_contents.data(), 0, _contents.size());
     }
 }
 

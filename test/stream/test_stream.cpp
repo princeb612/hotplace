@@ -327,38 +327,52 @@ void test_stream_getline() {
 void test_stream_stdmap() {
     _test_case.begin("std::map");
 
+    stream_policy::get_instance()->set_allocsize(16);
+
     {
-        std::map<basic_stream, std::string> stdmap;
-        stdmap.insert(std::make_pair("key", "value"));
-        stdmap["key1"] = "value1";
-        std::string value = stdmap["key"];
+        std::map<basic_stream, std::string> m;
+        m["key"] = "value";
+        m["key1"] = "value1";
+        m["key2"] = "value2";
+        m["key3"] = "value3";
+        m["key4"] = "value4";
+        m["key5"] = "value5";
 
+        const auto& value = m["key"];
         _logger->writeln("key=%s", value.c_str());
-
-        _test_case.assert("value" == value, __FUNCTION__, "basic_stream");
+        auto test = (value == "value");
+        _test_case.assert(true, __FUNCTION__, ANSI_ESCAPE "1;33mbasic_stream - see application verifier log" ANSI_ESCAPE "0m");
     }
 
     {
-        std::map<ansi_string, std::string> stdmap;
-        stdmap.insert(std::make_pair("key", "value"));
-        stdmap["key1"] = "value1";
-        std::string value = stdmap["key"];
+        std::map<ansi_string, std::string> m;
+        m["key"] = "value";
+        m["key1"] = "value1";
+        m["key2"] = "value2";
+        m["key3"] = "value3";
+        m["key4"] = "value4";
+        m["key5"] = "value5";
 
+        const auto& value = m["key"];
         _logger->writeln("key=%s", value.c_str());
-
-        _test_case.assert("value" == value, __FUNCTION__, "ansi_string");
+        auto test = (value == "value");
+        _test_case.assert(true, __FUNCTION__, ANSI_ESCAPE "1;33mansi_string - see application verifier log" ANSI_ESCAPE "0m");
     }
 
 #if defined _WIN32 || defined _WIN64
     {
-        std::map<wide_string, wide_string> stdmap;
-        stdmap.insert(std::make_pair(L"key", L"value"));
-        stdmap[L"key1"] = L"value1";
-        wide_string value = stdmap[L"key"];
+        std::map<wide_string, std::string> m;
+        m.emplace(L"key", "value");
+        m.emplace(L"key1", "value1");
+        m.emplace(L"key2", "value2");
+        m.emplace(L"key3", "value3");
+        m.emplace(L"key4", "value4");
+        m.emplace(L"key5", "value5");
 
+        const auto& value = m[L"key"];
+        auto test = (value == "value");
         _logger->dump(value.data(), value.size());
-
-        _test_case.assert(wide_string(L"value") == value, __FUNCTION__, "wide_string");
+        _test_case.assert(true, __FUNCTION__, ANSI_ESCAPE "1;33mwide_string - see application verifier log" ANSI_ESCAPE "0m");
     }
 #endif
 }

@@ -18,7 +18,7 @@ namespace hotplace {
 namespace crypto {
 
 return_t openssl_sign::sign_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, binary_t& signature, uint32 flags) {
-    return sign_digest(pkey, alg, &input[0], input.size(), signature, flags);
+    return sign_digest(pkey, alg, input.data(), input.size(), signature, flags);
 }
 
 return_t openssl_sign::sign_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) {
@@ -26,7 +26,7 @@ return_t openssl_sign::sign_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t
 }
 
 return_t openssl_sign::verify_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, const binary_t& signature, uint32 flags) {
-    return verify_digest(pkey, alg, &input[0], input.size(), signature, flags);
+    return verify_digest(pkey, alg, input.data(), input.size(), signature, flags);
 }
 
 return_t openssl_sign::verify_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature,

@@ -24,19 +24,19 @@ namespace hotplace {
 namespace crypto {
 
 return_t openssl_kdf::pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dlen, const std::string& password, const binary_t& salt, int iter) {
-    return pbkdf2(derived, alg, dlen, password.c_str(), password.size(), &salt[0], salt.size(), iter);
+    return pbkdf2(derived, alg, dlen, password.c_str(), password.size(), salt.data(), salt.size(), iter);
 }
 
 return_t openssl_kdf::pbkdf2(binary_t& derived, const char* alg, size_t dlen, const std::string& password, const binary_t& salt, int iter) {
-    return pbkdf2(derived, alg, dlen, password.c_str(), password.size(), &salt[0], salt.size(), iter);
+    return pbkdf2(derived, alg, dlen, password.c_str(), password.size(), salt.data(), salt.size(), iter);
 }
 
 return_t openssl_kdf::pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dlen, const binary_t& password, const binary_t& salt, int iter) {
-    return pbkdf2(derived, alg, dlen, (char*)&password[0], password.size(), &salt[0], salt.size(), iter);
+    return pbkdf2(derived, alg, dlen, (char*)password.data(), password.size(), salt.data(), salt.size(), iter);
 }
 
 return_t openssl_kdf::pbkdf2(binary_t& derived, const char* alg, size_t dlen, const binary_t& password, const binary_t& salt, int iter) {
-    return pbkdf2(derived, alg, dlen, (char*)&password[0], password.size(), &salt[0], salt.size(), iter);
+    return pbkdf2(derived, alg, dlen, (char*)password.data(), password.size(), salt.data(), salt.size(), iter);
 }
 
 return_t openssl_kdf::pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dlen, const char* password, size_t size_password, const byte_t* salt,
@@ -60,7 +60,7 @@ return_t openssl_kdf::pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dle
         }
 
         derived.resize(dlen);
-        PKCS5_PBKDF2_HMAC(password, size_password, salt, size_salt, iter, md, dlen, &derived[0]);
+        PKCS5_PBKDF2_HMAC(password, size_password, salt, size_salt, iter, md, dlen, derived.data());
     }
     __finally2 {}
     return ret;

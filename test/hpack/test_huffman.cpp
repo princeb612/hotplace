@@ -41,7 +41,7 @@ void do_test_huffman_codes_routine(const char* sample, const char* expect) {
         // decode
         {
             basic_stream bs;
-            ret = huffcode->decode(&bs, &bin[0], bin.size());
+            ret = huffcode->decode(&bs, bin.data(), bin.size());
             if (option.verbose) {
                 test_case_notimecheck notimecheck(_test_case);
                 _logger->writeln("%s", bs.c_str());

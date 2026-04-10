@@ -55,7 +55,7 @@ class t_suffixtree {
     }
     virtual ~t_suffixtree() { delete _root; }
 
-    t_suffixtree<BT, T>& add(const std::vector<T>& pattern) { return add(&pattern[0], pattern.size()); }
+    t_suffixtree<BT, T>& add(const std::vector<T>& pattern) { return add(pattern.data(), pattern.size()); }
     t_suffixtree<BT, T>& add(const T* pattern, size_t size) {
         if (pattern) {
             for (size_t i = 0; i < size; ++i) {
@@ -70,7 +70,7 @@ class t_suffixtree {
         return *this;
     }
 
-    std::set<unsigned> search(const std::vector<T>& pattern) { return search(&pattern[0], pattern.size()); }
+    std::set<unsigned> search(const std::vector<T>& pattern) { return search(pattern.data(), pattern.size()); }
     std::set<unsigned> search(const T* pattern, size_t size) {
         std::set<unsigned> index;
         if (pattern) {
