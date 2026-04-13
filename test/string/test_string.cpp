@@ -393,7 +393,7 @@ void test_ansi_string() {
 
     {
         // application verifier - check memory access violation
-        std::map<ansi_string, std::string> m;
+        std::map<ansi_string, ansi_string> m;
         m.emplace("apple", "red");
         m.emplace("banana", "yellow");
         m.emplace("grape", "violet");
@@ -434,7 +434,7 @@ void test_wide_string() {
 
     {
         // application verifier - check memory access violation
-        std::map<wide_string, std::wstring> m;
+        std::map<wide_string, wide_string> m;
         m.emplace(L"apple", L"red");
         m.emplace(L"banana", L"yellow");
         m.emplace(L"grape", L"violet");

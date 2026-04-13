@@ -31,8 +31,8 @@
     * CBOR
 
 * details
-  * Revision 928
-    * [testing] valgrind, application verifier
+  * Revision 929
+    * [tested] valgrind, application verifier, sanitize
   * Revision 926
     * [tested] CBOR/COSE refactoring
   * Revision 907

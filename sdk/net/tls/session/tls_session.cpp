@@ -340,6 +340,15 @@ void tls_session::select_into_scheduled_extension(tls_extensions* extensions, tl
     }
 }
 
+void tls_session::clear_scheduled_extensions() {
+    critical_section_guard guard(_lock);
+    for (auto iter = _extension_list.begin(); iter != _extension_list.end(); iter++) {
+        auto ext = *iter;
+        ext->release();
+    }
+    _extension_list.clear();
+}
+
 void tls_session::push_alert(tls_direction_t dir, uint8 level, uint8 desc) { get_session_info(dir).push_alert(level, desc); }
 
 void tls_session::get_alert(tls_direction_t dir, std::function<void(uint8, uint8)> func, uint8 flags) { get_session_info(dir).get_alert(func, flags); }

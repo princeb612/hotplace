@@ -162,6 +162,7 @@ class tls_session {
     void schedule_extension(tls_extension* extension);
     void select_into_scheduled_extension(tls_extensions* extensions);
     void select_into_scheduled_extension(tls_extensions* extensions, tls_ext_type_t type);
+    void clear_scheduled_extensions();
 
     /**
      * If no common cryptographic parameters can be negotiated,

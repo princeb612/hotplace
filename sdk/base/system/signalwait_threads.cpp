@@ -61,6 +61,12 @@ return_t signalwait_threads::create() {
             if (errorcode_t::success == ret) {
                 threadid_t tid = thread_obj->gettid();
                 _container.insert(std::make_pair(tid, thread_rt));
+#if defined DEBUG
+                if (istraceable(trace_category_internal, loglevel_debug)) {
+                    trace_debug_event(trace_category_internal, trace_event_internal,
+                                      [&](basic_stream& dbs) -> void { dbs.println("thread.create tid %p %p", tid, thread_rt); });
+                }
+#endif
             }
         } else {
             ret = errorcode_t::max_reached;
@@ -94,11 +100,13 @@ void signalwait_threads::join_signaled() {
     if (errorcode_t::success == ret) {
         thread_info* thread_context = nullptr;
         thread* thread = nullptr;
+        threadid_t tid;
 
         {
             critical_section_guard guard(_lock);
             if (_readytojoin.size()) {
                 auto iter = _readytojoin.begin();
+                tid = iter->first;
                 thread_context = iter->second;
                 thread = thread_context->get_thread();
                 _readytojoin.erase(iter);
@@ -106,9 +114,21 @@ void signalwait_threads::join_signaled() {
         }
 
         if (thread) {
+#if defined DEBUG
+            if (istraceable(trace_category_internal, loglevel_debug)) {
+                trace_debug_event(trace_category_internal, trace_event_internal,
+                                  [&](basic_stream& dbs) -> void { dbs.println("thread.tryjoin tid %p %p", tid, thread_context); });
+            }
+#endif
             thread->join();
             delete thread;
             delete thread_context;
+#if defined DEBUG
+            if (istraceable(trace_category_internal, loglevel_debug)) {
+                trace_debug_event(trace_category_internal, trace_event_internal,
+                                  [&](basic_stream& dbs) -> void { dbs.println("thread.join    tid %p %p", tid, thread_context); });
+            }
+#endif
         }
     }
 }
@@ -126,7 +146,7 @@ size_t signalwait_threads::running() {
     size_t size = 0;
 
     critical_section_guard guard(_lock);
-    size = _container.size();
+    size = _readytojoin.size() + _container.size();
     return size;
 }
 

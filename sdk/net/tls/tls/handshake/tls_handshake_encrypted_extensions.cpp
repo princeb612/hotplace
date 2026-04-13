@@ -72,6 +72,8 @@ return_t tls_handshake_encrypted_extensions::do_read_body(tls_direction_t dir, c
                 pos += 2;  // len
                 ret = get_extensions().read(this, dir, stream, size, pos);
             }
+
+            session->clear_scheduled_extensions();  // release ALPN
         }
     }
     __finally2 {}
