@@ -97,7 +97,7 @@ static return_t enum_modules_toolhelp(HANDLE process_handle, TYPE_CALLBACK_HANDL
         GETPROCADDRESS(CREATETOOLHELP32SNAPSHOT, lpfnCreateToolhelp32Snapshot, kernel32_handle, NAMEOF_API_CREATETOOLHELP32SNAPSHOT, ret, __leave2);
         GETPROCADDRESS(MODULE32FIRST, lpfnModule32First, kernel32_handle, NAMEOF_API_MODULE32FIRST, ret, __leave2);
         GETPROCADDRESS(MODULE32NEXT, lpfnModule32Next, kernel32_handle, NAMEOF_API_MODULE32NEXT, ret, __leave2);
-
+#if 0
         /* TOKEN_ADJUST_SESSIONID should be removed in the Windows NT 4.0 */
         ret =
             open_process_token(&hToken, process_handle,
@@ -107,11 +107,11 @@ static return_t enum_modules_toolhelp(HANDLE process_handle, TYPE_CALLBACK_HANDL
             if (errorcode_t::success != ret) {
                 __leave2;
             }
-
+        
             adjust_privileges(hToken, SE_ASSIGNPRIMARYTOKEN_NAME, SE_PRIVILEGE_ENABLED, nullptr);
             adjust_privileges(hToken, SE_INCREASE_QUOTA_NAME, SE_PRIVILEGE_ENABLED, nullptr);
         }
-
+#endif
         hModuleSnap = lpfnCreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 0);
         if (INVALID_HANDLE_VALUE == hModuleSnap) {
             ret = GetLastError();
@@ -140,7 +140,7 @@ static return_t enum_modules_toolhelp(HANDLE process_handle, TYPE_CALLBACK_HANDL
         } while (lpfnModule32Next(hModuleSnap, &me));
     }
     __finally2 {
-        if (INVALID_HANDLE_VALUE != hModuleSnap) {
+        if (nullptr != hModuleSnap) {
             CloseHandle(hModuleSnap);
         }
         if (nullptr != hToken) {

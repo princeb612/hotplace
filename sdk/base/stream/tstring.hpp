@@ -24,7 +24,7 @@ namespace hotplace {
 class ansi_string : public stream_t {
    public:
     ansi_string();
-    ansi_string(const char* data);
+    ansi_string(const char* data, ...);
     ansi_string(const ansi_string& other);
     ansi_string(ansi_string&& other);
     virtual ~ansi_string();
@@ -154,7 +154,6 @@ class ansi_string : public stream_t {
 
    protected:
    private:
-    bufferio _bio;
     bufferio_context_t* _handle;
 };
 
@@ -162,7 +161,7 @@ class ansi_string : public stream_t {
 class wide_string : public stream_t {
    public:
     wide_string();
-    wide_string(const wchar_t* data);
+    wide_string(const wchar_t* data, ...);
     wide_string(const wide_string& other);
     wide_string(wide_string&& other);
     virtual ~wide_string();
@@ -285,7 +284,6 @@ class wide_string : public stream_t {
 
    protected:
    private:
-    bufferio _bio;
     bufferio_context_t* _handle;
 };
 #endif

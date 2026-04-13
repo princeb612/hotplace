@@ -69,13 +69,15 @@ class bufferio {
      * @param uint32 flags [INOPT] see bufferio_context_flag_t
      * @return error code (see error.hpp)
      */
-    return_t open(bufferio_context_t** handle, uint32 block_size = (1 << 10), byte_t pad_size = 0, uint32 flags = 0);
+    static return_t open(bufferio_context_t** handle, uint32 block_size = (1 << 10), byte_t pad_size = 0, uint32 flags = 0);
     /**
      * @brief close
      * @param bufferio_context_t* handle [IN] handle
      * @return error code (see error.hpp)
      */
-    return_t close(bufferio_context_t* handle);
+    static return_t close(bufferio_context_t* handle);
+
+    static return_t clone(bufferio_context_t* oldone, bufferio_context_t** newone);
 
     /**
      * @brief write
@@ -85,7 +87,7 @@ class bufferio {
      * @return error code (see error.hpp)
      * @remarks
      */
-    return_t write(bufferio_context_t* handle, const void* data, size_t data_size);
+    static return_t write(bufferio_context_t* handle, const void* data, size_t data_size);
     /**
      * @brief printf
      * @param bufferio_context_t* handle [IN] handle
@@ -93,7 +95,7 @@ class bufferio {
      * @return error code (see error.hpp)
      * @remarks
      */
-    return_t printf(bufferio_context_t* handle, const char* fmt, ...);
+    static return_t printf(bufferio_context_t* handle, const char* fmt, ...);
     /**
      * @brief vprintf
      * @param bufferio_context_t* handle [IN] handle
@@ -102,7 +104,7 @@ class bufferio {
      * @return error code (see error.hpp)
      * @remarks
      */
-    return_t vprintf(bufferio_context_t* handle, const char* fmt, va_list ap);
+    static return_t vprintf(bufferio_context_t* handle, const char* fmt, va_list ap);
 #if defined _WIN32 || defined _WIN64
     /**
      * @brief printf
@@ -111,7 +113,7 @@ class bufferio {
      * @return error code (see error.hpp)
      * @remarks
      */
-    return_t printf(bufferio_context_t* handle, const wchar_t* fmt, ...);
+    static return_t printf(bufferio_context_t* handle, const wchar_t* fmt, ...);
     /**
      * @brief vprintf
      * @param bufferio_context_t* handle [IN] handle
@@ -120,7 +122,7 @@ class bufferio {
      * @return error code (see error.hpp)
      * @remarks
      */
-    return_t vprintf(bufferio_context_t* handle, const wchar_t* szFormat, va_list ap);
+    static return_t vprintf(bufferio_context_t* handle, const wchar_t* szFormat, va_list ap);
 #endif
     /**
      * @brief clear
@@ -128,12 +130,12 @@ class bufferio {
      * @return error code (see error.hpp)
      * @remarks
      */
-    return_t clear(bufferio_context_t* handle);
+    static return_t clear(bufferio_context_t* handle);
     /**
      * @brief empty
      * @return bool
      */
-    bool empty(bufferio_context_t* handle);
+    static bool empty(bufferio_context_t* handle);
     /**
      * @brief occupied
      * @return bool
@@ -143,7 +145,7 @@ class bufferio {
      *      positive sentense
      *          if (bio.occupied(handle)) { do something }
      */
-    bool occupied(bufferio_context_t* handle);
+    static bool occupied(bufferio_context_t* handle);
     /**
      * @brief size only
      * @param bufferio_context_t* handle [IN] handle
@@ -151,7 +153,7 @@ class bufferio {
      * @return error code (see error.hpp)
      * @remarks
      */
-    return_t size(bufferio_context_t* handle, size_t* contents_size);
+    static return_t size(bufferio_context_t* handle, size_t* contents_size);
     /**
      * @brief data and size
      * @param bufferio_context_t* handle [IN] handle
@@ -160,7 +162,7 @@ class bufferio {
      * @param uint32 flag [IN] flag
      * @return error code (see error.hpp)
      */
-    return_t get(bufferio_context_t* handle, byte_t** contents, size_t* contents_size, uint32 flag = 0) const;
+    static return_t get(bufferio_context_t* handle, byte_t** contents, size_t* contents_size, uint32 flag = 0);
     /**
      * @brief compare
      * @param bufferio_context_t* handle [IN] handle
@@ -168,7 +170,7 @@ class bufferio {
      * @param size_t data_size [IN] size
      * @return
      */
-    bool compare(bufferio_context_t* handle, const void* data, size_t data_size);
+    static bool compare(bufferio_context_t* handle, const void* data, size_t data_size);
     /**
      * @brief cut
      * @param bufferio_context_t* handle [IN] handle
@@ -176,7 +178,7 @@ class bufferio {
      * @param uint32 length [IN] length
      * @return error code (see error.hpp)
      */
-    return_t cut(bufferio_context_t* handle, uint32 begin_pos, uint32 length);
+    static return_t cut(bufferio_context_t* handle, uint32 begin_pos, uint32 length);
     /**
      * @brief insert
      * @param bufferio_context_t* handle [IN] handle
@@ -185,7 +187,7 @@ class bufferio {
      * @param size_t      data_size   [in]
      * @return error code (see error.hpp)
      */
-    return_t insert(bufferio_context_t* handle, size_t begin, const void* data, size_t data_size);
+    static return_t insert(bufferio_context_t* handle, size_t begin, const void* data, size_t data_size);
     /**
      * @brief find_first_of, find_not_first_of
      * @param bufferio_context_t* handle [IN] handle
@@ -196,11 +198,11 @@ class bufferio {
      *              size_t find_position  = stream.find_first_of(stream_handle, find_text, 0);
      *              size_t ltrim_position = stream.find_first_of(stream_handle, isspace, 0);
      */
-    size_t find_first_of(bufferio_context_t* handle, const char* find, size_t offset = 0);
-    size_t find_first_of(bufferio_context_t* handle, int (*func)(int), size_t offset = 0);
+    static size_t find_first_of(bufferio_context_t* handle, const char* find, size_t offset = 0);
+    static size_t find_first_of(bufferio_context_t* handle, int (*func)(int), size_t offset = 0);
 #if defined _WIN32 || defined _WIN64
-    size_t wfind_first_of(bufferio_context_t* handle, const wchar_t* find, size_t offset = 0);
-    size_t wfind_first_of(bufferio_context_t* handle, int (*func)(wint_t), size_t offset = 0);
+    static size_t wfind_first_of(bufferio_context_t* handle, const wchar_t* find, size_t offset = 0);
+    static size_t wfind_first_of(bufferio_context_t* handle, int (*func)(wint_t), size_t offset = 0);
 #endif
     /**
      * @brief find_first_of, find_not_first_of
@@ -212,11 +214,11 @@ class bufferio {
      *      bio.printf (handle, "hello world");
      *      pos = bio.find_not_first_of (handle, "hello"); // 5
      */
-    size_t find_not_first_of(bufferio_context_t* handle, const char* find, size_t offset = 0);
-    size_t find_not_first_of(bufferio_context_t* handle, int (*func)(int), size_t offset = 0);
+    static size_t find_not_first_of(bufferio_context_t* handle, const char* find, size_t offset = 0);
+    static size_t find_not_first_of(bufferio_context_t* handle, int (*func)(int), size_t offset = 0);
 #if defined _WIN32 || defined _WIN64
-    size_t wfind_not_first_of(bufferio_context_t* handle, const wchar_t* find, size_t offset = 0);
-    size_t wfind_not_first_of(bufferio_context_t* handle, int (*func)(wint_t), size_t offset = 0);
+    static size_t wfind_not_first_of(bufferio_context_t* handle, const wchar_t* find, size_t offset = 0);
+    static size_t wfind_not_first_of(bufferio_context_t* handle, int (*func)(wint_t), size_t offset = 0);
 #endif
     /**
      * @brief find_last_of, find_not_last_of
@@ -227,11 +229,11 @@ class bufferio {
      *              size_t find_position  = stream.find_last_of(stream_handle, find_text, 0);
      *              size_t rtrim_position = stream.find_last_of(stream_handle, isspace, 0);
      */
-    size_t find_last_of(bufferio_context_t* handle, const char* find);
-    size_t find_last_of(bufferio_context_t* handle, int (*func)(int));
+    static size_t find_last_of(bufferio_context_t* handle, const char* find);
+    static size_t find_last_of(bufferio_context_t* handle, int (*func)(int));
 #if defined _WIN32 || defined _WIN64
-    size_t wfind_last_of(bufferio_context_t* handle, const wchar_t* find);
-    size_t wfind_last_of(bufferio_context_t* handle, int (*func)(wint_t));
+    static size_t wfind_last_of(bufferio_context_t* handle, const wchar_t* find);
+    static size_t wfind_last_of(bufferio_context_t* handle, int (*func)(wint_t));
 #endif
     /**
      * @brief find_last_of, find_not_last_of
@@ -239,11 +241,11 @@ class bufferio {
      * @param const char* find        [IN]
      * @param size_t      offset      [INOPT]
      */
-    size_t find_not_last_of(bufferio_context_t* handle, const char* find);
-    size_t find_not_last_of(bufferio_context_t* handle, int (*func)(int));
+    static size_t find_not_last_of(bufferio_context_t* handle, const char* find);
+    static size_t find_not_last_of(bufferio_context_t* handle, int (*func)(int));
 #if defined _WIN32 || defined _WIN64
-    size_t wfind_not_last_of(bufferio_context_t* handle, const wchar_t* find);
-    size_t wfind_not_last_of(bufferio_context_t* handle, int (*func)(wint_t));
+    static size_t wfind_not_last_of(bufferio_context_t* handle, const wchar_t* find);
+    static size_t wfind_not_last_of(bufferio_context_t* handle, int (*func)(wint_t));
 #endif
 
     /**
@@ -253,23 +255,23 @@ class bufferio {
      * @param size_t begin [inopt]
      * @param int flag [inopt] replace a 1st case
      */
-    return_t replace(bufferio_context_t* handle, const char* from, const char* to, size_t begin = 0, int flag = 0);
+    static return_t replace(bufferio_context_t* handle, const char* from, const char* to, size_t begin = 0, int flag = 0);
 #if defined _WIN32 || defined _WIN64
-    return_t wreplace(bufferio_context_t* handle, const wchar_t* from, const wchar_t* to, size_t begin = 0, int flag = 0);
+    static return_t wreplace(bufferio_context_t* handle, const wchar_t* from, const wchar_t* to, size_t begin = 0, int flag = 0);
 #endif
 
     /**
      * @brief lock
      */
-    return_t lock(bufferio_context_t* handle);
+    static return_t lock(bufferio_context_t* handle);
     /**
      * @brief unlock
      */
-    return_t unlock(bufferio_context_t* handle);
+    static return_t unlock(bufferio_context_t* handle);
     /**
      * @brief auto indent (text mode)
      */
-    void autoindent(bufferio_context_t* handle, uint8 indent);
+    static void autoindent(bufferio_context_t* handle, uint8 indent);
 
     /**
      * @brief in-class static const integral initializer
@@ -287,7 +289,7 @@ class bufferio {
      * @return
      * @remarks
      */
-    return_t extend(bufferio_context_t* handle, size_t alloc_size, bufferio_t** allocated_pointer, uint32 flag = 0) const;
+    static return_t extend(bufferio_context_t* handle, size_t alloc_size, bufferio_t** allocated_pointer, uint32 flag = 0);
 
     /**
      * @brief find
@@ -295,11 +297,11 @@ class bufferio {
      * @param mode [in] 1 find_first_of, 0 find_not_first_of
      * @param const char* find [in]
      */
-    size_t find_first_of_routine(bufferio_context_t* handle, int mode, const char* find, size_t offset = 0);
-    size_t find_first_of_routine(bufferio_context_t* handle, int mode, int (*func)(int), size_t offset = 0);
+    static size_t find_first_of_routine(bufferio_context_t* handle, int mode, const char* find, size_t offset = 0);
+    static size_t find_first_of_routine(bufferio_context_t* handle, int mode, int (*func)(int), size_t offset = 0);
 #if defined _WIN32 || defined _WIN64
-    size_t wfind_first_of_routine(bufferio_context_t* handle, int mode, const wchar_t* find, size_t offset = 0);
-    size_t wfind_first_of_routine(bufferio_context_t* handle, int mode, int (*func)(wint_t), size_t offset = 0);
+    static size_t wfind_first_of_routine(bufferio_context_t* handle, int mode, const wchar_t* find, size_t offset = 0);
+    static size_t wfind_first_of_routine(bufferio_context_t* handle, int mode, int (*func)(wint_t), size_t offset = 0);
 #endif
     /**
      * @brief find
@@ -307,11 +309,11 @@ class bufferio {
      * @param mode [in] 1 find_last_of, 0 find_not_last_of
      * @param const char* find [in]
      */
-    size_t find_last_of_routine(bufferio_context_t* handle, int mode, const char* find);
-    size_t find_last_of_routine(bufferio_context_t* handle, int mode, int (*func)(int));
+    static size_t find_last_of_routine(bufferio_context_t* handle, int mode, const char* find);
+    static size_t find_last_of_routine(bufferio_context_t* handle, int mode, int (*func)(int));
 #if defined _WIN32 || defined _WIN64
-    size_t wfind_last_of_routine(bufferio_context_t* handle, int mode, const wchar_t* find);
-    size_t wfind_last_of_routine(bufferio_context_t* handle, int mode, int (*func)(wint_t));
+    static size_t wfind_last_of_routine(bufferio_context_t* handle, int mode, const wchar_t* find);
+    static size_t wfind_last_of_routine(bufferio_context_t* handle, int mode, int (*func)(wint_t));
 #endif
 };
 

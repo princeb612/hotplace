@@ -26,7 +26,7 @@ void test_sprintf();
 void test_vprintf();
 void test_stream();
 void test_stream_getline();
-void test_stream_stdmap();
+void test_basic_stream();
 void test_vtprintf();
 void test_autoindent();
 void test_split();

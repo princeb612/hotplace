@@ -43,7 +43,7 @@ class basic_stream : public stream_t {
      * @param   const basic_stream& other [in]
      */
     basic_stream(const basic_stream& other);
-    basic_stream(basic_stream&& other);
+    basic_stream(basic_stream&& other) noexcept;
     /**
      * @brief   destructor
      */
@@ -127,7 +127,7 @@ class basic_stream : public stream_t {
      * @param   basic_stream obj [in]
      */
     basic_stream& operator=(const basic_stream& other);
-    basic_stream& operator=(basic_stream&& other);
+    basic_stream& operator=(basic_stream&& other) noexcept;
     basic_stream& operator=(const std::string& str);
     basic_stream& operator=(const char* str);
 
@@ -141,7 +141,8 @@ class basic_stream : public stream_t {
      * @param   basic_stream lhs [in]
      * @param   basic_stream rhs [in]
      */
-    static int compare(const basic_stream& lhs, const basic_stream& rhs);
+    int compare(const basic_stream& lhs, const basic_stream& rhs) const;
+    int compare(const basic_stream& lhs, const char* rhs) const;
     /**
      * @brief   operator <
      * @param   basic_stream other [in]
@@ -156,6 +157,9 @@ class basic_stream : public stream_t {
     bool operator==(const basic_stream& other) const;
     bool operator==(const char* other) const;
     bool operator==(const std::string& other) const;
+    bool operator!=(const basic_stream& other) const;
+    bool operator!=(const char* other) const;
+    bool operator!=(const std::string& other) const;
 
     friend std::string& operator+=(std::string& lhs, const basic_stream& rhs);
     friend std::string& operator<<(std::string& lhs, const basic_stream& rhs);
@@ -166,7 +170,6 @@ class basic_stream : public stream_t {
 
    protected:
    private:
-    bufferio _bio;
     bufferio_context_t* _handle;
 };
 

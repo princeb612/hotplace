@@ -39,6 +39,9 @@ class critical_section : public critical_section_t {
      */
     virtual void leave() { pthread_mutex_unlock(&_mutex_handle); }
 
+    critical_section(const critical_section&) = delete;
+    critical_section& operator=(const critical_section&) = delete;
+
    private:
     /**
      * @brief startup

@@ -285,42 +285,115 @@ void test_split() {
     _test_case.assert(true, __FUNCTION__, "split");
 }
 
+template <typename TYPE>
+void t_test_rule_of_5(const std::string& name) {
+    //  -fsanitize=address -fno-omit-frame-pointer -g
+
+    _logger->writeln(name);
+
+    {
+        TYPE a("hello");
+        TYPE b = a;  // copy ctor
+        _logger->writeln("a       = %s", a.c_str());
+        _logger->writeln("b(copy) = %s", b.c_str());
+    }
+    {
+        TYPE a("hello");
+        TYPE b;
+        b = a;  // copy assignment
+        _logger->writeln("a       = %s", a.c_str());
+        _logger->writeln("b(copy) = %s", b.c_str());
+    }
+    {
+        TYPE a("hello");
+        TYPE b = std::move(a);  // move ctor
+        _logger->writeln("a       = %s", a.c_str());
+        _logger->writeln("b(move) = %s", b.c_str());
+    }
+    {
+        TYPE a("hello");
+        TYPE b;
+        b = std::move(a);  // move assignment
+        _logger->writeln("a       = %s", a.c_str());
+        _logger->writeln("b(move) = %s", b.c_str());
+    }
+    {
+        // map insert (copy ctor)
+        std::map<int, TYPE> m;
+        TYPE t("Alice");
+        m.insert({1, t});
+    }
+    {
+        // operator[] (default + assignment)
+        std::map<int, TYPE> m;
+        m[1] = TYPE("Bob");
+    }
+    {
+        // emplace (move)
+        std::map<int, TYPE> m;
+        m.emplace(1, TYPE("Charlie"));
+    }
+    {
+        TYPE a("hello");
+        TYPE b;
+        a = a;  // self assignment (X)
+        _logger->writeln("a       = %s", a.c_str());
+        b = a;  // copy assignment
+        _logger->writeln("a       = %s", a.c_str());
+        _logger->writeln("b(copy) = %s", b.c_str());
+        b = std::move(a);  // move assignment
+        _logger->writeln("a       = %s", a.c_str());
+        _logger->writeln("b(move) = %s", b.c_str());
+    }
+    {
+        // vector (reallocation → move/copy explosion)
+        std::vector<TYPE> v;
+        for (int i = 0; i < 10; ++i) {
+            v.push_back(TYPE("Temp"));
+        }
+    }
+    _test_case.assert(true, __FUNCTION__, "see sanitize log");
+}
+
 void test_ansi_string() {
     _test_case.begin("ansi_string");
     _test_case.reset_time();
 
-    ansi_string astr;
-    astr << "sample "
+    t_test_rule_of_5<ansi_string>("ansi_string");
+
+    {
+        ansi_string astr;
+        astr << "sample "
 #if defined _WIN32 || defined _WIN64
-         << L"unicode "
+             << L"unicode "
 #endif
-         << (uint16)1 << " " << 1.1f;
+             << (uint16)1 << " " << 1.1f;
 
-    _logger->writeln("lhs %s", astr.c_str());
+        _logger->writeln("lhs %s", astr.c_str());
 
-    ansi_string astr2;
-    astr2 << "sample "
+        ansi_string astr2;
+        astr2 << "sample "
 #if defined _WIN32 || defined _WIN64
-          << "unicode "
+              << "unicode "
 #endif
-          << (uint16)1 << " " << 1.1f;
+              << (uint16)1 << " " << 1.1f;
 
-    _test_case.assert(astr == astr2, __FUNCTION__, "ansi_string operator==");
-    _test_case.assert(astr == astr2.c_str(), __FUNCTION__, "ansi_string operator==");
+        _test_case.assert(astr == astr2, __FUNCTION__, "ansi_string operator==");
+        _test_case.assert(astr == astr2.c_str(), __FUNCTION__, "ansi_string operator==");
 
-    astr2 << " dummy";
+        astr2 << " dummy";
 
-    _logger->writeln("rhs %s", astr2.c_str());
+        _logger->writeln("rhs %s", astr2.c_str());
 
-    _test_case.assert(astr != astr2, __FUNCTION__, "ansi_string operator!=");
-    _test_case.assert(astr != astr2.c_str(), __FUNCTION__, "ansi_string operator!=");
-    _test_case.assert(astr < astr2, __FUNCTION__, "ansi_string operator<");
-    _test_case.assert(astr2 > astr, __FUNCTION__, "ansi_string operator>");
+        _test_case.assert(astr != astr2, __FUNCTION__, "ansi_string operator!=");
+        _test_case.assert(astr != astr2.c_str(), __FUNCTION__, "ansi_string operator!=");
+        _test_case.assert(astr < astr2, __FUNCTION__, "ansi_string operator<");
+        _test_case.assert(astr2 > astr, __FUNCTION__, "ansi_string operator>");
+    }
 
-#if defined _WIN32 || defined _WIN64
     {
         // application verifier - check memory access violation
-        std::map<ansi_string, ansi_string> m;
+        std::map<ansi_string, std::string> m;
         m.emplace("apple", "red");
         m.emplace("banana", "yellow");
         m.emplace("grape", "violet");
@@ -333,7 +406,6 @@ void test_ansi_string() {
         }
         _test_case.assert(true, __FUNCTION__, ANSI_ESCAPE "1;33msee application verifier log" ANSI_ESCAPE "0m");
     }
-#endif
 }
 
 #if defined _WIN32 || defined _WIN64
@@ -341,27 +413,28 @@ void test_wide_string() {
     _test_case.begin("wide_string");
     _test_case.reset_time();
 
-    wide_string wstr;
-    wstr << L"sample " << "ansi " << (uint16)1 << " " << 1.1f;
-    _logger->hdump("lhs", wstr.data(), wstr.size(), 16, 3);
+    {
+        wide_string wstr;
+        wstr << L"sample " << "ansi " << (uint16)1 << " " << 1.1f;
+        _logger->hdump("lhs", wstr.data(), wstr.size(), 16, 3);
 
-    wide_string wstr2(L"sample ansi 1 1.100000");
-    _test_case.assert(wstr == wstr2, __FUNCTION__, "wide_string operator==");
-    _test_case.assert(wstr == wstr2.c_str(), __FUNCTION__, "wide_string operator==");
+        wide_string wstr2(L"sample ansi 1 1.100000");
+        _test_case.assert(wstr == wstr2, __FUNCTION__, "wide_string operator==");
+        _test_case.assert(wstr == wstr2.c_str(), __FUNCTION__, "wide_string operator==");
 
-    wstr2 << L" dummy";
+        wstr2 << L" dummy";
 
-    _logger->hdump("rhs", wstr2.data(), wstr2.size(), 16, 3);
+        _logger->hdump("rhs", wstr2.data(), wstr2.size(), 16, 3);
 
-    _test_case.assert(wstr != wstr2, __FUNCTION__, "wide_string operator!=");
-    _test_case.assert(wstr != wstr2.c_str(), __FUNCTION__, "wide_string operator!=");
-    _test_case.assert(wstr < wstr2, __FUNCTION__, "wide_string operator<");
-    _test_case.assert(wstr2 > wstr, __FUNCTION__, "wide_string operator>");
+        _test_case.assert(wstr != wstr2, __FUNCTION__, "wide_string operator!=");
+        _test_case.assert(wstr != wstr2.c_str(), __FUNCTION__, "wide_string operator!=");
+        _test_case.assert(wstr < wstr2, __FUNCTION__, "wide_string operator<");
+        _test_case.assert(wstr2 > wstr, __FUNCTION__, "wide_string operator>");
+    }
 
-#if defined _WIN32 || defined _WIN64
     {
         // application verifier - check memory access violation
-        std::map<wide_string, wide_string> m;
+        std::map<wide_string, std::wstring> m;
         m.emplace(L"apple", L"red");
         m.emplace(L"banana", L"yellow");
         m.emplace(L"grape", L"violet");
@@ -378,7 +451,6 @@ void test_wide_string() {
         }
         _test_case.assert(true, __FUNCTION__, ANSI_ESCAPE "1;33msee application verifier log" ANSI_ESCAPE "0m");
     }
-#endif
 }
 #endif
 

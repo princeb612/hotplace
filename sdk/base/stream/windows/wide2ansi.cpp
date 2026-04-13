@@ -31,28 +31,6 @@ return_t W2A(ansi_string& target, const wchar_t* source, uint32 codepage) {
     return ret;
 }
 
-return_t A2W(stream_t* stream, const char* source, uint32 codepage) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == stream || nullptr == source) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        std::vector<wchar_t> buffer;
-        int sizeNeed = MultiByteToWideChar(codepage, 0, source, -1, nullptr, 0);
-        if (sizeNeed > 0) {
-            buffer.resize(sizeNeed);  // including null pad
-            MultiByteToWideChar(codepage, 0, source, -1, buffer.data(), sizeNeed);
-            if (sizeNeed >= sizeof(wchar_t)) {
-                stream->write((void*)buffer.data(), (sizeNeed - 1) * sizeof(wchar_t));
-            }
-        }
-    }
-    __finally2 {}
-    return ret;
-}
-
 return_t W2A(stream_t* stream, const wchar_t* source, uint32 codepage) {
     return_t ret = errorcode_t::success;
     __try2 {

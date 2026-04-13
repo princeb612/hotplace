@@ -97,7 +97,59 @@ return_t bufferio::close(bufferio_context_t* handle) {
     return ret;
 }
 
-return_t bufferio::extend(bufferio_context_t* handle, size_t alloc_size, bufferio_t** allocated_pointer, uint32 flag) const {
+return_t bufferio::clone(bufferio_context_t* oldone, bufferio_context_t** newone) {
+    return_t ret = errorcode_t::success;
+    bufferio_context_t* context = nullptr;
+
+    __try2 {
+        if (nullptr == oldone || nullptr == newone) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        if (BUFFERIO_CONTEXT_SIGNATURE != oldone->signature) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+
+        critical_section_guard guard(oldone->bufferio_lock);
+
+        ret = open(&context, oldone->block_size, oldone->pad_size, oldone->flags);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        context->bufferio_size = oldone->bufferio_size;
+
+        for (const auto& item : oldone->bufferio_queue) {
+            byte_t* base_address = nullptr;
+            bufferio_t* block = nullptr;
+            ret = extend(context, item->limit, &block, 0);
+            if (errorcode_t::success != ret) {
+                break;
+            }
+            memcpy(block->base_address, item->base_address, item->limit);
+            block->offset = item->offset;
+            block->limit = item->limit;
+        }
+
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        *newone = context;
+    }
+    __finally2 {
+        if (errorcode_t::success != ret) {
+            if (context) {
+                close(context);
+            }
+        }
+    }
+    return ret;
+}
+
+return_t bufferio::extend(bufferio_context_t* handle, size_t alloc_size, bufferio_t** allocated_pointer, uint32 flag) {
     return_t ret = errorcode_t::success;
     void* memory_allocated = nullptr;
     bufferio_t* bufferio_newly_allocated = nullptr;
@@ -292,7 +344,7 @@ return_t bufferio::size(bufferio_context_t* handle, size_t* contents_size) {
     return ret;
 }
 
-return_t bufferio::get(bufferio_context_t* handle, byte_t** contents, size_t* contents_size, uint32 flags) const {
+return_t bufferio::get(bufferio_context_t* handle, byte_t** contents, size_t* contents_size, uint32 flags) {
     return_t ret = errorcode_t::success;
     size_t index = 0;
     size_t data_size = 0;

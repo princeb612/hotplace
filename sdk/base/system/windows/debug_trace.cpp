@@ -103,7 +103,7 @@ return_t enum_modules_handler(uint32 type, uint32 count, void* data[], CALLBACK_
     switch (type) {
         case enum_modules_t::enum_toolhelp: {
             MODULEENTRY32* entry = (MODULEENTRY32*)data[0];
-            context->mssdk.lpfnSymLoadModule(process_handle, 0, entry->szExePath, entry->szModule, (arch_t)entry->modBaseAddr, entry->modBaseSize);
+            context->mssdk.lpfnSymLoadModule(process_handle, 0, entry->szExePath, entry->szModule, (DWORD64)entry->modBaseAddr, entry->modBaseSize);
         } break;
         case enum_modules_t::enum_psapi: {
             HMODULE module_handle = (HMODULE)data[0];
@@ -133,12 +133,11 @@ return_t enum_modules_handler(uint32 type, uint32 count, void* data[], CALLBACK_
                 TCHAR buffer_module[1 << 8];
                 lpfnGetModuleBaseName(process_handle, module_handle, buffer_module, RTL_NUMBER_OF(buffer_module));
 
-                context->mssdk.lpfnSymLoadModule(process_handle, 0, buffer_image, buffer_module, (arch_t)module_info->lpBaseOfDll, module_info->SizeOfImage);
+                context->mssdk.lpfnSymLoadModule(process_handle, 0, buffer_image, buffer_module, (DWORD64)module_info->lpBaseOfDll, module_info->SizeOfImage);
             }
             __finally2 {}
         } break;
     }
-
     return ret;
 }
 
@@ -241,7 +240,7 @@ return_t debug_trace::open(debug_trace_context_t** handle) {
         options &= ~SYMOPT_UNDNAME;
         context->mssdk.lpfnSymSetOptions(options);
 
-        // enum_modules(GetCurrentProcess(), enum_modules_handler, context);  // application verifier
+        // enum_modules(GetCurrentProcess(), enum_modules_handler, context);  // [APVR]
 
         context->imagehlp_handle = imagehlp_handle;
         *handle = context;
@@ -403,8 +402,17 @@ return_t debug_trace::trace(debug_trace_context_t* handle, CONTEXT* rtlcontext, 
                     stream->printf(constexpr_moduleinfo, base_name(Module.ImageName).c_str(), Module.BaseOfImage, frame.AddrPC.Offset - Module.BaseOfImage);
                 }
 
+                /**
+                 * SymGetSymFromAddr how it works
+                 * - PDB (Program Database)
+                 * - PE
+                 *   - CodeView debug info (PDB pointer)
+                 *   - COFF symbol table
+                 */
                 bRet = context->mssdk.lpfnSymGetSymFromAddr(process_handle, frame.AddrPC.Offset, &dwOffsetFromSymbol, symbol);
                 if (TRUE == bRet) {
+                    // msvc  : COFF + CodeView + PDB
+                    // clang : PDB(-gcodeview)
                     context->mssdk.lpfnUnDecorateSymbolName((PCTSTR)symbol->Name, (PTSTR)buffer_undecorated_name, (1 << 10), UNDNAME_NAME_ONLY);
                     context->mssdk.lpfnUnDecorateSymbolName((PCTSTR)symbol->Name, (PTSTR)buffer_undecorated_fullname, (1 << 10), UNDNAME_COMPLETE);
                     stream->printf(constexpr_undeco, bModuleInfoRet ? Module.ModuleName : "", buffer_undecorated_name);
@@ -412,7 +420,8 @@ return_t debug_trace::trace(debug_trace_context_t* handle, CONTEXT* rtlcontext, 
                         stream->printf(constexpr_fileline, dwOffsetFromSymbol);
                     }
                 } else {
-                    // ...
+                    // gcc(MINGW64) : COFF + DWARF(-g)
+                    // clang        : DWARF(-g)
                 }
 
                 DWORD displace = 0;

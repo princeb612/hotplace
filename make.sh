@@ -22,13 +22,14 @@ COMMENTS
   ctest          - build and run ctest
   debug          - gcc debug build
   format         - clang-format (syn. cf)
-  leaks          - gdb
+  msvc           - Microsoft Visual Studio
   opt            - optimize
   oqs            - liboqs, oqs-provider feature
   pch            - precompiled header
   prof           - gprof
   odbc           - ODBC feature
   redist         - redistribute MSYS2(MINGW) binaries
+  sanitize       - -fsanitize=address
   shared         - shared build
   disable_static - disable static build
   verbose        - CMAKE_VERBOSE_MAKEFILE ON
@@ -83,6 +84,7 @@ CXXFLAGS=''
 SUPPORT_DEBUG=0
 SUPPORT_PCH=0
 builddir=build
+toolset=
 args=("$@")
 generator='Unix Makefiles'
 
@@ -98,10 +100,14 @@ if [ ${#args[@]} -ne 0 ]; then
             do_ctest=1
         elif [ $arg = 'debug' ]; then
             SUPPORT_DEBUG=1
+        elif [ $arg = 'disable_static' ]; then
+            export SUPPORT_STATIC=0
         elif [ $arg = 'format' ]; then
             do_clangformat=1
-        elif [ $arg = 'leaks' ]; then
-            CXXFLAGS="${CXXFLAGS} -fsanitize=leak"
+        elif [ $arg = 'msvc' ]; then
+            # Visual Studio Community
+            builddir=build_msvc
+            generator='Visual Studio 18 2026'
         elif [ $arg = 'odbc' ]; then
             export SUPPORT_ODBC=1
         elif [ $arg = 'opt' ]; then
@@ -114,8 +120,8 @@ if [ ${#args[@]} -ne 0 ]; then
             CXXFLAGS="${CXXFLAGS} -pg"
         elif [ $arg = 'redist' ]; then
             do_redist=1
-        elif [ $arg = 'disable_static' ]; then
-            export SUPPORT_STATIC=0
+        elif [ $arg = 'sanitize' ]; then
+            CXXFLAGS="${CXXFLAGS} -fsanitize=address -fno-omit-frame-pointer"
         elif [ $arg = 'shared' ]; then
             export SUPPORT_SHARED=1
         elif [ $arg = 'test' ]; then
@@ -129,10 +135,6 @@ if [ ${#args[@]} -ne 0 ]; then
             export CMAKE_CXX_COMPILER=${toolchain_dir}/bin/c++
         elif [ $arg = 'verbose' ]; then
             export CMAKE_VERBOSE_MAKEFILE=ON
-        elif [ $arg = 'msvc' ]; then
-            # Visual Studio Community
-            builddir=build_msvc
-            generator='Visual Studio 18 2026'
         fi
     done
 fi

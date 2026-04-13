@@ -24,6 +24,7 @@ class http_header {
    public:
     http_header();
     http_header(const http_header& object);
+    http_header(http_header&& object);
     virtual ~http_header();
 
     /**
@@ -107,6 +108,7 @@ class http_header {
     return_t get_headers(std::function<void(const std::string&, const std::string&)> f);
 
     http_header& operator=(const http_header& object);
+    http_header& operator=(http_header&& object);
 
     http_header& set_version(uint8 version);
     uint8 get_version();

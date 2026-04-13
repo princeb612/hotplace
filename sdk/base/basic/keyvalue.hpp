@@ -310,6 +310,15 @@ class t_stringkey_value {
         }
     }
 
+    t_stringkey_value<value_t> &operator=(const t_stringkey_value<value_t> &object) {
+        _keyvalues = object._keyvalues;
+        _order_map = object._order_map;
+        _reverse_order_map = object._reverse_order_map;
+        _flags = object._flags;
+        _order = object._order;
+        return *this;
+    }
+
     /**
      * @brief   operator <<
      * @param   t_stringkey_value& other [in]

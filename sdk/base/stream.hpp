@@ -27,6 +27,7 @@ enum stream_type_t {
 
 class stream_t {
    public:
+    stream_t() {}
     virtual ~stream_t() {}
 
     virtual byte_t *data() const = 0;

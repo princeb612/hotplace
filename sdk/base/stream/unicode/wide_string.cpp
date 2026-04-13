@@ -13,41 +13,49 @@
 
 namespace hotplace {
 
-wide_string::wide_string() : _handle(nullptr) {
+wide_string::wide_string() : stream_t(), _handle(nullptr) {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
-    _bio.open(&_handle, allocsize, sizeof(wchar_t), bufferio_context_flag_t::memzero_free);
+    auto test = bufferio::open(&_handle, allocsize, sizeof(wchar_t), bufferio_context_flag_t::memzero_free);
+    if (errorcode_t::success != test) {
+        throw std::runtime_error("wide_string.ctor");
+    }
 }
 
-wide_string::wide_string(const wchar_t* data) : _handle(nullptr) {
-    size_t allocsize = stream_policy::get_instance()->get_allocsize();
-
-    _bio.open(&_handle, allocsize, sizeof(wchar_t), bufferio_context_flag_t::memzero_free);
-    _bio.write(_handle, data, wcslen(data) * sizeof(wchar_t));
+wide_string::wide_string(const wchar_t* data, ...) : wide_string() {
+    // delegating constructor
+    va_list ap;
+    va_start(ap, data);
+    try {
+        bufferio::vprintf(_handle, data, ap);  // consume va_list just one time, so do not va_copy
+    } catch (...) {
+        va_end(ap);
+        throw;
+    }
+    va_end(ap);
 }
 
-wide_string::wide_string(const wide_string& other) : _handle(nullptr) {
-    size_t allocsize = stream_policy::get_instance()->get_allocsize();
-
-    _bio.open(&_handle, allocsize, sizeof(wchar_t), bufferio_context_flag_t::memzero_free);
-    byte_t* data = nullptr;
-    size_t size = 0;
-
-    _bio.get(other._handle, &data, &size);
-    write((void*)data, size);
+wide_string::wide_string(const wide_string& other) : stream_t(), _handle(nullptr) {
+    bufferio_context_t* newone = nullptr;
+    auto test = bufferio::clone(other._handle, &newone);
+    if (errorcode_t::success != test) {
+        throw std::runtime_error("basic_stream.ctor.copy");
+    }
+    _handle = newone;
 }
 
-wide_string::wide_string(wide_string&& other) : _handle(nullptr) {
-    std::swap(_handle, other._handle);
-    other._handle = nullptr;
-}
+wide_string::wide_string(wide_string&& other) : stream_t(), _handle(other._handle) { other._handle = nullptr; }
 
-wide_string::~wide_string() { _bio.close(_handle); }
+wide_string::~wide_string() {
+    if (_handle) {
+        bufferio::close(_handle);
+    }
+}
 
 byte_t* wide_string::data() const {
     byte_t* data = nullptr;
     size_t size = 0;
 
-    _bio.get(_handle, &data, &size);
+    bufferio::get(_handle, &data, &size);
     return data;
 }
 
@@ -55,26 +63,26 @@ uint64 wide_string::size() const {
     byte_t* data = nullptr;
     size_t size = 0;
 
-    _bio.get(_handle, &data, &size);
+    bufferio::get(_handle, &data, &size);
     return size;
 }
 
-return_t wide_string::write(const void* data, size_t size) { return _bio.write(_handle, data, size); }
+return_t wide_string::write(const void* data, size_t size) { return bufferio::write(_handle, data, size); }
 
 return_t wide_string::fill(size_t l, char c) {
     return_t ret = errorcode_t::success;
 
     while (l--) {
-        _bio.printf(_handle, L"%c", c);
+        bufferio::printf(_handle, L"%c", c);
     }
     return ret;
 }
 
-return_t wide_string::clear() { return _bio.clear(_handle); }
+return_t wide_string::clear() { return bufferio::clear(_handle); }
 
-bool wide_string::empty() { return _bio.empty(_handle); }
+bool wide_string::empty() { return bufferio::empty(_handle); }
 
-bool wide_string::occupied() { return _bio.occupied(_handle); }
+bool wide_string::occupied() { return bufferio::occupied(_handle); }
 
 return_t wide_string::printf(const char* buf, ...) {
     return_t ret = errorcode_t::success;
@@ -103,7 +111,7 @@ return_t wide_string::printf(const wchar_t* buf, ...) {
     va_list ap;
 
     va_start(ap, buf);
-    ret = _bio.vprintf(_handle, buf, ap);
+    ret = bufferio::vprintf(_handle, buf, ap);
     va_end(ap);
     return ret;
 }
@@ -111,7 +119,7 @@ return_t wide_string::printf(const wchar_t* buf, ...) {
 return_t wide_string::vprintf(const wchar_t* buf, va_list ap) {
     return_t ret = errorcode_t::success;
 
-    ret = _bio.vprintf(_handle, buf, ap);
+    ret = bufferio::vprintf(_handle, buf, ap);
     return ret;
 }
 #endif
@@ -120,24 +128,24 @@ const wchar_t* wide_string::c_str() const {
     wchar_t* data = nullptr;
     size_t size = 0;
 
-    _bio.get(_handle, (byte_t**)&data, &size);
+    bufferio::get(_handle, (byte_t**)&data, &size);
     return data ? const_cast<const wchar_t*>(data) : L"";
 }
 
-size_t wide_string::find(wchar_t* data) { return _bio.wfind_first_of(_handle, data); }
+size_t wide_string::find(wchar_t* data) { return bufferio::wfind_first_of(_handle, data); }
 
-return_t wide_string::replace(const wchar_t* from, const wchar_t* to, size_t begin, int flag) { return _bio.wreplace(_handle, from, to, begin, flag); }
+return_t wide_string::replace(const wchar_t* from, const wchar_t* to, size_t begin, int flag) { return bufferio::wreplace(_handle, from, to, begin, flag); }
 
 wide_string wide_string::substr(size_t begin, size_t len) {
     wide_string stream;
 
-    _bio.lock(_handle);
+    bufferio::lock(_handle);
     stream.printf(L"%.*s", len, c_str() + begin);
-    _bio.unlock(_handle);
+    bufferio::unlock(_handle);
     return stream;
 }
 
-return_t wide_string::cut(size_t begin, size_t len) { return _bio.cut(_handle, begin * sizeof(wchar_t), len * sizeof(wchar_t)); }
+return_t wide_string::cut(size_t begin, size_t len) { return bufferio::cut(_handle, begin * sizeof(wchar_t), len * sizeof(wchar_t)); }
 
 return_t wide_string::trim() {
     return_t ret = errorcode_t::success;
@@ -149,10 +157,10 @@ return_t wide_string::trim() {
 
 return_t wide_string::ltrim() {
     return_t ret = errorcode_t::success;
-    size_t begin = _bio.wfind_not_first_of(_handle, iswspace, 0);
+    size_t begin = bufferio::wfind_not_first_of(_handle, iswspace, 0);
 
     if ((size_t)-1 != begin) {
-        _bio.cut(_handle, 0, begin * sizeof(wchar_t));
+        bufferio::cut(_handle, 0, begin * sizeof(wchar_t));
     }
     return ret;
 }
@@ -160,22 +168,22 @@ return_t wide_string::ltrim() {
 return_t wide_string::rtrim() {
     return_t ret = errorcode_t::success;
     size_t len = 0;
-    size_t end = _bio.wfind_not_last_of(_handle, iswspace);
+    size_t end = bufferio::wfind_not_last_of(_handle, iswspace);
 
-    _bio.size(_handle, &len);
+    bufferio::size(_handle, &len);
     if ((size_t)-1 != end) {
-        _bio.cut(_handle, (end) * sizeof(wchar_t), len - (end * sizeof(wchar_t)));
+        bufferio::cut(_handle, (end) * sizeof(wchar_t), len - (end * sizeof(wchar_t)));
     }
     return ret;
 }
 
-size_t wide_string::find_first_of(const wchar_t* find, size_t offset) { return _bio.wfind_first_of(_handle, find, offset); }
+size_t wide_string::find_first_of(const wchar_t* find, size_t offset) { return bufferio::wfind_first_of(_handle, find, offset); }
 
-size_t wide_string::find_not_first_of(const wchar_t* find, size_t offset) { return _bio.wfind_not_first_of(_handle, find, offset); }
+size_t wide_string::find_not_first_of(const wchar_t* find, size_t offset) { return bufferio::wfind_not_first_of(_handle, find, offset); }
 
-size_t wide_string::find_last_of(const wchar_t* find) { return _bio.wfind_last_of(_handle, find); }
+size_t wide_string::find_last_of(const wchar_t* find) { return bufferio::wfind_last_of(_handle, find); }
 
-size_t wide_string::find_not_last_of(const wchar_t* find) { return _bio.wfind_not_last_of(_handle, find); }
+size_t wide_string::find_not_last_of(const wchar_t* find) { return bufferio::wfind_not_last_of(_handle, find); }
 
 // getline subfunction
 static int isnewline(int c) {
@@ -203,13 +211,13 @@ return_t wide_string::getline(size_t pos, size_t* brk, wide_string& line) {
         const wchar_t* p = (const wchar_t*)data();
         size_t datasize = size();
 
-        _bio.lock(_handle);
+        bufferio::lock(_handle);
         ret = scan(p, datasize, pos, brk, &isnewline);
         if (errorcode_t::success == ret) {
             line.write((void*)(p + pos), *brk - pos);
             line.trim();
         }
-        _bio.unlock(_handle);
+        bufferio::unlock(_handle);
     }
     __finally2 {}
 
@@ -283,14 +291,17 @@ wide_string& wide_string::operator=(double buf) {
 }
 
 wide_string& wide_string::operator=(const wide_string& other) {
-    clear();
-    write(other.data(), other.size());
+    if (this != &other) {
+        wide_string tmp(other);  // strong exception guarantee
+        std::swap(_handle, tmp._handle);
+    }
     return *this;
 }
 
 wide_string& wide_string::operator=(wide_string&& other) {
-    clear();
-    std::swap(_handle, other._handle);
+    if (this != &other) {
+        std::swap(_handle, other._handle);
+    }
     return *this;
 }
 
@@ -420,57 +431,17 @@ int wide_string::compare(const wide_string& other) { return wcscmp(c_str(), othe
 
 int wide_string::compare(const wide_string& lhs, const wide_string& rhs) { return wcscmp(lhs.c_str(), rhs.c_str()); }
 
-bool wide_string::operator<(const wide_string& other) const { return 0 > wcscmp(c_str(), other.c_str()); }
+bool wide_string::operator<(const wide_string& other) const { return wcscmp(c_str(), other.c_str()) < 0; }
 
-bool wide_string::operator>(const wide_string& other) const { return 0 < wcscmp(c_str(), other.c_str()); }
+bool wide_string::operator>(const wide_string& other) const { return wcscmp(c_str(), other.c_str()) > 0; }
 
-bool wide_string::operator==(const wide_string& other) const {
-    bool ret = false;
+bool wide_string::operator==(const wide_string& other) const { return wcscmp(c_str(), other.c_str()) == 0; }
 
-    if (size() == other.size()) {
-        int cmp = memcmp(data(), other.data(), size());
-        ret = (0 == cmp);
-    }
-    return ret;
-}
+bool wide_string::operator!=(const wide_string& other) const { return wcscmp(c_str(), other.c_str()) != 0; }
 
-bool wide_string::operator!=(const wide_string& other) const {
-    bool ret = true;
+bool wide_string::operator==(const wchar_t* other) { return wcscmp(c_str(), other) == 0; }
 
-    if (size() == other.size()) {
-        int cmp = memcmp(data(), other.data(), size());
-        ret = (0 != cmp);
-    }
-    return ret;
-}
-
-bool wide_string::operator==(const wchar_t* input) {
-    bool ret = false;
-
-    if (input) {
-        size_t len = wcslen(input);
-        len *= sizeof(wchar_t);
-        if (size() == len) {
-            int cmp = memcmp(data(), input, len);
-            ret = (0 == cmp);
-        }
-    }
-    return ret;
-}
-
-bool wide_string::operator!=(const wchar_t* input) {
-    bool ret = true;
-
-    if (input) {
-        size_t len = wcslen(input);
-        len *= sizeof(wchar_t);
-        if (size() == len) {
-            int cmp = memcmp(data(), input, len);
-            ret = (0 != cmp);
-        }
-    }
-    return ret;
-}
+bool wide_string::operator!=(const wchar_t* other) { return wcscmp(c_str(), other) != 0; }
 
 std::wstring& operator+=(std::wstring& lhs, const wide_string& rhs) {
     lhs += rhs.c_str();
@@ -490,7 +461,7 @@ std::ostream& operator<<(std::ostream& lhs, const wide_string& rhs) {
 }
 
 void wide_string::autoindent(uint8 indent) {
-    _bio.autoindent(_handle, indent);
+    bufferio::autoindent(_handle, indent);
     if (indent) {
         fill(indent, L' ');
     } else {

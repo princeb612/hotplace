@@ -18,11 +18,9 @@ namespace net {
 
 http_header::http_header() : _version(1) {}
 
-http_header::http_header(const http_header& object) {
-    _names = object._names;
-    _headers = object._headers;
-    _version = object._version;
-}
+http_header::http_header(const http_header& object) : _names(object._names), _headers(object._headers), _version(object._version) {}
+
+http_header::http_header(http_header&& object) : _names(std::move(object._names)), _headers(std::move(object._headers)), _version(object._version) {}
 
 http_header::~http_header() {}
 
@@ -190,6 +188,15 @@ http_header& http_header::operator=(const http_header& object) {
     critical_section_guard guard(_lock);
     _names = object._names;
     _headers = object._headers;
+    _version = object._version;
+    return *this;
+}
+
+http_header& http_header::operator=(http_header&& object) {
+    critical_section_guard guard(_lock);
+    _names = std::move(object._names);
+    _headers = std::move(object._headers);
+    _version = object._version;
     return *this;
 }
 

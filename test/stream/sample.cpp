@@ -50,6 +50,7 @@ int main(int argc, char **argv) {
         set_trace_level(option.trace_level);
     }
 
+    test_basic_stream();  // [APVR]
     test_consolecolor();
     test_dumpmemory();
     test_i128();
@@ -57,7 +58,6 @@ int main(int argc, char **argv) {
     test_vprintf();  // [APVR]
     test_stream();
     test_stream_getline();
-    test_stream_stdmap();  // [APVR]
     test_vtprintf();
     test_autoindent();
     test_split();

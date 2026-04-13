@@ -15,41 +15,49 @@
 
 namespace hotplace {
 
-ansi_string::ansi_string() : _handle(nullptr) {
+ansi_string::ansi_string() : stream_t(), _handle(nullptr) {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
-    _bio.open(&_handle, allocsize, sizeof(char), bufferio_context_flag_t::memzero_free);
+    auto test = bufferio::open(&_handle, allocsize, sizeof(char), bufferio_context_flag_t::memzero_free);
+    if (errorcode_t::success != test) {
+        throw std::runtime_error("ansi_string.ctor");
+    }
 }
 
-ansi_string::ansi_string(const char* data) : _handle(nullptr) {
-    size_t allocsize = stream_policy::get_instance()->get_allocsize();
-
-    _bio.open(&_handle, allocsize, sizeof(char), bufferio_context_flag_t::memzero_free);
-    _bio.write(_handle, data, strlen(data));
+ansi_string::ansi_string(const char* data, ...) : ansi_string() {
+    // delegating constructor
+    va_list ap;
+    va_start(ap, data);
+    try {
+        bufferio::vprintf(_handle, data, ap);  // consume va_list just one time, so do not va_copy
+    } catch (...) {
+        va_end(ap);
+        throw;
+    }
+    va_end(ap);
 }
 
-ansi_string::ansi_string(const ansi_string& other) : _handle(nullptr) {
-    size_t allocsize = stream_policy::get_instance()->get_allocsize();
-
-    _bio.open(&_handle, allocsize, sizeof(char), bufferio_context_flag_t::memzero_free);
-    byte_t* data = nullptr;
-    size_t size = 0;
-
-    _bio.get(other._handle, &data, &size);
-    write((void*)data, size);
+ansi_string::ansi_string(const ansi_string& other) : stream_t(), _handle(nullptr) {
+    bufferio_context_t* newone = nullptr;
+    auto test = bufferio::clone(other._handle, &newone);
+    if (errorcode_t::success != test) {
+        throw std::runtime_error("ansi_string.ctor.copy");
+    }
+    _handle = newone;
 }
 
-ansi_string::ansi_string(ansi_string&& other) : _handle(nullptr) {
-    std::swap(_handle, other._handle);
-    other._handle = nullptr;
-}
+ansi_string::ansi_string(ansi_string&& other) : stream_t(), _handle(other._handle) { other._handle = nullptr; }
 
-ansi_string::~ansi_string() { _bio.close(_handle); }
+ansi_string::~ansi_string() {
+    if (_handle) {
+        bufferio::close(_handle);
+    }
+}
 
 byte_t* ansi_string::data() const {
     byte_t* data = nullptr;
     size_t size = 0;
 
-    _bio.get(_handle, &data, &size);
+    bufferio::get(_handle, &data, &size);
     return data;
 }
 
@@ -57,33 +65,33 @@ uint64 ansi_string::size() const {
     byte_t* data = nullptr;
     size_t size = 0;
 
-    _bio.get(_handle, &data, &size);
+    bufferio::get(_handle, &data, &size);
     return size;
 }
 
-return_t ansi_string::write(const void* data, size_t size) { return _bio.write(_handle, data, size); }
+return_t ansi_string::write(const void* data, size_t size) { return bufferio::write(_handle, data, size); }
 
 return_t ansi_string::fill(size_t l, char c) {
     return_t ret = errorcode_t::success;
 
     while (l--) {
-        _bio.printf(_handle, "%c", c);
+        bufferio::printf(_handle, "%c", c);
     }
     return ret;
 }
 
-return_t ansi_string::clear() { return _bio.clear(_handle); }
+return_t ansi_string::clear() { return bufferio::clear(_handle); }
 
-bool ansi_string::empty() { return _bio.empty(_handle); }
+bool ansi_string::empty() { return bufferio::empty(_handle); }
 
-bool ansi_string::occupied() { return _bio.occupied(_handle); }
+bool ansi_string::occupied() { return bufferio::occupied(_handle); }
 
 return_t ansi_string::printf(const char* buf, ...) {
     return_t ret = errorcode_t::success;
     va_list ap;
 
     va_start(ap, buf);
-    ret = _bio.vprintf(_handle, buf, ap);
+    ret = bufferio::vprintf(_handle, buf, ap);
     va_end(ap);
     return ret;
 }
@@ -91,7 +99,7 @@ return_t ansi_string::printf(const char* buf, ...) {
 return_t ansi_string::vprintf(const char* buf, va_list ap) {
     return_t ret = errorcode_t::success;
 
-    ret = _bio.vprintf(_handle, buf, ap);
+    ret = bufferio::vprintf(_handle, buf, ap);
     return ret;
 }
 
@@ -128,24 +136,24 @@ const char* ansi_string::c_str() const {
     char* data = nullptr;
     size_t size = 0;
 
-    _bio.get(_handle, (byte_t**)&data, &size);
+    bufferio::get(_handle, (byte_t**)&data, &size);
     return data ? const_cast<const char*>(data) : "";
 }
 
-size_t ansi_string::find(char* data) { return _bio.find_first_of(_handle, data); }
+size_t ansi_string::find(char* data) { return bufferio::find_first_of(_handle, data); }
 
-return_t ansi_string::replace(const char* from, const char* to, size_t begin, int flag) { return _bio.replace(_handle, from, to, begin, flag); }
+return_t ansi_string::replace(const char* from, const char* to, size_t begin, int flag) { return bufferio::replace(_handle, from, to, begin, flag); }
 
 ansi_string ansi_string::substr(size_t begin, size_t len) {
     ansi_string stream;
 
-    _bio.lock(_handle);
+    bufferio::lock(_handle);
     stream.printf("%.*s", len, c_str() + begin);
-    _bio.unlock(_handle);
+    bufferio::unlock(_handle);
     return stream;
 }
 
-return_t ansi_string::cut(size_t begin, size_t len) { return _bio.cut(_handle, begin, len); }
+return_t ansi_string::cut(size_t begin, size_t len) { return bufferio::cut(_handle, begin, len); }
 
 return_t ansi_string::trim() {
     return_t ret = errorcode_t::success;
@@ -157,10 +165,10 @@ return_t ansi_string::trim() {
 
 return_t ansi_string::ltrim() {
     return_t ret = errorcode_t::success;
-    size_t begin = _bio.find_not_first_of(_handle, isspace, 0);
+    size_t begin = bufferio::find_not_first_of(_handle, isspace, 0);
 
     if ((size_t)-1 != begin) {
-        _bio.cut(_handle, 0, begin);
+        bufferio::cut(_handle, 0, begin);
     }
     return ret;
 }
@@ -168,22 +176,22 @@ return_t ansi_string::ltrim() {
 return_t ansi_string::rtrim() {
     return_t ret = errorcode_t::success;
     size_t len = 0;
-    size_t end = _bio.find_not_last_of(_handle, isspace);
+    size_t end = bufferio::find_not_last_of(_handle, isspace);
 
-    _bio.size(_handle, &len);
+    bufferio::size(_handle, &len);
     if ((size_t)-1 != end) {
-        _bio.cut(_handle, end, len - end);  // base
+        bufferio::cut(_handle, end, len - end);  // base
     }
     return ret;
 }
 
-size_t ansi_string::find_first_of(const char* find, size_t offset) { return _bio.find_first_of(_handle, find, offset); }
+size_t ansi_string::find_first_of(const char* find, size_t offset) { return bufferio::find_first_of(_handle, find, offset); }
 
-size_t ansi_string::find_not_first_of(const char* find, size_t offset) { return _bio.find_not_first_of(_handle, find, offset); }
+size_t ansi_string::find_not_first_of(const char* find, size_t offset) { return bufferio::find_not_first_of(_handle, find, offset); }
 
-size_t ansi_string::find_last_of(const char* find) { return _bio.find_last_of(_handle, find); }
+size_t ansi_string::find_last_of(const char* find) { return bufferio::find_last_of(_handle, find); }
 
-size_t ansi_string::find_not_last_of(const char* find) { return _bio.find_not_last_of(_handle, find); }
+size_t ansi_string::find_not_last_of(const char* find) { return bufferio::find_not_last_of(_handle, find); }
 
 static int isnewline(int c) {
     int ret_value = 0;
@@ -209,13 +217,13 @@ return_t ansi_string::getline(size_t pos, size_t* brk, ansi_string& line) {
 
         const char* p = (const char*)data();
 
-        _bio.lock(_handle);
+        bufferio::lock(_handle);
         ret = scan(p, size(), pos, brk, isnewline);
         if (errorcode_t::success == ret) {
             line.write((void*)(p + pos), *brk - pos);
             line.trim();
         }
-        _bio.unlock(_handle);
+        bufferio::unlock(_handle);
     }
     __finally2 {}
 
@@ -283,14 +291,17 @@ ansi_string& ansi_string::operator=(double buf) {
 }
 
 ansi_string& ansi_string::operator=(const ansi_string& other) {
-    clear();
-    write(other.data(), other.size());
+    if (this != &other) {
+        ansi_string tmp(other);  // strong exeption guarantee
+        std::swap(_handle, tmp._handle);
+    }
     return *this;
 }
 
 ansi_string& ansi_string::operator=(ansi_string&& other) {
-    clear();
-    std::swap(_handle, other._handle);
+    if (this != &other) {
+        std::swap(_handle, other._handle);
+    }
     return *this;
 }
 
@@ -428,55 +439,17 @@ int ansi_string::compare(const ansi_string& other) { return strcmp(c_str(), othe
 
 int ansi_string::compare(const ansi_string& lhs, const ansi_string& rhs) { return strcmp(lhs.c_str(), rhs.c_str()); }
 
-bool ansi_string::operator<(const ansi_string& other) const { return 0 > strcmp(c_str(), other.c_str()); }
+bool ansi_string::operator<(const ansi_string& other) const { return strcmp(c_str(), other.c_str()) < 0; }
 
-bool ansi_string::operator>(const ansi_string& other) const { return 0 < strcmp(c_str(), other.c_str()); }
+bool ansi_string::operator>(const ansi_string& other) const { return strcmp(c_str(), other.c_str()) > 0; }
 
-bool ansi_string::operator==(const ansi_string& other) const {
-    bool ret = false;
+bool ansi_string::operator==(const ansi_string& other) const { return strcmp(c_str(), other.c_str()) == 0; }
 
-    if (size() == other.size()) {
-        int cmp = memcmp(data(), other.data(), size());
-        ret = (0 == cmp);
-    }
-    return ret;
-}
+bool ansi_string::operator!=(const ansi_string& other) const { return strcmp(c_str(), other.c_str()) != 0; }
 
-bool ansi_string::operator!=(const ansi_string& other) const {
-    bool ret = true;
+bool ansi_string::operator==(const char* other) { return strcmp(c_str(), other) == 0; }
 
-    if (size() == other.size()) {
-        int cmp = memcmp(data(), other.data(), size());
-        ret = (0 != cmp);
-    }
-    return ret;
-}
-
-bool ansi_string::operator==(const char* input) {
-    bool ret = false;
-
-    if (input) {
-        size_t len = strlen(input);
-        if (size() == len) {
-            int cmp = memcmp(data(), input, len);
-            ret = (0 == cmp);
-        }
-    }
-    return ret;
-}
-
-bool ansi_string::operator!=(const char* input) {
-    bool ret = true;
-
-    if (input) {
-        size_t len = strlen(input);
-        if (size() == len) {
-            int cmp = memcmp(data(), input, len);
-            ret = (0 != cmp);
-        }
-    }
-    return ret;
-}
+bool ansi_string::operator!=(const char* other) { return strcmp(c_str(), other) != 0; }
 
 std::string& operator+=(std::string& lhs, const ansi_string& rhs) {
     lhs += rhs.c_str();
@@ -494,7 +467,7 @@ std::ostream& operator<<(std::ostream& lhs, const ansi_string& rhs) {
 }
 
 void ansi_string::autoindent(uint8 indent) {
-    _bio.autoindent(_handle, indent);
+    bufferio::autoindent(_handle, indent);
     if (indent) {
         fill(indent, ' ');
     } else {

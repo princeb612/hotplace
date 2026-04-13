@@ -38,6 +38,9 @@ class critical_section : public critical_section_t {
      */
     virtual void leave() { ::LeaveCriticalSection(&m_cs); }
 
+    critical_section(const critical_section&) = delete;
+    critical_section& operator=(const critical_section&) = delete;
+
    private:
     /**
      * @brief startup

@@ -19,43 +19,49 @@
 
 namespace hotplace {
 
-basic_stream::basic_stream() : _handle(nullptr) {
+basic_stream::basic_stream() : stream_t(), _handle(nullptr) {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
-    _bio.open(&_handle, allocsize, 1);
+    auto test = bufferio::open(&_handle, allocsize, 1);  // new _handle
+    if (errorcode_t::success != test) {
+        throw std::runtime_error("basic_stream.ctor");
+    }
 }
 
-basic_stream::basic_stream(const char* data, ...) : _handle(nullptr) {
-    size_t allocsize = stream_policy::get_instance()->get_allocsize();
+basic_stream::basic_stream(const char* data, ...) : basic_stream() {
+    // delegating constructor
     va_list ap;
     va_start(ap, data);
-    _bio.open(&_handle, allocsize, 1);
-    _bio.vprintf(_handle, data, ap);
+    try {
+        bufferio::vprintf(_handle, data, ap);  // consume va_list just one time, so do not va_copy
+    } catch (...) {
+        va_end(ap);
+        throw;
+    }
     va_end(ap);
 }
 
-basic_stream::basic_stream(const basic_stream& other) : _handle(nullptr) {
-    size_t allocsize = stream_policy::get_instance()->get_allocsize();
-
-    _bio.open(&_handle, allocsize, 1);
-
-    byte_t* data = nullptr;
-    size_t size = 0;
-    _bio.get(other._handle, &data, &size);
-    write((void*)data, size);
+basic_stream::basic_stream(const basic_stream& other) : stream_t(), _handle(nullptr) {
+    bufferio_context_t* newone = nullptr;
+    auto test = bufferio::clone(other._handle, &newone);
+    if (errorcode_t::success != test) {
+        throw std::runtime_error("basic_stream.ctor.copy");
+    }
+    _handle = newone;
 }
 
-basic_stream::basic_stream(basic_stream&& other) : _handle(nullptr) {
-    std::swap(_handle, other._handle);
-    other._handle = nullptr;
-}
+basic_stream::basic_stream(basic_stream&& other) noexcept : stream_t(), _handle(other._handle) { other._handle = nullptr; }
 
-basic_stream::~basic_stream() { _bio.close(_handle); }
+basic_stream::~basic_stream() {
+    if (_handle) {
+        bufferio::close(_handle);
+    }
+}
 
 const char* basic_stream::c_str() const {
     char* data = nullptr;
     size_t size = 0;
 
-    _bio.get(_handle, (byte_t**)&data, &size);
+    bufferio::get(_handle, (byte_t**)&data, &size);
     return data;
 }
 
@@ -67,7 +73,7 @@ byte_t* basic_stream::data() const {
     byte_t* data = nullptr;
     size_t size = 0;
 
-    _bio.get(_handle, &data, &size);
+    bufferio::get(_handle, &data, &size);
     return data;
 }
 
@@ -75,15 +81,15 @@ uint64 basic_stream::size() const {
     byte_t* data = nullptr;
     size_t size = 0;
 
-    _bio.get(_handle, &data, &size);
+    bufferio::get(_handle, &data, &size);
     return size;
 }
 
-return_t basic_stream::write(const void* data, size_t size) { return _bio.write(_handle, data, size); }
+return_t basic_stream::write(const void* data, size_t size) { return bufferio::write(_handle, data, size); }
 
-return_t basic_stream::cut(uint32 begin_pos, uint32 length) { return _bio.cut(_handle, begin_pos, length); }
+return_t basic_stream::cut(uint32 begin_pos, uint32 length) { return bufferio::cut(_handle, begin_pos, length); }
 
-return_t basic_stream::insert(size_t begin, const void* data, size_t data_size) { return _bio.insert(_handle, begin, data, data_size); }
+return_t basic_stream::insert(size_t begin, const void* data, size_t data_size) { return bufferio::insert(_handle, begin, data, data_size); }
 
 return_t basic_stream::fill(size_t l, char c) {
     return_t ret = errorcode_t::success;
@@ -92,7 +98,7 @@ return_t basic_stream::fill(size_t l, char c) {
         // do nothing
     } else if (l <= 16) {
         while (l--) {
-            _bio.printf(_handle, "%c", c);
+            bufferio::printf(_handle, "%c", c);
         }
     } else {
         const size_t chunk_size = 256;
@@ -101,7 +107,7 @@ return_t basic_stream::fill(size_t l, char c) {
 
         while (l && errorcode_t::success == ret) {
             size_t n = (l < chunk_size) ? l : chunk_size;
-            ret = _bio.write(_handle, buf, n);
+            ret = bufferio::write(_handle, buf, n);
             l -= n;
         }
     }
@@ -109,11 +115,11 @@ return_t basic_stream::fill(size_t l, char c) {
     return ret;
 }
 
-return_t basic_stream::clear() { return _bio.clear(_handle); }
+return_t basic_stream::clear() { return bufferio::clear(_handle); }
 
-bool basic_stream::empty() { return _bio.empty(_handle); }
+bool basic_stream::empty() { return bufferio::empty(_handle); }
 
-bool basic_stream::occupied() { return _bio.occupied(_handle); }
+bool basic_stream::occupied() { return bufferio::occupied(_handle); }
 
 return_t basic_stream::printf(const char* buf, ...) {
     return_t ret = errorcode_t::success;
@@ -126,14 +132,14 @@ return_t basic_stream::printf(const char* buf, ...) {
         va_list ap;
 
         va_start(ap, buf);
-        ret = _bio.vprintf(_handle, buf, ap);
+        ret = bufferio::vprintf(_handle, buf, ap);
         va_end(ap);
     }
     __finally2 {}
     return ret;
 }
 
-return_t basic_stream::vprintf(const char* buf, va_list ap) { return _bio.vprintf(_handle, buf, ap); }
+return_t basic_stream::vprintf(const char* buf, va_list ap) { return bufferio::vprintf(_handle, buf, ap); }
 
 #if defined _WIN32 || defined _WIN64
 return_t basic_stream::printf(const wchar_t* buf, ...) {
@@ -147,14 +153,14 @@ return_t basic_stream::printf(const wchar_t* buf, ...) {
         va_list ap;
 
         va_start(ap, buf);
-        ret = _bio.vprintf(_handle, buf, ap);
+        ret = bufferio::vprintf(_handle, buf, ap);
         va_end(ap);
     }
     __finally2 {}
     return ret;
 }
 
-return_t basic_stream::vprintf(const wchar_t* buf, va_list ap) { return _bio.vprintf(_handle, buf, ap); }
+return_t basic_stream::vprintf(const wchar_t* buf, va_list ap) { return bufferio::vprintf(_handle, buf, ap); }
 #endif
 
 return_t basic_stream::println(const char* buf, ...) {
@@ -168,10 +174,10 @@ return_t basic_stream::println(const char* buf, ...) {
         va_list ap;
 
         va_start(ap, buf);
-        ret = _bio.vprintf(_handle, buf, ap);
+        ret = bufferio::vprintf(_handle, buf, ap);
         va_end(ap);
 
-        _bio.printf(_handle, "\n");
+        bufferio::printf(_handle, "\n");
     }
     __finally2 {}
     return ret;
@@ -184,14 +190,17 @@ return_t basic_stream::vprintf(const char* fmt, valist ap) {
 }
 
 basic_stream& basic_stream::operator=(const basic_stream& other) {
-    clear();
-    write(other.data(), other.size());
+    if (this != &other) {
+        basic_stream tmp(other);  // strong exeption guarantee
+        std::swap(_handle, tmp._handle);
+    }
     return *this;
 }
 
-basic_stream& basic_stream::operator=(basic_stream&& other) {
-    clear();
-    std::swap(_handle, other._handle);
+basic_stream& basic_stream::operator=(basic_stream&& other) noexcept {
+    if (this != &other) {
+        std::swap(_handle, other._handle);
+    }
     return *this;
 }
 
@@ -298,37 +307,19 @@ basic_stream& basic_stream::operator<<(const bignumber& value) {
     return *this;
 }
 
-int basic_stream::compare(const basic_stream& other) { return compare(*this, other); }
+int basic_stream::compare(const basic_stream& other) { return compare(*this, other.c_str()); }
 
-int basic_stream::compare(const basic_stream& lhs, const basic_stream& rhs) {
+int basic_stream::compare(const basic_stream& lhs, const basic_stream& rhs) const { return compare(lhs, rhs.c_str()); }
+
+int basic_stream::compare(const basic_stream& lhs, const char* rhs) const {
     int ret = -1;
-    auto ldata = lhs.data();
-    auto lsize = lhs.size();
-    auto rdata = rhs.data();
-    auto rsize = rhs.size();
-    if (lsize == rsize) {
-        ret = memcmp(ldata, rdata, lsize);
-    } else {
-        ret = (lsize < rsize) ? -1 : 1;
-    }
-    return ret;
-}
-
-bool basic_stream::operator<(const basic_stream& other) const { return 0 > compare(*this, other); }
-
-bool basic_stream::operator>(const basic_stream& other) const { return 0 < compare(*this, other); }
-
-bool basic_stream::operator==(const basic_stream& other) const { return 0 == compare(*this, other); }
-
-bool basic_stream::operator==(const char* other) const {
-    bool ret = false;
-    if (other) {
-        auto ldata = data();
-        auto lsize = size();
-        auto rdata = other;
-        auto rsize = strlen(other);
+    if (rhs) {
+        auto ldata = lhs.data();
+        auto lsize = lhs.size();
+        auto rdata = rhs;
+        auto rsize = strlen(rhs);
         if (lsize == rsize) {
-            ret = (0 == memcmp(ldata, rdata, lsize));
+            ret = memcmp(ldata, rdata, lsize);  // string and binary
         } else {
             ret = (lsize < rsize) ? -1 : 1;
         }
@@ -336,25 +327,30 @@ bool basic_stream::operator==(const char* other) const {
     return ret;
 }
 
-bool basic_stream::operator==(const std::string& other) const { return *this == other.c_str(); }
+bool basic_stream::operator<(const basic_stream& other) const { return compare(*this, other) < 0; }
 
-std::string& operator+=(std::string& lhs, const basic_stream& rhs) {
-    lhs += rhs.c_str();
-    return lhs;
-}
+bool basic_stream::operator>(const basic_stream& other) const { return compare(*this, other) > 0; }
 
-std::string& operator<<(std::string& lhs, const basic_stream& rhs) {
-    lhs += rhs.c_str();
-    return lhs;
-}
+bool basic_stream::operator==(const basic_stream& other) const { return compare(*this, other) == 0; }
 
-std::ostream& operator<<(std::ostream& lhs, const basic_stream& rhs) {
-    lhs << rhs.c_str();
-    return lhs;
-}
+bool basic_stream::operator==(const char* other) const { return compare(*this, other) == 0; }
+
+bool basic_stream::operator==(const std::string& other) const { return compare(*this, other.c_str()) == 0; }
+
+bool basic_stream::operator!=(const basic_stream& other) const { return compare(*this, other) != 0; }
+
+bool basic_stream::operator!=(const char* other) const { return compare(*this, other) != 0; }
+
+bool basic_stream::operator!=(const std::string& other) const { return compare(*this, other.c_str()) != 0; }
+
+std::string& operator+=(std::string& lhs, const basic_stream& rhs) { return lhs += rhs.c_str(); }
+
+std::string& operator<<(std::string& lhs, const basic_stream& rhs) { return lhs += rhs.c_str(); }
+
+std::ostream& operator<<(std::ostream& lhs, const basic_stream& rhs) { return lhs << rhs.c_str(); }
 
 void basic_stream::autoindent(uint8 indent) {
-    _bio.autoindent(_handle, indent);
+    bufferio::autoindent(_handle, indent);
     if (indent) {
         fill(indent, ' ');
     } else {

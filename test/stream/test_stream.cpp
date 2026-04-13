@@ -324,57 +324,80 @@ void test_stream_getline() {
     _test_case.assert(4 == l, __FUNCTION__, "getline");
 }
 
-void test_stream_stdmap() {
-    _test_case.begin("std::map");
+template <typename TYPE>
+void t_test_rule_of_5(const std::string& name) {
+    //  -fsanitize=address -fno-omit-frame-pointer -g
 
-    stream_policy::get_instance()->set_allocsize(16);
-
-    {
-        std::map<basic_stream, std::string> m;
-        m["key"] = "value";
-        m["key1"] = "value1";
-        m["key2"] = "value2";
-        m["key3"] = "value3";
-        m["key4"] = "value4";
-        m["key5"] = "value5";
-
-        const auto& value = m["key"];
-        _logger->writeln("key=%s", value.c_str());
-        auto test = (value == "value");
-        _test_case.assert(true, __FUNCTION__, ANSI_ESCAPE "1;33mbasic_stream - see application verifier log" ANSI_ESCAPE "0m");
-    }
+    _logger->writeln(name);
 
     {
-        std::map<ansi_string, std::string> m;
-        m["key"] = "value";
-        m["key1"] = "value1";
-        m["key2"] = "value2";
-        m["key3"] = "value3";
-        m["key4"] = "value4";
-        m["key5"] = "value5";
-
-        const auto& value = m["key"];
-        _logger->writeln("key=%s", value.c_str());
-        auto test = (value == "value");
-        _test_case.assert(true, __FUNCTION__, ANSI_ESCAPE "1;33mansi_string - see application verifier log" ANSI_ESCAPE "0m");
+        TYPE a("hello");
+        TYPE b = a;  // copy ctor
+        _logger->writeln("a       = %s", a.c_str());
+        _logger->writeln("b(copy) = %s", b.c_str());
     }
-
-#if defined _WIN32 || defined _WIN64
     {
-        std::map<wide_string, std::string> m;
-        m.emplace(L"key", "value");
-        m.emplace(L"key1", "value1");
-        m.emplace(L"key2", "value2");
-        m.emplace(L"key3", "value3");
-        m.emplace(L"key4", "value4");
-        m.emplace(L"key5", "value5");
-
-        const auto& value = m[L"key"];
-        auto test = (value == "value");
-        _logger->dump(value.data(), value.size());
-        _test_case.assert(true, __FUNCTION__, ANSI_ESCAPE "1;33mwide_string - see application verifier log" ANSI_ESCAPE "0m");
+        TYPE a("hello");
+        TYPE b;
+        b = a;  // copy assignment
+        _logger->writeln("a       = %s", a.c_str());
+        _logger->writeln("b(copy) = %s", b.c_str());
     }
-#endif
+    {
+        TYPE a("hello");
+        TYPE b = std::move(a);  // move ctor
+        _logger->writeln("a       = %s", a.c_str());
+        _logger->writeln("b(move) = %s", b.c_str());
+    }
+    {
+        TYPE a("hello");
+        TYPE b;
+        b = std::move(a);  // move assignment
+        _logger->writeln("a       = %s", a.c_str());
+        _logger->writeln("b(move) = %s", b.c_str());
+    }
+    {
+        // map insert (copy ctor)
+        std::map<int, TYPE> m;
+        TYPE t("Alice");
+        m.insert({1, t});
+    }
+    {
+        // operator[] (default + assignment)
+        std::map<int, TYPE> m;
+        m[1] = TYPE("Bob");
+    }
+    {
+        // emplace (move)
+        std::map<int, TYPE> m;
+        m.emplace(1, TYPE("Charlie"));
+    }
+    {
+        TYPE a("hello");
+        TYPE b;
+        a = a;  // self assignment (X)
+        _logger->writeln("a       = %s", a.c_str());
+        b = a;  // copy assignment
+        _logger->writeln("a       = %s", a.c_str());
+        _logger->writeln("b(copy) = %s", b.c_str());
+        b = std::move(a);  // move assignment
+        _logger->writeln("a       = %s", a.c_str());
+        _logger->writeln("b(move) = %s", b.c_str());
+    }
+    {
+        // vector (reallocation → move/copy explosion)
+        std::vector<TYPE> v;
+        for (int i = 0; i < 10; ++i) {
+            v.push_back(TYPE("Temp"));
+        }
+    }
+    _test_case.assert(true, __FUNCTION__, "see sanitize log");
+}
+
+void test_basic_stream() {
+    _test_case.begin("basic_stream");
+
+    t_test_rule_of_5<basic_stream>("basic_stream");
 }
 
 void test_vtprintf() {

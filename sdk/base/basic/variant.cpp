@@ -815,7 +815,9 @@ variant &variant::operator=(const variant &other) {
 }
 
 variant &variant::operator=(variant &&other) {
-    _vt = std::move(other._vt);
+    if (this != &other) {
+        _vt = std::move(other._vt);
+    }
     return *this;
 }
 
@@ -825,7 +827,9 @@ variant &variant::operator=(const variant_t &other) {
 }
 
 variant &variant::operator=(variant_t &&other) {
-    _vt = std::move(other);
+    if (&_vt != &other) {
+        _vt = std::move(other);
+    }
     return *this;
 }
 
