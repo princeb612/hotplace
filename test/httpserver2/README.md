@@ -10,8 +10,8 @@
 #   https://localhost:9000/
 #   https://[::1]:9000/
 # curl
-#   curl https://localhost:9000/ -v -s -k -http2
-#   curl https://[::1]:9000/ -v -s -k -http2
+#   curl https://localhost:9000/ -v -s -k --http2
+#   curl https://[::1]:9000/ -v -s -k --http2
 
 # stop
 rm .run
