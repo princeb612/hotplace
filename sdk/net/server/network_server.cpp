@@ -146,7 +146,9 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
 #endif
         }
 
+#if defined _WIN32 || defined _WIN64
         context->accept_threads.set_tag("accept_thread");
+#endif
         context->tls_accept_threads.set_tag("tls_accept_threads");
         context->producer_threads.set_tag("producer_threads");
         context->consumer_threads.set_tag("consumer_threads");
