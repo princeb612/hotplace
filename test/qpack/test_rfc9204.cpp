@@ -18,7 +18,7 @@ void test_expect(binary_t& bin, const char* expect, const char* func, const char
 
     va_list ap;
     va_start(ap, text);
-    _test_case.assert(base16_decode_rfc(expect) == bin, func, text, ap);
+    _test_case.vassert(base16_decode_rfc(expect) == bin, func, text, ap);
     va_end(ap);
 }
 
@@ -27,7 +27,7 @@ void test_dump(binary_t& bin, const char* text, ...) {
         basic_stream bs;
         va_list ap;
         va_start(ap, text);
-        bs.printf(text, ap);
+        bs.vprintf(text, ap);
         _logger->hdump(bs.c_str(), bin);
         va_end(ap);
     } else {
