@@ -146,6 +146,11 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
 #endif
         }
 
+        context->accept_threads.set_tag("accept_thread");
+        context->tls_accept_threads.set_tag("tls_accept_threads");
+        context->producer_threads.set_tag("producer_threads");
+        context->consumer_threads.set_tag("consumer_threads");
+
         context->tls_accept_threads.set(concurrent_tls_accept, tls_accept_thread, tls_accept_signal, context);
         context->producer_threads.set(concurrent_produce, producer_thread, producer_signal, context);
         context->consumer_threads.set(concurrent_consume, consumer_thread, consumer_signal, context);
@@ -646,6 +651,7 @@ return_t network_server::tls_accept_routine(network_multiplexer_context_t* handl
             __leave2;
         }
 
+        // see accept, accept_queue
         accept_context_t accpt_ctx;
         {
             critical_section_guard guard(handle->accept_queue_lock);
@@ -675,7 +681,14 @@ return_t network_server::tls_accept_routine(network_multiplexer_context_t* handl
             session_accepted(handle, socket_handle, (handle_t)accpt_ctx.cli_socket, &accpt_ctx.client_addr);
             /* socket_handle is release in session_closed member. */
         } else {
-            close_socket(accpt_ctx.cli_socket, true, 0);
+            // [APVR]
+            // close socket
+            //   openssl_tls_server_socket
+            //     if tls_accept fails, close socket
+            //     so do not close here
+            //   trial_tls_server_socket
+            //     close here
+            svr_socket->tls_accept_fails(accpt_ctx.cli_socket);
         }
     }
     __finally2 {}
@@ -718,7 +731,7 @@ return_t network_server::cleanup_tls_accept(network_multiplexer_context_t* handl
 
         accept_context_t accpt_ctx;
         critical_section_guard guard(handle->accept_queue_lock);
-        if (false == handle->accept_queue.empty()) {
+        while (false == handle->accept_queue.empty()) {
             accpt_ctx = handle->accept_queue.front();
             handle->accept_queue.pop();
             close_socket(accpt_ctx.cli_socket, true, 0);

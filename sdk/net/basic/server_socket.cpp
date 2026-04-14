@@ -56,6 +56,8 @@ return_t server_socket::dtls_handshake(netsession_t* sess) {
 
 return_t server_socket::tls_accept(socket_context_t** handle, socket_t listen_socket) { return errorcode_t::do_nothing; }
 
+return_t server_socket::tls_accept_fails(socket_t socket) { return errorcode_t::do_nothing; }
+
 return_t server_socket::tls_stop_accept() { return errorcode_t::do_nothing; }
 
 return_t server_socket::read(socket_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread) { return errorcode_t::do_nothing; }

@@ -64,7 +64,7 @@ return_t signalwait_threads::create() {
 #if defined DEBUG
                 if (istraceable(trace_category_internal, loglevel_debug)) {
                     trace_debug_event(trace_category_internal, trace_event_internal,
-                                      [&](basic_stream& dbs) -> void { dbs.println("thread.create tid %p %p", tid, thread_rt); });
+                                      [&](basic_stream& dbs) -> void { dbs.println(R"(thread.create  ["%s"] tid %p %p)", _tag.c_str(), tid, thread_rt); });
                 }
 #endif
             }
@@ -117,7 +117,7 @@ void signalwait_threads::join_signaled() {
 #if defined DEBUG
             if (istraceable(trace_category_internal, loglevel_debug)) {
                 trace_debug_event(trace_category_internal, trace_event_internal,
-                                  [&](basic_stream& dbs) -> void { dbs.println("thread.tryjoin tid %p %p", tid, thread_context); });
+                                  [&](basic_stream& dbs) -> void { dbs.println(R"(thread.tryjoin ["%s"] tid %p %p)", _tag.c_str(), tid, thread_context); });
             }
 #endif
             thread->join();
@@ -126,7 +126,7 @@ void signalwait_threads::join_signaled() {
 #if defined DEBUG
             if (istraceable(trace_category_internal, loglevel_debug)) {
                 trace_debug_event(trace_category_internal, trace_event_internal,
-                                  [&](basic_stream& dbs) -> void { dbs.println("thread.join    tid %p %p", tid, thread_context); });
+                                  [&](basic_stream& dbs) -> void { dbs.println(R"(thread.join    ["%s"] tid %p %p)", _tag.c_str(), tid, thread_context); });
             }
 #endif
         }
@@ -189,5 +189,7 @@ return_t signalwait_threads::ready_to_join(threadid_t tid) {
 
     return ret;
 }
+
+void signalwait_threads::set_tag(const std::string& name) { _tag = name; }
 
 }  // namespace hotplace

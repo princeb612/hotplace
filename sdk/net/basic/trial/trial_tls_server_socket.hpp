@@ -35,6 +35,7 @@ class trial_tls_server_socket : public naive_tcp_server_socket {
      * @param   socket_t cli_socket [in]
      */
     virtual return_t tls_accept(socket_context_t** handle, socket_t cli_socket);
+    virtual return_t tls_accept_fails(socket_t socket);
     /**
      * @brief   tls_stop_accept
      */

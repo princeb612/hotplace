@@ -28,6 +28,8 @@ class test_scenario {
     test_scenario() {
         __producer_threads.set(1, producer_scenario, producer_signal, this);
         __consumer_threads.set(1, consumer_scenario, consumer_signal, this);
+        __producer_threads.set_tag("producer_threads");
+        __consumer_threads.set_tag("consumer_threads");
     }
 
     ~test_scenario() {}

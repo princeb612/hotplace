@@ -192,19 +192,20 @@ void test_bn5() {
     openssl_prng prng;
     int loop = 10;
     while (loop--) {
-        bignumber i1 = prng.rand64();
-        bignumber i2 = prng.rand64();
+        bignumber b1 = prng.rand64();
+        bignumber b2 = prng.rand64();
         bignumber i = uint64(0);
-        i = i1 + i2;
-        _logger->writeln("%s + %s = %s", i1.str().c_str(), i2.str().c_str(), i.str().c_str());
-        i = i1 - i2;
-        _logger->writeln("%s - %s = %s", i1.str().c_str(), i2.str().c_str(), i.str().c_str());
-        i = i1 * i2;
-        _logger->writeln("%s * %s = %s", i1.str().c_str(), i2.str().c_str(), i.str().c_str());
-        i = i1 / i2;
-        _logger->writeln("%s / %s = %s", i1.str().c_str(), i2.str().c_str(), i.str().c_str());
-        i = i1 % i2;
-        _logger->writeln("%s mod %s = %s", i1.str().c_str(), i2.str().c_str(), i.str().c_str());
+        bignumber v = uint64(0);
+        i = b1 + b2;
+        _logger->writeln("%s + %s = %s", b1.str().c_str(), b2.str().c_str(), i.str().c_str());
+        i = b1 - b2;
+        _logger->writeln("%s - %s = %s", b1.str().c_str(), b2.str().c_str(), i.str().c_str());
+        i = b1 * b2;
+        _logger->writeln("%s * %s = %s", b1.str().c_str(), b2.str().c_str(), i.str().c_str());
+        i = b1 / b2;
+        _logger->writeln("%s / %s = %s", b1.str().c_str(), b2.str().c_str(), i.str().c_str());
+        i = b1 % b2;
+        _logger->writeln("%s mod %s = %s", b1.str().c_str(), b2.str().c_str(), i.str().c_str());
     }
 
     _test_case.reset_time();
@@ -293,16 +294,17 @@ void test_bn6() {
         bignumber intmax = (bignumber(1) << (item.bits - 1)) - bignumber(1);
         bignumber uintmax = (bignumber(1) << item.bits) - bignumber(1);
 
-        // intmin.get_bn().dump([&](const binary_t& bin) -> void { _logger->hdump("int.min", bin, 16, 3); });
+        _logger->writeln([&](basic_stream& bs) -> void { bs << "int" << item.bits << ".min -2^" << (item.bits - 1); });
         _logger->writeln([&](basic_stream& bs) -> void { bs << "int" << item.bits << ".min 0x" << intmin.hex(); });
         _logger->writeln([&](basic_stream& bs) -> void { bs << "int" << item.bits << ".min " << intmin.str(); });
-        // intmax.get_bn().dump([&](const binary_t& bin) -> void { _logger->hdump("int.max", bin, 16, 3); });
+
+        _logger->writeln([&](basic_stream& bs) -> void { bs << "int" << item.bits << ".max 2^" << (item.bits - 1) << "-1"; });
         _logger->writeln([&](basic_stream& bs) -> void { bs << "int" << item.bits << ".max 0x" << intmax.hex(); });
         _logger->writeln([&](basic_stream& bs) -> void { bs << "int" << item.bits << ".max " << intmax.str(); });
         auto test = (intmin.str() == std::string(item.minvalue)) && (intmax.str() == std::string(item.maxvalue));
         _test_case.assert(test, __FUNCTION__, "check int%i.min ~ int%i.max", item.bits, item.bits);
 
-        // uintmax.get_bn().dump([&](const binary_t& bin) -> void { _logger->hdump("uint.max", bin, 16, 3); });
+        _logger->writeln([&](basic_stream& bs) -> void { bs << "uint" << item.bits << ".max 2^" << item.bits << "-1"; });
         _logger->writeln([&](basic_stream& bs) -> void { bs << "uint" << item.bits << ".max 0x" << uintmax.hex(); });
         _logger->writeln([&](basic_stream& bs) -> void { bs << "uint" << item.bits << ".max " << uintmax.str(); });
         auto utest = (uintmax.str() == std::string(item.umaxvalue));

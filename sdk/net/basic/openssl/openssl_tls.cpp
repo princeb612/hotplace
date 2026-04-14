@@ -520,7 +520,7 @@ return_t openssl_tls::do_accept(socket_context_t* handle) {
         }
 
         auto fd = handle->fd;
-        auto ssl = handle->handle.ssl;
+        auto& ssl = handle->handle.ssl;
         auto tlsflags = handle->flags;
         int rc = 1;
         int flags = 0;

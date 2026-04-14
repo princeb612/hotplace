@@ -104,6 +104,24 @@ class signalwait_threads {
      */
     static return_t dummy_signal(void* param);
 
+    /**
+     * @remarks tag
+     * @example
+     *          _producer_threads.set_tag("producer_threads");
+     *          _consumer_threads.set_tag("consumer_threads");
+     *
+     *          set_trace_level(loglevel_debug);
+     *
+     *          log
+     *          thread.create  ["producer_threads"] tid 0x134 0x27dc2d076d0
+     *          thread.create  ["consumer_threads"] tid 0x138 0x27dc2d07d60
+     *          thread.tryjoin ["producer_threads"] tid 0x134 0x27dc2d076d0
+     *          thread.join    ["producer_threads"] tid 0x134 0x27dc2d076d0
+     *          thread.tryjoin ["consumer_threads"] tid 0x138 0x27dc2d07d60
+     *          thread.join    ["consumer_threads"] tid 0x138 0x27dc2d07d60
+     */
+    void set_tag(const std::string& name);
+
    protected:
     /**
      * @brief thread routine
@@ -129,6 +147,7 @@ class signalwait_threads {
     SIGNALWAITTHREADS_MAP _container;
     SIGNALWAITTHREADS_MAP _readytojoin;
     semaphore _sem;
+    std::string _tag;
 };
 
 }  // namespace hotplace

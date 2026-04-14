@@ -68,6 +68,22 @@ class server_socket : public basic_socket {
      */
     virtual return_t tls_accept(socket_context_t** handle, socket_t listen_socket);
     /**
+     * @brief   case if fails tls_accept
+     * @param   socket_t socket
+     * @remarks
+     *          case.1
+     *            tls_accept
+     *              if fails close_socket
+     *            tls_accept_fails
+     *              do nothing
+     *          case.2
+     *            tls_accept
+     *              return errorcode (not success)
+     *            tls_accept_fails
+     *              close_socket here
+     */
+    virtual return_t tls_accept_fails(socket_t socket);
+    /**
      * @brief   tls_stop_accept
      */
     virtual return_t tls_stop_accept();

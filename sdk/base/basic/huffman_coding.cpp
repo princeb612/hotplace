@@ -98,6 +98,10 @@ huffman_coding &huffman_coding::infer() {
         _btree.clean(root);
     }
 
+#if defined DEBUG
+    dump();
+#endif
+
     return *this;
 }
 
@@ -191,6 +195,37 @@ huffman_coding &huffman_coding::imports(const hc_code_t *table) {
         _range.sampling(size);
 #endif
     }
+
+#if defined DEBUG
+    dump();
+#endif
+
+    return *this;
+}
+
+huffman_coding &huffman_coding::imports(const std::map<uint8, std::string> &m) {
+    _codetable.clear();
+#if SWITCH_HUFFMANCODING_TRIE == 0
+    _reverse_codetable.clear();
+#else
+    _trie.reset();
+    _range.reset();
+#endif
+    for (const auto &item : m) {
+        const auto &sym = item.first;
+        const auto &code = item.second;
+        _codetable.emplace(sym, code);
+#if SWITCH_HUFFMANCODING_TRIE == 0
+        _reverse_codetable.emplace(code, sym);
+#else
+        _trie.insert(code.c_str(), code.size(), sym);
+        _range.sampling(code.size());
+#endif
+    }
+
+#if defined DEBUG
+    dump();
+#endif
 
     return *this;
 }
@@ -512,5 +547,17 @@ bool huffman_coding::decodable() {
 }
 
 size_t huffman_coding::sizeof_codetable() { return _codetable.size(); }
+
+void huffman_coding::dump() {
+    if (istraceable(trace_category_internal, loglevel_debug)) {
+        trace_debug_event(trace_category_internal, trace_event_internal, [&](basic_stream &dbs) -> void {
+            dbs.println("- huffman coding table");
+            auto lambda_exports = [&](uint8 sym, const char *code) -> void {
+                dbs.println(R"(  - sym %c (0x%02x) code : "%s" (len %zi))", isprint(sym) ? sym : '?', sym, code, strlen(code));
+            };
+            exports(lambda_exports);
+        });
+    }
+}
 
 }  // namespace hotplace

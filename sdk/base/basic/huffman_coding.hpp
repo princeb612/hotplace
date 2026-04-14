@@ -121,6 +121,7 @@ class huffman_coding {
      *          huff.imports(_h2hcodes);
      */
     huffman_coding &imports(const hc_code_t *table);
+    huffman_coding &imports(const std::map<uint8, std::string> &m);
     /**
      * @brief   export hufman codes
      * @sample
@@ -179,6 +180,7 @@ class huffman_coding {
     node_t *build(node_t **root = nullptr);
     void build(typename btree_t::node_t *&p);
     void infer(hc_temp &hc, typename btree_t::node_t *t);
+    void dump();  // debug
 
    private:
     measure_tree_t _measure;
