@@ -10,6 +10,7 @@
 
 #include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/stream/printf.hpp>
+#include <hotplace/sdk/base/stream/stream_policy.hpp>
 #include <hotplace/sdk/base/stream/tstring.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 
@@ -107,21 +108,19 @@ return_t ansi_string::vprintf(const char* buf, va_list ap) {
 return_t ansi_string::printf(const wchar_t* buf, ...) {
     return_t ret = errorcode_t::success;
     va_list ap;
-    basic_stream bs;
-
+    wide_string ws;
     va_start(ap, buf);
-    bs.vprintf(buf, ap);
+    ws.vprintf(buf, ap);
     va_end(ap);
-    ret = W2A(this, (wchar_t*)bs.data());
+    ret = W2A(this, (wchar_t*)ws.data());
     return ret;
 }
 
 return_t ansi_string::vprintf(const wchar_t* buf, va_list ap) {
     return_t ret = errorcode_t::success;
-    basic_stream bs;
-
-    bs.vprintf(buf, ap);
-    ret = W2A(this, (wchar_t*)bs.data());
+    wide_string ws;
+    ws.vprintf(buf, ap);
+    ret = W2A(this, (wchar_t*)ws.data());
     return ret;
 }
 #endif

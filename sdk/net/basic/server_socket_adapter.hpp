@@ -13,7 +13,6 @@
 #define __HOTPLACE_SDK_NET_BASIC_SERVERSOCKETADAPTER__
 
 #include <hotplace/sdk/base/system/shared_instance.hpp>
-#include <hotplace/sdk/net/basic/server_socket_builder.hpp>
 #include <hotplace/sdk/net/basic/types.hpp>
 
 namespace hotplace {

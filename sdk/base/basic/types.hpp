@@ -22,4 +22,15 @@
 #include <hotplace/sdk/base/trace.hpp>
 #include <hotplace/sdk/base/types.hpp>
 
+namespace hotplace {
+
+class binary;
+class huffman_coding;
+class obfuscate_string;
+class valist;
+struct variant_t;
+class variant;
+
+}  // namespace hotplace
+
 #endif

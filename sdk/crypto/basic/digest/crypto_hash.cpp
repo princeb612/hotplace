@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/crypto/basic/crypto_hash.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
 
 namespace hotplace {
 namespace crypto {

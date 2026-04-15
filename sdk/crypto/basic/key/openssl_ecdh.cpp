@@ -11,6 +11,7 @@
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_ecdh.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #if defined __linux__
 #include <arpa/inet.h>
 #endif

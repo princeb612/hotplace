@@ -11,7 +11,6 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_SIGNALWAITTHREADS__
 #define __HOTPLACE_SDK_BASE_SYSTEM_SIGNALWAITTHREADS__
 
-#include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/semaphore.hpp>
 #include <hotplace/sdk/base/system/thread.hpp>
 #include <map>

@@ -14,6 +14,7 @@
 #define __HOTPLACE_SDK_IO_ASN1_ASN1ENCODE__
 
 #include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/io/asn.1/types.hpp>
 
 namespace hotplace {

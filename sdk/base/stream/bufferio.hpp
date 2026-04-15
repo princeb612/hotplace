@@ -317,6 +317,17 @@ class bufferio {
 #endif
 };
 
+/**
+ * @brief   dump memory
+ * @param   bufferio_context_t* context [in]
+ * @param   stream_t* stream_object [out]
+ * @param   unsigned hex_part [inopt]
+ * @param   unsigned indent [inopt]
+ * @param   size_t rebase [inopt]
+ * @param   int flags [inopt]
+ */
+return_t dump_memory(bufferio_context_t* context, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
+
 }  // namespace hotplace
 
 #endif

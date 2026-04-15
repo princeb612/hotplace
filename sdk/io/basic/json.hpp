@@ -13,7 +13,6 @@
 
 #include <jansson.h>
 
-#include <hotplace/sdk/io/system/sdk.hpp>
 #include <hotplace/sdk/io/types.hpp>
 
 namespace hotplace {

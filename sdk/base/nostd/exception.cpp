@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/nostd/exception.hpp>
+#include <hotplace/sdk/base/system/error.hpp>
 
 namespace hotplace {
 

@@ -12,10 +12,7 @@
 #define __HOTPLACE_SDK_BASE_SYSTEM_UINT__
 
 #include <functional>
-#include <hotplace/sdk/base/error.hpp>
-#include <hotplace/sdk/base/stream.hpp>
-#include <hotplace/sdk/base/syntax.hpp>
-#include <hotplace/sdk/base/types.hpp>
+#include <hotplace/sdk/base/basic/types.hpp>
 
 namespace hotplace {
 

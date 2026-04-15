@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/stream/stream_policy.hpp>
 #include <hotplace/sdk/base/stream/tstring.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 
@@ -87,21 +88,19 @@ bool wide_string::occupied() { return bufferio::occupied(_handle); }
 return_t wide_string::printf(const char* buf, ...) {
     return_t ret = errorcode_t::success;
     va_list ap;
-    basic_stream bs;
-
+    ansi_string as;
     va_start(ap, buf);
-    bs.vprintf(buf, ap);
+    as.vprintf(buf, ap);
     va_end(ap);
-    ret = A2W(this, (char*)bs.data());
+    ret = A2W(this, (char*)as.data());
     return ret;
 }
 
 return_t wide_string::vprintf(const char* buf, va_list ap) {
     return_t ret = errorcode_t::success;
-    basic_stream bs;
-
-    bs.vprintf(buf, ap);
-    ret = A2W(this, (char*)bs.data());
+    ansi_string as;
+    as.vprintf(buf, ap);
+    ret = A2W(this, (char*)as.data());
     return ret;
 }
 
@@ -109,7 +108,6 @@ return_t wide_string::vprintf(const char* buf, va_list ap) {
 return_t wide_string::printf(const wchar_t* buf, ...) {
     return_t ret = errorcode_t::success;
     va_list ap;
-
     va_start(ap, buf);
     ret = bufferio::vprintf(_handle, buf, ap);
     va_end(ap);
@@ -118,7 +116,6 @@ return_t wide_string::printf(const wchar_t* buf, ...) {
 
 return_t wide_string::vprintf(const wchar_t* buf, va_list ap) {
     return_t ret = errorcode_t::success;
-
     ret = bufferio::vprintf(_handle, buf, ap);
     return ret;
 }
@@ -454,9 +451,9 @@ std::wstring& operator<<(std::wstring& lhs, const wide_string& rhs) {
 }
 
 std::ostream& operator<<(std::ostream& lhs, const wide_string& rhs) {
-    basic_stream bs;
-    W2A(&bs, rhs.c_str());
-    lhs << bs.c_str();
+    ansi_string as;
+    W2A(&as, rhs.c_str());
+    lhs << as.c_str();
     return lhs;
 }
 

@@ -11,7 +11,6 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_BASIC_EVPPKEY__
 #define __HOTPLACE_SDK_CRYPTO_BASIC_EVPPKEY__
 
-#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/crypto/basic/types.hpp>
 
 namespace hotplace {

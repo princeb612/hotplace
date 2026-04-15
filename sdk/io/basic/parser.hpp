@@ -15,7 +15,7 @@
 #include <hotplace/sdk/base/basic/keyvalue.hpp>
 #include <hotplace/sdk/base/pattern/aho_corasick.hpp>
 #include <hotplace/sdk/base/pattern/trie.hpp>
-#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/stream/types.hpp>
 #include <hotplace/sdk/io/types.hpp>
 
 namespace hotplace {

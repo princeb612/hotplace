@@ -16,7 +16,7 @@
   * ![MSYS2](https://img.shields.io/badge/MSYS2-MINGW64-green)
   * ![UBUNTU](https://img.shields.io/badge/UBUNTU->=20-green)
   * ![RHEL](https://img.shields.io/badge/RHEL->=7-green)
-  * ![Windows](https://img.shields.io/badge/Windows-10-green)
+  * ![Windows](https://img.shields.io/badge/Windows->=10-green)
 * status
   * JOSE ![implemented](https://img.shields.io/badge/implemented+SDK-green)
   * CBOR,COSE ![implemented](https://img.shields.io/badge/implemented+SDK-green)

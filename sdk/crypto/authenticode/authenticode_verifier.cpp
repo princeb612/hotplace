@@ -10,6 +10,7 @@
  */
 
 #include <hotplace/sdk/base/string/string.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/thread.hpp>
 #include <hotplace/sdk/crypto/authenticode/authenticode_plugin_pe.hpp>
 #include <hotplace/sdk/crypto/authenticode/authenticode_verifier.hpp>

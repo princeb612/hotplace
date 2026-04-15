@@ -12,7 +12,6 @@
 #define __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOKEYCHAIN__
 
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
-#include <hotplace/sdk/crypto/basic/types.hpp>
 
 namespace hotplace {
 namespace crypto {

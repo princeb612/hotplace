@@ -43,6 +43,8 @@
 #include <hotplace/sdk/base/graph/graph.hpp>
 
 /* nostd */
+#include <hotplace/sdk/base/nostd/avltree.hpp>
+#include <hotplace/sdk/base/nostd/btree.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/nostd/integer.hpp>
 #include <hotplace/sdk/base/nostd/list.hpp>
@@ -50,7 +52,6 @@
 #include <hotplace/sdk/base/nostd/pq.hpp>
 #include <hotplace/sdk/base/nostd/range.hpp>
 #include <hotplace/sdk/base/nostd/template.hpp>
-#include <hotplace/sdk/base/nostd/tree.hpp>
 #include <hotplace/sdk/base/nostd/vector.hpp>
 
 /* pattern */
@@ -68,15 +69,17 @@
 #include <hotplace/sdk/base/stream/bufferio.hpp>
 #include <hotplace/sdk/base/stream/printf.hpp>
 #include <hotplace/sdk/base/stream/split.hpp>
+#include <hotplace/sdk/base/stream/stream_policy.hpp>
 #include <hotplace/sdk/base/stream/tstring.hpp>
 #include <hotplace/sdk/base/stream/types.hpp>
-#include <hotplace/sdk/base/system/bignumber.hpp>
 
 /* string */
 #include <hotplace/sdk/base/string/string.hpp>
+#include <hotplace/sdk/base/string/types.hpp>
 
 /* system */
 #include <hotplace/sdk/base/system/atomic.hpp>
+#include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
@@ -103,5 +106,6 @@
 #include <hotplace/sdk/base/unittest/logger.hpp>
 #include <hotplace/sdk/base/unittest/testcase.hpp>
 #include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/unittest/types.hpp>
 
 #endif

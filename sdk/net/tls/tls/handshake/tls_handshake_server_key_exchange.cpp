@@ -14,6 +14,7 @@
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_sign.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_server_key_exchange.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>

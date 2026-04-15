@@ -11,7 +11,6 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_OQS_OQS__
 #define __HOTPLACE_SDK_CRYPTO_OQS_OQS__
 
-#include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/crypto/basic/types.hpp>
 #include <hotplace/sdk/crypto/oqs/types.hpp>
 

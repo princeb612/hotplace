@@ -13,7 +13,6 @@
 #define __HOTPLACE_SDK_CRYPTO_BASIC_CIPHERENCRYPT__
 
 #include <hotplace/sdk/base/system/shared_instance.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
 #include <hotplace/sdk/crypto/basic/types.hpp>
 
 namespace hotplace {

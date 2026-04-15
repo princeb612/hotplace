@@ -12,10 +12,7 @@
 #ifndef __HOTPLACE_SDK_BASE_NOSTD_EXCEPTION__
 #define __HOTPLACE_SDK_BASE_NOSTD_EXCEPTION__
 
-#include <hotplace/sdk/base/error.hpp>
-#include <hotplace/sdk/base/syntax.hpp>
-#include <hotplace/sdk/base/system/error.hpp>
-#include <hotplace/sdk/base/types.hpp>
+#include <hotplace/sdk/base/system/types.hpp>
 
 namespace hotplace {
 

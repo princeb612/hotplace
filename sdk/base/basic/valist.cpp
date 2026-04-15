@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/valist.hpp>
+#include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 
 namespace hotplace {

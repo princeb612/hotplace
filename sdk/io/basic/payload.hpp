@@ -12,11 +12,9 @@
 #define __HOTPLACE_SDK_IO_BASIC_PAYLOAD__
 
 #include <functional>
-#include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/basic/types.hpp>
 #include <hotplace/sdk/base/nostd/integer.hpp>
-#include <hotplace/sdk/base/system/endian.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
-#include <hotplace/sdk/base/template.hpp>
 #include <hotplace/sdk/io/basic/types.hpp>
 #include <hotplace/sdk/io/system/types.hpp>
 #include <list>

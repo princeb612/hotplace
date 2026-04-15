@@ -11,7 +11,6 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_JOSE_TYPES__
 #define __HOTPLACE_SDK_CRYPTO_JOSE_TYPES__
 
-#include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/types.hpp>
 #include <hotplace/sdk/crypto/types.hpp>
 #include <list>

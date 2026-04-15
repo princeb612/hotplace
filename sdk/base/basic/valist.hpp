@@ -13,7 +13,6 @@
 
 #include <stdarg.h>
 
-#include <hotplace/sdk/base/basic/types.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/stream/types.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>

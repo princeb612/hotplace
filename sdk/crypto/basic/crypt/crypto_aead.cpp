@@ -10,6 +10,7 @@
 
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_aead.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
 
 namespace hotplace {
 namespace crypto {

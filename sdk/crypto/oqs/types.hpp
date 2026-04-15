@@ -12,7 +12,7 @@
 #define __HOTPLACE_SDK_CRYPTO_OQS_TYPES__
 
 #include <hotplace/sdk/base/system/types.hpp>
-#include <hotplace/sdk/crypto/basic/crypto_key.hpp>
+#include <hotplace/sdk/crypto/basic/types.hpp>
 #include <set>
 
 namespace hotplace {

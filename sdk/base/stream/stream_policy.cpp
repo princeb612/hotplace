@@ -10,7 +10,7 @@
 
 #include <ctype.h>
 
-#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/stream/stream_policy.hpp>
 
 namespace hotplace {
 

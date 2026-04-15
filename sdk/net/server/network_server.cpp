@@ -18,6 +18,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/signalwait_threads.hpp>
 #include <hotplace/sdk/net/basic/naive/naive_tcp_server_socket.hpp>
 #include <hotplace/sdk/net/basic/naive/naive_udp_server_socket.hpp>

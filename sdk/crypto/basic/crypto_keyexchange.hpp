@@ -9,7 +9,6 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOKEYEXCHANGE__
 #define __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOKEYEXCHANGE__
 
-#include <hotplace/sdk/base/basic/binaries.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/crypto/basic/types.hpp>

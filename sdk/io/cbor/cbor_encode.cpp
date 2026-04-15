@@ -13,6 +13,7 @@
 
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/ieee754.hpp>
+#include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/io/cbor/cbor_encode.hpp>
 #include <hotplace/sdk/io/cbor/cbor_object.hpp>

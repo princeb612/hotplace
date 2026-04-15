@@ -10,6 +10,7 @@
 
 #include <hotplace/sdk/net/basic/server_socket.hpp>
 #include <hotplace/sdk/net/basic/server_socket_adapter.hpp>
+#include <hotplace/sdk/net/basic/server_socket_builder.hpp>
 
 namespace hotplace {
 namespace net {

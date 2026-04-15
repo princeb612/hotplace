@@ -10,6 +10,7 @@
  */
 
 #include <hotplace/sdk/base/basic/huffman_coding.hpp>
+#include <hotplace/sdk/base/unittest/trace.hpp>
 
 namespace hotplace {
 
@@ -549,6 +550,7 @@ bool huffman_coding::decodable() {
 size_t huffman_coding::sizeof_codetable() { return _codetable.size(); }
 
 void huffman_coding::dump() {
+#if defined DEBUG
     if (istraceable(trace_category_internal, loglevel_debug)) {
         trace_debug_event(trace_category_internal, trace_event_internal, [&](basic_stream &dbs) -> void {
             dbs.println("- huffman coding table");
@@ -558,6 +560,7 @@ void huffman_coding::dump() {
             exports(lambda_exports);
         });
     }
+#endif
 }
 
 }  // namespace hotplace

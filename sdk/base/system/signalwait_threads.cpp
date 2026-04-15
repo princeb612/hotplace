@@ -9,9 +9,11 @@
  */
 
 #include <hotplace/sdk/base/nostd/exception.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/base/system/signalwait_threads.hpp>
+#include <hotplace/sdk/base/unittest/trace.hpp>
 
 namespace hotplace {
 

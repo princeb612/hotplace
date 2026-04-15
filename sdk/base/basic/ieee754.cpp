@@ -10,6 +10,7 @@
  */
 
 #include <hotplace/sdk/base/basic/ieee754.hpp>
+#include <hotplace/sdk/base/basic/variant.hpp>
 
 namespace hotplace {
 

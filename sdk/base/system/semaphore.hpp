@@ -11,8 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_SEMAPHORE__
 #define __HOTPLACE_SDK_BASE_SYSTEM_SEMAPHORE__
 
-#include <hotplace/sdk/base/error.hpp>
-#include <hotplace/sdk/base/types.hpp>
+#include <hotplace/sdk/base/system/types.hpp>
 
 namespace hotplace {
 

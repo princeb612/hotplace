@@ -4,7 +4,7 @@
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *          obfuscate string at runtime
- *          use constexpr_obf to obfuscate a string at compile time (c++14 required)
+ *          use t_constexpr_obf to obfuscate a string at compile time (c++14 required)
  *
  * Revision History
  * Date         Name                Description
@@ -16,14 +16,14 @@
 #ifndef __HOTPLACE_SDK_BASE_BASIC_OBFUSCATESTRING__
 #define __HOTPLACE_SDK_BASE_BASIC_OBFUSCATESTRING__
 
-#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/stream/types.hpp>
 #include <string>
 
 namespace hotplace {
 
 /**
  * @brief   obfuscate
- * @see     constexpr_obf
+ * @see     t_constexpr_obf
  * @example
  *      obfuscate_string obf;
  *      {
@@ -37,7 +37,7 @@ namespace hotplace {
  *
  *      // see also
  *      #if __cplusplus >= 201402L    // c++14
- *      constexpr auto obf = constexpr_obf <8, 0x38>("password"); // compile time
+ *      constexpr auto obf = t_constexpr_obf <8, 0x38>("password"); // compile time
  *      std::string passwd = obf.load_string ();
  *      #endif
  *

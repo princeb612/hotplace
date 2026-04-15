@@ -12,9 +12,8 @@
 #ifndef __HOTPLACE_SDK_BASE_BASIC_DUMPMEMORY__
 #define __HOTPLACE_SDK_BASE_BASIC_DUMPMEMORY__
 
-#include <hotplace/sdk/base/basic/variant.hpp>
-#include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/stream/printf.hpp>
+#include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/stream/types.hpp>
 #include <string>
 
 namespace hotplace {
@@ -87,16 +86,6 @@ return_t dump_memory(const binary_t& data, stream_t* stream_object, unsigned hex
  * @param   int flags [inopt]
  */
 return_t dump_memory(const basic_stream& data, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
-/**
- * @brief   dump memory
- * @param   bufferio_context_t* context [in]
- * @param   stream_t* stream_object [out]
- * @param   unsigned hex_part [inopt]
- * @param   unsigned indent [inopt]
- * @param   size_t rebase [inopt]
- * @param   int flags [inopt]
- */
-return_t dump_memory(bufferio_context_t* context, stream_t* stream_object, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0, int flags = 0);
 /**
  * @brief   dump memory
  * @param   const variant_t& vt [in]

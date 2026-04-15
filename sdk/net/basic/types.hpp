@@ -167,6 +167,8 @@ class trial_composer;
 class tls_composer;
 class quic_composer;
 
+class server_socket_builder;
+
 class server_socket_adapter;
 class openssl_server_socket_adapter;
 class trial_server_socket_adapter;

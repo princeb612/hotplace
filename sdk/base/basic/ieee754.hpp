@@ -13,7 +13,6 @@
 #define __HOTPLACE_SDK_BASE_BASIC_IEEE754__
 
 #include <hotplace/sdk/base/basic/types.hpp>
-#include <hotplace/sdk/base/basic/variant.hpp>
 #include <string>
 
 namespace hotplace {

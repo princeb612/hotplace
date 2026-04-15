@@ -12,12 +12,9 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_SHAREDINSTANCE__
 #define __HOTPLACE_SDK_BASE_SYSTEM_SHAREDINSTANCE__
 
-#include <hotplace/sdk/base/charset.hpp>
-#include <hotplace/sdk/base/error.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
-#include <hotplace/sdk/base/syntax.hpp>
 #include <hotplace/sdk/base/system/atomic.hpp>
-#include <hotplace/sdk/base/types.hpp>
+#include <hotplace/sdk/base/system/types.hpp>
 
 namespace hotplace {
 

@@ -1,5 +1,5 @@
 
-## constexpr_obf
+## t_constexpr_obf
 
  * c++14 required
  * obfuscate a string at compile time

@@ -12,24 +12,7 @@
 
 namespace hotplace {
 
-return_t A2W(wide_string& target, const char* source, uint32 codepage) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == source) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        std::vector<wchar_t> buffer;
-        int sizeNeed = MultiByteToWideChar(codepage, 0, source, -1, nullptr, 0);
-        if (sizeNeed > 0) {
-            buffer.resize(sizeNeed);  // including null pad
-            MultiByteToWideChar(codepage, 0, source, -1, buffer.data(), sizeNeed);
-            target = buffer.data();
-        }
-    }
-    __finally2 {}
-    return ret;
-}
+return_t A2W(wide_string& target, const char* source, uint32 codepage) { return A2W(&target, source, codepage); }
 
 return_t A2W(stream_t* stream, const char* source, uint32 codepage) {
     return_t ret = errorcode_t::success;

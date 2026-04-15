@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/crypto/basic/crypto_sign.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
 
 namespace hotplace {
 namespace crypto {

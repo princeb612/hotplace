@@ -12,10 +12,7 @@
 #define __HOTPLACE_SDK_BASE_SYSTEM_TYPES__
 
 #include <functional>
-#include <hotplace/sdk/base/error.hpp>
-#include <hotplace/sdk/base/stream.hpp>
-#include <hotplace/sdk/base/syntax.hpp>
-#include <hotplace/sdk/base/types.hpp>
+#include <hotplace/sdk/base/basic/types.hpp>
 
 namespace hotplace {
 
@@ -40,12 +37,12 @@ namespace hotplace {
     }
 #endif
 
+class bignumber;
 class critical_section;
 class datetime;
 class semaphore;
 class signalwait_threads;
 class thread;
-class bignumber;
 
 }  // namespace hotplace
 
