@@ -37,3 +37,8 @@ void test_rfc7517_C() {
     dump("decrypted", output);
     _test_case.test(ret, __FUNCTION__, "RFC 7517 Appendix C. Encrypted RSA Private Key");
 }
+
+void test_rfc7517() {
+    _test_case.begin("RFC 7517");
+    test_rfc7517_C();  // RFC 7517 Appendix C.
+}

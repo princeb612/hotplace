@@ -51,22 +51,12 @@ int main(int argc, char** argv) {
     }
 
     test_kmp();
-    test_aho_corasick_simple();
     test_aho_corasick();
     test_trie();
-    test_trie_autocompletion();
-    test_trie_lookup();
-    test_trie_scan();
     test_suffixtree();
-    test_suffixtree2();
     test_ukkonen();
-    test_ukkonen2();
-    test_lcp();
-    test_wildcards();
-    test_wildcards2();
-    test_merge_ovl_intervals();
+    test_wildcard();
     test_aho_corasick_wildcard();
-    test_aho_corasick_ignorecase();
 
     _logger->flush();
 

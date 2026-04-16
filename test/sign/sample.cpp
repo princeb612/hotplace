@@ -57,14 +57,11 @@ int main(int argc, char** argv) {
     __try2 {
         openssl_startup();
 
-        test_hash_hmac_sign();
+        test_hmac();
 
-        test_nist_cavp_ecdsa();
-        test_rfc6979_ecdsa();
+        test_ecdsa();
         test_crypto_sign();
-        test_nist_cavp_rsa();
-        test_x509_sign();
-        check_ecdsa_size();
+        test_x509();
         test_rsassa();
         test_dsa();
     }

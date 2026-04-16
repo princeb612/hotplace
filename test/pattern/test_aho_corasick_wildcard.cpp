@@ -10,7 +10,7 @@
 
 #include "sample.hpp"
 
-void test_aho_corasick_wildcard() {
+void test_aho_corasick_wildcard_sample() {
     // studying...
     _test_case.begin("t_aho_corasick + wildcards");
 
@@ -522,4 +522,9 @@ void test_aho_corasick_ignorecase() {
 
         _test_case.assert(result == entry.expects, __FUNCTION__, "Aho Corasick algorithm + wildcards + ignorecase");
     }
+}
+
+void test_aho_corasick_wildcard() {
+    test_aho_corasick_wildcard_sample();
+    test_aho_corasick_ignorecase();
 }

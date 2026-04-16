@@ -59,15 +59,13 @@ int main(int argc, char** argv) {
 
         test_openssl_hash();
 
-        test_hmacsha_rfc4231();
+        test_rfc4231();  // HMAC SHA
 
-        test_cmac_rfc4493();
+        test_rfc4493();  // CMAC
 
-        test_hotp_rfc4226();
+        test_rfc4226();  // HOTP
 
-        test_totp_rfc6238(hash_algorithm_t::sha1);
-        test_totp_rfc6238(hash_algorithm_t::sha2_256);
-        test_totp_rfc6238(hash_algorithm_t::sha2_512);
+        test_rfc6238();  // TOTP
 
         test_transcript_hash();
     }

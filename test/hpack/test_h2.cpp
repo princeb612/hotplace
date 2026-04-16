@@ -15,7 +15,7 @@
 // wireshark
 // decode 'Header Block Fragment'
 
-void test_h2_header_frame() {
+void test_h2() {
     _test_case.begin("HTTP/2 Header Compression");
     const OPTION& option = _cmdline->value();
 

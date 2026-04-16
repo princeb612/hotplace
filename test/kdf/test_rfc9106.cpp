@@ -10,7 +10,7 @@
 
 #include "sample.hpp"
 
-void test_kdf_argon_rfc9106() {
+void test_rfc9106() {
     _test_case.begin("argon2d,argon2i,argon2id");
     const OPTION& option = _cmdline->value();
     openssl_kdf kdf;

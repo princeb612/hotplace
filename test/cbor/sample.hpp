@@ -23,9 +23,7 @@ extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
-void test_rfc7049_table4_1();
-void test_rfc7049_table4_2();
-
+void test_rfc7049();
 void test_parse();
 
 struct test_vector_parse {

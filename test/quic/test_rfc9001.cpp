@@ -341,3 +341,15 @@ void test_rfc_9001_a5() {
     //
     // packet = 4cfe4189655e5cd55c41f69080575d7999c25a5bfb
 }
+
+void test_rfc_9001() {
+    tls_session server_session(session_type_quic);
+    tls_session client_session(session_type_quic);
+
+    test_rfc_9001_section4();
+    test_rfc_9001_a1(&client_session, &server_session);
+    test_rfc_9001_a2(&client_session, &server_session);
+    test_rfc_9001_a3(&client_session, &server_session);
+    test_rfc_9001_a4(&client_session, &server_session);
+    test_rfc_9001_a5();
+}

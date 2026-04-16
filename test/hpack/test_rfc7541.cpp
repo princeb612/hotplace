@@ -622,3 +622,12 @@ void test_rfc7541_c_6() {
     _test_case.assert(215 == dyntable_decoder.get_tablesize(), __FUNCTION__, "%s #table size", text3);
     _test_case.assert(5 == count_evict_decoder, __FUNCTION__, "%s #check eviction %u", text3, count_evict_decoder);
 }
+
+void test_rfc7541() {
+    test_rfc7541_c_1();
+    test_rfc7541_c_2();
+    test_rfc7541_c_3();
+    test_rfc7541_c_4();
+    test_rfc7541_c_5();
+    test_rfc7541_c_6();
+}

@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
 
     /**
      *      to test -c
-     *      run first : httpauth -v
+     *      run first : httpserver1 -r
      *      and then  : httptest -c
      */
     (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION &o, char *param) -> void { o.enable_verbose(); }).optional()
@@ -63,51 +63,7 @@ int main(int argc, char **argv) {
         set_trace_level(option.trace_level);
     }
 
-    // uri
-    test_uri();
-    test_uri_form_encoded_body_parameter();
-    test_uri2();
-    test_escape_url();
-
-    // request
-    test_request();
-
-    // response
-    test_response_compose();
-    test_response_parse();
-
-    // authenticate
-    test_basic_authentication();
-    test_digest_access_authentication();
-    test_digest_access_authentication("MD5");
-    test_digest_access_authentication("MD5-sess");
-    test_digest_access_authentication("SHA-256");
-    test_digest_access_authentication("SHA-256-sess");
-    test_digest_access_authentication("SHA-512-256");
-    test_digest_access_authentication("SHA-512-256-sess");
-
-    test_rfc_digest_example();
-
-    // documents
-    test_documents();
-
-    // network test
-    if (option.connect) {
-        // how to test
-        // terminal 1
-        //   cd hotplace
-        //   ./make.sh debug pch
-        //   cd build/test/httpauth
-        //   ./test-httpauth -d
-        // terminal 2
-        //   cd build/test/htttest
-        //   ./test-httptest -d -c
-        test_get_tlsclient();
-        test_get_httpclient();
-
-        test_bearer_token();
-    }
-
+    test_http();
     test_http2_frame();
     test_http2();
 

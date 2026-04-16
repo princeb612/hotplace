@@ -422,7 +422,7 @@ return_t do_calc_digest_digest_access(http_authentication_provider *provider, ne
     return ret;
 }
 
-void test_digest_access_authentication(const char *alg, unsigned long *ossl_minver) {
+void test_digest_access_authentication(const char *alg = nullptr, unsigned long *ossl_minver = nullptr) {
     _test_case.begin("Digest Access Authentication Scheme");
     const OPTION &option = _cmdline->value();
 
@@ -867,4 +867,53 @@ void test_bearer_token() {
         }
     }
     _test_case.test(ret, __FUNCTION__, "bearer");
+}
+
+void test_http() {
+    const OPTION &option = _cmdline->value();
+
+    // uri
+    test_uri();
+    test_uri_form_encoded_body_parameter();
+    test_uri2();
+    test_escape_url();
+
+    // request
+    test_request();
+
+    // response
+    test_response_compose();
+    test_response_parse();
+
+    // authenticate
+    test_basic_authentication();
+    test_digest_access_authentication();
+    test_digest_access_authentication("MD5");
+    test_digest_access_authentication("MD5-sess");
+    test_digest_access_authentication("SHA-256");
+    test_digest_access_authentication("SHA-256-sess");
+    test_digest_access_authentication("SHA-512-256");
+    test_digest_access_authentication("SHA-512-256-sess");
+
+    test_rfc_digest_example();
+
+    // documents
+    test_documents();
+
+    // network test
+    if (option.connect) {
+        // how to test
+        // terminal 1
+        //   cd hotplace
+        //   ./make.sh debug pch
+        //   cd build/test/httpserver1
+        //   ./test-httpserver1 -r
+        // terminal 2
+        //   cd build/test/htttest
+        //   ./test-httptest -d -c
+        test_get_tlsclient();
+        test_get_httpclient();
+
+        test_bearer_token();
+    }
 }

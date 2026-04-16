@@ -31,6 +31,7 @@ void do_test_base64_routine(const char* source, size_t source_size, int encoding
 }
 
 void test_base64() {
+    _test_case.begin("b64 encoding");
     constexpr char lyrics[] = "still a man hears what he wants to hear and disregards the rest";
     size_t len = strlen(lyrics);
 

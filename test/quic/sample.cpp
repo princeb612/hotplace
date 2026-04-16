@@ -322,9 +322,7 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("-k", "keylog", [](OPTION& o, char* param) -> void { o.keylog = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-n", "encode number", [](OPTION& o, char* param) -> void { o.set(mode_encnum, param); }).optional().preced()
                 << t_cmdarg_t<OPTION>("-e", "encode base16", [](OPTION& o, char* param) -> void { o.set(mode_encode, param); }).optional().preced()
-                << t_cmdarg_t<OPTION>("-b", "decode base16", [](OPTION& o, char* param) -> void { o.set(mode_decode, param); }).optional().preced()
-                << t_cmdarg_t<OPTION>("--q", "test quic.xargs.org", [](OPTION& o, char* param) -> void { o.flags |= test_flag_quic; }).optional()
-                << t_cmdarg_t<OPTION>("--pcap", "test pcap", [](OPTION& o, char* param) -> void { o.flags |= test_flag_pcap; }).optional();
+                << t_cmdarg_t<OPTION>("-b", "decode base16", [](OPTION& o, char* param) -> void { o.set(mode_decode, param); }).optional().preced();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
@@ -355,53 +353,22 @@ int main(int argc, char** argv) {
 
     openssl_startup();
 
-    if ((test_flag_quic & option.flags) || (0 == option.flags)) {
-        test_quic_xargs_org();
-    }
+    test_quic();
 
-    if (0 == option.flags) {
-#if 0
-        // RFC 9000
-        test_rfc_9000_a1();
-        test_rfc_9000_a2();
-        test_rfc_9000_a3();
+    // RFC 9000
+    test_rfc_9000();
 
-        // RFC 9001
-        {
-            tls_session server_session(session_type_quic);
-            tls_session client_session(session_type_quic);
+    // RFC 9001
+    test_rfc_9001();
 
-            test_rfc_9001_section4();
-            test_rfc_9001_a1(&client_session, &server_session);
-            test_rfc_9001_a2(&client_session, &server_session);
-            test_rfc_9001_a3(&client_session, &server_session);
-            test_rfc_9001_a4(&client_session, &server_session);
-            test_rfc_9001_a5();
-        }
+    // RFC 9369
+    test_rfc_9369();
 
-        // RFC 9369
-        {
-            tls_session server_session(session_type_quic2);
-            tls_session client_session(session_type_quic2);
+    // http3.pcapng
+    test_pcap_http3();
 
-            test_rfc_9369_a1(&client_session, &server_session);
-            test_rfc_9369_a2(&client_session, &server_session);
-            test_rfc_9369_a3(&client_session, &server_session);
-            test_rfc_9369_a4(&client_session, &server_session);
-            test_rfc_9369_a5();
-        }
-#endif
-    }
-
-    if ((test_flag_pcap & option.flags) || (0 == option.flags)) {
-        // http3.pcapng
-        test_pcap_http3();
-    }
-
-    if (0 == option.flags) {
-        test_construct_1rtt();
-        test_construct_quic();
-    }
+    test_construct_1rtt();
+    test_construct_quic();
 
     openssl_cleanup();
 

@@ -22,14 +22,8 @@ extern t_shared_instance<hpack_encoder> encoder;
 
 void dump_hpack_session_routine(const char* stream, size_t size);
 
-void test_huffman_codes();
-void test_rfc7541_c_1();
-void test_rfc7541_c_2();
-void test_rfc7541_c_3();
-void test_rfc7541_c_4();
-void test_rfc7541_c_5();
-void test_rfc7541_c_6();
-
-void test_h2_header_frame();
+void test_huffman();
+void test_rfc7541();
+void test_h2();
 
 #endif

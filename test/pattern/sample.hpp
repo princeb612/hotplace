@@ -24,22 +24,12 @@ struct pattern_t {
     unsigned len;
 };
 
-void test_kmp();
-void test_aho_corasick_simple();
 void test_aho_corasick();
-void test_trie();
-void test_trie_autocompletion();
-void test_trie_lookup();
-void test_trie_scan();
-void test_suffixtree();
-void test_suffixtree2();
-void test_ukkonen();
-void test_ukkonen2();
-void test_lcp();
-void test_wildcards();
-void test_wildcards2();
-void test_merge_ovl_intervals();
 void test_aho_corasick_wildcard();
-void test_aho_corasick_ignorecase();
+void test_kmp();
+void test_suffixtree();
+void test_trie();
+void test_ukkonen();
+void test_wildcard();
 
 #endif

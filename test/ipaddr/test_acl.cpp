@@ -139,3 +139,9 @@ void test3() {
     _test_case.test(errorcode_t::not_supported, __FUNCTION__, "IPv6 not supported");
 #endif
 }
+
+void test_acl() {
+    test1();
+    test2();
+    test3();
+}

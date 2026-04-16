@@ -19,23 +19,6 @@ extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
-void test_features();
-
-void validate_openssl_crypt();
-void test_openssl_crypt(uint32 cooltime, uint32 unitsize);
-void test_keywrap_rfc3394();
-void test_chacha20_rfc7539();
-void test_chacha20_rfc7539_crypto_aead();
-void test_cbc_hmac_rfc7516();
-void test_cipher_encrypt();
-void test_crypto_encrypt();
-void test_validate_resources();
-void test_crypto_aead();
-void test_cbc_hmac_tls_mte();
-void test_cbc_hmac_tls_etm();
-void test_aead_ccm();
-void test_curves();
-
 typedef struct _test_vector_nist_cavp_blockcipher_t {
     const char* desc;
     const char* alg;
@@ -111,5 +94,19 @@ extern test_vector_cbchmac_tls_t test_vector_tls_mte[];
 extern const size_t sizeof_test_vector_tls_mte;
 extern test_vector_cbchmac_tls_t test_vector_tls_etm[];
 extern const size_t sizeof_test_vector_tls_etm;
+
+void test_features();
+void test_openssl_crypt();
+void test_rfc3394();  // keywrap
+void test_rfc7539();  // chacha20, chacha20-poly1305
+void test_rfc7516();
+void test_cipher_encrypt();
+void test_crypto_encrypt();
+void test_resources();
+void test_crypto_aead();
+void test_cbc_hmac_tls();
+void test_aead_ccm();
+void test_curves();
+void test_random();
 
 #endif

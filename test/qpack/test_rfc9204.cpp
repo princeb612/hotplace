@@ -663,3 +663,5 @@ void test_rfc9204_b() {
 
     test_rfc9204_b5(text5, clienttable);
 }
+
+void test_rfc9204() { test_rfc9204_b(); }

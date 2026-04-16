@@ -111,7 +111,9 @@ void test_quic_integer() {
         _logger->hdump("dump", bin_data);
         _test_case.assert(bin_data == base16_decode_rfc(data), __FUNCTION__, "opaque #2");
     }
+}
 
+void test_quic_encoded() {
     // integer
     auto test_lambda = [&](uint64 value, const char* expect) -> void {
         binary_t bin_expect = std::move(base16_decode_rfc(expect));
@@ -148,4 +150,9 @@ void test_quic_integer() {
     test_lambda(0x3fffffff, "0xbfffffff");
     test_lambda(0x40000000, "0xc000000040000000");
     test_lambda(0x3fffffffffffffff, "0xffffffffffffffff");
+}
+
+void test_quic() {
+    test_quic_integer();
+    test_quic_encoded();
 }

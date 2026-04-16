@@ -10,7 +10,7 @@
 
 #include "sample.hpp"
 
-uint32 test_hotp_rfc4226() {
+uint32 test_rfc4226() {
     _test_case.begin("HOTP (RFC 4226)");
     const OPTION& option = _cmdline->value();
 

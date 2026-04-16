@@ -10,7 +10,7 @@
 
 #include "sample.hpp"
 
-void test_random() {
+void test_random_simple() {
     _test_case.begin("random");
     const OPTION& option = _cmdline->value();
 
@@ -80,4 +80,10 @@ void test_token() {
     }
 
     _test_case.test(ret, __FUNCTION__, "token loop %i times", times);
+}
+
+void test_random() {
+    test_random_simple();
+    test_nonce();
+    test_token();
 }

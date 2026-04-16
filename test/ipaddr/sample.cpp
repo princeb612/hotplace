@@ -52,9 +52,7 @@ int main(int argc, char** argv) {
 
     _test_case.begin("ACL");
 
-    test1();
-    test2();
-    test3();
+    test_acl();
 
     _logger->flush();
 

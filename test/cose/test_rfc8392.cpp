@@ -75,3 +75,5 @@ void test_cwt_rfc8392() {
     _test_case.test(ret, __FUNCTION__, "RFC 8392 A.7.  Example MACed CWT with a Floating-Point Value");
     cose.close(handle);
 }
+
+void test_rfc8392() { test_cwt_rfc8392(); }

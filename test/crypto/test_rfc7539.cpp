@@ -112,3 +112,8 @@ void test_chacha20_rfc7539_crypto_aead() {
         }
     }
 }
+
+void test_rfc7539() {
+    test_chacha20_rfc7539();
+    test_chacha20_rfc7539_crypto_aead();
+}

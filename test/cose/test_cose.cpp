@@ -323,3 +323,13 @@ void test_cose(crypto_key* key) {
         }
     }
 }
+
+void test_cose() {
+    const OPTION& option = _cmdline->value();
+    if (false == option.skip_gen) {
+        crypto_key key;
+        test_keygen(&key);
+        test_selfgen(&key);
+        test_cose(&key);
+    }
+}

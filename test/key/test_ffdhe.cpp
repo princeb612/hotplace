@@ -10,7 +10,7 @@
 
 #include "sample.hpp"
 
-void test_ffdhe() {
+void test_ffdhe_key() {
     _test_case.begin("ffdhe");
 
     crypto_key key;
@@ -87,4 +87,9 @@ void test_ffdhe_dh() {
 
     _logger->hdump("shared", shared, 16, 3);
     _test_case.test(ret, __FUNCTION__, "DH");
+}
+
+void test_ffdhe() {
+    test_ffdhe_key();
+    test_ffdhe_dh();
 }

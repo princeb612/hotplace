@@ -61,16 +61,15 @@ int main(int argc, char** argv) {
 
         // debugging problem (takes a long time), valgrind --tool=helgrind or --tool=drd ...
         if (option.test_slow_kdf) {
-            test_kdf_pbkdf2_rfc6070();
-            test_kdf_pbkdf2_rfc7914();
-            test_kdf_scrypt_rfc7914();
+            test_rfc6070();
+            test_rfc7914();
         }
         if (option.test_argon2) {
-            test_kdf_argon_rfc9106();  // [APVR]
+            test_rfc9106();  // [APVR]
         }
 
-        test_kdf_extract_expand_rfc5869();
-        test_ckdf_rfc4615();
+        test_rfc5869();
+        test_rfc4615();
     }
     __finally2 { openssl_cleanup(); }
 

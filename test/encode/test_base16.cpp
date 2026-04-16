@@ -10,7 +10,7 @@
 
 #include "sample.hpp"
 
-void test_base16() {
+void test_base16_simple() {
     return_t ret = errorcode_t::success;
     constexpr char text[] = R"(0123456789abcdefghijklmnopqrstuvwxyz!@#$%^&*()-_=+[{]}\\|;:'",<.>/\?)";
     std::string encoded;
@@ -115,4 +115,13 @@ void test_base16_rfc() {
     do_dump_base16_rfc("case1", expr1);
     do_dump_base16_rfc("case2", expr2);
     do_dump_base16_rfc("case3", expr3);
+}
+
+void test_base16() {
+    _test_case.begin("b16 encoding");
+    test_base16_simple();
+    test_base16_func();
+    test_base16_decode();
+    test_base16_oddsize();
+    test_base16_rfc();
 }

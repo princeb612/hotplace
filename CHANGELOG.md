@@ -31,7 +31,7 @@
     * CBOR
 
 * details
-  * Revision 935
+  * Revision 937
   * Revision 933
     * [tested] valgrind, application verifier, sanitize
   * Revision 926

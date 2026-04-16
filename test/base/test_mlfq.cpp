@@ -20,6 +20,34 @@ SAMPLE_MAP _data_map;
 
 critical_section lock;
 
+class test_scenario {
+   public:
+    test_scenario() {
+        __producer_threads.set(1, producer_scenario, producer_signal, this);
+        __consumer_threads.set(1, consumer_scenario, consumer_signal, this);
+        __producer_threads.set_tag("producer_threads");
+        __consumer_threads.set_tag("consumer_threads");
+    }
+
+    ~test_scenario() {}
+
+    void make_scenario();
+    void stop_scenario();
+
+   protected:
+    static return_t producer_scenario(void*);
+    static return_t consumer_scenario(void*);
+    static return_t producer_signal(void*);
+    static return_t consumer_signal(void*);
+
+    signalwait_threads __producer_threads;
+    signalwait_threads __consumer_threads;
+    semaphore __producer_signal;
+    semaphore __consumer_signal;
+
+    t_mlfq<int, mlfq_nonshared_binder<int>> __mfq;
+};
+
 void test_scenario::make_scenario() {
     __producer_threads.create();
     __consumer_threads.create();
@@ -125,4 +153,18 @@ void confirm() {
         _logger->writeln("");
     }
     fflush(stdout);
+}
+
+void test_mlfq() {
+    _test_case.begin("mlfq");
+
+    thread thread1(scenario, nullptr);
+
+    thread1.start();
+
+    _logger->writeln("waiting");
+    thread1.wait(-1);
+    _logger->writeln("terminating");
+
+    confirm();
 }

@@ -10,7 +10,7 @@
 
 #include "sample.hpp"
 
-void test_x509_sign() {
+void test_x509() {
     _test_case.begin("RSA sign/verify");
 
     // generated self-signed certificate

@@ -12,7 +12,7 @@
  *          ./test-tlsserver.exe -r -k -T --trace -tls13
  *          openssl s_client -connect localhost:9000 -state -msg -trace -debug -keylogfile sslkeylog -tls1_3 -groups MLKEM512:MLKEM768:MLKEM1024
  *
- * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver1, httpauth, httpserver2
+ * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver1, httpserver2
  *
  * Revision History
  * Date         Name                Description

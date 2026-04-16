@@ -77,6 +77,13 @@ server_socket* server_socket_adapter::get_server_socket(uint32 scheme) {
         auto iter = _sockets.find(scheme_masked);
         if (_sockets.end() != iter) {
             svrsocket = iter->second;
+        } else {
+            server_socket_builder builder;
+            svrsocket = builder.set(scheme).build();
+            if (svrsocket) {
+                critical_section_guard guard(_lock);
+                _sockets.insert({scheme_masked, svrsocket});
+            }
         }
     }
     __finally2 {}

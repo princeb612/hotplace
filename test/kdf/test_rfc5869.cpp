@@ -10,7 +10,7 @@
 
 #include "sample.hpp"
 
-void test_kdf_extract_expand_rfc5869() {
+void test_rfc5869() {
     _test_case.begin("RFC 5869 Appendix A.  Test Vectors");
     const OPTION& option = _cmdline->value();
     openssl_kdf kdf;

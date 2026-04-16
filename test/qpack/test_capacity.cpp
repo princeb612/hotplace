@@ -139,3 +139,9 @@ void test_small_capacity() {
     _test_case.assert(80 == qpack_dyntable.get_capacity(), __FUNCTION__, "#capacity %zi", qpack_dyntable.get_capacity());
     _logger->dump(bin);
 }
+
+void test_capacity() {
+    test_zero_capacity();
+    test_tiny_capacity();
+    test_small_capacity();
+}

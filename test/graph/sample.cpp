@@ -51,7 +51,6 @@ int main(int argc, char** argv) {
     }
 
     test_graph();
-    test_graph2();
 
     _logger->flush();
 

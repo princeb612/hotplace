@@ -87,31 +87,19 @@ extern const testvector_http3_t pcap_http3[];
 extern const size_t sizeof_pcap_http3;
 
 std::string direction_string(tls_direction_t dir);
-
-// QUIC Version 1
-void test_rfc_9000_a1();
-void test_rfc_9000_a2();
-void test_rfc_9000_a3();
-
 void test_rfc_9001_construct_initial(testvector_initial_packet* item, tls_session* session);
 void test_rfc_9001_send_initial(testvector_initial_packet* item, tls_session* session);
 void test_rfc_9001_retry(testvector_retry_packet* item, tls_session* session);
 
-void test_rfc_9001_section4();
-void test_rfc_9001_a1(tls_session* client_session, tls_session* server_session);
-void test_rfc_9001_a2(tls_session* client_session, tls_session* server_session);
-void test_rfc_9001_a3(tls_session* client_session, tls_session* server_session);
-void test_rfc_9001_a4(tls_session* client_session, tls_session* server_session);
-void test_rfc_9001_a5();
+void test_quic();
 
-void test_quic_xargs_org();
+// QUIC Version 1
+void test_rfc_9000();
+
+void test_rfc_9001();
 
 // QUIC Version 2
-void test_rfc_9369_a1(tls_session* client_session, tls_session* server_session);
-void test_rfc_9369_a2(tls_session* client_session, tls_session* server_session);
-void test_rfc_9369_a3(tls_session* client_session, tls_session* server_session);
-void test_rfc_9369_a4(tls_session* client_session, tls_session* server_session);
-void test_rfc_9369_a5();
+void test_rfc_9369();
 
 // pcap
 void test_pcap_http3();

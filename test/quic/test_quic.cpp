@@ -510,3 +510,5 @@ void test_quic_xargs_org() {
         lambda_read_packet(&server_session, from_server, bin_packet, __FUNCTION__, "connection_close");
     }
 }
+
+void test_quic() { test_quic_xargs_org(); }

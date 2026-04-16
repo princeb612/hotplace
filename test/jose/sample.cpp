@@ -193,68 +193,13 @@ int main(int argc, char** argv) {
 
     openssl_startup();
 
-    test_basic();
-
-    _test_case.begin("RFC 7515");
-
-    test_rfc7515_A1();
-    test_rfc7515_HS();
-    test_rfc7515_A2();
-    test_rfc7515_A3();
-    test_rfc7515_A4();
-    test_rfc7515_A5();
-    test_rfc7515_A6();
-    test_rfc7515_A7();
-
-    _test_case.begin("RFC 7515 PEM");
-    test_rfc7515_bypem();
-    _test_case.begin("RFC 7515 key generation");
-    test_rfc7515_bykeygen();
-
-    _test_case.begin("key matching");
-    key_match_test();
-
-    _test_case.begin("RFC 7516");
-
-    test_rfc7516_A1_test();
-    test_rfc7516_A1();  // RSAES-OAEP and AES GCM
-
-    test_rsa_oaep_256();
-    test_rsa_oaep();
-
-    test_rfc7516_A2();  // RSAES-PKCS1-v1_5 and AES_128_CBC_HMAC_SHA_256
-    test_rfc7516_A3();  // AES Key Wrap and AES_128_CBC_HMAC_SHA_256
-    test_rfc7516_A4();  // Example JWE Using General JWE JSON Serialization
-
-    test_rfc7516_B();
-
-    _test_case.begin("RFC 7517");
-    test_jwk();
-    test_rfc7517_C();  // RFC 7517 Appendix C.
-
-    _test_case.begin("RFC 7518");
-    test_rfc7518_RSASSA_PSS();  // test
-    test_ecdh();
-    test_rfc7518_C();
-
-    _test_case.begin("RFC 7520");
+    test_rfc7515();
+    test_rfc7516();
+    test_rfc7517();
+    test_rfc7518();
     test_rfc7520();
-    test_rfc7520_6_nesting_sig_and_enc();
-
-    test_jwe_flattened();
-    test_jwe_json(jwe_t::jwe_a128cbc_hs256);
-    test_jwe_json(jwe_t::jwe_a192cbc_hs384);
-    test_jwe_json(jwe_t::jwe_a256cbc_hs512);
-    test_jwe_json(jwe_t::jwe_a128gcm);
-    test_jwe_json(jwe_t::jwe_a192gcm);
-    test_jwe_json(jwe_t::jwe_a256gcm);
-
-    _test_case.begin("RFC 7638");
-    test_jwk_thumbprint();
-
-    _test_case.begin("RFC 8037");
+    test_rfc7638();
     test_rfc8037();
-    test_okp();
 
     openssl_cleanup();
 

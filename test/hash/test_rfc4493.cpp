@@ -34,7 +34,7 @@ void do_test_aes128cbc_mac_routine(const binary_t& key, const binary_t& message,
     _test_case.assert(expect == result, __FUNCTION__, "cmac test");
 }
 
-void test_cmac_rfc4493() {
+void test_rfc4493() {
     _test_case.begin("CMAC (RFC 4493)");
 
     openssl_hash hash;

@@ -77,8 +77,7 @@ int main(int argc, char** argv) {
         set_trace_level(option.trace_level);
     }
 
-    test_rfc7049_table4_1();
-    test_rfc7049_table4_2();
+    test_rfc7049();
     test_parse();
 
     _logger->flush();

@@ -372,3 +372,13 @@ void test_bignumber() {
         _test_case.assert(bn == bn_int256max, __FUNCTION__, "bignumber");
     }
 }
+
+void test_payload() {
+    test_payload_write();
+    test_payload_read();
+    test_uint24();
+    test_payload_uint24();
+    test_group();
+    test_uint48();
+    test_bignumber();
+}

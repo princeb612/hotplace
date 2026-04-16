@@ -10,7 +10,7 @@
 
 #include "sample.hpp"
 
-void test_kdf_pbkdf2_rfc6070() {
+void test_rfc6070() {
     _test_case.begin("pbkdf2");
     const OPTION& option = _cmdline->value();
 

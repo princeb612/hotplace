@@ -247,3 +247,14 @@ void test_rfc_9369_a5() {
     //
     // packet = 5558b1c60ae7b6b932bc27d786f4bc2bb20f2162ba
 }
+
+void test_rfc_9369() {
+    tls_session server_session(session_type_quic2);
+    tls_session client_session(session_type_quic2);
+
+    test_rfc_9369_a1(&client_session, &server_session);
+    test_rfc_9369_a2(&client_session, &server_session);
+    test_rfc_9369_a3(&client_session, &server_session);
+    test_rfc_9369_a4(&client_session, &server_session);
+    test_rfc_9369_a5();
+}

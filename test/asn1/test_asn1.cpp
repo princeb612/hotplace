@@ -622,3 +622,19 @@ void test_x690_annex_a_2() {
     //
     //
 }
+
+void test_asn1() {
+    // studying ...
+    test_x690_8_1_3_length_octets();
+    test_x690_8_1_5_end_of_contents();
+    test_x690_encoding_value();
+    test_x690_encoding_typevalue();
+    test_x690_constructed();
+    test_x690_8_9_sequence();
+    test_x690_time();
+    test_asn1_object();
+
+    // TODO
+    test_x690_annex_a_1();
+    test_x690_annex_a_2();
+}

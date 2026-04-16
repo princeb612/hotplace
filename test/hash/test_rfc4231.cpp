@@ -10,7 +10,7 @@
 
 #include "sample.hpp"
 
-void test_hmacsha_rfc4231() {
+void test_rfc4231() {
     _test_case.begin("openssl_hash RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005");
     const OPTION& option = _cmdline->value();
 

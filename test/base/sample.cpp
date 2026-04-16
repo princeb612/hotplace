@@ -73,9 +73,12 @@ int main(int argc, char **argv) {
     test_endian();
     test_ieee754();
     test_loglevel();
+    test_mlfq();
     test_shared();
+    test_signalwait_threads();
     test_stream();
     test_string();
+    test_unittest();
     test_valist();
     test_variant();
 

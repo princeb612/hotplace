@@ -13,7 +13,7 @@
 
 #include "sample.hpp"
 
-void test_trie() {
+void test_trie_sample() {
     _test_case.begin("t_trie");
     // https://www.geeksforgeeks.org/trie-data-structure-in-cpp/
     struct testvector {
@@ -190,4 +190,11 @@ void test_trie_scan() {
     _logger->writeln(bs);
     _logger->dump(bs, 16, 3);
     _test_case.assert(bs == plaintext, __FUNCTION__, "huffman coding");
+}
+
+void test_trie() {
+    test_trie_sample();
+    test_trie_autocompletion();
+    test_trie_lookup();
+    test_trie_scan();
 }

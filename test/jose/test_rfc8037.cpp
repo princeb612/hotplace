@@ -9,7 +9,7 @@
 
 #include "sample.hpp"
 
-void test_rfc8037() {
+void test_rfc8037_features() {
     print_text("RFC 8037");
     return_t ret = errorcode_t::success;
     const OPTION& option = _cmdline->value();
@@ -143,4 +143,10 @@ void test_okp() {
         _test_case.test(ret, __FUNCTION__, "RFC 8037 JWS with OKP");
     }
     jose.close(handle);
+}
+
+void test_rfc8037() {
+    _test_case.begin("RFC 8037");
+    test_rfc8037_features();
+    test_okp();
 }

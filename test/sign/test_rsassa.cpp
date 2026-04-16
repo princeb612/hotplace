@@ -90,7 +90,7 @@ void test_nist_cavp_rsa() {
     dotest_nist_cavp_rsa_signpss(&key_rsa, test_vector_nist_cavp_rsa_fips186_4_signgenpss_186_3, sizeof_test_vector_nist_cavp_rsa_fips186_4_signgenpss_186_3);
 }
 
-void test_rsassa() {
+void test_rsassa_sample() {
     _test_case.begin("RSA key, RSAPSS key");
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -128,4 +128,9 @@ void test_rsassa() {
 
     lambda_test(NID_rsaEncryption);
     lambda_test(NID_rsassaPss);
+}
+
+void test_rsassa() {
+    test_nist_cavp_rsa();
+    test_rsassa_sample();
 }

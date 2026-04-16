@@ -58,11 +58,8 @@ int main(int argc, char** argv) {
 
     openssl_startup();
 
-    test_rfc9204_b();
-    test_zero_capacity();
-    test_tiny_capacity();
-    test_small_capacity();
-
+    test_rfc9204();
+    test_capacity();
     test_qpack_stream();
 
     openssl_cleanup();

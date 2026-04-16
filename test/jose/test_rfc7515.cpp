@@ -10,7 +10,6 @@
 #include "sample.hpp"
 
 void test_basic() {
-    print_text("basic informations");
     const OPTION option = _cmdline->value();
 
     struct {
@@ -726,4 +725,28 @@ void key_match_test() {
         }
     }
     __finally2 {}
+}
+
+void test_rfc7515() {
+    print_text("basic informations");
+    test_basic();
+
+    _test_case.begin("RFC 7515");
+
+    test_rfc7515_A1();
+    test_rfc7515_HS();
+    test_rfc7515_A2();
+    test_rfc7515_A3();
+    test_rfc7515_A4();
+    test_rfc7515_A5();
+    test_rfc7515_A6();
+    test_rfc7515_A7();
+
+    _test_case.begin("RFC 7515 PEM");
+    test_rfc7515_bypem();
+    _test_case.begin("RFC 7515 key generation");
+    test_rfc7515_bykeygen();
+
+    _test_case.begin("key matching");
+    key_match_test();
 }

@@ -175,18 +175,11 @@ int main(int argc, char** argv) {
         set_trace_level(option.trace_level);
     }
 
-    _test_case.begin("b16 encoding");
     test_base16();
-    test_base16_func();
-    test_base16_decode();
-    test_base16_oddsize();
-    test_base16_rfc();
 
-    _test_case.begin("b64 encoding");
     test_base64();
 
-    _test_case.begin("huffman codes");
-    test_huffman_codes();
+    test_huffman();
 
     _logger->flush();
 

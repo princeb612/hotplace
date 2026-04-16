@@ -4,7 +4,7 @@
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *      simple HTTP/3 server implementation
- * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver1, httpauth, httpserver2, dtlsserver, httpserver3
+ * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver1, httpserver2, dtlsserver, httpserver3
  *
  * Revision History
  * Date         Name                Description

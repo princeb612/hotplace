@@ -108,3 +108,9 @@ uint32 test_totp_rfc6238(hash_algorithm_t algorithm) {
 
     return ret;
 }
+
+void test_rfc6238() {
+    test_totp_rfc6238(hash_algorithm_t::sha1);
+    test_totp_rfc6238(hash_algorithm_t::sha2_256);
+    test_totp_rfc6238(hash_algorithm_t::sha2_512);
+}

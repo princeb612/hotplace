@@ -128,3 +128,8 @@ void test_kdf_scrypt_rfc7914() {
         _test_case.test(errorcode_t::not_supported, __FUNCTION__, "scrypt");
     }
 }
+
+void test_rfc7914() {
+    test_kdf_pbkdf2_rfc7914();
+    test_kdf_scrypt_rfc7914();
+}

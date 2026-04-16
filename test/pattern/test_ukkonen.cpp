@@ -10,7 +10,7 @@
 
 #include "sample.hpp"
 
-void test_ukkonen() {
+void test_ukkonen1() {
     _test_case.begin("ukkonen algorithm");
 
     struct testvector {
@@ -67,4 +67,9 @@ void test_ukkonen2() {
     std::set<int> result = tree.search("ana", 3);
     std::set<int> expect = {1, 3};
     _test_case.assert(result == expect, __FUNCTION__, "ukkonen search");
+}
+
+void test_ukkonen() {
+    test_ukkonen1();
+    test_ukkonen2();
 }

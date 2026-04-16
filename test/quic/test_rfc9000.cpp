@@ -99,3 +99,9 @@ void test_rfc_9000_a3() {
     decode_packet_number(0xa82f30ea, 0x9b32, 16, value);
     _test_case.assert(0xa82f9b32 == value, __FUNCTION__, "RFC 9000 A.3.");
 }
+
+void test_rfc_9000() {
+    test_rfc_9000_a1();
+    test_rfc_9000_a2();
+    test_rfc_9000_a3();
+}

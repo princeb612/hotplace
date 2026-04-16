@@ -23,16 +23,6 @@ extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
-void test_hash_hmac_sign();
-void test_nist_cavp_ecdsa();
-void test_rfc6979_ecdsa();
-void test_crypto_sign();
-void test_nist_cavp_rsa();
-void test_x509_sign();
-void check_ecdsa_size();
-void test_rsassa();
-void test_dsa();
-
 struct test_vector_nist_cavp_rsa_key_t {
     const char* kid;
     const char* n;
@@ -98,5 +88,12 @@ struct test_vector_nist_cavp_dsa_t {
 };
 extern const test_vector_nist_cavp_dsa_t test_vector_nist_cavp_dsa_fips186_3_signgen[];
 extern const size_t sizeof_test_vector_nist_cavp_dsa_fips186_3_signgen;
+
+void test_crypto_sign();
+void test_dsa();
+void test_ecdsa();
+void test_hmac();
+void test_rsassa();
+void test_x509();
 
 #endif

@@ -10,7 +10,7 @@
 
 #include "sample.hpp"
 
-void test_validate_resources() {
+void test_resources() {
     // after modification, check sanities
     _test_case.begin("validate resources");
 

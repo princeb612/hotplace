@@ -33,7 +33,7 @@ void test_aho_corasick_simple() {
     _test_case.assert(result == expect, __FUNCTION__, "Aho Corasick algorithm");
 }
 
-void test_aho_corasick() {
+void test_aho_corasick_sample() {
     _test_case.begin("t_aho_corasick");
 
     struct testvector {
@@ -161,4 +161,9 @@ void test_aho_corasick() {
 
         _test_case.assert(item.expects == result, __FUNCTION__, R"(multiple pattern search "%s")", item.source);
     }
+}
+
+void test_aho_corasick() {
+    test_aho_corasick_simple();
+    test_aho_corasick_sample();
 }

@@ -29,9 +29,12 @@ void test_dumpmemory();
 void test_endian();
 void test_ieee754();
 void test_loglevel();
+void test_mlfq();
 void test_shared();
+void test_signalwait_threads();
 void test_stream();
 void test_string();
+void test_unittest();
 void test_valist();
 void test_variant();
 

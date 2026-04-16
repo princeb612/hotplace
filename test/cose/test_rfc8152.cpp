@@ -1015,3 +1015,67 @@ void test_jose_from_cwk() {
     _test_case.test(ret, __FUNCTION__, "verify");
     cose.close(handle);
 }
+
+void test_rfc8152() {
+    const OPTION& option = _cmdline->value();
+
+    // check format
+    // install
+    //      pacman -S rubygems (MINGW)
+    //      yum install rubygems (RHEL)
+    //      gem install cbor-diag
+    // diag2cbor.rb < inputfile > outputfile
+    // compare
+    //      cat outputfile | xxd
+    //      xxd -ps outputfile
+
+    // part 0 .. try to decode
+    if (false == option.skip_cbor_basic) {
+        test_rfc8152_read_cbor();
+    }
+
+    // part 1 .. following cases
+    // encode and decode
+    // Test Vector comparison
+
+    cbor_web_key cwk;
+    cwk.load_file(&rfc8152_privkeys, key_ownspec, "rfc8152_c_7_2.cbor");
+    cwk.load_file(&rfc8152_pubkeys, key_ownspec, "rfc8152_c_7_1.cbor");
+
+    // RFC8152/Appendix_C_4_1.json
+    cwk.add_oct_b64u(&rfc8152_privkeys_c4, "hJtXhkV8FJG-Onbc6mxCcY", keydesc("our-secret2", crypto_use_t::use_enc));
+
+    // rfc8152_privkeys.for_each (dump_crypto_key, nullptr);
+    // rfc8152_pubkeys.for_each (dump_crypto_key, nullptr);
+
+    test_rfc8152_b();
+    // cbor_tag_t::cose_tag_sign
+    test_rfc8152_c_1_1();
+    test_rfc8152_c_1_2();
+    test_rfc8152_c_1_3();
+    test_rfc8152_c_1_4();
+    // cbor_tag_t::cose_tag_sign1
+    test_rfc8152_c_2_1();
+    // cbor_tag_t::cose_tag_encrypt
+    test_rfc8152_c_3_1();
+    test_rfc8152_c_3_2();
+    test_rfc8152_c_3_3();
+    test_rfc8152_c_3_4();
+    // cbor_tag_t::cose_tag_encrypt0
+    test_rfc8152_c_4_1();
+    test_rfc8152_c_4_2();
+    // cbor_tag_t::cose_tag_mac
+    test_rfc8152_c_5_1();
+    test_rfc8152_c_5_2();
+    test_rfc8152_c_5_3();
+    test_rfc8152_c_5_4();
+    // cbor_tag_t::cose_tag_mac0
+    test_rfc8152_c_6_1();
+    // key
+    test_rfc8152_c_7_1();
+    test_rfc8152_c_7_2();
+
+    // part 2 .. test JWK, CWK compatibility
+    // test crypto_key, crypto_keychain
+    test_jose_from_cwk();
+}

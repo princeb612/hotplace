@@ -11,7 +11,7 @@
 #include "sample.hpp"
 
 // https://www.geeksforgeeks.org/pattern-searching-using-trie-suffixes/
-void test_suffixtree() {
+void test_suffixtree1() {
     _test_case.begin("suffix tree");
 
     struct testvector {
@@ -51,4 +51,9 @@ void test_suffixtree2() {
         }
         _test_case.assert(item.expects == result, __FUNCTION__, "search %.*s", (unsigned)item.size, item.p);
     }
+}
+
+void test_suffixtree() {
+    test_suffixtree1();
+    test_suffixtree2();
 }

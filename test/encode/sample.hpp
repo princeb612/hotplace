@@ -45,13 +45,7 @@ extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 void test_base16();
-void test_base16_func();
-void test_base16_decode();
-void test_base16_oddsize();
-void test_base16_rfc();
-
 void test_base64();
-
-void test_huffman_codes();
+void test_huffman();
 
 #endif

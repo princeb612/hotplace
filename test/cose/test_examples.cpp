@@ -11,7 +11,7 @@
 
 #include "sample.hpp"
 
-void test_github_example() {
+void test_examples() {
     _test_case.begin("https://github.com/cose-wg/Examples");
 
     const OPTION& option = _cmdline->value();

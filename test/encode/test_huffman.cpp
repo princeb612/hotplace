@@ -10,7 +10,8 @@
 
 #include "sample.hpp"
 
-void test_huffman_codes() {
+void test_huffman() {
+    _test_case.begin("huffman codes");
     return_t ret = errorcode_t::success;
 
     const char* sample = "We don't playing because we grow old; we grow old because we stop playing. - George Bernard Shaw";

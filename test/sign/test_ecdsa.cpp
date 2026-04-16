@@ -212,3 +212,9 @@ void check_ecdsa_size() {
     };
     key.for_each(lambda, nullptr);
 }
+
+void test_ecdsa() {
+    test_nist_cavp_ecdsa();
+    test_rfc6979_ecdsa();
+    check_ecdsa_size();
+}

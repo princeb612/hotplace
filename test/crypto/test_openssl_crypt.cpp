@@ -195,3 +195,9 @@ void test_openssl_crypt(uint32 cooltime, uint32 unitsize) {
     }
     __finally2 {}
 }
+
+void test_openssl_crypt() {
+    validate_openssl_crypt();      // validate wrapper class openssl_crypt
+    test_openssl_crypt(10, 4096);  // performance (for large stream encryption performance, just check error occurrence)
+    test_openssl_crypt(0, 0);      // speed
+}

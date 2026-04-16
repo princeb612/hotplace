@@ -129,3 +129,5 @@ void test_dh_rfc7748() {
         _test_case.assert((shared_secret1 == shared_secret_expected) && (shared_secret1 == shared_secret2), __FUNCTION__, "RFC 7748 6.2.  Curve448");
     }
 }
+
+void test_dh() { test_dh_rfc7748(); }

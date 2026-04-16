@@ -25,11 +25,10 @@ extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
 void test_kdf_hkdf();
-void test_kdf_pbkdf2_rfc6070();
-void test_kdf_pbkdf2_rfc7914();
-void test_kdf_scrypt_rfc7914();
-void test_kdf_argon_rfc9106();
-void test_kdf_extract_expand_rfc5869();
-void test_ckdf_rfc4615();
+void test_rfc6070();  // PBKDF2
+void test_rfc7914();  // PBKDF2, scrypt
+void test_rfc9106();  // argon
+void test_rfc5869();  // extract, expand
+void test_rfc4615();  // CKDF
 
 #endif

@@ -43,7 +43,7 @@ void test_lcp() {
     _test_case.assert(result == "gee", __FUNCTION__, "LCP");
 }
 
-void test_wildcards() {
+void test_wildcards1() {
     _test_case.begin("wildcards");
 
     std::string text = "baaabab";
@@ -214,4 +214,11 @@ void test_merge_ovl_intervals() {
     // {1, 8}
     _logger->writeln(lambda_log);
     _test_case.assert(res == expect, __FUNCTION__, "test #5");
+}
+
+void test_wildcard() {
+    test_merge_ovl_intervals();
+    test_lcp();
+    test_wildcards1();
+    test_wildcards2();
 }

@@ -66,7 +66,7 @@ return_t do_test_rfc7520_jwe(crypto_key* key, const char* filename, const char* 
     return ret;
 }
 
-void test_rfc7520() {
+void test_rfc7520_features() {
     print_text("RFC 7520");
     json_web_key jwk;
     crypto_key key;
@@ -336,4 +336,18 @@ void test_jwe_json(jwe_t enc) {
         jose.close(handle_decrypt);
     }
     _test_case.test(ret, __FUNCTION__, "RFC 7520 JWE enc %s", nameof_enc);
+}
+
+void test_rfc7520() {
+    _test_case.begin("RFC 7520");
+    test_rfc7520_features();
+    test_rfc7520_6_nesting_sig_and_enc();
+
+    test_jwe_flattened();
+    test_jwe_json(jwe_t::jwe_a128cbc_hs256);
+    test_jwe_json(jwe_t::jwe_a192cbc_hs384);
+    test_jwe_json(jwe_t::jwe_a256cbc_hs512);
+    test_jwe_json(jwe_t::jwe_a128gcm);
+    test_jwe_json(jwe_t::jwe_a192gcm);
+    test_jwe_json(jwe_t::jwe_a256gcm);
 }

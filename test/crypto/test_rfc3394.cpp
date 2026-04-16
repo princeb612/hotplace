@@ -86,7 +86,7 @@ void do_test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {
     _test_case.assert(out_kw == expect, __FUNCTION__, msg ? msg : "");
 }
 
-void test_keywrap_rfc3394() {
+void test_rfc3394() {
     _test_case.begin("RFC 3394 keywrap");
 
     for (int i = 0; i < sizeof_test_vector_rfc3394; i++) {

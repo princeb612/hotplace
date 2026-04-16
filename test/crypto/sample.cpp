@@ -56,27 +56,25 @@ int main(int argc, char** argv) {
 
         test_features();
 
-        validate_openssl_crypt();  // validate wrapper class openssl_crypt
-        test_validate_resources();
+        test_resources();
 
-        test_openssl_crypt(10, 4096);  // performance (for large stream encryption performance, just check error occurrence)
-        test_openssl_crypt(0, 0);      // speed
+        test_openssl_crypt();
 
-        test_keywrap_rfc3394();
+        test_rfc3394();
 
-        test_chacha20_rfc7539();
-        test_chacha20_rfc7539_crypto_aead();
+        test_rfc7539();  // chacha20, chacha20-poly1305
 
-        test_cbc_hmac_rfc7516();
+        test_rfc7516();  // CBC HMAC
 
         test_cipher_encrypt();
         test_crypto_encrypt();
         test_crypto_aead();
-        test_cbc_hmac_tls_mte();  // mac_then_encrypt
-        test_cbc_hmac_tls_etm();  // encrypt_then_mac
+        test_cbc_hmac_tls();
         test_aead_ccm();
 
         test_curves();
+
+        test_random();
     }
     __finally2 { openssl_cleanup(); }
 

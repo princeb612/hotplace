@@ -41,12 +41,12 @@ enum tls_io_flag_t {
  */
 enum socket_scheme_t : uint32 {
     // 0x0000FFFF
-    socket_scheme_tcp = 0x00000000,
-    socket_scheme_udp = 0x00000001,
+    socket_scheme_tcp = 0x00000001,
+    socket_scheme_udp = 0x00000002,
     socket_scheme_tls = 0x00008000,
     socket_scheme_dtls = 0x00008001,
     socket_scheme_quic = 0x00008002,
-    socket_scheme_quic2 = 0x00008003,
+    socket_scheme_quic2 = 0x00008004,
     // 0x000F0000
     socket_scheme_openssl = 0x00000000,
     socket_scheme_trial = 0x00010000,

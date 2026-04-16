@@ -9,7 +9,7 @@
  *      test.2
  *          test-tlsclient
  *
- * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver1, httpauth, httpserver2
+ * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver1, httpserver2
  *
  * Revision History
  * Date         Name                Description

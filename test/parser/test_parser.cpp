@@ -50,7 +50,7 @@ void test_dump_testdata() {
     // _logger->dump(asn1_value, strlen(asn1_value));
 }
 
-void test_parser() {
+void test_parser_sample() {
     _test_case.begin("parse");
 
     parser p;
@@ -476,4 +476,14 @@ void test_patterns() {
         };
         context.for_each(dump_handler);
     }
+}
+
+void test_parser() {
+    test_dump_testdata();
+    test_parser_sample();
+    test_parser_options();
+    test_parser_search();
+    test_parser_compare();
+    test_multipattern_search();
+    test_patterns();
 }

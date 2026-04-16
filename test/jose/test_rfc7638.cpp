@@ -75,3 +75,8 @@ void test_jwk_thumbprint() {
     bool result = (thumbprint == sample);
     _test_case.test(result ? errorcode_t::success : errorcode_t::internal_error, __FUNCTION__, "RFC 7638 3.1.  Example JWK Thumbprint Computation");
 }
+
+void test_rfc7638() {
+    _test_case.begin("RFC 7638");
+    test_jwk_thumbprint();
+}

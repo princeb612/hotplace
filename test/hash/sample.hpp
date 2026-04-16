@@ -27,10 +27,10 @@ void test_hash_routine(hash_algorithm_t algorithm, const byte_t* key_data, unsig
 return_t test_hash_routine(hash_algorithm_t algorithm, binary_t key, binary_t data, binary_t expect, const char* text);
 
 void test_openssl_hash();
-void test_hmacsha_rfc4231();
-void test_cmac_rfc4493();
-uint32 test_hotp_rfc4226();
-uint32 test_totp_rfc6238(hash_algorithm_t algorithm);
+void test_rfc4231();    // HMAC SHA
+void test_rfc4493();    // CMAC
+uint32 test_rfc4226();  // HOTP
+void test_rfc6238();    // TOTP
 void test_transcript_hash();
 
 #endif

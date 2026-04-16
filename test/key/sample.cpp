@@ -57,14 +57,13 @@ int main(int argc, char** argv) {
 
         test_crypto_key();
         test_rsa();
-        test_eckey_compressed();
+        test_ec();
         if (option.test_ffdhe) {
             test_ffdhe();
-            test_ffdhe_dh();
         }
         test_der();
         test_dsa();
-        test_dh_rfc7748();
+        test_dh();
         test_curves();
         test_hpke();
         test_mlkem();

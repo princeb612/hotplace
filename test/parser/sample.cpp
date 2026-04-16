@@ -52,13 +52,7 @@ int main(int argc, char** argv) {
         set_trace_level(option.trace_level);
     }
 
-    test_dump_testdata();
     test_parser();
-    test_parser_options();
-    test_parser_search();
-    test_parser_compare();
-    test_multipattern_search();
-    test_patterns();
 
     _logger->flush();
 

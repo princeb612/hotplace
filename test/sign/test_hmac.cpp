@@ -107,3 +107,5 @@ void test_hash_hmac_sign() {
         jose.close(jose_context);
     }
 }
+
+void test_hmac() { test_hash_hmac_sign(); }

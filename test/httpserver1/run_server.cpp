@@ -4,7 +4,7 @@
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *      simple HTTP/1.1 server implementation
- * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver1, httpauth, httpserver2
+ * @sa  See in the following order : tcpserver1, tcpserver2, tlsserver, httpserver1, httpserver2
  *
  * Revision History
  * Date         Name                Description
@@ -38,8 +38,10 @@ return_t consumer_routine(uint32 type, uint32 data_count, void *data_array[], CA
 
     switch (type) {
         case mux_connect:
+            _logger->colorln("connect %i", session_socket->get_event_socket());
             break;
         case mux_read:
+            _logger->colorln("read %i", session_socket->get_event_socket());
             if (option.verbose) {
                 _logger->writeln("%.*s", (unsigned)bufsize, buf);
             }
@@ -52,6 +54,15 @@ return_t consumer_routine(uint32 type, uint32 data_count, void *data_array[], CA
                 if (use_tls) {
                     // using http_router
                     _http_server->get_http_router().route(session, request, &response);
+                    /*
+                        if ("HTTP/1.1" == request->get_version_str()) {
+                            std::string altsvc_fieldvalue = format(R"(h2=":%i"; h3=":%i"; ma=2592000; persist=1)", option.port_h2, option.port_h3);
+                            response.get_http_header().add("Alt-Svc", altsvc_fieldvalue);
+                        } else if ("HTTP/2" == request->get_version_str()) {
+                            std::string altsvc_fieldvalue = format(R"(h3=":%i"; ma=2592000; persist=1)", option.port_h3);
+                            response.get_http_header().add("Alt-Svc", altsvc_fieldvalue);
+                        }
+                     */
                 } else {
                     /**
                      * Upgrade : commonly used in upgrading HTTP/1.1 connections to WebSocket or HTTP/2.
@@ -90,6 +101,7 @@ return_t consumer_routine(uint32 type, uint32 data_count, void *data_array[], CA
 
             break;
         case mux_disconnect:
+            _logger->colorln("disconnect %i", session_socket->get_event_socket());
             break;
     }
     return ret;
@@ -165,6 +177,26 @@ return_t simple_http_server(void *) {
 
         _http_server->get_http_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 14);
 
+        // _http_server->get_ipaddr_acl().add_rule("10.10.10.10", false);  // deny
+
+        // Basic Authentication (realm)
+        std::string basic_realm = "Hello World";
+        // Digest Access Authentication (realm/algorithm/qop/userhash)
+        std::string digest_access_realm = "happiness";
+        std::string digest_access_realm2 = "testrealm@host.com";
+        std::string digest_access_alg = "SHA-256-sess";
+        std::string digest_access_alg2 = "SHA-256-sess";  // chrome not support SHA-512, SHA-512-sess, ...
+        std::string digest_access_qop = "auth";
+        bool digest_access_userhash = true;
+        // Bearer Authentication (realm)
+        std::string bearer_realm = "hotplace";
+        // OAuth 2.0 (realm)
+        std::string oauth2_realm = "somewhere over the rainbow";
+        basic_stream endpoint_url;
+        basic_stream cb_url;
+        endpoint_url << "https://localhost:" << option.port_tls;
+        cb_url << endpoint_url << "/client/cb";
+
         std::function<void(network_session *, http_request *, http_response *, http_router *)> default_handler =
             [&](network_session *session, http_request *request, http_response *response, http_router *router) -> void {
             basic_stream bs;
@@ -176,6 +208,39 @@ return_t simple_http_server(void *) {
             basic_stream bs;
             bs << request->get_http_uri().get_uri();
             response->compose(200, "text/html", "<html><body>404 Not Found<pre>%s</pre></body></html>", bs.c_str());
+        };
+        std::function<void(network_session *, http_request *, http_response *, http_router *)> cb_handler =
+            [&](network_session *session, http_request *request, http_response *response, http_router *router) -> void {
+            skey_value &kv = request->get_http_uri().get_query_keyvalue();
+            std::string code = kv.get("code");
+            std::string access_token = kv.get("access_token");
+            std::string error = kv.get("error");
+            if (error.empty()) {
+                if (code.size()) {
+                    // Authorization Code Grant
+                    http_client client;
+                    http_request req;
+                    http_response *resp = nullptr;
+                    basic_stream bs;
+                    bs << "/auth/token?grant_type=authorization_code&code=" << code << "&redirect_uri=" << cb_url << "&client_id=s6BhdRkqt3";
+
+                    req.compose(http_method_t::HTTP_POST, bs.c_str(), "");                             // token endpoint
+                    req.get_http_header().add("Authorization", "Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW");  // s6BhdRkqt3:gX1fBat3bV
+
+                    client.set_url(endpoint_url.c_str());
+                    client.set_wto(10 * 1000);
+                    client.request(req, &resp);
+                    if (resp) {
+                        *response = *resp;
+                        resp->release();
+                    }
+                } else if (access_token.size()) {
+                    // Implitcit Grant
+                    response->compose(200, "text/plain", "");
+                }
+            } else {
+                response->compose(401, "text/html", "<html><body>Unauthorized</body></html>");
+            }
         };
 
         _http_server->get_http_router()
@@ -195,10 +260,50 @@ return_t simple_http_server(void *) {
             .add("/api/html", api_response_html_handler)
             .add("/api/json", api_response_json_handler)
             .add("/api/test", default_handler)
-            .add(404, error_handler);
+            .add(404, error_handler)
+            // basic authentication
+            .add("/auth/basic", default_handler, new basic_authentication_provider(basic_realm))
+            // digest access authentication
+            .add("/auth/digest", default_handler, new digest_access_authentication_provider(digest_access_realm, digest_access_alg, digest_access_qop))
+            .add("/auth/userhash", default_handler,
+                 new digest_access_authentication_provider(digest_access_realm2, digest_access_alg2, digest_access_qop, digest_access_userhash))
+            // bearer authentication
+            .add("/auth/bearer", default_handler, new bearer_authentication_provider(bearer_realm))
+            // callback
+            .add("/client/cb", cb_handler);
 
-        // // constraints maximum packet size to 4KB
+        // constraints maximum packet size to 4KB
         _http_server->get_http_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 12);
+
+        // authentication
+        {
+            _http_server->get_http_router()
+                .get_oauth2_provider()
+                .add(new oauth2_authorization_code_grant_provider)
+                .add(new oauth2_implicit_grant_provider)
+                .add(new oauth2_resource_owner_password_credentials_grant_provider)
+                .add(new oauth2_client_credentials_grant_provider)
+                .add(new oauth2_unsupported_provider)
+                .set(oauth2_authorization_endpoint, "/auth/authorize")
+                .set(oauth2_token_endpoint, "/auth/token")
+                .set(oauth2_signpage, "/auth/sign")
+                .set(oauth2_signin, "/auth/signin")
+                .set_token_endpoint_authentication(new basic_authentication_provider(oauth2_realm))
+                .apply(_http_server->get_http_router());
+
+            http_authentication_resolver &resolver = _http_server->get_http_router().get_authenticate_resolver();
+
+            resolver.get_basic_credentials(basic_realm).add("user", "password");
+            resolver.get_basic_credentials(oauth2_realm).add("s6BhdRkqt3", "gX1fBat3bV");  // RFC 6749 Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
+            resolver.get_digest_credentials(digest_access_realm).add(digest_access_realm, digest_access_alg, "user", "password");
+            resolver.get_digest_credentials(digest_access_realm2)
+                .add(digest_access_realm2, digest_access_alg2, "Mufasa", "Circle Of Life")
+                .add(digest_access_realm2, digest_access_alg2, "user", "password");
+            resolver.get_bearer_credentials(bearer_realm).add("clientid", "token");
+
+            resolver.get_oauth2_credentials().insert("s6BhdRkqt3", "gX1fBat3bV", "user", "testapp", cb_url.c_str(), std::list<std::string>());
+            resolver.get_custom_credentials().add("user", "password");
+        }
 
         _http_server->start();
 

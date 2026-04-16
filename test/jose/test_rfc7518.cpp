@@ -155,3 +155,10 @@ void test_rfc7518_C() {
     dump2("derived", derived);
     dump_elem(derived);
 }
+
+void test_rfc7518() {
+    _test_case.begin("RFC 7518");
+    test_rfc7518_RSASSA_PSS();  // test
+    test_ecdh();
+    test_rfc7518_C();
+}

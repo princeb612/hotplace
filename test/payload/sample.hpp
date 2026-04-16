@@ -19,13 +19,7 @@ extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
-void test_payload_write();
-void test_payload_read();
-void test_uint24();
-void test_group();
-void test_payload_uint24();
-void test_quic_integer();
-void test_uint48();
-void test_bignumber();
+void test_payload();
+void test_quic();
 
 #endif

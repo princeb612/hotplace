@@ -71,3 +71,8 @@ void test_cbc_hmac_tls_etm() {
 
     test_cbc_hmac(test_vector_tls_etm, sizeof_test_vector_tls_etm);
 }
+
+void test_cbc_hmac_tls() {
+    test_cbc_hmac_tls_mte();  // mac_then_encrypt
+    test_cbc_hmac_tls_etm();  // encrypt_then_mac
+}

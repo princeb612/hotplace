@@ -581,3 +581,19 @@ void test_jwk() {
     //
     //   crypto_key::get_key(key->pkey, mapper->flag, item.type, item.pub1, item.pub2, item.priv, false);
 }
+
+void test_rfc7516() {
+    _test_case.begin("RFC 7516");
+
+    test_rfc7516_A1_test();
+    test_rfc7516_A1();  // RSAES-OAEP and AES GCM
+
+    test_rsa_oaep_256();
+    test_rsa_oaep();
+
+    test_rfc7516_A2();  // RSAES-PKCS1-v1_5 and AES_128_CBC_HMAC_SHA_256
+    test_rfc7516_A3();  // AES Key Wrap and AES_128_CBC_HMAC_SHA_256
+    test_rfc7516_A4();  // Example JWE Using General JWE JSON Serialization
+
+    test_rfc7516_B();
+}

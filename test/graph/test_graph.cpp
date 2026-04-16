@@ -78,7 +78,7 @@ void do_test_graph_shortest_path(t_graph<T>& graph, const T& start, const T& end
     delete shortest;
 }
 
-void test_graph() {
+void test_graph1() {
     _test_case.begin("graph<int>");
 
     // Data Structures and Algorithm Analysis in C++, 9 Graph Algorithms
@@ -200,4 +200,9 @@ void test_graph2() {
     do_test_graph<std::string>(g, "get up");
     do_test_graph_shortest_path<std::string>(g, "get up");
     do_test_graph_shortest_path<std::string>(g, "get up", "dream");
+}
+
+void test_graph() {
+    test_graph1();
+    test_graph2();
 }

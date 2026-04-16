@@ -11,7 +11,7 @@
 
 #include "sample.hpp"
 
-void test_validate_resource() {
+void test_resources() {
     _test_case.begin("validate resources");
 
     struct keylen_table_t {

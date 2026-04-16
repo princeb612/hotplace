@@ -61,49 +61,27 @@ extern crypto_key rfc8152_pubkeys;
 extern crypto_key rfc8152_privkeys_c4;
 
 // validate resources
-void test_validate_resource();
+void test_resources();
 
 // part 0 .. try to decode
 void test_rfc8152_read_cbor();
 
 // part 1 .. following cases
+// part 2 .. test JWK, CWK compatibility
 // encode and decode
 // Test Vector comparison
 return_t dump_test_data(const char* text, basic_stream& diagnostic);
 return_t dump_test_data(const char* text, const binary_t& cbor);
 void dump_crypto_key(crypto_key_object* key, void*);
-void test_rfc8152_b();
-void test_rfc8152_c_1_1();
-void test_rfc8152_c_1_2();
-void test_rfc8152_c_1_3();
-void test_rfc8152_c_1_4();
-void test_rfc8152_c_2_1();
-void test_rfc8152_c_3_1();
-void test_rfc8152_c_3_2();
-void test_rfc8152_c_3_3();
-void test_rfc8152_c_3_4();
-void test_rfc8152_c_4_1();
-void test_rfc8152_c_4_2();
-void test_rfc8152_c_5_1();
-void test_rfc8152_c_5_2();
-void test_rfc8152_c_5_3();
-void test_rfc8152_c_5_4();
-void test_rfc8152_c_6_1();
-void test_rfc8152_c_7_1();
-void test_rfc8152_c_7_2();
-
-// part 2 .. test JWK, CWK compatibility
-void test_jose_from_cwk();
+void test_rfc8152();
 
 // part 3 https://github.com/cose-wg/Examples
-void test_github_example();
+void test_examples();
 
 // part 4 encrypt/sign/mac
-void test_keygen(crypto_key* key);
-void test_selfgen(crypto_key* key);
-void test_cose(crypto_key* key);
+void test_cose();
 
 // part 5 CWT
-void test_cwt_rfc8392();
+void test_rfc8392();
 
 #endif

@@ -20,6 +20,5 @@ extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 void test_graph();
-void test_graph2();
 
 #endif

@@ -115,3 +115,5 @@ void test_eckey_compressed() {
         }
     }
 }
+
+void test_ec() { test_eckey_compressed(); }

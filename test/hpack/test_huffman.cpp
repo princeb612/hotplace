@@ -52,7 +52,7 @@ void do_test_huffman_codes_routine(const char* sample, const char* expect) {
     }
 }
 
-void test_huffman_codes() {
+void test_huffman() {
     _test_case.begin("RFC 7541 Appendix B. Huffman Code");
 
     struct huffman_coding_testvector {

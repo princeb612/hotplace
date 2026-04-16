@@ -537,3 +537,8 @@ void test_rfc7049_table4_2() {
         root->release();
     }
 }
+
+void test_rfc7049() {
+    test_rfc7049_table4_1();
+    test_rfc7049_table4_2();
+}

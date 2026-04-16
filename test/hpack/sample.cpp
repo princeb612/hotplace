@@ -67,19 +67,14 @@ int main(int argc, char** argv) {
     encoder.make_share(new hpack_encoder);
     _test_case.assert(true, __FUNCTION__, "check loading time of HPACK");
 
-    // and now .. test_h2_header_frame wo loading time
+    // and now .. test_h2 wo loading time
 
     // huffman codes
-    test_huffman_codes();
+    test_huffman();
 
     // HPACK
-    test_rfc7541_c_1();
-    test_rfc7541_c_2();
-    test_rfc7541_c_3();
-    test_rfc7541_c_4();
-    test_rfc7541_c_5();
-    test_rfc7541_c_6();
-    test_h2_header_frame();
+    test_rfc7541();
+    test_h2();
 
     openssl_cleanup();
 
