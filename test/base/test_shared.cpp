@@ -48,8 +48,6 @@ class simple_instance2 {
 void test_sharedinstance1() {
     int ret = 0;
 
-    _test_case.begin("shared reference");
-
     simple_instance1 *inst = new simple_instance1;  // ++refcounter
     _test_case.assert(1 == inst->getref(), __FUNCTION__, "ref count == 1");
     ret = inst->addref();  // ++refcounter
@@ -64,8 +62,6 @@ void test_sharedinstance1() {
 }
 
 void test_sharedinstance2() {
-    _test_case.begin("shared instance");
-
     {
         simple_instance2 *object = new simple_instance2;
         t_shared_instance<simple_instance2> inst(object);  // ++refcounter
@@ -82,4 +78,10 @@ void test_sharedinstance2() {
         // delete here (2 times ~t_shared_instance)
     }  // curly brace for instance lifetime
     _test_case.assert(1 == simple_instance2_dtor, __FUNCTION__, "shared instance");
+}
+
+void test_shared() {
+    _test_case.begin("shared instance");
+    test_sharedinstance1();
+    test_sharedinstance2();
 }

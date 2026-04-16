@@ -24,6 +24,7 @@ void test_btree();
 void test_exception();
 void test_find_lessthan_or_equal();
 void test_list();
+void test_map();
 void test_merge();
 void test_ovl();
 void test_pq();

@@ -1,6 +1,37 @@
 #include "sample.hpp"
 
 void test_bn1() {
+    struct testvector {
+        const char* hexvalue;
+        std::string decvalue;
+    } table[] = {
+        {"0x123456789abcdef", "81985529216486895"},
+        {"0x123456789", "4886718345"},
+        {"0x8000", "32768"},
+        // bignumber from numeric string (greater than int128)
+        // uint128.max + 1
+        {"0x100000000000000000000000000000000", "340282366920938463463374607431768211456"},
+        // 2^256 - 1
+        {"0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+         "115792089237316195423570985008687907853269984665640564039457584007913129639935"},
+    };
+
+    bignumber bn1;
+    bignumber bn2;
+
+    for (const auto& item : table) {
+        bn1 = item.hexvalue;
+        bn2 = item.decvalue;
+
+        bn1.dump([&](const binary_t& bin) -> void { _logger->hdump("from hexvalue", bin, 16, 3); });
+        bn2.dump([&](const binary_t& bin) -> void { _logger->hdump("from decvalue", bin, 16, 3); });
+
+        _test_case.assert(bn1 == bn2, __FUNCTION__, "compare");
+        _test_case.assert(bn1.str() == item.decvalue, __FUNCTION__, "base16 %s", item.decvalue.c_str());
+    }
+}
+
+void test_bn2() {
     struct {
         const char* text;
         int64 n1;
@@ -12,29 +43,27 @@ void test_bn1() {
         std::string mod;
         std::string lshift1;
         std::string rshift1;
-        std::string gcd;
     } table[] = {
         {"case 0", 36028797018963967LL, 1, "36028797018963968", "36028797018963966", "36028797018963967", "36028797018963967", "0", "72057594037927934",
-         "18014398509481983", "1"},
+         "18014398509481983"},
         {"case 1", 123456789012345678LL, 9876543210LL, "123456798888888888", "123456779135802468", "1219326311248285312223746380", "12499999", "8763888888",
-         "246913578024691356", "61728394506172839", "18"},
+         "246913578024691356", "61728394506172839"},
         {"case 2", -123456789012345678LL, -9876543210LL, "-123456798888888888", "-123456779135802468", "1219326311248285312223746380", "12499999",
-         "-8763888888", "-246913578024691356", "-61728394506172839", "-18"},
+         "-8763888888", "-246913578024691356", "-61728394506172839"},
         {"case 3", 123456789012345678LL, -9876543210LL, "123456779135802468", "123456798888888888", "-1219326311248285312223746380", "-12499999", "8763888888",
-         "246913578024691356", "61728394506172839", "-18"},
+         "246913578024691356", "61728394506172839"},
         {"case 4", -123456789012345678LL, 9876543210LL, "-123456779135802468", "-123456798888888888", "-1219326311248285312223746380", "-12499999",
-         "-8763888888", "-246913578024691356", "-61728394506172839", "18"},
+         "-8763888888", "-246913578024691356", "-61728394506172839"},
         {"case 5", 9876543210LL, 123456789012345678LL, "123456798888888888", "-123456779135802468", "1219326311248285312223746380", "0", "9876543210",
-         "19753086420", "4938271605", "18"},
+         "19753086420", "4938271605"},
         {"case 6", -9876543210LL, -123456789012345678LL, "-123456798888888888", "123456779135802468", "1219326311248285312223746380", "0", "-9876543210",
-         "-19753086420", "-4938271605", "-18"},
+         "-19753086420", "-4938271605"},
         {"case 7", -9876543210LL, 123456789012345678LL, "123456779135802468", "-123456798888888888", "-1219326311248285312223746380", "0", "-9876543210",
-         "-19753086420", "-4938271605", "-18"},
+         "-19753086420", "-4938271605"},
         {"case 8", 9876543210LL, -123456789012345678LL, "-123456779135802468", "123456798888888888", "-1219326311248285312223746380", "0", "9876543210",
-         "19753086420", "4938271605", "18"},
+         "19753086420", "4938271605"},
     };
 
-    // https://www.calculator.net/big-number-calculator.html
     // mod : verified only positive big numbers
 
     for (auto item : table) {
@@ -76,21 +105,7 @@ void test_bn1() {
         auto rshift1 = (n1 >> 1).str();
         _test_case.assert(rshift1 == item.rshift1, __FUNCTION__, "%s rshift1 %s", item.text, rshift1.c_str());
     }
-}
 
-void test_bn2() {
-    // modular
-    // -7 % 3 = -1, 7 % -3 = 1
-    auto a = bignumber(-7) % bignumber(3);
-    _logger->writeln("a = %s", a.str().c_str());
-    _test_case.assert(a.str() == "-1", __FUNCTION__, "-7 mod 3");
-
-    auto b = bignumber(7) % bignumber(-3);
-    _logger->writeln("b = %s", b.str().c_str());
-    _test_case.assert(b.str() == "1", __FUNCTION__, "7 mod -3");
-}
-
-void test_bn3() {
 #ifdef __SIZEOF_INT128__
     openssl_prng prng;
     int loop = 10;
@@ -136,9 +151,7 @@ void test_bn3() {
         _test_case.assert(bs == bn.str(), __FUNCTION__, "%I128i mod %I128i = %s (expect %I128i)", i1, i2, bn.str().c_str(), i);
     }
 #endif
-}
 
-void test_bn4() {
     {
         bignumber a(int64(9223372036854775807));
         bignumber b(int64(2147483647));
@@ -156,53 +169,20 @@ void test_bn4() {
         _test_case.assert(c.str() == "4294967298", __FUNCTION__, "bignumber a / b = %s", c.str().c_str());
     }
 
+    // modular
     {
-        bignumber a;
-        a = (bignumber(1) << 64) - 1;  // 18446744073709551615LL (2^64 - 1)
-        _logger->writeln("bignumber a = %s", a.str().c_str());
-        _test_case.assert(a.str() == "18446744073709551615", __FUNCTION__, "int128.max");
+        // -7 % 3 = -1, 7 % -3 = 1
+        auto a = bignumber(-7) % bignumber(3);
+        _logger->writeln("a = %s", a.str().c_str());
+        _test_case.assert(a.str() == "-1", __FUNCTION__, "-7 mod 3");
+
+        auto b = bignumber(7) % bignumber(-3);
+        _logger->writeln("b = %s", b.str().c_str());
+        _test_case.assert(b.str() == "1", __FUNCTION__, "7 mod -3");
     }
 }
 
-void test_bn5() {
-    bignumber a(bignumber(1) << 128);  // 340282366920938463463374607431768211456
-    bignumber b(bignumber(1) << 64);   // 18446744073709551616
-    bignumber c;
-    _logger->writeln("bignumber a = %s", a.str().c_str());
-    _logger->writeln("bignumber b = %s", b.str().c_str());
-
-    c = a + b;
-    _test_case.assert(c.str() == "340282366920938463481821351505477763072", __FUNCTION__, "bignumber a + b = %s", c.str().c_str());
-    c = a - b;
-    _test_case.assert(c.str() == "340282366920938463444927863358058659840", __FUNCTION__, "bignumber a - b = %s", c.str().c_str());
-    c = a * b;
-    _test_case.assert(c.str() == "6277101735386680763835789423207666416102355444464034512896", __FUNCTION__, "bignumber a * b = %s", c.str().c_str());
-    c = a / b;
-    _test_case.assert(c.str() == "18446744073709551616", __FUNCTION__, "bignumber a / b = %s", c.str().c_str());
-
-    openssl_prng prng;
-    int loop = 10;
-    while (loop--) {
-        bignumber b1 = prng.rand64();
-        bignumber b2 = prng.rand64();
-        bignumber i = uint64(0);
-        bignumber v = uint64(0);
-        i = b1 + b2;
-        _logger->writeln("%s + %s = %s", b1.str().c_str(), b2.str().c_str(), i.str().c_str());
-        i = b1 - b2;
-        _logger->writeln("%s - %s = %s", b1.str().c_str(), b2.str().c_str(), i.str().c_str());
-        i = b1 * b2;
-        _logger->writeln("%s * %s = %s", b1.str().c_str(), b2.str().c_str(), i.str().c_str());
-        i = b1 / b2;
-        _logger->writeln("%s / %s = %s", b1.str().c_str(), b2.str().c_str(), i.str().c_str());
-        i = b1 % b2;
-        _logger->writeln("%s mod %s = %s", b1.str().c_str(), b2.str().c_str(), i.str().c_str());
-    }
-
-    _test_case.reset_time();
-}
-
-void test_bn6() {
+void test_bn3() {
     struct testvector {
         int bits;
         const char* minvalue;
@@ -301,35 +281,45 @@ void test_bn6() {
         auto utest = (uintmax.str() == std::string(item.umaxvalue));
         _test_case.assert(utest, __FUNCTION__, "check uint%i.max", item.bits);
     }
-}
 
-void test_bn7() {
-    struct testvector {
-        const char* hexvalue;
-        std::string decvalue;
-        std::string b16encoded;
-    } table[] = {
-        {"0x123456789abcdef", "81985529216486895", "0123456789abcdef"},
-        {"0x123456789", "4886718345", "0000000123456789"},
-        {"0x8000", "32768", "00008000"},
-    };
+    {
+        bignumber a(bignumber(1) << 128);  // 340282366920938463463374607431768211456
+        bignumber b(bignumber(1) << 64);   // 18446744073709551616
+        bignumber c;
+        _logger->writeln("bignumber a = %s", a.str().c_str());
+        _logger->writeln("bignumber b = %s", b.str().c_str());
 
-    bignumber bn;
+        c = a + b;
+        _test_case.assert(c.str() == "340282366920938463481821351505477763072", __FUNCTION__, "bignumber a + b = %s", c.str().c_str());
+        c = a - b;
+        _test_case.assert(c.str() == "340282366920938463444927863358058659840", __FUNCTION__, "bignumber a - b = %s", c.str().c_str());
+        c = a * b;
+        _test_case.assert(c.str() == "6277101735386680763835789423207666416102355444464034512896", __FUNCTION__, "bignumber a * b = %s", c.str().c_str());
+        c = a / b;
+        _test_case.assert(c.str() == "18446744073709551616", __FUNCTION__, "bignumber a / b = %s", c.str().c_str());
 
-    for (const auto& item : table) {
-        bn = item.hexvalue;
-        bn.dump([&](const binary_t& bin) -> void { _logger->hdump("dump", bin, 16, 3); });
-        _test_case.assert(bn.str() == item.decvalue, __FUNCTION__, "base16 %s", item.decvalue.c_str());
-        binary_t bin;
-        bn >> bin;  // int sign = bn.get(bin);
-        std::string b16str;
-        b16str << bn;
-        _logger->hdump("dump", bin, 16, 3);
-        _test_case.assert(b16str == item.b16encoded, __FUNCTION__, "base16 %s", item.decvalue.c_str());
+        openssl_prng prng;
+        int loop = 10;
+        while (loop--) {
+            bignumber b1 = prng.rand64();
+            bignumber b2 = prng.rand64();
+            bignumber i = uint64(0);
+            bignumber v = uint64(0);
+            i = b1 + b2;
+            _logger->writeln("%s + %s = %s", b1.str().c_str(), b2.str().c_str(), i.str().c_str());
+            i = b1 - b2;
+            _logger->writeln("%s - %s = %s", b1.str().c_str(), b2.str().c_str(), i.str().c_str());
+            i = b1 * b2;
+            _logger->writeln("%s * %s = %s", b1.str().c_str(), b2.str().c_str(), i.str().c_str());
+            i = b1 / b2;
+            _logger->writeln("%s / %s = %s", b1.str().c_str(), b2.str().c_str(), i.str().c_str());
+            i = b1 % b2;
+            _logger->writeln("%s mod %s = %s", b1.str().c_str(), b2.str().c_str(), i.str().c_str());
+        }
     }
 }
 
-void test_bn8() {
+void test_bn4() {
     struct testvector {
         uint64 i1;
         uint64 i2;
@@ -358,44 +348,43 @@ void test_bn8() {
         _test_case.assert(bignumber(bit_or) == bn_or, __FUNCTION__, "%I64x OR %I64x = %I64x (%s)", item.i1, item.i2, bit_or, bn_or.hex().c_str());
         _test_case.assert(bignumber(bit_xor) == bn_xor, __FUNCTION__, "%I64x XOR %I64x = %I64x (%s)", item.i1, item.i2, bit_xor, bn_xor.hex().c_str());
     }
-}
 
-void test_bn9() {
-    openssl_prng prng;
-    uint64 i1 = 0;
-    uint64 i2 = 0;
-    uint64 ir = 0;
-    bignumber b1;
-    bignumber b2;
-    bignumber br;
-    int loop = 10;
+    {
+        uint64 i1 = 0;
+        uint64 i2 = 0;
+        uint64 ir = 0;
+        bignumber b1;
+        bignumber b2;
+        bignumber br;
+        int loop = 10;
 
-    while (loop--) {
-        i1 = prng.rand64();
-        i2 = prng.rand64();
-        b1 = i1;
-        b2 = i2;
+        while (loop--) {
+            i1 = prng.rand64();
+            i2 = prng.rand64();
+            b1 = i1;
+            b2 = i2;
 
-        _logger->writeln("sample %I64x %I64x", i1, i2);
+            _logger->writeln("sample %I64x %I64x", i1, i2);
 
-        ir = i1 & i2;
-        br = b1 & b2;
-        _logger->writeln("%I64x & %I64x = %s (expected %I64x)", i1, i2, br.hex().c_str(), ir);
-        _test_case.assert(bignumber(ir) == br, __FUNCTION__, "%I64x & %I64x = %I64x (%s)", i1, i2, ir, br.hex().c_str());
+            ir = i1 & i2;
+            br = b1 & b2;
+            _logger->writeln("%I64x & %I64x = %s (expected %I64x)", i1, i2, br.hex().c_str(), ir);
+            _test_case.assert(bignumber(ir) == br, __FUNCTION__, "%I64x & %I64x = %I64x (%s)", i1, i2, ir, br.hex().c_str());
 
-        ir = i1 | i2;
-        br = b1 | b2;
-        _logger->writeln("%I64x | %I64x = %s (expected %I64x)", i1, i2, br.hex().c_str(), ir);
-        _test_case.assert(bignumber(ir) == br, __FUNCTION__, "%I64x | %I64x = %I64x (%s)", i1, i2, ir, br.hex().c_str());
+            ir = i1 | i2;
+            br = b1 | b2;
+            _logger->writeln("%I64x | %I64x = %s (expected %I64x)", i1, i2, br.hex().c_str(), ir);
+            _test_case.assert(bignumber(ir) == br, __FUNCTION__, "%I64x | %I64x = %I64x (%s)", i1, i2, ir, br.hex().c_str());
 
-        ir = i1 ^ i2;
-        br = b1 ^ b2;
-        _logger->writeln("%I64x ^ %I64x = %s (expected %I64x)", i1, i2, br.hex().c_str(), ir);
-        _test_case.assert(bignumber(ir) == br, __FUNCTION__, "%I64x ^ %I64x = %I64x (%s)", i1, i2, ir, br.hex().c_str());
+            ir = i1 ^ i2;
+            br = b1 ^ b2;
+            _logger->writeln("%I64x ^ %I64x = %s (expected %I64x)", i1, i2, br.hex().c_str(), ir);
+            _test_case.assert(bignumber(ir) == br, __FUNCTION__, "%I64x ^ %I64x = %I64x (%s)", i1, i2, ir, br.hex().c_str());
+        }
     }
 }
 
-void test_bn10() {
+void test_bn5() {
     std::string sample = std::string("0x0123456789abcdef0123456789abcdef");
 #ifdef __SIZEOF_INT128__
     int128 signed_sample = t_htoi<int128>(sample.c_str());
@@ -449,16 +438,7 @@ void test_bn10() {
 #endif
 }
 
-void test_bn11() {
-    bignumber bn("340282366920938463463374607431768211456");  // uint128.max + 1
-    _logger->writeln("%s (%s)", bn.str().c_str(), bn.hex().c_str());
-    _test_case.assert(bn.str() == "340282366920938463463374607431768211456", __FUNCTION__, "bignumber from numeric string (greater than int128)");
-
-    bignumber bn2("0x100000000000000000000000000000000");
-    _test_case.assert(bn == bn2, __FUNCTION__, "compare");
-}
-
-void test_bn12() {
+void test_bn6() {
     bignumber bn(1);
     bignumber bn2;
     bn = -bn;
@@ -478,19 +458,51 @@ void test_bn12() {
     _test_case.assert(bn == bn2, __FUNCTION__, "bignumber = -uint128.max");
 }
 
+void test_bn7() {
+    openssl_prng prng;
+    int loop = 10;
+    while (--loop) {
+        uint64 i = prng.rand64();
+        _logger->writeln("i = %I64u", i);
+        bignumber bn(i);
+        bn *= bn;
+        _logger->writeln("i^i %s", bn.str().c_str());
+        bn.sqrt();
+        _logger->writeln("sqrt %s", bn.str().c_str());
+        _test_case.assert(bn == i, __FUNCTION__, "square, sqrt %I64u", i);
+    }
+    {
+        // https://en.wikipedia.org/wiki/Modular_exponentiation
+        // c ≡ 4^13 (mod 497)
+        // c is determined to be 445
+        struct testvector {
+            uint64 base;
+            uint64 exp;
+            uint64 m;
+            uint64 expect;
+        } table[] = {
+            {4, 1, 497, 4},   {4, 2, 497, 16},  {4, 3, 497, 64},   {4, 4, 497, 256},  {4, 5, 497, 30},   {4, 6, 497, 120},  {4, 7, 497, 480},
+            {4, 8, 497, 429}, {4, 9, 497, 225}, {4, 10, 497, 403}, {4, 11, 497, 121}, {4, 12, 497, 484}, {4, 13, 497, 445},
+        };
+        for (const auto& item : table) {
+            auto bn = bignumber::modpow(item.base, item.exp, item.m);
+            _test_case.assert(bn == item.expect, __FUNCTION__, "%I64u ^ %I64u mod % I64u = %s", item.base, item.exp, item.m, bn.str().c_str());
+        }
+    }
+    {
+        auto bn = bignumber::modinv(42, 2017);
+        _test_case.assert(bn == 1969, __FUNCTION__, "modinv");
+    }
+}
+
 void test_bignumber() {
     _test_case.begin("bignumber");
 
-    test_bn1();
-    test_bn2();
-    test_bn3();
-    test_bn4();
-    test_bn5();
-    test_bn6();
-    test_bn7();
-    test_bn8();
-    test_bn9();
-    test_bn10();
-    test_bn11();
-    test_bn12();
+    test_bn1();  // numeric, hexdecimal string
+    test_bn2();  // + - * /
+    test_bn3();  // shift
+    test_bn4();  // AND OR XOR
+    test_bn5();  // bn to integer
+    test_bn6();  // neg
+    test_bn7();  // sqaure, sqrt, modpow
 }

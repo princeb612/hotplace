@@ -201,8 +201,6 @@ class quic_packet_publisher {
      */
     void for_each_pkn(std::function<void(protection_space_t, uint64)> func);
 
-    return_t ack(protection_space_t space, uint64 pkn);
-
    protected:
     return_t probe_spaces(std::set<protection_space_t>& spaces);
     return_t prepare_packet_cid(quic_packet* packet, protection_space_t space, tls_direction_t dir);

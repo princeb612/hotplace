@@ -7,7 +7,7 @@
   * [study] CBOR/COSE (RFC 7049, 8949, 8152)
 
 * understanding
-  * Revision 927-
+  * Revision 927-933
     * MSVC environment (beta status) - application verifier (basics)
   * Revision 910-926
     * MSVC environment (alpha status) - build and run
@@ -31,7 +31,7 @@
     * CBOR
 
 * details
-  * Revision 934
+  * Revision 935
   * Revision 933
     * [tested] valgrind, application verifier, sanitize
   * Revision 926

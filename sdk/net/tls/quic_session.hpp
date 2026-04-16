@@ -44,7 +44,8 @@ class quic_session {
      */
     qpack_dynamic_table& get_dynamic_table();
     /**
-     * ack
+     * add pkn when reading packet
+     * quic_frame_ack reference this
      */
     t_ovl_points<uint32>& get_pkns(protection_space_t space);
     /**

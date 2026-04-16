@@ -13,8 +13,6 @@
 #define TESTVECTOR_ENTRY(e1, e2) {e1, e2}
 
 void test_byte_capacity_unsigned() {
-    _test_case.begin("byte capacity");
-
 #ifdef __SIZEOF_INT128__
     typedef uint128 signed_t;
     int bits = 16;
@@ -79,8 +77,6 @@ void test_byte_capacity_unsigned() {
 }
 
 void test_byte_capacity_signed() {
-    _test_case.begin("byte capacity");
-
 #ifdef __SIZEOF_INT128__
     typedef int128 signed_t;
     int bits = 16;
@@ -153,4 +149,10 @@ void test_byte_capacity_signed() {
         _test_case.assert(bytesize == entry.expect, __FUNCTION__, "(%2i) byte capacity %016I64x %I64i", bytesize, entry.x, entry.x);
 #endif
     }
+}
+
+void test_capacity() {
+    _test_case.begin("byte capacity");
+    test_byte_capacity_unsigned();
+    test_byte_capacity_signed();
 }

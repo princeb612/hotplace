@@ -166,3 +166,8 @@ void test_mapinsert() {
         }
     }  // dtor, pthread_mutex_destroy
 }
+
+void test_map() {
+    test_maphint();
+    test_mapinsert();
+}

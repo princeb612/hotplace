@@ -241,9 +241,6 @@ class quic_encoded;
 
 class quic_packet_publisher;
 
-class segmentation;
-class fragmentation;
-
 }  // namespace net
 }  // namespace hotplace
 

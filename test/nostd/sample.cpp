@@ -55,6 +55,7 @@ int main(int argc, char** argv) {
     test_exception();
     test_find_lessthan_or_equal();
     test_list();
+    test_map();
     test_merge();
     test_ovl();
     test_pq();

@@ -24,7 +24,7 @@
 namespace hotplace {
 namespace net {
 
-quic_packet_builder::quic_packet_builder() : _type(0), _msb(0), _session(nullptr), _segment(nullptr), _dir(from_any), _concat(0), _construct(false) {}
+quic_packet_builder::quic_packet_builder() : _type(0), _msb(0), _session(nullptr), _dir(from_any), _concat(0), _construct(false) {}
 
 quic_packet_builder& quic_packet_builder::set(quic_packet_t type) {
     _type = type;
@@ -54,12 +54,6 @@ quic_packet_builder& quic_packet_builder::set_msb(uint8 msb) {
 
 quic_packet_builder& quic_packet_builder::set(tls_session* session) {
     _session = session;
-    return *this;
-}
-
-quic_packet_builder& quic_packet_builder::set(segmentation* segment, size_t concat) {
-    _segment = segment;
-    _concat = concat;
     return *this;
 }
 

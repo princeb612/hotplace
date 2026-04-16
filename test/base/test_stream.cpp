@@ -10,95 +10,8 @@
 
 #include "sample.hpp"
 
-void test_consolecolor() {
-    _test_case.begin("console_color");
-    console_color concolor;
-
-    _test_case.reset_time();
-    console_style_t styles[] = {
-        console_style_t::normal, console_style_t::bold, console_style_t::dim, console_style_t::italic, console_style_t::underline, console_style_t::invert,
-    };
-    console_color_t fgcolors[] = {
-        console_color_t::black, console_color_t::red,     console_color_t::green, console_color_t::yellow,
-        console_color_t::blue,  console_color_t::magenta, console_color_t::cyan,  console_color_t::white,
-    };
-    console_color_t bgcolors[] = {
-        console_color_t::black,
-        console_color_t::white,
-    };
-
-    uint32 loop = 0;
-    _logger->consoleln([&](basic_stream& bs) -> void {
-        for (auto bgcolor : bgcolors) {
-            concolor.set_bgcolor(bgcolor);
-            for (auto style : styles) {
-                concolor.set_style(style);
-                for (auto fgcolor : fgcolors) {
-                    concolor.set_fgcolor(fgcolor);
-
-                    if (fgcolor != bgcolor) {
-                        bs << concolor.turnon() << "test" << concolor.turnoff();
-                        if (15 == (loop % 16)) {
-                            bs << "\n";
-                        }
-                        ++loop;
-                    }
-                }
-            }
-        }
-    });
-    _test_case.assert(true, __FUNCTION__, "console color.1 loop %i times", loop);
-
-    concolor.set_style(console_style_t::normal);
-    concolor.set_fgcolor(console_color_t::yellow);
-    concolor.set_bgcolor(console_color_t::black);
-
-    _logger->writeln([&](basic_stream& bs) -> void {
-        bs << concolor.turnon() << "color";
-        bs << concolor.turnoff() << "default";
-    });
-    _test_case.assert(true, __FUNCTION__, "console color.2");
-
-    _logger->writeln([&](basic_stream& bs) -> void {
-        bs << concolor.turnon() << concolor.set_style(console_style_t::bold).set_fgcolor(console_color_t::yellow).set_bgcolor(console_color_t::black) << "color"
-           << concolor.turnoff() << "default";
-    });
-    _test_case.assert(true, __FUNCTION__, "console color.3");
-}
-
-void do_test_dump_routine(const byte_t* dump_address, size_t dump_size, unsigned hex_part = 16, unsigned indent = 0, size_t rebase = 0x0) {
-    return_t ret = errorcode_t::success;
-    _logger->dump(dump_address, dump_size, hex_part, indent);
-    _test_case.test(ret, __FUNCTION__, "dump addr %p size %zi hex %i indent %i rebase %zi", dump_address, dump_size, hex_part, indent, rebase);
-}
-
-void test_dumpmemory() {
-    _test_case.begin("dump_memory");
-    return_t ret = errorcode_t::success;
-    ansi_string bs;
-    const char* text = "still a man hears what he wants to hear and disregards the rest";  // the boxer - Simon & Garfunkel
-
-    do_test_dump_routine((byte_t*)text, strlen(text));
-    do_test_dump_routine((byte_t*)text, strlen(text), 32);
-    do_test_dump_routine((byte_t*)text, strlen(text), 16, 4);
-    do_test_dump_routine((byte_t*)text, strlen(text), 16, 4, 0x1000);
-
-    std::string str(text);
-    _logger->hdump("dump", str, 16, 3);
-    _test_case.assert(true, __FUNCTION__, "string");
-
-    binary_t bin = std::move(str2bin(str));
-    _logger->hdump("dump", bin, 16, 3);
-    _test_case.assert(true, __FUNCTION__, "binary_t");
-
-    binary_t bin2;
-    _logger->hdump("dump", bin2, 16, 3);
-    _test_case.assert(true, __FUNCTION__, "dump blank");
-}
-
-void test_i128() {
+void test_stream_i128() {
 #ifdef __SIZEOF_INT128__
-    _test_case.begin("int128");
     ansi_string stream;
 
     // int8 — [-128 : 127]
@@ -182,121 +95,7 @@ void test_i128() {
 #endif
 }
 
-void do_test_sprintf_routine(valist& va, const char* fmt, const char* expect) {
-    basic_stream bs;
-
-    sprintf(&bs, fmt, va);
-    _logger->writeln("formatter %s", fmt);
-    _logger->writeln("result    %s", bs.c_str());
-    if (expect) {
-        _test_case.assert(0 == strcmp(expect, bs.c_str()), __FUNCTION__, "sprintf");
-    }
-}
-
-void test_sprintf() {
-    _test_case.begin("sprintf");
-
-    valist va;
-    va << 3.141592 << "phi" << 123;
-
-    _logger->writeln("{1} 3.141592 {2} phi {3} 123");
-
-    _test_case.reset_time();
-    do_test_sprintf_routine(va, "value={1} value={2} value={3}", "value=3.141592 value=phi value=123");
-    do_test_sprintf_routine(va, "value={2} value={3} value={1}", "value=phi value=123 value=3.141592");
-    do_test_sprintf_routine(va, "value={3} value={2} value={1}", "value=123 value=phi value=3.141592");
-    do_test_sprintf_routine(va, "value={2} value={1} value={3}", "value=phi value=3.141592 value=123");
-    do_test_sprintf_routine(va, "value={2} value={1} value={3} value={2}", "value=phi value=3.141592 value=123 value=phi");
-    do_test_sprintf_routine(va, "value={3} value={2} value={2} value={1} value={4} value={5}",
-                            "value=123 value=phi value=phi value=3.141592 value={4} value={5}");
-
-    basic_stream bs;
-    bs.printf("value %08x ", 0x304);
-    sprintf(&bs, "{1}:{2}:{3}", va);
-    _logger->writeln(bs);
-    _test_case.assert(bs == "value 00000304 3.141592:phi:123", __FUNCTION__, "value 00000304 3.141592:phi:123");
-}
-
-void test_vprintf() {
-    _test_case.begin("vprintf");
-
-    return_t ret = errorcode_t::success;
-    ansi_string str;
-
-#if __cplusplus >= 201402L  // c++14
-    valist val;
-    make_valist(val, 1, 3.141592, "hello");
-    ret = sprintf(&str, "param1 {1} param2 {2} param3 {3}", val);
-
-    {
-        test_case_notimecheck notimecheck(_test_case);
-        _logger->writeln(str.c_str());
-        str.clear();
-    }
-
-    _test_case.test(ret, __FUNCTION__, "make_list(Ts... args) and sprintf");
-
-    valist va;
-    ret = sprintf(&str, "param1 {1} param2 {2} param3 {3}", va << 1 << 3.14 << "hello");
-
-    {
-        test_case_notimecheck notimecheck(_test_case);
-        _logger->writeln(str.c_str());
-        str.clear();
-    }
-
-    _test_case.test(ret, __FUNCTION__, "sprintf");
-
-    ret = vprintf(&str, "param1 {1} param2 {2} param3 {3}", 1, 3.141592, "hello");
-
-    {
-        test_case_notimecheck notimecheck(_test_case);
-        _logger->writeln(str.c_str());
-        str.clear();
-    }
-
-    _test_case.test(ret, __FUNCTION__, "vprintf (Ts... args)");
-#else
-    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "at least c++14 required");
-#endif
-}
-
-void test_stream() {
-    _test_case.begin("stream");
-
-    basic_stream bs;
-    valist va;
-
-    va << 1 << "test string";  // argc 2
-
-    sprintf(&bs, "value1={1} value2={2}", va);  // value1=1 value2=test string
-    _logger->writeln(bs.c_str());
-    bs.clear();
-
-    sprintf(&bs, "value1={2} value2={1}", va);  // value1=test string value2=1
-    _logger->writeln(bs.c_str());
-    bs.clear();
-
-    sprintf(&bs, "value1={2} value2={1} value3={3}", va);  // value1=test string value2=1 value3={3}
-    _logger->writeln(bs.c_str());
-
-    _test_case.assert(true, __FUNCTION__, "stream");
-
-    bs.resize(50);
-    _logger->dump(bs);
-    _test_case.assert(50 == bs.size(), __FUNCTION__, "expand");
-
-    bs.resize(11);
-    _logger->dump(bs);
-    _test_case.assert(11 == bs.size(), __FUNCTION__, "shrink");
-
-    bs.resize(0);
-    _test_case.assert(bs.empty(), __FUNCTION__, "resize 0");
-}
-
 void test_stream_getline() {
-    _test_case.begin("stream::getline");
-
     return_t ret = errorcode_t::success;
     ansi_string stream(" line1 \nline2 \n  line3\nline4");
     ansi_string line;
@@ -394,15 +193,9 @@ void t_test_rule_of_5(const std::string& name) {
     _test_case.assert(true, __FUNCTION__, "see sanitize log");
 }
 
-void test_basic_stream() {
-    _test_case.begin("basic_stream");
+void test_stream_basic_stream() { t_test_rule_of_5<basic_stream>("basic_stream"); }
 
-    t_test_rule_of_5<basic_stream>("basic_stream");
-}
-
-void test_vtprintf() {
-    _test_case.begin("variant");
-
+void test_stream_vtprintf() {
     basic_stream bs;
     variant v;
 
@@ -417,8 +210,7 @@ void test_vtprintf() {
     _test_case.assert(true, __FUNCTION__, "vtprintf");
 }
 
-void test_autoindent() {
-    _test_case.begin("autoindent");
+void test_stream_autoindent() {
     basic_stream bs;
     bs.autoindent(2);
     bs.printf("test\ntest");
@@ -427,9 +219,7 @@ void test_autoindent() {
     _test_case.assert(bs == expect, __FUNCTION__, "indent");
 }
 
-void test_split() {
-    _test_case.begin("split");
-
+void test_stream_split() {
     const size_t testsize = 0x410;  // 1024 + 16
     const size_t testfragsize = 0x80;
     binary_t block;
@@ -459,9 +249,7 @@ void test_split() {
     _test_case.assert(table2 == expect2, __FUNCTION__, "split");
 }
 
-void test_split2() {
-    _test_case.begin("split");
-
+void test_stream_split2() {
     /**
      * input
      *   group #0 "group0" size 100
@@ -533,9 +321,7 @@ void test_split2() {
     spl.run(lambda);
 }
 
-void test_split3() {
-    _test_case.begin("split");
-
+void test_stream_split3() {
     // sketch dtls_record_publisher::publish(tls_records*, ...)
 
     uint16 segment_size = 500;
@@ -581,4 +367,17 @@ void test_split3() {
         expect.push_back(std::move(qitem));
     }
     _test_case.assert(container == expect, __FUNCTION__, "segmentation");
+}
+
+void test_stream() {
+    _test_case.begin("stream");
+
+    test_stream_basic_stream();  // [APVR]
+    test_stream_i128();
+    test_stream_getline();
+    test_stream_vtprintf();
+    test_stream_autoindent();
+    test_stream_split();
+    test_stream_split2();
+    test_stream_split3();
 }

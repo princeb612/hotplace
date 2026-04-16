@@ -50,23 +50,19 @@ void test_time() {
     timespan_t ts(3, 30, 111);
     long nsec = 0;
 
-    _test_case.begin("class datetime");
     datetime dt1;
     do_apply_timespan(&dt1, ts);
 
-    _test_case.begin("struct timespec");
     struct timespec spec;
     dt1.gettimespec(&spec);
     datetime dt2(spec);
     do_apply_timespan(&dt2, ts);
 
-    _test_case.begin("struct datetime");
     datetime_t t;
     dt1.getlocaltime(&t, &nsec);
     datetime dt3(t, &nsec);
     do_apply_timespan(&dt3, ts);
 
-    _test_case.begin("struct systemtime");
     systemtime_t systemtime;
     dt1.getsystemtime(1, &systemtime);
     datetime dt4(dt1);
@@ -78,7 +74,6 @@ void test_time() {
 }
 
 void test_timespec() {
-    _test_case.begin("timespec");
     std::list<struct timespec> slices;
     struct timespec ts1, ts2, ts3, ts4;
     struct timespec diff;
@@ -108,4 +103,10 @@ void test_timespec() {
     time_sum(result, slices);
     _logger->writeln("sum  %zi.%ld", result.tv_sec, result.tv_nsec);
     _test_case.assert((7 == result.tv_sec) && (777777777 == result.tv_nsec), __FUNCTION__, "time_sum");
+}
+
+void test_datetime() {
+    _test_case.begin("datetime");
+    test_time();
+    test_timespec();
 }

@@ -10,17 +10,25 @@
 
 #include "sample.hpp"
 
+struct MYOPTION : public CMDLINEOPTION {
+    std::string infile;
+    std::string outfile;
+    bool keygen;
+
+    MYOPTION() : CMDLINEOPTION(), keygen(false) {};
+};
+
 void do_test_cmdline(bool expect, int argc, char** argv) {
     return_t ret = errorcode_t::success;
 
-    t_cmdline_t<OPTION> cmdline;
+    t_cmdline_t<MYOPTION> cmdline;
 
-    cmdline << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.verbose = 1; }).optional()
-            << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
-            << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
-            << t_cmdarg_t<OPTION>("-in", "input", [&](OPTION& o, char* param) -> void { o.infile = param; }).preced()
-            << t_cmdarg_t<OPTION>("-out", "output", [&](OPTION& o, char* param) -> void { o.outfile = param; }).preced()
-            << t_cmdarg_t<OPTION>("-keygen", "keygen", [&](OPTION& o, char* param) -> void { o.keygen = true; }).optional();
+    cmdline << t_cmdarg_t<MYOPTION>("-v", "verbose", [](MYOPTION& o, char* param) -> void { o.verbose = 1; }).optional()
+            << t_cmdarg_t<MYOPTION>("-l", "log file", [](MYOPTION& o, char* param) -> void { o.log = 1; }).optional()
+            << t_cmdarg_t<MYOPTION>("-t", "log time", [](MYOPTION& o, char* param) -> void { o.time = 1; }).optional()
+            << t_cmdarg_t<MYOPTION>("-in", "input", [&](MYOPTION& o, char* param) -> void { o.infile = param; }).preced()
+            << t_cmdarg_t<MYOPTION>("-out", "output", [&](MYOPTION& o, char* param) -> void { o.outfile = param; }).preced()
+            << t_cmdarg_t<MYOPTION>("-keygen", "keygen", [&](MYOPTION& o, char* param) -> void { o.keygen = true; }).optional();
 
     std::string args;
     for (int i = 0; i < argc; i++) {
@@ -36,9 +44,9 @@ void do_test_cmdline(bool expect, int argc, char** argv) {
         cmdline.help();
     }
 
-    const OPTION& cmdoption = cmdline.value();
+    const MYOPTION& cmdoption = cmdline.value();
 
-    // OPTION cmdoption = cmdline.value ();
+    // MYOPTION cmdoption = cmdline.value ();
     _logger->writeln([&](basic_stream& bs) -> void {
         bs << "infile " << cmdoption.infile << "\n"
            << "outfile " << cmdoption.outfile << "\n"
@@ -49,7 +57,7 @@ void do_test_cmdline(bool expect, int argc, char** argv) {
     _test_case.assert(expect ? test : !test, __FUNCTION__, "cmdline %s (%s)", args.c_str(), expect ? "positive test" : "negative test");
 }
 
-void test1() {
+void test_cmdline() {
     _test_case.begin("commandline");
 
     int argc = 0;
@@ -58,7 +66,7 @@ void test1() {
         nullptr,
     };
 
-    _test_case.begin("case - invalid parameter");
+    _test_case.begin("commandline case - invalid parameter");
 
     argc = 2;
     argv[0] = (char*)"-in";
@@ -100,7 +108,7 @@ void test1() {
     argv[4] = (char*)"test.out";
     do_test_cmdline(false, argc, argv);
 
-    _test_case.begin("case - valid parameter");
+    _test_case.begin("commandline case - valid parameter");
 
     argc = 4;
     argv[0] = (char*)"-in";

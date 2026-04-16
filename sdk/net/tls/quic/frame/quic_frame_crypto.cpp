@@ -16,7 +16,6 @@
 #include <hotplace/sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <hotplace/sdk/net/tls/quic/quic.hpp>
 #include <hotplace/sdk/net/tls/quic/quic_encoded.hpp>
-#include <hotplace/sdk/net/tls/quic_packet_publisher.hpp>
 #include <hotplace/sdk/net/tls/quic_session.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshakes.hpp>
 #include <hotplace/sdk/net/tls/tls/tls.hpp>

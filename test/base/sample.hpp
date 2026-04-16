@@ -18,18 +18,21 @@
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
 
-void test_sharedinstance1();
-void test_sharedinstance2();
-void test_convert_endian();
-void test_endian();
-void test_byte_capacity_unsigned();
-void test_byte_capacity_signed();
-void test_maphint();
-void test_mapinsert();
-void test_binary();
-void test_loglevel();
-void test_merge();
-void test_variant();
 void test_bignumber();
+void test_binary();
+void test_bufferio();
+void test_capacity();
+void test_cmdline();
+void test_consolecolor();
+void test_datetime();
+void test_dumpmemory();
+void test_endian();
+void test_ieee754();
+void test_loglevel();
+void test_shared();
+void test_stream();
+void test_string();
+void test_valist();
+void test_variant();
 
 #endif

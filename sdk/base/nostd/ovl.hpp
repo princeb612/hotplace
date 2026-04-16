@@ -202,15 +202,15 @@ class t_ovl_points {
         interval(T p) : s(p), e(p) {}
         interval(T start, T end) : s(std::min(start, end)), e(std::max(start, end)) {}
         interval(const interval& other) : s(other.s), e(other.e) {}
-        interval(interval&& other) : s(other.s), e(other.e) {}
+        interval(interval&& other) : s(std::move(other.s)), e(std::move(other.e)) {}
         interval& operator=(const interval& other) {
             s = other.s;
             e = other.e;
             return *this;
         }
         interval& operator=(interval&& other) {
-            s = other.s;
-            e = other.e;
+            s = std::move(other.s);
+            e = std::move(other.e);
             return *this;
         }
         bool operator==(const interval& other) const { return (s == other.s) && (e == other.e); }
@@ -219,6 +219,8 @@ class t_ovl_points {
     static bool compare(const interval& lhs, const interval& rhs) { return lhs.s < rhs.s; }
 
     t_ovl_points() : _status(0) {}
+    t_ovl_points(const t_ovl_points& other) : _arr(other._arr), _status(other._status) {}
+    t_ovl_points(t_ovl_points&& other) : _arr(std::move(other._arr)), _status(other._status) {}
 
     t_ovl_points& add(const interval& t) {
         critical_section_guard guard(_lock);
@@ -315,6 +317,15 @@ class t_ovl_points {
         return _arr;
     }
     size_t size() const { return _arr.size(); }
+
+    t_ovl_points& operator=(const t_ovl_points& other) {
+        _arr = other._arr;
+        _status = other._status;
+    }
+    t_ovl_points& operator=(t_ovl_points&& other) {
+        _arr = std::move(other._arr);
+        _status = other._status;
+    }
 
     bool operator==(t_ovl_points<T>& other) {
         auto l = merge();

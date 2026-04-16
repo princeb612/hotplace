@@ -45,23 +45,33 @@ return_t tls_composer::do_quic_client_handshake(unsigned wto, std::function<void
                 .add(tls_hs_client_hello, dir,
                      [&](tls_handshake* handshake, tls_direction_t dir) -> return_t {
                          return_t ret = errorcode_t::success;
-                         handshake->get_extensions().add(tls_ext_quic_transport_parameters, dir, handshake,  //
-                                                         [&](tls_extension* extension) -> return_t {
-                                                             auto quic_params = (tls_extension_quic_transport_parameters*)(extension);
-                                                             (*quic_params)
-                                                                 .set(quic_param_disable_active_migration, binary_t())
-                                                                 .set(quic_param_initial_source_connection_id, binary_t())
-                                                                 .set(quic_param_max_idle_timeout, 120000)
-                                                                 .set(quic_param_max_udp_payload_size, max_payload_size)
-                                                                 .set(quic_param_active_connection_id_limit, 2)
-                                                                 .set(quic_param_initial_max_data, 0xc0000)
-                                                                 .set(quic_param_initial_max_stream_data_bidi_local, 0x80000)
-                                                                 .set(quic_param_initial_max_stream_data_bidi_remote, 0x80000)
-                                                                 .set(quic_param_initial_max_stream_data_uni, 0x80000)
-                                                                 .set(quic_param_initial_max_streams_bidi, 100)
-                                                                 .set(quic_param_initial_max_streams_uni, 100);
-                                                             return success;
-                                                         });
+                         handshake->get_extensions()
+                             .add(tls_ext_alpn, dir, handshake,
+                                  [&](tls_extension* extension) -> return_t {
+                                      auto alpn = (tls_extension_alpn*)extension;
+                                      binary_t protocols;
+                                      binary_append(protocols, uint8(2));
+                                      binary_append(protocols, "h3");
+                                      alpn->set_protocols(protocols);
+                                      return success;
+                                  })
+                             .add(tls_ext_quic_transport_parameters, dir, handshake,  //
+                                  [&](tls_extension* extension) -> return_t {
+                                      auto quic_params = (tls_extension_quic_transport_parameters*)(extension);
+                                      (*quic_params)
+                                          .set(quic_param_disable_active_migration, binary_t())
+                                          .set(quic_param_initial_source_connection_id, binary_t())
+                                          .set(quic_param_max_idle_timeout, 120000)
+                                          .set(quic_param_max_udp_payload_size, max_payload_size)
+                                          .set(quic_param_active_connection_id_limit, 2)
+                                          .set(quic_param_initial_max_data, 0xc0000)
+                                          .set(quic_param_initial_max_stream_data_bidi_local, 0x80000)
+                                          .set(quic_param_initial_max_stream_data_bidi_remote, 0x80000)
+                                          .set(quic_param_initial_max_stream_data_uni, 0x80000)
+                                          .set(quic_param_initial_max_streams_bidi, 100)
+                                          .set(quic_param_initial_max_streams_uni, 100);
+                                      return success;
+                                  });
                          return ret;
                      })
                 .publish(dir, [&](tls_session* session, binary_t& packet) -> void { func(session, packet); });
@@ -140,25 +150,25 @@ return_t tls_composer::do_quic_server_handshake(std::function<void(tls_session*,
                 .set_flags(flags)
                 .add(tls_hs_encrypted_extensions, dir,
                      [&](tls_handshake* handshake, tls_direction_t dir) -> return_t {
-                         handshake->get_extensions().add(tls_ext_quic_transport_parameters, dir, handshake,  //
-                                                         [&](tls_extension* extension) -> return_t {
-                                                             (*(tls_extension_quic_transport_parameters*)extension)
-                                                                 .set(quic_param_initial_max_stream_data_bidi_local, 0x20000)
-                                                                 .set(quic_param_stateless_reset_token, binary_t())
-                                                                 .set(quic_param_initial_max_stream_data_uni, 0x20000)
-                                                                 .set(quic_param_initial_source_connection_id, binary_t())
-                                                                 .set(quic_param_version_information, binary_t())
-                                                                 .set(quic_param_initial_max_data, 0x30000)
-                                                                 .set(quic_param_original_destination_connection_id, binary_t())
-                                                                 .set(quic_param_max_idle_timeout, 240000)
-                                                                 .set(quic_param_initial_max_streams_uni, 103)
-                                                                 .set(quic_param_initial_max_stream_data_bidi_remote, 0x20000)
-                                                                 .set(quic_param_google_version, binary_t())
-                                                                 .set(quic_param_max_datagram_frame_size, 0x10000)
-                                                                 .set(quic_param_max_udp_payload_size, max_payload_size)
-                                                                 .set(quic_param_initial_max_streams_bidi, 100);
-                                                             return success;
-                                                         });
+                         handshake->get_extensions().  //
+                             add(tls_ext_quic_transport_parameters, dir, handshake, [&](tls_extension* extension) -> return_t {
+                                 (*(tls_extension_quic_transport_parameters*)extension)
+                                     .set(quic_param_initial_max_stream_data_bidi_local, 0x20000)
+                                     .set(quic_param_stateless_reset_token, binary_t())
+                                     .set(quic_param_initial_max_stream_data_uni, 0x20000)
+                                     .set(quic_param_initial_source_connection_id, binary_t())
+                                     .set(quic_param_version_information, binary_t())
+                                     .set(quic_param_initial_max_data, 0x30000)
+                                     .set(quic_param_original_destination_connection_id, binary_t())
+                                     .set(quic_param_max_idle_timeout, 240000)
+                                     .set(quic_param_initial_max_streams_uni, 103)
+                                     .set(quic_param_initial_max_stream_data_bidi_remote, 0x20000)
+                                     .set(quic_param_google_version, binary_t())
+                                     .set(quic_param_max_datagram_frame_size, 0x10000)
+                                     .set(quic_param_max_udp_payload_size, max_payload_size)
+                                     .set(quic_param_initial_max_streams_bidi, 100);
+                                 return success;
+                             });
                          return success;
                      })
                 .add(tls_hs_certificate, dir)

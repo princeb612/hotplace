@@ -62,18 +62,22 @@ int main(int argc, char **argv) {
         _test_case.attach(_logger);
     }
 
-    test_sharedinstance1();
-    test_sharedinstance2();
-    test_endian();
-    test_convert_endian();
-    test_byte_capacity_unsigned();
-    test_byte_capacity_signed();
-    test_maphint();
-    test_mapinsert();
-    test_binary();
-    test_loglevel();
-    test_variant();
     test_bignumber();
+    test_binary();
+    test_bufferio();
+    test_capacity();
+    test_cmdline();
+    test_consolecolor();
+    test_datetime();
+    test_dumpmemory();
+    test_endian();
+    test_ieee754();
+    test_loglevel();
+    test_shared();
+    test_stream();
+    test_string();
+    test_valist();
+    test_variant();
 
     _logger->flush();
 

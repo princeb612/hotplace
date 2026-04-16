@@ -29,7 +29,6 @@ class quic_packet_builder {
     quic_packet_builder& set_msb(uint8 msb);
     quic_packet_builder& set(tls_session* session);
     quic_packet_builder& set(tls_direction_t dir);
-    quic_packet_builder& set(segmentation* segment, size_t concat = 0);
     /**
      * set PKN
      */
@@ -48,7 +47,6 @@ class quic_packet_builder {
     uint8 _msb;
     tls_session* _session;
     tls_direction_t _dir;
-    segmentation* _segment;
     size_t _concat;
     bool _construct;
 };

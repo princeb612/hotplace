@@ -37,6 +37,9 @@ class semaphore : public semaphore_t {
      */
     virtual return_t wait(unsigned msec);
 
+    semaphore(const semaphore&) = delete;
+    semaphore& operator=(const semaphore&) = delete;
+
    protected:
     sem_t _sem;
 };

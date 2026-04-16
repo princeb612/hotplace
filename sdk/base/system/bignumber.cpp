@@ -186,13 +186,13 @@ bignumber &bignumber::set(int128 value)
 bignumber &bignumber::set(int64 value)
 #endif
 {
+    _v.clear();
     if (value >= 0) {
         _sign = 1;
     } else {
         _sign = -1;
         value = -value;
     }
-    _v.clear();
     while (value) {
         _v.push_back(value % base);
         value /= base;
@@ -326,7 +326,7 @@ bignumber &bignumber::setstring(const char *value) {
 
 bignumber &bignumber::setstring(const std::string &value) { return setstring(value.c_str()); }
 
-bignumber bignumber::add(const bignumber &lhs, const bignumber &rhs) const {
+bignumber bignumber::add(const bignumber &lhs, const bignumber &rhs) {
     bignumber res;
     if (lhs._sign == rhs._sign) {
         res = absadd(lhs, rhs);
@@ -343,7 +343,7 @@ bignumber bignumber::add(const bignumber &lhs, const bignumber &rhs) const {
     return res;
 }
 
-bignumber bignumber::sub(const bignumber &lhs, const bignumber &rhs) const {
+bignumber bignumber::sub(const bignumber &lhs, const bignumber &rhs) {
     bignumber res;
     if (lhs._sign != rhs._sign) {
         res = absadd(lhs, rhs);
@@ -365,7 +365,7 @@ bignumber bignumber::sub(const bignumber &lhs, const bignumber &rhs) const {
     return res;
 }
 
-bignumber bignumber::mult_simple(const bignumber &lhs, const bignumber &rhs) const {
+bignumber bignumber::mult_simple(const bignumber &lhs, const bignumber &rhs) {
     // schoolbook O(n^2)
     bignumber res;
     res._sign = lhs._sign * rhs._sign;
@@ -384,7 +384,7 @@ bignumber bignumber::mult_simple(const bignumber &lhs, const bignumber &rhs) con
     return res;
 }
 
-bignumber bignumber::mult(const bignumber &lhs, const bignumber &rhs) const {
+bignumber bignumber::mult(const bignumber &lhs, const bignumber &rhs) {
     // karatsuba O(n^1.58)
     bignumber res;
     auto n = lhs._v.size();
@@ -425,16 +425,16 @@ bignumber bignumber::mult(const bignumber &lhs, const bignumber &rhs) const {
     return res;
 }
 
-bignumber bignumber::div(const bignumber &lhs, const bignumber &rhs) const {
+bignumber bignumber::div(const bignumber &lhs, const bignumber &rhs) {
     auto res = divide(lhs, rhs);
     return res.first;
 }
 
 // c++ style remainder
 // -7 % 3 = -1, 7 % -3 = 1
-bignumber bignumber::mod(const bignumber &lhs, const bignumber &rhs) const { return lhs - (lhs / rhs) * rhs; }
+bignumber bignumber::mod(const bignumber &lhs, const bignumber &rhs) { return lhs - (lhs / rhs) * rhs; }
 
-std::pair<bignumber, bignumber> bignumber::divide(const bignumber &lhs, const bignumber &rhs) const {
+std::pair<bignumber, bignumber> bignumber::divide(const bignumber &lhs, const bignumber &rhs) {
     std::pair<bignumber, bignumber> res = {{{0}}, {{0}}};
     bignumber quotient;
     bignumber remainder;
@@ -490,7 +490,7 @@ std::pair<bignumber, bignumber> bignumber::divide(const bignumber &lhs, const bi
     return res;
 }
 
-bignumber bignumber::bitwise_and(const bignumber &lhs, const bignumber &rhs) const {
+bignumber bignumber::bitwise_and(const bignumber &lhs, const bignumber &rhs) {
     bignumber res;
 #if (bn_intuitive == 1)
     auto lsize = lhs._v.size();
@@ -506,7 +506,7 @@ bignumber bignumber::bitwise_and(const bignumber &lhs, const bignumber &rhs) con
     return res;
 }
 
-bignumber bignumber::bitwise_or(const bignumber &lhs, const bignumber &rhs) const {
+bignumber bignumber::bitwise_or(const bignumber &lhs, const bignumber &rhs) {
     bignumber res;
 #if (bn_intuitive == 1)
     auto lsize = lhs._v.size();
@@ -522,7 +522,7 @@ bignumber bignumber::bitwise_or(const bignumber &lhs, const bignumber &rhs) cons
     return res;
 }
 
-bignumber bignumber::bitwise_xor(const bignumber &lhs, const bignumber &rhs) const {
+bignumber bignumber::bitwise_xor(const bignumber &lhs, const bignumber &rhs) {
     bignumber res;
 #if (bn_intuitive == 1)
     auto lsize = lhs._v.size();
@@ -538,7 +538,7 @@ bignumber bignumber::bitwise_xor(const bignumber &lhs, const bignumber &rhs) con
     return res;
 }
 
-bignumber bignumber::bitwise_not(const bignumber &other) const {
+bignumber bignumber::bitwise_not(const bignumber &other) {
     bignumber res;
 #if (bn_intuitive == 1)
     for (uint32 item : other._v) {
@@ -548,7 +548,7 @@ bignumber bignumber::bitwise_not(const bignumber &other) const {
     return res;
 }
 
-bignumber bignumber::gcd(const bignumber &lhs, const bignumber &rhs) const {
+bignumber bignumber::gcd(const bignumber &lhs, const bignumber &rhs) {
     bignumber a = lhs;
     bignumber b = rhs;
     while (false == b._v.empty()) {
@@ -558,7 +558,7 @@ bignumber bignumber::gcd(const bignumber &lhs, const bignumber &rhs) const {
     return a;
 }
 
-bignumber bignumber::modinv(bignumber a, bignumber m) const {
+bignumber bignumber::modinv(bignumber a, bignumber m) {
     bignumber m0 = m;
     bignumber x0 = 0;
     bignumber x1 = 1;
@@ -579,18 +579,18 @@ bignumber bignumber::modinv(bignumber a, bignumber m) const {
     return x1;
 }
 
-bignumber bignumber::modpow(bignumber b, bignumber exp, const bignumber &m) const {
+bignumber bignumber::modpow(bignumber b, bignumber exp, const bignumber &m) {
     bignumber res = 1;
     b = mod(b, m);
 
-    while (!exp._v.empty()) {
+    while (false == exp._v.empty()) {
         if (exp._v[0] & 1) res = mod(res * b, m);
 
         b = mod(b * b, m);
 
         // exp /= 2
         uint64 carry = 0;
-        for (auto i = exp._v.size() - 1; i >= 0; i--) {
+        for (int i = exp._v.size() - 1; i >= 0; i--) {
             uint64 cur = exp._v[i] + carry * base;
             exp._v[i] = cur / 2;
             carry = cur % 2;
@@ -600,13 +600,36 @@ bignumber bignumber::modpow(bignumber b, bignumber exp, const bignumber &m) cons
     return res;
 }
 
-bignumber bignumber::sqrt(const bignumber &other) const {
-    bignumber x = other;
-    bignumber y = (x + 1) / 2;
-    while (y < x) {
-        x = y;
-        y = (x + other / x) / 2;
+bignumber bignumber::sqrt(const bignumber &other) {
+    bignumber x;
+#if 0
+    // binary search
+    if (other._sign > 0) {
+        bignumber low = 1;
+        bignumber high = other;
+        x = 1;
+        while (low <= high) {
+            bignumber mid = (low + high) / 2;
+            if (mid * mid <= other) {
+                x = mid;
+                low = mid + 1;
+            } else {
+                high = mid - 1;
+            }
+        }
     }
+#else
+    // newton's method
+    if (other >= 2) {
+        size_t bitlen = other._v.size() << 5;  // uint32
+        x = bignumber(1) << (bitlen / 2 + 1);
+        bignumber y = (x + 1) / 2;
+        while (y < x) {
+            x = y;
+            y = (x + other / x) / 2;
+        }
+    }
+#endif
     return x;
 }
 
@@ -834,6 +857,8 @@ bignumber &bignumber::bitwise_or(const bignumber &other) { return *this = bitwis
 bignumber &bignumber::bitwise_xor(const bignumber &other) { return *this = bitwise_xor(*this, other); }
 
 bignumber &bignumber::bitwise_not() { return *this = bitwise_not(*this); }
+
+bignumber &bignumber::sqrt() { return *this = sqrt(*this); }
 
 size_t bignumber::capacity() const { return _v.size(); }
 

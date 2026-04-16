@@ -10,16 +10,13 @@
 
 #include "sample.hpp"
 
-void test_format() {
-    _test_case.begin("format");
+void test_string_format() {
     _test_case.reset_time();
     _logger->writeln(format("%s %d %1.1f\n", "sample", 1, 1.1f));
     _test_case.assert(true, __FUNCTION__, "format");
 }
 
-void test_getline() {
-    _test_case.begin("getline");
-
+void test_string_getline() {
     return_t ret = errorcode_t::success;
     const char* stream_data = " line1 \nline2 \n  line3\nline4";
     size_t stream_size = strlen(stream_data);
@@ -46,9 +43,7 @@ void test_getline() {
     _test_case.assert(true, __FUNCTION__, "getline");
 }
 
-void test_gettoken() {
-    _test_case.begin("gettoken");
-
+void test_string_gettoken() {
     std::string token = "=|", value;
     std::string data = "key=item1|value1|link1";
 
@@ -67,8 +62,7 @@ void test_gettoken() {
     _test_case.assert(value == "link1", __FUNCTION__, "gettoken");
 }
 
-void test_hexbin() {
-    _test_case.begin("base16");
+void test_string_hexbin() {
     _test_case.reset_time();
 
     const char* message = "sample";
@@ -85,9 +79,7 @@ void test_hexbin() {
     _test_case.assert(true, __FUNCTION__, "base16");
 }
 
-void test_constexpr_hide() {
-    _test_case.begin("constexpr");
-
+void test_string_constexpr_hide() {
     constexpr char temp1[] =
         "You and I in a little toy shop / Buy a bag of balloons with the money we've got / Set them free at the break of dawn / 'Til one by one, they were "
         "gone";
@@ -106,9 +98,7 @@ void test_constexpr_hide() {
     _test_case.assert(true, __FUNCTION__, "hide a string at compile time");
 }
 
-void test_constexpr_obf() {
-    _test_case.begin("constexpr_obf");
-
+void test_string_constexpr_obf() {
 #if __cplusplus >= 202002L  // c++20
     printf("c++20\n");
 #elif __cplusplus >= 201703L  // c++17
@@ -142,9 +132,7 @@ void test_constexpr_obf() {
 obfuscate_string operator""_obf(const char* source, size_t) { return obfuscate_string({source}); }
 #endif
 
-void test_obfuscate_string() {
-    _test_case.begin("obfuscate_string");
-
+void test_string_obfuscate_string() {
     bool test = false;
     basic_stream bs;
     binary_t bin;
@@ -202,8 +190,7 @@ int callback_printf(printf_context_t* context, const char* buf, int len) {
     return 0;
 }
 
-void test_printf() {
-    _test_case.begin("printf");
+void test_string_printf() {
     _test_case.reset_time();
 
     myprintf_context_t context;
@@ -213,8 +200,7 @@ void test_printf() {
     _test_case.assert(true, __FUNCTION__, "printf");
 }
 
-void test_replace() {
-    _test_case.begin("replace");
+void test_string_replace() {
     _test_case.reset_time();
 
     std::string data("hello world");
@@ -224,8 +210,7 @@ void test_replace() {
     _test_case.assert(true, __FUNCTION__, "replace");
 }
 
-void test_scan() {
-    _test_case.begin("scan");
+void test_string_scan() {
     _test_case.reset_time();
 
     return_t ret = errorcode_t::success;
@@ -245,8 +230,7 @@ void test_scan() {
     _logger->dump(data, strlen(data), 16);
 }
 
-void test_scan2() {
-    _test_case.begin("scan");
+void test_string_scan2() {
     _test_case.reset_time();
 
     return_t ret = errorcode_t::success;
@@ -267,8 +251,7 @@ void test_scan2() {
     _logger->dump(data, strlen(data), 16);
 }
 
-void test_split() {
-    _test_case.begin("split");
+void test_string_split() {
     _test_case.reset_time();
 
     split_context_t* handle = nullptr;
@@ -355,8 +338,7 @@ void t_test_rule_of_5(const std::string& name) {
     _test_case.assert(true, __FUNCTION__, "see sanitize log");
 }
 
-void test_ansi_string() {
-    _test_case.begin("ansi_string");
+void test_string_ansi_string() {
     _test_case.reset_time();
 
     t_test_rule_of_5<ansi_string>("ansi_string");
@@ -409,8 +391,7 @@ void test_ansi_string() {
 }
 
 #if defined _WIN32 || defined _WIN64
-void test_wide_string() {
-    _test_case.begin("wide_string");
+void test_string_wide_string() {
     _test_case.reset_time();
 
     {
@@ -454,8 +435,7 @@ void test_wide_string() {
 }
 #endif
 
-void test_tokenize() {
-    _test_case.begin("tokenize");
+void test_string_tokenize() {
     _test_case.reset_time();
 
     std::string data = "key=item1|value1|link1";
@@ -470,4 +450,26 @@ void test_tokenize() {
     }
 
     _test_case.assert(true, __FUNCTION__, "tokenize");
+}
+
+void test_string() {
+    _test_case.begin("string");
+
+    test_string_format();
+    test_string_getline();
+    test_string_gettoken();
+    test_string_hexbin();
+    test_string_constexpr_hide();
+    test_string_constexpr_obf();
+    test_string_obfuscate_string();
+    test_string_printf();
+    test_string_replace();
+    test_string_scan();
+    test_string_scan2();
+    test_string_split();
+    test_string_ansi_string();  // [APVR]
+#if defined _WIN32 || defined _WIN64
+    test_string_wide_string();  // [APVR]
+#endif
+    test_string_tokenize();
 }

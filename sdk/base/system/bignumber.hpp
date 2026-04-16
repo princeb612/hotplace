@@ -251,22 +251,22 @@ class bignumber {
     bignumber &setstring(const char *value);
     bignumber &setstring(const std::string &value);
 
-    bignumber add(const bignumber &lhs, const bignumber &rhs) const;
-    bignumber sub(const bignumber &lhs, const bignumber &rhs) const;
-    bignumber mult_simple(const bignumber &lhs, const bignumber &rhs) const;
-    bignumber mult(const bignumber &lhs, const bignumber &rhs) const;
-    bignumber div(const bignumber &lhs, const bignumber &rhs) const;
-    bignumber mod(const bignumber &lhs, const bignumber &rhs) const;
-    std::pair<bignumber, bignumber> divide(const bignumber &lhs, const bignumber &rhs) const;
-    bignumber bitwise_and(const bignumber &lhs, const bignumber &rhs) const;
-    bignumber bitwise_or(const bignumber &lhs, const bignumber &rhs) const;
-    bignumber bitwise_xor(const bignumber &lhs, const bignumber &rhs) const;
-    bignumber bitwise_not(const bignumber &other) const;
+    static bignumber add(const bignumber &lhs, const bignumber &rhs);
+    static bignumber sub(const bignumber &lhs, const bignumber &rhs);
+    static bignumber mult_simple(const bignumber &lhs, const bignumber &rhs);
+    static bignumber mult(const bignumber &lhs, const bignumber &rhs);
+    static bignumber div(const bignumber &lhs, const bignumber &rhs);
+    static bignumber mod(const bignumber &lhs, const bignumber &rhs);
+    static std::pair<bignumber, bignumber> divide(const bignumber &lhs, const bignumber &rhs);
+    static bignumber bitwise_and(const bignumber &lhs, const bignumber &rhs);
+    static bignumber bitwise_or(const bignumber &lhs, const bignumber &rhs);
+    static bignumber bitwise_xor(const bignumber &lhs, const bignumber &rhs);
+    static bignumber bitwise_not(const bignumber &other);
 
-    bignumber gcd(const bignumber &lhs, const bignumber &rhs) const;
-    bignumber modinv(bignumber a, bignumber m) const;
-    bignumber modpow(bignumber base, bignumber exp, const bignumber &m) const;
-    bignumber sqrt(const bignumber &other) const;
+    static bignumber gcd(const bignumber &lhs, const bignumber &rhs);
+    static bignumber modinv(bignumber a, bignumber m);
+    static bignumber modpow(bignumber base, bignumber exp, const bignumber &m);
+    static bignumber sqrt(const bignumber &other);
 
     bignumber &add(const bignumber &other);
     bignumber &sub(const bignumber &other);
@@ -278,6 +278,7 @@ class bignumber {
     bignumber &bitwise_or(const bignumber &other);
     bignumber &bitwise_xor(const bignumber &other);
     bignumber &bitwise_not();
+    bignumber &sqrt();
 
     /**
      * @brief   decimal string

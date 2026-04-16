@@ -32,7 +32,7 @@ void do_test_vprintf(bufferio_context_t* handle, const char* fmt, ...) {
     _test_case.test(ret, __FUNCTION__, "vprintf");
 }
 
-void test_bufferio() {
+void test_bufferio1() {
     return_t ret = errorcode_t::success;
     bool test = true;
     size_t len = 0;
@@ -153,7 +153,6 @@ void test_bufferio() {
 }
 
 void test_bufferio2() {
-    _test_case.begin("cases null-padded");
     // avoid c_str () return nullptr
     // std::cout << nullptr
     // printf ("%s", nullptr);
@@ -170,4 +169,10 @@ void test_bufferio2() {
     bio.get(handle, &data, &size_data);
     _test_case.assert(nullptr != data, __FUNCTION__, "c_str () after clear");
     bio.close(handle);
+}
+
+void test_bufferio() {
+    _test_case.begin("bufferio");
+    test_bufferio1();
+    test_bufferio2();
 }

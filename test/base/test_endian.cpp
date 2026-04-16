@@ -11,8 +11,6 @@
 #include "sample.hpp"
 
 void test_convert_endian() {
-    _test_case.begin("endian");
-
     {
         int16 i = 0x1234;
         int16 a = htons(i);
@@ -70,9 +68,7 @@ void test_convert_endian() {
 #endif
 }
 
-void test_endian() {
-    _test_case.begin("endian");
-
+void test_is_endian() {
     bool ret = false;
     std::string text;
     bool is_be = is_big_endian();
@@ -86,4 +82,10 @@ void test_endian() {
     ret = (true == is_be);
 #endif
     _test_case.assert((true == ret), __FUNCTION__, text.c_str());
+}
+
+void test_endian() {
+    _test_case.begin("endian");
+    test_is_endian();
+    test_convert_endian();
 }

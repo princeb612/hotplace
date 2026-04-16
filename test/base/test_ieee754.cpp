@@ -10,9 +10,7 @@
 
 #include "sample.hpp"
 
-void test_ieee754() {
-    _test_case.begin("ieee754_typeof");
-
+void test_typeof_ieee754() {
     {
         struct {
             uint16 half;
@@ -76,7 +74,6 @@ void test_ieee754() {
 }
 
 void test_frexp() {
-    _test_case.begin("frexp vs. ieee754_exp");
     float ftable[] = {0.0, 1.0, -1.0, 1.5, -1.5, 2.0, -2.0, 4.0, -4.0, 0.00006103515625, -0.00006103515625};
     for (auto item : ftable) {
         int s1 = 0;
@@ -107,9 +104,7 @@ void test_frexp() {
     }
 }
 
-void test_basic_stream() {
-    _test_case.begin("basic_stream");
-
+void test_float_printf() {
     {
         struct testvector {
             float f;
@@ -155,7 +150,6 @@ void test_basic_stream() {
 }
 
 void test_as_small_as_possible() {
-    _test_case.begin("ieee754_as_small_as_possible");
     // ieee754_as_small_as_possible
     // RFC 7049 Concise Binary Object Representation (CBOR)
     // RFC 8949 Concise Binary Object Representation (CBOR)
@@ -204,4 +198,12 @@ void test_as_small_as_possible() {
         bool expect = (var.content().data.ui16 == item.fp16);
         _test_case.assert(expect, __FUNCTION__, "ieee754_as_small_as_possible %s fp16 %04x fp32 %f fp64 %lf", tostr.c_str(), item.fp16, f, d);
     }
+}
+
+void test_ieee754() {
+    _test_case.begin("ieee754");
+    test_typeof_ieee754();
+    test_frexp();
+    test_float_printf();
+    test_as_small_as_possible();
 }
