@@ -117,7 +117,7 @@ class valist {
     valist& operator<<(const basic_stream& value);
     valist& operator<<(const variant_t& v);
     valist& operator<<(variant_t&& v);
-    valist& operator<<(const valist& object);
+    valist& operator=(const valist& object);
     /**
      * @brief clear
      */

@@ -193,13 +193,13 @@ int main(int argc, char** argv) {
 
     openssl_startup();
 
-    test_rfc7515();
-    test_rfc7516();
-    test_rfc7517();
-    test_rfc7518();
-    test_rfc7520();
-    test_rfc7638();
-    test_rfc8037();
+    testcase_rfc7515();
+    testcase_rfc7516();
+    testcase_rfc7517();
+    testcase_rfc7518();
+    testcase_rfc7520();
+    testcase_rfc7638();
+    testcase_rfc8037();
 
     openssl_cleanup();
 

@@ -91,20 +91,20 @@ void test_rfc_9001_construct_initial(testvector_initial_packet* item, tls_sessio
 void test_rfc_9001_send_initial(testvector_initial_packet* item, tls_session* session);
 void test_rfc_9001_retry(testvector_retry_packet* item, tls_session* session);
 
-void test_quic();
+void testcase_understand_quic();
 
 // QUIC Version 1
-void test_rfc_9000();
+void testcase_rfc_9000();
 
-void test_rfc_9001();
+void testcase_rfc_9001();
 
 // QUIC Version 2
-void test_rfc_9369();
+void testcase_rfc_9369();
 
 // pcap
-void test_pcap_http3();
+void testcase_pcap_http3();
 // construct
-void test_construct_1rtt();
-void test_construct_quic();
+void testcase_construct_1rtt();
+void testcase_construct_quic();
 
 #endif

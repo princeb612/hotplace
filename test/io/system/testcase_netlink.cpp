@@ -152,5 +152,7 @@ void testcase_netlink() {
 #if __GLIBC__ > 4
     _cases.push_back(test_netlink);
 #endif
+#else
+    _test_case.test(not_supported, __FUNCTION__, "linux only");
 #endif
 }

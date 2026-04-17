@@ -22,7 +22,7 @@ namespace hotplace {
 
 /*
  * @brief   big number
- * @refer   ChatGPT (+, -, *, /, mod, gcd, modinv, modpow, sqrt, <<. >>)
+ * @refer   ChatGPT (+, -, *, /, mod, gcd, modinv, modpow, sqrt, <<, >>)
  * @remarks
  *          int8     -128 ~ 127
  *          int16    -32768 ~ 32767

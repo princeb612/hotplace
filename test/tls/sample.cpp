@@ -243,61 +243,45 @@ int main(int argc, char** argv) {
         }
 #endif
 
-        {
-            // resource validation
-            test_validate();
-        }
+        testcase_resource();  // resource validation
 
-        {
-            // https://tls13.xargs.org/
-            test_tls13_xargs_org();
-            // https://tls12.xargs.org/
-            test_tls12_xargs_org();
-            // https://dtls.xargs.org/
-            test_dtls_xargs_org();
+        testcase_understand_tls13();  // https://tls13.xargs.org/
+        testcase_understand_tls12();  // https://tls12.xargs.org/
+        testcase_understand_dtls();   // https://dtls.xargs.org/
 
-            // RFC 8448 Example Handshake Traces for TLS 1.3
-            test_rfc8448_2();
+        // RFC 8448 Example Handshake Traces for TLS 1.3
+        testcase_rfc8448_2();
 
-            tls_session rfc8448_session;
+        tls_session rfc8448_session;
+        testcase_rfc8448_3(&rfc8448_session);
+        testcase_rfc8448_4(&rfc8448_session);
 
-            test_rfc8448_3(&rfc8448_session);
+        testcase_rfc8448_5();
+        testcase_rfc8448_6();
+        testcase_rfc8448_7();
 
-            test_rfc8448_4(&rfc8448_session);
-            test_rfc8448_5();
-            test_rfc8448_6();
-            test_rfc8448_7();
-
-            // https://github.com/syncsynchalt/illustrated-tls13/captures/
-            test_use_pre_master_secret();
-        }
+        testcase_pre_master_secret();  // https://github.com/syncsynchalt/illustrated-tls13/captures/
 
         load_certificate("rsa.crt", "rsa.key", nullptr);
         load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
 
-        {
-            test_tls12_aead();
-            test_pcap_tls13();
-            test_pcap_tls12();
-            test_construct_tls();
-            test_construct_tls13_mlkem();
-        }
+        testcase_tls12_aead();
 
-        {
-            test_pcap_dtls12();
-            test_construct_dtls13();
-            test_dtls_record_arrange();
-            test_construct_dtls12_1();  // generate and arrange fragmented diagrams (record-handshake multiplicity 1..1)
-            test_construct_dtls12_2();  // (record-handshake multiplicity 1..*)
-        }
+        testcase_pcap_tls13();
+        testcase_pcap_tls12();
+        testcase_pcap_http();
+        testcase_pcap_tls13_mlkem();
 
-        {
-            test_helloretryrequest();
-            test_alert();
+        testcase_construct_tls();
 
-            test_pcap_tls13_http1();
-            test_pcap_tls13_mlkem();
-        }
+        testcase_pcap_dtls12();
+        testcase_construct_dtls13();
+        testcase_dtls_record_arrange();
+        testcase_construct_dtls12_1();  // generate and arrange fragmented diagrams (record-handshake multiplicity 1..1)
+        testcase_construct_dtls12_2();  // (record-handshake multiplicity 1..*)
+
+        testcase_helloretryrequest();
+        testcase_alert();
     } else {
         dump_clienthello();
     }

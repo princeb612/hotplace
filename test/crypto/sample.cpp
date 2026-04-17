@@ -58,6 +58,8 @@ int main(int argc, char** argv) {
     }
 
     __try2 {
+        openssl_startup();
+
         testcase_advisor();
 
         testcase_aead_ccm();

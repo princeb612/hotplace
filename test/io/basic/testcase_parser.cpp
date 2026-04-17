@@ -43,7 +43,7 @@ constexpr char asn1_value[] =
         })";
 
 void test_dump_testdata() {
-    // _test_case.begin("parse");
+    // _test_case.begin("parser");
     // _logger->writeln(asn1_structure);
     // _logger->dump(asn1_structure, strlen(asn1_structure));
     // _logger->writeln(asn1_value);
@@ -51,7 +51,7 @@ void test_dump_testdata() {
 }
 
 void test_parser_sample() {
-    _test_case.begin("parse");
+    _test_case.begin("parser");
 
     parser p;
     parser::context context1;
@@ -78,7 +78,7 @@ void test_parser_sample() {
 }
 
 void test_parser_options() {
-    _test_case.begin("parse");
+    _test_case.begin("parser");
 
     return_t ret = errorcode_t::success;
     parser p;
@@ -133,7 +133,7 @@ void test_parser_options() {
 }
 
 void test_parser_search() {
-    _test_case.begin("parse");
+    _test_case.begin("parser");
 
     return_t ret = errorcode_t::success;
     parser p;
@@ -213,7 +213,7 @@ void test_parser_search() {
 }
 
 void test_parser_compare() {
-    _test_case.begin("parse");
+    _test_case.begin("parser");
 
     parser p;
     p.add_token("::=", token_assign);
@@ -229,7 +229,7 @@ void test_parser_compare() {
 }
 
 void test_multipattern_search() {
-    _test_case.begin("t_aho_corasick");
+    _test_case.begin("parser");
 
     // model
     constexpr char sample[] = R"(int a; int b = 0; bool b = true;)";
@@ -312,6 +312,7 @@ enum token_tag_t {
 };
 
 void test_patterns() {
+    _test_case.begin("parser");
     parser p;
     p.get_config().set("handle_lvalue_usertype", 1);
 

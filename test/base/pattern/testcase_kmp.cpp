@@ -21,7 +21,7 @@ struct pattern_search_sample_data {
 };
 
 void test_kmp() {
-    _test_case.begin("t_kmp");
+    _test_case.begin("kmp");
 
     // 0123456789abcdef0123
     // abacaabaccabacabaabb

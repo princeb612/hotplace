@@ -115,7 +115,7 @@ void test_payload_read() {
 }
 
 void test_uint24() {
-    _test_case.begin("uint24");
+    _test_case.begin("payload");
     const char* sample = "00 03 28";
     binary_t bin = std::move(base16_decode_rfc(sample));
 
@@ -255,7 +255,7 @@ void test_group_routine(const char* input, bool expect) {
 }
 
 void test_group() {
-    _test_case.begin("group");
+    _test_case.begin("payload");
     // case.1
     // 00000000 : 01 00 05 64 61 74 61 31 00 05 64 61 74 61 32 -- | ...data1..data2
     // case.2
@@ -267,7 +267,7 @@ void test_group() {
 }
 
 void test_uint48() {
-    _test_case.begin("uint48");
+    _test_case.begin("payload");
 
     // DTLS server_hello, certificate (fragment) - wireshark captured
     const char* record =
@@ -342,7 +342,7 @@ void test_uint48() {
 }
 
 void test_bignumber() {
-    _test_case.begin("bignumber");
+    _test_case.begin("payload");
 
     binary_t bin;
     bignumber bn_int256max = (bignumber(1) << 255) - bignumber(1);  // int256.max

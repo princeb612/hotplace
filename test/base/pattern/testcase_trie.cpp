@@ -14,7 +14,7 @@
 #include <hotplace/test/base/sample.hpp>
 
 void test_trie() {
-    _test_case.begin("t_trie");
+    _test_case.begin("trie");
     // https://www.geeksforgeeks.org/trie-data-structure-in-cpp/
     struct testvector {
         const char* p;
@@ -74,7 +74,7 @@ void test_trie() {
 }
 
 void test_trie_autocompletion() {
-    _test_case.begin("t_trie");
+    _test_case.begin("trie");
     // https://www.geeksforgeeks.org/auto-complete-feature-using-trie/
     struct testvector {
         const char* p;
@@ -84,7 +84,7 @@ void test_trie_autocompletion() {
         {"hello", 5}, {"dog", 3}, {"hell", 4}, {"cat", 3}, {"a", 1}, {"hel", 3}, {"help", 4}, {"helps", 5}, {"helping", 7},
     };
 
-    _test_case.begin("t_trie");
+    _test_case.begin("trie");
     t_trie<char> trie;
     bool test = false;
 
@@ -106,7 +106,7 @@ void test_trie_autocompletion() {
 }
 
 void test_trie_lookup() {
-    _test_case.begin("t_trie");
+    _test_case.begin("trie");
     t_trie<char> trie;
     trie.add("hello", 5)   // index 0
         .add("world", 5);  // index 1
@@ -155,7 +155,7 @@ void test_trie_lookup() {
 }
 
 void test_trie_scan() {
-    _test_case.begin("t_trie");
+    _test_case.begin("trie");
     t_trie<char> trie;
     for (auto i = 0;; i++) {
         auto item = _h2hcodes + i;

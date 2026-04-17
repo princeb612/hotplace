@@ -8,11 +8,12 @@
  * Date         Name                Description
  */
 
-#include "sample.hpp"
+#include <hotplace/test/encode/sample.hpp>
 
 test_case _test_case;
 t_shared_instance<logger> _logger;
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
+std::list<std::function<void(void)>> _cases;
 
 return_t _cmdret = errorcode_t::success;
 
@@ -175,11 +176,13 @@ int main(int argc, char** argv) {
         set_trace_level(option.trace_level);
     }
 
-    test_base16();
+    testcase_base16();
+    testcase_base64();
+    testcase_huffman();
 
-    test_base64();
-
-    test_huffman();
+    for (auto testfunc : _cases) {
+        testfunc();
+    }
 
     _logger->flush();
 

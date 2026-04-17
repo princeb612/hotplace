@@ -40,11 +40,6 @@ void do_cross_check_keycalc(tls_session* clisession, tls_session* svrsession, tl
 return_t construct_record_fragmented(tls_record* record, tls_direction_t dir, std::function<void(tls_session*, binary_t& bin)> func);
 return_t construct_record_fragmented(tls_records* records, tls_direction_t dir, std::function<void(tls_session*, binary_t& bin)> func);
 
-// xargs.org
-void test_tls13_xargs_org();
-void test_tls12_xargs_org();
-void test_dtls_xargs_org();
-
 struct pcap_testvector {
     tls_direction_t dir;
     const char* desc;
@@ -97,38 +92,40 @@ extern const size_t sizeof_pcap_tls13_aes128gcm_sha256_x25519mlkem768;
 extern const pcap_testvector pcap_tls13_aes128gcm_sha256_secp384r1mlkem1024[];
 extern const size_t sizeof_pcap_tls13_aes128gcm_sha256_secp384r1mlkem1024;
 
+// xargs.org
+void testcase_understand_tls13();
+void testcase_understand_tls12();
+void testcase_understand_dtls();
+
 // RFC
-void test_rfc8448_2();
-void test_rfc8448_3(tls_session* rfc8448_session);
-void test_rfc8448_4(tls_session* rfc8448_session);
-void test_rfc8448_5();
-void test_rfc8448_6();
-void test_rfc8448_7();
+void testcase_rfc8448_2();
+void testcase_rfc8448_3(tls_session* rfc8448_session);
+void testcase_rfc8448_4(tls_session* rfc8448_session);
+void testcase_rfc8448_5();
+void testcase_rfc8448_6();
+void testcase_rfc8448_7();
 
-void test_use_pre_master_secret();
+void testcase_pre_master_secret();
 
-void test_tls12_aead();
-void test_pcap_tls13();
-void test_pcap_tls12();
-void test_pcap_dtls12();
-void test_pcap_tls13_http1();
+void testcase_tls12_aead();
+void testcase_pcap_tls13();
+void testcase_pcap_tls13_mlkem();
+void testcase_pcap_tls12();
+void testcase_pcap_dtls12();
+void testcase_pcap_http();
 
-void test_dtls_record_arrange();
+void testcase_dtls_record_arrange();
 
-void test_construct_tls();
-void test_construct_tls13_mlkem();
-void test_construct_dtls13();
-void test_construct_dtls12_1();
-void test_construct_dtls12_2();
-void test_validate();
+void testcase_construct_tls();
+void testcase_construct_dtls13();
+void testcase_construct_dtls12_1();
+void testcase_construct_dtls12_2();
+void testcase_resource();
+
+void testcase_helloretryrequest();
+
+void testcase_alert();
 
 void dump_clienthello();
-
-void test_helloretryrequest();
-
-void test_alert();
-
-void test_pcap_tls13_http1();
-void test_pcap_tls13_mlkem();
 
 #endif

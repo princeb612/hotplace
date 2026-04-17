@@ -35,12 +35,12 @@ void dump_elem(const std::string& source);
 void dump_crypto_key(crypto_key_object* key, void*);
 return_t hash_stream(const char* algorithm, byte_t* stream, size_t size, binary_t& value);
 
-void test_rfc7515();
-void test_rfc7516();
-void test_rfc7517();
-void test_rfc7518();
-void test_rfc7520();
-void test_rfc7638();
-void test_rfc8037();
+void testcase_rfc7515();
+void testcase_rfc7516();
+void testcase_rfc7517();
+void testcase_rfc7518();
+void testcase_rfc7520();
+void testcase_rfc7638();
+void testcase_rfc8037();
 
 #endif

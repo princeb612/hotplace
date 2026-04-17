@@ -31,7 +31,7 @@
     * CBOR
 
 * details
-  * Revision 940
+  * Revision 941
   * Revision 938
     * [tested] openssl-4.0
   * Revision 933

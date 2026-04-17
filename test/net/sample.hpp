@@ -12,16 +12,29 @@
 
 #include <hotplace/sdk/sdk.hpp>
 #include <hotplace/test/net/hpack/test.hpp>
+#include <hotplace/test/net/http/test.hpp>
 #include <hotplace/test/net/qpack/test.hpp>
 #include <hotplace/test/test.hpp>
 
-struct OPTION : public CMDLINEOPTION {};
+struct OPTION : public CMDLINEOPTION {
+    std::string url;
+    int mode;
+    int connect;
+
+    OPTION() : CMDLINEOPTION(), url("https://localhost:9000/"), mode(0), connect(0) {}
+};
 
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 extern std::list<std::function<void(void)>> _cases;
 
+// HTTP
+void testcase_http();
+void testcase_http2();
+void testcase_http2_frame();
+
+// ipaddr
 void testcase_acl();
 
 // HPACK

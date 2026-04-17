@@ -11,6 +11,7 @@
 #include <hotplace/test/base/sample.hpp>
 
 void test_aho_corasick1() {
+    _test_case.begin("aho_corasick");
     t_aho_corasick<char> ac;
     ac.insert("he", 2);
     ac.insert("she", 3);
@@ -34,7 +35,7 @@ void test_aho_corasick1() {
 }
 
 void test_aho_corasick2() {
-    _test_case.begin("t_aho_corasick");
+    _test_case.begin("aho_corasick");
 
     struct testvector {
         const char* source;

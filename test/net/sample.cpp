@@ -29,7 +29,12 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("--debug", "trace level [debug]", [](OPTION& o, char* param) -> void { o.enable_trace(loglevel_debug); }).optional()
 #endif
                 << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional();
+                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-c", "connect", [](OPTION& o, char* param) -> void { o.connect = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-p", "read stream using http_protocol", [](OPTION& o, char* param) -> void { o.mode = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-u", "url (default https://localhost:9000/) feat. httptest1", [](OPTION& o, char* param) -> void { o.url = param; })
+                       .preced()
+                       .optional();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
@@ -51,38 +56,49 @@ int main(int argc, char** argv) {
         set_trace_level(option.trace_level);
     }
 
-    _test_case.begin("ACL");
+    __try2 {
+#if defined _WIN32 || defined _WIN64
+        winsock_startup();
+#endif
+        openssl_startup();
 
-    testcase_acl();
+        testcase_http();
+        testcase_http2();
+        testcase_http2_frame();
 
-    openssl_startup();
+        testcase_acl();
 
-    _test_case.reset_time();
-    // RFC 7541 Appendix B. Huffman Code
-    auto huffcode = http_huffman_coding::get_instance();
-    _test_case.assert(true, __FUNCTION__, "check loading time of HPACK Huffman Code");
-    // RFC 7541 Appendix B. Huffman Code
-    // RFC 7541 Appendix A.  Static Table Definition
-    encoder.make_share(new hpack_encoder);
-    _test_case.assert(true, __FUNCTION__, "check loading time of HPACK");
-    // and now .. test_h2 wo loading time
-    // huffman codes
+        _test_case.reset_time();
+        // RFC 7541 Appendix B. Huffman Code
+        auto huffcode = http_huffman_coding::get_instance();
+        _test_case.assert(true, __FUNCTION__, "check loading time of HPACK Huffman Code");
+        // RFC 7541 Appendix B. Huffman Code
+        // RFC 7541 Appendix A.  Static Table Definition
+        encoder.make_share(new hpack_encoder);
+        _test_case.assert(true, __FUNCTION__, "check loading time of HPACK");
+        // and now .. test_h2 wo loading time
+        // huffman codes
 
-    testcase_huffman();
-    // HPACK
-    testcase_rfc7541();
-    testcase_h2();
+        testcase_huffman();
+        // HPACK
+        testcase_rfc7541();
+        testcase_h2();
 
-    // QPACK
-    testcase_rfc9204();
-    testcase_capacity();
-    testcase_qpack_stream();
+        // QPACK
+        testcase_rfc9204();
+        testcase_capacity();
+        testcase_qpack_stream();
 
-    for (auto testfunc : _cases) {
-        testfunc();
+        for (auto testfunc : _cases) {
+            testfunc();
+        }
     }
-
-    openssl_cleanup();
+    __finally2 {
+        openssl_cleanup();
+#if defined _WIN32 || defined _WIN64
+        winsock_cleanup();
+#endif
+    }
 
     _logger->flush();
 

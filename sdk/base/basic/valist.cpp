@@ -212,7 +212,7 @@ valist& valist::operator<<(variant_t&& v) {
     return *this;
 }
 
-valist& valist::operator<<(const valist& object) { return assign(object); }
+valist& valist::operator=(const valist& object) { return assign(object); }
 
 void valist::clear() {
     critical_section_guard guard(_lock);

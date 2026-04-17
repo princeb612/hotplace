@@ -9,6 +9,7 @@ file (GLOB SOURCE_FILES
     *.cpp
     basic/*.cpp
     hpack/*.cpp
+    http/*.cpp
     qpack/*.cpp
 )
 

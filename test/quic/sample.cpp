@@ -353,22 +353,22 @@ int main(int argc, char** argv) {
 
     openssl_startup();
 
-    test_quic();
+    testcase_understand_quic();
 
     // RFC 9000
-    test_rfc_9000();
+    testcase_rfc_9000();
 
     // RFC 9001
-    test_rfc_9001();
+    testcase_rfc_9001();
 
     // RFC 9369
-    test_rfc_9369();
+    testcase_rfc_9369();
 
     // http3.pcapng
-    test_pcap_http3();
+    testcase_pcap_http3();
 
-    test_construct_1rtt();
-    test_construct_quic();
+    testcase_construct_1rtt();
+    testcase_construct_quic();
 
     openssl_cleanup();
 

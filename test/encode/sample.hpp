@@ -43,9 +43,10 @@ struct OPTION : public CMDLINEOPTION {
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
+extern std::list<std::function<void(void)>> _cases;
 
-void test_base16();
-void test_base64();
-void test_huffman();
+void testcase_base16();
+void testcase_base64();
+void testcase_huffman();
 
 #endif

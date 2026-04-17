@@ -91,35 +91,36 @@ int main(int argc, char** argv) {
     _logger->writeln("option.skip_validate %i", option.skip_validate ? 1 : 0);
     _logger->writeln("option.skip_gen %i", option.skip_gen ? 1 : 0);
 
-    openssl_startup();
+    __try2 {
+        openssl_startup();
 
-    test_resources();
+        testcase_resources();
 
-    test_rfc8152();
+        testcase_rfc8152();
 
-    // part 3 https://github.com/cose-wg/Examples
-    // A GitHub project has been created at <https://github.com/cose-wg/
-    // Examples> that contains not only the examples presented in this
-    // document, but a more complete set of testing examples as well.  Each
-    // example is found in a JSON file that contains the inputs used to
-    // create the example, some of the intermediate values that can be used
-    // in debugging the example and the output of the example presented in
-    // both a hex and a CBOR diagnostic notation format.  Some of the
-    // examples at the site are designed failure testing cases; these are
-    // clearly marked as such in the JSON file.  If errors in the examples
-    // in this document are found, the examples on GitHub will be updated,
-    // and a note to that effect will be placed in the JSON file.
-    if (false == option.skip_validate) {
-        test_examples();
+        // part 3 https://github.com/cose-wg/Examples
+        // A GitHub project has been created at <https://github.com/cose-wg/
+        // Examples> that contains not only the examples presented in this
+        // document, but a more complete set of testing examples as well.  Each
+        // example is found in a JSON file that contains the inputs used to
+        // create the example, some of the intermediate values that can be used
+        // in debugging the example and the output of the example presented in
+        // both a hex and a CBOR diagnostic notation format.  Some of the
+        // examples at the site are designed failure testing cases; these are
+        // clearly marked as such in the JSON file.  If errors in the examples
+        // in this document are found, the examples on GitHub will be updated,
+        // and a note to that effect will be placed in the JSON file.
+        if (false == option.skip_validate) {
+            testcase_examples();
+        }
+
+        // part 4 encrypt/sign/mac
+        testcase_cose();
+
+        // part 5 CWT
+        testcase_rfc8392();
     }
-
-    // part 4 encrypt/sign/mac
-    test_cose();
-
-    // part 5 CWT
-    test_rfc8392();
-
-    openssl_cleanup();
+    __finally2 { openssl_cleanup(); }
 
     _logger->flush();
 

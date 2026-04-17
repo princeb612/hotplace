@@ -61,10 +61,10 @@ extern crypto_key rfc8152_pubkeys;
 extern crypto_key rfc8152_privkeys_c4;
 
 // validate resources
-void test_resources();
+void testcase_resources();
 
 // part 0 .. try to decode
-void test_rfc8152_read_cbor();
+void testcase_rfc8152_read_cbor();
 
 // part 1 .. following cases
 // part 2 .. test JWK, CWK compatibility
@@ -73,15 +73,15 @@ void test_rfc8152_read_cbor();
 return_t dump_test_data(const char* text, basic_stream& diagnostic);
 return_t dump_test_data(const char* text, const binary_t& cbor);
 void dump_crypto_key(crypto_key_object* key, void*);
-void test_rfc8152();
+void testcase_rfc8152();
 
 // part 3 https://github.com/cose-wg/Examples
-void test_examples();
+void testcase_examples();
 
 // part 4 encrypt/sign/mac
-void test_cose();
+void testcase_cose();
 
 // part 5 CWT
-void test_rfc8392();
+void testcase_rfc8392();
 
 #endif

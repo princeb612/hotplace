@@ -15,7 +15,7 @@
  * applied parser::psearchex
  */
 void test_merge_ovl_intervals1() {
-    _test_case.begin("t_merge_ovl_intervals");
+    _test_case.begin("merge overlapping intervals");
     t_merge_ovl_intervals<int, int> moi;
     typedef t_merge_ovl_intervals<int, int>::interval interval;
     typedef std::vector<interval> result;
@@ -78,7 +78,7 @@ void test_merge_ovl_intervals1() {
 }
 
 void test_merge_ovl_intervals2() {
-    _test_case.begin("t_merge_ovl_intervals");
+    _test_case.begin("merge overlapping intervals");
 
     {
         t_merge_ovl_intervals<size_t> moi;
@@ -130,7 +130,7 @@ void test_merge_ovl_intervals2() {
 }
 
 void test_ack() {
-    _test_case.begin("t_ovl_points");
+    _test_case.begin("overlapping points");
 
     auto lambda = [](const char* func, const char* text, t_ovl_points<uint32>& p, ack_t& e) -> void {
         ack_t ack;
@@ -217,7 +217,7 @@ void test_ack() {
 }
 
 void test_subtraction() {
-    _test_case.begin("t_merge_ovl_intervals subtraction");
+    _test_case.begin("merge overlapping intervals");
     // [retransmission] check PKN not acknowledged
 
     {

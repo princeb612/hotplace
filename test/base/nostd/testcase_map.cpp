@@ -11,7 +11,7 @@
 #include <hotplace/test/base/sample.hpp>
 
 void test_maphint() {
-    _test_case.begin("t_maphint");
+    _test_case.begin("maphint");
     return_t ret = errorcode_t::success;
 
     std::map<int, std::string> source;

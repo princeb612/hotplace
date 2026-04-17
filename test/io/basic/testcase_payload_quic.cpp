@@ -114,6 +114,7 @@ void test_quic_integer() {
 }
 
 void test_quic_encoded() {
+    _test_case.begin("payload");
     // integer
     auto test_lambda = [&](uint64 value, const char* expect) -> void {
         binary_t bin_expect = std::move(base16_decode_rfc(expect));
