@@ -74,7 +74,8 @@ function build_openssl ()
     make -j 2
     make -j 2 install_sw install_ssldirs
 
-    touch ${base}/.complete
+    mkdir -p ${builddir}
+    touch ${builddir}/.complete
 }
 
 # build_jansson directory

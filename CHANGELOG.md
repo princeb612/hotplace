@@ -31,7 +31,8 @@
     * CBOR
 
 * details
-  * Revision 937
+  * Revision 938
+    * [tested] openssl-4.0
   * Revision 933
     * [tested] valgrind, application verifier, sanitize
   * Revision 926

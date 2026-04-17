@@ -48,6 +48,7 @@ if [ ${#args[@]} -ne 0 ]; then
 fi
 
 install_dir=${HOTPLACE_HOME}/thirdparty/$base
+export MAKEFLAGS='-j 4'
 
 for item in ${dependency[@]}; do
     member=item[name]
@@ -80,5 +81,7 @@ for item in ${dependency[@]}; do
         else
             ${!member_build}
         fi
+    else
+        echo '-' ${!member_name} 'done'
     fi
 done

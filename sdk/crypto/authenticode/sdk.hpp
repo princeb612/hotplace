@@ -18,7 +18,7 @@ namespace crypto {
 
 return_t crl_distribution_point(X509* cert, std::set<std::string>& crls);
 return_t pkcs7_digest_info(PKCS7* pkcs7_pointer, std::string& md, binary_t& digest);
-return_t X509_NAME_to_string(X509_NAME* name, std::string& data);
+return_t X509_NAME_to_string(const X509_NAME* name, std::string& data);
 
 }  // namespace crypto
 }  // namespace hotplace

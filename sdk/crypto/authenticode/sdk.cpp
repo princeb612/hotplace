@@ -40,7 +40,7 @@ return_t crl_distribution_point(X509 *cert, std::set<std::string> &crls) {
                 STACK_OF(X509_NAME_ENTRY) *sk_relname = distpoint->name.relativename;
                 for (int j = 0; j < sk_X509_NAME_ENTRY_num(sk_relname); j++) {
                     X509_NAME_ENTRY *e = sk_X509_NAME_ENTRY_value(sk_relname, j);
-                    ASN1_STRING *d = X509_NAME_ENTRY_get_data(e);
+                    auto d = X509_NAME_ENTRY_get_data(e);
 
                     std::string crl((char *)ASN1_STRING_get0_data(d), ASN1_STRING_length(d));
                     crls.insert(crl);
@@ -151,15 +151,15 @@ return_t pkcs7_digest_info(PKCS7 *pkcs7, std::string &md, binary_t &digest) {
 
         if (0 == OBJ_cmp(pkcs7->d.sign->contents->type, indir_objid) && pkcs7->d.sign->contents->d.other->type == V_ASN1_SEQUENCE) {
             ASN1_STRING *astr = pkcs7->d.sign->contents->d.other->value.sequence;
-            const unsigned char *p = astr->data;
-            SpcIndirectDataContent *idc = d2i_SpcIndirectDataContent(nullptr, &p, astr->length);
+            const unsigned char *p = ASN1_STRING_get0_data(astr);
+            SpcIndirectDataContent *idc = d2i_SpcIndirectDataContent(nullptr, &p, ASN1_STRING_length(astr));
             if (idc) {
                 if (idc->messageDigest && idc->messageDigest->digest && idc->messageDigest->digestAlgorithm) {
                     mdtype = OBJ_obj2nid(idc->messageDigest->digestAlgorithm->algorithm);
                     // const EVP_MD *evp_md = EVP_get_digestbynid (mdtype);
                     md = OBJ_nid2sn(mdtype);
-                    digest.resize(idc->messageDigest->digest->length);
-                    memcpy(digest.data(), idc->messageDigest->digest->data, idc->messageDigest->digest->length);
+                    digest.resize(ASN1_STRING_length(idc->messageDigest->digest));
+                    memcpy(digest.data(), ASN1_STRING_get0_data(idc->messageDigest->digest), ASN1_STRING_length(idc->messageDigest->digest));
                 }
                 SpcIndirectDataContent_free(idc);
             }
@@ -176,7 +176,7 @@ return_t pkcs7_digest_info(PKCS7 *pkcs7, std::string &md, binary_t &digest) {
     return ret;
 }
 
-return_t X509_NAME_to_string(X509_NAME *name, std::string &data) {
+return_t X509_NAME_to_string(const X509_NAME *name, std::string &data) {
     return_t ret = errorcode_t::success;
     char *s = nullptr;
     char *c = nullptr;
@@ -208,11 +208,12 @@ return_t X509_NAME_to_string(X509_NAME *name, std::string &data) {
 
         c = s;
         for (;;) {
-            // #ifndef CHARSET_EBCDIC
-            if (((*s == '/') && ((s[1] >= 'A') && (s[1] <= 'Z') && ((s[2] == '=') || ((s[2] >= 'A') && (s[2] <= 'Z') && (s[3] == '='))))) || (*s == '\0')) {
-                // #else
-                //  if (((*s == '/') && (isupper(s[1]) && ((s[2] == '=') || (isupper(s[2]) && (s[3] == '='))))) || (*s == '\0'))
-                // #endif
+#ifndef CHARSET_EBCDIC
+            if (((*s == '/') && ((s[1] >= 'A') && (s[1] <= 'Z') && ((s[2] == '=') || ((s[2] >= 'A') && (s[2] <= 'Z') && (s[3] == '='))))) || (*s == '\0'))
+#else
+            if (((*s == '/') && (isupper(s[1]) && ((s[2] == '=') || (isupper(s[2]) && (s[3] == '='))))) || (*s == '\0'))
+#endif
+            {
                 i = s - c;
                 data.append(c, i);
                 c = s + 1; /* skip following slash */

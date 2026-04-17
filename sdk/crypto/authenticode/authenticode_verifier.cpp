@@ -9,9 +9,11 @@
  * 2023.08.27   Soo Han, Kim        get_crl - temporary disabled, under construction
  */
 
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/thread.hpp>
+#include <hotplace/sdk/base/unittest/trace.hpp>
 #include <hotplace/sdk/crypto/authenticode/authenticode_plugin_pe.hpp>
 #include <hotplace/sdk/crypto/authenticode/authenticode_verifier.hpp>
 #include <hotplace/sdk/crypto/authenticode/sdk.hpp>
@@ -570,7 +572,7 @@ static unsigned int asn1_simple_hdr_len(const unsigned char* p, unsigned int len
 int verify_callback(int ok, X509_STORE_CTX* ctx) {
     char buf[256];
 
-    X509* err_cert = X509_STORE_CTX_get_current_cert(ctx);
+    X509* current_cert = X509_STORE_CTX_get_current_cert(ctx);
     int err = X509_STORE_CTX_get_error(ctx);
     int depth = X509_STORE_CTX_get_error_depth(ctx);
 
@@ -579,9 +581,13 @@ int verify_callback(int ok, X509_STORE_CTX* ctx) {
 
     std::string subject;
 
-    X509_NAME_to_string(X509_get_subject_name(err_cert), subject);
+    X509_NAME_to_string(X509_get_subject_name(current_cert), subject);
 
-    //__trace (0, format ("#depth=%d %s", depth, subject.c_str ()).c_str ());
+#if defined DEBUG
+    if (istraceable(trace_category_crypto, loglevel_debug)) {
+        trace_debug_event(trace_category_crypto, trace_event_verify, [&](basic_stream& dbs) -> void { dbs.println("# depth=%i %s", depth, subject.c_str()); });
+    }
+#endif
 
     if (0 == depth) {
         // find the thread-specified authenticode_context_t
@@ -617,7 +623,12 @@ int verify_callback(int ok, X509_STORE_CTX* ctx) {
     }
 
     if (0 == ok) {
-        //__trace (0, format ("#verify error:num=%d:%s", err, X509_verify_cert_error_string (err)).c_str ());
+#if defined DEBUG
+        if (istraceable(trace_category_crypto, loglevel_debug)) {
+            trace_debug_event(trace_category_crypto, trace_event_verify,
+                              [&](basic_stream& dbs) -> void { dbs.println("# verify error:num=%d:%s", err, X509_verify_cert_error_string(err)); });
+        }
+#endif
     }
     switch (err) {
         case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT:          // (2)
@@ -625,13 +636,15 @@ int verify_callback(int ok, X509_STORE_CTX* ctx) {
         {
             X509* cert = X509_STORE_CTX_get_current_cert(ctx);
             X509_NAME_oneline(X509_get_issuer_name(cert), buf, 256);
-            //__trace (0, format ("#issuer= %s", buf).c_str ());
+#if defined DEBUG
+            if (istraceable(trace_category_crypto, loglevel_debug)) {
+                trace_debug_event(trace_category_crypto, trace_event_verify, [&](basic_stream& dbs) -> void { dbs.println("# issuer= %s", buf); });
+            }
+#endif
         } break;
         case X509_V_ERR_UNABLE_TO_GET_CRL:               // (3)
         case X509_V_ERR_CERT_NOT_YET_VALID:              // (9)
         case X509_V_ERR_CERT_HAS_EXPIRED:                // (10)
-        case X509_V_ERR_CRL_NOT_YET_VALID:               // (11)
-        case X509_V_ERR_CRL_HAS_EXPIRED:                 // (12)
         case X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD:  // (13)
         case X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD:   // (14)
             // pass through
@@ -648,6 +661,8 @@ int verify_callback(int ok, X509_STORE_CTX* ctx) {
             X509_STORE_CTX_set_error(ctx, X509_V_OK);
             ok = 1;
             break;
+        case X509_V_ERR_CRL_NOT_YET_VALID:  // (11)
+        case X509_V_ERR_CRL_HAS_EXPIRED:    // (12)
         case 0:
             break;
         default:
@@ -655,11 +670,13 @@ int verify_callback(int ok, X509_STORE_CTX* ctx) {
             break;
     }
     if (0 == ok) {
-        // constexpr char constexpr_errmsg[] = "#verify error:num=";
-        //__trace(errorcode_t::internal_error, format("%s%d:%s", constexpr_errmsg, err, X509_verify_cert_error_string(err)).c_str());
+        //
     }
-    //__trace(0, format("#verify return:%d",ok).c_str());
-    // ok = 1;
+#if defined DEBUG
+    if (istraceable(trace_category_crypto, loglevel_debug)) {
+        trace_debug_event(trace_category_crypto, trace_event_verify, [&](basic_stream& dbs) -> void { dbs.println("# verify return:%d", ok); });
+    }
+#endif
     return ok;
 }
 
@@ -710,37 +727,61 @@ return_t authenticode_verifier::verify_pkcs7(authenticode_context_t* handle, voi
             }
         }
 
-#if 0
         int i = 0;
-        STACK_OF (X509) * signers = PKCS7_get0_signers (pkcs7, nullptr, 0);
-        printf ("\nNumber of signers: %d\n", sk_X509_num (signers));
-        for (i = 0; i < sk_X509_num (signers); i++) {
-            X509* cert = sk_X509_value (signers, i);
-            printf ("Signer %d\n", i);
-            print_x509 (cert);
+        STACK_OF(X509)* signers = PKCS7_get0_signers(pkcs7, nullptr, 0);
+        for (i = 0; i < sk_X509_num(signers); i++) {
+            X509* cert = sk_X509_value(signers, i);
+
+#if defined DEBUG
+            if (istraceable(trace_category_crypto, loglevel_debug)) {
+                trace_debug_event(trace_category_crypto, trace_event_verify, [&](basic_stream& dbs) -> void {
+                    std::string signer;
+                    X509_NAME_to_string(X509_get_subject_name(cert), signer);
+                    dbs.println("# signer[%i] : %s", i, signer.c_str());
+                });
+            }
+#endif
+            // print_x509 (cert);
 
             std::set<std::string> crls;
-            crl_distribution_point (cert, crls);
-            __for (std::set<std::string>::iterator, it, crls) {
-                std::string item = iter_value (it);
-
-                printf ("CRL : %s\n", item.c_str ());
+            crl_distribution_point(cert, crls);
+            for (auto crl : crls) {
+#if defined DEBUG
+                if (istraceable(trace_category_crypto, loglevel_debug)) {
+                    trace_debug_event(trace_category_crypto, trace_event_verify, [&](basic_stream& dbs) -> void { dbs.println("# - CRL : %s", crl.c_str()); });
+                }
+#endif
             }
             // openssl crl -inform DER -text -noout -in sf.crl
         }
-        sk_X509_free (signers);
+        sk_X509_free(signers);
 
-        printf ("\nNumber of certificates: %d\n", sk_X509_num (pkcs7->d.sign->cert));
-        for (i = 0; i < sk_X509_num (pkcs7->d.sign->cert); i++) {
-            X509 *cert = sk_X509_value (pkcs7->d.sign->cert, i);
-            printf ("Certificate %d\n", i);
-            print_x509 (cert);
-        }
+        for (i = 0; i < sk_X509_num(pkcs7->d.sign->cert); i++) {
+            X509* cert = sk_X509_value(pkcs7->d.sign->cert, i);
+            // print_x509 (cert);
+#if defined DEBUG
+            if (istraceable(trace_category_crypto, loglevel_debug)) {
+                trace_debug_event(trace_category_crypto, trace_event_verify, [&](basic_stream& dbs) -> void {
+                    std::string certificate;
+                    X509_NAME_to_string(X509_get_subject_name(cert), certificate);
+                    dbs.println("# certificate[%i] : %s", i, certificate.c_str());
+                });
+            }
 #endif
+            std::set<std::string> crls;
+            crl_distribution_point(cert, crls);
+            for (auto crl : crls) {
+#if defined DEBUG
+                if (istraceable(trace_category_crypto, loglevel_debug)) {
+                    trace_debug_event(trace_category_crypto, trace_event_verify, [&](basic_stream& dbs) -> void { dbs.println("# - CRL : %s", crl.c_str()); });
+                }
+#endif
+            }
+        }
 
-        int seqhdrlen = asn1_simple_hdr_len(pkcs7->d.sign->contents->d.other->value.sequence->data, pkcs7->d.sign->contents->d.other->value.sequence->length);
-        bio = BIO_new_mem_buf(pkcs7->d.sign->contents->d.other->value.sequence->data + seqhdrlen,
-                              pkcs7->d.sign->contents->d.other->value.sequence->length - seqhdrlen);
+        auto seq = pkcs7->d.sign->contents->d.other->value.sequence;
+        int seqhdrlen = asn1_simple_hdr_len(ASN1_STRING_get0_data(seq), ASN1_STRING_length(seq));
+        bio = BIO_new_mem_buf(ASN1_STRING_get0_data(seq) + seqhdrlen, ASN1_STRING_length(seq) - seqhdrlen);
 
         store = X509_STORE_new();
         X509_STORE_set_default_paths(store);
