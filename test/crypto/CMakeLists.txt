@@ -5,6 +5,24 @@
 #
 
 set (module crypto)
-file (GLOB SOURCE_FILES *.cpp)
+file (GLOB COMMON_SOURCE_FILES
+    *.cpp
+    advisor/*.cpp
+    crypt/*.cpp
+    hash/*.cpp
+    kdf/*.cpp
+    key/*.cpp
+    pqc/*.cpp
+    prng/*.cpp
+    sign/*.cpp
+)
+set (SOURCE_FILES ${COMMON_SOURCE_FILES})
+if (SUPPORT_OQS)
+    file (GLOB SOURCE_FILES_OQS pqc/oqs/*.cpp)
+    set (SOURCE_FILES ${COMMON_SOURCE_FILES} ${SOURCE_FILES_OQS})
+else (1)
+    file (GLOB SOURCE_FILES_DUMMY pqc/dummy/*.cpp)
+    set (SOURCE_FILES ${COMMON_SOURCE_FILES} ${SOURCE_FILES_DUMMY})
+endif ()
 
 maketest (${module} SOURCE_FILES PROJECT_SDK_MODULE_DEPENDENCIES PROJECT_SDK_PLATFORM_DEPENDENCIES 1)

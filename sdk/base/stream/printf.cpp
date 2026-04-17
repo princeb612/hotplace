@@ -9,13 +9,13 @@
  */
 
 #include <hotplace/sdk/base/basic/base16.hpp>
-#include <hotplace/sdk/base/basic/ieee754.hpp>
 #include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/pattern/aho_corasick.hpp>
 #include <hotplace/sdk/base/stream/printf.hpp>
 #include <hotplace/sdk/base/stream/tstring.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/base/system/bignumber.hpp>
+#include <hotplace/sdk/base/system/ieee754.hpp>
 
 namespace hotplace {
 

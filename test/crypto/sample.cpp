@@ -8,11 +8,12 @@
  * Date         Name                Description
  */
 
-#include "sample.hpp"
+#include <hotplace/test/crypto/sample.hpp>
 
 test_case _test_case;
 t_shared_instance<logger> _logger;
-t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
+t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
+std::list<std::function<void(void)>> _cases;
 
 int main(int argc, char** argv) {
     set_trace_option(trace_option_t::trace_bt);
@@ -29,7 +30,12 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("--debug", "trace level [debug]", [](OPTION& o, char* param) -> void { o.enable_trace(loglevel_debug); }).optional()
 #endif
                 << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional();
+                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-k", "dump keys", [](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional()
+                << t_cmdarg_t<OPTION>("-s", "test slow pbkdf2/scrypt", [](OPTION& o, char* param) -> void { o.flag_slow_kdf = true; }).optional()
+                << t_cmdarg_t<OPTION>("-argon2", "test argon2d, argon2i, argon2id", [](OPTION& o, char* param) -> void { o.flag_argon2 = true; }).optional()
+                << t_cmdarg_t<OPTION>("-ffdhe", "test FFDHE", [](OPTION& o, char* param) -> void { o.flag_ffdhe = true; }).optional();
+
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
@@ -52,29 +58,67 @@ int main(int argc, char** argv) {
     }
 
     __try2 {
-        openssl_startup();
+        testcase_advisor();
 
-        test_features();
+        testcase_aead_ccm();
+        testcase_cbc_hmac_tls();
+        testcase_cipher_encrypt();
+        testcase_crypto_aead();
+        testcase_crypto_encrypt();
+        testcase_openssl_crypt();
+        testcase_rfc3394();  // keywrap
+        testcase_rfc7516();  // CBC HMAC
+        testcase_rfc7539();  // chacha20, chacha20-poly1305
 
-        test_resources();
+        testcase_openssl_hash();
+        testcase_rfc4226();  // HOTP
+        testcase_rfc4231();  // HMAC SHA
+        testcase_rfc4493();  // CMAC
+        testcase_rfc6238();  // TOTP
+        testcase_transcript_hash();
 
-        test_openssl_crypt();
+        testcase_hkdf();
+        testcase_rfc4615();
+        testcase_rfc5869();
+        if (option.flag_slow_kdf) {
+            testcase_rfc6070();
+            testcase_rfc7914();
+        }
+        if (option.flag_argon2) {
+            testcase_rfc9106();
+        }
 
-        test_rfc3394();
+        testcase_crypto_key();
+        testcase_curves();
+        testcase_der();
+        testcase_dh();
+        testcase_ec();
+        testcase_hpke();
+        testcase_key_dsa();
+        if (option.flag_ffdhe) {
+            testcase_key_ffdhe();
+        }
+        testcase_key_mlkem();
+        testcase_key_rsa();
+        testcase_keyexchange();
 
-        test_rfc7539();  // chacha20, chacha20-poly1305
+        testcase_pqc_dsa();
+        testcase_pqc_encode();
+        testcase_pqc_hybrid_kem();
+        testcase_pqc_kem();
 
-        test_rfc7516();  // CBC HMAC
+        testcase_random();
 
-        test_cipher_encrypt();
-        test_crypto_encrypt();
-        test_crypto_aead();
-        test_cbc_hmac_tls();
-        test_aead_ccm();
+        testcase_crypto_sign();
+        testcase_dsa();
+        testcase_ecdsa();
+        testcase_hmac();
+        testcase_rsassa();
+        testcase_x509();
 
-        test_curves();
-
-        test_random();
+        for (auto testfunc : _cases) {
+            testfunc();
+        }
     }
     __finally2 { openssl_cleanup(); }
 

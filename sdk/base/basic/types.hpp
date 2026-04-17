@@ -26,7 +26,6 @@ namespace hotplace {
 
 class binary;
 class huffman_coding;
-class obfuscate_string;
 class valist;
 struct variant_t;
 class variant;

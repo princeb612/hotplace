@@ -11,10 +11,8 @@ cd module
   - pending
 - [x] authenticode
 - [x] base
-- [x] bufferio
 - [x] cbor
   - [x] RFC 7049
-- [x] cmdline
 - [x] cose
   - [x] RFC 8152
   - [x] RFC 8778
@@ -23,24 +21,27 @@ cd module
   - [x] RFC 3394
   - [x] RFC 7516
   - [x] RFC 7539
-- [x] datetime
+  - [x] hash
+    - [x] RFC 4226
+    - [x] RFC 4231
+    - [x] RFC 4493
+    - [x] RFC 6238
+  - [x] kdf
+    - [x] RFC 4615
+    - [x] RFC 5869
+    - [x] RFC 6070
+    - [x] RFC 7914
+    - [x] RFC 9106
+  - [x] sign
+    - [x] RFC 6979
 - [x] dtlsserver
   - [x] integration
     - [x] network_server
     - [x] libssl
     - [x] trial
 - [x] encode
-- [x] etc
-- [x] graph
-- [x] hash
-  - [x] RFC 4226
-  - [x] RFC 4231
-  - [x] RFC 4493
-  - [x] RFC 6238
 - [x] hpack
   - [x] RFC 7541
-- [x] httpaltsvc
-- [x] httpauth
 - [x] httpserver1
   - [x] integration
     - [x] network_server
@@ -52,8 +53,8 @@ cd module
     - [x] libssl
     - [x] trial
 - [x] httptest
-- [x] ieee754
-- [x] ipaddr
+- [x] io
+- [x] net
 - [x] jose
   - [x] RFC 7515
   - [x] RFC 7516
@@ -62,36 +63,18 @@ cd module
   - [x] RFC 7520
   - [x] RFC 7638
   - [x] RFC 8037
-- [x] kdf
-  - [x] RFC 4615
-  - [x] RFC 5869
-  - [x] RFC 6070
-  - [x] RFC 7914
-  - [x] RFC 9106
 - [x] key
 - [x] linux
-- [x] mlfq
 - [x] netclient
-- [x] nostd
 - [x] odbc
-- [x] parser
-- [x] pattern
-- [x] payload
 - [x] qpack
   - [x] RFC 9204
 - [x] quic
   - [x] RFC 9000
   - [x] RFC 9001
   - [x] RFC 9369
-- [x] random
-- [x] sign
-  - [x] RFC 6979
-- [x] stream
-- [x] string
-- [x] sysmon
 - [x] tcpserver1
 - [x] tcpserver2
-- [x] thread
 - [x] tls
   - [x] RFC 8448
   - [README.md](tls/README.md)
@@ -102,7 +85,6 @@ cd module
     - [x] trial
 - [x] udpserver1
 - [x] udpserver2
-- [x] unittest
 - [x] windows
 
 ### MSVC
@@ -133,46 +115,26 @@ cd module
   - [ ] asn1
   - [x] authenticode
   - [x] base
-  - [x] bufferio
   - [x] cbor
-  - [x] cmdline
   - [x] cose
   - [x] crypto
-  - [x] datetime
   - [x] dtlsserver
   - [x] encode
-  - [x] graph
-  - [x] hash
   - [x] hpack
-  - [ ] httpaltsvc
-  - [x] httpauth
   - [x] httpserver1
   - [x] httpserver2
   - [x] httptest
-  - [x] ieee754
-  - [x] ipaddr
+  - [x] io
+  - [x] net
   - [x] jose
-  - [x] kdf
   - [x] key
-  - [x] mlfq
   - [x] netclient
-  - [x] nostd
-  - [x] parser
-  - [x] pattern
-  - [x] payload
-  - [x] pqc
   - [x] qpack
   - [x] quic
-  - [x] random
-  - [x] sign
-  - [x] stream
-  - [x] string
   - [x] tcpserver1
   - [x] tcpserver2
-  - [x] thread
   - [x] tls
   - [x] tlsserver
   - [ ] udpserver1
   - [x] udpserver2
-  - [x] unittest
   - [x] windows

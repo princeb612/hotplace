@@ -11,102 +11,75 @@
 #define __HOTPLACE_TEST_CRYPTO__
 
 #include <hotplace/sdk/sdk.hpp>
+#include <hotplace/test/crypto/crypt/testvector.hpp>
+#include <hotplace/test/crypto/hash/test.hpp>
+#include <hotplace/test/crypto/sign/testvector.hpp>
 #include <hotplace/test/test.hpp>
 
-struct OPTION : public CMDLINEOPTION {};
+struct OPTION : public CMDLINEOPTION {
+    bool dump_keys;
+    bool flag_slow_kdf;
+    bool flag_argon2;
+    bool flag_ffdhe;
+
+    OPTION() : CMDLINEOPTION(), dump_keys(false), flag_slow_kdf(false), flag_argon2(false), flag_ffdhe(false) {}
+};
 
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
-extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
+extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
+extern std::list<std::function<void(void)>> _cases;
 
-typedef struct _test_vector_nist_cavp_blockcipher_t {
-    const char* desc;
-    const char* alg;
-    const char* key;
-    const char* iv;
-    const char* plaintext;
-    const char* ciphertext;
-} test_vector_nist_cavp_blockcipher_t;
+void testcase_advisor();
 
-extern const test_vector_nist_cavp_blockcipher_t test_vector_nist_cavp_blockcipher[];
-extern const size_t sizeof_test_vector_nist_cavp_blockcipher;
+void testcase_aead_ccm();
+void testcase_cbc_hmac_tls();
+void testcase_cipher_encrypt();
+void testcase_crypto_aead();
+void testcase_crypto_encrypt();
+void testcase_openssl_crypt();
+void testcase_rfc3394();  // keywrap
+void testcase_rfc7516();  // CBC HMAC
+void testcase_rfc7539();  // chacha20, chacha20-poly1305
 
-typedef struct _test_vector_rfc3394_t {
-    crypt_algorithm_t alg;
-    const char* algname;
-    const char* kek;
-    const char* key;
-    const char* expect;
-    const char* message;
-} test_vector_rfc3394_t;
+void testcase_openssl_hash();
+void testcase_rfc4226();  // HOTP
+void testcase_rfc4231();  // HMAC SHA
+void testcase_rfc4493();  // CMAC
+void testcase_rfc6238();  // TOTP
+void testcase_transcript_hash();
 
-extern const test_vector_rfc3394_t test_vector_rfc3394[];
-extern const size_t sizeof_test_vector_rfc3394;
+void testcase_hkdf();
+void testcase_rfc4615();
+void testcase_rfc5869();
+void testcase_rfc6070();
+void testcase_rfc7914();
+void testcase_rfc9106();
 
-// CBC-HMAC JOSE
-// Authenticated Encryption with AES-CBC and HMAC-SHA
-typedef struct _test_vector_aead_aes_cbc_hmac_sha2_t {
-    const char* text;
-    const char* enc_alg;
-    const char* mac_alg;
-    const char* k;  // mac_key || enc_key
-    const char* p;
-    const char* iv;
-    const char* a;
-    const char* q;
-    const char* s;  // validation
-    const char* t;  // validation
-    const char* c;  // validation
-} test_vector_aead_aes_cbc_hmac_sha2_t;
+void testcase_crypto_key();
+void testcase_curves();
+void testcase_der();
+void testcase_dh();
+void testcase_ec();
+void testcase_hpke();
+void testcase_key_dsa();
+void testcase_key_ffdhe();
+void testcase_key_mlkem();
+void testcase_key_rsa();
+void testcase_keyexchange();
 
-extern const test_vector_aead_aes_cbc_hmac_sha2_t test_vector_aead_aes_cbc_hmac_sha2[];
-extern const size_t sizeof_test_vector_aead_aes_cbc_hmac_sha2;
+void testcase_pqc_dsa();
+void testcase_pqc_encode();
+void testcase_pqc_hybrid_kem();
+void testcase_pqc_kem();
 
-typedef struct _test_vector_rfc7539_t {
-    const char* text;
-    const char* alg;
-    const char* key;
-    int counter;
-    const char* iv;
-    const char* msg;
-    const char* aad;
-    const char* tag;
-    const char* expect;
-} test_vector_rfc7539_t;
+void testcase_random();
 
-extern const test_vector_rfc7539_t test_vector_rfc7539[];
-extern const size_t sizeof_test_vector_rfc7539;
-
-// CBC-HMAC TLS
-struct test_vector_cbchmac_tls_t {
-    const char* desc;
-    uint16 flag;
-    hash_algorithm_t hashalg;
-    const char* key;
-    const char* iv;
-    const char* mackey;
-    const char* aad;
-    const char* plaintext;
-    const char* cbcmaced;
-};
-
-extern test_vector_cbchmac_tls_t test_vector_tls_mte[];
-extern const size_t sizeof_test_vector_tls_mte;
-extern test_vector_cbchmac_tls_t test_vector_tls_etm[];
-extern const size_t sizeof_test_vector_tls_etm;
-
-void test_features();
-void test_openssl_crypt();
-void test_rfc3394();  // keywrap
-void test_rfc7539();  // chacha20, chacha20-poly1305
-void test_rfc7516();
-void test_cipher_encrypt();
-void test_crypto_encrypt();
-void test_resources();
-void test_crypto_aead();
-void test_cbc_hmac_tls();
-void test_aead_ccm();
-void test_curves();
-void test_random();
+void testcase_crypto_sign();
+void testcase_dsa();
+void testcase_ecdsa();
+void testcase_hmac();
+void testcase_rsassa();
+void testcase_x509();
 
 #endif

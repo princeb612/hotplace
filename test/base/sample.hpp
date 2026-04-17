@@ -13,29 +13,62 @@
 #include <stdio.h>
 
 #include <hotplace/sdk/sdk.hpp>
+#include <hotplace/test/base/pattern/test.hpp>
 #include <hotplace/test/test.hpp>
+
+struct OPTION : public CMDLINEOPTION {
+    int attach;
+
+    OPTION() : CMDLINEOPTION(), attach(0) {}
+};
 
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
+extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
+extern std::list<std::function<void(void)>> _cases;
 
-void test_bignumber();
-void test_binary();
-void test_bufferio();
-void test_capacity();
-void test_cmdline();
-void test_consolecolor();
-void test_datetime();
-void test_dumpmemory();
-void test_endian();
-void test_ieee754();
-void test_loglevel();
-void test_mlfq();
-void test_shared();
-void test_signalwait_threads();
-void test_stream();
-void test_string();
-void test_unittest();
-void test_valist();
-void test_variant();
+void testcase_binary();
+void testcase_cmdline();
+void testcase_dumpmemory();
+void testcase_valist();
+void testcase_variant();
+
+void testcase_graph();
+
+void testcase_avltree();
+void testcase_btree();
+void testcase_exception();
+void testcase_findlte();
+void testcase_list();
+void testcase_map();
+void testcase_ovl();
+void testcase_pq();
+void testcase_range();
+void testcase_vector();
+
+void testcase_aho_corasick();
+void testcase_aho_corasick_wildcard();
+void testcase_kmp();
+void testcase_suffixtree();
+void testcase_trie();
+void testcase_ukkonen();
+void testcase_wildcard();
+
+void testcase_bufferio();
+void testcase_stream();
+
+void testcase_string();
+
+void testcase_bignumber();
+void testcase_capacity();
+void testcase_datetime();
+void testcase_endian();
+void testcase_ieee754();
+void testcase_shared();
+void testcase_signalwait_threads();
+
+void testcase_consolecolor();
+void testcase_loglevel();
+void testcase_unittest();
 
 #endif

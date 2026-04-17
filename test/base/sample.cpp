@@ -8,17 +8,12 @@
  * Date         Name                Description
  */
 
-#include "sample.hpp"
+#include <hotplace/test/base/sample.hpp>
 
 test_case _test_case;
 t_shared_instance<logger> _logger;
-
-struct OPTION : public CMDLINEOPTION {
-    int attach;
-
-    OPTION() : CMDLINEOPTION(), attach(0) {}
-};
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
+std::list<std::function<void(void)>> _cases;
 
 int main(int argc, char **argv) {
 #ifdef __MINGW32__
@@ -62,25 +57,53 @@ int main(int argc, char **argv) {
         _test_case.attach(_logger);
     }
 
-    test_bignumber();
-    test_binary();
-    test_bufferio();
-    test_capacity();
-    test_cmdline();
-    test_consolecolor();
-    test_datetime();
-    test_dumpmemory();
-    test_endian();
-    test_ieee754();
-    test_loglevel();
-    test_mlfq();
-    test_shared();
-    test_signalwait_threads();
-    test_stream();
-    test_string();
-    test_unittest();
-    test_valist();
-    test_variant();
+    testcase_binary();
+    testcase_cmdline();
+    testcase_dumpmemory();
+    testcase_valist();
+    testcase_variant();
+
+    testcase_graph();
+
+    testcase_avltree();
+    testcase_btree();
+    testcase_exception();
+    testcase_findlte();
+    testcase_list();
+    testcase_map();
+    testcase_ovl();
+    testcase_pq();
+    testcase_range();
+    testcase_vector();
+
+    testcase_aho_corasick();
+    testcase_aho_corasick_wildcard();
+    testcase_kmp();
+    testcase_suffixtree();
+    testcase_trie();
+    testcase_ukkonen();
+    testcase_wildcard();
+
+    testcase_bufferio();
+    testcase_stream();
+
+    testcase_string();
+
+    testcase_bignumber();
+    testcase_capacity();
+    testcase_datetime();
+    testcase_endian();
+    testcase_ieee754();
+    testcase_shared();
+    testcase_signalwait_threads();
+
+    testcase_consolecolor();
+    testcase_loglevel();
+    testcase_unittest();
+
+    for (auto testfunc : _cases) {
+        testfunc();
+    }
 
     _logger->flush();
 

@@ -14,4 +14,10 @@
 
 #include <hotplace/sdk/base/basic/types.hpp>
 
+namespace hotplace {
+
+class obfuscate_string;
+
+}  // namespace hotplace
+
 #endif

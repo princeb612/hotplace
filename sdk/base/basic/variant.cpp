@@ -12,13 +12,13 @@
 
 #include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/basic/binary.hpp>
-#include <hotplace/sdk/base/basic/ieee754.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/nostd/integer.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
+#include <hotplace/sdk/base/system/ieee754.hpp>
 #include <hotplace/sdk/base/system/types.hpp>
 #include <ostream>
 

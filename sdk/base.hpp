@@ -29,12 +29,9 @@
 #include <hotplace/sdk/base/basic/binaries.hpp>
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/cmdline.hpp>
-#include <hotplace/sdk/base/basic/constexpr_obfuscate.hpp>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/basic/huffman_coding.hpp>
-#include <hotplace/sdk/base/basic/ieee754.hpp>
 #include <hotplace/sdk/base/basic/keyvalue.hpp>
-#include <hotplace/sdk/base/basic/obfuscate_string.hpp>
 #include <hotplace/sdk/base/basic/types.hpp>
 #include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
@@ -74,6 +71,8 @@
 #include <hotplace/sdk/base/stream/types.hpp>
 
 /* string */
+#include <hotplace/sdk/base/string/constexpr_obfuscate.hpp>
+#include <hotplace/sdk/base/string/obfuscate_string.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/base/string/types.hpp>
 
@@ -89,6 +88,7 @@
 #elif defined _WIN32 || defined _WIN64
 #include <hotplace/sdk/base/system/windows/debug_trace.hpp>
 #endif
+#include <hotplace/sdk/base/system/ieee754.hpp>
 #include <hotplace/sdk/base/system/reference_counter.hpp>
 #include <hotplace/sdk/base/system/semaphore.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
