@@ -7,7 +7,7 @@ cd module
 ```
 
 ### tasks
-- [ ] asn1
+- [x] asn1
   - pending
 - [x] authenticode
 - [x] base
@@ -40,8 +40,6 @@ cd module
     - [x] libssl
     - [x] trial
 - [x] encode
-- [x] hpack
-  - [x] RFC 7541
 - [x] httpserver1
   - [x] integration
     - [x] network_server
@@ -52,9 +50,12 @@ cd module
     - [x] network_server
     - [x] libssl
     - [x] trial
-- [x] httptest
 - [x] io
 - [x] net
+  - [x] hpack
+    - [x] RFC 7541
+  - [x] qpack
+    - [x] RFC 9204
 - [x] jose
   - [x] RFC 7515
   - [x] RFC 7516
@@ -63,12 +64,9 @@ cd module
   - [x] RFC 7520
   - [x] RFC 7638
   - [x] RFC 8037
-- [x] key
 - [x] linux
 - [x] netclient
 - [x] odbc
-- [x] qpack
-  - [x] RFC 9204
 - [x] quic
   - [x] RFC 9000
   - [x] RFC 9001
@@ -99,8 +97,7 @@ cd module
     - [x] backtrace
     - [x] byte_capacity_signed
   - application verifier
-    - [ ] basics
-      - [ ] heaps
+    - [x] basics
   - MSVC-specific
     - [x] source file encoding (utf-8 character set)
     - [x] variable arguments ambiguity ('v' prefix)
@@ -120,21 +117,18 @@ cd module
   - [x] crypto
   - [x] dtlsserver
   - [x] encode
-  - [x] hpack
   - [x] httpserver1
   - [x] httpserver2
   - [x] httptest
   - [x] io
   - [x] net
   - [x] jose
-  - [x] key
   - [x] netclient
-  - [x] qpack
   - [x] quic
   - [x] tcpserver1
   - [x] tcpserver2
   - [x] tls
   - [x] tlsserver
-  - [ ] udpserver1
+  - [x] udpserver1
   - [x] udpserver2
   - [x] windows

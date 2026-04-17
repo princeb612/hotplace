@@ -76,7 +76,7 @@ return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CA
 
         wsabuf_read.wsabuf.len = bytes_transfered;
         int addrlen = sizeof(sockaddr_storage_t);
-        WSASendTo(sock, &wsabuf_read.wsabuf, 1, nullptr, flags, (sockaddr*)&addr, addrlen, nullptr, nullptr);
+        sendto(sock, wsabuf_read.wsabuf.buf, bytes_transfered, flags, (sockaddr*)&addr, addrlen);
 
         async_handler(accept_context, &netsock_event);
 #endif
