@@ -28,7 +28,6 @@ struct OPTION : public CMDLINEOPTION {
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
-extern std::list<std::function<void(void)>> _cases;
 
 void testcase_advisor();
 
@@ -72,6 +71,10 @@ void testcase_pqc_dsa();
 void testcase_pqc_encode();
 void testcase_pqc_hybrid_kem();
 void testcase_pqc_kem();
+
+void testcase_oqs_dsa();
+void testcase_oqs_encode();
+void testcase_oqs_kem();
 
 void testcase_random();
 

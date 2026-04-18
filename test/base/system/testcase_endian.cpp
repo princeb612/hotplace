@@ -87,6 +87,6 @@ void test_is_endian() {
 }
 
 void testcase_endian() {
-    _cases.push_back(test_is_endian);
-    _cases.push_back(test_convert_endian);
+    test_is_endian();
+    test_convert_endian();
 }

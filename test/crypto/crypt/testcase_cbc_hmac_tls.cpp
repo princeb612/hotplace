@@ -73,6 +73,6 @@ void test_cbc_hmac_tls_etm() {
 }
 
 void testcase_cbc_hmac_tls() {
-    _cases.push_back(test_cbc_hmac_tls_mte);  // mac_then_encrypt
-    _cases.push_back(test_cbc_hmac_tls_etm);  // encrypt_then_mac
+    test_cbc_hmac_tls_mte();  // mac_then_encrypt
+    test_cbc_hmac_tls_etm();  // encrypt_then_mac
 }

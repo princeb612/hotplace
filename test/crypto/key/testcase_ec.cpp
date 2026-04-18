@@ -116,4 +116,4 @@ void test_eckey_compressed() {
     }
 }
 
-void testcase_ec() { _cases.push_back(test_eckey_compressed); }
+void testcase_ec() { test_eckey_compressed(); }

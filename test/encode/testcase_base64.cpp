@@ -39,4 +39,4 @@ void test_base64() {
     do_test_base64_routine(lyrics, len, encoding_t::encoding_base64url);
 }
 
-void testcase_base64() { _cases.push_back(test_base64); }
+void testcase_base64() { test_base64(); }

@@ -154,6 +154,6 @@ void test_quic_encoded() {
 }
 
 void testcase_payload_quic() {
-    _cases.push_back(test_quic_integer);
-    _cases.push_back(test_quic_encoded);
+    test_quic_integer();
+    test_quic_encoded();
 }

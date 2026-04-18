@@ -247,4 +247,4 @@ void test_crypto_sign() {
     lambda_sign_kid("ECDSA", "NID_brainpoolP512t1", kty_ec, crypt_sig_ecdsa, hash_algorithm_t::sha2_512, true);
 }
 
-void testcase_crypto_sign() { _cases.push_back(test_crypto_sign); }
+void testcase_crypto_sign() { test_crypto_sign(); }

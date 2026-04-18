@@ -17,22 +17,11 @@ add_subdirectory (asn1)
 add_subdirectory (crypto)
 add_subdirectory (jose)
 add_subdirectory (cose)
-add_subdirectory (authenticode)
 
 # net
 add_subdirectory (net)
-add_subdirectory (tcpserver1)
-add_subdirectory (tcpserver2)
-add_subdirectory (tlsserver)
-add_subdirectory (httpserver1)
-add_subdirectory (httpserver2)
-add_subdirectory (udpserver1)
-add_subdirectory (udpserver2)
-add_subdirectory (dtlsserver)
-add_subdirectory (netclient)
 add_subdirectory (tls)
 add_subdirectory (quic)
-add_subdirectory (httpserver3)
 
 # odbc
 if (SUPPORT_ODBC)
@@ -46,6 +35,3 @@ endif ()
 if (WIN32)
 add_subdirectory (windows)
 endif ()
-
-# copy certificates
-add_subdirectory (etc)

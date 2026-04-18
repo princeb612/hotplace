@@ -380,12 +380,12 @@ void test_stream_split3() {
 }
 
 void testcase_stream() {
-    _cases.push_back(test_stream_basic_stream);  // [APVR]
-    _cases.push_back(test_stream_i128);
-    _cases.push_back(test_stream_getline);
-    _cases.push_back(test_stream_vtprintf);
-    _cases.push_back(test_stream_autoindent);
-    _cases.push_back(test_stream_split);
-    _cases.push_back(test_stream_split2);
-    _cases.push_back(test_stream_split3);
+    test_stream_basic_stream();
+    test_stream_i128();
+    test_stream_getline();
+    test_stream_vtprintf();
+    test_stream_autoindent();
+    test_stream_split();
+    test_stream_split2();
+    test_stream_split3();
 }

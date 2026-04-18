@@ -304,4 +304,4 @@ void test_h2() {
     lambda_test("GET /api/html", &hpack_dyntable, sample3, tv3, RTL_NUMBER_OF(tv3));
 }
 
-void testcase_h2() { _cases.push_back(test_h2); }
+void testcase_h2() { test_h2(); }

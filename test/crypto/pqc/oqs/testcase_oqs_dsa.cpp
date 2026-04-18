@@ -83,3 +83,5 @@ void test_oqs_dsa() {
     }
     __finally2 {}
 }
+
+void testcase_oqs_dsa() { test_oqs_dsa(); }

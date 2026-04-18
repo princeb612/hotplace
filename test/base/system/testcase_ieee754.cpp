@@ -205,8 +205,8 @@ void test_as_small_as_possible() {
 }
 
 void testcase_ieee754() {
-    _cases.push_back(test_typeof_ieee754);
-    _cases.push_back(test_frexp);
-    _cases.push_back(test_float_printf);
-    _cases.push_back(test_as_small_as_possible);
+    test_typeof_ieee754();
+    test_frexp();
+    test_float_printf();
+    test_as_small_as_possible();
 }

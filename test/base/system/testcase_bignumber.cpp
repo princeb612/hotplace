@@ -513,11 +513,11 @@ void test_bn7() {
 }
 
 void testcase_bignumber() {
-    _cases.push_back(test_bn1);  // numeric, hexdecimal string
-    _cases.push_back(test_bn2);  // + - * /
-    _cases.push_back(test_bn3);  // shift
-    _cases.push_back(test_bn4);  // AND OR XOR
-    _cases.push_back(test_bn5);  // bn to integer
-    _cases.push_back(test_bn6);  // neg
-    _cases.push_back(test_bn7);  // sqaure, sqrt, modpow
+    test_bn1();  // numeric, hexdecimal string
+    test_bn2();  // + - * /
+    test_bn3();  // shift
+    test_bn4();  // AND OR XOR
+    test_bn5();  // bn to integer
+    test_bn6();  // neg
+    test_bn7();  // sqaure, sqrt, modpow
 }

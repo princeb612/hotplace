@@ -27,7 +27,6 @@ struct OPTION : public CMDLINEOPTION {
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
-extern std::list<std::function<void(void)>> _cases;
 
 // HTTP
 void testcase_http();

@@ -480,11 +480,11 @@ void test_patterns() {
 }
 
 void testcase_parser() {
-    _cases.push_back(test_dump_testdata);
-    _cases.push_back(test_parser_sample);
-    _cases.push_back(test_parser_options);
-    _cases.push_back(test_parser_search);
-    _cases.push_back(test_parser_compare);
-    _cases.push_back(test_multipattern_search);
-    _cases.push_back(test_patterns);
+    test_dump_testdata();
+    test_parser_sample();
+    test_parser_options();
+    test_parser_search();
+    test_parser_compare();
+    test_multipattern_search();
+    test_patterns();
 }

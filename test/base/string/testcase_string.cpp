@@ -458,21 +458,21 @@ void test_string_tokenize() {
 }
 
 void testcase_string() {
-    _cases.push_back(test_string_format);
-    _cases.push_back(test_string_getline);
-    _cases.push_back(test_string_gettoken);
-    _cases.push_back(test_string_hexbin);
-    _cases.push_back(test_string_constexpr_hide);
-    _cases.push_back(test_string_constexpr_obf);
-    _cases.push_back(test_string_obfuscate_string);
-    _cases.push_back(test_string_printf);
-    _cases.push_back(test_string_replace);
-    _cases.push_back(test_string_scan);
-    _cases.push_back(test_string_scan2);
-    _cases.push_back(test_string_split);
-    _cases.push_back(test_string_ansi_string);  // [APVR]
+    test_string_format();
+    test_string_getline();
+    test_string_gettoken();
+    test_string_hexbin();
+    test_string_constexpr_hide();
+    test_string_constexpr_obf();
+    test_string_obfuscate_string();
+    test_string_printf();
+    test_string_replace();
+    test_string_scan();
+    test_string_scan2();
+    test_string_split();
+    test_string_ansi_string();
 #if defined _WIN32 || defined _WIN64
-    _cases.push_back(test_string_wide_string);  // [APVR]
+    test_string_wide_string();
 #endif
-    _cases.push_back(test_string_tokenize);
+    test_string_tokenize();
 }

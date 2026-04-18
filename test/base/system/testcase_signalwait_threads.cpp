@@ -62,4 +62,4 @@ void test_signalwait_threads() {
     _test_case.assert(0 == threads.running(), __FUNCTION__, "all thread terminated");
 }
 
-void testcase_signalwait_threads() { _cases.push_back(test_signalwait_threads); }
+void testcase_signalwait_threads() { test_signalwait_threads(); }

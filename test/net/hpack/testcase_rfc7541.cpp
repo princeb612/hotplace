@@ -624,10 +624,10 @@ void test_rfc7541_c_6() {
 }
 
 void testcase_rfc7541() {
-    _cases.push_back(test_rfc7541_c_1);
-    _cases.push_back(test_rfc7541_c_2);
-    _cases.push_back(test_rfc7541_c_3);
-    _cases.push_back(test_rfc7541_c_4);
-    _cases.push_back(test_rfc7541_c_5);
-    _cases.push_back(test_rfc7541_c_6);
+    test_rfc7541_c_1();
+    test_rfc7541_c_2();
+    test_rfc7541_c_3();
+    test_rfc7541_c_4();
+    test_rfc7541_c_5();
+    test_rfc7541_c_6();
 }

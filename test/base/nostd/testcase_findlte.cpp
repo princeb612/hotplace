@@ -27,4 +27,4 @@ void test_find_lessthan_or_equal() {
     }
 }
 
-void testcase_findlte() { _cases.push_back(test_find_lessthan_or_equal); }
+void testcase_findlte() { test_find_lessthan_or_equal(); }

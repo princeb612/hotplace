@@ -374,11 +374,11 @@ void test_bignumber() {
 }
 
 void testcase_payload() {
-    _cases.push_back(test_payload_write);
-    _cases.push_back(test_payload_read);
-    _cases.push_back(test_uint24);
-    _cases.push_back(test_payload_uint24);
-    _cases.push_back(test_group);
-    _cases.push_back(test_uint48);
-    _cases.push_back(test_bignumber);
+    test_payload_write();
+    test_payload_read();
+    test_uint24();
+    test_payload_uint24();
+    test_group();
+    test_uint48();
+    test_bignumber();
 }

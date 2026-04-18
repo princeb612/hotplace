@@ -154,6 +154,6 @@ void test_byte_capacity_signed() {
 }
 
 void testcase_capacity() {
-    _cases.push_back(test_byte_capacity_unsigned);
-    _cases.push_back(test_byte_capacity_signed);
+    test_byte_capacity_unsigned();
+    test_byte_capacity_signed();
 }

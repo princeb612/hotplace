@@ -62,4 +62,4 @@ void test_transcript_hash() {
     _test_case.assert(case3_hash_stream2 == case1_hash_stream2, __FUNCTION__, "transcript_hash");
 }
 
-void testcase_transcript_hash() { _cases.push_back(test_transcript_hash); }
+void testcase_transcript_hash() { test_transcript_hash(); }

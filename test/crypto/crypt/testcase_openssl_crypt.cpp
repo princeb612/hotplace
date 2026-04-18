@@ -202,6 +202,6 @@ void test_openssl_crypt() {
 }
 
 void testcase_openssl_crypt() {
-    _cases.push_back(validate_openssl_crypt);  // validate wrapper class openssl_crypt
-    _cases.push_back(test_openssl_crypt);
+    validate_openssl_crypt();  // validate wrapper class openssl_crypt
+    test_openssl_crypt();
 }

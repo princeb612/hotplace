@@ -121,9 +121,9 @@ void test_base16_rfc() {
 }
 
 void testcase_base16() {
-    _cases.push_back(test_base16);
-    _cases.push_back(test_base16_func);
-    _cases.push_back(test_base16_decode);
-    _cases.push_back(test_base16_oddsize);
-    _cases.push_back(test_base16_rfc);
+    test_base16();
+    test_base16_func();
+    test_base16_decode();
+    test_base16_oddsize();
+    test_base16_rfc();
 }

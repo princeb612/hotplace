@@ -525,6 +525,6 @@ void test_aho_corasick_ignorecase() {
 }
 
 void testcase_aho_corasick_wildcard() {
-    _cases.push_back(test_aho_corasick_wildcard);
-    _cases.push_back(test_aho_corasick_ignorecase);
+    test_aho_corasick_wildcard();
+    test_aho_corasick_ignorecase();
 }

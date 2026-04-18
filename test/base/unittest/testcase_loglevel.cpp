@@ -71,4 +71,4 @@ void test_loglevel() {
     _logger->set_loglevel(loglevel_trace).set_implicit_loglevel(loglevel_trace);  // reset
 }
 
-void testcase_loglevel() { _cases.push_back(test_loglevel); }
+void testcase_loglevel() { test_loglevel(); }

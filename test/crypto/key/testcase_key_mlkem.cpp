@@ -162,6 +162,6 @@ void test_mlkem_keyuse() {
 }
 
 void testcase_key_mlkem() {
-    _cases.push_back(test_mlkem_keygen);
-    _cases.push_back(test_mlkem_keyuse);
+    test_mlkem_keygen();
+    test_mlkem_keyuse();
 }

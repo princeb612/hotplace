@@ -144,4 +144,4 @@ void test_rfc5869() {
     }
 }
 
-void testcase_rfc5869() { _cases.push_back(test_rfc5869); }
+void testcase_rfc5869() { test_rfc5869(); }

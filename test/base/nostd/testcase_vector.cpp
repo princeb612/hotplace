@@ -32,4 +32,4 @@ void test_vector() {
     _test_case.assert(0 == v1.size(), __FUNCTION__, "case 5");
 }
 
-void testcase_vector() { _cases.push_back(test_vector); }
+void testcase_vector() { test_vector(); }

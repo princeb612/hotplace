@@ -169,4 +169,4 @@ void test_keyexchange() {
 #endif
 }
 
-void testcase_keyexchange() { _cases.push_back(test_keyexchange); }
+void testcase_keyexchange() { test_keyexchange(); }

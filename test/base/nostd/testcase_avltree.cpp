@@ -39,4 +39,4 @@ void test_avltree() {
     }
 }
 
-void testcase_avltree() { _cases.push_back(test_avltree); }
+void testcase_avltree() { test_avltree(); }

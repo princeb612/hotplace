@@ -49,4 +49,4 @@ return_t test_rfc4226() {
     return ret;
 }
 
-void testcase_rfc4226() { _cases.push_back(test_rfc4226); }
+void testcase_rfc4226() { test_rfc4226(); }

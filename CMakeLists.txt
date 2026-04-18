@@ -252,4 +252,10 @@ copy_headers_with_hierarchy(${PROJECT_SOURCE_DIR}/sdk ${PROJECT_SOURCE_DIR}/incl
 add_subdirectory (sdk)
 # test
 enable_testing ()
+# testcase
 add_subdirectory (test)
+# applet
+add_subdirectory (testapplet)
+
+# copy certificates
+add_subdirectory (etc)

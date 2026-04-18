@@ -13,7 +13,6 @@
 test_case _test_case;
 t_shared_instance<logger> _logger;
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
-std::list<std::function<void(void)>> _cases;
 
 int main(int argc, char** argv) {
     set_trace_option(trace_option_t::trace_bt);
@@ -109,6 +108,10 @@ int main(int argc, char** argv) {
         testcase_pqc_hybrid_kem();
         testcase_pqc_kem();
 
+        testcase_oqs_dsa();
+        testcase_oqs_encode();
+        testcase_oqs_kem();
+
         testcase_random();
 
         testcase_crypto_sign();
@@ -117,10 +120,6 @@ int main(int argc, char** argv) {
         testcase_hmac();
         testcase_rsassa();
         testcase_x509();
-
-        for (auto testfunc : _cases) {
-            testfunc();
-        }
     }
     __finally2 { openssl_cleanup(); }
 

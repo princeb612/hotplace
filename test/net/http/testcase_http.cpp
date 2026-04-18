@@ -918,4 +918,4 @@ void test_http() {
     }
 }
 
-void testcase_http() { _cases.push_back(test_http); }
+void testcase_http() { test_http(); }

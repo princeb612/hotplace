@@ -63,4 +63,4 @@ void test_key_rsa() {
     }
 }
 
-void testcase_key_rsa() { _cases.push_back(test_key_rsa); }
+void testcase_key_rsa() { test_key_rsa(); }

@@ -49,4 +49,4 @@ void test_cipher_encrypt() {
     lambda_test(chacha20, mode_cipher, key, iv, (byte_t*)sample, len);
 }
 
-void testcase_cipher_encrypt() { _cases.push_back(test_cipher_encrypt); }
+void testcase_cipher_encrypt() { test_cipher_encrypt(); }

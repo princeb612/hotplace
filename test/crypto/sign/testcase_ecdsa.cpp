@@ -214,7 +214,7 @@ void check_ecdsa_size() {
 }
 
 void testcase_ecdsa() {
-    _cases.push_back(test_nist_cavp_ecdsa);
-    _cases.push_back(test_rfc6979_ecdsa);
-    _cases.push_back(check_ecdsa_size);
+    test_nist_cavp_ecdsa();
+    test_rfc6979_ecdsa();
+    check_ecdsa_size();
 }

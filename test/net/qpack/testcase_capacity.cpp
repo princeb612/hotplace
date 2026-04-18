@@ -141,7 +141,7 @@ void test_small_capacity() {
 }
 
 void testcase_capacity() {
-    _cases.push_back(test_zero_capacity);
-    _cases.push_back(test_tiny_capacity);
-    _cases.push_back(test_small_capacity);
+    test_zero_capacity();
+    test_tiny_capacity();
+    test_small_capacity();
 }

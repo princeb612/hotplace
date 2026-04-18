@@ -40,4 +40,4 @@ void test_hkdf() {
     }
 }
 
-void testcase_hkdf() { _cases.push_back(test_hkdf); }
+void testcase_hkdf() { test_hkdf(); }

@@ -168,6 +168,6 @@ void test_mapinsert() {
 }
 
 void testcase_map() {
-    _cases.push_back(test_maphint);
-    _cases.push_back(test_mapinsert);
+    test_maphint();
+    test_mapinsert();
 }

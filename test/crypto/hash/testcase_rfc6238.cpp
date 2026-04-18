@@ -115,4 +115,4 @@ void test_rfc6238() {
     test_totp_rfc6238(hash_algorithm_t::sha2_512);
 }
 
-void testcase_rfc6238() { _cases.push_back(test_rfc6238); }
+void testcase_rfc6238() { test_rfc6238(); }

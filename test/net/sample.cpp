@@ -13,7 +13,6 @@
 test_case _test_case;
 t_shared_instance<logger> _logger;
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
-std::list<std::function<void(void)>> _cases;
 
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
@@ -88,10 +87,6 @@ int main(int argc, char** argv) {
         testcase_rfc9204();
         testcase_capacity();
         testcase_qpack_stream();
-
-        for (auto testfunc : _cases) {
-            testfunc();
-        }
     }
     __finally2 {
         openssl_cleanup();

@@ -24,4 +24,4 @@ void test_exception() {
     _test_case.assert(not_specified == rc, __FUNCTION__, "exception %s", reason.c_str());
 }
 
-void testcase_exception() { _cases.push_back(test_exception); }
+void testcase_exception() { test_exception(); }

@@ -130,6 +130,6 @@ void test_kdf_scrypt_rfc7914() {
 }
 
 void testcase_rfc7914() {
-    _cases.push_back(test_kdf_pbkdf2_rfc7914);
-    _cases.push_back(test_kdf_scrypt_rfc7914);
+    test_kdf_pbkdf2_rfc7914();
+    test_kdf_scrypt_rfc7914();
 }

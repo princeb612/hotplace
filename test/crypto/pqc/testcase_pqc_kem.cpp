@@ -109,4 +109,4 @@ void test_pqc_kem() {
 #endif
 }
 
-void testcase_pqc_kem() { _cases.push_back(test_pqc_kem); }
+void testcase_pqc_kem() { test_pqc_kem(); }

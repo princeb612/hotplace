@@ -158,4 +158,4 @@ void test_openssl_hash() {
     do_test_hash_loop(RTL_NUMBER_OF(hmac_table), hmac_table, (byte_t*)keydata, 32, (byte_t*)text, strlen(text));
 }
 
-void testcase_openssl_hash() { _cases.push_back(test_openssl_hash); }
+void testcase_openssl_hash() { test_openssl_hash(); }

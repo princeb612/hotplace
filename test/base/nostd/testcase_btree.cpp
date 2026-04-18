@@ -166,4 +166,4 @@ void test_btree() {
     }
 }
 
-void testcase_btree() { _cases.push_back(test_btree); }
+void testcase_btree() { test_btree(); }

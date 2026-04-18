@@ -96,9 +96,9 @@ void test_except() {
 }
 
 void testcase_unittest() {
-    _cases.push_back(test_testcase);
-    _cases.push_back(test_fail);
-    _cases.push_back(test_trace);
-    _cases.push_back(test_try_leave);
-    _cases.push_back(test_error);
+    test_testcase();
+    test_fail();
+    test_trace();
+    test_try_leave();
+    test_error();
 }

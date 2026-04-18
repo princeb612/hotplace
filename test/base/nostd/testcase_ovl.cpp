@@ -287,9 +287,9 @@ void test_subtraction() {
 }
 
 void testcase_ovl() {
-    _cases.push_back(test_merge_ovl_intervals1);
-    _cases.push_back(test_merge_ovl_intervals2);
+    test_merge_ovl_intervals1();
+    test_merge_ovl_intervals2();
     // RFC 9000 19.3 ACK Frames
-    _cases.push_back(test_ack);
-    _cases.push_back(test_subtraction);
+    test_ack();
+    test_subtraction();
 }

@@ -66,4 +66,4 @@ void test_consolecolor() {
     _test_case.assert(true, __FUNCTION__, "console color.3");
 }
 
-void testcase_consolecolor() { _cases.push_back(test_consolecolor); }
+void testcase_consolecolor() { test_consolecolor(); }

@@ -56,4 +56,4 @@ void test_curves() {
         nullptr);
 }
 
-void testcase_curves() { _cases.push_back(test_curves); }
+void testcase_curves() { test_curves(); }

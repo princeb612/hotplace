@@ -68,6 +68,6 @@ void test_sampling() {
 }
 
 void testcase_range() {
-    _cases.push_back(test_integer_range);
-    _cases.push_back(test_sampling);
+    test_integer_range();
+    test_sampling();
 }

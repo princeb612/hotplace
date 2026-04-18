@@ -116,4 +116,4 @@ void test_x509() {
     }
 }
 
-void testcase_x509() { _cases.push_back(test_x509); }
+void testcase_x509() { test_x509(); }

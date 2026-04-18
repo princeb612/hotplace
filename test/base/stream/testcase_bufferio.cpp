@@ -174,6 +174,6 @@ void test_bufferio2() {
 }
 
 void testcase_bufferio() {
-    _cases.push_back(test_bufferio1);
-    _cases.push_back(test_bufferio2);
+    test_bufferio1();
+    test_bufferio2();
 }

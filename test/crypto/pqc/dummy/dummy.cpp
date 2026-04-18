@@ -10,6 +10,6 @@
 
 #include <hotplace/test/crypto/sample.hpp>
 
-void test_oqs_dsa() {}
-void test_oqs_encode() {}
-void test_oqs_kem() {}
+void testcase_oqs_dsa() {}
+void testcase_oqs_encode() {}
+void testcase_oqs_kem() {}

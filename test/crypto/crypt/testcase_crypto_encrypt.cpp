@@ -61,4 +61,4 @@ void test_crypto_encrypt() {
     lambda_test(rsa_oaep512, (byte_t*)sample, len);
 }
 
-void testcase_crypto_encrypt() { _cases.push_back(test_crypto_encrypt); }
+void testcase_crypto_encrypt() { test_crypto_encrypt(); }

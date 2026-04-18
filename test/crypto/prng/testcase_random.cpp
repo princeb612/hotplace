@@ -83,7 +83,7 @@ void test_token() {
 }
 
 void testcase_random() {
-    _cases.push_back(test_random);
-    _cases.push_back(test_nonce);
-    _cases.push_back(test_token);
+    test_random();
+    test_nonce();
+    test_token();
 }

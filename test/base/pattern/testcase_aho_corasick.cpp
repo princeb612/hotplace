@@ -165,6 +165,6 @@ void test_aho_corasick2() {
 }
 
 void testcase_aho_corasick() {
-    _cases.push_back(test_aho_corasick1);
-    _cases.push_back(test_aho_corasick2);
+    test_aho_corasick1();
+    test_aho_corasick2();
 }

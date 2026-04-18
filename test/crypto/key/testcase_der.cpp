@@ -63,4 +63,4 @@ void test_der() {
     _test_case.assert(bin_der == bin_sample, __FUNCTION__, "write DER");
 }
 
-void testcase_der() { _cases.push_back(test_der); }
+void testcase_der() { test_der(); }

@@ -96,4 +96,4 @@ void test_binary() {
     _test_case.assert(1 == ui32, __FUNCTION__, "bin8 to uint32 %u", ui32);
 }
 
-void testcase_binary() { _cases.push_back(test_binary); }
+void testcase_binary() { test_binary(); }

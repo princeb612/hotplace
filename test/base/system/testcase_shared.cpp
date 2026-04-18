@@ -83,6 +83,6 @@ void test_sharedinstance2() {
 }
 
 void testcase_shared() {
-    _cases.push_back(test_sharedinstance1);
-    _cases.push_back(test_sharedinstance2);
+    test_sharedinstance1();
+    test_sharedinstance2();
 }

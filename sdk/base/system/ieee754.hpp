@@ -9,8 +9,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_BASE_BASIC_IEEE754__
-#define __HOTPLACE_SDK_BASE_BASIC_IEEE754__
+#ifndef __HOTPLACE_SDK_BASE_SYSTEM_IEEE754__
+#define __HOTPLACE_SDK_BASE_SYSTEM_IEEE754__
 
 #include <hotplace/sdk/base/basic/types.hpp>
 #include <string>

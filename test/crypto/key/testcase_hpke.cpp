@@ -215,5 +215,5 @@ void testcase_hpke() {
     // DHKEM | test/key | RFC 9180
 
     // understanding ...
-    _cases.push_back(test_dhkem_ossl_example);
+    test_dhkem_ossl_example();
 }

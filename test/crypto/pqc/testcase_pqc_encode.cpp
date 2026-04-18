@@ -79,4 +79,4 @@ void test_pqc_encode() {
 #endif
 }
 
-void testcase_pqc_encode() { _cases.push_back(test_pqc_encode); }
+void testcase_pqc_encode() { test_pqc_encode(); }

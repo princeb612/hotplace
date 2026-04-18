@@ -31,4 +31,4 @@ void test_list() {
     _test_case.assert(0 == l1.size(), __FUNCTION__, "case 5");
 }
 
-void testcase_list() { _cases.push_back(test_list); }
+void testcase_list() { test_list(); }

@@ -169,4 +169,4 @@ void test_mlfq() {
     confirm();
 }
 
-void testcase_mlfq() { _cases.push_back(test_mlfq); }
+void testcase_mlfq() { test_mlfq(); }

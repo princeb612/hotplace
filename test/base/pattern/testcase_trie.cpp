@@ -193,8 +193,8 @@ void test_trie_scan() {
 }
 
 void testcase_trie() {
-    _cases.push_back(test_trie);
-    _cases.push_back(test_trie_autocompletion);
-    _cases.push_back(test_trie_lookup);
-    _cases.push_back(test_trie_scan);
+    test_trie();
+    test_trie_autocompletion();
+    test_trie_lookup();
+    test_trie_scan();
 }

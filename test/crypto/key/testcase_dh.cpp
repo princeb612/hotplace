@@ -130,4 +130,4 @@ void test_dh_rfc7748() {
     }
 }
 
-void testcase_dh() { _cases.push_back(test_dh_rfc7748); }
+void testcase_dh() { test_dh_rfc7748(); }

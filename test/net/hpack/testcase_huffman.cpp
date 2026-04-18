@@ -90,4 +90,4 @@ void test_huffman() {
     }
 }
 
-void testcase_huffman() { _cases.push_back(test_huffman); }
+void testcase_huffman() { test_huffman(); }

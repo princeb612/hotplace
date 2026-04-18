@@ -92,3 +92,5 @@ void test_oqs_encode() {
     }
     __finally2 {}
 }
+
+void testcase_oqs_encode() { test_oqs_encode(); }

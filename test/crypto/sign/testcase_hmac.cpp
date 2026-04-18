@@ -108,4 +108,4 @@ void test_hash_hmac_sign() {
     }
 }
 
-void testcase_hmac() { _cases.push_back(test_hash_hmac_sign); }
+void testcase_hmac() { test_hash_hmac_sign(); }

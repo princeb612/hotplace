@@ -61,4 +61,4 @@ void test_dsa() {
     }
 }
 
-void testcase_dsa() { _cases.push_back(test_dsa); }
+void testcase_dsa() { test_dsa(); }

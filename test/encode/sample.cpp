@@ -13,7 +13,6 @@
 test_case _test_case;
 t_shared_instance<logger> _logger;
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
-std::list<std::function<void(void)>> _cases;
 
 return_t _cmdret = errorcode_t::success;
 
@@ -179,10 +178,6 @@ int main(int argc, char** argv) {
     testcase_base16();
     testcase_base64();
     testcase_huffman();
-
-    for (auto testfunc : _cases) {
-        testfunc();
-    }
 
     _logger->flush();
 

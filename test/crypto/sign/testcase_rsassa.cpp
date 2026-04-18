@@ -131,6 +131,6 @@ void test_rsassa_sample() {
 }
 
 void testcase_rsassa() {
-    _cases.push_back(test_nist_cavp_rsa);
-    _cases.push_back(test_rsassa_sample);
+    test_nist_cavp_rsa();
+    test_rsassa_sample();
 }

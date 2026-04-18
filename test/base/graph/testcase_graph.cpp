@@ -203,6 +203,6 @@ void test_graph2() {
 }
 
 void testcase_graph() {
-    _cases.push_back(test_graph1);
-    _cases.push_back(test_graph2);
+    test_graph1();
+    test_graph2();
 }

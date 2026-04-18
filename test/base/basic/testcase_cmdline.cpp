@@ -133,6 +133,6 @@ void test_cmdline_valid_parameter() {
 }
 
 void testcase_cmdline() {
-    _cases.push_back(test_cmdline_invalid_parameter);
-    _cases.push_back(test_cmdline_valid_parameter);
+    test_cmdline_invalid_parameter();
+    test_cmdline_valid_parameter();
 }

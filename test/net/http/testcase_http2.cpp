@@ -54,4 +54,4 @@ void test_http2() {
     svr_socket->release();
 }
 
-void testcase_http2() { _cases.push_back(test_http2); }
+void testcase_http2() { test_http2(); }

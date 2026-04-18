@@ -151,4 +151,4 @@ void test_qpack_stream() {
     }
 }
 
-void testcase_qpack_stream() { _cases.push_back(test_qpack_stream); }
+void testcase_qpack_stream() { test_qpack_stream(); }

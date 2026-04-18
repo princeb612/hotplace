@@ -88,7 +88,7 @@ cd module
 ### MSVC
 - issues
   - compatibility
-    - [ ] int128/uint128
+    - [x] __SIZEOF_INT128__ (int128/uint128)
     - [x] bignumber
     - [x] __builtin_clzll
     - [x] clock_gettime
@@ -109,7 +109,7 @@ cd module
     - [x] space (separated according to gcc/msvc)
     - [x] thirdparty (openssl manual build required)
 - test
-  - [ ] asn1
+  - [x] asn1
   - [x] authenticode
   - [x] base
   - [x] cbor

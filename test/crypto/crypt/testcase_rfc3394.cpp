@@ -94,4 +94,4 @@ void test_rfc3394() {
     }
 }
 
-void testcase_rfc3394() { _cases.push_back(test_rfc3394); }
+void testcase_rfc3394() { test_rfc3394(); }

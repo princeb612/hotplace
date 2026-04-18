@@ -133,4 +133,4 @@ void test_crypto_key() {
     _test_case.test(ret, __FUNCTION__, "CWK");
 }
 
-void testcase_crypto_key() { _cases.push_back(test_crypto_key); }
+void testcase_crypto_key() { test_crypto_key(); }

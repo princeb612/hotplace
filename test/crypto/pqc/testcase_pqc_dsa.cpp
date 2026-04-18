@@ -20,4 +20,4 @@ void test_pqc_dsa() {
 #endif
 }
 
-void testcase_pqc_dsa() { _cases.push_back(test_pqc_dsa); }
+void testcase_pqc_dsa() { test_pqc_dsa(); }

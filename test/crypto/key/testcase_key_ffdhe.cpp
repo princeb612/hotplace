@@ -90,6 +90,6 @@ void test_ffdhe_dh() {
 }
 
 void testcase_key_ffdhe() {
-    _cases.push_back(test_ffdhe_key);
-    _cases.push_back(test_ffdhe_dh);
+    test_ffdhe_key();
+    test_ffdhe_dh();
 }

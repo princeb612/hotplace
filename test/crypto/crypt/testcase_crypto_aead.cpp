@@ -86,4 +86,4 @@ void test_crypto_aead() {
     lambda("chacha20-poly1305", crypto_scheme_tls_chacha20_poly1305, key, nonce, nullptr, 0, aad);
 }
 
-void testcase_crypto_aead() { _cases.push_back(test_crypto_aead); }
+void testcase_crypto_aead() { test_crypto_aead(); }

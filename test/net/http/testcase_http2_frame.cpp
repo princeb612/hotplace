@@ -158,4 +158,4 @@ void test_http2_frame() {
     }
 }
 
-void testcase_http2_frame() { _cases.push_back(test_http2_frame); }
+void testcase_http2_frame() { test_http2_frame(); }

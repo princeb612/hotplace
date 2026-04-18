@@ -13,8 +13,8 @@
  * 2023.08.28   Soo Han, Kim        refactor
  */
 
-#ifndef __HOTPLACE_SDK_BASE_BASIC_OBFUSCATESTRING__
-#define __HOTPLACE_SDK_BASE_BASIC_OBFUSCATESTRING__
+#ifndef __HOTPLACE_SDK_BASE_STRING_OBFUSCATESTRING__
+#define __HOTPLACE_SDK_BASE_STRING_OBFUSCATESTRING__
 
 #include <hotplace/sdk/base/stream/types.hpp>
 #include <string>

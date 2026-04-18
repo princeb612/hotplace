@@ -664,4 +664,4 @@ void test_rfc9204_b() {
     test_rfc9204_b5(text5, clienttable);
 }
 
-void testcase_rfc9204() { _cases.push_back(test_rfc9204_b); }
+void testcase_rfc9204() { test_rfc9204_b(); }

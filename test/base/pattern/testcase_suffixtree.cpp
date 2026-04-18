@@ -54,6 +54,6 @@ void test_suffixtree2() {
 }
 
 void testcase_suffixtree() {
-    _cases.push_back(test_suffixtree1);
-    _cases.push_back(test_suffixtree2);
+    test_suffixtree1();
+    test_suffixtree2();
 }

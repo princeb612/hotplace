@@ -15,7 +15,6 @@
 test_case _test_case;
 t_shared_instance<logger> _logger;
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
-std::list<std::function<void(void)>> _cases;
 
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
@@ -62,10 +61,6 @@ int main(int argc, char** argv) {
     testcase_mlfq();
     if (option.flag_netlink) {
         testcase_netlink();
-    }
-
-    for (auto testfunc : _cases) {
-        testfunc();
     }
 
     _logger->flush();

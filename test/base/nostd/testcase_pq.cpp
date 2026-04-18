@@ -48,4 +48,4 @@ void test_pq() {
     _test_case.assert(false == errorcheck, __FUNCTION__, "case 3");
 }
 
-void testcase_pq() { _cases.push_back(test_pq); }
+void testcase_pq() { test_pq(); }

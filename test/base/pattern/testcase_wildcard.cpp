@@ -149,7 +149,7 @@ void test_wildcards2() {
 }
 
 void testcase_wildcard() {
-    _cases.push_back(test_lcp);
-    _cases.push_back(test_wildcards1);
-    _cases.push_back(test_wildcards2);
+    test_lcp();
+    test_wildcards1();
+    test_wildcards2();
 }

@@ -47,4 +47,4 @@ void test_variant() {
     _test_case.assert(neg == -1, __FUNCTION__, "negative");
 }
 
-void testcase_variant() { _cases.push_back(test_variant); }
+void testcase_variant() { test_variant(); }

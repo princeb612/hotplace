@@ -53,4 +53,4 @@ void test_key_dsa() {
     _test_case.assert(bin_priv == base16_decode(x), __FUNCTION__, "DSA private key");
 }
 
-void testcase_key_dsa() { _cases.push_back(test_key_dsa); }
+void testcase_key_dsa() { test_key_dsa(); }

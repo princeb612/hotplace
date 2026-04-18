@@ -70,6 +70,6 @@ void test_ukkonen2() {
 }
 
 void testcase_ukkonen() {
-    _cases.push_back(test_ukkonen1);
-    _cases.push_back(test_ukkonen2);
+    test_ukkonen1();
+    test_ukkonen2();
 }

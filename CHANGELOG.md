@@ -7,11 +7,11 @@
   * [study] CBOR/COSE (RFC 7049, 8949, 8152)
 
 * understanding
-  * Revision 927-933
+  * Revision 927-933 (Tag 1.83, Revision 942)
     * MSVC environment (beta status) - application verifier (basics)
   * Revision 910-926
     * MSVC environment (alpha status) - build and run
-  * Revision 876-904
+  * Revision 876-904 (Tag 1.71, Revision 904)
     * ML-KEM Post-Quantum Key Agreement for TLS 1.3
   * Revision 777-804
     * server - TLS, HTTP/1.1, HTTP/2
@@ -31,7 +31,7 @@
     * CBOR
 
 * details
-  * Revision 942
+  * Revision 944
   * Revision 938
     * [tested] openssl-4.0
   * Revision 933

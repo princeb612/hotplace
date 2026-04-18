@@ -120,7 +120,7 @@ void test_valist_stream() {
 }
 
 void testcase_valist() {
-    _cases.push_back(test_valist_sprintf);
-    _cases.push_back(test_valist_vprintf);  // [APVR]
-    _cases.push_back(test_valist_stream);
+    test_valist_sprintf();
+    test_valist_vprintf();
+    test_valist_stream();
 }

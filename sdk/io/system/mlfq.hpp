@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_IO_BASIC_MLFQ__
-#define __HOTPLACE_SDK_IO_BASIC_MLFQ__
+#ifndef __HOTPLACE_SDK_IO_SYSTEM_MLFQ__
+#define __HOTPLACE_SDK_IO_SYSTEM_MLFQ__
 
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/semaphore.hpp>

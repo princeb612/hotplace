@@ -110,6 +110,6 @@ void test_timespec() {
 }
 
 void testcase_datetime() {
-    _cases.push_back(test_time);
-    _cases.push_back(test_timespec);
+    test_time();
+    test_timespec();
 }

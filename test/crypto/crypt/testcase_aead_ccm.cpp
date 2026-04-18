@@ -76,4 +76,4 @@ void test_aead_ccm() {
     lambda("AEAD_AES_192_CCM", crypto_scheme_tls_aes_256_ccm_8, key, iv, (byte_t*)sample, size, aad);
 }
 
-void testcase_aead_ccm() { _cases.push_back(test_aead_ccm); }
+void testcase_aead_ccm() { test_aead_ccm(); }

@@ -141,7 +141,7 @@ void test3() {
 }
 
 void testcase_acl() {
-    _cases.push_back(test1);
-    _cases.push_back(test2);
-    _cases.push_back(test3);
+    test1();
+    test2();
+    test3();
 }

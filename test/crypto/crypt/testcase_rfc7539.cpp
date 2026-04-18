@@ -114,6 +114,6 @@ void test_chacha20_rfc7539_crypto_aead() {
 }
 
 void testcase_rfc7539() {
-    _cases.push_back(test_chacha20_rfc7539);
-    _cases.push_back(test_chacha20_rfc7539_crypto_aead);
+    test_chacha20_rfc7539();
+    test_chacha20_rfc7539_crypto_aead();
 }

@@ -90,4 +90,4 @@ void test_kmp() {
     }
 }
 
-void testcase_kmp() { _cases.push_back(test_kmp); }
+void testcase_kmp() { test_kmp(); }

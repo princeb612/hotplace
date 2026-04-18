@@ -112,7 +112,7 @@ void test_resources() {
 }
 
 void testcase_advisor() {
-    _cases.push_back(test_features);
-    _cases.push_back(test_hint_curves);
-    _cases.push_back(test_resources);
+    test_features();
+    test_hint_curves();
+    test_resources();
 }

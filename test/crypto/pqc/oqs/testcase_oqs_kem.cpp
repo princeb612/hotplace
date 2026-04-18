@@ -91,3 +91,5 @@ void test_oqs_kem() {
     }
     __finally2 {}
 }
+
+void testcase_oqs_kem() { test_oqs_kem(); }

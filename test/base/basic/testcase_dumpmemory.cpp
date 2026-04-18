@@ -40,4 +40,4 @@ void test_dumpmemory() {
     _test_case.assert(true, __FUNCTION__, "dump blank");
 }
 
-void testcase_dumpmemory() { _cases.push_back(test_dumpmemory); }
+void testcase_dumpmemory() { test_dumpmemory(); }

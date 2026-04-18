@@ -144,4 +144,4 @@ void test_pqc_hybrid_kem() {
 #endif
 }
 
-void testcase_pqc_hybrid_kem() { _cases.push_back(test_pqc_hybrid_kem); }
+void testcase_pqc_hybrid_kem() { test_pqc_hybrid_kem(); }
