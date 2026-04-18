@@ -78,10 +78,13 @@ function build_openssl ()
     touch ${builddir}/.complete
 }
 
+# cmake
+#   --install-prefix : cmake4 feature
+
 # build_jansson directory
 function build_jansson ()
 {
-    cmake -G "${generator}" --install-prefix ${install_dir} -B $builddir -DCMAKE_BUILD_TYPE=${target} -DJANSSON_BUILD_DOCS=OFF
+    cmake -G "${generator}" -DCMAKE_INSTALL_PREFIX=${install_dir} -B $builddir -DCMAKE_BUILD_TYPE=${target} -DJANSSON_BUILD_DOCS=OFF
     cd $builddir
     cmake --build . --config ${target}
     cmake --install . --config ${target}
@@ -95,7 +98,7 @@ function build_zlib ()
     # make
     # make install
 
-    cmake -G "${generator}" --install-prefix ${install_dir} -B $builddir -DCMAKE_BUILD_TYPE=${target}
+    cmake -G "${generator}" -DCMAKE_INSTALL_PREFIX=${install_dir} -B $builddir -DCMAKE_BUILD_TYPE=${target}
     cd $builddir
     cmake --build . --config ${target}
     cmake --install . --config ${target}
@@ -105,7 +108,7 @@ function build_zlib ()
 
 function build_liboqs()
 {
-    cmake -G "${generator}" --install-prefix ${install_dir} -B $builddir -DCMAKE_BUILD_TYPE=${target}
+    cmake -G "${generator}" -DCMAKE_INSTALL_PREFIX=${install_dir} -B $builddir -DCMAKE_BUILD_TYPE=${target}
     cd $builddir
     cmake --build . --config ${target}
     cmake --install . --config ${target}
@@ -115,7 +118,7 @@ function build_liboqs()
 
 function build_oqsprovider()
 {
-    cmake -G "${generator}" --install-prefix ${install_dir} -B $builddir -DCMAKE_BUILD_TYPE=${target} -DOQS_KEM_ENCODERS=ON
+    cmake -G "${generator}" -DCMAKE_INSTALL_PREFIX=${install_dir} -B $builddir -DCMAKE_BUILD_TYPE=${target} -DOQS_KEM_ENCODERS=ON
     cd $builddir
     cmake --build . --config ${target}
     cmake --install . --config ${target}

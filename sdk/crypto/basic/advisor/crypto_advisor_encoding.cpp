@@ -28,6 +28,7 @@ return_t crypto_advisor::get_encoding_params(key_encoding_t encoding, key_encodi
         int selection = 0;
         bool use_pass = false;
         switch (encoding) {
+#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
             case key_encoding_priv_pem: {
                 params.selection = OSSL_KEYMGMT_SELECT_KEYPAIR | OSSL_KEYMGMT_SELECT_ALL_PARAMETERS;
                 params.format = constexpr_pem;
@@ -64,6 +65,7 @@ return_t crypto_advisor::get_encoding_params(key_encoding_t encoding, key_encodi
                 params.structure = constexpr_pubkeyinfo;
                 params.use_pass = false;
             } break;
+#endif
             default: {
                 ret = errorcode_t::not_supported;
             }
