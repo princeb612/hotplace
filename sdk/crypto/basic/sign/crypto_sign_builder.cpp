@@ -18,32 +18,49 @@ crypto_sign_builder::crypto_sign_builder() : _scheme(crypt_sig_dgst), _hashalg(0
 
 crypto_sign* crypto_sign_builder::build() {
     crypto_sign* obj = nullptr;
-    switch (get_scheme()) {
-        case crypt_sig_dgst: {
-            obj = new crypto_sign_digest(get_digest());
-        } break;
-        case crypt_sig_hmac: {
-            obj = new crypto_sign_hmac(get_digest());
-        } break;
-        case crypt_sig_rsassa_pkcs15: {
-            obj = new crypto_sign_rsa_pkcs1(get_digest());
-        } break;
-        case crypt_sig_rsassa_pss: {
-            obj = new crypto_sign_rsa_pss(get_digest());
-        } break;
-        case crypt_sig_ecdsa: {
-            obj = new crypto_sign_ecdsa(get_digest());
-        } break;
-        case crypt_sig_eddsa: {
-            obj = new crypto_sign_eddsa(get_digest());
-        } break;
-        case crypt_sig_dsa: {
-            obj = new crypto_sign_dsa(get_digest());
-        } break;
+    __try2 {
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+        return_t ret = errorcode_t::success;
+        switch(get_digest()) {
+            case sha2_512_224:
+            case sha2_512_256:
+                ret = errorcode_t::not_supported;
+                break;
+            default:
+                break;
+        }
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+#endif
+        switch (get_scheme()) {
+            case crypt_sig_dgst: {
+                obj = new crypto_sign_digest(get_digest());
+            } break;
+            case crypt_sig_hmac: {
+                obj = new crypto_sign_hmac(get_digest());
+            } break;
+            case crypt_sig_rsassa_pkcs15: {
+                obj = new crypto_sign_rsa_pkcs1(get_digest());
+            } break;
+            case crypt_sig_rsassa_pss: {
+                obj = new crypto_sign_rsa_pss(get_digest());
+            } break;
+            case crypt_sig_ecdsa: {
+                obj = new crypto_sign_ecdsa(get_digest());
+            } break;
+            case crypt_sig_eddsa: {
+                obj = new crypto_sign_eddsa(get_digest());
+            } break;
+            case crypt_sig_dsa: {
+                obj = new crypto_sign_dsa(get_digest());
+            } break;
+        }
+        if (obj) {
+            obj->set_scheme(get_scheme());
+        }
     }
-    if (obj) {
-        obj->set_scheme(get_scheme());
-    }
+    __finally2 {}
     return obj;
 }
 

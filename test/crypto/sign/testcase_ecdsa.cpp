@@ -14,64 +14,71 @@ void do_test_ecdsa(crypto_key* key, uint32 nid, hash_algorithm_t alg, const bina
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
+    __try2 {
 #if OPENSSL_VERSION_NUMBER < 0x30000000L
-    switch (alg) {
-        case sha2_512_224:
-        case sha2_512_256:
-            ret = errorcode_t::not_supported;
-            break;
-        default:
-            break;
-    }
+        switch (alg) {
+            case sha2_512_224:
+            case sha2_512_256:
+                ret = errorcode_t::not_supported;
+                break;
+            default:
+                break;
+        }
 #endif
 
-    const hint_curve_t* hint = advisor->hintof_curve_nid(nid);
-    const char* hashalg = advisor->nameof_md(alg);
-
-    const EVP_PKEY* pkey = key->any();
-    if (errorcode_t::success == ret) {
-        /* check EC_GROUP_new_by_curve_name:unknown group */
-        EC_KEY* ec = EC_KEY_new_by_curve_name(nid);
-
-        if (ec) {
-            EC_KEY_free(ec);
-        } else {
-            ret = errorcode_t::not_supported;
-            ERR_clear_error();
+        if (errorcode_t::success != ret) {
+            __leave2;
         }
-    }
 
-    // using openssl_sign
-    if (errorcode_t::success == ret) {
-        openssl_sign sign;
-        ret = sign.verify_ecdsa(pkey, alg, input, signature);
-        const OPTION option = _cmdline->value();  // (*_cmdline).value () is ok
+        const hint_curve_t* hint = advisor->hintof_curve_nid(nid);
+        const char* hashalg = advisor->nameof_md(alg);
 
-        if (option.dump_keys || option.verbose) {
-            test_case_notimecheck notimecheck(_test_case);
-            basic_stream bs;
-            if (option.dump_keys) {
-                dump_key(pkey, &bs);
-                _logger->writeln("%s", bs.c_str());
-            }
-            if (option.verbose) {
-                _logger->hdump("input", input);
-                _logger->hdump("signature", signature);
+        const EVP_PKEY* pkey = key->any();
+        if (errorcode_t::success == ret) {
+            /* check EC_GROUP_new_by_curve_name:unknown group */
+            EC_KEY* ec = EC_KEY_new_by_curve_name(nid);
+
+            if (ec) {
+                EC_KEY_free(ec);
+            } else {
+                ret = errorcode_t::not_supported;
+                ERR_clear_error();
             }
         }
-        _test_case.test(ret, __FUNCTION__, "ECDSA.openssl_sign %s %s", hint ? hint->name_nist : "", hashalg);
-    }
 
-    // using crypto_sign
-    if (errorcode_t::success == ret) {
-        crypto_sign_builder builder;
-        crypto_sign* sign = builder.set_scheme(crypt_sig_ecdsa).set_digest(alg).build();
-        if (sign) {
-            ret = sign->verify(pkey, input, signature);
-            _test_case.test(ret, __FUNCTION__, "ECDSA.crypto_sign  %s %s", hint ? hint->name_nist : "", hashalg);
-            sign->release();
+        // using openssl_sign
+        if (errorcode_t::success == ret) {
+            openssl_sign sign;
+            ret = sign.verify_ecdsa(pkey, alg, input, signature);
+            const OPTION option = _cmdline->value();  // (*_cmdline).value () is ok
+
+            if (option.dump_keys || option.verbose) {
+                test_case_notimecheck notimecheck(_test_case);
+                basic_stream bs;
+                if (option.dump_keys) {
+                    dump_key(pkey, &bs);
+                    _logger->writeln("%s", bs.c_str());
+                }
+                if (option.verbose) {
+                    _logger->hdump("input", input);
+                    _logger->hdump("signature", signature);
+                }
+            }
+            _test_case.test(ret, __FUNCTION__, "ECDSA.openssl_sign %s %s", hint ? hint->name_nist : "", hashalg);
+        }
+
+        // using crypto_sign
+        if (errorcode_t::success == ret) {
+            crypto_sign_builder builder;
+            crypto_sign* sign = builder.set_scheme(crypt_sig_ecdsa).set_digest(alg).build();
+            if (sign) {
+                ret = sign->verify(pkey, input, signature);
+                _test_case.test(ret, __FUNCTION__, "ECDSA.crypto_sign  %s %s", hint ? hint->name_nist : "", hashalg);
+                sign->release();
+            }
         }
     }
+    __finally2 {}
 }
 
 void do_test_ecdsa_testvector(const test_vector_nist_cavp_ecdsa_t* vector, size_t sizeof_vector, int base16) {

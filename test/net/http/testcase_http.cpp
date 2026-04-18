@@ -892,8 +892,10 @@ void test_http() {
     test_digest_access_authentication("MD5-sess");
     test_digest_access_authentication("SHA-256");
     test_digest_access_authentication("SHA-256-sess");
+#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
     test_digest_access_authentication("SHA-512-256");
     test_digest_access_authentication("SHA-512-256-sess");
+#endif
 
     test_rfc_digest_example();
 

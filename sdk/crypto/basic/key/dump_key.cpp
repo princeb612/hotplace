@@ -410,8 +410,10 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
             case EVP_PKEY_DSA:
                 stream->printf("DSA");
                 break;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
             case EVP_PKEY_KEYMGMT:
                 break;
+#endif
             default:
                 ret = errorcode_t::not_supported;
                 break;

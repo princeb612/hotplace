@@ -270,6 +270,7 @@ return_t crypto_keychain::pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name
 return_t crypto_keychain::pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize,
                                           key_encoding_t encoding) {
     return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     EVP_PKEY_CTX* pctx = NULL;
     OSSL_PARAM params[3];
     int rc = 0;
@@ -318,6 +319,9 @@ return_t crypto_keychain::pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name
         }
     }
     __finally2 { EVP_PKEY_CTX_free(pctx); }
+#else
+    ret = errorcode_t::not_supported;
+#endif
     return ret;
 }
 
@@ -418,7 +422,7 @@ bool crypto_keychain::pkey_is_private(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey
         OSSL_ENCODER_CTX_free(encoder_context);
     }
 #else
-    ret = errorcode_t::not_supported;
+    // ret = errorcode_t::not_supported;
 #endif
     return ret_value;
 }

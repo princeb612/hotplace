@@ -433,7 +433,12 @@ return_t openssl_hash::finalize(hash_context_t* handle, binary_t& output) {
                 HMAC_CTX_cleanup(context->_hmac_context);
 #endif
             } else {
-                if (EVP_MD_FLAG_XOF & EVP_MD_get_flags(context->_evp_md)) {
+#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
+                if (EVP_MD_FLAG_XOF & EVP_MD_get_flags(context->_evp_md))
+#else
+                if (EVP_MD_FLAG_XOF & EVP_MD_meth_get_flags(context->_evp_md))
+#endif
+                {
                     // sha3 shake
                     size_digest <<= 1;
                     output.resize(size_digest);
@@ -505,7 +510,12 @@ return_t openssl_hash::hash(hash_context_t* handle, const byte_t* source_data, s
             } else {
                 EVP_DigestInit_ex(context->_md_context, context->_evp_md, nullptr);
                 EVP_DigestUpdate(context->_md_context, source_data, source_size);
-                if (EVP_MD_FLAG_XOF & EVP_MD_get_flags(context->_evp_md)) {
+#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
+                if (EVP_MD_FLAG_XOF & EVP_MD_get_flags(context->_evp_md))
+#else
+                if (EVP_MD_FLAG_XOF & EVP_MD_meth_get_flags(context->_evp_md))
+#endif
+                {
                     // sha3 shake
                     size_digest <<= 1;
                     output.resize(size_digest);

@@ -92,8 +92,8 @@ return_t dump_pem(const EVP_PKEY* pkey, BIO* out) {
                 PEM_write_bio_PrivateKey(out, (EVP_PKEY*)pkey, nullptr, nullptr, 0, nullptr, nullptr);
             }
             PEM_write_bio_Parameters(out, (EVP_PKEY*)pkey);
-        } else if (EVP_PKEY_KEYMGMT == type) {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
+        } else if (EVP_PKEY_KEYMGMT == type) {
             crypto_keychain keychain;
             binary_t keydata;
             bool is_keypair = keychain.pkey_is_private(nullptr, pkey);

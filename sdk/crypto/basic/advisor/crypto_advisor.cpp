@@ -82,7 +82,7 @@ return_t crypto_advisor::build() {
 #else
         const EVP_CIPHER* evp_cipher = EVP_get_cipherbyname(nameof_alg(item));
         if (evp_cipher) {
-            _cipher_fetch_map.insert(std::make_pair(CRYPTO_SCHEME16(typeof_alg(item), typeof_mode(item)), cipher_fetch_block_t(evp_cipher, item)));
+            _cipher_fetch_map.insert(std::make_pair(CRYPTO_SCHEME16(typeof_alg(item), typeof_mode(item)), cipher_fetch_block_t((EVP_CIPHER*)evp_cipher, item)));
             _evp_cipher_map.insert(std::make_pair(evp_cipher, item));
         }
 #endif
@@ -133,7 +133,7 @@ return_t crypto_advisor::build() {
 #else
         const EVP_MD* evp_md = EVP_get_digestbyname(nameof_alg(item));
         if (evp_md) {
-            _md_fetch_map.insert(std::make_pair(typeof_alg(item), md_fetch_block_t(evp_md, item)));
+            _md_fetch_map.insert(std::make_pair(typeof_alg(item), md_fetch_block_t((EVP_MD*)evp_md, item)));
         }
 #endif
         if (nullptr == evp_md) {

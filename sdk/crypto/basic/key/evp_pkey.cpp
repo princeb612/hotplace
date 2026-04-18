@@ -36,7 +36,7 @@ return_t nidof_evp_pkey(const EVP_PKEY* pkey, uint32& nid) {
                 EC_KEY_free(ec);
             }
         } else if (EVP_PKEY_DH == nid) {
-            nid = EVP_PKEY_get_base_id(pkey);
+            // nid = EVP_PKEY_get_base_id(pkey);
             DH* dh = EVP_PKEY_get1_DH((EVP_PKEY*)pkey);
             if (dh) {
                 int bits = BN_num_bits(DH_get0_p(dh));
@@ -59,14 +59,15 @@ return_t nidof_evp_pkey(const EVP_PKEY* pkey, uint32& nid) {
                 }
                 DH_free(dh);
             }
-        } else if (EVP_PKEY_KEYMGMT == nid) {
+        }
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
+        else if (EVP_PKEY_KEYMGMT == nid) {
             auto name = EVP_PKEY_get0_type_name(pkey);
             if (name) {
                 nid = OBJ_txt2nid(name);
             }
-#endif
         }
+#endif
 
         if (0 == nid) {
             ret = errorcode_t::not_supported;
@@ -118,8 +119,8 @@ crypto_kty_t typeof_crypto_key(const EVP_PKEY* pkey) {
             case EVP_PKEY_DSA: {
                 kty = crypto_kty_t::kty_dsa;
             } break;
-            case EVP_PKEY_KEYMGMT: {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
+            case EVP_PKEY_KEYMGMT: {
                 auto name = EVP_PKEY_get0_type_name(pkey);
                 if (name) {
                     auto nid = OBJ_txt2nid(name);
@@ -136,8 +137,8 @@ crypto_kty_t typeof_crypto_key(const EVP_PKEY* pkey) {
                         } break;
                     }
                 }
-#endif
             } break;
+#endif
             default:
                 break;
         }

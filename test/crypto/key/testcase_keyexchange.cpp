@@ -115,6 +115,7 @@ void test_keyexchange_mlkem(tls_group_t group) {
 
 void test_keyexchange() {
     _test_case.begin("keyexchange");
+    const OPTION& option = _cmdline->value();
 
     test_keyexchange_ecdhe(tls_group_sect163k1);
     test_keyexchange_ecdhe(tls_group_sect163r1);
@@ -152,11 +153,13 @@ void test_keyexchange() {
     test_keyexchange_ecdhe(tls_group_brainpoolP384r1tls13);
     test_keyexchange_ecdhe(tls_group_brainpoolP512r1tls13);
 
-    test_keyexchange_ecdhe(tls_group_ffdhe2048);
-    test_keyexchange_ecdhe(tls_group_ffdhe3072);
-    test_keyexchange_ecdhe(tls_group_ffdhe4096);
-    test_keyexchange_ecdhe(tls_group_ffdhe6144);
-    test_keyexchange_ecdhe(tls_group_ffdhe8192);
+    if (option.flag_ffdhe) {
+        test_keyexchange_ecdhe(tls_group_ffdhe2048);
+        test_keyexchange_ecdhe(tls_group_ffdhe3072);
+        test_keyexchange_ecdhe(tls_group_ffdhe4096);
+        test_keyexchange_ecdhe(tls_group_ffdhe6144);
+        test_keyexchange_ecdhe(tls_group_ffdhe8192);
+    }
 
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     test_keyexchange_mlkem(tls_group_mlkem512);

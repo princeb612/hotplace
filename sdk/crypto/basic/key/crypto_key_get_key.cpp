@@ -215,8 +215,10 @@ return_t crypto_key::get_asn1public_key(const EVP_PKEY* pkey, binary_t& pub) {
             __leave2;
         }
 
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
         int type = EVP_PKEY_id(pkey);
         if (EVP_PKEY_KEYMGMT != type) {
+#endif
             int len = i2d_PUBKEY((EVP_PKEY*)pkey, nullptr);
             if (len < 0) {
                 ret = errorcode_t::internal_error;
@@ -225,10 +227,12 @@ return_t crypto_key::get_asn1public_key(const EVP_PKEY* pkey, binary_t& pub) {
             pub.resize(len);
             byte_t* p = pub.data();
             len = i2d_PUBKEY((EVP_PKEY*)pkey, &p);
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
         } else {
             crypto_keychain keychain;
             ret = keychain.pkey_encode(nullptr, pkey, pub, key_encoding_pub_der);
         }
+#endif
     }
     __finally2 {}
     return ret;

@@ -4,7 +4,7 @@
 * ![cmake workflow](https://github.com/princeb612/hotplace/actions/workflows/build.yml/badge.svg)
 * ![codeql workflow](https://github.com/princeb612/hotplace/actions/workflows/codeql.yml/badge.svg)
 * powered by
-  * ![openssl](https://img.shields.io/badge/openssl-3.0/3.2/3.3/3.4/3.5/4.0-green)
+  * ![openssl](https://img.shields.io/badge/openssl-1.1.1/3.0/3.2/3.3/3.4/3.5/4.0-green)
   * ![jansson](https://img.shields.io/badge/jansson-2.15-green)
   * ![zlib](https://img.shields.io/badge/zlb-1.3.2-green)
 * language
@@ -280,7 +280,6 @@
     * RHEL 7 and newer, (including CentOS, Rocky Linux)
     * ubuntu 20.04 and newer
     * mingw x64
-    * Fedora Core release 4 (Stentz) w/ custom toolchain (GCC 4.8)
 
 ## custom toolchain
 
@@ -312,23 +311,6 @@
 * build custom jansson (example)
   * see https://github.com/akheron/jansson
   * cd thirdparty ; ./make.sh
-
-### FC4 custom toolchain
-
-* toolchain dependencies
-  * cmake (2.8.10.2)
-  * perl (5.10.0)
-  * m4 (1.4.13)
-  * autoconf (2.65)
-  * automake (1.16.4)
-  * libtool (1.5.2)
-  * make (3.80)
-  * gmp (4.3.2)
-  * mpfr (2.4.2)
-  * mpc (1.0.3)
-  * isl (0.10)
-  * binutils (2.18)
-  * gcc (4.8.5)
 
 # link
 
