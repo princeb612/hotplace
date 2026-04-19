@@ -53,21 +53,21 @@
   * RFC 8448 Example Handshake Traces for TLS 1.3
   * RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
     * sdk/net/tls/tls/
-    * test/tls/
+    * testcase/tls/
   * RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport
   * RFC 9001 Using TLS to Secure QUIC
   * RFC 9369 QUIC Version 2
     * sdk/net/tls/quic/
-    * test/quic/
+    * testcase/quic/
   * ML-KEM Post-Quantum Key Agreement for TLS 1.3
     * [draft-ietf-tls-mlkem-05](https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/)
     * [draft-ietf-tls-ecdhe-mlkem-03](https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/)
-    * test/tls/
+    * testcase/tls/
 * CBOR
   * RFC 7049 Concise Binary Object Representation (CBOR)
   * RFC 8949 Concise Binary Object Representation (CBOR)
     * sdk/io/cbor/
-    * test/cbor/
+    * testcase/cbor/
 * COSE
   * RFC 8152 CBOR Object Signing and Encryption (COSE)
   * RFC 8230 Using RSA Algorithms with CBOR Object Signing and Encryption (COSE) Messages
@@ -77,7 +77,7 @@
   * RFC 9053 CBOR Object Signing and Encryption (COSE): Initial Algorithms
   * RFC 9338 CBOR Object Signing and Encryption (COSE): Countersignatures
     * sdk/crypto/cose/
-    * test/cose/
+    * testcase/cose/
 * JOSE
   * RFC 7515 JSON Web Signature (JWS)
   * RFC 7516 JSON Web Encryption (JWE)
@@ -86,7 +86,7 @@
   * RFC 7520 Examples of Protecting Content Using JSON Object Signing and Encryption (JOSE)
   * RFC 8037 CFRG Elliptic Curve Diffie-Hellman (ECDH) and Signatures in JSON Object Signing and Encryption (JOSE)
     * sdk/crypto/jose/
-    * test/jose/
+    * testcase/jose/
 * HTTP/1.1
   * RFC 1945 Hypertext Transfer Protocol -- HTTP/1.0
   * RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1
@@ -98,35 +98,32 @@
   * RFC 6750 The OAuth 2.0 Authorization Framework: Bearer Token Usage
   * RFC 7616 HTTP Digest Access Authentication
     * sdk/net/http/
-    * test/httpserver1/
-    * test/httpauth/
-    * test/httptest/
+    * testcase/net/
+    * testapplet/httpserver1/
 * HTTP/2
   * RFC 7541 HPACK: Header Compression for HTTP/2
     * sdk/net/http/http2/
-    * test/hpack/
-    * test/httpserver2/
+    * testcase/net/
+    * testapplet/httpserver2/
   * RFC 7540 Hypertext Transfer Protocol Version 2 (HTTP/2)
   * RFC 7838 HTTP Alternative Services
   * RFC 9113 HTTP/2
     * sdk/net/http/http2/
     * sdk/net/basic/tls/
-    * test/payload/
-    * test/hpack/
-    * test/httpaltsvc/
-    * test/httpserver2/
+    * testcase/net/
+    * testapplet/httpserver2/
 * HTTP/3
   * RFC 9204 QPACK: Field Compression for HTTP/3
-    * test/qpack/
+    * testcase/net/
 * BASE16, BASE64, BASE64URL
   * RFC 4648 The Base16, Base32, and Base64 Data Encodings
     * sdk/base/basic/
-    * test/encode/
+    * testcase/encode/
 * HOTP, TOTP
   * RFC 4226 HOTP: An HMAC-Based One-Time Password Algorithm
   * RFC 6238 TOTP: Time-Based One-Time Password Algorithm
     * sdk/crypto/basic/
-    * test/hash/
+    * testcase/crypto/
 * Pattern Search
   * KMP algorithm
   * Trie
@@ -134,16 +131,15 @@
   * Ukkonen algorithm
   * Aho-Corasick algorithm (wildcard)
     * sdk/base/pattern/
-    * test/pattern/
-    * test/parser/
+    * testcase/base/
 * Graph
   * BFS, DFS, Djkstra
     * sdk/base/graph/
-    * test/graph/
+    * testcase/base/
 * Authenticode
   * Digital Certificate verification (plugin_msi, plugin_cabinet excluded)
     * sdk/crypto/authenticode/
-    * test/authenticode/
+    * testapplet/authenticode/
 
 ## applied
 
@@ -167,8 +163,7 @@
   * [Authenticated Encryption with AES-CBC and HMAC-SHA](https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt)
     * sdk/crypto/basic/
     * sdk/crypto/crypto/
-    * test/crypto/
-    * test/kdf/
+    * testcase/crypto/
 
   * RFC 2104 HMAC: Keyed-Hashing for Message Authentication
   * RFC 4231 HMAC-SHA Identifiers and Test Vectors December 2005
@@ -177,8 +172,7 @@
   * [NIST CAVP (Cryptographic Algorithm Validation Program) ECDSA](https://csrc.nist.gov/Projects/cryptographic-algorithm-validation-program/digital-signatures)
     * sdk/crypto/basic/
     * sdk/crypto/crypto/
-    * test/hash/
-    * test/sign/
+    * testcase/crypto/
 
   * RFC 4347 Datagram Transport Layer Security
   * RFC 5246 The Transport Layer Security (TLS) Protocol Version 1.2
@@ -187,23 +181,23 @@
   * RFC 8996 Deprecating TLS 1.0 and TLS 1.1
   * RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
     * sdk/net/basic/tls/
-    * test/tlsserver/
-    * test/dtlsserver/
+    * testapplet/tlsserver/
+    * testapplet/dtlsserver/
 
 * Compression
   * RFC 1951 DEFLATE Compressed Data Format Specification version 1.3
   * RFC 1952 GZIP file format specification version 4.3
     * Accept-Encoding, Content-Encoding
-    * test/httpserver1/
-    * test/httpserver2/
+    * testapplet/httpserver1/
+    * testapplet/httpserver2/
 
 * JOSE
   * RFC 7638 3.1.  Example JWK Thumbprint Computation
-    * test/jose/
+    * testcase/jose/
 
 * IEEE 754
   * half/single/double precision floating point
-    * test/ieee754/
+    * testcase/base/
 
 ## not applied
 

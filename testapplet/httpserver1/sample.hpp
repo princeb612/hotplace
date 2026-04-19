@@ -11,7 +11,7 @@
 #define __HOTPLACE_TESTAPPLET_HTTPSERVER__
 
 #include <hotplace/sdk/sdk.hpp>
-#include <hotplace/test/test.hpp>
+#include <hotplace/testcase/test.hpp>
 
 struct OPTION : public CMDLINEOPTION {
     int run;

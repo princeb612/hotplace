@@ -146,7 +146,8 @@ export SUPPORT_PCH
 # clang-format
 if [ $do_clangformat = 1 ]; then
     clang-format -i `find sdk -name \*.\?pp`
-    clang-format -i `find test -name \*.\?pp`
+    clang-format -i `find testcase -name \*.\?pp`
+    clang-format -i `find testapplet -name \*.\?pp`
 fi
 
 # redist mingw binaries
@@ -173,11 +174,11 @@ time make
 
 # ctest
 if [ $do_ctest = 1 ]; then
-    cd ${HOTPLACE_HOME}/${builddir}/test/
+    cd ${HOTPLACE_HOME}/${builddir}/testcase/
     ctest
 fi
 # run build/test/test.sh
 if [ $do_test = 1 ]; then
-    cd ${HOTPLACE_HOME}/${builddir}/test/
+    cd ${HOTPLACE_HOME}/${builddir}/testcase/
     ./test.sh
 fi

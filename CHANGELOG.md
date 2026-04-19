@@ -20,9 +20,10 @@
   * Revision 673-680 (Tag 0.97, Revision.684)
     * RFC 8448 Example Handshake Traces for TLS 1.3
   * Revision 650-672
-    * https://tls13.xargs.org/
-    * https://tls12.xargs.org/
-    * https://dtls.xargs.org/
+    * understanding TLS/DTLS
+      * https://tls13.xargs.org/
+      * https://tls12.xargs.org/
+      * https://dtls.xargs.org/
   * Revision 501-523 (Tag 0.56, Revision.528)
     * server - HTTP/2 (libssl)
   * Revision 221-442
@@ -31,7 +32,7 @@
     * CBOR
 
 * details
-  * Revision 948
+  * Revision 949
   * Revision 946
     * [tested] openssl-1.1.1 (old platform)
   * Revision 938

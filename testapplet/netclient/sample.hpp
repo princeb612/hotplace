@@ -11,7 +11,7 @@
 #define __HOTPLACE_TESTAPPLET_NETCLIENT__
 
 #include <hotplace/sdk/sdk.hpp>
-#include <hotplace/test/test.hpp>
+#include <hotplace/testcase/test.hpp>
 
 enum {
     option_flag_debug_tls_inside = 1 << 0,

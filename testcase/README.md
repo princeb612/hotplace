@@ -1,0 +1,85 @@
+### test
+
+run debug
+```
+cd module
+./test-module --trace
+```
+
+### tasks
+-test
+  - [x] asn1
+    - pending
+  - [x] base
+  - [x] cbor
+    - [x] RFC 7049
+  - [x] cose
+    - [x] RFC 8152
+    - [x] RFC 8778
+    - [x] RFC 9338
+  - [x] crypto
+    - [x] RFC 3394
+    - [x] RFC 7516
+    - [x] RFC 7539
+    - [x] hash
+      - [x] RFC 4226
+      - [x] RFC 4231
+      - [x] RFC 4493
+      - [x] RFC 6238
+    - [x] kdf
+      - [x] RFC 4615
+      - [x] RFC 5869
+      - [x] RFC 6070
+      - [x] RFC 7914
+      - [x] RFC 9106
+    - [x] sign
+      - [x] RFC 6979
+  - [x] encode
+  - [x] io
+  - [x] net
+    - [x] hpack
+      - [x] RFC 7541
+    - [x] qpack
+      - [x] RFC 9204
+  - [x] jose
+    - [x] RFC 7515
+    - [x] RFC 7516
+    - [x] RFC 7517
+    - [x] RFC 7518
+    - [x] RFC 7520
+    - [x] RFC 7638
+    - [x] RFC 8037
+  - [x] linux
+  - [x] odbc
+  - [x] quic
+    - [x] RFC 9000
+    - [x] RFC 9001
+    - [x] RFC 9369
+  - [x] tls
+    - [x] RFC 8448
+    - [README.md](tls/README.md)
+  - [x] windows
+
+### MSVC
+- issues
+  - compatibility
+    - [x] __SIZEOF_INT128__ (int128/uint128)
+    - [x] bignumber
+    - [x] __builtin_clzll
+    - [x] clock_gettime
+    - [x] ANSI escape code
+  - fix
+    - [x] backtrace
+    - [x] byte_capacity_signed
+  - application verifier
+    - [x] basics
+  - MSVC-specific
+    - [x] source file encoding (utf-8 character set)
+    - [x] variable arguments ambiguity ('v' prefix)
+    - [x] __cplusplus preprocessor macro
+    - [x] debug iterator (turn off)
+    - [x] VLA (Variable Length Array workaround)
+    - [ ] windows application manifest
+  - build
+    - [x] space (separated according to gcc/msvc)
+    - [x] thirdparty (openssl manual build required)

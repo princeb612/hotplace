@@ -242,9 +242,6 @@ link_directories (${SET_THIRDPARTY_DIR}/lib)
 
 # mkdir xxx
 file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
-# copy test.sh to xxx/build/test/
-file (COPY ${PROJECT_SOURCE_DIR}/test/test.sh DESTINATION ${PROJECT_SOURCE_DIR}/${SET_BUILDDIR}/test/)
-
 # copy header files
 copy_headers_with_hierarchy(${PROJECT_SOURCE_DIR}/sdk ${PROJECT_SOURCE_DIR}/include/hotplace/sdk)
 
@@ -253,7 +250,7 @@ add_subdirectory (sdk)
 # test
 enable_testing ()
 # testcase
-add_subdirectory (test)
+add_subdirectory (testcase)
 # applet
 add_subdirectory (testapplet)
 
