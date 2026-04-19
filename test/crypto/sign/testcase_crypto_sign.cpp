@@ -128,50 +128,54 @@ void test_crypto_sign() {
         const EVP_PKEY* pkey = key.find(kid, kty);
         const char* algname = advisor->nameof_md(alg);
 
-        crypto_sign_builder builder;
-        auto sign = builder.set_scheme(scheme).set_digest(alg).build();
-        if (sign) {
-            if (option.dump_keys) {
-                test_case_notimecheck notimecheck(_test_case);
-                basic_stream bs;
+        if (pkey) {
+            crypto_sign_builder builder;
+            auto sign = builder.set_scheme(scheme).set_digest(alg).build();
+            if (sign) {
                 if (option.dump_keys) {
-                    dump_key(pkey, &bs);
-                    _logger->writeln("%s", bs.c_str());
+                    test_case_notimecheck notimecheck(_test_case);
+                    basic_stream bs;
+                    if (option.dump_keys) {
+                        dump_key(pkey, &bs);
+                        _logger->writeln("%s", bs.c_str());
+                    }
                 }
-            }
 
-            ret = sign->sign(pkey, bin_sample, signature2);
-            _logger->hdump(format("> %s", text), signature2);
-            if (expect) {
-                _test_case.test(ret, __FUNCTION__, "%s kid:%s alg:%s #sign (len:%zi)", text, kid, algname, signature2.size());
-            } else {
-                _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "%s kid:%s alg:%s #sign-fail", text, kid, algname);
-            }
-
-            ret = sign->verify(pkey, bin_sample, signature2);
-            if (expect) {
-                _test_case.test(ret, __FUNCTION__, "%s kid:%s alg:%s #verify", text, kid, algname);
-            } else {
-                _test_case.ntest(ret, __FUNCTION__, "%s kid:%s alg:%s #verify-fail", text, kid, algname);
-            }
-
-            uint16 siglen = 0;
-            if (kty_ec == kty) {
-                switch (alg) {
-                    case sha2_256:
-                        siglen = 32 << 1;
-                        break;
-                    case sha2_384:
-                        siglen = 48 << 1;
-                        break;
-                    case sha2_512:
-                        siglen = 66 << 1;
-                        break;
+                ret = sign->sign(pkey, bin_sample, signature2);
+                _logger->hdump(format("> %s", text), signature2);
+                if (expect) {
+                    _test_case.test(ret, __FUNCTION__, "%s kid:%s alg:%s #sign (len:%zi)", text, kid, algname, signature2.size());
+                } else {
+                    _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "%s kid:%s alg:%s #sign-fail", text, kid, algname);
                 }
-                _test_case.assert(signature2.size() == siglen, __FUNCTION__, "%s kid:%s signature length %i <> %zi", text, kid, siglen, signature2.size());
-            }
 
-            sign->release();
+                ret = sign->verify(pkey, bin_sample, signature2);
+                if (expect) {
+                    _test_case.test(ret, __FUNCTION__, "%s kid:%s alg:%s #verify", text, kid, algname);
+                } else {
+                    _test_case.ntest(ret, __FUNCTION__, "%s kid:%s alg:%s #verify-fail", text, kid, algname);
+                }
+
+                uint16 siglen = 0;
+                if (kty_ec == kty) {
+                    switch (alg) {
+                        case sha2_256:
+                            siglen = 32 << 1;
+                            break;
+                        case sha2_384:
+                            siglen = 48 << 1;
+                            break;
+                        case sha2_512:
+                            siglen = 66 << 1;
+                            break;
+                    }
+                    _test_case.assert(signature2.size() == siglen, __FUNCTION__, "%s kid:%s signature length %i <> %zi", text, kid, siglen, signature2.size());
+                }
+
+                sign->release();
+            }
+        } else {
+            _test_case.test(not_supported, __FUNCTION__, "%s", kid);
         }
     };
 

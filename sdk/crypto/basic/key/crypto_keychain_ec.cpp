@@ -54,7 +54,7 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, const keydes
         rc = EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx, nid);
         if (rc < 1) {
             ret = errorcode_t::not_supported;
-            __leave2;
+            __leave2_trace_openssl(ret);
         }
         rc = EVP_PKEY_keygen(ctx, &pkey);
         if (rc < 1) {

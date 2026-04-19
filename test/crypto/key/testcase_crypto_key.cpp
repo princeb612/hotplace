@@ -115,7 +115,7 @@ void test_crypto_key() {
             bool test = (hint->keysize == keysize);
             _test_case.assert(test, __FUNCTION__, R"(%s key "x" size %zi (preserve leading zero))", item.name, bin_x.size());
         } else {
-            _test_case.test(not_found, __FUNCTION__, "%s", item.name);
+            _test_case.test(not_supported, __FUNCTION__, "%s", item.name);
         }
     }
 

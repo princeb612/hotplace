@@ -26,37 +26,41 @@ void test_keyexchange_ecdhe(tls_group_t group) {
     size_t sharesize = hint->first.keysize;
 
     ret = keyexch_alice.keygen(&keystore_alice, "alice", share_alice);
-    _test_case.assert((success == ret) && (sharesize == share_alice.size()), __FUNCTION__, "keygen %s (%zi)", name, share_alice.size());
-    // alice -> bob
-    crypto_key keystore_bob;
-    crypto_keyexchange keyexch_bob(group);
-    ret = keyexch_bob.keygen(&keystore_bob, "bob", share_bob);
-    _test_case.assert((success == ret) && (sharesize == share_bob.size()), __FUNCTION__, "keygen %s (%zi)", name, share_bob.size());
+    if (success != ret) {
+        _test_case.test(ret, __FUNCTION__, R"(not test "%s")", name);
+    } else {
+        _test_case.assert((success == ret) && (sharesize == share_alice.size()), __FUNCTION__, "keygen %s (%zi)", name, share_alice.size());
+        // alice -> bob
+        crypto_key keystore_bob;
+        crypto_keyexchange keyexch_bob(group);
+        ret = keyexch_bob.keygen(&keystore_bob, "bob", share_bob);
+        _test_case.assert((success == ret) && (sharesize == share_bob.size()), __FUNCTION__, "keygen %s (%zi)", name, share_bob.size());
 
-    {
-        _logger->write([&](basic_stream& dbs) -> void {
-            dbs.println("alice %s", name);
-            keystore_alice.for_each([&](crypto_key_object* obj, void*) -> void { dump_key(obj->get_pkey(), &dbs, 15, 4, dump_notrunc); });
-            dbs.println("bob %s", name);
-            keystore_bob.for_each([&](crypto_key_object* obj, void*) -> void { dump_key(obj->get_pkey(), &dbs, 15, 4, dump_notrunc); });
-        });
-    }
+        {
+            _logger->write([&](basic_stream& dbs) -> void {
+                dbs.println("alice %s", name);
+                keystore_alice.for_each([&](crypto_key_object* obj, void*) -> void { dump_key(obj->get_pkey(), &dbs, 15, 4, dump_notrunc); });
+                dbs.println("bob %s", name);
+                keystore_bob.for_each([&](crypto_key_object* obj, void*) -> void { dump_key(obj->get_pkey(), &dbs, 15, 4, dump_notrunc); });
+            });
+        }
 
-    keyexch_bob.exchange(&keystore_bob, "bob", share_alice, sharedsecret_bob);
-    // bob -> alice
-    ret = keyexch_alice.exchange(&keystore_alice, "alice", share_bob, sharedsecret_alice);
+        keyexch_bob.exchange(&keystore_bob, "bob", share_alice, sharedsecret_bob);
+        // bob -> alice
+        ret = keyexch_alice.exchange(&keystore_alice, "alice", share_bob, sharedsecret_alice);
 
-    {
-        _logger->write([&](basic_stream& dbs) -> void {
-            dbs << "alice " << base16_encode(sharedsecret_alice) << "\n";
-            dbs << "bob   " << base16_encode(sharedsecret_bob) << "\n";
-        });
+        {
+            _logger->write([&](basic_stream& dbs) -> void {
+                dbs << "alice " << base16_encode(sharedsecret_alice) << "\n";
+                dbs << "bob   " << base16_encode(sharedsecret_bob) << "\n";
+            });
+        }
+        bool test = false;
+        if (success == ret) {
+            ret = (sharedsecret_alice == sharedsecret_bob) ? ret : mismatch;
+        }
+        _test_case.test(ret, __FUNCTION__, "keyexchange %s compare shared secret", name);
     }
-    bool test = false;
-    if (success == ret) {
-        ret = (sharedsecret_alice == sharedsecret_bob) ? ret : mismatch;
-    }
-    _test_case.test(ret, __FUNCTION__, "keyexchange %s compare shared secret", name);
 }
 
 // https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/
