@@ -71,6 +71,7 @@ struct t_uint_custom_t {
         return *this;
     }
     void set(const TYPE &v) { hton(data, N, v); }
+    uint8 capacity() { return N; }
 
     virtual return_t hton(byte_t *p, uint8 len, const TYPE &value) { return errorcode_t::do_nothing; }
     virtual return_t ntoh(const byte_t *p, uint8 len, TYPE &value) { return errorcode_t::do_nothing; }

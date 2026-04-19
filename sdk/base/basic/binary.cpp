@@ -12,265 +12,303 @@
 #include <string.h>
 
 #include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/system/ieee754.hpp>  // binary32_from_fp32, binary64_from_fp64
+#include <ostream>
 
 namespace hotplace {
 
-binary::binary() : _be(false) {}
+return_t binary_push(binary_t& target, byte_t value) {
+    target.push_back(value);
+    return errorcode_t::success;
+}
 
-binary::binary(const binary& other) : _be(other._be), _bin(other._bin) {}
+return_t binary_append(binary_t& target, int8 value) {
+    target.push_back(static_cast<byte_t>(value));
+    return errorcode_t::success;
+}
 
-binary::binary(binary&& other) : _be(other._be), _bin(std::move(other._bin)) {}
+return_t binary_append(binary_t& target, uint8 value) {
+    target.push_back(value);
+    return errorcode_t::success;
+}
 
-binary::binary(char value) : _be(false) { push_back(value); }
+return_t binary_append(binary_t& target, int16 value, std::function<int16(const int16&)> func) { return t_binary_append<int16>(target, value, func); }
 
-binary::binary(byte_t value) : _be(false) { push_back(value); }
+return_t binary_append(binary_t& target, uint16 value, std::function<uint16(const uint16&)> func) { return t_binary_append<uint16>(target, value, func); }
 
-binary::binary(int16 value) : _be(false) { append(value); }
+return_t binary_append(binary_t& target, int32 value, std::function<int32(const int32&)> func) { return t_binary_append<int32>(target, value, func); }
 
-binary::binary(uint16 value) : _be(false) { append(value); }
+return_t binary_append(binary_t& target, uint32 value, std::function<uint32(const uint32&)> func) { return t_binary_append<uint32>(target, value, func); }
 
-binary::binary(int32 value) : _be(false) { append(value); }
+return_t binary_append(binary_t& target, int64 value, std::function<int64(const int64&)> func) { return t_binary_append<int64>(target, value, func); }
 
-binary::binary(uint32 value) : _be(false) { append(value); }
-
-binary::binary(int64 value) : _be(false) { append(value); }
-
-binary::binary(uint64 value) : _be(false) { append(value); }
+return_t binary_append(binary_t& target, uint64 value, std::function<uint64(const uint64&)> func) { return t_binary_append<uint64>(target, value, func); }
 
 #if defined __SIZEOF_INT128__
-binary::binary(int128 value) : _be(false) { append(value); }
+return_t binary_append(binary_t& target, int64 value, std::function<int128(const int128&)> func) { return t_binary_append<int128>(target, value, func); }
 
-binary::binary(uint128 value) : _be(false) { append(value); }
+return_t binary_append(binary_t& target, uint128 value, std::function<uint128(const uint128&)> func) { return t_binary_append<uint128>(target, value, func); }
 #endif
 
-binary::binary(float value) : _be(false) { append(value); }
-
-binary::binary(double value) : _be(false) { append(value); }
-
-binary::binary(const std::string& value) : _be(false) { append(value); }
-
-binary::binary(const char* buf) : _be(false) { append(buf); }
-
-binary::binary(const byte_t* buf, size_t size) : _be(false) { append(buf, size); }
-
-binary::binary(const binary_t& value) : _be(false), _bin(value) {}
-
-binary::binary(binary_t&& value) : _be(false), _bin(std::move(value)) {}
-
-binary& binary::set(const binary& other) {
-    _bin = other.get();
-    return *this;
+return_t binary_append(binary_t& target, float value, std::function<uint32(const uint32&)> func) {
+    uint32 fp = binary32_from_fp32(value);
+    if (nullptr != func) {
+        fp = func(fp);
+    }
+    const size_t pos = target.size();
+    target.resize(pos + sizeof(fp));
+    memcpy(target.data() + pos, &fp, sizeof(fp));
+    return errorcode_t::success;
 }
 
-binary& binary::set(const binary_t& value) {
-    _bin = value;
-    return *this;
+return_t binary_append(binary_t& target, double value, std::function<uint64(const uint64&)> func) {
+    uint64 fp = binary64_from_fp64(value);
+    if (nullptr != func) {
+        fp = func(fp);
+    }
+    const size_t pos = target.size();
+    target.resize(pos + sizeof(fp));
+    memcpy(target.data() + pos, &fp, sizeof(fp));
+    return errorcode_t::success;
 }
 
-binary& binary::set(binary_t&& value) {
-    _bin = std::move(value);
-    return *this;
+return_t binary_append(binary_t& target, const std::string& value) {
+    if (true == value.empty()) {
+        // do nothing
+    } else {
+        target.reserve(target.size() + value.size());
+        target.insert(target.end(), value.begin(), value.end());
+    }
+    return errorcode_t::success;
 }
 
-binary& binary::push_back(byte_t value) {
-    _bin.push_back(value);
-    return *this;
+return_t binary_append(binary_t& target, const binary_t& value) {
+    if (true == value.empty()) {
+        // do nothing
+    } else {
+        target.reserve(target.size() + value.size());
+        target.insert(target.end(), value.begin(), value.end());
+    }
+    return errorcode_t::success;
 }
 
-binary& binary::append(int16 value, std::function<int16(const int16&)> func) {
-    t_binary_append<int16>(_bin, value, func);
-    return *this;
+return_t binary_append(binary_t& target, const char* value) {
+    return_t ret = errorcode_t::success;
+    if (nullptr == value) {
+        ret = errorcode_t::invalid_parameter;
+    } else {
+        const size_t len = strlen(value);
+        if (0 != len) {
+            target.reserve(target.size() + len);
+            target.insert(target.end(), value, value + len);
+        }
+    }
+    return ret;
 }
 
-binary& binary::append(uint16 value, std::function<uint16(const uint16&)> func) {
-    t_binary_append<uint16>(_bin, value, func);
-    return *this;
+return_t binary_append(binary_t& target, const char* buf, size_t size) {
+    return_t ret = errorcode_t::success;
+    if (nullptr == buf) {
+        ret = errorcode_t::invalid_parameter;
+    } else {
+        if (0 != size) {
+            target.reserve(target.size() + size);
+            target.insert(target.end(), buf, buf + size);
+        }
+    }
+    return errorcode_t::success;
 }
 
-binary& binary::append(int32 value, std::function<int32(const int32&)> func) {
-    t_binary_append<int32>(_bin, value, func);
-    return *this;
+return_t binary_append(binary_t& target, const byte_t* buf, size_t size) {
+    return_t ret = errorcode_t::success;
+    if (nullptr == buf) {
+        ret = errorcode_t::invalid_parameter;
+    } else {
+        if (0 != size) {
+            target.reserve(target.size() + size);
+            target.insert(target.end(), buf, buf + size);
+        }
+    }
+    return ret;
 }
 
-binary& binary::append(uint32 value, std::function<uint32(const uint32&)> func) {
-    t_binary_append<uint32>(_bin, value, func);
-    return *this;
+return_t binary_append(binary_t& target, const byte_t* buf, size_t from, size_t to) {
+    return_t ret = errorcode_t::success;
+    if ((nullptr == buf) || (from >= to)) {
+        ret = errorcode_t::invalid_parameter;
+    } else {
+        const size_t len = to - from;
+        target.reserve(target.size() + len);
+        target.insert(target.end(), buf + from, buf + to);
+    }
+    return ret;
 }
 
-binary& binary::append(int64 value, std::function<int64(const int64&)> func) {
-    t_binary_append<int64>(_bin, value, func);
-    return *this;
+return_t binary_append2(binary_t& target, uint32 len, int16 value, std::function<int16(const int16&)> func) {
+    return t_binary_append2<int16>(target, len, value, func);
 }
 
-binary& binary::append(uint64 value, std::function<uint64(const uint64&)> func) {
-    t_binary_append<uint64>(_bin, value, func);
-    return *this;
+return_t binary_append2(binary_t& target, uint32 len, uint16 value, std::function<uint16(const uint16&)> func) {
+    return t_binary_append2<uint16>(target, len, value, func);
+}
+
+return_t binary_append2(binary_t& target, uint32 len, int32 value, std::function<int32(const int32&)> func) {
+    return t_binary_append2<int32>(target, len, value, func);
+}
+
+return_t binary_append2(binary_t& target, uint32 len, uint32 value, std::function<uint32(const uint32&)> func) {
+    return t_binary_append2<uint32>(target, len, value, func);
+}
+
+return_t binary_append2(binary_t& target, uint32 len, int64 value, std::function<int64(const int64&)> func) {
+    return t_binary_append2<int64>(target, len, value, func);
+}
+
+return_t binary_append2(binary_t& target, uint32 len, uint64 value, std::function<uint64(const uint64&)> func) {
+    return t_binary_append2<uint64>(target, len, value, func);
 }
 
 #if defined __SIZEOF_INT128__
-binary& binary::append(int128 value, std::function<int128(const int128&)> func) {
-    t_binary_append<int128>(_bin, value, func);
-    return *this;
+return_t binary_append2(binary_t& target, uint32 len, int128 value, std::function<int128(const int128&)> func) {
+    return t_binary_append2<int128>(target, len, value, func);
 }
 
-binary& binary::append(uint128 value, std::function<uint128(const uint128&)> func) {
-    t_binary_append<uint128>(_bin, value, func);
-    return *this;
+return_t binary_append2(binary_t& target, uint32 len, uint128 value, std::function<uint128(const uint128&)> func) {
+    return t_binary_append2<uint128>(target, len, value, func);
 }
 #endif
 
-binary& binary::append(float value, std::function<uint32(const uint32&)> func) {
-    binary_append(_bin, value, func);
-    return *this;
+return_t binary_load(binary_t& bn, uint32 bnlen, int16 value, std::function<int16(const int16&)> func) { return t_binary_load<int16>(bn, bnlen, value, func); }
+
+return_t binary_load(binary_t& bn, uint32 bnlen, uint16 value, std::function<uint16(const uint16&)> func) {
+    return t_binary_load<uint16>(bn, bnlen, value, func);
 }
 
-binary& binary::append(double value, std::function<uint64(const uint64&)> func) {
-    binary_append(_bin, value, func);
-    return *this;
+return_t binary_load(binary_t& bn, uint32 bnlen, int32 value, std::function<int32(const int32&)> func) { return t_binary_load<int32>(bn, bnlen, value, func); }
+
+return_t binary_load(binary_t& bn, uint32 bnlen, uint32 value, std::function<uint32(const uint32&)> func) {
+    return t_binary_load<uint32>(bn, bnlen, value, func);
 }
 
-binary& binary::append(const std::string& value) {
-    binary_append(_bin, value);
-    return *this;
+return_t binary_load(binary_t& bn, uint32 bnlen, int64 value, std::function<int64(const int64&)> func) { return t_binary_load<int64>(bn, bnlen, value, func); }
+
+return_t binary_load(binary_t& bn, uint32 bnlen, uint64 value, std::function<uint64(const uint64&)> func) {
+    return t_binary_load<uint64>(bn, bnlen, value, func);
 }
-
-binary& binary::append(const binary_t& value) {
-    binary_append(_bin, value);
-    return *this;
-}
-
-binary& binary::append(const binary& value) {
-    binary_append(_bin, value);
-    return *this;
-}
-
-binary& binary::append(const char* value) {
-    binary_append(_bin, value);
-    return *this;
-}
-
-binary& binary::append(const char* value, size_t size) {
-    binary_append(_bin, value, size);
-    return *this;
-}
-
-binary& binary::append(const byte_t* buf, size_t size) {
-    binary_append(_bin, buf, size);
-    return *this;
-}
-
-binary& binary::append(const byte_t* buf, size_t from, size_t to) {
-    binary_append(_bin, buf, from, to);
-    return *this;
-}
-
-binary& binary::fill(size_t count, const byte_t& value) {
-    binary_fill(_bin, count, value);
-    return *this;
-}
-
-binary& binary::byteorder(bool be) {
-    _be = be;
-    return *this;
-}
-
-binary& binary::operator<<(char value) { return push_back(value); }
-
-binary& binary::operator<<(byte_t value) { return push_back(value); }
-
-binary& binary::operator<<(int16 value) { return append(value, _be ? hton16 : nullptr); }
-
-binary& binary::operator<<(uint16 value) { return append(value, _be ? hton16 : nullptr); }
-
-binary& binary::operator<<(int32 value) { return append(value, _be ? hton32 : nullptr); }
-
-binary& binary::operator<<(uint32 value) { return append(value, _be ? hton32 : nullptr); }
-
-binary& binary::operator<<(int64 value) { return append(value, _be ? hton64 : nullptr); }
-
-binary& binary::operator<<(uint64 value) { return append(value, _be ? hton64 : nullptr); }
 
 #if defined __SIZEOF_INT128__
-binary& binary::operator<<(int128 value) { return append(value, _be ? hton128 : nullptr); }
+return_t binary_load(binary_t& bn, uint32 bnlen, int128 value, std::function<int128(const int128&)> func) {
+    return t_binary_load<int128>(bn, bnlen, value, func);
+}
 
-binary& binary::operator<<(uint128 value) { return append(value, _be ? hton128 : nullptr); }
+return_t binary_load(binary_t& bn, uint32 bnlen, uint128 value, std::function<uint128(const uint128&)> func) {
+    return t_binary_load<uint128>(bn, bnlen, value, func);
+}
 #endif
 
-binary& binary::operator<<(float value) { return append(value, _be ? hton32 : nullptr); }
+return_t binary_load(binary_t& target, uint32 bnlen, const byte_t* data, uint32 len) {
+    return_t ret = errorcode_t::success;
+    if (nullptr == data) {
+        ret = errorcode_t::invalid_parameter;
+    } else {
+        target.resize(bnlen);
+        if (len > bnlen) {
+            len = bnlen;
+        }
+        memcpy(target.data() + (bnlen - len), data, len);
+    }
+    return ret;
+}
 
-binary& binary::operator<<(double value) { return append(value, _be ? hton64 : nullptr); }
+return_t binary_fill(binary_t& target, size_t count, const byte_t& value) {
+    if (0 == count) {
+        // do nothing
+    } else {
+        const size_t pos = target.size();
+        target.resize(pos + count);
+        memset(target.data() + pos, value, count);
+    }
+    return errorcode_t::success;
+}
 
-binary& binary::operator<<(const std::string& value) { return append(value); }
+binary_t& operator<<(binary_t& lhs, uint8 rhs) {
+    lhs.push_back(rhs);
+    return lhs;
+}
 
-binary& binary::operator<<(const binary_t& value) { return append(value); }
+binary_t& operator<<(binary_t& lhs, uint16 rhs) {
+    lhs.reserve(lhs.size() + sizeof(uint16));
+    t_binary_append<uint16>(lhs, rhs, hton16);
+    return lhs;
+}
 
-binary& binary::operator<<(const binary& value) { return append(value); }
+binary_t& operator<<(binary_t& lhs, uint24_t rhs) {
+    lhs.reserve(lhs.size() + rhs.capacity());
+    lhs.insert(lhs.end(), rhs.data, rhs.data + rhs.capacity());
+    return lhs;
+}
 
-binary& binary::operator<<(const char* value) { return append(value); }
+binary_t& operator<<(binary_t& lhs, uint32 rhs) {
+    lhs.reserve(lhs.size() + sizeof(uint32));
+    t_binary_append<uint32>(lhs, rhs, hton32);
+    return lhs;
+}
 
-binary& binary::operator=(char value) { return clear().push_back(value); }
+binary_t& operator<<(binary_t& lhs, uint48_t rhs) {
+    lhs.reserve(lhs.size() + rhs.capacity());
+    lhs.insert(lhs.end(), rhs.data, rhs.data + rhs.capacity());
+    return lhs;
+}
 
-binary& binary::operator=(byte_t value) { return clear().push_back(value); }
-
-binary& binary::operator=(int16 value) { return clear().append(value, _be ? hton16 : nullptr); }
-
-binary& binary::operator=(uint16 value) { return clear().append(value, _be ? hton16 : nullptr); }
-
-binary& binary::operator=(int32 value) { return clear().append(value, _be ? hton32 : nullptr); }
-
-binary& binary::operator=(uint32 value) { return clear().append(value, _be ? hton32 : nullptr); }
-
-binary& binary::operator=(int64 value) { return clear().append(value, _be ? hton64 : nullptr); }
-
-binary& binary::operator=(uint64 value) { return clear().append(value, _be ? hton64 : nullptr); }
+binary_t& operator<<(binary_t& lhs, uint64 rhs) {
+    lhs.reserve(lhs.size() + sizeof(uint64));
+    t_binary_append<uint64>(lhs, rhs, hton64);
+    return lhs;
+}
 
 #if defined __SIZEOF_INT128__
-binary& binary::operator=(int128 value) { return clear().append(value, _be ? hton128 : nullptr); }
-
-binary& binary::operator=(uint128 value) { return clear().append(value, _be ? hton128 : nullptr); }
+binary_t& operator<<(binary_t& lhs, uint128 rhs) {
+    lhs.reserve(lhs.size() + sizeof(uint128));
+    t_binary_append<uint128>(lhs, rhs, hton128);
+    return lhs;
+}
 #endif
 
-binary& binary::operator=(float value) { return clear().append(value, _be ? hton32 : nullptr); }
-
-binary& binary::operator=(double value) { return clear().append(value, _be ? hton64 : nullptr); }
-
-binary& binary::operator=(const std::string& value) {
-    _bin.assign(value.begin(), value.end());
-    return *this;
+binary_t& operator<<(binary_t& lhs, char* rhs) {
+    if (nullptr != rhs) {
+        const size_t len = strlen(rhs);
+        if (0 != len) {
+            lhs.reserve(lhs.size() + len);
+            lhs.insert(lhs.end(), rhs, rhs + len);
+        }
+    }
+    return lhs;
 }
 
-binary& binary::operator=(const binary_t& value) {
-    _bin = value;
-    return *this;
+binary_t& operator<<(binary_t& lhs, const std::string& rhs) {
+    if (false == rhs.empty()) {
+        lhs.reserve(lhs.size() + rhs.size());
+        lhs.insert(lhs.end(), rhs.begin(), rhs.end());
+    }
+    return lhs;
 }
 
-binary& binary::operator=(binary_t&& value) {
-    _bin = std::move(value);
-    return *this;
+binary_t& operator<<(binary_t& lhs, const binary_t& rhs) {
+    if (false == rhs.empty()) {
+        lhs.reserve(lhs.size() + rhs.size());
+        lhs.insert(lhs.end(), rhs.begin(), rhs.end());
+    }
+    return lhs;
 }
 
-binary& binary::operator=(const binary& value) {
-    _bin = value.get();
-    return *this;
+std::string bin2str(const binary_t& bin) {
+    if (true == bin.empty()) {
+        return std::string();
+    } else {
+        return std::string(reinterpret_cast<const char*>(bin.data()), bin.size());
+    }
 }
 
-binary& binary::operator=(const char* value) { return clear().append(value); }
-
-binary& binary::clear() {
-    _bin.clear();
-    return *this;
-}
-
-binary_t& binary::get() { return _bin; }
-
-const binary_t& binary::get() const { return _bin; }
-
-binary::operator binary_t() { return _bin; }
-
-binary::operator const binary_t&() const { return _bin; }
-
-size_t binary::size() { return _bin.size(); }
-
-size_t binary::size() const { return _bin.size(); }
+binary_t str2bin(const std::string& source) { return binary_t(source.begin(), source.end()); }
 
 }  // namespace hotplace

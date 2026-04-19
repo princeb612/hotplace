@@ -12,7 +12,6 @@
 #ifndef __HOTPLACE_SDK_BASE_UNITTEST_LOGGER__
 #define __HOTPLACE_SDK_BASE_UNITTEST_LOGGER__
 
-#include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/keyvalue.hpp>
 #include <hotplace/sdk/base/charset.hpp>
 #include <hotplace/sdk/base/error.hpp>
@@ -176,28 +175,24 @@ class logger {
     logger& dump(const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& dump(const char* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& dump(const binary_t& msg, unsigned hexpart = 16, unsigned indent = 0);
-    logger& dump(const binary& msg, unsigned hexpart = 16, unsigned indent = 0);
     logger& dump(const std::string& msg, unsigned hexpart = 16, unsigned indent = 0);
     logger& dump(const basic_stream& msg, unsigned hexpart = 16, unsigned indent = 0);
 
     logger& dump(loglevel_t level, const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& dump(loglevel_t level, const char* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& dump(loglevel_t level, const binary_t& msg, unsigned hexpart = 16, unsigned indent = 0);
-    logger& dump(loglevel_t level, const binary& msg, unsigned hexpart = 16, unsigned indent = 0);
     logger& dump(loglevel_t level, const std::string& msg, unsigned hexpart = 16, unsigned indent = 0);
     logger& dump(loglevel_t level, const basic_stream& msg, unsigned hexpart = 16, unsigned indent = 0);
 
     logger& hdump(const std::string& header, const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& hdump(const std::string& header, const char* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& hdump(const std::string& header, const binary_t& msg, unsigned hexpart = 16, unsigned indent = 0);
-    logger& hdump(const std::string& header, const binary& msg, unsigned hexpart = 16, unsigned indent = 0);
     logger& hdump(const std::string& header, const std::string& msg, unsigned hexpart = 16, unsigned indent = 0);
     logger& hdump(const std::string& header, const basic_stream& msg, unsigned hexpart = 16, unsigned indent = 0);
 
     logger& hdump(loglevel_t level, const std::string& header, const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& hdump(loglevel_t level, const std::string& header, const char* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& hdump(loglevel_t level, const std::string& header, const binary_t& msg, unsigned hexpart = 16, unsigned indent = 0);
-    logger& hdump(loglevel_t level, const std::string& header, const binary& msg, unsigned hexpart = 16, unsigned indent = 0);
     logger& hdump(loglevel_t level, const std::string& header, const std::string& msg, unsigned hexpart = 16, unsigned indent = 0);
     logger& hdump(loglevel_t level, const std::string& header, const basic_stream& msg, unsigned hexpart = 16, unsigned indent = 0);
 

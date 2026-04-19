@@ -51,9 +51,9 @@ void tls_handshake_server_hello::set_session_id(const binary_t& value) { _sessio
 
 uint16 tls_handshake_server_hello::get_version() { return _version; }
 
-const binary& tls_handshake_server_hello::get_random() { return _random; }
+const binary_t& tls_handshake_server_hello::get_random() { return _random; }
 
-const binary& tls_handshake_server_hello::get_session_id() { return _session_id; }
+const binary_t& tls_handshake_server_hello::get_session_id() { return _session_id; }
 
 uint16 tls_handshake_server_hello::get_cipher_suite() {
     uint16 cs = 0;
@@ -241,9 +241,8 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
                 protection.calc_transcript_hash(session, client_hello.data(), client_hello.size(), handshake_hash);
 
                 // uint8(FE) || uint24(hash.size) || hash
-                binary message_hash;
-                message_hash << uint8(tls_hs_message_hash) << uint16(0) << byte_t(handshake_hash.size()) << handshake_hash;
-                const binary_t& synthetic_handshake_message = message_hash.get();
+                binary_t synthetic_handshake_message;
+                synthetic_handshake_message << uint8(tls_hs_message_hash) << uint24_t(handshake_hash.size()) << handshake_hash;
 
                 protection.reset_transcript_hash(session);
 

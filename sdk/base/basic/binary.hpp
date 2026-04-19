@@ -16,141 +16,9 @@
 #include <functional>
 #include <hotplace/sdk/base/basic/types.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
+#include <hotplace/sdk/base/system/uint.hpp>
 
 namespace hotplace {
-
-/*
- * @brief   std::vector<unsigned char> utility
- */
-class binary {
-   public:
-    binary();
-    binary(const binary& other);
-    binary(binary&& other);
-
-    binary(char value);
-    binary(byte_t value);
-    binary(int16 value);
-    binary(uint16 value);
-    binary(int32 value);
-    binary(uint32 value);
-    binary(int64 value);
-    binary(uint64 value);
-#if defined __SIZEOF_INT128__
-    binary(int128 value);
-    binary(uint128 value);
-#endif
-    binary(float value);
-    binary(double value);
-    binary(const std::string& value);
-    binary(const char* value);
-    binary(const byte_t* buf, size_t size);
-
-    binary(const binary_t& value);
-    binary(binary_t&& value);
-
-    binary& set(const binary& other);
-    binary& set(const binary_t& value);
-    binary& set(binary_t&& value);
-
-    binary& push_back(byte_t value);
-
-    /*
-     * @brief   append
-     * @sample
-     *          uint32 data = 100;
-     *          b.append(data);          // 64000000 little endian
-     *          b.append(data, hton32);  // 00000064 big endian
-     */
-    binary& append(int16 value, std::function<int16(const int16&)> func = nullptr);
-    binary& append(uint16 value, std::function<uint16(const uint16&)> func = nullptr);
-    binary& append(int32 value, std::function<int32(const int32&)> func = nullptr);
-    binary& append(uint32 value, std::function<uint32(const uint32&)> func = nullptr);
-    binary& append(int64 value, std::function<int64(const int64&)> func = nullptr);
-    binary& append(uint64 value, std::function<uint64(const uint64&)> func = nullptr);
-#if defined __SIZEOF_INT128__
-    binary& append(int128 value, std::function<int128(const int128&)> func = nullptr);
-    binary& append(uint128 value, std::function<uint128(const uint128&)> func = nullptr);
-#endif
-    binary& append(float value, std::function<uint32(const uint32&)> func = nullptr);
-    binary& append(double value, std::function<uint64(const uint64&)> func = nullptr);
-    /**
-     * @sample
-     *          b.append("token");
-     *          00000000 : 74 6F 6B 65 6E -- -- -- -- -- -- -- -- -- -- -- | token
-     */
-    binary& append(const std::string& value);
-    binary& append(const binary_t& value);
-    binary& append(const binary& value);
-    binary& append(const char* value);
-    binary& append(const char* buf, size_t size);
-    binary& append(const byte_t* buf, size_t size);
-    binary& append(const byte_t* buf, size_t from, size_t to);
-
-    binary& fill(size_t count, const byte_t& value);
-
-    /**
-     * @brief   byte order
-     * @sample
-     *          b.byteorder(false);
-     *          b << ui32;          // system endian
-     *          b.byteorder(true);
-     *          b << ui32;          // big endian
-     */
-    binary& byteorder(bool be);
-
-    binary& operator<<(char value);
-    binary& operator<<(byte_t value);
-    binary& operator<<(int16 value);
-    binary& operator<<(uint16 value);
-    binary& operator<<(int32 value);
-    binary& operator<<(uint32 value);
-    binary& operator<<(int64 value);
-    binary& operator<<(uint64 value);
-#if defined __SIZEOF_INT128__
-    binary& operator<<(int128 value);
-    binary& operator<<(uint128 value);
-#endif
-    binary& operator<<(float value);
-    binary& operator<<(double value);
-    binary& operator<<(const std::string& value);
-    binary& operator<<(const binary_t& value);
-    binary& operator<<(const binary& value);
-    binary& operator<<(const char* value);
-
-    binary& operator=(char value);
-    binary& operator=(byte_t value);
-    binary& operator=(int16 value);
-    binary& operator=(uint16 value);
-    binary& operator=(int32 value);
-    binary& operator=(uint32 value);
-    binary& operator=(int64 value);
-    binary& operator=(uint64 value);
-#if defined __SIZEOF_INT128__
-    binary& operator=(int128 value);
-    binary& operator=(uint128 value);
-#endif
-    binary& operator=(float value);
-    binary& operator=(double value);
-    binary& operator=(const std::string& value);
-    binary& operator=(const binary_t& value);
-    binary& operator=(binary_t&& value);
-    binary& operator=(const binary& value);
-    binary& operator=(const char* value);
-
-    binary& clear();
-
-    binary_t& get();
-    const binary_t& get() const;
-    operator binary_t();
-    operator const binary_t&() const;
-    size_t size();
-    size_t size() const;
-
-   private:
-    binary_t _bin;
-    bool _be;
-};
 
 /**
  * @sample
@@ -205,7 +73,6 @@ return_t binary_append(binary_t& target, float value, std::function<uint32(const
 return_t binary_append(binary_t& target, double value, std::function<uint64(const uint64&)> func = nullptr);
 return_t binary_append(binary_t& target, const std::string& value);
 return_t binary_append(binary_t& target, const binary_t& value);
-return_t binary_append(binary_t& target, const binary& other);
 return_t binary_append(binary_t& target, const char* buf);
 return_t binary_append(binary_t& target, const char* buf, size_t size);
 return_t binary_append(binary_t& target, const byte_t* buf, size_t size);
@@ -303,63 +170,46 @@ return_t binary_load(binary_t& target, uint32 limit, uint128 value, std::functio
 return_t binary_load(binary_t& target, uint32 limit, const byte_t* data, uint32 len);
 return_t binary_fill(binary_t& target, size_t count, const byte_t& value);
 
+binary_t& operator<<(binary_t& lhs, uint8 rhs);
+binary_t& operator<<(binary_t& lhs, uint16 rhs);
+binary_t& operator<<(binary_t& lhs, uint24_t rhs);
+binary_t& operator<<(binary_t& lhs, uint32 rhs);
+binary_t& operator<<(binary_t& lhs, uint48_t rhs);
+binary_t& operator<<(binary_t& lhs, uint64 rhs);
+#if defined __SIZEOF_INT128__
+binary_t& operator<<(binary_t& lhs, uint128 rhs);
+#endif
+
 /**
  * @brief append
  * @param binary_t& lhs [inout]
  * @param char* rhs [in]
  */
-static inline binary_t& operator<<(binary_t& lhs, char* rhs) {
-    if (nullptr != rhs) {
-        const size_t len = strlen(rhs);
-        if (0 != len) {
-            lhs.reserve(lhs.size() + len);
-            lhs.insert(lhs.end(), rhs, rhs + len);
-        }
-    }
-    return lhs;
-}
+binary_t& operator<<(binary_t& lhs, char* rhs);
 
 /**
  * @brief append
  * @param binary_t& lhs [inout]
  * @param std::string rhs [in]
  */
-static inline binary_t& operator<<(binary_t& lhs, const std::string& rhs) {
-    if (false == rhs.empty()) {
-        lhs.reserve(lhs.size() + rhs.size());
-        lhs.insert(lhs.end(), rhs.begin(), rhs.end());
-    }
-    return lhs;
-}
+binary_t& operator<<(binary_t& lhs, const std::string& rhs);
 
 /**
  * @brief append
  * @param binary_t& lhs [inout]
  * @param binary_t rhs [in]
  */
-static inline binary_t& operator<<(binary_t& lhs, const binary_t& rhs) {
-    if (false == rhs.empty()) {
-        lhs.reserve(lhs.size() + rhs.size());
-        lhs.insert(lhs.end(), rhs.begin(), rhs.end());
-    }
-    return lhs;
-}
+binary_t& operator<<(binary_t& lhs, const binary_t& rhs);
 
 /**
  * @brief   util
  */
-static inline std::string bin2str(const binary_t& bin) {
-    if (true == bin.empty()) {
-        return std::string();
-    } else {
-        return std::string(reinterpret_cast<const char*>(bin.data()), bin.size());
-    }
-}
+std::string bin2str(const binary_t& bin);
 
 /**
  * @brief   util
  */
-static inline binary_t str2bin(const std::string& source) { return binary_t(source.begin(), source.end()); }
+binary_t str2bin(const std::string& source);
 
 /**
  * @brief   binary to integer

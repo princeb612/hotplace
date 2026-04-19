@@ -15,6 +15,7 @@
  * 2021.06.29   Soo Han, Kim        printf unicode (codename.unicorn)
  * 2024.06.07   Soo Han, Kim        inf, -inf, nan (codename.hotplace)
  * 2024.08.01   Soo Han, Kim        -0.0 (codename.hotplace)
+ * 2026.04.19   Soo Han, Kim        [fixed] %%, return value
  *
  * printf license
  *  Copyright (c) 1990 Regents of the University of California.
@@ -555,6 +556,12 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                 prec = n < 0 ? -1 : n;
                 goto reswitch;
 
+            case _T('%'): /* %% */
+                PRINT(_T("%"), sizeof(TCHAR));
+                ret += 1;
+                size = 0;
+                break;
+
             case _T('0'):
                 /*
                  * ``Note that 0 is taken as a flag, not as the
@@ -624,10 +631,13 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                 ieee754_type = ieee754_typeof(doubleprec);
                 if (ieee754_typeof_t::ieee754_pinf == ieee754_type) {
                     PRINT(_T("inf"), (sizeof(TCHAR) * 3));
+                    ret += 3;
                 } else if (ieee754_typeof_t::ieee754_ninf == ieee754_type) {
                     PRINT(_T("-inf"), (sizeof(TCHAR) * 4));
+                    ret += 4;
                 } else if (ieee754_typeof_t::ieee754_nan == ieee754_type) {
                     PRINT(_T("nan"), (sizeof(TCHAR) * 3));
+                    ret += 3;
                 } else {
                     /*
                      * don't do unrealistic precision; just pad it with

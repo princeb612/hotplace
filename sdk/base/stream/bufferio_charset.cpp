@@ -380,29 +380,40 @@ return_t bufferio::printf(bufferio_context_t* handle, const wchar_t* fmt, ...)
 }
 
 #if defined _MBCS || defined MBCS
-return_t bufferio::vprintf(bufferio_context_t* handle, const char* fmt, va_list ap) {
-    return_t ret = errorcode_t::success;
-    int ret_vprintfworker = 0;
-
-    ret_vprintfworker = vprintf_runtime(handle, callback_printf, fmt, ap);
-    if (EOF == ret_vprintfworker) {
-        ret = errorcode_t::internal_error;
-    }
-
-    return ret;
-}
+return_t bufferio::vprintf(bufferio_context_t* handle, const char* fmt, va_list ap)
 #elif defined _UNICODE || defined UNICODE
-return_t bufferio::vprintf(bufferio_context_t* handle, const wchar_t* fmt, va_list ap) {
+return_t bufferio::vprintf(bufferio_context_t* handle, const wchar_t* fmt, va_list ap)
+#endif
+{
     return_t ret = errorcode_t::success;
-    int ret_vprintfworker = 0;
-
-    ret_vprintfworker = vprintf_runtimew(handle, callback_printfw, fmt, ap);
-    if (EOF == ret_vprintfworker) {
-        ret = errorcode_t::internal_error;
+    __try2 {
+        if (nullptr == handle) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
+#if defined DEBUG
+        auto n0 = handle->bufferio_size;
+#endif
+        int rc = 0;
+#if defined _MBCS || defined MBCS
+        rc = vprintf_runtime(handle, callback_printf, fmt, ap);
+#elif defined _UNICODE || defined UNICODE
+        rc = vprintf_runtimew(handle, callback_printfw, fmt, ap);
+#endif
+        if (EOF == rc) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+#if defined DEBUG
+        auto n1 = handle->bufferio_size;
+        if ((n1 - n0) != (rc * sizeof(TCHAR))) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+#endif
     }
-
+    __finally2 {}
     return ret;
 }
-#endif
 
 }  // namespace hotplace

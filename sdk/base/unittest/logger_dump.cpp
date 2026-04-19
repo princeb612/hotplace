@@ -48,14 +48,6 @@ logger& logger::dump(const binary_t& msg, unsigned hexpart, unsigned indent) {
     return *this;
 }
 
-logger& logger::dump(const binary& msg, unsigned hexpart, unsigned indent) {
-    if (test_loglevel()) {
-        const auto& m = msg.get();
-        do_dump(m.data(), m.size(), hexpart, indent);
-    }
-    return *this;
-}
-
 logger& logger::dump(const std::string& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel()) {
         do_dump((byte_t*)msg.c_str(), msg.size(), hexpart, indent);
@@ -87,14 +79,6 @@ logger& logger::dump(loglevel_t level, const char* addr, size_t size, unsigned h
 logger& logger::dump(loglevel_t level, const binary_t& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel(level)) {
         do_dump(msg.data(), msg.size(), hexpart, indent);
-    }
-    return *this;
-}
-
-logger& logger::dump(loglevel_t level, const binary& msg, unsigned hexpart, unsigned indent) {
-    if (test_loglevel(level)) {
-        const auto& m = msg.get();
-        do_dump(m.data(), m.size(), hexpart, indent);
     }
     return *this;
 }
@@ -134,14 +118,6 @@ logger& logger::hdump(const std::string& header, const binary_t& msg, unsigned h
     return *this;
 }
 
-logger& logger::hdump(const std::string& header, const binary& msg, unsigned hexpart, unsigned indent) {
-    if (test_loglevel()) {
-        const auto& m = msg.get();
-        do_hdump(header, m.data(), m.size(), hexpart, indent);
-    }
-    return *this;
-}
-
 logger& logger::hdump(const std::string& header, const std::string& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel()) {
         do_hdump(header, (byte_t*)msg.c_str(), msg.size(), hexpart, indent);
@@ -173,14 +149,6 @@ logger& logger::hdump(loglevel_t level, const std::string& header, const char* a
 logger& logger::hdump(loglevel_t level, const std::string& header, const binary_t& msg, unsigned hexpart, unsigned indent) {
     if (test_loglevel(level)) {
         do_hdump(header, msg.data(), msg.size(), hexpart, indent);
-    }
-    return *this;
-}
-
-logger& logger::hdump(loglevel_t level, const std::string& header, const binary& msg, unsigned hexpart, unsigned indent) {
-    if (test_loglevel(level)) {
-        const auto& m = msg.get();
-        do_hdump(header, m.data(), m.size(), hexpart, indent);
     }
     return *this;
 }

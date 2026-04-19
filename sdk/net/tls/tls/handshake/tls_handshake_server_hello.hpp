@@ -9,7 +9,6 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLS_HANDSHAKE_TLSHANDSHAKESERVERHELLO__
 #define __HOTPLACE_SDK_NET_TLS_TLS_HANDSHAKE_TLSHANDSHAKESERVERHELLO__
 
-#include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
 
 namespace hotplace {
@@ -69,8 +68,8 @@ class tls_handshake_server_hello : public tls_handshake {
     void set_random(const binary_t& value);
     void set_session_id(const binary_t& value);
     uint16 get_version();
-    const binary& get_random();
-    const binary& get_session_id();
+    const binary_t& get_random();
+    const binary_t& get_session_id();
     uint16 get_cipher_suite();
     return_t set_cipher_suite(uint16 cs);
     return_t set_cipher_suite(const char* cs);
@@ -84,8 +83,8 @@ class tls_handshake_server_hello : public tls_handshake {
 
    private:
     uint16 _version;
-    binary _random;  // 32 bytes
-    binary _session_id;
+    binary_t _random;  // 32 bytes
+    binary_t _session_id;
     uint8 _compression_method;
 };
 

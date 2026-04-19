@@ -21,7 +21,7 @@ crypto_sign* crypto_sign_builder::build() {
     __try2 {
 #if OPENSSL_VERSION_NUMBER < 0x30000000L
         return_t ret = errorcode_t::success;
-        switch(get_digest()) {
+        switch (get_digest()) {
             case sha2_512_224:
             case sha2_512_256:
                 ret = errorcode_t::not_supported;

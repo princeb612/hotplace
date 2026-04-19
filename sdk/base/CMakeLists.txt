@@ -7,6 +7,9 @@
 file (GLOB FILEGROUP_SDK_HEADER_BASE
     ${PROJECT_SOURCE_DIR}/sdk/base/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/base/basic/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/base/graph/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/base/nostd/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/base/pattern/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/base/stream/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/base/string/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/base/system/*.hpp

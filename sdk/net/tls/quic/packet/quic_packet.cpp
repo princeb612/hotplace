@@ -92,12 +92,12 @@ quic_packet& quic_packet::set_version() {
 
 uint32 quic_packet::get_version() { return _version; }
 
-quic_packet& quic_packet::set_dcid(const binary& cid) {
+quic_packet& quic_packet::set_dcid(const binary_t& cid) {
     _dcid = cid;
     return *this;
 }
 
-quic_packet& quic_packet::set_scid(const binary& cid) {
+quic_packet& quic_packet::set_scid(const binary_t& cid) {
     _scid = cid;
     return *this;
 }

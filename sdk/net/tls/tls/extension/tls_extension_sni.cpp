@@ -83,7 +83,7 @@ return_t tls_extension_sni::do_read_body(tls_direction_t dir, const byte_t* stre
 
         {
             _nametype = type;
-            _hostname.set(std::move(hostname));
+            _hostname = std::move(hostname);
         }
     }
     __finally2 {}
@@ -111,9 +111,9 @@ return_t tls_extension_sni::do_write_body(tls_direction_t dir, binary_t& bin) {
 
 uint8 tls_extension_sni::get_nametype() { return _nametype; }
 
-binary& tls_extension_sni::get_hostname() { return _hostname; }
+binary_t& tls_extension_sni::get_hostname() { return _hostname; }
 
-void tls_extension_sni::set_hostname(const std::string server) { _hostname = server; }
+void tls_extension_sni::set_hostname(const std::string server) { _hostname.assign(server.begin(), server.end()); }
 
 }  // namespace net
 }  // namespace hotplace

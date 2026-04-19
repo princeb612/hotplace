@@ -160,7 +160,7 @@ void test_bn2() {
         i = i1 % i2;
         bn = b1 % b2;
         bs.printf("%I128i", i);
-        _test_case.assert(bs == bn.str(), __FUNCTION__, "%I128i mod %I128i = %s (expect %I128i)", i1, i2, bn.str().c_str(), i);
+        _test_case.assert(bs == bn.str(), __FUNCTION__, "%I128i %% %I128i = %s (expect %I128i)", i1, i2, bn.str().c_str(), i);
     }
 #endif
 
@@ -186,11 +186,11 @@ void test_bn2() {
         // -7 % 3 = -1, 7 % -3 = 1
         auto a = bignumber(-7) % bignumber(3);
         _logger->writeln("a = %s", a.str().c_str());
-        _test_case.assert(a.str() == "-1", __FUNCTION__, "-7 mod 3");
+        _test_case.assert(a.str() == "-1", __FUNCTION__, "-7 %% 3");
 
         auto b = bignumber(7) % bignumber(-3);
         _logger->writeln("b = %s", b.str().c_str());
-        _test_case.assert(b.str() == "1", __FUNCTION__, "7 mod -3");
+        _test_case.assert(b.str() == "1", __FUNCTION__, "7 %% -3");
     }
 }
 
@@ -327,7 +327,7 @@ void test_bn3() {
             i = b1 / b2;
             _logger->writeln("%s / %s = %s", b1.str().c_str(), b2.str().c_str(), i.str().c_str());
             i = b1 % b2;
-            _logger->writeln("%s mod %s = %s", b1.str().c_str(), b2.str().c_str(), i.str().c_str());
+            _logger->writeln("%s %% %s = %s", b1.str().c_str(), b2.str().c_str(), i.str().c_str());
         }
     }
 }
@@ -503,7 +503,7 @@ void test_bn7() {
         };
         for (const auto& item : table) {
             auto bn = bignumber::modpow(item.base, item.exp, item.m);
-            _test_case.assert(bn == item.expect, __FUNCTION__, "%I64u ^ %I64u mod % I64u = %s", item.base, item.exp, item.m, bn.str().c_str());
+            _test_case.assert(bn == item.expect, __FUNCTION__, "%I64u ^ %I64u %% %I64u = %s", item.base, item.exp, item.m, bn.str().c_str());
         }
     }
     {

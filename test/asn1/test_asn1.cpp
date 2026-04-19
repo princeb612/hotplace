@@ -369,20 +369,16 @@ void test_x690_constructed() {
     // X.690 10.2 String encoding forms
     // For bitstring, octetstring and restricted character string types, the constructed form of encoding shall not be used. (Contrast with 8.23.6.)
     {
-        binary bin;
-        bin.push_back(asn1_tag_bitstring | asn1_tag_constructed);
-        bin.push_back(0x80);
-        bin.push_back(asn1_tag_bitstring);
-        t_asn1_length_octets<uint32>(bin.get(), 3);
-        bin.append(base16_decode("000a3b"));
-        bin.push_back(asn1_tag_bitstring);
-        t_asn1_length_octets<uint32>(bin.get(), 5);
-        bin.append(base16_decode("045f291cd0"));
-        bin.push_back(0x00);  // EOC
-        bin.push_back(0x00);  // EOC
-        _logger->writeln("%s", base16_encode(bin.get()).c_str());
+        binary_t bin;
+        bin << uint8(asn1_tag_bitstring | asn1_tag_constructed) << uint8(0x80) << uint8(asn1_tag_bitstring);
+        t_asn1_length_octets<uint32>(bin, 3);
+        bin << base16_decode("000a3b") << uint8(asn1_tag_bitstring);
+        t_asn1_length_octets<uint32>(bin, 5);
+        bin << base16_decode("045f291cd0") << uint8(0x00)  // EOC
+            << uint8(0x00);                                // EOC
+        _logger->writeln("%s", base16_encode(bin).c_str());
         const char* expect_constructed = "23 80 03 03 00 0A 3B 03 05 04 5F 29 1C D0 00 00";
-        _test_case.assert(bin.get() == base16_decode_rfc(expect_constructed), __FUNCTION__, "X.690 8.6.4 BitString constructed");
+        _test_case.assert(bin == base16_decode_rfc(expect_constructed), __FUNCTION__, "X.690 8.6.4 BitString constructed");
     }
 }
 

@@ -27,8 +27,8 @@ void test_kmp() {
     // abacaabaccabacabaabb
     //           abacab
 
-    binary data("abacaabaccabacabaabb");
-    binary pattern("abacab");
+    binary_t data = std::move(str2bin("abacaabaccabacabaabb"));
+    binary_t pattern = std::move(str2bin("abacab"));
 
     {
         // vector
@@ -42,7 +42,7 @@ void test_kmp() {
     {
         // contiguous memory space
         t_kmp<byte_t> kmp;
-        int idx = kmp.search(data.get().data(), data.get().size(), pattern.get().data(), pattern.get().size());
+        int idx = kmp.search(data.data(), data.size(), pattern.data(), pattern.size());
         _logger->hdump("data", data);
         _logger->hdump("pattern", pattern);
         _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<byte_t> %i", idx);
@@ -52,8 +52,8 @@ void test_kmp() {
         // compare member (see operator ==)
         std::vector<pattern_search_sample_data> data2;
         std::vector<pattern_search_sample_data> pattern2;
-        auto prepare = [](std::vector<pattern_search_sample_data>& target, const binary& source) -> void {
-            for (auto item : source.get()) {
+        auto prepare = [](std::vector<pattern_search_sample_data>& target, const binary_t& source) -> void {
+            for (auto item : source) {
                 target.insert(target.end(), item);
             }
         };
@@ -68,8 +68,8 @@ void test_kmp() {
     {
         std::vector<pattern_search_sample_data*> data2;
         std::vector<pattern_search_sample_data*> pattern2;
-        auto prepare = [](std::vector<pattern_search_sample_data*>& target, const binary& source) -> void {
-            for (auto item : source.get()) {
+        auto prepare = [](std::vector<pattern_search_sample_data*>& target, const binary_t& source) -> void {
+            for (auto item : source) {
                 target.insert(target.end(), new pattern_search_sample_data(item));
             }
         };

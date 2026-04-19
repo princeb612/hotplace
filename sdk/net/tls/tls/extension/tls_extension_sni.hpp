@@ -12,7 +12,6 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLS_EXTENSION_TLSEXTENSIONSNI__
 #define __HOTPLACE_SDK_NET_TLS_TLS_EXTENSION_TLSEXTENSIONSNI__
 
-#include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension.hpp>
 
 namespace hotplace {
@@ -27,7 +26,7 @@ class tls_extension_sni : public tls_extension {
     virtual ~tls_extension_sni();
 
     uint8 get_nametype();
-    binary& get_hostname();
+    binary_t& get_hostname();
     void set_hostname(const std::string server);
 
    protected:
@@ -36,7 +35,7 @@ class tls_extension_sni : public tls_extension {
 
    private:
     uint8 _nametype;
-    binary _hostname;
+    binary_t _hostname;
 };
 
 }  // namespace net

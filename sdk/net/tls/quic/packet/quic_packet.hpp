@@ -68,14 +68,14 @@ class quic_packet {
     uint32 get_version();
     /**
      * @brief   DCID
-     * @param   const binary& cid [in] DCID
+     * @param   const binary_t& cid [in] DCID
      */
-    quic_packet& set_dcid(const binary& cid);
+    quic_packet& set_dcid(const binary_t& cid);
     /**
      * @brief   SCID
-     * @param   const binary& cid [in] SCID
+     * @param   const binary_t& cid [in] SCID
      */
-    quic_packet& set_scid(const binary& cid);
+    quic_packet& set_scid(const binary_t& cid);
     /**
      * @brief   DCID
      */
