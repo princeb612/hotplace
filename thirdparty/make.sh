@@ -11,7 +11,7 @@
       $ ./make.sh
 
     * MSVC
-      # pacman -S mingw64/mingw-w64-x86_64-python-sphinx mingw64/mingw-w64-x86_64-nasm
+      # pacman -S cmake mingw64/mingw-w64-x86_64-python-sphinx mingw64/mingw-w64-x86_64-nasm
       # ./make.sh msvc
 
 COMMENTS

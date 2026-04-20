@@ -70,7 +70,12 @@ typedef struct linger linger_t;
  */
 typedef unsigned char byte_t;
 typedef unsigned int uint;
-typedef std::vector<byte_t> binary_t;
+// MSVC ADL (argument dependent lookup) problem
+// typedef std::vector<byte_t> binary_t;
+struct binary_t : public std::vector<byte_t> {
+    using std::vector<byte_t>::vector;     // inherit ctor
+    using std::vector<byte_t>::operator=;  // copy/move
+};
 
 enum loglevel_t : uint8 {
     loglevel_trace = 0,    // everything

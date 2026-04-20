@@ -8,8 +8,11 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/system/endian.hpp>
+#include <hotplace/sdk/base/system/uint.hpp>
 #include <hotplace/sdk/base/unittest/trace.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
@@ -242,7 +245,9 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
 
                 // uint8(FE) || uint24(hash.size) || hash
                 binary_t synthetic_handshake_message;
-                synthetic_handshake_message << uint8(tls_hs_message_hash) << uint24_t(handshake_hash.size()) << handshake_hash;
+                synthetic_handshake_message << uint8(tls_hs_message_hash)       //
+                                            << uint24_t(handshake_hash.size())  //
+                                            << handshake_hash;
 
                 protection.reset_transcript_hash(session);
 

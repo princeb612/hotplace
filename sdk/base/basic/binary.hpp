@@ -170,36 +170,75 @@ return_t binary_load(binary_t& target, uint32 limit, uint128 value, std::functio
 return_t binary_load(binary_t& target, uint32 limit, const byte_t* data, uint32 len);
 return_t binary_fill(binary_t& target, size_t count, const byte_t& value);
 
-binary_t& operator<<(binary_t& lhs, uint8 rhs);
-binary_t& operator<<(binary_t& lhs, uint16 rhs);
-binary_t& operator<<(binary_t& lhs, uint24_t rhs);
-binary_t& operator<<(binary_t& lhs, uint32 rhs);
-binary_t& operator<<(binary_t& lhs, uint48_t rhs);
-binary_t& operator<<(binary_t& lhs, uint64 rhs);
+static inline binary_t& operator<<(binary_t& lhs, uint8 rhs) {
+    lhs.push_back(rhs);
+    return lhs;
+}
+
+static inline binary_t& operator<<(binary_t& lhs, uint16 rhs) {
+    lhs.reserve(lhs.size() + sizeof(uint16));
+    t_binary_append<uint16>(lhs, rhs, hton16);
+    return lhs;
+}
+
+static inline binary_t& operator<<(binary_t& lhs, uint24_t rhs) {
+    lhs.reserve(lhs.size() + rhs.capacity());
+    lhs.insert(lhs.end(), rhs.data, rhs.data + rhs.capacity());
+    return lhs;
+}
+
+static inline binary_t& operator<<(binary_t& lhs, uint32 rhs) {
+    lhs.reserve(lhs.size() + sizeof(uint32));
+    t_binary_append<uint32>(lhs, rhs, hton32);
+    return lhs;
+}
+
+static inline binary_t& operator<<(binary_t& lhs, uint48_t rhs) {
+    lhs.reserve(lhs.size() + rhs.capacity());
+    lhs.insert(lhs.end(), rhs.data, rhs.data + rhs.capacity());
+    return lhs;
+}
+
+static inline binary_t& operator<<(binary_t& lhs, uint64 rhs) {
+    lhs.reserve(lhs.size() + sizeof(uint64));
+    t_binary_append<uint64>(lhs, rhs, hton64);
+    return lhs;
+}
+
 #if defined __SIZEOF_INT128__
-binary_t& operator<<(binary_t& lhs, uint128 rhs);
+static inline binary_t& operator<<(binary_t& lhs, uint128 rhs) {
+    lhs.reserve(lhs.size() + sizeof(uint128));
+    t_binary_append<uint128>(lhs, rhs, hton128);
+    return lhs;
+}
 #endif
 
-/**
- * @brief append
- * @param binary_t& lhs [inout]
- * @param char* rhs [in]
- */
-binary_t& operator<<(binary_t& lhs, char* rhs);
+static inline binary_t& operator<<(binary_t& lhs, char* rhs) {
+    if (nullptr != rhs) {
+        const size_t len = strlen(rhs);
+        if (0 != len) {
+            lhs.reserve(lhs.size() + len);
+            lhs.insert(lhs.end(), rhs, rhs + len);
+        }
+    }
+    return lhs;
+}
 
-/**
- * @brief append
- * @param binary_t& lhs [inout]
- * @param std::string rhs [in]
- */
-binary_t& operator<<(binary_t& lhs, const std::string& rhs);
+static inline binary_t& operator<<(binary_t& lhs, const std::string& rhs) {
+    if (false == rhs.empty()) {
+        lhs.reserve(lhs.size() + rhs.size());
+        lhs.insert(lhs.end(), rhs.begin(), rhs.end());
+    }
+    return lhs;
+}
 
-/**
- * @brief append
- * @param binary_t& lhs [inout]
- * @param binary_t rhs [in]
- */
-binary_t& operator<<(binary_t& lhs, const binary_t& rhs);
+static inline binary_t& operator<<(binary_t& lhs, const binary_t& rhs) {
+    if (false == rhs.empty()) {
+        lhs.reserve(lhs.size() + rhs.size());
+        lhs.insert(lhs.end(), rhs.begin(), rhs.end());
+    }
+    return lhs;
+}
 
 /**
  * @brief   util
