@@ -611,7 +611,7 @@ void test_x690_annex_a_2() {
     //
 }
 
-void test_asn1() {
+void testcase_asn1() {
     // studying ...
     test_x690_8_1_3_length_octets();
     test_x690_8_1_5_end_of_contents();

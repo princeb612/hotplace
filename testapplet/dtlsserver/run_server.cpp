@@ -84,7 +84,7 @@ return_t echo_server(void*) {
             }
 
             server_socket_builder builder;
-            dtls_socket = builder.set(flags).set_certificate("server.crt", "server.key").set_ciphersuites(ciphersuites).set_verify(0).build();
+            dtls_socket = builder.set(flags).set_certificate("ecdsa.crt", "ecdsa.key").set_ciphersuites(ciphersuites).set_verify(0).build();
         }
 
         server_conf conf;

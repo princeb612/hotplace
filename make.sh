@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash +x
 
 :<<COMMENTS
 @author Soo Han, Kim (princeb612.kr@gmail.com)
@@ -83,6 +83,7 @@ do_test=0
 CXXFLAGS=''
 SUPPORT_DEBUG=0
 SUPPORT_PCH=0
+target=Release
 builddir=build
 toolset=
 args=("$@")
@@ -100,6 +101,7 @@ if [ ${#args[@]} -ne 0 ]; then
             do_ctest=1
         elif [ $arg = 'debug' ]; then
             SUPPORT_DEBUG=1
+            target=Debug
         elif [ $arg = 'disable_static' ]; then
             export SUPPORT_STATIC=0
         elif [ $arg = 'format' ]; then
@@ -164,21 +166,21 @@ fi
 
 # build
 mkdir -p ${builddir}
-cd ${builddir}
-export MAKEFLAGS='-j 4'
-cmake -G "${generator}" -DCMAKE_POLICY_VERSION_MINIMUM=3.5 ..
-if [ $do_makefile = 1 ]; then
+cmake -G "${generator}" -B ${builddir} -DCMAKE_BUILD_TYPE=${target} -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+if [[ $do_makefile = 1 ]]; then
     exit
 fi
-time make
+
+export MAKEFLAGS='-j 4'
+time cmake --build ${builddir} --config ${target}
 
 # ctest
-if [ $do_ctest = 1 ]; then
-    cd ${HOTPLACE_HOME}/${builddir}/testcase/
-    ctest
+if [[ $do_ctest = 1 ]]; then
+    cd ${HOTPLACE_HOME}/${builddir}/
+    ctest -C ${target}
 fi
 # run build/test/test.sh
-if [ $do_test = 1 ]; then
+if [[ $do_test = 1 ]]; then
     cd ${HOTPLACE_HOME}/${builddir}/testcase/
     ./test.sh
 fi

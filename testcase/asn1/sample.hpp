@@ -18,6 +18,6 @@
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
 
-void test_asn1();
+void testcase_asn1();
 
 #endif

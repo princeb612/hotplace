@@ -17,7 +17,18 @@
 namespace hotplace {
 namespace io {
 
-//
+#if defined __linux__
+typedef int socket_t;
+#elif defined _WIN32 || defined _WIN64
+typedef SOCKET socket_t;
+#endif
+
+typedef struct sockaddr sockaddr_t;
+typedef struct sockaddr_storage sockaddr_storage_t;
+typedef struct linger linger_t;
+
+#define NET_DEFAULT_TIMEOUT 10
+typedef struct linger linger_t;
 
 }  // namespace io
 }  // namespace hotplace

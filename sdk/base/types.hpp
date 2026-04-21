@@ -47,19 +47,6 @@
 
 namespace hotplace {
 
-#if defined __linux__
-typedef int socket_t;
-#elif defined _WIN32 || defined _WIN64
-typedef SOCKET socket_t;
-#endif
-
-typedef struct sockaddr sockaddr_t;
-typedef struct sockaddr_storage sockaddr_storage_t;
-typedef struct linger linger_t;
-
-#define NET_DEFAULT_TIMEOUT 10
-typedef struct linger linger_t;
-
 /**
  * byte type conflict
  *
@@ -92,8 +79,6 @@ enum encoding_t {
     encoding_base64 = 2,     // BASE64    + /
     encoding_base64url = 3,  // BASE64URL - _ without padding
 };
-
-#define UINT128(hi, lo) (((__uint128_t)(hi)) << 64 | (lo))
 
 #ifndef _WIN32  // winnt.h
 #define RTL_NUMBER_OF(x) (sizeof(x) / sizeof(x[0]))

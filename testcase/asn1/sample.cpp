@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
         set_trace_level(option.trace_level);
     }
 
-    test_asn1();
+    testcase_asn1();
 
     _logger->flush();
 

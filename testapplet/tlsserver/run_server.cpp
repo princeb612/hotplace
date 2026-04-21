@@ -109,7 +109,7 @@ return_t echo_server(void*) {
             _logger->writeln("ciphersuites %s", ciphersuites.c_str());
 
             server_socket_builder builder;
-            tls_socket = builder.set(flags).set_certificate("rsa.crt", "rsa.key").set_ciphersuites(ciphersuites).set_groups(group).set_verify(0).build();
+            tls_socket = builder.set(flags).set_certificate("ecdsa.crt", "ecdsa.key").set_ciphersuites(ciphersuites).set_groups(group).set_verify(0).build();
         }
 
         server_conf conf;

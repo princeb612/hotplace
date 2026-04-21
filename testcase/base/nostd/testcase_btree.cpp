@@ -141,9 +141,6 @@ void test_btree() {
             testdata() : symbol(0), weight(0) {}
             testdata(byte_t b) : symbol(b), weight(0) {}
             testdata(const testdata& other) : symbol(other.symbol), weight(other.weight) {}
-
-            // bool operator<(const testdata& other) const { return symbol < other.symbol;
-            // }
         };
 
         // case.5

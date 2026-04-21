@@ -14,6 +14,10 @@
       # pacman -S cmake mingw64/mingw-w64-x86_64-python-sphinx mingw64/mingw-w64-x86_64-nasm
       # ./make.sh msvc
 
+    * dependency
+      * openssl
+        $ sudo yum install perl-Time-Piece 
+
 COMMENTS
 
 set -e
