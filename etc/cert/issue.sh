@@ -35,12 +35,12 @@ fi
 
 # root.key
 if [ ${certtype} = 'ecdsa' ]; then
-    openssl ecparam -name prime256v1 -genkey -out root-${certtype}.key
-elif [ ${certtype} = 'rsa' ]; then
-    openssl genrsa -out root-${certtype}.key 2048
+    openssl genpkey -algorithm ec -pkeyopt ec_paramgen_curve:P-256 -out root-${certtype}.key
 elif [ ${certtype} = 'mldsa' ]; then
     # ML-DSA-44 ML-DSA-65 ML-DSA-87
     openssl genpkey -algorithm ML-DSA-65 -out root-${certtype}.key
+elif [ ${certtype} = 'rsa' ]; then
+    openssl genpkey -algorithm rsa -pkeyopt rsa_keygen_bits:2048 -out root-${certtype}.key
 else
     exit
 fi
@@ -57,9 +57,15 @@ openssl x509 -req -days 3650 -in root-${certtype}.csr -signkey root-${certtype}.
 openssl x509 -text -in root-${certtype}.crt
 
 # server-encrypted.key
-openssl genrsa -aes256 -out server-${certtype}-encrypted.key 2048
+if [ ${certtype} = 'ecdsa' ]; then
+    openssl genpkey -algorithm ec -aes256 -pkeyopt ec_paramgen_curve:P-256 -out server-${certtype}-encrypted.key
+elif [ ${certtype} = 'mldsa' ]; then
+    openssl genpkey -algorithm ML-DSA-65 -aes256 -out server-${certtype}-encrypted.key
+elif [ ${certtype} = 'rsa' ]; then
+    openssl genpkey -algorithm rsa -aes256 -pkeyopt rsa_keygen_bits:2048 -out server-${certtype}-encrypted.key
+fi
 # server.key
-openssl rsa -in server-${certtype}-encrypted.key -out ${certtype}.key
+openssl pkey -in server-${certtype}-encrypted.key -out ${certtype}.key
 # server.csr
 MSYS_NO_PATHCONV=1 openssl req -new -key ${certtype}.key -out server-${certtype}.csr -subj '/C=KR/ST=KN/L=GJ/O=Test/OU=Test/CN=Test'
 # server.ext

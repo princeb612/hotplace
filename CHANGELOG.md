@@ -32,7 +32,7 @@
     * CBOR
 
 * details
-  * Revision 951
+  * Revision 952
   * Revision 946
     * [tested] openssl-1.1.1 (old platform)
   * Revision 938
