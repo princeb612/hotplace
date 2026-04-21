@@ -201,6 +201,10 @@ const tls_sig_scheme_t tls_sig_schemes[] = {
     {0x081a, 0, kty_ec, crypt_sig_ecdsa, NID_brainpoolP256r1, sig_sha256, "ecdsa_brainpoolP256r1tls13_sha256"},
     {0x081b, 0, kty_ec, crypt_sig_ecdsa, NID_brainpoolP384r1, sig_sha384, "ecdsa_brainpoolP384r1tls13_sha384"},
     {0x081c, 0, kty_ec, crypt_sig_ecdsa, NID_brainpoolP512r1, sig_sha512, "ecdsa_brainpoolP512r1tls13_sha512"},
+    // https://datatracker.ietf.org/doc/html/draft-ietf-tls-mldsa-00
+    {0x0904, tls_flag_support, kty_mldsa, crypt_sig_mldsa, nid_ml_dsa_44, sig_unknown, "mldsa44"},
+    {0x0905, tls_flag_support, kty_mldsa, crypt_sig_mldsa, nid_ml_dsa_65, sig_unknown, "mldsa65"},
+    {0x0906, tls_flag_support, kty_mldsa, crypt_sig_mldsa, nid_ml_dsa_87, sig_unknown, "mldsa87"},
 };
 define_tls_sizeof_variable(sig_scheme);
 

@@ -636,6 +636,7 @@ class crypto_key {
     static return_t extract_dh(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
     static return_t extract_dsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
     static return_t extract_mlkem(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
+    static return_t extract_mldsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
 
    private:
     /**

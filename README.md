@@ -63,6 +63,8 @@
     * [draft-ietf-tls-mlkem-05](https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/)
     * [draft-ietf-tls-ecdhe-mlkem-03](https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/)
     * testcase/tls/
+  * Use of ML-DSA in TLS 1.3
+    * [draft-ietf-tls-mldsa-00](https://datatracker.ietf.org/doc/html/draft-ietf-tls-mldsa-00)
 * CBOR
   * RFC 7049 Concise Binary Object Representation (CBOR)
   * RFC 8949 Concise Binary Object Representation (CBOR)

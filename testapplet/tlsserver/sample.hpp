@@ -18,6 +18,9 @@ enum option_flag_t {
     option_flag_allow_tls12 = (1 << 1),
     option_flag_trial = (1 << 2),
     option_flag_keylog = (1 << 3),
+    option_flag_cert_rsa = (1 << 4),
+    option_flag_cert_ecdsa = (1 << 5),
+    option_flag_cert_mldsa = (1 << 6),
 };
 
 struct OPTION : public CMDLINEOPTION {

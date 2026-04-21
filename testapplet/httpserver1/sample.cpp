@@ -39,7 +39,19 @@ int main(int argc, char **argv) {
                 << t_cmdarg_t<OPTION>("-e", "allow Content-Encoding", [](OPTION &o, char *param) -> void { o.content_encoding = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-T", "use trial", [](OPTION &o, char *param) -> void { o.trial = 1; }).optional()
                 << t_cmdarg_t<OPTION>("-k", "keylog", [](OPTION &o, char *param) -> void { o.keylog = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-cs", "ciphersuite", [](OPTION &o, char *param) -> void { o.cs = param; }).optional().preced();
+                << t_cmdarg_t<OPTION>("-cs", "ciphersuite", [](OPTION &o, char *param) -> void { o.cs = param; }).optional().preced()
+                << t_cmdarg_t<OPTION>("-cert", "rsa|ecdsa|mldsa",
+                                      [](OPTION &o, char *param) -> void {
+                                          if (0 == stricmp(param, "ecdsa")) {
+                                              o.flags |= option_flag_cert_ecdsa;
+                                          } else if (0 == stricmp(param, "mldsa")) {
+                                              o.flags |= option_flag_cert_mldsa;
+                                          } else if (0 == stricmp(param, "rsa")) {
+                                              o.flags |= option_flag_cert_rsa;
+                                          }
+                                      })
+                       .optional()
+                       .preced();
 
     _cmdline->parse(argc, argv);
 
@@ -67,12 +79,6 @@ int main(int argc, char **argv) {
     if (option.keylog) {
         auto sslkeylog = sslkeylog_exporter::get_instance();
         sslkeylog->set(lambda);
-    }
-    if (option.trial) {
-        // enable TLS 1.2 TLS_ECDHE_RSA ciphersuites
-        load_certificate("rsa.crt", "rsa.key", nullptr);
-        // enable TLS 1.2 TLS_ECDHE_ECDSA ciphersuites
-        load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
     }
 
     if (option.run) {

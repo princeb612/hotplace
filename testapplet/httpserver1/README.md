@@ -49,6 +49,10 @@ rm .run
     - [x] openssl
       - [x] openssl s_client -connect localhost:9000 -state -debug -trace -keylogfile sslkeylog -tls1_3 --curves SecP256r1MLKEM768
       - [x] openssl s_client -connect localhost:9000 -state -debug -trace -keylogfile sslkeylog -tls1_3 --curves SecP384r1MLKEM1024
+    - [x] ML-DSA certificate
+      - ./test-httpserver1 -r -d -T -cert mldsa
+      - SSLKEYLOGFILE=sslkeylog curl -s https://localhost:9000/ -v -k
+        - Certificate level 0: Public key type ML-DSA-65 (15616/192 Bits/secBits), signed using ML-DSA-65
   - [x] TLS 1.2
     - [x] curl
       - [x] SSLKEYLOGFILE=sslkeylog curl -s https://localhost:9000/ -k -v --tlsv1.2 --tls-max 1.2 --http1.1 --ciphers TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384

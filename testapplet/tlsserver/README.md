@@ -15,6 +15,7 @@
 * [x] ML-KEM Post-Quantum Key Agreement for TLS 1.3
   * [x] [draft-ietf-tls-mlkem-05](https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/)
   * [x] [draft-ietf-tls-ecdhe-mlkem-03](https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/)
+  * [x] [draft-ietf-tls-mldsa-00](https://datatracker.ietf.org/doc/html/draft-ietf-tls-mldsa-00)
   * [x] test
     * [x] server
       * [x] ./test-tlsserver.exe -r -k -T --trace -tls13

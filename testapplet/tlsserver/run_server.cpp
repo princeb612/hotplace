@@ -74,11 +74,18 @@ return_t echo_server(void*) {
         }
 
         if (option_flag_trial & option.flags) {
-            // enable TLS 1.2 TLS_ECDHE_RSA ciphersuites
-            load_certificate("rsa.crt", "rsa.key", nullptr);
-            // enable TLS 1.2 TLS_ECDHE_ECDSA ciphersuites
-            load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
-
+            if (option_flag_cert_ecdsa & option.flags) {
+                // enable TLS 1.2 TLS_ECDHE_ECDSA ciphersuites
+                load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
+            }
+            if (option_flag_cert_rsa & option.flags) {
+                // enable TLS 1.2 TLS_ECDHE_RSA ciphersuites
+                load_certificate("rsa.crt", "rsa.key", nullptr);
+            }
+            if (option_flag_cert_mldsa & option.flags) {
+                // ML-DSA certificate
+                load_certificate("mldsa.crt", "mldsa.key", nullptr);
+            }
             flags |= socket_scheme_trial;
         } else {
             flags |= socket_scheme_openssl;
@@ -109,7 +116,15 @@ return_t echo_server(void*) {
             _logger->writeln("ciphersuites %s", ciphersuites.c_str());
 
             server_socket_builder builder;
-            tls_socket = builder.set(flags).set_certificate("ecdsa.crt", "ecdsa.key").set_ciphersuites(ciphersuites).set_groups(group).set_verify(0).build();
+            builder.set(flags).set_ciphersuites(ciphersuites).set_groups(group).set_verify(0);
+            if (option_flag_cert_mldsa & option.flags) {
+                builder.set_certificate("mldsa.crt", "mldsa.key");
+            } else if (option_flag_cert_rsa & option.flags) {
+                builder.set_certificate("rsa.crt", "rsa.key");
+            } else {
+                builder.set_certificate("ecdsa.crt", "ecdsa.key");  // default
+            }
+            tls_socket = builder.build();
         }
 
         server_conf conf;

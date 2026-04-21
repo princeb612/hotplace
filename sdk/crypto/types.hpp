@@ -193,6 +193,7 @@ enum crypt_sig_type_t : uint8 {
     crypt_sig_eddsa = 6,          // Edwards-Curve Digital Signature Algorithms (EdDSAs)
     crypt_sig_dsa = 7,            // DSA
     crypt_sig_rsassa_x931 = 8,    // FIPS186-3, X9.31
+    crypt_sig_mldsa = 9,          // MLDSA
 };
 
 enum crypt_sig_t : uint16 {
@@ -388,6 +389,7 @@ enum crypto_kty_t : uint16 {
     kty_rsapss = 6,      // NID_rsassaPss
     kty_dsa = 7,         // NID_dsa
     kty_mlkem = 8,       // NID_ML_KEM_512, NID_ML_KEM_768, NID_ML_KEM_1024
+    kty_mldsa = 9,       // NID_ML_DSA_44, NID_ML_DSA_65, NID_ML_DSA_87
     kty_bad = 0xffff,
 };
 
@@ -478,6 +480,8 @@ enum crypt_item_t : uint16 {
 
     item_mlkem_pub = 85,
     item_mlkem_priv = 86,
+    item_mldsa_pub = 87,
+    item_mldsa_priv = 88,
 
     /* string */
     item_header = 128,  // p - header (protected_header.decoded)
@@ -1423,6 +1427,9 @@ enum nid_t : uint32 {
     nid_mlkem512 = 1454,              // NID_ML_KEM_512 (openssl-3.5)
     nid_mlkem768 = 1455,              // NID_ML_KEM_768 (openssl-3.5)
     nid_mlkem1024 = 1456,             // NID_ML_KEM_1024 (openssl-3.5)
+    nid_ml_dsa_44 = 1457,             // NID_ML_DSA_44 (openssl-3.5)
+    nid_ml_dsa_65 = 1458,             // NID_ML_DSA_65 (openssl-3.5)
+    nid_ml_dsa_87 = 1459,             // NID_ML_DSA_87 (openssl-3.5)
     nid_oct = 855,                    // EVP_PKEY_HMAC, NID_hmac
     nid_rsa = 6,                      // EVP_PKEY_RSA, NID_rsaEncryption
     nid_rsa2 = 19,                    // EVP_PKEY_RSA2, NID_rsa

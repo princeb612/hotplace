@@ -107,7 +107,7 @@ return_t simple_http2_server(void*) {
                 .set_port_http(option.port)
                 .enable_https(true)  // enable https scheme
                 .set_port_https(option.port_tls)
-                .set_tls_certificate("ecdsa.crt", "ecdsa.key")  // RSA certificate
+                .set_tls_certificate("ecdsa.crt", "ecdsa.key")  // certificate
                 .set_tls_verify_peer(0)                         // self-signed certificate
                 .enable_ipv4(true)                              // enable IPv4
                 .enable_ipv6(true)                              // enable IPv6

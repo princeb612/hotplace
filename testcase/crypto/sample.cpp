@@ -118,6 +118,7 @@ int main(int argc, char** argv) {
         testcase_dsa();
         testcase_ecdsa();
         testcase_hmac();
+        testcase_mldsa();
         testcase_rsassa();
         testcase_x509();
     }

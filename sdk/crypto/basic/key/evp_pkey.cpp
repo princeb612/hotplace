@@ -131,6 +131,11 @@ crypto_kty_t typeof_crypto_key(const EVP_PKEY* pkey) {
                         case NID_ML_KEM_1024: {
                             kty = crypto_kty_t::kty_mlkem;
                         } break;
+                        case NID_ML_DSA_44:
+                        case NID_ML_DSA_65:
+                        case NID_ML_DSA_87: {
+                            kty = crypto_kty_t::kty_mldsa;
+                        } break;
 #endif
                         default: {
                             // not supported
@@ -187,6 +192,11 @@ crypto_kty_t ktyof_nid(uint32 nid) {
         case NID_ML_KEM_1024: {
             kty = crypto_kty_t::kty_mlkem;
         } break;
+        case NID_ML_DSA_44:
+        case NID_ML_DSA_65:
+        case NID_ML_DSA_87: {
+            kty = crypto_kty_t::kty_mldsa;
+        }
 #endif
         default: {
             crypto_advisor* advisor = crypto_advisor::get_instance();

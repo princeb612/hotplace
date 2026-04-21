@@ -55,6 +55,9 @@ crypto_sign* crypto_sign_builder::build() {
             case crypt_sig_dsa: {
                 obj = new crypto_sign_dsa(get_digest());
             } break;
+            case crypt_sig_mldsa: {
+                obj = new crypto_sign_mldsa();
+            }
         }
         if (obj) {
             obj->set_scheme(get_scheme());
@@ -120,6 +123,15 @@ crypto_sign_builder& crypto_sign_builder::set_tls_sign_scheme(uint16 scheme) {
         } break;
         case 0x0203: /* ecdsa_sha1 */ {
             set_scheme(crypt_sig_ecdsa).set_digest(sha1);
+        } break;
+        case 0x0904: /* mldsa44 */ {
+            set_scheme(crypt_sig_mldsa).set_digest(hash_alg_unknown);
+        } break;
+        case 0x0905: /* mldsa65 */ {
+            set_scheme(crypt_sig_mldsa).set_digest(hash_alg_unknown);
+        } break;
+        case 0x0906: /* mldsa87 */ {
+            set_scheme(crypt_sig_mldsa).set_digest(hash_alg_unknown);
         } break;
     }
     return *this;
