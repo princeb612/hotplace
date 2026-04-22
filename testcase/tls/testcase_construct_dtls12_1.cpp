@@ -340,29 +340,15 @@ void do_test_construct_dtls12_1(const char* ciphersuite) {
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
     uint32 idx = 0;
 
-    // cover both cases (1..1, 1..*), so do not test the exact rcseq
-    auto lambda_test_next_seq = [&](const char* func, tls_session* session, tls_direction_t dir, uint16 expect_epoch, uint64 expect_next_rcseq,
-                                    uint16 expect_next_hsseq) -> void {
-        uint16 rcepoch = session->get_session_info(dir).get_keyvalue().get(session_dtls_epoch);
-        uint64 next_rcseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_seq);
-        uint16 next_hsseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_message_seq);
-        bool test = (expect_epoch == rcepoch) && (expect_next_rcseq >= next_rcseq) && (expect_next_hsseq == next_hsseq);
-        _test_case.assert(test, func, "#%i %s record (epoch %i next sequence %I64i) handshake (next sequence %i)", idx++,
-                          tlsadvisor->nameof_direction(dir).c_str(), rcepoch, next_rcseq, next_hsseq);
-    };
-    auto lambda_test_seq = [&](const char* func, tls_session* session, tls_direction_t dir, uint16 expect_epoch, uint64 expect_rcseq,
-                               uint16 expect_hsseq) -> void {
-        uint16 rcepoch = session->get_session_info(dir).get_keyvalue().get(session_dtls_epoch);
-        uint64 rcseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_seq);
-        uint16 hsseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_message_seq);
-        bool test = (expect_epoch == rcepoch) && (expect_rcseq >= rcseq) && (expect_hsseq == hsseq);
-        _test_case.assert(test, func, "#%i %s record (epoch %i sequence %I64i) handshake (sequence %i)", idx++, tlsadvisor->nameof_direction(dir).c_str(),
-                          rcepoch, rcseq, hsseq);
-    };
-
     return_t ret = errorcode_t::success;
 
     __try2 {
+        auto lambda_check_tls_status = [&](const char* func, const char* mesg, tls_session* session, uint32 expected) -> void {
+            uint32 status = session->get_session_status();
+            bool test = (status & expected);
+            _test_case.assert(test, func, mesg);
+        };
+
         // C->S, record epoch 0, sequence 0..1, handshake sequence 0
         ret = do_test_construct_client_hello(ciphersuite, &session_client, from_client, "client hello");
         if (errorcode_t::success != ret) {
@@ -372,8 +358,8 @@ void do_test_construct_dtls12_1(const char* ciphersuite) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 0, 2, 1);  // #0
-        lambda_test_seq(__FUNCTION__, &session_server, from_client, 0, 1, 0);       // #1
+        lambda_check_tls_status(__FUNCTION__, "CH", &session_client, session_status_client_hello);
+        lambda_check_tls_status(__FUNCTION__, "CH", &session_server, session_status_client_hello);
 
         // S->C, record epoch 0, sequence 0, handshake sequence 0
         ret = do_test_construct_hello_verify_request(&session_server, from_server, "hello verify request");
@@ -384,8 +370,8 @@ void do_test_construct_dtls12_1(const char* ciphersuite) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 1, 1);
-        lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 0, 0);
+        lambda_check_tls_status(__FUNCTION__, "HVR", &session_client, session_status_hello_verify_request);
+        lambda_check_tls_status(__FUNCTION__, "HVR", &session_server, session_status_hello_verify_request);
 
         // C->S, record epoch 0, sequence 2..3, handshake sequence 1
         ret = do_test_construct_client_hello(ciphersuite, &session_client, from_client, "client hello");
@@ -396,8 +382,8 @@ void do_test_construct_dtls12_1(const char* ciphersuite) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 0, 4, 2);
-        lambda_test_seq(__FUNCTION__, &session_server, from_client, 0, 3, 1);
+        lambda_check_tls_status(__FUNCTION__, "CH", &session_client, session_status_client_hello | session_status_hello_verify_request);
+        lambda_check_tls_status(__FUNCTION__, "CH", &session_server, session_status_client_hello | session_status_hello_verify_request);
 
         // S->C, record epoch 0, sequence 1, handshake sequence 1
         ret = do_test_construct_server_hello(&session_server, from_server, "server hello");
@@ -408,8 +394,8 @@ void do_test_construct_dtls12_1(const char* ciphersuite) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 2, 2);
-        lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 1, 1);
+        lambda_check_tls_status(__FUNCTION__, "SH", &session_client, session_status_server_hello);
+        lambda_check_tls_status(__FUNCTION__, "SH", &session_server, session_status_server_hello);
 
         do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
         do_cross_check_keycalc(&session_client, &session_server, tls_context_client_hello_random, "tls_context_client_hello_random");
@@ -426,8 +412,8 @@ void do_test_construct_dtls12_1(const char* ciphersuite) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 9, 3);
-        lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 8, 2);
+        lambda_check_tls_status(__FUNCTION__, "SC", &session_client, session_status_server_cert);
+        lambda_check_tls_status(__FUNCTION__, "SC", &session_server, session_status_server_cert);
 
         do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
 
@@ -440,8 +426,8 @@ void do_test_construct_dtls12_1(const char* ciphersuite) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 12, 4);
-        lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 11, 3);
+        lambda_check_tls_status(__FUNCTION__, "SKE", &session_client, session_status_server_key_exchange);
+        lambda_check_tls_status(__FUNCTION__, "SKE", &session_server, session_status_server_key_exchange);
 
         do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
 
@@ -454,8 +440,8 @@ void do_test_construct_dtls12_1(const char* ciphersuite) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 13, 5);
-        lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 12, 4);
+        lambda_check_tls_status(__FUNCTION__, "SHD", &session_client, session_status_server_hello_done);
+        lambda_check_tls_status(__FUNCTION__, "SHD", &session_server, session_status_server_hello_done);
 
         do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
 
@@ -468,8 +454,8 @@ void do_test_construct_dtls12_1(const char* ciphersuite) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 0, 5, 3);
-        lambda_test_seq(__FUNCTION__, &session_server, from_client, 0, 4, 2);
+        lambda_check_tls_status(__FUNCTION__, "CKE", &session_client, session_status_client_key_exchange);
+        lambda_check_tls_status(__FUNCTION__, "CKE", &session_server, session_status_client_key_exchange);
 
         do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
         do_cross_check_keycalc(&session_client, &session_server, tls_secret_server_key, "tls_secret_server_key");
@@ -486,7 +472,6 @@ void do_test_construct_dtls12_1(const char* ciphersuite) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 1, 0, 3);
 
         do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
 
@@ -499,8 +484,8 @@ void do_test_construct_dtls12_1(const char* ciphersuite) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 1, 1, 4);
-        lambda_test_seq(__FUNCTION__, &session_server, from_client, 1, 0, 3);
+        lambda_check_tls_status(__FUNCTION__, "CF", &session_client, session_status_client_finished);
+        lambda_check_tls_status(__FUNCTION__, "CF", &session_server, session_status_client_finished);
 
         do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
 
@@ -513,7 +498,6 @@ void do_test_construct_dtls12_1(const char* ciphersuite) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 1, 0, 5);
 
         // S->C, record epoch 1, sequence 0, handshake sequence 5
         ret = do_test_construct_finished(&session_server, from_server, "finished");
@@ -524,8 +508,8 @@ void do_test_construct_dtls12_1(const char* ciphersuite) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 1, 1, 6);
-        lambda_test_seq(__FUNCTION__, &session_client, from_server, 1, 0, 5);
+        lambda_check_tls_status(__FUNCTION__, "SF", &session_client, session_status_server_finished);
+        lambda_check_tls_status(__FUNCTION__, "SF", &session_server, session_status_server_finished);
 
         do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
         do_cross_check_keycalc(&session_client, &session_server, tls_secret_res_master, "tls_secret_res_master");

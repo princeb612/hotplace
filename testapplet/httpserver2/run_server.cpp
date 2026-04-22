@@ -70,9 +70,22 @@ return_t simple_http2_server(void*) {
     __try2 {
         uint32 scheme = 0;
         const char* title = nullptr;
-        if (option.trial) {
+        if (option.flags & option_flag_trial) {
             title = "HTTP/2 powered by http_server";
             scheme = socket_scheme_trial;
+
+            if (option.flags & option_flag_cert_ecdsa) {
+                // enable TLS 1.2 TLS_ECDHE_ECDSA ciphersuites
+                load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
+            }
+            if (option.flags & option_flag_cert_rsa) {
+                // enable TLS 1.2 TLS_ECDHE_RSA ciphersuites
+                load_certificate("rsa.crt", "rsa.key", nullptr);
+            }
+            if (option.flags & option_flag_cert_mldsa) {
+                // ML-DSA certificate
+                load_certificate("mldsa.crt", "mldsa.key", nullptr);
+            }
         } else {
             title = "HTTP/2 powered by http_server and libssl";
             scheme = socket_scheme_openssl;
@@ -107,15 +120,22 @@ return_t simple_http2_server(void*) {
                 .set_port_http(option.port)
                 .enable_https(true)  // enable https scheme
                 .set_port_https(option.port_tls)
-                .set_tls_certificate("ecdsa.crt", "ecdsa.key")  // certificate
-                .set_tls_verify_peer(0)                         // self-signed certificate
-                .enable_ipv4(true)                              // enable IPv4
-                .enable_ipv6(true)                              // enable IPv6
-                .enable_h2(true)                                // enable HTTP/2
+                .set_tls_verify_peer(0)  // self-signed certificate
+                .enable_ipv4(true)       // enable IPv4
+                .enable_ipv6(true)       // enable IPv6
+                .enable_h2(true)         // enable HTTP/2
                 .set_handler(consumer_routine)
                 .set_tls_cipher_list(ciphersuites);
 
-            if (option.content_encoding) {
+            if (option.flags & option_flag_cert_mldsa) {
+                builder.set_tls_certificate("mldsa.crt", "mldsa.key");
+            } else if (option.flags & option_flag_cert_rsa) {
+                builder.set_tls_certificate("rsa.crt", "rsa.key");
+            } else {
+                builder.set_tls_certificate("ecdsa.crt", "ecdsa.key");  // default
+            }
+
+            if (option.flags & option_flag_content_encoding) {
                 builder.allow_content_encoding("deflate, gzip");
             }
 

@@ -54,6 +54,10 @@ return_t crypto_keychain::add_mldsa(crypto_key* cryptokey, uint32 nid, const key
     return ret;
 }
 
+return_t crypto_keychain::add_mldsa_pub(crypto_key* cryptokey, uint32 nid, const binary_t& pub, key_encoding_t encoding, const keydesc& desc) {
+    return add_mldsa_pub(cryptokey, nid, pub.data(), pub.size(), encoding, desc);
+}
+
 return_t crypto_keychain::add_mldsa_pub(crypto_key* cryptokey, uint32 nid, const byte_t* pub, size_t pubsize, key_encoding_t encoding, const keydesc& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
@@ -154,6 +158,198 @@ return_t crypto_keychain::add_mldsa_priv(crypto_key* cryptokey, uint32 nid, cons
 #else
     ret = errorcode_t::not_supported;
 #endif
+    return ret;
+}
+
+return_t crypto_keychain::add_mldsa_pub_b64(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || (nullptr == pub)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = std::move(base64_decode(input, strlen(input), encoding_t::encoding_base64));
+            }
+        };
+
+        binary_t bin_pub;
+
+        os2b(pub, bin_pub);
+
+        ret = add_mldsa_pub(cryptokey, nid, bin_pub, encoding, desc);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::add_mldsa_pub_b64u(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || (nullptr == pub)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = std::move(base64_decode(input, strlen(input), encoding_t::encoding_base64url));
+            }
+        };
+
+        binary_t bin_pub;
+
+        os2b(pub, bin_pub);
+
+        ret = add_mldsa_pub(cryptokey, nid, bin_pub, encoding, desc);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::add_mldsa_pub_b16(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || (nullptr == pub)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = std::move(base16_decode(input, strlen(input)));
+            }
+        };
+
+        binary_t bin_pub;
+
+        os2b(pub, bin_pub);
+
+        ret = add_mldsa_pub(cryptokey, nid, bin_pub, encoding, desc);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::add_mldsa_pub_b16rfc(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || (nullptr == pub)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = std::move(base16_decode_rfc(std::string(input)));
+            }
+        };
+
+        binary_t bin_pub;
+
+        os2b(pub, bin_pub);
+
+        ret = add_mldsa_pub(cryptokey, nid, bin_pub, encoding, desc);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::add_mldsa_priv_b64(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || (nullptr == keypair)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = std::move(base64_decode(input, strlen(input), encoding_t::encoding_base64));
+            }
+        };
+
+        binary_t bin_keypair;
+
+        os2b(keypair, bin_keypair);
+
+        ret = add_mldsa_pub(cryptokey, nid, bin_keypair, encoding, desc);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::add_mldsa_priv_b64u(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || (nullptr == keypair)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = std::move(base64_decode(input, strlen(input), encoding_t::encoding_base64url));
+            }
+        };
+
+        binary_t bin_keypair;
+
+        os2b(keypair, bin_keypair);
+
+        ret = add_mldsa_pub(cryptokey, nid, bin_keypair, encoding, desc);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::add_mldsa_priv_b16(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || (nullptr == keypair)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = std::move(base16_decode(input, strlen(input)));
+            }
+        };
+
+        binary_t bin_keypair;
+
+        os2b(keypair, bin_keypair);
+
+        ret = add_mldsa_pub(cryptokey, nid, bin_keypair, encoding, desc);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::add_mldsa_priv_b16rfc(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || (nullptr == keypair)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = std::move(base16_decode_rfc(std::string(input)));
+            }
+        };
+
+        binary_t bin_keypair;
+
+        os2b(keypair, bin_keypair);
+
+        ret = add_mldsa_pub(cryptokey, nid, bin_keypair, encoding, desc);
+    }
+    __finally2 {}
     return ret;
 }
 

@@ -119,19 +119,19 @@ return_t simple_http_server(void *) {
     __try2 {
         uint32 scheme = 0;
         const char *title = nullptr;
-        if (option.trial) {
+        if (option.flags & option_flag_trial) {
             title = "HTTP/1.1 powered by http_server";
             scheme = socket_scheme_trial;
 
-            if (option_flag_cert_ecdsa & option.flags) {
+            if (option.flags & option_flag_cert_ecdsa) {
                 // enable TLS 1.2 TLS_ECDHE_ECDSA ciphersuites
                 load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
             }
-            if (option_flag_cert_rsa & option.flags) {
+            if (option.flags & option_flag_cert_rsa) {
                 // enable TLS 1.2 TLS_ECDHE_RSA ciphersuites
                 load_certificate("rsa.crt", "rsa.key", nullptr);
             }
-            if (option_flag_cert_mldsa & option.flags) {
+            if (option.flags & option_flag_cert_mldsa) {
                 // ML-DSA certificate
                 load_certificate("mldsa.crt", "mldsa.key", nullptr);
             }
@@ -175,15 +175,15 @@ return_t simple_http_server(void *) {
                 .set_handler(consumer_routine)
                 .set_tls_cipher_list(ciphersuites);
 
-            if (option_flag_cert_mldsa & option.flags) {
+            if (option.flags & option_flag_cert_mldsa) {
                 builder.set_tls_certificate("mldsa.crt", "mldsa.key");
-            } else if (option_flag_cert_rsa & option.flags) {
+            } else if (option.flags & option_flag_cert_rsa) {
                 builder.set_tls_certificate("rsa.crt", "rsa.key");
             } else {
                 builder.set_tls_certificate("ecdsa.crt", "ecdsa.key");  // default
             }
 
-            if (option.content_encoding) {
+            if (option.flags & option_flag_content_encoding) {
                 builder.allow_content_encoding("deflate, gzip");
             }
 

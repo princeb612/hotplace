@@ -529,8 +529,19 @@ class crypto_keychain {
      * @remarks openssl-3.5 required
      */
     return_t add_mldsa(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
+    return_t add_mldsa_pub(crypto_key* cryptokey, uint32 nid, const binary_t& pub, key_encoding_t encoding, const keydesc& desc);
     return_t add_mldsa_pub(crypto_key* cryptokey, uint32 nid, const byte_t* pub, size_t pubsize, key_encoding_t encoding, const keydesc& desc);
     return_t add_mldsa_priv(crypto_key* cryptokey, uint32 nid, const binary_t& keypair, key_encoding_t encoding, const keydesc& desc);
+
+    return_t add_mldsa_pub_b64(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc);
+    return_t add_mldsa_pub_b64u(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc);
+    return_t add_mldsa_pub_b16(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc);
+    return_t add_mldsa_pub_b16rfc(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc);
+
+    return_t add_mldsa_priv_b64(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc);
+    return_t add_mldsa_priv_b64u(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc);
+    return_t add_mldsa_priv_b16(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc);
+    return_t add_mldsa_priv_b16rfc(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc);
 
    protected:
 };
