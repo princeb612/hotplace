@@ -58,6 +58,8 @@ struct OSSL_LIB_CTX { /* dummy */
 #else
 #endif
 
+#include <memory>
+
 namespace hotplace {
 namespace crypto {
 
@@ -94,6 +96,64 @@ class transcript_hash_builder;
 
 class hmac_otp;
 class time_otp;
+
+struct BIO_deleter {
+    void operator()(BIO* bio) const { BIO_free(bio); }
+};
+struct BN_deleter {
+    void operator()(BIGNUM* bn) const { BN_clear_free(bn); }
+};
+struct BN_CTX_deleter {
+    void operator()(BN_CTX* bn_ctx) const { BN_CTX_free(bn_ctx); }
+};
+struct DH_deleter {
+    void operator()(DH* dh) const { DH_free(dh); }
+};
+struct DSA_deleter {
+    void operator()(DSA* dsa) const { DSA_free(dsa); }
+};
+struct DSA_SIG_deleter {
+    void operator()(DSA_SIG* dsasig) const { DSA_SIG_free(dsasig); }
+};
+struct EC_KEY_deleter {
+    void operator()(EC_KEY* eckey) const { EC_KEY_free(eckey); }
+};
+struct EC_POINT_deleter {
+    void operator()(EC_POINT* ecpoint) const { EC_POINT_free(ecpoint); }
+};
+struct EVP_PKEY_deleter {
+    void operator()(EVP_PKEY* pkey) const { EVP_PKEY_free(pkey); }
+};
+struct EVP_PKEY_CTX_deleter {
+    void operator()(EVP_PKEY_CTX* pkey_ctx) const { EVP_PKEY_CTX_free(pkey_ctx); }
+};
+struct OSSL_DECODER_CTX_deleter {
+    void operator()(OSSL_DECODER_CTX* ossldecoder) const { OSSL_DECODER_CTX_free(ossldecoder); }
+};
+struct OSSL_ENCODER_CTX_deleter {
+    void operator()(OSSL_ENCODER_CTX* osslencoder) const { OSSL_ENCODER_CTX_free(osslencoder); }
+};
+struct RSA_deleter {
+    void operator()(RSA* rsa) const { RSA_free(rsa); }
+};
+struct X509_deleter {
+    void operator()(X509* x509) const { X509_free(x509); }
+};
+
+using BIO_ptr = std::unique_ptr<BIO, BIO_deleter>;
+using BN_ptr = std::unique_ptr<BIGNUM, BN_deleter>;
+using BN_CTX_ptr = std::unique_ptr<BN_CTX, BN_CTX_deleter>;
+using DH_ptr = std::unique_ptr<DH, DH_deleter>;
+using DSA_ptr = std::unique_ptr<DSA, DSA_deleter>;
+using DSA_SIG_ptr = std::unique_ptr<DSA_SIG, DSA_SIG_deleter>;
+using EC_KEY_ptr = std::unique_ptr<EC_KEY, EC_KEY_deleter>;
+using EC_POINT_ptr = std::unique_ptr<EC_POINT, EC_POINT_deleter>;
+using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, EVP_PKEY_deleter>;
+using EVP_PKEY_CTX_ptr = std::unique_ptr<EVP_PKEY_CTX, EVP_PKEY_CTX_deleter>;
+using OSSL_DECODER_CTX_ptr = std::unique_ptr<OSSL_DECODER_CTX, OSSL_DECODER_CTX_deleter>;
+using OSSL_ENCODER_CTX_ptr = std::unique_ptr<OSSL_ENCODER_CTX, OSSL_ENCODER_CTX_deleter>;
+using RSA_ptr = std::unique_ptr<RSA, RSA_deleter>;
+using X509_ptr = std::unique_ptr<X509, X509_deleter>;
 
 }  // namespace crypto
 }  // namespace hotplace

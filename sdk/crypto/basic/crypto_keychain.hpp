@@ -470,6 +470,12 @@ class crypto_keychain {
     /**
      * @brief   DH
      * @sa      Finite Field Diffie-Hellman Ephemeral
+     * @remarks
+     *          y = g^x mod p
+     *            p : prime
+     *            g : generator
+     *            x : private key
+     *            y : public key
      * @example
      *          keychain.add_dh(&key, NID_ffdhe2048, keydesc("ffdhe2048"));
      *          keychain.add_dh(&key, NID_ffdhe3072, keydesc("ffdhe3072"));
@@ -478,11 +484,17 @@ class crypto_keychain {
      *          keychain.add_dh(&key, NID_ffdhe8192, keydesc("ffdhe8192"));
      */
     return_t add_dh(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
-    return_t add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& pub, const binary_t& priv, const keydesc& desc);
-    return_t add_dh_b64(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const keydesc& desc);
-    return_t add_dh_b64u(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const keydesc& desc);
-    return_t add_dh_b16(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const keydesc& desc);
-    return_t add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const keydesc& desc);
+    return_t add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& y, const binary_t& x, const keydesc& desc);
+    /* @refer Gemini (y from pqg or pgx) */
+    return_t add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& p, const binary_t& q, const binary_t& g, const binary_t& x, const keydesc& desc);
+    return_t add_dh_b64(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const keydesc& desc);
+    return_t add_dh_b64u(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const keydesc& desc);
+    return_t add_dh_b16(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const keydesc& desc);
+    return_t add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const keydesc& desc);
+    return_t add_dh_b64(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, const keydesc& desc);
+    return_t add_dh_b64u(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, const keydesc& desc);
+    return_t add_dh_b16(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, const keydesc& desc);
+    return_t add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, const keydesc& desc);
 
     /**
      * @brief DSA

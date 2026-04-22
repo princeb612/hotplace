@@ -62,6 +62,8 @@ template <typename OBJECT_T>
 class t_shared_reference {
    public:
     t_shared_reference() : _counter(0), _object(nullptr) {}
+    t_shared_reference(const t_shared_reference& other) = delete;
+    t_shared_reference(t_shared_reference&& other) : _counter(0), _object(nullptr) { *this = std::move(other); }
     ~t_shared_reference() {}
 
     void make_share(OBJECT_T* object) {
@@ -78,19 +80,29 @@ class t_shared_reference {
         return _counter;
     }
     int delref() {
-        if (0 == _counter) {
-            throw exception(errorcode_t::bad_request);
-        }
-        atomic_decrement(&_counter);
-        int ret = _counter;
-        if (0 == _counter) {
-            delete _object;
-            // do not access instance member any more
-            // be ware of destructor calling delref
+        int ret = 0;
+        if (_object) {
+            if (0 == _counter) {
+                throw exception(errorcode_t::bad_request);
+            }
+            atomic_decrement(&_counter);
+            ret = _counter;
+            if (0 == _counter) {
+                delete _object;
+                // do not access instance member any more
+                // be ware of destructor calling delref
+            }
         }
         return ret;
     }
     int getref() { return _counter; }
+
+    t_shared_reference& operator=(const t_shared_reference& other) = delete;
+    t_shared_reference& operator=(t_shared_reference&& other) {
+        std::swap(_counter, other._counter);
+        std::swap(_object, other._object);
+        return *this;
+    }
 
    private:
 #if defined __GNUC__
@@ -114,12 +126,11 @@ class t_shared_reference {
  *
  *      void test_sharedinstance2 ()
  *      {
- *          simple_instance* object = new simple_instance;
- *          t_shared_instance <simple_instance> inst (object);  // ++refcounter
+ *          t_shared_instance <simple_instance> inst;
+ *          inst.make_share(new simple_instance)
  *          inst->dosomething ();
- *          t_shared_instance <simple_instance> inst2 (inst);   // ++refcounter
- *          inst2->dosomething ();
- *          // delete here (2 times ~t_shared_instance)
+ *          t_shared_instance <simple_instance> inst2;
+ *          inst2 = std::move(inst);
  *      }
  */
 
@@ -131,32 +142,47 @@ class t_shared_instance {
     typedef int counter_type;
 #endif
    public:
-    t_shared_instance() : _object(nullptr) { _counter = new counter_type(1); }
+    t_shared_instance() : _object(nullptr) {
+        try {
+            _counter = new counter_type(1);
+        } catch (std::bad_alloc) {
+            throw std::runtime_error("t_shared_instance.ctor");
+        }
+    }
     t_shared_instance(OBJECT_T* object) : _object(object) { _counter = new counter_type(1); }
-    t_shared_instance(const t_shared_instance& inst) : _counter(inst._counter), _object(inst._object) { atomic_increment(_counter); }
+    t_shared_instance(const t_shared_instance& other) = delete;
+    t_shared_instance(t_shared_instance&& other) : _counter(nullptr), _object(nullptr) { *this = std::move(other); }
     ~t_shared_instance() { delref(); }
 
     int addref() {
-        atomic_increment(_counter);
-        int ret = *_counter;
+        int ret = 0;
+        if (_counter) {
+            atomic_increment(_counter);
+            ret = *_counter;
+        }
         return ret;
     }
     int delref() {
-        atomic_decrement(_counter);
-        int ret = *_counter;
-        if (0 == ret) {
-            if (_object) {
-                delete _object;
+        int ret = 0;
+        if (_counter) {
+            atomic_decrement(_counter);
+            ret = *_counter;
+            if (0 == ret) {
+                if (_object) {
+                    delete _object;
+                }
+                delete _counter;
+                _counter = nullptr;
+                _object = nullptr;
             }
-            delete _counter;
-            _counter = nullptr;
-            _object = nullptr;
         }
         return ret;
     }
     int getref() {
-        int ret = *_counter;
-
+        int ret = 0;
+        if (_counter) {
+            ret = *_counter;
+        }
         return ret;
     }
 
@@ -185,12 +211,11 @@ class t_shared_instance {
         }
         return *this;
     }
-    t_shared_instance& operator=(const t_shared_instance& other) {
-        delref();
 
-        _counter = other._counter;
-        _object = other._object;
-        atomic_increment(_counter);
+    t_shared_instance& operator=(const t_shared_instance& other) = delete;
+    t_shared_instance& operator=(t_shared_instance&& other) {
+        std::swap(_counter, other._counter);
+        std::swap(_object, other._object);
         return *this;
     }
 

@@ -6,6 +6,14 @@
  *
  * Revision History
  * Date         Name                Description
+ *
+ * RFC 7919 Negotiated Finite Field Diffie-Hellman Ephemeral Parameters for Transport Layer Security (TLS)
+ *
+ *   y = g^x mod p
+ *     p : prime
+ *     g : generator
+ *     x : privateate key
+ *     y : public key
  */
 
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
@@ -15,11 +23,7 @@ namespace crypto {
 
 return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const keydesc& desc) {
     return_t ret = errorcode_t::success;
-    EVP_PKEY* pkey = nullptr;
-    EVP_PKEY_CTX* ctx = nullptr;
     int ret_openssl = 0;
-    EVP_PKEY* params = nullptr;
-    EVP_PKEY_CTX* keyctx = nullptr;
 
     __try2 {
         if (nullptr == cryptokey) {
@@ -27,135 +31,234 @@ return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const keydes
             __leave2;
         }
 
-        ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_DH, nullptr);
-        ret_openssl = EVP_PKEY_paramgen_init(ctx);
+        EVP_PKEY_CTX_ptr ctx(EVP_PKEY_CTX_new_id(EVP_PKEY_DH, nullptr));
+        ret_openssl = EVP_PKEY_paramgen_init(ctx.get());
         if (ret_openssl < 0) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
-        ret_openssl = EVP_PKEY_CTX_set_dh_nid(ctx, nid);
+        ret_openssl = EVP_PKEY_CTX_set_dh_nid(ctx.get(), nid);
         if (ret_openssl < 0) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
-        ret_openssl = EVP_PKEY_paramgen(ctx, &params);
+
+        EVP_PKEY* p = nullptr;
+        ret_openssl = EVP_PKEY_paramgen(ctx.get(), &p);
         if (ret_openssl < 0) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
-        keyctx = EVP_PKEY_CTX_new(params, nullptr);
+        EVP_PKEY_ptr params(p);
+
+        EVP_PKEY_CTX_ptr keyctx(EVP_PKEY_CTX_new(params.get(), nullptr));
         if (nullptr == keyctx) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
-        ret_openssl = EVP_PKEY_keygen_init(keyctx);
+        ret_openssl = EVP_PKEY_keygen_init(keyctx.get());
         if (ret_openssl < 0) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-        ret_openssl = EVP_PKEY_keygen(keyctx, &pkey);
-        if (ret_openssl < 0) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-        if (nullptr == pkey) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
-        if (pkey) {
-            crypto_key_object key(pkey, desc);
-            ret = cryptokey->add(key);
+        EVP_PKEY* pk = nullptr;
+        ret_openssl = EVP_PKEY_keygen(keyctx.get(), &pk);
+        if (ret_openssl < 0) {
+            ret = errorcode_t::internal_error;
+            __leave2;
         }
-    }
-    __finally2 {
+        if (nullptr == pk) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+        EVP_PKEY_ptr pkey(pk);
+
+        crypto_key_object key(pkey.get(), desc);
+        ret = cryptokey->add(key);
         if (errorcode_t::success != ret) {
-            if (pkey) {
-                EVP_PKEY_free(pkey);
-            }
-        }
-        if (keyctx) {
-            EVP_PKEY_CTX_free(keyctx);
-        }
-        if (params) {
-            EVP_PKEY_free(params);
+            __leave2;
         }
 
-        if (ctx) {
-            EVP_PKEY_CTX_free(ctx);
-        }
+        pkey.release();  // cryptokey own pkey
+
+        // free keyctx
+        // free params
+        // free ctx
     }
+    __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& pub, const binary_t& priv, const keydesc& desc) {
+return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& y, const binary_t& x, const keydesc& desc) {
     return_t ret = errorcode_t::success;
-    EVP_PKEY* pkey = nullptr;
-    DH* dh = nullptr;
     int ret_openssl = 0;
     __try2 {
-        if (nullptr == cryptokey || pub.empty()) {
+        if (nullptr == cryptokey || y.empty()) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        /**
-         * RFC 7919 Negotiated Finite Field Diffie-Hellman Ephemeral Parameters for Transport Layer Security (TLS)
-         * dh = DH_new
-         * BN_hex2bn(&p, "ffffffffffffffffadf85458a2bb4a9aafdc5620273d3cf1...")
-         * BN_hex2bn(&g, "02")
-         * DH_set0_pqg(dh, p, nullptr, g)
-         */
-        dh = DH_new_by_nid(nid);  // p, g, length
+        DH_ptr dh(DH_new_by_nid(nid));
         if (nullptr == dh) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
-        BIGNUM* bn_pub = nullptr;
-        BIGNUM* bn_priv = nullptr;
-
-        bn_pub = BN_bin2bn(pub.data(), pub.size(), nullptr);
-        if (priv.size()) {
-            bn_priv = BN_bin2bn(priv.data(), priv.size(), nullptr);
+        BN_ptr bn_x;
+        BN_ptr bn_y(BN_bin2bn(y.data(), y.size(), nullptr));
+        if (x.size()) {
+            bn_x = std::move(BN_ptr(BN_bin2bn(x.data(), x.size(), nullptr)));
         }
 
-        ret_openssl = DH_set0_key(dh, bn_pub, bn_priv);
+        ret_openssl = DH_set0_key(dh.get(), bn_y.get(), bn_x.get());
         if (ret_openssl < 0) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
-        pkey = EVP_PKEY_new();
-        if (nullptr == pkey) {
+        bn_x.release();  // dh own bn_x
+        bn_y.release();  // dh own bn_y
+
+        EVP_PKEY_ptr pkey(EVP_PKEY_new());
+        if (nullptr == pkey.get()) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
-        ret_openssl = EVP_PKEY_assign_DH(pkey, dh);
+        ret_openssl = EVP_PKEY_assign_DH(pkey.get(), dh.get());
         if (ret_openssl < 0) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
-        if (pkey) {
-            crypto_key_object key(pkey, desc);
-            ret = cryptokey->add(key);
-        }
-    }
-    __finally2 {
+        dh.release();  // pkey own dh
+
+        crypto_key_object key(pkey.get(), desc);
+        ret = cryptokey->add(key);
         if (errorcode_t::success != ret) {
-            if (pkey) {
-                EVP_PKEY_free(pkey);
-            }
+            __leave2;
         }
+
+        pkey.release();  // cryptokey own pkey
     }
+    __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_dh_b64(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const keydesc& desc) {
+return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& p, const binary_t& q, const binary_t& g, const binary_t& x,
+                                 const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    int ret_openssl = 0;
+    __try2 {
+        if (nullptr == cryptokey || p.empty() || g.empty() || (q.empty() && x.empty())) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        DH_ptr dh(DH_new_by_nid(nid));
+        if (nullptr == dh) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        BN_ptr bn_p(BN_bin2bn(p.data(), p.size(), nullptr));
+        BN_ptr bn_q;
+        if (false == q.empty()) {
+            bn_q = std::move(BN_ptr(BN_bin2bn(q.data(), q.size(), nullptr)));
+        }
+        BN_ptr bn_g(BN_bin2bn(g.data(), g.size(), nullptr));
+        BN_ptr bn_x;
+        if (x.empty()) {
+            bn_x = std::move(BN_ptr(BN_new()));
+            // x ∈ [2, q-1]
+            BN_rand_range(bn_x.get(), bn_q.get());
+            // ensure x >= 2
+            if (BN_cmp(bn_x.get(), BN_value_one()) <= 0) {
+                BN_add_word(bn_x.get(), 2);
+            }
+        } else {
+            bn_x = std::move(BN_ptr(BN_bin2bn(x.data(), x.size(), nullptr)));  // y = g^x mod p
+        }
+
+        BN_ptr bn_y(BN_new());
+        BN_CTX_ptr bn_ctx(BN_CTX_new());
+
+        // y = g^x mod p
+        ret_openssl = BN_mod_exp(bn_y.get(), bn_g.get(), bn_x.get(), bn_p.get(), bn_ctx.get());
+        if (ret_openssl < 0) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        // public key (y) verification
+        {
+            // 1 < y < p-1
+            if (BN_cmp(bn_y.get(), BN_value_one()) <= 0) {
+                ret = errorcode_t::internal_error;
+                __leave2;
+            }
+            if (BN_cmp(bn_y.get(), bn_p.get()) >= 0) {
+                ret = errorcode_t::internal_error;
+                __leave2;
+            }
+            // y^q mod p == 1
+            BN_ptr bn_tmp(BN_new());
+            BN_mod_exp(bn_tmp.get(), bn_y.get(), bn_q.get(), bn_p.get(), bn_ctx.get());
+            if (false == BN_is_one(bn_tmp.get())) {
+                ret = errorcode_t::internal_error;
+                __leave2;
+            }
+        }
+
+        ret_openssl = DH_set0_pqg(dh.get(), bn_p.get(), bn_q.get(), bn_g.get());
+        if (ret_openssl < 0) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        bn_p.release();  // dh own bn_p
+        bn_q.release();  // dh own bn_q
+        bn_g.release();  // dh own bn_g
+
+        ret_openssl = DH_set0_key(dh.get(), bn_y.get(), bn_x.get());
+        if (ret_openssl < 0) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        bn_y.release();  // dh own bn_y
+        bn_x.release();  // dh own bn_x
+
+        EVP_PKEY_ptr pkey(EVP_PKEY_new());
+        if (nullptr == pkey.get()) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+        ret_openssl = EVP_PKEY_assign_DH(pkey.get(), dh.get());
+        if (ret_openssl < 0) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        dh.release();  // pkey own dh
+
+        crypto_key_object key(pkey.get(), desc);
+        ret = cryptokey->add(key);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        pkey.release();  // cryptokey own pkey
+    }
+    __finally2 {}
+    return ret;
+    // free bn_ctx
+}
+
+return_t crypto_keychain::add_dh_b64(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == cryptokey || nullptr == pub) {
+        if (nullptr == cryptokey || nullptr == y) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -166,22 +269,22 @@ return_t crypto_keychain::add_dh_b64(crypto_key* cryptokey, uint32 nid, const ch
             }
         };
 
-        binary_t bin_pub;
-        binary_t bin_priv;
+        binary_t bin_y;
+        binary_t bin_x;
 
-        os2b(pub, bin_pub);
-        os2b(priv, bin_priv);
+        os2b(y, bin_y);
+        os2b(x, bin_x);
 
-        ret = add_dh(cryptokey, nid, bin_pub, bin_priv, desc);
+        ret = add_dh(cryptokey, nid, bin_y, bin_x, desc);
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_dh_b64u(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const keydesc& desc) {
+return_t crypto_keychain::add_dh_b64u(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == cryptokey || nullptr == pub) {
+        if (nullptr == cryptokey || nullptr == y) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -192,22 +295,22 @@ return_t crypto_keychain::add_dh_b64u(crypto_key* cryptokey, uint32 nid, const c
             }
         };
 
-        binary_t bin_pub;
-        binary_t bin_priv;
+        binary_t bin_y;
+        binary_t bin_x;
 
-        os2b(pub, bin_pub);
-        os2b(priv, bin_priv);
+        os2b(y, bin_y);
+        os2b(x, bin_x);
 
-        ret = add_dh(cryptokey, nid, bin_pub, bin_priv, desc);
+        ret = add_dh(cryptokey, nid, bin_y, bin_x, desc);
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_dh_b16(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const keydesc& desc) {
+return_t crypto_keychain::add_dh_b16(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == cryptokey || nullptr == pub) {
+        if (nullptr == cryptokey || nullptr == y) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -218,22 +321,22 @@ return_t crypto_keychain::add_dh_b16(crypto_key* cryptokey, uint32 nid, const ch
             }
         };
 
-        binary_t bin_pub;
-        binary_t bin_priv;
+        binary_t bin_y;
+        binary_t bin_x;
 
-        os2b(pub, bin_pub);
-        os2b(priv, bin_priv);
+        os2b(y, bin_y);
+        os2b(x, bin_x);
 
-        ret = add_dh(cryptokey, nid, bin_pub, bin_priv, desc);
+        ret = add_dh(cryptokey, nid, bin_y, bin_x, desc);
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const keydesc& desc) {
+return_t crypto_keychain::add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == cryptokey || nullptr == pub) {
+        if (nullptr == cryptokey || nullptr == y) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -244,13 +347,133 @@ return_t crypto_keychain::add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const
             }
         };
 
-        binary_t bin_pub;
-        binary_t bin_priv;
+        binary_t bin_y;
+        binary_t bin_x;
 
-        os2b(pub, bin_pub);
-        os2b(priv, bin_priv);
+        os2b(y, bin_y);
+        os2b(x, bin_x);
 
-        ret = add_dh(cryptokey, nid, bin_pub, bin_priv, desc);
+        ret = add_dh(cryptokey, nid, bin_y, bin_x, desc);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::add_dh_b64(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || nullptr == p || nullptr == g || (nullptr == q && nullptr == x)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = std::move(base64_decode(input, strlen(input), encoding_t::encoding_base64));
+            }
+        };
+
+        binary_t bin_p;
+        binary_t bin_q;
+        binary_t bin_g;
+        binary_t bin_x;
+
+        os2b(p, bin_p);
+        os2b(q, bin_q);
+        os2b(g, bin_g);
+        os2b(x, bin_x);
+
+        ret = add_dh(cryptokey, nid, bin_p, bin_q, bin_g, bin_x, desc);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::add_dh_b64u(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || nullptr == p || nullptr == g || (nullptr == q && nullptr == x)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = std::move(base64_decode(input, strlen(input), encoding_t::encoding_base64url));
+            }
+        };
+
+        binary_t bin_p;
+        binary_t bin_q;
+        binary_t bin_g;
+        binary_t bin_x;
+
+        os2b(p, bin_p);
+        os2b(q, bin_q);
+        os2b(g, bin_g);
+        os2b(x, bin_x);
+
+        ret = add_dh(cryptokey, nid, bin_p, bin_q, bin_g, bin_x, desc);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::add_dh_b16(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || nullptr == p || nullptr == g || (nullptr == q && nullptr == x)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = std::move(base16_decode(input, strlen(input)));
+            }
+        };
+
+        binary_t bin_p;
+        binary_t bin_q;
+        binary_t bin_g;
+        binary_t bin_x;
+
+        os2b(p, bin_p);
+        os2b(q, bin_q);
+        os2b(g, bin_g);
+        os2b(x, bin_x);
+
+        ret = add_dh(cryptokey, nid, bin_p, bin_q, bin_g, bin_x, desc);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || nullptr == p || nullptr == g || (nullptr == q && nullptr == x)) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = std::move(base16_decode_rfc(std::string(input)));
+            }
+        };
+
+        binary_t bin_p;
+        binary_t bin_q;
+        binary_t bin_g;
+        binary_t bin_x;
+
+        os2b(p, bin_p);
+        os2b(q, bin_q);
+        os2b(g, bin_g);
+        os2b(x, bin_x);
+
+        ret = add_dh(cryptokey, nid, bin_p, bin_q, bin_g, bin_x, desc);
     }
     __finally2 {}
     return ret;

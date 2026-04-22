@@ -7,7 +7,7 @@
   * [study] CBOR/COSE (RFC 7049, 8949, 8152)
 
 * understanding
-  * Revision 927-933 (Tag 1.83, Revision 942)
+  * Revision 927-933 (Tag 1.90, Revision 954)
     * MSVC environment (beta status) - application verifier (basics)
   * Revision 910-926
     * MSVC environment (alpha status) - build and run
@@ -32,7 +32,7 @@
     * CBOR
 
 * details
-  * Revision 954
+  * Revision 955
   * Revision 953
     * [tested] TLS 1.3 ML-DSA certificate
   * Revision 946

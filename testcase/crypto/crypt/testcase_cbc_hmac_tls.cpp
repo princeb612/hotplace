@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/testcase/crypto/crypt/testvector.hpp>
 #include <hotplace/testcase/crypto/sample.hpp>
 
 void test_cbc_hmac(test_vector_cbchmac_tls_t* testvector, size_t size) {

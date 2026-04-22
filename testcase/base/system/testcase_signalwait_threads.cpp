@@ -13,21 +13,17 @@
 t_shared_instance<semaphore> _mutex;
 
 return_t thread_routine(void *param) {
-    t_shared_instance<semaphore> mtx(_mutex);
-
     _logger->writeln("thread started");
 
     _logger->writeln("wait for signal");
-    mtx->wait(-1);
+    _mutex->wait(-1);
     _logger->writeln("caught signal");
 
     return errorcode_t::success;
 }
 
 return_t thread_signal(void *param) {
-    t_shared_instance<semaphore> mtx(_mutex);
-
-    mtx->signal();
+    _mutex->signal();
     return errorcode_t::success;
 }
 

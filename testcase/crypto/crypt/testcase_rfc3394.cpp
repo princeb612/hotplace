@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/testcase/crypto/crypt/testvector.hpp>
 #include <hotplace/testcase/crypto/sample.hpp>
 
 void do_test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* vector) {

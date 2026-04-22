@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/testcase/crypto/key/testvector.hpp>
 #include <hotplace/testcase/crypto/sample.hpp>
 
 void test_ffdhe_key() {
@@ -89,7 +90,37 @@ void test_ffdhe_dh() {
     _test_case.test(ret, __FUNCTION__, "DH");
 }
 
+void test_rfc7919() {
+    _test_case.begin("RFC 7919");
+    return_t ret = errorcode_t::success;
+    crypto_key key;
+    crypto_keychain keychain;
+    for (auto i = 0; i < sizeof_test_vector_rfc7919; i++) {
+        auto item = test_vector_rfc7919[i];
+        keydesc desc(item.desc);
+        ret = keychain.add_dh_b16rfc(&key, item.nid, item.p, item.q, item.g, nullptr, std::move(desc));
+        _test_case.test(ret, __FUNCTION__, "%s", item.desc);
+
+        auto pkey = key.find(item.desc);
+
+        crypto_kty_t kty = crypto_kty_t::kty_unknown;
+        crypt_datamap_t datamap;
+        crypto_key::extract(pkey, public_key | private_key, kty, datamap, false);  // do not preserve leading zero octects to compare
+
+        _test_case.assert(datamap[item_dh_p] == base16_decode_rfc(item.p), __FUNCTION__, "check p");
+        _test_case.assert(datamap[item_dh_q] == base16_decode_rfc(item.q), __FUNCTION__, "check q");
+    }
+    auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
+        _logger->write([&](basic_stream& bs) -> void {
+            bs.println(ANSI_ESCAPE "1;32m> kid \"%s\"" ANSI_ESCAPE "0m", item->get_desc().get_kid_cstr());
+            dump_key(item->get_pkey(), &bs, 16, 3, dump_notrunc);
+        });
+    };
+    key.for_each(dump_crypto_key, nullptr);
+}
+
 void testcase_key_ffdhe() {
     test_ffdhe_key();
     test_ffdhe_dh();
+    test_rfc7919();
 }

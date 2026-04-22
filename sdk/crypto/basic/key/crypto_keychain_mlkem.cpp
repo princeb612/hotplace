@@ -19,12 +19,12 @@ namespace crypto {
 return_t crypto_keychain::add_mlkem(crypto_key* cryptokey, uint32 nid, const keydesc& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
-    EVP_PKEY* pkey = nullptr;
     __try2 {
         if (nullptr == cryptokey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+
         auto kty = ktyof_nid(nid);
         if (kty_mlkem != kty) {
             ret = errorcode_t::different_type;
@@ -35,17 +35,20 @@ return_t crypto_keychain::add_mlkem(crypto_key* cryptokey, uint32 nid, const key
             ret = errorcode_t::not_supported;
             __leave2;
         }
-        ret = pkey_keygen_byname(nullptr, &pkey, sn);
+
+        EVP_PKEY* pk = nullptr;
+        ret = pkey_keygen_byname(nullptr, &pk, sn);
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        if (pkey) {
-            crypto_key_object key(pkey, desc);
-            ret = cryptokey->add(key);
-        } else {
-            ret = errorcode_t::internal_error;
+
+        EVP_PKEY_ptr pkey(pk);
+        crypto_key_object key(pkey.get(), desc);
+        ret = cryptokey->add(key);
+        if (errorcode_t::success != ret) {
             __leave2;
         }
+        pkey.release();  // cryptokey own pkey
     }
     __finally2 {}
 #else
@@ -61,17 +64,19 @@ return_t crypto_keychain::add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const
 return_t crypto_keychain::add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const byte_t* pub, size_t pubsize, key_encoding_t encoding, const keydesc& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
-    EVP_PKEY* pkey = nullptr;
     __try2 {
         if (nullptr == cryptokey || nullptr == pub) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+
         auto kty = ktyof_nid(nid);
         if (kty_mlkem != kty) {
             ret = errorcode_t::different_type;
             __leave2;
         }
+
+        EVP_PKEY* pk = nullptr;
         switch (encoding) {
             case key_encoding_priv_pem:
             case key_encoding_encrypted_priv_pem:
@@ -79,37 +84,34 @@ return_t crypto_keychain::add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const
             case key_encoding_priv_der:
             case key_encoding_encrypted_priv_der:
             case key_encoding_pub_der: {
-                ret = pkey_decode_format(nullptr, &pkey, pub, pubsize, encoding);
+                ret = pkey_decode_format(nullptr, &pk, pub, pubsize, encoding);
             } break;
             case key_encoding_priv_raw:
             case key_encoding_pub_raw: {
-                ret = pkey_decode_raw(nullptr, OBJ_nid2sn(nid), &pkey, pub, pubsize, encoding);
+                ret = pkey_decode_raw(nullptr, OBJ_nid2sn(nid), &pk, pub, pubsize, encoding);
             }
         }
         if (errorcode_t::success != ret) {
             __leave2;
         }
+
+        EVP_PKEY_ptr pkey(pk);
+
         uint32 id = 0;
-        nidof_evp_pkey(pkey, id);
+        nidof_evp_pkey(pkey.get(), id);
         if (id != nid) {
             ret = errorcode_t::failed;
             __leave2;
         }
-        if (pkey) {
-            crypto_key_object key(pkey, desc);
-            ret = cryptokey->add(key);
-        } else {
-            ret = errorcode_t::internal_error;
+
+        crypto_key_object key(pkey.get(), desc);
+        ret = cryptokey->add(key);
+        if (errorcode_t::success != ret) {
             __leave2;
         }
+        pkey.release();  // cryptokey own pkey
     }
-    __finally2 {
-        if (success != ret) {
-            if (pkey) {
-                EVP_PKEY_free(pkey);
-            }
-        }
-    }
+    __finally2 {}
 #else
     ret = errorcode_t::not_supported;
 #endif
@@ -119,42 +121,41 @@ return_t crypto_keychain::add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const
 return_t crypto_keychain::add_mlkem_priv(crypto_key* cryptokey, uint32 nid, const binary_t& keypair, key_encoding_t encoding, const keydesc& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
-    EVP_PKEY* pkey = nullptr;
     __try2 {
         if (nullptr == cryptokey) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+
         auto kty = ktyof_nid(nid);
         if (kty_mlkem != kty) {
             ret = errorcode_t::different_type;
             __leave2;
         }
-        ret = pkey_decode(nullptr, &pkey, keypair, encoding);
+
+        EVP_PKEY* pk = nullptr;
+        ret = pkey_decode(nullptr, &pk, keypair, encoding);
         if (errorcode_t::success != ret) {
             __leave2;
         }
+
+        EVP_PKEY_ptr pkey(pk);
+
         uint32 id = 0;
-        nidof_evp_pkey(pkey, id);
+        nidof_evp_pkey(pkey.get(), id);
         if (id != nid) {
             ret = errorcode_t::failed;
             __leave2;
         }
-        if (pkey) {
-            crypto_key_object key(pkey, desc);
-            ret = cryptokey->add(key);
-        } else {
-            ret = errorcode_t::internal_error;
+
+        crypto_key_object key(pkey.get(), desc);
+        ret = cryptokey->add(key);
+        if (errorcode_t::success != ret) {
             __leave2;
         }
+        pkey.release();  // cryptokey own pkey
     }
-    __finally2 {
-        if (success != ret) {
-            if (pkey) {
-                EVP_PKEY_free(pkey);
-            }
-        }
-    }
+    __finally2 {}
 #else
     ret = errorcode_t::not_supported;
 #endif

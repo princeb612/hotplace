@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/testcase/crypto/crypt/testvector.hpp>
 #include <hotplace/testcase/crypto/sample.hpp>
 
 void validate_openssl_crypt() {

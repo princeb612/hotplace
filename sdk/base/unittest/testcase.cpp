@@ -101,7 +101,7 @@ void test_case::begin(const char* case_name, ...) {
 
     constexpr char constexpr_testcase[] = "[test case] ";
 
-    console_colored_stream << _concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::magenta) << constexpr_testcase << topic.c_str();
+    console_colored_stream << _concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::cyan) << constexpr_testcase << topic.c_str();
     console_colored_stream << _concolor.turnoff();
     if (_logger) {
         _logger->writeln(stream);
@@ -274,7 +274,7 @@ void test_case::vtest(return_t result, const char* test_function, const char* me
                 status._test_stat._count_success++;
                 break;
             case error_category_expect_failure:  // pass
-                color = console_color_t::magenta;
+                color = console_color_t::cyan;
                 _total._count_success++;
                 status._test_stat._count_success++;
                 break;
@@ -389,7 +389,7 @@ void test_case::dump_list_into_stream(const unittest_list_t& array, basic_stream
                 cprint(console_colored_stream, _concolor, console_color_t::white, fgcolor, constexpr_pass);
                 break;
             case error_category_expect_failure:
-                cprint(console_colored_stream, _concolor, console_color_t::magenta, fgcolor, constexpr_expect_failure);
+                cprint(console_colored_stream, _concolor, console_color_t::cyan, fgcolor, constexpr_expect_failure);
                 break;
             case error_category_severe:
                 cprint(console_colored_stream, _concolor, console_color_t::red, fgcolor, constexpr_fail);

@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/testcase/crypto/sample.hpp>
+#include <hotplace/testcase/crypto/sign/testvector.hpp>
 
 const test_vector_nist_cavp_dsa_param_t test_vector_nist_cavp_dsa_param[] = {
     {"mod = L=1024, N=160, SHA-1",

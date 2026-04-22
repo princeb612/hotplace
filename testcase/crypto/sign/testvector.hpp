@@ -7,8 +7,8 @@
  * Revision History
  * Date         Name                Description
  */
-#ifndef __HOTPLACE_TEST_CRYPTO_SIGN__
-#define __HOTPLACE_TEST_CRYPTO_SIGN__
+#ifndef __HOTPLACE_TEST_CRYPTO_SIGN_TESTVECTOR__
+#define __HOTPLACE_TEST_CRYPTO_SIGN_TESTVECTOR__
 
 #include <hotplace/sdk/sdk.hpp>
 #include <hotplace/testcase/test.hpp>

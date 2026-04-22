@@ -22,6 +22,7 @@ class critical_section : public critical_section_t {
      * @brief constructor
      */
     critical_section() { startup(); }
+    critical_section(const critical_section&) = delete;
 
     /**
      * @brief destructor
@@ -38,7 +39,6 @@ class critical_section : public critical_section_t {
      */
     virtual void leave() { ::LeaveCriticalSection(&m_cs); }
 
-    critical_section(const critical_section&) = delete;
     critical_section& operator=(const critical_section&) = delete;
 
    private:

@@ -18,7 +18,6 @@ namespace crypto {
 
 return_t crypto_keychain::add_oct(crypto_key* cryptokey, size_t size, const keydesc& desc) {
     return_t ret = errorcode_t::success;
-    EVP_PKEY* pkey = nullptr;
 
     __try2 {
         if (nullptr == cryptokey) {
@@ -29,22 +28,22 @@ return_t crypto_keychain::add_oct(crypto_key* cryptokey, size_t size, const keyd
         openssl_prng r;
         binary_t temp;
         r.random(temp, size);
-        pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, nullptr, temp.data(), size);
-        if (nullptr == pkey) {
+
+        EVP_PKEY_ptr pkey(EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, nullptr, temp.data(), size));
+        if (nullptr == pkey.get()) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
 
-        crypto_key_object key(pkey, desc);
+        crypto_key_object key(pkey.get(), desc);
         ret = cryptokey->add(key);
-    }
-    __finally2 {
         if (errorcode_t::success != ret) {
-            if (nullptr != pkey) {
-                EVP_PKEY_free(pkey);
-            }
+            __leave2;
         }
+
+        pkey.release();  // cryptokey own pkey
     }
+    __finally2 {}
     return ret;
 }
 
@@ -52,7 +51,6 @@ return_t crypto_keychain::add_oct(crypto_key* cryptokey, const binary_t& k, cons
 
 return_t crypto_keychain::add_oct(crypto_key* cryptokey, const byte_t* k, size_t size, const keydesc& desc) {
     return_t ret = errorcode_t::success;
-    EVP_PKEY* pkey = nullptr;
 
     __try2 {
         if (nullptr == cryptokey || nullptr == k) {
@@ -60,22 +58,21 @@ return_t crypto_keychain::add_oct(crypto_key* cryptokey, const byte_t* k, size_t
             __leave2;
         }
 
-        pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, nullptr, k, size);
-        if (nullptr == pkey) {
+        EVP_PKEY_ptr pkey(EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, nullptr, k, size));
+        if (nullptr == pkey.get()) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
 
-        crypto_key_object key(pkey, desc);
+        crypto_key_object key(pkey.get(), desc);
         ret = cryptokey->add(key);
-    }
-    __finally2 {
         if (errorcode_t::success != ret) {
-            if (nullptr != pkey) {
-                EVP_PKEY_free(pkey);
-            }
+            __leave2;
         }
+
+        pkey.release();  // cryptokey own pkey
     }
+    __finally2 {}
     return ret;
 }
 

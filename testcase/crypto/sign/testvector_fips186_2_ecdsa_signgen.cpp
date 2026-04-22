@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/testcase/crypto/sample.hpp>
+#include <hotplace/testcase/crypto/sign/testvector.hpp>
 
 // https://csrc.nist.gov/Projects/cryptographic-algorithm-validation-program/digital-signatures
 // FIPS 186-2 https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/dss/186-2ecdsatestvectors.zip

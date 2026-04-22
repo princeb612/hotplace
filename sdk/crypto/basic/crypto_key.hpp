@@ -619,7 +619,6 @@ class crypto_key {
      */
     return_t reference(crypto_key* skeys, crypto_kty_t kty, const char* sname, const char* dname = nullptr);
 
-   protected:
     /**
      * @brief extract
      * @param const EVP_PKEY* pkey [in]
@@ -629,6 +628,8 @@ class crypto_key {
      * @param bool plzero [inopt] preserve leading zero (default false)
      */
     static return_t extract(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
+
+   protected:
     static return_t extract_oct(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
     static return_t extract_rsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
     static return_t extract_ec(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);

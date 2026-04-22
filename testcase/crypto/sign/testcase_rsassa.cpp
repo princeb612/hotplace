@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/testcase/crypto/sample.hpp>
+#include <hotplace/testcase/crypto/sign/testvector.hpp>
 
 void dotest_nist_cavp_rsa_signgen15(crypto_key* key, const test_vector_nist_cavp_rsa_t* tv, size_t tvsize) {
     crypto_advisor* advisor = crypto_advisor::get_instance();

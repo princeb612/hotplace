@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/unittest/trace.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 
 namespace hotplace {
@@ -20,9 +21,11 @@ return_t get_opensslerror(int rc) {
         ret = errorcode_t::error_openssl_inside;
         uint32 option = get_trace_option();
         if (trace_option_t::trace_bt & option) {
-            basic_stream stream;
-            debug_trace_openssl(&stream);
-            std::cout << stream;
+#if defined DEBUG
+            if (istraceable(trace_category_crypto)) {
+                trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream &dbs) -> void { debug_trace_openssl(&dbs); });
+            }
+#endif
         }
     }
     return ret;
@@ -34,9 +37,11 @@ return_t trace_openssl(return_t errorcode) {
     if (errorcode_t::success != errorcode) {
         uint32 option = get_trace_option();
         if (trace_option_t::trace_bt & option) {
-            basic_stream stream;
-            debug_trace_openssl(&stream);
-            std::cout << stream;
+#if defined DEBUG
+            if (istraceable(trace_category_crypto)) {
+                trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream &dbs) -> void { debug_trace_openssl(&dbs); });
+            }
+#endif
         }
     }
     return ret;

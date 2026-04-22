@@ -43,14 +43,16 @@ return_t openssl_sign::sign_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, 
         }
 
         {
-            DSA_SIG* sig = DSA_do_sign(digest.data(), digest.size(), (DSA*)dsa);
-            if (sig) {
+            DSA_SIG_ptr sig(DSA_do_sign(digest.data(), digest.size(), (DSA*)dsa));
+            if (sig.get()) {
                 const BIGNUM* bn_r = nullptr;
                 const BIGNUM* bn_s = nullptr;
-                DSA_SIG_get0(sig, &bn_r, &bn_s);
+                DSA_SIG_get0(sig.get(), &bn_r, &bn_s);
                 bn2bin(bn_r, r);
                 bn2bin(bn_s, s);
-                DSA_SIG_free(sig);
+            } else {
+                ret = errorcode_t::internal_error;
+                __leave2_trace_openssl(ret);
             }
         }
     }
@@ -67,9 +69,6 @@ return_t openssl_sign::verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg
 return_t openssl_sign::verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& r, const binary_t& s) {
     return_t ret = errorcode_t::success;
     int ret_openssl = 1;
-    BIGNUM* bn_r = nullptr;
-    BIGNUM* bn_s = nullptr;
-    DSA_SIG* sig = nullptr;
     __try2 {
         if (nullptr == pkey || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
@@ -87,27 +86,25 @@ return_t openssl_sign::verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg
             }
         }
 
-        bin2bn(r, &bn_r);
-        bin2bn(s, &bn_s);
-        sig = DSA_SIG_new();
-        DSA_SIG_set0(sig, bn_r, bn_s);
-        ret_openssl = DSA_do_verify(digest.data(), digest.size(), sig, (DSA*)dsa);
+        BIGNUM* bignum_r = nullptr;
+        BIGNUM* bignum_s = nullptr;
+        bin2bn(r, &bignum_r);
+        bin2bn(s, &bignum_s);
+
+        BN_ptr bn_r(bignum_r);
+        BN_ptr bn_s(bignum_s);
+
+        DSA_SIG_ptr sig(DSA_SIG_new());
+        DSA_SIG_set0(sig.get(), bn_r.get(), bn_s.get());
+        bn_r.release();  // sig own bn_r
+        bn_s.release();  // sig own bn_s
+
+        ret_openssl = DSA_do_verify(digest.data(), digest.size(), sig.get(), (DSA*)dsa);
         if (ret_openssl < 1) {
             ret = errorcode_t::error_verify;
         }
     }
-    __finally2 {
-        if (sig) {
-            DSA_SIG_free(sig);  // bn_r, bn_s
-        } else {
-            if (bn_r) {
-                BN_free(bn_r);
-            }
-            if (bn_s) {
-                BN_free(bn_s);
-            }
-        }
-    }
+    __finally2 {}
     return ret;
 }
 

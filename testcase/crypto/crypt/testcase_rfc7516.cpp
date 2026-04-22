@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/testcase/crypto/crypt/testvector.hpp>
 #include <hotplace/testcase/crypto/sample.hpp>
 
 // Authenticated Encryption with AES-CBC and HMAC-SHA

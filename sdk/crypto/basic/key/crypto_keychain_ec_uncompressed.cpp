@@ -22,9 +22,7 @@ return_t crypto_keychain::add_ec_uncompressed(crypto_key* cryptokey, uint32 nid,
 return_t crypto_keychain::add_ec_uncompressed(crypto_key* cryptokey, uint32 nid, const byte_t* pubkey, size_t pubsize, const byte_t* privkey, size_t privsize,
                                               const keydesc& desc) {
     return_t ret = errorcode_t::success;
-    EVP_PKEY* pkey = nullptr;
-    EC_KEY* eckey = nullptr;
-    BIGNUM* bn_priv = nullptr;
+    EC_KEY* eck = nullptr;
     int rc = 1;
     __try2 {
         if (nullptr == cryptokey) {
@@ -32,52 +30,53 @@ return_t crypto_keychain::add_ec_uncompressed(crypto_key* cryptokey, uint32 nid,
             __leave2;
         }
 
-        pkey = EVP_PKEY_new();
-        if (nullptr == pkey) {
+        EVP_PKEY_ptr pkey(EVP_PKEY_new());
+        if (nullptr == pkey.get()) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
-        eckey = EC_KEY_new_by_curve_name(nid);
-        if (nullptr == eckey) {
+        eck = EC_KEY_new_by_curve_name(nid);
+        if (nullptr == eck) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         // call both o2i_ECPublicKey and EC_KEY_set_private_key
         if (pubkey && pubsize) {
-            o2i_ECPublicKey(&eckey, &pubkey, pubsize);
+            o2i_ECPublicKey(/* inout */ &eck, &pubkey, pubsize);
         }
-        if (privkey && privsize) {
-            bn_priv = BN_bin2bn(privkey, privsize, nullptr);
 
-            rc = EC_KEY_set_private_key(eckey, bn_priv);
+        EC_KEY_ptr eckey(eck);
+        eck = nullptr;
+
+        if (privkey && privsize) {
+            BN_ptr bn_priv(BN_bin2bn(privkey, privsize, nullptr));
+
+            rc = EC_KEY_set_private_key(eckey.get(), bn_priv.get());
             if (rc != 1) {
                 ret = errorcode_t::internal_error;
                 __leave2_trace_openssl(ret);
             }
         }
 
-        rc = EVP_PKEY_assign_EC_KEY(pkey, eckey);
+        rc = EVP_PKEY_assign_EC_KEY(pkey.get(), eckey.get());
         if (rc < 1) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
+        eckey.release();  // pkey own eckey
 
-        crypto_key_object key(pkey, desc);
+        crypto_key_object key(pkey.get(), desc);
         ret = cryptokey->add(key);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        pkey.release();  // cryptokey own pkey
     }
     __finally2 {
-        if (errorcode_t::success != ret) {
-            if (pkey) {
-                EVP_PKEY_free(pkey);
-            }
-        }
-        // if (eckey) {
-        //     EC_KEY_free(eckey);
-        // }
-        if (bn_priv) {
-            BN_free(bn_priv);
+        if (eck) {
+            EC_KEY_free(eck);
         }
     }
     return ret;

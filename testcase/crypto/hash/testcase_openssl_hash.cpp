@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/testcase/crypto/hash/test.hpp>
 #include <hotplace/testcase/crypto/sample.hpp>
 
 // no plan

@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/testcase/crypto/sample.hpp>
+#include <hotplace/testcase/crypto/sign/testvector.hpp>
 
 const test_vector_nist_cavp_ecdsa_t test_vector_rfc6979[] = {
     // A.2.3.  ECDSA, 192 Bits (Prime Field)

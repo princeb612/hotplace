@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/testcase/crypto/sample.hpp>
+#include <hotplace/testcase/crypto/sign/testvector.hpp>
 #include <map>
 
 void test_dsa() {

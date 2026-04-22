@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/testcase/crypto/sample.hpp>
+#include <hotplace/testcase/crypto/sign/testvector.hpp>
 
 // https://csrc.nist.gov/projects/cryptographic-algorithm-validation-program/digital-signatures
 // SigGen PKCS#1 Ver1.5

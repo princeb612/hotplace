@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/testcase/crypto/crypt/testvector.hpp>
 #include <hotplace/testcase/crypto/sample.hpp>
 
 void do_test_chacha20_rfc7539_testvector(const test_vector_rfc7539_t* vector) {

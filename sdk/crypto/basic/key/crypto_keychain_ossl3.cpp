@@ -25,15 +25,13 @@ return_t crypto_keychain::pkey_keygen_byname(OSSL_LIB_CTX* libctx, EVP_PKEY** pk
         }
 
         int rc = 0;
-        auto pkey_ctx = EVP_PKEY_CTX_new_from_name(libctx, name, nullptr);
-        if (pkey_ctx) {
-            rc = EVP_PKEY_keygen_init(pkey_ctx);
+        EVP_PKEY_CTX_ptr pkey_ctx(EVP_PKEY_CTX_new_from_name(libctx, name, nullptr));
+        if (pkey_ctx.get()) {
+            rc = EVP_PKEY_keygen_init(pkey_ctx.get());
             // OSSL_PARAM* params;
             // ...
             // EVP_PKEY_CTX_set_params(pkey_ctx, params);
-            EVP_PKEY_keygen(pkey_ctx, pkey);
-
-            EVP_PKEY_CTX_free(pkey_ctx);
+            EVP_PKEY_keygen(pkey_ctx.get(), pkey);
         } else {
             ret = errorcode_t::internal_error;
             __leave2;
@@ -49,8 +47,6 @@ return_t crypto_keychain::pkey_keygen_byname(OSSL_LIB_CTX* libctx, EVP_PKEY** pk
 return_t crypto_keychain::pkey_encode_format(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keydata, key_encoding_t encoding, const char* passphrase) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    OSSL_ENCODER_CTX* encoder_context = nullptr;
-    BIO* mem = nullptr;
     __try2 {
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
@@ -69,11 +65,11 @@ return_t crypto_keychain::pkey_encode_format(OSSL_LIB_CTX* libctx, const EVP_PKE
             __leave2;
         }
 
-        encoder_context = OSSL_ENCODER_CTX_new_for_pkey(pkey, params.selection, params.format, params.structure, nullptr);
-        if (encoder_context) {
+        OSSL_ENCODER_CTX_ptr encoder_context(OSSL_ENCODER_CTX_new_for_pkey(pkey, params.selection, params.format, params.structure, nullptr));
+        if (encoder_context.get()) {
             if (passphrase) {
-                OSSL_ENCODER_CTX_set_passphrase(encoder_context, (const unsigned char*)passphrase, strlen(passphrase));
-                OSSL_ENCODER_CTX_set_cipher(encoder_context, "AES-256-CBC", nullptr);
+                OSSL_ENCODER_CTX_set_passphrase(encoder_context.get(), (const unsigned char*)passphrase, strlen(passphrase));
+                OSSL_ENCODER_CTX_set_cipher(encoder_context.get(), "AES-256-CBC", nullptr);
             }
 
             unsigned char* pub = nullptr;
@@ -81,14 +77,14 @@ return_t crypto_keychain::pkey_encode_format(OSSL_LIB_CTX* libctx, const EVP_PKE
             BUF_MEM* buf = nullptr;
             int rc = 0;
 
-            mem = BIO_new(BIO_s_mem());
-            rc = OSSL_ENCODER_to_bio(encoder_context, mem);
+            BIO_ptr mem(BIO_new(BIO_s_mem()));
+            rc = OSSL_ENCODER_to_bio(encoder_context.get(), mem.get());
             if (rc < 1) {
                 ret = errorcode_t::internal_error;
                 __leave2;
             }
 
-            BIO_get_mem_ptr(mem, &buf);
+            BIO_get_mem_ptr(mem.get(), &buf);
             if (nullptr == buf || 0 == buf->length) {
                 ret = errorcode_t::internal_error;
                 __leave2;
@@ -100,10 +96,7 @@ return_t crypto_keychain::pkey_encode_format(OSSL_LIB_CTX* libctx, const EVP_PKE
             ret = failed;
         }
     }
-    __finally2 {
-        BIO_free(mem);
-        OSSL_ENCODER_CTX_free(encoder_context);
-    }
+    __finally2 {}
 #else
     ret = errorcode_t::not_supported;
 #endif
@@ -127,8 +120,6 @@ return_t crypto_keychain::pkey_decode_format(OSSL_LIB_CTX* libctx, EVP_PKEY** pk
                                              const char* passphrase) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    BIO* buf = nullptr;
-    OSSL_DECODER_CTX* decoder_context = nullptr;
     int rc = 0;
     __try2 {
         if (nullptr == pkey || nullptr == keystream) {
@@ -146,19 +137,19 @@ return_t crypto_keychain::pkey_decode_format(OSSL_LIB_CTX* libctx, EVP_PKEY** pk
             __leave2;
         }
 
-        buf = BIO_new_mem_buf(keystream, keysize);
-        if (nullptr == buf) {
+        BIO_ptr buf(BIO_new_mem_buf(keystream, keysize));
+        if (nullptr == buf.get()) {
             ret = failed;
             __leave2;
         }
 
-        decoder_context = OSSL_DECODER_CTX_new_for_pkey(pkey, params.format, params.structure, nullptr, params.selection, libctx, nullptr);
-        if (decoder_context) {
+        OSSL_DECODER_CTX_ptr decoder_context(OSSL_DECODER_CTX_new_for_pkey(pkey, params.format, params.structure, nullptr, params.selection, libctx, nullptr));
+        if (decoder_context.get()) {
             if (passphrase) {
-                OSSL_DECODER_CTX_set_passphrase(decoder_context, (const unsigned char*)passphrase, strlen(passphrase));
+                OSSL_DECODER_CTX_set_passphrase(decoder_context.get(), (const unsigned char*)passphrase, strlen(passphrase));
             }
 
-            rc = OSSL_DECODER_from_bio(decoder_context, buf);
+            rc = OSSL_DECODER_from_bio(decoder_context.get(), buf.get());
             if (rc < 1) {
                 ret = failed;
                 __leave2_trace_openssl(ret);
@@ -168,10 +159,7 @@ return_t crypto_keychain::pkey_decode_format(OSSL_LIB_CTX* libctx, EVP_PKEY** pk
             __leave2;
         }
     }
-    __finally2 {
-        BIO_free(buf);
-        OSSL_DECODER_CTX_free(decoder_context);
-    }
+    __finally2 {}
 #else
     ret = errorcode_t::not_supported;
 #endif
@@ -271,7 +259,6 @@ return_t crypto_keychain::pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name
                                           key_encoding_t encoding) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    EVP_PKEY_CTX* pctx = NULL;
     OSSL_PARAM params[3];
     int rc = 0;
     __try2 {
@@ -298,12 +285,12 @@ return_t crypto_keychain::pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name
             __leave2;
         }
 
-        pctx = EVP_PKEY_CTX_new_from_name(NULL, name, NULL);
-        if (nullptr == pctx) {
+        EVP_PKEY_CTX_ptr pctx(EVP_PKEY_CTX_new_from_name(NULL, name, NULL));
+        if (nullptr == pctx.get()) {
             ret = failed;
             __leave2_trace_openssl(ret);
         }
-        rc = EVP_PKEY_fromdata_init(pctx);
+        rc = EVP_PKEY_fromdata_init(pctx.get());
         if (rc <= 0) {
             ret = failed;
             __leave2_trace_openssl(ret);
@@ -312,13 +299,13 @@ return_t crypto_keychain::pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name
         params[0] = OSSL_PARAM_construct_octet_string(param, (void*)keystream, keysize);
         params[1] = OSSL_PARAM_construct_end();
 
-        rc = EVP_PKEY_fromdata(pctx, pkey, selection, params);
+        rc = EVP_PKEY_fromdata(pctx.get(), pkey, selection, params);
         if (rc <= 0) {
             ret = failed;
             __leave2_trace_openssl(ret);
         }
     }
-    __finally2 { EVP_PKEY_CTX_free(pctx); }
+    __finally2 {}
 #else
     ret = errorcode_t::not_supported;
 #endif
@@ -381,8 +368,6 @@ bool crypto_keychain::pkey_is_private(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey
     bool ret_value = false;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
     return_t ret = errorcode_t::success;
-    OSSL_ENCODER_CTX* encoder_context = nullptr;
-    BIO* mem = nullptr;
     __try2 {
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
@@ -394,20 +379,20 @@ bool crypto_keychain::pkey_is_private(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey
         key_encoding_params_t params;
         advisor->get_encoding_params(key_encoding_priv_der, params);
 
-        encoder_context = OSSL_ENCODER_CTX_new_for_pkey(pkey, params.selection, params.format, params.structure, nullptr);
-        if (encoder_context) {
+        OSSL_ENCODER_CTX_ptr encoder_context(OSSL_ENCODER_CTX_new_for_pkey(pkey, params.selection, params.format, params.structure, nullptr));
+        if (encoder_context.get()) {
             unsigned char* pub = nullptr;
             size_t publen = 0;
             BUF_MEM* buf = nullptr;
             int rc = 0;
 
-            mem = BIO_new(BIO_s_mem());
-            rc = OSSL_ENCODER_to_bio(encoder_context, mem);
+            BIO_ptr mem(BIO_new(BIO_s_mem()));
+            rc = OSSL_ENCODER_to_bio(encoder_context.get(), mem.get());
             if (rc < 1) {
                 __leave2;
             }
 
-            BIO_get_mem_ptr(mem, &buf);
+            BIO_get_mem_ptr(mem.get(), &buf);
             if (nullptr == buf || 0 == buf->length) {
                 __leave2;
             }
@@ -417,10 +402,7 @@ bool crypto_keychain::pkey_is_private(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey
             ret = failed;
         }
     }
-    __finally2 {
-        BIO_free(mem);
-        OSSL_ENCODER_CTX_free(encoder_context);
-    }
+    __finally2 {}
 #else
     // ret = errorcode_t::not_supported;
 #endif

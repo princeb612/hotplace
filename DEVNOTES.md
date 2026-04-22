@@ -6,50 +6,6 @@
 - [Memo](#memo)
 - [TODO](#todo)
 
-### Release
-
-TLS
-- RFC 5246 The Transport Layer Security (TLS) Protocol Version 1.2
-- RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
-- RFC 8448 Example Handshake Traces for TLS 1.3
-- ML-KEM Post-Quantum Key Agreement for TLS 1.3
-
-DTLS
-- RFC 9147 The Datagram Transport Layer Security (DTLS) Protocol Version 1.3
-
-QUIC
-- RFC 9000 QUIC: A UDP-Based Multiplexed and Secure Transport
-- RFC 9001 Using TLS to Secure QUIC
-- RFC 9369 QUIC Version 2
-
-HTTP/1.1, HTTP/2
-- RFC 2617 HTTP Authentication: Basic and Digest Access Authentication
-- RFC 7616 HTTP Digest Access Authentication
-- RFC 6749 The OAuth 2.0 Authorization Framework
-- RFC 7541 HPACK: Header Compression for HTTP/2
-- RFC 7540 Hypertext Transfer Protocol Version 2 (HTTP/2)
-  - basic request/response
-  - not support authentication schemes yet
-
-JOSE
-- RFC 7515 JSON Web Signature (JWS)
-- RFC 7516 JSON Web Encryption (JWE)
-- RFC 7517 JSON Web Key (JWK)
-- RFC 7518 JSON Web Algorithms (JWA)
-- RFC 7520 Examples of Protecting Content Using JSON Object Signing and Encryption (JOSE)
-- RFC 8037 CFRG Elliptic Curve Diffie-Hellman (ECDH) and Signatures in JSON Object Signing and Encryption (JOSE)
-
-COSE
-- RFC 7049 Concise Binary Object Representation (CBOR)
-- RFC 8152 CBOR Object Signing and Encryption (COSE)
-- RFC 8230 Using RSA Algorithms with CBOR Object Signing and Encryption (COSE) Messages
-- RFC 8392 CBOR Web Token (CWT)
-- RFC 8812 CBOR Object Signing and Encryption (COSE) and JSON Object Signing and Encryption (JOSE) Registrations for Web Authentication (WebAuthn) Algorithms
-- RFC 8949 Concise Binary Object Representation (CBOR)
-- RFC 9052 CBOR Object Signing and Encryption (COSE): Structures and Process
-- RFC 9053 CBOR Object Signing and Encryption (COSE): Initial Algorithms
-- RFC 9338 CBOR Object Signing and Encryption (COSE): Countersignatures
-
 ### Plan
 
 - in progress
@@ -210,6 +166,7 @@ flowchart LR
 ## TODO
 
 - [ ] HTTP/3
+  - [x] [The Illustrated QUIC Connection](https://quic.xargs.org/)
   - [x] http3.pcapng
     - [x] pcap
   - [ ] integration - network_server
@@ -223,9 +180,8 @@ flowchart LR
   - [x] static table
   - [x] dynamic table
 - [ ] TLS (understanding record, handshake, extension)
-  - [x] tls13.xargs.org
-  - [x] tls12.xargs.org
-  - [x] dtls.xargs.org
+  - [x] [The Illustrated TLS 1.3 Connection](https://tls13.xargs.org/)
+  - [x] [The Illustrated TLS 1.2 Connection](https://tls12.xargs.org/)
   - [x] RFC 8448
     - [x] 1-RTT
     - [x] 0-RTT
@@ -237,14 +193,12 @@ flowchart LR
     - [x] certificate verify
     - [x] finished
   - [x] TLS construct
-    - [x] TLS version
-      - [x] TLS1.3
-      - [x] TLS1.2 (fixed rev.740)
-  - [ ] DTLS construct
-    - [x] DTLS version
-      - [x] DTLS1.3
-      - [x] DTLS1.2 (rev.751, 760)
-      - [x] fragmentation (rev.758)
+    - [x] TLS1.3
+    - [x] TLS1.2 (fixed rev.740)
+  - [x] DTLS construct
+    - [x] DTLS1.3
+    - [x] DTLS1.2 (rev.751, 760)
+    - [x] fragmentation (rev.758)
   - [x] TLS over TCP (example netclient)
     - [x] HTTP/1.1
   - [x] DTLS over UDP (rev. 766)
@@ -255,10 +209,9 @@ flowchart LR
   - [x] TCP segmentation
   - [x] DTLS 1.2 AEAD (CCM not tested - no test vector)
   - [ ] extensions
-    - [ ] encrypted_client_hello
-    - [ ] compress_certificate
 - [x] UDP/DTLS
   - [x] integration - multiplexer (epoll, IOCP)
+  - [x] [The Illustrated DTLS Connection](https://dtls.xargs.org/)
   - [x] integration - network_server
     - [x] trial_tls_server_socket
     - [x] trial_dtls_server_socket

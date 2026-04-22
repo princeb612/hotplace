@@ -453,8 +453,8 @@ enum crypt_item_t : uint16 {
     item_ec_pub_uncompressed = 77,
     item_ec_pub = item_ec_pub_uncompressed,
 
-    item_dh_pub = 78,
-    item_dh_priv = 79,
+    item_dh_pub = 78,   // sa item_dh_p, item_dh_g, item_dh_y
+    item_dh_priv = 79,  // sa item_dh_x
 
     /**
      * DSA
@@ -482,6 +482,19 @@ enum crypt_item_t : uint16 {
     item_mlkem_priv = 86,
     item_mldsa_pub = 87,
     item_mldsa_priv = 88,
+
+    /**
+     *   y = g^x mod p
+     *     p : prime
+     *     g : generator
+     *     x : xate key
+     *     y : ylic key
+     */
+    item_dh_p = 89,
+    item_dh_q = 90,
+    item_dh_g = 91,
+    item_dh_y = item_dh_pub,
+    item_dh_x = item_dh_priv,
 
     /* string */
     item_header = 128,  // p - header (protected_header.decoded)

@@ -22,7 +22,7 @@ class simple_instance1 {
     ~simple_instance1() {
         _logger->writeln("destructor");
 
-        simple_instance1_dtor = 1;
+        ++simple_instance1_dtor;
     }
 
     void dosomething() { _logger->writeln("hello world"); }
@@ -40,7 +40,7 @@ class simple_instance2 {
     ~simple_instance2() {
         _logger->writeln("destructor");
 
-        simple_instance2_dtor = 1;
+        ++simple_instance2_dtor;
     }
     void dosomething() { _logger->writeln("hello world"); }
 };
@@ -65,19 +65,14 @@ void test_sharedinstance1() {
 void test_sharedinstance2() {
     _test_case.begin("shared instance");
     {
-        simple_instance2 *object = new simple_instance2;
-        t_shared_instance<simple_instance2> inst(object);  // ++refcounter
+        t_shared_instance<simple_instance2> inst;
+        inst.make_share(new simple_instance2);
         _test_case.assert(1 == inst.getref(), __FUNCTION__, "getref==1");
         inst->dosomething();
-        t_shared_instance<simple_instance2> inst2(inst);  // ++refcounter
-        _test_case.assert(2 == inst.getref(), __FUNCTION__, "getref==2");
+
+        t_shared_instance<simple_instance2> inst2(std::move(inst));
+        _test_case.assert(1 == inst2.getref(), __FUNCTION__, "getref==1");
         inst2->dosomething();
-        {
-            t_shared_instance<simple_instance2> inst3;
-            inst3 = inst;
-            _test_case.assert(3 == inst3.getref(), __FUNCTION__, "getref==3");
-        }
-        // delete here (2 times ~t_shared_instance)
     }  // curly brace for instance lifetime
     _test_case.assert(1 == simple_instance2_dtor, __FUNCTION__, "shared instance");
 }

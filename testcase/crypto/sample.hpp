@@ -11,9 +11,6 @@
 #define __HOTPLACE_TEST_CRYPTO__
 
 #include <hotplace/sdk/sdk.hpp>
-#include <hotplace/testcase/crypto/crypt/testvector.hpp>
-#include <hotplace/testcase/crypto/hash/test.hpp>
-#include <hotplace/testcase/crypto/sign/testvector.hpp>
 #include <hotplace/testcase/test.hpp>
 
 struct OPTION : public CMDLINEOPTION {

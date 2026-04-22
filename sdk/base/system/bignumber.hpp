@@ -264,7 +264,13 @@ class bignumber {
     static bignumber bitwise_not(const bignumber &other);
 
     static bignumber gcd(const bignumber &lhs, const bignumber &rhs);
+    /**
+     * @brief a^-1 mod m, however only when gcd(a, m) = 1
+     */
     static bignumber modinv(bignumber a, bignumber m);
+    /**
+     * @brief base^exp mod m
+     */
     static bignumber modpow(bignumber base, bignumber exp, const bignumber &m);
     static bignumber sqrt(const bignumber &other);
 

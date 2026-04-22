@@ -24,6 +24,7 @@ namespace hotplace {
 class semaphore : public semaphore_t {
    public:
     semaphore();
+    semaphore(const semaphore&) = delete;
     virtual ~semaphore();
 
     /**
@@ -37,7 +38,6 @@ class semaphore : public semaphore_t {
      */
     virtual return_t wait(unsigned msec);
 
-    semaphore(const semaphore&) = delete;
     semaphore& operator=(const semaphore&) = delete;
 
    protected:

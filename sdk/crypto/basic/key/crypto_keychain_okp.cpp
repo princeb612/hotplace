@@ -17,11 +17,7 @@ namespace crypto {
 
 return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const keydesc& desc) {
     return_t ret = errorcode_t::success;
-    EVP_PKEY* pkey = nullptr;
-    EVP_PKEY_CTX* ctx = nullptr;
     int ret_openssl = 0;
-    EVP_PKEY* params = nullptr;
-    EVP_PKEY_CTX* keyctx = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -43,45 +39,36 @@ return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const keyde
             __leave2;
         }
 
-        ctx = EVP_PKEY_CTX_new_id(type, nullptr);
-        if (nullptr == ctx) {
+        EVP_PKEY_CTX_ptr ctx(EVP_PKEY_CTX_new_id(type, nullptr));
+        if (nullptr == ctx.get()) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
         // OKP
-        ret_openssl = EVP_PKEY_keygen_init(ctx);
-        if (ret_openssl < 0) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-        ret_openssl = EVP_PKEY_keygen(ctx, &pkey);
+        ret_openssl = EVP_PKEY_keygen_init(ctx.get());
         if (ret_openssl < 0) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
-        if (pkey) {
-            crypto_key_object key(pkey, desc);
-            ret = cryptokey->add(key);
+        EVP_PKEY* pk = nullptr;
+        ret_openssl = EVP_PKEY_keygen(ctx.get(), &pk);
+        if (ret_openssl < 0) {
+            ret = errorcode_t::internal_error;
+            __leave2;
         }
-    }
-    __finally2 {
+
+        EVP_PKEY_ptr pkey(pk);
+
+        crypto_key_object key(pkey.get(), desc);
+        ret = cryptokey->add(key);
         if (errorcode_t::success != ret) {
-            if (pkey) {
-                EVP_PKEY_free(pkey);
-            }
-        }
-        if (keyctx) {
-            EVP_PKEY_CTX_free(keyctx);
-        }
-        if (params) {
-            EVP_PKEY_free(params);
+            __leave2;
         }
 
-        if (ctx) {
-            EVP_PKEY_CTX_free(ctx);
-        }
+        pkey.release();  // cryptokey own pkey
     }
+    __finally2 {}
     return ret;
 }
 
