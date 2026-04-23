@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   crypto_keychain.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -485,7 +485,7 @@ class crypto_keychain {
      */
     return_t add_dh(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
     return_t add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& y, const binary_t& x, const keydesc& desc);
-    /* @refer Gemini (y from pqg or pgx) */
+    /* @refer GPT (y from pqg or pgx) */
     return_t add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& p, const binary_t& q, const binary_t& g, const binary_t& x, const keydesc& desc);
     return_t add_dh_b64(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const keydesc& desc);
     return_t add_dh_b64u(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const keydesc& desc);

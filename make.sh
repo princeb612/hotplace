@@ -79,6 +79,7 @@ do_ctest=0
 do_makefile=0
 do_redist=0
 do_test=0
+do_updateheader=0
 
 CXXFLAGS=''
 SUPPORT_DEBUG=0
@@ -110,6 +111,8 @@ if [ ${#args[@]} -ne 0 ]; then
             # Visual Studio Community
             builddir=build_msvc
             generator='Visual Studio 18 2026'
+        elif [ $arg = 'header' ]; then
+            do_updateheader=1
         elif [ $arg = 'odbc' ]; then
             export SUPPORT_ODBC=1
         elif [ $arg = 'opt' ]; then
@@ -152,8 +155,25 @@ if [ $do_clangformat = 1 ]; then
     clang-format -i `find testapplet -name \*.\?pp`
 fi
 
+# update_fileheader directory
+function update_fileheader() (
+    find $1 -name "*.?pp" -type f | while read file; do
+        # dir=$(dirname "$file")
+        # base=$(basename "$file")
+        dir="${file%/*}"
+        base="${file##*/}"
+        echo sed -i 's/ \* @file.*/ \* @file   '$base'/g' $file
+        sed -i 's/ \* @file.*/ \* @file   '$base'/g' $file
+    done
+)
+if [[ $do_updateheader = 1 ]]; then
+    update_fileheader sdk
+    update_fileheader testcase
+    update_fileheader testapplet
+fi
+
 # redist mingw binaries
-if [ $do_redist = 1 ]; then
+if [[ $do_redist = 1 ]]; then
     # redist binaries to run wo mingw environment
     cd ${HOTPLACE_HOME}
     source redist.msys

@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   quic_frame_connection_close.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *      RFC 9000 19.19.  CONNECTION_CLOSE Frames

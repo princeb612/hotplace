@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   types.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -100,11 +100,17 @@ class time_otp;
 struct BIO_deleter {
     void operator()(BIO* bio) const { BIO_free(bio); }
 };
+struct BIO_chain_deleter {
+    void operator()(BIO* bio) const { BIO_free_all(bio); }
+};
 struct BN_deleter {
     void operator()(BIGNUM* bn) const { BN_clear_free(bn); }
 };
 struct BN_CTX_deleter {
     void operator()(BN_CTX* bn_ctx) const { BN_CTX_free(bn_ctx); }
+};
+struct CMAC_CTX_deleter {
+    void operator()(CMAC_CTX* ctx) const { CMAC_CTX_free(ctx); }
 };
 struct DH_deleter {
     void operator()(DH* dh) const { DH_free(dh); }
@@ -121,11 +127,26 @@ struct EC_KEY_deleter {
 struct EC_POINT_deleter {
     void operator()(EC_POINT* ecpoint) const { EC_POINT_free(ecpoint); }
 };
+struct EVP_CIPHER_deleter {
+    void operator()(EVP_CIPHER* cipher) const { EVP_CIPHER_free(cipher); }
+};
+struct EVP_CIPHER_CTX_deleter {
+    void operator()(EVP_CIPHER_CTX* ctx) const { EVP_CIPHER_CTX_free(ctx); }
+};
+struct EVP_MD_deleter {
+    void operator()(EVP_MD* md) const { EVP_MD_free(md); }
+};
+struct EVP_MD_CTX_deleter {
+    void operator()(EVP_MD_CTX* ctx) const { EVP_MD_CTX_free(ctx); }
+};
 struct EVP_PKEY_deleter {
     void operator()(EVP_PKEY* pkey) const { EVP_PKEY_free(pkey); }
 };
 struct EVP_PKEY_CTX_deleter {
-    void operator()(EVP_PKEY_CTX* pkey_ctx) const { EVP_PKEY_CTX_free(pkey_ctx); }
+    void operator()(EVP_PKEY_CTX* ctx) const { EVP_PKEY_CTX_free(ctx); }
+};
+struct HMAC_CTX_deleter {
+    void operator()(HMAC_CTX* ctx) const { HMAC_CTX_free(ctx); }
 };
 struct OSSL_DECODER_CTX_deleter {
     void operator()(OSSL_DECODER_CTX* ossldecoder) const { OSSL_DECODER_CTX_free(ossldecoder); }
@@ -141,15 +162,22 @@ struct X509_deleter {
 };
 
 using BIO_ptr = std::unique_ptr<BIO, BIO_deleter>;
+using BIO_CHAIN_ptr = std::unique_ptr<BIO, BIO_chain_deleter>;
 using BN_ptr = std::unique_ptr<BIGNUM, BN_deleter>;
 using BN_CTX_ptr = std::unique_ptr<BN_CTX, BN_CTX_deleter>;
+using CMAC_CTX_ptr = std::unique_ptr<CMAC_CTX, CMAC_CTX_deleter>;
 using DH_ptr = std::unique_ptr<DH, DH_deleter>;
 using DSA_ptr = std::unique_ptr<DSA, DSA_deleter>;
 using DSA_SIG_ptr = std::unique_ptr<DSA_SIG, DSA_SIG_deleter>;
 using EC_KEY_ptr = std::unique_ptr<EC_KEY, EC_KEY_deleter>;
 using EC_POINT_ptr = std::unique_ptr<EC_POINT, EC_POINT_deleter>;
+using EVP_CIPHER_ptr = std::unique_ptr<EVP_CIPHER, EVP_CIPHER_deleter>;
+using EVP_CIPHER_CTX_ptr = std::unique_ptr<EVP_CIPHER_CTX, EVP_CIPHER_CTX_deleter>;
+using EVP_MD_ptr = std::unique_ptr<EVP_MD, EVP_MD_deleter>;
+using EVP_MD_CTX_ptr = std::unique_ptr<EVP_MD_CTX, EVP_MD_CTX_deleter>;
 using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, EVP_PKEY_deleter>;
 using EVP_PKEY_CTX_ptr = std::unique_ptr<EVP_PKEY_CTX, EVP_PKEY_CTX_deleter>;
+using HMAC_CTX_ptr = std::unique_ptr<HMAC_CTX, HMAC_CTX_deleter>;
 using OSSL_DECODER_CTX_ptr = std::unique_ptr<OSSL_DECODER_CTX, OSSL_DECODER_CTX_deleter>;
 using OSSL_ENCODER_CTX_ptr = std::unique_ptr<OSSL_ENCODER_CTX, OSSL_ENCODER_CTX_deleter>;
 using RSA_ptr = std::unique_ptr<RSA, RSA_deleter>;

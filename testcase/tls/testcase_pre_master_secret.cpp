@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   testcase_pre_master_secret.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc https://github.com/syncsynchalt/illustrated-tls13
  * @remarks

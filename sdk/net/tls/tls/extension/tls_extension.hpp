@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   tls_extension.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -27,7 +27,6 @@ namespace net {
 class tls_extension {
    public:
     tls_extension(tls_handshake* hs);
-    tls_extension(const tls_extension& other);
     tls_extension(uint16 type, tls_handshake* hs);
     virtual ~tls_extension();
 

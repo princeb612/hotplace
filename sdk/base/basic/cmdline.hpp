@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   cmdline.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -66,6 +66,9 @@ class t_cmdarg_t {
     const char* desc() const;
     uint32 flag() const;
 
+    t_cmdarg_t& operator=(const t_cmdarg_t& other);
+    t_cmdarg_t& operator=(t_cmdarg_t&& other);
+
    protected:
     return_t bind(T& source, char* param);
 
@@ -123,6 +126,24 @@ return_t t_cmdarg_t<T>::bind(T& source, char* param) {
 
     _func(source, param);
     return ret;
+}
+
+template <typename T>
+t_cmdarg_t<T>& t_cmdarg_t<T>::operator=(const t_cmdarg_t& other) {
+    _token = other._token;
+    _desc = other._desc;
+    _func = other._func;
+    _flag = other._flag;
+    return *this;
+}
+
+template <typename T>
+t_cmdarg_t<T>& t_cmdarg_t<T>::operator=(t_cmdarg_t&& other) {
+    _token = std::move(other._token);
+    _desc = std::move(other._desc);
+    _func = std::move(other._func);
+    _flag = other._flag;
+    return *this;
 }
 
 /*

@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   quic_frame_handshake_done.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *      RFC 9000 19.20.  HANDSHAKE_DONE Frames

@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   http_header.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *  RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1

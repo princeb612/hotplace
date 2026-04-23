@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   openssl_kdf.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -34,7 +34,7 @@ return_t openssl_kdf::hkdf(binary_t& derived, hash_algorithm_t alg, size_t dlen,
 
 return_t openssl_kdf::hmac_kdf(binary_t& derived, hash_algorithm_t alg, size_t dlen, const binary_t& key, const binary_t& salt, const binary_t& info) {
     return_t ret = errorcode_t::success;
-    EVP_PKEY_CTX* ctx = nullptr;
+    // EVP_PKEY_CTX* ctx = nullptr;
     int ret_openssl = 0;
     const EVP_MD* md = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -53,30 +53,26 @@ return_t openssl_kdf::hmac_kdf(binary_t& derived, hash_algorithm_t alg, size_t d
             __leave2;
         }
 
-        ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, nullptr);
-        if (nullptr == ctx) {
+        EVP_PKEY_CTX_ptr ctx(EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, nullptr));
+        if (nullptr == ctx.get()) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
-        EVP_PKEY_derive_init(ctx);
-        EVP_PKEY_CTX_set_hkdf_md(ctx, md);
-        EVP_PKEY_CTX_set1_hkdf_key(ctx, key.data(), key.size());
-        EVP_PKEY_CTX_set1_hkdf_salt(ctx, salt.data(), salt.size());
-        EVP_PKEY_CTX_add1_hkdf_info(ctx, info.data(), info.size());
+        EVP_PKEY_derive_init(ctx.get());
+        EVP_PKEY_CTX_set_hkdf_md(ctx.get(), md);
+        EVP_PKEY_CTX_set1_hkdf_key(ctx.get(), key.data(), key.size());
+        EVP_PKEY_CTX_set1_hkdf_salt(ctx.get(), salt.data(), salt.size());
+        EVP_PKEY_CTX_add1_hkdf_info(ctx.get(), info.data(), info.size());
 
         derived.resize(dlen);
-        ret_openssl = EVP_PKEY_derive(ctx, derived.data(), &dlen);
+        ret_openssl = EVP_PKEY_derive(ctx.get(), derived.data(), &dlen);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
     }
-    __finally2 {
-        if (ctx) {
-            EVP_PKEY_CTX_free(ctx);
-        }
-    }
+    __finally2 {}
     return ret;
 }
 

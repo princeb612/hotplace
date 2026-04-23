@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   tls_protection_hp.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *          DTLS 1.3 ciphertext header protection

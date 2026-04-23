@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   crypto_keychain_okp.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -78,7 +78,6 @@ return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const binar
 
 return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const byte_t* x, size_t pubsize, const byte_t* d, size_t privsize, const keydesc& desc) {
     return_t ret = errorcode_t::success;
-    EVP_PKEY* pkey = nullptr;
 
     __try2 {
         if (nullptr == cryptokey) {
@@ -98,29 +97,28 @@ return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const byte_
             __leave2;
         }
 
+        EVP_PKEY_ptr pkey;
         if (d && privsize) {
-            pkey = EVP_PKEY_new_raw_private_key(nid, nullptr, d, privsize);
+            pkey = std::move(EVP_PKEY_ptr(EVP_PKEY_new_raw_private_key(nid, nullptr, d, privsize)));
         } else if (x && pubsize) {
-            pkey = EVP_PKEY_new_raw_public_key(nid, nullptr, x, pubsize);
+            pkey = std::move(EVP_PKEY_ptr(EVP_PKEY_new_raw_public_key(nid, nullptr, x, pubsize)));
         } else {
             ret = invalid_parameter;
             __leave2;
         }
-        if (nullptr == pkey) {
+        if (nullptr == pkey.get()) {
             ret = errorcode_t::bad_request;
             __leave2_trace_openssl(ret);
         }
 
-        crypto_key_object key(pkey, desc);
-        cryptokey->add(key);
-    }
-    __finally2 {
+        crypto_key_object key(pkey.get(), desc);
+        ret = cryptokey->add(key);
         if (errorcode_t::success != ret) {
-            if (pkey) {
-                EVP_PKEY_free(pkey);
-            }
+            __leave2;
         }
+        pkey.release();  // cryptokey own pkey
     }
+    __finally2 {}
     return ret;
 }
 

@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   tls_extension.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *          RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
@@ -30,14 +30,6 @@ constexpr char constexpr_ext_len[] = "extension len";
 constexpr char constexpr_extension_type[] = "extension type";
 
 tls_extension::tls_extension(tls_handshake* hs) : _hs(hs), _type(0), _bodysize(0), _size(0) {
-    if (nullptr == hs) {
-        throw exception(errorcode_t::no_session);
-    }
-    _shared.make_share(this);
-}
-
-tls_extension::tls_extension(const tls_extension& other) : _hs(other._hs), _type(other._type), _bodysize(other._bodysize), _size(other._size) {
-    auto hs = get_handshake();
     if (nullptr == hs) {
         throw exception(errorcode_t::no_session);
     }

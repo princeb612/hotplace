@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   dump_key.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -164,25 +164,23 @@ void dump_key_openssl(const EVP_PKEY* pkey, stream_t* stream, uint8 indent) {
         bool is_private = false;
         is_private_key(pkey, is_private);
 
-        BIO* bio = BIO_new(BIO_s_mem());
-        if (bio) {
+        BIO_ptr bio(BIO_new(BIO_s_mem()));
+        if (bio.get()) {
             if (is_private) {
-                EVP_PKEY_print_private(bio, pkey, indent, nullptr);
+                EVP_PKEY_print_private(bio.get(), pkey, indent, nullptr);
             } else {
-                EVP_PKEY_print_public(bio, pkey, indent, nullptr);
+                EVP_PKEY_print_public(bio.get(), pkey, indent, nullptr);
             }
 
             char temp[16];
             int l = 0;
             while (1) {
-                l = BIO_read(bio, temp, sizeof(temp));
+                l = BIO_read(bio.get(), temp, sizeof(temp));
                 if (0 >= l) {
                     break;
                 }
                 stream->write(temp, l);
             }
-
-            BIO_free(bio);
         }
     }
     __finally2 {}

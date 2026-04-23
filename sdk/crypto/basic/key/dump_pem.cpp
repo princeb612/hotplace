@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   dump_pem.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -18,7 +18,6 @@ namespace crypto {
 
 return_t dump_pem(const EVP_PKEY* pkey, stream_t* stream) {
     return_t ret = errorcode_t::success;
-    BIO* out = nullptr;
 
     __try2 {
         if (nullptr == pkey || nullptr == stream) {
@@ -27,30 +26,26 @@ return_t dump_pem(const EVP_PKEY* pkey, stream_t* stream) {
 
         stream->clear();
 
-        out = BIO_new(BIO_s_mem());
-        if (nullptr == out) {
+        BIO_CHAIN_ptr out(BIO_new(BIO_s_mem()));
+        if (nullptr == out.get()) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
-        dump_pem(pkey, out);
+        dump_pem(pkey, out.get());
 
         binary_t buf;
         buf.resize(64);
         int len = 0;
         while (1) {
-            len = BIO_read(out, buf.data(), buf.size());
+            len = BIO_read(out.get(), buf.data(), buf.size());
             if (0 >= len) {
                 break;
             }
             stream->write(buf.data(), len);
         }
     }
-    __finally2 {
-        if (out) {
-            BIO_free_all(out);
-        }
-    }
+    __finally2 {}
     return ret;
 }
 

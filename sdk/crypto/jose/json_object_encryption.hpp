@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   json_object_encryption.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *  RFC 7516 JSON Web Encryption (JWE)

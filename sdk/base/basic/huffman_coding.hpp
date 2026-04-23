@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   huffman_coding.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -52,6 +52,12 @@ class huffman_coding {
         hc_t(uint8 b) : symbol(b), weight(0), flags(0) {}
         hc_t(uint8 b, size_t f) : symbol(b), weight(f), flags(0) {}
         hc_t(const hc_t &other) : symbol(other.symbol), weight(other.weight), flags(other.flags) {}
+        hc_t &operator=(const hc_t &other) {
+            symbol = other.symbol;
+            weight = other.weight;
+            flags = other.flags;
+            return *this;
+        }
         friend bool operator<(const hc_t &lhs, const hc_t &rhs) { return lhs.symbol < rhs.symbol; }
     };
     struct hc_comparator : t_comparator_base<hc_t> {

@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   sample.cpp
  * @author  Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc    UDP server using multiplexer
  * @sa      See in the following order : udpserver, udpserver2, dtlsserver

@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   openssl_kdf_argon.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *  RFC 9106 Argon2 Memory-Hard Function for Password Hashing and Proof-of-Work Applications

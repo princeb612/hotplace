@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   graph.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -126,6 +126,21 @@ class t_graph {
             }
         }
         void change_vertex() { std::swap(_from, _to); }
+
+        edge& operator=(const edge& other) {
+            _from = other._from;
+            _to = other._to;
+            _weight = other._weight;
+            _direction = other._direction;
+            return *this;
+        }
+        edge& operator=(edge&& other) {
+            _from = std::move(other._from);
+            _to = std::move(other._to);
+            _weight = other._weight;
+            _direction = other._direction;
+            return *this;
+        }
     };
     /**
      * @brief   tag
@@ -150,6 +165,13 @@ class t_graph {
 
         bool is_unvisited() { return label_unvisited == get_label(); }
         bool is_visited() { return label_visited == get_label(); }
+
+        tag& operator=(const tag& other) {
+            _label = other._label;
+            _weight = other._weight;
+            _distance = other._distance;
+            return *this;
+        }
     };
 
     friend bool operator<(const vertex& lhs, const vertex& rhs) { return lhs._data < rhs._data; }

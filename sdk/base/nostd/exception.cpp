@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   exception.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -20,6 +20,18 @@ exception::exception(errorcode_t err, const std::string& desc) : _errorcode(err)
 exception::exception(const exception& other) : _errorcode(other._errorcode), _desc(other._desc) {}
 
 exception::exception(exception&& other) : _errorcode(other._errorcode), _desc(std::move(other._desc)) {}
+
+exception& exception::operator=(const exception& other) {
+    _errorcode = other._errorcode;
+    _desc = other._desc;
+    return *this;
+}
+
+exception& exception::operator=(exception&& other) {
+    _errorcode = other._errorcode;
+    _desc = std::move(other._desc);
+    return *this;
+}
 
 errorcode_t exception::get_errorcode() const { return _errorcode; }
 

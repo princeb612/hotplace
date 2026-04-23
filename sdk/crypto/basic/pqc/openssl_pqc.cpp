@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   openssl_pqc.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -117,7 +117,6 @@ return_t openssl_pqc::decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** 
 return_t openssl_pqc::encapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keycapsule, binary_t& sharedsecret) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    EVP_PKEY_CTX* pkey_ctx = nullptr;
     size_t keycapsule_len = 0;
     size_t sharedsecret_len = 0;
     int test = 0;
@@ -127,8 +126,8 @@ return_t openssl_pqc::encapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, bina
             __leave2;
         }
 
-        pkey_ctx = EVP_PKEY_CTX_new_from_pkey(nullptr, (EVP_PKEY*)pkey, nullptr);
-        if (nullptr == pkey_ctx) {
+        EVP_PKEY_CTX_ptr pkey_ctx(EVP_PKEY_CTX_new_from_pkey(nullptr, (EVP_PKEY*)pkey, nullptr));
+        if (nullptr == pkey_ctx.get()) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
@@ -136,12 +135,12 @@ return_t openssl_pqc::encapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, bina
         // oqs-provider/test/oqs_test_kems.c
         // $ ./oqs_test_kems oqsprovider path/oqs.cnf
 
-        test = EVP_PKEY_encapsulate_init(pkey_ctx, nullptr);
+        test = EVP_PKEY_encapsulate_init(pkey_ctx.get(), nullptr);
         if (test <= 0) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
-        test = EVP_PKEY_encapsulate(pkey_ctx, nullptr, &keycapsule_len, nullptr, &sharedsecret_len);
+        test = EVP_PKEY_encapsulate(pkey_ctx.get(), nullptr, &keycapsule_len, nullptr, &sharedsecret_len);
         if (test <= 0) {
             ret = errorcode_t::internal_error;
             __leave2;
@@ -150,13 +149,13 @@ return_t openssl_pqc::encapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, bina
         keycapsule.resize(keycapsule_len);
         sharedsecret.resize(sharedsecret_len);
 
-        test = EVP_PKEY_encapsulate(pkey_ctx, keycapsule.data(), &keycapsule_len, sharedsecret.data(), &sharedsecret_len);
+        test = EVP_PKEY_encapsulate(pkey_ctx.get(), keycapsule.data(), &keycapsule_len, sharedsecret.data(), &sharedsecret_len);
         if (test <= 0) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
     }
-    __finally2 { EVP_PKEY_CTX_free(pkey_ctx); }
+    __finally2 {}
 #else
     ret = errorcode_t::not_supported;
 #endif
@@ -179,7 +178,6 @@ return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, cons
 return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, const byte_t* capsulekeystream, size_t capsulekeysize, binary_t& sharedsecret) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    EVP_PKEY_CTX* pkey_ctx = nullptr;
     size_t sharedsecret_len = 0;
     int test = 0;
     __try2 {
@@ -188,18 +186,18 @@ return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, cons
             __leave2;
         }
 
-        pkey_ctx = EVP_PKEY_CTX_new_from_pkey(nullptr, (EVP_PKEY*)pkey, nullptr);
-        if (nullptr == pkey_ctx) {
+        EVP_PKEY_CTX_ptr pkey_ctx(EVP_PKEY_CTX_new_from_pkey(nullptr, (EVP_PKEY*)pkey, nullptr));
+        if (nullptr == pkey_ctx.get()) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
-        test = EVP_PKEY_decapsulate_init(pkey_ctx, nullptr);
+        test = EVP_PKEY_decapsulate_init(pkey_ctx.get(), nullptr);
         if (test <= 0) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
-        test = EVP_PKEY_decapsulate(pkey_ctx, nullptr, &sharedsecret_len, capsulekeystream, capsulekeysize);
+        test = EVP_PKEY_decapsulate(pkey_ctx.get(), nullptr, &sharedsecret_len, capsulekeystream, capsulekeysize);
         if (test <= 0) {
             ret = errorcode_t::internal_error;
             __leave2;
@@ -207,13 +205,13 @@ return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, cons
 
         sharedsecret.resize(sharedsecret_len);
 
-        test = EVP_PKEY_decapsulate(pkey_ctx, sharedsecret.data(), &sharedsecret_len, capsulekeystream, capsulekeysize);
+        test = EVP_PKEY_decapsulate(pkey_ctx.get(), sharedsecret.data(), &sharedsecret_len, capsulekeystream, capsulekeysize);
         if (test <= 0) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
     }
-    __finally2 { EVP_PKEY_CTX_free(pkey_ctx); }
+    __finally2 {}
 #else
     ret = errorcode_t::not_supported;
 #endif
@@ -223,7 +221,6 @@ return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, cons
 return_t openssl_pqc::sign(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    EVP_MD_CTX* md_context = nullptr;
     int rc = 1;
     size_t dgstsize = 0;
     __try2 {
@@ -233,30 +230,30 @@ return_t openssl_pqc::sign(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t* s
             __leave2;
         }
 
-        md_context = EVP_MD_CTX_new();
-        if (nullptr == md_context) {
+        EVP_MD_CTX_ptr md_context(EVP_MD_CTX_new());
+        if (nullptr == md_context.get()) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
 
-        rc = EVP_DigestSignInit_ex(md_context, nullptr, nullptr, libctx, nullptr, pkey, nullptr);
+        rc = EVP_DigestSignInit_ex(md_context.get(), nullptr, nullptr, libctx, nullptr, pkey, nullptr);
         if (rc < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
-        rc = EVP_DigestSignUpdate(md_context, stream, size);
+        rc = EVP_DigestSignUpdate(md_context.get(), stream, size);
         if (rc < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
-        rc = EVP_DigestSignFinal(md_context, nullptr, &dgstsize);
+        rc = EVP_DigestSignFinal(md_context.get(), nullptr, &dgstsize);
         if (rc < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
 
         signature.resize(dgstsize);
-        EVP_DigestSignFinal(md_context, signature.data(), &dgstsize);
+        EVP_DigestSignFinal(md_context.get(), signature.data(), &dgstsize);
 
         signature.resize(dgstsize);
     }
@@ -270,7 +267,6 @@ return_t openssl_pqc::sign(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t* s
 return_t openssl_pqc::verify(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    EVP_MD_CTX* md_context = nullptr;
     int rc = 1;
 
     __try2 {
@@ -283,25 +279,25 @@ return_t openssl_pqc::verify(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t*
             __leave2;
         }
 
-        md_context = EVP_MD_CTX_new();
-        if (nullptr == md_context) {
+        EVP_MD_CTX_ptr md_context(EVP_MD_CTX_new());
+        if (nullptr == md_context.get()) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
 
-        rc = EVP_DigestVerifyInit_ex(md_context, nullptr, nullptr, libctx, nullptr, pkey, nullptr);
+        rc = EVP_DigestVerifyInit_ex(md_context.get(), nullptr, nullptr, libctx, nullptr, pkey, nullptr);
         if (rc < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
 
-        rc = EVP_DigestVerifyUpdate(md_context, stream, size);
+        rc = EVP_DigestVerifyUpdate(md_context.get(), stream, size);
         if (rc < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
 
-        rc = EVP_DigestVerifyFinal(md_context, signature.data(), signature.size());
+        rc = EVP_DigestVerifyFinal(md_context.get(), signature.data(), signature.size());
         if (rc < 1) {
             ret = errorcode_t::error_verify;
             __leave2_trace_openssl(ret);
@@ -309,11 +305,7 @@ return_t openssl_pqc::verify(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t*
 
         ret = errorcode_t::success;
     }
-    __finally2 {
-        if (nullptr != md_context) {
-            EVP_MD_CTX_destroy(md_context);
-        }
-    }
+    __finally2 {}
 #else
     ret = errorcode_t::not_supported;
 #endif

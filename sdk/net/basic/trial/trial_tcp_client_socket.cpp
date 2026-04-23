@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   trial_tcp_client_socket.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *

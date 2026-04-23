@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   openssl_kdf_pbkdf2.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *  RFC 6070 PKCS #5: Password-Based Key Derivation Function 2 (PBKDF2)

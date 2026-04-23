@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   crypto_keychain_ec_uncompressed.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -48,7 +48,7 @@ return_t crypto_keychain::add_ec_uncompressed(crypto_key* cryptokey, uint32 nid,
         }
 
         EC_KEY_ptr eckey(eck);
-        eck = nullptr;
+        eck = nullptr;  // eckey own eck
 
         if (privkey && privsize) {
             BN_ptr bn_priv(BN_bin2bn(privkey, privsize, nullptr));

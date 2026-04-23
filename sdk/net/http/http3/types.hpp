@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   types.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *      https://www.iana.org/assignments/http3-parameters/http3-parameters.xhtml

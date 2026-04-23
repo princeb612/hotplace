@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   openssl_hash.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *  RFC 2104 HMAC: Keyed-Hashing for Message Authentication
@@ -36,9 +36,17 @@ struct openssl_hash_context_t : public hash_context_t {
     const EVP_MD* _evp_md;          // hash, HMAC
     binary_t _key;                  // CMAC, HMAC
 
-    openssl_hash_context_t() : _signature(0), _flags(0), _md_context(nullptr), _cmac_context(nullptr), _hmac_context(nullptr) {}
+    openssl_hash_context_t()
+        : _signature(OPENSSL_HASH_CONTEXT_SIGNATURE),
+          _hash_type(crypt_poweredby_t::openssl),
+          _flags(0),
+          _md_context(nullptr),
+          _cmac_context(nullptr),
+          _hmac_context(nullptr),
+          _evp_cipher(nullptr),
+          _evp_md(nullptr) {}
     openssl_hash_context_t(const openssl_hash_context_t& other)
-        : _signature(other._signature),
+        : _signature(OPENSSL_HASH_CONTEXT_SIGNATURE),
           _hash_type(other._hash_type),
           _flags(other._flags),
           _evp_cipher(other._evp_cipher),
@@ -60,12 +68,57 @@ struct openssl_hash_context_t : public hash_context_t {
             HMAC_CTX_copy(_hmac_context, other._hmac_context);
         }
     }
-    void swap(openssl_hash_context_t* other) {
-        if (other) {
-            std::swap<EVP_MD_CTX*>(_md_context, other->_md_context);
-            std::swap<CMAC_CTX*>(_cmac_context, other->_cmac_context);
-            std::swap<HMAC_CTX*>(_hmac_context, other->_hmac_context);
+    openssl_hash_context_t(openssl_hash_context_t&& other) { *this = std::move(other); }
+    ~openssl_hash_context_t() {
+        _signature = 0;
+        if (_md_context) {
+            EVP_MD_CTX_free(_md_context);
         }
+        if (_cmac_context) {
+            CMAC_CTX_free(_cmac_context);
+        }
+        if (_hmac_context) {
+            HMAC_CTX_free(_hmac_context);
+        }
+    }
+
+    openssl_hash_context_t& operator=(const openssl_hash_context_t& other) {
+        _signature = other._signature;
+        _hash_type = other._hash_type;
+        _flags = other._flags;
+        _evp_cipher = other._evp_cipher;
+        _evp_md = other._evp_md;
+        _key = other._key;
+        _md_context = nullptr;
+        _cmac_context = nullptr;
+        _hmac_context = nullptr;
+        if (other._md_context) {
+            _md_context = EVP_MD_CTX_create();
+            EVP_MD_CTX_copy(_md_context, other._md_context);
+        }
+        if (other._cmac_context) {
+            _cmac_context = CMAC_CTX_new();
+            CMAC_CTX_copy(_cmac_context, other._cmac_context);
+        }
+        if (other._hmac_context) {
+            _hmac_context = HMAC_CTX_new();
+            HMAC_CTX_copy(_hmac_context, other._hmac_context);
+        }
+        return *this;
+    }
+    openssl_hash_context_t& operator=(openssl_hash_context_t&& other) {
+        if (this != &other) {
+            std::swap(_signature, other._signature);
+            std::swap(_hash_type, other._hash_type);
+            std::swap(_flags, other._flags);
+            std::swap(_evp_cipher, other._evp_cipher);
+            std::swap(_evp_md, other._evp_md);
+            std::swap(_key, other._key);
+            std::swap(_md_context, other._md_context);
+            std::swap(_cmac_context, other._cmac_context);
+            std::swap(_hmac_context, other._hmac_context);
+        }
+        return *this;
     }
 };
 
@@ -105,8 +158,6 @@ return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm,
     return_t ret = errorcode_t::success;
     openssl_hash_context_t* context = nullptr;
 
-    HMAC_CTX* hmac_context = nullptr;
-    EVP_MD_CTX* md_context = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -123,32 +174,31 @@ return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm,
 
         __try_new_catch(context, new openssl_hash_context_t, ret, __leave2);
 
-        context->_signature = OPENSSL_HASH_CONTEXT_SIGNATURE;
-        // context->_algorithm = algorithm;
-        context->_hash_type = crypt_poweredby_t::openssl;
         context->_evp_md = method;
         context->_flags = 0;
         context->_key.resize(key_size);
         if (0 == key_size) {
-            md_context = EVP_MD_CTX_create(); /* OPENSSL_malloc, EVP_MD_CTX_init */
+            EVP_MD_CTX_ptr md_context(EVP_MD_CTX_new()); /* OPENSSL_malloc, EVP_MD_CTX_init */
 
-            if (nullptr == md_context) {
+            if (nullptr == md_context.get()) {
                 ret = errorcode_t::internal_error;
                 __leave2;
             }
-            context->_md_context = md_context;
+            context->_md_context = md_context.get();
+            md_context.release();  // context own md_context
 
             EVP_DigestInit_ex(context->_md_context, context->_evp_md, nullptr);
         } else {
             memcpy(context->_key.data(), key_data, key_size);
             context->_flags |= openssl_hash_context_flag_t::hash_hmac;
 
-            hmac_context = HMAC_CTX_new();
-            if (nullptr == hmac_context) {
+            HMAC_CTX_ptr hmac_context(HMAC_CTX_new());
+            if (nullptr == hmac_context.get()) {
                 ret = errorcode_t::out_of_memory;
                 __leave2;
             }
-            context->_hmac_context = hmac_context;
+            context->_hmac_context = hmac_context.get();
+            hmac_context.release();  // context own hmac_context
 
             HMAC_Init_ex(context->_hmac_context, context->_key.data(), context->_key.size(), context->_evp_md, nullptr);
         }
@@ -157,13 +207,6 @@ return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm,
     }
     __finally2 {
         if (errorcode_t::success != ret) {
-            if (nullptr != hmac_context) {
-                HMAC_CTX_free(hmac_context);
-            }
-            if (nullptr != md_context) {
-                EVP_MD_CTX_destroy(md_context);
-            }
-
             if (nullptr != context) {
                 delete context;
             }
@@ -181,7 +224,6 @@ return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm
     return_t ret = errorcode_t::success;
     openssl_hash_context_t* context = nullptr;
 
-    CMAC_CTX* cmac_context = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -198,9 +240,6 @@ return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm
 
         __try_new_catch(context, new openssl_hash_context_t, ret, __leave2);
 
-        context->_signature = OPENSSL_HASH_CONTEXT_SIGNATURE;
-        // context->_algorithm = algorithm;
-        context->_hash_type = crypt_poweredby_t::openssl;
         context->_evp_cipher = method;
         context->_flags = 0;
         context->_key.resize(key_size);
@@ -210,12 +249,13 @@ return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm
 
         context->_flags |= openssl_hash_context_flag_t::hash_cmac;
 
-        cmac_context = CMAC_CTX_new();
-        if (nullptr == cmac_context) {
+        CMAC_CTX_ptr cmac_context(CMAC_CTX_new());
+        if (nullptr == cmac_context.get()) {
             ret = errorcode_t::out_of_memory;
             __leave2;
         }
-        context->_cmac_context = cmac_context;
+        context->_cmac_context = cmac_context.get();
+        cmac_context.release();  // context own cmac_context
 
         CMAC_Init(context->_cmac_context, context->_key.data(), context->_key.size(), context->_evp_cipher, nullptr);
 
@@ -223,10 +263,6 @@ return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm
     }
     __finally2 {
         if (errorcode_t::success != ret) {
-            if (nullptr != cmac_context) {
-                CMAC_CTX_free(cmac_context);
-            }
-
             if (nullptr != context) {
                 delete context;
             }
@@ -255,16 +291,6 @@ return_t openssl_hash::close(hash_context_t* handle) {
             __leave2;
         }
 
-        if (nullptr != context->_md_context) {
-            EVP_MD_CTX_destroy(context->_md_context); /* EVP_MD_CTX_cleanup, OPENSSL_free */
-        }
-        if (nullptr != context->_cmac_context) {
-            CMAC_CTX_free(context->_cmac_context);
-        }
-        if (nullptr != context->_hmac_context) {
-            HMAC_CTX_free(context->_hmac_context);
-        }
-        context->_signature = 0;
         delete context;
     }
     __finally2 {}
@@ -359,7 +385,7 @@ return_t openssl_hash::update(hash_context_t* handle, const byte_t* data, size_t
 
         handle_dup = new openssl_hash_context_t(*context);  // duplicate CTX before finalize
         finalize(handle, digest);                           // calc MD
-        context->swap(handle_dup);                          // swap CTX
+        *context = std::move(*handle_dup);                  // swap CTX
     }
     __finally2 {
         if (handle_dup) {

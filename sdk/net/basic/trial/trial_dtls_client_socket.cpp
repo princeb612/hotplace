@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   trial_dtls_client_socket.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *          openssl not support DTLS 1.3 yet

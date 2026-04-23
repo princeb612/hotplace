@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   resource_ciphersuite.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
  *

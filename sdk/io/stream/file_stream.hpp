@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   file_stream.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -47,6 +47,7 @@ class file_stream : public stream_t {
      * @sa
      */
     file_stream();
+    file_stream(const file_stream& other) = delete;
     /**
      * @brief constructor
      * @param const char* filename [in]

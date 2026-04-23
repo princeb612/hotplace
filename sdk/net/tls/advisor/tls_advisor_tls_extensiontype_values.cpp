@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   tls_advisor_tls_extensiontype_values.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
  *

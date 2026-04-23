@@ -1,7 +1,8 @@
 ### Release 1.90
 
 - TLS
-  - [Use of ML-DSA in TLS 1.3](https://datatracker.ietf.org/doc/html/draft-ietf-tls-mldsa-00)
+  - Use of ML-DSA in TLS 1.3
+    - [draft-ietf-tls-mldsa-00](https://datatracker.ietf.org/doc/html/draft-ietf-tls-mldsa-00)
 
 ### Release 1.71
 

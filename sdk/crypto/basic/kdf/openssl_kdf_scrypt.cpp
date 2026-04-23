@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   openssl_kdf_scrypt.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *  RFC 7914 The scrypt Password-Based Key Derivation Function
@@ -25,7 +25,6 @@ namespace crypto {
 
 return_t openssl_kdf::scrypt(binary_t& derived, size_t dlen, const std::string& password, const binary_t& salt, int n, int r, int p) {
     return_t ret = errorcode_t::success;
-    EVP_PKEY_CTX* ctx = nullptr;
     int ret_openssl = 0;
     __try2 {
         derived.clear();
@@ -36,31 +35,27 @@ return_t openssl_kdf::scrypt(binary_t& derived, size_t dlen, const std::string& 
             __leave2;
         }
 #endif
-        ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_SCRYPT, nullptr);
-        if (nullptr == ctx) {
+        EVP_PKEY_CTX_ptr ctx(EVP_PKEY_CTX_new_id(EVP_PKEY_SCRYPT, nullptr));
+        if (nullptr == ctx.get()) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
-        EVP_PKEY_derive_init(ctx);
-        EVP_PKEY_CTX_set1_pbe_pass(ctx, password.c_str(), password.size());
-        EVP_PKEY_CTX_set1_scrypt_salt(ctx, salt.data(), salt.size());
-        EVP_PKEY_CTX_set_scrypt_N(ctx, n);
-        EVP_PKEY_CTX_set_scrypt_r(ctx, r);
-        EVP_PKEY_CTX_set_scrypt_p(ctx, p);
+        EVP_PKEY_derive_init(ctx.get());
+        EVP_PKEY_CTX_set1_pbe_pass(ctx.get(), password.c_str(), password.size());
+        EVP_PKEY_CTX_set1_scrypt_salt(ctx.get(), salt.data(), salt.size());
+        EVP_PKEY_CTX_set_scrypt_N(ctx.get(), n);
+        EVP_PKEY_CTX_set_scrypt_r(ctx.get(), r);
+        EVP_PKEY_CTX_set_scrypt_p(ctx.get(), p);
 
         derived.resize(dlen);
-        ret_openssl = EVP_PKEY_derive(ctx, derived.data(), &dlen);
+        ret_openssl = EVP_PKEY_derive(ctx.get(), derived.data(), &dlen);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
     }
-    __finally2 {
-        if (ctx) {
-            EVP_PKEY_CTX_free(ctx);
-        }
-    }
+    __finally2 {}
     return ret;
 }
 

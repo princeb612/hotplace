@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   crypto_key.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -18,29 +18,15 @@ namespace crypto {
 
 crypto_key::crypto_key() { _shared.make_share(this); }
 
-crypto_key::crypto_key(const crypto_key& object) {
+crypto_key::crypto_key(const crypto_key& other) {
     _shared.make_share(this);
 
-    _key_map = object._key_map;
-
-    for (auto& pair : _key_map) {
-        crypto_key_object& keyobj = pair.second;
-        EVP_PKEY_up_ref((EVP_PKEY*)keyobj.get_pkey());
-        auto x509 = keyobj.get_x509();
-        if (x509) {
-            X509_up_ref((X509*)x509);
-        }
-    }
+    *this = other;
 }
-crypto_key::crypto_key(crypto_key&& object) {
+crypto_key::crypto_key(crypto_key&& other) {
     _shared.make_share(this);
 
-#if __cplusplus >= 201703L  // c++17
-    _key_map.merge(object._key_map);
-#else
-    _key_map = object._key_map;
-    object._key_map.clear();
-#endif
+    *this = std::move(other);
 }
 
 crypto_key::~crypto_key() { clear(); }
@@ -169,6 +155,27 @@ void crypto_key::erase(const std::string& kid) {
 }
 
 crypto_kty_t ktyof_evp_pkey(crypto_key_object& key) { return ktyof_evp_pkey(key.get_pkey()); }
+
+crypto_key& crypto_key::operator=(const crypto_key& other) {
+    _key_map = other._key_map;
+
+    for (auto& pair : _key_map) {
+        crypto_key_object& keyobj = pair.second;
+        EVP_PKEY_up_ref((EVP_PKEY*)keyobj.get_pkey());
+        auto x509 = keyobj.get_x509();
+        if (x509) {
+            X509_up_ref((X509*)x509);
+        }
+    }
+    return *this;
+}
+
+crypto_key& crypto_key::operator=(crypto_key&& other) {
+    if (this != &other) {
+        _key_map = std::move(other._key_map);
+    }
+    return *this;
+}
 
 }  // namespace crypto
 }  // namespace hotplace

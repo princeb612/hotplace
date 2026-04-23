@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   evp_pkey.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -37,9 +37,9 @@ return_t nidof_evp_pkey(const EVP_PKEY* pkey, uint32& nid) {
             }
         } else if (EVP_PKEY_DH == nid) {
             // nid = EVP_PKEY_get_base_id(pkey);
-            DH* dh = EVP_PKEY_get1_DH((EVP_PKEY*)pkey);
-            if (dh) {
-                int bits = BN_num_bits(DH_get0_p(dh));
+            DH_ptr dh(EVP_PKEY_get1_DH((EVP_PKEY*)pkey));
+            if (dh.get()) {
+                int bits = BN_num_bits(DH_get0_p(dh.get()));
                 switch (bits) {
                     case 2048: {
                         nid = nid_ffdhe2048;
@@ -57,7 +57,6 @@ return_t nidof_evp_pkey(const EVP_PKEY* pkey, uint32& nid) {
                         nid = nid_ffdhe8192;
                     } break;
                 }
-                DH_free(dh);
             }
         }
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L

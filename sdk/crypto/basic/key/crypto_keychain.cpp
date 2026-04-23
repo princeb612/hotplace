@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   crypto_keychain.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -57,8 +57,6 @@ return_t crypto_keychain::load_pem(crypto_key* cryptokey, const char* buffer, si
     /**
      * RFC 7468 Textual Encodings of PKIX, PKCS, and CMS Structures
      */
-    BIO* bio_pub = nullptr;
-    BIO* bio_priv = nullptr;
 
     __try2 {
         if (nullptr == cryptokey || nullptr == buffer) {
@@ -66,122 +64,110 @@ return_t crypto_keychain::load_pem(crypto_key* cryptokey, const char* buffer, si
             __leave2;
         }
 
-        bio_pub = BIO_new(BIO_s_mem());
-        bio_priv = BIO_new(BIO_s_mem());
-        if (nullptr == bio_pub || nullptr == bio_priv) {
+        BIO_CHAIN_ptr bio_pub(BIO_new(BIO_s_mem()));
+        BIO_CHAIN_ptr bio_priv(BIO_new(BIO_s_mem()));
+        if (nullptr == bio_pub.get() || nullptr == bio_priv.get()) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
-        BIO_write(bio_pub, buffer, size);
-        BIO_write(bio_priv, buffer, size);
+        BIO_write(bio_pub.get(), buffer, size);
+        BIO_write(bio_priv.get(), buffer, size);
 
         while (1) {
-            EVP_PKEY* pkey_pub = nullptr;
-            pkey_pub = PEM_read_bio_PUBKEY(bio_pub, nullptr, nullptr, nullptr);
-            if (pkey_pub) {
-                crypto_key_object key(pkey_pub, desc);
-                cryptokey->add(key);
+            EVP_PKEY_ptr pkey_pub(PEM_read_bio_PUBKEY(bio_pub.get(), nullptr, nullptr, nullptr));
+            if (pkey_pub.get()) {
+                crypto_key_object key(pkey_pub.get(), desc);
+                auto test = cryptokey->add(key);
+                if (errorcode_t::success == test) {
+                    pkey_pub.release();  // cryptokey own pkey_pub
+                }
             } else {
                 break;
             }
         }
 
         while (1) {
-            EVP_PKEY* pkey_priv = nullptr;
-            pkey_priv = PEM_read_bio_PrivateKey(bio_priv, nullptr, nullptr, nullptr);
-            if (pkey_priv) {
-                crypto_key_object key(pkey_priv, desc);
-                cryptokey->add(key);
+            EVP_PKEY_ptr pkey_priv(PEM_read_bio_PrivateKey(bio_priv.get(), nullptr, nullptr, nullptr));
+            if (pkey_priv.get()) {
+                crypto_key_object key(pkey_priv.get(), desc);
+                auto test = cryptokey->add(key);
+                if (errorcode_t::success == test) {
+                    pkey_priv.release();  // cryptokey own pkey_priv
+                }
             } else {
                 break;
             }
         }
         ERR_clear_error();
     }
-    __finally2 {
-        if (bio_pub) {
-            BIO_free_all(bio_pub);
-        }
-        if (bio_priv) {
-            BIO_free_all(bio_priv);
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
 return_t crypto_keychain::load_cert(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc, int flags) {
     return_t ret = errorcode_t::success;
-    X509* cert = nullptr;
-    BIO* bio = nullptr;
-    EVP_PKEY* pkey = nullptr;
     __try2 {
         if (nullptr == buffer) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        bio = BIO_new(BIO_s_mem());
-        if (nullptr == bio) {
+        BIO_ptr bio(BIO_new(BIO_s_mem()));
+        if (nullptr == bio.get()) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
-        BIO_write(bio, buffer, size);
-        cert = PEM_read_bio_X509(bio, NULL, NULL, NULL);
-        if (nullptr == cert) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-        pkey = X509_get_pubkey(cert);
-        if (nullptr == pkey) {
+        BIO_write(bio.get(), buffer, size);
+        X509_ptr cert(PEM_read_bio_X509(bio.get(), NULL, NULL, NULL));
+        if (nullptr == cert.get()) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
-        crypto_key_object key(pkey, cert, desc);
-        cryptokey->add(key);
+        EVP_PKEY_ptr pkey(X509_get_pubkey(cert.get()));
+        if (nullptr == pkey.get()) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+
+        crypto_key_object key(pkey.get(), cert.get(), desc);
+        ret = cryptokey->add(key);
+        if (errorcode_t::success == ret) {
+            pkey.release();  // cryptokey own pkey
+            cert.release();  // cryptokey own cert
+        }
 
         ERR_clear_error();
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            if (pkey) {
-                EVP_PKEY_free(pkey);
-            }
-        }
-        if (bio) {
-            BIO_free(bio);
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
 return_t crypto_keychain::load_der(crypto_key* cryptokey, const byte_t* buffer, size_t size, const keydesc& desc, int flags) {
     return_t ret = errorcode_t::success;
-    X509* x509 = nullptr;
-    BIO* bio = nullptr;
-    EVP_PKEY* pkey = nullptr;
     __try2 {
         if (nullptr == cryptokey || nullptr == buffer) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        bio = BIO_new(BIO_s_mem());
-        if (nullptr == bio) {
+        X509_ptr x509;
+        BIO_ptr bio(BIO_new(BIO_s_mem()));
+        if (nullptr == bio.get()) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
-        BIO_write(bio, buffer, size);
+        BIO_write(bio.get(), buffer, size);
         const byte_t* p = buffer;
         // The letters i and d in i2d_TYPE() stand for "internal" (that is, an internal C structure) and "DER" respectively.
         // So i2d_TYPE() converts from internal to DER. d2i_ vice versa
-        pkey = d2i_PrivateKey_bio(bio, nullptr);
-        if (nullptr == pkey) {
-            x509 = d2i_X509(nullptr, &p, size);
-            pkey = X509_get_pubkey(x509);
+        EVP_PKEY_ptr pkey(d2i_PrivateKey_bio(bio.get(), nullptr));
+        if (nullptr == pkey.get()) {
+            x509 = std::move(X509_ptr(d2i_X509(nullptr, &p, size)));
+            pkey = std::move(EVP_PKEY_ptr(X509_get_pubkey(x509.get())));
         }
         if (nullptr == pkey) {
             ret = errorcode_t::bad_format;
@@ -191,33 +177,23 @@ return_t crypto_keychain::load_der(crypto_key* cryptokey, const byte_t* buffer, 
 #if defined DEBUG
         if (istraceable(trace_category_internal, loglevel_debug)) {
             trace_debug_event(trace_category_internal, trace_event_internal, [&](basic_stream& dbs) -> void {
-                // X509_print_fp(stdout, x509);
-                auto dbio = BIO_new(BIO_s_mem());
-                X509_print(dbio, x509);  // x509 -> dbio
-                read_bio(&dbs, dbio);    // dbio -> dbs
-                BIO_free(dbio);
+                BIO_ptr dbio(BIO_new(BIO_s_mem()));
+                X509_print(dbio.get(), x509.get());  // x509 -> dbio
+                read_bio(&dbs, dbio.get());          // dbio -> dbs
             });
         }
 #endif
 
-        crypto_key_object key(pkey, x509, desc);
-        cryptokey->add(key);
+        crypto_key_object key(pkey.get(), x509.get(), desc);
+        ret = cryptokey->add(key);
+        if (errorcode_t::success == ret) {
+            pkey.release();  // cryptokey own pkey
+            x509.release();  // cryptokey own x509
+        }
 
         ERR_clear_error();
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            if (pkey) {
-                EVP_PKEY_free(pkey);
-            }
-            if (x509) {
-                X509_free(x509);
-            }
-        }
-        if (bio) {
-            BIO_free(bio);
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -244,7 +220,6 @@ return_t crypto_keychain::write(crypto_key* cryptokey, keyflag_t mode, stream_t*
 
 return_t crypto_keychain::write_pem(crypto_key* cryptokey, stream_t* stream, int flag) {
     return_t ret = errorcode_t::success;
-    BIO* out = nullptr;
 
     __try2 {
         if (nullptr == cryptokey || nullptr == stream) {
@@ -254,39 +229,34 @@ return_t crypto_keychain::write_pem(crypto_key* cryptokey, stream_t* stream, int
 
         stream->clear();
 
-        out = BIO_new(BIO_s_mem());
-        if (nullptr == out) {
+        BIO_CHAIN_ptr out(BIO_new(BIO_s_mem()));
+        if (nullptr == out.get()) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
         auto lambda = [](crypto_key_object* key, void* param) -> void { dump_pem(key->get_pkey(), (BIO*)param); };
 
-        cryptokey->for_each(lambda, (void*)out);
+        cryptokey->for_each(lambda, (void*)out.get());
 
         binary_t buf;
         buf.resize(64);
         int len = 0;
         while (1) {
-            len = BIO_read(out, buf.data(), buf.size());
+            len = BIO_read(out.get(), buf.data(), buf.size());
             if (0 >= len) {
                 break;
             }
             stream->write(buf.data(), len);
         }
     }
-    __finally2 {
-        if (out) {
-            BIO_free_all(out);
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
 template <typename TYPE>
 return_t crypto_keychain::t_write_der(const X509* x509, TYPE& buffer, std::function<void(const byte_t*, int, TYPE&)> func) {
     return_t ret = errorcode_t::success;
-    BIO* out = nullptr;
 
     __try2 {
         if (nullptr == x509 || nullptr == func) {
@@ -294,19 +264,19 @@ return_t crypto_keychain::t_write_der(const X509* x509, TYPE& buffer, std::funct
             __leave2;
         }
 
-        out = BIO_new(BIO_s_mem());
-        if (nullptr == out) {
+        BIO_CHAIN_ptr out(BIO_new(BIO_s_mem()));
+        if (nullptr == out.get()) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
-        i2d_X509_bio(out, (X509*)x509);
+        i2d_X509_bio(out.get(), (X509*)x509);
 
         binary_t buf;
         buf.resize(64);
         int len = 0;
         while (1) {
-            len = BIO_read(out, buf.data(), buf.size());
+            len = BIO_read(out.get(), buf.data(), buf.size());
             if (0 >= len) {
                 break;
             }
@@ -314,11 +284,7 @@ return_t crypto_keychain::t_write_der(const X509* x509, TYPE& buffer, std::funct
             func(buf.data(), len, buffer);
         }
     }
-    __finally2 {
-        if (out) {
-            BIO_free_all(out);
-        }
-    }
+    __finally2 {}
     return ret;
 }
 

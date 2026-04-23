@@ -1,7 +1,7 @@
 
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   oid.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *

@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   cbor_object.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *  RFC 7049 Concise Binary Object Representation (CBOR)
@@ -71,6 +71,8 @@ class cbor_object {
     void tag(cbor_tag_t tag);
     bool tagged();
     cbor_tag_t tag_value();
+
+    cbor_object& operator=(const cbor_object& other);
 
     virtual int addref();
     virtual int release();

@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   http2_frame_push_promise.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *

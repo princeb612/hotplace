@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   range.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -142,6 +142,13 @@ class t_sampling_range {
         _min = T(0);
         _max = T(0);
         _flag = 0;
+    }
+
+    t_sampling_range& operator=(const t_sampling_range<T>& other) {
+        _min = other._min;
+        _max = other._max;
+        _flag = other._flag;
+        return *this;
     }
 
    private:

@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   openssl_ecdh.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -46,7 +46,6 @@ const EVP_PKEY* get_public_key(const EVP_PKEY* pkey) {
 
 return_t dh_key_agreement(const EVP_PKEY* pkey, const EVP_PKEY* pkey_pub, binary_t& secret) {
     return_t ret = errorcode_t::success;
-    EVP_PKEY_CTX* pkey_context = nullptr;
     int ret_test = 0;
 
     __try2 {
@@ -64,41 +63,37 @@ return_t dh_key_agreement(const EVP_PKEY* pkey, const EVP_PKEY* pkey_pub, binary
             __leave2;
         }
 
-        pkey_context = EVP_PKEY_CTX_new((EVP_PKEY*)pkey, nullptr);
-        if (nullptr == pkey_context) {
+        EVP_PKEY_CTX_ptr pkey_context(EVP_PKEY_CTX_new((EVP_PKEY*)pkey, nullptr));
+        if (nullptr == pkey_context.get()) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
         size_t size_secret = 0;
 
-        ret_test = EVP_PKEY_derive_init(pkey_context);
+        ret_test = EVP_PKEY_derive_init(pkey_context.get());
         if (1 > ret_test) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
-        ret_test = EVP_PKEY_derive_set_peer(pkey_context, (EVP_PKEY*)pkey_pub);
+        ret_test = EVP_PKEY_derive_set_peer(pkey_context.get(), (EVP_PKEY*)pkey_pub);
         if (1 > ret_test) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
-        ret_test = EVP_PKEY_derive(pkey_context, nullptr, &size_secret);
+        ret_test = EVP_PKEY_derive(pkey_context.get(), nullptr, &size_secret);
         if (1 > ret_test) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
         secret.resize(size_secret);
-        ret_test = EVP_PKEY_derive(pkey_context, secret.data(), &size_secret);
+        ret_test = EVP_PKEY_derive(pkey_context.get(), secret.data(), &size_secret);
         if (1 > ret_test) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
     }
-    __finally2 {
-        if (nullptr != pkey_context) {
-            EVP_PKEY_CTX_free(pkey_context);
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -170,13 +165,12 @@ return_t compose_otherinfo(const char* algid, const char* apu, const char* apv, 
 
 return_t concat_kdf(binary_t dh_secret, binary_t otherinfo, unsigned int keylen, binary_t& derived) {
     return_t ret = errorcode_t::success;
-    EVP_MD_CTX* ctx = nullptr;
 
     __try2 {
         derived.resize(keylen);
 
-        ctx = EVP_MD_CTX_create();
-        if (errorcode_t::success != ret) {
+        EVP_MD_CTX_ptr ctx(EVP_MD_CTX_create());
+        if (nullptr == ctx.get()) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
@@ -193,9 +187,11 @@ return_t concat_kdf(binary_t dh_secret, binary_t otherinfo, unsigned int keylen,
             hash.resize(hashlen);
 
             unsigned int alloca_size = hashlen;
-            if (1 != EVP_DigestInit_ex(ctx, dgst, nullptr) || 1 != EVP_DigestUpdate(ctx, counter.data(), counter.size()) ||
-                1 != EVP_DigestUpdate(ctx, dh_secret.data(), dh_secret.size()) || 1 != EVP_DigestUpdate(ctx, otherinfo.data(), otherinfo.size()) ||
-                1 != EVP_DigestFinal_ex(ctx, hash.data(), &alloca_size)) {
+            if (1 != EVP_DigestInit_ex(ctx.get(), dgst, nullptr) ||                      //
+                1 != EVP_DigestUpdate(ctx.get(), counter.data(), counter.size()) ||      //
+                1 != EVP_DigestUpdate(ctx.get(), dh_secret.data(), dh_secret.size()) ||  //
+                1 != EVP_DigestUpdate(ctx.get(), otherinfo.data(), otherinfo.size()) ||  //
+                1 != EVP_DigestFinal_ex(ctx.get(), hash.data(), &alloca_size)) {
                 ret = errorcode_t::internal_error;
                 break;
             }
@@ -205,11 +201,7 @@ return_t concat_kdf(binary_t dh_secret, binary_t otherinfo, unsigned int keylen,
             amt -= hashlen;
         }
     }
-    __finally2 {
-        if (ctx) {
-            EVP_MD_CTX_destroy(ctx);
-        }
-    }
+    __finally2 {}
     return ret;
 }
 

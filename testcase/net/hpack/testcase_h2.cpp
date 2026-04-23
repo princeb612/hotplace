@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   testcase_h2.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @remarks
  *      RFC 7541 HPACK: Header Compression for HTTP/2

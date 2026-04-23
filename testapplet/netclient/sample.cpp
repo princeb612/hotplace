@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   sample.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *      openssl s_server -cert server.crt -key server.key -tls1_3 -accept 9000

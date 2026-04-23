@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   openssl_crypt_evp.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *  RFC 3394 Advanced Encryption Standard (AES) Key Wrap Algorithm (September 2002)
@@ -26,7 +26,6 @@ return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const binary_t &plaintext,
 
 return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const byte_t *stream, size_t size, binary_t &ciphertext, crypt_enc_t mode) {
     return_t ret = errorcode_t::success;
-    EVP_PKEY_CTX *pkey_context = nullptr;
     crypto_advisor *advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -39,21 +38,21 @@ return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const byte_t *stream, size
             __leave2;
         }
 
-        pkey_context = EVP_PKEY_CTX_new((EVP_PKEY *)pkey, nullptr);
+        EVP_PKEY_CTX_ptr pkey_context(EVP_PKEY_CTX_new((EVP_PKEY *)pkey, nullptr));
 
-        if (nullptr == pkey_context) {
+        if (nullptr == pkey_context.get()) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
-        EVP_PKEY_encrypt_init(pkey_context);
+        EVP_PKEY_encrypt_init(pkey_context.get());
 
         int id = EVP_PKEY_id(pkey);
         if (EVP_PKEY_RSA == id) {
             switch (mode) {
                 case crypt_enc_t::rsa_1_5:
                     // padding
-                    EVP_PKEY_CTX_set_rsa_padding(pkey_context, RSA_PKCS1_PADDING);
+                    EVP_PKEY_CTX_set_rsa_padding(pkey_context.get(), RSA_PKCS1_PADDING);
                     break;
                 case crypt_enc_t::rsa_oaep:
                 case crypt_enc_t::rsa_oaep256:
@@ -81,9 +80,9 @@ return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const byte_t *stream, size
                     }
                     md = advisor->find_evp_md(alg);
 
-                    EVP_PKEY_CTX_set_rsa_padding(pkey_context, RSA_PKCS1_OAEP_PADDING);
-                    EVP_PKEY_CTX_set_rsa_oaep_md(pkey_context, md);
-                    EVP_PKEY_CTX_set_rsa_mgf1_md(pkey_context, md);
+                    EVP_PKEY_CTX_set_rsa_padding(pkey_context.get(), RSA_PKCS1_OAEP_PADDING);
+                    EVP_PKEY_CTX_set_rsa_oaep_md(pkey_context.get(), md);
+                    EVP_PKEY_CTX_set_rsa_mgf1_md(pkey_context.get(), md);
                 } break;
                 case crypt_enc_undefined:
                     break;
@@ -98,7 +97,7 @@ return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const byte_t *stream, size
         }
 
         size_t bufsize = 0;
-        ret_openssl = EVP_PKEY_encrypt(pkey_context, nullptr, &bufsize, stream, size);
+        ret_openssl = EVP_PKEY_encrypt(pkey_context.get(), nullptr, &bufsize, stream, size);
         if (ret_openssl < 1) {
             // if (-2 == ret_openssl) {
             ret = errorcode_t::internal_error;
@@ -106,17 +105,13 @@ return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const byte_t *stream, size
         }
 
         ciphertext.resize(bufsize);
-        ret_openssl = EVP_PKEY_encrypt(pkey_context, ciphertext.data(), &bufsize, stream, size);
+        ret_openssl = EVP_PKEY_encrypt(pkey_context.get(), ciphertext.data(), &bufsize, stream, size);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
     }
-    __finally2 {
-        if (nullptr != pkey_context) {
-            EVP_PKEY_CTX_free(pkey_context);
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -126,7 +121,6 @@ return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const binary_t &ciphertext
 
 return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const byte_t *stream, size_t size, binary_t &plaintext, crypt_enc_t mode) {
     return_t ret = errorcode_t::success;
-    EVP_PKEY_CTX *pkey_context = nullptr;
     crypto_advisor *advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -146,20 +140,20 @@ return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const byte_t *stream, size
             __leave2;
         }
 
-        pkey_context = EVP_PKEY_CTX_new((EVP_PKEY *)pkey, nullptr);
+        EVP_PKEY_CTX_ptr pkey_context(EVP_PKEY_CTX_new((EVP_PKEY *)pkey, nullptr));
 
-        if (nullptr == pkey_context) {
+        if (nullptr == pkey_context.get()) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
 
-        EVP_PKEY_decrypt_init(pkey_context);
+        EVP_PKEY_decrypt_init(pkey_context.get());
 
         if (EVP_PKEY_RSA == EVP_PKEY_id(pkey)) {
             switch (mode) {
                 case crypt_enc_t::rsa_1_5:
                     // padding
-                    EVP_PKEY_CTX_set_rsa_padding(pkey_context, RSA_PKCS1_PADDING);
+                    EVP_PKEY_CTX_set_rsa_padding(pkey_context.get(), RSA_PKCS1_PADDING);
                     break;
                 case crypt_enc_t::rsa_oaep:
                 case crypt_enc_t::rsa_oaep256:
@@ -187,9 +181,9 @@ return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const byte_t *stream, size
                     }
                     md = advisor->find_evp_md(alg);
 
-                    EVP_PKEY_CTX_set_rsa_padding(pkey_context, RSA_PKCS1_OAEP_PADDING);
-                    EVP_PKEY_CTX_set_rsa_oaep_md(pkey_context, md);
-                    EVP_PKEY_CTX_set_rsa_mgf1_md(pkey_context, md);
+                    EVP_PKEY_CTX_set_rsa_padding(pkey_context.get(), RSA_PKCS1_OAEP_PADDING);
+                    EVP_PKEY_CTX_set_rsa_oaep_md(pkey_context.get(), md);
+                    EVP_PKEY_CTX_set_rsa_mgf1_md(pkey_context.get(), md);
                 } break;
                 default:
                     break;
@@ -197,7 +191,7 @@ return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const byte_t *stream, size
         }
 
         size_t bufsize = 0;
-        ret_openssl = EVP_PKEY_decrypt(pkey_context, nullptr, &bufsize, stream, size);
+        ret_openssl = EVP_PKEY_decrypt(pkey_context.get(), nullptr, &bufsize, stream, size);
         if (ret_openssl < 1) {
             // if (-2 == ret_openssl) {
             ret = errorcode_t::internal_error;
@@ -205,18 +199,14 @@ return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const byte_t *stream, size
         }
 
         plaintext.resize(bufsize);
-        ret_openssl = EVP_PKEY_decrypt(pkey_context, plaintext.data(), &bufsize, stream, size);
+        ret_openssl = EVP_PKEY_decrypt(pkey_context.get(), plaintext.data(), &bufsize, stream, size);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
         plaintext.resize(bufsize);
     }
-    __finally2 {
-        if (nullptr != pkey_context) {
-            EVP_PKEY_CTX_free(pkey_context);
-        }
-    }
+    __finally2 {}
     return ret;
 }
 

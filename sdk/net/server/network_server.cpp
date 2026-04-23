@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   network_server.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *      TCP/TLS/UDP/DTLS ... support

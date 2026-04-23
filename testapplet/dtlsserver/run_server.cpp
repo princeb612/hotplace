@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file {file}
+ * @file   run_server.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc    DTLS server using network_server
  *          openssl s_client -dtls1_2 -connect 127.0.0.1:9000
