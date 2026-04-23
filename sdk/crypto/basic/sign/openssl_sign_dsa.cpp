@@ -12,6 +12,7 @@
 #include <hotplace/sdk/crypto/basic/crypto_hash.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
 
 namespace hotplace {
