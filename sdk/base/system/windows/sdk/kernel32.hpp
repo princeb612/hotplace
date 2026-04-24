@@ -374,7 +374,7 @@ typedef void(__stdcall *GETNATIVESYSTEMINFO)(LPSYSTEM_INFO lpSystemInfo);
  */
 typedef LANGID(__stdcall FAR *GETUSERDEFAULTUILANGUAGE)(void);
 
-#if defined __MINGW32__
+#if defined __MINGW32__ || defined __MINGW64__
 
 #if defined UNICODE
 #define OSVERSIONINFOEX OSVERSIONINFOEXW
@@ -942,7 +942,7 @@ typedef VOID(__stdcall *RTLCAPTURECONTEXT)(OUT PCONTEXT ContextRecord);
 
 #else
 
-#ifndef __MINGW32__
+#if !defined __MINGW32__ && !defined __MINGW64__
 
 #define LOCALE_ILANGUAGE 0x00000001        // language id
 #define LOCALE_SLANGUAGE 0x00000002        // localized name of language

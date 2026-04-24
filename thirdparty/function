@@ -92,26 +92,15 @@ function build_jansson ()
     touch .complete
 }
 
-function build_zlib ()
+function build_cmake ()
 {
     # ./configure --prefix=${install_dir}
     # make
     # make install
 
     cmake -G "${generator}" -DCMAKE_INSTALL_PREFIX=${install_dir} -B $builddir -DCMAKE_BUILD_TYPE=${target}
-    cd $builddir
-    cmake --build . --config ${target}
-    cmake --install . --config ${target}
-
-    touch .complete
-}
-
-function build_liboqs()
-{
-    cmake -G "${generator}" -DCMAKE_INSTALL_PREFIX=${install_dir} -B $builddir -DCMAKE_BUILD_TYPE=${target}
-    cd $builddir
-    cmake --build . --config ${target}
-    cmake --install . --config ${target}
+    cmake --build $builddir --config ${target}
+    cmake --install $builddir --config ${target}
 
     touch .complete
 }

@@ -124,7 +124,7 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, const binar
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
-        rsa.release();  // pkey own rsas
+        rsa.release();  // pkey own rsa
 
         crypto_key_object key(pkey.get(), desc);
         ret = cryptokey->add(key);
@@ -283,18 +283,19 @@ return_t crypto_keychain::add_rsa_b64(crypto_key* cryptokey, uint32 nid, const c
         os2b(e, bin_e);
         os2b(d, bin_d);
 
-        binary_t bin_p;
-        binary_t bin_q;
-        binary_t bin_dp;
-        binary_t bin_dq;
-        binary_t bin_qi;
-
         if (p && q && dp && dq && qi) {
+            binary_t bin_p;
+            binary_t bin_q;
+            binary_t bin_dp;
+            binary_t bin_dq;
+            binary_t bin_qi;
+
             os2b(p, bin_p);
             os2b(q, bin_q);
             os2b(dp, bin_dp);
             os2b(dq, bin_dq);
             os2b(qi, bin_qi);
+
             ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, desc);
         } else {
             ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, desc);

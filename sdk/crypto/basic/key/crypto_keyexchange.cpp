@@ -434,6 +434,7 @@ return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, bi
             binary_t bin_privkey;  // dummy
             ephemeral.get_key(prk, public_key, hybrid_kc, bin_privkey, true);
 
+            // https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/
             switch (first.kty) {
                 case kty_ec: {
                     kc.insert(kc.begin(), hybrid_kc.begin(), hybrid_kc.end());
@@ -547,6 +548,7 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
                 __leave2;
             }
 
+            // https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/
             switch (group) {
                 case tls_group_secp256r1mlkem768:
                 case tls_group_secp384r1mlkem1024: {

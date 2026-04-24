@@ -35,7 +35,7 @@ typedef HRESULT(__stdcall* SHLOADINDIRECTSTRING)(LPCWSTR pszSource, LPWSTR pszOu
 #define _WIN32_WINNT 0x0501
 
 /* sal */
-#ifndef __MINGW32__
+#if !defined __MINGW32__ && !defined __MINGW64__
 #include "psdk_rpcsal.h"
 #include "psdk_specstrings.h"
 #endif

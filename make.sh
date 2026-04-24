@@ -191,8 +191,8 @@ if [[ $do_makefile = 1 ]]; then
     exit
 fi
 
-export MAKEFLAGS='-j 4'
-time cmake --build ${builddir} --config ${target}
+# export MAKEFLAGS='-j 4'
+time cmake --build ${builddir} --config ${target} -j 4
 
 # ctest
 if [[ $do_ctest = 1 ]]; then

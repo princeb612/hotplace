@@ -127,6 +127,9 @@ struct EC_KEY_deleter {
 struct EC_POINT_deleter {
     void operator()(EC_POINT* ecpoint) const { EC_POINT_free(ecpoint); }
 };
+struct ECDSA_SIG_deleter {
+    void operator()(ECDSA_SIG* ecdsasig) const { ECDSA_SIG_free(ecdsasig); }
+};
 struct EVP_CIPHER_CTX_deleter {
     void operator()(EVP_CIPHER_CTX* ctx) const { EVP_CIPHER_CTX_free(ctx); }
 };
@@ -148,6 +151,15 @@ struct RSA_deleter {
 struct X509_deleter {
     void operator()(X509* x509) const { X509_free(x509); }
 };
+struct X509_CRL_deleter {
+    void operator()(X509_CRL* x509crl) const { X509_CRL_free(x509crl); }
+};
+struct X509_STORE_deleter {
+    void operator()(X509_STORE* x509store) const { X509_STORE_free(x509store); }
+};
+struct X509_STORE_CTX_deleter {
+    void operator()(X509_STORE_CTX* ctx) const { X509_STORE_CTX_free(ctx); }
+};
 
 using BIO_ptr = std::unique_ptr<BIO, BIO_deleter>;
 using BIO_CHAIN_ptr = std::unique_ptr<BIO, BIO_chain_deleter>;
@@ -159,6 +171,7 @@ using DSA_ptr = std::unique_ptr<DSA, DSA_deleter>;
 using DSA_SIG_ptr = std::unique_ptr<DSA_SIG, DSA_SIG_deleter>;
 using EC_KEY_ptr = std::unique_ptr<EC_KEY, EC_KEY_deleter>;
 using EC_POINT_ptr = std::unique_ptr<EC_POINT, EC_POINT_deleter>;
+using ECDSA_SIG_ptr = std::unique_ptr<ECDSA_SIG, ECDSA_SIG_deleter>;
 using EVP_CIPHER_CTX_ptr = std::unique_ptr<EVP_CIPHER_CTX, EVP_CIPHER_CTX_deleter>;
 using EVP_MD_CTX_ptr = std::unique_ptr<EVP_MD_CTX, EVP_MD_CTX_deleter>;
 using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, EVP_PKEY_deleter>;
@@ -166,6 +179,9 @@ using EVP_PKEY_CTX_ptr = std::unique_ptr<EVP_PKEY_CTX, EVP_PKEY_CTX_deleter>;
 using HMAC_CTX_ptr = std::unique_ptr<HMAC_CTX, HMAC_CTX_deleter>;
 using RSA_ptr = std::unique_ptr<RSA, RSA_deleter>;
 using X509_ptr = std::unique_ptr<X509, X509_deleter>;
+using X509_CRL_ptr = std::unique_ptr<X509_CRL, X509_CRL_deleter>;
+using X509_STORE_ptr = std::unique_ptr<X509_STORE, X509_STORE_deleter>;
+using X509_STORE_CTX_ptr = std::unique_ptr<X509_STORE_CTX, X509_STORE_CTX_deleter>;
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
 struct EVP_CIPHER_deleter {

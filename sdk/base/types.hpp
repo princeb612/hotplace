@@ -62,6 +62,7 @@ typedef unsigned int uint;
 struct binary_t : public std::vector<byte_t> {
     using std::vector<byte_t>::vector;     // inherit ctor
     using std::vector<byte_t>::operator=;  // copy/move
+    bool operator==(const struct binary_t &other) { return ((size() == other.size()) && (0 == memcmp(data(), other.data(), size()))); }
 };
 
 enum loglevel_t : uint8 {

@@ -23,7 +23,6 @@ return_t openssl_sign::sign_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, c
 return_t openssl_sign::sign_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    EVP_MD_CTX* md_context = nullptr;
     int ret_openssl = 1;
     size_t dgstsize = 0;
 
@@ -36,41 +35,37 @@ return_t openssl_sign::sign_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, c
 
         EVP_MD* evp_md = (EVP_MD*)advisor->find_evp_md(alg);
 
-        md_context = EVP_MD_CTX_create();
+        EVP_MD_CTX_ptr md_context(EVP_MD_CTX_new());
         if (nullptr == md_context) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
 
-        ret_openssl = EVP_DigestInit_ex(md_context, evp_md, nullptr);
+        ret_openssl = EVP_DigestInit_ex(md_context.get(), evp_md, nullptr);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
-        ret_openssl = EVP_DigestSignInit(md_context, nullptr, evp_md, nullptr, (EVP_PKEY*)pkey);
+        ret_openssl = EVP_DigestSignInit(md_context.get(), nullptr, evp_md, nullptr, (EVP_PKEY*)pkey);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
-        ret_openssl = EVP_DigestSignUpdate(md_context, stream, size);
+        ret_openssl = EVP_DigestSignUpdate(md_context.get(), stream, size);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
-        ret_openssl = EVP_DigestSignFinal(md_context, nullptr, &dgstsize);
+        ret_openssl = EVP_DigestSignFinal(md_context.get(), nullptr, &dgstsize);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
 
         signature.resize(dgstsize);
-        EVP_DigestSignFinal(md_context, signature.data(), &dgstsize);
+        EVP_DigestSignFinal(md_context.get(), signature.data(), &dgstsize);
     }
-    __finally2 {
-        if (nullptr != md_context) {
-            EVP_MD_CTX_destroy(md_context);
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -81,7 +76,6 @@ return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t alg,
 return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    EVP_MD_CTX* md_context = nullptr;
     int ret_openssl = 1;
 
     __try2 {
@@ -94,31 +88,31 @@ return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t alg,
 
         EVP_MD* evp_md = (EVP_MD*)advisor->find_evp_md(alg);
 
-        md_context = EVP_MD_CTX_create();
+        EVP_MD_CTX_ptr md_context(EVP_MD_CTX_new());
         if (nullptr == md_context) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
 
-        ret_openssl = EVP_DigestInit_ex(md_context, evp_md, nullptr);
+        ret_openssl = EVP_DigestInit_ex(md_context.get(), evp_md, nullptr);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
 
-        ret_openssl = EVP_DigestVerifyInit(md_context, nullptr, evp_md, nullptr, (EVP_PKEY*)pkey);
+        ret_openssl = EVP_DigestVerifyInit(md_context.get(), nullptr, evp_md, nullptr, (EVP_PKEY*)pkey);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
 
-        ret_openssl = EVP_DigestVerifyUpdate(md_context, stream, size);
+        ret_openssl = EVP_DigestVerifyUpdate(md_context.get(), stream, size);
         if (ret_openssl < 1) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
 
-        ret_openssl = EVP_DigestVerifyFinal(md_context, signature.data(), signature.size());
+        ret_openssl = EVP_DigestVerifyFinal(md_context.get(), signature.data(), signature.size());
         if (ret_openssl < 1) {
             ret = errorcode_t::error_verify;
             __leave2_trace_openssl(ret);
@@ -126,11 +120,7 @@ return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t alg,
 
         ret = errorcode_t::success;
     }
-    __finally2 {
-        if (nullptr != md_context) {
-            EVP_MD_CTX_destroy(md_context);
-        }
-    }
+    __finally2 {}
     return ret;
 }
 

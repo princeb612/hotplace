@@ -27,7 +27,7 @@
 #define ___in
 #define ___out
 
-#if defined __MINGW32__
+#if defined __MINGW32__ || defined __MINGW64__
 
 #define __bcount(size)
 #define __ecount(size)

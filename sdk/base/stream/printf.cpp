@@ -337,7 +337,7 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
             case TYPE_STRING:
                 switch (style) {
                     case vtprintf_style_cbor:
-                        stream->printf("\"%s\"", vt.data.str);
+                        stream->printf("\"%s\"", vt.data.str ? vt.data.str : "");
                         break;
                     case vtprintf_style_base16:
                         stream->printf("%s", base16_encode(vt.data.str).c_str());

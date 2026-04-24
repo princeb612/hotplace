@@ -263,7 +263,7 @@ typedef BOOLEAN(WINAPI *WRITEPROCESSORPWRSCHEME)(UINT, PMACHINE_PROCESSOR_POWER_
 #if defined DEFINE_POWER_DATA_ACCESSOR
 /* Vista, 2008 */
 
-#ifndef __MINGW32__
+#if !defined __MINGW32__ && !defined __MINGW64__
 typedef enum _POWER_DATA_ACCESSOR {
     //
     // Used by read/write and enumeration engines

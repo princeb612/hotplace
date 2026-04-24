@@ -32,7 +32,7 @@ typedef __int16 sint16;
 typedef unsigned __int16 uint16;
 typedef __int32 int32;
 typedef __int32 sint32;
-#if defined __MINGW32__
+#if defined __MINGW32__ || defined __MINGW64__
 typedef long unsigned int uint32;
 #else
 typedef unsigned __int32 uint32;

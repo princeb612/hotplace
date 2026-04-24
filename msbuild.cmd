@@ -9,7 +9,7 @@ set generator=Visual Studio 18 2026
 set target=Release
 
 mkdir %builddir%
-cmake -G "%generator%" -B %builddir% -DCMAKE_BUILD_TYPE=%target% -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+cmake -G "%generator%" -B %builddir% -DCMAKE_BUILD_TYPE=%target% -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DSUPPORT_PCH=1
 
 cmake --build %builddir% --config %target%
 

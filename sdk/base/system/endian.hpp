@@ -17,7 +17,7 @@ namespace hotplace {
 
 #if defined __GNUC__
 
-#if defined __MINGW32__
+#if defined __MINGW32__ || defined __MINGW64__
 
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #define __BIG_ENDIAN__

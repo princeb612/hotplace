@@ -208,11 +208,14 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const byte_t* data, s
             } else if (cbor_major_t::cbor_major_simple == lead_type) {
                 cbor_simple_t simple_type = cbor_simple::is_kind_of(cur);
                 switch (simple_type) {
+                    case cbor_simple_t::cbor_simple_half_fp:
+                        push(handle, lead_type, float_from_fp16(value), 0);
+                        break;
                     case cbor_simple_t::cbor_simple_single_fp:
-                        push(handle, lead_type, (float)value, 0);
+                        push(handle, lead_type, fp32_from_binary32(value), 0);
                         break;
                     case cbor_simple_t::cbor_simple_double_fp:
-                        push(handle, lead_type, (double)value, 0);
+                        push(handle, lead_type, fp64_from_binary64(value), 0);
                         break;
                     default:
                         push(handle, lead_type, value, 0);

@@ -21,6 +21,8 @@
 #include <hotplace/sdk/sdk.hpp>
 #include <iostream>
 #include <string>
+#define YAML_CPP_STATIC_DEFINE
+#include <yaml-cpp/yaml.h>
 
 using namespace hotplace;
 using namespace hotplace::crypto;

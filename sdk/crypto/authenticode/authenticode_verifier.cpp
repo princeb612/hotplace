@@ -686,12 +686,9 @@ return_t authenticode_verifier::verify_pkcs7(authenticode_context_t* handle, voi
 
     int ret_verify = 0;
     PKCS7* pkcs7 = reinterpret_cast<PKCS7*>(pkcs7_pointer);
-    X509_STORE_CTX* store_context = nullptr;
-    X509_STORE* store = nullptr;
-
-    // STACK_OF(X509)* chain = nullptr;
-    BIO* bio = nullptr;
-    authenticode_contexts_map_pib_t pib;
+    X509_STORE_CTX_ptr store_context;
+    X509_STORE_ptr store;
+    BIO_ptr bio;
 
     __try2 {
         if (nullptr == handle || nullptr == pkcs7) {
@@ -701,7 +698,7 @@ return_t authenticode_verifier::verify_pkcs7(authenticode_context_t* handle, voi
 
         {
             critical_section_guard guard(_contexts_lock);
-            pib = _contexts.insert(std::make_pair(get_thread_id(), handle));
+            _contexts.insert(std::make_pair(get_thread_id(), handle));
         }
 
         /* check if it's PKCS#7 signed data */
@@ -781,32 +778,32 @@ return_t authenticode_verifier::verify_pkcs7(authenticode_context_t* handle, voi
 
         auto seq = pkcs7->d.sign->contents->d.other->value.sequence;
         int seqhdrlen = asn1_simple_hdr_len(ASN1_STRING_get0_data(seq), ASN1_STRING_length(seq));
-        bio = BIO_new_mem_buf(ASN1_STRING_get0_data(seq) + seqhdrlen, ASN1_STRING_length(seq) - seqhdrlen);
+        bio = std::move(BIO_ptr(BIO_new_mem_buf(ASN1_STRING_get0_data(seq) + seqhdrlen, ASN1_STRING_length(seq) - seqhdrlen)));
 
-        store = X509_STORE_new();
-        X509_STORE_set_default_paths(store);
-        // X509_STORE_load_locations(store, nullptr, "/etc/pki/tls/certs/");
+        store = std::move(X509_STORE_ptr(X509_STORE_new()));
+        X509_STORE_set_default_paths(store.get());
+        // X509_STORE_load_locations(store.get(), nullptr, "/etc/pki/tls/certs/");
         // prevent error 20
         // X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY
         // unable to get local issuer certificate
-        // X509_STORE_load_locations(store, "trust.crt", nullptr);
+        // X509_STORE_load_locations(store.get(), "trust.crt", nullptr);
 
         {
             critical_section_guard guard(handle->lock);
             for (const auto& pair : handle->trusted_cert) {
                 const std::string& cert_file = pair.first;
                 const std::string& cert_path = pair.second;
-                // X509_STORE_load_locations (store, (char*)cert_file.data(),
+                // X509_STORE_load_locations (store.get(), (char*)cert_file.data(),
                 //                           (char*)cert_path.data());
                 // load cert wo path
                 if (cert_file.size()) {
-                    X509_LOOKUP* lookup = X509_STORE_add_lookup(store, X509_LOOKUP_file());
+                    X509_LOOKUP* lookup = X509_STORE_add_lookup(store.get(), X509_LOOKUP_file());
                     X509_load_cert_file(lookup, cert_file.c_str(), X509_FILETYPE_PEM);
                 }
             }
         }
 
-        X509_STORE_set_verify_cb_func(store, verify_callback);
+        X509_STORE_set_verify_cb_func(store.get(), verify_callback);
         ERR_clear_error();
 
         // chain = sk_X509_new_null();
@@ -815,27 +812,27 @@ return_t authenticode_verifier::verify_pkcs7(authenticode_context_t* handle, voi
         // X509_V_ERR_INVALID_PURPOSE
         // unsupported certificate purpose
         // http://securitypad.blogspot.kr/2017/01/openssl-pkcs7-verification-unsupported.html
-        store_context = X509_STORE_CTX_new();
-        X509_STORE_CTX_init(store_context, store, nullptr, nullptr);
-        X509_VERIFY_PARAM* vparam = X509_STORE_CTX_get0_param(store_context);
+        store_context = std::move(X509_STORE_CTX_ptr(X509_STORE_CTX_new()));
+        X509_STORE_CTX_init(store_context.get(), store.get(), nullptr, nullptr);
+        X509_VERIFY_PARAM* vparam = X509_STORE_CTX_get0_param(store_context.get());
         int purpose = X509_PURPOSE_ANY;
         X509_VERIFY_PARAM_set_purpose(vparam, purpose);
-        X509_STORE_set1_param(store, vparam);
+        X509_STORE_set1_param(store.get(), vparam);
 
         // PKCS7_verify use it's own X509_STORE_CTX
-        // X509_STORE_CTX_set_ex_data(store_context, 0, handle);
+        // X509_STORE_CTX_set_ex_data(store_context.get(), 0, handle);
 
-        X509_STORE_set_flags(store, X509_V_FLAG_CRL_CHECK);
+        X509_STORE_set_flags(store.get(), X509_V_FLAG_CRL_CHECK);
 
         for (auto& pair : crl_map) {
             X509_CRL* crl = pair.second;
             if (crl) {
-                X509_STORE_add_crl(store, crl);
+                X509_STORE_add_crl(store.get(), crl);
             }
         }
 
         int flag = 0;
-        ret_verify = PKCS7_verify(pkcs7, pkcs7->d.sign->cert, store, bio, nullptr, flag);
+        ret_verify = PKCS7_verify(pkcs7, pkcs7->d.sign->cert, store.get(), bio.get(), nullptr, flag);
         //__trace(0, format("PKCS7_verify %d", ret_verify).c_str());
         // printf("Signature verification: %s\n\n", ret_verify ? "ok" : "failed");
         if (ret_verify < 1) {
@@ -844,25 +841,14 @@ return_t authenticode_verifier::verify_pkcs7(authenticode_context_t* handle, voi
         }
     }
     __finally2 {
-        // if (nullptr != chain)
-        //{
-        //  sk_X509_free(chain);
-        //}
-        if (nullptr != bio) {
-            BIO_free(bio);
-        }
-        if (nullptr != store) {
-            X509_STORE_free(store);
-        }
-        if (nullptr != store_context) {
-            X509_STORE_CTX_free(store_context);
-        }
         if (nullptr != handle) {
             critical_section_guard guard(_contexts_lock);
-            if (true == pib.second) {
-                _contexts.erase(pib.first);
+            auto iter = _contexts.find(get_thread_id());
+            if (_contexts.end() != iter) {
+                _contexts.erase(iter);
             }
         }
+        result = (errorcode_t::success == ret) ? verify_ok : verify_fail;
     }
 
     return ret;

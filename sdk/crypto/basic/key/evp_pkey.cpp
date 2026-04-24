@@ -29,11 +29,13 @@ return_t nidof_evp_pkey(const EVP_PKEY* pkey, uint32& nid) {
 
         nid = EVP_PKEY_id(pkey);
         if (EVP_PKEY_EC == nid) {
-            EC_KEY* ec = EVP_PKEY_get1_EC_KEY((EVP_PKEY*)pkey);
-            if (ec) {
-                const EC_GROUP* group = EC_KEY_get0_group(ec);
+            EC_KEY_ptr ec(EVP_PKEY_get1_EC_KEY((EVP_PKEY*)pkey));
+            if (ec.get()) {
+                const EC_GROUP* group = EC_KEY_get0_group(ec.get());
                 nid = EC_GROUP_get_curve_name(group);
-                EC_KEY_free(ec);
+            } else {
+                ret = errorcode_t::internal_error;
+                __leave2;
             }
         } else if (EVP_PKEY_DH == nid) {
             // nid = EVP_PKEY_get_base_id(pkey);

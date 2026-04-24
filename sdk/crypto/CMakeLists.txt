@@ -10,7 +10,6 @@ file (GLOB FILEGROUP_SDK_HEADER_CRYPTO
     ${PROJECT_SOURCE_DIR}/sdk/crypto/basic/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/cose/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/crypto/jose/*.hpp
-    ${PROJECT_SOURCE_DIR}/sdk/crypto/oqs/*.hpp
 )
 
 file (GLOB FILEGROUP_SDK_SOURCE_CRYPTO

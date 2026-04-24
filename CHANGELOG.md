@@ -32,7 +32,7 @@
     * CBOR
 
 * details
-  * Revision 957
+  * Revision 958
   * Revision 953
     * [tested] TLS 1.3 ML-DSA certificate
   * Revision 946

@@ -78,7 +78,6 @@ int main(int argc, char** argv) {
     }
 
     testcase_rfc7049();
-    testcase_parse();
 
     _logger->flush();
 

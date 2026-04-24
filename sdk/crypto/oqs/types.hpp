@@ -19,6 +19,7 @@ namespace hotplace {
 namespace crypto {
 
 struct oqs_context {
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     OSSL_LIB_CTX* libctx;
     OSSL_PROVIDER* default_provider;
     OSSL_PROVIDER* oqs_provider;
@@ -27,6 +28,7 @@ struct oqs_context {
     std::list<std::pair<std::string, int>> sigalgs;
 
     oqs_context() : libctx(nullptr), default_provider(nullptr), oqs_provider(nullptr) {}
+#endif
 };
 
 class pqc_oqs;

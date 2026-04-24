@@ -204,9 +204,90 @@ void test_as_small_as_possible() {
     }
 }
 
+// https://baseconvert.com/ieee-754-floating-point
+void test_ieee754_conversion() {
+    _test_case.begin("ieee754");
+    struct testvector_fpconv {
+        const char* text;
+        uint16 fp16;
+        uint32 fp32;
+        uint64 fp64;
+        bool loss;
+    } table[] = {
+        {"0.0", 0x0000, 0x00000000, 0x0000000000000000, false},
+        {"0.00006103515625", 0x0400, 0x38800000, 0x3f10000000000000, false},
+        {"1.0", 0x3c00, 0x3f800000, 0x3ff0000000000000, false},
+        {"1.5", 0x3e00, 0x3fc00000, 0x3ff8000000000000, false},
+        {"2.0", 0x4000, 0x40000000, 0x4000000000000000, false},
+        {"4.0", 0x4400, 0x40800000, 0x4010000000000000, false},
+        {"32.625", 0x5014, 0x42028000, 0x4040500000000000, false},
+        {"65504.0", 0x7bff, 0x477fe000, 0x40effc0000000000, false},
+
+        {"-0.0", 0x8000, 0x80000000, 0x8000000000000000, false},
+        {"-0.00006103515625", 0x8400, 0xb8800000, 0xbf10000000000000, false},
+        {"-1.0", 0xbc00, 0xbf800000, 0xbff0000000000000, false},
+        {"-1.5", 0xbe00, 0xbfc00000, 0xbff8000000000000, false},
+        {"-2.0", 0xc000, 0xc0000000, 0xc000000000000000, false},
+        {"-4.0", 0xc400, 0xc0800000, 0xc010000000000000, false},
+        {"-32.625", 0xd014, 0xc2028000, 0xc040500000000000, false},
+        {"-65504.0", 0xfbff, 0xc77fe000, 0xc0effc0000000000, false},
+
+        {"inf", 0x7c00, 0x7f800000, 0x7ff0000000000000, false},
+        {"nan", 0x7e00, 0x7fc00000, 0x7ff8000000000000, false},
+
+        {"3.4028234663852886e+38", 0x7c00, 0x7f7fffff, 0x47efffffe0000000, true},  // NaN
+        {"1.0e+300", 0x7c00, 0x7f800000, 0x7e37e43c8800759c, true},                // NaN
+        {"100000.0", 0x7c00, 0x47c35000, 0x40f86a0000000000, true},                // NaN
+
+        {"5.960464477539063e-8", 0x0001, 0x33800000, 0x3e70000000000000, true},
+        {"-5.960464477539063e-8", 0x8001, 0xb3800000, 0xbe70000000000000, true},
+        {"0.3333333333333333", 0x3555, 0x3eaaaaab, 0x3fd5555555555555, true},
+        {"-0.3333333333333333", 0xb555, 0xbeaaaaab, 0xbfd5555555555555, true},
+        {"4.1", 0x441a, 0x40833333, 0x4010666666666666, true},
+        {"-4.1", 0xc41a, 0xc0833333, 0xc010666666666666, true},
+    };
+
+    for (auto item : table) {
+        float f = fp32_from_binary32(item.fp32);
+        double d = fp64_from_binary64(item.fp64);
+        _logger->writeln("single precision %f %g double precision %lf %lg", f, f, d, d);
+
+        {
+            uint16 fp16 = fp16_from_fp32(item.fp32);
+            _test_case.assert(fp16 == item.fp16, __FUNCTION__, "fp32 to fp16 %s", item.text);
+            uint32 fp32 = binary32_from_fp32(fp64_from_binary64(item.fp64));  // (float)double
+            _test_case.assert(fp32 == item.fp32, __FUNCTION__, "fp32 to fp16 %s", item.text);
+        }
+
+        {
+            variant vt;
+            uint8 l = 0;
+            double d = fp64_from_binary64(item.fp64);
+            l = ieee754_as_small_as_possible(vt, d);
+            if (8 == l) {
+            } else if (4 == l) {
+                _test_case.assert(vt.get().data.ui32 == item.fp32, __FUNCTION__, "fp64 to fp32 %s", item.text);
+            } else if (2 == l) {
+                _test_case.assert(vt.get().data.ui16 == item.fp16, __FUNCTION__, "fp64 to fp16 %s", item.text);
+            }
+        }
+
+        if (false == item.loss) {
+            uint32 fp32 = binary32_from_fp32(float_from_fp16(item.fp16));
+            uint64 fp64 = binary64_from_fp64(double_from_fp16(item.fp16));
+            f = fp32_from_binary32(fp32);
+            d = fp64_from_binary64(fp64);
+            _logger->writeln("fp16 to single precision %f %g double precision %lf %lg", f, f, d, d);
+            _test_case.assert(fp32 == item.fp32, __FUNCTION__, "fp16 to fp32 %s", item.text);
+            _test_case.assert(fp64 == item.fp64, __FUNCTION__, "fp16 to fp64 %s", item.text);
+        }
+    }
+}
+
 void testcase_ieee754() {
     test_typeof_ieee754();
     test_frexp();
     test_float_printf();
     test_as_small_as_possible();
+    test_ieee754_conversion();
 }

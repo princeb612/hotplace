@@ -1,4 +1,4 @@
-#!/bin/bash +x
+#!/bin/bash -x
 :<<COMMENTS
 @author Soo Han, Kim (princeb612.kr@gmail.com)
 @remarks
