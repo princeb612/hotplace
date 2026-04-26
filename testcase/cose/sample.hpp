@@ -17,44 +17,14 @@ struct OPTION : public CMDLINEOPTION {
     bool dump_keys;
     bool dump_diagnostic;
     bool skip_cbor_basic;
-    bool skip_validate;
     bool skip_gen;
 
-    OPTION() : CMDLINEOPTION(), dump_keys(false), dump_diagnostic(false), skip_cbor_basic(false), skip_validate(false), skip_gen(false) {}
+    OPTION() : CMDLINEOPTION(), dump_keys(false), dump_diagnostic(false), skip_cbor_basic(false), skip_gen(false) {}
 };
 
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
-
-typedef struct _test_vector_github_cose_wg_t {
-    const char* keysetname;  // crypto_key* key;
-    const char* file;
-    const char* cbor;
-    struct {
-        const char* external;
-        const char* iv_hex;
-        const char* apu_id;
-        const char* apu_nonce;
-        const char* apu_other;
-        const char* apv_id;
-        const char* apv_nonce;
-        const char* apv_other;
-        const char* pub_other;
-        const char* priv;
-    } shared;
-    struct {
-        const char* aad_hex;
-        const char* cek_hex;
-        const char* tomac_hex;
-    } enc;
-    int skip;
-    int untagged;
-    int debug;
-} test_vector_github_cose_wg_t;
-
-extern const test_vector_github_cose_wg_t test_vector_github_cose_wg[];
-extern const size_t sizeof_test_vector_github_cose_wg;
 
 extern crypto_key rfc8152_privkeys;
 extern crypto_key rfc8152_pubkeys;
@@ -76,7 +46,7 @@ void dump_crypto_key(crypto_key_object* key, void*);
 void testcase_rfc8152();
 
 // part 3 https://github.com/cose-wg/Examples
-void testcase_examples();
+void testcase_testvector_cose_examples();
 
 // part 4 encrypt/sign/mac
 void testcase_cose();

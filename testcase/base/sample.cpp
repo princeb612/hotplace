@@ -57,9 +57,11 @@ int main(int argc, char **argv) {
     }
 
     testcase_binary();
-    testcase_cmdline();
+    test_cmdline();
+    testcase_testvector_cmdline();
     testcase_dumpmemory();
     testcase_valist();
+    testcase_testvector_valist();
     testcase_variant();
 
     testcase_graph();
@@ -89,7 +91,9 @@ int main(int argc, char **argv) {
     testcase_string();
 
     testcase_bignumber();
+    testcase_testvector_bignumber();
     testcase_capacity();
+    testcase_testvector_capacity();
     testcase_datetime();
     testcase_endian();
     testcase_ieee754();

@@ -8,35 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/testcase/crypto/crypt/testvector.hpp>
 #include <hotplace/testcase/crypto/sample.hpp>
-
-void validate_openssl_crypt() {
-    _test_case.begin("CAVP block cipher - AES");
-    const OPTION& option = _cmdline->value();
-
-    openssl_crypt crypt;
-    crypt_context_t* handle = nullptr;
-    for (int i = 0; i < sizeof_test_vector_nist_cavp_blockcipher; i++) {
-        const test_vector_nist_cavp_blockcipher_t* vector = test_vector_nist_cavp_blockcipher + i;
-        binary_t ciphertext;
-        binary_t plaintext;
-        crypt.open(&handle, vector->alg, base16_decode(vector->key), base16_decode(vector->iv));
-        // EVP_CIPHER_CTX_set_padding(ctx, 0);
-        crypt.set(handle, crypt_ctrl_t::crypt_ctrl_padding, 0);
-        crypt.encrypt(handle, base16_decode(vector->plaintext), ciphertext);
-        crypt.decrypt(handle, base16_decode(vector->ciphertext), plaintext);
-        crypt.close(handle);
-
-        if (option.verbose) {
-            _logger->hdump("Ciphertext", ciphertext);
-            _logger->hdump("Plaintext", plaintext);
-        }
-
-        _test_case.assert(base16_decode(vector->ciphertext) == ciphertext, __FUNCTION__, "%s - encrypt", vector->desc);
-        _test_case.assert(base16_decode(vector->plaintext) == plaintext, __FUNCTION__, "%s - decrypt", vector->desc);
-    }
-}
 
 // no plan
 // class wincrypt : public crypt_t
@@ -202,7 +174,4 @@ void test_openssl_crypt() {
     test_openssl_crypt_routine(0, 0);      // speed
 }
 
-void testcase_openssl_crypt() {
-    validate_openssl_crypt();  // validate wrapper class openssl_crypt
-    test_openssl_crypt();
-}
+void testcase_openssl_crypt() { test_openssl_crypt(); }

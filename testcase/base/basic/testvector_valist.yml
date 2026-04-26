@@ -1,0 +1,28 @@
+testvector:
+  - example: sprintf
+    args:
+      - type: float
+        value: 3.141592
+      - type: string
+        value: phi
+      - type: int
+        value: 123
+    items:
+      - item:
+        format: value={1} value={2} value={3}
+        expect: value=3.141592 value=phi value=123
+      - item:
+        format: value={2} value={3} value={1}
+        expect: value=phi value=123 value=3.141592
+      - item:
+        format: value={3} value={2} value={1}
+        expect: value=123 value=phi value=3.141592
+      - item:
+        format: value={2} value={1} value={3}
+        expect: value=phi value=3.141592 value=123
+      - item:
+        format: value={2} value={1} value={3} value={2}
+        expect: value=phi value=3.141592 value=123 value=phi
+      - item:
+        format: value={3} value={2} value={2} value={1} value={4} value={5}
+        expect: value=123 value=phi value=phi value=3.141592 value={4} value={5}

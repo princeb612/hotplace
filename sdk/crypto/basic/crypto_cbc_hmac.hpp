@@ -92,8 +92,10 @@ class crypto_cbc_hmac {
     crypto_cbc_hmac();
 
     crypto_cbc_hmac& set_enc(const char* enc_alg);
+    crypto_cbc_hmac& set_enc(const std::string& enc_alg);
     crypto_cbc_hmac& set_enc(crypt_algorithm_t enc_alg);
     crypto_cbc_hmac& set_mac(const char* mac_alg);
+    crypto_cbc_hmac& set_mac(const std::string& mac_alg);
     crypto_cbc_hmac& set_mac(hash_algorithm_t mac_alg);
     crypto_cbc_hmac& set_flag(uint16 flag);
 

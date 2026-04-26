@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   testcase_rfc7516.cpp
+ * @file   testcase_cbc_hmac_jose.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -8,7 +8,6 @@
  * Date         Name                Description
  */
 
-#include <hotplace/testcase/crypto/crypt/testvector.hpp>
 #include <hotplace/testcase/crypto/sample.hpp>
 
 // Authenticated Encryption with AES-CBC and HMAC-SHA
@@ -16,6 +15,22 @@
 // AEAD_AES_192_CBC_HMAC_SHA_384
 // AEAD_AES_256_CBC_HMAC_SHA_384
 // AEAD_AES_256_CBC_HMAC_SHA_512
+
+// CBC-HMAC JOSE
+// Authenticated Encryption with AES-CBC and HMAC-SHA
+typedef struct _test_vector_aead_aes_cbc_hmac_sha2_t {
+    std::string item;
+    std::string encalg;
+    std::string macalg;
+    std::string k;   // mac_key || enc_key
+    std::string p;   // PT
+    std::string iv;  // IV
+    std::string a;   // AAD
+    std::string q;   // Q = CBC-ENC(ENC_KEY, P || PS)
+    std::string s;   // S = IV || Q
+    std::string t;   // T = MAC(MAC_KEY, A || S || AL)
+    std::string c;   // CT = S || T
+} test_vector_aead_aes_cbc_hmac_sha2_t;
 
 #define dump(var)                             \
     {                                         \
@@ -26,23 +41,23 @@
 // https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt
 // 2.1.  Encryption
 // Appendix A.  CBC Encryption and Decryption
-return_t do_test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_cbc_hmac_sha2_t* vector) {
+return_t do_test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_cbc_hmac_sha2_t* entry) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     const OPTION& option = _cmdline->value();
 
     __try2 {
-        if (nullptr == vector) {
+        if (nullptr == entry) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        const char* enc_alg = vector->enc_alg;
-        const char* mac_alg = vector->mac_alg;
-        binary_t k = std::move(base16_decode(vector->k));
-        binary_t iv = std::move(base16_decode(vector->iv));
-        binary_t a = std::move(base16_decode(vector->a));
-        binary_t p = std::move(base16_decode(vector->p));
+        const char* encalg = entry->encalg.c_str();
+        const char* macalg = entry->macalg.c_str();
+        binary_t k = std::move(base16_decode(entry->k));
+        binary_t iv = std::move(base16_decode(entry->iv));
+        binary_t a = std::move(base16_decode(entry->a));
+        binary_t p = std::move(base16_decode(entry->p));
         binary_t mac_key;
         binary_t enc_key;
         binary_t ps;
@@ -51,14 +66,14 @@ return_t do_test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_c
         binary_t t;
         binary_t c;
 
-        const hint_blockcipher_t* hint_blockcipher = advisor->hintof_blockcipher(enc_alg);
+        const hint_blockcipher_t* hint_blockcipher = advisor->hintof_blockcipher(encalg);
         if (nullptr == hint_blockcipher) {
             ret = errorcode_t::not_found;
             __leave2;
         }
         uint16 keysize = sizeof_key(hint_blockcipher);
         uint16 blocksize = sizeof_block(hint_blockcipher);
-        const hint_digest_t* hint_digest = advisor->hintof_digest(mac_alg);
+        const hint_digest_t* hint_digest = advisor->hintof_digest(macalg);
         if (nullptr == hint_digest) {
             ret = errorcode_t::not_found;
             __leave2;
@@ -97,7 +112,7 @@ return_t do_test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_c
         /* Q = CBC-ENC(ENC_KEY, P || PS) */
         crypt_context_t* crypt_handle = nullptr;
         openssl_crypt crypt;
-        crypt.open(&crypt_handle, enc_alg, enc_key, iv);
+        crypt.open(&crypt_handle, encalg, enc_key, iv);
         crypt.set(crypt_handle, crypt_ctrl_t::crypt_ctrl_padding, 0);
         crypt.encrypt(crypt_handle, p1, q);
         crypt.close(crypt_handle);
@@ -109,7 +124,7 @@ return_t do_test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_c
             dump(s);
         }
 
-        _test_case.assert(base16_decode(vector->s) == s, __FUNCTION__, "%s S = IV || CBC-ENC(ENC_KEY, P || PS)", vector->text);
+        _test_case.assert(base16_decode(entry->s) == s, __FUNCTION__, "%s S = IV || CBC-ENC(ENC_KEY, P || PS)", entry->item.c_str());
 
         /* A || S || AL */
         binary_t content;
@@ -120,10 +135,10 @@ return_t do_test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_c
 
         /* T = MAC(MAC_KEY, A || S || AL) */
         openssl_mac mac;
-        mac.hmac(mac_alg, mac_key, content, t);
+        mac.hmac(macalg, mac_key, content, t);
         t.resize(digestsize);
 
-        _test_case.assert(base16_decode(vector->t) == t, __FUNCTION__, "%s T = MAC(MAC_KEY, A || S || AL)", vector->text);
+        _test_case.assert(base16_decode(entry->t) == t, __FUNCTION__, "%s T = MAC(MAC_KEY, A || S || AL)", entry->item.c_str());
 
         /* C = S || T */
         c.insert(c.end(), s.begin(), s.end());
@@ -145,25 +160,25 @@ return_t do_test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_c
             dump(c);
         }
 
-        _test_case.assert(base16_decode(vector->c) == c, __FUNCTION__, "%s C = S || T", vector->text);
+        _test_case.assert(base16_decode(entry->c) == c, __FUNCTION__, "%s C = S || T", entry->item.c_str());
     }
     __finally2 {}
     return ret;
 }
 
-void do_test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_hmac_sha2_t* vector) {
+void do_test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_hmac_sha2_t* entry) {
     return_t ret = errorcode_t::success;
     const OPTION& option = _cmdline->value();
     // openssl_crypt aead;
 
-    binary_t cek = std::move(base16_decode(vector->k));
-    binary_t iv = std::move(base16_decode(vector->iv));
-    binary_t aad = std::move(base16_decode(vector->a));
-    binary_t plaintext = std::move(base16_decode(vector->p));
-    binary_t ciphertext = std::move(base16_decode(vector->q));
+    binary_t cek = std::move(base16_decode(entry->k));
+    binary_t iv = std::move(base16_decode(entry->iv));
+    binary_t aad = std::move(base16_decode(entry->a));
+    binary_t plaintext = std::move(base16_decode(entry->p));
+    binary_t ciphertext = std::move(base16_decode(entry->q));
 
     crypto_cbc_hmac cbchmac;
-    cbchmac.set_enc(vector->enc_alg).set_mac(vector->mac_alg).set_flag(jose_encrypt_then_mac);
+    cbchmac.set_enc(entry->encalg).set_mac(entry->macalg).set_flag(jose_encrypt_then_mac);
 
     binary_t enckey;
     binary_t mackey;
@@ -176,24 +191,47 @@ void do_test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_h
         test_case_notimecheck notimecheck(_test_case);
         dump(q);
     }
-    _test_case.assert(ciphertext == q, __FUNCTION__, "encrypt %s", vector->text);
+    _test_case.assert(ciphertext == q, __FUNCTION__, "encrypt %s", entry->item.c_str());
     binary_t p;
     ret = cbchmac.decrypt(enckey, mackey, iv, aad, q, p, t);
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
         dump(p);
     }
-    _test_case.assert(base16_decode(vector->p) == p, __FUNCTION__, "decrypt %s", vector->text);
+    _test_case.assert(base16_decode(entry->p) == p, __FUNCTION__, "decrypt %s", entry->item.c_str());
 }
 
-void test_rfc7516() {
-    _test_case.begin("Authenticated Encryption with AES-CBC and HMAC-SHA");
+void test_yaml_testvector_cbc_hmac_jose() {
+    _test_case.begin("Authenticated Encryption with AES-CBC and HMAC-SHA YAML");
 
-    for (int i = 0; i < sizeof_test_vector_aead_aes_cbc_hmac_sha2; i++) {
-        const test_vector_aead_aes_cbc_hmac_sha2_t* vector = test_vector_aead_aes_cbc_hmac_sha2 + i;
-        do_test_aead_aes_cbc_hmac_sha2_testvector1(vector);
-        do_test_aead_aes_cbc_hmac_sha2_testvector2(vector);
+    YAML::Node testvector = YAML::LoadFile("./testvector_cbc_hmac_jose.yml");
+    auto examples = testvector["testvector"];
+    if (examples && examples.IsSequence()) {
+        for (const auto& example : examples) {
+            auto text_example = example["example"].as<std::string>();
+            _logger->writeln("example: %s", text_example.c_str());
+
+            auto items = example["items"];
+            for (const auto& item : items) {
+                test_vector_aead_aes_cbc_hmac_sha2_t entry;
+
+                entry.item = std::move(item["item"].as<std::string>());
+                entry.encalg = std::move(item["encalg"].as<std::string>());
+                entry.macalg = std::move(item["macalg"].as<std::string>());
+                entry.k = std::move(item["k"].as<std::string>());
+                entry.p = std::move(item["p"].as<std::string>());
+                entry.iv = std::move(item["iv"].as<std::string>());
+                entry.a = std::move(item["a"].as<std::string>());
+                entry.q = std::move(item["q"].as<std::string>());
+                entry.s = std::move(item["s"].as<std::string>());
+                entry.t = std::move(item["t"].as<std::string>());
+                entry.c = std::move(item["c"].as<std::string>());
+
+                do_test_aead_aes_cbc_hmac_sha2_testvector1(&entry);
+                do_test_aead_aes_cbc_hmac_sha2_testvector2(&entry);
+            }
+        }
     }
 }
 
-void testcase_rfc7516() { test_rfc7516(); }
+void testcase_testvector_cbc_hmac_jose() { test_yaml_testvector_cbc_hmac_jose(); }

@@ -32,7 +32,9 @@
     * CBOR
 
 * details
-  * Revision 958
+  * Revision 959
+  * Revision 958 (Tag 1.93)
+    * [fixed] cbor_reader floating point
   * Revision 953
     * [tested] TLS 1.3 ML-DSA certificate
   * Revision 946

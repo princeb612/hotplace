@@ -146,6 +146,9 @@ return_t crypto_advisor::build() {
 #endif
         }
         _md_byname_map.insert(std::make_pair(nameof_alg(item), item));
+        if (item->altname) {
+            _md_byname_map.insert(std::make_pair(item->altname, item));
+        }
 
         if (evp_md) {
             set_feature(nameof_alg(item), advisor_feature_md);

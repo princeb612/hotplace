@@ -1,0 +1,87 @@
+testvector:
+  - example: myoption  # MYOPTION structure
+    items:
+      - item:
+        args:
+          - -in
+          - test.in
+        expect: false
+        reason: missing -out
+      - item:
+        args:
+        expect: false
+        reason: no parameter
+      - item:
+        args:
+          - -keygen
+          - -in
+          - test.in
+        expect: false
+        reason: missing -out
+      - item:
+        args:
+          - -keygen
+          - test.in
+          - -in
+        expect: false
+        reason: missing -in value and -out
+      - item:
+        args:
+          - -keygen
+          - test.in
+          - -in
+          - test.out
+        expect: false
+        reason: missing -out
+      - item:
+        args:
+          - -keygen
+          - test.in
+          - -in
+          - test.out
+          - out
+        expect: false
+        reason: missing -out value
+      - item:
+        args:
+          - -in-
+          - test.in
+          - -out
+          - test.out
+        expect: false
+        reason: missing -in
+      - item:
+        args:
+          - -in
+          - test.in
+          - -out
+          - test.out
+        expect: true
+        reason:
+      - item:
+        args:
+          - -keygen
+          - -in
+          - test.in
+          - -out
+          - test.out
+        expect: true
+        reason:
+      - item:
+        args:
+          - -in
+          - test.in
+          - -keygen
+          - -out
+          - test.out
+        expect: true
+        reason:
+      - item:
+        args:
+          - -in
+          - test.in
+          - -out
+          - test.out
+          - -keygen
+        expect: true
+        reason:

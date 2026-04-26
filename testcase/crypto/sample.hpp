@@ -29,14 +29,15 @@ extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 void testcase_advisor();
 
 void testcase_aead_ccm();
-void testcase_cbc_hmac_tls();
 void testcase_cipher_encrypt();
 void testcase_crypto_aead();
 void testcase_crypto_encrypt();
 void testcase_openssl_crypt();
-void testcase_rfc3394();  // keywrap
-void testcase_rfc7516();  // CBC HMAC
-void testcase_rfc7539();  // chacha20, chacha20-poly1305
+void testcase_testvector_cavp_blockciphers();
+void testcase_testvector_rfc3394();        // keywrap
+void testcase_testvector_rfc7539();        // chacha20, chacha20-poly1305
+void testcase_testvector_cbc_hmac_jose();  // JOSE
+void testcase_testvector_cbc_hmac_tls();   // TLS 1.2
 
 void testcase_openssl_hash();
 void testcase_rfc4226();  // HOTP

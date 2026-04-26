@@ -24,5 +24,6 @@ extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
 void testcase_rfc7049();
+void testcase_testvector_cbor();
 
 #endif

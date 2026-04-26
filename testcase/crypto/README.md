@@ -1,9 +1,11 @@
 #### crypto
 
 * test vector
+  * block ciphers
+    * https://csrc.nist.gov/projects/cryptographic-algorithm-validation-program/block-ciphers
+    * https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/aes/KAT_AES.zip
   * AES
     * RFC 3394 Advanced Encryption Standard (AES) Key Wrap Algorithm
-    * https://csrc.nist.gov/projects/cryptographic-algorithm-validation-program/block-ciphers
   * ChaCha20
     * RFC 7539 ChaCha20 and Poly1305 for IETF Protocols
   * AES-CBC-HMAC (JOSE, JWE)
@@ -129,3 +131,85 @@ NIST 2022
     - [ ] [ML-DSA-sigVer-FIPS204](https://github.com/usnistgov/ACVP-Server/tree/master/gen-val/json-files/ML-DSA-sigVer-FIPS204)
     - [ ] [ML-KEM-keyGen-FIPS203](https://github.com/usnistgov/ACVP-Server/tree/master/gen-val/json-files/ML-KEM-keyGen-FIPS203)
     - [ ] [ML-KEM-encapDecap-FIPS203](https://github.com/usnistgov/ACVP-Server/tree/master/gen-val/json-files/ML-KEM-encapDecap-FIPS203)
+
+#### YAML schema
+
+* CBC-HMAC JOSE YAML schema
+
+````
+testvector:
+  - example: CBC-HMAC JOSE
+    items:
+      - item: string
+        encalg: string  # [mandatory] algorithm
+        macalg: string  # [mandatory] algorithm
+        k: hexstring    # [mandatory] mackey || enckey
+        p: hexstring    # [mandatory] PT
+        iv: hexstring   # [mandatory] IV
+        a: hexstring    # [mandatory] AAD
+        q: hexstring    # [mandatory] Q = CBC-ENC(ENC_KEY, P || PS)
+        s: hexstring    # [mandatory] S = IV || Q
+        t: hexstring    # [mandatory] T = MAC(MAC_KEY, A || S || AL)
+        c: hexstring    # [mandatory] CT = S || T
+````
+
+* CBC-HMAC JOSE TLS schema
+
+````
+testvector:
+  - example: CBC-HMAC TLS
+    items:
+      - item: string       #
+        flag: string       # [mandatory] "mac_then_encrypt"|"encrypt_then_mac"
+        enckey: hexstring  # [mandatory]
+        iv: hexstring      # [mandatory]
+        macalg: string     # [mandatory]
+        mackey: hexstring  # [mandatory]
+        aad: hexstring     # [mandatory]
+        pt: hexstring      # [mandatory] plaintext
+        ct: hexstring      # [mandatory] ciphertext
+````
+
+* NIST CAVP block-ciphers TLS schema
+
+````
+testvector:
+  - example: CAVP block-ciphers
+    items:
+      - item: string    #
+        alg: string     # [mandatory]
+        key: hexstring  # [mandatory]
+        iv: hexstring   # [mandatory]
+        pt: hexstring   # [mandatory] plaintext
+        ct: hexstring   # [mandatory] ciphertext
+````
+
+* RFC 3394 schema
+
+````
+testvector:
+  - example: RFC 3394
+    items:
+      - item: string        #
+        alg: string         # [mandatory] "aes-128-wrap"|"aes-192-wrap"|"aes-256-wrap"
+        kek: hexstring      # [mandatory]
+        key: hexstring      # [mandatory]
+        keydata: hexstring  # [mandatory]
+````
+
+* RFC 7439 schema
+
+````
+testvector:
+  - example: RFC 7539
+    items:
+      - item: string        #
+        alg: string         # [mandatory] "chacha20"|"chacha20-poly1305"
+        key: hexstring      # [mandatory]
+        counter: int        # [mandatory]
+        iv: hexstring       # [mandatory]
+        aad: hexstring      #
+        tag: hexstring      #
+        pt: string          # [mandatory]
+        ct: hexstring       # [mandatory]
+````

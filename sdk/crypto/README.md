@@ -18,13 +18,16 @@ mindmap
         RSA
         ECDSA
         EdDSA
+        MLDSA
       key
         HMAC
         RSA
         EC
         OKP
-      key agreement
+      key exchange
         ECDH
+        KEM
+        hybrid KEM
       PRNG
       OTP
         HOTP

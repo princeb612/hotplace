@@ -62,7 +62,6 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("-k", "dump keys", [](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional()
                 << t_cmdarg_t<OPTION>("-u", "dump diagnostic", [](OPTION& o, char* param) -> void { o.dump_diagnostic = true; }).optional()
                 << t_cmdarg_t<OPTION>("-b", "skip basic encoding", [](OPTION& o, char* param) -> void { o.skip_cbor_basic = true; }).optional()
-                << t_cmdarg_t<OPTION>("-s", "skip validation w/ test vector", [](OPTION& o, char* param) -> void { o.skip_validate = true; }).optional()
                 << t_cmdarg_t<OPTION>("-g", "skip self-generated message", [](OPTION& o, char* param) -> void { o.skip_gen = true; }).optional();
     (*_cmdline).parse(argc, argv);
 
@@ -88,7 +87,6 @@ int main(int argc, char** argv) {
 
     _logger->writeln("option.verbose %i", option.verbose ? 1 : 0);
     _logger->writeln("option.dump_keys %i", option.dump_keys ? 1 : 0);
-    _logger->writeln("option.skip_validate %i", option.skip_validate ? 1 : 0);
     _logger->writeln("option.skip_gen %i", option.skip_gen ? 1 : 0);
 
     __try2 {
@@ -110,9 +108,7 @@ int main(int argc, char** argv) {
         // clearly marked as such in the JSON file.  If errors in the examples
         // in this document are found, the examples on GitHub will be updated,
         // and a note to that effect will be placed in the JSON file.
-        if (false == option.skip_validate) {
-            testcase_examples();
-        }
+        testcase_testvector_cose_examples();
 
         // part 4 encrypt/sign/mac
         testcase_cose();

@@ -18,7 +18,7 @@ struct MYOPTION : public CMDLINEOPTION {
     MYOPTION() : CMDLINEOPTION(), keygen(false) {};
 };
 
-void do_test_cmdline(bool expect, int argc, char** argv) {
+void do_test_cmdline_template_myoption(bool expect, int argc, char** argv) {
     return_t ret = errorcode_t::success;
 
     t_cmdline_t<MYOPTION> cmdline;
@@ -57,24 +57,49 @@ void do_test_cmdline(bool expect, int argc, char** argv) {
     _test_case.assert(expect ? test : !test, __FUNCTION__, "cmdline %s (%s)", args.c_str(), expect ? "positive test" : "negative test");
 }
 
-void test_cmdline() {
-    _test_case.begin("commandline");
+void test_yaml_testvector_cmdline() {
+    _test_case.begin("commandline YAML");
 
-    int argc = 0;
-    char* argv[5] = {};
+    YAML::Node testvector = YAML::LoadFile("./testvector_cmdline.yml");
+    auto examples = testvector["testvector"];
 
-    argc = 2;
-    argv[0] = (char*)"-in";
-    argv[1] = (char*)"test.in";
-    do_test_cmdline(false, argc, argv);  // missing -out
+    auto lambda_cmdline_myoption = [&](const YAML::Node& examples) -> void {
+        if (examples && examples.IsSequence()) {
+            for (const auto& example : examples) {
+                _logger->writeln("example: %s", example["example"].as<std::string>().c_str());
 
-    argc = 5;
-    argv[0] = (char*)"-keygen";
-    argv[1] = (char*)"-in";
-    argv[2] = (char*)"test.in";
-    argv[3] = (char*)"-out";
-    argv[4] = (char*)"test.out";
-    do_test_cmdline(true, argc, argv);  // -token.preced value -token.optional
+                auto items = example["items"];
+                for (const auto& item : items) {
+                    valist va;
+                    auto args = item["args"];
+                    auto expect = item["expect"].as<bool>();
+                    auto reason = item["reason"].as<std::string>();
+
+                    int argc = args.size();
+                    if (argc > 5) {
+                        _test_case.assert(false, __FUNCTION__, "invalid test vector");
+                        continue;
+                    }
+
+                    // argv memory access
+                    std::vector<std::string> table;
+                    for (const auto& arg : args) {
+                        table.push_back(arg.as<std::string>());
+                    }
+
+                    char* argv[5] = {};
+                    int i = 0;
+                    for (auto& entry : table) {
+                        argv[i] = (char*)entry.c_str();
+                        ++i;
+                    }
+
+                    do_test_cmdline_template_myoption(expect, argc, argv);
+                }
+            }
+        }
+    };
+    lambda_cmdline_myoption(examples);
 }
 
-void testcase_cmdline() { test_cmdline(); }
+void testcase_testvector_cmdline() { test_yaml_testvector_cmdline(); }

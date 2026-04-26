@@ -216,11 +216,11 @@ class bignumber {
     /**
      * @brief   bitshift
      */
-    bignumber operator<<(unsigned int shift) const;
-    bignumber &operator<<=(unsigned int shift);
+    bignumber operator<<(const bignumber &shift) const;
+    bignumber &operator<<=(const bignumber &shift);
 
-    bignumber operator>>(unsigned int shift) const;
-    bignumber &operator>>=(unsigned int shift);
+    bignumber operator>>(const bignumber &shift) const;
+    bignumber &operator>>=(const bignumber &shift);
 
     /**
      * @example
@@ -306,6 +306,8 @@ class bignumber {
      * @remarks number of internal limb (uint32)
      */
     size_t capacity() const;
+    size_t unsigned_byte_capacity() const;
+    size_t signed_byte_capacity() const;
     /**
      * @brief   dump (debugging purpose)
      */
@@ -367,8 +369,8 @@ class bignumber {
    protected:
     int compare(const bignumber &lhs, const bignumber &rhs) const;
 
-    bignumber leftshift(const bignumber &v, unsigned int shift) const;
-    bignumber rightshift(const bignumber &v, unsigned int shift) const;
+    bignumber leftshift(const bignumber &v, const bignumber &shift) const;
+    bignumber rightshift(const bignumber &v, const bignumber &shift) const;
 
     void trim();
 

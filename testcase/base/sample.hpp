@@ -27,9 +27,11 @@ extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 void testcase_binary();
-void testcase_cmdline();
+void test_cmdline();
+void testcase_testvector_cmdline();
 void testcase_dumpmemory();
 void testcase_valist();
+void testcase_testvector_valist();
 void testcase_variant();
 
 void testcase_graph();
@@ -59,7 +61,9 @@ void testcase_stream();
 void testcase_string();
 
 void testcase_bignumber();
+void testcase_testvector_bignumber();
 void testcase_capacity();
+void testcase_testvector_capacity();
 void testcase_datetime();
 void testcase_endian();
 void testcase_ieee754();

@@ -6,3 +6,35 @@
   * RFC 9338 CBOR Object Signing and Encryption (COSE): Countersignatures
   * RFC 8392 CBOR Web Token (CWT)
   * https://github.com/cose-wg/Examples
+
+#### YAML schema
+
+* COSE YAML schema
+
+````
+testvector:
+  examples:
+    - example:
+      items:
+        - item: string            # [mandatory] filename, description
+          keyset: string          # [mandatory] name of pre-defined keyset
+          cbor: hexstring         # [mandatory]
+          shared:                 # unsent, shared
+            external: hexstring
+            iv: hexstring
+            apu_id: hexstring
+            apu_nonce: hexstring
+            apu_other: hexstring
+            apv_id: hexstring
+            apv_nonce: hexstring
+            apv_other: hexstring
+            pub_other: hexstring
+            priv: hexstring
+          enc:
+            aad:
+            cek:
+            tomac:
+          skip: bit               # do not test
+          untagged: bit
+          debug: bit              # breakpoint
+````

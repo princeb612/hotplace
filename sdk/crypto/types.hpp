@@ -1210,7 +1210,8 @@ typedef struct _crypt_context_t crypt_context_t;
 ///////////////////////////////////////////////////////////////////////////
 typedef struct _hint_digest_t {
     hash_algorithm_t algorithm;
-    const char* fetchname;
+    const char* fetchname;  // advisor->hintof_digest("sha256")
+    const char* altname;    // advisor->hintof_digest("sha2_256")
     uint16 digest_size;
 } hint_digest_t;
 

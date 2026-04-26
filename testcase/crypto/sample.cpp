@@ -62,14 +62,15 @@ int main(int argc, char** argv) {
         testcase_advisor();
 
         testcase_aead_ccm();
-        testcase_cbc_hmac_tls();
         testcase_cipher_encrypt();
         testcase_crypto_aead();
         testcase_crypto_encrypt();
         testcase_openssl_crypt();
-        testcase_rfc3394();  // keywrap
-        testcase_rfc7516();  // CBC HMAC
-        testcase_rfc7539();  // chacha20, chacha20-poly1305
+        testcase_testvector_cavp_blockciphers();
+        testcase_testvector_rfc3394();        // keywrap
+        testcase_testvector_rfc7539();        // chacha20, chacha20-poly1305
+        testcase_testvector_cbc_hmac_jose();  // JOSE
+        testcase_testvector_cbc_hmac_tls();   // TLS 1.2
 
         testcase_openssl_hash();
         testcase_rfc4226();  // HOTP

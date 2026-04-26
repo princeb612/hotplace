@@ -28,6 +28,8 @@ crypto_cbc_hmac& crypto_cbc_hmac::set_enc(const char* enc_alg) {
     return *this;
 }
 
+crypto_cbc_hmac& crypto_cbc_hmac::set_enc(const std::string& enc_alg) { return set_enc(enc_alg.c_str()); }
+
 crypto_cbc_hmac& crypto_cbc_hmac::set_enc(crypt_algorithm_t enc_alg) {
     _enc_alg = enc_alg;
     return *this;
@@ -39,6 +41,8 @@ crypto_cbc_hmac& crypto_cbc_hmac::set_mac(const char* mac_alg) {
     _mac_alg = typeof_alg(hint_digest);
     return *this;
 }
+
+crypto_cbc_hmac& crypto_cbc_hmac::set_mac(const std::string& mac_alg) { return set_mac(mac_alg.c_str()); }
 
 crypto_cbc_hmac& crypto_cbc_hmac::set_mac(hash_algorithm_t mac_alg) {
     _mac_alg = mac_alg;

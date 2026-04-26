@@ -1,0 +1,205 @@
+testvector:
+  - example: unsigned_byte_capacity
+    items:
+      - value: 0x1
+        expect: 1
+      - value: 0x8
+        expect: 1
+      - value: 0x80
+        expect: 1
+      - value: 0x800
+        expect: 2
+      - value: 0x8000
+        expect: 2
+      - value: 0x80000
+        expect: 3
+      - value: 0x800000
+        expect: 3
+      - value: 0x8000000
+        expect: 4
+      - value: 0x80000000
+        expect: 4
+      - value: 0x800000000
+        expect: 5
+      - value: 0x8000000000
+        expect: 5
+      - value: 0x80000000000
+        expect: 6
+      - value: 0x800000000000
+        expect: 6
+      - value: 0x8000000000000
+        expect: 7
+      - value: 0x80000000000000
+        expect: 7
+      - value: 0x800000000000000
+        expect: 8
+      - value: 0x8000000000000000
+        expect: 8
+      - value: 0x80000000000000000
+        expect: 9
+      - value: 0x800000000000000000
+        expect: 9
+      - value: 0x8000000000000000000
+        expect: 10
+      - value: 0x80000000000000000000
+        expect: 10
+      - value: 0x800000000000000000000
+        expect: 11
+      - value: 0x8000000000000000000000
+        expect: 11
+      - value: 0x80000000000000000000000
+        expect: 12
+      - value: 0x800000000000000000000000
+        expect: 12
+      - value: 0x8000000000000000000000000
+        expect: 13
+      - value: 0x80000000000000000000000000
+        expect: 13
+      - value: 0x800000000000000000000000000
+        expect: 14
+      - value: 0x8000000000000000000000000000
+        expect: 14
+      - value: 0x80000000000000000000000000000
+        expect: 15
+      - value: 0x800000000000000000000000000000
+        expect: 15
+      - value: 0x8000000000000000000000000000000
+        expect: 16
+      - value: 0x10000000000000000000000000000000
+        expect: 16
+      - value: 0x20000000000000000000000000000000
+        expect: 16
+      - value: 0x40000000000000000000000000000000
+        expect: 16
+      - value: 0x80000000000000000000000000000000
+        expect: 16
+      - value: 0x100000000000000000000000000000000
+        expect: 17
+      - value: 0x200000000000000000000000000000000
+        expect: 17
+      - value: 0x400000000000000000000000000000000
+        expect: 17
+      - value: 0x800000000000000000000000000000000
+        expect: 17
+      - value: 0x1000000000000000000000000000000000
+        expect: 17
+      - value: 0x2000000000000000000000000000000000
+        expect: 17
+      - value: 0x4000000000000000000000000000000000
+        expect: 17
+      - value: 0x8000000000000000000000000000000000
+        expect: 17
+      - value: 0x10000000000000000000000000000000000
+        expect: 18
+      - value: 0xffffffffffffffffffffffffffffffffffff
+        expect: 18
+      - value: 0x1000000000000000000000000000000000000
+        expect: 19
+      - value: 0xffffffffffffffffffffffffffffffffffffff
+        expect: 19
+      - value: 0x100000000000000000000000000000000000000
+        expect: 20
+      - value: 0xffffffffffffffffffffffffffffffffffffffff
+        expect: 20
+      - value: 0x10000000000000000000000000000000000000000
+        expect: 21
+      - value: 0xffffffffffffffffffffffffffffffffffffffffff
+        expect: 21
+      - value: 0x1000000000000000000000000000000000000000000
+        expect: 22
+      - value: 0xffffffffffffffffffffffffffffffffffffffffffff
+        expect: 22
+      - value: 0x100000000000000000000000000000000000000000000
+        expect: 23
+      - value: 0xffffffffffffffffffffffffffffffffffffffffffffff
+        expect: 23
+      - value: 0x10000000000000000000000000000000000000000000000
+        expect: 24
+      - value: 0xffffffffffffffffffffffffffffffffffffffffffffffff
+        expect: 24
+      - value: 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff # uint256.max
+        expect: 32
+      - value: 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff # uint512.max
+        expect: 64
+  - example: signed_byte_capacity
+    items:
+      - value: 127
+        expect: 1
+      - value: -128
+        expect: 1
+      - value: 128
+        expect: 2
+      - value: -129
+        expect: 2
+      - value: 32767
+        expect: 2
+      - value: -32768
+        expect: 2
+      - value: 32768
+        expect: 3
+      - value: -32769
+        expect: 3
+      - value: 8388607
+        expect: 3
+      - value: -8388608
+        expect: 3
+      - value: 2147483647
+        expect: 4
+      - value: -2147483648
+        expect: 4
+      - value: 549755813887
+        expect: 5
+      - value: -549755813888
+        expect: 5
+      - value: 140737488355327
+        expect: 6
+      - value: -140737488355328
+        expect: 6
+      - value: 36028797018963967
+        expect: 7
+      - value: -36028797018963968
+        expect: 7
+      - value: 9223372036854775807
+        expect: 8
+      - value: -9223372036854775808
+        expect: 8
+      - value: 2361183241434822606847
+        expect: 9
+      - value: -2361183241434822606848
+        expect: 9
+      - value: 604462909807314587353087
+        expect: 10
+      - value: -604462909807314587353088
+        expect: 10
+      - value: 154742504910672534362390527
+        expect: 11
+      - value: -154742504910672534362390528
+        expect: 11
+      - value: 39614081257132168796771975167
+        expect: 12
+      - value: -39614081257132168796771975168
+        expect: 12
+      - value: 10141204801825835211973625643007
+        expect: 13
+      - value: -10141204801825835211973625643008
+        expect: 13
+      - value: 2596148429267413814265248164610047
+        expect: 14
+      - value: -2596148429267413814265248164610048
+        expect: 14
+      - value: 664613997892457936451903530140172287
+        expect: 15
+      - value: -664613997892457936451903530140172288
+        expect: 15
+      - value: 170141183460469231731687303715884105727
+        expect: 16
+      - value: -170141183460469231731687303715884105728
+        expect: 16
+      - value: -57896044618658097711785492504343953926634992332820282019728792003956564819968 # int256.min
+        expect: 32
+      - value: 57896044618658097711785492504343953926634992332820282019728792003956564819967 # int256.max
+        expect: 32
+      - value: -6703903964971298549787012499102923063739682910296196688861780721860882015036773488400937149083451713845015929093243025426876941405973284973216824503042048 # int512.min
+        expect: 64
+      - value: 6703903964971298549787012499102923063739682910296196688861780721860882015036773488400937149083451713845015929093243025426876941405973284973216824503042047 # int512.max
+        expect: 64

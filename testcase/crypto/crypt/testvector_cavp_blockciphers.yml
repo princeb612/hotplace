@@ -1,0 +1,93 @@
+testvector:
+  - example: CAVP block-ciphers
+    items:
+      - item: CBCGFSbox128.rsp, count = 0
+        alg: aes-128-cbc
+        key: 00000000000000000000000000000000
+        iv: 00000000000000000000000000000000
+        pt: f34481ec3cc627bacd5dc3fb08f273e6
+        ct: 0336763e966d92595a567cc9ce537f5e
+      - item: CBCGFSbox192.rsp, count = 0
+        alg: aes-192-cbc
+        key: 000000000000000000000000000000000000000000000000
+        iv: 00000000000000000000000000000000
+        pt: 1b077a6af4b7f98229de786d7516b639
+        ct: 275cfc0413d8ccb70513c3859b1d0f72
+      - item: CBCGFSbox256.rsp, count = 0
+        alg: aes-256-cbc
+        key: 0000000000000000000000000000000000000000000000000000000000000000
+        iv: 00000000000000000000000000000000
+        pt: 014730f80ac625fe84f026c60bfd547d
+        ct: 5c9d844ed46f9885085e5d6a4f94c7d7
+      - item: CFB128GFSbox128.rsp, count = 0
+        alg: aes-128-cfb
+        key: 00000000000000000000000000000000
+        iv: f34481ec3cc627bacd5dc3fb08f273e6
+        pt: 00000000000000000000000000000000
+        ct: 0336763e966d92595a567cc9ce537f5e
+      - item: CFB128GFSbox192.rsp, count = 0
+        alg: aes-192-cfb
+        key: 000000000000000000000000000000000000000000000000
+        iv: 1b077a6af4b7f98229de786d7516b639
+        pt: 00000000000000000000000000000000
+        ct: 275cfc0413d8ccb70513c3859b1d0f72
+      - item: CFB128GFSbox256.rsp, count = 0
+        alg: aes-256-cfb
+        key: 0000000000000000000000000000000000000000000000000000000000000000
+        iv: 014730f80ac625fe84f026c60bfd547d
+        pt: 00000000000000000000000000000000
+        ct: 5c9d844ed46f9885085e5d6a4f94c7d7
+      - item: CFB8GFSbox128.rsp, count = 0
+        alg: aes-128-cfb8
+        key: 00000000000000000000000000000000
+        iv: f34481ec3cc627bacd5dc3fb08f273e6
+        pt: 00
+        ct: 03
+      - item: CFB8GFSbox192.rsp, count = 0
+        alg: aes-192-cfb8
+        key: 000000000000000000000000000000000000000000000000
+        iv: 1b077a6af4b7f98229de786d7516b639
+        pt: 00
+        ct: 27
+      - item: CFB8GFSbox256.rsp, count = 0
+        alg: aes-256-cfb8
+        key: 0000000000000000000000000000000000000000000000000000000000000000
+        iv: 014730f80ac625fe84f026c60bfd547d
+        pt: 00
+        ct: 5c
+      - item: ECBGFSbox128.rsp, count = 0
+        alg: aes-128-ecb
+        key: 00000000000000000000000000000000
+        iv:
+        pt: f34481ec3cc627bacd5dc3fb08f273e6
+        ct: 0336763e966d92595a567cc9ce537f5e
+      - item: ECBGFSbox192.rsp, count = 0
+        alg: aes-192-ecb
+        key: 000000000000000000000000000000000000000000000000
+        iv:
+        pt: 1b077a6af4b7f98229de786d7516b639
+        ct: 275cfc0413d8ccb70513c3859b1d0f72
+      - item: ECBGFSbox256.rsp, count = 0
+        alg: aes-256-ecb
+        key: 0000000000000000000000000000000000000000000000000000000000000000
+        iv:
+        pt: 014730f80ac625fe84f026c60bfd547d
+        ct: 5c9d844ed46f9885085e5d6a4f94c7d7
+      - item: OFBGFSbox128.rsp, count = 0
+        alg: aes-128-ofb
+        key: 00000000000000000000000000000000
+        iv: f34481ec3cc627bacd5dc3fb08f273e6
+        pt: 00000000000000000000000000000000
+        ct: 0336763e966d92595a567cc9ce537f5e
+      - item: OFBGFSbox192.rsp, count = 0
+        alg: aes-192-ofb
+        key: 000000000000000000000000000000000000000000000000
+        iv: 1b077a6af4b7f98229de786d7516b639
+        pt: 00000000000000000000000000000000
+        ct: 275cfc0413d8ccb70513c3859b1d0f72
+      - item: OFBGFSbox256.rsp, count = 0
+        alg: aes-256-ofb
+        key: 0000000000000000000000000000000000000000000000000000000000000000
+        iv: 014730f80ac625fe84f026c60bfd547d
+        pt: 00000000000000000000000000000000
+        ct: 5c9d844ed46f9885085e5d6a4f94c7d7

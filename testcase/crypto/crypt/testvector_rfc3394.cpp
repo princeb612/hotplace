@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   testvector_rfc3394.cpp
+ * @file   testcase_rfc3394.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -8,82 +8,113 @@
  * Date         Name                Description
  */
 
-#include <hotplace/testcase/crypto/crypt/testvector.hpp>
 #include <hotplace/testcase/crypto/sample.hpp>
 
-const test_vector_rfc3394_t test_vector_rfc3394[] = {
-    {
-        // RFC 3394 4.1 Wrap 128 bits of Key Data with a 128-bit KEK
-        // KEK 000102030405060708090A0B0C0D0E0F
-        // Key Data 00112233445566778899AABBCCDDEEFF
-        // Ciphertext:  1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5
-        crypt_algorithm_t::aes128,
-        "aes-128-wrap",
-        "000102030405060708090A0B0C0D0E0F",
-        "00112233445566778899AABBCCDDEEFF",
-        "1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5",
-        "RFC 3394 4.1 Wrap 128 bits of Key Data with a 128-bit KEK",
-    },
-    {
-        // RFC 3394 4.2 Wrap 128 bits of Key Data with a 192-bit KEK
-        // KEK 000102030405060708090A0B0C0D0E0F1011121314151617
-        // Key Data 00112233445566778899AABBCCDDEEFF
-        // Ciphertext: 96778B25AE6CA435F92B5B97C050AED2468AB8A17AD84E5D
-        crypt_algorithm_t::aes192,
-        "aes-192-wrap",
-        "000102030405060708090A0B0C0D0E0F1011121314151617",
-        "00112233445566778899AABBCCDDEEFF",
-        "96778B25AE6CA435F92B5B97C050AED2468AB8A17AD84E5D",
-        "RFC 3394 4.2 Wrap 128 bits of Key Data with a 192-bit KEK",
-    },
-    {
-        // RFC 3394 4.3 Wrap 128 bits of Key Data with a 256-bit KEK
-        // KEK 000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F
-        // Key Data 00112233445566778899AABBCCDDEEFF
-        // Ciphertext: 64E8C3F9CE0F5BA263E9777905818A2A93C8191E7D6E8AE7
-        crypt_algorithm_t::aes256,
-        "aes-256-wrap",
-        "000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F",
-        "00112233445566778899AABBCCDDEEFF",
-        "64E8C3F9CE0F5BA263E9777905818A2A93C8191E7D6E8AE7",
-        "RFC 3394 4.3 Wrap 128 bits of Key Data with a 256-bit KEK",
-    },
-    {
-        // RFC 3394 4.4 Wrap 192 bits of Key Data with a 192-bit KEK
-        // KEK 000102030405060708090A0B0C0D0E0F1011121314151617
-        // Key Data 00112233445566778899AABBCCDDEEFF0001020304050607
-        // Ciphertext: 031D33264E15D33268F24EC260743EDCE1C6C7DDEE725A936BA814915C6762D2
-        crypt_algorithm_t::aes192,
-        "aes-192-wrap",
-        "000102030405060708090A0B0C0D0E0F1011121314151617",
-        "00112233445566778899AABBCCDDEEFF0001020304050607",
-        "031D33264E15D33268F24EC260743EDCE1C6C7DDEE725A936BA814915C6762D2",
-        "RFC 3394 4.4 Wrap 192 bits of Key Data with a 192-bit KEK",
-    },
-    {
-        // RFC 3394 4.5 Wrap 192 bits of Key Data with a 256-bit KEK
-        // KEK 000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F
-        // Key Data 00112233445566778899AABBCCDDEEFF0001020304050607
-        // Ciphertext: A8F9BC1612C68B3FF6E6F4FBE30E71E4769C8B80A32CB8958CD5D17D6B254DA1
-        crypt_algorithm_t::aes256,
-        "aes-256-wrap",
-        "000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F",
-        "00112233445566778899AABBCCDDEEFF0001020304050607",
-        "A8F9BC1612C68B3FF6E6F4FBE30E71E4769C8B80A32CB8958CD5D17D6B254DA1",
-        "RFC 3394 4.5 Wrap 192 bits of Key Data with a 256-bit KEK",
-    },
-    {
-        // RFC 3394 4.6 Wrap 256 bits of Key Data with a 256-bit KEK
-        // KEK 000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F
-        // Key Data 00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F
-        // Ciphertext: 28C9F404C4B810F4CBCCB35CFB87F8263F5786E2D80ED326CBC7F0E71A99F43BFB988B9B7A02DD21
-        crypt_algorithm_t::aes256,
-        "aes-256-wrap",
-        "000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F",
-        "00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F",
-        "28C9F404C4B810F4CBCCB35CFB87F8263F5786E2D80ED326CBC7F0E71A99F43BFB988B9B7A02DD21",
-        "RFC 3394 4.6 Wrap 256 bits of Key Data with a 256-bit KEK",
-    },
-};
+typedef struct _test_vector_rfc3394_t {
+    std::string item;
+    std::string alg;
+    std::string kek;
+    std::string key;
+    std::string keydata;
+} test_vector_rfc3394_t;
 
-const size_t sizeof_test_vector_rfc3394 = RTL_NUMBER_OF(test_vector_rfc3394);
+void do_test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* entry) {
+    return_t ret = errorcode_t::success;
+    const OPTION& option = _cmdline->value();
+
+    _test_case.reset_time();
+
+    std::string alg = entry->alg;
+    binary_t kek = std::move(base16_decode(entry->kek));
+    binary_t key = std::move(base16_decode(entry->key));
+    binary_t keydata = std::move(base16_decode(entry->keydata));
+    const char* msg = entry->item.c_str();
+
+    openssl_crypt crypt;
+    crypt_context_t* handle = nullptr;
+    binary_t iv;
+    binary_fill(iv, 8, 0xa6);
+    binary_t out_kw, out_kuw;
+
+    ret = crypt.open(&handle, alg.c_str(), kek, iv);
+    if (errorcode_t::success == ret) {
+        crypt.encrypt(handle, key.data(), key.size(), out_kw);
+
+        if (option.verbose) {
+            test_case_notimecheck notimecheck(_test_case);
+
+            crypto_advisor* advisor = crypto_advisor::get_instance();
+            _logger->writeln("alg %s", alg.c_str());
+
+            _logger->hdump("kek", kek);
+            _logger->hdump("key", key);
+            _logger->hdump("keywrap", out_kw);
+        }
+
+        crypt.decrypt(handle, out_kw.data(), out_kw.size(), out_kuw);
+
+        if (option.verbose) {
+            test_case_notimecheck notimecheck(_test_case);
+
+            _logger->hdump("key", out_kuw);
+        }
+
+        crypt.close(handle);
+    }
+    _test_case.assert(out_kw == keydata, __FUNCTION__, msg ? msg : "");
+
+    ret = crypt.open(&handle, alg.c_str(), kek, iv);
+    if (errorcode_t::success == ret) {
+        crypt.encrypt(handle, key.data(), key.size(), out_kw);
+
+        if (option.verbose) {
+            test_case_notimecheck notimecheck(_test_case);
+
+            crypto_advisor* advisor = crypto_advisor::get_instance();
+            _logger->writeln("alg %s", alg.c_str());
+
+            _logger->hdump("kek", kek);
+            _logger->hdump("key", key);
+            _logger->hdump("keywrap", out_kw);
+        }
+
+        crypt.decrypt(handle, out_kw.data(), out_kw.size(), out_kuw);
+
+        if (option.verbose) {
+            test_case_notimecheck notimecheck(_test_case);
+
+            _logger->hdump("key", out_kuw);
+        }
+
+        crypt.close(handle);
+    }
+    _test_case.assert(out_kw == keydata, __FUNCTION__, msg ? msg : "");
+}
+
+void test_yaml_testvector_rfc3394() {
+    _test_case.begin("RFC 3394 keywrap YAML");
+
+    YAML::Node testvector = YAML::LoadFile("./testvector_rfc3394.yml");
+    auto examples = testvector["testvector"];
+    if (examples && examples.IsSequence()) {
+        for (const auto& example : examples) {
+            auto text_example = example["example"].as<std::string>();
+            _logger->writeln("example: %s", text_example.c_str());
+
+            auto items = example["items"];
+            for (const auto& item : items) {
+                test_vector_rfc3394_t entry;
+
+                entry.item = std::move(item["item"].as<std::string>());
+                entry.alg = std::move(item["alg"].as<std::string>());
+                entry.kek = std::move(item["kek"].as<std::string>());
+                entry.key = std::move(item["key"].as<std::string>());
+                entry.keydata = std::move(item["keydata"].as<std::string>());
+
+                do_test_keywrap_rfc3394_testvector(&entry);
+            }
+        }
+    }
+}
+
+void testcase_testvector_rfc3394() { test_yaml_testvector_rfc3394(); }

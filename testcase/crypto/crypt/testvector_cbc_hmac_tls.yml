@@ -1,0 +1,57 @@
+testvector:
+  - example: CBC-HMAC TLS
+    items:
+      - item: https://tls12.xargs.org/#client-handshake-finished > client finished
+        flag: mac_then_encrypt
+        enckey: f656d037b173ef3e11169f27231a84b6
+        iv: 404142434445464748494a4b4c4d4e4f
+        macalg: sha1
+        mackey: 1b7d117c7d5f690bc263cae8ef60af0f1878acc2
+        aad: 0000000000000000160303
+        pt: 1400000ccf919626f1360c536aaad73a
+        ct: 227bc9ba81ef30f2a8a78ff1df50844d5804b7eeb2e214c32b6892aca3db7b78077fdd90067c516bacb3ba90dedf720f
+      - item: test/tls/tls12/tls12etm_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256.pcapng > client finished
+        flag: encrypt_then_mac
+        enckey: 12edab3ca03602d1f8f97c4fbe97a414
+        iv: c27bdd86b59b64171cb1f15bce8c6cc8
+        macalg: sha2_256
+        mackey: 05eaa1434e103c19701b389ed010afdd5753fc039fbc9a01da45361c642582cb
+        aad: 0000000000000000160303
+        pt: 1400000c9bf2cb3b4a834cc4dfa8478f
+        ct: b2084a5b1dd615cd056d1f288fb8e57b7eebd26fbb001832c06cde4b8fa477104371e5ba2a091b703bbc8069bc97bc2dd0d236fa3089553b17e96ec6a46410c0002dab9e5ce6dfb4a8539c906348d9ab
+      - item: test/tls/tls12/tls12etm_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256.pcapng > server finished
+        flag: encrypt_then_mac
+        enckey: 5e058192412a704bfe33f7dcb3ab736b
+        iv: 71bc51c5e88ed247052cb5a13e15ac4c
+        macalg: sha2_256
+        mackey: e4c1f413f96d2b21a34702c47a48628952fa1c9239ce15e902d53a265ebbeb83
+        aad: 0000000000000000160303
+        pt: 1400000ce9408ea8d4897cf1a4a5bbec
+        ct: aa69b78025eb0b3df40c35dc01a895fcd25366af6bb18346a7275f5c482d623980c2b38420c1eababbb2082a41c9e1e129a5cec9a866ebf1f8efe4e56286bee28ab6c69342924f2b7691e79e40f43331
+      - item: test/tls/tls12/tls12etm_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256.pcapng > client application data > hello
+        flag: encrypt_then_mac
+        enckey: 12edab3ca03602d1f8f97c4fbe97a414
+        iv: c27bdd86b59b64171cb1f15bce8c6cc8
+        macalg: sha2_256
+        mackey: 05eaa1434e103c19701b389ed010afdd5753fc039fbc9a01da45361c642582cb
+        aad: 0000000000000001170303
+        pt: 68656c6c6f0d0a
+        ct: 94b362f11e8d445d51bb336bbd236575f87eb64f32e9fe2316a37f055f6f546649a00559dfe39d94d8829f85e77649147348d7e39e02e3f620f8d7b29509c06a
+      - item: client finished
+        flag: encrypt_then_mac
+        enckey: 05c85c3cb998c8701a05e26b326e3ebf
+        iv: d4127df6bf0b3b352dc473a28a23eba1
+        macalg: sha2_256
+        mackey: d99e86a1556c859b35777daa55b18d297d10165c2befed04dc4d9f5c2fec7752
+        aad: 0000000000000000160303
+        pt: 1400000ccb805a3f49bec1a39d55c414
+        ct: 3a11d2ef0be9027aea7c4ee6f74913a622280ca8e71e42e84cc5c613905e6f0d2ab5f2e5766b298c85a822e5799fe89ccec6a7c4d65738d97ad2adb1cbe4659a05db0b2c9c9d6b5768b8f38f289e3e68
+      - item: client finished
+        flag: encrypt_then_mac
+        enckey: 08e314b2703fc111d6177b20e421a793
+        iv: 6ebde512a771bd15394af9845ebbfcef
+        macalg: sha2_256
+        mackey: 4a800ddfde0001fdca4d3f03f5e60c3a419030fb22d0251b92aeed100aa7e133
+        aad: 0000000000000000160303
+        pt: 1400000ccb5643c8860e24c25a02c5ed
+        ct: e9647811b475b1b5d0bcadb55937d81326ee5aaa57d007987dd81517e9916758a9efdcbe190e96aa821104805f92ff64f0ba8d7b4b9f8165765bc4f556afb7fa50486b22fa377f686eae9d6d9d7cf8f2

@@ -23,25 +23,33 @@ void do_test_sprintf_routine(valist& va, const char* fmt, const char* expect) {
 
 void test_valist_sprintf() {
     _test_case.begin("valist");
+
     valist va;
     va << 3.141592 << "phi" << 123;
 
     _logger->writeln("{1} 3.141592 {2} phi {3} 123");
 
-    _test_case.reset_time();
-    do_test_sprintf_routine(va, "value={1} value={2} value={3}", "value=3.141592 value=phi value=123");
-    do_test_sprintf_routine(va, "value={2} value={3} value={1}", "value=phi value=123 value=3.141592");
-    do_test_sprintf_routine(va, "value={3} value={2} value={1}", "value=123 value=phi value=3.141592");
-    do_test_sprintf_routine(va, "value={2} value={1} value={3}", "value=phi value=3.141592 value=123");
-    do_test_sprintf_routine(va, "value={2} value={1} value={3} value={2}", "value=phi value=3.141592 value=123 value=phi");
-    do_test_sprintf_routine(va, "value={3} value={2} value={2} value={1} value={4} value={5}",
-                            "value=123 value=phi value=phi value=3.141592 value={4} value={5}");
+    // basic
+    {
+        const char* fmt = "value={1} value={2} value={3}";
+        const char* expect = "value=3.141592 value=phi value=123";
 
-    basic_stream bs;
-    bs.printf("value %08x ", 0x304);
-    sprintf(&bs, "{1}:{2}:{3}", va);
-    _logger->writeln(bs);
-    _test_case.assert(bs == "value 00000304 3.141592:phi:123", __FUNCTION__, "value 00000304 3.141592:phi:123");
+        basic_stream bs;
+        sprintf(&bs, fmt, va);
+
+        _logger->writeln("formatter %s", fmt);
+        _logger->writeln("result    %s", bs.c_str());
+        _test_case.assert(0 == strcmp(expect, bs.c_str()), __FUNCTION__, "sprintf");
+    }
+
+    // concatenate
+    {
+        basic_stream bs;
+        bs.printf("value %08x ", 0x304);
+        sprintf(&bs, "{1}:{2}:{3}", va);
+        _logger->writeln(bs);
+        _test_case.assert(bs == "value 00000304 3.141592:phi:123", __FUNCTION__, "value 00000304 3.141592:phi:123");
+    }
 }
 
 void test_valist_vprintf() {

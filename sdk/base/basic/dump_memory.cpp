@@ -93,7 +93,9 @@ return_t dump_memory(const byte_t* dump_address, size_t dump_size, stream_t* str
             }
         }
 
-        stream->printf("\n");
+        if (0 == (dump_memory_flag_t::dump_nolf & flags)) {
+            stream->printf("\n");
+        }
     }
     __finally2 {}
     return ret;
