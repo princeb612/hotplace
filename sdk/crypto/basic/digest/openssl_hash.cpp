@@ -216,9 +216,7 @@ return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm,
     return ret;
 }
 
-return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm, const binary_t& key) {
-    return open(handle, algorithm, key.data(), key.size());
-}
+return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm, const binary_t& key) { return open(handle, algorithm, key.data(), key.size()); }
 
 return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key_data, unsigned key_size) {
     return_t ret = errorcode_t::success;

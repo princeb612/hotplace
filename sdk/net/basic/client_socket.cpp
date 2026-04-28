@@ -29,13 +29,9 @@ return_t client_socket::more(char* ptr_data, size_t size_data, size_t* cbread) {
 
 return_t client_socket::send(const char* ptr_data, size_t size_data, size_t* cbsent) { return errorcode_t::do_nothing; }
 
-return_t client_socket::recvfrom(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen) {
-    return errorcode_t::do_nothing;
-}
+return_t client_socket::recvfrom(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen) { return errorcode_t::do_nothing; }
 
-return_t client_socket::sendto(const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen) {
-    return errorcode_t::do_nothing;
-}
+return_t client_socket::sendto(const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen) { return errorcode_t::do_nothing; }
 
 socket_t client_socket::get_socket() { return INVALID_SOCKET; }
 

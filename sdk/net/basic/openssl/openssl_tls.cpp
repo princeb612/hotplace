@@ -689,8 +689,7 @@ return_t openssl_tls::read(socket_context_t* handle, int mode, void* buffer, siz
     return ret;
 }
 
-return_t openssl_tls::recvfrom(socket_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* cbread, struct sockaddr* addr,
-                               socklen_t* addrlen) {
+return_t openssl_tls::recvfrom(socket_context_t* handle, int mode, void* buffer, size_t buffer_size, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
     int rc = 0;
 
@@ -814,8 +813,7 @@ return_t openssl_tls::send(socket_context_t* handle, int mode, const char* data,
     return ret;
 }
 
-return_t openssl_tls::sendto(socket_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent, const struct sockaddr* addr,
-                             socklen_t addrlen) {
+return_t openssl_tls::sendto(socket_context_t* handle, int mode, const char* data, size_t size_data, size_t* size_sent, const struct sockaddr* addr, socklen_t addrlen) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == handle) {

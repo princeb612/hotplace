@@ -48,8 +48,7 @@ return_t crypto_aead::encrypt(const binary_t& key, const binary_t& iv, const uns
     return ret;
 }
 
-return_t crypto_aead::decrypt(const binary_t& key, const binary_t& iv, const binary_t& ciphertext, binary_t& plaintext, const binary_t& aad,
-                              const binary_t& tag) {
+return_t crypto_aead::decrypt(const binary_t& key, const binary_t& iv, const binary_t& ciphertext, binary_t& plaintext, const binary_t& aad, const binary_t& tag) {
     return decrypt(key, iv, ciphertext.data(), ciphertext.size(), plaintext, aad, tag);
 }
 

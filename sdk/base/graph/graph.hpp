@@ -95,16 +95,12 @@ class t_graph {
         int _weight;
         graph_direction_t _direction;
 
-        edge(const T& from, const T& to, int weight = 1, graph_direction_t d = graph_directed) : _from(from), _to(to), _direction(d), _weight(weight) {
-            adjust();
-        }
-        edge(T&& from, T&& to, int weight = 1, graph_direction_t d = graph_directed)
-            : _from(std::move(from)), _to(std::move(to)), _weight(weight), _direction(d) {
+        edge(const T& from, const T& to, int weight = 1, graph_direction_t d = graph_directed) : _from(from), _to(to), _direction(d), _weight(weight) { adjust(); }
+        edge(T&& from, T&& to, int weight = 1, graph_direction_t d = graph_directed) : _from(std::move(from)), _to(std::move(to)), _weight(weight), _direction(d) {
             adjust();
         }
 
-        edge(const vertex& from, const vertex& to, int weight = 1, graph_direction_t d = graph_directed)
-            : _from(from), _to(to), _weight(weight), _direction(d) {
+        edge(const vertex& from, const vertex& to, int weight = 1, graph_direction_t d = graph_directed) : _from(from), _to(to), _weight(weight), _direction(d) {
             adjust();
         }
         edge(vertex&& from, vertex&& to, graph_direction_t d = graph_directed, int weight = 1)
@@ -224,9 +220,7 @@ class t_graph {
     t_graph& add_directed_edge(const T& from, const T& to, int weight = 1) { return add_edge(from, to, weight, graph_direction_t::graph_directed); }
     t_graph& add_directed_edge(const vertex& from, const vertex& to, int weight = 1) { return add_edge(from, to, weight, graph_direction_t::graph_directed); }
     t_graph& add_undirected_edge(const T& from, const T& to, int weight = 1) { return add_edge(from, to, weight, graph_direction_t::graph_undirected); }
-    t_graph& add_undirected_edge(const vertex& from, const vertex& to, int weight = 1) {
-        return add_edge(from, to, weight, graph_direction_t::graph_undirected);
-    }
+    t_graph& add_undirected_edge(const vertex& from, const vertex& to, int weight = 1) { return add_edge(from, to, weight, graph_direction_t::graph_undirected); }
 
     t_graph& add_edge(const edge& e) {
         __try2 {

@@ -91,8 +91,7 @@ class http_header_compression {
      * @param   uint32 flags [inopt]
      * @return  error code (see error.hpp)
      */
-    virtual return_t decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value,
-                            uint32 flags = 0);
+    virtual return_t decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value, uint32 flags = 0);
 
     /**
      * @brief   Integer Representation

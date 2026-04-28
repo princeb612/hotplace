@@ -14,8 +14,7 @@
 namespace hotplace {
 namespace io {
 
-payload_member::payload_member(uint8 value, const char* name, const char* group)
-    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
+payload_member::payload_member(uint8 value, const char* name, const char* group) : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
     get_variant().set_uint8(value);
 }

@@ -82,6 +82,25 @@ return_t crypto_keychain::add_ec_uncompressed(crypto_key* cryptokey, uint32 nid,
     return ret;
 }
 
+return_t crypto_keychain::add_ec_uncompressed(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* pubkey, const char* privkey, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    switch (encoding) {
+        case encoding_t::encoding_base64:
+            ret = add_ec_uncompressed_b64(cryptokey, nid, pubkey, privkey, desc);
+            break;
+        case encoding_t::encoding_base64url:
+            ret = add_ec_uncompressed_b64u(cryptokey, nid, pubkey, privkey, desc);
+            break;
+        case encoding_t::encoding_base16:
+            ret = add_ec_uncompressed_b16(cryptokey, nid, pubkey, privkey, desc);
+            break;
+        case encoding_t::encoding_base16rfc:
+            ret = add_ec_uncompressed_b16rfc(cryptokey, nid, pubkey, privkey, desc);
+            break;
+    }
+    return ret;
+}
+
 return_t crypto_keychain::add_ec_uncompressed_b64(crypto_key* cryptokey, uint32 nid, const char* pubkey, const char* privkey, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -204,6 +223,26 @@ return_t crypto_keychain::add_ec_uncompressed(crypto_key* cryptokey, const char*
         ret = add_ec_uncompressed(cryptokey, nid, pubkey, privkey, desc);
     }
     __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::add_ec_uncompressed(crypto_key* cryptokey, const char* curve, encoding_t encoding, const char* pubkey, const char* privkey,
+                                              const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    switch (encoding) {
+        case encoding_t::encoding_base64:
+            ret = add_ec_uncompressed_b64(cryptokey, curve, pubkey, privkey, desc);
+            break;
+        case encoding_t::encoding_base64url:
+            ret = add_ec_uncompressed_b64u(cryptokey, curve, pubkey, privkey, desc);
+            break;
+        case encoding_t::encoding_base16:
+            ret = add_ec_uncompressed_b16(cryptokey, curve, pubkey, privkey, desc);
+            break;
+        case encoding_t::encoding_base16rfc:
+            ret = add_ec_uncompressed_b16rfc(cryptokey, curve, pubkey, privkey, desc);
+            break;
+    }
     return ret;
 }
 

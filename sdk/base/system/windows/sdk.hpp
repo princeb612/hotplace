@@ -391,8 +391,7 @@ enum loadlibrary_path_t {
 };
 
 return_t get_module_handle(HMODULE* module_handle, const char* dll_name, int32 path_type = loadlibrary_path_t::system_path, const char* dll_path = nullptr);
-return_t get_module_handle(HMODULE* module_handle, const wchar_t* dll_name, int32 path_type = loadlibrary_path_t::system_path,
-                           const wchar_t* dll_path = nullptr);
+return_t get_module_handle(HMODULE* module_handle, const wchar_t* dll_name, int32 path_type = loadlibrary_path_t::system_path, const wchar_t* dll_path = nullptr);
 
 return_t get_module_path(HMODULE module_handle, std::string& modulepath);
 return_t get_module_path(HMODULE module_handle, std::wstring& modulepath);
@@ -406,8 +405,7 @@ return_t is_process_wow64(HANDLE process_handle, BOOL* pResult);
 return_t load_library(HMODULE* module_handle, const char* dll_name, int32 path_type = loadlibrary_path_t::system_path, const char* dll_path = nullptr);
 return_t load_library(HMODULE* module_handle, const wchar_t* dll_name, int32 path_type = loadlibrary_path_t::system_path, const wchar_t* dll_path = nullptr);
 
-return_t load_library_ex(HMODULE* module_handle, const char* dll_name, uint32 flags, int32 path_type = loadlibrary_path_t::system_path,
-                         const char* dll_path = nullptr);
+return_t load_library_ex(HMODULE* module_handle, const char* dll_name, uint32 flags, int32 path_type = loadlibrary_path_t::system_path, const char* dll_path = nullptr);
 return_t load_library_ex(HMODULE* module_handle, const wchar_t* dll_name, uint32 flags, int32 path_type = loadlibrary_path_t::system_path,
                          const wchar_t* dll_path = nullptr);
 

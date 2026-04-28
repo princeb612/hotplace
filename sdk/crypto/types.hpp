@@ -1211,8 +1211,8 @@ typedef struct _crypt_context_t crypt_context_t;
 typedef struct _hint_digest_t {
     hash_algorithm_t algorithm;
     const char* fetchname;  // advisor->hintof_digest("sha256")
-    const char* altname;    // advisor->hintof_digest("sha2_256")
     uint16 digest_size;
+    const char* altname;  // advisor->hintof_digest("sha2-256")
 } hint_digest_t;
 
 hash_algorithm_t typeof_alg(const hint_digest_t* hint);
@@ -1347,6 +1347,8 @@ uint16 tlsgroupof(const hint_curve_t* hint);
 uint8 keysizeof(const hint_curve_t* hint);
 const char* oidof(const hint_curve_t* hint);
 bool support(const hint_curve_t* hint, hash_algorithm_t alg);
+bool support(const hint_curve_t* hint, const char* alg);
+bool support(const hint_curve_t* hint, const std::string& alg);
 
 ///////////////////////////////////////////////////////////////////////////
 // key

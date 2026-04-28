@@ -23,8 +23,7 @@ bearer_authentication_provider::bearer_authentication_provider(const std::string
 
 bearer_authentication_provider::~bearer_authentication_provider() {}
 
-bool bearer_authentication_provider::try_auth(http_authentication_resolver* resolver, network_session* session, http_request* request,
-                                              http_response* response) {
+bool bearer_authentication_provider::try_auth(http_authentication_resolver* resolver, network_session* session, http_request* request, http_response* response) {
     bool ret_value = false;
     __try2 {
         if (nullptr == resolver || nullptr == session || nullptr == request) {

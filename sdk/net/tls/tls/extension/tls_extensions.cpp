@@ -50,8 +50,7 @@ return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, con
                     if (istraceable(trace_category_net)) {
                         tls_advisor* tlsadvisor = tls_advisor::get_instance();
                         trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                            dbs.println(ANSI_ESCAPE "1;31m! error while reading extension %s" ANSI_ESCAPE "0m",
-                                        tlsadvisor->nameof_tls_extension(extension_type).c_str());
+                            dbs.println(ANSI_ESCAPE "1;31m! error while reading extension %s" ANSI_ESCAPE "0m", tlsadvisor->nameof_tls_extension(extension_type).c_str());
                         });
                     }
 #endif
@@ -80,8 +79,7 @@ return_t tls_extensions::write(tls_direction_t dir, binary_t& bin) {
             if (istraceable(trace_category_net)) {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                    dbs.println(ANSI_ESCAPE "1;31m! error while writing extension %s" ANSI_ESCAPE "0m",
-                                tlsadvisor->nameof_tls_extension(extension->get_type()).c_str());
+                    dbs.println(ANSI_ESCAPE "1;31m! error while writing extension %s" ANSI_ESCAPE "0m", tlsadvisor->nameof_tls_extension(extension->get_type()).c_str());
                 });
             }
 #endif

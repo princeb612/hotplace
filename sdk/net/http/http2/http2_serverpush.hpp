@@ -99,10 +99,8 @@ class http2_serverpush {
     return_t push(http_request* request, http_server* server, network_session* session);
 
    protected:
-    return_t do_push_promise(const std::string& promise, uint32 streamid, http_request* request, http_server* server, network_session* session,
-                             binary_t& stream);
-    return_t do_push(const std::string& promise, uint32 streamid, http_request* request, http_server* server, network_session* session,
-                     http_response* response);
+    return_t do_push_promise(const std::string& promise, uint32 streamid, http_request* request, http_server* server, network_session* session, binary_t& stream);
+    return_t do_push(const std::string& promise, uint32 streamid, http_request* request, http_server* server, network_session* session, http_response* response);
 
    private:
     typedef std::multimap<std::string, std::string> server_push_map_t;

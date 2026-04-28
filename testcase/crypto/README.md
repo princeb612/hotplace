@@ -1,9 +1,14 @@
 #### crypto
 
 * test vector
-  * block ciphers
-    * https://csrc.nist.gov/projects/cryptographic-algorithm-validation-program/block-ciphers
-    * https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/aes/KAT_AES.zip
+  * CAVP
+    * Block Ciphers
+      * https://csrc.nist.gov/projects/cryptographic-algorithm-validation-program/block-ciphers
+      * https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/aes/KAT_AES.zip
+    * Digital Signatures
+      * https://csrc.nist.gov/Projects/cryptographic-algorithm-validation-program/digital-signatures
+      * FIPS 186-2 https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/dss/186-2ecdsatestvectors.zip
+      * FIPS 186-4 https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/dss/186-4ecdsatestvectors.zip
   * AES
     * RFC 3394 Advanced Encryption Standard (AES) Key Wrap Algorithm
   * ChaCha20
@@ -20,7 +25,6 @@
     * RFC 6238 TOTP: Time-Based One-Time Password Algorithm
   * DSA
     * RFC 6979 Deterministic Usage of the Digital Signature Algorithm (DSA) and Elliptic Curve Digital Signature Algorithm (ECDSA)
-    * https://csrc.nist.gov/Projects/cryptographic-algorithm-validation-program/digital-signatures
   * KDF
     * RFC 4615 The Advanced Encryption Standard-Cipher-based Message Authentication Code-Pseudo-Random Function-128 (AES-CMAC-PRF-128) Algorithm for the Internet Key Exchange Protocol (IKE)
     * RFC 5869 HMAC-based Extract-and-Expand Key Derivation Function (HKDF)
@@ -31,7 +35,6 @@
     * RFC 7748
       * 6.1.  Curve25519
       * 6.2.  Curve448
-
 * reference
   * Hybrid Public Key Encryption
     * RFC 9180 Hybrid Public Key Encryption
@@ -134,82 +137,160 @@ NIST 2022
 
 #### YAML schema
 
-* CBC-HMAC JOSE YAML schema
+* CBC-HMAC JOSE schema
 
 ````
 testvector:
-  - example: CBC-HMAC JOSE
+  - example: string        #
+    schema: CBC-HMAC JOSE  # [mandatory] "CBC-HMAC JOSE"
     items:
       - item: string
-        encalg: string  # [mandatory] algorithm
-        macalg: string  # [mandatory] algorithm
-        k: hexstring    # [mandatory] mackey || enckey
-        p: hexstring    # [mandatory] PT
-        iv: hexstring   # [mandatory] IV
-        a: hexstring    # [mandatory] AAD
-        q: hexstring    # [mandatory] Q = CBC-ENC(ENC_KEY, P || PS)
-        s: hexstring    # [mandatory] S = IV || Q
-        t: hexstring    # [mandatory] T = MAC(MAC_KEY, A || S || AL)
-        c: hexstring    # [mandatory] CT = S || T
+        encalg: string     # [mandatory] algorithm
+        macalg: string     # [mandatory] algorithm
+        k: hexstring       # [mandatory] mackey || enckey
+        p: hexstring       # [mandatory] PT
+        iv: hexstring      # [mandatory] IV
+        a: hexstring       # [mandatory] AAD
+        q: hexstring       # [mandatory] Q = CBC-ENC(ENC_KEY, P || PS)
+        s: hexstring       # [mandatory] S = IV || Q
+        t: hexstring       # [mandatory] T = MAC(MAC_KEY, A || S || AL)
+        c: hexstring       # [mandatory] CT = S || T
 ````
 
 * CBC-HMAC JOSE TLS schema
 
 ````
 testvector:
-  - example: CBC-HMAC TLS
+  - example: string
+    schema: CBC-HMAC TLS    # [mandatory] "CBC-HMAC TLS"
     items:
-      - item: string       #
-        flag: string       # [mandatory] "mac_then_encrypt"|"encrypt_then_mac"
-        enckey: hexstring  # [mandatory]
-        iv: hexstring      # [mandatory]
-        macalg: string     # [mandatory]
-        mackey: hexstring  # [mandatory]
-        aad: hexstring     # [mandatory]
-        pt: hexstring      # [mandatory] plaintext
-        ct: hexstring      # [mandatory] ciphertext
+      - item: string        #
+        flag: string        # [mandatory] "mac_then_encrypt"|"encrypt_then_mac"
+        enckey: hexstring   # [mandatory] key
+        iv: hexstring       # [mandatory] IV
+        macalg: string      # [mandatory] algorithm
+        mackey: hexstring   # [mandatory] MAC key
+        aad: hexstring      # [mandatory] AAD
+        pt: hexstring       # [mandatory] plaintext
+        ct: hexstring       # [mandatory] ciphertext
 ````
 
 * NIST CAVP block-ciphers TLS schema
 
 ````
 testvector:
-  - example: CAVP block-ciphers
+  - example: string             #
+    schema: BLOCK CIPHERS       # [mandatory] "CAVP BLOCK CIPHERS"
     items:
-      - item: string    #
-        alg: string     # [mandatory]
-        key: hexstring  # [mandatory]
-        iv: hexstring   # [mandatory]
-        pt: hexstring   # [mandatory] plaintext
-        ct: hexstring   # [mandatory] ciphertext
+      - item: string            #
+        alg: string             # [mandatory] algorithm
+        key: hexstring          # [mandatory] key
+        iv: hexstring           # [mandatory] IV
+        pt: hexstring           # [mandatory] plaintext
+        ct: hexstring           # [mandatory] ciphertext
 ````
 
 * RFC 3394 schema
 
 ````
 testvector:
-  - example: RFC 3394
+  - example: string             #
+    schema: RFC 3394            # [mandatory] "RFC 3394"
     items:
-      - item: string        #
-        alg: string         # [mandatory] "aes-128-wrap"|"aes-192-wrap"|"aes-256-wrap"
-        kek: hexstring      # [mandatory]
-        key: hexstring      # [mandatory]
-        keydata: hexstring  # [mandatory]
+      - item: string            #
+        alg: string             # [mandatory] "aes-128-wrap"|"aes-192-wrap"|"aes-256-wrap"
+        kek: hexstring          # [mandatory] key encryption key
+        key: hexstring          # [mandatory] key
+        keydata: hexstring      # [mandatory] key data
 ````
 
 * RFC 7439 schema
 
 ````
 testvector:
-  - example: RFC 7539
+  - example: string             #
+    schema: RFC 7539            # [mandatory] "RFC 7539"
     items:
-      - item: string        #
-        alg: string         # [mandatory] "chacha20"|"chacha20-poly1305"
-        key: hexstring      # [mandatory]
-        counter: int        # [mandatory]
-        iv: hexstring       # [mandatory]
-        aad: hexstring      #
-        tag: hexstring      #
-        pt: string          # [mandatory]
-        ct: hexstring       # [mandatory]
+      - item: string            #
+        alg: string             # [mandatory] "chacha20"|"chacha20-poly1305"
+        key: hexstring          # [mandatory] key
+        counter: int            # [mandatory] counter
+        iv: hexstring           # [mandatory] IV
+        aad: hexstring          # mandatory if chacha20-poly1305
+        tag: hexstring          # mandatory if chacha20-poly1305
+        pt: string              # [mandatory] plaintext
+        ct: hexstring           # [mandatory] ciphertext
+````
+
+* NIST CAVP ECDSA schema
+
+````
+testvector:
+  - example: string             #
+    schema: ECDSA TESTVECTOR    # [mandatory] "ECDSA TESTVECTOR"
+    encoding: "base16"|"plain"  # [mandatory] m encoding
+    items:
+      - item: string            #
+        curve: string           # [mandatory]
+        m: hexstring            # [mandatory] message (see encoding)
+        d: hexstring            # [mandatory] private
+        x: hexstring            # [mandatory] public
+        y: hexstring            # [mandatory] public
+        k: hexstring            # [mandatory]
+        r: hexstring            # [mandatory] R
+        s: hexstring            # [mandatory] S
+````
+
+* NIST CAVP DSA schema
+
+````
+testvector:
+  - example: string             #
+    schema: DSA PARAMETER       # [mandatory] "DSA PARAMETER"
+    items:
+      - item: string            # [mandatory] primary key
+        p: hexstring            # [mandatory] prime
+        q: hexstring            # [mandatory] subprime
+        g: hexstring            # [mandatory] generator
+  - example: string             #
+    schema: DSA TESTVECTOR      # [mandatory] "DSA TESTVECTOR"
+    items:
+      - item: string            #
+        param: string           # [mandatory] foreign key (param) references DSA PARAMETER (item)
+        alg: string             # [mandatory]
+        m: hexstring            # [mandatory]
+        x: hexstring            # [mandatory] private
+        y: hexstring            # [mandatory] public
+        k: hexstring            # [mandatory]
+        r: hexstring            # [mandatory] R
+        s: hexstring            # [mandatory] S
+````
+
+* NIST CAVP RSA schema
+
+````
+testvector:
+  - example: string             #
+    schema: RSA KEY             # [mandatory] "RSA KEY"
+    items:
+      - item: string            # [mandatory] primary key
+        n: hexstring            # [mandatory] modulus
+        e: hexstring            # [mandatory] public exponent
+        d: hexstring            # [mandatory] private exponent
+  - example: string             #
+    schema: RSA PKCS 1.5        # [mandatory] "RSA PKCS 1.5"
+    items:
+      - item: string            #
+        key: string             # [mandatory] foreign key (key) references RSA KEY (item)
+        alg: string             # [mandatory] algorithm
+        m: hexstring            # [mandatory] message
+        s: hexstring            # [mandatory] signature
+    schema: RSA PSS             # [mandatory] "RSA PSS"
+    items:
+      - item: string            #
+        key: string             # [mandatory] foreign key (key) references RSA KEY (item)
+        alg: string             # [mandatory] algorithm
+        m: hexstring            # [mandatory] message
+        s: hexstring            # [mandatory] signature
+        salt: hexstring         # [mandatory] salt
 ````

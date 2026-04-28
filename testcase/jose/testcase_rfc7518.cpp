@@ -147,8 +147,7 @@ void test_rfc7518_C() {
     _logger->writeln(computation);
 
     bool result = (sample == computation);
-    _test_case.test(result ? errorcode_t::success : errorcode_t::internal_error, __FUNCTION__,
-                    "RFC 7518 Appendix C.  Example ECDH-ES Key Agreement Computation");
+    _test_case.test(result ? errorcode_t::success : errorcode_t::internal_error, __FUNCTION__, "RFC 7518 Appendix C.  Example ECDH-ES Key Agreement Computation");
 
     ecdh_es(pkey_bob, pkey_alice, alg, apu, apv, 16, derived);
 

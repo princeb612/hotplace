@@ -175,8 +175,7 @@ class openssl_sign {
      * @desc    RS256, RS384, RS512
      */
     return_t verify_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& signature, uint32 flags = 0);
-    return_t verify_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature,
-                                  uint32 flags = 0);
+    return_t verify_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);
     /*
      * @brief   verify
      * @param   const EVP_PKEY* pkey [in]

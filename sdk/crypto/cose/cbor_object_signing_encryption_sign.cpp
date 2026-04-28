@@ -177,8 +177,7 @@ return_t cbor_object_signing_encryption::dosign(cose_context_t* handle, crypto_k
 
 #if defined DEBUG
         if (istraceable(trace_category_crypto)) {
-            trace_debug_event(trace_category_crypto, trace_event_cose_signing,
-                              [&](basic_stream& dbs) -> void { dbs.println("dosign alg %i (%s)", alg, hint->name); });
+            trace_debug_event(trace_category_crypto, trace_event_cose_signing, [&](basic_stream& dbs) -> void { dbs.println("dosign alg %i (%s)", alg, hint->name); });
         }
 #endif
 

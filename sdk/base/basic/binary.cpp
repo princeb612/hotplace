@@ -144,25 +144,19 @@ return_t binary_append(binary_t& target, const byte_t* buf, size_t from, size_t 
     return ret;
 }
 
-return_t binary_append2(binary_t& target, uint32 len, int16 value, std::function<int16(const int16&)> func) {
-    return t_binary_append2<int16>(target, len, value, func);
-}
+return_t binary_append2(binary_t& target, uint32 len, int16 value, std::function<int16(const int16&)> func) { return t_binary_append2<int16>(target, len, value, func); }
 
 return_t binary_append2(binary_t& target, uint32 len, uint16 value, std::function<uint16(const uint16&)> func) {
     return t_binary_append2<uint16>(target, len, value, func);
 }
 
-return_t binary_append2(binary_t& target, uint32 len, int32 value, std::function<int32(const int32&)> func) {
-    return t_binary_append2<int32>(target, len, value, func);
-}
+return_t binary_append2(binary_t& target, uint32 len, int32 value, std::function<int32(const int32&)> func) { return t_binary_append2<int32>(target, len, value, func); }
 
 return_t binary_append2(binary_t& target, uint32 len, uint32 value, std::function<uint32(const uint32&)> func) {
     return t_binary_append2<uint32>(target, len, value, func);
 }
 
-return_t binary_append2(binary_t& target, uint32 len, int64 value, std::function<int64(const int64&)> func) {
-    return t_binary_append2<int64>(target, len, value, func);
-}
+return_t binary_append2(binary_t& target, uint32 len, int64 value, std::function<int64(const int64&)> func) { return t_binary_append2<int64>(target, len, value, func); }
 
 return_t binary_append2(binary_t& target, uint32 len, uint64 value, std::function<uint64(const uint64&)> func) {
     return t_binary_append2<uint64>(target, len, value, func);
@@ -180,30 +174,20 @@ return_t binary_append2(binary_t& target, uint32 len, uint128 value, std::functi
 
 return_t binary_load(binary_t& bn, uint32 bnlen, int16 value, std::function<int16(const int16&)> func) { return t_binary_load<int16>(bn, bnlen, value, func); }
 
-return_t binary_load(binary_t& bn, uint32 bnlen, uint16 value, std::function<uint16(const uint16&)> func) {
-    return t_binary_load<uint16>(bn, bnlen, value, func);
-}
+return_t binary_load(binary_t& bn, uint32 bnlen, uint16 value, std::function<uint16(const uint16&)> func) { return t_binary_load<uint16>(bn, bnlen, value, func); }
 
 return_t binary_load(binary_t& bn, uint32 bnlen, int32 value, std::function<int32(const int32&)> func) { return t_binary_load<int32>(bn, bnlen, value, func); }
 
-return_t binary_load(binary_t& bn, uint32 bnlen, uint32 value, std::function<uint32(const uint32&)> func) {
-    return t_binary_load<uint32>(bn, bnlen, value, func);
-}
+return_t binary_load(binary_t& bn, uint32 bnlen, uint32 value, std::function<uint32(const uint32&)> func) { return t_binary_load<uint32>(bn, bnlen, value, func); }
 
 return_t binary_load(binary_t& bn, uint32 bnlen, int64 value, std::function<int64(const int64&)> func) { return t_binary_load<int64>(bn, bnlen, value, func); }
 
-return_t binary_load(binary_t& bn, uint32 bnlen, uint64 value, std::function<uint64(const uint64&)> func) {
-    return t_binary_load<uint64>(bn, bnlen, value, func);
-}
+return_t binary_load(binary_t& bn, uint32 bnlen, uint64 value, std::function<uint64(const uint64&)> func) { return t_binary_load<uint64>(bn, bnlen, value, func); }
 
 #if defined __SIZEOF_INT128__
-return_t binary_load(binary_t& bn, uint32 bnlen, int128 value, std::function<int128(const int128&)> func) {
-    return t_binary_load<int128>(bn, bnlen, value, func);
-}
+return_t binary_load(binary_t& bn, uint32 bnlen, int128 value, std::function<int128(const int128&)> func) { return t_binary_load<int128>(bn, bnlen, value, func); }
 
-return_t binary_load(binary_t& bn, uint32 bnlen, uint128 value, std::function<uint128(const uint128&)> func) {
-    return t_binary_load<uint128>(bn, bnlen, value, func);
-}
+return_t binary_load(binary_t& bn, uint32 bnlen, uint128 value, std::function<uint128(const uint128&)> func) { return t_binary_load<uint128>(bn, bnlen, value, func); }
 #endif
 
 return_t binary_load(binary_t& target, uint32 bnlen, const byte_t* data, uint32 len) {

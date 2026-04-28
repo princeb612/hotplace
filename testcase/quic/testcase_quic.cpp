@@ -126,16 +126,12 @@ void test_quic_xargs_org() {
 
     {
         _logger->colorln("client-initial-keys-calc");
-        _test_case.assert(secrets.get(tls_secret_initial_quic_client_key) == base16_decode_rfc("b14b918124fda5c8d79847602fa3520b"), __FUNCTION__,
-                          "server initial key");
+        _test_case.assert(secrets.get(tls_secret_initial_quic_client_key) == base16_decode_rfc("b14b918124fda5c8d79847602fa3520b"), __FUNCTION__, "server initial key");
         _test_case.assert(secrets.get(tls_secret_initial_quic_client_iv) == base16_decode_rfc("ddbc15dea80925a55686a7df"), __FUNCTION__, "server initial iv");
-        _test_case.assert(secrets.get(tls_secret_initial_quic_client_hp) == base16_decode_rfc("6df4e9d737cdf714711d7c617ee82981"), __FUNCTION__,
-                          "server initial hp");
-        _test_case.assert(secrets.get(tls_secret_initial_quic_server_key) == base16_decode_rfc("d77fc4056fcfa32bd1302469ee6ebf90"), __FUNCTION__,
-                          "server initial key");
+        _test_case.assert(secrets.get(tls_secret_initial_quic_client_hp) == base16_decode_rfc("6df4e9d737cdf714711d7c617ee82981"), __FUNCTION__, "server initial hp");
+        _test_case.assert(secrets.get(tls_secret_initial_quic_server_key) == base16_decode_rfc("d77fc4056fcfa32bd1302469ee6ebf90"), __FUNCTION__, "server initial key");
         _test_case.assert(secrets.get(tls_secret_initial_quic_server_iv) == base16_decode_rfc("fcb748e37ff79860faa07477"), __FUNCTION__, "server initial iv");
-        _test_case.assert(secrets.get(tls_secret_initial_quic_server_hp) == base16_decode_rfc("440b2725e91dc79b370711ef792faa3d"), __FUNCTION__,
-                          "server initial hp");
+        _test_case.assert(secrets.get(tls_secret_initial_quic_server_hp) == base16_decode_rfc("440b2725e91dc79b370711ef792faa3d"), __FUNCTION__, "server initial hp");
     }
 
     /**

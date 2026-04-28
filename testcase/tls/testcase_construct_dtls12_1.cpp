@@ -23,60 +23,59 @@ static return_t do_test_construct_client_hello(const char* ciphersuite, tls_sess
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         tls_record_handshake record(session);
 
-        record.add(
-            tls_hs_client_hello, session,  //
-            [&](tls_handshake* hs) -> return_t {
-                auto handshake = (tls_handshake_client_hello*)hs;
+        record.add(tls_hs_client_hello, session,  //
+                   [&](tls_handshake* hs) -> return_t {
+                       auto handshake = (tls_handshake_client_hello*)hs;
 
-                const auto& cookie = session->get_tls_protection().get_secrets().get(tls_context_cookie);
-                if (false == cookie.empty()) {
-                    handshake->set_cookie(cookie);
-                }
+                       const auto& cookie = session->get_tls_protection().get_secrets().get(tls_context_cookie);
+                       if (false == cookie.empty()) {
+                           handshake->set_cookie(cookie);
+                       }
 
-                // cipher suites
-                *handshake << ciphersuite;
+                       // cipher suites
+                       *handshake << ciphersuite;
 
-                handshake->get_extensions()
-                    .add(tls_ext_ec_point_formats, dir, handshake,
-                         // ec_point_formats
-                         // RFC 9325 4.2.1
-                         // Note that [RFC8422] deprecates all but the uncompressed point format.
-                         // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
-                         [](tls_extension* extension) -> return_t {
-                             (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
-                             return success;
-                         })
-                    .add(tls_ext_supported_groups, dir, handshake,
-                         // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
-                         [](tls_extension* extension) -> return_t {
-                             (*(tls_extension_supported_groups*)extension).add("x25519").add("secp256r1").add("x448").add("secp521r1").add("secp384r1");
-                             return success;
-                         })
-                    .add(tls_ext_signature_algorithms, dir, handshake,
-                         [](tls_extension* extension) -> return_t {
-                             (*(tls_extension_signature_algorithms*)extension)
-                                 .add("ecdsa_secp256r1_sha256")
-                                 .add("ecdsa_secp384r1_sha384")
-                                 .add("ecdsa_secp521r1_sha512")
-                                 .add("ed25519")
-                                 .add("ed448")
-                                 .add("rsa_pkcs1_sha256")
-                                 .add("rsa_pkcs1_sha384")
-                                 .add("rsa_pkcs1_sha512")
-                                 .add("rsa_pss_pss_sha256")
-                                 .add("rsa_pss_pss_sha384")
-                                 .add("rsa_pss_pss_sha512")
-                                 .add("rsa_pss_rsae_sha256")
-                                 .add("rsa_pss_rsae_sha384")
-                                 .add("rsa_pss_rsae_sha512");
-                             return success;
-                         })
-                    .add(tls_ext_encrypt_then_mac, dir, handshake)
-                    .add(tls_ext_renegotiation_info, dir, handshake)
-                    .add(tls_ext_extended_master_secret, dir, handshake);
+                       handshake->get_extensions()
+                           .add(tls_ext_ec_point_formats, dir, handshake,
+                                // ec_point_formats
+                                // RFC 9325 4.2.1
+                                // Note that [RFC8422] deprecates all but the uncompressed point format.
+                                // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
+                                [](tls_extension* extension) -> return_t {
+                                    (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
+                                    return success;
+                                })
+                           .add(tls_ext_supported_groups, dir, handshake,
+                                // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
+                                [](tls_extension* extension) -> return_t {
+                                    (*(tls_extension_supported_groups*)extension).add("x25519").add("secp256r1").add("x448").add("secp521r1").add("secp384r1");
+                                    return success;
+                                })
+                           .add(tls_ext_signature_algorithms, dir, handshake,
+                                [](tls_extension* extension) -> return_t {
+                                    (*(tls_extension_signature_algorithms*)extension)
+                                        .add("ecdsa_secp256r1_sha256")
+                                        .add("ecdsa_secp384r1_sha384")
+                                        .add("ecdsa_secp521r1_sha512")
+                                        .add("ed25519")
+                                        .add("ed448")
+                                        .add("rsa_pkcs1_sha256")
+                                        .add("rsa_pkcs1_sha384")
+                                        .add("rsa_pkcs1_sha512")
+                                        .add("rsa_pss_pss_sha256")
+                                        .add("rsa_pss_pss_sha384")
+                                        .add("rsa_pss_pss_sha512")
+                                        .add("rsa_pss_rsae_sha256")
+                                        .add("rsa_pss_rsae_sha384")
+                                        .add("rsa_pss_rsae_sha512");
+                                    return success;
+                                })
+                           .add(tls_ext_encrypt_then_mac, dir, handshake)
+                           .add(tls_ext_renegotiation_info, dir, handshake)
+                           .add(tls_ext_extended_master_secret, dir, handshake);
 
-                return success;
-            });
+                       return success;
+                   });
 
         ret = construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
     }

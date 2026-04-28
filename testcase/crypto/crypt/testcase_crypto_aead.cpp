@@ -20,8 +20,7 @@ void test_crypto_aead() {
     constexpr char sample[] = "We don't playing because we grow old; we grow old because we stop playing.";
     size_t size = strlen(sample);
 
-    auto lambda = [&](const char* text, crypto_scheme_t scheme, const binary_t& key, const binary_t& iv, const byte_t* stream, size_t size,
-                      const binary_t& aad) -> void {
+    auto lambda = [&](const char* text, crypto_scheme_t scheme, const binary_t& key, const binary_t& iv, const byte_t* stream, size_t size, const binary_t& aad) -> void {
         return_t ret = errorcode_t::success;
         crypto_aead_builder builder;
         auto aead = builder.set_scheme(scheme).build();

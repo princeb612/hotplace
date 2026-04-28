@@ -119,8 +119,7 @@ class json_web_signature {
      * @example
      *          jws.sign (&crypto_key, jws_t::jws_hs256, claim, signature);
      */
-    return_t sign(crypto_key* crypto_key, jws_t alg, const std::string& claims, std::string& signature,
-                  jose_serialization_t mode = jose_serialization_t::jose_compact);
+    return_t sign(crypto_key* crypto_key, jws_t alg, const std::string& claims, std::string& signature, jose_serialization_t mode = jose_serialization_t::jose_compact);
     /**
      * @brief sign
      * @param crypto_key* crypto_key [in]

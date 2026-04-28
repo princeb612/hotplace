@@ -29,8 +29,7 @@ return_t openssl_sign::verify_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm
     return verify_digest(pkey, alg, input.data(), input.size(), signature, flags);
 }
 
-return_t openssl_sign::verify_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature,
-                                            uint32 flags) {
+return_t openssl_sign::verify_rsassa_pkcs15(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) {
     return verify_digest(pkey, alg, stream, size, signature, flags);
 }
 

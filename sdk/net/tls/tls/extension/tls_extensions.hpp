@@ -37,8 +37,7 @@ class tls_extensions {
      *          });
      */
     return_t add(tls_extension *extension, bool upref = false);
-    tls_extensions &add(uint16 type, tls_direction_t dir, tls_handshake *handshake, std::function<return_t(tls_extension *)> func = nullptr,
-                        bool upref = false);
+    tls_extensions &add(uint16 type, tls_direction_t dir, tls_handshake *handshake, std::function<return_t(tls_extension *)> func = nullptr, bool upref = false);
     tls_extensions &operator<<(tls_extension *extension);
     tls_extensions &operator<<(tls_extensions *extensions);
     return_t for_each(std::function<return_t(tls_extension *)> func);

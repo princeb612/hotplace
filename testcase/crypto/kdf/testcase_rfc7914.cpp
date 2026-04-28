@@ -63,7 +63,7 @@ void test_kdf_scrypt_rfc7914() {
     openssl_kdf kdf;
 
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    bool support = advisor->query_feature("scrypt");
+    auto support = advisor->query_feature("scrypt");
     if (support) {
         // openssl-3.0
         struct {

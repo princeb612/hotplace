@@ -129,8 +129,7 @@ void test3() {
     for (i = 0; i <= 128; i++) {
         mask = t_cidr_subnet_mask<ipaddr_t>(i);
         std::string pad("   ", pad_bytes(i));
-        stream.printf("%s/%d%s %032I128x & %032I128x => %032I128x ~ %032I128x\n", address, i, pad.c_str(), (ipv6), (mask), (ipv6 & mask),
-                      ((ipv6 & mask) | ~mask));
+        stream.printf("%s/%d%s %032I128x & %032I128x => %032I128x ~ %032I128x\n", address, i, pad.c_str(), (ipv6), (mask), (ipv6 & mask), ((ipv6 & mask) | ~mask));
     }
     _logger->write("%s", stream.c_str());
 

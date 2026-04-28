@@ -94,15 +94,13 @@ return_t json_object_signing_encryption::setoption(jose_context_t* handle, uint3
     return ret;
 }
 
-return_t json_object_signing_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const binary_t& input, std::string& output,
-                                                 jose_serialization_t type) {
+return_t json_object_signing_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const binary_t& input, std::string& output, jose_serialization_t type) {
     json_object_encryption jwe;
 
     return jwe.encrypt(handle, enc, alg, input, output, type);
 }
 
-return_t json_object_signing_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const std::string& input, std::string& output,
-                                                 jose_serialization_t type) {
+return_t json_object_signing_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const std::string& input, std::string& output, jose_serialization_t type) {
     return encrypt(handle, enc, alg, str2bin(input), output, type);
 }
 

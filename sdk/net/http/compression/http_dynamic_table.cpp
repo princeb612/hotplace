@@ -300,8 +300,7 @@ void http_dynamic_table::set_capacity(uint32 capacity) {
 
 #if defined DEBUG
     if (istraceable(trace_category_net)) {
-        trace_debug_event(trace_category_net, trace_event_header_compression_evict,
-                          [&](basic_stream& dbs) -> void { dbs.println("> set capacity %zi", capacity); });
+        trace_debug_event(trace_category_net, trace_event_header_compression_evict, [&](basic_stream& dbs) -> void { dbs.println("> set capacity %zi", capacity); });
     }
 #endif
 

@@ -43,8 +43,7 @@ return_t secure_prosumer::produce(tls_session* session, tls_direction_t dir, std
     return ret;
 }
 
-return_t secure_prosumer::produce(tls_session* session, tls_direction_t dir, const byte_t* ptr_data, size_t size_data, struct sockaddr* addr,
-                                  socklen_t* addrlen) {
+return_t secure_prosumer::produce(tls_session* session, tls_direction_t dir, const byte_t* ptr_data, size_t size_data, struct sockaddr* addr, socklen_t* addrlen) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == ptr_data) {

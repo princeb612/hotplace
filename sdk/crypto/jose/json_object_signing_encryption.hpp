@@ -325,8 +325,7 @@ class json_object_signing_encryption {
      *          jose.verify (jose_context, jws_result, result);
      *          jose.close (jose_context);
      */
-    return_t sign(jose_context_t* context, jws_t method, const std::string& input, std::string& output,
-                  jose_serialization_t type = jose_serialization_t::jose_compact);
+    return_t sign(jose_context_t* context, jws_t method, const std::string& input, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
     /**
      * @brief sign
      * @param jose_context_t* context [in]

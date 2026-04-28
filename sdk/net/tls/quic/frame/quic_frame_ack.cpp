@@ -112,8 +112,7 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
             // }
             // Figure 26: ACK Ranges
             payload ack_ranges;
-            ack_ranges << new payload_member(new quic_encoded(uint64(0)), constexpr_gap)
-                       << new payload_member(new quic_encoded(uint64(0)), constexpr_range_length);
+            ack_ranges << new payload_member(new quic_encoded(uint64(0)), constexpr_gap) << new payload_member(new quic_encoded(uint64(0)), constexpr_range_length);
             ack_ranges.read(stream, size, pos);
 
             uint64 gap = ack_ranges.t_value_of<uint64>(constexpr_gap);
@@ -137,8 +136,7 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
             // }
             // Figure 27: ECN Count Format
             payload ecn_counts;
-            ecn_counts << new payload_member(new quic_encoded(uint64(0)), constexpr_ect0_count)
-                       << new payload_member(new quic_encoded(uint64(0)), constexpr_ect1_count)
+            ecn_counts << new payload_member(new quic_encoded(uint64(0)), constexpr_ect0_count) << new payload_member(new quic_encoded(uint64(0)), constexpr_ect1_count)
                        << new payload_member(new quic_encoded(uint64(0)), constexpr_ectce_count);
             ecn_counts.read(stream, size, pos);
 

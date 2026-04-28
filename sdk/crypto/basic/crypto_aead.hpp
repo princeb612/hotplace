@@ -47,11 +47,9 @@ class crypto_aead {
     crypto_scheme_t get_scheme();
 
     return_t encrypt(const binary_t& key, const binary_t& iv, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad, binary_t& tag);
-    return_t encrypt(const binary_t& key, const binary_t& iv, const unsigned char* stream, size_t size, binary_t& ciphertext, const binary_t& aad,
-                     binary_t& tag);
+    return_t encrypt(const binary_t& key, const binary_t& iv, const unsigned char* stream, size_t size, binary_t& ciphertext, const binary_t& aad, binary_t& tag);
     return_t decrypt(const binary_t& key, const binary_t& iv, const binary_t& ciphertext, binary_t& plaintext, const binary_t& aad, const binary_t& tag);
-    return_t decrypt(const binary_t& key, const binary_t& iv, const unsigned char* stream, size_t size, binary_t& plaintext, const binary_t& aad,
-                     const binary_t& tag);
+    return_t decrypt(const binary_t& key, const binary_t& iv, const unsigned char* stream, size_t size, binary_t& plaintext, const binary_t& aad, const binary_t& tag);
 
     void addref();
     void release();

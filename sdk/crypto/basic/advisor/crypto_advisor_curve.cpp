@@ -19,7 +19,24 @@ return_t crypto_advisor::for_each_curve(std::function<void(const char*, uint32, 
     for (auto i = 0; i < sizeof_hint_curves; i++) {
         const hint_curve_t* item = hint_curves + i;
         if (item->name_nist) {
-            f(item->name_nist, advisor_feature_curve, user);
+            auto spec = query_feature(item->name_nist, advisor_feature_curve);
+            f(item->name_nist, spec, user);
+        }
+        if (item->name_x962) {
+            auto spec = query_feature(item->name_x962, advisor_feature_curve);
+            f(item->name_x962, spec, user);
+        }
+        if (item->name_sec) {
+            auto spec = query_feature(item->name_sec, advisor_feature_curve);
+            f(item->name_sec, spec, user);
+        }
+        if (item->name_bp) {
+            auto spec = query_feature(item->name_bp, advisor_feature_curve);
+            f(item->name_bp, spec, user);
+        }
+        if (item->name_wtls) {
+            auto spec = query_feature(item->name_wtls, advisor_feature_curve);
+            f(item->name_wtls, spec, user);
         }
     }
     return ret;
@@ -37,7 +54,6 @@ return_t crypto_advisor::for_each_curve_hint(std::function<void(const hint_curve
 const hint_curve_t* crypto_advisor::hintof_curve_nid(uint32 nid) {
     const hint_curve_t* item = nullptr;
     t_maphint<uint32, const hint_curve_t*> hint(_curve_bynid_map);
-
     hint.find(nid, &item);
     return item;
 }
@@ -46,20 +62,31 @@ const hint_curve_t* crypto_advisor::hintof_curve_name(const char* name) {
     const hint_curve_t* item = nullptr;
     if (name) {
         t_maphint<std::string, const hint_curve_t*> hint(_curve_name_map);
-
         hint.find(name, &item);
     }
     return item;
 }
 
+const hint_curve_t* crypto_advisor::hintof_curve_name(const std::string& name) {
+    const hint_curve_t* item = nullptr;
+    t_maphint<std::string, const hint_curve_t*> hint(_curve_name_map);
+    hint.find(name, &item);
+    return item;
+}
+
 const hint_curve_t* crypto_advisor::hintof_curve(const char* curve) {
     const hint_curve_t* item = nullptr;
-
     if (curve) {
         t_maphint<std::string, const hint_curve_t*> hint(_curve_name_map);
         hint.find(curve, &item);
     }
+    return item;
+}
 
+const hint_curve_t* crypto_advisor::hintof_curve(const std::string& curve) {
+    const hint_curve_t* item = nullptr;
+    t_maphint<std::string, const hint_curve_t*> hint(_curve_name_map);
+    hint.find(curve, &item);
     return item;
 }
 
@@ -237,6 +264,20 @@ bool support(const hint_curve_t* hint, hash_algorithm_t alg) {
     }
     return ret_value;
 }
+
+bool support(const hint_curve_t* hint, const char* alg) {
+    bool ret_value = false;
+    if (hint && alg) {
+        auto advisor = crypto_advisor::get_instance();
+        auto hint_md = advisor->hintof_digest(alg);
+        if (hint_md) {
+            ret_value = support(hint, typeof_alg(hint_md));
+        }
+    }
+    return ret_value;
+}
+
+bool support(const hint_curve_t* hint, const std::string& alg) { return support(hint, alg.c_str()); }
 
 }  // namespace crypto
 }  // namespace hotplace

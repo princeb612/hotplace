@@ -255,14 +255,13 @@ void test_subtraction() {
     {
         t_ovl_points<uint32> part;
         part.add(7, 12).add(14).add(15, 16).add(17, 18).add(21).add(19).add(22).add(20).add(25).add(23).add(24);
-        part.subtract(7, 12).subtract(14).subtract(16).subtract(17, 18).subtract(19, 22).subtract(23, 24).subtract(26, 30).for_each(
-            [](uint32 s, uint32 e) -> void {
-                if (s == e) {
-                    _logger->writeln("> %u", s);
-                } else {
-                    _logger->writeln("> %u-%u", s, e);
-                }
-            });
+        part.subtract(7, 12).subtract(14).subtract(16).subtract(17, 18).subtract(19, 22).subtract(23, 24).subtract(26, 30).for_each([](uint32 s, uint32 e) -> void {
+            if (s == e) {
+                _logger->writeln("> %u", s);
+            } else {
+                _logger->writeln("> %u-%u", s, e);
+            }
+        });
         t_ovl_points<uint32> expect;
         expect.add(15).add(25);
         _test_case.assert(part == expect, __FUNCTION__, "subtract #3");

@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   testcase_cmdline.cpp
+ * @file   testvector_cmdline.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -60,46 +60,58 @@ void do_test_cmdline_template_myoption(bool expect, int argc, char** argv) {
 void test_yaml_testvector_cmdline() {
     _test_case.begin("commandline YAML");
 
-    YAML::Node testvector = YAML::LoadFile("./testvector_cmdline.yml");
-    auto examples = testvector["testvector"];
+    auto lambda_test_cmdline_myoption = [&](const YAML::Node& items) -> void {
+        for (const auto& item : items) {
+            valist va;
+            auto args = item["args"];
+            auto expect = item["expect"].as<bool>();
+            auto reason = item["reason"].as<std::string>();
 
-    auto lambda_cmdline_myoption = [&](const YAML::Node& examples) -> void {
-        if (examples && examples.IsSequence()) {
-            for (const auto& example : examples) {
-                _logger->writeln("example: %s", example["example"].as<std::string>().c_str());
-
-                auto items = example["items"];
-                for (const auto& item : items) {
-                    valist va;
-                    auto args = item["args"];
-                    auto expect = item["expect"].as<bool>();
-                    auto reason = item["reason"].as<std::string>();
-
-                    int argc = args.size();
-                    if (argc > 5) {
-                        _test_case.assert(false, __FUNCTION__, "invalid test vector");
-                        continue;
-                    }
-
-                    // argv memory access
-                    std::vector<std::string> table;
-                    for (const auto& arg : args) {
-                        table.push_back(arg.as<std::string>());
-                    }
-
-                    char* argv[5] = {};
-                    int i = 0;
-                    for (auto& entry : table) {
-                        argv[i] = (char*)entry.c_str();
-                        ++i;
-                    }
-
-                    do_test_cmdline_template_myoption(expect, argc, argv);
-                }
+            int argc = args.size();
+            if (argc > 5) {
+                _test_case.assert(false, __FUNCTION__, "invalid test vector");
+                continue;
             }
+
+            // argv memory access
+            std::vector<std::string> table;
+            for (const auto& arg : args) {
+                table.push_back(arg.as<std::string>());
+            }
+
+            char* argv[5] = {};
+            int i = 0;
+            for (auto& entry : table) {
+                argv[i] = (char*)entry.c_str();
+                ++i;
+            }
+
+            do_test_cmdline_template_myoption(expect, argc, argv);
         }
     };
-    lambda_cmdline_myoption(examples);
+
+    YAML::Node testvector = YAML::LoadFile("./testvector_cmdline.yml");
+    auto examples = testvector["testvector"];
+    if (examples && examples.IsSequence()) {
+        for (const auto& example : examples) {
+            auto text_example = example["example"].as<std::string>();
+            _logger->writeln("example: %s", text_example.c_str());
+
+            auto schema = example["schema"].as<std::string>();
+            auto templ = example["template"].as<std::string>();
+            auto items = example["items"];
+
+            if (schema == "CMDLINE") {
+                if (templ == "myoption") {
+                    lambda_test_cmdline_myoption(items);
+                } else {
+                    _test_case.test(not_supported, __FUNCTION__, "unknown template");
+                }
+            } else {
+                _test_case.assert(false, __FUNCTION__, "bad message format");
+            }
+        }
+    }
 }
 
 void testcase_testvector_cmdline() { test_yaml_testvector_cmdline(); }

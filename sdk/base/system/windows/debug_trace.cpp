@@ -167,8 +167,7 @@ return_t debug_trace::open(debug_trace_context_t** handle) {
         DECLARE_NAMEOF_API_SYMLOADMODULE64;
 
         GETPROCADDRESS(STACKWALK64, context->mssdk.lpfnStackWalk, imagehlp_handle, NAMEOF_API_STACKWALK64, ret, __leave2);
-        GETPROCADDRESS(SYMFUNCTIONTABLEACCESS64, context->mssdk.lpfnSymFunctionTableAccess, imagehlp_handle, NAMEOF_API_SYMFUNCTIONTABLEACCESS64, ret,
-                       __leave2);
+        GETPROCADDRESS(SYMFUNCTIONTABLEACCESS64, context->mssdk.lpfnSymFunctionTableAccess, imagehlp_handle, NAMEOF_API_SYMFUNCTIONTABLEACCESS64, ret, __leave2);
         GETPROCADDRESS(SYMGETLINEFROMADDR64, context->mssdk.lpfnSymGetLineFromAddr, imagehlp_handle, NAMEOF_API_SYMGETLINEFROMADDR64, ret, __leave2);
         GETPROCADDRESS(SYMLOADMODULE64, context->mssdk.lpfnSymLoadModule, imagehlp_handle, NAMEOF_API_SYMLOADMODULE64, ret, __leave2);
         GETPROCADDRESS(SYMGETMODULEBASE64, context->mssdk.lpfnSymGetModuleBase, imagehlp_handle, NAMEOF_API_SYMGETMODULEBASE64, ret, __leave2);
@@ -385,8 +384,8 @@ return_t debug_trace::trace(debug_trace_context_t* handle, CONTEXT* rtlcontext, 
         IMAGEHLP_MODULE_LIST modulelist;
 
         for (nFrameNum = 0;; ++nFrameNum) {
-            bRet = context->mssdk.lpfnStackWalk(image_type, process_handle, thread_handle, &frame, rtlcontext, nullptr,
-                                                context->mssdk.lpfnSymFunctionTableAccess, context->mssdk.lpfnSymGetModuleBase, nullptr);
+            bRet = context->mssdk.lpfnStackWalk(image_type, process_handle, thread_handle, &frame, rtlcontext, nullptr, context->mssdk.lpfnSymFunctionTableAccess,
+                                                context->mssdk.lpfnSymGetModuleBase, nullptr);
             if (FALSE == bRet) {
                 break;
             }

@@ -15,38 +15,34 @@ void test_features() {
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     auto query_cipher = [&](const char* feature, uint32 spec, void* user) -> void {
-        bool test = advisor->query_feature(feature, advisor_feature_cipher);
-        return_t ret = test ? errorcode_t::success : errorcode_t::not_supported;
+        return_t ret = spec ? errorcode_t::success : errorcode_t::not_supported;
         _test_case.test(ret, __FUNCTION__, R"(check feature cipher "%s" [%08x])", feature, spec);
     };
     auto query_md = [&](const char* feature, uint32 spec, void* user) -> void {
-        bool test = advisor->query_feature(feature, advisor_feature_md);
-        return_t ret = test ? errorcode_t::success : errorcode_t::not_supported;
+        return_t ret = spec ? errorcode_t::success : errorcode_t::not_supported;
         _test_case.test(ret, __FUNCTION__, R"(check feature md "%s" [%08x])", feature, spec);
     };
     auto query_jwa = [&](const hint_jose_encryption_t* item, void* user) -> void {
-        bool test = advisor->query_feature(item->alg_name, advisor_feature_jwa);
+        auto test = advisor->query_feature(item->alg_name, advisor_feature_jwa);
         return_t ret = test ? errorcode_t::success : errorcode_t::not_supported;
         _test_case.test(ret, __FUNCTION__, R"(check feature JWA "%s" [%08x])", item->alg_name, advisor_feature_jwa);
     };
     auto query_jwe = [&](const hint_jose_encryption_t* item, void* user) -> void {
-        bool test = advisor->query_feature(item->alg_name, advisor_feature_jwe);
+        auto test = advisor->query_feature(item->alg_name, advisor_feature_jwe);
         return_t ret = test ? errorcode_t::success : errorcode_t::not_supported;
         _test_case.test(ret, __FUNCTION__, R"(check feature JWE "%s" [%08x])", item->alg_name, advisor_feature_jwe);
     };
     auto query_jws = [&](const hint_signature_t* item, void* user) -> void {
-        bool test = advisor->query_feature(item->jws_name, advisor_feature_jws);
+        auto test = advisor->query_feature(item->jws_name, advisor_feature_jws);
         return_t ret = test ? errorcode_t::success : errorcode_t::not_supported;
         _test_case.test(ret, __FUNCTION__, R"(check feature JWS "%s" [%08x])", item->jws_name, advisor_feature_jws);
     };
     auto query_cose = [&](const char* feature, uint32 spec, void* user) -> void {
-        bool test = advisor->query_feature(feature, advisor_feature_cose);
-        return_t ret = test ? errorcode_t::success : errorcode_t::not_supported;
+        return_t ret = spec ? errorcode_t::success : errorcode_t::not_supported;
         _test_case.test(ret, __FUNCTION__, R"(check feature COSE "%s" [%08x])", feature, spec);
     };
     auto query_curve = [&](const char* feature, uint32 spec, void* user) -> void {
-        bool test = advisor->query_feature(feature, advisor_feature_curve);
-        return_t ret = test ? errorcode_t::success : errorcode_t::not_supported;
+        return_t ret = spec ? errorcode_t::success : errorcode_t::not_supported;
         _test_case.test(ret, __FUNCTION__, R"(check feature Elliptic Curve "%s" [%08x])", feature, spec);
     };
 
@@ -57,6 +53,41 @@ void test_features() {
     advisor->for_each_jws(query_jws, nullptr);
     advisor->for_each_cose(query_cose, nullptr);
     advisor->for_each_curve(query_curve, nullptr);
+
+    _logger->writeln("features");
+    advisor->for_each_features([&](const char* name, uint32 spec) -> void {
+        _logger->writeln([&](basic_stream& bs) -> void {
+            bs << name << "\n";
+            bs << "  - usage : ";
+            if (spec & advisor_feature_cipher) {
+                bs << "cipher ";
+            }
+            if (spec & advisor_feature_md) {
+                bs << "md ";
+            }
+            if (spec & advisor_feature_wrap) {
+                bs << "wrap ";
+            }
+            if (spec & advisor_feature_jwa) {
+                bs << "jwa ";
+            }
+            if (spec & advisor_feature_jwe) {
+                bs << "jwe ";
+            }
+            if (spec & advisor_feature_jws) {
+                bs << "jws ";
+            }
+            if (spec & advisor_feature_cose) {
+                bs << "cose ";
+            }
+            if (spec & advisor_feature_curve) {
+                bs << "curve ";
+            }
+            if (spec & advisor_feature_version) {
+                bs << "(version-specific) ";
+            }
+        });
+    });
 }
 
 void test_hint_curves() {

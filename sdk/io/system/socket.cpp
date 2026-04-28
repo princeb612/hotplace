@@ -184,8 +184,7 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
     return ret;
 }
 
-return_t create_listener(unsigned int size_vector, unsigned int* vector_family, socket_t* vector_socket, int protocol_type, uint32 port,
-                         bool support_win32_acceptex) {
+return_t create_listener(unsigned int size_vector, unsigned int* vector_family, socket_t* vector_socket, int protocol_type, uint32 port, bool support_win32_acceptex) {
     return_t ret = errorcode_t::success;
     int socket_type = 0;
     int ipprotocol = 0;
@@ -418,8 +417,7 @@ return_t connect_socket_addr(socket_t sock, const sockaddr* addr, socklen_t addr
 
 #if defined DEBUG
         if (istraceable(trace_category_internal)) {
-            trace_debug_event(trace_category_internal, trace_event_socket,
-                              [&](basic_stream& dbs) -> void { dbs.println("connect SO_ERROR %i return %i", optval, rc); });
+            trace_debug_event(trace_category_internal, trace_event_socket, [&](basic_stream& dbs) -> void { dbs.println("connect SO_ERROR %i return %i", optval, rc); });
         }
 #elif defined _WIN32 || defined _WIN64
         // connect SO_ERROR 0 return 0

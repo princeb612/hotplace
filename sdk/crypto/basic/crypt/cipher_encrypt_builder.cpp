@@ -27,5 +27,21 @@ cipher_encrypt_builder& cipher_encrypt_builder::set(crypt_algorithm_t alg, crypt
     return *this;
 }
 
+cipher_encrypt_builder& cipher_encrypt_builder::set(const char* alg) {
+    auto advisor = crypto_advisor::get_instance();
+    auto hint = advisor->hintof_cipher(alg);
+    _alg = typeof_alg(hint);
+    _mode = typeof_mode(hint);
+    return *this;
+}
+
+cipher_encrypt_builder& cipher_encrypt_builder::set(const std::string& alg) {
+    auto advisor = crypto_advisor::get_instance();
+    auto hint = advisor->hintof_cipher(alg);
+    _alg = typeof_alg(hint);
+    _mode = typeof_mode(hint);
+    return *this;
+}
+
 }  // namespace crypto
 }  // namespace hotplace

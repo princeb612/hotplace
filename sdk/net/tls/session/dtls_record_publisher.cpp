@@ -105,8 +105,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                         if (istraceable(trace_category_net, loglevel_debug)) {
                             trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
                                 dbs.printf(ANSI_ESCAPE "1;36m");
-                                dbs.println("# publish %s %i %s", tlsadvisor->nameof_tls_handshake(hstype).c_str(), hsseq,
-                                            tlsadvisor->nameof_direction(dir, 1).c_str());
+                                dbs.println("# publish %s %i %s", tlsadvisor->nameof_tls_handshake(hstype).c_str(), hsseq, tlsadvisor->nameof_direction(dir, 1).c_str());
                                 dbs.printf(ANSI_ESCAPE "0m");
                                 dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
                             });

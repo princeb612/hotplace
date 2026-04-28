@@ -50,9 +50,7 @@ class t_suffixtree {
     };
 
     t_suffixtree(memberof_t memberof = memberof_defhandler<BT, T>) : _root(new trienode), _memberof(memberof) {}
-    t_suffixtree(const T* pattern, size_t size, memberof_t memberof = memberof_defhandler<BT, T>) : _root(new trienode), _memberof(memberof) {
-        add(pattern, size);
-    }
+    t_suffixtree(const T* pattern, size_t size, memberof_t memberof = memberof_defhandler<BT, T>) : _root(new trienode), _memberof(memberof) { add(pattern, size); }
     virtual ~t_suffixtree() { delete _root; }
 
     t_suffixtree<BT, T>& add(const std::vector<T>& pattern) { return add(pattern.data(), pattern.size()); }

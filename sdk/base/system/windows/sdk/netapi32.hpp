@@ -20,9 +20,8 @@
 /* @brief
     The NetUserEnum function retrieves information about all user accounts on a server.
  */
-typedef NET_API_STATUS(__stdcall* NETUSERENUM)(___in LPCWSTR servername OPTIONAL, ___in DWORD level, ___in DWORD filter, ___out LPBYTE* bufptr,
-                                               ___in DWORD prefmaxlen, ___out LPDWORD entriesread, ___out LPDWORD totalentries,
-                                               __inout LPDWORD resume_handle OPTIONAL);
+typedef NET_API_STATUS(__stdcall* NETUSERENUM)(___in LPCWSTR servername OPTIONAL, ___in DWORD level, ___in DWORD filter, ___out LPBYTE* bufptr, ___in DWORD prefmaxlen,
+                                               ___out LPDWORD entriesread, ___out LPDWORD totalentries, __inout LPDWORD resume_handle OPTIONAL);
 
 /* "NetApiBufferFree" */
 #define DECLARE_NAMEOF_API_NETAPIBUFFERFREE                                                \
@@ -58,9 +57,9 @@ typedef NET_API_STATUS(__stdcall* NETLOCALGROUPENUM)(___in LPCWSTR servername OP
     The NetLocalGroupGetMembers function retrieves a list of the members of a particular local group in the security database, which is the security accounts
    manager (SAM) database or, in the case of domain controllers, the Active Directory. Local group members can be users or global groups.
  */
-typedef NET_API_STATUS(__stdcall* NETLOCALGROUPGETMEMBERS)(___in LPCWSTR servername OPTIONAL, ___in LPCWSTR localgroupname, ___in DWORD level,
-                                                           ___out LPBYTE* bufptr, ___in DWORD prefmaxlen, ___out LPDWORD entriesread,
-                                                           ___out LPDWORD totalentries, __inout PDWORD_PTR resumehandle);
+typedef NET_API_STATUS(__stdcall* NETLOCALGROUPGETMEMBERS)(___in LPCWSTR servername OPTIONAL, ___in LPCWSTR localgroupname, ___in DWORD level, ___out LPBYTE* bufptr,
+                                                           ___in DWORD prefmaxlen, ___out LPDWORD entriesread, ___out LPDWORD totalentries,
+                                                           __inout PDWORD_PTR resumehandle);
 
 /* windows nt share */
 /* "NetShareEnum" */
@@ -86,8 +85,8 @@ typedef NET_API_STATUS(__stdcall* NETAPI32_NETSHAREENUM)(___in LPWSTR servername
 /* @brief
     Returns information about some or all open files on a server, depending on the parameters specified.
  */
-typedef NET_API_STATUS(__stdcall* NETAPI32_NETFILEENUM)(___in LPWSTR servername, ___in LPWSTR basepath, ___in LPWSTR username, ___in DWORD level,
-                                                        ___out LPBYTE* bufptr, ___in DWORD prefmaxlen, ___out LPDWORD entriesread, ___out LPDWORD totalentries,
+typedef NET_API_STATUS(__stdcall* NETAPI32_NETFILEENUM)(___in LPWSTR servername, ___in LPWSTR basepath, ___in LPWSTR username, ___in DWORD level, ___out LPBYTE* bufptr,
+                                                        ___in DWORD prefmaxlen, ___out LPDWORD entriesread, ___out LPDWORD totalentries,
                                                         __inout PDWORD_PTR resume_handle);
 
 /* "NetConnectionEnum" */
@@ -115,8 +114,8 @@ typedef NET_API_STATUS(__stdcall* NETAPI32_NETCONNECTIONENUM)(___in LPWSTR serve
     Provides information about sessions established on a server.
  */
 typedef NET_API_STATUS(__stdcall* NETAPI32_NETSESSIONENUM)(___in LPWSTR servername, ___in LPWSTR UncClientName, ___in LPWSTR username, ___in DWORD level,
-                                                           ___out LPBYTE* bufptr, ___in DWORD prefmaxlen, ___out LPDWORD entriesread,
-                                                           ___out LPDWORD totalentries, __inout LPDWORD resume_handle);
+                                                           ___out LPBYTE* bufptr, ___in DWORD prefmaxlen, ___out LPDWORD entriesread, ___out LPDWORD totalentries,
+                                                           __inout LPDWORD resume_handle);
 
 /* "NetApiBufferFree" */
 #define DECLARE_NAMEOF_API_NETAPI32_NETAPIBUFFERFREE                                       \
@@ -185,8 +184,8 @@ typedef NET_API_STATUS(__stdcall* NETWKSTAUSERGETINFO)(LPWSTR reserved, DWORD le
     The NetWkstaUserEnum function lists information about all users currently logged on to the workstation. This list includes interactive, service and batch
    logons.
  */
-typedef NET_API_STATUS(__stdcall* NETWKSTAUSERENUM)(___in LPWSTR servername, ___in DWORD level, ___out LPBYTE* bufptr, ___in DWORD prefmaxlen,
-                                                    ___out LPDWORD entriesread, ___out LPDWORD totalentries, __inout LPDWORD resumehandle);
+typedef NET_API_STATUS(__stdcall* NETWKSTAUSERENUM)(___in LPWSTR servername, ___in DWORD level, ___out LPBYTE* bufptr, ___in DWORD prefmaxlen, ___out LPDWORD entriesread,
+                                                    ___out LPDWORD totalentries, __inout LPDWORD resumehandle);
 
 /* "Netbios" */
 #define DECLARE_NAMEOF_API_NETBIOS            \

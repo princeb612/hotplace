@@ -122,9 +122,7 @@ return_t quic_frame::do_read_body(tls_direction_t dir, const byte_t* stream, siz
 
 return_t quic_frame::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }
 
-return_t quic_frame::do_write_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, size_t len, binary_t& bin) {
-    return errorcode_t::success;
-}
+return_t quic_frame::do_write_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, size_t len, binary_t& bin) { return errorcode_t::success; }
 
 quic_frame_t quic_frame::get_type() { return _type; }
 

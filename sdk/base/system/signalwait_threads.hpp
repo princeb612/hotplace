@@ -69,8 +69,7 @@ class signalwait_threads {
      * @return error code (see error.hpp)
      * @remarks if a threads running, it fails.
      */
-    return_t set(size_t max_concurrent, SIGNALWAITTHREADS_CALLBACK_ROUTINE thread_routine, SIGNALWAITTHREADS_CALLBACK_ROUTINE signal_callback,
-                 void* thread_param);
+    return_t set(size_t max_concurrent, SIGNALWAITTHREADS_CALLBACK_ROUTINE thread_routine, SIGNALWAITTHREADS_CALLBACK_ROUTINE signal_callback, void* thread_param);
     /**
      * @brief create a thread
      * @return error code (see error.hpp)

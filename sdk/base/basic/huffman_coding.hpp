@@ -108,6 +108,11 @@ class huffman_coding {
 
     void reset();
 
+    /**
+     * @example
+     *          huffman.reset();
+     *          huffman.load(stream1).load(stream2).load(stream3).learn().infer();
+     */
     huffman_coding &operator<<(const char *s);
     huffman_coding &load(const char *s);
     huffman_coding &learn();

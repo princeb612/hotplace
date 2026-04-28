@@ -120,8 +120,7 @@ return_t quic_frame_http3_stream::do_read_body(tls_direction_t dir, const byte_t
                     if (offbit) {
                         dbs.println("     > 0x%I64x (%I64i)", off, off);
                     }
-                    dbs.println("   > %s 0x%I64x (%I64i) %s", constexpr_stream_id, stream_id, stream_id,
-                                tlsadvisor->nameof_quic_streamid_type(stream_id).c_str());
+                    dbs.println("   > %s 0x%I64x (%I64i) %s", constexpr_stream_id, stream_id, stream_id, tlsadvisor->nameof_quic_streamid_type(stream_id).c_str());
                     if (streams.is_unidirectional_stream(stream_id)) {
                         auto resource = http_resource::get_instance();
                         dbs.println("    > %s %s", resource->get_h3_stream_name(unitype).c_str(), is_begin ? "*" : "");
@@ -290,8 +289,7 @@ return_t quic_frame_http3_stream::do_write_body(tls_direction_t dir, const byte_
                 dbs.println(ANSI_ESCAPE "1;34m  + frame %s 0x%x(%i)" ANSI_ESCAPE "0m", tlsadvisor->nameof_quic_frame(type).c_str(), type, type);
                 dbs.println("   > %s 0x%zx (%zi)", constexpr_offset, pos, pos);
                 dbs.println("   > %s 0x%zx (%zi)" ANSI_ESCAPE "0m", constexpr_length, len, len);
-                dbs.println("   > %s 0x%I64x (%I64i) %s", constexpr_stream_id, _stream_id, _stream_id,
-                            tlsadvisor->nameof_quic_streamid_type(_stream_id).c_str());
+                dbs.println("   > %s 0x%I64x (%I64i) %s", constexpr_stream_id, _stream_id, _stream_id, tlsadvisor->nameof_quic_streamid_type(_stream_id).c_str());
                 auto resource = http_resource::get_instance();
                 dbs.println("    > %s", resource->get_h3_stream_name(_unitype).c_str());
             });

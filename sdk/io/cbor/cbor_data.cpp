@@ -66,17 +66,11 @@ cbor_data::cbor_data(float value) : cbor_object(cbor_type_t::cbor_type_data) { _
 
 cbor_data::cbor_data(double value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_double(value); }
 
-cbor_data::cbor_data(const variant_t& vt) : cbor_object(cbor_type_t::cbor_type_data), _vt(vt) {
-    set_flags((vt.flag & flag_negative) ? cbor_data_flag_nint : 0);
-}
+cbor_data::cbor_data(const variant_t& vt) : cbor_object(cbor_type_t::cbor_type_data), _vt(vt) { set_flags((vt.flag & flag_negative) ? cbor_data_flag_nint : 0); }
 
-cbor_data::cbor_data(variant_t&& vt) : cbor_object(cbor_type_t::cbor_type_data), _vt(std::move(vt)) {
-    set_flags((vt.flag & flag_negative) ? cbor_data_flag_nint : 0);
-}
+cbor_data::cbor_data(variant_t&& vt) : cbor_object(cbor_type_t::cbor_type_data), _vt(std::move(vt)) { set_flags((vt.flag & flag_negative) ? cbor_data_flag_nint : 0); }
 
-cbor_data::cbor_data(const variant& other) : cbor_object(cbor_type_t::cbor_type_data), _vt(other) {
-    set_flags((other.flag() & flag_negative) ? cbor_data_flag_nint : 0);
-}
+cbor_data::cbor_data(const variant& other) : cbor_object(cbor_type_t::cbor_type_data), _vt(other) { set_flags((other.flag() & flag_negative) ? cbor_data_flag_nint : 0); }
 
 cbor_data::cbor_data(variant&& other) : cbor_object(cbor_type_t::cbor_type_data), _vt(std::move(other)) {
     set_flags((other.flag() & flag_negative) ? cbor_data_flag_nint : 0);

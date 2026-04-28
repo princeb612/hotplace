@@ -69,8 +69,7 @@ return_t tls_protection::build_iv(tls_session *session, binary_t &nonce, const b
     return ret;
 }
 
-return_t tls_protection::build_tls12_aad_from_record(tls_session *session, binary_t &aad, const binary_t &record_header, uint64 record_no,
-                                                     uint8 size_nonce_explicit) {
+return_t tls_protection::build_tls12_aad_from_record(tls_session *session, binary_t &aad, const binary_t &record_header, uint64 record_no, uint8 size_nonce_explicit) {
     return_t ret = errorcode_t::success;
 
     tls_advisor *tlsadvisor = tls_advisor::get_instance();
@@ -393,8 +392,8 @@ return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir,
     return ret;
 }
 
-return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext, const binary_t &aad,
-                                      binary_t &tag, protection_space_t space) {
+return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext, const binary_t &aad, binary_t &tag,
+                                      protection_space_t space) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -508,8 +507,8 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
     return ret;
 }
 
-return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext,
-                                      const binary_t &aad, const binary_t &tag, protection_space_t space) {
+return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext, const binary_t &aad,
+                                      const binary_t &tag, protection_space_t space) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {

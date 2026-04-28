@@ -135,10 +135,8 @@ class crypto_keyexchange {
     return_t keygen(tls_group_t group, crypto_key* key, const char* kid);
     return_t keyshare(tls_group_t group, crypto_key* key, const char* kid, binary_t& share);
     return_t keystore(tls_group_t group, crypto_key* storage, const char* kid, const binary_t& share);
-    return_t exchange(tls_group_t group, crypto_key* key, crypto_key* ephemeral, const char* kid, const char* epkid, const binary_t& share,
-                      binary_t& sharedsecret);
-    return_t exchange(tls_group_t group, crypto_key* key, crypto_key* ephemeral, const char* kid, const char* epkid, const char* shareid,
-                      binary_t& sharedsecret);
+    return_t exchange(tls_group_t group, crypto_key* key, crypto_key* ephemeral, const char* kid, const char* epkid, const binary_t& share, binary_t& sharedsecret);
+    return_t exchange(tls_group_t group, crypto_key* key, crypto_key* ephemeral, const char* kid, const char* epkid, const char* shareid, binary_t& sharedsecret);
     return_t encaps(tls_group_t group, const binary_t& share, binary_t& keycapsule, binary_t& sharedsecret);
     return_t decaps(tls_group_t group, crypto_key* key, const char* kid, const binary_t& share, binary_t& sharedsecret);
 

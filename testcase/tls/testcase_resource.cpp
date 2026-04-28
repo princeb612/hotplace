@@ -38,9 +38,8 @@ static void do_validate_resource_cipher_suite() {
         auth_t auth;
         const char* name;
     } auth_table[] = {
-        {auth_unknown, "NULL"},    {auth_dss, "DSS"},         {auth_rsa, "RSA"},       {auth_anon, "anon"},
-        {auth_krb5, "KRB5"},       {auth_psk, "PSK"},         {auth_ecdsa, "ECDSA"},   {auth_sha1, "SHA"},
-        {auth_sha2_256, "SHA256"}, {auth_sha2_384, "SHA384"}, {auth_eccpwd, "ECCPWD"}, {auth_gost, "GOSTR341112_256"},
+        {auth_unknown, "NULL"}, {auth_dss, "DSS"},  {auth_rsa, "RSA"},         {auth_anon, "anon"},       {auth_krb5, "KRB5"},     {auth_psk, "PSK"},
+        {auth_ecdsa, "ECDSA"},  {auth_sha1, "SHA"}, {auth_sha2_256, "SHA256"}, {auth_sha2_384, "SHA384"}, {auth_eccpwd, "ECCPWD"}, {auth_gost, "GOSTR341112_256"},
     };
     struct alg_t {
         crypt_algorithm_t alg;

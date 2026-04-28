@@ -449,11 +449,8 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
      */
 
     // 64 bits patched - hush
-#define SARG()                                          \
-    (flags & LONGDBL    ? va_arg(ap, int64)             \
-     : flags & LONGINT  ? (int64)va_arg(ap, long)       \
-     : flags & SHORTINT ? (int64)(short)va_arg(ap, int) \
-                        : (int64)va_arg(ap, int))
+#define SARG() \
+    (flags & LONGDBL ? va_arg(ap, int64) : flags & LONGINT ? (int64)va_arg(ap, long) : flags & SHORTINT ? (int64)(short)va_arg(ap, int) : (int64)va_arg(ap, int))
 #define UARG()                                                    \
     (flags & LONGDBL    ? va_arg(ap, uint64)                      \
      : flags & LONGINT  ? (uint64)va_arg(ap, unsigned long)       \

@@ -62,15 +62,13 @@ return_t server_socket::tls_stop_accept() { return errorcode_t::do_nothing; }
 
 return_t server_socket::read(socket_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread) { return errorcode_t::do_nothing; }
 
-return_t server_socket::recvfrom(socket_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr,
-                                 socklen_t* addrlen) {
+return_t server_socket::recvfrom(socket_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen) {
     return errorcode_t::do_nothing;
 }
 
 return_t server_socket::send(socket_context_t* handle, const char* ptr_data, size_t size_data, size_t* cbsent) { return errorcode_t::do_nothing; }
 
-return_t server_socket::sendto(socket_context_t* handle, const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr,
-                               socklen_t addrlen) {
+return_t server_socket::sendto(socket_context_t* handle, const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen) {
     return errorcode_t::do_nothing;
 }
 

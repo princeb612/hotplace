@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   testcase_rfc3394.cpp
+ * @file   testvector_rfc3394.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -36,7 +36,7 @@ void do_test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* entry) {
     binary_fill(iv, 8, 0xa6);
     binary_t out_kw, out_kuw;
 
-    ret = crypt.open(&handle, alg.c_str(), kek, iv);
+    ret = crypt.open(&handle, alg, kek, iv);
     if (errorcode_t::success == ret) {
         crypt.encrypt(handle, key.data(), key.size(), out_kw);
 
@@ -63,7 +63,7 @@ void do_test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* entry) {
     }
     _test_case.assert(out_kw == keydata, __FUNCTION__, msg ? msg : "");
 
-    ret = crypt.open(&handle, alg.c_str(), kek, iv);
+    ret = crypt.open(&handle, alg, kek, iv);
     if (errorcode_t::success == ret) {
         crypt.encrypt(handle, key.data(), key.size(), out_kw);
 
@@ -94,6 +94,20 @@ void do_test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* entry) {
 void test_yaml_testvector_rfc3394() {
     _test_case.begin("RFC 3394 keywrap YAML");
 
+    auto lambda_test_rfc3394 = [&](const YAML::Node& items) -> void {
+        for (const auto& item : items) {
+            test_vector_rfc3394_t entry;
+
+            entry.item = std::move(item["item"].as<std::string>());
+            entry.alg = std::move(item["alg"].as<std::string>());
+            entry.kek = std::move(item["kek"].as<std::string>());
+            entry.key = std::move(item["key"].as<std::string>());
+            entry.keydata = std::move(item["keydata"].as<std::string>());
+
+            do_test_keywrap_rfc3394_testvector(&entry);
+        }
+    };
+
     YAML::Node testvector = YAML::LoadFile("./testvector_rfc3394.yml");
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
@@ -101,17 +115,13 @@ void test_yaml_testvector_rfc3394() {
             auto text_example = example["example"].as<std::string>();
             _logger->writeln("example: %s", text_example.c_str());
 
+            auto schema = example["schema"].as<std::string>();
             auto items = example["items"];
-            for (const auto& item : items) {
-                test_vector_rfc3394_t entry;
 
-                entry.item = std::move(item["item"].as<std::string>());
-                entry.alg = std::move(item["alg"].as<std::string>());
-                entry.kek = std::move(item["kek"].as<std::string>());
-                entry.key = std::move(item["key"].as<std::string>());
-                entry.keydata = std::move(item["keydata"].as<std::string>());
-
-                do_test_keywrap_rfc3394_testvector(&entry);
+            if (schema == "RFC 3394") {
+                lambda_test_rfc3394(items);
+            } else {
+                _test_case.assert(false, __FUNCTION__, "bad message format");
             }
         }
     }

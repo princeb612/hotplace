@@ -62,8 +62,7 @@ return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key
     return ret;
 }
 
-return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key, cose_alg_t* methods, size_t size_method, const binary_t& input,
-                                         binary_t& output) {
+return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key, cose_alg_t* methods, size_t size_method, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
 
     __try2 {

@@ -121,12 +121,10 @@ void testcase_rfc8448_3(tls_session* rfc8448_session) {
         test_keycalc(rfc8448_session, tls_context_empty_hash, empty_hash, "empty_hash", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
         // # ECDH(priv, pub) --> shared_secret
         binary_t shared_secret;
-        test_keycalc(rfc8448_session, tls_context_shared_secret, shared_secret, "shared_secret",
-                     "8bd4054fb55b9d63fdfbacf9f04b9f0d35e6d63f537563efd46272900f89492d");
+        test_keycalc(rfc8448_session, tls_context_shared_secret, shared_secret, "shared_secret", "8bd4054fb55b9d63fdfbacf9f04b9f0d35e6d63f537563efd46272900f89492d");
         // # hash (ClientHello + ServerHello) --> hello_hash
         binary_t hello_hash;
-        test_keycalc(rfc8448_session, tls_context_transcript_hash, hello_hash, "hello_hash",
-                     "860c06edc07858ee8e78f0e7428c58edd6b43f2ca3e6e95f02ed063cf0e1cad8");
+        test_keycalc(rfc8448_session, tls_context_transcript_hash, hello_hash, "hello_hash", "860c06edc07858ee8e78f0e7428c58edd6b43f2ca3e6e95f02ed063cf0e1cad8");
         // compute ...
         // for more details ... see tls_protection::calc
         // hello_hash               860c06ed..
@@ -147,16 +145,14 @@ void testcase_rfc8448_3(tls_session* rfc8448_session) {
 
         // {server}  extract secret "early":
         binary_t early_secret;
-        test_keycalc(rfc8448_session, tls_secret_early_secret, early_secret, "early_secret",
-                     "33ad0a1c607ec03b09e6cd9893680ce210adf300aa1f2660e1b22e10f170f92a");
+        test_keycalc(rfc8448_session, tls_secret_early_secret, early_secret, "early_secret", "33ad0a1c607ec03b09e6cd9893680ce210adf300aa1f2660e1b22e10f170f92a");
         // {server}  derive secret for handshake "tls13 derived":
         binary_t secret_handshake_derived;
         test_keycalc(rfc8448_session, tls_secret_handshake_derived, secret_handshake_derived, "secret_handshake_derived",
                      "6f2615a108c702c5678f54fc9dbab69716c076189c48250cebeac3576c3611ba");
         // {server}  extract secret "handshake":
         binary_t secret_handshake;
-        test_keycalc(rfc8448_session, tls_secret_handshake, secret_handshake, "secret_handshake",
-                     "1dc826e93606aa6fdc0aadc12f741b01046aa6b99f691ed221a9f0ca043fbeac");
+        test_keycalc(rfc8448_session, tls_secret_handshake, secret_handshake, "secret_handshake", "1dc826e93606aa6fdc0aadc12f741b01046aa6b99f691ed221a9f0ca043fbeac");
         // {server}  derive secret "tls13 c hs traffic":
         binary_t secret_handshake_client;
         test_keycalc(rfc8448_session, tls_secret_c_hs_traffic, secret_handshake_client, "secret_handshake_client",
@@ -168,14 +164,12 @@ void testcase_rfc8448_3(tls_session* rfc8448_session) {
 
         binary_t secret_handshake_server_key;
         binary_t secret_handshake_server_iv;
-        test_keycalc(rfc8448_session, tls_secret_handshake_server_key, secret_handshake_server_key, "secret_handshake_server_key",
-                     "3fce516009c21727d0f2e4e86ee403bc");
+        test_keycalc(rfc8448_session, tls_secret_handshake_server_key, secret_handshake_server_key, "secret_handshake_server_key", "3fce516009c21727d0f2e4e86ee403bc");
         test_keycalc(rfc8448_session, tls_secret_handshake_server_iv, secret_handshake_server_iv, "secret_handshake_server_iv", "5d313eb2671276ee13000b30");
 
         binary_t secret_handshake_client_key;
         binary_t secret_handshake_client_iv;
-        test_keycalc(rfc8448_session, tls_secret_handshake_client_key, secret_handshake_client_key, "secret_handshake_client_key",
-                     "dbfaa693d1762c5b666af5d950258d01");
+        test_keycalc(rfc8448_session, tls_secret_handshake_client_key, secret_handshake_client_key, "secret_handshake_client_key", "dbfaa693d1762c5b666af5d950258d01");
         test_keycalc(rfc8448_session, tls_secret_handshake_client_iv, secret_handshake_client_iv, "secret_handshake_client_iv", "5bd3c71b836e0b76bb73265f");
     }
     // #3A1 encrypted_extensions
@@ -323,8 +317,7 @@ void testcase_rfc8448_3(tls_session* rfc8448_session) {
                      "17422dda596ed5d9acd890e3c63f5051");
         // {client}  derive write traffic keys for application data:
         binary_t secret_application_client_iv;
-        test_keycalc(rfc8448_session, tls_secret_application_client_iv, secret_application_client_iv, "secret_application_client_iv",
-                     "5b78923dee08579033e523d9");
+        test_keycalc(rfc8448_session, tls_secret_application_client_iv, secret_application_client_iv, "secret_application_client_iv", "5b78923dee08579033e523d9");
         // {server}  derive secret "tls13 s ap traffic":
         binary_t secret_application_server;
         test_keycalc(rfc8448_session, tls_secret_s_ap_traffic, secret_application_server, "secret_application_server",
@@ -334,8 +327,7 @@ void testcase_rfc8448_3(tls_session* rfc8448_session) {
                      "9f02283b6c9c07efc26bb9f2ac92e356");
         // {server}  derive write traffic keys for application data:
         binary_t secret_application_server_iv;
-        test_keycalc(rfc8448_session, tls_secret_application_server_iv, secret_application_server_iv, "secret_application_server_iv",
-                     "cf782b88dd83549aadf1e984");
+        test_keycalc(rfc8448_session, tls_secret_application_server_iv, secret_application_server_iv, "secret_application_server_iv", "cf782b88dd83549aadf1e984");
         // {server}  derive secret "tls13 exp master":
         binary_t secret_exporter_master;
         test_keycalc(rfc8448_session, tls_secret_exp_master, secret_exporter_master, "secret_exporter_master",
@@ -370,8 +362,7 @@ void testcase_rfc8448_3(tls_session* rfc8448_session) {
         // info (22)     hkdflabel("resumption")
         // expanded (32)
         binary_t secret_resumption;
-        test_keycalc(rfc8448_session, tls_secret_resumption, secret_resumption, "secret_resumption",
-                     "4ecd0eb6ec3b4d87f5d6028f922ca4c5851a277fd41311c9e62d2c9492e1c4f3");
+        test_keycalc(rfc8448_session, tls_secret_resumption, secret_resumption, "secret_resumption", "4ecd0eb6ec3b4d87f5d6028f922ca4c5851a277fd41311c9e62d2c9492e1c4f3");
     }
     // #5
     // {server}  construct a NewSessionTicket handshake message:

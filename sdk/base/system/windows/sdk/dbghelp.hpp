@@ -155,9 +155,8 @@
 /* @brief
     Writes user-mode minidump information to the specified file.
  */
-typedef BOOL(__stdcall *MINIDUMPWRITEDUMP)(HANDLE hProcess, DWORD ProcessId, HANDLE hFile, MINIDUMP_TYPE DumpType,
-                                           PMINIDUMP_EXCEPTION_INFORMATION ExceptionParam, PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam,
-                                           PMINIDUMP_CALLBACK_INFORMATION CallbackParam);
+typedef BOOL(__stdcall *MINIDUMPWRITEDUMP)(HANDLE hProcess, DWORD ProcessId, HANDLE hFile, MINIDUMP_TYPE DumpType, PMINIDUMP_EXCEPTION_INFORMATION ExceptionParam,
+                                           PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam, PMINIDUMP_CALLBACK_INFORMATION CallbackParam);
 
 /* @brief
     Deallocates all resources associated with the process handle.
@@ -235,8 +234,8 @@ typedef DWORD(__stdcall *UNDECORATESYMBOLNAME)(PCTSTR DecoratedName, PTSTR UnDec
  */
 typedef DWORD(__stdcall *SYMLOADMODULE)(HANDLE hProcess, HANDLE hFile, PCSTR ImageName, PCSTR ModuleName, DWORD BaseOfDll, DWORD SizeOfDll);
 
-typedef DWORD64(__stdcall *SYMLOADMODULEEX)(HANDLE hProcess, HANDLE hFile, PCTSTR ImageName, PCTSTR ModuleName, DWORD64 BaseOfDll, DWORD DllSize,
-                                            PMODLOAD_DATA Data, DWORD Flags);
+typedef DWORD64(__stdcall *SYMLOADMODULEEX)(HANDLE hProcess, HANDLE hFile, PCTSTR ImageName, PCTSTR ModuleName, DWORD64 BaseOfDll, DWORD DllSize, PMODLOAD_DATA Data,
+                                            DWORD Flags);
 
 /* @brief
     Loads the symbol table.

@@ -254,8 +254,7 @@ class tls_protection {
      * @param   tls_hs_type_t type [in]
      */
     return_t calc(tls_session* session, tls_hs_type_t type, tls_direction_t dir);
-    return_t calc_keyblock(hash_algorithm_t hmac_alg, const binary_t& master_secret, const binary_t& client_hello_random, const binary_t& server_hello_random,
-                           uint16 cs);
+    return_t calc_keyblock(hash_algorithm_t hmac_alg, const binary_t& master_secret, const binary_t& client_hello_random, const binary_t& server_hello_random, uint16 cs);
     return_t calc_psk(tls_session* session, const binary_t& binder_hash, const binary_t& psk_binder);
     return_t calc_finished(tls_direction_t dir, hash_algorithm_t alg, uint16 dlen, tls_secret_t& secret, binary_t& maced);
 

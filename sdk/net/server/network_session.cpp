@@ -291,8 +291,7 @@ return_t network_session::produce_stream(t_mlfq<network_session>* q, byte_t* buf
             }
 
             while (true) {
-                result = get_server_socket()->read(_session.netsock.event_handle, tls_io_flag_t::read_ssl_read, (char*)buf_read, size_buf_read,
-                                                   &cbread); /*SSL_read */
+                result = get_server_socket()->read(_session.netsock.event_handle, tls_io_flag_t::read_ssl_read, (char*)buf_read, size_buf_read, &cbread); /*SSL_read */
                 if (errorcode_t::success == result || errorcode_t::more_data == result) {
                     getstream()->produce(buf_read, cbread);
 
@@ -476,8 +475,7 @@ return_t network_session::dgram_get_sockaddr(sockaddr_storage_t* addr) {
         socklen_t addrlen = sizeof(sockaddr_storage_t);
         size_t cbread = _session.buf.bin.size();
         int mode = read_socket_recv | peek_msg;
-        ret = get_server_socket()->recvfrom(_session.netsock.event_handle, mode, _session.buf.bin.data(), _session.buf.bin.size(), &cbread, (sockaddr*)addr,
-                                            &addrlen);
+        ret = get_server_socket()->recvfrom(_session.netsock.event_handle, mode, _session.buf.bin.data(), _session.buf.bin.size(), &cbread, (sockaddr*)addr, &addrlen);
     }
     __finally2 {}
     return ret;

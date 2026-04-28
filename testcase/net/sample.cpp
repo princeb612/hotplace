@@ -20,20 +20,19 @@ int main(int argc, char** argv) {
 #endif
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
-    (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.enable_verbose(); }).optional()
+    (*_cmdline)
+        << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.enable_verbose(); }).optional()
 #if defined DEBUG
-                << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.enable_debug(); }).optional()
-                << t_cmdarg_t<OPTION>("-D", "trace level 0|2", [](OPTION& o, char* param) -> void { o.enable_trace(atoi(param)); }).optional().preced()
-                << t_cmdarg_t<OPTION>("--trace", "trace level [trace]", [](OPTION& o, char* param) -> void { o.enable_trace(loglevel_trace); }).optional()
-                << t_cmdarg_t<OPTION>("--debug", "trace level [debug]", [](OPTION& o, char* param) -> void { o.enable_trace(loglevel_debug); }).optional()
+        << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.enable_debug(); }).optional()
+        << t_cmdarg_t<OPTION>("-D", "trace level 0|2", [](OPTION& o, char* param) -> void { o.enable_trace(atoi(param)); }).optional().preced()
+        << t_cmdarg_t<OPTION>("--trace", "trace level [trace]", [](OPTION& o, char* param) -> void { o.enable_trace(loglevel_trace); }).optional()
+        << t_cmdarg_t<OPTION>("--debug", "trace level [debug]", [](OPTION& o, char* param) -> void { o.enable_trace(loglevel_debug); }).optional()
 #endif
-                << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-c", "connect", [](OPTION& o, char* param) -> void { o.connect = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-p", "read stream using http_protocol", [](OPTION& o, char* param) -> void { o.mode = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-u", "url (default https://localhost:9000/) feat. httptest1", [](OPTION& o, char* param) -> void { o.url = param; })
-                       .preced()
-                       .optional();
+        << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-c", "connect", [](OPTION& o, char* param) -> void { o.connect = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-p", "read stream using http_protocol", [](OPTION& o, char* param) -> void { o.mode = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-u", "url (default https://localhost:9000/) feat. httptest1", [](OPTION& o, char* param) -> void { o.url = param; }).preced().optional();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();

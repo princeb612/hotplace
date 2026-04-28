@@ -140,8 +140,8 @@ void print_pair(const container_t& c, stream_type& s, const std::string& mark_pr
  *          _logger->writeln("children : %s", bs.c_str());
  */
 template <typename container_t, typename stream_type>
-void print_pair(const container_t& c, stream_type& s, std::function<void(typename container_t::const_iterator, stream_type&)> f,
-                const std::string& mark_prologue = "[", const std::string& mark_delimiter = ", ", const std::string& mark_epilogue = "]") {
+void print_pair(const container_t& c, stream_type& s, std::function<void(typename container_t::const_iterator, stream_type&)> f, const std::string& mark_prologue = "[",
+                const std::string& mark_delimiter = ", ", const std::string& mark_epilogue = "]") {
     auto lambda = [&](typename container_t::const_iterator iter, int where) -> void {
         switch (where) {
             case seek_t::seek_begin:

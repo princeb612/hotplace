@@ -333,8 +333,7 @@ void test_uint48() {
         }
         _test_case.assert(tls_content_type_handshake == content_type, __FUNCTION__, "content_type 0x%02x (%s)", content_type,
                           tlsadvisor->nameof_tls_record(content_type).c_str());
-        _test_case.assert(dtls_12 == record_version, __FUNCTION__, "record_version 0x%04x (%s)", record_version,
-                          tlsadvisor->nameof_tls_version(record_version).c_str());
+        _test_case.assert(dtls_12 == record_version, __FUNCTION__, "record_version 0x%04x (%s)", record_version, tlsadvisor->nameof_tls_version(record_version).c_str());
         _test_case.assert(0 == dtls_record_epoch, __FUNCTION__, "dtls_record_epoch %u", dtls_record_epoch);
         _test_case.assert(1 == dtls_record_seq, __FUNCTION__, "dtls_record_seq %I64u", dtls_record_seq);
         _test_case.assert(0x61 == len, __FUNCTION__, "len %u", len);

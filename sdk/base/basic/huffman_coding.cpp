@@ -16,17 +16,19 @@ namespace hotplace {
 
 huffman_coding::huffman_coding() {}
 
-huffman_coding::~huffman_coding() {
+huffman_coding::~huffman_coding() { reset(); }
+
+void huffman_coding::reset() {
     _measure.clear();
     _btree.clear();
-    _m.clear();
     _codetable.clear();
 #if SWITCH_HUFFMANCODING_TRIE == 0
     _reverse_codetable.clear();
+#else
+    _trie.reset();
+    _range.reset();
 #endif
 }
-
-void huffman_coding::reset() { _measure.clear(); }
 
 huffman_coding &huffman_coding::operator<<(const char *s) { return load(s); }
 

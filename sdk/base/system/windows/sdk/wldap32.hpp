@@ -203,8 +203,7 @@ typedef ULONG (*LDAP_SEARCHA)(LDAP *ld, ___in const PCHAR base, ULONG scope, ___
     CHAR NAMEOF_API_LDAP_SEARCH_SW[] = {                                         \
         'l', 'd', 'a', 'p', '_', 's', 'e', 'a', 'r', 'c', 'h', '_', 's', 'W', 0, \
     };
-typedef ULONG (*LDAP_SEARCH_SW)(LDAP *ld, ___in const PWCHAR base, ULONG scope, ___in const PWCHAR filter, ___in PWCHAR attrs[], ULONG attrsonly,
-                                LDAPMessage **res);
+typedef ULONG (*LDAP_SEARCH_SW)(LDAP *ld, ___in const PWCHAR base, ULONG scope, ___in const PWCHAR filter, ___in PWCHAR attrs[], ULONG attrsonly, LDAPMessage **res);
 /* ldap_search_sA */
 #define DECLARE_NAMEOF_API_LDAP_SEARCH_SA                                        \
     CHAR NAMEOF_API_LDAP_SEARCH_SA[] = {                                         \
@@ -249,8 +248,7 @@ typedef ULONG (*LDAP_SEARCH_EXTA)(LDAP *ld, ___in const PCHAR base, ULONG scope,
         'l', 'd', 'a', 'p', '_', 's', 'e', 'a', 'r', 'c', 'h', '_', 'e', 'x', 't', '_', 's', 'W', 0, \
     };
 typedef ULONG (*LDAP_SEARCH_EXT_SW)(LDAP *ld, ___in const PWCHAR base, ___in ULONG scope, ___in const PWCHAR filter, ___in PWCHAR attrs[], ULONG attrsonly,
-                                    PLDAPControlW *ServerControls, PLDAPControlW *ClientControls, struct l_timeval *timeout, ULONG SizeLimit,
-                                    LDAPMessage **res);
+                                    PLDAPControlW *ServerControls, PLDAPControlW *ClientControls, struct l_timeval *timeout, ULONG SizeLimit, LDAPMessage **res);
 
 /* ldap_search_ext_sA */
 #define DECLARE_NAMEOF_API_LDAP_SEARCH_EXT_SA                                                        \
@@ -258,8 +256,7 @@ typedef ULONG (*LDAP_SEARCH_EXT_SW)(LDAP *ld, ___in const PWCHAR base, ___in ULO
         'l', 'd', 'a', 'p', '_', 's', 'e', 'a', 'r', 'c', 'h', '_', 'e', 'x', 't', '_', 's', 'A', 0, \
     };
 typedef ULONG (*LDAP_SEARCH_EXT_SA)(LDAP *ld, ___in const PCHAR base, ULONG scope, ___in const PCHAR filter, ___in PCHAR attrs[], ULONG attrsonly,
-                                    PLDAPControlA *ServerControls, PLDAPControlA *ClientControls, struct l_timeval *timeout, ULONG SizeLimit,
-                                    LDAPMessage **res);
+                                    PLDAPControlA *ServerControls, PLDAPControlA *ClientControls, struct l_timeval *timeout, ULONG SizeLimit, LDAPMessage **res);
 
 #define DECLARE_NAMEOF_API_LDAP_FIRST_ENTRY                                                \
     CHAR NAMEOF_API_LDAP_FIRST_ENTRY[] = {                                                 \

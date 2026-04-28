@@ -371,8 +371,8 @@ void quic_packet::dump() {
 #endif
 }
 
-return_t quic_packet::header_protect(tls_direction_t dir, protection_space_t space, const binary_t& bin_ciphertext, uint8 hdr, uint8 pn_length,
-                                     binary_t& bin_pn, binary_t& bin_protected_header) {
+return_t quic_packet::header_protect(tls_direction_t dir, protection_space_t space, const binary_t& bin_ciphertext, uint8 hdr, uint8 pn_length, binary_t& bin_pn,
+                                     binary_t& bin_protected_header) {
     return_t ret = errorcode_t::success;
     __try2 {
 #if defined DEBUG
@@ -417,8 +417,7 @@ return_t quic_packet::header_protect(tls_direction_t dir, protection_space_t spa
     return ret;
 }
 
-return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream, size_t size, protection_space_t space, uint8& hdr, uint32& pn,
-                                       binary_t& bin_payload) {
+return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream, size_t size, protection_space_t space, uint8& hdr, uint32& pn, binary_t& bin_payload) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();

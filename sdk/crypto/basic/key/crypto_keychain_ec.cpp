@@ -227,6 +227,25 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* curve, const
     return ret;
 }
 
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* x, const char* y, const char* d, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    switch (encoding) {
+        case encoding_t::encoding_base64:
+            ret = add_ec_b64(cryptokey, nid, x, y, d, desc);
+            break;
+        case encoding_t::encoding_base64url:
+            ret = add_ec_b64u(cryptokey, nid, x, y, d, desc);
+            break;
+        case encoding_t::encoding_base16:
+            ret = add_ec_b16(cryptokey, nid, x, y, d, desc);
+            break;
+        case encoding_t::encoding_base16rfc:
+            ret = add_ec_b16rfc(cryptokey, nid, x, y, d, desc);
+            break;
+    }
+    return ret;
+}
+
 return_t crypto_keychain::add_ec_b64(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -336,6 +355,25 @@ return_t crypto_keychain::add_ec_b16rfc(crypto_key* cryptokey, uint32 nid, const
         ret = add_ec2(cryptokey, nid, bin_x, bin_y, bin_d, desc);
     }
     __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* curve, encoding_t encoding, const char* x, const char* y, const char* d, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    switch (encoding) {
+        case encoding_t::encoding_base64:
+            ret = add_ec_b64(cryptokey, curve, x, y, d, desc);
+            break;
+        case encoding_t::encoding_base64url:
+            ret = add_ec_b64u(cryptokey, curve, x, y, d, desc);
+            break;
+        case encoding_t::encoding_base16:
+            ret = add_ec_b16(cryptokey, curve, x, y, d, desc);
+            break;
+        case encoding_t::encoding_base16rfc:
+            ret = add_ec_b16rfc(cryptokey, curve, x, y, d, desc);
+            break;
+    }
     return ret;
 }
 

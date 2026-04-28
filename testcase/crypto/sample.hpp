@@ -77,8 +77,10 @@ void testcase_oqs_kem();
 void testcase_random();
 
 void testcase_crypto_sign();
-void testcase_dsa();
 void testcase_ecdsa();
+void testcase_testvector_ecdsa();
+void testcase_testvector_dsa();
+void testcase_testvector_rsassa();
 void testcase_hmac();
 void testcase_mldsa();
 void testcase_rsassa();

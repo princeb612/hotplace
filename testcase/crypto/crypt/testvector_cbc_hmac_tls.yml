@@ -1,5 +1,6 @@
 testvector:
-  - example: CBC-HMAC TLS
+  - example:
+    schema: CBC-HMAC TLS
     items:
       - item: https://tls12.xargs.org/#client-handshake-finished > client finished
         flag: mac_then_encrypt
@@ -14,7 +15,7 @@ testvector:
         flag: encrypt_then_mac
         enckey: 12edab3ca03602d1f8f97c4fbe97a414
         iv: c27bdd86b59b64171cb1f15bce8c6cc8
-        macalg: sha2_256
+        macalg: sha2-256
         mackey: 05eaa1434e103c19701b389ed010afdd5753fc039fbc9a01da45361c642582cb
         aad: 0000000000000000160303
         pt: 1400000c9bf2cb3b4a834cc4dfa8478f
@@ -23,7 +24,7 @@ testvector:
         flag: encrypt_then_mac
         enckey: 5e058192412a704bfe33f7dcb3ab736b
         iv: 71bc51c5e88ed247052cb5a13e15ac4c
-        macalg: sha2_256
+        macalg: sha2-256
         mackey: e4c1f413f96d2b21a34702c47a48628952fa1c9239ce15e902d53a265ebbeb83
         aad: 0000000000000000160303
         pt: 1400000ce9408ea8d4897cf1a4a5bbec
@@ -32,7 +33,7 @@ testvector:
         flag: encrypt_then_mac
         enckey: 12edab3ca03602d1f8f97c4fbe97a414
         iv: c27bdd86b59b64171cb1f15bce8c6cc8
-        macalg: sha2_256
+        macalg: sha2-256
         mackey: 05eaa1434e103c19701b389ed010afdd5753fc039fbc9a01da45361c642582cb
         aad: 0000000000000001170303
         pt: 68656c6c6f0d0a
@@ -41,7 +42,7 @@ testvector:
         flag: encrypt_then_mac
         enckey: 05c85c3cb998c8701a05e26b326e3ebf
         iv: d4127df6bf0b3b352dc473a28a23eba1
-        macalg: sha2_256
+        macalg: sha2-256
         mackey: d99e86a1556c859b35777daa55b18d297d10165c2befed04dc4d9f5c2fec7752
         aad: 0000000000000000160303
         pt: 1400000ccb805a3f49bec1a39d55c414
@@ -50,7 +51,7 @@ testvector:
         flag: encrypt_then_mac
         enckey: 08e314b2703fc111d6177b20e421a793
         iv: 6ebde512a771bd15394af9845ebbfcef
-        macalg: sha2_256
+        macalg: sha2-256
         mackey: 4a800ddfde0001fdca4d3f03f5e60c3a419030fb22d0251b92aeed100aa7e133
         aad: 0000000000000000160303
         pt: 1400000ccb5643c8860e24c25a02c5ed

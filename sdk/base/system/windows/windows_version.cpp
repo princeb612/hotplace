@@ -268,8 +268,7 @@ return_t windows_version::detect_version() {
 
                 GETPROCADDRESSONLY(GETPRODUCTINFO, lpfnGetProductInfo, kernel32_module, NAMEOF_API_GETPRODUCTINFO);
                 if (lpfnGetProductInfo) {
-                    lpfnGetProductInfo(osvi_ptr->dwMajorVersion, osvi_ptr->dwMinorVersion, osvi_ptr->wServicePackMajor, osvi_ptr->wServicePackMinor,
-                                       &product_type);
+                    lpfnGetProductInfo(osvi_ptr->dwMajorVersion, osvi_ptr->dwMinorVersion, osvi_ptr->wServicePackMajor, osvi_ptr->wServicePackMinor, &product_type);
                 }
             }
         }

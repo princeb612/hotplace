@@ -18,7 +18,8 @@ return_t crypto_advisor::for_each_cose(std::function<void(const char*, uint32, v
     return_t ret = errorcode_t::success;
     for (auto i = 0; i < sizeof_hint_cose_algorithms; i++) {
         const hint_cose_algorithm_t* item = hint_cose_algorithms + i;
-        f(item->name, advisor_feature_cose, user);
+        auto spec = query_feature(item->name, advisor_feature_cose);
+        f(item->name, spec, user);
     }
     return ret;
 }
@@ -39,14 +40,12 @@ const hint_cose_algorithm_t* crypto_advisor::hintof_cose_algorithm(uint32 alg) {
     return item;
 }
 
-const hint_cose_algorithm_t* crypto_advisor::hintof_cose_algorithm(const char* alg) {
+const hint_cose_algorithm_t* crypto_advisor::hintof_cose_algorithm(const char* alg) { return alg ? hintof_cose_algorithm(std::string(alg)) : nullptr; }
+
+const hint_cose_algorithm_t* crypto_advisor::hintof_cose_algorithm(const std::string& alg) {
     const hint_cose_algorithm_t* item = nullptr;
-
-    if (alg) {
-        t_maphint<std::string, const hint_cose_algorithm_t*> hint(_cose_algorithm_byname_map);
-        hint.find(alg, &item);
-    }
-
+    t_maphint<std::string, const hint_cose_algorithm_t*> hint(_cose_algorithm_byname_map);
+    hint.find(alg, &item);
     return item;
 }
 

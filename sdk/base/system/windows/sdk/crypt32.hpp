@@ -17,10 +17,11 @@
         'C', 'r', 'y', 'p', 't', 'Q', 'u', 'e', 'r', 'y', 'O', 'b', 'j', 'e', 'c', 't', 0, \
     };
 /* "CertCreateCertificateChainEngine" */
-#define DECLARE_NAMEOF_API_CERTCREATECERTIFICATECHAINENGINE                                  \
-    CHAR NAMEOF_API_CERTCREATECERTIFICATECHAINENGINE[] = {                                   \
-        'C', 'e', 'r', 't', 'C', 'r', 'e', 'a', 't', 'e', 'C', 'e', 'r', 't', 'i', 'f', 'i', \
-        'c', 'a', 't', 'e', 'C', 'h', 'a', 'i', 'n', 'E', 'n', 'g', 'i', 'n', 'e', 0,        \
+#define DECLARE_NAMEOF_API_CERTCREATECERTIFICATECHAINENGINE                                      \
+    CHAR NAMEOF_API_CERTCREATECERTIFICATECHAINENGINE[] =                                         \
+        {                                                                                        \
+            'C', 'e', 'r', 't', 'C', 'r', 'e', 'a', 't', 'e', 'C', 'e', 'r', 't', 'i', 'f', 'i', \
+            'c', 'a', 't', 'e', 'C', 'h', 'a', 'i', 'n', 'E', 'n', 'g', 'i', 'n', 'e', 0,        \
     };
 /* "CryptMsgGetParam" */
 #define DECLARE_NAMEOF_API_CRYPTMSGGETPARAM                                                \
@@ -53,11 +54,9 @@
         'C', 'r', 'y', 'p', 't', 'M', 's', 'g', 'C', 'l', 'o', 's', 'e', 0, \
     };
 /* "CertFreeCertificateChainEngine" */
-#define DECLARE_NAMEOF_API_CERTFREECERTIFICATECHAINENGINE                                   \
-    CHAR NAMEOF_API_CERTFREECERTIFICATECHAINENGINE[] =                                      \
-        {                                                                                   \
-            'C', 'e', 'r', 't', 'F', 'r', 'e', 'e', 'C', 'e', 'r', 't', 'i', 'f', 'i', 'c', \
-            'a', 't', 'e', 'C', 'h', 'a', 'i', 'n', 'E', 'n', 'g', 'i', 'n', 'e', 0,        \
+#define DECLARE_NAMEOF_API_CERTFREECERTIFICATECHAINENGINE                                                                                                        \
+    CHAR NAMEOF_API_CERTFREECERTIFICATECHAINENGINE[] = {                                                                                                         \
+        'C', 'e', 'r', 't', 'F', 'r', 'e', 'e', 'C', 'e', 'r', 't', 'i', 'f', 'i', 'c', 'a', 't', 'e', 'C', 'h', 'a', 'i', 'n', 'E', 'n', 'g', 'i', 'n', 'e', 0, \
     };
 
 /* @brief
@@ -65,9 +64,8 @@
    or a certificate trust list. The object can either reside in a structure in memory or be contained in a file.
  */
 typedef BOOL(WINAPI* CRYPTQUERYOBJECT)(___in DWORD dwObjectType, ___in const void* pvObject, ___in DWORD dwExpectedContentTypeFlags,
-                                       ___in DWORD dwExpectedFormatTypeFlags, ___in DWORD dwFlags, ___out DWORD* pdwMsgAndCertEncodingType,
-                                       ___out DWORD* pdwContentType, ___out DWORD* pdwFormatType, ___out HCERTSTORE* phCertStore, ___out HCRYPTMSG* phMsg,
-                                       ___out const void** ppvContext);
+                                       ___in DWORD dwExpectedFormatTypeFlags, ___in DWORD dwFlags, ___out DWORD* pdwMsgAndCertEncodingType, ___out DWORD* pdwContentType,
+                                       ___out DWORD* pdwFormatType, ___out HCERTSTORE* phCertStore, ___out HCRYPTMSG* phMsg, ___out const void** ppvContext);
 
 /* @brief
     The CertCreateCertificateChainEngine function creates a new, nondefault chain engine for an application.
@@ -88,16 +86,16 @@ typedef BOOL(WINAPI* CRYPTMSGGETPARAM)(___in HCRYPTMSG hCryptMsg, ___in DWORD dw
    dwFindType and its associated pvFindPara. This function can be used in a loop to find all of the certificates in a certificate store that match the specified
    find criteria.
  */
-typedef PCCERT_CONTEXT(WINAPI* CERTFINDCERTIFICATEINSTORE)(___in HCERTSTORE hCertStore, ___in DWORD dwCertEncodingType, ___in DWORD dwFindFlags,
-                                                           ___in DWORD dwFindType, ___in const void* pvFindPara, ___in PCCERT_CONTEXT pPrevCertContext);
+typedef PCCERT_CONTEXT(WINAPI* CERTFINDCERTIFICATEINSTORE)(___in HCERTSTORE hCertStore, ___in DWORD dwCertEncodingType, ___in DWORD dwFindFlags, ___in DWORD dwFindType,
+                                                           ___in const void* pvFindPara, ___in PCCERT_CONTEXT pPrevCertContext);
 
 /* @brief
     The CertGetCertificateChain function builds a certificate chain context starting from an end certificate and going back, if possible, to a trusted root
    certificate.
  */
 typedef BOOL(WINAPI* CERTGETCERTIFICATECHAIN)(__in_opt HCERTCHAINENGINE hChainEngine, ___in PCCERT_CONTEXT pCertContext, __in_opt LPFILETIME pTime,
-                                              ___in HCERTSTORE hAdditionalStore, ___in PCERT_CHAIN_PARA pChainPara, ___in DWORD dwFlags,
-                                              ___in LPVOID pvReserved, ___out PCCERT_CHAIN_CONTEXT* ppChainContext);
+                                              ___in HCERTSTORE hAdditionalStore, ___in PCERT_CHAIN_PARA pChainPara, ___in DWORD dwFlags, ___in LPVOID pvReserved,
+                                              ___out PCCERT_CHAIN_CONTEXT* ppChainContext);
 
 /* @brief
     The CertFreeCertificateContext function frees a certificate context by decrementing its reference count.
@@ -126,7 +124,7 @@ typedef void(WINAPI* CERTFREECERTIFICATECHAINENGINE)(___in HCERTCHAINENGINE hCha
 /* @brief
     The CertFreeCertificateChainEngine function frees a certificate trust engine.
  */
-typedef DWORD(WINAPI* CERTGETNAMESTRING)(___in PCCERT_CONTEXT pCertContext, ___in DWORD dwType, ___in DWORD dwFlags, ___in void* pvTypePara,
-                                         ___out LPTSTR pszNameString, ___in DWORD cchNameString);
+typedef DWORD(WINAPI* CERTGETNAMESTRING)(___in PCCERT_CONTEXT pCertContext, ___in DWORD dwType, ___in DWORD dwFlags, ___in void* pvTypePara, ___out LPTSTR pszNameString,
+                                         ___in DWORD cchNameString);
 
 #endif

@@ -52,8 +52,7 @@ void test_loglevel() {
 
         for (auto lvl : cases) {
             basic_stream bs;
-            bs.printf("> current loglevel [%s] do [%s] expect [%s]", table[glevel].c_str(), table[lvl].c_str(),
-                      (lvl >= _logger->get_loglevel()) ? "true" : "false");
+            bs.printf("> current loglevel [%s] do [%s] expect [%s]", table[glevel].c_str(), table[lvl].c_str(), (lvl >= _logger->get_loglevel()) ? "true" : "false");
             dologlevel(lvl, bs.c_str());
         }
 

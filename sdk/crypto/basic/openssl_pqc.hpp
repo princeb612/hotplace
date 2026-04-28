@@ -81,8 +81,7 @@ class openssl_pqc {
      *          key_encoding_pub_raw
      * @param const char* passphrase [inopt]
      */
-    return_t decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding,
-                    const char* passphrase = nullptr);
+    return_t decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
     return_t decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding,
                     const char* passphrase = nullptr);
     /**

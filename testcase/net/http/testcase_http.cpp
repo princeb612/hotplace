@@ -292,8 +292,7 @@ void test_basic_authentication() {
 
     provider.request_auth(&session, &request, &response);
 
-    std::function<return_t(const std::string &user, const std::string &password)> test_resolver = [&](const std::string &user,
-                                                                                                      const std::string &password) -> return_t {
+    std::function<return_t(const std::string &user, const std::string &password)> test_resolver = [&](const std::string &user, const std::string &password) -> return_t {
         return_t ret = errorcode_t::failed;
 
         // server response

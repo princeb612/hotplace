@@ -151,13 +151,11 @@ class openssl_kdf {
     return_t hkdf_expand_tls13_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const char* label, const binary_t& context);
     return_t hkdf_expand_tls13_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const char* label, const binary_t& context);
     return_t hkdf_expand_tls13_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const binary_t& label, const binary_t& context);
-    return_t hkdf_expand_tls13_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const binary_t& label,
-                                     const binary_t& context);
+    return_t hkdf_expand_tls13_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const binary_t& label, const binary_t& context);
     return_t hkdf_expand_dtls13_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const char* label, const binary_t& context);
     return_t hkdf_expand_dtls13_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const char* label, const binary_t& context);
     return_t hkdf_expand_dtls13_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const binary_t& label, const binary_t& context);
-    return_t hkdf_expand_dtls13_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const binary_t& label,
-                                      const binary_t& context);
+    return_t hkdf_expand_dtls13_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const binary_t& label, const binary_t& context);
     /*
      * @param   binary_t& hkdflabel [out]
      * @param   uint16 length [in]
@@ -169,8 +167,7 @@ class openssl_kdf {
      *          kdf.hkdf_expand_label(handshake_derived_secret, hashalg, dlen, early_secret, str2bin("tls13 "), str2bin("derived"), empty_hash);
      */
     return_t hkdf_label(binary_t& hkdflabel, uint16 length, const binary_t& prefix, const binary_t& label, const binary_t& context);
-    return_t hkdf_expand_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const char* prefix, const char* label,
-                               const binary_t& context);
+    return_t hkdf_expand_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const char* prefix, const char* label, const binary_t& context);
     return_t hkdf_expand_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const char* prefix, const char* label,
                                const binary_t& context);
     return_t hkdf_expand_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const binary_t& prefix, const binary_t& label,
@@ -318,10 +315,8 @@ class openssl_kdf {
     return_t pbkdf2(binary_t& derived, const char* alg, size_t dlen, const std::string& password, const binary_t& salt, int iter);
     return_t pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dlen, const binary_t& password, const binary_t& salt, int iter);
     return_t pbkdf2(binary_t& derived, const char* alg, size_t dlen, const binary_t& password, const binary_t& salt, int iter);
-    return_t pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dlen, const char* password, size_t size_password, const byte_t* salt, size_t size_salt,
-                    int iter);
-    return_t pbkdf2(binary_t& derived, const char* alg, size_t dlen, const char* password, size_t size_password, const byte_t* salt, size_t size_salt,
-                    int iter);
+    return_t pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dlen, const char* password, size_t size_password, const byte_t* salt, size_t size_salt, int iter);
+    return_t pbkdf2(binary_t& derived, const char* alg, size_t dlen, const char* password, size_t size_password, const byte_t* salt, size_t size_salt, int iter);
     /**
      * @brief   scrypt
      * @param   binary_t& derived [out]

@@ -23,8 +23,7 @@ namespace net {
 
 openssl_tls_context::openssl_tls_context(uint32 flag) : _ctx(nullptr) { tlscontext_open_simple(&_ctx, flag); }
 
-openssl_tls_context::openssl_tls_context(uint32 flag, const char* cert_file, const char* key_file, const char* password, const char* chain_file)
-    : _ctx(nullptr) {
+openssl_tls_context::openssl_tls_context(uint32 flag, const char* cert_file, const char* key_file, const char* password, const char* chain_file) : _ctx(nullptr) {
     openssl_tls_context_open(&_ctx, flag, cert_file, key_file, password, chain_file);
 }
 

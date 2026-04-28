@@ -28,7 +28,12 @@ crypto_cbc_hmac& crypto_cbc_hmac::set_enc(const char* enc_alg) {
     return *this;
 }
 
-crypto_cbc_hmac& crypto_cbc_hmac::set_enc(const std::string& enc_alg) { return set_enc(enc_alg.c_str()); }
+crypto_cbc_hmac& crypto_cbc_hmac::set_enc(const std::string& enc_alg) {
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    auto hint_cipher = advisor->hintof_cipher(enc_alg);
+    _enc_alg = typeof_alg(hint_cipher);
+    return *this;
+}
 
 crypto_cbc_hmac& crypto_cbc_hmac::set_enc(crypt_algorithm_t enc_alg) {
     _enc_alg = enc_alg;
@@ -42,7 +47,12 @@ crypto_cbc_hmac& crypto_cbc_hmac::set_mac(const char* mac_alg) {
     return *this;
 }
 
-crypto_cbc_hmac& crypto_cbc_hmac::set_mac(const std::string& mac_alg) { return set_mac(mac_alg.c_str()); }
+crypto_cbc_hmac& crypto_cbc_hmac::set_mac(const std::string& mac_alg) {
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    const hint_digest_t* hint_digest = advisor->hintof_digest(mac_alg);
+    _mac_alg = typeof_alg(hint_digest);
+    return *this;
+}
 
 crypto_cbc_hmac& crypto_cbc_hmac::set_mac(hash_algorithm_t mac_alg) {
     _mac_alg = mac_alg;
@@ -119,8 +129,8 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
     return ret;
 }
 
-return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const byte_t* plaintext,
-                                  size_t plainsize, binary_t& ciphertext) {
+return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const byte_t* plaintext, size_t plainsize,
+                                  binary_t& ciphertext) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_crypt crypt;
@@ -244,8 +254,8 @@ return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey
     return ret;
 }
 
-return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const byte_t* ciphertext,
-                                  size_t ciphersize, binary_t& plaintext) {
+return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const byte_t* ciphertext, size_t ciphersize,
+                                  binary_t& plaintext) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_crypt crypt;
@@ -362,8 +372,8 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
     return ret;
 }
 
-return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const byte_t* plaintext,
-                                  size_t plainsize, binary_t& ciphertext, binary_t& tag) {
+return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const byte_t* plaintext, size_t plainsize,
+                                  binary_t& ciphertext, binary_t& tag) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_crypt crypt;
@@ -443,8 +453,8 @@ return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey
     return ret;
 }
 
-return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const byte_t* ciphertext,
-                                  size_t ciphersize, binary_t& plaintext, const binary_t& tag) {
+return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const byte_t* ciphertext, size_t ciphersize,
+                                  binary_t& plaintext, const binary_t& tag) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_crypt crypt;

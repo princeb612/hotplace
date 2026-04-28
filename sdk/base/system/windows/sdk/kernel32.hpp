@@ -343,10 +343,10 @@ typedef VOID(__stdcall *OUTPUTDEBUGSTRINGW)(__in_opt LPCWSTR lpOutputString);
     The function finds the message definition in a message table resource based on a message identifier and a language identifier.
     The function copies the formatted message text to an output buffer, processing any embedded insert sequences if requested.
  */
-typedef DWORD(__stdcall *FORMATMESSAGEA)(___in DWORD dwFlags, __in_opt LPCVOID lpSource, ___in DWORD dwMessageId, ___in DWORD dwLanguageId,
-                                         ___out LPSTR lpBuffer, ___in DWORD nSize, __in_opt va_list *Arguments);
-typedef DWORD(__stdcall *FORMATMESSAGEW)(___in DWORD dwFlags, __in_opt LPCVOID lpSource, ___in DWORD dwMessageId, ___in DWORD dwLanguageId,
-                                         ___out LPWSTR lpBuffer, ___in DWORD nSize, __in_opt va_list *Arguments);
+typedef DWORD(__stdcall *FORMATMESSAGEA)(___in DWORD dwFlags, __in_opt LPCVOID lpSource, ___in DWORD dwMessageId, ___in DWORD dwLanguageId, ___out LPSTR lpBuffer,
+                                         ___in DWORD nSize, __in_opt va_list *Arguments);
+typedef DWORD(__stdcall *FORMATMESSAGEW)(___in DWORD dwFlags, __in_opt LPCVOID lpSource, ___in DWORD dwMessageId, ___in DWORD dwLanguageId, ___out LPWSTR lpBuffer,
+                                         ___in DWORD nSize, __in_opt va_list *Arguments);
 
 /* "GetNativeSystemInfo" */
 #define DECLARE_NAMEOF_API_GETNATIVESYSTEMINFO                                                            \
@@ -605,11 +605,9 @@ typedef BOOL(__stdcall *ISWOW64PROCESS)(HANDLE, PBOOL);
         'W', 'o', 'w', '6', '4', 'E', 'n', 'a', 'b', 'l', 'e', 'W', 'o', 'w', '6', '4', 'F', 's', 'R', 'e', 'd', 'i', 'r', 'e', 'c', 't', 'i', 'o', 'n', 0, \
     };
 /* "Wow64DisableWow64FsRedirection" */
-#define DECLARE_NAMEOF_API_WOW64DISABLEWOW64FSREDIRECTION                                   \
-    CHAR NAMEOF_API_WOW64DISABLEWOW64FSREDIRECTION[] =                                      \
-        {                                                                                   \
-            'W', 'o', 'w', '6', '4', 'D', 'i', 's', 'a', 'b', 'l', 'e', 'W', 'o', 'w', '6', \
-            '4', 'F', 's', 'R', 'e', 'd', 'i', 'r', 'e', 'c', 't', 'i', 'o', 'n', 0,        \
+#define DECLARE_NAMEOF_API_WOW64DISABLEWOW64FSREDIRECTION                                                                                                        \
+    CHAR NAMEOF_API_WOW64DISABLEWOW64FSREDIRECTION[] = {                                                                                                         \
+        'W', 'o', 'w', '6', '4', 'D', 'i', 's', 'a', 'b', 'l', 'e', 'W', 'o', 'w', '6', '4', 'F', 's', 'R', 'e', 'd', 'i', 'r', 'e', 'c', 't', 'i', 'o', 'n', 0, \
     };
 /* "Wow64RevertWow64FsRedirection" */
 #define DECLARE_NAMEOF_API_WOW64REVERTWOW64FSREDIRECTION                                                                                                    \

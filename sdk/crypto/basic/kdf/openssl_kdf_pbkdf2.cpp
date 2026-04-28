@@ -39,8 +39,8 @@ return_t openssl_kdf::pbkdf2(binary_t& derived, const char* alg, size_t dlen, co
     return pbkdf2(derived, alg, dlen, (char*)password.data(), password.size(), salt.data(), salt.size(), iter);
 }
 
-return_t openssl_kdf::pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dlen, const char* password, size_t size_password, const byte_t* salt,
-                             size_t size_salt, int iter) {
+return_t openssl_kdf::pbkdf2(binary_t& derived, hash_algorithm_t alg, size_t dlen, const char* password, size_t size_password, const byte_t* salt, size_t size_salt,
+                             int iter) {
     return_t ret = errorcode_t::success;
     const EVP_MD* md = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();

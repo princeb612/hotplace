@@ -172,12 +172,9 @@ class qpack_encoder : public http_header_compression {
      */
     qpack_encoder& encode_name_value(http_dynamic_table* dyntable, binary_t& target, uint32 flags, const std::string& name, const std::string& value);
 
-    return_t decode_encoder_stream(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item,
-                                   uint32 flags = 0);
-    return_t decode_decoder_stream(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item,
-                                   uint32 flags = 0);
-    return_t decode_http3_header(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item,
-                                 uint32 flags = 0);
+    return_t decode_encoder_stream(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item, uint32 flags = 0);
+    return_t decode_decoder_stream(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item, uint32 flags = 0);
+    return_t decode_http3_header(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item, uint32 flags = 0);
 };
 
 /**

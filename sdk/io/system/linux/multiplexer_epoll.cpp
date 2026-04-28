@@ -81,8 +81,7 @@ return_t multiplexer_epoll::open(multiplexer_context_t** handle, size_t concurre
 
 #if defined DEBUG
         if (istraceable(trace_category_internal)) {
-            trace_debug_event(trace_category_internal, trace_event_multiplexer,
-                              [&](basic_stream& dbs) -> void { dbs.println("epoll handle %i created", epollfd); });
+            trace_debug_event(trace_category_internal, trace_event_multiplexer, [&](basic_stream& dbs) -> void { dbs.println("epoll handle %i created", epollfd); });
         }
 #endif
     }

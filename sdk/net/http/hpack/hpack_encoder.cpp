@@ -165,8 +165,7 @@ hpack_encoder& hpack_encoder::encode_header(http_dynamic_table* dyntable, binary
     return *this;
 }
 
-hpack_encoder& hpack_encoder::decode_header(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name,
-                                            std::string& value) {
+hpack_encoder& hpack_encoder::decode_header(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value) {
     decode(dyntable, source, size, pos, name, value);
     return *this;
 }

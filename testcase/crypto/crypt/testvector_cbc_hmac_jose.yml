@@ -1,5 +1,6 @@
 testvector:
-  - example: CBC-HMAC JOSE
+  - example: https://www.ietf.org/archive/id/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.txt
+    schema: CBC-HMAC JOSE
     items:
       - item: 5.1.  AEAD_AES_128_CBC_HMAC_SHA256
         encalg: aes-128-cbc

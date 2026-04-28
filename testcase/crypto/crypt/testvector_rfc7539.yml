@@ -1,5 +1,6 @@
 testvector:
   - example: RFC 7539
+    schema: RFC 7539
     items:
       - item: RFC 7539/8439 2.4  The ChaCha20 Encryption Algorithm
         alg: chacha20

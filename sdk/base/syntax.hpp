@@ -88,8 +88,7 @@
 #define __catchnew(expr) if (expr)
 #endif
 
-#define __try_new_catch(ptr, statement, return_variable, leave_statement) \
-    __try_new_catch2(ptr, statement, return_variable, errorcode_t::out_of_memory, leave_statement)
+#define __try_new_catch(ptr, statement, return_variable, leave_statement) __try_new_catch2(ptr, statement, return_variable, errorcode_t::out_of_memory, leave_statement)
 #define __try_new_catch2(ptr, statement, return_variable, errorcode, leave_statement) \
     __trynew { ptr = statement; }                                                     \
     __catchnew(nullptr == ptr) {                                                      \

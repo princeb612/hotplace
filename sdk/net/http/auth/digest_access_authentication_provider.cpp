@@ -40,8 +40,7 @@ digest_access_authentication_provider::digest_access_authentication_provider(con
 
 digest_access_authentication_provider::~digest_access_authentication_provider() {}
 
-bool digest_access_authentication_provider::try_auth(http_authentication_resolver* resolver, network_session* session, http_request* request,
-                                                     http_response* response) {
+bool digest_access_authentication_provider::try_auth(http_authentication_resolver* resolver, network_session* session, http_request* request, http_response* response) {
     bool ret_value = false;
     __try2 {
         if (nullptr == resolver || nullptr == session || nullptr == request) {
@@ -101,8 +100,7 @@ return_t digest_access_authentication_provider::request_auth(network_session* se
     return ret;
 }
 
-return_t digest_access_authentication_provider::prepare_digest_access(network_session* session, http_request* request, http_response* response,
-                                                                      skey_value& kv) {
+return_t digest_access_authentication_provider::prepare_digest_access(network_session* session, http_request* request, http_response* response, skey_value& kv) {
     return_t ret = errorcode_t::mismatch;
     __try2 {
         if (nullptr == session || nullptr == request || nullptr == response) {

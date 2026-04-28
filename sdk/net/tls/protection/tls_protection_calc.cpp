@@ -350,8 +350,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                         } break;
                         case tls_flow_0rtt: {
                             const binary_t &secret_resumption_early = get_secrets().get(tls_secret_resumption_early);
-                            lambda_expand_label(tls_secret_handshake_derived, secret_handshake_derived, hashalg, dlen, secret_resumption_early, "derived",
-                                                empty_hash);
+                            lambda_expand_label(tls_secret_handshake_derived, secret_handshake_derived, hashalg, dlen, secret_resumption_early, "derived", empty_hash);
                         } break;
                         case tls_flow_renegotiation: {
                             // TODO

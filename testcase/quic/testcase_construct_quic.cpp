@@ -397,14 +397,13 @@ void construct_http3_svr_resp(tls_session* session, tls_direction_t dir, uint32 
 
     publisher.set_session(session)
         .set_flags(flags)
-        .add_stream(
-            quic_stream_client_bidi, h3_control_stream, h3_frame_data,
-            [&](http3_frame* frame) -> return_t {
-                return_t ret = errorcode_t::success;
-                http3_frame_data* headers = (http3_frame_data*)frame;
-                headers->set_contents(R"(<!DOCTYPE html><html><head><title>test</title><meta charset="UTF-8"></head><body><p>Hello world</p></body></html>)");
-                return ret;
-            })
+        .add_stream(quic_stream_client_bidi, h3_control_stream, h3_frame_data,
+                    [&](http3_frame* frame) -> return_t {
+                        return_t ret = errorcode_t::success;
+                        http3_frame_data* headers = (http3_frame_data*)frame;
+                        headers->set_contents(R"(<!DOCTYPE html><html><head><title>test</title><meta charset="UTF-8"></head><body><p>Hello world</p></body></html>)");
+                        return ret;
+                    })
         .publish(dir,  //
                  [&](tls_session* session, binary_t& packet) -> void {
                      bins.push_back(packet);
@@ -512,8 +511,7 @@ void testcase_construct_quic() {
             ack_t ack;
             ack << pkns;
             ack_t expect(largest, range);
-            _test_case.assert(ack == expect, __FUNCTION__, "confirm ack %s %i..%i", tlsadvisor->nameof_protection_space(space).c_str(), largest,
-                              largest - range);
+            _test_case.assert(ack == expect, __FUNCTION__, "confirm ack %s %i..%i", tlsadvisor->nameof_protection_space(space).c_str(), largest, largest - range);
         };
 
         // initial (PADDING)

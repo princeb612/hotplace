@@ -53,6 +53,8 @@ class cipher_encrypt_builder {
     cipher_encrypt* build();
 
     cipher_encrypt_builder& set(crypt_algorithm_t alg, crypt_mode_t mode);
+    cipher_encrypt_builder& set(const char* alg);
+    cipher_encrypt_builder& set(const std::string& alg);
 
    protected:
     crypt_algorithm_t _alg;

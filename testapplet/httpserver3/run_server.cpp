@@ -118,14 +118,14 @@ return_t simple_http2_server(void*) {
         _http_server->get_http_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 14);
         _http_server->get_http2_protocol().set_constraints(protocol_constraints_t::protocol_packet_size, 1 << 16);  // default window size 64k
 
-        std::function<void(network_session*, http_request*, http_response*, http_router*)> default_handler =
-            [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
+        std::function<void(network_session*, http_request*, http_response*, http_router*)> default_handler = [&](network_session* session, http_request* request,
+                                                                                                                 http_response* response, http_router* router) -> void {
             basic_stream bs;
             bs << request->get_http_uri().get_uri();
             response->compose(200, "text/html", "<html><body><pre>%s</pre></body></html>", bs.c_str());
         };
-        std::function<void(network_session*, http_request*, http_response*, http_router*)> error_handler =
-            [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
+        std::function<void(network_session*, http_request*, http_response*, http_router*)> error_handler = [&](network_session* session, http_request* request,
+                                                                                                               http_response* response, http_router* router) -> void {
             basic_stream bs;
             bs << request->get_http_uri().get_uri();
             response->compose(200, "text/html", "<html><body>404 Not Found<pre>%s</pre></body></html>", bs.c_str());
@@ -144,10 +144,7 @@ return_t simple_http2_server(void*) {
             .set_default_document("index.html");
 
         // router
-        _http_server->get_http_router()
-            .add("/api/html", api_response_html_handler)
-            .add("/api/json", api_response_json_handler)
-            .add("/api/test", default_handler);
+        _http_server->get_http_router().add("/api/html", api_response_html_handler).add("/api/json", api_response_json_handler).add("/api/test", default_handler);
 
         // _http_server->get_http_router().get_http2_serverpush().add("/index.html", "/style.css").add("/index.html", "/blah.js");
 

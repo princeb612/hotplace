@@ -186,8 +186,8 @@ uint32 hmac_otp::get(otp_context_t* handle, binary_t counter, uint32& code) {
         /* Sbits = DT(HS) - Dynamic Truncate */
         int offset = output_allocated[output_size - 1] & 0x0f;
         /* Snum = StToNum(Sbits) */
-        uint32 value = ((output_allocated[offset] & 0x7f) << 24) | ((output_allocated[offset + 1] & 0xff) << 16) |
-                       ((output_allocated[offset + 2] & 0xff) << 8) | ((output_allocated[offset + 3] & 0xff));
+        uint32 value = ((output_allocated[offset] & 0x7f) << 24) | ((output_allocated[offset + 1] & 0xff) << 16) | ((output_allocated[offset + 2] & 0xff) << 8) |
+                       ((output_allocated[offset + 3] & 0xff));
         /* D = Snum mo 10^Digit */
         value %= digit[context->_digit_length];
         code = value;

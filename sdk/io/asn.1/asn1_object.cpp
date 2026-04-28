@@ -22,9 +22,7 @@
 namespace hotplace {
 namespace io {
 
-asn1_object::asn1_object(asn1_type_t type, asn1_tag* tag) : _type(type), _tag(tag), _component_type(0), _parent(nullptr), _object(nullptr) {
-    _ref.make_share(this);
-}
+asn1_object::asn1_object(asn1_type_t type, asn1_tag* tag) : _type(type), _tag(tag), _component_type(0), _parent(nullptr), _object(nullptr) { _ref.make_share(this); }
 
 asn1_object::asn1_object(const std::string& name, asn1_type_t type, asn1_tag* tag)
     : _name(name), _type(type), _tag(tag), _component_type(0), _parent(nullptr), _object(nullptr) {

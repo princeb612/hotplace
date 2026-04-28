@@ -42,8 +42,7 @@ oauth2_authorization_code_grant_provider::oauth2_authorization_code_grant_provid
 
 oauth2_authorization_code_grant_provider::~oauth2_authorization_code_grant_provider() {}
 
-void oauth2_authorization_code_grant_provider::authorization_handler(network_session* session, http_request* request, http_response* response,
-                                                                     http_router* router) {
+void oauth2_authorization_code_grant_provider::authorization_handler(network_session* session, http_request* request, http_response* response, http_router* router) {
     // 4.1. Authorization Code Grant
     // 4.1.1.  Authorization Request
     // 4.1.2.  Authorization Response
@@ -414,10 +413,9 @@ oauth2_provider& oauth2_provider::apply(http_router& router) {
              [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
                  signpage_handler(session, request, response, router);
              })
-        .add(get(oauth2_provider_key_t::oauth2_signin),
-             [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
-                 signin_handler(session, request, response, router);
-             });
+        .add(get(oauth2_provider_key_t::oauth2_signin), [&](network_session* session, http_request* request, http_response* response, http_router* router) -> void {
+            signin_handler(session, request, response, router);
+        });
     return *this;
 }
 

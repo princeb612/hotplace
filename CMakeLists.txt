@@ -144,7 +144,11 @@ endif ()
 # dependencies
 if (SUPPORT_DEBUG)
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+      if (UNIX) # linux
+        set (PROJECT_THIRDPARTY_DEPENDENCIES crypto ssl jansson z yaml-cppd)
+      elseif (WIN32) # MINGW
         set (PROJECT_THIRDPARTY_DEPENDENCIES crypto ssl jansson_d zd yaml-cppd)
+      endif ()
     elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
         set (PROJECT_THIRDPARTY_DEPENDENCIES libcrypto libssl jansson_d zd yaml-cppd)
     endif ()

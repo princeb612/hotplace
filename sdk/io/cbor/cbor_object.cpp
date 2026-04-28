@@ -19,9 +19,7 @@ namespace io {
 
 cbor_object::cbor_object() : _type(cbor_type_t::cbor_type_null), _flags(0), _tag(cbor_tag_t::cbor_tag_unknown), _reserved_size(0) { _shared.make_share(this); }
 
-cbor_object::cbor_object(cbor_type_t type, uint32 flags) : _type(type), _flags(flags), _tag(cbor_tag_t::cbor_tag_unknown), _reserved_size(0) {
-    _shared.make_share(this);
-}
+cbor_object::cbor_object(cbor_type_t type, uint32 flags) : _type(type), _flags(flags), _tag(cbor_tag_t::cbor_tag_unknown), _reserved_size(0) { _shared.make_share(this); }
 
 cbor_object::cbor_object(const cbor_object& other) : _type(other._type), _flags(other._flags), _tag(other._tag), _reserved_size(other._reserved_size) {
     _shared.make_share(this);

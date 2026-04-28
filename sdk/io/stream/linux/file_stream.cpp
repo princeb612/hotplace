@@ -217,7 +217,10 @@ uint64 file_stream::size() const {
 void file_stream::truncate(int64 file_pos, int64* ptr_file_pos) {
     if (true == is_open()) {
         //::lseek(_file_handle, file_pos, SEEK_SET);
-        ::ftruncate(_file_handle, file_pos);
+        int rc = ::ftruncate(_file_handle, file_pos);
+        if (rc < 0) {
+            // do something
+        }
         _filesize_low = file_pos;
     }
 }

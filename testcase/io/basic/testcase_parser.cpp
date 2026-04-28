@@ -64,8 +64,8 @@ void test_parser_sample() {
 
         // dump
         auto dump_handler = [&](const token_description* desc) -> void {
-            _logger->writeln("line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", desc->line, desc->type, p.typeof_token(desc->type).c_str(), desc->index,
-                             desc->pos, desc->size, (unsigned)desc->size, desc->p);
+            _logger->writeln("line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", desc->line, desc->type, p.typeof_token(desc->type).c_str(), desc->index, desc->pos,
+                             desc->size, (unsigned)desc->size, desc->p);
         };
 
         context1.for_each(dump_handler);
@@ -90,8 +90,8 @@ void test_parser_options() {
     uint16 handle_comments = 0;
 
     auto dump_handler = [&](const token_description* desc) -> void {
-        _logger->writeln("line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", desc->line, desc->type, p.typeof_token(desc->type).c_str(), desc->index,
-                         desc->pos, desc->size, (unsigned)desc->size, desc->p);
+        _logger->writeln("line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", desc->line, desc->type, p.typeof_token(desc->type).c_str(), desc->index, desc->pos,
+                         desc->size, (unsigned)desc->size, desc->p);
     };
 
     // turn off switches and parse
@@ -472,8 +472,8 @@ void test_patterns() {
         }
 
         auto dump_handler = [&](const token_description* desc) -> void {
-            _logger->writeln("line %zi type %d(%s) tag %i index %d pos %zi len %zi (%.*s)", desc->line, desc->type, p.typeof_token(desc->type).c_str(),
-                             desc->tag, desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
+            _logger->writeln("line %zi type %d(%s) tag %i index %d pos %zi len %zi (%.*s)", desc->line, desc->type, p.typeof_token(desc->type).c_str(), desc->tag,
+                             desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
         };
         context.for_each(dump_handler);
     }

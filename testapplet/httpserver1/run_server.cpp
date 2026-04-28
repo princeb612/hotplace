@@ -83,9 +83,8 @@ return_t consumer_routine(uint32 type, uint32 data_count, void *data_array[], CA
                             // RFC 2817 4.2 Mandatory Advertisement
                             response.get_http_header().add("Upgrade", "TLS/1.3, HTTP/1.1").add("Connection", "Upgrade");
                             int status_code = 426;  // Upgrade Required
-                            response.compose(status_code, "text/html", "<html><body><a href='https://localhost:%d%s'>%d %s</a><br></body></html>",
-                                             option.port_tls, request->get_http_uri().get_uri(), status_code,
-                                             http_resource::get_instance()->load(status_code).c_str());
+                            response.compose(status_code, "text/html", "<html><body><a href='https://localhost:%d%s'>%d %s</a><br></body></html>", option.port_tls,
+                                             request->get_http_uri().get_uri(), status_code, http_resource::get_instance()->load(status_code).c_str());
                         }
                     } else {
                         /* 301 Move Permanently */
@@ -223,14 +222,14 @@ return_t simple_http_server(void *) {
             bs << request->get_http_uri().get_uri();
             response->compose(200, "text/html", "<html><body><pre>%s</pre></body></html>", bs.c_str());
         };
-        std::function<void(network_session *, http_request *, http_response *, http_router *)> error_handler =
-            [&](network_session *session, http_request *request, http_response *response, http_router *router) -> void {
+        std::function<void(network_session *, http_request *, http_response *, http_router *)> error_handler = [&](network_session *session, http_request *request,
+                                                                                                                   http_response *response, http_router *router) -> void {
             basic_stream bs;
             bs << request->get_http_uri().get_uri();
             response->compose(200, "text/html", "<html><body>404 Not Found<pre>%s</pre></body></html>", bs.c_str());
         };
-        std::function<void(network_session *, http_request *, http_response *, http_router *)> cb_handler =
-            [&](network_session *session, http_request *request, http_response *response, http_router *router) -> void {
+        std::function<void(network_session *, http_request *, http_response *, http_router *)> cb_handler = [&](network_session *session, http_request *request,
+                                                                                                                http_response *response, http_router *router) -> void {
             skey_value &kv = request->get_http_uri().get_query_keyvalue();
             std::string code = kv.get("code");
             std::string access_token = kv.get("access_token");

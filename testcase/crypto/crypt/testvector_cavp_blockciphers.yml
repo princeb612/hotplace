@@ -1,5 +1,6 @@
 testvector:
   - example: CAVP block-ciphers
+    schema: BLOCK CIPHERS
     items:
       - item: CBCGFSbox128.rsp, count = 0
         alg: aes-128-cbc

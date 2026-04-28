@@ -217,14 +217,12 @@ typedef enum _UDP_TABLE_CLASS { UDP_TABLE_BASIC, UDP_TABLE_OWNER_PID, UDP_TABLE_
 /* @brief
     The GetExtendedTcpTable function retrieves a table that contains a list of TCP endpoints available to the application.
  */
-typedef DWORD(WINAPI *GETEXTENDEDTCPTABLE)(OUT PVOID pTcpTable, IN OUT PDWORD pdwSize, IN BOOL bOrder, IN ULONG ulAf, IN TCP_TABLE_CLASS TableClass,
-                                           IN ULONG Reserved);
+typedef DWORD(WINAPI *GETEXTENDEDTCPTABLE)(OUT PVOID pTcpTable, IN OUT PDWORD pdwSize, IN BOOL bOrder, IN ULONG ulAf, IN TCP_TABLE_CLASS TableClass, IN ULONG Reserved);
 
 /* @brief
     The GetExtendedUdpTable function retrieves a table that contains a list of UDP endpoints available to the application.
  */
-typedef DWORD(WINAPI *GETEXTENDEDUDPTABLE)(OUT PVOID pUdpTable, IN OUT PDWORD pdwSize, IN BOOL bOrder, IN ULONG ulAf, IN UDP_TABLE_CLASS TableClass,
-                                           IN ULONG Reserved);
+typedef DWORD(WINAPI *GETEXTENDEDUDPTABLE)(OUT PVOID pUdpTable, IN OUT PDWORD pdwSize, IN BOOL bOrder, IN ULONG ulAf, IN UDP_TABLE_CLASS TableClass, IN ULONG Reserved);
 
 /* @brief
     The NotifyAddrChange function causes a notification to be sent to the caller whenever a change occurs in the table that maps IPv4 addresses to interfaces.

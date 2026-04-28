@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   testcase_rfc7049.cpp
+ * @file   testvector_cbor.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -47,21 +47,32 @@ void do_parse_cbor_routine(const char* text, const char* input, const char* diag
 
 void test_yaml_testvector_cbor() {
     _test_case.begin("test3.CBOR YAML");
+
+    auto lambda_test_cbor_testvector = [&](const YAML::Node& items) -> void {
+        for (const auto& item : items) {
+            std::string text_item = item["item"].as<std::string>();
+            std::string text_cbor = item["cbor"].as<std::string>();
+            std::string text_diag = item["diag"].as<std::string>();
+            auto loss = item["loss"];
+            if (loss) {
+            } else {
+                do_parse_cbor_routine(text_item.c_str(), text_cbor.c_str(), rtrim(text_diag).c_str());
+            }
+        }
+    };
+
     YAML::Node testvector = YAML::LoadFile("./testvector_cbor.yml");
     auto examples = testvector["testvector"];
     auto lambda_test = [&](const YAML::Node& examples) -> void {
         if (examples && examples.IsSequence()) {
             for (const auto& example : examples) {
+                auto schema = example["schema"].as<std::string>();
                 auto items = example["items"];
-                for (const auto& item : items) {
-                    std::string text_item = item["item"].as<std::string>();
-                    std::string text_cbor = item["cbor"].as<std::string>();
-                    std::string text_diag = item["diag"].as<std::string>();
-                    auto loss = item["loss"];
-                    if (loss) {
-                    } else {
-                        do_parse_cbor_routine(text_item.c_str(), text_cbor.c_str(), rtrim(text_diag).c_str());
-                    }
+
+                if (schema == "RFC 7049") {
+                    lambda_test_cbor_testvector(items);
+                } else {
+                    _test_case.assert(false, __FUNCTION__, "bad message format");
                 }
             }
         }

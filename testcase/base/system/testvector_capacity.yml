@@ -1,5 +1,6 @@
 testvector:
   - example: unsigned_byte_capacity
+    schema: UNSIGNED BYTE CAPACITY
     items:
       - value: 0x1
         expect: 1
@@ -122,6 +123,7 @@ testvector:
       - value: 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff # uint512.max
         expect: 64
   - example: signed_byte_capacity
+    schema: SIGNED BYTE CAPACITY
     items:
       - value: 127
         expect: 1

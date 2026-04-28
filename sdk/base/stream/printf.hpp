@@ -107,6 +107,8 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
 /**
  * @brief   safe format printer
  * @remakrs
+ *          sprintf support {1} {2} ... using valist (codename.grape)
+ *
  *          format specifier replacement (do not supports %c %s %d, but {1} {2} {3} ... available)
  *          standard vprintf(fmt, ap) supports ordered format specifier {1} {2} {3} ...
  * @example

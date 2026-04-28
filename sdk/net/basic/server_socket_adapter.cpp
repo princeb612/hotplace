@@ -25,8 +25,7 @@ uint32 server_socket_adapter::get_adapter_scheme(uint32 scheme, return_t& retcod
     return scheme;
 }
 
-return_t server_socket_adapter::startup(uint32 scheme, const std::string& server_cert, const std::string& server_key, const std::string& cipher_suites,
-                                        int verify_peer) {
+return_t server_socket_adapter::startup(uint32 scheme, const std::string& server_cert, const std::string& server_key, const std::string& cipher_suites, int verify_peer) {
     return_t ret = errorcode_t::success;
     __try2 {
         uint32 flags = 0;

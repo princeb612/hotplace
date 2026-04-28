@@ -142,13 +142,9 @@ parser::search_result parser::wsearch(const parser::context& context, const char
     return context.wsearch(this, pattern, size_pattern, pos);
 }
 
-parser::search_result parser::wsearch(const parser::context& context, const std::string& pattern, unsigned int pos) {
-    return context.wsearch(this, pattern, pos);
-}
+parser::search_result parser::wsearch(const parser::context& context, const std::string& pattern, unsigned int pos) { return context.wsearch(this, pattern, pos); }
 
-parser::search_result parser::wsearch(const parser::context& context, const basic_stream& pattern, unsigned int pos) {
-    return context.wsearch(this, pattern, pos);
-}
+parser::search_result parser::wsearch(const parser::context& context, const basic_stream& pattern, unsigned int pos) { return context.wsearch(this, pattern, pos); }
 
 bool parser::compare(parser* obj, const char* lhs, const char* rhs) {
     bool ret = false;

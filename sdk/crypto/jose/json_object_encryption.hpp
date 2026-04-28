@@ -222,8 +222,8 @@ class json_object_encryption {
          * @param crypt_variantmap_t& variantmap [in]
          * @param uint32 flags [inopt] see setoption
          */
-        return_t docompose_encryption_header_parameter(binary_t& header, jwe_t enc, jwa_t alg, jose_compose_t flag, const std::string& kid,
-                                                       crypt_datamap_t& datamap, crypt_variantmap_t& variantmap, uint32 flags = 0);
+        return_t docompose_encryption_header_parameter(binary_t& header, jwe_t enc, jwa_t alg, jose_compose_t flag, const std::string& kid, crypt_datamap_t& datamap,
+                                                       crypt_variantmap_t& variantmap, uint32 flags = 0);
         /**
          * @biref recipient
          * @param jwa_t alg [in]

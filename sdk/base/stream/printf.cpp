@@ -6,6 +6,7 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2017.07.26   Soo Han, Kim        sprintf support {1} {2} ... using valist (codename.grape Revision 371)
  */
 
 #include <hotplace/sdk/base/basic/base16.hpp>
@@ -24,19 +25,11 @@ typedef struct _variant_conversion_t {
     const char* formatter;
 } variant_conversion_t;
 
-#define VARIANT_CONVERSION_ITEM(t, f) \
-    {                                 \
-        t,                            \
-        f,                            \
-    }
-
 static variant_conversion_t type_formatter[] = {
-    VARIANT_CONVERSION_ITEM(TYPE_CHAR, "%c"),   VARIANT_CONVERSION_ITEM(TYPE_BYTE, "%c"),    VARIANT_CONVERSION_ITEM(TYPE_SHORT, "%i"),
-    VARIANT_CONVERSION_ITEM(TYPE_USHORT, "%i"), VARIANT_CONVERSION_ITEM(TYPE_INT32, "%i"),   VARIANT_CONVERSION_ITEM(TYPE_UINT32, "%i"),
-    VARIANT_CONVERSION_ITEM(TYPE_INT64, "%li"), VARIANT_CONVERSION_ITEM(TYPE_UINT64, "%li"), VARIANT_CONVERSION_ITEM(TYPE_POINTER, "%p"),
-    VARIANT_CONVERSION_ITEM(TYPE_STRING, "%s"), VARIANT_CONVERSION_ITEM(TYPE_FLOAT, "%f"),   VARIANT_CONVERSION_ITEM(TYPE_DOUBLE, "%lf"),
+    {TYPE_CHAR, "%c"},   {TYPE_BYTE, "%c"},    {TYPE_SHORT, "%i"},   {TYPE_USHORT, "%i"}, {TYPE_INT32, "%i"}, {TYPE_UINT32, "%i"},
+    {TYPE_INT64, "%li"}, {TYPE_UINT64, "%li"}, {TYPE_POINTER, "%p"}, {TYPE_STRING, "%s"}, {TYPE_FLOAT, "%f"}, {TYPE_DOUBLE, "%lf"},
 };
-size_t size_type_formatter = sizeof(type_formatter) / sizeof(type_formatter[0]);
+size_t size_type_formatter = RTL_NUMBER_OF(type_formatter);
 
 return_t sprintf(stream_t* stream, const char* fmt, valist va) {
     return_t ret = errorcode_t::success;

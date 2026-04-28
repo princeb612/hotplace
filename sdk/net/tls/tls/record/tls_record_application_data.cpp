@@ -34,8 +34,7 @@ constexpr char constexpr_dtls_record_seq[] = "dtls record sequence number";
 
 tls_record_application_data::tls_record_application_data(tls_session* session) : tls_record(tls_content_type_application_data, session) {}
 
-tls_record_application_data::tls_record_application_data(tls_session* session, const std::string& data)
-    : tls_record(tls_content_type_application_data, session) {
+tls_record_application_data::tls_record_application_data(tls_session* session, const std::string& data) : tls_record(tls_content_type_application_data, session) {
     binary_append(_bin, data);
 }
 
@@ -43,8 +42,7 @@ tls_record_application_data::tls_record_application_data(tls_session* session, c
     _bin = data;
 }
 
-tls_record_application_data::tls_record_application_data(tls_session* session, const byte_t* data, size_t size)
-    : tls_record(tls_content_type_application_data, session) {
+tls_record_application_data::tls_record_application_data(tls_session* session, const byte_t* data, size_t size) : tls_record(tls_content_type_application_data, session) {
     binary_append(_bin, data, size);
 }
 

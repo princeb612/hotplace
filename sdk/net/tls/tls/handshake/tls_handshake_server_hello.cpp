@@ -41,8 +41,7 @@ constexpr char constexpr_group_dtls[] = "dtls";
 constexpr char constexpr_cookie_len[] = "cookie len";
 constexpr char constexpr_cookie[] = "cookie";
 
-tls_handshake_server_hello::tls_handshake_server_hello(tls_session* session)
-    : tls_handshake(tls_hs_server_hello, session), _version(0), _compression_method(0) {}
+tls_handshake_server_hello::tls_handshake_server_hello(tls_session* session) : tls_handshake(tls_hs_server_hello, session), _version(0), _compression_method(0) {}
 
 tls_handshake_server_hello::~tls_handshake_server_hello() {}
 
@@ -353,8 +352,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                         dbs.println("   %s", base16_encode(session_id).c_str());
                     }
                     dbs.println(" > %s 0x%04x %s", constexpr_cipher_suite, cipher_suite, tlsadvisor->nameof_tls_cipher_suite(cipher_suite).c_str());
-                    dbs.println(" > %s %i %s", constexpr_compression_method, compression_method,
-                                tlsadvisor->nameof_compression_method(compression_method).c_str());
+                    dbs.println(" > %s %i %s", constexpr_compression_method, compression_method, tlsadvisor->nameof_compression_method(compression_method).c_str());
                     dbs.println(" > %s 0x%02x(%i)", constexpr_extension_len, extension_len, extension_len);
                     dbs.autoindent(0);
                 });

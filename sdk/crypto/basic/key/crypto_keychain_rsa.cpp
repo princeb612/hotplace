@@ -147,8 +147,8 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, jwa_t alg, const binary
     return add_rsa(cryptokey, nid_rsa, n, e, d, kd);
 }
 
-return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, const binary_t& n, const binary_t& e, const binary_t& d, const binary_t& p,
-                                  const binary_t& q, const binary_t& dp, const binary_t& dq, const binary_t& qi, const keydesc& desc) {
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, const binary_t& n, const binary_t& e, const binary_t& d, const binary_t& p, const binary_t& q,
+                                  const binary_t& dp, const binary_t& dq, const binary_t& qi, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     int ret_openssl = 1;
 
@@ -244,8 +244,8 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, const binar
     return ret;
 }
 
-return_t crypto_keychain::add_rsa(crypto_key* cryptokey, jwa_t alg, const binary_t& n, const binary_t& e, const binary_t& d, const binary_t& p,
-                                  const binary_t& q, const binary_t& dp, const binary_t& dq, const binary_t& qi, const keydesc& desc) {
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, jwa_t alg, const binary_t& n, const binary_t& e, const binary_t& d, const binary_t& p, const binary_t& q,
+                                  const binary_t& dp, const binary_t& dq, const binary_t& qi, const keydesc& desc) {
     crypto_advisor* advisor = crypto_advisor::get_instance();
     const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm(alg);
     keydesc kd(desc);
@@ -255,12 +255,31 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, jwa_t alg, const binary
     return add_rsa(cryptokey, nid_rsa, n, e, d, p, q, dp, dq, qi, kd);
 }
 
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* n, const char* e, const char* d, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    switch (encoding) {
+        case encoding_t::encoding_base64:
+            ret = add_rsa_b64(cryptokey, nid, n, e, d, desc);
+            break;
+        case encoding_t::encoding_base64url:
+            ret = add_rsa_b64u(cryptokey, nid, n, e, d, desc);
+            break;
+        case encoding_t::encoding_base16:
+            ret = add_rsa_b16(cryptokey, nid, n, e, d, desc);
+            break;
+        case encoding_t::encoding_base16rfc:
+            ret = add_rsa_b16rfc(cryptokey, nid, n, e, d, desc);
+            break;
+    }
+    return ret;
+}
+
 return_t crypto_keychain::add_rsa_b64(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const keydesc& desc) {
     return add_rsa_b64(cryptokey, nid, n, e, d, nullptr, nullptr, nullptr, nullptr, nullptr, desc);
 }
 
-return_t crypto_keychain::add_rsa_b64(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const char* p, const char* q,
-                                      const char* dp, const char* dq, const char* qi, const keydesc& desc) {
+return_t crypto_keychain::add_rsa_b64(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const char* p, const char* q, const char* dp,
+                                      const char* dq, const char* qi, const keydesc& desc) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -309,8 +328,8 @@ return_t crypto_keychain::add_rsa_b64u(crypto_key* cryptokey, uint32 nid, const 
     return add_rsa_b64u(cryptokey, nid, n, e, d, nullptr, nullptr, nullptr, nullptr, nullptr, desc);
 }
 
-return_t crypto_keychain::add_rsa_b64u(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const char* p, const char* q,
-                                       const char* dp, const char* dq, const char* qi, const keydesc& desc) {
+return_t crypto_keychain::add_rsa_b64u(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const char* p, const char* q, const char* dp,
+                                       const char* dq, const char* qi, const keydesc& desc) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -358,8 +377,8 @@ return_t crypto_keychain::add_rsa_b16(crypto_key* cryptokey, uint32 nid, const c
     return add_rsa_b16(cryptokey, nid, n, e, d, nullptr, nullptr, nullptr, nullptr, nullptr, desc);
 }
 
-return_t crypto_keychain::add_rsa_b16(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const char* p, const char* q,
-                                      const char* dp, const char* dq, const char* qi, const keydesc& desc) {
+return_t crypto_keychain::add_rsa_b16(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const char* p, const char* q, const char* dp,
+                                      const char* dq, const char* qi, const keydesc& desc) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -407,8 +426,8 @@ return_t crypto_keychain::add_rsa_b16rfc(crypto_key* cryptokey, uint32 nid, cons
     return add_rsa_b16rfc(cryptokey, nid, n, e, d, nullptr, nullptr, nullptr, nullptr, nullptr, desc);
 }
 
-return_t crypto_keychain::add_rsa_b16rfc(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const char* p, const char* q,
-                                         const char* dp, const char* dq, const char* qi, const keydesc& desc) {
+return_t crypto_keychain::add_rsa_b16rfc(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const char* p, const char* q, const char* dp,
+                                         const char* dq, const char* qi, const keydesc& desc) {
     return_t ret = errorcode_t::success;
 
     __try2 {

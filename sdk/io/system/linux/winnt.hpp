@@ -352,9 +352,8 @@ typedef PIMAGE_NT_HEADERS32 PIMAGE_NT_HEADERS;
 
 // IMAGE_FIRST_SECTION doesn't need 32/64 versions since the file header is the same either way.
 
-#define IMAGE_FIRST_SECTION(ntheader)                                                            \
-    ((PIMAGE_SECTION_HEADER)((arch_t)ntheader + FIELD_OFFSET(IMAGE_NT_HEADERS, OptionalHeader) + \
-                             ((PIMAGE_NT_HEADERS)(ntheader))->FileHeader.SizeOfOptionalHeader))
+#define IMAGE_FIRST_SECTION(ntheader) \
+    ((PIMAGE_SECTION_HEADER)((arch_t)ntheader + FIELD_OFFSET(IMAGE_NT_HEADERS, OptionalHeader) + ((PIMAGE_NT_HEADERS)(ntheader))->FileHeader.SizeOfOptionalHeader))
 
 // Subsystem Values
 

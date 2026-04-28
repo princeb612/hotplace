@@ -60,6 +60,7 @@ class crypto_advisor {
      */
     const hint_blockcipher_t* hintof_blockcipher(crypt_algorithm_t alg);
     const hint_blockcipher_t* hintof_blockcipher(const char* alg);
+    const hint_blockcipher_t* hintof_blockcipher(const std::string& alg);
     const hint_blockcipher_t* hintof_blockcipher(crypto_scheme_t scheme);
     /**
      * @brief find blockcipher hint
@@ -80,11 +81,13 @@ class crypto_advisor {
      */
     const EVP_CIPHER* find_evp_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode);
     const EVP_CIPHER* find_evp_cipher(const char* name);
+    const EVP_CIPHER* find_evp_cipher(const std::string& name);
     /**
      * @brief hint
      * @param const char* name [in] ex. "aes-128-cbc"
      */
     const hint_cipher_t* hintof_cipher(const char* name);
+    const hint_cipher_t* hintof_cipher(const std::string& name);
     const hint_cipher_t* hintof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode);
     const hint_cipher_t* hintof_cipher(crypto_scheme_t scheme);
     /**
@@ -107,6 +110,12 @@ class crypto_advisor {
     const char* nameof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode);
     /**
      * @brief   for_each
+     * @ example
+     *          auto query_cipher = [&](const char* feature, uint32 spec, void* user) -> void {
+     *              return_t ret = spec ? errorcode_t::success : errorcode_t::not_supported;
+     *              _test_case.test(ret, __FUNCTION__, R"(check feature cipher "%s" [%08x])", feature, spec);
+     *          };
+     *          advisor->for_each_cipher(query_cipher, nullptr);
      */
     return_t for_each_cipher(std::function<void(const char*, uint32, void*)> f, void* user);
     return_t for_each_cipher(std::function<void(const hint_cipher_t*)> func);
@@ -126,8 +135,10 @@ class crypto_advisor {
     const EVP_MD* find_evp_md(crypt_sig_t sig);
     const EVP_MD* find_evp_md(jws_t sig);
     const EVP_MD* find_evp_md(const char* name);
+    const EVP_MD* find_evp_md(const std::string& name);
     const hint_digest_t* hintof_digest(hash_algorithm_t algorithm);
     const hint_digest_t* hintof_digest(const char* name);
+    const hint_digest_t* hintof_digest(const std::string& name);
 
     /**
      * @brief find md string
@@ -140,12 +151,27 @@ class crypto_advisor {
      *          // return EVP_sha3_256 ()
      */
     const char* nameof_md(hash_algorithm_t algorithm);
-
+    /**
+     * @example
+     *          auto query_md = [&](const char* feature, uint32 spec, void* user) -> void {
+     *              return_t ret = spec ? errorcode_t::success : errorcode_t::not_supported;
+     *              _test_case.test(ret, __FUNCTION__, R"(check feature md "%s" [%08x])", feature, spec);
+     *          };
+     *          advisor->for_each_md(query_md, nullptr);
+     */
     return_t for_each_md(std::function<void(const char*, uint32, void*)> f, void* user);
 
     ///////////////////////////////////////////////////////////////////////////
     // curve
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * @example
+     *          auto query_curve = [&](const char* feature, uint32 spec, void* user) -> void {
+     *              return_t ret = spec ? errorcode_t::success : errorcode_t::not_supported;
+     *              _test_case.test(ret, __FUNCTION__, R"(check feature Elliptic Curve "%s" [%08x])", feature, spec);
+     *          };
+     *          advisor->for_each_curve(query_curve, nullptr);
+     */
     return_t for_each_curve(std::function<void(const char*, uint32, void*)> f, void* user);
     return_t for_each_curve_hint(std::function<void(const hint_curve_t*, void*)> f, void* user);
     /**
@@ -163,6 +189,7 @@ class crypto_advisor {
      * @remarks cover NIST, X9.62, X9.63, SEC
      */
     const hint_curve_t* hintof_curve_name(const char* name);
+    const hint_curve_t* hintof_curve_name(const std::string& name);
     /**
      * @brief hint (syn. hintof_curve_name)
      * @param const char* curve [in]
@@ -172,6 +199,7 @@ class crypto_advisor {
      * @remarks cover NIST, X9.62, X9.63, SEC
      */
     const hint_curve_t* hintof_curve(const char* curve);
+    const hint_curve_t* hintof_curve(const std::string& curve);
     /*
      * @brief   hint
      * @return  return nullptr if pkey is not EC_KEY
@@ -504,6 +532,14 @@ class crypto_advisor {
     ///////////////////////////////////////////////////////////////////////////
     // COSE
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * @example
+     *          auto query_cose = [&](const char* feature, uint32 spec, void* user) -> void {
+     *              return_t ret = spec ? errorcode_t::success : errorcode_t::not_supported;
+     *              _test_case.test(ret, __FUNCTION__, R"(check feature COSE "%s" [%08x])", feature, spec);
+     *          };
+     *          advisor->for_each_cose(query_cose, nullptr);
+     */
     return_t for_each_cose(std::function<void(const char*, uint32, void*)> f, void* user);
     /**
      * @brief hint
@@ -518,6 +554,7 @@ class crypto_advisor {
      * @return const hint_cose_algorithm_t*
      */
     const hint_cose_algorithm_t* hintof_cose_algorithm(const char* alg);
+    const hint_cose_algorithm_t* hintof_cose_algorithm(const std::string& alg);
 
     const hint_curve_t* hintof_curve(cose_ec_curve_t curve);
 
@@ -682,8 +719,13 @@ class crypto_advisor {
      *   ML-KEM
      *     ML-KEM-512, ML-KEM-768, ML-KEM-1024
      */
-    bool query_feature(const char* feature, uint32 spec = 0);
+    uint32 query_feature(const char* feature, uint32 spec = 0);
+    uint32 query_feature(const std::string& feature, uint32 spec = 0);
     bool check_minimum_version(unsigned long osslver);
+    /**
+     * @sa  advisor_feature_t
+     */
+    void for_each_features(std::function<void(const char* name, uint32 spec)> fn);
 
     /**
      * @brief   cookie secret

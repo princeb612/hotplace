@@ -57,6 +57,8 @@ class crypto_hash_builder {
     crypto_hash* build();
 
     crypto_hash_builder& set(hash_algorithm_t alg);
+    crypto_hash_builder& set(const char* alg);
+    crypto_hash_builder& set(const std::string& alg);
 
    protected:
    private:

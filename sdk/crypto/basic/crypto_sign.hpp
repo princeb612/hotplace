@@ -64,6 +64,8 @@ class crypto_sign_builder {
      */
     crypto_sign_builder& set_scheme(crypt_sig_type_t scheme);
     crypto_sign_builder& set_digest(hash_algorithm_t hashalg);
+    crypto_sign_builder& set_digest(const char* hashalg);
+    crypto_sign_builder& set_digest(const std::string& hashalg);
 
     /**
      * @sample

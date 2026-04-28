@@ -50,16 +50,18 @@ typedef BOOL(__stdcall *GETUSERPROFILEDIRECTORY)(HANDLE hToken, LPTSTR lpProfile
 #endif
 
 /* "ExpandEnvironmentStringsForUserA" */
-#define DECLARE_NAMEOF_API_EXPANDENVIRONMENTSTRINGSFORUSERA                                  \
-    CHAR NAMEOF_API_EXPANDENVIRONMENTSTRINGSFORUSERA[] = {                                   \
-        'E', 'x', 'p', 'a', 'n', 'd', 'E', 'n', 'v', 'i', 'r', 'o', 'n', 'm', 'e', 'n', 't', \
-        'S', 't', 'r', 'i', 'n', 'g', 's', 'F', 'o', 'r', 'U', 's', 'e', 'r', 'A', 0,        \
+#define DECLARE_NAMEOF_API_EXPANDENVIRONMENTSTRINGSFORUSERA                                      \
+    CHAR NAMEOF_API_EXPANDENVIRONMENTSTRINGSFORUSERA[] =                                         \
+        {                                                                                        \
+            'E', 'x', 'p', 'a', 'n', 'd', 'E', 'n', 'v', 'i', 'r', 'o', 'n', 'm', 'e', 'n', 't', \
+            'S', 't', 'r', 'i', 'n', 'g', 's', 'F', 'o', 'r', 'U', 's', 'e', 'r', 'A', 0,        \
     };
 /* "ExpandEnvironmentStringsForUserW" */
-#define DECLARE_NAMEOF_API_EXPANDENVIRONMENTSTRINGSFORUSERW                                  \
-    CHAR NAMEOF_API_EXPANDENVIRONMENTSTRINGSFORUSERW[] = {                                   \
-        'E', 'x', 'p', 'a', 'n', 'd', 'E', 'n', 'v', 'i', 'r', 'o', 'n', 'm', 'e', 'n', 't', \
-        'S', 't', 'r', 'i', 'n', 'g', 's', 'F', 'o', 'r', 'U', 's', 'e', 'r', 'W', 0,        \
+#define DECLARE_NAMEOF_API_EXPANDENVIRONMENTSTRINGSFORUSERW                                      \
+    CHAR NAMEOF_API_EXPANDENVIRONMENTSTRINGSFORUSERW[] =                                         \
+        {                                                                                        \
+            'E', 'x', 'p', 'a', 'n', 'd', 'E', 'n', 'v', 'i', 'r', 'o', 'n', 'm', 'e', 'n', 't', \
+            'S', 't', 'r', 'i', 'n', 'g', 's', 'F', 'o', 'r', 'U', 's', 'e', 'r', 'W', 0,        \
     };
 
 /* @brief

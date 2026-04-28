@@ -26,5 +26,19 @@ crypto_hash_builder& crypto_hash_builder::set(hash_algorithm_t alg) {
     return *this;
 }
 
+crypto_hash_builder& crypto_hash_builder::set(const char* alg) {
+    auto advisor = crypto_advisor::get_instance();
+    auto hint = advisor->hintof_digest(alg);
+    _alg = typeof_alg(hint);
+    return *this;
+}
+
+crypto_hash_builder& crypto_hash_builder::set(const std::string& alg) {
+    auto advisor = crypto_advisor::get_instance();
+    auto hint = advisor->hintof_digest(alg);
+    _alg = typeof_alg(hint);
+    return *this;
+}
+
 }  // namespace crypto
 }  // namespace hotplace

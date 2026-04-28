@@ -515,8 +515,7 @@ void test_rfc7049_table4_2() {
     {
         // [18446744073709551615,18446744073709551616,18446744073709551617]
         cbor_array* root = new cbor_array();
-        *root << new cbor_data(bignumber("18446744073709551615")) << new cbor_data(bignumber("18446744073709551616"))
-              << new cbor_data(bignumber("18446744073709551617"));
+        *root << new cbor_data(bignumber("18446744073709551615")) << new cbor_data(bignumber("18446744073709551616")) << new cbor_data(bignumber("18446744073709551617"));
         do_cbor_test(root, "831bffffffffffffffffc249010000000000000000c249010000000000000001");
         root->release();
     }

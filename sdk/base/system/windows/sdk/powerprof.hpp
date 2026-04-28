@@ -356,19 +356,18 @@ typedef enum _POWER_DATA_ACCESSOR {
         _T('n'), _T('f'), _T('o'), _T('r'), _T('m'), _T('a'), _T('t'), _T('i'), _T('o'), _T('n'), 0,                \
     };
 /* PowerSettingRegisterNotification */
-#define DECLARE_NAMEOF_API_POWERSETTINGREGISTERNOTIFICATION                                                    \
-    char NAMEOF_API_POWERSETTINGREGISTERNOTIFICATION[] =                                                       \
-        {                                                                                                      \
-            _T('P'), _T('o'), _T('w'), _T('e'), _T('r'), _T('S'), _T('e'), _T('t'), _T('t'), _T('i'), _T('n'), \
-            _T('g'), _T('R'), _T('e'), _T('g'), _T('i'), _T('s'), _T('t'), _T('e'), _T('r'), _T('N'), _T('o'), \
-            _T('t'), _T('i'), _T('f'), _T('i'), _T('c'), _T('a'), _T('t'), _T('i'), _T('o'), _T('n'), 0,       \
+#define DECLARE_NAMEOF_API_POWERSETTINGREGISTERNOTIFICATION                                                                                                      \
+    char NAMEOF_API_POWERSETTINGREGISTERNOTIFICATION[] = {                                                                                                       \
+        _T('P'), _T('o'), _T('w'), _T('e'), _T('r'), _T('S'), _T('e'), _T('t'), _T('t'), _T('i'), _T('n'), _T('g'), _T('R'), _T('e'), _T('g'), _T('i'), _T('s'), \
+        _T('t'), _T('e'), _T('r'), _T('N'), _T('o'), _T('t'), _T('i'), _T('f'), _T('i'), _T('c'), _T('a'), _T('t'), _T('i'), _T('o'), _T('n'), 0,                \
     };
 /* PowerSettingUnregisterNotification */
-#define DECLARE_NAMEOF_API_POWERSETTINGUNREGISTERNOTIFICATION                                                       \
-    char NAMEOF_API_POWERSETTINGUNREGISTERNOTIFICATION[] = {                                                        \
-        _T('P'), _T('o'), _T('w'), _T('e'), _T('r'), _T('S'), _T('e'), _T('t'), _T('t'), _T('i'), _T('n'), _T('g'), \
-        _T('U'), _T('n'), _T('r'), _T('e'), _T('g'), _T('i'), _T('s'), _T('t'), _T('e'), _T('r'), _T('N'), _T('o'), \
-        _T('t'), _T('i'), _T('f'), _T('i'), _T('c'), _T('a'), _T('t'), _T('i'), _T('o'), _T('n'), 0,                \
+#define DECLARE_NAMEOF_API_POWERSETTINGUNREGISTERNOTIFICATION                                                           \
+    char NAMEOF_API_POWERSETTINGUNREGISTERNOTIFICATION[] =                                                              \
+        {                                                                                                               \
+            _T('P'), _T('o'), _T('w'), _T('e'), _T('r'), _T('S'), _T('e'), _T('t'), _T('t'), _T('i'), _T('n'), _T('g'), \
+            _T('U'), _T('n'), _T('r'), _T('e'), _T('g'), _T('i'), _T('s'), _T('t'), _T('e'), _T('r'), _T('N'), _T('o'), \
+            _T('t'), _T('i'), _T('f'), _T('i'), _T('c'), _T('a'), _T('t'), _T('i'), _T('o'), _T('n'), 0,                \
     };
 
 /* @brief   PowerGetActiveScheme

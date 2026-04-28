@@ -15,8 +15,7 @@ crypto_key rfc8152_privkeys;
 crypto_key rfc8152_pubkeys;
 crypto_key rfc8152_privkeys_c4;
 
-return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, cbor_object* root, const char* expect_file, const char* text,
-                              bool dountag = true) {
+return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, cbor_object* root, const char* expect_file, const char* text, bool dountag = true) {
     return_t ret = errorcode_t::success;
     return_t test = errorcode_t::success;
     const OPTION& option = _cmdline->value();
@@ -246,8 +245,7 @@ void test_rfc8152_b() {
     cose_recipient& layered_recipient = recipient.add(new cose_recipient);
     layered_recipient.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_ecdhes_hkdf_256);
     layered_recipient.get_unprotected()
-        .add(cose_key_t::cose_ephemeral_key, cose_ec_curve_t::cose_ec_p256, base16_decode("b2add44368ea6d641f9ca9af308b4079aeb519f11e9b8a55a600b21233e86e68"),
-             false)
+        .add(cose_key_t::cose_ephemeral_key, cose_ec_curve_t::cose_ec_p256, base16_decode("b2add44368ea6d641f9ca9af308b4079aeb519f11e9b8a55a600b21233e86e68"), false)
         .add(cose_key_t::cose_kid, "meriadoc.brandybuck@buckland.example");
 
     composer.compose(&root);
@@ -272,8 +270,7 @@ void test_rfc8152_c_1_1() {
     cose_recipient& signature = composer.get_recipients().add(new cose_recipient);
     signature.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_es256);
     signature.get_unprotected().add(cose_key_t::cose_kid, "11");
-    signature.get_payload().set_b16(
-        "e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a");
+    signature.get_payload().set_b16("e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a");
     composer.compose(&root);
 
     cbor_object_signing_encryption cose;
@@ -296,8 +293,7 @@ void test_rfc8152_c_1_2() {
     cose_recipient& signature = composer.get_recipients().add(new cose_recipient);
     signature.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_es256);
     signature.get_unprotected().add(cose_key_t::cose_kid, "11");
-    signature.get_payload().set_b16(
-        "e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a");
+    signature.get_payload().set_b16("e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a");
 
     cose_recipient& signature2 = composer.get_recipients().add(new cose_recipient);
     signature2.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_es512);
@@ -331,8 +327,7 @@ void test_rfc8152_c_1_3() {
     cose_recipient& signature = composer.get_recipients().add(new cose_recipient);
     signature.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_es256);
     signature.get_unprotected().add(cose_key_t::cose_kid, "11");
-    signature.get_payload().set_b16(
-        "e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a");
+    signature.get_payload().set_b16("e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a");
 
     composer.compose(&root);
 
@@ -357,8 +352,7 @@ void test_rfc8152_c_1_4() {
     cose_recipient& signature = composer.get_recipients().add(new cose_recipient);
     signature.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_es256);
     signature.get_unprotected().add(cose_key_t::cose_kid, "11");
-    signature.get_payload().set_b16(
-        "3fc54702aa56e1b2cb20284294c9106a63f91bac658d69351210a031d8fc7c5ff3e4be39445b1a3e83e1510d1aca2f2e8a7c081c7645042b18aba9d1fad1bd9c");
+    signature.get_payload().set_b16("3fc54702aa56e1b2cb20284294c9106a63f91bac658d69351210a031d8fc7c5ff3e4be39445b1a3e83e1510d1aca2f2e8a7c081c7645042b18aba9d1fad1bd9c");
 
     composer.compose(&root);
 
@@ -380,8 +374,7 @@ void test_rfc8152_c_2_1() {
     composer.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_es256);
     composer.get_unprotected().add(cose_key_t::cose_kid, "11");
     composer.get_payload().set("This is the content.");
-    composer.get_singleitem().set_b16(
-        "8eb33e4ca31d1c465ab05aac34cc6b23d58fef5c083106c4d25a91aef0b0117e2af9a291aa32e14ab834dc56ed2a223444547e01f11d3b0916e5a4c345cacb36");
+    composer.get_singleitem().set_b16("8eb33e4ca31d1c465ab05aac34cc6b23d58fef5c083106c4d25a91aef0b0117e2af9a291aa32e14ab834dc56ed2a223444547e01f11d3b0916e5a4c345cacb36");
 
     composer.compose(&root);
 
@@ -407,8 +400,7 @@ void test_rfc8152_c_3_1() {
     cose_recipient& recipient = composer.get_recipients().add(new cose_recipient);
     recipient.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_ecdhes_hkdf_256);
     recipient.get_unprotected()
-        .add(cose_key_t::cose_ephemeral_key, cose_ec_curve_t::cose_ec_p256, base16_decode("98f50a4ff6c05861c8860d13a638ea56c3f5ad7590bbfbf054e1c7b4d91d6280"),
-             true)
+        .add(cose_key_t::cose_ephemeral_key, cose_ec_curve_t::cose_ec_p256, base16_decode("98f50a4ff6c05861c8860d13a638ea56c3f5ad7590bbfbf054e1c7b4d91d6280"), true)
         .add(cose_key_t::cose_kid, "meriadoc.brandybuck@buckland.example");
 
     composer.compose(&root);
@@ -470,8 +462,7 @@ void test_rfc8152_c_3_3() {
     cose_recipient& recipient = composer.get_recipients().add(new cose_recipient);
     recipient.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_ecdhes_hkdf_256);
     recipient.get_unprotected()
-        .add(cose_key_t::cose_ephemeral_key, cose_ec_curve_t::cose_ec_p256, base16_decode("98f50a4ff6c05861c8860d13a638ea56c3f5ad7590bbfbf054e1c7b4d91d6280"),
-             true)
+        .add(cose_key_t::cose_ephemeral_key, cose_ec_curve_t::cose_ec_p256, base16_decode("98f50a4ff6c05861c8860d13a638ea56c3f5ad7590bbfbf054e1c7b4d91d6280"), true)
         .add(cose_key_t::cose_kid, "meriadoc.brandybuck@buckland.example");
 
     composer.compose(&root);
@@ -651,9 +642,7 @@ void test_rfc8152_c_5_4() {
     recipient.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_ecdhes_a128kw);
     recipient.get_unprotected()
         .add(cose_key_t::cose_ephemeral_key, cose_ec_curve_t::cose_ec_p521,
-             base16_decode(
-                 "0043b12669acac3fd27898ffba0bcd2e6c366d53bc4db71f909a759304acfb5e18cdc7ba0b13ff8c7636271a6924b1ac63c02688075b55ef2d613574e7dc242f79c3"),
-             true)
+             base16_decode("0043b12669acac3fd27898ffba0bcd2e6c366d53bc4db71f909a759304acfb5e18cdc7ba0b13ff8c7636271a6924b1ac63c02688075b55ef2d613574e7dc242f79c3"), true)
         .add(cose_key_t::cose_kid, "bilbo.baggins@hobbiton.example");
     recipient.get_payload().set_b16("339bc4f79984cdc6b3e6ce5f315a4c7d2b0ac466fcea69e8c07dfbca5bb1f661bc5f8e0df9e3eff5");
 
@@ -722,18 +711,17 @@ void test_rfc8152_c_7_1() {
     {
         cbor_map* key = new cbor_map();
 
-        *key
-            << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(cose_ec_curve_t::cose_ec_p521))
-            << new cbor_pair(
-                   cose_key_lable_t::cose_ec_x,
-                   new cbor_data(base16_decode(
-                       "0072992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737bf5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620085e5c8f42ad")))
-            << new cbor_pair(
-                   cose_key_lable_t::cose_ec_y,
-                   new cbor_data(base16_decode(
-                       "01dca6947bce88bc5790485ac97427342bc35f887d86d65a089377e247e60baa55e4e8501e2ada5724ac51d6909008033ebc10ac999b9d7f5cc2519f3fe1ea1d9475")))
-            << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(cose_kty_t::cose_kty_ec2))
-            << new cbor_pair(cose_key_lable_t::cose_lable_kid, new cbor_data(str2bin("bilbo.baggins@hobbiton.example")));
+        *key << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(cose_ec_curve_t::cose_ec_p521))
+             << new cbor_pair(
+                    cose_key_lable_t::cose_ec_x,
+                    new cbor_data(base16_decode(
+                        "0072992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737bf5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620085e5c8f42ad")))
+             << new cbor_pair(
+                    cose_key_lable_t::cose_ec_y,
+                    new cbor_data(base16_decode(
+                        "01dca6947bce88bc5790485ac97427342bc35f887d86d65a089377e247e60baa55e4e8501e2ada5724ac51d6909008033ebc10ac999b9d7f5cc2519f3fe1ea1d9475")))
+             << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(cose_kty_t::cose_kty_ec2))
+             << new cbor_pair(cose_key_lable_t::cose_lable_kid, new cbor_data(str2bin("bilbo.baggins@hobbiton.example")));
 
         *root << key;
     }
@@ -789,20 +777,19 @@ void test_rfc8152_c_7_2() {
     {
         cbor_map* key = new cbor_map();
 
-        *key
-            << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(cose_kty_t::cose_kty_ec2))
-            << new cbor_pair(cose_key_lable_t::cose_lable_kid, new cbor_data(str2bin("bilbo.baggins@hobbiton.example")))
-            << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(cose_ec_curve_t::cose_ec_p521))
-            << new cbor_pair(
-                   cose_key_lable_t::cose_ec_x,
-                   new cbor_data(base16_decode(
-                       "0072992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737bf5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620085e5c8f42ad")))
-            << new cbor_pair(
-                   cose_key_lable_t::cose_ec_y,
-                   new cbor_data(base16_decode(
-                       "01dca6947bce88bc5790485ac97427342bc35f887d86d65a089377e247e60baa55e4e8501e2ada5724ac51d6909008033ebc10ac999b9d7f5cc2519f3fe1ea1d9475")))
-            << new cbor_pair(cose_key_lable_t::cose_ec_d, new cbor_data(base16_decode("00085138ddabf5ca975f5860f91a08e91d6d5f9a76ad4018766a476680b55cd339e8ab6c"
-                                                                                      "72b5facdb2a2a50ac25bd086647dd3e2e6e99e84ca2c3609fdf177feb26d")));
+        *key << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(cose_kty_t::cose_kty_ec2))
+             << new cbor_pair(cose_key_lable_t::cose_lable_kid, new cbor_data(str2bin("bilbo.baggins@hobbiton.example")))
+             << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(cose_ec_curve_t::cose_ec_p521))
+             << new cbor_pair(
+                    cose_key_lable_t::cose_ec_x,
+                    new cbor_data(base16_decode(
+                        "0072992cb3ac08ecf3e5c63dedec0d51a8c1f79ef2f82f94f3c737bf5de7986671eac625fe8257bbd0394644caaa3aaf8f27a4585fbbcad0f2457620085e5c8f42ad")))
+             << new cbor_pair(
+                    cose_key_lable_t::cose_ec_y,
+                    new cbor_data(base16_decode(
+                        "01dca6947bce88bc5790485ac97427342bc35f887d86d65a089377e247e60baa55e4e8501e2ada5724ac51d6909008033ebc10ac999b9d7f5cc2519f3fe1ea1d9475")))
+             << new cbor_pair(cose_key_lable_t::cose_ec_d, new cbor_data(base16_decode("00085138ddabf5ca975f5860f91a08e91d6d5f9a76ad4018766a476680b55cd339e8ab6c"
+                                                                                       "72b5facdb2a2a50ac25bd086647dd3e2e6e99e84ca2c3609fdf177feb26d")));
 
         *root << key;
     }

@@ -561,8 +561,7 @@ const EVP_PKEY* crypto_key::find(const char* kid, crypto_use_t use, bool up_ref)
 
             for (iter = lower_bound; iter != upper_bound; iter++) {
                 crypto_key_object& item = iter->second;
-                bool test =
-                    find_discriminant(item, kid, nullptr, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use, 0);  // using map, so don't care SEARCH_KID
+                bool test = find_discriminant(item, kid, nullptr, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use, 0);  // using map, so don't care SEARCH_KID
                 if (test) {
                     ret_value = item.get_pkey();
                     break;

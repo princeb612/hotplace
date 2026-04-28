@@ -43,8 +43,8 @@ return_t tls_protection::get_cbc_hmac_key(tls_session *session, tls_direction_t 
     return ret;
 }
 
-return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext,
-                                          const binary_t &additional, binary_t &maced) {
+return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext, const binary_t &additional,
+                                          binary_t &maced) {
     return_t ret = errorcode_t::success;
     __try2 {
         ciphertext.clear();

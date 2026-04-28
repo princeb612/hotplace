@@ -141,9 +141,8 @@ typedef HINTERNET(__stdcall* INTERNETOPEN)(___in LPCTSTR lpszAgent, ___in DWORD 
 /* @brief
     Opens an File Transfer Protocol (FTP) or HTTP session for a given site.
  */
-typedef HINTERNET(__stdcall* INTERNETCONNECT)(___in HINTERNET hInternet, ___in LPCTSTR lpszServerName, ___in INTERNET_PORT nServerPort,
-                                              ___in LPCTSTR lpszUsername, ___in LPCTSTR lpszPassword, ___in DWORD dwService, ___in DWORD dwFlags,
-                                              ___in DWORD_PTR dwContext);
+typedef HINTERNET(__stdcall* INTERNETCONNECT)(___in HINTERNET hInternet, ___in LPCTSTR lpszServerName, ___in INTERNET_PORT nServerPort, ___in LPCTSTR lpszUsername,
+                                              ___in LPCTSTR lpszPassword, ___in DWORD dwService, ___in DWORD dwFlags, ___in DWORD_PTR dwContext);
 
 /* @brief
     Attempts to make a connection to the Internet.
@@ -191,8 +190,7 @@ typedef BOOL(__stdcall* INTERNETQUERYOPTION)(___in HINTERNET hInternet, ___in DW
 /* @brief
     Reads data from a handle opened by the InternetOpenUrl, FtpOpenFile, or HttpOpenRequest function.
  */
-typedef BOOL(__stdcall* INTERNETREADFILE)(___in HINTERNET hFile, ___out LPVOID lpBuffer, ___in DWORD dwNumberOfBytesToRead,
-                                          ___out LPDWORD lpdwNumberOfBytesRead);
+typedef BOOL(__stdcall* INTERNETREADFILE)(___in HINTERNET hFile, ___out LPVOID lpBuffer, ___in DWORD dwNumberOfBytesToRead, ___out LPDWORD lpdwNumberOfBytesRead);
 
 #if defined _MBCS || defined MBCS
 #define DECLARE_NAMEOF_API_FINDFIRSTURLCACHEENTRY DECLARE_NAMEOF_API_FINDFIRSTURLCACHEENTRYA
@@ -270,11 +268,9 @@ typedef HANDLE(__stdcall* FINDFIRSTURLCACHEENTRYW)(___in LPCWSTR lpszUrlSearchPa
 /* @brief
     Retrieves the next entry in the Internet cache.
  */
-typedef BOOL(__stdcall* FINDNEXTURLCACHEENTRYA)(___in HANDLE hEnumHandle, ___out LPINTERNET_CACHE_ENTRY_INFOA_ lpNextCacheEntryInfo,
-                                                __inout LPDWORD lpcbCacheEntryInfo);
+typedef BOOL(__stdcall* FINDNEXTURLCACHEENTRYA)(___in HANDLE hEnumHandle, ___out LPINTERNET_CACHE_ENTRY_INFOA_ lpNextCacheEntryInfo, __inout LPDWORD lpcbCacheEntryInfo);
 
-typedef BOOL(__stdcall* FINDNEXTURLCACHEENTRYW)(___in HANDLE hEnumHandle, ___out LPINTERNET_CACHE_ENTRY_INFOW_ lpNextCacheEntryInfo,
-                                                __inout LPDWORD lpcbCacheEntryInfo);
+typedef BOOL(__stdcall* FINDNEXTURLCACHEENTRYW)(___in HANDLE hEnumHandle, ___out LPINTERNET_CACHE_ENTRY_INFOW_ lpNextCacheEntryInfo, __inout LPDWORD lpcbCacheEntryInfo);
 
 /* @brief
     Closes the specified cache enumeration handle.

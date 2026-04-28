@@ -39,8 +39,8 @@ class crypt_t {
      *        crypt.open(&handle, crypt_algorithm_t::aes256, crypt_mode_t::cbc, key, size_key, iv, size_iv);
      *        crypt.close(handle);
      */
-    virtual return_t open(crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key, unsigned size_key,
-                          const unsigned char* iv, unsigned size_iv) = 0;
+    virtual return_t open(crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key, unsigned size_key, const unsigned char* iv,
+                          unsigned size_iv) = 0;
     /**
      * @brief create a context handle (symmetric)
      * @param crypt_context_t** handle [out]
@@ -116,8 +116,7 @@ class crypt_t {
      * @param const binary_t& aad [in]
      * @param binary_t& tag [out]
      */
-    virtual return_t encrypt(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, binary_t& ciphertext, const binary_t& aad,
-                             binary_t& tag) = 0;
+    virtual return_t encrypt(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, binary_t& ciphertext, const binary_t& aad, binary_t& tag) = 0;
     /**
      * @brief encrypt (GCM/CCM)
      * @param crypt_context_t* handle [in]

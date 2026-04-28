@@ -29,8 +29,8 @@
 namespace hotplace {
 namespace net {
 
-return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t &master_secret, const binary_t &client_hello_random,
-                                       const binary_t &server_hello_random, uint16 cs) {
+return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t &master_secret, const binary_t &client_hello_random, const binary_t &server_hello_random,
+                                       uint16 cs) {
     return_t ret = errorcode_t::success;
     __try2 {
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
@@ -151,14 +151,10 @@ return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t
                         dbs.println("> secret_server_mac_key[%08x] %s (%zi-octet)", tls_secret_server_mac_key, base16_encode(secret_server_mac_key).c_str(),
                                     secret_server_mac_key.size());
                     }
-                    dbs.println("> secret_client_key[%08x] %s (%zi-octet)", tls_secret_client_key, base16_encode(secret_client_key).c_str(),
-                                secret_client_key.size());
-                    dbs.println("> secret_server_key[%08x] %s (%zi-octet)", tls_secret_server_key, base16_encode(secret_server_key).c_str(),
-                                secret_server_key.size());
-                    dbs.println("> secret_client_iv[%08x] %s (%zi-octet)", tls_secret_client_iv, base16_encode(secret_client_iv).c_str(),
-                                secret_client_iv.size());
-                    dbs.println("> secret_server_iv[%08x] %s (%zi-octet)", tls_secret_server_iv, base16_encode(secret_server_iv).c_str(),
-                                secret_server_iv.size());
+                    dbs.println("> secret_client_key[%08x] %s (%zi-octet)", tls_secret_client_key, base16_encode(secret_client_key).c_str(), secret_client_key.size());
+                    dbs.println("> secret_server_key[%08x] %s (%zi-octet)", tls_secret_server_key, base16_encode(secret_server_key).c_str(), secret_server_key.size());
+                    dbs.println("> secret_client_iv[%08x] %s (%zi-octet)", tls_secret_client_iv, base16_encode(secret_client_iv).c_str(), secret_client_iv.size());
+                    dbs.println("> secret_server_iv[%08x] %s (%zi-octet)", tls_secret_server_iv, base16_encode(secret_server_iv).c_str(), secret_server_iv.size());
                     dbs.printf(ANSI_ESCAPE "0m");
                 });
             }

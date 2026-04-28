@@ -31,9 +31,7 @@ namespace net {
 constexpr char constexpr_deflate[] = "deflate";
 constexpr char constexpr_gzip[] = "gzip";
 
-http_response::http_response() : _router(nullptr), _request(nullptr), _statuscode(0), _dyntable(nullptr), _version(1), _stream_id(0) {
-    _shared.make_share(this);
-}
+http_response::http_response() : _router(nullptr), _request(nullptr), _statuscode(0), _dyntable(nullptr), _version(1), _stream_id(0) { _shared.make_share(this); }
 
 http_response::http_response(http_request* request) : _router(nullptr), _request(request), _statuscode(0), _dyntable(nullptr), _version(1), _stream_id(0) {
     _shared.make_share(this);
@@ -309,20 +307,14 @@ http_response& http_response::get_response(basic_stream& bs) {
                 basic_stream encoded;
                 zlib_deflate(zlib_windowbits_t::windowbits_deflate, (byte_t*)content(), content_size(), &encoded);
 
-                get_http_header()
-                    .add(constexpr_content_encoding, constexpr_deflate)
-                    .add(constexpr_content_length, format("%zi", encoded.size()))
-                    .get_headers(headers);
+                get_http_header().add(constexpr_content_encoding, constexpr_deflate).add(constexpr_content_length, format("%zi", encoded.size())).get_headers(headers);
                 bs << get_version_str() << " " << status_code() << " " << resource->load(status_code()) << "\r\n" << headers << "\r\n";
                 bs.write(encoded.data(), encoded.size());
             } else if ((std::string::npos != content_encoding_conf.find(constexpr_gzip)) && (std::string::npos != accept_encoding.find(constexpr_gzip))) {
                 basic_stream encoded;
                 zlib_deflate(zlib_windowbits_t::windowbits_gzip, (byte_t*)content(), content_size(), &encoded);
 
-                get_http_header()
-                    .add(constexpr_content_encoding, constexpr_gzip)
-                    .add(constexpr_content_length, format("%zi", encoded.size()))
-                    .get_headers(headers);
+                get_http_header().add(constexpr_content_encoding, constexpr_gzip).add(constexpr_content_length, format("%zi", encoded.size())).get_headers(headers);
                 bs << get_version_str() << " " << status_code() << " " << resource->load(status_code()) << "\r\n" << headers << "\r\n";
                 bs.write(encoded.data(), encoded.size());
             } else /* "identity" */ {

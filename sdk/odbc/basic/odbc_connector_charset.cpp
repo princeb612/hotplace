@@ -55,9 +55,9 @@ return_t odbc_connector::connect(odbc_query** dbquery, LPCTSTR connection_string
         ::SQLSetConnectAttr(dbc_handle, SQL_ATTR_AUTOCOMMIT, auto_commit_ptr, 0);
 
         // Connect
-        ret_sql = ::SQLDriverConnect(dbc_handle, nullptr, reinterpret_cast<SQLTCHAR*>(const_cast<LPTSTR>(connection_string)), SQL_NTS,
-                                     reinterpret_cast<SQLTCHAR*>(out_connection_string), RTL_NUMBER_OF(out_connection_string), &out_connection_string_len,
-                                     SQL_DRIVER_NOPROMPT);
+        ret_sql =
+            ::SQLDriverConnect(dbc_handle, nullptr, reinterpret_cast<SQLTCHAR*>(const_cast<LPTSTR>(connection_string)), SQL_NTS,
+                               reinterpret_cast<SQLTCHAR*>(out_connection_string), RTL_NUMBER_OF(out_connection_string), &out_connection_string_len, SQL_DRIVER_NOPROMPT);
         if (!SQL_SUCCEEDED(ret_sql)) {
             odbc_diagnose::get_instance()->diagnose(SQL_HANDLE_DBC, dbc_handle);
             __leave2;

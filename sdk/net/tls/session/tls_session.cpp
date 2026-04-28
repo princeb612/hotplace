@@ -37,13 +37,7 @@ tls_session::tls_session()
 }
 
 tls_session::tls_session(session_type_t type)
-    : _type(type),
-      _status(0),
-      _hook_param(nullptr),
-      _composer(nullptr),
-      _dtls_record_publisher(nullptr),
-      _dtls_record_arrange(nullptr),
-      _quic_session(nullptr) {
+    : _type(type), _status(0), _hook_param(nullptr), _composer(nullptr), _dtls_record_publisher(nullptr), _dtls_record_arrange(nullptr), _quic_session(nullptr) {
     _shared.make_share(this);
     set_type(type);
 }

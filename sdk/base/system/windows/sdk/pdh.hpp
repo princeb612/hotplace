@@ -81,11 +81,9 @@ typedef PDH_STATUS(__stdcall* PDHCLOSEQUERY)(___in PDH_HQUERY hQuery);
 /* @brief
     Adds the specified counter to the query.
  */
-typedef PDH_STATUS(__stdcall* PDHADDCOUNTERA)(___in PDH_HQUERY hQuery, ___in LPCSTR szFullCounterPath, ___in DWORD_PTR dwUserData,
-                                              ___out PDH_HCOUNTER* phCounter);
+typedef PDH_STATUS(__stdcall* PDHADDCOUNTERA)(___in PDH_HQUERY hQuery, ___in LPCSTR szFullCounterPath, ___in DWORD_PTR dwUserData, ___out PDH_HCOUNTER* phCounter);
 
-typedef PDH_STATUS(__stdcall* PDHADDCOUNTERW)(___in PDH_HQUERY hQuery, ___in LPCWSTR szFullCounterPath, ___in DWORD_PTR dwUserData,
-                                              ___out PDH_HCOUNTER* phCounter);
+typedef PDH_STATUS(__stdcall* PDHADDCOUNTERW)(___in PDH_HQUERY hQuery, ___in LPCWSTR szFullCounterPath, ___in DWORD_PTR dwUserData, ___out PDH_HCOUNTER* phCounter);
 
 /* "PdhRemoveCounter" */
 #define DECLARE_NAMEOF_API_PDHREMOVECOUNTER                                                \

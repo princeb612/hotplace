@@ -185,6 +185,8 @@
       * ITU-T X.693 ISO/IEC 8825-4 ASN.1 encoding rules: XML Encoding Rules (XER)
 * Neural Networks / Machine Learning
   * sketch repository (private, spin off, in progress)
+* Format String Syntax
+  * https://fmt.dev/dev/syntax/
 
 ## next time
 

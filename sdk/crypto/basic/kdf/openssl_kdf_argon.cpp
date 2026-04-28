@@ -23,8 +23,8 @@
 namespace hotplace {
 namespace crypto {
 
-return_t openssl_kdf::argon2(binary_t& derived, argon2_t mode, size_t dlen, const binary_t& password, const binary_t& salt, const binary_t& ad,
-                             const binary_t& secret, uint32 iteration_cost, uint32 parallel_cost, uint32 memory_cost) {
+return_t openssl_kdf::argon2(binary_t& derived, argon2_t mode, size_t dlen, const binary_t& password, const binary_t& salt, const binary_t& ad, const binary_t& secret,
+                             uint32 iteration_cost, uint32 parallel_cost, uint32 memory_cost) {
     return_t ret = errorcode_t::success;
 
     derived.clear();

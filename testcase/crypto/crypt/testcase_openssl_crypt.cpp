@@ -89,8 +89,8 @@ void do_test_crypt_routine(crypt_algorithm_t algorithm, crypt_mode_t mode, unsig
     }
 }
 
-void do_test_crypto_loop(unsigned count_algorithms, crypt_algorithm_t* algorithms, crypt_mode_t mode, unsigned key_size, const byte_t* key_data,
-                         unsigned iv_size, const byte_t* iv_data, byte_t* data, size_t size) {
+void do_test_crypto_loop(unsigned count_algorithms, crypt_algorithm_t* algorithms, crypt_mode_t mode, unsigned key_size, const byte_t* key_data, unsigned iv_size,
+                         const byte_t* iv_data, byte_t* data, size_t size) {
     for (unsigned index_algorithms = 0; index_algorithms < count_algorithms; index_algorithms++) {
         do_test_crypt_routine(algorithms[index_algorithms], mode, key_size, key_data, iv_size, iv_data, data, size);
     }  // foreach algorithm
@@ -139,11 +139,9 @@ void test_openssl_crypt_routine(uint32 cooltime, uint32 unitsize) {
         std::string condition = format("[test condition cooltime %i unitsize %i]", ossl_get_cooltime(), ossl_get_unitsize());
 
         _test_case.begin("openssl_crypt crypt_mode_t::cbc %s", condition.c_str());
-        do_test_crypto_loop(RTL_NUMBER_OF(algorithm_table), algorithm_table, crypt_mode_t::cbc, 16, keydata, 16, iv, (byte_t*)constexpr_text,
-                            strlen(constexpr_text));
+        do_test_crypto_loop(RTL_NUMBER_OF(algorithm_table), algorithm_table, crypt_mode_t::cbc, 16, keydata, 16, iv, (byte_t*)constexpr_text, strlen(constexpr_text));
         _test_case.begin("openssl_crypt crypt_mode_t::cfb %s", condition.c_str());
-        do_test_crypto_loop(RTL_NUMBER_OF(algorithm_table), algorithm_table, crypt_mode_t::cfb, 16, keydata, 16, iv, (byte_t*)constexpr_text,
-                            strlen(constexpr_text));
+        do_test_crypto_loop(RTL_NUMBER_OF(algorithm_table), algorithm_table, crypt_mode_t::cfb, 16, keydata, 16, iv, (byte_t*)constexpr_text, strlen(constexpr_text));
         _test_case.begin("openssl_crypt crypt_mode_t::cfb1 %s", condition.c_str());
         do_test_crypto_loop(RTL_NUMBER_OF(cfbx_algorithm_table), cfbx_algorithm_table, crypt_mode_t::cfb1, 16, keydata, 16, iv, (byte_t*)constexpr_text,
                             strlen(constexpr_text));
@@ -151,11 +149,9 @@ void test_openssl_crypt_routine(uint32 cooltime, uint32 unitsize) {
         do_test_crypto_loop(RTL_NUMBER_OF(cfbx_algorithm_table), cfbx_algorithm_table, crypt_mode_t::cfb8, 16, keydata, 16, iv, (byte_t*)constexpr_text,
                             strlen(constexpr_text));
         _test_case.begin("openssl_crypt crypt_mode_t::ofb %s", condition.c_str());
-        do_test_crypto_loop(RTL_NUMBER_OF(algorithm_table), algorithm_table, crypt_mode_t::ofb, 16, keydata, 16, iv, (byte_t*)constexpr_text,
-                            strlen(constexpr_text));
+        do_test_crypto_loop(RTL_NUMBER_OF(algorithm_table), algorithm_table, crypt_mode_t::ofb, 16, keydata, 16, iv, (byte_t*)constexpr_text, strlen(constexpr_text));
         _test_case.begin("openssl_crypt crypt_mode_t::ecb %s", condition.c_str());
-        do_test_crypto_loop(RTL_NUMBER_OF(algorithm_table), algorithm_table, crypt_mode_t::ecb, 16, keydata, 16, iv, (byte_t*)constexpr_text,
-                            strlen(constexpr_text));
+        do_test_crypto_loop(RTL_NUMBER_OF(algorithm_table), algorithm_table, crypt_mode_t::ecb, 16, keydata, 16, iv, (byte_t*)constexpr_text, strlen(constexpr_text));
         _test_case.begin("openssl_crypt crypt_mode_t::ctr %s", condition.c_str());
         do_test_crypto_loop(RTL_NUMBER_OF(ctr_algorithm_table), ctr_algorithm_table, crypt_mode_t::ctr, 16, keydata, 16, iv, (byte_t*)constexpr_text,
                             strlen(constexpr_text));

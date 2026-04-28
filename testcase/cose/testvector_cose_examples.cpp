@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   testcase_examples.cpp
+ * @file   testvector_cose_examples.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -20,9 +20,8 @@ void test_yaml_testvector_cose_examples() {
     crypto_key key;
     cwk.add_ec_b64u(&key, "P-256", "usWxHK2PmfnHKwXPS54m0kTcGJ90UiglWiGahtagnv8", "IBOL-C3BttVivg-lSreASjpkttcsz-1rb7btKLv8EX4",
                     "V8kgd2ZBRuh2dgyVINBUqpPDr7BOMGcF22CQMIUHtNM", keydesc("11"));
-    cwk.add_ec_b64u(&key, "P-384", "kTJyP2KSsBBhnb4kjWmMF7WHVsY55xUPgb7k64rDcjatChoZ1nvjKmYmPh5STRKc",
-                    "mM0weMVU2DKsYDxDJkEP9hZiRZtB8fPfXbzINZj_fF7YQRynNWedHEyzAJOX2e8s", "ok3Nq97AXlpEusO7jIy1FZATlBP9PNReMU7DWbkLQ5dU90snHuuHVDjEPmtV0fTo",
-                    keydesc("P384"));
+    cwk.add_ec_b64u(&key, "P-384", "kTJyP2KSsBBhnb4kjWmMF7WHVsY55xUPgb7k64rDcjatChoZ1nvjKmYmPh5STRKc", "mM0weMVU2DKsYDxDJkEP9hZiRZtB8fPfXbzINZj_fF7YQRynNWedHEyzAJOX2e8s",
+                    "ok3Nq97AXlpEusO7jIy1FZATlBP9PNReMU7DWbkLQ5dU90snHuuHVDjEPmtV0fTo", keydesc("P384"));
     cwk.add_ec_b64u(&key, "P-521", "AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9A5RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt",
                     "AdymlHvOiLxXkEhayXQnNCvDX4h9htZaCJN34kfmC6pV5OhQHiraVySsUdaQkAgDPrwQrJmbnX9cwlGfP-HqHZR1",
                     "AAhRON2r9cqXX1hg-RoI6R1tX5p2rUAYdmpHZoC1XNM56KtscrX6zbKipQrCW9CGZH3T4ubpnoTKLDYJ_fF3_rJt", keydesc("bilbo.baggins@hobbiton.example"));
@@ -30,9 +29,8 @@ void test_yaml_testvector_cose_examples() {
                    "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60", keydesc("11"));
     cwk.add_ec_b16(&key, "Ed448", "5fd7449b59b461fd2ce787ec616ad46a1da1342485a70e1f8a0ea75d80e96778edf124769b46c7061bd6783df1e50f6cd1fa1abeafe8256180", "",
                    "6c82a562cb808d10d632be89c8513ebf6c929f34ddfa8c9f63c9960ef6e348a3528c8a3fcc2f044e39a3fc5b94492f8f032e7549a20098f95b", keydesc("ed448"));
-    cwk.add_ec_b16(&key, "P-256", "863aa7bc0326716aa59db5bf66cc660d0591d51e4891bc2e6a9baff5077d927c",
-                   "ad4eed482a7985be019e9b1936c16e00190e8bcc48ee12d35ff89f0fc7a099ca", "d42044eb2cd2691e926da4871cf3529ddec6b034f824ba5e050d2c702f97c7a5",
-                   keydesc("Alice Lovelace"));
+    cwk.add_ec_b16(&key, "P-256", "863aa7bc0326716aa59db5bf66cc660d0591d51e4891bc2e6a9baff5077d927c", "ad4eed482a7985be019e9b1936c16e00190e8bcc48ee12d35ff89f0fc7a099ca",
+                   "d42044eb2cd2691e926da4871cf3529ddec6b034f824ba5e050d2c702f97c7a5", keydesc("Alice Lovelace"));
     cwk.add_ec_b64u(&key, "P-256", "Ze2loSV3wrroKUN_4zhwGhCqo3Xhu1td4QjeQ5wIVR0", "HlLtdXARY_f55A3fnzQbPcm6hgr34Mp8p-nuzQCE0Zw",
                     "r_kHyZ-a06rmxM3yESK84r1otSg-aQcVStkRhA-iCM8", keydesc("meriadoc.brandybuck@buckland.example"));
     cwk.add_ec_b64u(&key, "P-256", "mPUKT_bAWGHIhg0TpjjqVsP1rXWQu_vwVOHHtNkdYoA", "8BQAsImGeAS46fyWw5MhYfGTT0IjBpFw2SS34Dv4Irs",
@@ -65,15 +63,13 @@ void test_yaml_testvector_cose_examples() {
     crypto_key ecdh_wrap_p521_key;
     cwk.add_ec_b64u(&ecdh_wrap_p521_key, "P-521", "AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9A5RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt",
                     "AdymlHvOiLxXkEhayXQnNCvDX4h9htZaCJN34kfmC6pV5OhQHiraVySsUdaQkAgDPrwQrJmbnX9cwlGfP-HqHZR1",
-                    "AAhRON2r9cqXX1hg-RoI6R1tX5p2rUAYdmpHZoC1XNM56KtscrX6zbKipQrCW9CGZH3T4ubpnoTKLDYJ_fF3_rJt",
-                    keydesc("meriadoc.brandybuck@buckland.example", "ES512"));
+                    "AAhRON2r9cqXX1hg-RoI6R1tX5p2rUAYdmpHZoC1XNM56KtscrX6zbKipQrCW9CGZH3T4ubpnoTKLDYJ_fF3_rJt", keydesc("meriadoc.brandybuck@buckland.example", "ES512"));
 
     crypto_key aes_ccm_key;
     cwk.add_oct_b64u(&aes_ccm_key, "hJtXIZ2uSN5kbQfbtTNWbg", keydesc("our-secret", crypto_use_t::use_enc));
     cwk.add_oct_b64u(&aes_ccm_key, "Dx4tPEtaaXiHlqW0w9Lh8B8uPUxbanmIl6a1xNPi8QA", keydesc("sec-256", crypto_use_t::use_enc));
     cwk.add_oct_b64u(&aes_ccm_key, "Dx4tPEtaaXiHlqW0w9Lh8B8uPUxbanmI", keydesc("sec-192", crypto_use_t::use_enc));
-    cwk.add_oct_b64u(&aes_ccm_key, "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYgAESIzd4iZqiEiIyQlJicoqrvM3e7_paanqKmgsbKztA",
-                     keydesc("sec-64", crypto_use_t::use_enc));
+    cwk.add_oct_b64u(&aes_ccm_key, "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYgAESIzd4iZqiEiIyQlJicoqrvM3e7_paanqKmgsbKztA", keydesc("sec-64", crypto_use_t::use_enc));
     cwk.add_oct_b64u(&aes_ccm_key, "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYgAESIzd4iZqiEiIyQlJico", keydesc("sec-48", crypto_use_t::use_enc));
     cwk.add_oct_b64u(&aes_ccm_key, "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYg", keydesc("018c0ae5-4d9b-471b-bfd6-eef314bc7037", crypto_use_t::use_enc));
 
@@ -92,8 +88,7 @@ void test_yaml_testvector_cose_examples() {
 
     crypto_key cwtkey;
     cwk.add_ec_b16(&cwtkey, "P-256", "143329cce7868e416927599cf65a34f3ce2ffda55a7eca69ed8919a394d42f0f",
-                   "60f7f1a780d8a783bfb7a2dd6b2796e8128dbbcef9d3d168db9529971a36e7b9", "6c1382765aec5358f117733d281c1c7bdc39884d04a45a1e6c67c858bc206c19",
-                   keydesc());
+                   "60f7f1a780d8a783bfb7a2dd6b2796e8128dbbcef9d3d168db9529971a36e7b9", "6c1382765aec5358f117733d281c1c7bdc39884d04a45a1e6c67c858bc206c19", keydesc());
     cwk.add_oct_b16(&cwtkey, "231f4c4d4d3051fdc2ec0a3851d5b383", keydesc("our-secret"));
 
     crypto_key key_cwt_a4;
@@ -184,8 +179,7 @@ void test_yaml_testvector_cose_examples() {
             }
         }
     };
-    auto lambda_set_param = [&](const char* header, const YAML::Node& node, const char* name, cose_context_t* handle, cose_param_t id,
-                                basic_stream& properties) {
+    auto lambda_set_param = [&](const char* header, const YAML::Node& node, const char* name, cose_context_t* handle, cose_param_t id, basic_stream& properties) {
         if (node && node.IsMap()) {
             auto sub = node[name];
             if (sub && sub.IsScalar()) {
@@ -203,124 +197,133 @@ void test_yaml_testvector_cose_examples() {
             }
         }
     };
+    auto lambda_test_cose_examples = [&](const YAML::Node& items) -> void {
+        if (items && items.IsSequence()) {
+            for (const auto& item : items) {
+                auto text_item = item["item"].as<std::string>();
+                auto text_keyset = item["keyset"].as<std::string>();
+                auto text_cbor = item["cbor"].as<std::string>();
+
+                _logger->colorln("item: %s", text_item.c_str());
+                _logger->writeln("keyset: %s", text_keyset.c_str());
+                _logger->writeln("cbor: %s", text_cbor.c_str());
+
+                auto flag_skip = lambda_itemnode_as_bool(item["skip"]);
+                if (flag_skip) {
+                    continue;
+                }
+                auto flag_debug = lambda_itemnode_as_bool(item["debug"]);
+                if (flag_debug) {
+                    int break_point_here = 1;
+                }
+                auto flag_untagged = lambda_itemnode_as_bool(item["untagged"]);
+
+                binary_t cbor = std::move(base16_decode(text_cbor));
+                crypto_key* mapped_key = keymapper[text_keyset];
+
+                mapped_key->for_each(dump_crypto_key, nullptr);
+
+                binary_t bin_cbor;
+                basic_stream diagnostic;
+                cbor_reader reader;
+                cbor_reader_context_t* reader_handle = nullptr;
+                reader.open(&reader_handle);
+                reader.parse(reader_handle, cbor);
+                reader.publish(reader_handle, &diagnostic);
+                reader.publish(reader_handle, &bin_cbor);
+                reader.close(reader_handle);
+                if (option.verbose) {
+                    _logger->writeln([&](basic_stream& bs) -> void {
+                        bs.printf("cbor\n");
+                        dump_memory(bin_cbor, &bs, 16, 2, dump_notrunc);
+                    });
+                    _logger->writeln("diagnostic\n  %s", diagnostic.c_str());
+
+                    cbor_publisher publisher;
+                    cose_composer composer;
+                    basic_stream bs_diagnostic_composed;
+                    binary_t bin_composed;
+                    cbor_array* cbor_newone = nullptr;
+
+                    composer.parse(cbor);
+                    composer.compose(&cbor_newone, bin_composed, flag_untagged ? false : true);
+
+                    publisher.publish(cbor_newone, &bs_diagnostic_composed);
+                    dump_test_data("compose", bs_diagnostic_composed);
+                    _test_case.assert(bin_composed == bin_cbor, __FUNCTION__, "compose.parse %s", text_item.c_str());
+                }
+
+                basic_stream properties;
+                basic_stream reason;
+                basic_stream debug_stream;
+                return_t ret = errorcode_t::success;
+
+                auto node_enc = item["enc"];
+                auto node_shared = item["shared"];
+
+                cose_context_t* handle = nullptr;
+                cose.open(&handle);
+
+                lambda_dump_subnode("AAD", node_enc, "aad");
+                lambda_dump_subnode("CEK", node_enc, "cek");
+                lambda_dump_subnode("tomac", node_enc, "tomac");
+
+                lambda_set_param("external", node_shared, "external", handle, cose_param_t::cose_external, properties);
+                lambda_set_param("unsent iv", node_shared, "iv", handle, cose_param_t::cose_unsent_iv, properties);
+                lambda_set_param("unsent partyu id", node_shared, "apu_id", handle, cose_param_t::cose_unsent_apu_id, properties);
+                lambda_set_param("unsent partyu nonce", node_shared, "apu_nonce", handle, cose_param_t::cose_unsent_apu_nonce, properties);
+                lambda_set_param("unsent partyu other", node_shared, "apu_other", handle, cose_param_t::cose_unsent_apu_other, properties);
+                lambda_set_param("unsent partyv id", node_shared, "apv_id", handle, cose_param_t::cose_unsent_apv_id, properties);
+                lambda_set_param("unsent partyv nonce", node_shared, "apv_nonce", handle, cose_param_t::cose_unsent_apv_nonce, properties);
+                lambda_set_param("unsent partyv other", node_shared, "apv_other", handle, cose_param_t::cose_unsent_apv_other, properties);
+                lambda_set_param("unsent pub other", node_shared, "pub_other", handle, cose_param_t::cose_unsent_pub_other, properties);
+                lambda_set_param("unsent private", node_shared, "priv", handle, cose_param_t::cose_unsent_priv_other, properties);
+
+                binary_t output;
+                ret = cose.process(handle, mapped_key, cbor, output);
+
+                if (option.verbose) {
+                    uint32 flags = 0;
+                    uint32 debug_flags = 0;
+                    cose.get(handle, flags, debug_flags);
+                    if (debug_flags & cose_debug_notfound_key) {
+                        reason << "!key ";
+                    }
+                    if (debug_flags & cose_debug_partial_iv) {
+                        reason << "partial_iv ";
+                    }
+                    if (debug_flags & cose_debug_counter_sig) {
+                        reason << "counter_sig ";
+                    }
+                    debug_stream = handle->debug_stream;
+                    if (output.size()) {
+                        _logger->writeln([&](basic_stream& bs) -> void {
+                            bs << "decrypted\n";
+                            dump_memory(output, &bs, 16, 4, dump_notrunc);
+                            bs << base16_encode(output);
+                        });
+                    }
+                }
+
+                cose.close(handle);
+
+                _test_case.test(ret, __FUNCTION__, "%s %s %s%s%s%s", text_item.c_str(), properties.c_str(), reason.size() ? "[ debug : " : "", reason.c_str(),
+                                reason.size() ? "] " : " ", debug_stream.c_str());
+            }
+        }
+    };
 
     YAML::Node testvector = YAML::LoadFile("./testvector_cose_examples.yml");
-    auto examples = testvector["testvector"]["examples"];
+    auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {
+            auto schema = example["schema"].as<std::string>();
             auto items = example["items"];
-            if (items && items.IsSequence()) {
-                for (const auto& item : items) {
-                    auto text_item = item["item"].as<std::string>();
-                    auto text_keyset = item["keyset"].as<std::string>();
-                    auto text_cbor = item["cbor"].as<std::string>();
 
-                    _logger->colorln("item: %s", text_item.c_str());
-                    _logger->writeln("keyset: %s", text_keyset.c_str());
-                    _logger->writeln("cbor: %s", text_cbor.c_str());
-
-                    auto flag_skip = lambda_itemnode_as_bool(item["skip"]);
-                    if (flag_skip) {
-                        continue;
-                    }
-                    auto flag_debug = lambda_itemnode_as_bool(item["debug"]);
-                    if (flag_debug) {
-                        int break_point_here = 1;
-                    }
-                    auto flag_untagged = lambda_itemnode_as_bool(item["untagged"]);
-
-                    binary_t cbor = std::move(base16_decode(text_cbor));
-                    crypto_key* mapped_key = keymapper[text_keyset];
-
-                    mapped_key->for_each(dump_crypto_key, nullptr);
-
-                    binary_t bin_cbor;
-                    basic_stream diagnostic;
-                    cbor_reader reader;
-                    cbor_reader_context_t* reader_handle = nullptr;
-                    reader.open(&reader_handle);
-                    reader.parse(reader_handle, cbor);
-                    reader.publish(reader_handle, &diagnostic);
-                    reader.publish(reader_handle, &bin_cbor);
-                    reader.close(reader_handle);
-                    if (option.verbose) {
-                        _logger->writeln([&](basic_stream& bs) -> void {
-                            bs.printf("cbor\n");
-                            dump_memory(bin_cbor, &bs, 16, 2, dump_notrunc);
-                        });
-                        _logger->writeln("diagnostic\n  %s", diagnostic.c_str());
-
-                        cbor_publisher publisher;
-                        cose_composer composer;
-                        basic_stream bs_diagnostic_composed;
-                        binary_t bin_composed;
-                        cbor_array* cbor_newone = nullptr;
-
-                        composer.parse(cbor);
-                        composer.compose(&cbor_newone, bin_composed, flag_untagged ? false : true);
-
-                        publisher.publish(cbor_newone, &bs_diagnostic_composed);
-                        dump_test_data("compose", bs_diagnostic_composed);
-                        _test_case.assert(bin_composed == bin_cbor, __FUNCTION__, "compose.parse %s", text_item.c_str());
-                    }
-
-                    basic_stream properties;
-                    basic_stream reason;
-                    basic_stream debug_stream;
-                    return_t ret = errorcode_t::success;
-
-                    auto node_enc = item["enc"];
-                    auto node_shared = item["shared"];
-
-                    cose_context_t* handle = nullptr;
-                    cose.open(&handle);
-
-                    lambda_dump_subnode("AAD", node_enc, "aad");
-                    lambda_dump_subnode("CEK", node_enc, "cek");
-                    lambda_dump_subnode("tomac", node_enc, "tomac");
-
-                    lambda_set_param("external", node_shared, "external", handle, cose_param_t::cose_external, properties);
-                    lambda_set_param("unsent iv", node_shared, "iv", handle, cose_param_t::cose_unsent_iv, properties);
-                    lambda_set_param("unsent partyu id", node_shared, "apu_id", handle, cose_param_t::cose_unsent_apu_id, properties);
-                    lambda_set_param("unsent partyu nonce", node_shared, "apu_nonce", handle, cose_param_t::cose_unsent_apu_nonce, properties);
-                    lambda_set_param("unsent partyu other", node_shared, "apu_other", handle, cose_param_t::cose_unsent_apu_other, properties);
-                    lambda_set_param("unsent partyv id", node_shared, "apv_id", handle, cose_param_t::cose_unsent_apv_id, properties);
-                    lambda_set_param("unsent partyv nonce", node_shared, "apv_nonce", handle, cose_param_t::cose_unsent_apv_nonce, properties);
-                    lambda_set_param("unsent partyv other", node_shared, "apv_other", handle, cose_param_t::cose_unsent_apv_other, properties);
-                    lambda_set_param("unsent pub other", node_shared, "pub_other", handle, cose_param_t::cose_unsent_pub_other, properties);
-                    lambda_set_param("unsent private", node_shared, "priv", handle, cose_param_t::cose_unsent_priv_other, properties);
-
-                    binary_t output;
-                    ret = cose.process(handle, mapped_key, cbor, output);
-
-                    if (option.verbose) {
-                        uint32 flags = 0;
-                        uint32 debug_flags = 0;
-                        cose.get(handle, flags, debug_flags);
-                        if (debug_flags & cose_debug_notfound_key) {
-                            reason << "!key ";
-                        }
-                        if (debug_flags & cose_debug_partial_iv) {
-                            reason << "partial_iv ";
-                        }
-                        if (debug_flags & cose_debug_counter_sig) {
-                            reason << "counter_sig ";
-                        }
-                        debug_stream = handle->debug_stream;
-                        if (output.size()) {
-                            _logger->writeln([&](basic_stream& bs) -> void {
-                                bs << "decrypted\n";
-                                dump_memory(output, &bs, 16, 4, dump_notrunc);
-                                bs << base16_encode(output);
-                            });
-                        }
-                    }
-
-                    cose.close(handle);
-
-                    _test_case.test(ret, __FUNCTION__, "%s %s %s%s%s%s", text_item.c_str(), properties.c_str(), reason.size() ? "[ debug : " : "",
-                                    reason.c_str(), reason.size() ? "] " : " ", debug_stream.c_str());
-                }
+            if (schema == "COSE EXAMPLES") {
+                lambda_test_cose_examples(items);
+            } else {
+                _test_case.assert(false, __FUNCTION__, "bad message format");
             }
         }
     }

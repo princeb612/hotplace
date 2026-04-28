@@ -1,5 +1,7 @@
 testvector:
-  - example: myoption  # MYOPTION structure
+  - example: cmdline
+    schema: CMDLINE
+    template: myoption  # MYOPTION structure
     items:
       - item:
         args:

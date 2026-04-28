@@ -22,8 +22,7 @@
 namespace hotplace {
 namespace net {
 
-trial_tls_server_socket::trial_tls_server_socket(tls_version_t minspec, tls_version_t maxspec)
-    : naive_tcp_server_socket(), _minspec(minspec), _maxspec(maxspec) {}
+trial_tls_server_socket::trial_tls_server_socket(tls_version_t minspec, tls_version_t maxspec) : naive_tcp_server_socket(), _minspec(minspec), _maxspec(maxspec) {}
 
 trial_tls_server_socket::~trial_tls_server_socket() {}
 
@@ -54,9 +53,7 @@ return_t trial_tls_server_socket::tls_accept(socket_context_t **handle, socket_t
                 size_t sent = 0;
                 naive_tcp_server_socket::send(ctx, (char *)bin.data(), bin.size(), &sent);
             };
-            auto lambda = [&](tls_session *sess, uint32 status) -> void {
-                sess->get_tls_composer()->session_status_changed(status, from_server, 1000, lambda_send);
-            };
+            auto lambda = [&](tls_session *sess, uint32 status) -> void { sess->get_tls_composer()->session_status_changed(status, from_server, 1000, lambda_send); };
 
             session->set_hook_change_session_status(lambda);
             session->set_hook_param(context);

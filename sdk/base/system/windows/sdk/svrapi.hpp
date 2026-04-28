@@ -36,8 +36,8 @@ typedef NET_API_STATUS(__stdcall *SVRAPI_NETSHAREENUM)(const char FAR *pszServer
 /* @brief
     Returns information about some or all open files on a server, depending on the parameters specified.
  */
-typedef NET_API_STATUS(__stdcall *SVRAPI_NETFILEENUM)(const char FAR *pszServer, const char FAR *pszBasePath, short sLevel, char FAR *pbBuffer,
-                                                      unsigned short cbBuffer, unsigned short FAR *pcEntriesRead, unsigned short FAR *pcTotalAvail);
+typedef NET_API_STATUS(__stdcall *SVRAPI_NETFILEENUM)(const char FAR *pszServer, const char FAR *pszBasePath, short sLevel, char FAR *pbBuffer, unsigned short cbBuffer,
+                                                      unsigned short FAR *pcEntriesRead, unsigned short FAR *pcTotalAvail);
 
 /* "NetConnectionEnum" */
 #define DECLARE_NAMEOF_API_SVRAPI_NETCONNECTIONENUM                                             \

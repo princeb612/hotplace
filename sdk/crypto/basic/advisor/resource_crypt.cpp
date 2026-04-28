@@ -116,6 +116,8 @@ const hint_cipher_t evp_cipher_methods[] = {
     {crypto_scheme_bf_ecb, blowfish, ecb, "bf-ecb"},
     {crypto_scheme_bf_ofb, blowfish, ofb, "bf-ofb"},
 
+    // RFC 6367 mentions Camellia GCM
+
     {crypto_scheme_camellia_128_cbc, camellia128, cbc, "camellia-128-cbc"},
     {crypto_scheme_camellia_128_cfb, camellia128, cfb, "camellia-128-cfb"},
     {crypto_scheme_camellia_128_cfb1, camellia128, cfb1, "camellia-128-cfb1"},

@@ -243,9 +243,8 @@ return_t protection_context::select_from(const protection_context& other, tls_se
                     }
 #if defined DEBUG
                     if (istraceable(trace_category_net)) {
-                        trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
-                            dbs.println(" ? " ANSI_ESCAPE "1;33m# 0x%02x %s" ANSI_ESCAPE "0m", cs, hint->name_iana);
-                        });
+                        trace_debug_event(trace_category_net, trace_event_tls_protection,
+                                          [&](basic_stream& dbs) -> void { dbs.println(" ? " ANSI_ESCAPE "1;33m# 0x%02x %s" ANSI_ESCAPE "0m", cs, hint->name_iana); });
                     }
 #endif
                     cs_map[hint->spec].push_back(cs);
@@ -266,9 +265,8 @@ return_t protection_context::select_from(const protection_context& other, tls_se
 #if defined DEBUG
                     if (istraceable(trace_category_net)) {
                         auto hint = tlsadvisor->hintof_cipher_suite(cs);
-                        trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
-                            dbs.println(" ! " ANSI_ESCAPE "1;33m# 0x%02x %s" ANSI_ESCAPE "0m", cs, hint->name_iana);
-                        });
+                        trace_debug_event(trace_category_net, trace_event_tls_protection,
+                                          [&](basic_stream& dbs) -> void { dbs.println(" ! " ANSI_ESCAPE "1;33m# 0x%02x %s" ANSI_ESCAPE "0m", cs, hint->name_iana); });
                     }
 #endif
                     break;

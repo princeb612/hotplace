@@ -89,13 +89,11 @@ return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t 
     return verify_rsassa_pss(pkey, alg, input.data(), input.size(), signature, saltlen);
 }
 
-return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature,
-                                         uint32 flags) {
+return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) {
     return verify_rsassa_pss(pkey, alg, stream, size, signature, -1);
 }
 
-return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature,
-                                         int saltlen) {
+return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature, int saltlen) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_hash hash;

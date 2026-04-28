@@ -76,8 +76,8 @@ return_t odbc_query::build_fieldinfo(void) {
         }
 
         while (nCol <= NumResCols) {
-            ret_sql = SQLDescribeCol(_stmt_handle, nCol, reinterpret_cast<SQLTCHAR*>(ColName), RTL_NUMBER_OF(ColName), &ColNameLength, &ColType, &ColSize,
-                                     &Scale, &Nullable);
+            ret_sql =
+                SQLDescribeCol(_stmt_handle, nCol, reinterpret_cast<SQLTCHAR*>(ColName), RTL_NUMBER_OF(ColName), &ColNameLength, &ColType, &ColSize, &Scale, &Nullable);
             if (!SQL_SUCCEEDED(ret_sql)) {
                 ret = errorcode_t::internal_error;
                 break;
@@ -110,8 +110,8 @@ return_t odbc_query::bind_statement_parameter(UINT nIndex, DWORD CType, DWORD SQ
             __leave2;
         }
 
-        ret_sql = SQLBindParameter(_stmt_handle, (SQLUSMALLINT)nIndex, SQL_PARAM_INPUT, (SQLSMALLINT)CType, (SQLSMALLINT)SQLType, 0, 0, pData,
-                                   (SQLINTEGER)sizeData, nullptr);
+        ret_sql =
+            SQLBindParameter(_stmt_handle, (SQLUSMALLINT)nIndex, SQL_PARAM_INPUT, (SQLSMALLINT)CType, (SQLSMALLINT)SQLType, 0, 0, pData, (SQLINTEGER)sizeData, nullptr);
         if (SQL_SUCCEEDED(ret_sql)) {
             // do nothing
         } else {
@@ -405,9 +405,8 @@ return_t odbc_query::fetch(odbc_record* odbc_record_ptr) {
                 size_t dwDataSize = bio.size();
 
                 if (dwDataSize == 0) { /* 미리 준비한 버퍼를 사용해 데이터를 가져온 경우 */
-                    __try_new_catch(odbc_field_ptr,
-                                    new odbc_field(nCol, nColumnType, nColumnType, nDataLen > 0 ? (int)nDataLen : 1, (unsigned char*)DataBuf, pFieldRef), ret,
-                                    __leave2);
+                    __try_new_catch(odbc_field_ptr, new odbc_field(nCol, nColumnType, nColumnType, nDataLen > 0 ? (int)nDataLen : 1, (unsigned char*)DataBuf, pFieldRef),
+                                    ret, __leave2);
                 } else { /* 메모리 스트림을 사용해 큰 데이터를 가져온 경우 */
                     __try_new_catch(odbc_field_ptr,
                                     new odbc_field(nCol, nColumnType, nColumnType, dwDataSize > 0 ? (int)dwDataSize : 1, (unsigned char*)pData, pFieldRef), ret,

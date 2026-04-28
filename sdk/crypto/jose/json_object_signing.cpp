@@ -34,8 +34,7 @@ return_t json_object_signing::sign(jose_context_t* handle, jws_t sig, const std:
     return sign(handle, methods, input, output, type);
 }
 
-return_t json_object_signing::sign(jose_context_t* handle, std::list<jws_t> const& methods, const std::string& input, std::string& output,
-                                   jose_serialization_t type) {
+return_t json_object_signing::sign(jose_context_t* handle, std::list<jws_t> const& methods, const std::string& input, std::string& output, jose_serialization_t type) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 

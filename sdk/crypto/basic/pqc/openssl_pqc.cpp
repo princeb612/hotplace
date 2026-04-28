@@ -76,8 +76,7 @@ return_t openssl_pqc::decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const byte_t
     return ret;
 }
 
-return_t openssl_pqc::decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding,
-                             const char* passphrase) {
+return_t openssl_pqc::decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey || keydata.empty()) {

@@ -83,11 +83,9 @@ void test_dtls_xargs_org() {
         binary_t secret_handshake_server_iv;
         test_keycalc(&session, tls_secret_handshake_server_iv, secret_handshake_server_iv, "secret_handshake_server_iv", "6d9924be044ee97c624913f2");
         binary_t secret_handshake_client_sn_key;
-        test_keycalc(&session, tls_secret_handshake_client_sn_key, secret_handshake_client_sn_key, "secret_handshake_client_sn_key",
-                     "beed6218676635c2cb46a45694144fec");
+        test_keycalc(&session, tls_secret_handshake_client_sn_key, secret_handshake_client_sn_key, "secret_handshake_client_sn_key", "beed6218676635c2cb46a45694144fec");
         binary_t secret_handshake_server_sn_key;
-        test_keycalc(&session, tls_secret_handshake_server_sn_key, secret_handshake_server_sn_key, "secret_handshake_server_sn_key",
-                     "7173fac51194e775001d625ef69d7c9f");
+        test_keycalc(&session, tls_secret_handshake_server_sn_key, secret_handshake_server_sn_key, "secret_handshake_server_sn_key", "7173fac51194e775001d625ef69d7c9f");
     }
     // https://dtls.xargs.org/#server-encrypted-extensions-datagram
     {
@@ -159,16 +157,14 @@ void test_dtls_xargs_org() {
     // https://dtls.xargs.org/#client-application-keys-calc
     {
         binary_t secret_application_client_key;
-        test_keycalc(&session, tls_secret_application_client_key, secret_application_client_key, "secret_application_client_key",
-                     "9ba90dbce8857bc1fcb81d41a0465cfe");
+        test_keycalc(&session, tls_secret_application_client_key, secret_application_client_key, "secret_application_client_key", "9ba90dbce8857bc1fcb81d41a0465cfe");
         binary_t secret_application_client_iv;
         test_keycalc(&session, tls_secret_application_client_iv, secret_application_client_iv, "secret_application_client_iv", "682219974631fa0656ee4eff");
         binary_t secret_application_client_sn_key;
         test_keycalc(&session, tls_secret_application_client_sn_key, secret_application_client_sn_key, "secret_application_client_sn_key",
                      "5cb5bd8bac29777c650c0dde22d16d47");
         binary_t secret_application_server_key;
-        test_keycalc(&session, tls_secret_application_server_key, secret_application_server_key, "secret_application_server_key",
-                     "2b65fffbbc8189474aa2003c43c32d4d");
+        test_keycalc(&session, tls_secret_application_server_key, secret_application_server_key, "secret_application_server_key", "2b65fffbbc8189474aa2003c43c32d4d");
         binary_t secret_application_server_iv;
         test_keycalc(&session, tls_secret_application_server_iv, secret_application_server_iv, "secret_application_server_iv", "582f5a11bdaf973fe3ffeb4e");
         binary_t secret_application_server_sn_key;

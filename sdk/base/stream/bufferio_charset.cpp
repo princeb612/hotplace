@@ -28,9 +28,7 @@ size_t bufferio::wfind_first_of(bufferio_context_t* handle, const wchar_t* find,
 #endif
 
 #if defined _MBCS || defined MBCS
-size_t bufferio::find_first_of(bufferio_context_t* handle, int (*is_ctype_func)(int), size_t offset) {
-    return find_first_of_routine(handle, 1, is_ctype_func, offset);
-}
+size_t bufferio::find_first_of(bufferio_context_t* handle, int (*is_ctype_func)(int), size_t offset) { return find_first_of_routine(handle, 1, is_ctype_func, offset); }
 #elif defined _UNICODE || defined UNICODE
 size_t bufferio::wfind_first_of(bufferio_context_t* handle, int (*is_ctype_func)(wint_t), size_t offset) {
     return wfind_first_of_routine(handle, 1, is_ctype_func, offset);

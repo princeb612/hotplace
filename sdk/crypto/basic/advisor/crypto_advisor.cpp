@@ -90,8 +90,7 @@ return_t crypto_advisor::build() {
         if (istraceable(trace_category_crypto, loglevel_debug)) {
             // __trace(errorcode_t::debug, "%s", nameof_alg(item));
             if (nullptr == evp_cipher) {
-                trace_debug_event(trace_category_crypto, trace_event_openssl_nosupport,
-                                  [&](basic_stream& dbs) -> void { dbs.println("no %s", nameof_alg(item)); });
+                trace_debug_event(trace_category_crypto, trace_event_openssl_nosupport, [&](basic_stream& dbs) -> void { dbs.println("no %s", nameof_alg(item)); });
             } else {
                 trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream& dbs) -> void { dbs.println("%s", nameof_alg(item)); });
             }
@@ -117,7 +116,6 @@ return_t crypto_advisor::build() {
             _cipher_fetch_map.insert({CRYPTO_SCHEME16(item->hint.algorithm, item->hint.mode), std::move(block)});
             _evp_cipher_map.insert({item->_cipher, &item->hint});
 
-            set_feature(item->hint.fetchname, advisor_feature_cipher);
             set_feature(item->hint.fetchname, advisor_feature_wrap);
         }
     }
@@ -140,18 +138,20 @@ return_t crypto_advisor::build() {
 #if defined DEBUG
             if (istraceable(trace_category_crypto, loglevel_debug)) {
                 // __trace(errorcode_t::debug, "%s", nameof_alg(item));
-                trace_debug_event(trace_category_crypto, trace_event_openssl_nosupport,
-                                  [&](basic_stream& dbs) -> void { dbs.println("no %s", nameof_alg(item)); });
+                trace_debug_event(trace_category_crypto, trace_event_openssl_nosupport, [&](basic_stream& dbs) -> void { dbs.println("no %s", nameof_alg(item)); });
             }
 #endif
         }
         _md_byname_map.insert(std::make_pair(nameof_alg(item), item));
         if (item->altname) {
-            _md_byname_map.insert(std::make_pair(item->altname, item));
+            _md_byname_map.insert(std::make_pair(item->altname, item));  // see query_feature
         }
 
         if (evp_md) {
             set_feature(nameof_alg(item), advisor_feature_md);
+            if (item->altname) {
+                set_feature(item->altname, advisor_feature_md);
+            }
         }
     }
 
@@ -199,6 +199,7 @@ return_t crypto_advisor::build() {
     }
     for (i = 0; i < sizeof_hint_curves; i++) {
         const hint_curve_t* item = hint_curves + i;
+
         if (item->name_nist) {
             _nid_bycurve_map.insert(std::make_pair(item->name_nist, item));
         }
@@ -207,26 +208,51 @@ return_t crypto_advisor::build() {
         }
         _curve_bynid_map.insert(std::make_pair(item->id, item));
 
-        if (item->name_nist) {
-            set_feature(item->name_nist, advisor_feature_curve);
-            if (item->name_nist) {
-                _curve_name_map.insert({item->name_nist, item});
+        // see query_feature
+        {
+            bool support_ec2 = false;
+
+            if (kty_ec == item->kty) {
+                EC_KEY_ptr ec = EC_KEY_ptr(EC_KEY_new_by_curve_name(item->id));
+                if (ec.get()) {
+                    support_ec2 = true;
+                } else {
+                    ERR_clear_error();
+                }
+                // end of ec
+            } else if (kty_okp == item->kty) {
+                EVP_PKEY_CTX_ptr ctx(EVP_PKEY_CTX_new_id(item->id, nullptr));
+                if (ctx.get()) {
+                    support_ec2 = true;
+                } else {
+                    ERR_clear_error();
+                }
+                // end of ctx
             }
-            if (item->name_x962) {
-                set_feature(item->name_x962, advisor_feature_curve);
-            }
-            if (item->name_sec) {
-                set_feature(item->name_sec, advisor_feature_curve);
-            }
-            if (item->name_bp) {
-                set_feature(item->name_bp, advisor_feature_curve);
-            }
-            if (item->name_wtls) {
-                set_feature(item->name_wtls, advisor_feature_curve);
+
+            if (support_ec2) {
+                if (item->name_nist) {
+                    set_feature(item->name_nist, advisor_feature_curve);
+                }
+                if (item->name_x962) {
+                    set_feature(item->name_x962, advisor_feature_curve);
+                }
+                if (item->name_sec) {
+                    set_feature(item->name_sec, advisor_feature_curve);
+                }
+                if (item->name_bp) {
+                    set_feature(item->name_bp, advisor_feature_curve);
+                }
+                if (item->name_wtls) {
+                    set_feature(item->name_wtls, advisor_feature_curve);
+                }
             }
         }
         if (item->tlsgroup) {
             _tls_group_curve_map.insert({item->tlsgroup, item});
+        }
+        if (item->name_nist) {
+            _curve_name_map.insert({item->name_nist, item});
         }
         if (item->name_x962) {
             _curve_name_map.insert({item->name_x962, item});
@@ -358,22 +384,27 @@ return_t crypto_advisor::cleanup() {
     return ret;
 }
 
-bool crypto_advisor::query_feature(const char* feature, uint32 spec) {
-    bool ret = false;
+uint32 crypto_advisor::query_feature(const char* feature, uint32 spec) {
+    uint32 ret = 0;
     if (feature) {
-        std::string key = feature;
-        auto iter = _features.find(key);
-        if (_features.end() != iter) {
-            const uint32& flags = iter->second;
-            if (advisor_feature_version & flags) {
-                unsigned long osslver = OpenSSL_version_num();
-                auto ver = _versions[key];
-                ret = (osslver >= ver);
-            } else if (spec) {
-                ret = (flags & spec);
-            } else {
-                ret = true;
-            }
+        ret = query_feature(std::string(feature), spec);
+    }
+    return ret;
+}
+
+uint32 crypto_advisor::query_feature(const std::string& feature, uint32 spec) {
+    uint32 ret = 0;
+    auto iter = _features.find(feature);
+    if (_features.end() != iter) {
+        const uint32& flags = iter->second;
+        if (advisor_feature_version & flags) {
+            unsigned long osslver = OpenSSL_version_num();
+            auto ver = _versions[feature];
+            ret = (osslver >= ver);
+        } else if (spec) {
+            ret = (flags & spec);
+        } else {
+            ret = flags;
         }
     }
     return ret;
@@ -382,6 +413,14 @@ bool crypto_advisor::query_feature(const char* feature, uint32 spec) {
 bool crypto_advisor::check_minimum_version(unsigned long osslver) {
     unsigned long ver = OpenSSL_version_num();
     return (ver >= osslver) ? true : false;
+}
+
+void crypto_advisor::for_each_features(std::function<void(const char* name, uint32 spec)> fn) {
+    if (fn) {
+        for (auto item : _features) {
+            fn(item.first.c_str(), item.second);
+        }
+    }
 }
 
 void crypto_advisor::get_cookie_secret(uint8 key, size_t secret_size, binary_t& secret) {

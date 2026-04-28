@@ -432,9 +432,7 @@ return_t authenticode_plugin_pe::find_if_separated(std::string filepathname_not_
     return errorcode_t::not_available;
 }
 
-return_t authenticode_plugin_pe::verify_if_separated(std::string file_not_signed, std::string file_signed, uint32* result) {
-    return errorcode_t::not_available;
-}
+return_t authenticode_plugin_pe::verify_if_separated(std::string file_not_signed, std::string file_signed, uint32* result) { return errorcode_t::not_available; }
 
 return_t authenticode_plugin_pe::read_checksum(file_stream* filestream, uint32* out_checksum_value) {
     return_t ret = errorcode_t::success;

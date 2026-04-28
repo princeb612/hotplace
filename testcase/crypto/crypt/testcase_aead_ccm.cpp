@@ -20,8 +20,7 @@ void test_aead_ccm() {
     size_t size = strlen(sample);
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
-    auto lambda = [&](const char* text, crypto_scheme_t scheme, const binary_t& key, const binary_t& iv, const byte_t* stream, size_t size,
-                      const binary_t& aad) -> void {
+    auto lambda = [&](const char* text, crypto_scheme_t scheme, const binary_t& key, const binary_t& iv, const byte_t* stream, size_t size, const binary_t& aad) -> void {
         return_t ret = errorcode_t::success;
         openssl_crypt crypt;
         crypt_context_t* handle = nullptr;

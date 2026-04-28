@@ -144,6 +144,19 @@ crypto_sign_builder& crypto_sign_builder::set_digest(hash_algorithm_t hashalg) {
     return *this;
 }
 
+crypto_sign_builder& crypto_sign_builder::set_digest(const char* hashalg) {
+    auto advisor = crypto_advisor::get_instance();
+    auto hint = advisor->hintof_digest(hashalg);
+    _hashalg = typeof_alg(hint);
+    return *this;
+}
+crypto_sign_builder& crypto_sign_builder::set_digest(const std::string& hashalg) {
+    auto advisor = crypto_advisor::get_instance();
+    auto hint = advisor->hintof_digest(hashalg);
+    _hashalg = typeof_alg(hint);
+    return *this;
+}
+
 crypto_sign_builder& crypto_sign_builder::set_scheme(jws_t type) {
     // jws_t jws_hs256, ...
     // crypt_sig_t sig_hs256

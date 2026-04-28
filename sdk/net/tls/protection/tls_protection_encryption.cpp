@@ -78,8 +78,8 @@ uint8 tls_protection::get_tag_size() {
 // length of TLSCiphertext.fragment may not exceed 2^14 + 2048
 #define TLS_CIPHERTEXT_MAXSIZE ((2 << 14) + 2048)
 
-return_t tls_protection::encrypt(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext, const binary_t &additional,
-                                 binary_t &tag, protection_space_t space) {
+return_t tls_protection::encrypt(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext, const binary_t &additional, binary_t &tag,
+                                 protection_space_t space) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -186,8 +186,8 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
     return ret;
 }
 
-return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext,
-                                 const binary_t &aad, const binary_t &tag, protection_space_t space) {
+return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext, const binary_t &aad,
+                                 const binary_t &tag, protection_space_t space) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {

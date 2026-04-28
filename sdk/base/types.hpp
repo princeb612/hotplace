@@ -79,6 +79,7 @@ enum encoding_t {
     encoding_base16 = 1,     // BASE16
     encoding_base64 = 2,     // BASE64    + /
     encoding_base64url = 3,  // BASE64URL - _ without padding
+    encoding_base16rfc = 4,  // see base16_encode_rfc, base16_decode_rfc
 };
 
 #ifndef _WIN32  // winnt.h

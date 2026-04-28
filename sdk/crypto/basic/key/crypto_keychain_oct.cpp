@@ -86,6 +86,25 @@ return_t crypto_keychain::add_oct(crypto_key* cryptokey, jwa_t alg, const binary
     return add_oct(cryptokey, k, kd);
 }
 
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, encoding_t encoding, const char* k, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    switch (encoding) {
+        case encoding_t::encoding_base64:
+            ret = add_oct_b64(cryptokey, k, desc);
+            break;
+        case encoding_t::encoding_base64url:
+            ret = add_oct_b64u(cryptokey, k, desc);
+            break;
+        case encoding_t::encoding_base16:
+            ret = add_oct_b16(cryptokey, k, desc);
+            break;
+        case encoding_t::encoding_base16rfc:
+            ret = add_oct_b16rfc(cryptokey, k, desc);
+            break;
+    }
+    return ret;
+}
+
 return_t crypto_keychain::add_oct_b64(crypto_key* cryptokey, const char* k, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {

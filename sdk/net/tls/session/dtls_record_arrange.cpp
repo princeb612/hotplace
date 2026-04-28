@@ -132,9 +132,8 @@ return_t dtls_record_arrange::consume(const sockaddr* addr, socklen_t addrlen, u
 
 #if defined DEBUG
                 if (istraceable(trace_category_net)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
-                        dbs.println(ANSI_ESCAPE "1;35mDTLS reorder ! epoch %u seq %I64u" ANSI_ESCAPE "0m", epoch, seq);
-                    });
+                    trace_debug_event(trace_category_net, trace_event_tls_record,
+                                      [&](basic_stream& dbs) -> void { dbs.println(ANSI_ESCAPE "1;35mDTLS reorder ! epoch %u seq %I64u" ANSI_ESCAPE "0m", epoch, seq); });
                 }
 #endif
 

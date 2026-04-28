@@ -18,8 +18,7 @@ void test_x690_8_1_3_length_octets() {
         uint32 i;
         const char* expect;
     } _table[] = {
-        {38, "26"},     {50, "32"},     {100, "64"},       {127, "7f"},        {128, "81 80"},
-        {200, "81 c8"}, {201, "81 c9"}, {300, "82 01 2c"}, {1024, "82 04 00"}, {65535, "82 ff ff"},
+        {38, "26"}, {50, "32"}, {100, "64"}, {127, "7f"}, {128, "81 80"}, {200, "81 c8"}, {201, "81 c9"}, {300, "82 01 2c"}, {1024, "82 04 00"}, {65535, "82 ff ff"},
     };
 
     binary_t bin;
@@ -307,8 +306,8 @@ void test_x690_encoding_typevalue() {
          "X.690 11.7 #1"},  // 19920521000000Z
         {new asn1_object(asn1_type_generalizedtime), variant(datetime_t(1992, 6, 22, 12, 34, 21)), "18 0F 31 39 39 32 30 36 32 32 31 32 33 34 32 31 5A",
          "X.690 11.7 #2"},  // 19920622123421Z
-        {new asn1_object(asn1_type_generalizedtime), variant(datetime_t(1992, 7, 22, 13, 21, 00, 3)),
-         "18 11 31 39 39 32 30 37 32 32 31 33 32 31 30 30 2E 33 5A", "X.690 11.7 #3"},  // 19920722132100.3Z
+        {new asn1_object(asn1_type_generalizedtime), variant(datetime_t(1992, 7, 22, 13, 21, 00, 3)), "18 11 31 39 39 32 30 37 32 32 31 33 32 31 30 30 2E 33 5A",
+         "X.690 11.7 #3"},  // 19920722132100.3Z
 
         // X.690 8.14 encoding of a tagged value
         // case 1. Type1 ::= VisibleString
@@ -465,8 +464,7 @@ void test_asn1_object() {
         {"REAL", new asn1_object(asn1_type_real)},
         {"SEQUENCE {name IA5String, ok BOOLEAN}", new asn1_sequence(2, new asn1_object("name", asn1_type_ia5string), new asn1_object("ok", asn1_type_boolean))},
         {"Date ::= VisibleString", new asn1_object("Date", asn1_type_visiblestring)},
-        {"Date ::= [APPLICATION 3] IMPLICIT VisibleString",
-         new asn1_object("Date", asn1_type_visiblestring, new asn1_tag(asn1_class_application, 3, asn1_implicit))},
+        {"Date ::= [APPLICATION 3] IMPLICIT VisibleString", new asn1_object("Date", asn1_type_visiblestring, new asn1_tag(asn1_class_application, 3, asn1_implicit))},
     };
 
     basic_stream bs;
@@ -487,8 +485,8 @@ void test_asn1_object() {
 
         auto result = p.psearchex(ctx);
         auto dump_handler = [&](const token_description* desc) -> void {
-            _logger->writeln("> type %d(%s) tag %i index %d pos %zi len %zi (%.*s)", desc->type, p.typeof_token(desc->type).c_str(), desc->tag, desc->index,
-                             desc->pos, desc->size, (unsigned)desc->size, desc->p);
+            _logger->writeln("> type %d(%s) tag %i index %d pos %zi len %zi (%.*s)", desc->type, p.typeof_token(desc->type).c_str(), desc->tag, desc->index, desc->pos,
+                             desc->size, (unsigned)desc->size, desc->p);
         };
         std::map<uint32, asn1_type_t> typemap;
         typemap.insert({token_bool, asn1_type_boolean});
@@ -552,8 +550,7 @@ void test_x690_annex_a_1() {
         asn1* object = new asn1;
 
         auto node_personal = new asn1_set("PersonnelRecord", new asn1_tag(asn1_class_application, 0, asn1_implicit));
-        *node_personal << new asn1_object("name", new asn1_object("Name", asn1_type_referenced))
-                       << new asn1_object("title", asn1_type_visiblestring, new asn1_tag(0))
+        *node_personal << new asn1_object("name", new asn1_object("Name", asn1_type_referenced)) << new asn1_object("title", asn1_type_visiblestring, new asn1_tag(0))
                        << new asn1_object("number", new asn1_object("EmployeeNumber", asn1_type_referenced))
                        << new asn1_object("dateOfHire", new asn1_object("Date", asn1_type_referenced, new asn1_tag(1)))
                        << new asn1_object("nameOfSpouse", new asn1_object("Name", asn1_type_referenced, new asn1_tag(2)))
@@ -566,8 +563,7 @@ void test_x690_annex_a_1() {
         *object << node_childinfo;
 
         auto node_name = new asn1_sequence("Name", new asn1_tag(asn1_class_application, 1, asn1_implicit));
-        *node_name << new asn1_object("givenName", new asn1_object(asn1_type_visiblestring))
-                   << new asn1_object("initial", new asn1_object(asn1_type_visiblestring))
+        *node_name << new asn1_object("givenName", new asn1_object(asn1_type_visiblestring)) << new asn1_object("initial", new asn1_object(asn1_type_visiblestring))
                    << new asn1_object("familyName", new asn1_object(asn1_type_visiblestring));
         *object << node_name;
 

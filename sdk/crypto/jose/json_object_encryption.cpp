@@ -71,8 +71,7 @@ return_t json_object_encryption::encrypt(jose_context_t *handle, jwe_t enc, jwa_
     return ret;
 }
 
-return_t json_object_encryption::encrypt(jose_context_t *handle, jwe_t enc, jwa_t alg, const std::string &input, std::string &output,
-                                         jose_serialization_t type) {
+return_t json_object_encryption::encrypt(jose_context_t *handle, jwe_t enc, jwa_t alg, const std::string &input, std::string &output, jose_serialization_t type) {
     return encrypt(handle, enc, alg, str2bin(input), output, type);
 }
 

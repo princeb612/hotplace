@@ -25,13 +25,9 @@
 namespace hotplace {
 namespace io {
 
-return_t zlib_deflate(zlib_windowbits_t windowbits, const binary_t& input, binary_t& output) {
-    return zlib_deflate(windowbits, input.data(), input.size(), output);
-}
+return_t zlib_deflate(zlib_windowbits_t windowbits, const binary_t& input, binary_t& output) { return zlib_deflate(windowbits, input.data(), input.size(), output); }
 
-return_t zlib_inflate(zlib_windowbits_t windowbits, const binary_t& input, binary_t& output) {
-    return zlib_inflate(windowbits, input.data(), input.size(), output);
-}
+return_t zlib_inflate(zlib_windowbits_t windowbits, const binary_t& input, binary_t& output) { return zlib_inflate(windowbits, input.data(), input.size(), output); }
 
 return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t size, binary_t& output) {
     return_t ret = errorcode_t::success;
@@ -149,13 +145,9 @@ return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
     return ret;
 }
 
-return_t zlib_deflate(zlib_windowbits_t windowbits, const binary_t& input, stream_t* output) {
-    return zlib_deflate(windowbits, input.data(), input.size(), output);
-}
+return_t zlib_deflate(zlib_windowbits_t windowbits, const binary_t& input, stream_t* output) { return zlib_deflate(windowbits, input.data(), input.size(), output); }
 
-return_t zlib_inflate(zlib_windowbits_t windowbits, const binary_t& input, stream_t* output) {
-    return zlib_inflate(windowbits, input.data(), input.size(), output);
-}
+return_t zlib_inflate(zlib_windowbits_t windowbits, const binary_t& input, stream_t* output) { return zlib_inflate(windowbits, input.data(), input.size(), output); }
 
 return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t size, stream_t* output) {
     return_t ret = errorcode_t::success;

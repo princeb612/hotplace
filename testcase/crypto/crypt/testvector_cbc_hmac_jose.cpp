@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   testcase_cbc_hmac_jose.cpp
+ * @file   testvector_cbc_hmac_jose.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -204,6 +204,27 @@ void do_test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_h
 void test_yaml_testvector_cbc_hmac_jose() {
     _test_case.begin("Authenticated Encryption with AES-CBC and HMAC-SHA YAML");
 
+    auto lambda_test_cbc_hmac_jose = [&](const YAML::Node& items) -> void {
+        for (const auto& item : items) {
+            test_vector_aead_aes_cbc_hmac_sha2_t entry;
+
+            entry.item = std::move(item["item"].as<std::string>());
+            entry.encalg = std::move(item["encalg"].as<std::string>());
+            entry.macalg = std::move(item["macalg"].as<std::string>());
+            entry.k = std::move(item["k"].as<std::string>());
+            entry.p = std::move(item["p"].as<std::string>());
+            entry.iv = std::move(item["iv"].as<std::string>());
+            entry.a = std::move(item["a"].as<std::string>());
+            entry.q = std::move(item["q"].as<std::string>());
+            entry.s = std::move(item["s"].as<std::string>());
+            entry.t = std::move(item["t"].as<std::string>());
+            entry.c = std::move(item["c"].as<std::string>());
+
+            do_test_aead_aes_cbc_hmac_sha2_testvector1(&entry);
+            do_test_aead_aes_cbc_hmac_sha2_testvector2(&entry);
+        }
+    };
+
     YAML::Node testvector = YAML::LoadFile("./testvector_cbc_hmac_jose.yml");
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
@@ -211,24 +232,13 @@ void test_yaml_testvector_cbc_hmac_jose() {
             auto text_example = example["example"].as<std::string>();
             _logger->writeln("example: %s", text_example.c_str());
 
+            auto schema = example["schema"].as<std::string>();
             auto items = example["items"];
-            for (const auto& item : items) {
-                test_vector_aead_aes_cbc_hmac_sha2_t entry;
 
-                entry.item = std::move(item["item"].as<std::string>());
-                entry.encalg = std::move(item["encalg"].as<std::string>());
-                entry.macalg = std::move(item["macalg"].as<std::string>());
-                entry.k = std::move(item["k"].as<std::string>());
-                entry.p = std::move(item["p"].as<std::string>());
-                entry.iv = std::move(item["iv"].as<std::string>());
-                entry.a = std::move(item["a"].as<std::string>());
-                entry.q = std::move(item["q"].as<std::string>());
-                entry.s = std::move(item["s"].as<std::string>());
-                entry.t = std::move(item["t"].as<std::string>());
-                entry.c = std::move(item["c"].as<std::string>());
-
-                do_test_aead_aes_cbc_hmac_sha2_testvector1(&entry);
-                do_test_aead_aes_cbc_hmac_sha2_testvector2(&entry);
+            if (schema == "CBC-HMAC JOSE") {
+                lambda_test_cbc_hmac_jose(items);
+            } else {
+                _test_case.assert(false, __FUNCTION__, "bad message format");
             }
         }
     }

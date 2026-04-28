@@ -6,6 +6,7 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2016.02.19   Soo Han, Kim        dynamic_va_list (codename.merlin Revision 3152)
  */
 
 #ifndef __HOTPLACE_SDK_BASE_BASIC_VALIST__

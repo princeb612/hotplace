@@ -147,9 +147,9 @@ typedef NTSTATUS(__stdcall *NTOPENSECTION)(OUT PHANDLE SectionHandle, IN ACCESS_
     Note
     If the call to this function occurs in user mode, you should use the name "NtMapViewOfSection" instead of "ZwMapViewOfSection".
  */
-typedef NTSTATUS(__stdcall *NTMAPVIEWOFSECTION)(IN HANDLE SectionHandle, IN HANDLE ProcessHandle, IN OUT PVOID *BaseAddress, IN ULONG ZeroBits,
-                                                IN ULONG CommitSize, IN OUT PLARGE_INTEGER SectionOffset, IN OUT PULONG ViewSize,
-                                                IN SECTION_INHERIT InheritDisposition, IN ULONG AllocationType, IN ULONG Protect);
+typedef NTSTATUS(__stdcall *NTMAPVIEWOFSECTION)(IN HANDLE SectionHandle, IN HANDLE ProcessHandle, IN OUT PVOID *BaseAddress, IN ULONG ZeroBits, IN ULONG CommitSize,
+                                                IN OUT PLARGE_INTEGER SectionOffset, IN OUT PULONG ViewSize, IN SECTION_INHERIT InheritDisposition,
+                                                IN ULONG AllocationType, IN ULONG Protect);
 
 /* @brief
     The RtlInitUnicodeString routine is obsolete and is exported only to support existing driver binaries.
@@ -182,8 +182,7 @@ typedef ULONG(__stdcall *RTLNTSTATUSTODOSERROR)(IN NTSTATUS Status);
     [NtQuerySystemInformation may be altered or unavailable in future versions of Windows. Applications should use the alternate functions listed in this
    topic.] Retrieves the specified system information.
  */
-typedef NTSTATUS(__stdcall *NTQUERYSYSTEMINFORMATION)(ULONG SystemInformationClass, PVOID SystemInformation, ULONG SystemInformationLength,
-                                                      PULONG ReturnLength);
+typedef NTSTATUS(__stdcall *NTQUERYSYSTEMINFORMATION)(ULONG SystemInformationClass, PVOID SystemInformation, ULONG SystemInformationLength, PULONG ReturnLength);
 /* @brief
     The ZwDuplicateObject routine creates a handle that is a duplicate of the specified source handle.
     If the call to this function occurs in user mode, you should use the name "NtDuplicateObject" instead of "ZwDuplicateObject".

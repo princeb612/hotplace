@@ -34,8 +34,7 @@ void test_ukkonen1() {
         auto debug_handler = [](t_ukkonen<char>::trienode* node, int level, const char* p, size_t size) -> void {
             if (p) {
                 _logger->writeln([&](basic_stream& bs) -> void {
-                    bs.printf("%p start %i end %i len %i index %i link %p\n", node, node->start, node->end, node->length(), node->suffix_index,
-                              node->suffix_link);
+                    bs.printf("%p start %i end %i len %i index %i link %p\n", node, node->start, node->end, node->length(), node->suffix_index, node->suffix_link);
 
                     bs.fill(level, ' ');
                     bs.printf(R"("%.*s")", (unsigned)size, p);

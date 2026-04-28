@@ -162,9 +162,16 @@ function update_fileheader() (
         # base=$(basename "$file")
         dir="${file%/*}"
         base="${file##*/}"
-        echo sed -i 's/ \* @file.*/ \* @file   '$base'/g' $file
-        sed -i 's/ \* @file.*/ \* @file   '$base'/g' $file
+
+        echo sed 's/ \* @file.*/ \* @file   '$base'/g' "$file"
+        sed 's/ \* @file.*/ \* @file   '$base'/g' "$file" > "$file.tmp"
+        if ! cmp -s "$file" "$file.tmp"; then
+            mv "$file.tmp" "$file"
+        else
+            rm "$file.tmp"
+        fi
     done
+    # rm -f `find $1 -name \*.tmp`
 )
 if [[ $do_updateheader = 1 ]]; then
     update_fileheader sdk

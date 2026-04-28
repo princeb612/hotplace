@@ -162,11 +162,9 @@ return_t json_object_encryption::composer::compose_encryption(jose_context_t *ha
 
                                     json_object_set_new(json_epk, "kty", json_string(kty.c_str()));
                                     json_object_set_new(json_epk, "crv", json_string(curve_name.c_str()));
-                                    json_object_set_new(json_epk, "x",
-                                                        json_string(base64_encode(pub1.data(), pub1.size(), encoding_t::encoding_base64url).c_str()));
+                                    json_object_set_new(json_epk, "x", json_string(base64_encode(pub1.data(), pub1.size(), encoding_t::encoding_base64url).c_str()));
                                     if (pub2.size()) {
-                                        json_object_set_new(json_epk, "y",
-                                                            json_string(base64_encode(pub2.data(), pub2.size(), encoding_t::encoding_base64url).c_str()));
+                                        json_object_set_new(json_epk, "y", json_string(base64_encode(pub2.data(), pub2.size(), encoding_t::encoding_base64url).c_str()));
                                     }
                                     json_object_set_new(header, "epk", json_epk);
                                 }
@@ -370,8 +368,7 @@ return_t json_object_encryption::composer::compose_encryption_dorandom(jose_cont
     return ret;
 }
 
-return_t json_object_encryption::composer::docompose_protected_header(binary_t &header, jwe_t enc, jwa_t alg, jose_compose_t flag, const std::string &kid,
-                                                                      uint32 flags) {
+return_t json_object_encryption::composer::docompose_protected_header(binary_t &header, jwe_t enc, jwa_t alg, jose_compose_t flag, const std::string &kid, uint32 flags) {
     return_t ret = errorcode_t::success;
     crypt_datamap_t datamap;
     crypt_variantmap_t variantmap;
@@ -380,9 +377,8 @@ return_t json_object_encryption::composer::docompose_protected_header(binary_t &
     return ret;
 }
 
-return_t json_object_encryption::composer::docompose_encryption_header_parameter(binary_t &header, jwe_t enc, jwa_t alg, jose_compose_t flag,
-                                                                                 const std::string &kid, crypt_datamap_t &datamap,
-                                                                                 crypt_variantmap_t &variantmap, uint32 flags) {
+return_t json_object_encryption::composer::docompose_encryption_header_parameter(binary_t &header, jwe_t enc, jwa_t alg, jose_compose_t flag, const std::string &kid,
+                                                                                 crypt_datamap_t &datamap, crypt_variantmap_t &variantmap, uint32 flags) {
     return_t ret = errorcode_t::success;
     json_t *json_header = nullptr;
     crypto_advisor *advisor = crypto_advisor::get_instance();
@@ -477,8 +473,8 @@ return_t json_object_encryption::composer::docompose_encryption_header_parameter
     return ret;
 }
 
-return_t json_object_encryption::composer::docompose_encryption_recipient_random(jwa_t alg, const EVP_PKEY *pkey, jose_recipient_t &recipient,
-                                                                                 crypt_datamap_t &datamap, crypt_variantmap_t &variantmap) {
+return_t json_object_encryption::composer::docompose_encryption_recipient_random(jwa_t alg, const EVP_PKEY *pkey, jose_recipient_t &recipient, crypt_datamap_t &datamap,
+                                                                                 crypt_variantmap_t &variantmap) {
     return_t ret = errorcode_t::success;
     crypto_advisor *advisor = crypto_advisor::get_instance();
 
@@ -698,8 +694,7 @@ return_t json_object_encryption::composer::parse_decryption(jose_context_t *hand
 }
 
 return_t json_object_encryption::composer::doparse_decryption(jose_context_t *handle, const char *protected_header, const char *encrypted_key, const char *iv,
-                                                              const char *ciphertext, const char *tag, void *json_t_root, jwe_t &type,
-                                                              jose_encryption_t &item) {
+                                                              const char *ciphertext, const char *tag, void *json_t_root, jwe_t &type, jose_encryption_t &item) {
     return_t ret = errorcode_t::success;
     json_t *json_protected = nullptr;
     crypto_advisor *advisor = crypto_advisor::get_instance();
@@ -787,8 +782,7 @@ return_t json_object_encryption::composer::doparse_decryption(jose_context_t *ha
 }
 
 return_t json_object_encryption::composer::doparse_decryption_recipient(jose_context_t *handle, const char *protected_header, const char *encrypted_key,
-                                                                        void *json_t_root, void *json_t_recipient_header, jwa_t &type,
-                                                                        jose_recipient_t &recipient) {
+                                                                        void *json_t_root, void *json_t_recipient_header, jwa_t &type, jose_recipient_t &recipient) {
     return_t ret = errorcode_t::success;
     crypto_advisor *advisor = crypto_advisor::get_instance();
     std::list<json_t *> pool;

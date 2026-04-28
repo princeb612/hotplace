@@ -145,8 +145,7 @@ return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary
     return ret;
 }
 
-return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& p, const binary_t& q, const binary_t& g, const binary_t& x,
-                                 const keydesc& desc) {
+return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& p, const binary_t& q, const binary_t& g, const binary_t& x, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     int ret_openssl = 0;
     __try2 {
@@ -255,6 +254,25 @@ return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary
     // free bn_ctx
 }
 
+return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* y, const char* x, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    switch (encoding) {
+        case encoding_t::encoding_base64:
+            ret = add_dh_b64(cryptokey, nid, y, x, desc);
+            break;
+        case encoding_t::encoding_base64url:
+            ret = add_dh_b64u(cryptokey, nid, y, x, desc);
+            break;
+        case encoding_t::encoding_base16:
+            ret = add_dh_b16(cryptokey, nid, y, x, desc);
+            break;
+        case encoding_t::encoding_base16rfc:
+            ret = add_dh_b16rfc(cryptokey, nid, y, x, desc);
+            break;
+    }
+    return ret;
+}
+
 return_t crypto_keychain::add_dh_b64(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -356,6 +374,26 @@ return_t crypto_keychain::add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const
         ret = add_dh(cryptokey, nid, bin_y, bin_x, desc);
     }
     __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* p, const char* q, const char* g, const char* x,
+                                 const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    switch (encoding) {
+        case encoding_t::encoding_base64:
+            ret = add_dh_b64(cryptokey, nid, p, q, g, x, desc);
+            break;
+        case encoding_t::encoding_base64url:
+            ret = add_dh_b64u(cryptokey, nid, p, q, g, x, desc);
+            break;
+        case encoding_t::encoding_base16:
+            ret = add_dh_b16(cryptokey, nid, p, q, g, x, desc);
+            break;
+        case encoding_t::encoding_base16rfc:
+            ret = add_dh_b16rfc(cryptokey, nid, p, q, g, x, desc);
+            break;
+    }
     return ret;
 }
 

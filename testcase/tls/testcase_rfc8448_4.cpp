@@ -83,21 +83,16 @@ void testcase_rfc8448_4(tls_session* rfc8448_session) {
         binary_t context;
 
         binary_t bin;
-        test_keycalc(rfc8448_session, tls_secret_res_master, bin, "secret_resumption_master",
-                     "7df235f2031d2a051287d02b0241b0bfdaf86cc856231f2d5aba46c434ec196c");
+        test_keycalc(rfc8448_session, tls_secret_res_master, bin, "secret_resumption_master", "7df235f2031d2a051287d02b0241b0bfdaf86cc856231f2d5aba46c434ec196c");
         test_keycalc(rfc8448_session, tls_secret_resumption, bin, "secret_resumption", "4ecd0eb6ec3b4d87f5d6028f922ca4c5851a277fd41311c9e62d2c9492e1c4f3");
-        test_keycalc(rfc8448_session, tls_secret_resumption_early, bin, "secret_resumption_early",
-                     "9b2188e9b2fc6d64d71dc329900e20bb41915000f678aa839cbb797cb7d8332c");
+        test_keycalc(rfc8448_session, tls_secret_resumption_early, bin, "secret_resumption_early", "9b2188e9b2fc6d64d71dc329900e20bb41915000f678aa839cbb797cb7d8332c");
 
         // tls_extension_pre_shared_key
-        test_keycalc(rfc8448_session, tls_context_resumption_binder_hash, bin, "binder_hash",
-                     "63224b2e4573f2d3454ca84b9d009a04f6be9e05711a8396473aefa01e924a14");
-        test_keycalc(rfc8448_session, tls_context_resumption_binder_key, bin, "binder key (PRK)",
-                     "69fe131a3bbad5d63c64eebcc30e395b9d8107726a13d074e389dbc8a4e47256");
+        test_keycalc(rfc8448_session, tls_context_resumption_binder_hash, bin, "binder_hash", "63224b2e4573f2d3454ca84b9d009a04f6be9e05711a8396473aefa01e924a14");
+        test_keycalc(rfc8448_session, tls_context_resumption_binder_key, bin, "binder key (PRK)", "69fe131a3bbad5d63c64eebcc30e395b9d8107726a13d074e389dbc8a4e47256");
         test_keycalc(rfc8448_session, tls_context_resumption_finished_key, bin, "finished key (expanded)",
                      "5588673e72cb59c87d220caffe94f2dea9a3b1609f7d50e90a48227db9ed7eaa");
-        test_keycalc(rfc8448_session, tls_context_resumption_finished, bin, "finished (PSK binder)",
-                     "3add4fb2d8fdf822a0ca3cf7678ef5e88dae990141c5924d57bb6fa31b9e5f9d");
+        test_keycalc(rfc8448_session, tls_context_resumption_finished, bin, "finished (PSK binder)", "3add4fb2d8fdf822a0ca3cf7678ef5e88dae990141c5924d57bb6fa31b9e5f9d");
 
         // {client}  derive secret "tls13 c e traffic"
         test_keycalc(rfc8448_session, tls_secret_c_e_traffic, bin, "c e traffic", "3fbbe6a60deb66c30a32795aba0eff7eaa10105586e7be5c09678d63b6caab62");
@@ -180,8 +175,7 @@ void testcase_rfc8448_4(tls_session* rfc8448_session) {
         test_keycalc(rfc8448_session, tls_secret_application_server, bin, "secret_application_server",
                      "cc21f1bf8feb7dd5fa505bd9c4b468a9984d554a993dc49e6d285598fb672691");
         // {server}  derive secret "tls13 exp master"
-        test_keycalc(rfc8448_session, tls_secret_exporter_master, bin, "secret_exporter_master",
-                     "3fd93d4ffddc98e64b14dd107aedf8ee4add23f4510f58a4592d0b201bee56b4");
+        test_keycalc(rfc8448_session, tls_secret_exporter_master, bin, "secret_exporter_master", "3fd93d4ffddc98e64b14dd107aedf8ee4add23f4510f58a4592d0b201bee56b4");
         // {server}  derive write traffic keys for application data
         test_keycalc(rfc8448_session, tls_secret_application_server_key, bin, "secret_application_server_key", "e857c690a34c5a9129d833619684f95e");
         test_keycalc(rfc8448_session, tls_secret_application_server_iv, bin, "secret_application_server_iv", "0685d6b561aab9ef1013faf9");

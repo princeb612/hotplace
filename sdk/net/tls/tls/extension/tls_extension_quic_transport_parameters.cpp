@@ -102,8 +102,7 @@ tls_extension_quic_transport_parameters& tls_extension_quic_transport_parameters
     return *this;
 }
 
-return_t tls_extension_quic_transport_parameters::read_quic_params(const byte_t* stream, size_t size, size_t& pos,
-                                                                   std::list<std::pair<uint64, variant>>& params) {
+return_t tls_extension_quic_transport_parameters::read_quic_params(const byte_t* stream, size_t size, size_t& pos, std::list<std::pair<uint64, variant>>& params) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {

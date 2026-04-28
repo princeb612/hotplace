@@ -30,8 +30,7 @@
 namespace hotplace {
 namespace crypto {
 
-return_t cbor_object_signing_encryption::encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& input,
-                                                 binary_t& output) {
+return_t cbor_object_signing_encryption::encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
 
     __try2 {

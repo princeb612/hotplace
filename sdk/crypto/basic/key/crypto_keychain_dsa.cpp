@@ -63,8 +63,8 @@ return_t crypto_keychain::add_dsa(crypto_key* cryptokey, uint32 nid, const keyde
     return ret;
 }
 
-return_t crypto_keychain::add_dsa(crypto_key* cryptokey, uint32 nid, const binary_t& pub, const binary_t& priv, const binary_t& p, const binary_t& q,
-                                  const binary_t& g, const keydesc& desc) {
+return_t crypto_keychain::add_dsa(crypto_key* cryptokey, uint32 nid, const binary_t& y, const binary_t& x, const binary_t& p, const binary_t& q, const binary_t& g,
+                                  const keydesc& desc) {
     return_t ret = errorcode_t::success;
     int ret_openssl = 0;
 
@@ -94,11 +94,11 @@ return_t crypto_keychain::add_dsa(crypto_key* cryptokey, uint32 nid, const binar
 
         BN_ptr bn_pub;
         BN_ptr bn_priv;
-        if (pub.size()) {
-            bn_pub = std::move(BN_ptr(BN_bin2bn(pub.data(), pub.size(), nullptr)));
+        if (y.size()) {
+            bn_pub = std::move(BN_ptr(BN_bin2bn(y.data(), y.size(), nullptr)));
         }
-        if (priv.size()) {
-            bn_priv = std::move(BN_ptr(BN_bin2bn(priv.data(), priv.size(), nullptr)));
+        if (x.size()) {
+            bn_priv = std::move(BN_ptr(BN_bin2bn(x.data(), x.size(), nullptr)));
         }
         ret_openssl = DSA_set0_key(dsa.get(), bn_pub.get(), bn_priv.get());
         if (ret_openssl < 0) {
@@ -132,11 +132,10 @@ return_t crypto_keychain::add_dsa(crypto_key* cryptokey, uint32 nid, const binar
     return ret;
 }
 
-return_t crypto_keychain::add_dsa_b64(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const char* p, const char* q, const char* g,
-                                      const keydesc& desc) {
+return_t crypto_keychain::add_dsa_b64(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const char* p, const char* q, const char* g, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == cryptokey || nullptr == pub || nullptr == p || nullptr == q || nullptr == g) {
+        if (nullptr == cryptokey || nullptr == y || nullptr == p || (nullptr == q && nullptr == x) || nullptr == g) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -153,8 +152,8 @@ return_t crypto_keychain::add_dsa_b64(crypto_key* cryptokey, uint32 nid, const c
         binary_t bin_q;
         binary_t bin_g;
 
-        os2b(pub, bin_pub);
-        os2b(priv, bin_priv);
+        os2b(y, bin_pub);
+        os2b(x, bin_priv);
         os2b(p, bin_p);
         os2b(q, bin_q);
         os2b(g, bin_g);
@@ -165,11 +164,11 @@ return_t crypto_keychain::add_dsa_b64(crypto_key* cryptokey, uint32 nid, const c
     return ret;
 }
 
-return_t crypto_keychain::add_dsa_b64u(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const char* p, const char* q, const char* g,
+return_t crypto_keychain::add_dsa_b64u(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const char* p, const char* q, const char* g,
                                        const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == cryptokey || nullptr == pub || nullptr == p || nullptr == q || nullptr == g) {
+        if (nullptr == cryptokey || nullptr == y || nullptr == p || (nullptr == q && nullptr == x) || nullptr == g) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -186,8 +185,8 @@ return_t crypto_keychain::add_dsa_b64u(crypto_key* cryptokey, uint32 nid, const 
         binary_t bin_q;
         binary_t bin_g;
 
-        os2b(pub, bin_pub);
-        os2b(priv, bin_priv);
+        os2b(y, bin_pub);
+        os2b(x, bin_priv);
         os2b(p, bin_p);
         os2b(q, bin_q);
         os2b(g, bin_g);
@@ -198,11 +197,10 @@ return_t crypto_keychain::add_dsa_b64u(crypto_key* cryptokey, uint32 nid, const 
     return ret;
 }
 
-return_t crypto_keychain::add_dsa_b16(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const char* p, const char* q, const char* g,
-                                      const keydesc& desc) {
+return_t crypto_keychain::add_dsa_b16(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const char* p, const char* q, const char* g, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == cryptokey || nullptr == pub || nullptr == p || nullptr == q || nullptr == g) {
+        if (nullptr == cryptokey || nullptr == y || nullptr == p || (nullptr == q && nullptr == x) || nullptr == g) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -219,8 +217,8 @@ return_t crypto_keychain::add_dsa_b16(crypto_key* cryptokey, uint32 nid, const c
         binary_t bin_q;
         binary_t bin_g;
 
-        os2b(pub, bin_pub);
-        os2b(priv, bin_priv);
+        os2b(y, bin_pub);
+        os2b(x, bin_priv);
         os2b(p, bin_p);
         os2b(q, bin_q);
         os2b(g, bin_g);
@@ -231,11 +229,11 @@ return_t crypto_keychain::add_dsa_b16(crypto_key* cryptokey, uint32 nid, const c
     return ret;
 }
 
-return_t crypto_keychain::add_dsa_b16rfc(crypto_key* cryptokey, uint32 nid, const char* pub, const char* priv, const char* p, const char* q, const char* g,
+return_t crypto_keychain::add_dsa_b16rfc(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const char* p, const char* q, const char* g,
                                          const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == cryptokey || nullptr == pub || nullptr == p || nullptr == q || nullptr == g) {
+        if (nullptr == cryptokey || nullptr == y || nullptr == p || (nullptr == q && nullptr == x) || nullptr == g) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -252,8 +250,8 @@ return_t crypto_keychain::add_dsa_b16rfc(crypto_key* cryptokey, uint32 nid, cons
         binary_t bin_q;
         binary_t bin_g;
 
-        os2b(pub, bin_pub);
-        os2b(priv, bin_priv);
+        os2b(y, bin_pub);
+        os2b(x, bin_priv);
         os2b(p, bin_p);
         os2b(q, bin_q);
         os2b(g, bin_g);

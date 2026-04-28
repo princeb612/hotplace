@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   testcase_capacity.cpp
+ * @file   testvector_capacity.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -13,11 +13,7 @@
 void test_yaml_testvector_capacity() {
     _test_case.begin("byte capacity YAML");
 
-    YAML::Node testvector = YAML::LoadFile("./testvector_capacity.yml");
-    auto examples = testvector["testvector"];
-
-    auto lambda_test_unsigned_byte_capacity = [&](const YAML::Node& example) -> void {
-        auto items = example["items"];
+    auto lambda_test_unsigned_byte_capacity = [&](const YAML::Node& items) -> void {
         if (items && items.IsSequence()) {
             for (const auto& item : items) {
                 bignumber bn = item["value"].as<std::string>();
@@ -28,8 +24,7 @@ void test_yaml_testvector_capacity() {
             }
         }
     };
-    auto lambda_test_signed_byte_capacity = [&](const YAML::Node& example) -> void {
-        auto items = example["items"];
+    auto lambda_test_signed_byte_capacity = [&](const YAML::Node& items) -> void {
         if (items && items.IsSequence()) {
             for (const auto& item : items) {
                 bignumber bn = item["value"].as<std::string>();
@@ -41,14 +36,22 @@ void test_yaml_testvector_capacity() {
         }
     };
 
+    YAML::Node testvector = YAML::LoadFile("./testvector_capacity.yml");
+    auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {
             auto text_example = example["example"].as<std::string>();
             _logger->writeln("example: %s", text_example.c_str());
-            if (text_example == "unsigned_byte_capacity") {
-                lambda_test_unsigned_byte_capacity(example);
-            } else if (text_example == "signed_byte_capacity") {
-                lambda_test_signed_byte_capacity(example);
+
+            auto schema = example["schema"].as<std::string>();
+            auto items = example["items"];
+
+            if (schema == "UNSIGNED BYTE CAPACITY") {
+                lambda_test_unsigned_byte_capacity(items);
+            } else if (schema == "SIGNED BYTE CAPACITY") {
+                lambda_test_signed_byte_capacity(items);
+            } else {
+                _test_case.assert(false, __FUNCTION__, "bad message format");
             }
         }
     }

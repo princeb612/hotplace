@@ -38,8 +38,8 @@ return_t async_handler(accept_context_t* accept_context, netsocket_event_t* nets
     netbuffer_t& wsabuf_read = netsock_event->netio_read;
     wsabuf_read.init();
     int addrlen = sizeof(sockaddr_storage_t);
-    WSARecvFrom(accept_context->udp_server_sock, &wsabuf_read.wsabuf, 1, nullptr, &flags, (sockaddr*)&netsock_event->client_addr, &addrlen,
-                &wsabuf_read.overlapped, (LPWSAOVERLAPPED_COMPLETION_ROUTINE) nullptr);
+    WSARecvFrom(accept_context->udp_server_sock, &wsabuf_read.wsabuf, 1, nullptr, &flags, (sockaddr*)&netsock_event->client_addr, &addrlen, &wsabuf_read.overlapped,
+                (LPWSAOVERLAPPED_COMPLETION_ROUTINE) nullptr);
 #endif
     return ret;
 }

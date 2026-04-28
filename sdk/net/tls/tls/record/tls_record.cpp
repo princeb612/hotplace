@@ -91,8 +91,7 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 auto content_type = get_type();
                 dbs.printf(ANSI_ESCAPE "1;36m");
-                dbs.println("# write %s 0x%02x(%i) (%s)", constexpr_content_type, content_type, content_type,
-                            tlsadvisor->nameof_tls_record(content_type).c_str());
+                dbs.println("# write %s 0x%02x(%i) (%s)", constexpr_content_type, content_type, content_type, tlsadvisor->nameof_tls_record(content_type).c_str());
                 dbs.printf(ANSI_ESCAPE "0m");
             });
         }

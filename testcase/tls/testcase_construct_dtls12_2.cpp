@@ -24,69 +24,68 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         tls_record_handshake record(session);
 
-        record.add(
-            tls_hs_client_hello, session,  //
-            [&](tls_handshake* hs) -> return_t {
-                auto handshake = (tls_handshake_client_hello*)hs;
+        record.add(tls_hs_client_hello, session,  //
+                   [&](tls_handshake* hs) -> return_t {
+                       auto handshake = (tls_handshake_client_hello*)hs;
 
-                const auto& cookie = session->get_tls_protection().get_secrets().get(tls_context_cookie);
-                if (false == cookie.empty()) {
-                    handshake->set_cookie(cookie);
-                }
+                       const auto& cookie = session->get_tls_protection().get_secrets().get(tls_context_cookie);
+                       if (false == cookie.empty()) {
+                           handshake->set_cookie(cookie);
+                       }
 
-                // cipher suites
-                {
-                    *handshake  // << "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
-                                // << "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384"
-                                // << "TLS_ECDHE_ECDSA_WITH_AES_128_CCM:TLS_ECDHE_ECDSA_WITH_AES_256_CCM"
-                                // << "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8"
-                                // << "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"
-                        << "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA"
-                        << "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"
-                        << "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384";
-                }
+                       // cipher suites
+                       {
+                           *handshake  // << "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
+                                       // << "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384"
+                                       // << "TLS_ECDHE_ECDSA_WITH_AES_128_CCM:TLS_ECDHE_ECDSA_WITH_AES_256_CCM"
+                                       // << "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8"
+                                       // << "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"
+                               << "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA"
+                               << "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"
+                               << "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384";
+                       }
 
-                handshake->get_extensions()
-                    .add(tls_ext_ec_point_formats, dir, handshake,
-                         // ec_point_formats
-                         // RFC 9325 4.2.1
-                         // Note that [RFC8422] deprecates all but the uncompressed point format.
-                         // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
-                         [](tls_extension* extension) -> return_t {
-                             (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
-                             return success;
-                         })
-                    .add(tls_ext_supported_groups, dir, handshake,
-                         // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
-                         [](tls_extension* extension) -> return_t {
-                             (*(tls_extension_supported_groups*)extension).add("x25519").add("secp256r1").add("x448").add("secp521r1").add("secp384r1");
-                             return success;
-                         })
-                    .add(tls_ext_signature_algorithms, dir, handshake,
-                         [](tls_extension* extension) -> return_t {
-                             (*(tls_extension_signature_algorithms*)extension)
-                                 .add("ecdsa_secp256r1_sha256")
-                                 .add("ecdsa_secp384r1_sha384")
-                                 .add("ecdsa_secp521r1_sha512")
-                                 .add("ed25519")
-                                 .add("ed448")
-                                 .add("rsa_pkcs1_sha256")
-                                 .add("rsa_pkcs1_sha384")
-                                 .add("rsa_pkcs1_sha512")
-                                 .add("rsa_pss_pss_sha256")
-                                 .add("rsa_pss_pss_sha384")
-                                 .add("rsa_pss_pss_sha512")
-                                 .add("rsa_pss_rsae_sha256")
-                                 .add("rsa_pss_rsae_sha384")
-                                 .add("rsa_pss_rsae_sha512");
-                             return success;
-                         })
-                    .add(tls_ext_encrypt_then_mac, dir, handshake)
-                    .add(tls_ext_renegotiation_info, dir, handshake)
-                    .add(tls_ext_extended_master_secret, dir, handshake);
+                       handshake->get_extensions()
+                           .add(tls_ext_ec_point_formats, dir, handshake,
+                                // ec_point_formats
+                                // RFC 9325 4.2.1
+                                // Note that [RFC8422] deprecates all but the uncompressed point format.
+                                // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
+                                [](tls_extension* extension) -> return_t {
+                                    (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
+                                    return success;
+                                })
+                           .add(tls_ext_supported_groups, dir, handshake,
+                                // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
+                                [](tls_extension* extension) -> return_t {
+                                    (*(tls_extension_supported_groups*)extension).add("x25519").add("secp256r1").add("x448").add("secp521r1").add("secp384r1");
+                                    return success;
+                                })
+                           .add(tls_ext_signature_algorithms, dir, handshake,
+                                [](tls_extension* extension) -> return_t {
+                                    (*(tls_extension_signature_algorithms*)extension)
+                                        .add("ecdsa_secp256r1_sha256")
+                                        .add("ecdsa_secp384r1_sha384")
+                                        .add("ecdsa_secp521r1_sha512")
+                                        .add("ed25519")
+                                        .add("ed448")
+                                        .add("rsa_pkcs1_sha256")
+                                        .add("rsa_pkcs1_sha384")
+                                        .add("rsa_pkcs1_sha512")
+                                        .add("rsa_pss_pss_sha256")
+                                        .add("rsa_pss_pss_sha384")
+                                        .add("rsa_pss_pss_sha512")
+                                        .add("rsa_pss_rsae_sha256")
+                                        .add("rsa_pss_rsae_sha384")
+                                        .add("rsa_pss_rsae_sha512");
+                                    return success;
+                                })
+                           .add(tls_ext_encrypt_then_mac, dir, handshake)
+                           .add(tls_ext_renegotiation_info, dir, handshake)
+                           .add(tls_ext_extended_master_secret, dir, handshake);
 
-                return success;
-            });
+                       return success;
+                   });
 
         ret = construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
     }
@@ -312,17 +311,15 @@ void do_test_construct_dtls12_2(uint32 flags) {
         uint64 next_rcseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_seq);
         uint16 next_hsseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_message_seq);
         bool test = (expect_epoch == rcepoch) && (expect_next_hsseq == next_hsseq) && (expect_next_hsseq == next_hsseq);
-        _test_case.assert(test, func, "%s record (epoch %i next sequence %I64i) handshake (next sequence %i)", tlsadvisor->nameof_direction(dir).c_str(),
-                          rcepoch, next_rcseq, next_hsseq);
+        _test_case.assert(test, func, "%s record (epoch %i next sequence %I64i) handshake (next sequence %i)", tlsadvisor->nameof_direction(dir).c_str(), rcepoch,
+                          next_rcseq, next_hsseq);
     };
-    auto lambda_test_seq = [&](const char* func, tls_session* session, tls_direction_t dir, uint16 expect_epoch, uint64 expect_rcseq,
-                               uint16 expect_hsseq) -> void {
+    auto lambda_test_seq = [&](const char* func, tls_session* session, tls_direction_t dir, uint16 expect_epoch, uint64 expect_rcseq, uint16 expect_hsseq) -> void {
         uint16 rcepoch = session->get_session_info(dir).get_keyvalue().get(session_dtls_epoch);
         uint64 rcseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_seq);
         uint16 hsseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_message_seq);
         bool test = (expect_epoch == rcepoch) && (expect_hsseq == hsseq) && (expect_hsseq == hsseq);
-        _test_case.assert(test, func, "%s record (epoch %i sequence %I64i) handshake (sequence %i)", tlsadvisor->nameof_direction(dir).c_str(), rcepoch, rcseq,
-                          hsseq);
+        _test_case.assert(test, func, "%s record (epoch %i sequence %I64i) handshake (sequence %i)", tlsadvisor->nameof_direction(dir).c_str(), rcepoch, rcseq, hsseq);
     };
 
     return_t ret = errorcode_t::success;
@@ -381,8 +378,7 @@ void do_test_construct_dtls12_2(uint32 flags) {
         //   -> tls_record_handshake (epoch 0, sequence 1) contains server_hello and certificate (handshake sequences in order 1, 2)
         //   -> tls_record_handshake (epoch 0, sequence 8) contains certificate and server_key_exchange (handshake sequences in order 2, 3)
         //   -> tls_record_handshake (epoch 0, sequence 10) contains server_key_exchange and server_hello_done (handshake sequences in order 3, 4)
-        ret = do_test_construct_from_server_hello_to_server_hello_done(&session_server, from_server,
-                                                                       "server hello, certificate, server key exchange, server hello done");
+        ret = do_test_construct_from_server_hello_to_server_hello_done(&session_server, from_server, "server hello, certificate, server key exchange, server hello done");
         if (errorcode_t::success != ret) {
             __leave2;
         }

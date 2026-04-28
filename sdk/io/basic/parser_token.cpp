@@ -19,8 +19,7 @@ namespace io {
 
 parser::token::token() : _type(0), _tag(0), _pos(0), _size(0), _line(1), _index(-1) {}
 
-parser::token::token(const parser::token& other)
-    : _type(other._type), _tag(other._tag), _pos(other._pos), _size(other._size), _line(other._line), _index(other._index) {}
+parser::token::token(const parser::token& other) : _type(other._type), _tag(other._tag), _pos(other._pos), _size(other._size), _line(other._line), _index(other._index) {}
 
 parser::token& parser::token::init() {
     _type = 0;

@@ -116,11 +116,13 @@ int main(int argc, char** argv) {
         testcase_random();
 
         testcase_crypto_sign();
-        testcase_dsa();
         testcase_ecdsa();
+        testcase_testvector_ecdsa();
+        testcase_testvector_dsa();
         testcase_hmac();
         testcase_mldsa();
         testcase_rsassa();
+        testcase_testvector_rsassa();
         testcase_x509();
     }
     __finally2 { openssl_cleanup(); }
