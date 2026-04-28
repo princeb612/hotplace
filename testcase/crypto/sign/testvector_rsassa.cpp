@@ -10,41 +10,6 @@
 
 #include <hotplace/testcase/crypto/sample.hpp>
 
-#if 0
-
-void dotest_nist_cavp_rsa_signpss(crypto_key* key, const test_vector_nist_cavp_rsa_t* tv, size_t tvsize) {
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-    crypto_sign_builder builder;
-    for (auto i = 0; i < tvsize; i++) {
-        return_t ret = success;
-        auto item = tv + i;
-        auto s = builder.set_scheme(crypt_sig_rsassa_pss).set_digest(item->alg).build();
-        const char* hashalg = advisor->nameof_md(item->alg);
-        if (s) {
-            if (item->salt) {
-                binary_t salt = std::move(base16_decode(item->salt));
-                s->set_saltlen(salt.size());  // set saltlen
-            }
-            auto pkey = key->find(item->kid);
-            if (pkey) {
-                binary_t msg = std::move(base16_decode(item->msg));
-                binary_t signature = std::move(base16_decode(item->s));
-                ret = s->verify(pkey, msg, signature);
-                _logger->hdump("> input", msg);
-                _logger->hdump("> signature", signature);
-            } else {
-                ret = not_found;
-            }
-            s->release();
-        } else {
-            ret = not_supported;
-        }
-        _test_case.test(ret, __FUNCTION__, R"(verify kid:"%s" hash:%s msg:%s...)", item->kid, hashalg, std::string(item->msg, 8).c_str());
-    }
-}
-
-#endif
-
 struct test_vector_nist_cavp_rsa_key_t {
     std::string item;
     std::string n;
