@@ -40,58 +40,6 @@ void do_cross_check_keycalc(tls_session* clisession, tls_session* svrsession, tl
 return_t construct_record_fragmented(tls_record* record, tls_direction_t dir, std::function<void(tls_session*, binary_t& bin)> func);
 return_t construct_record_fragmented(tls_records* records, tls_direction_t dir, std::function<void(tls_session*, binary_t& bin)> func);
 
-struct pcap_testvector {
-    tls_direction_t dir;
-    const char* desc;
-    const char* record;
-};
-void play_pcap(tls_session* session, const pcap_testvector* testvector, size_t size);
-
-extern const pcap_testvector pcap_tls13_aes128gcm_sha256[];
-extern const size_t sizeof_pcap_tls13_aes128gcm_sha256;
-extern const pcap_testvector pcap_tls13_aes256gcm_sha384[];
-extern const size_t sizeof_pcap_tls13_aes256gcm_sha384;
-extern const pcap_testvector pcap_tls13_aes128ccm_sha256[];
-extern const size_t sizeof_pcap_tls13_aes128ccm_sha256;
-extern const pcap_testvector pcap_tls13_chacha20_poly1305[];
-extern const size_t sizeof_pcap_tls13_chacha20_poly1305;
-extern const pcap_testvector pcap_tls12etm_aes128cbc_sha256[];
-extern const size_t sizeof_pcap_tls12etm_aes128cbc_sha256;
-extern const pcap_testvector pcap_tls12mte_aes128cbc_sha256[];
-extern const size_t sizeof_pcap_tls12mte_aes128cbc_sha256;
-extern const pcap_testvector pcap_tls12_aes128gcm_sha256[];
-extern const size_t sizeof_pcap_tls12_aes128gcm_sha256;
-extern const pcap_testvector pcap_tls12_chacha20poly1305_sha256[];
-extern const size_t sizeof_pcap_tls12_chacha20poly1305_sha256;
-extern const pcap_testvector pcap_dtls12[];
-extern const size_t sizeof_pcap_dtls12;
-extern const pcap_testvector pcap_dtls12_mtu1500[];
-extern const size_t sizeof_pcap_dtls12_mtu1500;
-extern const pcap_testvector pcap_dtls12_aes128gcm[];
-extern const size_t sizeof_pcap_dtls12_aes128gcm;
-extern const pcap_testvector pcap_dtls12_chacha20_poly1305[];
-extern const size_t sizeof_pcap_dtls12_chacha20_poly1305;
-extern const pcap_testvector pcap_tls13_http1_aes128gcm_sha256[];
-extern const size_t sizeof_pcap_tls13_http1_aes128gcm_sha256;
-extern const pcap_testvector pcap_tls13_http2_aes128gcm_sha256[];
-extern const size_t sizeof_pcap_tls13_http2_aes128gcm_sha256;
-extern const pcap_testvector pcap_curl_http1_tls12[];
-extern const size_t sizeof_pcap_curl_http1_tls12;
-extern const pcap_testvector pcap_curl_http1_tls12_chacha20_poly1305[];
-extern const size_t sizeof_pcap_curl_http1_tls12_chacha20_poly1305;
-extern const pcap_testvector pcap_tls13_aes128gcm_sha256_mlkem512[];
-extern const size_t sizeof_pcap_tls13_aes128gcm_sha256_mlkem512;
-extern const pcap_testvector pcap_tls13_aes128gcm_sha256_mlkem768[];
-extern const size_t sizeof_pcap_tls13_aes128gcm_sha256_mlkem768;
-extern const pcap_testvector pcap_tls13_aes128gcm_sha256_mlkem1024[];
-extern const size_t sizeof_pcap_tls13_aes128gcm_sha256_mlkem1024;
-extern const pcap_testvector pcap_tls13_aes128gcm_sha256_secp256r1mlkem768[];
-extern const size_t sizeof_pcap_tls13_aes128gcm_sha256_secp256r1mlkem768;
-extern const pcap_testvector pcap_tls13_aes128gcm_sha256_x25519mlkem768[];
-extern const size_t sizeof_pcap_tls13_aes128gcm_sha256_x25519mlkem768;
-extern const pcap_testvector pcap_tls13_aes128gcm_sha256_secp384r1mlkem1024[];
-extern const size_t sizeof_pcap_tls13_aes128gcm_sha256_secp384r1mlkem1024;
-
 // xargs.org
 void testcase_understand_tls13();
 void testcase_understand_tls12();
@@ -108,11 +56,9 @@ void testcase_rfc8448_7();
 void testcase_pre_master_secret();
 
 void testcase_tls12_aead();
-void testcase_pcap_tls13();
-void testcase_pcap_tls13_mlkem();
-void testcase_pcap_tls12();
-void testcase_pcap_dtls12();
-void testcase_pcap_http();
+void testcase_mlkem_encoding();
+
+void testcase_testvector_pcap();
 
 void testcase_dtls_record_arrange();
 

@@ -14,7 +14,7 @@
 
 ````
 testvector:
-  - example:
+  - example: string          # [mandatory] testcase
     schema: RFC 7049         # [mandatory] "RFC 7049"
     items:
       - item: string         # [mandatory] diagnostic, description
@@ -23,7 +23,4 @@ testvector:
         diag: |
           string
         loss: boolean        # dataloss encoding e.g. float(5.960464477539063e-8) FP32 5.96046448e-08 BINARY32 33800000
-  - example:
-    schema: CBOR TESTVECTOR  # [mandatory] "CBOR TESTVECTOR"
-    items:
 ````

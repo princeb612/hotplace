@@ -1,5 +1,5 @@
 testvector:
-  - example: sprintf
+  - example: valist sprintf
     schema: VALIST SPRINTF
     args:
       - type: float

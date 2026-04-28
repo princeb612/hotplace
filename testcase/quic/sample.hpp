@@ -66,26 +66,6 @@ struct testvector_retry_packet {
     tls_direction_t dir;
 };
 
-/**
- * wireshark http3.pcapng
- */
-enum prot_t : uint8 {
-    prot_quic = 1,
-    prot_tls13 = 2,
-    prot_http3 = 3,
-};
-
-struct testvector_http3_t {
-    tls_direction_t dir;
-    prot_t prot;
-    const char* desc;
-    const char* frame;
-    int debug;
-};
-
-extern const testvector_http3_t pcap_http3[];
-extern const size_t sizeof_pcap_http3;
-
 std::string direction_string(tls_direction_t dir);
 void test_rfc_9001_construct_initial(testvector_initial_packet* item, tls_session* session);
 void test_rfc_9001_send_initial(testvector_initial_packet* item, tls_session* session);
@@ -102,7 +82,7 @@ void testcase_rfc_9001();
 void testcase_rfc_9369();
 
 // pcap
-void testcase_pcap_http3();
+void testcase_testvector_pcap();
 // construct
 void testcase_construct_1rtt();
 void testcase_construct_quic();

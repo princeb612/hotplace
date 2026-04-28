@@ -1,5 +1,5 @@
 testvector:
-  - example:
+  - example: CBC-HMAC TLS
     schema: CBC-HMAC TLS
     items:
       - item: https://tls12.xargs.org/#client-handshake-finished > client finished

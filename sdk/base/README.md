@@ -1,4 +1,4 @@
-### base
+#### base
 
 ```mermaid
 mindmap
@@ -54,7 +54,7 @@ mindmap
         Djstra
 ```
 
-### references
+#### references
 
 * books
   * Data Structures and Algorithm Analysis in C++
@@ -110,7 +110,7 @@ mindmap
     * https://baseconvert.com/ieee-754-floating-point
     * https://www.omnicalculator.com/other/floating-point
 
-### C++ Standard
+#### C++ Standard
 
 | C++ std | GCC   | reference                                             |
 |--       |--     |--                                                     |
@@ -126,7 +126,7 @@ mindmap
 
 ; https://gcc.gnu.org/projects/cxx-status.html
 
-### t_constexpr_obf
+#### t_constexpr_obf
 
  * c++14 required
  * obfuscate a string at compile time
@@ -142,7 +142,7 @@ mindmap
      * std::cout << CONSTEXPR_OBF_CSTR(sample) << std::endl;
    * strings binary | grep "wild" # not found
 
-### bignumber
+#### bignumber
 
 - int8
   - int8.min -2<sup>7</sup>

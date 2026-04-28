@@ -300,17 +300,16 @@ static return_t do_test_construct_encrypted_extensions(tls_session* session, tls
                     ret = (*record)
                               .add(tls_hs_encrypted_extensions, session,
                                    [&](tls_handshake* handshake) -> return_t {
-                                       handshake->get_extensions().add(tls_ext_alpn, dir, handshake,  //
-                                                                       [](tls_extension* extension) -> return_t {
-                                                                           auto alpn = (tls_extension_alpn*)extension;
-                                                                           binary_t protocols;
-                                                                           binary_append(protocols, uint8(2));
-                                                                           binary_append(protocols, "h2");
-                                                                           binary_append(protocols, uint8(8));
-                                                                           binary_append(protocols, "http/1.1");
-                                                                           alpn->set_protocols(protocols);
-                                                                           return success;
-                                                                       });
+                                       handshake->get_extensions().add(tls_ext_alpn, dir, handshake, [](tls_extension* extension) -> return_t {
+                                           auto alpn = (tls_extension_alpn*)extension;
+                                           binary_t protocols;
+                                           binary_append(protocols, uint8(2));
+                                           binary_append(protocols, "h2");
+                                           binary_append(protocols, uint8(8));
+                                           binary_append(protocols, "http/1.1");
+                                           alpn->set_protocols(protocols);
+                                           return success;
+                                       });
                                        return success;
                                    })
                               .write(dir, bin);

@@ -365,7 +365,7 @@ int main(int argc, char** argv) {
     testcase_rfc_9369();
 
     // http3.pcapng
-    testcase_pcap_http3();
+    testcase_testvector_pcap();
 
     testcase_construct_1rtt();
     testcase_construct_quic();

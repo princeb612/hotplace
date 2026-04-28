@@ -1,5 +1,5 @@
 testvector:
-  - example:
+  - example: https://github.com/cose-wg/Examples
     schema: COSE EXAMPLES
     items:
       - item: aes-ccm-examples/aes-ccm-01.json

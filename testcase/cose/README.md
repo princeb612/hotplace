@@ -13,7 +13,7 @@
 
 ````
 testvector:
-  - example:
+  - example: string             # [mandatory] testcase
     schema: COSE EXAMPLES       # [mandatory] "COSE EXAMPLES"
     items:
       - item: string            # [mandatory] filename, description

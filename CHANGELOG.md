@@ -32,7 +32,7 @@
     * CBOR
 
 * details
-  * Revision 960
+  * Revision 961
   * Revision 958 (Tag 1.93)
     * [fixed] cbor_reader floating point
   * Revision 953

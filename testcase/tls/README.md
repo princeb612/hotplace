@@ -1,4 +1,4 @@
-## test
+#### test
 
 - [x] tasks
   - [x] baby steps
@@ -43,14 +43,14 @@
     - [x] DTLS 1.2 fragmentation (Revision 781)
   - [x] sslkeylog
 
-### packet capture
+#### packet capture
 
 * [tls13](tls13/README.md)
 * [tls12](tls12/README.md)
 * [dtls12](dtls12/README.md)
 * [linux](linux/README.md)
 
-### Cipher Suites
+#### Cipher Suites
 
 | code   | version | Cipher Suites                                 |        |
 | --     | --      | --                                            | --     |
@@ -82,7 +82,24 @@
 | 0xc0ae | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8            | -      |
 | 0xc0af | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8            | -      |
 
-### test_construct_tls_routine
+#### YAML schema
+
+* PCAP schema
+
+````
+testvector:
+  - example: string                         # [mandatory] testcase
+    schema: PCAP SIMPLE                     # [mandatory] "PCAP SIMPLE" (not 5 tuple format)
+    protocol: "TLS"|"DTLS"                  # [mandatory]
+    secrets:                                # pre master secrets
+      - item: string                        #
+    items:                                  # TLS Record
+      - item: string                        #
+        dir: "from_client"|"from_server"    # [mandatory]
+        record: hexstring                   # [mandatory]
+````
+
+#### test_construct_tls_routine
 
 - https://tls13.xargs.org
   - C->S client_hello
@@ -148,7 +165,7 @@
   - S->C change_cipher_spec
   - S->C finished
 
-### TLS 1.3
+#### TLS 1.3
 
 * 1-RTT
   * C->S

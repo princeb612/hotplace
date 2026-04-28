@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   testcase_pcap_tls13_mlkem.cpp
+ * @file   testcase_mlkem_encoding.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  * @remarks
@@ -12,143 +12,7 @@
 
 #include "sample.hpp"
 
-void testcase_pcap_tls13_mlkem() {
-    // MLKEM
-
-    {
-        _test_case.begin("TLS 1.3 tls13_TLS_AES_128_CCM_SHA256_MLKEM512.pcapng");
-
-        tls_session session(session_type_tls);
-
-        auto sslkeylog = sslkeylog_importer::get_instance();
-        sslkeylog->attach(&session);
-
-        (*sslkeylog) << "SERVER_HANDSHAKE_TRAFFIC_SECRET 0eadc6a1788916e5199dc24ca980d304489f92e180c50c558cb2c5dcdce66f96 "
-                        "0e7da5c8b6bf000c0599618bdc34b1ed628d287619665274da3bdc51d649627f";
-        (*sslkeylog) << "EXPORTER_SECRET 0eadc6a1788916e5199dc24ca980d304489f92e180c50c558cb2c5dcdce66f96 "
-                        "d0d84072fee9b483ab96bea1c5224dd75548fdb7083d8a2aa83e528f8c543442";
-        (*sslkeylog) << "SERVER_TRAFFIC_SECRET_0 0eadc6a1788916e5199dc24ca980d304489f92e180c50c558cb2c5dcdce66f96 "
-                        "159d5dfca44a8a66b980b4280b565df0004daafda1f99398a96780227ba83840";
-        (*sslkeylog) << "CLIENT_HANDSHAKE_TRAFFIC_SECRET 0eadc6a1788916e5199dc24ca980d304489f92e180c50c558cb2c5dcdce66f96 "
-                        "5953c3bec14ebeafe042191d554a335debe58cfb1a12b349aba7d2c2386020db";
-        (*sslkeylog) << "CLIENT_TRAFFIC_SECRET_0 0eadc6a1788916e5199dc24ca980d304489f92e180c50c558cb2c5dcdce66f96 "
-                        "c437c7abf792d31b89940c5c452ef89b78aa4a08edd9252bbcc2bfd1501f94c4";
-
-        play_pcap(&session, pcap_tls13_aes128gcm_sha256_mlkem512, sizeof_pcap_tls13_aes128gcm_sha256_mlkem512);
-    }
-
-    {
-        _test_case.begin("TLS 1.3 tls13_TLS_AES_128_CCM_SHA256_MLKEM768.pcapng");
-
-        tls_session session(session_type_tls);
-
-        auto sslkeylog = sslkeylog_importer::get_instance();
-        sslkeylog->attach(&session);
-
-        (*sslkeylog) << "SERVER_HANDSHAKE_TRAFFIC_SECRET 72f4fd6702bd475a94e1e80a91c9a8a2d7ed160f3445d30ee9959d9621f4ba2c "
-                        "df6301988ab035b487e5f7b94742567adb3d0c399d9ea5ef8ede85368f211026";
-        (*sslkeylog) << "EXPORTER_SECRET 72f4fd6702bd475a94e1e80a91c9a8a2d7ed160f3445d30ee9959d9621f4ba2c "
-                        "4f0c0a4e1412f2c9bf7ba1aba347ec2fbcd624836c11f038ca2327fee4619c3b";
-        (*sslkeylog) << "SERVER_TRAFFIC_SECRET_0 72f4fd6702bd475a94e1e80a91c9a8a2d7ed160f3445d30ee9959d9621f4ba2c "
-                        "d6f113f4783f908cabdfda5c9cc26c113ab29e1b36dc01ebd14b78c19bd06737";
-        (*sslkeylog) << "CLIENT_HANDSHAKE_TRAFFIC_SECRET 72f4fd6702bd475a94e1e80a91c9a8a2d7ed160f3445d30ee9959d9621f4ba2c "
-                        "842cb1512334ce3c11a16dc48bbcb9b6509ce695fb2a5c776701cc02edfa8852";
-        (*sslkeylog) << "CLIENT_TRAFFIC_SECRET_0 72f4fd6702bd475a94e1e80a91c9a8a2d7ed160f3445d30ee9959d9621f4ba2c "
-                        "b214c1fd92038ccd71fa0c62d70c8b189bfce3660db3e941febf1d2d7b790f73";
-
-        play_pcap(&session, pcap_tls13_aes128gcm_sha256_mlkem768, sizeof_pcap_tls13_aes128gcm_sha256_mlkem768);
-    }
-
-    {
-        _test_case.begin("TLS 1.3 tls13_TLS_AES_128_CCM_SHA256_MLKEM1024.pcapng");
-
-        tls_session session(session_type_tls);
-
-        auto sslkeylog = sslkeylog_importer::get_instance();
-        sslkeylog->attach(&session);
-
-        (*sslkeylog) << "SERVER_HANDSHAKE_TRAFFIC_SECRET 00ab11e590762daa4d17567ffb8e53b2fe1ca569bd9b841d64d31fe130caa82e "
-                        "4648aa6e38d1def505b7319ca1a525c926971a8010aed0b99b37f8c7512acf08";
-        (*sslkeylog) << "EXPORTER_SECRET 00ab11e590762daa4d17567ffb8e53b2fe1ca569bd9b841d64d31fe130caa82e "
-                        "483759ce74b327e5dc8fed0bb82cb63d36629fc805e629337ece3bff1f1b6c15";
-        (*sslkeylog) << "SERVER_TRAFFIC_SECRET_0 00ab11e590762daa4d17567ffb8e53b2fe1ca569bd9b841d64d31fe130caa82e "
-                        "58487cdf120f18d746383673fc83ddf186c38bb5e8aa5fc01f9f2014128bfb19";
-        (*sslkeylog) << "CLIENT_HANDSHAKE_TRAFFIC_SECRET 00ab11e590762daa4d17567ffb8e53b2fe1ca569bd9b841d64d31fe130caa82e "
-                        "84486b9a42215bf477b4a07a49bb32fb5b82393e243a0a7b552f1b8d39763637";
-        (*sslkeylog) << "CLIENT_TRAFFIC_SECRET_0 00ab11e590762daa4d17567ffb8e53b2fe1ca569bd9b841d64d31fe130caa82e "
-                        "9375babb3abaf98a471413230e4c13e9868ef6d18d3d253da4f0ae9b49628288";
-
-        play_pcap(&session, pcap_tls13_aes128gcm_sha256_mlkem1024, sizeof_pcap_tls13_aes128gcm_sha256_mlkem1024);
-    }
-
-    // hybrid MLKEM
-
-    {
-        _test_case.begin("TLS 1.3 tls13_TLS_AES_128_CCM_SHA256_SecP256r1MLKEM768.pcapng");
-
-        tls_session session(session_type_tls);
-
-        auto sslkeylog = sslkeylog_importer::get_instance();
-        sslkeylog->attach(&session);
-
-        (*sslkeylog) << "SERVER_HANDSHAKE_TRAFFIC_SECRET a771772cd5024b8bdbebed457ae2b648df0e7a27fb10c0a139f25d54be8e36f7 "
-                        "b05a5a2344e39bcffa03327ca5147269898ba61748b6091cbb1320b345175b2f";
-        (*sslkeylog) << "EXPORTER_SECRET a771772cd5024b8bdbebed457ae2b648df0e7a27fb10c0a139f25d54be8e36f7 "
-                        "16962036f3561161e5d15eebedeb2121ead12c44bad47d060d38e03f6fcb93eb";
-        (*sslkeylog) << "SERVER_TRAFFIC_SECRET_0 a771772cd5024b8bdbebed457ae2b648df0e7a27fb10c0a139f25d54be8e36f7 "
-                        "026747680ade14119d0395a1bd17112798646fde50574c727eace699c17d07d0";
-        (*sslkeylog) << "CLIENT_HANDSHAKE_TRAFFIC_SECRET a771772cd5024b8bdbebed457ae2b648df0e7a27fb10c0a139f25d54be8e36f7 "
-                        "d6a2333a654ed6d53d5c13dfa49c6a7a582c0dafb4678acf85d25b9ba1d68058";
-        (*sslkeylog) << "CLIENT_TRAFFIC_SECRET_0 a771772cd5024b8bdbebed457ae2b648df0e7a27fb10c0a139f25d54be8e36f7 "
-                        "d0282b4797220d75a32d2bb36f649ad1cdc3e2489b83df059dd86d588a13cc4d";
-
-        play_pcap(&session, pcap_tls13_aes128gcm_sha256_secp256r1mlkem768, sizeof_pcap_tls13_aes128gcm_sha256_secp256r1mlkem768);
-    }
-
-    {
-        _test_case.begin("TLS 1.3 tls13_TLS_AES_128_CCM_SHA256_X25519MLKEM768.pcapng");
-
-        tls_session session(session_type_tls);
-
-        auto sslkeylog = sslkeylog_importer::get_instance();
-        sslkeylog->attach(&session);
-
-        (*sslkeylog) << "SERVER_HANDSHAKE_TRAFFIC_SECRET eeff3b12b284e64c59ee3eb71ead214c28e552964939fddacd5cbb7b61d5fbb2 "
-                        "b87a2fefb446a062ac376d1c3e64e0b4967528dd4599233be6c31e63039a67bb";
-        (*sslkeylog) << "EXPORTER_SECRET eeff3b12b284e64c59ee3eb71ead214c28e552964939fddacd5cbb7b61d5fbb2 "
-                        "2080b729b75e526e724ba4fb76d806fe48a8c9f0141d152f6910f3d9dbf3e2f6";
-        (*sslkeylog) << "SERVER_TRAFFIC_SECRET_0 eeff3b12b284e64c59ee3eb71ead214c28e552964939fddacd5cbb7b61d5fbb2 "
-                        "678afd939623d2d91132bd895087e40006e3a61818cfa5005eb3cd0a7e6748be";
-        (*sslkeylog) << "CLIENT_HANDSHAKE_TRAFFIC_SECRET eeff3b12b284e64c59ee3eb71ead214c28e552964939fddacd5cbb7b61d5fbb2 "
-                        "450b1a22afc24e238d00186e367309876a7e67e3d0a9844577e5d815cdabdbb8";
-        (*sslkeylog) << "CLIENT_TRAFFIC_SECRET_0 eeff3b12b284e64c59ee3eb71ead214c28e552964939fddacd5cbb7b61d5fbb2 "
-                        "1156d6830a41d7fe958cde2cf74ccb348d91f59c9a649b18ab803b26c23a2f54";
-
-        play_pcap(&session, pcap_tls13_aes128gcm_sha256_x25519mlkem768, sizeof_pcap_tls13_aes128gcm_sha256_x25519mlkem768);
-    }
-
-    {
-        _test_case.begin("TLS 1.3 tls13_TLS_AES_128_CCM_SHA256_SecP384r1MLKEM1024.pcapng");
-
-        tls_session session(session_type_tls);
-
-        auto sslkeylog = sslkeylog_importer::get_instance();
-        sslkeylog->attach(&session);
-
-        (*sslkeylog) << "SERVER_HANDSHAKE_TRAFFIC_SECRET 48d6db376538948c9ee64daded5ffe77e0f7a8a50cc17cd8456b9b7120936eae "
-                        "908766c605ec30bbd84b7bbdc6b1d96164d330924385bfd37989debb4660f49f";
-        (*sslkeylog) << "EXPORTER_SECRET 48d6db376538948c9ee64daded5ffe77e0f7a8a50cc17cd8456b9b7120936eae "
-                        "876a1a9c117da419ac36ded9fd7b3a2693efd6743e28506fb32139a1d3a80ae7";
-        (*sslkeylog) << "SERVER_TRAFFIC_SECRET_0 48d6db376538948c9ee64daded5ffe77e0f7a8a50cc17cd8456b9b7120936eae "
-                        "f948b2e1694d480baa64b01cfb9693a732841ddc1217bb3109c4a3e720ecd969";
-        (*sslkeylog) << "CLIENT_HANDSHAKE_TRAFFIC_SECRET 48d6db376538948c9ee64daded5ffe77e0f7a8a50cc17cd8456b9b7120936eae "
-                        "23b203467279759446393407e9548fe4b905bdd7f57317c5f79c5835158b2f2d";
-        (*sslkeylog) << "CLIENT_TRAFFIC_SECRET_0 48d6db376538948c9ee64daded5ffe77e0f7a8a50cc17cd8456b9b7120936eae "
-                        "517b30b77ff6e84b383357ccadd583b2136598cb742efc13ebf04af7b5b67554";
-
-        play_pcap(&session, pcap_tls13_aes128gcm_sha256_secp384r1mlkem1024, sizeof_pcap_tls13_aes128gcm_sha256_secp384r1mlkem1024);
-    }
-
+void test_mlkem_encoding() {
     // TLS 1.3 key_share raw encoding
     _test_case.begin("TLS 1.3 keyshare MLKEM encoding");
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
@@ -245,3 +109,5 @@ void testcase_pcap_tls13_mlkem() {
     _test_case.test(not_supported, __FUNCTION__, "openssl 3.5 required");
 #endif
 }
+
+void testcase_mlkem_encoding() { test_mlkem_encoding(); }

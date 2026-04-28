@@ -141,27 +141,27 @@ NIST 2022
 
 ````
 testvector:
-  - example: string        #
-    schema: CBC-HMAC JOSE  # [mandatory] "CBC-HMAC JOSE"
+  - example: string         # [mandatory] testcase
+    schema: CBC-HMAC JOSE   # [mandatory] "CBC-HMAC JOSE"
     items:
       - item: string
-        encalg: string     # [mandatory] algorithm
-        macalg: string     # [mandatory] algorithm
-        k: hexstring       # [mandatory] mackey || enckey
-        p: hexstring       # [mandatory] PT
-        iv: hexstring      # [mandatory] IV
-        a: hexstring       # [mandatory] AAD
-        q: hexstring       # [mandatory] Q = CBC-ENC(ENC_KEY, P || PS)
-        s: hexstring       # [mandatory] S = IV || Q
-        t: hexstring       # [mandatory] T = MAC(MAC_KEY, A || S || AL)
-        c: hexstring       # [mandatory] CT = S || T
+        encalg: string      # [mandatory] algorithm
+        macalg: string      # [mandatory] algorithm
+        k: hexstring        # [mandatory] mackey || enckey
+        p: hexstring        # [mandatory] PT
+        iv: hexstring       # [mandatory] IV
+        a: hexstring        # [mandatory] AAD
+        q: hexstring        # [mandatory] Q = CBC-ENC(ENC_KEY, P || PS)
+        s: hexstring        # [mandatory] S = IV || Q
+        t: hexstring        # [mandatory] T = MAC(MAC_KEY, A || S || AL)
+        c: hexstring        # [mandatory] CT = S || T
 ````
 
 * CBC-HMAC JOSE TLS schema
 
 ````
 testvector:
-  - example: string
+  - example: string         # [mandatory] testcase
     schema: CBC-HMAC TLS    # [mandatory] "CBC-HMAC TLS"
     items:
       - item: string        #
@@ -179,8 +179,8 @@ testvector:
 
 ````
 testvector:
-  - example: string             #
-    schema: BLOCK CIPHERS       # [mandatory] "CAVP BLOCK CIPHERS"
+  - example: string             # [mandatory] testcase
+    schema: BLOCK CIPHERS       # [mandatory] "BLOCK CIPHERS"
     items:
       - item: string            #
         alg: string             # [mandatory] algorithm
@@ -194,7 +194,7 @@ testvector:
 
 ````
 testvector:
-  - example: string             #
+  - example: string             # [mandatory] testcase
     schema: RFC 3394            # [mandatory] "RFC 3394"
     items:
       - item: string            #
@@ -208,7 +208,7 @@ testvector:
 
 ````
 testvector:
-  - example: string             #
+  - example: string             # [mandatory] testcase
     schema: RFC 7539            # [mandatory] "RFC 7539"
     items:
       - item: string            #
@@ -226,7 +226,7 @@ testvector:
 
 ````
 testvector:
-  - example: string             #
+  - example: string             # [mandatory] testcase
     schema: ECDSA TESTVECTOR    # [mandatory] "ECDSA TESTVECTOR"
     encoding: "base16"|"plain"  # [mandatory] m encoding
     items:
@@ -245,14 +245,14 @@ testvector:
 
 ````
 testvector:
-  - example: string             #
+  - example: string             # [mandatory] testcase
     schema: DSA PARAMETER       # [mandatory] "DSA PARAMETER"
     items:
       - item: string            # [mandatory] primary key
         p: hexstring            # [mandatory] prime
         q: hexstring            # [mandatory] subprime
         g: hexstring            # [mandatory] generator
-  - example: string             #
+  - example: string             # [mandatory] testcase
     schema: DSA TESTVECTOR      # [mandatory] "DSA TESTVECTOR"
     items:
       - item: string            #
@@ -270,14 +270,14 @@ testvector:
 
 ````
 testvector:
-  - example: string             #
+  - example: string             # [mandatory] testcase
     schema: RSA KEY             # [mandatory] "RSA KEY"
     items:
       - item: string            # [mandatory] primary key
         n: hexstring            # [mandatory] modulus
         e: hexstring            # [mandatory] public exponent
         d: hexstring            # [mandatory] private exponent
-  - example: string             #
+  - example: string             # [mandatory] testcase
     schema: RSA PKCS 1.5        # [mandatory] "RSA PKCS 1.5"
     items:
       - item: string            #
@@ -285,6 +285,7 @@ testvector:
         alg: string             # [mandatory] algorithm
         m: hexstring            # [mandatory] message
         s: hexstring            # [mandatory] signature
+  - example: string             # [mandatory] testcase
     schema: RSA PSS             # [mandatory] "RSA PSS"
     items:
       - item: string            #

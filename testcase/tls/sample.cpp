@@ -116,34 +116,6 @@ void do_cross_check_keycalc(tls_session* clisession, tls_session* svrsession, tl
     _test_case.assert(client_secret == server_secret, __FUNCTION__, "cross-check secret %s", secret_name);
 }
 
-void play_pcap(tls_session* session, const pcap_testvector* testvector, size_t size) {
-    bool has_fatal = false;
-
-    auto lambda_test_fatal_alert = [&](uint8 level, uint8 desc) -> void {
-        if (tls_alertlevel_fatal == level) {
-            if (tls_alertdesc_certificate_unknown != desc) {
-                has_fatal = true;
-            }
-        }
-    };
-
-    for (auto i = 0; i < size; i++) {
-        const pcap_testvector* item = testvector + i;
-
-        binary_t bin_record = std::move(base16_decode_rfc(item->record));
-        if (bin_record.empty()) {
-            continue;
-        }
-        dump_record(item->desc, session, item->dir, bin_record);
-
-        session->get_alert(item->dir, lambda_test_fatal_alert);
-        if (has_fatal) {
-            _test_case.test(failed, __FUNCTION__, "fatal alert");
-            break;
-        }
-    }
-}
-
 return_t construct_record_fragmented(tls_record* record, tls_direction_t dir, std::function<void(tls_session*, binary_t& bin)> func) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -266,22 +238,18 @@ int main(int argc, char** argv) {
         load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
 
         testcase_tls12_aead();
+        testcase_mlkem_encoding();
 
-        testcase_pcap_tls13();
-        testcase_pcap_tls12();
-        testcase_pcap_http();
-        testcase_pcap_tls13_mlkem();
+        testcase_testvector_pcap();
+
+        testcase_helloretryrequest();
+        testcase_alert();
 
         testcase_construct_tls();
-
-        testcase_pcap_dtls12();
         testcase_construct_dtls13();
         testcase_dtls_record_arrange();
         testcase_construct_dtls12_1();  // generate and arrange fragmented diagrams (record-handshake multiplicity 1..1)
         testcase_construct_dtls12_2();  // (record-handshake multiplicity 1..*)
-
-        testcase_helloretryrequest();
-        testcase_alert();
     } else {
         dump_clienthello();
     }

@@ -12,7 +12,7 @@
 
 #include "sample.hpp"
 
-void testcase_alert() {
+void test_alert() {
     _test_case.begin("alert");
 
     tls_session session;
@@ -95,3 +95,5 @@ void testcase_alert() {
         _test_case.assert(test, __FUNCTION__, "alert == {fatal, unexpected message}");
     }
 }
+
+void testcase_alert() { test_alert(); }
