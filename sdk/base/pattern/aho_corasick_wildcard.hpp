@@ -110,8 +110,8 @@ namespace hotplace {
  *              ac.insert("h*s", 3);   // pattern 7
  *              ac.build();
  *              const char* source = "ahishers";
- *              std::multimap<size_t, unsigned> result;
- *              std::multimap<size_t, unsigned> expect =
+ *              std::multimap<size_t, size_t> result;
+ *              std::multimap<size_t, size_t> expect =
  *                  {{range_t(0, 1), 6}, {range_t(1, 3), 0}, {range_t(1, 3), 3}, {range_t(1, 3), 5},
  *                   {range_t(4, 6), 1}, {range_t(4, 7), 2}, {range_t(4, 6), 4}, {range_t(5, 7), 5}}};
  *              result = ac.search(source, strlen(source));
@@ -205,7 +205,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
             }
         }
     }
-    virtual void dosearch(const T* source, size_t size, std::map<size_t, std::set<unsigned>>& result) {
+    virtual void dosearch(const T* source, size_t size, std::map<size_t, std::set<size_t>>& result) {
         if (source) {
             typedef std::pair<trienode*, size_t> pair_t;
             std::set<pair_t> visit;
@@ -322,7 +322,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
         }
     }
 
-    virtual void get_result(const std::map<size_t, std::set<unsigned>>& ordered, std::multimap<range_t, unsigned>& result, size_t size) {
+    virtual void get_result(const std::map<size_t, std::set<size_t>>& ordered, std::multimap<range_t, size_t>& result, size_t size) {
         for (const auto& pair : ordered) {
             const auto& v = pair.first;
             const auto& positions = pair.second;
@@ -357,9 +357,9 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
                             if (startswith_wildcard_any & tag.modes) {
                                 range.begin = 0;
                             } else {
-                                unsigned n = pos - tag.adjust + 1;
-                                unsigned p = 0;
-                                find_lessthan_or_equal<unsigned>(positions_prefix, n, p);
+                                auto n = pos - tag.adjust + 1;
+                                size_t p = 0;
+                                find_lessthan_or_equal<size_t>(positions_prefix, n, p);
 
                                 range.begin = p - tag.size + 1;
                             }

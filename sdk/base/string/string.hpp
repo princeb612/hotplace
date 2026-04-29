@@ -136,8 +136,8 @@ return_t getline(const wchar_t* stream, size_t sizestream, size_t startpos, size
  *  split_end (handle);
  */
 typedef struct _split_map_item {
-    uint32 begin;
-    uint32 length;
+    size_t begin;
+    size_t length;
 } split_map_item;
 typedef std::vector<split_map_item> split_map_list;
 typedef struct _split_context_t {

@@ -752,7 +752,7 @@ return_t tls_advisor::negotiate_alpn(tls_handshake* handshake, const byte_t* alp
         }
 
         t_aho_corasick<byte_t> ac;
-        std::multimap<unsigned, range_t> rearranged;
+        std::multimap<size_t, range_t> rearranged;
 
         ac.insert(_prot.data(), _prot.size());  // pattern [0]
         ac.build();
@@ -761,7 +761,7 @@ return_t tls_advisor::negotiate_alpn(tls_handshake* handshake, const byte_t* alp
 
         ac.order_by_pattern(result, rearranged);
 
-        auto select = [&](unsigned patid) -> void {
+        auto select = [&](size_t patid) -> void {
             auto iter = rearranged.lower_bound(patid);
             if (rearranged.end() != iter) {
                 auto ext = new tls_extension_alpn(handshake);

@@ -30,17 +30,17 @@ class crypt_t {
      * @param crypt_algorithm_t algorithm [in]
      * @param crypt_mode_t mode [in]
      * @param const unsigned char* key [in]
-     * @param unsigned size_key [in]
+     * @param size_t size_key [in]
      * @param const unsigned char* iv [in]
-     * @param unsigned size_iv [in]
+     * @param size_t size_iv [in]
      * @return error code (see error.hpp)
      * @example
      *        crypt_context_t* handle = nullptr;
      *        crypt.open(&handle, crypt_algorithm_t::aes256, crypt_mode_t::cbc, key, size_key, iv, size_iv);
      *        crypt.close(handle);
      */
-    virtual return_t open(crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key, unsigned size_key, const unsigned char* iv,
-                          unsigned size_iv) = 0;
+    virtual return_t open(crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key, size_t size_key, const unsigned char* iv,
+                          size_t size_iv) = 0;
     /**
      * @brief create a context handle (symmetric)
      * @param crypt_context_t** handle [out]

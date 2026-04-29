@@ -16,7 +16,7 @@
 
 namespace hotplace {
 
-return_t b24_i32(const byte_t* p, uint8 len, uint32& value) {
+return_t b24_i32(const byte_t* p, size_t len, uint32& value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -35,7 +35,7 @@ return_t b24_i32(const byte_t* p, uint8 len, uint32& value) {
     return ret;
 }
 
-return_t i32_b24(byte_t* p, uint8 len, uint32 value) {
+return_t i32_b24(byte_t* p, size_t len, uint32 value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -65,9 +65,9 @@ uint24_t::uint24_t(const byte_t* p, size_t size) : t_uint_custom_t<uint32, 3>(p,
 
 uint24_t::uint24_t(uint32 v) : t_uint_custom_t<uint32, 3>() { set(v); }
 
-return_t uint24_t::hton(byte_t* p, uint8 len, const uint32& value) { return i32_b24(p, len, value); }
+return_t uint24_t::hton(byte_t* p, size_t len, const uint32& value) { return i32_b24(p, len, value); }
 
-return_t uint24_t::ntoh(const byte_t* p, uint8 len, uint32& value) { return b24_i32(p, len, value); }
+return_t uint24_t::ntoh(const byte_t* p, size_t len, uint32& value) { return b24_i32(p, len, value); }
 
 return_t b24_i32(const uint24_t& u, uint32& value) { return b24_i32(u.data, RTL_FIELD_SIZE(uint24_t, data), value); }
 

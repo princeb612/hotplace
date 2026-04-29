@@ -69,7 +69,7 @@ uint8 ieee754_as_small_as_possible(variant& vt, double fp) {
     bool cond2 = (fp64_pinf == (fp64_pinf & fp64.storage));
     if (cond1 && !cond2) {
         fp32_t fp32;
-        fp32.fp = fp;
+        fp32.fp = t_justdoit(fp);
         if (fp32_pinf != (fp32_pinf & fp32.storage)) {
             // variant_set_float (fp32.fp);
             // ret = 4;
@@ -366,13 +366,13 @@ ieee754_typeof_t ieee754_exp(uint16 value, int* s, int* e, uint16* m) {
             case ieee754_zero:
                 break;
             case ieee754_pinf:
-                mantissa = fp32_from_binary32(fp32_pinf);
+                mantissa = fp16_pinf;
                 break;
             case ieee754_ninf:
-                mantissa = fp32_from_binary32(fp32_ninf);
+                mantissa = fp16_ninf;
                 break;
             case ieee754_nan:
-                mantissa = fp32_from_binary32(fp32_nan);
+                mantissa = fp16_nan;
                 break;
             default:
                 exponent = ((value >> 10) & 0x001f) - bias_m1;
@@ -460,7 +460,7 @@ ieee754_typeof_t ieee754_exp(double value, int* s, int* e, double* m) {
                 mantissa = fp64_from_binary64(fp64_nan);
                 break;
             default:
-                exponent = ((b64 >> 52) & 0x000007ff) - bias_m1;
+                exponent = t_justdoit(((b64 >> 52) & 0x000007ff) - bias_m1);
                 mantissa = fp64_from_binary64((b64 & ~fp64_pinf) | (bias_m1 << 52));
                 break;
         }

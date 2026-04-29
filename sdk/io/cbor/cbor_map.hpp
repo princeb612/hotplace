@@ -14,7 +14,6 @@
 #ifndef __HOTPLACE_SDK_IO_CBOR_CBORMAP__
 #define __HOTPLACE_SDK_IO_CBOR_CBORMAP__
 
-#include <hotplace/sdk/base/nostd/integer.hpp>
 #include <hotplace/sdk/io/cbor/cbor_pair.hpp>
 
 namespace hotplace {
@@ -114,7 +113,7 @@ class cbor_map : public cbor_object {
 
 template <typename KTY>
 struct cbor_map_int_binder {
-    KTY bind(variant vt) { return t_to_int<KTY>(vt.content()); }
+    KTY bind(variant vt) { return vt.t_toi<KTY>(); }
 };
 
 template <typename KTY>

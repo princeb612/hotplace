@@ -13,7 +13,6 @@
 #include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
-#include <hotplace/sdk/base/nostd/integer.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/base/system/bignumber.hpp>
@@ -167,7 +166,7 @@ variant_t &variant::get() { return _vt; }
 
 vartype_t variant::type() const { return _vt.type; }
 
-uint16 variant::size() const { return _vt.size; }
+size_t variant::size() const { return _vt.size; }
 
 uint16 variant::flag() const { return _vt.flag; }
 
@@ -600,7 +599,7 @@ const binary_t variant::to_bin(uint32 flags) const {
     return bin;
 }
 
-int variant::to_int() const { return t_to_int<int>(_vt); }
+int variant::to_int() { return t_toi<int>(); }
 
 return_t variant::to_binary(binary_t &target, uint32 flags) const {
     return_t ret = errorcode_t::success;

@@ -37,7 +37,7 @@ namespace hotplace {
  *              ac.insert("a", 1);
  *              ac.build();
  *              const char* text = "abcaabc";
- *              std::multimap<range_t, unsigned> result;
+ *              std::multimap<range_t, size_t> result;
  *              result = ac.search(text, strlen(text));
  *              for (auto [range, pid] : result) {
  *                  _logger->writeln("pos [%zi..%zi] pattern[%i]", range.begin, range.end, pid);
@@ -75,7 +75,7 @@ class t_aho_corasick {
     struct trienode {
         std::unordered_map<BT, trienode*> children;
         trienode* failure;
-        std::set<unsigned> output;
+        std::set<size_t> output;
         uint8 flag;  // reserved
 
         trienode() : failure(nullptr), flag(0) {}
@@ -104,19 +104,19 @@ class t_aho_corasick {
 
     /**
      * @brief   search for patterns
-     * @return  std::multimap<range_t, unsigned>
+     * @return  std::multimap<range_t, size_t>
      */
-    std::multimap<range_t, unsigned> search(const std::vector<T>& source) {
-        std::map<size_t, std::set<unsigned>> ordered;
-        std::multimap<range_t, unsigned> result;
+    std::multimap<range_t, size_t> search(const std::vector<T>& source) {
+        std::map<size_t, std::set<size_t>> ordered;
+        std::multimap<range_t, size_t> result;
         auto size = source.size();
         dosearch(source.data(), size, ordered);
         get_result(ordered, result, size);
         return result;
     }
-    std::multimap<range_t, unsigned> search(const T* source, size_t size) {
-        std::map<size_t, std::set<unsigned>> ordered;
-        std::multimap<range_t, unsigned> result;
+    std::multimap<range_t, size_t> search(const T* source, size_t size) {
+        std::map<size_t, std::set<size_t>> ordered;
+        std::multimap<range_t, size_t> result;
         dosearch(source, size, ordered);
         get_result(ordered, result, size);
         return result;
@@ -132,7 +132,7 @@ class t_aho_corasick {
     /**
      * @brief   order by pattern id
      * @sample
-     *          std::multimap<unsigned, range_t> rearranged;
+     *          std::multimap<size_t, range_t> rearranged;
      *          ac.insert(pattern1, size_pattern1);
      *          ac.build();
      *          auto result = ac.search(source, size);
@@ -142,7 +142,7 @@ class t_aho_corasick {
      *              // do something
      *          }
      */
-    void order_by_pattern(const std::multimap<range_t, unsigned>& input, std::multimap<unsigned, range_t>& output) {
+    void order_by_pattern(const std::multimap<range_t, size_t>& input, std::multimap<size_t, range_t>& output) {
         output.clear();
         for (auto& pair : input) {
             output.insert({pair.second, pair.first});
@@ -231,7 +231,7 @@ class t_aho_corasick {
     /**
      * @brief   search
      */
-    virtual void dosearch(const T* source, size_t size, std::map<size_t, std::set<unsigned>>& result) {
+    virtual void dosearch(const T* source, size_t size, std::map<size_t, std::set<size_t>>& result) {
         if (source) {
             trienode* current = _root;
             for (size_t i = 0; i < size; ++i) {
@@ -251,7 +251,7 @@ class t_aho_corasick {
     /*
      * @brief   collect results
      */
-    virtual void collect_results(trienode* node, size_t pos, std::map<size_t, std::set<unsigned>>& result) {
+    virtual void collect_results(trienode* node, size_t pos, std::map<size_t, std::set<size_t>>& result) {
         if (node) {
             for (const auto& v : node->output) {
                 // v is an index of a pattern
@@ -260,7 +260,7 @@ class t_aho_corasick {
             }
         }
     }
-    virtual void get_result(const std::map<size_t, std::set<unsigned>>& ordered, std::multimap<range_t, unsigned>& result, size_t size) {
+    virtual void get_result(const std::map<size_t, std::set<size_t>>& ordered, std::multimap<range_t, size_t>& result, size_t size) {
         for (const auto& pair : ordered) {
             const auto& v = pair.first;
             const auto& positions = pair.second;

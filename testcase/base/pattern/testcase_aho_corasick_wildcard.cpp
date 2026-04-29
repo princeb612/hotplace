@@ -17,7 +17,7 @@ void test_aho_corasick_wildcard() {
     struct testvector {
         const char* source;
         std::vector<pattern_t> patterns;
-        std::multimap<range_t, unsigned> expects;
+        std::multimap<range_t, size_t> expects;
     } _table[] = {
         // banana
         // ??       (0..1)[0] ba
@@ -409,8 +409,8 @@ void test_aho_corasick_wildcard() {
     for (auto entry : _table) {
         // t_aho_corasick<char> ac(memberof_defhandler<char>);
         t_aho_corasick_wildcard<char> ac(memberof_defhandler<char>, '?', '*');
-        std::multimap<range_t, unsigned> result;
-        std::multimap<range_t, unsigned> expect;
+        std::multimap<range_t, size_t> result;
+        std::multimap<range_t, size_t> expect;
 
         _logger->writeln(R"(source     "%.*s")", strlen(entry.source), entry.source);
 
@@ -441,7 +441,7 @@ void test_aho_corasick_ignorecase() {
     struct testvector {
         const char* source;
         std::vector<pattern_t> patterns;
-        std::multimap<range_t, unsigned> expects;
+        std::multimap<range_t, size_t> expects;
     } _table[] = {
         // George Bernard Shaw
         // 0         1         2         3         4         5         6         7
@@ -500,8 +500,8 @@ void test_aho_corasick_ignorecase() {
 
     for (auto entry : _table) {
         t_aho_corasick_wildcard<char> ac(memberof_tolower, '?', '*');
-        std::multimap<range_t, unsigned> result;
-        std::multimap<range_t, unsigned> expect;
+        std::multimap<range_t, size_t> result;
+        std::multimap<range_t, size_t> expect;
 
         _logger->writeln(R"(source     "%.*s")", strlen(entry.source), entry.source);
 

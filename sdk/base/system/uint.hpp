@@ -26,28 +26,28 @@ namespace hotplace {
  *              HTTP/2 frame header length
  *              ASN.1 Certificate length
  *            implement
- *              return_t b24_i32(const byte_t *p, uint8 len, uint32 &value)
- *              return_t i32_b24(byte_t *p, uint8 len, uint32 value)
+ *              return_t b24_i32(const byte_t *p, size_t len, uint32 &value)
+ *              return_t i32_b24(byte_t *p, size_t len, uint32 value)
  *              struct uint24_t : t_uint_custom_t<uint32, 3>
  *          2 uint40
  *            implement
- *              return_t b40_i64(const byte_t *p, uint8 len, uint64 &value)
- *              return_t i64_b40(byte_t *p, uint8 len, uint64 value)
+ *              return_t b40_i64(const byte_t *p, size_t len, uint64 &value)
+ *              return_t i64_b40(byte_t *p, size_t len, uint64 value)
  *              struct uint40_t : t_uint_custom_t<uint64, 5>
  *          3 uint48
  *            usage case
  *              DTLS record sequence
  *            implement
- *              return_t b48_i64(const byte_t *p, uint8 len, uint64 &value)
- *              return_t i64_b48(byte_t *p, uint8 len, uint64 value)
+ *              return_t b48_i64(const byte_t *p, size_t len, uint64 &value)
+ *              return_t i64_b48(byte_t *p, size_t len, uint64 value)
  *              struct uint48_t : t_uint_custom_t<uint64, 6>
  *          4 uint56
  *            implement
- *              return_t b56_i64(const byte_t *p, uint8 len, uint64 &value)
- *              return_t i64_b56(byte_t *p, uint8 len, uint64 value)
+ *              return_t b56_i64(const byte_t *p, size_t len, uint64 &value)
+ *              return_t i64_b56(byte_t *p, size_t len, uint64 value)
  *              struct uint56_t : t_uint_custom_t<uint64, 7>
  */
-template <typename TYPE, uint8 N>
+template <typename TYPE, size_t N>
 struct t_uint_custom_t {
     byte_t data[N];
 
@@ -71,10 +71,10 @@ struct t_uint_custom_t {
         return *this;
     }
     void set(const TYPE &v) { hton(data, N, v); }
-    uint8 capacity() { return N; }
+    size_t capacity() { return N; }
 
-    virtual return_t hton(byte_t *p, uint8 len, const TYPE &value) { return errorcode_t::do_nothing; }
-    virtual return_t ntoh(const byte_t *p, uint8 len, TYPE &value) { return errorcode_t::do_nothing; }
+    virtual return_t hton(byte_t *p, size_t len, const TYPE &value) { return errorcode_t::do_nothing; }
+    virtual return_t ntoh(const byte_t *p, size_t len, TYPE &value) { return errorcode_t::do_nothing; }
 };
 
 /**
@@ -83,8 +83,8 @@ struct t_uint_custom_t {
  *          b24_i32 - from 24bits byte stream to 32 bit integer
  *          i32_b24 - from 32 bit integer to 24bits byte stream
  */
-return_t b24_i32(const byte_t *p, uint8 len, uint32 &value);
-return_t i32_b24(byte_t *p, uint8 len, uint32 value);
+return_t b24_i32(const byte_t *p, size_t len, uint32 &value);
+return_t i32_b24(byte_t *p, size_t len, uint32 value);
 
 /* TLS handshake length */
 struct uint24_t : t_uint_custom_t<uint32, 3> {
@@ -93,16 +93,16 @@ struct uint24_t : t_uint_custom_t<uint32, 3> {
     uint24_t(const byte_t *p, size_t size);
     uint24_t(uint32 v);
 
-    return_t hton(byte_t *p, uint8 len, const uint32 &value) override;
-    return_t ntoh(const byte_t *p, uint8 len, uint32 &value) override;
+    return_t hton(byte_t *p, size_t len, const uint32 &value) override;
+    return_t ntoh(const byte_t *p, size_t len, uint32 &value) override;
 };
 
 return_t b24_i32(const uint24_t &u, uint32 &value);
 return_t i32_b24(uint24_t &u, uint32 value);
 
 /* DTLS record sequence */
-return_t b48_i64(const byte_t *p, uint8 len, uint64 &value);
-return_t i64_b48(byte_t *p, uint8 len, uint64 value);
+return_t b48_i64(const byte_t *p, size_t len, uint64 &value);
+return_t i64_b48(byte_t *p, size_t len, uint64 value);
 
 struct uint48_t : t_uint_custom_t<uint64, 6> {
     uint48_t();
@@ -110,8 +110,8 @@ struct uint48_t : t_uint_custom_t<uint64, 6> {
     uint48_t(const byte_t *p, size_t size);
     uint48_t(uint64 v);
 
-    return_t hton(byte_t *p, uint8 len, const uint64 &value) override;
-    return_t ntoh(const byte_t *p, uint8 len, uint64 &value) override;
+    return_t hton(byte_t *p, size_t len, const uint64 &value) override;
+    return_t ntoh(const byte_t *p, size_t len, uint64 &value) override;
 };
 
 return_t b48_i64(const uint48_t &u, uint64 &value);

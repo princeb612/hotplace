@@ -204,7 +204,7 @@ return_t debug_trace::open(debug_trace_context_t** handle) {
 
         DWORD test = 0;
         TCHAR buffer_data[1 << 12];
-        size_t buffer_data_size = RTL_NUMBER_OF(buffer_data);
+        DWORD buffer_data_size = RTL_NUMBER_OF(buffer_data);
         std::string symbol_search_path;
 
         test = GetCurrentDirectory(buffer_data_size, buffer_data);
@@ -520,7 +520,7 @@ LONG __stdcall exception_handler(struct _EXCEPTION_POINTERS* exception_ptr) {
             trace.trace(handle, exception_ptr, &stream);
             trace.close(handle);
 
-            printf("%.*s\n", stream.size(), stream.data());
+            printf("%.*s\n", (int)stream.size(), stream.data());
 
             CloseHandle(thread_handle);
         }

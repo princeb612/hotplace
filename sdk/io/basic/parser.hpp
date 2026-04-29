@@ -148,7 +148,7 @@ struct token_description {
  *          auto dump_handler = [&](const token_description* desc) -> void {
  *              _logger->writeln("line %zi type %d(%s) index %d pos %zi len %zi (%.*s)",
  *                  desc->line, desc->type, p.typeof_token(desc->type).c_str(),
- *                  desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
+ *                  desc->index, desc->pos, desc->size, (int)desc->size, desc->p);
  *          };
  *          context1.for_each(dump_handler);
  */
@@ -162,8 +162,8 @@ class parser {
         const char* p;
         size_t size;
         size_t pos;
-        int begidx;
-        int endidx;
+        size_t begidx;
+        size_t endidx;
 
         search_result() : match(false), p(nullptr), size(0), pos(-1), begidx(-1), endidx(-1) {}
     };
@@ -219,17 +219,17 @@ class parser {
         /**
          * @brief   character-level search
          */
-        search_result csearch(parser* obj, const char* pattern, size_t size_pattern, unsigned int pos = 0) const;
-        search_result csearch(parser* obj, const std::string& pattern, unsigned int pos = 0) const;
-        search_result csearch(parser* obj, const basic_stream& pattern, unsigned int pos = 0) const;
+        search_result csearch(parser* obj, const char* pattern, size_t size_pattern, size_t pos = 0) const;
+        search_result csearch(parser* obj, const std::string& pattern, size_t pos = 0) const;
+        search_result csearch(parser* obj, const basic_stream& pattern, size_t pos = 0) const;
 
         /**
          * @brief   word-level search
          */
-        search_result wsearch(parser* obj, const context& pattern, unsigned int pos = 0) const;
-        search_result wsearch(parser* obj, const char* pattern, size_t size_pattern, unsigned int pos = 0) const;
-        search_result wsearch(parser* obj, const std::string& pattern, unsigned int pos = 0) const;
-        search_result wsearch(parser* obj, const basic_stream& pattern, unsigned int pos = 0) const;
+        search_result wsearch(parser* obj, const context& pattern, size_t pos = 0) const;
+        search_result wsearch(parser* obj, const char* pattern, size_t size_pattern, size_t pos = 0) const;
+        search_result wsearch(parser* obj, const std::string& pattern, size_t pos = 0) const;
+        search_result wsearch(parser* obj, const basic_stream& pattern, size_t pos = 0) const;
         /**
          * @brief   word-level comparison
          */
@@ -239,8 +239,8 @@ class parser {
          * @brief   pattern-level search
          */
         void add_pattern(parser* obj);
-        std::multimap<range_t, unsigned> psearch(parser* obj) const;
-        std::multimap<range_t, unsigned> psearchex(parser* obj) const;
+        std::multimap<range_t, size_t> psearch(parser* obj) const;
+        std::multimap<range_t, size_t> psearchex(parser* obj) const;
 
         void clear();
 
@@ -248,7 +248,7 @@ class parser {
         void for_each(const search_result& res, std::function<void(const token_description* desc)> f) const;
         void walk(std::function<void(const char* p, const parser::token*)> f);
 
-        void wsearch_result(search_result& result, uint32 idx, size_t size) const;
+        void wsearch_result(search_result& result, size_t idx, size_t size) const;
         /**
          * @brief   search_result
          * @sample
@@ -256,7 +256,7 @@ class parser {
          *          for (auto [range, pid] : result) {
          *              parser::search_result res;
          *              context.psearch_result(res, range, pid);
-         *              _logger->writeln("pos [%i..%i] pattern[%i] %.*s", res.begidx, res.endidx, (unsigned)res.size, res.p);
+         *              _logger->writeln("pos [%i..%i] pattern[%i] %.*s", res.begidx, res.endidx, (int)res.size, res.p);
          *          }
          */
         void psearch_result(search_result& result, range_t range) const;
@@ -303,15 +303,15 @@ class parser {
      *          parser::search_result cresult = p.csearch(context1, pattern, 0);
      *          parser::search_result cresult2 = p.csearch(context1, pattern2, strlen(pattern2), cresult.pos);
      */
-    search_result csearch(const parser::context& context, const char* pattern, size_t size_pattern, unsigned int pos = 0);
-    search_result csearch(const parser::context& context, const std::string& pattern, unsigned int pos = 0);
-    search_result csearch(const parser::context& context, const basic_stream& pattern, unsigned int pos = 0);
+    search_result csearch(const parser::context& context, const char* pattern, size_t size_pattern, size_t pos = 0);
+    search_result csearch(const parser::context& context, const std::string& pattern, size_t pos = 0);
+    search_result csearch(const parser::context& context, const basic_stream& pattern, size_t pos = 0);
     /**
      * @brief   pattern search (word-level)
      * @param   const parser::context& context [in]
      * @param   const char* pattern [in]
      * @param   size_t size_pattern [in]
-     * @param   unsigned int pos [inopt]
+     * @param   size_t pos [inopt]
      * @sample
      *          // context1._tokens.size() --> 93, pattern._tokens.size() --> 6
      *          // word search - KMP N(context1)=93, M(pattern)=6, O(93+6)
@@ -320,9 +320,9 @@ class parser {
      *          parser::search_result wresult = p.wsearch(context1, pattern, 0);
      *          parser::search_result wresult2 = p.wsearch(context1, pattern2, strlen(pattern2), wresult.endidx + 1);
      */
-    search_result wsearch(const parser::context& context, const char* pattern, size_t size_pattern, unsigned int pos = 0);
-    search_result wsearch(const parser::context& context, const std::string& pattern, unsigned int pos = 0);
-    search_result wsearch(const parser::context& context, const basic_stream& pattern, unsigned int pos = 0);
+    search_result wsearch(const parser::context& context, const char* pattern, size_t size_pattern, size_t pos = 0);
+    search_result wsearch(const parser::context& context, const std::string& pattern, size_t pos = 0);
+    search_result wsearch(const parser::context& context, const basic_stream& pattern, size_t pos = 0);
     /**
      * @brief   compare (word-level comparison, ignore white spaces)
      * @param   const char* lhs [in]
@@ -346,7 +346,7 @@ class parser {
      *          p.parse(context, sample);
      *          p.add_pattern("int a;").add_pattern("int a = 0;").add_pattern("bool a;").add_pattern("bool a = true;");
      =          result = p.psearch();
-     *          // std::multimap<unsigned, size_t> expect = {{0, 0}, {1, 3}, {3, 8}};
+     *          // std::multimap<size_t, size_t> expect = {{0, 0}, {1, 3}, {3, 8}};
      *          // sample  : int a; int b = 0; bool b = true;
      *          // pattern : 0      1          3
      *          // tokens  : 0   12 3   4 5 67 8    9 a b   c
@@ -471,7 +471,7 @@ class parser {
      *              context.psearch_result(res, range, pid);
      *
      *              // all patterns matched
-     *              _logger->writeln("pos [%i..%i] pattern[%i] %.*s", res.begin, res.end, pid, (unsigned)res.size, res.p);
+     *              _logger->writeln("pos [%i..%i] pattern[%i] %.*s", res.begin, res.end, pid, (int)res.size, res.p);
      *          }
      *          auto resultex = p.psearch(context);
      *          for (auto [range, pid] : resultex) {
@@ -479,7 +479,7 @@ class parser {
      *              context.psearch_result(res, range, pid);
      *
      *              // merge all overlapping intervals into one and output the result which should have only mutually exclusive intervals
-     *              _logger->writeln("pos [%2i..%2i] pattern[%2i] %.*s", res.begin, res.end, pid, (unsigned)res.size, res.p);
+     *              _logger->writeln("pos [%2i..%2i] pattern[%2i] %.*s", res.begin, res.end, pid, (int)res.size, res.p);
      *          }
      *
      *          // source
@@ -497,13 +497,13 @@ class parser {
      *          //  pos [ 2] pattern[12] [APPLICATION 3] IMPLICIT VisibleString  // including pattern [0]
      *
      */
-    std::multimap<range_t, unsigned> psearch(const parser::context& context);
+    std::multimap<range_t, size_t> psearch(const parser::context& context);
     /**
      * @brief   pattern search
      * @remarks merge all overlapping patterns
      * @sa      t_merge_ovl_intervals
      */
-    std::multimap<range_t, unsigned> psearchex(const parser::context& context);
+    std::multimap<range_t, size_t> psearchex(const parser::context& context);
 
     /**
      * @brief   add token

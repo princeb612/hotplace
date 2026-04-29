@@ -188,17 +188,13 @@ return_t file_stream::begin_mmap(size_t dwAdditionalMappingSize) {
         BY_HANDLE_FILE_INFORMATION fi;
         GetFileInformationByHandle(_file_handle, &fi);
 
-        _filesize_low = fi.nFileSizeLow;
-        _filesize_high = fi.nFileSizeHigh;
+        LARGE_INTEGER li;
+        li.LowPart = fi.nFileSizeLow;
+        li.HighPart = fi.nFileSizeHigh;
+        li.QuadPart += dwAdditionalMappingSize;
 
-        uint32 filesize_low = _filesize_low;
-        // uint32 filesize_high = _filesize_high;
-
-        uint32 sizemask = ~filesize_low;
-        if (dwAdditionalMappingSize > sizemask) {
-            _filesize_high++;
-        }
-        _filesize_low += dwAdditionalMappingSize;
+        _filesize_low = li.LowPart;
+        _filesize_high = li.HighPart;
 
         _filemap_handle = CreateFileMapping(_file_handle, nullptr, protect, _filesize_high, (uint32)_filesize_low, nullptr);
         if (nullptr == _filemap_handle) {

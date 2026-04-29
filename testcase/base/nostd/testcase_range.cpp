@@ -37,9 +37,11 @@ void test_integer_range() {
     _test_case.assert(int32(0x7fffffff) == i32.getmax(), __FUNCTION__, "int32 max");
     _test_case.assert(int64(0x8000000000000000) == i64.getmin(), __FUNCTION__, "int64 min");
     _test_case.assert(int64(0x7fffffffffffffff) == i64.getmax(), __FUNCTION__, "int64 max");
+
 #ifdef __SIZEOF_INT128__
     _test_case.assert(t_atoi<int128>("-170141183460469231731687303715884105728") == i128.getmin(), __FUNCTION__, "int128 min");
     _test_case.assert(t_atoi<int128>("170141183460469231731687303715884105727") == i128.getmax(), __FUNCTION__, "int128 max");
+    _test_case.assert(t_atoi<uint128>("340282366920938463463374607431768211455") == ui128.getmax(), __FUNCTION__, "uint128 max");
 #endif
 }
 

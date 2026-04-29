@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/nostd/template.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/base/unittest/trace.hpp>
@@ -141,7 +142,7 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
         } while (nullptr != addrinf_traverse);
 
         if (INVALID_SOCKET == s) {
-            ret = get_lasterror(s, wsaerror);
+            ret = get_lasterror(t_justdoit(s), wsaerror);  // linux int, windows ignore
             __leave2;
         }
 
@@ -247,7 +248,7 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
                         sock = WSASocket(family, socktype, protocol, nullptr, 0, WSA_FLAG_OVERLAPPED);
 #endif
                         if (INVALID_SOCKET == sock) {
-                            ret = get_lasterror(sock, wsaerror);
+                            ret = get_lasterror(t_justdoit(sock), wsaerror);
                             __leave2;
                         }
 

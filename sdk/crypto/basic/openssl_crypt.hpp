@@ -94,8 +94,8 @@ class openssl_crypt : public crypt_t {
      *        crypt.open(&handle, crypt_algorithm_t::aes256, crypt_mode_t::cbc, key, size_key, iv, size_iv);
      *        crypt.close(handle);
      */
-    virtual return_t open(crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key, unsigned size_key, const unsigned char* iv,
-                          unsigned size_iv);
+    virtual return_t open(crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key, size_t size_key, const unsigned char* iv,
+                          size_t size_iv);
     /**
      * @brief create a context handle (symmetric)
      * @param crypt_context_t** handle [out]

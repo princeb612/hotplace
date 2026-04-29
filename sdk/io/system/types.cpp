@@ -8,8 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/nostd/integer.hpp>
-#include <hotplace/sdk/base/template.hpp>
+#include <hotplace/sdk/base/nostd/template.hpp>
 #include <hotplace/sdk/io/system/types.hpp>
 #if defined __linux__
 #include <arpa/inet.h>

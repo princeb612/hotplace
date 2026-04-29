@@ -135,7 +135,7 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const byte_t* data, s
         byte_t cur = 0;
         uint32 tag = 0;
 
-        for (i < 0; i < size; i++) {
+        for (i = 0; i < size; ++i) {
             cur = *(data + i);
             byte_t lead_type = (cur & 0xe0) >> 5;
             byte_t lead_value = (cur & 0x1f);
@@ -155,12 +155,12 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const byte_t* data, s
                     value = *(byte_t*)(data + i + 1);
                     i++;
                 } else if (25 == lead_value) {
-                    value = *(uint16*)(data + i + 1);
-                    value = ntoh16(value);
+                    uint16 ui16 = *(uint16*)(data + i + 1);
+                    value = ntoh16(ui16);
                     i += 2;
                 } else if (26 == lead_value) {
-                    value = *(uint32*)(data + i + 1);
-                    value = ntoh32(value);
+                    uint32 ui32 = *(uint32*)(data + i + 1);
+                    value = ntoh32(ui32);
                     i += 4;
                 } else if (27 == lead_value) {
                     value = *(uint64*)(data + i + 1);
@@ -209,10 +209,10 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const byte_t* data, s
                 cbor_simple_t simple_type = cbor_simple::is_kind_of(cur);
                 switch (simple_type) {
                     case cbor_simple_t::cbor_simple_half_fp:
-                        push(handle, lead_type, float_from_fp16(value), 0);
+                        push(handle, lead_type, float_from_fp16(t_narrow_cast(value)), 0);
                         break;
                     case cbor_simple_t::cbor_simple_single_fp:
-                        push(handle, lead_type, fp32_from_binary32(value), 0);
+                        push(handle, lead_type, fp32_from_binary32(t_narrow_cast(value)), 0);
                         break;
                     case cbor_simple_t::cbor_simple_double_fp:
                         push(handle, lead_type, fp64_from_binary64(value), 0);
@@ -290,7 +290,7 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, uint64 dat
         } else if (cbor_major_t::cbor_major_tag == type) {
         } else if (cbor_major_t::cbor_major_simple == type) {
             cbor_simple* temp = nullptr;
-            __try_new_catch(temp, new cbor_simple(data), ret, __leave2);
+            __try_new_catch(temp, new cbor_simple(uint8(t_narrow_cast(data))), ret, __leave2);
             temp->tag(handle->temp.tag_value);
             insert(handle, temp);
         }

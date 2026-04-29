@@ -264,8 +264,7 @@ return_t authenticode_plugin_pe::write_authenticode(file_stream* filestream, bin
             }
             IMAGE_NT_HEADERS* nt_headers = reinterpret_cast<IMAGE_NT_HEADERS*>(stream_data + dos_header->e_lfanew);
             if (IMAGE_NT_SIGNATURE == nt_headers->Signature) {
-                // size_t directory_rva = 0;
-                size_t directory_size = 0;
+                UINT32_TYPE directory_size = 0;
 
                 IMAGE_OPTIONAL_HEADER* optional_header = &nt_headers->OptionalHeader;
                 if (IMAGE_NT_OPTIONAL_HDR64_MAGIC == optional_header->Magic) {

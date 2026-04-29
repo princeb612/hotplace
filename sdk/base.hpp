@@ -19,7 +19,6 @@
 #include <hotplace/sdk/base/inline.hpp>
 #include <hotplace/sdk/base/stream.hpp>
 #include <hotplace/sdk/base/syntax.hpp>
-#include <hotplace/sdk/base/template.hpp>
 #include <hotplace/sdk/base/trace.hpp>
 #include <hotplace/sdk/base/types.hpp>
 
@@ -43,7 +42,6 @@
 #include <hotplace/sdk/base/nostd/avltree.hpp>
 #include <hotplace/sdk/base/nostd/btree.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
-#include <hotplace/sdk/base/nostd/integer.hpp>
 #include <hotplace/sdk/base/nostd/list.hpp>
 #include <hotplace/sdk/base/nostd/ovl.hpp>
 #include <hotplace/sdk/base/nostd/pq.hpp>

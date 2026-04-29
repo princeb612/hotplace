@@ -102,6 +102,6 @@ void play_yaml_pcap_http3(const char* filename) {
     }
 }
 
-void test_yaml_testvector_pcap_http3() { play_yaml_pcap_http3("./testvector_pcap_http3.yml"); }
+void test_yaml_testvector_pcap_http3() { play_yaml_pcap_http3("testvector_pcap_http3.yml"); }
 
 void testcase_testvector_pcap() { test_yaml_testvector_pcap_http3(); }

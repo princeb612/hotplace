@@ -17,7 +17,6 @@
 #include <hotplace/sdk/base/charset.hpp>
 #include <hotplace/sdk/base/error.hpp>
 #include <hotplace/sdk/base/syntax.hpp>
-#include <hotplace/sdk/base/template.hpp>
 #include <hotplace/sdk/base/types.hpp>
 #include <list>
 #include <string>
@@ -110,16 +109,6 @@ static inline int byte_capacity(uint64 v) { return ((sizeof(v) << 3) - bit_lengt
 
 #if defined __SIZEOF_INT128__
 static inline int byte_capacity(uint128 v) { return ((sizeof(v) << 3) - bit_length(v) + 7) >> 3; }
-#endif
-
-static inline int byte_capacity(int16 v) { return byte_capacity_signed<int16>(v); }
-
-static inline int byte_capacity(int32 v) { return byte_capacity_signed<int32>(v); }
-
-static inline int byte_capacity(int64 v) { return byte_capacity_signed<int64>(v); }
-
-#if defined __SIZEOF_INT128__
-static inline int byte_capacity(int128 v) { return byte_capacity_signed<int128>(v); }
 #endif
 
 // secure functions

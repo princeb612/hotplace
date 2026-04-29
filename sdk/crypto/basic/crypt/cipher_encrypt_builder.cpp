@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/crypto/basic/cipher_encrypt.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 
 namespace hotplace {
 namespace crypto {

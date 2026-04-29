@@ -103,7 +103,7 @@ struct netbuffer_t {
         buflen = bin.size();
 #elif defined _WIN32 || defined _WIN64
         memset(&overlapped, 0, sizeof(OVERLAPPED));
-        wsabuf.len = bin.size();
+        wsabuf.len = t_narrow_cast(bin.size());
         wsabuf.buf = bin.data();
 #endif
     }

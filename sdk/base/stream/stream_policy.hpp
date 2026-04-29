@@ -40,7 +40,7 @@ class stream_policy {
     static stream_policy _instance;
     stream_policy();
 
-    typedef std::map<std::string, uint32> basic_stream_policy_map_t;
+    typedef std::map<std::string, size_t> basic_stream_policy_map_t;
     basic_stream_policy_map_t _config;
 };
 

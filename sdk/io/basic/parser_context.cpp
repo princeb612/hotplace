@@ -244,7 +244,7 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size, uint32 
                         break;
                     case token_dquote:
                     default:
-                        if ((token_dquote == type) && (true == handle_quoted)) {
+                        if ((token_dquote == type) && (handle_quoted)) {
                             break;
                         }
 
@@ -281,7 +281,7 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size, uint32 
     return ret;
 }
 
-parser::search_result parser::context::csearch(parser* obj, const char* pattern, size_t size_pattern, unsigned int pos) const {
+parser::search_result parser::context::csearch(parser* obj, const char* pattern, size_t size_pattern, size_t pos) const {
     search_result result;
     __try2 {
         if (nullptr == obj || nullptr == pattern) {
@@ -303,15 +303,11 @@ parser::search_result parser::context::csearch(parser* obj, const char* pattern,
     return result;
 }
 
-parser::search_result parser::context::csearch(parser* obj, const std::string& pattern, unsigned int pos) const {
-    return csearch(obj, pattern.c_str(), pattern.size(), pos);
-}
+parser::search_result parser::context::csearch(parser* obj, const std::string& pattern, size_t pos) const { return csearch(obj, pattern.c_str(), pattern.size(), pos); }
 
-parser::search_result parser::context::csearch(parser* obj, const basic_stream& pattern, unsigned int pos) const {
-    return csearch(obj, pattern.c_str(), pattern.size(), pos);
-}
+parser::search_result parser::context::csearch(parser* obj, const basic_stream& pattern, size_t pos) const { return csearch(obj, pattern.c_str(), pattern.size(), pos); }
 
-parser::search_result parser::context::wsearch(parser* obj, const context& pattern, unsigned int pos) const {
+parser::search_result parser::context::wsearch(parser* obj, const context& pattern, size_t pos) const {
     search_result result;
     __try2 {
         if (nullptr == obj) {
@@ -340,7 +336,7 @@ parser::search_result parser::context::wsearch(parser* obj, const context& patte
     return result;
 }
 
-parser::search_result parser::context::wsearch(parser* obj, const char* pattern, size_t size_pattern, unsigned int pos) const {
+parser::search_result parser::context::wsearch(parser* obj, const char* pattern, size_t size_pattern, size_t pos) const {
     // handle by word
     return_t ret = errorcode_t::success;
     parser::context pattern_context;
@@ -349,13 +345,9 @@ parser::search_result parser::context::wsearch(parser* obj, const char* pattern,
     return (errorcode_t::success == ret) ? wsearch(obj, pattern_context, pos) : search_result();
 }
 
-parser::search_result parser::context::wsearch(parser* obj, const std::string& pattern, unsigned int pos) const {
-    return wsearch(obj, pattern.c_str(), pattern.size(), pos);
-}
+parser::search_result parser::context::wsearch(parser* obj, const std::string& pattern, size_t pos) const { return wsearch(obj, pattern.c_str(), pattern.size(), pos); }
 
-parser::search_result parser::context::wsearch(parser* obj, const basic_stream& pattern, unsigned int pos) const {
-    return wsearch(obj, pattern.c_str(), pattern.size(), pos);
-}
+parser::search_result parser::context::wsearch(parser* obj, const basic_stream& pattern, size_t pos) const { return wsearch(obj, pattern.c_str(), pattern.size(), pos); }
 
 bool parser::context::compare(parser* obj, const parser::context& other) const {
     bool ret = false;
@@ -385,8 +377,8 @@ void parser::context::add_pattern(parser* obj) {
     }
 }
 
-std::multimap<range_t, unsigned> parser::context::psearch(parser* obj) const {
-    std::multimap<range_t, unsigned> result;
+std::multimap<range_t, size_t> parser::context::psearch(parser* obj) const {
+    std::multimap<range_t, size_t> result;
     if (obj) {
         auto ac = obj->_ac;
         ac->build();
@@ -395,14 +387,14 @@ std::multimap<range_t, unsigned> parser::context::psearch(parser* obj) const {
     return result;
 }
 
-std::multimap<range_t, unsigned> parser::context::psearchex(parser* obj) const {
-    std::multimap<range_t, unsigned> result;
+std::multimap<range_t, size_t> parser::context::psearchex(parser* obj) const {
+    std::multimap<range_t, size_t> result;
     if (obj) {
         auto ac = obj->_ac;
         ac->build();
         auto acres = ac->search(_tokens.data(), _tokens.size());
 
-        t_merge_ovl_intervals<unsigned int, int> moi;  // unsigned int pos, int patternid
+        t_merge_ovl_intervals<size_t, uint32> moi;
         search_result r;
 
         for (const auto& pair : acres) {
@@ -457,7 +449,7 @@ void parser::context::clear() {
     _tokens.clear();
 }
 
-void parser::context::wsearch_result(search_result& result, uint32 idx, size_t size) const {
+void parser::context::wsearch_result(search_result& result, size_t idx, size_t size) const {
     token* begin = _tokens[idx];
     token* end = _tokens[idx + size - 1];
 

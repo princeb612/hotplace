@@ -43,8 +43,17 @@ void test_variant() {
     _test_case.assert(bs == "0123456789abcdef (81985529216486895)", __FUNCTION__, "vtprintf variant.bignumber");
 
     vt.clear().set_uint32(0).set_flag(flag_negative);  // CBOR style
-    auto neg = t_to_int<int32>(vt);
+    bignumber bn_neg(vt.content());
+    auto neg = bn_neg.t_bntoi<int32>();
     _test_case.assert(neg == -1, __FUNCTION__, "negative");
+
+    int count_throw = 0;
+    try {
+        auto neg = bn_neg.t_bntoi<uint32>();
+    } catch (...) {
+        ++count_throw;
+    }
+    _test_case.assert(1 == count_throw, __FUNCTION__, "exception unsigned cast");
 }
 
 void testcase_variant() { test_variant(); }

@@ -313,7 +313,7 @@ return_t authenticode_verifier::verify(authenticode_context_t* handle, const cha
         BIO* in = nullptr;
         __try2 {
             in = BIO_new(BIO_s_mem());
-            BIO_write(in, binary.data(), binary.size());
+            BIO_write(in, binary.data(), t_narrow_cast(binary.size()));
             /*
              * openssl asn1parse -inform der -i -in bCerficiate.saved
              * openssl pkcs7 -inform DER -print_certs -text -in bCerficiate.saved

@@ -188,7 +188,7 @@ size_t bufferio::wfind_last_of_routine(bufferio_context_t* handle, int mode, con
 #endif
 {
     return_t ret = errorcode_t::success;
-    int ret_value = -1;
+    size_t ret_value = -1;
 
     __try2 {
         if (nullptr == handle) {
@@ -241,7 +241,7 @@ size_t bufferio::wfind_last_of_routine(bufferio_context_t* handle, int mode, int
 #endif
 {
     return_t ret = errorcode_t::success;
-    int ret_value = -1;
+    size_t ret_value = -1;
 
     __try2 {
         if (nullptr == handle || nullptr == is_ctype_func) {

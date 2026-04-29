@@ -46,12 +46,22 @@ typedef int handle_t;
 
 typedef union _LARGE_INTEGER {
     struct {
+#ifdef __BIG_ENDIAN__
+        uint32 HighPart;
+        uint32 LowPart;
+#else
         uint32 LowPart;
         uint32 HighPart;
+#endif
     };
     struct {
+#ifdef __BIG_ENDIAN__
+        uint32 HighPart;
+        uint32 LowPart;
+#else
         uint32 LowPart;
         uint32 HighPart;
+#endif
     } u;
     uint64 QuadPart;
 } LARGE_INTEGER, *PLARGE_INTEGER;

@@ -44,7 +44,7 @@ void test_byte_capacity_signed() {
         {127, 1}, {-128, 1}, {128, 2}, {-129, 2}, {32767, 2}, {-32768, 2}, {32768, 3}, {-32769, 3}, {8388607, 3}, {-8388608, 3}, {2147483647, 4}, {-2147483648LL, 4},
     };
     for (auto entry : _table) {
-        int bytesize = byte_capacity_signed<int64>(entry.x);
+        int bytesize = t_byte_capacity_signed<int64>(entry.x);
         _logger->writeln("%20I64i %016I64x (%i bytes)", entry.x, entry.x, bytesize);
         _test_case.assert(bytesize == entry.expect, __FUNCTION__, "(%2i) byte capacity %016I64x %I64i", bytesize, entry.x, entry.x);
     }

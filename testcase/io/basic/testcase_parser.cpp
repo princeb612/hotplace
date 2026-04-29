@@ -248,8 +248,8 @@ void test_multipattern_search() {
         //                   bool b = true; ; pattern2 (pattern index 1)
 
         t_aho_corasick<int> ac;
-        std::multimap<range_t, unsigned> result;
-        std::multimap<range_t, unsigned> expect = {{range_t(0, 2), 0}, {range_t(3, 7), 1}, {range_t(8, 12), 1}};
+        std::multimap<range_t, size_t> result;
+        std::multimap<range_t, size_t> expect = {{range_t(0, 2), 0}, {range_t(3, 7), 1}, {range_t(8, 12), 1}};
         std::vector<int> pattern1 = {token_type, token_word, token_colon};
         std::vector<int> pattern2 = {token_type, token_word, token_equal, token_word, token_colon};
 
@@ -286,8 +286,8 @@ void test_multipattern_search() {
         //  pattern[1] 3..7
         //  pattern[2] no match
         //  pattern[3] 8..12
-        std::multimap<range_t, unsigned> result;
-        std::multimap<range_t, unsigned> expect = {{range_t(0, 2), 0}, {range_t(3, 7), 1}, {range_t(8, 12), 3}};
+        std::multimap<range_t, size_t> result;
+        std::multimap<range_t, size_t> expect = {{range_t(0, 2), 0}, {range_t(3, 7), 1}, {range_t(8, 12), 3}};
         p.add_token("bool", 0x1000).add_token("int", 0x1001).add_token("true", 0x1002).add_token("false", 0x1002);
         p.parse(context, sample);
         p.add_pattern("int a;").add_pattern("int a = 0;").add_pattern("bool a;").add_pattern("bool a = true;");

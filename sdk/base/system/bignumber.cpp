@@ -9,8 +9,10 @@
  *
  */
 
+#include <cmath>
 #include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
 
@@ -57,6 +59,8 @@ bignumber::bignumber(int128 value) { set(value); }
 bignumber::bignumber(uint128 value) { setu(value); }
 #endif
 
+bignumber::bignumber(const variant_t &vt) { set(vt); }
+
 bignumber::bignumber(const byte_t *p, size_t n) { set(p, n); }
 
 bignumber::bignumber(const binary_t &base16hexstream) { sethex(base16hexstream); }
@@ -100,6 +104,8 @@ bignumber &bignumber::operator=(int128 value) { return set(value); }
 
 bignumber &bignumber::operator=(uint128 value) { return setu(value); }
 #endif
+
+bignumber &bignumber::operator=(const variant_t &vt) { return set(vt); }
 
 bignumber &bignumber::operator=(const binary_t &base16hexstream) { return sethex(base16hexstream); }
 
@@ -215,6 +221,82 @@ bignumber &bignumber::setu(uint64 value)
         value /= base;
     }
     trim();
+    return *this;
+}
+
+bignumber &bignumber::set(const variant_t &vt) {
+    switch (vt.type) {
+        case TYPE_BOOL:
+            set(vt.data.b ? 1 : 0);
+            break;
+        case TYPE_INT8:
+            set(vt.data.i8);
+            break;
+        case TYPE_UINT8:
+            set(vt.data.ui8);
+            break;
+        case TYPE_INT16:
+            set(vt.data.i16);
+            break;
+        case TYPE_UINT16:
+            set(vt.data.ui16);
+            break;
+        case TYPE_INT24:
+            set(vt.data.i32);
+            break;
+        case TYPE_UINT24:
+            set(vt.data.ui32);
+            break;
+        case TYPE_INT32:
+            set(vt.data.i32);
+            break;
+        case TYPE_UINT32:
+            set(vt.data.ui32);
+            break;
+        case TYPE_INT48:
+            set(vt.data.i64);
+            break;
+        case TYPE_UINT48:
+            set(vt.data.ui64);
+            break;
+        case TYPE_INT64:
+            set(vt.data.i64);
+            break;
+        case TYPE_UINT64:
+            set(vt.data.ui64);
+            break;
+#if defined __SIZEOF_INT128__
+        case TYPE_INT128:
+            set(vt.data.i128);
+            break;
+        case TYPE_UINT128:
+            set(vt.data.ui128);
+            break;
+#endif
+        case TYPE_FLOAT:
+            set(uint64(t_narrow_cast(std::round(vt.data.f))));
+            break;
+        case TYPE_DOUBLE:
+            set(uint64(t_narrow_cast(std::round(vt.data.d))));
+            break;
+        case TYPE_STRING:
+        case TYPE_NSTRING:
+            if (vt.size) {
+                *this = std::string(vt.data.str, vt.size);
+            } else {
+                *this = vt.data.str;
+            }
+            break;
+        case TYPE_BINARY:
+            set(vt.data.bstr, vt.size);
+            break;
+        default:
+            break;
+    }
+    if (vt.flag & flag_negative) {
+        *this += 1;
+        _sign = -_sign;
+    }
     return *this;
 }
 
@@ -386,7 +468,7 @@ bignumber bignumber::mult(const bignumber &lhs, const bignumber &rhs) {
     if (n < 32) {
         res = mult_simple(lhs, rhs);
     } else {
-        int k = n / 2;
+        auto k = n / 2;
 
         bignumber a1;
         bignumber a2;
@@ -396,8 +478,8 @@ bignumber bignumber::mult(const bignumber &lhs, const bignumber &rhs) {
         a1._v = std::vector<uint32>(lhs._v.begin(), lhs._v.begin() + k);
         a2._v = std::vector<uint32>(lhs._v.begin() + k, lhs._v.end());
 
-        b1._v = std::vector<uint32>(rhs._v.begin(), rhs._v.begin() + std::min((int)rhs._v.size(), k));
-        b2._v = std::vector<uint32>(rhs._v.begin() + std::min((int)rhs._v.size(), k), rhs._v.end());
+        b1._v = std::vector<uint32>(rhs._v.begin(), rhs._v.begin() + std::min(rhs._v.size(), k));
+        b2._v = std::vector<uint32>(rhs._v.begin() + std::min(rhs._v.size(), k), rhs._v.end());
 
         bignumber z0 = mult(a1, b1);
         bignumber z2 = mult(a2, b2);
@@ -452,8 +534,9 @@ std::pair<bignumber, bignumber> bignumber::divide(const bignumber &lhs, const bi
 
         a._sign = b._sign = 1;
 
-        for (int i = a._v.size() - 1; i >= 0; i--) {
-            remainder._v.insert(remainder._v.begin(), a._v[i]);
+        for (auto i = a._v.size(); i > 0; --i) {
+            size_t idx = i - 1;
+            remainder._v.insert(remainder._v.begin(), a._v[idx]);
             remainder.trim();
 
             uint32 limit = base - 1;
@@ -473,7 +556,7 @@ std::pair<bignumber, bignumber> bignumber::divide(const bignumber &lhs, const bi
                 }
             }
 
-            quotient._v[i] = x;
+            quotient._v[idx] = x;
             remainder = remainder - (b * x);
         }
 
@@ -577,9 +660,10 @@ bignumber bignumber::modpow(bignumber b, bignumber exp, const bignumber &m) {
 
         // exp /= 2
         uint64 carry = 0;
-        for (int i = exp._v.size() - 1; i >= 0; i--) {
-            uint64 cur = exp._v[i] + carry * base;
-            exp._v[i] = cur / 2;
+        for (size_t i = exp._v.size(); i > 0; --i) {
+            size_t idx = i - 1;
+            uint64 cur = exp._v[idx] + carry * base;
+            exp._v[idx] = t_narrow_cast(cur / 2);
             carry = cur % 2;
         }
         exp.trim();
@@ -633,12 +717,13 @@ int bignumber::compare(const bignumber &lhs, const bignumber &rhs) const {
         }
     }
 
-    for (int i = (int)lhs._v.size() - 1; i >= 0; i--) {
-        if (lhs._v[i] != rhs._v[i]) {
+    for (size_t i = lhs._v.size(); i > 0; --i) {
+        size_t idx = i - 1;
+        if (lhs._v[idx] != rhs._v[idx]) {
             if (lhs._sign == 1) {
-                return lhs._v[i] < rhs._v[i] ? -1 : 1;
+                return lhs._v[idx] < rhs._v[idx] ? -1 : 1;
             } else {
-                return lhs._v[i] < rhs._v[i] ? 1 : -1;
+                return lhs._v[idx] < rhs._v[idx] ? 1 : -1;
             }
         }
     }
@@ -693,8 +778,8 @@ bignumber bignumber::rightshift(const bignumber &v, const bignumber &shift) cons
         // int bit_shift = shift % 32;
 
         auto pqr = divide(shift, 32);  // pair(quotient, remainder)
-        int64 limb_shift = pqr.first._v.empty() ? 0 : pqr.first._v[0];
-        int64 bit_shift = pqr.second._v.empty() ? 0 : pqr.second._v[0];
+        uint64 limb_shift = pqr.first._v.empty() ? 0 : pqr.first._v[0];
+        uint64 bit_shift = pqr.second._v.empty() ? 0 : pqr.second._v[0];
 
         if (v._v.size() <= limb_shift) {
         } else {
@@ -702,10 +787,11 @@ bignumber bignumber::rightshift(const bignumber &v, const bignumber &shift) cons
             res._v.resize(v._v.size() - limb_shift);
 
             uint32 carry = 0;
-            for (int i = (int)v._v.size() - 1; i >= limb_shift; --i) {
-                uint32 cur = v._v[i];
+            for (auto i = v._v.size(); i > limb_shift; --i) {
+                size_t idx = i - 1;
+                uint32 cur = v._v[idx];
 
-                res._v[i - limb_shift] = (cur >> bit_shift) | ((uint64)carry << (32 - bit_shift));
+                res._v[idx - limb_shift] = (cur >> bit_shift) | ((uint64)carry << (32 - bit_shift));
                 carry = cur & ((1u << bit_shift) - 1);
             }
 
@@ -729,9 +815,10 @@ int bignumber::abscmp(const bignumber &lhs, const bignumber &rhs) {
     if (lhs._v.size() != rhs._v.size()) {
         ret = lhs._v.size() < rhs._v.size() ? -1 : 1;
     } else {
-        for (int i = (int)lhs._v.size() - 1; i >= 0; --i) {
-            if (lhs._v[i] != rhs._v[i]) {
-                ret = lhs._v[i] < rhs._v[i] ? -1 : 1;
+        for (auto i = lhs._v.size(); i > 0; --i) {
+            size_t idx = i - 1;
+            if (lhs._v[idx] != rhs._v[idx]) {
+                ret = lhs._v[idx] < rhs._v[idx] ? -1 : 1;
                 break;
             }
         }
@@ -752,7 +839,7 @@ bignumber bignumber::absadd(const bignumber &lhs, const bignumber &rhs) {
         carry = sum / base;
     }
     if (carry) {
-        res._v.push_back(carry);
+        res._v.push_back(t_narrow_cast(carry));
     }
     return res;
 }
@@ -885,12 +972,13 @@ std::string bignumber::str() const {
     } else {
         while (false == tmp._v.empty()) {
             uint64 carry = 0;
-            for (int i = (int)tmp._v.size() - 1; i >= 0; i--) {
-                uint64 cur = (carry << 32) | tmp._v[i];
-                tmp._v[i] = (uint32)(cur / 10);
+            for (size_t i = tmp._v.size(); i > 0; --i) {
+                size_t idx = i - 1;
+                uint64 cur = (carry << 32) | tmp._v[idx];
+                tmp._v[idx] = (uint32)(cur / 10);
                 carry = cur % 10;
             }
-            res.push_back('0' + carry);
+            res.push_back(t_narrow_cast('0' + carry));
             while (false == tmp._v.empty() && 0 == tmp._v.back()) {
                 tmp._v.pop_back();
             }
@@ -912,13 +1000,14 @@ std::string bignumber::hex() const {
 
 void bignumber::dump(std::function<void(const binary_t &)> func) const {
     binary_t out;
-    for (int i = (int)_v.size() - 1; i >= 0; i--) {
-        auto x = _v[i];
+    for (size_t i = _v.size(); i > 0; --i) {
+        size_t idx = i - 1;
+        auto x = _v[idx];
         if (is_little_endian()) {
             x = hton32(x);
         }
-        for (int i = 0; i < 4; i++) {
-            out.push_back((x >> (8 * i)) & 0xFF);
+        for (int j = 0; j < 4; j++) {
+            out.push_back((x >> (8 * j)) & 0xFF);
         }
     }
     if (func) {
@@ -928,10 +1017,11 @@ void bignumber::dump(std::function<void(const binary_t &)> func) const {
 
 int bignumber::get(binary_t &base16hexstream, bool trimzero) const {
     base16hexstream.clear();
-
+    // limb (uint32) operation
     for (auto rit = _v.rbegin(); rit != _v.rend(); rit++) {
         binary_append(base16hexstream, *rit, ntoh32);
     }
+    // byte operation
     if (trimzero) {
         if (false == base16hexstream.empty()) {
             while (0 == base16hexstream.front()) {

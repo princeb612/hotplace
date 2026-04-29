@@ -88,7 +88,7 @@ uint64 basic_stream::size() const {
 
 return_t basic_stream::write(const void* data, size_t size) { return bufferio::write(_handle, data, size); }
 
-return_t basic_stream::cut(uint32 begin_pos, uint32 length) { return bufferio::cut(_handle, begin_pos, length); }
+return_t basic_stream::cut(size_t begin_pos, size_t length) { return bufferio::cut(_handle, begin_pos, length); }
 
 return_t basic_stream::insert(size_t begin, const void* data, size_t data_size) { return bufferio::insert(_handle, begin, data, data_size); }
 

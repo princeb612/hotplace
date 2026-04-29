@@ -102,7 +102,7 @@ class t_kmp {
      *          p.add_pattern("int a;").add_pattern("int a = 0;").add_pattern("bool a;").add_pattern("bool a = true;");
      *          // pattern matching using t_aho_corasick<int, token*>
      =          result = p.psearch();
-     *          // std::multimap<unsigned, size_t> expect = {{0, 0}, {3, 1}, {8, 3}};
+     *          // std::multimap<size_t, size_t> expect = {{0, 0}, {3, 1}, {8, 3}};
      *          // sample  : int a; int b = 0; bool b = true;
      *          // tokens  : 0   12 3   4 5 67 8    9 a b   c
      *          // pattern : 0      1          3
@@ -111,7 +111,7 @@ class t_kmp {
 
     t_kmp() {}
 
-    int search(const std::vector<T>& data, const std::vector<T>& pattern, unsigned int pos = 0, comparator_t comparator = nullptr) {
+    int search(const std::vector<T>& data, const std::vector<T>& pattern, size_t pos = 0, comparator_t comparator = nullptr) {
         return search(data.data(), data.size(), pattern.data(), pattern.size(), pos, comparator);
     }
 
@@ -119,14 +119,14 @@ class t_kmp {
      * @brief   search
      * @return  index, -1 (not found)
      */
-    int search(const T* data, size_t size_data, const T* pattern, size_t size_pattern, unsigned int pos = 0, comparator_t comparator = nullptr) {
-        int ret = -1;
+    size_t search(const T* data, size_t size_data, const T* pattern, size_t size_pattern, size_t pos = 0, comparator_t comparator = nullptr) {
+        size_t ret = -1;
         if (data && pattern && size_pattern) {
-            unsigned int n = size_data;
-            unsigned int m = size_pattern;
-            std::vector<int> fail = failure(pattern, m, comparator);
-            unsigned int i = pos;
-            unsigned int j = 0;
+            auto n = size_data;
+            auto m = size_pattern;
+            auto fail = failure(pattern, m, comparator);
+            auto i = pos;
+            size_t j = 0;
             while (i < n) {
                 bool test = false;
                 if (comparator) {
@@ -152,8 +152,8 @@ class t_kmp {
     }
 
    protected:
-    std::vector<int> failure(const T* pattern, size_t size, comparator_t comparator = nullptr) {
-        std::vector<int> fail(size);
+    std::vector<size_t> failure(const T* pattern, size_t size, comparator_t comparator = nullptr) {
+        std::vector<size_t> fail(size);
         fail[0] = 0;
         size_t m = size;
         size_t j = 0;

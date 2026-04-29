@@ -214,7 +214,7 @@ return_t X509_NAME_to_string(const X509_NAME *name, std::string &data) {
             if (((*s == '/') && (isupper(s[1]) && ((s[2] == '=') || (isupper(s[2]) && (s[3] == '='))))) || (*s == '\0'))
 #endif
             {
-                i = s - c;
+                i = t_justdoit(s - c);
                 data.append(c, i);
                 c = s + 1; /* skip following slash */
                 if (*s != '\0') {

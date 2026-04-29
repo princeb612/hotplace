@@ -120,7 +120,7 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
             }
 
             auto try_read = list_size_unknown.empty();
-            uint16 space = 0;
+            size_t space = 0;
             if (item->encoded()) {
                 if (try_read) {
                     lambda_readitem(item, base, size, offset, &size_item);

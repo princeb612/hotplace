@@ -20,6 +20,7 @@
 
 #include <zlib.h>
 
+#include <hotplace/sdk/base/nostd/template.hpp>
 #include <hotplace/sdk/io/basic/zlib.hpp>
 
 namespace hotplace {
@@ -43,13 +44,11 @@ return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
         int rc = Z_OK;
         uint32 cooltime = 0;
         binary_t buffer;
-        z_stream defstream = {
-            0,
-        };
+        z_stream defstream = {};
         defstream.zalloc = Z_NULL;
         defstream.zfree = Z_NULL;
         defstream.opaque = Z_NULL;
-        defstream.avail_in = size;
+        defstream.avail_in = t_narrow_cast(size);
         defstream.next_in = (byte_t*)input;
 
         buffer.resize(1 << 10);
@@ -101,13 +100,11 @@ return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
         int rc = Z_OK;
         uint32 cooltime = 0;
         binary_t buffer;
-        z_stream infstream = {
-            0,
-        };
+        z_stream infstream = {};
         infstream.zalloc = Z_NULL;
         infstream.zfree = Z_NULL;
         infstream.opaque = Z_NULL;
-        infstream.avail_in = size;
+        infstream.avail_in = t_narrow_cast(size);
         infstream.next_in = (byte_t*)input;
 
         buffer.resize(1 << 10);
@@ -163,13 +160,11 @@ return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
         int rc = Z_OK;
         uint32 cooltime = 0;
         binary_t buffer;
-        z_stream defstream = {
-            0,
-        };
+        z_stream defstream = {};
         defstream.zalloc = Z_NULL;
         defstream.zfree = Z_NULL;
         defstream.opaque = Z_NULL;
-        defstream.avail_in = size;
+        defstream.avail_in = t_narrow_cast(size);
         defstream.next_in = (byte_t*)input;
 
         buffer.resize(1 << 10);
@@ -221,13 +216,11 @@ return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
         int rc = Z_OK;
         uint32 cooltime = 0;
         binary_t buffer;
-        z_stream infstream = {
-            0,
-        };
+        z_stream infstream = {};
         infstream.zalloc = Z_NULL;
         infstream.zfree = Z_NULL;
         infstream.opaque = Z_NULL;
-        infstream.avail_in = size;
+        infstream.avail_in = t_narrow_cast(size);
         infstream.next_in = (byte_t*)input;
 
         buffer.resize(1 << 10);
@@ -302,9 +295,7 @@ return_t zlib_inflate(zlib_windowbits_t windowbits, stream_t const* input, strea
 int zlib_def(FILE* source, FILE* dest, int level) {
     int rc, flush;
     unsigned have;
-    z_stream strm = {
-        0,
-    };
+    z_stream strm = {};
     unsigned char in[CHUNK];
     unsigned char out[CHUNK];
 
@@ -355,9 +346,7 @@ int zlib_def(FILE* source, FILE* dest, int level) {
 int zlib_inf(FILE* source, FILE* dest) {
     int rc = Z_OK;
     unsigned have = 0;
-    z_stream strm = {
-        0,
-    };
+    z_stream strm = {};
     unsigned char in[CHUNK];
     unsigned char out[CHUNK];
 

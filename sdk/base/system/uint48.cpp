@@ -16,7 +16,7 @@
 
 namespace hotplace {
 
-return_t b48_i64(const byte_t* p, uint8 len, uint64& value) {
+return_t b48_i64(const byte_t* p, size_t len, uint64& value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -35,7 +35,7 @@ return_t b48_i64(const byte_t* p, uint8 len, uint64& value) {
     return ret;
 }
 
-return_t i64_b48(byte_t* p, uint8 len, uint64 value) {
+return_t i64_b48(byte_t* p, size_t len, uint64 value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -65,9 +65,9 @@ uint48_t::uint48_t(const byte_t* p, size_t size) : t_uint_custom_t<uint64, 6>(p,
 
 uint48_t::uint48_t(uint64 v) : t_uint_custom_t<uint64, 6>() { set(v); }
 
-return_t uint48_t::hton(byte_t* p, uint8 len, const uint64& value) { return i64_b48(p, len, value); }
+return_t uint48_t::hton(byte_t* p, size_t len, const uint64& value) { return i64_b48(p, len, value); }
 
-return_t uint48_t::ntoh(const byte_t* p, uint8 len, uint64& value) { return b48_i64(p, len, value); }
+return_t uint48_t::ntoh(const byte_t* p, size_t len, uint64& value) { return b48_i64(p, len, value); }
 
 return_t b48_i64(const uint48_t& u, uint64& value) { return b48_i64(u.data, RTL_FIELD_SIZE(uint48_t, data), value); }
 

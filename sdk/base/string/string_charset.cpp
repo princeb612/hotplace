@@ -83,7 +83,7 @@ return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t*
 
         t_kmp<TCHAR> kmp;
         size_t sizematch = _tcslen(match);
-        int pos = kmp.search(stream, sizestream, match, sizematch, startpos);
+        auto pos = kmp.search(stream, sizestream, match, sizematch, startpos);
         if (-1 == pos) {
             *brk = sizestream;
             ret = errorcode_t::not_found;

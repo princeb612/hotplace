@@ -126,25 +126,25 @@ return_t parser::parse(parser::context& context, const std::string& p) { return 
 
 return_t parser::parse(parser::context& context, const basic_stream& p) { return parse(context, p.c_str(), p.size()); }
 
-parser::search_result parser::csearch(const parser::context& context, const char* pattern, size_t size_pattern, unsigned int pos) {
+parser::search_result parser::csearch(const parser::context& context, const char* pattern, size_t size_pattern, size_t pos) {
     return context.csearch(this, pattern, size_pattern, pos);  // handle by characters
 }
 
-parser::search_result parser::csearch(const parser::context& context, const std::string& pattern, unsigned int pos) {
+parser::search_result parser::csearch(const parser::context& context, const std::string& pattern, size_t pos) {
     return context.csearch(this, pattern, pos);  // handle by characters
 }
 
-parser::search_result parser::csearch(const parser::context& context, const basic_stream& pattern, unsigned int pos) {
+parser::search_result parser::csearch(const parser::context& context, const basic_stream& pattern, size_t pos) {
     return context.csearch(this, pattern, pos);  // handle by characters
 }
 
-parser::search_result parser::wsearch(const parser::context& context, const char* pattern, size_t size_pattern, unsigned int pos) {
+parser::search_result parser::wsearch(const parser::context& context, const char* pattern, size_t size_pattern, size_t pos) {
     return context.wsearch(this, pattern, size_pattern, pos);
 }
 
-parser::search_result parser::wsearch(const parser::context& context, const std::string& pattern, unsigned int pos) { return context.wsearch(this, pattern, pos); }
+parser::search_result parser::wsearch(const parser::context& context, const std::string& pattern, size_t pos) { return context.wsearch(this, pattern, pos); }
 
-parser::search_result parser::wsearch(const parser::context& context, const basic_stream& pattern, unsigned int pos) { return context.wsearch(this, pattern, pos); }
+parser::search_result parser::wsearch(const parser::context& context, const basic_stream& pattern, size_t pos) { return context.wsearch(this, pattern, pos); }
 
 bool parser::compare(parser* obj, const char* lhs, const char* rhs) {
     bool ret = false;
@@ -179,9 +179,9 @@ parser& parser::add_pattern(const char* p, size_t size) {
 
 parser& parser::add_pattern(const std::string& pattern) { return add_pattern(pattern.c_str(), pattern.size()); }
 
-std::multimap<range_t, unsigned> parser::psearch(const parser::context& context) { return context.psearch(this); }
+std::multimap<range_t, size_t> parser::psearch(const parser::context& context) { return context.psearch(this); }
 
-std::multimap<range_t, unsigned> parser::psearchex(const parser::context& context) { return context.psearchex(this); }
+std::multimap<range_t, size_t> parser::psearchex(const parser::context& context) { return context.psearchex(this); }
 
 parser& parser::add_token(const std::string& token_name, uint32 attr, uint32 tag) {
     if (false == token_name.empty()) {
@@ -260,7 +260,7 @@ bool parser::lookup(const char* p, size_t size, std::string& token_name, uint32&
 }
 
 void parser::dump(const parser::context& context, basic_stream& bs) {
-    int line = 1;
+    size_t line = 1;
     std::map<int, std::string> color;
     color.insert({token_lvalue, "1;34"});
     color.insert({token_assign, "1;33"});

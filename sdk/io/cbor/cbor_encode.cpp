@@ -173,7 +173,7 @@ return_t cbor_encode::encode(binary_t& target, int16 value) {
             binary_push(target, (major << 5) | value);
         } else if (value < 0x100) {
             binary_push(target, (major << 5) | 24);
-            binary_push(target, value);
+            binary_push(target, t_narrow_cast(value));
         } else {
             binary_push(target, (major << 5) | 25);
             binary_append(target, value, hton16);
@@ -191,7 +191,7 @@ return_t cbor_encode::encode(binary_t& target, cbor_major_t major, uint16 value)
             binary_push(target, (major << 5) | value);
         } else if (value < 0x100) {
             binary_push(target, (major << 5) | 24);
-            binary_push(target, value);
+            binary_push(target, t_narrow_cast(value));
         } else {
             binary_push(target, (major << 5) | 25);
             binary_append(target, value, hton16);
@@ -268,10 +268,10 @@ return_t cbor_encode::encode(binary_t& target, int64 value) {
         }
 
         if (value < 24) {
-            binary_push(target, (major << 5) | value);
+            binary_push(target, t_narrow_cast((major << 5) | value));
         } else if (value < 0x100) {
             binary_push(target, (major << 5) | 24);
-            binary_push(target, value);
+            binary_push(target, t_narrow_cast(value));
         } else if (value < 0x10000) {
             binary_push(target, (major << 5) | 25);
             binary_append(target, (uint16)value, hton16);
@@ -292,10 +292,10 @@ return_t cbor_encode::encode(binary_t& target, cbor_major_t major, uint64 value)
 
     __try2 {
         if (value < 24) {
-            binary_push(target, (major << 5) | value);
+            binary_push(target, t_narrow_cast((major << 5) | value));
         } else if (value < 0x100) {
             binary_push(target, (major << 5) | 24);
-            binary_push(target, value);
+            binary_push(target, t_narrow_cast(value));
         } else if (value < 0x10000) {
             binary_push(target, (major << 5) | 25);
             binary_append(target, (uint16)value, hton16);

@@ -88,8 +88,8 @@ typedef struct _openssl_crypt_context_t : public crypt_context_t {
 
 } openssl_crypt_context_t;
 
-return_t openssl_crypt::open(crypt_context_t **handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char *key, unsigned size_key,
-                             const unsigned char *iv, unsigned size_iv) {
+return_t openssl_crypt::open(crypt_context_t **handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char *key, size_t size_key, const unsigned char *iv,
+                             size_t size_iv) {
     return_t ret = errorcode_t::success;
     openssl_crypt_context_t *context = nullptr;
     int ret_init = 0;

@@ -19,14 +19,14 @@ void test_aho_corasick1() {
     ac.insert("his", 3);
     ac.build();
     const char* source = "ahishers";
-    std::multimap<range_t, unsigned> result;
-    std::multimap<range_t, unsigned> expect = {{range_t(1, 3), 3}, {range_t(3, 5), 1}, {range_t(4, 5), 0}, {range_t(4, 7), 2}};
+    std::multimap<range_t, size_t> result;
+    std::multimap<range_t, size_t> expect = {{range_t(1, 3), 3}, {range_t(3, 5), 1}, {range_t(4, 5), 0}, {range_t(4, 7), 2}};
     result = ac.search(source, strlen(source));
 
     _logger->writeln(R"(source "%s")", source);
     for (auto item : result) {
         size_t begin = item.first.begin;
-        unsigned patid = item.second;
+        size_t patid = item.second;
         std::vector<char> pat;
         ac.get_pattern(patid, pat);
         _logger->writeln(R"(pos [%zi] pattern[%i] "%.*s")", begin, patid, pat.size(), pat.data());
@@ -40,7 +40,7 @@ void test_aho_corasick2() {
     struct testvector {
         const char* source;
         std::vector<pattern_t> patterns;
-        std::multimap<range_t, unsigned> expects;  // pair(pos_occurrence, id_pattern)
+        std::multimap<range_t, size_t> expects;  // pair(pos_occurrence, id_pattern)
     } _table[] = {
         {
             // t_aho_corasick ac;
@@ -140,8 +140,8 @@ void test_aho_corasick2() {
 
     for (auto item : _table) {
         t_aho_corasick<char> ac;
-        std::multimap<range_t, unsigned> expect;
-        std::multimap<range_t, unsigned> result;
+        std::multimap<range_t, size_t> expect;
+        std::multimap<range_t, size_t> result;
 
         _logger->writeln(R"(source "%s")", item.source);
         int i = 0;

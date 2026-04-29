@@ -45,7 +45,7 @@ typedef std::list<bufferio_t*> bufferin_queue_t;
 
 struct bufferio_context_t : printf_context_t {
     uint32 signature;
-    uint32 block_size;  // block size
+    size_t block_size;  // block size
     byte_t pad_size;    // pad bytes
     uint32 flags;       // combination of bufferio_context_flag_t
 
@@ -64,12 +64,12 @@ class bufferio {
     /**
      * @brief open
      * @param bufferio_context_t** handle [OUT] handle
-     * @param uint32 block_size [INOPT] block size
+     * @param size_t block_size [INOPT] block size
      * @param byte_t pad_size [INOPT] pad bytes
      * @param uint32 flags [INOPT] see bufferio_context_flag_t
      * @return error code (see error.hpp)
      */
-    static return_t open(bufferio_context_t** handle, uint32 block_size = (1 << 10), byte_t pad_size = 0, uint32 flags = 0);
+    static return_t open(bufferio_context_t** handle, size_t block_size = (1 << 10), byte_t pad_size = 0, uint32 flags = 0);
     /**
      * @brief close
      * @param bufferio_context_t* handle [IN] handle
@@ -175,10 +175,10 @@ class bufferio {
      * @brief cut
      * @param bufferio_context_t* handle [IN] handle
      * @param uint32 begin_pos [IN] pos
-     * @param uint32 length [IN] length
+     * @param size_t length [IN] length
      * @return error code (see error.hpp)
      */
-    static return_t cut(bufferio_context_t* handle, uint32 begin_pos, uint32 length);
+    static return_t cut(bufferio_context_t* handle, size_t begin_pos, size_t length);
     /**
      * @brief insert
      * @param bufferio_context_t* handle [IN] handle

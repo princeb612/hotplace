@@ -151,7 +151,7 @@ size_t payload_member::get_space() {
     } else if (variant_flag_t::flag_int == get_variant().flag()) {
         space = get_variant().size();
     } else if (_ref) {
-        space = t_to_int<size_t>(_ref->get_variant()) * _refmulti;
+        space = _ref->get_variant().t_toi<size_t>() * _refmulti;
     }
     return space;
 }
@@ -163,7 +163,7 @@ size_t payload_member::get_capacity() {
     } else if (payload_member_reserve_is_set & get_flags()) {
         space = _reserve;
     } else if (_ref) {
-        space = t_to_int<size_t>(_ref->get_variant()) * _refmulti;
+        space = _ref->get_variant().t_toi<size_t>() * _refmulti;
     } else {
         space = get_variant().size();
     }
@@ -177,9 +177,9 @@ size_t payload_member::get_reference_value() {
     } else if (payload_member_reserve_is_set & get_flags()) {
         size = _reserve;
     } else if (_ref) {
-        size = t_to_int<size_t>(_ref->get_variant()) * _refmulti;
+        size = _ref->get_variant().t_toi<size_t>() * _refmulti;
     } else {
-        size = t_to_int<size_t>(get_variant());
+        size = get_variant().t_toi<size_t>();
     }
     return size;
 }
@@ -228,7 +228,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
         variant& v = get_variant();
         vartype_t type = v.type();
         if (variant_flag_t::flag_int == v.flag()) {
-            uint16 vsize = v.size();
+            auto vsize = v.size();
             if (limit >= vsize) {
                 switch (type) {
                     /* int8, uint8 */
@@ -309,7 +309,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                 if (encoded) {
                     size = encoded->value();
                 } else {
-                    size = t_to_int<size_t>(ref->get_variant());
+                    size = _ref->get_variant().t_toi<size_t>();
                 }
             }
 
@@ -381,7 +381,7 @@ payload_member& payload_member::read(const byte_t* ptr, size_t size_ptr, size_t 
     return *this;
 }
 
-payload_member& payload_member::reserve(uint16 size) {
+payload_member& payload_member::reserve(size_t size) {
     _reserve = size;
     _flags |= payload_member_reserve_is_set;
     return *this;

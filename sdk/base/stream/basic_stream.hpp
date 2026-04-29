@@ -65,7 +65,7 @@ class basic_stream : public stream_t {
      * @param   size_t size [in]
      */
     virtual return_t write(const void* data, size_t size);
-    return_t cut(uint32 begin_pos, uint32 length);
+    return_t cut(size_t begin_pos, size_t length);
     return_t insert(size_t begin, const void* data, size_t data_size);
     /**
      * @brief   fill

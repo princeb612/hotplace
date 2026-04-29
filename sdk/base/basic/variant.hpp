@@ -13,7 +13,10 @@
 
 #include <string.h>
 
+#include <cmath>
+#include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/nostd/template.hpp>
 #include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/base/system/uint.hpp>
@@ -172,7 +175,7 @@ union vartype_union {
 struct variant_t {
     vartype_t type;
     vartype_union data;
-    uint16 size;
+    size_t size;
     uint16 flag;
 
     variant_t();
@@ -227,7 +230,7 @@ class variant {
     const variant_t& content() const;
     variant_t& get();
     vartype_t type() const;
-    uint16 size() const;
+    size_t size() const;
     uint16 flag() const;
 
     /**
@@ -308,7 +311,7 @@ class variant {
     /**
      * @brief   to integer
      */
-    int to_int() const;
+    int to_int();
     /*
      * @brief   to binary
      * @param   binary_t& target [out]
@@ -326,6 +329,113 @@ class variant {
     variant& operator=(const variant_t& other);
     variant& operator=(variant_t&& other);
     variant& operator=(const bignumber& other);
+
+    template <typename T>
+    T t_toi() {
+        // errorcode = errorcode_t::success;
+        size_t tsize = sizeof(T);
+        size_t vsize = 0;
+        T i = 0;  // i = T();
+
+        switch (_vt.type) {
+            case TYPE_BOOL:
+                vsize = RTL_FIELD_SIZE(vartype_union, b);
+                i = _vt.data.b ? 1 : 0;
+                break;
+            case TYPE_INT8:
+                vsize = RTL_FIELD_SIZE(vartype_union, i8);
+                i = _vt.data.i8;
+                break;
+            case TYPE_UINT8:
+                vsize = RTL_FIELD_SIZE(vartype_union, ui8);
+                i = _vt.data.ui8;
+                break;
+            case TYPE_INT16:
+                vsize = RTL_FIELD_SIZE(vartype_union, i16);
+                i = _vt.data.i16;
+                break;
+            case TYPE_UINT16:
+                vsize = RTL_FIELD_SIZE(vartype_union, i16);
+                i = _vt.data.ui16;
+                break;
+            case TYPE_INT24:
+                vsize = RTL_FIELD_SIZE(vartype_union, i32);
+                i = _vt.data.i32;
+                break;
+            case TYPE_UINT24:
+                vsize = RTL_FIELD_SIZE(vartype_union, ui32);
+                i = _vt.data.ui32;
+                break;
+            case TYPE_INT32:
+                vsize = RTL_FIELD_SIZE(vartype_union, i32);
+                i = _vt.data.i32;
+                break;
+            case TYPE_UINT32:
+                vsize = RTL_FIELD_SIZE(vartype_union, ui32);
+                i = _vt.data.ui32;
+                break;
+            case TYPE_INT48:
+                vsize = RTL_FIELD_SIZE(vartype_union, i64);
+                i = t_narrow_cast(_vt.data.i64);
+                break;
+            case TYPE_UINT48:
+                vsize = RTL_FIELD_SIZE(vartype_union, ui64);
+                i = t_narrow_cast(_vt.data.ui64);
+                break;
+            case TYPE_INT64:
+                vsize = RTL_FIELD_SIZE(vartype_union, i64);
+                i = (T)_vt.data.i64;
+                break;
+            case TYPE_UINT64:
+                vsize = RTL_FIELD_SIZE(vartype_union, ui64);
+                i = (T)_vt.data.ui64;
+                break;
+#if defined __SIZEOF_INT128__
+            case TYPE_INT128:
+                vsize = RTL_FIELD_SIZE(vartype_union, i128);
+                i = (T)_vt.data.i128;
+                break;
+            case TYPE_UINT128:
+                vsize = RTL_FIELD_SIZE(vartype_union, ui128);
+                i = (T)_vt.data.ui128;
+                break;
+#endif
+            case TYPE_FLOAT:
+                vsize = RTL_FIELD_SIZE(vartype_union, f);
+                i = t_narrow_cast(std::round(_vt.data.f));
+                break;
+            case TYPE_DOUBLE:
+                vsize = RTL_FIELD_SIZE(vartype_union, d);
+                i = t_narrow_cast(std::round(_vt.data.d));
+                break;
+            case TYPE_STRING:
+            case TYPE_NSTRING:
+                if (_vt.size) {
+                    i = atoi(std::string(_vt.data.str, _vt.size).c_str());
+                } else {
+                    i = atoi(_vt.data.str);
+                }
+                break;
+            case TYPE_BINARY: {
+                return_t errorcode = success;
+                i = t_binary_to_integer<T>(_vt.data.bstr, _vt.size, errorcode);
+            } break;
+            default:
+                break;
+        }
+        if ((i >= 0) && (flag_negative & _vt.flag)) {
+            if (std::is_signed<T>::value) {
+                i += 1;
+                i = -i;
+            } else {
+                throw exception(miscast_negative);
+            }
+        }
+        if (vsize > tsize) {
+            //
+        }
+        return i;
+    }
 
    protected:
    private:

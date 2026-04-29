@@ -398,7 +398,7 @@ return_t datetime::timespec_to_systemtime(int mode, const struct timespec& ts, s
         st->hour = tm.tm_hour;
         st->minute = tm.tm_min;
         st->second = tm.tm_sec;
-        st->milliseconds = ts.tv_nsec / EXP6;
+        st->milliseconds = t_narrow_cast(ts.tv_nsec / EXP6);
     }
     __finally2 {}
     return ret;
@@ -552,7 +552,7 @@ return_t time_diff(struct timespec& ts, struct timespec begin, struct timespec e
             int64 tv_nsec = (int64)EXP9;
             tv_nsec += end.tv_nsec;
             tv_nsec -= begin.tv_nsec;
-            ts.tv_nsec = tv_nsec;
+            ts.tv_nsec = t_justdoit(tv_nsec);
             ts.tv_sec = end.tv_sec - begin.tv_sec - 1;
         }
     }
@@ -620,7 +620,7 @@ void system_gettime(int clockid, struct timespec& ts) {
         QueryPerformanceFrequency(&freq);
         QueryPerformanceCounter(&counter);
         ts.tv_sec = counter.QuadPart / freq.QuadPart;
-        ts.tv_nsec = (counter.QuadPart % freq.QuadPart) * 1000000000LL / freq.QuadPart;
+        ts.tv_nsec = t_justdoit((counter.QuadPart % freq.QuadPart) * 1000000000LL / freq.QuadPart);
     } else if (CLOCK_BOOTTIME == clockid) {
         // realtimeapiset.h, kernel32.dll, 	Mincore.lib
         typedef VOID (*QUERYINTERRUPTTIMEPRECISE)(ULONGLONG* lpInterruptTimePrecise);

@@ -103,11 +103,11 @@ void play_yaml_pcap(const char* filename) {
 }
 
 void test_yaml_testvector_pcap() {
-    play_yaml_pcap("./testvector_pcap_tls13.yml");
-    play_yaml_pcap("./testvector_pcap_tls12.yml");
-    play_yaml_pcap("./testvector_pcap_http.yml");
-    play_yaml_pcap("./testvector_pcap_dtls12.yml");
-    play_yaml_pcap("./testvector_pcap_tls13_mlkem.yml");
+    play_yaml_pcap("testvector_pcap_tls13.yml");
+    play_yaml_pcap("testvector_pcap_tls12.yml");
+    play_yaml_pcap("testvector_pcap_http.yml");
+    play_yaml_pcap("testvector_pcap_dtls12.yml");
+    play_yaml_pcap("testvector_pcap_tls13_mlkem.yml");
 }
 
 void testcase_testvector_pcap() { test_yaml_testvector_pcap(); }

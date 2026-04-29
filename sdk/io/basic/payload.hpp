@@ -13,8 +13,10 @@
 
 #include <functional>
 #include <hotplace/sdk/base/basic/types.hpp>
-#include <hotplace/sdk/base/nostd/integer.hpp>
+#include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <hotplace/sdk/base/system/uint.hpp>
 #include <hotplace/sdk/io/basic/types.hpp>
 #include <hotplace/sdk/io/system/types.hpp>
 #include <list>
@@ -129,7 +131,7 @@ class payload_member {
 
     payload_member& write(binary_t& bin);
     payload_member& read(const byte_t* ptr, size_t size_ptr, size_t offset, size_t* size_read);
-    payload_member& reserve(uint16 size);
+    payload_member& reserve(size_t size);
 
     payload_encoded* get_payload_encoded();
 
@@ -148,7 +150,7 @@ class payload_member {
     payload_member* _ref;
     uint8 _refmulti;
     payload_encoded* _vl;
-    uint16 _reserve;
+    size_t _reserve;
     uint8 _flags;
 };
 
@@ -384,7 +386,7 @@ class payload {
                 auto encoded = item->get_payload_encoded();
                 i = encoded->value();
             } else {
-                i = t_to_int<T>(item->get_variant());
+                i = item->get_variant().t_toi<T>();
             }
         }
         return i;
@@ -397,7 +399,7 @@ class payload {
                 auto encoded = item->get_payload_encoded();
                 i = encoded->value();
             } else {
-                i = t_to_int<T>(item->get_variant());
+                i = item->get_variant().t_toi<T>();
             }
         }
         return i;

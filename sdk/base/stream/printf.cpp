@@ -73,7 +73,7 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
 
         // Step1. check order using map ...
         typedef std::map<size_t, size_t> va_map_t;
-        typedef std::list<int> va_array_t;
+        typedef std::list<size_t> va_array_t;
         va_map_t va_map; /* pair(position, {id}) */
         va_array_t va_array;
         t_aho_corasick<char> ac;
@@ -85,7 +85,7 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
         auto result = ac.search(formatter.c_str(), formatter.size());
         for (auto item : result) {
             const range_t& range = item.first;
-            unsigned patid = item.second;
+            auto patid = item.second;
             va_map.insert({range.begin, patid});
         }
 

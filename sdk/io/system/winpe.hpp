@@ -33,7 +33,7 @@ class winpe_checksum {
 
    protected:
     uint32 _checksum;
-    uint32 _size;
+    size_t _size;
 };
 
 }  // namespace io

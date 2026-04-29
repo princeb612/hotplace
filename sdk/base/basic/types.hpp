@@ -18,7 +18,6 @@
 #include <hotplace/sdk/base/inline.hpp>
 #include <hotplace/sdk/base/stream.hpp>
 #include <hotplace/sdk/base/syntax.hpp>
-#include <hotplace/sdk/base/template.hpp>
 #include <hotplace/sdk/base/trace.hpp>
 #include <hotplace/sdk/base/types.hpp>
 

@@ -139,11 +139,11 @@ return_t binary_append2(binary_t& target, uint32 len, uint128 value, std::functi
  * @brief   overwrite (resize and fill)
  */
 template <typename T>
-return_t t_binary_load(binary_t& target, uint32 bnlen, T value, std::function<T(const T&)> func = nullptr) {
+return_t t_binary_load(binary_t& target, size_t bnlen, T value, std::function<T(const T&)> func = nullptr) {
     target.clear();
     target.resize(bnlen);
     if (0 != bnlen) {
-        uint32 tsize = sizeof(T);
+        size_t tsize = sizeof(T);
         size_t toffset = 0;
         if (bnlen < tsize) {
             toffset = tsize - bnlen;
@@ -157,17 +157,17 @@ return_t t_binary_load(binary_t& target, uint32 bnlen, T value, std::function<T(
     return errorcode_t::success;
 }
 
-return_t binary_load(binary_t& target, uint32 limit, int16 value, std::function<int16(const int16&)> func = nullptr);
-return_t binary_load(binary_t& target, uint32 limit, uint16 value, std::function<uint16(const uint16&)> func = nullptr);
-return_t binary_load(binary_t& target, uint32 limit, int32 value, std::function<int32(const int32&)> func = nullptr);
-return_t binary_load(binary_t& target, uint32 limit, uint32 value, std::function<uint32(const uint32&)> func = nullptr);
-return_t binary_load(binary_t& target, uint32 limit, int64 value, std::function<int64(const int64&)> func = nullptr);
-return_t binary_load(binary_t& target, uint32 limit, uint64 value, std::function<uint64(const uint64&)> func = nullptr);
+return_t binary_load(binary_t& target, size_t limit, int16 value, std::function<int16(const int16&)> func = nullptr);
+return_t binary_load(binary_t& target, size_t limit, uint16 value, std::function<uint16(const uint16&)> func = nullptr);
+return_t binary_load(binary_t& target, size_t limit, int32 value, std::function<int32(const int32&)> func = nullptr);
+return_t binary_load(binary_t& target, size_t limit, uint32 value, std::function<uint32(const uint32&)> func = nullptr);
+return_t binary_load(binary_t& target, size_t limit, int64 value, std::function<int64(const int64&)> func = nullptr);
+return_t binary_load(binary_t& target, size_t limit, uint64 value, std::function<uint64(const uint64&)> func = nullptr);
 #if defined __SIZEOF_INT128__
-return_t binary_load(binary_t& target, uint32 limit, int128 value, std::function<int128(const int128&)> func = nullptr);
-return_t binary_load(binary_t& target, uint32 limit, uint128 value, std::function<uint128(const uint128&)> func = nullptr);
+return_t binary_load(binary_t& target, size_t limit, int128 value, std::function<int128(const int128&)> func = nullptr);
+return_t binary_load(binary_t& target, size_t limit, uint128 value, std::function<uint128(const uint128&)> func = nullptr);
 #endif
-return_t binary_load(binary_t& target, uint32 limit, const byte_t* data, uint32 len);
+return_t binary_load(binary_t& target, size_t limit, const byte_t* data, size_t len);
 return_t binary_fill(binary_t& target, size_t count, const byte_t& value);
 
 static inline binary_t& operator<<(binary_t& lhs, uint8 rhs) {

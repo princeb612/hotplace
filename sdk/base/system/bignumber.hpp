@@ -12,6 +12,7 @@
 #define __HOTPLACE_SDK_BASE_SYSTEM_BIGNUMBER__
 
 #include <functional>
+#include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
 #include <hotplace/sdk/base/system/types.hpp>
 #include <iomanip>
@@ -104,6 +105,7 @@ class bignumber {
     bignumber(int128 value);
     bignumber(uint128 value);
 #endif
+    bignumber(const variant_t &vt);
     /**
      * @brief   big-endian byte order stream
      */
@@ -141,6 +143,7 @@ class bignumber {
     bignumber &operator=(int128 value);
     bignumber &operator=(uint128 value);
 #endif
+    bignumber &operator=(const variant_t &vt);
     bignumber &operator=(const binary_t &base16hexstream);
     bignumber &operator=(const char *value);
     bignumber &operator=(const std::string &value);
@@ -246,6 +249,7 @@ class bignumber {
     bignumber &set(int64 value);
     bignumber &setu(uint64 value);
 #endif
+    bignumber &set(const variant_t &vt);
     bignumber &set(const byte_t *p, size_t n);
     bignumber &sethex(const binary_t &base16hexstream);
     bignumber &setstring(const char *value);
@@ -337,17 +341,17 @@ class bignumber {
      */
     template <typename T>
     T t_bntoi() const {
+        T value = 0;
         size_t tsize = sizeof(T);
         bignumber bn = std::move(normalize(*this, tsize << 3, std::is_signed<T>::value));
 
-        T value = 0;
         binary_t bin;
         bn >> bin;  // base16, BE
         size_t size = bin.size();
         if (size > tsize) {
             bin.erase(bin.begin(), bin.begin() + size - tsize);
         } else if (size < tsize) {
-            int n = tsize - size;
+            auto n = tsize - size;
             while (n--) {
                 bin.insert(bin.begin(), 0);
             }
@@ -361,7 +365,11 @@ class bignumber {
             }
         }
         if (bn < 0) {
-            value = -value;
+            if (std::is_signed<T>::value) {
+                value = -value;
+            } else {
+                throw exception(miscast_negative);
+            }
         }
         return value;
     }
@@ -389,6 +397,16 @@ class bignumber {
 #endif
 
    private:
+    /**
+     * | uint32.max + 1          | sign  1, vector {0, 1},                 |
+     * | "4294967296"            | sign  1, vector {0, 1},                 |
+     * | "-4294967296"           | sign -1, vector {0, 1},                 |
+     * | uint64.max + 1          | sign  1, vector {0, 0, 1}               |
+     * | "18446744073709551616"  | sign  1, vector {0, 0, 1}               |
+     * | "-18446744073709551616" | sign -1, vector {0, 0, 1}               |
+     * |  0x123456789abcdef      | sign  1, vector {0x89abcdef, 0x1234567} |
+     * | -0x123456789abcdef      | sign -1, vector {0x89abcdef, 0x1234567} |
+     */
     std::vector<uint32> _v;
     int _sign;
 };

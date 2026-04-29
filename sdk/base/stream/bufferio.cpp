@@ -25,7 +25,7 @@ bufferio::bufferio() {}
 
 bufferio::~bufferio() {}
 
-return_t bufferio::open(bufferio_context_t** handle, uint32 block_size, byte_t pad_size, uint32 flags) {
+return_t bufferio::open(bufferio_context_t** handle, size_t block_size, byte_t pad_size, uint32 flags) {
     return_t ret = errorcode_t::success;
     bufferio_context_t* context = nullptr;
 
@@ -457,9 +457,9 @@ bool bufferio::compare(bufferio_context_t* handle, const void* data_to_compare, 
     return ret_bool;
 }
 
-return_t bufferio::cut(bufferio_context_t* handle, uint32 begin_pos, uint32 length) {
+return_t bufferio::cut(bufferio_context_t* handle, size_t begin_pos, size_t length) {
     return_t ret = errorcode_t::success;
-    uint32 end_pos = begin_pos + length;
+    size_t end_pos = begin_pos + length;
 
     __try2 {
         if (nullptr == handle) {
