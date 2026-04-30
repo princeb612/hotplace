@@ -422,7 +422,7 @@ bool tls_advisor::is_kindof_tls(uint16 ver) {
 bool tls_advisor::is_kindof_dtls(uint16 ver) {
     bool ret = false;
     auto hint = hintof_tls_version(ver);
-    ret = (hint && (0 == hint->flags & flag_kindof_tls));
+    ret = (hint && (0 == (hint->flags & flag_kindof_tls)));
     return ret;
 }
 

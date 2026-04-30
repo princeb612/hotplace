@@ -67,7 +67,7 @@ return_t http2_frame_settings::do_read_body(const byte_t* stream, size_t size, s
 return_t http2_frame_settings::do_write_body(binary_t& body) {
     return_t ret = errorcode_t::success;
 
-    uint32 len = _settings.size() * sizeof(http2_setting_t);
+    auto len = _settings.size() * sizeof(http2_setting_t);
     ret = set_payload_size(len);
 
     if (errorcode_t::success == ret) {

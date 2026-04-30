@@ -105,7 +105,7 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
             // in case of DTLS 1.2 chacha20-poly1305, true == is_kindof_dtls()
             // in case of CBC-HMAC, session_type_dtls == session->get_type
             auto &kv = session->get_session_info(dir).get_keyvalue();
-            uint16 epoch = kv.get(session_dtls_epoch);
+            uint16 epoch = t_narrow_cast(kv.get(session_dtls_epoch));
             uint64 seq = kv.get(session_dtls_seq);
             record_no = session->get_dtls_record_arrange().make_epoch_seq(epoch, seq);
         } else {
@@ -202,7 +202,7 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
             // in case of DTLS 1.2 chacha20-poly1305, true == is_kindof_dtls()
             // in case of CBC-HMAC, session_type_dtls == session->get_type
             auto &kv = session->get_session_info(dir).get_keyvalue();
-            uint16 epoch = kv.get(session_dtls_epoch);
+            uint16 epoch = t_narrow_cast(kv.get(session_dtls_epoch));
             uint64 seq = kv.get(session_dtls_seq);
             record_no = session->get_dtls_record_arrange().make_epoch_seq(epoch, seq);
         } else {

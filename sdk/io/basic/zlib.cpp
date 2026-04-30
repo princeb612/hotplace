@@ -65,12 +65,12 @@ return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
 
         deflateInit2(&defstream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, wbit, 8, Z_DEFAULT_STRATEGY);
         do {
-            defstream.avail_out = buffer.size();
+            defstream.avail_out = t_narrow_cast(buffer.size());
             defstream.next_out = buffer.data();
 
             rc = deflate(&defstream, Z_FINISH);
 
-            uint32 size = output.size();
+            auto size = output.size();
             if (size < defstream.total_out) {
                 output.insert(output.end(), buffer.data(), buffer.data() + defstream.total_out - size);
             }
@@ -121,12 +121,12 @@ return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
 
         inflateInit2(&infstream, wbit);
         do {
-            infstream.avail_out = buffer.size();
+            infstream.avail_out = t_narrow_cast(buffer.size());
             infstream.next_out = buffer.data();
 
             rc = inflate(&infstream, Z_NO_FLUSH);
 
-            uint32 size = output.size();
+            auto size = output.size();
             if (size < infstream.total_out) {
                 output.insert(output.end(), buffer.data(), buffer.data() + infstream.total_out - size);
             }
@@ -181,12 +181,12 @@ return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
 
         deflateInit2(&defstream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, wbit, 8, Z_DEFAULT_STRATEGY);
         do {
-            defstream.avail_out = buffer.size();
+            defstream.avail_out = t_narrow_cast(buffer.size());
             defstream.next_out = buffer.data();
 
             rc = deflate(&defstream, Z_FINISH);
 
-            uint32 size = output->size();
+            auto size = output->size();
             if (size < defstream.total_out) {
                 output->write(buffer.data(), defstream.total_out - size);
             }
@@ -237,12 +237,12 @@ return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
 
         inflateInit2(&infstream, wbit);
         do {
-            infstream.avail_out = buffer.size();
+            infstream.avail_out = t_narrow_cast(buffer.size());
             infstream.next_out = buffer.data();
 
             rc = inflate(&infstream, Z_NO_FLUSH);
 
-            uint32 size = output->size();
+            auto size = output->size();
             if (size < infstream.total_out) {
                 output->write(buffer.data(), infstream.total_out - size);
             }
@@ -310,7 +310,8 @@ int zlib_def(FILE* source, FILE* dest, int level) {
 
     /* compress until end of file */
     do {
-        strm.avail_in = fread(in, 1, CHUNK, source);
+        auto cbread = fread(in, 1, CHUNK, source);
+        strm.avail_in = t_narrow_cast(cbread);
 
         if (ferror(source)) {
             (void)deflateEnd(&strm);
@@ -363,7 +364,8 @@ int zlib_inf(FILE* source, FILE* dest) {
 
     /* decompress until deflate stream ends or end of file */
     do {
-        strm.avail_in = fread(in, 1, CHUNK, source);
+        auto cbread = fread(in, 1, CHUNK, source);
+        strm.avail_in = t_narrow_cast(cbread);
         if (ferror(source)) {
             (void)inflateEnd(&strm);
             return Z_ERRNO;

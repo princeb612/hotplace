@@ -250,10 +250,20 @@ uint64 file_stream::size() const {
     return ret_value;
 }
 
-void file_stream::truncate(int64 lfilepos, int64* ptrfilepos) {
+void file_stream::truncate(int32 lfilepos, int32* ptrfilepos) {
     UNREFERENCED_PARAMETER(ptrfilepos);
     if (true == is_open()) {
         SetFilePointer(_file_handle, lfilepos, (PLONG)ptrfilepos, SEEK_SET);
+        SetEndOfFile(_file_handle);
+        size();
+    }
+}
+
+void file_stream::truncate(size_t lfilepos) {
+    if (true == is_open()) {
+        LARGE_INTEGER li;
+        li.QuadPart = lfilepos;
+        SetFilePointer(_file_handle, li.LowPart, (PLONG)&li.HighPart, SEEK_SET);
         SetEndOfFile(_file_handle);
         size();
     }
@@ -315,7 +325,7 @@ return_t file_stream::write(const void* data, size_t size_data) {
     uint32 idx = 0;
     while (size_data) {
         DWORD written = 0;
-        BOOL test = WriteFile(_file_handle, mem + idx, size_data, &written, nullptr);
+        BOOL test = WriteFile(_file_handle, mem + idx, t_justdoit(size_data), &written, nullptr);
         if (FALSE == test) {
             ret = GetLastError();
             break;

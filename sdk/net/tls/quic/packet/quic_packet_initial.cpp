@@ -291,7 +291,8 @@ size_t quic_packet_initial::estimate_overhead() {
     auto& protection = session->get_tls_protection();
     auto tagsize = protection.get_tag_size();
     auto maxsize = get_max_payload_size();
-    auto estimate = estimate_quic_packet_size(get_type(), _dcid.size(), _scid.size(), _token.size(), get_pn_length(), maxsize, tagsize);
+    auto estimate =
+        estimate_quic_packet_size(get_type(), t_narrow_cast(_dcid.size()), _scid.size(), t_narrow_cast(_token.size()), get_pn_length(), t_narrow_cast(maxsize), tagsize);
     return estimate - maxsize;
 }
 

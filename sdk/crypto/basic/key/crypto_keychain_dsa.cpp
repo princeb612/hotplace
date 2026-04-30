@@ -80,9 +80,9 @@ return_t crypto_keychain::add_dsa(crypto_key* cryptokey, uint32 nid, const binar
             __leave2;
         }
 
-        BN_ptr bn_p(BN_bin2bn(p.data(), p.size(), nullptr));
-        BN_ptr bn_q(BN_bin2bn(q.data(), q.size(), nullptr));
-        BN_ptr bn_g(BN_bin2bn(g.data(), g.size(), nullptr));
+        BN_ptr bn_p(BN_bin2bn(p.data(), t_narrow_cast(p.size()), nullptr));
+        BN_ptr bn_q(BN_bin2bn(q.data(), t_narrow_cast(q.size()), nullptr));
+        BN_ptr bn_g(BN_bin2bn(g.data(), t_narrow_cast(g.size()), nullptr));
         ret_openssl = DSA_set0_pqg(dsa.get(), bn_p.get(), bn_q.get(), bn_g.get());
         if (ret_openssl < 0) {
             ret = errorcode_t::internal_error;
@@ -95,10 +95,10 @@ return_t crypto_keychain::add_dsa(crypto_key* cryptokey, uint32 nid, const binar
         BN_ptr bn_pub;
         BN_ptr bn_priv;
         if (y.size()) {
-            bn_pub = std::move(BN_ptr(BN_bin2bn(y.data(), y.size(), nullptr)));
+            bn_pub = std::move(BN_ptr(BN_bin2bn(y.data(), t_narrow_cast(y.size()), nullptr)));
         }
         if (x.size()) {
-            bn_priv = std::move(BN_ptr(BN_bin2bn(x.data(), x.size(), nullptr)));
+            bn_priv = std::move(BN_ptr(BN_bin2bn(x.data(), t_narrow_cast(x.size()), nullptr)));
         }
         ret_openssl = DSA_set0_key(dsa.get(), bn_pub.get(), bn_priv.get());
         if (ret_openssl < 0) {

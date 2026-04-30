@@ -43,7 +43,7 @@ uint32 hmac_otp::open(otp_context_t** handle, unsigned int digit_length, hash_al
             __leave2;
         }
 
-        ret = hash.open(&hash_handle, algorithm, key_data, key_size);
+        ret = hash.open(&hash_handle, algorithm, key_data, t_narrow_cast(key_size));
         if (errorcode_t::success != ret) {
             __leave2;
         }

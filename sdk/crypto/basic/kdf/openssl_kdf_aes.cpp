@@ -58,7 +58,7 @@ return_t openssl_kdf::hkdf_expand_aes_rfc8152(binary_t& okm, const char* alg, si
 
         binary_t iv;
         uint16 blocksize = sizeof_block(hint);
-        uint32 offset = 0;
+        size_t offset = 0;
         binary_t t_block;  // T(0) = empty string (zero length)
         int t_block_size = 0;
         int size_update = 0;
@@ -66,11 +66,11 @@ return_t openssl_kdf::hkdf_expand_aes_rfc8152(binary_t& okm, const char* alg, si
 
         EVP_CIPHER_CTX_set_padding(context.get(), 1);
 
-        for (uint32 i = 1; offset < dlen /* N = ceil(L/Hash_Size) */; i++) {
+        for (size_t i = 1; offset < dlen /* N = ceil(L/Hash_Size) */; ++i) {
             binary_t content;  // T(1) = AES-CMAC(PRK, T(0) | info | 0x01)
             content.insert(content.end(), t_block.begin(), t_block.end());
             content.insert(content.end(), info.begin(), info.end());
-            content.insert(content.end(), i);  // i = 1..255 (01..ff)
+            content.insert(content.end(), uint8(i));  // i = 1..255 (01..ff)
 
             // T(i) = AES-CMAC(PRK, T(i-1) | info | i), i = 1..255 (01..ff)
             if (0 == t_block_size) {
@@ -83,13 +83,13 @@ return_t openssl_kdf::hkdf_expand_aes_rfc8152(binary_t& okm, const char* alg, si
             int size_update = 0;
             size_t size_input = content.size();
             for (size_t j = 0; j < size_input; j += blocksize) {
-                int remain = size_input - j;
-                int size = (remain < blocksize) ? remain : blocksize;
+                auto remain = size_input - j;
+                auto size = (remain < blocksize) ? remain : blocksize;
                 if (remain > blocksize) {
                     EVP_CipherUpdate(context.get(), t_block.data(), &size_update, &content[j], blocksize);
                 } else {
-                    EVP_CipherUpdate(context.get(), t_block.data(), &size_update, &content[j], remain);
-                    EVP_CipherUpdate(context.get(), t_block.data(), &size_update, iv.data(), blocksize - remain);
+                    EVP_CipherUpdate(context.get(), t_block.data(), &size_update, &content[j], t_narrow_cast(remain));
+                    EVP_CipherUpdate(context.get(), t_block.data(), &size_update, iv.data(), t_narrow_cast(blocksize - remain));
                 }
             }
 

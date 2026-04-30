@@ -88,7 +88,7 @@ std::string tls_advisor::nameof_ec_point_format(uint8 code) {
     return value;
 }
 
-uint16 tls_advisor::valueof_ec_point_format(const std::string& name) {
+uint8 tls_advisor::valueof_ec_point_format(const std::string& name) {
     uint16 value = 0;
     auto iter = _ec_point_format_names.find(name);
     if (_ec_point_format_names.end() != iter) {

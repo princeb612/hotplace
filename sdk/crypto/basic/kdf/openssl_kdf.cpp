@@ -61,9 +61,9 @@ return_t openssl_kdf::hmac_kdf(binary_t& derived, hash_algorithm_t alg, size_t d
 
         EVP_PKEY_derive_init(ctx.get());
         EVP_PKEY_CTX_set_hkdf_md(ctx.get(), md);
-        EVP_PKEY_CTX_set1_hkdf_key(ctx.get(), key.data(), key.size());
-        EVP_PKEY_CTX_set1_hkdf_salt(ctx.get(), salt.data(), salt.size());
-        EVP_PKEY_CTX_add1_hkdf_info(ctx.get(), info.data(), info.size());
+        EVP_PKEY_CTX_set1_hkdf_key(ctx.get(), key.data(), t_narrow_cast(key.size()));
+        EVP_PKEY_CTX_set1_hkdf_salt(ctx.get(), salt.data(), t_narrow_cast(salt.size()));
+        EVP_PKEY_CTX_add1_hkdf_info(ctx.get(), info.data(), t_narrow_cast(info.size()));
 
         derived.resize(dlen);
         ret_openssl = EVP_PKEY_derive(ctx.get(), derived.data(), &dlen);
@@ -187,13 +187,13 @@ return_t openssl_kdf::hkdf_expand(binary_t& okm, const char* alg, size_t dlen, c
 
         okm.clear();
 
-        uint32 offset = 0;
+        size_t offset = 0;
         binary_t t_block;  // T(0) = empty string (zero length)
-        for (uint32 i = 1; offset < dlen /* N = ceil(L/Hash_Size) */; i++) {
+        for (size_t i = 1; offset < dlen /* N = ceil(L/Hash_Size) */; ++i) {
             binary_t content;  // T(1) = HMAC-Hash(PRK, T(0) | info | 0x01)
             content.insert(content.end(), t_block.begin(), t_block.end());
             content.insert(content.end(), info.begin(), info.end());
-            content.insert(content.end(), i);  // i = 1..255 (01..ff)
+            content.insert(content.end(), uint8(i));  // i = 1..255 (01..ff)
 
             openssl_mac mac;
             mac.hmac(alg, prk, content, t_block);  // T(i) = HMAC-Hash(PRK, T(i-1) | info | i), i = 1..255 (01..ff)
@@ -264,13 +264,13 @@ return_t openssl_kdf::cmac_kdf_extract(binary_t& prk, crypt_algorithm_t alg, con
             binary_t o128;
             o128.resize(blocksize);
 
-            hash.open(&mac_handle, algorithm, crypt_mode_t::cbc, o128.data(), o128.size());
+            hash.open(&mac_handle, algorithm, crypt_mode_t::cbc, o128.data(), t_narrow_cast(o128.size()));
             hash.hash(mac_handle, salt.data(), salt.size(), k);
             hash.close(mac_handle);
         }
 
         // step 2.
-        hash.open(&mac_handle, algorithm, crypt_mode_t::cbc, k.data(), k.size());
+        hash.open(&mac_handle, algorithm, crypt_mode_t::cbc, k.data(), t_narrow_cast(k.size()));
         hash.hash(mac_handle, ikm.data(), ikm.size(), prk);
         hash.close(mac_handle);
     }
@@ -294,17 +294,17 @@ return_t openssl_kdf::cmac_kdf_expand(binary_t& okm, crypt_algorithm_t alg, size
         const hint_blockcipher_t* hint = advisor->hintof_blockcipher(alg);
         uint16 blocksize = sizeof_block(hint);
 
-        uint32 offset = 0;
+        size_t offset = 0;
         binary_t t_block;  // T(0) = empty string (zero length)
-        for (uint32 i = 1; offset < dlen /* N = ceil(L/Hash_Size) */; i++) {
+        for (size_t i = 1; offset < dlen /* N = ceil(L/Hash_Size) */; ++i) {
             binary_t content;  // T(1) = AES-CMAC(PRK, T(0) | info | 0x01)
             content.insert(content.end(), t_block.begin(), t_block.end());
             content.insert(content.end(), info.begin(), info.end());
-            content.insert(content.end(), i);  // i = 1..255 (01..ff)
+            content.insert(content.end(), uint8(i));  // i = 1..255 (01..ff)
 
             // T(i) = AES-CMAC(PRK, T(i-1) | info | i), i = 1..255 (01..ff)
             hash_context_t* mac_handle = nullptr;
-            hash.open(&mac_handle, alg, crypt_mode_t::ecb, prk.data(), prk.size());
+            hash.open(&mac_handle, alg, crypt_mode_t::ecb, prk.data(), t_narrow_cast(prk.size()));
             hash.hash(mac_handle, content.data(), content.size(), t_block);
             hash.close(mac_handle);
 

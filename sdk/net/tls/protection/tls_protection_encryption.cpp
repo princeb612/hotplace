@@ -67,7 +67,7 @@ uint8 tls_protection::get_tag_size() {
                 ret_value = hint_cipher->tsize;  // CCM (16), CCM_8 (8)
                 break;
             default:
-                ret_value = dlen;
+                ret_value = t_narrow_cast(dlen);
                 break;
         }
     }

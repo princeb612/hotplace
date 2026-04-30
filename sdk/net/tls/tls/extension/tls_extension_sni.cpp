@@ -96,7 +96,7 @@ return_t tls_extension_sni::do_write_body(tls_direction_t dir, binary_t& bin) {
     {
         uint8 type = get_nametype();
         const binary_t& hostname = get_hostname();
-        uint16 entry_len = 1 + hostname.size();
+        uint16 entry_len = t_narrow_cast(1 + hostname.size());
 
         payload pl;
         pl << new payload_member(uint16(entry_len), true, constexpr_entry_len)           //

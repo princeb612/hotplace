@@ -24,19 +24,19 @@ class quic_frame_padding : public quic_frame {
     virtual ~quic_frame_padding();
 
     /**
-     * @param   uint16 len [in]
+     * @param   size_t len [in]
      * @param   uint32 flags [inopt] see quic_packet_flag_t
      * @desc
      *          pad(300);               // add a frame 300 bytes
      *          pad(1200, pad_packet);  // make a packet 1200 bytes
      */
-    void pad(uint16 len, uint32 flags = 0);
+    void pad(size_t len, uint32 flags = 0);
 
    protected:
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
    private:
-    uint16 _len;
+    size_t _len;
     uint32 _flags;
 };
 

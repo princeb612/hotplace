@@ -97,7 +97,7 @@ return_t tls_extension_client_supported_versions::do_write_body(tls_direction_t 
             for (auto ver : _versions) {
                 binary_append(bin_versions, ver, hton16);
             }
-            cbsize_versions = bin_versions.size();
+            cbsize_versions = t_narrow_cast(bin_versions.size());
         }
         {
             payload pl;

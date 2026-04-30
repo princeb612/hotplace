@@ -534,7 +534,7 @@ return_t qpack_encoder::pack(http_dynamic_table* dyntable, binary_t& target, uin
         qpack_ric2eic(capacity, ric, base, eic, sign, deltabase);
 
         binary_t temp;
-        temp.push_back(eic);
+        temp.push_back(t_narrow_cast(eic));
         uint8 mask = sign ? 0x80 : 0x00;
         uint8 prefix = 7;
         encode_int(temp, mask, prefix, deltabase);

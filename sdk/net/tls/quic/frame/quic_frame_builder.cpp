@@ -99,7 +99,7 @@ quic_frame* quic_frame_builder::build() {
         case quic_frame_type_ack:
         case quic_frame_type_ack + 1: {
             // RFC 9001 19.3.  ACK Frames
-            __try_new_catch_only(frame, new quic_frame_ack(session, type));
+            __try_new_catch_only(frame, new quic_frame_ack(session, t_narrow_cast(type)));
         } break;
         case quic_frame_type_reset_stream: {
             // 19.4.  RESET_STREAM Frames
@@ -127,9 +127,9 @@ quic_frame* quic_frame_builder::build() {
         case quic_frame_type_stream7: {
             // 19.8.  STREAM Frames
             if ((_alpn == "\x2h3") || is_kindof_alpn(session, std::string("\x2h3"))) {
-                __try_new_catch_only(frame, new quic_frame_http3_stream(session, type));
+                __try_new_catch_only(frame, new quic_frame_http3_stream(session, t_narrow_cast(type)));
             } else {
-                __try_new_catch_only(frame, new quic_frame_stream(session, type));
+                __try_new_catch_only(frame, new quic_frame_stream(session, t_narrow_cast(type)));
             }
             quic_frame_stream* stream = (quic_frame_stream*)frame;
             stream->set(get_streamid(), _unitype);

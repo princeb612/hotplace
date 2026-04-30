@@ -46,7 +46,7 @@ quic_packet_publisher& quic_packet_publisher::set_session(tls_session* session) 
     return *this;
 }
 
-quic_packet_publisher& quic_packet_publisher::set_payload_size(uint16 size) {
+quic_packet_publisher& quic_packet_publisher::set_payload_size(size_t size) {
     _payload_size = size;
     return *this;
 }

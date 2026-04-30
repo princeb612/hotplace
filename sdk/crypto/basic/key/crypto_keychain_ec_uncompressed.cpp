@@ -44,14 +44,14 @@ return_t crypto_keychain::add_ec_uncompressed(crypto_key* cryptokey, uint32 nid,
 
         // call both o2i_ECPublicKey and EC_KEY_set_private_key
         if (pubkey && pubsize) {
-            o2i_ECPublicKey(/* inout */ &eck, &pubkey, pubsize);
+            o2i_ECPublicKey(/* inout */ &eck, &pubkey, t_narrow_cast(pubsize));
         }
 
         EC_KEY_ptr eckey(eck);
         eck = nullptr;  // eckey own eck
 
         if (privkey && privsize) {
-            BN_ptr bn_priv(BN_bin2bn(privkey, privsize, nullptr));
+            BN_ptr bn_priv(BN_bin2bn(privkey, t_narrow_cast(privsize), nullptr));
 
             rc = EC_KEY_set_private_key(eckey.get(), bn_priv.get());
             if (rc != 1) {

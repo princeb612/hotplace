@@ -106,7 +106,7 @@ uint32 time_otp::get(otp_context_t* handle, time64_t time, uint32& code) {
             ret = errorcode_t::invalid_context;
         }
 
-        uint32 c = (time / context->_interval);
+        uint32 c = t_narrow_cast(time / context->_interval);
 
         hotp.get(context->_hotp_handle, c, code);
     }

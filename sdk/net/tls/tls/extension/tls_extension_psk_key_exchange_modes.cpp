@@ -81,7 +81,7 @@ return_t tls_extension_psk_key_exchange_modes::do_write_body(tls_direction_t dir
         for (auto m : _modes) {
             binary_append(bin_modes, m);
         }
-        cbsize_modes = bin_modes.size();
+        cbsize_modes = t_narrow_cast(bin_modes.size());
     }
     {
         payload pl;

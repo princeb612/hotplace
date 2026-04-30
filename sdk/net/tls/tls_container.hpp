@@ -106,7 +106,7 @@ class t_tls_container {
     /**
      * tls_handshake, tls_extension
      */
-    TYPE_PTR get(uint8 type, bool upref) {
+    TYPE_PTR get(ENTITY_TYPE type, bool upref) {
         critical_section_guard guard(_lock);
         TYPE_PTR obj = nullptr;
         auto iter = _dictionary.find(type);

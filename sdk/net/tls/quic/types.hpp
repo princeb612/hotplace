@@ -134,7 +134,7 @@ enum quic_stream_id_t : uint8 {
 /**
  * RFC 9000 18.  Transport Parameter Encoding
  */
-enum quic_param_t {
+enum quic_param_t : uint64 {
     quic_param_original_destination_connection_id = 0x00,
     quic_param_max_idle_timeout = 0x01,
     quic_param_stateless_reset_token = 0x02,
@@ -163,12 +163,10 @@ enum quic_param_t {
     quic_param_google_version = 0x4752,
     quic_param_version_information_draft = 0xff73db,
     quic_param_min_ack_delay = 0xff04de1b,
-#ifdef __SIZEOF_INT128__  // MSVC complaint
-    quic_param_enable_multipath = 0x0f739bbc1b666d05,
-    quic_param_enable_multipath_06 = 0x0f739bbc1b666d06,
-    quic_param_initial_max_path_id = 0x0f739bbc1b666d0d,
-    quic_param_bdp_frame = 0x4143414213370002,
-#endif
+    quic_param_enable_multipath = 0x0f739bbc1b666d05ULL,
+    quic_param_enable_multipath_06 = 0x0f739bbc1b666d06ULL,
+    quic_param_initial_max_path_id = 0x0f739bbc1b666d0dULL,
+    quic_param_bdp_frame = 0x4143414213370002ULL,
 };
 
 /**

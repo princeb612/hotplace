@@ -16,7 +16,9 @@
 #include <functional>
 #include <hotplace/sdk/base/basic/types.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
+#include <limits>
 #include <set>
+#include <type_traits>
 
 namespace hotplace {
 
@@ -34,9 +36,9 @@ struct narrow_cast_t {
         if (debug_except) {
             TYPE converted = static_cast<TYPE>(value);
             if (static_cast<SOURCE>(converted) != value) {
-                throw exception(errorcode_t::miscast_negative);
+                throw exception(errorcode_t::miscast_unsigned);
             }
-            if (std::is_signed<SOURCE>::value != std::is_signed<TYPE>::value) {
+            if (std::numeric_limits<SOURCE>::is_signed != std::numeric_limits<TYPE>::is_signed) {
                 if ((value < 0) != (converted < 0)) {
                     throw exception(errorcode_t::miscast_narrow);
                 }
@@ -55,6 +57,27 @@ constexpr narrow_cast_t<TYPE, true> t_narrow_cast(TYPE v) {
 template <typename TYPE>
 constexpr narrow_cast_t<TYPE, false> t_justdoit(TYPE v) {
     return {v};
+}
+
+/**
+ * @example
+ *          signed value;
+ *          value = -value;
+ */
+template <typename TYPE>
+typename std::enable_if<std::numeric_limits<TYPE>::is_signed, TYPE>::type t_change_sign(TYPE i) {
+    return -i;
+}
+
+/**
+ * @example
+ *          unsigned value;
+ *          value = -value;
+ */
+template <typename TYPE>
+typename std::enable_if<!std::numeric_limits<TYPE>::is_signed, TYPE>::type t_change_sign(TYPE i) {
+    throw exception(miscast_unsigned);
+    return i;
 }
 
 template <typename T>
@@ -100,7 +123,7 @@ TYPE t_atoi_n(const char* value, size_t size) {
             if (is_signed) {
                 sign = -1;
             } else {
-                throw exception(errorcode_t::miscast_negative);
+                throw exception(errorcode_t::miscast_unsigned);
             }
         }
 
@@ -124,7 +147,7 @@ TYPE t_atoi_n(const char* value, size_t size) {
         }
 
         if (sign < 0) {
-            res = -res;
+            res = t_change_sign<TYPE>(res);
         }
     }
     __finally2 {}

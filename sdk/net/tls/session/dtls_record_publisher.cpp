@@ -79,7 +79,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
             {
                 auto rctype = record->get_type();
                 auto& kv = session->get_session_info(dir).get_keyvalue();
-                uint16 hsseq = kv.get(session_dtls_message_seq);
+                uint16 hsseq = t_narrow_cast(kv.get(session_dtls_message_seq));
 
                 std::list<tls_record*> records;
 
@@ -144,7 +144,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                     }
                     auto rec_fragmented = *records.rbegin();
                     auto hs_fragmented = new dtls_handshake_fragmented(desc.hstype, session);  // do not change sequence (handshake)
-                    hs_fragmented->prepare_fragment(stream, size, desc.hsseq, fragoffset, fragsize);
+                    hs_fragmented->prepare_fragment(stream, size, desc.hsseq, fragoffset, t_narrow_cast(fragsize));
                     *rec_fragmented << hs_fragmented;
                 };
 

@@ -33,7 +33,7 @@ return_t openssl_mac::hmac(const char* alg, const binary_t& key, const byte_t* s
             __leave2;
         }
 
-        ret = hash.open(&handle, alg, key.data(), key.size());
+        ret = hash.open(&handle, alg, key.data(), t_narrow_cast(key.size()));
         if (errorcode_t::success == ret) {
             ret = hash.hash(handle, stream, size, output);
         }
@@ -59,7 +59,7 @@ return_t openssl_mac::hmac(hash_algorithm_t alg, const binary_t& key, const byte
             __leave2;
         }
 
-        ret = hash.open(&handle, alg, key.data(), key.size());
+        ret = hash.open(&handle, alg, key.data(), t_narrow_cast(key.size()));
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -150,13 +150,13 @@ return_t openssl_mac::cbc_mac(const char* alg, const binary_t& key, const binary
         size_t size_input = input.size();
         uint16 blocksize = sizeof_block(hint_cipher);
         for (size_t i = 0; i < size_input; i += blocksize) {
-            int remain = size_input - i;
-            int size = (remain < blocksize) ? remain : blocksize;
+            auto remain = size_input - i;
+            auto size = (remain < blocksize) ? remain : blocksize;
             if (remain > blocksize) {
                 EVP_CipherUpdate(context.get(), tag.data(), &size_update, &input[i], blocksize);
             } else {
-                EVP_CipherUpdate(context.get(), tag.data(), &size_update, &input[i], remain);
-                EVP_CipherUpdate(context.get(), tag.data(), &size_update, iv.data(), blocksize - remain);
+                EVP_CipherUpdate(context.get(), tag.data(), &size_update, &input[i], t_narrow_cast(remain));
+                EVP_CipherUpdate(context.get(), tag.data(), &size_update, iv.data(), t_narrow_cast(blocksize - remain));
             }
         }
         tag.resize(tagsize);

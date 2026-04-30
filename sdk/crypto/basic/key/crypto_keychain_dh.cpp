@@ -106,9 +106,9 @@ return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary
         }
 
         BN_ptr bn_x;
-        BN_ptr bn_y(BN_bin2bn(y.data(), y.size(), nullptr));
+        BN_ptr bn_y(BN_bin2bn(y.data(), t_narrow_cast(y.size()), nullptr));
         if (x.size()) {
-            bn_x = std::move(BN_ptr(BN_bin2bn(x.data(), x.size(), nullptr)));
+            bn_x = std::move(BN_ptr(BN_bin2bn(x.data(), t_narrow_cast(x.size()), nullptr)));
         }
 
         ret_openssl = DH_set0_key(dh.get(), bn_y.get(), bn_x.get());
@@ -160,12 +160,12 @@ return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary
             __leave2;
         }
 
-        BN_ptr bn_p(BN_bin2bn(p.data(), p.size(), nullptr));
+        BN_ptr bn_p(BN_bin2bn(p.data(), t_narrow_cast(p.size()), nullptr));
         BN_ptr bn_q;
         if (false == q.empty()) {
-            bn_q = std::move(BN_ptr(BN_bin2bn(q.data(), q.size(), nullptr)));
+            bn_q = std::move(BN_ptr(BN_bin2bn(q.data(), t_narrow_cast(q.size()), nullptr)));
         }
-        BN_ptr bn_g(BN_bin2bn(g.data(), g.size(), nullptr));
+        BN_ptr bn_g(BN_bin2bn(g.data(), t_narrow_cast(g.size()), nullptr));
         BN_ptr bn_x;
         if (x.empty()) {
             bn_x = std::move(BN_ptr(BN_new()));
@@ -176,7 +176,7 @@ return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary
                 BN_add_word(bn_x.get(), 2);
             }
         } else {
-            bn_x = std::move(BN_ptr(BN_bin2bn(x.data(), x.size(), nullptr)));  // y = g^x mod p
+            bn_x = std::move(BN_ptr(BN_bin2bn(x.data(), t_narrow_cast(x.size()), nullptr)));  // y = g^x mod p
         }
 
         BN_ptr bn_y(BN_new());

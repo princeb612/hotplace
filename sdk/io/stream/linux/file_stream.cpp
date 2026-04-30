@@ -214,14 +214,32 @@ uint64 file_stream::size() const {
     return ret_value;
 }
 
-void file_stream::truncate(int64 file_pos, int64* ptr_file_pos) {
+void file_stream::truncate(int32 file_pos, int32* ptr_file_pos) {
     if (true == is_open()) {
         //::lseek(_file_handle, file_pos, SEEK_SET);
-        int rc = ::ftruncate(_file_handle, file_pos);
+        LARGE_INTEGER li;
+        li.LowPart = file_pos;
+        if (ptr_file_pos) {
+            li.HighPart = *ptr_file_pos;
+        }
+        int rc = ::ftruncate(_file_handle, li.QuadPart);
         if (rc < 0) {
             // do something
         }
         _filesize_low = file_pos;
+    }
+}
+
+void file_stream::truncate(size_t file_pos) {
+    if (true == is_open()) {
+        int rc = ::ftruncate(_file_handle, file_pos);
+        if (rc < 0) {
+            // do something
+        }
+        LARGE_INTEGER li;
+        li.QuadPart = file_pos;
+        _filesize_low = li.LowPart;
+        _filesize_high = li.HighPart;
     }
 }
 

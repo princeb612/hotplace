@@ -601,7 +601,7 @@ return_t openssl_tls::set_tls_io(socket_context_t* handle, int type) {
             auto sbio_write = BIO_new(BIO_s_mem());
             SSL_set_bio(ssl, sbio_read, sbio_write);
         } else if (1 == type) {
-            auto sbio = BIO_new_dgram(fd, BIO_NOCLOSE);
+            auto sbio = BIO_new_dgram(t_justdoit(fd), BIO_NOCLOSE);
             SSL_set_bio(ssl, sbio, sbio);
             SSL_set_options(ssl, SSL_OP_COOKIE_EXCHANGE);
         }
@@ -626,7 +626,7 @@ return_t openssl_tls::read(socket_context_t* handle, int mode, void* buffer, siz
 
         size_t size_read = buffer_size;
         if (tls_io_flag_t::read_socket_recv & mode) {
-            rc = ::recv(handle->fd, (char*)buffer, buffer_size, 0);
+            rc = ::recv(handle->fd, (char*)buffer, t_narrow_cast(buffer_size), 0);
             if (0 == rc) { /* gracefully closed */
                 ret = errorcode_t::disconnect;
                 __leave2;
@@ -650,7 +650,7 @@ return_t openssl_tls::read(socket_context_t* handle, int mode, void* buffer, siz
         }
 
         if (tls_io_flag_t::read_ssl_read & mode) {
-            int written = BIO_number_written(rbio);
+            auto written = BIO_number_written(rbio);
             /**
              *  SSL_read
              *      ~ TLS 1.2   re-handshake
@@ -675,7 +675,7 @@ return_t openssl_tls::read(socket_context_t* handle, int mode, void* buffer, siz
                 }
                 __leave2;
             } else {
-                if (buffer_size < (size_t)written) {
+                if (buffer_size < written) {
                     ret = errorcode_t::more_data;
                 }
                 if (nullptr != cbread) {
@@ -710,7 +710,7 @@ return_t openssl_tls::recvfrom(socket_context_t* handle, int mode, void* buffer,
             if (tls_io_flag_t::peek_msg & mode) {
                 flag = MSG_PEEK;
             }
-            rc = ::recvfrom(handle->fd, (char*)buffer, buffer_size, flag, addr, addrlen);
+            rc = ::recvfrom(handle->fd, (char*)buffer, t_narrow_cast(buffer_size), flag, addr, addrlen);
             if (0 == rc) { /* gracefully closed */
                 ret = errorcode_t::disconnect;
                 __leave2;
@@ -792,13 +792,13 @@ return_t openssl_tls::send(socket_context_t* handle, int mode, const char* data,
         }
 
         if (tls_io_flag_t::send_bio_read & mode) {
-            int written = BIO_number_written(wbio);
+            auto written = BIO_number_written(wbio);
 
-            int ret_read = 0;
+            auto ret_read = 0;
             std::vector<char> buf;
             buf.resize(written);
 
-            ret_read = BIO_read(wbio, buf.data(), buf.size());
+            ret_read = BIO_read(wbio, buf.data(), t_narrow_cast(buf.size()));
             if (ret_read < 1) {
                 ret = get_opensslerror(ret_read);
                 __leave2; /* too many traces here */
@@ -841,20 +841,20 @@ return_t openssl_tls::sendto(socket_context_t* handle, int mode, const char* dat
         }
 
         if (tls_io_flag_t::send_bio_read & mode) {
-            int written = BIO_number_written(wbio);
+            auto written = BIO_number_written(wbio);
 
-            int ret_read = 0;
+            size_t ret_read = 0;
             std::vector<char> buf;
             buf.resize(written);
 
-            ret_read = BIO_read(wbio, buf.data(), buf.size());
+            ret_read = BIO_read(wbio, buf.data(), t_narrow_cast(buf.size()));
             if (ret_read < 1) {
-                ret = get_opensslerror(ret_read);
+                ret = get_opensslerror(t_justdoit(ret_read));
                 __leave2; /* too many traces here */
             }
 
             if (tls_io_flag_t::send_socket_send & mode) {
-                ::sendto(handle->fd, buf.data(), ret_read, 0, addr, addrlen);
+                ::sendto(handle->fd, buf.data(), t_narrow_cast(ret_read), 0, addr, addrlen);
             }
         }
     }

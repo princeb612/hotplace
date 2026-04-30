@@ -232,7 +232,7 @@ return_t read_bio(stream_t *stream, BIO *bio) {
         buf.resize(64);
         int len = 0;
         while (1) {
-            len = BIO_read(bio, buf.data(), buf.size());
+            len = BIO_read(bio, buf.data(), t_narrow_cast(buf.size()));
             if (0 >= len) {
                 break;
             }

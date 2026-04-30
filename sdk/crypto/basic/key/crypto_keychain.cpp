@@ -71,8 +71,8 @@ return_t crypto_keychain::load_pem(crypto_key* cryptokey, const char* buffer, si
             __leave2;
         }
 
-        BIO_write(bio_pub.get(), buffer, size);
-        BIO_write(bio_priv.get(), buffer, size);
+        BIO_write(bio_pub.get(), buffer, t_narrow_cast(size));
+        BIO_write(bio_priv.get(), buffer, t_narrow_cast(size));
 
         while (1) {
             EVP_PKEY_ptr pkey_pub(PEM_read_bio_PUBKEY(bio_pub.get(), nullptr, nullptr, nullptr));
@@ -119,7 +119,7 @@ return_t crypto_keychain::load_cert(crypto_key* cryptokey, const char* buffer, s
             __leave2;
         }
 
-        BIO_write(bio.get(), buffer, size);
+        BIO_write(bio.get(), buffer, t_narrow_cast(size));
         X509_ptr cert(PEM_read_bio_X509(bio.get(), NULL, NULL, NULL));
         if (nullptr == cert.get()) {
             ret = errorcode_t::internal_error;
@@ -160,13 +160,13 @@ return_t crypto_keychain::load_der(crypto_key* cryptokey, const byte_t* buffer, 
             __leave2;
         }
 
-        BIO_write(bio.get(), buffer, size);
+        BIO_write(bio.get(), buffer, t_narrow_cast(size));
         const byte_t* p = buffer;
         // The letters i and d in i2d_TYPE() stand for "internal" (that is, an internal C structure) and "DER" respectively.
         // So i2d_TYPE() converts from internal to DER. d2i_ vice versa
         EVP_PKEY_ptr pkey(d2i_PrivateKey_bio(bio.get(), nullptr));
         if (nullptr == pkey.get()) {
-            x509 = std::move(X509_ptr(d2i_X509(nullptr, &p, size)));
+            x509 = std::move(X509_ptr(d2i_X509(nullptr, &p, t_narrow_cast(size))));
             pkey = std::move(EVP_PKEY_ptr(X509_get_pubkey(x509.get())));
         }
         if (nullptr == pkey) {
@@ -243,7 +243,7 @@ return_t crypto_keychain::write_pem(crypto_key* cryptokey, stream_t* stream, int
         buf.resize(64);
         int len = 0;
         while (1) {
-            len = BIO_read(out.get(), buf.data(), buf.size());
+            len = BIO_read(out.get(), buf.data(), t_narrow_cast(buf.size()));
             if (0 >= len) {
                 break;
             }
@@ -276,7 +276,7 @@ return_t crypto_keychain::t_write_der(const X509* x509, TYPE& buffer, std::funct
         buf.resize(64);
         int len = 0;
         while (1) {
-            len = BIO_read(out.get(), buf.data(), buf.size());
+            len = BIO_read(out.get(), buf.data(), t_narrow_cast(buf.size()));
             if (0 >= len) {
                 break;
             }

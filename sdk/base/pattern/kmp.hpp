@@ -111,7 +111,7 @@ class t_kmp {
 
     t_kmp() {}
 
-    int search(const std::vector<T>& data, const std::vector<T>& pattern, size_t pos = 0, comparator_t comparator = nullptr) {
+    size_t search(const std::vector<T>& data, const std::vector<T>& pattern, size_t pos = 0, comparator_t comparator = nullptr) {
         return search(data.data(), data.size(), pattern.data(), pattern.size(), pos, comparator);
     }
 

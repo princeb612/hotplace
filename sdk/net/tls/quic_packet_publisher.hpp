@@ -68,7 +68,7 @@ class quic_packet_publisher {
     ~quic_packet_publisher();
 
     quic_packet_publisher& set_session(tls_session* session);
-    quic_packet_publisher& set_payload_size(uint16 size);
+    quic_packet_publisher& set_payload_size(size_t size);
 
     /**
      * @param uint32 flags [in] see quic_packet_flag_t
@@ -208,7 +208,7 @@ class quic_packet_publisher {
 
    private:
     tls_session* _session;
-    uint16 _payload_size;
+    size_t _payload_size;
     uint32 _flags;
 
     // QUIC CRYPTO FRAME

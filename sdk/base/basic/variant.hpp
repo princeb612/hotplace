@@ -352,27 +352,27 @@ class variant {
                 break;
             case TYPE_INT16:
                 vsize = RTL_FIELD_SIZE(vartype_union, i16);
-                i = _vt.data.i16;
+                i = t_narrow_cast(_vt.data.i16);
                 break;
             case TYPE_UINT16:
                 vsize = RTL_FIELD_SIZE(vartype_union, i16);
-                i = _vt.data.ui16;
+                i = t_narrow_cast(_vt.data.ui16);
                 break;
             case TYPE_INT24:
                 vsize = RTL_FIELD_SIZE(vartype_union, i32);
-                i = _vt.data.i32;
+                i = t_narrow_cast(_vt.data.i32);
                 break;
             case TYPE_UINT24:
                 vsize = RTL_FIELD_SIZE(vartype_union, ui32);
-                i = _vt.data.ui32;
+                i = t_narrow_cast(_vt.data.ui32);
                 break;
             case TYPE_INT32:
                 vsize = RTL_FIELD_SIZE(vartype_union, i32);
-                i = _vt.data.i32;
+                i = t_narrow_cast(_vt.data.i32);
                 break;
             case TYPE_UINT32:
                 vsize = RTL_FIELD_SIZE(vartype_union, ui32);
-                i = _vt.data.ui32;
+                i = t_narrow_cast(_vt.data.ui32);
                 break;
             case TYPE_INT48:
                 vsize = RTL_FIELD_SIZE(vartype_union, i64);
@@ -424,15 +424,8 @@ class variant {
                 break;
         }
         if ((i >= 0) && (flag_negative & _vt.flag)) {
-            if (std::is_signed<T>::value) {
-                i += 1;
-                i = -i;
-            } else {
-                throw exception(miscast_negative);
-            }
-        }
-        if (vsize > tsize) {
-            //
+            i += 1;
+            i = t_change_sign<T>(i);  // i = -i
         }
         return i;
     }

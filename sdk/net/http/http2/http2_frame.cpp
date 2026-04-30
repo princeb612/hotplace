@@ -61,7 +61,7 @@ http2_frame::~http2_frame() {}
 
 uint32 http2_frame::get_frame_size() { return sizeof(http2_frame_header_t) + get_payload_size(); }
 
-uint32 http2_frame::get_payload_size() { return _payload_size; }
+size_t http2_frame::get_payload_size() { return _payload_size; }
 
 uint8 http2_frame::get_type() { return _type; }
 
@@ -69,7 +69,7 @@ uint8 http2_frame::get_flags() { return _flags; }
 
 uint32 http2_frame::get_stream_id() { return _stream_id; }
 
-return_t http2_frame::set_payload_size(uint32 size) {
+return_t http2_frame::set_payload_size(size_t size) {
     return_t ret = errorcode_t::success;
     if (size > 0x00ffffff) {
         ret = errorcode_t::bad_data;
@@ -210,10 +210,12 @@ return_t http2_frame::write(binary_t& frame) {
 return_t http2_frame::do_write_header(binary_t& frame, const binary_t& body) {
     return_t ret = errorcode_t::success;
 
+    uint32 bodylen = t_narrow_cast(body.size());
+
     payload pl;
-    pl << new payload_member(uint24_t(body.size()), constexpr_frame_length)  //
-       << new payload_member(uint8(_type), constexpr_frame_type)             //
-       << new payload_member(uint8(_flags), constexpr_frame_flags)           //
+    pl << new payload_member(uint24_t(bodylen), constexpr_frame_length)  //
+       << new payload_member(uint8(_type), constexpr_frame_type)         //
+       << new payload_member(uint8(_flags), constexpr_frame_flags)       //
        << new payload_member(uint32(_stream_id), true, constexpr_frame_stream_identifier);
     pl.write(frame);
 

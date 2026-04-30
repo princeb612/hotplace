@@ -290,7 +290,8 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, uint64 dat
         } else if (cbor_major_t::cbor_major_tag == type) {
         } else if (cbor_major_t::cbor_major_simple == type) {
             cbor_simple* temp = nullptr;
-            __try_new_catch(temp, new cbor_simple(uint8(t_narrow_cast(data))), ret, __leave2);
+            uint8 t = t_narrow_cast(data);
+            __try_new_catch(temp, new cbor_simple(t), ret, __leave2);
             temp->tag(handle->temp.tag_value);
             insert(handle, temp);
         }

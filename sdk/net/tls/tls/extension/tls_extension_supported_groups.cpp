@@ -109,7 +109,7 @@ return_t tls_extension_supported_groups::do_write_body(tls_direction_t dir, bina
                     binary_append(bin_supported_groups, curve, hton16);
                 }
             }
-            cbsize_supported_groups = bin_supported_groups.size();
+            cbsize_supported_groups = t_narrow_cast(bin_supported_groups.size());
         }
         {
             payload pl;

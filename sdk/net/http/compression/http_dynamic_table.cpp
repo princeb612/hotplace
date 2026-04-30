@@ -281,7 +281,7 @@ return_t http_dynamic_table::evict() {
     return ret;
 }
 
-void http_dynamic_table::set_capacity(uint32 capacity) {
+void http_dynamic_table::set_capacity(size_t capacity) {
     /**
      * RFC 9113 6.5.2.  Defined Settings
      *  SETTINGS_HEADER_TABLE_SIZE (0x01)

@@ -132,10 +132,10 @@ return_t rs2sig(const binary_t& r, const binary_t& s, uint16 unitsize, binary_t&
 
         size_t rlen = r.size();
         size_t slen = s.size();
-        uint16 r_ltrim = 0;
-        uint16 r_lpad = 0;
-        uint16 s_ltrim = 0;
-        uint16 s_lpad = 0;
+        size_t r_ltrim = 0;
+        size_t r_lpad = 0;
+        size_t s_ltrim = 0;
+        size_t s_lpad = 0;
 
         // ASN.1 DER preceding zero
         if (rlen > unitsize) {

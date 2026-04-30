@@ -25,10 +25,10 @@ return_t crypto_keychain::add_ec_compressed(crypto_key* cryptokey, uint32 nid, c
             __leave2;
         }
 
-        BN_ptr bn_x(BN_bin2bn(x.data(), x.size(), nullptr));
+        BN_ptr bn_x(BN_bin2bn(x.data(), t_narrow_cast(x.size()), nullptr));
         BN_ptr bn_d;
         if (d.size() > 0) {
-            bn_d = std::move(BN_ptr(BN_bin2bn(d.data(), d.size(), nullptr)));
+            bn_d = std::move(BN_ptr(BN_bin2bn(d.data(), t_narrow_cast(d.size()), nullptr)));
         }
 
         if (nullptr == bn_x.get()) {

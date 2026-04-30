@@ -251,7 +251,7 @@ const error_description error_descriptions[] = {
     errordef(block_segmented, "segment"),
     errordef(violation, "violation"),
     errordef(ambiguous, "ambiguous"),
-    errordef(miscast_negative, "negative integer to unsigned type"),
+    errordef(miscast_unsigned, "negative integer to unsigned type"),
     errordef(miscast_narrow, "narrow conversion"),
 
     errordef(not_supported, "not supported"),

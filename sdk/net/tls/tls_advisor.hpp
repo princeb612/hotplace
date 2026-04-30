@@ -72,6 +72,7 @@ declare_tls_resource(cert_type_code, uint8);
 declare_tls_resource(extension_type_code, uint16);
 
 // https://www.iana.org/assignments/quic/quic.xhtml
+// declare_tls_resource(quic_trans_param_code, quic_paramt_t);
 declare_tls_resource(quic_trans_param_code, uint64);
 declare_tls_resource(quic_frame_type_code, uint64);
 declare_tls_resource(quic_trans_error_code, uint64);
@@ -168,7 +169,7 @@ class tls_advisor {
     std::string nameof_tls_record(uint8 type);       // record->get_type()
     std::string nameof_ec_curve_type(uint8 code);    // "named_curve"
     std::string nameof_ec_point_format(uint8 code);  // "uncompressed"
-    uint16 valueof_ec_point_format(const std::string& name);
+    uint8 valueof_ec_point_format(const std::string& name);
     std::string nameof_tls_handshake(uint8 type);          // handshake->get_type()
     std::string nameof_kdf_id(uint16 type);                // "HKDF_SHA256", "HKDF_SHA384"
     std::string nameof_psk_key_exchange_mode(uint8 code);  // "psk_ke", "psk_dhe_ke"
@@ -286,7 +287,7 @@ class tls_advisor {
     std::map<uint8, const tls_ec_point_format_code_t*> _ec_point_format_codes;
     std::map<std::string, const tls_ec_point_format_code_t*> _ec_point_format_names;
     std::map<uint8, const tls_handshake_type_code_t*> _handshake_type_codes;
-    std::map<uint8, const tls_kdf_id_code_t*> _kdf_id_codes;
+    std::map<uint16, const tls_kdf_id_code_t*> _kdf_id_codes;
     std::map<uint8, const tls_psk_keyexchange_code_t*> _psk_keyexchange_codes;
     std::map<std::string, const tls_psk_keyexchange_code_t*> _psk_keyexchange_names;
     std::map<uint16, const tls_sig_scheme_t*> _sig_scheme_codes;

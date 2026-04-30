@@ -289,7 +289,7 @@ parser::search_result parser::context::csearch(parser* obj, const char* pattern,
         }
 
         t_kmp<char> kmp;
-        int idx = kmp.search(_p, _size, pattern, size_pattern, pos);
+        auto idx = kmp.search(_p, _size, pattern, size_pattern, pos);
         if (-1 == idx) {
             __leave2;
         }
@@ -324,7 +324,7 @@ parser::search_result parser::context::wsearch(parser* obj, const context& patte
         auto comparator = [](const parser::token* lhs, const parser::token* rhs) -> bool { return (lhs->get_index() == rhs->get_index()); };
 
         t_kmp<parser::token*> kmp;
-        int idx = kmp.search(_tokens, pattern._tokens, pos, comparator);
+        auto idx = kmp.search(_tokens, pattern._tokens, pos, comparator);
         if (-1 == idx) {
             __leave2;
         }
@@ -394,7 +394,7 @@ std::multimap<range_t, size_t> parser::context::psearchex(parser* obj) const {
         ac->build();
         auto acres = ac->search(_tokens.data(), _tokens.size());
 
-        t_merge_ovl_intervals<size_t, uint32> moi;
+        t_merge_ovl_intervals<size_t, size_t> moi;
         search_result r;
 
         for (const auto& pair : acres) {
@@ -543,7 +543,7 @@ void parser::context::for_each(const parser::search_result& res, std::function<v
             f(&desc);
         };
 
-        for (int i = res.begidx; i <= res.endidx; i++) {
+        for (auto i = res.begidx; i <= res.endidx; ++i) {
             auto token = _tokens[i];
             token->visit(_p, handler);
         }

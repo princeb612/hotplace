@@ -137,7 +137,7 @@ return_t crypto_keychain::pkey_decode_format(OSSL_LIB_CTX* libctx, EVP_PKEY** pk
             __leave2;
         }
 
-        BIO_ptr buf(BIO_new_mem_buf(keystream, keysize));
+        BIO_ptr buf(BIO_new_mem_buf(keystream, t_narrow_cast(keysize)));
         if (nullptr == buf.get()) {
             ret = failed;
             __leave2;

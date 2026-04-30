@@ -61,7 +61,7 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
                 // certificate, certificate_verify, finished(server), finished(client)
                 session_status_prerequisite = session_status_server_cert_verified;
                 if (from_client == dir) {
-                    session_status_prerequisite != session_status_server_finished;
+                    session_status_prerequisite |= session_status_server_finished;
                 }
             } else if (tls_flow_0rtt == flow) {
                 session_status_prerequisite = session_status_client_hello | session_status_server_hello | session_status_encrypted_extensions;

@@ -41,7 +41,7 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, size_t bits
             __leave2_trace_openssl(ret);
         }
 
-        ret_openssl = EVP_PKEY_CTX_set_rsa_keygen_bits(pkey_context.get(), bits);
+        ret_openssl = EVP_PKEY_CTX_set_rsa_keygen_bits(pkey_context.get(), t_narrow_cast(bits));
         if (ret_openssl <= 0) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
@@ -100,11 +100,11 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, const binar
             __leave2;
         }
 
-        BN_ptr bn_n(BN_bin2bn(n.data(), n.size(), nullptr));
-        BN_ptr bn_e(BN_bin2bn(e.data(), e.size(), nullptr));
+        BN_ptr bn_n(BN_bin2bn(n.data(), t_narrow_cast(n.size()), nullptr));
+        BN_ptr bn_e(BN_bin2bn(e.data(), t_narrow_cast(e.size()), nullptr));
         BN_ptr bn_d;
         if (0 != d.size()) {
-            bn_d = std::move(BN_ptr(BN_bin2bn(d.data(), d.size(), nullptr)));
+            bn_d = std::move(BN_ptr(BN_bin2bn(d.data(), t_narrow_cast(d.size()), nullptr)));
         }
 
         RSA_set0_key(rsa.get(), bn_n.get(), bn_e.get(), bn_d.get());
@@ -168,8 +168,8 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, const binar
             __leave2;
         }
 
-        BN_ptr bn_n(BN_bin2bn(n.data(), n.size(), nullptr));
-        BN_ptr bn_e(BN_bin2bn(e.data(), e.size(), nullptr));
+        BN_ptr bn_n(BN_bin2bn(n.data(), t_narrow_cast(n.size()), nullptr));
+        BN_ptr bn_e(BN_bin2bn(e.data(), t_narrow_cast(e.size()), nullptr));
         BN_ptr bn_d;
         BN_ptr bn_p;
         BN_ptr bn_q;
@@ -178,23 +178,23 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, const binar
         BN_ptr bn_iqmp;
 
         if (0 != d.size()) {
-            bn_d = std::move(BN_ptr(BN_bin2bn(d.data(), d.size(), nullptr)));
+            bn_d = std::move(BN_ptr(BN_bin2bn(d.data(), t_narrow_cast(d.size()), nullptr)));
         }
 
         if (0 != p.size()) {
-            bn_p = std::move(BN_ptr(BN_bin2bn(p.data(), p.size(), nullptr)));
+            bn_p = std::move(BN_ptr(BN_bin2bn(p.data(), t_narrow_cast(p.size()), nullptr)));
         }
         if (0 != q.size()) {
-            bn_q = std::move(BN_ptr(BN_bin2bn(q.data(), q.size(), nullptr)));
+            bn_q = std::move(BN_ptr(BN_bin2bn(q.data(), t_narrow_cast(q.size()), nullptr)));
         }
         if (0 != dp.size()) {
-            bn_dmp1 = std::move(BN_ptr(BN_bin2bn(dp.data(), dp.size(), nullptr)));
+            bn_dmp1 = std::move(BN_ptr(BN_bin2bn(dp.data(), t_narrow_cast(dp.size()), nullptr)));
         }
         if (0 != dq.size()) {
-            bn_dmq1 = std::move(BN_ptr(BN_bin2bn(dq.data(), dq.size(), nullptr)));
+            bn_dmq1 = std::move(BN_ptr(BN_bin2bn(dq.data(), t_narrow_cast(dq.size()), nullptr)));
         }
         if (0 != qi.size()) {
-            bn_iqmp = std::move(BN_ptr(BN_bin2bn(qi.data(), qi.size(), nullptr)));
+            bn_iqmp = std::move(BN_ptr(BN_bin2bn(qi.data(), t_narrow_cast(qi.size()), nullptr)));
         }
 
         RSA_set0_key(rsa.get(), bn_n.get(), bn_e.get(), bn_d.get());

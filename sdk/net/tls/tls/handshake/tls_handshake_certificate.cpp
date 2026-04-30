@@ -278,7 +278,7 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
             bool is_tls13 = tlsadvisor->is_kindof_tls13(tls_version);
 
             binary_t extensions;
-            uint32 certificate_len = certificate.size();
+            uint32 certificate_len = t_narrow_cast(certificate.size());
             uint32 certificates_len = 3 /* uint24 */ + certificate_len;  // TLS 1.2
             if (is_tls13) {
                 certificates_len += sizeof(uint16);

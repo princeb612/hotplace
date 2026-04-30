@@ -56,7 +56,7 @@ return_t quic_frame_padding::do_write_body(tls_direction_t dir, binary_t& bin) {
     return ret;
 }
 
-void quic_frame_padding::pad(uint16 len, uint32 flags) {
+void quic_frame_padding::pad(size_t len, uint32 flags) {
     _len = len;
     _flags = flags;
 }

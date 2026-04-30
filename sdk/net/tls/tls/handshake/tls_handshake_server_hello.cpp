@@ -241,11 +241,11 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
                 // client_hello
                 const binary_t& client_hello = secrets.get(tls_context_client_hello);
                 protection.calc_transcript_hash(session, client_hello.data(), client_hello.size(), handshake_hash);
-
+                uint32 hashsize = t_narrow_cast(handshake_hash.size());
                 // uint8(FE) || uint24(hash.size) || hash
                 binary_t synthetic_handshake_message;
-                synthetic_handshake_message << uint8(tls_hs_message_hash)       //
-                                            << uint24_t(handshake_hash.size())  //
+                synthetic_handshake_message << uint8(tls_hs_message_hash)  //
+                                            << uint24_t(hashsize)          //
                                             << handshake_hash;
 
                 protection.reset_transcript_hash(session);

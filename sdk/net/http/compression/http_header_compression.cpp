@@ -63,9 +63,9 @@ return_t http_header_compression::encode_int(binary_t& target, uint8 mask, uint8
 
         uint8 i = 0;
         if (value < n) {
-            target.insert(target.end(), value | mask);
+            target.insert(target.end(), uint8(value | mask));
         } else {
-            target.insert(target.end(), n | mask);
+            target.insert(target.end(), uint8(n | mask));
             value -= n;
             // 128 (0x80)
             //   1 value
@@ -76,7 +76,7 @@ return_t http_header_compression::encode_int(binary_t& target, uint8 mask, uint8
                 target.insert(target.end(), i);
                 value /= 0x80;
             }
-            target.insert(target.end(), value);
+            target.insert(target.end(), uint8(value));
         }
     } else {
         ret = errorcode_t::invalid_parameter;

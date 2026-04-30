@@ -26,7 +26,7 @@ return_t qpack_ric2eic(size_t capacity, size_t ric, size_t base, size_t& eic, bo
         if (0 == ric) {
             eic = ric;
         } else {
-            size_t maxentries = ::floor(capacity / 32);
+            size_t maxentries = t_justdoit(::floor(capacity / 32));
             eic = (ric % (2 * maxentries)) + 1;
         }
 
@@ -88,7 +88,7 @@ return_t qpack_eic2ric(size_t capacity, size_t tni, size_t eic, bool sign, size_
          *    if ReqInsertCount == 0:
          *       Error
          */
-        size_t maxentries = ::floor(capacity / 32);
+        size_t maxentries = t_justdoit(::floor(capacity / 32));
         size_t fullrange = 2 * maxentries;
         if (0 == eic) {
             ric = 0;
@@ -99,7 +99,7 @@ return_t qpack_eic2ric(size_t capacity, size_t tni, size_t eic, bool sign, size_
             }
 
             size_t maxvalue = tni + maxentries;
-            size_t maxwrapped = ::floor(maxvalue / fullrange) * fullrange;
+            size_t maxwrapped = t_justdoit(::floor(maxvalue / fullrange) * fullrange);
             ric = maxwrapped + eic - 1;
 
             if (ric > maxvalue) {

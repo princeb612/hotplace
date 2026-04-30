@@ -116,7 +116,7 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
             if (dont_control_dtls_sequence & get_flags()) {
                 // do nothing
             } else {
-                _dtls_epoch = kv.get(session_dtls_epoch);
+                _dtls_epoch = t_narrow_cast(kv.get(session_dtls_epoch));
                 _dtls_record_seq = kv.get(session_dtls_seq);
             }
         }
@@ -348,7 +348,7 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
                 keyepoch = get_key_epoch();
                 dtlsrecordseq = get_dtls_record_seq();
             }
-            protection.write_aad(session, dir, additional, get_type(), record_version, record_no, keyepoch, dtlsrecordseq, body.size());
+            protection.write_aad(session, dir, additional, get_type(), record_version, record_no, keyepoch, dtlsrecordseq, t_narrow_cast(body.size()));
 
             ret = protection.encrypt(session, dir, body, ciphertext, additional, tag);
             if (errorcode_t::success != ret) {
@@ -382,7 +382,7 @@ return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin
 
         {
             _range.begin = bin.size();
-            _bodysize = body.size();
+            _bodysize = t_narrow_cast(body.size());
         }
 
         {

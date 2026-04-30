@@ -42,8 +42,8 @@ return_t openssl_kdf::scrypt(binary_t& derived, size_t dlen, const std::string& 
         }
 
         EVP_PKEY_derive_init(ctx.get());
-        EVP_PKEY_CTX_set1_pbe_pass(ctx.get(), password.c_str(), password.size());
-        EVP_PKEY_CTX_set1_scrypt_salt(ctx.get(), salt.data(), salt.size());
+        EVP_PKEY_CTX_set1_pbe_pass(ctx.get(), password.c_str(), t_narrow_cast(password.size()));
+        EVP_PKEY_CTX_set1_scrypt_salt(ctx.get(), salt.data(), t_narrow_cast(salt.size()));
         EVP_PKEY_CTX_set_scrypt_N(ctx.get(), n);
         EVP_PKEY_CTX_set_scrypt_r(ctx.get(), r);
         EVP_PKEY_CTX_set_scrypt_p(ctx.get(), p);

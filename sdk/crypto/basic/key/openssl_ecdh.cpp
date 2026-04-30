@@ -106,12 +106,12 @@ binary_t kdf_parameter_int(uint32 source) {
 
 binary_t kdf_parameter_string(const char* source) {
     binary_t value;
-    uint32 len = 0;
+    size_t len = 0;
     if (source) {
         len = strlen(source);
     }
     value.reserve(sizeof(uint32) + len);
-    uint32 be_len = hton32(len);
+    uint32 be_len = hton32(t_narrow_cast(len));
     value.insert(value.end(), (byte_t*)&be_len, (byte_t*)&be_len + sizeof(be_len));
     if (len) {
         value.insert(value.end(), (byte_t*)source, (byte_t*)source + len);
@@ -186,7 +186,7 @@ return_t concat_kdf(binary_t dh_secret, binary_t otherinfo, unsigned int keylen,
             binary_t hash;
             hash.resize(hashlen);
 
-            unsigned int alloca_size = hashlen;
+            unsigned int alloca_size = t_narrow_cast(hashlen);
             if (1 != EVP_DigestInit_ex(ctx.get(), dgst, nullptr) ||                      //
                 1 != EVP_DigestUpdate(ctx.get(), counter.data(), counter.size()) ||      //
                 1 != EVP_DigestUpdate(ctx.get(), dh_secret.data(), dh_secret.size()) ||  //

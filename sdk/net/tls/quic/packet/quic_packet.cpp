@@ -224,7 +224,7 @@ return_t quic_packet::do_read_header(tls_direction_t dir, const byte_t* stream, 
         } else {
             // RFC 9000 5.1.  Connection ID
             // Packets with short headers (Section 17.3) only include the Destination Connection ID and omit the explicit length.
-            auto size_dcid = 0;
+            size_t size_dcid = 0;
             if (is_clientinitiated(dir)) {
                 size_dcid = secrets.get(tls_context_server_cid).size();
             } else if (is_serverinitiated(dir)) {

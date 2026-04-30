@@ -65,7 +65,7 @@ return_t http_protocol::is_kind_of(void* stream, size_t stream_size) {
 
 return_t http_protocol::read_stream(basic_stream* stream, size_t* request_size, protocol_state_t* state, int* priority) {
     const char* stream_data = (const char*)stream->data();
-    uint32 stream_size = stream->size();
+    auto stream_size = stream->size();
 
     __try2 {
         if (priority) {

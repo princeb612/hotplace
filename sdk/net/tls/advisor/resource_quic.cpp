@@ -44,12 +44,10 @@ define_tls_variable(quic_trans_param_code) = {
     {quic_param_google_version, "google_version"},
     {quic_param_version_information_draft, "version_information_draft"},
     {quic_param_min_ack_delay, "min_ack_delay"},
-#ifdef __SIZEOF_INT128__
     {quic_param_enable_multipath, "enable_multipath"},
     {quic_param_enable_multipath_06, "enable_multipath(-06)"},
     {quic_param_initial_max_path_id, "initial_max_path_id"},
     {quic_param_bdp_frame, "bdp_frame"},
-#endif
 };
 define_tls_sizeof_variable(quic_trans_param_code);
 

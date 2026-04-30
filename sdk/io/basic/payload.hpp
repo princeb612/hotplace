@@ -384,7 +384,7 @@ class payload {
         if (item) {
             if (item->encoded()) {
                 auto encoded = item->get_payload_encoded();
-                i = encoded->value();
+                i = t_narrow_cast(encoded->value());
             } else {
                 i = item->get_variant().t_toi<T>();
             }
@@ -397,7 +397,7 @@ class payload {
         if (item) {
             if (item->encoded()) {
                 auto encoded = item->get_payload_encoded();
-                i = encoded->value();
+                i = t_narrow_cast(encoded->value());
             } else {
                 i = item->get_variant().t_toi<T>();
             }
@@ -405,7 +405,7 @@ class payload {
         return i;
     }
     void get_binary(const std::string& name, binary_t& bin, uint32 flags = 0);
-    return_t reserve(const std::string& name, uint16 size);
+    return_t reserve(const std::string& name, size_t size);
     size_t get_space(const std::string& name);
 
    private:

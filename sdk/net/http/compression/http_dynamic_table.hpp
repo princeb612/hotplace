@@ -77,7 +77,7 @@ class http_dynamic_table {
     /**
      * @brief   capacity (SETTINGS_QPACK_MAX_TABLE_CAPACITY)
      */
-    void set_capacity(uint32 capacity);
+    void set_capacity(size_t capacity);
     size_t get_capacity();
     /**
      * @brief   table size
@@ -117,7 +117,7 @@ class http_dynamic_table {
     void pick(size_t entry, const std::string& name, std::string& value);
 
     critical_section _lock;
-    uint32 _capacity;
+    size_t _capacity;
     size_t _inserted;
     size_t _dropped;
     size_t _ack;  // qpack

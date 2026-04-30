@@ -363,7 +363,7 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
                     binary_t &key = context->datamap[crypt_item_t::item_cek];
                     EVP_CipherInit_ex(context->encrypt_context, nullptr, nullptr, key.data(), iv.data(), 1);
 
-                    ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, nullptr, plainsize);
+                    ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, nullptr, t_narrow_cast(plainsize));
                     if (ret_cipher < 1) {
                         ret = errorcode_t::error_cipher;
                         break;
@@ -371,7 +371,7 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
                 }
 
                 const auto &a = *aad;
-                ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, a.data(), a.size());
+                ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, a.data(), t_narrow_cast(a.size()));
                 if (ret_cipher < 1) {
                     ret = errorcode_t::error_cipher;
                     break;
@@ -413,9 +413,9 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
             size_t size_progress = 0;
             size_t size_process = 0;
             for (size_t i = 0; i < plainsize; i += blocksize) {
-                int remain = plainsize - i;
-                int size = (remain < blocksize) ? remain : blocksize;
-                EVP_CipherUpdate(context->encrypt_context, ciphertext + size_progress, &size_update, plaintext + i, size);
+                auto remain = plainsize - i;
+                auto size = (remain < blocksize) ? remain : blocksize;
+                EVP_CipherUpdate(context->encrypt_context, ciphertext + size_progress, &size_update, plaintext + i, t_narrow_cast(size));
                 size_progress += size_update;
                 size_process += size_update;
                 if (size_process > unitsize) {
@@ -423,11 +423,11 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
                     size_process = 0;
                 }
             }
-            size_update = size_progress;
+            size_update = t_narrow_cast(size_progress);
         } else {
             // performance
 
-            ret_cipher = EVP_CipherUpdate(context->encrypt_context, ciphertext, &size_update, plaintext, plainsize);
+            ret_cipher = EVP_CipherUpdate(context->encrypt_context, ciphertext, &size_update, plaintext, t_narrow_cast(plainsize));
             if (1 > ret_cipher) {
                 ret = errorcode_t::error_cipher;
                 __leave2_trace_openssl(ret);
@@ -540,7 +540,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
                     binary_t &key = context->datamap[crypt_item_t::item_cek];
                     EVP_CipherInit_ex(context->decrypt_context, nullptr, nullptr, key.data(), iv.data(), 0);
 
-                    ret_cipher = EVP_CipherUpdate(context->decrypt_context, nullptr, &size_update, nullptr, ciphersize);
+                    ret_cipher = EVP_CipherUpdate(context->decrypt_context, nullptr, &size_update, nullptr, t_narrow_cast(ciphersize));
                     if (ret_cipher < 1) {
                         ret = errorcode_t::error_cipher;
                         break;
@@ -548,7 +548,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
                 }
 
                 const auto &a = *aad;
-                ret_cipher = EVP_CipherUpdate(context->decrypt_context, nullptr, &size_update, a.empty() ? (byte_t *)"" : a.data(), a.size());
+                ret_cipher = EVP_CipherUpdate(context->decrypt_context, nullptr, &size_update, a.empty() ? (byte_t *)"" : a.data(), t_narrow_cast(a.size()));
                 if (ret_cipher < 1) {
                     ret = errorcode_t::error_cipher;
                     break;
@@ -588,9 +588,9 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
             size_t size_progress = 0;
             size_t size_process = 0;
             for (size_t i = 0; i < ciphersize; i += blocksize) {
-                int remain = ciphersize - i;
-                int size = (remain < blocksize) ? remain : blocksize;
-                EVP_CipherUpdate(context->decrypt_context, plaintext + size_progress, &size_update, ciphertext + i, size);
+                auto remain = ciphersize - i;
+                auto size = (remain < blocksize) ? remain : blocksize;
+                EVP_CipherUpdate(context->decrypt_context, plaintext + size_progress, &size_update, ciphertext + i, t_narrow_cast(size));
                 size_progress += size_update;
                 size_process += size_update;
                 if (size_process > unitsize) {
@@ -598,11 +598,11 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
                     size_process = 0;
                 }
             }
-            size_update = size_progress;
+            size_update = t_narrow_cast(size_progress);
         } else {
             // performance
 
-            ret_cipher = EVP_CipherUpdate(context->decrypt_context, plaintext, &size_update, ciphertext, ciphersize);
+            ret_cipher = EVP_CipherUpdate(context->decrypt_context, plaintext, &size_update, ciphertext, t_narrow_cast(ciphersize));
             if (1 != ret_cipher) {
                 ret = errorcode_t::error_cipher;
                 __leave2_trace_openssl(ret);

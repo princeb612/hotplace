@@ -38,7 +38,7 @@ return_t dump_pem(const EVP_PKEY* pkey, stream_t* stream) {
         buf.resize(64);
         int len = 0;
         while (1) {
-            len = BIO_read(out.get(), buf.data(), buf.size());
+            len = BIO_read(out.get(), buf.data(), t_narrow_cast(buf.size()));
             if (0 >= len) {
                 break;
             }
@@ -94,7 +94,7 @@ return_t dump_pem(const EVP_PKEY* pkey, BIO* out) {
             bool is_keypair = keychain.pkey_is_private(nullptr, pkey);
             keychain.pkey_encode(nullptr, pkey, keydata, is_keypair ? key_encoding_priv_pem : key_encoding_pub_pem);
             if (keydata.size()) {
-                BIO_write(out, keydata.data(), keydata.size());
+                BIO_write(out, keydata.data(), t_narrow_cast(keydata.size()));
             }
 #endif
         }

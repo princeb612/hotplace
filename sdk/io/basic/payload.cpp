@@ -327,7 +327,7 @@ void payload::get_binary(const std::string& name, binary_t& bin, uint32 flags) {
     }
 }
 
-return_t payload::reserve(const std::string& name, uint16 size) {
+return_t payload::reserve(const std::string& name, size_t size) {
     return_t ret = errorcode_t::success;
     auto item = select(name);
     if (item) {

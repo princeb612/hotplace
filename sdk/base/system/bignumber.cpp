@@ -13,6 +13,7 @@
 #include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
 
@@ -273,12 +274,14 @@ bignumber &bignumber::set(const variant_t &vt) {
             set(vt.data.ui128);
             break;
 #endif
-        case TYPE_FLOAT:
-            set(uint64(t_narrow_cast(std::round(vt.data.f))));
-            break;
-        case TYPE_DOUBLE:
-            set(uint64(t_narrow_cast(std::round(vt.data.d))));
-            break;
+        case TYPE_FLOAT: {
+            uint32 data = t_narrow_cast(std::round(vt.data.f));
+            set(data);
+        } break;
+        case TYPE_DOUBLE: {
+            uint64 data = t_narrow_cast(std::round(vt.data.d));
+            set(data);
+        } break;
         case TYPE_STRING:
         case TYPE_NSTRING:
             if (vt.size) {
@@ -736,9 +739,9 @@ bignumber bignumber::leftshift(const bignumber &v, const bignumber &shift) const
     if (v._v.empty()) {
         // do nothing
     } else if (shift._sign < 0) {
-        throw std::runtime_error("bignumber.leftshift");
+        throw exception(errorcode_t::not_supported);
     } else if (shift.capacity() > 1) {
-        throw std::runtime_error("bignumber.leftshift.todo");
+        throw exception(errorcode_t::not_implemented);
     } else {
         // auto limb_shift = shift / 32;
         // auto bit_shift = shift % 32;
@@ -770,9 +773,9 @@ bignumber bignumber::rightshift(const bignumber &v, const bignumber &shift) cons
     if (v._v.empty()) {
         // do nothing
     } else if (shift._sign < 0) {
-        throw std::runtime_error("bignumber.rightshift");
+        throw exception(errorcode_t::not_supported);
     } else if (shift.capacity() > 1) {
-        throw std::runtime_error("bignumber.rightshift.todo");
+        throw exception(errorcode_t::not_implemented);
     } else {
         // int limb_shift = shift / 32;
         // int bit_shift = shift % 32;
@@ -945,7 +948,7 @@ size_t bignumber::unsigned_byte_capacity() const {
             ret_value += (bn._v.size() - 1) << 2;  // uint32 4 bytes
         }
     } else {
-        throw std::runtime_error("typecheck");
+        throw exception(errorcode_t::not_supported);
     }
     return ret_value;
 }

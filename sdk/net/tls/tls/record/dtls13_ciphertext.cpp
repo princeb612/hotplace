@@ -309,10 +309,10 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
 
         {
             _content_type = uhdr;
-            _bodysize = body.size();
+            _bodysize = t_narrow_cast(body.size());
             _range.begin = recpos;
             _range.end = header.size();
-            _sequence = sess_recno;
+            _sequence = t_narrow_cast(sess_recno);
             _sequence_len = sequence_len;
             _offset_encdata = header.size();
         }
@@ -343,7 +343,7 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
         } else {
             rec_enc = t_binary_to_integer<uint8>(protmask);
         }
-        recno = sess_recno ^ rec_enc;
+        recno = t_narrow_cast(sess_recno ^ rec_enc);
 
         {
             payload pl;

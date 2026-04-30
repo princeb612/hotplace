@@ -320,7 +320,7 @@ return_t bin2bn(const binary_t& bin, BIGNUM** bn) {
         }
 
         if (bin.size()) {
-            *bn = BN_bin2bn(bin.data(), bin.size(), nullptr);
+            *bn = BN_bin2bn(bin.data(), t_narrow_cast(bin.size()), nullptr);
         }
     }
     __finally2 {}

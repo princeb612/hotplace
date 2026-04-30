@@ -236,7 +236,7 @@ return_t tls_record_application_data::get_application_data(binary_t& message, bo
         auto dlen = 0;  // hint_mac->digest_size;
         uint8 last_byte = *message.rbegin();
         size_t extra = last_byte + dlen + 1;
-        lambda(message, extra);
+        lambda(message, t_narrow_cast(extra));
     } else {
         lambda(message, 1);
     }

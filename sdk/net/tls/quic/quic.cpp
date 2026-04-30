@@ -148,12 +148,12 @@ return_t encode_packet_number(uint64 full_pn, uint64 largest_acked, uint64& repr
             num_unacked = full_pn - largest_acked;
         }
 
-        uint64 min_bits = (log(num_unacked) / log(2)) + 1;
-        uint8 num_bytes = ceil(min_bits / 8);
+        uint64 min_bits = uint64((log(num_unacked) / log(2)) + 1);
+        uint8 num_bytes = uint8(ceil(min_bits / 8));
 
         // represent at leat twice
         represent = num_unacked << 1;
-        nbits = (log(represent) / log(2)) + 1;
+        nbits = uint8((log(represent) / log(2)) + 1);
     }
     __finally2 {}
     return ret;
@@ -163,11 +163,11 @@ return_t decode_packet_number(uint64 largest_pn, uint64 truncated_pn, uint8 pn_n
     return_t ret = errorcode_t::success;
     __try2 {
         value = 0;
-        auto expected_pn = largest_pn + 1;
-        auto pn_win = 1 << pn_nbits;
-        auto pn_hwin = pn_win / 2;
-        auto pn_mask = pn_win - 1;
-        auto candidate_pn = (expected_pn & ~pn_mask) | truncated_pn;
+        size_t expected_pn = largest_pn + 1;
+        size_t pn_win = 1 << pn_nbits;
+        size_t pn_hwin = pn_win / 2;
+        size_t pn_mask = pn_win - 1;
+        size_t candidate_pn = (expected_pn & ~pn_mask) | truncated_pn;
         if ((candidate_pn <= expected_pn - pn_hwin) && (candidate_pn < 0x400000000000000 - pn_win)) {
             value = candidate_pn + pn_win;
         } else if ((candidate_pn > expected_pn + pn_hwin) && (candidate_pn >= pn_win)) {

@@ -211,7 +211,7 @@ return_t tls_extension::do_write_header(tls_direction_t dir, binary_t& bin, cons
     {
         _header_range.begin = bin.size();
         _header_range.end = 4 + bin.size();
-        _bodysize = body.size();
+        _bodysize = t_narrow_cast(body.size());
         _size = 4 + _bodysize;
     }
     {

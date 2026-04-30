@@ -340,7 +340,7 @@ int set_cookie_generate_callback_routine(SSL* ssl, unsigned char* cookie, unsign
     dtls_cookie_dgram_peer_sockaddr(bin, ssl);
 
     memcpy(cookie, bin.data(), bin.size());
-    *cookie_len = bin.size();
+    *cookie_len = t_narrow_cast(bin.size());
 
     return 1;
 }
@@ -372,7 +372,7 @@ int set_default_passwd_callback_routine(char* buf, int num, int rwflag, void* us
     size_t len = stream->size();
 
     strncpy(buf, (char*)stream->data(), len);
-    return len;
+    return t_narrow_cast(len);
 }
 
 int set_alpn_select_h2_cb(SSL* ssl, const unsigned char** out, unsigned char* outlen, const unsigned char* in, unsigned int inlen, void* arg) {
@@ -387,7 +387,7 @@ int set_alpn_select_h2_cb(SSL* ssl, const unsigned char** out, unsigned char* ou
     int pos_h2 = -1;
     int pos_h1_1 = -1;
 
-    for (int pos = 0; pos < inlen;) {
+    for (unsigned int pos = 0; pos < inlen;) {
         uint8 len = in[pos];
         if (0 == strncmp((char*)in + pos, "\x2h2", 3)) {
             pos_h2 = pos;

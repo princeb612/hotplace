@@ -138,8 +138,8 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
                 ret = errorcode_t::error_handshake;
                 __leave2;
             }
-            uint32 ticket_lifetime = kv.get(session_ticket_lifetime);
-            uint32 ticket_age_add = kv.get(session_ticket_age_add);
+            uint32 ticket_lifetime = t_narrow_cast(kv.get(session_ticket_lifetime));
+            uint32 ticket_age_add = t_narrow_cast(kv.get(session_ticket_age_add));
             if (obfuscated_ticket_age - ticket_age_add > ticket_lifetime) {
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
                 session->reset_session_status();

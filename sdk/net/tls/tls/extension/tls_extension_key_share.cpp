@@ -227,7 +227,8 @@ return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, bina
 
         if (tls_flow_hello_retry_request == protection.get_flow()) {
             clear();
-            add(session->get_session_info(from_server).get_keyvalue().get(session_key_share_group));
+            uint16 group = t_narrow_cast(session->get_session_info(from_server).get_keyvalue().get(session_key_share_group));
+            add(group);
         }
 
         auto& tlskey = protection.get_key();
@@ -423,7 +424,7 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
                 keyexchange.keyshare((tls_group_t)group, &tlskey, KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC, share);
                 pubkey = std::move(share);
             }
-            pubkeylen = pubkey.size();
+            pubkeylen = t_narrow_cast(pubkey.size());
         }
 
         payload pl;

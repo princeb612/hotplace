@@ -62,7 +62,7 @@ return_t tls_protection::build_iv(tls_session *session, binary_t &nonce, const b
         for (uint64 i = 0; i < 8; i++) {
             auto v = iv[12 - 1 - i];
             auto n = ((recordno >> (i * 8)) & 0xff);
-            nonce[12 - 1 - i] = v ^ n;
+            nonce[12 - 1 - i] = uint8(v ^ n);
         }
     }
     __finally2 {}
@@ -247,7 +247,7 @@ return_t tls_protection::write_aad(tls_session *session, tls_direction_t dir, bi
             record_no = session->get_recordno(dir, false);
         } else {
             auto &kv = session->get_session_info(dir).get_keyvalue();
-            key_epoch = kv.get(session_dtls_epoch);
+            key_epoch = t_narrow_cast(kv.get(session_dtls_epoch));
             dtls_record_seq = kv.get(session_dtls_seq);
         }
 
@@ -440,7 +440,7 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
                     // in case of DTLS 1.2 chacha20-poly1305, true == is_kindof_dtls()
                     // in case of CBC-HMAC, session_type_dtls == session->get_type
                     auto &kv = session->get_session_info(dir).get_keyvalue();
-                    uint16 epoch = kv.get(session_dtls_epoch);
+                    uint16 epoch = t_narrow_cast(kv.get(session_dtls_epoch));
                     uint64 seq = kv.get(session_dtls_seq);
                     record_no = session->get_dtls_record_arrange().make_epoch_seq(epoch, seq);
                 }
@@ -570,7 +570,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
                     // in case of DTLS 1.2 chacha20-poly1305, true == is_kindof_dtls()
                     // in case of CBC-HMAC, session_type_dtls == session->get_type
                     auto &kv = session->get_session_info(dir).get_keyvalue();
-                    uint16 epoch = kv.get(session_dtls_epoch);
+                    uint16 epoch = t_narrow_cast(kv.get(session_dtls_epoch));
                     uint64 seq = kv.get(session_dtls_seq);
                     record_no = session->get_dtls_record_arrange().make_epoch_seq(epoch, seq);
                 }

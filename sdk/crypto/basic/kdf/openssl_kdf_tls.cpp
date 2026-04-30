@@ -122,9 +122,9 @@ return_t openssl_kdf::hkdf_label(binary_t& hkdflabel, uint16 length, const binar
          *  Appendix A.  Sample Packet Protection
          */
 
-        uint8 opaque_len_label = prefix.size() + label.size();  // length including "tls13 " or "dtls13"
-        uint8 opaque_len_context = context.size();
-#if 0  // tested
+        uint8 opaque_len_label = t_narrow_cast(prefix.size() + label.size());  // length including "tls13 " or "dtls13"
+        uint8 opaque_len_context = t_justdoit(context.size());                 // parameter checked
+#if 0                                                                          // tested
         payload pl;
         pl << new payload_member(length, true) //
            << new payload_member(opaque_len_label) //

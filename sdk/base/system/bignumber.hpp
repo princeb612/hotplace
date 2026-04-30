@@ -365,11 +365,7 @@ class bignumber {
             }
         }
         if (bn < 0) {
-            if (std::is_signed<T>::value) {
-                value = -value;
-            } else {
-                throw exception(miscast_negative);
-            }
+            value = t_change_sign<T>(value);  // value = -value
         }
         return value;
     }

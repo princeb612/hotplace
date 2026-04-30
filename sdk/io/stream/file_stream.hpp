@@ -164,7 +164,8 @@ class file_stream : public stream_t {
      * @remarks
      * @sa
      */
-    void truncate(int64 file_pos = 0, int64* ptr_file_pos = nullptr);
+    void truncate(int32 file_pos = 0, int32* ptr_file_pos = nullptr);
+    void truncate(size_t file_pos);
     /**
      * @brief seek
      * @param   int64     file_pos      [IN]  position

@@ -66,7 +66,7 @@ return_t openssl_sign::sign_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, co
          * the supplied private key and returns the created signature.
          */
         // openssl 3.0 EVP_PKEY_get0 family return const key pointer
-        ECDSA_SIG_ptr ecdsa_sig(ECDSA_do_sign(hash_value.data(), hash_value.size(), ec_key));
+        ECDSA_SIG_ptr ecdsa_sig(ECDSA_do_sign(hash_value.data(), t_narrow_cast(hash_value.size()), ec_key));
         if (nullptr == ecdsa_sig.get()) {
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
@@ -153,12 +153,12 @@ return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, 
             auto unitsize = advisor->unitsizeof_ecdsa(alg);
             der2sig(signature, unitsize, temp);
             size_t signature_size = temp.size();
-            bn_r = std::move(BN_ptr(BN_bin2bn(temp.data(), signature_size / 2, nullptr)));
-            bn_s = std::move(BN_ptr(BN_bin2bn(&temp[signature_size / 2], signature_size / 2, nullptr)));
+            bn_r = std::move(BN_ptr(BN_bin2bn(temp.data(), t_narrow_cast(signature_size / 2), nullptr)));
+            bn_s = std::move(BN_ptr(BN_bin2bn(&temp[signature_size / 2], t_narrow_cast(signature_size / 2), nullptr)));
         } else {
             size_t signature_size = signature.size();
-            bn_r = std::move(BN_ptr(BN_bin2bn(signature.data(), signature_size / 2, nullptr)));
-            bn_s = std::move(BN_ptr(BN_bin2bn(&signature[signature_size / 2], signature_size / 2, nullptr)));
+            bn_r = std::move(BN_ptr(BN_bin2bn(signature.data(), t_narrow_cast(signature_size / 2), nullptr)));
+            bn_s = std::move(BN_ptr(BN_bin2bn(&signature[signature_size / 2], t_narrow_cast(signature_size / 2), nullptr)));
         }
 
         ECDSA_SIG_set0(ecdsa_sig.get(), bn_r.get(), bn_s.get());
@@ -168,7 +168,7 @@ return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, 
         /* Verifies that the supplied signature is a valid ECDSA
          * signature of the supplied hash value using the supplied public key.
          */
-        ret_openssl = ECDSA_do_verify(hash_value.data(), hash_value.size(), ecdsa_sig.get(), ec_key);
+        ret_openssl = ECDSA_do_verify(hash_value.data(), t_narrow_cast(hash_value.size()), ecdsa_sig.get(), ec_key);
         if (1 != ret_openssl) {
             ret = errorcode_t::error_verify;
             __leave2_trace_openssl(ret);

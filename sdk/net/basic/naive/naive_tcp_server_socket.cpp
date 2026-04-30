@@ -52,7 +52,7 @@ return_t naive_tcp_server_socket::accept(socket_t* client_socket, socket_t liste
         socket_t socket = INVALID_SOCKET;
         socket = ::accept(listen_socket, addr, addrlen);
         if (INVALID_SOCKET == socket) {
-            ret = get_lasterror(socket);
+            ret = get_lasterror(t_justdoit(socket));
             __leave2;
         }
 

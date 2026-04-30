@@ -48,7 +48,7 @@ class openssl_hash : public hash_t {
      *      openssl 3.1   - md4, whirlpool
      *
      * @param const unsigned char* key [inopt]
-     * @param unsigned keysize [inopt]
+     * @param size_t keysize [inopt]
      * @return error code (see error.hpp)
      * @remarks
      * @example
@@ -78,7 +78,7 @@ class openssl_hash : public hash_t {
      *    hash.hash(handle, source, source_size, hash_data);
      *    hash.close(handle)
      */
-    virtual return_t open(hash_context_t** handle, const char* algorithm, const unsigned char* key = nullptr, unsigned keysize = 0);
+    virtual return_t open(hash_context_t** handle, const char* algorithm, const unsigned char* key = nullptr, size_t keysize = 0);
     /**
      * @brief open (HMAC, CMAC)
      * @param hash_context_t** handle [out]
@@ -92,10 +92,10 @@ class openssl_hash : public hash_t {
      * @param hash_context_t** handle [out]
      * @param hash_algorithm_t alg [in]
      * @param const unsigned char* key [inopt]
-     * @param unsigned keysize [inopt]
+     * @param size_t keysize [inopt]
      * @return error code (see error.hpp)
      */
-    virtual return_t open(hash_context_t** handle, hash_algorithm_t alg, const unsigned char* key = nullptr, unsigned keysize = 0);
+    virtual return_t open(hash_context_t** handle, hash_algorithm_t alg, const unsigned char* key = nullptr, size_t keysize = 0);
     /**
      * @brief open (HMAC)
      */
@@ -106,10 +106,10 @@ class openssl_hash : public hash_t {
      * @param crypt_algorithm_t alg [in]
      * @param crypt_mode_t mode [in]
      * @param const unsigned char* key [inopt]
-     * @param unsigned keysize [inopt]
+     * @param size_t keysize [inopt]
      * @return error code (see error.hpp)
      */
-    virtual return_t open(hash_context_t** handle, crypt_algorithm_t alg, crypt_mode_t mode, const unsigned char* key, unsigned keysize);
+    virtual return_t open(hash_context_t** handle, crypt_algorithm_t alg, crypt_mode_t mode, const unsigned char* key, size_t keysize);
     /**
      * @brief open (CMAC)
      */

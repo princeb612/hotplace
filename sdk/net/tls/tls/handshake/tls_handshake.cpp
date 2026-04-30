@@ -144,7 +144,8 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
 
             dtls_handshake_t header;
             header.msg_type = get_type();
-            uint24_t length(assemble.size());
+            uint32 assemblesize = t_narrow_cast(assemble.size());
+            uint24_t length(assemblesize);
             memcpy(header.length, length.data, 3);
             header.seq = hton16(_dtls_seq);
             memset(header.fragment_offset, 0, 3);
@@ -430,11 +431,11 @@ return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, cons
     auto legacy_version = protection.get_lagacy_version();
     auto& kv = session->get_session_info(dir).get_keyvalue();
 
-    _fragment_len = body.size();
-    uint32 length = _reassembled_size ? _reassembled_size : body.size();
+    _fragment_len = t_narrow_cast(body.size());
+    uint32 length = _reassembled_size ? _reassembled_size : t_narrow_cast(body.size());
     if (dont_control_dtls_handshake_sequence & get_flags()) {
     } else {
-        _dtls_seq = kv.get(session_dtls_message_seq);
+        _dtls_seq = t_narrow_cast(kv.get(session_dtls_message_seq));
     }
 
     payload pl;
@@ -468,7 +469,7 @@ return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, cons
     pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(legacy_version));
     {
         _range.begin = bin.size();
-        _bodysize = body.size();
+        _bodysize = t_narrow_cast(body.size());
     }
 
     // handshakes 1..*
@@ -482,7 +483,7 @@ return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, cons
 
     if (dont_control_dtls_handshake_sequence & get_flags()) {
     } else {
-        _dtls_seq = kv.inc(session_dtls_message_seq);
+        _dtls_seq = t_narrow_cast(kv.inc(session_dtls_message_seq));
     }
 
     return ret;

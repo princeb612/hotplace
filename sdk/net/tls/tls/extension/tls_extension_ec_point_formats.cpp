@@ -109,7 +109,7 @@ return_t tls_extension_ec_point_formats::do_write_body(tls_direction_t dir, bina
                     binary_append(bin_formats, epf);
                 }
             }
-            cbsize_formats = bin_formats.size();
+            cbsize_formats = t_narrow_cast(bin_formats.size());
         }
         {
             payload pl;
@@ -129,7 +129,7 @@ tls_extension_ec_point_formats& tls_extension_ec_point_formats::add(uint8 code) 
 
 tls_extension_ec_point_formats& tls_extension_ec_point_formats::add(const std::string& name) {
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
-    uint16 code = tlsadvisor->valueof_ec_point_format(name);
+    auto code = tlsadvisor->valueof_ec_point_format(name);
     return add(code);
 }
 

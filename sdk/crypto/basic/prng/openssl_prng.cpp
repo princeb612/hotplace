@@ -40,7 +40,7 @@ return_t openssl_prng::random(unsigned char* buf, size_t size) {
             __leave2;
         }
 
-        RAND_bytes(buf, size);
+        RAND_bytes(buf, t_narrow_cast(size));
     }
     __finally2 {}
     return ret;
@@ -52,7 +52,7 @@ return_t openssl_prng::random(binary_t& buffer, size_t size) {
         ret = errorcode_t::do_nothing;
     } else {
         buffer.resize(size);
-        RAND_bytes(buffer.data(), buffer.size());
+        RAND_bytes(buffer.data(), t_narrow_cast(buffer.size()));
     }
     return ret;
 }
@@ -90,7 +90,7 @@ std::string openssl_prng::rand(size_t size, encoding_t expr, bool usetime) {
 
     binary_t buffer;
     buffer.resize(size);
-    RAND_bytes(buffer.data(), buffer.size());
+    RAND_bytes(buffer.data(), t_narrow_cast(buffer.size()));
     if (encoding_t::encoding_base64 == expr) {
         ret_value += base64_encode(buffer, encoding_t::encoding_base64);
     } else if (encoding_t::encoding_base64url == expr) {

@@ -73,7 +73,7 @@ return_t tls_extension_compress_certificate::do_write_body(tls_direction_t dir, 
         for (auto alg : _algorithms) {
             binary_append(bin_algorithms, alg, hton16);
         }
-        cbsize_algorithms = bin_algorithms.size();
+        cbsize_algorithms = t_narrow_cast(bin_algorithms.size());
     }
     {
         payload pl;

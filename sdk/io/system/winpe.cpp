@@ -53,8 +53,10 @@ return_t winpe_checksum::finalize(uint32& checksum) {
     return_t ret = errorcode_t::success;
 
     checksum = 0;
-    checksum = (uint16)(((_checksum >> 16) + _checksum) & 0xffff);
-    checksum += _size;
+    uint32 temp = (_checksum >> 16) + (_checksum & 0xffff);
+    temp = (temp >> 16) + (temp & 0xffff);
+    checksum = temp & 0xffff;
+    checksum += (uint32)_size;
 
     return ret;
 }

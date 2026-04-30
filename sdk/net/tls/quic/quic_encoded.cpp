@@ -115,7 +115,7 @@ return_t quic_encoded::read(const byte_t* stream, size_t size, size_t& pos) {
             pos += _value;
             quic_length_vle_int(pos - old, _sizeof_value);
         } else {
-            _sizeof_value = pos - old;
+            _sizeof_value = t_narrow_cast(pos - old);
         }
     }
     __finally2 {}

@@ -83,7 +83,7 @@ return_t http2_protocol::read_stream(basic_stream* stream, size_t* request_size,
         }
 
         byte_t* stream_data = stream->data();
-        uint32 stream_size = stream->size();
+        auto stream_size = stream->size();
 
         // RFC 7540 3.5. HTTP/2 Connection Preface
         // 0x505249202a20485454502f322e300d0a0d0a534d0d0a0d0a
@@ -122,7 +122,7 @@ return_t http2_protocol::read_stream(basic_stream* stream, size_t* request_size,
 
         if (stream_size >= RTL_FIELD_SIZE(http2_frame_header_t, len) + pos) {
             http2_frame_header_t* frame = (http2_frame_header_t*)(stream_data + pos);
-            uint32 max_frame_size = get_constraints(protocol_constraints_t::protocol_packet_size);
+            auto max_frame_size = get_constraints(protocol_constraints_t::protocol_packet_size);
             const uint32 frame_header_size = sizeof(http2_frame_header_t);
             uint32 len = 0;  // the length of the frame payload
             b24_i32(stream_data + pos, RTL_FIELD_SIZE(http2_frame_header_t, len), len);

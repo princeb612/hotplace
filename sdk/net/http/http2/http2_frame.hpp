@@ -27,7 +27,7 @@ class http2_frame {
     virtual ~http2_frame();
 
     uint32 get_frame_size();
-    uint32 get_payload_size();
+    size_t get_payload_size();
     uint8 get_type();
     uint8 get_flags();
     uint32 get_stream_id();
@@ -71,10 +71,10 @@ class http2_frame {
     virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_header(binary_t& frame, const binary_t& body);
     virtual return_t do_write_body(binary_t& frame);
-    return_t set_payload_size(uint32 size);
+    return_t set_payload_size(size_t size);
 
    private:
-    uint32 _payload_size;
+    size_t _payload_size;
     uint8 _type;
     uint8 _flags;
     uint32 _stream_id;

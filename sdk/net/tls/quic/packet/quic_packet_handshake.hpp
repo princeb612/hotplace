@@ -43,7 +43,7 @@ class quic_packet_handshake : public quic_packet {
      *  Packet Payload (8..),
      */
     uint64 _length;
-    uint8 _sizeof_length;
+    size_t _sizeof_length;
 };
 
 }  // namespace net

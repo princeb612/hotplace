@@ -44,7 +44,7 @@ return_t openssl_sign::sign_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, 
         }
 
         {
-            DSA_SIG_ptr sig(DSA_do_sign(digest.data(), digest.size(), (DSA*)dsa));
+            DSA_SIG_ptr sig(DSA_do_sign(digest.data(), t_narrow_cast(digest.size()), (DSA*)dsa));
             if (sig.get()) {
                 const BIGNUM* bn_r = nullptr;
                 const BIGNUM* bn_s = nullptr;
@@ -100,7 +100,7 @@ return_t openssl_sign::verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg
         bn_r.release();  // sig own bn_r
         bn_s.release();  // sig own bn_s
 
-        ret_openssl = DSA_do_verify(digest.data(), digest.size(), sig.get(), (DSA*)dsa);
+        ret_openssl = DSA_do_verify(digest.data(), t_narrow_cast(digest.size()), sig.get(), (DSA*)dsa);
         if (ret_openssl < 1) {
             ret = errorcode_t::error_verify;
         }

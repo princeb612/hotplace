@@ -56,15 +56,21 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
             // random
             {
                 openssl_prng prng;
-
-                binary_t random;  // gmt_unix_time(4 bytes) + random(28 bytes)
-                time_t gmt_unix_time = time(nullptr);
-                binary_append(random, gmt_unix_time, hton32);
-                random.resize(sizeof(uint32));
-                binary_t temp;
-                prng.random(temp, 28);
-                binary_append(random, temp);
-                hs->set_random(random);
+                binary_t bin_rand;
+                bin_rand.reserve(32);
+                if (tls_13 == minspec) {
+                    prng.random(bin_rand, 32);
+                } else {
+                    // time_t: uint64
+                    // gmt_unix_time(4 bytes) + random(28 bytes)
+                    time_t t64 = time(nullptr);
+                    uint32 t32 = t_justdoit(t64);
+                    binary_append(bin_rand, t32, hton32);
+                    binary_t temp;
+                    prng.random(temp, 28);
+                    binary_append(bin_rand, temp);
+                }
+                hs->set_random(bin_rand);
             }
 
             // cookie
