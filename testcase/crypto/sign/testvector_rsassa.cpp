@@ -68,7 +68,7 @@ void test_yaml_testvector_rsassa() {
             if (s) {
                 if (crypt_sig_rsassa_pss == scheme) {
                     binary_t salt = std::move(base16_decode(entry.salt));
-                    s->set_saltlen(salt.size());
+                    s->set_saltlen(t_narrow_cast(salt.size()));
                 }
 
                 auto pkey = key.find(entry.kid.c_str());

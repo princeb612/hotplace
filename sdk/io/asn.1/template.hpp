@@ -28,8 +28,8 @@ namespace io {
  * @sa
  *          X.690 8.1.3 Length octets
  */
-template <typename type>
-uint32 t_asn1_length_octets(binary_t& bin, type len, size_t pos = -1) {
+template <typename TYPE>
+uint32 t_asn1_length_octets(binary_t& bin, TYPE len, size_t pos = -1) {
     if (-1 == pos) {
         pos = bin.size();
     }
@@ -37,9 +37,9 @@ uint32 t_asn1_length_octets(binary_t& bin, type len, size_t pos = -1) {
     uint32 size_encode = 0;
     if (len > 0x7f) {
         int bytesize = byte_capacity(len);
-        type temp = convert_endian(len);
+        TYPE temp = convert_endian(len);
         bin.insert(bin.begin() + pos, 0x80 | bytesize);  // X.690 8.1.3.5
-        bin.insert(bin.begin() + pos + 1, (byte_t*)&temp + sizeof(type) - bytesize, (byte_t*)&temp + sizeof(type));
+        bin.insert(bin.begin() + pos + 1, (byte_t*)&temp + sizeof(TYPE) - bytesize, (byte_t*)&temp + sizeof(TYPE));
         size_encode = 1 + bytesize;
     } else {
         // X.690 8.1.3.4
@@ -50,12 +50,12 @@ uint32 t_asn1_length_octets(binary_t& bin, type len, size_t pos = -1) {
 }
 
 // X.690 8.19.2
-template <typename type>
-size_t t_asn1_oid_value(binary_t& bin, type v, size_t pos = -1) {
+template <typename TYPE>
+uint32 t_asn1_oid_value(binary_t& bin, TYPE v, size_t pos = -1) {
     if (-1 == pos) {
         pos = bin.size();
     }
-    size_t len = 0;
+    uint32 len = 0;
     uint8 m = 0;
     while (v > 0x7f) {
         bin.insert(bin.begin() + pos, ((byte_t)v & 0x7f) | m);
@@ -67,23 +67,23 @@ size_t t_asn1_oid_value(binary_t& bin, type v, size_t pos = -1) {
     return len + 1;
 }
 
-template <typename type>
-uint32 t_asn1_integer_value(binary_t& bin, type v, size_t pos = -1) {
+template <typename TYPE>
+uint32 t_asn1_integer_value(binary_t& bin, TYPE v, size_t pos = -1) {
     if (-1 == pos) {
         pos = bin.size();
     }
     uint32 len = byte_capacity(v);
-    type temp = convert_endian(v);
-    bin.insert(bin.begin() + pos, (byte_t*)&temp + sizeof(type) - len, (byte_t*)&temp + sizeof(type));
+    TYPE temp = convert_endian(v);
+    bin.insert(bin.begin() + pos, (byte_t*)&temp + sizeof(TYPE) - len, (byte_t*)&temp + sizeof(TYPE));
     return len;
 }
 
 // X.690 8.3 encoding of an integer value
-template <typename type>
-void t_asn1_encode_integer(binary_t& bin, type value) {
+template <typename TYPE>
+void t_asn1_encode_integer(binary_t& bin, TYPE value) {
     bin.insert(bin.end(), asn1_tag_integer);  // X.690 8.1.2 identifier octets
     size_t pos = bin.size();
-    size_t size_encode = t_asn1_integer_value<type>(bin, value, pos);  // X.690 8.3.3
+    size_t size_encode = t_asn1_integer_value<TYPE>(bin, value, pos);  // X.690 8.3.3
     t_asn1_length_octets<size_t>(bin, size_encode, pos);
 }
 
@@ -130,8 +130,8 @@ static inline double ieee754_fabs(double v) { return fabs(v); }
  *             exponent -2(FE)
  *             N 5(5)
  */
-template <typename fptype, typename bintype>
-size_t t_asn1_encode_real(binary_t& bin, fptype value) {
+template <typename FPTYPE, typename BINTYPE>
+size_t t_asn1_encode_real(binary_t& bin, FPTYPE value) {
     // Step.1
     // ASN.1 by simple words - Chapter 2. Encoding of REAL type
 
@@ -156,16 +156,21 @@ size_t t_asn1_encode_real(binary_t& bin, fptype value) {
 
     int sign = 0;
     int exponent = 0;
-    float mantissa = 0;
+    FPTYPE mantissa = 0;
     ieee754_typeof_t type = ieee754_exp(value, &sign, &exponent, &mantissa);  // ieee754_typeof and frexpf
 
-    auto isint = [](fptype v) -> bool { return 0.0 == fmod(v, 1); };
+    auto isint = [](FPTYPE v) -> bool { return 0.0 == fmod(v, 1); };
 
-    while (ieee754_single_precision == ieee754_typeof(mantissa)) {
+    while (true) {
+        auto type = ieee754_typeof(mantissa);
+        if ((ieee754_single_precision == type) || (ieee754_double_precision == type)) {
+        } else {
+            break;
+        }
 #if 0
         {
             basic_stream bs;
-            bs << "FP" << (sizeof(fptype) << 3) << " : " << value << " exponent " << exponent << " mantissa " << mantissa;
+            bs << "FP" << (sizeof(FPTYPE) << 3) << " : " << value << " exponent " << exponent << " mantissa " << mantissa;
             std::cout << bs << std::endl;
         }
 #endif
@@ -212,7 +217,7 @@ size_t t_asn1_encode_real(binary_t& bin, fptype value) {
         default:
             // V(e m)
             size_exponent = t_asn1_integer_value<int>(bin, exponent);
-            size_mantissa = t_asn1_integer_value<int>(bin, ieee754_fabs(mantissa));
+            size_mantissa = t_asn1_integer_value<int>(bin, int(ieee754_fabs(mantissa)));
             // T(info_octet)
             uint8 info = sign ? asn1_real_binary_neg : asn1_real_binary;
             switch (size_exponent) {

@@ -68,7 +68,7 @@ return_t split_count(split_context_t* handle, size_t& result) {
     return ret;
 }
 
-return_t split_get(split_context_t* handle, unsigned int index, binary_t& data) {
+return_t split_get(split_context_t* handle, size_t index, binary_t& data) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -92,7 +92,7 @@ return_t split_get(split_context_t* handle, unsigned int index, binary_t& data) 
     return ret;
 }
 
-return_t split_get(split_context_t* handle, unsigned int index, std::string& data) {
+return_t split_get(split_context_t* handle, size_t index, std::string& data) {
     return_t ret = errorcode_t::success;
 
     __try2 {

@@ -185,7 +185,7 @@ class t_list {
     iterator end() { return iterator(*this, _tail); }
     const_iterator end() const { return const_iterator(*this, _tail); }
 
-    int size() const { return _size; }
+    size_t size() const { return _size; }
     bool empty() const { return 0 == size(); }
     void clear() {
         while (false == empty()) {

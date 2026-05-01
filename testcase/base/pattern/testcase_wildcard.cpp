@@ -20,7 +20,7 @@ std::string get_lcp(std::string ar[], size_t n) {
         } else {
             std::sort(ar, ar + n);
 
-            int en = std::min(ar[0].size(), ar[n - 1].size());
+            auto en = std::min(ar[0].size(), ar[n - 1].size());
 
             std::string first = ar[0], last = ar[n - 1];
             int i = 0;

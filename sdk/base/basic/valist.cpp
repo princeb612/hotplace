@@ -122,7 +122,7 @@ valist& valist::operator<<(long value) {
 valist& valist::operator<<(unsigned long value) {
     variant_t v;
 
-    v.type = TYPE_LONG;
+    v.type = TYPE_ULONG;
 #if defined __linux__
 #if __WORDSIZE == 64
     v.data.ui64 = value;

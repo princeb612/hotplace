@@ -59,7 +59,7 @@ http2_frame::http2_frame(const http2_frame& other) {
 
 http2_frame::~http2_frame() {}
 
-uint32 http2_frame::get_frame_size() { return sizeof(http2_frame_header_t) + get_payload_size(); }
+uint32 http2_frame::get_frame_size() { return t_narrow_cast(sizeof(http2_frame_header_t) + get_payload_size()); }
 
 size_t http2_frame::get_payload_size() { return _payload_size; }
 

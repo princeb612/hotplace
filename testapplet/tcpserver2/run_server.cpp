@@ -42,7 +42,7 @@ return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CA
         } break;
         case multiplexer_event_type_t::mux_read: {
             _logger->writeln("read %d msg [%.*s]", sock, (unsigned)bufsize, buf);
-            send(sock, buf, bufsize, 0);
+            send(sock, buf, t_narrow_cast(bufsize), 0);
         } break;
         case multiplexer_event_type_t::mux_disconnect: {
             _logger->writeln("disconnect %d", sock);

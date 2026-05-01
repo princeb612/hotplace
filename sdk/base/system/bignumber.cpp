@@ -920,6 +920,11 @@ bignumber &bignumber::div(const bignumber &other) { return *this = div(*this, ot
 
 bignumber &bignumber::mod(const bignumber &other) { return *this = mod(*this, other); }
 
+bignumber &bignumber::abs() {
+    _sign = 1;
+    return *this;
+}
+
 bignumber &bignumber::neg() {
     _sign = -_sign;
     return *this;
@@ -981,7 +986,8 @@ std::string bignumber::str() const {
                 tmp._v[idx] = (uint32)(cur / 10);
                 carry = cur % 10;
             }
-            res.push_back(t_narrow_cast('0' + carry));
+            uint8 c = t_narrow_cast('0' + carry);
+            res.push_back(c);
             while (false == tmp._v.empty() && 0 == tmp._v.back()) {
                 tmp._v.pop_back();
             }

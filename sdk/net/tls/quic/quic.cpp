@@ -164,7 +164,7 @@ return_t decode_packet_number(uint64 largest_pn, uint64 truncated_pn, uint8 pn_n
     __try2 {
         value = 0;
         size_t expected_pn = largest_pn + 1;
-        size_t pn_win = 1 << pn_nbits;
+        size_t pn_win = (size_t)1 << pn_nbits;
         size_t pn_hwin = pn_win / 2;
         size_t pn_mask = pn_win - 1;
         size_t candidate_pn = (expected_pn & ~pn_mask) | truncated_pn;

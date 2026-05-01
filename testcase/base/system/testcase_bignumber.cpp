@@ -407,6 +407,9 @@ void test_bn6() {
     bn2 = "-340282366920938463463374607431768211455";
     _logger->writeln("bignumber = %s", bn.str().c_str());
     _test_case.assert(bn == bn2, __FUNCTION__, "bignumber = -uint128.max");
+
+    bn = -127;
+    _test_case.assert(bn.abs() == 127, __FUNCTION__, "abs");
 }
 
 void test_bn7() {

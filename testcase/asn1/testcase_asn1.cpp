@@ -168,7 +168,7 @@ void test_x690_encoding_value() {
         // e -20 m 129453.0
         // >>> print("Decoded REAL:", decode(binascii.unhexlify('090580ec01f9ad'), asn1Spec=univ.Real()))
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [0.12345600128173828]>, b'')
-        {variant(0.123456), "090580ec01f9ad", "X.690 8.5"},
+        {variant(0.123456f), "090580ec01f9ad", "X.690 8.5"},
         // 2^-3 + 2^-5 -> 0.00101 -> 1.01 * 2^-3 (IEEE754) -> 101 * 2^-5
         {variant(0.15625), "090380fb05", "X.690 8.5"},
         // 2^-1 (IEEE754) -> 0.1 -> 1.0 * 2^-1 (IEEE754)
@@ -184,26 +184,26 @@ void test_x690_encoding_value() {
         // e -21 m 2579497.0
         // >>> print("Decoded REAL:", decode(binascii.unhexlify('090580EB275C29'), asn1Spec=univ.Real()))
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [1.2300000190734863]>, b'')
-        {variant(1.23), "090580EB275C29", "X.690 8.5"},
+        {variant(1.23f), "090580EB275C29", "X.690 8.5"},
         // 2^1 -> 10 -> 1.0 * 2^1 (IEEE754) -> 80 01 01
         {variant(2.0), "0903800101", "X.690 8.5"},
         // 2^5 + 2^-2 + 2^2-4 -> 100000.0101 -> 1.000000101 * 2^5 (IEEE754) -> 1000000101 * 2^-4
         {variant(32.3125), "090480fc0205", "X.690 8.5"},
         // >>> print("Decoded REAL:", decode(binascii.unhexlify('090680ef009dcccd'), asn1Spec=univ.Real()))
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [78.9000015258789]>, b'')
-        {variant(78.90), "090680ef009dcccd", "X.690 8.5"},
+        {variant(78.90f), "090680ef009dcccd", "X.690 8.5"},
         {variant(123.0), "090380007b", "X.690 8.5"},
         // >>> print("Decoded REAL:", decode(binascii.unhexlify('090680ef00f6e979'), asn1Spec=univ.Real()))
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [123.45600128173828]>, b'')
-        {variant(123.456), "090680ef00f6e979", "X.690 8.5"},
+        {variant(123.456f), "090680ef00f6e979", "X.690 8.5"},
         // >>> print("Decoded REAL:", decode(binascii.unhexlify('090680f600c0e6b7'), asn1Spec=univ.Real()))
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [12345.6787109375]>, b'')
-        {variant(12345.6789), "090680f600c0e6b7", "X.690 8.5"},
+        {variant(12345.6789f), "090680f600c0e6b7", "X.690 8.5"},
         // (-1)^1 * 1.0 * 2^0 (IEEE754) -> c0 00 01
         {variant(-1.0), "0903c00001", "X.690 8.5"},
         // >>> print("Decoded REAL:", decode(binascii.unhexlify('0905c0eb275c29'), asn1Spec=univ.Real()))
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [-1.2300000190734863]>, b'')
-        {variant(-1.23), "0905c0eb275c29", "X.690 8.5"},
+        {variant(-1.23f), "0905c0eb275c29", "X.690 8.5"},
         {variant(-456.0), "0903c00339", "X.690 8.5"},
         {variant(fp32_from_binary32(fp32_pinf)), "090140", "X.690 8.5 Inf"},
         {variant(fp32_from_binary32(fp32_ninf)), "090141", "X.690 8.5 -Inf"},
@@ -413,7 +413,7 @@ void test_x690_8_9_sequence() {
         size_t pos = bin.size();
         enc.ia5string(bin, "Smith");
         enc.primitive(bin, true);
-        size_t size = bin.size() - pos;  // 0xa
+        uint8 size = t_narrow_cast(bin.size() - pos);  // 0xa
         bin.insert(bin.begin() + pos, size);
 
         _logger->writeln("%s", base16_encode(bin).c_str());

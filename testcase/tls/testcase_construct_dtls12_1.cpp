@@ -307,9 +307,9 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
         uint32 retry = 10;  // max elements
         while (retry--) {
             auto test = arrange.consume((sockaddr*)&addr, sizeof(addr), epoch, seq, bin);
-            if (empty == test) {
+            if (errorcode_t::empty == test) {
                 break;
-            } else if (not_ready == test) {
+            } else if (errorcode_t::not_ready == test) {
                 continue;
             }
 

@@ -76,7 +76,7 @@ class quic_packet_publisher {
     quic_packet_publisher& set_flags(uint32 flags);
 
     tls_session* get_session();
-    uint16 get_payload_size();
+    size_t get_payload_size();
     uint32 get_flags();
 
     /**

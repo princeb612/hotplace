@@ -27,7 +27,7 @@ namespace hotplace {
  * @refer   Gemini
  */
 template <typename SOURCE, bool debug_except = false>
-struct narrow_cast_t {
+struct t_narrow_cast_t {
     const SOURCE value;
 
     template <typename TYPE>
@@ -36,10 +36,23 @@ struct narrow_cast_t {
         if (debug_except) {
             TYPE converted = static_cast<TYPE>(value);
             if (static_cast<SOURCE>(converted) != value) {
-                throw exception(errorcode_t::miscast_unsigned);
+                /**
+                 * case.1
+                 *  int32 i32 = -1;
+                 *  uint8 ui8 = t_intended_narrow_cast(i32);
+                 * case.2
+                 *  int32 i32 = 300;
+                 *  int8 i8 = t_intended_narrow_cast(i32);
+                 */
+                throw exception(errorcode_t::miscast_narrow);
             }
             if (std::numeric_limits<SOURCE>::is_signed != std::numeric_limits<TYPE>::is_signed) {
                 if ((value < 0) != (converted < 0)) {
+                    /**
+                     * case.3
+                     *  uint32 ui32 = 4294967295;
+                     *  int32 i32 = t_intended_narrow_cast(ui32);
+                     */
                     throw exception(errorcode_t::miscast_narrow);
                 }
             }
@@ -50,12 +63,12 @@ struct narrow_cast_t {
 };
 
 template <typename TYPE>
-constexpr narrow_cast_t<TYPE, true> t_narrow_cast(TYPE v) {
+constexpr t_narrow_cast_t<TYPE, true> t_narrow_cast(TYPE v) {
     return {v};
 }
 
 template <typename TYPE>
-constexpr narrow_cast_t<TYPE, false> t_justdoit(TYPE v) {
+constexpr t_narrow_cast_t<TYPE, false> t_justdoit(TYPE v) {
     return {v};
 }
 

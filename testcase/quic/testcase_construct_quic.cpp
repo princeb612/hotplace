@@ -502,7 +502,7 @@ void testcase_construct_quic() {
         session_server.set_recordno(from_server, 30, protection_application);
 
         auto lambda_check_pkn = [](tls_session* session, tls_direction_t dir, protection_space_t space, uint32 pkn_expect) -> void {
-            uint32 pkn = session->get_recordno(dir, false, space);
+            uint32 pkn = t_narrow_cast(session->get_recordno(dir, false, space));
             _test_case.assert(pkn_expect == pkn, __FUNCTION__, "PKN %i", pkn);
         };
         auto lambda_test_ready_to_ack = [](tls_session* session, protection_space_t space, uint32 largest, uint32 range) -> void {
@@ -526,7 +526,7 @@ void testcase_construct_quic() {
                 construct_quic_cli_initial(&session_client, from_client, quic_pad_packet, bins, text);
                 send_packet(&session_server, from_client, bins, text);
                 range_ch = bins.size() ? (bins.size() - 1) : 0;  // consider fragmentation
-                lambda_test_ready_to_ack(&session_server, protection_initial, 10 + range_ch, range_ch);
+                lambda_test_ready_to_ack(&session_server, protection_initial, t_narrow_cast(10 + range_ch), t_narrow_cast(range_ch));
             }
 
             // cf. http3.pcapng #3
@@ -538,7 +538,7 @@ void testcase_construct_quic() {
                 construct_quic_svr_initial(&session_server, from_server, quic_ack_packet | quic_pad_packet, bins, text);
                 send_packet(&session_client, from_server, bins, text);
                 auto range_sh = bins.size() ? (bins.size() - 1) : 0;
-                lambda_test_ready_to_ack(&session_client, protection_initial, 10 + range_sh, range_sh);
+                lambda_test_ready_to_ack(&session_client, protection_initial, t_narrow_cast(10 + range_sh), t_narrow_cast(range_sh));
             }
 
             // cf. http3.pcapng #4
@@ -546,7 +546,7 @@ void testcase_construct_quic() {
             //   PKN 11 initial [ACK (10), PADDING]
             {
                 const char* text = "initial [ACK, PADDING]";
-                lambda_check_pkn(&session_client, from_client, protection_initial, 10 + range_ch + 1);
+                lambda_check_pkn(&session_client, from_client, protection_initial, t_narrow_cast(10 + range_ch + 1));
                 construct_quic_ack(&session_client, from_client, quic_pad_packet, bins, text);
                 send_packet(&session_server, from_client, bins, text);
             }

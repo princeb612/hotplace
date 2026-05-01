@@ -59,7 +59,7 @@ void test_scenario::stop_scenario() {
 }
 
 return_t test_scenario::producer_scenario(void* parameter) {
-    srand(time(nullptr));
+    srand(t_narrow_cast(time(nullptr)));
     test_scenario* obj = (test_scenario*)parameter;
     int i = 0;
     for (i = 0; i < _test_loop; i++) {

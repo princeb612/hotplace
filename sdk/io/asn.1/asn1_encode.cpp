@@ -177,7 +177,7 @@ asn1_encode& asn1_encode::reloid(binary_t& bin, const std::string& value) {
 }
 
 asn1_encode& asn1_encode::encode(binary_t& bin, asn1_type_t type, const binary_t& value) {
-    t_asn1_length_octets<uint32>(bin, value.size());
+    t_asn1_length_octets<uint32>(bin, t_narrow_cast(value.size()));
     binary_append(bin, value);
     return *this;
 }
@@ -272,7 +272,7 @@ asn1_encode& asn1_encode::bitstring(binary_t& bin, const std::string& value) {
         temp += "0";
     }
     binary_push(bin, asn1_tag_bitstring);
-    t_asn1_length_octets<uint16>(bin, 1 + (temp.size() / 2));
+    t_asn1_length_octets<uint16>(bin, t_narrow_cast(1 + (temp.size() / 2)));
     binary_push(bin, pad);
     binary_append(bin, base16_decode(temp));
     return *this;
@@ -291,21 +291,21 @@ asn1_encode& asn1_encode::ia5string(binary_t& bin, const std::string& value) {
 asn1_encode& asn1_encode::octstring(binary_t& bin, const std::string& value) {
     binary_t oct = std::move(base16_decode(value));
     binary_push(bin, asn1_tag_octstring);
-    t_asn1_length_octets<uint16>(bin, oct.size());
+    t_asn1_length_octets<uint16>(bin, t_narrow_cast(oct.size()));
     binary_append(bin, oct);
     return *this;
 }
 
 asn1_encode& asn1_encode::printablestring(binary_t& bin, const std::string& value) {
     binary_push(bin, asn1_tag_printstring);
-    t_asn1_length_octets<uint16>(bin, value.size());
+    t_asn1_length_octets<uint16>(bin, t_narrow_cast(value.size()));
     binary_append(bin, value);
     return *this;
 }
 
 asn1_encode& asn1_encode::t61string(binary_t& bin, const std::string& value) {
     binary_push(bin, asn1_tag_teletexstring);
-    t_asn1_length_octets<uint16>(bin, value.size());
+    t_asn1_length_octets<uint16>(bin, t_narrow_cast(value.size()));
     binary_append(bin, value);
     return *this;
 }
@@ -319,7 +319,7 @@ asn1_encode& asn1_encode::generalized_time(binary_t& bin, const datetime_t& dt) 
     basic_stream bs;
     generalized_time(bs, dt);
     binary_push(bin, asn1_tag_generalizedtime);
-    t_asn1_length_octets<uint16>(bin, bs.size());
+    t_asn1_length_octets<uint16>(bin, t_narrow_cast(bs.size()));
     bin.insert(bin.end(), bs.data(), bs.data() + bs.size());
     return *this;
 }
@@ -337,7 +337,7 @@ asn1_encode& asn1_encode::utctime(binary_t& bin, const datetime_t& dt, int tzoff
     basic_stream bs;
     utctime(bs, dt, tzoffset);
     binary_push(bin, asn1_tag_utctime);
-    t_asn1_length_octets<uint16>(bin, bs.size());
+    t_asn1_length_octets<uint16>(bin, t_narrow_cast(bs.size()));
     bin.insert(bin.end(), bs.data(), bs.data() + bs.size());
     return *this;
 }

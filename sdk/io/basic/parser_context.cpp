@@ -473,7 +473,7 @@ void parser::context::psearch_result(search_result& result, range_t range) const
     result.endidx = range.end;
 }
 
-return_t parser::context::get(uint32 index, token_description* desc) {
+return_t parser::context::get(size_t index, token_description* desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == desc) {

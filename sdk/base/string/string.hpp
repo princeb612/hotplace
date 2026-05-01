@@ -146,8 +146,8 @@ typedef struct _split_context_t {
 } split_context_t;
 return_t split_begin(split_context_t** handle, const char* str, const char* delim);
 return_t split_count(split_context_t* handle, size_t& result);
-return_t split_get(split_context_t* handle, unsigned int index, binary_t& data);
-return_t split_get(split_context_t* handle, unsigned int index, std::string& data);
+return_t split_get(split_context_t* handle, size_t index, binary_t& data);
+return_t split_get(split_context_t* handle, size_t index, std::string& data);
 return_t split_end(split_context_t* handle);
 return_t split_foreach(split_context_t* handle, std::function<void(const std::string&)> func);
 

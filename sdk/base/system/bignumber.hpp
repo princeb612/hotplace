@@ -283,6 +283,7 @@ class bignumber {
     bignumber &mult(const bignumber &other);
     bignumber &div(const bignumber &other);
     bignumber &mod(const bignumber &other);
+    bignumber &abs();
     bignumber &neg();
     bignumber &bitwise_and(const bignumber &other);
     bignumber &bitwise_or(const bignumber &other);

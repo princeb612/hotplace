@@ -172,9 +172,9 @@ void test_graph1() {
 /*
  *  @sa     User-defined literals (since C++11)
  */
-int operator"" _min(unsigned long long int x) { return x; }
-int operator"" _hour(unsigned long long int x) { return x * 60; }
-int operator"" _hour(long double x) { return x * 60; }
+int operator"" _min(unsigned long long int x) { return t_narrow_cast(x); }
+int operator"" _hour(unsigned long long int x) { return t_narrow_cast(x * 60); }
+int operator"" _hour(long double x) { return t_narrow_cast(x * 60); }
 
 void test_graph2() {
     _test_case.begin("graph<std::string>");

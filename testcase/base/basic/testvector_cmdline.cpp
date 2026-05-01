@@ -67,7 +67,7 @@ void test_yaml_testvector_cmdline() {
             auto expect = item["expect"].as<bool>();
             auto reason = item["reason"].as<std::string>();
 
-            int argc = args.size();
+            int argc = t_narrow_cast(args.size());
             if (argc > 5) {
                 _test_case.assert(false, __FUNCTION__, "invalid test vector");
                 continue;

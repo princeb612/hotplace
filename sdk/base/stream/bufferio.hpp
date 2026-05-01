@@ -174,7 +174,7 @@ class bufferio {
     /**
      * @brief cut
      * @param bufferio_context_t* handle [IN] handle
-     * @param uint32 begin_pos [IN] pos
+     * @param size_t begin_pos [IN] pos
      * @param size_t length [IN] length
      * @return error code (see error.hpp)
      */

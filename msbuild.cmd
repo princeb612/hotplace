@@ -16,7 +16,9 @@ if not exist %builddir% (
 
 cmake -G "%generator%" -B %builddir% -DCMAKE_BUILD_TYPE=%target% -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DSUPPORT_PCH=1
 
-cmake --build %builddir% --config %target%
+set MAKEFLAGS='-j 8'
+
+cmake --build %builddir% --config %target% -j 4
 
 cd %builddir%
 ctest -C %target%

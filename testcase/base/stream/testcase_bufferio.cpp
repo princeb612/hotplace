@@ -67,8 +67,8 @@ void test_bufferio1() {
     ret = bio.size(handle, &size);
     _test_case.test(ret, __FUNCTION__, "size %zi", size);
 
-    uint32 begin = 7;
-    uint32 length = size - begin;
+    size_t begin = 7;
+    size_t length = size - begin;
     ret = bio.cut(handle, begin, length);
     _test_case.test(ret, __FUNCTION__, "cut from %i len %i", begin, length);
     do_dump(handle);

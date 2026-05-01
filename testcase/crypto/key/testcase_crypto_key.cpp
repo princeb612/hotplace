@@ -105,7 +105,7 @@ void test_crypto_key() {
             binary_t bin_x, bin_y, bin_d;
             key.get_key(pkey, bin_x, bin_y, bin_d, true);  // preserve leading zero
             auto hint = advisor->hintof_curve_nid(item.nid);
-            uint8 keysize = bin_x.size();
+            uint8 keysize = t_narrow_cast(bin_x.size());
             // NID_sect571k1 70..72
             // NID_sect409r1 50..52
             // NID_sect113r1 13..15

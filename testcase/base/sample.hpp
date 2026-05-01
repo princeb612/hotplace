@@ -27,9 +27,10 @@ extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 void testcase_binary();
-void test_cmdline();
+void testcase_cmdline();
 void testcase_testvector_cmdline();
 void testcase_dumpmemory();
+void testcase_narrowcast();
 void testcase_valist();
 void testcase_testvector_valist();
 void testcase_variant();

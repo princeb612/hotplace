@@ -144,7 +144,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                     }
                     auto rec_fragmented = *records.rbegin();
                     auto hs_fragmented = new dtls_handshake_fragmented(desc.hstype, session);  // do not change sequence (handshake)
-                    hs_fragmented->prepare_fragment(stream, size, desc.hsseq, fragoffset, t_narrow_cast(fragsize));
+                    hs_fragmented->prepare_fragment(stream, t_narrow_cast(size), desc.hsseq, t_narrow_cast(fragoffset), t_narrow_cast(fragsize));
                     *rec_fragmented << hs_fragmented;
                 };
 

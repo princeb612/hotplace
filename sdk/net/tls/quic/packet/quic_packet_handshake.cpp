@@ -145,7 +145,7 @@ return_t quic_packet_handshake::do_write(tls_direction_t dir, binary_t& header, 
         uint8 pn_length = 0;
         uint64 len = 0;
         binary_t bin_pn;
-        uint8 prefix_len = _sizeof_length >> 1;
+        uint8 prefix_len = t_narrow_cast(_sizeof_length >> 1);
 
         // unprotected header
         {

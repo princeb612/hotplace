@@ -92,7 +92,7 @@ return_t quic_packet_initial::do_read_body(tls_direction_t dir, const byte_t* st
             pl.get_binary(constexpr_tag, _tag);
 
             offset_pnpayload = pl.offset_of(constexpr_payload);
-            _sizeof_length = pl.get_space(constexpr_len);  // support longer size
+            _sizeof_length = t_narrow_cast(pl.get_space(constexpr_len));  // support longer size
 
             pos_unprotect = (ppos + offset_pnpayload + 4);
         }
@@ -291,8 +291,8 @@ size_t quic_packet_initial::estimate_overhead() {
     auto& protection = session->get_tls_protection();
     auto tagsize = protection.get_tag_size();
     auto maxsize = get_max_payload_size();
-    auto estimate =
-        estimate_quic_packet_size(get_type(), t_narrow_cast(_dcid.size()), _scid.size(), t_narrow_cast(_token.size()), get_pn_length(), t_narrow_cast(maxsize), tagsize);
+    auto estimate = estimate_quic_packet_size(get_type(), t_narrow_cast(_dcid.size()), t_narrow_cast(_scid.size()), t_narrow_cast(_token.size()), get_pn_length(),
+                                              t_narrow_cast(maxsize), tagsize);
     return estimate - maxsize;
 }
 

@@ -113,7 +113,7 @@ enum token_t {
 };
 
 struct token_description {
-    uint32 index;
+    size_t index;
     uint32 type;
     uint32 tag;
     size_t pos;
@@ -261,7 +261,7 @@ class parser {
          */
         void psearch_result(search_result& result, range_t range) const;
 
-        return_t get(uint32 index, token_description* desc);
+        return_t get(size_t index, token_description* desc);
 
        protected:
         return_t init(parser* obj, const char* p, size_t size);

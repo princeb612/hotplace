@@ -307,7 +307,7 @@ return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey
                     __leave2;
                 }
 
-                datalen = plainsize - dlen - 1;  // pad1
+                datalen = t_narrow_cast(plainsize - dlen - 1);  // pad1
                 binary_append(mac, &plaintext[datalen], dlen);
                 plaintext.resize(datalen);
             }
@@ -323,7 +323,7 @@ return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey
         } else if (tls_encrypt_then_mac == flag) {
             {
                 // mac
-                datalen = ciphersize - dlen;
+                datalen = t_narrow_cast(ciphersize - dlen);
                 binary_append(mac, ciphertext + datalen, dlen);
                 (*hmac).update(aad).update(uint16(datalen), hton16).update(ciphertext, datalen).finalize(tag);
                 if (tag != mac) {

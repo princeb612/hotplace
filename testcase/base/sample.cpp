@@ -57,9 +57,10 @@ int main(int argc, char **argv) {
     }
 
     testcase_binary();
-    test_cmdline();
+    testcase_cmdline();
     testcase_testvector_cmdline();
     testcase_dumpmemory();
+    testcase_narrowcast();
     testcase_valist();
     testcase_testvector_valist();
     testcase_variant();
