@@ -22,15 +22,15 @@ namespace hotplace {
  * @sample
  *          // construct
  *          t_suffixtree<char> suffixtree("geeksforgeeks.org", 17);
- *          std::set<unsigned> result = suffixtree.search("ee", 2);       // 1, 9
- *          std::set<unsigned> result = suffixtree.search("geek", 4);     // 0, 8
- *          std::set<unsigned> result = suffixtree.search("quiz", 4);     // not found
- *          std::set<unsigned> result = suffixtree.search("forgeeks", 8); // 5
+ *          std::set<size_t> result = suffixtree.search("ee", 2);       // 1, 9
+ *          std::set<size_t> result = suffixtree.search("geek", 4);     // 0, 8
+ *          std::set<size_t> result = suffixtree.search("quiz", 4);     // not found
+ *          std::set<size_t> result = suffixtree.search("forgeeks", 8); // 5
  *
  *          //
  *          t_suffixtree<char> suffixtree;
  *          suffixtree.add("geeksforgeeks.org", 17);
- *          std::set<unsigned> result = suffixtree.search("ee", 2);       // 1, 9
+ *          std::set<size_t> result = suffixtree.search("ee", 2);       // 1, 9
  */
 template <typename BT = char, typename T = BT>
 class t_suffixtree {
@@ -39,7 +39,7 @@ class t_suffixtree {
 
     struct trienode {
         std::unordered_map<BT, trienode*> children;
-        std::set<unsigned> index;
+        std::set<size_t> index;
 
         trienode() {}
         ~trienode() {
@@ -68,9 +68,9 @@ class t_suffixtree {
         return *this;
     }
 
-    std::set<unsigned> search(const std::vector<T>& pattern) { return search(pattern.data(), pattern.size()); }
-    std::set<unsigned> search(const T* pattern, size_t size) {
-        std::set<unsigned> index;
+    std::set<size_t> search(const std::vector<T>& pattern) { return search(pattern.data(), pattern.size()); }
+    std::set<size_t> search(const T* pattern, size_t size) {
+        std::set<size_t> index;
         if (pattern) {
             trienode* current = _root;
             for (size_t i = 0; i < size; ++i) {
@@ -97,7 +97,7 @@ class t_suffixtree {
     }
 
    protected:
-    void add(const BT* pattern, size_t size, unsigned idx) {
+    void add(const BT* pattern, size_t size, size_t idx) {
         if (pattern) {
             trienode* current = _root;
             for (size_t i = 0; i < size; ++i) {

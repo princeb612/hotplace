@@ -1,6 +1,221 @@
 testvector:
   - example: https://github.com/cose-wg/Examples
     schema: COSE EXAMPLES
+    keys:
+      - item: 11
+        keyset: key
+        encoding: base64url
+        kty: ec
+        crv: P-256
+        x: usWxHK2PmfnHKwXPS54m0kTcGJ90UiglWiGahtagnv8
+        y: IBOL-C3BttVivg-lSreASjpkttcsz-1rb7btKLv8EX4
+        d: V8kgd2ZBRuh2dgyVINBUqpPDr7BOMGcF22CQMIUHtNM
+      - item: P384
+        keyset: key
+        encoding: base64url
+        kty: ec
+        crv: P-384
+        x: kTJyP2KSsBBhnb4kjWmMF7WHVsY55xUPgb7k64rDcjatChoZ1nvjKmYmPh5STRKc
+        y: mM0weMVU2DKsYDxDJkEP9hZiRZtB8fPfXbzINZj_fF7YQRynNWedHEyzAJOX2e8s
+        d: ok3Nq97AXlpEusO7jIy1FZATlBP9PNReMU7DWbkLQ5dU90snHuuHVDjEPmtV0fTo
+      - item: bilbo.baggins@hobbiton.example
+        keyset: key
+        encoding: base64url
+        kty: ec
+        crv: P-521
+        x: AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9A5RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt
+        y: AdymlHvOiLxXkEhayXQnNCvDX4h9htZaCJN34kfmC6pV5OhQHiraVySsUdaQkAgDPrwQrJmbnX9cwlGfP-HqHZR1
+        d: AAhRON2r9cqXX1hg-RoI6R1tX5p2rUAYdmpHZoC1XNM56KtscrX6zbKipQrCW9CGZH3T4ubpnoTKLDYJ_fF3_rJt
+      - item: 11
+        keyset: key
+        encoding: base16
+        kty: okp
+        crv: Ed25519
+        x: d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a
+        d: 9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60
+      - item: ed448
+        keyset: key
+        encoding: base16
+        kty: okp
+        crv: Ed448
+        x: 5fd7449b59b461fd2ce787ec616ad46a1da1342485a70e1f8a0ea75d80e96778edf124769b46c7061bd6783df1e50f6cd1fa1abeafe8256180
+        d: 6c82a562cb808d10d632be89c8513ebf6c929f34ddfa8c9f63c9960ef6e348a3528c8a3fcc2f044e39a3fc5b94492f8f032e7549a20098f95b
+      - item: Alice Lovelace
+        keyset: key
+        encoding: base16
+        kty: ec
+        crv: P-256
+        x: 863aa7bc0326716aa59db5bf66cc660d0591d51e4891bc2e6a9baff5077d927c
+        y: ad4eed482a7985be019e9b1936c16e00190e8bcc48ee12d35ff89f0fc7a099ca
+        d: d42044eb2cd2691e926da4871cf3529ddec6b034f824ba5e050d2c702f97c7a5
+      - item: meriadoc.brandybuck@buckland.example
+        keyset: key
+        encoding: base64url
+        kty: ec
+        crv: P-256
+        x: Ze2loSV3wrroKUN_4zhwGhCqo3Xhu1td4QjeQ5wIVR0
+        y: HlLtdXARY_f55A3fnzQbPcm6hgr34Mp8p-nuzQCE0Zw
+        d: r_kHyZ-a06rmxM3yESK84r1otSg-aQcVStkRhA-iCM8
+      - item: peregrin.took@tuckborough.example
+        keyset: key
+        encoding: base64url
+        kty: ec
+        crv: P-256
+        x: mPUKT_bAWGHIhg0TpjjqVsP1rXWQu_vwVOHHtNkdYoA
+        y: 8BQAsImGeAS46fyWw5MhYfGTT0IjBpFw2SS34Dv4Irs
+        d: AtH35vJsQ9SGjYfOsjUxYXQKrPH3FjZHmEtSKoSN8cM
+      - item: X25519-1
+        keyset: key
+        encoding: base16
+        kty: okp
+        crv: X25519
+        x: 7FFE91F5F932DAE92BE603F55FAC0F4C4C9328906EE550EDCB7F6F7626EBC07E
+        d: 00a943daa2e38b2edbf0da0434eaaec6016fe25dcd5ecacbc07dc30300567655
+      - item: X25519-bob
+        keyset: key
+        encoding: base16
+        kty: okp
+        crv: X25519
+        x: DE9EDB7D7B7DC1B4D35B61C2ECE435373F8343C85B78674DADFC7E146F882B4F
+        d: 58AB087E624A8A4B79E17F8B83800EE66F3BB1292618B6FD1C2F8B27FF88E06B
+      - item: X25519-alice
+        keyset: key
+        encoding: base16
+        kty: okp
+        crv: X25519
+        x: 8520F0098930A754748B7DDCB43EF75A0DBF3A0D26381AF4EBA4A98EAA9B4E6A
+        d: 70076D0A7318A57D3C16C17251B26645DF4C2F87EBC0992AB177FBA51DB92C6A
+      - item: our-secret
+        keyuse: enc
+        keyset: key
+        encoding: base64url
+        kty: oct
+        k: hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYg
+      - item: sec-48
+        keyuse: enc
+        keyset: key
+        encoding: base64url
+        kty: oct
+        k: hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYgAESIzd4iZqiEiIyQlJico
+      - item: sec-64
+        keyuse: enc
+        keyset: key
+        encoding: base64url
+        kty: oct
+        k: hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYgAESIzd4iZqiEiIyQlJicoqrvM3e7_paanqKmgsbKztA
+      - item: meriadoc.brandybuck@rsa.example
+        keyset: key
+        encoding: base16
+        kty: rsa
+        n: BC7E29D0DF7E20CC9DC8D509E0F68895922AF0EF452190D402C61B554334A7BF91C9A570240F994FAE1B69035BCFAD4F7E249EB26087C2665E7C958C967B1517413DC3F97A431691A5999B257CC6CD356BAD168D929B8BAE9020750E74CF60F6FD35D6BB3FC93FC28900478694F508B33E7C00E24F90EDF37457FC3E8EFCFD2F42306301A8205AB740515331D5C18F0C64D4A43BE52FC440400F6BFC558A6E32884C2AF56F29E5C52780CEA7285F5C057FC0DFDA232D0ADA681B01495D9D0E32196633588E289E59035FF664F056189F2F10FE05827B796C326E3E748FFA7C589ED273C9C43436CDDB4A6A22523EF8BCB2221615B799966F1ABA5BC84B7A27CF
+        e: 010001
+        d: 0969FF04FCC1E1647C20402CF3F736D4CAE33F264C1C6EE3252CFCC77CDEF533D700570AC09A50D7646EDFB1F86A13BCABCF00BD659F27813D08843597271838BC46ED4743FE741D9BC38E0BF36D406981C7B81FCE54861CEBFB85AD23A8B4833C1BEE18C05E4E436A869636980646EECB839E4DAF434C9C6DFBF3A55CE1DB73E4902F89384BD6F9ECD3399FB1ED4B83F28D356C8E619F1F0DC96BBE8B75C1812CA58F360259EAEB1D17130C3C0A2715A99BE49898E871F6088A29570DC2FFA0CEFFFA27F1F055CBAABFD8894E0CC24F176E34EBAD32278A466F8A34A685ACC8207D9EC1FCBBD094996DC73C6305FCA31668BE57B1699D0BB456CC8871BFFBCD
+      - item: meriadoc.brandybuck@buckland.example
+        keyset: ecdh_wrap_p256_key
+        encoding: base64url
+        kty: ec
+        crv: P-256
+        x: Ze2loSV3wrroKUN_4zhwGhCqo3Xhu1td4QjeQ5wIVR0
+        y: HlLtdXARY_f55A3fnzQbPcm6hgr34Mp8p-nuzQCE0Zw
+        d: r_kHyZ-a06rmxM3yESK84r1otSg-aQcVStkRhA-iCM8
+      - item: meriadoc.brandybuck@buckland.example
+        keyalg: ES512
+        keyset: ecdh_wrap_p521_key
+        encoding: base64url
+        kty: ec
+        crv: P-521
+        x: AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9A5RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt
+        y: AdymlHvOiLxXkEhayXQnNCvDX4h9htZaCJN34kfmC6pV5OhQHiraVySsUdaQkAgDPrwQrJmbnX9cwlGfP-HqHZR1
+        d: AAhRON2r9cqXX1hg-RoI6R1tX5p2rUAYdmpHZoC1XNM56KtscrX6zbKipQrCW9CGZH3T4ubpnoTKLDYJ_fF3_rJt
+      - item: our-secret
+        keyuse: enc
+        keyset: aes_ccm_key
+        encoding: base64url
+        kty: oct
+        k: hJtXIZ2uSN5kbQfbtTNWbg
+      - item: sec-256
+        keyuse: enc
+        keyset: aes_ccm_key
+        encoding: base64url
+        kty: oct
+        k: Dx4tPEtaaXiHlqW0w9Lh8B8uPUxbanmIl6a1xNPi8QA
+      - item: sec-192
+        keyuse: enc
+        keyset: aes_ccm_key
+        encoding: base64url
+        kty: oct
+        k: Dx4tPEtaaXiHlqW0w9Lh8B8uPUxbanmI
+      - item: sec-64
+        keyuse: enc
+        keyset: aes_ccm_key
+        encoding: base64url
+        kty: oct
+        k: hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYgAESIzd4iZqiEiIyQlJicoqrvM3e7_paanqKmgsbKztA
+      - item: sec-48
+        keyuse: enc
+        keyset: aes_ccm_key
+        encoding: base64url
+        kty: oct
+        k: hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYgAESIzd4iZqiEiIyQlJico
+      - item: 018c0ae5-4d9b-471b-bfd6-eef314bc7037
+        keyuse: enc
+        keyset: aes_ccm_key
+        encoding: base64url
+        kty: oct
+        k: hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYg
+      - item: our-secret
+        keyuse: enc
+        keyset: hmac_aes_256_key
+        encoding: base64url
+        kty: oct
+        k: Dx4tPEtaaXiHlqW0w9Lh8B8uPUxbanmIl6a1xNPi8QA
+      - item: sec-48
+        keyuse: enc
+        keyset: aes_gcm_02_key
+        encoding: base64url
+        kty: oct
+        k: Dx4tPEtaaXiHlqW0w9Lh8B8uPUxbanmI
+      - item: sec-64
+        keyuse: enc
+        keyset: aes_gcm_03_key
+        encoding: base64url
+        kty: oct
+        k: Dx4tPEtaaXiHlqW0w9Lh8B8uPUxbanmIl6a1xNPi8QA
+      - item: our-secret
+        keyuse: enc
+        keyset: hmac_aes_128_key
+        encoding: base64url
+        kty: oct
+        k: hJtXIZ2uSN5kbQfbtTNWbg
+      - item: sec-48
+        keyuse: enc
+        keyset: key_hmac_enc_02
+        encoding: base64url
+        kty: oct
+        k: hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYgAESIzd4iZqiEiIyQlJico
+      - item:
+        keyset: cwtkey
+        encoding: base16
+        kty: ec
+        crv: P-256
+        x: 143329cce7868e416927599cf65a34f3ce2ffda55a7eca69ed8919a394d42f0f
+        y: 60f7f1a780d8a783bfb7a2dd6b2796e8128dbbcef9d3d168db9529971a36e7b9
+        d: 6c1382765aec5358f117733d281c1c7bdc39884d04a45a1e6c67c858bc206c19
+      - item: our-secret
+        keyset: cwtkey
+        encoding: base16
+        kty: oct
+        k: 231f4c4d4d3051fdc2ec0a3851d5b383
+      - item: our-secret
+        keyset: key_cwt_a4
+        encoding: base16
+        kty: oct
+        k: 403697de87af64611c1d32a05dab0fe1fcb715a86ab435f1ec99192d79569388
+      - item: sec-64
+        keyset: key_hmac_enc_03
+        encoding: base64url
+        kty: oct
+        k: hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYgAESIzd4iZqiEiIyQlJicoqrvM3e7_paanqKmgsbKztA
     items:
       - item: aes-ccm-examples/aes-ccm-01.json
         keyset: aes_ccm_key

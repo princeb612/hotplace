@@ -17,18 +17,18 @@ void test_suffixtree1() {
     struct testvector {
         const char* p;
         size_t size;
-        std::set<unsigned> expects;
+        std::set<size_t> expects;
     };
 
     t_suffixtree<char> tree("geeksforgeeks.org", 17);
     testvector _table_pattern[] = {{"ee", 2, {1, 9}}, {"geek", 4, {0, 8}}, {"quiz", 4, {}}, {"forgeeks", 8, {5}}};
 
     for (auto item : _table_pattern) {
-        std::set<unsigned> result = tree.search(item.p, item.size);
+        std::set<size_t> result = tree.search(item.p, item.size);
         for (auto idx : result) {
-            _logger->writeln("found at %i", idx);
+            _logger->writeln("found at %zi", idx);
         }
-        _test_case.assert(item.expects == result, __FUNCTION__, "search %.*s", (unsigned)item.size, item.p);
+        _test_case.assert(item.expects == result, __FUNCTION__, "search %.*s", (int)item.size, item.p);
     }
 }
 
@@ -38,18 +38,18 @@ void test_suffixtree2() {
     struct testvector {
         const char* p;
         size_t size;
-        std::set<unsigned> expects;
+        std::set<size_t> expects;
     };
 
     t_suffixtree<char> tree;
     tree.reset().add("test ", 5).add("geeksforgeeks.org", 17);  // "test geeksforgeeks.org"
     testvector _table_pattern[] = {{"ee", 2, {6, 14}}, {"geek", 4, {5, 13}}, {"quiz", 4, {}}, {"forgeeks", 8, {10}}, {"est g", 4, {1}}};
     for (auto item : _table_pattern) {
-        std::set<unsigned> result = tree.search(item.p, item.size);
+        std::set<size_t> result = tree.search(item.p, item.size);
         for (auto idx : result) {
-            _logger->writeln("found at %i", idx);
+            _logger->writeln("found at %zi", idx);
         }
-        _test_case.assert(item.expects == result, __FUNCTION__, "search %.*s", (unsigned)item.size, item.p);
+        _test_case.assert(item.expects == result, __FUNCTION__, "search %.*s", (int)item.size, item.p);
     }
 }
 

@@ -28,23 +28,23 @@ class t_ukkonen {
     struct trienode;
     typedef typename std::function<BT(const T* _source, size_t idx)> memberof_t;
     typedef typename std::function<void(const BT* t, size_t size)> dump_handler;
-    typedef typename std::function<void(trienode* node, int level, const BT* t, size_t size)> debug_handler;
+    typedef typename std::function<void(trienode* node, size_t level, const BT* t, size_t size)> debug_handler;
 
     struct trienode {
         std::unordered_map<BT, trienode*> children;
         trienode* suffix_link;
-        int start;
-        int end;
-        int suffix_index;
+        size_t start;
+        size_t end;
+        size_t suffix_index;
 
-        trienode(int start = -1, int end = -1) : start(start), end(end), suffix_index(-1), suffix_link(nullptr) {}
+        trienode(size_t start = -1, size_t end = -1) : start(start), end(end), suffix_index(-1), suffix_link(nullptr) {}
         ~trienode() {
             for (auto item : children) {
                 delete item.second;
             }
         }
 
-        int length() { return end - start + 1; }
+        size_t length() { return end - start + 1; }
     };
 
     t_ukkonen(memberof_t memberof = memberof_defhandler<BT, T>) : _memberof(memberof) { init(_root = new trienode); }
@@ -58,13 +58,13 @@ class t_ukkonen {
     t_ukkonen<BT, T>& add(const T* pattern, size_t size) {
         if (pattern) {
             reset();
-            for (int i = 0; i < size; ++i) {
+            for (size_t i = 0; i < size; ++i) {
                 const BT& t = _memberof(pattern, i);
                 _source.insert(_source.end(), t);
             }
             init(_root);
-            int source_size = _source.size();
-            for (int i = 0; i < source_size; ++i) {
+            size_t source_size = _source.size();
+            for (size_t i = 0; i < source_size; ++i) {
                 extend(i);
             }
         }
@@ -72,19 +72,19 @@ class t_ukkonen {
         return *this;
     }
 
-    std::set<int> search(const std::vector<T>& pattern) { return search(pattern.data(), pattern.size()); }
-    std::set<int> search(const T* pattern, size_t size) {
-        std::set<int> result;
-        int pos = -1;
+    std::set<size_t> search(const std::vector<T>& pattern) { return search(pattern.data(), pattern.size()); }
+    std::set<size_t> search(const T* pattern, size_t size) {
+        std::set<size_t> result;
+        size_t pos = -1;
+
         if (pattern) {
             trienode* current = _root;
-            int i = 0;
-            for (int i = 0; i < size;) {
+            for (size_t i = 0; i < size;) {
                 const BT& t = _memberof(pattern, i);
                 if (current->children.end() != current->children.find(t)) {
                     trienode* child = current->children[t];
-                    int len = child->length();
-                    for (int j = 0; j < len && i < size; j++, i++) {
+                    size_t len = child->length();
+                    for (size_t j = 0; j < len && i < size; j++, i++) {
                         pos = child->start + j;
                         if (_source[pos] != _memberof(pattern, i)) {
                             return result;  // not found
@@ -117,9 +117,9 @@ class t_ukkonen {
     std::vector<BT> _source;
     trienode* _root;
     trienode* _active_node;
-    int _active_edge;
-    int _active_length;
-    int _remaining_suffix_count;
+    size_t _active_edge;
+    size_t _active_length;
+    size_t _remaining_suffix_count;
 
     void init(trienode* node) {
         _active_node = node;
@@ -128,7 +128,7 @@ class t_ukkonen {
         _remaining_suffix_count = 0;
     }
 
-    void extend(int pos) {
+    void extend(size_t pos) {
         trienode* last_new_node = nullptr;
         _remaining_suffix_count++;
         while (_remaining_suffix_count > 0) {
@@ -145,7 +145,7 @@ class t_ukkonen {
                 }
             } else {
                 trienode* next = item->second;
-                int len = next->length();
+                size_t len = next->length();
                 if (_active_length >= len) {
                     _active_edge += len;
                     _active_length -= len;
@@ -190,7 +190,7 @@ class t_ukkonen {
         }
     }
 
-    void set_suffixindex(trienode* node, int height) {
+    void set_suffixindex(trienode* node, size_t height) {
         if (node) {
             for (auto child : node->children) {
                 set_suffixindex(child.second, height + child.second->length());
@@ -201,7 +201,7 @@ class t_ukkonen {
         }
     }
 
-    void collect_suffix_indices(trienode* node, std::set<int>& result) {
+    void collect_suffix_indices(trienode* node, std::set<size_t>& result) {
         if (node) {
             if (-1 == node->suffix_index) {
                 for (auto child : node->children) {
@@ -213,14 +213,14 @@ class t_ukkonen {
         }
     }
 
-    void dump(trienode* node, int level, dump_handler handler) {
+    void dump(trienode* node, size_t level, dump_handler handler) {
         for (auto& child : node->children) {
             trienode* item = child.second;
             handler(&_source[item->start], item->length());
             dump(child.second, level + 1, handler);
         }
     }
-    void debug(trienode* node, int level, debug_handler handler) {
+    void debug(trienode* node, size_t level, debug_handler handler) {
         for (auto& child : node->children) {
             trienode* item = child.second;
             handler(node, level, &_source[item->start], item->length());

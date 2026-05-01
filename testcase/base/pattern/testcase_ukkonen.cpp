@@ -20,7 +20,7 @@ void test_ukkonen1() {
         struct {
             const char* p;
             size_t size;
-            std::set<int> expects;
+            std::set<size_t> expects;
         } expect[5];
     };
     testvector _table[] =  // ...
@@ -31,10 +31,10 @@ void test_ukkonen1() {
 
     for (auto item : _table) {
         t_ukkonen<char> tree(item.p, item.size);
-        auto debug_handler = [](t_ukkonen<char>::trienode* node, int level, const char* p, size_t size) -> void {
+        auto debug_handler = [](t_ukkonen<char>::trienode* node, size_t level, const char* p, size_t size) -> void {
             if (p) {
                 _logger->writeln([&](basic_stream& bs) -> void {
-                    bs.printf("%p start %i end %i len %i index %i link %p\n", node, node->start, node->end, node->length(), node->suffix_index, node->suffix_link);
+                    bs.printf("%p start %zi end %zi len %zi index %zi link %p\n", node, node->start, node->end, node->length(), node->suffix_index, node->suffix_link);
 
                     bs.fill(level, ' ');
                     bs.printf(R"("%.*s")", (unsigned)size, p);
@@ -43,9 +43,9 @@ void test_ukkonen1() {
         };
         tree.debug(debug_handler);
         for (unsigned i = 0; i < item.count; i++) {
-            std::set<int> result = tree.search(item.expect[i].p, item.expect[i].size);
+            std::set<size_t> result = tree.search(item.expect[i].p, item.expect[i].size);
             basic_stream bs;
-            print<std::set<int>, basic_stream>(result, bs);
+            print<std::set<size_t>, basic_stream>(result, bs);
 
             _test_case.assert(item.expect[i].expects == result, __FUNCTION__, "ukkonen search %s -> %s", item.expect[i].p, bs.c_str());
         }
@@ -63,8 +63,8 @@ void test_ukkonen2() {
         }
     };
     tree.dump(dump_handler);
-    std::set<int> result = tree.search("ana", 3);
-    std::set<int> expect = {1, 3};
+    std::set<size_t> result = tree.search("ana", 3);
+    std::set<size_t> expect = {1, 3};
     _test_case.assert(result == expect, __FUNCTION__, "ukkonen search");
 }
 

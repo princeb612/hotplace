@@ -15,9 +15,38 @@
 testvector:
   - example: string             # [mandatory] testcase
     schema: COSE EXAMPLES       # [mandatory] "COSE EXAMPLES"
+    keys:
+      - item: string            # [mandatory] kid
+        keyuse: string          # "enc"|"sig"
+        keyalg: string          #
+        keyset: string          # [mandatory]
+        encoding: string        # [mandatory] "base64url"|"base64"|"base16"
+        kty: ec                 # [mandatory] "ec"
+        crv: string             # [mandatory] "P-256"|"P-384"|"P-521"|...
+        x: encoding             # [mandatory] x
+        y: encoding             # [mandatory] y
+        d: encoding             # d
+      - item: string            # [mandatory] kid
+        keyuse: string          # "enc"|"sig"
+        keyalg: string          #
+        keyset: string          # [mandatory]
+        encoding: string        # [mandatory] "base64url"|"base64"|"base16"
+        kty: okp                # [mandatory] "okp"
+        crv: string             # [mandatory] "Ed25519"|"Ed448"
+        x: encoding             # [mandatory] x
+        d: encoding             # private
+      - item: string            # [mandatory] kid
+        keyuse: string          # "enc"|"sig"
+        keyalg: string          #
+        keyset: string          # [mandatory]
+        encoding: string        # [mandatory] "base64url"|"base64"|"base16"
+        kty: rsa                # [mandatory] "rsa"
+        n: encoding             # [mandatory] n
+        e: encoding             # [mandatory] e
+        d: encoding             # d
     items:
       - item: string            # [mandatory] filename, description
-        keyset: string          # [mandatory] name of pre-defined keyset
+        keyset: string          # [mandatory] foreign key (keyset) references KEYS (keyset)
         cbor: hexstring         # [mandatory]
         shared:                 # unsent, shared
           external: hexstring

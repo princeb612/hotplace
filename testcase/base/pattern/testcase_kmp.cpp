@@ -33,19 +33,19 @@ void test_kmp() {
     {
         // vector
         t_kmp<byte_t> kmp;
-        int idx = kmp.search(data, pattern);
+        size_t idx = kmp.search(data, pattern);
         _logger->hdump("data", data);
         _logger->hdump("pattern", pattern);
-        _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<byte_t> %i", idx);
+        _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<byte_t> %zi", idx);
     }
 
     {
         // contiguous memory space
         t_kmp<byte_t> kmp;
-        int idx = kmp.search(data.data(), data.size(), pattern.data(), pattern.size());
+        size_t idx = kmp.search(data.data(), data.size(), pattern.data(), pattern.size());
         _logger->hdump("data", data);
         _logger->hdump("pattern", pattern);
-        _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<byte_t> %i", idx);
+        _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<byte_t> %zi", idx);
     }
 
     {
@@ -61,8 +61,8 @@ void test_kmp() {
         prepare(pattern2, pattern);
 
         t_kmp<pattern_search_sample_data> kmp;
-        int idx = kmp.search(data2.data(), data2.size(), pattern2.data(), pattern2.size());
-        _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<struct> %i", idx);
+        size_t idx = kmp.search(data2.data(), data2.size(), pattern2.data(), pattern2.size());
+        _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<struct> %zi", idx);
     }
 
     {
@@ -83,8 +83,8 @@ void test_kmp() {
         prepare(pattern2, pattern);
         t_kmp<pattern_search_sample_data*> kmp;
         auto comparator = [](const pattern_search_sample_data* other, const pattern_search_sample_data* rhs) -> bool { return (other->value == rhs->value); };
-        int idx = kmp.search(data2.data(), data2.size(), pattern2.data(), pattern2.size(), 0, comparator);
-        _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<struct*> %i using comparator", idx);
+        size_t idx = kmp.search(data2.data(), data2.size(), pattern2.data(), pattern2.size(), 0, comparator);
+        _test_case.assert(0xa == idx, __FUNCTION__, "pattern search<struct*> %zi using comparator", idx);
         clean(data2);
         clean(pattern2);
     }
