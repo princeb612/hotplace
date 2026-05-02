@@ -32,8 +32,8 @@
     * CBOR
 
 * details
-  * Revision 967
-    * CI failure (azure.archive.ubuntu.com problem)
+  * Revision 968
+    * github workflow problem
   * Revision 966
     * [fixed] MSVC compiler warning
   * Revision 958 (Tag 1.93)
