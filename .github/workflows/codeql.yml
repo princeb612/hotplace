@@ -46,7 +46,8 @@ jobs:
 
     steps:
     - name: setup
-      run: sudo apt install libssl-dev libjansson-dev zlib1g-dev libyaml-cpp-dev
+      # azure.archive.ubuntu.com problem
+      # run: sudo apt install libssl-dev libjansson-dev zlib1g-dev libyaml-cpp-dev
 
     - name: Checkout repository
       uses: actions/checkout@v3
