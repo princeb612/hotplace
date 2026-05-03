@@ -32,8 +32,8 @@
     * CBOR
 
 * details
-  * Revision 970
-    * gcc warnings
+  * Revision 969-971
+    * [tested] gcc warnings
   * Revision 968
     * github workflow problem
   * Revision 966

@@ -170,7 +170,7 @@ TYPE t_atoi_n(const char* value, size_t size) {
         }
 
         if (sign < 0) {
-            res = t_change_sign<TYPE>(res);
+            res = -res;
         }
     }
     __finally2 {}
