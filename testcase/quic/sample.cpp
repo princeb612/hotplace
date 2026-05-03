@@ -43,20 +43,20 @@ void whatsthis() {
         case mode_encnum: {
             auto i64_input = t_atoi<uint64>(option.content);
             quic_write_vle_int(i64_input, bin_encoded);
-            auto encoded = std::move(base16_encode(bin_encoded));
+            auto encoded = base16_encode(bin_encoded);
             bs.printf("> encode\n");
             bs.printf("  %I64i (0x%I64x) -> %s\n", i64_input, i64_input, encoded.c_str());
         } break;
         case mode_encode: {
-            bin_input = std::move(base16_decode_rfc(option.content));
+            bin_input = base16_decode_rfc(option.content);
             auto i64_input = t_binary_to_integer<uint64>(bin_input);
             quic_write_vle_int(i64_input, bin_encoded);
-            auto encoded = std::move(base16_encode(bin_encoded));
+            auto encoded = base16_encode(bin_encoded);
             bs.printf("> encode\n");
             bs.printf("  0x%I64x (%I64i) -> %s\n", i64_input, i64_input, encoded.c_str());
         } break;
         case mode_decode: {
-            bin_input = std::move(base16_decode_rfc(option.content));
+            bin_input = base16_decode_rfc(option.content);
             size_t pos = 0;
             uint64 i64_decoded = 0;
             quic_read_vle_int(bin_input.data(), bin_input.size(), pos, i64_decoded);
@@ -107,29 +107,29 @@ void test_rfc_9001_construct_initial(testvector_initial_packet* item, tls_sessio
     uint8 pn_length = item->pn_length;
     size_t length = item->length;
 
-    size_t pos = 0;
+    // size_t pos = 0;
     openssl_crypt crypt;
-    crypt_context_t* handle = nullptr;
+    // crypt_context_t* handle = nullptr;
 
     // DCID, expectation data, result, ...
     {
         if (item->dcid) {
-            bin_dcid = std::move(base16_decode_rfc(item->dcid));
+            bin_dcid = base16_decode_rfc(item->dcid);
         }
         if (item->scid) {
-            bin_scid = std::move(base16_decode_rfc(item->scid));
+            bin_scid = base16_decode_rfc(item->scid);
         }
         if (item->token) {
-            bin_token = std::move(base16_decode_rfc(item->token));
+            bin_token = base16_decode_rfc(item->token);
         }
-        bin_frame = std::move(base16_decode_rfc(item->frame));
+        bin_frame = base16_decode_rfc(item->frame);
         if (item->pad) {
             bin_frame.resize(item->resize);
         }
 
-        bin_expect_unprotected_header = std::move(base16_decode_rfc(item->expect_unprotected_header));
-        bin_expect_protected_header = std::move(base16_decode_rfc(item->expect_protected_header));
-        bin_expect_result = std::move(base16_decode_rfc(item->expect_result));
+        bin_expect_unprotected_header = base16_decode_rfc(item->expect_unprotected_header);
+        bin_expect_protected_header = base16_decode_rfc(item->expect_protected_header);
+        bin_expect_result = base16_decode_rfc(item->expect_result);
     }
 
     auto& protection = session->get_tls_protection();
@@ -222,19 +222,19 @@ void test_rfc_9001_send_initial(testvector_initial_packet* item, tls_session* se
 
     size_t pos = 0;
     openssl_crypt crypt;
-    crypt_context_t* handle = nullptr;
+    // crypt_context_t* handle = nullptr;
 
     // DCID, expectation data, result, ...
     {
         // bin_odcid = base16_decode_rfc(item->odcid);
         if (item->dcid) {
-            bin_dcid = std::move(base16_decode_rfc(item->dcid));
+            bin_dcid = base16_decode_rfc(item->dcid);
         }
         if (item->scid) {
-            bin_scid = std::move(base16_decode_rfc(item->scid));
+            bin_scid = base16_decode_rfc(item->scid);
         }
 
-        bin_expect_result = std::move(base16_decode_rfc(item->expect_result));
+        bin_expect_result = base16_decode_rfc(item->expect_result);
     }
 
     // read
@@ -264,22 +264,22 @@ void test_rfc_9001_retry(testvector_retry_packet* item, tls_session* session) {
     binary_t bin_expect_result;
     binary_t bin_expect_tag;
 
-    const char* text = item->text;
+    // const char* text = item->text;
     const char* func = item->func;
     tls_direction_t dir = item->dir;
 
     {
         if (item->dcid) {
-            bin_dcid = std::move(base16_decode_rfc(item->dcid));
+            bin_dcid = base16_decode_rfc(item->dcid);
         }
         if (item->scid) {
-            bin_scid = std::move(base16_decode_rfc(item->scid));
+            bin_scid = base16_decode_rfc(item->scid);
         }
         if (item->token) {
-            bin_token = std::move(base16_decode_rfc(item->token));
+            bin_token = base16_decode_rfc(item->token);
         }
-        bin_expect_result = std::move(base16_decode_rfc(item->expect_result));
-        bin_expect_tag = std::move(base16_decode_rfc(item->expect_tag));
+        bin_expect_result = base16_decode_rfc(item->expect_result);
+        bin_expect_tag = base16_decode_rfc(item->expect_tag);
     }
 
     // write

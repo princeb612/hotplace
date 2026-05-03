@@ -208,7 +208,6 @@ return_t openssl_kdf::hkdf_expand_label(binary_t& okm, const char* alg, uint16 l
 
 return_t openssl_kdf::hkdf_expand_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const binary_t& prefix, const binary_t& label,
                                         const binary_t& context) {
-    return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     return hkdf_expand_label(okm, advisor->nameof_md(alg), length, secret, prefix, label, context);
 }

@@ -54,10 +54,10 @@ return_t do_test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_c
 
         const char* encalg = entry->encalg.c_str();
         const char* macalg = entry->macalg.c_str();
-        binary_t k = std::move(base16_decode(entry->k));
-        binary_t iv = std::move(base16_decode(entry->iv));
-        binary_t a = std::move(base16_decode(entry->a));
-        binary_t p = std::move(base16_decode(entry->p));
+        binary_t k = base16_decode(entry->k);
+        binary_t iv = base16_decode(entry->iv);
+        binary_t a = base16_decode(entry->a);
+        binary_t p = base16_decode(entry->p);
         binary_t mac_key;
         binary_t enc_key;
         binary_t ps;
@@ -171,11 +171,11 @@ void do_test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_h
     const OPTION& option = _cmdline->value();
     // openssl_crypt aead;
 
-    binary_t cek = std::move(base16_decode(entry->k));
-    binary_t iv = std::move(base16_decode(entry->iv));
-    binary_t aad = std::move(base16_decode(entry->a));
-    binary_t plaintext = std::move(base16_decode(entry->p));
-    binary_t ciphertext = std::move(base16_decode(entry->q));
+    binary_t cek = base16_decode(entry->k);
+    binary_t iv = base16_decode(entry->iv);
+    binary_t aad = base16_decode(entry->a);
+    binary_t plaintext = base16_decode(entry->p);
+    binary_t ciphertext = base16_decode(entry->q);
 
     crypto_cbc_hmac cbchmac;
     cbchmac.set_enc(entry->encalg).set_mac(entry->macalg).set_flag(jose_encrypt_then_mac);
@@ -187,6 +187,7 @@ void do_test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_h
     binary_t q;
     binary_t t;
     ret = cbchmac.encrypt(enckey, mackey, iv, aad, plaintext, q, t);
+    _test_case.test(ret, __FUNCTION__, "encrypt");
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
         dump(q);
@@ -194,6 +195,7 @@ void do_test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_h
     _test_case.assert(ciphertext == q, __FUNCTION__, "encrypt %s", entry->item.c_str());
     binary_t p;
     ret = cbchmac.decrypt(enckey, mackey, iv, aad, q, p, t);
+    _test_case.test(ret, __FUNCTION__, "decrypt");
     if (option.verbose) {
         test_case_notimecheck notimecheck(_test_case);
         dump(p);
@@ -204,7 +206,7 @@ void do_test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_h
 void test_yaml_testvector_cbc_hmac_jose() {
     _test_case.begin("Authenticated Encryption with AES-CBC and HMAC-SHA YAML");
 
-    auto lambda_test_cbc_hmac_jose = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_cbchmac_jose = [&](const YAML::Node& items) -> void {
         for (const auto& item : items) {
             test_vector_aead_aes_cbc_hmac_sha2_t entry;
 
@@ -236,7 +238,7 @@ void test_yaml_testvector_cbc_hmac_jose() {
             auto items = example["items"];
 
             if (schema == "CBC-HMAC JOSE") {
-                lambda_test_cbc_hmac_jose(items);
+                lambda_yaml_cbchmac_jose(items);
             } else {
                 _test_case.assert(false, __FUNCTION__, "bad message format");
             }

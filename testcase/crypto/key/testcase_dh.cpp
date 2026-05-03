@@ -13,7 +13,7 @@
 // ECDH
 void test_dh_rfc7748() {
     _test_case.begin("RFC 7748 6.  Diffie-Hellman");
-    return_t ret = success;
+    // return_t ret = success;
 
     crypto_key key;
     crypto_keychain keychain;

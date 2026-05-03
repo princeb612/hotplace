@@ -50,7 +50,6 @@ return_t http_request::open(const char* request, size_t size_request, uint32 fla
         close();
 
         std::string uri;
-        size_t pos = 0;
 
         if (1 == get_version()) {
             open_h1(request, size_request, flags);

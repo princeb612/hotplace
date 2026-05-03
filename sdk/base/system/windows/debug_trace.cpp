@@ -143,7 +143,6 @@ return_t enum_modules_handler(uint32 type, uint32 count, void* data[], CALLBACK_
 
 return_t debug_trace::open(debug_trace_context_t** handle) {
     return_t ret = errorcode_t::success;
-    backtrace_context_t* context = nullptr;
     HMODULE imagehlp_handle = nullptr;
 
     __try2 {
@@ -155,7 +154,7 @@ return_t debug_trace::open(debug_trace_context_t** handle) {
         DECLARE_DLLNAME_IMAGEHLP;
         ret = load_library(&imagehlp_handle, DLLNAME_IMAGEHLP, loadlibrary_path_t::system_path, nullptr);
 
-        __try_new_catch(context, new backtrace_context_t, ret, __leave2);
+        auto context = make_unique<backtrace_context_t>();
 
 #ifdef __x86_64__
         DECLARE_NAMEOF_API_STACKWALK64;
@@ -242,15 +241,11 @@ return_t debug_trace::open(debug_trace_context_t** handle) {
         // enum_modules(GetCurrentProcess(), enum_modules_handler, context);  // [APVR]
 
         context->imagehlp_handle = imagehlp_handle;
-        *handle = context;
+        *handle = context.get();
+
+        context.release();
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            if (context) {
-                delete context;
-            }
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -367,7 +362,7 @@ return_t debug_trace::trace(debug_trace_context_t* handle, CONTEXT* rtlcontext, 
             __leave2;
         }
 
-        constexpr char constexpr_debug[] = "debug";
+        // constexpr char constexpr_debug[] = "debug";
         constexpr char constexpr_frameinfo[] = "#%-4d %08x %08x %08x %08x %08x %08x ";
         constexpr char constexpr_moduleinfo[] = "%s(0x%08x)+0x%08x ";
         constexpr char constexpr_undeco[] = "%s!%s";

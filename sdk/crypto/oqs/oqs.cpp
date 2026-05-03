@@ -24,7 +24,6 @@ pqc_oqs::~pqc_oqs() {}
 return_t pqc_oqs::open(oqs_context** context) {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
     return_t ret = errorcode_t::success;
-    oqs_context* handle = nullptr;
     OSSL_LIB_CTX* libctx = nullptr;
     OSSL_PROVIDER* default_provider = nullptr;
     OSSL_PROVIDER* oqs_provider = nullptr;
@@ -34,7 +33,7 @@ return_t pqc_oqs::open(oqs_context** context) {
             ret = errorcode_t::invalid_parameter;
         }
 
-        __try_new_catch(handle, new oqs_context, ret, __leave2);
+        auto handle = make_unique<oqs_context>();
 
         libctx = OSSL_LIB_CTX_new();
 
@@ -72,7 +71,9 @@ return_t pqc_oqs::open(oqs_context** context) {
         handle->default_provider = default_provider;
         handle->oqs_provider = oqs_provider;
 
-        *context = handle;
+        *context = handle.get();
+
+        handle.release();
     }
     __finally2 {
         if (errorcode_t::success != ret) {

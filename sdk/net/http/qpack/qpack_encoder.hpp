@@ -24,6 +24,7 @@ namespace net {
 class qpack_encoder : public http_header_compression {
    public:
     qpack_encoder();
+    virtual ~qpack_encoder();
 
     /**
      * @brief   encode (header compression)
@@ -54,7 +55,7 @@ class qpack_encoder : public http_header_compression {
      *              encoder.decode(dyntable, stream, streamsize, pos, item, flags);
      *          }
      */
-    virtual return_t decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item, uint32 flags = 0);
+    return_t decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item, uint32 flags = 0);
     return_t decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::list<http_compression_decode_t>& kv, uint32 flags = 0);
     /**
      * @brief   RFC 9204 4.3.1.  Set Dynamic Table Capacity

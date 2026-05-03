@@ -38,7 +38,6 @@ cbor_object_signing_encryption::~cbor_object_signing_encryption() {}
 
 return_t cbor_object_signing_encryption::open(cose_context_t** handle) {
     return_t ret = errorcode_t::success;
-    cose_context_t* context = nullptr;
 
     __try2 {
         if (nullptr == handle) {
@@ -46,9 +45,12 @@ return_t cbor_object_signing_encryption::open(cose_context_t** handle) {
             __leave2;
         }
 
-        __try_new_catch(context, new cose_context_t, ret, __leave2);
+        auto context = make_unique<cose_context_t>();
         context->composer = new cose_composer;
-        *handle = context;
+
+        *handle = context.get();
+
+        context.release();
     }
     __finally2 {}
     return ret;
@@ -143,7 +145,7 @@ return_t cbor_object_signing_encryption::verify(cose_context_t* handle, crypto_k
 return_t cbor_object_signing_encryption::process(cose_context_t* handle, crypto_key* key, const binary_t& cbor, binary_t& output, cose_mode_t mode) {
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
+    // crypto_advisor* advisor = crypto_advisor::get_instance();
     std::set<return_t> results;
 
     __try2 {
@@ -317,7 +319,6 @@ return_t cbor_object_signing_encryption::preprocess(cose_context_t* handle, cryp
 return_t cbor_object_signing_encryption::preprocess_skeleton(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t>& algs, crypt_category_t category,
                                                              const binary_t& input) {
     return_t ret = errorcode_t::success;
-    return_t check = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -372,6 +373,8 @@ return_t cbor_object_signing_encryption::preprocess_skeleton(cose_context_t* han
                 body.get_unprotected().add(cose_key_t::cose_kid, kid);
                 body.get_payload().set(input);
             } break;
+            default:
+                break;
         }
 
         if (crypt_category_t::crypt_category_crypt == category || crypt_category_t::crypt_category_mac == category) {
@@ -398,8 +401,6 @@ return_t cbor_object_signing_encryption::preprocess_skeleton(cose_context_t* han
 return_t cbor_object_signing_encryption::preprocess_random(cose_context_t* handle, crypto_key* key) {
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
-    return_t test = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
         if (nullptr == handle) {
@@ -462,7 +463,7 @@ return_t cbor_object_signing_encryption::preprocess_dorandom(cose_context_t* han
             __leave2;
         }
 
-        cose_alg_t alg = alg = layer->get_algorithm();
+        cose_alg_t alg = layer->get_algorithm();
         crypt_category_t category = advisor->categoryof(alg);
         std::string kid = layer->get_kid();
 
@@ -590,35 +591,32 @@ return_t cbor_object_signing_encryption::compose_kdf_context(cose_context_t* han
             throw exception(errorcode_t::unexpected);
         }
 
-        __try_new_catch(root, new cbor_array(), ret, __leave2);
+        root = new cbor_array();
 
-        *root << new cbor_data(algid) << new cbor_array() << new cbor_array() << new cbor_array();
-        cbor_array* partyu = (cbor_array*)(*root)[1];
-        cbor_array* partyv = (cbor_array*)(*root)[2];
-        cbor_array* pub = (cbor_array*)(*root)[3];
-        // PartyUInfo
+        (*root)
+            .add(new cbor_data(algid))
+            .add([&](cbor_array* partyu) -> void {
+                *partyu << compose_kdf_context_item(handle, layer, cose_key_t::cose_partyu_id, cose_param_t::cose_unsent_apu_id)
+                        << compose_kdf_context_item(handle, layer, cose_key_t::cose_partyu_nonce, cose_param_t::cose_unsent_apu_nonce)
+                        << compose_kdf_context_item(handle, layer, cose_key_t::cose_partyu_other, cose_param_t::cose_unsent_apu_other);
+            })
+            .add([&](cbor_array* partyv) -> void {
+                *partyv << compose_kdf_context_item(handle, layer, cose_key_t::cose_partyv_id, cose_param_t::cose_unsent_apv_id)
+                        << compose_kdf_context_item(handle, layer, cose_key_t::cose_partyv_nonce, cose_param_t::cose_unsent_apv_nonce)
+                        << compose_kdf_context_item(handle, layer, cose_key_t::cose_partyv_other, cose_param_t::cose_unsent_apv_other);
+            })
+            .add([&](cbor_array* pub) -> void {
+                // SuppPubInfo
+                *pub << new cbor_data(keylen) << layer->get_protected().cbor();
+                binary_t bin_public;
+                layer->finditem(cose_param_t::cose_unsent_pub_other, bin_public, cose_scope::cose_scope_unsent);
+                if (bin_public.size()) {
+                    *pub << new cbor_data(bin_public);
+                }
+            });
+
         {
-            *partyu << compose_kdf_context_item(handle, layer, cose_key_t::cose_partyu_id, cose_param_t::cose_unsent_apu_id)
-                    << compose_kdf_context_item(handle, layer, cose_key_t::cose_partyu_nonce, cose_param_t::cose_unsent_apu_nonce)
-                    << compose_kdf_context_item(handle, layer, cose_key_t::cose_partyu_other, cose_param_t::cose_unsent_apu_other);
-        }
-        // PartyVInfo
-        {
-            *partyv << compose_kdf_context_item(handle, layer, cose_key_t::cose_partyv_id, cose_param_t::cose_unsent_apv_id)
-                    << compose_kdf_context_item(handle, layer, cose_key_t::cose_partyv_nonce, cose_param_t::cose_unsent_apv_nonce)
-                    << compose_kdf_context_item(handle, layer, cose_key_t::cose_partyv_other, cose_param_t::cose_unsent_apv_other);
-        }
-        // SuppPubInfo
-        {
-            *pub << new cbor_data(keylen) << layer->get_protected().cbor();
-            binary_t bin_public;
-            layer->finditem(cose_param_t::cose_unsent_pub_other, bin_public, cose_scope::cose_scope_unsent);
-            if (bin_public.size()) {
-                *pub << new cbor_data(bin_public);
-            }
-        }
-        // SuppPrivInfo
-        {
+            // SuppPrivInfo
             binary_t bin_private;
             layer->finditem(cose_param_t::cose_unsent_priv_other, bin_private, cose_scope::cose_scope_unsent);
             if (bin_private.size()) {

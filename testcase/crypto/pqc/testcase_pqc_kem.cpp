@@ -15,7 +15,7 @@ void test_pqc_kem() {
 
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     return_t ret = errorcode_t::success;
-    const OPTION& option = _cmdline->value();
+    // const OPTION& option = _cmdline->value();
 
     __try2 {
         crypto_keychain keychain;

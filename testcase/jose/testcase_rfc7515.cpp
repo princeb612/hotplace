@@ -267,7 +267,7 @@ void test_rfc7515_A3() {
     print_text("RFC 7515 A.3");
 
     /* RFC 7515 */
-    constexpr byte_t es256_header[] = "{\"alg\":\"ES256\"}";
+    // constexpr byte_t es256_header[] = "{\"alg\":\"ES256\"}";
     constexpr char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
 
     return_t ret = errorcode_t::success;
@@ -461,15 +461,15 @@ void test_rfc7515_A7() {
 void test_rfc7515_bypem() {
     print_text("RFC 7515 by PEM");
 
-    constexpr byte_t hs256_header[] = "{\"typ\":\"JWT\",\r\n \"alg\":\"HS256\"}";
+    // constexpr byte_t hs256_header[] = "{\"typ\":\"JWT\",\r\n \"alg\":\"HS256\"}";
     constexpr byte_t rs256_header[] = "{\"alg\":\"RS256\"}";
     constexpr byte_t ps256_header[] = "{\"alg\":\"PS256\"}";
     constexpr byte_t es256_header[] = "{\"alg\":\"ES256\"}";
-    constexpr byte_t rs384_header[] = "{\"alg\":\"RS384\"}";
-    constexpr byte_t ps384_header[] = "{\"alg\":\"PS384\"}";
-    constexpr byte_t es384_header[] = "{\"alg\":\"ES384\"}";
-    constexpr byte_t rs512_header[] = "{\"alg\":\"RS512\"}";
-    constexpr byte_t ps512_header[] = "{\"alg\":\"PS512\"}";
+    // constexpr byte_t rs384_header[] = "{\"alg\":\"RS384\"}";
+    // constexpr byte_t ps384_header[] = "{\"alg\":\"PS384\"}";
+    // constexpr byte_t es384_header[] = "{\"alg\":\"ES384\"}";
+    // constexpr byte_t rs512_header[] = "{\"alg\":\"RS512\"}";
+    // constexpr byte_t ps512_header[] = "{\"alg\":\"PS512\"}";
     constexpr byte_t es512_header[] = "{\"alg\":\"ES512\"}";
     constexpr char claim[] = "{\"iss\":\"joe\",\r\n \"exp\":1300819380,\r\n \"http://example.com/is_root\":true}";
 
@@ -680,7 +680,7 @@ void do_key_match(crypto_key* key, jws_t sig, crypto_use_t use) {
 
 void key_match_test() {
     json_web_key jwk;
-    const OPTION& option = _cmdline->value();
+    // const OPTION& option = _cmdline->value();
 
     // crypto_advisor* advisor = crypto_advisor::get_instance ();
 

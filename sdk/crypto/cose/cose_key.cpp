@@ -55,10 +55,7 @@ void cose_data::cose_key::set(cose_orderlist_t& order) { _order = order; }
 cbor_map* cose_data::cose_key::cbor() {
     cbor_map* object = nullptr;
     __try2 {
-        __try_new_catch_only(object, new cbor_map());
-        if (nullptr == object) {
-            __leave2;
-        }
+        object = new cbor_map();
 
         cose_kty_t kty;
         switch (_curve) {

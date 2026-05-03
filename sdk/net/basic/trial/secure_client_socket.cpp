@@ -81,7 +81,7 @@ return_t secure_client_socket::do_shutdown() {
         do_send(bin);
 
         session->wait_change_session_status(session_status_server_close_notified, get_wto());
-        auto session_status = session->get_session_status();
+        // auto session_status = session->get_session_status();
     }
     __finally2 {}
     return ret;

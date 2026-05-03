@@ -183,6 +183,8 @@ void asn1_object::represent(binary_t* b) {
                 case asn1_type_reloid:
                     enc.reloid(*b, _var.to_str());
                     break;
+                default:
+                    break;
             }
         }
     }

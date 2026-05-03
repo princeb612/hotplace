@@ -42,7 +42,7 @@ const hint_group_t* crypto_advisor::hintof_tls_group(const std::string& name) {
 
 void crypto_advisor::enum_tls_group(std::function<void(const hint_group_t*)> func) {
     if (func) {
-        for (auto i = 0; i < sizeof_hint_groups; i++) {
+        for (size_t i = 0; i < sizeof_hint_groups; i++) {
             auto item = hint_groups + i;
             func(item);
         }

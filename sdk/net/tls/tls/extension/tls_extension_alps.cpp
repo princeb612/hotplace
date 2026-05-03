@@ -31,7 +31,7 @@ return_t tls_extension_alps::do_read_body(tls_direction_t dir, const byte_t* str
     return_t ret = errorcode_t::success;
     __try2 {
         uint16 alps_len = 0;
-        uint8 alpn_len = 0;
+        // uint8 alpn_len = 0;
         binary_t alpn;
         {
             payload pl;

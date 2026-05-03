@@ -14,7 +14,6 @@ namespace hotplace {
 
 return_t split_begin(split_context_t** handle, const char* str, const char* delim) {
     return_t ret = errorcode_t::success;
-    split_context_t* context = nullptr;
 
     __try2 {
         if (nullptr == handle || nullptr == str || nullptr == delim) {
@@ -22,7 +21,7 @@ return_t split_begin(split_context_t** handle, const char* str, const char* deli
             __leave2;
         }
 
-        __try_new_catch(context, new split_context_t, ret, __leave2);
+        auto context = make_unique<split_context_t>();
 
         context->source = str;
 
@@ -47,7 +46,10 @@ return_t split_begin(split_context_t** handle, const char* str, const char* deli
                 begin = (mark + size_delim);
             }
         }
-        *handle = context;
+
+        *handle = context.get();
+
+        context.release();
     }
     __finally2 {}
     return ret;

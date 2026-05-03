@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <hotplace/sdk/base/nostd/template.hpp>
 #include <hotplace/sdk/base/stream/bufferio.hpp>
 #include <hotplace/sdk/base/stream/printf.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
@@ -27,15 +28,13 @@ bufferio::~bufferio() {}
 
 return_t bufferio::open(bufferio_context_t** handle, size_t block_size, byte_t pad_size, uint32 flags) {
     return_t ret = errorcode_t::success;
-    bufferio_context_t* context = nullptr;
-
     __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        __try_new_catch(context, new bufferio_context_t, ret, __leave2);
+        auto context = make_unique<bufferio_context_t>();
 
         if (0 == block_size) {
             block_size = (1 << 10);
@@ -48,7 +47,8 @@ return_t bufferio::open(bufferio_context_t** handle, size_t block_size, byte_t p
 
         context->bufferio_size = 0;
 
-        *handle = context;
+        *handle = context.get();
+        context.release();
     }
     __finally2 {}
     return ret;
@@ -122,7 +122,6 @@ return_t bufferio::clone(bufferio_context_t* oldone, bufferio_context_t** newone
         context->bufferio_size = oldone->bufferio_size;
 
         for (const auto& item : oldone->bufferio_queue) {
-            byte_t* base_address = nullptr;
             bufferio_t* block = nullptr;
             ret = extend(context, item->limit, &block, 0);
             if (errorcode_t::success != ret) {
@@ -350,7 +349,6 @@ return_t bufferio::get(bufferio_context_t* handle, byte_t** contents, size_t* co
     size_t data_size = 0;
     bufferio_t* bufferio_newly_allocated = nullptr;
     byte_t* data = nullptr;
-    uint32 pad_size = 0;
 
     __try2 {
         if (nullptr == handle || nullptr == contents || nullptr == contents_size) {
@@ -384,8 +382,6 @@ return_t bufferio::get(bufferio_context_t* handle, byte_t** contents, size_t* co
             *contents = front->base_address;
             *contents_size = data_size;
         } else {
-            pad_size = handle->pad_size;
-
             ret = extend(handle, data_size, &bufferio_newly_allocated, bufferio_flag_t::manual);
             if (errorcode_t::success != ret) {
                 __leave2;
@@ -412,17 +408,17 @@ return_t bufferio::get(bufferio_context_t* handle, byte_t** contents, size_t* co
 }
 
 bool bufferio::compare(bufferio_context_t* handle, const void* data_to_compare, size_t size_to_compare) {
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     bool ret_bool = false;
 
     __try2 {
         if (nullptr == handle || nullptr == data_to_compare) {
-            ret = errorcode_t::invalid_parameter;
+            // ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         if (BUFFERIO_CONTEXT_SIGNATURE != handle->signature) {
-            ret = errorcode_t::invalid_context;
+            // ret = errorcode_t::invalid_context;
             __leave2;
         }
 

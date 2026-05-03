@@ -67,7 +67,7 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
             __leave2;
         }
 
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        // tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
         auto& protection = session->get_tls_protection();
         auto& secrets = protection.get_secrets();

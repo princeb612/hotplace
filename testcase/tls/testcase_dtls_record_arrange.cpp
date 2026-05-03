@@ -37,7 +37,7 @@ void testcase_dtls_record_arrange() {
             "16 fe ff 00 00 00 00 00 00 00 00 00 23 03 00 00"
             "17 00 00 00 00 00 00 00 17 fe ff 14 d8 32 1d 16"
             "e2 72 e5 3c bc 26 77 2d ff 69 a2 56 ed cd cc 0a";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         arrange.produce((sockaddr*)&addr, addrlen, bin_record.data(), bin_record.size());
 
         arrange.consume((sockaddr*)&addr, addrlen, epoch, seq, packet);
@@ -59,7 +59,7 @@ void testcase_dtls_record_arrange() {
             "0a 0c 04 54 65 73 74 31 0d 30 0b 06 03 55 04 0b"
             "0c 04 54 65 73 74 31 0d 30 0b 06 03 55 04 03 0c"
             "04 54 65 73 74 30 82 01 22 30 0d 06 09 2a 86 48";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         arrange.produce((sockaddr*)&addr, addrlen, bin_record.data(), bin_record.size());
 
         ret = arrange.consume((sockaddr*)&addr, addrlen, epoch, seq, packet);
@@ -82,7 +82,7 @@ void testcase_dtls_record_arrange() {
             "2a 86 48 86 f7 0d 01 01 0b 05 00 30 59 31 0b 30"
             "09 06 03 55 04 06 13 02 4b 52 31 0b 30 09 06 03"
             "55 04 08 0c 02 47 47 31 0b 30 09 06 03 55 04 07";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         arrange.produce((sockaddr*)&addr, addrlen, bin_record.data(), bin_record.size());
 
         arrange.consume((sockaddr*)&addr, addrlen, epoch, seq, packet);
@@ -110,7 +110,7 @@ void testcase_dtls_record_arrange() {
             "30 0d 06 09 2a 86 48 86 f7 0d 01 01 0b 05 00 03"
             "82 01 01 00 00 a5 f5 54 18 ab ad 36 38 c8 fc 0b"
             "66 60 dd 9f 75 9d 86 5b 79 2f ee 57 f1 79 1c 15";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         arrange.produce((sockaddr*)&addr, addrlen, bin_record.data(), bin_record.size());
     }
     // #8 S->C, epoch 0 seq 4 - certificate (fragment)
@@ -129,7 +129,7 @@ void testcase_dtls_record_arrange() {
             "b1 22 a2 be 41 6d ba 91 dc 0b 31 4e 88 f9 4d 9c"
             "61 2d ec b2 13 0a c2 91 8e a2 d6 e9 40 b9 32 b9"
             "80 8f b3 18 a3 33 13 23 d5 d0 7e d9 d0 7f 93 e0";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         arrange.produce((sockaddr*)&addr, addrlen, bin_record.data(), bin_record.size());
 
         arrange.consume((sockaddr*)&addr, addrlen, epoch, seq, packet);
@@ -154,7 +154,7 @@ void testcase_dtls_record_arrange() {
             "53 cc 65 89 9e 9b 35 45 63 15 92 99 92 6f 3d 06"
             "ce c0 0b 05 c0 d7 b1 73 c2 61 1c 65 8b f1 e0 bf"
             "68 e6 22 c4 c3 5f ff 90 70 3e 95 cc 0b e3 e6 ef";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         arrange.produce((sockaddr*)&addr, addrlen, bin_record.data(), bin_record.size());
     }
     // #10 S->C, epoch 0 seq 6 - certificate (fragment)
@@ -173,7 +173,7 @@ void testcase_dtls_record_arrange() {
             "46 46 af 3a c2 17 89 ec c8 83 ae da e6 69 63 e0"
             "9c 84 22 c5 7a de e8 23 6b 53 9d 6f 94 d2 7f 5c"
             "be 1d 0c de 0e 07 0d 52 a5 43 8c e8 05 ef c0 ff";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         arrange.produce((sockaddr*)&addr, addrlen, bin_record.data(), bin_record.size());
 
         arrange.consume((sockaddr*)&addr, addrlen, epoch, seq, packet);
@@ -188,7 +188,7 @@ void testcase_dtls_record_arrange() {
         const char* record =
             "16 fe fd 00 00 00 00 00 00 00 0a 00 0c 0e 00 00"
             "00 00 04 00 00 00 00 00 00";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         arrange.produce((sockaddr*)&addr, addrlen, bin_record.data(), bin_record.size());
     }
     // #12 S->C, epoch 0 seq 9 - server_key_exchange (fragment)
@@ -207,7 +207,7 @@ void testcase_dtls_record_arrange() {
             "18 8b 62 17 5d 7b 13 c2 4a 64 9c 38 46 56 c3 11"
             "3b 41 4b a5 26 20 df e0 a8 6d f9 72 31 fe 95 da"
             "a9 f3 a6 a1 54 e3 74 e1 7b 00 54 b7 eb 8e cc 5e";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         arrange.produce((sockaddr*)&addr, addrlen, bin_record.data(), bin_record.size());
     }
     // #19 S->C, epoch 1 seq 1 - encrypted alert
@@ -218,7 +218,7 @@ void testcase_dtls_record_arrange() {
             "0f 0c 8c 3a 1a be 77 ee 4b e7 96 8d bf fb 32 ed"
             "06 d6 56 2d b9 e5 d9 62 23 fc c2 c0 cf 39 aa bd"
             "3e 38 e8 ab 29 14 61 64 11 28 45 a9 59";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         arrange.produce((sockaddr*)&addr, addrlen, bin_record.data(), bin_record.size());
     }
     // #16 S->C, epoch 0 seq 12 - change_cipher_spec
@@ -232,7 +232,7 @@ void testcase_dtls_record_arrange() {
             "e0 7e 05 a1 80 ba f8 1d 01 a0 62 ec 7c b4 95 da"
             "c3 99 95 90 59 4c f5 83 e3 cf 53 c8 16 6c 2d 8f"
             "70 4e 30 15 d9 f7 43 d7 3a 65 94";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         arrange.produce((sockaddr*)&addr, addrlen, bin_record.data(), bin_record.size());
     }
     // #15 S->C, epoch 0 seq 11 - new_session_ticket
@@ -251,7 +251,7 @@ void testcase_dtls_record_arrange() {
             "78 1c b3 ff 90 be ad 1b 0b 5d 9e 95 db 51 35 e9"
             "3f 42 7f af a8 10 94 64 8f 2d e4 0d 30 ba c4 14"
             "a2 f2 63 3b 0d a5 6f b4 9f 52 81 e0 3b dd ac";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         arrange.produce((sockaddr*)&addr, addrlen, bin_record.data(), bin_record.size());
     }
     {

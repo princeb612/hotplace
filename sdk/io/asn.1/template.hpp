@@ -30,7 +30,7 @@ namespace io {
  */
 template <typename TYPE>
 uint32 t_asn1_length_octets(binary_t& bin, TYPE len, size_t pos = -1) {
-    if (-1 == pos) {
+    if ((size_t)-1 == pos) {
         pos = bin.size();
     }
 

@@ -300,10 +300,6 @@ void logger::stdout_handler(const basic_stream& bs) {
 }
 
 logger& logger::touch(logger_item* item) {
-    time_t now = time(nullptr);
-    uint16 flush_time = 0;
-    uint16 flush_size = 0;
-
     basic_stream& bs = item->bs;
 
     if (bs.size()) {

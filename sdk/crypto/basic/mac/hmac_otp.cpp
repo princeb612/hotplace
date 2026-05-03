@@ -33,7 +33,6 @@ hmac_otp::~hmac_otp() {}
 
 uint32 hmac_otp::open(otp_context_t** handle, unsigned int digit_length, hash_algorithm_t algorithm, const byte_t* key_data, size_t key_size) {
     uint32 ret = errorcode_t::success;
-    hotp_context_t* context = nullptr;
     openssl_hash hash;
     hash_context_t* hash_handle = nullptr;
 
@@ -48,7 +47,7 @@ uint32 hmac_otp::open(otp_context_t** handle, unsigned int digit_length, hash_al
             __leave2;
         }
 
-        __try_new_catch(context, new hotp_context_t, ret, __leave2);
+        auto context = make_unique<hotp_context_t>();
 
         context->_signature = HOTP_CONTEXT_SIGNATURE;
         context->_hmac_context = hash_handle;
@@ -61,15 +60,14 @@ uint32 hmac_otp::open(otp_context_t** handle, unsigned int digit_length, hash_al
         }
         context->_digit_length = digit_length;
 
-        *handle = context;
+        *handle = context.get();
+
+        context.release();
     }
     __finally2 {
         if (errorcode_t::success != ret) {
             if (nullptr != hash_handle) {
                 hash.close(hash_handle);
-            }
-            if (nullptr != context) {
-                delete context;
             }
         }
     }

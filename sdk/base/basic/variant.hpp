@@ -332,80 +332,60 @@ class variant {
 
     template <typename T>
     T t_toi() {
-        // errorcode = errorcode_t::success;
-        size_t tsize = sizeof(T);
-        size_t vsize = 0;
         T i = 0;  // i = T();
 
         switch (_vt.type) {
             case TYPE_BOOL:
-                vsize = RTL_FIELD_SIZE(vartype_union, b);
                 i = _vt.data.b ? 1 : 0;
                 break;
             case TYPE_INT8:
-                vsize = RTL_FIELD_SIZE(vartype_union, i8);
                 i = _vt.data.i8;
                 break;
             case TYPE_UINT8:
-                vsize = RTL_FIELD_SIZE(vartype_union, ui8);
                 i = _vt.data.ui8;
                 break;
             case TYPE_INT16:
-                vsize = RTL_FIELD_SIZE(vartype_union, i16);
                 i = t_narrow_cast(_vt.data.i16);
                 break;
             case TYPE_UINT16:
-                vsize = RTL_FIELD_SIZE(vartype_union, i16);
                 i = t_narrow_cast(_vt.data.ui16);
                 break;
             case TYPE_INT24:
-                vsize = RTL_FIELD_SIZE(vartype_union, i32);
                 i = t_narrow_cast(_vt.data.i32);
                 break;
             case TYPE_UINT24:
-                vsize = RTL_FIELD_SIZE(vartype_union, ui32);
                 i = t_narrow_cast(_vt.data.ui32);
                 break;
             case TYPE_INT32:
-                vsize = RTL_FIELD_SIZE(vartype_union, i32);
                 i = t_narrow_cast(_vt.data.i32);
                 break;
             case TYPE_UINT32:
-                vsize = RTL_FIELD_SIZE(vartype_union, ui32);
                 i = t_narrow_cast(_vt.data.ui32);
                 break;
             case TYPE_INT48:
-                vsize = RTL_FIELD_SIZE(vartype_union, i64);
                 i = t_narrow_cast(_vt.data.i64);
                 break;
             case TYPE_UINT48:
-                vsize = RTL_FIELD_SIZE(vartype_union, ui64);
                 i = t_narrow_cast(_vt.data.ui64);
                 break;
             case TYPE_INT64:
-                vsize = RTL_FIELD_SIZE(vartype_union, i64);
                 i = (T)_vt.data.i64;
                 break;
             case TYPE_UINT64:
-                vsize = RTL_FIELD_SIZE(vartype_union, ui64);
                 i = (T)_vt.data.ui64;
                 break;
 #if defined __SIZEOF_INT128__
             case TYPE_INT128:
-                vsize = RTL_FIELD_SIZE(vartype_union, i128);
                 i = (T)_vt.data.i128;
                 break;
             case TYPE_UINT128:
-                vsize = RTL_FIELD_SIZE(vartype_union, ui128);
                 i = (T)_vt.data.ui128;
                 break;
 #endif
             case TYPE_FLOAT:
-                vsize = RTL_FIELD_SIZE(vartype_union, f);
                 i = t_narrow_cast(std::round(_vt.data.f));
                 break;
             case TYPE_DOUBLE:
-                vsize = RTL_FIELD_SIZE(vartype_union, d);
                 i = t_narrow_cast(std::round(_vt.data.d));
                 break;
             case TYPE_STRING:

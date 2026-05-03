@@ -33,7 +33,7 @@ void test_maphint() {
 
 void test_mapinsert() {
     _test_case.begin("understanding map insert");
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
 
     struct copyitem_t {
         int i;
@@ -103,7 +103,7 @@ void test_mapinsert() {
         std::map<int, copyitem_t> dict;
         auto pib = dict.insert({0, copyitem_t(0)});
         if (true == pib.second) {
-            auto& entry = pib.first->second;
+            // auto& entry = pib.first->second;
             //
         }
     }
@@ -115,7 +115,7 @@ void test_mapinsert() {
 
         auto pib = dict.insert(std::make_pair(0, moveitem_t(0)));
         if (true == pib.second) {
-            auto& entry = pib.first->second;
+            // auto& entry = pib.first->second;
             //
         }
     }

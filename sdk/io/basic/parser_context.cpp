@@ -112,11 +112,10 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size, uint32 
         bool comments = false;
         bool quot = false;
 
-        auto type_of = [&](char c) -> token_t { return _ascii_token_table[c].type; };
+        auto type_of = [&](char c) -> token_t { return _ascii_token_table[(byte_t)c].type; };
         auto hook = [&](int where, parser::token* t) -> bool {
             bool ret_hook = true;
             if (0 == where) {
-                parser::token* prev = nullptr;
                 switch (get_token().get_type()) {
                     case token_assign:
                         lvalue = last_token();
@@ -290,7 +289,7 @@ parser::search_result parser::context::csearch(parser* obj, const char* pattern,
 
         t_kmp<char> kmp;
         auto idx = kmp.search(_p, _size, pattern, size_pattern, pos);
-        if (-1 == idx) {
+        if (size_t(-1) == idx) {
             __leave2;
         }
 
@@ -325,7 +324,7 @@ parser::search_result parser::context::wsearch(parser* obj, const context& patte
 
         t_kmp<parser::token*> kmp;
         auto idx = kmp.search(_tokens, pattern._tokens, pos, comparator);
-        if (-1 == idx) {
+        if (size_t(-1) == idx) {
             __leave2;
         }
 
@@ -357,7 +356,7 @@ bool parser::context::compare(parser* obj, const parser::context& other) const {
             size_t idx = 0;
             for (idx = 0; idx != size; idx++) {
                 parser::token* token_lhs = _tokens[idx];
-                parser::token* token_rhs = other._tokens[idx];
+                // parser::token* token_rhs = other._tokens[idx];
                 if (token_lhs->get_index() != token_lhs->get_index()) {
                     break;
                 }

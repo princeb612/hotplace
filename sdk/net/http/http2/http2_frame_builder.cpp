@@ -53,37 +53,37 @@ http2_frame* http2_frame_builder::build() {
     http2_frame* frame = nullptr;
     switch (get_type()) {
         case h2_frame_data: {
-            __try_new_catch_only(frame, new http2_frame_data);
+            frame = new http2_frame_data;
         } break;
         case h2_frame_headers: {
-            __try_new_catch_only(frame, new http2_frame_headers);
+            frame = new http2_frame_headers;
         } break;
         case h2_frame_priority: {
-            __try_new_catch_only(frame, new http2_frame_priority);
+            frame = new http2_frame_priority;
         } break;
         case h2_frame_rst_stream: {
-            __try_new_catch_only(frame, new http2_frame_rst_stream);
+            frame = new http2_frame_rst_stream;
         } break;
         case h2_frame_settings: {
-            __try_new_catch_only(frame, new http2_frame_settings);
+            frame = new http2_frame_settings;
         } break;
         case h2_frame_push_promise: {
-            __try_new_catch_only(frame, new http2_frame_push_promise);
+            frame = new http2_frame_push_promise;
         } break;
         case h2_frame_ping: {
-            __try_new_catch_only(frame, new http2_frame_ping);
+            frame = new http2_frame_ping;
         } break;
         case h2_frame_goaway: {
-            __try_new_catch_only(frame, new http2_frame_goaway);
+            frame = new http2_frame_goaway;
         } break;
         case h2_frame_window_update: {
-            __try_new_catch_only(frame, new http2_frame_window_update);
+            frame = new http2_frame_window_update;
         } break;
         case h2_frame_continuation: {
-            __try_new_catch_only(frame, new http2_frame_continuation);
+            frame = new http2_frame_continuation;
         } break;
         case h2_frame_altsvc: {
-            __try_new_catch_only(frame, new http2_frame_alt_svc);
+            frame = new http2_frame_alt_svc;
         } break;
     }
     if (frame) {

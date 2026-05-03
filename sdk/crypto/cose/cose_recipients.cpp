@@ -69,6 +69,17 @@ cose_recipients& cose_recipients::set_upperlayer(cose_recipient* layer) {
 
 cose_recipient* cose_recipients::get_upperlayer() { return _upperlayer; }
 
+bool cose_recipients::exist(int key, int scope) {
+    bool ret = false;
+    for (cose_recipient* recipient : _recipients) {
+        ret = recipient->exist(key, scope);
+        if (ret) {
+            break;
+        }
+    }
+    return ret;
+}
+
 return_t cose_recipients::finditem(int key, int& value, int scope) {
     return_t ret = errorcode_t::not_found;
     for (cose_recipient* recipient : _recipients) {

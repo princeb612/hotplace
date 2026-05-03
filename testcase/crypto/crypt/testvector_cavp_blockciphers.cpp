@@ -24,7 +24,7 @@ void test_yaml_cavp_blockciphers() {
 
     openssl_crypt crypt;
 
-    auto lambda_test_cavp_block_ciphers = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_block_ciphers = [&](const YAML::Node& items) -> void {
         for (const auto& item : items) {
             test_vector_nist_cavp_blockcipher_t entry;
             entry.item = std::move(item["item"].as<std::string>());
@@ -62,7 +62,7 @@ void test_yaml_cavp_blockciphers() {
             auto items = example["items"];
 
             if (schema == "BLOCK CIPHERS") {
-                lambda_test_cavp_block_ciphers(items);
+                lambda_yaml_block_ciphers(items);
             } else {
                 _test_case.assert(false, __FUNCTION__, "bad message format");
             }

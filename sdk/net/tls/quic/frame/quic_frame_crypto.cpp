@@ -139,8 +139,6 @@ return_t quic_frame_crypto::do_write_body(tls_direction_t dir, const byte_t* str
         //   calc
         //     exclude packet.header, packet.tag, frame.header
 
-        auto session = get_session();
-
         payload pl;
         pl << new payload_member(new quic_encoded(uint8(get_type())), constexpr_type)  //
            << new payload_member(new quic_encoded(pos), constexpr_offset)              //

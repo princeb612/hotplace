@@ -85,7 +85,7 @@ return_t quic_frames::read(tls_direction_t dir, const binary_t& bin) {
         const byte_t* stream = bin.data();
         size_t size = bin.size();
         size_t pos = 0;
-        auto ret = read(dir, stream, size, pos);
+        ret = read(dir, stream, size, pos);
     }
     __finally2 {}
     return ret;

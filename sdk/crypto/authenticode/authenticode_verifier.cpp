@@ -161,24 +161,16 @@ return_t authenticode_verifier::free_engines(authenticode_context_t* handle) {
 
 return_t authenticode_verifier::open(authenticode_context_t** handle) {
     return_t ret = errorcode_t::success;
-    authenticode_context_t* context = nullptr;
 
-    __try2 {
-        __try_new_catch(context, new authenticode_context_t, ret, __leave2);
+    auto context = make_unique<authenticode_context_t>();
+    context->signature = AUTHENTICODE_CONTEXT_SIGNATURE;
 
-        context->signature = AUTHENTICODE_CONTEXT_SIGNATURE;
+    load_engines(context.get());
 
-        load_engines(context);
+    *handle = context.get();
 
-        *handle = context;
-    }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            if (nullptr != context) {
-                delete context;
-            }
-        }
-    }
+    context.release();
+
     return ret;
 }
 
@@ -792,7 +784,7 @@ return_t authenticode_verifier::verify_pkcs7(authenticode_context_t* handle, voi
             critical_section_guard guard(handle->lock);
             for (const auto& pair : handle->trusted_cert) {
                 const std::string& cert_file = pair.first;
-                const std::string& cert_path = pair.second;
+                // const std::string& cert_path = pair.second;
                 // X509_STORE_load_locations (store.get(), (char*)cert_file.data(),
                 //                           (char*)cert_path.data());
                 // load cert wo path

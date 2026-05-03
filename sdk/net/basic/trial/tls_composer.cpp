@@ -37,6 +37,8 @@ tls_composer::tls_composer(tls_session* session) : _session(session), _minspec(t
         case session_type_quic2: {
             _minspec = tls_13;
         } break;
+        default:
+            break;
     }
 }
 

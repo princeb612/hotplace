@@ -45,13 +45,12 @@ return_t async_handler(accept_context_t* accept_context, netsocket_event_t* nets
 }
 
 return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
-    accept_context_t* accept_context = (accept_context_t*)user_context;
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     std::string address;
 
     if (mux_dgram == type) {
 #if defined __linux__
-        multiplexer_context_t* handle = (multiplexer_context_t*)data_array[0];
+        // multiplexer_context_t* handle = (multiplexer_context_t*)data_array[0];
         int sock = (int)(long)data_array[1];
         char buffer[BUFSIZE];
         sockaddr_storage_t addr;
@@ -63,6 +62,7 @@ return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CA
             sendto(sock, buffer, ret_recv, 0, (sockaddr*)&addr, socklen);
         }
 #elif defined _WIN32 || defined _WIN64
+        accept_context_t* accept_context = (accept_context_t*)user_context;
         uint32 bytes_transfered = (uint32)(arch_t)data_array[1];
         netsocket_event_t* netsock_event_ptr = (netsocket_event_t*)data_array[2];
         auto sock = accept_context->udp_server_sock;

@@ -14,7 +14,7 @@ void test_rfc5869() {
     _test_case.begin("RFC 5869 Appendix A.  Test Vectors");
     const OPTION& option = _cmdline->value();
     openssl_kdf kdf;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
+    // crypto_advisor* advisor = crypto_advisor::get_instance();
 
     // RFC 5869 HMAC-based Extract-and-Expand Key Derivation Function (HKDF)
 
@@ -108,18 +108,18 @@ void test_rfc5869() {
         },
     };
 
-    int i = 0;
+    size_t i = 0;
     basic_stream bs;
-    for (i = 0; i < RTL_NUMBER_OF(expand_vector); i++) {
+    for (i = 0; i < RTL_NUMBER_OF(expand_vector); ++i) {
         // 2.2 Step 1: Extract
         //  PRK = HMAC-Hash(salt, IKM)
         binary_t bin_prk;
         auto alg = expand_vector[i].alg;
-        binary_t ikm = std::move(base16_decode(expand_vector[i].ikm));
-        binary_t salt = std::move(base16_decode(expand_vector[i].salt));
-        binary_t info = std::move(base16_decode(expand_vector[i].info));
-        binary_t prk = std::move(base16_decode(expand_vector[i].prk));
-        binary_t okm = std::move(base16_decode(expand_vector[i].okm));
+        binary_t ikm = base16_decode(expand_vector[i].ikm);
+        binary_t salt = base16_decode(expand_vector[i].salt);
+        binary_t info = base16_decode(expand_vector[i].info);
+        binary_t prk = base16_decode(expand_vector[i].prk);
+        binary_t okm = base16_decode(expand_vector[i].okm);
         auto dlen = expand_vector[i].dlen;
         auto desc = expand_vector[i].desc;
 

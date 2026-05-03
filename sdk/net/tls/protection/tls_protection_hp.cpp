@@ -119,8 +119,6 @@ return_t tls_protection::protection_mask(tls_session *session, tls_direction_t d
 
         // aes-128-ebc-encrypt
 
-        uint16 recno = 0;
-        uint16 rec_enc = 0;
         tls_secret_t secret_key;
 
         {

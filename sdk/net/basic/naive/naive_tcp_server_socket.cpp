@@ -33,7 +33,7 @@ return_t naive_tcp_server_socket::open(socket_context_t** handle, unsigned int f
             __leave2;
         }
 
-        __try_new_catch(context, new socket_context_t(sock, closesocket_ondestroy), ret, __leave2);
+        context = new socket_context_t(sock, closesocket_ondestroy);
         *handle = context;
     }
     __finally2 {}

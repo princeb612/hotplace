@@ -32,10 +32,10 @@ class t_ukkonen {
 
     struct trienode {
         std::unordered_map<BT, trienode*> children;
-        trienode* suffix_link;
         size_t start;
         size_t end;
         size_t suffix_index;
+        trienode* suffix_link;
 
         trienode(size_t start = -1, size_t end = -1) : start(start), end(end), suffix_index(-1), suffix_link(nullptr) {}
         ~trienode() {
@@ -203,7 +203,7 @@ class t_ukkonen {
 
     void collect_suffix_indices(trienode* node, std::set<size_t>& result) {
         if (node) {
-            if (-1 == node->suffix_index) {
+            if (size_t(-1) == node->suffix_index) {
                 for (auto child : node->children) {
                     collect_suffix_indices(child.second, result);
                 }

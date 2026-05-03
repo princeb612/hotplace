@@ -32,8 +32,9 @@ constexpr char constexpr_fragment_offset[] = "fragment offset";
 constexpr char constexpr_fragment_len[] = "fragment len";
 
 tls_handshake::tls_handshake(tls_hs_type_t type, tls_session* session)
-    : _session(session),
+    : _extension_len(0),
       _type(type),
+      _session(session),
       _bodysize(0),
       _is_dtls(false),
       _dtls_seq(0),
@@ -41,7 +42,6 @@ tls_handshake::tls_handshake(tls_hs_type_t type, tls_session* session)
       _fragment_len(0),
       _reassembled_size(0),
       _size(0),
-      _extension_len(0),
       _flags(0) {
     if (session) {
         session->addref();
@@ -106,8 +106,6 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
             });
         }
 #endif
-
-        size_t bpos = pos;
 
         auto test = do_read_header(dir, stream, size, pos);
         if (errorcode_t::success != test) {

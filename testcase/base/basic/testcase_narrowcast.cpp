@@ -63,24 +63,26 @@ void check(const char* text, bool expect, std::function<void(void)> f) {
 
 void test_narrowcast() {
     _test_case.begin("narrow cast");
-    return_t ret = errorcode_t::success;
 
     // signed to unsigned
     check("case.1", true, [&](void) -> void {
         int32 i32 = -1;
         uint16 ui16 = t_my_narrow_cast(i32);
+        UNREFERENCED_PARAMETER(ui16);
     });
 
     // int16.max+1 to int16
     check("case.2", true, [&](void) -> void {
         int32 i32 = 32767 + 1;
         int16 i16 = t_my_narrow_cast(i32);
+        UNREFERENCED_PARAMETER(i16);
     });
 
     // uint32.max to int32
     check("case.3", true, [&](void) -> void {
         uint32 ui32 = 4294967295;
         int32 i32 = t_my_narrow_cast(ui32);
+        UNREFERENCED_PARAMETER(i32);
     });
 }
 

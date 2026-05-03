@@ -74,15 +74,16 @@ void tls_advisor::load_resource() {
 
 void tls_advisor::load_tls_parameters() {
     // code, name
-    for (auto i = 0; i < sizeof_tls_alert_level_codes; i++) {
+    size_t i = 0;
+    for (i = 0; i < sizeof_tls_alert_level_codes; i++) {
         auto item = tls_alert_level_codes + i;
         _alert_level_codes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_alert_codes; i++) {
+    for (i = 0; i < sizeof_tls_alert_codes; i++) {
         auto item = tls_alert_codes + i;
         _alert_codes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_cipher_suites; i++) {
+    for (i = 0; i < sizeof_tls_cipher_suites; i++) {
         auto item = tls_cipher_suites + i;
         _cipher_suite_codes.insert({item->code, item});
         if (item->name_iana) {
@@ -92,33 +93,33 @@ void tls_advisor::load_tls_parameters() {
             _cipher_suite_names.insert({item->name_ossl, item});
         }
     }
-    for (auto i = 0; i < sizeof_tls_content_type_codes; i++) {
+    for (i = 0; i < sizeof_tls_content_type_codes; i++) {
         auto item = tls_content_type_codes + i;
         _content_type_codes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_ec_curve_type_codes; i++) {
+    for (i = 0; i < sizeof_tls_ec_curve_type_codes; i++) {
         auto item = tls_ec_curve_type_codes + i;
         _ec_curve_type_codes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_ec_point_format_codes; i++) {
+    for (i = 0; i < sizeof_tls_ec_point_format_codes; i++) {
         auto item = tls_ec_point_format_codes + i;
         _ec_point_format_codes.insert({item->code, item});
         _ec_point_format_names.insert({item->desc, item});
     }
-    for (auto i = 0; i < sizeof_tls_handshake_type_codes; i++) {
+    for (i = 0; i < sizeof_tls_handshake_type_codes; i++) {
         auto item = tls_handshake_type_codes + i;
         _handshake_type_codes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_kdf_id_codes; i++) {
+    for (i = 0; i < sizeof_tls_kdf_id_codes; i++) {
         auto item = tls_kdf_id_codes + i;
         _kdf_id_codes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_psk_keyexchange_codes; i++) {
+    for (i = 0; i < sizeof_tls_psk_keyexchange_codes; i++) {
         auto item = tls_psk_keyexchange_codes + i;
         _psk_keyexchange_codes.insert({item->code, item});
         _psk_keyexchange_names.insert({item->desc, item});
     }
-    for (auto i = 0; i < sizeof_tls_sig_schemes; i++) {
+    for (i = 0; i < sizeof_tls_sig_schemes; i++) {
         auto item = tls_sig_schemes + i;
         _sig_scheme_codes.insert({item->code, item});
         _sig_scheme_names.insert({item->name, item});
@@ -127,42 +128,45 @@ void tls_advisor::load_tls_parameters() {
 
 void tls_advisor::load_tls_extensiontype_values() {
     // valueof_compression_alg
-    for (auto i = 0; i < sizeof_tls_compression_alg_codes; i++) {
+    size_t i = 0;
+    for (i = 0; i < sizeof_tls_compression_alg_codes; i++) {
         auto item = tls_compression_alg_codes + i;
         _compression_alg_codes.insert({item->code, item});
         _compression_alg_names.insert({item->desc, item});
     }
-    for (auto i = 0; i < sizeof_tls_extension_type_codes; i++) {
+    for (i = 0; i < sizeof_tls_extension_type_codes; i++) {
         auto item = tls_extension_type_codes + i;
         _extension_type_codes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_cert_status_type_codes; i++) {
+    for (i = 0; i < sizeof_tls_cert_status_type_codes; i++) {
         auto item = tls_cert_status_type_codes + i;
         _cert_status_type_codes.insert({item->code, item});
     }
 }
 
 void tls_advisor::load_tls_quic() {
-    for (auto i = 0; i < sizeof_tls_quic_trans_param_codes; i++) {
+    size_t i = 0;
+    for (i = 0; i < sizeof_tls_quic_trans_param_codes; i++) {
         auto item = tls_quic_trans_param_codes + i;
         _quic_trans_param_codes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_quic_frame_type_codes; i++) {
+    for (i = 0; i < sizeof_tls_quic_frame_type_codes; i++) {
         auto item = tls_quic_frame_type_codes + i;
         _quic_frame_type_codes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_quic_trans_error_codes; i++) {
+    for (i = 0; i < sizeof_tls_quic_trans_error_codes; i++) {
         auto item = tls_quic_trans_error_codes + i;
         _quic_trans_error_codes.insert({item->code, item});
     }
-    for (auto i = 0; i < sizeof_tls_quic_packet_type_codes; i++) {
+    for (i = 0; i < sizeof_tls_quic_packet_type_codes; i++) {
         auto item = tls_quic_packet_type_codes + i;
         _quic_packet_type_codes.insert({item->code, item});
     }
 }
 
 void tls_advisor::load_tls_aead_parameters() {
-    for (auto i = 0; i < sizeof_tls_aead_alg_codes; i++) {
+    size_t i = 0;
+    for (i = 0; i < sizeof_tls_aead_alg_codes; i++) {
         auto item = tls_aead_alg_codes + i;
         _aead_alg_codes.insert({item->code, item});
     }
@@ -175,30 +179,31 @@ void tls_advisor::load_tls_version() {
     //   4.2.1.  Supported Versions
     //   5.1.  Record Layer
     //   9.2.  Mandatory-to-Implement Extensions
-
-    for (auto i = 0; i < sizeof_tls_version_hint; i++) {
+    size_t i = 0;
+    for (i = 0; i < sizeof_tls_version_hint; i++) {
         auto item = tls_version_hint + i;
         _tls_version.insert({item->code, item});
     }
 }
 
 void tls_advisor::load_etc() {
-    for (auto i = 0; i < sizeof_tls_session_status_codes; i++) {
+    size_t i = 0;
+    for (i = 0; i < sizeof_tls_session_status_codes; i++) {
         auto item = tls_session_status_codes + i;
         _session_status_codes.insert({item->code, item});
     }
 
-    for (auto i = 0; i < sizeof_tls_secret_codes; i++) {
+    for (i = 0; i < sizeof_tls_secret_codes; i++) {
         auto item = tls_secret_codes + i;
         _secret_codes.insert({item->code, item});
     }
 
-    for (auto i = 0; i < sizeof_tls_quic_stream_id_codes; i++) {
+    for (i = 0; i < sizeof_tls_quic_stream_id_codes; i++) {
         auto item = tls_quic_stream_id_codes + i;
         _quic_stream_id_codes.insert({item->code, item});
     }
 
-    for (auto i = 0; i < sizeof_tls_protection_space_codes; i++) {
+    for (i = 0; i < sizeof_tls_protection_space_codes; i++) {
         auto item = tls_protection_space_codes + i;
         _protection_space_codes.insert({item->code, item});
     }
@@ -245,7 +250,8 @@ const hint_blockcipher_t* tls_advisor::hintof_blockcipher(uint16 code) {
 }
 
 void tls_advisor::enum_cipher_suites(std::function<void(const tls_cipher_suite_t*)> fn) {
-    for (auto i = 0; i < sizeof_tls_cipher_suites; i++) {
+    size_t i = 0;
+    for (i = 0; i < sizeof_tls_cipher_suites; i++) {
         auto item = tls_cipher_suites + i;
         if (item->flags & tls_flag_support) {
             fn(item);

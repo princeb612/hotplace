@@ -98,8 +98,6 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
             __leave2;
         }
 
-        sockaddr_storage_t sa = {0};
-
         addrinf_traverse = addrinf;
         do {
             auto family = addrinf_traverse->ai_family;
@@ -118,6 +116,7 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
                         // (IOCP) bind UDP socket
                         //        sin_addr = 0.0.0.0
                         //        sin.port = 0
+                        sockaddr_storage_t sa = {};
                         sa.ss_family = family;
                         bind(s, (sockaddr*)&sa, sizeof(sa));
                     }
@@ -185,7 +184,7 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
     return ret;
 }
 
-return_t create_listener(unsigned int size_vector, unsigned int* vector_family, socket_t* vector_socket, int protocol_type, uint32 port, bool support_win32_acceptex) {
+return_t create_listener(unsigned int size_vector, unsigned int* vector_family, socket_t* vector_socket, int protocol_type, uint16 port, bool support_win32_acceptex) {
     return_t ret = errorcode_t::success;
     int socket_type = 0;
     int ipprotocol = 0;
@@ -224,7 +223,7 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
         hints.ai_flags = AI_PASSIVE;
 
         char port_value[1 << 3];
-        snprintf(port_value, sizeof(port_value), ("%d"), port);
+        snprintf(port_value, sizeof(port_value), ("%u"), port);
         ret_function = getaddrinfo(nullptr, port_value, &hints, &addrinf);
         if (0 != ret_function) {
             ret = get_lasterror(ret_function, wsaerror);

@@ -153,7 +153,6 @@ return_t tls_composer::do_tls_client_handshake(unsigned wto, std::function<void(
 
 return_t tls_composer::do_tls_client_hello(std::function<void(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
-    tls_advisor* tlsadvisor = tls_advisor::get_instance();
     tls_record* record = nullptr;
     tls_direction_t dir = from_client;
     __try2 {
@@ -168,10 +167,7 @@ return_t tls_composer::do_tls_client_hello(std::function<void(tls_session*, bina
             __leave2;
         }
 
-        uint32 session_status = 0;
-        auto session_type = session->get_type();
-        auto& protection = session->get_tls_protection();
-        bool is_dtls = (session_type_dtls == session_type);
+        // auto session_type = session->get_type();
 
         tls_record_builder builder;
         record = builder.set(dir).construct().build(tls_content_type_handshake, session, [&](tls_record* record) -> return_t {
@@ -287,7 +283,6 @@ return_t tls_composer::do_tls_server_handshake_phase1(std::function<void(tls_ses
 return_t tls_composer::do_tls_server_handshake_phase2(std::function<void(tls_session*, binary_t&)> func) {
     return_t ret = errorcode_t::success;
     tls_record_builder builder;
-    tls_advisor* tlsadvisor = tls_advisor::get_instance();
     tls_direction_t dir = from_server;
     tls_records records;
     __try2 {

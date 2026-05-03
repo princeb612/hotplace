@@ -182,7 +182,7 @@ return_t tls_protection::write_aad(tls_session *session, tls_direction_t dir, bi
 
         secrets.erase(tls_context_nonce_explicit);
         bool tls12_aead = false;
-        uint8 sizeof_nonce_explicit = 0;
+        // uint8 sizeof_nonce_explicit = 0;
 
         /**
          * RFC 5246 6.2.3.3.  AEAD Ciphers
@@ -222,7 +222,7 @@ return_t tls_protection::write_aad(tls_session *session, tls_direction_t dir, bi
                 }
             } else if (ccm == mode || gcm == mode) {
                 tls12_aead = true;
-                sizeof_nonce_explicit = 8;
+                // sizeof_nonce_explicit = 8;
 
                 // CCM, GCM
                 len = bodysize;
@@ -401,8 +401,6 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
             __leave2;
         }
 
-        auto record_version = get_lagacy_version();
-        size_t content_header_size = 0;
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
         uint16 cs = 0;
@@ -417,7 +415,6 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
         }
         auto hint_cipher = tlsadvisor->hintof_cipher(cs);
 
-        crypt_context_t *handle = nullptr;
         openssl_crypt crypt;
 
         tls_secret_t secret_key;
@@ -517,8 +514,6 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
         }
 
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
-        auto session_type = session->get_type();
-        auto record_version = get_lagacy_version();
         uint16 cs = 0;
         switch (space) {
             case protection_initial:

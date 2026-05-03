@@ -20,6 +20,8 @@ namespace net {
 
 hpack_encoder::hpack_encoder() : http_header_compression() {}
 
+hpack_encoder::~hpack_encoder() {}
+
 return_t hpack_encoder::encode(http_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags) {
     return_t ret = errorcode_t::success;
     match_result_t state = match_result_t::not_matched;
@@ -59,7 +61,7 @@ return_t hpack_encoder::encode(http_dynamic_table* dyntable, binary_t& target, c
     return ret;
 }
 
-return_t hpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value) {
+return_t hpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value, uint32 flags) {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == dyntable) || (nullptr == source)) {
@@ -301,7 +303,7 @@ hpack_encoder& hpack_encoder::encode_name_value(binary_t& target, uint32 flags, 
     return *this;
 }
 
-return_t hpack_encoder::set_capacity(http_dynamic_table* dyntable, binary_t& target, uint8 maxsize) {
+return_t hpack_encoder::set_capacity(http_dynamic_table* dyntable, binary_t& target, uint64 maxsize) {
     /**
      * RFC 7541 Figure 12: Maximum Dynamic Table Size Change
      *   0   1   2   3   4   5   6   7

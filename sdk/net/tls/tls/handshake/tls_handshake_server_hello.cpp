@@ -198,6 +198,8 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
                         ret = errorcode_t::error_handshake;
                     }
                 } break;
+                default:
+                    break;
             }
             if (errorcode_t::success != ret) {
                 __leave2;
@@ -292,7 +294,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
 
             binary_t random;
             binary_t session_id;
-            uint8 session_ids = 0;
+            // uint8 session_ids = 0;
             uint16 cipher_suite = 0;
             uint8 compression_method = 0;
             uint16 extension_len = 0;
@@ -323,7 +325,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                 version = pl.t_value_of<uint16>(constexpr_version);
 
                 pl.get_binary(constexpr_random, random);
-                session_ids = pl.t_value_of<uint8>(constexpr_session_id_len);
+                // session_ids = pl.t_value_of<uint8>(constexpr_session_id_len);
                 pl.get_binary(constexpr_session_id, session_id);
                 cipher_suite = pl.t_value_of<uint16>(constexpr_cipher_suite);
                 compression_method = pl.t_value_of<uint8>(constexpr_compression_method);

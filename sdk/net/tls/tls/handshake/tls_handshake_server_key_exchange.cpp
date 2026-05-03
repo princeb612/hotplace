@@ -87,7 +87,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
             auto &protection = session->get_tls_protection();
             auto &secrets = protection.get_secrets();
             auto &tlskey = protection.get_key();
-            crypto_advisor *advisor = crypto_advisor::get_instance();
+            // crypto_advisor *advisor = crypto_advisor::get_instance();
             tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
             size_t hspos = pos;

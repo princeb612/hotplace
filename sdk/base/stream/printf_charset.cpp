@@ -468,7 +468,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
             /* void */;
         }
 
-        if (n = (int)(fmt - fmark)) {
+        if ((n = (int)(fmt - fmark))) {
             PRINT(fmark, n);
             ret += n;
         }

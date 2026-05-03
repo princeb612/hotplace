@@ -44,7 +44,6 @@ bool payload::get_group_condition(const std::string& name) {
 }
 
 payload& payload::set_reference_value(const std::string& name, const std::string& ref, uint8 multiple) {
-    size_t space = 0;
     if (name.size() && ref.size()) {
         payload_member* member_ref = nullptr;
         payload_member* member = nullptr;
@@ -81,7 +80,6 @@ return_t payload::read(const binary_t& bin, size_t& pos) { return read((byte_t*)
 
 return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
-    size_t len = 0;
     size_t offset = pos;
 
     __try2 {

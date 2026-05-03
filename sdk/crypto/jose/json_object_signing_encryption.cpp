@@ -33,7 +33,6 @@ json_object_signing_encryption::~json_object_signing_encryption() {}
 
 return_t json_object_signing_encryption::open(jose_context_t** handle, crypto_key* crypto_key) {
     return_t ret = errorcode_t::success;
-    jose_context_t* context = nullptr;
 
     __try2 {
         if (nullptr == handle || nullptr == crypto_key) {
@@ -41,21 +40,16 @@ return_t json_object_signing_encryption::open(jose_context_t** handle, crypto_ke
             __leave2;
         }
 
-        __try_new_catch(context, new jose_context_t, ret, __leave2);
-
+        auto context = make_unique<jose_context_t>();
         context->key = crypto_key;
 
         crypto_key->addref();
 
-        *handle = context;
+        *handle = context.get();
+
+        context.release();
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            if (context) {
-                delete context;
-            }
-        }
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -46,6 +46,7 @@ class cose_recipients {
 
     virtual cbor_array* cbor();
 
+    bool exist(int key, int scope = cose_scope_layer);
     return_t finditem(int key, int& value, int scope = cose_scope_layer);
     return_t finditem(int key, std::string& value, int scope = cose_scope_layer);
     return_t finditem(int key, binary_t& value, int scope = cose_scope_layer);

@@ -32,7 +32,7 @@ constexpr char constexpr_scid[] = "scid";
 constexpr char constexpr_dcid_len[] = "dcid len";
 constexpr char constexpr_scid_len[] = "scid len";
 
-quic_packet::quic_packet(tls_session* session) : _type(0), _session(nullptr), _ht(0), _version(1), _pn(0) {
+quic_packet::quic_packet(tls_session* session) : _type(0), _ht(0), _session(nullptr), _version(1), _pn(0) {
     if (nullptr == session) {
         throw no_session;
     }
@@ -42,7 +42,7 @@ quic_packet::quic_packet(tls_session* session) : _type(0), _session(nullptr), _h
     _shared.make_share(this);
 }
 
-quic_packet::quic_packet(quic_packet_t type, tls_session* session) : _type(type), _session(nullptr), _ht(0), _version(1), _pn(0) {
+quic_packet::quic_packet(quic_packet_t type, tls_session* session) : _type(type), _ht(0), _session(nullptr), _version(1), _pn(0) {
     if (nullptr == session) {
         throw no_session;
     }
@@ -55,7 +55,15 @@ quic_packet::quic_packet(quic_packet_t type, tls_session* session) : _type(type)
 }
 
 quic_packet::quic_packet(const quic_packet& other)
-    : _type(other._type), _session(nullptr), _ht(other._ht), _version(other._version), _dcid(other._dcid), _scid(other._scid), _pn(other._pn) {
+    : _type(other._type),
+      _ht(other._ht),
+      _session(nullptr),
+      _version(other._version),
+      _pn(other._pn),
+      _dcid(other._dcid),
+      _scid(other._scid),
+      _payload(other._payload),
+      _tag(other._tag) {
     if (nullptr == other._session) {
         throw no_session;
     }

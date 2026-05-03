@@ -146,7 +146,6 @@ return_t cbor_object_signing_encryption::domac(cose_context_t* handle, crypto_ke
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    int enc_alg = 0;
 
     __try2 {
         if (nullptr == handle || nullptr == key) {
@@ -208,11 +207,6 @@ return_t cbor_object_signing_encryption::domac(cose_context_t* handle, crypto_ke
         }
 
         compose_mac_context(handle, layer, tomac);
-
-        const EVP_PKEY* pkey = nullptr;
-        if (kid.size()) {
-            pkey = key->find(kid.c_str(), hint->kty);
-        }
 
         openssl_mac mac;
         cose_group_t group = hint->group;

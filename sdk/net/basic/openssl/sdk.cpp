@@ -42,7 +42,7 @@ return_t BIO_ADDR_to_sockaddr(BIO_ADDR* bio_addr, struct sockaddr* sockaddr, soc
         size_t socklen4 = sizeof(struct sockaddr_in);
         size_t socklen6 = sizeof(struct sockaddr_in6);
 
-        if ((nullptr == bio_addr) || (nullptr == sockaddr) || (addrlen < socklen4)) {
+        if ((nullptr == bio_addr) || (nullptr == sockaddr) || (size_t(addrlen) < socklen4)) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -58,7 +58,7 @@ return_t BIO_ADDR_to_sockaddr(BIO_ADDR* bio_addr, struct sockaddr* sockaddr, soc
                 addr4->sin_port = BIO_ADDR_rawport(bio_addr);
             } break;
             case AF_INET6:
-                if (addrlen >= socklen6) {
+                if (size_t(addrlen) >= socklen6) {
                     struct sockaddr_in6* addr6 = (struct sockaddr_in6*)sockaddr;
                     BIO_ADDR_rawaddress(bio_addr, &addr6->sin6_addr, nullptr);
                     addr6->sin6_port = BIO_ADDR_rawport(bio_addr);

@@ -46,9 +46,6 @@ return_t tls_extension_client_supported_versions::do_postprocess(tls_direction_t
 return_t tls_extension_client_supported_versions::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_handshake()->get_session();
-        auto& protection = session->get_tls_protection();
-
         uint16 count = 0;
         binary_t versions;
         {
@@ -88,9 +85,6 @@ return_t tls_extension_client_supported_versions::do_read_body(tls_direction_t d
 return_t tls_extension_client_supported_versions::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_handshake()->get_session();
-        auto& protection = session->get_tls_protection();
-
         uint8 cbsize_versions = 0;
         binary_t bin_versions;
         {
@@ -162,7 +156,7 @@ return_t tls_extension_server_supported_versions::do_read_body(tls_direction_t d
 return_t tls_extension_server_supported_versions::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_handshake()->get_session();
+        // auto session = get_handshake()->get_session();
 
         payload pl;
         pl << new payload_member(uint16(get_version()), true, constexpr_version);

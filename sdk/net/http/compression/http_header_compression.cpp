@@ -19,11 +19,22 @@ namespace net {
 
 http_header_compression::http_header_compression() : _safe_mask(false) {}
 
+http_header_compression::~http_header_compression() {}
+
 return_t http_header_compression::encode(http_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags) {
     return errorcode_t::success;
 }
 
 return_t http_header_compression::decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value,
+                                         uint32 flags) {
+    return errorcode_t::success;
+}
+
+return_t http_header_compression::decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item, uint32 flags) {
+    return errorcode_t::success;
+}
+
+return_t http_header_compression::decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::list<http_compression_decode_t>& kv,
                                          uint32 flags) {
     return errorcode_t::success;
 }
@@ -292,7 +303,7 @@ return_t http_header_compression::selectall(http_static_table* statable, http_dy
     return ret;
 }
 
-return_t http_header_compression::set_capacity(http_dynamic_table* dyntable, binary_t& target, uint8 maxsize) { return errorcode_t::success; }
+return_t http_header_compression::set_capacity(http_dynamic_table* dyntable, binary_t& target, uint64 maxsize) { return errorcode_t::success; }
 
 return_t http_header_compression::duplicate(http_dynamic_table* dyntable, binary_t& target, size_t index) { return errorcode_t::success; }
 

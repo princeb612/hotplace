@@ -13,7 +13,7 @@
 void test_yaml_testvector_valist() {
     _test_case.begin("valist YAML");
 
-    auto lambda_test_valist_sprintf = [&](const YAML::Node& args, const YAML::Node& items) -> void {
+    auto lambda_yaml_valist_sprintf = [&](const YAML::Node& args, const YAML::Node& items) -> void {
         valist va;
         for (const auto& arg : args) {
             std::string type = arg["type"].as<std::string>();
@@ -50,7 +50,7 @@ void test_yaml_testvector_valist() {
             if (schema == "VALIST SPRINTF") {
                 auto args = example["args"];
                 auto items = example["items"];
-                lambda_test_valist_sprintf(args, items);
+                lambda_yaml_valist_sprintf(args, items);
             } else {
                 _test_case.assert(false, __FUNCTION__, "bad message format");
             }

@@ -98,8 +98,8 @@ return_t crypto_cbc_hmac::split_key(const binary_t key, binary_t& enckey, binary
         }
 
         uint16 keysize = sizeof_key(hint_blockcipher);
-        uint16 ivsize = sizeof_iv(hint_blockcipher);
-        uint16 blocksize = sizeof_block(hint_blockcipher);
+        // uint16 ivsize = sizeof_iv(hint_blockcipher);
+        // uint16 blocksize = sizeof_block(hint_blockcipher);
         uint16 digestsize = sizeof_digest(hint_digest);
         digestsize >>= 1;  // truncate
 
@@ -302,7 +302,7 @@ return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey
                 }
 
                 size_t plainsize = plaintext.size();
-                if (dlen + 1 > plainsize) {
+                if (size_t(dlen + 1) > plainsize) {
                     ret = errorcode_t::bad_data;
                     __leave2;
                 }

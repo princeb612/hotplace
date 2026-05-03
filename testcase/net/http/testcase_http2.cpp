@@ -22,9 +22,9 @@ void test_http2() {
 
     protocol_group << http2_prot;
 
-    for (auto i = 0; i < sizeof_testvector_h2; i++) {
+    for (size_t i = 0; i < sizeof_testvector_h2; i++) {
         auto item = testvector_h2frame + i;
-        binary_t frame = std::move(base16_decode_rfc(item->frame));
+        binary_t frame = base16_decode_rfc(item->frame);
 
         // network_server::producer_routine
         // session.produce(&event_queue, frame.data(), frame.size());

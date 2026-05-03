@@ -62,7 +62,7 @@ return_t nidof_evp_pkey(const EVP_PKEY* pkey, uint32& nid) {
             }
         }
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-        else if (EVP_PKEY_KEYMGMT == nid) {
+        else if ((uint32)EVP_PKEY_KEYMGMT == nid) {
             auto name = EVP_PKEY_get0_type_name(pkey);
             if (name) {
                 nid = OBJ_txt2nid(name);

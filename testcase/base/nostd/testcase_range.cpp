@@ -12,7 +12,6 @@
 
 void test_sampling() {
     _test_case.begin("range");
-    bool test = false;
     t_sampling_range<int> sample;
     auto expect = [&](int emin, int emax) -> bool {
         int imin = sample.getmin();

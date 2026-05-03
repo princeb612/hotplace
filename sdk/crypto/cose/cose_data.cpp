@@ -11,6 +11,7 @@
  */
 
 #include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
@@ -105,100 +106,74 @@ cose_data& cose_data::add(int key, const binary_t& value) { return add(key, valu
 cose_data& cose_data::replace(int key, const binary_t& value) { return replace(key, value.data(), value.size()); }
 
 cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, const binary_t& y) {
-    cose_key* k = nullptr;
-    return_t ret = errorcode_t::success;
-    __try2 {
-        __try_new_catch(k, new cose_key(), ret, __leave2);
+    auto k = make_unique<cose_key>();
 
-        k->set(&get_owner()->get_static_key(), curve, x, y);
-        add(key, TYPE_STATIC_KEY, k);
+    k->set(&get_owner()->get_static_key(), curve, x, y);
+    add(key, TYPE_STATIC_KEY, k.get());
 
-        _keys.push_back(k);
-    }
-    __finally2 {}
+    _keys.push_back(k.get());
+    k.release();
     return *this;
 }
 
 cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, const binary_t& y, std::list<int>& order) {
-    cose_key* k = nullptr;
-    return_t ret = errorcode_t::success;
-    __try2 {
-        __try_new_catch(k, new cose_key(), ret, __leave2);
+    auto k = make_unique<cose_key>();
 
-        k->set(&get_owner()->get_static_key(), curve, x, y);
-        k->set(order);
-        add(key, TYPE_STATIC_KEY, k);
+    k->set(&get_owner()->get_static_key(), curve, x, y);
+    k->set(order);
+    add(key, TYPE_STATIC_KEY, k.get());
 
-        _keys.push_back(k);
-    }
-    __finally2 {}
+    _keys.push_back(k.get());
+    k.release();
     return *this;
 }
 
 cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, bool ysign) {
-    cose_key* k = nullptr;
-    return_t ret = errorcode_t::success;
-    __try2 {
-        __try_new_catch(k, new cose_key(), ret, __leave2);
+    auto k = make_unique<cose_key>();
 
-        k->set(&get_owner()->get_static_key(), curve, x, ysign);
-        add(key, TYPE_STATIC_KEY, k);
+    k->set(&get_owner()->get_static_key(), curve, x, ysign);
+    add(key, TYPE_STATIC_KEY, k.get());
 
-        _keys.push_back(k);
-    }
-    __finally2 {}
+    _keys.push_back(k.get());
+    k.release();
     return *this;
 }
 
 cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, bool ysign, std::list<int>& order) {
-    cose_key* k = nullptr;
-    return_t ret = errorcode_t::success;
-    __try2 {
-        __try_new_catch(k, new cose_key(), ret, __leave2);
+    auto k = make_unique<cose_key>();
 
-        k->set(&get_owner()->get_static_key(), curve, x, ysign);
-        k->set(order);
-        add(key, TYPE_STATIC_KEY, k);
+    k->set(&get_owner()->get_static_key(), curve, x, ysign);
+    k->set(order);
+    add(key, TYPE_STATIC_KEY, k.get());
 
-        _keys.push_back(k);
-    }
-    __finally2 {}
+    _keys.push_back(k.get());
+    k.release();
     return *this;
 }
 
 cose_data& cose_data::add(cose_alg_t alg, const char* kid, const binary_t& signature) {
-    cose_countersign* countersign = nullptr;
-    return_t ret = errorcode_t::success;
+    auto countersign = make_unique<cose_countersign>();
 
-    __try2 {
-        __try_new_catch(countersign, new cose_countersign, ret, __leave2);
-        countersign->set_upperlayer(get_owner());
-        countersign->set_property(cose_property_t::cose_property_countersign);
+    countersign->set_upperlayer(get_owner());
+    countersign->set_property(cose_property_t::cose_property_countersign);
 
-        countersign->get_protected().add(cose_key_t::cose_alg, alg);
-        if (kid) {
-            countersign->get_unprotected().add(cose_key_t::cose_kid, kid);
-        }
-        countersign->get_signature().set(signature);
-
-        add(countersign);
+    countersign->get_protected().add(cose_key_t::cose_alg, alg);
+    if (kid) {
+        countersign->get_unprotected().add(cose_key_t::cose_kid, kid);
     }
-    __finally2 {}
+    countersign->get_signature().set(signature);
+
+    add(countersign.release());
     return *this;
 }
 
 cose_data& cose_data::add(cose_recipient* countersign) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        cose_countersigns* countersigns = get_owner()->get_countersigns1();
-        cose_variantmap_t::iterator iter = _data_map.find(cose_key_t::cose_counter_sig);
-        if (_data_map.end() == iter) {
-            add(cose_key_t::cose_counter_sig, TYPE_COUNTER_SIG, countersigns);
-        }
-        countersigns->add(countersign);
+    cose_countersigns* countersigns = get_owner()->get_countersigns1();
+    cose_variantmap_t::iterator iter = _data_map.find(cose_key_t::cose_counter_sig);
+    if (_data_map.end() == iter) {
+        add(cose_key_t::cose_counter_sig, TYPE_COUNTER_SIG, countersigns);
     }
-    __finally2 {}
+    countersigns->add(countersign);
     return *this;
 }
 
@@ -252,7 +227,6 @@ cose_data& cose_data::clear() {
 
 bool cose_data::exist(int key) {
     bool ret_value = false;
-    return_t ret = errorcode_t::success;
 
     std::map<int, variant>::iterator iter = _data_map.find(key);
     if (_data_map.end() != iter) {
@@ -309,10 +283,12 @@ return_t cose_data::build_protected(cbor_data** object) {
         }
 
         if (_payload.size()) {
-            *object = new cbor_data(_payload);
+            auto temp = make_unique<cbor_data>(_payload);
+            *object = temp.get();
+            temp.release();
         } else {
             if (_data_map.size()) {
-                __try_new_catch(part_protected, new cbor_map(), ret, __leave2);
+                part_protected = new cbor_map();
 
                 for (const auto& key : _order) {
                     cose_variantmap_t::iterator map_iter = _data_map.find(key);
@@ -391,7 +367,7 @@ return_t cose_data::build_unprotected(cbor_map** object) {
             __leave2;
         }
 
-        __try_new_catch(part_unprotected, new cbor_map(), ret, __leave2);
+        part_unprotected = new cbor_map();
 
         for (const auto& key : _order) {
             cose_variantmap_t::iterator map_iter = _data_map.find(key);
@@ -425,7 +401,7 @@ return_t cose_data::build_unprotected(cbor_map** object, cose_variantmap_t& unse
             __leave2;
         }
 
-        __try_new_catch(part_unprotected, new cbor_map(), ret, __leave2);
+        part_unprotected = new cbor_map();
 
         for (const auto& key : _order) {
             cose_variantmap_t::iterator unsent_iter = unsent.find(key);
@@ -463,7 +439,7 @@ return_t cose_data::build_data(cbor_data** object) {
             __leave2;
         }
 
-        __try_new_catch(*object, new cbor_data(_payload), ret, __leave2);
+        *object = new cbor_data(_payload);
     }
     __finally2 {}
     return ret;
@@ -537,7 +513,6 @@ return_t cose_data::parse_payload(cbor_data* object) {
 
 return_t cose_data::parse(cbor_map* object) {
     return_t ret = errorcode_t::success;
-    return_t check = errorcode_t::success;
 
     __try2 {
         if (nullptr == object) {
@@ -615,7 +590,6 @@ return_t cose_data::parse(cbor_map* object) {
 
 return_t cose_data::parse_static_key(cbor_map* object, int keyid) {
     return_t ret = errorcode_t::success;
-    return_t check = errorcode_t::success;
 
     __try2 {
         if (nullptr == object) {
@@ -625,7 +599,7 @@ return_t cose_data::parse_static_key(cbor_map* object, int keyid) {
 
         cbor_map_hint<int, cbor_map_int_binder<int>> hint(object);
         cose_orderlist_t order;
-        uint16 kty = 0;
+        // uint16 kty = 0;
         uint16 curve = 0;
         binary_t bin_x;
         binary_t bin_y;
@@ -694,8 +668,7 @@ return_t cose_data::parse_counter_signs(cbor_array* object, int keyid) {
             cbor_map* countersig_unprotected = cbor_typeof<cbor_map>((*object)[1], cbor_type_t::cbor_type_map);
             cbor_data* countersig_signature = cbor_typeof<cbor_data>((*object)[2], cbor_type_t::cbor_type_data);
             if (countersig_protected && countersig_unprotected && countersig_signature) {
-                cose_countersign* countersign = nullptr;
-                __try_new_catch_only(countersign, new cose_countersign);
+                cose_countersign* countersign = new cose_countersign;
 
                 countersign->set_upperlayer(get_owner());
                 countersign->set_composer(get_owner()->get_composer());

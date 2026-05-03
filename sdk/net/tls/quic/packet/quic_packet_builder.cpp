@@ -32,7 +32,6 @@ quic_packet_builder& quic_packet_builder::set(quic_packet_t type) {
 }
 
 quic_packet_builder& quic_packet_builder::set(protection_space_t space) {
-    quic_packet_t type = quic_packet_type_initial;
     switch (space) {
         case protection_initial: {
             _type = quic_packet_type_initial;
@@ -43,6 +42,8 @@ quic_packet_builder& quic_packet_builder::set(protection_space_t space) {
         case protection_application: {
             _type = quic_packet_type_1_rtt;
         } break;
+        default:
+            break;
     }
     return *this;
 }
@@ -93,10 +94,10 @@ quic_packet* quic_packet_builder::build() {
         }
         switch (type) {
             case quic_packet_type_version_negotiation: {
-                __try_new_catch_only(packet, new quic_packet_version_negotiation(session));
+                packet = new quic_packet_version_negotiation(session);
             } break;
             case quic_packet_type_initial: {
-                __try_new_catch_only(packet, new quic_packet_initial(session));
+                packet = new quic_packet_initial(session);
                 if (is_construct() && (is_unidirection(get_direction()))) {
                     openssl_prng prng;
                     uint32 pn = t_narrow_cast(session->get_recordno(get_direction(), false, protection_initial));
@@ -105,10 +106,10 @@ quic_packet* quic_packet_builder::build() {
                 }
             } break;
             case quic_packet_type_0_rtt: {
-                __try_new_catch_only(packet, new quic_packet_0rtt(session));
+                packet = new quic_packet_0rtt(session);
             } break;
             case quic_packet_type_handshake: {
-                __try_new_catch_only(packet, new quic_packet_handshake(session));
+                packet = new quic_packet_handshake(session);
                 if (is_construct() && (is_unidirection(get_direction()))) {
                     openssl_prng prng;
                     uint32 pn = t_narrow_cast(session->get_recordno(get_direction(), false, protection_handshake));
@@ -117,10 +118,10 @@ quic_packet* quic_packet_builder::build() {
                 }
             } break;
             case quic_packet_type_retry: {
-                __try_new_catch_only(packet, new quic_packet_retry(session));
+                packet = new quic_packet_retry(session);
             } break;
             case quic_packet_type_1_rtt: {
-                __try_new_catch_only(packet, new quic_packet_1rtt(session));
+                packet = new quic_packet_1rtt(session);
                 if (is_construct()) {
                     openssl_prng prng;
                     uint32 pn = t_narrow_cast(session->get_recordno(get_direction(), false, protection_application));

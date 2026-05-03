@@ -467,7 +467,7 @@ void test_digest_access_authentication(const char *alg = nullptr, unsigned long 
             std::string auth;
             std::string cred;
             skey_value kv;
-            size_t pos = 0;
+            // size_t pos = 0;
             response.get_http_header().get("WWW-Authenticate", auth);
             http_header::to_keyvalue(auth, kv);
 
@@ -554,7 +554,7 @@ void do_test_rfc_example_routine(const std::string &text, digest_access_authenti
 
 void test_rfc_digest_example() {
     _test_case.begin("RFC examples");
-    const OPTION &option = _cmdline->value();
+    // const OPTION &option = _cmdline->value();
 
     http_request request;
 

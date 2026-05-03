@@ -26,7 +26,7 @@ void test_hash_routine(hash_algorithm_t algorithm, const byte_t* key_data, unsig
 
     ansi_string bs;
 
-    const char* alg = advisor->nameof_md(algorithm);
+    // const char* alg = advisor->nameof_md(algorithm);
     size_t digest_size = 0;
 
     __try2 {
@@ -75,7 +75,7 @@ return_t test_hash_routine(hash_algorithm_t algorithm, binary_t key, binary_t da
 
     ansi_string bs;
 
-    const char* alg = advisor->nameof_md(algorithm);
+    // const char* alg = advisor->nameof_md(algorithm);
     size_t digest_size = 0;
 
     __try2 {

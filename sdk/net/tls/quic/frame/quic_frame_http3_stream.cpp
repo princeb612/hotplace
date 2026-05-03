@@ -63,7 +63,7 @@ return_t quic_frame_http3_stream::do_read_body(tls_direction_t dir, const byte_t
         pl.read(stream, size, pos);
 
         uint64 stream_id = 0;
-        uint64 fin = 0;
+        // uint64 fin = 0;
         uint64 len = 0;
         uint64 off = 0;
         binary_t stream_data;
@@ -244,7 +244,7 @@ return_t quic_frame_http3_stream::do_write_body(tls_direction_t dir, const byte_
             __leave2;
         }
 
-        size_t snapshot = bin.size();
+        // size_t snapshot = bin.size();
         auto tlsadvisor = tls_advisor::get_instance();
 
         uint8 type = quic_frame_type_stream;

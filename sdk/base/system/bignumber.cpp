@@ -387,7 +387,7 @@ bignumber &bignumber::setstring(const char *value) {
             while (*p) {
                 uint32 digit = *p - '0';
                 uint64 carry = digit;
-                for (auto i = 0; i < _v.size(); ++i) {
+                for (size_t i = 0; i < _v.size(); ++i) {
                     uint64 x = _v[i] * 10ULL + carry;
                     _v[i] = (x & 0xffffffff);
                     carry = x >> 32;
@@ -576,8 +576,8 @@ bignumber bignumber::bitwise_and(const bignumber &lhs, const bignumber &rhs) {
     auto lsize = lhs._v.size();
     auto rsize = rhs._v.size();
     auto h = std::max(lsize, rsize);
-    auto l = std::min(lsize, rsize);
-    for (auto i = 0; i < h; i++) {
+    // auto l = std::min(lsize, rsize);
+    for (size_t i = 0; i < h; i++) {
         uint32 lval = (i < lsize) ? lhs._v[i] : 0;
         uint32 rval = (i < rsize) ? rhs._v[i] : 0;
         res._v.push_back(lval & rval);
@@ -590,8 +590,8 @@ bignumber bignumber::bitwise_or(const bignumber &lhs, const bignumber &rhs) {
     auto lsize = lhs._v.size();
     auto rsize = rhs._v.size();
     auto h = std::max(lsize, rsize);
-    auto l = std::min(lsize, rsize);
-    for (auto i = 0; i < h; i++) {
+    // auto l = std::min(lsize, rsize);
+    for (size_t i = 0; i < h; i++) {
         uint32 lval = (i < lsize) ? lhs._v[i] : 0;
         uint32 rval = (i < rsize) ? rhs._v[i] : 0;
         res._v.push_back(lval | rval);
@@ -604,8 +604,8 @@ bignumber bignumber::bitwise_xor(const bignumber &lhs, const bignumber &rhs) {
     auto lsize = lhs._v.size();
     auto rsize = rhs._v.size();
     auto h = std::max(lsize, rsize);
-    auto l = std::min(lsize, rsize);
-    for (auto i = 0; i < h; i++) {
+    // auto l = std::min(lsize, rsize);
+    for (size_t i = 0; i < h; i++) {
         uint32 lval = (i < lsize) ? lhs._v[i] : 0;
         uint32 rval = (i < rsize) ? rhs._v[i] : 0;
         res._v.push_back(lval ^ rval);
@@ -895,8 +895,8 @@ bignumber bignumber::normalize(const bignumber &other, uint64 bits, bool sign) c
 #endif
 {
     bignumber res(other);
-    auto m = std::move(bn_mod(bits));
-    auto h = std::move(bn_half(bits));
+    auto m = bn_mod(bits);
+    auto h = bn_half(bits);
     res %= m;
     if (sign) {
         if (res < 0) {

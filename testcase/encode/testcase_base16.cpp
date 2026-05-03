@@ -12,13 +12,16 @@
 
 void test_base16() {
     _test_case.begin("b16 encoding");
+
     return_t ret = errorcode_t::success;
     constexpr char text[] = R"(0123456789abcdefghijklmnopqrstuvwxyz!@#$%^&*()-_=+[{]}\\|;:'",<.>/\?)";
     std::string encoded;
 
-    base16_encode((byte_t*)text, strlen(text), encoded);
+    ret = base16_encode((byte_t*)text, strlen(text), encoded);
+    _test_case.test(ret, __FUNCTION__, "encode");
     binary_t decoded;
     ret = base16_decode(encoded, decoded);
+    _test_case.test(ret, __FUNCTION__, "decode");
 
     {
         test_case_notimecheck notimecheck(_test_case);
@@ -27,10 +30,6 @@ void test_base16() {
         _logger->writeln("encode: %s", encoded.c_str());
         _logger->hdump("dump decoded", decoded);
     }
-
-    bool test = false;
-    test = (strlen(text) == decoded.size());
-    _test_case.assert(test, __FUNCTION__, "b16");
 }
 
 void test_base16_func() {
@@ -67,6 +66,7 @@ void test_base16_decode() {
     binary_t decoded;
 
     ret = base16_decode(encoded, decoded);
+    _test_case.test(ret, __FUNCTION__, "decode");
 
     {
         test_case_notimecheck notimecheck(_test_case);
@@ -75,16 +75,12 @@ void test_base16_decode() {
         dump_memory(decoded.data(), decoded.size(), &bs);
         _logger->writeln("%s", bs.c_str());
     }
-
-    bool test = false;
-    test = ((encoded.size() / 2) == decoded.size());
-    _test_case.test(ret, __FUNCTION__, "b16");
 }
 
 void test_base16_oddsize() {
     _test_case.begin("b16 encoding");
     const char* test = "0cef3f4babe6f9875e5db28c27d6a197d607c3641a90f10c2cc2cb302ba658aa151dc76c507488b99f4b3c8bb404fb5c852f959273f412cbdd5e713c5e3f0e67f94";
-    binary_t bin_test = std::move(base16_decode(test));
+    binary_t bin_test = base16_decode(test);
 
     {
         test_case_notimecheck notimecheck(_test_case);
@@ -100,8 +96,8 @@ void test_base16_oddsize() {
 void do_dump_base16_rfc(const char* text, const char* input) {
     basic_stream bs;
 
-    std::string encoded = std::move(base16_encode_rfc(input));
-    binary_t decoded = std::move(base16_decode(encoded));
+    std::string encoded = base16_encode_rfc(input);
+    binary_t decoded = base16_decode(encoded);
     dump_memory(decoded, &bs, 16, 4);
     _logger->writeln("%s\n  input   %s\n  encoded %s\n  decoded\n%s", text, input, encoded.c_str(), bs.c_str());
 }

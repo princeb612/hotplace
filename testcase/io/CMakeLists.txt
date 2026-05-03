@@ -8,6 +8,7 @@ set (module io)
 file (GLOB SOURCE_FILES
     *.cpp
     basic/*.cpp
+    stream/*.cpp
     system/*.cpp
 )
 

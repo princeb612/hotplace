@@ -81,7 +81,7 @@ void test_ffdhe_dh() {
 
     auto genkey = key.find("generated");
     auto pubkey = key.find("pub");
-    auto privkey = key.find("priv");
+    // auto privkey = key.find("priv");
 
     binary_t shared;
     ret = dh_key_agreement(genkey, pubkey, shared);
@@ -95,7 +95,7 @@ void test_rfc7919() {
     return_t ret = errorcode_t::success;
     crypto_key key;
     crypto_keychain keychain;
-    for (auto i = 0; i < sizeof_test_vector_rfc7919; i++) {
+    for (size_t i = 0; i < sizeof_test_vector_rfc7919; i++) {
         auto item = test_vector_rfc7919[i];
         keydesc desc(item.desc);
         ret = keychain.add_dh_b16rfc(&key, item.nid, item.p, item.q, item.g, nullptr, std::move(desc));

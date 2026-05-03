@@ -136,7 +136,7 @@ void test_selfgen(crypto_key* key) {
     _test_case.begin("key generation");
 
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    binary_t input = std::move(str2bin("hello world"));
+    binary_t input = str2bin("hello world");
     std::list<cose_alg_t> algs;
     size_t i = 0;
     size_t j = 0;
@@ -183,7 +183,7 @@ void do_test_cose_encrypt(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, co
     binary_t cbor;
 
     cose_context_t* handle = nullptr;
-    const OPTION& option = _cmdline->value();
+    // const OPTION& option = _cmdline->value();
 
     ret = cose.open(&handle);
     if (errorcode_t::success == ret) {
@@ -222,7 +222,7 @@ void do_test_cose_sign(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const
     binary_t cbor;
 
     cose_context_t* handle = nullptr;
-    const OPTION& option = _cmdline->value();
+    // const OPTION& option = _cmdline->value();
 
     ret = cose.open(&handle);
     if (errorcode_t::success == ret) {
@@ -256,7 +256,7 @@ void do_test_cose_mac(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const 
     binary_t cbor;
 
     cose_context_t* handle = nullptr;
-    const OPTION& option = _cmdline->value();
+    // const OPTION& option = _cmdline->value();
 
     ret = cose.open(&handle);
     if (errorcode_t::success == ret) {
@@ -291,10 +291,10 @@ void do_test_cose_mac(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const 
 void test_cose(crypto_key* key) {
     _test_case.begin("it's fun");
 
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     cbor_object_signing_encryption cose;
-    binary_t input = std::move(str2bin("hello world"));
+    binary_t input = str2bin("hello world");
     size_t i = 0;
     size_t j = 0;
 

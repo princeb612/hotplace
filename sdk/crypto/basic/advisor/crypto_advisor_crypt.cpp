@@ -121,7 +121,6 @@ const hint_cipher_t* crypto_advisor::hintof_cipher(crypto_scheme_t scheme) {
 }
 
 const char* crypto_advisor::nameof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode) {
-    return_t ret = errorcode_t::success;
     const char* ret_value = nullptr;
     uint32 key = CRYPTO_SCHEME16(algorithm, mode);
     auto iter = _cipher_fetch_map.find(key);
@@ -134,12 +133,13 @@ const char* crypto_advisor::nameof_cipher(crypt_algorithm_t algorithm, crypt_mod
 
 return_t crypto_advisor::for_each_cipher(std::function<void(const char*, uint32, void*)> f, void* user) {
     return_t ret = errorcode_t::success;
-    for (auto i = 0; i < sizeof_evp_cipher_methods; i++) {
+    size_t i = 0;
+    for (i = 0; i < sizeof_evp_cipher_methods; i++) {
         const hint_cipher_t* item = evp_cipher_methods + i;
         auto spec = query_feature(nameof_alg(item), advisor_feature_cipher);
         f(nameof_alg(item), spec, user);
     }
-    for (auto i = 0; i < sizeof_ossl1_aes_wrap_methods; i++) {
+    for (i = 0; i < sizeof_ossl1_aes_wrap_methods; i++) {
         const evp_cipher_ossl1_methods* item = ossl1_aes_wrap_methods + i;
         auto spec = query_feature(item->hint.fetchname, advisor_feature_wrap);
         f(item->hint.fetchname, spec, user);
@@ -149,7 +149,7 @@ return_t crypto_advisor::for_each_cipher(std::function<void(const char*, uint32,
 
 return_t crypto_advisor::for_each_cipher(std::function<void(const hint_cipher_t*)> func) {
     return_t ret = errorcode_t::success;
-    for (auto i = 0; i < sizeof_evp_cipher_methods; i++) {
+    for (size_t i = 0; i < sizeof_evp_cipher_methods; i++) {
         const hint_cipher_t* item = evp_cipher_methods + i;
         func(item);
     }

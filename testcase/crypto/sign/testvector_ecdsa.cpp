@@ -44,9 +44,9 @@ void do_test_ecdsa(const test_vector_nist_cavp_ecdsa_t* entry) {
 
         binary_t message;
         if (entry->encoding == "base16") {
-            message = std::move(base16_decode(entry->m));
+            message = base16_decode(entry->m);
         } else if (entry->encoding == "plain") {
-            message = std::move(str2bin(entry->m));
+            message = str2bin(entry->m);
         } else {
             _test_case.assert(false, __FUNCTION__, "bad message format");
             __leave2;
@@ -59,8 +59,8 @@ void do_test_ecdsa(const test_vector_nist_cavp_ecdsa_t* entry) {
 
         // R || S
         binary_t signature;
-        binary_t bin_r = std::move(base16_decode(entry->r));
-        binary_t bin_s = std::move(base16_decode(entry->s));
+        binary_t bin_r = base16_decode(entry->r);
+        binary_t bin_s = base16_decode(entry->s);
         signature.insert(signature.end(), bin_r.begin(), bin_r.end());
         signature.insert(signature.end(), bin_s.begin(), bin_s.end());
 
@@ -102,21 +102,21 @@ void do_test_ecdsa(const test_vector_nist_cavp_ecdsa_t* entry) {
 void test_yaml_testvector_ecdsa() {
     _test_case.begin("ECDSA YAML");
 
-    auto lambda_test_ecdsa_testvector = [&](const YAML::Node& items, const std::string& encoding) -> void {
+    auto lambda_yaml_ecdsa_testvector = [&](const YAML::Node& items, const std::string& encoding) -> void {
         for (const auto& item : items) {
             test_vector_nist_cavp_ecdsa_t entry;
 
             entry.encoding = encoding;
-            entry.item = std::move(item["item"].as<std::string>());
-            entry.curve = std::move(item["curve"].as<std::string>());
-            entry.alg = std::move(item["alg"].as<std::string>());
-            entry.m = std::move(item["m"].as<std::string>());
-            entry.d = std::move(item["d"].as<std::string>());
-            entry.x = std::move(item["x"].as<std::string>());
-            entry.y = std::move(item["y"].as<std::string>());
-            entry.k = std::move(item["k"].as<std::string>());
-            entry.r = std::move(item["r"].as<std::string>());
-            entry.s = std::move(item["s"].as<std::string>());
+            entry.item = item["item"].as<std::string>();
+            entry.curve = item["curve"].as<std::string>();
+            entry.alg = item["alg"].as<std::string>();
+            entry.m = item["m"].as<std::string>();
+            entry.d = item["d"].as<std::string>();
+            entry.x = item["x"].as<std::string>();
+            entry.y = item["y"].as<std::string>();
+            entry.k = item["k"].as<std::string>();
+            entry.r = item["r"].as<std::string>();
+            entry.s = item["s"].as<std::string>();
 
             do_test_ecdsa(&entry);
         }
@@ -133,9 +133,9 @@ void test_yaml_testvector_ecdsa() {
             auto items = example["items"];
 
             if (schema == "ECDSA TESTVECTOR") {
-                auto encoding = std::move(example["encoding"].as<std::string>());
+                auto encoding = example["encoding"].as<std::string>();
 
-                lambda_test_ecdsa_testvector(items, encoding);
+                lambda_yaml_ecdsa_testvector(items, encoding);
             } else {
                 _test_case.assert(false, __FUNCTION__, "bad message format");
             }

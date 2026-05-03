@@ -117,6 +117,8 @@ class http_dynamic_table {
     void pick(size_t entry, const std::string& name, std::string& value);
 
     critical_section _lock;
+    uint8 _type;  // see header_compression_type_t
+    size_t _tablesize;
     size_t _capacity;
     size_t _inserted;
     size_t _dropped;
@@ -136,9 +138,6 @@ class http_dynamic_table {
     commit_queue_t _commit_queue;
 
    private:
-    uint8 _type;  // see header_compression_type_t
-    size_t _tablesize;
-
     std::function<void(trace_category_t, uint32 event)> _hook;
 };
 

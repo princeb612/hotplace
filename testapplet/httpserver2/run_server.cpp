@@ -29,9 +29,9 @@ void api_response_json_handler(network_session*, http_request* request, http_res
 
 return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     return_t ret = errorcode_t::success;
-    netsocket_t* session_socket = (netsocket_t*)data_array[0];
-    char* buf = (char*)data_array[1];
-    size_t bufsize = (size_t)data_array[2];
+    // netsocket_t* session_socket = (netsocket_t*)data_array[0];
+    // char* buf = (char*)data_array[1];
+    // size_t bufsize = (size_t)data_array[2];
     network_session* session = (network_session*)data_array[3];
     http_request* request = (http_request*)data_array[4];
 
@@ -39,7 +39,7 @@ return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CA
     basic_stream bs;
     std::string message;
 
-    const OPTION& option = _cmdline->value();
+    // const OPTION& option = _cmdline->value();
 
     switch (type) {
         case mux_connect:
@@ -207,7 +207,7 @@ return_t simple_http2_server(void*) {
 
 void run_server() {
     thread thread1(simple_http2_server, nullptr);
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
 
     __try2 { thread1.start(); }
     __finally2 { thread1.wait(-1); }

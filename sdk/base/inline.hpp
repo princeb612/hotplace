@@ -30,63 +30,51 @@ namespace hotplace {
  */
 static inline int bit_length(uint16 v) {
     unsigned int ret_value = 0;
+    if (v) {
 #if defined __GNUC__
-    ret_value = __builtin_clz(v) - 16;
+        ret_value = 32 - __builtin_clz(v);
 #elif defined _MSC_VER
-    if (0 == v) {
-        ret_value = 16;
-    } else {
-        unsigned long idx = 0;
-        _BitScanReverse(&idx, v);
-        ret_value = 15 - idx;
-    }
+        ret_value = 16 - __lzcnt16(v);
 #endif
+    }
     return ret_value;
 }
 
 static inline int bit_length(uint32 v) {
     unsigned int ret_value = 0;
+    if (v) {
 #if defined __GNUC__
-    ret_value = __builtin_clz(v);
+        ret_value = 32 - __builtin_clz(v);
 #elif defined _MSC_VER
-    if (0 == v) {
-        ret_value = 32;
-    } else {
-        unsigned long idx = 0;
-        _BitScanReverse(&idx, v);
-        ret_value = 31 - idx;
-    }
+        ret_value = 32 - __lzcnt(v);
 #endif
+    }
     return ret_value;
 }
 
 static inline int bit_length(uint64 v) {
     unsigned int ret_value = 0;
-#if defined __GNUC__
-    ret_value = __builtin_clzll(v);
-#elif defined _MSC_VER
-    if (0 == v) {
-        ret_value = 64;
+    uint32 hi = uint32(v >> 32);
+    uint32 lo = uint32(v);
+    if (hi) {
+        ret_value = bit_length(hi) + 32;
     } else {
-        unsigned long idx = 0;
-        _BitScanReverse64(&idx, v);
-        ret_value = 63 - idx;
+        ret_value = bit_length(lo);
     }
-#endif
     return ret_value;
 }
 
 #if defined __SIZEOF_INT128__
 static inline int bit_length(uint128 v) {
-    int b = 128;
-    uint64 hi = (v >> 64);
-    uint64 lo = 0;
+    unsigned int ret_value = 0;
+    uint64 hi = uint64(v >> 64);
+    uint64 lo = uint64(v);
     if (hi) {
-        b = bit_length(hi);
-    } else if (lo = (v & ~0ULL)) {
-        b = bit_length(lo) + 64;
+        ret_value = bit_length(hi) + 64;
+    } else {
+        ret_value = bit_length(lo);
     }
-    return b;
+    return ret_value;
 }
 #endif
 
@@ -101,14 +89,14 @@ static inline int bit_length(uint128 v) {
  *          08000000000000000000000000000000 16 bytes
  */
 
-static inline int byte_capacity(uint16 v) { return ((sizeof(v) << 3) - bit_length(v) + 7) >> 3; }
+static inline int byte_capacity(uint16 v) { return (bit_length(v) + 7) >> 3; }
 
-static inline int byte_capacity(uint32 v) { return ((sizeof(v) << 3) - bit_length(v) + 7) >> 3; }
+static inline int byte_capacity(uint32 v) { return (bit_length(v) + 7) >> 3; }
 
-static inline int byte_capacity(uint64 v) { return ((sizeof(v) << 3) - bit_length(v) + 7) >> 3; }
+static inline int byte_capacity(uint64 v) { return (bit_length(v) + 7) >> 3; }
 
 #if defined __SIZEOF_INT128__
-static inline int byte_capacity(uint128 v) { return ((sizeof(v) << 3) - bit_length(v) + 7) >> 3; }
+static inline int byte_capacity(uint128 v) { return (bit_length(v) + 7) >> 3; }
 #endif
 
 // secure functions
@@ -349,7 +337,7 @@ static inline return_t memxor(byte_t* target, const byte_t* mask, size_t len) {
             __leave2;
         }
 
-        for (auto i = 0; i < len; i++) {
+        for (size_t i = 0; i < len; ++i) {
             target[i] ^= mask[i];
         }
     }

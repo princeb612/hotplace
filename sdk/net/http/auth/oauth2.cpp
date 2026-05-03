@@ -316,7 +316,6 @@ void oauth2_unsupported_provider::authorization_handler(network_session* session
 }
 
 void oauth2_unsupported_provider::token_handler(network_session* session, http_request* request, http_response* response, http_router* router) {
-    skey_value& kv = request->get_http_uri().get_query_keyvalue();
     basic_stream body;
     json_t* root = nullptr;
 
@@ -443,7 +442,7 @@ return_t oauth2_provider::choose(oauth2_grant_provider_ref_map_t& object, const 
         if (object.end() == iter) {
             oauth2_grant_provider_map_t::iterator piter = _providers.find(oauth2_grant_t::oauth2_unsupported);
             if (_providers.end() == piter) {
-                __try_new_catch(provider, new oauth2_unsupported_provider, ret, __leave2);
+                provider = new oauth2_unsupported_provider;
             } else {
                 provider = piter->second;
                 provider->addref();

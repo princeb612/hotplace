@@ -53,7 +53,7 @@ return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* s
         auto session = get_session();
         size_t tpos = 0;
         size_t recpos = offsetof_header();
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        // tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
         if (session->get_session_info(dir).apply_protection()) {
             /**
@@ -86,9 +86,6 @@ return_t tls_record_handshake::do_read_body(tls_direction_t dir, const byte_t* s
             tls_protection& protection = session->get_tls_protection();
             binary_t plaintext;
 
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            auto cs = protection.get_cipher_suite();
-            bool is_cbc = tlsadvisor->is_kindof_cbc(cs);
             auto limit = recpos + get_record_size();
             ret = protection.decrypt(session, dir, stream, limit, recpos, plaintext);
             if (errorcode_t::success == ret) {

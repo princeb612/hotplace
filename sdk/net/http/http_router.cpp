@@ -187,12 +187,12 @@ oauth2_provider& http_router::get_oauth2_provider() { return _oauth2; }
 
 bool http_router::get_auth_provider(http_request* request, http_response* response, http_authentication_provider** provider) {
     bool ret_value = false;
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     http_authentication_provider* auth_provider = nullptr;
 
     __try2 {
         if (nullptr == request || nullptr == response || nullptr == provider) {
-            ret = errorcode_t::invalid_parameter;
+            // ret = errorcode_t::invalid_parameter;
             __leave2;
         } else {
             critical_section_guard guard(_lock);
@@ -208,7 +208,7 @@ bool http_router::get_auth_provider(http_request* request, http_response* respon
         }
 
         if (nullptr == auth_provider) {
-            ret = errorcode_t::not_found;
+            // ret = errorcode_t::not_found;
             __leave2;
         } else {
             auth_provider->addref();

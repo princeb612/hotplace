@@ -67,7 +67,7 @@ return_t openssl_tls::tls_open(socket_context_t** handle, socket_t fd, uint32 fl
             __leave2;
         }
 
-        __try_new_catch(context, new socket_context_t, ret, __leave2);
+        context = new socket_context_t;
 
         auto ssl = SSL_new(_ctx);
         if (nullptr == ssl) {
@@ -116,7 +116,7 @@ return_t openssl_tls::dtls_open(socket_context_t** handle, socket_t fd, uint32 f
             __leave2;
         }
 
-        __try_new_catch(context, new socket_context_t, ret, __leave2);
+        context = new socket_context_t;
 
         /* SSL_accept */
         auto ssl = SSL_new(_ctx);
@@ -151,7 +151,6 @@ return_t openssl_tls::dtls_open(socket_context_t** handle, socket_t fd, uint32 f
 
 return_t openssl_tls::close(socket_context_t* handle) {
     return_t ret = errorcode_t::success;
-    socket_context_t* context = nullptr;
 
     __try2 {
         if (nullptr == handle) {
@@ -168,9 +167,6 @@ return_t openssl_tls::close(socket_context_t* handle) {
 return_t openssl_tls::connect(socket_context_t** handle, int type, const char* address, uint16 port, uint32 wto) {
     return_t ret = errorcode_t::success;
     socket_t fd = INVALID_SOCKET;
-    BIO* sbio_read = nullptr;
-    BIO* sbio_write = nullptr;
-    SSL* ssl = nullptr;
     socket_context_t* context = nullptr;
     sockaddr_storage_t addr;
     uint32 flags = socket_context_flag_t::closesocket_ondestroy | socket_context_flag_t::tls_nbio;
@@ -591,7 +587,6 @@ return_t openssl_tls::set_tls_io(socket_context_t* handle, int type) {
 
         auto fd = handle->fd;
         auto ssl = handle->handle.ssl;
-        auto rbio = SSL_get_rbio(ssl);
 
         /**
          *  SSL_set_bio - BIO_s_mem for TCP, BIO_s_datagram for UDP

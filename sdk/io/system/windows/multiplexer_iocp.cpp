@@ -30,7 +30,6 @@ multiplexer_iocp::~multiplexer_iocp() {}
 
 return_t multiplexer_iocp::open(multiplexer_context_t **handle, size_t concurrent) {
     return_t ret = errorcode_t::success;
-    multiplexer_iocp_context_t *context = nullptr;
     HANDLE handle_iocp = nullptr;
     multiplexer_controller_context_t *handle_controller = nullptr;
     multiplexer_controller controller;
@@ -40,7 +39,8 @@ return_t multiplexer_iocp::open(multiplexer_context_t **handle, size_t concurren
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        __try_new_catch(context, new multiplexer_iocp_context_t, ret, __leave2);
+
+        auto context = make_unique<multiplexer_iocp_context_t>();
 
         ret = controller.open(&handle_controller);
         if (errorcode_t::success != ret) {
@@ -53,7 +53,9 @@ return_t multiplexer_iocp::open(multiplexer_context_t **handle, size_t concurren
         context->handle_iocp = handle_iocp;
         context->handle_controller = handle_controller;
 
-        *handle = context;
+        *handle = context.get();
+
+        context.release();
 
 #if defined DEBUG
         if (istraceable(trace_category_internal)) {

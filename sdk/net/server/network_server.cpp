@@ -133,7 +133,7 @@ return_t network_server::open(network_multiplexer_context_t** handle, unsigned i
             __leave2;
         }
 
-        __try_new_catch(context, new network_multiplexer_context_t, ret, __leave2);
+        context = new network_multiplexer_context_t;
 
         int socktype = 0;
         typeof_socket(sock, socktype);
@@ -354,7 +354,7 @@ return_t network_server::event_loop_run(network_multiplexer_context_t* handle, u
             // (epoll, iocp) bind udp.socket - mplexer.bind(mplexer_handle, (handle_t)sock, session_object);
             // (windows) async read
 
-            auto scheme = handle->svr_socket->get_scheme();
+            // auto scheme = handle->svr_socket->get_scheme();
             socket_t listen_sock = handle->listen_handle->fd;
             network_session* dgram_session = nullptr;
             handle->session_manager.get_dgram_session(&dgram_session, (handle_t)listen_sock, handle->svr_socket, nullptr);
@@ -667,7 +667,7 @@ return_t network_server::tls_accept_routine(network_multiplexer_context_t* handl
             }
         }
 
-        socket_t listen_sock = (socket_t)handle->listen_handle->fd;
+        // socket_t listen_sock = (socket_t)handle->listen_handle->fd;
 
         // int socktype = 0;
         // typeof_socket(listen_sock, socktype);
@@ -796,7 +796,7 @@ return_t network_server::producer_routine(uint32 type, uint32 data_count, void* 
             }
         }
     } else if (multiplexer_event_type_t::mux_dgram == type) {
-        auto scheme = context->svr_socket->get_scheme();
+        // auto scheme = context->svr_socket->get_scheme();
         network_session* dgram_session = nullptr;
         context->session_manager.get_dgram_session(&dgram_session, (handle_t)context->listen_handle->fd, context->svr_socket, nullptr);
         if (dgram_session) {
@@ -829,8 +829,8 @@ return_t network_server::producer_routine(uint32 type, uint32 data_count, void* 
         session_object->ready_to_read();
     } else if (multiplexer_event_type_t::mux_disconnect == type) {
         svr.session_closed(context, (handle_t)session_object->socket_info()->event_handle->fd);
-    } else if (multiplexer_event_type_t::mux_dgram) {
-        auto scheme = context->svr_socket->get_scheme();
+    } else if (multiplexer_event_type_t::mux_dgram == type) {
+        // auto scheme = context->svr_socket->get_scheme();
         // dgram_session is bound to listenfd
         network_session* dgram_session = nullptr;
         context->session_manager.get_dgram_session(&dgram_session, (handle_t)context->listen_handle->fd, context->svr_socket, nullptr);

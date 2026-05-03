@@ -13,22 +13,22 @@
 void test_yaml_testvector_capacity() {
     _test_case.begin("byte capacity YAML");
 
-    auto lambda_test_unsigned_byte_capacity = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_unsigned_byte_capacity = [&](const YAML::Node& items) -> void {
         if (items && items.IsSequence()) {
             for (const auto& item : items) {
                 bignumber bn = item["value"].as<std::string>();
-                auto expect = item["expect"].as<int>();
+                auto expect = item["expect"].as<unsigned int>();
                 auto value = bn.unsigned_byte_capacity();
                 _logger->writeln("%s %s byte capacity %zi expect %i", bn.str().c_str(), bn.hex().c_str(), value, expect);
                 _test_case.assert(value == expect, __FUNCTION__, "%s %s byte capacity %i", bn.str().c_str(), bn.hex().c_str(), expect);
             }
         }
     };
-    auto lambda_test_signed_byte_capacity = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_signed_byte_capacity = [&](const YAML::Node& items) -> void {
         if (items && items.IsSequence()) {
             for (const auto& item : items) {
                 bignumber bn = item["value"].as<std::string>();
-                auto expect = item["expect"].as<int>();
+                auto expect = item["expect"].as<unsigned int>();
                 auto value = bn.signed_byte_capacity();
                 _logger->writeln("%s %s byte capacity %zi expect %i", bn.str().c_str(), bn.hex().c_str(), value, expect);
                 _test_case.assert(value == expect, __FUNCTION__, "%s %s byte capacity %i", bn.str().c_str(), bn.hex().c_str(), expect);
@@ -47,9 +47,9 @@ void test_yaml_testvector_capacity() {
             auto items = example["items"];
 
             if (schema == "UNSIGNED BYTE CAPACITY") {
-                lambda_test_unsigned_byte_capacity(items);
+                lambda_yaml_unsigned_byte_capacity(items);
             } else if (schema == "SIGNED BYTE CAPACITY") {
-                lambda_test_signed_byte_capacity(items);
+                lambda_yaml_signed_byte_capacity(items);
             } else {
                 _test_case.assert(false, __FUNCTION__, "bad message format");
             }

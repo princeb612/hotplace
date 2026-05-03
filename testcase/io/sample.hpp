@@ -28,6 +28,8 @@ void testcase_parser();
 void testcase_payload();
 void testcase_payload_quic();
 
+void testcase_filestream();
+
 void testcase_mlfq();
 void testcase_netlink();
 

@@ -77,7 +77,6 @@ return_t tls_composer::do_quic_client_handshake(unsigned wto, std::function<void
                 .publish(dir, [&](tls_session* session, binary_t& packet) -> void { func(session, packet); });
 
             // S->C SH
-            uint32 session_status_finished = 0;
             uint32 session_status_prerequisite = session_status_server_hello;
             session->wait_change_session_status(session_status_prerequisite, wto);
             session_status = session->get_session_status();

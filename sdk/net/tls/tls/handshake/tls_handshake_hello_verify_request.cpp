@@ -52,11 +52,11 @@ return_t tls_handshake_hello_verify_request::do_postprocess(tls_direction_t dir,
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        auto session_type = session->get_type();
-        auto hspos = offsetof_header();
+        // auto session_type = session->get_type();
+        // auto hspos = offsetof_header();
         auto& protection = session->get_tls_protection();
         auto& secrets = protection.get_secrets();
-        auto size_header_body = get_size();
+        // auto size_header_body = get_size();
 
         secrets.assign(tls_context_cookie, _cookie);
 
@@ -70,9 +70,6 @@ return_t tls_handshake_hello_verify_request::do_postprocess(tls_direction_t dir,
 return_t tls_handshake_hello_verify_request::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
-        auto& protection = session->get_tls_protection();
-
         /**
          * RFC 8446 4.2.2.  Cookie
          * struct {
@@ -103,7 +100,7 @@ return_t tls_handshake_hello_verify_request::do_read_body(tls_direction_t dir, c
 return_t tls_handshake_hello_verify_request::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto version = get_session()->get_tls_protection().get_lagacy_version();
+        // auto version = get_session()->get_tls_protection().get_lagacy_version();
         payload pl;
         pl << new payload_member(uint16(0), true, constexpr_version)           //
            << new payload_member(uint8(_cookie.size()), constexpr_cookie_len)  //

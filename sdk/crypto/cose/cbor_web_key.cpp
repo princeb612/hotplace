@@ -57,7 +57,7 @@ return_t cbor_web_key::load_b16(crypto_key* cryptokey, const char* buffer, size_
             __leave2;
         }
 
-        binary_t bin = std::move(base16_decode(buffer, size));
+        binary_t bin = base16_decode(buffer, size);
         ret = load(cryptokey, bin.data(), bin.size(), flag);
     }
     __finally2 {}
@@ -116,7 +116,6 @@ return_t cbor_web_key::load(crypto_key* cryptokey, const binary_t& buffer, int f
 
 return_t cbor_web_key::load(crypto_key* key, cbor_object* root, int flag) {
     return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
         if (nullptr == key || nullptr == root) {
@@ -310,8 +309,7 @@ void cwk_writer(crypto_key_object* key, void* param) {
 
         std::string kid = key->get_desc().get_kid_str();
 
-        cbor_map* keynode = nullptr;
-        __try_new_catch(keynode, new cbor_map(), ret, __leave2);
+        cbor_map* keynode = new cbor_map();
 
         cose_kty_t cose_kty = advisor->ktyof(kty);
         *keynode << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(cose_kty));  // 1
@@ -401,7 +399,7 @@ return_t cbor_web_key::write(crypto_key* cryptokey, cbor_object** root, int flag
             __leave2;
         }
 
-        __try_new_catch(cbor_root, new cbor_array(), ret, __leave2);
+        cbor_root = new cbor_array();
 
         cose_mapper_t mapper;
         mapper.root = cbor_root;

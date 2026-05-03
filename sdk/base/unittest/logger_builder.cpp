@@ -9,6 +9,7 @@
  *
  */
 
+#include <hotplace/sdk/base/nostd/template.hpp>
 #include <hotplace/sdk/base/unittest/logger.hpp>
 
 namespace hotplace {
@@ -43,15 +44,12 @@ logger_builder& logger_builder::attach(test_case* testcase) {
 }
 
 logger* logger_builder::build() {
-    logger* p = nullptr;
-    __try_new_catch_only(p, new logger);
-    if (p) {
-        p->_keyvalue = _keyvalue;
-        p->_skeyvalue = _skeyvalue;
-        p->start_consumer();
-        if (_testcase) {
-            p->attach(_testcase);
-        }
+    auto p = new logger();
+    p->_keyvalue = _keyvalue;
+    p->_skeyvalue = _skeyvalue;
+    p->start_consumer();
+    if (_testcase) {
+        p->attach(_testcase);
     }
     return p;
 }

@@ -17,6 +17,7 @@
 #include <hotplace/sdk/base/basic/types.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
 #include <limits>
+#include <memory>
 #include <set>
 #include <type_traits>
 
@@ -92,6 +93,15 @@ typename std::enable_if<!std::numeric_limits<TYPE>::is_signed, TYPE>::type t_cha
     throw exception(miscast_unsigned);
     return i;
 }
+
+#if __cplusplus >= 201402L  // c++14
+using std::make_unique;
+#else
+template <typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args) {
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+#endif
 
 template <typename T>
 struct t_comparator_base {
@@ -182,7 +192,7 @@ T t_htoi(const char* hex) {
     const char* p = hex;
     char c = 0;
     int i = 0;
-    while (c = *p++) {
+    while (0 != (c = *p++)) {
         value <<= 4;
         if ('0' <= c && c <= '9') {
             i = c - '0';

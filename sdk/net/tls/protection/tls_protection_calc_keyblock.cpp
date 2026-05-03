@@ -84,6 +84,8 @@ return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t
                 case gcm: {
                     ivsize = 4;
                 } break;
+                default:
+                    break;
             }
             auto dlen = (is_cbc) ? sizeof_digest(hint_digest) : 0;
             size_t size_keycalc = (dlen << 1) + (keysize << 1) + (ivsize << 1);

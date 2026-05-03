@@ -142,13 +142,7 @@ class t_shared_instance {
     typedef int counter_type;
 #endif
    public:
-    t_shared_instance() : _object(nullptr) {
-        try {
-            _counter = new counter_type(1);
-        } catch (std::bad_alloc) {
-            throw std::runtime_error("t_shared_instance.ctor");
-        }
-    }
+    t_shared_instance() : _object(nullptr) { _counter = new counter_type(1); }
     t_shared_instance(OBJECT_T* object) : _object(object) { _counter = new counter_type(1); }
     t_shared_instance(const t_shared_instance& other) = delete;
     t_shared_instance(t_shared_instance&& other) : _counter(nullptr), _object(nullptr) { *this = std::move(other); }

@@ -15,9 +15,9 @@ void test_cwt_rfc8392() {
     _test_case.begin("CWT");
 
     // A.1.  Example CWT Claims Set
-    constexpr char claim[] =
-        "a70175636f61703a2f2f61732e6578616d706c652e636f6d02656572696b77037818636f61703a2f2f6c696768742e6578616d706c652e636f6d041a5612aeb0051a5610d9f0061a5610d9"
-        "f007420b71";
+    // constexpr char claim[] =
+    //     "a70175636f61703a2f2f61732e6578616d706c652e636f6d02656572696b77037818636f61703a2f2f6c696768742e6578616d706c652e636f6d041a5612aeb0051a5610d9f0061a5610d9"
+    //     "f007420b71";
     // A.2.1.  128-Bit Symmetric Key
     constexpr char symm128[] = "a42050231f4c4d4d3051fdc2ec0a3851d5b3830104024c53796d6d6574726963313238030a";
     // A.2.2.  256-Bit Symmetric Key
@@ -48,7 +48,7 @@ void test_cwt_rfc8392() {
     constexpr char cwt_maced_fp[] = "d18443a10104a1044c53796d6d65747269633235364ba106fb41d584367c20000048b8816f34c0542892";
 
     return_t ret = errorcode_t::success;
-    const OPTION& option = _cmdline->value();
+    // const OPTION& option = _cmdline->value();
     crypto_key key;
     cbor_web_key cwk;
     cwk.load_b16(&key, symm128);

@@ -95,7 +95,7 @@ class t_graph {
         int _weight;
         graph_direction_t _direction;
 
-        edge(const T& from, const T& to, int weight = 1, graph_direction_t d = graph_directed) : _from(from), _to(to), _direction(d), _weight(weight) { adjust(); }
+        edge(const T& from, const T& to, int weight = 1, graph_direction_t d = graph_directed) : _from(from), _to(to), _weight(weight), _direction(d) { adjust(); }
         edge(T&& from, T&& to, int weight = 1, graph_direction_t d = graph_directed) : _from(std::move(from)), _to(std::move(to)), _weight(weight), _direction(d) {
             adjust();
         }
@@ -287,6 +287,7 @@ class t_graph {
         typedef std::function<void(const T&, const T&, int, const std::list<T>&)> visitor_t;  // from, to,wight, path
 
         graph_search(const t_graph<T>& g) : _g(g) {}
+        virtual ~graph_search() {}
 
         virtual graph_search& learn() {
             do_setup();
@@ -398,6 +399,7 @@ class t_graph {
     class graph_adjacent_list : public graph_search {
        public:
         graph_adjacent_list(const t_graph<T>& g) : graph_search(g) {}
+        virtual ~graph_adjacent_list() {}
 
        protected:
         typedef std::list<T> result_t;
@@ -445,6 +447,7 @@ class t_graph {
     class graph_dfs : public graph_search {
        public:
         graph_dfs(const t_graph<T>& g) : graph_search(g) {}
+        virtual ~graph_dfs() {}
 
        protected:
         typedef std::list<T> result_t;
@@ -494,6 +497,7 @@ class t_graph {
     class graph_bfs : public graph_search {
        public:
         graph_bfs(const t_graph<T>& g) : graph_search(g) {}
+        virtual ~graph_bfs() {}
 
        protected:
         typedef std::list<T> result_t;
@@ -567,6 +571,7 @@ class t_graph {
     class graph_dijkstra : public graph_search {
        public:
         graph_dijkstra(const t_graph<T>& g) : graph_search(g) {}
+        virtual ~graph_dijkstra() {}
 
        protected:
         typedef typename graph_search::visitor_t visitor_t;

@@ -315,8 +315,6 @@ return_t cbor_encode::encodefp16(binary_t& target, uint16 value) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        uint32 be = 0;
-
         binary_push(target, (cbor_major_t::cbor_major_float << 5) | 25);
         binary_append(target, value, hton16);
     }
@@ -330,7 +328,6 @@ return_t cbor_encode::encode(binary_t& target, float value) {
 
     __try2 {
         variant var;
-        uint32 be = 0;
         ieee754_as_small_as_possible(var, value);
 
         const variant_t& vt = var.content();
@@ -357,7 +354,6 @@ return_t cbor_encode::encode(binary_t& target, double value) {
 
     __try2 {
         variant var;
-        uint64 be = 0;
         ieee754_as_small_as_possible(var, value);
 
         const variant_t& vt = var.content();

@@ -86,22 +86,22 @@ server_socket* server_socket_builder::build() {
 
         switch (socket_scheme) {
             case socket_scheme_tcp: {
-                __try_new_catch_only(svrsocket, new naive_tcp_server_socket);
+                svrsocket = new naive_tcp_server_socket;
             } break;
             case socket_scheme_udp: {
-                __try_new_catch_only(svrsocket, new naive_udp_server_socket);
+                svrsocket = new naive_udp_server_socket;
             } break;
             case socket_scheme_tls: {
                 switch (powered_by) {
                     case socket_scheme_openssl: {
                         openssl_tls_context ctx(tlscontext_flag_tls | ossl_flags, _server_cert.c_str(), _server_key.c_str());
-                        __try_new_catch_only(svrsocket, new openssl_tls_server_socket(new openssl_tls(&ctx)));
+                        svrsocket = new openssl_tls_server_socket(new openssl_tls(&ctx));
                         ctx.set_cipher_list(_cipher_suites.c_str());
                         ctx.set_group_list(_groups.c_str());
                         ctx.set_verify(_verify);
                     } break;
                     case socket_scheme_trial: {
-                        __try_new_catch_only(svrsocket, new trial_tls_server_socket(trial_minspec, trial_maxspec));
+                        svrsocket = new trial_tls_server_socket(trial_minspec, trial_maxspec);
                     } break;
                 }
             } break;
@@ -109,13 +109,13 @@ server_socket* server_socket_builder::build() {
                 switch (powered_by) {
                     case socket_scheme_openssl: {
                         openssl_tls_context ctx(tlscontext_flag_dtls | ossl_flags, _server_cert.c_str(), _server_key.c_str());
-                        __try_new_catch_only(svrsocket, new openssl_dtls_server_socket(new openssl_tls(&ctx)));
+                        svrsocket = new openssl_dtls_server_socket(new openssl_tls(&ctx));
                         ctx.set_cipher_list(_cipher_suites.c_str());
                         ctx.set_group_list(_groups.c_str());
                         ctx.set_verify(_verify);
                     } break;
                     case socket_scheme_trial: {
-                        __try_new_catch_only(svrsocket, new trial_dtls_server_socket(trial_minspec, trial_maxspec));
+                        svrsocket = new trial_dtls_server_socket(trial_minspec, trial_maxspec);
                     } break;
                 }
             } break;
@@ -126,7 +126,7 @@ server_socket* server_socket_builder::build() {
                         // not supported
                     } break;
                     case socket_scheme_trial: {
-                        __try_new_catch_only(svrsocket, new trial_quic_server_socket);
+                        svrsocket = new trial_quic_server_socket;
                     } break;
                 }
             } break;
@@ -159,10 +159,10 @@ server_socket_adapter* server_socket_builder::build_adapter() {
         auto powered_by = socket_scheme_mask_powered_by & scheme;
         switch (powered_by) {
             case socket_scheme_openssl: {
-                __try_new_catch_only(adapter, new openssl_server_socket_adapter);
+                adapter = new openssl_server_socket_adapter;
             } break;
             case socket_scheme_trial: {
-                __try_new_catch_only(adapter, new trial_server_socket_adapter);
+                adapter = new trial_server_socket_adapter;
             } break;
         }
     }

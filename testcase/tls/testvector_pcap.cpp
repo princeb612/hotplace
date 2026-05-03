@@ -24,7 +24,7 @@ void play_yaml_pcap(const char* filename) {
         }
     };
 
-    auto lambda_test_pcap = [&](const YAML::Node& example) -> void {
+    auto lambda_yaml_pcap = [&](const YAML::Node& example) -> void {
         __try2 {
             auto protocol = example["protocol"].as<std::string>();
 
@@ -67,7 +67,7 @@ void play_yaml_pcap(const char* filename) {
                         break;
                     }
 
-                    binary_t bin_record = std::move(base16_decode(record));
+                    binary_t bin_record = base16_decode(record);
                     if (bin_record.empty()) {
                         continue;
                     }
@@ -94,7 +94,7 @@ void play_yaml_pcap(const char* filename) {
             auto schema = example["schema"].as<std::string>();
 
             if (schema == "PCAP SIMPLE") {
-                lambda_test_pcap(example);
+                lambda_yaml_pcap(example);
             } else {
                 _test_case.assert(false, __FUNCTION__, "bad message format - reason: schema");
             }

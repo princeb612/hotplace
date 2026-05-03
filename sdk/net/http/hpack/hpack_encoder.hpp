@@ -22,6 +22,7 @@ namespace net {
 class hpack_encoder : public http_header_compression {
    public:
     hpack_encoder();
+    virtual ~hpack_encoder();
 
     /**
      * @brief   encode (header compression)
@@ -51,7 +52,7 @@ class hpack_encoder : public http_header_compression {
      *          // insert into dynamic table
      *          dyntable->commit();
      */
-    virtual return_t decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value);
+    virtual return_t decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value, uint32 flags = 0);
 
     /**
      * @brief   encode (header compression)
@@ -75,14 +76,14 @@ class hpack_encoder : public http_header_compression {
     /**
      * @brief   dynamic table size
      * @param   http_dynamic_table* dyntable [in]
-     * @param   binary_t& target
-     * @param   uint8 maxsize
+     * @param   binary_t& target [out]
+     * @param   uint64 maxsize [in]
      * @return  error code (see error.hpp)
      * @remarks
      *          RFC 7541 6.3.  Dynamic Table Size Update
      *          RFC 9204 4.3.1.  Set Dynamic Table Capacity
      */
-    virtual return_t set_capacity(http_dynamic_table* dyntable, binary_t& target, uint8 maxsize);
+    virtual return_t set_capacity(http_dynamic_table* dyntable, binary_t& target, uint64 maxsize);
 
    protected:
     /**

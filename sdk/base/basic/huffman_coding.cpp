@@ -313,7 +313,7 @@ return_t huffman_coding::encode(binary_t &bin, const byte_t *source, size_t size
     return_t ret = errorcode_t::success;
     std::string buf;
     std::string code;
-    size_t totalbits = 0;
+
     const byte_t *p = nullptr;
     size_t i = 0;
     t_maphint_const<uint8, std::string> hint(_codetable);
@@ -367,7 +367,7 @@ return_t huffman_coding::encode(binary_t &bin, const byte_t *source, size_t size
         auto lambda_os_byte = [](const std::string &s, size_t count) -> uint8 {
             uint8 rc = 0;
             if (count <= s.size()) {
-                for (int n = 0; n < count; n++) {
+                for (size_t n = 0; n < count; n++) {
                     if ('1' == s[n]) {
                         rc |= (1 << (7 - n));
                     }
@@ -476,10 +476,6 @@ return_t huffman_coding::decode(stream_t *stream, const byte_t *source, size_t s
             byte_t b = source[i];
             for (int n = 7; n >= 0; n--) {
                 que += ((b & (1 << n)) ? '1' : '0');
-            }
-
-            if (0x80 == b) {
-                uint breakpoint = 1;
             }
 
             while (que.size() >= code_minsize) {

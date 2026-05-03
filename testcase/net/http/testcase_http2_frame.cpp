@@ -14,7 +14,7 @@
 void do_test_http2_frame(http2_frame* frame1, http2_frame* frame2, const char* text, const char* expect) {
     binary_t bin_f1;
     binary_t bin_f2;
-    binary_t bin_expect = std::move(base16_decode_rfc(expect));
+    binary_t bin_expect = base16_decode_rfc(expect);
 
     // write a composed http2_frame context into binary
     frame1->write(bin_f1);
@@ -38,7 +38,7 @@ void do_test_http2_frame(http2_frame* frame1, http2_frame* frame2, const char* t
 }
 
 void test_http2_frame() {
-    const OPTION& option = _cmdline->value();
+    // const OPTION& option = _cmdline->value();
     _test_case.begin("HTTP/2 Frame");
 
     basic_stream bs;

@@ -34,7 +34,7 @@ return_t naive_udp_server_socket::open(socket_context_t** handle, unsigned int f
         }
 
         // UDP contains listen socket
-        __try_new_catch(context, new socket_context_t(sock, 0), ret, __leave2);
+        context = new socket_context_t(sock, 0);
         *handle = context;
     }
     __finally2 {}

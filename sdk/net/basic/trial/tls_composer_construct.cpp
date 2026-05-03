@@ -46,7 +46,6 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
         auto session_type = session->get_type();
         auto& protection = session->get_tls_protection();
         bool is_dtls = (session_type_dtls == session_type);
-        tls_handshake_client_hello* hs = nullptr;
         auto dir = from_client;
 
         tls_handshake_builder builder;

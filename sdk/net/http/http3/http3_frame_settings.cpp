@@ -84,6 +84,8 @@ return_t http3_frame_settings::do_write(binary_t& bin) {
                 pl << new payload_member(new quic_encoded(uint64(id)), constexpr_identifier)  //
                    << new payload_member(new quic_encoded(value.to_bin()), constexpr_value);
             } break;
+            default:
+                break;
         }
         pl.write(_payload);
     }

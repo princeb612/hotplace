@@ -61,7 +61,7 @@ return_t tls_handshake_certificate::do_preprocess(tls_direction_t dir) {
 return_t tls_handshake_certificate::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        // tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
         auto hspos = offsetof_header();
         auto& protection = session->get_tls_protection();

@@ -12,10 +12,10 @@
 
 void test_rfc9106() {
     _test_case.begin("argon2d,argon2i,argon2id");
-    const OPTION& option = _cmdline->value();
+    // const OPTION& option = _cmdline->value();
     openssl_kdf kdf;
 
-    crypto_advisor* advisor = crypto_advisor::get_instance();
+    // crypto_advisor* advisor = crypto_advisor::get_instance();
     // openssl-3.2
     struct {
         argon2_t mode;
@@ -58,7 +58,7 @@ void test_rfc9106() {
         },
     };
 
-    for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
+    for (size_t i = 0; i < RTL_NUMBER_OF(vector); i++) {
         binary_t derived;
         auto test = kdf.argon2(derived, vector[i].mode, 32, base16_decode(vector[i].password), base16_decode(vector[i].salt), base16_decode(vector[i].ad),
                                base16_decode(vector[i].secret));

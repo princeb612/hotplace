@@ -36,7 +36,7 @@ void test_alert() {
             "08 08 1a 08 1b 08 1c 08 09 08 0a 08 0b 08 04 08"
             "05 08 06 04 01 05 01 06 01 03 03 03 01 03 02 04"
             "02 05 02 06 02";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         dump_record("client_hello", &session, from_client, bin_record);
     }
     // server hello
@@ -47,7 +47,7 @@ void test_alert() {
             "8b 24 30 cf ab 97 20 b1 37 6d 63 00 c0 27 00 00"
             "19 ff 01 00 01 00 00 0b 00 04 03 00 01 02 00 23"
             "00 00 00 16 00 00 00 17 00 00";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         dump_record("server_hello", &session, from_server, bin_record);
     }
     // no certificate handshake
@@ -74,7 +74,7 @@ void test_alert() {
             "5d 4a 54 2b 9e 1e dd 52 fe d8 74 a2 78 ca f5 1b"
             "c8 3a c1 06 16 ad 35 4a 84 be 16 2b c6 10 a8 b2"
             "f7";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         auto ret = dump_record("server_key_exchange after server_hello (no certificate)", &session, from_server, bin_record, false);
         _test_case.test(errorcode_t::error_handshake == ret, __FUNCTION__, "server_key_exchange -> {fatal, unexpected message}");
     }

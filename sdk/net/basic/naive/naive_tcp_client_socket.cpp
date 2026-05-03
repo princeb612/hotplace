@@ -77,7 +77,7 @@ return_t naive_tcp_client_socket::read(char* ptr_data, size_t size_data, size_t*
             if (cbread) {
                 *cbread = (errorcode_t::success == ret) ? ret_recv : 0;
             }
-            if (size_data == ret_recv) {
+            if (size_data == (size_t)ret_recv) {
                 ret = errorcode_t::more_data;
             }
         }

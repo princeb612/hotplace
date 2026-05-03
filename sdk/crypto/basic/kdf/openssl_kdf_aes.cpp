@@ -61,7 +61,6 @@ return_t openssl_kdf::hkdf_expand_aes_rfc8152(binary_t& okm, const char* alg, si
         size_t offset = 0;
         binary_t t_block;  // T(0) = empty string (zero length)
         int t_block_size = 0;
-        int size_update = 0;
         iv.resize(16);
 
         EVP_CIPHER_CTX_set_padding(context.get(), 1);
@@ -84,7 +83,6 @@ return_t openssl_kdf::hkdf_expand_aes_rfc8152(binary_t& okm, const char* alg, si
             size_t size_input = content.size();
             for (size_t j = 0; j < size_input; j += blocksize) {
                 auto remain = size_input - j;
-                auto size = (remain < blocksize) ? remain : blocksize;
                 if (remain > blocksize) {
                     EVP_CipherUpdate(context.get(), t_block.data(), &size_update, &content[j], blocksize);
                 } else {

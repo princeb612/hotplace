@@ -54,8 +54,8 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
 
         auto session = get_session();
         auto& protection = session->get_tls_protection();
-        auto& secrets = protection.get_secrets();
-        auto session_type = session->get_type();
+        // auto& secrets = protection.get_secrets();
+        // auto session_type = session->get_type();
         auto session_status = session->get_session_status();
 
         // RFC 8446
@@ -275,7 +275,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
         binary_t session_id;
         binary_t cipher_suites;
         binary_t compression_methods;
-        uint8 session_id_len = 0;
+        // uint8 session_id_len = 0;
         uint16 cipher_suite_len = 0;
         uint8 compression_method_len = 0;
         binary_t cookie;
@@ -312,7 +312,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
 
             version = pl.t_value_of<uint16>(constexpr_version);
             pl.get_binary(constexpr_random, random);
-            session_id_len = pl.t_value_of<uint8>(constexpr_session_id_len);
+            // session_id_len = pl.t_value_of<uint8>(constexpr_session_id_len);
             pl.get_binary(constexpr_session_id, session_id);
             pl.get_binary(constexpr_cookie, cookie);
             cipher_suite_len = pl.t_value_of<uint16>(constexpr_cipher_suite_len);
@@ -323,7 +323,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
         }
 
         {
-            for (auto i = 0; i < cipher_suite_len / sizeof(uint16); i++) {
+            for (size_t i = 0; i < cipher_suite_len / sizeof(uint16); i++) {
                 auto cs = t_binary_to_integer<uint16>(&cipher_suites[i << 1], sizeof(uint16));
                 _cipher_suites.push_back(cs);
             }

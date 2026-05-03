@@ -40,8 +40,6 @@ return_t signalwait_threads::set(size_t max_concurrent, SIGNALWAITTHREADS_CALLBA
 
 return_t signalwait_threads::create() {
     return_t ret = errorcode_t::success;
-    thread* thread_obj = nullptr;
-    thread_info* thread_rt = nullptr;
 
     __try2 {
         if (nullptr == _thread_callback_routine) {
@@ -52,39 +50,32 @@ return_t signalwait_threads::create() {
         critical_section_guard guard(_lock);
 
         if (_container.size() < _capacity) { /* check max concurrent thread */
-            __try_new_catch(thread_rt, new thread_info, ret, __leave2);
-            __try_new_catch(thread_obj, new thread(thread_routine, thread_rt), ret, __leave2);
+            auto thread_rt = make_unique<thread_info>();
+            auto thread_obj = make_unique<thread>(thread_routine, thread_rt.get());
 
             // set members before thread starts
-            thread_rt->set_thread(thread_obj);
+            thread_rt->set_thread(thread_obj.get());
             thread_rt->set_container(this);
             // thread starts here
             ret = thread_obj->start(); /* CreateThread, pthread_create here */
             if (errorcode_t::success == ret) {
                 threadid_t tid = thread_obj->gettid();
-                _container.insert(std::make_pair(tid, thread_rt));
+                _container.insert(std::make_pair(tid, thread_rt.get()));
 #if defined DEBUG
                 if (istraceable(trace_category_internal, loglevel_debug)) {
                     trace_debug_event(trace_category_internal, trace_event_internal,
-                                      [&](basic_stream& dbs) -> void { dbs.println(R"(thread.create  ["%s"] tid %p %p)", _tag.c_str(), tid, thread_rt); });
+                                      [&](basic_stream& dbs) -> void { dbs.println(R"(thread.create  ["%s"] tid %p %p)", _tag.c_str(), tid, thread_rt.get()); });
                 }
 #endif
+                thread_rt.release();
+                thread_obj.release();
             }
+
         } else {
             ret = errorcode_t::max_reached;
         }
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            if (nullptr != thread_obj) {
-                // thread_obj->release ();
-                delete thread_obj;
-            }
-            if (nullptr != thread_rt) {
-                delete thread_rt;
-            }
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
@@ -137,7 +128,7 @@ void signalwait_threads::join_signaled() {
 
 void signalwait_threads::signal_and_wait_all(int reserved) {
     size_t loop = running();
-    for (auto i = 0; i < loop; i++) {
+    for (size_t i = 0; i < loop; i++) {
         join();
     }
 }

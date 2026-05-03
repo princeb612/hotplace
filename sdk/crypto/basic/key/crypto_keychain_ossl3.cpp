@@ -24,10 +24,10 @@ return_t crypto_keychain::pkey_keygen_byname(OSSL_LIB_CTX* libctx, EVP_PKEY** pk
             __leave2;
         }
 
-        int rc = 0;
+        // int rc = 0;
         EVP_PKEY_CTX_ptr pkey_ctx(EVP_PKEY_CTX_new_from_name(libctx, name, nullptr));
         if (pkey_ctx.get()) {
-            rc = EVP_PKEY_keygen_init(pkey_ctx.get());
+            EVP_PKEY_keygen_init(pkey_ctx.get());
             // OSSL_PARAM* params;
             // ...
             // EVP_PKEY_CTX_set_params(pkey_ctx, params);
@@ -72,8 +72,6 @@ return_t crypto_keychain::pkey_encode_format(OSSL_LIB_CTX* libctx, const EVP_PKE
                 OSSL_ENCODER_CTX_set_cipher(encoder_context.get(), "AES-256-CBC", nullptr);
             }
 
-            unsigned char* pub = nullptr;
-            size_t publen = 0;
             BUF_MEM* buf = nullptr;
             int rc = 0;
 
@@ -364,10 +362,9 @@ return_t crypto_keychain::pkey_decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, con
 bool crypto_keychain::pkey_is_private(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey) {
     bool ret_value = false;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
+            // ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
@@ -378,8 +375,6 @@ bool crypto_keychain::pkey_is_private(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey
 
         OSSL_ENCODER_CTX_ptr encoder_context(OSSL_ENCODER_CTX_new_for_pkey(pkey, params.selection, params.format, params.structure, nullptr));
         if (encoder_context.get()) {
-            unsigned char* pub = nullptr;
-            size_t publen = 0;
             BUF_MEM* buf = nullptr;
             int rc = 0;
 
@@ -396,7 +391,7 @@ bool crypto_keychain::pkey_is_private(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey
 
             ret_value = true;
         } else {
-            ret = failed;
+            // ret = failed;
         }
     }
     __finally2 {}

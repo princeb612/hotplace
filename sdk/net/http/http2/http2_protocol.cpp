@@ -33,7 +33,7 @@ return_t http2_protocol::is_kind_of(void* stream, size_t stream_size) {
         // RFC 7540 3.5. HTTP/2 Connection Preface
         // 0x505249202a20485454502f322e300d0a0d0a534d0d0a0d0a
         constexpr char preface[] = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
-        const uint16 sizeof_preface = 24;
+        // const uint16 sizeof_preface = 24;
         const uint16 sampling_size = 5;
 
         // check frame header
@@ -121,7 +121,7 @@ return_t http2_protocol::read_stream(basic_stream* stream, size_t* request_size,
         }
 
         if (stream_size >= RTL_FIELD_SIZE(http2_frame_header_t, len) + pos) {
-            http2_frame_header_t* frame = (http2_frame_header_t*)(stream_data + pos);
+            // http2_frame_header_t* frame = (http2_frame_header_t*)(stream_data + pos);
             auto max_frame_size = get_constraints(protocol_constraints_t::protocol_packet_size);
             const uint32 frame_header_size = sizeof(http2_frame_header_t);
             uint32 len = 0;  // the length of the frame payload

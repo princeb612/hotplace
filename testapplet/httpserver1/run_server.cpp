@@ -351,7 +351,7 @@ return_t simple_http_server(void *) {
 
 void run_server() {
     thread thread1(simple_http_server, nullptr);
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
 
     __try2 { thread1.start(); }
     __finally2 { thread1.wait(-1); }

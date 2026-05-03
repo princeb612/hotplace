@@ -37,8 +37,6 @@ return_t tls_record_alert::do_postprocess(tls_direction_t dir) {
 return_t tls_record_alert::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        uint16 len = get_body_size();
-
         {
             auto session = get_session();
             size_t tpos = 0;
@@ -49,11 +47,11 @@ return_t tls_record_alert::do_read_body(tls_direction_t dir, const byte_t* strea
             auto& session_info = session->get_session_info(dir);
             if (session_info.apply_protection()) {
                 tls_protection& protection = session->get_tls_protection();
-                auto tlsversion = protection.get_tls_version();
-                auto cs = protection.get_cipher_suite();
+                // auto tlsversion = protection.get_tls_version();
+                // auto cs = protection.get_cipher_suite();
                 binary_t plaintext;
 
-                tls_advisor* tlsadvisor = tls_advisor::get_instance();
+                // tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 auto limit = recpos + get_record_size();
                 ret = protection.decrypt(session, dir, stream, limit, recpos, plaintext);
                 if (errorcode_t::success == ret) {

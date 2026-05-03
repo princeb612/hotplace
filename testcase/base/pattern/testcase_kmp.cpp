@@ -27,8 +27,8 @@ void test_kmp() {
     // abacaabaccabacabaabb
     //           abacab
 
-    binary_t data = std::move(str2bin("abacaabaccabacabaabb"));
-    binary_t pattern = std::move(str2bin("abacab"));
+    binary_t data = str2bin("abacaabaccabacabaabb");
+    binary_t pattern = str2bin("abacab");
 
     {
         // vector

@@ -55,7 +55,7 @@ return_t thread::join() {
 
 return_t thread::wait(unsigned msec) {
     return_t ret = errorcode_t::success;
-    int ret_value = 0;
+    // int ret_value = 0;
 
 #if __GLIBC_MINOR >= 3
 #else

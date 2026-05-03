@@ -115,6 +115,10 @@ enum encoding_t {
 #define ANSI_ESCAPE "\x1b["
 #endif
 
+#ifndef UNREFERENCED_PARAMETER
+#define UNREFERENCED_PARAMETER(p) (void)(p)
+#endif
+
 }  // namespace hotplace
 
 #endif

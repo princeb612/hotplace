@@ -219,7 +219,7 @@ void quic_packet_handshake::dump() {
         quic_packet::dump();
 
         trace_debug_event(trace_category_net, trace_event_quic_packet, [&](basic_stream& dbs) -> void {
-            auto session = get_session();
+            // auto session = get_session();
 
             // length = packet number + payload
             auto len = get_bodysize();

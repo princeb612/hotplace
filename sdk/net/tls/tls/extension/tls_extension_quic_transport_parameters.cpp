@@ -38,8 +38,8 @@ return_t tls_extension_quic_transport_parameters::do_read_body(tls_direction_t d
 
         _params.clear();
 
-        auto tpos = offsetof_header();
-        auto ext_len = get_body_size();
+        // auto tpos = offsetof_header();
+        // auto ext_len = get_body_size();
 
         // RFC 9001 8.2.  QUIC Transport Parameters Extension
         // RFC 9000 18.  Transport Parameter Encoding
@@ -162,6 +162,8 @@ return_t tls_extension_quic_transport_parameters::read_quic_params(const byte_t*
                         case TYPE_BINARY: {
                             vtprintf(&dbs, item.second, vtprintf_style_base16);
                         } break;
+                        default:
+                            break;
                     }
                     dbs.println("");
                 }
@@ -191,6 +193,8 @@ return_t tls_extension_quic_transport_parameters::write_quic_param(uint64 id, co
             pl << new payload_member(new quic_encoded(id), constexpr_param_id)  //
                << new payload_member(new quic_encoded(value.to_bin()), constexpr_param);
         } break;
+        default:
+            break;
     }
     pl.write(params);
     return ret;

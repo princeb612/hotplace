@@ -51,7 +51,7 @@ return_t protection_context::negotiate(tls_session* session, uint16 minspec, uin
         cs = 0;
         tlsver = 0;
 
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        // tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto& protection = session->get_tls_protection();
         auto& prot_context = protection.get_protection_context();
         auto nego_context = protection.get_protection_context();  // copy
@@ -204,8 +204,6 @@ return_t protection_context::select_from(const protection_context& other, tls_se
         }
 
         {
-            uint16 candidate = 0;
-
             for (auto cs : other._cipher_suites) {  // request
                 auto hint = tlsadvisor->hintof_cipher_suite(cs);
                 if (hint && (tls_flag_support & hint->flags)) {
@@ -239,6 +237,8 @@ return_t protection_context::select_from(const protection_context& other, tls_se
                                     continue;
                                 }
                             } break;
+                            default:
+                                break;
                         }
                     }
 #if defined DEBUG

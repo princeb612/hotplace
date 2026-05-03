@@ -88,7 +88,7 @@ return_t tls_handshake_certificate_verify::sign_certverify(const EVP_PKEY* pkey,
         auto session = get_session();
         tls_protection& protection = session->get_tls_protection();
         auto& protection_context = protection.get_protection_context();
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        // tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
         auto kty = ktyof_evp_pkey(pkey);
         scheme = protection_context.select_signature_algorithm(kty);
@@ -121,7 +121,7 @@ return_t tls_handshake_certificate_verify::verify_certverify(const EVP_PKEY* pke
         }
 
         auto session = get_session();
-        tls_protection& protection = session->get_tls_protection();
+        // tls_protection& protection = session->get_tls_protection();
 
         crypto_sign_builder builder;
         auto sign = builder.set_tls_sign_scheme(scheme).build();
@@ -195,7 +195,7 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
-        tls_protection& protection = session->get_tls_protection();
+        // tls_protection& protection = session->get_tls_protection();
 
         uint16 scheme = 0;
         uint16 len = 0;
@@ -251,8 +251,6 @@ return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, bi
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
-        tls_protection& protection = session->get_tls_protection();
-        auto& protection_context = protection.get_protection_context();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
         const char* kid = nullptr;  // Private Key

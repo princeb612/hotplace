@@ -27,7 +27,6 @@ static int set_cookie_generate_callback_routine(SSL* ssl, unsigned char* cookie,
 static int set_cookie_verify_callback_routine(SSL* ssl, const unsigned char* cookie, unsigned int cookie_len);
 static void keylog_callback_routine(const SSL* ssl, const char* line);
 static int set_default_passwd_callback_routine(char* buf, int num, int rwflag, void* userdata);
-static int set_alpn_select_h2_cb(SSL* ssl, const unsigned char** out, unsigned char* outlen, const unsigned char* in, unsigned int inlen, void* arg);
 
 return_t tlscontext_open_simple(SSL_CTX** context, uint32 flags) {
     return_t ret = errorcode_t::success;
@@ -373,72 +372,6 @@ int set_default_passwd_callback_routine(char* buf, int num, int rwflag, void* us
 
     strncpy(buf, (char*)stream->data(), len);
     return t_narrow_cast(len);
-}
-
-int set_alpn_select_h2_cb(SSL* ssl, const unsigned char** out, unsigned char* outlen, const unsigned char* in, unsigned int inlen, void* arg) {
-    // TLS Application-Layer Protocol Negotiation Extension
-    // see enable_alpn_h2, http_server_builder, test/httpserver2
-
-    int ret = SSL_TLSEXT_ERR_NOACK;
-
-    // 00000000 : 02 68 32 08 68 74 74 70 2F 31 2E 31 -- -- -- -- | .h2.http/1.1
-
-#if 1
-    int pos_h2 = -1;
-    int pos_h1_1 = -1;
-
-    for (unsigned int pos = 0; pos < inlen;) {
-        uint8 len = in[pos];
-        if (0 == strncmp((char*)in + pos, "\x2h2", 3)) {
-            pos_h2 = pos;
-            break;
-        } else if (0 == strncmp((char*)in + pos, "\x8http/1.1", 9)) {
-            pos_h1_1 = pos;
-            // keep searching h2
-        }
-        pos += (len + 1);
-    }
-
-    if (pos_h2 != -1) {
-        *out = in + pos_h2 + 1;
-        *outlen = in[pos_h2];
-        ret = SSL_TLSEXT_ERR_OK;
-    } else if (pos_h1_1 != -1) {
-        *out = in + pos_h1_1 + 1;
-        *outlen = in[pos_h1_1];
-        ret = SSL_TLSEXT_ERR_OK;
-    }
-#else
-    // tested codes
-
-    t_aho_corasick<char> ac;
-    std::multimap<unsigned, range_t> rearranged;
-
-    ac.insert("\x2h2", 3);        // pattern [0]
-    ac.insert("\x8http/1.1", 9);  // pattern [1]
-    ac.build();
-
-    auto result = ac.search((char*)in, inlen);
-
-    ac.order_by_pattern(result, rearranged);
-
-    auto select = [&](unsigned pid) -> void {
-        auto iter = rearranged.lower_bound(pid);  // pattern id
-        if (rearranged.end() != iter) {
-            range_t& range = iter->second;
-            *out = in + range.begin + 1;  // h2, http1.1
-            *outlen = in[range.begin];    // \x2, \8
-            ret = SSL_TLSEXT_ERR_OK;
-        }
-    };
-
-    select(0);  // \x2h2
-    if (SSL_TLSEXT_ERR_OK != ret) {
-        select(1);  // \x8http/1.1
-    }
-#endif
-
-    return ret;
 }
 
 }  // namespace net

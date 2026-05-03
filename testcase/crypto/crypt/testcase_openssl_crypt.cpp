@@ -20,7 +20,7 @@ void do_test_crypt_routine(crypt_algorithm_t algorithm, crypt_mode_t mode, unsig
     return_t ret = errorcode_t::success;
 
     const OPTION& option = _cmdline->value();
-    crypto_advisor* advisor = crypto_advisor::get_instance();
+    // crypto_advisor* advisor = crypto_advisor::get_instance();
     crypt_context_t* crypt_handle = nullptr;
 
     openssl_crypt crypt;

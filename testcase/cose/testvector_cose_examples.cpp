@@ -22,7 +22,7 @@ void test_yaml_testvector_cose_examples() {
     keymapper["rfc8152_pubkeys"] = rfc8152_pubkeys;
     keymapper["rfc8152_privkeys_c4"] = rfc8152_privkeys_c4;
 
-    int i = 0;
+    size_t i = 0;
     cbor_encode e;
 
     std::map<std::string, int> dictionary;
@@ -45,14 +45,6 @@ void test_yaml_testvector_cose_examples() {
 
     _test_case.reset_time();
 
-    auto dumps = [&](const char* b, const char* f) -> void {
-        _logger->colorln([&](basic_stream& bs) -> void {
-            bs.printf(">%s %s\n", b, f);
-            dump_memory(base16_decode(f), &bs, 16, 2, dump_notrunc);
-        });
-    };
-
-    bool result = false;
     cbor_object_signing_encryption cose;
 
     auto lambda_load_keys = [&](const YAML::Node& items) -> void {
@@ -122,16 +114,6 @@ void test_yaml_testvector_cose_examples() {
         }
         return rc;
     };
-    auto lambda_subnode_as_string = [&](const YAML::Node& node, const char* name) -> std::string {
-        std::string rc;
-        if (node && node.IsMap()) {
-            auto sub = node[name];
-            if (sub && sub.IsScalar()) {
-                rc = sub.as<std::string>();
-            }
-        }
-        return rc;
-    };
     auto lambda_dump_subnode = [&](const char* header, const YAML::Node& node, const char* name) {
         if (node && node.IsMap()) {
             auto sub = node[name];
@@ -164,7 +146,7 @@ void test_yaml_testvector_cose_examples() {
             }
         }
     };
-    auto lambda_test_cose_examples = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_cose_examples = [&](const YAML::Node& items) -> void {
         if (items && items.IsSequence()) {
             for (const auto& item : items) {
                 auto text_item = item["item"].as<std::string>();
@@ -182,10 +164,11 @@ void test_yaml_testvector_cose_examples() {
                 auto flag_debug = lambda_itemnode_as_bool(item["debug"]);
                 if (flag_debug) {
                     int break_point_here = 1;
+                    UNREFERENCED_PARAMETER(break_point_here);
                 }
                 auto flag_untagged = lambda_itemnode_as_bool(item["untagged"]);
 
-                binary_t cbor = std::move(base16_decode(text_cbor));
+                binary_t cbor = base16_decode(text_cbor);
                 crypto_key& mapped_key = keymapper[text_keyset];
 
                 mapped_key.for_each(dump_crypto_key, nullptr);
@@ -291,7 +274,7 @@ void test_yaml_testvector_cose_examples() {
                 lambda_load_keys(keys);
 
                 auto items = example["items"];
-                lambda_test_cose_examples(items);
+                lambda_yaml_cose_examples(items);
             } else {
                 _test_case.assert(false, __FUNCTION__, "bad message format");
             }

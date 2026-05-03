@@ -37,9 +37,9 @@ return_t tls_extension_sni::do_read_body(tls_direction_t dir, const byte_t* stre
     __try2 {
         // RFC 6066 3.  Server Name Indication
 
-        uint16 first_entry_len = 0;
+        // uint16 first_entry_len = 0;
         uint8 type = 0;
-        uint16 hostname_len = 0;
+        // uint16 hostname_len = 0;
         binary_t hostname;
         {
             /**
@@ -66,7 +66,7 @@ return_t tls_extension_sni::do_read_body(tls_direction_t dir, const byte_t* stre
             pl.read(stream, endpos_extension(), pos);
 
             type = pl.t_value_of<uint8>(constexpr_name_type);
-            hostname_len = pl.t_value_of<uint16>(constexpr_hostname_len);
+            // hostname_len = pl.t_value_of<uint16>(constexpr_hostname_len);
             pl.get_binary(constexpr_hostname, hostname);
         }
 

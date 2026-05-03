@@ -20,7 +20,7 @@ static udp_traffic _traffic;
 static return_t do_test_construct_client_hello(const char* ciphersuite, tls_session* session, tls_direction_t dir, const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        // tls_advisor* tlsadvisor = tls_advisor::get_instance();
         tls_record_handshake record(session);
 
         record.add(tls_hs_client_hello, session,  //
@@ -335,9 +335,6 @@ void do_test_construct_dtls12_1(const char* ciphersuite) {
 
     session_client.get_dtls_record_publisher().set_fragment_size(128);
     session_server.get_dtls_record_publisher().set_fragment_size(128);
-
-    tls_advisor* tlsadvisor = tls_advisor::get_instance();
-    uint32 idx = 0;
 
     return_t ret = errorcode_t::success;
 

@@ -42,11 +42,11 @@ namespace net {
 http2_session::http2_session() : _enable_push(false) {}
 
 http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data_array[], http_server* server, http_request** request) {
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
 
     __try2 {
         if (nullptr == data_array || nullptr == server || nullptr == request) {
-            ret = errorcode_t::invalid_parameter;
+            // ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
@@ -74,7 +74,7 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
         }
 #endif
 
-        netsocket_t* session_socket = (netsocket_t*)data_array[0];
+        // netsocket_t* session_socket = (netsocket_t*)data_array[0];
         byte_t* buf = (byte_t*)data_array[1];
         size_t bufsize = (size_t)data_array[2];
 
@@ -101,11 +101,9 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
 
         constexpr char preface[] = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
         const uint16 sizeof_preface = 24;
-        bool stage_preface = false;
         size_t pos_frame = 0;
         if (bufsize > sizeof_preface) {
             if (0 == strncmp((char*)buf, preface, sizeof_preface)) {
-                stage_preface = true;
                 pos_frame = sizeof_preface;
             }
         }
@@ -117,7 +115,6 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
         uint32 mask = (h2_flag_end_stream | h2_flag_end_headers);
         http_request* req = nullptr;
 
-        uint8 f = 0;
         flags_pib_t flags_pib = _flags.insert(std::make_pair(stream_id, flags));
         if (false == flags_pib.second) {
             flags_pib.first->second |= flags;

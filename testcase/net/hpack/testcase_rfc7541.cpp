@@ -48,7 +48,7 @@ void do_test_rfc7541_c_1_routine(uint8 prefix, size_t i, const char* expect, con
     uint8 test = 0;
     test = (expect && (i == value));
     if (test) {
-        binary_t bin_expect = std::move(base16_decode_rfc(expect));
+        binary_t bin_expect = base16_decode_rfc(expect);
         test = (test && (bin == bin_expect));
     }
     _test_case.assert(test, __FUNCTION__, text);
@@ -56,7 +56,6 @@ void do_test_rfc7541_c_1_routine(uint8 prefix, size_t i, const char* expect, con
 
 void test_rfc7541_c_1() {
     _test_case.begin("RFC 7541 HPACK C.1. Integer Representation Examples");
-    const OPTION& option = _cmdline->value();
 
     do_test_rfc7541_c_1_routine(5, 10, "0a", "RFC 7541 C.1.1. Example 1: Encoding 10 Using a 5-Bit Prefix");
     do_test_rfc7541_c_1_routine(5, 1337, "1f9a0a", "RFC 7541 C.1.2. Example 2: Encoding 1337 Using a 5-Bit Prefix");

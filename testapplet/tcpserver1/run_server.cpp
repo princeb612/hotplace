@@ -37,7 +37,8 @@ return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CA
 return_t client_connected_handler(socket_t sockcli, netsocket_event_t** out_netsocket_context) {
     return_t ret = errorcode_t::success;
 
-    netsocket_event_t* netsocket_event = netsocket_event = new netsocket_event_t;
+    auto netsocket_event = make_unique<netsocket_event_t>();
+
     sockaddr_storage_t sockaddr_client;
     int sockaddr_len = sizeof(sockaddr_client);
 
@@ -45,7 +46,9 @@ return_t client_connected_handler(socket_t sockcli, netsocket_event_t** out_nets
     getpeername(sockcli, (struct sockaddr*)&sockaddr_client, (socklen_t*)&sockaddr_len);
     memcpy(&(netsocket_event->client_addr), &sockaddr_client, sockaddr_len);
 
-    *out_netsocket_context = netsocket_event;
+    *out_netsocket_context = netsocket_event.get();
+
+    netsocket_event.release();
 
     _logger->writeln("accept %d", (int)sockcli);
 

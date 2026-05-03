@@ -41,8 +41,8 @@ return_t tls_extension_key_share::add(const std::string& group) { return errorco
 return_t tls_extension_key_share::add(uint16 group, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        // crypto_advisor* advisor = crypto_advisor::get_instance();
+        // tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
         auto session = get_handshake()->get_session();
 
@@ -104,8 +104,8 @@ return_t tls_extension_key_share::add_pubkey(uint16 group, const binary_t& pubke
             __leave2;
         }
 
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        // crypto_advisor* advisor = crypto_advisor::get_instance();
+        // tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto& protection = session->get_tls_protection();
         auto& keyshare = protection.get_key();
 
@@ -150,7 +150,7 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
         // RFC 8446 4.2.8.  Key Share
         // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes (psk_dhe_ke)
 
-        auto advisor = crypto_advisor::get_instance();
+        // auto advisor = crypto_advisor::get_instance();
         auto tlsadvisor = tls_advisor::get_instance();
         auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
@@ -195,11 +195,7 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
                 trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                    auto session = get_handshake()->get_session();
-                    auto& protection = session->get_tls_protection();
-                    auto& tlskey = protection.get_key();
-                    auto hint_group = advisor->hintof_tls_group(group);
-
+                    // auto session = get_handshake()->get_session();
                     dbs.println("   > %s %i(0x%04x)", constexpr_len, len, len);
                     dbs.println("    > %s", constexpr_key_share_entry);
                     dbs.println("     > %s 0x%04x (%s)", constexpr_group, group, tlsadvisor->nameof_group(group).c_str());
@@ -220,7 +216,7 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
 return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
-        crypto_advisor* advisor = crypto_advisor::get_instance();
+        // crypto_advisor* advisor = crypto_advisor::get_instance();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
@@ -361,7 +357,7 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
     return_t ret = errorcode_t::success;
     __try2 {
         crypto_advisor* advisor = crypto_advisor::get_instance();
-        auto tlsadvisor = tls_advisor::get_instance();
+        // auto tlsadvisor = tls_advisor::get_instance();
         auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
         auto& tlskey = protection.get_key();
@@ -459,7 +455,7 @@ return_t tls_extension_server_key_share::add_keyshare() {
     __try2 {
         auto session = get_handshake()->get_session();
         auto advisor = crypto_advisor::get_instance();
-        auto tlsadvisor = tls_advisor::get_instance();
+        // auto tlsadvisor = tls_advisor::get_instance();
         auto& protection = session->get_tls_protection();
         uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
 

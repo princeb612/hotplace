@@ -78,9 +78,7 @@ t_binaries<tls_secret_t> &tls_protection::get_secrets() { return _secrets; }
 
 size_t tls_protection::get_header_size() {
     size_t ret_value = 0;
-    auto record_version = get_lagacy_version();
     size_t content_header_size = 0;
-    tls_advisor *tlsadvisor = tls_advisor::get_instance();
     if (is_kindof_dtls()) {
         content_header_size = RTL_FIELD_SIZE(tls_content_t, dtls);
     } else {

@@ -23,10 +23,6 @@ constexpr char constexpr_pubkeyinfo[] = "SubjectPublicKeyInfo";
 return_t crypto_advisor::get_encoding_params(key_encoding_t encoding, key_encoding_params_t& params) {
     return_t ret = errorcode_t::success;
     __try2 {
-        const char* format = nullptr;
-        const char* structure = nullptr;
-        int selection = 0;
-        bool use_pass = false;
         switch (encoding) {
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
             case key_encoding_priv_pem: {
@@ -99,6 +95,8 @@ std::string crypto_advisor::nameof_encoding(key_encoding_t encoding) {
         case key_encoding_pub_der: {
             value = "DER public key";
         } break;
+        default:
+            break;
     }
     return value;
 }

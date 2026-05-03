@@ -27,8 +27,8 @@ namespace crypto {
 #define CRYPTO_SCHEME_CATEGORY_CBCHMAC 0x01000000
 #define CRYPTO_SCHEME_CATEGORY_TLS 0x02000000
 #define CRYPTO_SCHEME_HINT_CCM8 0x00010000
-#define CRYPTO_SCHEME16(c, m) ((c << 8) | (m & 0xff))
-#define CRYPTO_SCHEME32(d, c, m) ((d & 0xffff0000) | (c << 8) | (m & 0xff))
+#define CRYPTO_SCHEME16(c, m) uint16((c << 8) | (m & 0xff))
+#define CRYPTO_SCHEME32(d, c, m) uint32((d & 0xffff0000) | (c << 8) | (m & 0xff))
 
 ///////////////////////////////////////////////////////////////////////////
 // crypt

@@ -42,7 +42,6 @@ return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
         output.resize(0);
 
         int rc = Z_OK;
-        uint32 cooltime = 0;
         binary_t buffer;
         z_stream defstream = {};
         defstream.zalloc = Z_NULL;
@@ -60,6 +59,8 @@ return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
                 break;
             case zlib_windowbits_t::windowbits_gzip:
                 wbit = MAX_WBITS + 16;
+                break;
+            default:
                 break;
         }
 
@@ -98,7 +99,6 @@ return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
         output.resize(0);
 
         int rc = Z_OK;
-        uint32 cooltime = 0;
         binary_t buffer;
         z_stream infstream = {};
         infstream.zalloc = Z_NULL;
@@ -116,6 +116,8 @@ return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
                 break;
             case zlib_windowbits_t::windowbits_gzip:
                 wbit = MAX_WBITS + 16;
+                break;
+            default:
                 break;
         }
 
@@ -158,7 +160,6 @@ return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
         output->clear();
 
         int rc = Z_OK;
-        uint32 cooltime = 0;
         binary_t buffer;
         z_stream defstream = {};
         defstream.zalloc = Z_NULL;
@@ -176,6 +177,8 @@ return_t zlib_deflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
                 break;
             case zlib_windowbits_t::windowbits_gzip:
                 wbit = MAX_WBITS + 16;
+                break;
+            default:
                 break;
         }
 
@@ -214,7 +217,6 @@ return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
         output->clear();
 
         int rc = Z_OK;
-        uint32 cooltime = 0;
         binary_t buffer;
         z_stream infstream = {};
         infstream.zalloc = Z_NULL;
@@ -232,6 +234,8 @@ return_t zlib_inflate(zlib_windowbits_t windowbits, byte_t const* input, size_t 
                 break;
             case zlib_windowbits_t::windowbits_gzip:
                 wbit = MAX_WBITS + 16;
+                break;
+            default:
                 break;
         }
 

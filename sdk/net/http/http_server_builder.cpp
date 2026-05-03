@@ -120,7 +120,7 @@ http_server *http_server_builder::build() {
             __leave2;
         }
 
-        __try_new_catch(server, new http_server(adapter), ret, __leave2);
+        server = new http_server(adapter);
 
         server->get_server_conf().copyfrom(&get_server_conf());
 

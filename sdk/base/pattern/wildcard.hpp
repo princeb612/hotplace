@@ -68,11 +68,11 @@ class t_wildcards {
 
     bool match(const std::vector<T>& source, const std::vector<T>& pattern) { return match(source.data(), source.size(), pattern.data(), pattern.size()); }
     bool match(const T* source, size_t n, const T* pattern, size_t m) {
-        bool ret = false;
-        int i = 0;
-        int j = 0;
-        int startidx = -1;
-        int match = 0;
+        // bool ret = false;
+        size_t i = 0;
+        size_t j = 0;
+        size_t startidx = -1;
+        size_t match = 0;
 
         while ((i < n) && (j < m)) {
             const BT& t = _memberof(source, i);
@@ -84,7 +84,7 @@ class t_wildcards {
                 startidx = j;
                 match = i;
                 j++;
-            } else if (-1 != startidx) {
+            } else if (size_t(-1) != startidx) {
                 j = startidx + 1;
                 match++;
                 i = match;
@@ -106,9 +106,9 @@ class t_wildcards {
     }
 
    private:
-    memberof_t _memberof;
     BT _wild_single;  // ?
     BT _wild_any;     // *
+    memberof_t _memberof;
 };
 
 }  // namespace hotplace

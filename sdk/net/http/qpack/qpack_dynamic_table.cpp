@@ -28,8 +28,7 @@ qpack_dynamic_table::~qpack_dynamic_table() {}
 void qpack_dynamic_table::for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f) {
     if (f) {
         critical_section_guard guard(_lock);
-        auto entries = _dynamic_reversemap.size();
-        for (auto iter = _dynamic_reversemap.begin(); iter != _dynamic_reversemap.end(); iter++) {
+        for (auto iter = _dynamic_reversemap.begin(); iter != _dynamic_reversemap.end(); ++iter) {
             size_t entry = iter->first;
             size_t entno = (entry - _dropped);
             size_t entsize = iter->second.second;

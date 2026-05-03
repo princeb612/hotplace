@@ -41,7 +41,7 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
  * @param   unsigned int* vector_family [in] AF_INET, AF_INET6
  * @param   socket_t* vector_socket     [out]
  * @param   int protocol_type           [in] IPPROTO_TCP
- * @param   uint32 port                 [in]
+ * @param   uint16 port                 [in]
  * @param   bool support_win32_acceptex [inopt]
  * @error   error code (see error.hpp)
  * @example
@@ -53,7 +53,7 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
  *              close_socket(sock, true, 0);
  *          }
  */
-return_t create_listener(unsigned int size_vector, unsigned int* vector_family, socket_t* vector_socket, int protocol_type, uint32 port,
+return_t create_listener(unsigned int size_vector, unsigned int* vector_family, socket_t* vector_socket, int protocol_type, uint16 port,
                          bool support_win32_acceptex = false);
 /**
  * @brief   create_socket and connect_socket_addr

@@ -13,7 +13,7 @@
 void test_yaml_testvector_bignumber() {
     _test_case.begin("bignumber YAML");
 
-    auto lambda_readstring = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_bn_string = [&](const YAML::Node& items) -> void {
         if (items && items.IsSequence()) {
             for (const auto& item : items) {
                 auto hex = item["hex"].as<std::string>();
@@ -31,7 +31,7 @@ void test_yaml_testvector_bignumber() {
         }
     };
 
-    auto lambda_arithmetic_operations = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_bn_arithmetic = [&](const YAML::Node& items) -> void {
         if (items && items.IsSequence()) {
             for (const auto& item : items) {
                 auto node_int1 = item["int1"];
@@ -95,7 +95,7 @@ void test_yaml_testvector_bignumber() {
         }
     };
 
-    auto lambda_intminmax = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_bn_intminmax = [&](const YAML::Node& items) -> void {
         if (items && items.IsSequence()) {
             for (const auto& item : items) {
                 auto node_bits = item["bits"];
@@ -128,7 +128,7 @@ void test_yaml_testvector_bignumber() {
         }
     };
 
-    auto lambda_bits_operations = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_bn_bitwise = [&](const YAML::Node& items) -> void {
         if (items && items.IsSequence()) {
             for (const auto& item : items) {
                 auto node_int1 = item["int1"];
@@ -161,7 +161,7 @@ void test_yaml_testvector_bignumber() {
         }
     };
 
-    auto lambda_negative = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_bn_negative = [&](const YAML::Node& items) -> void {
         if (items && items.IsSequence()) {
             for (const auto& item : items) {
                 auto node_value = item["value"];
@@ -175,7 +175,7 @@ void test_yaml_testvector_bignumber() {
         }
     };
 
-    auto lambda_modpow = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_bn_modpow = [&](const YAML::Node& items) -> void {
         if (items && items.IsSequence()) {
             for (const auto& item : items) {
                 auto node_base = item["base"];
@@ -208,17 +208,17 @@ void test_yaml_testvector_bignumber() {
             auto items = example["items"];
 
             if (schema == "BIGNUMBER STRING") {
-                lambda_readstring(items);
+                lambda_yaml_bn_string(items);
             } else if (schema == "BIGNUMBER ARITHMETIC") {
-                lambda_arithmetic_operations(items);
+                lambda_yaml_bn_arithmetic(items);
             } else if (schema == "BIGNUMBER INTMINMAX") {
-                lambda_intminmax(items);
+                lambda_yaml_bn_intminmax(items);
             } else if (schema == "BIGNUMBER BITWISE") {
-                lambda_bits_operations(items);
+                lambda_yaml_bn_bitwise(items);
             } else if (schema == "BIGNUMBER NEGATIVE") {
-                lambda_negative(items);
+                lambda_yaml_bn_negative(items);
             } else if (schema == "BIGNUMBER MODPOW") {
-                lambda_modpow(items);
+                lambda_yaml_bn_modpow(items);
             } else {
                 _test_case.assert(false, __FUNCTION__, "bad message format");
             }

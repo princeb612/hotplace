@@ -192,6 +192,8 @@ void test_as_small_as_possible() {
             case TYPE_DOUBLE:
                 len = ieee754_as_small_as_possible(var, item.var.content().data.d);
                 break;
+            default:
+                break;
         }
         float f = float_from_fp16(item.fp16);
         double d = double_from_fp16(item.fp16);
@@ -200,7 +202,7 @@ void test_as_small_as_possible() {
         _logger->writeln(tostr);
         _logger->dump(bin);
         bool expect = (var.content().data.ui16 == item.fp16);
-        _test_case.assert(expect, __FUNCTION__, "ieee754_as_small_as_possible %s fp16 %04x fp32 %f fp64 %lf", tostr.c_str(), item.fp16, f, d);
+        _test_case.assert(expect, __FUNCTION__, "ieee754_as_small_as_possible [len %u] %s fp16 %04x fp32 %f fp64 %lf", len, tostr.c_str(), item.fp16, f, d);
     }
 }
 

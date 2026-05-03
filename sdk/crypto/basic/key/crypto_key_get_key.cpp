@@ -87,6 +87,8 @@ return_t crypto_key::get_public_key(const EVP_PKEY* pkey, binary_t& pub1, binary
                     pub1 = iter->second;
                 }
             } break;
+            default:
+                break;
         }
     }
     return ret;
@@ -215,6 +217,8 @@ return_t crypto_key::get_private_key(const EVP_PKEY* pkey, binary_t& priv) {
                     priv = iter->second;
                 }
             } break;
+            default:
+                break;
         }
     }
     return ret;
@@ -455,6 +459,8 @@ return_t crypto_key::get_key(const EVP_PKEY* pkey, int flags, crypto_kty_t& type
                     lambda_get_item(crypt_item_t::item_mldsa_priv, priv);
                 }
             } break;
+            default:
+                break;
         }
     }
     return ret;
@@ -521,6 +527,8 @@ return_t crypto_key::get_privkey(const EVP_PKEY* pkey, crypto_kty_t& type, binar
                     priv = iter->second;
                 }
             } break;
+            default:
+                break;
         }
     }
     return ret;

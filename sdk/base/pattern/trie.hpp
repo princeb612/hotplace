@@ -324,7 +324,6 @@ class t_trie {
      */
     size_t lookup(const T* input, size_t size, TP** tag = nullptr) const {
         size_t len = 0;
-        bool ret = true;
         bool eow = false;
         if (input) {
             trienode* current = _root;

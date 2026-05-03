@@ -131,6 +131,8 @@ uint16 crypto_advisor::sizeof_ecdsa(crypt_sig_t sig) {
         case sig_sha512:
             ret_value = 66 << 1;
             break;
+        default:
+            break;
     }
     return ret_value;
 }

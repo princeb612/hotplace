@@ -18,7 +18,7 @@ void test_curves() {
     advisor->for_each_curve_hint(
         [&](const hint_curve_t* hint, void*) -> void {
             auto nid = hint->nid;
-            auto kty = hint->kty;
+            // auto kty = hint->kty;
 
             basic_stream bs;
             if (hint->name_nist) {

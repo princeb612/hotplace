@@ -16,7 +16,7 @@ static void do_validate_resource_cipher_suite() {
     // validate const tls_cipher_suite_t tls_cipher_suites[] = ...
 
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    // tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
     struct keyex_item_t {
         keyexchange_t keyex;
@@ -41,6 +41,7 @@ static void do_validate_resource_cipher_suite() {
         {auth_unknown, "NULL"}, {auth_dss, "DSS"},  {auth_rsa, "RSA"},         {auth_anon, "anon"},       {auth_krb5, "KRB5"},     {auth_psk, "PSK"},
         {auth_ecdsa, "ECDSA"},  {auth_sha1, "SHA"}, {auth_sha2_256, "SHA256"}, {auth_sha2_384, "SHA384"}, {auth_eccpwd, "ECCPWD"}, {auth_gost, "GOSTR341112_256"},
     };
+#if 0
     struct alg_t {
         crypt_algorithm_t alg;
         crypt_mode_t mode;
@@ -57,6 +58,7 @@ static void do_validate_resource_cipher_suite() {
         {sha2_256, "SHA256"},
         {sha2_384, "SHA384"},
     };
+#endif
     struct iana_except_t {
         keyexchange_t keyex;
         auth_t auth;
@@ -82,7 +84,7 @@ static void do_validate_resource_cipher_suite() {
         auth_map.insert({item.auth, item.name});
     }
     std::map<std::string, const iana_except_t*> except_map;
-    for (int i = 0; i < RTL_NUMBER_OF(except_table); i++) {
+    for (size_t i = 0; i < RTL_NUMBER_OF(except_table); i++) {
         const iana_except_t* item = except_table + i;
         except_map.insert({item->iana, item});
     }
@@ -95,7 +97,7 @@ static void do_validate_resource_cipher_suite() {
             continue;
         }
 
-        auto cipher = typeof_alg(hint_scheme);
+        // auto cipher = typeof_alg(hint_scheme);
         auto mode = typeof_mode(hint_scheme);
         auto tsize = hint_scheme->tsize;
 

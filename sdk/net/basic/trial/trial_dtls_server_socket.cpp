@@ -38,7 +38,7 @@ return_t trial_dtls_server_socket::dtls_open(socket_context_t** handle, socket_t
             __leave2;
         }
 
-        __try_new_catch(context, new socket_context_t, ret, __leave2);
+        context = new socket_context_t;
 
         auto session = new tls_session(session_type_dtls);
         context->fd = fd;
@@ -146,7 +146,6 @@ return_t trial_dtls_server_socket::sendto(socket_context_t* handle, const char* 
 
     __try2 {
         auto session = handle->handle.session;
-        auto& protection = session->get_tls_protection();
         auto tlsver = session->get_tls_protection().get_tls_version();
 
         binary_t bin;
@@ -163,7 +162,7 @@ return_t trial_dtls_server_socket::sendto(socket_context_t* handle, const char* 
         }
 
         if (bin.empty()) {
-            int debug = 1;
+            // do nothing
         } else {
             size_t sent = 0;
             naive_udp_server_socket::sendto(handle, (char*)bin.data(), bin.size(), &sent, addr, addrlen);

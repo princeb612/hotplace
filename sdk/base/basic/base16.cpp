@@ -339,7 +339,6 @@ std::string base16_encode_rfc(const std::string& source) {
             replace(inpart, "\n", "");
             replace(inpart, "-", "");
             split_context_t* handle = nullptr;
-            size_t count = 0;
             std::string data;
             binary_t temp;
             split_begin(&handle, inpart.c_str(), ",");

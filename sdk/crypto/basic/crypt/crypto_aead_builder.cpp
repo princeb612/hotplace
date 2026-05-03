@@ -48,7 +48,7 @@ crypto_aead* crypto_aead_builder::build() {
         case crypto_scheme_tls_aria_256_gcm:
         case crypto_scheme_tls_camellia_128_gcm:
         case crypto_scheme_tls_camellia_256_gcm: {
-            __try_new_catch_only(obj, new crypto_aead(scheme));
+            obj = new crypto_aead(scheme);
         } break;
         default: {
         } break;

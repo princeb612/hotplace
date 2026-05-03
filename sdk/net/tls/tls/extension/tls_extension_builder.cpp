@@ -67,67 +67,67 @@ tls_extension* tls_extension_builder::build() {
         }
         switch (get_type()) {
             case tls_ext_server_name: /* 0x0000 */ {
-                __try_new_catch_only(extension, new tls_extension_sni(handshake));
+                extension = new tls_extension_sni(handshake);
             } break;
             case tls_ext_status_request: /* 0x0005 */ {
-                __try_new_catch_only(extension, new tls_extension_status_request(handshake));
+                extension = new tls_extension_status_request(handshake);
             } break;
             case tls_ext_supported_groups: /* 0x000a */ {
-                __try_new_catch_only(extension, new tls_extension_supported_groups(handshake));
+                extension = new tls_extension_supported_groups(handshake);
             } break;
             case tls_ext_ec_point_formats: /* 0x000b */ {
-                __try_new_catch_only(extension, new tls_extension_ec_point_formats(handshake));
+                extension = new tls_extension_ec_point_formats(handshake);
             } break;
             case tls_ext_signature_algorithms: /* 0x000d */ {
-                __try_new_catch_only(extension, new tls_extension_signature_algorithms(handshake));
+                extension = new tls_extension_signature_algorithms(handshake);
             } break;
             case tls_ext_application_layer_protocol_negotiation: /* 0x0010 */ {
-                __try_new_catch_only(extension, new tls_extension_alpn(handshake));
+                extension = new tls_extension_alpn(handshake);
             } break;
             case tls_ext_compress_certificate: /* 0x001b */ {
-                __try_new_catch_only(extension, new tls_extension_compress_certificate(handshake));
+                extension = new tls_extension_compress_certificate(handshake);
             } break;
             case tls_ext_pre_shared_key: /* 0x0029 */ {
                 auto dir = get_direction();
                 if (from_client == dir) {
-                    __try_new_catch_only(extension, new tls_extension_client_psk(handshake));
+                    extension = new tls_extension_client_psk(handshake);
                 } else if (from_server == dir) {
-                    __try_new_catch_only(extension, new tls_extension_server_psk(handshake));
+                    extension = new tls_extension_server_psk(handshake);
                 }
             } break;
             case tls_ext_supported_versions: /* 0x002b */ {
                 auto dir = get_direction();
                 if (from_client == dir) {
-                    __try_new_catch_only(extension, new tls_extension_client_supported_versions(handshake));
+                    extension = new tls_extension_client_supported_versions(handshake);
                 } else if (from_server == dir) {
-                    __try_new_catch_only(extension, new tls_extension_server_supported_versions(handshake));
+                    extension = new tls_extension_server_supported_versions(handshake);
                 }
             } break;
             case tls_ext_psk_key_exchange_modes: /* 0x002d */ {
-                __try_new_catch_only(extension, new tls_extension_psk_key_exchange_modes(handshake));
+                extension = new tls_extension_psk_key_exchange_modes(handshake);
             } break;
             case tls_ext_key_share: /* 0x0033 */ {
                 auto dir = get_direction();
                 if (from_client == dir) {
-                    __try_new_catch_only(extension, new tls_extension_client_key_share(handshake));
+                    extension = new tls_extension_client_key_share(handshake);
                 } else if (from_server == dir) {
-                    __try_new_catch_only(extension, new tls_extension_server_key_share(handshake));
+                    extension = new tls_extension_server_key_share(handshake);
                 }
             } break;
             case tls_ext_quic_transport_parameters: /* 0x0039 */ {
-                __try_new_catch_only(extension, new tls_extension_quic_transport_parameters(handshake));
+                extension = new tls_extension_quic_transport_parameters(handshake);
             } break;
             case tls_ext_application_layer_protocol_settings: /* 0x4469 */ {
-                __try_new_catch_only(extension, new tls_extension_alps(handshake));
+                extension = new tls_extension_alps(handshake);
             } break;
             case tls_ext_encrypted_client_hello: /* 0xfe0d */ {
-                __try_new_catch_only(extension, new tls_extension_encrypted_client_hello(handshake));
+                extension = new tls_extension_encrypted_client_hello(handshake);
             } break;
             case tls_ext_renegotiation_info: /* 0xff01 */ {
-                __try_new_catch_only(extension, new tls_extension_renegotiation_info(handshake));
+                extension = new tls_extension_renegotiation_info(handshake);
             } break;
             case tls_ext_early_data: /* 0x002a */ {
-                __try_new_catch_only(extension, new tls_extension_early_data(handshake));
+                extension = new tls_extension_early_data(handshake);
             } break;
 
             case tls_ext_certificate_authorities:      /* 0x002f */
@@ -150,7 +150,7 @@ tls_extension* tls_extension_builder::build() {
             case tls_ext_tlmsp:                        /* 0x0024 */
             case tls_ext_use_srtp:                     /* 0x000e */
             default: {
-                __try_new_catch_only(extension, new tls_extension_unknown(get_type(), handshake));
+                extension = new tls_extension_unknown(get_type(), handshake);
             } break;
         }
     }

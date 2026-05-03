@@ -73,14 +73,14 @@ void test_is_endian() {
     _test_case.begin("endian");
     bool ret = false;
     std::string text;
-    bool is_be = is_big_endian();
-    bool is_le = is_little_endian();
 
 #if defined __LITTLE_ENDIAN
     text = "__LITTLE_ENDIAN__";
+    bool is_le = is_little_endian();
     ret = (true == is_le);
 #elif defined __BIG_ENDIAN
     text = "__BIG_ENDIAN__";
+    bool is_be = is_big_endian();
     ret = (true == is_be);
 #endif
     _test_case.assert((true == ret), __FUNCTION__, text.c_str());

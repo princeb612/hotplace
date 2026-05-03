@@ -65,7 +65,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                     throw exception(no_session);
                 }
             }
-            auto session_type = session->get_type();
+            // auto session_type = session->get_type();
             size_t hdrsize = sizeof(dtls_handshake_t);
 
             struct spl_desc {

@@ -28,7 +28,6 @@ time_otp::~time_otp() {}
 
 uint32 time_otp::open(otp_context_t** handle, unsigned int digit_length, time_t interval, hash_algorithm_t algorithm, const byte_t* key_data, size_t key_size) {
     uint32 ret = errorcode_t::success;
-    totp_context_t* context = nullptr;
     hmac_otp hotp;
     otp_context_t* hotp_handle = nullptr;
 
@@ -42,7 +41,7 @@ uint32 time_otp::open(otp_context_t** handle, unsigned int digit_length, time_t 
             __leave2;
         }
 
-        __try_new_catch(context, new totp_context_t, ret, __leave2);
+        auto context = make_unique<totp_context_t>();
 
         context->_signature = TOTP_CONTEXT_SIGNATURE;
         context->_hotp_handle = hotp_handle;
@@ -53,15 +52,14 @@ uint32 time_otp::open(otp_context_t** handle, unsigned int digit_length, time_t 
             context->_interval = interval;
         }
 
-        *handle = context;
+        *handle = context.get();
+
+        context.release();
     }
     __finally2 {
         if (errorcode_t::success != ret) {
             if (nullptr != hotp_handle) {
                 hotp.close(hotp_handle);
-            }
-            if (nullptr != context) {
-                delete context;
             }
         }
     }

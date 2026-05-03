@@ -99,8 +99,8 @@ return_t json_object_signing::sign(jose_context_t* handle, std::list<std::string
                 }
             }
 
-            std::string header_encoded = std::move(base64_encode((byte_t*)header.c_str(), header.size(), encoding_t::encoding_base64url));
-            std::string claims_encoded = std::move(base64_encode((byte_t*)input.c_str(), input.size(), encoding_t::encoding_base64url));
+            std::string header_encoded = base64_encode((byte_t*)header.c_str(), header.size(), encoding_t::encoding_base64url);
+            std::string claims_encoded = base64_encode((byte_t*)input.c_str(), input.size(), encoding_t::encoding_base64url);
 
             binary_t header_claims;
 
@@ -159,7 +159,7 @@ return_t json_object_signing::verify(jose_context_t* handle, const std::string& 
         for (const auto& item : handle->signs) {
             bool result_per_signature = false;
 
-            std::string protected_header = std::move(base64_decode_careful(item.header, encoding_t::encoding_base64url));
+            std::string protected_header = base64_decode_careful(item.header, encoding_t::encoding_base64url);
             jws_t sig;
             std::string header_kid;
 
@@ -223,7 +223,7 @@ return_t json_object_signing::dosign(crypto_key* key, jws_t sig, const binary_t&
 
 return_t json_object_signing::dosign(crypto_key* key, jws_t sig, const binary_t& input, binary_t& output, std::string& kid) {
     return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
+    // crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
         if (nullptr == key) {
@@ -284,7 +284,7 @@ return_t json_object_signing::doverify(crypto_key* key, jws_t sig, const binary_
 
 return_t json_object_signing::doverify(crypto_key* key, const char* kid, jws_t sig, const binary_t& input, const binary_t& output, bool& result) {
     return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
+    // crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
         result = false;

@@ -31,7 +31,7 @@ void test_zero_capacity() {
     _test_case.begin("no dynamic table");
     count_evict_encoder = 0;
 
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     qpack_encoder enc;
     qpack_dynamic_table qpack_dyntable;
     binary_t bin;
@@ -69,7 +69,7 @@ void test_tiny_capacity() {
     _test_case.begin("dynamic table capacity 32");
     count_evict_encoder = 0;
 
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     qpack_encoder enc;
     qpack_dynamic_table qpack_dyntable;
     binary_t bin;
@@ -99,7 +99,7 @@ void test_small_capacity() {
     _test_case.begin("dynamic table capacity 80");
     count_evict_encoder = 0;
 
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     qpack_encoder enc;
     qpack_dynamic_table qpack_dyntable;
     binary_t bin;

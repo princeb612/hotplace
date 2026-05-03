@@ -378,7 +378,7 @@ return_t client_socket_prosumer::do_read(char* ptr_data, size_t size_data, size_
         }
         auto type = socket_type();
         if (SOCK_DGRAM == type) {
-            if ((nullptr == addr) || (nullptr == addrlen) || (*addrlen < sizeof(sockaddr_storage_t))) {
+            if ((nullptr == addr) || (nullptr == addrlen) || (size_t(*addrlen) < sizeof(sockaddr_storage_t))) {
                 ret = errorcode_t::invalid_parameter;
                 __leave2;
             }

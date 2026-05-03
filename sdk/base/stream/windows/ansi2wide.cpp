@@ -27,7 +27,7 @@ return_t A2W(stream_t* stream, const char* source, uint32 codepage) {
         if (sizeNeed > 0) {
             buffer.resize(sizeNeed);  // including null pad
             MultiByteToWideChar(codepage, 0, source, -1, buffer.data(), sizeNeed);
-            if (sizeNeed >= sizeof(wchar_t)) {
+            if (size_t(sizeNeed) >= sizeof(wchar_t)) {
                 stream->write((void*)buffer.data(), (sizeNeed - 1) * sizeof(wchar_t));
             }
         }

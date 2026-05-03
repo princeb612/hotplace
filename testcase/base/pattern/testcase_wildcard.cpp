@@ -23,7 +23,7 @@ std::string get_lcp(std::string ar[], size_t n) {
             auto en = std::min(ar[0].size(), ar[n - 1].size());
 
             std::string first = ar[0], last = ar[n - 1];
-            int i = 0;
+            size_t i = 0;
             while (i < en && first[i] == last[i]) i++;
 
             lcp = first.substr(0, i);

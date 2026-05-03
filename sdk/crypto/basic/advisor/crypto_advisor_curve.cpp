@@ -16,7 +16,7 @@ namespace crypto {
 
 return_t crypto_advisor::for_each_curve(std::function<void(const char*, uint32, void*)> f, void* user) {
     return_t ret = errorcode_t::success;
-    for (auto i = 0; i < sizeof_hint_curves; i++) {
+    for (size_t i = 0; i < sizeof_hint_curves; i++) {
         const hint_curve_t* item = hint_curves + i;
         if (item->name_nist) {
             auto spec = query_feature(item->name_nist, advisor_feature_curve);
@@ -44,7 +44,7 @@ return_t crypto_advisor::for_each_curve(std::function<void(const char*, uint32, 
 
 return_t crypto_advisor::for_each_curve_hint(std::function<void(const hint_curve_t*, void*)> f, void* user) {
     return_t ret = errorcode_t::success;
-    for (auto i = 0; i < sizeof_hint_curves; i++) {
+    for (size_t i = 0; i < sizeof_hint_curves; i++) {
         const hint_curve_t* item = hint_curves + i;
         f(item, user);
     }
@@ -259,6 +259,8 @@ bool support(const hint_curve_t* hint, hash_algorithm_t alg) {
                 break;
             case sha2_512:
                 ret_value = hint->flags & ECDSA_SUPPORT_SHA2_512;
+                break;
+            default:
                 break;
         }
     }

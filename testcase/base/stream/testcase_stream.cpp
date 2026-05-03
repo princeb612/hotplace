@@ -231,7 +231,7 @@ void test_stream_split() {
     const size_t testsize = 0x410;  // 1024 + 16
     const size_t testfragsize = 0x80;
     binary_t block;
-    for (auto i = 0; i < testsize; i++) {
+    for (size_t i = 0; i < testsize; i++) {
         block.push_back((byte_t)(i % 0x100));
     }
 

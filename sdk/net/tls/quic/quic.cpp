@@ -148,8 +148,8 @@ return_t encode_packet_number(uint64 full_pn, uint64 largest_acked, uint64& repr
             num_unacked = full_pn - largest_acked;
         }
 
-        uint64 min_bits = uint64((log(num_unacked) / log(2)) + 1);
-        uint8 num_bytes = uint8(ceil(min_bits / 8));
+        // uint64 min_bits = uint64((log(num_unacked) / log(2)) + 1);
+        // uint8 num_bytes = uint8(ceil(min_bits / 8));
 
         // represent at leat twice
         represent = num_unacked << 1;

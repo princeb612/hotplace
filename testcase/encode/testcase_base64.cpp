@@ -11,7 +11,7 @@
 #include <hotplace/testcase/encode/sample.hpp>
 
 void do_test_base64_routine(const char* source, size_t source_size, int encoding) {
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     basic_stream bs;
     std::string encoded_b64;
     binary_t decoded_b64;

@@ -48,9 +48,6 @@ return_t tls_extension_supported_groups::do_postprocess(tls_direction_t dir) {
 return_t tls_extension_supported_groups::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_handshake()->get_session();
-        auto& protection = session->get_tls_protection();
-
         binary_t supported_groups;
         uint16 curves = 0;
 
@@ -97,8 +94,6 @@ return_t tls_extension_supported_groups::do_write_body(tls_direction_t dir, bina
     return_t ret = errorcode_t::success;
     __try2 {
         auto advisor = crypto_advisor::get_instance();
-        auto session = get_handshake()->get_session();
-        auto& protection = session->get_tls_protection();
 
         uint16 cbsize_supported_groups = 0;
         binary_t bin_supported_groups;

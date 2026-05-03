@@ -17,7 +17,7 @@ t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 return_t _cmdret = errorcode_t::success;
 
 void whatsthis() {
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
 
     // $ ./test-encode -b64u AQIDBAU
     //  what u want to know

@@ -69,6 +69,7 @@ struct http_compression_decode_t {
 class http_header_compression {
    public:
     http_header_compression();
+    virtual ~http_header_compression();
 
     /**
      * @brief   encode (header compression)
@@ -92,6 +93,8 @@ class http_header_compression {
      * @return  error code (see error.hpp)
      */
     virtual return_t decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::string& name, std::string& value, uint32 flags = 0);
+    virtual return_t decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, http_compression_decode_t& item, uint32 flags = 0);
+    virtual return_t decode(http_dynamic_table* dyntable, const byte_t* source, size_t size, size_t& pos, std::list<http_compression_decode_t>& kv, uint32 flags = 0);
 
     /**
      * @brief   Integer Representation
@@ -207,7 +210,7 @@ class http_header_compression {
      */
     return_t selectall(http_static_table* static_table, http_dynamic_table* dyntable, uint32 flags, size_t index, std::string& name, std::string& value);
 
-    virtual return_t set_capacity(http_dynamic_table* dyntable, binary_t& target, uint8 maxsize);
+    virtual return_t set_capacity(http_dynamic_table* dyntable, binary_t& target, uint64 maxsize);
     virtual return_t duplicate(http_dynamic_table* dyntable, binary_t& target, size_t index);
     virtual return_t ack(http_dynamic_table* dyntable, binary_t& target, uint32 streamid);
     virtual return_t cancel(http_dynamic_table* dyntable, binary_t& target, uint32 streamid);

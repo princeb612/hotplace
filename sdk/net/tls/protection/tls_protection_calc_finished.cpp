@@ -38,8 +38,8 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
         }
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
-        auto cs = get_cipher_suite();
-        const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(cs);
+        // auto cs = get_cipher_suite();
+        // const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(cs);
 
         // https://tls13.xargs.org/#server-handshake-finished/annotated
         binary_t fin_hash;

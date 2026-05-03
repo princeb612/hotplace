@@ -39,7 +39,7 @@ uint8 tls_protection::get_tag_size() {
         auto hmac_alg = hint->mac;
         auto hint_digest = advisor->hintof_digest(hmac_alg);
 
-        auto cipher = hint_cipher->algorithm;
+        // auto cipher = hint_cipher->algorithm;
         auto mode = hint_cipher->mode;
         auto dlen = sizeof_digest(hint_digest);
 
@@ -91,8 +91,8 @@ return_t tls_protection::encrypt(tls_session *session, tls_direction_t dir, cons
             __leave2;
         }
 
-        auto record_version = get_lagacy_version();
-        size_t content_header_size = 0;
+        // auto record_version = get_lagacy_version();
+        // size_t content_header_size = 0;
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
         auto cs = get_cipher_suite();

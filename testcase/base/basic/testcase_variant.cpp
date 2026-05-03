@@ -50,6 +50,7 @@ void test_variant() {
     int count_throw = 0;
     try {
         auto neg = bn_neg.t_bntoi<uint32>();
+        UNREFERENCED_PARAMETER(neg);
     } catch (...) {
         ++count_throw;
     }

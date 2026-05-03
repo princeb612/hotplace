@@ -80,19 +80,16 @@ return_t cbor_map::join(cbor_object* object, cbor_object* extra) {
             }
 
             cbor_data* inst = (cbor_data*)object;
-            cbor_pair* pair = nullptr;
-            __try_new_catch(pair, new cbor_pair(inst, extra), ret, __leave2);
-            if (pair) {
-                _array.push_back(pair);
+            cbor_pair* pair = new cbor_pair(inst, extra);
+            _array.push_back(pair);
 
-                uint16 lhs_flag = inst->data().flag();
-                if (lhs_flag & variant_flag_t::flag_int) {
-                    int key = inst->data().to_int();
-                } else if (lhs_flag & variant_flag_t::flag_string) {
-                    std::string key;
-                    inst->data().to_string(key);
-                }
-            }
+            // uint16 lhs_flag = inst->data().flag();
+            // if (lhs_flag & variant_flag_t::flag_int) {
+            //     int key = inst->data().to_int();
+            // } else if (lhs_flag & variant_flag_t::flag_string) {
+            //     std::string key;
+            //     inst->data().to_string(key);
+            // }
         }
     }
     __finally2 {}
@@ -138,8 +135,6 @@ int cbor_map::addref() {
 }
 
 int cbor_map::release() {
-    return_t ret = errorcode_t::success;
-
     for (cbor_pair* item : _array) {
         item->release();
     }

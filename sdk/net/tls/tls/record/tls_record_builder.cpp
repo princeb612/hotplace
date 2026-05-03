@@ -79,41 +79,41 @@ tls_record* tls_record_builder::build() {
         auto session_type = session->get_type();
         switch (get_type()) {
             case tls_content_type_change_cipher_spec: {
-                __try_new_catch_only(record, new tls_record_change_cipher_spec(session));
+                record = new tls_record_change_cipher_spec(session);
             } break;
             case tls_content_type_alert: {
                 if (is_construct()) {
-                    bool is_kind_of_tls = session->get_tls_protection().is_kindof_tls();
+                    // bool is_kind_of_tls = session->get_tls_protection().is_kindof_tls();
                     bool is_kind_of_tls13 = session->get_tls_protection().is_kindof_tls13();
                     bool apply_protection = session->get_session_info(get_direction()).apply_protection();
                     if (is_kind_of_tls13 && (apply_protection || is_protected())) {
-                        __try_new_catch_only(record, new tls_record_application_data(session));  // encapsulation
+                        record = new tls_record_application_data(session);  // encapsulation
                     } else {
-                        __try_new_catch_only(record, new tls_record_alert(session));
+                        record = new tls_record_alert(session);
                     }
                 } else {
-                    __try_new_catch_only(record, new tls_record_alert(session));
+                    record = new tls_record_alert(session);
                 }
             } break;
             case tls_content_type_handshake: {
                 if (is_construct()) {
-                    bool is_kind_of_tls = session->get_tls_protection().is_kindof_tls();
+                    // bool is_kind_of_tls = session->get_tls_protection().is_kindof_tls();
                     bool is_kind_of_tls13 = session->get_tls_protection().is_kindof_tls13();
                     bool apply_protection = session->get_session_info(get_direction()).apply_protection();
                     if (is_kind_of_tls13 && (apply_protection || is_protected())) {
-                        __try_new_catch_only(record, new tls_record_application_data(session));  // encapsulation
+                        record = new tls_record_application_data(session);  // encapsulation
                     } else {
-                        __try_new_catch_only(record, new tls_record_handshake(session));
+                        record = new tls_record_handshake(session);
                     }
                 } else {
-                    __try_new_catch_only(record, new tls_record_handshake(session));
+                    record = new tls_record_handshake(session);
                 }
             } break;
             case tls_content_type_application_data: {
-                __try_new_catch_only(record, new tls_record_application_data(session));
+                record = new tls_record_application_data(session);
             } break;
             case tls_content_type_ack: {
-                __try_new_catch_only(record, new tls_record_ack(session));
+                record = new tls_record_ack(session);
             } break;
             case tls_content_type_heartbeat:
             case tls_content_type_tls12_cid:
@@ -123,11 +123,11 @@ tls_record* tls_record_builder::build() {
                         //
                     } else {
                         // DTLS 1.3 Ciphertext
-                        __try_new_catch_only(record, new dtls13_ciphertext(get_type(), session));
+                        record = new dtls13_ciphertext(get_type(), session);
                     }
                 } else {
                     // TLS 1.2~, DTLS 1.3 Plaintext
-                    __try_new_catch_only(record, new tls_record_unknown(get_type(), session));
+                    record = new tls_record_unknown(get_type(), session);
                 }
             } break;
         }

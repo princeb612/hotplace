@@ -20,6 +20,8 @@ namespace net {
 
 qpack_encoder::qpack_encoder() : http_header_compression() {}
 
+qpack_encoder::~qpack_encoder() {}
+
 return_t qpack_encoder::encode(http_dynamic_table* dyntable, binary_t& target, const std::string& name, const std::string& value, uint32 flags) {
     return_t ret = errorcode_t::success;
     match_result_t state = match_result_t::not_matched;
@@ -263,7 +265,6 @@ return_t qpack_encoder::decode_encoder_stream(http_dynamic_table* dyntable, cons
         auto statable = qpack_static_table::get_instance();
 
         size_t i = 0;
-        size_t idx = 0;
 
         if (qpack_layout_capacity & flags) {
             decode_int(source, pos, mask, prefix, item.capacity);
@@ -384,8 +385,6 @@ return_t qpack_encoder::decode_http3_header(http_dynamic_table* dyntable, const 
          */
 
         if (qpack_field_section_prefix & flags) {
-            size_t ric = 0;
-            size_t base = 0;
             ret = unpack(dyntable, source, size, pos, item);
             if (errorcode_t::success != ret) {
                 __leave2;
@@ -443,7 +442,6 @@ return_t qpack_encoder::decode_http3_header(http_dynamic_table* dyntable, const 
             auto statable = qpack_static_table::get_instance();
 
             size_t i = 0;
-            size_t idx = 0;
             if (qpack_layout_index & flags) {
                 decode_int(source, pos, mask, prefix, i);
                 selectall(statable, dyntable, flags, i, item.name, item.value);

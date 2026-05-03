@@ -114,7 +114,6 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
         }
         binary_append(aad, uint64(record_no), hton64);  // sequence
         binary_append(aad, additional.data(), 3);       // rechdr (content_type, version)
-        size_t plainsize = 0;
 
         crypto_cbc_hmac cbchmac;
         cbchmac.set_enc(enc_alg).set_mac(hmac_alg).set_flag(flag);

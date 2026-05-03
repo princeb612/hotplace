@@ -30,7 +30,7 @@ void play_yaml_pcap_http3(const char* filename) {
         }
     };
 
-    auto lambda_test_pcap = [&](const YAML::Node& example) -> void {
+    auto lambda_yaml_pcap = [&](const YAML::Node& example) -> void {
         return_t ret = errorcode_t::success;
         auto secrets = example["secrets"];
         if (secrets && secrets.IsSequence()) {
@@ -60,10 +60,16 @@ void play_yaml_pcap_http3(const char* filename) {
 
                 if (protocol == "QUIC") {
                     std::string frame = item["frame"].as<std::string>();
-                    binary_t bin_frame = std::move(base16_decode_rfc(frame));
+                    binary_t bin_frame = base16_decode_rfc(frame);
 
                     quic_packets packets;
                     ret = packets.read(&quicsession, direction, bin_frame);
+
+                    quicsession.get_alert(direction, lambda_test_fatal_alert);
+                    if (has_fatal) {
+                        _test_case.assert(false == has_fatal, __FUNCTION__, "fatal alert");
+                        break;
+                    }
                 } else if (protocol == "TLS 1.3") {
                     // tls_records records;
                     // ret = records.read(&tlssession, dir, bin_frame);
@@ -97,7 +103,7 @@ void play_yaml_pcap_http3(const char* filename) {
                 continue;
             }
 
-            lambda_test_pcap(example);
+            lambda_yaml_pcap(example);
         }
     }
 }

@@ -132,7 +132,7 @@ bool is_kindof_frame(quic_frame* frame, protection_space_t space) {
 return_t kindof_frame(quic_frame_t type, protection_space_t& space) {
     return_t ret = errorcode_t::success;
     space = protection_application;
-    return success;
+    return ret;
 }
 
 bool is_kindof_frame(quic_frame_t type, protection_space_t space) {

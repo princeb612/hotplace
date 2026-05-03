@@ -148,7 +148,7 @@ class file_stream : public stream_t {
      * @remarks
      * @sa
      */
-    return_t begin_mmap(size_t additional_mapping_size = 0);
+    return_t begin_mmap();
     /**
      * @brief munmap
      * @param
@@ -164,12 +164,10 @@ class file_stream : public stream_t {
      * @remarks
      * @sa
      */
-    void truncate(int32 file_pos = 0, int32* ptr_file_pos = nullptr);
     void truncate(size_t file_pos);
     /**
      * @brief seek
      * @param   int64     file_pos      [IN]  position
-     * @param   int64*    ptr_file_pos  [OUT] position
      * @param   uint32    method        [IN]
      *                                      FILE_BEGIN
      *                                      FILE_CURRENT
@@ -180,7 +178,7 @@ class file_stream : public stream_t {
      *          void Seek(LONG lPosLo, PLONG plPosLo, PLONG plPosHi, uint32 method);
      * @sa
      */
-    void seek(int64 file_pos, int64* ptr_file_pos, uint32 method);
+    void seek(int64 file_pos, uint32 method);
     /**
      * @brief printf
      * @param   LPCTSTR     fmt        [IN]
@@ -202,24 +200,23 @@ class file_stream : public stream_t {
 
     /**
      * @brief write
-     * @param   void*      data          [IN]
-     * @param   size_t     size_data     [IN]
+     * @param   void*      data         [IN]
+     * @param   size_t     size         [IN]
      * @return
      * @remarks
-     *          in case of mmaped status, all write operation work up to (4G - 1) bytes
      * @sa
      */
-    virtual return_t write(const void* data, size_t size_data);
+    virtual return_t write(const void* data, size_t size);
     virtual return_t fill(size_t l, char c);
     /**
      * @brief read
-     * @param   void*      data          [IN]
-     * @param   uint32     cbBuffer      [IN]
-     * @param   uint32*    cbRead        [OUT]
+     * @param   void*      data         [IN]
+     * @param   uint32     size         [IN]
+     * @param   uint32*    size_read    [OUT]
      * @return
      * @remarks
      */
-    return_t read(void* data, uint32 buffer, uint32* size_read);
+    return_t read(void* data, size_t size, size_t* size_read);
 
 #if 0
     /**
@@ -261,9 +258,6 @@ class file_stream : public stream_t {
     byte_t* _file_data;
     uint32 _filesize_low;
     uint32 _filesize_high;
-    uint32 _filepos_low;
-    uint32 _filepos_high;
-    size_t _mapping_size;
 
 #if defined _WIN32 || defined _WIN64
     OVERLAPPED _win32_ov;

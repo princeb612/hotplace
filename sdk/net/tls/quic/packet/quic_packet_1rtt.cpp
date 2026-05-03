@@ -99,12 +99,10 @@ return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binar
         }
 
         auto& protection = session->get_tls_protection();
-        auto tagsize = protection.get_tag_size();
 
         binary_t bin_unprotected_header = std::move(header);
         binary_t bin_protected_header;
         uint8 pn_length = 0;
-        uint64 len = 0;
         binary_t bin_pn;
 
         // unprotected header
@@ -114,7 +112,7 @@ return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binar
 
             // packet number length + payload size + AEAD tag size
             pn_length = get_pn_length();
-            len = pn_length + get_payload().size() + tagsize;
+            // len = pn_length + get_payload().size() + tagsize;
 
             // packet number
             binary_load(bin_pn, pn_length, _pn, hton32);

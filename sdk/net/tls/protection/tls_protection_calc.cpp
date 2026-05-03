@@ -314,7 +314,6 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
 
                             uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
                             if (group_enforced) {
-                                auto hint = advisor->hintof_tls_group(group_enforced);
                                 // enforcing
                                 auto pkey_ch = get_key().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, group);
                                 if (nullptr == pkey_ch) {
@@ -516,8 +515,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
 
                 binary_t pre_master_secret;
                 {
-                    auto group = get_protection_context().get0_supported_group();
-                    auto hint_group = advisor->hintof_tls_group(group);
+                    // auto group = get_protection_context().get0_supported_group();
 
                     const EVP_PKEY *pkey_priv = nullptr;
                     const EVP_PKEY *pkey_pub = nullptr;
@@ -582,7 +580,6 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                      *                       [0..47];
                      */
                     binary_t seed;
-                    hash_context_t *hmac_handle = nullptr;
                     size_t size_master_secret = 48;
 
                     auto use_ems = session->get_keyvalue().get(session_extended_master_secret);
@@ -623,8 +620,8 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             if (istraceable(trace_category_net)) {
                 // CLIENT_RANDOM
                 trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
-                    std::string keylog_client_random = std::move(base16_encode(get_secrets().get(tls_context_client_hello_random)));
-                    std::string keylog_master_secret = std::move(base16_encode(master_secret));
+                    std::string keylog_client_random = base16_encode(get_secrets().get(tls_context_client_hello_random));
+                    std::string keylog_master_secret = base16_encode(master_secret);
                     dbs.printf(ANSI_ESCAPE "1;36m");
                     dbs.println("# CLIENT_RANDOM %s %s", keylog_client_random.c_str(), keylog_master_secret.c_str());
                     dbs.printf(ANSI_ESCAPE "0m");

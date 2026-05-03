@@ -24,8 +24,8 @@ return_t enum_modules_handler(uint32 type, uint32 count, void* data[], CALLBACK_
             _logger->writeln("module [%s]", entry->szExePath);
         } break;
         case enum_modules_t::enum_psapi: {
-            HMODULE module_handle = (HMODULE)data[0];
-            MODULEINFO* module_info = (MODULEINFO*)data[1];
+            // HMODULE module_handle = (HMODULE)data[0];
+            // MODULEINFO* module_info = (MODULEINFO*)data[1];
             // ...
         } break;
     }

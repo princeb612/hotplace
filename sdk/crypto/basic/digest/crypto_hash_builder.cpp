@@ -16,11 +16,7 @@ namespace crypto {
 
 crypto_hash_builder::crypto_hash_builder() : _alg(hash_alg_unknown) {}
 
-crypto_hash* crypto_hash_builder::build() {
-    crypto_hash* obj = nullptr;
-    __try_new_catch_only(obj, new crypto_hash(_alg));
-    return obj;
-}
+crypto_hash* crypto_hash_builder::build() { return new crypto_hash(_alg); }
 
 crypto_hash_builder& crypto_hash_builder::set(hash_algorithm_t alg) {
     _alg = alg;

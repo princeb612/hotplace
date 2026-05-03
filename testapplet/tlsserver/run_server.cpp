@@ -175,7 +175,6 @@ return_t echo_server(void*) {
 
 void run_server() {
     thread thread1(echo_server, nullptr);
-    return_t ret = errorcode_t::success;
 
     __try2 {
         _test_case.begin("tls server");

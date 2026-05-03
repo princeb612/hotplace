@@ -14,7 +14,7 @@ void test_rfc6070() {
     _test_case.begin("pbkdf2");
     const OPTION& option = _cmdline->value();
 
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     openssl_kdf kdf;
 
     // RFC 6070 PKCS #5: Password-Based Key Derivation Function 2 (PBKDF2) Test Vectors
@@ -38,7 +38,7 @@ void test_rfc6070() {
 
     binary_t result;
 
-    for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
+    for (size_t i = 0; i < RTL_NUMBER_OF(vector); i++) {
         binary_t password;
         password.insert(password.end(), vector[i].password, vector[i].password + vector[i].size_password);
         binary_t salt;

@@ -16,7 +16,7 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
     return_t ret = errorcode_t::success;
 
     __try2 {
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        // tls_advisor* tlsadvisor = tls_advisor::get_instance();
         tls_record_handshake record(session);
 
         ret = record

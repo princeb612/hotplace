@@ -32,7 +32,7 @@ void testcase_construct_1rtt() {
             "3d b6 29 03 24 ad 7d 9c 9d 00 8e 87 fe 08 57 3f"
             "7b 5d 0d 3f";
 
-        binary_t bin_ciphertext = std::move(base16_decode_rfc(ciphertext));
+        binary_t bin_ciphertext = base16_decode_rfc(ciphertext);
         quic_packets packets;
         ret = packets.read(&quicsession, dir, bin_ciphertext);
         auto pkt = packets[0];
@@ -55,7 +55,7 @@ void testcase_construct_1rtt() {
          *    > range length 5
          */
         constexpr char payload[] = "02 18 00 01 0A 00 05";
-        binary_t bin_payload = std::move(base16_decode_rfc(payload));
+        binary_t bin_payload = base16_decode_rfc(payload);
         binary_t bin_packet;
 
         quic_packet_1rtt packet(&quicsession);

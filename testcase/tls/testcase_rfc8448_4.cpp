@@ -22,7 +22,7 @@
 void testcase_rfc8448_4(tls_session* rfc8448_session) {
     _test_case.begin("RFC 8448 4.  Resumed 0-RTT Handshake");
     return_t ret = errorcode_t::success;
-    size_t pos = 0;
+    // size_t pos = 0;
     crypto_keychain keychain;
     auto& protection = rfc8448_session->get_tls_protection();
     binary_t bin;
@@ -75,7 +75,7 @@ void testcase_rfc8448_4(tls_session* rfc8448_session) {
             "3c f7 67 8e f5 e8 8d ae 99 01 41 c5 92 4d 57 bb 6f a3 1b 9e 5f"
             "9d";
         // verify PSK binder == finished
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         dump_record("client_hello", rfc8448_session, from_client, bin_record);
     }
     {
@@ -108,7 +108,7 @@ void testcase_rfc8448_4(tls_session* rfc8448_session) {
             "17 03 03 00 17 ab 1d f4 20 e7 5c 45"
             "7a 7c c5 d2 84 4f 76 d5 ae e4 b4 ed bf 04 9b e0";
         // application_data after CH (decryption)
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         dump_record("application_data", rfc8448_session, from_client, bin_record);
     }
     {
@@ -137,7 +137,7 @@ void testcase_rfc8448_4(tls_session* rfc8448_session) {
             "00 00 33 00 24 00 1d 00 20 12 17 61 ee 42 c3 33 e1 b9 e7 7b 60"
             "dd 57 c2 05 3c d9 45 12 ab 47 f1 15 e8 6e ff 50 94 2c ea 31 00"
             "2b 00 02 03 04";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         dump_record("server_hello", rfc8448_session, from_server, bin_record);
     }
     {
@@ -164,7 +164,7 @@ void testcase_rfc8448_4(tls_session* rfc8448_session) {
             "9c 1c 77 b4 f3 78 49 a6 95 ab 25 50 60 a3 3f ee 77 0c a9 5c b8"
             "48 6b fd 08 43 b8 70 24 86 5c a3 5c c4 1c 4e 51 5c 64 dc b1 36"
             "9f 98 63 5b c7 a5";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         dump_record("encrypted_extensions .. finished", rfc8448_session, from_server, bin_record);
     }
     {
@@ -186,7 +186,7 @@ void testcase_rfc8448_4(tls_session* rfc8448_session) {
         const char* record =
             "17 03 03 00 15 ac a6 fc 94 48 41 29"
             "8d f9 95 93 72 5f 9b f9 75 44 29 b1 2f 09";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         dump_record("end_of_early_data", rfc8448_session, from_client, bin_record);
     }
     {
@@ -202,7 +202,7 @@ void testcase_rfc8448_4(tls_session* rfc8448_session) {
             "2a 4b 3f 0b 6a e0 d8 e6 cc 8d 08 e0 db 35 15 ef 5c 2b df 19 22"
             "ea fb b7 00 09 96 47 16 d8 34 fb 70 c3 d2 a5 6c 5b 1f 5f 6b db"
             "a6 c3 33 cf";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         dump_record("finished", rfc8448_session, from_client, bin_record);
     }
     {
@@ -217,7 +217,7 @@ void testcase_rfc8448_4(tls_session* rfc8448_session) {
             "1b e9 ae 5e 1c b2 a9 aa 4b 33 d4 e8 66 af 1e db 06 89 19 23 77"
             "41 aa 03 1d 7a 74 d4 91 c9 9b 9d 4e 23 2b 74 20 6b c6 fb aa 04"
             "fe 78 be 44 a9 b4 f5 43 20 a1 7e b7 69 92 af ac 31 03";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         dump_record("application_data", rfc8448_session, from_client, bin_record);
     }
     {
@@ -227,7 +227,7 @@ void testcase_rfc8448_4(tls_session* rfc8448_session) {
             "bc 00 06 57 d3 86 7d f0 39 cc cf 79 04 78 84 cf 75 77 17 46 f7"
             "40 b5 a8 3f 46 2a 09 54 c3 58 13 93 a2 03 a2 5a 7d d1 41 41 ef"
             "1a 37 90 0c db 62 ff 62 de e1 ba 39 ab 25 90 cb f1 94";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         dump_record("application_data", rfc8448_session, from_server, bin_record);
     }
     {
@@ -235,7 +235,7 @@ void testcase_rfc8448_4(tls_session* rfc8448_session) {
         const char* record =
             "17 03 03 00 13 0f ac ce 32 46 bd fc"
             "63 69 83 8d 6a 82 ae 6d e5 d4 22 dc";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         dump_record("alert", rfc8448_session, from_client, bin_record);
     }
     {
@@ -243,7 +243,7 @@ void testcase_rfc8448_4(tls_session* rfc8448_session) {
         const char* record =
             "17 03 03 00 13 5b 18 af 44 4e 8e 1e"
             "ec 71 58 fb 62 d8 f2 57 7d 37 ba 5d";
-        binary_t bin_record = std::move(base16_decode_rfc(record));
+        binary_t bin_record = base16_decode_rfc(record);
         dump_record("alert", rfc8448_session, from_server, bin_record);
     }
 }

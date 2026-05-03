@@ -94,8 +94,8 @@ return_t der2rs(const binary_t& asn1der, uint16 unitsize, binary_t& r, binary_t&
         pl.read(asn1der.data(), asn1der.size());
 
         uint8 sequence = pl.t_value_of<uint8>(constexpr_sequence);
-        uint8 rlen = pl.t_value_of<uint8>(constexpr_rlen);
-        uint8 slen = pl.t_value_of<uint8>(constexpr_slen);
+        // uint8 rlen = pl.t_value_of<uint8>(constexpr_rlen);
+        // uint8 slen = pl.t_value_of<uint8>(constexpr_slen);
         if (0x30 != sequence) {
             ret = errorcode_t::bad_format;
             __leave2;

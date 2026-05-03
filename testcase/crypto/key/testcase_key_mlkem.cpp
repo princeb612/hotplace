@@ -18,8 +18,11 @@ void test_mlkem_keygen() {
     crypto_key key;
 
     ret = keychain.add_mlkem(&key, NID_ML_KEM_512, keydesc("ML-KEM-512"));
+    _test_case.test(ret, __FUNCTION__, "ML-KEM-512");
     ret = keychain.add_mlkem(&key, NID_ML_KEM_768, keydesc("ML-KEM-768"));
+    _test_case.test(ret, __FUNCTION__, "ML-KEM-768");
     ret = keychain.add_mlkem(&key, NID_ML_KEM_1024, keydesc("ML-KEM-1024"));
+    _test_case.test(ret, __FUNCTION__, "ML-KEM-1024");
 
     auto dump_crypto_key = [&](crypto_key_object *item, void *) -> void {
         auto kid = item->get_desc().get_kid_cstr();
@@ -80,7 +83,7 @@ void test_mlkem_keyuse_routine(tls_group_t group, const binary_t &share) {
 
 void test_mlkem_keyuse() {
     _test_case.begin("ML-KEM");
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     struct testvector {
         tls_group_t group;
         const char *client_share;
@@ -154,7 +157,7 @@ void test_mlkem_keyuse() {
             "786cc7c5a8a595e0166b16ad7faa72da90bd63978739865ca6c1078eb11d21d9c9cbbfa8a40c6ac917d54a4f04efa59f152b5d287189e0915d8aa6",
         },
     };
-    for (auto i = 0; i < RTL_NUMBER_OF(tv); i++) {
+    for (size_t i = 0; i < RTL_NUMBER_OF(tv); i++) {
         auto item = tv + i;
         auto share = base16_decode(item->client_share);
         test_mlkem_keyuse_routine(item->group, share);

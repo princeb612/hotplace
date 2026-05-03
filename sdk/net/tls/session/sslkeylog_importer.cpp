@@ -46,7 +46,7 @@ void sslkeylog_importer::load() {
                 // TLS 1.2
                 {"CLIENT_RANDOM", tls_secret_master},
             };
-            for (auto i = 0; i < RTL_NUMBER_OF(resources); i++) {
+            for (size_t i = 0; i < RTL_NUMBER_OF(resources); i++) {
                 const sslkeylog_item* item = resources + i;
                 _table.insert({item->name, item->secret});
                 _rtable.insert({item->secret, item->name});
@@ -126,7 +126,7 @@ void sslkeylog_importer::session_status_changed(tls_session* session, uint32 sta
             secrets.assign(secret, value);
 
 #if defined DEBUG
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            // tls_advisor* tlsadvisor = tls_advisor::get_instance();
             if (istraceable(trace_category_net)) {
                 trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                     auto& name = _instance._rtable[secret];

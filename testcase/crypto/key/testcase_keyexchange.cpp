@@ -55,7 +55,7 @@ void test_keyexchange_ecdhe(tls_group_t group) {
                 dbs << "bob   " << base16_encode(sharedsecret_bob) << "\n";
             });
         }
-        bool test = false;
+        // bool test = false;
         if (success == ret) {
             ret = (sharedsecret_alice == sharedsecret_bob) ? ret : mismatch;
         }

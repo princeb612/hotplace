@@ -73,6 +73,7 @@ class cose_recipient {
     cose_recipient& set_property(uint16 property);
     uint16 get_property();
 
+    bool exist(int key, int scope = cose_scope_layer);
     return_t finditem(int key, int& value, int scope = cose_scope_layer);
     return_t finditem(int key, std::string& value, int scope = cose_scope_layer);
     return_t finditem(int key, binary_t& value, int scope = cose_scope_layer);
@@ -95,6 +96,12 @@ class cose_recipient {
     return_t parse_singleitem(cbor_object* object);
 
    private:
+    cose_recipient* _upperlayer;
+    uint16 _depth;
+    uint16 _property;
+    cose_composer* _composer;
+    cbor_tag_t _cbor_tag;
+
     cose_protected _protected;
     cose_unprotected _unprotected;
     cose_binary _payload;
@@ -103,12 +110,6 @@ class cose_recipient {
     cose_countersigns* _countersigns;
     crypto_key _static_key;
     cose_data _params;
-
-    cose_recipient* _upperlayer;
-    uint16 _depth;
-    uint16 _property;
-    cose_composer* _composer;
-    cbor_tag_t _cbor_tag;
 };
 
 }  // namespace crypto

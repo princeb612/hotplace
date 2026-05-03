@@ -245,7 +245,7 @@ return_t oauth2_credentials::grant(std::string& access_token, std::string& refre
             }
         }
 
-        __try_new_catch(token, new access_token_t(client_id, atoken, rtoken, expire), ret, __leave2);  // refcounter = 1
+        token = new access_token_t(client_id, atoken, rtoken, expire);  // refcounter = 1
 
         auto lambda_access = [](access_token_t* object) -> void {};
         auto lambda_addref = [](access_token_t* object) -> void { object->addref(); };

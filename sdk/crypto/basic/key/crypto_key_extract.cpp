@@ -19,8 +19,6 @@ namespace crypto {
 
 return_t crypto_key::extract(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool preserve) {
     return_t ret = errorcode_t::success;
-    int ret_openssl = 1;
-
     __try2 {
         datamap.clear();
 
@@ -56,6 +54,8 @@ return_t crypto_key::extract(const EVP_PKEY* pkey, int flags, crypto_kty_t& type
             case crypto_kty_t::kty_mldsa:
                 ret = extract_mldsa(pkey, flags, type, datamap, false);
                 break;
+            default:
+                break;
         }
     }
     __finally2 {}
@@ -64,7 +64,7 @@ return_t crypto_key::extract(const EVP_PKEY* pkey, int flags, crypto_kty_t& type
 
 return_t crypto_key::extract_oct(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero) {
     return_t ret = errorcode_t::success;
-    int ret_openssl = 1;
+
     __try2 {
         datamap.clear();
 
@@ -96,7 +96,7 @@ return_t crypto_key::extract_oct(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
 
 return_t crypto_key::extract_rsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero) {
     return_t ret = errorcode_t::success;
-    int ret_openssl = 1;
+
     __try2 {
         datamap.clear();
 
@@ -321,7 +321,7 @@ return_t crypto_key::extract_okp(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
 
 return_t crypto_key::extract_dh(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero) {
     return_t ret = errorcode_t::success;
-    int ret_openssl = 1;
+
     __try2 {
         datamap.clear();
 
@@ -400,7 +400,6 @@ return_t crypto_key::extract_dh(const EVP_PKEY* pkey, int flags, crypto_kty_t& t
 
 return_t crypto_key::extract_dsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero) {
     return_t ret = errorcode_t::success;
-    int ret_openssl = 1;
     __try2 {
         datamap.clear();
 
@@ -472,7 +471,7 @@ return_t crypto_key::extract_dsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
 
 return_t crypto_key::extract_mlkem(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero) {
     return_t ret = errorcode_t::success;
-    int ret_openssl = 1;
+
     __try2 {
         datamap.clear();
 
@@ -513,7 +512,7 @@ return_t crypto_key::extract_mlkem(const EVP_PKEY* pkey, int flags, crypto_kty_t
 
 return_t crypto_key::extract_mldsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero) {
     return_t ret = errorcode_t::success;
-    int ret_openssl = 1;
+
     __try2 {
         datamap.clear();
 

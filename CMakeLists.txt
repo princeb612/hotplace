@@ -14,7 +14,7 @@ cmake_minimum_required (VERSION 2.8)
 project (hotplace)
 
 # set (CMAKE_BUILD_TYPE Release)
-set (CMAKE_VERBOSE_MAKEFILE OFF)
+set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
 set (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
@@ -71,6 +71,7 @@ if (NOT "$ENV{SET_STDCPP}" STREQUAL "")
 endif ()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
     if (SUPPORT_DEBUG)
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g")
     endif ()

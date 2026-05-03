@@ -12,7 +12,7 @@
 
 void test_key_dsa() {
     _test_case.begin("DSA");
-    return_t ret = success;
+    // return_t ret = success;
     crypto_key key;
 
     const char* p =
@@ -32,7 +32,7 @@ void test_key_dsa() {
     keychain.add_dsa_b16(&key, nid_dsa, y, x, p, q, g, keydesc("DSA private"));
     keychain.add_dsa_b16(&key, nid_dsa, y, nullptr, p, q, g, keydesc("DSA public"));
 
-    auto pkey_genkey = key.find("genkey");
+    // auto pkey_genkey = key.find("genkey");
     auto pkey_dsa_priv = key.find("DSA private");
 
     auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {

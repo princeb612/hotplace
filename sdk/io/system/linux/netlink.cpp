@@ -54,7 +54,6 @@ netlink::~netlink() {}
 
 return_t netlink::open(netlink_t **handle, uint32 flags, TYPE_CALLBACK_HANDLER consumer_handler, void *parameter) {
     return_t ret = errorcode_t::success;
-    NETLINK_CONTEXT *context = NULL;
 
     __try2 {
         if (NULL == handle || NULL == consumer_handler) {
@@ -62,7 +61,7 @@ return_t netlink::open(netlink_t **handle, uint32 flags, TYPE_CALLBACK_HANDLER c
             __leave2_trace(ret);
         }
 
-        __try_new_catch(context, new NETLINK_CONTEXT, ret, __leave2);
+        auto context = make_unique<NETLINK_CONTEXT>();
 
         context->flags = flags;
         context->consumer_handler = consumer_handler;
@@ -78,8 +77,8 @@ return_t netlink::open(netlink_t **handle, uint32 flags, TYPE_CALLBACK_HANDLER c
         }
         context->sock = sock;
 
-        context->producer.set(1, producer_thread_routine, producer_thread_signal, context);
-        context->consumer.set(1, consumer_thread_routine, consumer_thread_signal, context);
+        context->producer.set(1, producer_thread_routine, producer_thread_signal, context.get());
+        context->consumer.set(1, consumer_thread_routine, consumer_thread_signal, context.get());
         context->producer.create();
         context->consumer.create();
 
@@ -88,15 +87,11 @@ return_t netlink::open(netlink_t **handle, uint32 flags, TYPE_CALLBACK_HANDLER c
             __leave2_trace(ret);
         }
 
-        *handle = context;
+        *handle = context.get();
+
+        context.release();
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            if (context) {
-                delete context;
-            }
-        }
-    }
+    __finally2 {}
 
     return ret;
 }

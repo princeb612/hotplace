@@ -18,7 +18,6 @@ void do_test_dump_routine(const byte_t* dump_address, size_t dump_size, unsigned
 
 void test_dumpmemory() {
     _test_case.begin("dump_memory");
-    return_t ret = errorcode_t::success;
     ansi_string bs;
     const char* text = "still a man hears what he wants to hear and disregards the rest";  // the boxer - Simon & Garfunkel
 
@@ -31,7 +30,7 @@ void test_dumpmemory() {
     _logger->hdump("dump", str, 16, 3);
     _test_case.assert(true, __FUNCTION__, "string");
 
-    binary_t bin = std::move(str2bin(str));
+    binary_t bin = str2bin(str);
     _logger->hdump("dump", bin, 16, 3);
     _test_case.assert(true, __FUNCTION__, "binary_t");
 

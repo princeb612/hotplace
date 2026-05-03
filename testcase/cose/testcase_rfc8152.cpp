@@ -17,7 +17,7 @@ crypto_key rfc8152_privkeys_c4;
 
 return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys, cbor_object* root, const char* expect_file, const char* text, bool dountag = true) {
     return_t ret = errorcode_t::success;
-    return_t test = errorcode_t::success;
+    // return_t test = errorcode_t::success;
     const OPTION& option = _cmdline->value();
 
     __try2 {
@@ -54,7 +54,7 @@ return_t do_test_cose_example(cose_context_t* cose_handle, crypto_key* cose_keys
 
                 cbor_reader reader;
                 cbor_reader_context_t* handle = nullptr;
-                cbor_object* newone = nullptr;
+                // cbor_object* newone = nullptr;
 
                 reader.open(&handle);
                 reader.parse(handle, expect);
@@ -942,7 +942,7 @@ void test_jose_from_cwk() {
 
     // dump keys JWK formatted
     json_web_key jwk;
-    size_t size = 0;
+    // size_t size = 0;
     basic_stream json;
     jwk.write(&privkey, &json, 1);
     if (option.verbose) {
@@ -961,14 +961,14 @@ void test_jose_from_cwk() {
     const EVP_PKEY* pkey = nullptr;
     std::string kid;
     pkey = privkey.select(kid, crypt_sig_t::sig_es512);
-    _test_case.assert(kid == "bilbo.baggins@hobbiton.example", __FUNCTION__, "select key from CWK where type is es512");
+    _test_case.assert(pkey && (kid == "bilbo.baggins@hobbiton.example"), __FUNCTION__, "select key from CWK where type is es512");
     pkey = privkey.select(kid, crypt_sig_t::sig_es256);
-    _test_case.assert(kid == "11", __FUNCTION__, "select key from CWK where type is es256");  // alphabetic order...
+    _test_case.assert(pkey && (kid == "11"), __FUNCTION__, "select key from CWK where type is es256");  // alphabetic order...
 
     _test_case.reset_time();
 
     return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
+    // crypto_advisor* advisor = crypto_advisor::get_instance();
 
     cbor_object_signing_encryption cose;
     cose_context_t* handle = nullptr;

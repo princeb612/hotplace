@@ -610,7 +610,6 @@ return_t variant::to_binary(binary_t &target, uint32 flags) const {
         target.clear();
     }
 
-    byte_t *p = nullptr;
     switch (_vt.type) {
         case TYPE_INT8:
         case TYPE_UINT8:

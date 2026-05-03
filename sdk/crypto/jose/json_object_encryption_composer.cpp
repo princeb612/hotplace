@@ -804,7 +804,7 @@ return_t json_object_encryption::composer::doparse_decryption_recipient(jose_con
         if (protected_header) {
             // protected can be nullptr
             // see RFC 7520 5.12.  Protecting Content Only
-            std::string protected_header_decoded = std::move(base64_decode_careful(protected_header, strlen(protected_header), encoding_t::encoding_base64url));
+            std::string protected_header_decoded = base64_decode_careful(protected_header, strlen(protected_header), encoding_t::encoding_base64url);
             ret_test = json_open_stream(&json_protected, protected_header_decoded.c_str(), true);
             if (errorcode_t::success != ret_test) {
                 ret = errorcode_t::bad_data;

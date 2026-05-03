@@ -91,7 +91,6 @@ typedef struct _openssl_crypt_context_t : public crypt_context_t {
 return_t openssl_crypt::open(crypt_context_t **handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char *key, size_t size_key, const unsigned char *iv,
                              size_t size_iv) {
     return_t ret = errorcode_t::success;
-    openssl_crypt_context_t *context = nullptr;
     int ret_init = 0;
     binary_t temp_key;
     binary_t temp_iv;
@@ -109,7 +108,7 @@ return_t openssl_crypt::open(crypt_context_t **handle, crypt_algorithm_t algorit
             __leave2;
         }
 
-        __try_new_catch(context, new openssl_crypt_context_t, ret, __leave2);
+        auto context = make_unique<openssl_crypt_context_t>();
 
         uint32 internal_size_key = 0;
         uint32 internal_size_iv = 0;
@@ -172,20 +171,13 @@ return_t openssl_crypt::open(crypt_context_t **handle, crypt_algorithm_t algorit
         EVP_CIPHER_CTX_set_padding(context->encrypt_context, 1);
         EVP_CIPHER_CTX_set_padding(context->decrypt_context, 1);
 
-        *handle = context;
+        *handle = context.get();
+
+        context.release();
     }
     __finally2 {
         std::fill(temp_key.begin(), temp_key.end(), 0);
         std::fill(temp_iv.begin(), temp_iv.end(), 0);
-
-        if (errorcode_t::success != ret) {
-            if (nullptr != context) {
-                EVP_CIPHER_CTX_cleanup(context->encrypt_context);
-                EVP_CIPHER_CTX_cleanup(context->decrypt_context);
-                context->signature = 0;
-                delete context;
-            }
-        }
     }
 
     return ret;
@@ -451,6 +443,8 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
                     break;
                 }
             } break;
+            default:
+                break;
         }
 
         if (errorcode_t::success != ret) {
@@ -502,7 +496,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
         int ret_cipher = 0;
         int size_update = 0;
         int size_final = 0;
-        int tag_size = 0;
+        size_t tag_size = 0;
         binary_t &iv = context->datamap[crypt_item_t::item_iv];
 
         EVP_CipherInit(context->decrypt_context, nullptr, nullptr, iv.data(), 0);
@@ -521,7 +515,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
                     ret = errorcode_t::error_verify;
                     break;
                 }
-                EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_AEAD_SET_TAG, tag_size, (void *)(*tag).data());
+                EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_AEAD_SET_TAG, t_narrow_cast(tag_size), (void *)(*tag).data());
 
                 uint16 iv_size = 0;
                 uint16 nonce_size = 0;
@@ -567,6 +561,8 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
             case crypt_mode_t::ccm:
             case crypt_mode_t::wrap:
                 cooltime = 0;
+                break;
+            default:
                 break;
         }
 

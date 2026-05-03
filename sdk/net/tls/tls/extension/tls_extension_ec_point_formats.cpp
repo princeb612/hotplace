@@ -41,9 +41,6 @@ return_t tls_extension_ec_point_formats::do_postprocess(tls_direction_t dir) {
 return_t tls_extension_ec_point_formats::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_handshake()->get_session();
-        auto& protection = session->get_tls_protection();
-
         // RFC 8422 5.1.2.  Supported Point Formats Extension
         // enum {
         //     uncompressed (0),
@@ -95,9 +92,6 @@ return_t tls_extension_ec_point_formats::do_read_body(tls_direction_t dir, const
 return_t tls_extension_ec_point_formats::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_handshake()->get_session();
-        auto& protection = session->get_tls_protection();
-
         uint8 cbsize_formats = 0;
         binary_t bin_formats;
         {

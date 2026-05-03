@@ -71,7 +71,7 @@ return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const b
         const byte_t* stream = bin.data();
         size_t size = bin.size();
         size_t pos = 0;
-        auto ret = read(session, dir, stream, size, pos);
+        ret = read(session, dir, stream, size, pos);
     }
     __finally2 {}
     return ret;
@@ -83,11 +83,6 @@ return_t tls_handshakes::write(tls_session* session, tls_direction_t dir, binary
         if (nullptr == session) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
-        }
-
-        bool control_seq = false;
-        if (session_type_dtls == session->get_type()) {
-            control_seq = true;
         }
 
         auto lambda = [&](tls_handshake* handshake) -> return_t { return handshake->write(dir, bin); };

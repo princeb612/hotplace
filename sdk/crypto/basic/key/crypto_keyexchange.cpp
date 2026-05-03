@@ -112,7 +112,7 @@ return_t crypto_keyexchange::keygen(tls_group_t group, crypto_key* key, const ch
         }
 
         auto nid = hint->first.nid;
-        auto kty = hint->first.kty;
+        // auto kty = hint->first.kty;
 
         auto pkey = key->find_nid(kid, nid);
         if (pkey) {
@@ -161,7 +161,7 @@ return_t crypto_keyexchange::keyshare(tls_group_t group, crypto_key* key, const 
         }
 
         auto nid = hint->first.nid;
-        auto kty = hint->first.kty;
+        // auto kty = hint->first.kty;
 
         // keygen
         crypto_keychain keychain;
@@ -385,6 +385,8 @@ return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, bi
             case kty_ec: {
                 ret = keychain.add(&ephemeral, first.nid, keydesc(epkid));  // hybrid
             } break;
+            default:
+                break;
         }
         if (errorcode_t::success != ret) {
             __leave2;
@@ -557,6 +559,8 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
                 case tls_group_x25519mlkem768: {
                     binary_append(ss, hybrid_ss);
                 } break;
+                default:
+                    break;
             }
         }
 

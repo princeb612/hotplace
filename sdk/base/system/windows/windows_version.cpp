@@ -33,7 +33,7 @@ const OSVERSIONINFOEXA* windows_version::get_osvi() {
 
 return_t windows_version::detect() {
     return_t ret = errorcode_t::success;
-    BOOL bret = TRUE;
+    // BOOL bret = TRUE;
 
     __try2 {
         if (windows_version_flag_t::winver_detected & _flags) {

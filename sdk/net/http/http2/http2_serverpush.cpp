@@ -201,7 +201,7 @@ return_t http2_serverpush::do_push(const std::string &promise, uint32 streamid, 
         }
 
         auto &htmldocs = server->get_http_router().get_html_documents();
-        auto &reqheader = request->get_http_header();
+        // auto &reqheader = request->get_http_header();
         auto &hpsess = session->get_http2_session()->get_hpack_dyntable();
 
         std::string content_type;

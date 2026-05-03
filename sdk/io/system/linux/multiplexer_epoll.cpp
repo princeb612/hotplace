@@ -45,14 +45,13 @@ multiplexer_epoll::~multiplexer_epoll() {}
 
 return_t multiplexer_epoll::open(multiplexer_context_t** handle, size_t concurrent) {
     return_t ret = errorcode_t::success;
-    multiplexer_epoll_context_t* context = nullptr;
     handle_t epollfd = -1;
     struct epoll_event* events = nullptr;
     multiplexer_controller_context_t* handle_controller = nullptr;
     multiplexer_controller controller;
 
     __try2 {
-        __try_new_catch(context, new multiplexer_epoll_context_t, ret, __leave2);
+        auto context = make_unique<multiplexer_epoll_context_t>();
 
         ret = controller.open(&handle_controller);
         if (errorcode_t::success != ret) {
@@ -77,8 +76,9 @@ return_t multiplexer_epoll::open(multiplexer_context_t** handle, size_t concurre
         context->concurrent = concurrent;
         context->handle_controller = handle_controller;
 
-        *handle = context;
+        *handle = context.get();
 
+        context.release();
 #if defined DEBUG
         if (istraceable(trace_category_internal)) {
             trace_debug_event(trace_category_internal, trace_event_multiplexer, [&](basic_stream& dbs) -> void { dbs.println("epoll handle %i created", epollfd); });
@@ -92,9 +92,6 @@ return_t multiplexer_epoll::open(multiplexer_context_t** handle, size_t concurre
             }
             if (-1 != epollfd) {
                 ::close(epollfd);
-            }
-            if (nullptr != context) {
-                delete context;
             }
         }
     }

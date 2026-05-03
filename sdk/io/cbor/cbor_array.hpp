@@ -65,13 +65,20 @@ class cbor_array : public cbor_object {
      */
 
     template <typename T>
-    cbor_array& add(std::function<void(T*)> f, uint32 flags = 0);
+    cbor_array& add(std::function<void(T*)> func, uint32 flags = 0) {
+        if (func) {
+            auto obj = new T(flags);
+            func(obj);
+            *this << obj;
+        }
+        return *this;
+    }
 
-    cbor_array& add(std::function<void(cbor_array*)> f, uint32 flags = 0);
-    cbor_array& add(std::function<void(cbor_map*)> f, uint32 flags = 0);
+    cbor_array& add(std::function<void(cbor_array*)> func, uint32 flags = 0);
+    cbor_array& add(std::function<void(cbor_map*)> func, uint32 flags = 0);
 
-    cbor_array& operator<<(cbor_array* object);
     cbor_array& operator<<(cbor_data* object);
+    cbor_array& operator<<(cbor_array* object);
     cbor_array& operator<<(cbor_map* object);
 
     virtual size_t size();

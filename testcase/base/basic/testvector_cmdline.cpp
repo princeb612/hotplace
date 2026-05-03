@@ -60,7 +60,7 @@ void do_test_cmdline_template_myoption(bool expect, int argc, char** argv) {
 void test_yaml_testvector_cmdline() {
     _test_case.begin("commandline YAML");
 
-    auto lambda_test_cmdline_myoption = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_cmdline = [&](const YAML::Node& items) -> void {
         for (const auto& item : items) {
             valist va;
             auto args = item["args"];
@@ -103,7 +103,7 @@ void test_yaml_testvector_cmdline() {
 
             if (schema == "CMDLINE") {
                 if (templ == "myoption") {
-                    lambda_test_cmdline_myoption(items);
+                    lambda_yaml_cmdline(items);
                 } else {
                     _test_case.test(not_supported, __FUNCTION__, "unknown template");
                 }

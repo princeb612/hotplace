@@ -58,7 +58,7 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
         binary_t connection_id;
         uint16 sequence = 0;
         uint8 sequence_len = 0;
-        size_t offset_sequence = 0;
+        // size_t offset_sequence = 0;
         uint16 len = 0;
         binary_t encdata;
         size_t offset_encdata = 0;
@@ -98,12 +98,12 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
             if (pl.get_group_condition(constexpr_group_s16)) {
                 sequence = pl.t_value_of<uint16>(constexpr_sequence16);
                 sequence_len = 2;
-                offset_sequence = pl.offset_of(constexpr_group_s16);
+                // offset_sequence = pl.offset_of(constexpr_group_s16);
             }
             if (pl.get_group_condition(constexpr_group_s8)) {
                 sequence = pl.t_value_of<uint16>(constexpr_sequence8);
                 sequence_len = 1;
-                offset_sequence = pl.offset_of(constexpr_group_s8);
+                // offset_sequence = pl.offset_of(constexpr_group_s8);
             }
             if (pl.get_group_condition(constexpr_group_l)) {
                 len = pl.t_value_of<uint16>(constexpr_len);

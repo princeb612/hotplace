@@ -58,6 +58,8 @@ int main(int argc, char** argv) {
     testcase_payload();
     testcase_payload_quic();
 
+    testcase_filestream();
+
     testcase_mlfq();
     if (option.flag_netlink) {
         testcase_netlink();

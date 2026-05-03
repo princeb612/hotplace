@@ -89,6 +89,35 @@ cose_recipient& cose_recipient::add(cose_recipient* recipient) {
     return _recipients.add(object);
 }
 
+bool cose_recipient::exist(int key, int scope) {
+    bool ret = false;
+    __try2 {
+        if (cose_scope::cose_scope_unsent & scope) {
+            ret = get_composer()->get_unsent().data().exist(key);
+            if (ret) {
+                __leave2;
+            }
+        }
+        if (cose_scope::cose_scope_protected & scope) {
+            ret = get_protected().data().exist(key);
+            if (ret) {
+                __leave2;
+            }
+        }
+        if (cose_scope::cose_scope_unprotected & scope) {
+            ret = get_unprotected().data().exist(key);
+            if (ret) {
+                __leave2;
+            }
+        }
+        if (cose_scope::cose_scope_children & scope) {
+            ret = get_recipients().exist(key, scope);
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
 return_t cose_recipient::finditem(int key, int& value, int scope) {
     return_t ret = errorcode_t::not_found;
     __try2 {
@@ -225,8 +254,8 @@ return_t cose_recipient::getparam(cose_param_t id, binary_t& bin) {
 
 return_t cose_recipient::parse(cbor_array* root) {
     return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-    cbor_tag_t cbor_tag = cbor_tag_t::cbor_tag_unknown;
+    // crypto_advisor* advisor = crypto_advisor::get_instance();
+    // cbor_tag_t cbor_tag = cbor_tag_t::cbor_tag_unknown;
 
     __try2 {
         clear();
@@ -288,7 +317,7 @@ return_t cose_recipient::parse_header(cbor_array* root) {
 
 return_t cose_recipient::parse_message(cbor_array* root) {
     return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
+    // crypto_advisor* advisor = crypto_advisor::get_instance();
     size_t i = 0;
 
     __try2 {

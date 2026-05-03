@@ -17,7 +17,7 @@
 
 void test_h2() {
     _test_case.begin("HTTP/2 Header Compression");
-    const OPTION& option = _cmdline->value();
+    // const OPTION& option = _cmdline->value();
 
     // [test vector] chrome generated header
 
@@ -49,7 +49,7 @@ void test_h2() {
 
         sess->dump("dynamic table", dump_hpack_session_routine);
 
-        for (auto i = 0; i < size_tv; i++) {
+        for (size_t i = 0; i < size_tv; i++) {
             auto& item = tv[i];
             const auto& key = kv[item.key];
             _test_case.assert(key == item.value, __FUNCTION__, "%s (%s: %s)", text, item.key, key.c_str());

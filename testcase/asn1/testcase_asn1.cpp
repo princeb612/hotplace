@@ -23,10 +23,10 @@ void test_x690_8_1_3_length_octets() {
 
     binary_t bin;
 
-    auto encode_length_octet_routine = [&](const testvector& entry, binary_t& bin) -> void { t_asn1_length_octets<uint32>(bin, entry.i); };
+    auto lambda_encode_length_octet = [&](const testvector& entry, binary_t& bin) -> void { t_asn1_length_octets<uint32>(bin, entry.i); };
 
     for (auto entry : _table) {
-        encode_length_octet_routine(entry, bin);
+        lambda_encode_length_octet(entry, bin);
 
         {
             test_case_notimecheck notimecheck(_test_case);
@@ -230,7 +230,7 @@ void test_x690_encoding_value() {
 
             _logger->writeln("%s", base16_encode(bin).c_str());
 
-            binary_t bin_expect = std::move(base16_decode_rfc(entry.expect));
+            binary_t bin_expect = base16_decode_rfc(entry.expect);
             return_t ret = errorcode_t::success;
             if (bin_expect.empty()) {
                 ret = errorcode_t::not_supported;
@@ -396,9 +396,9 @@ void test_x690_8_9_sequence() {
 
     // SEQUENCE {name IA5String , ok BOOLEAN }
     {
-        constexpr char type[] = R"(SEQUENCE {name IA5String, ok BOOLEAN})";
-        constexpr char value[] = R"({name "Smith", ok TRUE})";
-        constexpr char expect[] = "300a1605536d6974680101ff";
+        // constexpr char type[] = R"(SEQUENCE {name IA5String, ok BOOLEAN})";
+        // constexpr char value[] = R"({name "Smith", ok TRUE})";
+        // constexpr char expect[] = "300a1605536d6974680101ff";
 
         auto seq = new asn1_sequence;
         *seq << new asn1_object("name", asn1_type_ia5string) << new asn1_object("ok", asn1_type_boolean);

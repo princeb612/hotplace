@@ -151,7 +151,7 @@ return_t openssl_mac::cbc_mac(const char* alg, const binary_t& key, const binary
         uint16 blocksize = sizeof_block(hint_cipher);
         for (size_t i = 0; i < size_input; i += blocksize) {
             auto remain = size_input - i;
-            auto size = (remain < blocksize) ? remain : blocksize;
+            // auto size = (remain < blocksize) ? remain : blocksize;
             if (remain > blocksize) {
                 EVP_CipherUpdate(context.get(), tag.data(), &size_update, &input[i], blocksize);
             } else {

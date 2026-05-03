@@ -22,73 +22,61 @@ namespace hotplace {
 namespace io {
 
 cbor_pair::cbor_pair(const bignumber& value, cbor_data* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
-    return_t ret = errorcode_t::success;
-
     __try2 {
         if (nullptr == object) {
             throw exception(errorcode_t::not_specified);
         }
-        __try_new_catch(_lhs, new cbor_data(value), ret, __leave2);
+        _lhs = new cbor_data(value);
     }
     __finally2 {}
 }
 
 cbor_pair::cbor_pair(const bignumber& value, cbor_map* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
-    return_t ret = errorcode_t::success;
-
     __try2 {
         if (nullptr == object) {
             throw exception(errorcode_t::not_specified);
         }
-        __try_new_catch(_lhs, new cbor_data(value), ret, __leave2);
+        _lhs = new cbor_data(value);
     }
     __finally2 {}
 }
 
 cbor_pair::cbor_pair(const bignumber& value, cbor_array* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
-    return_t ret = errorcode_t::success;
-
     __try2 {
         if (nullptr == object) {
             throw exception(errorcode_t::not_specified);
         }
-        __try_new_catch(_lhs, new cbor_data(value), ret, __leave2);
+        _lhs = new cbor_data(value);
     }
     __finally2 {}
 }
 
 cbor_pair::cbor_pair(const char* key, cbor_data* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
-    return_t ret = errorcode_t::success;
-
     __try2 {
         if (nullptr == object) {
             throw exception(errorcode_t::not_specified);
         }
-        __try_new_catch(_lhs, new cbor_data(key), ret, __leave2);
+        _lhs = new cbor_data(key);
     }
     __finally2 {}
 }
 
 cbor_pair::cbor_pair(const char* key, cbor_map* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
-    return_t ret = errorcode_t::success;
-
     __try2 {
         if (nullptr == object) {
             throw exception(errorcode_t::not_specified);
         }
-        __try_new_catch(_lhs, new cbor_data(key), ret, __leave2);
+        _lhs = new cbor_data(key);
     }
     __finally2 {}
 }
 
 cbor_pair::cbor_pair(const char* key, cbor_array* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
-    return_t ret = errorcode_t::success;
-
     __try2 {
         if (nullptr == object) {
             throw exception(errorcode_t::not_specified);
         }
-        __try_new_catch(_lhs, new cbor_data(key), ret, __leave2);
+        _lhs = new cbor_data(key);
     }
     __finally2 {}
 }

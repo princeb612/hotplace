@@ -92,7 +92,7 @@ tls_extension_compress_certificate& tls_extension_compress_certificate::add(uint
 }
 
 tls_extension_compress_certificate& tls_extension_compress_certificate::add(const std::string& name) {
-    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    // tls_advisor* tlsadvisor = tls_advisor::get_instance();
     return *this;
 }
 

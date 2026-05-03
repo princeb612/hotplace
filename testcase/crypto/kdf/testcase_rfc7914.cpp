@@ -15,7 +15,7 @@ void test_kdf_pbkdf2_rfc7914() {
     _test_case.begin("pbkdf2");
     const OPTION& option = _cmdline->value();
 
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     openssl_kdf kdf;
 
     struct {
@@ -43,7 +43,7 @@ void test_kdf_pbkdf2_rfc7914() {
 
     binary_t result;
 
-    for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
+    for (size_t i = 0; i < RTL_NUMBER_OF(vector); i++) {
         kdf.pbkdf2(result, hash_algorithm_t::sha2_256, vector[i].dlen, vector[i].password, str2bin(vector[i].salt), vector[i].c);
 
         if (option.verbose) {
@@ -115,7 +115,7 @@ void test_kdf_scrypt_rfc7914() {
 
         binary_t result;
 
-        for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
+        for (size_t i = 0; i < RTL_NUMBER_OF(vector); i++) {
             ret = kdf.scrypt(result, vector[i].dlen, vector[i].password, str2bin(vector[i].salt), vector[i].n, vector[i].r, vector[i].p);
             if (errorcode_t::success == ret) {
                 if (option.verbose) {

@@ -97,7 +97,7 @@ void test_rfc9204_b1() {
 #else
         ret = enc.unpack(&dyntable, bin.data(), bin.size(), pos, item);
 #endif
-        _test_case.assert((0 == item.ric) && (0 == item.base), __FUNCTION__, "%s #field section prefix", text1);
+        _test_case.assert((success == ret) && (0 == item.ric) && (0 == item.base), __FUNCTION__, "%s #field section prefix", text1);
 
         std::string name;
         std::string value;
@@ -112,10 +112,10 @@ void test_rfc9204_b1() {
 void test_rfc9204_b2_encoder_stream(const char* text2, binary_t& bin, qpack_dynamic_table& dyntable) {
     bin.clear();
 
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     qpack_encoder enc;
     uint32 flags = 0;
-    size_t pos = 0;
+    // size_t pos = 0;
     http_compression_decode_t item;
 
     /**
@@ -164,10 +164,10 @@ void test_rfc9204_b2_encoder_stream(const char* text2, binary_t& bin, qpack_dyna
 void test_rfc9204_b2_header_stream(const char* text2, binary_t& bin, qpack_dynamic_table& dyntable) {
     bin.clear();
 
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     qpack_encoder enc;
     uint32 flags = 0;
-    size_t pos = 0;
+    // size_t pos = 0;
     http_compression_decode_t item;
 
     /**
@@ -205,7 +205,7 @@ void test_rfc9204_b2_header_stream(const char* text2, binary_t& bin, qpack_dynam
 }
 
 void test_rfc9204_b2(const char* text2, const binary_t& encoderstream, const binary_t& headerstream, binary_t& decoderstream, qpack_dynamic_table& dyntable) {
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     qpack_encoder enc;
     uint32 flags = 0;
     size_t pos = 0;
@@ -268,6 +268,7 @@ void test_rfc9204_b2_decoder_stream(const char* text2, binary_t& bin, qpack_dyna
     std::list<http_compression_decode_t> kv;
     pos = 0;
     ret = enc.decode(&dyntable, bin.data(), bin.size(), pos, kv, flags);
+    _test_case.test(ret, __FUNCTION__, "decode");
 
     dyntable.dump("RFC 9204 B.2. Stream: Decoder", dump_qpack_session_routine);
 
@@ -280,7 +281,7 @@ void test_rfc9204_b3_encoder_stream(const char* text3, binary_t& bin, qpack_dyna
     return_t ret = errorcode_t::success;
     qpack_encoder enc;
     uint32 flags = 0;
-    size_t pos = 0;
+    // size_t pos = 0;
     http_compression_decode_t item;
 
     /**
@@ -300,6 +301,7 @@ void test_rfc9204_b3_encoder_stream(const char* text3, binary_t& bin, qpack_dyna
     {
         flags = qpack_intermediary;
         ret = enc.insert(&dyntable, bin, "custom-key", "custom-value", flags);  // abs 2
+        _test_case.test(ret, __FUNCTION__, "insert");
     }
 
     {
@@ -316,7 +318,7 @@ void test_rfc9204_b3_encoder_stream(const char* text3, binary_t& bin, qpack_dyna
 void test_rfc9204_b3(const char* text3, const binary_t& encoderstream, binary_t& decoderstream, qpack_dynamic_table& dyntable) {
     decoderstream.clear();
 
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     qpack_encoder enc;
     uint32 flags = 0;
     size_t pos = 0;
@@ -351,7 +353,7 @@ void test_rfc9204_b3(const char* text3, const binary_t& encoderstream, binary_t&
 }
 
 void test_rfc9204_b3_decoder_stream(const char* text3, const binary_t& bin, qpack_dynamic_table& dyntable) {
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     qpack_encoder enc;
     uint32 flags = 0;
     size_t pos = 0;
@@ -372,7 +374,7 @@ void test_rfc9204_b4_encoder_stream(const char* text4, binary_t& bin, qpack_dyna
     return_t ret = errorcode_t::success;
     qpack_encoder enc;
     uint32 flags = 0;
-    size_t pos = 0;
+    // size_t pos = 0;
     http_compression_decode_t item;
 
     /**
@@ -407,10 +409,10 @@ void test_rfc9204_b4_encoder_stream(const char* text4, binary_t& bin, qpack_dyna
 void test_rfc9204_b4_header_stream(const char* text4, binary_t& bin, qpack_dynamic_table& dyntable) {
     bin.clear();
 
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     qpack_encoder enc;
     uint32 flags = 0;
-    size_t pos = 0;
+    // size_t pos = 0;
     http_compression_decode_t item;
 
     /**
@@ -518,6 +520,7 @@ void test_rfc9204_b4_decoder_stream(const char* text4, const binary_t& bin, qpac
     flags = qpack_quic_stream_decoder;
     pos = 0;
     ret = enc.decode(&dyntable, bin.data(), bin.size(), pos, item, flags);
+    _test_case.test(ret, __FUNCTION__, "decode");
 
     /**
      *   Stream: Decoder
@@ -538,10 +541,10 @@ void test_rfc9204_b4_decoder_stream(const char* text4, const binary_t& bin, qpac
 }
 
 void test_rfc9204_b5(const char* text5, qpack_dynamic_table& dyntable) {
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     qpack_encoder enc;
     uint32 flags = 0;
-    size_t pos = 0;
+    // size_t pos = 0;
     http_compression_decode_t item;
 
     binary_t bin;

@@ -18,7 +18,9 @@ namespace hotplace {
 namespace io {
 
 file_stream::file_stream()
-    : _file_handle(INVALID_HANDLE_VALUE),
+    : _stream_type(stream_type_t::file),
+      _file_handle(INVALID_HANDLE_VALUE),
+      _mode(0),
       _access(0),
       _share(0),
       _create(0),
@@ -26,15 +28,12 @@ file_stream::file_stream()
       _file_data(nullptr),
       _filesize_low(0),
       _filesize_high(0),
-      _filepos_low(0),
-      _filepos_high(0),
-      _mapping_size(0),
-      _stream_type(stream_type_t::file) {}
-
-file_stream::~file_stream() { close(); }
+      _flags(0) {}
 
 file_stream::file_stream(const char* filename, uint32 mode)
-    : _file_handle(INVALID_HANDLE_VALUE),
+    : _stream_type(stream_type_t::file),
+      _file_handle(INVALID_HANDLE_VALUE),
+      _mode(0),
       _access(0),
       _share(0),
       _create(0),
@@ -42,14 +41,13 @@ file_stream::file_stream(const char* filename, uint32 mode)
       _file_data(nullptr),
       _filesize_low(0),
       _filesize_high(0),
-      _filepos_low(0),
-      _filepos_high(0),
-      _mapping_size(0),
-      _stream_type(stream_type_t::file) {
+      _flags(0) {
     if (filename) {
         open(filename, mode);
     }
 }
+
+file_stream::~file_stream() { close(); }
 
 return_t file_stream::open(const char* file_name, uint32 flag) {
     return_t ret = errorcode_t::success;
@@ -115,7 +113,7 @@ return_t file_stream::open(const wchar_t* file_name, uint32 flag) {
         }
 
         if (filestream_flag_t::flag_create_always & flag) {
-            truncate(0, nullptr);
+            truncate(0);
         }
 
         memset(&_win32_ov, 0, sizeof(_win32_ov));
@@ -127,6 +125,9 @@ return_t file_stream::open(const wchar_t* file_name, uint32 flag) {
         BY_HANDLE_FILE_INFORMATION fi;
         GetFileInformationByHandle(_file_handle, &fi);
 
+        _create = create;
+        _access = access;
+        _share = share;
         _flags = flag;
         _filesize_low = fi.nFileSizeLow;
         _filesize_high = fi.nFileSizeHigh;
@@ -149,6 +150,7 @@ return_t file_stream::close() {
         CloseHandle(_file_handle);
 
         _file_handle = INVALID_HANDLE_VALUE;
+        _mode = 0;
         _access = 0;
         _share = 0;
         _create = 0;
@@ -156,16 +158,14 @@ return_t file_stream::close() {
         _file_data = nullptr;
         _filesize_low = 0;
         _filesize_high = 0;
-        _filepos_low = 0;
-        _filepos_high = 0;
-        _mapping_size = 0;
+        _flags = 0;
     }
     return ret;
 }
 
 bool file_stream::is_mmapped() { return nullptr != _filemap_handle && nullptr != _file_data; }
 
-return_t file_stream::begin_mmap(size_t dwAdditionalMappingSize) {
+return_t file_stream::begin_mmap() {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -180,7 +180,7 @@ return_t file_stream::begin_mmap(size_t dwAdditionalMappingSize) {
         uint32 protect = PAGE_READONLY;
         uint32 access = FILE_MAP_READ;
 
-        if (GENERIC_WRITE == (access & GENERIC_WRITE)) {
+        if (GENERIC_WRITE == (_access & GENERIC_WRITE)) {
             protect = PAGE_READWRITE;
             access |= FILE_MAP_WRITE;
         }
@@ -191,18 +191,13 @@ return_t file_stream::begin_mmap(size_t dwAdditionalMappingSize) {
         LARGE_INTEGER li;
         li.LowPart = fi.nFileSizeLow;
         li.HighPart = fi.nFileSizeHigh;
-        li.QuadPart += dwAdditionalMappingSize;
 
-        _filesize_low = li.LowPart;
-        _filesize_high = li.HighPart;
-
-        _filemap_handle = CreateFileMapping(_file_handle, nullptr, protect, _filesize_high, (uint32)_filesize_low, nullptr);
+        _filemap_handle = CreateFileMapping(_file_handle, nullptr, protect, li.HighPart, li.LowPart, nullptr);
         if (nullptr == _filemap_handle) {
             ret = GetLastError();
-            __leave2;
+        } else {
+            _file_data = (byte_t*)MapViewOfFile(_filemap_handle, access, 0, 0, 0);
         }
-        _file_data = (byte_t*)MapViewOfFile(_filemap_handle, access, 0, 0, 0);
-        _mapping_size = dwAdditionalMappingSize;
     }
     __finally2 {
         if (errorcode_t::success != ret) {
@@ -231,87 +226,43 @@ int file_stream::get_stream_type() { return _stream_type; }
 byte_t* file_stream::data() const { return _file_data; }
 
 uint64 file_stream::size() const {
-    // ~ 4GB
-    // return _filesize_low;
-    size_t ret_value = 0;
-    uint32 filesize_low = 0;
-    uint32 filesize_high = 0;
+    LARGE_INTEGER li = {};
 
     if (INVALID_HANDLE_VALUE != _file_handle) {
         BY_HANDLE_FILE_INFORMATION fi;
         GetFileInformationByHandle(_file_handle, &fi);
 
-        filesize_low = fi.nFileSizeLow;
-        filesize_high = fi.nFileSizeHigh;
+        li.LowPart = fi.nFileSizeLow;
+        li.HighPart = fi.nFileSizeHigh;
     }
-    ret_value = filesize_high;
-    ret_value <<= 32;
-    ret_value += filesize_low;
-    return ret_value;
-}
-
-void file_stream::truncate(int32 lfilepos, int32* ptrfilepos) {
-    UNREFERENCED_PARAMETER(ptrfilepos);
-    if (true == is_open()) {
-        SetFilePointer(_file_handle, lfilepos, (PLONG)ptrfilepos, SEEK_SET);
-        SetEndOfFile(_file_handle);
-        size();
-    }
+    return li.QuadPart;
 }
 
 void file_stream::truncate(size_t lfilepos) {
     if (true == is_open()) {
         LARGE_INTEGER li;
         li.QuadPart = lfilepos;
+
         SetFilePointer(_file_handle, li.LowPart, (PLONG)&li.HighPart, SEEK_SET);
         SetEndOfFile(_file_handle);
-        size();
+
+        BY_HANDLE_FILE_INFORMATION fi;
+        GetFileInformationByHandle(_file_handle, &fi);
+        _filesize_low = fi.nFileSizeLow;
+        _filesize_high = fi.nFileSizeHigh;
     }
 }
 
-void file_stream::seek(int64 lfilepos, int64* ptrfilepos, uint32 method) {
+void file_stream::seek(int64 lfilepos, uint32 method) {
     if (true == is_open()) {
-        LARGE_INTEGER li;
+        LARGE_INTEGER li = {};
         li.QuadPart = lfilepos;
 
-        if (true == is_mmapped()) {
-            BY_HANDLE_FILE_INFORMATION fi;
-            GetFileInformationByHandle(_file_handle, &fi);
-
-            _filesize_low = fi.nFileSizeLow;
-            _filesize_high = fi.nFileSizeHigh;
-
-            switch (method) {
-                case FILE_BEGIN:
-                    _filepos_low = li.LowPart;
-                    _filepos_high = li.HighPart;
-                    break;
-                case FILE_CURRENT:
-                    break;
-                case FILE_END:
-                    _filepos_low = _filesize_low;
-                    _filepos_high = _filesize_high;
-                    break;
-                    if (nullptr != ptrfilepos) {
-                        li.LowPart = _filepos_low;
-                        li.HighPart = _filepos_high;
-                        *ptrfilepos = li.QuadPart;
-                    }
-            }
-        } else {
-            int ret_lseek = SetFilePointer(_file_handle, li.LowPart, &li.HighPart, method);
-            if (nullptr != ptrfilepos) {
-                if (errorcode_t::success == GetLastError()) {
-                    *ptrfilepos = ret_lseek;
-                } else {
-                    *ptrfilepos = 0;
-                }
-            }
-        }
+        SetFilePointer(_file_handle, li.LowPart, &li.HighPart, method);
     }
 }
 
-return_t file_stream::write(const void* data, size_t size_data) {
+return_t file_stream::write(const void* data, size_t size) {
     return_t ret = errorcode_t::success;
 
     // windows
@@ -322,15 +273,15 @@ return_t file_stream::write(const void* data, size_t size_data) {
     // linux .. not work
 
     byte_t* mem = (byte_t*)data;
-    uint32 idx = 0;
-    while (size_data) {
-        DWORD written = 0;
-        BOOL test = WriteFile(_file_handle, mem + idx, t_justdoit(size_data), &written, nullptr);
+    size_t idx = 0;
+    DWORD written = 0;
+    while (size) {
+        BOOL test = WriteFile(_file_handle, mem + idx, t_justdoit(size), &written, nullptr);
         if (FALSE == test) {
             ret = GetLastError();
             break;
         }
-        size_data -= written;
+        size -= written;
         idx += written;
     }
     return ret;
@@ -345,33 +296,23 @@ return_t file_stream::fill(size_t l, char c) {
     return ret;
 }
 
-return_t file_stream::read(void* data, uint32 size_data, uint32* size_read) {
+return_t file_stream::read(void* data, size_t size, size_t* size_read) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr == data || 0 == size_data) {
+        if (nullptr == data || 0 == size) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (true == is_mmapped()) {
-            if ((_filepos_high > 0) || (-1 - _filepos_low < size_data)) {
-                ret = errorcode_t::not_supported;
-            } else {
-                memcpy(data, _file_data + _filepos_low, size_data);
-                if (nullptr != size_read) {
-                    *size_read = size_data;
-                }
-                _filepos_low += size_data;
-            }
-        } else {
-            int ret_readfile = ReadFile(_file_handle, data, size_data, (LPDWORD)size_read, nullptr);
-            if (-1 == ret_readfile) {
-                ret = GetLastError();
-                __leave2;
-            }
-            if (nullptr != size_read) {
-                *size_read = ret_readfile;
-            }
+
+        DWORD cbread = 0;
+        int rc = ReadFile(_file_handle, data, (DWORD)size, &cbread, nullptr);
+        if (-1 == rc) {
+            ret = GetLastError();
+            __leave2;
+        }
+        if (nullptr != size_read) {
+            *size_read = cbread;
         }
     }
     __finally2 {}

@@ -97,7 +97,7 @@ quic_packet_publisher& quic_packet_publisher::add(tls_hs_type_t type, tls_direct
 }
 
 quic_packet_publisher& quic_packet_publisher::add(quic_frame_t type, std::function<return_t(quic_frame*)> func) {
-    auto session = get_session();
+    // auto session = get_session();
     switch (type) {
         case quic_frame_type_crypto:
         case quic_frame_type_stream:
@@ -174,7 +174,7 @@ return_t quic_packet_publisher::probe_spaces(std::set<protection_space_t>& space
             std::set<protection_space_t> temp;
             ret = get_handshakes().for_each([&](tls_handshake* handshake) -> return_t {
                 protection_space_t space;
-                auto test = kindof_handshake(handshake, space);
+                kindof_handshake(handshake, space);
                 temp.insert(space);
                 return (1 == temp.size()) ? success : bad_request;
             });
@@ -538,7 +538,7 @@ return_t quic_packet_publisher::consume(quic_packet* packet, size_t paid, std::f
             } else {
                 auto iter = entries.begin();
                 auto& entry = *iter;
-                auto capacity = entry.bin.size() - entry.pos;
+                // auto capacity = entry.bin.size() - entry.pos;
 
                 segment_t segment;
                 segment.stream = entry.bin.data();

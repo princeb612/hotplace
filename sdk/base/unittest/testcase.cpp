@@ -194,7 +194,6 @@ void test_case::check_time(struct timespec& ts) {
 }
 
 void test_case::assert(bool expect, const char* test_function, const char* message, ...) {
-    return_t ret = errorcode_t::success;
     va_list ap;
     va_start(ap, message);
     vassert(expect, test_function, message, ap);
@@ -586,7 +585,6 @@ void test_case::report_unittest(basic_stream& stream) {
 
 void test_case::report_cases(basic_stream& stream) {
     t_stream_binder<basic_stream, console_color> console_colored_stream(stream);
-    console_color_t fgcolor = console_color_t::white;
 
     //
     // compose
@@ -637,7 +635,6 @@ void test_case::report_failed(basic_stream& stream) {
 
     unittest_list_t array;
 
-    unsigned int field_nsec = (RTL_FIELD_SIZE(struct timespec, tv_nsec) << 3);
     console_colored_stream << _concolor.turnon().set_style(console_style_t::bold);
 
     for (const auto& pair : _test_map) {

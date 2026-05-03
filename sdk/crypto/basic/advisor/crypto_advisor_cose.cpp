@@ -16,7 +16,7 @@ namespace crypto {
 
 return_t crypto_advisor::for_each_cose(std::function<void(const char*, uint32, void*)> f, void* user) {
     return_t ret = errorcode_t::success;
-    for (auto i = 0; i < sizeof_hint_cose_algorithms; i++) {
+    for (size_t i = 0; i < sizeof_hint_cose_algorithms; i++) {
         const hint_cose_algorithm_t* item = hint_cose_algorithms + i;
         auto spec = query_feature(item->name, advisor_feature_cose);
         f(item->name, spec, user);

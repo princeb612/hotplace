@@ -25,9 +25,9 @@ void do_test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* entry) {
     _test_case.reset_time();
 
     std::string alg = entry->alg;
-    binary_t kek = std::move(base16_decode(entry->kek));
-    binary_t key = std::move(base16_decode(entry->key));
-    binary_t keydata = std::move(base16_decode(entry->keydata));
+    binary_t kek = base16_decode(entry->kek);
+    binary_t key = base16_decode(entry->key);
+    binary_t keydata = base16_decode(entry->keydata);
     const char* msg = entry->item.c_str();
 
     openssl_crypt crypt;
@@ -43,7 +43,6 @@ void do_test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* entry) {
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
 
-            crypto_advisor* advisor = crypto_advisor::get_instance();
             _logger->writeln("alg %s", alg.c_str());
 
             _logger->hdump("kek", kek);
@@ -70,7 +69,6 @@ void do_test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* entry) {
         if (option.verbose) {
             test_case_notimecheck notimecheck(_test_case);
 
-            crypto_advisor* advisor = crypto_advisor::get_instance();
             _logger->writeln("alg %s", alg.c_str());
 
             _logger->hdump("kek", kek);
@@ -94,15 +92,15 @@ void do_test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* entry) {
 void test_yaml_testvector_rfc3394() {
     _test_case.begin("RFC 3394 keywrap YAML");
 
-    auto lambda_test_rfc3394 = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_rfc3394 = [&](const YAML::Node& items) -> void {
         for (const auto& item : items) {
             test_vector_rfc3394_t entry;
 
-            entry.item = std::move(item["item"].as<std::string>());
-            entry.alg = std::move(item["alg"].as<std::string>());
-            entry.kek = std::move(item["kek"].as<std::string>());
-            entry.key = std::move(item["key"].as<std::string>());
-            entry.keydata = std::move(item["keydata"].as<std::string>());
+            entry.item = item["item"].as<std::string>();
+            entry.alg = item["alg"].as<std::string>();
+            entry.kek = item["kek"].as<std::string>();
+            entry.key = item["key"].as<std::string>();
+            entry.keydata = item["keydata"].as<std::string>();
 
             do_test_keywrap_rfc3394_testvector(&entry);
         }
@@ -119,7 +117,7 @@ void test_yaml_testvector_rfc3394() {
             auto items = example["items"];
 
             if (schema == "RFC 3394") {
-                lambda_test_rfc3394(items);
+                lambda_yaml_rfc3394(items);
             } else {
                 _test_case.assert(false, __FUNCTION__, "bad message format");
             }

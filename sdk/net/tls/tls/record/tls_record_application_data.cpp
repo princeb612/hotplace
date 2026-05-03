@@ -94,7 +94,7 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
         auto session = get_session();
         tls_protection& protection = session->get_tls_protection();
 
-        uint16 len = get_body_size();
+        // uint16 len = get_body_size();
         size_t tpos = 0;
         size_t recpos = offsetof_header();
         binary_t plaintext;
@@ -132,7 +132,7 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
             auto plainsize = plaintext.size();
             if (plainsize) {
                 if (protection.is_kindof_tls13()) {
-                    auto tlsversion = protection.get_tls_version();
+                    // auto tlsversion = protection.get_tls_version();
                     uint8 last_byte = *plaintext.rbegin();
                     if (tls_content_type_alert == last_byte) {
                         tls_record_alert alert(session);
@@ -220,7 +220,7 @@ bool tls_record_application_data::apply_protection() { return true; }
 
 return_t tls_record_application_data::get_application_data(binary_t& message, bool untag) {
     return_t ret = errorcode_t::success;
-    auto& protection = get_session()->get_tls_protection();
+    // auto& protection = get_session()->get_tls_protection();
     auto lambda = [&](const binary_t& msg, uint8 trail) -> void {
         if (msg.size() > trail) {
             _bin.clear();
@@ -229,10 +229,6 @@ return_t tls_record_application_data::get_application_data(binary_t& message, bo
     };
 
     if (untag) {
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
-        const hint_digest_t* hint_mac = advisor->hintof_digest(hint_tls_alg->mac);
         auto dlen = 0;  // hint_mac->digest_size;
         uint8 last_byte = *message.rbegin();
         size_t extra = last_byte + dlen + 1;

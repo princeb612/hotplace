@@ -87,7 +87,7 @@ static void pkey_param_printf(crypt_item_t type, const binary_t& key, stream_t* 
         }
 
         /* base64url encoding */
-        std::string b64url_encoded = std::move(base64_encode(key, encoding_t::encoding_base64url));
+        std::string b64url_encoded = base64_encode(key, encoding_t::encoding_base64url);
         cbor_data* root = new cbor_data(key);
 
         /* openssl evp_pkey_print style */
@@ -501,7 +501,7 @@ return_t dump_key(const EVP_PKEY* pkey, stream_t* stream, uint8 hex_part, uint8 
                 pkey_param_printf(crypt_item_t::item_dh_priv, datamap[item_dh_x], stream, hex_part, indent);
             } break;
             case EVP_PKEY_DSA: {
-                auto dsa = EVP_PKEY_get0_DSA((EVP_PKEY*)pkey);
+                // auto dsa = EVP_PKEY_get0_DSA((EVP_PKEY*)pkey);
 
                 pkey_param_printf(crypt_item_t::item_dsa_pub, datamap[item_dsa_y], stream, hex_part, indent);
                 pkey_param_printf(crypt_item_t::item_dsa_p, datamap[item_dsa_p], stream, hex_part, indent);

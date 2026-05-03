@@ -15,7 +15,7 @@ void test_pqc_hybrid_kem() {
 
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     return_t ret = errorcode_t::success;
-    const OPTION& option = _cmdline->value();
+    // const OPTION& option = _cmdline->value();
 
     // Post-quantum hybrid ECDHE-MLKEM Key Agreement for TLSv1.3
     // https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/01/

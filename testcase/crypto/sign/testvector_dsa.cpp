@@ -36,31 +36,31 @@ void test_yaml_testvector_dsa() {
     return_t ret = errorcode_t::success;
     std::map<std::string, test_vector_nist_cavp_dsa_param_t> dsa_params;
 
-    auto lambda_test_dsa_parameter = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_dsa_param = [&](const YAML::Node& items) -> void {
         for (const auto& item : items) {
             test_vector_nist_cavp_dsa_param_t entry;
 
-            entry.item = std::move(item["item"].as<std::string>());
-            entry.p = std::move(item["p"].as<std::string>());
-            entry.q = std::move(item["q"].as<std::string>());
-            entry.g = std::move(item["g"].as<std::string>());
+            entry.item = item["item"].as<std::string>();
+            entry.p = item["p"].as<std::string>();
+            entry.q = item["q"].as<std::string>();
+            entry.g = item["g"].as<std::string>();
 
             dsa_params.emplace(entry.item, entry);
         }
     };
-    auto lambda_test_dsa_testvector = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_dsa_testvector = [&](const YAML::Node& items) -> void {
         for (const auto& item : items) {
             test_vector_nist_cavp_dsa_t entry;
 
-            entry.item = std::move(item["item"].as<std::string>());
-            entry.param = std::move(item["param"].as<std::string>());
-            entry.alg = std::move(item["alg"].as<std::string>());
-            entry.m = std::move(item["m"].as<std::string>());
-            entry.x = std::move(item["x"].as<std::string>());
-            entry.y = std::move(item["y"].as<std::string>());
-            entry.k = std::move(item["k"].as<std::string>());
-            entry.r = std::move(item["r"].as<std::string>());
-            entry.s = std::move(item["s"].as<std::string>());
+            entry.item = item["item"].as<std::string>();
+            entry.param = item["param"].as<std::string>();
+            entry.alg = item["alg"].as<std::string>();
+            entry.m = item["m"].as<std::string>();
+            entry.x = item["x"].as<std::string>();
+            entry.y = item["y"].as<std::string>();
+            entry.k = item["k"].as<std::string>();
+            entry.r = item["r"].as<std::string>();
+            entry.s = item["s"].as<std::string>();
 
             auto advisor = crypto_advisor::get_instance();
             auto hint = advisor->hintof_digest(entry.alg);
@@ -69,9 +69,9 @@ void test_yaml_testvector_dsa() {
             crypto_key key;
             crypto_keychain keychain;
 
-            binary_t bin_m = std::move(base16_decode(entry.m));
-            binary_t bin_r = std::move(base16_decode(entry.r));
-            binary_t bin_s = std::move(base16_decode(entry.s));
+            binary_t bin_m = base16_decode(entry.m);
+            binary_t bin_r = base16_decode(entry.r);
+            binary_t bin_s = base16_decode(entry.s);
 
             auto param = dsa_params[entry.param];
             keychain.add_dsa_b16(&key, nid_dsa, entry.y.c_str(), entry.x.c_str(), param.p.c_str(), param.q.c_str(), param.g.c_str(), keydesc("DSA"));
@@ -108,9 +108,9 @@ void test_yaml_testvector_dsa() {
             auto items = example["items"];
 
             if (schema == "DSA PARAMETER") {
-                lambda_test_dsa_parameter(items);
+                lambda_yaml_dsa_param(items);
             } else if (schema == "DSA TESTVECTOR") {
-                lambda_test_dsa_testvector(items);
+                lambda_yaml_dsa_testvector(items);
             } else {
                 _test_case.assert(false, __FUNCTION__, "bad message format");
             }

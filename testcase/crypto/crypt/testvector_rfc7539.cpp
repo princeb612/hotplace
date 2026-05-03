@@ -27,27 +27,27 @@ void test_yaml_testvector_rfc7539() {
 
     return_t ret = errorcode_t::success;
 
-    auto lambda_test_rfc7539 = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_rfc7539 = [&](const YAML::Node& items) -> void {
         for (const auto& item : items) {
             test_vector_rfc7539_t entry;
 
-            entry.item = std::move(item["item"].as<std::string>());
-            entry.alg = std::move(item["alg"].as<std::string>());
-            entry.key = std::move(item["key"].as<std::string>());
-            entry.counter = std::move(item["counter"].as<int>());
-            entry.iv = std::move(item["iv"].as<std::string>());
-            entry.aad = std::move(item["aad"].as<std::string>());
-            entry.tag = std::move(item["tag"].as<std::string>());
-            entry.pt = std::move(item["pt"].as<std::string>());
-            entry.ct = std::move(item["ct"].as<std::string>());
+            entry.item = item["item"].as<std::string>();
+            entry.alg = item["alg"].as<std::string>();
+            entry.key = item["key"].as<std::string>();
+            entry.counter = item["counter"].as<int>();
+            entry.iv = item["iv"].as<std::string>();
+            entry.aad = item["aad"].as<std::string>();
+            entry.tag = item["tag"].as<std::string>();
+            entry.pt = item["pt"].as<std::string>();
+            entry.ct = item["ct"].as<std::string>();
 
-            binary_t key = std::move(base16_decode_rfc(entry.key));
+            binary_t key = base16_decode_rfc(entry.key);
             uint32 counter = entry.counter;
-            binary_t iv = std::move(base16_decode_rfc(entry.iv));
-            binary_t pt = std::move(str2bin(entry.pt));
-            binary_t aad = std::move(base16_decode_rfc(entry.aad));
-            binary_t ct = std::move(base16_decode_rfc(entry.ct));
-            binary_t tag = std::move(base16_decode_rfc(entry.tag));
+            binary_t iv = base16_decode_rfc(entry.iv);
+            binary_t pt = str2bin(entry.pt);
+            binary_t aad = base16_decode_rfc(entry.aad);
+            binary_t ct = base16_decode_rfc(entry.ct);
+            binary_t tag = base16_decode_rfc(entry.tag);
 
             openssl_crypt crypt;
             binary_t c;
@@ -105,7 +105,7 @@ void test_yaml_testvector_rfc7539() {
             auto items = example["items"];
 
             if (schema == "RFC 7539") {
-                lambda_test_rfc7539(items);
+                lambda_yaml_rfc7539(items);
             } else {
                 _test_case.assert(false, __FUNCTION__, "bad message format");
             }

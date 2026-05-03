@@ -68,7 +68,6 @@ return_t quic_packet_initial::do_read_body(tls_direction_t dir, const byte_t* st
         }
 
         auto& protection = session->get_tls_protection();
-        auto& secrets = protection.get_secrets();
         auto tagsize = protection.get_tag_size();
 
         binary_t bin_unprotected_header;
@@ -250,8 +249,6 @@ void quic_packet_initial::dump() {
         quic_packet::dump();
 
         trace_debug_event(trace_category_net, trace_event_quic_packet, [&](basic_stream& dbs) -> void {
-            auto session = get_session();
-
             // token
             dbs.println(" > token (len %zi)", _token.size());
             if (check_trace_level(loglevel_debug)) {

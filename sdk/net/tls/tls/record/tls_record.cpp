@@ -39,7 +39,7 @@ constexpr char constexpr_dtls_epoch[] = "epoch";
 constexpr char constexpr_dtls_record_seq[] = "sequence number";
 
 tls_record::tls_record(uint8 type, tls_session* session)
-    : _content_type(type), _cond_dtls(false), _dtls_epoch(0), _dtls_record_seq(0), _bodysize(0), _session(session), _flags(0) {
+    : _content_type(type), _cond_dtls(false), _dtls_epoch(0), _dtls_record_seq(0), _bodysize(0), _flags(0), _session(session) {
     if (session) {
         session->addref();
     } else {
@@ -58,7 +58,7 @@ tls_record::~tls_record() {
 return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = get_session();
+        // auto session = get_session();
 
         ret = do_preprocess(dir);
         if (errorcode_t::success != ret) {
@@ -108,7 +108,7 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
         }
 
         auto session_type = session->get_type();
-        auto& protection = session->get_tls_protection();
+        // auto& protection = session->get_tls_protection();
         auto is_dtls = (session_type == session_type_dtls);
 
         if (is_dtls) {
@@ -192,7 +192,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
         bool cond_dtls = false;
         uint16 key_epoch = 0;
         uint64 dtls_record_seq = 0;
-        auto session_type = session->get_type();
+        // auto session_type = session->get_type();
 
         {
             /**
@@ -269,7 +269,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
         if (istraceable(trace_category_net)) {
             trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                const auto& range = get_header_range();
+                // const auto& range = get_header_range();
 
                 dbs.println("# record (%s) [size 0x%zx(%zi) pos 0x%x]", tlsadvisor->nameof_direction(dir).c_str(), size, size, recpos);
 
@@ -323,10 +323,10 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
 
             auto& protection = session->get_tls_protection();
             auto record_version = protection.get_lagacy_version();
-            auto tagsize = protection.get_tag_size();
-            auto tlsversion = protection.get_tls_version();
+            // auto tagsize = protection.get_tag_size();
+            // auto tlsversion = protection.get_tls_version();
             auto cs = protection.get_cipher_suite();
-            crypto_advisor* advisor = crypto_advisor::get_instance();
+            // crypto_advisor* advisor = crypto_advisor::get_instance();
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(cs);
             if (nullptr == hint) {
@@ -378,7 +378,7 @@ return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin
     __try2 {
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         uint16 record_version = get_legacy_version();
-        auto is_tls = tlsadvisor->is_kindof_tls(record_version);
+        // auto is_tls = tlsadvisor->is_kindof_tls(record_version);
 
         {
             _range.begin = bin.size();
@@ -405,7 +405,7 @@ return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin
         if (istraceable(trace_category_net)) {
             trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                const auto& range = get_header_range();
+                // const auto& range = get_header_range();
 
                 dbs.println("# record %s", (from_server == dir) ? "(server)" : (from_client == dir) ? "(client)" : "");
 

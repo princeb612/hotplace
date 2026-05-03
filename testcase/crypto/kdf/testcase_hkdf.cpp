@@ -15,7 +15,7 @@ void test_hkdf() {
     const OPTION& option = _cmdline->value();
     openssl_kdf kdf;
 
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
 
     struct {
         const char* password;
@@ -29,7 +29,7 @@ void test_hkdf() {
 
     binary_t result;
 
-    for (int i = 0; i < RTL_NUMBER_OF(vector); i++) {
+    for (size_t i = 0; i < RTL_NUMBER_OF(vector); i++) {
         kdf.hmac_kdf(result, hash_algorithm_t::sha2_256, vector[i].dlen, str2bin(vector[i].password), str2bin(vector[i].salt), str2bin(vector[i].info));
 
         if (option.verbose) {

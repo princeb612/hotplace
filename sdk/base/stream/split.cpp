@@ -43,7 +43,7 @@ return_t split(const byte_t* stream, size_t size, size_t fragment_size, size_t p
         } else {
             size_t offset = 0;
             size_t blocksize = 0;
-            for (size_t offset = 0; offset < size; offset += blocksize) {
+            for (offset = 0; offset < size; offset += blocksize) {
                 auto remains = size - offset;
                 blocksize = (0 == offset) ? (fragment_size - pre) : fragment_size;
                 if (remains < blocksize) {

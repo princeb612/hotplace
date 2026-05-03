@@ -28,7 +28,7 @@ return_t network_stream::produce(byte_t* buf_read, size_t size_buf_read, const s
 
     __try2 {
         if (size_buf_read > 0) {
-            __try_new_catch(buffer_object, new network_stream_data, ret, __leave2);
+            buffer_object = new network_stream_data;
 
             buffer_object->assign(buf_read, size_buf_read);
             if (addr) {
@@ -60,8 +60,6 @@ return_t network_stream::consume(network_stream_data** ptr_buffer_object) {
         ret = errorcode_t::invalid_parameter;
     } else {
         *ptr_buffer_object = nullptr;
-
-        network_stream_data* buffer_object = nullptr;
 
         t_chain<network_stream_data> single_link;
 

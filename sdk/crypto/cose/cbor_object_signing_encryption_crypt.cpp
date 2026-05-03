@@ -222,7 +222,7 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
             // Partial IV
             // 1.  Left-pad the Partial IV with zeros to the length of IV.
             // 2.  XOR the padded Partial IV with the context IV.
-            size_t ivsize = iv.size();
+            // size_t ivsize = iv.size();
             // binary_t aligned_partial_iv;
             // binary_load(aligned_partial_iv, ivsize, partial_iv.data(), partial_iv.size());
             // for (size_t i = 0; i < ivsize; i++) {
@@ -232,14 +232,6 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
         }
 
         compose_enc_context(handle, layer, aad);
-
-        const EVP_PKEY* pkey = nullptr;
-        if (kid.size()) {
-            pkey = key->find(kid.c_str(), hint->kty);
-        } else {
-            std::string k;
-            pkey = key->select(k, hint->kty);
-        }
 
         if (mode) {
             body.get_params().finditem(cose_param_t::cose_param_plaintext, input);

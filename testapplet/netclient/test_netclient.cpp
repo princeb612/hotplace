@@ -338,7 +338,7 @@ void dtls_client2() {
 }
 
 void quic_client() {
-    const OPTION& option = _cmdline->value();
+    // const OPTION& option = _cmdline->value();
 
     // - [ ] TODO
     //   - [ ] tls_composer QUIC feature

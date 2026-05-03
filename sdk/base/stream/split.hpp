@@ -172,7 +172,7 @@ void splitter<DESCRIPTOR_T>::add(const byte_t* stream, size_t size, DESCRIPTOR_T
 
 template <typename DESCRIPTOR_T>
 void splitter<DESCRIPTOR_T>::set_segment_size(size_t splitsize) {
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     critical_section_guard guard(_lock);
     if (splitsize <= 1) {
         _segment_size = 2;
@@ -193,7 +193,7 @@ return_t splitter<DESCRIPTOR_T>::run(std::function<void(uint32, const byte_t*, s
     critical_section_guard guard(_lock);
 
     size_t pre = 0;
-    size_t group = 0;
+    // size_t group = 0;
     for (auto item : _list) {
         byte_t* blockstream = nullptr;
         size_t blocksize = 0;

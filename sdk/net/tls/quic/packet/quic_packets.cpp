@@ -65,7 +65,7 @@ return_t quic_packets::read(tls_session* session, tls_direction_t dir, const bin
         const byte_t* stream = bin.data();
         size_t size = bin.size();
         size_t pos = 0;
-        auto ret = read(session, dir, stream, size, pos);
+        ret = read(session, dir, stream, size, pos);
     }
     __finally2 {}
     return ret;

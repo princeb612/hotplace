@@ -116,7 +116,7 @@ return_t binary_append(binary_t& target, const char* buf, size_t size) {
             target.insert(target.end(), buf, buf + size);
         }
     }
-    return errorcode_t::success;
+    return ret;
 }
 
 return_t binary_append(binary_t& target, const byte_t* buf, size_t size) {

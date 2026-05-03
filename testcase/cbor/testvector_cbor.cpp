@@ -18,7 +18,7 @@ void do_parse_cbor_routine(const char* text, const char* input, const char* diag
     ansi_string bs;
     binary_t bin;
     bool test = false;
-    bool test2 = false;
+    // bool test2 = false;
 
     reader.open(&handle);
     ret = reader.parse(handle, input);  // read
@@ -48,7 +48,7 @@ void do_parse_cbor_routine(const char* text, const char* input, const char* diag
 void test_yaml_testvector_cbor() {
     _test_case.begin("test3.CBOR YAML");
 
-    auto lambda_test_cbor_testvector = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_rfc7049 = [&](const YAML::Node& items) -> void {
         for (const auto& item : items) {
             std::string text_item = item["item"].as<std::string>();
             std::string text_cbor = item["cbor"].as<std::string>();
@@ -70,7 +70,7 @@ void test_yaml_testvector_cbor() {
                 auto items = example["items"];
 
                 if (schema == "RFC 7049") {
-                    lambda_test_cbor_testvector(items);
+                    lambda_yaml_rfc7049(items);
                 } else {
                     _test_case.assert(false, __FUNCTION__, "bad message format");
                 }

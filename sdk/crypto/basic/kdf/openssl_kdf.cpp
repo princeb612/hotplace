@@ -178,7 +178,7 @@ return_t openssl_kdf::hkdf_expand(binary_t& okm, const char* alg, size_t dlen, c
         }
 
         size_t digest_size = sizeof_digest(hint);
-        size_t prk_size = prk.size();
+        // size_t prk_size = prk.size();
 
         if (dlen > digest_size * 255) {
             ret = errorcode_t::out_of_range;
@@ -280,7 +280,7 @@ return_t openssl_kdf::cmac_kdf_extract(binary_t& prk, crypt_algorithm_t alg, con
 
 return_t openssl_kdf::cmac_kdf_expand(binary_t& okm, crypt_algorithm_t alg, size_t dlen, const binary_t& prk, const binary_t& info) {
     return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
+    // crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_hash hash;
 
     __try2 {
@@ -290,9 +290,6 @@ return_t openssl_kdf::cmac_kdf_expand(binary_t& okm, crypt_algorithm_t alg, size
          */
 
         okm.clear();
-
-        const hint_blockcipher_t* hint = advisor->hintof_blockcipher(alg);
-        uint16 blocksize = sizeof_block(hint);
 
         size_t offset = 0;
         binary_t t_block;  // T(0) = empty string (zero length)

@@ -404,7 +404,7 @@ void test_aho_corasick_wildcard() {
         },
     };
 
-    const OPTION& option = _cmdline->value();
+    // const OPTION& option = _cmdline->value();
 
     for (auto entry : _table) {
         // t_aho_corasick<char> ac(memberof_defhandler<char>);
@@ -496,7 +496,7 @@ void test_aho_corasick_ignorecase() {
         },
     };
 
-    const OPTION& option = _cmdline->value();
+    // const OPTION& option = _cmdline->value();
 
     for (auto entry : _table) {
         t_aho_corasick_wildcard<char> ac(memberof_tolower, '?', '*');

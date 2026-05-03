@@ -60,7 +60,7 @@ return_t cose_composer::compose(cbor_array** object, bool tagged) {
             __leave2;
         }
 
-        __try_new_catch(root, new cbor_array, ret, __leave2);
+        root = new cbor_array;
 
         {
             crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -142,7 +142,6 @@ return_t cose_composer::diagnose(cbor_array** object, basic_stream& stream, bool
 return_t cose_composer::parse(const binary_t& input) {
     return_t ret = errorcode_t::success;
     cbor_object* root = nullptr;
-    cbor_array* cbor_message = nullptr;
 
     __try2 {
         clear();

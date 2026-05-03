@@ -95,8 +95,9 @@ void test_parser_options() {
     };
 
     // turn off switches and parse
-    p.get_config().set("handle_comments", 0);
+    p.get_config().set(std::string("handle_comments"), 0);
     ret = p.parse(context1, asn1_structure, strlen(asn1_structure));
+    _test_case.test(ret, __FUNCTION__, "parse");
 
     {
         test_case_notimecheck notimecheck(_test_case);

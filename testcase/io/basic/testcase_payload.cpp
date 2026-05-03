@@ -21,12 +21,12 @@
 //  binary_t    *       N/A         "pad"       "pad"
 
 void test_payload_write() {
-    const OPTION& option = _cmdline->value();
+    // const OPTION& option = _cmdline->value();
     _test_case.begin("payload");
 
     payload pl;
-    binary_t data = std::move(str2bin("data"));
-    binary_t pad = std::move(str2bin("pad"));
+    binary_t data = str2bin("data");
+    binary_t pad = str2bin("pad");
     uint8 padlen = 3;  // "pad"
     binary_t bin_padded;
     binary_t bin_notpadded;
@@ -67,12 +67,12 @@ void test_payload_write() {
 }
 
 void test_payload_read() {
-    const OPTION& option = _cmdline->value();
+    // const OPTION& option = _cmdline->value();
     _test_case.begin("payload");
 
     payload pl;
     binary_t bin_dump;
-    binary_t decoded = std::move(base16_decode("036461746100001000706164"));
+    binary_t decoded = base16_decode("036461746100001000706164");
 
     pl << new payload_member((uint8)0, "padlen", "pad") << new payload_member(binary_t(), "data") << new payload_member((uint32)0, true, "value")
        << new payload_member(binary_t(), "pad", "pad");
@@ -117,7 +117,7 @@ void test_payload_read() {
 void test_uint24() {
     _test_case.begin("payload");
     const char* sample = "00 03 28";
-    binary_t bin = std::move(base16_decode_rfc(sample));
+    binary_t bin = base16_decode_rfc(sample);
 
     uint32 ui32 = 0;
     b24_i32(bin.data(), bin.size(), ui32);
@@ -137,12 +137,12 @@ void test_uint24() {
 //  binary_t    *       N/A         "pad"       N/A
 
 void test_payload_uint24() {
-    const OPTION& option = _cmdline->value();
+    // const OPTION& option = _cmdline->value();
     _test_case.begin("payload");
 
-    binary_t pad = std::move(str2bin("pad"));
+    binary_t pad = str2bin("pad");
     binary_t bin_payload;
-    binary_t expect = std::move(base16_decode("0310000010000000706164"));
+    binary_t expect = base16_decode("0310000010000000706164");
 
     // write
     {
@@ -193,7 +193,7 @@ void test_group_routine(const char* input, bool expect) {
     constexpr char constexpr_data2[] = "data2";
     constexpr char constexpr_group2[] = "group2";
 
-    binary_t bin = std::move(base16_decode_rfc(input));
+    binary_t bin = base16_decode_rfc(input);
     size_t pos = 0;
 
     bool cond_group2 = false;
@@ -286,12 +286,12 @@ void test_uint48() {
         "59 31 0B 30 09 06 03 55 04 06 13 02 4B 52 31 0B"
         "30 09 06 03 55 04 08 0C 02 47 47 31 0B 30 09 06"
         "03 55 04 07 -- -- -- -- -- -- -- -- -- -- -- --";
-    binary_t bin = std::move(base16_decode_rfc(record));
+    binary_t bin = base16_decode_rfc(record);
 
     constexpr char constexpr_content_type[] = "record content type";
     constexpr char constexpr_record_version[] = "record version";
     constexpr char constexpr_len[] = "len";
-    constexpr char constexpr_application_data[] = "application data";
+    // constexpr char constexpr_application_data[] = "application data";
 
     constexpr char constexpr_group_dtls[] = "dtls";
     constexpr char constexpr_dtls_epoch[] = "epoch";

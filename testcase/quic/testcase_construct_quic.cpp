@@ -9,7 +9,7 @@
 
 #include "sample.hpp"
 
-static int max_udp_payload_size = 1200;
+static size_t max_udp_payload_size = 1200;
 
 void enum_pkns(quic_packet_publisher& publisher) {
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -70,7 +70,7 @@ void construct_quic_cli_initial(tls_session* session, tls_direction_t dir, uint3
                  [&](tls_session* session, binary_t& packet) -> void {
                      bins.push_back(packet);
                      auto tlsadvisor = tls_advisor::get_instance();
-                     auto test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
+                     bool test = (quic_pad_packet & flags) ? (max_udp_payload_size == packet.size()) : true;
                      _test_case.assert(test, __FUNCTION__, "[%zi] {%s} %s", packet.size(), tlsadvisor->nameof_direction(dir, 0).c_str(), message);
                  });
 
@@ -478,7 +478,7 @@ void testcase_construct_quic() {
     _test_case.begin("construct");
 
     __try2 {
-        return_t ret = errorcode_t::success;
+        // return_t ret = errorcode_t::success;
 
         auto tlsadvisor = tls_advisor::get_instance();
         tlsadvisor->enable_alpn("h3");

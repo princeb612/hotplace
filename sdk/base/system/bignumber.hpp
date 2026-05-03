@@ -344,7 +344,7 @@ class bignumber {
     T t_bntoi() const {
         T value = 0;
         size_t tsize = sizeof(T);
-        bignumber bn = std::move(normalize(*this, tsize << 3, std::is_signed<T>::value));
+        bignumber bn = normalize(*this, tsize << 3, std::is_signed<T>::value);
 
         binary_t bin;
         bn >> bin;  // base16, BE

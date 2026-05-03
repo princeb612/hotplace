@@ -49,12 +49,12 @@ struct openssl_hash_context_t : public hash_context_t {
         : _signature(OPENSSL_HASH_CONTEXT_SIGNATURE),
           _hash_type(other._hash_type),
           _flags(other._flags),
-          _evp_cipher(other._evp_cipher),
-          _evp_md(other._evp_md),
-          _key(other._key),
           _md_context(nullptr),
           _cmac_context(nullptr),
-          _hmac_context(nullptr) {
+          _hmac_context(nullptr),
+          _evp_cipher(other._evp_cipher),
+          _evp_md(other._evp_md),
+          _key(other._key) {
         if (other._md_context) {
             _md_context = EVP_MD_CTX_create();
             EVP_MD_CTX_copy(_md_context, other._md_context);
@@ -156,8 +156,6 @@ return_t openssl_hash::open(hash_context_t** handle, const char* algorithm, cons
 
 return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm, const unsigned char* key_data, size_t key_size) {
     return_t ret = errorcode_t::success;
-    openssl_hash_context_t* context = nullptr;
-
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -172,7 +170,7 @@ return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm,
             __leave2;
         }
 
-        __try_new_catch(context, new openssl_hash_context_t, ret, __leave2);
+        auto context = make_unique<openssl_hash_context_t>();
 
         context->_evp_md = method;
         context->_flags = 0;
@@ -203,15 +201,11 @@ return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm,
             HMAC_Init_ex(context->_hmac_context, context->_key.data(), t_narrow_cast(context->_key.size()), context->_evp_md, nullptr);
         }
 
-        *handle = context;
+        *handle = context.get();
+
+        context.release();
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            if (nullptr != context) {
-                delete context;
-            }
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -222,8 +216,6 @@ return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm,
 
 return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key_data, size_t key_size) {
     return_t ret = errorcode_t::success;
-    openssl_hash_context_t* context = nullptr;
-
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -238,7 +230,7 @@ return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm
             __leave2;
         }
 
-        __try_new_catch(context, new openssl_hash_context_t, ret, __leave2);
+        auto context = make_unique<openssl_hash_context_t>();
 
         context->_evp_cipher = method;
         context->_flags = 0;
@@ -259,15 +251,11 @@ return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm
 
         CMAC_Init(context->_cmac_context, context->_key.data(), context->_key.size(), context->_evp_cipher, nullptr);
 
-        *handle = context;
+        *handle = context.get();
+
+        context.release();
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            if (nullptr != context) {
-                delete context;
-            }
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -559,7 +547,6 @@ return_t openssl_hash::hash(hash_context_t* handle, const byte_t* source_data, s
 
 return_t openssl_hash::dup(hash_context_t** duplicated, hash_context_t* handle) {
     return_t ret = errorcode_t::success;
-    openssl_hash_context_t* context = nullptr;
     __try2 {
         if (nullptr == duplicated || nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
@@ -567,9 +554,8 @@ return_t openssl_hash::dup(hash_context_t** duplicated, hash_context_t* handle) 
         }
 
         openssl_hash_context_t* other = (openssl_hash_context_t*)handle;
-        __try_new_catch(context, new openssl_hash_context_t(*other), ret, __leave2);
 
-        *duplicated = context;
+        *duplicated = new openssl_hash_context_t(*other);
     }
     __finally2 {}
     return ret;

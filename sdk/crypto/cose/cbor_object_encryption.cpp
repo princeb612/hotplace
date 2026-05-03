@@ -82,7 +82,6 @@ return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key
 }
 
 return_t cbor_object_encryption::decrypt(cose_context_t* handle, crypto_key* key, const binary_t& input, binary_t& output, bool& result) {
-    return_t ret = errorcode_t::success;
     cbor_object_signing_encryption cose;
 
     // RFC 8152 4.3.  Externally Supplied Data

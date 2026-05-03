@@ -58,6 +58,8 @@ crypto_sign* crypto_sign_builder::build() {
             case crypt_sig_mldsa: {
                 obj = new crypto_sign_mldsa();
             }
+            default:
+                break;
         }
         if (obj) {
             obj->set_scheme(get_scheme());

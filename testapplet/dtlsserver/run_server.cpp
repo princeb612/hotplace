@@ -48,8 +48,6 @@ return_t echo_server(void*) {
 
     fclose(fp);
 
-    SSL_CTX* sslctx = nullptr;
-    openssl_tls* tls = nullptr;
     server_socket* dtls_socket = nullptr;
     uint16 nproc_threads = 1;
 #if defined __linux__
@@ -135,7 +133,7 @@ return_t echo_server(void*) {
 
 void run_server() {
     thread thread1(echo_server, nullptr);
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
 
     __try2 {
         _test_case.begin("dtls server");

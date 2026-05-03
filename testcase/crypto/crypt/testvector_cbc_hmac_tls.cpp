@@ -28,12 +28,12 @@ void test_cbc_hmac(test_vector_cbchmac_tls_t* entry) {
     crypto_cbc_hmac cbchmac;
     uint16 flag = 0;
 
-    binary_t enckey = std::move(base16_decode(entry->enckey));
-    binary_t iv = std::move(base16_decode(entry->iv));
-    binary_t mackey = std::move(base16_decode(entry->mackey));
-    binary_t aad = std::move(base16_decode(entry->aad));
-    binary_t plaintext = std::move(base16_decode_rfc(entry->pt));
-    binary_t ciphertext = std::move(base16_decode_rfc(entry->ct));
+    binary_t enckey = base16_decode(entry->enckey);
+    binary_t iv = base16_decode(entry->iv);
+    binary_t mackey = base16_decode(entry->mackey);
+    binary_t aad = base16_decode(entry->aad);
+    binary_t plaintext = base16_decode_rfc(entry->pt);
+    binary_t ciphertext = base16_decode_rfc(entry->ct);
     basic_stream desc;
 
     if ("mac_then_encrypt" == entry->flag) {
@@ -75,7 +75,7 @@ void test_cbc_hmac(test_vector_cbchmac_tls_t* entry) {
 void test_yaml_testvector_cbc_hmac_tls() {
     _test_case.begin("CBC-HMAC TLS 1.2 YAML");
 
-    auto lambda_test_cbc_hmac_tls = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_cbchmac_tls = [&](const YAML::Node& items) -> void {
         for (const auto& item : items) {
             test_vector_cbchmac_tls_t entry;
 
@@ -104,7 +104,7 @@ void test_yaml_testvector_cbc_hmac_tls() {
             auto items = example["items"];
 
             if (schema == "CBC-HMAC TLS") {
-                lambda_test_cbc_hmac_tls(items);
+                lambda_yaml_cbchmac_tls(items);
             } else {
                 _test_case.assert(false, __FUNCTION__, "bad message format");
             }

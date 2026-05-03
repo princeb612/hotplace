@@ -629,7 +629,7 @@ const EVP_PKEY* crypto_key::find(const char* kid, crypto_kty_t kt, crypto_use_t 
 
 const EVP_PKEY* crypto_key::find_nid(const char* kid, uint32 nid, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
+    // crypto_advisor* advisor = crypto_advisor::get_instance();
     critical_section_guard guard(_lock);
     __try2 {
         std::string k;
@@ -668,7 +668,7 @@ const EVP_PKEY* crypto_key::find_nid(const char* kid, uint32 nid, crypto_use_t u
 
 const EVP_PKEY* crypto_key::find(const char* kid, tls_group_t group, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
+    // crypto_advisor* advisor = crypto_advisor::get_instance();
     critical_section_guard guard(_lock);
     __try2 {
         std::string k;

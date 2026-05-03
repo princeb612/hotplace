@@ -87,7 +87,7 @@ const char* crypto_advisor::nameof_md(hash_algorithm_t algorithm) {
 
 return_t crypto_advisor::for_each_md(std::function<void(const char*, uint32, void*)> f, void* user) {
     return_t ret = errorcode_t::success;
-    for (auto i = 0; i < sizeof_evp_md_methods; i++) {
+    for (size_t i = 0; i < sizeof_evp_md_methods; i++) {
         const hint_digest_t* item = evp_md_methods + i;
         auto spec = query_feature(nameof_alg(item), advisor_feature_md);
         f(nameof_alg(item), spec, user);

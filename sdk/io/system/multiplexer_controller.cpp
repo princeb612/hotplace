@@ -35,7 +35,6 @@ multiplexer_controller::~multiplexer_controller() {}
 
 return_t multiplexer_controller::open(multiplexer_controller_context_t** handle) {
     return_t ret = errorcode_t::success;
-    multiplexer_event_loop_controller_context_t* context = nullptr;
 
     __try2 {
         if (nullptr == handle) {
@@ -43,10 +42,13 @@ return_t multiplexer_controller::open(multiplexer_controller_context_t** handle)
             __leave2;
         }
 
-        __try_new_catch(context, new multiplexer_event_loop_controller_context_t, ret, __leave2);
+        auto context = make_unique<multiplexer_event_loop_controller_context_t>();
 
         context->signature = MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT_SIGNATURE;
-        *handle = context;
+
+        *handle = context.get();
+
+        context.release();
     }
     __finally2 {}
 

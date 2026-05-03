@@ -81,17 +81,17 @@ size_t bufferio::find_first_of_routine(bufferio_context_t* handle, int mode, con
 size_t bufferio::wfind_first_of_routine(bufferio_context_t* handle, int mode, const wchar_t* find, size_t offset)
 #endif
 {
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     size_t ret_value = (size_t)-1;
 
     __try2 {
         if (nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
+            // ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         if (BUFFERIO_CONTEXT_SIGNATURE != handle->signature) {
-            ret = errorcode_t::invalid_context;
+            // ret = errorcode_t::invalid_context;
             __leave2;
         }
 
@@ -135,17 +135,17 @@ size_t bufferio::find_first_of_routine(bufferio_context_t* handle, int mode, int
 size_t bufferio::wfind_first_of_routine(bufferio_context_t* handle, int mode, int (*is_ctype_func)(wint_t), size_t offset)
 #endif
 {
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     size_t ret_value = (size_t)-1;
 
     __try2 {
         if (nullptr == handle || nullptr == is_ctype_func) {
-            ret = errorcode_t::invalid_parameter;
+            // ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         if (BUFFERIO_CONTEXT_SIGNATURE != handle->signature) {
-            ret = errorcode_t::invalid_context;
+            // ret = errorcode_t::invalid_context;
             __leave2;
         }
 
@@ -187,17 +187,17 @@ size_t bufferio::find_last_of_routine(bufferio_context_t* handle, int mode, cons
 size_t bufferio::wfind_last_of_routine(bufferio_context_t* handle, int mode, const wchar_t* find)
 #endif
 {
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     size_t ret_value = -1;
 
     __try2 {
         if (nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
+            // ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         if (BUFFERIO_CONTEXT_SIGNATURE != handle->signature) {
-            ret = errorcode_t::invalid_context;
+            // ret = errorcode_t::invalid_context;
             __leave2;
         }
 
@@ -240,17 +240,17 @@ size_t bufferio::find_last_of_routine(bufferio_context_t* handle, int mode, int 
 size_t bufferio::wfind_last_of_routine(bufferio_context_t* handle, int mode, int (*is_ctype_func)(wint_t))
 #endif
 {
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     size_t ret_value = -1;
 
     __try2 {
         if (nullptr == handle || nullptr == is_ctype_func) {
-            ret = errorcode_t::invalid_parameter;
+            // ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         if (BUFFERIO_CONTEXT_SIGNATURE != handle->signature) {
-            ret = errorcode_t::invalid_context;
+            // ret = errorcode_t::invalid_context;
             __leave2;
         }
 
@@ -330,7 +330,7 @@ return_t bufferio::wreplace(bufferio_context_t* handle, const wchar_t* from, con
 
         for (pos = begin; pos <= handle->bufferio_size - from_length; pos++) {
             size_t ret_find = imp_find_first_of(handle, from, pos);
-            if (-1 != ret_find) {
+            if (size_t(-1) != ret_find) {
                 cut(handle, ret_find * sizeof(TCHAR), from_length * sizeof(TCHAR));
                 insert(handle, ret_find * sizeof(TCHAR), to, to_length * sizeof(TCHAR));
                 if (bufferio_flag_t::run_once == flag) {

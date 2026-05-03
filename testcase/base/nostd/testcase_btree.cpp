@@ -68,7 +68,6 @@ void test_btree() {
             testdata1(const testdata1& other) : basedata(other) {}
 
             bool operator<(const testdata1& other) const {
-                bool test = false;
                 if (key < other.key) {
                     return true;
                 } else if (key == other.key) {
@@ -84,7 +83,6 @@ void test_btree() {
             testdata2(const testdata2& other) : basedata(other) {}
 
             bool operator<(const testdata2& other) const {
-                bool test = false;
                 if (value < other.value) {
                     return true;
                 } else if (value == other.value) {

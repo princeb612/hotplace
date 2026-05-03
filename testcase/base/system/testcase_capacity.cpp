@@ -10,6 +10,38 @@
 
 #include <hotplace/testcase/base/sample.hpp>
 
+void test_bit_length() {
+    _test_case.begin("bit_length");
+
+    auto lambda_bitlength_ui16 = [&](uint16 value, int expect) -> void {
+        auto len = bit_length(value);
+        _test_case.assert(len == expect, __FUNCTION__, "bit_length %u = %i", value, len);
+    };
+    auto lambda_bitlength_ui32 = [&](uint32 value, int expect) -> void {
+        auto len = bit_length(value);
+        _test_case.assert(len == expect, __FUNCTION__, "bit_length %lu = %i", value, len);
+    };
+    auto lambda_bitlength_ui64 = [&](uint64 value, int expect) -> void {
+        auto len = bit_length(value);
+        _test_case.assert(len == expect, __FUNCTION__, "bit_length %I64u = %i", value, len);
+    };
+
+    lambda_bitlength_ui16(0, 0);      // 0000
+    lambda_bitlength_ui16(1, 1);      // 0001
+    lambda_bitlength_ui16(2, 2);      // 0010
+    lambda_bitlength_ui16(5, 3);      // 0101
+    lambda_bitlength_ui16(7, 3);      // 0111
+    lambda_bitlength_ui32(8, 4);      // 1000
+    lambda_bitlength_ui32(9, 4);      // 1001
+    lambda_bitlength_ui32(255, 8);    // 11111111
+    lambda_bitlength_ui32(0xff, 8);   // 11111111
+    lambda_bitlength_ui32(0x100, 9);  // 100000000
+    lambda_bitlength_ui32(1024, 11);  // 10000000000
+    lambda_bitlength_ui64(0x7fffffff, 31);
+    lambda_bitlength_ui64(0xffffffff, 32);
+    lambda_bitlength_ui64(0x100000000, 33);
+}
+
 void test_byte_capacity_unsigned() {
     _test_case.begin("byte capacity");
 
@@ -28,7 +60,6 @@ void test_byte_capacity_unsigned() {
 
 void test_byte_capacity_signed() {
     _test_case.begin("byte capacity");
-    typedef int64 signed_t;
     int bits = 8;
 
     for (int n = 1; n <= bits; n++) {
@@ -51,6 +82,7 @@ void test_byte_capacity_signed() {
 }
 
 void testcase_capacity() {
+    test_bit_length();
     test_byte_capacity_unsigned();
     test_byte_capacity_signed();
 }

@@ -13,8 +13,8 @@
 void test_crypto_encrypt() {
     _test_case.begin("crypto_encrypt");
 
-    return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
+    // return_t ret = errorcode_t::success;
+    // crypto_advisor* advisor = crypto_advisor::get_instance();
 
     crypto_key key;
     crypto_keychain keychain;

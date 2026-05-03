@@ -90,32 +90,32 @@ quic_frame* quic_frame_builder::build() {
     switch (type) {
         case quic_frame_type_padding: {
             // RFC 9001 19.1.  PADDING Frames
-            __try_new_catch_only(frame, new quic_frame_padding(session));
+            frame = new quic_frame_padding(session);
         } break;
         case quic_frame_type_ping: {
             // RFC 9001 19.2.  PING Frames
-            __try_new_catch_only(frame, new quic_frame_ping(session));
+            frame = new quic_frame_ping(session);
         } break;
         case quic_frame_type_ack:
         case quic_frame_type_ack + 1: {
             // RFC 9001 19.3.  ACK Frames
-            __try_new_catch_only(frame, new quic_frame_ack(session, t_narrow_cast(type)));
+            frame = new quic_frame_ack(session, t_narrow_cast(type));
         } break;
         case quic_frame_type_reset_stream: {
             // 19.4.  RESET_STREAM Frames
-            __try_new_catch_only(frame, new quic_frame_reset_stream(session));
+            frame = new quic_frame_reset_stream(session);
         } break;
         case quic_frame_type_stop_sending: {
             // 19.5.  STOP_SENDING Frames
-            __try_new_catch_only(frame, new quic_frame_stop_sending(session));
+            frame = new quic_frame_stop_sending(session);
         } break;
         case quic_frame_type_crypto: {
             // 19.6.  CRYPTO Frames
-            __try_new_catch_only(frame, new quic_frame_crypto(session));
+            frame = new quic_frame_crypto(session);
         } break;
         case quic_frame_type_new_token: {
             // 19.7.  NEW_TOKEN Frames
-            __try_new_catch_only(frame, new quic_frame_new_token(session));
+            frame = new quic_frame_new_token(session);
         } break;
         case quic_frame_type_stream:
         case quic_frame_type_stream1:
@@ -127,9 +127,9 @@ quic_frame* quic_frame_builder::build() {
         case quic_frame_type_stream7: {
             // 19.8.  STREAM Frames
             if ((_alpn == "\x2h3") || is_kindof_alpn(session, std::string("\x2h3"))) {
-                __try_new_catch_only(frame, new quic_frame_http3_stream(session, t_narrow_cast(type)));
+                frame = new quic_frame_http3_stream(session, t_narrow_cast(type));
             } else {
-                __try_new_catch_only(frame, new quic_frame_stream(session, t_narrow_cast(type)));
+                frame = new quic_frame_stream(session, t_narrow_cast(type));
             }
             quic_frame_stream* stream = (quic_frame_stream*)frame;
             stream->set(get_streamid(), _unitype);
@@ -154,7 +154,7 @@ quic_frame* quic_frame_builder::build() {
             break;
         case quic_frame_type_new_connection_id:
             // Figure 39: NEW_CONNECTION_ID Frame Format
-            __try_new_catch_only(frame, new quic_frame_new_connection_id(session));
+            frame = new quic_frame_new_connection_id(session);
             break;
         case quic_frame_type_retire_connection_id:
             // Figure 40: RETIRE_CONNECTION_ID Frame Format
@@ -168,11 +168,11 @@ quic_frame* quic_frame_builder::build() {
         case quic_frame_type_connection_close:
         case quic_frame_type_connection_close1:
             // Figure 43: CONNECTION_CLOSE Frame Format
-            __try_new_catch_only(frame, new quic_frame_connection_close(session));
+            frame = new quic_frame_connection_close(session);
             break;
         case quic_frame_type_handshake_done:
             // Figure 44: HANDSHAKE_DONE Frame Format
-            __try_new_catch_only(frame, new quic_frame_handshake_done(session));
+            frame = new quic_frame_handshake_done(session);
             break;
         default: {
         } break;

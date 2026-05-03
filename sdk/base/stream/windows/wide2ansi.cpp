@@ -27,7 +27,7 @@ return_t W2A(stream_t* stream, const wchar_t* source, uint32 codepage) {
 
         buffer.resize(sizeNeed);  // including null pad
         WideCharToMultiByte(codepage, 0, source, -1, buffer.data(), sizeNeed, nullptr, nullptr);
-        if (sizeNeed >= sizeof(char)) {
+        if (size_t(sizeNeed) >= sizeof(char)) {
             stream->write((void*)buffer.data(), (sizeNeed - 1) * sizeof(char));
         }
     }

@@ -47,40 +47,40 @@ http3_frame* http3_frame_builder::build() {
     http3_frame* frame = nullptr;
     switch (_type) {
         case h3_frame_data: {
-            __try_new_catch_only(frame, new http3_frame_data);
+            frame = new http3_frame_data;
         } break;
         case h3_frame_headers: {
             if (_session) {
-                __try_new_catch_only(frame, new http3_frame_headers(_session));
+                frame = new http3_frame_headers(_session);
             }
         } break;
         case h3_frame_cancel_push: {
-            __try_new_catch_only(frame, new http3_frame_cancel_push);
+            frame = new http3_frame_cancel_push;
         } break;
         case h3_frame_settings: {
-            __try_new_catch_only(frame, new http3_frame_settings);
+            frame = new http3_frame_settings;
         } break;
         case h3_frame_push_promise: {
-            __try_new_catch_only(frame, new http3_frame_push_promise);
+            frame = new http3_frame_push_promise;
         } break;
         case h3_frame_goaway: {
-            __try_new_catch_only(frame, new http3_frame_goaway);
+            frame = new http3_frame_goaway;
         } break;
         case h3_frame_origin: {
-            __try_new_catch_only(frame, new http3_frame_origin);
+            frame = new http3_frame_origin;
         } break;
         case h3_frame_max_push_id: {
-            __try_new_catch_only(frame, new http3_frame_max_push_id);
+            frame = new http3_frame_max_push_id;
         } break;
         case h3_frame_metadata: {
-            __try_new_catch_only(frame, new http3_frame_metadata);
+            frame = new http3_frame_metadata;
         } break;
         case h3_frame_priority_update:
         case h3_frame_priority_update1: {
-            __try_new_catch_only(frame, new http3_frame_priority_update((h3_frame_t)_type));
+            frame = new http3_frame_priority_update((h3_frame_t)_type);
         } break;
         default: {
-            __try_new_catch_only(frame, new http3_frame_unknown(_type));
+            frame = new http3_frame_unknown(_type);
         } break;
     }
     return frame;

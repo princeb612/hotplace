@@ -82,7 +82,6 @@ return_t tls_protection::update_transcript_hash(tls_session *session, const byte
 
                 basic_stream bs;
                 size_t offset_body = sizeof(dtls_handshake_t);
-                size_t sizeof_reconstruction_data = 8;
                 //  0.. 3 handshake header
                 hash->update(stream, sizeof(tls_handshake_t));
                 //  4..11 handshake reconstruction data (8 bytes)
@@ -195,7 +194,6 @@ return_t tls_protection::calc_context_hash(tls_session *session, hash_algorithm_
                 basic_stream bs;
                 // DTLS
                 size_t offset_version = 12;
-                size_t sizeof_reconstruction_data = 8;
                 //  0.. 3 handshake header
                 hash->update(stream, sizeof(tls_handshake_t));
                 //  4..11 handshake reconstruction data (8 bytes)

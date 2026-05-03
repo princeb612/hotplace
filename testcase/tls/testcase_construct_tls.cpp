@@ -600,6 +600,7 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
                 has_fatal = true;
             }
         };
+        session->get_alert(dir, lambda_test_fatal_alert);
 
         if (has_fatal) {
             ret = failed;

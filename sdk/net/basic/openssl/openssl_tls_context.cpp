@@ -85,7 +85,7 @@ openssl_tls_context& openssl_tls_context::set_group_list(const char* list) {
 }
 
 openssl_tls_context& openssl_tls_context::set_use_dh(int bits) {
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
     DH* dh = nullptr;
     int rc = 0;
     __try2 {
@@ -94,7 +94,7 @@ openssl_tls_context& openssl_tls_context::set_use_dh(int bits) {
             __leave2;
         }
 
-        auto options = SSL_CTX_get_options(_ctx);
+        // auto options = SSL_CTX_get_options(_ctx);
 
         dh = DH_new();
         if (nullptr == dh) {
@@ -103,7 +103,7 @@ openssl_tls_context& openssl_tls_context::set_use_dh(int bits) {
 
         rc = DH_generate_parameters_ex(dh, bits, DH_GENERATOR_2, NULL);
         if (rc < 1) {
-            ret = get_opensslerror(rc);
+            // ret = get_opensslerror(rc);
             __leave2;
         }
 
@@ -120,7 +120,7 @@ openssl_tls_context& openssl_tls_context::set_use_dh(int bits) {
         int codes = 0;
         rc = DH_check(dh, &codes);
         if (rc < 1) {
-            ret = get_opensslerror(rc);
+            // ret = get_opensslerror(rc);
             __leave2;
         }
         if (0 != codes) {

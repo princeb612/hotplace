@@ -26,15 +26,5 @@ quic_packet_0rtt::quic_packet_0rtt(const quic_packet_0rtt& other) : quic_packet(
 
 quic_packet_0rtt::~quic_packet_0rtt() {}
 
-return_t quic_packet_0rtt::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    return ret;
-}
-
-return_t quic_packet_0rtt::write(tls_direction_t dir, binary_t& header, binary_t& ciphertext, binary_t& tag) {
-    return_t ret = errorcode_t::success;
-    return ret;
-}
-
 }  // namespace net
 }  // namespace hotplace
