@@ -32,7 +32,7 @@
     * CBOR
 
 * details
-  * Revision 973
+  * Revision 974
   * Revision 969-971
     * [tested] gcc warnings
   * Revision 968
