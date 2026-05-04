@@ -51,7 +51,7 @@ void test_yaml_cavp_blockciphers() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("./testvector_cavp_blockciphers.yml");
+    YAML::Node testvector = YAML::LoadFile("testvector_cavp_blockciphers.yml");
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {

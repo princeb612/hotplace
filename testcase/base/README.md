@@ -107,3 +107,17 @@ testvector:
         format: string                      # [mandatory] value={1} value={2} value={3}
         expect: boolean                     # [mandatory] result
 ````
+
+* regular expression YAML schema
+
+````
+testvector:
+  - example: string                         # [mandatory] testcase
+    schema: REGEX                           # [mandatory] "REGEX"
+    items:
+      - item: string                        #
+        input: string                       # [mandatory]
+        expr: expression                    # [mandatory]
+        results:
+        - "string"                          # [mandatory] 0..*
+````

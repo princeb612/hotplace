@@ -263,7 +263,7 @@ void test_yaml_testvector_cose_examples() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("./testvector_cose_examples.yml");
+    YAML::Node testvector = YAML::LoadFile("testvector_cose_examples.yml");
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {

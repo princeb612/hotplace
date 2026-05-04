@@ -122,7 +122,7 @@ void test_yaml_testvector_ecdsa() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("./testvector_ecdsa.yml");
+    YAML::Node testvector = YAML::LoadFile("testvector_ecdsa.yml");
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {

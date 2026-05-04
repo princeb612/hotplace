@@ -227,7 +227,7 @@ void test_yaml_testvector_cbc_hmac_jose() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("./testvector_cbc_hmac_jose.yml");
+    YAML::Node testvector = YAML::LoadFile("testvector_cbc_hmac_jose.yml");
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {

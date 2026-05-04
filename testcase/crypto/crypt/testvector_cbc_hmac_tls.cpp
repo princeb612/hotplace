@@ -93,7 +93,7 @@ void test_yaml_testvector_cbc_hmac_tls() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("./testvector_cbc_hmac_tls.yml");
+    YAML::Node testvector = YAML::LoadFile("testvector_cbc_hmac_tls.yml");
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {

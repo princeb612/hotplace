@@ -54,10 +54,16 @@ netlink::~netlink() {}
 
 return_t netlink::open(netlink_t **handle, uint32 flags, TYPE_CALLBACK_HANDLER consumer_handler, void *parameter) {
     return_t ret = errorcode_t::success;
+    socket_t sock = 0;
 
     __try2 {
         if (NULL == handle || NULL == consumer_handler) {
             ret = errorcode_t::invalid_parameter;
+            __leave2_trace(ret);
+        }
+
+        ret = netlink_open(&sock);
+        if (errorcode_t::success != ret) {
             __leave2_trace(ret);
         }
 
@@ -69,12 +75,6 @@ return_t netlink::open(netlink_t **handle, uint32 flags, TYPE_CALLBACK_HANDLER c
 
         context->producer_loop = 1;
         context->consumer_loop = 1;
-
-        socket_t sock = 0;
-        ret = netlink_open(&sock);
-        if (errorcode_t::success != ret) {
-            __leave2_trace(ret);
-        }
         context->sock = sock;
 
         context->producer.set(1, producer_thread_routine, producer_thread_signal, context.get());
@@ -91,7 +91,13 @@ return_t netlink::open(netlink_t **handle, uint32 flags, TYPE_CALLBACK_HANDLER c
 
         context.release();
     }
-    __finally2 {}
+    __finally2 {
+        if (errorcode_t::success != ret) {
+            if (sock) {
+                netlink_close(sock);
+            }
+        }
+    }
 
     return ret;
 }

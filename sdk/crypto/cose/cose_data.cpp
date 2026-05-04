@@ -110,9 +110,10 @@ cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, const binary
 
     k->set(&get_owner()->get_static_key(), curve, x, y);
     add(key, TYPE_STATIC_KEY, k.get());
-
     _keys.push_back(k.get());
+
     k.release();
+
     return *this;
 }
 
@@ -122,9 +123,10 @@ cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, const binary
     k->set(&get_owner()->get_static_key(), curve, x, y);
     k->set(order);
     add(key, TYPE_STATIC_KEY, k.get());
-
     _keys.push_back(k.get());
+
     k.release();
+
     return *this;
 }
 
@@ -133,9 +135,10 @@ cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, bool ysign) 
 
     k->set(&get_owner()->get_static_key(), curve, x, ysign);
     add(key, TYPE_STATIC_KEY, k.get());
-
     _keys.push_back(k.get());
+
     k.release();
+
     return *this;
 }
 
@@ -145,9 +148,10 @@ cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, bool ysign, 
     k->set(&get_owner()->get_static_key(), curve, x, ysign);
     k->set(order);
     add(key, TYPE_STATIC_KEY, k.get());
-
     _keys.push_back(k.get());
+
     k.release();
+
     return *this;
 }
 
@@ -156,14 +160,15 @@ cose_data& cose_data::add(cose_alg_t alg, const char* kid, const binary_t& signa
 
     countersign->set_upperlayer(get_owner());
     countersign->set_property(cose_property_t::cose_property_countersign);
-
     countersign->get_protected().add(cose_key_t::cose_alg, alg);
     if (kid) {
         countersign->get_unprotected().add(cose_key_t::cose_kid, kid);
     }
     countersign->get_signature().set(signature);
+    add(countersign.get());
 
-    add(countersign.release());
+    countersign.release();
+
     return *this;
 }
 
@@ -274,7 +279,6 @@ return_t cose_data::finditem(int key, binary_t& value) {
 
 return_t cose_data::build_protected(cbor_data** object) {
     return_t ret = errorcode_t::success;
-    cbor_map* part_protected = nullptr;
 
     __try2 {
         if (nullptr == object) {
@@ -283,40 +287,36 @@ return_t cose_data::build_protected(cbor_data** object) {
         }
 
         if (_payload.size()) {
-            auto temp = make_unique<cbor_data>(_payload);
-            *object = temp.get();
-            temp.release();
+            auto root = make_unique<cbor_data>(_payload);
+            *object = root.get();
+            root.release();
         } else {
             if (_data_map.size()) {
-                part_protected = new cbor_map();
+                auto root = make_unique<cbor_map>();
 
                 for (const auto& key : _order) {
                     cose_variantmap_t::iterator map_iter = _data_map.find(key);
                     variant value = map_iter->second;
-                    *part_protected << new cbor_pair(new cbor_data(key), new cbor_data(std::move(value)));
+                    *(root.get()) << new cbor_pair(new cbor_data(key), new cbor_data(std::move(value)));
                 }
 
                 cbor_publisher publisher;
-                publisher.publish(part_protected, &_payload);
+                publisher.publish(root.get(), &_payload);
 
                 *object = new cbor_data(_payload);
+
+                // release root
             } else {
                 *object = new cbor_data(binary_t());
             }
         }
     }
-    __finally2 {
-        if (part_protected) {
-            part_protected->release();
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
 return_t cose_data::build_protected(cbor_data** object, cose_variantmap_t& unsent) {
     return_t ret = errorcode_t::success;
-    cbor_map* part_protected = nullptr;
-
     __try2 {
         if (nullptr == object) {
             ret = errorcode_t::invalid_parameter;
@@ -327,7 +327,7 @@ return_t cose_data::build_protected(cbor_data** object, cose_variantmap_t& unsen
             *object = new cbor_data(_payload);
         } else {
             if (_data_map.size()) {
-                __try_new_catch(part_protected, new cbor_map(), ret, __leave2);
+                auto root = make_unique<cbor_map>();
 
                 for (const auto& key : _order) {
                     cose_variantmap_t::iterator unsent_iter = unsent.find(key);
@@ -337,29 +337,26 @@ return_t cose_data::build_protected(cbor_data** object, cose_variantmap_t& unsen
 
                     cose_variantmap_t::iterator map_iter = _data_map.find(key);
                     variant value = map_iter->second;
-                    *part_protected << new cbor_pair(new cbor_data(key), new cbor_data(std::move(value)));
+                    *(root.get()) << new cbor_pair(new cbor_data(key), new cbor_data(std::move(value)));
                 }
 
                 cbor_publisher publisher;
-                publisher.publish(part_protected, &_payload);
+                publisher.publish(root.get(), &_payload);
 
                 *object = new cbor_data(_payload);
+
+                // release root
             } else {
                 *object = new cbor_data(binary_t());
             }
         }
     }
-    __finally2 {
-        if (part_protected) {
-            part_protected->release();
-        }
-    }
+    __finally2 {}
     return ret;
 }
 
 return_t cose_data::build_unprotected(cbor_map** object) {
     return_t ret = errorcode_t::success;
-    cbor_map* part_unprotected = nullptr;
 
     __try2 {
         if (nullptr == object) {
@@ -367,7 +364,7 @@ return_t cose_data::build_unprotected(cbor_map** object) {
             __leave2;
         }
 
-        part_unprotected = new cbor_map();
+        auto root = make_unique<cbor_map>();
 
         for (const auto& key : _order) {
             cose_variantmap_t::iterator map_iter = _data_map.find(key);
@@ -376,16 +373,18 @@ return_t cose_data::build_unprotected(cbor_map** object) {
 
             if (TYPE_STATIC_KEY == vt.type) {
                 cose_key* k = (cose_key*)vt.data.p;
-                *part_unprotected << new cbor_pair(key, k->cbor());
+                *(root.get()) << new cbor_pair(key, k->cbor());
             } else if (TYPE_COUNTER_SIG == vt.type) {
                 cose_countersigns* signs = get_owner()->get_countersigns1();
-                *part_unprotected << new cbor_pair(cose_key_t::cose_counter_sig, signs->cbor());
+                *(root.get()) << new cbor_pair(cose_key_t::cose_counter_sig, signs->cbor());
             } else {
-                *part_unprotected << new cbor_pair(new cbor_data(key), new cbor_data(value));
+                *(root.get()) << new cbor_pair(new cbor_data(key), new cbor_data(value));
             }
         }
 
-        *object = part_unprotected;
+        *object = root.get();
+
+        root.release();
     }
     __finally2 {}
     return ret;
@@ -393,7 +392,6 @@ return_t cose_data::build_unprotected(cbor_map** object) {
 
 return_t cose_data::build_unprotected(cbor_map** object, cose_variantmap_t& unsent) {
     return_t ret = errorcode_t::success;
-    cbor_map* part_unprotected = nullptr;
 
     __try2 {
         if (nullptr == object) {
@@ -401,7 +399,7 @@ return_t cose_data::build_unprotected(cbor_map** object, cose_variantmap_t& unse
             __leave2;
         }
 
-        part_unprotected = new cbor_map();
+        auto root = make_unique<cbor_map>();
 
         for (const auto& key : _order) {
             cose_variantmap_t::iterator unsent_iter = unsent.find(key);
@@ -415,16 +413,18 @@ return_t cose_data::build_unprotected(cbor_map** object, cose_variantmap_t& unse
 
             if (TYPE_STATIC_KEY == vt.type) {
                 cose_key* k = (cose_key*)vt.data.p;
-                *part_unprotected << new cbor_pair(key, k->cbor());
+                *(root.get()) << new cbor_pair(key, k->cbor());
             } else if (TYPE_COUNTER_SIG == vt.type) {
                 cose_recipient* sign = (cose_recipient*)vt.data.p;
-                *part_unprotected << new cbor_pair(cose_key_t::cose_counter_sig, sign->cbor());
+                *(root.get()) << new cbor_pair(cose_key_t::cose_counter_sig, sign->cbor());
             } else {
-                *part_unprotected << new cbor_pair(new cbor_data(key), new cbor_data(value));
+                *(root.get()) << new cbor_pair(new cbor_data(key), new cbor_data(value));
             }
         }
 
-        *object = part_unprotected;
+        *object = root.get();
+
+        root.release();
     }
     __finally2 {}
     return ret;

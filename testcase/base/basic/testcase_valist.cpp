@@ -52,12 +52,12 @@ void test_valist_sprintf() {
     }
 }
 
-void test_valist_vprintf() {
+void test_valist_cpp14() {
     _test_case.begin("valist");
-    return_t ret = errorcode_t::success;
     ansi_string str;
 
 #if __cplusplus >= 201402L  // c++14
+    return_t ret = errorcode_t::success;
     valist val;
     make_valist(val, 1, 3.141592, "hello");
     ret = sprintf(&str, "param1 {1} param2 {2} param3 {3}", val);
@@ -103,15 +103,15 @@ void test_valist_stream() {
     va << 1 << "test string";  // argc 2
 
     sprintf(&bs, "value1={1} value2={2}", va);  // value1=1 value2=test string
-    _logger->writeln(bs.c_str());
+    _logger->writeln(bs);
     bs.clear();
 
     sprintf(&bs, "value1={2} value2={1}", va);  // value1=test string value2=1
-    _logger->writeln(bs.c_str());
+    _logger->writeln(bs);
     bs.clear();
 
     sprintf(&bs, "value1={2} value2={1} value3={3}", va);  // value1=test string value2=1 value3={3}
-    _logger->writeln(bs.c_str());
+    _logger->writeln(bs);
 
     _test_case.assert(true, __FUNCTION__, "stream");
 
@@ -125,10 +125,15 @@ void test_valist_stream() {
 
     bs.resize(0);
     _test_case.assert(bs.empty(), __FUNCTION__, "resize 0");
+
+    va << std::string("hello") << basic_stream("world");
+    sprintf(&bs, "{3} {4}", va);
+    _logger->writeln(bs);
+    _test_case.assert(bs == "hello world", __FUNCTION__, "valist << std::string << basic_stream");
 }
 
 void testcase_valist() {
     test_valist_sprintf();
-    test_valist_vprintf();
+    test_valist_cpp14();
     test_valist_stream();
 }

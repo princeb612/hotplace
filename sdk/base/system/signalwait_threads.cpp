@@ -70,7 +70,6 @@ return_t signalwait_threads::create() {
                 thread_rt.release();
                 thread_obj.release();
             }
-
         } else {
             ret = errorcode_t::max_reached;
         }

@@ -41,6 +41,7 @@ void testcase_avltree();
 void testcase_btree();
 void testcase_exception();
 void testcase_findlte();
+void testcase_int();
 void testcase_list();
 void testcase_map();
 void testcase_ovl();
@@ -60,6 +61,7 @@ void testcase_bufferio();
 void testcase_stream();
 
 void testcase_string();
+void testcase_testvector_regex();
 
 void testcase_bignumber();
 void testcase_testvector_bignumber();

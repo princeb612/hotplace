@@ -1,0 +1,62 @@
+# \{, \}      brace
+# ()          grouping
+# (\d+)       one or more number
+# (?: ... )?  there may or may not be an internal pattern
+# ([^}]+)     find one or more characters that are not }.
+testvector:
+  - example: regular expression
+    schema: REGEX
+    items:
+    - item: parameter
+      input: data {10}, {20:apple}, {30:orange juice}
+      expr: \{(\d+)(?::([^}]+))?\}
+      results:
+        - "{10}"                # 10
+        - "{20:apple}"          # 20, apple
+        - "{30:orange juice}"   # 30, orange juice
+    - item: parameter
+      input: param1 {1:04x} param2 {2:-15s} param3 {3} param4 {4:}
+      expr: \{(\d+:?[^}]*)\}
+      results:
+        - "{1:04x}"     # 1:04x
+        - "{2:-15s}"    # 2:-15s
+        - "{3}"         # 3
+        - "{4:}"        # 4:
+    - item: parameter
+      input: param1 {1:04x} param2 {2:-15s} param3 {3} param4 {4:}
+      expr: \{(\d+):?([^}]*)\}
+      results:
+        - "{1:04x}"     # 1, 04x
+        - "{2:-15s}"    # 2, -15s
+        - "{3}"         # 3, empty
+        - "{4:}"        # 4, empty
+    - item: email address
+      input: princeb612.kr@gmail.com
+      expr: ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
+      results:
+      - "princeb612.kr@gmail.com"
+    - item: cell phone number
+      input: 010-000-0000
+      expr: ^01(?:0|1|[6-9])-(?:\d{3}|\d{4})-\d{4}$
+      results:
+      - "010-000-0000"
+    - item: password
+      input: "#$@!PassworD123"
+      expr: ^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$
+      results:
+      - "#$@!PassworD123"
+    - item: number
+      input: 1234567890
+      expr: ^[0-9]+$
+      results:
+      - "1234567890"
+    - item: IPv4 address
+      input: 127.0.0.1
+      expr: \b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b
+      results:
+      - "127.0.0.1"
+    - item: URL
+      input: https://github.com/princeb612/hotplace
+      expr: https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)
+      results:
+      - "https://github.com/princeb612/hotplace" # [0] https://github.com/princeb612/hotplace [2] /princeb612/hotplace

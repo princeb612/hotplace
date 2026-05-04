@@ -90,7 +90,7 @@ void test_yaml_testvector_cmdline() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("./testvector_cmdline.yml");
+    YAML::Node testvector = YAML::LoadFile("testvector_cmdline.yml");
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {

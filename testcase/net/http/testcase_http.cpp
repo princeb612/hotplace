@@ -708,7 +708,7 @@ void test_documents() {
 
     uri = "/../test.html";
     test = docs.get_local(uri, local);
-    _test_case.nassert(test, __FUNCTION__, "uri %s local %s", uri.c_str(), local.c_str());
+    _test_case.nassert(test, __FUNCTION__, "uri %s local %s", uri.c_str(), local.c_str());  // fail, local empty
 }
 
 /*

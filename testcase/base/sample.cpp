@@ -71,6 +71,7 @@ int main(int argc, char **argv) {
     testcase_btree();
     testcase_exception();
     testcase_findlte();
+    testcase_int();
     testcase_list();
     testcase_map();
     testcase_ovl();
@@ -90,6 +91,7 @@ int main(int argc, char **argv) {
     testcase_stream();
 
     testcase_string();
+    testcase_testvector_regex();
 
     testcase_bignumber();
     testcase_testvector_bignumber();

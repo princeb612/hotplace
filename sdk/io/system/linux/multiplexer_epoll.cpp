@@ -51,8 +51,6 @@ return_t multiplexer_epoll::open(multiplexer_context_t** handle, size_t concurre
     multiplexer_controller controller;
 
     __try2 {
-        auto context = make_unique<multiplexer_epoll_context_t>();
-
         ret = controller.open(&handle_controller);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -69,6 +67,8 @@ return_t multiplexer_epoll::open(multiplexer_context_t** handle, size_t concurre
             ret = errno;
             __leave2;
         }
+
+        auto context = make_unique<multiplexer_epoll_context_t>();
 
         context->signature = MULTIPLEXER_EPOLL_CONTEXT_SIGNATURE;
         context->epoll_fd = epollfd;

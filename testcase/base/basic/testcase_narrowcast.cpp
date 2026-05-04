@@ -35,7 +35,7 @@ struct t_my_narrow_cast_t {
             _logger->writeln("case.1");
             throw exception(miscast_narrow);
         }
-        if (std::numeric_limits<SOURCE>::is_signed != std::numeric_limits<TYPE>::is_signed) {
+        if (typename t_is_signed<SOURCE>::type() != typename t_is_signed<TYPE>::type()) {
             if ((value < 0) != (converted < 0)) {
                 _logger->writeln("case.2");
                 throw exception(miscast_narrow);

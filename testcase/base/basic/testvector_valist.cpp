@@ -38,7 +38,7 @@ void test_yaml_testvector_valist() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("./testvector_valist.yml");
+    YAML::Node testvector = YAML::LoadFile("testvector_valist.yml");
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {

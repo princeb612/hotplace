@@ -61,7 +61,7 @@ void test_yaml_testvector_cbor() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("./testvector_cbor.yml");
+    YAML::Node testvector = YAML::LoadFile("testvector_cbor.yml");
     auto examples = testvector["testvector"];
     auto lambda_test = [&](const YAML::Node& examples) -> void {
         if (examples && examples.IsSequence()) {

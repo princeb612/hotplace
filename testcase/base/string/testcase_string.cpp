@@ -12,8 +12,9 @@
 
 void test_string_format() {
     _test_case.begin("string");
-    _logger->writeln(format("%s %d %1.1f\n", "sample", 1, 1.1f));
-    _test_case.assert(true, __FUNCTION__, "format");
+    auto str = format("%s %d %1.1f", "sample", 1, 1.1f);
+    _logger->writeln(str);
+    _test_case.assert(str == "sample 1 1.1", __FUNCTION__, "format");
 }
 
 void test_string_getline() {
@@ -36,7 +37,7 @@ void test_string_getline() {
         // printf ("%.*s\n", brk - pos, stream_data + pos);
         std::string line(stream_data + pos, brk - pos);
         ltrim(rtrim(line));
-        printf("%s\n", line.c_str());
+        _logger->writeln("%s", line.c_str());
 
         pos = brk;
     }
@@ -52,15 +53,19 @@ void test_string_gettoken() {
     _test_case.reset_time();
 
     gettoken(data, token, 0, value);  // "key"
+    _logger->writeln(value);
     _test_case.assert(value == "key", __FUNCTION__, "gettoken");
 
     gettoken(data, token, 1, value);  // "item1"
+    _logger->writeln(value);
     _test_case.assert(value == "item1", __FUNCTION__, "gettoken");
 
     gettoken(data, token, 2, value);  // "value1"
+    _logger->writeln(value);
     _test_case.assert(value == "value1", __FUNCTION__, "gettoken");
 
     gettoken(data, token, 3, value);  // "link1"
+    _logger->writeln(value);
     _test_case.assert(value == "link1", __FUNCTION__, "gettoken");
 }
 

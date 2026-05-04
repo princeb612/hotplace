@@ -24,6 +24,32 @@
 namespace hotplace {
 
 /**
+ * @brief   custom type traits
+ * @refer   Gemini
+ * @remarks
+ *          std::is_signed<__int128>
+ *          std::numeric_limits<__int128>::is_signed
+ *
+ *          false  UBUNTU 20  GCC 9.4.0
+ *          true   MINGW64    GCC 15.2.0
+ */
+template <typename T>
+struct t_is_signed : std::is_signed<T> {};
+template <typename T>
+struct t_is_unsigned : std::is_unsigned<T> {};
+
+#ifdef __SIZEOF_INT128__
+template <>
+struct t_is_signed<int128> : std::true_type {};
+template <>
+struct t_is_signed<uint128> : std::false_type {};
+template <>
+struct t_is_unsigned<int128> : std::false_type {};
+template <>
+struct t_is_unsigned<uint128> : std::true_type {};
+#endif
+
+/**
  * @brief   narrow cast
  * @refer   Gemini
  */
@@ -47,7 +73,7 @@ struct t_narrow_cast_t {
                  */
                 throw exception(errorcode_t::miscast_narrow);
             }
-            if (std::numeric_limits<SOURCE>::is_signed != std::numeric_limits<TYPE>::is_signed) {
+            if (typename t_is_signed<SOURCE>::type() != typename t_is_signed<TYPE>::type()) {
                 if ((value < 0) != (converted < 0)) {
                     /**
                      * case.3
@@ -73,25 +99,21 @@ constexpr t_narrow_cast_t<TYPE, false> t_justdoit(TYPE v) {
     return {v};
 }
 
-/**
- * @example
- *          signed value;
- *          value = -value;
- */
+namespace custom {
 template <typename TYPE>
-typename std::enable_if<std::numeric_limits<TYPE>::is_signed, TYPE>::type t_change_sign(TYPE i) {
+TYPE t_change_sign(TYPE i, std::true_type) {
     return -i;
 }
-
-/**
- * @example
- *          unsigned value;
- *          value = -value;
- */
 template <typename TYPE>
-typename std::enable_if<!std::numeric_limits<TYPE>::is_signed, TYPE>::type t_change_sign(TYPE i) {
+TYPE t_change_sign(TYPE i, std::false_type) {
     throw exception(miscast_unsigned);
     return i;
+}
+}  // namespace custom
+
+template <typename TYPE>
+TYPE t_change_sign(TYPE i) {
+    return custom::t_change_sign(i, typename t_is_signed<TYPE>::type());
 }
 
 #if __cplusplus >= 201402L  // c++14
@@ -170,7 +192,7 @@ TYPE t_atoi_n(const char* value, size_t size) {
         }
 
         if (sign < 0) {
-            res = -res;
+            res = t_change_sign(res);
         }
     }
     __finally2 {}

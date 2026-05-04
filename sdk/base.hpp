@@ -54,6 +54,7 @@
 #include <hotplace/sdk/base/pattern/aho_corasick_wildcard.hpp>
 #include <hotplace/sdk/base/pattern/kmp.hpp>
 #include <hotplace/sdk/base/pattern/pattern.hpp>
+#include <hotplace/sdk/base/pattern/regex.hpp>
 #include <hotplace/sdk/base/pattern/suffixtree.hpp>
 #include <hotplace/sdk/base/pattern/trie.hpp>
 #include <hotplace/sdk/base/pattern/ukkonen.hpp>

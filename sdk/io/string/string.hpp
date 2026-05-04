@@ -77,20 +77,6 @@ std::string tokenize(const std::string& source, const std::string& tokens, size_
 std::wstring tokenize(const std::wstring& source, const std::wstring& tokens, size_t& pos, int mode = 0);
 #endif
 
-//
-// std::regex
-//
-
-/**
- * @brief   regular expression
- * @param   const std::string& input [in]
- * @param   const std::string& expr [in]
- * @param   size_t& pos [out]
- * @param   std::list<std::string>& tokens [out]
- * @sa      split_url
- */
-void regex_token(const std::string& input, const std::string& expr, size_t& pos, std::list<std::string>& tokens);
-
 /**
  * @brief  escape_url
  * @param  const char* url [in]

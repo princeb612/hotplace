@@ -43,7 +43,6 @@ return_t multiplexer_controller::open(multiplexer_controller_context_t** handle)
         }
 
         auto context = make_unique<multiplexer_event_loop_controller_context_t>();
-
         context->signature = MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT_SIGNATURE;
 
         *handle = context.get();

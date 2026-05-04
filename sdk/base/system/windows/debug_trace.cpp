@@ -241,6 +241,7 @@ return_t debug_trace::open(debug_trace_context_t** handle) {
         // enum_modules(GetCurrentProcess(), enum_modules_handler, context);  // [APVR]
 
         context->imagehlp_handle = imagehlp_handle;
+
         *handle = context.get();
 
         context.release();

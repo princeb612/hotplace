@@ -34,20 +34,20 @@ return_t bufferio::open(bufferio_context_t** handle, size_t block_size, byte_t p
             __leave2;
         }
 
-        auto context = make_unique<bufferio_context_t>();
-
         if (0 == block_size) {
             block_size = (1 << 10);
         }
+
+        auto context = make_unique<bufferio_context_t>();
 
         context->signature = BUFFERIO_CONTEXT_SIGNATURE;
         context->block_size = block_size;
         context->pad_size = pad_size;
         context->flags = flags;
-
         context->bufferio_size = 0;
 
         *handle = context.get();
+
         context.release();
     }
     __finally2 {}

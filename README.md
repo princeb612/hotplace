@@ -1,7 +1,9 @@
 # hotplace
 
 * Research on personal interests
-* powered by
+* ![cmake workflow](https://github.com/princeb612/hotplace/actions/workflows/build.yml/badge.svg)
+* ![codeql workflow](https://github.com/princeb612/hotplace/actions/workflows/codeql.yml/badge.svg)
+* powered by* powered by
   * ![openssl](https://img.shields.io/badge/openssl-1.1.1/3.0/3.2/3.3/3.4/3.5/4.0-green)
   * ![jansson](https://img.shields.io/badge/jansson-2.15-green)
   * ![zlib](https://img.shields.io/badge/zlb-1.3.2-green)
@@ -225,20 +227,9 @@
 
 ### openssl
 
-* important
-  * openssl 1.1.1 or newer
-    * RSA-OAEP-256
-    * Ed25519 Ed448 X25519 X448
-    * sha3
-  * openssl 3.0, 3.1
-    * EVP_CIPHER_fetch/EVP_CIPHER_free, EVP_MD_fetch/EVP_MD_free
-    * truncated sha ("sha2-512/224", "sha2-512/256")
-    * failed to load PEM file containing HMAC private key
-  * openssl 3.2
-    * argon2d, argon2i, argon2id
+* issue
   * custom build required in RHEL (RHEL, centos, rocky) and older version
-    * -fPIC required
-    * algoritm test, random SEGV, ctr_update SEGV (older linux), ...
+    * random SEGV, ctr_update SEGV (older linux), ...
 
 * how to custom build
   * build custom openssl (example)

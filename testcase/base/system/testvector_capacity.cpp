@@ -36,7 +36,7 @@ void test_yaml_testvector_capacity() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("./testvector_capacity.yml");
+    YAML::Node testvector = YAML::LoadFile("testvector_capacity.yml");
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {

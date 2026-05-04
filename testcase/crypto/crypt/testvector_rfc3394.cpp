@@ -106,7 +106,7 @@ void test_yaml_testvector_rfc3394() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("./testvector_rfc3394.yml");
+    YAML::Node testvector = YAML::LoadFile("testvector_rfc3394.yml");
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {

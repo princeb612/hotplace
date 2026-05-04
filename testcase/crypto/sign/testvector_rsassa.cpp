@@ -97,7 +97,7 @@ void test_yaml_testvector_rsassa() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("./testvector_rsassa.yml");
+    YAML::Node testvector = YAML::LoadFile("testvector_rsassa.yml");
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {

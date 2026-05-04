@@ -115,7 +115,8 @@ logger::logger_item* logger::get_context(bool upref) {
     // stream per thread
     logger_stream_map_t::iterator iter = _logger_stream_map.find(tid);
     if (_logger_stream_map.end() == iter) {
-        _logger_stream_map.insert(std::make_pair(tid, item = new logger_item));
+        item = new logger_item;
+        _logger_stream_map.insert(std::make_pair(tid, item));
     } else {
         item = iter->second;
     }
