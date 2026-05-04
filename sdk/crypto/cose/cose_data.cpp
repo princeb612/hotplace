@@ -303,9 +303,10 @@ return_t cose_data::build_protected(cbor_data** object) {
                 cbor_publisher publisher;
                 publisher.publish(root.get(), &_payload);
 
-                *object = new cbor_data(_payload);
+                root->release();
+                root.release();
 
-                // release root
+                *object = new cbor_data(_payload);
             } else {
                 *object = new cbor_data(binary_t());
             }
@@ -343,9 +344,10 @@ return_t cose_data::build_protected(cbor_data** object, cose_variantmap_t& unsen
                 cbor_publisher publisher;
                 publisher.publish(root.get(), &_payload);
 
-                *object = new cbor_data(_payload);
+                root->release();
+                root.release();
 
-                // release root
+                *object = new cbor_data(_payload);
             } else {
                 *object = new cbor_data(binary_t());
             }
