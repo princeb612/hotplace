@@ -88,12 +88,14 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
            << new payload_member(new quic_encoded(uint64(0)), constexpr_first_ack_range);
         pl.read(stream, size, pos);
 
+#if defined DEBUG
         uint64 largest_ack = pl.t_value_of<uint64>(constexpr_largest_ack);
         uint64 ack_delay = pl.t_value_of<uint64>(constexpr_ack_delay);
+#endif
         uint64 ack_range_count = pl.t_value_of<uint64>(constexpr_ack_range_count);
+#if defined DEBUG
         uint64 first_ack_range = pl.t_value_of<uint64>(constexpr_first_ack_range);
 
-#if defined DEBUG
         basic_stream dbs;
 
         if (istraceable(trace_category_net)) {
@@ -115,10 +117,10 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
             ack_ranges << new payload_member(new quic_encoded(uint64(0)), constexpr_gap) << new payload_member(new quic_encoded(uint64(0)), constexpr_range_length);
             ack_ranges.read(stream, size, pos);
 
+#if defined DEBUG
             uint64 gap = ack_ranges.t_value_of<uint64>(constexpr_gap);
             uint64 range_length = ack_ranges.t_value_of<uint64>(constexpr_range_length);
 
-#if defined DEBUG
             if (istraceable(trace_category_net)) {
                 dbs.println("   > %s[%I64i]", constexpr_ack_ranges, i);
                 dbs.println("    > %s %I64i", constexpr_gap, gap);
@@ -140,11 +142,11 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
                        << new payload_member(new quic_encoded(uint64(0)), constexpr_ectce_count);
             ecn_counts.read(stream, size, pos);
 
+#if defined DEBUG
             uint64 ect0_count = ecn_counts.t_value_of<uint64>(constexpr_ect0_count);
             uint64 ect1_count = ecn_counts.t_value_of<uint64>(constexpr_ect1_count);
             uint64 ectce_count = ecn_counts.t_value_of<uint64>(constexpr_ectce_count);
 
-#if defined DEBUG
             if (istraceable(trace_category_net)) {
                 dbs.println("   > %s", constexpr_ecn_counts);
                 dbs.println("    > %s %I64i", constexpr_ect0_count, ect0_count);
@@ -170,7 +172,6 @@ return_t quic_frame_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
         auto session = get_session();
         auto space = get_space();
         auto type = get_type();
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
         if (protection_default == space) {
             ret = errorcode_t::not_ready;
@@ -201,6 +202,7 @@ return_t quic_frame_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 dbs.println(ANSI_ESCAPE "1;34m  + frame %s 0x%x(%i)" ANSI_ESCAPE "0m", tlsadvisor->nameof_quic_frame(type).c_str(), type, type);
             });
         }

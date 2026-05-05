@@ -181,9 +181,9 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
 return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
+#if defined DEBUG
         auto session = get_session();
 
-#if defined DEBUG
         if (istraceable(trace_category_net)) {
             trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -262,7 +262,9 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
         auto& secrets = protection.get_secrets();
         auto type = session->get_type();
 
+#if defined DEBUG
         tls_hs_type_t hstype;
+#endif
         uint32 length = 0;
         bool cond_dtls = false;
         uint16 dtls_seq = 0;
@@ -302,7 +304,9 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
                 pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(legacy_version));
                 pl.read(stream, size, pos);
 
+#if defined DEBUG
                 hstype = (tls_hs_type_t)pl.t_value_of<uint8>(constexpr_message_type);
+#endif
                 length = pl.t_value_of<uint32>(constexpr_len);
 
                 cond_dtls = pl.get_group_condition(constexpr_group_dtls);

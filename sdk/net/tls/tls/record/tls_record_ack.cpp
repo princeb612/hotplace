@@ -36,7 +36,9 @@ return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
         //     RecordNumber record_numbers<0..2^16-1>;
         // } ACK;
 
+#if defined DEBUG
         uint16 ack_len = 0;
+#endif
         binary_t ack;
         {
             payload pl;
@@ -45,7 +47,9 @@ return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
             pl.set_reference_value(constexpr_ack, constexpr_ack_len);
             pl.read(stream, size, pos);
 
+#if defined DEBUG
             ack_len = pl.t_value_of<uint16>(constexpr_ack_len);
+#endif
             pl.get_binary(constexpr_ack, ack);
         }
 

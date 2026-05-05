@@ -44,10 +44,10 @@ return_t quic_frame_stop_sending::do_read_body(tls_direction_t dir, const byte_t
            << new payload_member(new quic_encoded(uint64(0)), constexpr_error_code);
         pl.read(stream, size, pos);
 
+#if defined DEBUG
         uint64 stream_id = pl.t_value_of<uint64>(constexpr_stream_id);
         uint64 error_code = pl.t_value_of<uint64>(constexpr_error_code);
 
-#if defined DEBUG
         if (istraceable(trace_category_net)) {
             trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();

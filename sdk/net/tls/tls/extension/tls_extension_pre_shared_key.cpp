@@ -97,11 +97,15 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
         auto& secrets = protection.get_secrets();
 
         uint16 psk_identities_len = 0;
+#if defined DEBUG
         uint16 psk_identity_len = 0;
+#endif
         binary_t psk_identity;
         uint32 obfuscated_ticket_age = 0;
         uint16 psk_binders_len = 0;
+#if defined DEBUG
         uint8 psk_binder_len = 0;
+#endif
         binary_t psk_binder;
         tls_direction_t dir = from_client;
 
@@ -120,12 +124,16 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
             pl.read(stream, endpos_extension(), pos);
 
             psk_identities_len = pl.t_value_of<uint16>(constexpr_psk_identities_len);
+#if defined DEBUG
             psk_identity_len = pl.t_value_of<uint16>(constexpr_psk_identity_len);
+#endif
             pl.get_binary(constexpr_psk_identity, psk_identity);
             obfuscated_ticket_age = pl.t_value_of<uint32>(constexpr_obfuscated_ticket_age);
             offset_psk_binders_len = offsetof_header() + pl.offset_of(constexpr_psk_binders_len);  // 0-RTT "res binder"
             psk_binders_len = pl.t_value_of<uint16>(constexpr_psk_binders_len);
+#if defined DEBUG
             psk_binder_len = pl.t_value_of<uint8>(constexpr_psk_binder_len);
+#endif
             pl.get_binary(constexpr_psk_binder, psk_binder);
         }
 

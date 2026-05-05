@@ -61,8 +61,10 @@ return_t http3_frame::do_read_frame(const byte_t* stream, size_t size, size_t& p
 
     size_t fpos = pos;
     __try2 {
+#if defined DEBUG
         uint64 type = 0;
         uint64 length = 0;
+#endif
         binary_t frame_payload;
 
         {
@@ -74,8 +76,10 @@ return_t http3_frame::do_read_frame(const byte_t* stream, size_t size, size_t& p
             pl.set_reference_value(constexpr_payload, constexpr_length);
             ret = pl.read(stream, size, pos);
 
+#if defined DEBUG
             type = pl.t_value_of<uint64>(constexpr_type);
             length = pl.t_value_of<uint64>(constexpr_length);
+#endif
             pl.get_binary(constexpr_payload, frame_payload);
         }
 

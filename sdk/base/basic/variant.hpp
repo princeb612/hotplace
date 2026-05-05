@@ -336,6 +336,7 @@ class variant {
 
         switch (_vt.type) {
             case TYPE_BOOL:
+            case TYPE_BOOLEAN:
                 i = _vt.data.b ? 1 : 0;
                 break;
             case TYPE_INT8:

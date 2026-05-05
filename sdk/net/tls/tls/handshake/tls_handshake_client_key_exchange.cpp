@@ -82,7 +82,9 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
 
         {
             auto session = get_session();
+#if defined DEBUG
             uint8 pubkey_len = 0;
+#endif
             binary_t pubkey;
             {
                 payload pl;
@@ -91,7 +93,9 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
                 pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
                 pl.read(stream, size, pos);
 
+#if defined DEBUG
                 pubkey_len = pl.t_value_of<uint8>(constexpr_pubkey_len);
+#endif
                 pl.get_binary(constexpr_pubkey, pubkey);
             }
 

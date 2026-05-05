@@ -28,20 +28,21 @@ http3_frame_settings::http3_frame_settings() : http3_frame(h3_frame_settings) {}
 return_t http3_frame_settings::do_read_payload(const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     // RFC 9114 Figure 7: SETTINGS Frame
-    auto resource = http_resource::get_instance();
-    uint64 id = 0;
-    uint64 value = 0;
+
     while (pos < size) {
         payload pl;
         pl << new payload_member(new quic_encoded(uint64(0)), constexpr_identifier)  //
            << new payload_member(new quic_encoded(uint64(0)), constexpr_value);
         pl.read(stream, size, pos);
 
+#if defined DEBUG
+        uint64 id = 0;
+        uint64 value = 0;
         id = pl.t_value_of<uint64>(constexpr_identifier);
         value = pl.t_value_of<uint64>(constexpr_value);
 
-#if defined DEBUG
         if (istraceable(trace_category_net)) {
+            auto resource = http_resource::get_instance();
             trace_debug_event(trace_category_net, trace_event_http3, [&](basic_stream& dbs) -> void {
                 dbs.println("  > %I64i (%s) 0x%0I64x (%I64i)", id, resource->get_h3_settings_name(id).c_str(), value, value);
             });
@@ -53,7 +54,6 @@ return_t http3_frame_settings::do_read_payload(const byte_t* stream, size_t size
 
 return_t http3_frame_settings::do_write(binary_t& bin) {
     return_t ret = errorcode_t::success;
-    auto resource = http_resource::get_instance();
     binary_t temp;
 
     for (auto& item : _params) {
@@ -62,6 +62,7 @@ return_t http3_frame_settings::do_write(binary_t& bin) {
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
+            auto resource = http_resource::get_instance();
             trace_debug_event(trace_category_net, trace_event_http3,
                               [&](basic_stream& dbs) -> void { dbs << "  > " << id << " (" << resource->get_h3_settings_name(id) << ") " << value << "\n"; });
         }

@@ -64,6 +64,7 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 stream->printf(constexpr_null);
                 break;
             case TYPE_BOOL:
+            case TYPE_BOOLEAN:
                 stream->printf("%s", vt.data.b ? constexpr_true : constexpr_false);
                 break;
             case TYPE_INT8:

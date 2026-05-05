@@ -92,13 +92,17 @@ void signalwait_threads::join_signaled() {
     if (errorcode_t::success == ret) {
         thread_info* thread_context = nullptr;
         thread* thread = nullptr;
+#if defined DEBUG
         threadid_t tid;
+#endif
 
         {
             critical_section_guard guard(_lock);
             if (_readytojoin.size()) {
                 auto iter = _readytojoin.begin();
+#if defined DEBUG
                 tid = iter->first;
+#endif
                 thread_context = iter->second;
                 thread = thread_context->get_thread();
                 _readytojoin.erase(iter);

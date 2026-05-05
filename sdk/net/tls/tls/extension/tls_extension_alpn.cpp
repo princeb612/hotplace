@@ -34,7 +34,9 @@ return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* str
         auto& protection = session->get_tls_protection();
         auto& secrets = protection.get_secrets();
 
+#if defined DEBUG
         uint16 alpn_len = 0;
+#endif
         binary_t protocols;
         {
             // RFC 7301
@@ -45,7 +47,9 @@ return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* str
             pl.set_reference_value(constexpr_protocol, constexpr_alpn_len);
             pl.read(stream, endpos_extension(), pos);
 
+#if defined DEBUG
             alpn_len = pl.t_value_of<uint16>(constexpr_alpn_len);
+#endif
             pl.get_binary(constexpr_protocol, protocols);
         }
 

@@ -150,7 +150,6 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
 return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
         auto& protection = session->get_tls_protection();
         auto sess_recno = session->get_recordno(dir, false);
@@ -225,6 +224,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
                 trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
                     dbs.println("> content type 0x%02x(%i) %s", type, type, tlsadvisor->nameof_tls_record(type).c_str());
 
                     if (check_trace_level(loglevel_debug)) {

@@ -151,11 +151,12 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
         // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes (psk_dhe_ke)
 
         // auto advisor = crypto_advisor::get_instance();
-        auto tlsadvisor = tls_advisor::get_instance();
         auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
         size_t limit = endpos_extension();
+#if defined DEBUG
         uint16 len = 0;
+#endif
 
         //  struct {
         //      NamedGroup group;
@@ -169,7 +170,9 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
             payload pl;
             pl << new payload_member(uint16(0), true, constexpr_len);
             pl.read(stream, limit, pos);
+#if defined DEBUG
             len = pl.t_value_of<uint16>(constexpr_len);
+#endif
         }
 
         protection.get_protection_context().clear_keyshare_groups();
@@ -195,6 +198,7 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
                 trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                    auto tlsadvisor = tls_advisor::get_instance();
                     // auto session = get_handshake()->get_session();
                     dbs.println("   > %s %i(0x%04x)", constexpr_len, len, len);
                     dbs.println("    > %s", constexpr_key_share_entry);
@@ -216,8 +220,6 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
 return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
-        // crypto_advisor* advisor = crypto_advisor::get_instance();
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
 
@@ -239,6 +241,7 @@ return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, bina
 #if defined DEBUG
             if (istraceable(trace_category_net, loglevel_debug)) {
                 trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
                     dbs.println("%s", tlsadvisor->nameof_group(group).c_str());
                     dump_memory(pubkey, &dbs, 16, 7, 0x0, dump_notrunc);
                 });
@@ -289,8 +292,6 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
         binary_t pubkey;
         uint16 pubkeylen = 0;
         auto advisor = crypto_advisor::get_instance();
-        auto tlsadvisor = tls_advisor::get_instance();
-
         auto& protection = session->get_tls_protection();
         protection.get_secrets().erase(tls_context_shared_secret);
 
@@ -335,6 +336,7 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                auto tlsadvisor = tls_advisor::get_instance();
                 dbs.println("   > %s 0x%04x (%s)", constexpr_group, group, tlsadvisor->nameof_group(group).c_str());
                 if (pubkeylen) {
                     dbs.println("   > %s %i", constexpr_pubkey_len, pubkeylen);

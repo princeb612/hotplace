@@ -41,9 +41,11 @@ return_t tls_extension_renegotiation_info::do_read_body(tls_direction_t dir, con
         pl.set_reference_value(constexpr_renegotiation_info, constexpr_renegotiation_info_length);
         pl.read(stream, size, pos);
 
+#if defined DEBUG
         uint8 len = 0;
-        binary_t info;
         len = pl.t_value_of<uint8>(constexpr_renegotiation_info_length);
+#endif
+        binary_t info;
         pl.get_binary(constexpr_renegotiation_info, info);
 
 #if defined DEBUG

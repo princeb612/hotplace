@@ -31,6 +31,7 @@ return_t cbor_encode::encode(binary_t& bin, variant_t vt) {
     __try2 {
         switch (vt.type) {
             case TYPE_BOOL:
+            case TYPE_BOOLEAN:
                 encode(bin, vt.data.b);
                 break;
             case TYPE_INT8:

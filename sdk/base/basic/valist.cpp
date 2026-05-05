@@ -43,8 +43,8 @@ valist& valist::assign(const std::vector<variant_t>& args) {
 valist& valist::operator<<(bool value) {
     variant_t v;
 
-    v.type = TYPE_INT;  // default argument promotions
-    v.data.i = value;
+    v.type = TYPE_BOOL;
+    v.data.b = value;
     insert(std::move(v));
     return *this;
 }
@@ -52,8 +52,8 @@ valist& valist::operator<<(bool value) {
 valist& valist::operator<<(char value) {
     variant_t v;
 
-    v.type = TYPE_INT;  // default argument promotions
-    v.data.i = value;
+    v.type = TYPE_CHAR;
+    v.data.i8 = value;
     insert(std::move(v));
     return *this;
 }
@@ -61,8 +61,8 @@ valist& valist::operator<<(char value) {
 valist& valist::operator<<(unsigned char value) {
     variant_t v;
 
-    v.type = TYPE_INT;  // default argument promotions
-    v.data.i = value;
+    v.type = TYPE_BYTE;
+    v.data.ui8 = value;
     insert(std::move(v));
     return *this;
 }
@@ -70,8 +70,8 @@ valist& valist::operator<<(unsigned char value) {
 valist& valist::operator<<(short value) {
     variant_t v;
 
-    v.type = TYPE_INT;  // default argument promotions
-    v.data.i = value;
+    v.type = TYPE_SHORT;
+    v.data.i16 = value;
     insert(std::move(v));
     return *this;
 }
@@ -79,8 +79,8 @@ valist& valist::operator<<(short value) {
 valist& valist::operator<<(unsigned short value) {
     variant_t v;
 
-    v.type = TYPE_INT;  // default argument promotions
-    v.data.i = value;
+    v.type = TYPE_USHORT;
+    v.data.ui16 = value;
     insert(std::move(v));
     return *this;
 }
@@ -98,7 +98,7 @@ valist& valist::operator<<(unsigned int value) {
     variant_t v;
 
     v.type = TYPE_UINT;
-    v.data.i64 = value;
+    v.data.ui32 = value;
     insert(std::move(v));
     return *this;
 }
@@ -343,8 +343,6 @@ void valist::build() {
                     native_data_size = sizeof(int64);
                     break;
                 case TYPE_FLOAT:
-                    native_data_size = sizeof(float);
-                    break;
                 case TYPE_DOUBLE:
                     native_data_size = sizeof(double);
                     break;
@@ -421,9 +419,6 @@ void valist::build() {
                     native_data_size = sizeof(int64);
                     break;
                 case TYPE_FLOAT:
-                    native_data = &(vt.data.f);
-                    native_data_size = sizeof(float);
-                    break;
                 case TYPE_DOUBLE:
                     native_data = &(vt.data.d);
                     native_data_size = sizeof(double);

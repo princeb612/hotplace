@@ -71,7 +71,6 @@ return_t quic_frame_new_token::do_write_body(tls_direction_t dir, binary_t& bin)
     return_t ret = errorcode_t::success;
     __try2 {
         auto type = get_type();
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
         openssl_prng prng;
         binary_t token;
@@ -85,6 +84,7 @@ return_t quic_frame_new_token::do_write_body(tls_direction_t dir, binary_t& bin)
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 dbs.println(ANSI_ESCAPE "1;34m  + frame %s 0x%x(%i)" ANSI_ESCAPE "0m", tlsadvisor->nameof_quic_frame(type).c_str(), type, type);
             });
         }

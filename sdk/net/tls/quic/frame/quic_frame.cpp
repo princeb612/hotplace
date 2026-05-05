@@ -32,8 +32,9 @@ quic_frame::~quic_frame() {}
 return_t quic_frame::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+#if defined DEBUG
         size_t begin = pos;
+#endif
 
         // RFC 9001 19.  Frame Types and Formats
         uint64 type = 0;
@@ -44,6 +45,7 @@ return_t quic_frame::read(tls_direction_t dir, const byte_t* stream, size_t size
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
             trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
                 dbs.println(ANSI_ESCAPE "1;34m  > frame %s 0x%x(%i) @0x%zx" ANSI_ESCAPE "0m", tlsadvisor->nameof_quic_frame(type).c_str(), type, type, begin);
             });
@@ -59,7 +61,9 @@ return_t quic_frame::read(tls_direction_t dir, const byte_t* stream, size_t size
 
         // trim padding
         if (quic_frame_type_padding == type) {
+#if defined DEBUG
             size_t tpos = pos;
+#endif
             for (auto t = pos; t < size; t++) {
                 if (0 == stream[pos]) {
                     pos++;

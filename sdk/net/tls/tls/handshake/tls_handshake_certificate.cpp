@@ -115,7 +115,9 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
         auto is_tls13 = tlsadvisor->is_kindof_tls13(tls_version);
 
         crypto_keychain keychain;
+#if defined DEBUG
         uint8 request_context_len = 0;
+#endif
         uint32 certificates_len = 0;
         binary_t certificates;
         {
@@ -130,7 +132,9 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
             pl.set_reference_value(constexpr_certificate_extensions, constexpr_certificate_extensions_len);
             pl.read(stream, size, pos);
 
+#if defined DEBUG
             request_context_len = pl.t_value_of<uint8>(constexpr_request_context_len);
+#endif
             certificates_len = pl.t_value_of<uint32>(constexpr_certificates_len);
             pl.get_binary(constexpr_certificates, certificates);
         }
@@ -174,14 +178,20 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
 
             binary_t cert;
 
+#if defined DEBUG
             uint32 certificate_len = pl.t_value_of<uint32>(constexpr_certificate_len);
+#endif
             pl.get_binary(constexpr_certificate, cert);
 
+#if defined DEBUG
             uint16 extensions_len = 0;
+#endif
             binary_t cert_extensions;
 
             if (is_tls13) {
+#if defined DEBUG
                 extensions_len = pl.t_value_of<uint16>(constexpr_certificate_extensions_len);
+#endif
                 pl.get_binary(constexpr_certificate_extensions, cert_extensions);
             }
 

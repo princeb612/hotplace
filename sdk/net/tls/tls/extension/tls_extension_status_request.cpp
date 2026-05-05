@@ -35,8 +35,10 @@ return_t tls_extension_status_request::do_read_body(tls_direction_t dir, const b
     return_t ret = errorcode_t::success;
     __try2 {
         uint8 cert_status_type = 0;
+#if defined DEBUG
         uint16 responderid_info_len = 0;
         uint16 request_ext_info_len = 0;
+#endif
         binary_t responderid_info;
         binary_t request_ext_info;
         {
@@ -51,8 +53,10 @@ return_t tls_extension_status_request::do_read_body(tls_direction_t dir, const b
             pl.read(stream, endpos_extension(), pos);
 
             cert_status_type = pl.t_value_of<uint8>(constexpr_cert_status_type);
+#if defined DEBUG
             responderid_info_len = pl.t_value_of<uint8>(constexpr_responderid_info_len);
             request_ext_info_len = pl.t_value_of<uint8>(constexpr_request_ext_info_len);
+#endif
             pl.get_binary(constexpr_responderid_info, responderid_info);
             pl.get_binary(constexpr_request_ext_info, request_ext_info);
         }

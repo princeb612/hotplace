@@ -98,13 +98,27 @@ return_t client_socket_prosumer::close() {
 
 return_t client_socket_prosumer::read(char* ptr_data, size_t size_data, size_t* cbread) {
     return_t ret = errorcode_t::success;
-    ret = do_read(ptr_data, size_data, cbread, nullptr, nullptr);
+    __try2 {
+        if (nullptr == ptr_data || nullptr == cbread) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        ret = do_read(ptr_data, size_data, cbread, nullptr, nullptr);
+    }
+    __finally2 {}
     return ret;
 }
 
 return_t client_socket_prosumer::more(char* ptr_data, size_t size_data, size_t* cbread) {
     return_t ret = errorcode_t::success;
-    ret = read(ptr_data, size_data, cbread);
+    __try2 {
+        if (nullptr == ptr_data || nullptr == cbread) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        ret = read(ptr_data, size_data, cbread);
+    }
+    __finally2 {}
     return ret;
 }
 

@@ -150,7 +150,6 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto session = get_session();
         auto& protection = session->get_tls_protection();
-        auto& secrets = protection.get_secrets();
         auto tlsversion = protection.get_tls_version();
         uint16 dlen = 0;
         hash_algorithm_t hmacalg;
@@ -194,6 +193,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
                 trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                    auto& secrets = protection.get_secrets();
                     dbs.autoindent(1);
                     dbs.println("> %s " ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", constexpr_verify_data, (errorcode_t::success == ret) ? "true" : "false");
                     if (check_trace_level(loglevel_debug)) {
@@ -225,7 +225,6 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
     __try2 {
         auto session = get_session();
         auto& protection = session->get_tls_protection();
-        auto& secrets = protection.get_secrets();
 
         crypto_advisor* advisor = crypto_advisor::get_instance();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -259,6 +258,7 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                auto& secrets = protection.get_secrets();
                 dbs.println("> %s", constexpr_verify_data);
                 if (check_trace_level(loglevel_debug)) {
                     dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);

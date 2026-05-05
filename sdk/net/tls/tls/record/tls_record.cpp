@@ -187,7 +187,9 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
         uint8 content_type = 0;
+#if defined DEBUG
         uint16 record_version = 0;
+#endif
         uint16 len = 0;
         bool cond_dtls = false;
         uint16 key_epoch = 0;
@@ -233,7 +235,9 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
             pl.read(stream, size, pos);
 
             content_type = pl.t_value_of<uint8>(constexpr_content_type);
+#if defined DEBUG
             record_version = pl.t_value_of<uint16>(constexpr_record_version);
+#endif
             len = pl.t_value_of<uint16>(constexpr_len);
             cond_dtls = pl.get_group_condition(constexpr_group_dtls);
             if (cond_dtls) {

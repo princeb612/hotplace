@@ -149,7 +149,7 @@ std::string tls_advisor::nameof_signature_scheme(uint16 code) {
 }
 
 uint16 tls_advisor::valueof_signature_scheme(const std::string& name) {
-    uint16 value;
+    uint16 value = 0;
     auto iter = _sig_scheme_names.find(name);
     if (_sig_scheme_names.end() != iter) {
         auto item = iter->second;

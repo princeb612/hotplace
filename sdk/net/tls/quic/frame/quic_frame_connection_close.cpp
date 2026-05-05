@@ -42,10 +42,11 @@ quic_frame_connection_close::~quic_frame_connection_close() {}
 return_t quic_frame_connection_close::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
+#if defined DEBUG
         uint64 error_code = 0;
         uint64 frame_type = 0;
         binary_t reason_phase;
-
+#endif
         bool is_0x1c = quic_frame_type_connection_close == get_type();
 
         {
@@ -57,11 +58,13 @@ return_t quic_frame_connection_close::do_read_body(tls_direction_t dir, const by
             pl.set_group(constexpr_frametype, is_0x1c);
             pl.read(stream, size, pos);
 
+#if defined DEBUG
             error_code = pl.t_value_of<uint64>(constexpr_error_code);
             if (is_0x1c) {
                 frame_type = pl.t_value_of<uint64>(constexpr_frametype);
             }
             pl.get_binary(constexpr_reason_phase, reason_phase);
+#endif
         }
 
 #if defined DEBUG

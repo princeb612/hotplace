@@ -876,7 +876,7 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
                     ret = crypt.decrypt(enc_alg, kek, kwiv, payload, cek);
                 }
             } else if (cose_group_t::cose_group_key_rsa_oaep == group) {
-                crypt_enc_t encmode;
+                crypt_enc_t encmode = crypt_enc_undefined;
                 switch (alg) {
                     case cose_alg_t::cose_rsaoaep1:
                         encmode = crypt_enc_t::rsa_oaep;

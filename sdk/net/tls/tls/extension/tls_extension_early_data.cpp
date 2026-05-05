@@ -51,7 +51,9 @@ return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_
         }
 
         {
+#if defined DEBUG
             uint32 max_early_data_size = 0;
+#endif
 
             payload pl;
             pl << new payload_member(uint32(0), true, constexpr_max_early_data_size, constexpr_new_session_ticket);
@@ -63,8 +65,8 @@ return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_
             pl.read(stream, size, pos);
 
             if (is_nst) {
-                max_early_data_size = pl.t_value_of<uint32>(constexpr_max_early_data_size);
 #if defined DEBUG
+                max_early_data_size = pl.t_value_of<uint32>(constexpr_max_early_data_size);
                 if (istraceable(trace_category_net)) {
                     trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                         dbs.println("  > %s 0x%04x(%i)", constexpr_max_early_data_size, max_early_data_size, max_early_data_size);

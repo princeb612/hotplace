@@ -43,9 +43,9 @@ return_t crypto_advisor::build() {
     return_t ret = errorcode_t::success;
 
     uint32 i = 0;
-    unsigned long osslver = OpenSSL_version_num();
 #if defined DEBUG
     if (istraceable(trace_category_crypto)) {
+        unsigned long osslver = OpenSSL_version_num();
         trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream& dbs) -> void { dbs.println("openssl version %x", osslver); });
     }
 #endif

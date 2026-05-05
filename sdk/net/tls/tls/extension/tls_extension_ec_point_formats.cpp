@@ -52,7 +52,9 @@ return_t tls_extension_ec_point_formats::do_read_body(tls_direction_t dir, const
         // } ECPointFormatList;
 
         binary_t formats;
+#if defined DEBUG
         uint8 len = 0;
+#endif
 
         {
             payload pl;
@@ -61,7 +63,9 @@ return_t tls_extension_ec_point_formats::do_read_body(tls_direction_t dir, const
             pl.set_reference_value(constexpr_formats, constexpr_len);
             pl.read(stream, endpos_extension(), pos);
 
+#if defined DEBUG
             len = pl.t_value_of<uint8>(constexpr_len);
+#endif
             pl.get_binary(constexpr_formats, formats);
         }
 

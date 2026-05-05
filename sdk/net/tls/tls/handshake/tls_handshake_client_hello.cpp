@@ -270,7 +270,9 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
         auto& secrets = protection.get_secrets();
 
         uint16 legacy_version = protection.get_lagacy_version();
+#if defined DEBUG
         uint16 version = 0;
+#endif
         binary_t random;
         binary_t session_id;
         binary_t cipher_suites;
@@ -310,7 +312,9 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
             // -  A "signature_algorithms" (Section 4.2.3) extension
             // -  A "pre_shared_key" (Section 4.2.11) extension
 
+#if defined DEBUG
             version = pl.t_value_of<uint16>(constexpr_version);
+#endif
             pl.get_binary(constexpr_random, random);
             // session_id_len = pl.t_value_of<uint8>(constexpr_session_id_len);
             pl.get_binary(constexpr_session_id, session_id);

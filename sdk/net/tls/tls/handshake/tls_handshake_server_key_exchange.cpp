@@ -96,7 +96,9 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
             uint8 pubkey_len = 0;
             binary_t pubkey;
             uint16 sigalg = 0;
+#if defined DEBUG
             uint16 sig_len = 0;
+#endif
             binary_t sig;
 
             // RFC 5246 7.4.3.  Server Key Exchange Message
@@ -118,7 +120,9 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                 pubkey_len = pl.t_value_of<uint8>(constexpr_pubkey_len);
                 pl.get_binary(constexpr_pubkey, pubkey);
                 sigalg = pl.t_value_of<uint16>(constexpr_signature);
+#if defined DEBUG
                 sig_len = pl.t_value_of<uint16>(constexpr_sig_len);
+#endif
                 pl.get_binary(constexpr_sig, sig);
             }
 

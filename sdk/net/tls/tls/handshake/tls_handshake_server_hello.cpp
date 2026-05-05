@@ -296,7 +296,9 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
             binary_t session_id;
             // uint8 session_ids = 0;
             uint16 cipher_suite = 0;
+#if defined DEBUG
             uint8 compression_method = 0;
+#endif
             uint16 extension_len = 0;
 
             binary_t bin_server_hello;
@@ -328,7 +330,9 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                 // session_ids = pl.t_value_of<uint8>(constexpr_session_id_len);
                 pl.get_binary(constexpr_session_id, session_id);
                 cipher_suite = pl.t_value_of<uint16>(constexpr_cipher_suite);
+#if defined DEBUG
                 compression_method = pl.t_value_of<uint8>(constexpr_compression_method);
+#endif
                 extension_len = pl.t_value_of<uint16>(constexpr_extension_len);
             }
 

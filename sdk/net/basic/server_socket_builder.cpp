@@ -153,7 +153,7 @@ server_socket* server_socket_builder::build() {
 }
 
 server_socket_adapter* server_socket_builder::build_adapter() {
-    server_socket_adapter* adapter;
+    server_socket_adapter* adapter = nullptr;
     __try2 {
         auto scheme = get_scheme();
         auto powered_by = socket_scheme_mask_powered_by & scheme;

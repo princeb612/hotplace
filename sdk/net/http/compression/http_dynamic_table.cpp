@@ -255,7 +255,9 @@ return_t http_dynamic_table::evict() {
 
             for (auto iter = lbound; iter != ubound; iter++) {
                 const auto& v = iter->second;  // pair(value, entry)
+#if defined DEBUG
                 const auto& val = v.first;
+#endif
                 const auto& ent = v.second;
                 if (ent == t) {
                     if (_hook) {

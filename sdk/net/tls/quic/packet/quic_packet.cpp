@@ -438,8 +438,9 @@ return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream
             __leave2;
         }
 
+#if defined DEBUG
         uint8 hdr_backup = hdr;
-
+#endif
         // unprotect ht
         if (quic_packet_field_hf & hdr) {
             hdr ^= (bin_mask[0] & 0x0f);

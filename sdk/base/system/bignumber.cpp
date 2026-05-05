@@ -228,6 +228,7 @@ bignumber &bignumber::setu(uint64 value)
 bignumber &bignumber::set(const variant_t &vt) {
     switch (vt.type) {
         case TYPE_BOOL:
+        case TYPE_BOOLEAN:
             set(vt.data.b ? 1 : 0);
             break;
         case TYPE_INT8:

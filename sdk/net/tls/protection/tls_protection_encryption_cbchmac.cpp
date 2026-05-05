@@ -56,7 +56,6 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
         auto session_type = session->get_type();
         auto cs = get_cipher_suite();
 
-        crypto_advisor *advisor = crypto_advisor::get_instance();
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
         const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(cs);
@@ -128,6 +127,7 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
 #if defined DEBUG
         if (istraceable(trace_category_net, loglevel_debug)) {
             trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+                crypto_advisor *advisor = crypto_advisor::get_instance();
                 dbs.println("> encrypt %s", advisor->nameof_authenticated_encryption(flag).c_str());
                 dbs.println(" > aad %s", base16_encode(aad).c_str());
                 dbs.println(" > enc %s", advisor->nameof_cipher(enc_alg, cbc));
@@ -162,7 +162,6 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         // stream = unprotected(content header + iv) + protected(ciphertext)
         // ciphertext = enc(plaintext + tag)
 
-        crypto_advisor *advisor = crypto_advisor::get_instance();
         tls_advisor *tlsadvisor = tls_advisor::get_instance();
 
         const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(cs);
@@ -209,7 +208,6 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         }
         binary_append(aad, uint64(record_no), hton64);  // sequence
         binary_append(aad, stream + pos, 3);            // rechdr (content_type, version)
-        size_t plainsize = 0;
 
         // MtE
         //   plaintext || tag
@@ -253,6 +251,7 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
 #if defined DEBUG
         if (istraceable(trace_category_net, loglevel_debug)) {
             trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+                crypto_advisor *advisor = crypto_advisor::get_instance();
                 dbs.println("> decrypt %s", advisor->nameof_authenticated_encryption(flag).c_str());
                 dbs.println(" > aad %s", base16_encode(aad).c_str());
                 dbs.println(" > enc %s", advisor->nameof_cipher(enc_alg, cbc));
@@ -263,7 +262,6 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
                 dbs.println(" > record no %i", record_no);
                 dbs.println(" > ciphertext");
                 dump_memory(ciphertext, ciphersize, &dbs, 16, 3, 0x0, dump_notrunc);
-                dbs.println(" > plaintext 0x%x(%i)", plainsize, plainsize);
                 dump_memory(plaintext, &dbs, 16, 3, 0x0, dump_notrunc);
             });
         }

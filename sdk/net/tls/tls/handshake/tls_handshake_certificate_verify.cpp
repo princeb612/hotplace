@@ -198,7 +198,9 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
         // tls_protection& protection = session->get_tls_protection();
 
         uint16 scheme = 0;
+#if defined DEBUG
         uint16 len = 0;
+#endif
         binary_t signature;
         {
             payload pl;
@@ -209,7 +211,9 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
             pl.read(stream, size, pos);
 
             scheme = pl.t_value_of<uint16>(constexpr_signature_alg);
+#if defined DEBUG
             len = pl.t_value_of<uint16>(constexpr_len);
+#endif
             pl.get_binary(constexpr_signature, signature);
         }
 

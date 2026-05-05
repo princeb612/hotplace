@@ -419,7 +419,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
 
     ieee754_typeof_t ieee754_type = ieee754_typeof_t::ieee754_finite;
 
-    auto PRINT = [&](const TCHAR *s, size_t len) -> int { return runtime_printf(context, s, len); };
+    auto PRINT = [&](const TCHAR *s, int len) -> int { return runtime_printf(context, s, len); };
     auto PAD_SP = [&](int loop) -> void {
         if (loop > 0) {
             printf_runtime(context, runtime_printf, _T("%-*s"), loop, " ");
@@ -469,7 +469,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
             ret += n;
         }
         if (ch == _T('\n')) {
-            PRINT((TCHAR *)&ch, sizeof(TCHAR));
+            PRINT((TCHAR *)&ch, (int)sizeof(TCHAR));
             ret += 1;
             // auto indent
             if (context->indent) {
@@ -550,7 +550,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                 goto reswitch;
 
             case _T('%'): /* %% */
-                PRINT(_T("%"), sizeof(TCHAR));
+                PRINT(_T("%"), (int)sizeof(TCHAR));
                 ret += 1;
                 size = 0;
                 break;
@@ -623,13 +623,13 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                 doubleprec = va_arg(ap, double);
                 ieee754_type = ieee754_typeof(doubleprec);
                 if (ieee754_typeof_t::ieee754_pinf == ieee754_type) {
-                    PRINT(_T("inf"), (sizeof(TCHAR) * 3));
+                    PRINT(_T("inf"), (int)(sizeof(TCHAR) * 3));
                     ret += 3;
                 } else if (ieee754_typeof_t::ieee754_ninf == ieee754_type) {
-                    PRINT(_T("-inf"), (sizeof(TCHAR) * 4));
+                    PRINT(_T("-inf"), (int)(sizeof(TCHAR) * 4));
                     ret += 4;
                 } else if (ieee754_typeof_t::ieee754_nan == ieee754_type) {
-                    PRINT(_T("nan"), (sizeof(TCHAR) * 3));
+                    PRINT(_T("nan"), (int)(sizeof(TCHAR) * 3));
                     ret += 3;
                 } else {
                     /*

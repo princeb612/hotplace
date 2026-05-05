@@ -55,7 +55,9 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
         __try2 {
             record->addref();
 
+#if defined DEBUG
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
+#endif
             tls_record_builder builder;
             auto session = get_session();
             if (nullptr == session) {

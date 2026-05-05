@@ -58,7 +58,7 @@ void test_yaml_testvector_cose_examples() {
                 auto node_keyalg = item["keyalg"];
                 auto node_keyuse = item["keyuse"];
 
-                encoding_t enctype;
+                encoding_t enctype = encoding_base16;
                 if (encoding == "base16") {
                     enctype = encoding_base16;
                 } else if (encoding == "base16rfc") {
@@ -67,6 +67,8 @@ void test_yaml_testvector_cose_examples() {
                     enctype = encoding_base64;
                 } else if (encoding == "base64url") {
                     enctype = encoding_base64url;
+                } else {
+                    break;
                 }
 
                 keydesc desc(text_item);

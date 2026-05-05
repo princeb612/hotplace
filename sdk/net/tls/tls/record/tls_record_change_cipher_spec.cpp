@@ -25,12 +25,12 @@ tls_record_change_cipher_spec::~tls_record_change_cipher_spec() {}
 return_t tls_record_change_cipher_spec::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     auto session = get_session();
-    tls_advisor* tlsadvisor = tls_advisor::get_instance();
     if (session) {
         session->get_session_info(dir).begin_protection();
         session->reset_recordno(dir);
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
             trace_debug_event(trace_category_net, trace_event_tls_record,
                               [&](basic_stream& dbs) -> void { dbs.println("> change_cipher_spec %s", tlsadvisor->nameof_direction(dir).c_str()); });
         }

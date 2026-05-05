@@ -44,11 +44,12 @@ quic_frame_http3_stream::~quic_frame_http3_stream() {}
 return_t quic_frame_http3_stream::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto tlsadvisor = tls_advisor::get_instance();
         auto type = get_type();
         bool offbit = (type & quic_frame_stream_off) ? true : false;
         bool lenbit = (type & quic_frame_stream_len) ? true : false;
+#if defined DEBUG
         bool finbit = (type & quic_frame_stream_fin) ? true : false;
+#endif
 
         payload pl;
         pl << new payload_member(new quic_encoded(uint64(0)), constexpr_stream_id)                 //
@@ -64,20 +65,24 @@ return_t quic_frame_http3_stream::do_read_body(tls_direction_t dir, const byte_t
 
         uint64 stream_id = 0;
         // uint64 fin = 0;
+#if defined DEBUG
         uint64 len = 0;
         uint64 off = 0;
+#endif
         binary_t stream_data;
         auto session = get_session();
         auto& streams = session->get_quic_session().get_streams();
         auto is_begin = false;
 
         stream_id = pl.t_value_of<uint64>(constexpr_stream_id);
+#if defined DEBUG
         if (lenbit) {
             len = pl.t_value_of<uint64>(constexpr_length);
         }
         if (offbit) {
             off = pl.t_value_of<uint64>(constexpr_offset);
         }
+#endif
         pl.get_binary(constexpr_stream_data, stream_data);
 
         _stream_id = stream_id;
@@ -111,6 +116,7 @@ return_t quic_frame_http3_stream::do_read_body(tls_direction_t dir, const byte_t
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
                 trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+                    auto tlsadvisor = tls_advisor::get_instance();
                     dbs.println("   > %s %i", constexpr_fin_bit, finbit);
                     dbs.println("   > %s %i", constexpr_len_bit, lenbit);
                     if (lenbit) {
@@ -245,7 +251,6 @@ return_t quic_frame_http3_stream::do_write_body(tls_direction_t dir, const byte_
         }
 
         // size_t snapshot = bin.size();
-        auto tlsadvisor = tls_advisor::get_instance();
 
         uint8 type = quic_frame_type_stream;
         type |= quic_frame_stream_len;
@@ -286,6 +291,7 @@ return_t quic_frame_http3_stream::do_write_body(tls_direction_t dir, const byte_
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+                auto tlsadvisor = tls_advisor::get_instance();
                 dbs.println(ANSI_ESCAPE "1;34m  + frame %s 0x%x(%i)" ANSI_ESCAPE "0m", tlsadvisor->nameof_quic_frame(type).c_str(), type, type);
                 dbs.println("   > %s 0x%zx (%zi)", constexpr_offset, pos, pos);
                 dbs.println("   > %s 0x%zx (%zi)" ANSI_ESCAPE "0m", constexpr_length, len, len);
