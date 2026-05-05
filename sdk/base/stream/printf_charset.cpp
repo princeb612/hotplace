@@ -54,12 +54,12 @@ namespace hotplace {
 #define ZEROPAD 0x20   /* zero (as opposed to blank) pad */
 #define HEXPREFIX 0x40 /* add 0x or 0X prefix */
 
-#define BUF (MAXEXP + MAXFRACT + 1) /* + decimal point */
 #define DEFPREC 6
 /* 11-bit exponent (VAX G floating point) is 308 decimal digits */
 #define MAXEXP 308
 /* 128 bit fraction takes up 39 decimal digits; max reasonable precision */
 #define MAXFRACT 39
+#define BUF (MAXEXP + MAXFRACT + 1) /* + decimal point */
 
 #if __cplusplus >= 201703L  // c++17
 #define __register
@@ -375,22 +375,6 @@ static int __cvt_double(double number, __register int prec, int flags, int *sign
     return (int)(t - startp);
 }
 
-#define PRINT(buf, len) runtime_printf(context, (TCHAR *)buf, len)
-#define PAD_SP(howmany)         \
-    {                           \
-        int n = howmany;        \
-        while (n-- > 0) {       \
-            PRINT(_T (" "), 1); \
-        }                       \
-    }
-#define PAD_0(howmany)          \
-    {                           \
-        int n = howmany;        \
-        while (n-- > 0) {       \
-            PRINT(_T ("0"), 1); \
-        }                       \
-    }
-
 /* int vprintf_runtime (printf_context_t *context, CALLBACK_PRINTF runtime_printf, const TCHAR * fmt0, va_list ap) */
 #if defined _MBCS || defined MBCS
 int vprintf_runtime(printf_context_t *context, CALLBACK_PRINTFA runtime_printf, const char *fmt0, va_list ap)
@@ -423,9 +407,9 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
     // 32 bits
     // unsigned long archint;     /* integer arguments %[diouxX] */
     enum { OCT, DEC, HEX } base; /* base for [diouxX] conversion */
-    int dprec;                   /* a copy of prec if [diouxX], 0 otherwise */
-    int dpad;                    /* extra 0 padding needed for integers */
-    int fieldsz;                 /* field size expanded by sign, dpad etc */
+    int dprec = 0;               /* a copy of prec if [diouxX], 0 otherwise */
+    int dpad = 0;                /* extra 0 padding needed for integers */
+    int fieldsz = 0;             /* field size expanded by sign, dpad etc */
     /* The initialization of 'size' is to suppress a warning that
        'size' might be used unitialized.  It seems gcc can't
        quite grok this spaghetti code ... */
@@ -434,6 +418,18 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
     TCHAR ox[2] = {0};    /* space for 0x hex-prefix */
 
     ieee754_typeof_t ieee754_type = ieee754_typeof_t::ieee754_finite;
+
+    auto PRINT = [&](const TCHAR *s, size_t len) -> int { return runtime_printf(context, s, len); };
+    auto PAD_SP = [&](int loop) -> void {
+        if (loop > 0) {
+            printf_runtime(context, runtime_printf, _T("%-*s"), loop, " ");
+        }
+    };
+    auto PAD_0 = [&](int loop) -> void {
+        if (loop > 0) {
+            printf_runtime(context, runtime_printf, _T("%0*d"), loop, 0);
+        }
+    };
 
     if (nullptr == runtime_printf) {
         goto error;
@@ -473,7 +469,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
             ret += n;
         }
         if (ch == _T('\n')) {
-            PRINT(&ch, sizeof(TCHAR));
+            PRINT((TCHAR *)&ch, sizeof(TCHAR));
             ret += 1;
             // auto indent
             if (context->indent) {

@@ -267,12 +267,16 @@ void regex_tokens(const char* input, size_t len, const char* expr, size_t& pos, 
             } else if (rc < 0) {
                 break;
             } else {
+                std::map<size_t, range_t> item;
                 for (int i = 0; i < rc; ++i) {
                     auto begin = ovector[2 * i];
                     auto end = ovector[2 * i + 1];
                     if (begin != -1) {
-                        tokens.emplace_back(begin, end);
+                        item.emplace(i, range_t(pos + begin, pos + end));
                     }
+                }
+                if (false == item.empty()) {
+                    tokens.push_back(std::move(item));
                 }
 
                 size_t fin = ovector[1];

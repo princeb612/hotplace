@@ -135,6 +135,7 @@ class valist {
      * @return error code (see error.hpp)
      */
     return_t at(size_t index, variant_t& v);
+    variant_t& operator[](size_t index);
 
     /**
      * @brief return va_list

@@ -11,6 +11,7 @@
 
 #include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 
 namespace hotplace {
@@ -42,8 +43,8 @@ valist& valist::assign(const std::vector<variant_t>& args) {
 valist& valist::operator<<(bool value) {
     variant_t v;
 
-    v.type = TYPE_BOOLEAN;
-    v.data.b = value;
+    v.type = TYPE_INT;  // default argument promotions
+    v.data.i = value;
     insert(std::move(v));
     return *this;
 }
@@ -51,8 +52,8 @@ valist& valist::operator<<(bool value) {
 valist& valist::operator<<(char value) {
     variant_t v;
 
-    v.type = TYPE_CHAR;
-    v.data.c = value;
+    v.type = TYPE_INT;  // default argument promotions
+    v.data.i = value;
     insert(std::move(v));
     return *this;
 }
@@ -60,8 +61,8 @@ valist& valist::operator<<(char value) {
 valist& valist::operator<<(unsigned char value) {
     variant_t v;
 
-    v.type = TYPE_BYTE;
-    v.data.uc = value;
+    v.type = TYPE_INT;  // default argument promotions
+    v.data.i = value;
     insert(std::move(v));
     return *this;
 }
@@ -69,8 +70,8 @@ valist& valist::operator<<(unsigned char value) {
 valist& valist::operator<<(short value) {
     variant_t v;
 
-    v.type = TYPE_SHORT;
-    v.data.i16 = value;
+    v.type = TYPE_INT;  // default argument promotions
+    v.data.i = value;
     insert(std::move(v));
     return *this;
 }
@@ -78,8 +79,8 @@ valist& valist::operator<<(short value) {
 valist& valist::operator<<(unsigned short value) {
     variant_t v;
 
-    v.type = TYPE_USHORT;
-    v.data.ui16 = value;
+    v.type = TYPE_INT;  // default argument promotions
+    v.data.i = value;
     insert(std::move(v));
     return *this;
 }
@@ -156,14 +157,18 @@ valist& valist::operator<<(unsigned long long value) {
 }
 
 valist& valist::operator<<(float value) {
+    /* ‘float’ is promoted to ‘double’ when passed through ‘...’ */
     variant_t v;
 
-    v.type = TYPE_FLOAT;
-    v.data.f = value;
+    v.type = TYPE_DOUBLE;  // default argument promotions
+    v.data.d = (double)value;
     insert(std::move(v));
     return *this;
 }
 
+/**
+ * valist << 3.141592
+ */
 valist& valist::operator<<(double value) {
     variant_t v;
 
@@ -239,6 +244,14 @@ return_t valist::at(size_t index, variant_t& v) {
         ret = errorcode_t::out_of_range;
     }
     return ret;
+}
+
+variant_t& valist::operator[](size_t index) {
+    if (index < size()) {
+        return _args[index];
+    } else {
+        throw exception(errorcode_t::out_of_range);
+    }
 }
 
 va_list& valist::get() {

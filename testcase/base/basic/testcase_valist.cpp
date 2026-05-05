@@ -10,17 +10,6 @@
 
 #include <hotplace/testcase/base/sample.hpp>
 
-void do_test_sprintf_routine(valist& va, const char* fmt, const char* expect) {
-    basic_stream bs;
-
-    sprintf(&bs, fmt, va);
-    _logger->writeln("formatter %s", fmt);
-    _logger->writeln("result    %s", bs.c_str());
-    if (expect) {
-        _test_case.assert(0 == strcmp(expect, bs.c_str()), __FUNCTION__, "sprintf");
-    }
-}
-
 void test_valist_sprintf() {
     _test_case.begin("valist");
 
@@ -104,32 +93,52 @@ void test_valist_stream() {
 
     sprintf(&bs, "value1={1} value2={2}", va);  // value1=1 value2=test string
     _logger->writeln(bs);
+    _test_case.assert(bs == "value1=1 value2=test string", __FUNCTION__, "sprintf #1");
     bs.clear();
 
     sprintf(&bs, "value1={2} value2={1}", va);  // value1=test string value2=1
     _logger->writeln(bs);
+    _test_case.assert(bs == "value1=test string value2=1", __FUNCTION__, "sprintf #2");
     bs.clear();
 
     sprintf(&bs, "value1={2} value2={1} value3={3}", va);  // value1=test string value2=1 value3={3}
     _logger->writeln(bs);
+    _test_case.assert(bs == "value1=test string value2=1 value3={3}", __FUNCTION__, "sprintf #3");
+    bs.clear();
 
-    _test_case.assert(true, __FUNCTION__, "stream");
+    va << 3.141592f;
+    sprintf(&bs, "value1={2} value2={1} value3={3}", va);  // value1=test string value2=1 value3=3.141592
+    _test_case.assert(bs == "value1=test string value2=1 value3=3.141592", __FUNCTION__, "sprintf #4");
+    _logger->writeln(bs);
+    bs.clear();
+
+    sprintf(&bs, "value1={3} value2={1} value3={2}", va);  // value1=3.141592 value2=1 value3=test string
+    _test_case.assert(bs == "value1=3.141592 value2=1 value3=test string", __FUNCTION__, "sprintf #5");
+    _logger->writeln(bs);
 
     bs.resize(50);
     _logger->dump(bs);
     _test_case.assert(50 == bs.size(), __FUNCTION__, "expand");
 
+    sprintf(&bs, "value1={2} value2={1} value3={3}", va);  // value1=test string value2=1 value3=3.141592
+    _logger->writeln(bs);
+    _logger->dump(bs);
+
     bs.resize(11);
     _logger->dump(bs);
     _test_case.assert(11 == bs.size(), __FUNCTION__, "shrink");
+
+    sprintf(&bs, "value1={2} value2={1} value3={3}", va);  // value1=test string value2=1 value3=3.141592
+    _logger->writeln(bs);
+    _logger->dump(bs);
 
     bs.resize(0);
     _test_case.assert(bs.empty(), __FUNCTION__, "resize 0");
 
     va << std::string("hello") << basic_stream("world");
-    sprintf(&bs, "{3} {4}", va);
+    sprintf(&bs, "{4} {5}", va);
     _logger->writeln(bs);
-    _test_case.assert(bs == "hello world", __FUNCTION__, "valist << std::string << basic_stream");
+    _test_case.assert(bs == "hello world", __FUNCTION__, "sprintf #6");
 }
 
 void testcase_valist() {
