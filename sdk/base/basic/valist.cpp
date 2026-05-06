@@ -522,7 +522,7 @@ void valist::insert(const variant_t& v) {
 void valist::insert(variant_t&& v) {
     critical_section_guard guard(_lock);
 
-    _args.push_back(v);
+    _args.push_back(std::move(v));
     _modified = true;
 }
 

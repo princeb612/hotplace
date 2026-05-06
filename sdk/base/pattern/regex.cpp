@@ -68,7 +68,6 @@ void regex_tokens(const char* input, size_t len, const char* expr, size_t& pos, 
         auto start = pos;
         auto re_begin = std::cregex_iterator(input + start, input + len, re_expr);
         auto re_end = std::cregex_iterator();
-        size_t update = 0;
 
         for (std::cregex_iterator iter = re_begin; iter != re_end; ++iter) {
             const std::cmatch& match = *iter;
@@ -96,10 +95,6 @@ void regex_tokens(const char* input, size_t len, const char* expr, size_t& pos, 
                 tokens.push_back(std::move(item));
                 pos = start + match.position(0) + match.length(0);
             }
-        }
-
-        if (update) {
-            pos += update;
         }
     }
 #elif defined USE_PCRE
