@@ -121,14 +121,14 @@ valist& valist::operator<<(unsigned long value) {
 
 valist& valist::operator<<(long long value) {
     // windows LLPI64
-    variant v(value);
+    variant v((int64)value);
     insert(std::move(v.get()));
     v.reset();
     return *this;
 }
 
 valist& valist::operator<<(unsigned long long value) {
-    variant v(value);
+    variant v((uint64)value);
     insert(std::move(v.get()));
     v.reset();
     return *this;
