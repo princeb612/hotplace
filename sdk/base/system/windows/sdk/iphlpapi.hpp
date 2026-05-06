@@ -93,32 +93,32 @@
     The GetAdaptersInfo function retrieves adapter information for the local computer.
     On Windows XP and later:  Use the GetAdaptersAddresses function instead of GetAdaptersInfo.
  */
-typedef DWORD(WINAPI *GETADAPTERSINFO)(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen);
-typedef DWORD(WINAPI *GETIPADDRTABLE)(OUT PMIB_IPADDRTABLE pIpAddrTable, IN OUT PULONG pdwSize, IN BOOL bOrder);
+typedef DWORD(WINAPI* GETADAPTERSINFO)(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen);
+typedef DWORD(WINAPI* GETIPADDRTABLE)(OUT PMIB_IPADDRTABLE pIpAddrTable, IN OUT PULONG pdwSize, IN BOOL bOrder);
 
 /* @brief
     The GetIpNetTable function retrieves the IPv4 to physical address mapping table.
  */
-typedef DWORD(WINAPI *GETIPNETTABLE)(OUT PMIB_IPNETTABLE pIpNetTable, IN OUT PULONG pdwSize, IN BOOL bOrder);
+typedef DWORD(WINAPI* GETIPNETTABLE)(OUT PMIB_IPNETTABLE pIpNetTable, IN OUT PULONG pdwSize, IN BOOL bOrder);
 /* @brief
     The GetIfTable function retrieves the MIB-II interface table.
  */
-typedef DWORD(WINAPI *GETIFTABLE)(OUT PMIB_IFTABLE pIfTable, IN OUT PULONG pdwSize, IN BOOL bOrder);
+typedef DWORD(WINAPI* GETIFTABLE)(OUT PMIB_IFTABLE pIfTable, IN OUT PULONG pdwSize, IN BOOL bOrder);
 
 /* @brief
     The GetNetworkParams function retrieves network parameters for the local computer.
  */
-typedef DWORD(WINAPI *GETNETWORKPARAMS)(PFIXED_INFO pFixedInfo, PULONG pOutBufLen);
+typedef DWORD(WINAPI* GETNETWORKPARAMS)(PFIXED_INFO pFixedInfo, PULONG pOutBufLen);
 
 /* @brief
     The GetTcpTable function retrieves the IPv4 TCP connection table.
  */
-typedef DWORD(WINAPI *GETTCPTABLE)(OUT PMIB_TCPTABLE pUdpTable, IN OUT PDWORD pdwSize, IN BOOL bOrder);
+typedef DWORD(WINAPI* GETTCPTABLE)(OUT PMIB_TCPTABLE pUdpTable, IN OUT PDWORD pdwSize, IN BOOL bOrder);
 
 /* @brief
     The GetUdpTable function retrieves the IPv4 User Datagram Protocol (UDP) listener table.
  */
-typedef DWORD(WINAPI *GETUDPTABLE)(OUT PMIB_UDPTABLE pUdpTable, IN OUT PDWORD pdwSize, IN BOOL bOrder);
+typedef DWORD(WINAPI* GETUDPTABLE)(OUT PMIB_UDPTABLE pUdpTable, IN OUT PDWORD pdwSize, IN BOOL bOrder);
 
 typedef struct _MIB_TCPROW_EX {
     DWORD dwState;
@@ -180,7 +180,7 @@ typedef struct _MIB_UDP6TABLE_EX {
    @comment
     see IPHelper::GetExtendedTcpTable1
  */
-typedef DWORD(WINAPI *ALLOCATEANDGETTCPEXTABLEFROMSTACK)(OUT PVOID *ppTcpTable, IN BOOL bOrder, IN HANDLE hHeap, IN DWORD dwFlags, IN DWORD dwFamily);
+typedef DWORD(WINAPI* ALLOCATEANDGETTCPEXTABLEFROMSTACK)(OUT PVOID* ppTcpTable, IN BOOL bOrder, IN HANDLE hHeap, IN DWORD dwFlags, IN DWORD dwFamily);
 
 /* @brief
     [This function is no longer available for use as of Windows Vista. Instead, use the GetUdpTable or GetExtendedUdpTable function to retrieve the UDP
@@ -189,7 +189,7 @@ typedef DWORD(WINAPI *ALLOCATEANDGETTCPEXTABLEFROMSTACK)(OUT PVOID *ppTcpTable, 
    @comment
     see IPHelper::GetExtendedUdpTable1
  */
-typedef DWORD(WINAPI *ALLOCATEANDGETUDPEXTABLEFROMSTACK)(OUT PVOID *ppUDPTable, IN BOOL bOrder, IN HANDLE hHeap, IN DWORD dwFlags, IN DWORD dwFamily);
+typedef DWORD(WINAPI* ALLOCATEANDGETUDPEXTABLEFROMSTACK)(OUT PVOID* ppUDPTable, IN BOOL bOrder, IN HANDLE hHeap, IN DWORD dwFlags, IN DWORD dwFamily);
 
 #if _MSC_FULL_VER >= 140050727
 
@@ -217,22 +217,22 @@ typedef enum _UDP_TABLE_CLASS { UDP_TABLE_BASIC, UDP_TABLE_OWNER_PID, UDP_TABLE_
 /* @brief
     The GetExtendedTcpTable function retrieves a table that contains a list of TCP endpoints available to the application.
  */
-typedef DWORD(WINAPI *GETEXTENDEDTCPTABLE)(OUT PVOID pTcpTable, IN OUT PDWORD pdwSize, IN BOOL bOrder, IN ULONG ulAf, IN TCP_TABLE_CLASS TableClass, IN ULONG Reserved);
+typedef DWORD(WINAPI* GETEXTENDEDTCPTABLE)(OUT PVOID pTcpTable, IN OUT PDWORD pdwSize, IN BOOL bOrder, IN ULONG ulAf, IN TCP_TABLE_CLASS TableClass, IN ULONG Reserved);
 
 /* @brief
     The GetExtendedUdpTable function retrieves a table that contains a list of UDP endpoints available to the application.
  */
-typedef DWORD(WINAPI *GETEXTENDEDUDPTABLE)(OUT PVOID pUdpTable, IN OUT PDWORD pdwSize, IN BOOL bOrder, IN ULONG ulAf, IN UDP_TABLE_CLASS TableClass, IN ULONG Reserved);
+typedef DWORD(WINAPI* GETEXTENDEDUDPTABLE)(OUT PVOID pUdpTable, IN OUT PDWORD pdwSize, IN BOOL bOrder, IN ULONG ulAf, IN UDP_TABLE_CLASS TableClass, IN ULONG Reserved);
 
 /* @brief
     The NotifyAddrChange function causes a notification to be sent to the caller whenever a change occurs in the table that maps IPv4 addresses to interfaces.
  */
-typedef DWORD(WINAPI *NOTIFYADDRCHANGE)(___out PHANDLE Handle, ___in LPOVERLAPPED overlapped);
+typedef DWORD(WINAPI* NOTIFYADDRCHANGE)(___out PHANDLE Handle, ___in LPOVERLAPPED overlapped);
 
 /* @brief
     The NotifyRouteChange function causes a notification to be sent to the caller whenever a change occurs in the IPv4 routing table.
  */
-typedef DWORD(WINAPI *NOTIFYROUTECHANGE)(___out PHANDLE Handle, ___in LPOVERLAPPED overlapped);
+typedef DWORD(WINAPI* NOTIFYROUTECHANGE)(___out PHANDLE Handle, ___in LPOVERLAPPED overlapped);
 
 /* @brief
     The CancelIPChangeNotify function cancels notification of IPv4 address and route changes previously requested with successful calls to the NotifyAddrChange
@@ -240,6 +240,6 @@ typedef DWORD(WINAPI *NOTIFYROUTECHANGE)(___out PHANDLE Handle, ___in LPOVERLAPP
    @comment
     XP, 2003+
  */
-typedef BOOL(WINAPI *CANCELIPCHANGENOTIFY)(___in LPOVERLAPPED notifyOverlapped);
+typedef BOOL(WINAPI* CANCELIPCHANGENOTIFY)(___in LPOVERLAPPED notifyOverlapped);
 
 #endif

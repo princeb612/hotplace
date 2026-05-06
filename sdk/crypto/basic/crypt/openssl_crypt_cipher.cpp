@@ -10,6 +10,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/base/unittest/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
@@ -32,13 +33,13 @@ typedef struct _openssl_crypt_context_t : public crypt_context_t {
     crypt_poweredby_t crypto_type;  // see crypt_poweredby_t
     crypt_algorithm_t algorithm;    // see crypt_algorithm_t
     crypt_mode_t mode;              // see crypt_mode_t
-    EVP_CIPHER_CTX *encrypt_context;
-    EVP_CIPHER_CTX *decrypt_context;
+    EVP_CIPHER_CTX* encrypt_context;
+    EVP_CIPHER_CTX* decrypt_context;
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
     EVP_CIPHER_CTX encrypt_context2;
     EVP_CIPHER_CTX decrypt_context2;
 #endif
-    crypto_key *key;
+    crypto_key* key;
     crypt_datamap_t datamap;
     crypt_variantmap_t variantmap;
     uint32 flag;
@@ -69,11 +70,11 @@ typedef struct _openssl_crypt_context_t : public crypt_context_t {
     }
 
     ~_openssl_crypt_context_t() {
-        auto lambda_data = [](std::pair<const crypt_item_t, binary_t> &item) {
-            binary_t &data = item.second;
+        auto lambda_data = [](std::pair<const crypt_item_t, binary_t>& item) {
+            binary_t& data = item.second;
             std::fill(data.begin(), data.end(), 0);
         };
-        auto lambda_variant = [](std::pair<const crypt_item_t, variant_t> &item) { item.second.data.i64 = 0; };
+        auto lambda_variant = [](std::pair<const crypt_item_t, variant_t>& item) { item.second.data.i64 = 0; };
         for_each(datamap.begin(), datamap.end(), lambda_data);
         for_each(variantmap.begin(), variantmap.end(), lambda_variant);
 
@@ -88,13 +89,13 @@ typedef struct _openssl_crypt_context_t : public crypt_context_t {
 
 } openssl_crypt_context_t;
 
-return_t openssl_crypt::open(crypt_context_t **handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char *key, size_t size_key, const unsigned char *iv,
+return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key, size_t size_key, const unsigned char* iv,
                              size_t size_iv) {
     return_t ret = errorcode_t::success;
     int ret_init = 0;
     binary_t temp_key;
     binary_t temp_iv;
-    crypto_advisor *advisor = crypto_advisor::get_instance();
+    crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
         if (nullptr == handle) {
@@ -102,7 +103,7 @@ return_t openssl_crypt::open(crypt_context_t **handle, crypt_algorithm_t algorit
             __leave2;
         }
 
-        const EVP_CIPHER *cipher = advisor->find_evp_cipher(algorithm, mode);
+        const EVP_CIPHER* cipher = advisor->find_evp_cipher(algorithm, mode);
         if (nullptr == cipher) {
             ret = errorcode_t::not_supported;
             __leave2;
@@ -183,9 +184,9 @@ return_t openssl_crypt::open(crypt_context_t **handle, crypt_algorithm_t algorit
     return ret;
 }
 
-return_t openssl_crypt::close(crypt_context_t *handle) {
+return_t openssl_crypt::close(crypt_context_t* handle) {
     return_t ret = errorcode_t::success;
-    openssl_crypt_context_t *context = static_cast<openssl_crypt_context_t *>(handle);
+    openssl_crypt_context_t* context = static_cast<openssl_crypt_context_t*>(handle);
 
     __try2 {
         if (nullptr == handle) {
@@ -211,9 +212,9 @@ return_t openssl_crypt::close(crypt_context_t *handle) {
     return ret;
 }
 
-return_t openssl_crypt::set(crypt_context_t *handle, crypt_ctrl_t id, uint16 param) {
+return_t openssl_crypt::set(crypt_context_t* handle, crypt_ctrl_t id, uint16 param) {
     return_t ret = errorcode_t::success;
-    openssl_crypt_context_t *context = static_cast<openssl_crypt_context_t *>(handle);
+    openssl_crypt_context_t* context = static_cast<openssl_crypt_context_t*>(handle);
 
     __try2 {
         if (nullptr == handle) {
@@ -243,10 +244,10 @@ return_t openssl_crypt::set(crypt_context_t *handle, crypt_ctrl_t id, uint16 par
     return ret;
 }
 
-return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned char *plaintext, size_t plainsize, unsigned char *ciphertext, size_t *ciphersize,
-                                         const binary_t *aad, binary_t *tag) {
+return_t openssl_crypt::encrypt_internal(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, unsigned char* ciphertext, size_t* ciphersize,
+                                         const binary_t* aad, binary_t* tag) {
     return_t ret = errorcode_t::success;
-    openssl_crypt_context_t *context = static_cast<openssl_crypt_context_t *>(handle);
+    openssl_crypt_context_t* context = static_cast<openssl_crypt_context_t*>(handle);
 
     __try2 {
         if (nullptr == handle || nullptr == ciphersize) {
@@ -276,7 +277,7 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
         int size_update = 0;
         int size_final = 0;
         int tag_size = 0;
-        binary_t &iv = context->datamap[crypt_item_t::item_iv];
+        binary_t& iv = context->datamap[crypt_item_t::item_iv];
 
         EVP_CipherInit(context->encrypt_context, nullptr, nullptr, iv.data(), 1);
 
@@ -300,7 +301,7 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
                      *      EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, tag) // success
                      */
                     if ((nullptr == plaintext) && (0 == plainsize)) {
-                        plaintext = (const byte_t *)"";
+                        plaintext = (const byte_t*)"";
                     }
                 }
 
@@ -352,7 +353,7 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
                 }
 
                 if (crypt_mode_t::ccm == context->mode) {
-                    binary_t &key = context->datamap[crypt_item_t::item_cek];
+                    binary_t& key = context->datamap[crypt_item_t::item_cek];
                     EVP_CipherInit_ex(context->encrypt_context, nullptr, nullptr, key.data(), iv.data(), 1);
 
                     ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, nullptr, t_narrow_cast(plainsize));
@@ -362,7 +363,7 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
                     }
                 }
 
-                const auto &a = *aad;
+                const auto& a = *aad;
                 ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, a.data(), t_narrow_cast(a.size()));
                 if (ret_cipher < 1) {
                     ret = errorcode_t::error_cipher;
@@ -394,8 +395,8 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
              * check hints for block ciphers
              * EVP_CIPHER_get_block_size, EVP_CIPHER_CTX_get_block_size works wrong (CFB, OFB)
              */
-            crypto_advisor *advisor = crypto_advisor::get_instance();
-            const hint_blockcipher_t *hint_cipher = advisor->hintof_blockcipher(context->algorithm);
+            crypto_advisor* advisor = crypto_advisor::get_instance();
+            const hint_blockcipher_t* hint_cipher = advisor->hintof_blockcipher(context->algorithm);
             if (nullptr == hint_cipher) {
                 ret = errorcode_t::not_supported;
                 __leave2;
@@ -464,10 +465,10 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t *handle, const unsigned
     return ret;
 }
 
-return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned char *ciphertext, size_t ciphersize, unsigned char *plaintext, size_t *plainsize,
-                                         const binary_t *aad, const binary_t *tag) {
+return_t openssl_crypt::decrypt_internal(crypt_context_t* handle, const unsigned char* ciphertext, size_t ciphersize, unsigned char* plaintext, size_t* plainsize,
+                                         const binary_t* aad, const binary_t* tag) {
     return_t ret = errorcode_t::success;
-    openssl_crypt_context_t *context = static_cast<openssl_crypt_context_t *>(handle);
+    openssl_crypt_context_t* context = static_cast<openssl_crypt_context_t*>(handle);
 
     __try2 {
         if (nullptr == handle || nullptr == plainsize) {
@@ -497,7 +498,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
         int size_update = 0;
         int size_final = 0;
         size_t tag_size = 0;
-        binary_t &iv = context->datamap[crypt_item_t::item_iv];
+        binary_t& iv = context->datamap[crypt_item_t::item_iv];
 
         EVP_CipherInit(context->decrypt_context, nullptr, nullptr, iv.data(), 0);
 
@@ -515,7 +516,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
                     ret = errorcode_t::error_verify;
                     break;
                 }
-                EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_AEAD_SET_TAG, t_narrow_cast(tag_size), (void *)(*tag).data());
+                EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_AEAD_SET_TAG, t_narrow_cast(tag_size), (void*)(*tag).data());
 
                 uint16 iv_size = 0;
                 uint16 nonce_size = 0;
@@ -531,7 +532,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
                 }
 
                 if (crypt_mode_t::ccm == context->mode) {
-                    binary_t &key = context->datamap[crypt_item_t::item_cek];
+                    binary_t& key = context->datamap[crypt_item_t::item_cek];
                     EVP_CipherInit_ex(context->decrypt_context, nullptr, nullptr, key.data(), iv.data(), 0);
 
                     ret_cipher = EVP_CipherUpdate(context->decrypt_context, nullptr, &size_update, nullptr, t_narrow_cast(ciphersize));
@@ -541,8 +542,8 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
                     }
                 }
 
-                const auto &a = *aad;
-                ret_cipher = EVP_CipherUpdate(context->decrypt_context, nullptr, &size_update, a.empty() ? (byte_t *)"" : a.data(), t_narrow_cast(a.size()));
+                const auto& a = *aad;
+                ret_cipher = EVP_CipherUpdate(context->decrypt_context, nullptr, &size_update, a.empty() ? (byte_t*)"" : a.data(), t_narrow_cast(a.size()));
                 if (ret_cipher < 1) {
                     ret = errorcode_t::error_cipher;
                     break;
@@ -573,8 +574,8 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
              * check hints for block ciphers
              * EVP_CIPHER_get_block_size, EVP_CIPHER_CTX_get_block_size works wrong (CFB, OFB)
              */
-            crypto_advisor *advisor = crypto_advisor::get_instance();
-            const hint_blockcipher_t *hint_cipher = advisor->hintof_blockcipher(context->algorithm);
+            crypto_advisor* advisor = crypto_advisor::get_instance();
+            const hint_blockcipher_t* hint_cipher = advisor->hintof_blockcipher(context->algorithm);
             if (nullptr == hint_cipher) {
                 ret = errorcode_t::not_supported;
                 __leave2;
@@ -605,7 +606,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
             }
 #if defined DEBUG
             if (istraceable(trace_category_crypto, loglevel_debug)) {
-                trace_debug_event(trace_category_crypto, trace_event_encryption, [&](basic_stream &dbs) -> void {
+                trace_debug_event(trace_category_crypto, trace_event_encryption, [&](basic_stream& dbs) -> void {
                     dbs.println("> ciphertext");
                     dump_memory(ciphertext, ciphersize, &dbs, 16, 3, 0, dump_notrunc);
                     dbs.println("> plaintext");
@@ -634,9 +635,9 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t *handle, const unsigned
     return ret;
 }
 
-return_t openssl_crypt::query(crypt_context_t *handle, size_t cmd, size_t &value) {
+return_t openssl_crypt::query(crypt_context_t* handle, size_t cmd, size_t& value) {
     return_t ret = errorcode_t::success;
-    openssl_crypt_context_t *context = static_cast<openssl_crypt_context_t *>(handle);
+    openssl_crypt_context_t* context = static_cast<openssl_crypt_context_t*>(handle);
 
     __try2 {
         if (nullptr == handle) {

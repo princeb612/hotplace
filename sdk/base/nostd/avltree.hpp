@@ -33,24 +33,24 @@ class t_avltree {
    private:
     struct avlnode {
         key_t _key;
-        avlnode *_left;
-        avlnode *_right;
+        avlnode* _left;
+        avlnode* _right;
 
         // AVL features
         int _height;
 
-        avlnode(const key_t &key, avlnode *lt = nullptr, avlnode *rt = nullptr, int height = 0) : _key(key), _left(lt), _right(rt), _height(height) {}
-        avlnode(key_t &&key, avlnode *lt = nullptr, avlnode *rt = nullptr, int height = 0) : _key{std::move(key)}, _left(lt), _right(rt), _height(height) {}
+        avlnode(const key_t& key, avlnode* lt = nullptr, avlnode* rt = nullptr, int height = 0) : _key(key), _left(lt), _right(rt), _height(height) {}
+        avlnode(key_t&& key, avlnode* lt = nullptr, avlnode* rt = nullptr, int height = 0) : _key{std::move(key)}, _left(lt), _right(rt), _height(height) {}
     };
 
    public:
     typedef avlnode node_t;
-    typedef typename std::function<void(key_t const &t)> const_visitor;
-    typedef typename std::function<void(key_t &t)> visitor;
+    typedef typename std::function<void(key_t const& t)> const_visitor;
+    typedef typename std::function<void(key_t& t)> visitor;
 
     t_avltree() : _root(nullptr), _size(0) {}
-    t_avltree(const t_avltree &other) : _root(nullptr), _size(0) { _root = clone(other._root); }
-    t_avltree(t_avltree &&other) : _root(nullptr), _size(0) {
+    t_avltree(const t_avltree& other) : _root(nullptr), _size(0) { _root = clone(other._root); }
+    t_avltree(t_avltree&& other) : _root(nullptr), _size(0) {
         _root = other._root;
         _size = other._size;
         other._root = nullptr;
@@ -58,21 +58,21 @@ class t_avltree {
     }
     ~t_avltree() { clear(); }
 
-    bool contains(const key_t &x) const { return contains(x, _root); }
+    bool contains(const key_t& x) const { return contains(x, _root); }
     bool empty() const { return (nullptr == _root); }
     size_t size() const { return _size; }
     void for_each(const_visitor visit) { walk(_root, visit); }
 
     void clear() { clear(_root); }
-    void insert(const key_t &x, visitor visit = nullptr) { insert(x, _root, visit); }
-    void insert(key_t &&x, visitor visit = nullptr) { insert(x, _root, visit); }
-    void remove(const key_t &x) { remove(x, _root); }
+    void insert(const key_t& x, visitor visit = nullptr) { insert(x, _root, visit); }
+    void insert(key_t&& x, visitor visit = nullptr) { insert(x, _root, visit); }
+    void remove(const key_t& x) { remove(x, _root); }
 
-    t_avltree &operator=(const t_avltree &other) {
+    t_avltree& operator=(const t_avltree& other) {
         clear();
         _root = clone(other._root);
     }
-    t_avltree &operator=(t_avltree &&other) {
+    t_avltree& operator=(t_avltree&& other) {
         clear();
         _root = other._root;
         _size = other._size;
@@ -81,12 +81,12 @@ class t_avltree {
     }
 
    private:
-    node_t *_root;
+    node_t* _root;
     comparator_t _comparator;
     size_t _size;
 
-    node_t *insert(const key_t &x, node_t *&t, visitor visit = nullptr) {
-        node_t *p = nullptr;
+    node_t* insert(const key_t& x, node_t*& t, visitor visit = nullptr) {
+        node_t* p = nullptr;
         if (nullptr == t) {
             t = new node_t(x);
             _size++;
@@ -107,8 +107,8 @@ class t_avltree {
 
         return p;
     }
-    node_t *insert(key_t &&x, node_t *&t, visitor visit = nullptr) {
-        node_t *p = nullptr;
+    node_t* insert(key_t&& x, node_t*& t, visitor visit = nullptr) {
+        node_t* p = nullptr;
         if (nullptr == t) {
             t = new node_t(std::move(x));
             _size++;
@@ -129,7 +129,7 @@ class t_avltree {
 
         return p;
     }
-    void remove(const key_t &x, node_t *&t) {
+    void remove(const key_t& x, node_t*& t) {
         if (nullptr == t) {
             // do nothing
         } else if (_comparator(x, t->_key)) {
@@ -140,14 +140,14 @@ class t_avltree {
             t->_key = find_min(t->_right)->_key;
             remove(t->_key, t->_right);
         } else {
-            node_t *oldone = t;
+            node_t* oldone = t;
             t = (t->_left) ? t->_left : t->_right;
             delete oldone;
             _size--;
         }
         balance(t);
     }
-    node_t *find_min(node_t *t) const {
+    node_t* find_min(node_t* t) const {
         if (nullptr != t) {
             while (t->_left) {
                 t = t->_left;
@@ -155,7 +155,7 @@ class t_avltree {
         }
         return t;
     }
-    node_t *find_max(node_t *t) const {
+    node_t* find_max(node_t* t) const {
         if (nullptr != t) {
             while (t->_right) {
                 t = t->_right;
@@ -163,7 +163,7 @@ class t_avltree {
         }
         return t;
     }
-    bool contains(const key_t &x, node_t *t) const {
+    bool contains(const key_t& x, node_t* t) const {
         bool ret = false;
         __try2 {
             if (nullptr == t) {
@@ -179,7 +179,7 @@ class t_avltree {
         __finally2 {}
         return ret;
     }
-    void clear(node_t *&t) {
+    void clear(node_t*& t) {
         if (t) {
             clear(t->_left);
             clear(t->_right);
@@ -187,7 +187,7 @@ class t_avltree {
         }
         t = nullptr;
     }
-    void walk(node_t *t, const_visitor visit) {
+    void walk(node_t* t, const_visitor visit) {
         if (t) {
             // in-order traverse
             walk(t->_left, visit);
@@ -195,8 +195,8 @@ class t_avltree {
             walk(t->_right, visit);
         }
     }
-    node_t *clone(node_t *t) const {
-        node_t *item = nullptr;
+    node_t* clone(node_t* t) const {
+        node_t* item = nullptr;
         if (t) {
             item = new node_t(t->_key, clone(t->_left), clone(t->_right));
         }
@@ -207,10 +207,10 @@ class t_avltree {
     // AVL features
     //
 
-    int height(node_t *t) const { return t ? t->_height : -1; }
+    int height(node_t* t) const { return t ? t->_height : -1; }
     static const int ALLOWED_IMBALANCE = 1;
 
-    void balance(node_t *&t) {
+    void balance(node_t*& t) {
         if (t) {
             if (height(t->_left) - height(t->_right) > ALLOWED_IMBALANCE) {
                 if (height(t->_left->_left) >= height(t->_left->_right)) {
@@ -228,34 +228,34 @@ class t_avltree {
             t->_height = std::max(height(t->_left), height(t->_right)) + 1;
         }
     }
-    void rotate_left(node_t *&k2) {
-        node_t *k1 = k2->_left;
+    void rotate_left(node_t*& k2) {
+        node_t* k1 = k2->_left;
         k2->_left = k1->_right;
         k1->_right = k2;
         k2->_height = std::max(height(k2->_left), height(k2->_right)) + 1;
         k1->_height = std::max(height(k1->_left), k2->_height) + 1;
         k2 = k1;
     }
-    void rotate_left2(node_t *&k3) {
+    void rotate_left2(node_t*& k3) {
         rotate_right(k3->_left);
         rotate_left(k3);
     }
-    void rotate_right(node_t *&k2) {
-        node_t *k1 = k2->_right;
+    void rotate_right(node_t*& k2) {
+        node_t* k1 = k2->_right;
         k2->_right = k1->_left;
         k1->_left = k2;
         k2->_height = std::max(height(k2->_right), height(k2->_left)) + 1;
         k1->_height = std::max(height(k1->_right), k2->_height) + 1;
         k2 = k1;
     }
-    void rotate_right2(node_t *&k3) {
+    void rotate_right2(node_t*& k3) {
         rotate_left(k3->_right);
         rotate_right(k3);
     }
 
    public:
     // added
-    node_t *first() const { return find_min(_root); }
+    node_t* first() const { return find_min(_root); }
 };
 
 }  // namespace hotplace

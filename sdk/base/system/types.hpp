@@ -17,17 +17,17 @@
 namespace hotplace {
 
 #if defined __linux__
-#define DLSYM(handle, nameof_api, func_ptr) *(void **)(&func_ptr) = dlsym(handle, nameof_api)
+#define DLSYM(handle, nameof_api, func_ptr) *(void**)(&func_ptr) = dlsym(handle, nameof_api)
 #define TRYDLSYM(handle, nameof_api, func_ptr, branch_if_fail) \
     {                                                          \
         DLSYM(handle, nameof_api, func_ptr);                   \
-        char *error = nullptr;                                 \
+        char* error = nullptr;                                 \
         if (nullptr != (error = dlerror())) {                  \
             branch_if_fail;                                    \
         }                                                      \
     }
 #elif defined _WIN32 || defined _WIN64
-#define DLSYM(handle, nameof_api, func_ptr) *(void **)(&func_ptr) = (void *)GetProcAddress((HMODULE)handle, nameof_api)
+#define DLSYM(handle, nameof_api, func_ptr) *(void**)(&func_ptr) = (void*)GetProcAddress((HMODULE)handle, nameof_api)
 #define TRYDLSYM(handle, nameof_api, func_ptr, branch_if_fail) \
     {                                                          \
         DLSYM(handle, nameof_api, func_ptr);                   \
@@ -36,6 +36,13 @@ namespace hotplace {
         }                                                      \
     }
 #endif
+
+struct datetime_t;
+struct timespan_t;
+struct filetime_t;
+struct systemtime_t;
+struct uint24_t;
+struct uint48_t;
 
 class bignumber;
 class critical_section;

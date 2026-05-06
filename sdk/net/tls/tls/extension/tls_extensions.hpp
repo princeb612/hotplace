@@ -19,9 +19,9 @@ class tls_extensions {
    public:
     tls_extensions();
 
-    return_t read(tls_handshake *handshake, tls_direction_t dir, const byte_t *stream, size_t size, size_t &pos);
-    return_t read(tls_handshake *handshake, tls_direction_t dir, const binary_t &bin);
-    return_t write(tls_direction_t dir, binary_t &bin);
+    return_t read(tls_handshake* handshake, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
+    return_t read(tls_handshake* handshake, tls_direction_t dir, const binary_t& bin);
+    return_t write(tls_direction_t dir, binary_t& bin);
 
     /**
      * add
@@ -36,14 +36,14 @@ class tls_extensions {
      *              return success;
      *          });
      */
-    return_t add(tls_extension *extension, bool upref = false);
-    tls_extensions &add(uint16 type, tls_direction_t dir, tls_handshake *handshake, std::function<return_t(tls_extension *)> func = nullptr, bool upref = false);
-    tls_extensions &operator<<(tls_extension *extension);
-    tls_extensions &operator<<(tls_extensions *extensions);
-    return_t for_each(std::function<return_t(tls_extension *)> func);
-    tls_extension *get(uint16 type, bool upref = false);
-    tls_extension *getat(size_t index, bool upref = false);
-    tls_extension *operator[](size_t index);
+    return_t add(tls_extension* extension, bool upref = false);
+    tls_extensions& add(uint16 type, tls_direction_t dir, tls_handshake* handshake, std::function<return_t(tls_extension*)> func = nullptr, bool upref = false);
+    tls_extensions& operator<<(tls_extension* extension);
+    tls_extensions& operator<<(tls_extensions* extensions);
+    return_t for_each(std::function<return_t(tls_extension*)> func);
+    tls_extension* get(uint16 type, bool upref = false);
+    tls_extension* getat(size_t index, bool upref = false);
+    tls_extension* operator[](size_t index);
     bool empty();
     size_t size();
     void clear();
@@ -51,7 +51,7 @@ class tls_extensions {
    protected:
    private:
     critical_section _lock;
-    t_tls_distinct_container<tls_extension *, uint16> _extensions;  // tls_ext_type_t
+    t_tls_distinct_container<tls_extension*, uint16> _extensions;  // tls_ext_type_t
 };
 
 }  // namespace net

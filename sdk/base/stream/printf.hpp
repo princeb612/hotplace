@@ -64,8 +64,8 @@ struct printf_context_t {
 /**
  * @brief callback
  */
-typedef int (*CALLBACK_PRINTFA)(printf_context_t *context, const char *buf, int len);
-typedef int (*CALLBACK_PRINTFW)(printf_context_t *context, const wchar_t *buf, int len);
+typedef int (*CALLBACK_PRINTFA)(printf_context_t* context, const char* buf, int len);
+typedef int (*CALLBACK_PRINTFW)(printf_context_t* context, const wchar_t* buf, int len);
 
 #if defined _MBCS || defined MBCS
 #define CALLBACK_PRINTF CALLBACK_PRINTFA
@@ -84,9 +84,9 @@ typedef int (*CALLBACK_PRINTFW)(printf_context_t *context, const wchar_t *buf, i
  * @param   const char  *   fmt0
  * @param   ...
  */
-int printf_runtime(printf_context_t *context, CALLBACK_PRINTFA runtime_printf, const char *fmt0, ...);
+int printf_runtime(printf_context_t* context, CALLBACK_PRINTFA runtime_printf, const char* fmt0, ...);
 #if defined _WIN32 || defined _WIN64
-int printf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf, const wchar_t *fmt0, ...);
+int printf_runtimew(printf_context_t* context, CALLBACK_PRINTFW runtime_printf, const wchar_t* fmt0, ...);
 #endif
 /**
  * @brief vprintf
@@ -95,9 +95,9 @@ int printf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf, 
  * @param   const char  *   fmt0
  * @param   va_list         ap
  */
-int vprintf_runtime(printf_context_t *context, CALLBACK_PRINTFA runtime_printf, const char *fmt0, va_list ap);
+int vprintf_runtime(printf_context_t* context, CALLBACK_PRINTFA runtime_printf, const char* fmt0, va_list ap);
 #if defined _WIN32 || defined _WIN64
-int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf, const wchar_t *fmt0, va_list ap);
+int vprintf_runtimew(printf_context_t* context, CALLBACK_PRINTFW runtime_printf, const wchar_t* fmt0, va_list ap);
 #endif
 
 //
@@ -107,19 +107,58 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
 /**
  * @brief   safe format printer
  * @remakrs
- *          sprintf support {1} {2} ... using valist (codename.grape)
+ *          sprintf support {1} {2} ... using valist (codename.grape Revision 371)
+ *          Aho-Corasick algorithm applied (codename.hotplace Revision 607)
+ *          format string syntax e.g. {1:02x} {1:3d} {2:-10s} (codename.hotplace Revision 977)
  *
  *          format specifier replacement (do not supports %c %s %d, but {1} {2} {3} ... available)
  *          standard vprintf(fmt, ap) supports ordered format specifier {1} {2} {3} ...
+ *
+ *          format string syntax
+ *          - {n} n MUST be in 1..arg
+ *          - string argument {n}, {n:-10s}, {n:10s}
+ *          - integer argument {n}, {n:10d}, {n:10i}, {n:08x}
+ *          - floating point argument {n}, {n:le}, {n:lf}, {n:lg}
+ *
  * @example
  *          basic_stream bs;
- *          valist va;
- *          va << 1 << "test string"; // argc 2
- *          sprintf (&bs, "value1={1} value2={2}", va); // value1=1 value2=test string
- *          sprintf (&bs, "value1={2} value2={1}", va); // value1=test string value2=1
- *          sprintf (&bs, "value1={2} value2={1} value3={3}", va); // value1=test string value2=1 value3={3}
+ *          {
+ *              valist va;
+ *              va << 1 << "test string"; // argc 2
+ *
+ *              bs.clear();
+ *              sprintf (&bs, "value1={1} value2={2}", va);
+ *              // value1=1 value2=test string
+ *              bs.clear();
+ *              sprintf (&bs, "value1={2} value2={1}", va);
+ *              // value1=test string value2=1
+ *              bs.clear();
+ *              sprintf (&bs, "value1={2} value2={1} value3={3}", va);
+ *              // value1=test string value2=1 value3={3}
+ *          }
+ *
+ *          {
+ *              valist va;
+ *              va << 256 << "hello world" << 3.141592;
+ *
+ *              bs.clear();
+ *              sprintf(&bs, R"(value={1}, value={1:04x}, value={1:04d})", va);
+ *              // value=256, value=0x0100, value=0256
+ *              bs.clear();
+ *              sprintf(&bs, R"(value="{2}", value="{2:-15s}", value="{2:15s}")", va);
+ *              // value="hello world", value="hello world    ", value="    hello world"
+ *              bs.clear();
+ *              sprintf(&bs, R"(value={3}, value={3:le}, value={3:lg})", va);
+ *              // value=3.141592, value=3.141592e+00, value=3.14159
+ *              bs.clear();
+ *              // {n} n MUST be in 1..arg so {-1} is ignored
+ *              // {2} is a string so 10d is ignored
+ *              // {3} is an integer so s is ignored
+ *              sprintf(&bs, {R"(value={-1}, value="{2:10d}", value={3:s})", va);
+ *              // value={-1}, value="hello world", value=3.141592
+ *          }
  */
-return_t sprintf(stream_t *stream, const char *fmt, valist va);
+return_t sprintf(stream_t* stream, const char* fmt, valist va);
 
 /* @brief   safe format printer (variadic template edition)
  * @remarks
@@ -136,14 +175,14 @@ return_t sprintf(stream_t *stream, const char *fmt, valist va);
  */
 
 template <typename T>
-void make_valist(valist &va, T arg) {
+void make_valist(valist& va, T arg) {
     va << arg;
 }
 
 #if __cplusplus >= 201103L  // c++11
 
 template <typename T, typename... Args>
-void make_valist(valist &va, T arg, Args... args) {
+void make_valist(valist& va, T arg, Args... args) {
     va << arg;
     make_valist(va, args...);
 }
@@ -156,7 +195,7 @@ void make_valist(valist &va, T arg, Args... args) {
  * @param Args...       args    [in] parameter pack (c++11)
  */
 template <class... Args>
-return_t vprintf(stream_t *stream, const char *fmt, Args... args) {
+return_t vprintf(stream_t* stream, const char* fmt, Args... args) {
     auto s = [&stream, fmt, args...] {
         valist va;
 
@@ -195,8 +234,8 @@ enum vtprintf_style_t {
     vtprintf_style_base16 = 2,
     vtprintf_style_debugmode = 3,
 };
-return_t vtprintf(stream_t *stream, const variant_t &vt, vtprintf_style_t style = vtprintf_style_normal);
-return_t vtprintf(stream_t *stream, const variant &vt, vtprintf_style_t style = vtprintf_style_normal);
+return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style = vtprintf_style_normal);
+return_t vtprintf(stream_t* stream, const variant& vt, vtprintf_style_t style = vtprintf_style_normal);
 
 }  // namespace hotplace
 

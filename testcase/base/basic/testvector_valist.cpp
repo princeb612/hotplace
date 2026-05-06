@@ -27,6 +27,7 @@ void test_yaml_testvector_valist() {
         }
 
         for (const auto& item : items) {
+            std::string text_itm = item["item"].as<std::string>();
             std::string text_fmt = item["format"].as<std::string>();
             std::string text_exp = item["expect"].as<std::string>();
 
@@ -34,7 +35,7 @@ void test_yaml_testvector_valist() {
             sprintf(&bs, text_fmt.c_str(), va);
             _logger->writeln("out %s", bs.c_str());
             _logger->writeln("exp %s", text_exp.c_str());
-            _test_case.assert(bs == text_exp, __FUNCTION__, "format string %s", text_fmt.c_str());
+            _test_case.assert(bs == text_exp, __FUNCTION__, "%s format string %s", text_itm.c_str(), text_fmt.c_str());
         }
     };
 
@@ -47,7 +48,7 @@ void test_yaml_testvector_valist() {
 
             auto schema = example["schema"].as<std::string>();
 
-            if (schema == "VALIST SPRINTF") {
+            if (schema == "VALIST") {
                 auto args = example["args"];
                 auto items = example["items"];
                 lambda_yaml_valist_sprintf(args, items);

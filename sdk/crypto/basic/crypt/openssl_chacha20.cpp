@@ -14,9 +14,9 @@
 namespace hotplace {
 namespace crypto {
 
-return_t openssl_chacha20_iv(binary_t &iv, uint32 counter, const binary_t &nonce) { return openssl_chacha20_iv(iv, counter, nonce.data(), nonce.size()); }
+return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const binary_t& nonce) { return openssl_chacha20_iv(iv, counter, nonce.data(), nonce.size()); }
 
-return_t openssl_chacha20_iv(binary_t &iv, uint32 counter, const byte_t *nonce, size_t nonce_size) {
+return_t openssl_chacha20_iv(binary_t& iv, uint32 counter, const byte_t* nonce, size_t nonce_size) {
     return_t ret = errorcode_t::success;
 
     __try2 {

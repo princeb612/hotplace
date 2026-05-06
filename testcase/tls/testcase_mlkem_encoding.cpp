@@ -17,9 +17,9 @@ void test_mlkem_encoding() {
     _test_case.begin("TLS 1.3 keyshare MLKEM encoding");
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     struct testvector {
-        const char *desc;
-        const char *name;
-        const char *keydata;
+        const char* desc;
+        const char* name;
+        const char* keydata;
     } table[] = {
         {
             "tls13_TLS_AES_128_CCM_SHA256_MLKEM512.pcapng #4",
@@ -93,7 +93,7 @@ void test_mlkem_encoding() {
         binary_t bin_pub = base16_decode(item->keydata);
         binary_t encode_pub;
 
-        EVP_PKEY *pkey = nullptr;
+        EVP_PKEY* pkey = nullptr;
         ret = keychain.pkey_decode_raw(nullptr, name, &pkey, bin_pub, key_encoding_pub_raw);
         _test_case.test(ret, __FUNCTION__, "decode %s", name);
 
@@ -101,7 +101,7 @@ void test_mlkem_encoding() {
         _test_case.test(ret, __FUNCTION__, "encode %s", name);
         _test_case.assert(bin_pub == encode_pub, __FUNCTION__, "confirm %s", name);
 
-        _logger->writeln([&](basic_stream &dbs) -> void { dump_key(pkey, &dbs); });
+        _logger->writeln([&](basic_stream& dbs) -> void { dump_key(pkey, &dbs); });
 
         EVP_PKEY_free(pkey);
     }

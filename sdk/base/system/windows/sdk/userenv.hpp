@@ -22,7 +22,7 @@
    @comment
     NT4+
  */
-typedef BOOL(__stdcall *CREATEENVIRONMENTBLOCK)(LPVOID *lpEnvironment, HANDLE hToken, BOOL bInherit);
+typedef BOOL(__stdcall* CREATEENVIRONMENTBLOCK)(LPVOID* lpEnvironment, HANDLE hToken, BOOL bInherit);
 
 /* "DestroyEnvironmentBlock" */
 #define DECLARE_NAMEOF_API_DESTROYENVIRONMENTBLOCK                                                                            \
@@ -35,7 +35,7 @@ typedef BOOL(__stdcall *CREATEENVIRONMENTBLOCK)(LPVOID *lpEnvironment, HANDLE hT
    @comment
     NT4+
  */
-typedef BOOL(__stdcall *GETUSERPROFILEDIRECTORY)(HANDLE hToken, LPTSTR lpProfileDir, LPDWORD lpcchSize);
+typedef BOOL(__stdcall* GETUSERPROFILEDIRECTORY)(HANDLE hToken, LPTSTR lpProfileDir, LPDWORD lpcchSize);
 
 #if defined _MBCS || defined MBCS
 #define DECLARE_NAMEOF_API_EXPANDENVIRONMENTSTRINGSFORUSER DECLARE_NAMEOF_API_EXPANDENVIRONMENTSTRINGSFORUSERA
@@ -67,9 +67,9 @@ typedef BOOL(__stdcall *GETUSERPROFILEDIRECTORY)(HANDLE hToken, LPTSTR lpProfile
 /* @brief
     Expands the source string by using the environment block established for the specified user.
  */
-typedef BOOL(__stdcall *EXPANDENVIRONMENTSTRINGSFORUSERA)(HANDLE hToken, LPCSTR lpSrc, LPSTR lpDest, DWORD dwSize);
+typedef BOOL(__stdcall* EXPANDENVIRONMENTSTRINGSFORUSERA)(HANDLE hToken, LPCSTR lpSrc, LPSTR lpDest, DWORD dwSize);
 
-typedef BOOL(__stdcall *EXPANDENVIRONMENTSTRINGSFORUSERW)(HANDLE hToken, LPCWSTR lpSrc, LPWSTR lpDest, DWORD dwSize);
+typedef BOOL(__stdcall* EXPANDENVIRONMENTSTRINGSFORUSERW)(HANDLE hToken, LPCWSTR lpSrc, LPWSTR lpDest, DWORD dwSize);
 
 #undef NAMEOF_API_GETUSERPROFILEDIRECTORY
 
@@ -97,6 +97,6 @@ typedef BOOL(__stdcall *EXPANDENVIRONMENTSTRINGSFORUSERW)(HANDLE hToken, LPCWSTR
 /* @brief
     Frees environment variables created by the CreateEnvironmentBlock function.
  */
-typedef BOOL(__stdcall *DESTROYENVIRONMENTBLOCK)(LPVOID lpEnvironment);
+typedef BOOL(__stdcall* DESTROYENVIRONMENTBLOCK)(LPVOID lpEnvironment);
 
 #endif

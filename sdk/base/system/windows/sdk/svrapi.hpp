@@ -24,8 +24,8 @@
     You can also use the WNetEnumResource function to retrieve resource information.
     However, WNetEnumResource does not enumerate hidden shares or users connected to a share.
  */
-typedef NET_API_STATUS(__stdcall *SVRAPI_NETSHAREENUM)(const char FAR *pszServer, short sLevel, char FAR *pbBuffer, unsigned short cbBuffer,
-                                                       unsigned short FAR *pcEntriesRead, unsigned short FAR *pcTotalAvail);
+typedef NET_API_STATUS(__stdcall* SVRAPI_NETSHAREENUM)(const char FAR* pszServer, short sLevel, char FAR* pbBuffer, unsigned short cbBuffer,
+                                                       unsigned short FAR* pcEntriesRead, unsigned short FAR* pcTotalAvail);
 
 /* "NetFileEnum" */
 #define DECLARE_NAMEOF_API_SVRAPI_NETFILEENUM                     \
@@ -36,8 +36,8 @@ typedef NET_API_STATUS(__stdcall *SVRAPI_NETSHAREENUM)(const char FAR *pszServer
 /* @brief
     Returns information about some or all open files on a server, depending on the parameters specified.
  */
-typedef NET_API_STATUS(__stdcall *SVRAPI_NETFILEENUM)(const char FAR *pszServer, const char FAR *pszBasePath, short sLevel, char FAR *pbBuffer, unsigned short cbBuffer,
-                                                      unsigned short FAR *pcEntriesRead, unsigned short FAR *pcTotalAvail);
+typedef NET_API_STATUS(__stdcall* SVRAPI_NETFILEENUM)(const char FAR* pszServer, const char FAR* pszBasePath, short sLevel, char FAR* pbBuffer, unsigned short cbBuffer,
+                                                      unsigned short FAR* pcEntriesRead, unsigned short FAR* pcTotalAvail);
 
 /* "NetConnectionEnum" */
 #define DECLARE_NAMEOF_API_SVRAPI_NETCONNECTIONENUM                                             \
@@ -50,8 +50,8 @@ typedef NET_API_STATUS(__stdcall *SVRAPI_NETFILEENUM)(const char FAR *pszServer,
     If there is more than one user using this connection, then it is possible to get more than one structure for the same connection, but with a different user
    name.
  */
-typedef NET_API_STATUS(__stdcall *SVRAPI_NETCONNECTIONENUM)(const char FAR *pszServer, const char FAR *pszQualifier, short sLevel, char FAR *pbBuffer,
-                                                            unsigned short cbBuffer, unsigned short FAR *pcEntriesRead, unsigned short FAR *pcTotalAvail);
+typedef NET_API_STATUS(__stdcall* SVRAPI_NETCONNECTIONENUM)(const char FAR* pszServer, const char FAR* pszQualifier, short sLevel, char FAR* pbBuffer,
+                                                            unsigned short cbBuffer, unsigned short FAR* pcEntriesRead, unsigned short FAR* pcTotalAvail);
 
 /* "NetShareAdd" */
 #define DECLARE_NAMEOF_API_SVRAPI_NETSHAREADD                     \
@@ -62,7 +62,7 @@ typedef NET_API_STATUS(__stdcall *SVRAPI_NETCONNECTIONENUM)(const char FAR *pszS
 /* @brief
     Shares a server resource.
  */
-typedef NET_API_STATUS(__stdcall *SVRAPI_NETSHAREADD)(const char FAR *pszServer, short sLevel, const char FAR *pbBuffer, unsigned short cbBuffer);
+typedef NET_API_STATUS(__stdcall* SVRAPI_NETSHAREADD)(const char FAR* pszServer, short sLevel, const char FAR* pbBuffer, unsigned short cbBuffer);
 
 /* "NetShareDel" */
 #define DECLARE_NAMEOF_API_SVRAPI_NETSHAREDEL                     \
@@ -74,6 +74,6 @@ typedef NET_API_STATUS(__stdcall *SVRAPI_NETSHAREADD)(const char FAR *pszServer,
     Deletes a share name from a server's list of shared resources, disconnecting all connections to the shared resource.
     The extended function NetShareDelEx allows the caller to specify a SHARE_INFO_0, SHARE_INFO_1, SHARE_INFO_2, SHARE_INFO_502, or SHARE_INFO_503 structure.
  */
-typedef NET_API_STATUS(__stdcall *SVRAPI_NETSHAREDEL)(const char FAR *pszServer, const char FAR *pszNetName, unsigned short usReserved);
+typedef NET_API_STATUS(__stdcall* SVRAPI_NETSHAREDEL)(const char FAR* pszServer, const char FAR* pszNetName, unsigned short usReserved);
 
 #endif

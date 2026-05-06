@@ -49,7 +49,7 @@ void test_sharedinstance1() {
     _test_case.begin("shared instance");
     int ret = 0;
 
-    simple_instance1 *inst = new simple_instance1;  // ++refcounter
+    simple_instance1* inst = new simple_instance1;  // ++refcounter
     _test_case.assert(1 == inst->getref(), __FUNCTION__, "ref count == 1");
     ret = inst->addref();  // ++refcounter
     _test_case.assert(2 == ret, __FUNCTION__, "addref");

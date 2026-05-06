@@ -155,92 +155,92 @@
 /* @brief
     Writes user-mode minidump information to the specified file.
  */
-typedef BOOL(__stdcall *MINIDUMPWRITEDUMP)(HANDLE hProcess, DWORD ProcessId, HANDLE hFile, MINIDUMP_TYPE DumpType, PMINIDUMP_EXCEPTION_INFORMATION ExceptionParam,
+typedef BOOL(__stdcall* MINIDUMPWRITEDUMP)(HANDLE hProcess, DWORD ProcessId, HANDLE hFile, MINIDUMP_TYPE DumpType, PMINIDUMP_EXCEPTION_INFORMATION ExceptionParam,
                                            PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam, PMINIDUMP_CALLBACK_INFORMATION CallbackParam);
 
 /* @brief
     Deallocates all resources associated with the process handle.
  */
-typedef BOOL(__stdcall *SYMCLEANUP)(HANDLE hProcess);
+typedef BOOL(__stdcall* SYMCLEANUP)(HANDLE hProcess);
 
 /* @brief
     Retrieves the function table entry for the specified address.
  */
-typedef PVOID(__stdcall *SYMFUNCTIONTABLEACCESS)(HANDLE hProcess, DWORD AddrBase);
+typedef PVOID(__stdcall* SYMFUNCTIONTABLEACCESS)(HANDLE hProcess, DWORD AddrBase);
 
-typedef PVOID(__stdcall *SYMFUNCTIONTABLEACCESS64)(HANDLE hProcess, DWORD64 AddrBase);
+typedef PVOID(__stdcall* SYMFUNCTIONTABLEACCESS64)(HANDLE hProcess, DWORD64 AddrBase);
 
 /* @brief
     Locates the source line for the specified address.
  */
-typedef BOOL(__stdcall *SYMGETLINEFROMADDR)(HANDLE hProcess, DWORD dwAddr, PDWORD pdwDisplacement, PIMAGEHLP_LINE Line);
+typedef BOOL(__stdcall* SYMGETLINEFROMADDR)(HANDLE hProcess, DWORD dwAddr, PDWORD pdwDisplacement, PIMAGEHLP_LINE Line);
 
-typedef BOOL(__stdcall *SYMGETLINEFROMADDR64)(HANDLE hProcess, DWORD64 dwAddr, PDWORD pdwDisplacement, PIMAGEHLP_LINE64 Line);
+typedef BOOL(__stdcall* SYMGETLINEFROMADDR64)(HANDLE hProcess, DWORD64 dwAddr, PDWORD pdwDisplacement, PIMAGEHLP_LINE64 Line);
 
 /* @brief
     Retrieves the base address of the module that contains the specified address.
  */
-typedef DWORD(__stdcall *SYMGETMODULEBASE)(HANDLE hProcess, DWORD dwAddr);
-typedef DWORD64(__stdcall *SYMGETMODULEBASE64)(HANDLE hProcess, DWORD64 dwAddr);
+typedef DWORD(__stdcall* SYMGETMODULEBASE)(HANDLE hProcess, DWORD dwAddr);
+typedef DWORD64(__stdcall* SYMGETMODULEBASE64)(HANDLE hProcess, DWORD64 dwAddr);
 
 /* @brief
     Retrieves the module information of the specified module.
  */
-typedef BOOL(__stdcall *SYMGETMODULEINFO)(HANDLE hProcess, DWORD dwAddr, PIMAGEHLP_MODULE ModuleInfo);
+typedef BOOL(__stdcall* SYMGETMODULEINFO)(HANDLE hProcess, DWORD dwAddr, PIMAGEHLP_MODULE ModuleInfo);
 
-typedef BOOL(__stdcall *SYMGETMODULEINFO64)(HANDLE hProcess, DWORD64 dwAddr, PIMAGEHLP_MODULE64 ModuleInfo);
+typedef BOOL(__stdcall* SYMGETMODULEINFO64)(HANDLE hProcess, DWORD64 dwAddr, PIMAGEHLP_MODULE64 ModuleInfo);
 
 /* @brief
     Retrieves the current option mask.
  */
-typedef DWORD(__stdcall *SYMGETOPTIONS)(void);
+typedef DWORD(__stdcall* SYMGETOPTIONS)(void);
 
 /* @brief
     Locates the symbol for the specified address.
     Note  This function is provided only for compatibility. Applications should use SymFromAddr.
  */
-typedef BOOL(__stdcall *SYMGETSYMFROMADDR)(HANDLE hProcess, DWORD Address, PDWORD Displacement, PIMAGEHLP_SYMBOL Symbol);
+typedef BOOL(__stdcall* SYMGETSYMFROMADDR)(HANDLE hProcess, DWORD Address, PDWORD Displacement, PIMAGEHLP_SYMBOL Symbol);
 
-typedef BOOL(__stdcall *SYMGETSYMFROMADDR64)(HANDLE hProcess, DWORD64 Address, PDWORD64 Displacement, PIMAGEHLP_SYMBOL64 Symbol);
+typedef BOOL(__stdcall* SYMGETSYMFROMADDR64)(HANDLE hProcess, DWORD64 Address, PDWORD64 Displacement, PIMAGEHLP_SYMBOL64 Symbol);
 
 /* @brief
     Initializes the symbol handler for a process.
  */
-typedef BOOL(__stdcall *SYMINITIALIZE)(HANDLE hProcess, PCTSTR UserSearchPath, BOOL fInvadeProcess);
+typedef BOOL(__stdcall* SYMINITIALIZE)(HANDLE hProcess, PCTSTR UserSearchPath, BOOL fInvadeProcess);
 
 /* @brief
     Sets the options mask.
  */
-typedef DWORD(__stdcall *SYMSETOPTIONS)(DWORD SymOptions);
+typedef DWORD(__stdcall* SYMSETOPTIONS)(DWORD SymOptions);
 
 /* @brief
     Obtains a stack trace.
  */
-typedef BOOL(__stdcall *STACKWALK)(DWORD MachineType, HANDLE hProcess, HANDLE hThread, LPSTACKFRAME StackFrame, PVOID ContextRecord,
+typedef BOOL(__stdcall* STACKWALK)(DWORD MachineType, HANDLE hProcess, HANDLE hThread, LPSTACKFRAME StackFrame, PVOID ContextRecord,
                                    PREAD_PROCESS_MEMORY_ROUTINE ReadMemoryRoutine, PFUNCTION_TABLE_ACCESS_ROUTINE FunctionTableAccessRoutine,
                                    PGET_MODULE_BASE_ROUTINE GetModuleBaseRoutine, PTRANSLATE_ADDRESS_ROUTINE TranslateAddress);
 
-typedef BOOL(__stdcall *STACKWALK64)(DWORD MachineType, HANDLE hProcess, HANDLE hThread, LPSTACKFRAME64 StackFrame, PVOID ContextRecord,
+typedef BOOL(__stdcall* STACKWALK64)(DWORD MachineType, HANDLE hProcess, HANDLE hThread, LPSTACKFRAME64 StackFrame, PVOID ContextRecord,
                                      PREAD_PROCESS_MEMORY_ROUTINE64 ReadMemoryRoutine, PFUNCTION_TABLE_ACCESS_ROUTINE64 FunctionTableAccessRoutine,
                                      PGET_MODULE_BASE_ROUTINE64 GetModuleBaseRoutine, PTRANSLATE_ADDRESS_ROUTINE64 TranslateAddress);
 
 /* @brief
     Undecorates the specified decorated C++ symbol name.
  */
-typedef DWORD(__stdcall *UNDECORATESYMBOLNAME)(PCTSTR DecoratedName, PTSTR UnDecoratedName, DWORD UndecoratedLength, DWORD Flags);
+typedef DWORD(__stdcall* UNDECORATESYMBOLNAME)(PCTSTR DecoratedName, PTSTR UnDecoratedName, DWORD UndecoratedLength, DWORD Flags);
 
 /* @brief
     Loads the symbol table for the specified module.
  */
-typedef DWORD(__stdcall *SYMLOADMODULE)(HANDLE hProcess, HANDLE hFile, PCSTR ImageName, PCSTR ModuleName, DWORD BaseOfDll, DWORD SizeOfDll);
+typedef DWORD(__stdcall* SYMLOADMODULE)(HANDLE hProcess, HANDLE hFile, PCSTR ImageName, PCSTR ModuleName, DWORD BaseOfDll, DWORD SizeOfDll);
 
-typedef DWORD64(__stdcall *SYMLOADMODULEEX)(HANDLE hProcess, HANDLE hFile, PCTSTR ImageName, PCTSTR ModuleName, DWORD64 BaseOfDll, DWORD DllSize, PMODLOAD_DATA Data,
+typedef DWORD64(__stdcall* SYMLOADMODULEEX)(HANDLE hProcess, HANDLE hFile, PCTSTR ImageName, PCTSTR ModuleName, DWORD64 BaseOfDll, DWORD DllSize, PMODLOAD_DATA Data,
                                             DWORD Flags);
 
 /* @brief
     Loads the symbol table.
     This function has been superseded by the SymLoadModuleEx function.
  */
-typedef DWORD64(__stdcall *SYMLOADMODULE64)(HANDLE hProcess, HANDLE hFile, PCSTR ImageName, PCSTR ModuleName, DWORD64 BaseOfDll, DWORD SizeOfDll);
+typedef DWORD64(__stdcall* SYMLOADMODULE64)(HANDLE hProcess, HANDLE hFile, PCSTR ImageName, PCSTR ModuleName, DWORD64 BaseOfDll, DWORD SizeOfDll);
 
 #endif

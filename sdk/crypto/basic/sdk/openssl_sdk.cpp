@@ -64,15 +64,15 @@ void openssl_cleanup_implementation() {
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
 
 #if defined __linux__
-static pthread_mutex_t *openssl_threadsafe = nullptr;
+static pthread_mutex_t* openssl_threadsafe = nullptr;
 #elif defined _WIN32 || defined _WIN64
-static HANDLE *openssl_threadsafe = nullptr;
+static HANDLE* openssl_threadsafe = nullptr;
 #endif
 
 #if defined __linux__
 static unsigned long(get_thread_id_callback)() { return (unsigned long)pthread_self(); }
 #endif
-static void(opensslthread_locking_callback)(int mode, int type, const char *file, int line);
+static void(opensslthread_locking_callback)(int mode, int type, const char* file, int line);
 
 /* openssl-0.9.8 thread-safe */
 void openssl_thread_setup_implementation(void) {
@@ -84,9 +84,9 @@ void openssl_thread_setup_implementation(void) {
         }
 
 #if defined __linux__
-        openssl_threadsafe = (pthread_mutex_t *)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(pthread_mutex_t));
+        openssl_threadsafe = (pthread_mutex_t*)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(pthread_mutex_t));
 #elif defined _WIN32 || defined _WIN64
-        openssl_threadsafe = (HANDLE *)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(HANDLE));
+        openssl_threadsafe = (HANDLE*)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(HANDLE));
 #endif
         if (nullptr == openssl_threadsafe) {
             ret = errorcode_t::out_of_memory;
@@ -103,7 +103,7 @@ void openssl_thread_setup_implementation(void) {
 #if defined __linux__
         CRYPTO_set_id_callback(get_thread_id_callback);
 #endif
-        CRYPTO_set_locking_callback((void (*)(int, int, const char *, int))opensslthread_locking_callback);
+        CRYPTO_set_locking_callback((void (*)(int, int, const char*, int))opensslthread_locking_callback);
         /* id callback defined */
     }
     __finally2 {}
@@ -126,7 +126,7 @@ void openssl_thread_cleanup_implementation(void) {
 }
 
 /* openssl-0.9.8 thread-safe */
-void opensslthread_locking_callback(int mode, int type, const char *file, int line) {
+void opensslthread_locking_callback(int mode, int type, const char* file, int line) {
     assert(nullptr != openssl_threadsafe);
 
     if (mode & CRYPTO_LOCK) {
@@ -220,7 +220,7 @@ void openssl_thread_end(void) {
 #endif
 }
 
-return_t read_bio(stream_t *stream, BIO *bio) {
+return_t read_bio(stream_t* stream, BIO* bio) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream || nullptr == bio) {

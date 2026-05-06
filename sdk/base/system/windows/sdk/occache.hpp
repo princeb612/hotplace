@@ -23,6 +23,6 @@
 /* @brief
     Removes the registry entries and all of the files associated with the specified control.
  */
-typedef HRESULT(WINAPI *REMOVECONTROLBYNAME)(LPCTSTR lpszFile, LPCTSTR lpszCLSID, LPCTSTR lpszTypeLibID, BOOL bForceRemove, DWORD dwIsDistUnit);
+typedef HRESULT(WINAPI* REMOVECONTROLBYNAME)(LPCTSTR lpszFile, LPCTSTR lpszCLSID, LPCTSTR lpszTypeLibID, BOOL bForceRemove, DWORD dwIsDistUnit);
 
 #endif

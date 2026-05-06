@@ -28,7 +28,7 @@
 namespace hotplace {
 namespace net {
 
-return_t tls_protection::get_protection_mask_key(tls_session *session, tls_direction_t dir, protection_space_t space, tls_secret_t &secret_key) {
+return_t tls_protection::get_protection_mask_key(tls_session* session, tls_direction_t dir, protection_space_t space, tls_secret_t& secret_key) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session_type = session->get_type();
@@ -86,10 +86,10 @@ return_t tls_protection::get_protection_mask_key(tls_session *session, tls_direc
     return ret;
 }
 
-return_t tls_protection::protection_mask(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, binary_t &mask, size_t masklen,
+return_t tls_protection::protection_mask(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, binary_t& mask, size_t masklen,
                                          protection_space_t space) {
     return_t ret = errorcode_t::success;
-    cipher_encrypt *cipher = nullptr;
+    cipher_encrypt* cipher = nullptr;
 
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -97,8 +97,8 @@ return_t tls_protection::protection_mask(tls_session *session, tls_direction_t d
             __leave2;
         }
 
-        crypto_advisor *advisor = crypto_advisor::get_instance();
-        tls_advisor *tlsadvisor = tls_advisor::get_instance();
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
         auto alg = aes128;  // DTLS, QUIC initial
 
@@ -127,7 +127,7 @@ return_t tls_protection::protection_mask(tls_session *session, tls_direction_t d
             cipher_encrypt_builder builder;
             cipher = builder.set(alg, ecb).build();
             if (cipher) {
-                const auto &key = get_secrets().get(secret_key);
+                const auto& key = get_secrets().get(secret_key);
                 auto samplesize = (size > blocksize) ? blocksize : size;
                 ret = cipher->encrypt(key, binary_t(), stream, samplesize, mask);
 
@@ -135,7 +135,7 @@ return_t tls_protection::protection_mask(tls_session *session, tls_direction_t d
 
 #if defined DEBUG
                 if (istraceable(trace_category_net)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+                    trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                         dbs.println("> protection");
                         dbs.println(" > key[%08x] %s (%s)", secret_key, base16_encode(key).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
                         dbs.println(" > sample %s", base16_encode(stream, samplesize).c_str());

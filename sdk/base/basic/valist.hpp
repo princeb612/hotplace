@@ -140,7 +140,8 @@ class valist {
     /**
      * @brief return va_list
      */
-    va_list& get();
+    va_list get();
+    operator va_list();
 
    protected:
     /**

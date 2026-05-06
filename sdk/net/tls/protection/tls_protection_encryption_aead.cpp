@@ -40,7 +40,7 @@ constexpr char constexpr_record_no[] = "record no";
 constexpr char constexpr_dtls_epoch[] = "epoch";
 constexpr char constexpr_dtls_record_seq[] = "sequence number";
 
-return_t tls_protection::build_iv(tls_session *session, binary_t &nonce, const binary_t &iv, uint64 recordno) {
+return_t tls_protection::build_iv(tls_session* session, binary_t& nonce, const binary_t& iv, uint64 recordno) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -69,10 +69,10 @@ return_t tls_protection::build_iv(tls_session *session, binary_t &nonce, const b
     return ret;
 }
 
-return_t tls_protection::build_tls12_aad_from_record(tls_session *session, binary_t &aad, const binary_t &record_header, uint64 record_no, uint8 size_nonce_explicit) {
+return_t tls_protection::build_tls12_aad_from_record(tls_session* session, binary_t& aad, const binary_t& record_header, uint64 record_no, uint8 size_nonce_explicit) {
     return_t ret = errorcode_t::success;
 
-    tls_advisor *tlsadvisor = tls_advisor::get_instance();
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
     uint8 content_type = 0;
     uint16 record_version = 0;
     uint16 len = 0;
@@ -88,7 +88,7 @@ return_t tls_protection::build_tls12_aad_from_record(tls_session *session, binar
            << new payload_member(uint48_t(0), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
            << new payload_member(uint16(0), true, constexpr_len);                               // tls, dtls
 
-        auto lambda_check_dtls = [&](payload *pl, payload_member *item) -> void {
+        auto lambda_check_dtls = [&](payload* pl, payload_member* item) -> void {
             auto ver = pl->t_value_of<uint16>(item);
             pl->set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(ver));
         };
@@ -146,10 +146,10 @@ return_t tls_protection::build_tls12_aad_from_record(tls_session *session, binar
     return ret;
 }
 
-return_t tls_protection::write_aad(tls_session *session, tls_direction_t dir, binary_t &aad, uint8 content_type, uint32 version, uint64 recno, uint16 epoch,
+return_t tls_protection::write_aad(tls_session* session, tls_direction_t dir, binary_t& aad, uint8 content_type, uint32 version, uint64 recno, uint16 epoch,
                                    uint64 dtlsseq, uint16 bodysize) {
     return_t ret = errorcode_t::success;
-    tls_advisor *tlsadvisor = tls_advisor::get_instance();
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
     __try2 {
         if (nullptr == session) {
@@ -157,8 +157,8 @@ return_t tls_protection::write_aad(tls_session *session, tls_direction_t dir, bi
             __leave2;
         }
 
-        auto &protection = session->get_tls_protection();
-        auto &secrets = protection.get_secrets();
+        auto& protection = session->get_tls_protection();
+        auto& secrets = protection.get_secrets();
 
         auto record_version = protection.get_lagacy_version();
         auto tagsize = protection.get_tag_size();
@@ -246,7 +246,7 @@ return_t tls_protection::write_aad(tls_session *session, tls_direction_t dir, bi
         if (is_tls) {
             record_no = session->get_recordno(dir, false);
         } else {
-            auto &kv = session->get_session_info(dir).get_keyvalue();
+            auto& kv = session->get_session_info(dir).get_keyvalue();
             key_epoch = t_narrow_cast(kv.get(session_dtls_epoch));
             dtls_record_seq = kv.get(session_dtls_seq);
         }
@@ -284,7 +284,7 @@ return_t tls_protection::write_aad(tls_session *session, tls_direction_t dir, bi
     return ret;
 }
 
-return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir, protection_space_t space, tls_secret_t &secret_key, tls_secret_t &secret_iv) {
+return_t tls_protection::get_aead_key(tls_session* session, tls_direction_t dir, protection_space_t space, tls_secret_t& secret_key, tls_secret_t& secret_iv) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session) {
@@ -392,7 +392,7 @@ return_t tls_protection::get_aead_key(tls_session *session, tls_direction_t dir,
     return ret;
 }
 
-return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext, const binary_t &aad, binary_t &tag,
+return_t tls_protection::encrypt_aead(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad, binary_t& tag,
                                       protection_space_t space) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -401,7 +401,7 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
             __leave2;
         }
 
-        tls_advisor *tlsadvisor = tls_advisor::get_instance();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
         uint16 cs = 0;
         switch (space) {
@@ -424,8 +424,8 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
         uint64 record_no = 0;
         record_no = session->get_recordno(dir, true, space);
 
-        const auto &key = get_secrets().get(secret_key);
-        const auto &iv = get_secrets().get(secret_iv);
+        const auto& key = get_secrets().get(secret_key);
+        const auto& iv = get_secrets().get(secret_iv);
         binary_t nonce;
         encrypt_option_t options[] = {{crypt_ctrl_nsize, hint_cipher->nsize}, {crypt_ctrl_tsize, hint_cipher->tsize}, {}};
 
@@ -436,7 +436,7 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
                 if (is_kindof_dtls()) {
                     // in case of DTLS 1.2 chacha20-poly1305, true == is_kindof_dtls()
                     // in case of CBC-HMAC, session_type_dtls == session->get_type
-                    auto &kv = session->get_session_info(dir).get_keyvalue();
+                    auto& kv = session->get_session_info(dir).get_keyvalue();
                     uint16 epoch = t_narrow_cast(kv.get(session_dtls_epoch));
                     uint64 seq = kv.get(session_dtls_seq);
                     record_no = session->get_dtls_record_arrange().make_epoch_seq(epoch, seq);
@@ -444,7 +444,7 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
                 build_iv(session, nonce, iv, record_no);
                 ret = crypt.encrypt(alg, mode, key, nonce, plaintext, ciphertext, aad, tag, options);
             } else if (ccm == mode || gcm == mode) {
-                const binary_t &nonce_explicit = get_secrets().get(tls_context_nonce_explicit);
+                const binary_t& nonce_explicit = get_secrets().get(tls_context_nonce_explicit);
                 binary_append(nonce, iv);
                 binary_append(nonce, nonce_explicit);
                 ret = crypt.encrypt(alg, mode, key, nonce, plaintext, ciphertext, aad, tag, options);
@@ -457,7 +457,7 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
 
 #if defined DEBUG
         if (istraceable(trace_category_net, loglevel_debug)) {
-            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                 dbs.println("> encrypt");
                 dbs.println(" > key[%08x] %s (%s)", secret_key, base16_encode(key).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
                 dbs.println(" > iv [%08x] %s (%s)", secret_iv, base16_encode(iv).c_str(), tlsadvisor->nameof_secret(secret_iv).c_str());
@@ -477,7 +477,7 @@ return_t tls_protection::encrypt_aead(tls_session *session, tls_direction_t dir,
     return ret;
 }
 
-return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext,
+return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
                                       protection_space_t space) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -504,8 +504,8 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
     return ret;
 }
 
-return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext, const binary_t &aad,
-                                      const binary_t &tag, protection_space_t space) {
+return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad,
+                                      const binary_t& tag, protection_space_t space) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -513,7 +513,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
             __leave2;
         }
 
-        tls_advisor *tlsadvisor = tls_advisor::get_instance();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         uint16 cs = 0;
         switch (space) {
             case protection_initial:
@@ -535,8 +535,8 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
 
         uint64 record_no = session->get_recordno(dir, true, space);
 
-        const binary_t &key = get_secrets().get(secret_key);
-        const binary_t &iv = get_secrets().get(secret_iv);
+        const binary_t& key = get_secrets().get(secret_key);
+        const binary_t& iv = get_secrets().get(secret_iv);
         binary_t tls12_aad;
         binary_t nonce;
         auto alg = typeof_alg(hint_cipher);
@@ -564,7 +564,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
                 if (is_kindof_dtls()) {
                     // in case of DTLS 1.2 chacha20-poly1305, true == is_kindof_dtls()
                     // in case of CBC-HMAC, session_type_dtls == session->get_type
-                    auto &kv = session->get_session_info(dir).get_keyvalue();
+                    auto& kv = session->get_session_info(dir).get_keyvalue();
                     uint16 epoch = t_narrow_cast(kv.get(session_dtls_epoch));
                     uint64 seq = kv.get(session_dtls_seq);
                     record_no = session->get_dtls_record_arrange().make_epoch_seq(epoch, seq);
@@ -609,7 +609,7 @@ return_t tls_protection::decrypt_aead(tls_session *session, tls_direction_t dir,
 
 #if defined DEBUG
         if (istraceable(trace_category_net, loglevel_debug)) {
-            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                 dbs.println("> decrypt");
                 dbs.println(" > key[%08x] %s (%s)", secret_key, base16_encode(key).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
                 dbs.println(" > iv [%08x] %s (%s)", secret_iv, base16_encode(iv).c_str(), tlsadvisor->nameof_secret(secret_iv).c_str());

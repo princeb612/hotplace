@@ -13,36 +13,36 @@
 namespace hotplace {
 namespace crypto {
 
-return_t crl_distribution_point(X509 *cert, std::set<std::string> &crls) {
+return_t crl_distribution_point(X509* cert, std::set<std::string>& crls) {
     return_t ret = errorcode_t::success;
 
     __try2 {
         crls.clear();
 
         int nid = NID_crl_distribution_points;
-        STACK_OF(DIST_POINT) *dist_points = (STACK_OF(DIST_POINT) *)X509_get_ext_d2i(cert, nid, nullptr, nullptr);
+        STACK_OF(DIST_POINT)* dist_points = (STACK_OF(DIST_POINT)*)X509_get_ext_d2i(cert, nid, nullptr, nullptr);
         if (nullptr == dist_points) {
             ret = errorcode_t::internal_error;
             __leave2;
         }
         for (int i = 0; i < sk_DIST_POINT_num(dist_points); i++) {
-            DIST_POINT *dp = sk_DIST_POINT_value(dist_points, i);
-            DIST_POINT_NAME *distpoint = dp->distpoint;
+            DIST_POINT* dp = sk_DIST_POINT_value(dist_points, i);
+            DIST_POINT_NAME* distpoint = dp->distpoint;
             if (0 == distpoint->type) {  // fullname GENERALIZEDNAME
                 for (int j = 0; j < sk_GENERAL_NAME_num(distpoint->name.fullname); j++) {
-                    GENERAL_NAME *gen = sk_GENERAL_NAME_value(distpoint->name.fullname, j);
-                    ASN1_IA5STRING *asn1_str = gen->d.uniformResourceIdentifier;
+                    GENERAL_NAME* gen = sk_GENERAL_NAME_value(distpoint->name.fullname, j);
+                    ASN1_IA5STRING* asn1_str = gen->d.uniformResourceIdentifier;
 
-                    std::string crl((char *)ASN1_STRING_get0_data(asn1_str), ASN1_STRING_length(asn1_str));
+                    std::string crl((char*)ASN1_STRING_get0_data(asn1_str), ASN1_STRING_length(asn1_str));
                     crls.insert(crl);
                 }
             } else if (1 == distpoint->type) {  // relative X509NAME
-                STACK_OF(X509_NAME_ENTRY) *sk_relname = distpoint->name.relativename;
+                STACK_OF(X509_NAME_ENTRY)* sk_relname = distpoint->name.relativename;
                 for (int j = 0; j < sk_X509_NAME_ENTRY_num(sk_relname); j++) {
-                    X509_NAME_ENTRY *e = sk_X509_NAME_ENTRY_value(sk_relname, j);
+                    X509_NAME_ENTRY* e = sk_X509_NAME_ENTRY_value(sk_relname, j);
                     auto d = X509_NAME_ENTRY_get_data(e);
 
-                    std::string crl((char *)ASN1_STRING_get0_data(d), ASN1_STRING_length(d));
+                    std::string crl((char*)ASN1_STRING_get0_data(d), ASN1_STRING_length(d));
                     crls.insert(crl);
                 }
             }
@@ -88,8 +88,8 @@ return_t crl_distribution_point(X509 *cert, std::set<std::string> &crls) {
 #define SPC_INDIRECT_DATA_OBJID "1.3.6.1.4.1.311.2.1.4"
 
 typedef struct {
-    ASN1_OBJECT *type;
-    ASN1_TYPE *value;
+    ASN1_OBJECT* type;
+    ASN1_TYPE* value;
 } SpcAttributeTypeAndOptionalValue;
 
 // DECLARE_ASN1_FUNCTIONS(SpcAttributeTypeAndOptionalValue)
@@ -99,8 +99,8 @@ ASN1_SEQUENCE_END(SpcAttributeTypeAndOptionalValue);
 // IMPLEMENT_ASN1_FUNCTIONS(SpcAttributeTypeAndOptionalValue)
 
 typedef struct {
-    ASN1_OBJECT *algorithm;
-    ASN1_TYPE *parameters;
+    ASN1_OBJECT* algorithm;
+    ASN1_TYPE* parameters;
 } AlgorithmIdentifier;
 
 // DECLARE_ASN1_FUNCTIONS(AlgorithmIdentifier)
@@ -109,8 +109,8 @@ ASN1_SEQUENCE_END(AlgorithmIdentifier);
 // IMPLEMENT_ASN1_FUNCTIONS(AlgorithmIdentifier)
 
 typedef struct {
-    AlgorithmIdentifier *digestAlgorithm;
-    ASN1_OCTET_STRING *digest;
+    AlgorithmIdentifier* digestAlgorithm;
+    ASN1_OCTET_STRING* digest;
 } DigestInfo;
 
 // DECLARE_ASN1_FUNCTIONS(DigestInfo)
@@ -119,8 +119,8 @@ ASN1_SEQUENCE_END(DigestInfo);
 // IMPLEMENT_ASN1_FUNCTIONS(DigestInfo)
 
 typedef struct {
-    SpcAttributeTypeAndOptionalValue *data;
-    DigestInfo *messageDigest;
+    SpcAttributeTypeAndOptionalValue* data;
+    DigestInfo* messageDigest;
 } SpcIndirectDataContent;
 
 // DECLARE_ASN1_FUNCTIONS(SpcIndirectDataContent)
@@ -129,7 +129,7 @@ ASN1_SEQUENCE(SpcIndirectDataContent) = {ASN1_SIMPLE(SpcIndirectDataContent, dat
 ASN1_SEQUENCE_END(SpcIndirectDataContent);
 IMPLEMENT_ASN1_FUNCTIONS(SpcIndirectDataContent);
 
-return_t pkcs7_digest_info(PKCS7 *pkcs7, std::string &md, binary_t &digest) {
+return_t pkcs7_digest_info(PKCS7* pkcs7, std::string& md, binary_t& digest) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -146,13 +146,13 @@ return_t pkcs7_digest_info(PKCS7 *pkcs7, std::string &md, binary_t &digest) {
             __leave2;
         }
 
-        ASN1_OBJECT *indir_objid = OBJ_txt2obj(SPC_INDIRECT_DATA_OBJID, 1);
+        ASN1_OBJECT* indir_objid = OBJ_txt2obj(SPC_INDIRECT_DATA_OBJID, 1);
         int mdtype = -1;
 
         if (0 == OBJ_cmp(pkcs7->d.sign->contents->type, indir_objid) && pkcs7->d.sign->contents->d.other->type == V_ASN1_SEQUENCE) {
-            ASN1_STRING *astr = pkcs7->d.sign->contents->d.other->value.sequence;
-            const unsigned char *p = ASN1_STRING_get0_data(astr);
-            SpcIndirectDataContent *idc = d2i_SpcIndirectDataContent(nullptr, &p, ASN1_STRING_length(astr));
+            ASN1_STRING* astr = pkcs7->d.sign->contents->d.other->value.sequence;
+            const unsigned char* p = ASN1_STRING_get0_data(astr);
+            SpcIndirectDataContent* idc = d2i_SpcIndirectDataContent(nullptr, &p, ASN1_STRING_length(astr));
             if (idc) {
                 if (idc->messageDigest && idc->messageDigest->digest && idc->messageDigest->digestAlgorithm) {
                     mdtype = OBJ_obj2nid(idc->messageDigest->digestAlgorithm->algorithm);
@@ -176,11 +176,11 @@ return_t pkcs7_digest_info(PKCS7 *pkcs7, std::string &md, binary_t &digest) {
     return ret;
 }
 
-return_t X509_NAME_to_string(const X509_NAME *name, std::string &data) {
+return_t X509_NAME_to_string(const X509_NAME* name, std::string& data) {
     return_t ret = errorcode_t::success;
-    char *s = nullptr;
-    char *c = nullptr;
-    char *b = nullptr;
+    char* s = nullptr;
+    char* c = nullptr;
+    char* b = nullptr;
     int l = 0;
     int i = 0;
 

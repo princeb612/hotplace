@@ -29,11 +29,11 @@
 namespace hotplace {
 namespace net {
 
-return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t &master_secret, const binary_t &client_hello_random, const binary_t &server_hello_random,
+return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t& master_secret, const binary_t& client_hello_random, const binary_t& server_hello_random,
                                        uint16 cs) {
     return_t ret = errorcode_t::success;
     __try2 {
-        tls_advisor *tlsadvisor = tls_advisor::get_instance();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
         crypto_hmac_builder builder;
         auto hmac_expansion = builder.set(hmac_alg).set(master_secret).build();
@@ -140,7 +140,7 @@ return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t
 
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+                trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                     dbs.printf(ANSI_ESCAPE "1;36m");
                     dbs.println("> cipher_suite %s", tlsadvisor->hintof_cipher_suite(cs)->name_iana);
                     dbs.println("> master_secret %s", base16_encode(master_secret).c_str());

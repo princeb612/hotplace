@@ -37,7 +37,7 @@ constexpr char constexpr_quic2_key[] = "quicv2 key";
 constexpr char constexpr_quic2_iv[] = "quicv2 iv";
 constexpr char constexpr_quic2_hp[] = "quicv2 hp";
 
-return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_direction_t dir) {
+return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     // RFC 8446 7.1.  Key Schedule
     __try2 {
@@ -49,12 +49,12 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
         auto session_type = session->get_type();
         uint16 cipher_suite = get_cipher_suite();
 
-        crypto_advisor *advisor = crypto_advisor::get_instance();
-        tls_advisor *tlsadvisor = tls_advisor::get_instance();
+        crypto_advisor* advisor = crypto_advisor::get_instance();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-        const char *label_quic_key = nullptr;
-        const char *label_quic_iv = nullptr;
-        const char *label_quic_hp = nullptr;
+        const char* label_quic_key = nullptr;
+        const char* label_quic_iv = nullptr;
+        const char* label_quic_hp = nullptr;
 
         if ((session_type_quic == session_type) || (session_type_quic2 == session_type)) {
             if (0 == cipher_suite) {
@@ -72,18 +72,18 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             }
         }
 
-        const tls_cipher_suite_t *hint_tls_alg = tlsadvisor->hintof_cipher_suite(cipher_suite);
+        const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(cipher_suite);
         if (nullptr == hint_tls_alg) {
             ret = errorcode_t::not_supported;
             __leave2;
         }
 
-        const hint_blockcipher_t *hint_blockcipher = tlsadvisor->hintof_blockcipher(cipher_suite);
+        const hint_blockcipher_t* hint_blockcipher = tlsadvisor->hintof_blockcipher(cipher_suite);
         if (nullptr == hint_blockcipher) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        const hint_digest_t *hint_mac = advisor->hintof_digest(hint_tls_alg->mac);
+        const hint_digest_t* hint_mac = advisor->hintof_digest(hint_tls_alg->mac);
         if (nullptr == hint_mac) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -105,8 +105,8 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
         }
         empty_ikm.resize(dlen);
 
-        auto lambda_expand_label = [&](tls_secret_t sec, binary_t &okm, const char *hashalg, uint16 dlen, const binary_t &secret, const char *label,
-                                       const binary_t &context) -> void {
+        auto lambda_expand_label = [&](tls_secret_t sec, binary_t& okm, const char* hashalg, uint16 dlen, const binary_t& secret, const char* label,
+                                       const binary_t& context) -> void {
             okm.clear();
             if (is_kindof_dtls()) {
                 kdf.hkdf_expand_dtls13_label(okm, hashalg, dlen, secret, label, context);
@@ -115,7 +115,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             }
             get_secrets().assign(sec, okm);
         };
-        auto lambda_extract = [&](tls_secret_t sec, binary_t &prk, const char *hashalg, const binary_t &salt, const binary_t &ikm) -> void {
+        auto lambda_extract = [&](tls_secret_t sec, binary_t& prk, const char* hashalg, const binary_t& salt, const binary_t& ikm) -> void {
             kdf.hmac_kdf_extract(prk, hashalg, salt, ikm);
             get_secrets().assign(sec, prk);
         };
@@ -174,7 +174,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                 if (is_kindof_tls13()) {
                     if (tls_flow_0rtt == flow) {
                         // 0-RTT
-                        const binary_t &secret_resumption_early = get_secrets().get(tls_secret_resumption_early);  // client finished
+                        const binary_t& secret_resumption_early = get_secrets().get(tls_secret_resumption_early);  // client finished
 
                         // {client}  derive secret "tls13 c e traffic"
                         binary_t secret_c_e_traffic;
@@ -194,7 +194,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     }
                 }
             } else if ((session_type_quic == session_type) || (session_type_quic2 == session_type)) {
-                const binary_t &salt = get_secrets().get(tls_context_quic_dcid);
+                const binary_t& salt = get_secrets().get(tls_context_quic_dcid);
                 if ((false == salt.empty()) && get_secrets().get(tls_secret_initial_quic).empty()) {
                     binary_t bin_initial_salt;
                     if (session_type_quic == session_type) {
@@ -283,8 +283,8 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                     //  psk_dhe_ke  ... key_share
                     binary_t shared_secret;
 
-                    const EVP_PKEY *pkey_priv = nullptr;
-                    const EVP_PKEY *pkey_pub = nullptr;
+                    const EVP_PKEY* pkey_priv = nullptr;
+                    const EVP_PKEY* pkey_pub = nullptr;
 
                     auto group = get_protection_context().get0_keyshare_group();
                     auto hint_group = advisor->hintof_tls_group(group);
@@ -348,7 +348,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                             lambda_expand_label(tls_secret_handshake_derived, secret_handshake_derived, hashalg, dlen, early_secret, "derived", empty_hash);
                         } break;
                         case tls_flow_0rtt: {
-                            const binary_t &secret_resumption_early = get_secrets().get(tls_secret_resumption_early);
+                            const binary_t& secret_resumption_early = get_secrets().get(tls_secret_resumption_early);
                             lambda_expand_label(tls_secret_handshake_derived, secret_handshake_derived, hashalg, dlen, secret_resumption_early, "derived", empty_hash);
                         } break;
                         case tls_flow_renegotiation: {
@@ -397,10 +397,10 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             }
         } else if (tls_hs_end_of_early_data == type) {
             binary_t okm;
-            const binary_t &secret_c_hs_traffic = get_secrets().get(tls_secret_c_hs_traffic);
+            const binary_t& secret_c_hs_traffic = get_secrets().get(tls_secret_c_hs_traffic);
             lambda_expand_label(tls_secret_handshake_client_key, okm, hashalg, keysize, secret_c_hs_traffic, "key", empty);
             lambda_expand_label(tls_secret_handshake_client_iv, okm, hashalg, 12, secret_c_hs_traffic, "iv", empty);
-            const binary_t &secret_s_hs_traffic = get_secrets().get(tls_secret_s_hs_traffic);
+            const binary_t& secret_s_hs_traffic = get_secrets().get(tls_secret_s_hs_traffic);
             lambda_expand_label(tls_secret_handshake_server_key, okm, hashalg, keysize, secret_s_hs_traffic, "key", empty);
             lambda_expand_label(tls_secret_handshake_server_iv, okm, hashalg, 12, secret_s_hs_traffic, "iv", empty);
         } else if ((tls_hs_finished == type) && is_serverinitiated(dir)) {
@@ -435,7 +435,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                 secret_application_server = get_secrets().get(tls_secret_s_ap_traffic);
                 secret_exporter_master = get_secrets().get(tls_secret_exp_master);
             } else {
-                const binary_t &secret_application = get_secrets().get(tls_secret_application);
+                const binary_t& secret_application = get_secrets().get(tls_secret_application);
                 lambda_expand_label(tls_secret_c_ap_traffic, secret_application_client, hashalg, dlen, secret_application, "c ap traffic", context_hash);
                 lambda_expand_label(tls_secret_s_ap_traffic, secret_application_server, hashalg, dlen, secret_application, "s ap traffic", context_hash);
                 lambda_expand_label(tls_secret_exp_master, secret_exporter_master, hashalg, dlen, secret_application, "exp master", context_hash);
@@ -477,7 +477,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
              */
 
             binary_t secret_resumption_master;
-            const binary_t &secret_application = get_secrets().get(tls_secret_application);
+            const binary_t& secret_application = get_secrets().get(tls_secret_application);
             lambda_expand_label(tls_secret_res_master, secret_resumption_master, hashalg, dlen, secret_application, "res master", context_hash);
 
             binary_t secret_resumption;
@@ -491,7 +491,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
 
             binary_t okm;
             if (is_kindof_dtls()) {
-                const auto &secret_application_client = get_secrets().get(tls_secret_c_ap_traffic);
+                const auto& secret_application_client = get_secrets().get(tls_secret_c_ap_traffic);
                 lambda_expand_label(tls_secret_application_client_sn_key, okm, hashalg, keysize, secret_application_client, "sn", empty);
             }
 
@@ -499,8 +499,8 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
             crypto_hmac_builder builder;
             binary_t master_secret;
             hash_algorithm_t hmac_alg = algof_mac(hint_tls_alg);
-            const binary_t &client_hello_random = get_secrets().get(tls_context_client_hello_random);
-            const binary_t &server_hello_random = get_secrets().get(tls_context_server_hello_random);
+            const binary_t& client_hello_random = get_secrets().get(tls_context_client_hello_random);
+            const binary_t& server_hello_random = get_secrets().get(tls_context_server_hello_random);
 
             if (use_pre_master_secret()) {
                 master_secret = get_secrets().get(tls_secret_master);
@@ -517,8 +517,8 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
                 {
                     // auto group = get_protection_context().get0_supported_group();
 
-                    const EVP_PKEY *pkey_priv = nullptr;
-                    const EVP_PKEY *pkey_pub = nullptr;
+                    const EVP_PKEY* pkey_priv = nullptr;
+                    const EVP_PKEY* pkey_pub = nullptr;
                     auto pkey_ske = get_key().find(KID_TLS_SERVER_KEY_EXCHANGE);
                     auto pkey_cke = get_key().find(KID_TLS_CLIENT_KEY_EXCHANGE);
                     bool test = false;
@@ -542,7 +542,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
 
 #if defined DEBUG
                 if (istraceable(trace_category_net)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+                    trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                         dbs.printf(ANSI_ESCAPE "1;36m");
                         dbs.println("> hmac alg %x", hmac_alg);
                         dbs.println("> client hello random %s", base16_encode(client_hello_random).c_str());
@@ -619,7 +619,7 @@ return_t tls_protection::calc(tls_session *session, tls_hs_type_t type, tls_dire
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
                 // CLIENT_RANDOM
-                trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+                trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                     std::string keylog_client_random = base16_encode(get_secrets().get(tls_context_client_hello_random));
                     std::string keylog_master_secret = base16_encode(master_secret);
                     dbs.printf(ANSI_ESCAPE "1;36m");

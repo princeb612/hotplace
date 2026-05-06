@@ -27,8 +27,8 @@
         'G', 'e', 't', 'P', 'h', 'y', 's', 'L', 'o', 'n', 'g', 0, \
     };
 
-typedef bool(__stdcall *INITIALIZEWINIO)();
-typedef void(__stdcall *SHUTDOWNWINIO)();
-typedef bool(__stdcall *GETPHYSLONG)(PBYTE pbPhysAddr, PDWORD pdwPhysVal);
+typedef bool(__stdcall* INITIALIZEWINIO)();
+typedef void(__stdcall* SHUTDOWNWINIO)();
+typedef bool(__stdcall* GETPHYSLONG)(PBYTE pbPhysAddr, PDWORD pdwPhysVal);
 
 #endif

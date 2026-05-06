@@ -29,7 +29,7 @@
 namespace hotplace {
 namespace net {
 
-return_t tls_protection::calc_psk(tls_session *session, const binary_t &binder_hash, const binary_t &psk_binder) {
+return_t tls_protection::calc_psk(tls_session* session, const binary_t& binder_hash, const binary_t& psk_binder) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -45,8 +45,8 @@ return_t tls_protection::calc_psk(tls_session *session, const binary_t &binder_h
         openssl_kdf kdf;
         // PRK
         binary_t context_resumption_binder_key;
-        const binary_t &secret_resumption_early = get_secrets().get(tls_secret_resumption_early);
-        const binary_t &context_empty_hash = get_secrets().get(tls_context_empty_hash);
+        const binary_t& secret_resumption_early = get_secrets().get(tls_secret_resumption_early);
+        const binary_t& context_empty_hash = get_secrets().get(tls_context_empty_hash);
         kdf.hkdf_expand_tls13_label(context_resumption_binder_key, sha2_256, 32, secret_resumption_early, "res binder", context_empty_hash);
         get_secrets().assign(tls_context_resumption_binder_key, context_resumption_binder_key);
 

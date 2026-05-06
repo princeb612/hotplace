@@ -52,7 +52,7 @@ cbor_data::cbor_data(const bignumber& value, uint32 flags) : cbor_object(cbor_ty
 
 cbor_data::cbor_data(const byte_t* bstr, size_t size) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_bstr_new(bstr, size); }
 
-cbor_data::cbor_data(const binary_t& data) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_binary_new(data); }
+cbor_data::cbor_data(const binary_t& data) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_binary(data); }
 
 cbor_data::cbor_data(const char* tstr) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_str_new(tstr); }
 

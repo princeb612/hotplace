@@ -90,8 +90,8 @@ namespace hotplace {
 class bignumber {
    public:
     bignumber();
-    bignumber(const bignumber &other);
-    bignumber(bignumber &&other);
+    bignumber(const bignumber& other);
+    bignumber(bignumber&& other);
 
     bignumber(int8 value);
     bignumber(uint8 value);
@@ -105,15 +105,15 @@ class bignumber {
     bignumber(int128 value);
     bignumber(uint128 value);
 #endif
-    bignumber(const variant_t &vt);
+    bignumber(const variant_t& vt);
     /**
      * @brief   big-endian byte order stream
      */
-    bignumber(const byte_t *p, size_t n);
+    bignumber(const byte_t* p, size_t n);
     /**
      * @brief   base16 hex-stream
      */
-    bignumber(const binary_t &base16hexstream);
+    bignumber(const binary_t& base16hexstream);
     /**
      * @brief   numeric, hexdecimal string
      * @example
@@ -126,75 +126,75 @@ class bignumber {
      *          bignumber bn("340282366920938463463374607431768211456");
      *          bignumber bn("0x10000000000000000");
      */
-    bignumber(const std::string &value);
+    bignumber(const std::string& value);
     ~bignumber();
 
-    bignumber &operator=(const bignumber &other);
-    bignumber &operator=(bignumber &&other);
-    bignumber &operator=(int8 value);
-    bignumber &operator=(uint8 value);
-    bignumber &operator=(int16 value);
-    bignumber &operator=(uint16 value);
-    bignumber &operator=(int32 value);
-    bignumber &operator=(uint32 value);
-    bignumber &operator=(int64 value);
-    bignumber &operator=(uint64 value);
+    bignumber& operator=(const bignumber& other);
+    bignumber& operator=(bignumber&& other);
+    bignumber& operator=(int8 value);
+    bignumber& operator=(uint8 value);
+    bignumber& operator=(int16 value);
+    bignumber& operator=(uint16 value);
+    bignumber& operator=(int32 value);
+    bignumber& operator=(uint32 value);
+    bignumber& operator=(int64 value);
+    bignumber& operator=(uint64 value);
 #ifdef __SIZEOF_INT128__
-    bignumber &operator=(int128 value);
-    bignumber &operator=(uint128 value);
+    bignumber& operator=(int128 value);
+    bignumber& operator=(uint128 value);
 #endif
-    bignumber &operator=(const variant_t &vt);
-    bignumber &operator=(const binary_t &base16hexstream);
-    bignumber &operator=(const char *value);
-    bignumber &operator=(const std::string &value);
+    bignumber& operator=(const variant_t& vt);
+    bignumber& operator=(const binary_t& base16hexstream);
+    bignumber& operator=(const char* value);
+    bignumber& operator=(const std::string& value);
 
     /**
      * @brief   add
      */
-    bignumber operator+(const bignumber &other) const;
-    bignumber &operator+=(const bignumber &other);
+    bignumber operator+(const bignumber& other) const;
+    bignumber& operator+=(const bignumber& other);
 
     /**
      * @brief   subtract
      */
-    bignumber operator-(const bignumber &other) const;
-    bignumber &operator-=(const bignumber &other);
+    bignumber operator-(const bignumber& other) const;
+    bignumber& operator-=(const bignumber& other);
 
     /**
      * @brief   multiply
      */
-    bignumber operator*(const bignumber &other) const;
-    bignumber &operator*=(const bignumber &other);
+    bignumber operator*(const bignumber& other) const;
+    bignumber& operator*=(const bignumber& other);
 
     /**
      * @brief   divide
      */
-    bignumber operator/(const bignumber &other) const;
-    bignumber &operator/=(const bignumber &other);
+    bignumber operator/(const bignumber& other) const;
+    bignumber& operator/=(const bignumber& other);
 
     /**
      * @brief   module
      */
-    bignumber operator%(const bignumber &other) const;
-    bignumber &operator%=(const bignumber &other);
+    bignumber operator%(const bignumber& other) const;
+    bignumber& operator%=(const bignumber& other);
 
     /**
      * @brief   AND
      */
-    bignumber operator&(const bignumber &other) const;
-    bignumber &operator&=(const bignumber &other);
+    bignumber operator&(const bignumber& other) const;
+    bignumber& operator&=(const bignumber& other);
 
     /**
      * @brief   OR
      */
-    bignumber operator|(const bignumber &other) const;
-    bignumber &operator|=(const bignumber &other);
+    bignumber operator|(const bignumber& other) const;
+    bignumber& operator|=(const bignumber& other);
 
     /**
      * @brief   XOR
      */
-    bignumber operator^(const bignumber &other) const;
-    bignumber &operator^=(const bignumber &other);
+    bignumber operator^(const bignumber& other) const;
+    bignumber& operator^=(const bignumber& other);
 
     /**
      * @brief   NOT
@@ -208,34 +208,34 @@ class bignumber {
      *          bignumber bn2("0x100000000000000000000000000000000");
      *          _test_case.assert(bn == bn2, __FUNCTION__, "compare");
      */
-    bool operator<(const bignumber &other) const;
-    bool operator<=(const bignumber &other) const;
-    bool operator>(const bignumber &other) const;
-    bool operator>=(const bignumber &other) const;
+    bool operator<(const bignumber& other) const;
+    bool operator<=(const bignumber& other) const;
+    bool operator>(const bignumber& other) const;
+    bool operator>=(const bignumber& other) const;
 
-    bool operator==(const bignumber &other) const;
-    bool operator!=(const bignumber &other) const;
+    bool operator==(const bignumber& other) const;
+    bool operator!=(const bignumber& other) const;
 
     /**
      * @brief   bitshift
      */
-    bignumber operator<<(const bignumber &shift) const;
-    bignumber &operator<<=(const bignumber &shift);
+    bignumber operator<<(const bignumber& shift) const;
+    bignumber& operator<<=(const bignumber& shift);
 
-    bignumber operator>>(const bignumber &shift) const;
-    bignumber &operator>>=(const bignumber &shift);
+    bignumber operator>>(const bignumber& shift) const;
+    bignumber& operator>>=(const bignumber& shift);
 
     /**
      * @example
      *          bn = -bn;
      */
-    bignumber &operator-();
+    bignumber& operator-();
 
     /**
      * @brief   ++bn, --bn
      */
-    bignumber &operator++();
-    bignumber &operator--();
+    bignumber& operator++();
+    bignumber& operator--();
     /**
      * @brief   bn++, bn--
      */
@@ -243,31 +243,31 @@ class bignumber {
     bignumber operator--(int);
 
 #ifdef __SIZEOF_INT128__
-    bignumber &set(int128 value);
-    bignumber &setu(uint128 value);
+    bignumber& set(int128 value);
+    bignumber& setu(uint128 value);
 #else
-    bignumber &set(int64 value);
-    bignumber &setu(uint64 value);
+    bignumber& set(int64 value);
+    bignumber& setu(uint64 value);
 #endif
-    bignumber &set(const variant_t &vt);
-    bignumber &set(const byte_t *p, size_t n);
-    bignumber &sethex(const binary_t &base16hexstream);
-    bignumber &setstring(const char *value);
-    bignumber &setstring(const std::string &value);
+    bignumber& set(const variant_t& vt);
+    bignumber& set(const byte_t* p, size_t n);
+    bignumber& sethex(const binary_t& base16hexstream);
+    bignumber& setstring(const char* value);
+    bignumber& setstring(const std::string& value);
 
-    static bignumber add(const bignumber &lhs, const bignumber &rhs);
-    static bignumber sub(const bignumber &lhs, const bignumber &rhs);
-    static bignumber mult_simple(const bignumber &lhs, const bignumber &rhs);
-    static bignumber mult(const bignumber &lhs, const bignumber &rhs);
-    static bignumber div(const bignumber &lhs, const bignumber &rhs);
-    static bignumber mod(const bignumber &lhs, const bignumber &rhs);
-    static std::pair<bignumber, bignumber> divide(const bignumber &lhs, const bignumber &rhs);
-    static bignumber bitwise_and(const bignumber &lhs, const bignumber &rhs);
-    static bignumber bitwise_or(const bignumber &lhs, const bignumber &rhs);
-    static bignumber bitwise_xor(const bignumber &lhs, const bignumber &rhs);
-    static bignumber bitwise_not(const bignumber &other);
+    static bignumber add(const bignumber& lhs, const bignumber& rhs);
+    static bignumber sub(const bignumber& lhs, const bignumber& rhs);
+    static bignumber mult_simple(const bignumber& lhs, const bignumber& rhs);
+    static bignumber mult(const bignumber& lhs, const bignumber& rhs);
+    static bignumber div(const bignumber& lhs, const bignumber& rhs);
+    static bignumber mod(const bignumber& lhs, const bignumber& rhs);
+    static std::pair<bignumber, bignumber> divide(const bignumber& lhs, const bignumber& rhs);
+    static bignumber bitwise_and(const bignumber& lhs, const bignumber& rhs);
+    static bignumber bitwise_or(const bignumber& lhs, const bignumber& rhs);
+    static bignumber bitwise_xor(const bignumber& lhs, const bignumber& rhs);
+    static bignumber bitwise_not(const bignumber& other);
 
-    static bignumber gcd(const bignumber &lhs, const bignumber &rhs);
+    static bignumber gcd(const bignumber& lhs, const bignumber& rhs);
     /**
      * @brief a^-1 mod m, however only when gcd(a, m) = 1
      */
@@ -275,21 +275,21 @@ class bignumber {
     /**
      * @brief base^exp mod m
      */
-    static bignumber modpow(bignumber base, bignumber exp, const bignumber &m);
-    static bignumber sqrt(const bignumber &other);
+    static bignumber modpow(bignumber base, bignumber exp, const bignumber& m);
+    static bignumber sqrt(const bignumber& other);
 
-    bignumber &add(const bignumber &other);
-    bignumber &sub(const bignumber &other);
-    bignumber &mult(const bignumber &other);
-    bignumber &div(const bignumber &other);
-    bignumber &mod(const bignumber &other);
-    bignumber &abs();
-    bignumber &neg();
-    bignumber &bitwise_and(const bignumber &other);
-    bignumber &bitwise_or(const bignumber &other);
-    bignumber &bitwise_xor(const bignumber &other);
-    bignumber &bitwise_not();
-    bignumber &sqrt();
+    bignumber& add(const bignumber& other);
+    bignumber& sub(const bignumber& other);
+    bignumber& mult(const bignumber& other);
+    bignumber& div(const bignumber& other);
+    bignumber& mod(const bignumber& other);
+    bignumber& abs();
+    bignumber& neg();
+    bignumber& bitwise_and(const bignumber& other);
+    bignumber& bitwise_or(const bignumber& other);
+    bignumber& bitwise_xor(const bignumber& other);
+    bignumber& bitwise_not();
+    bignumber& sqrt();
 
     /**
      * @brief   decimal string
@@ -316,22 +316,22 @@ class bignumber {
     /**
      * @brief   dump (debugging purpose)
      */
-    void dump(std::function<void(const binary_t &)> func) const;
+    void dump(std::function<void(const binary_t&)> func) const;
     /**
      * @brief   base16 hexdecimal stream
      * @param   binary_t &base16hexstream [out]
      * @param   bool trimzero [inopt] true
      * @return  sign 1 positive, -1 negative
      */
-    int get(binary_t &base16hexstream, bool trimzero = true) const;
+    int get(binary_t& base16hexstream, bool trimzero = true) const;
 
     /**
      * @brief   bignumber to bytestream (BE) and vice versa.
      */
-    friend binary_t &operator<<(binary_t &lhs, const bignumber &rhs);
-    friend std::string &operator<<(std::string &lhs, const bignumber &rhs);
-    friend binary_t &operator>>(const bignumber &lhs, binary_t &rhs);
-    friend std::string &operator>>(const bignumber &lhs, std::string &rhs);
+    friend binary_t& operator<<(binary_t& lhs, const bignumber& rhs);
+    friend std::string& operator<<(std::string& lhs, const bignumber& rhs);
+    friend binary_t& operator>>(const bignumber& lhs, binary_t& rhs);
+    friend std::string& operator>>(const bignumber& lhs, std::string& rhs);
 
     /*
      * @return T
@@ -358,9 +358,9 @@ class bignumber {
             }
         }
         if (is_big_endian()) {
-            value = *(T *)bin.data();
+            value = *(T*)bin.data();
         } else if (is_little_endian()) {
-            value = *(T *)bin.data();
+            value = *(T*)bin.data();
             if (tsize > 1) {
                 value = convert_endian(value);
             }
@@ -372,25 +372,25 @@ class bignumber {
     }
 
    protected:
-    int compare(const bignumber &lhs, const bignumber &rhs) const;
+    int compare(const bignumber& lhs, const bignumber& rhs) const;
 
-    bignumber leftshift(const bignumber &v, const bignumber &shift) const;
-    bignumber rightshift(const bignumber &v, const bignumber &shift) const;
+    bignumber leftshift(const bignumber& v, const bignumber& shift) const;
+    bignumber rightshift(const bignumber& v, const bignumber& shift) const;
 
     void trim();
 
-    static int abscmp(const bignumber &lhs, const bignumber &rhs);
-    static bignumber absadd(const bignumber &lhs, const bignumber &rhs);
-    static bignumber abssub(const bignumber &lhs, const bignumber &rhs);
+    static int abscmp(const bignumber& lhs, const bignumber& rhs);
+    static bignumber absadd(const bignumber& lhs, const bignumber& rhs);
+    static bignumber abssub(const bignumber& lhs, const bignumber& rhs);
 
 #ifdef __SIZEOF_INT128__
     bignumber bn_mod(uint128 bits) const;
     bignumber bn_half(uint128 bits) const;
-    bignumber normalize(const bignumber &other, uint128 bits, bool sign) const;
+    bignumber normalize(const bignumber& other, uint128 bits, bool sign) const;
 #else
     bignumber bn_mod(uint64 bits) const;
     bignumber bn_half(uint64 bits) const;
-    bignumber normalize(const bignumber &other, uint64 bits, bool sign) const;
+    bignumber normalize(const bignumber& other, uint64 bits, bool sign) const;
 #endif
 
    private:

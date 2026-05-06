@@ -30,13 +30,13 @@ void huffman_coding::reset() {
 #endif
 }
 
-huffman_coding &huffman_coding::operator<<(const char *s) { return load(s); }
+huffman_coding& huffman_coding::operator<<(const char* s) { return load(s); }
 
-huffman_coding &huffman_coding::load(const char *s) {
+huffman_coding& huffman_coding::load(const char* s) {
     // count
     if (s) {
-        auto hook = [](hc_t &t) -> void { t.weight++; };
-        for (const char *p = s; *p; p++) {
+        auto hook = [](hc_t& t) -> void { t.weight++; };
+        for (const char* p = s; *p; p++) {
             uint8 symbol = (uint8)*p;
             _measure.insert(hc_t(symbol), hook);
         }
@@ -44,7 +44,7 @@ huffman_coding &huffman_coding::load(const char *s) {
     return *this;
 }
 
-huffman_coding &huffman_coding::learn() {
+huffman_coding& huffman_coding::learn() {
     _btree.clear();
     _m.clear();
     _codetable.clear();
@@ -60,7 +60,7 @@ huffman_coding &huffman_coding::learn() {
      * _btree   .. merge by weight until (1 == size()), see hc_comparator::operator
      */
 
-    auto lambda = [&](hc_t const &t) -> void { _btree.insert(t); };
+    auto lambda = [&](hc_t const& t) -> void { _btree.insert(t); };
     _measure.for_each(lambda);  // insert into _btree select * from _measure
 
     while (_btree.size() > 1) {
@@ -68,11 +68,11 @@ huffman_coding &huffman_coding::learn() {
         hc_t k_lhs;
         hc_t k_rhs;
 
-        typename btree_t::node_t *l = _btree.clone_nocascade(_btree.first());
+        typename btree_t::node_t* l = _btree.clone_nocascade(_btree.first());
         k_lhs = l->_key;
         _btree.remove(l->_key);
 
-        typename btree_t::node_t *r = _btree.clone_nocascade(_btree.first());
+        typename btree_t::node_t* r = _btree.clone_nocascade(_btree.first());
         k_rhs = r->_key;
         _btree.remove(r->_key);
 
@@ -80,7 +80,7 @@ huffman_coding &huffman_coding::learn() {
         k.weight = k_lhs.weight + k_rhs.weight;
         k.flags = 1;  // merged
 
-        typename btree_t::node_t *newone = _btree.add(k);  // merged
+        typename btree_t::node_t* newone = _btree.add(k);  // merged
 
         map_pib_t pib = _m.insert(std::make_pair(k, _btree.clone_nocascade(newone)));
         pib.first->second->_left = l;
@@ -89,8 +89,8 @@ huffman_coding &huffman_coding::learn() {
     return *this;
 }
 
-huffman_coding &huffman_coding::infer() {
-    huffman_coding::node_t *root = nullptr;
+huffman_coding& huffman_coding::infer() {
+    huffman_coding::node_t* root = nullptr;
     build(&root);
 
     if (root) {
@@ -108,7 +108,7 @@ huffman_coding &huffman_coding::infer() {
     return *this;
 }
 
-void huffman_coding::infer(hc_temp &hc, typename btree_t::node_t *t) {
+void huffman_coding::infer(hc_temp& hc, typename btree_t::node_t* t) {
     if (t) {
         hc.depth++;
 
@@ -117,8 +117,8 @@ void huffman_coding::infer(hc_temp &hc, typename btree_t::node_t *t) {
         hc.code.pop_back();
 
         if (0 == t->_key.flags) {
-            const auto &sym = t->_key.symbol;
-            const auto &code = hc.code;
+            const auto& sym = t->_key.symbol;
+            const auto& code = hc.code;
             _codetable.insert(std::make_pair(sym, code));
 #if SWITCH_HUFFMANCODING_TRIE == 0
             _reverse_codetable.insert(std::make_pair(code, sym));
@@ -137,8 +137,8 @@ void huffman_coding::infer(hc_temp &hc, typename btree_t::node_t *t) {
     }
 }
 
-huffman_coding::node_t *huffman_coding::build(node_t **root) {
-    typename btree_t::node_t *p = nullptr;
+huffman_coding::node_t* huffman_coding::build(node_t** root) {
+    typename btree_t::node_t* p = nullptr;
     if (_m.size()) {
         p = _m.rbegin()->second;
         _m.erase(p->_key);
@@ -154,7 +154,7 @@ huffman_coding::node_t *huffman_coding::build(node_t **root) {
     return p;
 }
 
-void huffman_coding::build(typename btree_t::node_t *&p) {
+void huffman_coding::build(typename btree_t::node_t*& p) {
     if (p) {
         if (p->_left) {
             build(p->_left);
@@ -164,7 +164,7 @@ void huffman_coding::build(typename btree_t::node_t *&p) {
         }
         typename map_t::iterator iter = _m.find(p->_key);
         if (_m.end() != iter) {
-            typename btree_t::node_t *t = iter->second;
+            typename btree_t::node_t* t = iter->second;
 
             _btree.clean(p);
             p = t;
@@ -173,7 +173,7 @@ void huffman_coding::build(typename btree_t::node_t *&p) {
     }
 }
 
-huffman_coding &huffman_coding::imports(const hc_code_t *table) {
+huffman_coding& huffman_coding::imports(const hc_code_t* table) {
     _codetable.clear();
 #if SWITCH_HUFFMANCODING_TRIE == 0
     _reverse_codetable.clear();
@@ -183,7 +183,7 @@ huffman_coding &huffman_coding::imports(const hc_code_t *table) {
 #endif
 
     for (size_t i = 0; table; i++) {
-        const hc_code_t *item = table + i;
+        const hc_code_t* item = table + i;
         if (nullptr == item->code) {
             break;
         }
@@ -191,8 +191,8 @@ huffman_coding &huffman_coding::imports(const hc_code_t *table) {
 #if SWITCH_HUFFMANCODING_TRIE == 0
         _reverse_codetable.insert(std::make_pair(item->code, item->sym));
 #else
-        const auto &sym = item->sym;
-        const auto &code = item->code;
+        const auto& sym = item->sym;
+        const auto& code = item->code;
         size_t size = strlen(code);
         _trie.insert(code, size, sym);
         _range.sampling(size);
@@ -206,7 +206,7 @@ huffman_coding &huffman_coding::imports(const hc_code_t *table) {
     return *this;
 }
 
-huffman_coding &huffman_coding::imports(const std::map<uint8, std::string> &m) {
+huffman_coding& huffman_coding::imports(const std::map<uint8, std::string>& m) {
     _codetable.clear();
 #if SWITCH_HUFFMANCODING_TRIE == 0
     _reverse_codetable.clear();
@@ -214,9 +214,9 @@ huffman_coding &huffman_coding::imports(const std::map<uint8, std::string> &m) {
     _trie.reset();
     _range.reset();
 #endif
-    for (const auto &item : m) {
-        const auto &sym = item.first;
-        const auto &code = item.second;
+    for (const auto& item : m) {
+        const auto& sym = item.first;
+        const auto& code = item.second;
         _codetable.emplace(sym, code);
 #if SWITCH_HUFFMANCODING_TRIE == 0
         _reverse_codetable.emplace(code, sym);
@@ -233,14 +233,14 @@ huffman_coding &huffman_coding::imports(const std::map<uint8, std::string> &m) {
     return *this;
 }
 
-huffman_coding &huffman_coding::exports(std::function<void(uint8, const char *)> v) {
+huffman_coding& huffman_coding::exports(std::function<void(uint8, const char*)> v) {
     for (auto item : _codetable) {
         v(item.first, item.second.c_str());
     }
     return *this;
 }
 
-return_t huffman_coding::expect(const char *source, size_t &size_expected) const {
+return_t huffman_coding::expect(const char* source, size_t& size_expected) const {
     return_t ret = errorcode_t::success;
     __try2 {
         size_expected = 0;
@@ -249,13 +249,13 @@ return_t huffman_coding::expect(const char *source, size_t &size_expected) const
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        ret = expect((byte_t *)source, strlen(source), size_expected);
+        ret = expect((byte_t*)source, strlen(source), size_expected);
     }
     __finally2 {}
     return ret;
 }
 
-return_t huffman_coding::expect(const char *source, size_t size, size_t &size_expected) const {
+return_t huffman_coding::expect(const char* source, size_t size, size_t& size_expected) const {
     return_t ret = errorcode_t::success;
     __try2 {
         size_expected = 0;
@@ -264,13 +264,13 @@ return_t huffman_coding::expect(const char *source, size_t size, size_t &size_ex
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        ret = expect((byte_t *)source, size, size_expected);
+        ret = expect((byte_t*)source, size, size_expected);
     }
     __finally2 {}
     return ret;
 }
 
-return_t huffman_coding::expect(const byte_t *source, size_t size, size_t &size_expected) const {
+return_t huffman_coding::expect(const byte_t* source, size_t size, size_t& size_expected) const {
     return_t ret = errorcode_t::success;
     __try2 {
         size_expected = 0;
@@ -287,7 +287,7 @@ return_t huffman_coding::expect(const byte_t *source, size_t size, size_t &size_
 
         t_maphint_const<uint8, std::string> hint(_codetable);
         size_t i = 0;
-        const byte_t *p = source;
+        const byte_t* p = source;
         for (i = 0; i < size; i++) {
             std::string code;
             hint.find(p[i], &code);
@@ -307,14 +307,14 @@ return_t huffman_coding::expect(const byte_t *source, size_t size, size_t &size_
     return ret;
 }
 
-return_t huffman_coding::encode(binary_t &bin, const char *source, size_t size, bool usepad) const { return encode(bin, (byte_t *)source, size, usepad); }
+return_t huffman_coding::encode(binary_t& bin, const char* source, size_t size, bool usepad) const { return encode(bin, (byte_t*)source, size, usepad); }
 
-return_t huffman_coding::encode(binary_t &bin, const byte_t *source, size_t size, bool usepad) const {
+return_t huffman_coding::encode(binary_t& bin, const byte_t* source, size_t size, bool usepad) const {
     return_t ret = errorcode_t::success;
     std::string buf;
     std::string code;
 
-    const byte_t *p = nullptr;
+    const byte_t* p = nullptr;
     size_t i = 0;
     t_maphint_const<uint8, std::string> hint(_codetable);
 
@@ -364,7 +364,7 @@ return_t huffman_coding::encode(binary_t &bin, const byte_t *source, size_t size
         usepad &= (code_minsize >= 5);  // overwrite usepad
 
         // octet stream byte
-        auto lambda_os_byte = [](const std::string &s, size_t count) -> uint8 {
+        auto lambda_os_byte = [](const std::string& s, size_t count) -> uint8 {
             uint8 rc = 0;
             if (count <= s.size()) {
                 for (size_t n = 0; n < count; n++) {
@@ -418,9 +418,9 @@ return_t huffman_coding::encode(binary_t &bin, const byte_t *source, size_t size
     return ret;
 }
 
-return_t huffman_coding::encode(stream_t *stream, const char *source, size_t size) const { return encode(stream, (byte_t *)source, size); }
+return_t huffman_coding::encode(stream_t* stream, const char* source, size_t size) const { return encode(stream, (byte_t*)source, size); }
 
-return_t huffman_coding::encode(stream_t *stream, const byte_t *source, size_t size) const {
+return_t huffman_coding::encode(stream_t* stream, const byte_t* source, size_t size) const {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream || nullptr == source) {
@@ -428,7 +428,7 @@ return_t huffman_coding::encode(stream_t *stream, const byte_t *source, size_t s
             __leave2;
         }
         // align to MSB
-        const byte_t *p = nullptr;
+        const byte_t* p = nullptr;
         size_t i = 0;
         t_maphint_const<uint8, std::string> hint(_codetable);
         for (p = source, i = 0; i < size; i++) {
@@ -441,7 +441,7 @@ return_t huffman_coding::encode(stream_t *stream, const byte_t *source, size_t s
     return ret;
 }
 
-return_t huffman_coding::decode(stream_t *stream, const byte_t *source, size_t size, uint32 flags) const {
+return_t huffman_coding::decode(stream_t* stream, const byte_t* source, size_t size, uint32 flags) const {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == stream) || (nullptr == source)) {
@@ -550,9 +550,9 @@ size_t huffman_coding::sizeof_codetable() { return _codetable.size(); }
 void huffman_coding::dump() {
 #if defined DEBUG
     if (istraceable(trace_category_internal, loglevel_debug)) {
-        trace_debug_event(trace_category_internal, trace_event_internal, [&](basic_stream &dbs) -> void {
+        trace_debug_event(trace_category_internal, trace_event_internal, [&](basic_stream& dbs) -> void {
             dbs.println("- huffman coding table");
-            auto lambda_exports = [&](uint8 sym, const char *code) -> void {
+            auto lambda_exports = [&](uint8 sym, const char* code) -> void {
                 dbs.println(R"(  - sym %c (0x%02x) code : "%s" (len %zi))", isprint(sym) ? sym : '?', sym, code, strlen(code));
             };
             exports(lambda_exports);

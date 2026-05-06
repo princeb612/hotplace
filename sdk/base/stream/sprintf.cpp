@@ -7,11 +7,15 @@
  * Revision History
  * Date         Name                Description
  * 2017.07.26   Soo Han, Kim        sprintf support {1} {2} ... using valist (codename.grape Revision 371)
+ * 2024.09.13   Soo Han, Kim        Aho-Corasick algorithm applied (codename.hotplace Revision 607)
+ * 2026.05.06   Soo Han, Kim        format string syntax e.g. {1:02x} {1:3d} {2:-10s} (codename.hotplace Revision 977)
  */
 
 #include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/basic/valist.hpp>
+#include <hotplace/sdk/base/nostd/template.hpp>
 #include <hotplace/sdk/base/pattern/aho_corasick.hpp>
+#include <hotplace/sdk/base/pattern/regex.hpp>
 #include <hotplace/sdk/base/stream/printf.hpp>
 #include <hotplace/sdk/base/stream/tstring.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
@@ -35,12 +39,7 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        if (nullptr == fmt) {
+        if (nullptr == stream || nullptr == fmt) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -71,51 +70,159 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
 
 #endif
 
-        // Step1. check order using map ...
-        typedef std::map<size_t, size_t> va_map_t;
-        typedef std::list<size_t> va_array_t;
-        va_map_t va_map; /* pair(position, {id}) */
-        va_array_t va_array;
-        t_aho_corasick<char> ac;
-        for (i = 0; i < va.size(); i++) {
-            auto pat = format("{%zi}", i + 1);
-            ac.insert(pat.c_str(), pat.size());
-        }
-        ac.build();
-        auto result = ac.search(formatter.c_str(), formatter.size());
-        for (auto item : result) {
-            const range_t& range = item.first;
-            auto patid = item.second;
-            va_map.insert({range.begin, patid});
-        }
-
-        // Step2. relocate valist, build list
-        valist va_new;
-        for (const auto& pair : va_map) {
-            const auto& idx = pair.second;
-            va.at(idx, v);
-            va_new << v;
-            va_array.push_back(idx);
-        }
-
-        // Step3. replace format specifier
         typedef std::map<size_t, std::string> formatter_map_t;
-        formatter_map_t formats;
+        formatter_map_t fmtspec;  // format specifier
         for (i = 0; i < RTL_NUMBER_OF(type_formatter); i++) {
             variant_conversion_t* item = type_formatter + i;
-            formats.insert(std::make_pair(item->type, item->formatter));
-        }
-        i = 0;
-        for (const auto& idx : va_array) {
-            va_new.at(i, v);
-            formatter_map_t::iterator fmt_it = formats.find(v.type);
-            if (formats.end() != fmt_it) {
-                formatter.replace(format("{%zi}", idx + 1).c_str(), fmt_it->second.c_str(), 0, bufferio_flag_t::run_once);
-            }
-            i++;
+            fmtspec.insert(std::make_pair(item->type, item->formatter));
         }
 
-        stream->vprintf((char*)formatter.data(), va_new.get());
+        if (0) {
+            /**
+             * Aho-Corasick
+             *
+             * {1} {2} {3}
+             * {3} {2} {1}
+             * ...
+             */
+
+            // Step1. check order using map ...
+            typedef std::map<size_t, size_t> va_map_t;
+            typedef std::list<size_t> va_array_t;
+            va_map_t va_map; /* pair(position, {id}) */
+            va_array_t va_array;
+            t_aho_corasick<char> ac;
+            for (i = 0; i < va.size(); i++) {
+                auto pat = format("{%zi}", i + 1);
+                ac.insert(pat.c_str(), pat.size());
+            }
+            ac.build();
+            auto result = ac.search(formatter.c_str(), formatter.size());
+            for (auto item : result) {
+                const range_t& range = item.first;
+                auto patid = item.second;
+                va_map.insert({range.begin, patid});
+            }
+
+            // Step2. relocate valist, build list
+            valist va_new;
+            for (const auto& pair : va_map) {
+                const auto& idx = pair.second;
+                va.at(idx, v);
+                va_new << v;
+                va_array.push_back(idx);
+            }
+
+            // Step3. replace format specifier
+            i = 0;
+            for (const auto& idx : va_array) {
+                va_new.at(i, v);
+                formatter_map_t::iterator fmt_it = fmtspec.find(v.type);
+                if (fmtspec.end() != fmt_it) {
+                    formatter.replace(format("{%zi}", idx + 1).c_str(), fmt_it->second.c_str(), 0, bufferio_flag_t::run_once);
+                }
+                i++;
+            }
+
+            stream->vprintf((char*)formatter.data(), va_new.get());
+        }
+
+        if (1) {
+            /**
+             * format string syntax
+             * regular expression based
+             *
+             * {1:08x} {2:-15s} {3:10d}
+             * {1:08x} {1} {3:08x}
+             */
+
+            ansi_string formatter;
+            formatter.write((void*)fmt, strlen(fmt));
+            valist va_new;
+
+            const char* expr = R"(\{(\d+):?([^}]*)\})";
+            size_t pos = 0;
+            std::list<std::map<size_t, range_t>> tokens;
+            std::list<std::pair<std::string, std::string>> fmtlist;
+
+            regex_tokens(formatter.c_str(), formatter.size(), expr, pos, tokens);
+
+            for (auto matchit = tokens.begin(); matchit != tokens.end(); ++matchit) {
+                auto match = *matchit;
+
+                // param id
+                auto param_range = match[1];
+                auto param_id = t_atoi_n<int>(formatter.c_str() + param_range.begin, param_range.end - param_range.begin);
+                if ((0 == param_id) || (size_t(param_id) > va.size())) {
+                    continue;
+                }
+
+                size_t idx = param_id - 1;
+                auto v = va[idx];
+                auto vtype = v.type;
+                auto vflag = v.flag;
+
+                // full match
+                auto range = match[0];
+                std::string src(formatter.c_str() + range.begin, range.end - range.begin);
+
+                // format specifier
+                std::string dest;
+                auto fmtovl = match[2];
+                if (fmtovl.begin != fmtovl.end) {
+                    std::string temp(formatter.c_str() + fmtovl.begin, fmtovl.end - fmtovl.begin);
+                    char b = temp[0];
+                    char r = *temp.rbegin();
+                    if (b == '%') { /* do nothing */
+                    } else {
+                        if (flag_int & vflag) {
+                            switch (r) {
+                                case 'd':
+                                case 'i':
+                                    dest = std::move(temp);
+                                    dest.insert(dest.begin(), '%');
+                                    break;
+                                case 'x':  // 0x
+                                    dest = std::move(temp);
+                                    dest.insert(dest.begin(), '%');
+                                    dest.insert(dest.begin(), 'x');
+                                    dest.insert(dest.begin(), '0');
+                                    break;
+                            }
+                        } else if (flag_string & vflag) {
+                            switch (r) {
+                                case 's':
+                                    dest = std::move(temp);
+                                    dest.insert(dest.begin(), '%');
+                                    break;
+                            }
+                        } else if (flag_float & vflag) {
+                            switch (r) {
+                                case 'e':
+                                case 'f':
+                                case 'g':
+                                    dest = std::move(temp);
+                                    dest.insert(dest.begin(), '%');
+                                    break;
+                            }
+                        }
+                    }
+                }
+                if (dest.empty()) {
+                    auto it = fmtspec.find(vtype);
+                    if (fmtspec.end() != it) {
+                        dest = it->second;
+                    }
+                }
+
+                va_new << v;
+                fmtlist.push_back({std::move(src), std::move(dest)});
+            }
+            for (auto item : fmtlist) {
+                formatter.replace(item.first.c_str(), item.second.c_str(), 0, bufferio_flag_t::run_once);
+            }
+            stream->vprintf((char*)formatter.data(), va_new.get());
+        }
     }
     __finally2 {
         // do nothing

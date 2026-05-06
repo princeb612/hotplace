@@ -41,128 +41,106 @@ valist& valist::assign(const std::vector<variant_t>& args) {
 }
 
 valist& valist::operator<<(bool value) {
-    variant_t v;
-
-    v.type = TYPE_BOOL;
-    v.data.b = value;
-    insert(std::move(v));
+    variant v(value);
+    insert(std::move(v.get()));
+    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(char value) {
-    variant_t v;
-
-    v.type = TYPE_CHAR;
-    v.data.i8 = value;
-    insert(std::move(v));
+    variant v(value);
+    insert(std::move(v.get()));
+    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(unsigned char value) {
-    variant_t v;
-
-    v.type = TYPE_BYTE;
-    v.data.ui8 = value;
-    insert(std::move(v));
+    variant v(value);
+    insert(std::move(v.get()));
+    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(short value) {
-    variant_t v;
-
-    v.type = TYPE_SHORT;
-    v.data.i16 = value;
-    insert(std::move(v));
+    variant v(value);
+    insert(std::move(v.get()));
+    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(unsigned short value) {
-    variant_t v;
-
-    v.type = TYPE_USHORT;
-    v.data.ui16 = value;
-    insert(std::move(v));
+    variant v(value);
+    insert(std::move(v.get()));
+    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(int value) {
-    variant_t v;
-
-    v.type = TYPE_INT;
-    v.data.i32 = value;
-    insert(std::move(v));
+    variant v((int32)value);
+    insert(std::move(v.get()));
+    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(unsigned int value) {
-    variant_t v;
-
-    v.type = TYPE_UINT;
-    v.data.ui32 = value;
-    insert(std::move(v));
+    variant v((uint32)value);
+    insert(std::move(v.get()));
+    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(long value) {
-    variant_t v;
-
-    v.type = TYPE_LONG;
 #if defined __linux__
 #if __WORDSIZE == 64
-    v.data.i64 = value;
+    variant v((int64)value);  // LPI64
 #else
-    v.data.i32 = value;
+    variant v((int32)value);
 #endif
 #elif defined _WIN32 || defined _WIN64
-    v.data.i32 = value;
+    variant v((int32)value);
 #endif
-    insert(std::move(v));
+    insert(std::move(v.get()));
+    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(unsigned long value) {
-    variant_t v;
-
-    v.type = TYPE_ULONG;
 #if defined __linux__
 #if __WORDSIZE == 64
-    v.data.ui64 = value;
+    variant v((uint64)value);  // LPI64
 #else
-    v.data.ui32 = value;
+    variant v((uint32)value);
 #endif
 #elif defined _WIN32 || defined _WIN64
-    v.data.ui32 = value;
+    variant v((uint32)value);
 #endif
-
-    insert(std::move(v));
+    insert(std::move(v.get()));
+    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(long long value) {
-    variant_t v;
-
-    v.type = TYPE_LONGLONG;
-    v.data.i64 = value;
-    insert(std::move(v));
+    // windows LLPI64
+    variant v(value);
+    insert(std::move(v.get()));
+    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(unsigned long long value) {
-    variant_t v;
-
-    v.type = TYPE_ULONGLONG;
-    v.data.ui64 = value;
-    insert(std::move(v));
+    variant v(value);
+    insert(std::move(v.get()));
+    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(float value) {
-    /* ‘float’ is promoted to ‘double’ when passed through ‘...’ */
-    variant_t v;
-
-    v.type = TYPE_DOUBLE;  // default argument promotions
-    v.data.d = (double)value;
-    insert(std::move(v));
+    /* default argument promotions
+     * ‘float’ is promoted to ‘double’ when passed through ‘...’
+     */
+    variant v((double)value);
+    insert(std::move(v.get()));
+    v.reset();
     return *this;
 }
 
@@ -170,30 +148,24 @@ valist& valist::operator<<(float value) {
  * valist << 3.141592
  */
 valist& valist::operator<<(double value) {
-    variant_t v;
-
-    v.type = TYPE_DOUBLE;
-    v.data.d = value;
-    insert(std::move(v));
+    variant v(value);
+    insert(std::move(v.get()));
+    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(void* value) {
-    variant_t v;
-
-    v.type = TYPE_POINTER;
-    v.data.p = value;
-    insert(std::move(v));
+    variant v(value);
+    insert(std::move(v.get()));
+    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(const char* value) {
     if (value) {
-        variant_t v;
-        v.type = TYPE_STRING;
-        v.data.p = strdup(value);
-        v.flag |= variant_flag_t::flag_free;
-        insert(std::move(v));
+        variant v(value);
+        insert(std::move(v.get()));
+        v.reset();
     }
     return *this;
 }
@@ -254,7 +226,7 @@ variant_t& valist::operator[](size_t index) {
     }
 }
 
-va_list& valist::get() {
+va_list valist::get() {
     critical_section_guard guard(_lock);
 
     // va_list ap;
@@ -292,6 +264,8 @@ va_list& valist::get() {
 
     return _type.ap;
 }
+
+valist::operator va_list() { return get(); }
 
 #if defined __linux__
 #if (defined(__linux__) && defined(__x86_64__))

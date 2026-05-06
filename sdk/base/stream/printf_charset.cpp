@@ -15,7 +15,7 @@
  * 2021.06.29   Soo Han, Kim        printf unicode (codename.unicorn)
  * 2024.06.07   Soo Han, Kim        inf, -inf, nan (codename.hotplace)
  * 2024.08.01   Soo Han, Kim        -0.0 (codename.hotplace)
- * 2026.04.19   Soo Han, Kim        [fixed] %%, return value
+ * 2026.04.19   Soo Han, Kim        [fixed] %%, return value (codename.hotplace)
  *
  * printf license
  *  Copyright (c) 1990 Regents of the University of California.
@@ -71,8 +71,8 @@ static inline int tochar(int c) { return c + _T('0'); }
 
 static inline int todigit(int c) { return c - _T('0'); }
 
-static TCHAR *exponent(__register TCHAR *p, __register int exp, int fmtch) {
-    __register TCHAR *t;
+static TCHAR* exponent(__register TCHAR* p, __register int exp, int fmtch) {
+    __register TCHAR* t;
     TCHAR expbuf[MAXEXP];
 
     *p++ = fmtch;
@@ -102,7 +102,7 @@ static TCHAR *exponent(__register TCHAR *p, __register int exp, int fmtch) {
     return p;
 }
 
-static TCHAR *round(double fract, int *exp, __register TCHAR *start, __register TCHAR *end, TCHAR ch, int *signp) {
+static TCHAR* round(double fract, int* exp, __register TCHAR* start, __register TCHAR* end, TCHAR ch, int* signp) {
     double tmp;
 
     if (fract) {
@@ -148,7 +148,7 @@ static TCHAR *round(double fract, int *exp, __register TCHAR *start, __register 
     return start;
 }
 
-static int __cvt_double(double number, __register int prec, int flags, int *signp, int fmtch, TCHAR *startp, TCHAR *endp) {
+static int __cvt_double(double number, __register int prec, int flags, int* signp, int fmtch, TCHAR* startp, TCHAR* endp) {
     __register TCHAR *p, *t;
     __register double fract;
     int dotrim = 0, expcnt, gformat = 0;
@@ -213,7 +213,7 @@ static int __cvt_double(double number, __register int prec, int flags, int *sign
                     } while (--prec && fract);
                 }
                 if (fract) {
-                    startp = round(fract, (int *)nullptr, startp, t - 1, (TCHAR)0, signp);
+                    startp = round(fract, (int*)nullptr, startp, t - 1, (TCHAR)0, signp);
                 }
             }
             for (; prec--; *t++ = _T('0')) {
@@ -355,7 +355,7 @@ static int __cvt_double(double number, __register int prec, int flags, int *sign
                     }
                 }
                 if (fract) {
-                    startp = round(fract, (int *)nullptr, startp, t - 1, (TCHAR)0, signp);
+                    startp = round(fract, (int*)nullptr, startp, t - 1, (TCHAR)0, signp);
                 }
             }
             /* alternate format, adds 0's for precision, else trim 0's */
@@ -377,16 +377,16 @@ static int __cvt_double(double number, __register int prec, int flags, int *sign
 
 /* int vprintf_runtime (printf_context_t *context, CALLBACK_PRINTF runtime_printf, const TCHAR * fmt0, va_list ap) */
 #if defined _MBCS || defined MBCS
-int vprintf_runtime(printf_context_t *context, CALLBACK_PRINTFA runtime_printf, const char *fmt0, va_list ap)
+int vprintf_runtime(printf_context_t* context, CALLBACK_PRINTFA runtime_printf, const char* fmt0, va_list ap)
 #elif defined _UNICODE || defined UNICODE
-int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf, const wchar_t *fmt0, va_list ap)
+int vprintf_runtimew(printf_context_t* context, CALLBACK_PRINTFW runtime_printf, const wchar_t* fmt0, va_list ap)
 #endif
 {
-    __register const TCHAR *fmt = nullptr; /* format string */
+    __register const TCHAR* fmt = nullptr; /* format string */
     __register int ch = 0;                 /* character from fmt */
     __register int n = 0;                  /* handy integer (short term usage) */
-    __register TCHAR *cp = nullptr;        /* handy TCHAR pointer (short term usage) */
-    const TCHAR *fmark = nullptr;          /* for remembering a place in fmt */
+    __register TCHAR* cp = nullptr;        /* handy TCHAR pointer (short term usage) */
+    const TCHAR* fmark = nullptr;          /* for remembering a place in fmt */
     __register int flags = 0;              /* flags as above */
     int ret = 0;                           /* return value accumulator */
     int width = 0;                         /* width from format (%8d), or 0 */
@@ -419,7 +419,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
 
     ieee754_typeof_t ieee754_type = ieee754_typeof_t::ieee754_finite;
 
-    auto PRINT = [&](const TCHAR *s, int len) -> int { return runtime_printf(context, s, len); };
+    auto PRINT = [&](const TCHAR* s, int len) -> int { return runtime_printf(context, s, len); };
     auto PAD_SP = [&](int loop) -> void {
         if (loop > 0) {
             printf_runtime(context, runtime_printf, _T("%-*s"), loop, " ");
@@ -469,7 +469,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
             ret += n;
         }
         if (ch == _T('\n')) {
-            PRINT((TCHAR *)&ch, (int)sizeof(TCHAR));
+            PRINT((TCHAR*)&ch, (int)sizeof(TCHAR));
             ret += 1;
             // auto indent
             if (context->indent) {
@@ -664,11 +664,11 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
 
             case _T('n'):
                 if (flags & LONGINT) {
-                    *va_arg(ap, long *) = ret;
+                    *va_arg(ap, long*) = ret;
                 } else if (flags & SHORTINT) {
-                    *va_arg(ap, short *) = ret;
+                    *va_arg(ap, short*) = ret;
                 } else {
-                    *va_arg(ap, int *) = ret;
+                    *va_arg(ap, int*) = ret;
                 }
                 continue; /* no output */
 
@@ -689,7 +689,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                  *  -- ANSI X3J11
                  */
                 /* NOSTRICT */
-                archint = (uint64)va_arg(ap, void *);
+                archint = (uint64)va_arg(ap, void*);
                 base = HEX;
                 flags |= HEXPREFIX;
                 ch = _T('x');
@@ -779,8 +779,8 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                 }
 
             case _T('s'):
-                if ((cp = va_arg(ap, TCHAR *)) == nullptr) {
-                    cp = (TCHAR *)_T ("(null)");
+                if ((cp = va_arg(ap, TCHAR*)) == nullptr) {
+                    cp = (TCHAR*)_T ("(null)");
                 }
                 if (prec >= 0) {
                     /*
@@ -789,9 +789,9 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                      * strlen() will go further.
                      */
 #if defined _MBCS || defined MBCS
-                    TCHAR *p = (TCHAR *)memchr(cp, 0, prec);
+                    TCHAR* p = (TCHAR*)memchr(cp, 0, prec);
 #elif defined _UNICODE || defined UNICODE
-                    TCHAR *p = (TCHAR *)wmemchr(cp, 0, prec);
+                    TCHAR* p = (TCHAR*)wmemchr(cp, 0, prec);
 #endif
 
                     if (nullptr != p) {
@@ -845,7 +845,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                  */
                 cp = buf + BUF;
                 if (archint || prec) {
-                    TCHAR *xdigs = nullptr; /* digits for [xX] conversion */
+                    TCHAR* xdigs = nullptr; /* digits for [xX] conversion */
                     /*
                      * unsigned mod is hard, and unsigned mod
                      * by a constant is easier than that by
@@ -874,10 +874,10 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
 
                         case HEX:
                             if (ch == _T('X')) {
-                                xdigs = (TCHAR *)_T ("0123456789ABCDEF");
+                                xdigs = (TCHAR*)_T ("0123456789ABCDEF");
                             } else {
                                 /* ch == 'x' || ch == 'p' */
-                                xdigs = (TCHAR *)_T ("0123456789abcdef");
+                                xdigs = (TCHAR*)_T ("0123456789abcdef");
                             }
                             do {
                                 *--cp = xdigs[archint & 15];
@@ -886,7 +886,7 @@ int vprintf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printf,
                             break;
 
                         default:
-                            cp = (TCHAR *)_T ("bad base") /*"bug in vform: bad base" */;
+                            cp = (TCHAR*)_T ("bad base") /*"bug in vform: bad base" */;
                             goto skipsize;
                     }
                 }
@@ -982,9 +982,9 @@ error:
 
 /* int printf_runtime (printf_context_t *context, CALLBACK_PRINTF runtime_printf, const TCHAR * fmt0, ...) */
 #if defined _MBCS || defined MBCS
-int printf_runtime(printf_context_t *context, CALLBACK_PRINTFA runtime_printf, const char *fmt0, ...)
+int printf_runtime(printf_context_t* context, CALLBACK_PRINTFA runtime_printf, const char* fmt0, ...)
 #elif defined _UNICODE || defined UNICODE
-int printf_runtimew(printf_context_t *context, CALLBACK_PRINTFW runtime_printfw, const wchar_t *fmt0, ...)
+int printf_runtimew(printf_context_t* context, CALLBACK_PRINTFW runtime_printfw, const wchar_t* fmt0, ...)
 #endif
 {
     int nRet = EOF;

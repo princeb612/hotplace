@@ -35,7 +35,7 @@ json_object_encryption::json_object_encryption() {}
 
 json_object_encryption::~json_object_encryption() {}
 
-return_t json_object_encryption::encrypt(jose_context_t *handle, jwe_t enc, jwa_t alg, const binary_t &input, std::string &output, jose_serialization_t type) {
+return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const binary_t& input, std::string& output, jose_serialization_t type) {
     return_t ret = errorcode_t::success;
     json_object_encryption::composer composer;
 
@@ -71,11 +71,11 @@ return_t json_object_encryption::encrypt(jose_context_t *handle, jwe_t enc, jwa_
     return ret;
 }
 
-return_t json_object_encryption::encrypt(jose_context_t *handle, jwe_t enc, jwa_t alg, const std::string &input, std::string &output, jose_serialization_t type) {
+return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const std::string& input, std::string& output, jose_serialization_t type) {
     return encrypt(handle, enc, alg, str2bin(input), output, type);
 }
 
-return_t json_object_encryption::encrypt(jose_context_t *handle, jwe_t enc, const std::list<jwa_t> &jwalgs, const binary_t &input, std::string &output,
+return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, const std::list<jwa_t>& jwalgs, const binary_t& input, std::string& output,
                                          jose_serialization_t type) {
     return_t ret = errorcode_t::success;
     json_object_encryption::composer composer;
@@ -109,7 +109,7 @@ return_t json_object_encryption::encrypt(jose_context_t *handle, jwe_t enc, cons
             zlib_deflate(zlib_windowbits_t::windowbits_deflate, input, deflated);
         }
 
-        for (const jwa_t &alg : algs) {
+        for (const jwa_t& alg : algs) {
             return_t check = errorcode_t::success;
 
             if (jose_flag_t::jose_deflate & handle->flags) {
@@ -136,12 +136,12 @@ return_t json_object_encryption::encrypt(jose_context_t *handle, jwe_t enc, cons
     return ret;
 }
 
-return_t json_object_encryption::encrypt(jose_context_t *handle, jwe_t enc, const std::list<jwa_t> &algs, const std::string &input, std::string &output,
+return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, const std::list<jwa_t>& algs, const std::string& input, std::string& output,
                                          jose_serialization_t type) {
     return encrypt(handle, enc, algs, str2bin(input), output, type);
 }
 
-return_t json_object_encryption::decrypt(jose_context_t *handle, const std::string &input, binary_t &output, bool &result) {
+return_t json_object_encryption::decrypt(jose_context_t* handle, const std::string& input, binary_t& output, bool& result) {
     return_t ret = errorcode_t::success;
     json_object_encryption::composer composer;
 
@@ -159,19 +159,19 @@ return_t json_object_encryption::decrypt(jose_context_t *handle, const std::stri
 
         return_t ret_test = errorcode_t::success;
         std::list<bool> results;
-        for (auto &epair : handle->encryptions) {
-            const jwe_t &enc = epair.first;
-            jose_encryption_t &item = epair.second;
+        for (auto& epair : handle->encryptions) {
+            const jwe_t& enc = epair.first;
+            jose_encryption_t& item = epair.second;
             binary_t zip;
             t_maphint<crypt_item_t, binary_t> hint(item.datamap);
             hint.find(crypt_item_t::item_zip, &zip);
 
-            for (auto &rpair : item.recipients) {
-                const jwa_t &alg = rpair.first;
+            for (auto& rpair : item.recipients) {
+                const jwa_t& alg = rpair.first;
                 bool run = true;
 
                 if (run) {
-                    jose_recipient_t &recipient = rpair.second;
+                    jose_recipient_t& recipient = rpair.second;
                     std::string kid;
 
                     if (false == recipient.kid.empty()) {
@@ -212,13 +212,13 @@ return_t json_object_encryption::decrypt(jose_context_t *handle, const std::stri
     return ret;
 }
 
-return_t json_object_encryption::doencrypt(jose_context_t *handle, jwe_t enc, jwa_t alg, const binary_t &input, binary_t &output) {
+return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     json_object_encryption::composer composer;
     openssl_crypt crypt;
     openssl_hash hash;
     openssl_kdf kdf;
-    crypto_advisor *advisor = crypto_advisor::get_instance();
+    crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
         if (nullptr == handle) {
@@ -232,20 +232,20 @@ return_t json_object_encryption::doencrypt(jose_context_t *handle, jwe_t enc, jw
             __leave2;
         }
 
-        const hint_jose_encryption_t *alg_hint = advisor->hintof_jose_algorithm(alg);   // key management
-        const hint_jose_encryption_t *enc_hint = advisor->hintof_jose_encryption(enc);  // content encryption
+        const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm(alg);   // key management
+        const hint_jose_encryption_t* enc_hint = advisor->hintof_jose_encryption(enc);  // content encryption
 
-        jose_encryption_t &item = iter->second;
+        jose_encryption_t& item = iter->second;
         binary_t cek = item.datamap[crypt_item_t::item_cek];                                      // in, enc
         binary_t iv = item.datamap[crypt_item_t::item_iv];                                        // in, enc
-        binary_t &aad = item.datamap[crypt_item_t::item_aad];                                     // in, enc
-        binary_t &encrypted_key = item.recipients[alg].datamap[crypt_item_t::item_encryptedkey];  // out, alg
-        binary_t &tag = item.datamap[crypt_item_t::item_tag];                                     // out, enc
-        binary_t &ciphertext = item.datamap[crypt_item_t::item_ciphertext];                       // out, enc
+        binary_t& aad = item.datamap[crypt_item_t::item_aad];                                     // in, enc
+        binary_t& encrypted_key = item.recipients[alg].datamap[crypt_item_t::item_encryptedkey];  // out, alg
+        binary_t& tag = item.datamap[crypt_item_t::item_tag];                                     // out, enc
+        binary_t& ciphertext = item.datamap[crypt_item_t::item_ciphertext];                       // out, enc
 
         // alg part - encrypted_key from cek
         {
-            const char *alg_name = alg_hint->alg_name;
+            const char* alg_name = alg_hint->alg_name;
             crypt_enc_t crypt_mode = (crypt_enc_t)alg_hint->mode;
             crypt_algorithm_t alg_crypt_alg = (crypt_algorithm_t)alg_hint->crypt_alg;
             crypt_mode_t alg_crypt_mode = (crypt_mode_t)alg_hint->crypt_mode;
@@ -262,7 +262,7 @@ return_t json_object_encryption::doencrypt(jose_context_t *handle, jwe_t enc, jw
             // memset(kw_iv.data(), 0xa6, kw_iv.size());
 
             std::string kid;
-            const EVP_PKEY *pkey = handle->key->select(kid, alg, crypto_use_t::use_enc);
+            const EVP_PKEY* pkey = handle->key->select(kid, alg, crypto_use_t::use_enc);
             if (nullptr == pkey) {
                 ret = errorcode_t::not_found;
                 __leave2;
@@ -316,7 +316,7 @@ return_t json_object_encryption::doencrypt(jose_context_t *handle, jwe_t enc, jw
                  *     algorithm, in the Direct Key Agreement mode, or
                  * RFC7520 5.5. Key Agreement Using ECDH-ES with AES-CBC-HMAC-SHA2
                  */
-                const EVP_PKEY *epk = item.recipients[alg].epk;
+                const EVP_PKEY* epk = item.recipients[alg].epk;
                 int keylen = enc_hint->keysize;
                 uint32 enc_group = enc_hint->group;
                 if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
@@ -335,7 +335,7 @@ return_t json_object_encryption::doencrypt(jose_context_t *handle, jwe_t enc, jw
                  * RFC7520 5.4. Key Agreement with Key Wrapping Using ECDH-ES and AES-KeyWrap with AES-GCM
                  */
                 binary_t derived_key;
-                const EVP_PKEY *epk = item.recipients[alg].epk;
+                const EVP_PKEY* epk = item.recipients[alg].epk;
                 int keylen = alg_hint->keysize;
                 uint32 enc_group = enc_hint->group;
                 if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
@@ -352,7 +352,7 @@ return_t json_object_encryption::doencrypt(jose_context_t *handle, jwe_t enc, jw
                  */
                 binary_t iv1 = item.recipients[alg].datamap[crypt_item_t::item_iv];
                 binary_t aad1;                                                          // empty
-                binary_t &tag1 = item.recipients[alg].datamap[crypt_item_t::item_tag];  // compute authencation tag here
+                binary_t& tag1 = item.recipients[alg].datamap[crypt_item_t::item_tag];  // compute authencation tag here
 
                 ret = crypt.encrypt(alg_crypt_alg, alg_crypt_mode, oct, iv1, cek, encrypted_key, aad1, tag1);
 
@@ -384,7 +384,7 @@ return_t json_object_encryption::doencrypt(jose_context_t *handle, jwe_t enc, jw
                 /* salt
                  * salt = UTF8(alg) + 0 + BASE64URL_DECODE(p2s)
                  */
-                salt.insert(salt.end(), (byte_t *)alg_name, (byte_t *)alg_name + strlen(alg_name));
+                salt.insert(salt.end(), (byte_t*)alg_name, (byte_t*)alg_name + strlen(alg_name));
                 salt.insert(salt.end(), 0);
                 salt.insert(salt.end(), p2s.begin(), p2s.end());
 
@@ -426,16 +426,16 @@ return_t json_object_encryption::doencrypt(jose_context_t *handle, jwe_t enc, jw
     return ret;
 }
 
-return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jwa_t alg, const binary_t &input, binary_t &output) {
+return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const binary_t& input, binary_t& output) {
     return dodecrypt(handle, enc, alg, nullptr, input, output);
 }
 
-return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jwa_t alg, const char *kid, const binary_t &input, binary_t &output) {
+return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const char* kid, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     openssl_crypt crypt;
     openssl_hash hash;
     openssl_kdf kdf;
-    crypto_advisor *advisor = crypto_advisor::get_instance();
+    crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
         if (nullptr == handle) {
@@ -449,15 +449,15 @@ return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jw
             __leave2;
         }
 
-        const hint_jose_encryption_t *alg_hint = advisor->hintof_jose_algorithm(alg);   // key management
-        const hint_jose_encryption_t *enc_hint = advisor->hintof_jose_encryption(enc);  // content encryption
+        const hint_jose_encryption_t* alg_hint = advisor->hintof_jose_algorithm(alg);   // key management
+        const hint_jose_encryption_t* enc_hint = advisor->hintof_jose_encryption(enc);  // content encryption
 
         if (nullptr == alg_hint || nullptr == enc_hint) {
             ret = errorcode_t::bad_request;
             __leave2;
         }
 
-        jose_encryption_t &item = iter->second;
+        jose_encryption_t& item = iter->second;
         binary_t cek;                                                                            // local, enc, from encrypted_key
         binary_t iv = item.datamap[crypt_item_t::item_iv];                                       // in, enc
         binary_t aad = item.datamap[crypt_item_t::item_aad];                                     // in, enc
@@ -469,7 +469,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jw
 
         // alg part - encrypted_key from cek
         {
-            const char *alg_name = alg_hint->alg_name;
+            const char* alg_name = alg_hint->alg_name;
             crypt_enc_t crypt_mode = (crypt_enc_t)alg_hint->mode;
             crypt_algorithm_t alg_crypt_alg = (crypt_algorithm_t)alg_hint->crypt_alg;
             crypt_mode_t alg_crypt_mode = (crypt_mode_t)alg_hint->crypt_mode;
@@ -485,7 +485,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jw
             kw_iv.resize(8, 0xa6);
             // memset(kw_iv.data(), 0xa6, kw_iv.size());
 
-            const EVP_PKEY *pkey = nullptr;
+            const EVP_PKEY* pkey = nullptr;
             if (kid) {
                 pkey = handle->key->find(kid, alg, crypto_use_t::use_enc);
             } else {
@@ -542,7 +542,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jw
                  *     algorithm, in the Direct Key Agreement mode, or
                  * RFC7520 5.5. Key Agreement Using ECDH-ES with AES-CBC-HMAC-SHA2
                  */
-                const EVP_PKEY *epk = item.recipients[alg].epk;
+                const EVP_PKEY* epk = item.recipients[alg].epk;
                 int keylen = enc_hint->keysize;
                 uint32 enc_group = enc_hint->group;
                 if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
@@ -562,7 +562,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jw
                  * AES-KeyWrap with AES-GCM
                  */
                 binary_t derived_key;
-                const EVP_PKEY *epk = item.recipients[alg].epk;
+                const EVP_PKEY* epk = item.recipients[alg].epk;
                 int keylen = alg_hint->keysize;
                 uint32 enc_group = enc_hint->group;
                 if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
@@ -595,7 +595,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jw
                 /* salt
                  * salt = UTF8(alg) + 0 + BASE64URL_DECODE(p2s)
                  */
-                salt.insert(salt.end(), (byte_t *)alg_name, (byte_t *)alg_name + strlen(alg_name));
+                salt.insert(salt.end(), (byte_t*)alg_name, (byte_t*)alg_name + strlen(alg_name));
                 salt.insert(salt.end(), 0);
                 salt.insert(salt.end(), p2s.begin(), p2s.end());
 
@@ -637,7 +637,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t *handle, jwe_t enc, jw
     return ret;
 }
 
-return_t json_object_encryption::check_constraints(jwa_t alg, const EVP_PKEY *pkey) {
+return_t json_object_encryption::check_constraints(jwa_t alg, const EVP_PKEY* pkey) {
     return_t ret = errorcode_t::success;
 
     __try2 {

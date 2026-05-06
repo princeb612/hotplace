@@ -16,22 +16,24 @@
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/base/system/bignumber.hpp>
+#include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
 #include <hotplace/sdk/base/system/ieee754.hpp>
 #include <hotplace/sdk/base/system/types.hpp>
+#include <hotplace/sdk/base/types.hpp>
 #include <ostream>
 
 namespace hotplace {
 
 variant_t::variant_t() : type(TYPE_NULL), size(0), flag(0) { memset(&data, 0, sizeof(data)); }
 
-variant_t::variant_t(const variant_t &other) : type(TYPE_NULL), size(0), flag(0) { *this = other; }
+variant_t::variant_t(const variant_t& other) : type(TYPE_NULL), size(0), flag(0) { *this = other; }
 
-variant_t::variant_t(variant_t &&other) : type(TYPE_NULL), size(0), flag(0) { *this = std::move(other); }
+variant_t::variant_t(variant_t&& other) : type(TYPE_NULL), size(0), flag(0) { *this = std::move(other); }
 
 variant_t::~variant_t() { clear(); }
 
-variant_t &variant_t::operator=(const variant_t &other) {
+variant_t& variant_t::operator=(const variant_t& other) {
     clear();
 
     type = other.type;
@@ -40,14 +42,14 @@ variant_t &variant_t::operator=(const variant_t &other) {
             case TYPE_BINARY:
             case TYPE_NSTRING:
             case TYPE_BIGNUMBER:
-                data.bstr = (unsigned char *)malloc(other.size + 1);
+                data.bstr = (unsigned char*)malloc(other.size + 1);
                 memcpy(data.bstr, other.data.bstr, other.size);
                 break;
             case TYPE_STRING:
                 data.str = strdup(other.data.str);
                 break;
             case TYPE_DATETIME:
-                data.dt = (datetime_t *)malloc(sizeof(datetime_t));
+                data.dt = (datetime_t*)malloc(sizeof(datetime_t));
                 memcpy(data.dt, other.data.dt, sizeof(datetime_t));
                 break;
             default:
@@ -62,19 +64,19 @@ variant_t &variant_t::operator=(const variant_t &other) {
     return *this;
 }
 
-variant_t &variant_t::operator=(variant_t &&other) {
-    clear();
+variant_t& variant_t::operator=(variant_t&& other) {
+    if (this != &other) {
+        clear();
 
-    type = other.type;
-    memcpy(&data, &other.data, sizeof(data));
-    size = other.size;
-    flag = other.flag;
-    other.reset();
-
+        std::swap(type, other.type);
+        std::swap(data, other.data);
+        std::swap(size, other.size);
+        std::swap(flag, other.flag);
+    }
     return *this;
 }
 
-variant_t &variant_t::reset() {
+variant_t& variant_t::reset() {
     type = TYPE_NULL;
     memset(&data, 0, sizeof(data));
     size = 0;
@@ -83,7 +85,7 @@ variant_t &variant_t::reset() {
     return *this;
 }
 
-variant_t &variant_t::clear() {
+variant_t& variant_t::clear() {
     if (variant_flag_t::flag_free & flag) {
         free(data.p);
     }
@@ -98,19 +100,21 @@ variant_t &variant_t::clear() {
 
 variant::variant() {}
 
-variant::variant(const void *value) { set_pointer(value); }
+variant::variant(const variant& value) : _vt(value._vt) {}
 
-variant::variant(const char *value) { set_str_new(value); }
+variant::variant(variant&& value) : _vt(std::move(value._vt)) {}
 
-variant::variant(const char *value, size_t n) { set_strn_new(value, n); }
+variant::variant(const variant_t& value) : _vt(value) {}
 
-variant::variant(const unsigned char *value, size_t n) { set_bstr_new(value, n); }
+variant::variant(variant_t&& value) : _vt(std::move(value)) {}
 
-variant::variant(const std::string &value) { set_strn_new(value.c_str(), value.size()); }
+variant::variant(const void* value) { set_pointer(value); }
 
-variant::variant(const binary_t &value) { set_bstr_new(value.data(), value.size()); }
+variant::variant(const char* value) { set_str_new(value); }
 
-variant::variant(const stream_t *value) { set_bstr_new(value); }
+variant::variant(const char* value, size_t n) { set_strn_new(value, n); }
+
+variant::variant(const unsigned char* value, size_t n) { set_bstr_new(value, n); }
 
 variant::variant(bool value) { set_bool(value); }
 
@@ -122,13 +126,13 @@ variant::variant(int16 value) { set_int16(value); }
 
 variant::variant(uint16 value) { set_uint16(value); }
 
-variant::variant(const uint24_t &value) { set_uint24(value); }
+variant::variant(const uint24_t& value) { set_uint24(value); }
 
 variant::variant(int32 value) { set_int32(value); }
 
 variant::variant(uint32 value) { set_uint32(value); }
 
-variant::variant(const uint48_t &value) { set_uint48(value); }
+variant::variant(const uint48_t& value) { set_uint48(value); }
 
 variant::variant(int64 value) { set_int64(value); }
 
@@ -144,25 +148,23 @@ variant::variant(float value) { set_float(value); }
 
 variant::variant(double value) { set_double(value); }
 
-variant::variant(const datetime_t &value) { set_datetime(value); }
+variant::variant(vartype_t vtype, void* value) { set_user_type(vtype, value); }
 
-variant::variant(vartype_t vtype, void *value) { set_user_type(vtype, value); }
+variant::variant(const std::string& value) { set_strn_new(value.c_str(), value.size()); }
 
-variant::variant(const variant_t &value) : _vt(value) {}
+variant::variant(const binary_t& value) { set_bstr_new(value.data(), value.size()); }
 
-variant::variant(variant_t &&value) : _vt(std::move(value)) {}
+variant::variant(const stream_t* value) { set_stream(value); }
 
-variant::variant(const variant &value) : _vt(value._vt) {}
+variant::variant(const datetime_t& value) { set_datetime(value); }
 
-variant::variant(variant &&value) : _vt(std::move(value._vt)) {}
-
-variant::variant(const bignumber &value) { set_bn(value); }
+variant::variant(const bignumber& value) { set_bn(value); }
 
 variant::~variant() { _vt.clear(); }
 
-const variant_t &variant::content() const { return _vt; }
+const variant_t& variant::content() const { return _vt; }
 
-variant_t &variant::get() { return _vt; }
+variant_t& variant::get() { return _vt; }
 
 vartype_t variant::type() const { return _vt.type; }
 
@@ -170,42 +172,35 @@ size_t variant::size() const { return _vt.size; }
 
 uint16 variant::flag() const { return _vt.flag; }
 
-/**
- * @brief reset
- * @example
- *      vt.reset().set_bool(true);
- */
-variant &variant::clear() {
-    if (variant_flag_t::flag_free & _vt.flag) {
-        free(_vt.data.p);
-    }
-
-    _vt.type = TYPE_NULL;
-    memset(&_vt.data, 0, RTL_FIELD_SIZE(variant_t, data));
-    _vt.size = 0;
-    _vt.flag = 0;
-    return *this;
-}
-
-variant &variant::set_flag(uint16 flag) {
+variant& variant::set_flag(uint16 flag) {
     _vt.flag |= flag;
     return *this;
 }
 
-variant &variant::unset_flag(uint16 flag) {
+variant& variant::unset_flag(uint16 flag) {
     _vt.flag &= ~flag;
     return *this;
 }
 
-variant &variant::set_pointer(const void *value) {
+variant& variant::reset() {
+    _vt.reset();
+    return *this;
+}
+
+variant& variant::clear() {
+    _vt.clear();
+    return *this;
+}
+
+variant& variant::set_pointer(const void* value) {
     _vt.type = TYPE_POINTER;
-    _vt.data.p = (void *)value;
-    _vt.size = sizeof(void *);
+    _vt.data.p = (void*)value;
+    _vt.size = sizeof(void*);
     _vt.flag = flag_pointer;
     return *this;
 }
 
-variant &variant::set_bool(bool value) {
+variant& variant::set_bool(bool value) {
     _vt.type = TYPE_BOOL;
     _vt.data.b = (value);
     _vt.size = sizeof(bool);
@@ -213,7 +208,7 @@ variant &variant::set_bool(bool value) {
     return *this;
 }
 
-variant &variant::set_int8(int8 value) {
+variant& variant::set_int8(int8 value) {
     _vt.type = TYPE_INT8;
     _vt.data.i8 = (value);
     _vt.size = sizeof(int8);
@@ -221,7 +216,7 @@ variant &variant::set_int8(int8 value) {
     return *this;
 }
 
-variant &variant::set_uint8(uint8 value) {
+variant& variant::set_uint8(uint8 value) {
     _vt.type = TYPE_UINT8;
     _vt.data.ui8 = (value);
     _vt.size = sizeof(uint8);
@@ -229,7 +224,7 @@ variant &variant::set_uint8(uint8 value) {
     return *this;
 }
 
-variant &variant::set_int16(int16 value) {
+variant& variant::set_int16(int16 value) {
     _vt.type = TYPE_INT16;
     _vt.data.i16 = (value);
     _vt.size = sizeof(uint16);
@@ -237,7 +232,7 @@ variant &variant::set_int16(int16 value) {
     return *this;
 }
 
-variant &variant::set_uint16(uint16 value) {
+variant& variant::set_uint16(uint16 value) {
     _vt.type = TYPE_UINT16;
     _vt.data.ui16 = (value);
     _vt.size = sizeof(uint16);
@@ -245,7 +240,7 @@ variant &variant::set_uint16(uint16 value) {
     return *this;
 }
 
-variant &variant::set_int24(int32 value) {
+variant& variant::set_int24(int32 value) {
     _vt.type = TYPE_INT24;
     _vt.data.i32 = (value & 0x00ffffff);
     _vt.size = RTL_FIELD_SIZE(uint24_t, data);
@@ -253,7 +248,7 @@ variant &variant::set_int24(int32 value) {
     return *this;
 }
 
-variant &variant::set_uint24(uint32 value) {
+variant& variant::set_uint24(uint32 value) {
     _vt.type = TYPE_UINT24;
     _vt.data.ui32 = (value & 0x00ffffff);
     _vt.size = RTL_FIELD_SIZE(uint24_t, data);
@@ -261,7 +256,7 @@ variant &variant::set_uint24(uint32 value) {
     return *this;
 }
 
-variant &variant::set_uint24(const byte_t *p, size_t len) {
+variant& variant::set_uint24(const byte_t* p, size_t len) {
     _vt.type = TYPE_UINT24;
     b24_i32(p, len, _vt.data.ui32);
     _vt.size = RTL_FIELD_SIZE(uint24_t, data);
@@ -269,7 +264,7 @@ variant &variant::set_uint24(const byte_t *p, size_t len) {
     return *this;
 }
 
-variant &variant::set_uint24(const uint24_t &value) {
+variant& variant::set_uint24(const uint24_t& value) {
     _vt.type = TYPE_UINT24;
     b24_i32(value, _vt.data.ui32);
     _vt.size = RTL_FIELD_SIZE(uint24_t, data);
@@ -277,7 +272,7 @@ variant &variant::set_uint24(const uint24_t &value) {
     return *this;
 }
 
-variant &variant::set_int32(int32 value) {
+variant& variant::set_int32(int32 value) {
     _vt.type = TYPE_INT32;
     _vt.data.i32 = (value);
     _vt.size = sizeof(int32);
@@ -285,7 +280,7 @@ variant &variant::set_int32(int32 value) {
     return *this;
 }
 
-variant &variant::set_uint32(uint32 value) {
+variant& variant::set_uint32(uint32 value) {
     _vt.type = TYPE_UINT32;
     _vt.data.ui32 = (value);
     _vt.size = sizeof(uint32);
@@ -293,7 +288,7 @@ variant &variant::set_uint32(uint32 value) {
     return *this;
 }
 
-variant &variant::set_int48(int64 value) {
+variant& variant::set_int48(int64 value) {
     _vt.type = TYPE_INT48;
     _vt.data.i64 = (value & 0x0000ffffffffffff);
     _vt.size = RTL_FIELD_SIZE(uint48_t, data);
@@ -301,7 +296,7 @@ variant &variant::set_int48(int64 value) {
     return *this;
 }
 
-variant &variant::set_uint48(uint64 value) {
+variant& variant::set_uint48(uint64 value) {
     _vt.type = TYPE_UINT48;
     _vt.data.ui64 = (value & 0x0000ffffffffffff);
     _vt.size = RTL_FIELD_SIZE(uint48_t, data);
@@ -309,7 +304,7 @@ variant &variant::set_uint48(uint64 value) {
     return *this;
 }
 
-variant &variant::set_uint48(const byte_t *p, size_t len) {
+variant& variant::set_uint48(const byte_t* p, size_t len) {
     _vt.type = TYPE_UINT48;
     b48_i64(p, len, _vt.data.ui64);
     _vt.size = RTL_FIELD_SIZE(uint48_t, data);
@@ -317,7 +312,7 @@ variant &variant::set_uint48(const byte_t *p, size_t len) {
     return *this;
 }
 
-variant &variant::set_uint48(const uint48_t &value) {
+variant& variant::set_uint48(const uint48_t& value) {
     _vt.type = TYPE_UINT48;
     b48_i64(value, _vt.data.ui64);
     _vt.size = RTL_FIELD_SIZE(uint48_t, data);
@@ -325,7 +320,7 @@ variant &variant::set_uint48(const uint48_t &value) {
     return *this;
 }
 
-variant &variant::set_int64(int64 value) {
+variant& variant::set_int64(int64 value) {
     _vt.type = TYPE_INT64;
     _vt.data.i64 = (value);
     _vt.size = sizeof(int64);
@@ -333,7 +328,7 @@ variant &variant::set_int64(int64 value) {
     return *this;
 }
 
-variant &variant::set_uint64(uint64 value) {
+variant& variant::set_uint64(uint64 value) {
     _vt.type = TYPE_UINT64;
     _vt.data.ui64 = (value);
     _vt.size = sizeof(uint64);
@@ -342,7 +337,7 @@ variant &variant::set_uint64(uint64 value) {
 }
 
 #if defined __SIZEOF_INT128__
-variant &variant::set_int128(int128 value) {
+variant& variant::set_int128(int128 value) {
     _vt.type = TYPE_INT128;
     _vt.data.i128 = (value);
     _vt.size = sizeof(int128);
@@ -350,7 +345,7 @@ variant &variant::set_int128(int128 value) {
     return *this;
 }
 
-variant &variant::set_uint128(uint128 value) {
+variant& variant::set_uint128(uint128 value) {
     _vt.type = TYPE_UINT128;
     _vt.data.ui128 = (value);
     _vt.size = sizeof(uint128);
@@ -359,7 +354,7 @@ variant &variant::set_uint128(uint128 value) {
 }
 #endif
 
-variant &variant::set_fp16(uint16 value) {
+variant& variant::set_fp16(uint16 value) {
     _vt.type = TYPE_FP16;
     _vt.data.ui16 = (value);
     _vt.size = sizeof(uint16);
@@ -367,7 +362,7 @@ variant &variant::set_fp16(uint16 value) {
     return *this;
 }
 
-variant &variant::set_fp32(float value) {
+variant& variant::set_fp32(float value) {
     _vt.type = TYPE_FLOAT;
     _vt.data.f = (value);
     _vt.size = sizeof(float);
@@ -375,9 +370,11 @@ variant &variant::set_fp32(float value) {
     return *this;
 }
 
-variant &variant::set_float(float value) { return set_fp32(value); }
+variant& variant::set_float(float value) { return set_fp32(value); }
 
-variant &variant::set_fp64(double value) {
+variant& variant::set_bin32(uint32 value) { return set_fp32(fp32_from_binary32(value)); }
+
+variant& variant::set_fp64(double value) {
     _vt.type = TYPE_DOUBLE;
     _vt.data.d = (value);
     _vt.size = sizeof(double);
@@ -385,47 +382,11 @@ variant &variant::set_fp64(double value) {
     return *this;
 }
 
-variant &variant::set_double(double value) { return set_fp64(value); }
+variant& variant::set_double(double value) { return set_fp64(value); }
 
-variant &variant::set_datetime(const datetime_t &value) {
-    _vt.type = TYPE_DATETIME;
-    _vt.size = sizeof(datetime_t);
-    _vt.flag = flag_datetime;
-    datetime_t *p = (datetime_t *)malloc(sizeof(datetime_t));
-    if (p) {
-        memcpy(p, &value, sizeof(datetime_t));
-        _vt.flag |= variant_flag_t::flag_free;
-    }
-    _vt.data.dt = p;
+variant& variant::set_bin64(uint64 value) { return set_fp64(fp64_from_binary64(value)); }
 
-    return *this;
-}
-
-variant &variant::set_str(const char *value) {
-    _vt.type = TYPE_STRING;
-    _vt.data.str = (char *)value;
-    _vt.size = 0;
-    _vt.flag = flag_string;
-    return *this;
-}
-
-variant &variant::set_nstr(const char *value, size_t n) {
-    _vt.type = TYPE_NSTRING;
-    _vt.data.str = (char *)value;
-    _vt.size = n;
-    _vt.flag = flag_string;
-    return *this;
-}
-
-variant &variant::set_bstr(const unsigned char *value, size_t n) {
-    _vt.type = TYPE_BINARY;
-    _vt.data.bstr = (unsigned char *)value;
-    _vt.size = n;
-    _vt.flag = flag_binary;
-    return *this;
-}
-
-variant &variant::set_user_type(vartype_t vtype, void *value) {
+variant& variant::set_user_type(vartype_t vtype, void* value) {
     _vt.type = vtype;
     _vt.data.p = value;
     _vt.size = 0;
@@ -433,11 +394,35 @@ variant &variant::set_user_type(vartype_t vtype, void *value) {
     return *this;
 }
 
-variant &variant::set_str_new(const char *value) {
+variant& variant::set_str(const char* value) {
+    _vt.type = TYPE_STRING;
+    _vt.data.str = (char*)value;
+    _vt.size = 0;
+    _vt.flag = flag_string;
+    return *this;
+}
+
+variant& variant::set_nstr(const char* value, size_t n) {
+    _vt.type = TYPE_NSTRING;
+    _vt.data.str = (char*)value;
+    _vt.size = n;
+    _vt.flag = flag_string;
+    return *this;
+}
+
+variant& variant::set_bstr(const unsigned char* value, size_t n) {
+    _vt.type = TYPE_BINARY;
+    _vt.data.bstr = (unsigned char*)value;
+    _vt.size = n;
+    _vt.flag = flag_binary;
+    return *this;
+}
+
+variant& variant::set_str_new(const char* value) {
     _vt.type = TYPE_STRING;
     _vt.size = 0;
     _vt.flag = flag_string;
-    char *p = nullptr;
+    char* p = nullptr;
     if (value) {
         p = strdup(value);
         if (p) {
@@ -449,27 +434,13 @@ variant &variant::set_str_new(const char *value) {
     return *this;
 }
 
-variant &variant::set_str_new(const std::string &value) {
+variant& variant::set_strn_new(const char* value, size_t n) {
     _vt.type = TYPE_STRING;
     _vt.size = 0;
     _vt.flag = flag_string;
-    char *p = strdup(value.c_str());
-    if (p) {
-        _vt.data.str = p;
-        _vt.flag |= variant_flag_t::flag_free;
-        _vt.size = value.size();
-    }
-    _vt.data.str = p;
-    return *this;
-}
-
-variant &variant::set_strn_new(const char *value, size_t n) {
-    _vt.type = TYPE_STRING;
-    _vt.size = 0;
-    _vt.flag = flag_string;
-    char *p = nullptr;
+    char* p = nullptr;
     if (n) {
-        p = (char *)malloc(n + 1);
+        p = (char*)malloc(n + 1);
         if (p) {
             strncpy(p, value, n);
             *(p + n) = 0;
@@ -481,13 +452,13 @@ variant &variant::set_strn_new(const char *value, size_t n) {
     return *this;
 }
 
-variant &variant::set_bstr_new(const unsigned char *value, size_t n) {
+variant& variant::set_bstr_new(const unsigned char* value, size_t n) {
     _vt.type = TYPE_BINARY;
     _vt.size = 0;
     _vt.flag = flag_binary;
-    unsigned char *p = nullptr;
+    unsigned char* p = nullptr;
     if (n) {
-        p = (unsigned char *)malloc(n + 1);
+        p = (unsigned char*)malloc(n + 1);
         if (p) {
             memcpy(p, value, n);
             *(p + n) = 0;
@@ -499,16 +470,67 @@ variant &variant::set_bstr_new(const unsigned char *value, size_t n) {
     return *this;
 }
 
-variant &variant::set_bstr_new(const stream_t *s) {
+variant& variant::set_nstr_new(const char* value, size_t n) {
+    _vt.type = TYPE_NSTRING;
+    _vt.size = 0;
+    _vt.flag = flag_string;
+    char* p = nullptr;
+    if (n) {
+        p = (char*)malloc(n + 1);
+        if (p) {
+            strncpy(p, value, n);
+            *(p + n) = 0;
+            _vt.size = n;
+            _vt.flag |= variant_flag_t::flag_free;
+        }
+    }
+    _vt.data.str = p;
+    return *this;
+}
+
+variant& variant::set_string(const std::string& value) {
+    _vt.type = TYPE_STRING;
+    _vt.size = 0;
+    _vt.flag = flag_string;
+    char* p = strdup(value.c_str());
+    if (p) {
+        _vt.data.str = p;
+        _vt.flag |= variant_flag_t::flag_free;
+        _vt.size = value.size();
+    }
+    _vt.data.str = p;
+    return *this;
+}
+
+variant& variant::set_binary(const binary_t& bin) {
     _vt.type = TYPE_BINARY;
     _vt.size = 0;
     _vt.flag = flag_binary;
-    unsigned char *p = nullptr;
+    unsigned char* p = nullptr;
+    size_t n = bin.size();
+    if (n) {
+        p = (unsigned char*)malloc(n + 1);
+        if (p) {
+            memcpy(p, bin.data(), n);
+            *(p + n) = 0;
+            _vt.size = n;
+            _vt.flag |= variant_flag_t::flag_free;
+        }
+    }
+    _vt.data.bstr = p;
+    return *this;
+}
+
+variant& variant::set_stream(const stream_t* s) {
+    _vt.type = TYPE_BINARY;
+    _vt.size = 0;
+    _vt.flag = flag_binary;
+    unsigned char* p = nullptr;
     if (s) {
-        const byte_t *value = s->data();
+        const byte_t* value = s->data();
         size_t n = s->size();
         if (n) {
-            p = (unsigned char *)malloc(n + 1);
+            p = (unsigned char*)malloc(n + 1);
             if (p) {
                 memcpy(p, value, n);
                 *(p + n) = 0;
@@ -521,63 +543,40 @@ variant &variant::set_bstr_new(const stream_t *s) {
     return *this;
 }
 
-variant &variant::set_nstr_new(const char *value, size_t n) {
-    _vt.type = TYPE_NSTRING;
-    _vt.size = 0;
-    _vt.flag = flag_string;
-    char *p = nullptr;
-    if (n) {
-        p = (char *)malloc(n + 1);
-        if (p) {
-            strncpy(p, value, n);
-            *(p + n) = 0;
-            _vt.size = n;
-            _vt.flag |= variant_flag_t::flag_free;
-        }
+variant& variant::set_datetime(const datetime_t& value) {
+    _vt.type = TYPE_DATETIME;
+    _vt.size = sizeof(datetime_t);
+    _vt.flag = flag_datetime;
+    datetime_t* p = (datetime_t*)malloc(sizeof(datetime_t));
+    if (p) {
+        memcpy(p, &value, sizeof(datetime_t));
+        _vt.flag |= variant_flag_t::flag_free;
     }
-    _vt.data.str = p;
+    _vt.data.dt = p;
+
     return *this;
 }
 
-variant &variant::set_binary_new(const binary_t &bin) {
-    _vt.type = TYPE_BINARY;
-    _vt.size = 0;
-    _vt.flag = flag_binary;
-    unsigned char *p = nullptr;
-    size_t n = bin.size();
-    if (n) {
-        p = (unsigned char *)malloc(n + 1);
-        if (p) {
-            memcpy(p, bin.data(), n);
-            *(p + n) = 0;
-            _vt.size = n;
-            _vt.flag |= variant_flag_t::flag_free;
-        }
-    }
-    _vt.data.bstr = p;
-    return *this;
-}
-
-variant &variant::set_bn(const bignumber &value) {
+variant& variant::set_bn(const bignumber& value) {
     binary_t bin;
     value >> bin;
 
     _vt.type = TYPE_BIGNUMBER;
     auto size = bin.size();
     if (false == bin.empty()) {
-        _vt.data.bstr = (unsigned char *)malloc(size + 1);
+        _vt.data.bstr = (unsigned char*)malloc(size + 1);
         memcpy(_vt.data.bstr, bin.data(), size);
         _vt.size = size;
-        _vt.flag = variant_flag_t::flag_free;
+        _vt.flag = flag_binary | flag_free;
     }
     if (value < 0) {
-        _vt.flag |= variant_flag_t::flag_negative;
+        _vt.flag |= flag_negative;
     }
 
     return *this;
 }
 
-variant &variant::set_bn(const unsigned char *p, size_t n) { return set_bn(bignumber(p, n)); }
+variant& variant::set_bn(const unsigned char* p, size_t n) { return set_bn(bignumber(p, n)); }
 
 const std::string variant::to_str() const {
     std::string ret_value;
@@ -601,7 +600,7 @@ const binary_t variant::to_bin(uint32 flags) const {
 
 int variant::to_int() { return t_toi<int>(); }
 
-return_t variant::to_binary(binary_t &target, uint32 flags) const {
+return_t variant::to_binary(binary_t& target, uint32 flags) const {
     return_t ret = errorcode_t::success;
 
     bool change_endian = (variant_convendian & flags);
@@ -692,7 +691,7 @@ return_t variant::to_binary(binary_t &target, uint32 flags) const {
     return ret;
 }
 
-return_t variant::to_string(std::string &target) const {
+return_t variant::to_string(std::string& target) const {
     return_t ret = errorcode_t::success;
 
     target.clear();
@@ -790,7 +789,7 @@ return_t variant::to_string(std::string &target) const {
             if (_vt.data.str) {
                 target.clear();
                 uint32 i = 0;
-                char *p = nullptr;
+                char* p = nullptr;
                 for (i = 0, p = _vt.data.str; i < _vt.size; i++, p++) {
                     if (isprint(*p)) {
                         target.append(p, 1);
@@ -807,30 +806,68 @@ return_t variant::to_string(std::string &target) const {
     return ret;
 }
 
-variant &variant::operator=(const variant &other) {
+variant& variant::operator=(const variant& other) {
     _vt = other._vt;
     return *this;
 }
 
-variant &variant::operator=(variant &&other) {
+variant& variant::operator=(variant&& other) {
     if (this != &other) {
         _vt = std::move(other._vt);
     }
     return *this;
 }
 
-variant &variant::operator=(const variant_t &other) {
+variant& variant::operator=(const variant_t& other) {
     _vt = other;
     return *this;
 }
 
-variant &variant::operator=(variant_t &&other) {
-    if (&_vt != &other) {
-        _vt = std::move(other);
-    }
+variant& variant::operator=(variant_t&& other) {
+    _vt = std::move(other);
     return *this;
 }
 
-variant &variant::operator=(const bignumber &other) { return set_bn(other); }
+variant& variant::operator=(const void* value) { return set_pointer(value); }
+
+variant& variant::operator=(bool value) { return set_bool(value); }
+
+variant& variant::operator=(int8 value) { return set_int8(value); }
+
+variant& variant::operator=(uint8 value) { return set_uint8(value); }
+
+variant& variant::operator=(int16 value) { return set_int16(value); }
+
+variant& variant::operator=(uint16 value) { return set_uint16(value); }
+
+variant& variant::operator=(const uint24_t& value) { return set_uint24(value); }
+
+variant& variant::operator=(int32 value) { return set_int32(value); }
+
+variant& variant::operator=(uint32 value) { return set_uint32(value); }
+
+variant& variant::operator=(const uint48_t& value) { return set_uint48(value); }
+
+variant& variant::operator=(int64 value) { return set_int64(value); }
+
+variant& variant::operator=(uint64 value) { return set_uint64(value); }
+
+#if defined __SIZEOF_INT128__
+variant& variant::operator=(int128 value) { return set_int128(value); }
+
+variant& variant::operator=(uint128 value) { return set_uint128(value); }
+#endif
+
+variant& variant::operator=(float value) { return set_float(value); }
+
+variant& variant::operator=(double value) { return set_double(value); }
+
+variant& variant::operator=(const std::string& value) { return set_string(value); }
+
+variant& variant::operator=(const binary_t& value) { return set_binary(value); }
+
+variant& variant::operator=(const datetime_t& value) { return set_datetime(value); }
+
+variant& variant::operator=(const bignumber& other) { return set_bn(other); }
 
 }  // namespace hotplace

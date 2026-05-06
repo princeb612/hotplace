@@ -32,7 +32,7 @@ constexpr char constexpr_signature[] = "signature";
 constexpr char constexpr_sig_len[] = "signature len";
 constexpr char constexpr_sig[] = "computed signature";
 
-tls_handshake_server_key_exchange::tls_handshake_server_key_exchange(tls_session *session) : tls_handshake(tls_hs_server_key_exchange, session) {}
+tls_handshake_server_key_exchange::tls_handshake_server_key_exchange(tls_session* session) : tls_handshake(tls_hs_server_key_exchange, session) {}
 
 tls_handshake_server_key_exchange::~tls_handshake_server_key_exchange() {}
 
@@ -59,12 +59,12 @@ return_t tls_handshake_server_key_exchange::do_preprocess(tls_direction_t dir) {
     return ret;
 }
 
-return_t tls_handshake_server_key_exchange::do_postprocess(tls_direction_t dir, const byte_t *stream, size_t size) {
+return_t tls_handshake_server_key_exchange::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_session();
         auto hspos = offsetof_header();
-        auto &protection = session->get_tls_protection();
+        auto& protection = session->get_tls_protection();
         auto hssize = get_size();
 
         protection.update_transcript_hash(session, stream + hspos, hssize);
@@ -74,7 +74,7 @@ return_t tls_handshake_server_key_exchange::do_postprocess(tls_direction_t dir, 
     return ret;
 }
 
-return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, const byte_t *stream, size_t size, size_t &pos) {
+return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {
@@ -84,11 +84,11 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
 
         {
             auto session = get_session();
-            auto &protection = session->get_tls_protection();
-            auto &secrets = protection.get_secrets();
-            auto &tlskey = protection.get_key();
+            auto& protection = session->get_tls_protection();
+            auto& secrets = protection.get_secrets();
+            auto& tlskey = protection.get_key();
             // crypto_advisor *advisor = crypto_advisor::get_instance();
-            tls_advisor *tlsadvisor = tls_advisor::get_instance();
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
             size_t hspos = pos;
             uint8 curve_info = 0;
@@ -164,7 +164,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
 
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream &dbs) -> void {
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                     dbs.autoindent(2);
                     dbs.println("> %s %i (%s)", constexpr_curve_info, curve_info, tlsadvisor->nameof_ec_curve_type(curve_info).c_str());
                     dbs.println("> %s 0x%04x %s", constexpr_curve, curve, tlsadvisor->nameof_group(curve).c_str());
@@ -193,13 +193,13 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
     return ret;
 }
 
-return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, binary_t &bin) {
+return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     auto session = get_session();
-    auto &protection = session->get_tls_protection();
-    auto &secrets = protection.get_secrets();
-    auto &tlskey = protection.get_key();
-    auto &protection_context = protection.get_protection_context();
+    auto& protection = session->get_tls_protection();
+    auto& secrets = protection.get_secrets();
+    auto& tlskey = protection.get_key();
+    auto& protection_context = protection.get_protection_context();
     auto advisor = crypto_advisor::get_instance();
     auto tlsadvisor = tls_advisor::get_instance();
     uint8 curve_info = 3;  // named curvev
@@ -210,7 +210,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
     crypto_keyexchange keyexchange;
 
     {
-        auto lambda = [&](uint16 group, bool *ctrl) -> void {
+        auto lambda = [&](uint16 group, bool* ctrl) -> void {
             auto hint = advisor->hintof_curve_tls_group(group);
             if (hint && hint->tlsgroup) {
                 keyexchange.keygen((tls_group_t)group, &tlskey, KID_TLS_SERVER_KEY_EXCHANGE);
@@ -227,7 +227,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
 
     uint16 sigalg = 0;
     {
-        auto lambda = [&](uint16 sigscheme, bool *ctrl) -> void {
+        auto lambda = [&](uint16 sigscheme, bool* ctrl) -> void {
             auto hint = tlsadvisor->hintof_signature_scheme(sigscheme);
             bool stop = false;
             if (hint) {
@@ -275,7 +275,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
 
 #if defined DEBUG
     if (istraceable(trace_category_net)) {
-        trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream &dbs) -> void {
+        trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
             dbs.autoindent(2);
             dbs.println("> %s %i (%s)", constexpr_curve_info, curve_info, tlsadvisor->nameof_ec_curve_type(curve_info).c_str());
             dbs.println("> %s 0x%04x %s", constexpr_curve, curve, tlsadvisor->nameof_group(curve).c_str());

@@ -98,7 +98,7 @@ testvector:
 ````
 testvector:
   - example: string                         # [mandatory] testcase
-    schema: VALIST SPRINTF                  # [mandatory] "VALIST SPRINTF"
+    schema: VALIST                          # [mandatory] "VALIST SPRINTF"
     args:
       - type: "float"|"string"|"int"        # [mandatory]
         value: string                       # [mandatory]

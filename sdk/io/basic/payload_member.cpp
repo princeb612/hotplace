@@ -27,7 +27,7 @@ payload_member::payload_member(uint8 value, uint16 repeat, const char* name, con
     while (temp--) {
         bin.insert(bin.end(), value);
     }
-    get_variant().set_binary_new(bin);
+    get_variant().set_binary(bin);
 }
 
 payload_member::payload_member(uint16 value, bool bigendian, const char* name, const char* group)
@@ -71,7 +71,7 @@ payload_member::payload_member(uint128 value, bool bigendian, const char* name, 
 payload_member::payload_member(const binary_t& value, const char* name, const char* group)
     : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
-    get_variant().set_binary_new(value);
+    get_variant().set_binary(value);
 }
 
 payload_member::payload_member(const byte_t* stream, size_t size, bool alloc, const char* name, const char* group)
@@ -87,13 +87,13 @@ payload_member::payload_member(const byte_t* stream, size_t size, bool alloc, co
 payload_member::payload_member(const std::string& value, const char* name, const char* group)
     : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
-    get_variant().set_str_new(value);
+    get_variant().set_string(value);
 }
 
 payload_member::payload_member(const stream_t* value, const char* name, const char* group)
     : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
-    get_variant().set_bstr_new(value);
+    get_variant().set_stream(value);
 }
 
 payload_member::payload_member(payload_encoded* value, const char* name, const char* group)

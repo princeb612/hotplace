@@ -29,7 +29,7 @@
     The function passes the inquiry to a trust provider that supports the action identifier, if one exists.
     For certificate verification, use the CertGetCertificateChain and CertVerifyCertificateChainPolicy functions.
  */
-typedef BOOL(__stdcall *WINVERIFYTRUST)(HWND hwnd, GUID *pguidAction, LPVOID pvData);
+typedef BOOL(__stdcall* WINVERIFYTRUST)(HWND hwnd, GUID* pguidAction, LPVOID pvData);
 /* @brief
     [The WintrustLoadFunctionPointers function is available for use in the operating systems specified in the Requirements section.
     It may be altered or unavailable in subsequent versions.
@@ -42,6 +42,6 @@ typedef BOOL(__stdcall *WINVERIFYTRUST)(HWND hwnd, GUID *pguidAction, LPVOID pvD
    @comment
     XP, 2003 이후에는 CryptQueryObject 를 사용하도록 처리하고 있다. (Helper Authenticode 참고)
  */
-typedef BOOL(__stdcall *WINTRUSTLOADFUNCTIONPOINTERS)(GUID *pgActionID, CRYPT_PROVIDER_FUNCTIONS *pPfns);
+typedef BOOL(__stdcall* WINTRUSTLOADFUNCTIONPOINTERS)(GUID* pgActionID, CRYPT_PROVIDER_FUNCTIONS* pPfns);
 
 #endif

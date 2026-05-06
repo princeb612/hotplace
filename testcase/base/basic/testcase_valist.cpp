@@ -141,8 +141,43 @@ void test_valist_stream() {
     _test_case.assert(bs == "hello world", __FUNCTION__, "sprintf #6");
 }
 
+void test_valist_formatstring() {
+    _test_case.begin("valist");
+
+    struct testvector {
+        const char* fmt;
+        const char* expect;
+    } table[] = {
+        {R"(value={1}, value={1:04x}, value={1:04d})", R"(value=256, value=0x0100, value=0256)"},
+        {R"(value="{2}", value="{2:-15s}", value="{2:15s}")", R"(value="hello world", value="hello world    ", value="    hello world")"},
+        {R"(value={3}, value={3:le}, value={3:lg})", R"(value=3.141592, value=3.141592e+00, value=3.14159)"},
+        /**
+         * {n} n must be in 1..arg so {-1} is ignored
+         * {2} is a string so 10d is ignored
+         * {3} is an integer so s is ignored.
+         */
+        {R"(value={-1}, value="{2:10d}", value={3:s})", R"(value={-1}, value="hello world", value=3.141592)"},
+    };
+
+    basic_stream bs;
+    valist va;
+    va << 256 << "hello world" << 3.141592;
+
+    auto lambda_test = [&](const char* fmt, const char* expect) -> void {
+        bs.clear();
+        sprintf(&bs, fmt, va);
+        _logger->writeln(bs);
+        _test_case.assert(bs == expect, __FUNCTION__, "expect %s", expect);
+    };
+
+    for (auto item : table) {
+        lambda_test(item.fmt, item.expect);
+    }
+}
+
 void testcase_valist() {
     test_valist_sprintf();
     test_valist_cpp14();
     test_valist_stream();
+    test_valist_formatstring();
 }

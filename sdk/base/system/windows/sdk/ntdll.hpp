@@ -24,7 +24,7 @@ typedef LONG NTSTATUS;
     [NtQueryInformationProcess may be altered or unavailable in future versions of Windows. Applications should use the alternate functions listed in this
    topic.] Retrieves information about the specified process.
  */
-typedef NTSTATUS(__stdcall *NTQUERYINFORMATIONPROCESS)(HANDLE, UINT, PVOID, ULONG, PULONG);
+typedef NTSTATUS(__stdcall* NTQUERYINFORMATIONPROCESS)(HANDLE, UINT, PVOID, ULONG, PULONG);
 
 /* "VerSetConditionMask" */
 #define DECLARE_NAMEOF_API_VERSETCONDITIONMASK                                                            \
@@ -36,7 +36,7 @@ typedef NTSTATUS(__stdcall *NTQUERYINFORMATIONPROCESS)(HANDLE, UINT, PVOID, ULON
     Sets the bits of a 64-bit value to indicate the comparison operator to use for a specified operating system version attribute.
     This function is used to build the dwlConditionMask parameter of the VerifyVersionInfo function.
  */
-typedef ULONGLONG(__stdcall *VERSETCONDITIONMASK)(ULONGLONG, ULONG, UCHAR);
+typedef ULONGLONG(__stdcall* VERSETCONDITIONMASK)(ULONGLONG, ULONG, UCHAR);
 
 /* "NtSetInformationThread" */
 #define DECLARE_NAMEOF_API_NTSETINFORMATIONTHREAD                                                                        \
@@ -44,7 +44,7 @@ typedef ULONGLONG(__stdcall *VERSETCONDITIONMASK)(ULONGLONG, ULONG, UCHAR);
         'N', 't', 'S', 'e', 't', 'I', 'n', 'f', 'o', 'r', 'm', 'a', 't', 'i', 'o', 'n', 'T', 'h', 'r', 'e', 'a', 'd', 0, \
     };
 
-typedef NTSTATUS(__stdcall *NTSETINFORMATIONTHREAD)(HANDLE, UINT, PVOID, ULONG);
+typedef NTSTATUS(__stdcall* NTSETINFORMATIONTHREAD)(HANDLE, UINT, PVOID, ULONG);
 
 typedef enum _SECTION_INHERIT { ViewShare = 1, ViewUnmap = 2 } SECTION_INHERIT;
 
@@ -71,7 +71,7 @@ typedef struct _UNICODE_STRING {
     USHORT Length;
     USHORT MaximumLength;
 #ifdef MIDL_PASS
-    [ size_is(MaximumLength / 2), length_is((Length) / 2) ] USHORT *Buffer;
+    [ size_is(MaximumLength / 2), length_is((Length) / 2) ] USHORT* Buffer;
 #else   // MIDL_PASS
     PWSTR Buffer;
 #endif  // MIDL_PASS
@@ -133,21 +133,21 @@ typedef struct _OBJECT_ATTRIBUTES {
     Note
     If the call to this function occurs in user mode, you should use the name "NtUnmapViewOfSection" instead of "ZwUnmapViewOfSection".
  */
-typedef NTSTATUS(__stdcall *NTUNMAPVIEWOFSECTION)(IN HANDLE ProcessHandle, IN PVOID BaseAddress);
+typedef NTSTATUS(__stdcall* NTUNMAPVIEWOFSECTION)(IN HANDLE ProcessHandle, IN PVOID BaseAddress);
 
 /* @brief
     The ZwOpenSection routine opens a handle for an existing section object.
     Note
     If the call to this function occurs in user mode, you should use the name "NtOpenSection" instead of "ZwOpenSection".
  */
-typedef NTSTATUS(__stdcall *NTOPENSECTION)(OUT PHANDLE SectionHandle, IN ACCESS_MASK DesiredAccess, IN POBJECT_ATTRIBUTES ObjectAttributes);
+typedef NTSTATUS(__stdcall* NTOPENSECTION)(OUT PHANDLE SectionHandle, IN ACCESS_MASK DesiredAccess, IN POBJECT_ATTRIBUTES ObjectAttributes);
 
 /* @brief
     The ZwMapViewOfSection routine maps a view of a section into the virtual address space of a subject process.
     Note
     If the call to this function occurs in user mode, you should use the name "NtMapViewOfSection" instead of "ZwMapViewOfSection".
  */
-typedef NTSTATUS(__stdcall *NTMAPVIEWOFSECTION)(IN HANDLE SectionHandle, IN HANDLE ProcessHandle, IN OUT PVOID *BaseAddress, IN ULONG ZeroBits, IN ULONG CommitSize,
+typedef NTSTATUS(__stdcall* NTMAPVIEWOFSECTION)(IN HANDLE SectionHandle, IN HANDLE ProcessHandle, IN OUT PVOID* BaseAddress, IN ULONG ZeroBits, IN ULONG CommitSize,
                                                 IN OUT PLARGE_INTEGER SectionOffset, IN OUT PULONG ViewSize, IN SECTION_INHERIT InheritDisposition,
                                                 IN ULONG AllocationType, IN ULONG Protect);
 
@@ -155,12 +155,12 @@ typedef NTSTATUS(__stdcall *NTMAPVIEWOFSECTION)(IN HANDLE SectionHandle, IN HAND
     The RtlInitUnicodeString routine is obsolete and is exported only to support existing driver binaries.
     Drivers should use the safe-string routines RtlUnicodeStringInit and RtlUnicodeStringInitEx instead.
  */
-typedef VOID(__stdcall *RTLINITUNICODESTRING)(IN OUT PUNICODE_STRING DestinationString, IN PCWSTR SourceString);
+typedef VOID(__stdcall* RTLINITUNICODESTRING)(IN OUT PUNICODE_STRING DestinationString, IN PCWSTR SourceString);
 
 /* @brief
     Converts the specified NTSTATUS code to its equivalent system error code.
  */
-typedef ULONG(__stdcall *RTLNTSTATUSTODOSERROR)(IN NTSTATUS Status);
+typedef ULONG(__stdcall* RTLNTSTATUSTODOSERROR)(IN NTSTATUS Status);
 
 /* "NtQuerySystemInformation" */
 #define DECLARE_NAMEOF_API_NTQUERYSYSTEMINFORMATION                                                                                \
@@ -182,18 +182,18 @@ typedef ULONG(__stdcall *RTLNTSTATUSTODOSERROR)(IN NTSTATUS Status);
     [NtQuerySystemInformation may be altered or unavailable in future versions of Windows. Applications should use the alternate functions listed in this
    topic.] Retrieves the specified system information.
  */
-typedef NTSTATUS(__stdcall *NTQUERYSYSTEMINFORMATION)(ULONG SystemInformationClass, PVOID SystemInformation, ULONG SystemInformationLength, PULONG ReturnLength);
+typedef NTSTATUS(__stdcall* NTQUERYSYSTEMINFORMATION)(ULONG SystemInformationClass, PVOID SystemInformation, ULONG SystemInformationLength, PULONG ReturnLength);
 /* @brief
     The ZwDuplicateObject routine creates a handle that is a duplicate of the specified source handle.
     If the call to this function occurs in user mode, you should use the name "NtDuplicateObject" instead of "ZwDuplicateObject".
  */
-typedef NTSTATUS(__stdcall *NTDUPLICATEOBJECT)(HANDLE SourceProcessHandle, HANDLE SourceHandle, HANDLE TargetProcessHandle, PHANDLE TargetHandle,
+typedef NTSTATUS(__stdcall* NTDUPLICATEOBJECT)(HANDLE SourceProcessHandle, HANDLE SourceHandle, HANDLE TargetProcessHandle, PHANDLE TargetHandle,
                                                ACCESS_MASK DesiredAccess, ULONG Attributes, ULONG Options);
 /* @brief
     The ZwQueryObject routine provides information about a supplied object.
     If the call to the ZwQueryObject function occurs in user mode, you should use the name "NtQueryObject" instead of "ZwQueryObject".
  */
-typedef NTSTATUS(__stdcall *NTQUERYOBJECT)(HANDLE ObjectHandle, ULONG ObjectInformationClass, PVOID ObjectInformation, ULONG ObjectInformationLength,
+typedef NTSTATUS(__stdcall* NTQUERYOBJECT)(HANDLE ObjectHandle, ULONG ObjectInformationClass, PVOID ObjectInformation, ULONG ObjectInformationLength,
                                            PULONG ReturnLength);
 
 #endif

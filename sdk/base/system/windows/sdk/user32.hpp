@@ -20,7 +20,7 @@
 /* @brief
     Determines whether the last message read from the current thread's queue originated from a WOW64 process.
  */
-typedef BOOL(__stdcall *ISWOW64MESSAGE)(void);
+typedef BOOL(__stdcall* ISWOW64MESSAGE)(void);
 
 /* "LockWorkStation" */
 #define DECLARE_NAMEOF_API_LOCKWORKSTATION                                            \
@@ -31,7 +31,7 @@ typedef BOOL(__stdcall *ISWOW64MESSAGE)(void);
 /* @brief
     Locks the workstation's display. Locking a workstation protects it from unauthorized use.
  */
-typedef BOOL(__stdcall *LOCKWORKSTATION)(void);
+typedef BOOL(__stdcall* LOCKWORKSTATION)(void);
 
 #if defined _MBCS || defined MBCS
 #define DECLARE_NAMEOF_API_REGISTERDEVICENOTIFICATION DECLARE_NAMEOF_API_REGISTERDEVICENOTIFICATIONA
@@ -62,10 +62,10 @@ typedef BOOL(__stdcall *LOCKWORKSTATION)(void);
 /* @brief
     Registers the device or type of device for which a window will receive notifications.
  */
-typedef HDEVNOTIFY(__stdcall *REGISTERDEVICENOTIFICATION)(HANDLE hRecipient, LPVOID NotificationFilter, DWORD Flags);
+typedef HDEVNOTIFY(__stdcall* REGISTERDEVICENOTIFICATION)(HANDLE hRecipient, LPVOID NotificationFilter, DWORD Flags);
 /* @brief
     Closes the specified device notification handle.
  */
-typedef BOOL(__stdcall *UNREGISTERDEVICENOTIFICATION)(HDEVNOTIFY Handle);
+typedef BOOL(__stdcall* UNREGISTERDEVICENOTIFICATION)(HDEVNOTIFY Handle);
 
 #endif

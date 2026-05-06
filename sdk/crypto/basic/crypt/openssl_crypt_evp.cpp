@@ -20,13 +20,13 @@
 namespace hotplace {
 namespace crypto {
 
-return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const binary_t &plaintext, binary_t &ciphertext, crypt_enc_t mode) {
+return_t openssl_crypt::encrypt(const EVP_PKEY* pkey, const binary_t& plaintext, binary_t& ciphertext, crypt_enc_t mode) {
     return encrypt(pkey, plaintext.data(), plaintext.size(), ciphertext, mode);
 }
 
-return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const byte_t *stream, size_t size, binary_t &ciphertext, crypt_enc_t mode) {
+return_t openssl_crypt::encrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& ciphertext, crypt_enc_t mode) {
     return_t ret = errorcode_t::success;
-    crypto_advisor *advisor = crypto_advisor::get_instance();
+    crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
         int ret_openssl = 1;
@@ -38,7 +38,7 @@ return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const byte_t *stream, size
             __leave2;
         }
 
-        EVP_PKEY_CTX_ptr pkey_context(EVP_PKEY_CTX_new((EVP_PKEY *)pkey, nullptr));
+        EVP_PKEY_CTX_ptr pkey_context(EVP_PKEY_CTX_new((EVP_PKEY*)pkey, nullptr));
 
         if (nullptr == pkey_context.get()) {
             ret = errorcode_t::internal_error;
@@ -60,7 +60,7 @@ return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const byte_t *stream, size
                 case crypt_enc_t::rsa_oaep512: {
                     // OAEP
                     hash_algorithm_t alg = hash_algorithm_t::sha1;
-                    const EVP_MD *md = nullptr;
+                    const EVP_MD* md = nullptr;
 
                     switch (mode) {
                         case crypt_enc_t::rsa_oaep:
@@ -115,13 +115,13 @@ return_t openssl_crypt::encrypt(const EVP_PKEY *pkey, const byte_t *stream, size
     return ret;
 }
 
-return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const binary_t &ciphertext, binary_t &plaintext, crypt_enc_t mode) {
+return_t openssl_crypt::decrypt(const EVP_PKEY* pkey, const binary_t& ciphertext, binary_t& plaintext, crypt_enc_t mode) {
     return decrypt(pkey, ciphertext.data(), ciphertext.size(), plaintext, mode);
 }
 
-return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const byte_t *stream, size_t size, binary_t &plaintext, crypt_enc_t mode) {
+return_t openssl_crypt::decrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& plaintext, crypt_enc_t mode) {
     return_t ret = errorcode_t::success;
-    crypto_advisor *advisor = crypto_advisor::get_instance();
+    crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
         int ret_openssl = 1;
@@ -140,7 +140,7 @@ return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const byte_t *stream, size
             __leave2;
         }
 
-        EVP_PKEY_CTX_ptr pkey_context(EVP_PKEY_CTX_new((EVP_PKEY *)pkey, nullptr));
+        EVP_PKEY_CTX_ptr pkey_context(EVP_PKEY_CTX_new((EVP_PKEY*)pkey, nullptr));
 
         if (nullptr == pkey_context.get()) {
             ret = errorcode_t::internal_error;
@@ -161,7 +161,7 @@ return_t openssl_crypt::decrypt(const EVP_PKEY *pkey, const byte_t *stream, size
                 case crypt_enc_t::rsa_oaep512: {
                     // OAEP
                     hash_algorithm_t alg = hash_algorithm_t::sha1;
-                    const EVP_MD *md = nullptr;
+                    const EVP_MD* md = nullptr;
 
                     switch (mode) {
                         case crypt_enc_t::rsa_oaep:

@@ -46,7 +46,7 @@ class t_stringkey_value {
      */
     t_stringkey_value(uint32 flags = key_value_flag_t::key_value_case_sensitive) : _flags(flags), _order(0) {}
 
-    t_stringkey_value(const t_stringkey_value &object) {
+    t_stringkey_value(const t_stringkey_value& object) {
         _keyvalues = object._keyvalues;
         _order_map = object._order_map;
         _reverse_order_map = object._reverse_order_map;
@@ -62,7 +62,7 @@ class t_stringkey_value {
      * @brief set
      * @param uint32 flags [in]
      */
-    t_stringkey_value &set(uint32 flags) {
+    t_stringkey_value& set(uint32 flags) {
         _flags = flags;
         return *this;
     }
@@ -78,7 +78,7 @@ class t_stringkey_value {
      *          set (key1, value2, key_value_mode_t::kv_keep); // return errorcode_t::already_exist
      *          set (key1, value2, key_value_mode_t::kv_update); // kv_update, return errorcode_t::success
      */
-    return_t set(const std::string &name, const TYPE &value, int mode = key_value_mode_t::kv_update) {
+    return_t set(const std::string& name, const TYPE& value, int mode = key_value_mode_t::kv_update) {
         return_t ret = errorcode_t::success;
 
         __try2 {
@@ -113,13 +113,13 @@ class t_stringkey_value {
      * @remarks
      *          set(name, value, key_value_mode_t::kv_update);
      */
-    return_t update(const std::string &name, const TYPE &value) { return set(name, value, key_value_mode_t::kv_update); }
+    return_t update(const std::string& name, const TYPE& value) { return set(name, value, key_value_mode_t::kv_update); }
     /**
      * @brief   remove
      * @param   const std::string&  name    [IN]
      * @return  error code (see error.hpp)
      */
-    return_t remove(const std::string &name) {
+    return_t remove(const std::string& name) {
         return_t ret = errorcode_t::success;
 
         __try2 {
@@ -166,7 +166,7 @@ class t_stringkey_value {
      *          result = exist ("key"); // true
      *          result = exist ("value"); // false
      */
-    bool exist(const std::string &name) {
+    bool exist(const std::string& name) {
         bool ret_value = false;
 
         __try2 {
@@ -192,7 +192,7 @@ class t_stringkey_value {
      *          value = kv ["key"]; // "value"
      *          value = kv ["value"]; // nullptr
      */
-    TYPE operator[](const std::string &name) {
+    TYPE operator[](const std::string& name) {
         TYPE ret_value = TYPE();
 
         __try2 {
@@ -220,7 +220,7 @@ class t_stringkey_value {
      *          kv.query ("key", value); // "value"
      *          kv.query ("value", value); // ""
      */
-    return_t query(const std::string &name, TYPE &value) {
+    return_t query(const std::string& name, TYPE& value) {
         return_t ret = errorcode_t::success;
 
         __try2 {
@@ -240,7 +240,7 @@ class t_stringkey_value {
         __finally2 {}
         return ret;
     }
-    TYPE get(const std::string &name) {
+    TYPE get(const std::string& name) {
         TYPE ret_value = TYPE();
         query(name, ret_value);
         return ret_value;
@@ -259,11 +259,11 @@ class t_stringkey_value {
      *          result of kv1.copy (kv2, key_value_mode_t::kv_update) is kv1 [ ("key1", "value1"), ("key2", "item2"), ("key3", "item3") ]
      *          result of kv1.copy (kv2, key_value_mode_t::kv_keep)   is kv1 [ ("key1", "value1"), ("key2", "value2"), ("key3", "item3") ]
      */
-    return_t copy(t_stringkey_value &other, int mode = key_value_mode_t::kv_update) {
+    return_t copy(t_stringkey_value& other, int mode = key_value_mode_t::kv_update) {
         return_t ret = errorcode_t::success;
 
         critical_section_guard guard(other._lock);
-        keyvalue_map_t &source = other._keyvalues;
+        keyvalue_map_t& source = other._keyvalues;
 
         ret = copyfrom(source, mode);
         return ret;
@@ -274,7 +274,7 @@ class t_stringkey_value {
      * @return  error code (see error.hpp)
      * @sa      copy
      */
-    return_t copyfrom(const std::map<std::string, TYPE> &source, int mode) {
+    return_t copyfrom(const std::map<std::string, TYPE>& source, int mode) {
         return_t ret = errorcode_t::success;
 
         critical_section_guard guard(_lock);
@@ -283,13 +283,13 @@ class t_stringkey_value {
             clear();
         }
 
-        for (const auto &pair : source) {
+        for (const auto& pair : source) {
             set(pair.first, pair.second, mode);
         }
 
         return ret;
     }
-    return_t copyto(std::map<std::string, TYPE> &target) {
+    return_t copyto(std::map<std::string, TYPE>& target) {
         return_t ret = errorcode_t::success;
 
         critical_section_guard guard(_lock);
@@ -302,15 +302,15 @@ class t_stringkey_value {
      * @param   std::function<void(const std::string&, const std::string&, void*)> func [in]
      * @param   void* param [inopt]
      */
-    void foreach (std::function<void(const std::string &, const TYPE &, void *)> func, void *param = nullptr) {
+    void foreach (std::function<void(const std::string&, const TYPE&, void*)> func, void* param = nullptr) {
         critical_section_guard guard(_lock);
-        for (const auto &pair : _order_map) {
+        for (const auto& pair : _order_map) {
             typename keyvalue_map_t::iterator iter = _keyvalues.find(pair.second);
             func(iter->first, iter->second, param);
         }
     }
 
-    t_stringkey_value &operator=(const t_stringkey_value &object) {
+    t_stringkey_value& operator=(const t_stringkey_value& object) {
         _keyvalues = object._keyvalues;
         _order_map = object._order_map;
         _reverse_order_map = object._reverse_order_map;
@@ -325,7 +325,7 @@ class t_stringkey_value {
      * @return  t_stringkey_value&
      * @remarks copy with key_value_mode_t::kv_update
      */
-    t_stringkey_value &operator<<(t_stringkey_value &other) {
+    t_stringkey_value& operator<<(t_stringkey_value& other) {
         copy(other, key_value_mode_t::kv_update);
         return *this;
     }
@@ -362,9 +362,9 @@ class t_key_value {
     typedef std::pair<typename keyvalue_map_t::iterator, bool> keyvalue_map_pib_t;
 
     t_key_value() {}
-    t_key_value(const t_key_value &other) { _keyvalue_map = other._keyvalue_map; }
+    t_key_value(const t_key_value& other) { _keyvalue_map = other._keyvalue_map; }
 
-    t_key_value &set(KET key, const TYPE &value) {
+    t_key_value& set(KET key, const TYPE& value) {
         critical_section_guard guard(_lock);
         keyvalue_map_pib_t pib = _keyvalue_map.insert(std::make_pair(key, value));
         if (false == pib.second) {
@@ -373,7 +373,7 @@ class t_key_value {
 
         return *this;
     }
-    TYPE get(const KET &key, bool get_then_inc = false) {
+    TYPE get(const KET& key, bool get_then_inc = false) {
         critical_section_guard guard(_lock);
         auto value = _keyvalue_map[key];
         if (get_then_inc) {
@@ -381,26 +381,26 @@ class t_key_value {
         }
         return value;
     }
-    TYPE inc(const KET &key) {
+    TYPE inc(const KET& key) {
         critical_section_guard guard(_lock);
         auto value = _keyvalue_map[key];
         _keyvalue_map[key] = ++value;
         return value;
     }
-    void remove(const KET &key) {
+    void remove(const KET& key) {
         critical_section_guard guard(_lock);
         typename keyvalue_map_t::iterator iter = _keyvalue_map.find(key);
         if (_keyvalue_map.end() != iter) {
             _keyvalue_map.erase(iter);
         }
     }
-    t_key_value &operator=(const t_key_value &other) {
+    t_key_value& operator=(const t_key_value& other) {
         critical_section_guard guard(_lock);
         _keyvalue_map.clear();
         _keyvalue_map = other._keyvalue_map;
         return *this;
     }
-    return_t copyfrom(const t_key_value *other) {
+    return_t copyfrom(const t_key_value* other) {
         return_t ret = errorcode_t::success;
         if (nullptr == other) {
             ret = errorcode_t::invalid_parameter;

@@ -21,17 +21,17 @@ namespace io {
 typedef struct _multiplexer_iocp_context_t : public multiplexer_context_t {
     uint32 signature;
     HANDLE handle_iocp;
-    multiplexer_controller_context_t *handle_controller;
+    multiplexer_controller_context_t* handle_controller;
 } multiplexer_iocp_context_t;
 
 multiplexer_iocp::multiplexer_iocp() {}
 
 multiplexer_iocp::~multiplexer_iocp() {}
 
-return_t multiplexer_iocp::open(multiplexer_context_t **handle, size_t concurrent) {
+return_t multiplexer_iocp::open(multiplexer_context_t** handle, size_t concurrent) {
     return_t ret = errorcode_t::success;
     HANDLE handle_iocp = nullptr;
-    multiplexer_controller_context_t *handle_controller = nullptr;
+    multiplexer_controller_context_t* handle_controller = nullptr;
     multiplexer_controller controller;
 
     __try2 {
@@ -59,7 +59,7 @@ return_t multiplexer_iocp::open(multiplexer_context_t **handle, size_t concurren
 
 #if defined DEBUG
         if (istraceable(trace_category_internal)) {
-            trace_debug_event(trace_category_internal, trace_event_multiplexer, [&](basic_stream &dbs) -> void { dbs.println("iocp handle %08x created", handle_iocp); });
+            trace_debug_event(trace_category_internal, trace_event_multiplexer, [&](basic_stream& dbs) -> void { dbs.println("iocp handle %08x created", handle_iocp); });
         }
 #endif
     }
@@ -68,9 +68,9 @@ return_t multiplexer_iocp::open(multiplexer_context_t **handle, size_t concurren
     return ret;
 }
 
-return_t multiplexer_iocp::close(multiplexer_context_t *handle) {
+return_t multiplexer_iocp::close(multiplexer_context_t* handle) {
     return_t ret = errorcode_t::success;
-    multiplexer_iocp_context_t *context = (multiplexer_iocp_context_t *)handle;
+    multiplexer_iocp_context_t* context = (multiplexer_iocp_context_t*)handle;
     multiplexer_controller controller;
 
     __try2 {
@@ -96,9 +96,9 @@ return_t multiplexer_iocp::close(multiplexer_context_t *handle) {
     return ret;
 }
 
-return_t multiplexer_iocp::bind(multiplexer_context_t *handle, handle_t eventsource, void *data) {
+return_t multiplexer_iocp::bind(multiplexer_context_t* handle, handle_t eventsource, void* data) {
     return_t ret = errorcode_t::success;
-    multiplexer_iocp_context_t *context = (multiplexer_iocp_context_t *)handle;
+    multiplexer_iocp_context_t* context = (multiplexer_iocp_context_t*)handle;
 
     __try2 {
         if (nullptr == handle) {
@@ -123,7 +123,7 @@ return_t multiplexer_iocp::bind(multiplexer_context_t *handle, handle_t eventsou
 #if defined DEBUG
         if (istraceable(trace_category_internal)) {
             trace_debug_event(trace_category_internal, trace_event_multiplexer,
-                              [&](basic_stream &dbs) -> void { dbs.println("iocp handle %08x bind %i", context->handle_iocp, eventsource); });
+                              [&](basic_stream& dbs) -> void { dbs.println("iocp handle %08x bind %i", context->handle_iocp, eventsource); });
         }
 #endif
     }
@@ -131,15 +131,15 @@ return_t multiplexer_iocp::bind(multiplexer_context_t *handle, handle_t eventsou
     return ret;
 }
 
-return_t multiplexer_iocp::unbind(multiplexer_context_t *handle, handle_t eventsource, void *data) {
+return_t multiplexer_iocp::unbind(multiplexer_context_t* handle, handle_t eventsource, void* data) {
     return_t ret = errorcode_t::success;
 
     return ret;
 }
 
-return_t multiplexer_iocp::event_loop_run(multiplexer_context_t *handle, handle_t listenfd, TYPE_CALLBACK_HANDLEREXV event_callback_routine, void *parameter) {
+return_t multiplexer_iocp::event_loop_run(multiplexer_context_t* handle, handle_t listenfd, TYPE_CALLBACK_HANDLEREXV event_callback_routine, void* parameter) {
     return_t ret = errorcode_t::success;
-    multiplexer_iocp_context_t *context = (multiplexer_iocp_context_t *)handle;
+    multiplexer_iocp_context_t* context = (multiplexer_iocp_context_t*)handle;
     UINT_PTR token_handle = 0;
     multiplexer_controller controller;
 
@@ -190,11 +190,11 @@ return_t multiplexer_iocp::event_loop_run(multiplexer_context_t *handle, handle_
                 break;
             }
 
-            void *data_vector[4] = {nullptr};
-            data_vector[0] = (void *)handle;
-            data_vector[1] = (void *)(arch_t)size_transfered;
-            data_vector[2] = (void *)completion_key;
-            data_vector[3] = (void *)overlapped;
+            void* data_vector[4] = {nullptr};
+            data_vector[0] = (void*)handle;
+            data_vector[1] = (void*)(arch_t)size_transfered;
+            data_vector[2] = (void*)completion_key;
+            data_vector[3] = (void*)overlapped;
 
             DWORD type = 0;
             if (0 == size_transfered) {
@@ -212,9 +212,9 @@ return_t multiplexer_iocp::event_loop_run(multiplexer_context_t *handle, handle_
     return ret;
 }
 
-return_t multiplexer_iocp::event_loop_break(multiplexer_context_t *handle, arch_t *token_handle) {
+return_t multiplexer_iocp::event_loop_break(multiplexer_context_t* handle, arch_t* token_handle) {
     return_t ret = errorcode_t::success;
-    multiplexer_iocp_context_t *context = (multiplexer_iocp_context_t *)handle;
+    multiplexer_iocp_context_t* context = (multiplexer_iocp_context_t*)handle;
     multiplexer_controller controller;
 
     __try2 {
@@ -234,9 +234,9 @@ return_t multiplexer_iocp::event_loop_break(multiplexer_context_t *handle, arch_
     return ret;
 }
 
-return_t multiplexer_iocp::event_loop_break_concurrent(multiplexer_context_t *handle, size_t concurrent) {
+return_t multiplexer_iocp::event_loop_break_concurrent(multiplexer_context_t* handle, size_t concurrent) {
     return_t ret = errorcode_t::success;
-    multiplexer_iocp_context_t *context = (multiplexer_iocp_context_t *)handle;
+    multiplexer_iocp_context_t* context = (multiplexer_iocp_context_t*)handle;
     multiplexer_controller controller;
 
     __try2 {
@@ -257,10 +257,10 @@ return_t multiplexer_iocp::event_loop_break_concurrent(multiplexer_context_t *ha
     return ret;
 }
 
-return_t multiplexer_iocp::post(multiplexer_context_t *handle, uint32 size_vecotor, void *data_vector[]) {
+return_t multiplexer_iocp::post(multiplexer_context_t* handle, uint32 size_vecotor, void* data_vector[]) {
     return_t ret = errorcode_t::success;
 
-    multiplexer_iocp_context_t *context = (multiplexer_iocp_context_t *)handle;
+    multiplexer_iocp_context_t* context = (multiplexer_iocp_context_t*)handle;
 
     __try2 {
         if (nullptr == handle) {
@@ -278,7 +278,7 @@ return_t multiplexer_iocp::post(multiplexer_context_t *handle, uint32 size_vecot
     return ret;
 }
 
-return_t multiplexer_iocp::setoption(multiplexer_context_t *handle, arch_t optionvalue, size_t size_optionvalue) {
+return_t multiplexer_iocp::setoption(multiplexer_context_t* handle, arch_t optionvalue, size_t size_optionvalue) {
     UNREFERENCED_PARAMETER(handle);
     UNREFERENCED_PARAMETER(optionvalue);
     UNREFERENCED_PARAMETER(size_optionvalue);

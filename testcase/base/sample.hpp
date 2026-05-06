@@ -53,6 +53,7 @@ void testcase_aho_corasick();
 void testcase_aho_corasick_wildcard();
 void testcase_kmp();
 void testcase_suffixtree();
+void testcase_testvector_regex();
 void testcase_trie();
 void testcase_ukkonen();
 void testcase_wildcard();
@@ -61,7 +62,6 @@ void testcase_bufferio();
 void testcase_stream();
 
 void testcase_string();
-void testcase_testvector_regex();
 
 void testcase_bignumber();
 void testcase_testvector_bignumber();

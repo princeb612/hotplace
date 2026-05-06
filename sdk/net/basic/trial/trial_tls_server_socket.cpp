@@ -26,7 +26,7 @@ trial_tls_server_socket::trial_tls_server_socket(tls_version_t minspec, tls_vers
 
 trial_tls_server_socket::~trial_tls_server_socket() {}
 
-return_t trial_tls_server_socket::tls_accept(socket_context_t **handle, socket_t cli_socket) {
+return_t trial_tls_server_socket::tls_accept(socket_context_t** handle, socket_t cli_socket) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = new tls_session(session_type_tls);
@@ -40,20 +40,20 @@ return_t trial_tls_server_socket::tls_accept(socket_context_t **handle, socket_t
         composer->set_maxver(_maxspec);
 
         {
-            auto lambda_send = [&](tls_session *sess, binary_t &bin) -> void {
-                socket_context_t *ctx = (socket_context_t *)(sess->get_hook_param());
+            auto lambda_send = [&](tls_session* sess, binary_t& bin) -> void {
+                socket_context_t* ctx = (socket_context_t*)(sess->get_hook_param());
 #if defined DEBUG
                 if (istraceable(trace_category_net, loglevel_debug)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream &dbs) -> void {
+                    trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                         dbs.println("send %p %i", ctx, ctx->fd);
                         dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
                     });
                 }
 #endif
                 size_t sent = 0;
-                naive_tcp_server_socket::send(ctx, (char *)bin.data(), bin.size(), &sent);
+                naive_tcp_server_socket::send(ctx, (char*)bin.data(), bin.size(), &sent);
             };
-            auto lambda = [&](tls_session *sess, uint32 status) -> void { sess->get_tls_composer()->session_status_changed(status, from_server, 1000, lambda_send); };
+            auto lambda = [&](tls_session* sess, uint32 status) -> void { sess->get_tls_composer()->session_status_changed(status, from_server, 1000, lambda_send); };
 
             session->set_hook_change_session_status(lambda);
             session->set_hook_param(context);
@@ -70,7 +70,7 @@ return_t trial_tls_server_socket::tls_stop_accept() {
     return ret;
 }
 
-return_t trial_tls_server_socket::read(socket_context_t *handle, int mode, char *ptr_data, size_t size_data, size_t *cbread) {
+return_t trial_tls_server_socket::read(socket_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == handle || nullptr == ptr_data) {
@@ -102,7 +102,7 @@ return_t trial_tls_server_socket::read(socket_context_t *handle, int mode, char 
 #endif
         if (read_bio_write & mode) {
             // iocp & epoll, handshake, alert
-            ret = session->get_secure_prosumer()->produce(session, from_client, (byte_t *)ptr_data, ptr_size);
+            ret = session->get_secure_prosumer()->produce(session, from_client, (byte_t*)ptr_data, ptr_size);
         }
         if (read_ssl_read & mode) {
             // iocp & epoll, application_data
@@ -113,7 +113,7 @@ return_t trial_tls_server_socket::read(socket_context_t *handle, int mode, char 
     return ret;
 }
 
-return_t trial_tls_server_socket::send(socket_context_t *handle, const char *ptr_data, size_t size_data, size_t *cbsent) {
+return_t trial_tls_server_socket::send(socket_context_t* handle, const char* ptr_data, size_t size_data, size_t* cbsent) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == handle) {
@@ -126,11 +126,11 @@ return_t trial_tls_server_socket::send(socket_context_t *handle, const char *ptr
         binary_t bin;
         tls_direction_t dir = from_server;
         tls_record_application_data record(session);
-        record.get_records().add(new tls_record_application_data(session, (byte_t *)ptr_data, size_data));
+        record.get_records().add(new tls_record_application_data(session, (byte_t*)ptr_data, size_data));
         record.write(dir, bin);
 
         size_t sent = 0;
-        naive_tcp_server_socket::send(handle, (char *)bin.data(), bin.size(), &sent);
+        naive_tcp_server_socket::send(handle, (char*)bin.data(), bin.size(), &sent);
     }
     __finally2 {}
     return ret;

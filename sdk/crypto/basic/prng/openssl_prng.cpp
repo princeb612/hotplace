@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 
 namespace hotplace {

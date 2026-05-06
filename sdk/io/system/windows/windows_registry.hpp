@@ -67,9 +67,9 @@ class windows_registry {
      * @sa
      * @remarks
      */
-    return_t create_key(PHKEY pkey, HKEY hrootkey, const char *sub_key, REGSAM regsam = KEY_CREATE_SUB_KEY, DWORD option = REG_OPTION_NON_VOLATILE,
+    return_t create_key(PHKEY pkey, HKEY hrootkey, const char* sub_key, REGSAM regsam = KEY_CREATE_SUB_KEY, DWORD option = REG_OPTION_NON_VOLATILE,
                         LPSECURITY_ATTRIBUTES attrib = nullptr);
-    return_t create_key(PHKEY pkey, HKEY hrootkey, const wchar_t *sub_key, REGSAM regsam = KEY_CREATE_SUB_KEY, DWORD option = REG_OPTION_NON_VOLATILE,
+    return_t create_key(PHKEY pkey, HKEY hrootkey, const wchar_t* sub_key, REGSAM regsam = KEY_CREATE_SUB_KEY, DWORD option = REG_OPTION_NON_VOLATILE,
                         LPSECURITY_ATTRIBUTES attrib = nullptr);
     /**
      * @brief   OpenKey
@@ -81,8 +81,8 @@ class windows_registry {
      * @sa
      * @remarks
      */
-    return_t open_key(PHKEY pkey, HKEY hrootkey, const char *sub_key, REGSAM regsam = KEY_READ);
-    return_t open_key(PHKEY pkey, HKEY hrootkey, const wchar_t *sub_key, REGSAM regsam = KEY_READ);
+    return_t open_key(PHKEY pkey, HKEY hrootkey, const char* sub_key, REGSAM regsam = KEY_READ);
+    return_t open_key(PHKEY pkey, HKEY hrootkey, const wchar_t* sub_key, REGSAM regsam = KEY_READ);
     /**
      * @brief   CloseKey
      * @param   HKEY                    hkey                [IN] key
@@ -108,8 +108,8 @@ class windows_registry {
      *          ret = reg.open_key(&hkey, HKEY_LOCAL_MACHINE, REGPATH_SOFTWARE, KEY_ENUMERATE_SUB_KEYS|KEY_QUERY_VALUE);
      *          reg.enumerate_subkeys(hkey, enum_subkeys_handler, nullptr);
      */
-    return_t enumerate_subkeys(HKEY hkey, ENUM_CALLBACK_HANDLERA callback_handler, void *param);
-    return_t enumerate_subkeys(HKEY hkey, ENUM_CALLBACK_HANDLERW callback_handler, void *param);
+    return_t enumerate_subkeys(HKEY hkey, ENUM_CALLBACK_HANDLERA callback_handler, void* param);
+    return_t enumerate_subkeys(HKEY hkey, ENUM_CALLBACK_HANDLERW callback_handler, void* param);
 
     /**
      * @brief   enum
@@ -130,8 +130,8 @@ class windows_registry {
      *          }
      *          reg.enumerate_values(hkey, enum_values_handler, nullptr);
      */
-    return_t enumerate_values(HKEY hkey, ENUM_CALLBACK_HANDLERA callback_handler, void *param);
-    return_t enumerate_values(HKEY hkey, ENUM_CALLBACK_HANDLERW callback_handler, void *param);
+    return_t enumerate_values(HKEY hkey, ENUM_CALLBACK_HANDLERA callback_handler, void* param);
+    return_t enumerate_values(HKEY hkey, ENUM_CALLBACK_HANDLERW callback_handler, void* param);
 
     /**
      * @brief   RegSetValueEx
@@ -142,8 +142,8 @@ class windows_registry {
      * @sa
      * @remarks
      */
-    return_t set_string(HKEY hkey, const char *value, const char *data);
-    return_t set_string(HKEY hkey, const wchar_t *value, const wchar_t *data);
+    return_t set_string(HKEY hkey, const char* value, const char* data);
+    return_t set_string(HKEY hkey, const wchar_t* value, const wchar_t* data);
     /**
      * @brief   RegSetValueEx
      * @param   HKEY                    hkey        [IN] key
@@ -155,8 +155,8 @@ class windows_registry {
      * @sa
      * @remarks
      */
-    return_t set_value(HKEY hkey, const char *value, DWORD type, void *data, DWORD size);
-    return_t set_value(HKEY hkey, const wchar_t *value, DWORD type, void *data, DWORD size);
+    return_t set_value(HKEY hkey, const char* value, DWORD type, void* data, DWORD size);
+    return_t set_value(HKEY hkey, const wchar_t* value, DWORD type, void* data, DWORD size);
     /**
      * @brief   RegQueryValueEx
      * @param   HKEY                    hkey        [IN] key
@@ -172,8 +172,8 @@ class windows_registry {
      *          DWORD size = sizeof(data); // cb size
      *          reg.query_value(hkey, value, &type, data, &data);
      */
-    return_t query_value(HKEY hkey, const char *value, LPDWORD type_ptr, void *data, LPDWORD data_ptr);
-    return_t query_value(HKEY hkey, const wchar_t *value, LPDWORD type_ptr, void *data, LPDWORD data_ptr);
+    return_t query_value(HKEY hkey, const char* value, LPDWORD type_ptr, void* data, LPDWORD data_ptr);
+    return_t query_value(HKEY hkey, const wchar_t* value, LPDWORD type_ptr, void* data, LPDWORD data_ptr);
     /**
      * @brief   RegQueryValueEx
      * @param   HKEY                    hkey        [IN] key
@@ -182,8 +182,8 @@ class windows_registry {
      * @sa
      * @remarks
      */
-    return_t delete_value(HKEY hkey, const char *value);
-    return_t delete_value(HKEY hkey, const wchar_t *value);
+    return_t delete_value(HKEY hkey, const char* value);
+    return_t delete_value(HKEY hkey, const wchar_t* value);
     /**
      * @brief
      * @param   HKEY                    hrootkey    [IN] root
@@ -194,16 +194,16 @@ class windows_registry {
      * @sa
      * @remarks
      */
-    return_t delete_key(HKEY hrootkey, const char *sub_key, DWORD option);
-    return_t delete_key(HKEY hrootkey, const wchar_t *sub_key, DWORD option);
+    return_t delete_key(HKEY hrootkey, const char* sub_key, DWORD option);
+    return_t delete_key(HKEY hrootkey, const wchar_t* sub_key, DWORD option);
     /*
      * @brief   delete sub keys
      * @param   HKEY    hrootkey    [IN]
      * @param   LPCTSTR sub_key     [IN]
      * @remarks
      */
-    return_t delete_sub_nodes(HKEY hrootkey, const char *sub_key);
-    return_t delete_sub_nodes(HKEY hrootkey, const wchar_t *sub_key);
+    return_t delete_sub_nodes(HKEY hrootkey, const char* sub_key);
+    return_t delete_sub_nodes(HKEY hrootkey, const wchar_t* sub_key);
 
    protected:
 };

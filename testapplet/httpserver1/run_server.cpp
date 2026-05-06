@@ -15,26 +15,26 @@
 
 #define FILENAME_RUN _T (".run")
 
-void api_response_html_handler(network_session *, http_request *request, http_response *response, http_router *router) {
+void api_response_html_handler(network_session*, http_request* request, http_response* response, http_router* router) {
     response->compose(200, "text/html", "<html><body>page - ok<body></html>");
 }
 
-void api_response_json_handler(network_session *, http_request *request, http_response *response, http_router *router) {
+void api_response_json_handler(network_session*, http_request* request, http_response* response, http_router* router) {
     response->compose(200, "application/json", R"({"result":"ok"})");
 }
 
-return_t consumer_routine(uint32 type, uint32 data_count, void *data_array[], CALLBACK_CONTROL *callback_control, void *user_context) {
+return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CALLBACK_CONTROL* callback_control, void* user_context) {
     return_t ret = errorcode_t::success;
-    netsocket_t *session_socket = (netsocket_t *)data_array[0];
-    char *buf = (char *)data_array[1];
+    netsocket_t* session_socket = (netsocket_t*)data_array[0];
+    char* buf = (char*)data_array[1];
     size_t bufsize = (size_t)data_array[2];
-    network_session *session = (network_session *)data_array[3];
-    http_request *request = (http_request *)data_array[4];
+    network_session* session = (network_session*)data_array[3];
+    http_request* request = (http_request*)data_array[4];
 
     basic_stream bs;
     std::string message;
 
-    const OPTION &option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     switch (type) {
         case mux_connect:
@@ -74,8 +74,8 @@ return_t consumer_routine(uint32 type, uint32 data_count, void *data_array[], CA
                      */
                     if (0) {
                         /* chrome, edge - not support upgrade */
-                        const std::string &connection = request->get_http_header().get("Connection");
-                        const std::string &upgrade = request->get_http_header().get("Upgrade");
+                        const std::string& connection = request->get_http_header().get("Connection");
+                        const std::string& upgrade = request->get_http_header().get("Upgrade");
                         if (("Upgrade" == connection) && (upgrade.find("TLS/1.3"))) {
                             // RFC 2817 3.3 Server Acceptance of Upgrade Request
                             response.compose(101);  // Switching Protocols
@@ -106,18 +106,18 @@ return_t consumer_routine(uint32 type, uint32 data_count, void *data_array[], CA
     return ret;
 }
 
-return_t simple_http_server(void *) {
-    const OPTION &option = _cmdline->value();
+return_t simple_http_server(void*) {
+    const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
 
-    FILE *fp = fopen(FILENAME_RUN, "w");
+    FILE* fp = fopen(FILENAME_RUN, "w");
 
     fclose(fp);
 
     __try2 {
         uint32 scheme = 0;
-        const char *title = nullptr;
+        const char* title = nullptr;
         if (option.flags & option_flag_trial) {
             title = "HTTP/1.1 powered by http_server";
             scheme = socket_scheme_trial;
@@ -141,7 +141,7 @@ return_t simple_http_server(void *) {
 
         _test_case.begin(title);
 
-        server_socket_adapter *adapter = nullptr;
+        server_socket_adapter* adapter = nullptr;
         {
             server_socket_builder builder;
             adapter = builder.set(scheme).build_adapter();
@@ -216,21 +216,21 @@ return_t simple_http_server(void *) {
         endpoint_url << "https://localhost:" << option.port_tls;
         cb_url << endpoint_url << "/client/cb";
 
-        std::function<void(network_session *, http_request *, http_response *, http_router *)> default_handler =
-            [&](network_session *session, http_request *request, http_response *response, http_router *router) -> void {
+        std::function<void(network_session*, http_request*, http_response*, http_router*)> default_handler = [&](network_session* session, http_request* request,
+                                                                                                                 http_response* response, http_router* router) -> void {
             basic_stream bs;
             bs << request->get_http_uri().get_uri();
             response->compose(200, "text/html", "<html><body><pre>%s</pre></body></html>", bs.c_str());
         };
-        std::function<void(network_session *, http_request *, http_response *, http_router *)> error_handler = [&](network_session *session, http_request *request,
-                                                                                                                   http_response *response, http_router *router) -> void {
+        std::function<void(network_session*, http_request*, http_response*, http_router*)> error_handler = [&](network_session* session, http_request* request,
+                                                                                                               http_response* response, http_router* router) -> void {
             basic_stream bs;
             bs << request->get_http_uri().get_uri();
             response->compose(200, "text/html", "<html><body>404 Not Found<pre>%s</pre></body></html>", bs.c_str());
         };
-        std::function<void(network_session *, http_request *, http_response *, http_router *)> cb_handler = [&](network_session *session, http_request *request,
-                                                                                                                http_response *response, http_router *router) -> void {
-            skey_value &kv = request->get_http_uri().get_query_keyvalue();
+        std::function<void(network_session*, http_request*, http_response*, http_router*)> cb_handler = [&](network_session* session, http_request* request,
+                                                                                                            http_response* response, http_router* router) -> void {
+            skey_value& kv = request->get_http_uri().get_query_keyvalue();
             std::string code = kv.get("code");
             std::string access_token = kv.get("access_token");
             std::string error = kv.get("error");
@@ -239,7 +239,7 @@ return_t simple_http_server(void *) {
                     // Authorization Code Grant
                     http_client client;
                     http_request req;
-                    http_response *resp = nullptr;
+                    http_response* resp = nullptr;
                     basic_stream bs;
                     bs << "/auth/token?grant_type=authorization_code&code=" << code << "&redirect_uri=" << cb_url << "&client_id=s6BhdRkqt3";
 
@@ -310,7 +310,7 @@ return_t simple_http_server(void *) {
                 .set_token_endpoint_authentication(new basic_authentication_provider(oauth2_realm))
                 .apply(_http_server->get_http_router());
 
-            http_authentication_resolver &resolver = _http_server->get_http_router().get_authenticate_resolver();
+            http_authentication_resolver& resolver = _http_server->get_http_router().get_authenticate_resolver();
 
             resolver.get_basic_credentials(basic_realm).add("user", "password");
             resolver.get_basic_credentials(oauth2_realm).add("s6BhdRkqt3", "gX1fBat3bV");  // RFC 6749 Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW

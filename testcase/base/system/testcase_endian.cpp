@@ -41,8 +41,8 @@ void test_convert_endian() {
     };
 
     for (auto item : _table_64) {
-        _logger->dump((byte_t *)&item.h, sizeof(uint64));
-        _logger->dump((byte_t *)&item.n, sizeof(uint64));
+        _logger->dump((byte_t*)&item.h, sizeof(uint64));
+        _logger->dump((byte_t*)&item.n, sizeof(uint64));
         _test_case.assert(hton64(item.h) == item.n, __FUNCTION__, "hton64 %x %x", item.h, item.n);
     }
 
@@ -62,8 +62,8 @@ void test_convert_endian() {
     };
 
     for (auto item : _table_128) {
-        _logger->dump((byte_t *)&item.h, sizeof(uint128));
-        _logger->dump((byte_t *)&item.n, sizeof(uint128));
+        _logger->dump((byte_t*)&item.h, sizeof(uint128));
+        _logger->dump((byte_t*)&item.n, sizeof(uint128));
         _test_case.assert(hton128(item.h) == item.n, __FUNCTION__, "hton128 %x %x", item.h, item.n);
     }
 #endif

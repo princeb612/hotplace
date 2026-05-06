@@ -9,13 +9,13 @@
 
 #include <hotplace/testcase/net/sample.hpp>
 
-void do_split_url(const char *url, url_info_t *url_info) {
-    const OPTION &option = _cmdline->value();
+void do_split_url(const char* url, url_info_t* url_info) {
+    const OPTION& option = _cmdline->value();
 
     split_url(url, url_info);
 
     if (option.verbose) {
-        _logger->writeln([&](basic_stream &bs) -> void {
+        _logger->writeln([&](basic_stream& bs) -> void {
             bs << "> url      : " << url << "\n"
                << "> scheme   : " << url_info->scheme << "\n"
                << "> host     : " << url_info->host << "\n"
@@ -26,7 +26,7 @@ void do_split_url(const char *url, url_info_t *url_info) {
 
             skey_value kv;
             http_uri::to_keyvalue(url_info->query, kv);
-            kv.foreach ([&](const std::string &key, const std::string &value, void *param) -> void { bs << "> query*   : " << key << " : " << value << "\n"; });
+            kv.foreach ([&](const std::string& key, const std::string& value, void* param) -> void { bs << "> query*   : " << key << " : " << value << "\n"; });
         });
     }
 }
@@ -89,11 +89,11 @@ void test_uri() {
     {
         http_request request;
         request.open("GET /client/cb?code=5lkd8ApNal3fkg3S6fh-uw&state=xyz");
-        skey_value &kv = request.get_http_uri().get_query_keyvalue();
+        skey_value& kv = request.get_http_uri().get_query_keyvalue();
         std::string code = kv.get("code");
 
-        _logger->write([&](basic_stream &bs) -> void {
-            kv.foreach ([&](const std::string &key, const std::string &value, void *param) -> void { bs << "> query*   : " << key << " : " << value << "\n"; });
+        _logger->write([&](basic_stream& bs) -> void {
+            kv.foreach ([&](const std::string& key, const std::string& value, void* param) -> void { bs << "> query*   : " << key << " : " << value << "\n"; });
         });
 
         _test_case.assert("5lkd8ApNal3fkg3S6fh-uw" == kv.get("code"), __FUNCTION__, "uri.get_query_keyvalue.code");
@@ -102,10 +102,10 @@ void test_uri() {
 
 void test_request() {
     _test_case.begin("request");
-    const OPTION &option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     // chrome browser request data https://127.0.0.1:9000/test
-    const char *input =
+    const char* input =
         "GET /test HTTP/1.1\r\n"
         "Accept: "
         "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/"
@@ -138,7 +138,7 @@ void test_request() {
         _logger->writeln("%s", input);
     }
 
-    const char *uri = request.get_http_uri().get_uri();
+    const char* uri = request.get_http_uri().get_uri();
     _test_case.assert(0 == strcmp(uri, "/test"), __FUNCTION__, "uri");
 
     _test_case.assert("GET" == request.get_method(), __FUNCTION__, "method");
@@ -150,7 +150,7 @@ void test_request() {
 
 void test_response_compose() {
     _test_case.begin("response");
-    const OPTION &option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     http_response response;
     response.get_http_header().add("Connection", "Keep-Alive");
@@ -171,13 +171,13 @@ void test_response_compose() {
 
 void test_response_parse() {
     _test_case.begin("response");
-    const OPTION &option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     http_response response;
     std::string wwwauth;
     skey_value kv;
 
-    const char *input =
+    const char* input =
         "HTTP/1.1 401 Unauthorized\r\n"
         "Connection: Keep-Alive\r\n"
         "Content-Length: 42\r\n"
@@ -194,7 +194,7 @@ void test_response_parse() {
     http_header::to_keyvalue(wwwauth, kv);
 
     if (option.verbose) {
-        kv.foreach ([&](const std::string &k, const std::string &v, void *param) -> void { _logger->writeln("> %s:=%s", k.c_str(), v.c_str()); });
+        kv.foreach ([&](const std::string& k, const std::string& v, void* param) -> void { _logger->writeln("> %s:=%s", k.c_str(), v.c_str()); });
     }
 
     _test_case.assert(401 == response.status_code(), __FUNCTION__, "status");
@@ -211,7 +211,7 @@ void test_response_parse() {
 
 void test_uri_form_encoded_body_parameter() {
     _test_case.begin("uri");
-    const OPTION &option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     http_request request1;
     http_request request2;
@@ -232,8 +232,8 @@ void test_uri_form_encoded_body_parameter() {
         _logger->writeln("%s", request_stream2.c_str());
     }
 
-    skey_value &kv1 = request1.get_http_uri().get_query_keyvalue();
-    skey_value &kv2 = request2.get_http_uri().get_query_keyvalue();
+    skey_value& kv1 = request1.get_http_uri().get_query_keyvalue();
+    skey_value& kv2 = request2.get_http_uri().get_query_keyvalue();
 
     _test_case.assert(request_stream1 == request_stream2, __FUNCTION__, "form encoded body parameter");
     _test_case.assert(kv1.get("client_id") == "clientid", __FUNCTION__, "client_id");
@@ -242,9 +242,9 @@ void test_uri_form_encoded_body_parameter() {
 
 void test_uri2() {
     _test_case.begin("uri");
-    const OPTION &option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
-    const char *input = "/resource?client_id=clientid&access_token=token";
+    const char* input = "/resource?client_id=clientid&access_token=token";
 
     skey_value kv;
     http_uri::to_keyvalue(input, kv);
@@ -260,7 +260,7 @@ void test_uri2() {
 
 void test_escape_url() {
     _test_case.begin("uri");
-    const OPTION &option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     constexpr char input[] = "https://test.com:8080/%7Eb612%2Ftest%2Ehtml";
 
@@ -277,7 +277,7 @@ void test_escape_url() {
 
 void test_basic_authentication() {
     _test_case.begin("Basic Authentication Scheme");
-    const OPTION &option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
     naive_tcp_server_socket socket;  // dummy
@@ -292,7 +292,7 @@ void test_basic_authentication() {
 
     provider.request_auth(&session, &request, &response);
 
-    std::function<return_t(const std::string &user, const std::string &password)> test_resolver = [&](const std::string &user, const std::string &password) -> return_t {
+    std::function<return_t(const std::string& user, const std::string& password)> test_resolver = [&](const std::string& user, const std::string& password) -> return_t {
         return_t ret = errorcode_t::failed;
 
         // server response
@@ -338,17 +338,17 @@ void test_basic_authentication() {
  * calcuration routine
  * cf. see digest_access_authentication_provider::auth_digest_access (slightly different)
  */
-return_t do_calc_digest_digest_access(http_authentication_provider *provider, network_session *session, http_request *request, skey_value &kv,
-                                      std::string &digest_response) {
+return_t do_calc_digest_digest_access(http_authentication_provider* provider, network_session* session, http_request* request, skey_value& kv,
+                                      std::string& digest_response) {
     return_t ret = errorcode_t::success;
-    const OPTION &option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
     __try2 {
         if (nullptr == provider || nullptr == request) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        digest_access_authentication_provider *dgst_provider = (digest_access_authentication_provider *)provider;
+        digest_access_authentication_provider* dgst_provider = (digest_access_authentication_provider*)provider;
 
         std::string alg;
         std::string hashalg = dgst_provider->get_algorithm();
@@ -421,15 +421,15 @@ return_t do_calc_digest_digest_access(http_authentication_provider *provider, ne
     return ret;
 }
 
-void test_digest_access_authentication(const char *alg = nullptr, unsigned long *ossl_minver = nullptr) {
+void test_digest_access_authentication(const char* alg = nullptr, unsigned long* ossl_minver = nullptr) {
     _test_case.begin("Digest Access Authentication Scheme");
-    const OPTION &option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
 
     bool support = true;
     if (ossl_minver) {
-        crypto_advisor *advisor = crypto_advisor::get_instance();
+        crypto_advisor* advisor = crypto_advisor::get_instance();
         support = advisor->check_minimum_version(*ossl_minver);
     }
 
@@ -448,8 +448,8 @@ void test_digest_access_authentication(const char *alg = nullptr, unsigned long 
 
         provider.request_auth(&session, &request, &response);
 
-        std::function<return_t(const std::string &user, const std::string &password)> test_resolver = [&](const std::string &user,
-                                                                                                          const std::string &password) -> return_t {
+        std::function<return_t(const std::string& user, const std::string& password)> test_resolver = [&](const std::string& user,
+                                                                                                          const std::string& password) -> return_t {
             return_t ret = errorcode_t::failed;
 
             // server response
@@ -492,7 +492,7 @@ void test_digest_access_authentication(const char *alg = nullptr, unsigned long 
             valist va;
             va << kv.get("username") << provider.get_realm() << kv.get("algorithm") << kv.get("nonce") << request.get_http_uri().get_uri() << response_calc
                << kv.get("opaque") << kv.get("qop") << kv.get("nc") << kv.get("cnonce");
-            const char *digest_fmt =
+            const char* digest_fmt =
                 R"(Digest username="{1}", realm="{2}", algorithm={3}, nonce="{4}", uri="{5}", response="{6}", opaque="{7}", qop={8}, nc={9}, cnonce="{10}")";
             sprintf(&digest_stream, digest_fmt, va);
             request.get_http_header().add("Authorization", digest_stream.c_str());  // set a response
@@ -524,8 +524,8 @@ void test_digest_access_authentication(const char *alg = nullptr, unsigned long 
     }
 }
 
-void do_test_rfc_example_routine(const std::string &text, digest_access_authentication_provider *provider, http_request &request, const std::string &username,
-                                 const std::string &password, const std::string &expect) {
+void do_test_rfc_example_routine(const std::string& text, digest_access_authentication_provider* provider, http_request& request, const std::string& username,
+                                 const std::string& password, const std::string& expect) {
     std::string response;
     std::string challenge;
     skey_value kv;
@@ -561,7 +561,7 @@ void test_rfc_digest_example() {
     // RFC 2617 3.5 Example "Circle Of Life"
     {
         digest_access_authentication_provider provider("testrealm@host.com");
-        const char *value = R"(Digest username="Mufasa", realm="testrealm@host.com", nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093",
+        const char* value = R"(Digest username="Mufasa", realm="testrealm@host.com", nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093",
             uri="/dir/index.html", qop=auth, nc=00000001, cnonce="0a4f113b", response="6629fae49393a05397450978507c4ef1",
             opaque="5ccc069c403ebaf9f0171e9517f40e41")";
         request.get_http_header().clear().add("Authorization", value);
@@ -574,7 +574,7 @@ void test_rfc_digest_example() {
     // part of MD5
     {
         digest_access_authentication_provider provider("http-auth@example.org", "MD5", "auth", false);
-        const char *value = R"(Digest username="Mufasa", realm="http-auth@example.org", uri="/dir/index.html", algorithm=MD5,
+        const char* value = R"(Digest username="Mufasa", realm="http-auth@example.org", uri="/dir/index.html", algorithm=MD5,
             nonce="7ypf/xlj9XXwfDPEoM4URrv/xwf94BcCAzFZH4GiTo0v", nc=00000001, cnonce="f2/wE4q74E6zIJEtWaHKaf5wv/H5QzzpXusqGemxURZJ", qop=auth,
             response="8ca523f5e9506fed4657c9700eebdbec", opaque="FQhe/qaU925kfnzjCev0ciny7QMkPqMAFRtzCUYo5tdS")";
         request.get_http_header().clear().add("Authorization", value);
@@ -585,7 +585,7 @@ void test_rfc_digest_example() {
     // part of SHA-256
     {
         digest_access_authentication_provider provider("http-auth@example.org", "SHA-256", "auth", false);
-        const char *value = R"(Digest username="Mufasa", realm="http-auth@example.org", uri="/dir/index.html", algorithm=SHA-256,
+        const char* value = R"(Digest username="Mufasa", realm="http-auth@example.org", uri="/dir/index.html", algorithm=SHA-256,
             nonce="7ypf/xlj9XXwfDPEoM4URrv/xwf94BcCAzFZH4GiTo0v", nc=00000001, cnonce="f2/wE4q74E6zIJEtWaHKaf5wv/H5QzzpXusqGemxURZJ", qop=auth,
             response="753927fa0e85d155564e2e272a28d1802ca10daf4496794697cf8db5856cb6c1", opaque="FQhe/qaU925kfnzjCev0ciny7QMkPqMAFRtzCUYo5tdS")";
         request.get_http_header().clear().add("Authorization", value);
@@ -653,7 +653,7 @@ void test_rfc_digest_example() {
     {
         // - _H<SHA-256>(user:testrealm@host.com) -> 43d8a4a4c9f8634537543ba66a36b6ab6f2a0f0e6eef9a0042909797fac93308
         digest_access_authentication_provider provider("testrealm@host.com", "SHA-256", "auth", true);
-        const char *value = R"(Digest username="43d8a4a4c9f8634537543ba66a36b6ab6f2a0f0e6eef9a0042909797fac93308", realm="testrealm@host.com",
+        const char* value = R"(Digest username="43d8a4a4c9f8634537543ba66a36b6ab6f2a0f0e6eef9a0042909797fac93308", realm="testrealm@host.com",
             nonce="61ca153723668dd86217cad715d3d2dc", uri="/auth/userhash", algorithm=SHA-256, response="4eec813c6cb8e3e4eb40a6b21a547fcb15b9158c5595d05c82612673980730ef",
             opaque="5f17278895ad1df3c8c4698686ffd074", qop=auth, nc=00000001, cnonce="b45026393ee4f4a4", userhash=true)";
         request.get_http_header().clear().add("Authorization", value);
@@ -667,7 +667,7 @@ void test_rfc_digest_example() {
     {
         // - _H<SHA-256>(user:happiness) -> 9448db3978d7cbc5354221a5a84ba65db2e9a0fe625c62c52fb5171b974ee17d
         digest_access_authentication_provider provider("happiness", "SHA-256-sess", "auth", true);
-        const char *value = R"(Digest username="9448db3978d7cbc5354221a5a84ba65db2e9a0fe625c62c52fb5171b974ee17d", realm="happiness",
+        const char* value = R"(Digest username="9448db3978d7cbc5354221a5a84ba65db2e9a0fe625c62c52fb5171b974ee17d", realm="happiness",
             nonce="9bfec7e309fbbd69eea202ed0d2b501e", uri="/auth/digest", algorithm=SHA-256-sess,
             response="3defcdd8bda2d9304af3145c93687c1929e8ad6361b564d738ad2ed5eaaedf6d", opaque="2813b77014a6956fec12191120a3da08", qop=auth, nc=00000001,
             cnonce="3232cbe68a1b16ef", userhash=true)";
@@ -717,7 +717,7 @@ void test_documents() {
  */
 void test_get_tlsclient() {
     _test_case.begin("httpserver test");
-    const OPTION &option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::success;
 
@@ -729,7 +729,7 @@ void test_get_tlsclient() {
             __leave2;
         }
 
-        SSL_CTX *sslctx = nullptr;
+        SSL_CTX* sslctx = nullptr;
         tlscontext_open_simple(&sslctx, tlscontext_flag_tls);
         openssl_tls tls(sslctx);
         openssl_tls_client_socket cli(&tls);
@@ -759,13 +759,13 @@ void test_get_tlsclient() {
                     ret = cli.read(buf, sizeof(buf), &sizeread);
 
                     if (option.verbose) {
-                        _logger->dump((byte_t *)buf, sizeread);
+                        _logger->dump((byte_t*)buf, sizeread);
                     }
                     while (errorcode_t::more_data == ret) {
                         ret = cli.more(buf, sizeof(buf), &sizeread);
 
                         if (option.verbose) {
-                            _logger->dump((byte_t *)buf, sizeread);
+                            _logger->dump((byte_t*)buf, sizeread);
                         }
                     }
                 } else {
@@ -776,19 +776,19 @@ void test_get_tlsclient() {
                     group.add(&http);
 
                     ret = cli.read(buf, sizeof(buf), &sizeread);
-                    stream_read.produce((byte_t *)buf, sizeread);
+                    stream_read.produce((byte_t*)buf, sizeread);
                     while (errorcode_t::more_data == ret) {
                         ret = cli.more(buf, sizeof(buf), &sizeread);
-                        stream_read.produce((byte_t *)buf, sizeread);
+                        stream_read.produce((byte_t*)buf, sizeread);
                     }
 
                     stream_read.write(&group, &stream_interpreted);
-                    network_stream_data *data = nullptr;
+                    network_stream_data* data = nullptr;
                     stream_interpreted.consume(&data);
                     if (data) {
                         _logger->colorln("response");
                         if (option.verbose) {
-                            _logger->writeln("%.*s", (unsigned)data->size(), (char *)data->content());
+                            _logger->writeln("%.*s", (unsigned)data->size(), (char*)data->content());
                         }
 
                         data->release();
@@ -811,12 +811,12 @@ void test_get_tlsclient() {
  */
 void test_get_httpclient() {
     _test_case.begin("httpserver test");
-    const OPTION &option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::failed;
     http_client client;
     http_request request;
-    http_response *response = nullptr;
+    http_response* response = nullptr;
 
     client.set_url(option.url);
     client.set_wto(60000);  // 1 min
@@ -841,12 +841,12 @@ void test_get_httpclient() {
 
 void test_bearer_token() {
     _test_case.begin("httpserver test");
-    const OPTION &option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     return_t ret = errorcode_t::failed;
     http_client client;
     http_request request;
-    http_response *response = nullptr;
+    http_response* response = nullptr;
     client.set_url(option.url);
     client.set_wto(60000);  // 1 min
 
@@ -869,7 +869,7 @@ void test_bearer_token() {
 }
 
 void test_http() {
-    const OPTION &option = _cmdline->value();
+    const OPTION& option = _cmdline->value();
 
     // uri
     test_uri();

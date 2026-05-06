@@ -24,7 +24,7 @@ void test_mlkem_keygen() {
     ret = keychain.add_mlkem(&key, NID_ML_KEM_1024, keydesc("ML-KEM-1024"));
     _test_case.test(ret, __FUNCTION__, "ML-KEM-1024");
 
-    auto dump_crypto_key = [&](crypto_key_object *item, void *) -> void {
+    auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
         auto kid = item->get_desc().get_kid_cstr();
         auto pkey = key.find(kid);
         _test_case.assert(nullptr != pkey, __FUNCTION__, "find %s", kid);
@@ -32,7 +32,7 @@ void test_mlkem_keygen() {
         auto kty = ktyof_evp_pkey(pkey);
         _test_case.assert(kty_mlkem == kty, __FUNCTION__, "kty %s", nameof_key_type(kty));
 
-        _logger->write([&](basic_stream &bs) -> void {
+        _logger->write([&](basic_stream& bs) -> void {
             bs.println(ANSI_ESCAPE "1;32m> kid \"%s\"" ANSI_ESCAPE "0m", item->get_desc().get_kid_cstr());
             dump_key(item->get_pkey(), &bs, 16, 3, dump_notrunc);
         });
@@ -46,23 +46,23 @@ void test_mlkem_keygen() {
 #endif
 }
 
-void test_mlkem_keyuse_routine(tls_group_t group, const binary_t &share) {
+void test_mlkem_keyuse_routine(tls_group_t group, const binary_t& share) {
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     return_t ret = errorcode_t::success;
     crypto_keyexchange keyexchange;
     crypto_key key;
 
-    crypto_advisor *advisor = crypto_advisor::get_instance();
+    crypto_advisor* advisor = crypto_advisor::get_instance();
     auto hint = advisor->hintof_tls_group(group);
     if (hint) {
         auto name = hint->name;
 
         ret = keyexchange.keystore(group, &key, "store", share);
         _test_case.test(ret, __FUNCTION__, "store %s", name);
-        auto dump_crypto_key = [&](crypto_key_object *item, void *) -> void {
+        auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
             auto kid = item->get_desc().get_kid_cstr();
 
-            _logger->write([&](basic_stream &bs) -> void {
+            _logger->write([&](basic_stream& bs) -> void {
                 bs.println(ANSI_ESCAPE "1;32m> kid \"%s\"" ANSI_ESCAPE "0m", kid);
                 dump_key(item->get_pkey(), &bs, 16, 3, dump_notrunc);
             });
@@ -86,7 +86,7 @@ void test_mlkem_keyuse() {
     // return_t ret = errorcode_t::success;
     struct testvector {
         tls_group_t group;
-        const char *client_share;
+        const char* client_share;
     };
     testvector tv[] = {
         {

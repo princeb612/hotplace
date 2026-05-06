@@ -29,14 +29,14 @@
 namespace hotplace {
 namespace net {
 
-return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg, uint16 dlen, tls_secret_t &typeof_secret, binary_t &maced) {
+return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg, uint16 dlen, tls_secret_t& typeof_secret, binary_t& maced) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (hash_alg_unknown == alg) {
             ret = errorcode_t::unknown;
             __leave2;
         }
-        tls_advisor *tlsadvisor = tls_advisor::get_instance();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
         // auto cs = get_cipher_suite();
         // const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(cs);
@@ -60,7 +60,7 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
             } else if (is_clientinitiated(dir)) {
                 typeof_secret = tls_secret_c_hs_traffic;
             }
-            const binary_t &ht_secret = get_secrets().get(typeof_secret);
+            const binary_t& ht_secret = get_secrets().get(typeof_secret);
             hash_algorithm_t hashalg = tlsadvisor->algof_hash(get_cipher_suite());
             openssl_kdf kdf;
             binary_t context;
@@ -70,14 +70,14 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
                 kdf.hkdf_expand_tls13_label(fin_key, hashalg, dlen, ht_secret, "finished", context);
             }
             crypto_hmac_builder builder;
-            crypto_hmac *hmac = builder.set(hashalg).set(fin_key).build();
+            crypto_hmac* hmac = builder.set(hashalg).set(fin_key).build();
             if (hmac) {
                 hmac->mac(fin_hash, maced);
                 hmac->release();
             }
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+                trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                     dbs.println("> finished");
                     dbs.println("  key   %s", base16_encode(fin_key).c_str());
                     dbs.println("  hash  %s", base16_encode(fin_hash).c_str());
@@ -95,7 +95,7 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
             binary_append(seed, fin_hash);
 
             typeof_secret = tls_secret_master;
-            const binary_t &fin_key = get_secrets().get(typeof_secret);
+            const binary_t& fin_key = get_secrets().get(typeof_secret);
 
             crypto_hmac_builder builder;
             auto hmac = builder.set(alg).set(fin_key).build();
@@ -115,7 +115,7 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
             }
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
+                trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                     dbs.println("> finished");
                     dbs.println("  key   %s", base16_encode(fin_key).c_str());
                     dbs.println("  hash  %s", base16_encode(fin_hash).c_str());

@@ -47,25 +47,25 @@
     The WSALookupServiceBegin function initiates a client query that is constrained by the information contained within a WSAQUERYSET structure.
     WSALookupServiceBegin only returns a handle, which should be used by subsequent calls to WSALookupServiceNext to get the actual results.
  */
-typedef INT(WINAPI *WSALOOKUPSERVICEBEGINA)(LPWSAQUERYSETA lpqsRestrictions, DWORD dwControlFlags, LPHANDLE lphLookup);
+typedef INT(WINAPI* WSALOOKUPSERVICEBEGINA)(LPWSAQUERYSETA lpqsRestrictions, DWORD dwControlFlags, LPHANDLE lphLookup);
 
-typedef INT(WINAPI *WSALOOKUPSERVICEBEGINW)(LPWSAQUERYSETW lpqsRestrictions, DWORD dwControlFlags, LPHANDLE lphLookup);
+typedef INT(WINAPI* WSALOOKUPSERVICEBEGINW)(LPWSAQUERYSETW lpqsRestrictions, DWORD dwControlFlags, LPHANDLE lphLookup);
 
 /* @brief
     The WSALookupServiceNext function is called after obtaining a handle from a previous call to WSALookupServiceBegin in order to retrieve the requested
    service information. The provider will pass back a WSAQUERYSET structure in the lpqsResults buffer. The client should continue to call this function until it
    returns WSA_E_NO_MORE, indicating that all of WSAQUERYSET has been returned.
  */
-typedef INT(WINAPI *WSALOOKUPSERVICENEXTA)(HANDLE hLookup, DWORD dwControlFlags, LPDWORD lpdwBufferLength, LPWSAQUERYSETA lpqsResults);
+typedef INT(WINAPI* WSALOOKUPSERVICENEXTA)(HANDLE hLookup, DWORD dwControlFlags, LPDWORD lpdwBufferLength, LPWSAQUERYSETA lpqsResults);
 
-typedef INT(WINAPI *WSALOOKUPSERVICENEXTW)(HANDLE hLookup, DWORD dwControlFlags, LPDWORD lpdwBufferLength, LPWSAQUERYSETW lpqsResults);
+typedef INT(WINAPI* WSALOOKUPSERVICENEXTW)(HANDLE hLookup, DWORD dwControlFlags, LPDWORD lpdwBufferLength, LPWSAQUERYSETW lpqsResults);
 
 /* @brief
     The WSALookupServiceEnd function is called to free the handle after previous calls to WSALookupServiceBegin and WSALookupServiceNext.
     If you call WSALookupServiceEnd from another thread while an existing WSALookupServiceNext is blocked, the end call will have the same effect as a cancel
    and will cause the WSALookupServiceNext call to return immediately.
  */
-typedef INT(WINAPI *WSALOOKUPSERVICEEND)(HANDLE hLookup);
+typedef INT(WINAPI* WSALOOKUPSERVICEEND)(HANDLE hLookup);
 
 #if defined _MBCS || defined MBCS
 
@@ -102,7 +102,7 @@ typedef INT(WINAPI *WSALOOKUPSERVICEEND)(HANDLE hLookup);
 /* @brief
     The Windows Sockets WSANSPIoctl function enables developers to make I/O control calls to a registered namespace.
  */
-typedef int(WINAPI *WSANSPIOCTL)(HANDLE hLookup, DWORD dwControlCode, LPVOID lpvInBuffer, DWORD cbInBuffer, LPVOID lpvOutBuffer, DWORD cbOutBuffer,
+typedef int(WINAPI* WSANSPIOCTL)(HANDLE hLookup, DWORD dwControlCode, LPVOID lpvInBuffer, DWORD cbInBuffer, LPVOID lpvOutBuffer, DWORD cbOutBuffer,
                                  LPDWORD lpcbBytesReturned, LPWSACOMPLETION lpCompletion);
 
 #endif

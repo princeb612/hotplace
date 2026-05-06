@@ -62,7 +62,7 @@ typedef unsigned int uint;
 struct binary_t : public std::vector<byte_t> {
     using std::vector<byte_t>::vector;     // inherit ctor
     using std::vector<byte_t>::operator=;  // copy/move
-    bool operator==(const struct binary_t &other) { return ((size() == other.size()) && (0 == memcmp(data(), other.data(), size()))); }
+    bool operator==(const struct binary_t& other) { return ((size() == other.size()) && (0 == memcmp(data(), other.data(), size()))); }
 };
 
 enum loglevel_t : uint8 {
@@ -84,9 +84,9 @@ enum encoding_t {
 
 #ifndef _WIN32  // winnt.h
 #define RTL_NUMBER_OF(x) (sizeof(x) / sizeof(x[0]))
-#define RTL_FIELD_TYPE(type, field) (((type *)0)->field)
-#define RTL_FIELD_SIZE(type, field) (sizeof(((type *)0)->field))
-#define FIELD_OFFSET(type, field) ((int32)(arch_t) & (((type *)0)->field))
+#define RTL_FIELD_TYPE(type, field) (((type*)0)->field)
+#define RTL_FIELD_SIZE(type, field) (sizeof(((type*)0)->field))
+#define FIELD_OFFSET(type, field) ((int32)(arch_t) & (((type*)0)->field))
 #define RTL_SIZEOF_THROUGH_FIELD(type, field) (FIELD_OFFSET(type, field) + RTL_FIELD_SIZE(type, field))
 #define RTL_NUMBER_OF_FIELD(type, field) (RTL_NUMBER_OF(RTL_FIELD_TYPE(type, field)))
 #define RTL_PADDING_BETWEEN_FIELDS(type, field1, field2)                                                                                                  \

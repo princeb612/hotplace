@@ -27,10 +27,10 @@
 /* @brief
     Returns the current status of Windows Defender.
  */
-typedef HRESULT(WINAPI *WDSTATUS)(BOOL *pfEnabled);
+typedef HRESULT(WINAPI* WDSTATUS)(BOOL* pfEnabled);
 /* @biref
     Changes Windows Defender status to on or off.
  */
-typedef HRESULT(WINAPI *WDENABLE)(BOOL fEnable);
+typedef HRESULT(WINAPI* WDENABLE)(BOOL fEnable);
 
 #endif

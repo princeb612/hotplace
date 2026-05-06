@@ -39,26 +39,26 @@
     Increments (increases by one) the value of the specified 32-bit variable as an atomic operation.
     To operate on 64-bit values, use the InterlockedIncrement64 function.
  */
-typedef LONG(__stdcall *INTERLOCKEDINCREMENT)(__inout LONG volatile *Addend);
+typedef LONG(__stdcall* INTERLOCKEDINCREMENT)(__inout LONG volatile* Addend);
 /* @brief
     Decrements (decreases by one) the value of the specified 32-bit variable as an atomic operation.
     To operate on 64-bit values, use the InterlockedDecrement64 function.
  */
-typedef LONG(__stdcall *INTERLOCKEDDECREMENT)(__inout LONG volatile *Addend);
+typedef LONG(__stdcall* INTERLOCKEDDECREMENT)(__inout LONG volatile* Addend);
 /* @brief
     Performs an atomic compare-and-exchange operation on the specified values.
     The function compares two specified 32-bit values and exchanges with another 32-bit value based on the outcome of the comparison.
     If you are exchanging pointer values, this function has been superseded by the InterlockedCompareExchangePointer function.
     To operate on 64-bit values, use the InterlockedCompareExchange64 function.
  */
-typedef LONG(__stdcall *INTERLOCKEDCOMPAREEXCHANGE)(__inout LONG volatile *Destination, ___in LONG Exchange, ___in LONG Comperand);
+typedef LONG(__stdcall* INTERLOCKEDCOMPAREEXCHANGE)(__inout LONG volatile* Destination, ___in LONG Exchange, ___in LONG Comperand);
 /* @brief
     Sets a 32-bit variable to the specified value as an atomic operation.
     To operate on a pointer variable, use the InterlockedExchangePointer function.
     To operate on a 16-bit variable, use the InterlockedExchange16 function.
     To operate on a 64-bit variable, use the InterlockedExchange64 function.
  */
-typedef LONG(__stdcall *INTERLOCKEDEXCHANGE)(__inout LONG volatile *Target, ___in LONG Value);
+typedef LONG(__stdcall* INTERLOCKEDEXCHANGE)(__inout LONG volatile* Target, ___in LONG Value);
 
 // CriticalSection
 /* "InitializeCriticalSectionAndSpinCount" */
@@ -78,12 +78,12 @@ typedef LONG(__stdcall *INTERLOCKEDEXCHANGE)(__inout LONG volatile *Target, ___i
     When a thread tries to acquire a critical section that is locked, the thread spins: it enters a loop which iterates spin count times, checking to see if the
    lock is released. If the lock is not released before the loop finishes, the thread goes to sleep to wait for the lock to be released.
  */
-typedef BOOL(__stdcall *INITIALIZECRITICALSECTIONANDSPINCOUNT)(LPCRITICAL_SECTION lpCriticalSection, DWORD dwSpinCount);
+typedef BOOL(__stdcall* INITIALIZECRITICALSECTIONANDSPINCOUNT)(LPCRITICAL_SECTION lpCriticalSection, DWORD dwSpinCount);
 /* @brief
     Attempts to enter a critical section without blocking.
     If the call is successful, the calling thread takes ownership of the critical section.
  */
-typedef BOOL(__stdcall *TRYENTERCRITICALSECTION)(LPCRITICAL_SECTION lpCriticalSection);
+typedef BOOL(__stdcall* TRYENTERCRITICALSECTION)(LPCRITICAL_SECTION lpCriticalSection);
 
 // FindFirstFile/FindNextFile/FindClose
 #undef NAMEOF_API_FINDFIRSTFILE
@@ -142,18 +142,18 @@ typedef BOOL(__stdcall *TRYENTERCRITICALSECTION)(LPCRITICAL_SECTION lpCriticalSe
     To specify additional attributes to use in a search, use the FindFirstFileEx function.
     To perform this operation as a transacted operation, use the FindFirstFileTransacted function.
  */
-typedef HANDLE(__stdcall *FINDFIRSTFILEA)(___in LPCSTR lpFileName, ___out LPWIN32_FIND_DATAA lpFindFileData);
-typedef HANDLE(__stdcall *FINDFIRSTFILEW)(___in LPCWSTR lpFileName, ___out LPWIN32_FIND_DATAW lpFindFileData);
+typedef HANDLE(__stdcall* FINDFIRSTFILEA)(___in LPCSTR lpFileName, ___out LPWIN32_FIND_DATAA lpFindFileData);
+typedef HANDLE(__stdcall* FINDFIRSTFILEW)(___in LPCWSTR lpFileName, ___out LPWIN32_FIND_DATAW lpFindFileData);
 /* @brief
     Continues a file search from a previous call to the FindFirstFile, FindFirstFileEx, or FindFirstFileTransacted functions.
  */
-typedef BOOL(__stdcall *FINDNEXTFILEA)(___in HANDLE hFindFile, ___out LPWIN32_FIND_DATAA lpFindFileData);
-typedef BOOL(__stdcall *FINDNEXTFILEW)(___in HANDLE hFindFile, ___out LPWIN32_FIND_DATAW lpFindFileData);
+typedef BOOL(__stdcall* FINDNEXTFILEA)(___in HANDLE hFindFile, ___out LPWIN32_FIND_DATAA lpFindFileData);
+typedef BOOL(__stdcall* FINDNEXTFILEW)(___in HANDLE hFindFile, ___out LPWIN32_FIND_DATAW lpFindFileData);
 /* @brief
     Closes a file search handle opened by the FindFirstFile, FindFirstFileEx, FindFirstFileNameW, FindFirstFileNameTransactedW, FindFirstFileTransacted,
    FindFirstStreamTransactedW, or FindFirstStreamW functions.
  */
-typedef BOOL(__stdcall *FINDCLOSE)(__inout HANDLE hFindFile);
+typedef BOOL(__stdcall* FINDCLOSE)(__inout HANDLE hFindFile);
 
 // ReadFileEx/WriteFileEx
 /* "ReadFileEx" */
@@ -172,7 +172,7 @@ typedef BOOL(__stdcall *FINDCLOSE)(__inout HANDLE hFindFile);
     It reports its completion status asynchronously, calling the specified completion routine when reading is completed or canceled and the calling thread is in
    an alertable wait state. To read data from a file or device synchronously, use the ReadFile function.
  */
-typedef BOOL(__stdcall *READFILEEX)(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPOVERLAPPED lpOverlapped,
+typedef BOOL(__stdcall* READFILEEX)(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPOVERLAPPED lpOverlapped,
                                     LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
 
 /* @brief
@@ -180,7 +180,7 @@ typedef BOOL(__stdcall *READFILEEX)(HANDLE hFile, LPVOID lpBuffer, DWORD nNumber
     It reports its completion status asynchronously, calling the specified completion routine when writing is completed or canceled and the calling thread is in
    an alertable wait state. To write data to a file or device synchronously, use the WriteFile function.
  */
-typedef BOOL(__stdcall *WRITEFILEEX)(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPOVERLAPPED lpOverlapped,
+typedef BOOL(__stdcall* WRITEFILEEX)(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPOVERLAPPED lpOverlapped,
                                      LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
 
 // CreateToolhelp32Snapshot/Process32First/Process32Next/Module32First/Module32Next
@@ -193,7 +193,7 @@ typedef BOOL(__stdcall *WRITEFILEEX)(HANDLE hFile, LPCVOID lpBuffer, DWORD nNumb
 /* @brief
     Takes a snapshot of the specified processes, as well as the heaps, modules, and threads used by these processes.
  */
-typedef HANDLE(__stdcall *CREATETOOLHELP32SNAPSHOT)(DWORD, DWORD);
+typedef HANDLE(__stdcall* CREATETOOLHELP32SNAPSHOT)(DWORD, DWORD);
 
 #if defined _MBCS || defined MBCS
 #define DECLARE_NAMEOF_API_PROCESS32FIRST DECLARE_NAMEOF_API_PROCESS32FIRSTA
@@ -232,13 +232,13 @@ typedef HANDLE(__stdcall *CREATETOOLHELP32SNAPSHOT)(DWORD, DWORD);
 /* @brief
     Retrieves information about the first process encountered in a system snapshot.
  */
-typedef BOOL(__stdcall *PROCESS32FIRSTA)(HANDLE, LPPROCESSENTRY32);
-typedef BOOL(__stdcall *PROCESS32FIRSTW)(HANDLE, LPPROCESSENTRY32W);
+typedef BOOL(__stdcall* PROCESS32FIRSTA)(HANDLE, LPPROCESSENTRY32);
+typedef BOOL(__stdcall* PROCESS32FIRSTW)(HANDLE, LPPROCESSENTRY32W);
 /* @brief
     Retrieves information about the next process recorded in a system snapshot.
  */
-typedef BOOL(__stdcall *PROCESS32NEXTA)(HANDLE, LPPROCESSENTRY32);
-typedef BOOL(__stdcall *PROCESS32NEXTW)(HANDLE, LPPROCESSENTRY32W);
+typedef BOOL(__stdcall* PROCESS32NEXTA)(HANDLE, LPPROCESSENTRY32);
+typedef BOOL(__stdcall* PROCESS32NEXTW)(HANDLE, LPPROCESSENTRY32W);
 
 #if defined _MBCS || defined MBCS
 #define DECLARE_NAMEOF_API_MODULE32FIRST DECLARE_NAMEOF_API_MODULE32FIRSTA
@@ -284,14 +284,14 @@ typedef BOOL(__stdcall *PROCESS32NEXTW)(HANDLE, LPPROCESSENTRY32W);
 /* @brief
     Retrieves information about the first module associated with a process.
  */
-typedef BOOL(__stdcall *MODULE32FIRSTA)(HANDLE hSnapshot, LPMODULEENTRY32 lpme);
-typedef BOOL(__stdcall *MODULE32FIRSTW)(HANDLE hSnapshot, LPMODULEENTRY32W lpme);
+typedef BOOL(__stdcall* MODULE32FIRSTA)(HANDLE hSnapshot, LPMODULEENTRY32 lpme);
+typedef BOOL(__stdcall* MODULE32FIRSTW)(HANDLE hSnapshot, LPMODULEENTRY32W lpme);
 
 /* @brief
     Retrieves information about the next module associated with a process or thread.
  */
-typedef BOOL(__stdcall *MODULE32NEXTA)(HANDLE hSnapshot, LPMODULEENTRY32 lpme);
-typedef BOOL(__stdcall *MODULE32NEXTW)(HANDLE hSnapshot, LPMODULEENTRY32W lpme);
+typedef BOOL(__stdcall* MODULE32NEXTA)(HANDLE hSnapshot, LPMODULEENTRY32 lpme);
+typedef BOOL(__stdcall* MODULE32NEXTW)(HANDLE hSnapshot, LPMODULEENTRY32W lpme);
 
 // OutputDebugString
 
@@ -321,8 +321,8 @@ typedef BOOL(__stdcall *MODULE32NEXTW)(HANDLE hSnapshot, LPMODULEENTRY32W lpme);
 /* @brief
     Sends a string to the debugger for display.
  */
-typedef VOID(__stdcall *OUTPUTDEBUGSTRINGA)(__in_opt LPCSTR lpOutputString);
-typedef VOID(__stdcall *OUTPUTDEBUGSTRINGW)(__in_opt LPCWSTR lpOutputString);
+typedef VOID(__stdcall* OUTPUTDEBUGSTRINGA)(__in_opt LPCSTR lpOutputString);
+typedef VOID(__stdcall* OUTPUTDEBUGSTRINGW)(__in_opt LPCWSTR lpOutputString);
 
 /* FormatMessage */
 #define DECLARE_NAMEOF_API_FORMATMESSAGEA                                        \
@@ -343,10 +343,10 @@ typedef VOID(__stdcall *OUTPUTDEBUGSTRINGW)(__in_opt LPCWSTR lpOutputString);
     The function finds the message definition in a message table resource based on a message identifier and a language identifier.
     The function copies the formatted message text to an output buffer, processing any embedded insert sequences if requested.
  */
-typedef DWORD(__stdcall *FORMATMESSAGEA)(___in DWORD dwFlags, __in_opt LPCVOID lpSource, ___in DWORD dwMessageId, ___in DWORD dwLanguageId, ___out LPSTR lpBuffer,
-                                         ___in DWORD nSize, __in_opt va_list *Arguments);
-typedef DWORD(__stdcall *FORMATMESSAGEW)(___in DWORD dwFlags, __in_opt LPCVOID lpSource, ___in DWORD dwMessageId, ___in DWORD dwLanguageId, ___out LPWSTR lpBuffer,
-                                         ___in DWORD nSize, __in_opt va_list *Arguments);
+typedef DWORD(__stdcall* FORMATMESSAGEA)(___in DWORD dwFlags, __in_opt LPCVOID lpSource, ___in DWORD dwMessageId, ___in DWORD dwLanguageId, ___out LPSTR lpBuffer,
+                                         ___in DWORD nSize, __in_opt va_list* Arguments);
+typedef DWORD(__stdcall* FORMATMESSAGEW)(___in DWORD dwFlags, __in_opt LPCVOID lpSource, ___in DWORD dwMessageId, ___in DWORD dwLanguageId, ___out LPWSTR lpBuffer,
+                                         ___in DWORD nSize, __in_opt va_list* Arguments);
 
 /* "GetNativeSystemInfo" */
 #define DECLARE_NAMEOF_API_GETNATIVESYSTEMINFO                                                            \
@@ -358,7 +358,7 @@ typedef DWORD(__stdcall *FORMATMESSAGEW)(___in DWORD dwFlags, __in_opt LPCVOID l
     Retrieves information about the current system to an application running under WOW64.
     If the function is called from a 64-bit application, it is equivalent to the GetSystemInfo function.
  */
-typedef void(__stdcall *GETNATIVESYSTEMINFO)(LPSYSTEM_INFO lpSystemInfo);
+typedef void(__stdcall* GETNATIVESYSTEMINFO)(LPSYSTEM_INFO lpSystemInfo);
 
 /* "GetUserDefaultUILanguage" */
 #define DECLARE_NAMEOF_API_GETUSERDEFAULTUILANGUAGE                                                                                \
@@ -372,7 +372,7 @@ typedef void(__stdcall *GETNATIVESYSTEMINFO)(LPSYSTEM_INFO lpSystemInfo);
     If there is no preferred language set for the system, then the system default UI language (also known as "install language") is returned.
     For more information about the user UI language, see User Interface Language Management.
  */
-typedef LANGID(__stdcall FAR *GETUSERDEFAULTUILANGUAGE)(void);
+typedef LANGID(__stdcall FAR* GETUSERDEFAULTUILANGUAGE)(void);
 
 #if defined __MINGW32__ || defined __MINGW64__
 
@@ -410,7 +410,7 @@ typedef LANGID(__stdcall FAR *GETUSERDEFAULTUILANGUAGE)(void);
 /* @brief
     Compares a set of operating system version requirements to the corresponding values for the currently running version of the system.
  */
-typedef BOOL(NTAPI *VERIFYVERSIONINFO)(POSVERSIONINFOEX, DWORD, DWORDLONG);
+typedef BOOL(NTAPI* VERIFYVERSIONINFO)(POSVERSIONINFOEX, DWORD, DWORDLONG);
 
 /* "GetProductInfo" */
 #define DECLARE_NAMEOF_API_GETPRODUCTINFO                                        \
@@ -425,7 +425,7 @@ typedef BOOL(NTAPI *VERIFYVERSIONINFO)(POSVERSIONINFOEX, DWORD, DWORDLONG);
     Vista Edition 을 파악하기 위해서 GetProductInfo API 를 이용한다.
     see alse, http://msdn2.microsoft.com/en-gb/library/ms724358.aspx
  */
-typedef BOOL(__stdcall *GETPRODUCTINFO)(DWORD, DWORD, DWORD, DWORD, LPDWORD);
+typedef BOOL(__stdcall* GETPRODUCTINFO)(DWORD, DWORD, DWORD, DWORD, LPDWORD);
 
 /* "GetProcessWorkingSetSize" */
 #define DECLARE_NAMEOF_API_GETPROCESSWORKINGSETSIZE                                                                                \
@@ -436,7 +436,7 @@ typedef BOOL(__stdcall *GETPRODUCTINFO)(DWORD, DWORD, DWORD, DWORD, LPDWORD);
 /* @brief
     Retrieves the minimum and maximum working set sizes of the specified process.
  */
-typedef BOOL(__stdcall *GETPROCESSWORKINGSETSIZE)(___in HANDLE hProcess, ___out PSIZE_T lpMinimumWorkingSetSize, ___out PSIZE_T lpMaximumWorkingSetSize);
+typedef BOOL(__stdcall* GETPROCESSWORKINGSETSIZE)(___in HANDLE hProcess, ___out PSIZE_T lpMinimumWorkingSetSize, ___out PSIZE_T lpMaximumWorkingSetSize);
 
 /* "SetProcessWorkingSetSize" */
 #define DECLARE_NAMEOF_API_SETPROCESSWORKINGSETSIZE                                                                                \
@@ -447,7 +447,7 @@ typedef BOOL(__stdcall *GETPROCESSWORKINGSETSIZE)(___in HANDLE hProcess, ___out 
 /* @brief
     Sets the minimum and maximum working set sizes for the specified process.
  */
-typedef BOOL(__stdcall *SETPROCESSWORKINGSETSIZE)(___in HANDLE hProcess, ___in SIZE_T dwMinimumWorkingSetSize, ___in SIZE_T dwMaximumWorkingSetSize);
+typedef BOOL(__stdcall* SETPROCESSWORKINGSETSIZE)(___in HANDLE hProcess, ___in SIZE_T dwMinimumWorkingSetSize, ___in SIZE_T dwMaximumWorkingSetSize);
 
 #undef NAMEOF_API_GETSYSTEMWOW64DIRECTORY
 
@@ -480,8 +480,8 @@ typedef BOOL(__stdcall *SETPROCESSWORKINGSETSIZE)(___in HANDLE hProcess, ___in S
     Retrieves the path of the system directory used by WOW64.
     This directory is not present on 32-bit Windows.
  */
-typedef UINT(__stdcall *GETSYSTEMWOW64DIRECTORYA)(LPSTR lpBuffer, UINT uSize);
-typedef UINT(__stdcall *GETSYSTEMWOW64DIRECTORYW)(LPWSTR lpBuffer, UINT uSize);
+typedef UINT(__stdcall* GETSYSTEMWOW64DIRECTORYA)(LPSTR lpBuffer, UINT uSize);
+typedef UINT(__stdcall* GETSYSTEMWOW64DIRECTORYW)(LPWSTR lpBuffer, UINT uSize);
 
 /* "SetSystemPowerState" */
 #define DECLARE_NAMEOF_API_SETSYSTEMPOWERSTATE                                                            \
@@ -498,7 +498,7 @@ typedef UINT(__stdcall *GETSYSTEMWOW64DIRECTORYW)(LPWSTR lpBuffer, UINT uSize);
    @comment
     see SystemHalt
  */
-typedef BOOL(__stdcall *SETSYSTEMPOWERSTATE)(___in BOOL fSuspend, ___in BOOL fForce);
+typedef BOOL(__stdcall* SETSYSTEMPOWERSTATE)(___in BOOL fSuspend, ___in BOOL fForce);
 
 /* "GetSystemPowerStatus" */
 #define DECLARE_NAMEOF_API_GETSYSTEMPOWERSTATUS                                                                \
@@ -510,7 +510,7 @@ typedef BOOL(__stdcall *SETSYSTEMPOWERSTATE)(___in BOOL fSuspend, ___in BOOL fFo
     Retrieves the power status of the system.
     The status indicates whether the system is running on AC or DC power, whether the battery is currently charging, and how much battery life remains.
  */
-typedef BOOL(__stdcall *GETSYSTEMPOWERSTATUS)(___out LPSYSTEM_POWER_STATUS lpSystemPowerStatus);
+typedef BOOL(__stdcall* GETSYSTEMPOWERSTATUS)(___out LPSYSTEM_POWER_STATUS lpSystemPowerStatus);
 
 #undef NAMEOF_API_CREATEJOBOBJECT
 
@@ -538,8 +538,8 @@ typedef BOOL(__stdcall *GETSYSTEMPOWERSTATUS)(___out LPSYSTEM_POWER_STATUS lpSys
 /* @brief
     Creates or opens a job object.
  */
-typedef HANDLE(__stdcall *CREATEJOBOBJECTA)(__in_opt LPSECURITY_ATTRIBUTES lpJobAttributes, __in_opt LPCSTR lpName);
-typedef HANDLE(__stdcall *CREATEJOBOBJECTW)(__in_opt LPSECURITY_ATTRIBUTES lpJobAttributes, __in_opt LPCWSTR lpName);
+typedef HANDLE(__stdcall* CREATEJOBOBJECTA)(__in_opt LPSECURITY_ATTRIBUTES lpJobAttributes, __in_opt LPCSTR lpName);
+typedef HANDLE(__stdcall* CREATEJOBOBJECTW)(__in_opt LPSECURITY_ATTRIBUTES lpJobAttributes, __in_opt LPCWSTR lpName);
 
 /* "AssignProcessToJobObject" */
 #define DECLARE_NAMEOF_API_ASSIGNPROCESSTOJOBOBJECT                                                                                \
@@ -550,7 +550,7 @@ typedef HANDLE(__stdcall *CREATEJOBOBJECTW)(__in_opt LPSECURITY_ATTRIBUTES lpJob
 /* @brief
     Assigns a process to an existing job object.
  */
-typedef BOOL(__stdcall *ASSIGNPROCESSTOJOBOBJECT)(___in HANDLE hJob, ___in HANDLE hProcess);
+typedef BOOL(__stdcall* ASSIGNPROCESSTOJOBOBJECT)(___in HANDLE hJob, ___in HANDLE hProcess);
 
 /* "TerminateJobObject" */
 #define DECLARE_NAMEOF_API_TERMINATEJOBOBJECT                                                        \
@@ -562,7 +562,7 @@ typedef BOOL(__stdcall *ASSIGNPROCESSTOJOBOBJECT)(___in HANDLE hJob, ___in HANDL
     Terminates all processes currently associated with the job.
     If the job is nested, this function terminates all processes currently associated with the job and all of its child jobs in the hierarchy.
  */
-typedef BOOL(__stdcall *TERMINATEJOBOBJECT)(___in HANDLE hJob, ___in UINT uExitCode);
+typedef BOOL(__stdcall* TERMINATEJOBOBJECT)(___in HANDLE hJob, ___in UINT uExitCode);
 
 /* "ProcessIdToSessionId" */
 #define DECLARE_NAMEOF_API_PROCESSIDTOSESSIONID                                                                \
@@ -573,7 +573,7 @@ typedef BOOL(__stdcall *TERMINATEJOBOBJECT)(___in HANDLE hJob, ___in UINT uExitC
 /* @brief
     Retrieves the Remote Desktop Services session associated with a specified process.
  */
-typedef BOOL(__stdcall *PROCESSIDTOSESSIONID)(DWORD dwProcessId, DWORD *pSessionId);
+typedef BOOL(__stdcall* PROCESSIDTOSESSIONID)(DWORD dwProcessId, DWORD* pSessionId);
 
 /* "WTSGetActiveConsoleSessionId" */
 #define DECLARE_NAMEOF_API_WTSGETACTIVECONSOLESESSIONID                                                                                                \
@@ -586,7 +586,7 @@ typedef BOOL(__stdcall *PROCESSIDTOSESSIONID)(DWORD dwProcessId, DWORD *pSession
     The physical console is the monitor, keyboard, and mouse.
     Note that it is not necessary that Remote Desktop Services be running for this function to succeed.
  */
-typedef DWORD(__stdcall *WTSGETACTIVECONSOLESESSIONID)();
+typedef DWORD(__stdcall* WTSGETACTIVECONSOLESESSIONID)();
 
 /* "IsWow64Process" */
 #define DECLARE_NAMEOF_API_ISWOW64PROCESS                                        \
@@ -597,7 +597,7 @@ typedef DWORD(__stdcall *WTSGETACTIVECONSOLESESSIONID)();
 /* @brief
     Determines whether the specified process is running under WOW64.
  */
-typedef BOOL(__stdcall *ISWOW64PROCESS)(HANDLE, PBOOL);
+typedef BOOL(__stdcall* ISWOW64PROCESS)(HANDLE, PBOOL);
 
 /* "Wow64EnableWow64FsRedirection" */
 #define DECLARE_NAMEOF_API_WOW64ENABLEWOW64FSREDIRECTION                                                                                                    \
@@ -622,21 +622,21 @@ typedef BOOL(__stdcall *ISWOW64PROCESS)(HANDLE, PBOOL);
     Note  These two methods of controlling file system redirection cannot be combined in any way.
     Do not use the Wow64EnableWow64FsRedirection function with either the Wow64DisableWow64FsRedirection or the Wow64RevertWow64FsRedirection function.
  */
-typedef BOOLEAN(__stdcall *WOW64ENABLEWOW64FSREDIRECTION)(BOOLEAN Wow64FsEnableRedirection);
+typedef BOOLEAN(__stdcall* WOW64ENABLEWOW64FSREDIRECTION)(BOOLEAN Wow64FsEnableRedirection);
 /* @brief
     Disables file system redirection for the calling thread. File system redirection is enabled by default.
  */
-typedef BOOL(__stdcall *WOW64DISABLEWOW64FSREDIRECTION)(PVOID *OldValue);
+typedef BOOL(__stdcall* WOW64DISABLEWOW64FSREDIRECTION)(PVOID* OldValue);
 /* @brief
     Restores file system redirection for the calling thread.
     This function should not be called without a previous call to the Wow64DisableWow64FsRedirection function.
     Any data allocation on behalf of the Wow64DisableWow64FsRedirection function is cleaned up by this function.
  */
-typedef BOOL(__stdcall *WOW64REVERTWOW64FSREDIRECTION)(PVOID OlValue);
+typedef BOOL(__stdcall* WOW64REVERTWOW64FSREDIRECTION)(PVOID OlValue);
 
 /* fiber */
 
-typedef VOID(__stdcall *PFIBER_START_ROUTINE)(LPVOID lpFiberParameter);
+typedef VOID(__stdcall* PFIBER_START_ROUTINE)(LPVOID lpFiberParameter);
 typedef PFIBER_START_ROUTINE LPFIBER_START_ROUTINE;
 
 /* "CreateFiber" */
@@ -670,24 +670,24 @@ typedef PFIBER_START_ROUTINE LPFIBER_START_ROUTINE;
     This function does not schedule the fiber.
     To specify both a commit and reserve stack size, use the CreateFiberEx function.
  */
-typedef LPVOID(__stdcall *CREATEFIBER)(___in SIZE_T dwStackSize, ___in LPFIBER_START_ROUTINE lpStartAddress, __in_opt LPVOID lpParameter);
+typedef LPVOID(__stdcall* CREATEFIBER)(___in SIZE_T dwStackSize, ___in LPFIBER_START_ROUTINE lpStartAddress, __in_opt LPVOID lpParameter);
 
 /* @brief
     Deletes an existing fiber.
  */
-typedef VOID(__stdcall *DELETEFIBER)(___in LPVOID lpFiber);
+typedef VOID(__stdcall* DELETEFIBER)(___in LPVOID lpFiber);
 /* @brief
     Schedules a fiber. The function must be called on a fiber.
  */
-typedef VOID(__stdcall *SWITCHTOFIBER)(___in LPVOID lpFiber);
+typedef VOID(__stdcall* SWITCHTOFIBER)(___in LPVOID lpFiber);
 /* @brief
     Converts the current thread into a fiber. You must convert a thread into a fiber before you can schedule other fibers.
  */
-typedef LPVOID(__stdcall *CONVERTTHREADTOFIBER)(__in_opt LPVOID lpParameter);
+typedef LPVOID(__stdcall* CONVERTTHREADTOFIBER)(__in_opt LPVOID lpParameter);
 /* @brief
     Converts the current fiber into a thread.
  */
-typedef BOOL(__stdcall *CONVERTFIBERTOTHREAD)(VOID);
+typedef BOOL(__stdcall* CONVERTFIBERTOTHREAD)(VOID);
 
 /* "SwitchToThread" */
 #define DECLARE_NAMEOF_API_SWITCHTOTHREAD                                        \
@@ -698,15 +698,15 @@ typedef BOOL(__stdcall *CONVERTFIBERTOTHREAD)(VOID);
     Causes the calling thread to yield execution to another thread that is ready to run on the current processor. The operating system selects the next thread
    to be executed.
  */
-typedef BOOL(__stdcall *SWITCHTOTHREAD)(void);
+typedef BOOL(__stdcall* SWITCHTOTHREAD)(void);
 /* @brief
     Allocates a block of memory from a heap. The allocated memory is not movable.
  */
-typedef LPVOID(__stdcall *HEAPALLOC)(HANDLE hHeap, DWORD dwFlags, SIZE_T dwBytes);
+typedef LPVOID(__stdcall* HEAPALLOC)(HANDLE hHeap, DWORD dwFlags, SIZE_T dwBytes);
 /* @brief
     Frees a memory block allocated from a heap by the HeapAlloc or HeapReAlloc function.
  */
-typedef BOOL(__stdcall *HEAPFREE)(HANDLE hHeap, DWORD dwFlags, LPVOID lpMem);
+typedef BOOL(__stdcall* HEAPFREE)(HANDLE hHeap, DWORD dwFlags, LPVOID lpMem);
 /* @brief
     Allocates the specified number of bytes from the heap.
 
@@ -715,7 +715,7 @@ typedef BOOL(__stdcall *HEAPFREE)(HANDLE hHeap, DWORD dwFlags, LPVOID lpMem);
     New applications should use the heap functions unless documentation states that a local function should be used.
     For more information, see Global and Local Functions.
  */
-typedef HLOCAL(__stdcall *LOCALALLOC)(UINT uFlags, SIZE_T uBytes);
+typedef HLOCAL(__stdcall* LOCALALLOC)(UINT uFlags, SIZE_T uBytes);
 /* @brief
     Frees the specified local memory object and invalidates its handle.
 
@@ -724,7 +724,7 @@ typedef HLOCAL(__stdcall *LOCALALLOC)(UINT uFlags, SIZE_T uBytes);
     New applications should use the heap functions unless documentation states that a local function should be used.
     For more information, see Global and Local Functions.
  */
-typedef HLOCAL(__stdcall *LOCALFREE)(HLOCAL hMem);
+typedef HLOCAL(__stdcall* LOCALFREE)(HLOCAL hMem);
 /* @brief
     Allocates the specified number of bytes from the heap.
 
@@ -733,7 +733,7 @@ typedef HLOCAL(__stdcall *LOCALFREE)(HLOCAL hMem);
     New applications should use the heap functions unless documentation states that a global function should be used.
     For more information, see Global and Local Functions.
  */
-typedef HGLOBAL(__stdcall *GLOBALALLOC)(UINT uFlags, SIZE_T dwBytes);
+typedef HGLOBAL(__stdcall* GLOBALALLOC)(UINT uFlags, SIZE_T dwBytes);
 /* @brief
     Frees the specified global memory object and invalidates its handle.
 
@@ -742,18 +742,18 @@ typedef HGLOBAL(__stdcall *GLOBALALLOC)(UINT uFlags, SIZE_T dwBytes);
     New applications should use the heap functions unless documentation states that a global function should be used.
     For more information, see Global and Local Functions.
  */
-typedef HGLOBAL(__stdcall *GLOBALFREE)(HGLOBAL hMem);
+typedef HGLOBAL(__stdcall* GLOBALFREE)(HGLOBAL hMem);
 /* @brief
     Reserves or commits a region of pages in the virtual address space of the calling process.
     Memory allocated by this function is automatically initialized to zero, unless MEM_RESET is specified.
     To allocate memory in the address space of another process, use the VirtualAllocEx function.
  */
-typedef LPVOID(__stdcall *VIRTUALALLOC)(LPVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect);
+typedef LPVOID(__stdcall* VIRTUALALLOC)(LPVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect);
 /* @brief
     Releases, decommits, or releases and decommits a region of pages within the virtual address space of the calling process.
     To free memory allocated in another process by the VirtualAllocEx function, use the VirtualFreeEx function.
  */
-typedef BOOL(__stdcall *VIRTUALFREE)(LPVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType);
+typedef BOOL(__stdcall* VIRTUALFREE)(LPVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType);
 
 /* "DuplicateHandle" */
 #define DECLARE_NAMEOF_API_DUPLICATEHANDLE                                            \
@@ -764,7 +764,7 @@ typedef BOOL(__stdcall *VIRTUALFREE)(LPVOID lpAddress, SIZE_T dwSize, DWORD dwFr
 /* @brief
     Duplicates an object handle.
  */
-typedef BOOL(__stdcall *DUPLICATEHANDLE)(___in HANDLE hSourceProcessHandle, ___in HANDLE hSourceHandle, ___in HANDLE hTargetProcessHandle,
+typedef BOOL(__stdcall* DUPLICATEHANDLE)(___in HANDLE hSourceProcessHandle, ___in HANDLE hSourceHandle, ___in HANDLE hTargetProcessHandle,
                                          __deref_out LPHANDLE lpTargetHandle, ___in DWORD dwDesiredAccess, ___in BOOL bInheritHandle, ___in DWORD dwOptions);
 
 /* "GetSystemTimes" */
@@ -782,12 +782,12 @@ typedef BOOL(__stdcall *DUPLICATEHANDLE)(___in HANDLE hSourceProcessHandle, ___i
     Retrieves system timing information.
     On a multiprocessor system, the values returned are the sum of the designated times across all processors.
  */
-typedef BOOL(__stdcall *GETSYSTEMTIMES)(__out_opt LPFILETIME lpIdleTime, __out_opt LPFILETIME lpKernelTime, __out_opt LPFILETIME lpUserTime);
+typedef BOOL(__stdcall* GETSYSTEMTIMES)(__out_opt LPFILETIME lpIdleTime, __out_opt LPFILETIME lpKernelTime, __out_opt LPFILETIME lpUserTime);
 
 /* @brief
     Retrieves timing information for the specified process.
  */
-typedef BOOL(__stdcall *GETPROCESSTIMES)(___in HANDLE hProcess, ___out LPFILETIME lpCreationTime, ___out LPFILETIME lpExitTime, ___out LPFILETIME lpKernelTime,
+typedef BOOL(__stdcall* GETPROCESSTIMES)(___in HANDLE hProcess, ___out LPFILETIME lpCreationTime, ___out LPFILETIME lpExitTime, ___out LPFILETIME lpKernelTime,
                                          ___out LPFILETIME lpUserTime);
 
 /* "GlobalMemoryStatusEx" */
@@ -799,7 +799,7 @@ typedef BOOL(__stdcall *GETPROCESSTIMES)(___in HANDLE hProcess, ___out LPFILETIM
 /* @brief
     Retrieves information about the system's current usage of both physical and virtual memory.
  */
-typedef BOOL(__stdcall *GLOBALMEMORYSTATUSEX)(LPMEMORYSTATUSEX lpBuffer);
+typedef BOOL(__stdcall* GLOBALMEMORYSTATUSEX)(LPMEMORYSTATUSEX lpBuffer);
 /* "ReadDirectoryChangesW" */
 #define DECLARE_NAMEOF_API_READDIRECTORYCHANGESW                                                                    \
     CHAR NAMEOF_API_READDIRECTORYCHANGESW[] = {                                                                     \
@@ -811,7 +811,7 @@ typedef BOOL(__stdcall *GLOBALMEMORYSTATUSEX)(LPMEMORYSTATUSEX lpBuffer);
     The function does not report changes to the specified directory itself.
     To track changes on a volume, see change journals.
  */
-typedef BOOL(__stdcall *READDIRECTORYCHANGESW)(___in HANDLE hDirectory, ___out LPVOID lpBuffer, ___in DWORD nBufferLength, ___in BOOL bWatchSubtree,
+typedef BOOL(__stdcall* READDIRECTORYCHANGESW)(___in HANDLE hDirectory, ___out LPVOID lpBuffer, ___in DWORD nBufferLength, ___in BOOL bWatchSubtree,
                                                ___in DWORD dwNotifyFilter, __out_opt LPDWORD lpBytesReturned, __inout_opt LPOVERLAPPED lpOverlapped,
                                                __in_opt LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
 
@@ -843,11 +843,11 @@ typedef BOOL(__stdcall *READDIRECTORYCHANGESW)(___in HANDLE hDirectory, ___out L
 /* @brief
     Retrieves a volume GUID path for the volume that is associated with the specified volume mount point ( drive letter, volume GUID path, or mounted folder).
  */
-typedef BOOL(__stdcall *GETVOLUMENAMEFORVOLUMEMOUNTPOINTA)(___in LPCSTR lpszVolumeMountPoint, __out_ecount(cchBufferLength) LPSTR lpszVolumeName,
+typedef BOOL(__stdcall* GETVOLUMENAMEFORVOLUMEMOUNTPOINTA)(___in LPCSTR lpszVolumeMountPoint, __out_ecount(cchBufferLength) LPSTR lpszVolumeName,
                                                            ___in DWORD cchBufferLength);
 /* @brief
  */
-typedef BOOL(__stdcall *GETVOLUMENAMEFORVOLUMEMOUNTPOINTW)(___in LPCWSTR lpszVolumeMountPoint, __out_ecount(cchBufferLength) LPWSTR lpszVolumeName,
+typedef BOOL(__stdcall* GETVOLUMENAMEFORVOLUMEMOUNTPOINTW)(___in LPCWSTR lpszVolumeMountPoint, __out_ecount(cchBufferLength) LPWSTR lpszVolumeName,
                                                            ___in DWORD cchBufferLength);
 
 #if defined _MBCS || defined MBCS
@@ -882,9 +882,9 @@ typedef BOOL(__stdcall *GETVOLUMENAMEFORVOLUMEMOUNTPOINTW)(___in LPCWSTR lpszVol
     The QueryDosDevice function enables an application to query the names of the junctions used to implement the MS-DOS device namespace as well as the value of
    each specific junction.
  */
-typedef DWORD(WINAPI *QUERYDOSDEVICEA)(IN OUT LPCSTR lpDeviceName, OUT LPSTR lpTargetPath, IN DWORD ucchMax);
+typedef DWORD(WINAPI* QUERYDOSDEVICEA)(IN OUT LPCSTR lpDeviceName, OUT LPSTR lpTargetPath, IN DWORD ucchMax);
 
-typedef DWORD(WINAPI *QUERYDOSDEVICEW)(IN OUT LPCWSTR lpDeviceName, OUT LPWSTR lpTargetPath, IN DWORD ucchMax);
+typedef DWORD(WINAPI* QUERYDOSDEVICEW)(IN OUT LPCWSTR lpDeviceName, OUT LPWSTR lpTargetPath, IN DWORD ucchMax);
 
 /* "GetSystemFirmwareTable" */
 #define DECLARE_NAMEOF_API_GETSYSTEMFIRMWARETABLE                                                                        \
@@ -895,7 +895,7 @@ typedef DWORD(WINAPI *QUERYDOSDEVICEW)(IN OUT LPCWSTR lpDeviceName, OUT LPWSTR l
 /* @brief
     Retrieves the specified firmware table from the firmware table provider.
  */
-typedef UINT(__stdcall *GETSYSTEMFIRMWARETABLE)(___in DWORD FirmwareTableProviderSignature, ___in DWORD FirmwareTableID, ___out PVOID pFirmwareTableBuffer,
+typedef UINT(__stdcall* GETSYSTEMFIRMWARETABLE)(___in DWORD FirmwareTableProviderSignature, ___in DWORD FirmwareTableID, ___out PVOID pFirmwareTableBuffer,
                                                 ___in DWORD BufferSize);
 
 #if defined _MBCS || defined MBCS
@@ -924,11 +924,11 @@ typedef UINT(__stdcall *GETSYSTEMFIRMWARETABLE)(___in DWORD FirmwareTableProvide
 /* @brief
     Retrieves the full name of the executable image for the specified process.
  */
-typedef BOOL(__stdcall *QUERYFULLPROCESSIMAGENAMEA)(___in HANDLE hProcess, ___in DWORD dwFlags, ___out LPSTR lpExeName, __inout PDWORD lpdwSize);
+typedef BOOL(__stdcall* QUERYFULLPROCESSIMAGENAMEA)(___in HANDLE hProcess, ___in DWORD dwFlags, ___out LPSTR lpExeName, __inout PDWORD lpdwSize);
 
-typedef BOOL(__stdcall *QUERYFULLPROCESSIMAGENAMEW)(___in HANDLE hProcess, ___in DWORD dwFlags, ___out LPWSTR lpExeName, __inout PDWORD lpdwSize);
+typedef BOOL(__stdcall* QUERYFULLPROCESSIMAGENAMEW)(___in HANDLE hProcess, ___in DWORD dwFlags, ___out LPWSTR lpExeName, __inout PDWORD lpdwSize);
 
-typedef VOID(__stdcall *RTLCAPTURECONTEXT)(OUT PCONTEXT ContextRecord);
+typedef VOID(__stdcall* RTLCAPTURECONTEXT)(OUT PCONTEXT ContextRecord);
 /* "RtlCaptureContext" */
 #define DECLARE_NAMEOF_API_RTLCAPTURECONTEXT                                                    \
     CHAR NAMEOF_API_RTLCAPTURECONTEXT[] = {                                                     \
@@ -1089,7 +1089,7 @@ typedef VOID(__stdcall *RTLCAPTURECONTEXT)(OUT PCONTEXT ContextRecord);
 
 #endif
 
-typedef int(__stdcall *GETLOCALEINFOEX)(__in_opt LPCWSTR lpLocaleName, ___in LCTYPE LCType, __out_opt LPWSTR lpLCData, ___in int cchData);
+typedef int(__stdcall* GETLOCALEINFOEX)(__in_opt LPCWSTR lpLocaleName, ___in LCTYPE LCType, __out_opt LPWSTR lpLCData, ___in int cchData);
 /* "GetLocaleInfoEx" */
 #define DECLARE_NAMEOF_API_GETLOCALEINFOEX                                            \
     CHAR NAMEOF_API_GETLOCALEINFOEX[] = {                                             \

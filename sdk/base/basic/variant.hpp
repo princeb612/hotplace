@@ -17,9 +17,8 @@
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/types.hpp>
 #include <hotplace/sdk/base/nostd/template.hpp>
-#include <hotplace/sdk/base/system/bignumber.hpp>
-#include <hotplace/sdk/base/system/datetime.hpp>
-#include <hotplace/sdk/base/system/uint.hpp>
+#include <hotplace/sdk/base/stream/types.hpp>
+#include <hotplace/sdk/base/system/types.hpp>
 
 namespace hotplace {
 
@@ -193,13 +192,16 @@ struct variant_t {
 class variant {
    public:
     variant();
+    variant(const variant& value);
+    variant(variant&& value);
+
+    variant(const variant_t& value);
+    variant(variant_t&& value);
+
     variant(const void* value);
     variant(const char* value);
     variant(const char* value, size_t n);
     variant(const unsigned char* value, size_t n);
-    variant(const std::string& value);
-    variant(const binary_t& value);
-    variant(const stream_t* value);
     variant(bool value);
     variant(int8 value);
     variant(uint8 value);
@@ -217,31 +219,38 @@ class variant {
 #endif
     variant(float value);
     variant(double value);
-    variant(const datetime_t& value);
+
     variant(vartype_t vtype, void* value);
-    variant(const variant_t& value);
-    variant(variant_t&& value);
-    variant(const variant& value);
-    variant(variant&& value);
+
+    variant(const std::string& value);
+    variant(const binary_t& value);
+    variant(const datetime_t& value);
+    variant(const stream_t* value);
     variant(const bignumber& value);
-    variant(bignumber&& value);
     ~variant();
 
     const variant_t& content() const;
     variant_t& get();
+
     vartype_t type() const;
     size_t size() const;
     uint16 flag() const;
 
+    variant& set_flag(uint16 flag);
+    variant& unset_flag(uint16 flag);
+
+    /**
+     * @brief   reset
+     * @remarks do not free
+     */
+    variant& reset();
     /**
      * @brief   clear
+     * @remarks free if flag_free is set
      * @example
      *          vt.clear().set_bool(true);
      */
     variant& clear();
-
-    variant& set_flag(uint16 flag);
-    variant& unset_flag(uint16 flag);
 
     /**
      * @brief   setter
@@ -257,41 +266,63 @@ class variant {
     variant& set_uint8(uint8 value);
     variant& set_int16(int16 value);
     variant& set_uint16(uint16 value);
-    variant& set_int24(int32 value);    // 32/24 [0 .. 0x00ffffff]
-    variant& set_uint24(uint32 value);  // 32/24 [0 .. 0x00ffffff]
+    /**
+     * 32/24 [0 .. 0x00ffffff]
+     */
+    variant& set_int24(int32 value);
+    variant& set_uint24(uint32 value);
     variant& set_uint24(const byte_t* p, size_t len);
     variant& set_uint24(const uint24_t& value);
-    variant& set_int32(int32 value);    // 32/32 [0 .. 0xffffffff]
-    variant& set_uint32(uint32 value);  // 32/32 [0 .. 0xffffffff]
+    /**
+     * 32/32 [0 .. 0xffffffff]
+     */
+    variant& set_int32(int32 value);
+    variant& set_uint32(uint32 value);
+    /**
+     * 64/48
+     */
     variant& set_int48(int64 value);
     variant& set_uint48(uint64 value);
     variant& set_uint48(const byte_t* p, size_t len);
     variant& set_uint48(const uint48_t& value);
+    /**
+     * 64
+     */
     variant& set_int64(int64 value);
     variant& set_uint64(uint64 value);
 #if defined __SIZEOF_INT128__
+    /**
+     * 128
+     */
     variant& set_int128(int128 value);
     variant& set_uint128(uint128 value);
 #endif
-    variant& set_fp16(uint16 value);
+    variant& set_fp16(uint16 value);  // binary16
     variant& set_fp32(float value);
     variant& set_float(float value);
+    variant& set_bin32(uint32 value);  // binary32
     variant& set_fp64(double value);
     variant& set_double(double value);
-    variant& set_datetime(const datetime_t& value);
+    variant& set_bin64(uint64 value);  // binary64
+
+    /**
+     * user type pointer
+     */
+    variant& set_user_type(vartype_t vtype, void* value);
+
     variant& set_str(const char* value);
     variant& set_nstr(const char* value, size_t n);
     variant& set_bstr(const unsigned char* value, size_t n);
-    variant& set_user_type(vartype_t vtype, void* value);
 
     variant& set_str_new(const char* value);
-    variant& set_str_new(const std::string& value);
     variant& set_strn_new(const char* value, size_t n);
     variant& set_bstr_new(const unsigned char* value, size_t n);
-    variant& set_bstr_new(const stream_t* s);
     variant& set_nstr_new(const char* value, size_t n);
-    variant& set_binary_new(const binary_t& bin);
 
+    variant& set_string(const std::string& value);
+    variant& set_binary(const binary_t& bin);
+    variant& set_stream(const stream_t* s);
+    variant& set_datetime(const datetime_t& value);
     variant& set_bn(const bignumber& value);
     variant& set_bn(const unsigned char* p, size_t n);
 
@@ -328,7 +359,30 @@ class variant {
     variant& operator=(variant&& other);
     variant& operator=(const variant_t& other);
     variant& operator=(variant_t&& other);
-    variant& operator=(const bignumber& other);
+
+    variant& operator=(const void* value);
+    variant& operator=(bool value);
+    variant& operator=(int8 value);
+    variant& operator=(uint8 value);
+    variant& operator=(int16 value);
+    variant& operator=(uint16 value);
+    variant& operator=(const uint24_t& value);
+    variant& operator=(int32 value);
+    variant& operator=(uint32 value);
+    variant& operator=(const uint48_t& value);
+    variant& operator=(int64 value);
+    variant& operator=(uint64 value);
+#if defined __SIZEOF_INT128__
+    variant& operator=(int128 value);
+    variant& operator=(uint128 value);
+#endif
+    variant& operator=(float value);
+    variant& operator=(double value);
+
+    variant& operator=(const std::string& value);
+    variant& operator=(const binary_t& value);
+    variant& operator=(const datetime_t& value);
+    variant& operator=(const bignumber& value);
 
     template <typename T>
     T t_toi() {

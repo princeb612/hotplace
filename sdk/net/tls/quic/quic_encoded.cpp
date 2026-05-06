@@ -40,13 +40,13 @@ quic_encoded::quic_encoded(const char* data) : payload_encoded(), _datalink(true
 
 quic_encoded::quic_encoded(const std::string& data) : payload_encoded(), _datalink(true) {
     _value = data.size();
-    _data.set_str_new(data);
+    _data.set_string(data);
     quic_length_vle_int(_value, _sizeof_value);
 }
 
 quic_encoded::quic_encoded(const binary_t& data) : payload_encoded(), _datalink(true) {
     _value = data.size();
-    _data.set_binary_new(data);
+    _data.set_binary(data);
     quic_length_vle_int(_value, _sizeof_value);
 }
 
@@ -62,13 +62,13 @@ quic_encoded& quic_encoded::set(const char* data) {
 }
 quic_encoded& quic_encoded::set(const std::string& data) {
     _value = data.size();
-    _data.clear().set_str_new(data);
+    _data.clear().set_string(data);
     quic_length_vle_int(_value, _sizeof_value);
     return *this;
 }
 quic_encoded& quic_encoded::set(const binary_t& data) {
     _value = data.size();
-    _data.clear().set_binary_new(data);
+    _data.clear().set_binary(data);
     quic_length_vle_int(_value, _sizeof_value);
     return *this;
 }

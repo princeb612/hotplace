@@ -35,14 +35,14 @@ class trial_tls_client_socket : public secure_client_socket {
     trial_tls_client_socket(tls_version_t spec = tls_13);
     virtual ~trial_tls_client_socket();
 
-    virtual return_t send(const char *ptr_data, size_t size_data, size_t *cbsent);
+    virtual return_t send(const char* ptr_data, size_t size_data, size_t* cbsent);
 
     virtual int socket_type();
 
     virtual uint32 get_scheme();
 
    protected:
-    virtual return_t do_send(binary_t &bin);
+    virtual return_t do_send(binary_t& bin);
 
    private:
 };

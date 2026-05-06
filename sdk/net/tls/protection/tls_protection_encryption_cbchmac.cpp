@@ -28,7 +28,7 @@
 namespace hotplace {
 namespace net {
 
-return_t tls_protection::get_cbc_hmac_key(tls_session *session, tls_direction_t dir, tls_secret_t &secret_key, tls_secret_t &secret_mac_key) {
+return_t tls_protection::get_cbc_hmac_key(tls_session* session, tls_direction_t dir, tls_secret_t& secret_key, tls_secret_t& secret_mac_key) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (is_clientinitiated(dir)) {
@@ -43,8 +43,8 @@ return_t tls_protection::get_cbc_hmac_key(tls_session *session, tls_direction_t 
     return ret;
 }
 
-return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext, const binary_t &additional,
-                                          binary_t &maced) {
+return_t tls_protection::encrypt_cbc_hmac(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& additional,
+                                          binary_t& maced) {
     return_t ret = errorcode_t::success;
     __try2 {
         ciphertext.clear();
@@ -56,9 +56,9 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
         auto session_type = session->get_type();
         auto cs = get_cipher_suite();
 
-        tls_advisor *tlsadvisor = tls_advisor::get_instance();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-        const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(cs);
+        const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(cs);
         if (nullptr == hint) {
             ret = errorcode_t::not_supported;
             __leave2;
@@ -77,10 +77,10 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
 
         uint64 record_no = 0;
 
-        const binary_t &enckey = get_secrets().get(secret_key);
+        const binary_t& enckey = get_secrets().get(secret_key);
         auto enc_alg = typeof_alg(hint_cipher);
         auto hmac_alg = hint->mac;  // do not promote insecure algorithm
-        const binary_t &mackey = get_secrets().get(secret_mac_key);
+        const binary_t& mackey = get_secrets().get(secret_mac_key);
 
         bool etm = session->get_keyvalue().get(session_encrypt_then_mac);
         uint16 flag = etm ? tls_encrypt_then_mac : tls_mac_then_encrypt;
@@ -103,7 +103,7 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
         if (session_type_dtls == session_type) {
             // in case of DTLS 1.2 chacha20-poly1305, true == is_kindof_dtls()
             // in case of CBC-HMAC, session_type_dtls == session->get_type
-            auto &kv = session->get_session_info(dir).get_keyvalue();
+            auto& kv = session->get_session_info(dir).get_keyvalue();
             uint16 epoch = t_narrow_cast(kv.get(session_dtls_epoch));
             uint64 seq = kv.get(session_dtls_seq);
             record_no = session->get_dtls_record_arrange().make_epoch_seq(epoch, seq);
@@ -126,8 +126,8 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
 
 #if defined DEBUG
         if (istraceable(trace_category_net, loglevel_debug)) {
-            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
-                crypto_advisor *advisor = crypto_advisor::get_instance();
+            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                crypto_advisor* advisor = crypto_advisor::get_instance();
                 dbs.println("> encrypt %s", advisor->nameof_authenticated_encryption(flag).c_str());
                 dbs.println(" > aad %s", base16_encode(aad).c_str());
                 dbs.println(" > enc %s", advisor->nameof_cipher(enc_alg, cbc));
@@ -148,7 +148,7 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session *session, tls_direction_t 
     return ret;
 }
 
-return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext) {
+return_t tls_protection::decrypt_cbc_hmac(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -162,9 +162,9 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         // stream = unprotected(content header + iv) + protected(ciphertext)
         // ciphertext = enc(plaintext + tag)
 
-        tls_advisor *tlsadvisor = tls_advisor::get_instance();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-        const tls_cipher_suite_t *hint = tlsadvisor->hintof_cipher_suite(cs);
+        const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(cs);
         if (nullptr == hint) {
             ret = errorcode_t::not_supported;
             __leave2;
@@ -185,10 +185,10 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
 
         uint64 record_no = 0;
 
-        const binary_t &enckey = get_secrets().get(secret_key);
+        const binary_t& enckey = get_secrets().get(secret_key);
         auto enc_alg = hint_cipher->algorithm;
         auto hmac_alg = hint->mac;  // do not promote insecure algorithm
-        const binary_t &mackey = get_secrets().get(secret_mac_key);
+        const binary_t& mackey = get_secrets().get(secret_mac_key);
 
         bool etm = session->get_keyvalue().get(session_encrypt_then_mac);
         uint16 flag = etm ? tls_encrypt_then_mac : tls_mac_then_encrypt;
@@ -199,7 +199,7 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         if (session_type_dtls == session_type) {
             // in case of DTLS 1.2 chacha20-poly1305, true == is_kindof_dtls()
             // in case of CBC-HMAC, session_type_dtls == session->get_type
-            auto &kv = session->get_session_info(dir).get_keyvalue();
+            auto& kv = session->get_session_info(dir).get_keyvalue();
             uint16 epoch = t_narrow_cast(kv.get(session_dtls_epoch));
             uint64 seq = kv.get(session_dtls_seq);
             record_no = session->get_dtls_record_arrange().make_epoch_seq(epoch, seq);
@@ -216,7 +216,7 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
         //   ciphertext || tag
         binary_t iv;
         size_t bpos = 0;
-        const byte_t *ciphertext = nullptr;
+        const byte_t* ciphertext = nullptr;
         size_t ciphersize = 0;
         if (etm) {
             bpos = content_header_size;
@@ -250,8 +250,8 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session *session, tls_direction_t 
 
 #if defined DEBUG
         if (istraceable(trace_category_net, loglevel_debug)) {
-            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream &dbs) -> void {
-                crypto_advisor *advisor = crypto_advisor::get_instance();
+            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                crypto_advisor* advisor = crypto_advisor::get_instance();
                 dbs.println("> decrypt %s", advisor->nameof_authenticated_encryption(flag).c_str());
                 dbs.println(" > aad %s", base16_encode(aad).c_str());
                 dbs.println(" > enc %s", advisor->nameof_cipher(enc_alg, cbc));

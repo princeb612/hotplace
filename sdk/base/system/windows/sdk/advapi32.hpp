@@ -42,7 +42,7 @@
    CreateProcessWithLogonW function instead. CreateProcessWithLogonW requires no special privileges, but the specified user account must be allowed to log on
    interactively. Generally, it is best to use CreateProcessWithLogonW to create a process with alternate credentials.
  */
-typedef BOOL(__stdcall *CREATEPROCESSASUSER)(HANDLE hToken, LPCTSTR lpApplicationName, LPTSTR lpCommandLine, LPSECURITY_ATTRIBUTES lpProcessAttributes,
+typedef BOOL(__stdcall* CREATEPROCESSASUSER)(HANDLE hToken, LPCTSTR lpApplicationName, LPTSTR lpCommandLine, LPSECURITY_ATTRIBUTES lpProcessAttributes,
                                              LPSECURITY_ATTRIBUTES lpThreadAttributes, BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment,
                                              LPCTSTR lpCurrentDirectory, LPSTARTUPINFO lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation);
 
@@ -62,7 +62,7 @@ typedef BOOL(__stdcall *CREATEPROCESSASUSER)(HANDLE hToken, LPCTSTR lpApplicatio
    privilege if the token is not assignable. CreateProcessWithLogonW requires no special privileges, but the specified user account must be allowed to log on
    interactively. Generally, it is best to use CreateProcessWithLogonW to create a process with alternate credentials.
  */
-typedef BOOL(__stdcall *CREATEPROCESSWITHTOKENW)(IN HANDLE hToken, IN DWORD dwLogonFlags, IN OPTIONAL LPCWSTR lpApplicationName, IN OUT OPTIONAL LPWSTR lpCommandLine,
+typedef BOOL(__stdcall* CREATEPROCESSWITHTOKENW)(IN HANDLE hToken, IN DWORD dwLogonFlags, IN OPTIONAL LPCWSTR lpApplicationName, IN OUT OPTIONAL LPWSTR lpCommandLine,
                                                  IN DWORD dwCreationFlags, IN OPTIONAL LPVOID lpEnvironment, IN OPTIONAL LPCWSTR lpCurrentDirectory,
                                                  IN LPSTARTUPINFOW lpStartupInfo, OUT LPPROCESS_INFORMATION lpProcessInfo);
 
@@ -99,7 +99,7 @@ typedef BOOL(__stdcall *CREATEPROCESSWITHTOKENW)(IN HANDLE hToken, IN DWORD dwLo
    @comment
     NT+
  */
-typedef BOOL(__stdcall *LOGONUSER)(___in LPTSTR lpszUsername, __in_opt LPTSTR lpszDomain, ___in LPTSTR lpszPassword, ___in DWORD dwLogonType, ___in DWORD dwLogonProvider,
+typedef BOOL(__stdcall* LOGONUSER)(___in LPTSTR lpszUsername, __in_opt LPTSTR lpszDomain, ___in LPTSTR lpszPassword, ___in DWORD dwLogonType, ___in DWORD dwLogonProvider,
                                    ___out PHANDLE phToken);
 
 /* "CreateProcessWithLogonW" */
@@ -117,7 +117,7 @@ typedef BOOL(__stdcall *LOGONUSER)(___in LPTSTR lpszUsername, __in_opt LPTSTR lp
    @comment
     2000+
  */
-typedef BOOL(WINAPI *CREATEPROCESSWITHLOGONW)(___in LPCWSTR lpUsername, __in_opt LPCWSTR lpDomain, ___in LPCWSTR lpPassword, ___in DWORD dwLogonFlags,
+typedef BOOL(WINAPI* CREATEPROCESSWITHLOGONW)(___in LPCWSTR lpUsername, __in_opt LPCWSTR lpDomain, ___in LPCWSTR lpPassword, ___in DWORD dwLogonFlags,
                                               __in_opt LPCWSTR lpApplicationName, __inout_opt LPWSTR lpCommandLine, ___in DWORD dwCreationFlags,
                                               __in_opt LPVOID lpEnvironment, __in_opt LPCWSTR lpCurrentDirectory, ___in LPSTARTUPINFOW lpStartupInfo,
                                               ___out LPPROCESS_INFORMATION lpProcessInformation);
@@ -136,7 +136,7 @@ typedef BOOL(WINAPI *CREATEPROCESSWITHLOGONW)(___in LPCWSTR lpUsername, __in_opt
     Platform SDK 에는 TOKEN_ALL_ACCESS 에는 TOKEN_ADJUST_SESSIONID 플래그를 포함
     이로 인해 Windows NT 4.0 은 ERROR_ACCESS_DENIED 가 발생할 수 있다.
  */
-typedef BOOL(__stdcall *OPENPROCESSTOKEN)(HANDLE ProcessHandle, DWORD DesiredAccess, PHANDLE TokenHandle);
+typedef BOOL(__stdcall* OPENPROCESSTOKEN)(HANDLE ProcessHandle, DWORD DesiredAccess, PHANDLE TokenHandle);
 
 /* "OpenThreadToken" */
 #define DECLARE_NAMEOF_API_OPENTHREADTOKEN                                            \
@@ -147,7 +147,7 @@ typedef BOOL(__stdcall *OPENPROCESSTOKEN)(HANDLE ProcessHandle, DWORD DesiredAcc
 /* @brief
     The OpenThreadToken function opens the access token associated with a thread.
  */
-typedef BOOL(__stdcall *OPENTHREADTOKEN)(___in HANDLE ThreadHandle, ___in DWORD DesiredAccess, ___in BOOL OpenAsSelf, ___out PHANDLE TokenHandle);
+typedef BOOL(__stdcall* OPENTHREADTOKEN)(___in HANDLE ThreadHandle, ___in DWORD DesiredAccess, ___in BOOL OpenAsSelf, ___out PHANDLE TokenHandle);
 
 /* "GetTokenInformation" */
 #define DECLARE_NAMEOF_API_GETTOKENINFORMATION                                                            \
@@ -160,7 +160,7 @@ typedef BOOL(__stdcall *OPENTHREADTOKEN)(___in HANDLE ThreadHandle, ___in DWORD 
    obtain the information. To determine if a user is a member of a specific group, use the CheckTokenMembership function. To determine group membership for app
    container tokens, use the CheckTokenMembershipEx function.
  */
-typedef BOOL(__stdcall *GETTOKENINFORMATION)(HANDLE TokenHandle, TOKEN_INFORMATION_CLASS TokenInformationClass, LPVOID TokenInformation, DWORD TokenInformationLength,
+typedef BOOL(__stdcall* GETTOKENINFORMATION)(HANDLE TokenHandle, TOKEN_INFORMATION_CLASS TokenInformationClass, LPVOID TokenInformation, DWORD TokenInformationLength,
                                              PDWORD ReturnLength);
 
 #undef NAMEOF_API_LOOKUPPRIVILEGEVALUE
@@ -190,7 +190,7 @@ typedef BOOL(__stdcall *GETTOKENINFORMATION)(HANDLE TokenHandle, TOKEN_INFORMATI
     The LookupPrivilegeValue function retrieves the locally unique identifier (LUID) used on a specified system to locally represent the specified privilege
    name.
  */
-typedef BOOL(__stdcall *LOOKUPPRIVILEGEVALUE)(LPCTSTR lpSystemName, LPCTSTR lpName, PLUID lpLuid);
+typedef BOOL(__stdcall* LOOKUPPRIVILEGEVALUE)(LPCTSTR lpSystemName, LPCTSTR lpName, PLUID lpLuid);
 
 /* "AdjustTokenPrivileges" */
 #define DECLARE_NAMEOF_API_ADJUSTTOKENPRIVILEGES                                                                    \
@@ -202,7 +202,7 @@ typedef BOOL(__stdcall *LOOKUPPRIVILEGEVALUE)(LPCTSTR lpSystemName, LPCTSTR lpNa
     The AdjustTokenPrivileges function enables or disables privileges in the specified access token.
     Enabling or disabling privileges in an access token requires TOKEN_ADJUST_PRIVILEGES access.
  */
-typedef BOOL(__stdcall *ADJUSTTOKENPRIVILEGES)(HANDLE TokenHandle, BOOL DisableAllPrivileges, PTOKEN_PRIVILEGES NewState, DWORD BufferLength,
+typedef BOOL(__stdcall* ADJUSTTOKENPRIVILEGES)(HANDLE TokenHandle, BOOL DisableAllPrivileges, PTOKEN_PRIVILEGES NewState, DWORD BufferLength,
                                                PTOKEN_PRIVILEGES PreviousState, PDWORD ReturnLength);
 
 /* "InitializeAcl" */
@@ -214,7 +214,7 @@ typedef BOOL(__stdcall *ADJUSTTOKENPRIVILEGES)(HANDLE TokenHandle, BOOL DisableA
 /* @brief
     The InitializeAcl function initializes a new ACL structure.
  */
-typedef BOOL(__stdcall *INITIALIZEACL)(___out PACL pAcl, ___in DWORD nAclLength, ___in DWORD dwAclRevision);
+typedef BOOL(__stdcall* INITIALIZEACL)(___out PACL pAcl, ___in DWORD nAclLength, ___in DWORD dwAclRevision);
 
 /* "IsValidAcl" */
 #define DECLARE_NAMEOF_API_ISVALIDACL                        \
@@ -225,7 +225,7 @@ typedef BOOL(__stdcall *INITIALIZEACL)(___out PACL pAcl, ___in DWORD nAclLength,
 /* @brief
     The IsValidAcl function validates an access control list (ACL).
  */
-typedef BOOL(__stdcall *ISVALIDACL)(___in PACL pAcl);
+typedef BOOL(__stdcall* ISVALIDACL)(___in PACL pAcl);
 
 /* "AddAccessAllowedAce" */
 #define DECLARE_NAMEOF_API_ADDACCESSALLOWEDACE                                                            \
@@ -238,7 +238,7 @@ typedef BOOL(__stdcall *ISVALIDACL)(___in PACL pAcl);
     The access is granted to a specified security identifier (SID).
     To control whether the new ACE can be inherited by child objects, use the AddAccessAllowedAceEx function.
  */
-typedef BOOL(__stdcall *ADDACCESSALLOWEDACE)(__inout PACL pAcl, ___in DWORD dwAceRevision, ___in DWORD AccessMask, ___in PSID pSid);
+typedef BOOL(__stdcall* ADDACCESSALLOWEDACE)(__inout PACL pAcl, ___in DWORD dwAceRevision, ___in DWORD AccessMask, ___in PSID pSid);
 
 /* "AddAccessDeniedAce" */
 #define DECLARE_NAMEOF_API_ADDACCESSDENIEDACE                                                        \
@@ -251,7 +251,7 @@ typedef BOOL(__stdcall *ADDACCESSALLOWEDACE)(__inout PACL pAcl, ___in DWORD dwAc
     The access is denied to a specified security identifier (SID).
     To control whether the new ACE can be inherited by child objects, use the AddAccessDeniedAceEx function.
  */
-typedef BOOL(__stdcall *ADDACCESSDENIEDACE)(__inout PACL pAcl, ___in DWORD dwAceRevision, ___in DWORD AccessMask, ___in PSID pSid);
+typedef BOOL(__stdcall* ADDACCESSDENIEDACE)(__inout PACL pAcl, ___in DWORD dwAceRevision, ___in DWORD AccessMask, ___in PSID pSid);
 
 #undef NAMEOF_API_LOOKUPACCOUNTSID
 
@@ -280,7 +280,7 @@ typedef BOOL(__stdcall *ADDACCESSDENIEDACE)(__inout PACL pAcl, ___in DWORD dwAce
     The LookupAccountSid function accepts a security identifier (SID) as input.
     It retrieves the name of the account for this SID and the name of the first domain on which this SID is found.
  */
-typedef BOOL(__stdcall *LOOKUPACCOUNTSID)(LPCTSTR lpSystemName, PSID lpSid, LPTSTR lpName, LPDWORD cchName, LPTSTR lpReferencedDomainName,
+typedef BOOL(__stdcall* LOOKUPACCOUNTSID)(LPCTSTR lpSystemName, PSID lpSid, LPTSTR lpName, LPDWORD cchName, LPTSTR lpReferencedDomainName,
                                           LPDWORD cchReferencedDomainName, PSID_NAME_USE peUse);
 
 /* "CreateWellKnownSid" */
@@ -292,8 +292,8 @@ typedef BOOL(__stdcall *LOOKUPACCOUNTSID)(LPCTSTR lpSystemName, PSID lpSid, LPTS
 /* @brief
     The CreateWellKnownSid function creates a SID for predefined aliases.
  */
-typedef BOOL(__stdcall *CREATEWELLKNOWNSID)(___in WELL_KNOWN_SID_TYPE WellKnownSidType, __in_opt PSID DomainSid, __out_bcount_part_opt(*cbSid, *cbSid) PSID pSid,
-                                            __inout DWORD *cbSid);
+typedef BOOL(__stdcall* CREATEWELLKNOWNSID)(___in WELL_KNOWN_SID_TYPE WellKnownSidType, __in_opt PSID DomainSid, __out_bcount_part_opt(*cbSid, *cbSid) PSID pSid,
+                                            __inout DWORD* cbSid);
 
 #undef NAMEOF_API_LOOKUPACCOUNTNAME
 
@@ -323,7 +323,7 @@ typedef BOOL(__stdcall *CREATEWELLKNOWNSID)(___in WELL_KNOWN_SID_TYPE WellKnownS
     It retrieves a security identifier (SID) for the account and the name of the domain on which the account was found.
     The LsaLookupNames function can also retrieve computer accounts.
  */
-typedef BOOL(__stdcall *LOOKUPACCOUNTNAME)(__in_opt LPCTSTR lpSystemName, ___in LPCTSTR lpAccountName, __out_bcount_part_opt(*cbSid, *cbSid) PSID Sid,
+typedef BOOL(__stdcall* LOOKUPACCOUNTNAME)(__in_opt LPCTSTR lpSystemName, ___in LPCTSTR lpAccountName, __out_bcount_part_opt(*cbSid, *cbSid) PSID Sid,
                                            __inout LPDWORD cbSid,
                                            __out_ecount_part_opt(*cchReferencedDomainName, *cchReferencedDomainName + 1) LPTSTR ReferencedDomainName,
                                            __inout LPDWORD cchReferencedDomainName, ___out PSID_NAME_USE peUse);
@@ -337,7 +337,7 @@ typedef BOOL(__stdcall *LOOKUPACCOUNTNAME)(__in_opt LPCTSTR lpSystemName, ___in 
 /* @brief
     The InitializeSecurityDescriptor function initializes a new security descriptor.
  */
-typedef BOOL(__stdcall *INITIALIZESECURITYDESCRIPTOR)(___out PSECURITY_DESCRIPTOR pSecurityDescriptor, ___in DWORD dwRevision);
+typedef BOOL(__stdcall* INITIALIZESECURITYDESCRIPTOR)(___out PSECURITY_DESCRIPTOR pSecurityDescriptor, ___in DWORD dwRevision);
 
 /* "SetSecurityDescriptorDacl" */
 #define DECLARE_NAMEOF_API_SETSECURITYDESCRIPTORDACL                                                                                    \
@@ -349,7 +349,7 @@ typedef BOOL(__stdcall *INITIALIZESECURITYDESCRIPTOR)(___out PSECURITY_DESCRIPTO
     The SetSecurityDescriptorDacl function sets information in a discretionary access control list (DACL).
     If a DACL is already present in the security descriptor, the DACL is replaced.
  */
-typedef BOOL(__stdcall *SETSECURITYDESCRIPTORDACL)(__inout PSECURITY_DESCRIPTOR pSecurityDescriptor, ___in BOOL bDaclPresent, __in_opt PACL pDacl,
+typedef BOOL(__stdcall* SETSECURITYDESCRIPTORDACL)(__inout PSECURITY_DESCRIPTOR pSecurityDescriptor, ___in BOOL bDaclPresent, __in_opt PACL pDacl,
                                                    ___in BOOL bDaclDefaulted);
 
 /* "SetSecurityDescriptorSacl" */
@@ -362,7 +362,7 @@ typedef BOOL(__stdcall *SETSECURITYDESCRIPTORDACL)(__inout PSECURITY_DESCRIPTOR 
     The SetSecurityDescriptorDacl function sets information in a discretionary access control list (DACL).
     If a DACL is already present in the security descriptor, the DACL is replaced.
  */
-typedef BOOL(__stdcall *SETSECURITYDESCRIPTORSACL)(__inout PSECURITY_DESCRIPTOR pSecurityDescriptor, ___in BOOL bSaclPresent, __in_opt PACL pSacl,
+typedef BOOL(__stdcall* SETSECURITYDESCRIPTORSACL)(__inout PSECURITY_DESCRIPTOR pSecurityDescriptor, ___in BOOL bSaclPresent, __in_opt PACL pSacl,
                                                    ___in BOOL bSaclDefaulted);
 
 /* "SetSecurityDescriptorOwner" */
@@ -375,7 +375,7 @@ typedef BOOL(__stdcall *SETSECURITYDESCRIPTORSACL)(__inout PSECURITY_DESCRIPTOR 
     The SetSecurityDescriptorOwner function sets the owner information of an absolute-format security descriptor.
     It replaces any owner information already present in the security descriptor.
  */
-typedef BOOL(__stdcall *SETSECURITYDESCRIPTOROWNER)(__inout PSECURITY_DESCRIPTOR pSecurityDescriptor, __in_opt PSID pOwner, ___in BOOL bOwnerDefaulted);
+typedef BOOL(__stdcall* SETSECURITYDESCRIPTOROWNER)(__inout PSECURITY_DESCRIPTOR pSecurityDescriptor, __in_opt PSID pOwner, ___in BOOL bOwnerDefaulted);
 
 /* "SetSecurityDescriptorGroup" */
 #define DECLARE_NAMEOF_API_SETSECURITYDESCRIPTORGROUP                                                                                        \
@@ -387,7 +387,7 @@ typedef BOOL(__stdcall *SETSECURITYDESCRIPTOROWNER)(__inout PSECURITY_DESCRIPTOR
     The SetSecurityDescriptorGroup function sets the primary group information of an absolute-format security descriptor, replacing any primary group
    information already present in the security descriptor.
  */
-typedef BOOL(__stdcall *SETSECURITYDESCRIPTORGROUP)(__inout PSECURITY_DESCRIPTOR pSecurityDescriptor, __in_opt PSID pGroup, ___in BOOL bGroupDefaulted);
+typedef BOOL(__stdcall* SETSECURITYDESCRIPTORGROUP)(__inout PSECURITY_DESCRIPTOR pSecurityDescriptor, __in_opt PSID pGroup, ___in BOOL bGroupDefaulted);
 
 /* "AllocateAndInitializeSid" */
 #define DECLARE_NAMEOF_API_ALLOCATEANDINITIALIZESID                                                                                \
@@ -398,9 +398,9 @@ typedef BOOL(__stdcall *SETSECURITYDESCRIPTORGROUP)(__inout PSECURITY_DESCRIPTOR
 /* @brief
     The AllocateAndInitializeSid function allocates and initializes a security identifier (SID) with up to eight subauthorities.
  */
-typedef BOOL(__stdcall *ALLOCATEANDINITIALIZESID)(PSID_IDENTIFIER_AUTHORITY pIdentifierAuthority, BYTE nSubAuthorityCount, DWORD dwSubAuthority0, DWORD dwSubAuthority1,
+typedef BOOL(__stdcall* ALLOCATEANDINITIALIZESID)(PSID_IDENTIFIER_AUTHORITY pIdentifierAuthority, BYTE nSubAuthorityCount, DWORD dwSubAuthority0, DWORD dwSubAuthority1,
                                                   DWORD dwSubAuthority2, DWORD dwSubAuthority3, DWORD dwSubAuthority4, DWORD dwSubAuthority5, DWORD dwSubAuthority6,
-                                                  DWORD dwSubAuthority7, PSID *pSid);
+                                                  DWORD dwSubAuthority7, PSID* pSid);
 
 /* "EqualSid" */
 #define DECLARE_NAMEOF_API_EQUALSID                \
@@ -412,12 +412,12 @@ typedef BOOL(__stdcall *ALLOCATEANDINITIALIZESID)(PSID_IDENTIFIER_AUTHORITY pIde
     The EqualSid function tests two security identifier (SID) values for equality.
     Two SIDs must match exactly to be considered equal.
  */
-typedef BOOL(__stdcall *EQUALSID)(PSID pSid1, PSID pSid2);
+typedef BOOL(__stdcall* EQUALSID)(PSID pSid1, PSID pSid2);
 
 /* @brief
     The GetLengthSid function returns the length, in bytes, of a valid security identifier (SID).
  */
-typedef DWORD(__stdcall *GETLENGTHSID)(PSID pSid);
+typedef DWORD(__stdcall* GETLENGTHSID)(PSID pSid);
 
 /* "FreeSid" */
 #define DECLARE_NAMEOF_API_FREESID            \
@@ -428,7 +428,7 @@ typedef DWORD(__stdcall *GETLENGTHSID)(PSID pSid);
 /* @brief
     The FreeSid function frees a security identifier (SID) previously allocated by using the AllocateAndInitializeSid function.
  */
-typedef PVOID(__stdcall *FREESID)(___in PSID pSid);
+typedef PVOID(__stdcall* FREESID)(___in PSID pSid);
 
 /* "CheckTokenMembership" */
 #define DECLARE_NAMEOF_API_CHECKTOKENMEMBERSHIP                                                                \
@@ -440,7 +440,7 @@ typedef PVOID(__stdcall *FREESID)(___in PSID pSid);
     The CheckTokenMembership function determines whether a specified security identifier (SID) is enabled in an access token.
     If you want to determine group membership for app container tokens, you need to use the CheckTokenMembershipEx function.
  */
-typedef BOOL(__stdcall *CHECKTOKENMEMBERSHIP)(__in_opt HANDLE TokenHandle, ___in PSID SidToCheck, ___out PBOOL IsMember);
+typedef BOOL(__stdcall* CHECKTOKENMEMBERSHIP)(__in_opt HANDLE TokenHandle, ___in PSID SidToCheck, ___out PBOOL IsMember);
 
 /* "ImpersonateLoggedOnUser" */
 #define DECLARE_NAMEOF_API_IMPERSONATELOGGEDONUSER                                                                            \
@@ -457,11 +457,11 @@ typedef BOOL(__stdcall *CHECKTOKENMEMBERSHIP)(__in_opt HANDLE TokenHandle, ___in
     The ImpersonateLoggedOnUser function lets the calling thread impersonate the security context of a logged-on user.
     The user is represented by a token handle.
  */
-typedef BOOL(__stdcall *IMPERSONATELOGGEDONUSER)(___in HANDLE hToken);
+typedef BOOL(__stdcall* IMPERSONATELOGGEDONUSER)(___in HANDLE hToken);
 /* @brief
     The RevertToSelf function terminates the impersonation of a client application.
  */
-typedef BOOL(__stdcall *REVERTTOSELF)(void);
+typedef BOOL(__stdcall* REVERTTOSELF)(void);
 
 /* SCM */
 
@@ -621,7 +621,7 @@ typedef BOOL(__stdcall *REVERTTOSELF)(void);
     Changes the configuration parameters of a service.
     To change the optional configuration parameters, use the ChangeServiceConfig2 function.
  */
-typedef BOOL(WINAPI *CHANGESERVICECONFIG)(___in SC_HANDLE hService, ___in DWORD dwServiceType, ___in DWORD dwStartType, ___in DWORD dwErrorControl,
+typedef BOOL(WINAPI* CHANGESERVICECONFIG)(___in SC_HANDLE hService, ___in DWORD dwServiceType, ___in DWORD dwStartType, ___in DWORD dwErrorControl,
                                           __in_opt LPCTSTR lpBinaryPathName, __in_opt LPCTSTR lpLoadOrderGroup, __out_opt LPDWORD lpdwTagId,
                                           __in_opt LPCTSTR lpDependencies, __in_opt LPCTSTR lpServiceStartName, __in_opt LPCTSTR lpPassword,
                                           __in_opt LPCTSTR lpDisplayName);
@@ -629,23 +629,23 @@ typedef BOOL(WINAPI *CHANGESERVICECONFIG)(___in SC_HANDLE hService, ___in DWORD 
 /* @brief
     Changes the optional configuration parameters of a service.
  */
-typedef BOOL(WINAPI *CHANGESERVICECONFIG2)(___in SC_HANDLE hService, ___in DWORD dwInfoLevel, ___in LPVOID lpInfo);
+typedef BOOL(WINAPI* CHANGESERVICECONFIG2)(___in SC_HANDLE hService, ___in DWORD dwInfoLevel, ___in LPVOID lpInfo);
 
 /* @brief
     Closes a handle to a service control manager or service object.
  */
-typedef BOOL(WINAPI *CLOSESERVICEHANDLE)(___in SC_HANDLE hSCObject);
+typedef BOOL(WINAPI* CLOSESERVICEHANDLE)(___in SC_HANDLE hSCObject);
 
 /* @brief
     Sends a control code to a service.
     To specify additional information when stopping a service, use the ControlServiceEx function.
  */
-typedef BOOL(WINAPI *CONTROLSERVICE)(___in SC_HANDLE hService, ___in DWORD dwControl, ___out LPSERVICE_STATUS lpServiceStatus);
+typedef BOOL(WINAPI* CONTROLSERVICE)(___in SC_HANDLE hService, ___in DWORD dwControl, ___out LPSERVICE_STATUS lpServiceStatus);
 
 /* @brief
     Creates a service object and adds it to the specified service control manager database.
  */
-typedef SC_HANDLE(WINAPI *CREATESERVICE)(___in SC_HANDLE hSCManager, ___in LPCTSTR lpServiceName, ___in LPCTSTR lpDisplayName, ___in DWORD dwDesiredAccess,
+typedef SC_HANDLE(WINAPI* CREATESERVICE)(___in SC_HANDLE hSCManager, ___in LPCTSTR lpServiceName, ___in LPCTSTR lpDisplayName, ___in DWORD dwDesiredAccess,
                                          ___in DWORD dwServiceType, ___in DWORD dwStartType, ___in DWORD dwErrorControl, ___in LPCTSTR lpBinaryPathName,
                                          ___in LPCTSTR lpLoadOrderGroup, ___out LPDWORD lpdwTagId, ___in LPCTSTR lpDependencies, ___in LPCTSTR lpServiceStartName,
                                          ___in LPCTSTR lpPassword);
@@ -653,30 +653,30 @@ typedef SC_HANDLE(WINAPI *CREATESERVICE)(___in SC_HANDLE hSCManager, ___in LPCTS
 /* @brief
     Marks the specified service for deletion from the service control manager database.
  */
-typedef BOOL(WINAPI *DELETESERVICE)(___in SC_HANDLE hService);
+typedef BOOL(WINAPI* DELETESERVICE)(___in SC_HANDLE hService);
 
 /* @brief
     Retrieves the name and status of each service that depends on the specified service; that is, the specified service must be running before the dependent
    services can run.
  */
-typedef BOOL(WINAPI *ENUMDEPENDENTSERVICES)(___in SC_HANDLE hService, ___in DWORD dwServiceState, ___out LPENUM_SERVICE_STATUS lpServices, ___in DWORD cbBufSize,
+typedef BOOL(WINAPI* ENUMDEPENDENTSERVICES)(___in SC_HANDLE hService, ___in DWORD dwServiceState, ___out LPENUM_SERVICE_STATUS lpServices, ___in DWORD cbBufSize,
                                             ___out LPDWORD pcbBytesNeeded, ___out LPDWORD lpServicesReturned);
 
 /* @brief
     Establishes a connection to the service control manager on the specified computer and opens the specified service control manager database.
  */
-typedef SC_HANDLE(WINAPI *OPENSCMANAGER)(___in LPCTSTR lpMachineName, ___in LPCTSTR lpDatabaseName, ___in DWORD dwDesiredAccess);
+typedef SC_HANDLE(WINAPI* OPENSCMANAGER)(___in LPCTSTR lpMachineName, ___in LPCTSTR lpDatabaseName, ___in DWORD dwDesiredAccess);
 
 /* @brief
     Opens an existing service.
  */
-typedef SC_HANDLE(WINAPI *OPENSERVICE)(___in SC_HANDLE hSCManager, ___in LPCTSTR lpServiceName, ___in DWORD dwDesiredAccess);
+typedef SC_HANDLE(WINAPI* OPENSERVICE)(___in SC_HANDLE hSCManager, ___in LPCTSTR lpServiceName, ___in DWORD dwDesiredAccess);
 
 /* @brief
     Retrieves the configuration parameters of the specified service.
     Optional configuration parameters are available using the QueryServiceConfig2 function.
  */
-typedef BOOL(WINAPI *QUERYSERVICECONFIG)(___in SC_HANDLE hService, ___out LPQUERY_SERVICE_CONFIG lpServiceConfig, ___in DWORD cbBufSize, ___out LPDWORD pcbBytesNeeded);
+typedef BOOL(WINAPI* QUERYSERVICECONFIG)(___in SC_HANDLE hService, ___out LPQUERY_SERVICE_CONFIG lpServiceConfig, ___in DWORD cbBufSize, ___out LPDWORD pcbBytesNeeded);
 
 /* @brief
     Retrieves the current status of the specified service.
@@ -684,12 +684,12 @@ typedef BOOL(WINAPI *QUERYSERVICECONFIG)(___in SC_HANDLE hService, ___out LPQUER
     QueryServiceStatusEx returns the same information QueryServiceStatus returns, with the addition of the process identifier and additional information for the
    service.
  */
-typedef BOOL(WINAPI *QUERYSERVICESTATUS)(___in SC_HANDLE hService, ___out LPSERVICE_STATUS lpServiceStatus);
+typedef BOOL(WINAPI* QUERYSERVICESTATUS)(___in SC_HANDLE hService, ___out LPSERVICE_STATUS lpServiceStatus);
 
 /* @brief
     Starts a service.
  */
-typedef BOOL(WINAPI *STARTSERVICE)(___in SC_HANDLE hService, ___in DWORD dwNumServiceArgs, ___in LPCTSTR *lpServiceArgVectors);
+typedef BOOL(WINAPI* STARTSERVICE)(___in SC_HANDLE hService, ___in DWORD dwNumServiceArgs, ___in LPCTSTR* lpServiceArgVectors);
 
 #undef NAMEOF_API_REGISTERSERVICECTRLHANDLER
 #undef NAMEOF_API_REGISTERSERVICECTRLHANDLEREX
@@ -770,21 +770,21 @@ typedef BOOL(WINAPI *STARTSERVICE)(___in SC_HANDLE hService, ___in DWORD dwNumSe
    @comment
     NT+
  */
-typedef SERVICE_STATUS_HANDLE(WINAPI *REGISTERSERVICECTRLHANDLER)(___in LPCTSTR lpServiceName, ___in LPHANDLER_FUNCTION lpHandlerProc);
+typedef SERVICE_STATUS_HANDLE(WINAPI* REGISTERSERVICECTRLHANDLER)(___in LPCTSTR lpServiceName, ___in LPHANDLER_FUNCTION lpHandlerProc);
 
 /* @brief
     Registers a function to handle extended service control requests.
    @comment
     windows 2000+
  */
-typedef SERVICE_STATUS_HANDLE(WINAPI *REGISTERSERVICECTRLHANDLEREX)(___in LPCTSTR lpServiceName, ___in LPHANDLER_FUNCTION_EX lpHandlerProc, ___in LPVOID lpContext);
+typedef SERVICE_STATUS_HANDLE(WINAPI* REGISTERSERVICECTRLHANDLEREX)(___in LPCTSTR lpServiceName, ___in LPHANDLER_FUNCTION_EX lpHandlerProc, ___in LPVOID lpContext);
 
 /* @brief
     Updates the service control manager's status information for the calling service.
    @comment
     NT+
  */
-typedef BOOL(WINAPI *SETSERVICESTATUS)(___in SERVICE_STATUS_HANDLE hServiceStatus, ___in LPSERVICE_STATUS lpServiceStatus);
+typedef BOOL(WINAPI* SETSERVICESTATUS)(___in SERVICE_STATUS_HANDLE hServiceStatus, ___in LPSERVICE_STATUS lpServiceStatus);
 
 /* @brief
     Connects the main thread of a service process to the service control manager, which causes the thread to be the service control dispatcher thread for the
@@ -792,13 +792,13 @@ typedef BOOL(WINAPI *SETSERVICESTATUS)(___in SERVICE_STATUS_HANDLE hServiceStatu
    @comment
     NT+
  */
-typedef BOOL(WINAPI *STARTSERVICECTRLDISPATCHER)(___in const SERVICE_TABLE_ENTRY *lpServiceTable);
+typedef BOOL(WINAPI* STARTSERVICECTRLDISPATCHER)(___in const SERVICE_TABLE_ENTRY* lpServiceTable);
 
 /* @brief
     Connects the main thread of a service process to the service control manager, which causes the thread to be the service control dispatcher thread for the
    calling process.
  */
-typedef BOOL(WINAPI *ENUMSERVICESSTATUSEX)(___in SC_HANDLE hSCManager, ___in SC_ENUM_TYPE InfoLevel, ___in DWORD dwServiceType, ___in DWORD dwServiceState,
+typedef BOOL(WINAPI* ENUMSERVICESSTATUSEX)(___in SC_HANDLE hSCManager, ___in SC_ENUM_TYPE InfoLevel, ___in DWORD dwServiceType, ___in DWORD dwServiceState,
                                            __out_opt LPBYTE lpServices, ___in DWORD cbBufSize, ___out LPDWORD pcbBytesNeeded, ___out LPDWORD lpServicesReturned,
                                            __inout_opt LPDWORD lpResumeHandle, __in_opt LPCTSTR pszGroupName);
 
@@ -829,13 +829,13 @@ typedef BOOL(WINAPI *ENUMSERVICESSTATUSEX)(___in SC_HANDLE hSCManager, ___in SC_
     Initiates a shutdown and optional restart of the specified computer.
     To record a reason for the shutdown in the event log, call the InitiateSystemShutdownEx function.
  */
-typedef BOOL(__stdcall *INITIATESYSTEMSHUTDOWN)(___in LPTSTR lpMachineName, ___in LPTSTR lpMessage, ___in DWORD dwTimeout, ___in BOOL bForceAppsClosed,
+typedef BOOL(__stdcall* INITIATESYSTEMSHUTDOWN)(___in LPTSTR lpMachineName, ___in LPTSTR lpMessage, ___in DWORD dwTimeout, ___in BOOL bForceAppsClosed,
                                                 ___in BOOL bRebootAfterShutdown);
 
 /* @brief
     Initiates a shutdown and optional restart of the specified computer, and optionally records the reason for the shutdown.
  */
-typedef BOOL(__stdcall *INITIATESYSTEMSHUTDOWNEX)(___in LPTSTR lpMachineName, ___in LPTSTR lpMessage, ___in DWORD dwTimeout, ___in BOOL bForceAppsClosed,
+typedef BOOL(__stdcall* INITIATESYSTEMSHUTDOWNEX)(___in LPTSTR lpMachineName, ___in LPTSTR lpMessage, ___in DWORD dwTimeout, ___in BOOL bForceAppsClosed,
                                                   ___in BOOL bRebootAfterShutdown, ___in DWORD dwReason);
 
 /* Crypt */
@@ -904,30 +904,30 @@ typedef BOOL(__stdcall *INITIATESYSTEMSHUTDOWNEX)(___in LPTSTR lpMachineName, __
     With the appropriate setting of dwFlags, this function can also create and destroy key containers and can provide access to a CSP with a temporary key
    container if access to a private key is not required.
  */
-typedef BOOL(WINAPI *CRYPTACQUIRECONTEXT)(___out HCRYPTPROV *phProv, ___in LPCTSTR pszContainer, ___in LPCTSTR pszProvider, ___in DWORD dwProvType, ___in DWORD dwFlags);
+typedef BOOL(WINAPI* CRYPTACQUIRECONTEXT)(___out HCRYPTPROV* phProv, ___in LPCTSTR pszContainer, ___in LPCTSTR pszProvider, ___in DWORD dwProvType, ___in DWORD dwFlags);
 /* @brief
     The CryptCreateHash function initiates the hashing of a stream of data.
     It creates and returns to the calling application a handle to a cryptographic service provider (CSP) hash object.
     This handle is used in subsequent calls to CryptHashData and CryptHashSessionKey to hash session keys and other streams of data.
  */
-typedef BOOL(WINAPI *CRYPTCREATEHASH)(___in HCRYPTPROV hProv, ___in ALG_ID Algid, ___in HCRYPTKEY hKey, ___in DWORD dwFlags, ___out HCRYPTHASH *phHash);
+typedef BOOL(WINAPI* CRYPTCREATEHASH)(___in HCRYPTPROV hProv, ___in ALG_ID Algid, ___in HCRYPTKEY hKey, ___in DWORD dwFlags, ___out HCRYPTHASH* phHash);
 /* @brief
     The CryptHashData function adds data to a specified hash object.
     This function and CryptHashSessionKey can be called multiple times to compute the hash of long or discontinuous data streams.
     Before calling this function, CryptCreateHash must be called to create a handle of a hash object.
  */
-typedef BOOL(WINAPI *CRYPTHASHDATA)(___in HCRYPTHASH hHash, ___in BYTE *pbData, ___in DWORD dwDataLen, ___in DWORD dwFlags);
+typedef BOOL(WINAPI* CRYPTHASHDATA)(___in HCRYPTHASH hHash, ___in BYTE* pbData, ___in DWORD dwDataLen, ___in DWORD dwFlags);
 /* @brief
     The CryptGetHashParam function retrieves data that governs the operations of a hash object.
     The actual hash value can be retrieved by using this function.
  */
-typedef BOOL(WINAPI *CRYPTGETHASHPARAM)(___in HCRYPTHASH hHash, ___in DWORD dwParam, ___out BYTE *pbData, __inout DWORD *pdwDataLen, ___in DWORD dwFlags);
+typedef BOOL(WINAPI* CRYPTGETHASHPARAM)(___in HCRYPTHASH hHash, ___in DWORD dwParam, ___out BYTE* pbData, __inout DWORD* pdwDataLen, ___in DWORD dwFlags);
 /* @brief
     The CryptDestroyHash function destroys the hash object referenced by the hHash parameter.
     After a hash object has been destroyed, it can no longer be used.
     To help ensure security, we recommend that hash objects be destroyed after they have been used.
  */
-typedef BOOL(WINAPI *CRYPTDESTROYHASH)(___in HCRYPTHASH hHash);
+typedef BOOL(WINAPI* CRYPTDESTROYHASH)(___in HCRYPTHASH hHash);
 /* @brief
     The CryptReleaseContext function releases the handle of a cryptographic service provider (CSP) and a key container.
     At each call to this function, the reference count on the CSP is reduced by one.
@@ -936,9 +936,9 @@ typedef BOOL(WINAPI *CRYPTDESTROYHASH)(___in HCRYPTHASH hHash);
     After this function is called, the released CSP handle is no longer valid.
     This function does not destroy key containers or key pairs.
  */
-typedef BOOL(WINAPI *CRYPTRELEASECONTEXT)(___in HCRYPTPROV hProv, ___in DWORD dwFlags);
+typedef BOOL(WINAPI* CRYPTRELEASECONTEXT)(___in HCRYPTPROV hProv, ___in DWORD dwFlags);
 
-typedef BOOL(WINAPI *CRYPTGENRANDOM)(HCRYPTPROV hProv, DWORD dwLen, BYTE *pbBuffer);
+typedef BOOL(WINAPI* CRYPTGENRANDOM)(HCRYPTPROV hProv, DWORD dwLen, BYTE* pbBuffer);
 
 /* "RegNotifyChangeKeyValue" */
 #define DECLARE_NAMEOF_API_REGNOTIFYCHANGEKEYVALUE                                                                            \
@@ -949,7 +949,7 @@ typedef BOOL(WINAPI *CRYPTGENRANDOM)(HCRYPTPROV hProv, DWORD dwLen, BYTE *pbBuff
 /* @brief
     Notifies the caller about changes to the attributes or contents of a specified registry key.
  */
-typedef LONG(WINAPI *REGNOTIFYCHANGEKEYVALUE)(___in HKEY hKey, ___in BOOL bWatchSubtree, ___in DWORD dwNotifyFilter, __in_opt HANDLE hEvent, ___in BOOL fAsynchronous);
+typedef LONG(WINAPI* REGNOTIFYCHANGEKEYVALUE)(___in HKEY hKey, ___in BOOL bWatchSubtree, ___in DWORD dwNotifyFilter, __in_opt HANDLE hEvent, ___in BOOL fAsynchronous);
 
 /* minimum supported - XP, 2003 */
 #if defined _MBCS || defined MBCS
@@ -983,8 +983,8 @@ typedef LONG(WINAPI *REGNOTIFYCHANGEKEYVALUE)(___in HKEY hKey, ___in BOOL bWatch
     The ConvertSidToStringSid function converts a security identifier (SID) to a string format suitable for display, storage, or transmission.
     To convert the string-format SID back to a valid, functional SID, call the ConvertStringSidToSid function.
  */
-typedef BOOL(WINAPI *CONVERTSIDTOSTRINGSIDA)(___in PSID Sid, ___out LPSTR *StringSid);
+typedef BOOL(WINAPI* CONVERTSIDTOSTRINGSIDA)(___in PSID Sid, ___out LPSTR* StringSid);
 
-typedef BOOL(WINAPI *CONVERTSIDTOSTRINGSIDW)(___in PSID Sid, ___out LPWSTR *StringSid);
+typedef BOOL(WINAPI* CONVERTSIDTOSTRINGSIDW)(___in PSID Sid, ___out LPWSTR* StringSid);
 
 #endif

@@ -44,7 +44,7 @@
 /* @brief
     Retrieves a list of sessions on a specified Remote Desktop Session Host (RD Session Host) server.
  */
-typedef DWORD(__stdcall *WTSENUMERATESESSIONS)(HANDLE hServer, DWORD Reserved, DWORD Version, PWTS_SESSION_INFO *ppSessionInfo, DWORD *pCount);
+typedef DWORD(__stdcall* WTSENUMERATESESSIONS)(HANDLE hServer, DWORD Reserved, DWORD Version, PWTS_SESSION_INFO* ppSessionInfo, DWORD* pCount);
 
 /* "WTSQuerySessionInformationA" */
 #define DECLARE_NAMEOF_API_WTSQUERYSESSIONINFORMATIONA                                                                                            \
@@ -61,7 +61,7 @@ typedef DWORD(__stdcall *WTSENUMERATESESSIONS)(HANDLE hServer, DWORD Reserved, D
     Retrieves session information for the specified session on the specified Remote Desktop Session Host (RD Session Host) server.
     It can be used to query session information on local and remote RD Session Host servers.
  */
-typedef BOOL(__stdcall *WTSQUERYSESSIONINFORMATION)(HANDLE hServer, DWORD SessionId, WTS_INFO_CLASS WTSInfoClass, LPTSTR *ppBuffer, DWORD *pBytesReturned);
+typedef BOOL(__stdcall* WTSQUERYSESSIONINFORMATION)(HANDLE hServer, DWORD SessionId, WTS_INFO_CLASS WTSInfoClass, LPTSTR* ppBuffer, DWORD* pBytesReturned);
 
 /* "WTSQueryUserToken" */
 #define DECLARE_NAMEOF_API_WTSQUERYUSERTOKEN                                                    \
@@ -75,7 +75,7 @@ typedef BOOL(__stdcall *WTSQUERYSESSIONINFORMATION)(HANDLE hServer, DWORD Sessio
    Service providers must use caution that they do not leak user tokens when calling this function. Service providers must close token handles after they have
    finished using them.
  */
-typedef BOOL(__stdcall *WTSQUERYUSERTOKEN)(IN ULONG SessionId, OUT PHANDLE phToken);
+typedef BOOL(__stdcall* WTSQUERYUSERTOKEN)(IN ULONG SessionId, OUT PHANDLE phToken);
 
 /* "WTSFreeMemory" */
 #define DECLARE_NAMEOF_API_WTSFREEMEMORY                                    \
@@ -86,7 +86,7 @@ typedef BOOL(__stdcall *WTSQUERYUSERTOKEN)(IN ULONG SessionId, OUT PHANDLE phTok
 /* @brief
     Frees memory allocated by a Remote Desktop Services function.
  */
-typedef VOID(__stdcall *WTSFREEMEMORY)(PVOID pMemory);
+typedef VOID(__stdcall* WTSFREEMEMORY)(PVOID pMemory);
 
 /* "WTSWaitSystemEvent" */
 #define DECLARE_NAMEOF_API_WTSWAITSYSTEMEVENT                                                        \
@@ -97,6 +97,6 @@ typedef VOID(__stdcall *WTSFREEMEMORY)(PVOID pMemory);
 /* @brief
     Waits for a Remote Desktop Services event before returning to the caller.
  */
-typedef BOOL(__stdcall *WTSWAITSYSTEMEVENT)(HANDLE hServer, DWORD EventMask, DWORD *pEventFlags);
+typedef BOOL(__stdcall* WTSWAITSYSTEMEVENT)(HANDLE hServer, DWORD EventMask, DWORD* pEventFlags);
 
 #endif

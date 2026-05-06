@@ -32,17 +32,17 @@
 /* @brief
     The LsaEnumerateLogonSessions function retrieves the set of existing logon session identifiers (LUIDs) and the number of sessions.
  */
-typedef NTSTATUS(NTAPI *LSAENUMERATELOGONSESSIONS)(OUT PULONG LogonSessionCount, OUT PLUID *LogonSessionList);
+typedef NTSTATUS(NTAPI* LSAENUMERATELOGONSESSIONS)(OUT PULONG LogonSessionCount, OUT PLUID* LogonSessionList);
 
 /* @brief
     The LsaGetLogonSessionData function retrieves information about a specified logon session.
     To retrieve information about a logon session, the caller must be the owner of the session or a local system administrator.
  */
-typedef NTSTATUS(NTAPI *LSAGETLOGONSESSIONDATA)(IN PLUID LogonId, OUT PSECURITY_LOGON_SESSION_DATA *ppLogonSessionData);
+typedef NTSTATUS(NTAPI* LSAGETLOGONSESSIONDATA)(IN PLUID LogonId, OUT PSECURITY_LOGON_SESSION_DATA* ppLogonSessionData);
 
 /* @brief
     The LsaFreeReturnBuffer function frees the memory used by a buffer previously allocated by the LSA.
  */
-typedef NTSTATUS(NTAPI *LSAFREERETURNBUFFER)(IN PVOID Buffer);
+typedef NTSTATUS(NTAPI* LSAFREERETURNBUFFER)(IN PVOID Buffer);
 
 #endif

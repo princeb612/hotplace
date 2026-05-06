@@ -22,7 +22,7 @@
 /* @brief
     Retrieves the process identifier for each process object in the system.
  */
-typedef BOOL(WINAPI *ENUMPROCESSES)(DWORD *pProcessIds, DWORD cb, DWORD *pBytesReturned);
+typedef BOOL(WINAPI* ENUMPROCESSES)(DWORD* pProcessIds, DWORD cb, DWORD* pBytesReturned);
 
 /* "EnumProcessModules" */
 #define DECLARE_NAMEOF_API_ENUMPROCESSMODULES                                                        \
@@ -34,8 +34,8 @@ typedef BOOL(WINAPI *ENUMPROCESSES)(DWORD *pProcessIds, DWORD cb, DWORD *pBytesR
     Retrieves a handle for each module in the specified process.
     To control whether a 64-bit application enumerates 32-bit modules, 64-bit modules, or both types of modules, use the EnumProcessModulesEx function.
  */
-typedef BOOL(__stdcall *ENUMPROCESSMODULES)(HANDLE hProcess,     // handle to process
-                                            HMODULE *lphModule,  // array of module handles
+typedef BOOL(__stdcall* ENUMPROCESSMODULES)(HANDLE hProcess,     // handle to process
+                                            HMODULE* lphModule,  // array of module handles
                                             DWORD cb,            // size of array
                                             LPDWORD lpcbNeeded   // number of bytes required
 );
@@ -85,12 +85,12 @@ typedef BOOL(__stdcall *ENUMPROCESSMODULES)(HANDLE hProcess,     // handle to pr
 /* @brief
     Retrieves the base name of the specified module.
  */
-typedef DWORD(__stdcall *GETMODULEBASENAMEA)(HANDLE hProcess,   // handle to process
+typedef DWORD(__stdcall* GETMODULEBASENAMEA)(HANDLE hProcess,   // handle to process
                                              HMODULE hModule,   // handle to module
                                              LPSTR lpBaseName,  // base name buffer
                                              DWORD nSize        // maximum characters to retrieve
 );
-typedef DWORD(__stdcall *GETMODULEBASENAMEW)(HANDLE hProcess,    // handle to process
+typedef DWORD(__stdcall* GETMODULEBASENAMEW)(HANDLE hProcess,    // handle to process
                                              HMODULE hModule,    // handle to module
                                              LPWSTR lpBaseName,  // base name buffer
                                              DWORD nSize         // maximum characters to retrieve
@@ -98,13 +98,13 @@ typedef DWORD(__stdcall *GETMODULEBASENAMEW)(HANDLE hProcess,    // handle to pr
 /* @brief
     Retrieves the fully qualified path for the file containing the specified module.
  */
-typedef DWORD(__stdcall *GETMODULEFILENAMEEXA)(HANDLE hProcess,   // handle to process
+typedef DWORD(__stdcall* GETMODULEFILENAMEEXA)(HANDLE hProcess,   // handle to process
                                                HMODULE hModule,   // handle to module
                                                LPSTR lpFileName,  // base name buffer
                                                DWORD nSize        // maximum characters to retrieve
 );
 
-typedef DWORD(__stdcall *GETMODULEFILENAMEEXW)(HANDLE hProcess,    // handle to process
+typedef DWORD(__stdcall* GETMODULEFILENAMEEXW)(HANDLE hProcess,    // handle to process
                                                HMODULE hModule,    // handle to module
                                                LPWSTR lpFileName,  // base name buffer
                                                DWORD nSize         // maximum characters to retrieve
@@ -124,9 +124,9 @@ typedef DWORD(__stdcall *GETMODULEFILENAMEEXW)(HANDLE hProcess,    // handle to 
 /* @brief
     Retrieves the name of the executable file for the specified process.
  */
-typedef DWORD(WINAPI *GETPROCESSIMAGEFILENAMEA)(___in HANDLE hProcess, __out_ecount(nSize) LPSTR lpImageFileName, ___in DWORD nSize);
+typedef DWORD(WINAPI* GETPROCESSIMAGEFILENAMEA)(___in HANDLE hProcess, __out_ecount(nSize) LPSTR lpImageFileName, ___in DWORD nSize);
 
-typedef DWORD(WINAPI *GETPROCESSIMAGEFILENAMEW)(___in HANDLE hProcess, __out_ecount(nSize) LPWSTR lpImageFileName, ___in DWORD nSize);
+typedef DWORD(WINAPI* GETPROCESSIMAGEFILENAMEW)(___in HANDLE hProcess, __out_ecount(nSize) LPWSTR lpImageFileName, ___in DWORD nSize);
 
 #if defined _MBCS || defined MBCS
 #define DECLARE_NAMEOF_API_GETPROCESSIMAGEFILENAME DECLARE_NAMEOF_API_GETPROCESSIMAGEFILENAMEA
@@ -149,6 +149,6 @@ typedef DWORD(WINAPI *GETPROCESSIMAGEFILENAMEW)(___in HANDLE hProcess, __out_eco
 /* @brief
     Retrieves information about the specified module in the MODULEINFO structure.
  */
-typedef BOOL(__stdcall *GETMODULEINFORMATION)(HANDLE hProcess, HMODULE hModule, LPMODULEINFO lpmodinfo, DWORD cb);
+typedef BOOL(__stdcall* GETMODULEINFORMATION)(HANDLE hProcess, HMODULE hModule, LPMODULEINFO lpmodinfo, DWORD cb);
 
 #endif

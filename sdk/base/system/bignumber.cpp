@@ -27,12 +27,12 @@ static const uint32 base1e9 = 1000000000;    // printf-friendly (setw(9) << limb
 
 bignumber::bignumber() { set(0); }
 
-bignumber::bignumber(const bignumber &other) {
+bignumber::bignumber(const bignumber& other) {
     _v = other._v;
     _sign = other._sign;
 }
 
-bignumber::bignumber(bignumber &&other) {
+bignumber::bignumber(bignumber&& other) {
     _v = std::move(other._v);
     _sign = other._sign;
     other._sign = 1;
@@ -60,119 +60,119 @@ bignumber::bignumber(int128 value) { set(value); }
 bignumber::bignumber(uint128 value) { setu(value); }
 #endif
 
-bignumber::bignumber(const variant_t &vt) { set(vt); }
+bignumber::bignumber(const variant_t& vt) { set(vt); }
 
-bignumber::bignumber(const byte_t *p, size_t n) { set(p, n); }
+bignumber::bignumber(const byte_t* p, size_t n) { set(p, n); }
 
-bignumber::bignumber(const binary_t &base16hexstream) { sethex(base16hexstream); }
+bignumber::bignumber(const binary_t& base16hexstream) { sethex(base16hexstream); }
 
-bignumber::bignumber(const std::string &value) { setstring(value); }
+bignumber::bignumber(const std::string& value) { setstring(value); }
 
 bignumber::~bignumber() {}
 
-bignumber &bignumber::operator=(const bignumber &other) {
+bignumber& bignumber::operator=(const bignumber& other) {
     _v = other._v;
     _sign = other._sign;
     trim();
     return *this;
 }
 
-bignumber &bignumber::operator=(bignumber &&other) {
+bignumber& bignumber::operator=(bignumber&& other) {
     _v = std::move(other._v);
     _sign = other._sign;
     trim();
     return *this;
 }
 
-bignumber &bignumber::operator=(int8 value) { return set(value); }
+bignumber& bignumber::operator=(int8 value) { return set(value); }
 
-bignumber &bignumber::operator=(uint8 value) { return setu(value); }
+bignumber& bignumber::operator=(uint8 value) { return setu(value); }
 
-bignumber &bignumber::operator=(int16 value) { return set(value); }
+bignumber& bignumber::operator=(int16 value) { return set(value); }
 
-bignumber &bignumber::operator=(uint16 value) { return setu(value); }
+bignumber& bignumber::operator=(uint16 value) { return setu(value); }
 
-bignumber &bignumber::operator=(int32 value) { return set(value); }
+bignumber& bignumber::operator=(int32 value) { return set(value); }
 
-bignumber &bignumber::operator=(uint32 value) { return setu(value); }
+bignumber& bignumber::operator=(uint32 value) { return setu(value); }
 
-bignumber &bignumber::operator=(int64 value) { return set(value); }
+bignumber& bignumber::operator=(int64 value) { return set(value); }
 
-bignumber &bignumber::operator=(uint64 value) { return setu(value); }
+bignumber& bignumber::operator=(uint64 value) { return setu(value); }
 
 #ifdef __SIZEOF_INT128__
-bignumber &bignumber::operator=(int128 value) { return set(value); }
+bignumber& bignumber::operator=(int128 value) { return set(value); }
 
-bignumber &bignumber::operator=(uint128 value) { return setu(value); }
+bignumber& bignumber::operator=(uint128 value) { return setu(value); }
 #endif
 
-bignumber &bignumber::operator=(const variant_t &vt) { return set(vt); }
+bignumber& bignumber::operator=(const variant_t& vt) { return set(vt); }
 
-bignumber &bignumber::operator=(const binary_t &base16hexstream) { return sethex(base16hexstream); }
+bignumber& bignumber::operator=(const binary_t& base16hexstream) { return sethex(base16hexstream); }
 
-bignumber &bignumber::operator=(const char *value) { return setstring(value); }
+bignumber& bignumber::operator=(const char* value) { return setstring(value); }
 
-bignumber &bignumber::operator=(const std::string &value) { return setstring(value); }
+bignumber& bignumber::operator=(const std::string& value) { return setstring(value); }
 
-bignumber bignumber::operator+(const bignumber &other) const { return add(*this, other); }
+bignumber bignumber::operator+(const bignumber& other) const { return add(*this, other); }
 
-bignumber &bignumber::operator+=(const bignumber &other) { return *this = add(other); }
+bignumber& bignumber::operator+=(const bignumber& other) { return *this = add(other); }
 
-bignumber bignumber::operator-(const bignumber &other) const { return sub(*this, other); }
+bignumber bignumber::operator-(const bignumber& other) const { return sub(*this, other); }
 
-bignumber &bignumber::operator-=(const bignumber &other) { return *this = sub(other); }
+bignumber& bignumber::operator-=(const bignumber& other) { return *this = sub(other); }
 
-bignumber bignumber::operator*(const bignumber &other) const { return mult(*this, other); }
+bignumber bignumber::operator*(const bignumber& other) const { return mult(*this, other); }
 
-bignumber &bignumber::operator*=(const bignumber &other) { return *this = mult(other); }
+bignumber& bignumber::operator*=(const bignumber& other) { return *this = mult(other); }
 
-bignumber bignumber::operator/(const bignumber &other) const { return div(*this, other); }
+bignumber bignumber::operator/(const bignumber& other) const { return div(*this, other); }
 
-bignumber &bignumber::operator/=(const bignumber &other) { return *this = div(other); }
+bignumber& bignumber::operator/=(const bignumber& other) { return *this = div(other); }
 
-bignumber bignumber::operator%(const bignumber &other) const { return mod(*this, other); }
+bignumber bignumber::operator%(const bignumber& other) const { return mod(*this, other); }
 
-bignumber &bignumber::operator%=(const bignumber &other) { return *this = mod(other); }
+bignumber& bignumber::operator%=(const bignumber& other) { return *this = mod(other); }
 
-bignumber bignumber::operator&(const bignumber &other) const { return bitwise_and(*this, other); }
+bignumber bignumber::operator&(const bignumber& other) const { return bitwise_and(*this, other); }
 
-bignumber &bignumber::operator&=(const bignumber &other) { return *this = bitwise_and(*this, other); }
+bignumber& bignumber::operator&=(const bignumber& other) { return *this = bitwise_and(*this, other); }
 
-bignumber bignumber::operator|(const bignumber &other) const { return bitwise_or(*this, other); }
+bignumber bignumber::operator|(const bignumber& other) const { return bitwise_or(*this, other); }
 
-bignumber &bignumber::operator|=(const bignumber &other) { return *this = bitwise_or(*this, other); }
+bignumber& bignumber::operator|=(const bignumber& other) { return *this = bitwise_or(*this, other); }
 
-bignumber bignumber::operator^(const bignumber &other) const { return bitwise_xor(*this, other); }
+bignumber bignumber::operator^(const bignumber& other) const { return bitwise_xor(*this, other); }
 
-bignumber &bignumber::operator^=(const bignumber &other) { return *this = bitwise_xor(*this, other); }
+bignumber& bignumber::operator^=(const bignumber& other) { return *this = bitwise_xor(*this, other); }
 
 bignumber bignumber::operator~() const { return bitwise_not(*this); }
 
-bool bignumber::operator<(const bignumber &other) const { return compare(*this, other) < 0; }
+bool bignumber::operator<(const bignumber& other) const { return compare(*this, other) < 0; }
 
-bool bignumber::operator<=(const bignumber &other) const { return compare(*this, other) <= 0; }
+bool bignumber::operator<=(const bignumber& other) const { return compare(*this, other) <= 0; }
 
-bool bignumber::operator>(const bignumber &other) const { return compare(*this, other) > 0; }
+bool bignumber::operator>(const bignumber& other) const { return compare(*this, other) > 0; }
 
-bool bignumber::operator>=(const bignumber &other) const { return compare(*this, other) >= 0; }
+bool bignumber::operator>=(const bignumber& other) const { return compare(*this, other) >= 0; }
 
-bool bignumber::operator==(const bignumber &other) const { return compare(*this, other) == 0; }
+bool bignumber::operator==(const bignumber& other) const { return compare(*this, other) == 0; }
 
-bool bignumber::operator!=(const bignumber &other) const { return compare(*this, other) != 0; }
+bool bignumber::operator!=(const bignumber& other) const { return compare(*this, other) != 0; }
 
-bignumber bignumber::operator<<(const bignumber &shift) const { return leftshift(*this, shift); }
+bignumber bignumber::operator<<(const bignumber& shift) const { return leftshift(*this, shift); }
 
-bignumber &bignumber::operator<<=(const bignumber &shift) { return *this = leftshift(*this, shift); }
+bignumber& bignumber::operator<<=(const bignumber& shift) { return *this = leftshift(*this, shift); }
 
-bignumber bignumber::operator>>(const bignumber &shift) const { return rightshift(*this, shift); }
+bignumber bignumber::operator>>(const bignumber& shift) const { return rightshift(*this, shift); }
 
-bignumber &bignumber::operator>>=(const bignumber &shift) { return *this = rightshift(*this, shift); }
+bignumber& bignumber::operator>>=(const bignumber& shift) { return *this = rightshift(*this, shift); }
 
-bignumber &bignumber::operator-() { return neg(); }
+bignumber& bignumber::operator-() { return neg(); }
 
-bignumber &bignumber::operator++() { return *this += 1; }
+bignumber& bignumber::operator++() { return *this += 1; }
 
-bignumber &bignumber::operator--() { return *this -= 1; }
+bignumber& bignumber::operator--() { return *this -= 1; }
 
 bignumber bignumber::operator++(int) {
     bignumber res(*this);
@@ -187,9 +187,9 @@ bignumber bignumber::operator--(int) {
 }
 
 #ifdef __SIZEOF_INT128__
-bignumber &bignumber::set(int128 value)
+bignumber& bignumber::set(int128 value)
 #else
-bignumber &bignumber::set(int64 value)
+bignumber& bignumber::set(int64 value)
 #endif
 {
     _v.clear();
@@ -210,9 +210,9 @@ bignumber &bignumber::set(int64 value)
 }
 
 #ifdef __SIZEOF_INT128__
-bignumber &bignumber::setu(uint128 value)
+bignumber& bignumber::setu(uint128 value)
 #else
-bignumber &bignumber::setu(uint64 value)
+bignumber& bignumber::setu(uint64 value)
 #endif
 {
     _sign = 1;
@@ -225,7 +225,7 @@ bignumber &bignumber::setu(uint64 value)
     return *this;
 }
 
-bignumber &bignumber::set(const variant_t &vt) {
+bignumber& bignumber::set(const variant_t& vt) {
     switch (vt.type) {
         case TYPE_BOOL:
         case TYPE_BOOLEAN:
@@ -304,7 +304,7 @@ bignumber &bignumber::set(const variant_t &vt) {
     return *this;
 }
 
-bignumber &bignumber::set(const byte_t *p, size_t n) {
+bignumber& bignumber::set(const byte_t* p, size_t n) {
     _sign = 1;
     _v.clear();
     if (p) {
@@ -320,7 +320,7 @@ bignumber &bignumber::set(const byte_t *p, size_t n) {
             }
         }
         while (false == bin.empty()) {
-            uint32 t = hton32(*(uint32 *)bin.data());
+            uint32 t = hton32(*(uint32*)bin.data());
             _v.insert(_v.begin(), t);
             bin.erase(bin.begin(), bin.begin() + 4);
         }
@@ -329,7 +329,7 @@ bignumber &bignumber::set(const byte_t *p, size_t n) {
     return *this;
 }
 
-bignumber &bignumber::sethex(const binary_t &base16hexstream) {
+bignumber& bignumber::sethex(const binary_t& base16hexstream) {
     _sign = 1;
     _v.clear();
     if (false == base16hexstream.empty()) {
@@ -343,7 +343,7 @@ bignumber &bignumber::sethex(const binary_t &base16hexstream) {
             }
         }
         while (false == bin.empty()) {
-            uint32 t = hton32(*(uint32 *)bin.data());
+            uint32 t = hton32(*(uint32*)bin.data());
             _v.insert(_v.begin(), t);
             bin.erase(bin.begin(), bin.begin() + 4);
         }
@@ -352,7 +352,7 @@ bignumber &bignumber::sethex(const binary_t &base16hexstream) {
     return *this;
 }
 
-bignumber &bignumber::setstring(const char *value) {
+bignumber& bignumber::setstring(const char* value) {
     _sign = 1;
     _v.clear();
     if (value) {
@@ -370,7 +370,7 @@ bignumber &bignumber::setstring(const char *value) {
                     }
                 }
                 while (false == bin.empty()) {
-                    uint32 t = hton32(*(uint32 *)bin.data());
+                    uint32 t = hton32(*(uint32*)bin.data());
                     _v.insert(_v.begin(), t);
                     bin.erase(bin.begin(), bin.begin() + 4);
                 }
@@ -379,7 +379,7 @@ bignumber &bignumber::setstring(const char *value) {
         } else {
             // "numeric", "-numeric"
 
-            const char *p = value;
+            const char* p = value;
             if (*p == '-') {
                 _sign = -1;
                 ++p;
@@ -405,9 +405,9 @@ bignumber &bignumber::setstring(const char *value) {
     return *this;
 }
 
-bignumber &bignumber::setstring(const std::string &value) { return setstring(value.c_str()); }
+bignumber& bignumber::setstring(const std::string& value) { return setstring(value.c_str()); }
 
-bignumber bignumber::add(const bignumber &lhs, const bignumber &rhs) {
+bignumber bignumber::add(const bignumber& lhs, const bignumber& rhs) {
     bignumber res;
     if (lhs._sign == rhs._sign) {
         res = absadd(lhs, rhs);
@@ -424,7 +424,7 @@ bignumber bignumber::add(const bignumber &lhs, const bignumber &rhs) {
     return res;
 }
 
-bignumber bignumber::sub(const bignumber &lhs, const bignumber &rhs) {
+bignumber bignumber::sub(const bignumber& lhs, const bignumber& rhs) {
     bignumber res;
     if (lhs._sign != rhs._sign) {
         res = absadd(lhs, rhs);
@@ -446,7 +446,7 @@ bignumber bignumber::sub(const bignumber &lhs, const bignumber &rhs) {
     return res;
 }
 
-bignumber bignumber::mult_simple(const bignumber &lhs, const bignumber &rhs) {
+bignumber bignumber::mult_simple(const bignumber& lhs, const bignumber& rhs) {
     // schoolbook O(n^2)
     bignumber res;
     res._sign = lhs._sign * rhs._sign;
@@ -465,7 +465,7 @@ bignumber bignumber::mult_simple(const bignumber &lhs, const bignumber &rhs) {
     return res;
 }
 
-bignumber bignumber::mult(const bignumber &lhs, const bignumber &rhs) {
+bignumber bignumber::mult(const bignumber& lhs, const bignumber& rhs) {
     // karatsuba O(n^1.58)
     bignumber res;
     auto n = lhs._v.size();
@@ -506,16 +506,16 @@ bignumber bignumber::mult(const bignumber &lhs, const bignumber &rhs) {
     return res;
 }
 
-bignumber bignumber::div(const bignumber &lhs, const bignumber &rhs) {
+bignumber bignumber::div(const bignumber& lhs, const bignumber& rhs) {
     auto res = divide(lhs, rhs);
     return res.first;
 }
 
 // c++ style remainder
 // -7 % 3 = -1, 7 % -3 = 1
-bignumber bignumber::mod(const bignumber &lhs, const bignumber &rhs) { return lhs - (lhs / rhs) * rhs; }
+bignumber bignumber::mod(const bignumber& lhs, const bignumber& rhs) { return lhs - (lhs / rhs) * rhs; }
 
-std::pair<bignumber, bignumber> bignumber::divide(const bignumber &lhs, const bignumber &rhs) {
+std::pair<bignumber, bignumber> bignumber::divide(const bignumber& lhs, const bignumber& rhs) {
     std::pair<bignumber, bignumber> res = {{{0}}, {{0}}};
     bignumber quotient;
     bignumber remainder;
@@ -572,7 +572,7 @@ std::pair<bignumber, bignumber> bignumber::divide(const bignumber &lhs, const bi
     return res;
 }
 
-bignumber bignumber::bitwise_and(const bignumber &lhs, const bignumber &rhs) {
+bignumber bignumber::bitwise_and(const bignumber& lhs, const bignumber& rhs) {
     bignumber res;
     auto lsize = lhs._v.size();
     auto rsize = rhs._v.size();
@@ -586,7 +586,7 @@ bignumber bignumber::bitwise_and(const bignumber &lhs, const bignumber &rhs) {
     return res;
 }
 
-bignumber bignumber::bitwise_or(const bignumber &lhs, const bignumber &rhs) {
+bignumber bignumber::bitwise_or(const bignumber& lhs, const bignumber& rhs) {
     bignumber res;
     auto lsize = lhs._v.size();
     auto rsize = rhs._v.size();
@@ -600,7 +600,7 @@ bignumber bignumber::bitwise_or(const bignumber &lhs, const bignumber &rhs) {
     return res;
 }
 
-bignumber bignumber::bitwise_xor(const bignumber &lhs, const bignumber &rhs) {
+bignumber bignumber::bitwise_xor(const bignumber& lhs, const bignumber& rhs) {
     bignumber res;
     auto lsize = lhs._v.size();
     auto rsize = rhs._v.size();
@@ -614,7 +614,7 @@ bignumber bignumber::bitwise_xor(const bignumber &lhs, const bignumber &rhs) {
     return res;
 }
 
-bignumber bignumber::bitwise_not(const bignumber &other) {
+bignumber bignumber::bitwise_not(const bignumber& other) {
     bignumber res;
     for (uint32 item : other._v) {
         res._v.push_back(!item);
@@ -622,7 +622,7 @@ bignumber bignumber::bitwise_not(const bignumber &other) {
     return res;
 }
 
-bignumber bignumber::gcd(const bignumber &lhs, const bignumber &rhs) {
+bignumber bignumber::gcd(const bignumber& lhs, const bignumber& rhs) {
     bignumber a = lhs;
     bignumber b = rhs;
     while (false == b._v.empty()) {
@@ -653,7 +653,7 @@ bignumber bignumber::modinv(bignumber a, bignumber m) {
     return x1;
 }
 
-bignumber bignumber::modpow(bignumber b, bignumber exp, const bignumber &m) {
+bignumber bignumber::modpow(bignumber b, bignumber exp, const bignumber& m) {
     bignumber res = 1;
     b = mod(b, m);
 
@@ -675,7 +675,7 @@ bignumber bignumber::modpow(bignumber b, bignumber exp, const bignumber &m) {
     return res;
 }
 
-bignumber bignumber::sqrt(const bignumber &other) {
+bignumber bignumber::sqrt(const bignumber& other) {
     bignumber x;
 #if 0
     // binary search
@@ -708,7 +708,7 @@ bignumber bignumber::sqrt(const bignumber &other) {
     return x;
 }
 
-int bignumber::compare(const bignumber &lhs, const bignumber &rhs) const {
+int bignumber::compare(const bignumber& lhs, const bignumber& rhs) const {
     if (lhs._sign != rhs._sign) {
         return lhs._sign < rhs._sign ? -1 : 1;
     }
@@ -734,7 +734,7 @@ int bignumber::compare(const bignumber &lhs, const bignumber &rhs) const {
     return 0;
 }
 
-bignumber bignumber::leftshift(const bignumber &v, const bignumber &shift) const {
+bignumber bignumber::leftshift(const bignumber& v, const bignumber& shift) const {
     // O(n)
     bignumber res;
     if (v._v.empty()) {
@@ -768,7 +768,7 @@ bignumber bignumber::leftshift(const bignumber &v, const bignumber &shift) const
     return res;
 }
 
-bignumber bignumber::rightshift(const bignumber &v, const bignumber &shift) const {
+bignumber bignumber::rightshift(const bignumber& v, const bignumber& shift) const {
     // O(n);
     bignumber res;
     if (v._v.empty()) {
@@ -814,7 +814,7 @@ void bignumber::trim() {
     }
 }
 
-int bignumber::abscmp(const bignumber &lhs, const bignumber &rhs) {
+int bignumber::abscmp(const bignumber& lhs, const bignumber& rhs) {
     int ret = 0;
     if (lhs._v.size() != rhs._v.size()) {
         ret = lhs._v.size() < rhs._v.size() ? -1 : 1;
@@ -830,7 +830,7 @@ int bignumber::abscmp(const bignumber &lhs, const bignumber &rhs) {
     return ret;
 }
 
-bignumber bignumber::absadd(const bignumber &lhs, const bignumber &rhs) {
+bignumber bignumber::absadd(const bignumber& lhs, const bignumber& rhs) {
     // O(n)
     bignumber res;
     int64 carry = 0;
@@ -848,7 +848,7 @@ bignumber bignumber::absadd(const bignumber &lhs, const bignumber &rhs) {
     return res;
 }
 
-bignumber bignumber::abssub(const bignumber &lhs, const bignumber &rhs) {
+bignumber bignumber::abssub(const bignumber& lhs, const bignumber& rhs) {
     // |lhs| >= |rhs|
     // O(n)
     bignumber res;
@@ -890,9 +890,9 @@ bignumber bignumber::bn_half(uint64 bits) const
 }
 
 #ifdef __SIZEOF_INT128__
-bignumber bignumber::normalize(const bignumber &other, uint128 bits, bool sign) const
+bignumber bignumber::normalize(const bignumber& other, uint128 bits, bool sign) const
 #else
-bignumber bignumber::normalize(const bignumber &other, uint64 bits, bool sign) const
+bignumber bignumber::normalize(const bignumber& other, uint64 bits, bool sign) const
 #endif
 {
     bignumber res(other);
@@ -911,35 +911,35 @@ bignumber bignumber::normalize(const bignumber &other, uint64 bits, bool sign) c
     return res;
 }
 
-bignumber &bignumber::add(const bignumber &other) { return *this = add(*this, other); }
+bignumber& bignumber::add(const bignumber& other) { return *this = add(*this, other); }
 
-bignumber &bignumber::sub(const bignumber &other) { return *this = sub(*this, other); }
+bignumber& bignumber::sub(const bignumber& other) { return *this = sub(*this, other); }
 
-bignumber &bignumber::mult(const bignumber &other) { return *this = mult(*this, other); }
+bignumber& bignumber::mult(const bignumber& other) { return *this = mult(*this, other); }
 
-bignumber &bignumber::div(const bignumber &other) { return *this = div(*this, other); }
+bignumber& bignumber::div(const bignumber& other) { return *this = div(*this, other); }
 
-bignumber &bignumber::mod(const bignumber &other) { return *this = mod(*this, other); }
+bignumber& bignumber::mod(const bignumber& other) { return *this = mod(*this, other); }
 
-bignumber &bignumber::abs() {
+bignumber& bignumber::abs() {
     _sign = 1;
     return *this;
 }
 
-bignumber &bignumber::neg() {
+bignumber& bignumber::neg() {
     _sign = -_sign;
     return *this;
 }
 
-bignumber &bignumber::bitwise_and(const bignumber &other) { return *this = bitwise_and(*this, other); }
+bignumber& bignumber::bitwise_and(const bignumber& other) { return *this = bitwise_and(*this, other); }
 
-bignumber &bignumber::bitwise_or(const bignumber &other) { return *this = bitwise_or(*this, other); }
+bignumber& bignumber::bitwise_or(const bignumber& other) { return *this = bitwise_or(*this, other); }
 
-bignumber &bignumber::bitwise_xor(const bignumber &other) { return *this = bitwise_xor(*this, other); }
+bignumber& bignumber::bitwise_xor(const bignumber& other) { return *this = bitwise_xor(*this, other); }
 
-bignumber &bignumber::bitwise_not() { return *this = bitwise_not(*this); }
+bignumber& bignumber::bitwise_not() { return *this = bitwise_not(*this); }
 
-bignumber &bignumber::sqrt() { return *this = sqrt(*this); }
+bignumber& bignumber::sqrt() { return *this = sqrt(*this); }
 
 size_t bignumber::capacity() const { return _v.size(); }
 
@@ -1008,7 +1008,7 @@ std::string bignumber::hex() const {
     return b16str;
 }
 
-void bignumber::dump(std::function<void(const binary_t &)> func) const {
+void bignumber::dump(std::function<void(const binary_t&)> func) const {
     binary_t out;
     for (size_t i = _v.size(); i > 0; --i) {
         size_t idx = i - 1;
@@ -1025,7 +1025,7 @@ void bignumber::dump(std::function<void(const binary_t &)> func) const {
     }
 }
 
-int bignumber::get(binary_t &base16hexstream, bool trimzero) const {
+int bignumber::get(binary_t& base16hexstream, bool trimzero) const {
     base16hexstream.clear();
     // limb (uint32) operation
     for (auto rit = _v.rbegin(); rit != _v.rend(); rit++) {
@@ -1042,24 +1042,24 @@ int bignumber::get(binary_t &base16hexstream, bool trimzero) const {
     return _sign;
 }
 
-binary_t &operator<<(binary_t &lhs, const bignumber &rhs) {
+binary_t& operator<<(binary_t& lhs, const bignumber& rhs) {
     rhs.get(lhs, false);
     return lhs;
 }
 
-std::string &operator<<(std::string &lhs, const bignumber &rhs) {
+std::string& operator<<(std::string& lhs, const bignumber& rhs) {
     binary_t bin;
     rhs.get(bin, false);
     lhs = base16_encode(bin);
     return lhs;
 }
 
-binary_t &operator>>(const bignumber &lhs, binary_t &rhs) {
+binary_t& operator>>(const bignumber& lhs, binary_t& rhs) {
     lhs.get(rhs, false);
     return rhs;
 }
 
-std::string &operator>>(const bignumber &lhs, std::string &rhs) {
+std::string& operator>>(const bignumber& lhs, std::string& rhs) {
     binary_t bin;
     lhs.get(bin, false);
     rhs = base16_encode(bin);

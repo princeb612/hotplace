@@ -30,8 +30,8 @@ namespace net {
 
 uint8 tls_protection::get_tag_size() {
     uint8 ret_value = 0;
-    crypto_advisor *advisor = crypto_advisor::get_instance();
-    tls_advisor *tlsadvisor = tls_advisor::get_instance();
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
     auto cs = get_cipher_suite();
     auto hint = tlsadvisor->hintof_cipher_suite(cs);
     auto hint_cipher = tlsadvisor->hintof_cipher(cs);
@@ -78,7 +78,7 @@ uint8 tls_protection::get_tag_size() {
 // length of TLSCiphertext.fragment may not exceed 2^14 + 2048
 #define TLS_CIPHERTEXT_MAXSIZE ((2 << 14) + 2048)
 
-return_t tls_protection::encrypt(tls_session *session, tls_direction_t dir, const binary_t &plaintext, binary_t &ciphertext, const binary_t &additional, binary_t &tag,
+return_t tls_protection::encrypt(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& additional, binary_t& tag,
                                  protection_space_t space) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -93,7 +93,7 @@ return_t tls_protection::encrypt(tls_session *session, tls_direction_t dir, cons
 
         // auto record_version = get_lagacy_version();
         // size_t content_header_size = 0;
-        tls_advisor *tlsadvisor = tls_advisor::get_instance();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
         auto cs = get_cipher_suite();
         auto is_cbc = tlsadvisor->is_kindof_cbc(cs);
@@ -118,7 +118,7 @@ return_t tls_protection::encrypt(tls_session *session, tls_direction_t dir, cons
     return ret;
 }
 
-return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext,
+return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
                                  protection_space_t space) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -131,7 +131,7 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
             __leave2;
         }
 
-        tls_advisor *tlsadvisor = tls_advisor::get_instance();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         bool is_kindof_cbc = tlsadvisor->is_kindof_cbc(get_cipher_suite());
         if (is_kindof_cbc) {
             ret = decrypt_cbc_hmac(session, dir, stream, size, pos, plaintext);
@@ -146,7 +146,7 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
     return ret;
 }
 
-return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext, binary_t &aad,
+return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, binary_t& aad,
                                  protection_space_t space) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -158,7 +158,7 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
         switch (session_type) {
             case session_type_tls:
             case session_type_dtls: {
-                tls_advisor *tlsadvisor = tls_advisor::get_instance();
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 bool is_kindof_cbc = tlsadvisor->is_kindof_cbc(get_cipher_suite());
                 if (is_kindof_cbc) {
                     ret = decrypt_cbc_hmac(session, dir, stream, size, pos, plaintext);
@@ -186,8 +186,8 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
     return ret;
 }
 
-return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, const byte_t *stream, size_t size, size_t pos, binary_t &plaintext, const binary_t &aad,
-                                 const binary_t &tag, protection_space_t space) {
+return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad,
+                                 const binary_t& tag, protection_space_t space) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == session || nullptr == stream) {
@@ -195,7 +195,7 @@ return_t tls_protection::decrypt(tls_session *session, tls_direction_t dir, cons
             __leave2;
         }
 
-        tls_advisor *tlsadvisor = tls_advisor::get_instance();
+        tls_advisor* tlsadvisor = tls_advisor::get_instance();
         bool is_kindof_cbc = tlsadvisor->is_kindof_cbc(get_cipher_suite());
 
         if (is_kindof_cbc) {

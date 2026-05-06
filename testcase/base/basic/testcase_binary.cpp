@@ -21,7 +21,7 @@ void test_binary() {
 
     uint16 ui16 = 1;
     ui16 = convert_endian(ui16);
-    binary_load(bin, sizeof(uint32), (byte_t *)&ui16, sizeof(ui16));
+    binary_load(bin, sizeof(uint32), (byte_t*)&ui16, sizeof(ui16));
     // 4 bytes long
     // 00000000 : 00 00 00 01 -- -- -- -- -- -- -- -- -- -- -- -- | ....
     _logger->dump(bin);

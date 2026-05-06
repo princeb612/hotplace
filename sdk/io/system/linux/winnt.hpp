@@ -541,7 +541,7 @@ typedef struct _IMAGE_SYMBOL {
     byte_t StorageClass;
     byte_t NumberOfAuxSymbols;
 } IMAGE_SYMBOL;
-typedef IMAGE_SYMBOL UNALIGNED *PIMAGE_SYMBOL;
+typedef IMAGE_SYMBOL UNALIGNED* PIMAGE_SYMBOL;
 
 #define IMAGE_SIZEOF_SYMBOL 18
 
@@ -701,7 +701,7 @@ typedef union _IMAGE_AUX_SYMBOL {
         byte_t Selection;            // communal selection type
     } Section;
 } IMAGE_AUX_SYMBOL;
-typedef IMAGE_AUX_SYMBOL UNALIGNED *PIMAGE_AUX_SYMBOL;
+typedef IMAGE_AUX_SYMBOL UNALIGNED* PIMAGE_AUX_SYMBOL;
 
 typedef enum IMAGE_AUX_SYMBOL_TYPE {
     IMAGE_AUX_SYMBOL_TYPE_TOKEN_DEF = 1,
@@ -714,7 +714,7 @@ typedef struct IMAGE_AUX_SYMBOL_TOKEN_DEF {
     byte_t rgbReserved[12];  // Must be 0
 } IMAGE_AUX_SYMBOL_TOKEN_DEF;
 
-typedef IMAGE_AUX_SYMBOL_TOKEN_DEF UNALIGNED *PIMAGE_AUX_SYMBOL_TOKEN_DEF;
+typedef IMAGE_AUX_SYMBOL_TOKEN_DEF UNALIGNED* PIMAGE_AUX_SYMBOL_TOKEN_DEF;
 
 //
 // Communal selection types.
@@ -744,7 +744,7 @@ typedef struct _IMAGE_RELOCATION {
     uint32 SymbolTableIndex;
     uint16 Type;
 } IMAGE_RELOCATION;
-typedef IMAGE_RELOCATION UNALIGNED *PIMAGE_RELOCATION;
+typedef IMAGE_RELOCATION UNALIGNED* PIMAGE_RELOCATION;
 
 //
 // I386 relocation types.
@@ -1112,7 +1112,7 @@ typedef struct _IMAGE_LINENUMBER {
     } Type;
     uint16 Linenumber;  // Line number.
 } IMAGE_LINENUMBER;
-typedef IMAGE_LINENUMBER UNALIGNED *PIMAGE_LINENUMBER;
+typedef IMAGE_LINENUMBER UNALIGNED* PIMAGE_LINENUMBER;
 
 //
 // Based relocation format.
@@ -1123,7 +1123,7 @@ typedef struct _IMAGE_BASE_RELOCATION {
     uint32 SizeOfBlock;
     //  uint16    TypeOffset[1];
 } IMAGE_BASE_RELOCATION;
-typedef IMAGE_BASE_RELOCATION UNALIGNED *PIMAGE_BASE_RELOCATION;
+typedef IMAGE_BASE_RELOCATION UNALIGNED* PIMAGE_BASE_RELOCATION;
 
 //
 // Based relocation types.
@@ -1201,7 +1201,7 @@ typedef struct _IMAGE_THUNK_DATA64 {
         uint64 AddressOfData;  // PIMAGE_IMPORT_BY_NAME
     } u1;
 } IMAGE_THUNK_DATA64;
-typedef IMAGE_THUNK_DATA64 *PIMAGE_THUNK_DATA64;
+typedef IMAGE_THUNK_DATA64* PIMAGE_THUNK_DATA64;
 
 typedef struct _IMAGE_THUNK_DATA32 {
     union {
@@ -1211,7 +1211,7 @@ typedef struct _IMAGE_THUNK_DATA32 {
         uint32 AddressOfData;  // PIMAGE_IMPORT_BY_NAME
     } u1;
 } IMAGE_THUNK_DATA32;
-typedef IMAGE_THUNK_DATA32 *PIMAGE_THUNK_DATA32;
+typedef IMAGE_THUNK_DATA32* PIMAGE_THUNK_DATA32;
 
 #define IMAGE_ORDINAL_FLAG64 0x8000000000000000
 #define IMAGE_ORDINAL_FLAG32 0x80000000
@@ -1228,7 +1228,7 @@ typedef struct _IMAGE_TLS_DIRECTORY64 {
     uint32 SizeOfZeroFill;
     uint32 Characteristics;
 } IMAGE_TLS_DIRECTORY64;
-typedef IMAGE_TLS_DIRECTORY64 *PIMAGE_TLS_DIRECTORY64;
+typedef IMAGE_TLS_DIRECTORY64* PIMAGE_TLS_DIRECTORY64;
 
 typedef struct _IMAGE_TLS_DIRECTORY32 {
     uint32 StartAddressOfRawData;
@@ -1238,7 +1238,7 @@ typedef struct _IMAGE_TLS_DIRECTORY32 {
     uint32 SizeOfZeroFill;
     uint32 Characteristics;
 } IMAGE_TLS_DIRECTORY32;
-typedef IMAGE_TLS_DIRECTORY32 *PIMAGE_TLS_DIRECTORY32;
+typedef IMAGE_TLS_DIRECTORY32* PIMAGE_TLS_DIRECTORY32;
 
 #ifdef _WIN64
 #define IMAGE_ORDINAL_FLAG IMAGE_ORDINAL_FLAG64
@@ -1272,7 +1272,7 @@ typedef struct _IMAGE_IMPORT_DESCRIPTOR {
     uint32 Name;
     uint32 FirstThunk;  // RVA to IAT (if bound this IAT has actual addresses)
 } IMAGE_IMPORT_DESCRIPTOR;
-typedef IMAGE_IMPORT_DESCRIPTOR UNALIGNED *PIMAGE_IMPORT_DESCRIPTOR;
+typedef IMAGE_IMPORT_DESCRIPTOR UNALIGNED* PIMAGE_IMPORT_DESCRIPTOR;
 
 //
 // New format import descriptors pointed to by DataDirectory[ IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT ]

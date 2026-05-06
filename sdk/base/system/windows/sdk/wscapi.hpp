@@ -30,17 +30,17 @@
 /* @brief
     Registers a callback function to be run when Windows Security Center (WSC) detects a change that could affect the health of one of the security providers.
  */
-typedef HRESULT(__stdcall *WSCREGISTERFORCHANGES)(___in LPVOID Reserved, ___out PHANDLE phCallbackRegistration, ___in LPTHREAD_START_ROUTINE lpCallbackAddress,
+typedef HRESULT(__stdcall* WSCREGISTERFORCHANGES)(___in LPVOID Reserved, ___out PHANDLE phCallbackRegistration, ___in LPTHREAD_START_ROUTINE lpCallbackAddress,
                                                   ___in PVOID pContext);
 
 /* @brief
     Cancels a callback registration that was made by a call to the WscRegisterForChanges function.
  */
-typedef HRESULT(__stdcall *WSCUNREGISTERCHANGES)(___in HANDLE hRegistrationHandle);
+typedef HRESULT(__stdcall* WSCUNREGISTERCHANGES)(___in HANDLE hRegistrationHandle);
 
 /* @brief
     Gets the aggregate health state of the security provider categories represented by the specified WSC_SECURITY_PROVIDER enumeration values.
  */
-typedef HRESULT(__stdcall *WSCGETSECURITYPROVIDERHEALTH)(___in DWORD Providers, ___out /*PWSC_SECURITY_PROVIDER_HEALTH*/ INT *pHealth);
+typedef HRESULT(__stdcall* WSCGETSECURITYPROVIDERHEALTH)(___in DWORD Providers, ___out /*PWSC_SECURITY_PROVIDER_HEALTH*/ INT* pHealth);
 
 #endif

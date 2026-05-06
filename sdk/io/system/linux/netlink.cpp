@@ -35,7 +35,7 @@ typedef std::queue<PROC_EVENT> PROC_EVENTS;
 typedef struct _NETLINK_CONTEXT {
     uint32 flags;
     TYPE_CALLBACK_HANDLER consumer_handler;
-    void *parameter;
+    void* parameter;
     socket_t sock;
     critical_section lock;
     PROC_EVENTS que;
@@ -52,7 +52,7 @@ netlink::netlink() {}
 
 netlink::~netlink() {}
 
-return_t netlink::open(netlink_t **handle, uint32 flags, TYPE_CALLBACK_HANDLER consumer_handler, void *parameter) {
+return_t netlink::open(netlink_t** handle, uint32 flags, TYPE_CALLBACK_HANDLER consumer_handler, void* parameter) {
     return_t ret = errorcode_t::success;
     socket_t sock = 0;
 
@@ -102,7 +102,7 @@ return_t netlink::open(netlink_t **handle, uint32 flags, TYPE_CALLBACK_HANDLER c
     return ret;
 }
 
-return_t netlink::close(netlink_t *handle) {
+return_t netlink::close(netlink_t* handle) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -111,7 +111,7 @@ return_t netlink::close(netlink_t *handle) {
             __leave2;
         }
 
-        NETLINK_CONTEXT *context = static_cast<NETLINK_CONTEXT *>(handle);
+        NETLINK_CONTEXT* context = static_cast<NETLINK_CONTEXT*>(handle);
 
         netlink_control(context->sock, false);  // stop event notificaion
         netlink_close(context->sock);
@@ -124,7 +124,7 @@ return_t netlink::close(netlink_t *handle) {
         std::swap(context->que, empty);
         context->lock.leave();
 
-        context = static_cast<NETLINK_CONTEXT *>(handle);
+        context = static_cast<NETLINK_CONTEXT*>(handle);
         delete context;
     }
     __finally2 {}
@@ -132,7 +132,7 @@ return_t netlink::close(netlink_t *handle) {
     return ret;
 }
 
-return_t netlink::producer_thread_routine(void *param) {
+return_t netlink::producer_thread_routine(void* param) {
     return_t ret = errorcode_t::success;
     int rc = 0;
 
@@ -149,7 +149,7 @@ return_t netlink::producer_thread_routine(void *param) {
             __leave2;
         }
 
-        NETLINK_CONTEXT *context = static_cast<NETLINK_CONTEXT *>(param);
+        NETLINK_CONTEXT* context = static_cast<NETLINK_CONTEXT*>(param);
 
         while (1) {
             if (0 == context->producer_loop) {
@@ -193,7 +193,7 @@ return_t netlink::producer_thread_routine(void *param) {
     return ret;
 }
 
-return_t netlink::producer_thread_signal(void *param) {
+return_t netlink::producer_thread_signal(void* param) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -202,7 +202,7 @@ return_t netlink::producer_thread_signal(void *param) {
             __leave2;
         }
 
-        NETLINK_CONTEXT *context = static_cast<NETLINK_CONTEXT *>(param);
+        NETLINK_CONTEXT* context = static_cast<NETLINK_CONTEXT*>(param);
 
         context->producer_loop = 0;
         // context->producer_sem.signal ();
@@ -211,7 +211,7 @@ return_t netlink::producer_thread_signal(void *param) {
     return ret;
 }
 
-return_t netlink::consumer_thread_routine(void *param) {
+return_t netlink::consumer_thread_routine(void* param) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -220,7 +220,7 @@ return_t netlink::consumer_thread_routine(void *param) {
             __leave2;
         }
 
-        NETLINK_CONTEXT *context = static_cast<NETLINK_CONTEXT *>(param);
+        NETLINK_CONTEXT* context = static_cast<NETLINK_CONTEXT*>(param);
 
         while (1) {
             if (0 == context->consumer_loop) {
@@ -249,7 +249,7 @@ return_t netlink::consumer_thread_routine(void *param) {
     return ret;
 }
 
-return_t netlink::consumer_thread_signal(void *param) {
+return_t netlink::consumer_thread_signal(void* param) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -258,7 +258,7 @@ return_t netlink::consumer_thread_signal(void *param) {
             __leave2;
         }
 
-        NETLINK_CONTEXT *context = static_cast<NETLINK_CONTEXT *>(param);
+        NETLINK_CONTEXT* context = static_cast<NETLINK_CONTEXT*>(param);
 
         context->consumer_loop = 0;
     }
@@ -266,7 +266,7 @@ return_t netlink::consumer_thread_signal(void *param) {
     return ret;
 }
 
-return_t netlink::netlink_open(socket_t *sock) {
+return_t netlink::netlink_open(socket_t* sock) {
     return_t ret = errorcode_t::success;
     int nl_sock = 0;
 
@@ -287,7 +287,7 @@ return_t netlink::netlink_open(socket_t *sock) {
         sa_nl.nl_family = AF_NETLINK;
         sa_nl.nl_groups = CN_IDX_PROC;
         sa_nl.nl_pid = getpid();
-        rc = bind(nl_sock, (struct sockaddr *)&sa_nl, sizeof(sa_nl));  // sudo required
+        rc = bind(nl_sock, (struct sockaddr*)&sa_nl, sizeof(sa_nl));  // sudo required
         ret = get_lasterror(rc);
         if (errorcode_t::success != ret) {
             __leave2_trace(ret);

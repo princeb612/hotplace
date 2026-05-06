@@ -66,15 +66,15 @@ uint16 tls_protection::get_tls_version() { return _version; }
 
 void tls_protection::set_tls_version(uint16 version) { _version = version; }
 
-crypto_key &tls_protection::get_key() { return _key; }
+crypto_key& tls_protection::get_key() { return _key; }
 
-crypto_keyexchange &tls_protection::get_keyexchange() { return _keyexchange; }
+crypto_keyexchange& tls_protection::get_keyexchange() { return _keyexchange; }
 
 void tls_protection::use_pre_master_secret(bool use) { _use_pre_master_secret = use; }
 
 bool tls_protection::use_pre_master_secret() { return _use_pre_master_secret; }
 
-t_binaries<tls_secret_t> &tls_protection::get_secrets() { return _secrets; }
+t_binaries<tls_secret_t>& tls_protection::get_secrets() { return _secrets; }
 
 size_t tls_protection::get_header_size() {
     size_t ret_value = 0;
@@ -88,17 +88,17 @@ size_t tls_protection::get_header_size() {
     return ret_value;
 }
 
-protection_context &tls_protection::get_protection_context() { return _handshake_context; }
+protection_context& tls_protection::get_protection_context() { return _handshake_context; }
 
-return_t tls_protection::negotiate(tls_session *session, uint16 &ciphersuite, uint16 &tlsversion) {
+return_t tls_protection::negotiate(tls_session* session, uint16& ciphersuite, uint16& tlsversion) {
     return session->get_tls_protection().get_protection_context().negotiate(session, tls_10, tls_13, ciphersuite, tlsversion);
 }
 
-return_t tls_protection::negotiate(tls_session *session, uint16 minspec, uint16 maxspec, uint16 &ciphersuite, uint16 &tlsversion) {
+return_t tls_protection::negotiate(tls_session* session, uint16 minspec, uint16 maxspec, uint16& ciphersuite, uint16& tlsversion) {
     return session->get_tls_protection().get_protection_context().negotiate(session, minspec, maxspec, ciphersuite, tlsversion);
 }
 
-void tls_protection::set_session(tls_session *session) {
+void tls_protection::set_session(tls_session* session) {
     if (session) {
         _session = session;
     }

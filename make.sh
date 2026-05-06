@@ -150,9 +150,12 @@ export SUPPORT_PCH
 
 # clang-format
 if [ $do_clangformat = 1 ]; then
-    clang-format -i `find sdk -name \*.\?pp`
-    clang-format -i `find testcase -name \*.\?pp`
-    clang-format -i `find testapplet -name \*.\?pp`
+    if [[ $MSYSTEM = 'MINGW64' ]]; then
+        # clang-format version 21.1.8 (https://github.com/msys2/MSYS2-packages ...)
+        clang-format -i `find sdk -name \*.\?pp`
+        clang-format -i `find testcase -name \*.\?pp`
+        clang-format -i `find testapplet -name \*.\?pp`
+    fi
 fi
 
 # update_fileheader directory

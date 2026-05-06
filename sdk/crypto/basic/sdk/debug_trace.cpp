@@ -23,7 +23,7 @@ return_t get_opensslerror(int rc) {
         if (trace_option_t::trace_bt & option) {
 #if defined DEBUG
             if (istraceable(trace_category_crypto)) {
-                trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream &dbs) -> void { debug_trace_openssl(&dbs); });
+                trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream& dbs) -> void { debug_trace_openssl(&dbs); });
             }
 #endif
         }
@@ -39,7 +39,7 @@ return_t trace_openssl(return_t errorcode) {
         if (trace_option_t::trace_bt & option) {
 #if defined DEBUG
             if (istraceable(trace_category_crypto)) {
-                trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream &dbs) -> void { debug_trace_openssl(&dbs); });
+                trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream& dbs) -> void { debug_trace_openssl(&dbs); });
             }
 #endif
         }
@@ -47,7 +47,7 @@ return_t trace_openssl(return_t errorcode) {
     return ret;
 }
 
-return_t debug_trace_openssl(stream_t *stream) {
+return_t debug_trace_openssl(stream_t* stream) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -60,8 +60,8 @@ return_t debug_trace_openssl(stream_t *stream) {
         char buf[256];
 
         std::string bio;
-        const char *file = nullptr;
-        const char *data = nullptr;
+        const char* file = nullptr;
+        const char* data = nullptr;
         int line = 0;
         int flags = 0;
 

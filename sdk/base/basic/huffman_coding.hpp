@@ -51,17 +51,17 @@ class huffman_coding {
         hc_t() : symbol(0), weight(0), flags(0) {}
         hc_t(uint8 b) : symbol(b), weight(0), flags(0) {}
         hc_t(uint8 b, size_t f) : symbol(b), weight(f), flags(0) {}
-        hc_t(const hc_t &other) : symbol(other.symbol), weight(other.weight), flags(other.flags) {}
-        hc_t &operator=(const hc_t &other) {
+        hc_t(const hc_t& other) : symbol(other.symbol), weight(other.weight), flags(other.flags) {}
+        hc_t& operator=(const hc_t& other) {
             symbol = other.symbol;
             weight = other.weight;
             flags = other.flags;
             return *this;
         }
-        friend bool operator<(const hc_t &lhs, const hc_t &rhs) { return lhs.symbol < rhs.symbol; }
+        friend bool operator<(const hc_t& lhs, const hc_t& rhs) { return lhs.symbol < rhs.symbol; }
     };
     struct hc_comparator : t_comparator_base<hc_t> {
-        bool operator()(const hc_t &lhs, const hc_t &rhs) const {
+        bool operator()(const hc_t& lhs, const hc_t& rhs) const {
             bool ret = false;
 
             if (lhs.weight < rhs.weight) {
@@ -85,20 +85,20 @@ class huffman_coding {
     };
     struct hc_code {
         uint8 sym;
-        const char *code;
+        const char* code;
     };
 
     typedef t_btree<hc_t> measure_tree_t;          // counting
     typedef t_btree<hc_t, hc_comparator> btree_t;  // by weight(frequency)
-    typedef std::map<hc_t, typename btree_t::node_t *, hc_comparator> map_t;
+    typedef std::map<hc_t, typename btree_t::node_t*, hc_comparator> map_t;
     typedef std::pair<typename map_t::iterator, bool> map_pib_t;
     typedef std::map<uint8, std::string> codetable_t;
     typedef std::map<std::string, uint8> reverse_codetable_t;
 
     typedef typename btree_t::node_t node_t;
-    typedef typename std::function<void(hc_t const &t)> const_visitor;
-    typedef typename std::function<void(hc_t &t)> visitor;
-    typedef typename std::function<void(hc_t &t, const hc_t &lhs, const hc_t &rhs)> learn_visitor;
+    typedef typename std::function<void(hc_t const& t)> const_visitor;
+    typedef typename std::function<void(hc_t& t)> visitor;
+    typedef typename std::function<void(hc_t& t, const hc_t& lhs, const hc_t& rhs)> learn_visitor;
 
    public:
     typedef hc_code hc_code_t;
@@ -113,10 +113,10 @@ class huffman_coding {
      *          huffman.reset();
      *          huffman.load(stream1).load(stream2).load(stream3).learn().infer();
      */
-    huffman_coding &operator<<(const char *s);
-    huffman_coding &load(const char *s);
-    huffman_coding &learn();
-    huffman_coding &infer();
+    huffman_coding& operator<<(const char* s);
+    huffman_coding& load(const char* s);
+    huffman_coding& learn();
+    huffman_coding& infer();
 
     /**
      * @brief   import pre-trained codes
@@ -131,8 +131,8 @@ class huffman_coding {
      *          huffman_coding huff;
      *          huff.imports(_h2hcodes);
      */
-    huffman_coding &imports(const hc_code_t *table);
-    huffman_coding &imports(const std::map<uint8, std::string> &m);
+    huffman_coding& imports(const hc_code_t* table);
+    huffman_coding& imports(const std::map<uint8, std::string>& m);
     /**
      * @brief   export hufman codes
      * @sample
@@ -142,11 +142,11 @@ class huffman_coding {
      *          huffman_coding huff;
      *          huff.imports(_h2hcodes).exports(lambda_exports);
      */
-    huffman_coding &exports(std::function<void(uint8, const char *)> v);
+    huffman_coding& exports(std::function<void(uint8, const char*)> v);
 
-    return_t expect(const char *source, size_t &size_expected) const;
-    return_t expect(const char *source, size_t size, size_t &size_expected) const;
-    return_t expect(const byte_t *source, size_t size, size_t &size_expected) const;
+    return_t expect(const char* source, size_t& size_expected) const;
+    return_t expect(const char* source, size_t size, size_t& size_expected) const;
+    return_t expect(const byte_t* source, size_t size, size_t& size_expected) const;
 
     /*
      * @brief   encode
@@ -156,8 +156,8 @@ class huffman_coding {
      *          huff.encode(bin, (byte_t*)sample, strlen(sample));
      *          // f1 e3 c2 e5 f2 3a 6b a0 ab 90 f4 ff
      */
-    return_t encode(binary_t &bin, const char *source, size_t size, bool usepad = true) const;
-    return_t encode(binary_t &bin, const byte_t *source, size_t size, bool usepad = true) const;
+    return_t encode(binary_t& bin, const char* source, size_t size, bool usepad = true) const;
+    return_t encode(binary_t& bin, const byte_t* source, size_t size, bool usepad = true) const;
     /*
      * @brief   encode
      * @sample
@@ -167,8 +167,8 @@ class huffman_coding {
      *          printf("%s\n", bs.c_str());
      *
      */
-    return_t encode(stream_t *stream, const char *source, size_t size) const;
-    return_t encode(stream_t *stream, const byte_t *source, size_t size) const;
+    return_t encode(stream_t* stream, const char* source, size_t size) const;
+    return_t encode(stream_t* stream, const byte_t* source, size_t size) const;
     /**
      * @brief   decode
      * @remarks constraints : min(code len in bits) >= 5
@@ -178,7 +178,7 @@ class huffman_coding {
      *          huff.encode(...);
      *          huff.decode(...);
      */
-    return_t decode(stream_t *stream, const byte_t *source, size_t size, uint32 flags = 0) const;
+    return_t decode(stream_t* stream, const byte_t* source, size_t size, uint32 flags = 0) const;
 
     /**
      * @brief   check min(code len in bits) >= 5
@@ -188,9 +188,9 @@ class huffman_coding {
     size_t sizeof_codetable();
 
    protected:
-    node_t *build(node_t **root = nullptr);
-    void build(typename btree_t::node_t *&p);
-    void infer(hc_temp &hc, typename btree_t::node_t *t);
+    node_t* build(node_t** root = nullptr);
+    void build(typename btree_t::node_t*& p);
+    void infer(hc_temp& hc, typename btree_t::node_t* t);
     void dump();  // debug
 
    private:
