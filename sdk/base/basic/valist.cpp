@@ -226,7 +226,7 @@ variant_t& valist::operator[](size_t index) {
     }
 }
 
-va_list valist::get() {
+va_list& valist::get() {
     critical_section_guard guard(_lock);
 
     // va_list ap;
@@ -264,8 +264,6 @@ va_list valist::get() {
 
     return _type.ap;
 }
-
-valist::operator va_list() { return get(); }
 
 #if defined __linux__
 #if (defined(__linux__) && defined(__x86_64__))

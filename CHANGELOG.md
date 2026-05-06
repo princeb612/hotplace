@@ -32,7 +32,7 @@
     * CBOR
 
 * details
-  * Revision 977
+  * Revision 978
     * [tested] sprintf (format string syntax)
   * Revision 969-971
     * [tested] gcc warnings
