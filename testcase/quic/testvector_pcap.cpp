@@ -35,16 +35,16 @@ void play_yaml_pcap_http3(const char* filename) {
         auto secrets = example["secrets"];
         if (secrets && secrets.IsSequence()) {
             for (const auto& item : secrets) {
-                (*sslkeylog) << item["item"].as<std::string>();
+                (*sslkeylog) << item["item"].as<std::string>("");
             }
         }
 
         auto items = example["items"];
         if (items && items.IsSequence()) {
             for (const auto& item : items) {
-                std::string text = item["item"].as<std::string>();
-                std::string dir = item["dir"].as<std::string>();
-                std::string protocol = item["protocol"].as<std::string>();
+                std::string text = item["item"].as<std::string>("");
+                std::string dir = item["dir"].as<std::string>("");
+                std::string protocol = item["protocol"].as<std::string>("");
 
                 tls_direction_t direction;
                 if (dir == "from_client") {
@@ -59,7 +59,7 @@ void play_yaml_pcap_http3(const char* filename) {
                 _logger->colorln(text);
 
                 if (protocol == "QUIC") {
-                    std::string frame = item["frame"].as<std::string>();
+                    std::string frame = item["frame"].as<std::string>("");
                     binary_t bin_frame = base16_decode_rfc(frame);
 
                     quic_packets packets;
@@ -88,11 +88,11 @@ void play_yaml_pcap_http3(const char* filename) {
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>();
+            auto text_example = example["example"].as<std::string>("");
             _test_case.begin(text_example);
 
-            auto schema = example["schema"].as<std::string>();
-            auto protocol = example["protocol"].as<std::string>();
+            auto schema = example["schema"].as<std::string>("");
+            auto protocol = example["protocol"].as<std::string>("");
 
             if (protocol != "HTTP/3") {
                 _test_case.assert(false, __FUNCTION__, "bad message format - reason: protocol");

@@ -40,10 +40,10 @@ void test_yaml_testvector_dsa() {
         for (const auto& item : items) {
             test_vector_nist_cavp_dsa_param_t entry;
 
-            entry.item = item["item"].as<std::string>();
-            entry.p = item["p"].as<std::string>();
-            entry.q = item["q"].as<std::string>();
-            entry.g = item["g"].as<std::string>();
+            entry.item = item["item"].as<std::string>("");
+            entry.p = item["p"].as<std::string>("");
+            entry.q = item["q"].as<std::string>("");
+            entry.g = item["g"].as<std::string>("");
 
             dsa_params.emplace(entry.item, entry);
         }
@@ -52,15 +52,15 @@ void test_yaml_testvector_dsa() {
         for (const auto& item : items) {
             test_vector_nist_cavp_dsa_t entry;
 
-            entry.item = item["item"].as<std::string>();
-            entry.param = item["param"].as<std::string>();
-            entry.alg = item["alg"].as<std::string>();
-            entry.m = item["m"].as<std::string>();
-            entry.x = item["x"].as<std::string>();
-            entry.y = item["y"].as<std::string>();
-            entry.k = item["k"].as<std::string>();
-            entry.r = item["r"].as<std::string>();
-            entry.s = item["s"].as<std::string>();
+            entry.item = item["item"].as<std::string>("");
+            entry.param = item["param"].as<std::string>("");
+            entry.alg = item["alg"].as<std::string>("");
+            entry.m = item["m"].as<std::string>("");
+            entry.x = item["x"].as<std::string>("");
+            entry.y = item["y"].as<std::string>("");
+            entry.k = item["k"].as<std::string>("");
+            entry.r = item["r"].as<std::string>("");
+            entry.s = item["s"].as<std::string>("");
 
             auto advisor = crypto_advisor::get_instance();
             auto hint = advisor->hintof_digest(entry.alg);
@@ -101,10 +101,10 @@ void test_yaml_testvector_dsa() {
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>();
+            auto text_example = example["example"].as<std::string>("");
             _logger->writeln("example: %s", text_example.c_str());
 
-            auto schema = example["schema"].as<std::string>();
+            auto schema = example["schema"].as<std::string>("");
             auto items = example["items"];
 
             if (schema == "DSA PARAMETER") {

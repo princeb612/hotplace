@@ -13,6 +13,7 @@
 
 #include <functional>
 #include <hotplace/sdk/base/nostd/exception.hpp>
+#include <hotplace/sdk/base/nostd/template.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
 #include <hotplace/sdk/base/system/types.hpp>
 #include <iomanip>

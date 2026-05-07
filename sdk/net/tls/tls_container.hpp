@@ -80,7 +80,7 @@ class t_tls_container {
                 }
             } else {
                 // tls_record
-                auto type = item->get_type();
+                // auto type = item->get_type();
                 _members.push_back(item);
             }
         }

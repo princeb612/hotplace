@@ -65,7 +65,7 @@ void test_yaml_testvector_cmdline() {
             valist va;
             auto args = item["args"];
             auto expect = item["expect"].as<bool>();
-            auto reason = item["reason"].as<std::string>();
+            auto reason = item["reason"].as<std::string>("");
 
             int argc = t_narrow_cast(args.size());
             if (argc > 5) {
@@ -76,7 +76,7 @@ void test_yaml_testvector_cmdline() {
             // argv memory access
             std::vector<std::string> table;
             for (const auto& arg : args) {
-                table.push_back(arg.as<std::string>());
+                table.push_back(arg.as<std::string>(""));
             }
 
             char* argv[5] = {};
@@ -94,11 +94,11 @@ void test_yaml_testvector_cmdline() {
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>();
+            auto text_example = example["example"].as<std::string>("");
             _logger->writeln("example: %s", text_example.c_str());
 
-            auto schema = example["schema"].as<std::string>();
-            auto templ = example["template"].as<std::string>();
+            auto schema = example["schema"].as<std::string>("");
+            auto templ = example["template"].as<std::string>("");
             auto items = example["items"];
 
             if (schema == "CMDLINE") {

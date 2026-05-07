@@ -210,17 +210,17 @@ void test_yaml_testvector_cbc_hmac_jose() {
         for (const auto& item : items) {
             test_vector_aead_aes_cbc_hmac_sha2_t entry;
 
-            entry.item = std::move(item["item"].as<std::string>());
-            entry.encalg = std::move(item["encalg"].as<std::string>());
-            entry.macalg = std::move(item["macalg"].as<std::string>());
-            entry.k = std::move(item["k"].as<std::string>());
-            entry.p = std::move(item["p"].as<std::string>());
-            entry.iv = std::move(item["iv"].as<std::string>());
-            entry.a = std::move(item["a"].as<std::string>());
-            entry.q = std::move(item["q"].as<std::string>());
-            entry.s = std::move(item["s"].as<std::string>());
-            entry.t = std::move(item["t"].as<std::string>());
-            entry.c = std::move(item["c"].as<std::string>());
+            entry.item = std::move(item["item"].as<std::string>(""));
+            entry.encalg = std::move(item["encalg"].as<std::string>(""));
+            entry.macalg = std::move(item["macalg"].as<std::string>(""));
+            entry.k = std::move(item["k"].as<std::string>(""));
+            entry.p = std::move(item["p"].as<std::string>(""));
+            entry.iv = std::move(item["iv"].as<std::string>(""));
+            entry.a = std::move(item["a"].as<std::string>(""));
+            entry.q = std::move(item["q"].as<std::string>(""));
+            entry.s = std::move(item["s"].as<std::string>(""));
+            entry.t = std::move(item["t"].as<std::string>(""));
+            entry.c = std::move(item["c"].as<std::string>(""));
 
             do_test_aead_aes_cbc_hmac_sha2_testvector1(&entry);
             do_test_aead_aes_cbc_hmac_sha2_testvector2(&entry);
@@ -231,10 +231,10 @@ void test_yaml_testvector_cbc_hmac_jose() {
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>();
+            auto text_example = example["example"].as<std::string>("");
             _logger->writeln("example: %s", text_example.c_str());
 
-            auto schema = example["schema"].as<std::string>();
+            auto schema = example["schema"].as<std::string>("");
             auto items = example["items"];
 
             if (schema == "CBC-HMAC JOSE") {

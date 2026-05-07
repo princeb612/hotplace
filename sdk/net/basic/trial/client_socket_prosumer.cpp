@@ -412,7 +412,7 @@ return_t client_socket_prosumer::do_read(char* ptr_data, size_t size_data, size_
                 if (false == _rq.empty()) {
                     auto& item = _rq.front();
 
-                    if (SOCK_DGRAM == type) {
+                    if (SOCK_DGRAM == type && nullptr != addr) {
                         memcpy(addr, &item.addr, sizeof(sockaddr_storage_t));
                     }
 

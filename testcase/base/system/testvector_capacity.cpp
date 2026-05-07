@@ -16,7 +16,7 @@ void test_yaml_testvector_capacity() {
     auto lambda_yaml_unsigned_byte_capacity = [&](const YAML::Node& items) -> void {
         if (items && items.IsSequence()) {
             for (const auto& item : items) {
-                bignumber bn = item["value"].as<std::string>();
+                bignumber bn = item["value"].as<std::string>("");
                 auto expect = item["expect"].as<unsigned int>();
                 auto value = bn.unsigned_byte_capacity();
                 _logger->writeln("%s %s byte capacity %zi expect %i", bn.str().c_str(), bn.hex().c_str(), value, expect);
@@ -27,7 +27,7 @@ void test_yaml_testvector_capacity() {
     auto lambda_yaml_signed_byte_capacity = [&](const YAML::Node& items) -> void {
         if (items && items.IsSequence()) {
             for (const auto& item : items) {
-                bignumber bn = item["value"].as<std::string>();
+                bignumber bn = item["value"].as<std::string>("");
                 auto expect = item["expect"].as<unsigned int>();
                 auto value = bn.signed_byte_capacity();
                 _logger->writeln("%s %s byte capacity %zi expect %i", bn.str().c_str(), bn.hex().c_str(), value, expect);
@@ -40,10 +40,10 @@ void test_yaml_testvector_capacity() {
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>();
+            auto text_example = example["example"].as<std::string>("");
             _logger->writeln("example: %s", text_example.c_str());
 
-            auto schema = example["schema"].as<std::string>();
+            auto schema = example["schema"].as<std::string>("");
             auto items = example["items"];
 
             if (schema == "UNSIGNED BYTE CAPACITY") {

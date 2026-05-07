@@ -10,6 +10,7 @@
 
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
+#include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/io/system/socket.hpp>
 #include <hotplace/sdk/net/basic/openssl/sdk.hpp>
 #include <hotplace/sdk/net/basic/util/sdk.hpp>
@@ -93,8 +94,13 @@ return_t SSL_dgram_peer_sockaddr(SSL* ssl, struct sockaddr* sockaddr, socklen_t 
         }
 
         bio_addr = BIO_ADDR_new();
-        BIO_dgram_get_peer(SSL_get_rbio(ssl), bio_addr);
-        BIO_ADDR_to_sockaddr(bio_addr, sockaddr, addrlen);
+        int rc = BIO_dgram_get_peer(SSL_get_rbio(ssl), bio_addr);
+        if (rc > 0) {
+            BIO_ADDR_to_sockaddr(bio_addr, sockaddr, addrlen);
+        } else {
+            ret = errorcode_t::internal_error;
+            __leave2_trace_openssl(ret);
+        }
     }
     __finally2 {
         if (bio_addr) {

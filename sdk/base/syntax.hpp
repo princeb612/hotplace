@@ -82,7 +82,7 @@
 
 #ifdef __cplusplus
 #define __trynew try
-#define __catchnew(expt) catch (std::bad_alloc)
+#define __catchnew(expt) catch (const std::bad_alloc& e)
 #else
 #define __trynew
 #define __catchnew(expr) if (expr)

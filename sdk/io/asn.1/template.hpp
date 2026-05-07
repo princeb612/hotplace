@@ -52,7 +52,7 @@ uint32 t_asn1_length_octets(binary_t& bin, TYPE len, size_t pos = -1) {
 // X.690 8.19.2
 template <typename TYPE>
 uint32 t_asn1_oid_value(binary_t& bin, TYPE v, size_t pos = -1) {
-    if (-1 == pos) {
+    if (size_t(-1) == pos) {
         pos = bin.size();
     }
     uint32 len = 0;
@@ -69,7 +69,7 @@ uint32 t_asn1_oid_value(binary_t& bin, TYPE v, size_t pos = -1) {
 
 template <typename TYPE>
 uint32 t_asn1_integer_value(binary_t& bin, TYPE v, size_t pos = -1) {
-    if (-1 == pos) {
+    if (size_t(-1) == pos) {
         pos = bin.size();
     }
     uint32 len = byte_capacity(v);

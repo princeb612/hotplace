@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/nostd/exception.hpp>
+#include <hotplace/sdk/base/nostd/template.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>

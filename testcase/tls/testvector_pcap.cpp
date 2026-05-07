@@ -26,7 +26,7 @@ void play_yaml_pcap(const char* filename) {
 
     auto lambda_yaml_pcap = [&](const YAML::Node& example) -> void {
         __try2 {
-            auto protocol = example["protocol"].as<std::string>();
+            auto protocol = example["protocol"].as<std::string>("");
 
             session_type_t session_type = session_type_tls;
             if (protocol == "TLS") {
@@ -46,16 +46,16 @@ void play_yaml_pcap(const char* filename) {
             auto secrets = example["secrets"];
             if (secrets && secrets.IsSequence()) {
                 for (const auto& item : secrets) {
-                    (*sslkeylog) << item["item"].as<std::string>();
+                    (*sslkeylog) << item["item"].as<std::string>("");
                 }
             }
 
             auto items = example["items"];
             if (items && items.IsSequence()) {
                 for (const auto& item : items) {
-                    std::string text = item["item"].as<std::string>();
-                    std::string dir = item["dir"].as<std::string>();
-                    std::string record = item["record"].as<std::string>();
+                    std::string text = item["item"].as<std::string>("");
+                    std::string dir = item["dir"].as<std::string>("");
+                    std::string record = item["record"].as<std::string>("");
 
                     tls_direction_t direction;
                     if (dir == "from_client") {
@@ -88,10 +88,10 @@ void play_yaml_pcap(const char* filename) {
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>();
+            auto text_example = example["example"].as<std::string>("");
             _test_case.begin(text_example);
 
-            auto schema = example["schema"].as<std::string>();
+            auto schema = example["schema"].as<std::string>("");
 
             if (schema == "PCAP SIMPLE") {
                 lambda_yaml_pcap(example);

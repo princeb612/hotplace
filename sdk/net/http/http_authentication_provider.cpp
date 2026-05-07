@@ -19,6 +19,8 @@ namespace net {
 
 http_authentication_provider::http_authentication_provider(const std::string& realm) : _realm(realm) { _shared.make_share(this); }
 
+http_authentication_provider::~http_authentication_provider() {}
+
 std::string http_authentication_provider::get_challenge(http_request* request) {
     std::string token_auth;
     request->get_http_header().get("Authorization", token_auth);

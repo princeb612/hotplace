@@ -431,7 +431,7 @@ int vprintf_runtimew(printf_context_t* context, CALLBACK_PRINTFW runtime_printf,
         }
     };
 
-    if (nullptr == runtime_printf) {
+    if (nullptr == runtime_printf || nullptr == fmt0) {
         goto error;
     }
 

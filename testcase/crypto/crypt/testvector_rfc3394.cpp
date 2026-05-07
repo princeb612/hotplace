@@ -96,11 +96,11 @@ void test_yaml_testvector_rfc3394() {
         for (const auto& item : items) {
             test_vector_rfc3394_t entry;
 
-            entry.item = item["item"].as<std::string>();
-            entry.alg = item["alg"].as<std::string>();
-            entry.kek = item["kek"].as<std::string>();
-            entry.key = item["key"].as<std::string>();
-            entry.keydata = item["keydata"].as<std::string>();
+            entry.item = item["item"].as<std::string>("");
+            entry.alg = item["alg"].as<std::string>("");
+            entry.kek = item["kek"].as<std::string>("");
+            entry.key = item["key"].as<std::string>("");
+            entry.keydata = item["keydata"].as<std::string>("");
 
             do_test_keywrap_rfc3394_testvector(&entry);
         }
@@ -110,10 +110,10 @@ void test_yaml_testvector_rfc3394() {
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>();
+            auto text_example = example["example"].as<std::string>("");
             _logger->writeln("example: %s", text_example.c_str());
 
-            auto schema = example["schema"].as<std::string>();
+            auto schema = example["schema"].as<std::string>("");
             auto items = example["items"];
 
             if (schema == "RFC 3394") {

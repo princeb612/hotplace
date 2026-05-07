@@ -129,7 +129,7 @@ void regex_tokens(const char* input, size_t len, const char* expr, size_t& pos, 
                     auto begin = ovector[2 * i];
                     auto end = ovector[2 * i + 1];
                     if (begin != -1) {
-                        item.emplace(i, range_t(pos + begin, pos + end));
+                        item.emplace(i, range_t(begin, end));
 
 #if defined DEBUG
                         if (istraceable(trace_category_internal, loglevel_debug)) {
@@ -144,11 +144,13 @@ void regex_tokens(const char* input, size_t len, const char* expr, size_t& pos, 
                     tokens.push_back(std::move(item));
                 }
 
-                size_t fin = ovector[1];
-                if (fin == pos) {
-                    ++pos;
-                } else {
-                    pos = fin;
+                pos = ovector[1];
+                if (ovector[0] == ovector[1]) {
+                    if (pos < len) {
+                        ++pos;
+                    } else {
+                        break;
+                    }
                 }
             }
         }

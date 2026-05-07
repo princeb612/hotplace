@@ -306,6 +306,15 @@ return_t http2_frame::write_compressed_header(http_header* header, binary_t& fra
     return ret;
 }
 
+http2_frame& http2_frame::operator=(const http2_frame& other) {
+    _payload_size = other._payload_size;
+    _type = other._type;
+    _flags = other._flags;
+    _stream_id = other._stream_id;
+    _hpack_dyntable = other._hpack_dyntable;
+    return *this;
+}
+
 void http2_frame::addref() { _shared.addref(); }
 
 void http2_frame::release() { _shared.delref(); }

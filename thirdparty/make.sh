@@ -34,14 +34,12 @@ args=("$@")
 target=Release
 base=gcc
 generator='Unix Makefiles'
-builddir=build
 param=
 
 if [ ${#args[@]} -ne 0 ]; then
     for arg in ${args[@]}; do
         if [ $arg = 'msvc' ]; then
             base=msvc
-            builddir=build_msvc
             generator='Visual Studio 18 2026'
         elif [ $arg = 'release' ]; then
             target=Release
@@ -78,7 +76,7 @@ for item in ${dependency[@]}; do
         inflate `basename ${!member_url}`
     fi
     # build
-    if [ ! -f $member_basedir/${builddir}/.complete ]; then
+    if [ ! -f $member_basedir/.complete ]; then
         cd ${HOTPLACE_HOME}/thirdparty/$member_basedir
         if [ ! -z ${!member_buildscript} ]; then
             $(${!member_buildscript})

@@ -32,7 +32,7 @@
     * CBOR
 
 * details
-  * Revision 980
+  * Revision 982
   * Revision 979
     * [tested] sprintf (format string syntax)
   * Revision 969-971
@@ -254,7 +254,7 @@
     * [feature] HTTP/2 (RFC 7541, RFC 9113)
   * Revision 506
     * [feature] HPACK (RFC 7541)
-  * Revision 504
+  * Revision 505
     * [feature] huffman_coding
   * Revision 486
     * [feature] OAuth 2.0 (RFC 6749)

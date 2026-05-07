@@ -6,7 +6,7 @@
  *
  * Revision History
  * Date         Name                Description
- * 2023.09.12   Soo Han, Kim        CBOR (codename.hotplace)
+ * 2024.04.26   Soo Han, Kim        sketch (codename.hotplace Revision 505)
  */
 
 #include <hotplace/sdk/base/basic/huffman_coding.hpp>

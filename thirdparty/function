@@ -48,6 +48,15 @@ function inflate ()
     fi
 }
 
+function build_tool ()
+{
+    cmake -G "${generator}" -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${target} -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    make
+    sudo make install
+
+    touch .complete
+}
+
 # build_openssl directory
 function build_openssl ()
 {
@@ -84,10 +93,9 @@ function build_openssl ()
 # build_jansson directory
 function build_jansson ()
 {
-    cmake -G "${generator}" -DCMAKE_INSTALL_PREFIX=${install_dir} -B $builddir -DCMAKE_BUILD_TYPE=${target} -DJANSSON_BUILD_DOCS=OFF
-    cd $builddir
-    cmake --build . --config ${target}
-    cmake --install . --config ${target}
+    cmake -G "${generator}" -DCMAKE_INSTALL_PREFIX=${install_dir} -DCMAKE_BUILD_TYPE=${target} -DJANSSON_BUILD_DOCS=OFF
+    make
+    make install
 
     touch .complete
 }
@@ -98,19 +106,22 @@ function build_cmake ()
     # make
     # make install
 
-    cmake -G "${generator}" -DCMAKE_INSTALL_PREFIX=${install_dir} -B $builddir -DCMAKE_BUILD_TYPE=${target}
-    cmake --build $builddir --config ${target}
-    cmake --install $builddir --config ${target}
+    # -std=c++11
+    #   -DCMAKE_CXX_STANDARD=11
+    # prevent -std=c++11 -std=gnu++11
+    #   -DCMAKE_CXX_EXTENSIONS=OFF
+    cmake -G "${generator}" -DCMAKE_INSTALL_PREFIX=${install_dir} -DCMAKE_BUILD_TYPE=${target} -DCMAKE_CXX_STANDARD=11 -DCMAKE_CXX_EXTENSIONS=OFF -DCMAKE_VERBOSE_MAKEFILE=ON
+    make
+    make install
 
     touch .complete
 }
 
 function build_oqsprovider()
 {
-    cmake -G "${generator}" -DCMAKE_INSTALL_PREFIX=${install_dir} -B $builddir -DCMAKE_BUILD_TYPE=${target} -DOQS_KEM_ENCODERS=ON
-    cd $builddir
-    cmake --build . --config ${target}
-    cmake --install . --config ${target}
+    cmake -G "${generator}" -DCMAKE_INSTALL_PREFIX=${install_dir} -DCMAKE_BUILD_TYPE=${target} -DOQS_KEM_ENCODERS=ON
+    make
+    make install
 
     touch .complete
 }

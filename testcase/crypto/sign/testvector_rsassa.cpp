@@ -37,10 +37,10 @@ void test_yaml_testvector_rsassa() {
         for (const auto& item : items) {
             test_vector_nist_cavp_rsa_key_t entry;
 
-            entry.item = item["item"].as<std::string>();
-            entry.n = item["n"].as<std::string>();
-            entry.e = item["e"].as<std::string>();
-            entry.d = item["d"].as<std::string>();
+            entry.item = item["item"].as<std::string>("");
+            entry.n = item["n"].as<std::string>("");
+            entry.e = item["e"].as<std::string>("");
+            entry.d = item["d"].as<std::string>("");
 
             keychain.add_rsa_b16(&key, nid_rsa, entry.n.c_str(), entry.e.c_str(), entry.d.c_str(), keydesc(entry.item));
         };
@@ -49,17 +49,17 @@ void test_yaml_testvector_rsassa() {
         for (const auto& item : items) {
             test_vector_nist_cavp_rsa_t entry;
 
-            entry.item = item["item"].as<std::string>();
-            entry.kid = item["kid"].as<std::string>();
-            entry.alg = item["alg"].as<std::string>();
-            entry.m = item["m"].as<std::string>();
-            entry.s = item["s"].as<std::string>();
+            entry.item = item["item"].as<std::string>("");
+            entry.kid = item["kid"].as<std::string>("");
+            entry.alg = item["alg"].as<std::string>("");
+            entry.m = item["m"].as<std::string>("");
+            entry.s = item["s"].as<std::string>("");
             if (crypt_sig_rsassa_pss == scheme) {
                 auto node_salt = item["salt"];
                 // salt:
-                //      as<std::string>() return null
+                //      as<std::string>("") return null
                 if (false == node_salt.IsNull()) {
-                    entry.salt = node_salt.as<std::string>();
+                    entry.salt = node_salt.as<std::string>("");
                 }
             }
 
@@ -101,10 +101,10 @@ void test_yaml_testvector_rsassa() {
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>();
+            auto text_example = example["example"].as<std::string>("");
             _logger->writeln("example: %s", text_example.c_str());
 
-            auto schema = example["schema"].as<std::string>();
+            auto schema = example["schema"].as<std::string>("");
             auto items = example["items"];
 
             if (schema == "RSA KEY") {

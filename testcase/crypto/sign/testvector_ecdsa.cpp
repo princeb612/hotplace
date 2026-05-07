@@ -107,16 +107,16 @@ void test_yaml_testvector_ecdsa() {
             test_vector_nist_cavp_ecdsa_t entry;
 
             entry.encoding = encoding;
-            entry.item = item["item"].as<std::string>();
-            entry.curve = item["curve"].as<std::string>();
-            entry.alg = item["alg"].as<std::string>();
-            entry.m = item["m"].as<std::string>();
-            entry.d = item["d"].as<std::string>();
-            entry.x = item["x"].as<std::string>();
-            entry.y = item["y"].as<std::string>();
-            entry.k = item["k"].as<std::string>();
-            entry.r = item["r"].as<std::string>();
-            entry.s = item["s"].as<std::string>();
+            entry.item = item["item"].as<std::string>("");
+            entry.curve = item["curve"].as<std::string>("");
+            entry.alg = item["alg"].as<std::string>("");
+            entry.m = item["m"].as<std::string>("");
+            entry.d = item["d"].as<std::string>("");
+            entry.x = item["x"].as<std::string>("");
+            entry.y = item["y"].as<std::string>("");
+            entry.k = item["k"].as<std::string>("");
+            entry.r = item["r"].as<std::string>("");
+            entry.s = item["s"].as<std::string>("");
 
             do_test_ecdsa(&entry);
         }
@@ -126,14 +126,14 @@ void test_yaml_testvector_ecdsa() {
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>();
+            auto text_example = example["example"].as<std::string>("");
             _logger->writeln("example: %s", text_example.c_str());
 
-            auto schema = example["schema"].as<std::string>();
+            auto schema = example["schema"].as<std::string>("");
             auto items = example["items"];
 
             if (schema == "ECDSA TESTVECTOR") {
-                auto encoding = example["encoding"].as<std::string>();
+                auto encoding = example["encoding"].as<std::string>("");
 
                 lambda_yaml_ecdsa_testvector(items, encoding);
             } else {

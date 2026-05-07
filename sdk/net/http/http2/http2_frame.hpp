@@ -63,6 +63,8 @@ class http2_frame {
     virtual return_t write_compressed_header(binary_t& frag, const std::string& name, const std::string& value, uint32 flags = hpack_indexing | hpack_huffman);
     virtual return_t write_compressed_header(http_header* header, binary_t& frag, uint32 flags = hpack_indexing | hpack_huffman);
 
+    http2_frame& operator=(const http2_frame& other);
+
     void addref();
     void release();
 

@@ -218,9 +218,11 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
                 va_new << v;
                 fmtlist.push_back({std::move(src), std::move(dest)});
             }
+
             for (auto item : fmtlist) {
                 formatter.replace(item.first.c_str(), item.second.c_str(), 0, bufferio_flag_t::run_once);
             }
+
             stream->vprintf((char*)formatter.data(), va_new.get());
         }
     }

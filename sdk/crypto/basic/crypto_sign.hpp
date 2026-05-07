@@ -92,6 +92,8 @@ class crypto_sign {
     friend class crypto_sign_builder;
 
    public:
+    virtual ~crypto_sign();
+
     virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0) = 0;
     virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0) = 0;
     virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0) = 0;

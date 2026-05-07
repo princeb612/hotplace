@@ -27,7 +27,7 @@ class http_response {
     http_response();
     http_response(http_request* request);
     http_response(const http_response& object);
-    ~http_response();
+    virtual ~http_response();
 
     /* *
      * @brief   open HTTP 1.x

@@ -79,15 +79,15 @@ void test_yaml_testvector_cbc_hmac_tls() {
         for (const auto& item : items) {
             test_vector_cbchmac_tls_t entry;
 
-            entry.item = std::move(item["item"].as<std::string>());
-            entry.flag = std::move(item["flag"].as<std::string>());
-            entry.macalg = std::move(item["macalg"].as<std::string>());
-            entry.enckey = std::move(item["enckey"].as<std::string>());
-            entry.iv = std::move(item["iv"].as<std::string>());
-            entry.mackey = std::move(item["mackey"].as<std::string>());
-            entry.aad = std::move(item["aad"].as<std::string>());
-            entry.pt = std::move(item["pt"].as<std::string>());
-            entry.ct = std::move(item["ct"].as<std::string>());
+            entry.item = std::move(item["item"].as<std::string>(""));
+            entry.flag = std::move(item["flag"].as<std::string>(""));
+            entry.macalg = std::move(item["macalg"].as<std::string>(""));
+            entry.enckey = std::move(item["enckey"].as<std::string>(""));
+            entry.iv = std::move(item["iv"].as<std::string>(""));
+            entry.mackey = std::move(item["mackey"].as<std::string>(""));
+            entry.aad = std::move(item["aad"].as<std::string>(""));
+            entry.pt = std::move(item["pt"].as<std::string>(""));
+            entry.ct = std::move(item["ct"].as<std::string>(""));
 
             test_cbc_hmac(&entry);
         }
@@ -97,10 +97,10 @@ void test_yaml_testvector_cbc_hmac_tls() {
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>();
+            auto text_example = example["example"].as<std::string>("");
             _logger->writeln("example: %s", text_example.c_str());
 
-            auto schema = example["schema"].as<std::string>();
+            auto schema = example["schema"].as<std::string>("");
             auto items = example["items"];
 
             if (schema == "CBC-HMAC TLS") {

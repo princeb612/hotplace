@@ -50,9 +50,9 @@ void test_yaml_testvector_cbor() {
 
     auto lambda_yaml_rfc7049 = [&](const YAML::Node& items) -> void {
         for (const auto& item : items) {
-            std::string text_item = item["item"].as<std::string>();
-            std::string text_cbor = item["cbor"].as<std::string>();
-            std::string text_diag = item["diag"].as<std::string>();
+            std::string text_item = item["item"].as<std::string>("");
+            std::string text_cbor = item["cbor"].as<std::string>("");
+            std::string text_diag = item["diag"].as<std::string>("");
             auto loss = item["loss"];
             if (loss) {
             } else {
@@ -66,7 +66,7 @@ void test_yaml_testvector_cbor() {
     auto lambda_test = [&](const YAML::Node& examples) -> void {
         if (examples && examples.IsSequence()) {
             for (const auto& example : examples) {
-                auto schema = example["schema"].as<std::string>();
+                auto schema = example["schema"].as<std::string>("");
                 auto items = example["items"];
 
                 if (schema == "RFC 7049") {

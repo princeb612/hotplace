@@ -50,10 +50,10 @@ void test_yaml_testvector_cose_examples() {
     auto lambda_load_keys = [&](const YAML::Node& items) -> void {
         if (items && items.IsSequence()) {
             for (const auto& item : items) {
-                auto text_item = item["item"].as<std::string>();
-                auto keyset = item["keyset"].as<std::string>();
-                auto encoding = item["encoding"].as<std::string>();
-                auto kty = item["kty"].as<std::string>();
+                auto text_item = item["item"].as<std::string>("");
+                auto keyset = item["keyset"].as<std::string>("");
+                auto encoding = item["encoding"].as<std::string>("");
+                auto kty = item["kty"].as<std::string>("");
 
                 auto node_keyalg = item["keyalg"];
                 auto node_keyuse = item["keyuse"];
@@ -73,11 +73,11 @@ void test_yaml_testvector_cose_examples() {
 
                 keydesc desc(text_item);
                 if (node_keyalg) {
-                    auto keyalg = node_keyalg.as<std::string>();
+                    auto keyalg = node_keyalg.as<std::string>("");
                     desc.set_alg(keyalg);
                 }
                 if (node_keyuse) {
-                    auto keyuse = node_keyuse.as<std::string>();
+                    auto keyuse = node_keyuse.as<std::string>("");
                     if (keyuse == "enc") {
                         desc.set_use_enc();
                     }
@@ -86,23 +86,23 @@ void test_yaml_testvector_cose_examples() {
                 auto& key = keymapper[keyset];
 
                 if (kty == "oct") {
-                    auto k = item["k"].as<std::string>();
+                    auto k = item["k"].as<std::string>("");
                     cwk.add_oct(&key, enctype, k.c_str(), desc);
                 } else if (kty == "ec") {
-                    auto crv = item["crv"].as<std::string>();
-                    auto x = item["x"].as<std::string>();
-                    auto y = item["y"].as<std::string>();
-                    auto d = item["d"].as<std::string>();
+                    auto crv = item["crv"].as<std::string>("");
+                    auto x = item["x"].as<std::string>("");
+                    auto y = item["y"].as<std::string>("");
+                    auto d = item["d"].as<std::string>("");
                     cwk.add_ec(&key, crv.c_str(), enctype, x.c_str(), y.c_str(), d.c_str(), desc);
                 } else if (kty == "okp") {
-                    auto crv = item["crv"].as<std::string>();
-                    auto x = item["x"].as<std::string>();
-                    auto d = item["d"].as<std::string>();
+                    auto crv = item["crv"].as<std::string>("");
+                    auto x = item["x"].as<std::string>("");
+                    auto d = item["d"].as<std::string>("");
                     cwk.add_okp(&key, crv.c_str(), enctype, x.c_str(), d.c_str(), desc);
                 } else if (kty == "rsa") {
-                    auto n = item["n"].as<std::string>();
-                    auto e = item["e"].as<std::string>();
-                    auto d = item["d"].as<std::string>();
+                    auto n = item["n"].as<std::string>("");
+                    auto e = item["e"].as<std::string>("");
+                    auto d = item["d"].as<std::string>("");
                     cwk.add_rsa(&key, nid_rsa, enctype, n.c_str(), e.c_str(), d.c_str(), desc);
                 }
             }
@@ -122,7 +122,7 @@ void test_yaml_testvector_cose_examples() {
             if (sub && sub.IsScalar()) {
                 if (option.verbose) {
                     _logger->write([&](basic_stream& bs) -> void {
-                        auto value = sub.as<std::string>();
+                        auto value = sub.as<std::string>("");
                         bs.printf("> %s %s\n", header, value.c_str());
                         dump_memory(base16_decode(value), &bs, 16, 2, 0, dump_notrunc);
                     });
@@ -134,7 +134,7 @@ void test_yaml_testvector_cose_examples() {
         if (node && node.IsMap()) {
             auto sub = node[name];
             if (sub && sub.IsScalar()) {
-                auto value = sub.as<std::string>();
+                auto value = sub.as<std::string>("");
                 binary_t bin_value = base16_decode(value);
                 cose.set(handle, id, bin_value);
                 properties << name << " ";
@@ -151,9 +151,9 @@ void test_yaml_testvector_cose_examples() {
     auto lambda_yaml_cose_examples = [&](const YAML::Node& items) -> void {
         if (items && items.IsSequence()) {
             for (const auto& item : items) {
-                auto text_item = item["item"].as<std::string>();
-                auto text_keyset = item["keyset"].as<std::string>();
-                auto text_cbor = item["cbor"].as<std::string>();
+                auto text_item = item["item"].as<std::string>("");
+                auto text_keyset = item["keyset"].as<std::string>("");
+                auto text_cbor = item["cbor"].as<std::string>("");
 
                 _logger->colorln("item: %s", text_item.c_str());
                 _logger->writeln("keyset: %s", text_keyset.c_str());
@@ -269,7 +269,7 @@ void test_yaml_testvector_cose_examples() {
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {
-            auto schema = example["schema"].as<std::string>();
+            auto schema = example["schema"].as<std::string>("");
 
             if (schema == "COSE EXAMPLES") {
                 auto keys = example["keys"];

@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/nostd/template.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 
 namespace hotplace {

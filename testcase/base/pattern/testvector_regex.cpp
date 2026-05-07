@@ -14,8 +14,8 @@ void test_yaml_testvector_regex() {
     _test_case.begin("regex YAML");
 
     auto lambda_yaml_test_item = [&](const YAML::Node& item) -> void {
-        auto input = item["input"].as<std::string>();
-        auto expr = item["expr"].as<std::string>();
+        auto input = item["input"].as<std::string>("");
+        auto expr = item["expr"].as<std::string>("");
         auto node_results = item["results"];
 
         std::list<std::string> tokens_results;
@@ -27,7 +27,7 @@ void test_yaml_testvector_regex() {
 
         if (node_results && node_results.IsSequence()) {
             for (const auto& result : node_results) {
-                auto res = result.as<std::string>();
+                auto res = result.as<std::string>("");
                 _logger->writeln("expect %s", res.c_str());
                 tokens_expect.push_back(std::move(res));
             }
@@ -89,10 +89,10 @@ void test_yaml_testvector_regex() {
     auto examples = testvector["testvector"];
     if (examples && examples.IsSequence()) {
         for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>();
+            auto text_example = example["example"].as<std::string>("");
             _logger->writeln("example: %s", text_example.c_str());
 
-            auto schema = example["schema"].as<std::string>();
+            auto schema = example["schema"].as<std::string>("");
             auto items = example["items"];
 
             if (schema == "REGEX") {
