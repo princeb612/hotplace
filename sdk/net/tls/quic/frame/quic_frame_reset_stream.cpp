@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/quic/frame/quic_frame_reset_stream.hpp>
 #include <hotplace/sdk/net/tls/quic/quic.hpp>
@@ -45,9 +45,15 @@ return_t quic_frame_reset_stream::do_read_body(tls_direction_t dir, const byte_t
         constexpr char constexpr_final_size[] = "final size";
 
         payload pl;
-        pl << new payload_member(new quic_encoded(uint64(0)), constexpr_stream_id)   //
-           << new payload_member(new quic_encoded(uint64(0)), constexpr_error_code)  //
-           << new payload_member(new quic_encoded(uint64(0)), constexpr_final_size);
+        try {
+            pl << new payload_member(new quic_encoded(uint64(0)), constexpr_stream_id)   //
+               << new payload_member(new quic_encoded(uint64(0)), constexpr_error_code)  //
+               << new payload_member(new quic_encoded(uint64(0)), constexpr_final_size);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
+
         pl.read(stream, size, pos);
 
 #if defined DEBUG

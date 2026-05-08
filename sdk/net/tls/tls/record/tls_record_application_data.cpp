@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
@@ -153,7 +153,7 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
                                 ret = errorcode_t::unexpected;
                                 session->reset_session_status();
                                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
-                                __leave2;
+                                __leave2_trace(ret);
                             }
                         }
                         if (is_cbc) {

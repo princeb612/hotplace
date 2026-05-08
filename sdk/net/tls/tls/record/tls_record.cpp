@@ -13,7 +13,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
@@ -62,12 +62,12 @@ return_t tls_record::read(tls_direction_t dir, const byte_t* stream, size_t size
 
         ret = do_preprocess(dir);
         if (errorcode_t::success != ret) {
-            __leave2;
+            __leave2_trace(ret);
         }
 
         ret = do_read_header(dir, stream, size, pos);
         if (errorcode_t::success != ret) {
-            __leave2;
+            __leave2_trace(ret);
         }
 
         size_t tpos = pos;
@@ -98,13 +98,13 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
 #endif
         ret = do_preprocess(dir);
         if (errorcode_t::success != ret) {
-            __leave2;
+            __leave2_trace(ret);
         }
 
         binary_t body;
         ret = do_write_body(dir, body);
         if (errorcode_t::success != ret) {
-            __leave2;
+            __leave2_trace(ret);
         }
 
         auto session_type = session->get_type();
@@ -173,7 +173,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
     __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         auto session = get_session();
@@ -181,7 +181,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
 
         if ((size < pos) || (size - pos < minsize)) {
             ret = errorcode_t::no_more;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -221,17 +221,23 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
              *   Figure 4: DTLS 1.3 Header Examples
              */
             payload pl;
-            pl << new payload_member(uint8(0), constexpr_content_type)                              // tls, dtls
-               << new payload_member(uint16(0), true, constexpr_record_version)                     // tls, dtls
-               << new payload_member(uint16(0), true, constexpr_dtls_epoch, constexpr_group_dtls)   // dtls
-               << new payload_member(uint48_t(0), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
-               << new payload_member(uint16(0), true, constexpr_len);                               // tls, dtls
+            try {
+                pl << new payload_member(uint8(0), constexpr_content_type)                              // tls, dtls
+                   << new payload_member(uint16(0), true, constexpr_record_version)                     // tls, dtls
+                   << new payload_member(uint16(0), true, constexpr_dtls_epoch, constexpr_group_dtls)   // dtls
+                   << new payload_member(uint48_t(0), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
+                   << new payload_member(uint16(0), true, constexpr_len);                               // tls, dtls
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
 
             auto lambda_check_dtls = [&](payload* pl, payload_member* item) -> void {
                 auto ver = pl->t_value_of<uint16>(item);
                 pl->set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(ver));
             };
             pl.set_condition(constexpr_record_version, lambda_check_dtls);
+
             pl.read(stream, size, pos);
 
             content_type = pl.t_value_of<uint8>(constexpr_content_type);
@@ -250,11 +256,11 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
             // more than 2^14+2048 bytes
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_record_overflow);
             ret = errorcode_t::error_overflow;
-            __leave2;
+            __leave2_trace(ret);
         } else {
             if (size - pos < len) {
                 ret = errorcode_t::bad_data;
-                __leave2;
+                __leave2_trace(ret);
             }
         }
 
@@ -335,12 +341,12 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
             const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(cs);
             if (nullptr == hint) {
                 ret = errorcode_t::not_supported;
-                __leave2;
+                __leave2_trace(ret);
             }
             auto hint_cipher = tlsadvisor->hintof_blockcipher(cs);
             if (nullptr == hint_cipher) {
                 ret = errorcode_t::not_supported;
-                __leave2;
+                __leave2_trace(ret);
             }
 
             uint64 record_no = 0;
@@ -356,7 +362,7 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
 
             ret = protection.encrypt(session, dir, body, ciphertext, additional, tag);
             if (errorcode_t::success != ret) {
-                __leave2;
+                __leave2_trace(ret);
             }
 
             bool is_cbc = tlsadvisor->is_kindof_cbc(cs);
@@ -391,14 +397,23 @@ return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin
 
         {
             payload pl;
-            pl << new payload_member(uint8(get_type()), constexpr_content_type)                                         // tls, dtls
-               << new payload_member(uint16(record_version), true, constexpr_record_version)                            // tls, dtls
-               << new payload_member(uint16(get_key_epoch()), true, constexpr_dtls_epoch, constexpr_group_dtls)         // dtls
-               << new payload_member(uint48_t(get_dtls_record_seq()), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
-               << new payload_member(uint16(body.size()), true, constexpr_len);                                         // tls, dtls
+            try {
+                pl << new payload_member(uint8(get_type()), constexpr_content_type)                                         // tls, dtls
+                   << new payload_member(uint16(record_version), true, constexpr_record_version)                            // tls, dtls
+                   << new payload_member(uint16(get_key_epoch()), true, constexpr_dtls_epoch, constexpr_group_dtls)         // dtls
+                   << new payload_member(uint48_t(get_dtls_record_seq()), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
+                   << new payload_member(uint16(body.size()), true, constexpr_len);                                         // tls, dtls
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
 
             pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(record_version));
-            pl.write(bin);
+
+            ret = pl.write(bin);
+            if (errorcode_t::success != ret) {
+                __leave2_trace(ret);
+            }
         }
 
         _range.end = bin.size();

@@ -12,7 +12,7 @@
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/thread.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/system/multiplexer.hpp>
 #include <map>
 
@@ -43,7 +43,7 @@ return_t multiplexer_controller::open(multiplexer_controller_context_t** handle)
             __leave2;
         }
 
-        auto context = make_unique<multiplexer_event_loop_controller_context_t>();
+        auto context = custom::make_unique<multiplexer_event_loop_controller_context_t>();
         context->signature = MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT_SIGNATURE;
 
         *handle = context.get();

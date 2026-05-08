@@ -35,15 +35,23 @@ return_t http2_frame_alt_svc::do_read_body(const byte_t* stream, size_t size, si
         }
 
         payload pl;
-        pl << new payload_member((uint16)0, true, constexpr_frame_origin_len)  //
-           << new payload_member(binary_t(), constexpr_frame_origin)           //
-           << new payload_member(binary_t(), constexpr_frame_alt_svc_field_value);
+        try {
+            pl << new payload_member((uint16)0, true, constexpr_frame_origin_len)  //
+               << new payload_member(binary_t(), constexpr_frame_origin)           //
+               << new payload_member(binary_t(), constexpr_frame_alt_svc_field_value);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
 
         // size(origin) = value(origin len)
         // size(altsvc) = _payload_size - sizeof(uint16) - value(origin len)
         pl.set_reference_value(constexpr_frame_origin, constexpr_frame_origin_len);
 
-        pl.read(stream, size, pos);
+        ret = pl.read(stream, size, pos);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
         pl.get_binary(constexpr_frame_origin, _origin);
         pl.get_binary(constexpr_frame_alt_svc_field_value, _altsvc);
@@ -54,15 +62,25 @@ return_t http2_frame_alt_svc::do_read_body(const byte_t* stream, size_t size, si
 
 return_t http2_frame_alt_svc::do_write_body(binary_t& body) {
     return_t ret = errorcode_t::success;
+    __try2 {
+        payload pl;
+        try {
+            pl << new payload_member((uint16)_origin.size(), true, constexpr_frame_origin_len)  //
+               << new payload_member(_origin, constexpr_frame_origin)                           //
+               << new payload_member(_altsvc, constexpr_frame_alt_svc_field_value);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
 
-    payload pl;
-    pl << new payload_member((uint16)_origin.size(), true, constexpr_frame_origin_len)  //
-       << new payload_member(_origin, constexpr_frame_origin)                           //
-       << new payload_member(_altsvc, constexpr_frame_alt_svc_field_value);
-    pl.write(body);
+        ret = pl.write(body);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
-    ret = set_payload_size(body.size());
-
+        ret = set_payload_size(body.size());
+    }
+    __finally2 {}
     return ret;
 }
 

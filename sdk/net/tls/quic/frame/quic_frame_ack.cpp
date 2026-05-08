@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/quic/frame/quic_frame_ack.hpp>
 #include <hotplace/sdk/net/tls/quic/packet/quic_packet.hpp>
@@ -82,10 +82,16 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
         auto type = get_type();
 
         payload pl;
-        pl << new payload_member(new quic_encoded(uint64(0)), constexpr_largest_ack)      //
-           << new payload_member(new quic_encoded(uint64(0)), constexpr_ack_delay)        //
-           << new payload_member(new quic_encoded(uint64(0)), constexpr_ack_range_count)  //
-           << new payload_member(new quic_encoded(uint64(0)), constexpr_first_ack_range);
+        try {
+            pl << new payload_member(new quic_encoded(uint64(0)), constexpr_largest_ack)      //
+               << new payload_member(new quic_encoded(uint64(0)), constexpr_ack_delay)        //
+               << new payload_member(new quic_encoded(uint64(0)), constexpr_ack_range_count)  //
+               << new payload_member(new quic_encoded(uint64(0)), constexpr_first_ack_range);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
+
         pl.read(stream, size, pos);
 
 #if defined DEBUG
@@ -185,12 +191,21 @@ return_t quic_frame_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
         pkns.set_status(0);
 
         payload pl;
-        pl << new payload_member(new quic_encoded(uint8(type)), constexpr_type)                               //
-           << new payload_member(new quic_encoded(uint64(ack.largest_ack)), constexpr_largest_ack)            //
-           << new payload_member(new quic_encoded(uint64(0)), constexpr_ack_delay)                            //
-           << new payload_member(new quic_encoded(uint64(ack.ack_ranges.size())), constexpr_ack_range_count)  //
-           << new payload_member(new quic_encoded(uint64(ack.first_ack_range)), constexpr_first_ack_range);
-        pl.write(bin);
+        try {
+            pl << new payload_member(new quic_encoded(uint8(type)), constexpr_type)                               //
+               << new payload_member(new quic_encoded(uint64(ack.largest_ack)), constexpr_largest_ack)            //
+               << new payload_member(new quic_encoded(uint64(0)), constexpr_ack_delay)                            //
+               << new payload_member(new quic_encoded(uint64(ack.ack_ranges.size())), constexpr_ack_range_count)  //
+               << new payload_member(new quic_encoded(uint64(ack.first_ack_range)), constexpr_first_ack_range);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
+
+        ret = pl.write(bin);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
         for (auto& item : ack.ack_ranges) {
             payload ack_ranges;

@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_builder.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extensions.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
@@ -24,7 +24,7 @@ return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, con
     __try2 {
         if (nullptr == handshake || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         // extension

@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/http/http2/http2_frame_ping.hpp>
 #include <hotplace/sdk/net/http/http2/http2_protocol.hpp>
@@ -23,34 +24,31 @@ http2_frame_ping::http2_frame_ping(const http2_frame_ping& other) : http2_frame(
 http2_frame_ping::~http2_frame_ping() {}
 
 return_t http2_frame_ping::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    function_pipeline<return_t> pipeline;
+    payload pl;
 
-        payload pl;
-        pl << new payload_member((uint32)0, true, constexpr_frame_opaque);
-
-        pl.read(stream, size, pos);
-
-        _opaque = pl.t_value_of<uint32>(constexpr_frame_opaque);
-    }
-    __finally2 {}
-    return ret;
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() { return (nullptr != stream); })
+        .run_trycatch([&]() -> return_t {
+            pl << new payload_member((uint32)0, true, constexpr_frame_opaque);
+            return pl.read(stream, size, pos);
+        })
+        .walk([&]() -> void { _opaque = pl.t_value_of<uint32>(constexpr_frame_opaque); });
+    return pipeline.result();
 }
 
 return_t http2_frame_ping::do_write_body(binary_t& body) {
-    return_t ret = errorcode_t::success;
-
+    function_pipeline<return_t> pipeline;
     payload pl;
-    pl << new payload_member(_opaque, true, constexpr_frame_opaque);
-    pl.write(body);
 
-    ret = set_payload_size(body.size());
-
-    return ret;
+    pipeline  //
+        .run_trycatch([&]() -> return_t {
+            pl << new payload_member(_opaque, true, constexpr_frame_opaque);
+            return pl.write(body);
+        })
+        .run([&]() -> return_t { return set_payload_size(body.size()); });
+    return pipeline.result();
 }
 
 void http2_frame_ping::dump(stream_t* s) {

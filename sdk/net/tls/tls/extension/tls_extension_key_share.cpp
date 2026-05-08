@@ -9,7 +9,8 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
@@ -39,50 +40,44 @@ return_t tls_extension_key_share::add(uint16 group) { return errorcode_t::succes
 return_t tls_extension_key_share::add(const std::string& group) { return errorcode_t::success; }
 
 return_t tls_extension_key_share::add(uint16 group, tls_direction_t dir) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        // crypto_advisor* advisor = crypto_advisor::get_instance();
-        // tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    function_pipeline<return_t> pipeline;
 
-        auto session = get_handshake()->get_session();
+    auto session = get_handshake()->get_session();
+    auto& protection = session->get_tls_protection();
+    auto& keyshare = protection.get_key();
+    const char* privkid = nullptr;
+    const char* pubkid = nullptr;
 
-        const char* privkid = nullptr;
-        const char* pubkid = nullptr;
-        if (from_client == dir) {
-            privkid = KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE;
-            pubkid = KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC;
-        } else {
-            privkid = KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE;
-            pubkid = KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC;
-        }
+    pipeline  //
+        .run([&]() -> return_t {
+            if (from_client == dir) {
+                privkid = KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE;
+                pubkid = KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC;
+            } else {
+                privkid = KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE;
+                pubkid = KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC;
+            }
 
-        auto& protection = session->get_tls_protection();
-        auto& keyshare = protection.get_key();
-
-        crypto_keyexchange keyexchange;
-        ret = keyexchange.keygen((tls_group_t)group, &keyshare, privkid);
-        if (success != ret) {
-            __leave2;
-        }
-        auto pkey = keyshare.find_group(privkid, group);
-        ret = keyshare.add((EVP_PKEY*)pkey, pubkid, true);
-        if (success != ret) {
-            __leave2;
-        }
-
-        protection.get_protection_context().add_keyshare_group(group);
+            crypto_keyexchange keyexchange;
+            return keyexchange.keygen((tls_group_t)group, &keyshare, privkid);
+        })
+        .run([&]() -> return_t {
+            auto pkey = keyshare.find_group(privkid, group);
+            return keyshare.add((EVP_PKEY*)pkey, pubkid, true);
+        })
+        .walk([&]() -> void {
+            protection.get_protection_context().add_keyshare_group(group);
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                dbs.println(ANSI_ESCAPE "1;32m+ add keypair %s (group %s)" ANSI_ESCAPE "0m", privkid, tlsadvisor->nameof_group(group).c_str());
-            });
-        }
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+                    dbs.println(ANSI_ESCAPE "1;32m+ add keypair %s (group %s)" ANSI_ESCAPE "0m", privkid, tlsadvisor->nameof_group(group).c_str());
+                });
+            }
 #endif
-    }
-    __finally2 {}
-    return ret;
+        });
+    return pipeline.result();
 }
 
 void tls_extension_key_share::clear() {}
@@ -96,32 +91,31 @@ return_t tls_extension_key_share::add(const std::string& group, tls_direction_t 
 }
 
 return_t tls_extension_key_share::add_pubkey(uint16 group, const binary_t& pubkey, const keydesc& desc, tls_direction_t dir) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_handshake()->get_session();
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
+    function_pipeline<return_t> pipeline;
+    auto session = get_handshake()->get_session();
 
-        // crypto_advisor* advisor = crypto_advisor::get_instance();
-        // tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        auto& protection = session->get_tls_protection();
-        auto& keyshare = protection.get_key();
+    pipeline  //
+        .run([&]() -> return_t { return (nullptr == session) ? invalid_context : success; })
+        .run([&]() -> return_t {
+            // crypto_advisor* advisor = crypto_advisor::get_instance();
+            // tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            auto& protection = session->get_tls_protection();
+            auto& keyshare = protection.get_key();
 
-        crypto_keyexchange keyexchange;
-        ret = keyexchange.keystore((tls_group_t)group, &keyshare, desc.get_kid_cstr(), pubkey);
+            crypto_keyexchange keyexchange;
+            return keyexchange.keystore((tls_group_t)group, &keyshare, desc.get_kid_cstr(), pubkey);
+        })
+        .walk([&]() -> void {
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                dbs.println(ANSI_ESCAPE "1;32m+ add pub key %s (group %s)" ANSI_ESCAPE "0m", desc.get_kid_cstr(), tlsadvisor->nameof_group(group).c_str());
-            });
-        }
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+                    dbs.println(ANSI_ESCAPE "1;32m+ add pub key %s (group %s)" ANSI_ESCAPE "0m", desc.get_kid_cstr(), tlsadvisor->nameof_group(group).c_str());
+                });
+            }
 #endif
-    }
-    __finally2 {}
-    return ret;
+        });
+    return pipeline.result();
 }
 
 std::string tls_extension_key_share::get_kid() { return ""; }
@@ -145,124 +139,131 @@ void tls_extension_client_key_share::clear() {
 }
 
 return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        // RFC 8446 4.2.8.  Key Share
-        // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes (psk_dhe_ke)
+    function_pipeline<return_t> pipeline;
 
-        // auto advisor = crypto_advisor::get_instance();
-        auto session = get_handshake()->get_session();
-        auto& protection = session->get_tls_protection();
-        size_t limit = endpos_extension();
+    // RFC 8446 4.2.8.  Key Share
+    // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes (psk_dhe_ke)
+
+    // auto advisor = crypto_advisor::get_instance();
+    auto session = get_handshake()->get_session();
+    auto& protection = session->get_tls_protection();
+    size_t limit = endpos_extension();
 #if defined DEBUG
-        uint16 len = 0;
+    uint16 len = 0;
 #endif
+    payload pl;
 
-        //  struct {
-        //      NamedGroup group;
-        //      opaque key_exchange<1..2^16-1>;
-        //  } KeyShareEntry;
+    //  struct {
+    //      NamedGroup group;
+    //      opaque key_exchange<1..2^16-1>;
+    //  } KeyShareEntry;
 
-        //  struct {
-        //      KeyShareEntry client_shares<0..2^16-1>;
-        //  } KeyShareClientHello;
-        {
-            payload pl;
+    //  struct {
+    //      KeyShareEntry client_shares<0..2^16-1>;
+    //  } KeyShareClientHello;
+
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() { return (nullptr != stream) && (pos < size); })
+        .walk_trycatch([&]() {
             pl << new payload_member(uint16(0), true, constexpr_len);
             pl.read(stream, limit, pos);
+        })
+        .walk_trycatch([&]() -> void {
 #if defined DEBUG
             len = pl.t_value_of<uint16>(constexpr_len);
 #endif
-        }
+            protection.get_protection_context().clear_keyshare_groups();
 
-        protection.get_protection_context().clear_keyshare_groups();
+            while (pos < limit) {
+                uint16 group = 0;
+                binary_t pubkey;
 
-        while (pos < limit) {
-            uint16 group = 0;
-            binary_t pubkey;
+                payload pl;
+                pl << new payload_member(uint16(0), true, constexpr_group)       //
+                   << new payload_member(uint16(0), true, constexpr_pubkey_len)  //
+                   << new payload_member(binary_t(), constexpr_pubkey);          //
+                pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
 
-            payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_group)       //
-               << new payload_member(uint16(0), true, constexpr_pubkey_len)  //
-               << new payload_member(binary_t(), constexpr_pubkey);          //
-            pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
-            pl.read(stream, limit, pos);
+                pl.read(stream, limit, pos);
 
-            group = pl.t_value_of<uint16>(constexpr_group);
-            pl.get_binary(constexpr_pubkey, pubkey);
+                group = pl.t_value_of<uint16>(constexpr_group);
+                pl.get_binary(constexpr_pubkey, pubkey);
 
-            protection.get_protection_context().add_keyshare_group(group);
+                protection.get_protection_context().add_keyshare_group(group);
 
-            add_pubkey(group, pubkey, keydesc(get_kid()), dir);
+                add_pubkey(group, pubkey, keydesc(get_kid()), dir);
 
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                    auto tlsadvisor = tls_advisor::get_instance();
-                    // auto session = get_handshake()->get_session();
-                    dbs.println("   > %s %i(0x%04x)", constexpr_len, len, len);
-                    dbs.println("    > %s", constexpr_key_share_entry);
-                    dbs.println("     > %s 0x%04x (%s)", constexpr_group, group, tlsadvisor->nameof_group(group).c_str());
-                    dbs.println("     > %s %04x(%i)", constexpr_pubkey_len, pubkey.size(), pubkey.size());
-                    if (check_trace_level(loglevel_debug)) {
-                        dump_memory(pubkey, &dbs, 16, 7, 0x0, dump_notrunc);
-                    }
-                    dbs.println("       %s", base16_encode(pubkey).c_str());
-                });
-            }
+                if (istraceable(trace_category_net)) {
+                    trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                        auto tlsadvisor = tls_advisor::get_instance();
+                        // auto session = get_handshake()->get_session();
+                        dbs.println("   > %s %i(0x%04x)", constexpr_len, len, len);
+                        dbs.println("    > %s", constexpr_key_share_entry);
+                        dbs.println("     > %s 0x%04x (%s)", constexpr_group, group, tlsadvisor->nameof_group(group).c_str());
+                        dbs.println("     > %s %04x(%i)", constexpr_pubkey_len, pubkey.size(), pubkey.size());
+                        if (check_trace_level(loglevel_debug)) {
+                            dump_memory(pubkey, &dbs, 16, 7, 0x0, dump_notrunc);
+                        }
+                        dbs.println("       %s", base16_encode(pubkey).c_str());
+                    });
+                }
 #endif
-        }
-    }
-    __finally2 {}
-    return ret;
+            }
+        });
+    return pipeline.result();
 }
 
 return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_handshake()->get_session();
-        auto& protection = session->get_tls_protection();
+    function_pipeline<return_t> pipeline;
+    auto session = get_handshake()->get_session();
+    auto& protection = session->get_tls_protection();
+    binary_t bin_keyshare;
 
-        if (tls_flow_hello_retry_request == protection.get_flow()) {
-            clear();
-            uint16 group = t_narrow_cast(session->get_session_info(from_server).get_keyvalue().get(session_key_share_group));
-            add(group);
-        }
+    pipeline  //
+        .walk([&]() -> void {
+            if (tls_flow_hello_retry_request == protection.get_flow()) {
+                clear();
+                uint16 group = t_narrow_cast(session->get_session_info(from_server).get_keyvalue().get(session_key_share_group));
+                add(group);
+            }
+        })
+        .walk_trycatch([&]() -> void {
+            auto& tlskey = protection.get_key();
 
-        auto& tlskey = protection.get_key();
-        binary_t bin_keyshare;
+            protection.get_protection_context().for_each_keyshare_groups([&](uint16 group, bool* cont) -> void {
+                binary_t pubkey;
 
-        protection.get_protection_context().for_each_keyshare_groups([&](uint16 group, bool*) -> void {
-            binary_t pubkey;
-
-            crypto_keyexchange keyexchange;
-            keyexchange.keyshare((tls_group_t)group, &tlskey, KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, pubkey);
+                crypto_keyexchange keyexchange;
+                keyexchange.keyshare((tls_group_t)group, &tlskey, KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, pubkey);
 
 #if defined DEBUG
-            if (istraceable(trace_category_net, loglevel_debug)) {
-                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                    dbs.println("%s", tlsadvisor->nameof_group(group).c_str());
-                    dump_memory(pubkey, &dbs, 16, 7, 0x0, dump_notrunc);
-                });
-            }
+                if (istraceable(trace_category_net, loglevel_debug)) {
+                    trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+                        dbs.println("%s", tlsadvisor->nameof_group(group).c_str());
+                        dump_memory(pubkey, &dbs, 16, 7, 0x0, dump_notrunc);
+                    });
+                }
 #endif
-            if (false == pubkey.empty()) {
-                payload pl;
-                pl << new payload_member(uint16(group), true, constexpr_group)               //
-                   << new payload_member(uint16(pubkey.size()), true, constexpr_pubkey_len)  //
-                   << new payload_member(pubkey, constexpr_pubkey);
-                pl.write(bin_keyshare);
-            }
-        });
+                if (false == pubkey.empty()) {
+                    payload pl;
+                    pl << new payload_member(uint16(group), true, constexpr_group)               //
+                       << new payload_member(uint16(pubkey.size()), true, constexpr_pubkey_len)  //
+                       << new payload_member(pubkey, constexpr_pubkey);
 
-        binary_t bin_keysharelen;
-        binary_append(bin_keysharelen, uint16(bin_keyshare.size()), hton16);
-        bin_keyshare.insert(bin_keyshare.begin(), bin_keysharelen.begin(), bin_keysharelen.end());
-        bin = std::move(bin_keyshare);
-    }
-    __finally2 {}
-    return ret;
+                    pl.write(bin_keyshare);
+                }
+            });
+        })
+        .walk([&]() -> void {
+            binary_t bin_keysharelen;
+            binary_append(bin_keysharelen, uint16(bin_keyshare.size()), hton16);
+            bin_keyshare.insert(bin_keyshare.begin(), bin_keysharelen.begin(), bin_keysharelen.end());
+            bin = std::move(bin_keyshare);
+        });
+    return pipeline.result();
 }
 
 std::string tls_extension_client_key_share::get_kid() { return KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC; }
@@ -285,27 +286,31 @@ void tls_extension_server_key_share::clear() {
 }
 
 return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_handshake()->get_session();
-        uint16 group = 0;
-        binary_t pubkey;
-        uint16 pubkeylen = 0;
-        auto advisor = crypto_advisor::get_instance();
-        auto& protection = session->get_tls_protection();
-        protection.get_secrets().erase(tls_context_shared_secret);
+    function_pipeline<return_t> pipeline;
+    auto session = get_handshake()->get_session();
+    uint16 group = 0;
+    binary_t pubkey;
+    uint16 pubkeylen = 0;
+    auto advisor = crypto_advisor::get_instance();
+    auto& protection = session->get_tls_protection();
+    protection.get_secrets().erase(tls_context_shared_secret);
+    payload pl;
 
-        {
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() { return (nullptr != stream); })
+        .walk_trycatch([&]() -> void {
             //  struct {
             //      KeyShareEntry server_share;
             //  } KeyShareServerHello;
-            payload pl;
             pl << new payload_member(uint16(0), true, constexpr_group)       //
                << new payload_member(uint16(0), true, constexpr_pubkey_len)  //
                << new payload_member(binary_t(), constexpr_pubkey);          //
             pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
-            pl.read(stream, endpos_extension(), pos);
 
+            pl.read(stream, endpos_extension(), pos);
+        })
+        .walk([&]() -> void {
             // RFC 8448 5.  HelloRetryRequest
             // if (0 == pubkeylen) hello_retry_request
 
@@ -331,150 +336,154 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
 
             // HRR
             session->get_session_info(from_server).get_keyvalue().set(session_key_share_group, group);
-        }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                auto tlsadvisor = tls_advisor::get_instance();
-                dbs.println("   > %s 0x%04x (%s)", constexpr_group, group, tlsadvisor->nameof_group(group).c_str());
-                if (pubkeylen) {
-                    dbs.println("   > %s %i", constexpr_pubkey_len, pubkeylen);
-                    if (check_trace_level(loglevel_debug)) {
-                        dump_memory(pubkey, &dbs, 16, 5, 0x0, dump_notrunc);
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                    auto tlsadvisor = tls_advisor::get_instance();
+                    dbs.println("   > %s 0x%04x (%s)", constexpr_group, group, tlsadvisor->nameof_group(group).c_str());
+                    if (pubkeylen) {
+                        dbs.println("   > %s %i", constexpr_pubkey_len, pubkeylen);
+                        if (check_trace_level(loglevel_debug)) {
+                            dump_memory(pubkey, &dbs, 16, 5, 0x0, dump_notrunc);
+                        }
+                        dbs.println("     %s", base16_encode(pubkey).c_str());
+                    } else {
+                        dbs.println("     " ANSI_ESCAPE "1;33mHelloRetryRequest" ANSI_ESCAPE "0m");
                     }
-                    dbs.println("     %s", base16_encode(pubkey).c_str());
-                } else {
-                    dbs.println("     " ANSI_ESCAPE "1;33mHelloRetryRequest" ANSI_ESCAPE "0m");
-                }
-            });
-        }
+                });
+            }
 #endif
-    }
-    __finally2 {}
-    return ret;
+        });
+    return pipeline.result();
 }
 
 return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        // auto tlsadvisor = tls_advisor::get_instance();
-        auto session = get_handshake()->get_session();
-        auto& protection = session->get_tls_protection();
-        auto& tlskey = protection.get_key();
-        uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
-        auto group = group_enforced ? group_enforced : protection.get_protection_context().get0_keyshare_group();
-        auto hint_group = advisor->hintof_tls_group(group);
-        bool correct_group = true;
-        bool iskindof_mlkem = false;
-        if (hint_group) {
-            iskindof_mlkem = (tls_flag_pqc & hint_group->flags);
-        } else {
-            correct_group = false;
-        }
-
-        if (iskindof_mlkem) {
-            // encapsulate
-        } else {
-            auto pkey_svr = tlskey.find_group(get_kid().c_str(), group);
-            auto pkey_cli = protection.get_key().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, group);
-
-            if (nullptr == pkey_svr) {
-                correct_group = false;
-            } else {
-                // RFC 8446 2.1.  Incorrect DHE Share
-                // do HRR
-
-                uint32 nid_pkey_cli = 0;
-                uint32 nid_pkey_svr = 0;
-                nidof_evp_pkey(pkey_cli, nid_pkey_cli);
-                nidof_evp_pkey(pkey_svr, nid_pkey_svr);
-
-                if (nid_pkey_cli && nid_pkey_svr && (nid_pkey_svr == nid_pkey_cli)) {
-                    // do nothing
-                } else {
-                    correct_group = false;
-                }
-            }
-        }
-
-        binary_t pubkey;
-        uint16 pubkeylen = 0;
-        if (correct_group) {
-            crypto_keyexchange keyexchange;
-            binary_t share;
-            binary_t keycapsule;
-
-            if (iskindof_mlkem) {
-                keyexchange.keyshare((tls_group_t)group, &tlskey, KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, share);
-
-                binary_t sharedsecret;
-                keyexchange.encaps((tls_group_t)group, share, keycapsule, sharedsecret);
-                protection.get_secrets().assign(tls_context_shared_secret, sharedsecret);
-#if defined DEBUG
-                if (istraceable(trace_category_net)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void { dbs.println("   > encaps"); });
-                }
-#endif
-                pubkey = std::move(keycapsule);
-            } else {
-                keyexchange.keyshare((tls_group_t)group, &tlskey, KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC, share);
-                pubkey = std::move(share);
-            }
-            pubkeylen = t_narrow_cast(pubkey.size());
-        }
-
-        payload pl;
-        pl << new payload_member(uint16(group), true, constexpr_group)           //
-           << new payload_member(uint16(pubkeylen), true, constexpr_pubkey_len)  //
-           << new payload_member(pubkey, constexpr_pubkey);
-        auto lambda_hook = [&](payload* pl, payload_member* member) -> void {
-            // if do_helloretryrequest is false, do HelloRetryRequest
-            pl->set_group(constexpr_pubkey_len, correct_group);
-            pl->set_group(constexpr_pubkey, correct_group);
-        };
-        pl.set_condition(constexpr_group, lambda_hook);
-        pl.write(bin);
-
-#if defined DEBUG
-        if (hint_group) {
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_extension,
-                                  [&](basic_stream& dbs) -> void { dbs.println("   > group %s %s", hint_group->name, base16_encode(pubkey).c_str()); });
-            }
-        }
-#endif
+    function_pipeline<return_t> pipeline;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    // auto tlsadvisor = tls_advisor::get_instance();
+    auto session = get_handshake()->get_session();
+    auto& protection = session->get_tls_protection();
+    auto& tlskey = protection.get_key();
+    uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
+    auto group = group_enforced ? group_enforced : protection.get_protection_context().get0_keyshare_group();
+    auto hint_group = advisor->hintof_tls_group(group);
+    bool correct_group = true;
+    bool iskindof_mlkem = false;
+    if (hint_group) {
+        iskindof_mlkem = (tls_flag_pqc & hint_group->flags);
+    } else {
+        correct_group = false;
     }
-    __finally2 {}
-    return ret;
+    binary_t pubkey;
+    uint16 pubkeylen = 0;
+    payload pl;
+
+    pipeline  //
+        .walk([&]() -> void {
+            if (iskindof_mlkem) {
+                // encapsulate
+            } else {
+                auto pkey_svr = tlskey.find_group(get_kid().c_str(), group);
+                auto pkey_cli = protection.get_key().find_group(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, group);
+
+                if (nullptr == pkey_svr) {
+                    correct_group = false;
+                } else {
+                    // RFC 8446 2.1.  Incorrect DHE Share
+                    // do HRR
+
+                    uint32 nid_pkey_cli = 0;
+                    uint32 nid_pkey_svr = 0;
+                    nidof_evp_pkey(pkey_cli, nid_pkey_cli);
+                    nidof_evp_pkey(pkey_svr, nid_pkey_svr);
+
+                    if (nid_pkey_cli && nid_pkey_svr && (nid_pkey_svr == nid_pkey_cli)) {
+                        // do nothing
+                    } else {
+                        correct_group = false;
+                    }
+                }
+            }
+
+            if (correct_group) {
+                crypto_keyexchange keyexchange;
+                binary_t share;
+                binary_t keycapsule;
+
+                if (iskindof_mlkem) {
+                    keyexchange.keyshare((tls_group_t)group, &tlskey, KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC, share);
+
+                    binary_t sharedsecret;
+                    keyexchange.encaps((tls_group_t)group, share, keycapsule, sharedsecret);
+                    protection.get_secrets().assign(tls_context_shared_secret, sharedsecret);
+#if defined DEBUG
+                    if (istraceable(trace_category_net)) {
+                        trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void { dbs.println("   > encaps"); });
+                    }
+#endif
+                    pubkey = std::move(keycapsule);
+                } else {
+                    keyexchange.keyshare((tls_group_t)group, &tlskey, KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC, share);
+                    pubkey = std::move(share);
+                }
+                pubkeylen = t_narrow_cast(pubkey.size());
+            }
+        })
+        .run_trycatch([&]() -> return_t {
+            pl << new payload_member(uint16(group), true, constexpr_group)           //
+               << new payload_member(uint16(pubkeylen), true, constexpr_pubkey_len)  //
+               << new payload_member(pubkey, constexpr_pubkey);
+            auto lambda_hook = [&](payload* pl, payload_member* member) -> void {
+                // if do_helloretryrequest is false, do HelloRetryRequest
+                pl->set_group(constexpr_pubkey_len, correct_group);
+                pl->set_group(constexpr_pubkey, correct_group);
+            };
+            pl.set_condition(constexpr_group, lambda_hook);
+
+            return pl.write(bin);
+        })
+        .walk([&]() -> void {
+#if defined DEBUG
+            if (hint_group) {
+                if (istraceable(trace_category_net)) {
+                    trace_debug_event(trace_category_net, trace_event_tls_extension,
+                                      [&](basic_stream& dbs) -> void { dbs.println("   > group %s %s", hint_group->name, base16_encode(pubkey).c_str()); });
+                }
+            }
+#endif
+        });
+    return pipeline.result();
 }
 
 std::string tls_extension_server_key_share::get_kid() { return KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC; }
 
 return_t tls_extension_server_key_share::add_keyshare() {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_handshake()->get_session();
-        auto advisor = crypto_advisor::get_instance();
-        // auto tlsadvisor = tls_advisor::get_instance();
-        auto& protection = session->get_tls_protection();
-        uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
+    function_pipeline<return_t> pipeline;
+    auto session = get_handshake()->get_session();
+    auto advisor = crypto_advisor::get_instance();
+    // auto tlsadvisor = tls_advisor::get_instance();
+    auto& protection = session->get_tls_protection();
+    uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
 
-        if (group_enforced) {
-            add(group_enforced);
-        } else {
-            auto group = protection.get_protection_context().get0_keyshare_group();
-            auto hint = advisor->hintof_tls_group(group);
-            if (nullptr == hint) {
-                ret = not_supported;
-                __leave2;
+    pipeline  //
+        .test_parameter([&]() { return true; })
+        .run([&]() -> return_t {
+            return_t ret = success;
+            if (group_enforced) {
+                add(group_enforced);
+            } else {
+                auto group = protection.get_protection_context().get0_keyshare_group();
+                auto hint = advisor->hintof_tls_group(group);
+                if (nullptr == hint) {
+                    ret = not_supported;
+                } else {
+                    ret = add(group);
+                }
             }
-            ret = add(group);
-        }
-    }
-    __finally2 {}
-    return ret;
+            return ret;
+        });
+    return pipeline.result();
 }
 
 }  // namespace net

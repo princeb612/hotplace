@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/quic/frame/quic_frame.hpp>
 #include <hotplace/sdk/net/tls/quic/frame/quic_frames.hpp>
@@ -220,12 +220,17 @@ return_t quic_packet::do_read_header(tls_direction_t dir, const byte_t* stream, 
         //   17.3.  Short Header Packets
 
         payload pl;
-        pl << new payload_member(uint8(0), constexpr_hdr)                                   //
-           << new payload_member(uint32(0), true, constexpr_version, constexpr_longheader)  //
-           << new payload_member(uint8(0), constexpr_dcid_len, constexpr_longheader)        //
-           << new payload_member(binary_t(), constexpr_dcid)                                //
-           << new payload_member(uint8(0), constexpr_scid_len, constexpr_longheader)        //
-           << new payload_member(binary_t(), constexpr_scid, constexpr_longheader);         //
+        try {
+            pl << new payload_member(uint8(0), constexpr_hdr)                                   //
+               << new payload_member(uint32(0), true, constexpr_version, constexpr_longheader)  //
+               << new payload_member(uint8(0), constexpr_dcid_len, constexpr_longheader)        //
+               << new payload_member(binary_t(), constexpr_dcid)                                //
+               << new payload_member(uint8(0), constexpr_scid_len, constexpr_longheader)        //
+               << new payload_member(binary_t(), constexpr_scid, constexpr_longheader);         //
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
         if (is_longheader) {
             pl.set_reference_value(constexpr_dcid, constexpr_dcid_len);
             pl.set_reference_value(constexpr_scid, constexpr_scid_len);
@@ -297,40 +302,47 @@ return_t quic_packet::do_read(tls_direction_t dir, const byte_t* stream, size_t 
 
 return_t quic_packet::do_write_header(binary_t& header, const binary_t& body) {
     return_t ret = errorcode_t::success;
+    __try2 {
+        uint8 hdr = 0;
+        bool is_longheader = true;
 
-    uint8 hdr = 0;
-    bool is_longheader = true;
+        if (_ht) {
+            uint8 pty = 0;
+            get_type(_ht, pty, is_longheader);
+        } else {
+            set_type(_type, _ht, is_longheader);
+        }
 
-    if (_ht) {
-        uint8 pty = 0;
-        get_type(_ht, pty, is_longheader);
-    } else {
-        set_type(_type, _ht, is_longheader);
+        hdr = _ht;
+        switch (_type) {
+            /**
+             * RFC 9001 17.2.5.  Retry Packet
+             * The value in the Unused field is set to an arbitrary value by the server; a client MUST ignore these bits.
+             */
+            case quic_packet_type_retry:
+                hdr |= 0xf;
+                break;
+            default:
+                break;
+        }
+
+        payload pl;
+        try {
+            pl << new payload_member(hdr, constexpr_hdr)                                             //
+               << new payload_member(_version, true, constexpr_version, constexpr_longheader)        //
+               << new payload_member(uint8(_dcid.size()), constexpr_dcid_len, constexpr_longheader)  //
+               << new payload_member(_dcid, constexpr_dcid)                                          //
+               << new payload_member(uint8(_scid.size()), constexpr_scid_len, constexpr_longheader)  //
+               << new payload_member(_scid, constexpr_scid, constexpr_longheader);                   //
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
+        pl.set_group(constexpr_longheader, is_longheader);
+
+        ret = pl.write(header);
     }
-
-    hdr = _ht;
-    switch (_type) {
-        /**
-         * RFC 9001 17.2.5.  Retry Packet
-         * The value in the Unused field is set to an arbitrary value by the server; a client MUST ignore these bits.
-         */
-        case quic_packet_type_retry:
-            hdr |= 0xf;
-            break;
-        default:
-            break;
-    }
-
-    payload pl;
-    pl << new payload_member(hdr, constexpr_hdr)                                             //
-       << new payload_member(_version, true, constexpr_version, constexpr_longheader)        //
-       << new payload_member(uint8(_dcid.size()), constexpr_dcid_len, constexpr_longheader)  //
-       << new payload_member(_dcid, constexpr_dcid)                                          //
-       << new payload_member(uint8(_scid.size()), constexpr_scid_len, constexpr_longheader)  //
-       << new payload_member(_scid, constexpr_scid, constexpr_longheader);                   //
-    pl.set_group(constexpr_longheader, is_longheader);
-    pl.write(header);
-
+    __finally2 {}
     return ret;
 }
 

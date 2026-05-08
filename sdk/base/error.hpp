@@ -208,7 +208,7 @@ enum errorcode_t : uint32 {
     /* 0xef01000b 4009820171 */ not_available,
     /* 0xef01000c 4009820172 */ not_ready,
     /* 0xef01000d 4009820173 */ no_init,
-    /* 0xef01000e 4009820174 */ no_data,
+    /* 0xef01000e 4009820174 */ exception_caught,
     /* 0xef01000f 4009820175 */ bad_data,
     /* 0xef010010 4009820176 */ bad_format,
     /* 0xef010011 4009820177 */ error_overflow,
@@ -226,7 +226,7 @@ enum errorcode_t : uint32 {
     /* 0xef01001c 4009820188 */ max_reached,
     /* 0xef01001d 4009820189 */ failed,
     /* 0xef01001e 4009820190 */ blocked,
-    /* 0xef01001f 4009820191 */ not_implemented,
+    /* 0xef01001f 4009820191 */ reserved2,
     /* 0xef010020 4009820192 */ closed,
     /* 0xef010021 4009820193 */ disconnect,
     /* 0xef010022 4009820194 */ error_cipher,
@@ -261,7 +261,7 @@ enum errorcode_t : uint32 {
     /* 0xef01003f 4009820223 */ narrow_type,
     /* 0xef010040 4009820224 */ error_certificate,
     /* 0xef010041 4009820225 */ exceed,
-    /* 0xef010042 4009820226 */ fragmented,
+    /* 0xef010042 4009820226 */ reserved3,
     /* 0xef010043 4009820227 */ not_specified,
     /* 0xef010044 4009820228 */ error_negotiate,
     /* 0xef010045 4009820229 */ illegal_parameter,
@@ -302,6 +302,9 @@ enum errorcode_t : uint32 {
     /* 0xff010009 4278255625 */ no_more,
     /* 0xff01000a 4278255626 */ more_data,
     /* 0xff01000b 4278255627 */ reassemble,
+    /* 0xff01000c 4278255628 */ no_data,
+    /* 0xff01000d 4278255629 */ fragmented,
+    /* 0xff01000e 4278255630 */ not_implemented,
 };
 
 /*

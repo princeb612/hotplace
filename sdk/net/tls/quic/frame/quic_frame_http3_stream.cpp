@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/http/http3/http3_frame.hpp>
 #include <hotplace/sdk/net/http/http_resource.hpp>
@@ -52,15 +52,22 @@ return_t quic_frame_http3_stream::do_read_body(tls_direction_t dir, const byte_t
 #endif
 
         payload pl;
-        pl << new payload_member(new quic_encoded(uint64(0)), constexpr_stream_id)                 //
-           << new payload_member(new quic_encoded(uint64(0)), constexpr_offset, constexpr_offset)  //
-           << new payload_member(new quic_encoded(uint64(0)), constexpr_length, constexpr_length)  //
-           << new payload_member(binary_t(), constexpr_stream_data);
+        try {
+            pl << new payload_member(new quic_encoded(uint64(0)), constexpr_stream_id)                 //
+               << new payload_member(new quic_encoded(uint64(0)), constexpr_offset, constexpr_offset)  //
+               << new payload_member(new quic_encoded(uint64(0)), constexpr_length, constexpr_length)  //
+               << new payload_member(binary_t(), constexpr_stream_data);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
+
         pl.set_group(constexpr_offset, offbit);
         pl.set_group(constexpr_length, lenbit);
         if (lenbit) {
             pl.set_reference_value(constexpr_stream_data, constexpr_length);
         }
+
         pl.read(stream, size, pos);
 
         uint64 stream_id = 0;
@@ -278,15 +285,25 @@ return_t quic_frame_http3_stream::do_write_body(tls_direction_t dir, const byte_
         }
 
         payload pl;
-        pl << new payload_member(new quic_encoded(type), constexpr_type)                              //
-           << new payload_member(new quic_encoded(uint64(_stream_id)), constexpr_stream_id)           //
-           << new payload_member(new quic_encoded(uint64(pos)), constexpr_offset, constexpr_offset)   //
-           << new payload_member(new quic_encoded(uint64(slen)), constexpr_length, constexpr_length)  //
-           << new payload_member(new quic_encoded(_unitype), constexpr_unitype, constexpr_unitype)    //
-           << new payload_member(stream + pos, len, false, constexpr_stream_data);
+        try {
+            pl << new payload_member(new quic_encoded(type), constexpr_type)                              //
+               << new payload_member(new quic_encoded(uint64(_stream_id)), constexpr_stream_id)           //
+               << new payload_member(new quic_encoded(uint64(pos)), constexpr_offset, constexpr_offset)   //
+               << new payload_member(new quic_encoded(uint64(slen)), constexpr_length, constexpr_length)  //
+               << new payload_member(new quic_encoded(_unitype), constexpr_unitype, constexpr_unitype)    //
+               << new payload_member(stream + pos, len, false, constexpr_stream_data);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
+
         pl.set_group(constexpr_offset, (pos > 0));
         pl.set_group(constexpr_unitype, is_begin);
-        pl.write(bin);
+
+        ret = pl.write(bin);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {

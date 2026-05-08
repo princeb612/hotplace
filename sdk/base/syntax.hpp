@@ -20,69 +20,9 @@
 #define __finally2 while (0);
 #define __leave2 break
 
-#if defined DEBUG
-#define __footprints(x)                                                                          \
-    if (hotplace::get_trace_option()) {                                                          \
-        ::printf("[" ANSI_ESCAPE "31m%08x" ANSI_ESCAPE "0m][%s @ %d]\n", x, __FILE__, __LINE__); \
-    }
-#define __footprintf(...)                                                                        \
-    if (hotplace::get_trace_option()) {                                                          \
-        ::printf("[" ANSI_ESCAPE "35m debug  " ANSI_ESCAPE "0m][%s @ %d] ", __FILE__, __LINE__); \
-        ::printf(__VA_ARGS__);                                                                   \
-        printf("\n");                                                                            \
-    }
-#else
-#define __footprints(x)
-#define __footprintf(...)
-#endif
-/**
- * @brief   leave
- *      // leave a trace
- *      ret = do_something ();
- *      if (errorcode_t::success != ret) {
- *          __leave2_trace(x);
- *      }
- *
- *      // leave if faild
- *      ret = do_something ();
- *      __leave2_if_fail (ret);
- */
-#if defined DEBUG
-#define __trace(x, ...)               \
-    {                                 \
-        __footprintf(__VA_ARGS__);    \
-        hotplace::trace_backtrace(x); \
-    }
-#define __leave2_trace(x)             \
-    {                                 \
-        __footprints(x);              \
-        hotplace::trace_backtrace(x); \
-        break;                        \
-    }
-#define __leave2_tracef(x, ...)       \
-    {                                 \
-        __footprintf(__VA_ARGS__);    \
-        hotplace::trace_backtrace(x); \
-        break;                        \
-    }
-#define __leave2_if_fail(x)          \
-    if (errorcode_t::success != x) { \
-        __footprints(x);             \
-        break;                       \
-    }
-#else
-#define __trace(x, ...)
-#define __leave2_trace(x) break
-#define __leave2_tracef(x, ...) break
-#define __leave2_if_fail(x)          \
-    if (errorcode_t::success != x) { \
-        break;                       \
-    }
-#endif
-
 #ifdef __cplusplus
 #define __trynew try
-#define __catchnew(expt) catch (const std::bad_alloc& e)
+#define __catchnew(expt) catch (const std::bad_alloc&)
 #else
 #define __trynew
 #define __catchnew(expr) if (expr)

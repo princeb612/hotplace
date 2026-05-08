@@ -196,7 +196,7 @@ fi
 
 # build
 mkdir -p ${builddir}
-cmake -G "${generator}" -B ${builddir} -DCMAKE_BUILD_TYPE=${target} -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+cmake -G "${generator}" -B ${builddir} -DCMAKE_BUILD_TYPE=${target}
 if [[ $do_makefile = 1 ]]; then
     exit
 fi

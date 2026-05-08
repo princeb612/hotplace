@@ -10,7 +10,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/quic/frame/quic_frames.hpp>
@@ -51,9 +51,15 @@ return_t quic_packet_1rtt::do_read_body(tls_direction_t dir, const byte_t* strea
 
         {
             payload pl;
-            pl << new payload_member(binary_t(), constexpr_payload)  // PN + payload
-               << new payload_member(binary_t(), constexpr_tag);
+            try {
+                pl << new payload_member(binary_t(), constexpr_payload)  // PN + payload
+                   << new payload_member(binary_t(), constexpr_tag);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2;
+            }
             pl.reserve(constexpr_tag, tagsize);
+
             pl.read(stream, size, pos);
 
             pl.get_binary(constexpr_payload, _payload);
@@ -119,8 +125,17 @@ return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binar
 
             // unprotected header
             payload pl;
-            pl << new payload_member(bin_pn);
-            pl.write(bin_unprotected_header);
+            try {
+                pl << new payload_member(bin_pn);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2;
+            }
+
+            ret = pl.write(bin_unprotected_header);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
         }
 
         /**
@@ -153,10 +168,18 @@ return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binar
 
                 // encode packet number
                 payload pl;
-                pl << new payload_member(bin_pn);  //
+                try {
+                    pl << new payload_member(bin_pn);  //
+                } catch (...) {
+                    ret = errorcode_t::out_of_memory;
+                    __leave2;
+                }
 
                 // protected header
-                pl.write(bin_protected_header);
+                ret = pl.write(bin_protected_header);
+                if (errorcode_t::success != ret) {
+                    __leave2;
+                }
             }
 
             header = std::move(bin_protected_header);

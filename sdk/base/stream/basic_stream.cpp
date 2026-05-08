@@ -184,11 +184,7 @@ return_t basic_stream::println(const char* buf, ...) {
     return ret;
 }
 
-return_t basic_stream::vprintf(const char* fmt, valist ap) {
-    return_t ret = errorcode_t::success;
-    ret = sprintf(this, fmt, ap);
-    return ret;
-}
+return_t basic_stream::vprintf(const char* fmt, valist ap) { return sprintf(this, fmt, ap); }
 
 basic_stream& basic_stream::operator=(const basic_stream& other) {
     if (this != &other) {

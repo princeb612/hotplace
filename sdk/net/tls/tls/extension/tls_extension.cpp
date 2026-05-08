@@ -12,8 +12,9 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_builder.hpp>
@@ -51,7 +52,7 @@ tls_extension* tls_extension::read(tls_handshake* handshake, tls_direction_t dir
     __try2 {
         if (nullptr == handshake || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
         // extension
         //  uint16 type
@@ -59,7 +60,7 @@ tls_extension* tls_extension::read(tls_handshake* handshake, tls_direction_t dir
         //  ...
         if (pos + 4 > size) {
             ret = errorcode_t::no_more;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         {
@@ -81,64 +82,34 @@ tls_extension* tls_extension::read(tls_handshake* handshake, tls_direction_t dir
 }
 
 return_t tls_extension::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    function_pipeline<return_t> pipeline;
 
-        ret = do_preprocess(dir);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        ret = do_read_header(dir, stream, size, pos);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        size_t tpos = pos;  // responding to unhandled extentions
-        ret = do_read_body(dir, stream, size, tpos);
-        pos += get_body_size();  // responding to unhandled extentions
-
-        ret = do_postprocess(dir);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-    }
-    __finally2 {}
-    return ret;
+    pipeline  //
+        .test_parameter([&]() { return (nullptr != stream); })
+        .run([&]() -> return_t { return do_preprocess(dir); })
+        .run([&]() -> return_t { return do_read_header(dir, stream, size, pos); })
+        .run([&]() -> return_t {
+            size_t tpos = pos;  // responding to unhandled extentions
+            return do_read_body(dir, stream, size, tpos);
+        })
+        .run([&]() -> return_t {
+            pos += get_body_size();  // responding to unhandled extentions
+            return do_postprocess(dir);
+        });
+    return pipeline.result();
 }
 
 return_t tls_extension::write(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
+    function_pipeline<return_t> pipeline;
+    binary_t body;
 
-    __try2 {
-        ret = do_preprocess(dir);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        binary_t body;
-        ret = do_write_body(dir, body);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        ret = do_write_header(dir, bin, body);
-
-        ret = do_preprocess(dir);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        ret = do_postprocess(dir);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-    }
-    __finally2 {}
-    return ret;
+    pipeline  //
+        .run([&]() -> return_t { return do_preprocess(dir); })
+        .run([&]() -> return_t { return do_write_body(dir, body); })
+        .run([&]() -> return_t { return do_write_header(dir, bin, body); })
+        .run([&]() -> return_t { return do_preprocess(dir); })
+        .run([&]() -> return_t { return do_postprocess(dir); });
+    return pipeline.result();
 }
 
 return_t tls_extension::do_preprocess(tls_direction_t dir) { return errorcode_t::success; }
@@ -150,11 +121,11 @@ return_t tls_extension::do_read_header(tls_direction_t dir, const byte_t* stream
     __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
         if (pos + 4 > size) {
             ret = errorcode_t::no_more;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         size_t extpos = pos;
@@ -162,12 +133,15 @@ return_t tls_extension::do_read_header(tls_direction_t dir, const byte_t* stream
         uint16 ext_len = 0;
         {
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_extension_type)  //
-               << new payload_member(uint16(0), true, constexpr_ext_len);
-            ret = pl.read(stream, size, pos);
-            if (errorcode_t::success != ret) {
-                __leave2;
+            try {
+                pl << new payload_member(uint16(0), true, constexpr_extension_type)  //
+                   << new payload_member(uint16(0), true, constexpr_ext_len);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
             }
+
+            pl.read(stream, size, pos);
 
             extension_type = pl.t_value_of<uint16>(constexpr_extension_type);
             ext_len = pl.t_value_of<uint16>(constexpr_ext_len);
@@ -175,7 +149,7 @@ return_t tls_extension::do_read_header(tls_direction_t dir, const byte_t* stream
 
         if (size - pos < ext_len) {
             ret = errorcode_t::no_more;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         {
@@ -208,23 +182,35 @@ return_t tls_extension::do_read_body(tls_direction_t dir, const byte_t* stream, 
 
 return_t tls_extension::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body) {
     return_t ret = errorcode_t::success;
-    {
-        _header_range.begin = bin.size();
-        _header_range.end = 4 + bin.size();
-        _bodysize = t_narrow_cast(body.size());
-        _size = 4 + _bodysize;
+    __try2 {
+        {
+            _header_range.begin = bin.size();
+            _header_range.end = 4 + bin.size();
+            _bodysize = t_narrow_cast(body.size());
+            _size = 4 + _bodysize;
+        }
+        {
+            // header
+            payload pl;
+            try {
+                pl << new payload_member(uint16(get_type()), true, constexpr_extension_type)  //
+                   << new payload_member(uint16(_bodysize), true, constexpr_ext_len);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
+
+            ret = pl.write(bin);
+            if (errorcode_t::success != ret) {
+                __leave2_trace(ret);
+            }
+        }
+        {
+            // body
+            bin.insert(bin.end(), body.begin(), body.end());
+        }
     }
-    {
-        // header
-        payload pl;
-        pl << new payload_member(uint16(get_type()), true, constexpr_extension_type)  //
-           << new payload_member(uint16(_bodysize), true, constexpr_ext_len);
-        pl.write(bin);
-    }
-    {
-        // body
-        bin.insert(bin.end(), body.begin(), body.end());
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -17,6 +17,7 @@
  */
 
 #include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_sign.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
@@ -35,99 +36,95 @@ constexpr char constexpr_slen[] = "slen";
 constexpr char constexpr_s[] = "s";
 
 return_t rs2der(const binary_t& r, const binary_t& s, binary_t& asn1der) {
-    return_t ret = errorcode_t::success;
+    function_pipeline<return_t> pipeline;
+    binary_t r1;
+    binary_t s1;
+    binary_t prefix;
+    payload pl;
 
-    __try2 {
-        asn1der.clear();
+    pipeline  //
+        .walk([&]() -> void { asn1der.clear(); })
+        .test_parameter([&]() -> bool { return (false == r.empty()) && (false == s.empty()); })
+        .walk([&]() -> void {
+            // ASN.1 DER
+            // ASN.1 DER (30 || length || 02 || r_length || r || 02 || s_length || s)
 
-        if (r.empty() || s.empty()) {
-            ret = errorcode_t::illegal_parameter;
-            __leave2;
-        }
-
-        // ASN.1 DER
-        // ASN.1 DER (30 || length || 02 || r_length || r || 02 || s_length || s)
-
-        // MSB determines sign. MSB 0x80 is set, prefix 00.
-        binary_t r1 = r;
-        binary_t s1 = s;
-        binary_t prefix;
-        prefix.push_back(0);
-        if (0x80 & r1[0]) {
-            r1.insert(r1.begin(), prefix.begin(), prefix.end());
-        }
-        if (0x80 & s1[0]) {
-            s1.insert(s1.begin(), prefix.begin(), prefix.end());
-        }
-
-        payload pl;
-        pl << new payload_member(uint8(0x30))                       //
-           << new payload_member(uint8(r1.size() + s1.size() + 4))  //
-           << new payload_member(uint8(asn1_tag_integer))           //
-           << new payload_member(uint8(r1.size()))                  //
-           << new payload_member(r1)                                //
-           << new payload_member(uint8(asn1_tag_integer))           //
-           << new payload_member(uint8(s1.size()))                  //
-           << new payload_member(s1);
-        pl.write(asn1der);
-    }
-    __finally2 {}
-    return ret;
+            // MSB determines sign. MSB 0x80 is set, prefix 00.
+            r1 = r;
+            s1 = s;
+            prefix.push_back(0);
+            if (0x80 & r1[0]) {
+                r1.insert(r1.begin(), prefix.begin(), prefix.end());
+            }
+            if (0x80 & s1[0]) {
+                s1.insert(s1.begin(), prefix.begin(), prefix.end());
+            }
+        })
+        .walk_trycatch([&]() -> void {
+            pl << new payload_member(uint8(0x30))                       //
+               << new payload_member(uint8(r1.size() + s1.size() + 4))  //
+               << new payload_member(uint8(asn1_tag_integer))           //
+               << new payload_member(uint8(r1.size()))                  //
+               << new payload_member(r1)                                //
+               << new payload_member(uint8(asn1_tag_integer))           //
+               << new payload_member(uint8(s1.size()))                  //
+               << new payload_member(s1);
+        })
+        .run([&]() -> return_t { return pl.write(asn1der); });
+    return pipeline.result();
 }
 
 return_t der2rs(const binary_t& asn1der, uint16 unitsize, binary_t& r, binary_t& s) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        payload pl;
-        pl << new payload_member(uint8(0), constexpr_sequence)  //
-           << new payload_member(uint8(0), constexpr_len)       //
-           << new payload_member(uint8(0))                      //
-           << new payload_member(uint8(0), constexpr_rlen)      //
-           << new payload_member(binary_t(), constexpr_r)       //
-           << new payload_member(uint8(0))                      //
-           << new payload_member(uint8(0), constexpr_slen)      //
-           << new payload_member(binary_t(), constexpr_s);
+    function_pipeline<return_t> pipeline;
+    payload pl;
 
-        pl.set_reference_value(constexpr_r, constexpr_rlen);
-        pl.set_reference_value(constexpr_s, constexpr_slen);
+    pipeline.test_not_fail()
+        .walk_trycatch([&]() -> void {
+            pl << new payload_member(uint8(0), constexpr_sequence)  //
+               << new payload_member(uint8(0), constexpr_len)       //
+               << new payload_member(uint8(0))                      //
+               << new payload_member(uint8(0), constexpr_rlen)      //
+               << new payload_member(binary_t(), constexpr_r)       //
+               << new payload_member(uint8(0))                      //
+               << new payload_member(uint8(0), constexpr_slen)      //
+               << new payload_member(binary_t(), constexpr_s);
+        })
+        .run([&]() -> return_t {
+            pl.set_reference_value(constexpr_r, constexpr_rlen);
+            pl.set_reference_value(constexpr_s, constexpr_slen);
 
-        pl.read(asn1der.data(), asn1der.size());
+            return pl.read(asn1der.data(), asn1der.size());
+        })
+        .run([&]() -> return_t {
+            uint8 sequence = pl.t_value_of<uint8>(constexpr_sequence);
+            // uint8 rlen = pl.t_value_of<uint8>(constexpr_rlen);
+            // uint8 slen = pl.t_value_of<uint8>(constexpr_slen);
+            if (0x30 != sequence) {
+                return errorcode_t::bad_format;
+            }
 
-        uint8 sequence = pl.t_value_of<uint8>(constexpr_sequence);
-        // uint8 rlen = pl.t_value_of<uint8>(constexpr_rlen);
-        // uint8 slen = pl.t_value_of<uint8>(constexpr_slen);
-        if (0x30 != sequence) {
-            ret = errorcode_t::bad_format;
-            __leave2;
-        }
-
-        pl.get_binary(constexpr_r, r);
-        pl.get_binary(constexpr_s, s);
-    }
-    __finally2 {}
-    return ret;
+            pl.get_binary(constexpr_r, r);
+            pl.get_binary(constexpr_s, s);
+            return success;
+        });
+    return pipeline.result();
 }
 
 return_t sig2rs(const binary_t& sig, binary_t& r, binary_t& s) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        size_t size = sig.size();
-        if (size % 2) {
-            ret = errorcode_t::bad_format;
-            __leave2;
-        }
+    function_pipeline<return_t> pipeline;
+    size_t size = sig.size();
 
+    pipeline.run([&] { return (size % 2) ? errorcode_t::bad_format : success; }).walk([&] {
         size_t halfsize = size >> 1;
         r = binary_t(sig.begin(), sig.begin() + halfsize);
         s = binary_t(sig.begin() + halfsize, sig.end());
-    }
-    __finally2 {}
-    return ret;
+    });
+    return pipeline.result();
 }
 
 return_t rs2sig(const binary_t& r, const binary_t& s, uint16 unitsize, binary_t& signature) {
-    return_t ret = errorcode_t::success;
-    __try2 {
+    function_pipeline<return_t> pipeline;
+    pipeline.walk([&]() {
         signature.clear();
 
         size_t rlen = r.size();
@@ -170,44 +167,26 @@ return_t rs2sig(const binary_t& r, const binary_t& s, uint16 unitsize, binary_t&
         } else {
             binary_append(signature, s);
         }
-    }
-    __finally2 {}
-    return ret;
+    });
+    return pipeline.result();
 }
 
 return_t der2sig(const binary_t& asn1der, uint16 unitsize, binary_t& signature) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        binary_t bin_r;
-        binary_t bin_s;
-        ret = der2rs(asn1der, unitsize, bin_r, bin_s);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
+    function_pipeline<return_t> pipeline;
+    binary_t bin_r;
+    binary_t bin_s;
 
-        ret = rs2sig(bin_r, bin_s, unitsize, signature);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-    }
-    __finally2 {}
-    return ret;
+    pipeline.walk([&]() { return der2rs(asn1der, unitsize, bin_r, bin_s); }).walk([&]() { return rs2sig(bin_r, bin_s, unitsize, signature); });
+    return pipeline.result();
 }
 
 return_t sig2der(const binary_t& signature, binary_t& asn1der) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        binary_t bin_r;
-        binary_t bin_s;
+    function_pipeline<return_t> pipeline;
+    binary_t bin_r;
+    binary_t bin_s;
 
-        ret = sig2rs(signature, bin_r, bin_s);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        ret = rs2der(bin_r, bin_s, asn1der);
-    }
-    __finally2 {}
-    return ret;
+    pipeline.walk([&]() { return sig2rs(signature, bin_r, bin_s); }).walk([&]() { return rs2der(bin_r, bin_s, asn1der); });
+    return pipeline.result();
 }
 
 }  // namespace crypto

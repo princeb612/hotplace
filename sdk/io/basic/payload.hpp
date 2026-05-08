@@ -204,6 +204,21 @@ class payload_encoded {
     t_shared_reference<payload_encoded> _shared;
 };
 
+/**
+ * proxy
+ */
+struct payload_member_proxy {
+    payload_member* ptr;
+
+    payload_member_proxy(payload_member* p) : ptr(p) {}
+    // payload::operator << failure
+    ~payload_member_proxy() {
+        if (ptr) {
+            delete ptr;
+        }
+    }
+};
+
 class payload {
    public:
     payload();
@@ -212,8 +227,30 @@ class payload {
     /**
      * @brief   add
      * @sa      payload_member
+     * @remarks
+     *          understanding pl << new A << new B << new C;
+     *            - operator << (operator << (new A, new B), new C);
+     *            - if an exception occurs in B, a memory leak occurs in A.
+     *
+     *          #1 make_unique
+     *              try {
+     *                  pl << new payload_member(uint16(0), true, constexpr_extension_type)
+     *                     << new payload_member(uint16(0), true, constexpr_ext_len);
+     *              } catch (...) {
+     *                  throw exception(out_of_memory);
+     *              }
+     *
+     *          #2 proxy
+     *              try {
+     *                  pl << new payload_member(uint16(0), true, constexpr_extension_type)
+     *                     << new payload_member(uint16(0), true, constexpr_ext_len);
+     *              } catch (...) {
+     *                  throw exception(out_of_memory);
+     *              }
      */
-    payload& operator<<(payload_member* member);
+    // payload& operator<<(payload_member* member);
+    payload& operator<<(std::unique_ptr<payload_member> member);
+    payload& operator<<(payload_member_proxy proxy);
 
     /**
      * @brief   enable/disable group

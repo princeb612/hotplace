@@ -9,8 +9,8 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/base/types.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
 #include <hotplace/sdk/net/basic/openssl/sdk.hpp>
 #include <hotplace/sdk/net/basic/server_socket.hpp>
 #include <hotplace/sdk/net/basic/util/sdk.hpp>

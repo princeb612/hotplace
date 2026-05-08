@@ -67,7 +67,7 @@ return_t netlink::open(netlink_t** handle, uint32 flags, TYPE_CALLBACK_HANDLER c
             __leave2_trace(ret);
         }
 
-        auto context = make_unique<NETLINK_CONTEXT>();
+        auto context = custom::make_unique<NETLINK_CONTEXT>();
 
         context->flags = flags;
         context->consumer_handler = consumer_handler;

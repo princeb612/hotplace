@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_encrypted_client_hello.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
@@ -48,16 +48,22 @@ return_t tls_extension_encrypted_client_hello::do_read_body(tls_direction_t dir,
 
         {
             payload pl;
-            pl << new payload_member(uint8(0), constexpr_client_hello_type)   //
-               << new payload_member(uint16(0), true, constexpr_kdf)          //
-               << new payload_member(uint16(0), true, constexpr_aead)         //
-               << new payload_member(uint8(0), constexpr_config_id)           //
-               << new payload_member(uint16(0), true, constexpr_enc_len)      //
-               << new payload_member(binary_t(), constexpr_enc)               //
-               << new payload_member(uint16(0), true, constexpr_payload_len)  //
-               << new payload_member(binary_t(), constexpr_payload);
+            try {
+                pl << new payload_member(uint8(0), constexpr_client_hello_type)   //
+                   << new payload_member(uint16(0), true, constexpr_kdf)          //
+                   << new payload_member(uint16(0), true, constexpr_aead)         //
+                   << new payload_member(uint8(0), constexpr_config_id)           //
+                   << new payload_member(uint16(0), true, constexpr_enc_len)      //
+                   << new payload_member(binary_t(), constexpr_enc)               //
+                   << new payload_member(uint16(0), true, constexpr_payload_len)  //
+                   << new payload_member(binary_t(), constexpr_payload);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
             pl.set_reference_value(constexpr_enc, constexpr_enc_len);
             pl.set_reference_value(constexpr_payload, constexpr_payload_len);
+
             pl.read(stream, endpos_extension(), pos);
 
             client_hello_type = pl.t_value_of<uint8>(constexpr_client_hello_type);

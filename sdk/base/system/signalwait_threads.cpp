@@ -14,7 +14,7 @@
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/base/system/signalwait_threads.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 
 namespace hotplace {
 
@@ -51,8 +51,8 @@ return_t signalwait_threads::create() {
         critical_section_guard guard(_lock);
 
         if (_container.size() < _capacity) { /* check max concurrent thread */
-            auto thread_rt = make_unique<thread_info>();
-            auto thread_obj = make_unique<thread>(thread_routine, thread_rt.get());
+            auto thread_rt = custom::make_unique<thread_info>();
+            auto thread_obj = custom::make_unique<thread>(thread_routine, thread_rt.get());
 
             // set members before thread starts
             thread_rt->set_thread(thread_obj.get());

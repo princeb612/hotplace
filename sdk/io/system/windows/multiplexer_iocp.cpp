@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/system/multiplexer.hpp>
 #include <hotplace/sdk/io/system/socket.hpp>
 
@@ -40,7 +40,7 @@ return_t multiplexer_iocp::open(multiplexer_context_t** handle, size_t concurren
             __leave2;
         }
 
-        auto context = make_unique<multiplexer_iocp_context_t>();
+        auto context = custom::make_unique<multiplexer_iocp_context_t>();
 
         ret = controller.open(&handle_controller);
         if (errorcode_t::success != ret) {

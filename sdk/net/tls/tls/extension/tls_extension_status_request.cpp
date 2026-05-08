@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_status_request.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
@@ -43,13 +43,19 @@ return_t tls_extension_status_request::do_read_body(tls_direction_t dir, const b
         binary_t request_ext_info;
         {
             payload pl;
-            pl << new payload_member(uint8(0), constexpr_cert_status_type)             //
-               << new payload_member(uint16(), true, constexpr_responderid_info_len)   //
-               << new payload_member(binary_t(), constexpr_responderid_info)           //
-               << new payload_member(uint16(0), true, constexpr_request_ext_info_len)  //
-               << new payload_member(binary_t(), constexpr_request_ext_info);
+            try {
+                pl << new payload_member(uint8(0), constexpr_cert_status_type)             //
+                   << new payload_member(uint16(), true, constexpr_responderid_info_len)   //
+                   << new payload_member(binary_t(), constexpr_responderid_info)           //
+                   << new payload_member(uint16(0), true, constexpr_request_ext_info_len)  //
+                   << new payload_member(binary_t(), constexpr_request_ext_info);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
             pl.set_reference_value(constexpr_responderid_info, constexpr_responderid_info_len);
             pl.set_reference_value(constexpr_request_ext_info, constexpr_request_ext_info_len);
+
             pl.read(stream, endpos_extension(), pos);
 
             cert_status_type = pl.t_value_of<uint8>(constexpr_cert_status_type);

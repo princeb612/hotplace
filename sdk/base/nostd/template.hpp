@@ -23,6 +23,47 @@
 
 namespace hotplace {
 
+namespace custom {
+
+/*
+ * @brief   default deleter
+ */
+template <typename T, typename... Args>
+typename std::enable_if<!std::is_array<T>::value, std::unique_ptr<T> >::type make_unique(Args&&... args) {
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+/**
+ * @brief   T[], default deleter
+ */
+template <typename T>
+typename std::enable_if<std::is_array<T>::value, std::unique_ptr<T> >::type make_unique(size_t size) {
+    typedef typename std::remove_extent<T>::type element_type;
+    return std::unique_ptr<T>(new element_type[size]());
+}
+/**
+ * @brief   custom deleter
+ * @example
+ *          auto deleter = [](cbor_array* p) { p->release(); };
+ *          auto root = make_unique_with_deleter<cbor_array>(deleter);
+ */
+template <typename T, typename D, typename... Args>
+typename std::enable_if<!std::is_array<T>::value, std::unique_ptr<T, D> >::type make_unique_with_deleter(D deleter, Args&&... args) {
+    return std::unique_ptr<T, D>(new T(std::forward<Args>(args)...), deleter);
+}
+/**
+ * @brief   T[], custom deleter
+ * @example
+ *          auto deleter = [](byte_t* p) { delete[] p; };
+ *          auto buffer = make_unique_with_deleter<byte_t[]>(size_buffer, deleter);
+ */
+template <typename T, typename D>
+typename std::enable_if<std::is_array<T>::value, std::unique_ptr<T, D> >::type make_unique_with_deleter(size_t size, D deleter) {
+    typedef typename std::remove_extent<T>::type element_type;
+    return std::unique_ptr<T, D>(new element_type[size](), deleter);
+}
+
+}  // namespace custom
+
 /**
  * @brief   custom type traits
  * @refer   Gemini
@@ -115,15 +156,6 @@ template <typename TYPE>
 TYPE t_change_sign(TYPE i) {
     return custom::t_change_sign(i, typename t_is_signed<TYPE>::type());
 }
-
-#if __cplusplus >= 201402L  // c++14
-using std::make_unique;
-#else
-template <typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args&&... args) {
-    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
-#endif
 
 template <typename T>
 struct t_comparator_base {

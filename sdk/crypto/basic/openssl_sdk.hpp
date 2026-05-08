@@ -33,12 +33,21 @@ void openssl_thread_end(void);
 return_t get_opensslerror(int rc);
 return_t trace_openssl(return_t errorcode);
 return_t debug_trace_openssl(stream_t* stream);
-#define __leave2_trace_openssl(x)       \
-    if (errorcode_t::success != x) {    \
-        __footprints(x);                \
-    }                                   \
-    hotplace::crypto::trace_openssl(x); \
-    __leave2;
+
+/**
+ *  DEBUG only
+ *  leave_trace_dbg_openssl_print(__FILE__, __LINE__, ret);
+ */
+void leave_trace_dbg_openssl_print(const char* file, unsigned int line, return_t ret);
+#ifdef DEBUG
+#define __leave2_trace_openssl(x)                             \
+    {                                                         \
+        leave_trace_dbg_openssl_print(__FILE__, __LINE__, x); \
+        break;                                                \
+    }
+#else
+#define __leave2_trace_openssl(x) break
+#endif
 
 /* openssl-1.1.1 no older-version compatibility
  * OPENSSL_VERSION_NUMBER MNNFFPPS (major minor fix patch status)

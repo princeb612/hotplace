@@ -11,6 +11,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record_builder.hpp>
 #include <hotplace/sdk/net/tls/tls/tls.hpp>
@@ -23,7 +24,7 @@ return_t tls_dump_record(tls_session* session, tls_direction_t dir, const byte_t
     __try2 {
         if (nullptr == session || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         {

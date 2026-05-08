@@ -9,7 +9,8 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record_ack.hpp>
 #include <hotplace/sdk/net/tls/tls/tls.hpp>
@@ -27,57 +28,60 @@ tls_record_ack::tls_record_ack(tls_session* session) : tls_record(tls_content_ty
 tls_record_ack::~tls_record_ack() {}
 
 return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        uint16 len = get_body_size();
+    function_pipeline<return_t> pipeline;
+    uint16 len = get_body_size();
 
-        // RFC 9147 7.  ACK Message
-        // struct {
-        //     RecordNumber record_numbers<0..2^16-1>;
-        // } ACK;
+    // RFC 9147 7.  ACK Message
+    // struct {
+    //     RecordNumber record_numbers<0..2^16-1>;
+    // } ACK;
 
 #if defined DEBUG
-        uint16 ack_len = 0;
+    uint16 ack_len = 0;
 #endif
-        binary_t ack;
-        {
-            payload pl;
+    binary_t ack;
+    payload pl;
+
+    pipeline  //
+        .test_not_fail()
+        .walk_trycatch([&]() {
             pl << new payload_member(uint16(0), true, constexpr_ack_len)  //
                << new payload_member(binary_t(), constexpr_ack);
             pl.set_reference_value(constexpr_ack, constexpr_ack_len);
-            pl.read(stream, size, pos);
 
+            pl.read(stream, size, pos);
+        })
+        .walk([&]() {
 #if defined DEBUG
             ack_len = pl.t_value_of<uint16>(constexpr_ack_len);
 #endif
             pl.get_binary(constexpr_ack, ack);
-        }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
-                dbs.println("> %s %04x(%i)", constexpr_ack_len, ack_len, ack_len);
-                if (check_trace_level(loglevel_debug)) {
-                    dump_memory(ack, &dbs, 16, 3, 0x0, dump_notrunc);
-                }
-            });
-        }
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                    dbs.println("> %s %04x(%i)", constexpr_ack_len, ack_len, ack_len);
+                    if (check_trace_level(loglevel_debug)) {
+                        dump_memory(ack, &dbs, 16, 3, 0x0, dump_notrunc);
+                    }
+                });
+            }
 #endif
 
-        pos += len;
-    }
-    __finally2 {}
-    return ret;
+            pos += len;
+        });
+    return pipeline.result();
 }
 
 return_t tls_record_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    {
-        payload pl;
+    function_pipeline<return_t> pipeline;
+    payload pl;
+
+    pipeline.run_trycatch([&]() {
         pl << new payload_member(uint16(0), true);
-        pl.write(bin);
-    }
-    return ret;
+        return pl.write(bin);
+    });
+    return pipeline.result();
 }
 
 }  // namespace net

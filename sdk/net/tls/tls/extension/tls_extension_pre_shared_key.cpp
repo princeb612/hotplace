@@ -60,7 +60,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_pre_shared_key.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
@@ -112,15 +112,21 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
         size_t offset_psk_binders_len = 0;
         {
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_psk_identities_len)     //
-               << new payload_member(uint16(0), true, constexpr_psk_identity_len)       //
-               << new payload_member(binary_t(), constexpr_psk_identity)                //
-               << new payload_member(uint32(0), true, constexpr_obfuscated_ticket_age)  //
-               << new payload_member(uint16(0), true, constexpr_psk_binders_len)        //
-               << new payload_member(uint8(0), constexpr_psk_binder_len)                //
-               << new payload_member(binary_t(), constexpr_psk_binder);
+            try {
+                pl << new payload_member(uint16(0), true, constexpr_psk_identities_len)     //
+                   << new payload_member(uint16(0), true, constexpr_psk_identity_len)       //
+                   << new payload_member(binary_t(), constexpr_psk_identity)                //
+                   << new payload_member(uint32(0), true, constexpr_obfuscated_ticket_age)  //
+                   << new payload_member(uint16(0), true, constexpr_psk_binders_len)        //
+                   << new payload_member(uint8(0), constexpr_psk_binder_len)                //
+                   << new payload_member(binary_t(), constexpr_psk_binder);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
             pl.set_reference_value(constexpr_psk_identity, constexpr_psk_identity_len);
             pl.set_reference_value(constexpr_psk_binder, constexpr_psk_binder_len);
+
             pl.read(stream, endpos_extension(), pos);
 
             psk_identities_len = pl.t_value_of<uint16>(constexpr_psk_identities_len);
@@ -144,7 +150,7 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
                 session->reset_session_status();
                 ret = errorcode_t::error_handshake;
-                __leave2;
+                __leave2_trace(ret);
             }
             uint32 ticket_lifetime = t_narrow_cast(kv.get(session_ticket_lifetime));
             uint32 ticket_age_add = t_narrow_cast(kv.get(session_ticket_age_add));
@@ -152,7 +158,7 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
                 session->reset_session_status();
                 ret = errorcode_t::error_handshake;
-                __leave2;
+                __leave2_trace(ret);
             }
         }
 
@@ -220,7 +226,13 @@ return_t tls_extension_server_psk::do_read_body(tls_direction_t dir, const byte_
         uint16 selected_identity = 0;
         {
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_selected_identity);
+            try {
+                pl << new payload_member(uint16(0), true, constexpr_selected_identity);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
+
             pl.read(stream, endpos_extension(), pos);
 
             selected_identity = pl.t_value_of<uint16>(constexpr_selected_identity);

@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_renegotiation_info.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
@@ -36,9 +36,15 @@ return_t tls_extension_renegotiation_info::do_read_body(tls_direction_t dir, con
         auto& secrets = protection.get_secrets();
 
         payload pl;
-        pl << new payload_member(uint8(0), constexpr_renegotiation_info_length)  //
-           << new payload_member(binary_t(), constexpr_renegotiation_info);
+        try {
+            pl << new payload_member(uint8(0), constexpr_renegotiation_info_length)  //
+               << new payload_member(binary_t(), constexpr_renegotiation_info);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2_trace(ret);
+        }
         pl.set_reference_value(constexpr_renegotiation_info, constexpr_renegotiation_info_length);
+
         pl.read(stream, size, pos);
 
 #if defined DEBUG
@@ -91,7 +97,7 @@ return_t tls_extension_renegotiation_info::do_read_body(tls_direction_t dir, con
         if (errorcode_t::success != ret) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
             session->reset_session_status();
-            __leave2;
+            __leave2_trace(ret);
         }
     }
     __finally2 {}
@@ -120,9 +126,15 @@ return_t tls_extension_renegotiation_info::do_write_body(tls_direction_t dir, bi
         }
 
         payload pl;
-        pl << new payload_member(uint8(renegotiation_info.size()), constexpr_renegotiation_info_length)  //
-           << new payload_member(renegotiation_info, constexpr_renegotiation_info);
-        pl.write(bin);
+        try {
+            pl << new payload_member(uint8(renegotiation_info.size()), constexpr_renegotiation_info_length)  //
+               << new payload_member(renegotiation_info, constexpr_renegotiation_info);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2_trace(ret);
+        }
+
+        ret = pl.write(bin);
     }
     __finally2 {}
     return ret;

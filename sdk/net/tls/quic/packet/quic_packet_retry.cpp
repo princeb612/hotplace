@@ -36,7 +36,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/quic/packet/quic_packet_retry.hpp>
@@ -62,9 +62,15 @@ return_t quic_packet_retry::do_read_body(tls_direction_t dir, const byte_t* stre
     __try2 {
         {
             payload pl;
-            pl << new payload_member(binary_t(), constexpr_retry_token)  //
-               << new payload_member(binary_t(), constexpr_retry_integrity_tag);
+            try {
+                pl << new payload_member(binary_t(), constexpr_retry_token)  //
+                   << new payload_member(binary_t(), constexpr_retry_integrity_tag);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2;
+            }
             pl.reserve(constexpr_retry_integrity_tag, 128 >> 3);
+
             pl.read(stream, size, pos);
 
             pl.get_binary(constexpr_retry_token, _retry_token);
@@ -79,27 +85,37 @@ return_t quic_packet_retry::do_read_body(tls_direction_t dir, const byte_t* stre
 
 return_t quic_packet_retry::write(tls_direction_t dir, binary_t& packet) {
     return_t ret = errorcode_t::success;
+    __try2 {
+        ret = do_write_header(packet);
 
-    ret = do_write_header(packet);
+        binary_t bin_integrity_tag;
 
-    binary_t bin_integrity_tag;
-
-    if (from_any != dir) {
-        ret = retry_integrity_tag(*this, bin_integrity_tag);
-        if (errorcode_t::success == ret) {
-            _retry_integrity_tag = std::move(bin_integrity_tag);
+        if (from_any != dir) {
+            ret = retry_integrity_tag(*this, bin_integrity_tag);
+            if (errorcode_t::success == ret) {
+                _retry_integrity_tag = std::move(bin_integrity_tag);
+            }
         }
+
+        {
+            payload pl;
+            try {
+                pl << new payload_member(_retry_token)  //
+                   << new payload_member(_retry_integrity_tag);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2;
+            }
+
+            ret = pl.write(packet);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+        }
+
+        dump();
     }
-
-    {
-        payload pl;
-        pl << new payload_member(_retry_token)  //
-           << new payload_member(_retry_integrity_tag);
-        pl.write(packet);
-    }
-
-    dump();
-
+    __finally2 {}
     return ret;
 }
 

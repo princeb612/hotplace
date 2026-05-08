@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/quic/frame/quic_frame_crypto.hpp>
 #include <hotplace/sdk/net/tls/quic/packet/quic_packet.hpp>
@@ -62,10 +62,17 @@ return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stre
         //       - certificate_verify    ... ok
 
         payload pl;
-        pl << new payload_member(new quic_encoded(uint64(0)), constexpr_offset)  //
-           << new payload_member(new quic_encoded(uint64(0)), constexpr_length)  //
-           << new payload_member(binary_t(), constexpr_crypto_data);
+        try {
+            pl << new payload_member(new quic_encoded(uint64(0)), constexpr_offset)  //
+               << new payload_member(new quic_encoded(uint64(0)), constexpr_length)  //
+               << new payload_member(binary_t(), constexpr_crypto_data);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
+
         pl.set_reference_value(constexpr_crypto_data, constexpr_length);
+
         pl.read(stream, size, pos);
 
         uint64 offset = pl.t_value_of<uint64>(constexpr_offset);
@@ -142,11 +149,20 @@ return_t quic_frame_crypto::do_write_body(tls_direction_t dir, const byte_t* str
         //     exclude packet.header, packet.tag, frame.header
 
         payload pl;
-        pl << new payload_member(new quic_encoded(uint8(get_type())), constexpr_type)  //
-           << new payload_member(new quic_encoded(pos), constexpr_offset)              //
-           << new payload_member(new quic_encoded(len), constexpr_length)              //
-           << new payload_member(stream + pos, len, false, constexpr_crypto_data);
-        pl.write(bin);
+        try {
+            pl << new payload_member(new quic_encoded(uint8(get_type())), constexpr_type)  //
+               << new payload_member(new quic_encoded(pos), constexpr_offset)              //
+               << new payload_member(new quic_encoded(len), constexpr_length)              //
+               << new payload_member(stream + pos, len, false, constexpr_crypto_data);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
+
+        ret = pl.write(bin);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {

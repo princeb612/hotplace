@@ -37,7 +37,7 @@ return_t consumer_routine(uint32 type, uint32 data_count, void* data_array[], CA
 return_t client_connected_handler(socket_t sockcli, netsocket_event_t** out_netsocket_context) {
     return_t ret = errorcode_t::success;
 
-    auto netsocket_event = make_unique<netsocket_event_t>();
+    auto netsocket_event = custom::make_unique<netsocket_event_t>();
 
     sockaddr_storage_t sockaddr_client;
     int sockaddr_len = sizeof(sockaddr_client);

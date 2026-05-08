@@ -170,7 +170,7 @@ return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm,
             __leave2;
         }
 
-        auto context = make_unique<openssl_hash_context_t>();
+        auto context = custom::make_unique<openssl_hash_context_t>();
 
         context->_evp_md = method;
         context->_flags = 0;
@@ -230,7 +230,7 @@ return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm
             __leave2;
         }
 
-        auto context = make_unique<openssl_hash_context_t>();
+        auto context = custom::make_unique<openssl_hash_context_t>();
 
         context->_evp_cipher = method;
         context->_flags = 0;

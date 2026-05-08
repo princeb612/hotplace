@@ -11,6 +11,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_builder.hpp>
 #include <hotplace/sdk/net/tls/tls/tls.hpp>
@@ -24,12 +25,12 @@ return_t tls_dump_handshake(tls_session* session, tls_direction_t dir, const byt
     __try2 {
         if (nullptr == session || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
         {
             if (size - pos < 4) {
                 ret = errorcode_t::no_more;
-                __leave2;
+                __leave2_trace(ret);
             }
 
             tls_hs_type_t hs = (tls_hs_type_t)stream[pos];

@@ -191,7 +191,7 @@ const error_description error_descriptions[] = {
     errordef(not_available, "not available"),
     errordef(not_ready, "not ready"),
     errordef(no_init, "not initialized"),
-    errordef(no_data, "no data"),
+    errordef(exception_caught, "exception caught"),
     errordef(bad_data, "bad data"),
     errordef(bad_format, "bad format"),
     errordef(error_overflow, "overflow"),
@@ -208,7 +208,6 @@ const error_description error_descriptions[] = {
     errordef(max_reached, "max reached"),
     errordef(failed, "failed"),
     errordef(blocked, "blocked"),
-    errordef(not_implemented, "not_implemented"),
     errordef(closed, "closed"),
     errordef(disconnect, "disconnect"),
     errordef(error_cipher, "error cipher"),
@@ -244,7 +243,6 @@ const error_description error_descriptions[] = {
     errordef(narrow_type, "narrow type"),
     errordef(error_certificate, "certificate"),
     errordef(exceed, "exceed the designed size"),
-    errordef(fragmented, "fragment detected"),
     errordef(not_specified, "not specfied"),
     errordef(error_negotiate, "(re)negotiation failed"),
     errordef(illegal_parameter, "illegal parameter"),  // ie. invalid_parameter + error_verify
@@ -266,6 +264,9 @@ const error_description error_descriptions[] = {
     errordef(no_more, "no more data"),
     errordef(more_data, "more data"),
     errordef(reassemble, "reassemble"),
+    errordef(no_data, "no data"),
+    errordef(fragmented, "fragment detected"),
+    errordef(not_implemented, "not_implemented"),
 };  // namespace hotplace
 
 error_advisor error_advisor::_instance;

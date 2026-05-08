@@ -18,10 +18,26 @@ payload::payload() {}
 
 payload::~payload() { clear(); }
 
-payload& payload::operator<<(payload_member* member) {
+payload& payload::operator<<(std::unique_ptr<payload_member> member) {
     if (member) {
-        // members
-        _members.push_back(member);
+        auto item = member.get();
+        _members.push_back(item);
+
+        // read(parse)
+        if (item->get_name().size()) {
+            _members_map.insert(std::make_pair(item->get_name(), item));
+        }
+
+        member.release();  // _members own member
+    }
+    return *this;
+}
+
+payload& payload::operator<<(payload_member_proxy proxy) {
+    auto member = proxy.ptr;
+    if (member) {
+        _members.push_back(proxy.ptr);
+        proxy.ptr = nullptr;  // _members own member.ptr
 
         // read(parse)
         if (member->get_name().size()) {

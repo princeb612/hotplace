@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 
 namespace hotplace {
@@ -80,6 +80,15 @@ return_t debug_trace_openssl(stream_t* stream) {
     }
     __finally2 {}
     return ret;
+}
+
+void leave_trace_dbg_openssl_print(const char* file, unsigned int line, return_t ret) {
+#if defined DEBUG
+    if (errorcode_t::success != ret) {
+        leave_trace_dbg_print(file, line, false, ret);
+    }
+    trace_openssl(ret);
+#endif
 }
 
 }  // namespace crypto

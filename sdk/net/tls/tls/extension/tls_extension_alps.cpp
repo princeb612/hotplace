@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_alps.hpp>
 #include <hotplace/sdk/net/tls/tls/tls.hpp>
@@ -35,9 +35,15 @@ return_t tls_extension_alps::do_read_body(tls_direction_t dir, const byte_t* str
         binary_t alpn;
         {
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_alps_len)  //
-               << new payload_member(binary_t(), constexpr_alpn);
+            try {
+                pl << new payload_member(uint16(0), true, constexpr_alps_len)  //
+                   << new payload_member(binary_t(), constexpr_alpn);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
             pl.set_reference_value(constexpr_alpn, constexpr_alps_len);
+
             pl.read(stream, endpos_extension(), pos);
 
             alps_len = pl.t_value_of<uint16>(constexpr_alps_len);

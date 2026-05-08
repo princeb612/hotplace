@@ -22,7 +22,7 @@ return_t split_begin(split_context_t** handle, const char* str, const char* deli
             __leave2;
         }
 
-        auto context = make_unique<split_context_t>();
+        auto context = custom::make_unique<split_context_t>();
 
         context->source = str;
 

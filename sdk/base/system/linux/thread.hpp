@@ -25,6 +25,8 @@ namespace hotplace {
  */
 class thread : public thread_t {
    public:
+    thread() = delete;
+    thread(const thread&) = delete;
     /**
      * @brief constructor
      */
@@ -48,6 +50,8 @@ class thread : public thread_t {
 
     // virtual int addref ();
     // virtual int release ();
+
+    thread& operator=(const thread&) = delete;
 
    private:
     static void* thread_routine(void* param);

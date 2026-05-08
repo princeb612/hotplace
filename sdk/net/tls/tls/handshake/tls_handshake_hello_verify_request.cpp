@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_hello_verify_request.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
@@ -32,7 +32,7 @@ return_t tls_handshake_hello_verify_request::do_preprocess(tls_direction_t dir) 
     __try2 {
         if (from_server != dir) {
             ret = errorcode_t::bad_request;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         auto session = get_session();
@@ -41,7 +41,7 @@ return_t tls_handshake_hello_verify_request::do_preprocess(tls_direction_t dir) 
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
             session->reset_session_status();
             ret = errorcode_t::error_handshake;
-            __leave2;
+            __leave2_trace(ret);
         }
     }
     __finally2 {}
@@ -78,10 +78,16 @@ return_t tls_handshake_hello_verify_request::do_read_body(tls_direction_t dir, c
          */
 
         payload pl;
-        pl << new payload_member(uint16(0), true, constexpr_version)  //
-           << new payload_member(uint8(0), constexpr_cookie_len)      //
-           << new payload_member(binary_t(), constexpr_cookie);
+        try {
+            pl << new payload_member(uint16(0), true, constexpr_version)  //
+               << new payload_member(uint8(0), constexpr_cookie_len)      //
+               << new payload_member(binary_t(), constexpr_cookie);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2_trace(ret);
+        }
         pl.set_reference_value(constexpr_cookie, constexpr_cookie_len);
+
         pl.read(stream, size, pos);
 
         pl.get_binary(constexpr_cookie, _cookie);
@@ -102,10 +108,16 @@ return_t tls_handshake_hello_verify_request::do_write_body(tls_direction_t dir, 
     __try2 {
         // auto version = get_session()->get_tls_protection().get_lagacy_version();
         payload pl;
-        pl << new payload_member(uint16(0), true, constexpr_version)           //
-           << new payload_member(uint8(_cookie.size()), constexpr_cookie_len)  //
-           << new payload_member(_cookie, constexpr_cookie);
-        pl.write(bin);
+        try {
+            pl << new payload_member(uint16(0), true, constexpr_version)           //
+               << new payload_member(uint8(_cookie.size()), constexpr_cookie_len)  //
+               << new payload_member(_cookie, constexpr_cookie);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2_trace(ret);
+        }
+
+        ret = pl.write(bin);
     }
     __finally2 {}
     return ret;

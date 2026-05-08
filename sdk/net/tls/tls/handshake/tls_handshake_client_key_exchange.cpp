@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
@@ -35,7 +35,7 @@ return_t tls_handshake_client_key_exchange::do_preprocess(tls_direction_t dir) {
     __try2 {
         if (from_client != dir) {
             ret = errorcode_t::bad_request;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         auto session = get_session();
@@ -46,7 +46,7 @@ return_t tls_handshake_client_key_exchange::do_preprocess(tls_direction_t dir) {
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
                 session->reset_session_status();
                 ret = errorcode_t::error_handshake;
-                __leave2;
+                __leave2_trace(ret);
             }
         }
     }
@@ -77,7 +77,7 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
     __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         {
@@ -88,9 +88,15 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
             binary_t pubkey;
             {
                 payload pl;
-                pl << new payload_member(uint8(0), constexpr_pubkey_len)  //
-                   << new payload_member(binary_t(), constexpr_pubkey);
+                try {
+                    pl << new payload_member(uint8(0), constexpr_pubkey_len)  //
+                       << new payload_member(binary_t(), constexpr_pubkey);
+                } catch (...) {
+                    ret = errorcode_t::out_of_memory;
+                    __leave2_trace(ret);
+                }
                 pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
+
                 pl.read(stream, size, pos);
 
 #if defined DEBUG
@@ -157,15 +163,24 @@ return_t tls_handshake_client_key_exchange::do_write_body(tls_direction_t dir, b
                 keyexchange.keyshare((tls_group_t)hint->group, &tlskey, KID_TLS_CLIENT_KEY_EXCHANGE, pubkey);
             } else {
                 ret = errorcode_t::not_supported;
-                __leave2;
+                __leave2_trace(ret);
             }
         }
 
         {
             payload pl;
-            pl << new payload_member(uint8(pubkey.size()), constexpr_pubkey_len)  //
-               << new payload_member(pubkey, constexpr_pubkey);
-            pl.write(bin);
+            try {
+                pl << new payload_member(uint8(pubkey.size()), constexpr_pubkey_len)  //
+                   << new payload_member(pubkey, constexpr_pubkey);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
+
+            ret = pl.write(bin);
+            if (errorcode_t::success != ret) {
+                __leave2_trace(ret);
+            }
         }
 
 #if defined DEBUG

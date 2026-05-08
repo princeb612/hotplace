@@ -19,7 +19,7 @@
 
 #include <hotplace/sdk/base/nostd/template.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/system/multiplexer.hpp>
 #include <hotplace/sdk/io/system/socket.hpp>
 
@@ -69,7 +69,7 @@ return_t multiplexer_epoll::open(multiplexer_context_t** handle, size_t concurre
             __leave2;
         }
 
-        auto context = make_unique<multiplexer_epoll_context_t>();
+        auto context = custom::make_unique<multiplexer_epoll_context_t>();
 
         context->signature = MULTIPLEXER_EPOLL_CONTEXT_SIGNATURE;
         context->epoll_fd = epollfd;

@@ -7,6 +7,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/net/tls/dtls_record_publisher.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record_builder.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_records.hpp>
@@ -22,7 +23,7 @@ return_t tls_records::read(tls_session* session, tls_direction_t dir, const byte
     __try2 {
         if (nullptr == session || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         while (pos < size) {
@@ -49,11 +50,11 @@ return_t tls_records::read(tls_session* session, tls_direction_t dir, const bina
     __try2 {
         if (nullptr == session) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
         if (bin.empty()) {
             ret = errorcode_t::empty;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         const byte_t* stream = bin.data();
@@ -70,7 +71,7 @@ return_t tls_records::write(tls_session* session, tls_direction_t dir, std::func
     __try2 {
         if (nullptr == session || nullptr == func) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         if (session_type_dtls == session->get_type()) {

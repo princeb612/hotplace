@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_server_hello_done.hpp>
@@ -43,7 +43,7 @@ return_t tls_handshake_server_hello_done::do_preprocess(tls_direction_t dir) {
     __try2 {
         if (from_server != dir) {
             ret = errorcode_t::bad_request;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         auto session = get_session();
@@ -54,7 +54,7 @@ return_t tls_handshake_server_hello_done::do_preprocess(tls_direction_t dir) {
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
                 session->reset_session_status();
                 ret = errorcode_t::error_handshake;
-                __leave2;
+                __leave2_trace(ret);
             }
         }
     }

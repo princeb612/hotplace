@@ -13,7 +13,7 @@
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/thread.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/authenticode/authenticode_plugin_pe.hpp>
 #include <hotplace/sdk/crypto/authenticode/authenticode_verifier.hpp>
 #include <hotplace/sdk/crypto/authenticode/sdk.hpp>
@@ -162,7 +162,7 @@ return_t authenticode_verifier::free_engines(authenticode_context_t* handle) {
 return_t authenticode_verifier::open(authenticode_context_t** handle) {
     return_t ret = errorcode_t::success;
 
-    auto context = make_unique<authenticode_context_t>();
+    auto context = custom::make_unique<authenticode_context_t>();
     context->signature = AUTHENTICODE_CONTEXT_SIGNATURE;
 
     load_engines(context.get());

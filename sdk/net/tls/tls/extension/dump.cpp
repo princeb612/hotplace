@@ -11,6 +11,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_builder.hpp>
 #include <hotplace/sdk/net/tls/tls/tls.hpp>
@@ -19,22 +20,19 @@ namespace hotplace {
 namespace net {
 
 return_t tls_dump_extension(tls_handshake* handshake, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == handshake || nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        // extension
-        //  uint16 type
-        //  uint16 len
-        //  ...
-        if (pos + 4 > size) {
-            ret = errorcode_t::no_more;
-            __leave2;
-        }
+    function_pipeline<return_t> pipeline;
 
-        {
+    pipeline  //
+        .test_parameter([&]() { return (nullptr != handshake) && (nullptr != stream); })
+        .run([&]() -> return_t {
+            // extension
+            //  uint16 type
+            //  uint16 len
+            //  ...
+            return (pos + 4 > size) ? no_more : success;
+        })
+        .run([&]() ->return_t {
+            return_t ret = success;
             auto extension_type = ntoh16(*(uint16*)(stream + pos));
             tls_extension_builder builder;
             auto extension = builder.set(handshake).set(dir).set(extension_type).build();
@@ -42,10 +40,9 @@ return_t tls_dump_extension(tls_handshake* handshake, tls_direction_t dir, const
                 ret = extension->read(dir, stream, size, pos);
                 extension->release();
             }
-        }
-    }
-    __finally2 {}
-    return ret;
+            return ret;
+        });
+    return pipeline.result();
 }
 
 }  // namespace net

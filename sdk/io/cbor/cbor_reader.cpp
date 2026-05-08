@@ -13,7 +13,7 @@
 
 #include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/system/bignumber.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/cbor/cbor_array.hpp>
 #include <hotplace/sdk/io/cbor/cbor_bstrings.hpp>
 #include <hotplace/sdk/io/cbor/cbor_data.hpp>

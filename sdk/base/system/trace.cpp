@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 
 namespace hotplace {
 
@@ -81,5 +81,37 @@ static int8 _trace_level = 0;
 bool check_trace_level(int8 level) { return level <= _trace_level; }
 
 void set_trace_level(int8 level) { _trace_level = level; }
+
+void leave_trace_dbg_print(const char* file, unsigned int line, bool bt, return_t ret) {
+#if defined DEBUG
+    if (istraceable(trace_category_internal, loglevel_debug)) {
+        trace_debug_event(trace_category_internal, trace_event_internal,
+                          [&](basic_stream& dbs) -> void { dbs.printf("[" ANSI_ESCAPE "36m%08x" ANSI_ESCAPE "0m][%s @ %d]\n", ret, file, line); });
+
+        if (bt) {
+            trace_backtrace(ret);
+        }
+    }
+#endif
+}
+
+void leave_trace_dbg_printf(const char* file, unsigned int line, bool bt, return_t ret, const char* msg, ...) {
+#if defined DEBUG
+    if (istraceable(trace_category_internal, loglevel_debug)) {
+        va_list ap;
+        va_start(ap, msg);
+        trace_debug_event(trace_category_internal, trace_event_internal, [&](basic_stream& dbs) -> void {
+            dbs.printf("[" ANSI_ESCAPE "36m%08x" ANSI_ESCAPE "0m][%s @ %d]\n", ret, file, line);
+            dbs.vprintf(msg, ap);
+            dbs.printf("\n");
+        });
+        va_end(ap);
+
+        if (bt) {
+            trace_backtrace(ret);
+        }
+    }
+#endif
+}
 
 }  // namespace hotplace

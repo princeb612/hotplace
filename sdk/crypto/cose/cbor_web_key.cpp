@@ -309,41 +309,39 @@ void cwk_writer(crypto_key_object* key, void* param) {
 
         std::string kid = key->get_desc().get_kid_str();
 
-        cbor_map* keynode = new cbor_map();
-
-        cose_kty_t cose_kty = advisor->ktyof(kty);
-        *keynode << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(cose_kty));  // 1
-        if (kid.size()) {
-            *keynode << new cbor_pair(cose_key_lable_t::cose_lable_kid, new cbor_data(str2bin(kid)));  // 2
-        }
-
-        if (crypto_kty_t::kty_ec == kty || crypto_kty_t::kty_okp == kty) {
-            uint32 nid = 0;
-            cose_ec_curve_t cose_curve = cose_ec_curve_t::cose_ec_unknown;
-
-            nidof_evp_pkey(key->get_pkey(), nid);
-            cose_curve = advisor->curveof(nid);
-
-            *keynode << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(cose_curve))  // -1
-                     << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(pub1));         // -2
-
-            if (crypto_kty_t::kty_ec == kty) {
-                *keynode << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(pub2));  // -3
+        (*root).add([&](cbor_map* keynode) -> void {
+            cose_kty_t cose_kty = advisor->ktyof(kty);
+            *keynode << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(cose_kty));  // 1
+            if (kid.size()) {
+                *keynode << new cbor_pair(cose_key_lable_t::cose_lable_kid, new cbor_data(str2bin(kid)));  // 2
             }
-            if (priv.size()) {
-                *keynode << new cbor_pair(cose_key_lable_t::cose_ec_d, new cbor_data(priv));  // -4
-            }
-        } else if (crypto_kty_t::kty_oct == kty) {
-            *keynode << new cbor_pair(cose_key_lable_t::cose_symm_k, new cbor_data(priv));  // -1
-        } else if (crypto_kty_t::kty_rsa == kty) {
-            *keynode << new cbor_pair(cose_key_lable_t::cose_rsa_n, new cbor_data(pub1))   // -1
-                     << new cbor_pair(cose_key_lable_t::cose_rsa_e, new cbor_data(pub2));  // -2
-            if (priv.size()) {
-                *keynode << new cbor_pair(cose_key_lable_t::cose_rsa_d, new cbor_data(priv));  // -3
-            }
-        }
 
-        *root << keynode;
+            if (crypto_kty_t::kty_ec == kty || crypto_kty_t::kty_okp == kty) {
+                uint32 nid = 0;
+                cose_ec_curve_t cose_curve = cose_ec_curve_t::cose_ec_unknown;
+
+                nidof_evp_pkey(key->get_pkey(), nid);
+                cose_curve = advisor->curveof(nid);
+
+                *keynode << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(cose_curve))  // -1
+                         << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(pub1));         // -2
+
+                if (crypto_kty_t::kty_ec == kty) {
+                    *keynode << new cbor_pair(cose_key_lable_t::cose_ec_y, new cbor_data(pub2));  // -3
+                }
+                if (priv.size()) {
+                    *keynode << new cbor_pair(cose_key_lable_t::cose_ec_d, new cbor_data(priv));  // -4
+                }
+            } else if (crypto_kty_t::kty_oct == kty) {
+                *keynode << new cbor_pair(cose_key_lable_t::cose_symm_k, new cbor_data(priv));  // -1
+            } else if (crypto_kty_t::kty_rsa == kty) {
+                *keynode << new cbor_pair(cose_key_lable_t::cose_rsa_n, new cbor_data(pub1))   // -1
+                         << new cbor_pair(cose_key_lable_t::cose_rsa_e, new cbor_data(pub2));  // -2
+                if (priv.size()) {
+                    *keynode << new cbor_pair(cose_key_lable_t::cose_rsa_d, new cbor_data(priv));  // -3
+                }
+            }
+        });
     }
     __finally2 {}
 }

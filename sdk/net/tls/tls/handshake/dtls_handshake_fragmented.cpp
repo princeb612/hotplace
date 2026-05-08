@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/dtls_handshake_fragmented.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
@@ -48,12 +48,12 @@ return_t dtls_handshake_fragmented::prepare_fragment(const byte_t* stream, uint3
     __try2 {
         if ((0 != size) && (nullptr == stream)) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         ret = tls_handshake::prepare_fragment(stream, size, seq, fragment_offset, fragment_length);
         if (errorcode_t::success != ret) {
-            __leave2;
+            __leave2_trace(ret);
         }
 
         _fragmented.insert(_fragmented.end(), stream + fragment_offset, stream + fragment_offset + fragment_length);

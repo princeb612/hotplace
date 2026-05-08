@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
@@ -51,7 +51,7 @@ return_t tls_handshake_certificate::do_preprocess(tls_direction_t dir) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
             session->reset_session_status();
             ret = errorcode_t::error_handshake;
-            __leave2;
+            __leave2_trace(ret);
         }
     }
     __finally2 {}
@@ -85,7 +85,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
     __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         // RFC 8446 2.  Protocol Overview
@@ -122,14 +122,20 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
         binary_t certificates;
         {
             payload pl;
-            pl << new payload_member(uint8(0), constexpr_request_context_len, constexpr_group_tls13)  // TLS 1.3
-               << new payload_member(binary_t(), constexpr_request_context, constexpr_group_tls13)    // TLS 1.3
-               << new payload_member(uint24_t(0), constexpr_certificates_len)                         //
-               << new payload_member(binary_t(), constexpr_certificates);                             //
+            try {
+                pl << new payload_member(uint8(0), constexpr_request_context_len, constexpr_group_tls13)  // TLS 1.3
+                   << new payload_member(binary_t(), constexpr_request_context, constexpr_group_tls13)    // TLS 1.3
+                   << new payload_member(uint24_t(0), constexpr_certificates_len)                         //
+                   << new payload_member(binary_t(), constexpr_certificates);                             //
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
             pl.set_group(constexpr_group_tls13, is_tls13);
             pl.set_reference_value(constexpr_request_context, constexpr_request_context_len);
             pl.set_reference_value(constexpr_certificates, constexpr_certificates_len);
             pl.set_reference_value(constexpr_certificate_extensions, constexpr_certificate_extensions_len);
+
             pl.read(stream, size, pos);
 
 #if defined DEBUG
@@ -166,10 +172,15 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
             // [2] root certificate authority         ex. Issuer: C=BE, O=GlobalSign nv-sa, OU=Root CA, CN=GlobalSign Root CA
 
             payload pl;
-            pl << new payload_member(uint24_t(0), constexpr_certificate_len)                                        //
-               << new payload_member(binary_t(), constexpr_certificate)                                             //
-               << new payload_member(uint16(0), true, constexpr_certificate_extensions_len, constexpr_group_tls13)  //
-               << new payload_member(binary_t(), constexpr_certificate_extensions, constexpr_group_tls13);          //
+            try {
+                pl << new payload_member(uint24_t(0), constexpr_certificate_len)                                        //
+                   << new payload_member(binary_t(), constexpr_certificate)                                             //
+                   << new payload_member(uint16(0), true, constexpr_certificate_extensions_len, constexpr_group_tls13)  //
+                   << new payload_member(binary_t(), constexpr_certificate_extensions, constexpr_group_tls13);          //
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                break;
+            }
             pl.set_group(constexpr_group_tls13, is_tls13);
             pl.set_reference_value(constexpr_certificate, constexpr_certificate_len);
             pl.set_reference_value(constexpr_certificate_extensions, constexpr_certificate_extensions_len);
@@ -225,6 +236,10 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
             idx++;
         }
 
+        if (errorcode_t::success != ret) {
+            __leave2_trace(ret);
+        }
+
 #if defined DEBUG
         if (istraceable(trace_category_net, loglevel_debug)) {
             trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
@@ -263,7 +278,7 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_no_certificate);
             session->reset_session_status();
             ret = errorcode_t::error_certificate;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         binary_t certificate;
@@ -296,15 +311,24 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
             }
 
             payload pl;
-            pl << new payload_member(uint8(0), constexpr_request_context_len, constexpr_group_tls13)                                 // TLS 1.3
-               << new payload_member(binary_t(), constexpr_request_context, constexpr_group_tls13)                                   // TLS 1.3
-               << new payload_member(uint24_t(certificates_len), constexpr_certificates_len)                                         // certificate + extensions
-               << new payload_member(uint24_t(certificate_len), constexpr_certificate_len)                                           // certificate
-               << new payload_member(certificate, constexpr_certificate)                                                             // certificate
-               << new payload_member(uint16(extensions.size()), true, constexpr_certificate_extensions_len, constexpr_group_tls13);  // extensions
+            try {
+                pl << new payload_member(uint8(0), constexpr_request_context_len, constexpr_group_tls13)                                 // TLS 1.3
+                   << new payload_member(binary_t(), constexpr_request_context, constexpr_group_tls13)                                   // TLS 1.3
+                   << new payload_member(uint24_t(certificates_len), constexpr_certificates_len)                                         // certificate + extensions
+                   << new payload_member(uint24_t(certificate_len), constexpr_certificate_len)                                           // certificate
+                   << new payload_member(certificate, constexpr_certificate)                                                             // certificate
+                   << new payload_member(uint16(extensions.size()), true, constexpr_certificate_extensions_len, constexpr_group_tls13);  // extensions
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
 
             pl.set_group(constexpr_group_tls13, is_tls13);  // tls1_ext_supported_versions 0x002b server_hello
-            pl.write(bin);
+
+            ret = pl.write(bin);
+            if (errorcode_t::success != ret) {
+                __leave2_trace(ret);
+            }
 
             if (is_tls13) {
                 binary_append(bin, extensions);

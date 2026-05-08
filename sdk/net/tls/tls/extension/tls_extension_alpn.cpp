@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_alpn.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
@@ -42,9 +42,15 @@ return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* str
             // RFC 7301
 
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_alpn_len)  //
-               << new payload_member(binary_t(0), constexpr_protocol);
+            try {
+                pl << new payload_member(uint16(0), true, constexpr_alpn_len)  //
+                   << new payload_member(binary_t(0), constexpr_protocol);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
             pl.set_reference_value(constexpr_protocol, constexpr_alpn_len);
+
             pl.read(stream, endpos_extension(), pos);
 
 #if defined DEBUG
@@ -82,15 +88,27 @@ return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* str
 
 return_t tls_extension_alpn::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
-    {
-        payload pl;
-        pl << new payload_member(uint16(_protocols.size()), true, constexpr_alpn_len)  //
-           << new payload_member(_protocols, constexpr_protocol);                      //
-        pl.write(bin);
+    __try2 {
+        {
+            payload pl;
+            try {
+                pl << new payload_member(uint16(_protocols.size()), true, constexpr_alpn_len)  //
+                   << new payload_member(_protocols, constexpr_protocol);                      //
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
+
+            ret = pl.write(bin);
+            if (errorcode_t::success != ret) {
+                __leave2_trace(ret);
+            }
+        }
+        if (from_server == dir) {
+            get_handshake()->get_session()->get_tls_protection().get_secrets().assign(tls_context_alpn, _protocols);
+        }
     }
-    if (from_server == dir) {
-        get_handshake()->get_session()->get_tls_protection().get_secrets().assign(tls_context_alpn, _protocols);
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_BASE_UNITTEST_TRACE__
-#define __HOTPLACE_SDK_BASE_UNITTEST_TRACE__
+#ifndef __HOTPLACE_SDK_BASE_SYSTEM_TRACE__
+#define __HOTPLACE_SDK_BASE_SYSTEM_TRACE__
 
 #include <functional>
 #include <hotplace/sdk/base/basic/types.hpp>
@@ -20,6 +20,59 @@
 #include <list>
 
 namespace hotplace {
+
+/**
+ * @brief   leave
+ *      // leave a trace
+ *      ret = do_something ();
+ *      if (errorcode_t::success != ret) {
+ *          __leave2_trace(x);
+ *      }
+ *
+ *      // leave if faild
+ *      ret = do_something ();
+ *      __leave2_if_fail (ret);
+ */
+
+/**
+ *  DEBUG only
+ *  leave_trace_dbg_print(__FILE__, __LINE__, false, ret);
+ */
+void leave_trace_dbg_print(const char* file, unsigned int line, bool bt, return_t ret);
+/**
+ *  DEBUG only
+ *  leave_trace_dbg_printf(__FILE__, __LINE__, false, ret, "%s", message);
+ */
+void leave_trace_dbg_printf(const char* file, unsigned int line, bool bt, return_t ret, const char* msg, ...);
+
+#if defined DEBUG
+
+#define __leave2_trace(x)                                    \
+    {                                                        \
+        leave_trace_dbg_print(__FILE__, __LINE__, false, x); \
+        break;                                               \
+    }
+#define __leave2_tracef(x, ...)                                           \
+    {                                                                     \
+        leave_trace_dbg_printf(__FILE__, __LINE__, true, x, __VA_ARGS__); \
+        break;                                                            \
+    }
+#define __leave2_if_fail(x)                                 \
+    if (success != x) {                                     \
+        leave_trace_dbg_print(__FILE__, __LINE__, true, x); \
+        break;                                              \
+    }
+
+#else
+
+#define __leave2_trace(x) break
+#define __leave2_tracef(x, ...) break
+#define __leave2_if_fail(x) \
+    if (success != x) {     \
+        break;              \
+    }
+
+#endif
 
 enum trace_category_t {
     trace_category_internal = 0,

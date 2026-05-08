@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/http/http3/http3_frame_data.hpp>
 #include <hotplace/sdk/net/http/http_resource.hpp>
@@ -49,10 +49,19 @@ return_t http3_frame_data::do_write(binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         payload pl;
-        pl << new payload_member(new quic_encoded(uint64(get_type())))       //
-           << new payload_member(new quic_encoded(uint64(_payload.size())))  //
-           << new payload_member(_payload);
-        pl.write(bin);
+        try {
+            pl << new payload_member(new quic_encoded(uint64(get_type())))       //
+               << new payload_member(new quic_encoded(uint64(_payload.size())))  //
+               << new payload_member(_payload);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
+
+        ret = pl.write(bin);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
     }
     __finally2 {}
     return ret;

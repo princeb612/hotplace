@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_new_session_ticket.hpp>
@@ -39,7 +39,7 @@ return_t tls_handshake_new_session_ticket::do_preprocess(tls_direction_t dir) {
     __try2 {
         if (from_server != dir) {
             ret = errorcode_t::bad_request;
-            __leave2;
+            __leave2_trace(ret);
         }
     }
     __finally2 {}
@@ -64,7 +64,7 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
     __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         // tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -91,17 +91,23 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
 
         {
             payload pl;
-            pl << new payload_member(uint32(0), true, constexpr_ticket_lifetime)       //
-               << new payload_member(uint32(0), true, constexpr_ticket_age_add)        //
-               << new payload_member(uint8(0), constexpr_ticket_nonce_len)             //
-               << new payload_member(binary_t(), constexpr_ticket_nonce)               //
-               << new payload_member(uint16(0), true, constexpr_session_ticket_len)    //
-               << new payload_member(binary_t(), constexpr_session_ticket)             //
-               << new payload_member(uint16(0), true, constexpr_ticket_extension_len)  //
-               << new payload_member(binary_t(), constexpr_ticket_extensions);
+            try {
+                pl << new payload_member(uint32(0), true, constexpr_ticket_lifetime)       //
+                   << new payload_member(uint32(0), true, constexpr_ticket_age_add)        //
+                   << new payload_member(uint8(0), constexpr_ticket_nonce_len)             //
+                   << new payload_member(binary_t(), constexpr_ticket_nonce)               //
+                   << new payload_member(uint16(0), true, constexpr_session_ticket_len)    //
+                   << new payload_member(binary_t(), constexpr_session_ticket)             //
+                   << new payload_member(uint16(0), true, constexpr_ticket_extension_len)  //
+                   << new payload_member(binary_t(), constexpr_ticket_extensions);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
             pl.set_reference_value(constexpr_ticket_nonce, constexpr_ticket_nonce_len);
             pl.set_reference_value(constexpr_session_ticket, constexpr_session_ticket_len);
             pl.set_reference_value(constexpr_ticket_extensions, constexpr_ticket_extension_len);
+
             pl.read(stream, size, pos);
 
             ticket_lifetime = pl.t_value_of<uint32>(constexpr_ticket_lifetime);
@@ -173,15 +179,21 @@ return_t tls_handshake_new_session_ticket::do_write_body(tls_direction_t dir, bi
         }
         {
             payload pl;
-            pl << new payload_member(uint32(ticket_lifetime), true, constexpr_ticket_lifetime)                //
-               << new payload_member(uint32(ticket_age_add), true, constexpr_ticket_age_add)                  //
-               << new payload_member(uint8(ticket_nonce.size()), constexpr_ticket_nonce_len)                  //
-               << new payload_member(ticket_nonce, constexpr_ticket_nonce)                                    //
-               << new payload_member(uint16(session_ticket.size()), true, constexpr_session_ticket_len)       //
-               << new payload_member(session_ticket, constexpr_session_ticket)                                //
-               << new payload_member(uint16(ticket_extensions.size()), true, constexpr_ticket_extension_len)  //
-               << new payload_member(ticket_extensions, constexpr_ticket_extensions);
-            pl.write(bin);
+            try {
+                pl << new payload_member(uint32(ticket_lifetime), true, constexpr_ticket_lifetime)                //
+                   << new payload_member(uint32(ticket_age_add), true, constexpr_ticket_age_add)                  //
+                   << new payload_member(uint8(ticket_nonce.size()), constexpr_ticket_nonce_len)                  //
+                   << new payload_member(ticket_nonce, constexpr_ticket_nonce)                                    //
+                   << new payload_member(uint16(session_ticket.size()), true, constexpr_session_ticket_len)       //
+                   << new payload_member(session_ticket, constexpr_session_ticket)                                //
+                   << new payload_member(uint16(ticket_extensions.size()), true, constexpr_ticket_extension_len)  //
+                   << new payload_member(ticket_extensions, constexpr_ticket_extensions);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
+
+            ret = pl.write(bin);
         }
     }
     __finally2 {}

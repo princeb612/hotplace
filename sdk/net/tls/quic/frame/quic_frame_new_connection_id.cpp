@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/quic/frame/quic_frame_new_connection_id.hpp>
@@ -53,13 +53,19 @@ return_t quic_frame_new_connection_id::do_read_body(tls_direction_t dir, const b
     return_t ret = errorcode_t::success;
     __try2 {
         payload pl;
-        pl << new payload_member(new quic_encoded(uint64(0)), constexpr_sequence_number)  //
-           << new payload_member(new quic_encoded(uint64(0)), constexpr_retire_prior_to)  //
-           << new payload_member(uint8(0), constexpr_connection_id_len)                   //
-           << new payload_member(binary_t(), constexpr_connection_id)                     //
-           << new payload_member(binary_t(), constexpr_stateless_reset_token);
+        try {
+            pl << new payload_member(new quic_encoded(uint64(0)), constexpr_sequence_number)  //
+               << new payload_member(new quic_encoded(uint64(0)), constexpr_retire_prior_to)  //
+               << new payload_member(uint8(0), constexpr_connection_id_len)                   //
+               << new payload_member(binary_t(), constexpr_connection_id)                     //
+               << new payload_member(binary_t(), constexpr_stateless_reset_token);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
         pl.set_reference_value(constexpr_connection_id, constexpr_connection_id_len);
         pl.reserve(constexpr_stateless_reset_token, 16);  // 128 >> 3
+
         pl.read(stream, size, pos);
 
         uint64 sequence_number = 0;
@@ -138,12 +144,21 @@ return_t quic_frame_new_connection_id::do_write_body(tls_direction_t dir, binary
         secrets.assign(tls_context_stateless_reset_token, token);
 
         payload pl;
-        pl << new payload_member(new quic_encoded(uint8(type)), constexpr_type)       //
-           << new payload_member(new quic_encoded(seq), constexpr_sequence_number)    //
-           << new payload_member(new quic_encoded(prior), constexpr_retire_prior_to)  //
-           << new payload_member(new quic_encoded(cid), constexpr_connection_id)      //
-           << new payload_member(new quic_encoded(token), constexpr_stateless_reset_token);
-        pl.write(bin);
+        try {
+            pl << new payload_member(new quic_encoded(uint8(type)), constexpr_type)       //
+               << new payload_member(new quic_encoded(seq), constexpr_sequence_number)    //
+               << new payload_member(new quic_encoded(prior), constexpr_retire_prior_to)  //
+               << new payload_member(new quic_encoded(cid), constexpr_connection_id)      //
+               << new payload_member(new quic_encoded(token), constexpr_stateless_reset_token);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
+
+        ret = pl.write(bin);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {

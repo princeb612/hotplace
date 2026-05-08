@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>  // basic_stream
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/net/http/html_documents.hpp>
 #include <hotplace/sdk/net/http/http2/http2_frame.hpp>
 #include <hotplace/sdk/net/http/http2/http2_frame_continuation.hpp>

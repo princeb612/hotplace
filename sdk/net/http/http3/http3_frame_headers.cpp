@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/http/compression/http_header_compression_stream.hpp>
 #include <hotplace/sdk/net/http/http3/http3_frame_headers.hpp>
@@ -75,10 +75,19 @@ return_t http3_frame_headers::do_write(binary_t& bin) {
         _payload = std::move(stream.get_binary());
 
         payload pl;
-        pl << new payload_member(new quic_encoded(uint64(h3_frame_headers)))  //
-           << new payload_member(new quic_encoded(uint64(_payload.size())))   //
-           << new payload_member(_payload);
-        pl.write(bin);
+        try {
+            pl << new payload_member(new quic_encoded(uint64(h3_frame_headers)))  //
+               << new payload_member(new quic_encoded(uint64(_payload.size())))   //
+               << new payload_member(_payload);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
+
+        ret = pl.write(bin);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
     }
     __finally2 {}
     return ret;

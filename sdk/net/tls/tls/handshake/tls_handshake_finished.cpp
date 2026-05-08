@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_hmac.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_kdf.hpp>
@@ -72,7 +72,7 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
             bool isprotected = session->get_session_info(dir).apply_protection();
             if (false == isprotected) {
                 ret = errorcode_t::confidential;
-                __leave2;
+                __leave2_trace(ret);
             }
 
             // certificate, server_key_exchange, server_hello_done, client_key_exchange
@@ -87,7 +87,7 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
             session->reset_session_status();
             ret = errorcode_t::error_handshake;
-            __leave2;
+            __leave2_trace(ret);
         }
     }
     __finally2 {}
@@ -137,7 +137,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
     __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         // RFC 8446 2.  Protocol Overview
@@ -157,7 +157,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
             const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
             if (nullptr == hint_tls_alg) {
                 ret = errorcode_t::not_supported;
-                __leave2;
+                __leave2_trace(ret);
             }
             if (tlsadvisor->is_kindof_tls13(tlsversion)) {
                 dlen = sizeof_digest(advisor->hintof_digest(hint_tls_alg->mac));
@@ -171,8 +171,14 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
 
         {
             payload pl;
-            pl << new payload_member(binary_t(), constexpr_verify_data);
+            try {
+                pl << new payload_member(binary_t(), constexpr_verify_data);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
             pl.reserve(constexpr_verify_data, dlen);
+
             pl.read(stream, size, pos);
 
             pl.get_binary(constexpr_verify_data, verify_data);
@@ -210,7 +216,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
 #endif
 
             if (errorcode_t::success != ret) {
-                __leave2;
+                __leave2_trace(ret);
             }
 
             _verify_data = std::move(verify_data);
@@ -235,7 +241,7 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
             const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
             if (nullptr == hint_tls_alg) {
                 ret = errorcode_t::success;
-                __leave2;
+                __leave2_trace(ret);
             }
             if (tlsadvisor->is_kindof_tls13(tlsversion)) {
                 dlen = sizeof_digest(advisor->hintof_digest(hint_tls_alg->mac));
@@ -251,8 +257,17 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
 
         {
             payload pl;
-            pl << new payload_member(verify_data, constexpr_verify_data);
-            pl.write(bin);
+            try {
+                pl << new payload_member(verify_data, constexpr_verify_data);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
+
+            ret = pl.write(bin);
+            if (errorcode_t::success != ret) {
+                __leave2_trace(ret);
+            }
         }
 
 #if defined DEBUG

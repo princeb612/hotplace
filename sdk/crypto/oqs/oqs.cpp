@@ -33,7 +33,7 @@ return_t pqc_oqs::open(oqs_context** context) {
             ret = errorcode_t::invalid_parameter;
         }
 
-        auto handle = make_unique<oqs_context>();
+        auto handle = custom::make_unique<oqs_context>();
 
         libctx = OSSL_LIB_CTX_new();
 

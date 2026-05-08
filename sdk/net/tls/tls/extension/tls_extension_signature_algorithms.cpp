@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_signature_algorithms.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
@@ -49,9 +49,15 @@ return_t tls_extension_signature_algorithms::do_read_body(tls_direction_t dir, c
 
         {
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_algorithms)  //
-               << new payload_member(binary_t(), constexpr_algorithm);
+            try {
+                pl << new payload_member(uint16(0), true, constexpr_algorithms)  //
+                   << new payload_member(binary_t(), constexpr_algorithm);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
             pl.set_reference_value(constexpr_algorithm, constexpr_algorithms);
+
             pl.read(stream, endpos_extension(), pos);
 
             count = pl.t_value_of<uint16>(constexpr_algorithms) >> 1;
@@ -94,9 +100,15 @@ return_t tls_extension_signature_algorithms::do_write_body(tls_direction_t dir, 
         }
         {
             payload pl;
-            pl << new payload_member(cbsize_algorithms, true, constexpr_algorithms)  //
-               << new payload_member(bin_algorithms, constexpr_algorithm);
-            pl.write(bin);
+            try {
+                pl << new payload_member(cbsize_algorithms, true, constexpr_algorithms)  //
+                   << new payload_member(bin_algorithms, constexpr_algorithm);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
+
+            ret = pl.write(bin);
         }
     }
     __finally2 {}

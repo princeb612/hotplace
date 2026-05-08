@@ -10,6 +10,7 @@
 
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_encrypted_extensions.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
@@ -43,7 +44,7 @@ return_t tls_handshake_encrypted_extensions::do_read_body(tls_direction_t dir, c
     __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         {

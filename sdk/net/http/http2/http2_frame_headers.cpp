@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/http/http2/http2_frame_headers.hpp>
 #include <hotplace/sdk/net/http/http2/http2_protocol.hpp>
@@ -27,79 +28,80 @@ http2_frame_headers::http2_frame_headers(const http2_frame_headers& other)
 http2_frame_headers::~http2_frame_headers() {}
 
 return_t http2_frame_headers::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    function_pipeline<return_t> pipeline;
+    payload pl;
 
-        payload pl;
-        pl << new payload_member(uint8(0), constexpr_frame_pad_length, constexpr_frame_padding)                 //
-           << new payload_member(uint32(0), true, constexpr_frame_stream_dependency, constexpr_frame_priority)  //
-           << new payload_member(uint8(0), constexpr_frame_weight, constexpr_frame_priority)                    //
-           << new payload_member(binary_t(), constexpr_frame_fragment)                                          //
-           << new payload_member(binary_t(), constexpr_frame_padding, constexpr_frame_padding);
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() { return (nullptr != stream); })
+        .run_trycatch([&]() -> return_t {
+            pl << new payload_member(uint8(0), constexpr_frame_pad_length, constexpr_frame_padding)                 //
+               << new payload_member(uint32(0), true, constexpr_frame_stream_dependency, constexpr_frame_priority)  //
+               << new payload_member(uint8(0), constexpr_frame_weight, constexpr_frame_priority)                    //
+               << new payload_member(binary_t(), constexpr_frame_fragment)                                          //
+               << new payload_member(binary_t(), constexpr_frame_padding, constexpr_frame_padding);
+            auto dopad = (get_flags() & h2_flag_t::h2_flag_padded) ? true : false;
+            auto dopriority = (get_flags() & h2_flag_t::h2_flag_priority) ? true : false;
+            pl.set_group(constexpr_frame_padding, dopad)
+                .set_group(constexpr_frame_priority, dopriority)
+                .set_reference_value(constexpr_frame_padding, constexpr_frame_pad_length);
 
-        auto dopad = (get_flags() & h2_flag_t::h2_flag_padded) ? true : false;
-        auto dopriority = (get_flags() & h2_flag_t::h2_flag_priority) ? true : false;
-        pl.set_group(constexpr_frame_padding, dopad)
-            .set_group(constexpr_frame_priority, dopriority)
-            .set_reference_value(constexpr_frame_padding, constexpr_frame_pad_length);
-
-        pl.read(stream, size, pos);
-
-        if (get_flags() & h2_flag_t::h2_flag_padded) {
-            _padlen = pl.t_value_of<uint8>(constexpr_frame_pad_length);
-        }
-        if (get_flags() & h2_flag_t::h2_flag_priority) {
-            uint32 temp = pl.t_value_of<uint32>(constexpr_frame_stream_dependency);
-            _exclusive = (temp & 0x80000000) ? true : false;
-            _dependency = (temp & 0x7fffffff);
-            _weight = pl.t_value_of<uint8>(constexpr_frame_weight);
-        }
-        pl.get_binary(constexpr_frame_fragment, _fragment);
-    }
-    __finally2 {}
-    return ret;
+            return pl.read(stream, size, pos);
+        })
+        .walk([&]() -> void {
+            if (get_flags() & h2_flag_t::h2_flag_padded) {
+                _padlen = pl.t_value_of<uint8>(constexpr_frame_pad_length);
+            }
+            if (get_flags() & h2_flag_t::h2_flag_priority) {
+                uint32 temp = pl.t_value_of<uint32>(constexpr_frame_stream_dependency);
+                _exclusive = (temp & 0x80000000) ? true : false;
+                _dependency = (temp & 0x7fffffff);
+                _weight = pl.t_value_of<uint8>(constexpr_frame_weight);
+            }
+            pl.get_binary(constexpr_frame_fragment, _fragment);
+        });
+    return pipeline.result();
 }
 
 return_t http2_frame_headers::do_write_body(binary_t& body) {
-    return_t ret = errorcode_t::success;
+    function_pipeline<return_t> pipeline;
+    payload pl;
 
     uint32 dependency = _dependency;
     if (_exclusive) {
         dependency |= 0x80000000;
     }
 
-    payload pl;
-    pl << new payload_member(_padlen, constexpr_frame_pad_length, constexpr_frame_padding)
-       << new payload_member(dependency, true, constexpr_frame_stream_dependency, constexpr_frame_priority)
-       << new payload_member(_weight, constexpr_frame_weight, constexpr_frame_priority)  //
-       << new payload_member(_fragment, constexpr_frame_fragment)                        //
-       << new payload_member(uint8(0), _padlen, constexpr_frame_padding, constexpr_frame_padding);
+    pipeline  //
+        .run_trycatch([&]() -> return_t {
+            pl << new payload_member(_padlen, constexpr_frame_pad_length, constexpr_frame_padding)
+               << new payload_member(dependency, true, constexpr_frame_stream_dependency, constexpr_frame_priority)
+               << new payload_member(_weight, constexpr_frame_weight, constexpr_frame_priority)  //
+               << new payload_member(_fragment, constexpr_frame_fragment)                        //
+               << new payload_member(uint8(0), _padlen, constexpr_frame_padding, constexpr_frame_padding);
+            auto dopad = (get_flags() & h2_flag_t::h2_flag_padded) ? true : false;
+            auto dopriority = (get_flags() & h2_flag_t::h2_flag_priority) ? true : false;
+            pl.set_group(constexpr_frame_padding, dopad).set_group(constexpr_frame_priority, dopriority);
 
-    auto dopad = (get_flags() & h2_flag_t::h2_flag_padded) ? true : false;
-    auto dopriority = (get_flags() & h2_flag_t::h2_flag_priority) ? true : false;
-    pl.set_group(constexpr_frame_padding, dopad).set_group(constexpr_frame_priority, dopriority);
-    pl.write(body);
+            return pl.write(body);
+        })
+        .run([&]() -> return_t {
+            uint8 flags = get_flags();
+            if (_padlen) {
+                flags |= h2_flag_t::h2_flag_padded;
+            } else {
+                flags &= ~h2_flag_t::h2_flag_padded;
+            }
+            if (dependency) {
+                flags |= h2_flag_t::h2_flag_priority;
+            } else {
+                flags &= ~h2_flag_t::h2_flag_priority;
+            }
+            set_flags(flags);
 
-    uint8 flags = get_flags();
-    if (_padlen) {
-        flags |= h2_flag_t::h2_flag_padded;
-    } else {
-        flags &= ~h2_flag_t::h2_flag_padded;
-    }
-    if (dependency) {
-        flags |= h2_flag_t::h2_flag_priority;
-    } else {
-        flags &= ~h2_flag_t::h2_flag_priority;
-    }
-    set_flags(flags);
-
-    ret = set_payload_size(body.size());
-
-    return ret;
+            return set_payload_size(body.size());
+        });
+    return pipeline.result();
 }
 
 void http2_frame_headers::dump(stream_t* s) {

@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_supported_versions.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
@@ -50,9 +50,15 @@ return_t tls_extension_client_supported_versions::do_read_body(tls_direction_t d
         binary_t versions;
         {
             payload pl;
-            pl << new payload_member(uint8(0), constexpr_versions)  //
-               << new payload_member(binary_t(), constexpr_version);
+            try {
+                pl << new payload_member(uint8(0), constexpr_versions)  //
+                   << new payload_member(binary_t(), constexpr_version);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
             pl.set_reference_value(constexpr_version, constexpr_versions);
+
             pl.read(stream, endpos_extension(), pos);
 
             count = pl.t_value_of<uint8>(constexpr_versions) >> 1;
@@ -95,9 +101,15 @@ return_t tls_extension_client_supported_versions::do_write_body(tls_direction_t 
         }
         {
             payload pl;
-            pl << new payload_member(cbsize_versions, constexpr_versions)  //
-               << new payload_member(bin_versions, constexpr_version);
-            pl.write(bin);
+            try {
+                pl << new payload_member(cbsize_versions, constexpr_versions)  //
+                   << new payload_member(bin_versions, constexpr_version);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
+
+            ret = pl.write(bin);
         }
     }
     __finally2 {}
@@ -128,7 +140,13 @@ return_t tls_extension_server_supported_versions::do_read_body(tls_direction_t d
 
         {
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_version);
+            try {
+                pl << new payload_member(uint16(0), true, constexpr_version);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
+
             pl.read(stream, endpos_extension(), pos);
 
             version = pl.t_value_of<uint16>(constexpr_version);
@@ -159,8 +177,14 @@ return_t tls_extension_server_supported_versions::do_write_body(tls_direction_t 
         // auto session = get_handshake()->get_session();
 
         payload pl;
-        pl << new payload_member(uint16(get_version()), true, constexpr_version);
-        pl.write(bin);
+        try {
+            pl << new payload_member(uint16(get_version()), true, constexpr_version);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2_trace(ret);
+        }
+
+        ret = pl.write(bin);
     }
     __finally2 {}
     return ret;

@@ -38,7 +38,7 @@ return_t bufferio::open(bufferio_context_t** handle, size_t block_size, byte_t p
             block_size = (1 << 10);
         }
 
-        auto context = make_unique<bufferio_context_t>();
+        auto context = custom::make_unique<bufferio_context_t>();
 
         context->signature = BUFFERIO_CONTEXT_SIGNATURE;
         context->block_size = block_size;

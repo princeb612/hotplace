@@ -106,7 +106,7 @@ cose_data& cose_data::add(int key, const binary_t& value) { return add(key, valu
 cose_data& cose_data::replace(int key, const binary_t& value) { return replace(key, value.data(), value.size()); }
 
 cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, const binary_t& y) {
-    auto k = make_unique<cose_key>();
+    auto k = custom::make_unique<cose_key>();
 
     k->set(&get_owner()->get_static_key(), curve, x, y);
     add(key, TYPE_STATIC_KEY, k.get());
@@ -118,7 +118,7 @@ cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, const binary
 }
 
 cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, const binary_t& y, std::list<int>& order) {
-    auto k = make_unique<cose_key>();
+    auto k = custom::make_unique<cose_key>();
 
     k->set(&get_owner()->get_static_key(), curve, x, y);
     k->set(order);
@@ -131,7 +131,7 @@ cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, const binary
 }
 
 cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, bool ysign) {
-    auto k = make_unique<cose_key>();
+    auto k = custom::make_unique<cose_key>();
 
     k->set(&get_owner()->get_static_key(), curve, x, ysign);
     add(key, TYPE_STATIC_KEY, k.get());
@@ -143,7 +143,7 @@ cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, bool ysign) 
 }
 
 cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, bool ysign, std::list<int>& order) {
-    auto k = make_unique<cose_key>();
+    auto k = custom::make_unique<cose_key>();
 
     k->set(&get_owner()->get_static_key(), curve, x, ysign);
     k->set(order);
@@ -156,7 +156,7 @@ cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, bool ysign, 
 }
 
 cose_data& cose_data::add(cose_alg_t alg, const char* kid, const binary_t& signature) {
-    auto countersign = make_unique<cose_countersign>();
+    auto countersign = custom::make_unique<cose_countersign>();
 
     countersign->set_upperlayer(get_owner());
     countersign->set_property(cose_property_t::cose_property_countersign);
@@ -287,12 +287,12 @@ return_t cose_data::build_protected(cbor_data** object) {
         }
 
         if (_payload.size()) {
-            auto root = make_unique<cbor_data>(_payload);
+            auto root = custom::make_unique<cbor_data>(_payload);
             *object = root.get();
             root.release();
         } else {
             if (_data_map.size()) {
-                auto root = make_unique<cbor_map>();
+                auto root = custom::make_unique<cbor_map>();
 
                 for (const auto& key : _order) {
                     cose_variantmap_t::iterator map_iter = _data_map.find(key);
@@ -328,7 +328,7 @@ return_t cose_data::build_protected(cbor_data** object, cose_variantmap_t& unsen
             *object = new cbor_data(_payload);
         } else {
             if (_data_map.size()) {
-                auto root = make_unique<cbor_map>();
+                auto root = custom::make_unique<cbor_map>();
 
                 for (const auto& key : _order) {
                     cose_variantmap_t::iterator unsent_iter = unsent.find(key);
@@ -366,7 +366,7 @@ return_t cose_data::build_unprotected(cbor_map** object) {
             __leave2;
         }
 
-        auto root = make_unique<cbor_map>();
+        auto root = custom::make_unique<cbor_map>();
 
         for (const auto& key : _order) {
             cose_variantmap_t::iterator map_iter = _data_map.find(key);
@@ -401,7 +401,7 @@ return_t cose_data::build_unprotected(cbor_map** object, cose_variantmap_t& unse
             __leave2;
         }
 
-        auto root = make_unique<cbor_map>();
+        auto root = custom::make_unique<cbor_map>();
 
         for (const auto& key : _order) {
             cose_variantmap_t::iterator unsent_iter = unsent.find(key);

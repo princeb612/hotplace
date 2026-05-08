@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_ec_point_formats.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
@@ -58,9 +58,15 @@ return_t tls_extension_ec_point_formats::do_read_body(tls_direction_t dir, const
 
         {
             payload pl;
-            pl << new payload_member(uint8(0), constexpr_len)  //
-               << new payload_member(binary_t(0), constexpr_formats);
+            try {
+                pl << new payload_member(uint8(0), constexpr_len)  //
+                   << new payload_member(binary_t(0), constexpr_formats);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
             pl.set_reference_value(constexpr_formats, constexpr_len);
+
             pl.read(stream, endpos_extension(), pos);
 
 #if defined DEBUG
@@ -111,9 +117,15 @@ return_t tls_extension_ec_point_formats::do_write_body(tls_direction_t dir, bina
         }
         {
             payload pl;
-            pl << new payload_member(uint8(cbsize_formats), constexpr_len)  //
-               << new payload_member(bin_formats, constexpr_formats);
-            pl.write(bin);
+            try {
+                pl << new payload_member(uint8(cbsize_formats), constexpr_len)  //
+                   << new payload_member(bin_formats, constexpr_formats);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
+
+            ret = pl.write(bin);
         }
     }
     __finally2 {}

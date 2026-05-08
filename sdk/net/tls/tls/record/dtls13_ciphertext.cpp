@@ -12,7 +12,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/cipher_encrypt.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
@@ -64,12 +64,17 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
         size_t offset_encdata = 0;
         {
             payload pl;
-            pl << new payload_member(uint8(0), constexpr_unified_header)                          //
-               << new payload_member(binary_t(), constexpr_connection_id, constexpr_group_c)      // cid    C:1
-               << new payload_member(uint16(0), true, constexpr_sequence16, constexpr_group_s16)  // seq 16 S:1
-               << new payload_member(uint8(0), constexpr_sequence8, constexpr_group_s8)           // seq 8  S:0
-               << new payload_member(uint16(0), true, constexpr_len, constexpr_group_l)           // len    L:1
-               << new payload_member(binary_t(), constexpr_encdata);
+            try {
+                pl << new payload_member(uint8(0), constexpr_unified_header)                          //
+                   << new payload_member(binary_t(), constexpr_connection_id, constexpr_group_c)      // cid    C:1
+                   << new payload_member(uint16(0), true, constexpr_sequence16, constexpr_group_s16)  // seq 16 S:1
+                   << new payload_member(uint8(0), constexpr_sequence8, constexpr_group_s8)           // seq 8  S:0
+                   << new payload_member(uint16(0), true, constexpr_len, constexpr_group_l)           // len    L:1
+                   << new payload_member(binary_t(), constexpr_encdata);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
 
             /**
              * 0 1 2 3 4 5 6 7
@@ -89,6 +94,7 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
                 }
             };
             pl.set_condition(constexpr_unified_header, lambda_condition);
+
             pl.read(stream, size, pos);
 
             uhdr = pl.t_value_of<uint8>(constexpr_unified_header);
@@ -165,7 +171,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
 
         ret = protection.protection_mask(session, dir, stream + offset_encdata, size - offset_encdata, protmask, 2);
         if (errorcode_t::success != ret) {
-            __leave2;
+            __leave2_trace(ret);
         }
 
         // recno
@@ -178,7 +184,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
 
         if (recno != sess_recno) {
             ret = errorcode_t::mismatch;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         binary_t additional;
@@ -269,7 +275,7 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
         uint8 cap = byte_capacity(sess_recno);
         if (cap > 2) {
             ret = errorcode_t::exceed;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         size_t recpos = bin.size();
@@ -295,16 +301,25 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
 
         {
             payload pl;
-            pl << new payload_member(uhdr, constexpr_unified_header)                                          //
-               << new payload_member(_cid, constexpr_connection_id, constexpr_group_c)                        // cid    C:1
-               << new payload_member(uint16(sess_recno), true, constexpr_sequence16, constexpr_group_s16)     // seq 16 S:1
-               << new payload_member(uint8(sess_recno), constexpr_sequence8, constexpr_group_s8)              // seq 8  S:0
-               << new payload_member(uint16(body.size() + tagsize), true, constexpr_len, constexpr_group_l);  // len    L:1
+            try {
+                pl << new payload_member(uhdr, constexpr_unified_header)                                          //
+                   << new payload_member(_cid, constexpr_connection_id, constexpr_group_c)                        // cid    C:1
+                   << new payload_member(uint16(sess_recno), true, constexpr_sequence16, constexpr_group_s16)     // seq 16 S:1
+                   << new payload_member(uint8(sess_recno), constexpr_sequence8, constexpr_group_s8)              // seq 8  S:0
+                   << new payload_member(uint16(body.size() + tagsize), true, constexpr_len, constexpr_group_l);  // len    L:1
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
             pl.set_group(constexpr_group_c, (0x10 & uhdr));
             pl.set_group(constexpr_group_s16, 0 != (0x08 & uhdr));
             pl.set_group(constexpr_group_s8, 0 == (0x08 & uhdr));
             pl.set_group(constexpr_group_l, (0x04 & uhdr));
-            pl.write(header);
+
+            ret = pl.write(header);
+            if (errorcode_t::success != ret) {
+                __leave2_trace(ret);
+            }
         }
 
         {
@@ -320,7 +335,7 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
         {
             ret = protection.encrypt(session, dir, body, ciphertext, header, tag);
             if (errorcode_t::success != ret) {
-                __leave2;
+                __leave2_trace(ret);
             }
         }
 
@@ -335,7 +350,7 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
         binary_t protmask;
         ret = protection.protection_mask(session, dir, block.data(), block.size(), protmask, 2);
         if (errorcode_t::success != ret) {
-            __leave2;
+            __leave2_trace(ret);
         }
 
         if (2 == sequence_len) {
@@ -347,16 +362,25 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
 
         {
             payload pl;
-            pl << new payload_member(uhdr, constexpr_unified_header)                                  //
-               << new payload_member(_cid, constexpr_connection_id, constexpr_group_c)                // cid    C:1
-               << new payload_member(uint16(recno), true, constexpr_sequence16, constexpr_group_s16)  // seq 16 S:1
-               << new payload_member(uint8(recno), constexpr_sequence8, constexpr_group_s8)           // seq 8  S:0
-               << new payload_member(uint16(block.size()), true, constexpr_len, constexpr_group_l);   // len    L:1
+            try {
+                pl << new payload_member(uhdr, constexpr_unified_header)                                  //
+                   << new payload_member(_cid, constexpr_connection_id, constexpr_group_c)                // cid    C:1
+                   << new payload_member(uint16(recno), true, constexpr_sequence16, constexpr_group_s16)  // seq 16 S:1
+                   << new payload_member(uint8(recno), constexpr_sequence8, constexpr_group_s8)           // seq 8  S:0
+                   << new payload_member(uint16(block.size()), true, constexpr_len, constexpr_group_l);   // len    L:1
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
             pl.set_group(constexpr_group_c, (0x10 & uhdr));
             pl.set_group(constexpr_group_s16, 0 != (0x08 & uhdr));
             pl.set_group(constexpr_group_s8, 0 == (0x08 & uhdr));
             pl.set_group(constexpr_group_l, (0x04 & uhdr));
-            pl.write(bin);
+
+            ret = pl.write(bin);
+            if (errorcode_t::success != ret) {
+                __leave2_trace(ret);
+            }
 
             binary_append(bin, block);
         }

@@ -12,8 +12,8 @@
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/base/system/uint.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension.hpp>
@@ -73,14 +73,14 @@ return_t tls_handshake_server_hello::set_cipher_suite(uint16 cs) {
         auto hint = tlsadvisor->hintof_cipher_suite(cs);
         if (nullptr == hint) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         if (0 == (tls_flag_support & hint->flags)) {
             auto test = session->get_keyvalue().get(session_debug_deprecated_ciphersuite);
             if (0 == test) {
                 ret = errorcode_t::bad_request;
-                __leave2;
+                __leave2_trace(ret);
             }
         }
 
@@ -96,7 +96,7 @@ return_t tls_handshake_server_hello::set_cipher_suite(const char* cs) {
     __try2 {
         if (nullptr == cs) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         auto session = get_session();
@@ -104,14 +104,14 @@ return_t tls_handshake_server_hello::set_cipher_suite(const char* cs) {
         auto hint = tlsadvisor->hintof_cipher_suite(cs);
         if (nullptr == hint) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         if (0 == (tls_flag_support & hint->flags)) {
             auto test = session->get_keyvalue().get(session_debug_deprecated_ciphersuite);
             if (0 == test) {
                 ret = errorcode_t::bad_request;
-                __leave2;
+                __leave2_trace(ret);
             }
         }
 
@@ -129,7 +129,7 @@ return_t tls_handshake_server_hello::do_preprocess(tls_direction_t dir) {
     __try2 {
         if (from_server != dir) {
             ret = errorcode_t::bad_request;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         auto session = get_session();
@@ -139,7 +139,7 @@ return_t tls_handshake_server_hello::do_preprocess(tls_direction_t dir) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
             session->reset_session_status();
             ret = errorcode_t::error_handshake;
-            __leave2;
+            __leave2_trace(ret);
         }
     }
     __finally2 {}
@@ -202,7 +202,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
                     break;
             }
             if (errorcode_t::success != ret) {
-                __leave2;
+                __leave2_trace(ret);
             }
 
             protection.calc_transcript_hash(session, stream + hspos, size_header_body, hello_hash);  // server_hello
@@ -278,7 +278,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
     __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         {
@@ -305,18 +305,24 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
 
             {
                 payload pl;
-                pl << new payload_member(uint16(0), true, constexpr_version)         //
-                   << new payload_member(binary_t(), constexpr_random)               //
-                   << new payload_member(uint8(0), constexpr_session_id_len)         //
-                   << new payload_member(binary_t(), constexpr_session_id)           //
-                   << new payload_member(uint16(0), true, constexpr_cipher_suite)    //
-                   << new payload_member(uint8(0), constexpr_compression_method)     //
-                   << new payload_member(uint16(0), true, constexpr_extension_len);  //
+                try {
+                    pl << new payload_member(uint16(0), true, constexpr_version)         //
+                       << new payload_member(binary_t(), constexpr_random)               //
+                       << new payload_member(uint8(0), constexpr_session_id_len)         //
+                       << new payload_member(binary_t(), constexpr_session_id)           //
+                       << new payload_member(uint16(0), true, constexpr_cipher_suite)    //
+                       << new payload_member(uint8(0), constexpr_compression_method)     //
+                       << new payload_member(uint16(0), true, constexpr_extension_len);  //
+                } catch (...) {
+                    ret = errorcode_t::out_of_memory;
+                    __leave2_trace(ret);
+                }
 
                 pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(legacy_version));
 
                 pl.reserve(constexpr_random, 32);
                 pl.set_reference_value(constexpr_session_id, constexpr_session_id_len);
+
                 pl.read(stream, size, pos);
 
                 // RFC 8446 4.1.1.  Cryptographic Negotiation
@@ -340,7 +346,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
                 session->reset_session_status();
                 ret = errorcode_t::error_handshake;
-                __leave2;
+                __leave2_trace(ret);
             }
 
 #if defined DEBUG
@@ -379,7 +385,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                         session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                         session->reset_session_status();
                         ret = error_handshake;
-                        __leave2;
+                        __leave2_trace(ret);
                     }
                 }
             }
@@ -395,7 +401,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                         session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                         session->reset_session_status();
                         ret = error_handshake;
-                        __leave2;
+                        __leave2_trace(ret);
                     }
                 }
             }
@@ -471,7 +477,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
         binary_t extensions;
         ret = get_extensions().write(dir, extensions);
         if (errorcode_t::success != ret) {
-            __leave2;
+            __leave2_trace(ret);
         }
 
         // RFC 8446
@@ -484,7 +490,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                 session->reset_session_status();
                 ret = errorcode_t::error_handshake;
-                __leave2;
+                __leave2_trace(ret);
             }
         }
 
@@ -506,16 +512,25 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
 
         {
             payload pl;
-            pl << new payload_member(uint16(_version ? _version : legacy_version), true, constexpr_version)  //
-               << new payload_member(_random, constexpr_random)                                              //
-               << new payload_member(uint8(_session_id.size()), constexpr_session_id_len)                    //
-               << new payload_member(_session_id, constexpr_session_id)                                      //
-               << new payload_member(uint16(cs), true, constexpr_cipher_suite)                               //
-               << new payload_member(uint8(0), constexpr_compression_method)                                 //
-               << new payload_member(uint16(extensions.size()), true, constexpr_extension_len);              //
+            try {
+                pl << new payload_member(uint16(_version ? _version : legacy_version), true, constexpr_version)  //
+                   << new payload_member(_random, constexpr_random)                                              //
+                   << new payload_member(uint8(_session_id.size()), constexpr_session_id_len)                    //
+                   << new payload_member(_session_id, constexpr_session_id)                                      //
+                   << new payload_member(uint16(cs), true, constexpr_cipher_suite)                               //
+                   << new payload_member(uint8(0), constexpr_compression_method)                                 //
+                   << new payload_member(uint16(extensions.size()), true, constexpr_extension_len);              //
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
 
             pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(legacy_version));
-            pl.write(bin);
+
+            ret = pl.write(bin);
+            if (errorcode_t::success != ret) {
+                __leave2_trace(ret);
+            }
         }
 
         secrets.assign(tls_context_server_hello_random, _random);

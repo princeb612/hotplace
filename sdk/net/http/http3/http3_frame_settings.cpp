@@ -9,8 +9,9 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/http/http3/http3_frame_settings.hpp>
 #include <hotplace/sdk/net/http/http_resource.hpp>
@@ -31,8 +32,14 @@ return_t http3_frame_settings::do_read_payload(const byte_t* stream, size_t size
 
     while (pos < size) {
         payload pl;
-        pl << new payload_member(new quic_encoded(uint64(0)), constexpr_identifier)  //
-           << new payload_member(new quic_encoded(uint64(0)), constexpr_value);
+        try {
+            pl << new payload_member(new quic_encoded(uint64(0)), constexpr_identifier)  //
+               << new payload_member(new quic_encoded(uint64(0)), constexpr_value);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            break;
+        }
+
         pl.read(stream, size, pos);
 
 #if defined DEBUG
@@ -54,49 +61,69 @@ return_t http3_frame_settings::do_read_payload(const byte_t* stream, size_t size
 
 return_t http3_frame_settings::do_write(binary_t& bin) {
     return_t ret = errorcode_t::success;
-    binary_t temp;
+    __try2 {
+        binary_t temp;
 
-    for (auto& item : _params) {
-        auto id = item.first;
-        auto& value = item.second;
+        for (auto& item : _params) {
+            auto id = item.first;
+            auto& value = item.second;
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            auto resource = http_resource::get_instance();
-            trace_debug_event(trace_category_net, trace_event_http3,
-                              [&](basic_stream& dbs) -> void { dbs << "  > " << id << " (" << resource->get_h3_settings_name(id) << ") " << value << "\n"; });
-        }
+            if (istraceable(trace_category_net)) {
+                auto resource = http_resource::get_instance();
+                trace_debug_event(trace_category_net, trace_event_http3,
+                                  [&](basic_stream& dbs) -> void { dbs << "  > " << id << " (" << resource->get_h3_settings_name(id) << ") " << value << "\n"; });
+            }
 #endif
 
-        payload pl;
+            payload pl;
+            try {
+                switch (value.content().type) {
+                    case TYPE_NULL: {
+                        pl << new payload_member(new quic_encoded(uint64(id)), constexpr_identifier)  //
+                           << new payload_member(new quic_encoded(uint64(0)), constexpr_value);
+                    } break;
+                    case TYPE_UINT64: {
+                        auto v = value.content().data.ui64;
 
-        switch (value.content().type) {
-            case TYPE_NULL: {
-                pl << new payload_member(new quic_encoded(uint64(id)), constexpr_identifier)  //
-                   << new payload_member(new quic_encoded(uint64(0)), constexpr_value);
-            } break;
-            case TYPE_UINT64: {
-                auto v = value.content().data.ui64;
-
-                pl << new payload_member(new quic_encoded(uint64(id)), constexpr_identifier)  //
-                   << new payload_member(new quic_encoded(v), constexpr_value);
-            } break;
-            case TYPE_BINARY: {
-                pl << new payload_member(new quic_encoded(uint64(id)), constexpr_identifier)  //
-                   << new payload_member(new quic_encoded(value.to_bin()), constexpr_value);
-            } break;
-            default:
+                        pl << new payload_member(new quic_encoded(uint64(id)), constexpr_identifier)  //
+                           << new payload_member(new quic_encoded(v), constexpr_value);
+                    } break;
+                    case TYPE_BINARY: {
+                        pl << new payload_member(new quic_encoded(uint64(id)), constexpr_identifier)  //
+                           << new payload_member(new quic_encoded(value.to_bin()), constexpr_value);
+                    } break;
+                    default:
+                        break;
+                }
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
                 break;
+            }
+
+            ret = pl.write(_payload);
+            if (errorcode_t::success != ret) {
+                break;
+            }
         }
-        pl.write(_payload);
+
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        payload pl;
+        try {
+            pl << new payload_member(new quic_encoded(uint64(h3_frame_settings)))  //
+               << new payload_member(new quic_encoded(uint64(_payload.size())))    //
+               << new payload_member(_payload);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
+
+        ret = pl.write(bin);
     }
-
-    payload pl;
-    pl << new payload_member(new quic_encoded(uint64(h3_frame_settings)))  //
-       << new payload_member(new quic_encoded(uint64(_payload.size())))    //
-       << new payload_member(_payload);
-    pl.write(bin);
-
+    __finally2 {}
     return ret;
 }
 

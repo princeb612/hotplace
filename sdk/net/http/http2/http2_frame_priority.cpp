@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/http/http2/http2_frame_priority.hpp>
 #include <hotplace/sdk/net/http/http2/http2_protocol.hpp>
@@ -24,46 +25,43 @@ http2_frame_priority::http2_frame_priority(const http2_frame_priority& other)
 http2_frame_priority::~http2_frame_priority() {}
 
 return_t http2_frame_priority::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
+    function_pipeline<return_t> pipeline;
+    payload pl;
 
-    __try2 {
-        if (nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        payload pl;
-        pl << new payload_member(uint32(0), true, constexpr_frame_stream_dependency)  //
-           << new payload_member(uint8(0), constexpr_frame_weight);
-
-        pl.set_reference_value(constexpr_frame_padding, constexpr_frame_pad_length);
-        pl.read(stream, size, pos);
-
-        uint32 temp = pl.t_value_of<uint32>(constexpr_frame_stream_dependency);
-        _exclusive = (temp & 0x80000000) ? true : false;
-        _dependency = (temp & 0x7fffffff);
-        _weight = pl.t_value_of<uint8>(constexpr_frame_weight);
-    }
-    __finally2 {}
-    return ret;
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() { return (nullptr != stream); })
+        .run_trycatch([&]() -> return_t {
+            pl << new payload_member(uint32(0), true, constexpr_frame_stream_dependency)  //
+               << new payload_member(uint8(0), constexpr_frame_weight);
+            pl.set_reference_value(constexpr_frame_padding, constexpr_frame_pad_length);
+            return pl.read(stream, size, pos);
+        })
+        .walk([&]() -> void {
+            uint32 temp = pl.t_value_of<uint32>(constexpr_frame_stream_dependency);
+            _exclusive = (temp & 0x80000000) ? true : false;
+            _dependency = (temp & 0x7fffffff);
+            _weight = pl.t_value_of<uint8>(constexpr_frame_weight);
+        });
+    return pipeline.result();
 }
 
 return_t http2_frame_priority::do_write_body(binary_t& body) {
-    return_t ret = errorcode_t::success;
-
+    function_pipeline<return_t> pipeline;
+    payload pl;
     uint32 dependency = _dependency;
     if (_exclusive) {
         dependency |= 0x80000000;
     }
 
-    payload pl;
-    pl << new payload_member(dependency, true, constexpr_frame_stream_dependency)  //
-       << new payload_member(_weight, constexpr_frame_weight);
-    pl.write(body);
-
-    ret = set_payload_size(body.size());
-
-    return ret;
+    pipeline  //
+        .run_trycatch([&]() -> return_t {
+            pl << new payload_member(dependency, true, constexpr_frame_stream_dependency)  //
+               << new payload_member(_weight, constexpr_frame_weight);
+            return pl.write(body);
+        })
+        .run([&]() -> return_t { return set_payload_size(body.size()); });
+    return pipeline.result();
 }
 
 void http2_frame_priority::dump(stream_t* s) {

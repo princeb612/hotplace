@@ -32,7 +32,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/quic/frame/quic_frame.hpp>
 #include <hotplace/sdk/net/tls/quic/frame/quic_frames.hpp>
@@ -78,11 +78,17 @@ return_t quic_packet_initial::do_read_body(tls_direction_t dir, const byte_t* st
 
         {
             payload pl;
-            pl << new payload_member(new quic_encoded(binary_t()), constexpr_token)  // Token Length (i), Token (..)
-               << new payload_member(new quic_encoded(uint64(0)), constexpr_len)     // Length (i)
-               << new payload_member(binary_t(), constexpr_payload)                  // Packet Number (8..32), Packet Payload (8..)
-               << new payload_member(binary_t(), constexpr_tag);
+            try {
+                pl << new payload_member(new quic_encoded(binary_t()), constexpr_token)  // Token Length (i), Token (..)
+                   << new payload_member(new quic_encoded(uint64(0)), constexpr_len)     // Length (i)
+                   << new payload_member(binary_t(), constexpr_payload)                  // Packet Number (8..32), Packet Payload (8..)
+                   << new payload_member(binary_t(), constexpr_tag);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2;
+            }
             pl.reserve(constexpr_tag, tagsize);
+
             pl.read(stream, size, pos);
 
             pl.get_binary(constexpr_token, _token);
@@ -186,10 +192,19 @@ return_t quic_packet_initial::do_write(tls_direction_t dir, binary_t& header, bi
 
             // unprotected header
             payload pl;
-            pl << new payload_member(new quic_encoded(get_token()))      // Token Length (i), Token (..)
-               << new payload_member(new quic_encoded(len, prefix_len))  // Length (i)
-               << new payload_member(bin_pn);                            // Packet Number (8..32)
-            pl.write(bin_unprotected_header);
+            try {
+                pl << new payload_member(new quic_encoded(get_token()))      // Token Length (i), Token (..)
+                   << new payload_member(new quic_encoded(len, prefix_len))  // Length (i)
+                   << new payload_member(bin_pn);                            // Packet Number (8..32)
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2;
+            }
+
+            ret = pl.write(bin_unprotected_header);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
         }
 
         /**
@@ -225,12 +240,20 @@ return_t quic_packet_initial::do_write(tls_direction_t dir, binary_t& header, bi
 
                 // encode packet number
                 payload pl;
-                pl << new payload_member(new quic_encoded(get_token()))      //
-                   << new payload_member(new quic_encoded(len, prefix_len))  //
-                   << new payload_member(bin_pn);
+                try {
+                    pl << new payload_member(new quic_encoded(get_token()))      //
+                       << new payload_member(new quic_encoded(len, prefix_len))  //
+                       << new payload_member(bin_pn);
+                } catch (...) {
+                    ret = errorcode_t::out_of_memory;
+                    __leave2;
+                }
 
                 // protected header
-                pl.write(bin_protected_header);
+                ret = pl.write(bin_protected_header);
+                if (errorcode_t::success != ret) {
+                    __leave2;
+                }
             }
 
             header = std::move(bin_protected_header);

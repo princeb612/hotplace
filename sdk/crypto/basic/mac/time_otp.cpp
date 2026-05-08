@@ -41,7 +41,7 @@ uint32 time_otp::open(otp_context_t** handle, unsigned int digit_length, time_t 
             __leave2;
         }
 
-        auto context = make_unique<totp_context_t>();
+        auto context = custom::make_unique<totp_context_t>();
 
         context->_signature = TOTP_CONTEXT_SIGNATURE;
         context->_hotp_handle = hotp_handle;

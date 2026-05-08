@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_sign.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
@@ -50,7 +50,7 @@ return_t tls_handshake_certificate_verify::do_preprocess(tls_direction_t dir) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_certificate_required);
             session->reset_session_status();
             ret = errorcode_t::error_handshake;
-            __leave2;
+            __leave2_trace(ret);
         }
     }
     __finally2 {}
@@ -82,7 +82,7 @@ return_t tls_handshake_certificate_verify::sign_certverify(const EVP_PKEY* pkey,
     __try2 {
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         auto session = get_session();
@@ -117,7 +117,7 @@ return_t tls_handshake_certificate_verify::verify_certverify(const EVP_PKEY* pke
     __try2 {
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         auto session = get_session();
@@ -182,7 +182,7 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
     __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         // RFC 8446 2.  Protocol Overview
@@ -204,10 +204,16 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
         binary_t signature;
         {
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_signature_alg)  //
-               << new payload_member(uint16(0), true, constexpr_len)            //
-               << new payload_member(binary_t(), constexpr_signature);
+            try {
+                pl << new payload_member(uint16(0), true, constexpr_signature_alg)  //
+                   << new payload_member(uint16(0), true, constexpr_len)            //
+                   << new payload_member(binary_t(), constexpr_signature);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
             pl.set_reference_value(constexpr_signature, constexpr_len);
+
             pl.read(stream, size, pos);
 
             scheme = pl.t_value_of<uint16>(constexpr_signature_alg);
@@ -269,7 +275,7 @@ return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, bi
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_no_certificate);
             session->reset_session_status();
             ret = errorcode_t::error_certificate;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         uint16 scheme = 0;
@@ -277,10 +283,16 @@ return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, bi
         ret = sign_certverify(pkey, dir, scheme, signature);
 
         payload pl;
-        pl << new payload_member(uint16(scheme), true, constexpr_signature_alg)  //
-           << new payload_member(uint16(signature.size()), true, constexpr_len)  //
-           << new payload_member(signature, constexpr_signature);
-        pl.write(bin);
+        try {
+            pl << new payload_member(uint16(scheme), true, constexpr_signature_alg)  //
+               << new payload_member(uint16(signature.size()), true, constexpr_len)  //
+               << new payload_member(signature, constexpr_signature);
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2_trace(ret);
+        }
+
+        ret = pl.write(bin);
     }
     __finally2 {}
     return ret;

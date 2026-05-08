@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_psk_key_exchange_modes.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
@@ -41,9 +41,15 @@ return_t tls_extension_psk_key_exchange_modes::do_read_body(tls_direction_t dir,
         binary_t mode;
         {
             payload pl;
-            pl << new payload_member(uint8(0), constexpr_modes)  //
-               << new payload_member(binary_t(), constexpr_mode);
+            try {
+                pl << new payload_member(uint8(0), constexpr_modes)  //
+                   << new payload_member(binary_t(), constexpr_mode);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
             pl.set_reference_value(constexpr_mode, constexpr_modes);
+
             pl.read(stream, endpos_extension(), pos);
 
             modes = pl.t_value_of<uint8>(constexpr_modes);
@@ -75,20 +81,29 @@ return_t tls_extension_psk_key_exchange_modes::do_read_body(tls_direction_t dir,
 
 return_t tls_extension_psk_key_exchange_modes::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
-    uint8 cbsize_modes = 0;
-    binary_t bin_modes;
-    {
-        for (auto m : _modes) {
-            binary_append(bin_modes, m);
+    __try2 {
+        uint8 cbsize_modes = 0;
+        binary_t bin_modes;
+        {
+            for (auto m : _modes) {
+                binary_append(bin_modes, m);
+            }
+            cbsize_modes = t_narrow_cast(bin_modes.size());
         }
-        cbsize_modes = t_narrow_cast(bin_modes.size());
+        {
+            payload pl;
+            try {
+                pl << new payload_member(cbsize_modes, constexpr_modes)  //
+                   << new payload_member(bin_modes, constexpr_mode);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
+
+            ret = pl.write(bin);
+        }
     }
-    {
-        payload pl;
-        pl << new payload_member(cbsize_modes, constexpr_modes)  //
-           << new payload_member(bin_modes, constexpr_mode);
-        pl.write(bin);
-    }
+    __finally2 {}
     return ret;
 }
 

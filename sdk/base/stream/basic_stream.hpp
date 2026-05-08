@@ -96,6 +96,34 @@ class basic_stream : public stream_t {
 #endif
 
     return_t println(const char* buf, ...);
+
+    /**
+     * @brief   format string syntax
+     * @remarks
+     *          - {n} n MUST be in 1..arg
+     *          - string argument {n}, {n:-10s}, {n:10s}
+     *          - integer argument {n}, {n:10d}, {n:10i}, {n:08x}
+     *          - floating point argument {n}, {n:le}, {n:lf}, {n:lg}
+     * @example
+     *          valist va;
+     *          va << 256 << "hello world" << 3.141592;
+     *
+     *          bs.clear();
+     *          bs.sprintf(R"(value={1}, value={1:04x}, value={1:04d})", va);
+     *          // value=256, value=0x0100, value=0256
+     *          bs.clear();
+     *          bs.sprintf(R"(value="{2}", value="{2:-15s}", value="{2:15s}")", va);
+     *          // value="hello world", value="hello world    ", value="    hello world"
+     *          bs.clear();
+     *          bs.sprintf(R"(value={3}, value={3:le}, value={3:lg})", va);
+     *          // value=3.141592, value=3.141592e+00, value=3.14159
+     *          bs.clear();
+     *          // {n} n MUST be in 1..arg so {-1} is ignored
+     *          // {2} is a string so 10d is ignored
+     *          // {3} is an integer so s is ignored
+     *          bs.sprintf({R"(value={-1}, value="{2:10d}", value={3:s})", va);
+     *          // value={-1}, value="hello world", value=3.141592
+     */
     return_t vprintf(const char* fmt, valist ap);
 
     basic_stream& operator<<(const char* str);

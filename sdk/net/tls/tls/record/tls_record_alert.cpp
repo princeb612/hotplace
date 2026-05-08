@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record_alert.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
 #include <hotplace/sdk/net/tls/tls_protection.hpp>
@@ -73,11 +73,11 @@ return_t tls_record_alert::read_plaintext(tls_direction_t dir, const byte_t* str
     __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
         if (pos + 2 > size) {
             ret = errorcode_t::bad_data;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         uint8 level = 0;

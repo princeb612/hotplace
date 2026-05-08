@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/binary.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_hash.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>

@@ -12,7 +12,7 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_early_data.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
@@ -47,7 +47,7 @@ return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_
 
         // RFC 8446 Early data is not permitted after a HelloRetryRequest
         if (tls_flow_hello_retry_request == protection.get_flow()) {
-            __leave2;
+            __leave2_trace(ret);
         }
 
         {
@@ -56,7 +56,12 @@ return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_
 #endif
 
             payload pl;
-            pl << new payload_member(uint32(0), true, constexpr_max_early_data_size, constexpr_new_session_ticket);
+            try {
+                pl << new payload_member(uint32(0), true, constexpr_max_early_data_size, constexpr_new_session_ticket);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
 
             auto is_nst = false;
             is_nst = (tls_hs_new_session_ticket == get_handshake()->get_type());

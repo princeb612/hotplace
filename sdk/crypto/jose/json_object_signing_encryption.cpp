@@ -40,7 +40,7 @@ return_t json_object_signing_encryption::open(jose_context_t** handle, crypto_ke
             __leave2;
         }
 
-        auto context = make_unique<jose_context_t>();
+        auto context = custom::make_unique<jose_context_t>();
         context->key = crypto_key;
 
         crypto_key->addref();

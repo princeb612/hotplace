@@ -13,7 +13,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/system/types.hpp>
 #include <hotplace/sdk/net/http/hpack/hpack_dynamic_table.hpp>
 #include <hotplace/sdk/net/http/http2/http2_frame.hpp>

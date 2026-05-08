@@ -10,8 +10,8 @@
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/error.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/base/system/windows/debug_trace.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
 #include <iostream>
 
 namespace hotplace {
@@ -154,7 +154,7 @@ return_t debug_trace::open(debug_trace_context_t** handle) {
         DECLARE_DLLNAME_IMAGEHLP;
         ret = load_library(&imagehlp_handle, DLLNAME_IMAGEHLP, loadlibrary_path_t::system_path, nullptr);
 
-        auto context = make_unique<backtrace_context_t>();
+        auto context = custom::make_unique<backtrace_context_t>();
 
 #ifdef __x86_64__
         DECLARE_NAMEOF_API_STACKWALK64;

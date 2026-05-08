@@ -25,6 +25,8 @@ namespace hotplace {
  */
 class thread : public thread_t {
    public:
+    thread() = delete;
+    thread(const thread&) = delete;
     /**
      * @brief constructor
      */
@@ -45,6 +47,8 @@ class thread : public thread_t {
     virtual return_t wait(unsigned msec);
 
     virtual threadid_t gettid();
+
+    thread& operator=(const thread&) = delete;
 
    private:
     static DWORD thread_routine(void* param);

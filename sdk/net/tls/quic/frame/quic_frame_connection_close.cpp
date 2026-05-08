@@ -19,7 +19,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/quic/frame/quic_frame_connection_close.hpp>
 #include <hotplace/sdk/net/tls/quic/quic.hpp>
@@ -51,9 +51,15 @@ return_t quic_frame_connection_close::do_read_body(tls_direction_t dir, const by
 
         {
             payload pl;
-            pl << new payload_member(new quic_encoded(uint64(0)), constexpr_error_code)                      //
-               << new payload_member(new quic_encoded(uint64(0)), constexpr_frametype, constexpr_frametype)  //
-               << new payload_member(new quic_encoded(binary_t()), constexpr_reason_phase);
+            try {
+                pl << new payload_member(new quic_encoded(uint64(0)), constexpr_error_code)                      //
+                   << new payload_member(new quic_encoded(uint64(0)), constexpr_frametype, constexpr_frametype)  //
+                   << new payload_member(new quic_encoded(binary_t()), constexpr_reason_phase);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2;
+            }
+
             pl.set_reference_value(constexpr_reason_phase, constexpr_reason_phase_len);
             pl.set_group(constexpr_frametype, is_0x1c);
             pl.read(stream, size, pos);

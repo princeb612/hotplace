@@ -47,7 +47,7 @@ uint32 hmac_otp::open(otp_context_t** handle, unsigned int digit_length, hash_al
             __leave2;
         }
 
-        auto context = make_unique<hotp_context_t>();
+        auto context = custom::make_unique<hotp_context_t>();
 
         context->_signature = HOTP_CONTEXT_SIGNATURE;
         context->_hmac_context = hash_handle;

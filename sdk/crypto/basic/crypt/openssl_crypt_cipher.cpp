@@ -11,7 +11,7 @@
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
@@ -109,7 +109,7 @@ return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorit
             __leave2;
         }
 
-        auto context = make_unique<openssl_crypt_context_t>();
+        auto context = custom::make_unique<openssl_crypt_context_t>();
 
         uint32 internal_size_key = 0;
         uint32 internal_size_iv = 0;

@@ -9,7 +9,7 @@
 # minimum platform
 # - toolchain dependencies : cmake (2.8.10.2)
 
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.16)
 
 project (hotplace)
 

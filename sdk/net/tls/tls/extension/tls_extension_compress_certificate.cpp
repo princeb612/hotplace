@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_compress_certificate.hpp>
 #include <hotplace/sdk/net/tls/tls/tls.hpp>
@@ -33,9 +33,16 @@ return_t tls_extension_compress_certificate::do_read_body(tls_direction_t dir, c
         binary_t bin_algorithms;
         {
             payload pl;
-            pl << new payload_member(uint8(0), constexpr_algorithm_len)  //
-               << new payload_member(binary_t(), constexpr_algorithm);
+            try {
+                pl << new payload_member(uint8(0), constexpr_algorithm_len)  //
+                   << new payload_member(binary_t(), constexpr_algorithm);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
+
             pl.set_reference_value(constexpr_algorithm, constexpr_algorithm_len);
+
             pl.read(stream, endpos_extension(), pos);
 
             algorithms_len = pl.t_value_of<uint8>(constexpr_algorithm_len) >> 1;
@@ -67,20 +74,29 @@ return_t tls_extension_compress_certificate::do_read_body(tls_direction_t dir, c
 
 return_t tls_extension_compress_certificate::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
-    uint8 cbsize_algorithms = 0;
-    binary_t bin_algorithms;
-    {
-        for (auto alg : _algorithms) {
-            binary_append(bin_algorithms, alg, hton16);
+    __try2 {
+        uint8 cbsize_algorithms = 0;
+        binary_t bin_algorithms;
+        {
+            for (auto alg : _algorithms) {
+                binary_append(bin_algorithms, alg, hton16);
+            }
+            cbsize_algorithms = t_narrow_cast(bin_algorithms.size());
         }
-        cbsize_algorithms = t_narrow_cast(bin_algorithms.size());
+        {
+            payload pl;
+            try {
+                pl << new payload_member(uint8(cbsize_algorithms), constexpr_algorithm_len)  //
+                   << new payload_member(bin_algorithms, constexpr_algorithm);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
+
+            ret = pl.write(bin);
+        }
     }
-    {
-        payload pl;
-        pl << new payload_member(uint8(cbsize_algorithms), constexpr_algorithm_len)  //
-           << new payload_member(bin_algorithms, constexpr_algorithm);
-        pl.write(bin);
-    }
+    __finally2 {}
     return ret;
 }
 

@@ -82,7 +82,6 @@ return_t openssl_crypt::open(crypt_context_t** handle, const std::string& cipher
 
 return_t openssl_crypt::encrypt(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, unsigned char** ciphertext, size_t* ciphersize) {
     return_t ret = errorcode_t::success;
-    byte_t* output_allocated = nullptr;
 
     __try2 {
         if (nullptr == handle || nullptr == plaintext || nullptr == ciphertext || nullptr == ciphersize) {
@@ -90,26 +89,22 @@ return_t openssl_crypt::encrypt(crypt_context_t* handle, const unsigned char* pl
             __leave2;
         }
 
-        size_t size_out_allocated = plainsize + EVP_MAX_BLOCK_LENGTH;
-        __try_new_catch(output_allocated, new byte_t[size_out_allocated + 1], ret, __leave2);
+        size_t size_ciphertext_alloc = plainsize + EVP_MAX_BLOCK_LENGTH;
+        auto ciphertext_alloc = custom::make_unique_with_deleter<byte_t[]>(size_ciphertext_alloc + 1, [](byte_t* p) { delete[] p; });
 
-        ret = encrypt_internal(handle, plaintext, plainsize, output_allocated, &size_out_allocated, nullptr, nullptr);
+        ret = encrypt_internal(handle, plaintext, plainsize, ciphertext_alloc.get(), &size_ciphertext_alloc, nullptr, nullptr);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        output_allocated[size_out_allocated] = 0;
+        ciphertext_alloc[size_ciphertext_alloc] = 0;
 
-        *ciphertext = output_allocated;
-        *ciphersize = size_out_allocated;
+        *ciphertext = ciphertext_alloc.get();
+        *ciphersize = size_ciphertext_alloc;
+
+        ciphertext_alloc.release();  // ciphertext own ciphertext_alloc
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            if (output_allocated) {
-                delete[] output_allocated;
-            }
-        }
-    }
+    __finally2 {}
 
     return ret;
 }
@@ -170,7 +165,6 @@ return_t openssl_crypt::encrypt(crypt_context_t* handle, const binary_t& plainte
 
 return_t openssl_crypt::decrypt(crypt_context_t* handle, const unsigned char* ciphertext, size_t ciphersize, unsigned char** plaintext, size_t* plainsize) {
     return_t ret = errorcode_t::success;
-    byte_t* output_allocated = nullptr;
 
     __try2 {
         if (nullptr == handle || nullptr == ciphertext || nullptr == plaintext || nullptr == plainsize) {
@@ -178,26 +172,22 @@ return_t openssl_crypt::decrypt(crypt_context_t* handle, const unsigned char* ci
             __leave2;
         }
 
-        size_t size_out_allocated = ciphersize + EVP_MAX_BLOCK_LENGTH;
-        __try_new_catch(output_allocated, new byte_t[size_out_allocated + 1], ret, __leave2);
+        size_t size_plaintext_alloc = ciphersize + EVP_MAX_BLOCK_LENGTH;
+        auto plaintext_alloc = custom::make_unique_with_deleter<byte_t[]>(size_plaintext_alloc + 1, [](byte_t* p) { delete[] p; });
 
-        ret = decrypt_internal(handle, ciphertext, ciphersize, output_allocated, &size_out_allocated, nullptr, nullptr);
+        ret = decrypt_internal(handle, ciphertext, ciphersize, plaintext_alloc.get(), &size_plaintext_alloc, nullptr, nullptr);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        output_allocated[size_out_allocated] = 0;
+        plaintext_alloc[size_plaintext_alloc] = 0;
 
-        *plaintext = output_allocated;
-        *plainsize = size_out_allocated;
+        *plaintext = plaintext_alloc.get();
+        *plainsize = size_plaintext_alloc;
+
+        plaintext_alloc.release();
     }
-    __finally2 {
-        if (errorcode_t::success != ret) {
-            if (output_allocated) {
-                delete[] output_allocated;
-            }
-        }
-    }
+    __finally2 {}
 
     return ret;
 }

@@ -29,6 +29,7 @@
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/cmdline.hpp>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/basic/huffman_coding.hpp>
 #include <hotplace/sdk/base/basic/keyvalue.hpp>
 #include <hotplace/sdk/base/basic/types.hpp>
@@ -82,6 +83,7 @@
 #include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
 #include <hotplace/sdk/base/system/error.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #if defined __linux__
 #include <hotplace/sdk/base/system/linux/debug_trace.hpp>
 #elif defined _WIN32 || defined _WIN64
@@ -104,7 +106,6 @@
 #include <hotplace/sdk/base/unittest/console_color.hpp>
 #include <hotplace/sdk/base/unittest/logger.hpp>
 #include <hotplace/sdk/base/unittest/testcase.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
 #include <hotplace/sdk/base/unittest/types.hpp>
 
 #endif

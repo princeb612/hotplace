@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/quic/quic.hpp>
 #include <hotplace/sdk/net/tls/quic/quic_encoded.hpp>
@@ -107,13 +107,19 @@ return_t tls_extension_quic_transport_parameters::read_quic_params(const byte_t*
     __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         while (pos < size) {
             payload pl;
-            pl << new payload_member(new quic_encoded(uint64(0)), constexpr_param_id)  //
-               << new payload_member(new quic_encoded(binary_t()), constexpr_param);   //
+            try {
+                pl << new payload_member(new quic_encoded(uint64(0)), constexpr_param_id)  //
+                   << new payload_member(new quic_encoded(binary_t()), constexpr_param);   //
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                break;
+            }
+
             pl.read(stream, size, pos);
 
             uint64 param_id = pl.t_value_of<uint64>(constexpr_param_id);
@@ -142,6 +148,10 @@ return_t tls_extension_quic_transport_parameters::read_quic_params(const byte_t*
                     params.push_back({param_id, std::move(vt)});
                 } break;
             }
+        }
+
+        if (errorcode_t::success != ret) {
+            __leave2_trace(ret);
         }
 
 #if defined DEBUG
@@ -177,26 +187,35 @@ return_t tls_extension_quic_transport_parameters::read_quic_params(const byte_t*
 
 return_t tls_extension_quic_transport_parameters::write_quic_param(uint64 id, const variant& value, binary_t& params) {
     return_t ret = errorcode_t::success;
-    payload pl;
-    switch (value.content().type) {
-        case TYPE_NULL: {
-            pl << new payload_member(new quic_encoded(id), constexpr_param_id)  //
-               << new payload_member(new quic_encoded(uint64(0)), constexpr_param);
-        } break;
-        case TYPE_UINT64: {
-            binary_t temp;
-            quic_write_vle_int(value.content().data.ui64, temp);
-            pl << new payload_member(new quic_encoded(id), constexpr_param_id)  //
-               << new payload_member(new quic_encoded(temp), constexpr_param);
-        } break;
-        case TYPE_BINARY: {
-            pl << new payload_member(new quic_encoded(id), constexpr_param_id)  //
-               << new payload_member(new quic_encoded(value.to_bin()), constexpr_param);
-        } break;
-        default:
-            break;
+    __try2 {
+        payload pl;
+        try {
+            switch (value.content().type) {
+                case TYPE_NULL: {
+                    pl << new payload_member(new quic_encoded(id), constexpr_param_id)  //
+                       << new payload_member(new quic_encoded(uint64(0)), constexpr_param);
+                } break;
+                case TYPE_UINT64: {
+                    binary_t temp;
+                    quic_write_vle_int(value.content().data.ui64, temp);
+                    pl << new payload_member(new quic_encoded(id), constexpr_param_id)  //
+                       << new payload_member(new quic_encoded(temp), constexpr_param);
+                } break;
+                case TYPE_BINARY: {
+                    pl << new payload_member(new quic_encoded(id), constexpr_param_id)  //
+                       << new payload_member(new quic_encoded(value.to_bin()), constexpr_param);
+                } break;
+                default:
+                    break;
+            }
+        } catch (...) {
+            ret = errorcode_t::out_of_memory;
+            __leave2_trace(ret);
+        }
+
+        ret = pl.write(params);
     }
-    pl.write(params);
+    __finally2 {}
     return ret;
 }
 

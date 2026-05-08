@@ -10,7 +10,7 @@
  */
 
 #include <hotplace/sdk/base/basic/huffman_coding.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 
 namespace hotplace {
 

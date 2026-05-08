@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_supported_groups.hpp>
@@ -58,9 +58,15 @@ return_t tls_extension_supported_groups::do_read_body(tls_direction_t dir, const
             //  } NamedCurveList;
 
             payload pl;
-            pl << new payload_member(uint16(0), true, constexpr_curves)  //
-               << new payload_member(binary_t(0), constexpr_curve);
+            try {
+                pl << new payload_member(uint16(0), true, constexpr_curves)  //
+                   << new payload_member(binary_t(0), constexpr_curve);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
             pl.set_reference_value(constexpr_curve, constexpr_curves);
+
             pl.read(stream, endpos_extension(), pos);
 
             curves = pl.t_value_of<uint16>(constexpr_curves) >> 1;
@@ -108,9 +114,15 @@ return_t tls_extension_supported_groups::do_write_body(tls_direction_t dir, bina
         }
         {
             payload pl;
-            pl << new payload_member(uint16(cbsize_supported_groups), true, constexpr_curves)  //
-               << new payload_member(bin_supported_groups, constexpr_curve);
-            pl.write(bin);
+            try {
+                pl << new payload_member(uint16(cbsize_supported_groups), true, constexpr_curves)  //
+                   << new payload_member(bin_supported_groups, constexpr_curve);
+            } catch (...) {
+                ret = errorcode_t::out_of_memory;
+                __leave2_trace(ret);
+            }
+
+            ret = pl.write(bin);
         }
     }
     __finally2 {}

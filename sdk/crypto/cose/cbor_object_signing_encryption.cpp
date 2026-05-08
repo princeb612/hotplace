@@ -12,7 +12,7 @@
 
 #include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
@@ -45,12 +45,12 @@ return_t cbor_object_signing_encryption::open(cose_context_t** handle) {
             __leave2;
         }
 
-        auto context = make_unique<cose_context_t>();
+        auto context = custom::make_unique<cose_context_t>();
         context->composer = new cose_composer;
 
         *handle = context.get();
 
-        context.release();
+        context.release();  // handle own context
     }
     __finally2 {}
     return ret;
@@ -145,7 +145,6 @@ return_t cbor_object_signing_encryption::verify(cose_context_t* handle, crypto_k
 return_t cbor_object_signing_encryption::process(cose_context_t* handle, crypto_key* key, const binary_t& cbor, binary_t& output, cose_mode_t mode) {
     return_t ret = errorcode_t::success;
     return_t check = errorcode_t::success;
-    // crypto_advisor* advisor = crypto_advisor::get_instance();
     std::set<return_t> results;
 
     __try2 {
@@ -547,7 +546,6 @@ return_t cbor_object_signing_encryption::compose_kdf_context(cose_context_t* han
 
     // AlgorithmID: ... This normally is either a key wrap algorithm identifier or a content encryption algorithm identifier.
 
-    cbor_array* root = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
@@ -591,9 +589,9 @@ return_t cbor_object_signing_encryption::compose_kdf_context(cose_context_t* han
             throw exception(errorcode_t::unexpected);
         }
 
-        root = new cbor_array();
+        auto root = custom::make_unique_with_deleter<cbor_array>([](cbor_array* p) { p->release(); });
 
-        (*root)
+        (*root.get())
             .add(new cbor_data(algid))
             .add([&](cbor_array* partyu) -> void {
                 *partyu << compose_kdf_context_item(handle, layer, cose_key_t::cose_partyu_id, cose_param_t::cose_unsent_apu_id)
@@ -620,18 +618,16 @@ return_t cbor_object_signing_encryption::compose_kdf_context(cose_context_t* han
             binary_t bin_private;
             layer->finditem(cose_param_t::cose_unsent_priv_other, bin_private, cose_scope::cose_scope_unsent);
             if (bin_private.size()) {
-                *root << new cbor_data(bin_private);
+                (*root.get()) << new cbor_data(bin_private);
             }
         }
 
         cbor_publisher publisher;
-        publisher.publish(root, &kdf_context);
+        publisher.publish(root.get(), &kdf_context);
+
+        // release root
     }
-    __finally2 {
-        if (root) {
-            root->release();
-        }
-    }
+    __finally2 {}
 
     return ret;
 }

@@ -12,7 +12,7 @@
 #define __HOTPLACE_SDK_NET_HTTP_COMPRESSION_HTTP2DYNAMICTABLE__
 
 #include <functional>
-#include <hotplace/sdk/base/unittest/trace.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/net/http/compression/http_header_compression.hpp>
 
 namespace hotplace {

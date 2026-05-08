@@ -51,7 +51,6 @@ return_t cose_composer::compose(cbor_array** object, bool tagged) {
 
     //   then call compose(tag, object);
 
-    cbor_array* root = nullptr;
     cbor_tag_t cbor_tag = cbor_tag_t::cbor_tag_unknown;
 
     __try2 {
@@ -59,8 +58,6 @@ return_t cose_composer::compose(cbor_array** object, bool tagged) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-
-        root = new cbor_array;
 
         {
             crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -83,6 +80,8 @@ return_t cose_composer::compose(cbor_array** object, bool tagged) {
             }
             _cbor_tag = cbor_tag;
         }
+
+        auto root = new cbor_array;
 
         *root << get_protected().cbor() << get_unprotected().cbor() << get_payload().cbor();
         if (tagged) {
