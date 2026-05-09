@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
@@ -32,67 +33,70 @@ tls_extension_status_request::tls_extension_status_request(tls_handshake* handsh
 tls_extension_status_request::~tls_extension_status_request() {}
 
 return_t tls_extension_status_request::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        uint8 cert_status_type = 0;
+    function_pipeline<return_t> pipeline;
+
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr == stream) && (pos < size); })
+        .run_trycatch([&]() -> return_t {
+            uint8 cert_status_type = 0;
 #if defined DEBUG
-        uint16 responderid_info_len = 0;
-        uint16 request_ext_info_len = 0;
+            uint16 responderid_info_len = 0;
+            uint16 request_ext_info_len = 0;
 #endif
-        binary_t responderid_info;
-        binary_t request_ext_info;
-        {
-            payload pl;
-            try {
+            binary_t responderid_info;
+            binary_t request_ext_info;
+            {
+                payload pl;
                 pl << new payload_member(uint8(0), constexpr_cert_status_type)             //
                    << new payload_member(uint16(), true, constexpr_responderid_info_len)   //
                    << new payload_member(binary_t(), constexpr_responderid_info)           //
                    << new payload_member(uint16(0), true, constexpr_request_ext_info_len)  //
                    << new payload_member(binary_t(), constexpr_request_ext_info);
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
+                pl.set_reference_value(constexpr_responderid_info, constexpr_responderid_info_len);
+                pl.set_reference_value(constexpr_request_ext_info, constexpr_request_ext_info_len);
+
+                auto rc = pl.read(stream, endpos_extension(), pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
+
+                cert_status_type = pl.t_value_of<uint8>(constexpr_cert_status_type);
+#if defined DEBUG
+                responderid_info_len = pl.t_value_of<uint8>(constexpr_responderid_info_len);
+                request_ext_info_len = pl.t_value_of<uint8>(constexpr_request_ext_info_len);
+#endif
+                pl.get_binary(constexpr_responderid_info, responderid_info);
+                pl.get_binary(constexpr_request_ext_info, request_ext_info);
             }
-            pl.set_reference_value(constexpr_responderid_info, constexpr_responderid_info_len);
-            pl.set_reference_value(constexpr_request_ext_info, constexpr_request_ext_info_len);
-
-            pl.read(stream, endpos_extension(), pos);
-
-            cert_status_type = pl.t_value_of<uint8>(constexpr_cert_status_type);
-#if defined DEBUG
-            responderid_info_len = pl.t_value_of<uint8>(constexpr_responderid_info_len);
-            request_ext_info_len = pl.t_value_of<uint8>(constexpr_request_ext_info_len);
-#endif
-            pl.get_binary(constexpr_responderid_info, responderid_info);
-            pl.get_binary(constexpr_request_ext_info, request_ext_info);
-        }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-                dbs.println("   > %s %i %s", constexpr_cert_status_type, cert_status_type, tlsadvisor->nameof_cert_status_type(cert_status_type).c_str());
-                dbs.println("   > %s %i", constexpr_responderid_info_len, responderid_info_len);
-                if (check_trace_level(loglevel_debug)) {
-                    dump_memory(responderid_info, &dbs, 16, 4, 0x0, dump_notrunc);
-                }
-                dbs.println("   > %s %i", constexpr_request_ext_info_len, request_ext_info_len);
-                if (check_trace_level(loglevel_debug)) {
-                    dump_memory(request_ext_info, &dbs, 16, 4, 0x0, dump_notrunc);
-                }
-            });
-        }
+                    dbs.println("   > %s %i %s", constexpr_cert_status_type, cert_status_type, tlsadvisor->nameof_cert_status_type(cert_status_type).c_str());
+                    dbs.println("   > %s %i", constexpr_responderid_info_len, responderid_info_len);
+                    if (check_trace_level(loglevel_debug)) {
+                        dump_memory(responderid_info, &dbs, 16, 4, 0x0, dump_notrunc);
+                    }
+                    dbs.println("   > %s %i", constexpr_request_ext_info_len, request_ext_info_len);
+                    if (check_trace_level(loglevel_debug)) {
+                        dump_memory(request_ext_info, &dbs, 16, 4, 0x0, dump_notrunc);
+                    }
+                });
+            }
 #endif
 
-        {
-            _cert_status_type = cert_status_type;
-            _responderid_info = std::move(responderid_info);
-            _request_ext_info = std::move(request_ext_info);
-        }
-    }
-    __finally2 {}
-    return ret;
+            {
+                _cert_status_type = cert_status_type;
+                _responderid_info = std::move(responderid_info);
+                _request_ext_info = std::move(request_ext_info);
+            }
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 return_t tls_extension_status_request::do_write_body(tls_direction_t dir, binary_t& bin) { return not_supported; }

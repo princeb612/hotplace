@@ -84,8 +84,6 @@ test_case::test_case() : _logger(nullptr) { reset_time(); }
 void test_case::begin(const char* case_name, ...) {
     arch_t tid = get_thread_id();
     basic_stream topic;
-    basic_stream stream;
-    t_stream_binder<basic_stream, console_color> console_colored_stream(stream);
 
     critical_section_guard guard(_lock);
 
@@ -101,6 +99,8 @@ void test_case::begin(const char* case_name, ...) {
 
     constexpr char constexpr_testcase[] = "[test case] ";
 
+    basic_stream stream;
+    t_stream_binder<basic_stream, console_color> console_colored_stream(stream);
     console_colored_stream << _concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::cyan) << constexpr_testcase << topic.c_str();
     console_colored_stream << _concolor.turnoff();
     if (_logger) {
@@ -485,6 +485,12 @@ void test_case::report(uint32 top_count) {
     // --------------------------------------------------------------------------------
     report_testtime(stream, top_count);
 
+    if (_total._count_fail) {
+        print_fail(stream);
+    } else {
+        print_pass(stream);
+    }
+
     critical_section_guard guard(_lock);
 
     //
@@ -725,5 +731,25 @@ void test_case::lock() { _lock.enter(); }
 void test_case::unlock() { _lock.leave(); }
 
 void test_case::attach(logger* log) { _logger = log; }
+
+void test_case::print_pass(basic_stream& bs) {
+    // https://doodlenerd.com/web-tool/figlet-generator
+    bs << ANSI_ESCAPE << "1;" << fggreen << "m" << R"( ____                      )" << ANSI_ESCAPE << "0m\n";
+    bs << ANSI_ESCAPE << "1;" << fggreen << "m" << R"(|  _ \    __ _   ___   ___ )" << ANSI_ESCAPE << "0m\n";
+    bs << ANSI_ESCAPE << "1;" << fggreen << "m" << R"(| |_) |  / _` | / __| / __|)" << ANSI_ESCAPE << "0m\n";
+    bs << ANSI_ESCAPE << "1;" << fggreen << "m" << R"(|  __/  | (_| | \__ \ \__ \)" << ANSI_ESCAPE << "0m\n";
+    bs << ANSI_ESCAPE << "1;" << fggreen << "m" << R"(|_|      \__,_| |___/ |___/)" << ANSI_ESCAPE << "0m\n";
+    bs << ANSI_ESCAPE << "1;" << fggreen << "m" << "- hotplace test_case prooved" << ANSI_ESCAPE << "0m\n";
+}
+
+void test_case::print_fail(basic_stream& bs) {
+    // https://doodlenerd.com/web-tool/figlet-generator
+    bs << ANSI_ESCAPE << "1;" << fgred << "m" << R"( _____           _   _ )" << ANSI_ESCAPE << "0m\n";
+    bs << ANSI_ESCAPE << "1;" << fgred << "m" << R"(|  ___|   __ _  (_) | |)" << ANSI_ESCAPE << "0m\n";
+    bs << ANSI_ESCAPE << "1;" << fgred << "m" << R"(| |_     / _` | | | | |)" << ANSI_ESCAPE << "0m\n";
+    bs << ANSI_ESCAPE << "1;" << fgred << "m" << R"(|  _|   | (_| | | | | |)" << ANSI_ESCAPE << "0m\n";
+    bs << ANSI_ESCAPE << "1;" << fgred << "m" << R"(|_|      \__,_| |_| |_|)" << ANSI_ESCAPE << "0m\n";
+    bs << ANSI_ESCAPE << "1;" << fgred << "m" << "- hotplace test_case prooved" << ANSI_ESCAPE << "0m\n";
+}
 
 }  // namespace hotplace

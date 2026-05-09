@@ -32,7 +32,7 @@
     * CBOR
 
 * details
-  * Revision 984
+  * Revision 985
   * Revision 979
     * [tested] sprintf (format string syntax)
   * Revision 969-971

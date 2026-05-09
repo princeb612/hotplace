@@ -26,12 +26,12 @@ http2_frame_data::~http2_frame_data() {}
 
 return_t http2_frame_data::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     function_pipeline<return_t> pipeline;
-    payload pl;
 
     pipeline  //
         .test_not_fail()
-        .test_parameter([&]() { return (nullptr != stream); })
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
+            payload pl;
             // Pad Length?
             // conditional (as signified by a "?" in the diagram) and is only present if the PADDED flag is set
             pl << new payload_member(uint8(0), constexpr_frame_pad_length, constexpr_frame_padding)  //
@@ -40,21 +40,25 @@ return_t http2_frame_data::do_read_body(const byte_t* stream, size_t size, size_
             auto dopad = (get_flags() & h2_flag_t::h2_flag_padded) ? true : false;
             pl.set_group(constexpr_frame_padding, dopad).set_reference_value(constexpr_frame_padding, constexpr_frame_pad_length);
 
-            return pl.read(stream, size, pos);
-        })
-        .walk([&]() -> void {
+            auto rc = pl.read(stream, size, pos);
+            if (false == error_traits<return_t>::is_not_fail(rc)) {
+                return rc;
+            }
+
             _padlen = pl.t_value_of<uint8>(constexpr_frame_pad_length);
             pl.get_binary(constexpr_frame_data, _data);
+
+            return success;
         });
     return pipeline.result();
 }
 
 return_t http2_frame_data::do_write_body(binary_t& body) {
     function_pipeline<return_t> pipeline;
-    payload pl;
 
     pipeline
         .run_trycatch([&]() -> return_t {
+            payload pl;
             pl << new payload_member(_padlen, constexpr_frame_pad_length, constexpr_frame_padding)  //
                << new payload_member(_data, constexpr_frame_data)                                   //
                << new payload_member(uint8(0), _padlen, constexpr_frame_padding, constexpr_frame_padding);

@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
@@ -40,45 +41,45 @@ quic_frame_reset_stream::~quic_frame_reset_stream() {}
  */
 
 return_t quic_frame_reset_stream::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        constexpr char constexpr_final_size[] = "final size";
+    function_pipeline<return_t> pipeline;
 
-        payload pl;
-        try {
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .run_trycatch([&]() -> return_t {
+            constexpr char constexpr_final_size[] = "final size";
+
+            payload pl;
             pl << new payload_member(new quic_encoded(uint64(0)), constexpr_stream_id)   //
                << new payload_member(new quic_encoded(uint64(0)), constexpr_error_code)  //
                << new payload_member(new quic_encoded(uint64(0)), constexpr_final_size);
-        } catch (...) {
-            ret = errorcode_t::out_of_memory;
-            __leave2;
-        }
 
-        pl.read(stream, size, pos);
+            auto rc = pl.read(stream, size, pos);
+            if (false == error_traits<return_t>::is_not_fail(rc)) {
+                return rc;
+            }
 
 #if defined DEBUG
-        uint64 stream_id = pl.t_value_of<uint64>(constexpr_stream_id);
-        uint64 error_code = pl.t_value_of<uint64>(constexpr_error_code);
-        uint64 final_size = pl.t_value_of<uint64>(constexpr_final_size);
+            uint64 stream_id = pl.t_value_of<uint64>(constexpr_stream_id);
+            uint64 error_code = pl.t_value_of<uint64>(constexpr_error_code);
+            uint64 final_size = pl.t_value_of<uint64>(constexpr_final_size);
 
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
-                tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                dbs.println("   > %s %I64i", constexpr_stream_id, stream_id);
-                dbs.println("   > %s %I64i %s", constexpr_error_code, error_code, tlsadvisor->nameof_quic_error(error_code).c_str());
-                dbs.println("   > %s %I64i", constexpr_final_size, final_size);
-            });
-        }
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+                    dbs.println("   > %s %I64i", constexpr_stream_id, stream_id);
+                    dbs.println("   > %s %I64i %s", constexpr_error_code, error_code, tlsadvisor->nameof_quic_error(error_code).c_str());
+                    dbs.println("   > %s %I64i", constexpr_final_size, final_size);
+                });
+            }
 #endif
-    }
-    __finally2 {}
-    return ret;
+
+            return success;
+        });
+    return pipeline.result();
 }
 
-return_t quic_frame_reset_stream::do_write_body(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    return ret;
-}
+return_t quic_frame_reset_stream::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }
 
 }  // namespace net
 }  // namespace hotplace

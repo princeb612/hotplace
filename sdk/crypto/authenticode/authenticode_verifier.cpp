@@ -9,6 +9,7 @@
  * 2023.08.27   Soo Han, Kim        get_crl - temporary disabled, under construction
  */
 
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
@@ -114,25 +115,23 @@ return_t authenticode_verifier::add_engine(authenticode_context_t* handle, authe
 }
 
 return_t authenticode_verifier::load_engines(authenticode_context_t* handle) {
-    return_t ret = errorcode_t::success;
+    function_pipeline<return_t> pipeline;
 
-    __try2 {
-        if (nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        if (AUTHENTICODE_CONTEXT_SIGNATURE != handle->signature) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
+    pipeline  //
+        .test_parameter([&]() -> bool { return (nullptr != handle); })
+        .run_trycatch([&]() -> return_t {
+            if (AUTHENTICODE_CONTEXT_SIGNATURE != handle->signature) {
+                return errorcode_t::invalid_context;
+            }
 
-        critical_section_guard guard(handle->lock);
-        handle->engines.insert(std::make_pair(authenticode_engine_id_pe, new authenticode_plugin_pe()));
-        // handle->engines.insert (std::make_pair (authenticode_engine_id_msi, new authenticode_plugin_msi ()));
-        // handle->engines.insert (std::make_pair (authenticode_engine_id_cab, new authenticode_plugin_cabinet ()));
-    }
-    __finally2 {}
-    return ret;
+            critical_section_guard guard(handle->lock);
+            handle->engines.insert(std::make_pair(authenticode_engine_id_pe, new authenticode_plugin_pe()));
+            // handle->engines.insert (std::make_pair (authenticode_engine_id_msi, new authenticode_plugin_msi ()));
+            // handle->engines.insert (std::make_pair (authenticode_engine_id_cab, new authenticode_plugin_cabinet ()));
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 return_t authenticode_verifier::free_engines(authenticode_context_t* handle) {

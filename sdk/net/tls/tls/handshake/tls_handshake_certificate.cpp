@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
@@ -81,262 +82,254 @@ return_t tls_handshake_certificate::do_postprocess(tls_direction_t dir, const by
 }
 
 return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2_trace(ret);
-        }
+    function_pipeline<return_t> pipeline;
 
-        // RFC 8446 2.  Protocol Overview
-        // Certificate:  The certificate of the endpoint and any per-certificate
-        //    extensions.  This message is omitted by the server if not
-        //    authenticating with a certificate and by the client if the server
-        //    did not send CertificateRequest (thus indicating that the client
-        //    should not authenticate with a certificate).  Note that if raw
-        //    public keys [RFC7250] or the cached information extension
-        //    [RFC7924] are in use, then this message will not contain a
-        //    certificate but rather some other value corresponding to the
-        //    server's long-term key.  [Section 4.4.2]
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
+        .run_trycatch([&]() -> return_t {
+            return_t rc = success;
+            // RFC 8446 2.  Protocol Overview
+            // Certificate:  The certificate of the endpoint and any per-certificate
+            //    extensions.  This message is omitted by the server if not
+            //    authenticating with a certificate and by the client if the server
+            //    did not send CertificateRequest (thus indicating that the client
+            //    should not authenticate with a certificate).  Note that if raw
+            //    public keys [RFC7250] or the cached information extension
+            //    [RFC7924] are in use, then this message will not contain a
+            //    certificate but rather some other value corresponding to the
+            //    server's long-term key.  [Section 4.4.2]
 
-        // RFC 4346 7.4.2. Server Certificate
-        //  opaque ASN.1Cert<1..2^24-1>;
-        //  struct {
-        //      ASN.1Cert certificate_list<0..2^24-1>;
-        //  } Certificate;
-        // RFC 4346 7.4.3. Server Key Exchange Message
-        // RFC 4346 7.4.6. Client certificate
-        // RFC 4346 7.4.7. Client Key Exchange Message
+            // RFC 4346 7.4.2. Server Certificate
+            //  opaque ASN.1Cert<1..2^24-1>;
+            //  struct {
+            //      ASN.1Cert certificate_list<0..2^24-1>;
+            //  } Certificate;
+            // RFC 4346 7.4.3. Server Key Exchange Message
+            // RFC 4346 7.4.6. Client certificate
+            // RFC 4346 7.4.7. Client Key Exchange Message
 
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        auto session = get_session();
-        auto& protection = session->get_tls_protection();
-        auto tls_version = protection.get_tls_version();
-        auto is_tls13 = tlsadvisor->is_kindof_tls13(tls_version);
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            auto session = get_session();
+            auto& protection = session->get_tls_protection();
+            auto tls_version = protection.get_tls_version();
+            auto is_tls13 = tlsadvisor->is_kindof_tls13(tls_version);
 
-        crypto_keychain keychain;
+            crypto_keychain keychain;
 #if defined DEBUG
-        uint8 request_context_len = 0;
+            uint8 request_context_len = 0;
 #endif
-        uint32 certificates_len = 0;
-        binary_t certificates;
-        {
-            payload pl;
-            try {
+            uint32 certificates_len = 0;
+            binary_t certificates;
+            {
+                payload pl;
                 pl << new payload_member(uint8(0), constexpr_request_context_len, constexpr_group_tls13)  // TLS 1.3
                    << new payload_member(binary_t(), constexpr_request_context, constexpr_group_tls13)    // TLS 1.3
                    << new payload_member(uint24_t(0), constexpr_certificates_len)                         //
                    << new payload_member(binary_t(), constexpr_certificates);                             //
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
-            }
-            pl.set_group(constexpr_group_tls13, is_tls13);
-            pl.set_reference_value(constexpr_request_context, constexpr_request_context_len);
-            pl.set_reference_value(constexpr_certificates, constexpr_certificates_len);
-            pl.set_reference_value(constexpr_certificate_extensions, constexpr_certificate_extensions_len);
 
-            pl.read(stream, size, pos);
+                pl.set_group(constexpr_group_tls13, is_tls13);
+                pl.set_reference_value(constexpr_request_context, constexpr_request_context_len);
+                pl.set_reference_value(constexpr_certificates, constexpr_certificates_len);
+                pl.set_reference_value(constexpr_certificate_extensions, constexpr_certificate_extensions_len);
 
-#if defined DEBUG
-            request_context_len = pl.t_value_of<uint8>(constexpr_request_context_len);
-#endif
-            certificates_len = pl.t_value_of<uint32>(constexpr_certificates_len);
-            pl.get_binary(constexpr_certificates, certificates);
-        }
+                rc = pl.read(stream, size, pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
-                dbs.autoindent(1);
-                dbs.println(" > %s %i", constexpr_request_context_len, request_context_len);
-                dbs.println(" > %s 0x%04x(%i)", constexpr_certificates_len, certificates_len, certificates_len);
-                dbs.autoindent(0);
-            });
-        }
+                request_context_len = pl.t_value_of<uint8>(constexpr_request_context_len);
 #endif
-
-        auto& servercert = protection.get_key();
-        keydesc desc(use_sig);
-        if (from_server == dir) {
-            desc.set_kid(KID_TLS_SERVER_CERTIFICATE_PUBLIC);
-        } else {
-            desc.set_kid(KID_TLS_CLIENT_CERTIFICATE_PUBLIC);
-        }
-
-        uint16 idx = 0;
-        size_t cpos = 0;
-        while (cpos + 3 < certificates_len) {
-            // [0] server certificate                 ex. Issuer: C=US, O=Google Trust Services, CN=WE2
-            // [1] intermediate certificate authority ex. Issuer: C=US, O=Google Trust Services LLC, CN=GTS Root R4
-            // [2] root certificate authority         ex. Issuer: C=BE, O=GlobalSign nv-sa, OU=Root CA, CN=GlobalSign Root CA
-
-            payload pl;
-            try {
-                pl << new payload_member(uint24_t(0), constexpr_certificate_len)                                        //
-                   << new payload_member(binary_t(), constexpr_certificate)                                             //
-                   << new payload_member(uint16(0), true, constexpr_certificate_extensions_len, constexpr_group_tls13)  //
-                   << new payload_member(binary_t(), constexpr_certificate_extensions, constexpr_group_tls13);          //
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                break;
-            }
-            pl.set_group(constexpr_group_tls13, is_tls13);
-            pl.set_reference_value(constexpr_certificate, constexpr_certificate_len);
-            pl.set_reference_value(constexpr_certificate_extensions, constexpr_certificate_extensions_len);
-
-            pl.read(certificates.data(), certificates.size(), cpos);
-
-            binary_t cert;
-
-#if defined DEBUG
-            uint32 certificate_len = pl.t_value_of<uint32>(constexpr_certificate_len);
-#endif
-            pl.get_binary(constexpr_certificate, cert);
-
-#if defined DEBUG
-            uint16 extensions_len = 0;
-#endif
-            binary_t cert_extensions;
-
-            if (is_tls13) {
-#if defined DEBUG
-                extensions_len = pl.t_value_of<uint16>(constexpr_certificate_extensions_len);
-#endif
-                pl.get_binary(constexpr_certificate_extensions, cert_extensions);
+                certificates_len = pl.t_value_of<uint32>(constexpr_certificates_len);
+                pl.get_binary(constexpr_certificates, certificates);
             }
 
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
                 trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
-                    dbs.println("   > %s [%i] 0x%04x(%i)", constexpr_certificate_len, idx, certificate_len, certificate_len);
-                    if (is_tls13) {
-                        dbs.println("   > %s [%i] 0x%04x(%i)", constexpr_certificate_extensions_len, idx, extensions_len, extensions_len);
-                    }
+                    dbs.autoindent(1);
+                    dbs.println(" > %s %i", constexpr_request_context_len, request_context_len);
+                    dbs.println(" > %s 0x%04x(%i)", constexpr_certificates_len, certificates_len, certificates_len);
+                    dbs.autoindent(0);
                 });
             }
 #endif
 
-            if (0 == idx) {
-                keychain.load_der(&servercert, cert.data(), cert.size(), desc);
+            auto& servercert = protection.get_key();
+            keydesc desc(use_sig);
+            if (from_server == dir) {
+                desc.set_kid(KID_TLS_SERVER_CERTIFICATE_PUBLIC);
             } else {
+                desc.set_kid(KID_TLS_CLIENT_CERTIFICATE_PUBLIC);
+            }
+
+            uint16 idx = 0;
+            size_t cpos = 0;
+            while (cpos + 3 < certificates_len) {
+                // [0] server certificate                 ex. Issuer: C=US, O=Google Trust Services, CN=WE2
+                // [1] intermediate certificate authority ex. Issuer: C=US, O=Google Trust Services LLC, CN=GTS Root R4
+                // [2] root certificate authority         ex. Issuer: C=BE, O=GlobalSign nv-sa, OU=Root CA, CN=GlobalSign Root CA
+
+                payload pl;
+                pl << new payload_member(uint24_t(0), constexpr_certificate_len)                                        //
+                   << new payload_member(binary_t(), constexpr_certificate)                                             //
+                   << new payload_member(uint16(0), true, constexpr_certificate_extensions_len, constexpr_group_tls13)  //
+                   << new payload_member(binary_t(), constexpr_certificate_extensions, constexpr_group_tls13);          //
+
+                pl.set_group(constexpr_group_tls13, is_tls13);
+                pl.set_reference_value(constexpr_certificate, constexpr_certificate_len);
+                pl.set_reference_value(constexpr_certificate_extensions, constexpr_certificate_extensions_len);
+
+                rc = pl.read(certificates.data(), certificates.size(), cpos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
+
+                binary_t cert;
+
 #if defined DEBUG
-                if (istraceable(trace_category_net, loglevel_debug)) {
-                    crypto_key temp;
-                    keychain.load_der(&temp, cert.data(), cert.size(), desc);
+                uint32 certificate_len = pl.t_value_of<uint32>(constexpr_certificate_len);
+#endif
+                pl.get_binary(constexpr_certificate, cert);
+
+#if defined DEBUG
+                uint16 extensions_len = 0;
+#endif
+                binary_t cert_extensions;
+
+                if (is_tls13) {
+#if defined DEBUG
+                    extensions_len = pl.t_value_of<uint16>(constexpr_certificate_extensions_len);
+#endif
+                    pl.get_binary(constexpr_certificate_extensions, cert_extensions);
+                }
+
+#if defined DEBUG
+                if (istraceable(trace_category_net)) {
+                    trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                        dbs.println("   > %s [%i] 0x%04x(%i)", constexpr_certificate_len, idx, certificate_len, certificate_len);
+                        if (is_tls13) {
+                            dbs.println("   > %s [%i] 0x%04x(%i)", constexpr_certificate_extensions_len, idx, extensions_len, extensions_len);
+                        }
+                    });
                 }
 #endif
-            }
 
-            if (is_tls13 && (false == cert_extensions.empty())) {
-                tls_extensions extensions;
-                extensions.read(this, dir, cert_extensions);
-            }
+                if (0 == idx) {
+                    keychain.load_der(&servercert, cert.data(), cert.size(), desc);
+                } else {
+#if defined DEBUG
+                    if (istraceable(trace_category_net, loglevel_debug)) {
+                        crypto_key temp;
+                        keychain.load_der(&temp, cert.data(), cert.size(), desc);
+                    }
+#endif
+                }
 
-            idx++;
-        }
+                if (is_tls13 && (false == cert_extensions.empty())) {
+                    tls_extensions extensions;
+                    extensions.read(this, dir, cert_extensions);
+                }
 
-        if (errorcode_t::success != ret) {
-            __leave2_trace(ret);
-        }
+                idx++;
+            }  // while
 
 #if defined DEBUG
-        if (istraceable(trace_category_net, loglevel_debug)) {
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
-                dbs.autoindent(1);
-                auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
-                    if (item->get_desc().get_kid_str() == desc.get_kid_str()) {
-                        dbs.println(R"(> kid "%s")", item->get_desc().get_kid_cstr());
-                        dump_key(item->get_pkey(), &dbs, 16, 3, dump_notrunc);
-                    }
-                };
-                servercert.for_each(dump_crypto_key, nullptr);
-                dbs.autoindent(0);
-            });
-        }
+            if (istraceable(trace_category_net, loglevel_debug)) {
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                    dbs.autoindent(1);
+                    auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
+                        if (item->get_desc().get_kid_str() == desc.get_kid_str()) {
+                            dbs.println(R"(> kid "%s")", item->get_desc().get_kid_cstr());
+                            dump_key(item->get_pkey(), &dbs, 16, 3, dump_notrunc);
+                        }
+                    };
+                    servercert.for_each(dump_crypto_key, nullptr);
+                    dbs.autoindent(0);
+                });
+            }
 #endif
-    }
-    __finally2 {}
-    return ret;
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        auto session = get_session();
+    function_pipeline<return_t> pipeline;
 
-        const char* kid = nullptr;
-        if (from_server == dir) {
-            kid = KID_TLS_SERVER_CERTIFICATE_PUBLIC;
-        } else {
-            kid = KID_TLS_CLIENT_CERTIFICATE_PUBLIC;
-        }
+    pipeline  //
+        .run_trycatch([&]() -> return_t {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            auto session = get_session();
 
-        auto x509 = tlsadvisor->get_cert(session, kid);
-        if (nullptr == x509) {
-            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_no_certificate);
-            session->reset_session_status();
-            ret = errorcode_t::error_certificate;
-            __leave2_trace(ret);
-        }
-
-        binary_t certificate;
-        crypto_keychain keychain;
-        keychain.write_der(x509, certificate);
-
-#if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
-                dbs.autoindent(1);
-                dbs.println("> %s", constexpr_certificate);
-                if (check_trace_level(loglevel_debug)) {
-                    dump_memory(certificate, &dbs, 16, 3, 0x0, dump_notrunc);
-                }
-                dbs.autoindent(0);
-            });
-        }
-#endif
-
-        {
-            auto tls_version = session->get_tls_protection().get_tls_version();
-            bool is_tls13 = tlsadvisor->is_kindof_tls13(tls_version);
-
-            binary_t extensions;
-            uint32 certificate_len = t_narrow_cast(certificate.size());
-            uint32 certificates_len = 3 /* uint24 */ + certificate_len;  // TLS 1.2
-            if (is_tls13) {
-                certificates_len += sizeof(uint16);
-                get_extensions().write(dir, extensions);
+            const char* kid = nullptr;
+            if (from_server == dir) {
+                kid = KID_TLS_SERVER_CERTIFICATE_PUBLIC;
+            } else {
+                kid = KID_TLS_CLIENT_CERTIFICATE_PUBLIC;
             }
 
-            payload pl;
-            try {
+            auto x509 = tlsadvisor->get_cert(session, kid);
+            if (nullptr == x509) {
+                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_no_certificate);
+                session->reset_session_status();
+                return errorcode_t::error_certificate;
+            }
+
+            binary_t certificate;
+            crypto_keychain keychain;
+            keychain.write_der(x509, certificate);
+
+#if defined DEBUG
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                    dbs.autoindent(1);
+                    dbs.println("> %s", constexpr_certificate);
+                    if (check_trace_level(loglevel_debug)) {
+                        dump_memory(certificate, &dbs, 16, 3, 0x0, dump_notrunc);
+                    }
+                    dbs.autoindent(0);
+                });
+            }
+#endif
+
+            {
+                auto tls_version = session->get_tls_protection().get_tls_version();
+                bool is_tls13 = tlsadvisor->is_kindof_tls13(tls_version);
+
+                binary_t extensions;
+                uint32 certificate_len = t_narrow_cast(certificate.size());
+                uint32 certificates_len = 3 /* uint24 */ + certificate_len;  // TLS 1.2
+                if (is_tls13) {
+                    certificates_len += sizeof(uint16);
+                    get_extensions().write(dir, extensions);
+                }
+
+                payload pl;
                 pl << new payload_member(uint8(0), constexpr_request_context_len, constexpr_group_tls13)                                 // TLS 1.3
                    << new payload_member(binary_t(), constexpr_request_context, constexpr_group_tls13)                                   // TLS 1.3
                    << new payload_member(uint24_t(certificates_len), constexpr_certificates_len)                                         // certificate + extensions
                    << new payload_member(uint24_t(certificate_len), constexpr_certificate_len)                                           // certificate
                    << new payload_member(certificate, constexpr_certificate)                                                             // certificate
                    << new payload_member(uint16(extensions.size()), true, constexpr_certificate_extensions_len, constexpr_group_tls13);  // extensions
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
+
+                pl.set_group(constexpr_group_tls13, is_tls13);  // tls1_ext_supported_versions 0x002b server_hello
+
+                auto rc = pl.write(bin);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
+
+                if (is_tls13) {
+                    binary_append(bin, extensions);
+                }
             }
 
-            pl.set_group(constexpr_group_tls13, is_tls13);  // tls1_ext_supported_versions 0x002b server_hello
-
-            ret = pl.write(bin);
-            if (errorcode_t::success != ret) {
-                __leave2_trace(ret);
-            }
-
-            if (is_tls13) {
-                binary_append(bin, extensions);
-            }
-        }
-    }
-    __finally2 {}
-    return ret;
+            return success;
+        });
+    return pipeline.result();
 }
 
 }  // namespace net

@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_hmac.hpp>
@@ -133,31 +134,31 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_
 }
 
 return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2_trace(ret);
-        }
+    function_pipeline<return_t> pipeline;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    auto tlsversion = protection.get_tls_version();
+    uint16 dlen = 0;
+    hash_algorithm_t hmacalg;
+    tls_secret_t typeof_secret;
+    binary_t verify_data;
+    binary_t maced;
 
-        // RFC 8446 2.  Protocol Overview
-        // Finished:  A MAC (Message Authentication Code) over the entire
-        //    handshake.  This message provides key confirmation, binds the
-        //    endpoint's identity to the exchanged keys, and in PSK mode also
-        //    authenticates the handshake.  [Section 4.4.4]
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .run_trycatch([&]() -> return_t {
+            // RFC 8446 2.  Protocol Overview
+            // Finished:  A MAC (Message Authentication Code) over the entire
+            //    handshake.  This message provides key confirmation, binds the
+            //    endpoint's identity to the exchanged keys, and in PSK mode also
+            //    authenticates the handshake.  [Section 4.4.4]
 
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        auto session = get_session();
-        auto& protection = session->get_tls_protection();
-        auto tlsversion = protection.get_tls_version();
-        uint16 dlen = 0;
-        hash_algorithm_t hmacalg;
-        {
             const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
             if (nullptr == hint_tls_alg) {
-                ret = errorcode_t::not_supported;
-                __leave2_trace(ret);
+                return errorcode_t::not_available;
             }
             if (tlsadvisor->is_kindof_tls13(tlsversion)) {
                 dlen = sizeof_digest(advisor->hintof_digest(hint_tls_alg->mac));
@@ -165,43 +166,39 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
                 dlen = 12;
             }
             hmacalg = algof_mac(hint_tls_alg);
-        }
 
-        binary_t verify_data;
-
-        {
-            payload pl;
-            try {
+            {
+                payload pl;
                 pl << new payload_member(binary_t(), constexpr_verify_data);
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
+                pl.reserve(constexpr_verify_data, dlen);
+
+                auto rc = pl.read(stream, size, pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
+
+                pl.get_binary(constexpr_verify_data, verify_data);
             }
-            pl.reserve(constexpr_verify_data, dlen);
 
-            pl.read(stream, size, pos);
-
-            pl.get_binary(constexpr_verify_data, verify_data);
-        }
-
-        {
-            tls_secret_t typeof_secret;
-            binary_t maced;
             protection.calc_finished(dir, hmacalg, dlen, typeof_secret, maced);
 
             verify_data.resize(maced.size());
+
             if (maced.empty() || (verify_data != maced)) {
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                 session->reset_session_status();
-                ret = errorcode_t::error_verify;
+                return errorcode_t::error_verify;
             }
 
+            return success;
+        })
+        .walk_always([&](return_t rc) -> return_t {
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
                 trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                     auto& secrets = protection.get_secrets();
                     dbs.autoindent(1);
-                    dbs.println("> %s " ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", constexpr_verify_data, (errorcode_t::success == ret) ? "true" : "false");
+                    dbs.println("> %s " ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", constexpr_verify_data, (errorcode_t::success == rc) ? "true" : "false");
                     if (check_trace_level(loglevel_debug)) {
                         dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
                     }
@@ -214,34 +211,29 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
                 });
             }
 #endif
-
-            if (errorcode_t::success != ret) {
-                __leave2_trace(ret);
-            }
-
-            _verify_data = std::move(verify_data);
-        }
-    }
-    __finally2 {}
-    return ret;
+            return success;
+        })
+        .walk([&]() -> void { _verify_data = std::move(verify_data); });
+    return pipeline.result();
 }
 
 return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_session();
-        auto& protection = session->get_tls_protection();
+    function_pipeline<return_t> pipeline;
 
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        auto tlsversion = protection.get_tls_version();
-        uint16 dlen = 0;
-        hash_algorithm_t hmacalg;
-        {
+    pipeline  //
+        .run_trycatch([&]() -> return_t {
+            auto session = get_session();
+            auto& protection = session->get_tls_protection();
+
+            crypto_advisor* advisor = crypto_advisor::get_instance();
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            auto tlsversion = protection.get_tls_version();
+            uint16 dlen = 0;
+            hash_algorithm_t hmacalg;
+
             const tls_cipher_suite_t* hint_tls_alg = tlsadvisor->hintof_cipher_suite(protection.get_cipher_suite());
             if (nullptr == hint_tls_alg) {
-                ret = errorcode_t::success;
-                __leave2_trace(ret);
+                return errorcode_t::not_available;
             }
             if (tlsadvisor->is_kindof_tls13(tlsversion)) {
                 dlen = sizeof_digest(advisor->hintof_digest(hint_tls_alg->mac));
@@ -249,47 +241,42 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
                 dlen = 12;
             }
             hmacalg = algof_mac(hint_tls_alg);
-        }
 
-        tls_secret_t typeof_secret;
-        binary_t verify_data;
-        protection.calc_finished(dir, hmacalg, dlen, typeof_secret, verify_data);
+            tls_secret_t typeof_secret;
+            binary_t verify_data;
+            protection.calc_finished(dir, hmacalg, dlen, typeof_secret, verify_data);
 
-        {
-            payload pl;
-            try {
+            {
+                payload pl;
                 pl << new payload_member(verify_data, constexpr_verify_data);
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
-            }
 
-            ret = pl.write(bin);
-            if (errorcode_t::success != ret) {
-                __leave2_trace(ret);
+                auto rc = pl.write(bin);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
             }
-        }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
-                auto& secrets = protection.get_secrets();
-                dbs.println("> %s", constexpr_verify_data);
-                if (check_trace_level(loglevel_debug)) {
-                    dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
-                }
-                const binary_t ht_secret = secrets.get(typeof_secret);
-                dbs.println("  > secret [0x%08x] %s (%s)", typeof_secret, base16_encode(ht_secret).c_str(), tlsadvisor->nameof_secret(typeof_secret).c_str());
-                dbs.println("  > algorithm %s size %i", advisor->nameof_md(hmacalg), dlen);
-                dbs.println("  > verify data %s", base16_encode(verify_data).c_str());
-            });
-        }
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                    auto& secrets = protection.get_secrets();
+                    dbs.println("> %s", constexpr_verify_data);
+                    if (check_trace_level(loglevel_debug)) {
+                        dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
+                    }
+                    const binary_t ht_secret = secrets.get(typeof_secret);
+                    dbs.println("  > secret [0x%08x] %s (%s)", typeof_secret, base16_encode(ht_secret).c_str(), tlsadvisor->nameof_secret(typeof_secret).c_str());
+                    dbs.println("  > algorithm %s size %i", advisor->nameof_md(hmacalg), dlen);
+                    dbs.println("  > verify data %s", base16_encode(verify_data).c_str());
+                });
+            }
 #endif
 
-        _verify_data = std::move(verify_data);
-    }
-    __finally2 {}
-    return ret;
+            _verify_data = std::move(verify_data);
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 }  // namespace net

@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/http/http2/http2_frame_alt_svc.hpp>
 #include <hotplace/sdk/net/http/http2/http2_protocol.hpp>
@@ -27,61 +28,54 @@ http2_frame_alt_svc::http2_frame_alt_svc(const http2_frame_alt_svc& other) : htt
 http2_frame_alt_svc::~http2_frame_alt_svc() {}
 
 return_t http2_frame_alt_svc::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    function_pipeline<return_t> pipeline;
 
-        payload pl;
-        try {
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .run_trycatch([&]() -> return_t {
+            payload pl;
             pl << new payload_member((uint16)0, true, constexpr_frame_origin_len)  //
                << new payload_member(binary_t(), constexpr_frame_origin)           //
                << new payload_member(binary_t(), constexpr_frame_alt_svc_field_value);
-        } catch (...) {
-            ret = errorcode_t::out_of_memory;
-            __leave2;
-        }
 
-        // size(origin) = value(origin len)
-        // size(altsvc) = _payload_size - sizeof(uint16) - value(origin len)
-        pl.set_reference_value(constexpr_frame_origin, constexpr_frame_origin_len);
+            // size(origin) = value(origin len)
+            // size(altsvc) = _payload_size - sizeof(uint16) - value(origin len)
+            pl.set_reference_value(constexpr_frame_origin, constexpr_frame_origin_len);
 
-        ret = pl.read(stream, size, pos);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
+            auto rc = pl.read(stream, size, pos);
+            if (false == error_traits<return_t>::is_not_fail(rc)) {
+                return rc;
+            }
 
-        pl.get_binary(constexpr_frame_origin, _origin);
-        pl.get_binary(constexpr_frame_alt_svc_field_value, _altsvc);
-    }
-    __finally2 {}
-    return ret;
+            pl.get_binary(constexpr_frame_origin, _origin);
+            pl.get_binary(constexpr_frame_alt_svc_field_value, _altsvc);
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 return_t http2_frame_alt_svc::do_write_body(binary_t& body) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        payload pl;
-        try {
+    function_pipeline<return_t> pipeline;
+
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return true; })
+        .run_trycatch([&]() -> return_t {
+            payload pl;
             pl << new payload_member((uint16)_origin.size(), true, constexpr_frame_origin_len)  //
                << new payload_member(_origin, constexpr_frame_origin)                           //
                << new payload_member(_altsvc, constexpr_frame_alt_svc_field_value);
-        } catch (...) {
-            ret = errorcode_t::out_of_memory;
-            __leave2;
-        }
 
-        ret = pl.write(body);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
+            auto rc = pl.write(body);
+            if (false == error_traits<return_t>::is_not_fail(rc)) {
+                return rc;
+            }
 
-        ret = set_payload_size(body.size());
-    }
-    __finally2 {}
-    return ret;
+            return set_payload_size(body.size());
+        });
+    return pipeline.result();
 }
 
 void http2_frame_alt_svc::dump(stream_t* s) {

@@ -29,12 +29,12 @@ http2_frame_headers::~http2_frame_headers() {}
 
 return_t http2_frame_headers::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     function_pipeline<return_t> pipeline;
-    payload pl;
 
     pipeline  //
         .test_not_fail()
-        .test_parameter([&]() { return (nullptr != stream); })
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
+            payload pl;
             pl << new payload_member(uint8(0), constexpr_frame_pad_length, constexpr_frame_padding)                 //
                << new payload_member(uint32(0), true, constexpr_frame_stream_dependency, constexpr_frame_priority)  //
                << new payload_member(uint8(0), constexpr_frame_weight, constexpr_frame_priority)                    //
@@ -46,9 +46,11 @@ return_t http2_frame_headers::do_read_body(const byte_t* stream, size_t size, si
                 .set_group(constexpr_frame_priority, dopriority)
                 .set_reference_value(constexpr_frame_padding, constexpr_frame_pad_length);
 
-            return pl.read(stream, size, pos);
-        })
-        .walk([&]() -> void {
+            auto rc = pl.read(stream, size, pos);
+            if (false == error_traits<return_t>::is_not_fail(rc)) {
+                return rc;
+            }
+
             if (get_flags() & h2_flag_t::h2_flag_padded) {
                 _padlen = pl.t_value_of<uint8>(constexpr_frame_pad_length);
             }
@@ -59,21 +61,22 @@ return_t http2_frame_headers::do_read_body(const byte_t* stream, size_t size, si
                 _weight = pl.t_value_of<uint8>(constexpr_frame_weight);
             }
             pl.get_binary(constexpr_frame_fragment, _fragment);
+
+            return success;
         });
     return pipeline.result();
 }
 
 return_t http2_frame_headers::do_write_body(binary_t& body) {
     function_pipeline<return_t> pipeline;
-    payload pl;
-
-    uint32 dependency = _dependency;
-    if (_exclusive) {
-        dependency |= 0x80000000;
-    }
 
     pipeline  //
         .run_trycatch([&]() -> return_t {
+            uint32 dependency = _dependency;
+            if (_exclusive) {
+                dependency |= 0x80000000;
+            }
+            payload pl;
             pl << new payload_member(_padlen, constexpr_frame_pad_length, constexpr_frame_padding)
                << new payload_member(dependency, true, constexpr_frame_stream_dependency, constexpr_frame_priority)
                << new payload_member(_weight, constexpr_frame_weight, constexpr_frame_priority)  //
@@ -83,9 +86,11 @@ return_t http2_frame_headers::do_write_body(binary_t& body) {
             auto dopriority = (get_flags() & h2_flag_t::h2_flag_priority) ? true : false;
             pl.set_group(constexpr_frame_padding, dopad).set_group(constexpr_frame_priority, dopriority);
 
-            return pl.write(body);
-        })
-        .run([&]() -> return_t {
+            auto rc = pl.write(body);
+            if (false == error_traits<return_t>::is_not_fail(rc)) {
+                return rc;
+            }
+
             uint8 flags = get_flags();
             if (_padlen) {
                 flags |= h2_flag_t::h2_flag_padded;

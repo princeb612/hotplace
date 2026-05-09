@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
@@ -241,51 +242,49 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
 }
 
 return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2_trace(ret);
-        }
+    function_pipeline<return_t> pipeline;
 
-        /* RFC 8446 4.1.2.  Client Hello
-         *  uint16 ProtocolVersion;
-         *  opaque Random[32];
-         *
-         *  uint8 CipherSuite[2];    // Cryptographic suite selector
-         *
-         *  struct {
-         *      ProtocolVersion legacy_version = 0x0303;    // TLS v1.2
-         *      Random random;
-         *      opaque legacy_session_id<0..32>;
-         *      CipherSuite cipher_suite_len<2..2^16-2>;
-         *      opaque legacy_compression_methods<1..2^8-1>;
-         *      Extension extensions<8..2^16-1>;
-         *  } ClientHello;
-         */
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .run_trycatch([&]() -> return_t {
+            /* RFC 8446 4.1.2.  Client Hello
+             *  uint16 ProtocolVersion;
+             *  opaque Random[32];
+             *
+             *  uint8 CipherSuite[2];    // Cryptographic suite selector
+             *
+             *  struct {
+             *      ProtocolVersion legacy_version = 0x0303;    // TLS v1.2
+             *      Random random;
+             *      opaque legacy_session_id<0..32>;
+             *      CipherSuite cipher_suite_len<2..2^16-2>;
+             *      opaque legacy_compression_methods<1..2^8-1>;
+             *      Extension extensions<8..2^16-1>;
+             *  } ClientHello;
+             */
 
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        auto session = get_session();
-        auto& protection = session->get_tls_protection();
-        auto& secrets = protection.get_secrets();
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            auto session = get_session();
+            auto& protection = session->get_tls_protection();
+            auto& secrets = protection.get_secrets();
 
-        uint16 legacy_version = protection.get_lagacy_version();
+            uint16 legacy_version = protection.get_lagacy_version();
 #if defined DEBUG
-        uint16 version = 0;
+            uint16 version = 0;
 #endif
-        binary_t random;
-        binary_t session_id;
-        binary_t cipher_suites;
-        binary_t compression_methods;
-        // uint8 session_id_len = 0;
-        uint16 cipher_suite_len = 0;
-        uint8 compression_method_len = 0;
-        binary_t cookie;
-        uint16 extension_len = 0;
+            binary_t random;
+            binary_t session_id;
+            binary_t cipher_suites;
+            binary_t compression_methods;
+            // uint8 session_id_len = 0;
+            uint16 cipher_suite_len = 0;
+            uint8 compression_method_len = 0;
+            binary_t cookie;
+            uint16 extension_len = 0;
 
-        {
-            payload pl;
-            try {
+            {
+                payload pl;
                 pl << new payload_member(uint16(0), true, constexpr_version)                    // TLS 1.2
                    << new payload_member(binary_t(), constexpr_random)                          // 32 bytes
                    << new payload_member(uint8(0), constexpr_session_id_len)                    //
@@ -297,20 +296,19 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
                    << new payload_member(uint8(0), constexpr_compression_method_len)            //
                    << new payload_member(binary_t(), constexpr_compression_method)              //
                    << new payload_member(uint16(0), true, constexpr_extension_len);             //
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
-            }
 
-            pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(legacy_version));
+                pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(legacy_version));
 
-            pl.reserve(constexpr_random, 32);
-            pl.set_reference_value(constexpr_session_id, constexpr_session_id_len);
-            pl.set_reference_value(constexpr_cipher_suite, constexpr_cipher_suite_len);
-            pl.set_reference_value(constexpr_compression_method, constexpr_compression_method_len);
-            pl.set_reference_value(constexpr_cookie, constexpr_cookie_len);  // dtls
+                pl.reserve(constexpr_random, 32);
+                pl.set_reference_value(constexpr_session_id, constexpr_session_id_len);
+                pl.set_reference_value(constexpr_cipher_suite, constexpr_cipher_suite_len);
+                pl.set_reference_value(constexpr_compression_method, constexpr_compression_method_len);
+                pl.set_reference_value(constexpr_cookie, constexpr_cookie_len);  // dtls
 
-            pl.read(stream, size, pos);
+                auto rc = pl.read(stream, size, pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
 
             // RFC 8446 4.1.1.  Cryptographic Negotiation
             // -  A list of cipher suites
@@ -319,150 +317,147 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
             // -  A "pre_shared_key" (Section 4.2.11) extension
 
 #if defined DEBUG
-            version = pl.t_value_of<uint16>(constexpr_version);
+                version = pl.t_value_of<uint16>(constexpr_version);
 #endif
-            pl.get_binary(constexpr_random, random);
-            // session_id_len = pl.t_value_of<uint8>(constexpr_session_id_len);
-            pl.get_binary(constexpr_session_id, session_id);
-            pl.get_binary(constexpr_cookie, cookie);
-            cipher_suite_len = pl.t_value_of<uint16>(constexpr_cipher_suite_len);
-            pl.get_binary(constexpr_cipher_suite, cipher_suites);
-            compression_method_len = pl.t_value_of<uint8>(constexpr_compression_method_len);
-            pl.get_binary(constexpr_compression_method, compression_methods);
-            extension_len = pl.t_value_of<uint16>(constexpr_extension_len);
-        }
-
-        {
-            for (size_t i = 0; i < cipher_suite_len / sizeof(uint16); i++) {
-                auto cs = t_binary_to_integer<uint16>(&cipher_suites[i << 1], sizeof(uint16));
-                _cipher_suites.push_back(cs);
+                pl.get_binary(constexpr_random, random);
+                // session_id_len = pl.t_value_of<uint8>(constexpr_session_id_len);
+                pl.get_binary(constexpr_session_id, session_id);
+                pl.get_binary(constexpr_cookie, cookie);
+                cipher_suite_len = pl.t_value_of<uint16>(constexpr_cipher_suite_len);
+                pl.get_binary(constexpr_cipher_suite, cipher_suites);
+                compression_method_len = pl.t_value_of<uint8>(constexpr_compression_method_len);
+                pl.get_binary(constexpr_compression_method, compression_methods);
+                extension_len = pl.t_value_of<uint16>(constexpr_extension_len);
             }
-            for (auto i = 0; i < compression_method_len; i++) {
-                auto compr = t_binary_to_integer<uint8>(&compression_methods[i], sizeof(uint8));
-                _compression_methods.push_back(compr);
+
+            {
+                for (size_t i = 0; i < cipher_suite_len / sizeof(uint16); i++) {
+                    auto cs = t_binary_to_integer<uint16>(&cipher_suites[i << 1], sizeof(uint16));
+                    _cipher_suites.push_back(cs);
+                }
+                for (auto i = 0; i < compression_method_len; i++) {
+                    auto compr = t_binary_to_integer<uint8>(&compression_methods[i], sizeof(uint8));
+                    _compression_methods.push_back(compr);
+                }
             }
-        }
 
-        {
-            _random = random;
-            _session_id = session_id;
-            _cookie = cookie;
-            set_extension_len(extension_len);
-        }
+            {
+                _random = random;
+                _session_id = session_id;
+                _cookie = cookie;
+                set_extension_len(extension_len);
+            }
 
-        {
-            // server_key_update
-            secrets.assign(tls_context_client_hello_random, random);
-            secrets.assign(tls_context_session_id, session_id);  // avoid routines:tls_process_server_hello:invalid session id
-        }
+            {
+                // server_key_update
+                secrets.assign(tls_context_client_hello_random, random);
+                secrets.assign(tls_context_session_id, session_id);  // avoid routines:tls_process_server_hello:invalid session id
+            }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
-                uint16 i = 0;
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                    uint16 i = 0;
 
-                dbs.autoindent(1);
-                dbs.println(" > %s 0x%04x (%s)", constexpr_version, version, tlsadvisor->nameof_tls_version(version).c_str());
-                dbs.println(" > %s", constexpr_random);
-                if (random.size()) {
-                    dbs.println("   %s", base16_encode(random).c_str());
-                }
-                dbs.println(" > %s %02x(%zi)", constexpr_session_id, session_id.size(), session_id.size());
-                if (session_id.size()) {
-                    dbs.println("   %s", base16_encode(session_id).c_str());
-                }
-                dbs.println(" > %s %s", constexpr_cookie, base16_encode(cookie).c_str());
-                dbs.println(" > %s %04x(%i ent.)", constexpr_cipher_suite_len, cipher_suite_len, cipher_suite_len >> 1);
-                i = 0;
-                for (auto cs : _cipher_suites) {
-                    dbs.println("   [%i] 0x%04x %s", i++, cs, tlsadvisor->nameof_tls_cipher_suite(cs).c_str());
-                }
-                dbs.println(" > %s %i", constexpr_compression_method_len, compression_method_len);
-                i = 0;
-                for (auto compr : _compression_methods) {
-                    dbs.println("   [%i] 0x%02x %s", i++, compr, tlsadvisor->nameof_compression_method(compr).c_str());
-                }
-                dbs.println(" > %s 0x%04x(%i)", constexpr_extension_len, extension_len, extension_len);
-                dbs.autoindent(0);
-            });
-        }
+                    dbs.autoindent(1);
+                    dbs.println(" > %s 0x%04x (%s)", constexpr_version, version, tlsadvisor->nameof_tls_version(version).c_str());
+                    dbs.println(" > %s", constexpr_random);
+                    if (random.size()) {
+                        dbs.println("   %s", base16_encode(random).c_str());
+                    }
+                    dbs.println(" > %s %02x(%zi)", constexpr_session_id, session_id.size(), session_id.size());
+                    if (session_id.size()) {
+                        dbs.println("   %s", base16_encode(session_id).c_str());
+                    }
+                    dbs.println(" > %s %s", constexpr_cookie, base16_encode(cookie).c_str());
+                    dbs.println(" > %s %04x(%i ent.)", constexpr_cipher_suite_len, cipher_suite_len, cipher_suite_len >> 1);
+                    i = 0;
+                    for (auto cs : _cipher_suites) {
+                        dbs.println("   [%i] 0x%04x %s", i++, cs, tlsadvisor->nameof_tls_cipher_suite(cs).c_str());
+                    }
+                    dbs.println(" > %s %i", constexpr_compression_method_len, compression_method_len);
+                    i = 0;
+                    for (auto compr : _compression_methods) {
+                        dbs.println("   [%i] 0x%02x %s", i++, compr, tlsadvisor->nameof_compression_method(compr).c_str());
+                    }
+                    dbs.println(" > %s 0x%04x(%i)", constexpr_extension_len, extension_len, extension_len);
+                    dbs.autoindent(0);
+                });
+            }
 #endif
 
-        if (0 == extension_len) {
-            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
-            session->reset_session_status();
-            ret = errorcode_t::error_handshake;
-            __leave2_trace(ret);
-        }
-
-        ret = get_extensions().read(this, dir, stream, pos + extension_len, pos);
-        if (errorcode_t::success != ret) {
-            __leave2_trace(ret);
-        }
-
-        if (tls_flow_renegotiation == protection.get_flow()) {
-            // client renegotiation
-            auto ext_renegotiationinfo = get_extensions().get(tls_ext_renegotiation_info);
-            if (nullptr == ext_renegotiationinfo) {
+            if (0 == extension_len) {
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
                 session->reset_session_status();
-                ret = errorcode_t::error_handshake;
-                __leave2_trace(ret);
+                return errorcode_t::error_handshake;
             }
-        }
-    }
-    __finally2 {}
-    return ret;
+
+            auto rc = get_extensions().read(this, dir, stream, pos + extension_len, pos);
+            if (errorcode_t::success != rc) {
+                return rc;
+            }
+
+            if (tls_flow_renegotiation == protection.get_flow()) {
+                // client renegotiation
+                auto ext_renegotiationinfo = get_extensions().get(tls_ext_renegotiation_info);
+                if (nullptr == ext_renegotiationinfo) {
+                    session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
+                    session->reset_session_status();
+                    return errorcode_t::error_handshake;
+                }
+            }
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        auto session = get_session();
-        auto& protection = session->get_tls_protection();
-        auto& secrets = protection.get_secrets();
+    function_pipeline<return_t> pipeline;
 
-        binary_t extensions;
-        ret = get_extensions().write(dir, extensions);
-        if (errorcode_t::success != ret) {
-            __leave2_trace(ret);
-        }
+    pipeline  //
+        .run_trycatch([&]() -> return_t {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            auto session = get_session();
+            auto& protection = session->get_tls_protection();
+            auto& secrets = protection.get_secrets();
 
-        auto legacy_version = protection.get_lagacy_version();
-        binary_t cipher_suites;
-        for (uint16 cs : _cipher_suites) {
-            binary_append(cipher_suites, cs, hton16);
-        }
-
-        binary_t compression_methods;
-        compression_methods.resize(1);
-
-        auto session_status = session->get_session_status();
-        if (session_status_hello_verify_request & session_status) {
-            _random = secrets.get(tls_context_client_hello_random);
-        } else {
-            openssl_prng prng;
-            if (32 != _random.size()) {
-                // gmt_unix_time(4 bytes) + random(28 bytes)
-                binary_t random;
-                time_t gmt_unix_time = time(nullptr);
-                uint32 gmt = (uint32)gmt_unix_time;
-                binary_append(random, gmt, hton32);
-                binary_t temp;
-                prng.random(temp, 28);
-                binary_append(random, temp);
-
-                _random = std::move(random);
+            binary_t extensions;
+            auto rc = get_extensions().write(dir, extensions);
+            if (false == error_traits<return_t>::is_not_fail(rc)) {
+                return rc;
             }
-            // if (_session_id.empty()) {
-            //     prng.random(_session_id, 32);
-            // }
-        }
 
-        {
-            payload pl;
-            try {
+            auto legacy_version = protection.get_lagacy_version();
+            binary_t cipher_suites;
+            for (uint16 cs : _cipher_suites) {
+                binary_append(cipher_suites, cs, hton16);
+            }
+
+            binary_t compression_methods;
+            compression_methods.resize(1);
+
+            auto session_status = session->get_session_status();
+            if (session_status_hello_verify_request & session_status) {
+                _random = secrets.get(tls_context_client_hello_random);
+            } else {
+                openssl_prng prng;
+                if (32 != _random.size()) {
+                    // gmt_unix_time(4 bytes) + random(28 bytes)
+                    binary_t random;
+                    time_t gmt_unix_time = time(nullptr);
+                    uint32 gmt = (uint32)gmt_unix_time;
+                    binary_append(random, gmt, hton32);
+                    binary_t temp;
+                    prng.random(temp, 28);
+                    binary_append(random, temp);
+
+                    _random = std::move(random);
+                }
+            }
+
+            {
+                payload pl;
                 pl << new payload_member(uint16(legacy_version), true, constexpr_version)                      //
                    << new payload_member(_random, constexpr_random)                                            //
                    << new payload_member(uint8(_session_id.size()), constexpr_session_id_len)                  //
@@ -474,28 +469,22 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
                    << new payload_member(uint8(compression_methods.size()), constexpr_compression_method_len)  //
                    << new payload_member(compression_methods, constexpr_compression_method)                    //
                    << new payload_member(uint16(extensions.size()), true, constexpr_extension_len);            //
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
+
+                pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(legacy_version));
+
+                auto rc = pl.write(bin);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
             }
 
-            pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(legacy_version));
-
-            ret = pl.write(bin);
-            if (errorcode_t::success != ret) {
-                __leave2_trace(ret);
-            }
-        }
-
-        {
             // finished
             secrets.assign(tls_context_client_hello_random, _random);
-        }
 
-        binary_append(bin, extensions);
-    }
-    __finally2 {}
-    return ret;
+            binary_append(bin, extensions);
+            return success;
+        });
+    return pipeline.result();
 }
 
 void tls_handshake_client_hello::set_random(const binary_t& value) { _random = value; }

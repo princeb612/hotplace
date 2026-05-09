@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_builder.hpp>
@@ -20,47 +21,47 @@ namespace net {
 tls_extensions::tls_extensions() {}
 
 return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == handshake || nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2_trace(ret);
-        }
+    function_pipeline<return_t> pipeline;
 
-        // extension
-        //  uint16 type
-        //  uint16 len
-        //  ...
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != handshake) && (nullptr != stream) && (pos < size); })
+        .run([&]() -> return_t {
+            // extension
+            //  uint16 type
+            //  uint16 len
+            //  ...
 
-        tls_extension_builder builder;
-        while (pos < size) {
-            if (pos + 4 > size) {
-                ret = errorcode_t::no_more;
-                break;
-            }
+            tls_extension_builder builder;
+            while (pos < size) {
+                if (pos + 4 > size) {
+                    return errorcode_t::no_more;
+                }
 
-            auto extension_type = ntoh16(*(uint16*)(stream + pos));
-            auto extension = builder.set(handshake).set(dir).set(extension_type).build();
-            if (extension) {
-                ret = extension->read(dir, stream, size, pos);
-                if (errorcode_t::success == ret) {
-                    add(extension);
-                } else {
+                auto extension_type = ntoh16(*(uint16*)(stream + pos));
+                auto extension = builder.set(handshake).set(dir).set(extension_type).build();
+                if (extension) {
+                    auto rc = extension->read(dir, stream, size, pos);
+                    if (errorcode_t::success == rc) {
+                        add(extension);
+                    } else {
 #if defined DEBUG
-                    if (istraceable(trace_category_net)) {
-                        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                        trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                            dbs.println(ANSI_ESCAPE "1;31m! error while reading extension %s" ANSI_ESCAPE "0m", tlsadvisor->nameof_tls_extension(extension_type).c_str());
-                        });
-                    }
+                        if (istraceable(trace_category_net)) {
+                            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+                            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                                dbs.println(ANSI_ESCAPE "1;31m! error while reading extension %s" ANSI_ESCAPE "0m",
+                                            tlsadvisor->nameof_tls_extension(extension_type).c_str());
+                            });
+                        }
 #endif
-                    extension->release();
+                        extension->release();
+                    }
                 }
             }
-        }
-    }
-    __finally2 {}
-    return ret;
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, const binary_t& bin) {

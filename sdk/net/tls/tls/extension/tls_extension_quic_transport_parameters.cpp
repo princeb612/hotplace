@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
@@ -103,93 +104,88 @@ tls_extension_quic_transport_parameters& tls_extension_quic_transport_parameters
 }
 
 return_t tls_extension_quic_transport_parameters::read_quic_params(const byte_t* stream, size_t size, size_t& pos, std::list<std::pair<uint64, variant>>& params) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2_trace(ret);
-        }
+    function_pipeline<return_t> pipeline;
 
-        while (pos < size) {
-            payload pl;
-            try {
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .run_trycatch([&]() -> return_t {
+            while (pos < size) {
+                payload pl;
                 pl << new payload_member(new quic_encoded(uint64(0)), constexpr_param_id)  //
                    << new payload_member(new quic_encoded(binary_t()), constexpr_param);   //
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                break;
+
+                auto rc = pl.read(stream, size, pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
+
+                uint64 param_id = pl.t_value_of<uint64>(constexpr_param_id);
+                binary_t param;
+                pl.get_binary(constexpr_param, param);
+
+                switch (param_id) {
+                    case quic_param_original_destination_connection_id:
+                    case quic_param_stateless_reset_token:
+                    case quic_param_disable_active_migration:
+                    case quic_param_initial_source_connection_id:
+                    case quic_param_retry_source_connection_id:
+                    case 17:                   // version_information
+                    case 18258:                // google_version
+                    case 2792906686339107538:  // undocumented
+                    {
+                        variant vt(param);
+                        params.push_back({param_id, std::move(vt)});
+                    } break;
+                    default: {
+                        size_t epos = 0;
+                        uint64 value = 0;
+                        quic_read_vle_int(param.data(), param.size(), epos, value);
+
+                        variant vt(value);
+                        params.push_back({param_id, std::move(vt)});
+                    } break;
+                }
             }
-
-            pl.read(stream, size, pos);
-
-            uint64 param_id = pl.t_value_of<uint64>(constexpr_param_id);
-            binary_t param;
-            pl.get_binary(constexpr_param, param);
-
-            switch (param_id) {
-                case quic_param_original_destination_connection_id:
-                case quic_param_stateless_reset_token:
-                case quic_param_disable_active_migration:
-                case quic_param_initial_source_connection_id:
-                case quic_param_retry_source_connection_id:
-                case 17:                   // version_information
-                case 18258:                // google_version
-                case 2792906686339107538:  // undocumented
-                {
-                    variant vt(param);
-                    params.push_back({param_id, std::move(vt)});
-                } break;
-                default: {
-                    size_t epos = 0;
-                    uint64 value = 0;
-                    quic_read_vle_int(param.data(), param.size(), epos, value);
-
-                    variant vt(value);
-                    params.push_back({param_id, std::move(vt)});
-                } break;
-            }
-        }
-
-        if (errorcode_t::success != ret) {
-            __leave2_trace(ret);
-        }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                for (auto item : params) {
-                    auto param_id = item.first;
-                    const auto& v = item.second.content();
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+                    for (auto item : params) {
+                        auto param_id = item.first;
+                        const auto& v = item.second.content();
 
-                    dbs.printf("    > %I64i (%s) ", param_id, tlsadvisor->nameof_quic_param(param_id).c_str());
-                    switch (v.type) {
-                        case TYPE_NULL: {
-                        } break;
-                        case TYPE_UINT64: {
-                            dbs.printf("0x%I64x (%I64i)", v.data.ui64, v.data.ui64);
-                        } break;
-                        case TYPE_BINARY: {
-                            vtprintf(&dbs, item.second, vtprintf_style_base16);
-                        } break;
-                        default:
-                            break;
+                        dbs.printf("    > %I64i (%s) ", param_id, tlsadvisor->nameof_quic_param(param_id).c_str());
+                        switch (v.type) {
+                            case TYPE_NULL: {
+                            } break;
+                            case TYPE_UINT64: {
+                                dbs.printf("0x%I64x (%I64i)", v.data.ui64, v.data.ui64);
+                            } break;
+                            case TYPE_BINARY: {
+                                vtprintf(&dbs, item.second, vtprintf_style_base16);
+                            } break;
+                            default:
+                                break;
+                        }
+                        dbs.println("");
                     }
-                    dbs.println("");
-                }
-            });
-        }
+                });
+            }
 #endif
-    }
-    __finally2 {}
-    return ret;
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 return_t tls_extension_quic_transport_parameters::write_quic_param(uint64 id, const variant& value, binary_t& params) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        payload pl;
-        try {
+    function_pipeline<return_t> pipeline;
+
+    pipeline  //
+        .run_trycatch([&]() -> return_t {
+            payload pl;
             switch (value.content().type) {
                 case TYPE_NULL: {
                     pl << new payload_member(new quic_encoded(id), constexpr_param_id)  //
@@ -208,15 +204,10 @@ return_t tls_extension_quic_transport_parameters::write_quic_param(uint64 id, co
                 default:
                     break;
             }
-        } catch (...) {
-            ret = errorcode_t::out_of_memory;
-            __leave2_trace(ret);
-        }
 
-        ret = pl.write(params);
-    }
-    __finally2 {}
-    return ret;
+            return pl.write(params);
+        });
+    return pipeline.result();
 }
 
 }  // namespace net

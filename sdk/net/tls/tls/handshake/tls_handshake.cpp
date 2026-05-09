@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
@@ -248,31 +249,30 @@ return_t tls_handshake::do_preprocess(tls_direction_t dir) { return errorcode_t:
 return_t tls_handshake::do_postprocess(tls_direction_t dir, const byte_t* stream, size_t size) { return errorcode_t::success; }
 
 return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2_trace(ret);
-        }
+    function_pipeline<return_t> pipeline;
 
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        size_t hspos = pos;
-        auto session = get_session();
-        auto& protection = session->get_tls_protection();
-        auto& secrets = protection.get_secrets();
-        auto type = session->get_type();
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
+        .run_trycatch([&]() -> return_t {
+            return_t rc = success;
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            size_t hspos = pos;
+            auto session = get_session();
+            auto& protection = session->get_tls_protection();
+            auto& secrets = protection.get_secrets();
+            auto type = session->get_type();
 
 #if defined DEBUG
-        tls_hs_type_t hstype;
+            tls_hs_type_t hstype;
 #endif
-        uint32 length = 0;
-        bool cond_dtls = false;
-        uint16 dtls_seq = 0;
-        uint32 fragment_offset = 0;
-        uint32 fragment_len = 0;
-        size_t size_header_body = 0;
+            uint32 length = 0;
+            bool cond_dtls = false;
+            uint16 dtls_seq = 0;
+            uint32 fragment_offset = 0;
+            uint32 fragment_len = 0;
+            size_t size_header_body = 0;
 
-        {
             uint16 legacy_version = protection.get_lagacy_version();
             size_t sizeof_dtls_recons = 0;
             if (tlsadvisor->is_kindof_dtls(legacy_version)) {
@@ -287,27 +287,24 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
             }
 
             if ((size < pos) || (size - pos < (sizeof(tls_handshake_t) + sizeof_dtls_recons))) {
-                ret = errorcode_t::no_more;
-                __leave2_trace(ret);
+                return errorcode_t::no_more;
             }
 
             {
                 payload pl;
-                try {
-                    pl << new payload_member(uint8(0), constexpr_message_type)
-                       << new payload_member(uint24_t(0), constexpr_len)
-                       // DTLS handshake reconstruction data
-                       << new payload_member(uint16(0), true, constexpr_handshake_message_seq, constexpr_group_dtls)  // dtls
-                       << new payload_member(uint24_t(0), constexpr_fragment_offset, constexpr_group_dtls)            // dtls
-                       << new payload_member(uint24_t(0), constexpr_fragment_len, constexpr_group_dtls);              // dtls
-                } catch (...) {
-                    ret = errorcode_t::out_of_memory;
-                    __leave2_trace(ret);
-                }
+                pl << new payload_member(uint8(0), constexpr_message_type)
+                   << new payload_member(uint24_t(0), constexpr_len)
+                   // DTLS handshake reconstruction data
+                   << new payload_member(uint16(0), true, constexpr_handshake_message_seq, constexpr_group_dtls)  // dtls
+                   << new payload_member(uint24_t(0), constexpr_fragment_offset, constexpr_group_dtls)            // dtls
+                   << new payload_member(uint24_t(0), constexpr_fragment_len, constexpr_group_dtls);              // dtls
 
                 pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(legacy_version));
 
-                pl.read(stream, size, pos);
+                auto rc = pl.read(stream, size, pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
 
 #if defined DEBUG
                 hstype = (tls_hs_type_t)pl.t_value_of<uint8>(constexpr_message_type);
@@ -320,15 +317,12 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
                     fragment_offset = pl.t_value_of<uint32>(constexpr_fragment_offset);
                     fragment_len = pl.t_value_of<uint32>(constexpr_fragment_len);
                     if (fragment_offset + fragment_len > length) {
-                        ret = errorcode_t::bad_format;
-                        __leave2_trace(ret);
+                        return errorcode_t::bad_format;
                     }
                 }
             }
             size_header_body = sizeof(tls_handshake_t) + length + sizeof_dtls_recons;  // see sizeof_dtls_recons
-        }
 
-        {
             _range.begin = hspos;
             _range.end = pos;
             _bodysize = length;
@@ -346,84 +340,84 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
                 _fragment_len = fragment_len;
             }
             _size = size_header_body;
-        }
 
-        if ((session_type_tls == type) || (session_type_dtls == type)) {
-            if (cond_dtls) {
-                if (fragment_len < length) {
-                    if (0 == fragment_offset) {
-                        secrets.erase(tls_context_fragment);
+            if ((session_type_tls == type) || (session_type_dtls == type)) {
+                if (cond_dtls) {
+                    if (fragment_len < length) {
+                        if (0 == fragment_offset) {
+                            secrets.erase(tls_context_fragment);
+                        }
+
+                        secrets.append(tls_context_fragment, stream + pos, fragment_len);
+
+#if defined DEBUG
+                        if (istraceable(trace_category_net, loglevel_debug)) {
+                            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                                dbs.printf(ANSI_ESCAPE "1;33m");
+                                dbs.println(" > fragment");
+                                dump_memory(stream + pos, fragment_len, &dbs, 16, 3, 0, dump_notrunc);
+                                dbs.printf(ANSI_ESCAPE "0m");
+                            });
+                        }
+#endif
+
+                        if (length <= secrets.get(tls_context_fragment).size()) {
+                            pos += _fragment_len;
+                            rc = errorcode_t::reassemble;
+                        } else {
+                            pos += fragment_len;
+                            rc = errorcode_t::fragmented;
+                        }
                     }
+                }
+            } else if ((session_type_quic == type) || (session_type_quic2 == type)) {
+                // header     body     end-of-stream
+                // \- hspos   \-pos    \-size
+                // case not fragmented
+                // case fragmented
 
-                    secrets.append(tls_context_fragment, stream + pos, fragment_len);
-
+                if (hspos + length > size) {
+                    rc = errorcode_t::fragmented;
+                    secrets.append(tls_context_fragment, stream + hspos, size - hspos);
 #if defined DEBUG
                     if (istraceable(trace_category_net, loglevel_debug)) {
                         trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                             dbs.printf(ANSI_ESCAPE "1;33m");
                             dbs.println(" > fragment");
-                            dump_memory(stream + pos, fragment_len, &dbs, 16, 3, 0, dump_notrunc);
+                            dump_memory(stream + hspos, size - hspos, &dbs, 16, 3, 0, dump_notrunc);
                             dbs.printf(ANSI_ESCAPE "0m");
                         });
                     }
 #endif
+                }
+            }
 
-                    if (length <= secrets.get(tls_context_fragment).size()) {
-                        pos += _fragment_len;
-                        ret = errorcode_t::reassemble;
-                    } else {
-                        pos += fragment_len;
-                        ret = errorcode_t::fragmented;
+#if defined DEBUG
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                    dbs.autoindent(1);
+                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+                    dbs.println("> handshake type 0x%02x(%i) (%s)", hstype, hstype, tlsadvisor->nameof_tls_handshake(hstype).c_str());
+                    dbs.println(" > length 0x%06x(%i)", length, length);
+                    if (cond_dtls) {
+                        dbs.println(" > %s 0x%04x", constexpr_handshake_message_seq, dtls_seq);
+                        dbs.println(" > %s 0x%06x(%i)", constexpr_fragment_offset, fragment_offset, fragment_offset);
+                        dbs.println(" > %s 0x%06x(%i)", constexpr_fragment_len, fragment_len, fragment_len);
                     }
-                }
+                    dbs.autoindent(0);
+                });
             }
-        } else if ((session_type_quic == type) || (session_type_quic2 == type)) {
-            // header     body     end-of-stream
-            // \- hspos   \-pos    \-size
-            // case not fragmented
-            // case fragmented
-
-            if (hspos + length > size) {
-                ret = errorcode_t::fragmented;
-                secrets.append(tls_context_fragment, stream + hspos, size - hspos);
-#if defined DEBUG
-                if (istraceable(trace_category_net, loglevel_debug)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
-                        dbs.printf(ANSI_ESCAPE "1;33m");
-                        dbs.println(" > fragment");
-                        dump_memory(stream + hspos, size - hspos, &dbs, 16, 3, 0, dump_notrunc);
-                        dbs.printf(ANSI_ESCAPE "0m");
-                    });
-                }
 #endif
-            }
-        }
 
-#if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
-                dbs.autoindent(1);
-                tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                dbs.println("> handshake type 0x%02x(%i) (%s)", hstype, hstype, tlsadvisor->nameof_tls_handshake(hstype).c_str());
-                dbs.println(" > length 0x%06x(%i)", length, length);
-                if (cond_dtls) {
-                    dbs.println(" > %s 0x%04x", constexpr_handshake_message_seq, dtls_seq);
-                    dbs.println(" > %s 0x%06x(%i)", constexpr_fragment_offset, fragment_offset, fragment_offset);
-                    dbs.println(" > %s 0x%06x(%i)", constexpr_fragment_len, fragment_len, fragment_len);
-                }
-                dbs.autoindent(0);
-            });
-        }
-#endif
-    }
-    __finally2 {}
-    return ret;
+            return rc;
+        });
+    return pipeline.result();
 }
 
 return_t tls_handshake::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) { return errorcode_t::success; }
 
 return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body) {
-    return_t ret = errorcode_t::success;
+    function_pipeline<return_t> pipeline;
 
     // RFC 8446 4.1.2.  Client Hello
     // legacy_version
@@ -431,79 +425,75 @@ return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, cons
     //   and the legacy_version field MUST be set to 0x0303, which is the version number for TLS 1.2.
     //   TLS 1.3 ClientHellos are identified as having a legacy_version of 0x0303 and a supported_versions extension
     //   present with 0x0304 as the highest version indicated therein.
+    pipeline  //
+        .run_trycatch([&]() -> return_t {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            auto session = get_session();
+            auto& protection = session->get_tls_protection();
+            auto legacy_version = protection.get_lagacy_version();
+            auto& kv = session->get_session_info(dir).get_keyvalue();
 
-    __try2 {
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        auto session = get_session();
-        auto& protection = session->get_tls_protection();
-        auto legacy_version = protection.get_lagacy_version();
-        auto& kv = session->get_session_info(dir).get_keyvalue();
+            _fragment_len = t_narrow_cast(body.size());
+            uint32 length = _reassembled_size ? _reassembled_size : t_narrow_cast(body.size());
+            if (dont_control_dtls_handshake_sequence & get_flags()) {
+                // do nothing
+            } else {
+                _dtls_seq = t_narrow_cast(kv.get(session_dtls_message_seq));
+            }
 
-        _fragment_len = t_narrow_cast(body.size());
-        uint32 length = _reassembled_size ? _reassembled_size : t_narrow_cast(body.size());
-        if (dont_control_dtls_handshake_sequence & get_flags()) {
-        } else {
-            _dtls_seq = t_narrow_cast(kv.get(session_dtls_message_seq));
-        }
-
-        payload pl;
-        try {
+            payload pl;
             pl << new payload_member(uint8(get_type()), constexpr_message_type)
                << new payload_member(uint24_t(length), constexpr_len)
                // DTLS handshake reconstruction data
                << new payload_member(uint16(_dtls_seq), true, constexpr_handshake_message_seq, constexpr_group_dtls)  // dtls
                << new payload_member(uint24_t(_fragment_offset), constexpr_fragment_offset, constexpr_group_dtls)     // dtls
                << new payload_member(uint24_t(_fragment_len), constexpr_fragment_len, constexpr_group_dtls);          // dtls
-        } catch (...) {
-            ret = errorcode_t::out_of_memory;
-            __leave2_trace(ret);
-        }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
-                dbs.autoindent(1);
-                tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                auto hstype = get_type();
-                dbs.println("# handshake");
-                dbs.println("> handshake type 0x%02x(%i) (%s)", hstype, hstype, tlsadvisor->nameof_tls_handshake(hstype).c_str());
-                dbs.println(" > length 0x%06x(%i)", length, length);
-                if (session_type_dtls == session->get_type()) {
-                    dbs.println(" > %s 0x%04x", constexpr_handshake_message_seq, _dtls_seq);
-                    dbs.println(" > %s 0x%06x(%i)", constexpr_fragment_offset, _fragment_offset, _fragment_offset);
-                    dbs.println(" > %s 0x%06x(%i)", constexpr_fragment_len, _fragment_len, _fragment_len);
-                }
-                dbs.autoindent(0);
-            });
-        }
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                    dbs.autoindent(1);
+                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+                    auto hstype = get_type();
+                    dbs.println("# handshake");
+                    dbs.println("> handshake type 0x%02x(%i) (%s)", hstype, hstype, tlsadvisor->nameof_tls_handshake(hstype).c_str());
+                    dbs.println(" > length 0x%06x(%i)", length, length);
+                    if (session_type_dtls == session->get_type()) {
+                        dbs.println(" > %s 0x%04x", constexpr_handshake_message_seq, _dtls_seq);
+                        dbs.println(" > %s 0x%06x(%i)", constexpr_fragment_offset, _fragment_offset, _fragment_offset);
+                        dbs.println(" > %s 0x%06x(%i)", constexpr_fragment_len, _fragment_len, _fragment_len);
+                    }
+                    dbs.autoindent(0);
+                });
+            }
 #endif
 
-        pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(legacy_version));
-        {
+            pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(legacy_version));
+
             _range.begin = bin.size();
             _bodysize = t_narrow_cast(body.size());
-        }
 
-        // handshakes 1..*
-        size_t bin_oldsize = bin.size();
-        ret = pl.write(bin);
-        if (errorcode_t::success != ret) {
-            __leave2_trace(ret);
-        }
+            // handshakes 1..*
+            size_t bin_oldsize = bin.size();
+            auto rc = pl.write(bin);
+            if (false == error_traits<return_t>::is_not_fail(rc)) {
+                return rc;
+            }
 
-        {
             _range.end = bin.size();
             _size = bin.size() - bin_oldsize + body.size();
-        }
-        binary_append(bin, body);
 
-        if (dont_control_dtls_handshake_sequence & get_flags()) {
-        } else {
-            _dtls_seq = t_narrow_cast(kv.inc(session_dtls_message_seq));
-        }
-    }
-    __finally2 {}
-    return ret;
+            binary_append(bin, body);
+
+            if (dont_control_dtls_handshake_sequence & get_flags()) {
+            } else {
+                _dtls_seq = t_narrow_cast(kv.inc(session_dtls_message_seq));
+            }
+
+            return success;
+        })
+        .walk_failed([&]() -> void {});
+    return pipeline.result();
 }
 
 return_t tls_handshake::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }

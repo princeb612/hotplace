@@ -110,10 +110,10 @@ class function_pipeline {
             },
             false, expect_failure);
     }
-    function_pipeline& walk_always(std::function<void(void)> func) {
+    function_pipeline& walk_always(std::function<void(T)> func) {
         return runner(
             [&]() {
-                func();
+                func(_lastcode);
                 return _lastcode;
             },
             false, expect_dontcare);

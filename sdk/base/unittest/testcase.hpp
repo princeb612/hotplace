@@ -139,6 +139,10 @@ class test_case {
 
     void attach(logger* log);
 
+    // https://doodlenerd.com/web-tool/figlet-generator
+    void print_pass(basic_stream& bs);
+    void print_fail(basic_stream& bs);
+
    private:
     typedef struct _unittest_item_t {
         return_t _result;

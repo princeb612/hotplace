@@ -265,7 +265,7 @@ enum errorcode_t : uint32 {
     /* 0xef010043 4009820227 */ not_specified,
     /* 0xef010044 4009820228 */ error_negotiate,
     /* 0xef010045 4009820229 */ illegal_parameter,
-    /* 0xef010046 4009820230 */ block_segmented,
+    /* 0xef010046 4009820230 */ reserved4,
     /* 0xef010047 4009820231 */ violation,
     /* 0xef010048 4009820232 */ ambiguous,
     /* 0xef010049 4009820233 */ miscast_unsigned,
@@ -305,6 +305,7 @@ enum errorcode_t : uint32 {
     /* 0xff01000c 4278255628 */ no_data,
     /* 0xff01000d 4278255629 */ fragmented,
     /* 0xff01000e 4278255630 */ not_implemented,
+    /* 0xff01000f 4278255631 */ block_segmented,
 };
 
 /*

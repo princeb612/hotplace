@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_hello_verify_request.hpp>
@@ -68,59 +69,58 @@ return_t tls_handshake_hello_verify_request::do_postprocess(tls_direction_t dir,
 }
 
 return_t tls_handshake_hello_verify_request::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        /**
-         * RFC 8446 4.2.2.  Cookie
-         * struct {
-         *     opaque cookie<1..2^16-1>;
-         * } Cookie;
-         */
+    function_pipeline<return_t> pipeline;
 
-        payload pl;
-        try {
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .run_trycatch([&]() -> return_t {
+            /**
+             * RFC 8446 4.2.2.  Cookie
+             * struct {
+             *     opaque cookie<1..2^16-1>;
+             * } Cookie;
+             */
+
+            payload pl;
             pl << new payload_member(uint16(0), true, constexpr_version)  //
                << new payload_member(uint8(0), constexpr_cookie_len)      //
                << new payload_member(binary_t(), constexpr_cookie);
-        } catch (...) {
-            ret = errorcode_t::out_of_memory;
-            __leave2_trace(ret);
-        }
-        pl.set_reference_value(constexpr_cookie, constexpr_cookie_len);
+            pl.set_reference_value(constexpr_cookie, constexpr_cookie_len);
 
-        pl.read(stream, size, pos);
+            auto rc = pl.read(stream, size, pos);
+            if (false == error_traits<return_t>::is_not_fail(rc)) {
+                return rc;
+            }
 
-        pl.get_binary(constexpr_cookie, _cookie);
+            pl.get_binary(constexpr_cookie, _cookie);
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_handshake,
-                              [&](basic_stream& dbs) -> void { dbs.println("  > cookie %s", base16_encode(_cookie).c_str()); });
-        }
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_handshake,
+                                  [&](basic_stream& dbs) -> void { dbs.println("  > cookie %s", base16_encode(_cookie).c_str()); });
+            }
 #endif
-    }
-    __finally2 {}
-    return ret;
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 return_t tls_handshake_hello_verify_request::do_write_body(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        // auto version = get_session()->get_tls_protection().get_lagacy_version();
-        payload pl;
-        try {
+    function_pipeline<return_t> pipeline;
+
+    pipeline  //
+        .run_trycatch([&]() -> return_t {
+            // auto version = get_session()->get_tls_protection().get_lagacy_version();
+            payload pl;
             pl << new payload_member(uint16(0), true, constexpr_version)           //
                << new payload_member(uint8(_cookie.size()), constexpr_cookie_len)  //
                << new payload_member(_cookie, constexpr_cookie);
-        } catch (...) {
-            ret = errorcode_t::out_of_memory;
-            __leave2_trace(ret);
-        }
 
-        ret = pl.write(bin);
-    }
-    __finally2 {}
-    return ret;
+            return pl.write(bin);
+        });
+    return pipeline.result();
 }
 
 void tls_handshake_hello_verify_request::set_cookie(const binary_t& cookie) { _cookie = cookie; }

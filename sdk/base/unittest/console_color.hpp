@@ -43,6 +43,22 @@ enum console_color_t {
     magenta = (CONSOLE_COLOR_R + CONSOLE_COLOR_B),                  // 5
     cyan = (CONSOLE_COLOR_G + CONSOLE_COLOR_B),                     // 6
     white = (CONSOLE_COLOR_R + CONSOLE_COLOR_G + CONSOLE_COLOR_B),  // 7
+
+    fgwhite = (white + CONSOLE_COLOR_FG),
+    fgcyan = (cyan + CONSOLE_COLOR_FG),
+    fgmagenta = (magenta + CONSOLE_COLOR_FG),
+    fgyellow = (yellow + CONSOLE_COLOR_FG),
+    fgblue = (blue + CONSOLE_COLOR_FG),
+    fggreen = (green + CONSOLE_COLOR_FG),
+    fgred = (red + CONSOLE_COLOR_FG),
+
+    bgwhite = (white + CONSOLE_COLOR_BG),
+    bgcyan = (cyan + CONSOLE_COLOR_BG),
+    bgmagenta = (magenta + CONSOLE_COLOR_BG),
+    bgyellow = (yellow + CONSOLE_COLOR_BG),
+    bgblue = (blue + CONSOLE_COLOR_BG),
+    bggreen = (green + CONSOLE_COLOR_BG),
+    bgred = (red + CONSOLE_COLOR_BG),
 };
 
 /**

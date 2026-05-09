@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_alpn.hpp>
@@ -28,88 +29,85 @@ tls_extension_alpn::tls_extension_alpn(tls_handshake* handshake) : tls_extension
 tls_extension_alpn::~tls_extension_alpn() {}
 
 return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_handshake()->get_session();
-        auto& protection = session->get_tls_protection();
-        auto& secrets = protection.get_secrets();
+    function_pipeline<return_t> pipeline;
+
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .run_trycatch([&]() -> return_t {
+            auto session = get_handshake()->get_session();
+            auto& protection = session->get_tls_protection();
+            auto& secrets = protection.get_secrets();
 
 #if defined DEBUG
-        uint16 alpn_len = 0;
+            uint16 alpn_len = 0;
 #endif
-        binary_t protocols;
-        {
-            // RFC 7301
+            binary_t protocols;
+            {
+                // RFC 7301
 
-            payload pl;
-            try {
+                payload pl;
                 pl << new payload_member(uint16(0), true, constexpr_alpn_len)  //
                    << new payload_member(binary_t(0), constexpr_protocol);
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
-            }
-            pl.set_reference_value(constexpr_protocol, constexpr_alpn_len);
+                pl.set_reference_value(constexpr_protocol, constexpr_alpn_len);
 
-            pl.read(stream, endpos_extension(), pos);
+                auto rc = pl.read(stream, endpos_extension(), pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
 
 #if defined DEBUG
-            alpn_len = pl.t_value_of<uint16>(constexpr_alpn_len);
+                alpn_len = pl.t_value_of<uint16>(constexpr_alpn_len);
 #endif
-            pl.get_binary(constexpr_protocol, protocols);
-        }
+                pl.get_binary(constexpr_protocol, protocols);
+            }
 
-        {
             auto tlsadvisor = tls_advisor::get_instance();
             tlsadvisor->negotiate_alpn(get_handshake(), protocols.data(), protocols.size());
-        }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                dbs.println("   > %s %i", constexpr_alpn_len, alpn_len);
-                dump_memory(protocols, &dbs, 16, 5, 0x0, dump_notrunc);
-            });
-        }
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                    dbs.println("   > %s %i", constexpr_alpn_len, alpn_len);
+                    dump_memory(protocols, &dbs, 16, 5, 0x0, dump_notrunc);
+                });
+            }
 #endif
 
-        {
-            //
             _protocols = std::move(protocols);
-        }
 
-        if (from_server == dir) {
-            secrets.assign(tls_context_alpn, _protocols);
-        }
-    }
-    __finally2 {}
-    return ret;
+            if (from_server == dir) {
+                secrets.assign(tls_context_alpn, _protocols);
+            }
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 return_t tls_extension_alpn::do_write_body(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        {
-            payload pl;
-            try {
+    function_pipeline<return_t> pipeline;
+
+    pipeline  //
+        .run_trycatch([&]() -> return_t {
+            {
+                payload pl;
                 pl << new payload_member(uint16(_protocols.size()), true, constexpr_alpn_len)  //
                    << new payload_member(_protocols, constexpr_protocol);                      //
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
+
+                auto rc = pl.write(bin);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
             }
 
-            ret = pl.write(bin);
-            if (errorcode_t::success != ret) {
-                __leave2_trace(ret);
+            if (from_server == dir) {
+                get_handshake()->get_session()->get_tls_protection().get_secrets().assign(tls_context_alpn, _protocols);
             }
-        }
-        if (from_server == dir) {
-            get_handshake()->get_session()->get_tls_protection().get_secrets().assign(tls_context_alpn, _protocols);
-        }
-    }
-    __finally2 {}
-    return ret;
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 const binary_t& tls_extension_alpn::get_protocols() { return _protocols; }

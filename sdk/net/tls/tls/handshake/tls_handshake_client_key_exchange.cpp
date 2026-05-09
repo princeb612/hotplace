@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
@@ -73,130 +74,123 @@ return_t tls_handshake_client_key_exchange::do_postprocess(tls_direction_t dir, 
 }
 
 return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2_trace(ret);
-        }
+    function_pipeline<return_t> pipeline;
+    auto session = get_session();
+    binary_t pubkey;
 
-        {
-            auto session = get_session();
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .run_trycatch([&]() -> return_t {
+            return_t rc = success;
 #if defined DEBUG
             uint8 pubkey_len = 0;
 #endif
-            binary_t pubkey;
             {
                 payload pl;
-                try {
-                    pl << new payload_member(uint8(0), constexpr_pubkey_len)  //
-                       << new payload_member(binary_t(), constexpr_pubkey);
-                } catch (...) {
-                    ret = errorcode_t::out_of_memory;
-                    __leave2_trace(ret);
-                }
+                pl << new payload_member(uint8(0), constexpr_pubkey_len)  //
+                   << new payload_member(binary_t(), constexpr_pubkey);
                 pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
 
-                pl.read(stream, size, pos);
+                rc = pl.read(stream, size, pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
 
 #if defined DEBUG
                 pubkey_len = pl.t_value_of<uint8>(constexpr_pubkey_len);
 #endif
                 pl.get_binary(constexpr_pubkey, pubkey);
-            }
-
-            {
-                auto& protection = session->get_tls_protection();
-                auto& tlskey = protection.get_key();
-                crypto_keychain keychain;
-                crypto_keyexchange keyexchange;
-                uint32 nid = 0;
-                auto pkey_ske = tlskey.find(KID_TLS_SERVER_KEY_EXCHANGE);
-                nidof_evp_pkey(pkey_ske, nid);
-                if (nid) {
-                    crypto_advisor* advisor = crypto_advisor::get_instance();
-                    auto hint = advisor->hintof_tls_group_nid(nid);
-                    keyexchange.keystore((tls_group_t)hint->group, &tlskey, KID_TLS_CLIENT_KEY_EXCHANGE, pubkey);
-                } else {
-                    ret = errorcode_t::not_supported;
-                }
-            }
 
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
-                    dbs.autoindent(1);
-                    dbs.println(" > %s %i", constexpr_pubkey_len, pubkey_len);
-                    if (check_trace_level(loglevel_debug)) {
-                        dbs.println(" > %s", constexpr_pubkey);
-                        dump_memory(pubkey, &dbs, 16, 3, 0x0, dump_notrunc);
-                    }
-                    dbs.autoindent(0);
-                });
-            }
+                if (istraceable(trace_category_net)) {
+                    trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                        dbs.autoindent(1);
+                        dbs.println(" > %s %i", constexpr_pubkey_len, pubkey_len);
+                        if (check_trace_level(loglevel_debug)) {
+                            dbs.println(" > %s", constexpr_pubkey);
+                            dump_memory(pubkey, &dbs, 16, 3, 0x0, dump_notrunc);
+                        }
+                        dbs.autoindent(0);
+                    });
+                }
 #endif
-        }
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t tls_handshake_client_key_exchange::do_write_body(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        auto session = get_session();
-        auto& protection = session->get_tls_protection();
-        auto& tlskey = protection.get_key();
-        auto pkey_ske = tlskey.find(KID_TLS_SERVER_KEY_EXCHANGE);
-        binary_t pubkey;
-        uint32 nid = 0;
-        {
+            }
+            return success;
+        })
+        .run([&]() -> return_t {
+            auto& protection = session->get_tls_protection();
+            auto& tlskey = protection.get_key();
             crypto_keychain keychain;
             crypto_keyexchange keyexchange;
+            uint32 nid = 0;
+            auto pkey_ske = tlskey.find(KID_TLS_SERVER_KEY_EXCHANGE);
             nidof_evp_pkey(pkey_ske, nid);
             if (nid) {
                 crypto_advisor* advisor = crypto_advisor::get_instance();
                 auto hint = advisor->hintof_tls_group_nid(nid);
-
-                keyexchange.keygen((tls_group_t)hint->group, &tlskey, KID_TLS_CLIENT_KEY_EXCHANGE);
-                keyexchange.keyshare((tls_group_t)hint->group, &tlskey, KID_TLS_CLIENT_KEY_EXCHANGE, pubkey);
+                keyexchange.keystore((tls_group_t)hint->group, &tlskey, KID_TLS_CLIENT_KEY_EXCHANGE, pubkey);
             } else {
-                ret = errorcode_t::not_supported;
-                __leave2_trace(ret);
-            }
-        }
-
-        {
-            payload pl;
-            try {
-                pl << new payload_member(uint8(pubkey.size()), constexpr_pubkey_len)  //
-                   << new payload_member(pubkey, constexpr_pubkey);
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
+                return errorcode_t::not_available;
             }
 
-            ret = pl.write(bin);
-            if (errorcode_t::success != ret) {
-                __leave2_trace(ret);
+            return success;
+        });
+    return pipeline.result();
+}
+
+return_t tls_handshake_client_key_exchange::do_write_body(tls_direction_t dir, binary_t& bin) {
+    function_pipeline<return_t> pipeline;
+
+    pipeline  //
+        .run_trycatch([&]() -> return_t {
+            auto session = get_session();
+            auto& protection = session->get_tls_protection();
+            auto& tlskey = protection.get_key();
+            auto pkey_ske = tlskey.find(KID_TLS_SERVER_KEY_EXCHANGE);
+            binary_t pubkey;
+            uint32 nid = 0;
+            {
+                crypto_keychain keychain;
+                crypto_keyexchange keyexchange;
+                nidof_evp_pkey(pkey_ske, nid);
+                if (nid) {
+                    crypto_advisor* advisor = crypto_advisor::get_instance();
+                    auto hint = advisor->hintof_tls_group_nid(nid);
+
+                    keyexchange.keygen((tls_group_t)hint->group, &tlskey, KID_TLS_CLIENT_KEY_EXCHANGE);
+                    keyexchange.keyshare((tls_group_t)hint->group, &tlskey, KID_TLS_CLIENT_KEY_EXCHANGE, pubkey);
+                } else {
+                    return errorcode_t::not_available;
+                }
             }
-        }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net, loglevel_debug)) {
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
-                dbs.println("> SKE");
-                dump_key(pkey_ske, &dbs, 16, 3, dump_notrunc);
-                dbs.println("> CKE");
-                auto pkey_cke = tlskey.find_nid(KID_TLS_CLIENT_KEY_EXCHANGE, nid);
-                dump_key(pkey_cke, &dbs, 16, 3, dump_notrunc);
-            });
-        }
+            if (istraceable(trace_category_net, loglevel_debug)) {
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                    dbs.println("> SKE");
+                    dump_key(pkey_ske, &dbs, 16, 3, dump_notrunc);
+                    dbs.println("> CKE");
+                    auto pkey_cke = tlskey.find_nid(KID_TLS_CLIENT_KEY_EXCHANGE, nid);
+                    dump_key(pkey_cke, &dbs, 16, 3, dump_notrunc);
+                });
+            }
 #endif
-    }
-    __finally2 {}
-    return ret;
+
+            {
+                payload pl;
+                pl << new payload_member(uint8(pubkey.size()), constexpr_pubkey_len)  //
+                   << new payload_member(pubkey, constexpr_pubkey);
+
+                auto rc = pl.write(bin);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
+            }
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 }  // namespace net

@@ -60,6 +60,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_pre_shared_key.hpp>
@@ -90,29 +91,32 @@ tls_extension_client_psk::tls_extension_client_psk(tls_handshake* handshake)
 tls_extension_client_psk::~tls_extension_client_psk() {}
 
 return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_handshake()->get_session();
-        auto& protection = session->get_tls_protection();
-        auto& secrets = protection.get_secrets();
+    function_pipeline<return_t> pipeline;
+    auto session = get_handshake()->get_session();
+    auto& protection = session->get_tls_protection();
+    auto& secrets = protection.get_secrets();
 
-        uint16 psk_identities_len = 0;
+    uint16 psk_identities_len = 0;
 #if defined DEBUG
-        uint16 psk_identity_len = 0;
+    uint16 psk_identity_len = 0;
 #endif
-        binary_t psk_identity;
-        uint32 obfuscated_ticket_age = 0;
-        uint16 psk_binders_len = 0;
+    binary_t psk_identity;
+    uint32 obfuscated_ticket_age = 0;
+    uint16 psk_binders_len = 0;
 #if defined DEBUG
-        uint8 psk_binder_len = 0;
+    uint8 psk_binder_len = 0;
 #endif
-        binary_t psk_binder;
-        tls_direction_t dir = from_client;
+    binary_t psk_binder;
 
-        size_t offset_psk_binders_len = 0;
-        {
-            payload pl;
-            try {
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (from_client == dir) && (nullptr != stream) && (pos < size); })
+        .run_trycatch([&]() -> return_t {
+            return_t rc = success;
+
+            size_t offset_psk_binders_len = 0;
+            {
+                payload pl;
                 pl << new payload_member(uint16(0), true, constexpr_psk_identities_len)     //
                    << new payload_member(uint16(0), true, constexpr_psk_identity_len)       //
                    << new payload_member(binary_t(), constexpr_psk_identity)                //
@@ -120,98 +124,96 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
                    << new payload_member(uint16(0), true, constexpr_psk_binders_len)        //
                    << new payload_member(uint8(0), constexpr_psk_binder_len)                //
                    << new payload_member(binary_t(), constexpr_psk_binder);
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
-            }
-            pl.set_reference_value(constexpr_psk_identity, constexpr_psk_identity_len);
-            pl.set_reference_value(constexpr_psk_binder, constexpr_psk_binder_len);
+                pl.set_reference_value(constexpr_psk_identity, constexpr_psk_identity_len);
+                pl.set_reference_value(constexpr_psk_binder, constexpr_psk_binder_len);
 
-            pl.read(stream, endpos_extension(), pos);
+                rc = pl.read(stream, endpos_extension(), pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
 
-            psk_identities_len = pl.t_value_of<uint16>(constexpr_psk_identities_len);
+                psk_identities_len = pl.t_value_of<uint16>(constexpr_psk_identities_len);
 #if defined DEBUG
-            psk_identity_len = pl.t_value_of<uint16>(constexpr_psk_identity_len);
+                psk_identity_len = pl.t_value_of<uint16>(constexpr_psk_identity_len);
 #endif
-            pl.get_binary(constexpr_psk_identity, psk_identity);
-            obfuscated_ticket_age = pl.t_value_of<uint32>(constexpr_obfuscated_ticket_age);
-            offset_psk_binders_len = offsetof_header() + pl.offset_of(constexpr_psk_binders_len);  // 0-RTT "res binder"
-            psk_binders_len = pl.t_value_of<uint16>(constexpr_psk_binders_len);
+                pl.get_binary(constexpr_psk_identity, psk_identity);
+                obfuscated_ticket_age = pl.t_value_of<uint32>(constexpr_obfuscated_ticket_age);
+                offset_psk_binders_len = offsetof_header() + pl.offset_of(constexpr_psk_binders_len);  // 0-RTT "res binder"
+                psk_binders_len = pl.t_value_of<uint16>(constexpr_psk_binders_len);
 #if defined DEBUG
-            psk_binder_len = pl.t_value_of<uint8>(constexpr_psk_binder_len);
+                psk_binder_len = pl.t_value_of<uint8>(constexpr_psk_binder_len);
 #endif
-            pl.get_binary(constexpr_psk_binder, psk_binder);
-        }
-
-        {
-            auto& kv = session->get_session_info(from_server).get_keyvalue();
-            const binary_t& ticket = secrets.get(tls_context_new_session_ticket);
-            if (psk_identity != ticket) {
-                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
-                session->reset_session_status();
-                ret = errorcode_t::error_handshake;
-                __leave2_trace(ret);
+                pl.get_binary(constexpr_psk_binder, psk_binder);
             }
-            uint32 ticket_lifetime = t_narrow_cast(kv.get(session_ticket_lifetime));
-            uint32 ticket_age_add = t_narrow_cast(kv.get(session_ticket_age_add));
-            if (obfuscated_ticket_age - ticket_age_add > ticket_lifetime) {
-                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
-                session->reset_session_status();
-                ret = errorcode_t::error_handshake;
-                __leave2_trace(ret);
-            }
-        }
 
-        {
-            // RFC 8448 4.  Resumed 0-RTT Handshake
-            // RFC 8448 4.2.11.1.  Ticket Age
-
-            // binder hash
-            auto& protection = session->get_tls_protection();
-            binary_t context_resumption_binder_hash;
             {
-                size_t content_header_size = 0;
-                // size_t sizeof_dtls_recons = 0;
-                if (protection.is_kindof_tls()) {
-                    content_header_size = RTL_FIELD_SIZE(tls_content_t, tls);
-                } else {
-                    content_header_size = RTL_FIELD_SIZE(tls_content_t, dtls);
-                    // sizeof_dtls_recons = 8;
+                auto& kv = session->get_session_info(from_server).get_keyvalue();
+                const binary_t& ticket = secrets.get(tls_context_new_session_ticket);
+                if (psk_identity != ticket) {
+                    session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
+                    session->reset_session_status();
+                    return errorcode_t::error_handshake;
                 }
-                ret = protection.calc_context_hash(session, sha2_256, stream + content_header_size, offset_psk_binders_len - 1, context_resumption_binder_hash);
-                // if (errorcode_t::success != ret) do something
+                uint32 ticket_lifetime = t_narrow_cast(kv.get(session_ticket_lifetime));
+                uint32 ticket_age_add = t_narrow_cast(kv.get(session_ticket_age_add));
+                if (obfuscated_ticket_age - ticket_age_add > ticket_lifetime) {
+                    session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
+                    session->reset_session_status();
+                    return errorcode_t::error_handshake;
+                }
             }
 
-            // verify psk binder
-            ret = protection.calc_psk(session, context_resumption_binder_hash, psk_binder);
-        }
+            {
+                // RFC 8448 4.  Resumed 0-RTT Handshake
+                // RFC 8448 4.2.11.1.  Ticket Age
 
-#if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                dbs.println("   > %s 0x%04x(%i)", constexpr_psk_identity_len, psk_identity_len, psk_identity_len);
-                if (check_trace_level(loglevel_debug)) {
-                    dump_memory(psk_identity, &dbs, 16, 4, 0x0, dump_notrunc);
+                // binder hash
+                auto& protection = session->get_tls_protection();
+                binary_t context_resumption_binder_hash;
+                {
+                    size_t content_header_size = 0;
+                    // size_t sizeof_dtls_recons = 0;
+                    if (protection.is_kindof_tls()) {
+                        content_header_size = RTL_FIELD_SIZE(tls_content_t, tls);
+                    } else {
+                        content_header_size = RTL_FIELD_SIZE(tls_content_t, dtls);
+                        // sizeof_dtls_recons = 8;
+                    }
+                    rc = protection.calc_context_hash(session, sha2_256, stream + content_header_size, offset_psk_binders_len - 1, context_resumption_binder_hash);
+                    if (errorcode_t::success != rc) {
+                        return rc;
+                    }
                 }
-                dbs.println("   > %s 0x%08x", constexpr_obfuscated_ticket_age, obfuscated_ticket_age);
-                dbs.println("   > %s 0x%04x(%i)", constexpr_psk_binders_len, psk_binders_len, psk_binders_len);
-                dbs.println("   > %s 0x%04x(%i)", constexpr_psk_binder_len, psk_binder_len, psk_binder_len);
-                dbs.println("   > %s %s " ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", constexpr_psk_binder, base16_encode(psk_binder).c_str(),
-                            (errorcode_t::success == ret) ? "true" : "false");
-            });
-        }
-#endif
 
-        {
+                // verify psk binder
+                return protection.calc_psk(session, context_resumption_binder_hash, psk_binder);
+            }
+        })
+        .walk_always([&](return_t rc) -> void {
+#if defined DEBUG
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                    dbs.println("   > %s 0x%04x(%i)", constexpr_psk_identity_len, psk_identity_len, psk_identity_len);
+                    if (check_trace_level(loglevel_debug)) {
+                        dump_memory(psk_identity, &dbs, 16, 4, 0x0, dump_notrunc);
+                    }
+                    dbs.println("   > %s 0x%08x", constexpr_obfuscated_ticket_age, obfuscated_ticket_age);
+                    dbs.println("   > %s 0x%04x(%i)", constexpr_psk_binders_len, psk_binders_len, psk_binders_len);
+                    dbs.println("   > %s 0x%04x(%i)", constexpr_psk_binder_len, psk_binder_len, psk_binder_len);
+                    dbs.println("   > %s %s " ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", constexpr_psk_binder, base16_encode(psk_binder).c_str(),
+                                (errorcode_t::success == rc) ? "true" : "false");
+                });
+            }
+#endif
+        })
+        .walk([&]() -> void {
             _psk_identities_len = psk_identities_len;
             _psk_identity = std::move(psk_identity);
             _obfuscated_ticket_age = obfuscated_ticket_age;
             _psk_binders_len = psk_binders_len;
             _psk_binder = std::move(psk_binder);
-        }
-    }
-    __finally2 {}
-    return ret;
+        });
+    return pipeline.result();
 }
 
 return_t tls_extension_client_psk::do_write_body(tls_direction_t dir, binary_t& bin) { return not_supported; }
@@ -221,37 +223,37 @@ tls_extension_server_psk::tls_extension_server_psk(tls_handshake* handshake) : t
 tls_extension_server_psk::~tls_extension_server_psk() {}
 
 return_t tls_extension_server_psk::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        uint16 selected_identity = 0;
-        {
-            payload pl;
-            try {
+    function_pipeline<return_t> pipeline;
+
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return true; })
+        .run_trycatch([&]() -> return_t {
+            uint16 selected_identity = 0;
+            {
+                payload pl;
                 pl << new payload_member(uint16(0), true, constexpr_selected_identity);
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
+
+                auto rc = pl.read(stream, endpos_extension(), pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
+
+                selected_identity = pl.t_value_of<uint16>(constexpr_selected_identity);
             }
 
-            pl.read(stream, endpos_extension(), pos);
-
-            selected_identity = pl.t_value_of<uint16>(constexpr_selected_identity);
-        }
-
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension,
-                              [&](basic_stream& dbs) -> void { dbs.println("   > %s %i", constexpr_selected_identity, selected_identity); });
-        }
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_extension,
+                                  [&](basic_stream& dbs) -> void { dbs.println("   > %s %i", constexpr_selected_identity, selected_identity); });
+            }
 #endif
 
-        {
-            //
             _selected_identity = selected_identity;
-        }
-    }
-    __finally2 {}
-    return ret;
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 return_t tls_extension_server_psk::do_write_body(tls_direction_t dir, binary_t& bin) { return not_supported; }

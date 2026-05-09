@@ -51,6 +51,17 @@ logger* logger_builder::build() {
     if (_testcase) {
         p->attach(_testcase);
     }
+
+    // https://doodlenerd.com/web-tool/figlet-generator
+    basic_stream stream;
+    stream << ANSI_ESCAPE << "1;" << fgmagenta << "m" << R"( _   _           _             _                       )" << ANSI_ESCAPE << "0m\n";
+    stream << ANSI_ESCAPE << "1;" << fgmagenta << "m" << R"(| | | |   ___   | |_   _ __   | |   __ _    ___    ___ )" << ANSI_ESCAPE << "0m\n";
+    stream << ANSI_ESCAPE << "1;" << fgmagenta << "m" << R"(| |_| |  / _ \  | __| | '_ \  | |  / _` |  / __|  / _ \)" << ANSI_ESCAPE << "0m\n";
+    stream << ANSI_ESCAPE << "1;" << fgmagenta << "m" << R"(|  _  | | (_) | | |_  | |_) | | | | (_| | | (__  |  __/)" << ANSI_ESCAPE << "0m\n";
+    stream << ANSI_ESCAPE << "1;" << fgmagenta << "m" << R"(|_| |_|  \___/   \__| | .__/  |_|  \__,_|  \___|  \___|)" << ANSI_ESCAPE << "0m\n";
+    stream << ANSI_ESCAPE << "1;" << fgmagenta << "m" << R"(                      |_|                              )" << ANSI_ESCAPE << "0m\n";
+    p->consoleln(stream);
+
     return p;
 }
 

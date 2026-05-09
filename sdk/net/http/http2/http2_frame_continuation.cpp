@@ -26,25 +26,32 @@ http2_frame_continuation::~http2_frame_continuation() {}
 
 return_t http2_frame_continuation::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
     function_pipeline<return_t> pipeline;
-    payload pl;
 
     pipeline  //
         .test_not_fail()
         .test_parameter([&]() -> bool { return nullptr != stream; })
         .run_trycatch([&]() -> return_t {
+            payload pl;
             pl << new payload_member(binary_t(), constexpr_frame_fragment);
-            return pl.read(stream, size, pos);
-        })
-        .walk([&]() -> void { pl.get_binary(constexpr_frame_fragment, _fragment); });
+
+            auto rc = pl.read(stream, size, pos);
+            if (false == error_traits<return_t>::is_not_fail(rc)) {
+                return rc;
+            }
+
+            pl.get_binary(constexpr_frame_fragment, _fragment);
+
+            return success;
+        });
     return pipeline.result();
 }
 
 return_t http2_frame_continuation::do_write_body(binary_t& body) {
     function_pipeline<return_t> pipeline;
-    payload pl;
 
     pipeline
         .run_trycatch([&]() -> return_t {
+            payload pl;
             pl << new payload_member(_fragment, constexpr_frame_fragment);
             return pl.write(body);
         })

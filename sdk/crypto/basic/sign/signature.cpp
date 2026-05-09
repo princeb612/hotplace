@@ -39,13 +39,13 @@ return_t rs2der(const binary_t& r, const binary_t& s, binary_t& asn1der) {
     function_pipeline<return_t> pipeline;
     binary_t r1;
     binary_t s1;
-    binary_t prefix;
-    payload pl;
 
     pipeline  //
         .walk([&]() -> void { asn1der.clear(); })
         .test_parameter([&]() -> bool { return (false == r.empty()) && (false == s.empty()); })
-        .walk([&]() -> void {
+        .run([&]() -> return_t {
+            binary_t prefix;
+
             // ASN.1 DER
             // ASN.1 DER (30 || length || 02 || r_length || r || 02 || s_length || s)
 
@@ -59,8 +59,8 @@ return_t rs2der(const binary_t& r, const binary_t& s, binary_t& asn1der) {
             if (0x80 & s1[0]) {
                 s1.insert(s1.begin(), prefix.begin(), prefix.end());
             }
-        })
-        .walk_trycatch([&]() -> void {
+
+            payload pl;
             pl << new payload_member(uint8(0x30))                       //
                << new payload_member(uint8(r1.size() + s1.size() + 4))  //
                << new payload_member(uint8(asn1_tag_integer))           //
@@ -69,17 +69,20 @@ return_t rs2der(const binary_t& r, const binary_t& s, binary_t& asn1der) {
                << new payload_member(uint8(asn1_tag_integer))           //
                << new payload_member(uint8(s1.size()))                  //
                << new payload_member(s1);
-        })
-        .run([&]() -> return_t { return pl.write(asn1der); });
+
+            return pl.write(asn1der);
+        });
     return pipeline.result();
 }
 
 return_t der2rs(const binary_t& asn1der, uint16 unitsize, binary_t& r, binary_t& s) {
     function_pipeline<return_t> pipeline;
-    payload pl;
 
-    pipeline.test_not_fail()
-        .walk_trycatch([&]() -> void {
+    pipeline  //
+        .test_not_fail()
+        .run([&]() -> return_t {
+            payload pl;
+
             pl << new payload_member(uint8(0), constexpr_sequence)  //
                << new payload_member(uint8(0), constexpr_len)       //
                << new payload_member(uint8(0))                      //
@@ -88,14 +91,14 @@ return_t der2rs(const binary_t& asn1der, uint16 unitsize, binary_t& r, binary_t&
                << new payload_member(uint8(0))                      //
                << new payload_member(uint8(0), constexpr_slen)      //
                << new payload_member(binary_t(), constexpr_s);
-        })
-        .run([&]() -> return_t {
             pl.set_reference_value(constexpr_r, constexpr_rlen);
             pl.set_reference_value(constexpr_s, constexpr_slen);
 
-            return pl.read(asn1der.data(), asn1der.size());
-        })
-        .run([&]() -> return_t {
+            auto rc = pl.read(asn1der.data(), asn1der.size());
+            if (false == error_traits<return_t>::is_not_fail(rc)) {
+                return rc;
+            }
+
             uint8 sequence = pl.t_value_of<uint8>(constexpr_sequence);
             // uint8 rlen = pl.t_value_of<uint8>(constexpr_rlen);
             // uint8 slen = pl.t_value_of<uint8>(constexpr_slen);
@@ -105,6 +108,7 @@ return_t der2rs(const binary_t& asn1der, uint16 unitsize, binary_t& r, binary_t&
 
             pl.get_binary(constexpr_r, r);
             pl.get_binary(constexpr_s, s);
+
             return success;
         });
     return pipeline.result();
@@ -112,19 +116,26 @@ return_t der2rs(const binary_t& asn1der, uint16 unitsize, binary_t& r, binary_t&
 
 return_t sig2rs(const binary_t& sig, binary_t& r, binary_t& s) {
     function_pipeline<return_t> pipeline;
-    size_t size = sig.size();
 
-    pipeline.run([&] { return (size % 2) ? errorcode_t::bad_format : success; }).walk([&] {
-        size_t halfsize = size >> 1;
-        r = binary_t(sig.begin(), sig.begin() + halfsize);
-        s = binary_t(sig.begin() + halfsize, sig.end());
-    });
+    pipeline  //
+        .run([&]() -> return_t {
+            size_t size = sig.size();
+            if (size % 2) {
+                return errorcode_t::bad_format;
+            }
+
+            size_t halfsize = size >> 1;
+            r = binary_t(sig.begin(), sig.begin() + halfsize);
+            s = binary_t(sig.begin() + halfsize, sig.end());
+
+            return success;
+        });
     return pipeline.result();
 }
 
 return_t rs2sig(const binary_t& r, const binary_t& s, uint16 unitsize, binary_t& signature) {
     function_pipeline<return_t> pipeline;
-    pipeline.walk([&]() {
+    pipeline.walk([&]() -> void {
         signature.clear();
 
         size_t rlen = r.size();
@@ -176,7 +187,9 @@ return_t der2sig(const binary_t& asn1der, uint16 unitsize, binary_t& signature) 
     binary_t bin_r;
     binary_t bin_s;
 
-    pipeline.walk([&]() { return der2rs(asn1der, unitsize, bin_r, bin_s); }).walk([&]() { return rs2sig(bin_r, bin_s, unitsize, signature); });
+    pipeline  //
+        .run([&]() -> return_t { return der2rs(asn1der, unitsize, bin_r, bin_s); })
+        .run([&]() -> return_t { return rs2sig(bin_r, bin_s, unitsize, signature); });
     return pipeline.result();
 }
 
@@ -185,7 +198,9 @@ return_t sig2der(const binary_t& signature, binary_t& asn1der) {
     binary_t bin_r;
     binary_t bin_s;
 
-    pipeline.walk([&]() { return sig2rs(signature, bin_r, bin_s); }).walk([&]() { return rs2der(bin_r, bin_s, asn1der); });
+    pipeline  //
+        .run([&]() -> return_t { return sig2rs(signature, bin_r, bin_s); })
+        .run([&]() -> return_t { return rs2der(bin_r, bin_s, asn1der); });
     return pipeline.result();
 }
 

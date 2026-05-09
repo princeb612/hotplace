@@ -10,6 +10,7 @@
 
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/cipher_encrypt.hpp>
@@ -70,49 +71,129 @@ return_t tls_protection::build_iv(tls_session* session, binary_t& nonce, const b
 }
 
 return_t tls_protection::build_tls12_aad_from_record(tls_session* session, binary_t& aad, const binary_t& record_header, uint64 record_no, uint8 size_nonce_explicit) {
-    return_t ret = errorcode_t::success;
+    function_pipeline<return_t> pipeline;
 
-    __try2 {
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        uint8 content_type = 0;
-        uint16 record_version = 0;
-        uint16 len = 0;
-        bool cond_dtls = false;
-        uint16 key_epoch = 0;
-        uint64 dtls_record_seq = 0;
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != session); })
+        .run_trycatch([&]() -> return_t {
+            return_t rc = success;
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            uint8 content_type = 0;
+            uint16 record_version = 0;
+            uint16 len = 0;
+            bool cond_dtls = false;
+            uint16 key_epoch = 0;
+            uint64 dtls_record_seq = 0;
 
-        {
-            payload pl;
-            try {
+            {
+                payload pl;
                 pl << new payload_member(uint8(0), constexpr_content_type)                              // tls, dtls
                    << new payload_member(uint16(0), true, constexpr_record_version)                     // tls, dtls
                    << new payload_member(uint16(0), true, constexpr_dtls_epoch, constexpr_group_dtls)   // dtls
                    << new payload_member(uint48_t(0), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
                    << new payload_member(uint16(0), true, constexpr_len);                               // tls, dtls
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2;
+
+                auto lambda_check_dtls = [&](payload* pl, payload_member* item) -> void {
+                    auto ver = pl->t_value_of<uint16>(item);
+                    pl->set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(ver));
+                };
+                pl.set_condition(constexpr_record_version, lambda_check_dtls);
+
+                size_t apos = 0;
+                rc = pl.read(record_header.data(), record_header.size(), apos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
+
+                content_type = pl.t_value_of<uint8>(constexpr_content_type);
+                record_version = pl.t_value_of<uint16>(constexpr_record_version);
+                len = pl.t_value_of<uint16>(constexpr_len);
+                cond_dtls = pl.get_group_condition(constexpr_group_dtls);
+                if (cond_dtls) {
+                    key_epoch = pl.t_value_of<uint16>(constexpr_dtls_epoch);
+                    dtls_record_seq = pl.t_value_of<uint64>(constexpr_dtls_record_seq);
+                }
+            }
+            {
+                /**
+                 * RFC 5246 6.2.3.3.  AEAD Ciphers
+                 *   additional_data = seq_num + TLSCompressed.type +
+                 *                     TLSCompressed.version + TLSCompressed.length;
+                 *   AEADEncrypted = AEAD-Encrypt(write_key, nonce, plaintext,
+                 *                                additional_data)
+                 *   TLSCompressed.fragment = AEAD-Decrypt(write_key, nonce,
+                 *                                         AEADEncrypted,
+                 *                                         additional_data)
+                 *
+                 * uint64(seq_num) || uint8(type) || uint16(version) || uint16(cipertext.size)
+                 *
+                 * RFC 6347 4.1.2.1.  MAC
+                 *   The DTLS MAC is the same as that of TLS 1.2. However, rather than
+                 *   using TLS's implicit sequence number, the sequence number used to
+                 *   compute the MAC is the 64-bit value formed by concatenating the epoch
+                 *   and the sequence number in the order they appear on the wire.  Note
+                 *   that the DTLS epoch + sequence number is the same length as the TLS
+                 *   sequence number.
+                 *
+                 * uint16(epoch) || uint48(seq_num) || uint8(type) || uint16(version) || uint16(cipertext.size)
+                 */
+
+                len -= (size_nonce_explicit + get_tag_size());
+
+                payload pl;
+                pl << new payload_member(uint64(record_no), true, constexpr_record_no, constexpr_group_tls)
+                   << new payload_member(uint16(key_epoch), true, constexpr_dtls_epoch, constexpr_group_dtls)         // dtls
+                   << new payload_member(uint48_t(dtls_record_seq), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
+                   << new payload_member(uint8(content_type), constexpr_content_type)                                 // tls, dtls
+                   << new payload_member(uint16(record_version), true, constexpr_record_version)                      // tls, dtls
+                   << new payload_member(uint16(len), true, constexpr_len);                                           // tls, dtls
+
+                pl.set_group(constexpr_group_tls, (false == cond_dtls));
+                pl.set_group(constexpr_group_dtls, (true == cond_dtls));
+                rc = pl.write(aad);
             }
 
-            auto lambda_check_dtls = [&](payload* pl, payload_member* item) -> void {
-                auto ver = pl->t_value_of<uint16>(item);
-                pl->set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(ver));
-            };
-            pl.set_condition(constexpr_record_version, lambda_check_dtls);
+            return rc;
+        });
+    return pipeline.result();
+}
 
-            size_t apos = 0;
-            pl.read(record_header.data(), record_header.size(), apos);
+return_t tls_protection::write_aad(tls_session* session, tls_direction_t dir, binary_t& aad, uint8 content_type, uint32 version, uint64 recno, uint16 epoch,
+                                   uint64 dtlsseq, uint16 bodysize) {
+    function_pipeline<return_t> pipeline;
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-            content_type = pl.t_value_of<uint8>(constexpr_content_type);
-            record_version = pl.t_value_of<uint16>(constexpr_record_version);
-            len = pl.t_value_of<uint16>(constexpr_len);
-            cond_dtls = pl.get_group_condition(constexpr_group_dtls);
-            if (cond_dtls) {
-                key_epoch = pl.t_value_of<uint16>(constexpr_dtls_epoch);
-                dtls_record_seq = pl.t_value_of<uint64>(constexpr_dtls_record_seq);
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != session); })
+        .run_trycatch([&]() -> return_t {
+            auto& protection = session->get_tls_protection();
+            auto& secrets = protection.get_secrets();
+
+            auto record_version = protection.get_lagacy_version();
+            auto tagsize = protection.get_tag_size();
+            auto cs = protection.get_cipher_suite();
+            auto hint_blockcipher = tlsadvisor->hintof_blockcipher(cs);
+            if (nullptr == hint_blockcipher) {
+                return errorcode_t::not_available;
             }
-        }
-        {
+
+            auto ivsize = sizeof_iv(hint_blockcipher);
+            auto hint_cipher = tlsadvisor->hintof_cipher(cs);
+            auto mode = typeof_mode(hint_cipher);
+            auto is_tls = protection.is_kindof_tls();
+            auto is_tls12 = protection.is_kindof_tls12();
+            auto is_cbc = false;
+            bool etm = false;
+            uint16 key_epoch = 0;
+            uint64 dtls_record_seq = 0;
+            uint16 len = 0;
+
+            secrets.erase(tls_context_nonce_explicit);
+            bool tls12_aead = false;
+            // uint8 sizeof_nonce_explicit = 0;
+
             /**
              * RFC 5246 6.2.3.3.  AEAD Ciphers
              *   additional_data = seq_num + TLSCompressed.type +
@@ -123,7 +204,7 @@ return_t tls_protection::build_tls12_aad_from_record(tls_session* session, binar
              *                                         AEADEncrypted,
              *                                         additional_data)
              *
-             * uint64(seq_num) || uint8(type) || uint16(version) || uint16(cipertext.size)
+             * uint64(seq_num) || uint8(type) || uint16(version) || uint16(cipertext_wo_tag.size)
              *
              * RFC 6347 4.1.2.1.  MAC
              *   The DTLS MAC is the same as that of TLS 1.2. However, rather than
@@ -133,169 +214,82 @@ return_t tls_protection::build_tls12_aad_from_record(tls_session* session, binar
              *   that the DTLS epoch + sequence number is the same length as the TLS
              *   sequence number.
              *
-             * uint16(epoch) || uint48(seq_num) || uint8(type) || uint16(version) || uint16(cipertext.size)
+             * uint16(epoch) || uint48(seq_num) || uint8(type) || uint16(version) || uint16(cipertext_wo_tag.size)
              */
 
-            len -= (size_nonce_explicit + get_tag_size());
+            if (is_tls12) {
+                // TLS 1.2, DTLS 1.2
+                is_cbc = tlsadvisor->is_kindof_cbc(cs);
+                etm = session->get_keyvalue().get(session_encrypt_then_mac);
+                if (is_cbc) {
+                    // CBC
+                    if (etm) {
+                        // Encrypt-then-Mac
+                        len = bodysize + tagsize;
+                    } else {
+                        // Mac-then-Encrypt
+                        len = bodysize + tagsize + ivsize;
+                    }
+                } else if (ccm == mode || gcm == mode) {
+                    tls12_aead = true;
+                    // sizeof_nonce_explicit = 8;
+
+                    // CCM, GCM
+                    len = bodysize;
+
+                    // sketch ...
+                    // tls_context_nonce_explicit 12-octet
+                    openssl_prng prng;
+                    binary_t temp;
+                    prng.random(temp, 8);
+                    secrets.assign(tls_context_nonce_explicit, temp);
+                } else if (mode_poly1305 == mode) {
+                    tls12_aead = true;
+                    len = bodysize;
+                }
+            } else {
+                // TLS 1.3, DTLS 1.3
+                len = bodysize + tagsize;
+            }
+
+            uint64 record_no = 0;
+            if (is_tls) {
+                record_no = session->get_recordno(dir, false);
+            } else {
+                auto& kv = session->get_session_info(dir).get_keyvalue();
+                key_epoch = t_narrow_cast(kv.get(session_dtls_epoch));
+                dtls_record_seq = kv.get(session_dtls_seq);
+            }
 
             payload pl;
-            try {
-                pl << new payload_member(uint64(record_no), true, constexpr_record_no, constexpr_group_tls)
+            if (tls12_aead) {
+                pl << new payload_member(uint64(record_no), true, constexpr_record_no, constexpr_group_tls)           // tls
                    << new payload_member(uint16(key_epoch), true, constexpr_dtls_epoch, constexpr_group_dtls)         // dtls
                    << new payload_member(uint48_t(dtls_record_seq), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
                    << new payload_member(uint8(content_type), constexpr_content_type)                                 // tls, dtls
                    << new payload_member(uint16(record_version), true, constexpr_record_version)                      // tls, dtls
                    << new payload_member(uint16(len), true, constexpr_len);                                           // tls, dtls
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2;
+
+                pl.set_group(constexpr_group_tls, (true == is_tls));
+                pl.set_group(constexpr_group_dtls, (false == is_tls));
+            } else {
+                /**
+                 * AAD
+                 *   CBC  uint8(type) || uint16(version)
+                 *   AEAD uint8(type) || uint16(version) || uint16(len)
+                 */
+                pl << new payload_member(uint8(content_type), constexpr_content_type)                                 // tls, dtls
+                   << new payload_member(uint16(record_version), true, constexpr_record_version)                      // tls, dtls
+                   << new payload_member(uint16(key_epoch), true, constexpr_dtls_epoch, constexpr_group_dtls)         // dtls
+                   << new payload_member(uint48_t(dtls_record_seq), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
+                   << new payload_member(uint16(len), true, constexpr_len);                                           // tls, dtls
+
+                pl.set_group(constexpr_group_dtls, false == is_tls);
             }
 
-            pl.set_group(constexpr_group_tls, (false == cond_dtls));
-            pl.set_group(constexpr_group_dtls, (true == cond_dtls));
-            ret = pl.write(aad);
-        }
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t tls_protection::write_aad(tls_session* session, tls_direction_t dir, binary_t& aad, uint8 content_type, uint32 version, uint64 recno, uint16 epoch,
-                                   uint64 dtlsseq, uint16 bodysize) {
-    return_t ret = errorcode_t::success;
-    tls_advisor* tlsadvisor = tls_advisor::get_instance();
-
-    __try2 {
-        if (nullptr == session) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        auto& protection = session->get_tls_protection();
-        auto& secrets = protection.get_secrets();
-
-        auto record_version = protection.get_lagacy_version();
-        auto tagsize = protection.get_tag_size();
-        auto cs = protection.get_cipher_suite();
-        auto hint_blockcipher = tlsadvisor->hintof_blockcipher(cs);
-        if (nullptr == hint_blockcipher) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-
-        auto ivsize = sizeof_iv(hint_blockcipher);
-        auto hint_cipher = tlsadvisor->hintof_cipher(cs);
-        auto mode = typeof_mode(hint_cipher);
-        auto is_tls = protection.is_kindof_tls();
-        auto is_tls12 = protection.is_kindof_tls12();
-        auto is_cbc = false;
-        bool etm = false;
-        uint16 key_epoch = 0;
-        uint64 dtls_record_seq = 0;
-        uint16 len = 0;
-
-        secrets.erase(tls_context_nonce_explicit);
-        bool tls12_aead = false;
-        // uint8 sizeof_nonce_explicit = 0;
-
-        /**
-         * RFC 5246 6.2.3.3.  AEAD Ciphers
-         *   additional_data = seq_num + TLSCompressed.type +
-         *                     TLSCompressed.version + TLSCompressed.length;
-         *   AEADEncrypted = AEAD-Encrypt(write_key, nonce, plaintext,
-         *                                additional_data)
-         *   TLSCompressed.fragment = AEAD-Decrypt(write_key, nonce,
-         *                                         AEADEncrypted,
-         *                                         additional_data)
-         *
-         * uint64(seq_num) || uint8(type) || uint16(version) || uint16(cipertext_wo_tag.size)
-         *
-         * RFC 6347 4.1.2.1.  MAC
-         *   The DTLS MAC is the same as that of TLS 1.2. However, rather than
-         *   using TLS's implicit sequence number, the sequence number used to
-         *   compute the MAC is the 64-bit value formed by concatenating the epoch
-         *   and the sequence number in the order they appear on the wire.  Note
-         *   that the DTLS epoch + sequence number is the same length as the TLS
-         *   sequence number.
-         *
-         * uint16(epoch) || uint48(seq_num) || uint8(type) || uint16(version) || uint16(cipertext_wo_tag.size)
-         */
-
-        if (is_tls12) {
-            // TLS 1.2, DTLS 1.2
-            is_cbc = tlsadvisor->is_kindof_cbc(cs);
-            etm = session->get_keyvalue().get(session_encrypt_then_mac);
-            if (is_cbc) {
-                // CBC
-                if (etm) {
-                    // Encrypt-then-Mac
-                    len = bodysize + tagsize;
-                } else {
-                    // Mac-then-Encrypt
-                    len = bodysize + tagsize + ivsize;
-                }
-            } else if (ccm == mode || gcm == mode) {
-                tls12_aead = true;
-                // sizeof_nonce_explicit = 8;
-
-                // CCM, GCM
-                len = bodysize;
-
-                // sketch ...
-                // tls_context_nonce_explicit 12-octet
-                openssl_prng prng;
-                binary_t temp;
-                prng.random(temp, 8);
-                secrets.assign(tls_context_nonce_explicit, temp);
-            } else if (mode_poly1305 == mode) {
-                tls12_aead = true;
-                len = bodysize;
-            }
-        } else {
-            // TLS 1.3, DTLS 1.3
-            len = bodysize + tagsize;
-        }
-
-        uint64 record_no = 0;
-        if (is_tls) {
-            record_no = session->get_recordno(dir, false);
-        } else {
-            auto& kv = session->get_session_info(dir).get_keyvalue();
-            key_epoch = t_narrow_cast(kv.get(session_dtls_epoch));
-            dtls_record_seq = kv.get(session_dtls_seq);
-        }
-
-        payload pl;
-        if (tls12_aead) {
-            pl << new payload_member(uint64(record_no), true, constexpr_record_no, constexpr_group_tls)           // tls
-               << new payload_member(uint16(key_epoch), true, constexpr_dtls_epoch, constexpr_group_dtls)         // dtls
-               << new payload_member(uint48_t(dtls_record_seq), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
-               << new payload_member(uint8(content_type), constexpr_content_type)                                 // tls, dtls
-               << new payload_member(uint16(record_version), true, constexpr_record_version)                      // tls, dtls
-               << new payload_member(uint16(len), true, constexpr_len);                                           // tls, dtls
-
-            pl.set_group(constexpr_group_tls, (true == is_tls));
-            pl.set_group(constexpr_group_dtls, (false == is_tls));
-        } else {
-            /**
-             * AAD
-             *   CBC  uint8(type) || uint16(version)
-             *   AEAD uint8(type) || uint16(version) || uint16(len)
-             */
-            pl << new payload_member(uint8(content_type), constexpr_content_type)                                 // tls, dtls
-               << new payload_member(uint16(record_version), true, constexpr_record_version)                      // tls, dtls
-               << new payload_member(uint16(key_epoch), true, constexpr_dtls_epoch, constexpr_group_dtls)         // dtls
-               << new payload_member(uint48_t(dtls_record_seq), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
-               << new payload_member(uint16(len), true, constexpr_len);                                           // tls, dtls
-
-            pl.set_group(constexpr_group_dtls, false == is_tls);
-        }
-
-        pl.write(aad);
-    }
-    __finally2 {}
-
-    return ret;
+            return pl.write(aad);
+        });
+    return pipeline.result();
 }
 
 return_t tls_protection::get_aead_key(tls_session* session, tls_direction_t dir, protection_space_t space, tls_secret_t& secret_key, tls_secret_t& secret_iv) {

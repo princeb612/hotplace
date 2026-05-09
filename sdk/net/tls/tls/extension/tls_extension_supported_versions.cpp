@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
@@ -44,76 +45,77 @@ return_t tls_extension_client_supported_versions::do_postprocess(tls_direction_t
 }
 
 return_t tls_extension_client_supported_versions::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        uint16 count = 0;
-        binary_t versions;
-        {
-            payload pl;
-            try {
+    function_pipeline<return_t> pipeline;
+
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .run_trycatch([&]() -> return_t {
+            uint16 count = 0;
+            binary_t versions;
+            {
+                payload pl;
                 pl << new payload_member(uint8(0), constexpr_versions)  //
                    << new payload_member(binary_t(), constexpr_version);
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
+                pl.set_reference_value(constexpr_version, constexpr_versions);
+
+                auto rc = pl.read(stream, endpos_extension(), pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
+
+                count = pl.t_value_of<uint8>(constexpr_versions) >> 1;
+                pl.get_binary(constexpr_version, versions);
+
+                for (auto i = 0; i < count; i++) {
+                    auto ver = t_binary_to_integer<uint16>(&versions[i << 1], sizeof(uint16));
+                    add(ver);
+                }
             }
-            pl.set_reference_value(constexpr_version, constexpr_versions);
-
-            pl.read(stream, endpos_extension(), pos);
-
-            count = pl.t_value_of<uint8>(constexpr_versions) >> 1;
-            pl.get_binary(constexpr_version, versions);
-
-            for (auto i = 0; i < count; i++) {
-                auto ver = t_binary_to_integer<uint16>(&versions[i << 1], sizeof(uint16));
-                add(ver);
-            }
-        }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-                dbs.println("    > %s (%i ent.)", constexpr_versions, count);
-                int i = 0;
-                for (auto ver : _versions) {
-                    dbs.println("      [%i] 0x%04x %s", i++, ver, tlsadvisor->nameof_tls_version(ver).c_str());
-                }
-            });
-        }
+                    dbs.println("    > %s (%i ent.)", constexpr_versions, count);
+                    int i = 0;
+                    for (auto ver : _versions) {
+                        dbs.println("      [%i] 0x%04x %s", i++, ver, tlsadvisor->nameof_tls_version(ver).c_str());
+                    }
+                });
+            }
 #endif
-    }
-    __finally2 {}
-    return ret;
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 return_t tls_extension_client_supported_versions::do_write_body(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        uint8 cbsize_versions = 0;
-        binary_t bin_versions;
-        {
+    function_pipeline<return_t> pipeline;
+
+    pipeline  //
+        .run_trycatch([&]() -> return_t {
+            uint8 cbsize_versions = 0;
+            binary_t bin_versions;
+
             for (auto ver : _versions) {
                 binary_append(bin_versions, ver, hton16);
             }
             cbsize_versions = t_narrow_cast(bin_versions.size());
-        }
-        {
-            payload pl;
-            try {
+
+            {
+                payload pl;
                 pl << new payload_member(cbsize_versions, constexpr_versions)  //
                    << new payload_member(bin_versions, constexpr_version);
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
+
+                return pl.write(bin);
             }
 
-            ret = pl.write(bin);
-        }
-    }
-    __finally2 {}
-    return ret;
+            return success;
+        });
+    return pipeline.result();
 }
 
 tls_extension_client_supported_versions& tls_extension_client_supported_versions::add(uint16 code) {
@@ -132,62 +134,57 @@ tls_extension_server_supported_versions::tls_extension_server_supported_versions
 tls_extension_server_supported_versions::~tls_extension_server_supported_versions() {}
 
 return_t tls_extension_server_supported_versions::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto session = get_handshake()->get_session();
+    function_pipeline<return_t> pipeline;
 
-        uint16 version = 0;
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .run_trycatch([&]() -> return_t {
+            auto session = get_handshake()->get_session();
 
-        {
-            payload pl;
-            try {
+            uint16 version = 0;
+
+            {
+                payload pl;
                 pl << new payload_member(uint16(0), true, constexpr_version);
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
+
+                auto rc = pl.read(stream, endpos_extension(), pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
+
+                version = pl.t_value_of<uint16>(constexpr_version);
             }
 
-            pl.read(stream, endpos_extension(), pos);
-
-            version = pl.t_value_of<uint16>(constexpr_version);
-        }
-
-        {
             auto& protection = session->get_tls_protection();
             protection.set_tls_version(version);
-        }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-                dbs.println("    > 0x%04x %s", version, tlsadvisor->nameof_tls_version(version).c_str());
-            });
-        }
+                    dbs.println("    > 0x%04x %s", version, tlsadvisor->nameof_tls_version(version).c_str());
+                });
+            }
 #endif
-    }
-    __finally2 {}
-    return ret;
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 return_t tls_extension_server_supported_versions::do_write_body(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        // auto session = get_handshake()->get_session();
+    function_pipeline<return_t> pipeline;
 
-        payload pl;
-        try {
+    pipeline  //
+        .run_trycatch([&]() -> return_t {
+            payload pl;
             pl << new payload_member(uint16(get_version()), true, constexpr_version);
-        } catch (...) {
-            ret = errorcode_t::out_of_memory;
-            __leave2_trace(ret);
-        }
 
-        ret = pl.write(bin);
-    }
-    __finally2 {}
-    return ret;
+            return pl.write(bin);
+        });
+    return pipeline.result();
 }
 
 uint16 tls_extension_server_supported_versions::get_version() {

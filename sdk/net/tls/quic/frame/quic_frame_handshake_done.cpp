@@ -43,22 +43,7 @@ return_t quic_frame_handshake_done::do_write_body(tls_direction_t dir, binary_t&
     __try2 {
         auto type = get_type();
 
-#if 1
         bin.push_back(uint8(type));
-#else
-        payload pl;
-        try {
-            pl << new payload_member(new quic_encoded(uint8(type)), constexpr_type);
-        } catch (...) {
-            ret = errorcode_t::out_of_memory;
-            __leave2;
-        }
-
-        ret = pl.write(bin);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-#endif
 
 #if defined DEBUG
         if (istraceable(trace_category_net)) {

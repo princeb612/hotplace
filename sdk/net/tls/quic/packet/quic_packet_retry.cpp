@@ -36,6 +36,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
@@ -58,65 +59,60 @@ quic_packet_retry::quic_packet_retry(const quic_packet_retry& other)
 quic_packet_retry::~quic_packet_retry() {}
 
 return_t quic_packet_retry::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t& pos_unprotect) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        {
+    function_pipeline<return_t> pipeline;
+
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .run_trycatch([&]() -> return_t {
             payload pl;
-            try {
-                pl << new payload_member(binary_t(), constexpr_retry_token)  //
-                   << new payload_member(binary_t(), constexpr_retry_integrity_tag);
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2;
-            }
+            pl << new payload_member(binary_t(), constexpr_retry_token)  //
+               << new payload_member(binary_t(), constexpr_retry_integrity_tag);
             pl.reserve(constexpr_retry_integrity_tag, 128 >> 3);
 
-            pl.read(stream, size, pos);
+            auto rc = pl.read(stream, size, pos);
+            if (false == error_traits<return_t>::is_not_fail(rc)) {
+                return rc;
+            }
 
             pl.get_binary(constexpr_retry_token, _retry_token);
             pl.get_binary(constexpr_retry_integrity_tag, _retry_integrity_tag);
-        }
 
-        dump();
-    }
-    __finally2 {}
-    return ret;
+            return success;
+        })
+        .walk_always([&](return_t rc) -> void { dump(); });
+    return pipeline.result();
 }
 
 return_t quic_packet_retry::write(tls_direction_t dir, binary_t& packet) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        ret = do_write_header(packet);
+    function_pipeline<return_t> pipeline;
 
-        binary_t bin_integrity_tag;
+    pipeline  //
+        .run([&]() -> return_t { return do_write_header(packet); })
+        .run_trycatch([&]() -> return_t {
+            binary_t bin_integrity_tag;
 
-        if (from_any != dir) {
-            ret = retry_integrity_tag(*this, bin_integrity_tag);
-            if (errorcode_t::success == ret) {
-                _retry_integrity_tag = std::move(bin_integrity_tag);
+            if (from_any != dir) {
+                auto rc = retry_integrity_tag(*this, bin_integrity_tag);
+                if (errorcode_t::success == rc) {
+                    _retry_integrity_tag = std::move(bin_integrity_tag);
+                } else {
+                    return rc;
+                }
             }
-        }
 
-        {
-            payload pl;
-            try {
+            {
+                payload pl;
                 pl << new payload_member(_retry_token)  //
                    << new payload_member(_retry_integrity_tag);
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2;
-            }
 
-            ret = pl.write(packet);
-            if (errorcode_t::success != ret) {
-                __leave2;
+                return pl.write(packet);
             }
-        }
-
-        dump();
-    }
-    __finally2 {}
-    return ret;
+            return success;
+        })
+        .walk_always([&](return_t rc) -> void { dump(); });
+    ;
+    return pipeline.result();
 }
 
 void quic_packet_retry::dump() {

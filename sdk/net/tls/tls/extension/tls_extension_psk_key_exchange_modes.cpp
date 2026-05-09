@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
@@ -29,82 +30,83 @@ tls_extension_psk_key_exchange_modes::tls_extension_psk_key_exchange_modes(tls_h
 tls_extension_psk_key_exchange_modes::~tls_extension_psk_key_exchange_modes() {}
 
 return_t tls_extension_psk_key_exchange_modes::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes
-        // enum { psk_ke(0), psk_dhe_ke(1), (255) } PskKeyExchangeMode;
-        // struct {
-        //     PskKeyExchangeMode ke_modes<1..255>;
-        // } PskKeyExchangeModes;
+    function_pipeline<return_t> pipeline;
 
-        uint8 modes = 0;
-        binary_t mode;
-        {
-            payload pl;
-            try {
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
+        .run_trycatch([&]() -> return_t {
+            // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes
+            // enum { psk_ke(0), psk_dhe_ke(1), (255) } PskKeyExchangeMode;
+            // struct {
+            //     PskKeyExchangeMode ke_modes<1..255>;
+            // } PskKeyExchangeModes;
+
+            uint8 modes = 0;
+            binary_t mode;
+            {
+                payload pl;
                 pl << new payload_member(uint8(0), constexpr_modes)  //
                    << new payload_member(binary_t(), constexpr_mode);
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
+                pl.set_reference_value(constexpr_mode, constexpr_modes);
+
+                auto rc = pl.read(stream, endpos_extension(), pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
+
+                modes = pl.t_value_of<uint8>(constexpr_modes);
+                pl.get_binary(constexpr_mode, mode);
+
+                for (auto i = 0; i < modes; i++) {
+                    auto m = mode[i];
+                    add(m);
+                }
             }
-            pl.set_reference_value(constexpr_mode, constexpr_modes);
-
-            pl.read(stream, endpos_extension(), pos);
-
-            modes = pl.t_value_of<uint8>(constexpr_modes);
-            pl.get_binary(constexpr_mode, mode);
-
-            for (auto i = 0; i < modes; i++) {
-                auto m = mode[i];
-                add(m);
-            }
-        }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-                dbs.println("   > %s", constexpr_modes);
-                int i = 0;
-                for (auto m : _modes) {
-                    dbs.println("     [%i] %i %s", i++, m, tlsadvisor->nameof_psk_key_exchange_mode(m).c_str());
-                }
-            });
-        }
+                    dbs.println("   > %s", constexpr_modes);
+                    int i = 0;
+                    for (auto m : _modes) {
+                        dbs.println("     [%i] %i %s", i++, m, tlsadvisor->nameof_psk_key_exchange_mode(m).c_str());
+                    }
+                });
+            }
 #endif
-    }
-    __finally2 {}
-    return ret;
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 return_t tls_extension_psk_key_exchange_modes::do_write_body(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        uint8 cbsize_modes = 0;
-        binary_t bin_modes;
-        {
+    function_pipeline<return_t> pipeline;
+
+    pipeline  //
+        .run_trycatch([&]() -> return_t {
+            uint8 cbsize_modes = 0;
+            binary_t bin_modes;
+
             for (auto m : _modes) {
                 binary_append(bin_modes, m);
             }
             cbsize_modes = t_narrow_cast(bin_modes.size());
-        }
-        {
-            payload pl;
-            try {
+
+            {
+                payload pl;
                 pl << new payload_member(cbsize_modes, constexpr_modes)  //
                    << new payload_member(bin_modes, constexpr_mode);
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
+
+                return pl.write(bin);
             }
 
-            ret = pl.write(bin);
-        }
-    }
-    __finally2 {}
-    return ret;
+            return success;
+        });
+    return pipeline.result();
 }
 
 tls_extension_psk_key_exchange_modes& tls_extension_psk_key_exchange_modes::add(uint8 code) {

@@ -246,7 +246,6 @@ const error_description error_descriptions[] = {
     errordef(not_specified, "not specfied"),
     errordef(error_negotiate, "(re)negotiation failed"),
     errordef(illegal_parameter, "illegal parameter"),  // ie. invalid_parameter + error_verify
-    errordef(block_segmented, "segment"),
     errordef(violation, "violation"),
     errordef(ambiguous, "ambiguous"),
     errordef(miscast_unsigned, "negative integer to unsigned type"),
@@ -267,6 +266,7 @@ const error_description error_descriptions[] = {
     errordef(no_data, "no data"),
     errordef(fragmented, "fragment detected"),
     errordef(not_implemented, "not_implemented"),
+    errordef(block_segmented, "segment"),
 };  // namespace hotplace
 
 error_advisor error_advisor::_instance;

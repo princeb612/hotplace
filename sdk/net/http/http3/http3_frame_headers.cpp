@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/http/compression/http_header_compression_stream.hpp>
@@ -62,35 +63,30 @@ return_t http3_frame_headers::do_read_payload(const byte_t* stream, size_t size,
 }
 
 return_t http3_frame_headers::do_write(binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        qpack_stream stream;
-        uint32 flags = qpack_quic_stream_header;
-        auto& dyntable = _session->get_quic_session().get_dynamic_table();
-        stream.set_dyntable(&dyntable);
-        for (const auto& item : _kv) {
-            stream.encode_header(item.first, item.second, flags);
-        }
-        stream.pack(flags);
-        _payload = std::move(stream.get_binary());
+    function_pipeline<return_t> pipeline;
 
-        payload pl;
-        try {
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return true; })
+        .run_trycatch([&]() -> return_t {
+            qpack_stream stream;
+            uint32 flags = qpack_quic_stream_header;
+            auto& dyntable = _session->get_quic_session().get_dynamic_table();
+            stream.set_dyntable(&dyntable);
+            for (const auto& item : _kv) {
+                stream.encode_header(item.first, item.second, flags);
+            }
+            stream.pack(flags);
+            _payload = std::move(stream.get_binary());
+
+            payload pl;
             pl << new payload_member(new quic_encoded(uint64(h3_frame_headers)))  //
                << new payload_member(new quic_encoded(uint64(_payload.size())))   //
                << new payload_member(_payload);
-        } catch (...) {
-            ret = errorcode_t::out_of_memory;
-            __leave2;
-        }
 
-        ret = pl.write(bin);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-    }
-    __finally2 {}
-    return ret;
+            return pl.write(bin);
+        });
+    return pipeline.result();
 }
 
 http3_frame_headers& http3_frame_headers::add(const std::string& name, const std::string& value) {

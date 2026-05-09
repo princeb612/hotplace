@@ -10,6 +10,7 @@
 
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
@@ -274,56 +275,50 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
 }
 
 return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2_trace(ret);
-        }
+    function_pipeline<return_t> pipeline;
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    auto session = get_session();
+    auto& protection = session->get_tls_protection();
+    auto& secrets = protection.get_secrets();
+    auto& kv = session->get_keyvalue();
+    uint16 legacy_version = protection.get_lagacy_version();
+    uint16 version = 0;
 
-        {
-            /* RFC 8446 4.1.3.  Server Hello */
-
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            auto session = get_session();
-            auto& protection = session->get_tls_protection();
-            auto& secrets = protection.get_secrets();
-            auto& kv = session->get_keyvalue();
-            uint16 legacy_version = protection.get_lagacy_version();
-            uint16 version = 0;
-
-            binary_t random;
-            binary_t session_id;
-            // uint8 session_ids = 0;
-            uint16 cipher_suite = 0;
+    binary_t random;
+    binary_t session_id;
+    // uint8 session_ids = 0;
+    uint16 cipher_suite = 0;
 #if defined DEBUG
-            uint8 compression_method = 0;
+    uint8 compression_method = 0;
 #endif
-            uint16 extension_len = 0;
+    uint16 extension_len = 0;
 
-            binary_t bin_server_hello;
+    binary_t bin_server_hello;
 
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .run_trycatch([&]() -> return_t {
+            /* RFC 8446 4.1.3.  Server Hello */
             {
                 payload pl;
-                try {
-                    pl << new payload_member(uint16(0), true, constexpr_version)         //
-                       << new payload_member(binary_t(), constexpr_random)               //
-                       << new payload_member(uint8(0), constexpr_session_id_len)         //
-                       << new payload_member(binary_t(), constexpr_session_id)           //
-                       << new payload_member(uint16(0), true, constexpr_cipher_suite)    //
-                       << new payload_member(uint8(0), constexpr_compression_method)     //
-                       << new payload_member(uint16(0), true, constexpr_extension_len);  //
-                } catch (...) {
-                    ret = errorcode_t::out_of_memory;
-                    __leave2_trace(ret);
-                }
+                pl << new payload_member(uint16(0), true, constexpr_version)         //
+                   << new payload_member(binary_t(), constexpr_random)               //
+                   << new payload_member(uint8(0), constexpr_session_id_len)         //
+                   << new payload_member(binary_t(), constexpr_session_id)           //
+                   << new payload_member(uint16(0), true, constexpr_cipher_suite)    //
+                   << new payload_member(uint8(0), constexpr_compression_method)     //
+                   << new payload_member(uint16(0), true, constexpr_extension_len);  //
 
                 pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(legacy_version));
 
                 pl.reserve(constexpr_random, 32);
                 pl.set_reference_value(constexpr_session_id, constexpr_session_id_len);
 
-                pl.read(stream, size, pos);
+                auto rc = pl.read(stream, size, pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
 
                 // RFC 8446 4.1.1.  Cryptographic Negotiation
                 // If PSK is being used, ... "pre_shared_key" extension indicating the selected key
@@ -340,13 +335,6 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                 compression_method = pl.t_value_of<uint8>(constexpr_compression_method);
 #endif
                 extension_len = pl.t_value_of<uint16>(constexpr_extension_len);
-            }
-
-            if (0 == extension_len) {
-                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
-                session->reset_session_status();
-                ret = errorcode_t::error_handshake;
-                __leave2_trace(ret);
             }
 
 #if defined DEBUG
@@ -371,7 +359,19 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
             }
 #endif
 
-            ret = get_extensions().read(this, dir, stream, pos + extension_len, pos);
+            if (0 == extension_len) {
+                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
+                session->reset_session_status();
+                return errorcode_t::error_handshake;
+            }
+
+            return success;
+        })
+        .run([&]() -> return_t {
+            auto rc = get_extensions().read(this, dir, stream, pos + extension_len, pos);
+            if (false == error_traits<return_t>::is_not_fail(rc)) {
+                return rc;
+            }
 
             // encrypt_then_mac
             {
@@ -384,8 +384,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                     if (ext_etm) {
                         session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                         session->reset_session_status();
-                        ret = error_handshake;
-                        __leave2_trace(ret);
+                        return error_handshake;
                     }
                 }
             }
@@ -400,8 +399,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                     if (ext_ems) {
                         session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                         session->reset_session_status();
-                        ret = error_handshake;
-                        __leave2_trace(ret);
+                        return error_handshake;
                     }
                 }
             }
@@ -413,106 +411,107 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
             secrets.assign(tls_context_server_hello_random, random);
 
             _version = version;
-        }
-    }
-    __finally2 {}
-    return ret;
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
+    function_pipeline<return_t> pipeline;
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
-    __try2 {
-        auto session = get_session();
-        auto& protection = session->get_tls_protection();
-        auto& secrets = protection.get_secrets();
-        auto& kv = session->get_keyvalue();
-        auto legacy_version = protection.get_lagacy_version();
-        auto cs = get_cipher_suite();
-        auto hint = tlsadvisor->hintof_cipher_suite(cs);
 
-        {
-            // encrypt_then_mac
-            auto request_etm = kv.get(session_encrypt_then_mac);
-            if (request_etm) {
-                if (tlsadvisor->is_kindof_cbc(cs)) {
-                    auto ext_etm = get_extensions().get(tls_ext_encrypt_then_mac);
-                    if (nullptr == ext_etm) {
-                        get_extensions().add(tls_ext_encrypt_then_mac, dir, this, nullptr);
+    pipeline  //
+        .run_trycatch([&]() -> return_t {
+            return_t rc = success;
+            auto session = get_session();
+            auto& protection = session->get_tls_protection();
+            auto& secrets = protection.get_secrets();
+            auto& kv = session->get_keyvalue();
+            auto legacy_version = protection.get_lagacy_version();
+            auto cs = get_cipher_suite();
+            auto hint = tlsadvisor->hintof_cipher_suite(cs);
+
+            {
+                // encrypt_then_mac
+                auto request_etm = kv.get(session_encrypt_then_mac);
+                if (request_etm) {
+                    if (tlsadvisor->is_kindof_cbc(cs)) {
+                        auto ext_etm = get_extensions().get(tls_ext_encrypt_then_mac);
+                        if (nullptr == ext_etm) {
+                            get_extensions().add(tls_ext_encrypt_then_mac, dir, this, nullptr);
+                        }
                     }
                 }
+                auto ext_etm = get_extensions().get(tls_ext_encrypt_then_mac);
+                // test session_conf_etm && client_hello.get_extensions.has(etm extension) && server_hello.get_extensions.has(etm extension)
+                session->get_keyvalue().set(session_encrypt_then_mac, (request_etm && ext_etm) ? 1 : 0);
             }
-            auto ext_etm = get_extensions().get(tls_ext_encrypt_then_mac);
-            // test session_conf_etm && client_hello.get_extensions.has(etm extension) && server_hello.get_extensions.has(etm extension)
-            session->get_keyvalue().set(session_encrypt_then_mac, (request_etm && ext_etm) ? 1 : 0);
-        }
-        {
-            // extended master secret
-            auto request_ems = kv.get(session_extended_master_secret);
+            {
+                // extended master secret
+                auto request_ems = kv.get(session_extended_master_secret);
+                if (tls_12 == hint->spec) {
+                    if (request_ems) {
+                        auto ext_ems = get_extensions().get(tls_ext_extended_master_secret);
+                        if (nullptr == ext_ems) {
+                            get_extensions().add(tls_ext_extended_master_secret, dir, this, nullptr);
+                        }
+                    }
+                }
+                auto ext_ems = get_extensions().get(tls_ext_extended_master_secret);
+                // test session_conf_ems && client_hello.get_extensions.has(ems extension) && server_hello.get_extensions.has(ems extension)
+                session->get_keyvalue().set(session_extended_master_secret, (request_ems && ext_ems) ? 1 : 0);
+            }
             if (tls_12 == hint->spec) {
-                if (request_ems) {
-                    auto ext_ems = get_extensions().get(tls_ext_extended_master_secret);
-                    if (nullptr == ext_ems) {
-                        get_extensions().add(tls_ext_extended_master_secret, dir, this, nullptr);
-                    }
+                // fatal:handshake_failure
+                // avoid final_renegotiate:unsafe legacy renegotiation disabled
+                auto ext_renego = get_extensions().get(tls_ext_renegotiation_info);
+                if (nullptr == ext_renego) {
+                    get_extensions().add(tls_ext_renegotiation_info, dir, this, nullptr);
+                }
+
+                // TLS 1.2 server_hello
+                // TLS 1.3 encrypted_extensions
+                session->select_into_scheduled_extension(&get_extensions(), tls_ext_alpn);
+            }
+
+            binary_t extensions;
+            rc = get_extensions().write(dir, extensions);
+            if (false == error_traits<return_t>::is_not_fail(rc)) {
+                return rc;
+            }
+
+            // RFC 8446
+            // If there is no overlap between the received "supported_groups" and the groups supported by the server, then the
+            // server MUST abort the handshake with a "handshake_failure" or an "insufficient_security" alert.
+            auto ext_sg = get_extensions().get(tls_ext_supported_groups);
+            if (ext_sg) {
+                tls_extension_supported_groups* ext_sg_casted = (tls_extension_supported_groups*)ext_sg;
+                if (0 == ext_sg_casted->numberof_groups()) {
+                    session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
+                    session->reset_session_status();
+                    return errorcode_t::error_handshake;
                 }
             }
-            auto ext_ems = get_extensions().get(tls_ext_extended_master_secret);
-            // test session_conf_ems && client_hello.get_extensions.has(ems extension) && server_hello.get_extensions.has(ems extension)
-            session->get_keyvalue().set(session_extended_master_secret, (request_ems && ext_ems) ? 1 : 0);
-        }
-        if (tls_12 == hint->spec) {
-            // fatal:handshake_failure
-            // avoid final_renegotiate:unsafe legacy renegotiation disabled
-            auto ext_renego = get_extensions().get(tls_ext_renegotiation_info);
-            if (nullptr == ext_renego) {
-                get_extensions().add(tls_ext_renegotiation_info, dir, this, nullptr);
+
+            if (32 != _random.size()) {
+                // gmt_unix_time(4 bytes) + random(28 bytes)
+                openssl_prng prng;
+                binary_t random;
+                time_t gmt_unix_time = time(nullptr);
+                uint32 gmt = (uint32)gmt_unix_time;
+                binary_append(random, gmt, hton32);
+                binary_t temp;
+                prng.random(temp, 28);
+                binary_append(random, temp);
+
+                _random = std::move(random);
+
+                _session_id = secrets.get(tls_context_session_id);  // avoid routines:tls_process_server_hello:invalid session id
             }
 
-            // TLS 1.2 server_hello
-            // TLS 1.3 encrypted_extensions
-            session->select_into_scheduled_extension(&get_extensions(), tls_ext_alpn);
-        }
-
-        binary_t extensions;
-        ret = get_extensions().write(dir, extensions);
-        if (errorcode_t::success != ret) {
-            __leave2_trace(ret);
-        }
-
-        // RFC 8446
-        // If there is no overlap between the received "supported_groups" and the groups supported by the server, then the
-        // server MUST abort the handshake with a "handshake_failure" or an "insufficient_security" alert.
-        auto ext_sg = get_extensions().get(tls_ext_supported_groups);
-        if (ext_sg) {
-            tls_extension_supported_groups* ext_sg_casted = (tls_extension_supported_groups*)ext_sg;
-            if (0 == ext_sg_casted->numberof_groups()) {
-                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
-                session->reset_session_status();
-                ret = errorcode_t::error_handshake;
-                __leave2_trace(ret);
-            }
-        }
-
-        if (32 != _random.size()) {
-            // gmt_unix_time(4 bytes) + random(28 bytes)
-            openssl_prng prng;
-            binary_t random;
-            time_t gmt_unix_time = time(nullptr);
-            uint32 gmt = (uint32)gmt_unix_time;
-            binary_append(random, gmt, hton32);
-            binary_t temp;
-            prng.random(temp, 28);
-            binary_append(random, temp);
-
-            _random = std::move(random);
-
-            _session_id = secrets.get(tls_context_session_id);  // avoid routines:tls_process_server_hello:invalid session id
-        }
-
-        {
-            payload pl;
-            try {
+            {
+                payload pl;
                 pl << new payload_member(uint16(_version ? _version : legacy_version), true, constexpr_version)  //
                    << new payload_member(_random, constexpr_random)                                              //
                    << new payload_member(uint8(_session_id.size()), constexpr_session_id_len)                    //
@@ -520,34 +519,30 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
                    << new payload_member(uint16(cs), true, constexpr_cipher_suite)                               //
                    << new payload_member(uint8(0), constexpr_compression_method)                                 //
                    << new payload_member(uint16(extensions.size()), true, constexpr_extension_len);              //
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
+                pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(legacy_version));
+
+                rc = pl.write(bin);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
             }
 
-            pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(legacy_version));
+            secrets.assign(tls_context_server_hello_random, _random);
 
-            ret = pl.write(bin);
-            if (errorcode_t::success != ret) {
-                __leave2_trace(ret);
-            }
-        }
-
-        secrets.assign(tls_context_server_hello_random, _random);
-
-        binary_append(bin, extensions);
+            binary_append(bin, extensions);
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
-                dbs.println("> encrypt_then_mac %i", kv.get(session_encrypt_then_mac) ? 1 : 0);
-                dbs.println("> extended master secret %i", kv.get(session_extended_master_secret));
-            });
-        }
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                    dbs.println("> encrypt_then_mac %i", kv.get(session_encrypt_then_mac) ? 1 : 0);
+                    dbs.println("> extended master secret %i", kv.get(session_extended_master_secret));
+                });
+            }
 #endif
-    }
-    __finally2 {}
-    return ret;
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 }  // namespace net

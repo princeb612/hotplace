@@ -11,6 +11,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
@@ -33,91 +34,88 @@ tls_extension_sni::tls_extension_sni(tls_handshake* handshake) : tls_extension(t
 tls_extension_sni::~tls_extension_sni() {}
 
 return_t tls_extension_sni::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        // RFC 6066 3.  Server Name Indication
+    function_pipeline<return_t> pipeline;
 
-        // uint16 first_entry_len = 0;
-        uint8 type = 0;
-        // uint16 hostname_len = 0;
-        binary_t hostname;
-        {
-            /**
-             *  struct {
-             *      NameType name_type;
-             *      select (name_type) {
-             *          case host_name: HostName;
-             *      } name;
-             *  } ServerName;
-             *  enum {
-             *      host_name(0), (255)
-             *  } NameType;
-             *  opaque HostName<1..2^16-1>;
-             *  struct {
-             *      ServerName server_name_list<1..2^16-1>
-             *  } ServerNameList;
-             */
-            payload pl;
-            try {
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .run_trycatch([&]() -> return_t {
+            // RFC 6066 3.  Server Name Indication
+
+            // uint16 first_entry_len = 0;
+            uint8 type = 0;
+            // uint16 hostname_len = 0;
+            binary_t hostname;
+            {
+                /**
+                 *  struct {
+                 *      NameType name_type;
+                 *      select (name_type) {
+                 *          case host_name: HostName;
+                 *      } name;
+                 *  } ServerName;
+                 *  enum {
+                 *      host_name(0), (255)
+                 *  } NameType;
+                 *  opaque HostName<1..2^16-1>;
+                 *  struct {
+                 *      ServerName server_name_list<1..2^16-1>
+                 *  } ServerNameList;
+                 */
+                payload pl;
                 pl << new payload_member(uint16(0), true, constexpr_entry_len)     //
                    << new payload_member(uint8(0), constexpr_name_type)            //
                    << new payload_member(uint16(0), true, constexpr_hostname_len)  //
                    << new payload_member(binary_t(), constexpr_hostname);
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
+                pl.set_reference_value(constexpr_hostname, constexpr_hostname_len);
+
+                auto rc = pl.read(stream, endpos_extension(), pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
+
+                type = pl.t_value_of<uint8>(constexpr_name_type);
+                // hostname_len = pl.t_value_of<uint16>(constexpr_hostname_len);
+                pl.get_binary(constexpr_hostname, hostname);
             }
-            pl.set_reference_value(constexpr_hostname, constexpr_hostname_len);
-
-            pl.read(stream, endpos_extension(), pos);
-
-            type = pl.t_value_of<uint8>(constexpr_name_type);
-            // hostname_len = pl.t_value_of<uint16>(constexpr_hostname_len);
-            pl.get_binary(constexpr_hostname, hostname);
-        }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-                dbs.println("   > %s %i (%s)", constexpr_name_type, type, tlsadvisor->nameof_sni_nametype(type).c_str());  // 00 host_name
-                dbs.println("   > %s %s", constexpr_hostname, bin2str(hostname).c_str());
-            });
-        }
+                    dbs.println("   > %s %i (%s)", constexpr_name_type, type, tlsadvisor->nameof_sni_nametype(type).c_str());  // 00 host_name
+                    dbs.println("   > %s %s", constexpr_hostname, bin2str(hostname).c_str());
+                });
+            }
 #endif
 
-        {
             _nametype = type;
             _hostname = std::move(hostname);
-        }
-    }
-    __finally2 {}
-    return ret;
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 return_t tls_extension_sni::do_write_body(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        uint8 type = get_nametype();
-        const binary_t& hostname = get_hostname();
-        uint16 entry_len = t_narrow_cast(1 + hostname.size());
+    function_pipeline<return_t> pipeline;
 
-        payload pl;
-        try {
+    pipeline  //
+        .run_trycatch([&]() -> return_t {
+            uint8 type = get_nametype();
+            const binary_t& hostname = get_hostname();
+            uint16 entry_len = t_narrow_cast(1 + hostname.size());
+
+            payload pl;
             pl << new payload_member(uint16(entry_len), true, constexpr_entry_len)           //
                << new payload_member(uint8(type), constexpr_name_type)                       //
                << new payload_member(uint16(hostname.size()), true, constexpr_hostname_len)  //
                << new payload_member(hostname, constexpr_hostname);
-        } catch (...) {
-            ret = errorcode_t::out_of_memory;
-            __leave2_trace(ret);
-        }
 
-        ret = pl.write(bin);
-    }
-    __finally2 {}
-    return ret;
+            return pl.write(bin);
+        });
+    return pipeline.result();
 }
 
 uint8 tls_extension_sni::get_nametype() { return _nametype; }

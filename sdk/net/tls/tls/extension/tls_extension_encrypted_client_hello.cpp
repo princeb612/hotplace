@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_encrypted_client_hello.hpp>
@@ -35,20 +36,23 @@ tls_extension_encrypted_client_hello::tls_extension_encrypted_client_hello(tls_h
 tls_extension_encrypted_client_hello::~tls_extension_encrypted_client_hello() {}
 
 return_t tls_extension_encrypted_client_hello::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        uint8 client_hello_type = 0;
-        uint16 kdf = 0;
-        uint16 aead = 0;
-        uint8 config_id = 0;
-        uint16 enc_len = 0;
-        binary_t enc;
-        uint16 enc_payload_len = 0;
-        binary_t enc_payload;
+    function_pipeline<return_t> pipeline;
 
-        {
-            payload pl;
-            try {
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return true; })
+        .run_trycatch([&]() -> return_t {
+            uint8 client_hello_type = 0;
+            uint16 kdf = 0;
+            uint16 aead = 0;
+            uint8 config_id = 0;
+            uint16 enc_len = 0;
+            binary_t enc;
+            uint16 enc_payload_len = 0;
+            binary_t enc_payload;
+
+            {
+                payload pl;
                 pl << new payload_member(uint8(0), constexpr_client_hello_type)   //
                    << new payload_member(uint16(0), true, constexpr_kdf)          //
                    << new payload_member(uint16(0), true, constexpr_aead)         //
@@ -57,59 +61,59 @@ return_t tls_extension_encrypted_client_hello::do_read_body(tls_direction_t dir,
                    << new payload_member(binary_t(), constexpr_enc)               //
                    << new payload_member(uint16(0), true, constexpr_payload_len)  //
                    << new payload_member(binary_t(), constexpr_payload);
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
+                pl.set_reference_value(constexpr_enc, constexpr_enc_len);
+                pl.set_reference_value(constexpr_payload, constexpr_payload_len);
+
+                auto rc = pl.read(stream, endpos_extension(), pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
+
+                client_hello_type = pl.t_value_of<uint8>(constexpr_client_hello_type);
+                kdf = pl.t_value_of<uint16>(constexpr_kdf);
+                aead = pl.t_value_of<uint16>(constexpr_aead);
+                config_id = pl.t_value_of<uint8>(constexpr_config_id);
+                enc_len = pl.t_value_of<uint16>(constexpr_enc_len);
+                pl.get_binary(constexpr_enc, enc);
+                enc_payload_len = pl.t_value_of<uint16>(constexpr_payload_len);
+                pl.get_binary(constexpr_payload, enc_payload);
             }
-            pl.set_reference_value(constexpr_enc, constexpr_enc_len);
-            pl.set_reference_value(constexpr_payload, constexpr_payload_len);
-
-            pl.read(stream, endpos_extension(), pos);
-
-            client_hello_type = pl.t_value_of<uint8>(constexpr_client_hello_type);
-            kdf = pl.t_value_of<uint16>(constexpr_kdf);
-            aead = pl.t_value_of<uint16>(constexpr_aead);
-            config_id = pl.t_value_of<uint8>(constexpr_config_id);
-            enc_len = pl.t_value_of<uint16>(constexpr_enc_len);
-            pl.get_binary(constexpr_enc, enc);
-            enc_payload_len = pl.t_value_of<uint16>(constexpr_payload_len);
-            pl.get_binary(constexpr_payload, enc_payload);
-        }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-                dbs.println("   > %s %i", constexpr_client_hello_type, client_hello_type);
-                dbs.println("   > %s %i %s", constexpr_kdf, kdf, tlsadvisor->nameof_kdf_id(kdf).c_str());
-                dbs.println("   > %s %i %s", constexpr_aead, aead, tlsadvisor->nameof_aead_alg(aead).c_str());
-                dbs.println("   > %s %i", constexpr_config_id, config_id);
-                dbs.println("   > %s %i", constexpr_enc_len, enc_len);
-                if (check_trace_level(loglevel_debug)) {
-                    dump_memory(enc, &dbs, 16, 4, 0x0, dump_notrunc);
-                }
-                dbs.println("   > %s %i", constexpr_payload_len, enc_payload_len);
-                if (check_trace_level(loglevel_debug)) {
-                    dump_memory(enc_payload, &dbs, 16, 4, 0x0, dump_notrunc);
-                }
-            });
-        }
+                    dbs.println("   > %s %i", constexpr_client_hello_type, client_hello_type);
+                    dbs.println("   > %s %i %s", constexpr_kdf, kdf, tlsadvisor->nameof_kdf_id(kdf).c_str());
+                    dbs.println("   > %s %i %s", constexpr_aead, aead, tlsadvisor->nameof_aead_alg(aead).c_str());
+                    dbs.println("   > %s %i", constexpr_config_id, config_id);
+                    dbs.println("   > %s %i", constexpr_enc_len, enc_len);
+                    if (check_trace_level(loglevel_debug)) {
+                        dump_memory(enc, &dbs, 16, 4, 0x0, dump_notrunc);
+                    }
+                    dbs.println("   > %s %i", constexpr_payload_len, enc_payload_len);
+                    if (check_trace_level(loglevel_debug)) {
+                        dump_memory(enc_payload, &dbs, 16, 4, 0x0, dump_notrunc);
+                    }
+                });
+            }
 #endif
 
-        {
-            _client_hello_type = client_hello_type;
-            _kdf = kdf;
-            _aead = aead;
-            _config_id = config_id;
-            _enc_len = enc_len;
-            _enc = std::move(enc);
-            _enc_payload_len = enc_payload_len;
-            _enc_payload = std::move(enc_payload);
-        }
-    }
-    __finally2 {}
-    return ret;
+            {
+                _client_hello_type = client_hello_type;
+                _kdf = kdf;
+                _aead = aead;
+                _config_id = config_id;
+                _enc_len = enc_len;
+                _enc = std::move(enc);
+                _enc_payload_len = enc_payload_len;
+                _enc_payload = std::move(enc_payload);
+            }
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 return_t tls_extension_encrypted_client_hello::do_write_body(tls_direction_t dir, binary_t& bin) { return not_supported; }

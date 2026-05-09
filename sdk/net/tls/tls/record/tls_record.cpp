@@ -12,6 +12,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
@@ -168,155 +169,150 @@ return_t tls_record::do_postprocess(tls_direction_t dir) {
 }
 
 return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
+    function_pipeline<return_t> pipeline;
     size_t recpos = pos;
-    __try2 {
-        if (nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2_trace(ret);
-        }
 
-        auto session = get_session();
-        size_t minsize = (session_type_dtls == session->get_type()) ? sizeof(dtls_header) : sizeof(tls_header);
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .run_trycatch([&]() -> return_t {
+            auto session = get_session();
+            size_t minsize = (session_type_dtls == session->get_type()) ? sizeof(dtls_header) : sizeof(tls_header);
 
-        if ((size < pos) || (size - pos < minsize)) {
-            ret = errorcode_t::no_more;
-            __leave2_trace(ret);
-        }
+            if ((size < pos) || (size - pos < minsize)) {
+                return errorcode_t::no_more;
+            }
 
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-        uint8 content_type = 0;
+            uint8 content_type = 0;
 #if defined DEBUG
-        uint16 record_version = 0;
+            uint16 record_version = 0;
 #endif
-        uint16 len = 0;
-        bool cond_dtls = false;
-        uint16 key_epoch = 0;
-        uint64 dtls_record_seq = 0;
-        // auto session_type = session->get_type();
+            uint16 len = 0;
+            bool cond_dtls = false;
+            uint16 key_epoch = 0;
+            uint64 dtls_record_seq = 0;
+            // auto session_type = session->get_type();
 
-        {
-            /**
-             * RFC 8446 5.1.  Record Layer
-             *   enum {
-             *       invalid(0),
-             *       change_cipher_spec(20),
-             *       alert(21),
-             *       handshake(22),
-             *       application_data(23),
-             *       (255)
-             *   } ContentType;
-             *
-             *   struct {
-             *       ContentType type;
-             *       ProtocolVersion legacy_record_version;
-             *       uint16 length;
-             *       opaque fragment[TLSPlaintext.length];
-             *   } TLSPlaintext;
-             *
-             * RFC 9147 4.  The DTLS Record Layer
-             *   Figure 2: DTLS 1.3 Record Formats
-             *   Figure 3: DTLS 1.3 Unified Header
-             *   Figure 4: DTLS 1.3 Header Examples
-             */
-            payload pl;
-            try {
+            {
+                /**
+                 * RFC 8446 5.1.  Record Layer
+                 *   enum {
+                 *       invalid(0),
+                 *       change_cipher_spec(20),
+                 *       alert(21),
+                 *       handshake(22),
+                 *       application_data(23),
+                 *       (255)
+                 *   } ContentType;
+                 *
+                 *   struct {
+                 *       ContentType type;
+                 *       ProtocolVersion legacy_record_version;
+                 *       uint16 length;
+                 *       opaque fragment[TLSPlaintext.length];
+                 *   } TLSPlaintext;
+                 *
+                 * RFC 9147 4.  The DTLS Record Layer
+                 *   Figure 2: DTLS 1.3 Record Formats
+                 *   Figure 3: DTLS 1.3 Unified Header
+                 *   Figure 4: DTLS 1.3 Header Examples
+                 */
+                payload pl;
                 pl << new payload_member(uint8(0), constexpr_content_type)                              // tls, dtls
                    << new payload_member(uint16(0), true, constexpr_record_version)                     // tls, dtls
                    << new payload_member(uint16(0), true, constexpr_dtls_epoch, constexpr_group_dtls)   // dtls
                    << new payload_member(uint48_t(0), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
                    << new payload_member(uint16(0), true, constexpr_len);                               // tls, dtls
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
-            }
 
-            auto lambda_check_dtls = [&](payload* pl, payload_member* item) -> void {
-                auto ver = pl->t_value_of<uint16>(item);
-                pl->set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(ver));
-            };
-            pl.set_condition(constexpr_record_version, lambda_check_dtls);
+                auto lambda_check_dtls = [&](payload* pl, payload_member* item) -> void {
+                    auto ver = pl->t_value_of<uint16>(item);
+                    pl->set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(ver));
+                };
+                pl.set_condition(constexpr_record_version, lambda_check_dtls);
 
-            pl.read(stream, size, pos);
+                auto rc = pl.read(stream, size, pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
 
-            content_type = pl.t_value_of<uint8>(constexpr_content_type);
+                content_type = pl.t_value_of<uint8>(constexpr_content_type);
 #if defined DEBUG
-            record_version = pl.t_value_of<uint16>(constexpr_record_version);
+                record_version = pl.t_value_of<uint16>(constexpr_record_version);
 #endif
-            len = pl.t_value_of<uint16>(constexpr_len);
-            cond_dtls = pl.get_group_condition(constexpr_group_dtls);
-            if (cond_dtls) {
-                key_epoch = pl.t_value_of<uint16>(constexpr_dtls_epoch);
-                dtls_record_seq = pl.t_value_of<uint64>(constexpr_dtls_record_seq);
+                len = pl.t_value_of<uint16>(constexpr_len);
+                cond_dtls = pl.get_group_condition(constexpr_group_dtls);
+                if (cond_dtls) {
+                    key_epoch = pl.t_value_of<uint16>(constexpr_dtls_epoch);
+                    dtls_record_seq = pl.t_value_of<uint64>(constexpr_dtls_record_seq);
+                }
             }
-        }
 
-        if (len > 16384 + 2048) {
-            // more than 2^14+2048 bytes
-            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_record_overflow);
-            ret = errorcode_t::error_overflow;
-            __leave2_trace(ret);
-        } else {
-            if (size - pos < len) {
-                ret = errorcode_t::bad_data;
-                __leave2_trace(ret);
+            if (len > 16384 + 2048) {
+                // more than 2^14+2048 bytes
+                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_record_overflow);
+                return errorcode_t::error_overflow;
+            } else {
+                if (size - pos < len) {
+                    return errorcode_t::bad_data;
+                }
             }
-        }
 
-        {
-            _content_type = content_type;
-            _bodysize = len;
-            _cond_dtls = cond_dtls;
-            if (cond_dtls) {
-                _dtls_epoch = key_epoch;
+            {
+                _content_type = content_type;
+                _bodysize = len;
+                _cond_dtls = cond_dtls;
+                if (cond_dtls) {
+                    _dtls_epoch = key_epoch;
+                }
+                _range.begin = recpos;
+                _range.end = pos;
             }
-            _range.begin = recpos;
-            _range.end = pos;
-        }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
-                tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                // const auto& range = get_header_range();
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+                    // const auto& range = get_header_range();
 
-                dbs.println("# record (%s) [size 0x%zx(%zi) pos 0x%x]", tlsadvisor->nameof_direction(dir).c_str(), size, size, recpos);
+                    dbs.println("# record (%s) [size 0x%zx(%zi) pos 0x%x]", tlsadvisor->nameof_direction(dir).c_str(), size, size, recpos);
 
-                if (check_trace_level(loglevel_debug)) {
-                    uint16 content_header_size = 0;
-                    if (tlsadvisor->is_kindof_tls(record_version)) {
-                        content_header_size = RTL_FIELD_SIZE(tls_content_t, tls);
-                    } else {
-                        content_header_size = RTL_FIELD_SIZE(tls_content_t, dtls);
+                    if (check_trace_level(loglevel_debug)) {
+                        uint16 content_header_size = 0;
+                        if (tlsadvisor->is_kindof_tls(record_version)) {
+                            content_header_size = RTL_FIELD_SIZE(tls_content_t, tls);
+                        } else {
+                            content_header_size = RTL_FIELD_SIZE(tls_content_t, dtls);
+                        }
+                        dump_memory(stream + recpos, content_header_size + len, &dbs, 16, 3, 0, dump_notrunc);
                     }
-                    dump_memory(stream + recpos, content_header_size + len, &dbs, 16, 3, 0, dump_notrunc);
-                }
 
-                dbs.println("> %s 0x%02x(%i) (%s)", constexpr_content_type, content_type, content_type, tlsadvisor->nameof_tls_record(content_type).c_str());
-                dbs.println(" > %s 0x%04x (%s)", constexpr_record_version, record_version, tlsadvisor->nameof_tls_version(record_version).c_str());
-                if (is_dtls()) {
-                    dbs.println(" > %s 0x%04x", constexpr_dtls_epoch, key_epoch);
-                    dbs.println(" > %s 0x%012I64x (%I64u)", constexpr_dtls_record_seq, dtls_record_seq, dtls_record_seq);
-                }
-                dbs.println(" > %s 0x%04x(%i)", constexpr_len, len, len);
-            });
-        }
+                    dbs.println("> %s 0x%02x(%i) (%s)", constexpr_content_type, content_type, content_type, tlsadvisor->nameof_tls_record(content_type).c_str());
+                    dbs.println(" > %s 0x%04x (%s)", constexpr_record_version, record_version, tlsadvisor->nameof_tls_version(record_version).c_str());
+                    if (is_dtls()) {
+                        dbs.println(" > %s 0x%04x", constexpr_dtls_epoch, key_epoch);
+                        dbs.println(" > %s 0x%012I64x (%I64u)", constexpr_dtls_record_seq, dtls_record_seq, dtls_record_seq);
+                    }
+                    dbs.println(" > %s 0x%04x(%i)", constexpr_len, len, len);
+                });
+            }
 #endif
-        if (cond_dtls) {
-            _dtls_record_seq = dtls_record_seq;
+            if (cond_dtls) {
+                _dtls_record_seq = dtls_record_seq;
 
-            auto& kv = session->get_session_info(dir).get_keyvalue();
-            kv.set(session_dtls_epoch, key_epoch);
-            kv.set(session_dtls_seq, dtls_record_seq);
-        }
-    }
-    __finally2 {
-        if ((errorcode_t::success != ret) && (errorcode_t::block_segmented != ret)) {
-            pos = recpos;  // rollback
-        }
-    }
-    return ret;
+                auto& kv = session->get_session_info(dir).get_keyvalue();
+                kv.set(session_dtls_epoch, key_epoch);
+                kv.set(session_dtls_seq, dtls_record_seq);
+            }
+
+            return success;
+        })
+        .walk_failed([&]() -> void {
+            /* if (error != block_segmented) rollback */
+            pos = recpos;
+        });
+    return pipeline.result();
 }
 
 return_t tls_record::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) { return not_supported; }
@@ -384,70 +380,65 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
 }
 
 return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin, const binary_t& body) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        uint16 record_version = get_legacy_version();
-        // auto is_tls = tlsadvisor->is_kindof_tls(record_version);
+    function_pipeline<return_t> pipeline;
 
-        {
+    pipeline  //
+        .run_trycatch([&]() -> return_t {
+            tls_advisor* tlsadvisor = tls_advisor::get_instance();
+            uint16 record_version = get_legacy_version();
+            // auto is_tls = tlsadvisor->is_kindof_tls(record_version);
+
             _range.begin = bin.size();
             _bodysize = t_narrow_cast(body.size());
-        }
 
-        {
-            payload pl;
-            try {
+            {
+                payload pl;
                 pl << new payload_member(uint8(get_type()), constexpr_content_type)                                         // tls, dtls
                    << new payload_member(uint16(record_version), true, constexpr_record_version)                            // tls, dtls
                    << new payload_member(uint16(get_key_epoch()), true, constexpr_dtls_epoch, constexpr_group_dtls)         // dtls
                    << new payload_member(uint48_t(get_dtls_record_seq()), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
                    << new payload_member(uint16(body.size()), true, constexpr_len);                                         // tls, dtls
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
+
+                pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(record_version));
+
+                auto rc = pl.write(bin);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
             }
 
-            pl.set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(record_version));
+            _range.end = bin.size();
 
-            ret = pl.write(bin);
-            if (errorcode_t::success != ret) {
-                __leave2_trace(ret);
-            }
-        }
-
-        _range.end = bin.size();
-
-        binary_append(bin, body);
+            binary_append(bin, body);
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
-                tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                // const auto& range = get_header_range();
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+                    // const auto& range = get_header_range();
 
-                dbs.println("# record %s", (from_server == dir) ? "(server)" : (from_client == dir) ? "(client)" : "");
+                    dbs.println("# record %s", (from_server == dir) ? "(server)" : (from_client == dir) ? "(client)" : "");
 
-                auto content_type = get_type();
-                auto len = body.size();
-                dbs.println("> %s 0x%02x(%i) (%s)", constexpr_content_type, content_type, content_type, tlsadvisor->nameof_tls_record(content_type).c_str());
-                dbs.println(" > %s 0x%04x (%s)", constexpr_record_version, record_version, tlsadvisor->nameof_tls_version(record_version).c_str());
-                if (session_type_dtls == get_session()->get_type()) {
-                    if (dont_control_dtls_sequence & get_flags()) {
-                    } else {
-                        uint16 key_epoch = get_key_epoch();
-                        uint64 dtls_record_seq = get_dtls_record_seq();
-                        dbs.println(" > %s 0x%04x", constexpr_dtls_epoch, key_epoch);
-                        dbs.println(" > %s 0x%012I64x (%I64u)", constexpr_dtls_record_seq, dtls_record_seq, dtls_record_seq);
+                    auto content_type = get_type();
+                    auto len = body.size();
+                    dbs.println("> %s 0x%02x(%i) (%s)", constexpr_content_type, content_type, content_type, tlsadvisor->nameof_tls_record(content_type).c_str());
+                    dbs.println(" > %s 0x%04x (%s)", constexpr_record_version, record_version, tlsadvisor->nameof_tls_version(record_version).c_str());
+                    if (session_type_dtls == get_session()->get_type()) {
+                        if (dont_control_dtls_sequence & get_flags()) {
+                        } else {
+                            uint16 key_epoch = get_key_epoch();
+                            uint64 dtls_record_seq = get_dtls_record_seq();
+                            dbs.println(" > %s 0x%04x", constexpr_dtls_epoch, key_epoch);
+                            dbs.println(" > %s 0x%012I64x (%I64u)", constexpr_dtls_record_seq, dtls_record_seq, dtls_record_seq);
+                        }
                     }
-                }
-                dbs.println(" > %s 0x%04x(%i)", constexpr_len, len, len);
-            });
-        }
+                    dbs.println(" > %s 0x%04x(%i)", constexpr_len, len, len);
+                });
+            }
 #endif
-    }
-    __finally2 {}
-    return ret;
+            return success;
+        });
+    return pipeline.result();
 }
 
 return_t tls_record::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }

@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
@@ -46,87 +47,86 @@ return_t tls_extension_supported_groups::do_postprocess(tls_direction_t dir) {
 }
 
 return_t tls_extension_supported_groups::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        binary_t supported_groups;
-        uint16 curves = 0;
+    function_pipeline<return_t> pipeline;
 
-        {
-            // RFC 8422 5.  Data Structures and Computations
-            //  struct {
-            //      NamedCurve named_curve_list<2..2^16-1>
-            //  } NamedCurveList;
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .run_trycatch([&]() -> return_t {
+            binary_t supported_groups;
+            uint16 curves = 0;
 
-            payload pl;
-            try {
+            {
+                // RFC 8422 5.  Data Structures and Computations
+                //  struct {
+                //      NamedCurve named_curve_list<2..2^16-1>
+                //  } NamedCurveList;
+
+                payload pl;
                 pl << new payload_member(uint16(0), true, constexpr_curves)  //
                    << new payload_member(binary_t(0), constexpr_curve);
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
+                pl.set_reference_value(constexpr_curve, constexpr_curves);
+
+                auto rc = pl.read(stream, endpos_extension(), pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
+
+                curves = pl.t_value_of<uint16>(constexpr_curves) >> 1;
+                pl.get_binary(constexpr_curve, supported_groups);
+
+                for (auto i = 0; i < curves; i++) {
+                    auto curve = t_binary_to_integer<uint16>(&supported_groups[i << 1], sizeof(uint16));
+                    add(curve);
+                }
             }
-            pl.set_reference_value(constexpr_curve, constexpr_curves);
-
-            pl.read(stream, endpos_extension(), pos);
-
-            curves = pl.t_value_of<uint16>(constexpr_curves) >> 1;
-            pl.get_binary(constexpr_curve, supported_groups);
-
-            for (auto i = 0; i < curves; i++) {
-                auto curve = t_binary_to_integer<uint16>(&supported_groups[i << 1], sizeof(uint16));
-                add(curve);
-            }
-        }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                auto tlsadvisor = tls_advisor::get_instance();
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                    auto tlsadvisor = tls_advisor::get_instance();
 
-                dbs.println("   > %s (%i ent.)", constexpr_curves, curves);
-                int i = 0;
-                for (auto curve : _supported_groups) {
-                    dbs.println("     [%i] 0x%04x(%i) %s", i++, curve, curve, tlsadvisor->nameof_group(curve).c_str());
-                }
-            });
-        }
+                    dbs.println("   > %s (%i ent.)", constexpr_curves, curves);
+                    int i = 0;
+                    for (auto curve : _supported_groups) {
+                        dbs.println("     [%i] 0x%04x(%i) %s", i++, curve, curve, tlsadvisor->nameof_group(curve).c_str());
+                    }
+                });
+            }
 #endif
-    }
-    __finally2 {}
-    return ret;
+
+            return success;
+        });
+    return pipeline.result();
 }
 
 return_t tls_extension_supported_groups::do_write_body(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        auto advisor = crypto_advisor::get_instance();
+    function_pipeline<return_t> pipeline;
 
-        uint16 cbsize_supported_groups = 0;
-        binary_t bin_supported_groups;
-        {
-            for (auto curve : _supported_groups) {
-                auto hint = advisor->hintof_tls_group(curve);
-                if (hint && (tls_flag_support & hint->flags)) {
-                    binary_append(bin_supported_groups, curve, hton16);
+    pipeline  //
+        .run_trycatch([&]() -> return_t {
+            auto advisor = crypto_advisor::get_instance();
+
+            uint16 cbsize_supported_groups = 0;
+            binary_t bin_supported_groups;
+            {
+                for (auto curve : _supported_groups) {
+                    auto hint = advisor->hintof_tls_group(curve);
+                    if (hint && (tls_flag_support & hint->flags)) {
+                        binary_append(bin_supported_groups, curve, hton16);
+                    }
                 }
+                cbsize_supported_groups = t_narrow_cast(bin_supported_groups.size());
             }
-            cbsize_supported_groups = t_narrow_cast(bin_supported_groups.size());
-        }
-        {
-            payload pl;
-            try {
+            {
+                payload pl;
                 pl << new payload_member(uint16(cbsize_supported_groups), true, constexpr_curves)  //
                    << new payload_member(bin_supported_groups, constexpr_curve);
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                __leave2_trace(ret);
-            }
 
-            ret = pl.write(bin);
-        }
-    }
-    __finally2 {}
-    return ret;
+                return pl.write(bin);
+            }
+        });
+    return pipeline.result();
 }
 
 tls_extension_supported_groups& tls_extension_supported_groups::add(uint16 code) {

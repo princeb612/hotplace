@@ -27,57 +27,63 @@ constexpr char constexpr_value[] = "value";
 http3_frame_settings::http3_frame_settings() : http3_frame(h3_frame_settings) {}
 
 return_t http3_frame_settings::do_read_payload(const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
     // RFC 9114 Figure 7: SETTINGS Frame
 
-    while (pos < size) {
-        payload pl;
-        try {
-            pl << new payload_member(new quic_encoded(uint64(0)), constexpr_identifier)  //
-               << new payload_member(new quic_encoded(uint64(0)), constexpr_value);
-        } catch (...) {
-            ret = errorcode_t::out_of_memory;
-            break;
-        }
+    function_pipeline<return_t> pipeline;
+    pipeline  //
+        .test_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .walk([&]() -> void {
+            while (pos < size) {
+                pipeline  //
+                    .run_trycatch([&]() -> return_t {
+                        payload pl;
+                        pl << new payload_member(new quic_encoded(uint64(0)), constexpr_identifier)  //
+                           << new payload_member(new quic_encoded(uint64(0)), constexpr_value);
 
-        pl.read(stream, size, pos);
+                        auto rc = pl.read(stream, size, pos);
+                        if (false == error_traits<return_t>::is_not_fail(rc)) {
+                            return rc;
+                        }
 
 #if defined DEBUG
-        uint64 id = 0;
-        uint64 value = 0;
-        id = pl.t_value_of<uint64>(constexpr_identifier);
-        value = pl.t_value_of<uint64>(constexpr_value);
+                        uint64 id = 0;
+                        uint64 value = 0;
+                        id = pl.t_value_of<uint64>(constexpr_identifier);
+                        value = pl.t_value_of<uint64>(constexpr_value);
 
-        if (istraceable(trace_category_net)) {
-            auto resource = http_resource::get_instance();
-            trace_debug_event(trace_category_net, trace_event_http3, [&](basic_stream& dbs) -> void {
-                dbs.println("  > %I64i (%s) 0x%0I64x (%I64i)", id, resource->get_h3_settings_name(id).c_str(), value, value);
-            });
-        }
+                        if (istraceable(trace_category_net)) {
+                            auto resource = http_resource::get_instance();
+                            trace_debug_event(trace_category_net, trace_event_http3, [&](basic_stream& dbs) -> void {
+                                dbs.println("  > %I64i (%s) 0x%0I64x (%I64i)", id, resource->get_h3_settings_name(id).c_str(), value, value);
+                            });
+                        }
 #endif
-    }
-    return ret;
+                        return success;
+                    });
+            }
+        });
+    return pipeline.result();
 }
 
 return_t http3_frame_settings::do_write(binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        binary_t temp;
+    function_pipeline<return_t> pipeline;
 
-        for (auto& item : _params) {
-            auto id = item.first;
-            auto& value = item.second;
+    for (auto& item : _params) {
+        auto id = item.first;
+        auto& value = item.second;
 
+        pipeline  //
+            .run_trycatch([&]() -> return_t {
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                auto resource = http_resource::get_instance();
-                trace_debug_event(trace_category_net, trace_event_http3,
-                                  [&](basic_stream& dbs) -> void { dbs << "  > " << id << " (" << resource->get_h3_settings_name(id) << ") " << value << "\n"; });
-            }
+                if (istraceable(trace_category_net)) {
+                    auto resource = http_resource::get_instance();
+                    trace_debug_event(trace_category_net, trace_event_http3,
+                                      [&](basic_stream& dbs) -> void { dbs << "  > " << id << " (" << resource->get_h3_settings_name(id) << ") " << value << "\n"; });
+                }
 #endif
 
-            payload pl;
-            try {
+                payload pl;
                 switch (value.content().type) {
                     case TYPE_NULL: {
                         pl << new payload_member(new quic_encoded(uint64(id)), constexpr_identifier)  //
@@ -96,35 +102,21 @@ return_t http3_frame_settings::do_write(binary_t& bin) {
                     default:
                         break;
                 }
-            } catch (...) {
-                ret = errorcode_t::out_of_memory;
-                break;
-            }
 
-            ret = pl.write(_payload);
-            if (errorcode_t::success != ret) {
-                break;
-            }
-        }
+                return pl.write(_payload);
+            });
+    }
 
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        payload pl;
-        try {
+    pipeline  //
+        .run_trycatch([&]() -> return_t {
+            payload pl;
             pl << new payload_member(new quic_encoded(uint64(h3_frame_settings)))  //
                << new payload_member(new quic_encoded(uint64(_payload.size())))    //
                << new payload_member(_payload);
-        } catch (...) {
-            ret = errorcode_t::out_of_memory;
-            __leave2;
-        }
 
-        ret = pl.write(bin);
-    }
-    __finally2 {}
-    return ret;
+            return pl.write(bin);
+        });
+    return pipeline.result();
 }
 
 http3_frame_settings& http3_frame_settings::set(uint16 id, uint64 value) {

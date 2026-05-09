@@ -50,6 +50,8 @@ return_t tls_extension_key_share::add(uint16 group, tls_direction_t dir) {
 
     pipeline  //
         .run([&]() -> return_t {
+            return_t rc = success;
+
             if (from_client == dir) {
                 privkid = KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE;
                 pubkid = KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC;
@@ -59,13 +61,17 @@ return_t tls_extension_key_share::add(uint16 group, tls_direction_t dir) {
             }
 
             crypto_keyexchange keyexchange;
-            return keyexchange.keygen((tls_group_t)group, &keyshare, privkid);
-        })
-        .run([&]() -> return_t {
+            rc = keyexchange.keygen((tls_group_t)group, &keyshare, privkid);
+            if (success != rc) {
+                return rc;
+            }
+
             auto pkey = keyshare.find_group(privkid, group);
-            return keyshare.add((EVP_PKEY*)pkey, pubkid, true);
-        })
-        .walk([&]() -> void {
+            rc = keyshare.add((EVP_PKEY*)pkey, pubkid, true);
+            if (success != rc) {
+                return rc;
+            }
+
             protection.get_protection_context().add_keyshare_group(group);
 
 #if defined DEBUG
@@ -76,6 +82,8 @@ return_t tls_extension_key_share::add(uint16 group, tls_direction_t dir) {
                 });
             }
 #endif
+
+            return rc;
         });
     return pipeline.result();
 }
@@ -95,17 +103,22 @@ return_t tls_extension_key_share::add_pubkey(uint16 group, const binary_t& pubke
     auto session = get_handshake()->get_session();
 
     pipeline  //
-        .run([&]() -> return_t { return (nullptr == session) ? invalid_context : success; })
         .run([&]() -> return_t {
+            if (nullptr == session) {
+                return invalid_context;
+            }
+
             // crypto_advisor* advisor = crypto_advisor::get_instance();
             // tls_advisor* tlsadvisor = tls_advisor::get_instance();
             auto& protection = session->get_tls_protection();
             auto& keyshare = protection.get_key();
 
             crypto_keyexchange keyexchange;
-            return keyexchange.keystore((tls_group_t)group, &keyshare, desc.get_kid_cstr(), pubkey);
-        })
-        .walk([&]() -> void {
+            auto rc = keyexchange.keystore((tls_group_t)group, &keyshare, desc.get_kid_cstr(), pubkey);
+            if (success != rc) {
+                return rc;
+            }
+
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
                 trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
@@ -114,6 +127,7 @@ return_t tls_extension_key_share::add_pubkey(uint16 group, const binary_t& pubke
                 });
             }
 #endif
+            return success;
         });
     return pipeline.result();
 }
@@ -144,15 +158,6 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
     // RFC 8446 4.2.8.  Key Share
     // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes (psk_dhe_ke)
 
-    // auto advisor = crypto_advisor::get_instance();
-    auto session = get_handshake()->get_session();
-    auto& protection = session->get_tls_protection();
-    size_t limit = endpos_extension();
-#if defined DEBUG
-    uint16 len = 0;
-#endif
-    payload pl;
-
     //  struct {
     //      NamedGroup group;
     //      opaque key_exchange<1..2^16-1>;
@@ -164,15 +169,33 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
 
     pipeline  //
         .test_not_fail()
-        .test_parameter([&]() { return (nullptr != stream) && (pos < size); })
-        .walk_trycatch([&]() {
-            pl << new payload_member(uint16(0), true, constexpr_len);
-            pl.read(stream, limit, pos);
-        })
-        .walk_trycatch([&]() -> void {
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .run_trycatch([&]() -> return_t {
+            // auto advisor = crypto_advisor::get_instance();
+            auto session = get_handshake()->get_session();
+            auto& protection = session->get_tls_protection();
+            size_t limit = endpos_extension();
 #if defined DEBUG
-            len = pl.t_value_of<uint16>(constexpr_len);
+            uint16 len = 0;
 #endif
+            {
+                payload pl;
+
+                pl << new payload_member(uint16(0), true, constexpr_len);
+                auto rc = pl.read(stream, limit, pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
+
+#if defined DEBUG
+                len = pl.t_value_of<uint16>(constexpr_len);
+                if (istraceable(trace_category_net)) {
+                    trace_debug_event(trace_category_net, trace_event_tls_extension,
+                                      [&](basic_stream& dbs) -> void { dbs.println("   > %s %i(0x%04x)", constexpr_len, len, len); });
+                }
+#endif
+            }
+
             protection.get_protection_context().clear_keyshare_groups();
 
             while (pos < limit) {
@@ -185,7 +208,10 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
                    << new payload_member(binary_t(), constexpr_pubkey);          //
                 pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
 
-                pl.read(stream, limit, pos);
+                auto rc = pl.read(stream, limit, pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
 
                 group = pl.t_value_of<uint16>(constexpr_group);
                 pl.get_binary(constexpr_pubkey, pubkey);
@@ -199,7 +225,6 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
                     trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                         auto tlsadvisor = tls_advisor::get_instance();
                         // auto session = get_handshake()->get_session();
-                        dbs.println("   > %s %i(0x%04x)", constexpr_len, len, len);
                         dbs.println("    > %s", constexpr_key_share_entry);
                         dbs.println("     > %s 0x%04x (%s)", constexpr_group, group, tlsadvisor->nameof_group(group).c_str());
                         dbs.println("     > %s %04x(%i)", constexpr_pubkey_len, pubkey.size(), pubkey.size());
@@ -211,7 +236,10 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
                 }
 #endif
             }
+
+            return success;
         });
+
     return pipeline.result();
 }
 
@@ -222,14 +250,13 @@ return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, bina
     binary_t bin_keyshare;
 
     pipeline  //
-        .walk([&]() -> void {
+        .walk_trycatch([&]() -> void {
             if (tls_flow_hello_retry_request == protection.get_flow()) {
                 clear();
                 uint16 group = t_narrow_cast(session->get_session_info(from_server).get_keyvalue().get(session_key_share_group));
                 add(group);
             }
-        })
-        .walk_trycatch([&]() -> void {
+
             auto& tlskey = protection.get_key();
 
             protection.get_protection_context().for_each_keyshare_groups([&](uint16 group, bool* cont) -> void {
@@ -255,9 +282,8 @@ return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, bina
 
                     pl.write(bin_keyshare);
                 }
-            });
-        })
-        .walk([&]() -> void {
+            });  // end of for_each
+
             binary_t bin_keysharelen;
             binary_append(bin_keysharelen, uint16(bin_keyshare.size()), hton16);
             bin_keyshare.insert(bin_keyshare.begin(), bin_keysharelen.begin(), bin_keysharelen.end());
@@ -287,36 +313,41 @@ void tls_extension_server_key_share::clear() {
 
 return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     function_pipeline<return_t> pipeline;
-    auto session = get_handshake()->get_session();
-    uint16 group = 0;
-    binary_t pubkey;
-    uint16 pubkeylen = 0;
-    auto advisor = crypto_advisor::get_instance();
-    auto& protection = session->get_tls_protection();
-    protection.get_secrets().erase(tls_context_shared_secret);
-    payload pl;
 
     pipeline  //
         .test_not_fail()
-        .test_parameter([&]() { return (nullptr != stream); })
-        .walk_trycatch([&]() -> void {
-            //  struct {
-            //      KeyShareEntry server_share;
-            //  } KeyShareServerHello;
-            pl << new payload_member(uint16(0), true, constexpr_group)       //
-               << new payload_member(uint16(0), true, constexpr_pubkey_len)  //
-               << new payload_member(binary_t(), constexpr_pubkey);          //
-            pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
+        .run_trycatch([&]() -> return_t {
+            auto session = get_handshake()->get_session();
+            uint16 group = 0;
+            binary_t pubkey;
+            uint16 pubkeylen = 0;
+            auto advisor = crypto_advisor::get_instance();
+            auto& protection = session->get_tls_protection();
+            protection.get_secrets().erase(tls_context_shared_secret);
+            {
+                payload pl;
 
-            pl.read(stream, endpos_extension(), pos);
-        })
-        .walk([&]() -> void {
-            // RFC 8448 5.  HelloRetryRequest
-            // if (0 == pubkeylen) hello_retry_request
+                //  struct {
+                //      KeyShareEntry server_share;
+                //  } KeyShareServerHello;
+                pl << new payload_member(uint16(0), true, constexpr_group)       //
+                   << new payload_member(uint16(0), true, constexpr_pubkey_len)  //
+                   << new payload_member(binary_t(), constexpr_pubkey);          //
+                pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
 
-            group = pl.t_value_of<uint16>(constexpr_group);
-            pubkeylen = pl.t_value_of<uint16>(constexpr_pubkey_len);
-            pl.get_binary(constexpr_pubkey, pubkey);
+                auto rc = pl.read(stream, endpos_extension(), pos);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
+                }
+
+                // RFC 8448 5.  HelloRetryRequest
+                // if (0 == pubkeylen) hello_retry_request
+
+                group = pl.t_value_of<uint16>(constexpr_group);
+                pubkeylen = pl.t_value_of<uint16>(constexpr_pubkey_len);
+                pl.get_binary(constexpr_pubkey, pubkey);
+            }
 
             auto hint = advisor->hintof_tls_group(group);
 
@@ -354,33 +385,35 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
                 });
             }
 #endif
+
+            return success;
         });
     return pipeline.result();
 }
 
 return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, binary_t& bin) {
     function_pipeline<return_t> pipeline;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-    // auto tlsadvisor = tls_advisor::get_instance();
-    auto session = get_handshake()->get_session();
-    auto& protection = session->get_tls_protection();
-    auto& tlskey = protection.get_key();
-    uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
-    auto group = group_enforced ? group_enforced : protection.get_protection_context().get0_keyshare_group();
-    auto hint_group = advisor->hintof_tls_group(group);
-    bool correct_group = true;
-    bool iskindof_mlkem = false;
-    if (hint_group) {
-        iskindof_mlkem = (tls_flag_pqc & hint_group->flags);
-    } else {
-        correct_group = false;
-    }
-    binary_t pubkey;
-    uint16 pubkeylen = 0;
-    payload pl;
 
     pipeline  //
-        .walk([&]() -> void {
+        .run_trycatch([&]() -> return_t {
+            crypto_advisor* advisor = crypto_advisor::get_instance();
+            // auto tlsadvisor = tls_advisor::get_instance();
+            auto session = get_handshake()->get_session();
+            auto& protection = session->get_tls_protection();
+            auto& tlskey = protection.get_key();
+            uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
+            auto group = group_enforced ? group_enforced : protection.get_protection_context().get0_keyshare_group();
+            auto hint_group = advisor->hintof_tls_group(group);
+            bool correct_group = true;
+            bool iskindof_mlkem = false;
+            if (hint_group) {
+                iskindof_mlkem = (tls_flag_pqc & hint_group->flags);
+            } else {
+                correct_group = false;
+            }
+            binary_t pubkey;
+            uint16 pubkeylen = 0;
+
             if (iskindof_mlkem) {
                 // encapsulate
             } else {
@@ -428,30 +461,36 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
                     pubkey = std::move(share);
                 }
                 pubkeylen = t_narrow_cast(pubkey.size());
-            }
-        })
-        .run_trycatch([&]() -> return_t {
-            pl << new payload_member(uint16(group), true, constexpr_group)           //
-               << new payload_member(uint16(pubkeylen), true, constexpr_pubkey_len)  //
-               << new payload_member(pubkey, constexpr_pubkey);
-            auto lambda_hook = [&](payload* pl, payload_member* member) -> void {
-                // if do_helloretryrequest is false, do HelloRetryRequest
-                pl->set_group(constexpr_pubkey_len, correct_group);
-                pl->set_group(constexpr_pubkey, correct_group);
-            };
-            pl.set_condition(constexpr_group, lambda_hook);
 
-            return pl.write(bin);
-        })
-        .walk([&]() -> void {
 #if defined DEBUG
-            if (hint_group) {
-                if (istraceable(trace_category_net)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_extension,
-                                      [&](basic_stream& dbs) -> void { dbs.println("   > group %s %s", hint_group->name, base16_encode(pubkey).c_str()); });
+                if (hint_group) {
+                    if (istraceable(trace_category_net)) {
+                        trace_debug_event(trace_category_net, trace_event_tls_extension,
+                                          [&](basic_stream& dbs) -> void { dbs.println("   > group %s %s", hint_group->name, base16_encode(pubkey).c_str()); });
+                    }
+                }
+#endif
+            }
+
+            {
+                payload pl;
+                pl << new payload_member(uint16(group), true, constexpr_group)           //
+                   << new payload_member(uint16(pubkeylen), true, constexpr_pubkey_len)  //
+                   << new payload_member(pubkey, constexpr_pubkey);
+                auto lambda_hook = [&](payload* pl, payload_member* member) -> void {
+                    // if do_helloretryrequest is false, do HelloRetryRequest
+                    pl->set_group(constexpr_pubkey_len, correct_group);
+                    pl->set_group(constexpr_pubkey, correct_group);
+                };
+                pl.set_condition(constexpr_group, lambda_hook);
+
+                auto rc = pl.write(bin);
+                if (false == error_traits<return_t>::is_not_fail(rc)) {
+                    return rc;
                 }
             }
-#endif
+
+            return success;
         });
     return pipeline.result();
 }
@@ -467,7 +506,7 @@ return_t tls_extension_server_key_share::add_keyshare() {
     uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
 
     pipeline  //
-        .test_parameter([&]() { return true; })
+        .test_parameter([&]() -> bool { return true; })
         .run([&]() -> return_t {
             return_t ret = success;
             if (group_enforced) {
