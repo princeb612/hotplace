@@ -55,6 +55,7 @@ logger* logger_builder::build() {
     // https://doodlenerd.com/web-tool/figlet-generator
     basic_stream stream;
     auto lambda_banner = [&](const char* msg) -> void { stream << ANSI_ESCAPE << "1;" << fgmagenta << "m" << msg << ANSI_ESCAPE << "0m\n"; };
+    lambda_banner("");
     lambda_banner(R"( _   _           _             _                       )");
     lambda_banner(R"(| | | |   ___   | |_   _ __   | |   __ _    ___    ___ )");
     lambda_banner(R"(| |_| |  / _ \  | __| | '_ \  | |  / _` |  / __|  / _ \)");

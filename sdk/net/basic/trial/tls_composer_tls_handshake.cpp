@@ -195,11 +195,13 @@ return_t tls_composer::do_tls_server_handshake_phase1(std::function<void(tls_ses
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
     tls_direction_t dir = from_server;
     tls_records records;
+    tls_records alerts;
     __try2 {
         auto session = get_session();
         auto session_type = session->get_type();
         auto session_status = session->get_session_status();
         auto& protection = session->get_tls_protection();
+        std::set<uint8> fatal_alerts;
 
         builder.set(dir).construct();
 
@@ -228,6 +230,32 @@ return_t tls_composer::do_tls_server_handshake_phase1(std::function<void(tls_ses
                          }
                          return ret;
                      });
+
+            // unexpected message
+            auto lambda_has_fatal = [&](uint8 level, uint8 desc) -> void {
+                if (tls_alertlevel_fatal == level) {
+                    fatal_alerts.insert(desc);
+                }
+            };
+
+            auto lambda_alert = [&](uint8 desc) -> void {
+                builder                                                  //
+                    .add(&alerts, tls_content_type_alert, session,  //
+                         [&](tls_record* record) -> return_t {
+                             auto alert = (tls_record_alert*)record;
+                                alert->set(tls_alertlevel_fatal, desc);
+                             return ret;
+                         });
+                
+                do_tls_compose(&alerts, dir, func);
+            };
+
+            session->get_alert(from_server, lambda_has_fatal);
+            if (false == fatal_alerts.empty()) {
+                lambda_alert(*fatal_alerts.begin());
+                ret = error_handshake;
+                __leave2_trace(ret);
+            }
 
             auto tlsver = protection.get_protection_context().get0_supported_version();
             if (tlsadvisor->is_kindof_tls13(tlsver)) {
@@ -271,6 +299,13 @@ return_t tls_composer::do_tls_server_handshake_phase1(std::function<void(tls_ses
                              record->add(tls_hs_server_hello_done, session);
                              return success;
                          });
+            }
+
+            session->get_alert(from_server, lambda_has_fatal);
+            if (false == fatal_alerts.empty()) {
+                lambda_alert(*fatal_alerts.begin());
+                ret = error_handshake;
+                __leave2_trace(ret);
             }
         }
 

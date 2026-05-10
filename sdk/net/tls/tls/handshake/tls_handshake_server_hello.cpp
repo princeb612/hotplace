@@ -11,6 +11,7 @@
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/basic/function_pipeline.hpp>
+#include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
@@ -384,6 +385,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                     if (ext_etm) {
                         session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                         session->reset_session_status();
+                        __trace(error_handshake);
                         return error_handshake;
                     }
                 }
@@ -399,6 +401,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                     if (ext_ems) {
                         session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                         session->reset_session_status();
+                        __trace(error_handshake);
                         return error_handshake;
                     }
                 }
@@ -478,6 +481,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
             binary_t extensions;
             rc = get_extensions().write(dir, extensions);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
+                __trace(rc);
                 return rc;
             }
 
@@ -534,8 +538,15 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
                 trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
-                    dbs.println("> encrypt_then_mac %i", kv.get(session_encrypt_then_mac) ? 1 : 0);
-                    dbs.println("> extended master secret %i", kv.get(session_extended_master_secret));
+                    valist va;
+                    va << tlsadvisor->nameof_tls_cipher_suite(cs)     //
+                       << extensions.size()                           //
+                       << (kv.get(session_encrypt_then_mac) ? 1 : 0)  //
+                       << kv.get(session_extended_master_secret);
+                    dbs.println("> cipher suite {1:04x}", va);
+                    dbs.println("> extension {3:x}({3})", va);
+                    dbs.println("> encrypt_then_mac {3}", va);
+                    dbs.println("> extended master secret {4}", va);
                 });
             }
 #endif
