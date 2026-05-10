@@ -163,7 +163,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                 rc = sign->verify(pkey, message, sig, sign_flag_format_der);
                 sign->release();
             } else {
-                rc = errorcode_t::not_supported;
+                rc = errorcode_t::not_available;
             }
 
             return rc;

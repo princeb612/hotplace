@@ -177,8 +177,6 @@ return_t quic_frame_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return true; })
         .run_trycatch([&]() -> return_t {
             auto session = get_session();
             auto space = get_space();

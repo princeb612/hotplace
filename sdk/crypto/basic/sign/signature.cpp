@@ -43,7 +43,7 @@ return_t rs2der(const binary_t& r, const binary_t& s, binary_t& asn1der) {
     pipeline  //
         .walk([&]() -> void { asn1der.clear(); })
         .test_parameter([&]() -> bool { return (false == r.empty()) && (false == s.empty()); })
-        .run([&]() -> return_t {
+        .walk([&]() -> void {
             binary_t prefix;
 
             // ASN.1 DER
@@ -59,7 +59,8 @@ return_t rs2der(const binary_t& r, const binary_t& s, binary_t& asn1der) {
             if (0x80 & s1[0]) {
                 s1.insert(s1.begin(), prefix.begin(), prefix.end());
             }
-
+        })
+        .run([&]() -> return_t {
             payload pl;
             pl << new payload_member(uint8(0x30))                       //
                << new payload_member(uint8(r1.size() + s1.size() + 4))  //

@@ -166,8 +166,6 @@ return_t quic_packet_initial::do_write(tls_direction_t dir, binary_t& header, bi
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return true; })
         .run_trycatch([&]() -> return_t {
             return_t rc = success;
             auto session = get_session();

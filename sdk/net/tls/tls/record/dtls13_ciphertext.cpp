@@ -56,7 +56,7 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
 
     pipeline  //
         .test_not_fail()
-        .test_parameter([&]() -> bool { return true; })
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
         .run_trycatch([&]() -> return_t {
             uint8 uhdr = 0;
             binary_t connection_id;

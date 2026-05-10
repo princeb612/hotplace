@@ -61,7 +61,6 @@ return_t http2_frame_alt_svc::do_write_body(binary_t& body) {
 
     pipeline  //
         .test_not_fail()
-        .test_parameter([&]() -> bool { return true; })
         .run_trycatch([&]() -> return_t {
             payload pl;
             pl << new payload_member((uint16)_origin.size(), true, constexpr_frame_origin_len)  //

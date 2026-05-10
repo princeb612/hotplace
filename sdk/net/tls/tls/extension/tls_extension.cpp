@@ -85,7 +85,7 @@ return_t tls_extension::read(tls_direction_t dir, const byte_t* stream, size_t s
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
         .run([&]() -> return_t { return do_preprocess(dir); })
         .run([&]() -> return_t { return do_read_header(dir, stream, size, pos); })
         .run([&]() -> return_t {

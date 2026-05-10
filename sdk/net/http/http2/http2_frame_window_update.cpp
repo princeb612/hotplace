@@ -28,7 +28,7 @@ return_t http2_frame_window_update::do_read_body(const byte_t* stream, size_t si
 
     pipeline  //
         .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
         .run_trycatch([&]() -> return_t {
             payload pl;
             pl << new payload_member(uint32(0), true, constexpr_frame_window_size_increment);

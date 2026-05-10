@@ -14,7 +14,9 @@
 
 #include <hotplace/sdk/base/basic/types.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/error.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 
 namespace hotplace {
 
@@ -42,7 +44,7 @@ struct error_traits<int> {
  * @refer   Gemini
  * @sample
  *          // sketch
- *          function_pipeline<return_t> fp;
+ *          function_pipeline<return_t> pipeline;
  *          myclass my;
  *
  *          pipeline.test_parameter([&]() -> bool { return (nullptr != msg); })  // check parameter
@@ -53,9 +55,9 @@ struct error_traits<int> {
  *                  .run([&]() -> return_t { return my.c(); })                   // if success
  *                  .walk_failed([&]() -> void { my.undo(); });                  // if failed
  *
- *          printf("%zu/%zu\n", fp.processed(), fp.size());
+ *          printf("%zu/%zu\n", pipeline.processed(), pipeline.size());
  *
- *          return fp.result();
+ *          return pipeline.result();
  */
 template <typename T = return_t>
 class function_pipeline {
@@ -66,6 +68,21 @@ class function_pipeline {
         expect_dontcare = 3,
     };
     function_pipeline() : _lastcode(success), _processed_count(0), _total_count(0) { _is_success = error_traits<T>::is_success; };
+    ~function_pipeline() {
+#if defined DEBUG
+        if (istraceable(trace_category_internal, loglevel_debug)) {
+            trace_debug_event(trace_category_internal, trace_event_internal, [&](basic_stream& dbs) -> void {
+                std::string code;
+                auto rc = error_traits<T>::to_return_t(_lastcode);
+                error_advisor::get_instance()->error_code(rc, code);
+
+                dbs.println("pipeline report");
+                dbs.println("- processed %zi / %zi", processed(), size());
+                dbs.println("- last error 0x%08x %s", rc, code.c_str());
+            });
+        }
+#endif
+    }
 
     function_pipeline& test_parameter(std::function<bool(void)> checker) {
         if (false == checker()) {

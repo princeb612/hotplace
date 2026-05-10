@@ -54,12 +54,13 @@ logger* logger_builder::build() {
 
     // https://doodlenerd.com/web-tool/figlet-generator
     basic_stream stream;
-    stream << ANSI_ESCAPE << "1;" << fgmagenta << "m" << R"( _   _           _             _                       )" << ANSI_ESCAPE << "0m\n";
-    stream << ANSI_ESCAPE << "1;" << fgmagenta << "m" << R"(| | | |   ___   | |_   _ __   | |   __ _    ___    ___ )" << ANSI_ESCAPE << "0m\n";
-    stream << ANSI_ESCAPE << "1;" << fgmagenta << "m" << R"(| |_| |  / _ \  | __| | '_ \  | |  / _` |  / __|  / _ \)" << ANSI_ESCAPE << "0m\n";
-    stream << ANSI_ESCAPE << "1;" << fgmagenta << "m" << R"(|  _  | | (_) | | |_  | |_) | | | | (_| | | (__  |  __/)" << ANSI_ESCAPE << "0m\n";
-    stream << ANSI_ESCAPE << "1;" << fgmagenta << "m" << R"(|_| |_|  \___/   \__| | .__/  |_|  \__,_|  \___|  \___|)" << ANSI_ESCAPE << "0m\n";
-    stream << ANSI_ESCAPE << "1;" << fgmagenta << "m" << R"(                      |_|                              )" << ANSI_ESCAPE << "0m\n";
+    auto lambda_banner = [&](const char* msg) -> void { stream << ANSI_ESCAPE << "1;" << fgmagenta << "m" << msg << ANSI_ESCAPE << "0m\n"; };
+    lambda_banner(R"( _   _           _             _                       )");
+    lambda_banner(R"(| | | |   ___   | |_   _ __   | |   __ _    ___    ___ )");
+    lambda_banner(R"(| |_| |  / _ \  | __| | '_ \  | |  / _` |  / __|  / _ \)");
+    lambda_banner(R"(|  _  | | (_) | | |_  | |_) | | | | (_| | | (__  |  __/)");
+    lambda_banner(R"(|_| |_|  \___/   \__| | .__/  |_|  \__,_|  \___|  \___|)");
+    lambda_banner(R"(                      |_|                              )");
     p->consoleln(stream);
 
     return p;

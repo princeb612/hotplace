@@ -227,7 +227,7 @@ return_t tls_extension_server_psk::do_read_body(tls_direction_t dir, const byte_
 
     pipeline  //
         .test_not_fail()
-        .test_parameter([&]() -> bool { return true; })
+        .test_parameter([&]() -> bool { return (from_server == dir) && (nullptr != stream) && (pos < size); })
         .run_trycatch([&]() -> return_t {
             uint16 selected_identity = 0;
             {

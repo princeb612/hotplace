@@ -316,7 +316,7 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
 
     pipeline  //
         .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
         .run_trycatch([&]() -> return_t {
             auto session = get_handshake()->get_session();
             uint16 group = 0;
@@ -506,7 +506,6 @@ return_t tls_extension_server_key_share::add_keyshare() {
     uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
 
     pipeline  //
-        .test_parameter([&]() -> bool { return true; })
         .run([&]() -> return_t {
             return_t ret = success;
             if (group_enforced) {
@@ -515,7 +514,7 @@ return_t tls_extension_server_key_share::add_keyshare() {
                 auto group = protection.get_protection_context().get0_keyshare_group();
                 auto hint = advisor->hintof_tls_group(group);
                 if (nullptr == hint) {
-                    ret = not_supported;
+                    ret = not_available;
                 } else {
                     ret = add(group);
                 }

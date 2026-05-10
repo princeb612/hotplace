@@ -733,23 +733,27 @@ void test_case::unlock() { _lock.leave(); }
 void test_case::attach(logger* log) { _logger = log; }
 
 void test_case::print_pass(basic_stream& bs) {
+    auto lambda_banner = [&](const char* msg) -> void { bs << ANSI_ESCAPE << "1;" << fggreen << "m" << msg << ANSI_ESCAPE << "0m\n"; };
+
     // https://doodlenerd.com/web-tool/figlet-generator
-    bs << ANSI_ESCAPE << "1;" << fggreen << "m" << R"( ____                      )" << ANSI_ESCAPE << "0m\n";
-    bs << ANSI_ESCAPE << "1;" << fggreen << "m" << R"(|  _ \    __ _   ___   ___ )" << ANSI_ESCAPE << "0m\n";
-    bs << ANSI_ESCAPE << "1;" << fggreen << "m" << R"(| |_) |  / _` | / __| / __|)" << ANSI_ESCAPE << "0m\n";
-    bs << ANSI_ESCAPE << "1;" << fggreen << "m" << R"(|  __/  | (_| | \__ \ \__ \)" << ANSI_ESCAPE << "0m\n";
-    bs << ANSI_ESCAPE << "1;" << fggreen << "m" << R"(|_|      \__,_| |___/ |___/)" << ANSI_ESCAPE << "0m\n";
-    bs << ANSI_ESCAPE << "1;" << fggreen << "m" << "- hotplace test_case prooved" << ANSI_ESCAPE << "0m\n";
+    lambda_banner(R"( ____                      )");
+    lambda_banner(R"(|  _ \    __ _   ___   ___ )");
+    lambda_banner(R"(| |_) |  / _` | / __| / __|)");
+    lambda_banner(R"(|  __/  | (_| | \__ \ \__ \)");
+    lambda_banner(R"(|_|      \__,_| |___/ |___/)");
+    lambda_banner("- hotplace test_case prooved");
 }
 
 void test_case::print_fail(basic_stream& bs) {
+    auto lambda_banner = [&](const char* msg) -> void { bs << ANSI_ESCAPE << "1;" << fgred << "m" << msg << ANSI_ESCAPE << "0m\n"; };
+
     // https://doodlenerd.com/web-tool/figlet-generator
-    bs << ANSI_ESCAPE << "1;" << fgred << "m" << R"( _____           _   _ )" << ANSI_ESCAPE << "0m\n";
-    bs << ANSI_ESCAPE << "1;" << fgred << "m" << R"(|  ___|   __ _  (_) | |)" << ANSI_ESCAPE << "0m\n";
-    bs << ANSI_ESCAPE << "1;" << fgred << "m" << R"(| |_     / _` | | | | |)" << ANSI_ESCAPE << "0m\n";
-    bs << ANSI_ESCAPE << "1;" << fgred << "m" << R"(|  _|   | (_| | | | | |)" << ANSI_ESCAPE << "0m\n";
-    bs << ANSI_ESCAPE << "1;" << fgred << "m" << R"(|_|      \__,_| |_| |_|)" << ANSI_ESCAPE << "0m\n";
-    bs << ANSI_ESCAPE << "1;" << fgred << "m" << "- hotplace test_case prooved" << ANSI_ESCAPE << "0m\n";
+    lambda_banner(R"( _____           _   _ )");
+    lambda_banner(R"(|  ___|   __ _  (_) | |)");
+    lambda_banner(R"(| |_     / _` | | | | |)");
+    lambda_banner(R"(|  _|   | (_| | | | | |)");
+    lambda_banner(R"(|_|      \__,_| |_| |_|)");
+    lambda_banner("- hotplace test_case prooved");
 }
 
 }  // namespace hotplace

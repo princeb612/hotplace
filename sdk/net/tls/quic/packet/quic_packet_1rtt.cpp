@@ -37,7 +37,7 @@ return_t quic_packet_1rtt::do_read_body(tls_direction_t dir, const byte_t* strea
 
     pipeline  //
         .test_not_fail()
-        .test_parameter([&]() -> bool { return true; })
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
         .run_trycatch([&]() -> return_t {
             auto session = get_session();
             if ((nullptr == session) || is_anydirection(dir)) {

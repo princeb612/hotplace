@@ -34,7 +34,7 @@ return_t tls_extension_renegotiation_info::do_read_body(tls_direction_t dir, con
 
     pipeline  //
         .test_not_fail()
-        .test_parameter([&]() -> bool { return true; })
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
         .run_trycatch([&]() -> return_t {
             return_t rc = success;
             auto session = get_handshake()->get_session();
@@ -113,8 +113,6 @@ return_t tls_extension_renegotiation_info::do_write_body(tls_direction_t dir, bi
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return true; })
         .run_trycatch([&]() -> return_t {
             binary_t renegotiation_info;
 

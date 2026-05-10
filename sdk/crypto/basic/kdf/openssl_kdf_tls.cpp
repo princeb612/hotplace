@@ -13,7 +13,6 @@
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_kdf.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
-#include <hotplace/sdk/io/basic/payload.hpp>
 
 #if defined __linux__
 #include <dlfcn.h>
@@ -124,32 +123,13 @@ return_t openssl_kdf::hkdf_label(binary_t& hkdflabel, uint16 length, const binar
 
         uint8 opaque_len_label = t_narrow_cast(prefix.size() + label.size());  // length including "tls13 " or "dtls13"
         uint8 opaque_len_context = t_justdoit(context.size());                 // parameter checked
-#if 0                                                                          // tested
-        payload pl;
-        try {
-            pl << new payload_member(length, true) //
-               << new payload_member(opaque_len_label) //
-               << new payload_member(prefix) //
-               << new payload_member(label) //
-               << new payload_member(opaque_len_context) //
-               << new payload_member(context);
-        } catch (...) {
-            ret = errorcode_t::out_of_memory;
-            __leave2;
-        }
 
-        ret = pl.write(hkdflabel);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-#else
         binary_append(hkdflabel, length, hton16);
         binary_append(hkdflabel, opaque_len_label);
         binary_append(hkdflabel, prefix);
         binary_append(hkdflabel, label);
         binary_append(hkdflabel, opaque_len_context);
         binary_append(hkdflabel, context);
-#endif
     }
     __finally2 {}
     return ret;

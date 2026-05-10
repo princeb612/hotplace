@@ -251,7 +251,7 @@ return_t quic_frame_http3_stream::do_write_body(tls_direction_t dir, const byte_
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
         .run_trycatch([&]() -> return_t {
             // size_t snapshot = bin.size();
 

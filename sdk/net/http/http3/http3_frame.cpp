@@ -67,7 +67,7 @@ return_t http3_frame::do_read_frame(const byte_t* stream, size_t size, size_t& p
 
     pipeline  //
         .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
         .run_trycatch([&]() -> return_t {
             payload pl;
 

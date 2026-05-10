@@ -104,7 +104,7 @@ return_t tls_handshake_certificate_verify::sign_certverify(const EVP_PKEY* pkey,
 
             sign->release();
         } else {
-            ret = errorcode_t::not_supported;
+            ret = errorcode_t::not_available;
         }
     }
     __finally2 {}
@@ -171,7 +171,7 @@ return_t tls_handshake_certificate_verify::verify_certverify(const EVP_PKEY* pke
 
             sign->release();
         } else {
-            ret = errorcode_t::not_supported;
+            ret = errorcode_t::not_available;
         }
     }
     __finally2 {}
@@ -192,7 +192,7 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
 
     pipeline  //
         .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
         .run_trycatch([&]() -> return_t {
             // RFC 8446 2.  Protocol Overview
             // CertificateVerify:  A signature over the entire handshake using the

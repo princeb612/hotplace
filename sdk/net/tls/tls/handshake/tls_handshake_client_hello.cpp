@@ -365,12 +365,12 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
                     if (random.size()) {
                         dbs.println("   %s", base16_encode(random).c_str());
                     }
-                    dbs.println(" > %s %02x(%zi)", constexpr_session_id, session_id.size(), session_id.size());
+                    dbs.println(" > %s 0x%02x(%zi)", constexpr_session_id, session_id.size(), session_id.size());
                     if (session_id.size()) {
                         dbs.println("   %s", base16_encode(session_id).c_str());
                     }
                     dbs.println(" > %s %s", constexpr_cookie, base16_encode(cookie).c_str());
-                    dbs.println(" > %s %04x(%i ent.)", constexpr_cipher_suite_len, cipher_suite_len, cipher_suite_len >> 1);
+                    dbs.println(" > %s 0x%04x(%i ent.)", constexpr_cipher_suite_len, cipher_suite_len, cipher_suite_len >> 1);
                     i = 0;
                     for (auto cs : _cipher_suites) {
                         dbs.println("   [%i] 0x%04x %s", i++, cs, tlsadvisor->nameof_tls_cipher_suite(cs).c_str());

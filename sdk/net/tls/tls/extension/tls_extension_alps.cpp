@@ -33,7 +33,7 @@ return_t tls_extension_alps::do_read_body(tls_direction_t dir, const byte_t* str
 
     pipeline  //
         .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
         .run_trycatch([&]() -> return_t {
             uint16 alps_len = 0;
             // uint8 alpn_len = 0;

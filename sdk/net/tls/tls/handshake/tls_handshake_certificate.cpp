@@ -86,7 +86,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
 
     pipeline  //
         .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
         .run_trycatch([&]() -> return_t {
             return_t rc = success;
             // RFC 8446 2.  Protocol Overview

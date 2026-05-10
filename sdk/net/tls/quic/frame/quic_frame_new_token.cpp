@@ -81,8 +81,6 @@ return_t quic_frame_new_token::do_write_body(tls_direction_t dir, binary_t& bin)
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return true; })
         .run_trycatch([&]() -> return_t {
             auto type = get_type();
 

@@ -40,7 +40,7 @@ return_t tls_extension_encrypted_client_hello::do_read_body(tls_direction_t dir,
 
     pipeline  //
         .test_not_fail()
-        .test_parameter([&]() -> bool { return true; })
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
         .run_trycatch([&]() -> return_t {
             uint8 client_hello_type = 0;
             uint16 kdf = 0;

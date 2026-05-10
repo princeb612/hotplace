@@ -253,7 +253,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
 
     pipeline  //
         .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
         .run_trycatch([&]() -> return_t {
             return_t rc = success;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();

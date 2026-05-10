@@ -40,7 +40,7 @@ return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stre
 
     pipeline  //
         .test_not_fail()
-        .test_parameter([&]() -> bool { return true; })
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
         .run_trycatch([&]() -> return_t {
             auto session = get_session();
             auto& protection = session->get_tls_protection();

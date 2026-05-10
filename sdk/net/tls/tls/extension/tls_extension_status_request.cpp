@@ -37,7 +37,7 @@ return_t tls_extension_status_request::do_read_body(tls_direction_t dir, const b
 
     pipeline  //
         .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr == stream) && (pos < size); })
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
         .run_trycatch([&]() -> return_t {
             uint8 cert_status_type = 0;
 #if defined DEBUG

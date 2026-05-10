@@ -29,7 +29,7 @@ return_t http2_frame_data::do_read_body(const byte_t* stream, size_t size, size_
 
     pipeline  //
         .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
+        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
         .run_trycatch([&]() -> return_t {
             payload pl;
             // Pad Length?

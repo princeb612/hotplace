@@ -336,12 +336,12 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(cs);
             if (nullptr == hint) {
-                ret = errorcode_t::not_supported;
+                ret = errorcode_t::not_available;
                 __leave2_trace(ret);
             }
             auto hint_cipher = tlsadvisor->hintof_blockcipher(cs);
             if (nullptr == hint_cipher) {
-                ret = errorcode_t::not_supported;
+                ret = errorcode_t::not_available;
                 __leave2_trace(ret);
             }
 

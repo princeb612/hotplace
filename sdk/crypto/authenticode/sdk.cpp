@@ -181,7 +181,6 @@ return_t X509_NAME_to_string(const X509_NAME* name, std::string& data) {
     char* s = nullptr;
     char* c = nullptr;
     char* b = nullptr;
-    int l = 0;
     int i = 0;
 
     __try2 {
@@ -191,8 +190,6 @@ return_t X509_NAME_to_string(const X509_NAME* name, std::string& data) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-
-        l = 80 - 2;
 
         b = X509_NAME_oneline(name, nullptr, 0);
         if (nullptr == b) {
@@ -220,13 +217,11 @@ return_t X509_NAME_to_string(const X509_NAME* name, std::string& data) {
                 if (*s != '\0') {
                     data.append(", ");
                 }
-                l--;
             }
             if (*s == '\0') {
                 break;
             }
             s++;
-            l--;
         }
     }
     __finally2 {

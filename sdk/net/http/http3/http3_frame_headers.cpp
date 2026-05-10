@@ -66,8 +66,6 @@ return_t http3_frame_headers::do_write(binary_t& bin) {
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return true; })
         .run_trycatch([&]() -> return_t {
             qpack_stream stream;
             uint32 flags = qpack_quic_stream_header;
