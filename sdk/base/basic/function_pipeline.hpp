@@ -6,7 +6,7 @@
  *
  * Revision History
  * Date         Name                Description
- * 2026.05.08   Soo Han, Kim        (codename.hotplace Revision 983)
+ * 2026.05.08   Soo Han, Kim        sketch (codename.hotplace Revision 983)
  */
 
 #ifndef __HOTPLACE_SDK_BASE_BASIC_FUNCTIONPIPELINE__
@@ -23,8 +23,11 @@ namespace hotplace {
 template <typename T>
 struct error_traits;
 
+/* hotplace */
 template <>
 struct error_traits<return_t> {
+    static return_t value_success() { return success; }
+    static return_t value_exception() { return exception_caught; }
     static bool is_success(return_t code) { return (code == success) || (code == expect_failure); }
     static bool is_not_fail(return_t code) {
         auto category = error_advisor::get_instance()->categoryof(code);
@@ -33,11 +36,14 @@ struct error_traits<return_t> {
     static return_t to_return_t(return_t code) { return code; }
 };
 
+/* openssl */
 template <>
 struct error_traits<int> {
+    static int value_success() { return 1; }
+    static return_t value_exception() { return -1; }
     static bool is_success(int code) { return code >= 1; }
     static bool is_not_fail(int code) { return code >= 1; }
-    static return_t to_return_t(return_t code) { return (code > 1) ? success : internal_error; }
+    static return_t to_return_t(return_t code) { return (code >= 1) ? success : internal_error; }
 };
 
 /**
@@ -48,7 +54,7 @@ struct error_traits<int> {
  *          myclass my;
  *
  *          pipeline.test_parameter([&]() -> bool { return (nullptr != msg); })  // check parameter
- *                  .test_not_fail()                                             // if not severe error, go ahead
+ *                  .goahead_if_not_fail()                                             // if not severe error, go ahead
  *                  .walk([&]() -> void { printf("hello world"); })              // if success
  *                  .run([&]() -> return_t { return my.a(); })                   // if success
  *                  .run([&]() -> return_t { return my.b(); })                   // if success
@@ -67,7 +73,7 @@ class function_pipeline {
         expect_failure = 2,
         expect_dontcare = 3,
     };
-    function_pipeline() : _lastcode(success), _processed_count(0), _total_count(0) { _is_success = error_traits<T>::is_success; };
+    function_pipeline() : _lastcode(error_traits<T>::value_success()), _processed_count(0), _total_count(0) { _discriminant = error_traits<T>::is_success; };
     ~function_pipeline() {
 #if defined DEBUG
         if (istraceable(trace_category_internal, loglevel_debug)) {
@@ -90,50 +96,46 @@ class function_pipeline {
         }
         return *this;
     }
-    function_pipeline& test_success(std::function<bool(return_t)> checker) {
-        _is_success = checker;
+    function_pipeline& set(std::function<bool(T)> checker) {
+        _discriminant = checker;
         return *this;
     }
-    function_pipeline& test_only_success() {
-        _is_success = error_traits<T>::_is_success;
+    function_pipeline& goahead_if_success() {
+        _discriminant = error_traits<T>::_discriminant;
         return *this;
     }
-    function_pipeline& test_not_fail() {
-        _is_success = error_traits<T>::is_not_fail;
+    function_pipeline& goahead_if_not_fail() {
+        _discriminant = error_traits<T>::is_not_fail;
         return *this;
     }
 
     function_pipeline& walk(std::function<void(void)> func) {
-        return runner(
-            [&]() {
-                func();
-                return _lastcode;
-            },
-            false, expect_success);
+        auto lambda = [&]() {
+            func();
+            return _lastcode;
+        };
+        return runner(lambda, false, expect_success);
     }
     function_pipeline& walk_trycatch(std::function<void(void)> func) {
-        return runner(
-            [&]() {
-                func();
-                return _lastcode;
-            },
-            true, expect_success);
+        auto lambda = [&]() {
+            func();
+            return _lastcode;
+        };
+        return runner(lambda, true, expect_success);
     }
     function_pipeline& walk_failed(std::function<void(void)> func) {
-        return runner(
-            [&]() {
-                func();
-                return _lastcode;
-            },
-            false, expect_failure);
+        auto lambda = [&]() {
+            func();
+            return _lastcode;
+        };
+        return runner(lambda, false, expect_failure);
     }
     function_pipeline& walk_always(std::function<void(T)> func) {
-        return runner(
-            [&]() {
-                func(_lastcode);
-                return _lastcode;
-            },
-            false, expect_dontcare);
+        auto lambda = [&]() {
+            func(_lastcode);
+            return _lastcode;
+        };
+        return runner(lambda, false, expect_dontcare);
     }
 
     template <typename F>
@@ -151,7 +153,9 @@ class function_pipeline {
 
     size_t size() const { return _total_count; }
     size_t processed() const { return _processed_count; }
-    return_t result() const { return _lastcode; }
+    T result() const { return _lastcode; }
+    bool passed() const { return _discriminant(_lastcode); }
+    bool failed() const { return (false == _discriminant(_lastcode)); }
 
    protected:
     template <typename F>
@@ -161,17 +165,17 @@ class function_pipeline {
         if (expect_dontcare == expect) {
         } else {
             bool expectation = (expect_success == expect) ? true : false;
-            if (expectation != _is_success(_lastcode)) {
+            if (expectation != _discriminant(_lastcode)) {
                 return *this;
             }
         }
 
         try {
             auto rc = func();
-            check_returntype(rc);
+            test_returncode(rc);
         } catch (...) {
             if (use_trycatch) {
-                _lastcode = exception_caught;
+                _lastcode = error_traits<T>::value_exception();
             } else {
                 throw exception(exception_caught);
             }
@@ -179,20 +183,18 @@ class function_pipeline {
         return *this;
     }
 
-    void check_returntype(T rc) {
-        if (error_traits<return_t>::is_success(rc)) {
-            _lastcode = success;
+    void test_returncode(T rc) {
+        _lastcode = rc;
+        if (_discriminant(rc)) {
             ++_processed_count;
-        } else {
-            _lastcode = error_traits<T>::to_return_t(rc);
         }
     }
 
    private:
-    return_t _lastcode;
+    T _lastcode;
     size_t _processed_count;
     size_t _total_count;
-    std::function<bool(T)> _is_success;
+    std::function<bool(T)> _discriminant;
 };
 
 }  // namespace hotplace

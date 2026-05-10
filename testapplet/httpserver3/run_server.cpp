@@ -82,7 +82,7 @@ return_t simple_http2_server(void*) {
         {
             std::string ciphersuites;
             if (option.cs.empty()) {
-                ciphersuites = "TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256";
+                ciphersuites = "TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_SHA256";
             } else {
                 ciphersuites = option.cs;
             }

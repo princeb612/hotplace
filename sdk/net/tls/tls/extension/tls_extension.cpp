@@ -85,7 +85,7 @@ return_t tls_extension::read(tls_direction_t dir, const byte_t* stream, size_t s
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run([&]() -> return_t { return do_preprocess(dir); })
         .run([&]() -> return_t { return do_read_header(dir, stream, size, pos); })
         .run([&]() -> return_t {
@@ -122,8 +122,8 @@ return_t tls_extension::do_read_header(tls_direction_t dir, const byte_t* stream
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run([&]() -> return_t { return (pos + 4 > size) ? no_more : success; })
         .run_trycatch([&]() -> return_t {
             size_t extpos = pos;
@@ -136,14 +136,14 @@ return_t tls_extension::do_read_header(tls_direction_t dir, const byte_t* stream
 
             auto rc = pl.read(stream, size, pos);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
             extension_type = pl.t_value_of<uint16>(constexpr_extension_type);
             ext_len = pl.t_value_of<uint16>(constexpr_ext_len);
 
             if (size - pos < ext_len) {
-                return no_more;
+                __trace_return(no_more);
             }
 
             _header_range.begin = extpos;
@@ -190,7 +190,7 @@ return_t tls_extension::do_write_header(tls_direction_t dir, binary_t& bin, cons
 
             auto rc = pl.write(bin);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
             // body

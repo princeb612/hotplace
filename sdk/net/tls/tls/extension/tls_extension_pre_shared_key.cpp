@@ -109,8 +109,8 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
     binary_t psk_binder;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (from_client == dir) && (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (from_client == dir) && (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             return_t rc = success;
 
@@ -129,7 +129,7 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
 
                 rc = pl.read(stream, endpos_extension(), pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 psk_identities_len = pl.t_value_of<uint16>(constexpr_psk_identities_len);
@@ -152,14 +152,14 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
                 if (psk_identity != ticket) {
                     session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
                     session->reset_session_status();
-                    return errorcode_t::error_handshake;
+                    __trace_return(errorcode_t::error_handshake);
                 }
                 uint32 ticket_lifetime = t_narrow_cast(kv.get(session_ticket_lifetime));
                 uint32 ticket_age_add = t_narrow_cast(kv.get(session_ticket_age_add));
                 if (obfuscated_ticket_age - ticket_age_add > ticket_lifetime) {
                     session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
                     session->reset_session_status();
-                    return errorcode_t::error_handshake;
+                    __trace_return(errorcode_t::error_handshake);
                 }
             }
 
@@ -226,8 +226,8 @@ return_t tls_extension_server_psk::do_read_body(tls_direction_t dir, const byte_
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (from_server == dir) && (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (from_server == dir) && (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             uint16 selected_identity = 0;
             {
@@ -236,7 +236,7 @@ return_t tls_extension_server_psk::do_read_body(tls_direction_t dir, const byte_
 
                 auto rc = pl.read(stream, endpos_extension(), pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 selected_identity = pl.t_value_of<uint16>(constexpr_selected_identity);

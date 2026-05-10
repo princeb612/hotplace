@@ -77,8 +77,8 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             auto type = get_type();
 
@@ -90,7 +90,7 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
 
             auto rc = pl.read(stream, size, pos);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
 #if defined DEBUG
@@ -183,7 +183,7 @@ return_t quic_frame_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
             auto type = get_type();
 
             if (protection_default == space) {
-                return errorcode_t::not_available;
+                __trace_return(errorcode_t::not_available);
             }
 
             auto& pkns = session->get_quic_session().get_pkns(_space);
@@ -201,7 +201,7 @@ return_t quic_frame_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
 
             auto rc = pl.write(bin);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
             for (auto& item : ack.ack_ranges) {

@@ -44,15 +44,15 @@ return_t quic_frame_new_token::do_read_body(tls_direction_t dir, const byte_t* s
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             payload pl;
             pl << new payload_member(new quic_encoded(binary_t()), constexpr_token);
 
             auto rc = pl.read(stream, size, pos);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
             binary_t token;
@@ -94,7 +94,7 @@ return_t quic_frame_new_token::do_write_body(tls_direction_t dir, binary_t& bin)
 
             auto rc = pl.write(bin);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
 #if defined DEBUG

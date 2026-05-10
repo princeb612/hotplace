@@ -79,8 +79,8 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
     binary_t pubkey;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             return_t rc = success;
 #if defined DEBUG
@@ -94,7 +94,7 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
 
                 rc = pl.read(stream, size, pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
 #if defined DEBUG
@@ -131,7 +131,7 @@ return_t tls_handshake_client_key_exchange::do_read_body(tls_direction_t dir, co
                 auto hint = advisor->hintof_tls_group_nid(nid);
                 keyexchange.keystore((tls_group_t)hint->group, &tlskey, KID_TLS_CLIENT_KEY_EXCHANGE, pubkey);
             } else {
-                return errorcode_t::not_available;
+                __trace_return(errorcode_t::not_available);
             }
 
             return success;
@@ -161,7 +161,7 @@ return_t tls_handshake_client_key_exchange::do_write_body(tls_direction_t dir, b
                     keyexchange.keygen((tls_group_t)hint->group, &tlskey, KID_TLS_CLIENT_KEY_EXCHANGE);
                     keyexchange.keyshare((tls_group_t)hint->group, &tlskey, KID_TLS_CLIENT_KEY_EXCHANGE, pubkey);
                 } else {
-                    return errorcode_t::not_available;
+                    __trace_return(errorcode_t::not_available);
                 }
             }
 
@@ -184,7 +184,7 @@ return_t tls_handshake_client_key_exchange::do_write_body(tls_direction_t dir, b
 
                 auto rc = pl.write(bin);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
             }
 

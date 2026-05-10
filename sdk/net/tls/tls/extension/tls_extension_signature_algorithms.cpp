@@ -44,8 +44,8 @@ return_t tls_extension_signature_algorithms::do_read_body(tls_direction_t dir, c
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             // RFC 8446 4.2.3.  Signature Algorithms
 
@@ -60,7 +60,7 @@ return_t tls_extension_signature_algorithms::do_read_body(tls_direction_t dir, c
 
                 auto rc = pl.read(stream, endpos_extension(), pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 count = pl.t_value_of<uint16>(constexpr_algorithms) >> 1;
@@ -110,7 +110,7 @@ return_t tls_extension_signature_algorithms::do_write_body(tls_direction_t dir, 
 
                 auto rc = pl.write(bin);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
             }
 

@@ -33,8 +33,8 @@ return_t tls_extension_renegotiation_info::do_read_body(tls_direction_t dir, con
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             return_t rc = success;
             auto session = get_handshake()->get_session();
@@ -48,7 +48,7 @@ return_t tls_extension_renegotiation_info::do_read_body(tls_direction_t dir, con
 
             rc = pl.read(stream, size, pos);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
 #if defined DEBUG
@@ -101,7 +101,7 @@ return_t tls_extension_renegotiation_info::do_read_body(tls_direction_t dir, con
             if (errorcode_t::success != rc) {
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
                 session->reset_session_status();
-                return rc;
+                __trace_return(rc);
             }
 
             return success;

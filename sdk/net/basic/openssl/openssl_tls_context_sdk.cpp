@@ -318,13 +318,13 @@ void set_info_callback_routine(const SSL* ssl, int where, int ret) {
             dbs.printf("TLS %08X %08x ", SSL_version(ssl), where);
             switch (va.size()) {
                 case 1:
-                    dbs.vprintf("{1}\n", va);
+                    dbs.vaprintln("{1}", va);
                     break;
                 case 3:
-                    dbs.vprintf("{1}:{2}:{3}\n", va);
+                    dbs.vaprintln("{1}:{2}:{3}", va);
                     break;
                 case 4:
-                    dbs.vprintf("{1}:{2}:{3}:{4}\n", va);
+                    dbs.vaprintln("{1}:{2}:{3}:{4}", va);
                     break;
                 default:
                     break;

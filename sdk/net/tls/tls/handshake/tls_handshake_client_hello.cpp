@@ -245,8 +245,8 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             /* RFC 8446 4.1.2.  Client Hello
              *  uint16 ProtocolVersion;
@@ -307,7 +307,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
 
                 auto rc = pl.read(stream, size, pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
             // RFC 8446 4.1.1.  Cryptographic Negotiation
@@ -389,12 +389,12 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
             if (0 == extension_len) {
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
                 session->reset_session_status();
-                return errorcode_t::error_handshake;
+                __trace_return(errorcode_t::error_handshake);
             }
 
             auto rc = get_extensions().read(this, dir, stream, pos + extension_len, pos);
-            if (errorcode_t::success != rc) {
-                return rc;
+            if (false == error_traits<return_t>::is_not_fail(rc)) {
+                __trace_return(rc);
             }
 
             if (tls_flow_renegotiation == protection.get_flow()) {
@@ -403,7 +403,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
                 if (nullptr == ext_renegotiationinfo) {
                     session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
                     session->reset_session_status();
-                    return errorcode_t::error_handshake;
+                    __trace_return(errorcode_t::error_handshake);
                 }
             }
 
@@ -425,7 +425,7 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
             binary_t extensions;
             auto rc = get_extensions().write(dir, extensions);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
             auto legacy_version = protection.get_lagacy_version();
@@ -474,7 +474,7 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
 
                 auto rc = pl.write(bin);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
             }
 

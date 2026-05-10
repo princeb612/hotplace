@@ -30,8 +30,8 @@ return_t http2_frame_goaway::do_read_body(const byte_t* stream, size_t size, siz
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             payload pl;
             pl << new payload_member((uint32)0, true, constexpr_frame_last_stream_id)  //
@@ -40,7 +40,7 @@ return_t http2_frame_goaway::do_read_body(const byte_t* stream, size_t size, siz
 
             auto rc = pl.read(stream, size, pos);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
             _last_id = pl.t_value_of<uint32>(constexpr_frame_last_stream_id);
@@ -63,7 +63,7 @@ return_t http2_frame_goaway::do_write_body(binary_t& body) {
                << new payload_member(_debug, constexpr_frame_debug_data);
             auto rc = pl.write(body);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
             return set_payload_size(body.size());

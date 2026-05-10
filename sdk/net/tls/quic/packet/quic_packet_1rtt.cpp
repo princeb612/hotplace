@@ -36,43 +36,46 @@ return_t quic_packet_1rtt::do_read_body(tls_direction_t dir, const byte_t* strea
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
-            auto session = get_session();
-            if ((nullptr == session) || is_anydirection(dir)) {
-                return errorcode_t::invalid_context;
-            }
-
-            auto& protection = session->get_tls_protection();
-            auto tagsize = protection.get_tag_size();
-
-            binary_t bin_unprotected_header;
-            binary_t bin_protected_header;
-
-            size_t ppos = pos;
-            size_t offset_pnpayload = 0;
-
-            {
-                payload pl;
-                pl << new payload_member(binary_t(), constexpr_payload)  // PN + payload
-                   << new payload_member(binary_t(), constexpr_tag);
-                pl.reserve(constexpr_tag, tagsize);
-
-                auto rc = pl.read(stream, size, pos);
-                if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+            return_t rc = success;
+            __try2 {
+                auto session = get_session();
+                if ((nullptr == session) || is_anydirection(dir)) {
+                    __trace_return(errorcode_t::invalid_context);
                 }
 
-                pl.get_binary(constexpr_payload, _payload);
-                pl.get_binary(constexpr_tag, _tag);
+                auto& protection = session->get_tls_protection();
+                auto tagsize = protection.get_tag_size();
 
-                offset_pnpayload = pl.offset_of(constexpr_payload);
+                binary_t bin_unprotected_header;
+                binary_t bin_protected_header;
 
-                pos_unprotect = (ppos + offset_pnpayload + 4);
+                size_t ppos = pos;
+                size_t offset_pnpayload = 0;
+
+                {
+                    payload pl;
+                    pl << new payload_member(binary_t(), constexpr_payload)  // PN + payload
+                       << new payload_member(binary_t(), constexpr_tag);
+                    pl.reserve(constexpr_tag, tagsize);
+
+                    auto rc = pl.read(stream, size, pos);
+                    if (false == error_traits<return_t>::is_not_fail(rc)) {
+                        __trace_return(rc);
+                    }
+
+                    pl.get_binary(constexpr_payload, _payload);
+                    pl.get_binary(constexpr_tag, _tag);
+
+                    offset_pnpayload = pl.offset_of(constexpr_payload);
+
+                    pos_unprotect = (ppos + offset_pnpayload + 4);
+                }
             }
-
-            return success;
+            __finally2 {}
+            return rc;
         });
     return pipeline.result();
 }
@@ -106,7 +109,7 @@ return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binar
             return_t rc = success;
             auto session = get_session();
             if (nullptr == session) {
-                return errorcode_t::invalid_context;
+                __trace_return(errorcode_t::invalid_context);
             }
 
             auto& protection = session->get_tls_protection();
@@ -134,7 +137,7 @@ return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binar
 
                 rc = pl.write(bin_unprotected_header);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
             }
 
@@ -154,7 +157,7 @@ return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binar
                 // AEAD (PT:payload, CT:ciphertext, AAD:unprotected header, TAG:tag, space:application)
                 rc = protection.encrypt(session, dir, get_payload(), bin_ciphertext, bin_unprotected_header, bin_tag, protection_application);
                 if (errorcode_t::success != rc) {
-                    return rc;
+                    __trace_return(rc);
                 }
                 binary_append(bin_ciphertext, bin_tag);  // concatenatation
 
@@ -163,7 +166,7 @@ return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binar
                     uint8 ht = _ht;
                     rc = header_protect(dir, protection_application, bin_ciphertext, ht, pn_length, bin_pn, bin_protected_header);
                     if (errorcode_t::success != rc) {
-                        return rc;
+                        __trace_return(rc);
                     }
 
                     // encode packet number
@@ -173,7 +176,7 @@ return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binar
                     // protected header
                     rc = pl.write(bin_protected_header);
                     if (errorcode_t::success != rc) {
-                        return rc;
+                        __trace_return(rc);
                     }
                 }
 

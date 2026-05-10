@@ -55,8 +55,8 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
     size_t recpos = pos;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             uint8 uhdr = 0;
             binary_t connection_id;
@@ -96,7 +96,7 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
 
                 auto rc = pl.read(stream, size, pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 uhdr = pl.t_value_of<uint8>(constexpr_unified_header);
@@ -279,7 +279,7 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
             auto sess_recno = session->get_recordno(dir, false);
             uint8 cap = byte_capacity(sess_recno);
             if (cap > 2) {
-                return errorcode_t::exceed;
+                __trace_return(errorcode_t::exceed);
             }
 
             return_t rc = success;
@@ -319,7 +319,7 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
 
                 rc = pl.write(header);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
             }
 
@@ -336,7 +336,7 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
             {
                 rc = protection.encrypt(session, dir, body, ciphertext, header, tag);
                 if (errorcode_t::success != rc) {
-                    return rc;
+                    __trace_return(rc);
                 }
             }
 
@@ -376,7 +376,7 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
 
                 rc = pl.write(bin);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 binary_append(bin, block);

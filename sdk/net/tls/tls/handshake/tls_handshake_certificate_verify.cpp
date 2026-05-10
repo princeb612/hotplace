@@ -191,8 +191,8 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
     binary_t signature;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             // RFC 8446 2.  Protocol Overview
             // CertificateVerify:  A signature over the entire handshake using the
@@ -211,7 +211,7 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
 
                 auto rc = pl.read(stream, size, pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 scheme = pl.t_value_of<uint16>(constexpr_signature_alg);
@@ -274,7 +274,7 @@ return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, bi
             if (nullptr == pkey) {
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_no_certificate);
                 session->reset_session_status();
-                return errorcode_t::error_certificate;
+                __trace_return(errorcode_t::error_certificate);
             }
 
             uint16 scheme = 0;

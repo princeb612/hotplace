@@ -107,8 +107,8 @@ return_t tls_extension_quic_transport_parameters::read_quic_params(const byte_t*
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             while (pos < size) {
                 payload pl;
@@ -117,7 +117,7 @@ return_t tls_extension_quic_transport_parameters::read_quic_params(const byte_t*
 
                 auto rc = pl.read(stream, size, pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 uint64 param_id = pl.t_value_of<uint64>(constexpr_param_id);

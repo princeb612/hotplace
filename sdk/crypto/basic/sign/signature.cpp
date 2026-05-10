@@ -80,7 +80,7 @@ return_t der2rs(const binary_t& asn1der, uint16 unitsize, binary_t& r, binary_t&
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
+        .goahead_if_not_fail()
         .run([&]() -> return_t {
             payload pl;
 
@@ -97,14 +97,14 @@ return_t der2rs(const binary_t& asn1der, uint16 unitsize, binary_t& r, binary_t&
 
             auto rc = pl.read(asn1der.data(), asn1der.size());
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
             uint8 sequence = pl.t_value_of<uint8>(constexpr_sequence);
             // uint8 rlen = pl.t_value_of<uint8>(constexpr_rlen);
             // uint8 slen = pl.t_value_of<uint8>(constexpr_slen);
             if (0x30 != sequence) {
-                return errorcode_t::bad_format;
+                __trace_return(errorcode_t::bad_format);
             }
 
             pl.get_binary(constexpr_r, r);
@@ -122,7 +122,7 @@ return_t sig2rs(const binary_t& sig, binary_t& r, binary_t& s) {
         .run([&]() -> return_t {
             size_t size = sig.size();
             if (size % 2) {
-                return errorcode_t::bad_format;
+                __trace_return(errorcode_t::bad_format);
             }
 
             size_t halfsize = size >> 1;

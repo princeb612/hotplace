@@ -178,13 +178,19 @@ return_t basic_stream::println(const char* buf, ...) {
         ret = bufferio::vprintf(_handle, buf, ap);
         va_end(ap);
 
-        bufferio::printf(_handle, "\n");
+        bufferio::write(_handle, "\n", 1);
     }
     __finally2 {}
     return ret;
 }
 
-return_t basic_stream::vprintf(const char* fmt, valist ap) { return sprintf(this, fmt, ap); }
+return_t basic_stream::vaprintf(const char* fmt, valist ap) { return sprintf(this, fmt, ap); }
+
+return_t basic_stream::vaprintln(const char* fmt, valist ap) {
+    auto rc = sprintf(this, fmt, ap);
+    bufferio::write(_handle, "\n", 1);
+    return rc;
+}
 
 basic_stream& basic_stream::operator=(const basic_stream& other) {
     if (this != &other) {
@@ -203,21 +209,23 @@ basic_stream& basic_stream::operator=(basic_stream&& other) noexcept {
 
 basic_stream& basic_stream::operator=(const std::string& other) {
     clear();
-    printf(other.c_str());
+    write(other.data(), other.size());
     return *this;
 }
 
 basic_stream& basic_stream::operator=(const char* other) {
     clear();
     if (other) {
-        printf(other);
+        auto len = strlen(other);
+        write(other, len);
     }
     return *this;
 }
 
 basic_stream& basic_stream::operator<<(const char* other) {
     if (other) {
-        printf(other);
+        auto len = strlen(other);
+        write(other, len);
     }
     return *this;
 }
@@ -290,7 +298,7 @@ basic_stream& basic_stream::operator<<(const basic_stream& value) {
 }
 
 basic_stream& basic_stream::operator<<(const std::string& value) {
-    printf("%s", value.c_str());
+    write(value.data(), value.size());
     return *this;
 }
 
@@ -300,7 +308,7 @@ basic_stream& basic_stream::operator<<(const binary_t& value) {
 }
 
 basic_stream& basic_stream::operator<<(const bignumber& value) {
-    printf("%s", value.str().c_str());
+    *this << value.str();
     return *this;
 }
 

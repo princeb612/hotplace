@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_ecdh.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
@@ -187,11 +188,14 @@ return_t concat_kdf(binary_t dh_secret, binary_t otherinfo, unsigned int keylen,
             hash.resize(hashlen);
 
             unsigned int alloca_size = t_narrow_cast(hashlen);
-            if (1 != EVP_DigestInit_ex(ctx.get(), dgst, nullptr) ||                      //
-                1 != EVP_DigestUpdate(ctx.get(), counter.data(), counter.size()) ||      //
-                1 != EVP_DigestUpdate(ctx.get(), dh_secret.data(), dh_secret.size()) ||  //
-                1 != EVP_DigestUpdate(ctx.get(), otherinfo.data(), otherinfo.size()) ||  //
-                1 != EVP_DigestFinal_ex(ctx.get(), hash.data(), &alloca_size)) {
+            function_pipeline<int> pipeline;
+            pipeline  //
+                .run([&]() -> int { return EVP_DigestInit_ex(ctx.get(), dgst, nullptr); })
+                .run([&]() -> int { return EVP_DigestUpdate(ctx.get(), counter.data(), counter.size()); })
+                .run([&]() -> int { return EVP_DigestUpdate(ctx.get(), dh_secret.data(), dh_secret.size()); })
+                .run([&]() -> int { return EVP_DigestUpdate(ctx.get(), otherinfo.data(), otherinfo.size()); })
+                .run([&]() -> int { return EVP_DigestFinal_ex(ctx.get(), hash.data(), &alloca_size); });
+            if (pipeline.failed()) {
                 ret = errorcode_t::internal_error;
                 break;
             }

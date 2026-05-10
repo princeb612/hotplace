@@ -28,15 +28,15 @@ return_t http2_frame_continuation::do_read_body(const byte_t* stream, size_t siz
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             payload pl;
             pl << new payload_member(binary_t(), constexpr_frame_fragment);
 
             auto rc = pl.read(stream, size, pos);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
             pl.get_binary(constexpr_frame_fragment, _fragment);

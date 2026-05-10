@@ -66,8 +66,8 @@ return_t http3_frame::do_read_frame(const byte_t* stream, size_t size, size_t& p
 #endif
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             payload pl;
 
@@ -78,7 +78,7 @@ return_t http3_frame::do_read_frame(const byte_t* stream, size_t size, size_t& p
             pl.set_reference_value(constexpr_payload, constexpr_length);
             auto rc = pl.read(stream, size, pos);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
 #if defined DEBUG

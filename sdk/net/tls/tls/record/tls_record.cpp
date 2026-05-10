@@ -173,8 +173,8 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
     size_t recpos = pos;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             auto session = get_session();
             size_t minsize = (session_type_dtls == session->get_type()) ? sizeof(dtls_header) : sizeof(tls_header);
@@ -234,7 +234,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
 
                 auto rc = pl.read(stream, size, pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 content_type = pl.t_value_of<uint8>(constexpr_content_type);
@@ -255,7 +255,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
                 return errorcode_t::error_overflow;
             } else {
                 if (size - pos < len) {
-                    return errorcode_t::bad_data;
+                    __trace_return(errorcode_t::bad_data);
                 }
             }
 
@@ -403,7 +403,7 @@ return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin
 
                 auto rc = pl.write(bin);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
             }
 

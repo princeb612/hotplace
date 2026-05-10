@@ -44,8 +44,8 @@ return_t quic_frame_connection_close::do_read_body(tls_direction_t dir, const by
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
 #if defined DEBUG
             uint64 error_code = 0;
@@ -64,7 +64,7 @@ return_t quic_frame_connection_close::do_read_body(tls_direction_t dir, const by
                 pl.set_group(constexpr_frametype, is_0x1c);
                 auto rc = pl.read(stream, size, pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
 #if defined DEBUG

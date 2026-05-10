@@ -157,6 +157,66 @@ TYPE t_change_sign(TYPE i) {
     return custom::t_change_sign(i, typename t_is_signed<TYPE>::type());
 }
 
+/**
+ * @remarks
+ *          understanding object << new A << new B << new C;
+ *            - operator << (operator << (new A, new B), new C);
+ *            - if an exception occurs in B, a memory leak occurs in A.
+ *
+ *          #1 make_unique
+ *              try {
+ *                  pl << std::unique_ptr<payload_member>(uint16(0), true, constexpr_extension_type)
+ *                     << std::unique_ptr<payload_member>(uint16(0), true, constexpr_ext_len);
+ *              } catch (...) {
+ *                  throw exception(out_of_memory);
+ *              }
+ *              // if B fail, unique_ptr release A
+ *
+ *              payload& payload::operator<<(std::unique_ptr<payload_member> member) {
+ *                  if (member) {
+ *                      auto item = member.get();
+ *                      // insert(item), push_back(item), ...
+ *                      member.release();
+ *                  }
+ *                  return *this;
+ *              }
+ *
+ *          #2 proxy
+ *              try {
+ *                  pl << new payload_member(uint16(0), true, constexpr_extension_type)
+ *                     << new payload_member(uint16(0), true, constexpr_ext_len);
+ *              } catch (...) {
+ *                  throw exception(out_of_memory);
+ *              }
+ *              // if B fail, proxy release A
+ *
+ *              payload& payload::operator<<(t_pointer_proxy<payload_member> proxy) {
+ *                  auto item = proxy.ptr;
+ *                  if (item) {
+ *                      // insert(item), push_back(item), ...
+ *                      proxy.ptr = nullptr;
+ *                  }
+ *              }
+ */
+template <typename T>
+struct t_pointer_proxy {
+    T* ptr;
+    std::function<void(T*)> deleter;
+
+    t_pointer_proxy(T* p) : ptr(p) {
+        deleter = [](T* p) -> void {
+            if (p) {
+                delete p;
+            }
+        };
+    }
+    ~t_pointer_proxy() { deleter(ptr); }
+
+    T* get() { return ptr; }
+    void set(std::function<void(T*)> func) { deleter = func; }
+    void release() { ptr = nullptr; }
+};
+
 template <typename T>
 struct t_comparator_base {
     // friend bool operator<(const T& lhs, const T& rhs) { return lhs < rhs; }

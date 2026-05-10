@@ -63,12 +63,12 @@ return_t quic_packet_initial::do_read_body(tls_direction_t dir, const byte_t* st
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             auto session = get_session();
             if ((nullptr == session) || (false == is_unidirection(dir))) {
-                return errorcode_t::invalid_context;
+                __trace_return(errorcode_t::invalid_context);
             }
 
             auto& protection = session->get_tls_protection();
@@ -90,7 +90,7 @@ return_t quic_packet_initial::do_read_body(tls_direction_t dir, const byte_t* st
 
                 auto rc = pl.read(stream, size, pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 pl.get_binary(constexpr_token, _token);
@@ -170,7 +170,7 @@ return_t quic_packet_initial::do_write(tls_direction_t dir, binary_t& header, bi
             return_t rc = success;
             auto session = get_session();
             if (nullptr == session) {
-                return errorcode_t::invalid_context;
+                __trace_return(errorcode_t::invalid_context);
             }
 
             auto& protection = session->get_tls_protection();
@@ -203,7 +203,7 @@ return_t quic_packet_initial::do_write(tls_direction_t dir, binary_t& header, bi
 
                 rc = pl.write(bin_unprotected_header);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
             }
 
@@ -226,7 +226,7 @@ return_t quic_packet_initial::do_write(tls_direction_t dir, binary_t& header, bi
                 // AEAD
                 rc = protection.encrypt(session, dir, get_payload(), bin_ciphertext, bin_unprotected_header, bin_tag, protection_initial);
                 if (errorcode_t::success != rc) {
-                    return rc;
+                    __trace_return(rc);
                 }
                 binary_append(bin_ciphertext, bin_tag);
 
@@ -235,7 +235,7 @@ return_t quic_packet_initial::do_write(tls_direction_t dir, binary_t& header, bi
                     uint8 ht = _ht;
                     rc = header_protect(dir, protection_initial, bin_ciphertext, ht, pn_length, bin_pn, bin_protected_header);
                     if (errorcode_t::success != rc) {
-                        return rc;
+                        __trace_return(rc);
                     }
 
                     // encode packet number
@@ -247,7 +247,7 @@ return_t quic_packet_initial::do_write(tls_direction_t dir, binary_t& header, bi
                     // protected header
                     rc = pl.write(bin_protected_header);
                     if (false == error_traits<return_t>::is_not_fail(rc)) {
-                        return rc;
+                        __trace_return(rc);
                     }
                 }
 

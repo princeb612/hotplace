@@ -297,8 +297,8 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
     binary_t bin_server_hello;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             /* RFC 8446 4.1.3.  Server Hello */
             {
@@ -318,7 +318,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
 
                 auto rc = pl.read(stream, size, pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 // RFC 8446 4.1.1.  Cryptographic Negotiation
@@ -363,7 +363,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
             if (0 == extension_len) {
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
                 session->reset_session_status();
-                return errorcode_t::error_handshake;
+                __trace_return(errorcode_t::error_handshake);
             }
 
             return success;
@@ -385,8 +385,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                     if (ext_etm) {
                         session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                         session->reset_session_status();
-                        __trace(error_handshake);
-                        return error_handshake;
+                        __trace_return(error_handshake);
                     }
                 }
             }
@@ -401,8 +400,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                     if (ext_ems) {
                         session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                         session->reset_session_status();
-                        __trace(error_handshake);
-                        return error_handshake;
+                        __trace_return(error_handshake);
                     }
                 }
             }
@@ -481,8 +479,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
             binary_t extensions;
             rc = get_extensions().write(dir, extensions);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                __trace(rc);
-                return rc;
+                __trace_return(rc);
             }
 
             // RFC 8446
@@ -494,7 +491,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
                 if (0 == ext_sg_casted->numberof_groups()) {
                     session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                     session->reset_session_status();
-                    return errorcode_t::error_handshake;
+                    __trace_return(errorcode_t::error_handshake);
                 }
             }
 
@@ -527,7 +524,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
 
                 rc = pl.write(bin);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
             }
 
@@ -543,10 +540,10 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
                        << extensions.size()                           //
                        << (kv.get(session_encrypt_then_mac) ? 1 : 0)  //
                        << kv.get(session_extended_master_secret);
-                    dbs.println("> cipher suite {1:04x}", va);
-                    dbs.println("> extension {3:x}({3})", va);
-                    dbs.println("> encrypt_then_mac {3}", va);
-                    dbs.println("> extended master secret {4}", va);
+                    dbs.vaprintln("> cipher suite {1:04x}", va);
+                    dbs.vaprintln("> extension {2:x}({2})", va);
+                    dbs.vaprintln("> encrypt_then_mac {3}", va);
+                    dbs.vaprintln("> extended master secret {4}", va);
                 });
             }
 #endif

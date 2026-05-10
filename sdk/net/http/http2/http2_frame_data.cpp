@@ -28,8 +28,8 @@ return_t http2_frame_data::do_read_body(const byte_t* stream, size_t size, size_
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             payload pl;
             // Pad Length?
@@ -42,7 +42,7 @@ return_t http2_frame_data::do_read_body(const byte_t* stream, size_t size, size_
 
             auto rc = pl.read(stream, size, pos);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
             _padlen = pl.t_value_of<uint8>(constexpr_frame_pad_length);

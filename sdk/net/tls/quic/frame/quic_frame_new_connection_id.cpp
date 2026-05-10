@@ -54,8 +54,8 @@ return_t quic_frame_new_connection_id::do_read_body(tls_direction_t dir, const b
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             payload pl;
             pl << new payload_member(new quic_encoded(uint64(0)), constexpr_sequence_number)  //
@@ -69,7 +69,7 @@ return_t quic_frame_new_connection_id::do_read_body(tls_direction_t dir, const b
 
             auto rc = pl.read(stream, size, pos);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
             uint64 sequence_number = 0;
@@ -88,13 +88,13 @@ return_t quic_frame_new_connection_id::do_read_body(tls_direction_t dir, const b
 
             auto& tracker = session->get_quic_session().get_cid_tracker();
             if (tracker.empty()) {
-                throw exception(internal_error);
+                __trace_return(internal_error);
             }
             uint64 prior = tracker.rbegin()->first;
             if (retire_prior_to != prior) {
                 // TODO
                 // PROTOCOL_VIOLATION
-                throw exception(internal_error);
+                __trace_return(internal_error);
             }
 
             tracker.insert({sequence_number, connection_id});
@@ -159,7 +159,7 @@ return_t quic_frame_new_connection_id::do_write_body(tls_direction_t dir, binary
 
             auto rc = pl.write(bin);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
 #if defined DEBUG

@@ -42,6 +42,7 @@
 #include <string.h>
 
 #include <map>
+#include <new>
 #include <string>
 #include <vector>
 

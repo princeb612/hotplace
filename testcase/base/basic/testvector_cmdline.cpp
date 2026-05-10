@@ -62,7 +62,6 @@ void test_yaml_testvector_cmdline() {
 
     auto lambda_yaml_cmdline = [&](const YAML::Node& items) -> void {
         for (const auto& item : items) {
-            valist va;
             auto args = item["args"];
             auto expect = item["expect"].as<bool>();
             auto reason = item["reason"].as<std::string>("");

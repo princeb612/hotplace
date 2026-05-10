@@ -14,6 +14,7 @@
 #include <functional>
 #include <hotplace/sdk/base/basic/types.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/nostd/template.hpp>
 #include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/base/system/uint.hpp>
@@ -109,7 +110,12 @@ class payload_member {
     payload_member(const byte_t* stream, size_t size, bool alloc, const char* name = nullptr, const char* group = nullptr);
     payload_member(const std::string& value, const char* name = nullptr, const char* group = nullptr);
     payload_member(const stream_t* value, const char* name = nullptr, const char* group = nullptr);
-    payload_member(payload_encoded* value, const char* name = nullptr, const char* group = nullptr);
+    /**
+     * @sa      t_pointer_proxy
+     *          understanding object << new A << new B << new C;
+     */
+    payload_member(std::unique_ptr<payload_encoded> value, const char* name = nullptr, const char* group = nullptr);
+    payload_member(t_pointer_proxy<payload_encoded> value, const char* name = nullptr, const char* group = nullptr);
     payload_member(const bignumber& value, const char* name = nullptr, const char* group = nullptr);
     ~payload_member();
 
@@ -183,7 +189,7 @@ class payload_member {
  */
 class payload_encoded {
    public:
-    payload_encoded() { _shared.make_share(this); }
+    payload_encoded() {}
     virtual ~payload_encoded() {}
 
     virtual size_t lsize() = 0;
@@ -196,27 +202,9 @@ class payload_encoded {
     virtual return_t read(const byte_t* stream, size_t size, size_t& pos) = 0;
     virtual variant& get_variant() = 0;
 
-    virtual void addref() { _shared.addref(); }
-    virtual void release() { _shared.delref(); }
-
    protected:
    private:
-    t_shared_reference<payload_encoded> _shared;
-};
-
-/**
- * proxy
- */
-struct payload_member_proxy {
-    payload_member* ptr;
-
-    payload_member_proxy(payload_member* p) : ptr(p) {}
-    // payload::operator << failure
-    ~payload_member_proxy() {
-        if (ptr) {
-            delete ptr;
-        }
-    }
+    // t_shared_reference<payload_encoded> _shared;
 };
 
 class payload {
@@ -226,31 +214,11 @@ class payload {
 
     /**
      * @brief   add
-     * @sa      payload_member
-     * @remarks
-     *          understanding pl << new A << new B << new C;
-     *            - operator << (operator << (new A, new B), new C);
-     *            - if an exception occurs in B, a memory leak occurs in A.
-     *
-     *          #1 make_unique
-     *              try {
-     *                  pl << new payload_member(uint16(0), true, constexpr_extension_type)
-     *                     << new payload_member(uint16(0), true, constexpr_ext_len);
-     *              } catch (...) {
-     *                  throw exception(out_of_memory);
-     *              }
-     *
-     *          #2 proxy
-     *              try {
-     *                  pl << new payload_member(uint16(0), true, constexpr_extension_type)
-     *                     << new payload_member(uint16(0), true, constexpr_ext_len);
-     *              } catch (...) {
-     *                  throw exception(out_of_memory);
-     *              }
+     * @sa      t_pointer_proxy
+     *          understanding object << new A << new B << new C;
      */
-    // payload& operator<<(payload_member* member);
     payload& operator<<(std::unique_ptr<payload_member> member);
-    payload& operator<<(payload_member_proxy proxy);
+    payload& operator<<(t_pointer_proxy<payload_member> proxy);
 
     /**
      * @brief   enable/disable group

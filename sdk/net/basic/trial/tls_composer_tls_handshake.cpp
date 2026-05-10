@@ -195,7 +195,6 @@ return_t tls_composer::do_tls_server_handshake_phase1(std::function<void(tls_ses
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
     tls_direction_t dir = from_server;
     tls_records records;
-    tls_records alerts;
     __try2 {
         auto session = get_session();
         auto session_type = session->get_type();
@@ -239,15 +238,16 @@ return_t tls_composer::do_tls_server_handshake_phase1(std::function<void(tls_ses
             };
 
             auto lambda_alert = [&](uint8 desc) -> void {
-                builder                                                  //
-                    .add(&alerts, tls_content_type_alert, session,  //
+                records.clear();
+                builder                                              //
+                    .add(&records, tls_content_type_alert, session,  //
                          [&](tls_record* record) -> return_t {
                              auto alert = (tls_record_alert*)record;
-                                alert->set(tls_alertlevel_fatal, desc);
+                             alert->set(tls_alertlevel_fatal, desc);
                              return ret;
                          });
-                
-                do_tls_compose(&alerts, dir, func);
+
+                do_tls_compose(&records, dir, func);
             };
 
             session->get_alert(from_server, lambda_has_fatal);

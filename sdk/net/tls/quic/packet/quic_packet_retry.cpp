@@ -62,8 +62,8 @@ return_t quic_packet_retry::do_read_body(tls_direction_t dir, const byte_t* stre
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             payload pl;
             pl << new payload_member(binary_t(), constexpr_retry_token)  //
@@ -72,7 +72,7 @@ return_t quic_packet_retry::do_read_body(tls_direction_t dir, const byte_t* stre
 
             auto rc = pl.read(stream, size, pos);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
             pl.get_binary(constexpr_retry_token, _retry_token);
@@ -97,7 +97,7 @@ return_t quic_packet_retry::write(tls_direction_t dir, binary_t& packet) {
                 if (errorcode_t::success == rc) {
                     _retry_integrity_tag = std::move(bin_integrity_tag);
                 } else {
-                    return rc;
+                    __trace_return(rc);
                 }
             }
 

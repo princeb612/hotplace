@@ -46,8 +46,8 @@ return_t quic_frame_http3_stream::do_read_body(tls_direction_t dir, const byte_t
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             return_t rc = success;
             auto type = get_type();
@@ -71,7 +71,7 @@ return_t quic_frame_http3_stream::do_read_body(tls_direction_t dir, const byte_t
 
             rc = pl.read(stream, size, pos);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
             uint64 stream_id = 0;
@@ -251,7 +251,7 @@ return_t quic_frame_http3_stream::do_write_body(tls_direction_t dir, const byte_
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             // size_t snapshot = bin.size();
 
@@ -293,7 +293,7 @@ return_t quic_frame_http3_stream::do_write_body(tls_direction_t dir, const byte_
 
             auto rc = pl.write(bin);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
 #if defined DEBUG

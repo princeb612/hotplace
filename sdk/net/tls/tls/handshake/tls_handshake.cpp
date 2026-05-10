@@ -252,8 +252,8 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             return_t rc = success;
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -287,7 +287,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
             }
 
             if ((size < pos) || (size - pos < (sizeof(tls_handshake_t) + sizeof_dtls_recons))) {
-                return errorcode_t::no_more;
+                __trace_return(errorcode_t::no_more);
             }
 
             {
@@ -303,7 +303,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
 
                 auto rc = pl.read(stream, size, pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
 #if defined DEBUG
@@ -317,7 +317,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
                     fragment_offset = pl.t_value_of<uint32>(constexpr_fragment_offset);
                     fragment_len = pl.t_value_of<uint32>(constexpr_fragment_len);
                     if (fragment_offset + fragment_len > length) {
-                        return errorcode_t::bad_format;
+                        __trace_return(errorcode_t::bad_format);
                     }
                 }
             }
@@ -477,7 +477,7 @@ return_t tls_handshake::do_write_header(tls_direction_t dir, binary_t& bin, cons
             size_t bin_oldsize = bin.size();
             auto rc = pl.write(bin);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
             _range.end = bin.size();

@@ -203,7 +203,7 @@ void test_stream_basic_stream() {
     basic_stream bs;
     valist va;
     va << 256 << "hello world" << 3.141592;
-    bs.vprintf(R"(value={1:04x}, value="{2:-15s}", value={3:le})", va);
+    bs.vaprintf(R"(value={1:04x}, value="{2:-15s}", value={3:le})", va);
     _logger->writeln(bs);
     _test_case.assert(bs == R"(value=0x0100, value="hello world    ", value=3.141592e+00)", __FUNCTION__, "format string syntax");
 }

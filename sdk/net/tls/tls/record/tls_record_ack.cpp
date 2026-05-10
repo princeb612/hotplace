@@ -31,7 +31,7 @@ return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
+        .goahead_if_not_fail()
         .run_trycatch([&]() -> return_t {
             uint16 len = get_body_size();
 #if defined DEBUG
@@ -51,7 +51,7 @@ return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
 
             auto rc = pl.read(stream, size, pos);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
 #if defined DEBUG

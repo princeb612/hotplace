@@ -32,8 +32,8 @@ return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* str
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             auto session = get_handshake()->get_session();
             auto& protection = session->get_tls_protection();
@@ -53,7 +53,7 @@ return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* str
 
                 auto rc = pl.read(stream, endpos_extension(), pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
 #if defined DEBUG
@@ -97,7 +97,7 @@ return_t tls_extension_alpn::do_write_body(tls_direction_t dir, binary_t& bin) {
 
                 auto rc = pl.write(bin);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
             }
 

@@ -48,8 +48,8 @@ return_t tls_extension_client_supported_versions::do_read_body(tls_direction_t d
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             uint16 count = 0;
             binary_t versions;
@@ -61,7 +61,7 @@ return_t tls_extension_client_supported_versions::do_read_body(tls_direction_t d
 
                 auto rc = pl.read(stream, endpos_extension(), pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 count = pl.t_value_of<uint8>(constexpr_versions) >> 1;
@@ -137,8 +137,8 @@ return_t tls_extension_server_supported_versions::do_read_body(tls_direction_t d
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             auto session = get_handshake()->get_session();
 
@@ -150,7 +150,7 @@ return_t tls_extension_server_supported_versions::do_read_body(tls_direction_t d
 
                 auto rc = pl.read(stream, endpos_extension(), pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 version = pl.t_value_of<uint16>(constexpr_version);

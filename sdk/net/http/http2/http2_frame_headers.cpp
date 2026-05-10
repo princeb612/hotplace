@@ -31,8 +31,8 @@ return_t http2_frame_headers::do_read_body(const byte_t* stream, size_t size, si
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             payload pl;
             pl << new payload_member(uint8(0), constexpr_frame_pad_length, constexpr_frame_padding)                 //
@@ -48,7 +48,7 @@ return_t http2_frame_headers::do_read_body(const byte_t* stream, size_t size, si
 
             auto rc = pl.read(stream, size, pos);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
             if (get_flags() & h2_flag_t::h2_flag_padded) {
@@ -88,7 +88,7 @@ return_t http2_frame_headers::do_write_body(binary_t& body) {
 
             auto rc = pl.write(body);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
             uint8 flags = get_flags();

@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
 
     _logger->flush();
 
-    _test_case.report();
+    // _test_case.report();
     _cmdline->help();
     return _test_case.result();
 }

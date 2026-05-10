@@ -31,8 +31,8 @@ return_t http3_frame_settings::do_read_payload(const byte_t* stream, size_t size
 
     function_pipeline<return_t> pipeline;
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .walk([&]() -> void {
             while (pos < size) {
                 pipeline  //
@@ -43,7 +43,7 @@ return_t http3_frame_settings::do_read_payload(const byte_t* stream, size_t size
 
                         auto rc = pl.read(stream, size, pos);
                         if (false == error_traits<return_t>::is_not_fail(rc)) {
-                            return rc;
+                            __trace_return(rc);
                         }
 
 #if defined DEBUG

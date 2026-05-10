@@ -65,8 +65,8 @@ return_t quic_packet_handshake::do_read_body(tls_direction_t dir, const byte_t* 
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             auto session = get_session();
             if ((nullptr == session) || (false == is_unidirection(dir))) {
@@ -93,7 +93,7 @@ return_t quic_packet_handshake::do_read_body(tls_direction_t dir, const byte_t* 
 
                 auto rc = pl.read(stream, size, pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 _length = pl.t_value_of<uint64>(constexpr_len);
@@ -145,7 +145,7 @@ return_t quic_packet_handshake::do_write(tls_direction_t dir, binary_t& header, 
             return_t rc = success;
             auto session = get_session();
             if (nullptr == session) {
-                return errorcode_t::invalid_context;
+                __trace_return(errorcode_t::invalid_context);
             }
 
             auto& protection = session->get_tls_protection();
@@ -177,7 +177,7 @@ return_t quic_packet_handshake::do_write(tls_direction_t dir, binary_t& header, 
 
                 rc = pl.write(bin_unprotected_header);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
             }
 
@@ -206,7 +206,7 @@ return_t quic_packet_handshake::do_write(tls_direction_t dir, binary_t& header, 
                     uint8 ht = _ht;
                     rc = header_protect(dir, protection_handshake, bin_ciphertext, ht, pn_length, bin_pn, bin_protected_header);
                     if (errorcode_t::success != rc) {
-                        return rc;
+                        __trace_return(rc);
                     }
 
                     // encode packet number
@@ -217,7 +217,7 @@ return_t quic_packet_handshake::do_write(tls_direction_t dir, binary_t& header, 
                     // protected header
                     rc = pl.write(bin_protected_header);
                     if (errorcode_t::success != rc) {
-                        return rc;
+                        __trace_return(rc);
                     }
                 }
 

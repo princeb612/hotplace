@@ -48,6 +48,11 @@ void leave_trace_dbg_printf(const char* file, unsigned int line, bool bt, return
 #if defined DEBUG
 
 #define __trace(x) leave_trace_dbg_print(__FILE__, __LINE__, false, x)
+#define __trace_return(x)                                    \
+    {                                                        \
+        leave_trace_dbg_print(__FILE__, __LINE__, false, x); \
+        return x;                                            \
+    }
 #define __leave2_trace(x)                                    \
     {                                                        \
         leave_trace_dbg_print(__FILE__, __LINE__, false, x); \
@@ -67,6 +72,7 @@ void leave_trace_dbg_printf(const char* file, unsigned int line, bool bt, return
 #else
 
 #define __trace(x)
+#define __trace_return(x) return x
 #define __leave2_trace(x) break
 #define __leave2_tracef(x, ...) break
 #define __leave2_if_fail(x) \

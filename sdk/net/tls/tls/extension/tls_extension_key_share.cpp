@@ -63,13 +63,13 @@ return_t tls_extension_key_share::add(uint16 group, tls_direction_t dir) {
             crypto_keyexchange keyexchange;
             rc = keyexchange.keygen((tls_group_t)group, &keyshare, privkid);
             if (success != rc) {
-                return rc;
+                __trace_return(rc);
             }
 
             auto pkey = keyshare.find_group(privkid, group);
             rc = keyshare.add((EVP_PKEY*)pkey, pubkid, true);
             if (success != rc) {
-                return rc;
+                __trace_return(rc);
             }
 
             protection.get_protection_context().add_keyshare_group(group);
@@ -103,6 +103,7 @@ return_t tls_extension_key_share::add_pubkey(uint16 group, const binary_t& pubke
     auto session = get_handshake()->get_session();
 
     pipeline  //
+        .goahead_if_not_fail()
         .run([&]() -> return_t {
             if (nullptr == session) {
                 return invalid_context;
@@ -116,7 +117,7 @@ return_t tls_extension_key_share::add_pubkey(uint16 group, const binary_t& pubke
             crypto_keyexchange keyexchange;
             auto rc = keyexchange.keystore((tls_group_t)group, &keyshare, desc.get_kid_cstr(), pubkey);
             if (success != rc) {
-                return rc;
+                __trace_return(rc);
             }
 
 #if defined DEBUG
@@ -168,8 +169,8 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
     //  } KeyShareClientHello;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             // auto advisor = crypto_advisor::get_instance();
             auto session = get_handshake()->get_session();
@@ -184,7 +185,7 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
                 pl << new payload_member(uint16(0), true, constexpr_len);
                 auto rc = pl.read(stream, limit, pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
 #if defined DEBUG
@@ -210,7 +211,7 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
 
                 auto rc = pl.read(stream, limit, pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 group = pl.t_value_of<uint16>(constexpr_group);
@@ -315,8 +316,8 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             auto session = get_handshake()->get_session();
             uint16 group = 0;
@@ -338,7 +339,7 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
 
                 auto rc = pl.read(stream, endpos_extension(), pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 // RFC 8448 5.  HelloRetryRequest
@@ -486,7 +487,7 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
 
                 auto rc = pl.write(bin);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
             }
 

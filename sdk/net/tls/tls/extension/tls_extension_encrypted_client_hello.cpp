@@ -39,8 +39,8 @@ return_t tls_extension_encrypted_client_hello::do_read_body(tls_direction_t dir,
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             uint8 client_hello_type = 0;
             uint16 kdf = 0;
@@ -66,7 +66,7 @@ return_t tls_extension_encrypted_client_hello::do_read_body(tls_direction_t dir,
 
                 auto rc = pl.read(stream, endpos_extension(), pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 client_hello_type = pl.t_value_of<uint8>(constexpr_client_hello_type);

@@ -24,8 +24,8 @@ return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, con
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != handshake) && (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != handshake) && (nullptr != stream); })
         .run([&]() -> return_t {
             // extension
             //  uint16 type
@@ -35,7 +35,7 @@ return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, con
             tls_extension_builder builder;
             while (pos < size) {
                 if (pos + 4 > size) {
-                    return errorcode_t::no_more;
+                    __trace_return(errorcode_t::no_more);
                 }
 
                 auto extension_type = ntoh16(*(uint16*)(stream + pos));

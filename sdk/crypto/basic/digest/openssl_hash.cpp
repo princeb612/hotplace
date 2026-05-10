@@ -10,6 +10,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
@@ -371,9 +372,13 @@ return_t openssl_hash::update(hash_context_t* handle, const byte_t* data, size_t
             __leave2;
         }
 
-        handle_dup = new openssl_hash_context_t(*context);  // duplicate CTX before finalize
-        finalize(handle, digest);                           // calc MD
-        *context = std::move(*handle_dup);                  // swap CTX
+        handle_dup = new (std::nothrow) openssl_hash_context_t(*context);  // duplicate CTX before finalize
+        if (nullptr == handle_dup) {
+            ret = errorcode_t::out_of_memory;
+            __leave2_trace(ret);
+        }
+        finalize(handle, digest);           // calc MD
+        *context = std::move(*handle_dup);  // swap CTX
     }
     __finally2 {
         if (handle_dup) {
@@ -555,7 +560,13 @@ return_t openssl_hash::dup(hash_context_t** duplicated, hash_context_t* handle) 
 
         openssl_hash_context_t* other = (openssl_hash_context_t*)handle;
 
-        *duplicated = new openssl_hash_context_t(*other);
+        auto context = new (std::nothrow) openssl_hash_context_t(*other);
+        if (nullptr == context) {
+            ret = errorcode_t::out_of_memory;
+            __leave2_trace(ret);
+        }
+
+        *duplicated = context;
     }
     __finally2 {}
     return ret;

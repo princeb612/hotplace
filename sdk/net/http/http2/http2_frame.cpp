@@ -148,8 +148,8 @@ return_t http2_frame::do_read_header(const byte_t* stream, size_t size, size_t& 
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             if (size < pos + sizeof(http2_frame_header_t)) {
                 return errorcode_t::bad_data;
@@ -163,7 +163,7 @@ return_t http2_frame::do_read_header(const byte_t* stream, size_t size, size_t& 
 
             auto rc = pl.read(stream, size, pos);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
             _payload_size = pl.t_value_of<uint32>(constexpr_frame_length);
@@ -172,7 +172,7 @@ return_t http2_frame::do_read_header(const byte_t* stream, size_t size, size_t& 
             _stream_id = pl.t_value_of<uint32>(constexpr_frame_stream_identifier);
 
             if (_payload_size + pos < size) {
-                return errorcode_t::bad_data;
+                __trace_return(errorcode_t::bad_data);
             }
 
             return success;
@@ -224,7 +224,7 @@ return_t http2_frame::do_write_header(binary_t& frame, const binary_t& body) {
 
             auto rc = pl.write(frame);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
             binary_append(frame, body);

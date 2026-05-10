@@ -35,8 +35,8 @@ return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             // RFC 8446 4.2.10.  Early Data Indication
             // struct {
@@ -52,7 +52,7 @@ return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_
 
             // RFC 8446 Early data is not permitted after a HelloRetryRequest
             if (tls_flow_hello_retry_request == protection.get_flow()) {
-                return bad_request;
+                __trace_return(bad_request);
             }
 
             {
@@ -69,7 +69,7 @@ return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_
 
                 auto rc = pl.read(stream, size, pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 if (is_nst) {

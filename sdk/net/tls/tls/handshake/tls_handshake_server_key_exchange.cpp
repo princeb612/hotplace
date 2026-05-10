@@ -96,8 +96,8 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
     binary_t sig;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             // RFC 5246 7.4.3.  Server Key Exchange Message
             {
@@ -114,7 +114,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
 
                 auto rc = pl.read(stream, size, pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 curve_info = pl.t_value_of<uint8>(constexpr_curve_info);
@@ -145,7 +145,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                 crypto_keyexchange keyexchange;
                 rc = keyexchange.keystore((tls_group_t)curve, &tlskey, KID_TLS_SERVER_KEY_EXCHANGE, pubkey);
                 if (success != rc) {
-                    return rc;
+                    __trace_return(rc);
                 }
             }
 
@@ -164,6 +164,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                 sign->release();
             } else {
                 rc = errorcode_t::not_available;
+                __trace(rc);
             }
 
             return rc;
@@ -265,7 +266,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
                     rc = errorcode_t::not_available;
                 }
                 if (success != rc) {
-                    return rc;
+                    __trace_return(rc);
                 }
             }
 
@@ -303,7 +304,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
 
                 rc = pl.write(bin);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
             }
 

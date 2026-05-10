@@ -74,7 +74,7 @@ return_t tls_protection::build_tls12_aad_from_record(tls_session* session, binar
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
+        .goahead_if_not_fail()
         .test_parameter([&]() -> bool { return (nullptr != session); })
         .run_trycatch([&]() -> return_t {
             return_t rc = success;
@@ -103,7 +103,7 @@ return_t tls_protection::build_tls12_aad_from_record(tls_session* session, binar
                 size_t apos = 0;
                 rc = pl.read(record_header.data(), record_header.size(), apos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 content_type = pl.t_value_of<uint8>(constexpr_content_type);
@@ -165,7 +165,7 @@ return_t tls_protection::write_aad(tls_session* session, tls_direction_t dir, bi
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
     pipeline  //
-        .test_not_fail()
+        .goahead_if_not_fail()
         .test_parameter([&]() -> bool { return (nullptr != session); })
         .run_trycatch([&]() -> return_t {
             auto& protection = session->get_tls_protection();
@@ -176,7 +176,7 @@ return_t tls_protection::write_aad(tls_session* session, tls_direction_t dir, bi
             auto cs = protection.get_cipher_suite();
             auto hint_blockcipher = tlsadvisor->hintof_blockcipher(cs);
             if (nullptr == hint_blockcipher) {
-                return errorcode_t::not_available;
+                __trace_return(errorcode_t::not_available);
             }
 
             auto ivsize = sizeof_iv(hint_blockcipher);

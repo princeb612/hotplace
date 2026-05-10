@@ -147,8 +147,8 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
     binary_t maced;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             // RFC 8446 2.  Protocol Overview
             // Finished:  A MAC (Message Authentication Code) over the entire
@@ -174,7 +174,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
 
                 auto rc = pl.read(stream, size, pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 pl.get_binary(constexpr_verify_data, verify_data);
@@ -187,7 +187,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
             if (maced.empty() || (verify_data != maced)) {
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                 session->reset_session_status();
-                return errorcode_t::error_verify;
+                __trace_return(errorcode_t::error_verify);
             }
 
             return success;
@@ -252,7 +252,7 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
 
                 auto rc = pl.write(bin);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
             }
 

@@ -31,8 +31,8 @@ return_t http2_frame_alt_svc::do_read_body(const byte_t* stream, size_t size, si
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             payload pl;
             pl << new payload_member((uint16)0, true, constexpr_frame_origin_len)  //
@@ -45,7 +45,7 @@ return_t http2_frame_alt_svc::do_read_body(const byte_t* stream, size_t size, si
 
             auto rc = pl.read(stream, size, pos);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
             pl.get_binary(constexpr_frame_origin, _origin);
@@ -60,7 +60,7 @@ return_t http2_frame_alt_svc::do_write_body(binary_t& body) {
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
+        .goahead_if_not_fail()
         .run_trycatch([&]() -> return_t {
             payload pl;
             pl << new payload_member((uint16)_origin.size(), true, constexpr_frame_origin_len)  //
@@ -69,7 +69,7 @@ return_t http2_frame_alt_svc::do_write_body(binary_t& body) {
 
             auto rc = pl.write(body);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
             return set_payload_size(body.size());

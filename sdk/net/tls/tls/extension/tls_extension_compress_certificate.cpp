@@ -31,8 +31,8 @@ return_t tls_extension_compress_certificate::do_read_body(tls_direction_t dir, c
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             uint8 algorithms_len = 0;
             binary_t bin_algorithms;
@@ -45,7 +45,7 @@ return_t tls_extension_compress_certificate::do_read_body(tls_direction_t dir, c
 
                 auto rc = pl.read(stream, endpos_extension(), pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 algorithms_len = pl.t_value_of<uint8>(constexpr_algorithm_len) >> 1;

@@ -36,8 +36,8 @@ return_t tls_extension_status_request::do_read_body(tls_direction_t dir, const b
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             uint8 cert_status_type = 0;
 #if defined DEBUG
@@ -58,7 +58,7 @@ return_t tls_extension_status_request::do_read_body(tls_direction_t dir, const b
 
                 auto rc = pl.read(stream, endpos_extension(), pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 cert_status_type = pl.t_value_of<uint8>(constexpr_cert_status_type);

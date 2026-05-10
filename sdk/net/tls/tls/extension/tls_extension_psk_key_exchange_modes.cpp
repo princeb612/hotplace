@@ -33,8 +33,8 @@ return_t tls_extension_psk_key_exchange_modes::do_read_body(tls_direction_t dir,
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             // RFC 8446 4.2.9.  Pre-Shared Key Exchange Modes
             // enum { psk_ke(0), psk_dhe_ke(1), (255) } PskKeyExchangeMode;
@@ -52,7 +52,7 @@ return_t tls_extension_psk_key_exchange_modes::do_read_body(tls_direction_t dir,
 
                 auto rc = pl.read(stream, endpos_extension(), pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 modes = pl.t_value_of<uint8>(constexpr_modes);

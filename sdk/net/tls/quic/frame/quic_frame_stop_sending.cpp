@@ -33,8 +33,8 @@ return_t quic_frame_stop_sending::do_read_body(tls_direction_t dir, const byte_t
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             // 19.5.  STOP_SENDING Frames
 
@@ -50,7 +50,7 @@ return_t quic_frame_stop_sending::do_read_body(tls_direction_t dir, const byte_t
 
             auto rc = pl.read(stream, size, pos);
             if (false == error_traits<return_t>::is_not_fail(rc)) {
-                return rc;
+                __trace_return(rc);
             }
 
 #if defined DEBUG

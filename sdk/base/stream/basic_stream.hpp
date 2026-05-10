@@ -124,7 +124,8 @@ class basic_stream : public stream_t {
      *          bs.sprintf({R"(value={-1}, value="{2:10d}", value={3:s})", va);
      *          // value={-1}, value="hello world", value=3.141592
      */
-    return_t vprintf(const char* fmt, valist ap);
+    return_t vaprintf(const char* fmt, valist ap);
+    return_t vaprintln(const char* fmt, valist ap);
 
     basic_stream& operator<<(const char* str);
     basic_stream& operator<<(char value);

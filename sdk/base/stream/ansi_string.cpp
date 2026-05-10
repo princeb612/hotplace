@@ -125,7 +125,7 @@ return_t ansi_string::vprintf(const wchar_t* buf, va_list ap) {
 }
 #endif
 
-return_t ansi_string::vprintf(const char* fmt, valist ap) {
+return_t ansi_string::vaprintf(const char* fmt, valist ap) {
     return_t ret = errorcode_t::success;
     ret = sprintf(this, fmt, ap);
     return ret;
@@ -232,7 +232,8 @@ return_t ansi_string::getline(size_t pos, size_t* brk, ansi_string& line) {
 ansi_string& ansi_string::operator=(const char* buf) {
     clear();
     if (buf) {
-        printf("%s", buf);
+        auto len = strlen(buf);
+        write(buf, len);
     }
     return *this;
 }
@@ -306,7 +307,8 @@ ansi_string& ansi_string::operator=(ansi_string&& other) {
 
 ansi_string& ansi_string::operator+=(const char* buf) {
     if (buf) {
-        printf("%s", buf);
+        auto len = strlen(buf);
+        write(buf, len);
     }
     return *this;
 }
@@ -362,7 +364,8 @@ ansi_string& ansi_string::operator+=(const ansi_string& buf) {
 
 ansi_string& ansi_string::operator<<(const char* buf) {
     if (buf) {
-        printf("%s", buf);
+        auto len = strlen(buf);
+        write(buf, len);
     }
     return *this;
 }

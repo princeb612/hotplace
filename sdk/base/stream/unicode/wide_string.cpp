@@ -232,7 +232,8 @@ wide_string& wide_string::operator=(const char* buf) {
 wide_string& wide_string::operator=(const wchar_t* buf) {
     clear();
     if (buf) {
-        printf(L"%s", buf);
+        auto len = wcslen(buf);
+        write(buf, len * sizeof(wchar_t));
     }
     return *this;
 }
@@ -311,7 +312,8 @@ wide_string& wide_string::operator+=(const char* buf) {
 
 wide_string& wide_string::operator+=(const wchar_t* buf) {
     if (buf) {
-        printf(L"%s", buf);
+        auto len = wcslen(buf);
+        write(buf, len * sizeof(wchar_t));
     }
     return *this;
 }
@@ -372,7 +374,8 @@ wide_string& wide_string::operator<<(const char* buf) {
 
 wide_string& wide_string::operator<<(const wchar_t* buf) {
     if (buf) {
-        printf(L"%s", buf);
+        auto len = wcslen(buf);
+        write(buf, len * sizeof(wchar_t));
     }
     return *this;
 }

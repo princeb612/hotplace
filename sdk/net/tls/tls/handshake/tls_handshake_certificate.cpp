@@ -85,8 +85,8 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
     function_pipeline<return_t> pipeline;
 
     pipeline  //
-        .test_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream) && (pos < size); })
+        .goahead_if_not_fail()
+        .test_parameter([&]() -> bool { return (nullptr != stream); })
         .run_trycatch([&]() -> return_t {
             return_t rc = success;
             // RFC 8446 2.  Protocol Overview
@@ -135,7 +135,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
 
                 rc = pl.read(stream, size, pos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
 #if defined DEBUG
@@ -183,7 +183,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
 
                 rc = pl.read(certificates.data(), certificates.size(), cpos);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 binary_t cert;
@@ -319,7 +319,7 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
 
                 auto rc = pl.write(bin);
                 if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    return rc;
+                    __trace_return(rc);
                 }
 
                 if (is_tls13) {
