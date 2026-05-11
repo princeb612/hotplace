@@ -47,6 +47,7 @@ struct uint48_t;
 class bignumber;
 class critical_section;
 class datetime;
+class error_advisor;
 class semaphore;
 class signalwait_threads;
 class thread;

@@ -60,13 +60,23 @@ class protection_context {
     void clear_ec_point_formats();
     void clear_keyshare_groups();
 
+    /**
+     * @brief   for each
+     * @remarks
+     *          auto lambda = [&](uint16 sigscheme, bool* brk) -> void {
+     *              // ...
+     *              *brk = true;  // stop
+     *          };
+     */
     void for_each_cipher_suites(std::function<void(uint16, bool*)> fn) const;
     void for_each_signature_algorithms(std::function<void(uint16, bool*)> fn) const;
     void for_each_supported_groups(std::function<void(uint16, bool*)> fn) const;
     void for_each_supported_versions(std::function<void(uint16, bool*)> fn) const;
     void for_each_ec_point_formats(std::function<void(uint8, bool*)> fn) const;
     void for_each_keyshare_groups(std::function<void(uint16, bool*)> fn) const;
-
+    /**
+     * @remarks negotiation
+     */
     return_t select_from(const protection_context& other, tls_session* session, uint16 minspec = tls_12, uint16 maxspec = tls_13);
 
     void set_cipher_suite(uint16 cs);

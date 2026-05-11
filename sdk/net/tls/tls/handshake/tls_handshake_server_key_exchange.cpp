@@ -216,13 +216,13 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
             crypto_keyexchange keyexchange;
 
             {
-                auto lambda = [&](uint16 group, bool* ctrl) -> void {
+                auto lambda = [&](uint16 group, bool* brk) -> void {
                     auto hint = advisor->hintof_curve_tls_group(group);
                     if (hint && hint->tlsgroup) {
                         keyexchange.keygen((tls_group_t)group, &tlskey, KID_TLS_SERVER_KEY_EXCHANGE);
                         keyexchange.keyshare((tls_group_t)group, &tlskey, KID_TLS_SERVER_KEY_EXCHANGE, pubkey);
                         curve = group;
-                        *ctrl = true;  // stop
+                        *brk = true;  // stop
                     }
                 };
                 protection_context.for_each_supported_groups(lambda);
@@ -233,7 +233,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
 
             uint16 sigalg = 0;
             {
-                auto lambda = [&](uint16 sigscheme, bool* ctrl) -> void {
+                auto lambda = [&](uint16 sigscheme, bool* brk) -> void {
                     auto hint = tlsadvisor->hintof_signature_scheme(sigscheme);
                     bool stop = false;
                     if (hint) {
@@ -242,7 +242,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
                             stop = true;
                         }
                     }
-                    *ctrl = stop;
+                    *brk = stop;
                 };
                 protection_context.for_each_signature_algorithms(lambda);
             }

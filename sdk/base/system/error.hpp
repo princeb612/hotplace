@@ -13,6 +13,7 @@
 #define __HOTPLACE_SDK_BASE_SYSTEM_ERROR__
 
 #include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/base/system/types.hpp>
 #include <queue>
 
 namespace hotplace {
@@ -57,6 +58,32 @@ class error_advisor {
     typedef std::map<return_t, const error_description*> error_description_map_t;
     critical_section _lock;
     error_description_map_t _table;
+};
+
+template <typename T>
+struct error_traits;
+
+/* hotplace */
+template <>
+struct error_traits<return_t> {
+    static return_t value_success() { return success; }
+    static return_t value_exception() { return exception_caught; }
+    static bool is_success(return_t code) { return (code == success) || (code == expect_failure); }
+    static bool is_not_fail(return_t code) {
+        auto category = error_advisor::get_instance()->categoryof(code);
+        return (error_category_severe != category);
+    }
+    static return_t to_return_t(return_t code) { return code; }
+};
+
+/* openssl */
+template <>
+struct error_traits<int> {
+    static int value_success() { return 1; }
+    static int value_exception() { return -1; }
+    static bool is_success(int code) { return code > 0; }
+    static bool is_not_fail(int code) { return code > 0; }
+    static return_t to_return_t(return_t code) { return (code > 0) ? success : internal_error; }
 };
 
 }  // namespace hotplace

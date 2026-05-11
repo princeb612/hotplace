@@ -252,7 +252,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
             if (len > 16384 + 2048) {
                 // more than 2^14+2048 bytes
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_record_overflow);
-                return errorcode_t::error_overflow;
+                __trace_return(errorcode_t::error_overflow);
             } else {
                 if (size - pos < len) {
                     __trace_return(errorcode_t::bad_data);
@@ -381,11 +381,11 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
 
 return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin, const binary_t& body) {
     function_pipeline<return_t> pipeline;
+    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    uint16 record_version = get_legacy_version();
 
     pipeline  //
         .run_trycatch([&]() -> return_t {
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            uint16 record_version = get_legacy_version();
             // auto is_tls = tlsadvisor->is_kindof_tls(record_version);
 
             _range.begin = bin.size();
@@ -411,10 +411,12 @@ return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin
 
             binary_append(bin, body);
 
+            return success;
+        })
+        .walk([&]() -> void {
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
                 trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
-                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
                     // const auto& range = get_header_range();
 
                     dbs.println("# record %s", (from_server == dir) ? "(server)" : (from_client == dir) ? "(client)" : "");
@@ -436,7 +438,6 @@ return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin
                 });
             }
 #endif
-            return success;
         });
     return pipeline.result();
 }

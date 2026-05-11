@@ -92,7 +92,7 @@ class basic_stream : public stream_t {
     virtual return_t vprintf(const char* buf, va_list ap);
 #if defined _WIN32 || defined _WIN64
     virtual return_t printf(const wchar_t* buf, ...);
-    return_t vprintf(const wchar_t* buf, va_list ap);
+    return_t vwprintf(const wchar_t* buf, va_list ap);
 #endif
 
     return_t println(const char* buf, ...);

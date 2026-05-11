@@ -260,7 +260,7 @@ return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, bina
 
             auto& tlskey = protection.get_key();
 
-            protection.get_protection_context().for_each_keyshare_groups([&](uint16 group, bool* cont) -> void {
+            protection.get_protection_context().for_each_keyshare_groups([&](uint16 group, bool) -> void {
                 binary_t pubkey;
 
                 crypto_keyexchange keyexchange;

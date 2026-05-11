@@ -196,7 +196,7 @@ return_t concat_kdf(binary_t dh_secret, binary_t otherinfo, unsigned int keylen,
                 .run([&]() -> int { return EVP_DigestUpdate(ctx.get(), otherinfo.data(), otherinfo.size()); })
                 .run([&]() -> int { return EVP_DigestFinal_ex(ctx.get(), hash.data(), &alloca_size); });
             if (pipeline.failed()) {
-                ret = errorcode_t::internal_error;
+                ret = error_traits<int>::to_return_t(pipeline.result());
                 break;
             }
 

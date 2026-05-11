@@ -20,32 +20,6 @@
 
 namespace hotplace {
 
-template <typename T>
-struct error_traits;
-
-/* hotplace */
-template <>
-struct error_traits<return_t> {
-    static return_t value_success() { return success; }
-    static return_t value_exception() { return exception_caught; }
-    static bool is_success(return_t code) { return (code == success) || (code == expect_failure); }
-    static bool is_not_fail(return_t code) {
-        auto category = error_advisor::get_instance()->categoryof(code);
-        return (error_category_severe != category);
-    }
-    static return_t to_return_t(return_t code) { return code; }
-};
-
-/* openssl */
-template <>
-struct error_traits<int> {
-    static int value_success() { return 1; }
-    static return_t value_exception() { return -1; }
-    static bool is_success(int code) { return code >= 1; }
-    static bool is_not_fail(int code) { return code >= 1; }
-    static return_t to_return_t(return_t code) { return (code >= 1) ? success : internal_error; }
-};
-
 /**
  * @refer   Gemini
  * @sample
@@ -54,7 +28,7 @@ struct error_traits<int> {
  *          myclass my;
  *
  *          pipeline.test_parameter([&]() -> bool { return (nullptr != msg); })  // check parameter
- *                  .goahead_if_not_fail()                                             // if not severe error, go ahead
+ *                  .goahead_if_not_fail()                                       // if not severe error, go ahead
  *                  .walk([&]() -> void { printf("hello world"); })              // if success
  *                  .run([&]() -> return_t { return my.a(); })                   // if success
  *                  .run([&]() -> return_t { return my.b(); })                   // if success
@@ -76,16 +50,18 @@ class function_pipeline {
     function_pipeline() : _lastcode(error_traits<T>::value_success()), _processed_count(0), _total_count(0) { _discriminant = error_traits<T>::is_success; };
     ~function_pipeline() {
 #if defined DEBUG
-        if (istraceable(trace_category_internal, loglevel_debug)) {
-            trace_debug_event(trace_category_internal, trace_event_internal, [&](basic_stream& dbs) -> void {
-                std::string code;
-                auto rc = error_traits<T>::to_return_t(_lastcode);
-                error_advisor::get_instance()->error_code(rc, code);
+        if (processed() != size()) {
+            if (istraceable(trace_category_internal, loglevel_debug)) {
+                trace_debug_event(trace_category_internal, trace_event_internal, [&](basic_stream& dbs) -> void {
+                    std::string code;
+                    auto rc = error_traits<T>::to_return_t(_lastcode);
+                    error_advisor::get_instance()->error_code(rc, code);
 
-                dbs.println("pipeline report");
-                dbs.println("- processed %zi / %zi", processed(), size());
-                dbs.println("- last error 0x%08x %s", rc, code.c_str());
-            });
+                    dbs.println("pipeline report");
+                    dbs.println("- processed %zi / %zi", processed(), size());
+                    dbs.println("- last error 0x%08x %s", rc, code.c_str());
+                });
+            }
         }
 #endif
     }
@@ -160,8 +136,9 @@ class function_pipeline {
    protected:
     template <typename F>
     function_pipeline& runner(F func, bool use_trycatch, expect_t expect = expect_success) {
-        ++_total_count;
-
+        if (expect_failure != expect) {
+            ++_total_count;
+        }
         if (expect_dontcare == expect) {
         } else {
             bool expectation = (expect_success == expect) ? true : false;

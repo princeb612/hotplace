@@ -161,7 +161,7 @@ return_t basic_stream::printf(const wchar_t* buf, ...) {
     return ret;
 }
 
-return_t basic_stream::vprintf(const wchar_t* buf, va_list ap) { return bufferio::vprintf(_handle, buf, ap); }
+return_t basic_stream::vwprintf(const wchar_t* buf, va_list ap) { return bufferio::vprintf(_handle, buf, ap); }
 #endif
 
 return_t basic_stream::println(const char* buf, ...) {
