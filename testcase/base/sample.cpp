@@ -99,6 +99,8 @@ int main(int argc, char** argv) {
     testcase_testvector_capacity();
     testcase_datetime();
     testcase_endian();
+    testcase_floatingpoint();
+    testcase_testvector_floatingpoint();
     testcase_ieee754();
     testcase_shared();
     testcase_signalwait_threads();

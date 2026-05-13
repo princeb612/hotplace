@@ -277,7 +277,14 @@ class bignumber {
      * @brief base^exp mod m
      */
     static bignumber modpow(bignumber base, bignumber exp, const bignumber& m);
+    /**
+     * @brief square root
+     */
     static bignumber sqrt(const bignumber& other);
+    /**
+     * @brief pow 2^100=1267650600228229401496703205376
+     */
+    static bignumber pow(bignumber base, bignumber exp);
 
     bignumber& add(const bignumber& other);
     bignumber& sub(const bignumber& other);
@@ -372,9 +379,9 @@ class bignumber {
         return value;
     }
 
-   protected:
-    int compare(const bignumber& lhs, const bignumber& rhs) const;
+    static int compare(const bignumber& lhs, const bignumber& rhs);
 
+   protected:
     bignumber leftshift(const bignumber& v, const bignumber& shift) const;
     bignumber rightshift(const bignumber& v, const bignumber& shift) const;
 

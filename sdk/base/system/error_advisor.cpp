@@ -243,6 +243,7 @@ const error_description error_descriptions[] = {
     errordef(narrow_type, "narrow type"),
     errordef(error_certificate, "certificate"),
     errordef(exceed, "exceed the designed size"),
+    errordef(error_division, "e.g. divide by zero"),
     errordef(not_specified, "not specfied"),
     errordef(error_negotiate, "(re)negotiation failed"),
     errordef(illegal_parameter, "illegal parameter"),  // ie. invalid_parameter + error_verify

@@ -58,6 +58,35 @@ return_t crypto_keychain::add_mldsa(crypto_key* cryptokey, uint32 nid, const key
     return ret;
 }
 
+return_t crypto_keychain::add_mlkem(crypto_key* cryptokey, const char* name, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    __try2 {
+        if (nullptr == cryptokey || nullptr == name) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        int nid = OBJ_sn2nid(name);
+        if (0 == nid) {
+            nid = OBJ_ln2nid(name);
+        }
+
+        auto kty = ktyof_nid(nid);
+        if (kty_mldsa != kty) {
+            ret = errorcode_t::different_type;
+            __leave2;
+        }
+
+        ret = add_mlkem(cryptokey, nid, desc);
+    }
+    __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
+    return ret;
+}
+
 return_t crypto_keychain::add_mldsa_pub(crypto_key* cryptokey, uint32 nid, const binary_t& pub, key_encoding_t encoding, const keydesc& desc) {
     return add_mldsa_pub(cryptokey, nid, pub.data(), pub.size(), encoding, desc);
 }

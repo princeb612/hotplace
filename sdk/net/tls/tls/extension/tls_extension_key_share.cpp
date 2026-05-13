@@ -1,3 +1,4 @@
+
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
  * @file   tls_extension_key_share.cpp
@@ -60,6 +61,15 @@ return_t tls_extension_key_share::add(uint16 group, tls_direction_t dir) {
                 pubkid = KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC;
             }
 
+#if defined DEBUG
+            if (istraceable(trace_category_net)) {
+                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+                    dbs.println(ANSI_ESCAPE "1;32m+ try to add keypair %s (group %s)" ANSI_ESCAPE "0m", privkid, tlsadvisor->nameof_group(group).c_str());
+                });
+            }
+#endif
+
             crypto_keyexchange keyexchange;
             rc = keyexchange.keygen((tls_group_t)group, &keyshare, privkid);
             if (success != rc) {
@@ -73,15 +83,6 @@ return_t tls_extension_key_share::add(uint16 group, tls_direction_t dir) {
             }
 
             protection.get_protection_context().add_keyshare_group(group);
-
-#if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                    dbs.println(ANSI_ESCAPE "1;32m+ add keypair %s (group %s)" ANSI_ESCAPE "0m", privkid, tlsadvisor->nameof_group(group).c_str());
-                });
-            }
-#endif
 
             return rc;
         });
@@ -258,9 +259,12 @@ return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, bina
                 add(group);
             }
 
+            std::set<uint16> groups;
+            protection.get_protection_context().for_each_keyshare_groups([&](uint16 group, bool*) -> void { groups.insert(group); });
+
             auto& tlskey = protection.get_key();
 
-            protection.get_protection_context().for_each_keyshare_groups([&](uint16 group, bool) -> void {
+            for (auto group : groups) {
                 binary_t pubkey;
 
                 crypto_keyexchange keyexchange;
@@ -283,7 +287,7 @@ return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, bina
 
                     pl.write(bin_keyshare);
                 }
-            });  // end of for_each
+            }
 
             binary_t bin_keysharelen;
             binary_append(bin_keysharelen, uint16(bin_keyshare.size()), hton16);

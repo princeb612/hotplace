@@ -29,14 +29,14 @@ namespace custom {
  * @brief   default deleter
  */
 template <typename T, typename... Args>
-typename std::enable_if<!std::is_array<T>::value, std::unique_ptr<T> >::type make_unique(Args&&... args) {
+typename std::enable_if<!std::is_array<T>::value, std::unique_ptr<T>>::type make_unique(Args&&... args) {
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 /**
  * @brief   T[], default deleter
  */
 template <typename T>
-typename std::enable_if<std::is_array<T>::value, std::unique_ptr<T> >::type make_unique(size_t size) {
+typename std::enable_if<std::is_array<T>::value, std::unique_ptr<T>>::type make_unique(size_t size) {
     typedef typename std::remove_extent<T>::type element_type;
     return std::unique_ptr<T>(new element_type[size]());
 }
@@ -47,7 +47,7 @@ typename std::enable_if<std::is_array<T>::value, std::unique_ptr<T> >::type make
  *          auto root = make_unique_with_deleter<cbor_array>(deleter);
  */
 template <typename T, typename D, typename... Args>
-typename std::enable_if<!std::is_array<T>::value, std::unique_ptr<T, D> >::type make_unique_with_deleter(D deleter, Args&&... args) {
+typename std::enable_if<!std::is_array<T>::value, std::unique_ptr<T, D>>::type make_unique_with_deleter(D deleter, Args&&... args) {
     return std::unique_ptr<T, D>(new T(std::forward<Args>(args)...), deleter);
 }
 /**
@@ -57,7 +57,7 @@ typename std::enable_if<!std::is_array<T>::value, std::unique_ptr<T, D> >::type 
  *          auto buffer = make_unique_with_deleter<byte_t[]>(size_buffer, deleter);
  */
 template <typename T, typename D>
-typename std::enable_if<std::is_array<T>::value, std::unique_ptr<T, D> >::type make_unique_with_deleter(size_t size, D deleter) {
+typename std::enable_if<std::is_array<T>::value, std::unique_ptr<T, D>>::type make_unique_with_deleter(size_t size, D deleter) {
     typedef typename std::remove_extent<T>::type element_type;
     return std::unique_ptr<T, D>(new element_type[size](), deleter);
 }
@@ -215,6 +215,93 @@ struct t_pointer_proxy {
     T* get() { return ptr; }
     void set(std::function<void(T*)> func) { deleter = func; }
     void release() { ptr = nullptr; }
+};
+
+/**
+ * @example
+ *          // sketch
+ *          t_tracker<uint16> tracker;
+ *          tracker.add_group(101, 1, 2);
+ *          tracker.add_group(102, 1, 3);
+ *          tracker.add_group(103, 2, 4);
+ *
+ *          tracker.visit(1);
+ *          tracker.visit(2);
+ *
+ *          tracker.is_available(1);    // true
+ *          tracker.is_available(2);    // true
+ *          tracker.is_available(101);  // true
+ *          tracker.is_available(102);  // false
+ *
+ *          tracker.visit(3);
+ *
+ *          tracker.is_available(3);    // true
+ *          tracker.is_available(102);  // true
+ */
+template <typename T>
+class t_tracker {
+   public:
+    t_tracker() {}
+
+    template <typename... Args>
+    void add_group(T parent, Args... children) {
+        std::set<T> members = {children...};
+        members.erase(parent);
+
+        if (false == members.empty()) {
+            _dictionary[parent] = members;
+
+            for (const auto& child : members) {
+                _reverse[child].insert(parent);
+            }
+        }
+    }
+
+    void clear_visited() { _available.clear(); }
+    void visit(T id) {
+        if (0 == _available.count(id)) {
+            if (_dictionary.count(id)) {
+                const auto& children = _dictionary[id];
+                for (const auto& child_id : children) {
+                    if (0 == _available.count(child_id)) {
+                        return;
+                    }
+                }
+            }
+        }
+
+        _available.insert(id);
+
+        auto it = _reverse.find(id);
+        if (_reverse.end() != it) {
+            for (const T& parent : it->second) {
+                _visited[parent].insert(id);
+
+                if (_visited[parent] == _dictionary[parent]) {
+                    visit(parent);
+                }
+            }
+        }
+    }
+    bool is_available(T id) { return _available.count(id) > 0; }
+    bool get(T id, std::set<T>& members) {
+        bool ret = false;
+        members.clear();
+        if (is_available(id)) {
+            if (_dictionary.count(id)) {
+                members = _dictionary[id];
+            } else {
+                members.insert(id);
+            }
+        }
+        return ret;
+    }
+
+   protected:
+    std::map<T, std::set<T>> _reverse;     // reverse index
+    std::map<T, std::set<T>> _dictionary;  // member
+    std::map<T, std::set<T>> _visited;     // visited
+    std::set<T> _available;                // available
 };
 
 template <typename T>

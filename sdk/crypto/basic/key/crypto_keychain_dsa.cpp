@@ -18,7 +18,7 @@ return_t crypto_keychain::add_dsa(crypto_key* cryptokey, uint32 nid, const keyde
     int ret_openssl = 0;
 
     __try2 {
-        if (nullptr == cryptokey) {
+        if (nullptr == cryptokey || nid_dsa != nid) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -58,6 +58,29 @@ return_t crypto_keychain::add_dsa(crypto_key* cryptokey, uint32 nid, const keyde
         }
 
         pkey.release();  // cryptokey own pkey
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::add_dsa(crypto_key* cryptokey, const char* name, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == cryptokey || nullptr == name) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        int nid = OBJ_sn2nid(name);
+        if (nid_dsa != nid) {
+            nid = OBJ_ln2nid(name);
+        }
+        if (nid_dsa != nid) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        ret = add_dsa(cryptokey, nid, desc);
     }
     __finally2 {}
     return ret;

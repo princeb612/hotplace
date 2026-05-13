@@ -5,6 +5,7 @@
     * https://en.wikipedia.org/wiki/Modular_exponentiation
 * reference
   * https://www.calculator.net/big-number-calculator.html
+  * https://bigcalculator.org/
 
 #### YAML schema
 
@@ -120,4 +121,19 @@ testvector:
         expr: expression                    # [mandatory]
         results:
         - "string"                          # [mandatory] 0..*
+````
+
+* regular expression YAML schema
+
+````
+testvector:
+  - example: string                         # [mandatory] testcase
+    schema: FLOATINGPOINT                   # [mandatory] "FLOATINGPOINT"
+    items:
+      - float1: string                      # [mandatory] 123.45, -0.00123 1.2e8 1/3 355/113 22/7 ...
+        float2: string                      # [mandatory]
+        add: string                         #
+        sub: string                         #
+        mul: string                         #
+        div: string                         #
 ````

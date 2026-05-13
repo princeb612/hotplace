@@ -12,8 +12,8 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_QUICSESSION__
 #define __HOTPLACE_SDK_NET_TLS_QUICSESSION__
 
-#include <hotplace/sdk/base/basic/binaries.hpp>
 #include <hotplace/sdk/base/basic/keyvalue.hpp>
+#include <hotplace/sdk/base/nostd/binaries.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/net/http/qpack/qpack_dynamic_table.hpp>
 #include <hotplace/sdk/net/http/qpack/qpack_encoder.hpp>

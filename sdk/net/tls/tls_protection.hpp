@@ -12,7 +12,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLSPROTECTION__
 #define __HOTPLACE_SDK_NET_TLS_TLSPROTECTION__
 
-#include <hotplace/sdk/base/basic/binaries.hpp>
+#include <hotplace/sdk/base/nostd/binaries.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/types.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>

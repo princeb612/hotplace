@@ -82,6 +82,28 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, const keydes
     return ret;
 }
 
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* curve, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+
+    __try2 {
+        if (nullptr == cryptokey || nullptr == curve) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        uint32 nid = 0;
+        ret = advisor->nidof_ec_curve(curve, nid);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = add_ec2(cryptokey, nid, desc);
+    }
+    __finally2 {}
+    return ret;
+}
+
 return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& y, const binary_t& d, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     int rc = 1;
@@ -181,28 +203,6 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, jwa_t alg, c
         kd.set_alg(nameof_alg(hint));
     }
     return add_ec(cryptokey, nid, x, y, d, std::move(kd));
-}
-
-return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* curve, const keydesc& desc) {
-    return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-
-    __try2 {
-        if (nullptr == cryptokey || nullptr == curve) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        uint32 nid = 0;
-        ret = advisor->nidof_ec_curve(curve, nid);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        ret = add_ec2(cryptokey, nid, desc);
-    }
-    __finally2 {}
-    return ret;
 }
 
 return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* curve, const binary_t& x, const binary_t& y, const binary_t& d, const keydesc& desc) {

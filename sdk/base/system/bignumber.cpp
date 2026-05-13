@@ -19,11 +19,11 @@
 
 namespace hotplace {
 
-#define bn_intuitive 1
-#define base base2p32
-
+// #define bn_intuitive 1
+// #define base base2p32
+//
 static const uint64 base2p32 = 0x100000000;  // intuitive 2^32
-static const uint32 base1e9 = 1000000000;    // printf-friendly (setw(9) << limb)
+// static const uint32 base1e9 = 1000000000;    // printf-friendly (setw(9) << limb)
 
 bignumber::bignumber() { set(0); }
 
@@ -32,10 +32,9 @@ bignumber::bignumber(const bignumber& other) {
     _sign = other._sign;
 }
 
-bignumber::bignumber(bignumber&& other) {
-    _v = std::move(other._v);
-    _sign = other._sign;
-    other._sign = 1;
+bignumber::bignumber(bignumber&& other) : _sign(1) {
+    std::swap(_v, other._v);
+    std::swap(_sign, other._sign);
 }
 
 bignumber::bignumber(int8 value) { set(value); }
@@ -73,14 +72,12 @@ bignumber::~bignumber() {}
 bignumber& bignumber::operator=(const bignumber& other) {
     _v = other._v;
     _sign = other._sign;
-    trim();
     return *this;
 }
 
 bignumber& bignumber::operator=(bignumber&& other) {
-    _v = std::move(other._v);
-    _sign = other._sign;
-    trim();
+    std::swap(_v, other._v);
+    std::swap(_sign, other._sign);
     return *this;
 }
 
@@ -200,8 +197,8 @@ bignumber& bignumber::set(int64 value)
         value = -value;
     }
     while (value) {
-        _v.push_back(value % base);
-        value /= base;
+        _v.push_back(value % base2p32);
+        value /= base2p32;
     }
     if (_v.empty()) {
         _sign = 1;
@@ -218,8 +215,8 @@ bignumber& bignumber::setu(uint64 value)
     _sign = 1;
     _v.clear();
     while (value) {
-        _v.push_back(value % base);
-        value /= base;
+        _v.push_back(value % base2p32);
+        value /= base2p32;
     }
     trim();
     return *this;
@@ -457,8 +454,8 @@ bignumber bignumber::mult_simple(const bignumber& lhs, const bignumber& rhs) {
         for (size_t j = 0; j < rhs._v.size() || carry; j++) {
             int64 cur = res._v[i + j] + (int64)lhs._v[i] * (j < rhs._v.size() ? rhs._v[j] : 0) + carry;
 
-            res._v[i + j] = cur % base;
-            carry = cur / base;
+            res._v[i + j] = cur % base2p32;
+            carry = cur / base2p32;
         }
     }
     res.trim();
@@ -521,8 +518,7 @@ std::pair<bignumber, bignumber> bignumber::divide(const bignumber& lhs, const bi
     bignumber remainder;
 
     if (rhs == 0) {
-        // division by zero
-        // throw exception
+        throw exception(error_division);  // division by zero
     } else if (abscmp(rhs, 1) == 0) {
         quotient = lhs;
         quotient._sign = lhs._sign * rhs._sign;
@@ -543,7 +539,7 @@ std::pair<bignumber, bignumber> bignumber::divide(const bignumber& lhs, const bi
             remainder._v.insert(remainder._v.begin(), a._v[idx]);
             remainder.trim();
 
-            uint32 limit = base - 1;
+            uint32 limit = base2p32 - 1;
             uint32 x = 0;
             uint32 low = 0;
             uint32 high = limit;
@@ -666,7 +662,7 @@ bignumber bignumber::modpow(bignumber b, bignumber exp, const bignumber& m) {
         uint64 carry = 0;
         for (size_t i = exp._v.size(); i > 0; --i) {
             size_t idx = i - 1;
-            uint64 cur = exp._v[idx] + carry * base;
+            uint64 cur = exp._v[idx] + carry * base2p32;
             exp._v[idx] = t_narrow_cast(cur / 2);
             carry = cur % 2;
         }
@@ -708,7 +704,31 @@ bignumber bignumber::sqrt(const bignumber& other) {
     return x;
 }
 
-int bignumber::compare(const bignumber& lhs, const bignumber& rhs) const {
+bignumber bignumber::pow(bignumber base, bignumber exp) {
+    bignumber res = 1;
+    if (exp > 0) {
+        while (exp > 0) {
+            if (exp % 2 == 1) {
+                res *= base;
+            }
+            base *= base;
+            exp /= 2;
+        }
+    } else if (exp == 0) {
+        // res = 1;
+    } else {
+        if (base == 1) {
+            // res = 1;
+        } else if (base == -1) {
+            res = ((exp % 2) == 0) ? 1 : -1;
+        } else {
+            // res = 1;
+        }
+    }
+    return res;
+}
+
+int bignumber::compare(const bignumber& lhs, const bignumber& rhs) {
     if (lhs._sign != rhs._sign) {
         return lhs._sign < rhs._sign ? -1 : 1;
     }
@@ -839,8 +859,8 @@ bignumber bignumber::absadd(const bignumber& lhs, const bignumber& rhs) {
 
     for (size_t i = 0; i < n; i++) {
         int64 sum = carry + (i < lhs._v.size() ? lhs._v[i] : 0) + (i < rhs._v.size() ? rhs._v[i] : 0);
-        res._v[i] = sum % base;
-        carry = sum / base;
+        res._v[i] = sum % base2p32;
+        carry = sum / base2p32;
     }
     if (carry) {
         res._v.push_back(t_narrow_cast(carry));
@@ -858,7 +878,7 @@ bignumber bignumber::abssub(const bignumber& lhs, const bignumber& rhs) {
     for (size_t i = 0; i < lhs._v.size(); i++) {
         int64 x = (int64)lhs._v[i] - borrow - (i < rhs._v.size() ? rhs._v[i] : 0);
         if (x < 0) {
-            x += base;
+            x += base2p32;
             borrow = 1;
         } else {
             borrow = 0;

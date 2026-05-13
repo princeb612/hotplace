@@ -90,6 +90,16 @@ return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const keydes
     return ret;
 }
 
+return_t crypto_keychain::add_dh(crypto_key* cryptokey, const char* curve, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    auto hint = advisor->hintof_curve(curve);
+    if (hint) {
+        ret = add_dh(cryptokey, hint->nid, desc);
+    }
+    return ret;
+}
+
 return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& y, const binary_t& x, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     int ret_openssl = 0;

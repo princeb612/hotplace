@@ -1,4 +1,4 @@
-### crypto
+#### crypto
 
 ```mermaid
 mindmap
@@ -14,20 +14,36 @@ mindmap
         HMAC
         CMAC
       sign
-        HMAC
-        RSA
+        digest
+        DSA
         ECDSA
         EdDSA
+        HMAC
         MLDSA
+        RSA
+          PKCS1.5
+          PSS
       key
         HMAC
-        RSA
+        DH
+        DSA
         EC
         OKP
+        RSA
       key exchange
         ECDH
         KEM
         hybrid KEM
+      KDF
+        HMAC
+        CMAC
+        AES
+        argon
+        PBKDF2
+        scrypt
+        TLS/DTLS
+      PQC
+        oqsprovider
       PRNG
       OTP
         HOTP
@@ -44,7 +60,7 @@ mindmap
       key
 ```
 
-### references
+#### references
 
 * books
   * Secure Programming Cookbook for C and C++ - O'REILLY

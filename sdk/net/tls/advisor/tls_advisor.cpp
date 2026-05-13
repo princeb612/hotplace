@@ -697,12 +697,12 @@ return_t tls_advisor::set_default_tls_groups() {
     _groups.insert(tls_group_x25519);
     _groups.insert(tls_group_secp256r1);
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
-    _groups.insert(tls_group_mlkem512);
-    _groups.insert(tls_group_mlkem768);
-    _groups.insert(tls_group_mlkem1024);
-    _groups.insert(tls_group_x25519mlkem768);  // chrome
-    _groups.insert(tls_group_secp256r1mlkem768);
-    _groups.insert(tls_group_secp384r1mlkem1024);
+    // _groups.insert(tls_group_mlkem512);
+    // _groups.insert(tls_group_mlkem768);
+    // _groups.insert(tls_group_mlkem1024);
+    // _groups.insert(tls_group_x25519mlkem768);  // chrome
+    // _groups.insert(tls_group_secp256r1mlkem768);
+    // _groups.insert(tls_group_secp384r1mlkem1024);
 #endif
     return ret;
 }

@@ -1,27 +1,26 @@
-### network
+#### network
 
 ```mermaid
 mindmap
   root((net))
     socket
-      tcp
-      udp
-      tls
-      dtls
+      TCP
+      UDP
+      TLS
+      DTLS
     secure socket
-      tls
-      quic
+      TLS
+      DTLS
     server
       network server
       network protocol
       session
     http server
-      auth
-      http
-      http2
+      HTTP/1.1
+      HTTP/2
 ```
 
-### references
+#### references
 
 * books
 * RFC

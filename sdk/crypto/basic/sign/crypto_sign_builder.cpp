@@ -78,61 +78,61 @@ crypto_sign_builder& crypto_sign_builder::set_scheme(crypt_sig_type_t scheme) {
 
 crypto_sign_builder& crypto_sign_builder::set_tls_sign_scheme(uint16 scheme) {
     switch (scheme) {
-        case 0x0401: /* rsa_pkcs1_sha256 */ {
+        case tls_signature_scheme_rsa_pkcs1_sha256: /* 0x0401 */ {
             set_scheme(crypt_sig_rsassa_pkcs15).set_digest(sha2_256);
         } break;
-        case 0x0501: /* rsa_pkcs1_sha384 */ {
+        case tls_signature_scheme_rsa_pkcs1_sha384: /* 0x0501 */ {
             set_scheme(crypt_sig_rsassa_pkcs15).set_digest(sha2_384);
         } break;
-        case 0x0601: /* rsa_pkcs1_sha512 */ {
+        case tls_signature_scheme_rsa_pkcs1_sha512: /* 0x0601 */ {
             set_scheme(crypt_sig_rsassa_pkcs15).set_digest(sha2_512);
         } break;
-        case 0x0403: /* ecdsa_secp256r1_sha256 */ {
+        case tls_signature_scheme_ecdsa_secp256r1_sha256: /* 0x0403 */ {
             set_scheme(crypt_sig_ecdsa).set_digest(sha2_256);
         } break;
-        case 0x0503: /* ecdsa_secp384r1_sha384 */ {
+        case tls_signature_scheme_ecdsa_secp384r1_sha384: /* 0x0503 */ {
             set_scheme(crypt_sig_ecdsa).set_digest(sha2_384);
         } break;
-        case 0x0603: /* ecdsa_secp521r1_sha512 */ {
+        case tls_signature_scheme_ecdsa_secp521r1_sha512: /* 0x0603 */ {
             set_scheme(crypt_sig_ecdsa).set_digest(sha2_512);
         } break;
-        case 0x0804: /* rsa_pss_rsae_sha256 */ {
+        case tls_signature_scheme_rsa_pss_rsae_sha256: /* 0x0804 */ {
             set_scheme(crypt_sig_rsassa_pss).set_digest(sha2_256);
         } break;
-        case 0x0805: /* rsa_pss_rsae_sha384 */ {
+        case tls_signature_scheme_rsa_pss_rsae_sha384: /* 0x0805 */ {
             set_scheme(crypt_sig_rsassa_pss).set_digest(sha2_384);
         } break;
-        case 0x0806: /* rsa_pss_rsae_sha512 */ {
+        case tls_signature_scheme_rsa_pss_rsae_sha512: /* 0x0806 */ {
             set_scheme(crypt_sig_rsassa_pss).set_digest(sha2_512);
         } break;
-        case 0x0807: /* ed25519 */ {
+        case tls_signature_scheme_ed25519: /* 0x0807 */ {
             set_scheme(crypt_sig_eddsa);
         } break;
-        case 0x0808: /* ed448 */ {
+        case tls_signature_scheme_ed448: /* 0x0808 */ {
             set_scheme(crypt_sig_eddsa);
         } break;
-        case 0x0809: /* rsa_pss_pss_sha256 */ {
+        case tls_signature_scheme_rsa_pss_pss_sha256: /* 0x0809 */ {
             set_scheme(crypt_sig_rsassa_pss).set_digest(sha2_256);
         } break;
-        case 0x080a: /* rsa_pss_pss_sha384 */ {
+        case tls_signature_scheme_rsa_pss_pss_sha384: /* 0x080a */ {
             set_scheme(crypt_sig_rsassa_pss).set_digest(sha2_384);
         } break;
-        case 0x080b: /* rsa_pss_pss_sha512 */ {
+        case tls_signature_scheme_rsa_pss_pss_sha512: /* 0x080b */ {
             set_scheme(crypt_sig_rsassa_pss).set_digest(sha2_512);
         } break;
-        case 0x0201: /* rsa_pkcs1_sha1 */ {
+        case tls_signature_scheme_rsa_pkcs1_sha1: /* 0x0201 */ {
             set_scheme(crypt_sig_rsassa_pkcs15).set_digest(sha1);
         } break;
-        case 0x0203: /* ecdsa_sha1 */ {
+        case tls_signature_scheme_ecdsa_sha1: /* 0x0203 */ {
             set_scheme(crypt_sig_ecdsa).set_digest(sha1);
         } break;
-        case 0x0904: /* mldsa44 */ {
+        case tls_signature_scheme_mldsa44: /* 0x0904 */ {
             set_scheme(crypt_sig_mldsa).set_digest(hash_alg_unknown);
         } break;
-        case 0x0905: /* mldsa65 */ {
+        case tls_signature_scheme_mldsa65: /* 0x0905 */ {
             set_scheme(crypt_sig_mldsa).set_digest(hash_alg_unknown);
         } break;
-        case 0x0906: /* mldsa87 */ {
+        case tls_signature_scheme_mldsa87: /* 0x0906 */ {
             set_scheme(crypt_sig_mldsa).set_digest(hash_alg_unknown);
         } break;
     }

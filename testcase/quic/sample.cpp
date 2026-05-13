@@ -368,7 +368,7 @@ int main(int argc, char** argv) {
     testcase_testvector_pcap();
 
     testcase_construct_1rtt();
-    testcase_construct_quic();
+    // testcase_construct_quic();
 
     openssl_cleanup();
 

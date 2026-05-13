@@ -25,7 +25,6 @@
 /* basic */
 #include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/basic/base64.hpp>
-#include <hotplace/sdk/base/basic/binaries.hpp>
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/cmdline.hpp>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
@@ -41,6 +40,7 @@
 
 /* nostd */
 #include <hotplace/sdk/base/nostd/avltree.hpp>
+#include <hotplace/sdk/base/nostd/binaries.hpp>
 #include <hotplace/sdk/base/nostd/btree.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/nostd/list.hpp>
@@ -83,6 +83,7 @@
 #include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
 #include <hotplace/sdk/base/system/error.hpp>
+#include <hotplace/sdk/base/system/floating_point.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #if defined __linux__
 #include <hotplace/sdk/base/system/linux/debug_trace.hpp>

@@ -169,6 +169,8 @@
   * RFC 7685 A Transport Layer Security (TLS) ClientHello Padding Extension
   * RFC 8422 Elliptic Curve Cryptography (ECC) Cipher Suites for Transport Layer Security (TLS) Versions 1.2 and Earlier
   * RFC 9325 Recommendations for Secure Use of Transport Layer Security (TLS) and Datagram Transport Layer Security (DTLS)
+* ML-DSA for JOSE and COSE
+  * https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/
 
 * ASN.1
   * ITU-T X.680-X.699

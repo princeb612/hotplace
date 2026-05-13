@@ -12,6 +12,7 @@
 
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/basic/cipher_encrypt.hpp>
@@ -128,6 +129,9 @@ return_t tls_protection::protection_mask(tls_session* session, tls_direction_t d
             cipher = builder.set(alg, ecb).build();
             if (cipher) {
                 const auto& key = get_secrets().get(secret_key);
+                if (key.empty()) {
+                    throw exception(internal_error);
+                }
                 auto samplesize = (size > blocksize) ? blocksize : size;
                 ret = cipher->encrypt(key, binary_t(), stream, samplesize, mask);
 

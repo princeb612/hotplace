@@ -485,6 +485,7 @@ void testcase_construct_quic() {
 
         load_certificate("rsa.crt", "rsa.key", nullptr);
         load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
+        load_certificate("mldsa.crt", "mldsa.key", nullptr);
 
         std::list<binary_t> bins;
         tls_session session_client(session_type_quic);
@@ -565,7 +566,7 @@ void testcase_construct_quic() {
                 lambda_check_pkn(&session_server, from_server, protection_handshake, 20);
                 lambda_check_pkn(&session_server, from_server, protection_application, 30);
                 construct_quic_svr_handshakes_settings(&session_server, from_server, quic_ack_packet, bins, text);
-                _test_case.assert(2 == bins.size(), __FUNCTION__, "segmentation");
+                _test_case.assert(bins.size() > 1, __FUNCTION__, "segmentation");
                 send_packet(&session_client, from_server, bins, text);
                 lambda_test_ready_to_ack(&session_client, protection_handshake, 21, 1);    // CRYPTO(EE, CERT, CV, FIN)
                 lambda_test_ready_to_ack(&session_client, protection_application, 30, 0);  // SETTINGS

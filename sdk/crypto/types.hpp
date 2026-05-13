@@ -350,6 +350,45 @@ enum tls_group_t : uint16 {
     tls_group_secp384r1mlkem1024 = 0x11ed,    // 4589 Combining secp384r1 ECDH with ML-KEM-1024
 };
 
+/**
+ * RFC 8446 4.2.3.  Signature Algorithms
+ * tls_ext_signature_algorithms
+ */
+enum tls_signature_scheme_t : uint16 {
+    /* RSASSA-PKCS1-v1_5 algorithms */
+    tls_signature_scheme_rsa_pkcs1_sha256 = 0x0401,
+    tls_signature_scheme_rsa_pkcs1_sha384 = 0x0501,
+    tls_signature_scheme_rsa_pkcs1_sha512 = 0x0601,
+
+    /* ECDSA algorithms */
+    tls_signature_scheme_ecdsa_secp256r1_sha256 = 0x0403,
+    tls_signature_scheme_ecdsa_secp384r1_sha384 = 0x0503,
+    tls_signature_scheme_ecdsa_secp521r1_sha512 = 0x0603,
+
+    /* RSASSA-PSS algorithms with public key OID rsaEncryption */
+    tls_signature_scheme_rsa_pss_rsae_sha256 = 0x0804,
+    tls_signature_scheme_rsa_pss_rsae_sha384 = 0x0805,
+    tls_signature_scheme_rsa_pss_rsae_sha512 = 0x0806,
+
+    /* EdDSA algorithms */
+    tls_signature_scheme_ed25519 = 0x0807,
+    tls_signature_scheme_ed448 = 0x0808,
+
+    /* RSASSA-PSS algorithms with public key OID RSASSA-PSS */
+    tls_signature_scheme_rsa_pss_pss_sha256 = 0x0809,
+    tls_signature_scheme_rsa_pss_pss_sha384 = 0x080a,
+    tls_signature_scheme_rsa_pss_pss_sha512 = 0x080b,
+
+    /* Legacy algorithms */
+    tls_signature_scheme_rsa_pkcs1_sha1 = 0x0201,
+    tls_signature_scheme_ecdsa_sha1 = 0x0203,
+
+    /* https://www.iana.org/go/draft-ietf-tls-mldsa-00 */
+    tls_signature_scheme_mldsa44 = 0x904,
+    tls_signature_scheme_mldsa65 = 0x905,
+    tls_signature_scheme_mldsa87 = 0x906,
+};
+
 ///////////////////////////////////////////////////////////////////////////
 // key
 ///////////////////////////////////////////////////////////////////////////
@@ -1268,6 +1307,7 @@ enum curve_category_t : uint8 {
 
 /**
  * @brief  curve information
+ *              id          openssl nid             NID_X9_62_prime256v1
  *              nid         openssl nid             NID_X9_62_prime256v1
  *              cose_crv    cose curve              cose_ec_p256
  *              kty         key type                kty_ec
@@ -1300,7 +1340,7 @@ enum curve_category_t : uint8 {
  */
 struct hint_curve_t {
     uint32 id;                 // openssl NID
-    uint32 nid;                // openssl NID
+    uint32 nid;                // id and nid can be different (nid_brainpoolp256r1tls13, NID_brainpoolP256r1)
     crypto_kty_t kty;          // kty_ec, kty_okp
     crypto_use_t use;          // use_any, use_enc, use_sig
     uint16 tlsgroup;           // TLS group
@@ -1431,7 +1471,13 @@ enum crypt_poweredby_t {
     openssl = 1,
 };
 
-/* nid (use openssl nid definition for convenience) */
+/**
+ * nid (use openssl nid definition for convenience)
+ *
+ * #ifndef NID_ML_KEM_512
+ * #define NID_ML_KEM_512 1454
+ * #endif
+ */
 enum nid_t : uint32 {
     nid_dh = 28,                      // NID_dhKeyAgreement (EVP_PKEY_DH)
     nid_dsa = 116,                    // NID_dsa

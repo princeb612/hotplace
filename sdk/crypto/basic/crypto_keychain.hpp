@@ -314,6 +314,7 @@ class crypto_keychain {
      * @param   const keydesc& desc [in]
      */
     return_t add_ec2(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
+    return_t add_ec2(crypto_key* cryptokey, const char* curve, const keydesc& desc);
     /**
      * @brief   ECC/OKP
      * @param   crypto_key* cryptokey [in]
@@ -324,7 +325,6 @@ class crypto_keychain {
      * @param   const keydesc& desc [in]
      */
     return_t add_ec2(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& y, const binary_t& d, const keydesc& desc);
-
     return_t add_ec2(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* x, const char* y, const char* d, const keydesc& desc);
     return_t add_ec2_b64(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, const keydesc& desc);
     return_t add_ec2_b64u(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, const keydesc& desc);
@@ -347,6 +347,7 @@ class crypto_keychain {
      * @param   const keydesc& desc [in]
      */
     return_t add_ec(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
+
     return_t add_ec(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& y, const binary_t& d, const keydesc& desc);
     /**
      * @brief   load OKP
@@ -358,6 +359,8 @@ class crypto_keychain {
      * @param   const keydesc& desc [in]
      */
     return_t add_okp(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
+    return_t add_okp(crypto_key* cryptokey, const char* curve, const keydesc& desc);
+
     return_t add_okp(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& d, const keydesc& desc);
     return_t add_okp(crypto_key* cryptokey, uint32 nid, const byte_t* x, size_t pubsize, const byte_t* d, size_t privsize, const keydesc& desc);
 
@@ -493,6 +496,8 @@ class crypto_keychain {
      *          keychain.add_dh(&key, NID_ffdhe8192, keydesc("ffdhe8192"));
      */
     return_t add_dh(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
+    return_t add_dh(crypto_key* cryptokey, const char* curve, const keydesc& desc);
+
     return_t add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& y, const binary_t& x, const keydesc& desc);
     return_t add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& p, const binary_t& q, const binary_t& g, const binary_t& x, const keydesc& desc);
     return_t add_dh(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* y, const char* x, const keydesc& desc);
@@ -527,6 +532,8 @@ class crypto_keychain {
      *          keychain.add_dsa_b16(&key, nid_dsa, y, nullptr, p, q, g, keydesc("DSA public"));
      */
     return_t add_dsa(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
+    return_t add_dsa(crypto_key* cryptokey, const char* name, const keydesc& desc);
+
     return_t add_dsa(crypto_key* cryptokey, uint32 nid, const binary_t& y, const binary_t& x, const binary_t& p, const binary_t& q, const binary_t& g,
                      const keydesc& desc);
     /**
@@ -552,6 +559,8 @@ class crypto_keychain {
      * @remarks openssl-3.5 required
      */
     return_t add_mlkem(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
+    return_t add_mlkem(crypto_key* cryptokey, const char* name, const keydesc& desc);
+
     return_t add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const binary_t& pub, key_encoding_t encoding, const keydesc& desc);
     return_t add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const byte_t* pub, size_t pubsize, key_encoding_t encoding, const keydesc& desc);
     return_t add_mlkem_priv(crypto_key* cryptokey, uint32 nid, const binary_t& keypair, key_encoding_t encoding, const keydesc& desc);
@@ -572,6 +581,7 @@ class crypto_keychain {
      * @remarks openssl-3.5 required
      */
     return_t add_mldsa(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
+
     return_t add_mldsa_pub(crypto_key* cryptokey, uint32 nid, const binary_t& pub, key_encoding_t encoding, const keydesc& desc);
     return_t add_mldsa_pub(crypto_key* cryptokey, uint32 nid, const byte_t* pub, size_t pubsize, key_encoding_t encoding, const keydesc& desc);
     return_t add_mldsa_priv(crypto_key* cryptokey, uint32 nid, const binary_t& keypair, key_encoding_t encoding, const keydesc& desc);
@@ -585,6 +595,18 @@ class crypto_keychain {
     return_t add_mldsa_priv_b64u(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc);
     return_t add_mldsa_priv_b16(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc);
     return_t add_mldsa_priv_b16rfc(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc);
+
+    /**
+     * @brief   group
+     * @example
+     *          // the secp256r1 keys of kid1 and kid2 are different.
+     *          keychain.add_ec2(&key, "secp256r1", keydesc(kid1"));
+     *          keychain.add_group(&key, keydesc("kid2"), tls_group_secp256r1mlkem768, 2, NID_X9_62_prime256v1, nid_mlkem768);
+     *
+     *          keychain.add_group(&key, keydesc("kid3"), tls_group_x25519mlkem768, 2, NID_X25519, nid_mlkem768);
+     *          keychain.add_group(&key, keydesc("kid4"), tls_group_secp384r1mlkem1024, 2, NID_secp384r1, nid_mlkem1024);
+     */
+    return_t add_group(crypto_key* cryptokey, const char* kid, uint16 group, uint8 count, ...);
 
    protected:
 };

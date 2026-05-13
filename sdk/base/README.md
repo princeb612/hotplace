@@ -7,9 +7,8 @@ mindmap
       command line
       customized printf
       customized stream
-      customized shared pointer
       dump memory
-      binary
+      function pipeline
       variant
       valist
     encoding
@@ -17,8 +16,9 @@ mindmap
       base64
       huffman coding
     types
+      binary
       endian
-      variant types
+      variant
       IEEE754
         half-precision
         single-precision
@@ -28,6 +28,12 @@ mindmap
       testcase
       logger
       trace
+    stream
+      ansi string
+      wide string
+    string
+      constexpr obfuscation
+      obfuscate string
     system
       critical section
       semaphore
@@ -48,6 +54,7 @@ mindmap
         ukkonen
         aho corasick
           wildcard feature
+        regular expression
       graph
         BFS
         DFS

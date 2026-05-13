@@ -27,20 +27,25 @@ struct keydesc {
     std::string kid;
     std::string alg;
     uint32 use;
+    uint16 group;
 
-    keydesc() : use(crypto_use_t::use_any) {}
-    keydesc(const char* k) : use(crypto_use_t::use_any) { set_kid(k); }
-    keydesc(const char* k, const char* a) : use(crypto_use_t::use_any) { set_kid(k).set_alg(a); }
-    keydesc(const char* k, const char* a, crypto_use_t u) : use(u) { set_kid(k).set_alg(a); }
-    keydesc(const std::string& k) : use(crypto_use_t::use_any) { set_kid(k); }
-    keydesc(const std::string& k, const std::string& a) : use(crypto_use_t::use_any) { set_kid(k).set_alg(a); }
-    keydesc(const std::string& k, const std::string& a, crypto_use_t u) : use(u) { set_kid(k).set_alg(a); }
-    keydesc(const std::string& k, crypto_use_t u) : use(u) { set_kid(k); }
-    keydesc(crypto_use_t u) : use(u) {}
-    /* copy */
-    keydesc(const keydesc& other) : kid(other.kid), alg(other.alg), use(other.use) {}
-    /* move */
-    keydesc(keydesc&& other) : kid(std::move(other.kid)), alg(std::move(other.alg)), use(other.use) {}
+    keydesc() : use(crypto_use_t::use_any), group(0) {}
+    keydesc(const char* k) : use(crypto_use_t::use_any), group(0) { set_kid(k); }
+    keydesc(const char* k, const char* a) : use(crypto_use_t::use_any), group(0) { set_kid(k).set_alg(a); }
+    keydesc(const char* k, const char* a, crypto_use_t u) : use(u), group(0) { set_kid(k).set_alg(a); }
+    keydesc(const std::string& k) : use(crypto_use_t::use_any), group(0) { set_kid(k); }
+    keydesc(const std::string& k, const std::string& a) : use(crypto_use_t::use_any), group(0) { set_kid(k).set_alg(a); }
+    keydesc(const std::string& k, const std::string& a, crypto_use_t u) : use(u), group(0) { set_kid(k).set_alg(a); }
+    keydesc(const std::string& k, crypto_use_t u) : use(u), group(0) { set_kid(k); }
+    keydesc(crypto_use_t u) : use(u), group(0) {}
+
+    keydesc(const keydesc& other) : kid(other.kid), alg(other.alg), use(other.use), group(other.group) {}
+    keydesc(keydesc&& other) : keydesc() {
+        std::swap(kid, other.kid);
+        std::swap(alg, other.alg);
+        std::swap(use, other.use);
+        std::swap(group, other.group);
+    }
 
     keydesc& set_kid(const char* k) {
         if (k) {
@@ -78,16 +83,23 @@ struct keydesc {
         use &= (~crypto_use_t::use_enc & crypto_use_t::use_sig);
         return *this;
     }
+    keydesc& set_group(uint16 g) {
+        group = g;
+        return *this;
+    }
+
     keydesc& operator=(const keydesc& other) {
         kid = other.kid;
         alg = other.alg;
         use = other.use;
+        group = other.group;
         return *this;
     }
     keydesc& operator=(keydesc&& other) {
-        kid = std::move(other.kid);
-        alg = std::move(other.alg);
-        use = other.use;
+        std::swap(kid, other.kid);
+        std::swap(alg, other.alg);
+        std::swap(use, other.use);
+        std::swap(group, other.group);
         return *this;
     }
 
@@ -96,114 +108,41 @@ struct keydesc {
     const char* get_alg_cstr() const { return alg.c_str(); }
     const std::string& get_alg_str() const { return alg; }
     uint32 get_use() const { return use; }
+    uint16 get_group() const { return group; }
 };
 
 class crypto_key_object {
    public:
-    crypto_key_object() : _pkey(nullptr), _x509(nullptr) {}
-    crypto_key_object(EVP_PKEY* key, crypto_use_t use, const char* kid = nullptr, const char* alg = nullptr) : crypto_key_object() { set(key, nullptr, use, kid, alg); }
-    crypto_key_object(EVP_PKEY* key, X509* x509, crypto_use_t use, const char* kid = nullptr, const char* alg = nullptr) : crypto_key_object() {
-        set(key, x509, use, kid, alg);
-    }
-    crypto_key_object(const crypto_key_object& other) : crypto_key_object() { set(other._pkey, other._x509, other._desc); }
-    crypto_key_object(crypto_key_object&& other) : crypto_key_object() {
-        std::swap(_pkey, other._pkey);
-        std::swap(_x509, other._x509);
-        std::swap(_desc, other._desc);
-    }
-    crypto_key_object(EVP_PKEY* key, const keydesc& desc) : crypto_key_object() { set(key, nullptr, desc); }
-    crypto_key_object(EVP_PKEY* key, keydesc&& desc) : crypto_key_object() { set(key, nullptr, std::move(desc)); }
-    crypto_key_object(EVP_PKEY* key, X509* x509, const keydesc& desc) : crypto_key_object() { set(key, x509, desc); }
-    crypto_key_object(EVP_PKEY* key, X509* x509, keydesc&& desc) : crypto_key_object() { set(key, x509, std::move(desc)); }
-    ~crypto_key_object() {
-        if (_pkey) {
-            EVP_PKEY_free(_pkey);
-        }
-        if (_x509) {
-            X509_free(_x509);
-        }
-    }
+    crypto_key_object();
+    crypto_key_object(const crypto_key_object& other);
+    crypto_key_object(crypto_key_object&& other);
 
-    crypto_key_object& set(EVP_PKEY* key, X509* x509, crypto_use_t use, const char* kid = nullptr, const char* alg = nullptr) {
-        if (_pkey) {
-            EVP_PKEY_free(_pkey);
-        }
-        if (_x509) {
-            X509_free(_x509);
-        }
-        if (key) {
-            _pkey = key;
-            EVP_PKEY_up_ref(_pkey);
-        }
-        if (x509) {
-            _x509 = x509;
-            X509_up_ref(_x509);
-        }
-        _desc.set_kid(kid).set_alg(alg).set_use(use);
-        return *this;
-    }
-    crypto_key_object& set(EVP_PKEY* key, X509* x509, const keydesc& desc) {
-        if (_pkey) {
-            EVP_PKEY_free(_pkey);
-            _pkey = nullptr;
-        }
-        if (_x509) {
-            X509_free(_x509);
-            _x509 = nullptr;
-        }
-        if (key) {
-            _pkey = key;
-            EVP_PKEY_up_ref(_pkey);
-        }
-        if (x509) {
-            _x509 = x509;
-            X509_up_ref(_x509);
-        }
-        _desc = desc;
-        return *this;
-    }
-    crypto_key_object& set(EVP_PKEY* key, X509* x509, keydesc&& desc) {
-        if (_pkey) {
-            EVP_PKEY_free(_pkey);
-            _pkey = nullptr;
-        }
-        if (_x509) {
-            X509_free(_x509);
-            _x509 = nullptr;
-        }
-        if (key) {
-            _pkey = key;
-            EVP_PKEY_up_ref(_pkey);
-        }
-        if (x509) {
-            _x509 = x509;
-            X509_up_ref(_x509);
-        }
-        _desc = std::move(desc);
-        return *this;
-    }
+    crypto_key_object(EVP_PKEY* key, const keydesc& desc);
+    crypto_key_object(EVP_PKEY* key, keydesc&& desc);
+    crypto_key_object(EVP_PKEY* key, X509* x509, const keydesc& desc);
+    crypto_key_object(EVP_PKEY* key, X509* x509, keydesc&& desc);
+    ~crypto_key_object();
 
-    crypto_key_object& operator=(const crypto_key_object& other) {
-        set(other._pkey, other._x509, other._desc);
-        return *this;
-    }
-    crypto_key_object& operator=(crypto_key_object&& other) {
-        std::swap(_pkey, other._pkey);
-        std::swap(_x509, other._x509);
-        std::swap(_desc, other._desc);
-        return *this;
-    }
+    crypto_key_object& operator=(const crypto_key_object& other);
+    crypto_key_object& operator=(crypto_key_object&& other);
 
-    const keydesc& get_desc() const { return _desc; }
-    const EVP_PKEY* get_pkey() const { return _pkey; }
-    const X509* get_x509() const { return _x509; }
-    void set_desc(const keydesc& desc) { _desc = desc; }
-    void set_desc(keydesc&& desc) { _desc = std::move(desc); }
+    const keydesc& get_desc() const;
+    const EVP_PKEY* get_pkey() const;
+    const X509* get_x509() const;
+    uint16 get_group();
+
+    crypto_key_object& set_desc(const keydesc& desc);
+    crypto_key_object& set_desc(keydesc&& desc);
+    crypto_key_object& set_alg(const char* alg);
+    crypto_key_object& set_use(crypto_use_t use);
+    crypto_key_object& set_group(uint16 group);
+
+    void release();
 
    private:
-    EVP_PKEY* _pkey;
-    X509* _x509;  // certificate
-    keydesc _desc;
+    EVP_PKEY* _pkey;  // key
+    X509* _x509;      // certificate
+    keydesc _desc;    // description
 };
 
 /**
@@ -292,7 +231,8 @@ class crypto_key {
      * @param bool up_ref [inopt] false by default
      * @return error code (see error.hpp)
      */
-    return_t add(crypto_key_object key, bool up_ref = false);
+    return_t add(const crypto_key_object& key, bool up_ref = false);
+    return_t add(crypto_key_object&& key, bool up_ref = false);
     /**
      * @brief add
      * @param EVP_PKEY* key [in]

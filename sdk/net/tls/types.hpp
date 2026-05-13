@@ -233,40 +233,6 @@ enum tls_alertdesc_t : uint8 {
     tls_alertdesc_no_application_protocol = 120,          // RFC 8446
 };
 
-/**
- * RFC 8446 4.2.3.  Signature Algorithms
- * tls_ext_signature_algorithms
- */
-enum tls_signature_scheme_t : uint16 {
-    /* RSASSA-PKCS1-v1_5 algorithms */
-    tls_signature_scheme_rsa_pkcs1_sha256 = 0x0401,
-    tls_signature_scheme_rsa_pkcs1_sha384 = 0x0501,
-    tls_signature_scheme_rsa_pkcs1_sha512 = 0x0601,
-
-    /* ECDSA algorithms */
-    tls_signature_scheme_ecdsa_secp256r1_sha256 = 0x0403,
-    tls_signature_scheme_ecdsa_secp384r1_sha384 = 0x0503,
-    tls_signature_scheme_ecdsa_secp521r1_sha512 = 0x0603,
-
-    /* RSASSA-PSS algorithms with public key OID rsaEncryption */
-    tls_signature_scheme_rsa_pss_rsae_sha256 = 0x0804,
-    tls_signature_scheme_rsa_pss_rsae_sha384 = 0x0805,
-    tls_signature_scheme_rsa_pss_rsae_sha512 = 0x0806,
-
-    /* EdDSA algorithms */
-    tls_signature_scheme_ed25519 = 0x0807,
-    tls_signature_scheme_ed448 = 0x0808,
-
-    /* RSASSA-PSS algorithms with public key OID RSASSA-PSS */
-    tls_signature_scheme_rsa_pss_pss_sha256 = 0x0809,
-    tls_signature_scheme_rsa_pss_pss_sha384 = 0x080a,
-    tls_signature_scheme_rsa_pss_pss_sha512 = 0x080b,
-
-    /* Legacy algorithms */
-    tls_signature_scheme_rsa_pkcs1_sha1 = 0x0201,
-    tls_signature_scheme_ecdsa_sha1 = 0x0203,
-};
-
 struct tls_alert_t {
     tls_alertlevel_t level;
     tls_alertdesc_t desc;

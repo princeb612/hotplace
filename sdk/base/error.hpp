@@ -261,7 +261,7 @@ enum errorcode_t : uint32 {
     /* 0xef01003f 4009820223 */ narrow_type,
     /* 0xef010040 4009820224 */ error_certificate,
     /* 0xef010041 4009820225 */ exceed,
-    /* 0xef010042 4009820226 */ reserved3,
+    /* 0xef010042 4009820226 */ error_division,
     /* 0xef010043 4009820227 */ not_specified,
     /* 0xef010044 4009820228 */ error_negotiate,
     /* 0xef010045 4009820229 */ illegal_parameter,

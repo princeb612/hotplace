@@ -365,12 +365,32 @@ return_t crypto_keychain::add(crypto_key* cryptokey, uint32 nid, const keydesc& 
             case kty_mlkem: {
                 ret = add_mlkem(cryptokey, nid, desc);
             } break;
+            case kty_mldsa: {
+                ret = add_mldsa(cryptokey, nid, desc);
+            } break;
             default: {
                 ret = not_supported;
             } break;
         }
     }
     __finally2 {}
+    return ret;
+}
+
+return_t crypto_keychain::add_group(crypto_key* cryptokey, const char* kid, uint16 group, uint8 count, ...) {
+    return_t ret = success;
+    va_list ap;
+    va_start(ap, count);
+    for (uint8 i = 0; i < count; ++i) {
+        int nid = va_arg(ap, int);
+        keydesc desc(kid);
+        desc.set_group(group);
+        ret = add(cryptokey, nid, desc);
+        if (success != ret) {
+            break;
+        }
+    }
+    va_end(ap);
     return ret;
 }
 
