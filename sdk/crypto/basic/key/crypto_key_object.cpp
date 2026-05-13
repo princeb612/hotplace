@@ -68,11 +68,9 @@ crypto_key_object::~crypto_key_object() { release(); }
 void crypto_key_object::release() {
     if (_pkey) {
         EVP_PKEY_free(_pkey);
-        _pkey = nullptr;
     }
     if (_x509) {
         X509_free(_x509);
-        _x509 = nullptr;
     }
 }
 

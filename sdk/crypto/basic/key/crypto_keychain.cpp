@@ -78,7 +78,7 @@ return_t crypto_keychain::load_pem(crypto_key* cryptokey, const char* buffer, si
             EVP_PKEY_ptr pkey_pub(PEM_read_bio_PUBKEY(bio_pub.get(), nullptr, nullptr, nullptr));
             if (pkey_pub.get()) {
                 crypto_key_object key(pkey_pub.get(), desc);
-                auto test = cryptokey->add(key);
+                auto test = cryptokey->add(std::move(key));
                 if (errorcode_t::success == test) {
                     pkey_pub.release();  // cryptokey own pkey_pub
                 }
@@ -91,7 +91,7 @@ return_t crypto_keychain::load_pem(crypto_key* cryptokey, const char* buffer, si
             EVP_PKEY_ptr pkey_priv(PEM_read_bio_PrivateKey(bio_priv.get(), nullptr, nullptr, nullptr));
             if (pkey_priv.get()) {
                 crypto_key_object key(pkey_priv.get(), desc);
-                auto test = cryptokey->add(key);
+                auto test = cryptokey->add(std::move(key));
                 if (errorcode_t::success == test) {
                     pkey_priv.release();  // cryptokey own pkey_priv
                 }
@@ -133,7 +133,7 @@ return_t crypto_keychain::load_cert(crypto_key* cryptokey, const char* buffer, s
         }
 
         crypto_key_object key(pkey.get(), cert.get(), desc);
-        ret = cryptokey->add(key);
+        ret = cryptokey->add(std::move(key));
         if (errorcode_t::success == ret) {
             pkey.release();  // cryptokey own pkey
             cert.release();  // cryptokey own cert
@@ -185,7 +185,7 @@ return_t crypto_keychain::load_der(crypto_key* cryptokey, const byte_t* buffer, 
 #endif
 
         crypto_key_object key(pkey.get(), x509.get(), desc);
-        ret = cryptokey->add(key);
+        ret = cryptokey->add(std::move(key));
         if (errorcode_t::success == ret) {
             pkey.release();  // cryptokey own pkey
             x509.release();  // cryptokey own x509

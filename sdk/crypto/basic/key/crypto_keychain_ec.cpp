@@ -72,7 +72,7 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, const keydes
         EC_KEY_set_asn1_flag((EC_KEY*)EVP_PKEY_get0_EC_KEY(pkey.get()), OPENSSL_EC_NAMED_CURVE);  // openssl 3.0 EVP_PKEY_get0 family return const key pointer
 
         crypto_key_object key(pkey.get(), desc);
-        ret = cryptokey->add(key);
+        ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -185,7 +185,7 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, const binary
         }
 
         crypto_key_object key(pkey.get(), desc);
-        ret = cryptokey->add(key);
+        ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
         }

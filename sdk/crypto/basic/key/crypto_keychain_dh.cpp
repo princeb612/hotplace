@@ -75,7 +75,7 @@ return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const keydes
         EVP_PKEY_ptr pkey(pk);
 
         crypto_key_object key(pkey.get(), desc);
-        ret = cryptokey->add(key);
+        ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -144,7 +144,7 @@ return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary
         dh.release();  // pkey own dh
 
         crypto_key_object key(pkey.get(), desc);
-        ret = cryptokey->add(key);
+        ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -252,7 +252,7 @@ return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary
         dh.release();  // pkey own dh
 
         crypto_key_object key(pkey.get(), desc);
-        ret = cryptokey->add(key);
+        ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
         }

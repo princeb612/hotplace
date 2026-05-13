@@ -45,7 +45,7 @@ return_t crypto_keychain::add_mldsa(crypto_key* cryptokey, uint32 nid, const key
         EVP_PKEY_ptr pkey(pk);
 
         crypto_key_object key(pkey.get(), desc);
-        ret = cryptokey->add(key);
+        ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -134,7 +134,7 @@ return_t crypto_keychain::add_mldsa_pub(crypto_key* cryptokey, uint32 nid, const
         }
 
         crypto_key_object key(pkey.get(), desc);
-        ret = cryptokey->add(key);
+        ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -178,7 +178,7 @@ return_t crypto_keychain::add_mldsa_priv(crypto_key* cryptokey, uint32 nid, cons
         }
 
         crypto_key_object key(pkey.get(), desc);
-        ret = cryptokey->add(key);
+        ret = cryptokey->add(std::move(key));
         if (success != ret) {
             __leave2;
         }

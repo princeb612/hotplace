@@ -85,7 +85,7 @@ return_t crypto_keychain::add_ec_compressed(crypto_key* cryptokey, uint32 nid, c
         // ec using set1_family (internally upref)
 
         crypto_key_object key(pkey.get(), desc);
-        ret = cryptokey->add(key);
+        ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
         }

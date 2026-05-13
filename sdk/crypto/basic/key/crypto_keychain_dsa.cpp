@@ -52,7 +52,7 @@ return_t crypto_keychain::add_dsa(crypto_key* cryptokey, uint32 nid, const keyde
         dsa.release();  // pkey own dsa
 
         crypto_key_object key(pkey.get(), desc);
-        ret = cryptokey->add(key);
+        ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -144,7 +144,7 @@ return_t crypto_keychain::add_dsa(crypto_key* cryptokey, uint32 nid, const binar
         dsa.release();  // pkey own dsa
 
         crypto_key_object key(pkey.get(), desc);
-        ret = cryptokey->add(key);
+        ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
         }

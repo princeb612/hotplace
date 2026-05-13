@@ -36,7 +36,7 @@ return_t crypto_keychain::add_oct(crypto_key* cryptokey, size_t size, const keyd
         }
 
         crypto_key_object key(pkey.get(), desc);
-        ret = cryptokey->add(key);
+        ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -65,7 +65,7 @@ return_t crypto_keychain::add_oct(crypto_key* cryptokey, const byte_t* k, size_t
         }
 
         crypto_key_object key(pkey.get(), desc);
-        ret = cryptokey->add(key);
+        ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
         }
