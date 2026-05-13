@@ -34,10 +34,31 @@ decimal_float& decimal_float::normalize() {
     if (_mant == 0) {
         _exp = 0;
     } else {
+#if 0
+        // slow
+        while (_mant % 100000000 == 0) {
+            _mant /= 100000000;
+            _exp += 8;
+        }
         while (_mant % 10 == 0) {
             _mant /= 10;
             ++_exp;
         }
+#else
+        std::string s = _mant.str();
+        if (s.empty()) {
+        } else {
+            size_t count = 0;
+            for (auto it = s.rbegin(); it != s.rend() && *it == '0'; ++it) {
+                ++count;
+            }
+
+            if (count > 0) {
+                _mant = _mant / bignumber::pow10(count);
+                _exp += static_cast<int32>(count);
+            }
+        }
+#endif
     }
     return *this;
 }
@@ -186,47 +207,51 @@ bool decimal_float::operator<=(const decimal_float& other) { return compare(*thi
 
 std::string decimal_float::str() {
     std::string res;
-
     if (_mant == 0) {
         res = "0";
     } else {
         std::string s_mant = _mant.str();
         bool negative = (s_mant[0] == '-');
-
         const char* digits = s_mant.c_str() + (negative ? 1 : 0);
         size_t mant_len = s_mant.size() - (negative ? 1 : 0);
 
-        if (_exp >= 0) {
-            res.reserve(negative + mant_len + _exp);
-            if (negative) {
-                res.push_back('-');
-            }
-            res.append(digits, mant_len);
-            res.append(_exp, '0');
-        } else {
-            int pos = static_cast<int>(mant_len) + _exp;
+        int true_exp = static_cast<int>(mant_len) - 1 + _exp;
 
-            if (pos <= 0) {
-                size_t zeros = static_cast<size_t>(-pos);
-                res.reserve(negative + 2 + zeros + mant_len);
-                if (negative) {
-                    res.push_back('-');
-                }
-                res.append("0.");
-                res.append(zeros, '0');
-                res.append(digits, mant_len);
-            } else {
-                res.reserve(negative + mant_len + 1);
-                if (negative) {
-                    res.push_back('-');
-                }
-                res.append(digits, static_cast<size_t>(pos));
+        bool use_e = (true_exp >= 6 || true_exp <= -4);
+
+        if (negative) {
+            res.push_back('-');
+        }
+
+        if (use_e) {
+            res.push_back(digits[0]);
+            if (mant_len > 1) {
                 res.push_back('.');
-                res.append(digits + pos, mant_len - static_cast<size_t>(pos));
+                res.append(digits + 1, mant_len - 1);
+            }
+            res.push_back('e');
+            if (true_exp >= 0) {
+                res.push_back('+');
+            }
+            res.append(std::to_string(true_exp));
+        } else {
+            if (_exp >= 0) {
+                res.append(digits, mant_len);
+                res.append(_exp, '0');
+            } else {
+                int pos = static_cast<int>(mant_len) + _exp;
+                if (pos <= 0) {
+                    res.append("0.");
+                    res.append(static_cast<size_t>(-pos), '0');
+                    res.append(digits, mant_len);
+                } else {
+                    res.append(digits, static_cast<size_t>(pos));
+                    res.push_back('.');
+                    res.append(digits + pos, mant_len - static_cast<size_t>(pos));
+                }
             }
         }
     }
-
     return res;
 }
 

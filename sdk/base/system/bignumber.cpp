@@ -728,6 +728,17 @@ bignumber bignumber::pow(bignumber base, bignumber exp) {
     return res;
 }
 
+const bignumber& bignumber::pow10(uint32 n) {
+    static std::vector<bignumber> cache = {bignumber(1)};
+
+    if (n >= cache.size()) {
+        for (size_t i = cache.size(); i <= n; ++i) {
+            cache.push_back(cache.back() * 10);
+        }
+    }
+    return cache[n];
+}
+
 int bignumber::compare(const bignumber& lhs, const bignumber& rhs) {
     if (lhs._sign != rhs._sign) {
         return lhs._sign < rhs._sign ? -1 : 1;

@@ -133,22 +133,32 @@ floating_point floating_point::add(const floating_point& lhs, const floating_poi
         auto d2 = *rhs._storage._d;
         auto diff = d1._exp - d2._exp;
 
-        bignumber ml = d1._mant;
-        bignumber mr = d2._mant;
-
-        if (diff > 0) {
-            mr *= bignumber::pow(10, diff);
+        const int32 MAX_PRECISION = 512;
+        if (diff > MAX_PRECISION) {
+            fp = lhs;
+        } else if (diff < -MAX_PRECISION) {
+            decimal_float temp(bignumber(0) - d2._mant, d2._exp);
+            fp = std::move(temp);
         } else {
-            ml *= bignumber::pow(10, -diff);
-        }
+            bignumber ml = d1._mant;
+            bignumber mr = d2._mant;
 
-        decimal_float temp(ml + mr, std::min(d1._exp, d2._exp));
-        fp = std::move(temp);
+            if (diff > 0) {
+                ml *= bignumber::pow10(diff);
+            } else if (diff < 0) {
+                mr *= bignumber::pow10(-diff);
+            }
+
+            decimal_float temp(ml + mr, std::min(d1._exp, d2._exp));
+            fp = std::move(temp);
+        }
     } else {
         auto r1 = floating_point::to_rational(lhs);
         auto r2 = floating_point::to_rational(rhs);
         // a / b + c / d = (ad + bc) / bd
-        rational_float temp((r1._num * r2._den) + (r2._num * r1._den), r1._den * r2._den);
+        bignumber num = (r1._num * r2._den) + (r2._num * r1._den);
+        bignumber den = r1._den * r2._den;
+        rational_float temp(std::move(num), std::move(den));
         fp = std::move(temp);
     }
     return fp;
@@ -161,22 +171,32 @@ floating_point floating_point::subtract(const floating_point& lhs, const floatin
         auto d2 = *rhs._storage._d;
         auto diff = d1._exp - d2._exp;
 
-        bignumber ml = d1._mant;
-        bignumber mr = d2._mant;
-
-        if (diff > 0) {
-            mr *= bignumber::pow(10, diff);
+        const int32 MAX_PRECISION = 512;
+        if (diff > MAX_PRECISION) {
+            fp = lhs;
+        } else if (diff < -MAX_PRECISION) {
+            decimal_float temp(bignumber(0) - d2._mant, d2._exp);
+            fp = std::move(temp);
         } else {
-            ml *= bignumber::pow(10, -diff);
-        }
+            bignumber ml = d1._mant;
+            bignumber mr = d2._mant;
 
-        decimal_float temp(ml - mr, std::min(d1._exp, d2._exp));
-        fp = std::move(temp);
+            if (diff > 0) {
+                ml *= bignumber::pow10(diff);
+            } else if (diff < 0) {
+                mr *= bignumber::pow10(-diff);
+            }
+
+            decimal_float temp(ml - mr, std::min(d1._exp, d2._exp));
+            fp = std::move(temp);
+        }
     } else {
         auto r1 = floating_point::to_rational(lhs);
         auto r2 = floating_point::to_rational(rhs);
         // a / b - c / d = (ad - bc) / bd
-        rational_float temp((r1._num * r2._den) - (r2._num * r1._den), r1._den * r2._den);
+        bignumber num = (r1._num * r2._den) - (r2._num * r1._den);
+        bignumber den = r1._den * r2._den;
+        rational_float temp(std::move(num), std::move(den));
         fp = std::move(temp);
     }
     return fp;
@@ -250,10 +270,10 @@ rational_float floating_point::to_rational(const floating_point& f) {
     } else {
         auto d = *f._storage._d;
         if (d._exp >= 0) {
-            rational_float temp(d._mant * bignumber::pow(10, d._exp), 1);
+            rational_float temp(d._mant * bignumber::pow10(d._exp), 1);
             fp = std::move(temp);
         } else {
-            rational_float temp(d._mant, bignumber::pow(10, -d._exp));
+            rational_float temp(d._mant, bignumber::pow10(-d._exp));
             fp = std::move(temp);
         }
     }
