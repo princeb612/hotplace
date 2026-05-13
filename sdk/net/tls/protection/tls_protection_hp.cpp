@@ -129,9 +129,11 @@ return_t tls_protection::protection_mask(tls_session* session, tls_direction_t d
             cipher = builder.set(alg, ecb).build();
             if (cipher) {
                 const auto& key = get_secrets().get(secret_key);
+#if 0
                 if (key.empty()) {
                     throw exception(internal_error);
                 }
+#endif
                 auto samplesize = (size > blocksize) ? blocksize : size;
                 ret = cipher->encrypt(key, binary_t(), stream, samplesize, mask);
 
