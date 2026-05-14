@@ -114,6 +114,14 @@ std::string floating_point::str() {
     }
 }
 
+std::string floating_point::fstr(size_t precision) const {
+    if (_type == decimal_type) {
+        return _storage._d->fstr(precision);
+    } else {
+        return _storage._r->fstr(precision);
+    }
+}
+
 int floating_point::compare(const floating_point& lhs, const floating_point& rhs) {
     if (lhs._type == decimal_type && rhs._type == decimal_type) {
         return decimal_float::compare(*lhs._storage._d, *rhs._storage._d);
@@ -133,7 +141,7 @@ floating_point floating_point::add(const floating_point& lhs, const floating_poi
         auto d2 = *rhs._storage._d;
         auto diff = d1._exp - d2._exp;
 
-        const int32 MAX_PRECISION = 512;
+        const int32 MAX_PRECISION = 1024;
         if (diff > MAX_PRECISION) {
             fp = lhs;
         } else if (diff < -MAX_PRECISION) {
@@ -171,7 +179,7 @@ floating_point floating_point::subtract(const floating_point& lhs, const floatin
         auto d2 = *rhs._storage._d;
         auto diff = d1._exp - d2._exp;
 
-        const int32 MAX_PRECISION = 512;
+        const int32 MAX_PRECISION = 1024;
         if (diff > MAX_PRECISION) {
             fp = lhs;
         } else if (diff < -MAX_PRECISION) {

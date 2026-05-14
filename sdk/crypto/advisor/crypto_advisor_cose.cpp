@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 
 namespace hotplace {
@@ -121,9 +121,9 @@ crypt_category_t crypto_advisor::categoryof(cose_alg_t alg) {
     return category;
 }
 
-crypt_sig_t crypto_advisor::sigof(cose_alg_t sig) {
-    crypt_sig_t type = crypt_sig_t::sig_unknown;
-    t_maphint<cose_alg_t, crypt_sig_t> hint(_cose2sig_map);
+signature_t crypto_advisor::sigof(cose_alg_t sig) {
+    signature_t type = signature_t::sig_unknown;
+    t_maphint<cose_alg_t, signature_t> hint(_cose2sig_map);
 
     hint.find(sig, &type);
     return type;

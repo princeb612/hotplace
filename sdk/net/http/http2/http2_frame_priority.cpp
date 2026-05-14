@@ -25,52 +25,46 @@ http2_frame_priority::http2_frame_priority(const http2_frame_priority& other)
 http2_frame_priority::~http2_frame_priority() {}
 
 return_t http2_frame_priority::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
 
-    pipeline  //
-        .goahead_if_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
-        .run_trycatch([&]() -> return_t {
-            payload pl;
-            pl << new payload_member(uint32(0), true, constexpr_frame_stream_dependency)  //
-               << new payload_member(uint8(0), constexpr_frame_weight);
-            pl.set_reference_value(constexpr_frame_padding, constexpr_frame_pad_length);
-            auto rc = pl.read(stream, size, pos);
-            if (false == error_traits<return_t>::is_not_fail(rc)) {
-                __trace_return(rc);
-            }
+    __try2 {
+        if (nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
 
-            uint32 temp = pl.t_value_of<uint32>(constexpr_frame_stream_dependency);
-            _exclusive = (temp & 0x80000000) ? true : false;
-            _dependency = (temp & 0x7fffffff);
-            _weight = pl.t_value_of<uint8>(constexpr_frame_weight);
+        payload pl;
+        pl << new payload_member(uint32(0), true, constexpr_frame_stream_dependency)  //
+           << new payload_member(uint8(0), constexpr_frame_weight);
 
-            return success;
-        });
-    return pipeline.result();
+        pl.set_reference_value(constexpr_frame_padding, constexpr_frame_pad_length);
+        pl.read(stream, size, pos);
+
+        uint32 temp = pl.t_value_of<uint32>(constexpr_frame_stream_dependency);
+        _exclusive = (temp & 0x80000000) ? true : false;
+        _dependency = (temp & 0x7fffffff);
+        _weight = pl.t_value_of<uint8>(constexpr_frame_weight);
+    }
+    __finally2 {}
+    return ret;
 }
 
 return_t http2_frame_priority::do_write_body(binary_t& body) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
 
-    pipeline  //
-        .run_trycatch([&]() -> return_t {
-            uint32 dependency = _dependency;
-            if (_exclusive) {
-                dependency |= 0x80000000;
-            }
+    uint32 dependency = _dependency;
+    if (_exclusive) {
+        dependency |= 0x80000000;
+    }
 
-            payload pl;
-            pl << new payload_member(dependency, true, constexpr_frame_stream_dependency)  //
-               << new payload_member(_weight, constexpr_frame_weight);
-            auto rc = pl.write(body);
-            if (false == error_traits<return_t>::is_not_fail(rc)) {
-                __trace_return(rc);
-            }
+    payload pl;
+    pl << new payload_member(dependency, true, constexpr_frame_stream_dependency)  //
+       << new payload_member(_weight, constexpr_frame_weight);
+    pl.write(body);
 
-            return set_payload_size(body.size());
-        });
-    return pipeline.result();
+    ret = set_payload_size(body.size());
+
+    return ret;
 }
 
 void http2_frame_priority::dump(stream_t* s) {

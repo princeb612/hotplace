@@ -71,158 +71,146 @@ quic_frame_ack& quic_frame_ack::set_space(protection_space_t space) {
 
 protection_space_t quic_frame_ack::get_space() { return _space; }
 
-return_t quic_frame_ack::do_postprocess(tls_direction_t dir) { return errorcode_t::success; }
+return_t quic_frame_ack::do_postprocess(tls_direction_t dir) {
+    return_t ret = errorcode_t::success;
+
+    return ret;
+}
 
 return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto type = get_type();
 
-    pipeline  //
-        .goahead_if_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
-        .run_trycatch([&]() -> return_t {
-            auto type = get_type();
-
-            payload pl;
-            pl << new payload_member(new quic_encoded(uint64(0)), constexpr_largest_ack)      //
-               << new payload_member(new quic_encoded(uint64(0)), constexpr_ack_delay)        //
-               << new payload_member(new quic_encoded(uint64(0)), constexpr_ack_range_count)  //
-               << new payload_member(new quic_encoded(uint64(0)), constexpr_first_ack_range);
-
-            auto rc = pl.read(stream, size, pos);
-            if (false == error_traits<return_t>::is_not_fail(rc)) {
-                __trace_return(rc);
-            }
+        payload pl;
+        pl << new payload_member(new quic_encoded(uint64(0)), constexpr_largest_ack)      //
+           << new payload_member(new quic_encoded(uint64(0)), constexpr_ack_delay)        //
+           << new payload_member(new quic_encoded(uint64(0)), constexpr_ack_range_count)  //
+           << new payload_member(new quic_encoded(uint64(0)), constexpr_first_ack_range);
+        pl.read(stream, size, pos);
 
 #if defined DEBUG
-            uint64 largest_ack = pl.t_value_of<uint64>(constexpr_largest_ack);
-            uint64 ack_delay = pl.t_value_of<uint64>(constexpr_ack_delay);
+        uint64 largest_ack = pl.t_value_of<uint64>(constexpr_largest_ack);
+        uint64 ack_delay = pl.t_value_of<uint64>(constexpr_ack_delay);
 #endif
-            uint64 ack_range_count = pl.t_value_of<uint64>(constexpr_ack_range_count);
+        uint64 ack_range_count = pl.t_value_of<uint64>(constexpr_ack_range_count);
 #if defined DEBUG
-            uint64 first_ack_range = pl.t_value_of<uint64>(constexpr_first_ack_range);
+        uint64 first_ack_range = pl.t_value_of<uint64>(constexpr_first_ack_range);
 
-            basic_stream dbs;
+        basic_stream dbs;
+
+        if (istraceable(trace_category_net)) {
+            dbs.println("   > %s %I64i", constexpr_largest_ack, largest_ack);
+            dbs.println("   > %s %I64i", constexpr_ack_delay, ack_delay);
+            dbs.println("   > %s %I64i", constexpr_ack_range_count, ack_range_count);
+            dbs.println("   > %s %I64i", constexpr_first_ack_range, first_ack_range);
+        }
+#endif
+
+        // RFC 9001 19.3.1.  ACK Ranges
+        for (uint64 i = 0; i < ack_range_count; i++) {
+            // ACK Range {
+            //   Gap (i),
+            //   ACK Range Length (i),
+            // }
+            // Figure 26: ACK Ranges
+            payload ack_ranges;
+            ack_ranges << new payload_member(new quic_encoded(uint64(0)), constexpr_gap) << new payload_member(new quic_encoded(uint64(0)), constexpr_range_length);
+            ack_ranges.read(stream, size, pos);
+
+#if defined DEBUG
+            uint64 gap = ack_ranges.t_value_of<uint64>(constexpr_gap);
+            uint64 range_length = ack_ranges.t_value_of<uint64>(constexpr_range_length);
 
             if (istraceable(trace_category_net)) {
-                dbs.println("   > %s %I64i", constexpr_largest_ack, largest_ack);
-                dbs.println("   > %s %I64i", constexpr_ack_delay, ack_delay);
-                dbs.println("   > %s %I64i", constexpr_ack_range_count, ack_range_count);
-                dbs.println("   > %s %I64i", constexpr_first_ack_range, first_ack_range);
+                dbs.println("   > %s[%I64i]", constexpr_ack_ranges, i);
+                dbs.println("    > %s %I64i", constexpr_gap, gap);
+                dbs.println("    > %s %I64i", constexpr_range_length, range_length);
             }
 #endif
+        }
 
-            // RFC 9001 19.3.1.  ACK Ranges
-            for (uint64 i = 0; i < ack_range_count; i++) {
-                // ACK Range {
-                //   Gap (i),
-                //   ACK Range Length (i),
-                // }
-                // Figure 26: ACK Ranges
-                payload ack_ranges;
-                ack_ranges << new payload_member(new quic_encoded(uint64(0)), constexpr_gap) << new payload_member(new quic_encoded(uint64(0)), constexpr_range_length);
-                ack_ranges.read(stream, size, pos);
-
-#if defined DEBUG
-                uint64 gap = ack_ranges.t_value_of<uint64>(constexpr_gap);
-                uint64 range_length = ack_ranges.t_value_of<uint64>(constexpr_range_length);
-
-                if (istraceable(trace_category_net)) {
-                    dbs.println("   > %s[%I64i]", constexpr_ack_ranges, i);
-                    dbs.println("    > %s %I64i", constexpr_gap, gap);
-                    dbs.println("    > %s %I64i", constexpr_range_length, range_length);
-                }
-#endif
-            }
-
-            // RFC 9001 19.3.2.  ECN Counts
-            if ((quic_frame_type_ack + 1) == type) {
-                // ECN Counts {
-                //   ECT0 Count (i),
-                //   ECT1 Count (i),
-                //   ECN-CE Count (i),
-                // }
-                // Figure 27: ECN Count Format
-                payload ecn_counts;
-                ecn_counts << new payload_member(new quic_encoded(uint64(0)), constexpr_ect0_count)
-                           << new payload_member(new quic_encoded(uint64(0)), constexpr_ect1_count)
-                           << new payload_member(new quic_encoded(uint64(0)), constexpr_ectce_count);
-                ecn_counts.read(stream, size, pos);
+        // RFC 9001 19.3.2.  ECN Counts
+        if ((quic_frame_type_ack + 1) == type) {
+            // ECN Counts {
+            //   ECT0 Count (i),
+            //   ECT1 Count (i),
+            //   ECN-CE Count (i),
+            // }
+            // Figure 27: ECN Count Format
+            payload ecn_counts;
+            ecn_counts << new payload_member(new quic_encoded(uint64(0)), constexpr_ect0_count) << new payload_member(new quic_encoded(uint64(0)), constexpr_ect1_count)
+                       << new payload_member(new quic_encoded(uint64(0)), constexpr_ectce_count);
+            ecn_counts.read(stream, size, pos);
 
 #if defined DEBUG
-                uint64 ect0_count = ecn_counts.t_value_of<uint64>(constexpr_ect0_count);
-                uint64 ect1_count = ecn_counts.t_value_of<uint64>(constexpr_ect1_count);
-                uint64 ectce_count = ecn_counts.t_value_of<uint64>(constexpr_ectce_count);
+            uint64 ect0_count = ecn_counts.t_value_of<uint64>(constexpr_ect0_count);
+            uint64 ect1_count = ecn_counts.t_value_of<uint64>(constexpr_ect1_count);
+            uint64 ectce_count = ecn_counts.t_value_of<uint64>(constexpr_ectce_count);
 
-                if (istraceable(trace_category_net)) {
-                    dbs.println("   > %s", constexpr_ecn_counts);
-                    dbs.println("    > %s %I64i", constexpr_ect0_count, ect0_count);
-                    dbs.println("    > %s %I64i", constexpr_ect1_count, ect1_count);
-                    dbs.println("    > %s %I64i", constexpr_ectce_count, ectce_count);
-                }
-#endif
-            }
-
-#if defined DEBUG
             if (istraceable(trace_category_net)) {
-                trace_debug_event_stream(trace_category_net, trace_event_quic_frame, &dbs);
+                dbs.println("   > %s", constexpr_ecn_counts);
+                dbs.println("    > %s %I64i", constexpr_ect0_count, ect0_count);
+                dbs.println("    > %s %I64i", constexpr_ect1_count, ect1_count);
+                dbs.println("    > %s %I64i", constexpr_ectce_count, ectce_count);
             }
 #endif
+        }
 
-            return success;
-        });
-    return pipeline.result();
+#if defined DEBUG
+        if (istraceable(trace_category_net)) {
+            trace_debug_event_stream(trace_category_net, trace_event_quic_frame, &dbs);
+        }
+#endif
+    }
+    __finally2 {}
+    return ret;
 }
 
 return_t quic_frame_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        auto space = get_space();
+        auto type = get_type();
 
-    pipeline  //
-        .run_trycatch([&]() -> return_t {
-            auto session = get_session();
-            auto space = get_space();
-            auto type = get_type();
+        if (protection_default == space) {
+            ret = errorcode_t::not_ready;
+            __leave2;
+        }
 
-            if (protection_default == space) {
-                __trace_return(errorcode_t::not_available);
-            }
+        auto& pkns = session->get_quic_session().get_pkns(_space);
+        critical_section_guard guard(pkns.get_lock());
+        ack_t ack;
+        ack << pkns;
+        pkns.set_status(0);
 
-            auto& pkns = session->get_quic_session().get_pkns(_space);
-            critical_section_guard guard(pkns.get_lock());
-            ack_t ack;
-            ack << pkns;
-            pkns.set_status(0);
+        payload pl;
+        pl << new payload_member(new quic_encoded(uint8(type)), constexpr_type)                               //
+           << new payload_member(new quic_encoded(uint64(ack.largest_ack)), constexpr_largest_ack)            //
+           << new payload_member(new quic_encoded(uint64(0)), constexpr_ack_delay)                            //
+           << new payload_member(new quic_encoded(uint64(ack.ack_ranges.size())), constexpr_ack_range_count)  //
+           << new payload_member(new quic_encoded(uint64(ack.first_ack_range)), constexpr_first_ack_range);
+        pl.write(bin);
 
-            payload pl;
-            pl << new payload_member(new quic_encoded(uint8(type)), constexpr_type)                               //
-               << new payload_member(new quic_encoded(uint64(ack.largest_ack)), constexpr_largest_ack)            //
-               << new payload_member(new quic_encoded(uint64(0)), constexpr_ack_delay)                            //
-               << new payload_member(new quic_encoded(uint64(ack.ack_ranges.size())), constexpr_ack_range_count)  //
-               << new payload_member(new quic_encoded(uint64(ack.first_ack_range)), constexpr_first_ack_range);
-
-            auto rc = pl.write(bin);
-            if (false == error_traits<return_t>::is_not_fail(rc)) {
-                __trace_return(rc);
-            }
-
-            for (auto& item : ack.ack_ranges) {
-                payload ack_ranges;
-                ack_ranges << new payload_member(new quic_encoded(uint64(item.gap)), constexpr_gap)
-                           << new payload_member(new quic_encoded(uint64(item.ack_range_length)), constexpr_range_length);
-                ack_ranges.write(bin);
-            }
+        for (auto& item : ack.ack_ranges) {
+            payload ack_ranges;
+            ack_ranges << new payload_member(new quic_encoded(uint64(item.gap)), constexpr_gap)
+                       << new payload_member(new quic_encoded(uint64(item.ack_range_length)), constexpr_range_length);
+            ack_ranges.write(bin);
+        }
 
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
-                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                    dbs.println(ANSI_ESCAPE "1;34m  + frame %s 0x%x(%i)" ANSI_ESCAPE "0m", tlsadvisor->nameof_quic_frame(type).c_str(), type, type);
-                });
-            }
+        if (istraceable(trace_category_net)) {
+            trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
+                dbs.println(ANSI_ESCAPE "1;34m  + frame %s 0x%x(%i)" ANSI_ESCAPE "0m", tlsadvisor->nameof_quic_frame(type).c_str(), type, type);
+            });
+        }
 #endif
-
-            return success;
-        });
-    return pipeline.result();
+    }
+    __finally2 {}
+    return ret;
 }
 
 }  // namespace net

@@ -24,43 +24,35 @@ http2_frame_window_update::http2_frame_window_update(const http2_frame_window_up
 http2_frame_window_update::~http2_frame_window_update() {}
 
 return_t http2_frame_window_update::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
 
-    pipeline  //
-        .goahead_if_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
-        .run_trycatch([&]() -> return_t {
-            payload pl;
-            pl << new payload_member(uint32(0), true, constexpr_frame_window_size_increment);
+    __try2 {
+        if (nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
 
-            auto rc = pl.read(stream, size, pos);
-            if (false == error_traits<return_t>::is_not_fail(rc)) {
-                __trace_return(rc);
-            }
+        payload pl;
+        pl << new payload_member((uint32)0, true, constexpr_frame_window_size_increment);
 
-            _increment = pl.t_value_of<uint32>(constexpr_frame_window_size_increment);
+        pl.read(stream, size, pos);
 
-            return success;
-        });
-    return pipeline.result();
+        _increment = pl.t_value_of<uint32>(constexpr_frame_window_size_increment);
+    }
+    __finally2 {}
+    return ret;
 }
 
 return_t http2_frame_window_update::do_write_body(binary_t& body) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
 
-    pipeline  //
-        .run_trycatch([&]() -> return_t {
-            payload pl;
-            pl << new payload_member(_increment, true, constexpr_frame_window_size_increment);
+    payload pl;
+    pl << new payload_member(_increment, true, constexpr_frame_window_size_increment);
+    pl.write(body);
 
-            auto rc = pl.write(body);
-            if (false == error_traits<return_t>::is_not_fail(rc)) {
-                __trace_return(rc);
-            }
+    ret = set_payload_size(body.size());
 
-            return set_payload_size(body.size());
-        });
-    return pipeline.result();
+    return ret;
 }
 
 void http2_frame_window_update::dump(stream_t* s) {

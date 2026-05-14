@@ -44,7 +44,7 @@ return_t tls_handshake_encrypted_extensions::do_read_body(tls_direction_t dir, c
     __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace(ret);
+            __leave2;
         }
 
         {

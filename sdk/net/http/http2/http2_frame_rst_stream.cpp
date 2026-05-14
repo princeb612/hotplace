@@ -24,41 +24,35 @@ http2_frame_rst_stream::http2_frame_rst_stream(const http2_frame_rst_stream& oth
 http2_frame_rst_stream::~http2_frame_rst_stream() {}
 
 return_t http2_frame_rst_stream::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
 
-    pipeline  //
-        .goahead_if_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
-        .run_trycatch([&]() -> return_t {
-            payload pl;
-            pl << new payload_member((uint32)0, true, constexpr_frame_error_code);
-            auto rc = pl.read(stream, size, pos);
-            if (false == error_traits<return_t>::is_not_fail(rc)) {
-                __trace_return(rc);
-            }
+    __try2 {
+        if (nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
 
-            _errorcode = pl.t_value_of<uint32>(constexpr_frame_error_code);
+        payload pl;
+        pl << new payload_member((uint32)0, true, constexpr_frame_error_code);
 
-            return success;
-        });
-    return pipeline.result();
+        pl.read(stream, size, pos);
+
+        _errorcode = pl.t_value_of<uint32>(constexpr_frame_error_code);
+    }
+    __finally2 {}
+    return ret;
 }
 
 return_t http2_frame_rst_stream::do_write_body(binary_t& body) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
 
-    pipeline  //
-        .run_trycatch([&]() -> return_t {
-            payload pl;
-            pl << new payload_member(_errorcode, true, constexpr_frame_error_code);
-            auto rc = pl.write(body);
-            if (false == error_traits<return_t>::is_not_fail(rc)) {
-                __trace_return(rc);
-            }
+    payload pl;
+    pl << new payload_member(_errorcode, true, constexpr_frame_error_code);
+    pl.write(body);
 
-            return set_payload_size(body.size());
-        });
-    return pipeline.result();
+    ret = set_payload_size(body.size());
+
+    return ret;
 }
 
 void http2_frame_rst_stream::dump(stream_t* s) {

@@ -32,7 +32,10 @@
     * CBOR
 
 * details
-  * Revision 993
+  * Revision 994
+    * [fixed] floating point, bignumber
+    * [changed] self-signed certificates
+    * [rollback] TLS, HTTP/2, QUIC
   * Revision 979
     * [tested] sprintf (format string syntax)
   * Revision 969-971

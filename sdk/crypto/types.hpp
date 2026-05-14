@@ -183,40 +183,44 @@ enum hash_algorithm_t : uint8 {
 ///////////////////////////////////////////////////////////////////////////
 // sign
 ///////////////////////////////////////////////////////////////////////////
-enum crypt_sig_type_t : uint8 {
-    crypt_sig_unknown = 0,
-    crypt_sig_dgst = 1,           //
-    crypt_sig_hmac = 2,           // HMAC (kty_oct)
-    crypt_sig_rsassa_pkcs15 = 3,  // PKCS#1 Ver1.5 (kty_rsa)
-    crypt_sig_ecdsa = 4,          // Elliptic Curve Digital Signature Algorithm (ECDSA)
-    crypt_sig_rsassa_pss = 5,     // PKCS#1 RSASSA-PSS (kty_rsa, kty_rsapss)
-    crypt_sig_eddsa = 6,          // Edwards-Curve Digital Signature Algorithms (EdDSAs)
-    crypt_sig_dsa = 7,            // DSA
-    crypt_sig_rsassa_x931 = 8,    // FIPS186-3, X9.31
-    crypt_sig_mldsa = 9,          // MLDSA
+/**
+ * @sa  crypto_sign_builder, hint_sigscheme_t
+ */
+enum sig_category_t : uint8 {
+    sig_category_unknown = 0,
+    sig_category_dgst = 1,           //
+    sig_category_hmac = 2,           // HMAC (kty_oct)
+    sig_category_rsassa_pkcs15 = 3,  // PKCS#1 Ver1.5 (kty_rsa)
+    sig_category_ecdsa = 4,          // Elliptic Curve Digital Signature Algorithm (ECDSA)
+    sig_category_rsassa_pss = 5,     // PKCS#1 RSASSA-PSS (kty_rsa, kty_rsapss)
+    sig_category_eddsa = 6,          // Edwards-Curve Digital Signature Algorithms (EdDSAs)
+    sig_category_dsa = 7,            // DSA
+    sig_category_rsassa_x931 = 8,    // FIPS186-3, X9.31
+    sig_category_mldsa = 9,          // MLDSA
+    sig_category_brainpool = 10,     // RFC 8734
 };
 
-enum crypt_sig_t : uint16 {
+enum signature_t : uint16 {
     sig_unknown = 0,
 
-    sig_hs256 = CRYPTO_SCHEME16(crypt_sig_hmac, sha2_256),
-    sig_hs384 = CRYPTO_SCHEME16(crypt_sig_hmac, sha2_384),
-    sig_hs512 = CRYPTO_SCHEME16(crypt_sig_hmac, sha2_512),
+    sig_hs256 = CRYPTO_SCHEME16(sig_category_hmac, sha2_256),
+    sig_hs384 = CRYPTO_SCHEME16(sig_category_hmac, sha2_384),
+    sig_hs512 = CRYPTO_SCHEME16(sig_category_hmac, sha2_512),
 
-    sig_rs256 = CRYPTO_SCHEME16(crypt_sig_rsassa_pkcs15, sha2_256),
-    sig_rs384 = CRYPTO_SCHEME16(crypt_sig_rsassa_pkcs15, sha2_384),
-    sig_rs512 = CRYPTO_SCHEME16(crypt_sig_rsassa_pkcs15, sha2_512),
-    sig_rs1 = CRYPTO_SCHEME16(crypt_sig_rsassa_pkcs15, sha1),
+    sig_rs256 = CRYPTO_SCHEME16(sig_category_rsassa_pkcs15, sha2_256),
+    sig_rs384 = CRYPTO_SCHEME16(sig_category_rsassa_pkcs15, sha2_384),
+    sig_rs512 = CRYPTO_SCHEME16(sig_category_rsassa_pkcs15, sha2_512),
+    sig_rs1 = CRYPTO_SCHEME16(sig_category_rsassa_pkcs15, sha1),
 
-    sig_es256 = CRYPTO_SCHEME16(crypt_sig_ecdsa, sha2_256),
-    sig_es384 = CRYPTO_SCHEME16(crypt_sig_ecdsa, sha2_384),
-    sig_es512 = CRYPTO_SCHEME16(crypt_sig_ecdsa, sha2_512),
+    sig_es256 = CRYPTO_SCHEME16(sig_category_ecdsa, sha2_256),
+    sig_es384 = CRYPTO_SCHEME16(sig_category_ecdsa, sha2_384),
+    sig_es512 = CRYPTO_SCHEME16(sig_category_ecdsa, sha2_512),
 
-    sig_ps256 = CRYPTO_SCHEME16(crypt_sig_rsassa_pss, sha2_256),
-    sig_ps384 = CRYPTO_SCHEME16(crypt_sig_rsassa_pss, sha2_384),
-    sig_ps512 = CRYPTO_SCHEME16(crypt_sig_rsassa_pss, sha2_512),
+    sig_ps256 = CRYPTO_SCHEME16(sig_category_rsassa_pss, sha2_256),
+    sig_ps384 = CRYPTO_SCHEME16(sig_category_rsassa_pss, sha2_384),
+    sig_ps512 = CRYPTO_SCHEME16(sig_category_rsassa_pss, sha2_512),
 
-    sig_eddsa = CRYPTO_SCHEME16(crypt_sig_eddsa, 0),
+    sig_eddsa = CRYPTO_SCHEME16(sig_category_eddsa, 0),
 
     sig_sha1 = CRYPTO_SCHEME16(0, sha1),
     sig_sha224 = CRYPTO_SCHEME16(0, sha2_224),
@@ -226,7 +230,13 @@ enum crypt_sig_t : uint16 {
     sig_shake128 = CRYPTO_SCHEME16(0, shake128),
     sig_shake256 = CRYPTO_SCHEME16(0, shake256),
 
-    sig_es256k = CRYPTO_SCHEME16(crypt_sig_ecdsa, sha2_256),  // ES256K, NID_secp256k1
+    sig_es256k = CRYPTO_SCHEME16(sig_category_ecdsa, sha2_256),  // ES256K, NID_secp256k1
+
+    sig_mldsa = CRYPTO_SCHEME16(sig_category_mldsa, 0),
+
+    sig_brainpool256 = CRYPTO_SCHEME16(sig_category_brainpool, sha2_256),
+    sig_brainpool384 = CRYPTO_SCHEME16(sig_category_brainpool, sha2_384),
+    sig_brainpool512 = CRYPTO_SCHEME16(sig_category_brainpool, sha2_512),
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -283,17 +293,14 @@ enum ec_curve_t : uint32 {
 };
 
 /**
+ * RFC 8446 4.2.7.  Supported Groups
+ * RFC 8422 5.1.1.  Supported Elliptic Curves Extension
  * tls_ext_supported_groups
  * https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
  */
 enum tls_group_t : uint16 {
     tls_group_unknown = 0x0000,
-    // RFC 8446 4.2.7.  Supported Groups
-    // RFC 8422 5.1.1.  Supported Elliptic Curves Extension
     // deprecated (1..22), reserved (0xFE00..0xFEFF), deprecated(0xFF01..0xFF02)
-
-    // https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
-
     // cf. hint_curves define tls_group_sect163k1..tls_group_x448
 
     tls_group_sect163k1 = 0x0001,
@@ -353,40 +360,46 @@ enum tls_group_t : uint16 {
 /**
  * RFC 8446 4.2.3.  Signature Algorithms
  * tls_ext_signature_algorithms
+ * https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
  */
-enum tls_signature_scheme_t : uint16 {
+enum tls_sigscheme_t : uint16 {
     /* RSASSA-PKCS1-v1_5 algorithms */
-    tls_signature_scheme_rsa_pkcs1_sha256 = 0x0401,
-    tls_signature_scheme_rsa_pkcs1_sha384 = 0x0501,
-    tls_signature_scheme_rsa_pkcs1_sha512 = 0x0601,
+    tls_sigscheme_rsa_pkcs1_sha256 = 0x0401,
+    tls_sigscheme_rsa_pkcs1_sha384 = 0x0501,
+    tls_sigscheme_rsa_pkcs1_sha512 = 0x0601,
 
     /* ECDSA algorithms */
-    tls_signature_scheme_ecdsa_secp256r1_sha256 = 0x0403,
-    tls_signature_scheme_ecdsa_secp384r1_sha384 = 0x0503,
-    tls_signature_scheme_ecdsa_secp521r1_sha512 = 0x0603,
+    tls_sigscheme_ecdsa_secp256r1_sha256 = 0x0403,
+    tls_sigscheme_ecdsa_secp384r1_sha384 = 0x0503,
+    tls_sigscheme_ecdsa_secp521r1_sha512 = 0x0603,
 
     /* RSASSA-PSS algorithms with public key OID rsaEncryption */
-    tls_signature_scheme_rsa_pss_rsae_sha256 = 0x0804,
-    tls_signature_scheme_rsa_pss_rsae_sha384 = 0x0805,
-    tls_signature_scheme_rsa_pss_rsae_sha512 = 0x0806,
+    tls_sigscheme_rsa_pss_rsae_sha256 = 0x0804,
+    tls_sigscheme_rsa_pss_rsae_sha384 = 0x0805,
+    tls_sigscheme_rsa_pss_rsae_sha512 = 0x0806,
 
     /* EdDSA algorithms */
-    tls_signature_scheme_ed25519 = 0x0807,
-    tls_signature_scheme_ed448 = 0x0808,
+    tls_sigscheme_ed25519 = 0x0807,
+    tls_sigscheme_ed448 = 0x0808,
 
     /* RSASSA-PSS algorithms with public key OID RSASSA-PSS */
-    tls_signature_scheme_rsa_pss_pss_sha256 = 0x0809,
-    tls_signature_scheme_rsa_pss_pss_sha384 = 0x080a,
-    tls_signature_scheme_rsa_pss_pss_sha512 = 0x080b,
+    tls_sigscheme_rsa_pss_pss_sha256 = 0x0809,
+    tls_sigscheme_rsa_pss_pss_sha384 = 0x080a,
+    tls_sigscheme_rsa_pss_pss_sha512 = 0x080b,
+
+    /* RFC 8394 */
+    tls_sigscheme_ecdsa_brainpoolP256r1tls13_sha256 = 0x81a,
+    tls_sigscheme_ecdsa_brainpoolP384r1tls13_sha384 = 0x81b,
+    tls_sigscheme_ecdsa_brainpoolP512r1tls13_sha512 = 0x81c,
 
     /* Legacy algorithms */
-    tls_signature_scheme_rsa_pkcs1_sha1 = 0x0201,
-    tls_signature_scheme_ecdsa_sha1 = 0x0203,
+    tls_sigscheme_rsa_pkcs1_sha1 = 0x0201,
+    tls_sigscheme_ecdsa_sha1 = 0x0203,
 
     /* https://www.iana.org/go/draft-ietf-tls-mldsa-00 */
-    tls_signature_scheme_mldsa44 = 0x904,
-    tls_signature_scheme_mldsa65 = 0x905,
-    tls_signature_scheme_mldsa87 = 0x906,
+    tls_sigscheme_mldsa44 = 0x904,
+    tls_sigscheme_mldsa65 = 0x905,
+    tls_sigscheme_mldsa87 = 0x906,
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -641,12 +654,13 @@ enum jwe_t {
 };
 
 enum jws_group_t : uint8 {
-    jws_group_unknown = crypt_sig_unknown,
-    jws_group_hmac = crypt_sig_hmac,                    // HS256, HS384, HS512
-    jws_group_rsassa_pkcs15 = crypt_sig_rsassa_pkcs15,  // RS256, RS384, RS512
-    jws_group_ecdsa = crypt_sig_ecdsa,                  // ES256, ES384, ES512
-    jws_group_rsassa_pss = crypt_sig_rsassa_pss,        // PS256, PS384, PS512
-    jws_group_eddsa = crypt_sig_eddsa,                  // EdDSA
+    jws_group_unknown = sig_category_unknown,
+    jws_group_hmac = sig_category_hmac,                    // HS256, HS384, HS512
+    jws_group_rsassa_pkcs15 = sig_category_rsassa_pkcs15,  // RS256, RS384, RS512
+    jws_group_ecdsa = sig_category_ecdsa,                  // ES256, ES384, ES512
+    jws_group_rsassa_pss = sig_category_rsassa_pss,        // PS256, PS384, PS512
+    jws_group_eddsa = sig_category_eddsa,                  // EdDSA
+    jws_group_mldsa = sig_category_mldsa,                  // MLDSA
 };
 
 /**
@@ -669,6 +683,7 @@ enum jws_t : uint16 {
     jws_ps384 = sig_ps384,
     jws_ps512 = sig_ps512,
     jws_eddsa = sig_eddsa,
+    jws_mldsa = sig_mldsa,
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1268,23 +1283,35 @@ typedef struct _otp_context_t otp_context_t;
 // sign
 ///////////////////////////////////////////////////////////////////////////
 typedef struct _hint_signature_t {
-    crypt_sig_t sig;       // ex. sig_eddsa
-    jws_t jws_type;        // ex. jws_eddsa
-    jws_group_t group;     // ex. jws_group_eddsa
-    crypt_sig_type_t sty;  // ex. crypt_sig_eddsa
-    crypto_kty_t kty;      // ex. kty_okp
-    const char* jws_name;  // ex. "EdDSA"
-    hash_algorithm_t alg;  // ex. hash_alg_unknown
-    uint32 count;          // ex. 2
-    uint32 nid[2];         // ex. NID_ED25519, NID_ED448
+    signature_t sig;          // ex. sig_eddsa
+    jws_t jws_type;           // ex. jws_eddsa
+    jws_group_t group;        // ex. jws_group_eddsa
+    sig_category_t category;  // ex. sig_category_eddsa
+    crypto_kty_t kty;         // ex. kty_okp
+    const char* jws_name;     // ex. "EdDSA"
+    hash_algorithm_t alg;     // ex. hash_alg_unknown
+    uint32 count;             // ex. 2
+    uint32 nid[3];            // ex. NID_ED25519, NID_ED448
 } hint_signature_t;
 
-crypt_sig_t typeof_sig(const hint_signature_t* hint);
+signature_t typeof_sig(const hint_signature_t* hint);
 jws_t typeof_jws(const hint_signature_t* hint);
 jws_group_t typeof_group(const hint_signature_t* hint);
 crypto_kty_t typeof_kty(const hint_signature_t* hint);
 const char* nameof_jws(const hint_signature_t* hint);
 hash_algorithm_t typeof_alg(const hint_signature_t* hint);
+
+typedef struct _hint_sigscheme_t {
+    tls_sigscheme_t scheme;
+    uint16 spec;  // TLS version (0x304 TLS 1.3)
+    uint8 flags;
+    const char* name;
+    sig_category_t category;
+    signature_t sig;
+    crypto_kty_t kty;
+    uint32 nid;
+    hash_algorithm_t dgst;
+} hint_sigscheme_t;
 
 ///////////////////////////////////////////////////////////////////////////
 // curve
@@ -1536,6 +1563,16 @@ struct key_encoding_params_t {
     const char* structure;
     bool use_pass;
 };
+
+struct hint_pkey_t {
+    crypto_kty_t kty;                 // key type
+    uint32 nid;                       // openssl numeric id
+    const hint_kty_name_t* hint_kty;  // hint
+    const hint_curve_t* hint_curve;   // hint
+
+    hint_pkey_t() : kty(kty_unknown), nid(0), hint_kty(nullptr), hint_curve(nullptr) {}
+};
+std::string namesof(const hint_pkey_t* hint);
 
 }  // namespace crypto
 }  // namespace hotplace

@@ -145,39 +145,38 @@ return_t http2_frame::read(const byte_t* stream, size_t size, size_t& pos) {
 }
 
 return_t http2_frame::do_read_header(const byte_t* stream, size_t size, size_t& pos) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
 
-    pipeline  //
-        .goahead_if_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
-        .run_trycatch([&]() -> return_t {
-            if (size < pos + sizeof(http2_frame_header_t)) {
-                return errorcode_t::bad_data;
-            }
+        if (size < pos + sizeof(http2_frame_header_t)) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
 
-            payload pl;
-            pl << new payload_member(uint24_t(0), constexpr_frame_length)  //
-               << new payload_member(uint8(0), constexpr_frame_type)       //
-               << new payload_member(uint8(0), constexpr_frame_flags)      //
-               << new payload_member(uint32(0), true, constexpr_frame_stream_identifier);
+        payload pl;
+        pl << new payload_member(uint24_t(0), constexpr_frame_length)  //
+           << new payload_member(uint8(0), constexpr_frame_type)       //
+           << new payload_member(uint8(0), constexpr_frame_flags)      //
+           << new payload_member(uint32(0), true, constexpr_frame_stream_identifier);
 
-            auto rc = pl.read(stream, size, pos);
-            if (false == error_traits<return_t>::is_not_fail(rc)) {
-                __trace_return(rc);
-            }
+        pl.read(stream, size, pos);
 
-            _payload_size = pl.t_value_of<uint32>(constexpr_frame_length);
-            _type = pl.t_value_of<uint8>(constexpr_frame_type);
-            _flags = pl.t_value_of<uint8>(constexpr_frame_flags);
-            _stream_id = pl.t_value_of<uint32>(constexpr_frame_stream_identifier);
+        _payload_size = pl.t_value_of<uint32>(constexpr_frame_length);
+        _type = pl.t_value_of<uint8>(constexpr_frame_type);
+        _flags = pl.t_value_of<uint8>(constexpr_frame_flags);
+        _stream_id = pl.t_value_of<uint32>(constexpr_frame_stream_identifier);
 
-            if (_payload_size + pos < size) {
-                __trace_return(errorcode_t::bad_data);
-            }
-
-            return success;
-        });
-    return pipeline.result();
+        if (_payload_size + pos < size) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
+    }
+    __finally2 {}
+    return ret;
 }
 
 return_t http2_frame::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
@@ -210,27 +209,20 @@ return_t http2_frame::write(binary_t& frame) {
 }
 
 return_t http2_frame::do_write_header(binary_t& frame, const binary_t& body) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
 
-    pipeline  //
-        .run_trycatch([&]() -> return_t {
-            uint32 bodylen = t_narrow_cast(body.size());
+    uint32 bodylen = t_narrow_cast(body.size());
 
-            payload pl;
-            pl << new payload_member(uint24_t(bodylen), constexpr_frame_length)  //
-               << new payload_member(uint8(_type), constexpr_frame_type)         //
-               << new payload_member(uint8(_flags), constexpr_frame_flags)       //
-               << new payload_member(uint32(_stream_id), true, constexpr_frame_stream_identifier);
+    payload pl;
+    pl << new payload_member(uint24_t(bodylen), constexpr_frame_length)  //
+       << new payload_member(uint8(_type), constexpr_frame_type)         //
+       << new payload_member(uint8(_flags), constexpr_frame_flags)       //
+       << new payload_member(uint32(_stream_id), true, constexpr_frame_stream_identifier);
+    pl.write(frame);
 
-            auto rc = pl.write(frame);
-            if (false == error_traits<return_t>::is_not_fail(rc)) {
-                __trace_return(rc);
-            }
+    binary_append(frame, body);
 
-            binary_append(frame, body);
-            return success;
-        });
-    return pipeline.result();
+    return ret;
 }
 
 return_t http2_frame::do_write_body(binary_t& frame) {

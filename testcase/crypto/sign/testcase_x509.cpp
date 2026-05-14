@@ -83,7 +83,7 @@ void test_x509() {
 
     crypto_sign_builder builder;
     {
-        auto s = builder.set_scheme(crypt_sig_rsassa_pkcs15).set_digest(sha2_256).build();
+        auto s = builder.set_category(sig_category_rsassa_pkcs15).set_digest(sha2_256).build();
         if (s) {
             binary_t signature;
 
@@ -99,7 +99,7 @@ void test_x509() {
         }
     }
     {
-        auto s = builder.set_scheme(crypt_sig_rsassa_pss).set_digest(sha2_256).build();
+        auto s = builder.set_category(sig_category_rsassa_pss).set_digest(sha2_256).build();
         if (s) {
             binary_t signature;
 

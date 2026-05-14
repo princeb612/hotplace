@@ -58,6 +58,8 @@ void test_yaml_testvector_floatingpoint() {
             _logger->writeln(bs);
             try {
                 value = expect;
+                _logger->writeln("precision(32) -> %s", value.fstr(32).c_str());
+                _logger->writeln("c_str()       -> %s", value.str().c_str());
                 auto test = (res == value);
                 _test_case.assert(test, __FUNCTION__, "%s", bs.c_str());
             } catch (...) {

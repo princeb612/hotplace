@@ -124,15 +124,15 @@ return_t simple_http_server(void*) {
 
             if (option.flags & option_flag_cert_ecdsa) {
                 // enable TLS 1.2 TLS_ECDHE_ECDSA ciphersuites
-                load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
+                load_certificate("server-ecdsa.crt", "server-ecdsa.key", nullptr);
             }
             if (option.flags & option_flag_cert_rsa) {
                 // enable TLS 1.2 TLS_ECDHE_RSA ciphersuites
-                load_certificate("rsa.crt", "rsa.key", nullptr);
+                load_certificate("server-rsa.crt", "server-rsa.key", nullptr);
             }
             if (option.flags & option_flag_cert_mldsa) {
                 // ML-DSA certificate
-                load_certificate("mldsa.crt", "mldsa.key", nullptr);
+                load_certificate("server-mldsa.crt", "server-mldsa.key", nullptr);
             }
         } else {
             title = "HTTP/1.1 powered by http_server and libssl";
@@ -176,11 +176,11 @@ return_t simple_http_server(void*) {
                 .set_tls_cipher_list(ciphersuites);
 
             if (option.flags & option_flag_cert_mldsa) {
-                builder.set_tls_certificate("mldsa.crt", "mldsa.key");
+                builder.set_tls_certificate("server-mldsa.crt", "server-mldsa.key");
             } else if (option.flags & option_flag_cert_rsa) {
-                builder.set_tls_certificate("rsa.crt", "rsa.key");
+                builder.set_tls_certificate("server-rsa.crt", "server-rsa.key");
             } else {
-                builder.set_tls_certificate("ecdsa.crt", "ecdsa.key");  // default
+                builder.set_tls_certificate("server-ecdsa.crt", "server-ecdsa.key");  // default
             }
 
             if (option.flags & option_flag_content_encoding) {

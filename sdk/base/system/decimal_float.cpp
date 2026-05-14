@@ -255,6 +255,52 @@ std::string decimal_float::str() {
     return res;
 }
 
+std::string decimal_float::fstr(size_t precision) const {
+    std::string res;
+    if (_mant == 0) {
+        res = "0";
+    } else {
+        std::string s_mant = _mant.str();
+        bool negative = (s_mant[0] == '-');
+        const char* digits = s_mant.c_str() + (negative ? 1 : 0);
+        size_t mant_len = s_mant.size() - (negative ? 1 : 0);
+
+        if (negative) {
+            res.push_back('-');
+        }
+
+        if (_exp >= 0) {
+            res.append(digits, mant_len);
+            res.append(_exp, '0');
+        } else {
+            int pos = static_cast<int>(mant_len) + _exp;
+            if (pos <= 0) {
+                res.append("0.");
+                size_t len = static_cast<size_t>(-pos);
+                if (len > precision) {
+                    len = precision;
+                    mant_len = 0;
+                } else {
+                    if (len + mant_len > precision) {
+                        mant_len = precision - len;
+                    }
+                }
+                res.append(len, '0');
+                res.append(digits, mant_len);
+            } else {
+                res.append(digits, static_cast<size_t>(pos));
+                res.push_back('.');
+                auto len = mant_len - static_cast<size_t>(pos);
+                if (len > precision) {
+                    len = precision;
+                }
+                res.append(digits + pos, len);
+            }
+        }
+    }
+    return res;
+}
+
 int decimal_float::compare(const decimal_float& lhs, const decimal_float& rhs) {
     decimal_float a = lhs;
     decimal_float b = rhs;

@@ -25,7 +25,7 @@ return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const b
     __try2 {
         if (nullptr == session || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace(ret);
+            __leave2;
         }
 
         // read
@@ -62,11 +62,11 @@ return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const b
     __try2 {
         if (nullptr == session) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace(ret);
+            __leave2;
         }
         if (bin.empty()) {
             ret = errorcode_t::empty;
-            __leave2_trace(ret);
+            __leave2;
         }
 
         const byte_t* stream = bin.data();
@@ -83,7 +83,7 @@ return_t tls_handshakes::write(tls_session* session, tls_direction_t dir, binary
     __try2 {
         if (nullptr == session) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace(ret);
+            __leave2;
         }
 
         auto lambda = [&](tls_handshake* handshake) -> return_t { return handshake->write(dir, bin); };

@@ -25,38 +25,33 @@ http2_frame_continuation::http2_frame_continuation(const http2_frame_continuatio
 http2_frame_continuation::~http2_frame_continuation() {}
 
 return_t http2_frame_continuation::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
 
-    pipeline  //
-        .goahead_if_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
-        .run_trycatch([&]() -> return_t {
-            payload pl;
-            pl << new payload_member(binary_t(), constexpr_frame_fragment);
+        payload pl;
+        pl << new payload_member(binary_t(), constexpr_frame_fragment);
+        pl.read(stream, size, pos);
 
-            auto rc = pl.read(stream, size, pos);
-            if (false == error_traits<return_t>::is_not_fail(rc)) {
-                __trace_return(rc);
-            }
-
-            pl.get_binary(constexpr_frame_fragment, _fragment);
-
-            return success;
-        });
-    return pipeline.result();
+        pl.get_binary(constexpr_frame_fragment, _fragment);
+    }
+    __finally2 {}
+    return ret;
 }
 
 return_t http2_frame_continuation::do_write_body(binary_t& body) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
 
-    pipeline
-        .run_trycatch([&]() -> return_t {
-            payload pl;
-            pl << new payload_member(_fragment, constexpr_frame_fragment);
-            return pl.write(body);
-        })
-        .run([&]() -> return_t { return set_payload_size(body.size()); });
-    return pipeline.result();
+    payload pl;
+    pl << new payload_member(_fragment, constexpr_frame_fragment);
+    pl.write(body);
+
+    ret = set_payload_size(body.size());
+
+    return ret;
 }
 
 void http2_frame_continuation::dump(stream_t* s) {

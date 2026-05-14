@@ -68,16 +68,13 @@ testvector:
         add: 468
         sub: 242
         mul: 40115
-        div: 355/113
+        div: 355/113  # 3.14159292035398230088495575221238...
       - float1: -0.000
         float2: 1
         add: 1
         sub: -1
         mul: 0
         div: 0
-  - example: floating point (bugs)
-    schema: FLOATINGPOINT
-    items:
       - float1: 1000000000000000.1
         float2: 1000000000000000.0
         add: 2000000000000000.1

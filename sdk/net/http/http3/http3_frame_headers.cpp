@@ -63,28 +63,26 @@ return_t http3_frame_headers::do_read_payload(const byte_t* stream, size_t size,
 }
 
 return_t http3_frame_headers::do_write(binary_t& bin) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        qpack_stream stream;
+        uint32 flags = qpack_quic_stream_header;
+        auto& dyntable = _session->get_quic_session().get_dynamic_table();
+        stream.set_dyntable(&dyntable);
+        for (const auto& item : _kv) {
+            stream.encode_header(item.first, item.second, flags);
+        }
+        stream.pack(flags);
+        _payload = std::move(stream.get_binary());
 
-    pipeline  //
-        .run_trycatch([&]() -> return_t {
-            qpack_stream stream;
-            uint32 flags = qpack_quic_stream_header;
-            auto& dyntable = _session->get_quic_session().get_dynamic_table();
-            stream.set_dyntable(&dyntable);
-            for (const auto& item : _kv) {
-                stream.encode_header(item.first, item.second, flags);
-            }
-            stream.pack(flags);
-            _payload = std::move(stream.get_binary());
-
-            payload pl;
-            pl << new payload_member(new quic_encoded(uint64(h3_frame_headers)))  //
-               << new payload_member(new quic_encoded(uint64(_payload.size())))   //
-               << new payload_member(_payload);
-
-            return pl.write(bin);
-        });
-    return pipeline.result();
+        payload pl;
+        pl << new payload_member(new quic_encoded(uint64(h3_frame_headers)))  //
+           << new payload_member(new quic_encoded(uint64(_payload.size())))   //
+           << new payload_member(_payload);
+        pl.write(bin);
+    }
+    __finally2 {}
+    return ret;
 }
 
 http3_frame_headers& http3_frame_headers::add(const std::string& name, const std::string& value) {

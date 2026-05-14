@@ -24,41 +24,34 @@ http2_frame_ping::http2_frame_ping(const http2_frame_ping& other) : http2_frame(
 http2_frame_ping::~http2_frame_ping() {}
 
 return_t http2_frame_ping::do_read_body(const byte_t* stream, size_t size, size_t& pos) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
 
-    pipeline  //
-        .goahead_if_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
-        .run_trycatch([&]() -> return_t {
-            payload pl;
-            pl << new payload_member((uint32)0, true, constexpr_frame_opaque);
-            auto rc = pl.read(stream, size, pos);
-            if (false == error_traits<return_t>::is_not_fail(rc)) {
-                __trace_return(rc);
-            }
+        payload pl;
+        pl << new payload_member((uint32)0, true, constexpr_frame_opaque);
 
-            _opaque = pl.t_value_of<uint32>(constexpr_frame_opaque);
+        pl.read(stream, size, pos);
 
-            return success;
-        });
-    return pipeline.result();
+        _opaque = pl.t_value_of<uint32>(constexpr_frame_opaque);
+    }
+    __finally2 {}
+    return ret;
 }
 
 return_t http2_frame_ping::do_write_body(binary_t& body) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
 
-    pipeline  //
-        .run_trycatch([&]() -> return_t {
-            payload pl;
-            pl << new payload_member(_opaque, true, constexpr_frame_opaque);
-            auto rc = pl.write(body);
-            if (false == error_traits<return_t>::is_not_fail(rc)) {
-                __trace_return(rc);
-            }
+    payload pl;
+    pl << new payload_member(_opaque, true, constexpr_frame_opaque);
+    pl.write(body);
 
-            return set_payload_size(body.size());
-        });
-    return pipeline.result();
+    ret = set_payload_size(body.size());
+
+    return ret;
 }
 
 void http2_frame_ping::dump(stream_t* s) {

@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 
 namespace hotplace {
@@ -190,6 +190,11 @@ return_t crypto_advisor::build() {
         }
         set_feature(item->jws_name, advisor_feature_jws);
     }
+    for (i = 0; i < sizeof_hint_sigschemes; i++) {
+        const hint_sigscheme_t* item = hint_sigschemes + i;
+        _hint_sigscheme_map.emplace(item->scheme, item);
+        set_feature(item->name, advisor_feature_sigscheme);
+    }
     for (i = 0; i < sizeof_hint_cose_algorithms; i++) {
         const hint_cose_algorithm_t* item = hint_cose_algorithms + i;
         _cose_alg_map.insert(std::make_pair(item->alg, item));
@@ -280,22 +285,22 @@ return_t crypto_advisor::build() {
     _cose2kty_map.insert(std::make_pair(cose_kty_t::cose_kty_rsa, crypto_kty_t::kty_rsa));
 
     struct _sig2cose {
-        crypt_sig_t sig;
+        signature_t sig;
         jws_t jws;
         cose_alg_t cose;
     };
     struct _sig2cose sig2cose[] = {
-        {crypt_sig_t::sig_hs256, jws_t::jws_hs256, cose_alg_t::cose_hs256}, {crypt_sig_t::sig_hs384, jws_t::jws_hs384, cose_alg_t::cose_hs384},
-        {crypt_sig_t::sig_hs512, jws_t::jws_hs512, cose_alg_t::cose_hs512}, {crypt_sig_t::sig_rs256, jws_t::jws_rs256, cose_alg_t::cose_rs256},
-        {crypt_sig_t::sig_rs384, jws_t::jws_rs384, cose_alg_t::cose_rs384}, {crypt_sig_t::sig_rs512, jws_t::jws_rs512, cose_alg_t::cose_rs512},
-        {crypt_sig_t::sig_es256, jws_t::jws_es256, cose_alg_t::cose_es256}, {crypt_sig_t::sig_es384, jws_t::jws_es384, cose_alg_t::cose_es384},
-        {crypt_sig_t::sig_es512, jws_t::jws_es512, cose_alg_t::cose_es512}, {crypt_sig_t::sig_ps256, jws_t::jws_ps256, cose_alg_t::cose_ps256},
-        {crypt_sig_t::sig_ps384, jws_t::jws_ps384, cose_alg_t::cose_ps384}, {crypt_sig_t::sig_ps512, jws_t::jws_ps512, cose_alg_t::cose_ps512},
-        {crypt_sig_t::sig_eddsa, jws_t::jws_eddsa, cose_alg_t::cose_eddsa}, {crypt_sig_t::sig_es256k, jws_t::jws_unknown, cose_alg_t::cose_es256k},
-        {crypt_sig_t::sig_rs1, jws_t::jws_unknown, cose_alg_t::cose_rs1},
+        {signature_t::sig_hs256, jws_t::jws_hs256, cose_alg_t::cose_hs256}, {signature_t::sig_hs384, jws_t::jws_hs384, cose_alg_t::cose_hs384},
+        {signature_t::sig_hs512, jws_t::jws_hs512, cose_alg_t::cose_hs512}, {signature_t::sig_rs256, jws_t::jws_rs256, cose_alg_t::cose_rs256},
+        {signature_t::sig_rs384, jws_t::jws_rs384, cose_alg_t::cose_rs384}, {signature_t::sig_rs512, jws_t::jws_rs512, cose_alg_t::cose_rs512},
+        {signature_t::sig_es256, jws_t::jws_es256, cose_alg_t::cose_es256}, {signature_t::sig_es384, jws_t::jws_es384, cose_alg_t::cose_es384},
+        {signature_t::sig_es512, jws_t::jws_es512, cose_alg_t::cose_es512}, {signature_t::sig_ps256, jws_t::jws_ps256, cose_alg_t::cose_ps256},
+        {signature_t::sig_ps384, jws_t::jws_ps384, cose_alg_t::cose_ps384}, {signature_t::sig_ps512, jws_t::jws_ps512, cose_alg_t::cose_ps512},
+        {signature_t::sig_eddsa, jws_t::jws_eddsa, cose_alg_t::cose_eddsa}, {signature_t::sig_es256k, jws_t::jws_unknown, cose_alg_t::cose_es256k},
+        {signature_t::sig_rs1, jws_t::jws_unknown, cose_alg_t::cose_rs1},
     };
     struct _sig2cose cose2sig[] = {
-        {crypt_sig_t::sig_hs256, jws_t::jws_hs256, cose_alg_t::cose_hs256_64},
+        {signature_t::sig_hs256, jws_t::jws_hs256, cose_alg_t::cose_hs256_64},
     };
     for (i = 0; i < RTL_NUMBER_OF(sig2cose); i++) {
         _sig2jws_map.insert(std::make_pair(sig2cose[i].sig, sig2cose[i].jws));

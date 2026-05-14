@@ -191,72 +191,69 @@ return_t quic_packet::write_unprotected_header(binary_t& header) {
 }
 
 return_t quic_packet::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    function_pipeline<return_t> pipeline;
-
-    pipeline  //
-        .goahead_if_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
-        .run_trycatch([&]() -> return_t {
-            if ((size < 6) || (size < pos)) {
-                __trace_return(errorcode_t::bad_data);
-            }
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        if ((size < 6) || (size < pos)) {
+            ret = errorcode_t::bad_data;
+            __leave2;
+        }
 
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_quic_packet, [&](basic_stream& dbs) -> void { dbs.println("# QUIC packet (size %zi)", size); });
-            }
+        if (istraceable(trace_category_net)) {
+            trace_debug_event(trace_category_net, trace_event_quic_packet, [&](basic_stream& dbs) -> void { dbs.println("# QUIC packet (size %zi)", size); });
+        }
 #endif
 
-            auto session = get_session();
-            auto& protection = session->get_tls_protection();
-            auto& secrets = protection.get_secrets();
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+        auto& secrets = protection.get_secrets();
 
-            byte_t hdr = stream[pos];
-            bool is_longheader = true;
-            get_type(hdr, _type, is_longheader);
+        byte_t hdr = stream[pos];
+        bool is_longheader = true;
+        get_type(hdr, _type, is_longheader);
 
-            // RFC 9000
-            //   17.2.  Long Header Packets
-            //   17.3.  Short Header Packets
+        // RFC 9000
+        //   17.2.  Long Header Packets
+        //   17.3.  Short Header Packets
 
-            payload pl;
-            pl << new payload_member(uint8(0), constexpr_hdr)                                   //
-               << new payload_member(uint32(0), true, constexpr_version, constexpr_longheader)  //
-               << new payload_member(uint8(0), constexpr_dcid_len, constexpr_longheader)        //
-               << new payload_member(binary_t(), constexpr_dcid)                                //
-               << new payload_member(uint8(0), constexpr_scid_len, constexpr_longheader)        //
-               << new payload_member(binary_t(), constexpr_scid, constexpr_longheader);         //
-            if (is_longheader) {
-                pl.set_reference_value(constexpr_dcid, constexpr_dcid_len);
-                pl.set_reference_value(constexpr_scid, constexpr_scid_len);
-            } else {
-                // RFC 9000 5.1.  Connection ID
-                // Packets with short headers (Section 17.3) only include the Destination Connection ID and omit the explicit length.
-                size_t size_dcid = 0;
-                if (is_clientinitiated(dir)) {
-                    size_dcid = secrets.get(tls_context_server_cid).size();
-                } else if (is_serverinitiated(dir)) {
-                    size_dcid = secrets.get(tls_context_client_cid).size();
-                }
-                pl.reserve(constexpr_dcid, size_dcid);
+        payload pl;
+        pl << new payload_member(uint8(0), constexpr_hdr)                                   //
+           << new payload_member(uint32(0), true, constexpr_version, constexpr_longheader)  //
+           << new payload_member(uint8(0), constexpr_dcid_len, constexpr_longheader)        //
+           << new payload_member(binary_t(), constexpr_dcid)                                //
+           << new payload_member(uint8(0), constexpr_scid_len, constexpr_longheader)        //
+           << new payload_member(binary_t(), constexpr_scid, constexpr_longheader);         //
+        if (is_longheader) {
+            pl.set_reference_value(constexpr_dcid, constexpr_dcid_len);
+            pl.set_reference_value(constexpr_scid, constexpr_scid_len);
+        } else {
+            // RFC 9000 5.1.  Connection ID
+            // Packets with short headers (Section 17.3) only include the Destination Connection ID and omit the explicit length.
+            size_t size_dcid = 0;
+            if (is_clientinitiated(dir)) {
+                size_dcid = secrets.get(tls_context_server_cid).size();
+            } else if (is_serverinitiated(dir)) {
+                size_dcid = secrets.get(tls_context_client_cid).size();
             }
-            pl.set_group(constexpr_longheader, is_longheader);  // see get_type
+            pl.reserve(constexpr_dcid, size_dcid);
+        }
+        pl.set_group(constexpr_longheader, is_longheader);  // see get_type
 
-            auto rc = pl.read(stream, size, pos);
-            if (false == error_traits<return_t>::is_not_fail(rc)) {
-                __trace_return(rc);
-            }
+        pl.read(stream, size, pos);
 
-            _ht = hdr;
-            if (is_longheader) {
-                _version = pl.t_value_of<uint32>(constexpr_version);
-            }
-            pl.get_binary(constexpr_dcid, _dcid);
-            pl.get_binary(constexpr_scid, _scid);
-
-            return success;
-        });
-    return pipeline.result();
+        _ht = hdr;
+        if (is_longheader) {
+            _version = pl.t_value_of<uint32>(constexpr_version);
+        }
+        pl.get_binary(constexpr_dcid, _dcid);
+        pl.get_binary(constexpr_scid, _scid);
+    }
+    __finally2 {}
+    return ret;
 }
 
 return_t quic_packet::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t& pos_unprotect) { return errorcode_t::success; }
@@ -300,45 +297,42 @@ return_t quic_packet::do_unprotect(tls_direction_t dir, const byte_t* stream, si
 return_t quic_packet::do_read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t pos_unprotect) { return errorcode_t::success; }
 
 return_t quic_packet::do_write_header(binary_t& header, const binary_t& body) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
 
-    pipeline  //
-        .run_trycatch([&]() -> return_t {
-            uint8 hdr = 0;
-            bool is_longheader = true;
+    uint8 hdr = 0;
+    bool is_longheader = true;
 
-            if (_ht) {
-                uint8 pty = 0;
-                get_type(_ht, pty, is_longheader);
-            } else {
-                set_type(_type, _ht, is_longheader);
-            }
+    if (_ht) {
+        uint8 pty = 0;
+        get_type(_ht, pty, is_longheader);
+    } else {
+        set_type(_type, _ht, is_longheader);
+    }
 
-            hdr = _ht;
-            switch (_type) {
-                /**
-                 * RFC 9001 17.2.5.  Retry Packet
-                 * The value in the Unused field is set to an arbitrary value by the server; a client MUST ignore these bits.
-                 */
-                case quic_packet_type_retry:
-                    hdr |= 0xf;
-                    break;
-                default:
-                    break;
-            }
+    hdr = _ht;
+    switch (_type) {
+        /**
+         * RFC 9001 17.2.5.  Retry Packet
+         * The value in the Unused field is set to an arbitrary value by the server; a client MUST ignore these bits.
+         */
+        case quic_packet_type_retry:
+            hdr |= 0xf;
+            break;
+        default:
+            break;
+    }
 
-            payload pl;
-            pl << new payload_member(hdr, constexpr_hdr)                                             //
-               << new payload_member(_version, true, constexpr_version, constexpr_longheader)        //
-               << new payload_member(uint8(_dcid.size()), constexpr_dcid_len, constexpr_longheader)  //
-               << new payload_member(_dcid, constexpr_dcid)                                          //
-               << new payload_member(uint8(_scid.size()), constexpr_scid_len, constexpr_longheader)  //
-               << new payload_member(_scid, constexpr_scid, constexpr_longheader);                   //
-            pl.set_group(constexpr_longheader, is_longheader);
+    payload pl;
+    pl << new payload_member(hdr, constexpr_hdr)                                             //
+       << new payload_member(_version, true, constexpr_version, constexpr_longheader)        //
+       << new payload_member(uint8(_dcid.size()), constexpr_dcid_len, constexpr_longheader)  //
+       << new payload_member(_dcid, constexpr_dcid)                                          //
+       << new payload_member(uint8(_scid.size()), constexpr_scid_len, constexpr_longheader)  //
+       << new payload_member(_scid, constexpr_scid, constexpr_longheader);                   //
+    pl.set_group(constexpr_longheader, is_longheader);
+    pl.write(header);
 
-            return pl.write(header);
-        });
-    return pipeline.result();
+    return ret;
 }
 
 return_t quic_packet::do_write_body(tls_direction_t dir, binary_t& body) {

@@ -56,23 +56,23 @@ class openssl_sign {
     /**
      * @biref   sign
      * @param   const EVP_PKEY* pkey [in]
-     * @param   crypt_sig_t mode [in]
+     * @param   signature_t mode [in]
      * @param   const binary_t& input [in]
      * @param   binary_t& signature [out]
      * @param   uint32 flags [inopt]
      */
-    return_t sign(const EVP_PKEY* pkey, crypt_sig_t mode, const binary_t& input, binary_t& signature, uint32 flags = 0);
-    return_t sign(const EVP_PKEY* pkey, crypt_sig_t mode, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
+    return_t sign(const EVP_PKEY* pkey, signature_t mode, const binary_t& input, binary_t& signature, uint32 flags = 0);
+    return_t sign(const EVP_PKEY* pkey, signature_t mode, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
     /**
      * @biref   verify
      * @param   const EVP_PKEY* pkey [in]
-     * @param   crypt_sig_t mode [in]
+     * @param   signature_t mode [in]
      * @param   const binary_t& input [in]
      * @param   const binary_t& signature [in]
      * @param   uint32 flags [inopt]
      */
-    return_t verify(const EVP_PKEY* pkey, crypt_sig_t mode, const binary_t& input, const binary_t& signature, uint32 flags = 0);
-    return_t verify(const EVP_PKEY* pkey, crypt_sig_t mode, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);
+    return_t verify(const EVP_PKEY* pkey, signature_t mode, const binary_t& input, const binary_t& signature, uint32 flags = 0);
+    return_t verify(const EVP_PKEY* pkey, signature_t mode, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);
 
     /*
      * @brief   sign

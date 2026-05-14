@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 
 namespace hotplace {
 namespace crypto {
@@ -22,7 +22,7 @@ const EVP_MD* crypto_advisor::find_evp_md(hash_algorithm_t algorithm) {
     return ret_value;
 }
 
-const EVP_MD* crypto_advisor::find_evp_md(crypt_sig_t sig) {
+const EVP_MD* crypto_advisor::find_evp_md(signature_t sig) {
     const EVP_MD* ret_value = nullptr;
     const hint_signature_t* item = nullptr;
     t_maphint<uint32, const hint_signature_t*> hint(_crypt_sig_map);

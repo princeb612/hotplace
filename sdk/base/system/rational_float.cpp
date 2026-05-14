@@ -144,6 +144,94 @@ std::string rational_float::str() {
     return res;
 }
 
+// Gemini
+std::string rational_float::fstr(size_t precision) const {
+    std::string res;
+    if (_den == 0) {
+        res = "NaN";
+    } else if (_num == 0) {
+        res = "0";
+    } else {
+        bool is_negative = ((_num < 0) != (_den < 0));
+        bignumber n = _num;
+        bignumber d = _den;
+
+        n.abs();
+        d.abs();
+
+        bignumber quotient = n / d;
+        bignumber remainder = n % d;
+
+        std::string integer_part = quotient.str();
+        std::string fraction_part;
+
+        if (precision > 0 && remainder != 0) {
+            for (size_t i = 0; i < precision; ++i) {
+                remainder *= 10;
+                bignumber digit = remainder / d;
+                fraction_part += digit.str();
+                remainder = remainder % d;
+                if (remainder == 0) {
+                    break;
+                }
+            }
+        }
+
+        int true_exp = static_cast<int>(integer_part.length()) - 1;
+        bool small_value = (integer_part == "0" && !fraction_part.empty());
+
+        int leading_zeros = 0;
+        if (small_value) {
+            for (char c : fraction_part) {
+                if (c == '0') {
+                    leading_zeros++;
+                } else {
+                    break;
+                }
+            }
+            true_exp = -(leading_zeros + 1);
+        }
+
+        bool use_e = (true_exp >= 6 || true_exp <= -4);
+
+        res = is_negative ? "-" : "";
+
+        if (use_e) {
+            if (small_value) {
+                res += fraction_part[leading_zeros];
+                res += ".";
+                res += fraction_part.substr(leading_zeros + 1);
+            } else {
+                res += integer_part[0];
+                if (integer_part.length() > 1 || !fraction_part.empty()) {
+                    res += ".";
+                    res += integer_part.substr(1) + fraction_part;
+                }
+            }
+            while (res.back() == '0') {
+                res.pop_back();
+            }
+            if (res.back() == '.') {
+                res.pop_back();
+            }
+
+            res += "e" + (true_exp >= 0 ? std::string("+") : "") + std::to_string(true_exp);
+        } else {
+            res += integer_part;
+            if (!fraction_part.empty()) {
+                res += "." + fraction_part;
+                while (res.back() == '0') {
+                    res.pop_back();
+                }
+                if (res.back() == '.') {
+                    res.pop_back();
+                }
+            }
+        }
+    }
+    return res;
+}
+
 int rational_float::compare(const rational_float& lhs, const rational_float& rhs) { return bignumber::compare(lhs._num * rhs._den, rhs._num * lhs._den); }
 
 }  // namespace hotplace

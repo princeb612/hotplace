@@ -11,7 +11,7 @@
  */
 
 #include <hotplace/sdk/base/system/trace.hpp>
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 

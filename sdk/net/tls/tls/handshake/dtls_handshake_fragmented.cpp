@@ -48,12 +48,12 @@ return_t dtls_handshake_fragmented::prepare_fragment(const byte_t* stream, uint3
     __try2 {
         if ((0 != size) && (nullptr == stream)) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace(ret);
+            __leave2;
         }
 
         ret = tls_handshake::prepare_fragment(stream, size, seq, fragment_offset, fragment_length);
         if (errorcode_t::success != ret) {
-            __leave2_trace(ret);
+            __leave2;
         }
 
         _fragmented.insert(_fragmented.end(), stream + fragment_offset, stream + fragment_offset + fragment_length);

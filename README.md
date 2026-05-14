@@ -39,6 +39,13 @@
   * [custom toolchain](#custom-toolchain)
   * [link](#link)
 
+## implemented by running ChatGPT, Gemini
+
+* bignumber (class bignumber)
+* floating point (class floating_point)
+  * decimal floating point (class decimal_float)
+  * lossless fractional floating point (class rational_float)
+
 ## implemented
 
 * TLS,DTLS,QUIC

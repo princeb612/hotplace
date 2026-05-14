@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
@@ -18,7 +18,6 @@ namespace crypto {
 
 return_t nidof_evp_pkey(const EVP_PKEY* pkey, uint32& nid) {
     return_t ret = errorcode_t::success;
-
     __try2 {
         nid = 0;
 
@@ -27,53 +26,13 @@ return_t nidof_evp_pkey(const EVP_PKEY* pkey, uint32& nid) {
             __leave2;
         }
 
-        nid = EVP_PKEY_id(pkey);
-        if (EVP_PKEY_EC == nid) {
-            EC_KEY_ptr ec(EVP_PKEY_get1_EC_KEY((EVP_PKEY*)pkey));
-            if (ec.get()) {
-                const EC_GROUP* group = EC_KEY_get0_group(ec.get());
-                nid = EC_GROUP_get_curve_name(group);
-            } else {
-                ret = errorcode_t::internal_error;
-                __leave2;
-            }
-        } else if (EVP_PKEY_DH == nid) {
-            // nid = EVP_PKEY_get_base_id(pkey);
-            DH_ptr dh(EVP_PKEY_get1_DH((EVP_PKEY*)pkey));
-            if (dh.get()) {
-                int bits = BN_num_bits(DH_get0_p(dh.get()));
-                switch (bits) {
-                    case 2048: {
-                        nid = nid_ffdhe2048;
-                    } break;
-                    case 3072: {
-                        nid = nid_ffdhe3072;
-                    } break;
-                    case 4096: {
-                        nid = nid_ffdhe4096;
-                    } break;
-                    case 6144: {
-                        nid = nid_ffdhe6144;
-                    } break;
-                    case 8192: {
-                        nid = nid_ffdhe8192;
-                    } break;
-                }
-            }
-        }
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-        else if ((uint32)EVP_PKEY_KEYMGMT == nid) {
-            auto name = EVP_PKEY_get0_type_name(pkey);
-            if (name) {
-                nid = OBJ_txt2nid(name);
-            }
-        }
-#endif
-
-        if (0 == nid) {
-            ret = errorcode_t::not_supported;
+        hint_pkey_t hint;
+        ret = crypto_advisor::get_instance()->hintof_pkey(pkey, hint);
+        if (errorcode_t::success != ret) {
             __leave2;
         }
+
+        nid = hint.nid;
     }
     __finally2 {}
     return ret;
@@ -91,64 +50,22 @@ bool kindof_ecc(const EVP_PKEY* pkey) {
 
 crypto_kty_t typeof_crypto_key(const EVP_PKEY* pkey) {
     crypto_kty_t kty = crypto_kty_t::kty_unknown;
-    if (pkey) {
-        int type = EVP_PKEY_id(pkey);
-
-        switch (type) {
-            case EVP_PKEY_HMAC: {
-                kty = crypto_kty_t::kty_oct;
-            } break;
-            case EVP_PKEY_RSA:
-            case EVP_PKEY_RSA2: {
-                kty = crypto_kty_t::kty_rsa;
-            } break;
-            case EVP_PKEY_RSA_PSS: {
-                kty = crypto_kty_t::kty_rsapss;
-            } break;
-            case EVP_PKEY_EC: {
-                kty = crypto_kty_t::kty_ec;
-            } break;
-            case EVP_PKEY_X25519:
-            case EVP_PKEY_X448:
-            case EVP_PKEY_ED25519:
-            case EVP_PKEY_ED448: {
-                kty = crypto_kty_t::kty_okp;
-            } break;
-            case EVP_PKEY_DH: {
-                kty = crypto_kty_t::kty_dh;
-            } break;
-            case EVP_PKEY_DSA: {
-                kty = crypto_kty_t::kty_dsa;
-            } break;
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-            case EVP_PKEY_KEYMGMT: {
-                auto name = EVP_PKEY_get0_type_name(pkey);
-                if (name) {
-                    auto nid = OBJ_txt2nid(name);
-                    switch (nid) {
-#if OPENSSL_VERSION_NUMBER >= 0x30500000L
-                        case NID_ML_KEM_512:
-                        case NID_ML_KEM_768:
-                        case NID_ML_KEM_1024: {
-                            kty = crypto_kty_t::kty_mlkem;
-                        } break;
-                        case NID_ML_DSA_44:
-                        case NID_ML_DSA_65:
-                        case NID_ML_DSA_87: {
-                            kty = crypto_kty_t::kty_mldsa;
-                        } break;
-#endif
-                        default: {
-                            // not supported
-                        } break;
-                    }
-                }
-            } break;
-#endif
-            default:
-                break;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == pkey) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
         }
+
+        hint_pkey_t hint;
+        ret = crypto_advisor::get_instance()->hintof_pkey(pkey, hint);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        kty = hint.kty;
     }
+    __finally2 {}
     return kty;
 }
 

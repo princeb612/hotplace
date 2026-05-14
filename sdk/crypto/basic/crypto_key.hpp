@@ -291,11 +291,11 @@ class crypto_key {
     const EVP_PKEY* select(jwa_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /**
      * @brief select
-     * @param crypt_sig_t alg [in]
+     * @param signature_t alg [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select(crypt_sig_t sig, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* select(signature_t sig, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /**
      * @brief select
      * @param jws_t alg [in]
@@ -329,11 +329,11 @@ class crypto_key {
     /**
      * @brief select
      * @param std::string& kid [out]
-     * @param crypt_sig_t alg [in]
+     * @param signature_t alg [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select(std::string& kid, crypt_sig_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* select(std::string& kid, signature_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /**
      * @brief select
      * @param std::string& kid [out]
@@ -393,11 +393,11 @@ class crypto_key {
     /**
      * @brief find
      * @param const char* kid [in]
-     * @param crypt_sig_t alg [in]
+     * @param signature_t alg [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* find(const char* kid, crypt_sig_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* find(const char* kid, signature_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /**
      * @brief find
      * @param const char* kid [in]

@@ -62,53 +62,45 @@ quic_packet_handshake::quic_packet_handshake(const quic_packet_handshake& other)
 quic_packet_handshake::~quic_packet_handshake() {}
 
 return_t quic_packet_handshake::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t& pos_unprotect) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if ((nullptr == session) || (false == is_unidirection(dir))) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
 
-    pipeline  //
-        .goahead_if_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
-        .run_trycatch([&]() -> return_t {
-            auto session = get_session();
-            if ((nullptr == session) || (false == is_unidirection(dir))) {
-                return errorcode_t::invalid_context;
-            }
+        auto& protection = session->get_tls_protection();
+        auto tagsize = protection.get_tag_size();
 
-            auto& protection = session->get_tls_protection();
-            auto tagsize = protection.get_tag_size();
+        size_t ppos = pos;
+        size_t offset_pnpayload = 0;
 
-            size_t ppos = pos;
-            size_t offset_pnpayload = 0;
+        {
+            payload pl;
+            pl << new payload_member(new quic_encoded(uint64(0)), constexpr_len)  //
+               << new payload_member(binary_t(), constexpr_payload)               //
+               << new payload_member(binary_t(), constexpr_tag);
+            pl.reserve(constexpr_tag, tagsize);
+            pl.set_condition(constexpr_len, [&](payload* pl, payload_member* item) -> void {
+                auto len = pl->t_value_of<uint64>(constexpr_len);
+                auto payload_size = len - tagsize;
+                pl->reserve(constexpr_payload, payload_size);
+            });
+            pl.read(stream, size, pos);
 
-            {
-                payload pl;
-                pl << new payload_member(new quic_encoded(uint64(0)), constexpr_len)  //
-                   << new payload_member(binary_t(), constexpr_payload)               //
-                   << new payload_member(binary_t(), constexpr_tag);
-                pl.reserve(constexpr_tag, tagsize);
-                pl.set_condition(constexpr_len, [&](payload* pl, payload_member* item) -> void {
-                    auto len = pl->t_value_of<uint64>(constexpr_len);
-                    auto payload_size = len - tagsize;
-                    pl->reserve(constexpr_payload, payload_size);
-                });
+            _length = pl.t_value_of<uint64>(constexpr_len);
+            pl.get_binary(constexpr_payload, _payload);
+            pl.get_binary(constexpr_tag, _tag);
 
-                auto rc = pl.read(stream, size, pos);
-                if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    __trace_return(rc);
-                }
+            offset_pnpayload = pl.offset_of(constexpr_payload);
+            _sizeof_length = pl.get_space(constexpr_len);
 
-                _length = pl.t_value_of<uint64>(constexpr_len);
-                pl.get_binary(constexpr_payload, _payload);
-                pl.get_binary(constexpr_tag, _tag);
-
-                offset_pnpayload = pl.offset_of(constexpr_payload);
-                _sizeof_length = pl.get_space(constexpr_len);
-
-                pos_unprotect = (ppos + offset_pnpayload + 4);
-            }
-
-            return success;
-        });
-    return pipeline.result();
+            pos_unprotect = (ppos + offset_pnpayload + 4);
+        }
+    }
+    __finally2 {}
+    return ret;
 }
 
 return_t quic_packet_handshake::do_read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t pos_unprotect) {
@@ -138,98 +130,88 @@ return_t quic_packet_handshake::do_read(tls_direction_t dir, const byte_t* strea
 }
 
 return_t quic_packet_handshake::do_write(tls_direction_t dir, binary_t& header, binary_t& ciphertag) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        if (nullptr == session) {
+            ret = errorcode_t::invalid_context;
+            __leave2;
+        }
 
-    pipeline  //
-        .run_trycatch([&]() -> return_t {
-            return_t rc = success;
-            auto session = get_session();
-            if (nullptr == session) {
-                __trace_return(errorcode_t::invalid_context);
-            }
+        auto& protection = session->get_tls_protection();
+        auto tagsize = protection.get_tag_size();
 
-            auto& protection = session->get_tls_protection();
-            auto tagsize = protection.get_tag_size();
+        binary_t bin_unprotected_header = std::move(header);
+        binary_t bin_protected_header;
+        uint8 pn_length = 0;
+        uint64 len = 0;
+        binary_t bin_pn;
+        uint8 prefix_len = t_narrow_cast(_sizeof_length >> 1);
 
-            binary_t bin_unprotected_header = std::move(header);
-            binary_t bin_protected_header;
-            uint8 pn_length = 0;
-            uint64 len = 0;
-            binary_t bin_pn;
-            uint8 prefix_len = t_narrow_cast(_sizeof_length >> 1);
+        // unprotected header
+        {
+            // protected header
+            bin_protected_header = bin_unprotected_header;
+
+            // packet number length + payload size + AEAD tag size
+            pn_length = get_pn_length();
+            len = pn_length + get_payload().size() + tagsize;
+
+            // packet number
+            binary_load(bin_pn, pn_length, _pn, hton32);
 
             // unprotected header
+            payload pl;
+            pl << new payload_member(new quic_encoded(len, prefix_len))  //
+               << new payload_member(bin_pn);
+            pl.write(bin_unprotected_header);
+        }
+
+        /**
+         * RFC 9001 5.4.2.  Header Protection Sample
+         *
+         *  protected payload is at least 4 bytes longer than the sample required for header protection
+         *
+         *  in sampling header ciphertext for header protection, the Packet Number field is
+         *  assumed to be 4 bytes long (its maximum possible encoded length).
+         */
+        if (is_unidirection(dir)) {
+            binary_t bin_ciphertext;
+            binary_t bin_tag;
+            binary_t bin_mask;
+
+            // AEAD
+            ret = protection.encrypt(session, dir, get_payload(), bin_ciphertext, bin_unprotected_header, bin_tag, protection_handshake);
+            if (errorcode_t::success != ret) {
+                __leave2;
+            }
+            binary_append(bin_ciphertext, bin_tag);
+
+            // Header Protection
             {
-                // protected header
-                bin_protected_header = bin_unprotected_header;
+                uint8 ht = _ht;
+                ret = header_protect(dir, protection_handshake, bin_ciphertext, ht, pn_length, bin_pn, bin_protected_header);
+                if (errorcode_t::success != ret) {
+                    __leave2;
+                }
 
-                // packet number length + payload size + AEAD tag size
-                pn_length = get_pn_length();
-                len = pn_length + get_payload().size() + tagsize;
-
-                // packet number
-                binary_load(bin_pn, pn_length, _pn, hton32);
-
-                // unprotected header
+                // encode packet number
                 payload pl;
                 pl << new payload_member(new quic_encoded(len, prefix_len))  //
-                   << new payload_member(bin_pn);
+                   << new payload_member(bin_pn);                            //
 
-                rc = pl.write(bin_unprotected_header);
-                if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    __trace_return(rc);
-                }
+                // protected header
+                pl.write(bin_protected_header);
             }
 
-            /**
-             * RFC 9001 5.4.2.  Header Protection Sample
-             *
-             *  protected payload is at least 4 bytes longer than the sample required for header protection
-             *
-             *  in sampling header ciphertext for header protection, the Packet Number field is
-             *  assumed to be 4 bytes long (its maximum possible encoded length).
-             */
-            if (is_unidirection(dir)) {
-                binary_t bin_ciphertext;
-                binary_t bin_tag;
-                binary_t bin_mask;
-
-                // AEAD
-                rc = protection.encrypt(session, dir, get_payload(), bin_ciphertext, bin_unprotected_header, bin_tag, protection_handshake);
-                if (errorcode_t::success != rc) {
-                    return rc;
-                }
-                binary_append(bin_ciphertext, bin_tag);
-
-                // Header Protection
-                {
-                    uint8 ht = _ht;
-                    rc = header_protect(dir, protection_handshake, bin_ciphertext, ht, pn_length, bin_pn, bin_protected_header);
-                    if (errorcode_t::success != rc) {
-                        __trace_return(rc);
-                    }
-
-                    // encode packet number
-                    payload pl;
-                    pl << new payload_member(new quic_encoded(len, prefix_len))  //
-                       << new payload_member(bin_pn);                            //
-
-                    // protected header
-                    rc = pl.write(bin_protected_header);
-                    if (errorcode_t::success != rc) {
-                        __trace_return(rc);
-                    }
-                }
-
-                header = std::move(bin_protected_header);
-                ciphertag = std::move(bin_ciphertext);
-            } else {
-                header = std::move(bin_unprotected_header);
-            }
-
-            return success;
-        });
-    return pipeline.result();
+            header = std::move(bin_protected_header);
+            ciphertag = std::move(bin_ciphertext);
+        } else {
+            header = std::move(bin_unprotected_header);
+        }
+    }
+    __finally2 {}
+    return ret;
 }
 
 void quic_packet_handshake::dump() {

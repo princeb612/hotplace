@@ -45,6 +45,7 @@ class decimal_float {
     bool operator<=(const decimal_float& other);
 
     std::string str();
+    std::string fstr(size_t precision) const;
 
     static int compare(const decimal_float& lhs, const decimal_float& rhs);
 
@@ -85,6 +86,7 @@ class rational_float {
     bool operator<=(const rational_float& other);
 
     std::string str();
+    std::string fstr(size_t precision) const;
 
     static int compare(const rational_float& lhs, const rational_float& rhs);
 
@@ -145,6 +147,7 @@ class floating_point {
 
     fp_type_t get_type();
     std::string str();
+    std::string fstr(size_t precision) const;
 
     static int compare(const floating_point& lhs, const floating_point& rhs);
 

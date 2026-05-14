@@ -29,7 +29,7 @@ namespace crypto {
  *          }
  *
  *          // rsa_pss_rsae_sha256
- *          auto sign = builder.set_scheme(crypt_sig_rsassa_pkcs15).set_digest(sha2_256).build();
+ *          auto sign = builder.set_scheme(sig_category_rsassa_pkcs15).set_digest(sha2_256).build();
  *          if (sign) {
  *              ret = sign->verify(pkey, input, signature);
  *              sign->release();
@@ -55,14 +55,14 @@ class crypto_sign_builder {
      * @sample
      */
     crypto_sign* build();
-    crypt_sig_type_t get_scheme();
+    sig_category_t get_category();
     hash_algorithm_t get_digest();
 
     /**
      * @sample
-     *          auto sign = builder.set_scheme(crypt_sig_rsassa_pkcs15).set_digest(sha2_256).build();
+     *          auto sign = builder.set_scheme(sig_category_rsassa_pkcs15).set_digest(sha2_256).build();
      */
-    crypto_sign_builder& set_scheme(crypt_sig_type_t scheme);
+    crypto_sign_builder& set_category(sig_category_t category);
     crypto_sign_builder& set_digest(hash_algorithm_t hashalg);
     crypto_sign_builder& set_digest(const char* hashalg);
     crypto_sign_builder& set_digest(const std::string& hashalg);
@@ -84,7 +84,7 @@ class crypto_sign_builder {
 
    protected:
    private:
-    crypt_sig_type_t _scheme;
+    sig_category_t _category;
     uint16 _hashalg;
 };
 
@@ -101,7 +101,7 @@ class crypto_sign {
 
     void set_saltlen(int saltlen);  // RSA PSS (-1)
 
-    crypt_sig_type_t get_scheme();
+    sig_category_t get_category();
     hash_algorithm_t get_digest();
     int get_saltlen();
 
@@ -110,11 +110,11 @@ class crypto_sign {
 
    protected:
     crypto_sign(hash_algorithm_t hashalg);
-    void set_scheme(crypt_sig_type_t scheme);
+    void set_category(sig_category_t category);
 
    private:
     t_shared_reference<crypto_sign> _shared;
-    crypt_sig_type_t _scheme;
+    sig_category_t _category;
     hash_algorithm_t _hashalg;
     int _saltlen;
 };

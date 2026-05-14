@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOADVISOR__
-#define __HOTPLACE_SDK_CRYPTO_BASIC_CRYPTOADVISOR__
+#ifndef __HOTPLACE_SDK_CRYPTO_ADVISOR_CRYPTOADVISOR__
+#define __HOTPLACE_SDK_CRYPTO_ADVISOR_CRYPTOADVISOR__
 
 #include <algorithm>
 #include <functional>
@@ -31,6 +31,7 @@ enum advisor_feature_t {
     advisor_feature_curve = (1 << 7),
     advisor_feature_version = (1 << 8),
     advisor_feature_unspecified = (1 << 9),
+    advisor_feature_sigscheme = (1 << 10),
 };
 
 /**
@@ -132,7 +133,7 @@ class crypto_advisor {
      *          const EVP_MD* sha3_512 = (const EVP_MD*) find_evp_md (hash_algorithm_t::sha3_512); // EVP_sha3_512 ()
      */
     const EVP_MD* find_evp_md(hash_algorithm_t algorithm);
-    const EVP_MD* find_evp_md(crypt_sig_t sig);
+    const EVP_MD* find_evp_md(signature_t sig);
     const EVP_MD* find_evp_md(jws_t sig);
     const EVP_MD* find_evp_md(const char* name);
     const EVP_MD* find_evp_md(const std::string& name);
@@ -200,6 +201,12 @@ class crypto_advisor {
      */
     const hint_curve_t* hintof_curve(const char* curve);
     const hint_curve_t* hintof_curve(const std::string& curve);
+    /**
+     * @brief   hint
+     * @param   const EVP_PKEY* pkey [in]
+     * @param   hint_pkey_t& hint [out]
+     */
+    return_t hintof_pkey(const EVP_PKEY* pkey, hint_pkey_t& hint);
     /*
      * @brief   hint
      * @return  return nullptr if pkey is not EC_KEY
@@ -270,27 +277,33 @@ class crypto_advisor {
     ///////////////////////////////////////////////////////////////////////////
     // sign
     ///////////////////////////////////////////////////////////////////////////
-    hash_algorithm_t get_algorithm(crypt_sig_t sig);
+    hash_algorithm_t get_algorithm(signature_t sig);
     hash_algorithm_t get_algorithm(jws_t sig);
 
     /**
      * @brief hint
-     * @param crypt_sig_t sig [in]
-     *          crypt_sig_t::hs256 series, crypt_sig_t::rs256 series, crypt_sig_t::es256 series, crypt_sig_t::ps256 series, crypt_sig_t::eddsa
+     * @param signature_t sig [in]
+     *          signature_t::hs256 series, signature_t::rs256 series, signature_t::es256 series, signature_t::ps256 series, signature_t::eddsa
      * @return const hint_signature_t*
      */
-    const hint_signature_t* hintof_signature(crypt_sig_t sig);
+    const hint_signature_t* hintof_signature(signature_t sig);
     /**
      * @brief kind of
      * @param const EVP_PKEY* pkey [in]
-     * @param crypt_sig_t sig [in]
+     * @param signature_t sig [in]
      * @return true if match, false if not
      */
-    bool is_kindof(const EVP_PKEY* pkey, crypt_sig_t sig);
+    bool is_kindof(const EVP_PKEY* pkey, signature_t sig);
 
     uint16 unitsizeof_ecdsa(hash_algorithm_t alg);
     uint16 sizeof_ecdsa(hash_algorithm_t alg);
-    uint16 sizeof_ecdsa(crypt_sig_t sig);
+    uint16 sizeof_ecdsa(signature_t sig);
+
+    /**
+     * @brief TLS signature scheme
+     * @param uint16 scheme [in] tls_sigscheme_t
+     */
+    const hint_sigscheme_t* hintof_sigscheme(uint16 scheme);
 
     ///////////////////////////////////////////////////////////////////////////
     // key
@@ -525,9 +538,9 @@ class crypto_advisor {
      */
     bool is_kindof(const EVP_PKEY* pkey, const char* alg);
 
-    jws_t sigof(crypt_sig_t sig);
+    jws_t sigof(signature_t sig);
 
-    crypt_sig_t sigof(jws_t sig);
+    signature_t sigof(jws_t sig);
 
     ///////////////////////////////////////////////////////////////////////////
     // COSE
@@ -574,7 +587,7 @@ class crypto_advisor {
     crypto_kty_t ktyof(cose_kty_t kty);
 
     crypt_category_t categoryof(cose_alg_t alg);
-    crypt_sig_t sigof(cose_alg_t sig);
+    signature_t sigof(cose_alg_t sig);
 
     cose_ec_curve_t curveof(uint32 nid);
     uint32 curveof(cose_ec_curve_t curve);
@@ -807,6 +820,8 @@ class crypto_advisor {
     typedef std::map<std::string, const hint_signature_t*> signature_byname_map_t;
     signature_map_t _crypt_sig_map;
     signature_byname_map_t _sig_byname_map;
+    typedef std::map<uint16, const hint_sigscheme_t*> hint_sigscheme_map_t;
+    hint_sigscheme_map_t _hint_sigscheme_map;
     ///////////////////////////////////////////////////////////////////////////
     // key
     ///////////////////////////////////////////////////////////////////////////
@@ -820,8 +835,8 @@ class crypto_advisor {
     typedef std::map<std::string, const hint_jose_encryption_t*> jose_encryption_byname_map_t;
     typedef std::map<std::string, const hint_curve_t*> jose_nid_bycurve_map_t;
     typedef std::map<uint32, const hint_curve_t*> jose_curve_bynid_map_t;
-    typedef std::map<crypt_sig_t, jws_t> sig2jws_map_t;
-    typedef std::map<jws_t, crypt_sig_t> jws2sig_map_t;
+    typedef std::map<signature_t, jws_t> sig2jws_map_t;
+    typedef std::map<jws_t, signature_t> jws2sig_map_t;
     jose_encryption_map_t _alg_map;
     jose_encryption_map_t _enc_map;
     signature_map_t _jose_sig_map;
@@ -840,8 +855,8 @@ class crypto_advisor {
     typedef std::map<std::string, const hint_cose_algorithm_t*> cose_algorithm_byname_map_t;
     typedef std::map<crypto_kty_t, cose_kty_t> kty2cose_map_t;
     typedef std::map<cose_kty_t, crypto_kty_t> cose2kty_map_t;
-    typedef std::map<crypt_sig_t, cose_alg_t> sig2cose_map_t;
-    typedef std::map<cose_alg_t, crypt_sig_t> cose2sig_map_t;
+    typedef std::map<signature_t, cose_alg_t> sig2cose_map_t;
+    typedef std::map<cose_alg_t, signature_t> cose2sig_map_t;
     cose_algorithm_map_t _cose_alg_map;
     cose_curve_map_t _cose_curve_map;
     cose_algorithm_byname_map_t _cose_algorithm_byname_map;
@@ -894,6 +909,9 @@ extern const size_t sizeof_hint_curves;
 ///////////////////////////////////////////////////////////////////////////
 extern const hint_signature_t hint_signatures[];
 extern const size_t sizeof_hint_signatures;
+///////////////////////////////////////////////////////////////////////////
+extern const hint_sigscheme_t hint_sigschemes[];
+extern const size_t sizeof_hint_sigschemes;
 ///////////////////////////////////////////////////////////////////////////
 extern const hint_kty_name_t hint_kty_names[];
 extern const size_t sizeof_hint_kty_names;

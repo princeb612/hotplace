@@ -1,0 +1,235 @@
+/* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
+/**
+ * @file   resource_sign.cpp
+ * @author Soo Han, Kim (princeb612.kr@gmail.com)
+ * @desc
+ *
+ * Revision History
+ * Date         Name                Description
+ */
+
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
+#include <hotplace/sdk/io/system/sdk.hpp>
+#include <iostream>
+
+namespace hotplace {
+namespace crypto {
+
+const hint_signature_t hint_signatures[] = {
+    {
+        signature_t::sig_hs256,
+        jws_t::jws_hs256,
+        jws_group_t::jws_group_hmac,
+        sig_category_hmac,
+        crypto_kty_t::kty_oct,
+        "HS256",
+        hash_algorithm_t::sha2_256,
+        1,
+        NID_hmac,
+    },
+    {
+        signature_t::sig_hs384,
+        jws_t::jws_hs384,
+        jws_group_t::jws_group_hmac,
+        sig_category_hmac,
+        crypto_kty_t::kty_oct,
+        "HS384",
+        hash_algorithm_t::sha2_384,
+        1,
+        NID_hmac,
+    },
+    {
+        signature_t::sig_hs512,
+        jws_t::jws_hs512,
+        jws_group_t::jws_group_hmac,
+        sig_category_hmac,
+        crypto_kty_t::kty_oct,
+        "HS512",
+        hash_algorithm_t::sha2_512,
+        1,
+        NID_hmac,
+    },
+    {
+        signature_t::sig_rs256,
+        jws_t::jws_rs256,
+        jws_group_t::jws_group_rsassa_pkcs15,
+        sig_category_rsassa_pkcs15,
+        crypto_kty_t::kty_rsa,
+        "RS256",
+        hash_algorithm_t::sha2_256,
+        1,
+        NID_rsaEncryption,
+    },
+    {
+        signature_t::sig_rs384,
+        jws_t::jws_rs384,
+        jws_group_t::jws_group_rsassa_pkcs15,
+        sig_category_rsassa_pkcs15,
+        crypto_kty_t::kty_rsa,
+        "RS384",
+        hash_algorithm_t::sha2_384,
+        1,
+        NID_rsaEncryption,
+    },
+    {
+        signature_t::sig_rs512,
+        jws_t::jws_rs512,
+        jws_group_t::jws_group_rsassa_pkcs15,
+        sig_category_rsassa_pkcs15,
+        crypto_kty_t::kty_rsa,
+        "RS512",
+        hash_algorithm_t::sha2_512,
+        1,
+        NID_rsaEncryption,
+    },
+    {
+        signature_t::sig_rs1,
+        jws_t::jws_unknown,
+        jws_group_t::jws_group_rsassa_pkcs15,
+        sig_category_rsassa_pkcs15,
+        crypto_kty_t::kty_rsa,
+        "RS1",
+        hash_algorithm_t::sha1,
+        1,
+        NID_rsaEncryption,
+    },
+    {
+        signature_t::sig_es256,
+        jws_t::jws_es256,
+        jws_group_t::jws_group_ecdsa,
+        sig_category_ecdsa,
+        crypto_kty_t::kty_ec,
+        "ES256",
+        hash_algorithm_t::sha2_256,
+        1,
+        NID_X9_62_prime256v1,
+    },
+    {
+        signature_t::sig_es256k,
+        jws_t::jws_unknown,
+        jws_group_t::jws_group_ecdsa,
+        sig_category_ecdsa,
+        crypto_kty_t::kty_ec,
+        "ES256K",
+        hash_algorithm_t::sha2_256,
+        1,
+        NID_secp256k1,
+    },
+    {
+        signature_t::sig_es384,
+        jws_t::jws_es384,
+        jws_group_t::jws_group_ecdsa,
+        sig_category_ecdsa,
+        crypto_kty_t::kty_ec,
+        "ES384",
+        hash_algorithm_t::sha2_384,
+        1,
+        NID_secp384r1,
+    },
+    {
+        signature_t::sig_es512,
+        jws_t::jws_es512,
+        jws_group_t::jws_group_ecdsa,
+        sig_category_ecdsa,
+        crypto_kty_t::kty_ec,
+        "ES512",
+        hash_algorithm_t::sha2_512,
+        1,
+        NID_secp521r1,
+    },
+    {
+        signature_t::sig_ps256,
+        jws_t::jws_ps256,
+        jws_group_t::jws_group_rsassa_pss,
+        sig_category_rsassa_pss,
+        crypto_kty_t::kty_rsa,
+        "PS256",
+        hash_algorithm_t::sha2_256,
+        1,
+        NID_rsaEncryption,
+    },
+    {
+        signature_t::sig_ps384,
+        jws_t::jws_ps384,
+        jws_group_t::jws_group_rsassa_pss,
+        sig_category_rsassa_pss,
+        crypto_kty_t::kty_rsa,
+        "PS384",
+        hash_algorithm_t::sha2_384,
+        1,
+        NID_rsaEncryption,
+    },
+    {
+        signature_t::sig_ps512,
+        jws_t::jws_ps512,
+        jws_group_t::jws_group_rsassa_pss,
+        sig_category_rsassa_pss,
+        crypto_kty_t::kty_rsa,
+        "PS512",
+        hash_algorithm_t::sha2_512,
+        1,
+        NID_rsaEncryption,
+    },
+    {
+        signature_t::sig_eddsa,
+        jws_t::jws_eddsa,
+        jws_group_t::jws_group_eddsa,
+        sig_category_eddsa,
+        crypto_kty_t::kty_okp,
+        "EdDSA",
+        hash_algorithm_t::hash_alg_unknown,
+        2,
+        NID_ED25519,
+        NID_ED448,
+    },
+    {
+        signature_t::sig_mldsa,
+        jws_t::jws_mldsa,
+        jws_group_t::jws_group_mldsa,
+        sig_category_mldsa,
+        crypto_kty_t::kty_mldsa,
+        "MLDSA",
+        hash_algorithm_t::hash_alg_unknown,
+        3,
+        nid_ml_dsa_44,
+        nid_ml_dsa_65,
+        nid_ml_dsa_87,
+    },
+};
+
+const size_t sizeof_hint_signatures = RTL_NUMBER_OF(hint_signatures);
+
+extern const hint_sigscheme_t hint_sigschemes[] = {
+    {tls_sigscheme_rsa_pkcs1_sha256, 0x0301, tls_flag_support, "rsa_pkcs1_sha256", sig_category_rsassa_pkcs15, sig_rs256, kty_rsa, nid_rsa, sha2_256},
+    {tls_sigscheme_rsa_pkcs1_sha384, 0x0301, tls_flag_support, "rsa_pkcs1_sha384", sig_category_rsassa_pkcs15, sig_rs384, kty_rsa, nid_rsa, sha2_384},
+    {tls_sigscheme_rsa_pkcs1_sha512, 0x0301, tls_flag_support, "rsa_pkcs1_sha512", sig_category_rsassa_pkcs15, sig_rs512, kty_rsa, nid_rsa, sha2_512},
+    {tls_sigscheme_ecdsa_secp256r1_sha256, 0x0301, tls_flag_support, "ecdsa_secp256r1_sha256", sig_category_ecdsa, sig_es256, kty_ec, NID_X9_62_prime256v1, sha2_256},
+    {tls_sigscheme_ecdsa_secp384r1_sha384, 0x0301, tls_flag_support, "ecdsa_secp384r1_sha384", sig_category_ecdsa, sig_es384, kty_ec, NID_secp384r1, sha2_384},
+    {tls_sigscheme_ecdsa_secp521r1_sha512, 0x0301, tls_flag_support, "ecdsa_secp521r1_sha512", sig_category_ecdsa, sig_es512, kty_ec, NID_secp521r1, sha2_512},
+    {tls_sigscheme_rsa_pss_rsae_sha256, 0x0301, tls_flag_support, "rsa_pss_rsae_sha256", sig_category_rsassa_pss, sig_ps256, kty_rsa, nid_rsa, sha2_256},
+    {tls_sigscheme_rsa_pss_rsae_sha384, 0x0301, tls_flag_support, "rsa_pss_rsae_sha384", sig_category_rsassa_pss, sig_ps384, kty_rsa, nid_rsa, sha2_384},
+    {tls_sigscheme_rsa_pss_rsae_sha512, 0x0301, tls_flag_support, "rsa_pss_rsae_sha512", sig_category_rsassa_pss, sig_ps512, kty_rsa, nid_rsa, sha2_512},
+    {tls_sigscheme_ed25519, 0x0301, tls_flag_support, "ed25519", sig_category_eddsa, sig_eddsa, kty_okp, NID_ED25519, hash_alg_unknown},
+    {tls_sigscheme_ed448, 0x0301, tls_flag_support, "ed448", sig_category_eddsa, sig_eddsa, kty_okp, NID_ED448, hash_alg_unknown},
+    {tls_sigscheme_rsa_pss_pss_sha256, 0x0301, tls_flag_support, "rsa_pss_pss_sha256", sig_category_rsassa_pss, sig_ps256, kty_rsapss, nid_rsa, sha2_256},
+    {tls_sigscheme_rsa_pss_pss_sha384, 0x0301, tls_flag_support, "rsa_pss_pss_sha384", sig_category_rsassa_pss, sig_ps384, kty_rsapss, nid_rsa, sha2_384},
+    {tls_sigscheme_rsa_pss_pss_sha512, 0x0301, tls_flag_support, "rsa_pss_pss_sha512", sig_category_rsassa_pss, sig_ps512, kty_rsapss, nid_rsa, sha2_512},
+    {tls_sigscheme_ecdsa_brainpoolP256r1tls13_sha256, 0x0301, tls_flag_support, "ecdsa_brainpoolP256r1tls13_sha256", sig_category_ecdsa, sig_brainpool256, kty_ec,
+     nid_brainpoolp256r1tls13, sha2_256},
+    {tls_sigscheme_ecdsa_brainpoolP384r1tls13_sha384, 0x0301, tls_flag_support, "ecdsa_brainpoolP384r1tls13_sha384", sig_category_ecdsa, sig_brainpool384, kty_ec,
+     nid_brainpoolp384r1tls13, sha2_384},
+    {tls_sigscheme_ecdsa_brainpoolP512r1tls13_sha512, 0x0301, tls_flag_support, "ecdsa_brainpoolP512r1tls13_sha512", sig_category_ecdsa, sig_brainpool512, kty_ec,
+     nid_brainpoolp512r1tls13, sha2_512},
+    {tls_sigscheme_rsa_pkcs1_sha1, 0x0301, 0, "rsa_pkcs1_sha1", sig_category_rsassa_pkcs15, sig_rs1, kty_rsa, nid_rsa, sha1},
+    {tls_sigscheme_ecdsa_sha1, 0x0301, 0, "ecdsa_sha1", sig_category_ecdsa, sig_sha1, kty_ec, 0, sha1},
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    {tls_sigscheme_mldsa44, 0x0304, tls_flag_support, "mldsa44", sig_category_mldsa, sig_mldsa, kty_mldsa, nid_ml_dsa_87, hash_alg_unknown},
+    {tls_sigscheme_mldsa65, 0x0304, tls_flag_support, "mldsa65", sig_category_mldsa, sig_mldsa, kty_mldsa, nid_ml_dsa_65, hash_alg_unknown},
+    {tls_sigscheme_mldsa87, 0x0304, tls_flag_support, "mldsa87", sig_category_mldsa, sig_mldsa, kty_mldsa, nid_ml_dsa_44, hash_alg_unknown},
+#endif
+};
+
+extern const size_t sizeof_hint_sigschemes = RTL_NUMBER_OF(hint_sigschemes);
+
+}  // namespace crypto
+}  // namespace hotplace

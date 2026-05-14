@@ -10,7 +10,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>  // dump_notrunc
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/io/cbor/cbor_data.hpp>

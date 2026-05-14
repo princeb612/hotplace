@@ -13,15 +13,15 @@
 namespace hotplace {
 namespace crypto {
 
-crypto_sign::crypto_sign(hash_algorithm_t hashalg) : _scheme(crypt_sig_dgst), _hashalg(hashalg), _saltlen(-1) { _shared.make_share(this); }
+crypto_sign::crypto_sign(hash_algorithm_t hashalg) : _category(sig_category_dgst), _hashalg(hashalg), _saltlen(-1) { _shared.make_share(this); }
 
 crypto_sign::~crypto_sign() {}
 
-void crypto_sign::set_scheme(crypt_sig_type_t scheme) { _scheme = scheme; }
+void crypto_sign::set_category(sig_category_t category) { _category = category; }
 
 void crypto_sign::set_saltlen(int saltlen) { _saltlen = saltlen; }
 
-crypt_sig_type_t crypto_sign::get_scheme() { return _scheme; }
+sig_category_t crypto_sign::get_category() { return _category; }
 
 hash_algorithm_t crypto_sign::get_digest() { return _hashalg; }
 

@@ -30,90 +30,94 @@ http3_frame::http3_frame(h3_frame_t type) : _type(type) { _shared.make_share(thi
 http3_frame::~http3_frame() {}
 
 return_t http3_frame::read(const byte_t* stream, size_t size, size_t& pos) {
-    function_pipeline<return_t> pipeline;
-
-    pipeline  //
-        .run([&]() -> return_t { return do_read_frame(stream, size, pos); });
-    return pipeline.result();
+    return_t ret = errorcode_t::success;
+    __try2 {
+        ret = do_read_frame(stream, size, pos);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+    }
+    __finally2 {}
+    return ret;
 }
 
 return_t http3_frame::write(binary_t& bin) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
 
-    pipeline  //
-        .run([&]() -> return_t {
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_http3, [&](basic_stream& dbs) -> void {
-                    auto resource = http_resource::get_instance();
-                    dbs.println("+ %s %I64i (%s)", constexpr_type, get_type(), resource->get_h3_frame_name(get_type()).c_str());
-                });
-            }
+    if (istraceable(trace_category_net)) {
+        trace_debug_event(trace_category_net, trace_event_http3, [&](basic_stream& dbs) -> void {
+            auto resource = http_resource::get_instance();
+            dbs.println("+ %s %I64i (%s)", constexpr_type, get_type(), resource->get_h3_frame_name(get_type()).c_str());
+        });
+    }
 #endif
 
-            return do_write(bin);
-        });
-    return pipeline.result();
+    ret = do_write(bin);
+    return ret;
 }
 
 return_t http3_frame::do_read_frame(const byte_t* stream, size_t size, size_t& pos) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
+
     size_t fpos = pos;
-    binary_t frame_payload;
+    __try2 {
 #if defined DEBUG
-    uint64 type = 0;
-    uint64 length = 0;
+        uint64 type = 0;
+        uint64 length = 0;
 #endif
+        binary_t frame_payload;
 
-    pipeline  //
-        .goahead_if_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
-        .run_trycatch([&]() -> return_t {
-            payload pl;
-
+        {
             // RFC 9114 7.1.  Frame Layout
+            payload pl;
             pl << new payload_member(new quic_encoded(uint64(0)), constexpr_type)    //
                << new payload_member(new quic_encoded(uint64(0)), constexpr_length)  //
                << new payload_member(binary_t(), constexpr_payload);
             pl.set_reference_value(constexpr_payload, constexpr_length);
-            auto rc = pl.read(stream, size, pos);
-            if (false == error_traits<return_t>::is_not_fail(rc)) {
-                __trace_return(rc);
-            }
+            ret = pl.read(stream, size, pos);
 
 #if defined DEBUG
             type = pl.t_value_of<uint64>(constexpr_type);
             length = pl.t_value_of<uint64>(constexpr_length);
 #endif
             pl.get_binary(constexpr_payload, frame_payload);
+        }
 
-            return success;
-        })
-        .walk_always([&](return_t lasterror) -> void {
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_http3, [&](basic_stream& dbs) -> void {
-                    http_resource* resource = http_resource::get_instance();
-                    dbs.println("# %s %I64i (%s) %s", constexpr_type, type, resource->get_h3_frame_name(type).c_str(), (fragmented == lasterror) ? "fragmented" : "");
-                    dbs.println(" > %s 0x%I64x (%I64i)", constexpr_length, length, length);
-                    if (check_trace_level(loglevel_debug)) {
-                        dump_memory(frame_payload, &dbs, 16, 3, 0, dump_notrunc);
-                    }
-                });
-            }
+        if (istraceable(trace_category_net)) {
+            trace_debug_event(trace_category_net, trace_event_http3, [&](basic_stream& dbs) -> void {
+                http_resource* resource = http_resource::get_instance();
+                dbs.println("# %s %I64i (%s) %s", constexpr_type, type, resource->get_h3_frame_name(type).c_str(), (fragmented == ret) ? "fragmented" : "");
+                dbs.println(" > %s 0x%I64x (%I64i)", constexpr_length, length, length);
+                if (check_trace_level(loglevel_debug)) {
+                    dump_memory(frame_payload, &dbs, 16, 3, 0, dump_notrunc);
+                }
+            });
+        }
 #endif
-        })
-        .run([&]() -> return_t {
-            size_t ppos = 0;
-            return do_read_payload(frame_payload.data(), frame_payload.size(), ppos);
-        })
-        .walk_failed([&]() -> void { pos = fpos; });
-    return pipeline.result();
+
+        size_t ppos = 0;
+        ret = do_read_payload(frame_payload.data(), frame_payload.size(), ppos);
+    }
+    __finally2 {
+        if (errorcode_t::success != ret) {
+            pos = fpos;
+        }
+    }
+
+    return ret;
 }
 
-return_t http3_frame::do_read_payload(const byte_t* stream, size_t size, size_t& pos) { return errorcode_t::success; }
+return_t http3_frame::do_read_payload(const byte_t* stream, size_t size, size_t& pos) {
+    return_t ret = errorcode_t::success;
+    return ret;
+}
 
-return_t http3_frame::do_write(binary_t& bin) { return errorcode_t::success; }
+return_t http3_frame::do_write(binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    return ret;
+}
 
 h3_frame_t http3_frame::get_type() { return _type; }
 

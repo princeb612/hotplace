@@ -58,9 +58,9 @@ return_t echo_server(void*) {
         uint32 flags = socket_scheme_dtls | socket_scheme_tls12;  // DTLS 1.2
         if (option_flag_trial & option.flags) {
             // enable TLS 1.2 TLS_ECDHE_RSA ciphersuites
-            load_certificate("rsa.crt", "rsa.key", nullptr);
+            load_certificate("server-rsa.crt", "server-rsa.key", nullptr);
             // enable TLS 1.2 TLS_ECDHE_ECDSA ciphersuites
-            load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
+            load_certificate("server-ecdsa.crt", "server-ecdsa.key", nullptr);
 
             flags |= socket_scheme_trial;
         } else {

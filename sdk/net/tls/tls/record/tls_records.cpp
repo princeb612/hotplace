@@ -23,7 +23,7 @@ return_t tls_records::read(tls_session* session, tls_direction_t dir, const byte
     __try2 {
         if (nullptr == session || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace(ret);
+            __leave2;
         }
 
         while (pos < size) {
@@ -50,11 +50,11 @@ return_t tls_records::read(tls_session* session, tls_direction_t dir, const bina
     __try2 {
         if (nullptr == session) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace(ret);
+            __leave2;
         }
         if (bin.empty()) {
             ret = errorcode_t::empty;
-            __leave2_trace(ret);
+            __leave2;
         }
 
         const byte_t* stream = bin.data();
@@ -71,7 +71,7 @@ return_t tls_records::write(tls_session* session, tls_direction_t dir, std::func
     __try2 {
         if (nullptr == session || nullptr == func) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace(ret);
+            __leave2;
         }
 
         if (session_type_dtls == session->get_type()) {

@@ -234,8 +234,10 @@ int main(int argc, char** argv) {
 
         testcase_pre_master_secret();  // https://github.com/syncsynchalt/illustrated-tls13/captures/
 
-        load_certificate("rsa.crt", "rsa.key", nullptr);
-        load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
+        load_certificate("server-rsa.crt", "server-rsa.key", nullptr);
+        load_certificate("server-ecdsa.crt", "server-ecdsa.key", nullptr);
+        load_certificate("server-mldsa.crt", "server-mldsa.key", nullptr);
+        load_certificate("server-eddsa.crt", "server-eddsa.key", nullptr);
 
         testcase_tls12_aead();
         testcase_mlkem_encoding();

@@ -28,74 +28,61 @@ tls_extension_compress_certificate::tls_extension_compress_certificate(tls_hands
 tls_extension_compress_certificate::~tls_extension_compress_certificate() {}
 
 return_t tls_extension_compress_certificate::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        uint8 algorithms_len = 0;
+        binary_t bin_algorithms;
+        {
+            payload pl;
+            pl << new payload_member(uint8(0), constexpr_algorithm_len)  //
+               << new payload_member(binary_t(), constexpr_algorithm);
+            pl.set_reference_value(constexpr_algorithm, constexpr_algorithm_len);
+            pl.read(stream, endpos_extension(), pos);
 
-    pipeline  //
-        .goahead_if_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
-        .run_trycatch([&]() -> return_t {
-            uint8 algorithms_len = 0;
-            binary_t bin_algorithms;
-            {
-                payload pl;
-                pl << new payload_member(uint8(0), constexpr_algorithm_len)  //
-                   << new payload_member(binary_t(), constexpr_algorithm);
+            algorithms_len = pl.t_value_of<uint8>(constexpr_algorithm_len) >> 1;
+            pl.get_binary(constexpr_algorithm, bin_algorithms);
 
-                pl.set_reference_value(constexpr_algorithm, constexpr_algorithm_len);
-
-                auto rc = pl.read(stream, endpos_extension(), pos);
-                if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    __trace_return(rc);
-                }
-
-                algorithms_len = pl.t_value_of<uint8>(constexpr_algorithm_len) >> 1;
-                pl.get_binary(constexpr_algorithm, bin_algorithms);
-
-                for (auto i = 0; i < algorithms_len; i++) {
-                    auto alg = t_binary_to_integer<uint16>(&bin_algorithms[i << 1], sizeof(uint16));
-                    add(alg);
-                }
+            for (auto i = 0; i < algorithms_len; i++) {
+                auto alg = t_binary_to_integer<uint16>(&bin_algorithms[i << 1], sizeof(uint16));
+                add(alg);
             }
+        }
 
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        if (istraceable(trace_category_net)) {
+            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-                    dbs.println("   > %s %i (%i ent.)", constexpr_algorithm_len, algorithms_len << 1, algorithms_len);
-                    int i = 0;
-                    for (auto alg : _algorithms) {
-                        dbs.println("     [%i] 0x%04x %s", i++, alg, tlsadvisor->nameof_compression_alg(alg).c_str());
-                    }
-                });
-            }
+                dbs.println("   > %s %i (%i ent.)", constexpr_algorithm_len, algorithms_len << 1, algorithms_len);
+                int i = 0;
+                for (auto alg : _algorithms) {
+                    dbs.println("     [%i] 0x%04x %s", i++, alg, tlsadvisor->nameof_compression_alg(alg).c_str());
+                }
+            });
+        }
 #endif
-            return success;
-        });
-    return pipeline.result();
+    }
+    __finally2 {}
+    return ret;
 }
 
 return_t tls_extension_compress_certificate::do_write_body(tls_direction_t dir, binary_t& bin) {
-    function_pipeline<return_t> pipeline;
-
-    pipeline  //
-        .run_trycatch([&]() -> return_t {
-            uint8 cbsize_algorithms = 0;
-            binary_t bin_algorithms;
-            for (auto alg : _algorithms) {
-                binary_append(bin_algorithms, alg, hton16);
-            }
-            cbsize_algorithms = t_narrow_cast(bin_algorithms.size());
-
-            {
-                payload pl;
-                pl << new payload_member(uint8(cbsize_algorithms), constexpr_algorithm_len)  //
-                   << new payload_member(bin_algorithms, constexpr_algorithm);
-
-                return pl.write(bin);
-            }
-        });
-    return pipeline.result();
+    return_t ret = errorcode_t::success;
+    uint8 cbsize_algorithms = 0;
+    binary_t bin_algorithms;
+    {
+        for (auto alg : _algorithms) {
+            binary_append(bin_algorithms, alg, hton16);
+        }
+        cbsize_algorithms = t_narrow_cast(bin_algorithms.size());
+    }
+    {
+        payload pl;
+        pl << new payload_member(uint8(cbsize_algorithms), constexpr_algorithm_len)  //
+           << new payload_member(bin_algorithms, constexpr_algorithm);
+        pl.write(bin);
+    }
+    return ret;
 }
 
 tls_extension_compress_certificate& tls_extension_compress_certificate::add(uint16 code) {

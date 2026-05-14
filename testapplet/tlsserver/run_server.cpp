@@ -76,15 +76,15 @@ return_t echo_server(void*) {
         if (option_flag_trial & option.flags) {
             if (option_flag_cert_ecdsa & option.flags) {
                 // enable TLS 1.2 TLS_ECDHE_ECDSA ciphersuites
-                load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
+                load_certificate("server-ecdsa.crt", "server-ecdsa.key", nullptr);
             }
             if (option_flag_cert_rsa & option.flags) {
                 // enable TLS 1.2 TLS_ECDHE_RSA ciphersuites
-                load_certificate("rsa.crt", "rsa.key", nullptr);
+                load_certificate("server-rsa.crt", "server-rsa.key", nullptr);
             }
             if (option_flag_cert_mldsa & option.flags) {
                 // ML-DSA certificate
-                load_certificate("mldsa.crt", "mldsa.key", nullptr);
+                load_certificate("server-mldsa.crt", "server-mldsa.key", nullptr);
             }
             flags |= socket_scheme_trial;
         } else {
@@ -118,11 +118,11 @@ return_t echo_server(void*) {
             server_socket_builder builder;
             builder.set(flags).set_ciphersuites(ciphersuites).set_groups(group).set_verify(0);
             if (option_flag_cert_mldsa & option.flags) {
-                builder.set_certificate("mldsa.crt", "mldsa.key");
+                builder.set_certificate("server-mldsa.crt", "server-mldsa.key");
             } else if (option_flag_cert_rsa & option.flags) {
-                builder.set_certificate("rsa.crt", "rsa.key");
+                builder.set_certificate("server-rsa.crt", "server-rsa.key");
             } else {
-                builder.set_certificate("ecdsa.crt", "ecdsa.key");  // default
+                builder.set_certificate("server-ecdsa.crt", "server-ecdsa.key");  // default
             }
             tls_socket = builder.build();
         }

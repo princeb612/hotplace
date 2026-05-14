@@ -59,60 +59,49 @@ quic_packet_retry::quic_packet_retry(const quic_packet_retry& other)
 quic_packet_retry::~quic_packet_retry() {}
 
 return_t quic_packet_retry::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t& pos_unprotect) {
-    function_pipeline<return_t> pipeline;
-
-    pipeline  //
-        .goahead_if_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
-        .run_trycatch([&]() -> return_t {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        {
             payload pl;
             pl << new payload_member(binary_t(), constexpr_retry_token)  //
                << new payload_member(binary_t(), constexpr_retry_integrity_tag);
             pl.reserve(constexpr_retry_integrity_tag, 128 >> 3);
-
-            auto rc = pl.read(stream, size, pos);
-            if (false == error_traits<return_t>::is_not_fail(rc)) {
-                __trace_return(rc);
-            }
+            pl.read(stream, size, pos);
 
             pl.get_binary(constexpr_retry_token, _retry_token);
             pl.get_binary(constexpr_retry_integrity_tag, _retry_integrity_tag);
+        }
 
-            return success;
-        })
-        .walk_always([&](return_t rc) -> void { dump(); });
-    return pipeline.result();
+        dump();
+    }
+    __finally2 {}
+    return ret;
 }
 
 return_t quic_packet_retry::write(tls_direction_t dir, binary_t& packet) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
 
-    pipeline  //
-        .run([&]() -> return_t { return do_write_header(packet); })
-        .run_trycatch([&]() -> return_t {
-            binary_t bin_integrity_tag;
+    ret = do_write_header(packet);
 
-            if (from_any != dir) {
-                auto rc = retry_integrity_tag(*this, bin_integrity_tag);
-                if (errorcode_t::success == rc) {
-                    _retry_integrity_tag = std::move(bin_integrity_tag);
-                } else {
-                    __trace_return(rc);
-                }
-            }
+    binary_t bin_integrity_tag;
 
-            {
-                payload pl;
-                pl << new payload_member(_retry_token)  //
-                   << new payload_member(_retry_integrity_tag);
+    if (from_any != dir) {
+        ret = retry_integrity_tag(*this, bin_integrity_tag);
+        if (errorcode_t::success == ret) {
+            _retry_integrity_tag = std::move(bin_integrity_tag);
+        }
+    }
 
-                return pl.write(packet);
-            }
-            return success;
-        })
-        .walk_always([&](return_t rc) -> void { dump(); });
-    ;
-    return pipeline.result();
+    {
+        payload pl;
+        pl << new payload_member(_retry_token)  //
+           << new payload_member(_retry_integrity_tag);
+        pl.write(packet);
+    }
+
+    dump();
+
+    return ret;
 }
 
 void quic_packet_retry::dump() {

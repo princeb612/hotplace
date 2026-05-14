@@ -25,12 +25,12 @@ return_t tls_dump_handshake(tls_session* session, tls_direction_t dir, const byt
     __try2 {
         if (nullptr == session || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace(ret);
+            __leave2;
         }
         {
             if (size - pos < 4) {
                 ret = errorcode_t::no_more;
-                __leave2_trace(ret);
+                __leave2;
             }
 
             tls_hs_type_t hs = (tls_hs_type_t)stream[pos];

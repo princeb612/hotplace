@@ -47,18 +47,16 @@ return_t http3_frame_data::do_read_payload(const byte_t* stream, size_t size, si
 }
 
 return_t http3_frame_data::do_write(binary_t& bin) {
-    function_pipeline<return_t> pipeline;
-
-    pipeline  //
-        .run_trycatch([&]() -> return_t {
-            payload pl;
-            pl << new payload_member(new quic_encoded(uint64(get_type())))       //
-               << new payload_member(new quic_encoded(uint64(_payload.size())))  //
-               << new payload_member(_payload);
-
-            return pl.write(bin);
-        });
-    return pipeline.result();
+    return_t ret = errorcode_t::success;
+    __try2 {
+        payload pl;
+        pl << new payload_member(new quic_encoded(uint64(get_type())))       //
+           << new payload_member(new quic_encoded(uint64(_payload.size())))  //
+           << new payload_member(_payload);
+        pl.write(bin);
+    }
+    __finally2 {}
+    return ret;
 }
 
 return_t http3_frame_data::set_contents(const std::string& contents) {

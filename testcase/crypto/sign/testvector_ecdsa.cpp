@@ -88,7 +88,7 @@ void do_test_ecdsa(const test_vector_nist_cavp_ecdsa_t* entry) {
             auto hint = advisor->hintof_curve(entry->curve);
 
             crypto_sign_builder builder;
-            crypto_sign* sign = builder.set_scheme(crypt_sig_ecdsa).set_digest(entry->alg).build();
+            crypto_sign* sign = builder.set_category(sig_category_ecdsa).set_digest(entry->alg).build();
             if (sign) {
                 ret = sign->verify(pkey, message, signature);
                 _test_case.test(ret, __FUNCTION__, "ECDSA.crypto_sign  %s %s", hint ? hint->name_nist : "", entry->alg.c_str());

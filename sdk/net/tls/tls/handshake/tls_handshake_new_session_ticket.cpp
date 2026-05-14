@@ -40,7 +40,7 @@ return_t tls_handshake_new_session_ticket::do_preprocess(tls_direction_t dir) {
     __try2 {
         if (from_server != dir) {
             ret = errorcode_t::bad_request;
-            __leave2_trace(ret);
+            __leave2;
         }
     }
     __finally2 {}
@@ -61,141 +61,132 @@ return_t tls_handshake_new_session_ticket::do_postprocess(tls_direction_t dir, c
 }
 
 return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == stream) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
 
-    pipeline  //
-        .goahead_if_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
-        .run_trycatch([&]() -> return_t {
-            // tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            auto session = get_session();
-            auto& protection = session->get_tls_protection();
-            auto& secrets = protection.get_secrets();
+        // tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+        auto& secrets = protection.get_secrets();
 
-            /**
-             * RFC 8446 4.6.1.  New Session Ticket Message
-             * struct {
-             *     uint32 ticket_lifetime;
-             *     uint32 ticket_age_add;
-             *     opaque ticket_nonce<0..255>;
-             *     opaque ticket<1..2^16-1>;
-             *     Extension extensions<0..2^16-2>;
-             * } NewSessionTicket;
-             */
+        /**
+         * RFC 8446 4.6.1.  New Session Ticket Message
+         * struct {
+         *     uint32 ticket_lifetime;
+         *     uint32 ticket_age_add;
+         *     opaque ticket_nonce<0..255>;
+         *     opaque ticket<1..2^16-1>;
+         *     Extension extensions<0..2^16-2>;
+         * } NewSessionTicket;
+         */
 
-            uint32 ticket_lifetime = 0;
-            uint32 ticket_age_add = 0;
-            binary_t ticket_nonce;
-            binary_t session_ticket;
-            binary_t ticket_extensions;
+        uint32 ticket_lifetime = 0;
+        uint32 ticket_age_add = 0;
+        binary_t ticket_nonce;
+        binary_t session_ticket;
+        binary_t ticket_extensions;
 
-            {
-                payload pl;
-                pl << new payload_member(uint32(0), true, constexpr_ticket_lifetime)       //
-                   << new payload_member(uint32(0), true, constexpr_ticket_age_add)        //
-                   << new payload_member(uint8(0), constexpr_ticket_nonce_len)             //
-                   << new payload_member(binary_t(), constexpr_ticket_nonce)               //
-                   << new payload_member(uint16(0), true, constexpr_session_ticket_len)    //
-                   << new payload_member(binary_t(), constexpr_session_ticket)             //
-                   << new payload_member(uint16(0), true, constexpr_ticket_extension_len)  //
-                   << new payload_member(binary_t(), constexpr_ticket_extensions);
-                pl.set_reference_value(constexpr_ticket_nonce, constexpr_ticket_nonce_len);
-                pl.set_reference_value(constexpr_session_ticket, constexpr_session_ticket_len);
-                pl.set_reference_value(constexpr_ticket_extensions, constexpr_ticket_extension_len);
+        {
+            payload pl;
+            pl << new payload_member(uint32(0), true, constexpr_ticket_lifetime)       //
+               << new payload_member(uint32(0), true, constexpr_ticket_age_add)        //
+               << new payload_member(uint8(0), constexpr_ticket_nonce_len)             //
+               << new payload_member(binary_t(), constexpr_ticket_nonce)               //
+               << new payload_member(uint16(0), true, constexpr_session_ticket_len)    //
+               << new payload_member(binary_t(), constexpr_session_ticket)             //
+               << new payload_member(uint16(0), true, constexpr_ticket_extension_len)  //
+               << new payload_member(binary_t(), constexpr_ticket_extensions);
+            pl.set_reference_value(constexpr_ticket_nonce, constexpr_ticket_nonce_len);
+            pl.set_reference_value(constexpr_session_ticket, constexpr_session_ticket_len);
+            pl.set_reference_value(constexpr_ticket_extensions, constexpr_ticket_extension_len);
+            pl.read(stream, size, pos);
 
-                auto rc = pl.read(stream, size, pos);
-                if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    __trace_return(rc);
-                }
+            ticket_lifetime = pl.t_value_of<uint32>(constexpr_ticket_lifetime);
+            ticket_age_add = pl.t_value_of<uint32>(constexpr_ticket_age_add);
+            pl.get_binary(constexpr_ticket_nonce, ticket_nonce);
+            pl.get_binary(constexpr_session_ticket, session_ticket);
+            pl.get_binary(constexpr_ticket_extensions, ticket_extensions);
+        }
 
-                ticket_lifetime = pl.t_value_of<uint32>(constexpr_ticket_lifetime);
-                ticket_age_add = pl.t_value_of<uint32>(constexpr_ticket_age_add);
-                pl.get_binary(constexpr_ticket_nonce, ticket_nonce);
-                pl.get_binary(constexpr_session_ticket, session_ticket);
-                pl.get_binary(constexpr_ticket_extensions, ticket_extensions);
-            }
+        {
+            auto& kv = session->get_session_info(from_server).get_keyvalue();
+            kv.set(session_ticket_lifetime, ticket_lifetime);
+            kv.set(session_ticket_age_add, ticket_age_add);
+            secrets.assign(tls_context_new_session_ticket, session_ticket);
 
-            {
-                auto& kv = session->get_session_info(from_server).get_keyvalue();
-                kv.set(session_ticket_lifetime, ticket_lifetime);
-                kv.set(session_ticket_age_add, ticket_age_add);
-                secrets.assign(tls_context_new_session_ticket, session_ticket);
-
-                kv.set(session_ticket_timestamp, time(nullptr));
-            }
+            kv.set(session_ticket_timestamp, time(nullptr));
+        }
 
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
-                    dbs.autoindent(1);
-                    dbs.println(" > %s 0x%08x (%i secs)", constexpr_ticket_lifetime, ticket_lifetime, ticket_lifetime);
-                    dbs.println(" > %s 0x%08x", constexpr_ticket_age_add, ticket_age_add);
-                    dbs.println(" > %s %s", constexpr_ticket_nonce, base16_encode(ticket_nonce).c_str());
-                    dbs.println(" > %s %s", constexpr_session_ticket, base16_encode(session_ticket).c_str());
-                    if (check_trace_level(loglevel_debug)) {
-                        dump_memory(session_ticket, &dbs, 16, 3, 0x0, dump_notrunc);
-                    }
-                    dbs.println(" > %s 0x%zx (%zi)", constexpr_ticket_extensions, ticket_extensions.size(), ticket_extensions.size());
-                    dump_memory(ticket_extensions, &dbs, 16, 3, 0x0, dump_notrunc);
-                    dbs.autoindent(0);
-                });
-            }
+        if (istraceable(trace_category_net)) {
+            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                dbs.autoindent(1);
+                dbs.println(" > %s 0x%08x (%i secs)", constexpr_ticket_lifetime, ticket_lifetime, ticket_lifetime);
+                dbs.println(" > %s 0x%08x", constexpr_ticket_age_add, ticket_age_add);
+                dbs.println(" > %s %s", constexpr_ticket_nonce, base16_encode(ticket_nonce).c_str());
+                dbs.println(" > %s %s", constexpr_session_ticket, base16_encode(session_ticket).c_str());
+                if (check_trace_level(loglevel_debug)) {
+                    dump_memory(session_ticket, &dbs, 16, 3, 0x0, dump_notrunc);
+                }
+                dbs.println(" > %s 0x%zx (%zi)", constexpr_ticket_extensions, ticket_extensions.size(), ticket_extensions.size());
+                dump_memory(ticket_extensions, &dbs, 16, 3, 0x0, dump_notrunc);
+                dbs.autoindent(0);
+            });
+        }
 #endif
 
-            if (false == ticket_extensions.empty()) {
-                tls_extensions extensions;
-                extensions.read(this, dir, ticket_extensions);
-            }
-
-            return success;
-        });
-    return pipeline.result();
+        if (false == ticket_extensions.empty()) {
+            tls_extensions extensions;
+            extensions.read(this, dir, ticket_extensions);
+        }
+    }
+    __finally2 {}
+    return ret;
 }
 
 return_t tls_handshake_new_session_ticket::do_write_body(tls_direction_t dir, binary_t& bin) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+        auto& secrets = protection.get_secrets();
+        uint32 ticket_lifetime = 0;
+        uint32 ticket_age_add = 0;
+        binary_t ticket_nonce;
+        binary_t session_ticket;
+        binary_t ticket_extensions;
+        openssl_prng prng;
 
-    pipeline  //
-        .run_trycatch([&]() -> return_t {
-            auto session = get_session();
-            auto& protection = session->get_tls_protection();
-            auto& secrets = protection.get_secrets();
-            uint32 ticket_lifetime = 0;
-            uint32 ticket_age_add = 0;
-            binary_t ticket_nonce;
-            binary_t session_ticket;
-            binary_t ticket_extensions;
-            openssl_prng prng;
+        {
+            ticket_lifetime = 3 * 60 * 60;             // seconds as a 32-bit unsigned integer, MUST NOT use any value greater than 7 days.
+            prng.random((byte_t*)&ticket_age_add, 4);  // random 32-bit value
+            ticket_nonce.resize(2);                    // nonce
+            prng.random(session_ticket, 0xB2);         // PSK identity
 
-            {
-                ticket_lifetime = 3 * 60 * 60;             // seconds as a 32-bit unsigned integer, MUST NOT use any value greater than 7 days.
-                prng.random((byte_t*)&ticket_age_add, 4);  // random 32-bit value
-                ticket_nonce.resize(2);                    // nonce
-                prng.random(session_ticket, 0xB2);         // PSK identity
-
-                auto& kv = session->get_session_info(from_server).get_keyvalue();
-                kv.set(session_ticket_lifetime, ticket_lifetime);
-                kv.set(session_ticket_age_add, ticket_age_add);
-                secrets.assign(tls_context_new_session_ticket, session_ticket);
-            }
-
-            {
-                payload pl;
-                pl << new payload_member(uint32(ticket_lifetime), true, constexpr_ticket_lifetime)                //
-                   << new payload_member(uint32(ticket_age_add), true, constexpr_ticket_age_add)                  //
-                   << new payload_member(uint8(ticket_nonce.size()), constexpr_ticket_nonce_len)                  //
-                   << new payload_member(ticket_nonce, constexpr_ticket_nonce)                                    //
-                   << new payload_member(uint16(session_ticket.size()), true, constexpr_session_ticket_len)       //
-                   << new payload_member(session_ticket, constexpr_session_ticket)                                //
-                   << new payload_member(uint16(ticket_extensions.size()), true, constexpr_ticket_extension_len)  //
-                   << new payload_member(ticket_extensions, constexpr_ticket_extensions);
-
-                return pl.write(bin);
-            }
-
-            return success;
-        });
-    return pipeline.result();
+            auto& kv = session->get_session_info(from_server).get_keyvalue();
+            kv.set(session_ticket_lifetime, ticket_lifetime);
+            kv.set(session_ticket_age_add, ticket_age_add);
+            secrets.assign(tls_context_new_session_ticket, session_ticket);
+        }
+        {
+            payload pl;
+            pl << new payload_member(uint32(ticket_lifetime), true, constexpr_ticket_lifetime)                //
+               << new payload_member(uint32(ticket_age_add), true, constexpr_ticket_age_add)                  //
+               << new payload_member(uint8(ticket_nonce.size()), constexpr_ticket_nonce_len)                  //
+               << new payload_member(ticket_nonce, constexpr_ticket_nonce)                                    //
+               << new payload_member(uint16(session_ticket.size()), true, constexpr_session_ticket_len)       //
+               << new payload_member(session_ticket, constexpr_session_ticket)                                //
+               << new payload_member(uint16(ticket_extensions.size()), true, constexpr_ticket_extension_len)  //
+               << new payload_member(ticket_extensions, constexpr_ticket_extensions);
+            pl.write(bin);
+        }
+    }
+    __finally2 {}
+    return ret;
 }
 
 }  // namespace net

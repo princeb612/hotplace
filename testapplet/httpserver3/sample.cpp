@@ -73,9 +73,9 @@ int main(int argc, char** argv) {
     }
     if (option.trial) {
         // enable TLS 1.2 TLS_ECDHE_RSA ciphersuites
-        load_certificate("rsa.crt", "rsa.key", nullptr);
+        load_certificate("server-rsa.crt", "server-rsa.key", nullptr);
         // enable TLS 1.2 TLS_ECDHE_ECDSA ciphersuites
-        load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
+        load_certificate("server-ecdsa.crt", "server-ecdsa.key", nullptr);
     }
 
     if (option.run) {

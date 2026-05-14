@@ -483,9 +483,9 @@ void testcase_construct_quic() {
         auto tlsadvisor = tls_advisor::get_instance();
         tlsadvisor->enable_alpn("h3");
 
-        load_certificate("rsa.crt", "rsa.key", nullptr);
-        load_certificate("ecdsa.crt", "ecdsa.key", nullptr);
-        load_certificate("mldsa.crt", "mldsa.key", nullptr);
+        load_certificate("server-rsa.crt", "server-rsa.key", nullptr);
+        load_certificate("server-ecdsa.crt", "server-ecdsa.key", nullptr);
+        load_certificate("server-mldsa.crt", "server-mldsa.key", nullptr);
 
         std::list<binary_t> bins;
         tls_session session_client(session_type_quic);

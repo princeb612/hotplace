@@ -73,11 +73,11 @@ return_t tls_record_alert::read_plaintext(tls_direction_t dir, const byte_t* str
     __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace(ret);
+            __leave2;
         }
         if (pos + 2 > size) {
             ret = errorcode_t::bad_data;
-            __leave2_trace(ret);
+            __leave2;
         }
 
         uint8 level = 0;

@@ -24,7 +24,7 @@ return_t tls_dump_record(tls_session* session, tls_direction_t dir, const byte_t
     __try2 {
         if (nullptr == session || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2_trace(ret);
+            __leave2;
         }
 
         {

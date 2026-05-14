@@ -8,13 +8,13 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_sign.hpp>
 
 namespace hotplace {
 namespace crypto {
 
-crypto_sign_builder::crypto_sign_builder() : _scheme(crypt_sig_dgst), _hashalg(0) {}
+crypto_sign_builder::crypto_sign_builder() : _category(sig_category_dgst), _hashalg(0) {}
 
 crypto_sign* crypto_sign_builder::build() {
     crypto_sign* obj = nullptr;
@@ -33,108 +33,59 @@ crypto_sign* crypto_sign_builder::build() {
             __leave2;
         }
 #endif
-        switch (get_scheme()) {
-            case crypt_sig_dgst: {
+        switch (get_category()) {
+            case sig_category_dgst: {
                 obj = new crypto_sign_digest(get_digest());
             } break;
-            case crypt_sig_hmac: {
+            case sig_category_hmac: {
                 obj = new crypto_sign_hmac(get_digest());
             } break;
-            case crypt_sig_rsassa_pkcs15: {
+            case sig_category_rsassa_pkcs15: {
                 obj = new crypto_sign_rsa_pkcs1(get_digest());
             } break;
-            case crypt_sig_rsassa_pss: {
+            case sig_category_rsassa_pss: {
                 obj = new crypto_sign_rsa_pss(get_digest());
             } break;
-            case crypt_sig_ecdsa: {
+            case sig_category_ecdsa: {
                 obj = new crypto_sign_ecdsa(get_digest());
             } break;
-            case crypt_sig_eddsa: {
+            case sig_category_eddsa: {
                 obj = new crypto_sign_eddsa(get_digest());
             } break;
-            case crypt_sig_dsa: {
+            case sig_category_dsa: {
                 obj = new crypto_sign_dsa(get_digest());
             } break;
-            case crypt_sig_mldsa: {
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+            case sig_category_mldsa: {
                 obj = new crypto_sign_mldsa();
-            }
-            default:
-                break;
+            } break;
+#endif
+            case sig_category_brainpool: {
+                obj = new crypto_sign_ecdsa(get_digest());
+            } break;
+            default: {
+            } break;
         }
         if (obj) {
-            obj->set_scheme(get_scheme());
+            obj->set_category(get_category());
         }
     }
     __finally2 {}
     return obj;
 }
 
-crypt_sig_type_t crypto_sign_builder::get_scheme() { return _scheme; }
+sig_category_t crypto_sign_builder::get_category() { return _category; }
 
-crypto_sign_builder& crypto_sign_builder::set_scheme(crypt_sig_type_t scheme) {
-    _scheme = scheme;
+crypto_sign_builder& crypto_sign_builder::set_category(sig_category_t category) {
+    _category = category;
     return *this;
 }
 
 crypto_sign_builder& crypto_sign_builder::set_tls_sign_scheme(uint16 scheme) {
-    switch (scheme) {
-        case tls_signature_scheme_rsa_pkcs1_sha256: /* 0x0401 */ {
-            set_scheme(crypt_sig_rsassa_pkcs15).set_digest(sha2_256);
-        } break;
-        case tls_signature_scheme_rsa_pkcs1_sha384: /* 0x0501 */ {
-            set_scheme(crypt_sig_rsassa_pkcs15).set_digest(sha2_384);
-        } break;
-        case tls_signature_scheme_rsa_pkcs1_sha512: /* 0x0601 */ {
-            set_scheme(crypt_sig_rsassa_pkcs15).set_digest(sha2_512);
-        } break;
-        case tls_signature_scheme_ecdsa_secp256r1_sha256: /* 0x0403 */ {
-            set_scheme(crypt_sig_ecdsa).set_digest(sha2_256);
-        } break;
-        case tls_signature_scheme_ecdsa_secp384r1_sha384: /* 0x0503 */ {
-            set_scheme(crypt_sig_ecdsa).set_digest(sha2_384);
-        } break;
-        case tls_signature_scheme_ecdsa_secp521r1_sha512: /* 0x0603 */ {
-            set_scheme(crypt_sig_ecdsa).set_digest(sha2_512);
-        } break;
-        case tls_signature_scheme_rsa_pss_rsae_sha256: /* 0x0804 */ {
-            set_scheme(crypt_sig_rsassa_pss).set_digest(sha2_256);
-        } break;
-        case tls_signature_scheme_rsa_pss_rsae_sha384: /* 0x0805 */ {
-            set_scheme(crypt_sig_rsassa_pss).set_digest(sha2_384);
-        } break;
-        case tls_signature_scheme_rsa_pss_rsae_sha512: /* 0x0806 */ {
-            set_scheme(crypt_sig_rsassa_pss).set_digest(sha2_512);
-        } break;
-        case tls_signature_scheme_ed25519: /* 0x0807 */ {
-            set_scheme(crypt_sig_eddsa);
-        } break;
-        case tls_signature_scheme_ed448: /* 0x0808 */ {
-            set_scheme(crypt_sig_eddsa);
-        } break;
-        case tls_signature_scheme_rsa_pss_pss_sha256: /* 0x0809 */ {
-            set_scheme(crypt_sig_rsassa_pss).set_digest(sha2_256);
-        } break;
-        case tls_signature_scheme_rsa_pss_pss_sha384: /* 0x080a */ {
-            set_scheme(crypt_sig_rsassa_pss).set_digest(sha2_384);
-        } break;
-        case tls_signature_scheme_rsa_pss_pss_sha512: /* 0x080b */ {
-            set_scheme(crypt_sig_rsassa_pss).set_digest(sha2_512);
-        } break;
-        case tls_signature_scheme_rsa_pkcs1_sha1: /* 0x0201 */ {
-            set_scheme(crypt_sig_rsassa_pkcs15).set_digest(sha1);
-        } break;
-        case tls_signature_scheme_ecdsa_sha1: /* 0x0203 */ {
-            set_scheme(crypt_sig_ecdsa).set_digest(sha1);
-        } break;
-        case tls_signature_scheme_mldsa44: /* 0x0904 */ {
-            set_scheme(crypt_sig_mldsa).set_digest(hash_alg_unknown);
-        } break;
-        case tls_signature_scheme_mldsa65: /* 0x0905 */ {
-            set_scheme(crypt_sig_mldsa).set_digest(hash_alg_unknown);
-        } break;
-        case tls_signature_scheme_mldsa87: /* 0x0906 */ {
-            set_scheme(crypt_sig_mldsa).set_digest(hash_alg_unknown);
-        } break;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    auto hint = advisor->hintof_sigscheme(scheme);
+    if (hint) {
+        set_category(hint->category).set_digest(hint->dgst);
     }
     return *this;
 }
@@ -161,11 +112,11 @@ crypto_sign_builder& crypto_sign_builder::set_digest(const std::string& hashalg)
 
 crypto_sign_builder& crypto_sign_builder::set_scheme(jws_t type) {
     // jws_t jws_hs256, ...
-    // crypt_sig_t sig_hs256
+    // signature_t sig_hs256
     auto advisor = crypto_advisor::get_instance();
     auto hint = advisor->hintof_jose_signature(type);
     if (hint) {
-        set_scheme(hint->sty).set_digest(hint->alg);
+        set_category(hint->category).set_digest(hint->alg);
     }
     return *this;
 }

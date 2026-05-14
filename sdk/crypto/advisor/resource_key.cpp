@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/io/system/sdk.hpp>
 #include <iostream>
 
@@ -47,6 +47,10 @@ const hint_kty_name_t hint_kty_names[] = {
     {
         crypto_kty_t::kty_mlkem,
         "ML-KEM",
+    },
+    {
+        crypto_kty_t::kty_mldsa,
+        "MLDSA",
     },
 };
 

@@ -13,7 +13,7 @@
 #include <hotplace/sdk/base/pattern/aho_corasick.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/net/tls/quic/types.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_alpn.hpp>
@@ -529,7 +529,7 @@ std::string tls_advisor::nameof_direction(tls_direction_t dir, uint32 flag) {
     return value;
 }
 
-crypto_key& tls_advisor::get_keys() { return _keys; }
+crypto_key& tls_advisor::get_certs() { return _certs; }
 
 const EVP_PKEY* tls_advisor::get_key(tls_session* session, const char* kid) {
     const EVP_PKEY* ret_value = nullptr;
@@ -556,7 +556,7 @@ const EVP_PKEY* tls_advisor::get_key(tls_session* session, const char* kid) {
 
         ret_value = protection.get_key().find(kid, kty);
         if (nullptr == ret_value) {
-            ret_value = get_keys().find(kid, kty);
+            ret_value = get_certs().find(kid, kty);
         }
     }
     __finally2 {}
@@ -588,7 +588,7 @@ const X509* tls_advisor::get_cert(tls_session* session, const char* kid) {
 
         ret_value = protection.get_key().find_x509(kid, kty);
         if (nullptr == ret_value) {
-            ret_value = get_keys().find_x509(kid, kty);
+            ret_value = get_certs().find_x509(kid, kty);
         }
     }
     __finally2 {}
@@ -697,12 +697,12 @@ return_t tls_advisor::set_default_tls_groups() {
     _groups.insert(tls_group_x25519);
     _groups.insert(tls_group_secp256r1);
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
-    // _groups.insert(tls_group_mlkem512);
-    // _groups.insert(tls_group_mlkem768);
-    // _groups.insert(tls_group_mlkem1024);
-    // _groups.insert(tls_group_x25519mlkem768);  // chrome
-    // _groups.insert(tls_group_secp256r1mlkem768);
-    // _groups.insert(tls_group_secp384r1mlkem1024);
+    _groups.insert(tls_group_mlkem512);
+    _groups.insert(tls_group_mlkem768);
+    _groups.insert(tls_group_mlkem1024);
+    _groups.insert(tls_group_x25519mlkem768);  // chrome
+    _groups.insert(tls_group_secp256r1mlkem768);
+    _groups.insert(tls_group_secp384r1mlkem1024);
 #endif
     return ret;
 }

@@ -12,7 +12,7 @@
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
@@ -168,7 +168,7 @@ return_t cbor_object_signing_encryption::dosign(cose_context_t* handle, crypto_k
         std::string kid = layer->get_kid();
         binary_t signature;
 
-        crypt_sig_t sig = advisor->sigof(alg);
+        signature_t sig = advisor->sigof(alg);
         const hint_cose_algorithm_t* hint = advisor->hintof_cose_algorithm(alg);
         if (nullptr == hint) {
             ret = errorcode_t::bad_request;

@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 
 namespace hotplace {
@@ -244,17 +244,17 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, const char* alg) {
     return test;
 }
 
-jws_t crypto_advisor::sigof(crypt_sig_t sig) {
+jws_t crypto_advisor::sigof(signature_t sig) {
     jws_t type = jws_t::jws_unknown;
-    t_maphint<crypt_sig_t, jws_t> hint(_sig2jws_map);
+    t_maphint<signature_t, jws_t> hint(_sig2jws_map);
 
     hint.find(sig, &type);
     return type;
 }
 
-crypt_sig_t crypto_advisor::sigof(jws_t sig) {
-    crypt_sig_t type = crypt_sig_t::sig_unknown;
-    t_maphint<jws_t, crypt_sig_t> hint(_jws2sig_map);
+signature_t crypto_advisor::sigof(jws_t sig) {
+    signature_t type = signature_t::sig_unknown;
+    t_maphint<jws_t, signature_t> hint(_jws2sig_map);
 
     hint.find(sig, &type);
     return type;

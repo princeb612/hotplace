@@ -11,7 +11,7 @@
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
 #include <hotplace/sdk/net/tls/tls_protection.hpp>
@@ -29,7 +29,7 @@ protection_context::protection_context(const protection_context& other) {
     _supported_versions = other._supported_versions;
     _ec_point_formats = other._ec_point_formats;
     _keyshare_groups = other._keyshare_groups;
-    _keyshare_groups2 = other._keyshare_groups2;
+    _keyshare_set = other._keyshare_set;
     _cipher_suite = other._cipher_suite;
 }
 
@@ -41,7 +41,7 @@ protection_context::protection_context(protection_context&& other) {
     _supported_versions = std::move(other._supported_versions);
     _ec_point_formats = std::move(other._ec_point_formats);
     _keyshare_groups = std::move(other._keyshare_groups);
-    _keyshare_groups2 = std::move(other._keyshare_groups2);
+    _keyshare_set = std::move(other._keyshare_set);
     _cipher_suite = other._cipher_suite;
 }
 
@@ -78,7 +78,7 @@ void protection_context::add_ec_point_format(uint8 epf) { _ec_point_formats.push
 
 void protection_context::add_keyshare_group(uint16 group) {
     _keyshare_groups.push_back(group);
-    _keyshare_groups2.insert(group);
+    _keyshare_set.insert(group);
 }
 
 void protection_context::clear_cipher_suites() { _cipher_suites.clear(); }
@@ -93,7 +93,7 @@ void protection_context::clear_ec_point_formats() { _ec_point_formats.clear(); }
 
 void protection_context::clear_keyshare_groups() {
     _keyshare_groups.clear();
-    _keyshare_groups2.clear();
+    _keyshare_set.clear();
 }
 
 void protection_context::for_each_cipher_suites(std::function<void(uint16, bool*)> fn) const {
@@ -148,7 +148,7 @@ void protection_context::for_each_ec_point_formats(std::function<void(uint8, boo
 
 void protection_context::for_each_keyshare_groups(std::function<void(uint16, bool*)> fn) const {
     bool cont = false;
-    for (auto item : _keyshare_groups2) {
+    for (auto item : _keyshare_set) {
         fn(item, &cont);
         if (cont) {
             break;
@@ -182,7 +182,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
 
         std::set<uint16> specs;
         std::set<crypto_kty_t> ktypes_set;
-        // std::map<uint16, uint16> tlsversion_map;
+        std::set<uint32> certtypes_set;
         std::map<uint16, std::list<uint16>> cs_map;
 
         // TLS specification
@@ -194,11 +194,22 @@ return_t protection_context::select_from(const protection_context& other, tls_se
 
         {
             // check certificate type(s), see load_certificate
-            auto& keys = tlsadvisor->get_keys();
+            auto& keys = tlsadvisor->get_certs();
             auto lambda = [&](crypto_key_object* k, void* param) -> void {
                 auto pkey = k->get_pkey();
-                auto kty = ktyof_evp_pkey(pkey);
-                ktypes_set.insert(kty);
+                hint_pkey_t hint;
+                advisor->hintof_pkey(pkey, hint);
+                ktypes_set.insert(hint.kty);  // EC, RSA, DH, OKP, MLDSA
+                certtypes_set.insert(hint.nid);
+#if defined DEBUG
+                if (istraceable(trace_category_net)) {
+                    trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                        std::string wellknown = namesof(&hint);
+                        dbs.println(" ! " ANSI_ESCAPE "1;33m#certificate 0x%04x(%04u) %-7s %-5s %s" ANSI_ESCAPE "0m", hint.nid, hint.nid, k->get_desc().get_kid_cstr(),
+                                    hint.hint_kty->name, wellknown.c_str());
+                    });
+                }
+#endif
             };
             keys.for_each(lambda);
         }
@@ -243,8 +254,9 @@ return_t protection_context::select_from(const protection_context& other, tls_se
                     }
 #if defined DEBUG
                     if (istraceable(trace_category_net)) {
-                        trace_debug_event(trace_category_net, trace_event_tls_protection,
-                                          [&](basic_stream& dbs) -> void { dbs.println(" ? " ANSI_ESCAPE "1;33m# 0x%02x %s" ANSI_ESCAPE "0m", cs, hint->name_iana); });
+                        trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                            dbs.println(" ? " ANSI_ESCAPE "1;33m#ciphersuite 0x%04x(%04u) %s" ANSI_ESCAPE "0m", cs, cs, hint->name_iana);
+                        });
                     }
 #endif
                     cs_map[hint->spec].push_back(cs);
@@ -265,8 +277,10 @@ return_t protection_context::select_from(const protection_context& other, tls_se
 #if defined DEBUG
                     if (istraceable(trace_category_net)) {
                         auto hint = tlsadvisor->hintof_cipher_suite(cs);
-                        trace_debug_event(trace_category_net, trace_event_tls_protection,
-                                          [&](basic_stream& dbs) -> void { dbs.println(" ! " ANSI_ESCAPE "1;33m# 0x%02x %s" ANSI_ESCAPE "0m", cs, hint->name_iana); });
+                        trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                            dbs.println(" ! " ANSI_ESCAPE "1;33m#supported version 0x%04x" ANSI_ESCAPE "0m", ver);
+                            dbs.println(" ! " ANSI_ESCAPE "1;33m#ciphersuite 0x%04x(%04u) %s" ANSI_ESCAPE "0m", cs, cs, hint->name_iana);
+                        });
                     }
 #endif
                     break;
@@ -295,8 +309,21 @@ return_t protection_context::select_from(const protection_context& other, tls_se
         }
 
         {
-            // copy
-            _signature_algorithms = other._signature_algorithms;
+            other.for_each_signature_algorithms([&](uint16 scheme, bool*) -> void {
+                auto hint = advisor->hintof_sigscheme(scheme);
+                if (hint && (tls_flag_support & hint->flags)) {
+                    if (certtypes_set.end() != certtypes_set.find(hint->nid)) {
+                        _signature_algorithms.push_back(scheme);
+#if defined DEBUG
+                        if (istraceable(trace_category_net)) {
+                            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                                dbs.println(" ! " ANSI_ESCAPE "1;33m#signature 0x%04x(%04u) %s" ANSI_ESCAPE "0m", scheme, scheme, hint->name);
+                            });
+                        }
+#endif
+                    }
+                }
+            });
         }
 
         {
@@ -334,11 +361,11 @@ return_t protection_context::select_from(const protection_context& other, tls_se
                     } else {
                         _keyshare_groups.push_back(group);
                     }
-                    _keyshare_groups2.insert(group);
+                    _keyshare_set.insert(group);
 #if defined DEBUG
                     if (istraceable(trace_category_net)) {
                         trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
-                            dbs.println(" - " ANSI_ESCAPE "1;33m# 0x%04x %s" ANSI_ESCAPE "0m", group, tlsadvisor->nameof_group(group).c_str());
+                            dbs.println(" - " ANSI_ESCAPE "1;33m#keyshare 0x%04x(%04u) %s" ANSI_ESCAPE "0m", group, group, tlsadvisor->nameof_group(group).c_str());
                         });
                     }
 #endif

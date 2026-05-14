@@ -8,13 +8,13 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 
 namespace hotplace {
 namespace crypto {
 
-hash_algorithm_t crypto_advisor::get_algorithm(crypt_sig_t sig) {
+hash_algorithm_t crypto_advisor::get_algorithm(signature_t sig) {
     hash_algorithm_t ret_value = hash_algorithm_t::hash_alg_unknown;
     const hint_signature_t* item = nullptr;
     t_maphint<uint32, const hint_signature_t*> hint(_crypt_sig_map);
@@ -38,7 +38,7 @@ hash_algorithm_t crypto_advisor::get_algorithm(jws_t sig) {
     return ret_value;
 }
 
-const hint_signature_t* crypto_advisor::hintof_signature(crypt_sig_t sig) {
+const hint_signature_t* crypto_advisor::hintof_signature(signature_t sig) {
     const hint_signature_t* item = nullptr;
     t_maphint<uint32, const hint_signature_t*> hint(_crypt_sig_map);
 
@@ -46,7 +46,7 @@ const hint_signature_t* crypto_advisor::hintof_signature(crypt_sig_t sig) {
     return item;
 }
 
-bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, crypt_sig_t sig) {
+bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, signature_t sig) {
     bool test = false;
 
     __try2 {
@@ -113,7 +113,7 @@ uint16 crypto_advisor::unitsizeof_ecdsa(hash_algorithm_t alg) {
 
 uint16 crypto_advisor::sizeof_ecdsa(hash_algorithm_t alg) { return unitsizeof_ecdsa(alg) << 1; }
 
-uint16 crypto_advisor::sizeof_ecdsa(crypt_sig_t sig) {
+uint16 crypto_advisor::sizeof_ecdsa(signature_t sig) {
     uint16 ret_value = 0;
     switch (sig) {
         case sig_sha1:
@@ -137,10 +137,18 @@ uint16 crypto_advisor::sizeof_ecdsa(crypt_sig_t sig) {
     return ret_value;
 }
 
+// hint_sigscheme_t
+const hint_sigscheme_t* crypto_advisor::hintof_sigscheme(uint16 scheme) {
+    const hint_sigscheme_t* item = nullptr;
+    t_maphint<uint16, const hint_sigscheme_t*> hint(_hint_sigscheme_map);
+    hint.find(scheme, &item);
+    return item;
+}
+
 // hint_signature_t
 
-crypt_sig_t typeof_sig(const hint_signature_t* hint) {
-    crypt_sig_t type = sig_unknown;
+signature_t typeof_sig(const hint_signature_t* hint) {
+    signature_t type = sig_unknown;
     if (hint) {
         type = hint->sig;
     }

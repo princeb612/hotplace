@@ -41,63 +41,57 @@ quic_frame_connection_close::quic_frame_connection_close(tls_session* session) :
 quic_frame_connection_close::~quic_frame_connection_close() {}
 
 return_t quic_frame_connection_close::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    function_pipeline<return_t> pipeline;
-
-    pipeline  //
-        .goahead_if_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
-        .run_trycatch([&]() -> return_t {
+    return_t ret = errorcode_t::success;
+    __try2 {
 #if defined DEBUG
-            uint64 error_code = 0;
-            uint64 frame_type = 0;
-            binary_t reason_phase;
+        uint64 error_code = 0;
+        uint64 frame_type = 0;
+        binary_t reason_phase;
 #endif
-            bool is_0x1c = quic_frame_type_connection_close == get_type();
+        bool is_0x1c = quic_frame_type_connection_close == get_type();
 
-            {
-                payload pl;
-                pl << new payload_member(new quic_encoded(uint64(0)), constexpr_error_code)                      //
-                   << new payload_member(new quic_encoded(uint64(0)), constexpr_frametype, constexpr_frametype)  //
-                   << new payload_member(new quic_encoded(binary_t()), constexpr_reason_phase);
-
-                pl.set_reference_value(constexpr_reason_phase, constexpr_reason_phase_len);
-                pl.set_group(constexpr_frametype, is_0x1c);
-                auto rc = pl.read(stream, size, pos);
-                if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    __trace_return(rc);
-                }
+        {
+            payload pl;
+            pl << new payload_member(new quic_encoded(uint64(0)), constexpr_error_code)                      //
+               << new payload_member(new quic_encoded(uint64(0)), constexpr_frametype, constexpr_frametype)  //
+               << new payload_member(new quic_encoded(binary_t()), constexpr_reason_phase);
+            pl.set_reference_value(constexpr_reason_phase, constexpr_reason_phase_len);
+            pl.set_group(constexpr_frametype, is_0x1c);
+            pl.read(stream, size, pos);
 
 #if defined DEBUG
-                error_code = pl.t_value_of<uint64>(constexpr_error_code);
+            error_code = pl.t_value_of<uint64>(constexpr_error_code);
+            if (is_0x1c) {
+                frame_type = pl.t_value_of<uint64>(constexpr_frametype);
+            }
+            pl.get_binary(constexpr_reason_phase, reason_phase);
+#endif
+        }
+
+#if defined DEBUG
+        if (istraceable(trace_category_net)) {
+            trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
+                dbs.println("   > %s %I64i %s", constexpr_error_code, error_code, tlsadvisor->nameof_quic_error(error_code).c_str());
                 if (is_0x1c) {
-                    frame_type = pl.t_value_of<uint64>(constexpr_frametype);
+                    dbs.println("   > %s %I64i", constexpr_frametype, frame_type);
                 }
-                pl.get_binary(constexpr_reason_phase, reason_phase);
+                dbs.println("   > %s (%zi)", constexpr_reason_phase, reason_phase.size());
+                if (check_trace_level(loglevel_debug)) {
+                    dump_memory(reason_phase, &dbs, 16, 5, 0x0, dump_notrunc);
+                }
+            });
+        }
 #endif
-            }
-
-#if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
-                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                    dbs.println("   > %s %I64i %s", constexpr_error_code, error_code, tlsadvisor->nameof_quic_error(error_code).c_str());
-                    if (is_0x1c) {
-                        dbs.println("   > %s %I64i", constexpr_frametype, frame_type);
-                    }
-                    dbs.println("   > %s (%zi)", constexpr_reason_phase, reason_phase.size());
-                    if (check_trace_level(loglevel_debug)) {
-                        dump_memory(reason_phase, &dbs, 16, 5, 0x0, dump_notrunc);
-                    }
-                });
-            }
-#endif
-
-            return success;
-        });
-    return pipeline.result();
+    }
+    __finally2 {}
+    return ret;
 }
 
-return_t quic_frame_connection_close::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }
+return_t quic_frame_connection_close::do_write_body(tls_direction_t dir, binary_t& bin) {
+    return_t ret = errorcode_t::success;
+    return ret;
+}
 
 }  // namespace net
 }  // namespace hotplace

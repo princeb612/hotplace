@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 
@@ -299,7 +299,7 @@ const EVP_PKEY* crypto_key::select(jwa_t alg, crypto_use_t use, bool up_ref) {
     return ret_value;
 }
 
-const EVP_PKEY* crypto_key::select(crypt_sig_t sig, crypto_use_t use, bool up_ref) {
+const EVP_PKEY* crypto_key::select(signature_t sig, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     critical_section_guard guard(_lock);
@@ -311,7 +311,7 @@ const EVP_PKEY* crypto_key::select(crypt_sig_t sig, crypto_use_t use, bool up_re
 
         for (auto& pair : _key_map) {
             crypto_key_object& keyobj = pair.second;
-            bool test = find_discriminant<crypt_sig_t>(keyobj, nullptr, sig, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use, SEARCH_ALG);
+            bool test = find_discriminant<signature_t>(keyobj, nullptr, sig, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use, SEARCH_ALG);
             if (test) {
                 ret_value = keyobj.get_pkey();
                 break;
@@ -449,7 +449,7 @@ const EVP_PKEY* crypto_key::select(std::string& kid, jwa_t alg, crypto_use_t use
     return ret_value;
 }
 
-const EVP_PKEY* crypto_key::select(std::string& kid, crypt_sig_t sig, crypto_use_t use, bool up_ref) {
+const EVP_PKEY* crypto_key::select(std::string& kid, signature_t sig, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     critical_section_guard guard(_lock);
@@ -463,7 +463,7 @@ const EVP_PKEY* crypto_key::select(std::string& kid, crypt_sig_t sig, crypto_use
 
         for (auto& pair : _key_map) {
             crypto_key_object& keyobj = pair.second;
-            bool test = find_discriminant<crypt_sig_t>(keyobj, nullptr, sig, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use, SEARCH_ALG);
+            bool test = find_discriminant<signature_t>(keyobj, nullptr, sig, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use, SEARCH_ALG);
             if (test) {
                 ret_value = keyobj.get_pkey();
                 kid = keyobj.get_desc().get_kid_str();
@@ -755,7 +755,7 @@ const EVP_PKEY* crypto_key::find(const char* kid, jwa_t alg, crypto_use_t use, b
     return ret_value;
 }
 
-const EVP_PKEY* crypto_key::find(const char* kid, crypt_sig_t alg, crypto_use_t use, bool up_ref) {
+const EVP_PKEY* crypto_key::find(const char* kid, signature_t alg, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     critical_section_guard guard(_lock);

@@ -55,6 +55,8 @@ void test_floating_point() {
 
         bs.vaprintf(fmt.c_str(), va);
         _logger->writeln(bs);
+        _logger->writeln("precision(32) -> %s", res.fstr(32).c_str());
+        _logger->writeln("c_str()       -> %s", res.str().c_str());
         _test_case.assert(res == expect, __FUNCTION__, "%s", bs.c_str());
     };
 

@@ -18,8 +18,8 @@
 #include <hotplace/sdk/io.hpp>
 
 /* basic */
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/cipher_encrypt.hpp>
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_aead.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_cbc_hmac.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_encrypt.hpp>

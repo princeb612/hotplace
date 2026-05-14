@@ -14,8 +14,8 @@
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/cipher_encrypt.hpp>
-#include <hotplace/sdk/crypto/basic/crypto_advisor.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/record/dtls13_ciphertext.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record_ack.hpp>
@@ -51,109 +51,101 @@ tls_handshakes& dtls13_ciphertext::get_handshakes() { return _handshakes; }
 tls_records& dtls13_ciphertext::get_records() { return _records; }
 
 return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    function_pipeline<return_t> pipeline;
-    size_t recpos = pos;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        size_t recpos = pos;
 
-    pipeline  //
-        .goahead_if_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
-        .run_trycatch([&]() -> return_t {
-            uint8 uhdr = 0;
-            binary_t connection_id;
-            uint16 sequence = 0;
-            uint8 sequence_len = 0;
-            // size_t offset_sequence = 0;
-            uint16 len = 0;
-            binary_t encdata;
-            size_t offset_encdata = 0;
-            {
-                payload pl;
-                pl << new payload_member(uint8(0), constexpr_unified_header)                          //
-                   << new payload_member(binary_t(), constexpr_connection_id, constexpr_group_c)      // cid    C:1
-                   << new payload_member(uint16(0), true, constexpr_sequence16, constexpr_group_s16)  // seq 16 S:1
-                   << new payload_member(uint8(0), constexpr_sequence8, constexpr_group_s8)           // seq 8  S:0
-                   << new payload_member(uint16(0), true, constexpr_len, constexpr_group_l)           // len    L:1
-                   << new payload_member(binary_t(), constexpr_encdata);
+        uint8 uhdr = 0;
+        binary_t connection_id;
+        uint16 sequence = 0;
+        uint8 sequence_len = 0;
+        // size_t offset_sequence = 0;
+        uint16 len = 0;
+        binary_t encdata;
+        size_t offset_encdata = 0;
+        {
+            payload pl;
+            pl << new payload_member(uint8(0), constexpr_unified_header)                          //
+               << new payload_member(binary_t(), constexpr_connection_id, constexpr_group_c)      // cid    C:1
+               << new payload_member(uint16(0), true, constexpr_sequence16, constexpr_group_s16)  // seq 16 S:1
+               << new payload_member(uint8(0), constexpr_sequence8, constexpr_group_s8)           // seq 8  S:0
+               << new payload_member(uint16(0), true, constexpr_len, constexpr_group_l)           // len    L:1
+               << new payload_member(binary_t(), constexpr_encdata);
 
-                /**
-                 * 0 1 2 3 4 5 6 7
-                 * +-+-+-+-+-+-+-+-+
-                 * |0|0|1|C|S|L|E E|
-                 * +-+-+-+-+-+-+-+-+
-                 */
+            /**
+             * 0 1 2 3 4 5 6 7
+             * +-+-+-+-+-+-+-+-+
+             * |0|0|1|C|S|L|E E|
+             * +-+-+-+-+-+-+-+-+
+             */
 
-                auto lambda_condition = [&](payload* pl, payload_member* item) -> void {
-                    auto uhdr = pl->t_value_of<uint8>(item);
-                    pl->set_group(constexpr_group_c, (0x10 & uhdr));
-                    pl->set_group(constexpr_group_s16, 0 != (0x08 & uhdr));
-                    pl->set_group(constexpr_group_s8, 0 == (0x08 & uhdr));
-                    pl->set_group(constexpr_group_l, (0x04 & uhdr));
-                    if (0x04 & uhdr) {
-                        pl->set_reference_value(constexpr_encdata, constexpr_len);
-                    }
-                };
-                pl.set_condition(constexpr_unified_header, lambda_condition);
+            auto lambda_condition = [&](payload* pl, payload_member* item) -> void {
+                auto uhdr = pl->t_value_of<uint8>(item);
+                pl->set_group(constexpr_group_c, (0x10 & uhdr));
+                pl->set_group(constexpr_group_s16, 0 != (0x08 & uhdr));
+                pl->set_group(constexpr_group_s8, 0 == (0x08 & uhdr));
+                pl->set_group(constexpr_group_l, (0x04 & uhdr));
+                if (0x04 & uhdr) {
+                    pl->set_reference_value(constexpr_encdata, constexpr_len);
+                }
+            };
+            pl.set_condition(constexpr_unified_header, lambda_condition);
+            pl.read(stream, size, pos);
 
-                auto rc = pl.read(stream, size, pos);
-                if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    __trace_return(rc);
-                }
-
-                uhdr = pl.t_value_of<uint8>(constexpr_unified_header);
-                if (pl.get_group_condition(constexpr_group_c)) {
-                    pl.get_binary(constexpr_connection_id, connection_id);
-                }
-                if (pl.get_group_condition(constexpr_group_s16)) {
-                    sequence = pl.t_value_of<uint16>(constexpr_sequence16);
-                    sequence_len = 2;
-                    // offset_sequence = pl.offset_of(constexpr_group_s16);
-                }
-                if (pl.get_group_condition(constexpr_group_s8)) {
-                    sequence = pl.t_value_of<uint16>(constexpr_sequence8);
-                    sequence_len = 1;
-                    // offset_sequence = pl.offset_of(constexpr_group_s8);
-                }
-                if (pl.get_group_condition(constexpr_group_l)) {
-                    len = pl.t_value_of<uint16>(constexpr_len);
-                }
-                pl.get_binary(constexpr_encdata, encdata);
-                offset_encdata = pl.offset_of(constexpr_encdata);
+            uhdr = pl.t_value_of<uint8>(constexpr_unified_header);
+            if (pl.get_group_condition(constexpr_group_c)) {
+                pl.get_binary(constexpr_connection_id, connection_id);
             }
+            if (pl.get_group_condition(constexpr_group_s16)) {
+                sequence = pl.t_value_of<uint16>(constexpr_sequence16);
+                sequence_len = 2;
+                // offset_sequence = pl.offset_of(constexpr_group_s16);
+            }
+            if (pl.get_group_condition(constexpr_group_s8)) {
+                sequence = pl.t_value_of<uint16>(constexpr_sequence8);
+                sequence_len = 1;
+                // offset_sequence = pl.offset_of(constexpr_group_s8);
+            }
+            if (pl.get_group_condition(constexpr_group_l)) {
+                len = pl.t_value_of<uint16>(constexpr_len);
+            }
+            pl.get_binary(constexpr_encdata, encdata);
+            offset_encdata = pl.offset_of(constexpr_encdata);
+        }
 
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
-                    dbs.println("> %s", constexpr_unified_header);
-                    dbs.println(" > 0x%02x (C:%i S:%i L:%i E:%x)", uhdr, (uhdr & 0x10) ? 1 : 0, (uhdr & 0x08) ? 1 : 0, (uhdr & 0x04) ? 1 : 0, (uhdr & 0x03));
-                    if (connection_id.size()) {
-                        dbs.println(" > %s %s", constexpr_connection_id, base16_encode(connection_id).c_str());
-                    }
+        if (istraceable(trace_category_net)) {
+            trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                dbs.println("> %s", constexpr_unified_header);
+                dbs.println(" > 0x%02x (C:%i S:%i L:%i E:%x)", uhdr, (uhdr & 0x10) ? 1 : 0, (uhdr & 0x08) ? 1 : 0, (uhdr & 0x04) ? 1 : 0, (uhdr & 0x03));
+                if (connection_id.size()) {
+                    dbs.println(" > %s %s", constexpr_connection_id, base16_encode(connection_id).c_str());
+                }
 
-                    dbs.println(" > %s %04x", constexpr_sequence, sequence);
-                    dbs.println(" > %s %04x", constexpr_len, len);
-                    dbs.println(" > %s", constexpr_encdata);
-                    if (check_trace_level(loglevel_debug)) {
-                        dump_memory(encdata, &dbs, 16, 3, 0x0, dump_notrunc);
-                    }
-                });
-            }
+                dbs.println(" > %s %04x", constexpr_sequence, sequence);
+                dbs.println(" > %s %04x", constexpr_len, len);
+                dbs.println(" > %s", constexpr_encdata);
+                if (check_trace_level(loglevel_debug)) {
+                    dump_memory(encdata, &dbs, 16, 3, 0x0, dump_notrunc);
+                }
+            });
+        }
 #endif
 
-            {
-                _content_type = uhdr;
-                _bodysize = len;
+        {
+            _content_type = uhdr;
+            _bodysize = len;
 
-                _range.begin = recpos;
-                _range.end = pos;
+            _range.begin = recpos;
+            _range.end = pos;
 
-                _sequence = sequence;
-                _sequence_len = sequence_len;
-                _offset_encdata = offset_encdata;
-            }
-
-            return success;
-        });
-    return pipeline.result();
+            _sequence = sequence;
+            _sequence_len = sequence_len;
+            _offset_encdata = offset_encdata;
+        }
+    }
+    __finally2 {}
+    return ret;
 }
 
 return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
@@ -174,7 +166,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
 
         ret = protection.protection_mask(session, dir, stream + offset_encdata, size - offset_encdata, protmask, 2);
         if (errorcode_t::success != ret) {
-            __leave2_trace(ret);
+            __leave2;
         }
 
         // recno
@@ -187,7 +179,7 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
 
         if (recno != sess_recno) {
             ret = errorcode_t::mismatch;
-            __leave2_trace(ret);
+            __leave2;
         }
 
         binary_t additional;
@@ -270,132 +262,119 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
 }
 
 return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        auto session = get_session();
+        auto& protection = session->get_tls_protection();
+        auto sess_recno = session->get_recordno(dir, false);
+        uint8 cap = byte_capacity(sess_recno);
+        if (cap > 2) {
+            ret = errorcode_t::exceed;
+            __leave2;
+        }
 
-    pipeline  //
-        .run_trycatch([&]() -> return_t {
-            auto session = get_session();
-            auto& protection = session->get_tls_protection();
-            auto sess_recno = session->get_recordno(dir, false);
-            uint8 cap = byte_capacity(sess_recno);
-            if (cap > 2) {
-                __trace_return(errorcode_t::exceed);
+        size_t recpos = bin.size();
+        /**
+         * 0 1 2 3 4 5 6 7
+         * +-+-+-+-+-+-+-+-+
+         * |0|0|1|C|S|L|E E|
+         * +-+-+-+-+-+-+-+-+
+         */
+        binary_t ciphertext;
+        binary_t header;
+        binary_t tag;
+        uint8 uhdr = 0x20;
+        uint8 c = (_cid.empty()) ? 0x00 : 0x01;
+        uint8 s = (1 == cap) ? 0x00 : 0x08;
+        uint8 l = (body.empty()) ? 0x00 : 0x04;
+        uint8 e = 0x03;
+        uhdr |= (c | s | l | e);
+        uint8 sequence_len = s ? 2 : 1;
+        uint8 tagsize = protection.get_tag_size();
+
+        binary_t cid;
+
+        {
+            payload pl;
+            pl << new payload_member(uhdr, constexpr_unified_header)                                          //
+               << new payload_member(_cid, constexpr_connection_id, constexpr_group_c)                        // cid    C:1
+               << new payload_member(uint16(sess_recno), true, constexpr_sequence16, constexpr_group_s16)     // seq 16 S:1
+               << new payload_member(uint8(sess_recno), constexpr_sequence8, constexpr_group_s8)              // seq 8  S:0
+               << new payload_member(uint16(body.size() + tagsize), true, constexpr_len, constexpr_group_l);  // len    L:1
+            pl.set_group(constexpr_group_c, (0x10 & uhdr));
+            pl.set_group(constexpr_group_s16, 0 != (0x08 & uhdr));
+            pl.set_group(constexpr_group_s8, 0 == (0x08 & uhdr));
+            pl.set_group(constexpr_group_l, (0x04 & uhdr));
+            pl.write(header);
+        }
+
+        {
+            _content_type = uhdr;
+            _bodysize = t_narrow_cast(body.size());
+            _range.begin = recpos;
+            _range.end = header.size();
+            _sequence = t_narrow_cast(sess_recno);
+            _sequence_len = sequence_len;
+            _offset_encdata = header.size();
+        }
+
+        {
+            ret = protection.encrypt(session, dir, body, ciphertext, header, tag);
+            if (errorcode_t::success != ret) {
+                __leave2;
             }
+        }
 
-            return_t rc = success;
-            size_t recpos = bin.size();
-            /**
-             * 0 1 2 3 4 5 6 7
-             * +-+-+-+-+-+-+-+-+
-             * |0|0|1|C|S|L|E E|
-             * +-+-+-+-+-+-+-+-+
-             */
-            binary_t ciphertext;
-            binary_t header;
-            binary_t tag;
-            uint8 uhdr = 0x20;
-            uint8 c = (_cid.empty()) ? 0x00 : 0x01;
-            uint8 s = (1 == cap) ? 0x00 : 0x08;
-            uint8 l = (body.empty()) ? 0x00 : 0x04;
-            uint8 e = 0x03;
-            uhdr |= (c | s | l | e);
-            uint8 sequence_len = s ? 2 : 1;
-            uint8 tagsize = protection.get_tag_size();
+        binary_t block;
+        {
+            binary_append(block, ciphertext);
+            binary_append(block, tag);
+        }
 
-            binary_t cid;
+        uint16 recno = 0;
+        uint16 rec_enc = 0;
+        binary_t protmask;
+        ret = protection.protection_mask(session, dir, block.data(), block.size(), protmask, 2);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
-            {
-                payload pl;
-                pl << new payload_member(uhdr, constexpr_unified_header)                                          //
-                   << new payload_member(_cid, constexpr_connection_id, constexpr_group_c)                        // cid    C:1
-                   << new payload_member(uint16(sess_recno), true, constexpr_sequence16, constexpr_group_s16)     // seq 16 S:1
-                   << new payload_member(uint8(sess_recno), constexpr_sequence8, constexpr_group_s8)              // seq 8  S:0
-                   << new payload_member(uint16(body.size() + tagsize), true, constexpr_len, constexpr_group_l);  // len    L:1
+        if (2 == sequence_len) {
+            rec_enc = t_binary_to_integer<uint16>(protmask);
+        } else {
+            rec_enc = t_binary_to_integer<uint8>(protmask);
+        }
+        recno = t_narrow_cast(sess_recno ^ rec_enc);
 
-                pl.set_group(constexpr_group_c, (0x10 & uhdr));
-                pl.set_group(constexpr_group_s16, 0 != (0x08 & uhdr));
-                pl.set_group(constexpr_group_s8, 0 == (0x08 & uhdr));
-                pl.set_group(constexpr_group_l, (0x04 & uhdr));
+        {
+            payload pl;
+            pl << new payload_member(uhdr, constexpr_unified_header)                                  //
+               << new payload_member(_cid, constexpr_connection_id, constexpr_group_c)                // cid    C:1
+               << new payload_member(uint16(recno), true, constexpr_sequence16, constexpr_group_s16)  // seq 16 S:1
+               << new payload_member(uint8(recno), constexpr_sequence8, constexpr_group_s8)           // seq 8  S:0
+               << new payload_member(uint16(block.size()), true, constexpr_len, constexpr_group_l);   // len    L:1
+            pl.set_group(constexpr_group_c, (0x10 & uhdr));
+            pl.set_group(constexpr_group_s16, 0 != (0x08 & uhdr));
+            pl.set_group(constexpr_group_s8, 0 == (0x08 & uhdr));
+            pl.set_group(constexpr_group_l, (0x04 & uhdr));
+            pl.write(bin);
 
-                rc = pl.write(header);
-                if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    __trace_return(rc);
-                }
-            }
-
-            {
-                _content_type = uhdr;
-                _bodysize = t_narrow_cast(body.size());
-                _range.begin = recpos;
-                _range.end = header.size();
-                _sequence = t_narrow_cast(sess_recno);
-                _sequence_len = sequence_len;
-                _offset_encdata = header.size();
-            }
-
-            {
-                rc = protection.encrypt(session, dir, body, ciphertext, header, tag);
-                if (errorcode_t::success != rc) {
-                    __trace_return(rc);
-                }
-            }
-
-            binary_t block;
-            {
-                binary_append(block, ciphertext);
-                binary_append(block, tag);
-            }
-
-            uint16 recno = 0;
-            uint16 rec_enc = 0;
-            binary_t protmask;
-            rc = protection.protection_mask(session, dir, block.data(), block.size(), protmask, 2);
-            if (errorcode_t::success != rc) {
-                return rc;
-            }
-
-            if (2 == sequence_len) {
-                rec_enc = t_binary_to_integer<uint16>(protmask);
-            } else {
-                rec_enc = t_binary_to_integer<uint8>(protmask);
-            }
-            recno = t_narrow_cast(sess_recno ^ rec_enc);
-
-            {
-                payload pl;
-                pl << new payload_member(uhdr, constexpr_unified_header)                                  //
-                   << new payload_member(_cid, constexpr_connection_id, constexpr_group_c)                // cid    C:1
-                   << new payload_member(uint16(recno), true, constexpr_sequence16, constexpr_group_s16)  // seq 16 S:1
-                   << new payload_member(uint8(recno), constexpr_sequence8, constexpr_group_s8)           // seq 8  S:0
-                   << new payload_member(uint16(block.size()), true, constexpr_len, constexpr_group_l);   // len    L:1
-
-                pl.set_group(constexpr_group_c, (0x10 & uhdr));
-                pl.set_group(constexpr_group_s16, 0 != (0x08 & uhdr));
-                pl.set_group(constexpr_group_s8, 0 == (0x08 & uhdr));
-                pl.set_group(constexpr_group_l, (0x04 & uhdr));
-
-                rc = pl.write(bin);
-                if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    __trace_return(rc);
-                }
-
-                binary_append(bin, block);
-            }
+            binary_append(bin, block);
+        }
 
 #if defined DEBUG
-            if (istraceable(trace_category_net, loglevel_debug)) {
-                trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
-                    dbs.println("> header");
-                    dump_memory(header, &dbs, 16, 3, 0x0, dump_notrunc);
-                    dbs.println("> header masked (sequence)");
-                    dump_memory(bin.data(), header.size(), &dbs, 16, 3, 0x0, dump_notrunc);
-                });
-            }
+        if (istraceable(trace_category_net, loglevel_debug)) {
+            trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                dbs.println("> header");
+                dump_memory(header, &dbs, 16, 3, 0x0, dump_notrunc);
+                dbs.println("> header masked (sequence)");
+                dump_memory(bin.data(), header.size(), &dbs, 16, 3, 0x0, dump_notrunc);
+            });
+        }
 #endif
-
-            return success;
-        });
-    return pipeline.result();
+    }
+    __finally2 {}
+    return ret;
 }
 
 return_t dtls13_ciphertext::do_write_body(tls_direction_t dir, binary_t& bin) {

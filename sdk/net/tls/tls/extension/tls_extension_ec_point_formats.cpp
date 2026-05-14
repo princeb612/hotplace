@@ -40,92 +40,85 @@ return_t tls_extension_ec_point_formats::do_postprocess(tls_direction_t dir) {
 }
 
 return_t tls_extension_ec_point_formats::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        // RFC 8422 5.1.2.  Supported Point Formats Extension
+        // enum {
+        //     uncompressed (0),
+        //     deprecated (1..2),
+        //     reserved (248..255)
+        // } ECPointFormat;
+        // struct {
+        //     ECPointFormat ec_point_format_list<1..2^8-1>
+        // } ECPointFormatList;
 
-    pipeline  //
-        .goahead_if_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
-        .run_trycatch([&]() -> return_t {
-            // RFC 8422 5.1.2.  Supported Point Formats Extension
-            // enum {
-            //     uncompressed (0),
-            //     deprecated (1..2),
-            //     reserved (248..255)
-            // } ECPointFormat;
-            // struct {
-            //     ECPointFormat ec_point_format_list<1..2^8-1>
-            // } ECPointFormatList;
-
-            binary_t formats;
+        binary_t formats;
 #if defined DEBUG
-            uint8 len = 0;
+        uint8 len = 0;
 #endif
 
-            {
-                payload pl;
-                pl << new payload_member(uint8(0), constexpr_len)  //
-                   << new payload_member(binary_t(0), constexpr_formats);
-                pl.set_reference_value(constexpr_formats, constexpr_len);
-
-                auto rc = pl.read(stream, endpos_extension(), pos);
-                if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    __trace_return(rc);
-                }
+        {
+            payload pl;
+            pl << new payload_member(uint8(0), constexpr_len)  //
+               << new payload_member(binary_t(0), constexpr_formats);
+            pl.set_reference_value(constexpr_formats, constexpr_len);
+            pl.read(stream, endpos_extension(), pos);
 
 #if defined DEBUG
-                len = pl.t_value_of<uint8>(constexpr_len);
+            len = pl.t_value_of<uint8>(constexpr_len);
 #endif
-                pl.get_binary(constexpr_formats, formats);
-            }
+            pl.get_binary(constexpr_formats, formats);
+        }
 
+        {
             for (auto epf : formats) {
                 add(epf);
             }
+        }
 
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        if (istraceable(trace_category_net)) {
+            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-                    dbs.println("   > %s (%i ent.)", constexpr_formats, len);
-                    uint8 i = 0;
-                    for (auto fmt : _ec_point_formats) {
-                        dbs.println("     [%i] 0x%02x(%i) %s", i++, fmt, fmt, tlsadvisor->nameof_ec_point_format(fmt).c_str());
-                    }
-                });
-            }
+                dbs.println("   > %s (%i ent.)", constexpr_formats, len);
+                uint8 i = 0;
+                for (auto fmt : _ec_point_formats) {
+                    dbs.println("     [%i] 0x%02x(%i) %s", i++, fmt, fmt, tlsadvisor->nameof_ec_point_format(fmt).c_str());
+                }
+            });
+        }
 #endif
-            return success;
-        });
-    return pipeline.result();
+    }
+    __finally2 {}
+    return ret;
 }
 
 return_t tls_extension_ec_point_formats::do_write_body(tls_direction_t dir, binary_t& bin) {
-    function_pipeline<return_t> pipeline;
-
-    pipeline  //
-        .run_trycatch([&]() -> return_t {
-            uint8 cbsize_formats = 0;
-            binary_t bin_formats;
-            {
-                for (auto epf : _ec_point_formats) {
-                    // RFC 9325 4.2.1
-                    // Note that [RFC8422] deprecates all but the uncompressed point format.
-                    // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
-                    if (0 == epf) {
-                        binary_append(bin_formats, epf);
-                    }
+    return_t ret = errorcode_t::success;
+    __try2 {
+        uint8 cbsize_formats = 0;
+        binary_t bin_formats;
+        {
+            for (auto epf : _ec_point_formats) {
+                // RFC 9325 4.2.1
+                // Note that [RFC8422] deprecates all but the uncompressed point format.
+                // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
+                if (0 == epf) {
+                    binary_append(bin_formats, epf);
                 }
-                cbsize_formats = t_narrow_cast(bin_formats.size());
             }
-
+            cbsize_formats = t_narrow_cast(bin_formats.size());
+        }
+        {
             payload pl;
             pl << new payload_member(uint8(cbsize_formats), constexpr_len)  //
                << new payload_member(bin_formats, constexpr_formats);
-
-            return pl.write(bin);
-        });
-    return pipeline.result();
+            pl.write(bin);
+        }
+    }
+    __finally2 {}
+    return ret;
 }
 
 tls_extension_ec_point_formats& tls_extension_ec_point_formats::add(uint8 code) {

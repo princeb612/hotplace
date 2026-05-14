@@ -21,6 +21,12 @@
 namespace hotplace {
 namespace net {
 
+/**
+ * RFC 8446 4.2.3.  Signature Algorithms
+ * tls_ext_signature_algorithms
+ * https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
+ */
+
 constexpr char constexpr_algorithms[] = "algorithms";
 constexpr char constexpr_algorithm[] = "algorithm";
 
@@ -41,82 +47,65 @@ return_t tls_extension_signature_algorithms::do_postprocess(tls_direction_t dir)
 }
 
 return_t tls_extension_signature_algorithms::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
-    function_pipeline<return_t> pipeline;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        binary_t algorithms;
+        uint16 count = 0;
 
-    pipeline  //
-        .goahead_if_not_fail()
-        .test_parameter([&]() -> bool { return (nullptr != stream); })
-        .run_trycatch([&]() -> return_t {
-            // RFC 8446 4.2.3.  Signature Algorithms
+        {
+            payload pl;
+            pl << new payload_member(uint16(0), true, constexpr_algorithms)  //
+               << new payload_member(binary_t(), constexpr_algorithm);
+            pl.set_reference_value(constexpr_algorithm, constexpr_algorithms);
+            pl.read(stream, endpos_extension(), pos);
 
-            binary_t algorithms;
-            uint16 count = 0;
+            count = pl.t_value_of<uint16>(constexpr_algorithms) >> 1;
+            pl.get_binary(constexpr_algorithm, algorithms);
 
-            {
-                payload pl;
-                pl << new payload_member(uint16(0), true, constexpr_algorithms)  //
-                   << new payload_member(binary_t(), constexpr_algorithm);
-                pl.set_reference_value(constexpr_algorithm, constexpr_algorithms);
-
-                auto rc = pl.read(stream, endpos_extension(), pos);
-                if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    __trace_return(rc);
-                }
-
-                count = pl.t_value_of<uint16>(constexpr_algorithms) >> 1;
-                pl.get_binary(constexpr_algorithm, algorithms);
-
-                for (auto i = 0; i < count; i++) {
-                    auto alg = t_binary_to_integer<uint16>(&algorithms[i << 1], sizeof(uint16));
-                    add(alg);
-                }
+            for (auto i = 0; i < count; i++) {
+                auto alg = t_binary_to_integer<uint16>(&algorithms[i << 1], sizeof(uint16));
+                add(alg);
             }
+        }
 
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        if (istraceable(trace_category_net)) {
+            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-                    dbs.println("   > %s (%i ent.)", constexpr_algorithms, count);
-                    int i = 0;
-                    for (auto alg : _algorithms) {
-                        dbs.println("     [%02i] 0x%04x %s", i++, alg, tlsadvisor->nameof_signature_scheme(alg).c_str());
-                    }
-                });
-            }
+                dbs.println("   > %s (%i ent.)", constexpr_algorithms, count);
+                int i = 0;
+                for (auto alg : _algorithms) {
+                    dbs.println("     [%02i] 0x%04x %s", i++, alg, tlsadvisor->nameof_signature_scheme(alg).c_str());
+                }
+            });
+        }
 #endif
-
-            return success;
-        });
-    return pipeline.result();
+    }
+    __finally2 {}
+    return ret;
 }
 
 return_t tls_extension_signature_algorithms::do_write_body(tls_direction_t dir, binary_t& bin) {
-    function_pipeline<return_t> pipeline;
-
-    pipeline  //
-        .run_trycatch([&]() -> return_t {
-            uint16 cbsize_algorithms = 0;
-            binary_t bin_algorithms;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        uint16 cbsize_algorithms = 0;
+        binary_t bin_algorithms;
+        {
             for (auto alg : _algorithms) {
                 binary_append(bin_algorithms, alg, hton16);
             }
             cbsize_algorithms = t_narrow_cast(bin_algorithms.size());
-
-            {
-                payload pl;
-                pl << new payload_member(cbsize_algorithms, true, constexpr_algorithms)  //
-                   << new payload_member(bin_algorithms, constexpr_algorithm);
-
-                auto rc = pl.write(bin);
-                if (false == error_traits<return_t>::is_not_fail(rc)) {
-                    __trace_return(rc);
-                }
-            }
-
-            return success;
-        });
-    return pipeline.result();
+        }
+        {
+            payload pl;
+            pl << new payload_member(cbsize_algorithms, true, constexpr_algorithms)  //
+               << new payload_member(bin_algorithms, constexpr_algorithm);
+            pl.write(bin);
+        }
+    }
+    __finally2 {}
+    return ret;
 }
 
 tls_extension_signature_algorithms& tls_extension_signature_algorithms::add(uint16 code) {
