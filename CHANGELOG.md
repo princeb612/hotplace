@@ -32,7 +32,8 @@
     * CBOR
 
 * details
-  * Revision 995
+  * Revision 996
+    * finding github ctest segfault issue ...
   * Revision 994
     * [fixed] floating point, bignumber
     * [changed] self-signed certificates
