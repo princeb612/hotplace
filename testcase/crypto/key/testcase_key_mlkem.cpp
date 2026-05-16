@@ -83,7 +83,7 @@ void test_mlkem_keyuse_routine(tls_group_t group, const binary_t& share) {
 
 void test_mlkem_keyuse() {
     _test_case.begin("ML-KEM");
-    // return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
     struct testvector {
         tls_group_t group;
         const char* client_share;
@@ -162,6 +162,9 @@ void test_mlkem_keyuse() {
         auto share = base16_decode(item->client_share);
         test_mlkem_keyuse_routine(item->group, share);
     }
+#else
+    _test_case.test(not_supported, __FUNCTION__, "openssl 3.5 required");
+#endif
 }
 
 void testcase_key_mlkem() {

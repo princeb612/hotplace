@@ -559,11 +559,13 @@ void testcase_construct_dtls13() {
         test_construct_dtls_routine(item, "brainpoolP256r1tls13");
         test_construct_dtls_routine(item, "brainpoolP384r1tls13");
         test_construct_dtls_routine(item, "brainpoolP512r1tls13");
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
         test_construct_dtls_routine(item, "MLKEM512");
         test_construct_dtls_routine(item, "MLKEM768");
         test_construct_dtls_routine(item, "MLKEM1024");
         test_construct_dtls_routine(item, "SecP256r1MLKEM768");
         test_construct_dtls_routine(item, "X25519MLKEM768");
         test_construct_dtls_routine(item, "SecP384r1MLKEM1024");
+#endif
     }
 }

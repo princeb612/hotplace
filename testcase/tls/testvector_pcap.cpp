@@ -107,7 +107,9 @@ void test_yaml_testvector_pcap() {
     play_yaml_pcap("testvector_pcap_tls12.yml");
     play_yaml_pcap("testvector_pcap_http.yml");
     play_yaml_pcap("testvector_pcap_dtls12.yml");
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
     play_yaml_pcap("testvector_pcap_tls13_mlkem.yml");
+#endif
 }
 
 void testcase_testvector_pcap() { test_yaml_testvector_pcap(); }
