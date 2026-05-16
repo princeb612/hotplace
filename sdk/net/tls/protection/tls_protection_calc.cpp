@@ -292,6 +292,12 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
                         if (tls_flag_pqc & hint_group->flags) {
                             // tls_extension_key_share
                             shared_secret = get_secrets().get(tls_context_shared_secret);
+                            uint16 group = t_narrow_cast(session->get_session_info(from_server).get_keyvalue().get(session_hrr));
+                            if (group) {
+                                session->get_session_info(from_server).get_keyvalue().remove(session_hrr);
+                                ret = warn_retry;
+                                __leave2_trace(ret);
+                            }
                         } else {
                             pkey_priv = get_key().find_group(KID_TLS_SERVERHELLO_KEYSHARE_PRIVATE, group);
                             if (pkey_priv) {
@@ -309,7 +315,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
 
                             if (nullptr == pkey_priv || nullptr == pkey_pub) {
                                 ret = errorcode_t::warn_retry;  // HRR
-                                __leave2;
+                                __leave2_trace(ret);
                             }
 
                             uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
@@ -321,7 +327,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
                                 }
                                 if (nullptr == pkey_ch) {
                                     ret = errorcode_t::warn_retry;
-                                    __leave2;  // HRR
+                                    __leave2_trace(ret);  // HRR
                                 }
                             }
 
@@ -331,7 +337,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
                         }
                     } else {
                         ret = errorcode_t::warn_retry;  // HRR
-                        __leave2;
+                        __leave2_trace(ret);
                     }
 
                     binary_t early_secret;

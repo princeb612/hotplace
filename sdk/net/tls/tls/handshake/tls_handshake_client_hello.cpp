@@ -70,7 +70,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                     session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
                     session->reset_session_status();
                     ret = errorcode_t::error_handshake;
-                    __leave2;
+                    __leave2_trace(ret);
                 }
             } else if ((session_status_server_finished | session_status_client_finished) & session_status) {
                 // 0-RTT, renegotiation
@@ -79,7 +79,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
                 session->reset_session_status();
                 ret = errorcode_t::error_handshake;
-                __leave2;
+                __leave2_trace(ret);
             }
         }
 
@@ -174,7 +174,7 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                 session->reset_session_status();
                 ret = errorcode_t::error_handshake;
-                __leave2;
+                __leave2_trace(ret);
             }
         }
 
@@ -185,7 +185,7 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                 session->reset_session_status();
                 ret = errorcode_t::error_handshake;
-                __leave2;
+                __leave2_trace(ret);
             }
         }
         // transcript hash, keycalc
@@ -387,7 +387,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
             session->reset_session_status();
             ret = errorcode_t::error_handshake;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         ret = get_extensions().read(this, dir, stream, pos + extension_len, pos);
@@ -402,7 +402,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
                 session->reset_session_status();
                 ret = errorcode_t::error_handshake;
-                __leave2;
+                __leave2_trace(ret);
             }
         }
     }

@@ -181,8 +181,8 @@ return_t protection_context::select_from(const protection_context& other, tls_se
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
         std::set<uint16> specs;
-        std::set<crypto_kty_t> ktypes_set;
-        std::set<uint32> certtypes_set;
+        std::set<crypto_kty_t> certkty_set;
+        std::set<uint32> certnid_set;
         std::map<uint16, std::list<uint16>> cs_map;
 
         // TLS specification
@@ -199,8 +199,8 @@ return_t protection_context::select_from(const protection_context& other, tls_se
                 auto pkey = k->get_pkey();
                 hint_pkey_t hint;
                 advisor->hintof_pkey(pkey, hint);
-                ktypes_set.insert(hint.kty);  // EC, RSA, DH, OKP, MLDSA
-                certtypes_set.insert(hint.nid);
+                certkty_set.insert(hint.kty);  // EC, RSA, DH, OKP, MLDSA
+                certnid_set.insert(hint.nid);
 #if defined DEBUG
                 if (istraceable(trace_category_net)) {
                     trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
@@ -230,21 +230,21 @@ return_t protection_context::select_from(const protection_context& other, tls_se
                     }
 
                     if (tls_13 != hint->spec) {
-                        if (ktypes_set.empty()) {
+                        if (certkty_set.empty()) {
                             continue;
                         }
                         switch (hint->auth) {
                             case auth_rsa: {
                                 // allow TLS_ECDHE_RSA if RSA certificate exist
-                                auto iter = ktypes_set.find(kty_rsa);
-                                if (ktypes_set.end() == iter) {
+                                auto iter = certkty_set.find(kty_rsa);
+                                if (certkty_set.end() == iter) {
                                     continue;
                                 }
                             } break;
                             case auth_ecdsa: {
                                 // allow TLS_ECDHE_ECDSA if EC certificate exist
-                                auto iter = ktypes_set.find(kty_ec);
-                                if (ktypes_set.end() == iter) {
+                                auto iter = certkty_set.find(kty_ec);
+                                if (certkty_set.end() == iter) {
                                     continue;
                                 }
                             } break;
@@ -304,7 +304,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
 
             if (false == test) {
                 ret = errorcode_t::error_handshake;
-                __leave2;
+                __leave2_trace(ret);
             }
         }
 
@@ -312,7 +312,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
             other.for_each_signature_algorithms([&](uint16 scheme, bool*) -> void {
                 auto hint = advisor->hintof_sigscheme(scheme);
                 if (hint && (tls_flag_support & hint->flags)) {
-                    if (certtypes_set.end() != certtypes_set.find(hint->nid)) {
+                    if (certnid_set.end() != certnid_set.find(hint->nid)) {
                         _signature_algorithms.push_back(scheme);
 #if defined DEBUG
                         if (istraceable(trace_category_net)) {
@@ -333,18 +333,20 @@ return_t protection_context::select_from(const protection_context& other, tls_se
                 auto hint = advisor->hintof_tls_group(group);
                 if (hint && (tls_flag_support & hint->flags)) {
                     bool cond = true;
-                    if (tls_flag_pqc & hint->flags) {
+                    if (tlsadvisor->test_tls_group(group)) {
+                        if (tls_flag_pqc & hint->flags) {
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
-                        cond = (tls_13 == spec);
+                            cond = (tls_13 == spec);
 #else
-                        cond = false;
+                            cond = false;
 #endif
-                    }
-                    if (cond) {
-                        if (tls_flag_secure & hint->flags) {
-                            _supported_groups.insert(_supported_groups.begin(), group);
-                        } else {
-                            _supported_groups.push_back(group);
+                        }
+                        if (cond) {
+                            if (tls_flag_secure & hint->flags) {
+                                _supported_groups.insert(_supported_groups.begin(), group);
+                            } else {
+                                _supported_groups.push_back(group);
+                            }
                         }
                     }
                 }
@@ -376,6 +378,8 @@ return_t protection_context::select_from(const protection_context& other, tls_se
     __finally2 {}
     return ret;
 }
+
+bool protection_context::select_keyshare(uint16 group) { return _keyshare_set.count(group) > 0; }
 
 void protection_context::set_cipher_suite(uint16 cs) { _cipher_suite = cs; }
 

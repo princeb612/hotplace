@@ -14,45 +14,45 @@ void test_features() {
     _test_case.begin("features openssl version %08x", OpenSSL_version_num());
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
-    auto query_cipher = [&](const char* feature, uint32 spec, void* user) -> void {
+    auto query_cipher = [&](const char* feature, uint32 spec) -> void {
         return_t ret = spec ? errorcode_t::success : errorcode_t::not_supported;
         _test_case.test(ret, __FUNCTION__, R"(check feature cipher "%s" [%08x])", feature, spec);
     };
-    auto query_md = [&](const char* feature, uint32 spec, void* user) -> void {
+    auto query_md = [&](const char* feature, uint32 spec) -> void {
         return_t ret = spec ? errorcode_t::success : errorcode_t::not_supported;
         _test_case.test(ret, __FUNCTION__, R"(check feature md "%s" [%08x])", feature, spec);
     };
-    auto query_jwa = [&](const hint_jose_encryption_t* item, void* user) -> void {
+    auto query_jwa = [&](const hint_jose_encryption_t* item) -> void {
         auto test = advisor->query_feature(item->alg_name, advisor_feature_jwa);
         return_t ret = test ? errorcode_t::success : errorcode_t::not_supported;
         _test_case.test(ret, __FUNCTION__, R"(check feature JWA "%s" [%08x])", item->alg_name, advisor_feature_jwa);
     };
-    auto query_jwe = [&](const hint_jose_encryption_t* item, void* user) -> void {
+    auto query_jwe = [&](const hint_jose_encryption_t* item) -> void {
         auto test = advisor->query_feature(item->alg_name, advisor_feature_jwe);
         return_t ret = test ? errorcode_t::success : errorcode_t::not_supported;
         _test_case.test(ret, __FUNCTION__, R"(check feature JWE "%s" [%08x])", item->alg_name, advisor_feature_jwe);
     };
-    auto query_jws = [&](const hint_signature_t* item, void* user) -> void {
+    auto query_jws = [&](const hint_signature_t* item) -> void {
         auto test = advisor->query_feature(item->jws_name, advisor_feature_jws);
         return_t ret = test ? errorcode_t::success : errorcode_t::not_supported;
         _test_case.test(ret, __FUNCTION__, R"(check feature JWS "%s" [%08x])", item->jws_name, advisor_feature_jws);
     };
-    auto query_cose = [&](const char* feature, uint32 spec, void* user) -> void {
+    auto query_cose = [&](const char* feature, uint32 spec) -> void {
         return_t ret = spec ? errorcode_t::success : errorcode_t::not_supported;
         _test_case.test(ret, __FUNCTION__, R"(check feature COSE "%s" [%08x])", feature, spec);
     };
-    auto query_curve = [&](const char* feature, uint32 spec, void* user) -> void {
+    auto query_curve = [&](const char* feature, uint32 spec) -> void {
         return_t ret = spec ? errorcode_t::success : errorcode_t::not_supported;
         _test_case.test(ret, __FUNCTION__, R"(check feature Elliptic Curve "%s" [%08x])", feature, spec);
     };
 
-    advisor->for_each_cipher(query_cipher, nullptr);
-    advisor->for_each_md(query_md, nullptr);
-    advisor->for_each_jwa(query_jwa, nullptr);
-    advisor->for_each_jwe(query_jwe, nullptr);
-    advisor->for_each_jws(query_jws, nullptr);
-    advisor->for_each_cose(query_cose, nullptr);
-    advisor->for_each_curve(query_curve, nullptr);
+    advisor->for_each_cipher(query_cipher);
+    advisor->for_each_md(query_md);
+    advisor->for_each_jwa(query_jwa);
+    advisor->for_each_jwe(query_jwe);
+    advisor->for_each_jws(query_jws);
+    advisor->for_each_cose(query_cose);
+    advisor->for_each_curve(query_curve);
 
     _logger->writeln("features");
     advisor->for_each_features([&](const char* name, uint32 spec) -> void {
@@ -97,7 +97,7 @@ void test_hint_curves() {
 
     _logger->writeln("kty OSSL-NID TLS-group curve");
 
-    auto lambda = [&](const hint_curve_t* hint, void*) -> void {
+    auto lambda = [&](const hint_curve_t* hint) -> void {
         _logger->writeln([&](basic_stream& bs) -> void {
             bs.printf("%-3s     %4u    0x%04x ", advisor->nameof_kty(hint->kty), hint->nid, hint->tlsgroup);
             if (hint->name_nist) {
@@ -114,7 +114,7 @@ void test_hint_curves() {
             }
         });
     };
-    advisor->for_each_curve_hint(lambda, nullptr);
+    advisor->for_each_curve_hint(lambda);
 
     // EC  OSSL-NID  415 TLS-Group 0x0017 P-256 prime256v1 secp256r1
     // OKP OSSL-NID 1035 TLS-Group 0x001e X448

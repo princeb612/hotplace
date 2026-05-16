@@ -74,6 +74,7 @@ class protection_context {
     void for_each_supported_versions(std::function<void(uint16, bool*)> fn) const;
     void for_each_ec_point_formats(std::function<void(uint8, bool*)> fn) const;
     void for_each_keyshare_groups(std::function<void(uint16, bool*)> fn) const;
+    bool select_keyshare(uint16 group);
     /**
      * @remarks negotiation
      */

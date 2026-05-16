@@ -75,10 +75,12 @@ return_t crypto_advisor::hintof_pkey(const EVP_PKEY* pkey, hint_pkey_t& hint) {
                 }
             } break;
             case EVP_PKEY_X25519:
-            case EVP_PKEY_X448:
+            case EVP_PKEY_X448: {
+                kty = crypto_kty_t::kty_okp;
+            } break;
             case EVP_PKEY_ED25519:
             case EVP_PKEY_ED448: {
-                kty = crypto_kty_t::kty_okp;
+                kty = crypto_kty_t::kty_eddsa;
             } break;
             case EVP_PKEY_DH: {
                 kty = crypto_kty_t::kty_dh;

@@ -51,7 +51,8 @@ enum sessioninfo_conf_t : uint8 {
     session_ticket_lifetime = 4,   // RFC 8446 4.6.1. uint32
     session_ticket_age_add = 5,    // RFC 8446 4.6.1. uint32
     session_ticket_timestamp = 6,  // RFC 8446 4.2.11. see obfuscated_ticket_age
-    session_key_share_group = 7,   // HRR, uint16
+    session_key_share_group = 7,   // key share group (tls_extension_key_share)
+    session_hrr = 8,               // HRR (tls_extension_key_share case pubkeylen == 0)
 };
 enum session_conf_t : uint16 {
     // uint16, session->get_keyvalue()

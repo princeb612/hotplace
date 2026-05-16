@@ -413,6 +413,7 @@ enum tls_sigscheme_t : uint16 {
  * | key type   | public_key               | asn1public_key | private_key     |
  * | kty_oct    | N/A                      | N/A            | item_hmac_k     |
  * | kty_okp    | item_ec_x                | item_asn1der   | item_ec_d       |
+ * | kty_mldsa  | item_ec_x                | item_asn1der   | item_ec_d       |
  * | kty_ec     | item_ec_pub_uncompressed | item_asn1der   | item_ec_d       |
  * | kty_rsa    | N/A                      | item_asn1der   | item_rsa_d      |
  * | kty_rsapss | N/A                      | item_asn1der   | item_rsa_d      |
@@ -432,16 +433,19 @@ enum crypt_access_t {
 
 enum crypto_kty_t : uint16 {
     kty_unknown = 0,
-    kty_hmac = 1,        // NID_hmac
-    kty_oct = kty_hmac,  // NID_hmac (synomym)
-    kty_rsa = 2,         // NID_rsaEncryption, NID_rsa
-    kty_ec = 3,          // NID_X9_62_prime256v1, NID_secp384r1, NID_secp521r1
-    kty_okp = 4,         // NID_X25519, NID_X448, NID_ED25519, NID_ED448
-    kty_dh = 5,          // NID_dhKeyAgreement
-    kty_rsapss = 6,      // NID_rsassaPss
-    kty_dsa = 7,         // NID_dsa
-    kty_mlkem = 8,       // NID_ML_KEM_512, NID_ML_KEM_768, NID_ML_KEM_1024
-    kty_mldsa = 9,       // NID_ML_DSA_44, NID_ML_DSA_65, NID_ML_DSA_87
+    kty_oct = 1,          // NID_hmac
+    kty_hmac = kty_oct,   // NID_hmac (synomym)
+    kty_rsa = 2,          // NID_rsaEncryption, NID_rsa
+    kty_ec = 3,           // NID_X9_62_prime256v1, NID_secp384r1, NID_secp521r1
+    kty_okp = 4,          // NID_X25519,  NID_X448
+    kty_eddsa = kty_okp,  // NID_ED25519, NID_ED448
+    kty_dh = 5,           // NID_dhKeyAgreement
+    kty_rsapss = 6,       // NID_rsassaPss
+    kty_dsa = 7,          // NID_dsa
+    kty_mlkem = 8,        // NID_ML_KEM_512, NID_ML_KEM_768, NID_ML_KEM_1024
+    kty_mldsa = 9,        // NID_ML_DSA_44, NID_ML_DSA_65, NID_ML_DSA_87
+    kty_slhdsa = 11,      // NIST FIPS 205
+
     kty_bad = 0xffff,
 };
 
@@ -1069,6 +1073,7 @@ enum cose_hint_flag_t {
     cose_hint_kty_rsa = 1 << 14,
     cose_hint_kty_oct = 1 << 15,
     cose_hint_not_supported = 1 << 16,
+    cose_hint_kty_mldsa = 1 << 17,
 };
 
 /**

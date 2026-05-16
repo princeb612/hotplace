@@ -85,12 +85,21 @@ const char* crypto_advisor::nameof_md(hash_algorithm_t algorithm) {
     return ret_value;
 }
 
-return_t crypto_advisor::for_each_md(std::function<void(const char*, uint32, void*)> f, void* user) {
+return_t crypto_advisor::for_each_md(std::function<void(const char*, uint32)> f) {
     return_t ret = errorcode_t::success;
     for (size_t i = 0; i < sizeof_evp_md_methods; i++) {
         const hint_digest_t* item = evp_md_methods + i;
         auto spec = query_feature(nameof_alg(item), advisor_feature_md);
-        f(nameof_alg(item), spec, user);
+        f(nameof_alg(item), spec);
+    }
+    return ret;
+}
+
+return_t crypto_advisor::for_each_md(std::function<void(const hint_digest_t*)> f) {
+    return_t ret = errorcode_t::success;
+    for (size_t i = 0; i < sizeof_evp_md_methods; i++) {
+        const hint_digest_t* item = evp_md_methods + i;
+        f(item);
     }
     return ret;
 }

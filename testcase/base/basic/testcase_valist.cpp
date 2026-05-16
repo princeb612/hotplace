@@ -57,7 +57,7 @@ void test_valist_cpp14() {
         str.clear();
     }
 
-    _test_case.test(ret, __FUNCTION__, "make_list(Ts... args) and sprintf");
+    _test_case.test(ret, __FUNCTION__, "make_list and sprintf");
 
     valist va;
     ret = sprintf(&str, "param1 {1} param2 {2} param3 {3}", va << 1 << 3.14 << "hello");
@@ -78,7 +78,7 @@ void test_valist_cpp14() {
         str.clear();
     }
 
-    _test_case.test(ret, __FUNCTION__, "vprintf (Ts... args)");
+    _test_case.test(ret, __FUNCTION__, "vprintf");
 #else
     _test_case.test(errorcode_t::not_supported, __FUNCTION__, "at least c++14 required");
 #endif

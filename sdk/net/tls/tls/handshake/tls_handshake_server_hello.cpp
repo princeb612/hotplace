@@ -141,7 +141,7 @@ return_t tls_handshake_server_hello::do_preprocess(tls_direction_t dir) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
             session->reset_session_status();
             ret = errorcode_t::error_handshake;
-            __leave2;
+            __leave2_trace(ret);
         }
     }
     __finally2 {}
@@ -204,16 +204,27 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
                     break;
             }
             if (errorcode_t::success != ret) {
-                __leave2;
+                __leave2_trace(ret);
             }
 
             protection.calc_transcript_hash(session, stream + hspos, size_header_body, hello_hash);  // server_hello
 
             auto test = protection.calc(session, tls_hs_server_hello, dir);
-            auto& session_info = session->get_session_info(dir);
-            session_info.set_status(get_type());
+
+            session->get_session_info(dir).set_status(get_type());
             session->get_session_info(from_client).set_status(get_type());
+
             if (errorcode_t::warn_retry == test) {
+                if (warn_retry == ret) {
+#if defined DEBUG
+                    if (istraceable(trace_category_net)) {
+                        // CLIENT_RANDOM
+                        trace_debug_event(trace_category_net, trace_event_tls_protection,
+                                          [&](basic_stream& dbs) -> void { dbs.println("* " ANSI_ESCAPE "1;33mHelloRetryRequest" ANSI_ESCAPE "0m"); });
+                    }
+#endif
+                }
+
                 // if warn_retry, do HRR
 
                 // RFC 8446 2.1
@@ -342,7 +353,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
                 session->reset_session_status();
                 ret = errorcode_t::error_handshake;
-                __leave2;
+                __leave2_trace(ret);
             }
 
 #if defined DEBUG
@@ -381,7 +392,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                         session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                         session->reset_session_status();
                         ret = error_handshake;
-                        __leave2;
+                        __leave2_trace(ret);
                     }
                 }
             }
@@ -397,7 +408,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                         session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                         session->reset_session_status();
                         ret = error_handshake;
-                        __leave2;
+                        __leave2_trace(ret);
                     }
                 }
             }
@@ -486,7 +497,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                 session->reset_session_status();
                 ret = errorcode_t::error_handshake;
-                __leave2;
+                __leave2_trace(ret);
             }
         }
 

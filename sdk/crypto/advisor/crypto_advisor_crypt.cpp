@@ -131,18 +131,18 @@ const char* crypto_advisor::nameof_cipher(crypt_algorithm_t algorithm, crypt_mod
     return ret_value;
 }
 
-return_t crypto_advisor::for_each_cipher(std::function<void(const char*, uint32, void*)> f, void* user) {
+return_t crypto_advisor::for_each_cipher(std::function<void(const char*, uint32)> f) {
     return_t ret = errorcode_t::success;
     size_t i = 0;
     for (i = 0; i < sizeof_evp_cipher_methods; i++) {
         const hint_cipher_t* item = evp_cipher_methods + i;
         auto spec = query_feature(nameof_alg(item), advisor_feature_cipher);
-        f(nameof_alg(item), spec, user);
+        f(nameof_alg(item), spec);
     }
     for (i = 0; i < sizeof_ossl1_aes_wrap_methods; i++) {
         const evp_cipher_ossl1_methods* item = ossl1_aes_wrap_methods + i;
         auto spec = query_feature(item->hint.fetchname, advisor_feature_wrap);
-        f(item->hint.fetchname, spec, user);
+        f(item->hint.fetchname, spec);
     }
     return ret;
 }

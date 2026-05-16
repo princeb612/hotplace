@@ -260,7 +260,6 @@ class tls_advisor {
     return_t set_tls_groups(const char* groups);
     return_t set_default_tls_groups();
     bool test_tls_group(uint16 group);
-    void for_each_tls_groups(std::function<void(uint16)> func);
 
    protected:
     tls_advisor();

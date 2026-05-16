@@ -32,6 +32,7 @@ enum advisor_feature_t {
     advisor_feature_version = (1 << 8),
     advisor_feature_unspecified = (1 << 9),
     advisor_feature_sigscheme = (1 << 10),
+    advisor_feature_tlsgroup = (1 << 11),
 };
 
 /**
@@ -112,13 +113,13 @@ class crypto_advisor {
     /**
      * @brief   for_each
      * @ example
-     *          auto query_cipher = [&](const char* feature, uint32 spec, void* user) -> void {
+     *          auto query_cipher = [&](const char* feature, uint32 spec) -> void {
      *              return_t ret = spec ? errorcode_t::success : errorcode_t::not_supported;
      *              _test_case.test(ret, __FUNCTION__, R"(check feature cipher "%s" [%08x])", feature, spec);
      *          };
-     *          advisor->for_each_cipher(query_cipher, nullptr);
+     *          advisor->for_each_cipher(query_cipher);
      */
-    return_t for_each_cipher(std::function<void(const char*, uint32, void*)> f, void* user);
+    return_t for_each_cipher(std::function<void(const char*, uint32)> f);
     return_t for_each_cipher(std::function<void(const hint_cipher_t*)> func);
 
     ///////////////////////////////////////////////////////////////////////////
@@ -154,27 +155,28 @@ class crypto_advisor {
     const char* nameof_md(hash_algorithm_t algorithm);
     /**
      * @example
-     *          auto query_md = [&](const char* feature, uint32 spec, void* user) -> void {
+     *          auto query_md = [&](const char* feature, uint32 spec) -> void {
      *              return_t ret = spec ? errorcode_t::success : errorcode_t::not_supported;
      *              _test_case.test(ret, __FUNCTION__, R"(check feature md "%s" [%08x])", feature, spec);
      *          };
-     *          advisor->for_each_md(query_md, nullptr);
+     *          advisor->for_each_md(query_md);
      */
-    return_t for_each_md(std::function<void(const char*, uint32, void*)> f, void* user);
+    return_t for_each_md(std::function<void(const char*, uint32)> f);
+    return_t for_each_md(std::function<void(const hint_digest_t*)> f);
 
     ///////////////////////////////////////////////////////////////////////////
     // curve
     ///////////////////////////////////////////////////////////////////////////
     /**
      * @example
-     *          auto query_curve = [&](const char* feature, uint32 spec, void* user) -> void {
+     *          auto query_curve = [&](const char* feature, uint32 spec) -> void {
      *              return_t ret = spec ? errorcode_t::success : errorcode_t::not_supported;
      *              _test_case.test(ret, __FUNCTION__, R"(check feature Elliptic Curve "%s" [%08x])", feature, spec);
      *          };
-     *          advisor->for_each_curve(query_curve, nullptr);
+     *          advisor->for_each_curve(query_curve);
      */
-    return_t for_each_curve(std::function<void(const char*, uint32, void*)> f, void* user);
-    return_t for_each_curve_hint(std::function<void(const hint_curve_t*, void*)> f, void* user);
+    return_t for_each_curve(std::function<void(const char*, uint32)> f);
+    return_t for_each_curve_hint(std::function<void(const hint_curve_t*)> f);
     /**
      * @brief hint
      * @param uint32 nid [in] see ec_curve_t
@@ -305,6 +307,9 @@ class crypto_advisor {
      */
     const hint_sigscheme_t* hintof_sigscheme(uint16 scheme);
 
+    return_t for_each_sigscheme(std::function<void(tls_sigscheme_t, uint32)> f);
+    return_t for_each_sigscheme(std::function<void(const hint_sigscheme_t*)> f);
+
     ///////////////////////////////////////////////////////////////////////////
     // key
     ///////////////////////////////////////////////////////////////////////////
@@ -326,19 +331,17 @@ class crypto_advisor {
      * @example
      *          crypto_advisor* advisor = crypto_advisor::get_instance ();
      *
-     *          std::function <void (const hint_jose_encryption_t*, void*)> lambda1 =
-     *                  [] (const hint_jose_encryption_t* item, void* user) -> void { printf ("    %s\n", item->alg_name); };
-     *          std::function <void (const hint_signature_t*, void*)> lambda2 =
-     *                  [] (const hint_signature_t* item, void* user) -> void { printf ("    %s\n", item->jws_name); };
+     *          auto lambda1 = [] (const hint_jose_encryption_t* item) -> void { printf ("    %s\n", item->alg_name); };
+     *          auto lambda2 = [] (const hint_signature_t* item) -> void { printf ("    %s\n", item->jws_name); };
      *
-     *          advisor->for_each_jwa (lambda1, nullptr );
-     *          advisor->for_each_jwe (lambda1, nullptr );
+     *          advisor->for_each_jwa (lambda1);
+     *          advisor->for_each_jwe (lambda1);
      *
-     *          advisor->for_each_jws (lambda2, nullptr );
+     *          advisor->for_each_jws (lambda2);
      */
-    return_t for_each_jwa(std::function<void(const hint_jose_encryption_t*, void*)> f, void* user);
-    return_t for_each_jwe(std::function<void(const hint_jose_encryption_t*, void*)> f, void* user);
-    return_t for_each_jws(std::function<void(const hint_signature_t*, void*)> f, void* user);
+    return_t for_each_jwa(std::function<void(const hint_jose_encryption_t*)> f);
+    return_t for_each_jwe(std::function<void(const hint_jose_encryption_t*)> f);
+    return_t for_each_jws(std::function<void(const hint_signature_t*)> f);
 
     /**
      * @brief hint
@@ -547,13 +550,14 @@ class crypto_advisor {
     ///////////////////////////////////////////////////////////////////////////
     /**
      * @example
-     *          auto query_cose = [&](const char* feature, uint32 spec, void* user) -> void {
+     *          auto query_cose = [&](const char* feature, uint32 spec) -> void {
      *              return_t ret = spec ? errorcode_t::success : errorcode_t::not_supported;
      *              _test_case.test(ret, __FUNCTION__, R"(check feature COSE "%s" [%08x])", feature, spec);
      *          };
-     *          advisor->for_each_cose(query_cose, nullptr);
+     *          advisor->for_each_cose(query_cose);
      */
-    return_t for_each_cose(std::function<void(const char*, uint32, void*)> f, void* user);
+    return_t for_each_cose(std::function<void(const char*, uint32)> f);
+    return_t for_each_cose(std::function<void(const hint_cose_algorithm_t*)> f);
     /**
      * @brief hint
      * @param cose_alg_t sig [in]
@@ -605,6 +609,9 @@ class crypto_advisor {
     const hint_group_t* hintof_tls_group(const std::string& name);
     void enum_tls_group(std::function<void(const hint_group_t*)> func);
     const hint_group_t* hintof_tls_group_nid(uint32 nid);
+
+    return_t for_each_tls_group(std::function<void(uint16, uint32)> f);
+    return_t for_each_tls_group(std::function<void(const hint_group_t*)> f);
 
     ///////////////////////////////////////////////////////////////////////////
     // etc

@@ -14,39 +14,39 @@
 namespace hotplace {
 namespace crypto {
 
-return_t crypto_advisor::for_each_curve(std::function<void(const char*, uint32, void*)> f, void* user) {
+return_t crypto_advisor::for_each_curve(std::function<void(const char*, uint32)> f) {
     return_t ret = errorcode_t::success;
     for (size_t i = 0; i < sizeof_hint_curves; i++) {
         const hint_curve_t* item = hint_curves + i;
         if (item->name_nist) {
             auto spec = query_feature(item->name_nist, advisor_feature_curve);
-            f(item->name_nist, spec, user);
+            f(item->name_nist, spec);
         }
         if (item->name_x962) {
             auto spec = query_feature(item->name_x962, advisor_feature_curve);
-            f(item->name_x962, spec, user);
+            f(item->name_x962, spec);
         }
         if (item->name_sec) {
             auto spec = query_feature(item->name_sec, advisor_feature_curve);
-            f(item->name_sec, spec, user);
+            f(item->name_sec, spec);
         }
         if (item->name_bp) {
             auto spec = query_feature(item->name_bp, advisor_feature_curve);
-            f(item->name_bp, spec, user);
+            f(item->name_bp, spec);
         }
         if (item->name_wtls) {
             auto spec = query_feature(item->name_wtls, advisor_feature_curve);
-            f(item->name_wtls, spec, user);
+            f(item->name_wtls, spec);
         }
     }
     return ret;
 }
 
-return_t crypto_advisor::for_each_curve_hint(std::function<void(const hint_curve_t*, void*)> f, void* user) {
+return_t crypto_advisor::for_each_curve_hint(std::function<void(const hint_curve_t*)> f) {
     return_t ret = errorcode_t::success;
     for (size_t i = 0; i < sizeof_hint_curves; i++) {
         const hint_curve_t* item = hint_curves + i;
-        f(item, user);
+        f(item);
     }
     return ret;
 }

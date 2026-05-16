@@ -62,20 +62,23 @@ return_t tls_composer::do_tls_client_handshake(unsigned wto, std::function<void(
 
             // S->C SH, check HRR
             session->wait_change_session_status(session_status_server_hello, wto);
-            session_status = session->get_session_status();
 
-            if (0 == (session_status & session_status_server_hello)) {
-                ret = errorcode_t::error_handshake;
+            session_status = session->get_session_status();
+            if (session_status & session_status_server_hello) {
+                ret = success;
                 break;
+            } else {
+                ret = error_handshake;
             }
         } while ((tls_flow_hello_retry_request == protection.get_flow()) && (--retry));
 
         if (errorcode_t::success != ret) {
-            __leave2;
+            __leave2_trace(ret);
         }
-        if (tls_flow_1rtt != protection.get_flow()) {
+        auto flow = protection.get_flow();
+        if (tls_flow_1rtt != flow && tls_flow_hello_retry_request != flow) {
             ret = errorcode_t::error_handshake;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         tls_records records;
@@ -229,6 +232,9 @@ return_t tls_composer::do_tls_server_handshake_phase1(std::function<void(tls_ses
                          }
                          return ret;
                      });
+
+            do_tls_compose(&records, dir, func);
+            records.clear();
 
             // unexpected message
             auto lambda_has_fatal = [&](uint8 level, uint8 desc) -> void {

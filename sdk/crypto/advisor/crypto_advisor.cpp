@@ -333,6 +333,8 @@ return_t crypto_advisor::build() {
             std::string key = item->name;
             std::transform(key.begin(), key.end(), key.begin(), tolower);  // ignore case
             _tls_group_name_map.insert({std::move(key), item});
+
+            set_feature(item->name, advisor_feature_tlsgroup);
         }
     }
 

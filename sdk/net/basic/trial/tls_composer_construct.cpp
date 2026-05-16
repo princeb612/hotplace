@@ -9,7 +9,9 @@
  */
 
 #include <hotplace/sdk/base/nostd/exception.hpp>
+#include <hotplace/sdk/base/nostd/template.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 #include <hotplace/sdk/net/basic/trial/tls_composer.hpp>
 #include <hotplace/sdk/net/tls/dtls_record_publisher.hpp>
@@ -42,6 +44,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
         }
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        crypto_advisor* advisor = crypto_advisor::get_instance();
         uint32 session_status = 0;
         auto session_type = session->get_type();
         auto& protection = session->get_tls_protection();
@@ -105,30 +108,26 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                          return success;
                      })
                 .add(tls_ext_supported_groups, dir, hs,
-                     // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
                      [&](tls_extension* extension) -> return_t {
-                         tlsadvisor->for_each_tls_groups([&](uint16 group) -> void { (*(tls_extension_supported_groups*)extension).add(group); });
+                         auto ext = (tls_extension_supported_groups*)extension;
+                         // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
+                         advisor->for_each_tls_group([&](const hint_group_t* hint) -> void {
+                             auto group = hint->group;
+                             if (tlsadvisor->test_tls_group(group)) {
+                                 if (tls_flag_support & hint->flags) {
+                                     (*ext).add(group);
+                                 }
+                             }
+                         });
                          return success;
                      })
-                .add(tls_ext_signature_algorithms, dir, hs, [](tls_extension* extension) -> return_t {
-                    (*(tls_extension_signature_algorithms*)extension)
-                        .add("ecdsa_secp256r1_sha256")
-                        .add("ecdsa_secp384r1_sha384")
-                        .add("ecdsa_secp521r1_sha512")
-                        .add("ed25519")
-                        .add("ed448")
-                        .add("mldsa44")
-                        .add("mldsa65")
-                        .add("mldsa87")
-                        .add("rsa_pkcs1_sha256")
-                        .add("rsa_pkcs1_sha384")
-                        .add("rsa_pkcs1_sha512")
-                        .add("rsa_pss_pss_sha256")
-                        .add("rsa_pss_pss_sha384")
-                        .add("rsa_pss_pss_sha512")
-                        .add("rsa_pss_rsae_sha256")
-                        .add("rsa_pss_rsae_sha384")
-                        .add("rsa_pss_rsae_sha512");
+                .add(tls_ext_signature_algorithms, dir, hs, [&](tls_extension* extension) -> return_t {
+                    auto ext = (tls_extension_signature_algorithms*)extension;
+                    advisor->for_each_sigscheme([&](const hint_sigscheme_t* hint) -> void {
+                        if (tls_flag_support & hint->flags) {
+                            (*ext).add(hint->scheme);
+                        }
+                    });
                     return success;
                 });
 
@@ -137,10 +136,10 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                 hs->get_extensions()
                     .add(tls_ext_supported_versions, dir, hs,
                          [&](tls_extension* extension) -> return_t {
-                             auto sv = (tls_extension_client_supported_versions*)extension;
-                             (*sv).add(is_dtls ? dtls_13 : tls_13);
+                             auto ext = (tls_extension_client_supported_versions*)extension;
+                             (*ext).add(is_dtls ? dtls_13 : tls_13);
                              if (tls_12 == minspec) {
-                                 (*sv).add(is_dtls ? dtls_12 : tls_12);
+                                 (*ext).add(is_dtls ? dtls_12 : tls_12);
                              }
                              return success;
                          })
@@ -149,15 +148,33 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                              (*(tls_extension_psk_key_exchange_modes*)extension).add("psk_dhe_ke");
                              return success;
                          })
-                    .add(tls_ext_key_share, dir, hs,  //
-                         [&](tls_extension* extension) -> return_t {
-                             tls_extension_client_key_share* keyshare = (tls_extension_client_key_share*)extension;
-                             if (tls_flow_hello_retry_request != protection.get_flow()) {
-                                 keyshare->clear();
-                                 tlsadvisor->for_each_tls_groups([&](uint16 group) -> void { keyshare->add(group); });
-                             }
-                             return success;
-                         });
+                    .add(tls_ext_key_share, dir, hs, [&](tls_extension* extension) -> return_t {
+                        tls_extension_client_key_share* keyshare = (tls_extension_client_key_share*)extension;
+                        if (tls_flow_hello_retry_request != protection.get_flow()) {
+                            keyshare->clear();
+                            std::set<uint16> groups;
+                            advisor->for_each_tls_group([&](const hint_group_t* hint) -> void {
+                                auto group = hint->group;
+                                if (tlsadvisor->test_tls_group(group)) {
+                                    if (tls_flag_support & hint->flags) {
+                                        groups.insert(group);
+                                    }
+                                }
+                            });
+                            auto lambda = [&](std::list<uint16> members) -> void {
+                                for (auto group : members) {
+                                    if (groups.count(group)) {
+                                        keyshare->add(group);
+                                        break;
+                                    }
+                                }
+                            };
+                            lambda({tls_group_x25519mlkem768, tls_group_secp256r1mlkem768, tls_group_secp384r1mlkem1024, tls_group_mlkem768, tls_group_mlkem512,
+                                    tls_group_mlkem1024});
+                            lambda({tls_group_secp256r1, tls_group_secp384r1, tls_group_secp521r1, tls_group_x25519, tls_group_x448});
+                        }
+                        return success;
+                    });
             }
 
             if (tls_12 == minspec) {

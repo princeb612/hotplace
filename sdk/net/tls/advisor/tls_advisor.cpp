@@ -694,16 +694,6 @@ return_t tls_advisor::set_default_tls_groups() {
     return_t ret = errorcode_t::success;
     critical_section_guard guard(_lock);
     _groups.clear();
-    _groups.insert(tls_group_x25519);
-    _groups.insert(tls_group_secp256r1);
-#if OPENSSL_VERSION_NUMBER >= 0x30500000L
-    _groups.insert(tls_group_mlkem512);
-    _groups.insert(tls_group_mlkem768);
-    _groups.insert(tls_group_mlkem1024);
-    _groups.insert(tls_group_x25519mlkem768);  // chrome
-    _groups.insert(tls_group_secp256r1mlkem768);
-    _groups.insert(tls_group_secp384r1mlkem1024);
-#endif
     return ret;
 }
 
@@ -719,15 +709,6 @@ bool tls_advisor::test_tls_group(uint16 group) {
         }
     }
     return ret;
-}
-
-void tls_advisor::for_each_tls_groups(std::function<void(uint16)> func) {
-    if (func) {
-        critical_section_guard guard(_lock);
-        for (auto& group : _groups) {
-            func(group);
-        }
-    }
 }
 
 return_t tls_advisor::enable_alpn(const char* prot) {

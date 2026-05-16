@@ -70,19 +70,15 @@ void test_basic() {
         crypto_advisor* advisor = crypto_advisor::get_instance();
 
         _logger->writeln("JWA");
-        _logger->write([&](basic_stream& bs) -> void {
-            advisor->for_each_jwa([&](const hint_jose_encryption_t* item, void* user) -> void { bs.printf("    %s\n", item->alg_name); }, nullptr);
-        });
+        _logger->write(
+            [&](basic_stream& bs) -> void { advisor->for_each_jwa([&](const hint_jose_encryption_t* item) -> void { bs.printf("    %s\n", item->alg_name); }); });
 
         _logger->writeln("JWE");
-        _logger->write([&](basic_stream& bs) -> void {
-            advisor->for_each_jwe([&](const hint_jose_encryption_t* item, void* user) -> void { bs.printf("    %s\n", item->alg_name); }, nullptr);
-        });
+        _logger->write(
+            [&](basic_stream& bs) -> void { advisor->for_each_jwe([&](const hint_jose_encryption_t* item) -> void { bs.printf("    %s\n", item->alg_name); }); });
 
         _logger->writeln("JWS");
-        _logger->write([&](basic_stream& bs) -> void {
-            advisor->for_each_jws([&](const hint_signature_t* item, void* user) -> void { bs.printf("    %s\n", item->jws_name); }, nullptr);
-        });
+        _logger->write([&](basic_stream& bs) -> void { advisor->for_each_jws([&](const hint_signature_t* item) -> void { bs.printf("    %s\n", item->jws_name); }); });
     }
 #endif
 

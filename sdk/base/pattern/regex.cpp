@@ -80,13 +80,6 @@ void regex_tokens(const char* input, size_t len, const char* expr, size_t& pos, 
 
                     if (begin != end) {
                         item.emplace(i, range_t(begin, end));
-
-#if defined DEBUG
-                        if (istraceable(trace_category_internal, loglevel_debug)) {
-                            trace_debug_event(trace_category_internal, trace_event_internal,
-                                              [&](basic_stream& dbs) -> void { dbs.printf("- match[%zi] %s\n", i, std::string(input + begin, end - begin).c_str()); });
-                        }
-#endif
                     }
                 }
             }
@@ -130,14 +123,6 @@ void regex_tokens(const char* input, size_t len, const char* expr, size_t& pos, 
                     auto end = ovector[2 * i + 1];
                     if (begin != -1) {
                         item.emplace(i, range_t(begin, end));
-
-#if defined DEBUG
-                        if (istraceable(trace_category_internal, loglevel_debug)) {
-                            trace_debug_event(trace_category_internal, trace_event_internal, [&](basic_stream& dbs) -> void {
-                                dbs.printf("- match[%zi] %s\n", i, std::string(input + pos + begin, end - begin).c_str());
-                            });
-                        }
-#endif
                     }
                 }
                 if (false == item.empty()) {

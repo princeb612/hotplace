@@ -202,7 +202,7 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
     {
         cose_alg_t::cose_eddsa,
         "EdDSA",
-        crypto_kty_t::kty_okp,
+        crypto_kty_t::kty_eddsa,
         cose_group_t::cose_group_sign_eddsa,
         hint_cose_groups + (cose_group_t::cose_group_sign_eddsa - 1),
         {

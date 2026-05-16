@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 :<< COMMENTS
 1. self-signed certificate
@@ -7,18 +7,22 @@
 COMMENTS
 
 :<< HELP
-    RSA     - RSA certificate (RSA3072)
+
+    ./issue.sh ecdsa
+
+    RSA     - RSA certificate (RSA 3072)
+    RSAPSS  - RSAPSS certificate (RSAPSS 3072)
     ECDSA   - ECDSA certificate (P-384)
-    P-256
-    P-384
-    P-521
+    P-256   - ECDSA certificate (P-256)
+    P-384   - ECDSA certificate (P-384)
+    P-521   - ECDSA certificate (P-521)
     MLDSA   - MLDSA certificate (ML-DSA-65)
-    MLDSA44
-    MLDSA65
-    MLDSA87
+    MLDSA44 - MLDSA certificate (ML-DSA-44)
+    MLDSA65 - MLDSA certificate (ML-DSA-65)
+    MLDSA87 - MLDSA certificate (ML-DSA-87)
     EDDSA   - EDDSA Certificate (ED25519)
-    ED25519
-    ED448
+    ED25519 - EDDSA Certificate (ED25519)
+    ED448   - EDDSA Certificate (ED448)
     clean   - delete certificate files (and then exit)
 HELP
 
@@ -40,6 +44,8 @@ if [ ${#args[@]} -ne 0 ]; then
         elif [ "$item" = "p-521" ]; then
             certtype=$item
         elif [ "$item" = "rsa" ]; then
+            certtype=$item
+        elif [ "$item" = "rsapss" ]; then
             certtype=$item
         elif [ "$item" = "mldsa" ]; then
             certtype=$item
@@ -67,6 +73,7 @@ fi
 algorithm=""
 pkeyopt=()
 digest=""
+parameter=()
 
 # root.key
 if [ "${certtype}" = "ecdsa" ]; then
@@ -98,6 +105,10 @@ elif [ "${certtype}" = "rsa" ]; then
     algorithm="rsa"
     pkeyopt=( -pkeyopt rsa_keygen_bits:3072 )
     digest="-sha256"
+elif [ "${certtype}" = "rsapss" ]; then
+    algorithm="RSA-PSS"
+    pkeyopt=( -pkeyopt rsa_keygen_bits:3072 )
+    digest="-sha256"
 elif [ "${certtype}" = "eddsa" ]; then
     algorithm="Ed25519"
 elif [ "${certtype}" = "ed25519" ]; then
@@ -107,7 +118,7 @@ elif [ "${certtype}" = "ed448" ]; then
 else
     exit
 fi
-openssl genpkey -algorithm "${algorithm}" "${pkeyopt[@]}" -out root-${certtype}.key
+openssl genpkey -algorithm "${algorithm}" "${parameter[@]}" "${pkeyopt[@]}" -out root-${certtype}.key
 
 # root.csr
 MSYS_NO_PATHCONV=1 openssl req -new ${digest} -key root-${certtype}.key -out root-${certtype}.csr -subj '/C=KR/ST=KN/L=GJ/O=Test/OU=Test/CN=Test Root'
@@ -126,7 +137,7 @@ openssl x509 -req -days 3650 -in root-${certtype}.csr -signkey root-${certtype}.
 openssl x509 -text -in root-${certtype}.crt
 
 # server-encrypted.key
-openssl genpkey -algorithm ${algorithm} "${pkeyopt[@]}" -out server-${certtype}-tmp.key
+openssl genpkey -algorithm "${algorithm}" "${parameter[@]}" "${pkeyopt[@]}" -out server-${certtype}-tmp.key
 openssl pkey -aes256 -in server-${certtype}-tmp.key -out server-${certtype}-encrypted.key
 
 rm -f server-${certtype}-tmp.key 
@@ -157,5 +168,6 @@ EOF
 # server.crt
 openssl x509 -req -days 365 -in server-${certtype}.csr -extfile server-${certtype}.ext -CA root-${certtype}.crt -CAkey root-${certtype}.key -CAcreateserial -out server-${certtype}.crt
 # review server.crt
-# openssl x509 -noout -text -in server-${certtype}.crt
+openssl x509 -noout -text -in server-${certtype}.crt
+# verify
 openssl verify -CAfile root-${certtype}.crt server-${certtype}.crt

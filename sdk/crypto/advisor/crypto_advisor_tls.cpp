@@ -57,6 +57,25 @@ const hint_group_t* crypto_advisor::hintof_tls_group_nid(uint32 nid) {
     return item;
 }
 
+return_t crypto_advisor::for_each_tls_group(std::function<void(uint16, uint32)> f) {
+    return_t ret = errorcode_t::success;
+    for (size_t i = 0; i < sizeof_hint_groups; ++i) {
+        const auto& item = hint_groups + i;
+        auto spec = query_feature(item->name, advisor_feature_tlsgroup);
+        f(item->group, spec);
+    }
+    return ret;
+}
+
+return_t crypto_advisor::for_each_tls_group(std::function<void(const hint_group_t*)> f) {
+    return_t ret = errorcode_t::success;
+    for (size_t i = 0; i < sizeof_hint_groups; ++i) {
+        const auto& item = hint_groups + i;
+        f(item);
+    }
+    return ret;
+}
+
 bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, tls_group_t group) {
     bool ret = false;
     __try2 {

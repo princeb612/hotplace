@@ -145,6 +145,25 @@ const hint_sigscheme_t* crypto_advisor::hintof_sigscheme(uint16 scheme) {
     return item;
 }
 
+return_t crypto_advisor::for_each_sigscheme(std::function<void(tls_sigscheme_t, uint32)> f) {
+    return_t ret = errorcode_t::success;
+    for (size_t i = 0; i < sizeof_hint_sigschemes; ++i) {
+        const auto& item = hint_sigschemes + i;
+        auto spec = query_feature(item->name, advisor_feature_sigscheme);
+        f(item->scheme, spec);
+    }
+    return ret;
+}
+
+return_t crypto_advisor::for_each_sigscheme(std::function<void(const hint_sigscheme_t*)> f) {
+    return_t ret = errorcode_t::success;
+    for (size_t i = 0; i < sizeof_hint_sigschemes; ++i) {
+        const auto& item = hint_sigschemes + i;
+        f(item);
+    }
+    return ret;
+}
+
 // hint_signature_t
 
 signature_t typeof_sig(const hint_signature_t* hint) {

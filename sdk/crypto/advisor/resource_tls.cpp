@@ -350,25 +350,26 @@ const hint_group_t hint_groups[] = {
         "ffdhe8192",
         {kty_dh, NID_ffdhe8192, 1024},
     },
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
     // https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/
     {
         tls_group_mlkem512,
         keyexchange_mlkem,
-        tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc,
+        tls_flag_support | tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc,
         "MLKEM512",
         {kty_mlkem, nid_mlkem512, 800, 768},
     },
     {
         tls_group_mlkem768,
         keyexchange_mlkem,
-        tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc,
+        tls_flag_support | tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc,
         "MLKEM768",
         {kty_mlkem, nid_mlkem768, 1184, 1088},
     },
     {
         tls_group_mlkem1024,
         keyexchange_mlkem,
-        tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc,
+        tls_flag_support | tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc,
         "MLKEM1024",
         {kty_mlkem, nid_mlkem1024, 1568, 1568},
     },
@@ -376,7 +377,7 @@ const hint_group_t hint_groups[] = {
     {
         tls_group_secp256r1mlkem768,
         keyexchange_mlkem,
-        tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
+        tls_flag_support | tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
         "SecP256r1MLKEM768",
         {kty_ec, NID_X9_62_prime256v1, 65},
         {kty_mlkem, nid_mlkem768, 1184, 1088},
@@ -384,7 +385,7 @@ const hint_group_t hint_groups[] = {
     {
         tls_group_x25519mlkem768,
         keyexchange_mlkem,
-        tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
+        tls_flag_support | tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
         "X25519MLKEM768",
         // no consistency
         {kty_mlkem, nid_mlkem768, 1184, 1088},
@@ -393,11 +394,12 @@ const hint_group_t hint_groups[] = {
     {
         tls_group_secp384r1mlkem1024,
         keyexchange_mlkem,
-        tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
+        tls_flag_support | tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
         "SecP384r1MLKEM1024",
         {kty_ec, NID_secp384r1, 97},
         {kty_mlkem, nid_mlkem1024, 1568, 1568},
     },
+#endif
     {
         0xff01,
         keyexchange_unknown,

@@ -303,12 +303,11 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
             pl.set_reference_value(constexpr_pubkey, constexpr_pubkey_len);
             pl.read(stream, endpos_extension(), pos);
 
-            // RFC 8448 5.  HelloRetryRequest
-            // if (0 == pubkeylen) hello_retry_request
-
             group = pl.t_value_of<uint16>(constexpr_group);
             pubkeylen = pl.t_value_of<uint16>(constexpr_pubkey_len);
             pl.get_binary(constexpr_pubkey, pubkey);
+
+            // RFC 8448 5.  HelloRetryRequest
 
             auto hint = advisor->hintof_tls_group(group);
 
@@ -324,9 +323,10 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
                     add_pubkey(group, pubkey, keydesc(get_kid()), dir);
                     // and then ECDHE, HRR (see calc)
                 }
+            } else {
+                session->get_session_info(from_server).get_keyvalue().set(session_hrr, group);
             }
 
-            // HRR
             session->get_session_info(from_server).get_keyvalue().set(session_key_share_group, group);
         }
 
