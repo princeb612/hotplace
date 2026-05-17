@@ -115,6 +115,10 @@ int main(int argc, char** argv) {
 
         // part 5 CWT
         testcase_rfc8392();
+
+        // * https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/
+        testcase_akp();
+        testcase_testvector_akp();
     }
     __finally2 { openssl_cleanup(); }
 

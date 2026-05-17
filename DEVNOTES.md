@@ -172,7 +172,9 @@ flowchart LR
   - [ ] crypto_key hybrid key
   - [ ] QUIC PQC handshake
 - [ ] MLDSA
-  - [ ] JOSE
+  - [x] JOSE
+   - [x] JWK
+   - [x] sign
   - [ ] COSE
 - [ ] HTTP/3
   - [x] [The Illustrated QUIC Connection](https://quic.xargs.org/)

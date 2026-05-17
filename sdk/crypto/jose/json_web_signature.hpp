@@ -92,7 +92,7 @@ class json_web_signature {
     /**
      * @brief sign
      * @param crypto_key* crypto_key [in]
-     * @param std::list<std::string> const& headers [in]
+     * @param const std::list<std::string>& headers [in]
      * @param const std::string& claims [in]
      * @param std::string& signature [out]
      * @param jose_serialization_t mode [in]
@@ -105,7 +105,7 @@ class json_web_signature {
      *          headers.push_back (ps256_header);
      *          jws.sign (&crypto_key, headers, claim, signature);
      */
-    return_t sign(crypto_key* crypto_key, std::list<std::string> const& headers, const std::string& claims, std::string& signature,
+    return_t sign(crypto_key* crypto_key, const std::list<std::string>& headers, const std::string& claims, std::string& signature,
                   jose_serialization_t mode = jose_serialization_t::jose_compact);
     /**
      * @brief sign

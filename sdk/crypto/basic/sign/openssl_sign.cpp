@@ -32,27 +32,34 @@ return_t openssl_sign::sign(const EVP_PKEY* pkey, signature_t sig, const byte_t*
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        int type = EVP_PKEY_id(pkey);
+
+        auto kty = ktyof_evp_pkey(pkey);
+
         const hint_signature_t* hint = advisor->hintof_signature(sig);
         if (nullptr == hint) {
             ret = errorcode_t::bad_request;
             __leave2;
         }
-        int group = typeof_group(hint);
+        auto category = categoryof(hint);
         hash_algorithm_t hash_alg = typeof_alg(hint);
-        switch (type) {
-            case EVP_PKEY_HMAC:
-                switch (group) {
+
+        switch (kty) {
+            case kty_oct:
+                switch (category) {
                     case sig_category_t::sig_category_dgst:
                         ret = sign_digest(pkey, hash_alg, stream, size, signature);
                         break;
                     case sig_category_t::sig_category_hmac:
                         ret = sign_hmac(pkey, hash_alg, stream, size, signature);
                         break;
+                    default:
+                        ret = errorcode_t::bad_request;
+                        break;
                 }
                 break;
-            case EVP_PKEY_RSA:
-                switch (group) {
+            case kty_rsa:
+            case kty_rsapss:
+                switch (category) {
                     case sig_category_t::sig_category_rsassa_pkcs15:
                         ret = sign_rsassa_pkcs15(pkey, hash_alg, stream, size, signature);
                         break;
@@ -64,16 +71,20 @@ return_t openssl_sign::sign(const EVP_PKEY* pkey, signature_t sig, const byte_t*
                         break;
                 }
                 break;
-            case EVP_PKEY_EC:
+            case kty_ec:
                 ret = sign_ecdsa(pkey, hash_alg, stream, size, signature, flags);
                 break;
-            case EVP_PKEY_ED25519:
-            case EVP_PKEY_ED448:
+            case kty_okp:
                 ret = sign_eddsa(pkey, hash_alg, stream, size, signature);
                 break;
-            case EVP_PKEY_DSA:
+            case kty_dsa:
                 ret = sign_dsa(pkey, hash_alg, stream, size, signature);
                 break;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+            case kty_mldsa:
+                ret = sign_mldsa(pkey, stream, size, signature);
+                break;
+#endif
             default:
                 ret = errorcode_t::not_supported;
                 break;
@@ -96,27 +107,34 @@ return_t openssl_sign::verify(const EVP_PKEY* pkey, signature_t sig, const byte_
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        int type = EVP_PKEY_id(pkey);
+
+        auto kty = ktyof_evp_pkey(pkey);
+
         const hint_signature_t* hint = advisor->hintof_signature(sig);
         if (nullptr == hint) {
             ret = errorcode_t::bad_request;
             __leave2;
         }
-        int group = typeof_group(hint);
+        auto category = categoryof(hint);
         hash_algorithm_t hash_alg = typeof_alg(hint);
-        switch (type) {
-            case EVP_PKEY_HMAC:
-                switch (group) {
+
+        switch (kty) {
+            case kty_oct:
+                switch (category) {
                     case sig_category_t::sig_category_dgst:
                         ret = verify_digest(pkey, hash_alg, stream, size, signature);
                         break;
                     case sig_category_t::sig_category_hmac:
                         ret = verify_hmac(pkey, hash_alg, stream, size, signature);
                         break;
+                    default:
+                        ret = errorcode_t::bad_request;
+                        break;
                 }
                 break;
-            case EVP_PKEY_RSA:
-                switch (group) {
+            case kty_rsa:
+            case kty_rsapss:
+                switch (category) {
                     case sig_category_t::sig_category_rsassa_pkcs15:
                         ret = verify_rsassa_pkcs15(pkey, hash_alg, stream, size, signature);
                         break;
@@ -128,16 +146,20 @@ return_t openssl_sign::verify(const EVP_PKEY* pkey, signature_t sig, const byte_
                         break;
                 }
                 break;
-            case EVP_PKEY_EC:
+            case kty_ec:
                 ret = verify_ecdsa(pkey, hash_alg, stream, size, signature, flags);
                 break;
-            case EVP_PKEY_ED25519:
-            case EVP_PKEY_ED448:
+            case kty_okp:
                 ret = verify_eddsa(pkey, hash_alg, stream, size, signature);
                 break;
-            case EVP_PKEY_DSA:
+            case kty_dsa:
                 ret = verify_dsa(pkey, hash_alg, stream, size, signature);
                 break;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+            case kty_mldsa:
+                ret = verify_mldsa(pkey, stream, size, signature);
+                break;
+#endif
             default:
                 ret = errorcode_t::not_supported;
                 break;

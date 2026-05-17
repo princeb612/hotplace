@@ -103,6 +103,7 @@ return_t crypto_keychain::pkey_encode_format(OSSL_LIB_CTX* libctx, const EVP_PKE
 
 return_t crypto_keychain::pkey_decode_format(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase) {
     return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     __try2 {
         if (nullptr == pkey || keydata.empty()) {
             ret = errorcode_t::invalid_parameter;
@@ -111,6 +112,9 @@ return_t crypto_keychain::pkey_decode_format(OSSL_LIB_CTX* libctx, EVP_PKEY** pk
         ret = pkey_decode_format(libctx, pkey, keydata.data(), keydata.size(), encoding, passphrase);
     }
     __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
     return ret;
 }
 
@@ -166,6 +170,7 @@ return_t crypto_keychain::pkey_decode_format(OSSL_LIB_CTX* libctx, EVP_PKEY** pk
 
 return_t crypto_keychain::pkey_encode_raw(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keydata, key_encoding_t encoding) {
     return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     __try2 {
         if (nullptr == pkey) {
             ret = errorcode_t::invalid_parameter;
@@ -196,11 +201,15 @@ return_t crypto_keychain::pkey_encode_raw(OSSL_LIB_CTX* libctx, const EVP_PKEY* 
         }
     }
     __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
     return ret;
 }
 
 return_t crypto_keychain::pkey_decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase) {
     return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     __try2 {
         if (nullptr == pkey || keydata.empty()) {
             ret = errorcode_t::invalid_parameter;
@@ -209,12 +218,16 @@ return_t crypto_keychain::pkey_decode(OSSL_LIB_CTX* libctx, const char* name, EV
         ret = pkey_decode(libctx, name, pkey, keydata.data(), keydata.size(), encoding, passphrase);
     }
     __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
     return ret;
 }
 
 return_t crypto_keychain::pkey_decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding,
                                       const char* passphrase) {
     return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     __try2 {
         if (nullptr == pkey || nullptr == keystream) {
             ret = errorcode_t::invalid_parameter;
@@ -236,11 +249,15 @@ return_t crypto_keychain::pkey_decode(OSSL_LIB_CTX* libctx, const char* name, EV
         }
     }
     __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
     return ret;
 }
 
 return_t crypto_keychain::pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding) {
     return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     __try2 {
         if (nullptr == pkey || keydata.empty()) {
             ret = errorcode_t::invalid_parameter;
@@ -249,6 +266,9 @@ return_t crypto_keychain::pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name
         ret = pkey_decode_raw(libctx, name, pkey, keydata.data(), keydata.size(), encoding);
     }
     __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
     return ret;
 }
 
@@ -310,6 +330,7 @@ return_t crypto_keychain::pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name
 
 return_t crypto_keychain::pkey_encode(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keydata, key_encoding_t encoding, const char* passphrase) {
     return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     switch (encoding) {
         case key_encoding_priv_pem:
         case key_encoding_encrypted_priv_pem:
@@ -324,11 +345,15 @@ return_t crypto_keychain::pkey_encode(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey
             ret = pkey_encode_raw(libctx, pkey, keydata, encoding);
         } break;
     }
+#else
+    ret = errorcode_t::not_supported;
+#endif
     return ret;
 }
 
 return_t crypto_keychain::pkey_decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase) {
     return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     __try2 {
         if (nullptr == pkey || keydata.empty()) {
             ret = errorcode_t::invalid_parameter;
@@ -337,11 +362,15 @@ return_t crypto_keychain::pkey_decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, con
         ret = pkey_decode(libctx, pkey, keydata.data(), keydata.size(), encoding, passphrase);
     }
     __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
     return ret;
 }
 
 return_t crypto_keychain::pkey_decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding, const char* passphrase) {
     return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
     switch (encoding) {
         case key_encoding_priv_pem:
         case key_encoding_encrypted_priv_pem:
@@ -356,6 +385,9 @@ return_t crypto_keychain::pkey_decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, con
             ret = not_supported;
         } break;
     }
+#else
+    ret = errorcode_t::not_supported;
+#endif
     return ret;
 }
 
@@ -399,6 +431,425 @@ bool crypto_keychain::pkey_is_private(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey
     // ret = errorcode_t::not_supported;
 #endif
     return ret_value;
+}
+
+return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    __try2 {
+        if (nullptr == cryptokey) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto sn = OBJ_nid2sn(nid);
+        if (nullptr == sn) {
+            ret = errorcode_t::not_supported;
+            __leave2;
+        }
+
+        EVP_PKEY* pk = nullptr;
+        ret = pkey_keygen_byname(nullptr, &pk, sn);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        EVP_PKEY_ptr pkey(pk);
+        crypto_key_object key(pkey.get(), desc);
+        ret = cryptokey->add(std::move(key));
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        pkey.release();  // cryptokey own pkey
+    }
+    __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
+    return ret;
+}
+
+return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    __try2 {
+        if (nullptr == cryptokey || nullptr == name) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        EVP_PKEY* pk = nullptr;
+        ret = pkey_keygen_byname(nullptr, &pk, name);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        EVP_PKEY_ptr pkey(pk);
+        crypto_key_object key(pkey.get(), desc);
+        ret = cryptokey->add(std::move(key));
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        pkey.release();  // cryptokey own pkey
+    }
+    __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
+    return ret;
+}
+
+return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, const binary_t& keydata, key_encoding_t encoding, const keydesc& desc) {
+    return add_ossl3(cryptokey, nid, keydata.data(), keydata.size(), encoding, desc);
+}
+
+return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, const byte_t* keydata, size_t keysize, key_encoding_t encoding, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    __try2 {
+        if (nullptr == cryptokey || nullptr == keydata) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        const char* name = OBJ_nid2sn(nid);
+        if (nullptr == name) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        ret = add_ossl3(cryptokey, name, keydata, keysize, encoding, desc);
+    }
+    __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
+    return ret;
+}
+
+return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, const binary_t& keydata, key_encoding_t encoding, const keydesc& desc) {
+    return add_ossl3(cryptokey, name, keydata.data(), keydata.size(), encoding, desc);
+}
+
+return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, const byte_t* keydata, size_t keysize, key_encoding_t encoding, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    __try2 {
+        if (nullptr == cryptokey || nullptr == name || nullptr == keydata) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        EVP_PKEY* pk = nullptr;
+        ret = pkey_decode(nullptr, name, &pk, keydata, keysize, encoding);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        EVP_PKEY_ptr pkey(pk);
+
+        crypto_key_object key(pkey.get(), desc);
+        ret = cryptokey->add(std::move(key));
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        pkey.release();  // cryptokey own pkey
+    }
+    __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
+    return ret;
+}
+
+return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, encoding_t fmt, const char* key, key_encoding_t encoding, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    __try2 {
+        if (nullptr == cryptokey || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        switch (fmt) {
+            case encoding_base64: {
+                ret = add_ossl3_b64(cryptokey, nid, key, encoding, desc);
+            } break;
+            case encoding_base64url: {
+                ret = add_ossl3_b64u(cryptokey, nid, key, encoding, desc);
+            } break;
+            case encoding_base16: {
+                ret = add_ossl3_b16(cryptokey, nid, key, encoding, desc);
+            } break;
+            case encoding_base16rfc: {
+                ret = add_ossl3_b16rfc(cryptokey, nid, key, encoding, desc);
+            } break;
+            default: {
+                ret = errorcode_t::bad_request;
+            } break;
+        }
+    }
+    __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
+    return ret;
+}
+
+return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, encoding_t fmt, const char* key, key_encoding_t encoding, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    __try2 {
+        if (nullptr == cryptokey || nullptr == name || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        switch (fmt) {
+            case encoding_base64: {
+                ret = add_ossl3_b64(cryptokey, name, key, encoding, desc);
+            } break;
+            case encoding_base64url: {
+                ret = add_ossl3_b64u(cryptokey, name, key, encoding, desc);
+            } break;
+            case encoding_base16: {
+                ret = add_ossl3_b16(cryptokey, name, key, encoding, desc);
+            } break;
+            case encoding_base16rfc: {
+                ret = add_ossl3_b16rfc(cryptokey, name, key, encoding, desc);
+            } break;
+            default: {
+                ret = errorcode_t::bad_request;
+            } break;
+        }
+    }
+    __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
+    return ret;
+}
+
+return_t crypto_keychain::add_ossl3_b64(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    __try2 {
+        if (nullptr == cryptokey || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = std::move(base64_decode(input, strlen(input), encoding_t::encoding_base64));
+            }
+        };
+
+        binary_t bin;
+
+        os2b(key, bin);
+
+        ret = add_ossl3(cryptokey, nid, bin, encoding, desc);
+    }
+    __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
+    return ret;
+}
+
+return_t crypto_keychain::add_ossl3_b64u(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    __try2 {
+        if (nullptr == cryptokey || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = std::move(base64_decode(input, strlen(input), encoding_t::encoding_base64url));
+            }
+        };
+
+        binary_t bin;
+
+        os2b(key, bin);
+
+        ret = add_ossl3(cryptokey, nid, bin, encoding, desc);
+    }
+    __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
+    return ret;
+}
+
+return_t crypto_keychain::add_ossl3_b16(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    __try2 {
+        if (nullptr == cryptokey || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = std::move(base16_decode(input, strlen(input)));
+            }
+        };
+
+        binary_t bin;
+
+        os2b(key, bin);
+
+        ret = add_ossl3(cryptokey, nid, bin, encoding, desc);
+    }
+    __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
+    return ret;
+}
+
+return_t crypto_keychain::add_ossl3_b16rfc(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    __try2 {
+        if (nullptr == cryptokey || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = std::move(base16_decode_rfc(std::string(input)));
+            }
+        };
+
+        binary_t bin;
+
+        os2b(key, bin);
+
+        ret = add_ossl3(cryptokey, nid, bin, encoding, desc);
+    }
+    __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
+    return ret;
+}
+
+return_t crypto_keychain::add_ossl3_b64(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    __try2 {
+        if (nullptr == cryptokey || nullptr == name || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = std::move(base64_decode(input, strlen(input), encoding_t::encoding_base64));
+            }
+        };
+
+        binary_t bin;
+
+        os2b(key, bin);
+
+        ret = add_ossl3(cryptokey, name, bin, encoding, desc);
+    }
+    __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
+    return ret;
+}
+
+return_t crypto_keychain::add_ossl3_b64u(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    __try2 {
+        if (nullptr == cryptokey || nullptr == name || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = std::move(base64_decode(input, strlen(input), encoding_t::encoding_base64url));
+            }
+        };
+
+        binary_t bin;
+
+        os2b(key, bin);
+
+        ret = add_ossl3(cryptokey, name, bin, encoding, desc);
+    }
+    __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
+    return ret;
+}
+
+return_t crypto_keychain::add_ossl3_b16(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    __try2 {
+        if (nullptr == cryptokey || nullptr == name || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = std::move(base16_decode(input, strlen(input)));
+            }
+        };
+
+        binary_t bin;
+
+        os2b(key, bin);
+
+        ret = add_ossl3(cryptokey, name, bin, encoding, desc);
+    }
+    __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
+    return ret;
+}
+
+return_t crypto_keychain::add_ossl3_b16rfc(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    __try2 {
+        if (nullptr == cryptokey || nullptr == name || nullptr == key) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto os2b = [](const char* input, binary_t& output) -> void {
+            if (input) {
+                output = std::move(base16_decode_rfc(std::string(input)));
+            }
+        };
+
+        binary_t bin;
+
+        os2b(key, bin);
+
+        ret = add_ossl3(cryptokey, name, bin, encoding, desc);
+    }
+    __finally2 {}
+#else
+    ret = errorcode_t::not_supported;
+#endif
+    return ret;
 }
 
 }  // namespace crypto

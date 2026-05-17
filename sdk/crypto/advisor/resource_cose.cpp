@@ -115,6 +115,11 @@ const hint_cose_group_t hint_cose_groups[] = {
         cose_group_hash,  // 20
         crypt_category_hash,
     },
+    {
+        cose_group_sign_mldsa,
+        crypt_category_sign,
+        cose_hint_sign | cose_hint_kty_mldsa,
+    },
 };
 
 const size_t sizeof_hint_cose_groups = RTL_NUMBER_OF(hint_cose_groups);
@@ -605,6 +610,32 @@ const hint_cose_algorithm_t hint_cose_algorithms[] = {
             cose_ec_curve_t::cose_ec_secp256k1,
         },
     },
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    {
+        cose_alg_t::cose_mldsa44,
+        "ML-DSA-44",
+        crypto_kty_t::kty_mldsa,
+        cose_group_t::cose_group_sign_mldsa,
+        hint_cose_groups + (cose_group_t::cose_group_sign_mldsa - 1),
+        {NID_ML_DSA_44},
+    },
+    {
+        cose_alg_t::cose_mldsa65,
+        "ML-DSA-65",
+        crypto_kty_t::kty_mldsa,
+        cose_group_t::cose_group_sign_mldsa,
+        hint_cose_groups + (cose_group_t::cose_group_sign_mldsa - 1),
+        {NID_ML_DSA_65},
+    },
+    {
+        cose_alg_t::cose_mldsa87,
+        "ML-DSA-87",
+        crypto_kty_t::kty_mldsa,
+        cose_group_t::cose_group_sign_mldsa,
+        hint_cose_groups + (cose_group_t::cose_group_sign_mldsa - 1),
+        {NID_ML_DSA_87},
+    },
+#endif
     {
         cose_alg_t::cose_rs256,
         "RS256",

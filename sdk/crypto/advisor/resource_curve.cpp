@@ -768,7 +768,7 @@ const hint_curve_t hint_curves[] = {
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
         tls_group_brainpoolP256r1,
-        cose_ec_curve_t::cose_ec_unknown,
+        cose_ec_curve_t::cose_ec_brainpoolp256r1,
         ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,  // RFC 5639 Table 1
         32,
         prime_field_weierstrass_curve,
@@ -784,7 +784,7 @@ const hint_curve_t hint_curves[] = {
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
         tls_group_brainpoolP256r1tls13,
-        cose_ec_curve_t::cose_ec_unknown,
+        cose_ec_curve_t::cose_ec_brainpoolp256r1,
         ECDSA_SUPPORT_SHA2_256 | ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,  // RFC 5639 Table 1
         32,
         prime_field_weierstrass_curve,
@@ -817,7 +817,7 @@ const hint_curve_t hint_curves[] = {
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
         tls_group_unknown,
-        cose_ec_curve_t::cose_ec_unknown,
+        cose_ec_curve_t::cose_ec_brainpoolp320r1,
         ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,  // RFC 5639 Table 1
         40,
         prime_field_weierstrass_curve,
@@ -851,7 +851,7 @@ const hint_curve_t hint_curves[] = {
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
         tls_group_brainpoolP384r1,
-        cose_ec_curve_t::cose_ec_unknown,
+        cose_ec_curve_t::cose_ec_brainpoolp384r1,
         ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,  // RFC 5639 Table 1
         48,
         prime_field_weierstrass_curve,
@@ -867,7 +867,7 @@ const hint_curve_t hint_curves[] = {
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
         tls_group_brainpoolP384r1tls13,
-        cose_ec_curve_t::cose_ec_unknown,
+        cose_ec_curve_t::cose_ec_brainpoolp384r1,
         ECDSA_SUPPORT_SHA2_384 | ECDSA_SUPPORT_SHA2_512,  // RFC 5639 Table 1
         48,
         prime_field_weierstrass_curve,
@@ -901,7 +901,7 @@ const hint_curve_t hint_curves[] = {
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
         tls_group_brainpoolP512r1,
-        cose_ec_curve_t::cose_ec_unknown,
+        cose_ec_curve_t::cose_ec_brainpoolp512r1,
         ECDSA_SUPPORT_SHA2_512,  // RFC 5639 Table 1
         64,
         prime_field_weierstrass_curve,
@@ -917,7 +917,7 @@ const hint_curve_t hint_curves[] = {
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
         tls_group_brainpoolP512r1tls13,
-        cose_ec_curve_t::cose_ec_unknown,
+        cose_ec_curve_t::cose_ec_brainpoolp512r1,
         ECDSA_SUPPORT_SHA2_512,  // RFC 5639 Table 1
         64,
         prime_field_weierstrass_curve,

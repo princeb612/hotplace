@@ -88,6 +88,8 @@
   * [RFC 7518 JSON Web Algorithms (JWA)](https://datatracker.ietf.org/doc/html/rfc7518)
   * [RFC 7520 Examples of Protecting Content Using JSON Object Signing and Encryption (JOSE)](https://datatracker.ietf.org/doc/html/rfc7520)
   * [RFC 8037 CFRG Elliptic Curve Diffie-Hellman (ECDH) and Signatures in JSON Object Signing and Encryption (JOSE)](https://datatracker.ietf.org/doc/html/rfc8037)
+* ML-DSA for JOSE and COSE
+  * https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/
 * HTTP/1.1
   * [RFC 1945 Hypertext Transfer Protocol -- HTTP/1.0](https://datatracker.ietf.org/doc/html/rfc1945)
   * [RFC 2068 Hypertext Transfer Protocol -- HTTP/1.1](https://datatracker.ietf.org/doc/html/rfc2068)
@@ -176,8 +178,6 @@
   * RFC 7685 A Transport Layer Security (TLS) ClientHello Padding Extension
   * RFC 8422 Elliptic Curve Cryptography (ECC) Cipher Suites for Transport Layer Security (TLS) Versions 1.2 and Earlier
   * RFC 9325 Recommendations for Secure Use of Transport Layer Security (TLS) and Datagram Transport Layer Security (DTLS)
-* ML-DSA for JOSE and COSE
-  * https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/
 
 * ASN.1
   * ITU-T X.680-X.699

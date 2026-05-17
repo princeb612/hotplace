@@ -43,4 +43,7 @@ void testcase_rfc7520();
 void testcase_rfc7638();
 void testcase_rfc8037();
 
+void testcase_akp();
+void testcase_testvector_akp();
+
 #endif

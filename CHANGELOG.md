@@ -32,8 +32,8 @@
     * CBOR
 
 * details
-  * Revision 997
-    * github ci openssl 3.0.0 environment
+  * Revision 998
+    * ML-DSA for JOSE and COSE
   * Revision 994
     * [fixed] floating point, bignumber
     * [changed] self-signed certificates

@@ -496,7 +496,7 @@ return_t cbor_object_signing_encryption::preprocess_dorandom(cose_context_t* han
             crypto_keychain keychain;
             binary_t bin_x;
             binary_t bin_y;
-            cose_ec_curve_t curve = hint->eckey.curve;
+            cose_ec_curve_t curve = hint->keyinfo.curve;
             cose_key_t cosekey = cose_key_t::cose_key_unknown;
             if (cose_hint_flag_t::cose_hint_epk & flags) {
                 cosekey = cose_ephemeral_key;  // -1

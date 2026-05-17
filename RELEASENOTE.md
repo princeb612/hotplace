@@ -1,3 +1,8 @@
+### Release 1.112
+
+- ML-DSA for JOSE and COSE
+  - [draft-ietf-cose-dilithium](https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/)
+
 ### Release 1.90
 
 - TLS

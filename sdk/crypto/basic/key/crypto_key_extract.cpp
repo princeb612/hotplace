@@ -523,7 +523,7 @@ return_t crypto_key::extract_mldsa(const EVP_PKEY* pkey, int flags, crypto_kty_t
 
         type = ktyof_evp_pkey(pkey);
 
-        if (crypto_kty_t::kty_mlkem != type) {
+        if (crypto_kty_t::kty_mldsa != type) {
             ret = errorcode_t::different_type;
             __leave2;
         }

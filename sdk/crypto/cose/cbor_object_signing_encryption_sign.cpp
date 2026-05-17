@@ -207,6 +207,7 @@ return_t cbor_object_signing_encryption::dosign(cose_context_t* handle, crypto_k
             case cose_group_sign_eddsa:
             case cose_group_sign_rsassa_pss:
             case cose_group_sign_rsassa_pkcs15:
+            case cose_group_sign_mldsa:
                 if (mode) {
                     binary_t sign;
                     ret = signprocessor.sign(pkey, sig, tobesigned, signature);

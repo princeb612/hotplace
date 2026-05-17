@@ -201,6 +201,9 @@ int main(int argc, char** argv) {
     testcase_rfc7638();
     testcase_rfc8037();
 
+    testcase_akp();
+    testcase_testvector_akp();
+
     openssl_cleanup();
 
     _logger->flush();

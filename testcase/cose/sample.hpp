@@ -54,4 +54,7 @@ void testcase_cose();
 // part 5 CWT
 void testcase_rfc8392();
 
+void testcase_akp();
+void testcase_testvector_akp();
+
 #endif

@@ -57,8 +57,8 @@ return_t crypto_advisor::build() {
         }
     };
 
-    for (i = 0; i < sizeof_hint_blockciphers; i++) {
-        const hint_blockcipher_t* item = hint_blockciphers + i;
+    for (i = 0; i < sizeof_hint_blockciphers; ++i) {
+        auto item = hint_blockciphers + i;
         _blockcipher_map.insert(std::make_pair(typeof_alg(item), item));
     }
 
@@ -71,8 +71,8 @@ return_t crypto_advisor::build() {
     //     [FAIL] const EVP_CIPHER* cipher = EVP_get_cipherbyname("aes-128-wrap");
     //     [PASS] const EVP_CIPHER* cipher = crypto_advisor::get_instance()->find_evp_cipher("aes-128-wrap");
 
-    for (i = 0; i < sizeof_evp_cipher_methods; i++) {
-        const hint_cipher_t* item = evp_cipher_methods + i;
+    for (i = 0; i < sizeof_evp_cipher_methods; ++i) {
+        auto item = evp_cipher_methods + i;
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
         EVP_CIPHER* evp_cipher = EVP_CIPHER_fetch(nullptr, nameof_alg(item), nullptr);
         if (evp_cipher) {
@@ -108,8 +108,8 @@ return_t crypto_advisor::build() {
 
 #if (OPENSSL_VERSION_NUMBER < 0x30000000L)
     // workaround for openssl-1.1.1 - EVP_CIPHER_fetch("aes-128-wrap") return nullptr
-    for (i = 0; i < sizeof_ossl1_aes_wrap_methods; i++) {
-        const evp_cipher_ossl1_methods* item = ossl1_aes_wrap_methods + i;
+    for (i = 0; i < sizeof_ossl1_aes_wrap_methods; ++i) {
+        auto item = ossl1_aes_wrap_methods + i;
         if (item->_cipher) {
             cipher_fetch_block_t block((EVP_CIPHER*)item->_cipher, &item->hint);
             // distinguish between crypto_scheme_aes_128_gcm and crypto_scheme_tls_aes_128_gcm
@@ -121,8 +121,8 @@ return_t crypto_advisor::build() {
     }
 #endif
 
-    for (i = 0; i < sizeof_evp_md_methods; i++) {
-        const hint_digest_t* item = evp_md_methods + i;
+    for (i = 0; i < sizeof_evp_md_methods; ++i) {
+        auto item = evp_md_methods + i;
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
         EVP_MD* evp_md = EVP_MD_fetch(nullptr, nameof_alg(item), nullptr);
         if (evp_md) {
@@ -157,8 +157,8 @@ return_t crypto_advisor::build() {
 
     ERR_clear_error();  // errors while EVP_CIPHER_fetch, EVP_MD_fetch
 
-    for (i = 0; i < sizeof_hint_jose_algorithms; i++) {
-        const hint_jose_encryption_t* item = hint_jose_algorithms + i;
+    for (i = 0; i < sizeof_hint_jose_algorithms; ++i) {
+        auto item = hint_jose_algorithms + i;
         _alg_map.insert(std::make_pair(item->type, item));
         if (item->alg_name) {
             _alg_byname_map.insert(std::make_pair(item->alg_name, item));
@@ -166,8 +166,8 @@ return_t crypto_advisor::build() {
 
         set_feature(item->alg_name, advisor_feature_jwa);
     }
-    for (i = 0; i < sizeof_hint_jose_encryptions; i++) {
-        const hint_jose_encryption_t* item = hint_jose_encryptions + i;
+    for (i = 0; i < sizeof_hint_jose_encryptions; ++i) {
+        auto item = hint_jose_encryptions + i;
         _enc_map.insert(std::make_pair(item->type, item));
         if (item->alg_name) {
             _enc_byname_map.insert(std::make_pair(item->alg_name, item));
@@ -175,35 +175,56 @@ return_t crypto_advisor::build() {
 
         set_feature(item->alg_name, advisor_feature_jwe);
     }
-    for (i = 0; i < sizeof_hint_signatures; i++) {
-        const hint_signature_t* item = hint_signatures + i;
-        _crypt_sig_map.insert(std::make_pair(item->sig, item));
+    for (i = 0; i < sizeof_hint_signatures; ++i) {
+        auto item = hint_signatures + i;
+        _crypt_sig_map.emplace(item->sig, item);
         if (item->jws_name) {
-            _sig_byname_map.insert(std::make_pair(item->jws_name, item));
+            _sig_byname_map.emplace(item->jws_name, item);
         }
         if (item->jws_type) {
-            _jose_sig_map.insert(std::make_pair(item->jws_type, item));
-            _sig2jws_map.insert(std::make_pair(item->sig, item->jws_type));
+            _jose_sig_map.emplace(item->jws_type, item);
+            _sig2jws_map.emplace(item->sig, item->jws_type);
         }
         for (uint midx = 0; midx < item->count; midx++) {
-            _sig_bynid_map.insert(std::make_pair(item->nid[midx], item));
+            _sig_bynid_map.emplace(item->nid[midx], item);
         }
+
+        _sig2jws_map.emplace(item->sig, item->jws_type);
+        _jws2sig_map.emplace(item->jws_type, item->sig);
+        if (cose_alg_t::cose_unknown != item->cosealg) {
+            _sig2cose_map.emplace(item->sig, item->cosealg);
+        }
+        _cose2sig_map.emplace(item->cosealg, item->sig);
+
         set_feature(item->jws_name, advisor_feature_jws);
     }
-    for (i = 0; i < sizeof_hint_sigschemes; i++) {
-        const hint_sigscheme_t* item = hint_sigschemes + i;
+    struct _sig2cose {
+        signature_t sig;
+        jws_t jws;
+        cose_alg_t cose;
+    };
+    struct _sig2cose cose2sig[] = {
+        {signature_t::sig_hs256, jws_t::jws_hs256, cose_alg_t::cose_hs256_64},
+    };
+    for (i = 0; i < RTL_NUMBER_OF(cose2sig); ++i) {
+        _cose2sig_map.insert(std::make_pair(cose2sig[i].cose, cose2sig[i].sig));
+    }
+
+    for (i = 0; i < sizeof_hint_sigschemes; ++i) {
+        auto item = hint_sigschemes + i;
         _hint_sigscheme_map.emplace(item->scheme, item);
+        _hint_sigscheme_nid_map.emplace(item->nid, item);
         set_feature(item->name, advisor_feature_sigscheme);
     }
-    for (i = 0; i < sizeof_hint_cose_algorithms; i++) {
-        const hint_cose_algorithm_t* item = hint_cose_algorithms + i;
+    for (i = 0; i < sizeof_hint_cose_algorithms; ++i) {
+        auto item = hint_cose_algorithms + i;
         _cose_alg_map.insert(std::make_pair(item->alg, item));
         _cose_algorithm_byname_map.insert(std::make_pair(item->name, item));
 
         set_feature(item->name, advisor_feature_cose);
     }
-    for (i = 0; i < sizeof_hint_curves; i++) {
-        const hint_curve_t* item = hint_curves + i;
+    for (i = 0; i < sizeof_hint_curves; ++i) {
+        auto item = hint_curves + i;
 
         if (item->name_nist) {
             _nid_bycurve_map.insert(std::make_pair(item->name_nist, item));
@@ -284,44 +305,14 @@ return_t crypto_advisor::build() {
     _cose2kty_map.insert(std::make_pair(cose_kty_t::cose_kty_okp, crypto_kty_t::kty_okp));
     _cose2kty_map.insert(std::make_pair(cose_kty_t::cose_kty_rsa, crypto_kty_t::kty_rsa));
 
-    struct _sig2cose {
-        signature_t sig;
-        jws_t jws;
-        cose_alg_t cose;
-    };
-    struct _sig2cose sig2cose[] = {
-        {signature_t::sig_hs256, jws_t::jws_hs256, cose_alg_t::cose_hs256}, {signature_t::sig_hs384, jws_t::jws_hs384, cose_alg_t::cose_hs384},
-        {signature_t::sig_hs512, jws_t::jws_hs512, cose_alg_t::cose_hs512}, {signature_t::sig_rs256, jws_t::jws_rs256, cose_alg_t::cose_rs256},
-        {signature_t::sig_rs384, jws_t::jws_rs384, cose_alg_t::cose_rs384}, {signature_t::sig_rs512, jws_t::jws_rs512, cose_alg_t::cose_rs512},
-        {signature_t::sig_es256, jws_t::jws_es256, cose_alg_t::cose_es256}, {signature_t::sig_es384, jws_t::jws_es384, cose_alg_t::cose_es384},
-        {signature_t::sig_es512, jws_t::jws_es512, cose_alg_t::cose_es512}, {signature_t::sig_ps256, jws_t::jws_ps256, cose_alg_t::cose_ps256},
-        {signature_t::sig_ps384, jws_t::jws_ps384, cose_alg_t::cose_ps384}, {signature_t::sig_ps512, jws_t::jws_ps512, cose_alg_t::cose_ps512},
-        {signature_t::sig_eddsa, jws_t::jws_eddsa, cose_alg_t::cose_eddsa}, {signature_t::sig_es256k, jws_t::jws_unknown, cose_alg_t::cose_es256k},
-        {signature_t::sig_rs1, jws_t::jws_unknown, cose_alg_t::cose_rs1},
-    };
-    struct _sig2cose cose2sig[] = {
-        {signature_t::sig_hs256, jws_t::jws_hs256, cose_alg_t::cose_hs256_64},
-    };
-    for (i = 0; i < RTL_NUMBER_OF(sig2cose); i++) {
-        _sig2jws_map.insert(std::make_pair(sig2cose[i].sig, sig2cose[i].jws));
-        _jws2sig_map.insert(std::make_pair(sig2cose[i].jws, sig2cose[i].sig));
-        if (cose_alg_t::cose_unknown != sig2cose[i].cose) {
-            _sig2cose_map.insert(std::make_pair(sig2cose[i].sig, sig2cose[i].cose));
-        }
-        _cose2sig_map.insert(std::make_pair(sig2cose[i].cose, sig2cose[i].sig));
-    }
-    for (i = 0; i < RTL_NUMBER_OF(cose2sig); i++) {
-        _cose2sig_map.insert(std::make_pair(cose2sig[i].cose, cose2sig[i].sig));
-    }
-
-    for (i = 0; i < sizeof_hint_kty_names; i++) {
+    for (i = 0; i < sizeof_hint_kty_names; ++i) {
         auto item = hint_kty_names + i;
         if (item->name) {
             _kty_names.insert({item->kty, item});
         }
     }
 
-    for (i = 0; i < sizeof_hint_groups; i++) {
+    for (i = 0; i < sizeof_hint_groups; ++i) {
         auto item = hint_groups + i;
         if (tls_group_unknown != item->group) {
             _tls_group_map.insert({item->group, item});

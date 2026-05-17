@@ -27,17 +27,7 @@ json_web_key::json_web_key() : crypto_keychain() {}
 
 json_web_key::~json_web_key() {}
 
-return_t json_web_key::load(crypto_key* cryptokey, keyflag_t mode, const char* buffer, size_t size, const keydesc& desc, int flag) {
-    return_t ret = errorcode_t::success;
-    if (key_ownspec == mode) {
-        ret = load_pem(cryptokey, buffer, size, desc, flag);
-    } else {
-        ret = crypto_keychain::load(cryptokey, mode, buffer, size, desc, flag);
-    }
-    return ret;
-}
-
-return_t json_web_key::load_pem(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc, int flag) {
+return_t json_web_key::load_ownspec(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc, int flag) {
     return_t ret = errorcode_t::success;
     json_t* root = nullptr;
 
@@ -143,14 +133,57 @@ return_t json_web_key::read_json_keynode(crypto_key* cryptokey, json_t* json) {
                 const char* d_value = nullptr;
                 json_unpack(temp, "{s:s,s:s,s:s,s:s}", "crv", &crv_value, "x", &x_value, "y", &y_value, "d", &d_value);
 
-                add_ec_b64u(cryptokey, crv_value, x_value, y_value, d_value, desc);
+                ret = add_ec_b64u(cryptokey, crv_value, x_value, y_value, d_value, desc);
             } else if (0 == strcmp(kty, "OKP")) {
                 const char* crv_value = nullptr;
                 const char* x_value = nullptr;
                 const char* d_value = nullptr;
                 json_unpack(temp, "{s:s,s:s,s:s}", "crv", &crv_value, "x", &x_value, "d", &d_value);
 
-                add_ec_b64u(cryptokey, crv_value, x_value, nullptr, d_value, desc);
+                ret = add_ec_b64u(cryptokey, crv_value, x_value, nullptr, d_value, desc);
+            } else if (0 == strcmp(kty, "AKP")) {
+                // https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/
+                const char* alg_value = nullptr;
+                const char* pub_value = nullptr;
+                const char* priv_value = nullptr;
+                json_unpack(temp, "{s:s,s:s,s:s}", "alg", &alg_value, "pub", &pub_value, "priv", &priv_value);
+
+                if (nullptr == alg_value || (nullptr == pub_value && nullptr == priv_value)) {
+                    ret = bad_format;
+                    __leave2;
+                }
+
+                binary_t bin_pub;
+                binary_t bin_priv;
+                auto os2b = [](const char* input, binary_t& output) -> void {
+                    if (input) {
+                        output = std::move(base64_decode(input, strlen(input), encoding_t::encoding_base64url));
+                    }
+                };
+                os2b(pub_value, bin_pub);
+                os2b(priv_value, bin_priv);
+
+                /*
+                 * +===========+=============+============+================+
+                 * | Algorithm | Private Key | Public Key | Signature Size |
+                 * +===========+=============+============+================+
+                 * | ML-DSA-44 | 2560        | 1312       | 2420           |
+                 * +-----------+-------------+------------+----------------+
+                 * | ML-DSA-65 | 4032        | 1952       | 3309           |
+                 * +-----------+-------------+------------+----------------+
+                 * | ML-DSA-87 | 4896        | 2592       | 4627           |
+                 * +-----------+-------------+------------+----------------+
+                 */
+                hint_advisor_t hint;
+                auto advisor = crypto_advisor::get_instance();
+                advisor->hintof_name(alg_value, hint);
+                if (hint.hint_sigscheme) {
+                    if (bin_priv.size() == hint.hint_sigscheme->size.privkey) {
+                        ret = add_ossl3(cryptokey, alg_value, bin_priv, key_encoding_priv_raw, desc);
+                    } else if (bin_pub.size() == hint.hint_sigscheme->size.pubkey) {
+                        ret = add_ossl3(cryptokey, alg_value, bin_pub, key_encoding_pub_raw, desc);
+                    }
+                }
             }
         }
     }

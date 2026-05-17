@@ -34,6 +34,9 @@ return_t crypto_keychain::load(crypto_key* cryptokey, keyflag_t mode, const char
         }
 
         switch (mode) {
+            case key_ownspec:
+                ret = load_ownspec(cryptokey, buffer, size, desc, flags);
+                break;
             case key_pemfile:
                 ret = load_pem(cryptokey, buffer, size, desc, flags);
                 break;
@@ -51,6 +54,8 @@ return_t crypto_keychain::load(crypto_key* cryptokey, keyflag_t mode, const char
     __finally2 {}
     return ret;
 }
+
+return_t crypto_keychain::load_ownspec(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc, int flag) { return success; }
 
 return_t crypto_keychain::load_pem(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc, int flags) {
     return_t ret = errorcode_t::success;
@@ -363,10 +368,10 @@ return_t crypto_keychain::add(crypto_key* cryptokey, uint32 nid, const keydesc& 
                 ret = add_rsa(cryptokey, nid, 2048, desc);
             } break;
             case kty_mlkem: {
-                ret = add_mlkem(cryptokey, nid, desc);
+                ret = add_ossl3(cryptokey, nid, desc);
             } break;
             case kty_mldsa: {
-                ret = add_mldsa(cryptokey, nid, desc);
+                ret = add_ossl3(cryptokey, nid, desc);
             } break;
             default: {
                 ret = not_supported;

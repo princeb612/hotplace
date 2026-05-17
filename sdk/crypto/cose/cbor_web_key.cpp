@@ -67,10 +67,11 @@ return_t cbor_web_key::load_b16(crypto_key* cryptokey, const char* buffer, size_
 typedef struct _cose_object_key {
     int type;
     int curve;
+    int alg;
     std::string kid;
     std::map<int, binary_t> attrib;
 
-    _cose_object_key() : type(0), curve(0) {}
+    _cose_object_key() : type(0), curve(0), alg(0) {}
 } cose_key_object;
 
 return_t cbor_web_key::load(crypto_key* cryptokey, const byte_t* buffer, size_t size, int flag) {
@@ -160,6 +161,8 @@ return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int f
                         rhs->data().to_string(keyobj.kid);
                     } else if (cose_key_lable_t::cose_lable_kty == label) {  // 1
                         keyobj.type = rhs->data().to_int();
+                    } else if (cose_key_lable_t::cose_lable_alg == label) {  // 3
+                        keyobj.alg = rhs->data().to_int();
                     } else if (-1 == label) {  // ec2 curve, symmetric k
                         if (TYPE_BINARY == vt_rhs.type) {
                             // symm
@@ -170,7 +173,7 @@ return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int f
                             // curve if okp, ec2
                             keyobj.curve = rhs->data().to_int();
                         }
-                    } else if (label < -1) {  // ec2 (-2 x, -3 y, -4 d), rsa (-1 n, -2 e, -3 d, ..., -12 ti)
+                    } else if (label < -1) {  // ec2 (-2 x, -3 y, -4 d), rsa (-1 n, -2 e, -3 d, ..., -12 ti), mldsa (-1 pub, -2 priv)
                         binary_t bin;
                         rhs->data().to_binary(bin);
                         keyobj.attrib.insert(std::make_pair(label, bin));
@@ -200,6 +203,31 @@ return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int f
                 binary_t k;
                 hint_key.find(cose_key_lable_t::cose_symm_k, &k);  // -1
                 add_oct(cryptokey, k, desc);
+            } else if (cose_kty_t::cose_kty_akp == keyobj.type) {
+                uint32 nid = 0;
+                {
+                    auto hint = advisor->hintof_cose_algorithm((cose_alg_t)keyobj.alg);
+                    if (hint) {
+                        nid = hint->keyinfo.nid;
+                    }
+                }
+                if (nid) {
+                    hint_advisor_t hint;
+                    advisor->hintof_ossl_nid(nid, hint);
+
+                    if (hint.hint_sigscheme) {
+                        binary_t bin_pub;
+                        binary_t bin_priv;
+                        hint_key.find(cose_key_lable_t::cose_pub, &bin_pub);
+                        hint_key.find(cose_key_lable_t::cose_priv, &bin_priv);
+
+                        if (bin_priv.size() == hint.hint_sigscheme->size.privkey) {
+                            ret = add_ossl3(cryptokey, nid, bin_priv, key_encoding_priv_raw, desc);
+                        } else if (bin_pub.size() == hint.hint_sigscheme->size.pubkey) {
+                            ret = add_ossl3(cryptokey, nid, bin_pub, key_encoding_pub_raw, desc);
+                        }
+                    }
+                }
             }
         }
     }
@@ -274,11 +302,16 @@ void cwk_writer(crypto_key_object* key, void* param) {
         binary_t pub2;
         binary_t priv;
 
+        hint_advisor_t hint;
         auto pkey = key->get_pkey();
-        auto hint = advisor->hintof_curve_eckey(pkey);
+        advisor->hintof_pkey(pkey, hint);
 
-        if (hint && (CURVE_SUPPORT_COSE)) {
-            // do nothing
+        if (hint.hint_kty) {
+            if (hint.hint_curve) {
+                if (0 == (hint.hint_curve->flags & CURVE_SUPPORT_COSE)) {
+                    __leave2;
+                }
+            }
         } else {
             __leave2;
         }
@@ -298,6 +331,7 @@ void cwk_writer(crypto_key_object* key, void* param) {
             case kty_rsa:
             case kty_ec:
             case kty_okp:
+            case kty_mldsa:
                 break;
             default:
                 skip = true;
@@ -339,6 +373,11 @@ void cwk_writer(crypto_key_object* key, void* param) {
                          << new cbor_pair(cose_key_lable_t::cose_rsa_e, new cbor_data(pub2));  // -2
                 if (priv.size()) {
                     *keynode << new cbor_pair(cose_key_lable_t::cose_rsa_d, new cbor_data(priv));  // -3
+                }
+            } else if (crypto_kty_t::kty_mldsa == kty) {
+                *keynode << new cbor_pair(cose_key_lable_t::cose_pub, new cbor_data(pub1));  // -1
+                if (priv.size()) {
+                    *keynode << new cbor_pair(cose_key_lable_t::cose_priv, new cbor_data(priv));  // -2
                 }
             }
         });

@@ -17,11 +17,11 @@ void test_mlkem_keygen() {
     crypto_keychain keychain;
     crypto_key key;
 
-    ret = keychain.add_mlkem(&key, NID_ML_KEM_512, keydesc("ML-KEM-512"));
+    ret = keychain.add_ossl3(&key, NID_ML_KEM_512, keydesc("ML-KEM-512"));
     _test_case.test(ret, __FUNCTION__, "ML-KEM-512");
-    ret = keychain.add_mlkem(&key, NID_ML_KEM_768, keydesc("ML-KEM-768"));
+    ret = keychain.add_ossl3(&key, NID_ML_KEM_768, keydesc("ML-KEM-768"));
     _test_case.test(ret, __FUNCTION__, "ML-KEM-768");
-    ret = keychain.add_mlkem(&key, NID_ML_KEM_1024, keydesc("ML-KEM-1024"));
+    ret = keychain.add_ossl3(&key, NID_ML_KEM_1024, keydesc("ML-KEM-1024"));
     _test_case.test(ret, __FUNCTION__, "ML-KEM-1024");
 
     auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {

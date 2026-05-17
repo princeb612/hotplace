@@ -197,7 +197,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
             auto& keys = tlsadvisor->get_certs();
             auto lambda = [&](crypto_key_object* k, void* param) -> void {
                 auto pkey = k->get_pkey();
-                hint_pkey_t hint;
+                hint_advisor_t hint;
                 advisor->hintof_pkey(pkey, hint);
                 certkty_set.insert(hint.kty);  // EC, RSA, DH, OKP, MLDSA
                 certnid_set.insert(hint.nid);

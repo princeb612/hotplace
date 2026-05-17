@@ -26,7 +26,7 @@ return_t nidof_evp_pkey(const EVP_PKEY* pkey, uint32& nid) {
             __leave2;
         }
 
-        hint_pkey_t hint;
+        hint_advisor_t hint;
         ret = crypto_advisor::get_instance()->hintof_pkey(pkey, hint);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -57,7 +57,7 @@ crypto_kty_t typeof_crypto_key(const EVP_PKEY* pkey) {
             __leave2;
         }
 
-        hint_pkey_t hint;
+        hint_advisor_t hint;
         ret = crypto_advisor::get_instance()->hintof_pkey(pkey, hint);
         if (errorcode_t::success != ret) {
             __leave2;

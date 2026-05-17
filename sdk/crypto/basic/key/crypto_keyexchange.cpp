@@ -238,7 +238,7 @@ return_t crypto_keyexchange::keystore(tls_group_t group, crypto_key* storage, co
                 ret = keychain.add_okp(storage, nid, share.data(), keysize, nullptr, 0, desc);
             } break;
             case kty_mlkem: {
-                ret = keychain.add_mlkem_pub(storage, nid, share.data(), keysize, key_encoding_pub_raw, desc);
+                ret = keychain.add_ossl3(storage, nid, share.data(), keysize, key_encoding_pub_raw, desc);
             } break;
             default: {
                 ret = bad_request;
@@ -255,7 +255,7 @@ return_t crypto_keyexchange::keystore(tls_group_t group, crypto_key* storage, co
                     ret = keychain.add_okp(storage, hybrid.nid, &share[keysize], hybrid.keysize, nullptr, 0, desc);
                 } break;
                 case kty_mlkem: {
-                    ret = keychain.add_mlkem_pub(storage, hybrid.nid, &share[keysize], hybrid.keysize, key_encoding_pub_raw, desc);
+                    ret = keychain.add_ossl3(storage, hybrid.nid, &share[keysize], hybrid.keysize, key_encoding_pub_raw, desc);
                 } break;
                 default: {
                     ret = bad_request;

@@ -97,6 +97,7 @@ class crypto_keychain {
      * @return error code (see error.hpp)
      */
     virtual return_t load(crypto_key* cryptokey, keyflag_t mode, const char* buffer, size_t size, const keydesc& desc = keydesc(), int flag = 0);
+    virtual return_t load_ownspec(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc = keydesc(), int flag = 0);
     return_t load_pem(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc = keydesc(), int flag = 0);
     return_t load_cert(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc = keydesc(), int flag = 0);
     return_t load_der(crypto_key* cryptokey, const byte_t* buffer, size_t size, const keydesc& desc = keydesc(), int flag = 0);
@@ -553,48 +554,52 @@ class crypto_keychain {
     return_t add_dsa_b16(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const char* p, const char* q, const char* g, const keydesc& desc);
     return_t add_dsa_b16rfc(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const char* p, const char* q, const char* g, const keydesc& desc);
 
-    /**
-     * @brief ML-KEM
-     * @param uint32 nid [in] NID_ML_KEM_512, NID_ML_KEM_768, NID_ML_KEM_1024
+    /*
+     * @brief   ML-KEM, ML-DSA
+     * @param   uint32 nid [in]
+     *              NID_ML_KEM_512, NID_ML_KEM_768, NID_ML_KEM_1024
+     *              NID_ML_DSA_44, NID_ML_DSA_65, NID_ML_DSA_87
+     * @param   const char* name [in]
+     *              ML-KEM-512, ML-KEM-768, ML-KEM-1024
+     *              ML-DSA-44, ML-DSA-65, ML-DSA-87
+     * @pram    encoding_t fmt [in]
+     *              encoding_base64
+     *              encoding_base64url
+     *              encoding_base16
+     *              encoding_base16rfc
+     * @param   key_encoding_t encoding [in]
+     *              key_encoding_priv_pem
+     *              key_encoding_encrypted_priv_pem
+     *              key_encoding_pub_pem
+     *              key_encoding_priv_der
+     *              key_encoding_encrypted_priv_der
+     *              key_encoding_pub_der
+     *              key_encoding_priv_raw
+     *              key_encoding_pub_raw
+     * @param   const binary_t& key [in] MLKEM, MLDSA public key or private key
      * @remarks openssl-3.5 required
+     *          ML-KEM, ML-DSA share same function body (except only kty)
      */
-    return_t add_mlkem(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
-    return_t add_mlkem(crypto_key* cryptokey, const char* name, const keydesc& desc);
+    return_t add_ossl3(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
+    return_t add_ossl3(crypto_key* cryptokey, const char* name, const keydesc& desc);
 
-    return_t add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const binary_t& pub, key_encoding_t encoding, const keydesc& desc);
-    return_t add_mlkem_pub(crypto_key* cryptokey, uint32 nid, const byte_t* pub, size_t pubsize, key_encoding_t encoding, const keydesc& desc);
-    return_t add_mlkem_priv(crypto_key* cryptokey, uint32 nid, const binary_t& keypair, key_encoding_t encoding, const keydesc& desc);
+    return_t add_ossl3(crypto_key* cryptokey, uint32 nid, const binary_t& key, key_encoding_t encoding, const keydesc& desc);
+    return_t add_ossl3(crypto_key* cryptokey, uint32 nid, const byte_t* key, size_t keysize, key_encoding_t encoding, const keydesc& desc);
+    return_t add_ossl3(crypto_key* cryptokey, const char* name, const binary_t& key, key_encoding_t encoding, const keydesc& desc);
+    return_t add_ossl3(crypto_key* cryptokey, const char* name, const byte_t* key, size_t keysize, key_encoding_t encoding, const keydesc& desc);
 
-    return_t add_mlkem_pub_b64(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc);
-    return_t add_mlkem_pub_b64u(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc);
-    return_t add_mlkem_pub_b16(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc);
-    return_t add_mlkem_pub_b16rfc(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc);
+    return_t add_ossl3(crypto_key* cryptokey, uint32 nid, encoding_t fmt, const char* key, key_encoding_t encoding, const keydesc& desc);
+    return_t add_ossl3(crypto_key* cryptokey, const char* name, encoding_t fmt, const char* key, key_encoding_t encoding, const keydesc& desc);
 
-    return_t add_mlkem_priv_b64(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc);
-    return_t add_mlkem_priv_b64u(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc);
-    return_t add_mlkem_priv_b16(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc);
-    return_t add_mlkem_priv_b16rfc(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc);
+    return_t add_ossl3_b64(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, const keydesc& desc);
+    return_t add_ossl3_b64u(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, const keydesc& desc);
+    return_t add_ossl3_b16(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, const keydesc& desc);
+    return_t add_ossl3_b16rfc(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, const keydesc& desc);
 
-    /**
-     * @brief MLDSA
-     * @param uint32 nid [in] NID_ML_DSA_44, NID_ML_DSA_65, NID_ML_DSA_87
-     * @remarks openssl-3.5 required
-     */
-    return_t add_mldsa(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
-
-    return_t add_mldsa_pub(crypto_key* cryptokey, uint32 nid, const binary_t& pub, key_encoding_t encoding, const keydesc& desc);
-    return_t add_mldsa_pub(crypto_key* cryptokey, uint32 nid, const byte_t* pub, size_t pubsize, key_encoding_t encoding, const keydesc& desc);
-    return_t add_mldsa_priv(crypto_key* cryptokey, uint32 nid, const binary_t& keypair, key_encoding_t encoding, const keydesc& desc);
-
-    return_t add_mldsa_pub_b64(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc);
-    return_t add_mldsa_pub_b64u(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc);
-    return_t add_mldsa_pub_b16(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc);
-    return_t add_mldsa_pub_b16rfc(crypto_key* cryptokey, uint32 nid, const char* pub, key_encoding_t encoding, const keydesc& desc);
-
-    return_t add_mldsa_priv_b64(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc);
-    return_t add_mldsa_priv_b64u(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc);
-    return_t add_mldsa_priv_b16(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc);
-    return_t add_mldsa_priv_b16rfc(crypto_key* cryptokey, uint32 nid, const char* keypair, key_encoding_t encoding, const keydesc& desc);
+    return_t add_ossl3_b64(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, const keydesc& desc);
+    return_t add_ossl3_b64u(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, const keydesc& desc);
+    return_t add_ossl3_b16(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, const keydesc& desc);
+    return_t add_ossl3_b16rfc(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, const keydesc& desc);
 
     /**
      * @brief   group

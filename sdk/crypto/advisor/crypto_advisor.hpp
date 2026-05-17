@@ -44,6 +44,16 @@ class crypto_advisor {
 
     ~crypto_advisor();
 
+    // TOBE integration
+    /**
+     * @brief   hint
+     * @param   const EVP_PKEY* pkey [in]
+     * @param   hint_advisor_t& hint [out]
+     */
+    return_t hintof_pkey(const EVP_PKEY* pkey, hint_advisor_t& hint);
+    return_t hintof_name(const char* name, hint_advisor_t& hint);
+    return_t hintof_ossl_nid(uint32 nid, hint_advisor_t& hint);
+
     ///////////////////////////////////////////////////////////////////////////
     // crypt
     ///////////////////////////////////////////////////////////////////////////
@@ -203,12 +213,6 @@ class crypto_advisor {
      */
     const hint_curve_t* hintof_curve(const char* curve);
     const hint_curve_t* hintof_curve(const std::string& curve);
-    /**
-     * @brief   hint
-     * @param   const EVP_PKEY* pkey [in]
-     * @param   hint_pkey_t& hint [out]
-     */
-    return_t hintof_pkey(const EVP_PKEY* pkey, hint_pkey_t& hint);
     /*
      * @brief   hint
      * @return  return nullptr if pkey is not EC_KEY
@@ -306,6 +310,7 @@ class crypto_advisor {
      * @param uint16 scheme [in] tls_sigscheme_t
      */
     const hint_sigscheme_t* hintof_sigscheme(uint16 scheme);
+    const hint_sigscheme_t* hintof_sig_nid(uint32 nid);
 
     return_t for_each_sigscheme(std::function<void(tls_sigscheme_t, uint32)> f);
     return_t for_each_sigscheme(std::function<void(const hint_sigscheme_t*)> f);
@@ -564,7 +569,7 @@ class crypto_advisor {
      * @return const hint_cose_algorithm_t*
      */
     const hint_cose_algorithm_t* hintof_cose_algorithm(cose_alg_t alg);
-    const hint_cose_algorithm_t* hintof_cose_algorithm(uint32 alg);
+    const hint_cose_algorithm_t* hintof_cose_algorithm(int32 alg);
     /**
      * @brief hint
      * @param const char* alg [in]
@@ -829,6 +834,8 @@ class crypto_advisor {
     signature_byname_map_t _sig_byname_map;
     typedef std::map<uint16, const hint_sigscheme_t*> hint_sigscheme_map_t;
     hint_sigscheme_map_t _hint_sigscheme_map;
+    typedef std::map<uint32, const hint_sigscheme_t*> hint_sigscheme_nid_map_t;
+    hint_sigscheme_nid_map_t _hint_sigscheme_nid_map;
     ///////////////////////////////////////////////////////////////////////////
     // key
     ///////////////////////////////////////////////////////////////////////////
@@ -857,7 +864,7 @@ class crypto_advisor {
     ///////////////////////////////////////////////////////////////////////////
     // COSE
     ///////////////////////////////////////////////////////////////////////////
-    typedef std::map<uint32, const hint_cose_algorithm_t*> cose_algorithm_map_t;
+    typedef std::map<int32, const hint_cose_algorithm_t*> cose_algorithm_map_t;
     typedef std::map<cose_ec_curve_t, const hint_curve_t*> cose_curve_map_t;
     typedef std::map<std::string, const hint_cose_algorithm_t*> cose_algorithm_byname_map_t;
     typedef std::map<crypto_kty_t, cose_kty_t> kty2cose_map_t;

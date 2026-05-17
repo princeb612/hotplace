@@ -15,9 +15,9 @@ void test_mldsa() {
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     crypto_key key;
     crypto_keychain keychain;
-    keychain.add_mldsa(&key, NID_ML_DSA_44, keydesc("NID_ML_DSA_44"));
-    keychain.add_mldsa(&key, NID_ML_DSA_65, keydesc("NID_ML_DSA_65"));
-    keychain.add_mldsa(&key, NID_ML_DSA_87, keydesc("NID_ML_DSA_87"));
+    keychain.add_ossl3(&key, NID_ML_DSA_44, keydesc("NID_ML_DSA_44"));
+    keychain.add_ossl3(&key, NID_ML_DSA_65, keydesc("NID_ML_DSA_65"));
+    keychain.add_ossl3(&key, NID_ML_DSA_87, keydesc("NID_ML_DSA_87"));
     const char* sample = "We don't playing because we grow old; we grow old because we stop playing. - George Bernard Shaw";
 
     auto lambda = [&](const char* kid) -> void {

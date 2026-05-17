@@ -50,8 +50,7 @@ class json_web_key : public crypto_keychain {
      * @param int flag [inopt]
      * @return error code (see error.hpp)
      */
-    virtual return_t load(crypto_key* cryptokey, keyflag_t mode, const char* buffer, size_t size, const keydesc& desc = keydesc(), int flag = 0);
-    return_t load_pem(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc = keydesc(), int flag = 0);
+    virtual return_t load_ownspec(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc = keydesc(), int flag = 0);
     /**
      * @brief write
      * @brief write into buffer

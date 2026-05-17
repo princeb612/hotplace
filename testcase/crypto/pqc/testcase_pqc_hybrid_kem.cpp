@@ -44,7 +44,7 @@ void test_pqc_hybrid_kem() {
 
         // alice keygen, client hello
         {
-            keychain.add_mlkem(&key, nid_mlkem768, keydesc("Alice MLKEM768"));
+            keychain.add_ossl3(&key, nid_mlkem768, keydesc("Alice MLKEM768"));
             keychain.add_ec2(&key, 1034, keydesc("Alice x25519"));
         }
 

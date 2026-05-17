@@ -232,7 +232,9 @@ enum signature_t : uint16 {
 
     sig_es256k = CRYPTO_SCHEME16(sig_category_ecdsa, sha2_256),  // ES256K, NID_secp256k1
 
-    sig_mldsa = CRYPTO_SCHEME16(sig_category_mldsa, 0),
+    sig_mldsa44 = CRYPTO_SCHEME16(sig_category_mldsa, 2),  // NIST security level 2
+    sig_mldsa65 = CRYPTO_SCHEME16(sig_category_mldsa, 3),  // NIST security level 3
+    sig_mldsa87 = CRYPTO_SCHEME16(sig_category_mldsa, 5),  // NIST security level 5
 
     sig_brainpool256 = CRYPTO_SCHEME16(sig_category_brainpool, sha2_256),
     sig_brainpool384 = CRYPTO_SCHEME16(sig_category_brainpool, sha2_384),
@@ -687,7 +689,9 @@ enum jws_t : uint16 {
     jws_ps384 = sig_ps384,
     jws_ps512 = sig_ps512,
     jws_eddsa = sig_eddsa,
-    jws_mldsa = sig_mldsa,
+    jws_mldsa44 = sig_mldsa44,
+    jws_mldsa65 = sig_mldsa65,
+    jws_mldsa87 = sig_mldsa87,
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -744,6 +748,12 @@ enum cose_key_t {
     cose_x5u_sender = -28,
     cose_x5chain_sender = -29,
 };
+/**
+ * https://www.iana.org/assignments/cose/cose.xhtml
+ *
+ *  cose key common parameters
+ *  cose key type parameter
+ */
 enum cose_key_lable_t {
     // RFC 8152 Table 3: Key Map Labels
     // RFC 8152 Table 4: Key Map Labels
@@ -755,7 +765,7 @@ enum cose_key_lable_t {
 
     // RFC 8152 Table 23: EC Key Parameters
     // RFC 9053 Table 19: EC Key Parameters
-    // cose_kty_t::cose_kty_ec2
+    // cose_kty_t::cose_kty_ec2(2)
     cose_ec_crv = -1,
     cose_ec_x = -2,
     cose_ec_y = -3,
@@ -763,16 +773,18 @@ enum cose_key_lable_t {
 
     // RFC 8152 Table 24: Octet Key Pair Parameters
     // RFC 9053 Table 20: Octet Key Pair Parameters
-    // cose_kty_t::cose_kty_okp
+    // cose_kty_t::cose_kty_okp(1)
     cose_okp_crv = -1,
     cose_okp_x = -2,
     cose_okp_d = -4,
 
     // RFC 8152 Table 25: Symmetric Key Parameters
     // RFC 9053 Table 21: Symmetric Key Parameters
+    // cose_kty_t::cose_kty_symm(4)
     cose_symm_k = -1,
 
     // RSA 8230 Table 4: RSA Key Parameters
+    // cose_kty_t::cose_kty_rsa(3)
     cose_rsa_n = -1,
     cose_rsa_e = -2,
     cose_rsa_d = -3,
@@ -785,8 +797,20 @@ enum cose_key_lable_t {
     cose_rsa_ri = -10,
     cose_rsa_di = -11,
     cose_rsa_ti = -12,
+
+    // cose_kty_t::cose_kty_hss_lms(5)
+
+    // cose_kty_t::cose_kty_walnutdsa(6)
+
+    // cose_kty_t::cose_kry_akp(7)
+    cose_pub = -1,
+    cose_priv = -2,
 };
 
+/**
+ * @brief   cose key types
+ *          https://www.iana.org/assignments/cose
+ */
 enum cose_kty_t {
     // RFC 8152 Table 21: Key Type Values
     // RFC 9053 Table 17: Key Type Values
@@ -803,6 +827,8 @@ enum cose_kty_t {
     // RFC 9053 Table 22: Key Type Capabilities
     cose_kty_hss_lms = 5,
     cose_kty_walnutdsa = 6,
+    // https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/
+    cose_kty_akp = 7,
 };
 enum cose_keyop_t {
     // RFC 8152 Table 4: Key Operation Values
@@ -820,7 +846,8 @@ enum cose_keyop_t {
 };
 
 /**
- * @sa  crypto_key::generate_cose
+ * @brief   crypto_key::generate_cose
+ *          https://www.iana.org/assignments/cose/cose.xhtml
  */
 enum cose_ec_curve_t {
     cose_ec_unknown = 0,
@@ -834,6 +861,10 @@ enum cose_ec_curve_t {
     cose_ec_ed25519 = 6,
     cose_ec_ed448 = 7,
     cose_ec_secp256k1 = 8,  // RFC 8812 4.2.  COSE Elliptic Curves Registrations "secp256k1"
+    cose_ec_brainpoolp256r1 = 256,
+    cose_ec_brainpoolp320r1 = 257,
+    cose_ec_brainpoolp384r1 = 258,
+    cose_ec_brainpoolp512r1 = 259,
 };
 
 enum crypt_category_t {
@@ -924,7 +955,12 @@ enum cose_group_t {
     //   Table 1, SHA-1
     //   Table 2, SHA-256/64, SHA-256, SHA-384, SHA-512, SHA-512/256
     cose_group_hash = 20,
+    cose_group_sign_mldsa = 21,
 };
+/**
+ * @breif   cose algorithms
+ *          https://www.iana.org/assignments/cose/cose.xhtml
+ */
 enum cose_alg_t {
     cose_unknown = 0,
 
@@ -1001,6 +1037,11 @@ enum cose_alg_t {
 
     // RFC 8812 Table 2: ECDSA Algorithm Values
     cose_es256k = -47,  // "ES256K"
+
+    // https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/
+    cose_mldsa44 = -48,
+    cose_mldsa65 = -49,
+    cose_mldsa87 = -50,
 
     // RFC 8812 Table 1: RSASSA-PKCS1-v1_5 Algorithm Values
     cose_rs256 = -257,  // "RS256"
@@ -1292,6 +1333,7 @@ typedef struct _hint_signature_t {
     jws_t jws_type;           // ex. jws_eddsa
     jws_group_t group;        // ex. jws_group_eddsa
     sig_category_t category;  // ex. sig_category_eddsa
+    cose_alg_t cosealg;       //
     crypto_kty_t kty;         // ex. kty_okp
     const char* jws_name;     // ex. "EdDSA"
     hash_algorithm_t alg;     // ex. hash_alg_unknown
@@ -1299,9 +1341,9 @@ typedef struct _hint_signature_t {
     uint32 nid[3];            // ex. NID_ED25519, NID_ED448
 } hint_signature_t;
 
+sig_category_t categoryof(const hint_signature_t* hint);
 signature_t typeof_sig(const hint_signature_t* hint);
 jws_t typeof_jws(const hint_signature_t* hint);
-jws_group_t typeof_group(const hint_signature_t* hint);
 crypto_kty_t typeof_kty(const hint_signature_t* hint);
 const char* nameof_jws(const hint_signature_t* hint);
 hash_algorithm_t typeof_alg(const hint_signature_t* hint);
@@ -1316,6 +1358,11 @@ typedef struct _hint_sigscheme_t {
     crypto_kty_t kty;
     uint32 nid;
     hash_algorithm_t dgst;
+    struct {
+        uint16 signature;
+        uint16 privkey;
+        uint16 pubkey;
+    } size;
 } hint_sigscheme_t;
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1474,10 +1521,10 @@ typedef struct _hint_cose_algorithm_t {
     crypto_kty_t kty;
     cose_group_t group;
     const hint_cose_group_t* hint_group;
-    struct _eckey {
+    struct _keyinfo {
         uint16 nid;
         cose_ec_curve_t curve;
-    } eckey;
+    } keyinfo;
     struct _dgst {
         const char* algname;
         uint16 dlen;
@@ -1513,6 +1560,8 @@ enum crypt_poweredby_t {
 enum nid_t : uint32 {
     nid_dh = 28,                      // NID_dhKeyAgreement (EVP_PKEY_DH)
     nid_dsa = 116,                    // NID_dsa
+    nid_sha512_224 = 1094,            // NID_sha512_224 (openssl-3.0)
+    nid_sha512_256 = 1095,            // NID_sha512_256 (openssl-3.0)
     nid_ffdhe2048 = 1126,             // NID_ffdhe2048
     nid_ffdhe3072 = 1127,             // NID_ffdhe3072
     nid_ffdhe4096 = 1128,             // NID_ffdhe4096
@@ -1569,15 +1618,16 @@ struct key_encoding_params_t {
     bool use_pass;
 };
 
-struct hint_pkey_t {
-    crypto_kty_t kty;                 // key type
-    uint32 nid;                       // openssl numeric id
-    const hint_kty_name_t* hint_kty;  // hint
-    const hint_curve_t* hint_curve;   // hint
+struct hint_advisor_t {
+    crypto_kty_t kty;  // key type
+    uint32 nid;        // openssl numeric id
+    const hint_kty_name_t* hint_kty;
+    const hint_curve_t* hint_curve;
+    const hint_sigscheme_t* hint_sigscheme;
 
-    hint_pkey_t() : kty(kty_unknown), nid(0), hint_kty(nullptr), hint_curve(nullptr) {}
+    hint_advisor_t() : kty(kty_unknown), nid(0), hint_kty(nullptr), hint_curve(nullptr), hint_sigscheme(nullptr) {}
 };
-std::string namesof(const hint_pkey_t* hint);
+std::string namesof(const hint_advisor_t* hint);
 
 }  // namespace crypto
 }  // namespace hotplace

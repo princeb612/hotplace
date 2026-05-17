@@ -145,6 +145,13 @@ const hint_sigscheme_t* crypto_advisor::hintof_sigscheme(uint16 scheme) {
     return item;
 }
 
+const hint_sigscheme_t* crypto_advisor::hintof_sig_nid(uint32 nid) {
+    const hint_sigscheme_t* item = nullptr;
+    t_maphint<uint32, const hint_sigscheme_t*> hint(_hint_sigscheme_nid_map);
+    hint.find(nid, &item);
+    return item;
+}
+
 return_t crypto_advisor::for_each_sigscheme(std::function<void(tls_sigscheme_t, uint32)> f) {
     return_t ret = errorcode_t::success;
     for (size_t i = 0; i < sizeof_hint_sigschemes; ++i) {
@@ -166,6 +173,14 @@ return_t crypto_advisor::for_each_sigscheme(std::function<void(const hint_sigsch
 
 // hint_signature_t
 
+sig_category_t categoryof(const hint_signature_t* hint) {
+    sig_category_t type = sig_category_unknown;
+    if (hint) {
+        type = hint->category;
+    }
+    return type;
+}
+
 signature_t typeof_sig(const hint_signature_t* hint) {
     signature_t type = sig_unknown;
     if (hint) {
@@ -178,14 +193,6 @@ jws_t typeof_jws(const hint_signature_t* hint) {
     jws_t type = jws_unknown;
     if (hint) {
         type = hint->jws_type;
-    }
-    return type;
-}
-
-jws_group_t typeof_group(const hint_signature_t* hint) {
-    jws_group_t type = jws_group_unknown;
-    if (hint) {
-        type = hint->group;
     }
     return type;
 }

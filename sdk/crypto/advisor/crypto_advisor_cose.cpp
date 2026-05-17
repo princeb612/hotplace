@@ -35,15 +35,15 @@ return_t crypto_advisor::for_each_cose(std::function<void(const hint_cose_algori
 
 const hint_cose_algorithm_t* crypto_advisor::hintof_cose_algorithm(cose_alg_t alg) {
     const hint_cose_algorithm_t* item = nullptr;
-    t_maphint<uint32, const hint_cose_algorithm_t*> hint(_cose_alg_map);
+    t_maphint<int32, const hint_cose_algorithm_t*> hint(_cose_alg_map);
 
     hint.find(alg, &item);
     return item;
 }
 
-const hint_cose_algorithm_t* crypto_advisor::hintof_cose_algorithm(uint32 alg) {
+const hint_cose_algorithm_t* crypto_advisor::hintof_cose_algorithm(int32 alg) {
     const hint_cose_algorithm_t* item = nullptr;
-    t_maphint<uint32, const hint_cose_algorithm_t*> hint(_cose_alg_map);
+    t_maphint<int32, const hint_cose_algorithm_t*> hint(_cose_alg_map);
 
     hint.find(alg, &item);
     return item;
@@ -94,7 +94,7 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, cose_alg_t alg) {
         if (crypto_kty_t::kty_ec == kty) {
             uint32 nid = 0;
             nidof_evp_pkey(pkey, nid);
-            cmp2 = (hint->eckey.nid == nid);
+            cmp2 = (hint->keyinfo.nid == nid);
         }
         test = (cmp1 && cmp2);
     }
@@ -120,7 +120,7 @@ crypto_kty_t crypto_advisor::ktyof(cose_kty_t kty) {
 
 crypt_category_t crypto_advisor::categoryof(cose_alg_t alg) {
     crypt_category_t category = crypt_category_t::crypt_category_not_classified;
-    t_maphint<uint32, const hint_cose_algorithm_t*> hint(_cose_alg_map);
+    t_maphint<int32, const hint_cose_algorithm_t*> hint(_cose_alg_map);
 
     const hint_cose_algorithm_t* item = nullptr;
     hint.find(alg, &item);

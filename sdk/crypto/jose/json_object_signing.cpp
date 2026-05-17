@@ -160,7 +160,7 @@ return_t json_object_signing::verify(jose_context_t* handle, const std::string& 
             bool result_per_signature = false;
 
             std::string protected_header = base64_decode_careful(item.header, encoding_t::encoding_base64url);
-            jws_t sig;
+            jws_t sig = jws_t::jws_unknown;
             std::string header_kid;
 
             composer.parse_signature_protected_header(handle, protected_header.c_str(), sig, header_kid);
