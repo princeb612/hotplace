@@ -215,7 +215,7 @@ return_t crypto_advisor::ktyof_evp_pkey(const EVP_PKEY* pkey, crypto_kty_t& kty,
                         case NID_SLH_DSA_SHAKE_256s:
                         case NID_SLH_DSA_SHAKE_256f: {
                             kty = crypto_kty_t::kty_slhdsa;
-                        }
+                        } break;
 #endif
                         default: {
                             // not supported

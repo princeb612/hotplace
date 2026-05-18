@@ -58,8 +58,8 @@ struct universal_pairhash {
         using P1 = std::decay_t<T1>;
         using P2 = std::decay_t<T2>;
 #else
-        using P1 = std::decay<T1>;
-        using P2 = std::decay<T2>;
+        using P1 = typename std::decay<T1>::type;
+        using P2 = typename std::decay<T2>::type;
 #endif
 
         auto h1 = std::hash<P1>{}(p.first);
