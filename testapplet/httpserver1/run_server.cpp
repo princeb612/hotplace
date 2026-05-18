@@ -162,25 +162,39 @@ return_t simple_http_server(void*) {
                 .set_handler(consumer_routine)
                 .set_tls_cipher_list(ciphersuites);
 
+            auto lambda_set_certificate = [&](const char* crt, const char* key) -> void {
+                if (crt && key) {
+                    if (option.flags & option_flag_trial) {
+                        load_certificate(crt, key, nullptr);
+                    } else {
+                        builder.set_tls_certificate(crt, key);
+                    }
+                }
+            };
+
             if (option.cert == "ecdsa") {
-                load_certificate("server-ecdsa.crt", "server-ecdsa.key", nullptr);
+                lambda_set_certificate("server-ecdsa.crt", "server-ecdsa.key");
             } else if (option.cert == "eddsa") {
-                load_certificate("server-eddsa.crt", "server-eddsa.key", nullptr);
+                lambda_set_certificate("server-eddsa.crt", "server-eddsa.key");
             } else if (option.cert == "mldsa") {
-                load_certificate("server-mldsa.crt", "server-mldsa.key", nullptr);
+                lambda_set_certificate("server-mldsa.crt", "server-mldsa.key");
             } else if (option.cert == "slhdsa") {
-                load_certificate("server-slhdsa.crt", "server-slhdsa.key", nullptr);
+                lambda_set_certificate("server-slhdsa.crt", "server-slhdsa.key");
             } else if (option.cert == "rsa") {
-                load_certificate("server-rsa.crt", "server-rsa.key", nullptr);
+                lambda_set_certificate("server-rsa.crt", "server-rsa.key");
             } else if (option.cert == "rsapss") {
-                load_certificate("server-rsapss.crt", "server-rsapss.key", nullptr);
+                lambda_set_certificate("server-rsapss.crt", "server-rsapss.key");
             } else {
-                load_certificate("server-ecdsa.crt", "server-ecdsa.key", nullptr);
-                load_certificate("server-eddsa.crt", "server-eddsa.key", nullptr);
-                load_certificate("server-mldsa.crt", "server-mldsa.key", nullptr);
-                load_certificate("server-slhdsa.crt", "server-slhdsa.key", nullptr);
-                load_certificate("server-rsa.crt", "server-rsa.key", nullptr);
-                load_certificate("server-rsapss.crt", "server-rsapss.key", nullptr);
+                if (option.flags & option_flag_trial) {
+                    load_certificate("server-ecdsa.crt", "server-ecdsa.key", nullptr);
+                    load_certificate("server-eddsa.crt", "server-eddsa.key", nullptr);
+                    load_certificate("server-mldsa.crt", "server-mldsa.key", nullptr);
+                    load_certificate("server-slhdsa.crt", "server-slhdsa.key", nullptr);
+                    load_certificate("server-rsa.crt", "server-rsa.key", nullptr);
+                    load_certificate("server-rsapss.crt", "server-rsapss.key", nullptr);
+                } else {
+                    lambda_set_certificate("server-ecdsa.crt", "server-ecdsa.key");
+                }
             }
 
             if (option.flags & option_flag_content_encoding) {
