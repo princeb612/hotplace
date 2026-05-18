@@ -61,7 +61,7 @@ return_t signalwait_threads::create() {
             ret = thread_obj->start(); /* CreateThread, pthread_create here */
             if (errorcode_t::success == ret) {
                 threadid_t tid = thread_obj->gettid();
-                _container.insert(std::make_pair(tid, thread_rt.get()));
+                _container.emplace(tid, thread_rt.get());
 #if defined DEBUG
                 if (istraceable(trace_category_internal, loglevel_debug)) {
                     trace_debug_event(trace_category_internal, trace_event_internal,
@@ -179,7 +179,7 @@ return_t signalwait_threads::ready_to_join(threadid_t tid) {
     if (_container.end() == iter) {
         throw exception(errorcode_t::unexpected);
     } else {
-        _readytojoin.insert({iter->first, iter->second});
+        _readytojoin.emplace(iter->first, iter->second);
         _container.erase(iter);
         _sem.signal();
     }

@@ -11,6 +11,7 @@
 #include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_signature_algorithms.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
@@ -71,12 +72,17 @@ return_t tls_extension_signature_algorithms::do_read_body(tls_direction_t dir, c
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                tls_advisor* tlsadvisor = tls_advisor::get_instance();
+                auto advisor = crypto_advisor::get_instance();
 
                 dbs.println("   > %s (%i ent.)", constexpr_algorithms, count);
                 int i = 0;
                 for (auto alg : _algorithms) {
-                    dbs.println("     [%02i] 0x%04x %s", i++, alg, tlsadvisor->nameof_signature_scheme(alg).c_str());
+                    std::string name;
+                    auto hint = advisor->hintof_sigscheme(alg);
+                    if (hint) {
+                        name = hint->name;
+                    }
+                    dbs.println("     [%02i] 0x%04x %s", i++, alg, name.c_str());
                 }
             });
         }
@@ -114,9 +120,12 @@ tls_extension_signature_algorithms& tls_extension_signature_algorithms::add(uint
 }
 
 tls_extension_signature_algorithms& tls_extension_signature_algorithms::add(const std::string& name) {
-    tls_advisor* tlsadvisor = tls_advisor::get_instance();
-    auto code = tlsadvisor->valueof_signature_scheme(name);
-    return add(code);
+    auto advisor = crypto_advisor::get_instance();
+    auto hint = advisor->hintof_sigscheme(name);
+    if (hint) {
+        add(hint->scheme);
+    }
+    return *this;
 }
 
 void tls_extension_signature_algorithms::clear() { _algorithms.clear(); }

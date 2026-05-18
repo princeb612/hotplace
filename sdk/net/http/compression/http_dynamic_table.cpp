@@ -207,8 +207,8 @@ return_t http_dynamic_table::commit() {
 
             evict();
 
-            _dynamic_map.insert({name, {value, _inserted}});
-            _dynamic_reversemap.insert({_inserted, {name, entrysize}});
+            _dynamic_map.emplace(name, std::make_pair(value, _inserted));
+            _dynamic_reversemap.emplace(_inserted, std::make_pair(name, entrysize));
 
             if (_hook) {
                 _hook(trace_category_net, trace_event_header_compression_insert);

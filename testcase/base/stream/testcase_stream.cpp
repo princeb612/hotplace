@@ -161,7 +161,7 @@ void t_test_rule_of_5(const std::string& name) {
         // map insert (copy ctor)
         std::map<int, TYPE> m;
         TYPE t("Alice");
-        m.insert({1, t});
+        m.emplace(1, t);
     }
     {
         // operator[] (default + assignment)
@@ -247,7 +247,7 @@ void test_stream_split() {
     split_table table1;
     split_table expect1 = {{0x0, 0x80}, {0x80, 0x80}, {0x100, 0x80}, {0x180, 0x80}, {0x200, 0x80}, {0x280, 0x80}, {0x300, 0x80}, {0x380, 0x80}, {0x400, 0x10}};
     auto lambda1 = [&](const byte_t* stream, size_t size, size_t fragoffset, size_t fragsize) -> void {
-        table1.insert({fragoffset, fragsize});
+        table1.emplace(fragoffset, fragsize);
         _logger->writeln("split @0x%03zx [0x%zx]", fragoffset, fragsize);
         // _logger->dump(stream + fragoffset, fragsize, 16, 3);
     };
@@ -257,7 +257,7 @@ void test_stream_split() {
     split_table table2;
     split_table expect2 = {{0x0, 0x70}, {0x70, 0x80}, {0x0f0, 0x80}, {0x170, 0x80}, {0x1f0, 0x80}, {0x270, 0x80}, {0x2f0, 0x80}, {0x370, 0x80}, {0x3f0, 0x20}};
     auto lambda2 = [&](const byte_t* stream, size_t size, size_t fragoffset, size_t fragsize) -> void {
-        table2.insert({fragoffset, fragsize});
+        table2.emplace(fragoffset, fragsize);
         _logger->writeln("split @0x%03zx [0x%zx]", fragoffset, fragsize);
         // _logger->dump(stream + fragoffset, fragsize, 16, 3);
     };

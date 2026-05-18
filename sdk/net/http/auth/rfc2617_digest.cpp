@@ -61,12 +61,12 @@ rfc2617_digest& rfc2617_digest::digest(const std::string& algorithm) {
     //      MD5, SHA-512-256, SHA-256
     //      MD5-sess, SHA-512-256-sess, SHA-256-sess
     std::map<std::string, std::string> algmap;
-    algmap.insert(std::make_pair("MD5", "md5"));
-    algmap.insert(std::make_pair("MD5-sess", "md5"));
-    algmap.insert(std::make_pair("SHA-512-256", "sha2-512/256"));
-    algmap.insert(std::make_pair("SHA-512-256-sess", "sha2-512/256"));
-    algmap.insert(std::make_pair("SHA-256", "sha256"));
-    algmap.insert(std::make_pair("SHA-256-sess", "sha256"));
+    algmap.emplace("MD5", "md5");
+    algmap.emplace("MD5-sess", "md5");
+    algmap.emplace("SHA-512-256", "sha2-512/256");
+    algmap.emplace("SHA-512-256-sess", "sha2-512/256");
+    algmap.emplace("SHA-256", "sha256");
+    algmap.emplace("SHA-256-sess", "sha256");
 
     std::string hashalg;
     std::map<std::string, std::string>::iterator alg_iter = algmap.find(algorithm);

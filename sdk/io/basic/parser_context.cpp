@@ -144,7 +144,7 @@ return_t parser::context::parse(parser* obj, const char* p, size_t size, uint32 
                         ret_hook = obj->lookup(ts, entry_no, flags);
                         if (true == ret_hook) {
                             if (handle_lvalue_usertype) {
-                                index.insert({ts, t});
+                                index.emplace(ts, t);
                             }
                         } else {
                             ++error_lookup;
@@ -406,7 +406,7 @@ std::multimap<range_t, size_t> parser::context::psearchex(parser* obj) const {
         auto moires = moi.merge();
         for (auto item : moires) {
             range_t range(item.s, item.e);
-            result.insert({range, item.t});
+            result.emplace(range, item.t);
         }
     }
     return result;

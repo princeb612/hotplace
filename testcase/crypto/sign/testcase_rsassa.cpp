@@ -39,7 +39,10 @@ void test_rsassa_sample() {
         if (s) {
             s->sign(pkey, (byte_t*)message, msglen, sig);
             ret = s->verify(pkey, (byte_t*)message, msglen, sig);
-            _logger->dump(sig);
+            _logger->writeln([&](basic_stream& bs) -> void {
+                bs.println("signature");
+                bs << base16_encode(sig);
+            });
             _test_case.test(ret, __FUNCTION__, "verify kty %s", ktyname);
 
             s->release();

@@ -30,8 +30,8 @@ void hpack_static_table::load() {
             // RFC 7541 Appendix A.  Static Table Definition
             // if (_static_table.empty()) ...
             auto lambda = [&](uint32 index, const char* name, const char* value) -> void {
-                _static_table.insert(std::make_pair(name, std::make_pair(value ? value : "", index)));
-                _static_table_index.insert(std::make_pair(index, std::make_pair(name, value ? value : "")));
+                _static_table.emplace(name, std::make_pair(value ? value : "", index));
+                _static_table_index.emplace(index, std::make_pair(name, value ? value : ""));
             };
             http_resource::get_instance()->for_each_hpack_static_table(lambda);
         }

@@ -20,62 +20,62 @@ void http_resource::doload_resources_h1() {
     // 6.1.1 Status Code and Reason Phrase
     if (_status_codes.empty()) {
         // 10.1 Informational 1xx
-        _status_codes.insert(std::make_pair(100, "Continue"));
-        _status_codes.insert(std::make_pair(101, "Switching Protocols"));
+        _status_codes.emplace(100, "Continue");
+        _status_codes.emplace(101, "Switching Protocols");
         // 10.2 Successful 2xx
-        _status_codes.insert(std::make_pair(200, "OK"));
-        _status_codes.insert(std::make_pair(201, "Created"));
-        _status_codes.insert(std::make_pair(202, "Accepted"));
-        _status_codes.insert(std::make_pair(203, "Non-Authoritative Information"));
-        _status_codes.insert(std::make_pair(204, "No Content"));
-        _status_codes.insert(std::make_pair(205, "Reset Content"));
-        _status_codes.insert(std::make_pair(206, "Partial Content"));
+        _status_codes.emplace(200, "OK");
+        _status_codes.emplace(201, "Created");
+        _status_codes.emplace(202, "Accepted");
+        _status_codes.emplace(203, "Non-Authoritative Information");
+        _status_codes.emplace(204, "No Content");
+        _status_codes.emplace(205, "Reset Content");
+        _status_codes.emplace(206, "Partial Content");
         // 10.3 Redirection 3xx
-        _status_codes.insert(std::make_pair(300, "Multiple Choices"));
-        _status_codes.insert(std::make_pair(301, "Moved Permanently"));
-        _status_codes.insert(std::make_pair(302, "Found"));
-        _status_codes.insert(std::make_pair(303, "See Other"));
-        _status_codes.insert(std::make_pair(304, "Not Modified"));
-        _status_codes.insert(std::make_pair(305, "Use Proxy"));
-        _status_codes.insert(std::make_pair(307, "Temporary Redirect"));
+        _status_codes.emplace(300, "Multiple Choices");
+        _status_codes.emplace(301, "Moved Permanently");
+        _status_codes.emplace(302, "Found");
+        _status_codes.emplace(303, "See Other");
+        _status_codes.emplace(304, "Not Modified");
+        _status_codes.emplace(305, "Use Proxy");
+        _status_codes.emplace(307, "Temporary Redirect");
         // 10.4 Client Error 4xx
-        _status_codes.insert(std::make_pair(400, "Bad Request"));
-        _status_codes.insert(std::make_pair(401, "Unauthorized"));
-        _status_codes.insert(std::make_pair(402, "Payment Required"));
-        _status_codes.insert(std::make_pair(403, "Forbidden"));
-        _status_codes.insert(std::make_pair(404, "Not Found"));
-        _status_codes.insert(std::make_pair(405, "Method Not Allowed"));
-        _status_codes.insert(std::make_pair(406, "Not Acceptable"));
-        _status_codes.insert(std::make_pair(407, "Proxy Authentication Required"));
-        _status_codes.insert(std::make_pair(408, "Request Timeout"));
-        _status_codes.insert(std::make_pair(409, "Conflict"));
-        _status_codes.insert(std::make_pair(410, "Gone"));
-        _status_codes.insert(std::make_pair(411, "Length Required"));
-        _status_codes.insert(std::make_pair(412, "Precondition Failed"));
-        _status_codes.insert(std::make_pair(413, "Request Entity Too Large"));
-        _status_codes.insert(std::make_pair(414, "Request-URI Too Long"));
-        _status_codes.insert(std::make_pair(415, "Unsupported Media Type"));
-        _status_codes.insert(std::make_pair(416, "Requested Range Not Satisfiable"));
-        _status_codes.insert(std::make_pair(417, "Expectation Failed"));
-        _status_codes.insert(std::make_pair(426, "Upgrade Required"));
+        _status_codes.emplace(400, "Bad Request");
+        _status_codes.emplace(401, "Unauthorized");
+        _status_codes.emplace(402, "Payment Required");
+        _status_codes.emplace(403, "Forbidden");
+        _status_codes.emplace(404, "Not Found");
+        _status_codes.emplace(405, "Method Not Allowed");
+        _status_codes.emplace(406, "Not Acceptable");
+        _status_codes.emplace(407, "Proxy Authentication Required");
+        _status_codes.emplace(408, "Request Timeout");
+        _status_codes.emplace(409, "Conflict");
+        _status_codes.emplace(410, "Gone");
+        _status_codes.emplace(411, "Length Required");
+        _status_codes.emplace(412, "Precondition Failed");
+        _status_codes.emplace(413, "Request Entity Too Large");
+        _status_codes.emplace(414, "Request-URI Too Long");
+        _status_codes.emplace(415, "Unsupported Media Type");
+        _status_codes.emplace(416, "Requested Range Not Satisfiable");
+        _status_codes.emplace(417, "Expectation Failed");
+        _status_codes.emplace(426, "Upgrade Required");
         // 10.5 Server Error 5xx
-        _status_codes.insert(std::make_pair(500, "Internal Server Error"));
-        _status_codes.insert(std::make_pair(501, "Not Implemented"));
-        _status_codes.insert(std::make_pair(502, "Bad Gateway"));
-        _status_codes.insert(std::make_pair(503, "Service Unavailable"));
-        _status_codes.insert(std::make_pair(504, "Gateway Timeout"));
-        _status_codes.insert(std::make_pair(505, "HTTP Version Not Supported"));
+        _status_codes.emplace(500, "Internal Server Error");
+        _status_codes.emplace(501, "Not Implemented");
+        _status_codes.emplace(502, "Bad Gateway");
+        _status_codes.emplace(503, "Service Unavailable");
+        _status_codes.emplace(504, "Gateway Timeout");
+        _status_codes.emplace(505, "HTTP Version Not Supported");
     }
 
     // 5.1.1 Method
     if (_methods.empty()) {
-        _methods.insert(std::make_pair(http_method_t::HTTP_OPTIONS, "OPTIONS"));
-        _methods.insert(std::make_pair(http_method_t::HTTP_GET, "GET"));
-        _methods.insert(std::make_pair(http_method_t::HTTP_HEAD, "HEAD"));
-        _methods.insert(std::make_pair(http_method_t::HTTP_POST, "POST"));
-        _methods.insert(std::make_pair(http_method_t::HTTP_PUT, "PUT"));
-        _methods.insert(std::make_pair(http_method_t::HTTP_DELETE, "DELETE"));
-        _methods.insert(std::make_pair(http_method_t::HTTP_TRACE, "TRACE"));
+        _methods.emplace(http_method_t::HTTP_OPTIONS, "OPTIONS");
+        _methods.emplace(http_method_t::HTTP_GET, "GET");
+        _methods.emplace(http_method_t::HTTP_HEAD, "HEAD");
+        _methods.emplace(http_method_t::HTTP_POST, "POST");
+        _methods.emplace(http_method_t::HTTP_PUT, "PUT");
+        _methods.emplace(http_method_t::HTTP_DELETE, "DELETE");
+        _methods.emplace(http_method_t::HTTP_TRACE, "TRACE");
     }
 }
 

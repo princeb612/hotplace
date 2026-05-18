@@ -1,5 +1,12 @@
 .svn
+.vs
 build
 build_msvc
 include
 lib
+redist
+etc/cert/root*
+etc/cert/*.csr
+etc/cert/*-encrypted.key
+etc/cert/*.ext
+etc/cert/*.srl

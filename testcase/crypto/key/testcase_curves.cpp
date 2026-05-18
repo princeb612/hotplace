@@ -38,7 +38,7 @@ void test_curves() {
         auto kid = bs.c_str();
 
         auto test = keychain.add_ec2(&key, nid, keydesc(kid));
-        _test_case.test(test, __FUNCTION__, "%s", kid);
+        _test_case.test(test, __FUNCTION__, "%s 0x%04x(%u)", kid, nid, nid);
 
         auto pkey = key.find_nid(kid, nid);
 

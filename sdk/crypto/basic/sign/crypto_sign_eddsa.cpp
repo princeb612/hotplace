@@ -9,68 +9,13 @@
  */
 
 #include <hotplace/sdk/crypto/basic/crypto_sign.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
 
 namespace hotplace {
 namespace crypto {
 
-crypto_sign_eddsa::crypto_sign_eddsa(hash_algorithm_t hashalg) : crypto_sign(hashalg) {}
+crypto_sign_eddsa::crypto_sign_eddsa() : crypto_sign_digestsign() { _kty = kty_okp; }
 
-return_t crypto_sign_eddsa::sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == pkey || nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        openssl_sign s;
-        ret = s.sign_eddsa(pkey, get_digest(), stream, size, signature, flags);
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t crypto_sign_eddsa::verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == pkey || nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        openssl_sign s;
-        ret = s.verify_eddsa(pkey, get_digest(), stream, size, signature, flags);
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t crypto_sign_eddsa::sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        openssl_sign s;
-        ret = s.sign_eddsa(pkey, get_digest(), input, signature, flags);
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t crypto_sign_eddsa::verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        openssl_sign s;
-        ret = s.verify_eddsa(pkey, get_digest(), input, signature, flags);
-    }
-    __finally2 {}
-    return ret;
-}
+crypto_sign_eddsa::~crypto_sign_eddsa() {}
 
 }  // namespace crypto
 }  // namespace hotplace

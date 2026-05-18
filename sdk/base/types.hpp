@@ -41,6 +41,7 @@
 
 #include <string.h>
 
+#include <functional>
 #include <map>
 #include <new>
 #include <string>

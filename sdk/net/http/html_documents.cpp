@@ -36,7 +36,7 @@ html_documents& html_documents::add_documents_root(const std::string& root_uri, 
     if (false == ends_with(tdir, DIR_SEP_T)) {
         tdir += DIR_SEP_T;
     }
-    _urimap.insert(std::make_pair(turi, tdir));
+    _urimap.emplace(turi, tdir);
 
     _use = true;
 
@@ -45,7 +45,7 @@ html_documents& html_documents::add_documents_root(const std::string& root_uri, 
 
 html_documents& html_documents::add_content_type(const std::string& dot_ext, const std::string& content_type) {
     critical_section_guard guard(_lock);
-    _content_types.insert(std::make_pair(dot_ext, content_type));
+    _content_types.emplace(dot_ext, content_type);
     return *this;
 }
 
@@ -159,7 +159,7 @@ return_t html_documents::search_cache(const std::string& uri, binary_t& content)
 return_t html_documents::insert_cache(const std::string& uri, binary_t& content) {
     return_t ret = errorcode_t::success;
     critical_section_guard guard(_lock);
-    _cache_map.insert(std::make_pair(uri, content));
+    _cache_map.emplace(uri, content);
     return ret;
 }
 

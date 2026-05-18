@@ -74,7 +74,7 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
         formatter_map_t fmtspec;  // format specifier
         for (i = 0; i < RTL_NUMBER_OF(type_formatter); i++) {
             variant_conversion_t* item = type_formatter + i;
-            fmtspec.insert(std::make_pair(item->type, item->formatter));
+            fmtspec.emplace(item->type, item->formatter);
         }
 
         if (0) {

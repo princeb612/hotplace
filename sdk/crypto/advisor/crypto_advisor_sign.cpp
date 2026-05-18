@@ -54,10 +54,9 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, signature_t sig) {
             __leave2;
         }
 
-        // uint32 type = EVP_PKEY_id (pkey);
-        crypto_kty_t kty = ktyof_evp_pkey(pkey);
+        crypto_kty_t kty = kty_unknown;
         uint32 nid = 0;
-        nidof_evp_pkey(pkey, nid);
+        ktyof_evp_pkey(pkey, kty, nid);
 
         const hint_signature_t* hint = hintof_signature(sig);
         bool cond1 = (hint->sig == sig);
@@ -149,6 +148,22 @@ const hint_sigscheme_t* crypto_advisor::hintof_sig_nid(uint32 nid) {
     const hint_sigscheme_t* item = nullptr;
     t_maphint<uint32, const hint_sigscheme_t*> hint(_hint_sigscheme_nid_map);
     hint.find(nid, &item);
+    return item;
+}
+
+const hint_sigscheme_t* crypto_advisor::hintof_sigscheme(const char* name) {
+    const hint_sigscheme_t* item = nullptr;
+    if (name) {
+        t_maphint<std::string, const hint_sigscheme_t*> hint(_hint_sigscheme_name_map);
+        hint.find(name, &item);
+    }
+    return item;
+}
+
+const hint_sigscheme_t* crypto_advisor::hintof_sigscheme(const std::string& name) {
+    const hint_sigscheme_t* item = nullptr;
+    t_maphint<std::string, const hint_sigscheme_t*> hint(_hint_sigscheme_name_map);
+    hint.find(name, &item);
     return item;
 }
 

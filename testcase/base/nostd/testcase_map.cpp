@@ -55,11 +55,11 @@ void test_mapinsert() {
         /**
          * @remarks
          *          #if __cplusplus >= 201703L  // c++17
-         *          dict.insert({0, moveitem_t(0)});
+         *          dict.emplace(0, moveitem_t(0));
          *          #elif __cplusplus >= 201103L  // c++11
-         *          dict.insert(std::make_pair(0, moveitem_t(0)));
+         *          dict.emplace(0, moveitem_t(0));
          *          #else
-         *          dict.insert({0, copyitem_t(0)});
+         *          dict.emplace(0, copyitem_t(0));
          *          #endif
          */
         moveitem_t(const moveitem_t&) = delete;
@@ -86,7 +86,7 @@ void test_mapinsert() {
     {
         std::map<int, copyitem_t> dict;
 
-        dict.insert({0, copyitem_t(0)});
+        dict.emplace(0, copyitem_t(0));
     }
 
     // ctor1 move move dtor(moved) dtor(moved) dtor
@@ -94,14 +94,14 @@ void test_mapinsert() {
     {
         std::map<int, moveitem_t> dict;
 
-        dict.insert(std::make_pair(0, moveitem_t(0)));
+        dict.emplace(0, moveitem_t(0));
     }
 
     // ctor1 copy copy dtor dtor dtor
     _logger->colorln("case 3");
     {
         std::map<int, copyitem_t> dict;
-        auto pib = dict.insert({0, copyitem_t(0)});
+        auto pib = dict.emplace(0, copyitem_t(0));
         if (true == pib.second) {
             // auto& entry = pib.first->second;
             //
@@ -113,7 +113,7 @@ void test_mapinsert() {
     {
         std::map<int, moveitem_t> dict;
 
-        auto pib = dict.insert(std::make_pair(0, moveitem_t(0)));
+        auto pib = dict.emplace(0, moveitem_t(0));
         if (true == pib.second) {
             // auto& entry = pib.first->second;
             //

@@ -104,7 +104,7 @@ return_t authenticode_verifier::add_engine(authenticode_context_t* handle, authe
 
         critical_section_guard guard(handle->lock);
         std::pair<authenticode_engines_map_t::iterator, bool> result;
-        result = handle->engines.insert(std::make_pair(engine->id(), engine));
+        result = handle->engines.emplace(engine->id(), engine);
         if (false == result.second) {
             ret = errorcode_t::already_exist;
             engine->release();
@@ -128,7 +128,7 @@ return_t authenticode_verifier::load_engines(authenticode_context_t* handle) {
         }
 
         critical_section_guard guard(handle->lock);
-        handle->engines.insert(std::make_pair(authenticode_engine_id_pe, new authenticode_plugin_pe()));
+        handle->engines.emplace(authenticode_engine_id_pe, new authenticode_plugin_pe());
         // handle->engines.insert (std::make_pair (authenticode_engine_id_msi, new authenticode_plugin_msi ()));
         // handle->engines.insert (std::make_pair (authenticode_engine_id_cab, new authenticode_plugin_cabinet ()));
     }
@@ -533,7 +533,7 @@ return_t authenticode_verifier::add_trusted_rootcert(authenticode_context_t* han
         }
 
         critical_section_guard guard(handle->lock);
-        handle->trusted_cert.insert(std::make_pair(file ? file : "", path ? path : ""));
+        handle->trusted_cert.emplace(file ? file : "", path ? path : "");
     }
     __finally2 {}
     return ret;
@@ -691,7 +691,7 @@ return_t authenticode_verifier::verify_pkcs7(authenticode_context_t* handle, voi
 
         {
             critical_section_guard guard(_contexts_lock);
-            _contexts.insert(std::make_pair(get_thread_id(), handle));
+            _contexts.emplace(get_thread_id(), handle);
         }
 
         /* check if it's PKCS#7 signed data */
@@ -890,7 +890,7 @@ static return_t get_crl(authenticode_context_t* context, X509* cert, authenticod
                 authenticode_crl_map_t::iterator crl_it = context->crl_map.find(crl_url);
                 if (context->crl_map.end() != crl_it) {
                     // no matter what crl is null or not
-                    crl_map.insert(std::make_pair(crl_it->first, crl_it->second));
+                    crl_map.emplace(crl_it->first, crl_it->second);
                     __leave2;
                 }
 

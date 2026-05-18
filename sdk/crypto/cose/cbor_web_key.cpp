@@ -168,7 +168,7 @@ return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int f
                             // symm
                             binary_t bin;
                             rhs->data().to_binary(bin);
-                            keyobj.attrib.insert(std::make_pair(label, bin));
+                            keyobj.attrib.emplace(label, bin);
                         } else {
                             // curve if okp, ec2
                             keyobj.curve = rhs->data().to_int();
@@ -176,14 +176,14 @@ return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int f
                     } else if (label < -1) {  // ec2 (-2 x, -3 y, -4 d), rsa (-1 n, -2 e, -3 d, ..., -12 ti), mldsa (-1 pub, -2 priv)
                         binary_t bin;
                         rhs->data().to_binary(bin);
-                        keyobj.attrib.insert(std::make_pair(label, bin));
+                        keyobj.attrib.emplace(label, bin);
                     }
                 }
             }
             t_maphint<int, binary_t> hint_key(keyobj.attrib);
             keydesc desc(keyobj.kid);
             if (cose_kty_t::cose_kty_okp == keyobj.type || cose_kty_t::cose_kty_ec2 == keyobj.type) {  // 1, 2
-                uint32 nid = advisor->curveof((cose_ec_curve_t)keyobj.curve);
+                uint32 nid = advisor->nidof((cose_ec_curve_t)keyobj.curve);
                 binary_t x;
                 binary_t y;
                 binary_t d;
@@ -344,7 +344,7 @@ void cwk_writer(crypto_key_object* key, void* param) {
         std::string kid = key->get_desc().get_kid_str();
 
         (*root).add([&](cbor_map* keynode) -> void {
-            cose_kty_t cose_kty = advisor->ktyof(kty);
+            cose_kty_t cose_kty = advisor->cose_ktyof(kty);
             *keynode << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(cose_kty));  // 1
             if (kid.size()) {
                 *keynode << new cbor_pair(cose_key_lable_t::cose_lable_kid, new cbor_data(str2bin(kid)));  // 2
@@ -355,7 +355,7 @@ void cwk_writer(crypto_key_object* key, void* param) {
                 cose_ec_curve_t cose_curve = cose_ec_curve_t::cose_ec_unknown;
 
                 nidof_evp_pkey(key->get_pkey(), nid);
-                cose_curve = advisor->curveof(nid);
+                cose_curve = advisor->cose_curveof(nid);
 
                 *keynode << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(cose_curve))  // -1
                          << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(pub1));         // -2

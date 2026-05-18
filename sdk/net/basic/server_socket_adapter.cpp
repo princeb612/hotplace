@@ -44,7 +44,7 @@ return_t server_socket_adapter::startup(uint32 scheme, const std::string& server
         }
 
         critical_section_guard guard(_lock);
-        _sockets.insert({scheme_masked, s});
+        _sockets.emplace(scheme_masked, s);
     }
     __finally2 {}
     return ret;
@@ -81,7 +81,7 @@ server_socket* server_socket_adapter::get_server_socket(uint32 scheme) {
             svrsocket = builder.set(scheme).build();
             if (svrsocket) {
                 critical_section_guard guard(_lock);
-                _sockets.insert({scheme_masked, svrsocket});
+                _sockets.emplace(scheme_masked, svrsocket);
             }
         }
     }

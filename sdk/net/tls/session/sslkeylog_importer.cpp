@@ -48,8 +48,8 @@ void sslkeylog_importer::load() {
             };
             for (size_t i = 0; i < RTL_NUMBER_OF(resources); i++) {
                 const sslkeylog_item* item = resources + i;
-                _table.insert({item->name, item->secret});
-                _rtable.insert({item->secret, item->name});
+                _table.emplace(item->name, item->secret);
+                _rtable.emplace(item->secret, item->name);
             }
         }
     }
@@ -97,7 +97,7 @@ return_t sslkeylog_importer::add(const std::string& secret) {
         base16_decode(column2, value);
 
         auto& secret_map = _keylogs[random];
-        secret_map.insert({secret, value});
+        secret_map.emplace(secret, value);
     }
     __finally2 { split_end(handle); }
     return ret;

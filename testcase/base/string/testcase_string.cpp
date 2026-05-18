@@ -314,7 +314,7 @@ void t_test_rule_of_5(const std::string& name) {
         // map insert (copy ctor)
         std::map<int, TYPE> m;
         TYPE t("Alice");
-        m.insert({1, t});
+        m.emplace(1, t);
     }
     {
         // operator[] (default + assignment)

@@ -198,6 +198,7 @@ enum sig_category_t : uint8 {
     sig_category_rsassa_x931 = 8,    // FIPS186-3, X9.31
     sig_category_mldsa = 9,          // MLDSA
     sig_category_brainpool = 10,     // RFC 8734
+    sig_category_slhdsa = 11,        // SHL-DSA
 };
 
 enum signature_t : uint16 {
@@ -232,13 +233,26 @@ enum signature_t : uint16 {
 
     sig_es256k = CRYPTO_SCHEME16(sig_category_ecdsa, sha2_256),  // ES256K, NID_secp256k1
 
-    sig_mldsa44 = CRYPTO_SCHEME16(sig_category_mldsa, 2),  // NIST security level 2
-    sig_mldsa65 = CRYPTO_SCHEME16(sig_category_mldsa, 3),  // NIST security level 3
-    sig_mldsa87 = CRYPTO_SCHEME16(sig_category_mldsa, 5),  // NIST security level 5
+    sig_mldsa44 = CRYPTO_SCHEME16(sig_category_mldsa, 0x21),  // NIST security level 2
+    sig_mldsa65 = CRYPTO_SCHEME16(sig_category_mldsa, 0x31),  // NIST security level 3
+    sig_mldsa87 = CRYPTO_SCHEME16(sig_category_mldsa, 0x51),  // NIST security level 5
 
     sig_brainpool256 = CRYPTO_SCHEME16(sig_category_brainpool, sha2_256),
     sig_brainpool384 = CRYPTO_SCHEME16(sig_category_brainpool, sha2_384),
     sig_brainpool512 = CRYPTO_SCHEME16(sig_category_brainpool, sha2_512),
+
+    sig_slhdsa_sha2_128s = CRYPTO_SCHEME16(sig_category_slhdsa, 0x11),
+    sig_slhdsa_sha2_128f = CRYPTO_SCHEME16(sig_category_slhdsa, 0x12),
+    sig_slhdsa_sha2_192s = CRYPTO_SCHEME16(sig_category_slhdsa, 0x31),
+    sig_slhdsa_sha2_192f = CRYPTO_SCHEME16(sig_category_slhdsa, 0x32),
+    sig_slhdsa_sha2_256s = CRYPTO_SCHEME16(sig_category_slhdsa, 0x51),
+    sig_slhdsa_sha2_256f = CRYPTO_SCHEME16(sig_category_slhdsa, 0x52),
+    sig_slhdsa_shake_128s = CRYPTO_SCHEME16(sig_category_slhdsa, 0x13),
+    sig_slhdsa_shake_128f = CRYPTO_SCHEME16(sig_category_slhdsa, 0x14),
+    sig_slhdsa_shake_192s = CRYPTO_SCHEME16(sig_category_slhdsa, 0x33),
+    sig_slhdsa_shake_192f = CRYPTO_SCHEME16(sig_category_slhdsa, 0x34),
+    sig_slhdsa_shake_256s = CRYPTO_SCHEME16(sig_category_slhdsa, 0x53),
+    sig_slhdsa_shake_256f = CRYPTO_SCHEME16(sig_category_slhdsa, 0x54),
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -402,6 +416,19 @@ enum tls_sigscheme_t : uint16 {
     tls_sigscheme_mldsa44 = 0x904,
     tls_sigscheme_mldsa65 = 0x905,
     tls_sigscheme_mldsa87 = 0x906,
+
+    tls_sigscheme_slhdsa_sha2_128s = 0x0911,   // draft-reddy-tls-slhdsa-01
+    tls_sigscheme_slhdsa_sha2_128f = 0x0912,   // draft-reddy-tls-slhdsa-01
+    tls_sigscheme_slhdsa_sha2_192s = 0x0913,   // draft-reddy-tls-slhdsa-01
+    tls_sigscheme_slhdsa_sha2_192f = 0x0914,   // draft-reddy-tls-slhdsa-01
+    tls_sigscheme_slhdsa_sha2_256s = 0x0915,   // draft-reddy-tls-slhdsa-01
+    tls_sigscheme_slhdsa_sha2_256f = 0x0916,   // draft-reddy-tls-slhdsa-01
+    tls_sigscheme_slhdsa_shake_128s = 0x0917,  // draft-reddy-tls-slhdsa-01
+    tls_sigscheme_slhdsa_shake_128f = 0x0918,  // draft-reddy-tls-slhdsa-01
+    tls_sigscheme_slhdsa_shake_192s = 0x0919,  // draft-reddy-tls-slhdsa-01
+    tls_sigscheme_slhdsa_shake_192f = 0x091A,  // draft-reddy-tls-slhdsa-01
+    tls_sigscheme_slhdsa_shake_256s = 0x091B,  // draft-reddy-tls-slhdsa-01
+    tls_sigscheme_slhdsa_shake_256f = 0x091C,  // draft-reddy-tls-slhdsa-01
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -511,8 +538,11 @@ enum crypt_item_t : uint16 {
     item_ec_pub_uncompressed = 77,
     item_ec_pub = item_ec_pub_uncompressed,
 
-    item_dh_pub = 78,   // sa item_dh_p, item_dh_g, item_dh_y
-    item_dh_priv = 79,  // sa item_dh_x
+    item_pubkey = 78,
+    item_privkey = 79,
+
+    item_dh_pub = item_pubkey,    // sa item_dh_p, item_dh_g, item_dh_y
+    item_dh_priv = item_privkey,  // sa item_dh_x
 
     /**
      * DSA
@@ -536,10 +566,12 @@ enum crypt_item_t : uint16 {
     item_dsa_y = 84,
     item_dsa_x = item_dsa_priv,
 
-    item_mlkem_pub = 85,
-    item_mlkem_priv = 86,
-    item_mldsa_pub = 87,
-    item_mldsa_priv = 88,
+    item_mlkem_pub = item_pubkey,
+    item_mlkem_priv = item_privkey,
+    item_mldsa_pub = item_pubkey,
+    item_mldsa_priv = item_privkey,
+    item_slhdsa_pub = item_pubkey,
+    item_slhdsa_priv = item_privkey,
 
     /**
      *   y = g^x mod p
@@ -667,6 +699,7 @@ enum jws_group_t : uint8 {
     jws_group_rsassa_pss = sig_category_rsassa_pss,        // PS256, PS384, PS512
     jws_group_eddsa = sig_category_eddsa,                  // EdDSA
     jws_group_mldsa = sig_category_mldsa,                  // MLDSA
+    jws_group_slhdsa = sig_category_slhdsa,                // SLH-DSA
 };
 
 /**
@@ -1447,6 +1480,7 @@ struct hint_group_item_t {
     uint32 nid;
     uint16 keysize;
     uint16 capsulesize;
+    uint16 additional;  // group
 };
 
 struct hint_group_t {
@@ -1558,8 +1592,12 @@ enum crypt_poweredby_t {
  * #endif
  */
 enum nid_t : uint32 {
+    nid_rsa = 6,                      // EVP_PKEY_RSA, NID_rsaEncryption
+    nid_rsa2 = 19,                    // EVP_PKEY_RSA2, NID_rsa
     nid_dh = 28,                      // NID_dhKeyAgreement (EVP_PKEY_DH)
     nid_dsa = 116,                    // NID_dsa
+    nid_oct = 855,                    // EVP_PKEY_HMAC, NID_hmac
+    nid_rsapss = 912,                 // EVP_PKEY_RSA_PSS, NID_rsassaPss
     nid_sha512_224 = 1094,            // NID_sha512_224 (openssl-3.0)
     nid_sha512_256 = 1095,            // NID_sha512_256 (openssl-3.0)
     nid_ffdhe2048 = 1126,             // NID_ffdhe2048
@@ -1567,21 +1605,32 @@ enum nid_t : uint32 {
     nid_ffdhe4096 = 1128,             // NID_ffdhe4096
     nid_ffdhe6144 = 1129,             // NID_ffdhe6144
     nid_ffdhe8192 = 1130,             // NID_ffdhe8192
+    nid_brainpoolp256r1tls13 = 1285,  // NID_brainpoolP256r1tls13 (openssl-3.2)
+    nid_brainpoolp384r1tls13 = 1286,  // NID_brainpoolP384r1tls13 (openssl-3.2)
+    nid_brainpoolp512r1tls13 = 1287,  // NID_brainpoolP512r1tls13 (openssl-3.2)
     nid_mlkem512 = 1454,              // NID_ML_KEM_512 (openssl-3.5)
     nid_mlkem768 = 1455,              // NID_ML_KEM_768 (openssl-3.5)
     nid_mlkem1024 = 1456,             // NID_ML_KEM_1024 (openssl-3.5)
     nid_ml_dsa_44 = 1457,             // NID_ML_DSA_44 (openssl-3.5)
     nid_ml_dsa_65 = 1458,             // NID_ML_DSA_65 (openssl-3.5)
     nid_ml_dsa_87 = 1459,             // NID_ML_DSA_87 (openssl-3.5)
-    nid_oct = 855,                    // EVP_PKEY_HMAC, NID_hmac
-    nid_rsa = 6,                      // EVP_PKEY_RSA, NID_rsaEncryption
-    nid_rsa2 = 19,                    // EVP_PKEY_RSA2, NID_rsa
-    nid_rsapss = 912,                 // EVP_PKEY_RSA_PSS, NID_rsassaPss
-    nid_brainpoolp256r1tls13 = 1285,  // NID_brainpoolP256r1tls13 (openssl-3.2)
-    nid_brainpoolp384r1tls13 = 1286,  // NID_brainpoolP384r1tls13 (openssl-3.2)
-    nid_brainpoolp512r1tls13 = 1287,  // NID_brainpoolP512r1tls13 (openssl-3.2)
+    nid_slhdsa_sha2_128s = 1460,      // NID_SLH_DSA_SHA2_128s  RFC 9909 (openssl-3.5)
+    nid_slhdsa_sha2_128f = 1461,      // NID_SLH_DSA_SHA2_128f  RFC 9909 (openssl-3.5)
+    nid_slhdsa_sha2_192s = 1462,      // NID_SLH_DSA_SHA2_192s  RFC 9909 (openssl-3.5)
+    nid_slhdsa_sha2_192f = 1463,      // NID_SLH_DSA_SHA2_192f  RFC 9909 (openssl-3.5)
+    nid_slhdsa_sha2_256s = 1464,      // NID_SLH_DSA_SHA2_256s  RFC 9909 (openssl-3.5)
+    nid_slhdsa_sha2_256f = 1465,      // NID_SLH_DSA_SHA2_256f  RFC 9909 (openssl-3.5)
+    nid_slhdsa_shake_128s = 1466,     // NID_SLH_DSA_SHAKE_128s RFC 9909 (openssl-3.5)
+    nid_slhdsa_shake_128f = 1467,     // NID_SLH_DSA_SHAKE_128f RFC 9909 (openssl-3.5)
+    nid_slhdsa_shake_192s = 1468,     // NID_SLH_DSA_SHAKE_192s RFC 9909 (openssl-3.5)
+    nid_slhdsa_shake_192f = 1469,     // NID_SLH_DSA_SHAKE_192f RFC 9909 (openssl-3.5)
+    nid_slhdsa_shake_256s = 1470,     // NID_SLH_DSA_SHAKE_256s RFC 9909 (openssl-3.5)
+    nid_slhdsa_shake_256f = 1471,     // NID_SLH_DSA_SHAKE_256f RFC 9909 (openssl-3.5)
 };
 
+/**
+ * @sa  class crypto_cbc_hmac
+ */
 enum authenticated_encryption_flag_t : uint16 {
     tls_mac_then_encrypt = 0x0001,
     jose_encrypt_then_mac = 0x8001,
@@ -1592,6 +1641,7 @@ enum authenticated_encryption_flag_t : uint16 {
 // openssl-3.0 ENCODER
 ///////////////////////////////////////////////////////////////////////////
 
+// openssl definitions
 #define KEY_ENCODING_PEM 0x00000001
 #define KEY_ENCODING_DER 0x00000002
 #define KEY_ENCODING_RAW 0x00000003
@@ -1619,14 +1669,39 @@ struct key_encoding_params_t {
 };
 
 struct hint_advisor_t {
-    crypto_kty_t kty;  // key type
-    uint32 nid;        // openssl numeric id
-    const hint_kty_name_t* hint_kty;
-    const hint_curve_t* hint_curve;
-    const hint_sigscheme_t* hint_sigscheme;
+    crypto_kty_t kty = kty_unknown;
+    uint32 nid = 0;
+    const hint_kty_name_t* hint_kty = nullptr;
+    const hint_blockcipher_t* hint_blockcipher = nullptr;
+    const hint_cipher_t* hint_cipher = nullptr;
+    const hint_digest_t* hint_digest = nullptr;
+    const hint_curve_t* hint_curve = nullptr;
+    const hint_sigscheme_t* hint_sigscheme = nullptr;
+    const hint_jose_encryption_t* hint_jwa = nullptr;
+    const hint_jose_encryption_t* hint_jwe = nullptr;
+    const hint_signature_t* hint_jws = nullptr;
+    const hint_group_t* hint_group = nullptr;
 
-    hint_advisor_t() : kty(kty_unknown), nid(0), hint_kty(nullptr), hint_curve(nullptr), hint_sigscheme(nullptr) {}
+    hint_advisor_t() = default;
+    hint_advisor_t(const hint_advisor_t&) = default;
+    hint_advisor_t& operator=(const hint_advisor_t&) = default;
+
+    void clear() {
+        kty = kty_unknown;
+        nid = 0;
+        hint_kty = nullptr;
+        hint_blockcipher = nullptr;
+        hint_cipher = nullptr;
+        hint_digest = nullptr;
+        hint_curve = nullptr;
+        hint_sigscheme = nullptr;
+        hint_jwa = nullptr;
+        hint_jwe = nullptr;
+        hint_jws = nullptr;
+        hint_group = nullptr;
+    }
 };
+
 std::string namesof(const hint_advisor_t* hint);
 
 }  // namespace crypto

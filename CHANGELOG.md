@@ -32,8 +32,10 @@
     * CBOR
 
 * details
+  * Revision 999
+    * SLHDSA
   * Revision 998
-    * ML-DSA for JOSE and COSE
+    * [tested] ML-DSA for JOSE and COSE
   * Revision 994
     * [fixed] floating point, bignumber
     * [changed] self-signed certificates

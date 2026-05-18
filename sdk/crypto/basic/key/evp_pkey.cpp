@@ -26,13 +26,9 @@ return_t nidof_evp_pkey(const EVP_PKEY* pkey, uint32& nid) {
             __leave2;
         }
 
-        hint_advisor_t hint;
-        ret = crypto_advisor::get_instance()->hintof_pkey(pkey, hint);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        nid = hint.nid;
+        crypto_kty_t kty = kty_unknown;
+        auto advisor = crypto_advisor::get_instance();
+        ret = advisor->ktyof_evp_pkey(pkey, kty, nid);
     }
     __finally2 {}
     return ret;
@@ -48,84 +44,22 @@ bool kindof_ecc(const EVP_PKEY* pkey) {
     return test;
 }
 
-crypto_kty_t typeof_crypto_key(const EVP_PKEY* pkey) {
+crypto_kty_t ktyof_evp_pkey(const EVP_PKEY* pkey) {
     crypto_kty_t kty = crypto_kty_t::kty_unknown;
-    return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        hint_advisor_t hint;
-        ret = crypto_advisor::get_instance()->hintof_pkey(pkey, hint);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        kty = hint.kty;
+        uint32 nid = 0;
+        auto advisor = crypto_advisor::get_instance();
+        advisor->ktyof_evp_pkey(pkey, kty, nid);
     }
     __finally2 {}
     return kty;
 }
 
-crypto_kty_t ktyof_evp_pkey(const EVP_PKEY* key) { return typeof_crypto_key(key); }
-
-crypto_kty_t ktyof_nid(uint32 nid) {
-    crypto_kty_t kty = crypto_kty_t::kty_unknown;
-    switch (nid) {
-        case EVP_PKEY_HMAC: {
-            kty = crypto_kty_t::kty_oct;
-        } break;
-        case EVP_PKEY_RSA:
-        case EVP_PKEY_RSA2: {
-            kty = crypto_kty_t::kty_rsa;
-        } break;
-        case EVP_PKEY_RSA_PSS: {
-            kty = crypto_kty_t::kty_rsapss;
-        } break;
-        case EVP_PKEY_EC: {
-            kty = crypto_kty_t::kty_ec;
-        } break;
-        case EVP_PKEY_X25519:
-        case EVP_PKEY_X448:
-        case EVP_PKEY_ED25519:
-        case EVP_PKEY_ED448: {
-            kty = crypto_kty_t::kty_okp;
-        } break;
-        case EVP_PKEY_DH:
-        case NID_ffdhe2048:
-        case NID_ffdhe3072:
-        case NID_ffdhe4096:
-        case NID_ffdhe6144:
-        case NID_ffdhe8192: {
-            kty = crypto_kty_t::kty_dh;
-        } break;
-        case EVP_PKEY_DSA: {
-            kty = crypto_kty_t::kty_dsa;
-        } break;
-#if OPENSSL_VERSION_NUMBER >= 0x30500000L
-        case NID_ML_KEM_512:
-        case NID_ML_KEM_768:
-        case NID_ML_KEM_1024: {
-            kty = crypto_kty_t::kty_mlkem;
-        } break;
-        case NID_ML_DSA_44:
-        case NID_ML_DSA_65:
-        case NID_ML_DSA_87: {
-            kty = crypto_kty_t::kty_mldsa;
-        }
-#endif
-        default: {
-            crypto_advisor* advisor = crypto_advisor::get_instance();
-            auto hint = advisor->hintof_curve_nid(nid);
-            if (hint) {
-                kty = hint->kty;  // kty_ec, kty_okp
-            }
-        } break;
-    }
-    return kty;
-}
+crypto_kty_t ktyof_nid(uint32 nid) { return crypto_advisor::get_instance()->ktyof_ossl_nid(nid); }
 
 return_t is_private_key(const EVP_PKEY* pkey, bool& result) {
     return_t ret = errorcode_t::success;
@@ -186,7 +120,9 @@ return_t is_private_key(const EVP_PKEY* pkey, bool& result) {
                     }
                 }
             } break;
-            case kty_mlkem: {
+            case kty_mlkem:
+            case kty_mldsa:
+            case kty_slhdsa: {
                 crypto_keychain keychain;
                 result = keychain.pkey_is_private(nullptr, pkey);
             } break;

@@ -367,10 +367,9 @@ return_t crypto_keychain::add(crypto_key* cryptokey, uint32 nid, const keydesc& 
             case kty_rsa: {
                 ret = add_rsa(cryptokey, nid, 2048, desc);
             } break;
-            case kty_mlkem: {
-                ret = add_ossl3(cryptokey, nid, desc);
-            } break;
-            case kty_mldsa: {
+            case kty_mlkem:
+            case kty_mldsa:
+            case kty_slhdsa: {
                 ret = add_ossl3(cryptokey, nid, desc);
             } break;
             default: {

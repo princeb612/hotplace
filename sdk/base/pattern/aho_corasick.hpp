@@ -15,6 +15,7 @@
 #include <hotplace/sdk/base/basic/types.hpp>
 #include <hotplace/sdk/base/nostd/range.hpp>
 #include <hotplace/sdk/base/pattern/pattern.hpp>
+#include <unordered_set>
 
 namespace hotplace {
 
@@ -280,6 +281,21 @@ class t_aho_corasick {
     std::unordered_map<size_t, std::vector<BT>> _patterns;
     memberof_t _memberof;
 };
+
+// @refer   Gemini
+template <typename KEY, typename VALUE>
+bool equal(const std::multimap<KEY, VALUE>& m1, const std::multimap<KEY, VALUE>& m2) {
+    bool ret = false;
+    if (m1.size() == m2.size()) {
+        using pairtype = std::pair<const KEY, VALUE>;
+
+        std::unordered_multiset<pairtype, universal_pairhash> s1(m1.begin(), m1.end());
+        std::unordered_multiset<pairtype, universal_pairhash> s2(m2.begin(), m2.end());
+
+        ret = (s1 == s2);
+    }
+    return ret;
+}
 
 }  // namespace hotplace
 

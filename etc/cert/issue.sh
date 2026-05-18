@@ -10,20 +10,27 @@ COMMENTS
 
     ./issue.sh ecdsa
 
-    RSA     - RSA certificate (RSA 3072)
-    RSAPSS  - RSAPSS certificate (RSAPSS 3072)
-    ECDSA   - ECDSA certificate (P-384)
-    P-256   - ECDSA certificate (P-256)
-    P-384   - ECDSA certificate (P-384)
-    P-521   - ECDSA certificate (P-521)
-    MLDSA   - MLDSA certificate (ML-DSA-65)
-    MLDSA44 - MLDSA certificate (ML-DSA-44)
-    MLDSA65 - MLDSA certificate (ML-DSA-65)
-    MLDSA87 - MLDSA certificate (ML-DSA-87)
-    EDDSA   - EDDSA Certificate (ED25519)
-    ED25519 - EDDSA Certificate (ED25519)
-    ED448   - EDDSA Certificate (ED448)
-    clean   - delete certificate files (and then exit)
+    RSA        - RSA certificate (RSA 3072)
+    RSAPSS     - RSAPSS certificate (RSAPSS 3072)
+    ECDSA      - ECDSA certificate (P-384)
+    P-256      - ECDSA certificate (P-256)
+    P-384      - ECDSA certificate (P-384)
+    P-521      - ECDSA certificate (P-521)
+    MLDSA      - MLDSA certificate (ML-DSA-65)
+    MLDSA44    - MLDSA certificate (ML-DSA-44)
+    MLDSA65    - MLDSA certificate (ML-DSA-65)
+    MLDSA87    - MLDSA certificate (ML-DSA-87)
+    SLHDSA     - SLHDSA certificate (SLH-DSA-SHA2-128f)
+    SLHDSA128S - SLHDSA certificate (SLH-DSA-SHA2-128s)
+    SLHDSA128F - SLHDSA certificate (SLH-DSA-SHA2-128f)
+    SLHDSA192S - SLHDSA certificate (SLH-DSA-SHA2-192s)
+    SLHDSA192F - SLHDSA certificate (SLH-DSA-SHA2-192f)
+    SLHDSA256S - SLHDSA certificate (SLH-DSA-SHA2-256s)
+    SLHDSA256F - SLHDSA certificate (SLH-DSA-SHA2-256f)
+    EDDSA      - EDDSA Certificate (ED25519)
+    ED25519    - EDDSA Certificate (ED25519)
+    ED448      - EDDSA Certificate (ED448)
+    clean      - delete certificate files (and then exit)
 HELP
 
 set -euo pipefail
@@ -55,6 +62,20 @@ if [ ${#args[@]} -ne 0 ]; then
             certtype=$item
         elif [ "$item" = "mldsa87" ]; then
             certtype=$item
+        elif [ "$item" = "slhdsa" ]; then
+            certtype=$item
+        elif [ "$item" = "slhdsa128s" ]; then
+            certtype=$item
+        elif [ "$item" = "slhdsa128f" ]; then
+            certtype=$item
+        elif [ "$item" = "slhdsa192s" ]; then
+            certtype=$item
+        elif [ "$item" = "slhdsa192f" ]; then
+            certtype=$item
+        elif [ "$item" = "slhdsa256s" ]; then
+            certtype=$item
+        elif [ "$item" = "slhdsa256f" ]; then
+            certtype=$item
         elif [ "$item" = "eddsa" ]; then
             certtype=$item
         elif [ "$item" = "ed25519" ]; then
@@ -62,7 +83,7 @@ if [ ${#args[@]} -ne 0 ]; then
         elif [ "$item" = "ed448" ]; then
             certtype=$item
         elif [ "$item" = "clean" ]; then
-            rm -f root-* server-* *.srl *.pem
+            rm -f root-* server-* *.ext *.pem *.srl
             exit
         else
             exit
@@ -101,6 +122,20 @@ elif [ "${certtype}" = "mldsa65" ]; then
     algorithm="ML-DSA-65"
 elif [ "${certtype}" = "mldsa87" ]; then
     algorithm="ML-DSA-87"
+elif [ "${certtype}" = "slhdsa" ]; then
+    algorithm="SLH-DSA-SHA2-128f"
+elif [ "${certtype}" = "slhdsa128s" ]; then
+    algorithm="SLH-DSA-SHA2-128s"
+elif [ "${certtype}" = "slhdsa128f" ]; then
+    algorithm="SLH-DSA-SHA2-128f"
+elif [ "${certtype}" = "slhdsa192s" ]; then
+    algorithm="SLH-DSA-SHA2-192s"
+elif [ "${certtype}" = "slhdsa192f" ]; then
+    algorithm="SLH-DSA-SHA2-192f"
+elif [ "${certtype}" = "slhdsa256s" ]; then
+    algorithm="SLH-DSA-SHA2-256s"
+elif [ "${certtype}" = "slhdsa256f" ]; then
+    algorithm="SLH-DSA-SHA2-256f"
 elif [ "${certtype}" = "rsa" ]; then
     algorithm="rsa"
     pkeyopt=( -pkeyopt rsa_keygen_bits:3072 )

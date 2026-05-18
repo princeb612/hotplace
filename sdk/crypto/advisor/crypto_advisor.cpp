@@ -51,7 +51,7 @@ return_t crypto_advisor::build() {
 #endif
 
     auto set_feature = [&](const std::string& key, uint32 feature) -> void {
-        auto pib = _features.insert({key, feature});
+        auto pib = _features.emplace(key, feature);
         if (false == pib.second) {         // already exist
             pib.first->second |= feature;  // iterator->second points feature
         }
@@ -59,7 +59,7 @@ return_t crypto_advisor::build() {
 
     for (i = 0; i < sizeof_hint_blockciphers; ++i) {
         auto item = hint_blockciphers + i;
-        _blockcipher_map.insert(std::make_pair(typeof_alg(item), item));
+        _blockcipher_map.emplace(typeof_alg(item), item);
     }
 
     // openssl-3.0
@@ -76,14 +76,14 @@ return_t crypto_advisor::build() {
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
         EVP_CIPHER* evp_cipher = EVP_CIPHER_fetch(nullptr, nameof_alg(item), nullptr);
         if (evp_cipher) {
-            _cipher_fetch_map.insert(std::make_pair(item->scheme, cipher_fetch_block_t(evp_cipher, item)));
-            _evp_cipher_map.insert(std::make_pair(evp_cipher, item));
+            _cipher_fetch_map.emplace(item->scheme, cipher_fetch_block_t(evp_cipher, item));
+            _evp_cipher_map.emplace(evp_cipher, item);
         }
 #else
         const EVP_CIPHER* evp_cipher = EVP_get_cipherbyname(nameof_alg(item));
         if (evp_cipher) {
-            _cipher_fetch_map.insert(std::make_pair(CRYPTO_SCHEME16(typeof_alg(item), typeof_mode(item)), cipher_fetch_block_t((EVP_CIPHER*)evp_cipher, item)));
-            _evp_cipher_map.insert(std::make_pair(evp_cipher, item));
+            _cipher_fetch_map.emplace(CRYPTO_SCHEME16(typeof_alg(item), typeof_mode(item)), cipher_fetch_block_t((EVP_CIPHER*)evp_cipher, item));
+            _evp_cipher_map.emplace(evp_cipher, item);
         }
 #endif
 #if defined DEBUG
@@ -97,13 +97,13 @@ return_t crypto_advisor::build() {
         }
 #endif
 
-        _cipher_byname_map.insert(std::make_pair(nameof_alg(item), item));
+        _cipher_byname_map.emplace(nameof_alg(item), item);
 
         if (evp_cipher) {
             set_feature(nameof_alg(item), advisor_feature_cipher);
         }
 
-        _cipher_scheme_map.insert({item->scheme, item});
+        _cipher_scheme_map.emplace(item->scheme, item);
     }
 
 #if (OPENSSL_VERSION_NUMBER < 0x30000000L)
@@ -113,8 +113,8 @@ return_t crypto_advisor::build() {
         if (item->_cipher) {
             cipher_fetch_block_t block((EVP_CIPHER*)item->_cipher, &item->hint);
             // distinguish between crypto_scheme_aes_128_gcm and crypto_scheme_tls_aes_128_gcm
-            _cipher_fetch_map.insert({CRYPTO_SCHEME16(item->hint.algorithm, item->hint.mode), std::move(block)});
-            _evp_cipher_map.insert({item->_cipher, &item->hint});
+            _cipher_fetch_map.emplace(CRYPTO_SCHEME16(item->hint.algorithm, item->hint.mode), std::move(block));
+            _evp_cipher_map.emplace(item->_cipher, &item->hint);
 
             set_feature(item->hint.fetchname, advisor_feature_wrap);
         }
@@ -126,12 +126,12 @@ return_t crypto_advisor::build() {
 #if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
         EVP_MD* evp_md = EVP_MD_fetch(nullptr, nameof_alg(item), nullptr);
         if (evp_md) {
-            _md_fetch_map.insert(std::make_pair(item->algorithm, md_fetch_block_t(evp_md, item)));
+            _md_fetch_map.emplace(item->algorithm, md_fetch_block_t(evp_md, item));
         }
 #else
         const EVP_MD* evp_md = EVP_get_digestbyname(nameof_alg(item));
         if (evp_md) {
-            _md_fetch_map.insert(std::make_pair(typeof_alg(item), md_fetch_block_t((EVP_MD*)evp_md, item)));
+            _md_fetch_map.emplace(typeof_alg(item), md_fetch_block_t((EVP_MD*)evp_md, item));
         }
 #endif
         if (nullptr == evp_md) {
@@ -142,9 +142,9 @@ return_t crypto_advisor::build() {
             }
 #endif
         }
-        _md_byname_map.insert(std::make_pair(nameof_alg(item), item));
+        _md_byname_map.emplace(nameof_alg(item), item);
         if (item->altname) {
-            _md_byname_map.insert(std::make_pair(item->altname, item));  // see query_feature
+            _md_byname_map.emplace(item->altname, item);  // see query_feature
         }
 
         if (evp_md) {
@@ -159,18 +159,18 @@ return_t crypto_advisor::build() {
 
     for (i = 0; i < sizeof_hint_jose_algorithms; ++i) {
         auto item = hint_jose_algorithms + i;
-        _alg_map.insert(std::make_pair(item->type, item));
+        _alg_map.emplace(item->type, item);
         if (item->alg_name) {
-            _alg_byname_map.insert(std::make_pair(item->alg_name, item));
+            _alg_byname_map.emplace(item->alg_name, item);
         }
 
         set_feature(item->alg_name, advisor_feature_jwa);
     }
     for (i = 0; i < sizeof_hint_jose_encryptions; ++i) {
         auto item = hint_jose_encryptions + i;
-        _enc_map.insert(std::make_pair(item->type, item));
+        _enc_map.emplace(item->type, item);
         if (item->alg_name) {
-            _enc_byname_map.insert(std::make_pair(item->alg_name, item));
+            _enc_byname_map.emplace(item->alg_name, item);
         }
 
         set_feature(item->alg_name, advisor_feature_jwe);
@@ -207,19 +207,20 @@ return_t crypto_advisor::build() {
         {signature_t::sig_hs256, jws_t::jws_hs256, cose_alg_t::cose_hs256_64},
     };
     for (i = 0; i < RTL_NUMBER_OF(cose2sig); ++i) {
-        _cose2sig_map.insert(std::make_pair(cose2sig[i].cose, cose2sig[i].sig));
+        _cose2sig_map.emplace(cose2sig[i].cose, cose2sig[i].sig);
     }
 
     for (i = 0; i < sizeof_hint_sigschemes; ++i) {
         auto item = hint_sigschemes + i;
         _hint_sigscheme_map.emplace(item->scheme, item);
         _hint_sigscheme_nid_map.emplace(item->nid, item);
+        _hint_sigscheme_name_map.emplace(item->name, item);
         set_feature(item->name, advisor_feature_sigscheme);
     }
     for (i = 0; i < sizeof_hint_cose_algorithms; ++i) {
         auto item = hint_cose_algorithms + i;
-        _cose_alg_map.insert(std::make_pair(item->alg, item));
-        _cose_algorithm_byname_map.insert(std::make_pair(item->name, item));
+        _cose_alg_map.emplace(item->alg, item);
+        _cose_algorithm_byname_map.emplace(item->name, item);
 
         set_feature(item->name, advisor_feature_cose);
     }
@@ -227,12 +228,12 @@ return_t crypto_advisor::build() {
         auto item = hint_curves + i;
 
         if (item->name_nist) {
-            _nid_bycurve_map.insert(std::make_pair(item->name_nist, item));
+            _nid_bycurve_map.emplace(item->name_nist, item);
         }
         if (cose_ec_curve_t::cose_ec_unknown != item->cose_crv) {
-            _cose_curve_map.insert(std::make_pair(item->cose_crv, item));
+            _cose_curve_map.emplace(item->cose_crv, item);
         }
-        _curve_bynid_map.insert(std::make_pair(item->id, item));
+        _curve_bynid_map.emplace(item->id, item);
 
         // see query_feature
         {
@@ -275,55 +276,55 @@ return_t crypto_advisor::build() {
             }
         }
         if (item->tlsgroup) {
-            _tls_group_curve_map.insert({item->tlsgroup, item});
+            _tls_group_curve_map.emplace(item->tlsgroup, item);
         }
         if (item->name_nist) {
-            _curve_name_map.insert({item->name_nist, item});
+            _curve_name_map.emplace(item->name_nist, item);
         }
         if (item->name_x962) {
-            _curve_name_map.insert({item->name_x962, item});
+            _curve_name_map.emplace(item->name_x962, item);
         }
         if (item->name_sec) {
-            _curve_name_map.insert({item->name_sec, item});
+            _curve_name_map.emplace(item->name_sec, item);
         }
         if (item->name_bp) {
-            _curve_name_map.insert({item->name_bp, item});
+            _curve_name_map.emplace(item->name_bp, item);
         }
         if (item->name_wtls) {
-            _curve_name_map.insert({item->name_wtls, item});
+            _curve_name_map.emplace(item->name_wtls, item);
         }
-        _nid2curve_map.insert(std::make_pair(item->id, item));
+        _nid2curve_map.emplace(item->id, item);
     }
 
-    _kty2cose_map.insert(std::make_pair(crypto_kty_t::kty_ec, cose_kty_t::cose_kty_ec2));
-    _kty2cose_map.insert(std::make_pair(crypto_kty_t::kty_oct, cose_kty_t::cose_kty_symm));
-    _kty2cose_map.insert(std::make_pair(crypto_kty_t::kty_okp, cose_kty_t::cose_kty_okp));
-    _kty2cose_map.insert(std::make_pair(crypto_kty_t::kty_rsa, cose_kty_t::cose_kty_rsa));
+    _kty2cose_map.emplace(crypto_kty_t::kty_ec, cose_kty_t::cose_kty_ec2);
+    _kty2cose_map.emplace(crypto_kty_t::kty_oct, cose_kty_t::cose_kty_symm);
+    _kty2cose_map.emplace(crypto_kty_t::kty_okp, cose_kty_t::cose_kty_okp);
+    _kty2cose_map.emplace(crypto_kty_t::kty_rsa, cose_kty_t::cose_kty_rsa);
 
-    _cose2kty_map.insert(std::make_pair(cose_kty_t::cose_kty_ec2, crypto_kty_t::kty_ec));
-    _cose2kty_map.insert(std::make_pair(cose_kty_t::cose_kty_symm, crypto_kty_t::kty_oct));
-    _cose2kty_map.insert(std::make_pair(cose_kty_t::cose_kty_okp, crypto_kty_t::kty_okp));
-    _cose2kty_map.insert(std::make_pair(cose_kty_t::cose_kty_rsa, crypto_kty_t::kty_rsa));
+    _cose2kty_map.emplace(cose_kty_t::cose_kty_ec2, crypto_kty_t::kty_ec);
+    _cose2kty_map.emplace(cose_kty_t::cose_kty_symm, crypto_kty_t::kty_oct);
+    _cose2kty_map.emplace(cose_kty_t::cose_kty_okp, crypto_kty_t::kty_okp);
+    _cose2kty_map.emplace(cose_kty_t::cose_kty_rsa, crypto_kty_t::kty_rsa);
 
     for (i = 0; i < sizeof_hint_kty_names; ++i) {
         auto item = hint_kty_names + i;
         if (item->name) {
-            _kty_names.insert({item->kty, item});
+            _kty_names.emplace(item->kty, item);
         }
     }
 
     for (i = 0; i < sizeof_hint_groups; ++i) {
         auto item = hint_groups + i;
         if (tls_group_unknown != item->group) {
-            _tls_group_map.insert({item->group, item});
+            _tls_group_map.emplace(item->group, item);
             if (0 == (tls_flag_hybrid & item->flags)) {
-                _tls_group_nid_map.insert({item->first.nid, item});
+                _tls_group_nid_map.emplace(item->first.nid, item);
             }
         }
         if (item->name) {
             std::string key = item->name;
             std::transform(key.begin(), key.end(), key.begin(), tolower);  // ignore case
-            _tls_group_name_map.insert({std::move(key), item});
+            _tls_group_name_map.emplace(std::move(key), item);
 
             set_feature(item->name, advisor_feature_tlsgroup);
         }
@@ -349,14 +350,14 @@ return_t crypto_advisor::build() {
             {"SecP384r1MLKEM1024", 0x30500000},
         };
         for (auto item : _table) {
-            _features.insert({item.feature, advisor_feature_version});
-            _versions.insert({item.feature, item.version});
+            _features.emplace(item.feature, advisor_feature_version);
+            _versions.emplace(item.feature, item.version);
         }
     }
     {
-        _ae_names.insert({tls_mac_then_encrypt, "mac_then_encrypt"});   // TLS
-        _ae_names.insert({jose_encrypt_then_mac, "encrypt_then_mac"});  // JOSE
-        _ae_names.insert({tls_encrypt_then_mac, "encrypt_then_mac"});   // TLS
+        _ae_names.emplace(tls_mac_then_encrypt, "mac_then_encrypt");   // TLS
+        _ae_names.emplace(jose_encrypt_then_mac, "encrypt_then_mac");  // JOSE
+        _ae_names.emplace(tls_encrypt_then_mac, "encrypt_then_mac");   // TLS
     }
 
     return ret;
@@ -426,7 +427,7 @@ void crypto_advisor::get_cookie_secret(uint8 key, size_t secret_size, binary_t& 
     if (_cookie_secret.end() == iter) {
         openssl_prng prng;
         prng.random(secret, secret_size);
-        _cookie_secret.insert({key, secret});
+        _cookie_secret.emplace(key, secret);
     } else {
         secret = iter->second;
     }

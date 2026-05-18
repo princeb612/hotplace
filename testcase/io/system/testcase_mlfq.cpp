@@ -73,7 +73,7 @@ return_t test_scenario::producer_scenario(void* parameter) {
         _logger->writeln("post %d %d", pri, i);
         fflush(stdout);
 
-        _data_map.insert(std::make_pair(pri, i));
+        _data_map.emplace(pri, i);
 
         _test_sleep.wait(1);
     }

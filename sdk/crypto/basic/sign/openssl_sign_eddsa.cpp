@@ -17,87 +17,20 @@
 namespace hotplace {
 namespace crypto {
 
-return_t openssl_sign::sign_eddsa(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, binary_t& signature, uint32 flags) {
-    return sign_eddsa(pkey, alg, input.data(), input.size(), signature, flags);
+return_t openssl_sign::sign_eddsa(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags) {
+    return sign_digestsign(pkey, input, signature, flags);
 }
 
-return_t openssl_sign::sign_eddsa(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) {
-    return_t ret = errorcode_t::success;
-    int ret_test = 0;
-
-    __try2 {
-        signature.clear();
-
-        if (nullptr == pkey || nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        auto kty = ktyof_evp_pkey(pkey);
-        if (kty_okp != kty) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
-        EVP_MD_CTX_ptr ctx(EVP_MD_CTX_new());
-        ret_test = EVP_DigestSignInit(ctx.get(), nullptr, nullptr, nullptr, (EVP_PKEY*)pkey);
-        if (1 != ret_test) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        size_t dgstsize = 256;
-        signature.resize(dgstsize);
-        ret_test = EVP_DigestSign(ctx.get(), signature.data(), &dgstsize, stream, size);
-        if (1 != ret_test) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-        signature.resize(dgstsize);
-    }
-    __finally2 {}
-    return ret;
+return_t openssl_sign::sign_eddsa(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) {
+    return sign_digestsign(pkey, stream, size, signature, flags);
 }
 
-return_t openssl_sign::verify_eddsa(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, const binary_t& signature, uint32 flags) {
-    return verify_eddsa(pkey, alg, input.data(), input.size(), signature, flags);
+return_t openssl_sign::verify_eddsa(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags) {
+    return verify_digestsign(pkey, input, signature, flags);
 }
 
-return_t openssl_sign::verify_eddsa(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) {
-    return_t ret = errorcode_t::success;
-    int ret_test = 0;
-
-    __try2 {
-        if (nullptr == pkey || nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        auto kty = ktyof_evp_pkey(pkey);
-        if (kty_okp != kty) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
-        ret = errorcode_t::error_verify;
-
-        EVP_MD_CTX_ptr ctx(EVP_MD_CTX_new());
-        ret_test = EVP_DigestVerifyInit(ctx.get(), nullptr, nullptr, nullptr, (EVP_PKEY*)pkey);
-        if (1 != ret_test) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        ret_test = EVP_DigestVerify(ctx.get(), signature.data(), signature.size(), stream, size);
-        if (1 != ret_test) {
-            ret = errorcode_t::error_verify;
-            __leave2_trace_openssl(ret);
-        }
-
-        ret = errorcode_t::success;
-    }
-    __finally2 {}
-    return ret;
+return_t openssl_sign::verify_eddsa(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) {
+    return verify_digestsign(pkey, stream, size, signature, flags);
 }
 
 }  // namespace crypto

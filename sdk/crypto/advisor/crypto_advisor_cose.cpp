@@ -88,7 +88,9 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, cose_alg_t alg) {
         if (nullptr == hint) {
             __leave2;
         }
-        crypto_kty_t kty = ktyof_evp_pkey(pkey);
+        crypto_kty_t kty = kty_unknown;
+        uint32 nid = 0;
+        ktyof_evp_pkey(pkey, kty, nid);
         bool cmp1 = (hint->kty == kty);
         bool cmp2 = true;
         if (crypto_kty_t::kty_ec == kty) {
@@ -102,7 +104,7 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, cose_alg_t alg) {
     return test;
 }
 
-cose_kty_t crypto_advisor::ktyof(crypto_kty_t kty) {
+cose_kty_t crypto_advisor::cose_ktyof(crypto_kty_t kty) {
     cose_kty_t cose_kty = cose_kty_t::cose_kty_unknown;
     t_maphint<crypto_kty_t, cose_kty_t> hint(_kty2cose_map);
 
@@ -138,7 +140,7 @@ signature_t crypto_advisor::sigof(cose_alg_t sig) {
     return type;
 }
 
-cose_ec_curve_t crypto_advisor::curveof(uint32 nid) {
+cose_ec_curve_t crypto_advisor::cose_curveof(uint32 nid) {
     cose_ec_curve_t curve = cose_ec_curve_t::cose_ec_unknown;
     t_maphint<uint32, const hint_curve_t*> hint(_nid2curve_map);
 
@@ -150,7 +152,7 @@ cose_ec_curve_t crypto_advisor::curveof(uint32 nid) {
     return curve;
 }
 
-uint32 crypto_advisor::curveof(cose_ec_curve_t curve) {
+uint32 crypto_advisor::nidof(cose_ec_curve_t curve) {
     uint32 nid = 0;
     t_maphint<cose_ec_curve_t, const hint_curve_t*> hint(_cose_curve_map);
 

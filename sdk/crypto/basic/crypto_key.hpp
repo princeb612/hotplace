@@ -436,7 +436,9 @@ class crypto_key {
      *          | kty_rsapss | item_rsa_n     | item_rsa_e  |
      *          | kty_dh     | item_dh_pub    | N/A         |
      *          | kty_dsa    | N/A            | N/A         |
-     *          | kty_mlkem  | item_mlkem_pub | N/A         |
+     *          | kty_mlkem  | item_pub_key   | N/A         |
+     *          | kty_mldsa  | item_pub_key   | N/A         |
+     *          | kty_slhdsa | item_pub_key   | N/A         |
      */
     static return_t get_public_key(const EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2);
     /**
@@ -498,7 +500,9 @@ class crypto_key {
      *          | kty_rsapss | N/A                      | item_rsa_d      |
      *          | kty_dh     | item_dh_pub              | item_dh_priv    |
      *          | kty_dsa    | N/A                      | item_dsa_x      |
-     *          | kty_mlkem  | item_mlkem_pub           | item_mlkem_priv |
+     *          | kty_mlkem  | item_pub_key             | item_privkey    |
+     *          | kty_mldsa  | item_pub_key             | item_privkey    |
+     *          | kty_slhdsa | item_pub_key             | item_privkey    |
      *
      *          auto kty = ktyof_evp_pkey(pkey);
      *          if (kty_ec == kty) {
@@ -527,7 +531,9 @@ class crypto_key {
      *          | kty_rsapss | N/A                      | item_asn1der   | item_rsa_d      |
      *          | kty_dh     | item_dh_pub              | item_asn1der   | item_dh_priv    |
      *          | kty_dsa    | N/A                      | item_asn1der   | item_dsa_x      |
-     *          | kty_mlkem  | item_mlkem_pub           | item_asn1der   | item_mlkem_priv |
+     *          | kty_mlkem  | item_pub_key             | item_asn1der   | item_privkey    |
+     *          | kty_mldsa  | item_pub_key             | item_asn1der   | item_privkey    |
+     *          | kty_slhdsa | item_pub_key             | item_asn1der   | item_privkey    |
      */
     static return_t get_key(const EVP_PKEY* pkey, int flags, binary_t& pub, binary_t& priv, bool preserve = false);
     /**
@@ -546,7 +552,9 @@ class crypto_key {
      *          | kty_rsapss | item_rsa_n     | item_rsa_e  | item_rsa_d      |
      *          | kty_dh     | item_dh_pub    | N/A         | item_dh_priv    |
      *          | kty_dsa    | N/A            | N/A         | item_dsa_x      |
-     *          | kty_mlkem  | item_mlkem_pub | N/A         | item_mlkem_priv |
+     *          | kty_mlkem  | item_pub_key   | N/A         | item_privkey    |
+     *          | kty_mldsa  | item_pub_key   | N/A         | item_privkey    |
+     *          | kty_slhdsa | item_pub_key   | N/A         | item_privkey    |
      */
     static return_t get_key(const EVP_PKEY* pkey, binary_t& pub1, binary_t& pub2, binary_t& priv, bool preserve = false);
     /**
@@ -656,8 +664,7 @@ class crypto_key {
     static return_t extract_okp(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
     static return_t extract_dh(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
     static return_t extract_dsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
-    static return_t extract_mlkem(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
-    static return_t extract_mldsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
+    static return_t extract_ossl3(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero = false);
 
    private:
     /**

@@ -15,13 +15,6 @@
 namespace hotplace {
 namespace crypto {
 
-// avoid compile error
-#if OPENSSL_VERSION_NUMBER >= 0x30500000L
-#define tls_flag_support_pqc tls_flag_support
-#else
-#define tls_flag_support_pqc 0
-#endif
-
 const hint_group_t hint_groups[] = {
     // RFC 7919 Negotiated Finite Field Diffie-Hellman Ephemeral Parameters for Transport Layer Security (TLS)
     // ffdhe2048~ffdhe8192
@@ -355,21 +348,21 @@ const hint_group_t hint_groups[] = {
     {
         tls_group_mlkem512,
         keyexchange_mlkem,
-        tls_flag_support | tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc,
+        tls_flag_support | tls_flag_secure | tls_flag_pqc,
         "MLKEM512",
         {kty_mlkem, nid_mlkem512, 800, 768},
     },
     {
         tls_group_mlkem768,
         keyexchange_mlkem,
-        tls_flag_support | tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc,
+        tls_flag_support | tls_flag_secure | tls_flag_pqc,
         "MLKEM768",
         {kty_mlkem, nid_mlkem768, 1184, 1088},
     },
     {
         tls_group_mlkem1024,
         keyexchange_mlkem,
-        tls_flag_support | tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc,
+        tls_flag_support | tls_flag_secure | tls_flag_pqc,
         "MLKEM1024",
         {kty_mlkem, nid_mlkem1024, 1568, 1568},
     },
@@ -377,27 +370,27 @@ const hint_group_t hint_groups[] = {
     {
         tls_group_secp256r1mlkem768,
         keyexchange_mlkem,
-        tls_flag_support | tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
+        tls_flag_support | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
         "SecP256r1MLKEM768",
-        {kty_ec, NID_X9_62_prime256v1, 65},
-        {kty_mlkem, nid_mlkem768, 1184, 1088},
+        {kty_ec, NID_X9_62_prime256v1, 65, tls_group_secp256r1},
+        {kty_mlkem, nid_mlkem768, 1184, 1088, tls_group_mlkem768},
     },
     {
         tls_group_x25519mlkem768,
         keyexchange_mlkem,
-        tls_flag_support | tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
+        tls_flag_support | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
         "X25519MLKEM768",
         // no consistency
-        {kty_mlkem, nid_mlkem768, 1184, 1088},
-        {kty_okp, NID_X25519, 32},
+        {kty_mlkem, nid_mlkem768, 1184, 1088, tls_group_mlkem768},
+        {kty_okp, NID_X25519, 32, tls_group_x25519},
     },
     {
         tls_group_secp384r1mlkem1024,
         keyexchange_mlkem,
-        tls_flag_support | tls_flag_support_pqc | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
+        tls_flag_support | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
         "SecP384r1MLKEM1024",
-        {kty_ec, NID_secp384r1, 97},
-        {kty_mlkem, nid_mlkem1024, 1568, 1568},
+        {kty_ec, NID_secp384r1, 97, tls_group_secp384r1},
+        {kty_mlkem, nid_mlkem1024, 1568, 1568, tls_group_mlkem1024},
     },
 #endif
     {

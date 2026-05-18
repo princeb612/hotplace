@@ -44,18 +44,7 @@ int main(int argc, char** argv) {
                 << t_cmdarg_t<OPTION>("-T", "use trial", [](OPTION& o, char* param) -> void { o.flags |= option_flag_trial; }).optional()
                 << t_cmdarg_t<OPTION>("-k", "keylog", [](OPTION& o, char* param) -> void { o.flags |= option_flag_keylog; }).optional()
                 << t_cmdarg_t<OPTION>("-cs", "ciphersuite", [](OPTION& o, char* param) -> void { o.cs = param; }).optional().preced()
-                << t_cmdarg_t<OPTION>("-cert", "rsa|ecdsa|mldsa",
-                                      [](OPTION& o, char* param) -> void {
-                                          if (0 == stricmp(param, "ecdsa")) {
-                                              o.flags |= option_flag_cert_ecdsa;
-                                          } else if (0 == stricmp(param, "mldsa")) {
-                                              o.flags |= option_flag_cert_mldsa;
-                                          } else if (0 == stricmp(param, "rsa")) {
-                                              o.flags |= option_flag_cert_rsa;
-                                          }
-                                      })
-                       .optional()
-                       .preced();
+                << t_cmdarg_t<OPTION>("-cert", "rsa|rsapss|ecdsa|mldsa|eddsa|slhdsa", [](OPTION& o, char* param) -> void { o.cert = param; }).optional().preced();
 
     _cmdline->parse(argc, argv);
 

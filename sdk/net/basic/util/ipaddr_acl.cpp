@@ -68,7 +68,7 @@ return_t ipaddr_acl::add_rule(const char* addr, bool allow) {
             item.allow = allow;
 
             critical_section_guard guard(_lock);
-            ipaddress_rule_map_pib_t pib = _single_type_rule.insert(std::make_pair(address, item));
+            ipaddress_rule_map_pib_t pib = _single_type_rule.emplace(address, item);
             if (false == pib.second) {
                 ret = errorcode_t::already_exist;
             }
@@ -101,7 +101,7 @@ return_t ipaddr_acl::add_rule(const sockaddr_storage_t* sockaddr, bool allow) {
         item.allow = allow;
 
         critical_section_guard guard(_lock);
-        ipaddress_rule_map_pib_t pib = _single_type_rule.insert(std::make_pair(address, item));
+        ipaddress_rule_map_pib_t pib = _single_type_rule.emplace(address, item);
         if (false == pib.second) {
             ret = errorcode_t::already_exist;
         }
@@ -146,7 +146,7 @@ return_t ipaddr_acl::add_rule(const char* addr, int mask, bool allow) {
         item.allow = allow;
 
         critical_section_guard guard(_lock);
-        ipaddress_rule_map_pib_t pib = _range_type_rule.insert(std::make_pair(address_from, item));
+        ipaddress_rule_map_pib_t pib = _range_type_rule.emplace(address_from, item);
         if (false == pib.second) {
             ret = errorcode_t::already_exist;
         }
@@ -183,7 +183,7 @@ return_t ipaddr_acl::add_rule(const sockaddr_storage_t* sockaddr, int mask, bool
         item.allow = allow;
 
         critical_section_guard guard(_lock);
-        ipaddress_rule_map_pib_t pib = _range_type_rule.insert(std::make_pair(address_from, item));
+        ipaddress_rule_map_pib_t pib = _range_type_rule.emplace(address_from, item);
         if (false == pib.second) {
             ret = errorcode_t::already_exist;
         }
@@ -227,7 +227,7 @@ return_t ipaddr_acl::add_rule(const char* addr_from, const char* addr_to, bool a
         item.allow = allow;
 
         critical_section_guard guard(_lock);
-        ipaddress_rule_map_pib_t pib = _range_type_rule.insert(std::make_pair(address_from, item));
+        ipaddress_rule_map_pib_t pib = _range_type_rule.emplace(address_from, item);
         if (false == pib.second) {
             ret = errorcode_t::already_exist;
         }
@@ -271,7 +271,7 @@ return_t ipaddr_acl::add_rule(const sockaddr_storage_t* sockaddr_from, const soc
         item.allow = allow;
 
         critical_section_guard guard(_lock);
-        ipaddress_rule_map_pib_t pib = _range_type_rule.insert(std::make_pair(address_from, item));
+        ipaddress_rule_map_pib_t pib = _range_type_rule.emplace(address_from, item);
         if (false == pib.second) {
             ret = errorcode_t::already_exist;
         }

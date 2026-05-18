@@ -77,52 +77,47 @@ void tls_advisor::load_tls_parameters() {
     size_t i = 0;
     for (i = 0; i < sizeof_tls_alert_level_codes; i++) {
         auto item = tls_alert_level_codes + i;
-        _alert_level_codes.insert({item->code, item});
+        _alert_level_codes.emplace(item->code, item);
     }
     for (i = 0; i < sizeof_tls_alert_codes; i++) {
         auto item = tls_alert_codes + i;
-        _alert_codes.insert({item->code, item});
+        _alert_codes.emplace(item->code, item);
     }
     for (i = 0; i < sizeof_tls_cipher_suites; i++) {
         auto item = tls_cipher_suites + i;
-        _cipher_suite_codes.insert({item->code, item});
+        _cipher_suite_codes.emplace(item->code, item);
         if (item->name_iana) {
-            _cipher_suite_names.insert({item->name_iana, item});
+            _cipher_suite_names.emplace(item->name_iana, item);
         }
         if (item->name_ossl) {
-            _cipher_suite_names.insert({item->name_ossl, item});
+            _cipher_suite_names.emplace(item->name_ossl, item);
         }
     }
     for (i = 0; i < sizeof_tls_content_type_codes; i++) {
         auto item = tls_content_type_codes + i;
-        _content_type_codes.insert({item->code, item});
+        _content_type_codes.emplace(item->code, item);
     }
     for (i = 0; i < sizeof_tls_ec_curve_type_codes; i++) {
         auto item = tls_ec_curve_type_codes + i;
-        _ec_curve_type_codes.insert({item->code, item});
+        _ec_curve_type_codes.emplace(item->code, item);
     }
     for (i = 0; i < sizeof_tls_ec_point_format_codes; i++) {
         auto item = tls_ec_point_format_codes + i;
-        _ec_point_format_codes.insert({item->code, item});
-        _ec_point_format_names.insert({item->desc, item});
+        _ec_point_format_codes.emplace(item->code, item);
+        _ec_point_format_names.emplace(item->desc, item);
     }
     for (i = 0; i < sizeof_tls_handshake_type_codes; i++) {
         auto item = tls_handshake_type_codes + i;
-        _handshake_type_codes.insert({item->code, item});
+        _handshake_type_codes.emplace(item->code, item);
     }
     for (i = 0; i < sizeof_tls_kdf_id_codes; i++) {
         auto item = tls_kdf_id_codes + i;
-        _kdf_id_codes.insert({item->code, item});
+        _kdf_id_codes.emplace(item->code, item);
     }
     for (i = 0; i < sizeof_tls_psk_keyexchange_codes; i++) {
         auto item = tls_psk_keyexchange_codes + i;
-        _psk_keyexchange_codes.insert({item->code, item});
-        _psk_keyexchange_names.insert({item->desc, item});
-    }
-    for (i = 0; i < sizeof_tls_sig_schemes; i++) {
-        auto item = tls_sig_schemes + i;
-        _sig_scheme_codes.insert({item->code, item});
-        _sig_scheme_names.insert({item->name, item});
+        _psk_keyexchange_codes.emplace(item->code, item);
+        _psk_keyexchange_names.emplace(item->desc, item);
     }
 }
 
@@ -131,16 +126,16 @@ void tls_advisor::load_tls_extensiontype_values() {
     size_t i = 0;
     for (i = 0; i < sizeof_tls_compression_alg_codes; i++) {
         auto item = tls_compression_alg_codes + i;
-        _compression_alg_codes.insert({item->code, item});
-        _compression_alg_names.insert({item->desc, item});
+        _compression_alg_codes.emplace(item->code, item);
+        _compression_alg_names.emplace(item->desc, item);
     }
     for (i = 0; i < sizeof_tls_extension_type_codes; i++) {
         auto item = tls_extension_type_codes + i;
-        _extension_type_codes.insert({item->code, item});
+        _extension_type_codes.emplace(item->code, item);
     }
     for (i = 0; i < sizeof_tls_cert_status_type_codes; i++) {
         auto item = tls_cert_status_type_codes + i;
-        _cert_status_type_codes.insert({item->code, item});
+        _cert_status_type_codes.emplace(item->code, item);
     }
 }
 
@@ -148,19 +143,19 @@ void tls_advisor::load_tls_quic() {
     size_t i = 0;
     for (i = 0; i < sizeof_tls_quic_trans_param_codes; i++) {
         auto item = tls_quic_trans_param_codes + i;
-        _quic_trans_param_codes.insert({item->code, item});
+        _quic_trans_param_codes.emplace(item->code, item);
     }
     for (i = 0; i < sizeof_tls_quic_frame_type_codes; i++) {
         auto item = tls_quic_frame_type_codes + i;
-        _quic_frame_type_codes.insert({item->code, item});
+        _quic_frame_type_codes.emplace(item->code, item);
     }
     for (i = 0; i < sizeof_tls_quic_trans_error_codes; i++) {
         auto item = tls_quic_trans_error_codes + i;
-        _quic_trans_error_codes.insert({item->code, item});
+        _quic_trans_error_codes.emplace(item->code, item);
     }
     for (i = 0; i < sizeof_tls_quic_packet_type_codes; i++) {
         auto item = tls_quic_packet_type_codes + i;
-        _quic_packet_type_codes.insert({item->code, item});
+        _quic_packet_type_codes.emplace(item->code, item);
     }
 }
 
@@ -168,7 +163,7 @@ void tls_advisor::load_tls_aead_parameters() {
     size_t i = 0;
     for (i = 0; i < sizeof_tls_aead_alg_codes; i++) {
         auto item = tls_aead_alg_codes + i;
-        _aead_alg_codes.insert({item->code, item});
+        _aead_alg_codes.emplace(item->code, item);
     }
 }
 
@@ -182,7 +177,7 @@ void tls_advisor::load_tls_version() {
     size_t i = 0;
     for (i = 0; i < sizeof_tls_version_hint; i++) {
         auto item = tls_version_hint + i;
-        _tls_version.insert({item->code, item});
+        _tls_version.emplace(item->code, item);
     }
 }
 
@@ -190,22 +185,22 @@ void tls_advisor::load_etc() {
     size_t i = 0;
     for (i = 0; i < sizeof_tls_session_status_codes; i++) {
         auto item = tls_session_status_codes + i;
-        _session_status_codes.insert({item->code, item});
+        _session_status_codes.emplace(item->code, item);
     }
 
     for (i = 0; i < sizeof_tls_secret_codes; i++) {
         auto item = tls_secret_codes + i;
-        _secret_codes.insert({item->code, item});
+        _secret_codes.emplace(item->code, item);
     }
 
     for (i = 0; i < sizeof_tls_quic_stream_id_codes; i++) {
         auto item = tls_quic_stream_id_codes + i;
-        _quic_stream_id_codes.insert({item->code, item});
+        _quic_stream_id_codes.emplace(item->code, item);
     }
 
     for (i = 0; i < sizeof_tls_protection_space_codes; i++) {
         auto item = tls_protection_space_codes + i;
-        _protection_space_codes.insert({item->code, item});
+        _protection_space_codes.emplace(item->code, item);
     }
 }
 
@@ -279,23 +274,6 @@ const hint_digest_t* tls_advisor::hintof_digest(uint16 code) {
         ret_value = advisor->hintof_digest(hint_alg->mac);
     }
     return ret_value;
-}
-
-const tls_sig_scheme_t* tls_advisor::hintof_signature_scheme(uint16 code) {
-    const tls_sig_scheme_t* ret_value = nullptr;
-    auto iter = _sig_scheme_codes.find(code);
-    if (_sig_scheme_codes.end() != iter) {
-        ret_value = iter->second;
-    }
-    return ret_value;
-}
-
-void tls_advisor::enum_signature_scheme(std::function<void(const tls_sig_scheme_t*)> func) {
-    if (func) {
-        for (auto item : _sig_scheme_codes) {
-            func(item.second);
-        }
-    }
 }
 
 hash_algorithm_t tls_advisor::algof_hash(uint16 code) {
@@ -666,12 +644,23 @@ return_t tls_advisor::set_tls_groups(const char* groups) {
 
         critical_section_guard guard(_lock);
 
+        _groups.clear();
+
         auto advisor = crypto_advisor::get_instance();
         auto lambda = [&](const std::string& item) -> void {
             auto hint = advisor->hintof_tls_group(item);
             if (hint && (tls_flag_support & hint->flags)) {
                 auto code = hint->group;
                 _groups.insert(code);
+                if (tls_flag_hybrid & hint->flags) {
+                    // if SecP384r1MLKEM1024, also add SecP384r1, MLKEM1024
+                    if (hint->first.additional) {
+                        _groups.insert(hint->first.additional);
+                    }
+                    if (hint->second.additional) {
+                        _groups.insert(hint->second.additional);
+                    }
+                }
 #if defined DEBUG
                 if (istraceable(trace_category_net)) {
                     trace_debug_event(trace_category_net, trace_event_tls_protection,

@@ -138,26 +138,6 @@ uint8 tls_advisor::valueof_psk_key_exchange_mode(const std::string& name) {
     return value;
 }
 
-std::string tls_advisor::nameof_signature_scheme(uint16 code) {
-    std::string value;
-    auto iter = _sig_scheme_codes.find(code);
-    if (_sig_scheme_codes.end() != iter) {
-        auto item = iter->second;
-        value = item->name;
-    }
-    return value;
-}
-
-uint16 tls_advisor::valueof_signature_scheme(const std::string& name) {
-    uint16 value = 0;
-    auto iter = _sig_scheme_names.find(name);
-    if (_sig_scheme_names.end() != iter) {
-        auto item = iter->second;
-        value = item->code;
-    }
-    return value;
-}
-
 std::string tls_advisor::nameof_group(uint16 code) {
     std::string value;
     auto advisor = crypto_advisor::get_instance();

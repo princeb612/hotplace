@@ -80,9 +80,10 @@ void test_hash_hmac_sign() {
         binary_t signature;
         auto pkey = key.any();
         ret = sign.sign_hmac(pkey, hash_algorithm_t::sha2_256, bin_in, signature);
-        if (option.verbose) {
-            _logger->hdump("Sign", signature);
-        }
+        _logger->writeln([&](basic_stream& bs) -> void {
+            bs.println("signature");
+            bs << base16_encode(signature);
+        });
         _test_case.test(ret, __FUNCTION__, "sign");
 
         ret = sign.verify_hmac(pkey, hash_algorithm_t::sha2_256, bin_in, signature);

@@ -41,7 +41,7 @@ return_t network_session_manager::connected(handle_t event_socket, sockaddr_stor
 
         critical_section_guard guard(_session_lock);
 
-        auto pairib = _session_map.insert(std::make_pair(event_socket, (network_session*)nullptr));
+        auto pairib = _session_map.emplace(event_socket, (network_session*)nullptr);
         if (true == pairib.second) {
             session_object = new network_session(svr_socket);
             server_conf* conf = get_server_conf();
@@ -142,7 +142,7 @@ return_t network_session_manager::get_dgram_session(network_session** ptr_sessio
 
         critical_section_guard guard(_session_lock);
 
-        auto pairib = _session_map.insert(std::make_pair(listen_sock, (network_session*)nullptr));
+        auto pairib = _session_map.emplace(listen_sock, (network_session*)nullptr);
         if (true == pairib.second) {
             session_object = new network_session(svr_socket);
             server_conf* conf = get_server_conf();
@@ -187,7 +187,7 @@ return_t network_session_manager::get_dgram_cookie_session(network_session** ptr
         binary_t cookie;
         generate_cookie_sockaddr(cookie, (sockaddr*)addr, sizeof(sockaddr_storage_t));
 
-        auto pairib = _dgram_session_map.insert(std::make_pair(cookie, (network_session*)nullptr));
+        auto pairib = _dgram_session_map.emplace(cookie, (network_session*)nullptr);
         if (true == pairib.second) {
             session_object = new network_session(svr_socket, addr);
             server_conf* conf = get_server_conf();

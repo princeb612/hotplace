@@ -77,16 +77,16 @@ static void do_validate_resource_cipher_suite() {
 
     std::map<keyexchange_t, std::string> keyex_map;
     for (auto item : keyex_table) {
-        keyex_map.insert({item.keyex, item.name});
+        keyex_map.emplace(item.keyex, item.name);
     }
     std::map<auth_t, std::string> auth_map;
     for (auto item : auth_table) {
-        auth_map.insert({item.auth, item.name});
+        auth_map.emplace(item.auth, item.name);
     }
     std::map<std::string, const iana_except_t*> except_map;
     for (size_t i = 0; i < RTL_NUMBER_OF(except_table); i++) {
         const iana_except_t* item = except_table + i;
-        except_map.insert({item->iana, item});
+        except_map.emplace(item->iana, item);
     }
 
     for (size_t i = 0; i < sizeof_tls_cipher_suites; i++) {

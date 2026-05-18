@@ -780,7 +780,7 @@ const hint_curve_t hint_curves[] = {
     },
     {
         nid_brainpoolp256r1tls13,  // NID_brainpoolP256r1tls13 (openssl-3.2)
-        NID_brainpoolP256r1,
+        NID_brainpoolP256r1,       // NID_brainpoolP256r1tls13 TLS handshake only
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
         tls_group_brainpoolP256r1tls13,
@@ -792,7 +792,7 @@ const hint_curve_t hint_curves[] = {
         nullptr,
         nullptr,
         nullptr,
-        "brainpoolP256r1",
+        "brainpoolP256r1tls13",
     },
     {
         NID_brainpoolP256t1,
@@ -863,7 +863,7 @@ const hint_curve_t hint_curves[] = {
     },
     {
         nid_brainpoolp384r1tls13,  // NID_brainpoolP384r1tls13 (openssl-3.2)
-        NID_brainpoolP384r1,
+        NID_brainpoolP384r1,       // NID_brainpoolP384r1tls13 TLS handshake only
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
         tls_group_brainpoolP384r1tls13,
@@ -875,7 +875,7 @@ const hint_curve_t hint_curves[] = {
         nullptr,
         nullptr,
         nullptr,
-        "brainpoolP384r1",
+        "brainpoolP384r1tls13",
     },
     // https://neuromancer.sk/std/brainpool/brainpoolP384t1
     {
@@ -913,7 +913,7 @@ const hint_curve_t hint_curves[] = {
     },
     {
         nid_brainpoolp512r1tls13,  // NID_brainpoolP512r1tls13 (openssl-3.2)
-        NID_brainpoolP512r1,
+        NID_brainpoolP512r1,       // nid_brainpoolp512r1tls13 TLS handshake only
         crypto_kty_t::kty_ec,
         crypto_use_t::use_any,
         tls_group_brainpoolP512r1tls13,
@@ -925,7 +925,7 @@ const hint_curve_t hint_curves[] = {
         nullptr,
         nullptr,
         nullptr,
-        "brainpoolP512r1",
+        "brainpoolP512r1tls13",
     },
     // https://neuromancer.sk/std/brainpool/brainpoolP512t1
     {

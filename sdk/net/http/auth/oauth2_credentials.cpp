@@ -86,8 +86,8 @@ return_t oauth2_credentials::insert(const std::string& client_id, const std::str
         webapp.client_id = client_id;
         webapp.client_secret = client_secret;
 
-        _user_clientid.insert(std::make_pair(userid, client_id));
-        _webapps.insert(std::make_pair(client_id, webapp));
+        _user_clientid.emplace(userid, client_id);
+        _webapps.emplace(client_id, webapp);
     }
     __finally2 {}
     return ret;

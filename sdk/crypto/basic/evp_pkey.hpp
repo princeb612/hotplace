@@ -64,7 +64,6 @@ bool kindof_ecc(const EVP_PKEY* pkey);
  * @param const EVP_PKEY* key [in]
  * @return crypto_kty_t
  */
-crypto_kty_t typeof_crypto_key(const EVP_PKEY* key);
 crypto_kty_t ktyof_evp_pkey(const EVP_PKEY* key);
 crypto_kty_t ktyof_nid(uint32 nid);
 

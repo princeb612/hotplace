@@ -246,12 +246,12 @@ return_t cbor_object_signing_encryption::subprocess(cose_context_t* handle, cryp
                 // do nothing
             } else {
                 if (false == _builtmap) {
-                    _handlermap.insert(std::make_pair(cose_tag_encrypt, &cbor_object_signing_encryption::docrypt));
-                    _handlermap.insert(std::make_pair(cose_tag_encrypt0, &cbor_object_signing_encryption::docrypt));
-                    _handlermap.insert(std::make_pair(cose_tag_mac, &cbor_object_signing_encryption::domac));
-                    _handlermap.insert(std::make_pair(cose_tag_mac0, &cbor_object_signing_encryption::domac));
-                    _handlermap.insert(std::make_pair(cose_tag_sign, &cbor_object_signing_encryption::dosign));
-                    _handlermap.insert(std::make_pair(cose_tag_sign1, &cbor_object_signing_encryption::dosign));
+                    _handlermap.emplace(cose_tag_encrypt, &cbor_object_signing_encryption::docrypt);
+                    _handlermap.emplace(cose_tag_encrypt0, &cbor_object_signing_encryption::docrypt);
+                    _handlermap.emplace(cose_tag_mac, &cbor_object_signing_encryption::domac);
+                    _handlermap.emplace(cose_tag_mac0, &cbor_object_signing_encryption::domac);
+                    _handlermap.emplace(cose_tag_sign, &cbor_object_signing_encryption::dosign);
+                    _handlermap.emplace(cose_tag_sign1, &cbor_object_signing_encryption::dosign);
                     _builtmap = true;
                 }
 
@@ -337,7 +337,7 @@ return_t cbor_object_signing_encryption::preprocess_skeleton(cose_context_t* han
             const hint_cose_group_t* hint_group = hint->hint_group;
 
             flags |= hint_group->hintflags;
-            algmap.insert(std::make_pair(hint_group->category, alg));
+            algmap.emplace(hint_group->category, alg);
         }
 
         // test
@@ -504,7 +504,7 @@ return_t cbor_object_signing_encryption::preprocess_dorandom(cose_context_t* han
             if (cose_hint_static_key & flags) {
                 cosekey = cose_static_key;  // -2
             }
-            uint32 nid = advisor->curveof(curve);
+            uint32 nid = advisor->nidof(curve);
             keychain.add_ec2(&statickey, nid, keydesc());
             statickey.get_public_key(statickey.any(), bin_x, bin_y);
             layer->get_unprotected().add(cosekey, curve, bin_x, bin_y);

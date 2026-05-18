@@ -360,16 +360,16 @@ oauth2_provider& oauth2_provider::add(oauth2_grant_provider* provider) {
 
         critical_section_guard guard(_lock);
 
-        oauth2_grant_provider_map_pib_t pib = _providers.insert(std::make_pair(provider->type(), provider));
+        oauth2_grant_provider_map_pib_t pib = _providers.emplace(provider->type(), provider);
         if (pib.second) {
             std::string response_type = provider->response_type();
             if (response_type.size()) {
-                _authorization_providers.insert(std::make_pair(response_type, provider));
+                _authorization_providers.emplace(response_type, provider);
             }
 
             std::string grant_type = provider->grant_type();
             if (grant_type.size()) {
-                _token_providers.insert(std::make_pair(grant_type, provider));
+                _token_providers.emplace(grant_type, provider);
             }
         }
     }

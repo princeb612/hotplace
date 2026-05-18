@@ -24,7 +24,7 @@ payload& payload::operator<<(std::unique_ptr<payload_member> member) {
         _members.push_back(item);
         // read(parse)
         if (item->get_name().size()) {
-            _members_map.insert(std::make_pair(item->get_name(), item));
+            _members_map.emplace(item->get_name(), item);
         }
         member.release();  // _members own member
     }
@@ -37,7 +37,7 @@ payload& payload::operator<<(t_pointer_proxy<payload_member> member) {
         _members.push_back(item);
         // read(parse)
         if (item->get_name().size()) {
-            _members_map.insert(std::make_pair(item->get_name(), item));
+            _members_map.emplace(item->get_name(), item);
         }
         member.release();  // _members own member
     }
@@ -75,7 +75,7 @@ payload& payload::set_reference_value(const std::string& name, const std::string
 payload& payload::set_condition(const std::string& name, std::function<void(payload*, payload_member*)> hook) {
     cond_t cond;
     cond.hook = hook;
-    _cond_map.insert({name, cond});
+    _cond_map.emplace(name, cond);
     return *this;
 }
 

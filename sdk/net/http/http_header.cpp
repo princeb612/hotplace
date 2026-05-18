@@ -30,7 +30,7 @@ http_header& http_header::add(const std::string& name, const std::string& value)
 
         std::string key = (1 == get_version()) ? name : lowername(name);
 
-        http_header_map_pib_t pib = _headers.insert(std::make_pair(key, value));
+        http_header_map_pib_t pib = _headers.emplace(key, value);
         if (true == pib.second) {
             _names.push_back(key);
         } else {

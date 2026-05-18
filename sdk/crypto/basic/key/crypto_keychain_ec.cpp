@@ -54,6 +54,13 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, const keydes
             ret = errorcode_t::not_supported;
             __leave2_trace_openssl(ret);
         }
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+        rc = EVP_PKEY_CTX_set_ec_param_enc(ctx.get(), OPENSSL_EC_NAMED_CURVE);
+        if (rc < 1) {
+            ret = errorcode_t::internal_error;
+            __leave2_trace_openssl(ret);
+        }
+#endif
 
         EVP_PKEY* pk = nullptr;
         rc = EVP_PKEY_keygen(ctx.get(), &pk);
@@ -68,8 +75,11 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, const keydes
 
         EVP_PKEY_ptr pkey(pk);
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
         // set ASN.1 OPENSSL_EC_NAMED_CURVE flag for PEM export (PEM_write_bio_PUBKEY, PEM_write_bio_PrivateKey)
-        EC_KEY_set_asn1_flag((EC_KEY*)EVP_PKEY_get0_EC_KEY(pkey.get()), OPENSSL_EC_NAMED_CURVE);  // openssl 3.0 EVP_PKEY_get0 family return const key pointer
+        // openssl 3.0 EVP_PKEY_get0 family return const key pointer
+        EC_KEY_set_asn1_flag((EC_KEY*)EVP_PKEY_get0_EC_KEY(pkey.get()), OPENSSL_EC_NAMED_CURVE);
+#endif
 
         crypto_key_object key(pkey.get(), desc);
         ret = cryptokey->add(std::move(key));

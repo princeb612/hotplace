@@ -166,6 +166,13 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
 #if defined DEBUG
             if (istraceable(trace_category_net)) {
                 trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                    auto advisor = crypto_advisor::get_instance();
+                    auto hint = advisor->hintof_sigscheme(sigalg);
+                    std::string name;
+                    if (hint) {
+                        name = hint->name;
+                    }
+
                     dbs.autoindent(2);
                     dbs.println("> %s %i (%s)", constexpr_curve_info, curve_info, tlsadvisor->nameof_ec_curve_type(curve_info).c_str());
                     dbs.println("> %s 0x%04x %s", constexpr_curve, curve, tlsadvisor->nameof_group(curve).c_str());
@@ -175,7 +182,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                         dump_memory(pubkey, &dbs, 16, 4, 0x0, dump_notrunc);
                     }
                     dbs.println("> %s " ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", constexpr_signature, (errorcode_t::success == ret) ? "true" : "false");
-                    dbs.println(" > 0x%04x %s", sigalg, tlsadvisor->nameof_signature_scheme(sigalg).c_str());
+                    dbs.println(" > 0x%04x %s", sigalg, name.c_str());
                     dbs.println(" > %s %i", constexpr_sig_len, sig_len);
                     if (check_trace_level(loglevel_debug)) {
                         dump_memory(sig, &dbs, 16, 3, 0x0, dump_notrunc);
@@ -229,7 +236,8 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
     uint16 sigalg = 0;
     {
         auto lambda = [&](uint16 sigscheme, bool* ctrl) -> void {
-            auto hint = tlsadvisor->hintof_signature_scheme(sigscheme);
+            auto advisor = crypto_advisor::get_instance();
+            auto hint = advisor->hintof_sigscheme(sigscheme);
             bool stop = false;
             if (hint) {
                 if ((hint->kty == kty_cert) && (kty_unknown != kty_cert)) {
@@ -277,6 +285,13 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
 #if defined DEBUG
     if (istraceable(trace_category_net)) {
         trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+            auto advisor = crypto_advisor::get_instance();
+            auto hint = advisor->hintof_sigscheme(sigalg);
+            std::string name;
+            if (hint) {
+                name = hint->name;
+            }
+
             dbs.autoindent(2);
             dbs.println("> %s %i (%s)", constexpr_curve_info, curve_info, tlsadvisor->nameof_ec_curve_type(curve_info).c_str());
             dbs.println("> %s 0x%04x %s", constexpr_curve, curve, tlsadvisor->nameof_group(curve).c_str());
@@ -286,7 +301,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
                 dump_memory(pubkey, &dbs, 16, 4, 0, dump_notrunc);
             }
             dbs.println("> %s", constexpr_signature);
-            dbs.println(" > 0x%04x %s", sigalg, tlsadvisor->nameof_signature_scheme(sigalg).c_str());
+            dbs.println(" > 0x%04x %s", sigalg, name.c_str());
             dbs.println(" > %s %zi", constexpr_sig_len, sig.size());
             if (check_trace_level(loglevel_debug)) {
                 dump_memory(sig, &dbs, 16, 3, 0, dump_notrunc);

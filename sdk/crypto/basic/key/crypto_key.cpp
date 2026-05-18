@@ -64,7 +64,7 @@ return_t crypto_key::add(const crypto_key_object& key, bool up_ref) {
             }
         }
 
-        _key_map.insert(std::make_pair(key.get_desc().get_kid_str(), key));
+        _key_map.emplace(key.get_desc().get_kid_str(), key);
     }
     __finally2 {}
     return ret;
@@ -102,7 +102,7 @@ return_t crypto_key::add(crypto_key_object&& key, bool up_ref) {
             }
         }
 
-        _key_map.insert(std::make_pair(key.get_desc().get_kid_str(), std::move(key)));
+        _key_map.emplace(key.get_desc().get_kid_str(), std::move(key));
     }
     __finally2 {}
     return ret;
@@ -150,7 +150,7 @@ return_t crypto_key::append(crypto_key* source) {
             const std::string& name = pair.first;
             crypto_key_object& keyobj = pair.second;
             EVP_PKEY_up_ref((EVP_PKEY*)keyobj.get_pkey());
-            _key_map.insert(std::make_pair(name, keyobj));
+            _key_map.emplace(name, keyobj);
         }
     }
     __finally2 {}

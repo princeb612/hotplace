@@ -91,7 +91,9 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                 uint8 mask = tls_flag_secure | tls_flag_support;
                 auto lambda_cs = [&](const tls_cipher_suite_t* cs) -> void {
                     if ((mask & cs->flags) && (cs->spec >= minspec) && (cs->spec <= maxspec)) {
-                        hs->add_ciphersuite(cs->code);
+                        if (tlsadvisor->test_ciphersuite(cs->code)) {
+                            hs->add_ciphersuite(cs->code);
+                        }
                     }
                 };
                 tlsadvisor->enum_cipher_suites(lambda_cs);
@@ -125,7 +127,9 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                     auto ext = (tls_extension_signature_algorithms*)extension;
                     advisor->for_each_sigscheme([&](const hint_sigscheme_t* hint) -> void {
                         if (tls_flag_support & hint->flags) {
-                            (*ext).add(hint->scheme);
+                            if (minspec >= hint->spec) {
+                                (*ext).add(hint->scheme);
+                            }
                         }
                     });
                     return success;

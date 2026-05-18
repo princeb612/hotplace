@@ -234,8 +234,14 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
 #if defined DEBUG
         if (istraceable(trace_category_net)) {
             trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                auto advisor = crypto_advisor::get_instance();
+                auto hint = advisor->hintof_sigscheme(scheme);
+                std::string name;
+                if (hint) {
+                    name = hint->name;
+                }
                 dbs.autoindent(1);
-                dbs.println(" > %s 0x%04x %s", constexpr_signature_alg, scheme, tlsadvisor->nameof_signature_scheme(scheme).c_str());
+                dbs.println(" > %s 0x%04x %s", constexpr_signature_alg, scheme, name.c_str());
                 dbs.println(" > %s 0x%04x(%i)", constexpr_len, len, len);
                 // dbs.println(" > tosign");
                 // dump_memory(tosign, &dbs, 16, 3, 0x00, dump_notrunc);

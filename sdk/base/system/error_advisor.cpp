@@ -285,7 +285,7 @@ void error_advisor::build() {
         if (_table.empty()) {
             for (unsigned i = 0; i < RTL_NUMBER_OF(error_descriptions); i++) {
                 const error_description* item = error_descriptions + i;
-                _table.insert(std::make_pair(item->error, item));
+                _table.emplace(item->error, item);
             }
         }
     }

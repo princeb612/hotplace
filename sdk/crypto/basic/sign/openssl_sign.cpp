@@ -75,14 +75,15 @@ return_t openssl_sign::sign(const EVP_PKEY* pkey, signature_t sig, const byte_t*
                 ret = sign_ecdsa(pkey, hash_alg, stream, size, signature, flags);
                 break;
             case kty_okp:
-                ret = sign_eddsa(pkey, hash_alg, stream, size, signature);
+                ret = sign_digestsign(pkey, stream, size, signature);
                 break;
             case kty_dsa:
                 ret = sign_dsa(pkey, hash_alg, stream, size, signature);
                 break;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
             case kty_mldsa:
-                ret = sign_mldsa(pkey, stream, size, signature);
+            case kty_slhdsa:
+                ret = sign_digestsign(pkey, stream, size, signature);
                 break;
 #endif
             default:
@@ -150,13 +151,14 @@ return_t openssl_sign::verify(const EVP_PKEY* pkey, signature_t sig, const byte_
                 ret = verify_ecdsa(pkey, hash_alg, stream, size, signature, flags);
                 break;
             case kty_okp:
-                ret = verify_eddsa(pkey, hash_alg, stream, size, signature);
+                ret = verify_digestsign(pkey, stream, size, signature);
                 break;
             case kty_dsa:
                 ret = verify_dsa(pkey, hash_alg, stream, size, signature);
                 break;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
             case kty_mldsa:
+            case kty_slhdsa:
                 ret = verify_mldsa(pkey, stream, size, signature);
                 break;
 #endif

@@ -49,10 +49,10 @@ return_t crypto_key::extract(const EVP_PKEY* pkey, int flags, crypto_kty_t& type
                 ret = extract_dsa(pkey, flags, type, datamap, preserve);
                 break;
             case crypto_kty_t::kty_mlkem:
-                ret = extract_mlkem(pkey, flags, type, datamap, false);
-                break;
             case crypto_kty_t::kty_mldsa:
-                ret = extract_mldsa(pkey, flags, type, datamap, false);
+            case crypto_kty_t::kty_slhdsa:
+                ret = extract_ossl3(pkey, flags, type, datamap, false);
+                break;
                 break;
             default:
                 break;
@@ -87,7 +87,7 @@ return_t crypto_key::extract_oct(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
             bin_k.resize(key_length);
             EVP_PKEY_get_raw_private_key(pkey, bin_k.data(), &key_length);
 
-            datamap.insert(std::make_pair(crypt_item_t::item_hmac_k, bin_k));
+            datamap.emplace(crypt_item_t::item_hmac_k, bin_k);
         }
     }
     __finally2 {}
@@ -131,14 +131,14 @@ return_t crypto_key::extract_rsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
              */
             binary_t bin_pub;
             get_asn1public_key(pkey, bin_pub);
-            datamap.insert(std::make_pair(crypt_item_t::item_asn1der, bin_pub));
+            datamap.emplace(crypt_item_t::item_asn1der, bin_pub);
         } else if (crypt_access_t::public_key & flags) {
             binary_t bin_n;
             binary_t bin_e;
             bn2bin(bn_n, bin_n);
             bn2bin(bn_e, bin_e);
-            datamap.insert(std::make_pair(crypt_item_t::item_rsa_n, bin_n));
-            datamap.insert(std::make_pair(crypt_item_t::item_rsa_e, bin_e));
+            datamap.emplace(crypt_item_t::item_rsa_n, bin_n);
+            datamap.emplace(crypt_item_t::item_rsa_e, bin_e);
         }
 
         if (crypt_access_t::private_key & flags) {
@@ -147,7 +147,7 @@ return_t crypto_key::extract_rsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
                 int len_d = BN_num_bytes(bn_d);
                 bin_d.resize(len_d);
                 BN_bn2bin(bn_d, bin_d.data());
-                datamap.insert(std::make_pair(crypt_item_t::item_rsa_d, bin_d));
+                datamap.emplace(crypt_item_t::item_rsa_d, bin_d);
             }
         }
     }
@@ -187,7 +187,7 @@ return_t crypto_key::extract_ec(const EVP_PKEY* pkey, int flags, crypto_kty_t& t
         if (crypt_access_t::asn1public_key & flags) {
             binary_t bin_pub;
             get_asn1public_key(pkey, bin_pub);
-            datamap.insert(std::make_pair(crypt_item_t::item_asn1der, bin_pub));
+            datamap.emplace(crypt_item_t::item_asn1der, bin_pub);
         } else if (crypt_access_t::public_key & flags) {
             BN_ptr bn_x(BN_new());
             BN_ptr bn_y(BN_new());
@@ -216,14 +216,14 @@ return_t crypto_key::extract_ec(const EVP_PKEY* pkey, int flags, crypto_kty_t& t
                     }
                 }
 
-                datamap.insert(std::make_pair(crypt_item_t::item_ec_x, bin_x));
-                datamap.insert(std::make_pair(crypt_item_t::item_ec_y, bin_y));
+                datamap.emplace(crypt_item_t::item_ec_x, bin_x);
+                datamap.emplace(crypt_item_t::item_ec_y, bin_y);
 
                 binary_t uncompressed;
                 binary_append(uncompressed, uint8(4));
                 binary_append(uncompressed, bin_x);
                 binary_append(uncompressed, bin_y);
-                datamap.insert(std::make_pair(crypt_item_t::item_ec_pub_uncompressed, uncompressed));
+                datamap.emplace(crypt_item_t::item_ec_pub_uncompressed, uncompressed);
             }
         }
         if (crypt_access_t::private_key & flags) {
@@ -240,7 +240,7 @@ return_t crypto_key::extract_ec(const EVP_PKEY* pkey, int flags, crypto_kty_t& t
                     }
                 }
 
-                datamap.insert(std::make_pair(crypt_item_t::item_ec_d, bin_d));
+                datamap.emplace(crypt_item_t::item_ec_d, bin_d);
             }
         }
     }
@@ -279,7 +279,7 @@ return_t crypto_key::extract_okp(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
         if (crypt_access_t::asn1public_key & flags) {
             binary_t bin_pub;
             get_asn1public_key(pkey, bin_pub);
-            datamap.insert(std::make_pair(crypt_item_t::item_asn1der, std::move(bin_pub)));
+            datamap.emplace(crypt_item_t::item_asn1der, std::move(bin_pub));
         } else if (crypt_access_t::public_key & flags) {
             binary_t bin_x;
             size_t len_x = curve_size ? curve_size : 256;
@@ -294,7 +294,7 @@ return_t crypto_key::extract_okp(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
             }
 
             if (1 == ret_openssl) {
-                datamap.insert(std::make_pair(crypt_item_t::item_ec_x, std::move(bin_x)));
+                datamap.emplace(crypt_item_t::item_ec_x, std::move(bin_x));
             }
         }
         if (crypt_access_t::private_key & flags) {
@@ -311,7 +311,7 @@ return_t crypto_key::extract_okp(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
             }
 
             if (1 == ret_openssl) {
-                datamap.insert(std::make_pair(crypt_item_t::item_ec_d, std::move(bin_d)));
+                datamap.emplace(crypt_item_t::item_ec_d, std::move(bin_d));
             }
         }
     }
@@ -357,11 +357,11 @@ return_t crypto_key::extract_dh(const EVP_PKEY* pkey, int flags, crypto_kty_t& t
          */
         if (crypt_access_t::asn1public_key & flags) {
             get_asn1public_key(pkey, bin_pub);
-            datamap.insert(std::make_pair(crypt_item_t::item_asn1der, std::move(bin_pub)));
+            datamap.emplace(crypt_item_t::item_asn1der, std::move(bin_pub));
         } else if (crypt_access_t::public_key & flags) {
             if (bn_pub) {
                 bn2bin(bn_pub, bin_pub);
-                datamap.insert(std::make_pair(crypt_item_t::item_dh_pub, std::move(bin_pub)));
+                datamap.emplace(crypt_item_t::item_dh_pub, std::move(bin_pub));
             }
 
             const BIGNUM* bn_p = nullptr;
@@ -382,15 +382,15 @@ return_t crypto_key::extract_dh(const EVP_PKEY* pkey, int flags, crypto_kty_t& t
                     bin_q.erase(bin_q.begin());
                 }
             }
-            datamap.insert(std::make_pair(crypt_item_t::item_dh_p, std::move(bin_p)));
-            datamap.insert(std::make_pair(crypt_item_t::item_dh_q, std::move(bin_q)));
-            datamap.insert(std::make_pair(crypt_item_t::item_dh_g, std::move(bin_g)));
+            datamap.emplace(crypt_item_t::item_dh_p, std::move(bin_p));
+            datamap.emplace(crypt_item_t::item_dh_q, std::move(bin_q));
+            datamap.emplace(crypt_item_t::item_dh_g, std::move(bin_g));
         }
 
         if (crypt_access_t::private_key & flags) {
             if (bn_priv) {
                 bn2bin(bn_priv, bin_priv);
-                datamap.insert(std::make_pair(crypt_item_t::item_dh_priv, std::move(bin_priv)));
+                datamap.emplace(crypt_item_t::item_dh_priv, std::move(bin_priv));
             }
         }
     }
@@ -428,7 +428,7 @@ return_t crypto_key::extract_dsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
         if (crypt_access_t::asn1public_key & flags) {
             binary_t bin_pub;
             get_asn1public_key(pkey, bin_pub);
-            datamap.insert(std::make_pair(crypt_item_t::item_asn1der, std::move(bin_pub)));
+            datamap.emplace(crypt_item_t::item_asn1der, std::move(bin_pub));
         } else if (crypt_access_t::public_key & flags) {
             const BIGNUM* bn_p = nullptr;
             const BIGNUM* bn_q = nullptr;
@@ -438,22 +438,22 @@ return_t crypto_key::extract_dsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
             if (bn_y) {
                 binary_t bin_y;
                 bn2bin(bn_y, bin_y);
-                datamap.insert(std::make_pair(crypt_item_t::item_dsa_y, std::move(bin_y)));
+                datamap.emplace(crypt_item_t::item_dsa_y, std::move(bin_y));
             }
             if (bn_p) {
                 binary_t bin_p;
                 bn2bin(bn_p, bin_p);
-                datamap.insert(std::make_pair(crypt_item_t::item_dsa_p, std::move(bin_p)));
+                datamap.emplace(crypt_item_t::item_dsa_p, std::move(bin_p));
             }
             if (bn_q) {
                 binary_t bin_q;
                 bn2bin(bn_q, bin_q);
-                datamap.insert(std::make_pair(crypt_item_t::item_dsa_q, std::move(bin_q)));
+                datamap.emplace(crypt_item_t::item_dsa_q, std::move(bin_q));
             }
             if (bn_g) {
                 binary_t bin_g;
                 bn2bin(bn_g, bin_g);
-                datamap.insert(std::make_pair(crypt_item_t::item_dsa_g, std::move(bin_g)));
+                datamap.emplace(crypt_item_t::item_dsa_g, std::move(bin_g));
             }
         }
 
@@ -461,7 +461,7 @@ return_t crypto_key::extract_dsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
             if (bn_x) {
                 binary_t bin_x;
                 bn2bin(bn_x, bin_x);
-                datamap.insert(std::make_pair(crypt_item_t::item_dsa_priv, std::move(bin_x)));
+                datamap.emplace(crypt_item_t::item_dsa_priv, std::move(bin_x));
             }
         }
     }
@@ -469,7 +469,7 @@ return_t crypto_key::extract_dsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
     return ret;
 }
 
-return_t crypto_key::extract_mlkem(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero) {
+return_t crypto_key::extract_ossl3(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -481,9 +481,16 @@ return_t crypto_key::extract_mlkem(const EVP_PKEY* pkey, int flags, crypto_kty_t
         }
 
         type = ktyof_evp_pkey(pkey);
-
-        if (crypto_kty_t::kty_mlkem != type) {
-            ret = errorcode_t::different_type;
+        switch (type) {
+            case crypto_kty_t::kty_mlkem:
+            case crypto_kty_t::kty_mldsa:
+            case crypto_kty_t::kty_slhdsa:
+                break;
+            default:
+                ret = errorcode_t::different_type;
+                break;
+        }
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 
@@ -494,7 +501,7 @@ return_t crypto_key::extract_mlkem(const EVP_PKEY* pkey, int flags, crypto_kty_t
             binary_t bin_pub;
             ret = keychain.pkey_encode(nullptr, pkey, bin_pub, encoding);
             if (success == ret) {
-                datamap.insert(std::make_pair(item, std::move(bin_pub)));
+                datamap.emplace(item, std::move(bin_pub));
             }
         }
 
@@ -502,48 +509,7 @@ return_t crypto_key::extract_mlkem(const EVP_PKEY* pkey, int flags, crypto_kty_t
             binary_t bin_keypair;
             ret = keychain.pkey_encode(nullptr, pkey, bin_keypair, key_encoding_priv_raw);
             if (success == ret) {
-                datamap.insert(std::make_pair(crypt_item_t::item_mlkem_priv, std::move(bin_keypair)));
-            }
-        }
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t crypto_key::extract_mldsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& type, crypt_datamap_t& datamap, bool plzero) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        datamap.clear();
-
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        type = ktyof_evp_pkey(pkey);
-
-        if (crypto_kty_t::kty_mldsa != type) {
-            ret = errorcode_t::different_type;
-            __leave2;
-        }
-
-        crypto_keychain keychain;
-        if (crypt_access_t::public_key & flags) {
-            key_encoding_t encoding = (crypt_access_t::asn1public_key & flags) ? key_encoding_pub_der : key_encoding_pub_raw;
-            crypt_item_t item = (crypt_access_t::asn1public_key & flags) ? item_asn1der : item_mldsa_pub;
-            binary_t bin_pub;
-            ret = keychain.pkey_encode(nullptr, pkey, bin_pub, encoding);
-            if (success == ret) {
-                datamap.insert(std::make_pair(item, std::move(bin_pub)));
-            }
-        }
-
-        if (crypt_access_t::private_key & flags) {
-            binary_t bin_keypair;
-            ret = keychain.pkey_encode(nullptr, pkey, bin_keypair, key_encoding_priv_raw);
-            if (success == ret) {
-                datamap.insert(std::make_pair(crypt_item_t::item_mldsa_priv, std::move(bin_keypair)));
+                datamap.emplace(crypt_item_t::item_mlkem_priv, std::move(bin_keypair));
             }
         }
     }

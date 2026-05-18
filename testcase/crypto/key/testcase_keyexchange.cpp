@@ -153,6 +153,7 @@ void test_keyexchange() {
     test_keyexchange_ecdhe(tls_group_brainpoolP256r1);
     test_keyexchange_ecdhe(tls_group_brainpoolP384r1);
     test_keyexchange_ecdhe(tls_group_brainpoolP512r1);
+
     test_keyexchange_ecdhe(tls_group_brainpoolP256r1tls13);
     test_keyexchange_ecdhe(tls_group_brainpoolP384r1tls13);
     test_keyexchange_ecdhe(tls_group_brainpoolP512r1tls13);

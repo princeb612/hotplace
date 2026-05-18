@@ -248,7 +248,7 @@ return_t quic_packet_publisher::prepare_packet_cid(quic_packet* packet, protecti
                     openssl_prng prng;
                     prng.random(id, 8);
                     protection.get_secrets().assign(tls_context_server_cid, id);
-                    session->get_quic_session().get_cid_tracker().insert({0, id});
+                    session->get_quic_session().get_cid_tracker().emplace(0, id);
 #if defined DEBUG
                     if (istraceable(trace_category_net)) {
                         trace_debug_event(trace_category_net, trace_event_quic_packet,

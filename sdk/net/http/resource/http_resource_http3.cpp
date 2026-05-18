@@ -17,56 +17,56 @@ namespace net {
 void http_resource::doload_resources_h3() {
     if (_h3_error_codes.empty()) {
         // https://www.iana.org/assignments/http3-parameters/http3-parameters.xhtml
-        _h3_error_codes.insert({h3_datagram_error, "H3_DATAGRAM_ERROR"});
-        _h3_error_codes.insert({h3_no_error, "H3_NO_ERROR"});
-        _h3_error_codes.insert({h3_general_protocol_error, "H3_GENERAL_PROTOCOL_ERROR"});
-        _h3_error_codes.insert({h3_internal_error, "H3_INTERNAL_ERROR"});
-        _h3_error_codes.insert({h3_stream_creation_error, "H3_STREAM_CREATION_ERROR"});
-        _h3_error_codes.insert({h3_closed_critical_stream, "H3_CLOSED_CRITICAL_STREAM"});
-        _h3_error_codes.insert({h3_frame_unexpected, "H3_FRAME_UNEXPECTED"});
-        _h3_error_codes.insert({h3_frame_error, "H3_FRAME_ERROR"});
-        _h3_error_codes.insert({h3_excessive_load, "H3_EXCESSIVE_LOAD"});
-        _h3_error_codes.insert({h3_id_error, "H3_ID_ERROR"});
-        _h3_error_codes.insert({h3_settings_error, "H3_SETTINGS_ERROR"});
-        _h3_error_codes.insert({h3_missing_settings, "H3_MISSING_SETTINGS"});
-        _h3_error_codes.insert({h3_request_rejected, "H3_REQUEST_REJECTED"});
-        _h3_error_codes.insert({h3_request_cancelled, "H3_REQUEST_CANCELLED"});
-        _h3_error_codes.insert({h3_request_incomplete, "H3_REQUEST_INCOMPLETE"});
-        _h3_error_codes.insert({h3_message_error, "H3_MESSAGE_ERROR"});
-        _h3_error_codes.insert({h3_connect_error, "H3_CONNECT_ERROR"});
-        _h3_error_codes.insert({h3_version_fallback, "H3_VERSION_FALLBACK"});
-        _h3_error_codes.insert({qpack_decompression_failed, "QPACK_DECOMPRESSION_FAILED"});
-        _h3_error_codes.insert({qpack_encoder_stream_error, "QPACK_ENCODER_STREAM_ERROR"});
-        _h3_error_codes.insert({qpack_decoder_stream_error, "QPACK_DECODER_STREAM_ERROR"});
+        _h3_error_codes.emplace(h3_datagram_error, "H3_DATAGRAM_ERROR");
+        _h3_error_codes.emplace(h3_no_error, "H3_NO_ERROR");
+        _h3_error_codes.emplace(h3_general_protocol_error, "H3_GENERAL_PROTOCOL_ERROR");
+        _h3_error_codes.emplace(h3_internal_error, "H3_INTERNAL_ERROR");
+        _h3_error_codes.emplace(h3_stream_creation_error, "H3_STREAM_CREATION_ERROR");
+        _h3_error_codes.emplace(h3_closed_critical_stream, "H3_CLOSED_CRITICAL_STREAM");
+        _h3_error_codes.emplace(h3_frame_unexpected, "H3_FRAME_UNEXPECTED");
+        _h3_error_codes.emplace(h3_frame_error, "H3_FRAME_ERROR");
+        _h3_error_codes.emplace(h3_excessive_load, "H3_EXCESSIVE_LOAD");
+        _h3_error_codes.emplace(h3_id_error, "H3_ID_ERROR");
+        _h3_error_codes.emplace(h3_settings_error, "H3_SETTINGS_ERROR");
+        _h3_error_codes.emplace(h3_missing_settings, "H3_MISSING_SETTINGS");
+        _h3_error_codes.emplace(h3_request_rejected, "H3_REQUEST_REJECTED");
+        _h3_error_codes.emplace(h3_request_cancelled, "H3_REQUEST_CANCELLED");
+        _h3_error_codes.emplace(h3_request_incomplete, "H3_REQUEST_INCOMPLETE");
+        _h3_error_codes.emplace(h3_message_error, "H3_MESSAGE_ERROR");
+        _h3_error_codes.emplace(h3_connect_error, "H3_CONNECT_ERROR");
+        _h3_error_codes.emplace(h3_version_fallback, "H3_VERSION_FALLBACK");
+        _h3_error_codes.emplace(qpack_decompression_failed, "QPACK_DECOMPRESSION_FAILED");
+        _h3_error_codes.emplace(qpack_encoder_stream_error, "QPACK_ENCODER_STREAM_ERROR");
+        _h3_error_codes.emplace(qpack_decoder_stream_error, "QPACK_DECODER_STREAM_ERROR");
     }
     if (_h3_frame_names.empty()) {
-        _h3_frame_names.insert({h3_frame_data, "DATA"});
-        _h3_frame_names.insert({h3_frame_headers, "HEADERS"});
-        _h3_frame_names.insert({h3_frame_cancel_push, "CANCEL_PUSH"});
-        _h3_frame_names.insert({h3_frame_settings, "SETTINGS"});
-        _h3_frame_names.insert({h3_frame_push_promise, "PUSH_PROMISE"});
-        _h3_frame_names.insert({h3_frame_goaway, "GOAWAY"});
-        _h3_frame_names.insert({h3_frame_origin, "ORIGIN"});
-        _h3_frame_names.insert({h3_frame_max_push_id, "MAX_PUSH_ID"});
-        _h3_frame_names.insert({h3_frame_metadata, "METADATA"});
-        _h3_frame_names.insert({h3_frame_priority_update, "PRIOIRY_UPDATE"});
-        _h3_frame_names.insert({h3_frame_priority_update1, "PRIOIRY_UPDATE + 1"});
+        _h3_frame_names.emplace(h3_frame_data, "DATA");
+        _h3_frame_names.emplace(h3_frame_headers, "HEADERS");
+        _h3_frame_names.emplace(h3_frame_cancel_push, "CANCEL_PUSH");
+        _h3_frame_names.emplace(h3_frame_settings, "SETTINGS");
+        _h3_frame_names.emplace(h3_frame_push_promise, "PUSH_PROMISE");
+        _h3_frame_names.emplace(h3_frame_goaway, "GOAWAY");
+        _h3_frame_names.emplace(h3_frame_origin, "ORIGIN");
+        _h3_frame_names.emplace(h3_frame_max_push_id, "MAX_PUSH_ID");
+        _h3_frame_names.emplace(h3_frame_metadata, "METADATA");
+        _h3_frame_names.emplace(h3_frame_priority_update, "PRIOIRY_UPDATE");
+        _h3_frame_names.emplace(h3_frame_priority_update1, "PRIOIRY_UPDATE + 1");
     }
     if (_h3_frame_settings.empty()) {
         // RFC 9114 A.3.  HTTP/2 SETTINGS Parameters
         // https://www.iana.org/assignments/http3-parameters/http3-parameters.xhtml
-        _h3_frame_settings.insert({h3_settings_qpack_max_table_capacity, "QPACK_MAX_TABLE_CAPACITY"});
-        _h3_frame_settings.insert({h3_settings_max_field_section_size, "MAX_FIELD_SECTION_SIZE"});
-        _h3_frame_settings.insert({h3_settings_qpack_blocked_streams, "QPACK_BLOCKED_STREAMS"});
-        _h3_frame_settings.insert({h3_settings_enable_connect_protocol, "ENABLE_CONNECT_PROTOCOL"});
-        _h3_frame_settings.insert({h3_settings_h3_datagram, "H3_DATAGRAM"});
-        _h3_frame_settings.insert({h3_settings_enable_metadata, "ENABLE_METADATA"});
+        _h3_frame_settings.emplace(h3_settings_qpack_max_table_capacity, "QPACK_MAX_TABLE_CAPACITY");
+        _h3_frame_settings.emplace(h3_settings_max_field_section_size, "MAX_FIELD_SECTION_SIZE");
+        _h3_frame_settings.emplace(h3_settings_qpack_blocked_streams, "QPACK_BLOCKED_STREAMS");
+        _h3_frame_settings.emplace(h3_settings_enable_connect_protocol, "ENABLE_CONNECT_PROTOCOL");
+        _h3_frame_settings.emplace(h3_settings_h3_datagram, "H3_DATAGRAM");
+        _h3_frame_settings.emplace(h3_settings_enable_metadata, "ENABLE_METADATA");
     }
     if (_h3_stream_names.empty()) {
-        _h3_stream_names.insert({h3_control_stream, "CONTROL_STREAM"});
-        _h3_stream_names.insert({h3_push_stream, "PUSH_STREAM"});
-        _h3_stream_names.insert({h3_qpack_encoder_stream, "QPACK_ENCODER_STREAM"});
-        _h3_stream_names.insert({h3_qpack_decoder_stream, "QPACK_DECODER_STREAM"});
+        _h3_stream_names.emplace(h3_control_stream, "CONTROL_STREAM");
+        _h3_stream_names.emplace(h3_push_stream, "PUSH_STREAM");
+        _h3_stream_names.emplace(h3_qpack_encoder_stream, "QPACK_ENCODER_STREAM");
+        _h3_stream_names.emplace(h3_qpack_decoder_stream, "QPACK_DECODER_STREAM");
     }
 }
 

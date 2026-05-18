@@ -39,7 +39,7 @@ void test_yaml_testvector_cose_examples() {
         binary_t bin;
         e.encode(bin, cbor_major_t::cbor_major_tag, table[i]);
         std::string keyword = uppername(base16_encode(bin));
-        dictionary.insert(std::make_pair(keyword, table[i]));
+        dictionary.emplace(keyword, table[i]);
         _logger->writeln("%s => %i", keyword.c_str(), table[i]);
     }
 

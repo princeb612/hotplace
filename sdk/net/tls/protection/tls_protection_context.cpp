@@ -417,9 +417,9 @@ uint16 protection_context::get0_keyshare_group() {
 
 uint16 protection_context::select_signature_algorithm(crypto_kty_t kty) {
     uint16 ret_value = 0;
-    tls_advisor* tlsadvisor = tls_advisor::get_instance();
+    auto advisor = crypto_advisor::get_instance();
     for (auto item : _signature_algorithms) {
-        auto hint = tlsadvisor->hintof_signature_scheme(item);
+        auto hint = advisor->hintof_sigscheme(item);
         if (hint) {
             if ((tls_flag_support & hint->flags) && (hint->kty == kty)) {
                 ret_value = item;

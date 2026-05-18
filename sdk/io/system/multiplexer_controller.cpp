@@ -95,7 +95,7 @@ return_t multiplexer_controller::event_loop_new(multiplexer_controller_context_t
 
         critical_section_guard guard(context->lock);
 
-        multiplexer_event_loop_controler_map_pib_t pib = context->control.insert(std::make_pair(tid, 1));
+        multiplexer_event_loop_controler_map_pib_t pib = context->control.emplace(tid, 1);
         if (false == pib.second) {
             ret = errorcode_t::already_exist;
         }

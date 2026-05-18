@@ -84,6 +84,7 @@ void testcase_testvector_rsassa();
 void testcase_hmac();
 void testcase_mldsa();
 void testcase_rsassa();
+void testcase_slhdsa();
 void testcase_x509();
 
 #endif

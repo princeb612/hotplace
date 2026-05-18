@@ -21,7 +21,7 @@ custom_credentials& custom_credentials::add(const std::string& username, const s
     openssl_digest dgst;
     std::string password_hash;
     dgst.digest("sha512", password, password_hash, encoding_t::encoding_base64url);
-    _custom_credential.insert(std::make_pair(username, password_hash));
+    _custom_credential.emplace(username, password_hash);
     return *this;
 }
 

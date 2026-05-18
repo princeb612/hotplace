@@ -82,7 +82,7 @@ huffman_coding& huffman_coding::learn() {
 
         typename btree_t::node_t* newone = _btree.add(k);  // merged
 
-        map_pib_t pib = _m.insert(std::make_pair(k, _btree.clone_nocascade(newone)));
+        map_pib_t pib = _m.emplace(k, _btree.clone_nocascade(newone));
         pib.first->second->_left = l;
         pib.first->second->_right = r;
     }
@@ -119,9 +119,9 @@ void huffman_coding::infer(hc_temp& hc, typename btree_t::node_t* t) {
         if (0 == t->_key.flags) {
             const auto& sym = t->_key.symbol;
             const auto& code = hc.code;
-            _codetable.insert(std::make_pair(sym, code));
+            _codetable.emplace(sym, code);
 #if SWITCH_HUFFMANCODING_TRIE == 0
-            _reverse_codetable.insert(std::make_pair(code, sym));
+            _reverse_codetable.emplace(code, sym);
 #else
             size_t size = code.size();
             _trie.insert(code.c_str(), size, sym);
@@ -187,9 +187,9 @@ huffman_coding& huffman_coding::imports(const hc_code_t* table) {
         if (nullptr == item->code) {
             break;
         }
-        _codetable.insert(std::make_pair(item->sym, item->code));
+        _codetable.emplace(item->sym, item->code);
 #if SWITCH_HUFFMANCODING_TRIE == 0
-        _reverse_codetable.insert(std::make_pair(item->code, item->sym));
+        _reverse_codetable.emplace(item->code, item->sym);
 #else
         const auto& sym = item->sym;
         const auto& code = item->code;

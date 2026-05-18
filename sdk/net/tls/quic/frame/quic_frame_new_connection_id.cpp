@@ -88,7 +88,7 @@ return_t quic_frame_new_connection_id::do_read_body(tls_direction_t dir, const b
             throw exception(internal_error);
         }
 
-        tracker.insert({sequence_number, connection_id});
+        tracker.emplace(sequence_number, connection_id);
         secrets.assign(tls_context_server_cid, connection_id);
         secrets.assign(tls_context_stateless_reset_token, stateless_reset_token);
 
@@ -134,7 +134,7 @@ return_t quic_frame_new_connection_id::do_write_body(tls_direction_t dir, binary
         prng.random(cid, 8);
         prng.random(token, 16);
 
-        tracker.insert({seq, cid});
+        tracker.emplace(seq, cid);
         secrets.assign(tls_context_server_cid, cid);
         secrets.assign(tls_context_stateless_reset_token, token);
 

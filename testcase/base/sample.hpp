@@ -51,6 +51,7 @@ void testcase_vector();
 
 void testcase_aho_corasick();
 void testcase_aho_corasick_wildcard();
+void testcase_testvector_ahocorasick();
 void testcase_kmp();
 void testcase_suffixtree();
 void testcase_testvector_regex();

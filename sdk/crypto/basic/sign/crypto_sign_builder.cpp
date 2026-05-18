@@ -50,7 +50,7 @@ crypto_sign* crypto_sign_builder::build() {
                 obj = new crypto_sign_ecdsa(get_digest());
             } break;
             case sig_category_eddsa: {
-                obj = new crypto_sign_eddsa(get_digest());
+                obj = new crypto_sign_eddsa();
             } break;
             case sig_category_dsa: {
                 obj = new crypto_sign_dsa(get_digest());
@@ -59,10 +59,14 @@ crypto_sign* crypto_sign_builder::build() {
             case sig_category_mldsa: {
                 obj = new crypto_sign_mldsa();
             } break;
+            case sig_category_slhdsa: {
+                obj = new crypto_sign_slhdsa();
+            } break;
 #endif
             case sig_category_brainpool: {
                 obj = new crypto_sign_ecdsa(get_digest());
             } break;
+            case sig_category_rsassa_x931:  //
             default: {
             } break;
         }

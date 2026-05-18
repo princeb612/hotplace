@@ -55,7 +55,7 @@ return_t pqc_oqs::open(oqs_context** context) {
                     // encode/decode supported
                     // - p256_mlkem512
                     // - x25519_mlkem512
-                    ctx->algs.insert({alg, opid});
+                    ctx->algs.emplace(alg, opid);
                     if (OSSL_OP_KEM == opid) {
                         ctx->kemalgs.push_back({alg, flags});
                     } else if (OSSL_OP_SIGNATURE == opid) {

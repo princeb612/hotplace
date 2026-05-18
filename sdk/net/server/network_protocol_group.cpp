@@ -28,7 +28,7 @@ return_t network_protocol_group::add(network_protocol* protocol) {
         }
 
         critical_section_guard guard(_lock);
-        protocol_map_pib_t pib = _protocols.insert(std::make_pair(protocol->protocol_id(), protocol));
+        protocol_map_pib_t pib = _protocols.emplace(protocol->protocol_id(), protocol);
         if (true == pib.second) {
             protocol->addref();
         }

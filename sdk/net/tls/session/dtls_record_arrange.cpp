@@ -75,7 +75,7 @@ return_t dtls_record_arrange::produce(const sockaddr* addr, socklen_t addrlen, c
                         });
                     }
 #endif
-                    pool.packets.insert({key, std::move(packet)});
+                    pool.packets.emplace(key, std::move(packet));
                 }
             }
 

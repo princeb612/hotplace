@@ -40,7 +40,7 @@ http2_serverpush& http2_serverpush::add(const char* uri, const char* file) {
 
 http2_serverpush& http2_serverpush::add(const std::string& uri, const std::string& file) {
     critical_section_guard guard(_lock);
-    _server_push_map.insert({uri, file});
+    _server_push_map.emplace(uri, file);
     return *this;
 }
 

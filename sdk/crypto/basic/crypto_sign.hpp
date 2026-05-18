@@ -169,14 +169,24 @@ class crypto_sign_rsa_pss : public crypto_sign {
     virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0);
 };
 
-class crypto_sign_eddsa : public crypto_sign {
+class crypto_sign_digestsign : public crypto_sign {
    public:
-    crypto_sign_eddsa(hash_algorithm_t hashalg = hash_alg_unknown);
+    crypto_sign_digestsign();
+    virtual ~crypto_sign_digestsign();
 
     virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
     virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);
     virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0);
     virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0);
+
+   protected:
+    crypto_kty_t _kty;
+};
+
+class crypto_sign_eddsa : public crypto_sign_digestsign {
+   public:
+    crypto_sign_eddsa();
+    virtual ~crypto_sign_eddsa();
 };
 
 class crypto_sign_dsa : public crypto_sign {
@@ -189,14 +199,16 @@ class crypto_sign_dsa : public crypto_sign {
     virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0);
 };
 
-class crypto_sign_mldsa : public crypto_sign {
+class crypto_sign_mldsa : public crypto_sign_digestsign {
    public:
     crypto_sign_mldsa();
+    virtual ~crypto_sign_mldsa();
+};
 
-    virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
-    virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);
-    virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0);
-    virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0);
+class crypto_sign_slhdsa : public crypto_sign_digestsign {
+   public:
+    crypto_sign_slhdsa();
+    virtual ~crypto_sign_slhdsa();
 };
 
 // not implemented

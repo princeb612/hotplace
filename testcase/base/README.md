@@ -123,7 +123,7 @@ testvector:
         - "string"                          # [mandatory] 0..*
 ````
 
-* regular expression YAML schema
+* floating point YAML schema
 
 ````
 testvector:
@@ -136,4 +136,19 @@ testvector:
         sub: string                         #
         mul: string                         #
         div: string                         #
+````
+
+* aho corasick YAML scheme
+
+````
+testvector:
+  - example: string                         # [mandatory] testcase
+    schema: AHO CORASICK                    # [mandatory] "AHO CORASICK"
+    items:
+      - item: string                        # [mandatory]
+        input: string                       # [mandatory]
+        option: array of option string      # [mandatory] ex. [wildcards, ignorecase]
+                                            #             if wildcards option is included, wildcards such as ?, * can be included.
+        pattern:                            # [mandatory]
+          words: array of range pair        # [mandatory] ex. "words": [[begin1, end1], [begin2, end2], ...]
 ````

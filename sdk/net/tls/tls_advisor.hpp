@@ -129,19 +129,6 @@ extern const tls_cipher_suite_t tls_cipher_suites[];
 extern const size_t sizeof_tls_cipher_suites;
 hash_algorithm_t algof_mac(const tls_cipher_suite_t* info);
 
-struct tls_sig_scheme_t {
-    uint16 code;
-    tls_version_t spec;
-    uint8 flags;
-    crypto_kty_t kty;
-    sig_category_t sigtype;  // sig_category_rsassa_pkcs15, sig_category_ecdsa, sig_category_rsassa_pss, sig_category_eddsa
-    uint32 nid;
-    signature_t sig;  // sig_rs256, ..., sig_es256, ..., sig_ps256, ..., sig_eddsa, sig_sha1, sig_sha256, ...
-    const char* name;
-};
-extern const tls_sig_scheme_t tls_sig_schemes[];
-extern const size_t sizeof_tls_sig_schemes;
-
 declare_tls_resource(quic_packet_type_code, uint8);
 
 class tls_advisor {
@@ -157,9 +144,6 @@ class tls_advisor {
     void enum_cipher_suites(std::function<void(const tls_cipher_suite_t*)> fn);
     bool is_kindof_cbc(uint16 code);
     const hint_digest_t* hintof_digest(uint16 code);
-    const tls_sig_scheme_t* hintof_signature_scheme(uint16 code);
-    const tls_sig_scheme_t* hintof_signature_scheme(const std::string& name);
-    void enum_signature_scheme(std::function<void(const tls_sig_scheme_t*)> func);
     hash_algorithm_t algof_hash(uint16 code);
 
     // https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
@@ -175,8 +159,6 @@ class tls_advisor {
     std::string nameof_kdf_id(uint16 type);                // "HKDF_SHA256", "HKDF_SHA384"
     std::string nameof_psk_key_exchange_mode(uint8 code);  // "psk_ke", "psk_dhe_ke"
     uint8 valueof_psk_key_exchange_mode(const std::string& name);
-    std::string nameof_signature_scheme(uint16 code);
-    uint16 valueof_signature_scheme(const std::string& name);
     std::string nameof_group(uint16 code);
     uint16 valueof_group(const std::string& name);
 
@@ -258,7 +240,13 @@ class tls_advisor {
      *          }
      */
     return_t set_tls_groups(const char* groups);
+    /**
+     * @brief   allow all possible groups
+     */
     return_t set_default_tls_groups();
+    /**
+     * @brief   test group
+     */
     bool test_tls_group(uint16 group);
 
    protected:
@@ -290,8 +278,6 @@ class tls_advisor {
     std::map<uint16, const tls_kdf_id_code_t*> _kdf_id_codes;
     std::map<uint8, const tls_psk_keyexchange_code_t*> _psk_keyexchange_codes;
     std::map<std::string, const tls_psk_keyexchange_code_t*> _psk_keyexchange_names;
-    std::map<uint16, const tls_sig_scheme_t*> _sig_scheme_codes;
-    std::map<std::string, const tls_sig_scheme_t*> _sig_scheme_names;
 
     // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
     std::map<uint16, const tls_compression_alg_code_t*> _compression_alg_codes;

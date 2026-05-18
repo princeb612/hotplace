@@ -17,9 +17,6 @@ enum option_flag_t {
     option_flag_trial = (1 << 1),
     option_flag_keylog = (1 << 2),
     option_flag_content_encoding = (1 << 3),
-    option_flag_cert_rsa = (1 << 4),
-    option_flag_cert_ecdsa = (1 << 5),
-    option_flag_cert_mldsa = (1 << 6),
 };
 struct OPTION : public CMDLINEOPTION {
     int run;
@@ -27,6 +24,7 @@ struct OPTION : public CMDLINEOPTION {
     int port_tls;
     uint32 flags;
     std::string cs;
+    std::string cert;
 
     OPTION() : CMDLINEOPTION(), run(0), port(8080), port_tls(9000), flags(0) {}
 };

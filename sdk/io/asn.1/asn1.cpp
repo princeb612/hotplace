@@ -40,7 +40,7 @@ asn1& asn1::add_type(asn1_object* item) {
         _types.push_back(item);
         const std::string& name = item->get_name();
         if (false == name.empty()) {
-            _dictionary.insert({name, item});
+            _dictionary.emplace(name, item);
         }
     }
     return *this;

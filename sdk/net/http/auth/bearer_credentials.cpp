@@ -17,7 +17,7 @@ bearer_credentials::bearer_credentials() {}
 
 bearer_credentials& bearer_credentials::add(const std::string& client_id, const std::string& access_token) {
     critical_section_guard guard(_lock);
-    _bearer_credential.insert(std::make_pair(access_token, client_id));
+    _bearer_credential.emplace(access_token, client_id);
     return *this;
 }
 

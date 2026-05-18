@@ -23,7 +23,7 @@ http2_frame_settings::http2_frame_settings(const http2_frame_settings& other) : 
 http2_frame_settings::~http2_frame_settings() {}
 
 http2_frame_settings& http2_frame_settings::add(uint16 id, uint32 value) {
-    h2_setting_map_pib_t pib = _settings.insert(std::make_pair(id, value));
+    h2_setting_map_pib_t pib = _settings.emplace(id, value);
     if (false == pib.second) {
         pib.first->second = value;
     }

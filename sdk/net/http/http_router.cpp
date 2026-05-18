@@ -48,10 +48,10 @@ http_router& http_router::add(const std::string& uri, http_request_handler_t han
 
     http_router_t router;
     router.handler = handler;
-    _handler_map.insert(std::make_pair(uri, router));
+    _handler_map.emplace(uri, router);
 
     if (auth_provider) {
-        authenticate_map_pib_t pib = _authenticate_map.insert(std::make_pair(uri, auth_provider));
+        authenticate_map_pib_t pib = _authenticate_map.emplace(uri, auth_provider);
         if (upref) {
             if (pib.second) {
                 auth_provider->addref();
@@ -67,10 +67,10 @@ http_router& http_router::add(const std::string& uri, http_request_function_t ha
 
     http_router_t router;
     router.stdfunc = handler;
-    _handler_map.insert(std::make_pair(uri, router));
+    _handler_map.emplace(uri, router);
 
     if (auth_provider) {
-        authenticate_map_pib_t pib = _authenticate_map.insert(std::make_pair(uri, auth_provider));
+        authenticate_map_pib_t pib = _authenticate_map.emplace(uri, auth_provider);
         if (upref) {
             if (pib.second) {
                 auth_provider->addref();
@@ -85,7 +85,7 @@ http_router& http_router::add(int status_code, http_request_handler_t handler) {
     critical_section_guard guard(_lock);
     http_router_t router;
     router.handler = handler;
-    _status_handler_map.insert(std::make_pair(status_code, router));
+    _status_handler_map.emplace(status_code, router);
     return *this;
 }
 
@@ -93,7 +93,7 @@ http_router& http_router::add(int status_code, http_request_function_t handler) 
     critical_section_guard guard(_lock);
     http_router_t router;
     router.stdfunc = handler;
-    _status_handler_map.insert(std::make_pair(status_code, router));
+    _status_handler_map.emplace(status_code, router);
     return *this;
 }
 

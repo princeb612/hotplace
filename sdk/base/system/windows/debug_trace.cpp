@@ -393,7 +393,7 @@ return_t debug_trace::trace(debug_trace_context_t* handle, CONTEXT* rtlcontext, 
             } else {
                 BOOL bModuleInfoRet = context->mssdk.lpfnSymGetModuleInfo(process_handle, frame.AddrPC.Offset, &Module);
                 if (TRUE == bModuleInfoRet) {
-                    modulelist.insert(std::make_pair(Module.BaseOfImage, Module));
+                    modulelist.emplace(Module.BaseOfImage, Module);
                     stream->printf(constexpr_moduleinfo, base_name(Module.ImageName).c_str(), Module.BaseOfImage, frame.AddrPC.Offset - Module.BaseOfImage);
                 }
 

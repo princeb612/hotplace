@@ -21,7 +21,7 @@ digest_credentials::digest_credentials() {}
 
 digest_credentials& digest_credentials::add(const std::string& username, const std::string& password) {
     critical_section_guard guard(_lock);
-    _digest_access_credential.insert(std::make_pair(username, password));
+    _digest_access_credential.emplace(username, password);
     return *this;
 }
 
@@ -30,8 +30,8 @@ digest_credentials& digest_credentials::add(const std::string& realm, const std:
     dgst.add(username).add(":").add(realm).digest(algorithm);
 
     critical_section_guard guard(_lock);
-    _digest_access_credential.insert(std::make_pair(username, password));
-    _digest_access_userhash.insert(std::make_pair(dgst.get(), username));
+    _digest_access_credential.emplace(username, password);
+    _digest_access_userhash.emplace(dgst.get(), username);
     return *this;
 }
 

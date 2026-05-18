@@ -127,18 +127,28 @@ class openssl_sign {
     return_t sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, binary_t& signature, int saltlen);
     return_t sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
     return_t sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, binary_t& signature, int saltlen);
+
     /*
-     * @brief   sign
+     * @brief   sign (EdDSA, MLDSA, SLHDSA)
      * @param   const EVP_PKEY* pkey [in]
-     * @param   hash_algorithm_t hashalg [in]
      * @param   const binary_t& input [in]
      * @param   const binary_t& signature [in]
-     * @desc    EdDSA
+     * @param   uint32 flags [inopt] reserved
+     * @desc    intrinsic hash (includes shake-256)
      */
-    return_t sign_eddsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, binary_t& signature, uint32 flags = 0);
-    return_t sign_eddsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
+    return_t sign_digestsign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0);
+    return_t sign_digestsign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
     /*
-     * @brief   sign
+     * @brief   sign EdDSA
+     * @param   const EVP_PKEY* pkey [in]
+     * @param   const binary_t& input [in]
+     * @param   const binary_t& signature [in]
+     * @desc    intrinsic hash (includes shake-256)
+     */
+    return_t sign_eddsa(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0);
+    return_t sign_eddsa(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
+    /*
+     * @brief   sign MLDSA
      * @param   const EVP_PKEY* pkey [in]
      * @param   const binary_t& input [in]
      * @param   const binary_t& signature [in]
@@ -146,6 +156,15 @@ class openssl_sign {
      */
     return_t sign_mldsa(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0);
     return_t sign_mldsa(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
+    /*
+     * @brief   sign SLHDSA
+     * @param   const EVP_PKEY* pkey [in]
+     * @param   const binary_t& input [in]
+     * @param   const binary_t& signature [in]
+     * @desc    intrinsic hash (includes shake-256)
+     */
+    return_t sign_slhdsa(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0);
+    return_t sign_slhdsa(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
     /*
      * @brief   verify
      * @param   const EVP_PKEY* pkey [in]
@@ -200,23 +219,43 @@ class openssl_sign {
     return_t verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);
     return_t verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature, int saltlen);
     /*
-     * @brief   verify
+     * @brief   verify (EdDSA, MLDSA, SLHDSA)
+     * @param   const EVP_PKEY* pkey [in]
+     * @param   const binary_t& input [in]
+     * @param   const binary_t& signature [in]
+     * @param   uint32 flags [inopt] reserved
+     * @desc    intrinsic hash (includes shake-256)
+     */
+    return_t verify_digestsign(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0);
+    return_t verify_digestsign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);
+    /*
+     * @brief   verify (EdDSA)
      * @param   const EVP_PKEY* pkey [in]
      * @param   hash_algorithm_t hashalg [in]
      * @param   const binary_t& input [in]
      * @param   const binary_t& signature [in]
-     * @desc    EdDSA
+     * @desc    intrinsic hash (includes shake-256)
      */
-    return_t verify_eddsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const binary_t& input, const binary_t& signature, uint32 flags = 0);
-    return_t verify_eddsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);
+    return_t verify_eddsa(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0);
+    return_t verify_eddsa(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);
     /*
-     * @brief   verify
+     * @brief   verify (MLDSA)
      * @param   const EVP_PKEY* pkey [in]
      * @param   const binary_t& input [in]
      * @param   const binary_t& signature [in]
+     * @desc    intrinsic hash (includes shake-256)
      */
     return_t verify_mldsa(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0);
     return_t verify_mldsa(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);
+    /*
+     * @brief   verify (SLHDSA)
+     * @param   const EVP_PKEY* pkey [in]
+     * @param   const binary_t& input [in]
+     * @param   const binary_t& signature [in]
+     * @desc    intrinsic hash (includes shake-256)
+     */
+    return_t verify_slhdsa(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0);
+    return_t verify_slhdsa(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);
 
     /**
      * @brief sign

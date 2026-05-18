@@ -123,6 +123,7 @@ int main(int argc, char** argv) {
         testcase_mldsa();
         testcase_rsassa();
         testcase_testvector_rsassa();
+        testcase_slhdsa();
         testcase_x509();
     }
     __finally2 { openssl_cleanup(); }

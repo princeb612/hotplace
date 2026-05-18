@@ -17,6 +17,7 @@
 #include <hotplace/sdk/base/system/error.hpp>
 #include <hotplace/sdk/base/types.hpp>
 #include <limits>
+#include <type_traits>  // use decay_t to remove const, volatile, reference(&)
 
 namespace hotplace {
 
@@ -48,6 +49,20 @@ struct t_range_t {
 };
 
 typedef t_range_t<size_t> range_t;
+
+// @refer   Gemini
+struct universal_pairhash {
+    template <typename T1, typename T2>
+    std::size_t operator()(const std::pair<T1, T2>& p) const {
+        using P1 = std::decay_t<T1>;
+        using P2 = std::decay_t<T2>;
+
+        auto h1 = std::hash<P1>{}(p.first);
+        auto h2 = std::hash<P2>{}(p.second);
+
+        return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
+    }
+};
 
 /**
  * @sample
@@ -113,5 +128,19 @@ class t_sampling_range {
 };
 
 }  // namespace hotplace
+
+namespace std {
+
+// @refer   Gemini
+template <>
+struct hash<hotplace::range_t> {
+    std::size_t operator()(const hotplace::range_t& other) const {
+        std::size_t h1 = std::hash<size_t>{}(other.begin);
+        std::size_t h2 = std::hash<size_t>{}(other.end);
+        return h1 ^ (h2 + 0x9e3779b9);
+    }
+};
+
+}  // namespace std
 
 #endif

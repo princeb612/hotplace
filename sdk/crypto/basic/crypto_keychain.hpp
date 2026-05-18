@@ -559,9 +559,13 @@ class crypto_keychain {
      * @param   uint32 nid [in]
      *              NID_ML_KEM_512, NID_ML_KEM_768, NID_ML_KEM_1024
      *              NID_ML_DSA_44, NID_ML_DSA_65, NID_ML_DSA_87
+     *              NID_SLH_DSA_SHA2_128s, NID_SLH_DSA_SHA2_128f, NID_SLH_DSA_SHA2_192s, NID_SLH_DSA_SHA2_192f, NID_SLH_DSA_SHA2_256s, NID_SLH_DSA_SHA2_256f
+     *              NID_SLH_DSA_SHAKE_128s, NID_SLH_DSA_SHAKE_128f, NID_SLH_DSA_SHAKE_192s, NID_SLH_DSA_SHAKE_192f, NID_SLH_DSA_SHAKE_256s, NID_SLH_DSA_SHAKE_256f
      * @param   const char* name [in]
      *              ML-KEM-512, ML-KEM-768, ML-KEM-1024
      *              ML-DSA-44, ML-DSA-65, ML-DSA-87
+     *              SLH-DSA-SHA2-128s, SLH-DSA-SHA2-128f, SLH-DSA-SHA2-192s, SLH-DSA-SHA2-192f, SLH-DSA-SHA2-256s, SLH-DSA-SHA2-256f
+     *              SLH-DSA-SHAKE-128s, SLH-DSA-SHAKE-128f, SLH-DSA-SHAKE-192s, SLH-DSA-SHAKE-192f, SLH-DSA-SHAKE-256s, SLH-DSA-SHAKE-256f
      * @pram    encoding_t fmt [in]
      *              encoding_base64
      *              encoding_base64url

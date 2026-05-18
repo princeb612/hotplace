@@ -14,13 +14,13 @@ void test_loglevel() {
     _test_case.begin("loglevel");
 
     std::map<loglevel_t, std::string> table;
-    table.insert({loglevel_trace, "trace"});
-    table.insert({loglevel_debug, "debug"});
-    table.insert({loglevel_info, "info"});
-    table.insert({loglevel_warn, "warn"});
-    table.insert({loglevel_error, "error"});
-    table.insert({loglevel_fatal, "fatal"});
-    table.insert({loglevel_notice, "notice"});
+    table.emplace(loglevel_trace, "trace");
+    table.emplace(loglevel_debug, "debug");
+    table.emplace(loglevel_info, "info");
+    table.emplace(loglevel_warn, "warn");
+    table.emplace(loglevel_error, "error");
+    table.emplace(loglevel_fatal, "fatal");
+    table.emplace(loglevel_notice, "notice");
 
     std::list<loglevel_t> cases;
     for (auto lvl : table) {

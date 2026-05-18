@@ -61,15 +61,15 @@ void socket_advisor::build() {
         if (_family.empty()) {
             for (size_t i = 0; i < RTL_NUMBER_OF(socket_resource_family); ++i) {
                 const socket_resource& item = socket_resource_family[i];
-                _family.insert({item.code, item.desc});
+                _family.emplace(item.code, item.desc);
             }
             for (size_t i = 0; i < RTL_NUMBER_OF(socket_resource_type); ++i) {
                 const socket_resource& item = socket_resource_type[i];
-                _type.insert({item.code, item.desc});
+                _type.emplace(item.code, item.desc);
             }
             for (size_t i = 0; i < RTL_NUMBER_OF(socket_resource_protocol); ++i) {
                 const socket_resource& item = socket_resource_protocol[i];
-                _protocol.insert({item.code, item.desc});
+                _protocol.emplace(item.code, item.desc);
             }
         }
     }

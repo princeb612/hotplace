@@ -116,14 +116,14 @@ return_t quic_packet_initial::do_read(tls_direction_t dir, const byte_t* stream,
             } else {
                 if (false == get_dcid().empty()) {
                     secrets.assign(tls_context_server_cid, get_dcid());
-                    tracker.insert({0, get_dcid()});
+                    tracker.emplace(0, get_dcid());
                 }
             }
         } else if (from_server == dir) {
             if (false == get_scid().empty()) {
                 if (secrets.get(tls_context_server_cid).empty()) {
                     secrets.assign(tls_context_server_cid, get_scid());
-                    tracker.insert({0, get_scid()});
+                    tracker.emplace(0, get_scid());
                 }
             }
             if (false == get_dcid().empty()) {

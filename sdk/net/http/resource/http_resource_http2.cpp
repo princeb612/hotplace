@@ -18,51 +18,51 @@ namespace net {
 
 void http_resource::doload_resources_h2() {
     if (_h2_frame_names.empty()) {
-        _h2_frame_names.insert(std::make_pair(h2_frame_t::h2_frame_data, "DATA"));
-        _h2_frame_names.insert(std::make_pair(h2_frame_t::h2_frame_headers, "HEADERS"));
-        _h2_frame_names.insert(std::make_pair(h2_frame_t::h2_frame_priority, "PRIORITY"));
-        _h2_frame_names.insert(std::make_pair(h2_frame_t::h2_frame_rst_stream, "RST_STREAM"));
-        _h2_frame_names.insert(std::make_pair(h2_frame_t::h2_frame_settings, "SETTINGS"));
-        _h2_frame_names.insert(std::make_pair(h2_frame_t::h2_frame_push_promise, "PUSH_PROMISE"));
-        _h2_frame_names.insert(std::make_pair(h2_frame_t::h2_frame_ping, "PING"));
-        _h2_frame_names.insert(std::make_pair(h2_frame_t::h2_frame_goaway, "GOAWAY"));
-        _h2_frame_names.insert(std::make_pair(h2_frame_t::h2_frame_window_update, "WINDOW_UPDATE"));
-        _h2_frame_names.insert(std::make_pair(h2_frame_t::h2_frame_continuation, "CONTINUATION"));
-        _h2_frame_names.insert(std::make_pair(h2_frame_t::h2_frame_altsvc, "ALTSVC"));
+        _h2_frame_names.emplace(h2_frame_t::h2_frame_data, "DATA");
+        _h2_frame_names.emplace(h2_frame_t::h2_frame_headers, "HEADERS");
+        _h2_frame_names.emplace(h2_frame_t::h2_frame_priority, "PRIORITY");
+        _h2_frame_names.emplace(h2_frame_t::h2_frame_rst_stream, "RST_STREAM");
+        _h2_frame_names.emplace(h2_frame_t::h2_frame_settings, "SETTINGS");
+        _h2_frame_names.emplace(h2_frame_t::h2_frame_push_promise, "PUSH_PROMISE");
+        _h2_frame_names.emplace(h2_frame_t::h2_frame_ping, "PING");
+        _h2_frame_names.emplace(h2_frame_t::h2_frame_goaway, "GOAWAY");
+        _h2_frame_names.emplace(h2_frame_t::h2_frame_window_update, "WINDOW_UPDATE");
+        _h2_frame_names.emplace(h2_frame_t::h2_frame_continuation, "CONTINUATION");
+        _h2_frame_names.emplace(h2_frame_t::h2_frame_altsvc, "ALTSVC");
     }
 
     if (_h2_frame_flags.empty()) {
-        _h2_frame_flags.insert(std::make_pair(h2_flag_t::h2_flag_end_stream, "END_STREAM"));
-        _h2_frame_flags.insert(std::make_pair(h2_flag_t::h2_flag_end_headers, "END_HEADERS"));
-        _h2_frame_flags.insert(std::make_pair(h2_flag_t::h2_flag_padded, "PADDED"));
-        _h2_frame_flags.insert(std::make_pair(h2_flag_t::h2_flag_priority, "PRIORITY"));
+        _h2_frame_flags.emplace(h2_flag_t::h2_flag_end_stream, "END_STREAM");
+        _h2_frame_flags.emplace(h2_flag_t::h2_flag_end_headers, "END_HEADERS");
+        _h2_frame_flags.emplace(h2_flag_t::h2_flag_padded, "PADDED");
+        _h2_frame_flags.emplace(h2_flag_t::h2_flag_priority, "PRIORITY");
     }
     if (_h2_frame_flags2.empty()) {
-        _h2_frame_flags2.insert(std::make_pair(h2_flag_t::h2_flag_ack, "ACK"));
+        _h2_frame_flags2.emplace(h2_flag_t::h2_flag_ack, "ACK");
     }
     if (_h2_frame_settings.empty()) {
-        _h2_frame_settings.insert({h2_settings_header_table_size, "SETTINGS_HEADER_TABLE_SIZE"});
-        _h2_frame_settings.insert({h2_settings_enable_push, "SETTINGS_ENABLE_PUSH"});
-        _h2_frame_settings.insert({h2_settings_max_concurrent_streams, "SETTINGS_MAX_CONCURRENT_STREAMS"});
-        _h2_frame_settings.insert({h2_settings_initial_window_size, "SETTINGS_INITIAL_WINDOW_SIZE"});
-        _h2_frame_settings.insert({h2_settings_max_frame_size, "SETTINGS_MAX_FRAME_SIZE"});
-        _h2_frame_settings.insert({h2_settings_max_header_list_size, "SETTINGS_MAX_HEADER_LIST_SIZE"});
+        _h2_frame_settings.emplace(h2_settings_header_table_size, "SETTINGS_HEADER_TABLE_SIZE");
+        _h2_frame_settings.emplace(h2_settings_enable_push, "SETTINGS_ENABLE_PUSH");
+        _h2_frame_settings.emplace(h2_settings_max_concurrent_streams, "SETTINGS_MAX_CONCURRENT_STREAMS");
+        _h2_frame_settings.emplace(h2_settings_initial_window_size, "SETTINGS_INITIAL_WINDOW_SIZE");
+        _h2_frame_settings.emplace(h2_settings_max_frame_size, "SETTINGS_MAX_FRAME_SIZE");
+        _h2_frame_settings.emplace(h2_settings_max_header_list_size, "SETTINGS_MAX_HEADER_LIST_SIZE");
     }
     if (_h2_error_codes.empty()) {
-        _h2_error_codes.insert({h2_no_error, "no error"});
-        _h2_error_codes.insert({h2_protocol_error, "protocol error detected"});
-        _h2_error_codes.insert({h2_internal_error, "internal error"});
-        _h2_error_codes.insert({h2_flow_control_error, "flow-control limits exceeded"});
-        _h2_error_codes.insert({h2_settings_timeout, "settings not acknowledged"});
-        _h2_error_codes.insert({h2_stream_closed, "frame received for closed stream"});
-        _h2_error_codes.insert({h2_frame_size_error, "frame size incorrect"});
-        _h2_error_codes.insert({h2_refused_stream, "stream not processed"});
-        _h2_error_codes.insert({h2_cancel, "stream cancelled"});
-        _h2_error_codes.insert({h2_compression_error, "compression state not updated"});
-        _h2_error_codes.insert({h2_connect_error, "TCP connection error for CONNECT method"});
-        _h2_error_codes.insert({h2_enhance_your_calm, "processing capacity exceeded"});
-        _h2_error_codes.insert({h2_inadequate_security, "negotiated TLS parameters not acceptable"});
-        _h2_error_codes.insert({h2_http_1_1_required, "use HTTP/1.1 for the request"});
+        _h2_error_codes.emplace(h2_no_error, "no error");
+        _h2_error_codes.emplace(h2_protocol_error, "protocol error detected");
+        _h2_error_codes.emplace(h2_internal_error, "internal error");
+        _h2_error_codes.emplace(h2_flow_control_error, "flow-control limits exceeded");
+        _h2_error_codes.emplace(h2_settings_timeout, "settings not acknowledged");
+        _h2_error_codes.emplace(h2_stream_closed, "frame received for closed stream");
+        _h2_error_codes.emplace(h2_frame_size_error, "frame size incorrect");
+        _h2_error_codes.emplace(h2_refused_stream, "stream not processed");
+        _h2_error_codes.emplace(h2_cancel, "stream cancelled");
+        _h2_error_codes.emplace(h2_compression_error, "compression state not updated");
+        _h2_error_codes.emplace(h2_connect_error, "TCP connection error for CONNECT method");
+        _h2_error_codes.emplace(h2_enhance_your_calm, "processing capacity exceeded");
+        _h2_error_codes.emplace(h2_inadequate_security, "negotiated TLS parameters not acceptable");
+        _h2_error_codes.emplace(h2_http_1_1_required, "use HTTP/1.1 for the request");
     }
 }
 

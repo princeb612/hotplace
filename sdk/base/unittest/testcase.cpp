@@ -263,7 +263,7 @@ void test_case::vtest(return_t result, const char* test_function, const char* me
         topic = _testcase_per_threads[tid];
 
         test_status_t clean_status;
-        unittest_map_pib_t pib = _test_map.insert(std::make_pair(topic, clean_status));
+        unittest_map_pib_t pib = _test_map.emplace(topic, clean_status);
         unittest_map_t::iterator it = pib.first;
         test_status_t& status = it->second;
 

@@ -73,14 +73,14 @@ void asn1_resource::doload_resource() {
             {asn1_type_date, "DATE"},
         };
         for (auto item : _types) {
-            _type_id.insert({item.type, item.type_name});
-            _type_rid.insert({item.type_name, item.type});
+            _type_id.emplace(item.type, item.type_name);
+            _type_rid.emplace(item.type_name, item.type);
         }
 
-        _class_id.insert({asn1_class_universal, "UNIVERSAL"});
-        _class_id.insert({asn1_class_application, "APPLICATION"});
-        _class_id.insert({asn1_class_private, "PRIVATE"});
-        // _class_id.insert({asn1_class_empty, ""});
+        _class_id.emplace(asn1_class_universal, "UNIVERSAL");
+        _class_id.emplace(asn1_class_application, "APPLICATION");
+        _class_id.emplace(asn1_class_private, "PRIVATE");
+        // _class_id.emplace(asn1_class_empty, "");
     }
 }  // namespace io
 

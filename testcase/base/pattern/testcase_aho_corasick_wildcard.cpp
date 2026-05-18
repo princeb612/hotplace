@@ -496,8 +496,6 @@ void test_aho_corasick_ignorecase() {
         },
     };
 
-    // const OPTION& option = _cmdline->value();
-
     for (auto entry : _table) {
         t_aho_corasick_wildcard<char> ac(memberof_tolower, '?', '*');
         std::multimap<range_t, size_t> result;

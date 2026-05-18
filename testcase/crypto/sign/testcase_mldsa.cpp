@@ -26,7 +26,10 @@ void test_mldsa() {
         binary_t sig;
         auto pkey_mldsa = key.find(kid);
         ret = sign.sign_mldsa(pkey_mldsa, (byte_t*)sample, strlen(sample), sig);
-        _logger->hdump("signature", sig, 16, 3);
+        _logger->writeln([&](basic_stream& bs) -> void {
+            bs.println("signature");
+            bs << base16_encode(sig);
+        });
         _test_case.test(ret, __FUNCTION__, "sign %s size %zi", kid, sig.size());
         ret = sign.verify_mldsa(pkey_mldsa, (byte_t*)sample, strlen(sample), sig);
         _test_case.test(ret, __FUNCTION__, "verify %s", kid);

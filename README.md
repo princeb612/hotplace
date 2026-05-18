@@ -179,6 +179,10 @@
   * RFC 8422 Elliptic Curve Cryptography (ECC) Cipher Suites for Transport Layer Security (TLS) Versions 1.2 and Earlier
   * RFC 9325 Recommendations for Secure Use of Transport Layer Security (TLS) and Datagram Transport Layer Security (DTLS)
 
+* SLH-DSA
+  * [RFC 9909 Internet X.509 Public Key Infrastructure -- Algorithm Identifiers for the Stateless Hash-Based Digital Signature Algorithm (SLH-DSA)](https://www.rfc-editor.org/rfc/rfc9909.txt)
+  * [Use of SLH-DSA in TLS 1.3](https://www.ietf.org/archive/id/draft-reddy-tls-slhdsa-02.txt)
+
 * ASN.1
   * ITU-T X.680-X.699
     * [X.680-X.693 : Information Technology - Abstract Syntax Notation One (ASN.1) & ASN.1 encoding rules](https://www.itu.int/rec/T-REC-X.680-X.693-202102-I/en)

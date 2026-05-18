@@ -44,11 +44,11 @@ class crypto_advisor {
 
     ~crypto_advisor();
 
-    // TOBE integration
     /**
      * @brief   hint
      * @param   const EVP_PKEY* pkey [in]
      * @param   hint_advisor_t& hint [out]
+     * @sa      ktyof_evp_pkey
      */
     return_t hintof_pkey(const EVP_PKEY* pkey, hint_advisor_t& hint);
     return_t hintof_name(const char* name, hint_advisor_t& hint);
@@ -311,6 +311,8 @@ class crypto_advisor {
      */
     const hint_sigscheme_t* hintof_sigscheme(uint16 scheme);
     const hint_sigscheme_t* hintof_sig_nid(uint32 nid);
+    const hint_sigscheme_t* hintof_sigscheme(const char* scheme);
+    const hint_sigscheme_t* hintof_sigscheme(const std::string& scheme);
 
     return_t for_each_sigscheme(std::function<void(tls_sigscheme_t, uint32)> f);
     return_t for_each_sigscheme(std::function<void(const hint_sigscheme_t*)> f);
@@ -326,6 +328,8 @@ class crypto_advisor {
      */
     return_t nameof_kty(crypto_kty_t kty, std::string& name);
     const char* nameof_kty(crypto_kty_t kty);
+    crypto_kty_t ktyof_ossl_nid(uint32 nid);
+    return_t ktyof_evp_pkey(const EVP_PKEY* pkey, crypto_kty_t& kty, uint32& nid);
 
     ///////////////////////////////////////////////////////////////////////////
     // JOSE
@@ -592,14 +596,14 @@ class crypto_advisor {
      */
     bool is_kindof(const EVP_PKEY* pkey, cose_alg_t alg);
 
-    cose_kty_t ktyof(crypto_kty_t kty);
+    cose_kty_t cose_ktyof(crypto_kty_t kty);
     crypto_kty_t ktyof(cose_kty_t kty);
 
     crypt_category_t categoryof(cose_alg_t alg);
     signature_t sigof(cose_alg_t sig);
 
-    cose_ec_curve_t curveof(uint32 nid);
-    uint32 curveof(cose_ec_curve_t curve);
+    cose_ec_curve_t cose_curveof(uint32 nid);
+    uint32 nidof(cose_ec_curve_t curve);
 
     ///////////////////////////////////////////////////////////////////////////
     // TLS
@@ -835,7 +839,9 @@ class crypto_advisor {
     typedef std::map<uint16, const hint_sigscheme_t*> hint_sigscheme_map_t;
     hint_sigscheme_map_t _hint_sigscheme_map;
     typedef std::map<uint32, const hint_sigscheme_t*> hint_sigscheme_nid_map_t;
+    typedef std::map<std::string, const hint_sigscheme_t*> hint_sigscheme_name_map_t;
     hint_sigscheme_nid_map_t _hint_sigscheme_nid_map;
+    hint_sigscheme_name_map_t _hint_sigscheme_name_map;
     ///////////////////////////////////////////////////////////////////////////
     // key
     ///////////////////////////////////////////////////////////////////////////

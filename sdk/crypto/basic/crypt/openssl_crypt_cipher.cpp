@@ -152,8 +152,8 @@ return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorit
         temp_iv.resize(internal_size_iv);
         memcpy(temp_iv.data(), iv, (size_iv > internal_size_iv ? internal_size_iv : size_iv));
 
-        context->datamap.insert(std::make_pair(crypt_item_t::item_cek, temp_key));
-        context->datamap.insert(std::make_pair(crypt_item_t::item_iv, temp_iv));
+        context->datamap.emplace(crypt_item_t::item_cek, temp_key);
+        context->datamap.emplace(crypt_item_t::item_iv, temp_iv);
 
         /* key, iv */
         /* encrypt and decrypt re-initialize iv */

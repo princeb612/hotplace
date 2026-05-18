@@ -489,14 +489,14 @@ void test_asn1_object() {
                              desc->size, (unsigned)desc->size, desc->p);
         };
         std::map<uint32, asn1_type_t> typemap;
-        typemap.insert({token_bool, asn1_type_boolean});
-        typemap.insert({token_int, asn1_type_integer});
-        typemap.insert({token_bitstring, asn1_type_bitstring});
-        typemap.insert({token_octstring, asn1_type_octstring});
-        typemap.insert({token_null, asn1_type_null});
-        typemap.insert({token_real, asn1_type_real});
-        typemap.insert({token_ia5string, asn1_type_ia5string});
-        typemap.insert({token_visiblestring, asn1_type_visiblestring});
+        typemap.emplace(token_bool, asn1_type_boolean);
+        typemap.emplace(token_int, asn1_type_integer);
+        typemap.emplace(token_bitstring, asn1_type_bitstring);
+        typemap.emplace(token_octstring, asn1_type_octstring);
+        typemap.emplace(token_null, asn1_type_null);
+        typemap.emplace(token_real, asn1_type_real);
+        typemap.emplace(token_ia5string, asn1_type_ia5string);
+        typemap.emplace(token_visiblestring, asn1_type_visiblestring);
 
         for (auto& pair : result) {
             // pair(pos_occurrence, id_pattern)
