@@ -32,7 +32,7 @@
     * CBOR
 
 * details
-  * Revision 1000
+  * Revision 1001
   * Revision 999
     * SLHDSA
   * Revision 998

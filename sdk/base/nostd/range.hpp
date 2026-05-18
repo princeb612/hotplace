@@ -54,8 +54,13 @@ typedef t_range_t<size_t> range_t;
 struct universal_pairhash {
     template <typename T1, typename T2>
     std::size_t operator()(const std::pair<T1, T2>& p) const {
+#if __cplusplus >= 201402L  // c++14
         using P1 = std::decay_t<T1>;
         using P2 = std::decay_t<T2>;
+#else
+        using P1 = std::decay<T1>;
+        using P2 = std::decay<T2>;
+#endif
 
         auto h1 = std::hash<P1>{}(p.first);
         auto h2 = std::hash<P2>{}(p.second);
