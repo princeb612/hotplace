@@ -407,8 +407,7 @@ void test_aho_corasick_wildcard() {
     // const OPTION& option = _cmdline->value();
 
     for (auto entry : _table) {
-        // t_aho_corasick<char> ac(memberof_defhandler<char>);
-        t_aho_corasick_wildcard<char> ac(memberof_defhandler<char>, '?', '*');
+        t_aho_corasick_wildcard<char> ac('?', '*');
         std::multimap<range_t, size_t> result;
         std::multimap<range_t, size_t> expect;
 
@@ -433,7 +432,9 @@ void test_aho_corasick_wildcard() {
     }
 }
 
-char memberof_tolower(const char* source, size_t idx) { return source ? std::tolower(source[idx]) : char(); }
+struct memberof_tolower {
+    char operator()(const char* source, size_t idx) const { return source ? std::tolower(source[idx]) : char(); }
+};
 
 void test_aho_corasick_ignorecase() {
     _test_case.begin("aho_corasick + wildcards + ignore case");
@@ -497,7 +498,7 @@ void test_aho_corasick_ignorecase() {
     };
 
     for (auto entry : _table) {
-        t_aho_corasick_wildcard<char> ac(memberof_tolower, '?', '*');
+        t_aho_corasick_wildcard<char, char, memberof_tolower> ac('?', '*');
         std::multimap<range_t, size_t> result;
         std::multimap<range_t, size_t> expect;
 

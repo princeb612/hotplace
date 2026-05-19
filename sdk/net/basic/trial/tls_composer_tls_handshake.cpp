@@ -16,6 +16,7 @@
 #include <hotplace/sdk/net/tls/dtls_record_publisher.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake_hello_verify_request.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record.hpp>
+#include <hotplace/sdk/net/tls/tls/record/tls_record_alert.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record_builder.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_records.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>

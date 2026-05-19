@@ -6,6 +6,8 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2024.07.22   Soo Han, Kim        study (codename.hotplace Revision 554)
+ * 2026.05.19   Soo Han, Kim        replace std::function with functor (codename.hotplace Revision 1003)
  *
  */
 
@@ -57,14 +59,10 @@ namespace hotplace {
  *          test = wild.match("baaabab", 7, "*****ba*****ab", 14); // true
  *          test = wild.match("baaabab", 7, "ba?aba?", 7); // true
  */
-template <typename BT = char, typename T = BT>
+template <typename BT = char, typename T = BT, typename memberof_t = memberof_defhandler<BT, T>>
 class t_wildcards {
    public:
-    typedef typename std::function<BT(const T* source, size_t idx)> memberof_t;
-    typedef typename std::function<int(const BT& t)> kindof_t;
-
-    t_wildcards(const BT& wild_single, const BT& wild_any, memberof_t memberof = memberof_defhandler<BT, T>)
-        : _wild_single(wild_single), _wild_any(wild_any), _memberof(memberof) {}
+    t_wildcards(const BT& wild_single, const BT& wild_any, memberof_t memberof = memberof_t()) : _wild_single(wild_single), _wild_any(wild_any), _memberof(memberof) {}
 
     bool match(const std::vector<T>& source, const std::vector<T>& pattern) { return match(source.data(), source.size(), pattern.data(), pattern.size()); }
     bool match(const T* source, size_t n, const T* pattern, size_t m) {

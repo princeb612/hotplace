@@ -152,3 +152,16 @@ testvector:
         pattern:                            # [mandatory]
           words: array of range pair        # [mandatory] ex. "words": [[begin1, end1], [begin2, end2], ...]
 ````
+
+* KMP YAML scheme
+
+````
+testvector:
+  - example: string                         # [mandatory] testcase
+    schema: KMP                             # [mandatory] "KMP"
+    items:
+      - item: string                        # [mandatory]
+        pattern: string                     # [mandatory]
+        match: string                       # [mandatory]
+          words: array of occurrence        # [mandatory] ex. "words": [pos1, pos2, ...]
+````

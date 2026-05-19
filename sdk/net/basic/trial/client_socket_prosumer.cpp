@@ -378,10 +378,7 @@ return_t client_socket_prosumer::do_consume(basic_stream& stream, sockaddr_stora
     return ret;
 }
 
-return_t client_socket_prosumer::do_handshake() {
-    return_t ret = errorcode_t::success;
-    return ret;
-}
+return_t client_socket_prosumer::do_handshake() { return errorcode_t::success; }
 
 return_t client_socket_prosumer::do_read(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen) {
     return_t ret = errorcode_t::success;

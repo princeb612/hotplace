@@ -53,6 +53,7 @@ void testcase_aho_corasick();
 void testcase_aho_corasick_wildcard();
 void testcase_testvector_ahocorasick();
 void testcase_kmp();
+void testcase_testvector_kmp();
 void testcase_suffixtree();
 void testcase_testvector_regex();
 void testcase_trie();

@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 
+#include <hotplace/sdk/base/nostd/template.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/io/stream/file_stream.hpp>
 #include <hotplace/sdk/io/string/string.hpp>

@@ -494,10 +494,14 @@ void tls_record::operator<<(tls_handshake* handshake) {
     }
 }
 
-tls_record& tls_record::add(tls_hs_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func, bool upref) {
-    // do nothing
+tls_record& tls_record::add(tls_handshake* handshake) {
+    *this << handshake;
     return *this;
 }
+
+tls_record& tls_record::add(tls_content_type_t type, tls_session* session, std::function<return_t(tls_record*)> func, bool upref) { return *this; }
+
+tls_record& tls_record::add(tls_hs_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func, bool upref) { return *this; }
 
 void tls_record::addref() { _shared.addref(); }
 

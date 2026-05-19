@@ -65,10 +65,7 @@ return_t trial_tls_server_socket::tls_accept(socket_context_t** handle, socket_t
 
 return_t trial_tls_server_socket::tls_accept_fails(socket_t socket) { return close_socket(socket, true, 0); }
 
-return_t trial_tls_server_socket::tls_stop_accept() {
-    return_t ret = errorcode_t::success;
-    return ret;
-}
+return_t trial_tls_server_socket::tls_stop_accept() { return errorcode_t::success; }
 
 return_t trial_tls_server_socket::read(socket_context_t* handle, int mode, char* ptr_data, size_t size_data, size_t* cbread) {
     return_t ret = errorcode_t::success;

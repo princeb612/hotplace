@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   testcase_mldsa.cpp
+ * @file   testcase_slhdsa.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *

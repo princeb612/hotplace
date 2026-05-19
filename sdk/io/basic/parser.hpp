@@ -571,10 +571,17 @@ class parser {
         token_attr_tag(uint32 attr, uint32 tag) : attr(attr), tag(tag) {}
     };
 
-    t_trie<char, char, token_attr_tag> _tokens;  // tokens
-    t_trie<char> _dictionary;                    // lookup
-    t_aho_corasick<int, token*>* _ac;            // multi-pattern search
-    t_key_value<std::string, uint16> _keyvalue;  // get_config
+    struct tokenptr_to_int_t {
+        int operator()(token* const* source, size_t index) const {
+            const token* t = source[index];
+            return t->get_type();
+        }
+    };
+
+    t_trie<char, char, token_attr_tag> _tokens;           // tokens
+    t_trie<char> _dictionary;                             // lookup
+    t_aho_corasick<int, token*, tokenptr_to_int_t>* _ac;  // multi-pattern search
+    t_key_value<std::string, uint16> _keyvalue;           // get_config
 
     // debug
     typedef std::map<uint32, std::string> debug_info;

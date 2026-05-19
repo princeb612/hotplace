@@ -44,6 +44,13 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
         }
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        {
+            auto hint_minspec = tlsadvisor->hintof_tls_version(minspec);  // DTLS 1.2
+            minspec = hint_minspec->spec;                                 // TLS 1.2
+            auto hint_maxspec = tlsadvisor->hintof_tls_version(maxspec);  // DTLS 1.3
+            maxspec = hint_maxspec->spec;                                 // TLS 1.3
+        }
+
         crypto_advisor* advisor = crypto_advisor::get_instance();
         uint32 session_status = 0;
         auto session_type = session->get_type();
@@ -156,26 +163,47 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                         tls_extension_client_key_share* keyshare = (tls_extension_client_key_share*)extension;
                         if (tls_flow_hello_retry_request != protection.get_flow()) {
                             keyshare->clear();
-                            std::set<uint16> groups;
+
+                            std::set<uint16> groups_set;
+                            std::list<uint16> groups_list;
+                            std::set<uint16> groups_keyshare;
+
                             advisor->for_each_tls_group([&](const hint_group_t* hint) -> void {
                                 auto group = hint->group;
                                 if (tlsadvisor->test_tls_group(group)) {
                                     if (tls_flag_support & hint->flags) {
-                                        groups.insert(group);
+                                        auto pib = groups_set.insert(group);
+                                        if (false == pib.second) {
+                                            groups_list.push_back(group);
+                                        }
                                     }
                                 }
                             });
-                            auto lambda = [&](std::list<uint16> members) -> void {
-                                for (auto group : members) {
-                                    if (groups.count(group)) {
-                                        keyshare->add(group);
-                                        break;
+
+                            if (groups_set.empty()) {
+                                session->push_alert(from_server, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
+                                session->reset_session_status();
+                            } else {
+                                auto lambda = [&](std::list<uint16> members) -> void {
+                                    for (auto group : members) {
+                                        if (groups_set.count(group)) {
+                                            keyshare->add(group);
+                                            groups_keyshare.insert(group);
+                                            break;
+                                        }
                                     }
+                                };
+
+                                // try to add
+                                lambda({tls_group_x25519mlkem768, tls_group_secp256r1mlkem768, tls_group_secp384r1mlkem1024, tls_group_mlkem768, tls_group_mlkem512,
+                                        tls_group_mlkem1024});
+                                lambda({tls_group_secp256r1, tls_group_secp384r1, tls_group_secp521r1, tls_group_x25519, tls_group_x448});
+
+                                // if not added
+                                if (groups_keyshare.empty()) {
+                                    lambda(groups_list);
                                 }
-                            };
-                            lambda({tls_group_x25519mlkem768, tls_group_secp256r1mlkem768, tls_group_secp384r1mlkem1024, tls_group_mlkem768, tls_group_mlkem512,
-                                    tls_group_mlkem1024});
-                            lambda({tls_group_secp256r1, tls_group_secp384r1, tls_group_secp521r1, tls_group_x25519, tls_group_x448});
+                            }
                         }
                         return success;
                     });
@@ -213,6 +241,13 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
         }
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
+        {
+            auto hint_minspec = tlsadvisor->hintof_tls_version(minspec);  // DTLS 1.2
+            minspec = hint_minspec->spec;                                 // TLS 1.2
+            auto hint_maxspec = tlsadvisor->hintof_tls_version(maxspec);  // DTLS 1.3
+            maxspec = hint_maxspec->spec;                                 // TLS 1.3
+        }
+
         uint16 cs = 0;
         uint16 tlsver = 0;
         auto dir = from_server;

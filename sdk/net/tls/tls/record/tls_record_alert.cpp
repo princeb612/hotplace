@@ -29,10 +29,7 @@ tls_record_alert::tls_record_alert(tls_session* session, uint8 level, uint8 desc
 
 tls_record_alert::~tls_record_alert() {}
 
-return_t tls_record_alert::do_postprocess(tls_direction_t dir) {
-    return_t ret = errorcode_t::success;
-    return ret;
-}
+return_t tls_record_alert::do_postprocess(tls_direction_t dir) { return errorcode_t::success; }
 
 return_t tls_record_alert::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;

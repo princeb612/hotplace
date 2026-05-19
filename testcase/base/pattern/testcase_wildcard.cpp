@@ -90,8 +90,10 @@ void test_wildcards2() {
     _test_case.begin("wildcards");
 
     // pattern matching by pointer
-    auto memberof = [](node* const* n, size_t idx) -> tok_t { return n[idx]->data; };
-    t_wildcards<tok_t, node*> wild(tok_question, tok_asterisk, memberof);
+    struct memberof {
+        tok_t operator()(node* const* n, size_t idx) { return n[idx]->data; };
+    };
+    t_wildcards<tok_t, node*, memberof> wild(tok_question, tok_asterisk);
 
     // bool a;
     // int b = 0;

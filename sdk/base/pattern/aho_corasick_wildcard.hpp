@@ -6,6 +6,8 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2024.08.23   Soo Han, Kim        wildcards (codename.hotplace Revision 578)
+ * 2026.05.19   Soo Han, Kim        replace std::function with functor (codename.hotplace Revision 1003)
  *
  */
 
@@ -123,8 +125,10 @@ namespace hotplace {
  *
  *          // sample.2 ignore case + wildcard ?, *
  *          {
- *              char memberof_tolower(const char* source, size_t idx) { return source ? std::tolower(source[idx]) : char(); }
- *              t_aho_corasick_wildcard<char> ac(memberof_tolower, '?', '*');
+ *              struct memberof_tolower {
+ *                  char operator()(const char* source, size_t idx) const { return source ? std::tolower(source[idx]) : char(); }
+ *              };
+ *              t_aho_corasick_wildcard<char, char, memberof_tolower> ac('?', '*');
  *              ac.insert("we *ing", 7);
  *              ac.insert("we * old", 8);
  *              const char* source = "We don't playing because we grow old; we grow old because we stop playing.";
@@ -132,25 +136,25 @@ namespace hotplace {
  *              // (0..15)[0], (25..35)[1]), (38..48)[1], (58..72)[0] ; represented as (start..end)[patternid]
  *          }
  */
-template <typename BT = char, typename T = BT>
-class t_aho_corasick_wildcard : public t_aho_corasick<BT, T> {
+template <typename BT = char, typename T = BT, typename memberof_t = memberof_defhandler<BT, T>>
+class t_aho_corasick_wildcard : public t_aho_corasick<BT, T, memberof_t> {
    public:
     enum {
         flag_single = (1 << 0),
         flag_any = (1 << 1),
     };
 
-    typedef typename t_aho_corasick<BT, T>::memberof_t memberof_t;
-    typedef typename t_aho_corasick<BT, T>::trienode trienode;
-    using t_aho_corasick<BT, T>::_root;
-    using t_aho_corasick<BT, T>::_patterns;
-    using t_aho_corasick<BT, T>::_memberof;
-    using t_aho_corasick<BT, T>::collect_results;
-    using t_aho_corasick<BT, T>::get_pattern_size;
+    typedef typename t_aho_corasick<BT, T, memberof_t>::trienode trienode;
+    using t_aho_corasick<BT, T, memberof_t>::_root;
+    using t_aho_corasick<BT, T, memberof_t>::_patterns;
+    using t_aho_corasick<BT, T, memberof_t>::_memberof;
+    using t_aho_corasick<BT, T, memberof_t>::collect_results;
+    using t_aho_corasick<BT, T, memberof_t>::get_pattern_size;
 
    public:
-    t_aho_corasick_wildcard(memberof_t memberof, const BT& wildcard_single, const BT& wildcard_any)
-        : t_aho_corasick<BT, T>(memberof), _wildcard_single(wildcard_single), _wildcard_any(wildcard_any) {}
+    t_aho_corasick_wildcard(const BT& wildcard_single, const BT& wildcard_any, memberof_t memberof = memberof_t())
+        : t_aho_corasick<BT, T, memberof_t>(memberof), _wildcard_single(wildcard_single), _wildcard_any(wildcard_any) {}
+    virtual ~t_aho_corasick_wildcard() {}
 
    protected:
     virtual void doinsert(const T* pattern, size_t size) {

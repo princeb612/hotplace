@@ -6,6 +6,8 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2024.07.20   Soo Han, Kim        study (codename.hotplace Revision 551)
+ * 2026.05.19   Soo Han, Kim        replace std::function with functor (codename.hotplace Revision 1003)
  *
  */
 
@@ -32,11 +34,9 @@ namespace hotplace {
  *          suffixtree.add("geeksforgeeks.org", 17);
  *          std::set<size_t> result = suffixtree.search("ee", 2);       // 1, 9
  */
-template <typename BT = char, typename T = BT>
+template <typename BT = char, typename T = BT, typename memberof_t = memberof_defhandler<BT, T>>
 class t_suffixtree {
    public:
-    typedef typename std::function<BT(const T* source, size_t idx)> memberof_t;
-
     struct trienode {
         std::unordered_map<BT, trienode*> children;
         std::set<size_t> index;
@@ -49,8 +49,8 @@ class t_suffixtree {
         }
     };
 
-    t_suffixtree(memberof_t memberof = memberof_defhandler<BT, T>) : _root(new trienode), _memberof(memberof) {}
-    t_suffixtree(const T* pattern, size_t size, memberof_t memberof = memberof_defhandler<BT, T>) : _root(new trienode), _memberof(memberof) { add(pattern, size); }
+    t_suffixtree(memberof_t memberof = memberof_t()) : _root(new trienode), _memberof(memberof) {}
+    t_suffixtree(const T* pattern, size_t size, memberof_t memberof = memberof_t()) : _root(new trienode), _memberof(memberof) { add(pattern, size); }
     virtual ~t_suffixtree() { delete _root; }
 
     t_suffixtree<BT, T>& add(const std::vector<T>& pattern) { return add(pattern.data(), pattern.size()); }

@@ -62,10 +62,7 @@ return_t quic_frame_stop_sending::do_read_body(tls_direction_t dir, const byte_t
     return ret;
 }
 
-return_t quic_frame_stop_sending::do_write_body(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    return ret;
-}
+return_t quic_frame_stop_sending::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }
 
 }  // namespace net
 }  // namespace hotplace

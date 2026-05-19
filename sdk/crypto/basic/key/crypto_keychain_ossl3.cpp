@@ -442,7 +442,7 @@ return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, const key
             __leave2;
         }
 
-        auto sn = OBJ_nid2sn(nid);
+        auto sn = OBJ_nid2ln(nid);
         if (nullptr == sn) {
             ret = errorcode_t::not_supported;
             __leave2;
@@ -512,7 +512,7 @@ return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, const byt
             __leave2;
         }
 
-        const char* name = OBJ_nid2sn(nid);
+        const char* name = OBJ_nid2ln(nid);
         if (nullptr == name) {
             ret = errorcode_t::invalid_parameter;
             __leave2;

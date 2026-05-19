@@ -64,7 +64,6 @@ void test_json_testvector_akp(const char* filename) {
             binary_t bin_pub;
             binary_t bin_priv;
             key.get_key(pkey, public_key, bin_pub, bin_priv, true);
-            _logger->hdump("key", bin_pub, 16, 3);
 
             bool result = false;
             binary_t bin_raw_public_key = base16_decode(value_raw_public_key);
@@ -93,7 +92,7 @@ void test_json_testvector_akp(const char* filename) {
 }
 
 void testcase_testvector_akp() {
-    test_json_testvector_akp("jose_mldsa44.json");
-    test_json_testvector_akp("jose_mldsa65.json");
-    test_json_testvector_akp("jose_mldsa87.json");
+    test_json_testvector_akp("testvector_akp_mldsa44.json");
+    test_json_testvector_akp("testvector_akp_mldsa65.json");
+    test_json_testvector_akp("testvector_akp_mldsa87.json");
 }

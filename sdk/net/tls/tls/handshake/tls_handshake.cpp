@@ -67,12 +67,12 @@ tls_handshake* tls_handshake::read(tls_session* session, tls_direction_t dir, co
     __try2 {
         if (nullptr == session || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         if (size - pos < 4) {
             ret = errorcode_t::no_more;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         tls_hs_type_t hs = (tls_hs_type_t)stream[pos];
@@ -112,13 +112,13 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
         if (errorcode_t::success != test) {
             if (errorcode_t::reassemble != test) {
                 ret = test;
-                __leave2;
+                __leave2_trace(ret);
             }
         }
 
         ret = do_preprocess(dir);
         if (errorcode_t::success != ret) {
-            __leave2;
+            __leave2_trace(ret);
         }
 
         // RFC 9147 5.5.  Handshake Message Fragmentation and Reassembly
@@ -154,7 +154,7 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
 
             ret = read(dir, assemble.data(), assemble.size(), tpos);
             if (errorcode_t::success != ret) {
-                __leave2;
+                __leave2_trace(ret);
             }
         } else {
             if (tls_hs_encrypted_extensions == get_type()) {
@@ -163,11 +163,11 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
                 ret = do_read_body(dir, stream, size, pos);
             }
             if ((errorcode_t::success != ret) && (errorcode_t::no_more != ret)) {
-                __leave2;
+                __leave2_trace(ret);
             }
             ret = do_postprocess(dir, stream, size);
             if (errorcode_t::success != ret) {
-                __leave2;
+                __leave2_trace(ret);
             }
 
             pos = offsetof_body() + get_body_size();
@@ -198,7 +198,7 @@ return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
 
         ret = do_preprocess(dir);
         if (errorcode_t::success != ret) {
-            __leave2;
+            __leave2_trace(ret);
         }
 
         binary_t body;
@@ -211,7 +211,7 @@ return_t tls_handshake::write(tls_direction_t dir, binary_t& bin) {
 
         ret = do_postprocess(dir, stream, size);
         if (errorcode_t::success != ret) {
-            __leave2;
+            __leave2_trace(ret);
         }
     }
     __finally2 {}
@@ -227,12 +227,12 @@ return_t tls_handshake::prepare_fragment(const byte_t* stream, uint32 size, uint
 
         if (session_type_dtls != session->get_type()) {
             ret = errorcode_t::do_nothing;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         if (fragment_offset + fragment_length > size) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         _dtls_seq = seq;
@@ -253,7 +253,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
     __try2 {
         if (nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
+            __leave2_trace(ret);
         }
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
@@ -289,7 +289,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
 
             if ((size < pos) || (size - pos < (sizeof(tls_handshake_t) + sizeof_dtls_recons))) {
                 ret = errorcode_t::no_more;
-                __leave2;
+                __leave2_trace(ret);
             }
 
             {
@@ -317,7 +317,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
                     fragment_len = pl.t_value_of<uint32>(constexpr_fragment_len);
                     if (fragment_offset + fragment_len > length) {
                         ret = errorcode_t::bad_format;
-                        __leave2;
+                        __leave2_trace(ret);
                     }
                 }
             }

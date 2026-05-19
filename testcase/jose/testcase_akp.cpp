@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   testvector_akp.cpp
+ * @file   testcase_akp.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  *
  * Revision History

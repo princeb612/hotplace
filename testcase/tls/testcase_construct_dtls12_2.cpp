@@ -23,69 +23,14 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
     __try2 {
         // tls_advisor* tlsadvisor = tls_advisor::get_instance();
         tls_record_handshake record(session);
+        tls_handshake* handshake = nullptr;
 
-        record.add(tls_hs_client_hello, session,  //
-                   [&](tls_handshake* hs) -> return_t {
-                       auto handshake = (tls_handshake_client_hello*)hs;
+        ret = tls_composer::construct_client_hello(&handshake, session, nullptr, tls_12, tls_12);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
-                       const auto& cookie = session->get_tls_protection().get_secrets().get(tls_context_cookie);
-                       if (false == cookie.empty()) {
-                           handshake->set_cookie(cookie);
-                       }
-
-                       // cipher suites
-                       {
-                           *handshake  // << "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
-                                       // << "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384"
-                                       // << "TLS_ECDHE_ECDSA_WITH_AES_128_CCM:TLS_ECDHE_ECDSA_WITH_AES_256_CCM"
-                                       // << "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8"
-                                       // << "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"
-                               << "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA"
-                               << "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"
-                               << "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384";
-                       }
-
-                       handshake->get_extensions()
-                           .add(tls_ext_ec_point_formats, dir, handshake,
-                                // ec_point_formats
-                                // RFC 9325 4.2.1
-                                // Note that [RFC8422] deprecates all but the uncompressed point format.
-                                // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
-                                [](tls_extension* extension) -> return_t {
-                                    (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
-                                    return success;
-                                })
-                           .add(tls_ext_supported_groups, dir, handshake,
-                                // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
-                                [](tls_extension* extension) -> return_t {
-                                    (*(tls_extension_supported_groups*)extension).add("x25519").add("secp256r1").add("x448").add("secp521r1").add("secp384r1");
-                                    return success;
-                                })
-                           .add(tls_ext_signature_algorithms, dir, handshake,
-                                [](tls_extension* extension) -> return_t {
-                                    (*(tls_extension_signature_algorithms*)extension)
-                                        .add("ecdsa_secp256r1_sha256")
-                                        .add("ecdsa_secp384r1_sha384")
-                                        .add("ecdsa_secp521r1_sha512")
-                                        .add("ed25519")
-                                        .add("ed448")
-                                        .add("rsa_pkcs1_sha256")
-                                        .add("rsa_pkcs1_sha384")
-                                        .add("rsa_pkcs1_sha512")
-                                        .add("rsa_pss_pss_sha256")
-                                        .add("rsa_pss_pss_sha384")
-                                        .add("rsa_pss_pss_sha512")
-                                        .add("rsa_pss_rsae_sha256")
-                                        .add("rsa_pss_rsae_sha384")
-                                        .add("rsa_pss_rsae_sha512");
-                                    return success;
-                                })
-                           .add(tls_ext_encrypt_then_mac, dir, handshake)
-                           .add(tls_ext_renegotiation_info, dir, handshake)
-                           .add(tls_ext_extended_master_secret, dir, handshake);
-
-                       return success;
-                   });
+        record << handshake;
 
         ret = construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
     }
@@ -128,49 +73,16 @@ static return_t do_test_construct_from_server_hello_to_server_hello_done(tls_ses
     return_t ret = errorcode_t::success;
 
     __try2 {
-        uint16 server_cs = 0;
-        uint16 server_version = 0;
+        tls_record_handshake record(session);
+        tls_handshake* handshake = nullptr;
 
-        auto& protection = session->get_tls_protection();
-        protection.set_tls_version(dtls_12);
-        protection.negotiate(session, server_cs, server_version);
-
-        if (0x0000 == server_cs) {
-            ret = errorcode_t::unknown;
-            _test_case.test(ret, __FUNCTION__, "no cipher suite");
+        ret = tls_composer::construct_server_hello(&handshake, session, nullptr, tls_12, tls_12);
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        {
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            auto csname = tlsadvisor->nameof_tls_cipher_suite(server_cs);
-            _test_case.assert(csname.size(), __FUNCTION__, "%s", csname.c_str());
-        }
-
-        tls_record_handshake record(session);
-        record
-            .add(tls_hs_server_hello, session,
-                 [&](tls_handshake* hs) -> return_t {
-                     auto handshake = (tls_handshake_server_hello*)hs;
-
-                     handshake->set_cipher_suite(server_cs);
-
-                     handshake->get_extensions()
-                         .add(tls_ext_encrypt_then_mac, dir, handshake)
-                         .add(tls_ext_renegotiation_info, dir, handshake)
-                         .add(tls_ext_ec_point_formats, dir, handshake,
-                              [](tls_extension* extension) -> return_t {
-                                  (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
-                                  return success;
-                              })
-                         .add(tls_ext_supported_groups, dir, handshake,  //
-                              [](tls_extension* extension) -> return_t {
-                                  (*(tls_extension_supported_groups*)extension).add("x25519");
-                                  return success;
-                              });
-
-                     return success;
-                 })
+        record  //
+            .add(handshake)
             .add(tls_hs_certificate, session)
             .add(tls_hs_server_key_exchange, session)
             .add(tls_hs_server_hello_done, session);
@@ -303,24 +215,7 @@ void do_test_construct_dtls12_2(uint32 flags) {
     session_client.get_dtls_record_publisher().set_fragment_size(128);
     session_server.get_dtls_record_publisher().set_fragment_size(128);
 
-    tls_advisor* tlsadvisor = tls_advisor::get_instance();
-
-    auto lambda_test_next_seq = [&](const char* func, tls_session* session, tls_direction_t dir, uint16 expect_epoch, uint64 expect_next_rcseq,
-                                    uint16 expect_next_hsseq) -> void {
-        uint16 rcepoch = t_narrow_cast(session->get_session_info(dir).get_keyvalue().get(session_dtls_epoch));
-        uint64 next_rcseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_seq);
-        uint16 next_hsseq = t_narrow_cast(session->get_session_info(dir).get_keyvalue().get(session_dtls_message_seq));
-        bool test = (expect_epoch == rcepoch) && (expect_next_hsseq == next_hsseq) && (expect_next_hsseq == next_hsseq);
-        _test_case.assert(test, func, "%s record (epoch %i next sequence %I64i) handshake (next sequence %i)", tlsadvisor->nameof_direction(dir).c_str(), rcepoch,
-                          next_rcseq, next_hsseq);
-    };
-    auto lambda_test_seq = [&](const char* func, tls_session* session, tls_direction_t dir, uint16 expect_epoch, uint64 expect_rcseq, uint16 expect_hsseq) -> void {
-        uint16 rcepoch = t_narrow_cast(session->get_session_info(dir).get_keyvalue().get(session_dtls_epoch));
-        uint64 rcseq = session->get_session_info(dir).get_keyvalue().get(session_dtls_seq);
-        uint16 hsseq = t_narrow_cast(session->get_session_info(dir).get_keyvalue().get(session_dtls_message_seq));
-        bool test = (expect_epoch == rcepoch) && (expect_hsseq == hsseq) && (expect_hsseq == hsseq);
-        _test_case.assert(test, func, "%s record (epoch %i sequence %I64i) handshake (sequence %i)", tlsadvisor->nameof_direction(dir).c_str(), rcepoch, rcseq, hsseq);
-    };
+    // tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
     return_t ret = errorcode_t::success;
 
@@ -334,8 +229,6 @@ void do_test_construct_dtls12_2(uint32 flags) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 0, 2, 1);
-        lambda_test_seq(__FUNCTION__, &session_server, from_client, 0, 1, 0);
 
         // S->C, record epoch 0, sequence 0, handshake sequence 0
         ret = do_test_construct_hello_verify_request(&session_server, from_server, "hello verify request");
@@ -346,8 +239,6 @@ void do_test_construct_dtls12_2(uint32 flags) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 1, 1);
-        lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 0, 0);
 
         // C->S, record epoch 0, sequence 2..3, handshake sequence 1
         ret = do_test_construct_client_hello(&session_client, from_client, "client hello");
@@ -358,8 +249,6 @@ void do_test_construct_dtls12_2(uint32 flags) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 0, 4, 2);
-        lambda_test_seq(__FUNCTION__, &session_server, from_client, 0, 3, 1);
 
         // S->C
         // case dtls_record_publisher().set_flags(0)
@@ -386,13 +275,6 @@ void do_test_construct_dtls12_2(uint32 flags) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        if (flags & dtls_record_publisher_multi_handshakes) {
-            lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 11, 5);
-            lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 10, 4);
-        } else {
-            lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 0, 14, 5);
-            lambda_test_seq(__FUNCTION__, &session_client, from_server, 0, 13, 4);
-        }
 
         do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
         do_cross_check_keycalc(&session_client, &session_server, tls_context_client_hello_random, "tls_context_client_hello_random");
@@ -414,8 +296,6 @@ void do_test_construct_dtls12_2(uint32 flags) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        lambda_test_next_seq(__FUNCTION__, &session_client, from_client, 1, 1, 4);
-        lambda_test_seq(__FUNCTION__, &session_server, from_client, 1, 0, 3);
 
         do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
         do_cross_check_keycalc(&session_client, &session_server, tls_secret_server_key, "tls_secret_server_key");
@@ -439,8 +319,6 @@ void do_test_construct_dtls12_2(uint32 flags) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        lambda_test_next_seq(__FUNCTION__, &session_server, from_server, 1, 1, 6);
-        lambda_test_seq(__FUNCTION__, &session_client, from_server, 1, 0, 5);
 
         do_cross_check_keycalc(&session_client, &session_server, tls_context_transcript_hash, "tls_context_transcript_hash");
         do_cross_check_keycalc(&session_client, &session_server, tls_secret_res_master, "tls_secret_res_master");

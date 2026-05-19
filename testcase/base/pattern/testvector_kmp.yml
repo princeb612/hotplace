@@ -1,0 +1,29 @@
+testvector:
+  - example: The Knuth-Morris-Pratt Algorithm
+    schema: KMP
+    items:
+    - item: test 1
+      pattern: ABCDABD
+      match:
+        "ABC ABCD AB ABCDABDE": [12]
+    - item: test 2
+      pattern: ABACABA
+      match:
+        ABACABACABA: [0, 4]
+    - item: test 3
+      pattern: AAAAA
+      match:
+        AAAAAA: [0, 1]
+    - item: test 4
+      pattern: abacab
+      match:
+        abacaabaccabacabaabb: [10]
+        abac0abacab0abacab: [5, 12]
+    - item: test 5
+      pattern: cab
+      match:
+        abacaabaccabacabaabb: [9, 13]
+    - item: test 6
+      pattern: abc
+      match:
+        abacaabaccabacabaabb: []

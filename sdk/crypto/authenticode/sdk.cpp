@@ -157,7 +157,7 @@ return_t pkcs7_digest_info(PKCS7* pkcs7, std::string& md, binary_t& digest) {
                 if (idc->messageDigest && idc->messageDigest->digest && idc->messageDigest->digestAlgorithm) {
                     mdtype = OBJ_obj2nid(idc->messageDigest->digestAlgorithm->algorithm);
                     // const EVP_MD *evp_md = EVP_get_digestbynid (mdtype);
-                    md = OBJ_nid2sn(mdtype);
+                    md = OBJ_nid2ln(mdtype);
                     digest.resize(ASN1_STRING_length(idc->messageDigest->digest));
                     memcpy(digest.data(), ASN1_STRING_get0_data(idc->messageDigest->digest), ASN1_STRING_length(idc->messageDigest->digest));
                 }

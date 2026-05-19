@@ -6,6 +6,8 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2024.06.02   Soo Han, Kim        study (codename.hotplace Revision 536)
+ * 2026.05.19   Soo Han, Kim        replace std::function with functor (codename.hotplace Revision 1003)
  *
  */
 
@@ -60,7 +62,7 @@ namespace hotplace {
  *                  f (i)←0
  *                  i←i+1
  */
-template <typename T = char>
+template <typename T = char, typename comparator_t = std::equal_to<T>>
 class t_kmp {
    public:
     /**
@@ -82,12 +84,13 @@ class t_kmp {
      *          // data1.push_back(new object(1));
      *          // ...
      *
-     *          t_kmp<object*> kmp;
-     *          kmp.search(data1, data2);
+     *          t_kmp<parser::token*, decltype(comparator)> kmp(comparator);
+     *          kmp.learn(pattern);
+     *          kmp.search(data);
      *               // if (pattern[j] == data[i]) - incorrect
      *               // return -1
      *
-     *          kmp.search(data1, data2, 0, comparator);
+     *          kmp.search(data, 0);
      *               // if (comparator(pattern[j], data[i])) - correct
      *               // return 2
      *
@@ -107,33 +110,57 @@ class t_kmp {
      *          // tokens  : 0   12 3   4 5 67 8    9 a b   c
      *          // pattern : 0      1          3
      */
-    typedef typename std::function<bool(const T&, const T&)> comparator_t;
+    static constexpr size_t npos = static_cast<size_t>(-1);
 
-    t_kmp() {}
+    t_kmp(comparator_t comparator = comparator_t()) : _comparator(comparator) {}
 
-    size_t search(const std::vector<T>& data, const std::vector<T>& pattern, size_t pos = 0, comparator_t comparator = nullptr) {
-        return search(data.data(), data.size(), pattern.data(), pattern.size(), pos, comparator);
+    t_kmp& learn(const std::vector<T>& pattern) { return learn(pattern.data(), pattern.size()); }
+
+    /*
+     * @brief   one pattern multi search
+     */
+    t_kmp& learn(const T* pattern, size_t size) {
+        _failure.resize(size, 0);
+        _pattern.clear();
+        if (pattern && size) {
+            _pattern.insert(_pattern.begin(), pattern, pattern + size);
+            _failure[0] = 0;
+            size_t j = 0;
+            size_t i = 1;
+            while (i < size) {
+                if (_comparator(pattern[j], pattern[i])) {
+                    _failure[i] = j + 1;
+                    i++;
+                    j++;
+                } else if (j > 0) {
+                    j = _failure[j - 1];
+                } else {
+                    _failure[i] = 0;
+                    i++;
+                }
+            }
+        }
+        return *this;
+    }
+
+    size_t search(const std::vector<T>& data, size_t pos = 0) { return search(data.data(), data.size(), pos); }
+    size_t search(const std::vector<T>& data, const std::vector<T>& pattern, size_t pos = 0) {
+        return search(data.data(), data.size(), pattern.data(), pattern.size(), pos);
     }
 
     /**
      * @brief   search
      * @return  index, -1 (not found)
      */
-    size_t search(const T* data, size_t size_data, const T* pattern, size_t size_pattern, size_t pos = 0, comparator_t comparator = nullptr) {
-        size_t ret = -1;
-        if (data && pattern && size_pattern) {
-            auto n = size_data;
-            auto m = size_pattern;
-            auto fail = failure(pattern, m, comparator);
+    size_t search(const T* data, size_t size_data, size_t pos = 0) {
+        size_t ret = npos;
+        if (data) {
+            auto m = _failure.size();
             auto i = pos;
             size_t j = 0;
-            while (i < n) {
+            while (i < size_data) {
                 bool test = false;
-                if (comparator) {
-                    test = comparator(pattern[j], data[i]);
-                } else {
-                    test = (pattern[j] == data[i]);
-                }
+                test = _comparator(_pattern[j], data[i]);
                 if (test) {
                     if (j == m - 1) {
                         ret = i - m + 1;
@@ -142,7 +169,7 @@ class t_kmp {
                     i++;
                     j++;
                 } else if (j > 0) {
-                    j = fail[j - 1];
+                    j = _failure[j - 1];
                 } else {
                     i++;
                 }
@@ -151,33 +178,25 @@ class t_kmp {
         return ret;
     }
 
-   protected:
-    std::vector<size_t> failure(const T* pattern, size_t size, comparator_t comparator = nullptr) {
-        std::vector<size_t> fail(size);
-        fail[0] = 0;
-        size_t m = size;
-        size_t j = 0;
-        size_t i = 1;
-        while (i < m) {
-            bool test = false;
-            if (comparator) {
-                test = comparator(pattern[j], pattern[i]);
-            } else {
-                test = (pattern[j] == pattern[i]);
-            }
-            if (test) {
-                fail[i] = j + 1;
-                i++;
-                j++;
-            } else if (j > 0) {
-                j = fail[j - 1];
-            } else {
-                fail[i] = 0;
-                i++;
-            }
-        }
-        return fail;
+    /*
+     * @brief   learn pattern and search
+     * @remarks
+     *          for the same pattern
+     *              kmp.learn(pattern, size_pattern);
+     *              kmp.search(data, size_data);
+     *          or
+     *              kmp.search(data, size_data, pattern, size_pattern);
+     *              kmp.search(data, size_data);  // use the previously provided pattern
+     */
+    size_t search(const T* data, size_t size_data, const T* pattern, size_t size_pattern, size_t pos = 0) {
+        learn(pattern, size_pattern);
+        return search(data, size_data, pos);
     }
+
+   protected:
+    std::vector<T> _pattern;
+    std::vector<size_t> _failure;
+    comparator_t _comparator;
 };
 
 }  // namespace hotplace

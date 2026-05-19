@@ -20,62 +20,15 @@ static udp_traffic _traffic;
 static return_t do_test_construct_client_hello(const char* ciphersuite, tls_session* session, tls_direction_t dir, const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
-        // tls_advisor* tlsadvisor = tls_advisor::get_instance();
         tls_record_handshake record(session);
+        tls_handshake* handshake = nullptr;
 
-        record.add(tls_hs_client_hello, session,  //
-                   [&](tls_handshake* hs) -> return_t {
-                       auto handshake = (tls_handshake_client_hello*)hs;
+        ret = tls_composer::construct_client_hello(&handshake, session, nullptr, tls_12, tls_12);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
 
-                       const auto& cookie = session->get_tls_protection().get_secrets().get(tls_context_cookie);
-                       if (false == cookie.empty()) {
-                           handshake->set_cookie(cookie);
-                       }
-
-                       // cipher suites
-                       *handshake << ciphersuite;
-
-                       handshake->get_extensions()
-                           .add(tls_ext_ec_point_formats, dir, handshake,
-                                // ec_point_formats
-                                // RFC 9325 4.2.1
-                                // Note that [RFC8422] deprecates all but the uncompressed point format.
-                                // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
-                                [](tls_extension* extension) -> return_t {
-                                    (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
-                                    return success;
-                                })
-                           .add(tls_ext_supported_groups, dir, handshake,
-                                // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
-                                [](tls_extension* extension) -> return_t {
-                                    (*(tls_extension_supported_groups*)extension).add("x25519").add("secp256r1").add("x448").add("secp521r1").add("secp384r1");
-                                    return success;
-                                })
-                           .add(tls_ext_signature_algorithms, dir, handshake,
-                                [](tls_extension* extension) -> return_t {
-                                    (*(tls_extension_signature_algorithms*)extension)
-                                        .add("ecdsa_secp256r1_sha256")
-                                        .add("ecdsa_secp384r1_sha384")
-                                        .add("ecdsa_secp521r1_sha512")
-                                        .add("ed25519")
-                                        .add("ed448")
-                                        .add("rsa_pkcs1_sha256")
-                                        .add("rsa_pkcs1_sha384")
-                                        .add("rsa_pkcs1_sha512")
-                                        .add("rsa_pss_pss_sha256")
-                                        .add("rsa_pss_pss_sha384")
-                                        .add("rsa_pss_pss_sha512")
-                                        .add("rsa_pss_rsae_sha256")
-                                        .add("rsa_pss_rsae_sha384")
-                                        .add("rsa_pss_rsae_sha512");
-                                    return success;
-                                })
-                           .add(tls_ext_encrypt_then_mac, dir, handshake)
-                           .add(tls_ext_renegotiation_info, dir, handshake)
-                           .add(tls_ext_extended_master_secret, dir, handshake);
-
-                       return success;
-                   });
+        record << handshake;
 
         ret = construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
     }
@@ -117,48 +70,15 @@ static return_t do_test_construct_hello_verify_request(tls_session* session, tls
 static return_t do_test_construct_server_hello(tls_session* session, tls_direction_t dir, const char* message) {
     return_t ret = errorcode_t::success;
     __try2 {
-        uint16 server_cs = 0;
-        uint16 server_version = 0;
+        tls_record_handshake record(session);
+        tls_handshake* handshake = nullptr;
 
-        auto& protection = session->get_tls_protection();
-        protection.set_tls_version(dtls_12);
-        protection.negotiate(session, server_cs, server_version);
-
-        if (0x0000 == server_cs) {
-            ret = errorcode_t::unknown;
-            _test_case.test(ret, __FUNCTION__, "no cipher suite");
+        ret = tls_composer::construct_server_hello(&handshake, session, nullptr, tls_12, tls_12);
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        {
-            tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            auto csname = tlsadvisor->nameof_tls_cipher_suite(server_cs);
-            _test_case.assert(csname.size(), __FUNCTION__, "%s", csname.c_str());
-        }
-
-        tls_record_handshake record(session);
-        record.add(tls_hs_server_hello, session,  //
-                   [&](tls_handshake* hs) -> return_t {
-                       auto handshake = (tls_handshake_server_hello*)hs;
-
-                       handshake->set_cipher_suite(server_cs);
-
-                       handshake->get_extensions()
-                           .add(tls_ext_encrypt_then_mac, dir, handshake)
-                           .add(tls_ext_renegotiation_info, dir, handshake)
-                           .add(tls_ext_ec_point_formats, dir, handshake,
-                                [](tls_extension* extension) -> return_t {
-                                    (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
-                                    return success;
-                                })
-                           .add(tls_ext_supported_groups, dir, handshake,  //
-                                [](tls_extension* extension) -> return_t {
-                                    (*(tls_extension_supported_groups*)extension).add("x25519");
-                                    return success;
-                                });
-
-                       return success;
-                   });
+        record << handshake;
 
         ret = construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
     }

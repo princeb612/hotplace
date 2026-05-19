@@ -39,6 +39,8 @@ class tls_record {
 
     virtual void operator<<(tls_record* record);
     virtual void operator<<(tls_handshake* handshake);
+    virtual tls_record& add(tls_handshake* handshake);
+    virtual tls_record& add(tls_content_type_t type, tls_session* session, std::function<return_t(tls_record*)> func = nullptr, bool upref = false);
     virtual tls_record& add(tls_hs_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func = nullptr, bool upref = false);
 
     void addref();

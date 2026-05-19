@@ -22,6 +22,93 @@ const hint_group_t hint_groups[] = {
     // sa. const hint_curve_t hint_curves[]
 
     {
+        tls_group_secp256r1,
+        keyexchange_ecdhe,
+        tls_flag_support,
+        "secp256r1",
+        {kty_ec, NID_X9_62_prime256v1, 65},
+    },  // P-256, prime256v1, RFC 8446 9.1 MUST
+    {
+        tls_group_secp384r1,
+        keyexchange_ecdhe,
+        tls_flag_support,
+        "secp384r1",
+        {kty_ec, NID_secp384r1, 97},
+    },  // P-384, ansip384r1
+    {
+        tls_group_secp521r1,
+        keyexchange_ecdhe,
+        tls_flag_support,
+        "secp521r1",
+        {kty_ec, NID_secp521r1, 133},
+    },  // P-521, ansip521r1
+    {
+        tls_group_x25519,
+        keyexchange_ecdhe,
+        tls_flag_support,
+        "x25519",
+        {kty_okp, NID_X25519, 32},
+    },  // RFC 8446 8446 9.1 MUST
+    {
+        tls_group_x448,
+        keyexchange_ecdhe,
+        tls_flag_support,
+        "x448",
+        {kty_okp, NID_X448, 56},
+    },
+
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    // https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/
+    {
+        tls_group_mlkem512,
+        keyexchange_mlkem,
+        tls_flag_support | tls_flag_secure | tls_flag_pqc,
+        "MLKEM512",
+        {kty_mlkem, nid_mlkem512, 800, 768},
+    },
+    {
+        tls_group_mlkem768,
+        keyexchange_mlkem,
+        tls_flag_support | tls_flag_secure | tls_flag_pqc,
+        "MLKEM768",
+        {kty_mlkem, nid_mlkem768, 1184, 1088},
+    },
+    {
+        tls_group_mlkem1024,
+        keyexchange_mlkem,
+        tls_flag_support | tls_flag_secure | tls_flag_pqc,
+        "MLKEM1024",
+        {kty_mlkem, nid_mlkem1024, 1568, 1568},
+    },
+    // https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/
+    {
+        tls_group_secp256r1mlkem768,
+        keyexchange_mlkem,
+        tls_flag_support | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
+        "SecP256r1MLKEM768",
+        {kty_ec, NID_X9_62_prime256v1, 65, tls_group_secp256r1},
+        {kty_mlkem, nid_mlkem768, 1184, 1088, tls_group_mlkem768},
+    },
+    {
+        tls_group_x25519mlkem768,
+        keyexchange_mlkem,
+        tls_flag_support | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
+        "X25519MLKEM768",
+        // no consistency
+        {kty_mlkem, nid_mlkem768, 1184, 1088, tls_group_mlkem768},
+        {kty_okp, NID_X25519, 32, tls_group_x25519},
+    },
+    {
+        tls_group_secp384r1mlkem1024,
+        keyexchange_mlkem,
+        tls_flag_support | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
+        "SecP384r1MLKEM1024",
+        {kty_ec, NID_secp384r1, 97, tls_group_secp384r1},
+        {kty_mlkem, nid_mlkem1024, 1568, 1568, tls_group_mlkem1024},
+    },
+#endif
+
+    {
         tls_group_sect163k1,
         keyexchange_ecdhe,
         tls_flag_support,
@@ -176,41 +263,6 @@ const hint_group_t hint_groups[] = {
         {kty_ec, NID_secp256k1, 65},
     },  // ansip256k1
     {
-        tls_group_secp256r1,
-        keyexchange_ecdhe,
-        tls_flag_support,
-        "secp256r1",
-        {kty_ec, NID_X9_62_prime256v1, 65},
-    },  // P-256, prime256v1, RFC 8446 9.1 MUST
-    {
-        tls_group_secp384r1,
-        keyexchange_ecdhe,
-        tls_flag_support,
-        "secp384r1",
-        {kty_ec, NID_secp384r1, 97},
-    },  // P-384, ansip384r1
-    {
-        tls_group_secp521r1,
-        keyexchange_ecdhe,
-        tls_flag_support,
-        "secp521r1",
-        {kty_ec, NID_secp521r1, 133},
-    },  // P-521, ansip521r1
-    {
-        tls_group_x25519,
-        keyexchange_ecdhe,
-        tls_flag_support,
-        "x25519",
-        {kty_okp, NID_X25519, 32},
-    },  // RFC 8446 8446 9.1 MUST
-    {
-        tls_group_x448,
-        keyexchange_ecdhe,
-        tls_flag_support,
-        "x448",
-        {kty_okp, NID_X448, 56},
-    },
-    {
         tls_group_brainpoolP256r1,  //  RFC 7027
         keyexchange_ecdhe,
         tls_flag_support,
@@ -343,56 +395,6 @@ const hint_group_t hint_groups[] = {
         "ffdhe8192",
         {kty_dh, NID_ffdhe8192, 1024},
     },
-#if OPENSSL_VERSION_NUMBER >= 0x30500000L
-    // https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/
-    {
-        tls_group_mlkem512,
-        keyexchange_mlkem,
-        tls_flag_support | tls_flag_secure | tls_flag_pqc,
-        "MLKEM512",
-        {kty_mlkem, nid_mlkem512, 800, 768},
-    },
-    {
-        tls_group_mlkem768,
-        keyexchange_mlkem,
-        tls_flag_support | tls_flag_secure | tls_flag_pqc,
-        "MLKEM768",
-        {kty_mlkem, nid_mlkem768, 1184, 1088},
-    },
-    {
-        tls_group_mlkem1024,
-        keyexchange_mlkem,
-        tls_flag_support | tls_flag_secure | tls_flag_pqc,
-        "MLKEM1024",
-        {kty_mlkem, nid_mlkem1024, 1568, 1568},
-    },
-    // https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/
-    {
-        tls_group_secp256r1mlkem768,
-        keyexchange_mlkem,
-        tls_flag_support | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
-        "SecP256r1MLKEM768",
-        {kty_ec, NID_X9_62_prime256v1, 65, tls_group_secp256r1},
-        {kty_mlkem, nid_mlkem768, 1184, 1088, tls_group_mlkem768},
-    },
-    {
-        tls_group_x25519mlkem768,
-        keyexchange_mlkem,
-        tls_flag_support | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
-        "X25519MLKEM768",
-        // no consistency
-        {kty_mlkem, nid_mlkem768, 1184, 1088, tls_group_mlkem768},
-        {kty_okp, NID_X25519, 32, tls_group_x25519},
-    },
-    {
-        tls_group_secp384r1mlkem1024,
-        keyexchange_mlkem,
-        tls_flag_support | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
-        "SecP384r1MLKEM1024",
-        {kty_ec, NID_secp384r1, 97, tls_group_secp384r1},
-        {kty_mlkem, nid_mlkem1024, 1568, 1568, tls_group_mlkem1024},
-    },
-#endif
     {
         0xff01,
         keyexchange_unknown,

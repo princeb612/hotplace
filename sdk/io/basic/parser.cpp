@@ -16,12 +16,8 @@
 namespace hotplace {
 namespace io {
 
-parser::parser() {
-    auto tokenptr_to_int = [](token* const* source, size_t index) -> int {
-        const token* t = source[index];
-        return t->get_type();
-    };
-    _ac = new t_aho_corasick<int, token*>(tokenptr_to_int);
+parser::parser() : _ac(nullptr) {
+    _ac = new t_aho_corasick<int, token*, tokenptr_to_int_t>();
     get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1);
 
 #if 1

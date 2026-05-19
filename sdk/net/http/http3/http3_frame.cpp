@@ -109,15 +109,9 @@ return_t http3_frame::do_read_frame(const byte_t* stream, size_t size, size_t& p
     return ret;
 }
 
-return_t http3_frame::do_read_payload(const byte_t* stream, size_t size, size_t& pos) {
-    return_t ret = errorcode_t::success;
-    return ret;
-}
+return_t http3_frame::do_read_payload(const byte_t* stream, size_t size, size_t& pos) { return errorcode_t::success; }
 
-return_t http3_frame::do_write(binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    return ret;
-}
+return_t http3_frame::do_write(binary_t& bin) { return errorcode_t::success; }
 
 h3_frame_t http3_frame::get_type() { return _type; }
 

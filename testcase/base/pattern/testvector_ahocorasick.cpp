@@ -10,7 +10,9 @@
 
 #include <hotplace/testcase/base/sample.hpp>
 
-static char memberof_tolower(const char* source, size_t idx) { return source ? std::tolower(source[idx]) : char(); }
+struct memberof_tolower {
+    char operator()(const char* source, size_t idx) const { return source ? std::tolower(source[idx]) : char(); }
+};
 
 void test_yaml_testvector_ahocorasick() {
     _test_case.begin("aho corasick YAML");
@@ -20,14 +22,14 @@ void test_yaml_testvector_ahocorasick() {
         option_ignorecase = 2,
     };
 
-    auto lambda_builder = [](uint8 option) -> t_aho_corasick<char>* {
-        t_aho_corasick<char>* ac = nullptr;
+    auto lambda_builder = [](uint8 option) -> t_aho_corasick_t<char, char>* {
+        t_aho_corasick_t<char, char>* ac = nullptr;
         if (0 == option) {
             ac = new t_aho_corasick<char>();
         } else if ((option_wildcards) == (option & (option_wildcards | option_ignorecase))) {
-            ac = new t_aho_corasick_wildcard<char>(memberof_defhandler<char>, '?', '*');
+            ac = new t_aho_corasick_wildcard<char>('?', '*');
         } else if ((option_wildcards | option_ignorecase) == (option & (option_wildcards | option_ignorecase))) {
-            ac = new t_aho_corasick_wildcard<char>(memberof_tolower, '?', '*');
+            ac = new t_aho_corasick_wildcard<char, char, memberof_tolower>('?', '*');
         }
         return ac;
     };
@@ -110,7 +112,7 @@ void test_yaml_testvector_ahocorasick() {
 
                 bs.printf("%*s", (int)r.begin, "");
                 bs << input.substr(r.begin, r.end - r.begin + 1);
-                bs.fill(input.size() - r.end - 1, '-');
+                bs.fill(input.size() - r.end, '-');
                 bs.println(R"(> pattern "%.*s")", pattern.size(), pattern.data());
             }
         };

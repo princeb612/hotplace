@@ -6,6 +6,8 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2024.07.21   Soo Han, Kim        study (codename.hotplace Revision 553)
+ * 2026.05.19   Soo Han, Kim        replace std::function with functor (codename.hotplace Revision 1003)
  *
  */
 
@@ -22,11 +24,10 @@ namespace hotplace {
  *          https://brenden.github.io/ukkonen-animation/
  *          https://programmerspatch.blogspot.com/2013/02/ukkonens-suffix-tree-algorithm.html
  */
-template <typename BT = char, typename T = BT>
+template <typename BT = char, typename T = BT, typename memberof_t = memberof_defhandler<BT, T>>
 class t_ukkonen {
    public:
     struct trienode;
-    typedef typename std::function<BT(const T* _source, size_t idx)> memberof_t;
     typedef typename std::function<void(const BT* t, size_t size)> dump_handler;
     typedef typename std::function<void(trienode* node, size_t level, const BT* t, size_t size)> debug_handler;
 
@@ -47,8 +48,8 @@ class t_ukkonen {
         size_t length() { return end - start + 1; }
     };
 
-    t_ukkonen(memberof_t memberof = memberof_defhandler<BT, T>) : _memberof(memberof) { init(_root = new trienode); }
-    t_ukkonen(const T* _source, size_t size, memberof_t memberof = memberof_defhandler<BT, T>) : _memberof(memberof) {
+    t_ukkonen(memberof_t memberof = memberof_t()) : _memberof(memberof) { init(_root = new trienode); }
+    t_ukkonen(const T* _source, size_t size, memberof_t memberof = memberof_t()) : _memberof(memberof) {
         init(_root = new trienode);
         add(_source, size);
     }

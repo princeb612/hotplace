@@ -16,6 +16,7 @@
  *     y : public key
  */
 
+#include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 
 namespace hotplace {

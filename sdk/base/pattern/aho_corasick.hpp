@@ -6,7 +6,8 @@
  *
  * Revision History
  * Date         Name                Description
- *
+ * 2024.07.05   Soo Han, Kim        study (codename.hotplace Revision 548)
+ * 2026.05.19   Soo Han, Kim        replace std::function with functor (codename.hotplace Revision 1003)
  */
 
 #ifndef __HOTPLACE_SDK_BASE_PATTERN_AHOCORASICK__
@@ -18,6 +19,32 @@
 #include <unordered_set>
 
 namespace hotplace {
+
+/**
+ * @example
+ *          t_aho_corasick_t<char, char>* ac = nullptr;
+ *          if (0 == option) {
+ *              ac = new t_aho_corasick<char>();
+ *          } else if ((option_wildcards) == (option & (option_wildcards | option_ignorecase))) {
+ *              ac = new t_aho_corasick_wildcard<char>('?', '*');
+ *          } else if ((option_wildcards | option_ignorecase) == (option & (option_wildcards | option_ignorecase))) {
+ *              ac = new t_aho_corasick_wildcard<char, char, memberof_tolower>('?', '*');
+ *          }
+ */
+template <typename BT = char, typename T = BT>
+class t_aho_corasick_t {
+   public:
+    virtual ~t_aho_corasick_t() = default;
+
+    virtual void insert(const std::vector<T>& pattern) = 0;
+    virtual void insert(const T* pattern, size_t size) = 0;
+    virtual void build() = 0;
+    virtual std::multimap<range_t, size_t> search(const std::vector<T>& source) = 0;
+    virtual std::multimap<range_t, size_t> search(const T* source, size_t size) = 0;
+    virtual size_t get_pattern_size(size_t index) = 0;
+    virtual void order_by_pattern(const std::multimap<range_t, size_t>& input, std::multimap<size_t, range_t>& output) = 0;
+    virtual return_t get_pattern(size_t index, std::vector<BT>& pattern) = 0;
+};
 
 /**
  * @brief   Aho-Corasick algorithm
@@ -57,19 +84,19 @@ namespace hotplace {
  *
  *          // sample.2 ignore case
  *          {
- *              char memberof_tolower(const char* source, size_t idx) { return source ? std::tolower(source[idx]) : char(); }
- *              t_aho_corasick<char> ac(memberof_tolower);
+ *              struct memberof_tolower {
+ *                  char operator()(const char* source, size_t idx) const { return source ? std::tolower(source[idx]) : char(); }
+ *              };
+ *              t_aho_corasick<char, char, memberof_tolower> ac();
  *              ac.insert("hello", 5);
  *              ac.insert("world", 5);
  *              const char* source = "Hello World ";
  *              auto result = ac.search(source, strlen(source));
  *          }
  */
-template <typename BT = char, typename T = BT>
-class t_aho_corasick {
+template <typename BT = char, typename T = BT, typename memberof_t = memberof_defhandler<BT, T>>
+class t_aho_corasick : public t_aho_corasick_t<BT, T> {
    public:
-    typedef typename std::function<BT(const T* source, size_t idx)> memberof_t;
-
     /**
      * @brief   trie node structure
      */
@@ -90,24 +117,24 @@ class t_aho_corasick {
     };
 
    public:
-    t_aho_corasick(memberof_t memberof = memberof_defhandler<BT, T>) : _root(new trienode), _memberof(memberof) {}
+    t_aho_corasick(memberof_t memberof = memberof_t()) : t_aho_corasick_t<BT, T>(), _root(new trienode), _memberof(memberof) {}
     virtual ~t_aho_corasick() { dodestroy(); }
 
     /**
      * @brief   insert a pattern into the trie
      */
-    void insert(const std::vector<T>& pattern) { doinsert(pattern.data(), pattern.size()); }
-    void insert(const T* pattern, size_t size) { doinsert(pattern, size); }
+    void insert(const std::vector<T>& pattern) override { doinsert(pattern.data(), pattern.size()); }
+    void insert(const T* pattern, size_t size) override { doinsert(pattern, size); }
     /**
      * @brief   build the Aho-Corasick finite state machine
      */
-    void build() { dobuild(); }
+    void build() override { dobuild(); }
 
     /**
      * @brief   search for patterns
      * @return  std::multimap<range_t, size_t>
      */
-    std::multimap<range_t, size_t> search(const std::vector<T>& source) {
+    std::multimap<range_t, size_t> search(const std::vector<T>& source) override {
         std::map<size_t, std::set<size_t>> ordered;
         std::multimap<range_t, size_t> result;
         auto size = source.size();
@@ -115,7 +142,7 @@ class t_aho_corasick {
         get_result(ordered, result, size);
         return result;
     }
-    std::multimap<range_t, size_t> search(const T* source, size_t size) {
+    std::multimap<range_t, size_t> search(const T* source, size_t size) override {
         std::map<size_t, std::set<size_t>> ordered;
         std::multimap<range_t, size_t> result;
         dosearch(source, size, ordered);
@@ -143,7 +170,7 @@ class t_aho_corasick {
      *              // do something
      *          }
      */
-    void order_by_pattern(const std::multimap<range_t, size_t>& input, std::multimap<size_t, range_t>& output) {
+    void order_by_pattern(const std::multimap<range_t, size_t>& input, std::multimap<size_t, range_t>& output) override {
         output.clear();
         for (auto& pair : input) {
             output.insert({pair.second, pair.first});
@@ -156,7 +183,7 @@ class t_aho_corasick {
         _patterns.clear();
     }
 
-    return_t get_pattern(size_t index, std::vector<BT>& pattern) {
+    return_t get_pattern(size_t index, std::vector<BT>& pattern) override {
         return_t ret = errorcode_t::success;
         auto iter = _patterns.find(index);
         if (_patterns.end() != iter) {

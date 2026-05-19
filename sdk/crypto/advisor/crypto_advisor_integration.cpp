@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   crypto_advisor_tls.cpp
+ * @file   crypto_advisor_integration.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -107,7 +107,7 @@ return_t crypto_advisor::hintof_ossl_nid(uint32 nid, hint_advisor_t& hint) {
 std::string namesof(const hint_advisor_t* hint) {
     std::string res;
     if (hint) {
-        const char* sn = OBJ_nid2sn(hint->nid);
+        const char* sn = OBJ_nid2ln(hint->nid);
         if (sn) {
             res += sn;
             res += " ";

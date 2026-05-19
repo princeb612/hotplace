@@ -322,8 +322,8 @@ parser::search_result parser::context::wsearch(parser* obj, const context& patte
 
         auto comparator = [](const parser::token* lhs, const parser::token* rhs) -> bool { return (lhs->get_index() == rhs->get_index()); };
 
-        t_kmp<parser::token*> kmp;
-        auto idx = kmp.search(_tokens, pattern._tokens, pos, comparator);
+        t_kmp<parser::token*, decltype(comparator)> kmp(comparator);
+        auto idx = kmp.search(_tokens, pattern._tokens, pos);
         if (size_t(-1) == idx) {
             __leave2;
         }

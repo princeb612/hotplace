@@ -6,6 +6,8 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2024.07.16   Soo Han, Kim        study (codename.hotplace Revision 550)
+ * 2026.05.19   Soo Han, Kim        replace std::function with functor (codename.hotplace Revision 1003)
  */
 
 #ifndef __HOTPLACE_SDK_BASE_PATTERN_TRIE__
@@ -35,10 +37,9 @@ namespace hotplace {
  *          trie.erase("help", 4);
  *          result = trie.search("help", 4); // false
  */
-template <typename BT = char, typename T = BT, typename TP = BT>
+template <typename BT = char, typename T = BT, typename TP = BT, typename memberof_t = memberof_defhandler<BT, T>>
 class t_trie {
    public:
-    typedef typename std::function<BT(const T* source, size_t idx)> memberof_t;
     typedef typename std::function<void(const BT* t, size_t size)> dump_handler;
 
     /**
@@ -80,7 +81,7 @@ class t_trie {
         }
     };
 
-    t_trie(memberof_t memberof = memberof_defhandler<BT, T>) : _root(new trienode), _memberof(memberof) {}
+    t_trie(memberof_t memberof = memberof_t()) : _root(new trienode), _memberof(memberof) {}
     virtual ~t_trie() {
         delete _root;
         clear();

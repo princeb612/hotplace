@@ -53,9 +53,9 @@ namespace hotplace {
  *          t_wildcards<int, mystruct*> wild(kindof_exact_one, kindof_zero_or_more, memberof);
  */
 template <typename BT = char, typename T = BT>
-BT memberof_defhandler(const T* source, size_t idx) {
-    return source ? source[idx] : BT();
-}
+struct memberof_defhandler {
+    BT operator()(const T* source, size_t idx) const { return source ? static_cast<BT>(source[idx]) : BT(); }
+};
 
 }  // namespace hotplace
 

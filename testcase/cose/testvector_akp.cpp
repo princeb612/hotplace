@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   testcase_testvector_akp.cpp
+ * @file   testvector_akp.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -65,7 +65,6 @@ void test_json_testvector_akp(const char* filename) {
             binary_t bin_pub;
             binary_t bin_priv;
             key.get_key(pkey, public_key, bin_pub, bin_priv, true);
-            _logger->hdump("key", bin_pub, 16, 3);
 
             binary_t bin_raw_public_key = base16_decode(value_raw_public_key);
             _test_case.assert(bin_raw_public_key == bin_pub, __FUNCTION__, "public key %s", filename);
@@ -92,7 +91,7 @@ void test_json_testvector_akp(const char* filename) {
 }
 
 void testcase_testvector_akp() {
-    test_json_testvector_akp("cose_mldsa44.json");
-    test_json_testvector_akp("cose_mldsa65.json");
-    test_json_testvector_akp("cose_mldsa87.json");
+    test_json_testvector_akp("testvector_akp_mldsa44.json");
+    test_json_testvector_akp("testvector_akp_mldsa65.json");
+    test_json_testvector_akp("testvector_akp_mldsa87.json");
 }

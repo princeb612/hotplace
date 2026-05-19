@@ -81,10 +81,7 @@ return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_
     return ret;
 }
 
-return_t tls_extension_early_data::do_write_body(tls_direction_t dir, binary_t& bin) {
-    return_t ret = errorcode_t::success;
-    return ret;
-}
+return_t tls_extension_early_data::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }
 
 }  // namespace net
 }  // namespace hotplace

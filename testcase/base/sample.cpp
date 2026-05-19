@@ -83,6 +83,7 @@ int main(int argc, char** argv) {
     testcase_aho_corasick_wildcard();
     testcase_testvector_ahocorasick();
     testcase_kmp();
+    testcase_testvector_kmp();
     testcase_suffixtree();
     testcase_testvector_regex();
     testcase_trie();
