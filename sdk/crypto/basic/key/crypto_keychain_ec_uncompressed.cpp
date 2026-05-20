@@ -97,6 +97,9 @@ return_t crypto_keychain::add_ec_uncompressed(crypto_key* cryptokey, uint32 nid,
         case encoding_t::encoding_base16rfc:
             ret = add_ec_uncompressed_b16rfc(cryptokey, nid, pubkey, privkey, desc);
             break;
+        default:
+            ret = errorcode_t::not_supported;
+            break;
     }
     return ret;
 }
@@ -241,6 +244,9 @@ return_t crypto_keychain::add_ec_uncompressed(crypto_key* cryptokey, const char*
             break;
         case encoding_t::encoding_base16rfc:
             ret = add_ec_uncompressed_b16rfc(cryptokey, curve, pubkey, privkey, desc);
+            break;
+        default:
+            ret = errorcode_t::not_supported;
             break;
     }
     return ret;

@@ -10,6 +10,7 @@
  */
 
 #include <hotplace/sdk/base/basic/function_pipeline.hpp>
+#include <hotplace/sdk/base/nostd/memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
@@ -243,7 +244,7 @@ return_t authenticode_verifier::set(authenticode_context_t* handle, int option, 
 
 return_t authenticode_verifier::verify(authenticode_context_t* handle, const char* file_name, uint32 flags, uint32& result, uint32* engine_id) {
     return_t ret = errorcode_t::success;
-    file_stream filestream;
+    file_stream fs;
     authenticode_plugin* engine_matched = nullptr;
 
     __try2 {
@@ -257,7 +258,7 @@ return_t authenticode_verifier::verify(authenticode_context_t* handle, const cha
             __leave2;
         }
 
-        ret = filestream.open(file_name, filestream_flag_t::open_existing);
+        ret = fs.open(file_name, filestream_flag_t::open_existing);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -270,7 +271,7 @@ return_t authenticode_verifier::verify(authenticode_context_t* handle, const cha
 
             for (auto& pair : handle->engines) {
                 authenticode_plugin* engine = pair.second;
-                if ((true == engine->is_kind_of(&filestream)) && (false == engine->separated())) {
+                if ((true == engine->is_kind_of(&fs)) && (false == engine->separated())) {
                     engine->addref();
                     engine_matched = engine;
                     break;
@@ -281,7 +282,7 @@ return_t authenticode_verifier::verify(authenticode_context_t* handle, const cha
         if (nullptr == engine_matched) {
             ret = errorcode_t::bad_format;
         } else {
-            ret = engine_matched->extract(&filestream, binary);
+            ret = engine_matched->extract(&fs, binary);
         }
 
         if (errorcode_t::success != ret) {
@@ -325,7 +326,7 @@ return_t authenticode_verifier::verify(authenticode_context_t* handle, const cha
                 __leave2;
             }
 
-            engine_matched->digest(&filestream, md.c_str(), md_digest);
+            engine_matched->digest(&fs, md.c_str(), md_digest);
 
             if (authenticode_engine_id_msi != engine_matched->id()) {
                 if (pkcs7_digest != md_digest) {

@@ -93,8 +93,6 @@
 #include <hotplace/sdk/net/http/compression/http_dynamic_table.hpp>
 #include <hotplace/sdk/net/http/compression/http_header_compression.hpp>
 #include <hotplace/sdk/net/http/compression/http_header_compression_stream.hpp>
-#include <hotplace/sdk/net/http/compression/http_huffman_codes.hpp>
-#include <hotplace/sdk/net/http/compression/http_huffman_coding.hpp>
 #include <hotplace/sdk/net/http/compression/http_static_table.hpp>
 #include <hotplace/sdk/net/http/compression/types.hpp>
 

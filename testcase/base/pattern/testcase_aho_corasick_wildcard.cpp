@@ -432,10 +432,6 @@ void test_aho_corasick_wildcard() {
     }
 }
 
-struct memberof_tolower {
-    char operator()(const char* source, size_t idx) const { return source ? std::tolower(source[idx]) : char(); }
-};
-
 void test_aho_corasick_ignorecase() {
     _test_case.begin("aho_corasick + wildcards + ignore case");
 
@@ -498,7 +494,7 @@ void test_aho_corasick_ignorecase() {
     };
 
     for (auto entry : _table) {
-        t_aho_corasick_wildcard<char, char, memberof_tolower> ac('?', '*');
+        t_aho_corasick_wildcard<char, char, memberof_tolower_handler> ac('?', '*');
         std::multimap<range_t, size_t> result;
         std::multimap<range_t, size_t> expect;
 

@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <hotplace/sdk/base/nostd/template.hpp>
+#include <hotplace/sdk/base/nostd/memory.hpp>
 #include <hotplace/sdk/base/stream/bufferio.hpp>
 #include <hotplace/sdk/base/stream/printf.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>

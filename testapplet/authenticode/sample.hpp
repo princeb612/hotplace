@@ -10,7 +10,6 @@
 #ifndef __HOTPLACE_TESTAPPLET_AUTHENTICODE__
 #define __HOTPLACE_TESTAPPLET_AUTHENTICODE__
 
-#include <hotplace/sdk/sdk.hpp>
 #include <hotplace/testcase/test.hpp>
 
 extern test_case _test_case;

@@ -12,11 +12,8 @@
 #ifndef __HOTPLACE_SDK_BASE_NOSTD_RANGE__
 #define __HOTPLACE_SDK_BASE_NOSTD_RANGE__
 
-#include <hotplace/sdk/base/error.hpp>
-#include <hotplace/sdk/base/syntax.hpp>
+#include <hotplace/sdk/base/basic/types.hpp>
 #include <hotplace/sdk/base/system/error.hpp>
-#include <hotplace/sdk/base/types.hpp>
-#include <limits>
 #include <type_traits>  // use decay_t to remove const, volatile, reference(&)
 
 namespace hotplace {
@@ -67,69 +64,6 @@ struct universal_pairhash {
 
         return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
     }
-};
-
-/**
- * @sample
- *          t_sampling_range<int> sample;
- *          sample.sampling(1);   // getmin  1, getmax 1
- *          sample.sampling(-1);  // getmin -1, getmax 1
- *          sample.sampling(2);   // getmin -1, getmax 2
- *          sample.sampling(-2);  // getmin -2, getmax 1
- */
-template <typename T>
-class t_sampling_range {
-   public:
-    t_sampling_range() { reset(); }
-    t_sampling_range(const t_sampling_range<T>& other) : _min(other._min), _max(other._max), _flag(other._flag) {}
-
-    void sampling(const T& value) {
-        if (0 == _flag) {
-            _min = value;
-            _max = value;
-        } else {
-            if (value < _min) {
-                _min = value;
-            }
-            if (value > _max) {
-                _max = value;
-            }
-        }
-        _flag |= 0x1;
-    }
-
-    T getmin() const {
-        if (0 == _flag) {
-            return T(0);
-        } else {
-            return _min;
-        }
-    }
-    T getmax() const {
-        if (0 == _flag) {
-            return T(0);
-        } else {
-            return _max;
-        }
-    }
-
-    void reset() {
-        _min = T(0);
-        _max = T(0);
-        _flag = 0;
-    }
-
-    t_sampling_range& operator=(const t_sampling_range<T>& other) {
-        _min = other._min;
-        _max = other._max;
-        _flag = other._flag;
-        return *this;
-    }
-
-   private:
-    T _min;
-    T _max;
-    uint8 _flag;
 };
 
 }  // namespace hotplace

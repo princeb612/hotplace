@@ -125,10 +125,7 @@ namespace hotplace {
  *
  *          // sample.2 ignore case + wildcard ?, *
  *          {
- *              struct memberof_tolower {
- *                  char operator()(const char* source, size_t idx) const { return source ? std::tolower(source[idx]) : char(); }
- *              };
- *              t_aho_corasick_wildcard<char, char, memberof_tolower> ac('?', '*');
+ *              t_aho_corasick_wildcard<char, char, memberof_tolower_handler> ac('?', '*');
  *              ac.insert("we *ing", 7);
  *              ac.insert("we * old", 8);
  *              const char* source = "We don't playing because we grow old; we grow old because we stop playing.";

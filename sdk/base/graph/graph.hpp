@@ -14,7 +14,6 @@
 #define __HOTPLACE_SDK_BASE_GRAPH_GRAPH__
 
 #include <algorithm>
-#include <hotplace/sdk/base/nostd/template.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/syntax.hpp>
 #include <hotplace/sdk/base/types.hpp>
@@ -284,7 +283,7 @@ class t_graph {
 
        public:
         static const int graph_infinite = 0x10000000;
-        typedef std::function<void(const T&, const T&, int, const std::list<T>&)> visitor_t;  // from, to,wight, path
+        typedef std::function<void(const T&, const T&, int, const std::list<T>&)> visitor_t;  // from, to, weight, path
 
         graph_search(const t_graph<T>& g) : _g(g) {}
         virtual ~graph_search() {}

@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   testvector_ahocorasick.cpp
+ * @file   testvector_kmp.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -9,10 +9,6 @@
  */
 
 #include <hotplace/testcase/base/sample.hpp>
-
-struct memberof_tolower {
-    char operator()(const char* source, size_t idx) const { return source ? std::tolower(source[idx]) : char(); }
-};
 
 void test_yaml_testvector_kmp() {
     _test_case.begin("KMP YAML");

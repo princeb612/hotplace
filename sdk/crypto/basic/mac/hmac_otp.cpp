@@ -9,6 +9,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/nostd/memory.hpp>
 #include <hotplace/sdk/crypto/basic/hmac_otp.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
 

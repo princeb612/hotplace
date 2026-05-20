@@ -14,7 +14,6 @@
 
 #include <functional>
 #include <hotplace/sdk/base/error.hpp>
-#include <hotplace/sdk/base/nostd/template.hpp>
 #include <hotplace/sdk/base/syntax.hpp>
 #include <hotplace/sdk/base/types.hpp>
 #include <map>
@@ -55,6 +54,27 @@ namespace hotplace {
 template <typename BT = char, typename T = BT>
 struct memberof_defhandler {
     BT operator()(const T* source, size_t idx) const { return source ? static_cast<BT>(source[idx]) : BT(); }
+};
+
+/**
+ * @brief   pattern matching ignore case
+ * @example
+ *          t_aho_corasick_wildcard<char, char, memberof_tolower_handler> ac('?', '*');
+ */
+struct memberof_tolower_handler {
+    char operator()(const char* source, size_t idx) const { return source ? std::tolower(source[idx]) : char(); }
+};
+
+/**
+ * @example
+ *          struct symbol_less {
+ *              template <typename T>
+ *              bool operator()(const T& lhs, const T& rhs) const { return lhs.symmbol < rhs.symbol; }
+ *          };
+ */
+template <typename T, typename comparator_t = std::less<T>>
+struct t_comparator_base {
+    bool operator()(const T& lhs, const T& rhs) const { return comparator_t{}(lhs, rhs); }
 };
 
 }  // namespace hotplace

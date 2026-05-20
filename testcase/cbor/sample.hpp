@@ -10,7 +10,6 @@
 #ifndef __HOTPLACE_TEST_CBOR__
 #define __HOTPLACE_TEST_CBOR__
 
-#include <hotplace/sdk/sdk.hpp>
 #include <hotplace/testcase/test.hpp>
 
 struct OPTION : public CMDLINEOPTION {

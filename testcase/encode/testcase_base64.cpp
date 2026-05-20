@@ -10,33 +10,165 @@
 
 #include <hotplace/testcase/encode/sample.hpp>
 
-void do_test_base64_routine(const char* source, size_t source_size, int encoding) {
-    // return_t ret = errorcode_t::success;
-    basic_stream bs;
-    std::string encoded_b64;
-    binary_t decoded_b64;
+void test_base64() {
+    _test_case.begin("base64 encoding");
 
-    _test_case.reset_time();
-    base64_encode((byte_t*)source, source_size, encoded_b64, encoding);
-    base64_decode(encoded_b64, decoded_b64, encoding);
-    _test_case.assert(0 == memcmp(source, decoded_b64.data(), source_size), __FUNCTION__, "base64_decode");
+    return_t ret = errorcode_t::success;
+
+    const char* sample1 = "We don't playing because we grow old; we grow old because we stop playing.";
+    const char* sample2 = R"(0123456789abcdefghijklmnopqrstuvwxyz!@#$%^&*()-_=+[{]}\\|;:'",<.>/\?)";
+    /* comparison */
+    binary_t bin_sample1(sample1, sample1 + strlen(sample1));
+    binary_t bin_sample2(sample2, sample2 + strlen(sample2));
+    basic_stream bs_sample1(sample1);
+    basic_stream bs_sample2(sample2);
 
     {
-        test_case_notimecheck notimecheck(_test_case);
+        auto encoded = base64_encode(sample1);
+        auto decoded = base64_decode(encoded);
+        _logger->write([&](basic_stream& bs) -> void {
+            valist va;
+            va << encoded << decoded;
+            bs.vaprintln("encoded {1}", va);
+            bs.vaprintln("decoded {2:s}", va);  // printable data
+        });
+        _test_case.assert(decoded == bin_sample1, __FUNCTION__, "base64 encoding #1");
+    }
 
-        _logger->hdump("input", source, source_size, 16, 3);
-        _logger->hdump("encoded", encoded_b64, 16, 3);
-        _logger->hdump("decoded", decoded_b64, 16, 3);
+    {
+        auto encoded = base64_encode(sample2);
+        auto decoded = base64_decode(encoded);
+        _logger->write([&](basic_stream& bs) -> void {
+            valist va;
+            va << encoded << decoded;
+            bs.vaprintln("encoded {1}", va);
+            bs.vaprintln("decoded {2:s}", va);  // printable data
+        });
+        _test_case.assert(decoded == bin_sample2, __FUNCTION__, "base64 encoding #2");
+    }
+
+    {
+        std::string encoded;
+        std::string decoded;
+        ret = base64_encode((const byte_t*)sample1, strlen(sample1), encoded);
+        _test_case.test(ret, __FUNCTION__, "encode");
+        ret = base64_decode(encoded, decoded);
+        _logger->write([&](basic_stream& bs) -> void {
+            valist va;
+            va << encoded << decoded;
+            bs.vaprintln("encoded {1}", va);
+            bs.vaprintln("decoded {2}", va);
+        });
+        _test_case.test(ret, __FUNCTION__, "decode");
+        _test_case.assert(bs_sample1 == decoded, __FUNCTION__, "base64 encoding #3 std::string");
+    }
+
+    {
+        binary_t encoded;
+        binary_t decoded;
+        ret = base64_encode((const byte_t*)sample1, strlen(sample1), encoded);
+        _test_case.test(ret, __FUNCTION__, "encode");
+        decoded = base64_decode(encoded);
+        _logger->write([&](basic_stream& bs) -> void {
+            valist va;
+            va << encoded << decoded;
+            bs.vaprintln("encoded {1:s}", va);  // printable binary data
+            bs.vaprintln("decoded {2:s}", va);  // printable binary data
+        });
+        _test_case.assert(decoded == bin_sample1, __FUNCTION__, "base64 encoding #4 binary_t");
+    }
+
+    {
+        basic_stream encoded;
+        basic_stream decoded;
+        ret = base64_encode((const byte_t*)sample1, strlen(sample1), encoded);
+        _test_case.test(ret, __FUNCTION__, "encode");
+        base64_decode(encoded.c_str(), encoded.size(), decoded);
+        _logger->write([&](basic_stream& bs) -> void {
+            valist va;
+            va << encoded << decoded;
+            bs.vaprintln("encoded {1:s}", va);
+            bs.vaprintln("decoded {2:s}", va);
+        });
+        _test_case.assert(decoded == bs_sample1, __FUNCTION__, "base64 encoding #5 basic_stream");
     }
 }
 
-void test_base64() {
-    _test_case.begin("b64 encoding");
-    constexpr char lyrics[] = "still a man hears what he wants to hear and disregards the rest";
-    size_t len = strlen(lyrics);
+void test_base64_stream_by_encoding(std::string text, encoding_t encoding) {
+    _test_case.begin("base64 encoder/decoder stream %s", text.c_str());
 
-    do_test_base64_routine(lyrics, len, encoding_t::encoding_base64);
-    do_test_base64_routine(lyrics, len, encoding_t::encoding_base64url);
+    const size_t bufsize_test = 256;
+    binary_t sample;
+    sample.reserve(bufsize_test);
+    for (size_t i = 0; i < bufsize_test; ++i) {
+        sample.push_back(i);
+    }
+
+    auto write_encoder_chunks = [&](encoder_stream& encoder, const byte_t* stream, size_t stream_size, size_t chunk_size) -> void {
+        size_t pos = 0;
+        while (pos < stream_size) {
+            size_t len = std::min(chunk_size, stream_size - pos);
+            encoder.write(stream + pos, len);
+            pos += len;
+        }
+    };
+    // important testcase
+    auto write_decoder_chunks = [&](decoder_stream& decoder, const char* stream, size_t stream_size, size_t chunk_size) -> void {
+        size_t pos = 0;
+        while (pos < stream_size) {
+            size_t len = std::min(chunk_size, stream_size - pos);
+            decoder.write(stream + pos, len);
+            pos += len;
+        }
+    };
+
+    std::string expect_encoded;
+    base64_encode(sample, expect_encoded, encoding);
+
+    for (size_t chunk = 1; chunk <= 16; ++chunk) {
+        encoder_stream encoder(encoding);
+        _logger->writeln("start encoding");
+        write_encoder_chunks(encoder, sample.data(), sample.size(), chunk);
+        _logger->writeln("stop encoding");
+        auto encoded = encoder.str();  // always even size
+
+        valist va;
+        va << chunk << sample << encoded;
+        _logger->writeln([&](basic_stream& bs) -> void {
+            bs.vaprintln("chunk   {1:s}", va);
+            bs.vaprintln("source  {2:s}", va);  // printable data
+            bs.vaprintln("encoded {3:s}", va);
+        });
+
+        _test_case.assert(encoded == expect_encoded, __FUNCTION__, "base64 encoder stream chunk %zi", chunk);
+    }
+
+    std::string encoded;
+    base64_encode(sample, encoded, encoding);
+
+    for (size_t chunk = 1; chunk <= 16; ++chunk) {
+        decoder_stream decoder(encoding);
+        _logger->writeln("start decoding");
+        write_decoder_chunks(decoder, encoded.data(), encoded.size(), chunk);
+        _logger->writeln("stop decoding");
+        auto decoded = decoder.data();
+
+        valist va;
+        va << chunk << decoded;
+        _logger->writeln([&](basic_stream& bs) -> void {
+            bs.vaprintln("chunk   {1:s}", va);
+            bs.vaprintln("decoded {2:s}", va);  // printable data
+        });
+        _test_case.assert(decoded == sample, __FUNCTION__, "base64 decoder stream chunk %zi", chunk);
+    }
 }
 
-void testcase_base64() { test_base64(); }
+void test_base64_stream() {
+    test_base64_stream_by_encoding("base64", encoding_base64);
+    test_base64_stream_by_encoding("base64url", encoding_base64url);
+}
+
+void testcase_base64() {
+    test_base64();
+    test_base64_stream();
+}

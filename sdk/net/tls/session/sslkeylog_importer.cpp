@@ -91,10 +91,8 @@ return_t sslkeylog_importer::add(const std::string& secret) {
         }
 
         secret = iter->second;
-        binary_t random;
-        base16_decode(column1, random);
-        binary_t value;
-        base16_decode(column2, value);
+        auto random = base16_decode(column1);
+        auto value = base16_decode(column2);
 
         auto& secret_map = _keylogs[random];
         secret_map.emplace(secret, value);

@@ -10,7 +10,6 @@
 #ifndef __HOTPLACE_TEST_QUIC__
 #define __HOTPLACE_TEST_QUIC__
 
-#include <hotplace/sdk/sdk.hpp>
 #include <hotplace/testcase/test.hpp>
 
 enum test_flag_t {

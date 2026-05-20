@@ -10,7 +10,6 @@
 #ifndef __HOTPLACE_TEST_CRYPTO_KEY_TESTVECTOR__
 #define __HOTPLACE_TEST_CRYPTO_KEY_TESTVECTOR__
 
-#include <hotplace/sdk/sdk.hpp>
 #include <hotplace/testcase/test.hpp>
 
 struct test_vector_rfc7919_t {

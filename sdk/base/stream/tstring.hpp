@@ -147,6 +147,7 @@ class ansi_string : public stream_t {
     friend std::ostream& operator<<(std::ostream& lhs, const ansi_string& rhs);
 
     virtual void autoindent(uint8 indent);
+    void resize(size_t size) override;
 
    protected:
    private:
@@ -277,6 +278,7 @@ class wide_string : public stream_t {
     friend std::ostream& operator<<(std::ostream& lhs, const wide_string& rhs);
 
     virtual void autoindent(uint8 indent);
+    void resize(size_t bytes) override;
 
    protected:
    private:

@@ -10,7 +10,6 @@
 #ifndef __HOTPLACE_TEST_NET__
 #define __HOTPLACE_TEST_NET__
 
-#include <hotplace/sdk/sdk.hpp>
 #include <hotplace/testcase/net/hpack/test.hpp>
 #include <hotplace/testcase/net/http/test.hpp>
 #include <hotplace/testcase/net/qpack/test.hpp>

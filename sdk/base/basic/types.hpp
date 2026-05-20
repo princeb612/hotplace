@@ -23,6 +23,7 @@
 
 namespace hotplace {
 
+class http_huffman_coding;
 class huffman_coding;
 class valist;
 struct variant_t;

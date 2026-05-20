@@ -116,6 +116,7 @@ class valist {
     valist& operator<<(const char* value);
     valist& operator<<(const std::string& value);
     valist& operator<<(const basic_stream& value);
+    valist& operator<<(const binary_t& value);
     valist& operator<<(const variant_t& v);
     valist& operator<<(variant_t&& v);
     valist& operator=(const valist& object);

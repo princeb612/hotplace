@@ -83,8 +83,8 @@ void whatsthis() {
                 break;
             case encode_plaintext:
                 what = std::move(str2bin(o.content));
-                base16_encode(o.content, temp);
-                additional << "> b16\n  " << bin2str(temp).c_str() << "\n";
+                stemp = base16_encode(o.content);
+                additional << "> b16\n  " << stemp.c_str() << "\n";
                 additional << "> b64\n  " << base64_encode(o.content).c_str() << "\n";
                 additional << "> b64url\n  " << base64_encode(o.content, encoding_t::encoding_base64url).c_str() << "\n";
                 break;

@@ -180,6 +180,13 @@ valist& valist::operator<<(const basic_stream& value) {
     return *this;
 }
 
+valist& valist::operator<<(const binary_t& value) {
+    variant v(value);
+    insert(std::move(v.get()));
+    v.reset();
+    return *this;
+}
+
 valist& valist::operator<<(const variant_t& v) {
     insert(v);
     return *this;

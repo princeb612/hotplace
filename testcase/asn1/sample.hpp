@@ -12,7 +12,6 @@
 
 #include <stdio.h>
 
-#include <hotplace/sdk/sdk.hpp>
 #include <hotplace/testcase/test.hpp>
 
 extern test_case _test_case;

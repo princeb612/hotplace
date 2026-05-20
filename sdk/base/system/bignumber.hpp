@@ -12,8 +12,9 @@
 #define __HOTPLACE_SDK_BASE_SYSTEM_BIGNUMBER__
 
 #include <functional>
+#include <hotplace/sdk/base/nostd/atoi.hpp>
+#include <hotplace/sdk/base/nostd/cast.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
-#include <hotplace/sdk/base/nostd/template.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
 #include <hotplace/sdk/base/system/types.hpp>
 #include <iomanip>

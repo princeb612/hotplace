@@ -244,6 +244,8 @@ class file_stream : public stream_t {
      */
     virtual void autoindent(uint8 indent);
 
+    void resize(size_t bytes) override;
+
     int _stream_type;
 #if defined __linux__
     int _file_handle;

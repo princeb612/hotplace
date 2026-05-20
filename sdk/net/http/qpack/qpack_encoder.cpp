@@ -10,7 +10,7 @@
 
 #include <math.h>
 
-#include <hotplace/sdk/net/http/compression/http_huffman_coding.hpp>
+#include <hotplace/sdk/base/basic/http_huffman_coding.hpp>
 #include <hotplace/sdk/net/http/http_resource.hpp>
 #include <hotplace/sdk/net/http/qpack/qpack_encoder.hpp>
 #include <hotplace/sdk/net/http/qpack/qpack_static_table.hpp>

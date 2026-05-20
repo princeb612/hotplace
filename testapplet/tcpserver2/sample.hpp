@@ -10,7 +10,6 @@
 #ifndef __HOTPLACE_TESTAPPLET_TCPSERVER__
 #define __HOTPLACE_TESTAPPLET_TCPSERVER__
 
-#include <hotplace/sdk/sdk.hpp>
 #include <hotplace/testcase/test.hpp>
 
 struct OPTION : public CMDLINEOPTION {

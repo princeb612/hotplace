@@ -10,7 +10,6 @@
 #ifndef __HOTPLACE_TEST_ENCODE__
 #define __HOTPLACE_TEST_ENCODE__
 
-#include <hotplace/sdk/sdk.hpp>
 #include <hotplace/testcase/test.hpp>
 
 enum {

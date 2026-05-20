@@ -8,10 +8,9 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/net/http/compression/http_huffman_codes.hpp>
+#include <hotplace/sdk/base/basic/http_huffman_codes.hpp>
 
 namespace hotplace {
-namespace net {
 
 // RFC 7541 Appendix B. Huffman Code
 
@@ -275,5 +274,4 @@ const huffman_coding::hc_code_t _h2hcodes[] = {
     {0, nullptr},
 };
 
-}  // namespace net
 }  // namespace hotplace

@@ -10,7 +10,6 @@
 #ifndef __HOTPLACE_TESTAPPLET_HTTPSERVER__
 #define __HOTPLACE_TESTAPPLET_HTTPSERVER__
 
-#include <hotplace/sdk/sdk.hpp>
 #include <hotplace/testcase/test.hpp>
 
 enum option_flag_t {

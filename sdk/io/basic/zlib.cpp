@@ -20,7 +20,7 @@
 
 #include <zlib.h>
 
-#include <hotplace/sdk/base/nostd/template.hpp>
+#include <hotplace/sdk/base/nostd/cast.hpp>
 #include <hotplace/sdk/io/basic/zlib.hpp>
 
 namespace hotplace {

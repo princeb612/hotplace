@@ -14,7 +14,7 @@
 #include <functional>
 #include <hotplace/sdk/base/basic/types.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
-#include <hotplace/sdk/base/nostd/template.hpp>
+#include <hotplace/sdk/base/nostd/memory.hpp>
 #include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/base/system/uint.hpp>

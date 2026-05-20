@@ -10,6 +10,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/nostd/utility.hpp>
 #include <hotplace/sdk/net/http/http2/types.hpp>
 #include <hotplace/sdk/net/http/http_resource.hpp>
 

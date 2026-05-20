@@ -11,70 +11,148 @@
 #include <hotplace/testcase/encode/sample.hpp>
 
 void test_base16() {
-    _test_case.begin("b16 encoding");
+    _test_case.begin("base16 encoding");
 
     return_t ret = errorcode_t::success;
-    constexpr char text[] = R"(0123456789abcdefghijklmnopqrstuvwxyz!@#$%^&*()-_=+[{]}\\|;:'",<.>/\?)";
-    std::string encoded;
 
-    ret = base16_encode((byte_t*)text, strlen(text), encoded);
-    _test_case.test(ret, __FUNCTION__, "encode");
-    binary_t decoded;
-    ret = base16_decode(encoded, decoded);
-    _test_case.test(ret, __FUNCTION__, "decode");
+    const char* sample1 = "We don't playing because we grow old; we grow old because we stop playing.";
+    const char* sample2 = R"(0123456789abcdefghijklmnopqrstuvwxyz!@#$%^&*()-_=+[{]}\\|;:'",<.>/\?)";
+    /* comparison */
+    binary_t bin_sample1(sample1, sample1 + strlen(sample1));
+    binary_t bin_sample2(sample2, sample2 + strlen(sample2));
+    basic_stream bs_sample1(sample1);
+    basic_stream bs_sample2(sample2);
 
     {
-        test_case_notimecheck notimecheck(_test_case);
+        auto encoded = base16_encode(sample1);
+        auto decoded = base16_decode(encoded);
+        _logger->write([&](basic_stream& bs) -> void {
+            valist va;
+            va << encoded << decoded;
+            bs.vaprintln("encoded {1}", va);
+            bs.vaprintln("decoded {2:s}", va);  // printable data
+        });
+        _test_case.assert(decoded == bin_sample1, __FUNCTION__, "base16 encoding #1");
+    }
 
-        _logger->writeln("input : %s", text);
-        _logger->writeln("encode: %s", encoded.c_str());
-        _logger->hdump("dump decoded", decoded);
+    {
+        auto encoded = base16_encode(sample2);
+        auto decoded = base16_decode(encoded);
+        _logger->write([&](basic_stream& bs) -> void {
+            valist va;
+            va << encoded << decoded;
+            bs.vaprintln("encoded {1}", va);
+            bs.vaprintln("decoded {2:s}", va);  // printable data
+        });
+        _test_case.assert(decoded == bin_sample2, __FUNCTION__, "base16 encoding #2");
+    }
+
+    {
+        std::string encoded;
+        std::string decoded;
+        ret = base16_encode((const byte_t*)sample1, strlen(sample1), encoded);
+        _test_case.test(ret, __FUNCTION__, "encode");
+        ret = base16_decode(encoded, decoded);
+        _logger->write([&](basic_stream& bs) -> void {
+            valist va;
+            va << encoded << decoded;
+            bs.vaprintln("encoded {1}", va);
+            bs.vaprintln("decoded {2}", va);
+        });
+        _test_case.test(ret, __FUNCTION__, "decode");
+        _test_case.assert(bs_sample1 == decoded, __FUNCTION__, "base16 encoding #3 std::string");
+    }
+
+    {
+        binary_t encoded;
+        binary_t decoded;
+        ret = base16_encode((const byte_t*)sample1, strlen(sample1), encoded);
+        _test_case.test(ret, __FUNCTION__, "encode");
+        decoded = base16_decode(encoded);
+        _logger->write([&](basic_stream& bs) -> void {
+            valist va;
+            va << encoded << decoded;
+            bs.vaprintln("encoded {1:s}", va);  // printable binary data
+            bs.vaprintln("decoded {2:s}", va);  // printable binary data
+        });
+        _test_case.assert(decoded == bin_sample1, __FUNCTION__, "base16 encoding #4 binary_t");
+    }
+
+    {
+        basic_stream encoded;
+        basic_stream decoded;
+        ret = base16_encode((const byte_t*)sample1, strlen(sample1), encoded);
+        _test_case.test(ret, __FUNCTION__, "encode");
+        base16_decode(encoded.c_str(), encoded.size(), decoded);
+        _logger->write([&](basic_stream& bs) -> void {
+            valist va;
+            va << encoded << decoded;
+            bs.vaprintln("encoded {1:s}", va);
+            bs.vaprintln("decoded {2:s}", va);
+        });
+        _test_case.assert(decoded == bs_sample1, __FUNCTION__, "base16 encoding #5 basic_stream");
     }
 }
 
-void test_base16_func() {
-    return_t ret = errorcode_t::success;
-    constexpr byte_t text[] = "still a man hears what he wants to hear and disregards the rest";
+void test_base16_stream() {
+    _test_case.begin("base16 encoder/decoder stream");
 
-    /* return_t base16_encode (const byte_t* source, size_t size, char* buf, size_t* buflen) */
-    size_t size = 0;
-    std::vector<char> buf;
-    base16_encode(text, RTL_NUMBER_OF(text), nullptr, &size);
-    buf.resize(size);
-    ret = base16_encode(text, RTL_NUMBER_OF(text), buf.data(), &size);
-    _logger->dump(buf.data(), buf.size());
-    _test_case.test(ret, __FUNCTION__, "case1");
-
-    /* return_t base16_encode (const byte_t* source, size_t size, std::string& outpart) */
-    std::string strbuf;
-    ret = base16_encode(text, RTL_NUMBER_OF(text), strbuf);
-    _logger->dump(strbuf);
-    _test_case.test(ret, __FUNCTION__, "case2");
-
-    /* return_t base16_encode (const byte_t* source, size_t size, stream_t* stream) */
-    basic_stream streambuf;
-    ret = base16_encode(text, RTL_NUMBER_OF(text), &streambuf);
-    _logger->dump(streambuf);
-    _test_case.test(ret, __FUNCTION__, "case3");
-}
-
-void test_base16_decode() {
-    _test_case.begin("b16 encoding");
-    return_t ret = errorcode_t::success;
-    std::string encoded("0x000102030405060708090a0b0c0d0e0f808182838485868788898a8b8c8d8e8f");
-
-    binary_t decoded;
-
-    ret = base16_decode(encoded, decoded);
-    _test_case.test(ret, __FUNCTION__, "decode");
-
-    {
-        test_case_notimecheck notimecheck(_test_case);
-
-        basic_stream bs;
-        dump_memory(decoded.data(), decoded.size(), &bs);
-        _logger->writeln("%s", bs.c_str());
+    const size_t bufsize_test = 256;
+    binary_t sample;
+    sample.reserve(bufsize_test);
+    for (size_t i = 0; i < bufsize_test; ++i) {
+        sample.push_back(i);
     }
+
+    auto write_encoder_chunks = [&](encoder_stream& encoder, const byte_t* stream, size_t stream_size) -> void {
+        size_t pos = 0;
+        while (pos < stream_size) {
+            size_t len = (std::rand() % 16) + 1;
+            len = std::min(len, stream_size - pos);
+            encoder.write(stream + pos, len);
+            // _logger->writeln("write into encoder stream %zi bytes", len);
+            pos += len;
+        }
+    };
+    auto write_decoder_chunks = [&](decoder_stream& decoder, const char* stream, size_t stream_size) -> void {
+        size_t pos = 0;
+        while (pos < stream_size) {
+            size_t len = (std::rand() % 16) + 1;
+            len = std::min(len, stream_size - pos);
+            decoder.write(stream + pos, len);
+            // _logger->writeln("write into decoder stream %zi bytes", len);
+            pos += len;
+        }
+    };
+
+    encoder_stream encoder(encoding_base16);
+    _logger->writeln("start encoding");
+    write_encoder_chunks(encoder, sample.data(), sample.size());
+    _logger->writeln("stop encoding");
+    auto encoded = encoder.str();
+
+    valist va;
+    va << sample << encoded;
+    _logger->writeln([&](basic_stream& bs) -> void {
+        bs.vaprintln("{1:s}", va);
+        bs.vaprintln("{2}", va);
+    });
+
+    decoder_stream decoder(encoding_base16);
+    _logger->writeln("start decoding");
+    write_decoder_chunks(decoder, encoded.data(), encoded.size());
+    _logger->writeln("stop decoding");
+    auto decoded = decoder.data();
+    if (decoded.size() % 2) {
+        decoded.insert(decoded.begin(), 0);  // if odd size, preserve leading zero
+    }
+
+    va << decoded;
+    _logger->writeln([&](basic_stream& bs) -> void {
+        bs.vaprintln("{2}", va);
+        bs.vaprintln("{3:s}", va);
+    });
+    _test_case.assert(decoded == sample, __FUNCTION__, "base16 encoder/decoder stream");
 }
 
 void test_base16_oddsize() {
@@ -118,8 +196,7 @@ void test_base16_rfc() {
 
 void testcase_base16() {
     test_base16();
-    test_base16_func();
-    test_base16_decode();
+    test_base16_stream();
     test_base16_oddsize();
     test_base16_rfc();
 }

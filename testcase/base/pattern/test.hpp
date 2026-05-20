@@ -12,7 +12,7 @@
 
 #include <stdio.h>
 
-#include <hotplace/sdk/sdk.hpp>
+#include <hotplace/testcase/test.hpp>
 
 struct pattern_t {
     const char* pattern;

@@ -191,7 +191,7 @@ class basic_stream : public stream_t {
     friend std::ostream& operator<<(std::ostream& lhs, const basic_stream& rhs);
 
     virtual void autoindent(uint8 indent);
-    void resize(size_t size);
+    void resize(size_t size) override;
 
    protected:
    private:

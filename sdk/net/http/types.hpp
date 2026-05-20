@@ -94,7 +94,6 @@ class http_uri;
 
 // net/http/compression
 class http_header_compression;
-class http_huffman_coding;
 
 // net/http/http2
 class hpack_encoder;

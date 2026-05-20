@@ -9,11 +9,11 @@
  * 2017.07.26   Soo Han, Kim        sprintf support {1} {2} ... using valist (codename.grape Revision 371)
  * 2024.09.13   Soo Han, Kim        Aho-Corasick algorithm applied (codename.hotplace Revision 607)
  * 2026.05.06   Soo Han, Kim        format string syntax e.g. {1:02x} {1:3d} {2:-10s} (codename.hotplace Revision 977)
+ * 2026.05.20   Soo Han, Kim        printable binary data
  */
 
 #include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/basic/valist.hpp>
-#include <hotplace/sdk/base/nostd/template.hpp>
 #include <hotplace/sdk/base/pattern/aho_corasick.hpp>
 #include <hotplace/sdk/base/pattern/regex.hpp>
 #include <hotplace/sdk/base/stream/printf.hpp>
@@ -30,8 +30,8 @@ typedef struct _variant_conversion_t {
 } variant_conversion_t;
 
 static variant_conversion_t type_formatter[] = {
-    {TYPE_CHAR, "%c"},   {TYPE_BYTE, "%c"},    {TYPE_SHORT, "%i"},   {TYPE_USHORT, "%d"}, {TYPE_INT32, "%i"}, {TYPE_UINT32, "%u"},
-    {TYPE_INT64, "%li"}, {TYPE_UINT64, "%lu"}, {TYPE_POINTER, "%p"}, {TYPE_STRING, "%s"}, {TYPE_FLOAT, "%f"}, {TYPE_DOUBLE, "%lf"},
+    {TYPE_CHAR, "%c"},    {TYPE_BYTE, "%c"},    {TYPE_SHORT, "%i"},  {TYPE_USHORT, "%d"}, {TYPE_INT32, "%i"},   {TYPE_UINT32, "%u"}, {TYPE_INT64, "%li"},
+    {TYPE_UINT64, "%lu"}, {TYPE_POINTER, "%p"}, {TYPE_STRING, "%s"}, {TYPE_FLOAT, "%f"},  {TYPE_DOUBLE, "%lf"}, {TYPE_BINARY, "%p"},
 };
 size_t size_type_formatter = RTL_NUMBER_OF(type_formatter);
 
@@ -77,7 +77,8 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
             fmtspec.emplace(item->type, item->formatter);
         }
 
-        if (0) {
+#if 0
+        {
             /**
              * Aho-Corasick
              *
@@ -126,8 +127,9 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
 
             stream->vprintf((char*)formatter.data(), va_new.get());
         }
+#endif
 
-        if (1) {
+        {
             /**
              * format string syntax
              * regular expression based
@@ -161,6 +163,7 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
                 auto v = va[idx];
                 auto vtype = v.type;
                 auto vflag = v.flag;
+                variant vtemp;
 
                 // full match
                 auto range = match[0];
@@ -205,6 +208,24 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
                                     dest.insert(dest.begin(), '%');
                                     break;
                             }
+                        } else if (flag_binary & vflag) {
+                            switch (r) {
+                                case 's':
+                                    auto len = v.size;
+                                    std::string str;
+                                    str.reserve(len + 1);
+
+                                    // printable data (TYPE_BINARY)
+                                    std::transform(v.data.bstr, v.data.bstr + len, std::back_inserter(str),
+                                                   [](unsigned char c) { return std::isprint(c) ? static_cast<char>(c) : '.'; });
+
+                                    variant t(str);
+                                    vtemp = std::move(t);
+
+                                    dest = std::move(temp);
+                                    dest.insert(dest.begin(), '%');
+                                    break;
+                            }
                         }
                     }
                 }
@@ -215,7 +236,12 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
                     }
                 }
 
-                va_new << v;
+                if (TYPE_NULL == vtemp.type()) {
+                    va_new << v;
+                } else {
+                    va_new << std::move(vtemp.get());
+                    vtemp.reset();
+                }
                 fmtlist.push_back({std::move(src), std::move(dest)});
             }
 

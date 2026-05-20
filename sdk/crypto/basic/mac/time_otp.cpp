@@ -9,6 +9,8 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/nostd/memory.hpp>
+#include <hotplace/sdk/base/nostd/utility.hpp>
 #include <hotplace/sdk/crypto/basic/hmac_otp.hpp>
 #include <hotplace/sdk/crypto/basic/time_otp.hpp>
 

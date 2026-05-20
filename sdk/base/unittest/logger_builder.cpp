@@ -9,7 +9,6 @@
  *
  */
 
-#include <hotplace/sdk/base/nostd/template.hpp>
 #include <hotplace/sdk/base/unittest/logger.hpp>
 
 namespace hotplace {

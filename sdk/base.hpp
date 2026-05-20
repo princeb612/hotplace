@@ -29,6 +29,8 @@
 #include <hotplace/sdk/base/basic/cmdline.hpp>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/basic/function_pipeline.hpp>
+#include <hotplace/sdk/base/basic/http_huffman_codes.hpp>
+#include <hotplace/sdk/base/basic/http_huffman_coding.hpp>
 #include <hotplace/sdk/base/basic/huffman_coding.hpp>
 #include <hotplace/sdk/base/basic/keyvalue.hpp>
 #include <hotplace/sdk/base/basic/types.hpp>
@@ -39,15 +41,20 @@
 #include <hotplace/sdk/base/graph/graph.hpp>
 
 /* nostd */
+#include <hotplace/sdk/base/nostd/atoi.hpp>
 #include <hotplace/sdk/base/nostd/avltree.hpp>
 #include <hotplace/sdk/base/nostd/binaries.hpp>
 #include <hotplace/sdk/base/nostd/btree.hpp>
+#include <hotplace/sdk/base/nostd/capacity.hpp>
+#include <hotplace/sdk/base/nostd/cast.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/nostd/list.hpp>
+#include <hotplace/sdk/base/nostd/memory.hpp>
 #include <hotplace/sdk/base/nostd/ovl.hpp>
 #include <hotplace/sdk/base/nostd/pq.hpp>
 #include <hotplace/sdk/base/nostd/range.hpp>
-#include <hotplace/sdk/base/nostd/template.hpp>
+#include <hotplace/sdk/base/nostd/traits.hpp>
+#include <hotplace/sdk/base/nostd/utility.hpp>
 #include <hotplace/sdk/base/nostd/vector.hpp>
 
 /* pattern */
@@ -64,6 +71,7 @@
 /* stream */
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/stream/bufferio.hpp>
+#include <hotplace/sdk/base/stream/encoder_stream.hpp>
 #include <hotplace/sdk/base/stream/printf.hpp>
 #include <hotplace/sdk/base/stream/split.hpp>
 #include <hotplace/sdk/base/stream/stream_policy.hpp>

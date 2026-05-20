@@ -101,6 +101,9 @@ return_t crypto_keychain::add_oct(crypto_key* cryptokey, encoding_t encoding, co
         case encoding_t::encoding_base16rfc:
             ret = add_oct_b16rfc(cryptokey, k, desc);
             break;
+        default:
+            ret = errorcode_t::not_supported;
+            break;
     }
     return ret;
 }

@@ -16,132 +16,113 @@
 #define __HOTPLACE_SDK_BASE_BASIC_BASE64__
 
 #include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/nostd/traits.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 
 namespace hotplace {
 
 /**
- * encode   base64 and base64url (fill padding)
- * @param   const byte_t* sources [in]
- * @param   size_t source_size [in]
- * @param   byte_t* buffer [out]
- * @param   size_t* buffer_size [inout]
- * @param   int encoding [inopt] see encoding_t
- * @return  error code (see error.hpp)
  * @remarks
  *          source        eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
  *          BASE64 (E)    ZXlKMGVYQWlPaUpLVjFRaUxBMEtJQ0poYkdjaU9pSklVekkxTmlKOQ==
  *          BASE64URL (E) ZXlKMGVYQWlPaUpLVjFRaUxBMEtJQ0poYkdjaU9pSklVekkxTmlKOQ
  *          BASE64 (D)    {"typ":"JWT",\n "alg":"HS256"}
- * @example
- *          binary_t buffer;
- *          size_t size = 0;
- *          bse64_encode(source, source_size, buffer.data(), &size); // size in=0 out=56
- *          buffer.resize(size);
- *          bse64_encode(source, source_size, buffer.data(), &size); // size in=56 out=56
- *          buffer.resize(size);
  */
-return_t base64_encode(const byte_t* source, size_t source_size, byte_t* buffer, size_t* buffer_size, int encoding = encoding_t::encoding_base64);
+
+return_t base64_encode_raw(const byte_t* source, size_t source_size, char* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
+return_t base64_encode_raw(const binary_t& source, char* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
+return_t base64_encode_raw(const char* source, size_t source_size, char* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
+return_t base64_encode_raw(const std::string& source, char* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
+
+template <typename T>
+return_t base64_encode(const byte_t* source, size_t size, T& streambuf, encoding_t encoding = encoding_t::encoding_base64, uint32 flags = 0) {
+    typedef encoder_stream_traits<T> traits;
+    typedef typename traits::value_type value_type;
+    return_t ret = errorcode_t::success;
+
+    if (encoding_base64 == encoding || encoding_base64url == encoding) {
+        if (0 == (base64_notrunc & flags)) {
+            traits::trunc(streambuf);
+        }
+        size_t size_reserve = 0;
+        ret = base64_encode_raw(source, size, nullptr, &size_reserve, encoding);         // required size
+        if (errorcode_t::insufficient_buffer == ret) {                                   // how many size required
+            value_type* buf = traits::reserve(streambuf, size_reserve);                  // reserve
+            size_t size_written = size_reserve;                                          //
+            ret = base64_encode_raw(source, size, (char*)buf, &size_written, encoding);  // encode
+            if (errorcode_t::success == ret) {                                           //
+                traits::commit(streambuf, size_reserve, size_written);                   // shrink
+            }
+        }
+    }
+    return ret;
+};
+
+template <typename T>
+return_t base64_encode(const binary_t& source, T& streambuf, encoding_t encoding = encoding_t::encoding_base64, uint32 flags = 0) {
+    return base64_encode(source.data(), source.size(), streambuf, encoding, flags);
+}
+
+std::string base64_encode(const char* source, encoding_t encoding = encoding_t::encoding_base64);
+std::string base64_encode(const byte_t* source, size_t size, encoding_t encoding = encoding_t::encoding_base64);
+std::string base64_encode(const std::string& source, encoding_t encoding = encoding_t::encoding_base64);
+std::string base64_encode(const binary_t& source, encoding_t encoding = encoding_t::encoding_base64);
+std::string base64_encode(const basic_stream& source, encoding_t encoding = encoding_t::encoding_base64);
+
+return_t base64_decode_raw(const char* source, size_t source_size, byte_t* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
+return_t base64_decode_raw(const std::string& source, byte_t* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
+return_t base64_decode_raw(const byte_t* source, size_t source_size, byte_t* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
+return_t base64_decode_raw(const binary_t& source, byte_t* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
+
+template <typename T>
+return_t base64_decode(const char* source, size_t size, T& streambuf, encoding_t encoding = encoding_t::encoding_base64, uint32 flags = 0) {
+    typedef encoder_stream_traits<T> traits;
+    typedef typename traits::value_type value_type;
+    return_t ret = errorcode_t::success;
+
+    if (encoding_base64 == encoding || encoding_base64url == encoding) {
+        if (0 == (base64_notrunc & flags)) {
+            traits::trunc(streambuf);
+        }
+        size_t size_reserve = 0;
+        ret = base64_decode_raw(source, size, nullptr, &size_reserve, encoding);           // required size
+        if (errorcode_t::insufficient_buffer == ret) {                                     // how many size required
+            value_type* buf = traits::reserve(streambuf, size_reserve);                    // reserve
+            size_t size_written = size_reserve;                                            //
+            ret = base64_decode_raw(source, size, (byte_t*)buf, &size_written, encoding);  // decode
+            if (errorcode_t::success == ret) {                                             //
+                traits::commit(streambuf, size_reserve, size_written);                     // shrink
+            }
+        }
+    }
+    return ret;
+};
+
+template <typename T>
+return_t base64_decode(const std::string& source, T& streambuf, encoding_t encoding = encoding_t::encoding_base64, uint32 flags = 0) {
+    return base64_decode(source.c_str(), source.size(), streambuf, encoding, flags);
+}
+
+binary_t base64_decode(const char* source, encoding_t encoding = encoding_t::encoding_base64);
+binary_t base64_decode(const char* source, size_t size, encoding_t encoding = encoding_t::encoding_base64);
+binary_t base64_decode(const byte_t* source, size_t size, encoding_t encoding = encoding_t::encoding_base64);
+binary_t base64_decode(const std::string& source, encoding_t encoding = encoding_t::encoding_base64);
+binary_t base64_decode(const binary_t& source, encoding_t encoding = encoding_t::encoding_base64);
+binary_t base64_decode(const basic_stream& source, encoding_t encoding = encoding_t::encoding_base64);
 
 /**
- * @brief   encode
- * @param   const byte_t* source [in]
- * @param   size_t source_size [in]
- * @param   binary_t& encoded [out]
- * @param   int encoding [inopt] see encoding_t
- */
-return_t base64_encode(const byte_t* source, size_t source_size, binary_t& encoded, int encoding = encoding_t::encoding_base64);
-/**
- * @brief   encode
- * @param   const byte_t* source [in]
- * @param   size_t source_size [in]
- * @param   std::string& encoded [out]
- * @param   int encoding [inopt] see encoding_t
- */
-return_t base64_encode(const byte_t* source, size_t source_size, std::string& encoded, int encoding = encoding_t::encoding_base64);
-/**
- * @brief   encode
- * @param   const byte_t* source [in]
- * @param   size_t source_size [in]
- * @param   int encoding [inopt] see encoding_t
- */
-std::string base64_encode(const byte_t* source, size_t source_size, int encoding = encoding_t::encoding_base64);
-/**
- * @brief   encode
- * @param   const binary_t& source [in]
- * @param   int encoding [inopt] see encoding_t
- */
-std::string base64_encode(const binary_t& source, int encoding = encoding_t::encoding_base64);
-/**
- * @brief   encode
+ * @brief   decode (use this only if the original source is a string)
  * @param   const std::string& source [in]
- * @param   int encoding [inopt] see encoding_t
+ * @param   encoding_t encoding [inopt] see encoding_t
  */
-std::string base64_encode(const std::string& source, int encoding = encoding_t::encoding_base64);
-
+std::string base64_decode_careful(const std::string& source, encoding_t encoding = encoding_t::encoding_base64);
 /**
- * decode   base64 and base64url
- * @param   const byte_t* sources [in]
- * @param   size_t source_size [in]
- * @param   byte_t* buffer [out]
- * @param   size_t* buffer_size [inout]
- * @param   int encoding [inopt] see encoding_t
- * @return  error code (see error.hpp)
- * @example
- *          binary_t buffer;
- *          size_t size = 0;
- *          bse64_decode(source, source_size, buffer.data(), &size, encoding_t::encoding_base64url); // size in=0 out=42
- *          buffer.resize(size);
- *          bse64_decode(source, source_size, buffer.data(), &size, encoding_t::encoding_base64url); // size out=42 out=40
- *          buffer.resize(size);
- */
-return_t base64_decode(const byte_t* source, size_t source_size, byte_t* buffer, size_t* buffer_size, int encoding = encoding_t::encoding_base64);
-/**
- * @brief   decode
+ * @brief   decode (use this only if the original source is a string)
  * @param   const char* source [in]
  * @param   size_t source_size [in]
- * @param   binary_t& decoded [out]
- * @param   int encoding [inopt] see encoding_t
+ * @param   encoding_t encoding [inopt] see encoding_t
  */
-return_t base64_decode(const char* source, size_t source_size, binary_t& decoded, int encoding = encoding_t::encoding_base64);
-/**
- * @brief   decode
- * @param   const std::string& source [in]
- * @param   binary_t& decoded [out]
- * @param   int encoding [in] see encoding_t
- */
-return_t base64_decode(const std::string& source, binary_t& decoded, int encoding = encoding_t::encoding_base64);
-/**
- * @brief   decode
- * @param   const char* source [in]
- * @param   size_t source_size [in]
- * @param   int encoding [inopt] see encoding_t
- */
-binary_t base64_decode(const char* source, size_t source_size, int encoding = encoding_t::encoding_base64);
-/**
- * @brief   decode
- * @param   const binary_t& source [in]
- * @param   int encoding [inopt] see encoding_t
- */
-binary_t base64_decode(const binary_t& source, int encoding = encoding_t::encoding_base64);
-/**
- * @brief   decode
- * @param   const std::string& source [in]
- * @param   int encoding [inopt] see encoding_t
- */
-binary_t base64_decode(const std::string& source, int encoding = encoding_t::encoding_base64);
-/**
- * @brief   decode
- * @param   const std::string& source [in]
- * @param   int encoding [inopt] see encoding_t
- */
-std::string base64_decode_careful(const std::string& source, int encoding = encoding_t::encoding_base64);
-/**
- * @brief   decode
- * @param   const char* source [in]
- * @param   size_t source_size [in]
- * @param   int encoding [inopt] see encoding_t
- */
-std::string base64_decode_careful(const char* source, size_t source_size, int encoding = encoding_t::encoding_base64);
+std::string base64_decode_careful(const char* source, size_t source_size, encoding_t encoding = encoding_t::encoding_base64);
 
 }  // namespace hotplace
 

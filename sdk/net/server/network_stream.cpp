@@ -10,6 +10,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/nostd/list.hpp>
+#include <hotplace/sdk/base/nostd/memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/net/server/network_protocol.hpp>
@@ -174,17 +175,13 @@ return_t network_stream::do_writep(network_protocol_group* protocol_group, netwo
 
         test = protocol_group->is_kind_of(bufstream.data(), bufstream.size(), &protocol);  // reference counter ++
 
-        auto lambda = [](network_protocol* object) -> void {
-            if (object) {
-                object->release();  // reference counter --
-            }
-        };
-        t_promise_on_destroy<network_protocol*>(protocol, lambda);
-
         if (errorcode_t::more_data == test) {
             // do nothing
         } else if (errorcode_t::success == test) {
-            protocol->read_stream(&bufstream, &message_size, &state, &priority);
+            auto lambda_deleter = [](network_protocol* object) -> void { object->release(); };  // reference counter --
+            auto protocol_ptr = custom::make_promise_on_destruction<network_protocol>(protocol, lambda_deleter);
+
+            protocol_ptr.get()->read_stream(&bufstream, &message_size, &state, &priority);
             switch (state) {
                 case protocol_state_t::protocol_state_complete: {
                     target->produce(bufstream.data(), message_size, buffer_object->get_sockaddr());

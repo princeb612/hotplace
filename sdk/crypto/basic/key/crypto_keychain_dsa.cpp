@@ -155,6 +155,29 @@ return_t crypto_keychain::add_dsa(crypto_key* cryptokey, uint32 nid, const binar
     return ret;
 }
 
+return_t crypto_keychain::add_dsa(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* y, const char* x, const char* p, const char* q, const char* g,
+                                  const keydesc& desc) {
+    return_t ret = errorcode_t::success;
+    switch (encoding) {
+        case encoding_t::encoding_base64:
+            ret = add_dsa_b64(cryptokey, nid, y, x, p, q, g, desc);
+            break;
+        case encoding_t::encoding_base64url:
+            ret = add_dsa_b64u(cryptokey, nid, y, x, p, q, g, desc);
+            break;
+        case encoding_t::encoding_base16:
+            ret = add_dsa_b16(cryptokey, nid, y, x, p, q, g, desc);
+            break;
+        case encoding_t::encoding_base16rfc:
+            ret = add_dsa_b16rfc(cryptokey, nid, y, x, p, q, g, desc);
+            break;
+        default:
+            ret = errorcode_t::not_supported;
+            break;
+    }
+    return ret;
+}
+
 return_t crypto_keychain::add_dsa_b64(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const char* p, const char* q, const char* g, const keydesc& desc) {
     return_t ret = errorcode_t::success;
     __try2 {

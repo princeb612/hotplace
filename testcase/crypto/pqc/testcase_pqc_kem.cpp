@@ -76,10 +76,10 @@ void test_pqc_kem() {
                 ret = pqc.encapsule(nullptr, pubkey, keycapsule, sharedsecret_bob);
                 _logger->write([&](basic_stream& bs) -> void {
                     bs << "capsule ";
-                    base16_encode(keycapsule, &bs, base16_notrunc);
+                    base16_encode(keycapsule, bs, base16_notrunc);
                     bs << "\n";
                     bs << "shared secret ";
-                    base16_encode(sharedsecret_bob, &bs, base16_notrunc);
+                    base16_encode(sharedsecret_bob, bs, base16_notrunc);
                     bs << "\n";
                 });
                 _test_case.test(ret, __FUNCTION__, "encapsule %s size %zi", alg.c_str(), keycapsule.size());
@@ -89,13 +89,13 @@ void test_pqc_kem() {
                 ret = pqc.decapsule(nullptr, privkey, keycapsule, sharedsecret_alice);
                 _logger->write([&](basic_stream& bs) -> void {
                     bs << "shared secret\n";
-                    base16_encode(sharedsecret_alice, &bs, base16_notrunc);
+                    base16_encode(sharedsecret_alice, bs, base16_notrunc);
                     bs << "\n";
                 });
                 _test_case.test(ret, __FUNCTION__, "decapsule %s", alg.c_str());
             }
 
-            _logger->writeln([&](basic_stream& bs) -> void { base16_encode(sharedsecret_alice, &bs); });
+            _logger->writeln([&](basic_stream& bs) -> void { base16_encode(sharedsecret_alice, bs); });
             _test_case.assert(sharedsecret_alice == sharedsecret_bob, __FUNCTION__, "compare shared secret");
 
             EVP_PKEY_free(pubkey);

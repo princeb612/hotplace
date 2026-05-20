@@ -47,7 +47,7 @@ void test_pqc_encode() {
                 if (option.dump_keys) {
                     _logger->writeln([&](basic_stream& bs) -> void {
                         bs << "DER\n";
-                        base16_encode(keydata, &bs);
+                        base16_encode(keydata, bs);
                     });
                 }
                 _test_case.test(ret, __FUNCTION__, "encode private key %s", alg.c_str());

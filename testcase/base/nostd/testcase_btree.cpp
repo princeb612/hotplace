@@ -143,7 +143,10 @@ void test_btree() {
 
         // case.5
         {
-            t_btree<testdata, t_type_comparator<testdata>> bt;
+            struct symbol_less {
+                bool operator()(const testdata& lhs, const testdata& rhs) const { return lhs.symbol < rhs.symbol; }
+            };
+            t_btree<testdata, symbol_less> bt;
             auto lambda = [](testdata& code) -> void { code.weight++; };
             for (auto b : sample) {
                 if (b) {

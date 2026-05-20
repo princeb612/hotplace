@@ -280,6 +280,9 @@ return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, encoding_t e
         case encoding_t::encoding_base16rfc:
             ret = add_dh_b16rfc(cryptokey, nid, y, x, desc);
             break;
+        default:
+            ret = errorcode_t::not_supported;
+            break;
     }
     return ret;
 }
@@ -403,6 +406,9 @@ return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, encoding_t e
             break;
         case encoding_t::encoding_base16rfc:
             ret = add_dh_b16rfc(cryptokey, nid, p, q, g, x, desc);
+            break;
+        default:
+            ret = errorcode_t::not_supported;
             break;
     }
     return ret;

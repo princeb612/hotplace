@@ -29,176 +29,87 @@
 #define __HOTPLACE_SDK_BASE_BASIC_BASE16__
 
 #include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/nostd/traits.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 
 namespace hotplace {
 
-enum base16_flag_t {
-    base16_notrunc = (1 << 0),
-    base16_capital = (1 << 1),
+return_t base16_encode_raw(const byte_t* source, size_t size, char* buf, size_t* buflen, uint32 flags = 0);
+return_t base16_encode_raw(const binary_t& source, char* buf, size_t* buflen, uint32 flags = 0);
+return_t base16_encode_raw(const char* source, size_t size, char* buf, size_t* buflen, uint32 flags = 0);
+return_t base16_encode_raw(const std::string& source, char* buf, size_t* buflen, uint32 flags = 0);
+
+template <typename T>
+return_t base16_encode(const byte_t* source, size_t size, T& streambuf, uint32 flags = 0) {
+    typedef encoder_stream_traits<T> traits;
+    typedef typename traits::value_type value_type;
+    return_t ret = errorcode_t::success;
+
+    if (0 == (base16_notrunc & flags)) {
+        traits::trunc(streambuf);
+    }
+    size_t size_reserve = 0;
+    ret = base16_encode_raw(source, size, nullptr, &size_reserve, flags);         // required size
+    if (errorcode_t::insufficient_buffer == ret) {                                // how many size required
+        value_type* buf = traits::reserve(streambuf, size_reserve);               // reserve
+        size_t size_written = size_reserve;                                       //
+        ret = base16_encode_raw(source, size, (char*)buf, &size_written, flags);  // encode
+        if (errorcode_t::success == ret) {                                        //
+            traits::commit(streambuf, size_reserve, size_written);                // shrink
+        }
+    }
+    return ret;
 };
 
-/*
- * @brief   encode
- * @param   const byte_t* source [in]
- * @param   size_t size [in]
- * @param   char* buf [out]
- * @param   size_t* buflen [out]
- * @example
- *          binary_t source = std::move(str2bin ("hello world"));
- *          size_t size = 0;
- *          base16_encode (source.data(), source.size, nullptr, &size);
- *          char* buf = (char*) malloc (size);
- *          base16_encode (source.data(), source.size, buf, &size);
- *          free (buf);
- */
-return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buflen);
-/*
- * @brief   encode
- * @param   const byte_t* source [in]
- * @param   size_t size [in]
- * @param   std::string& outpart [out]
- * @param   uint32 flags [inopt] default 0, possible flags base16_notrunc | base16_capital
- * @example
- *          binary_t source = std::move(str2bin ("hello world"));
- *          std::string encoded;
- *          base16_encode (source.data(), source.size, encoded);
- */
-return_t base16_encode(const byte_t* source, size_t size, std::string& outpart, uint32 flags = 0);
-/*
- * @brief   encode
- * @param   const byte_t* source [in]
- * @param   size_t size [in]
- * @param   stream_t* stream [out]
- * @param   uint32 flags [inopt] default 0, possible flags base16_notrunc | base16_capital
- * @example
- *          binary_t source = std::move(str2bin ("hello world"));
- *          basic_stream encoded;
- *          base16_encode (source.data(), source.size, &encoded);
- */
-return_t base16_encode(const byte_t* source, size_t size, stream_t* stream, uint32 flags = 0);
-/*
- * @brief   encode
- * @param   const binary_t& source [in]
- * @param   char* buf [out]
- * @param   size_t* buflen [out]
- * @example
- *          binary_t source = std::move(str2bin ("hello world"));
- *          size_t size = 0;
- *          base16_encode (source, nullptr, &size);
- *          char* buf = (char*) malloc (size);
- *          base16_encode (source, buf, &size);
- *          free (buf);
- */
-return_t base16_encode(const binary_t& source, char* buf, size_t* buflen);
-/*
- * @brief   encode
- * @param   const binary_t& source [in]
- * @param   std::string& outpart [out]
- * @param   uint32 flags [inopt] default 0, possible flags base16_notrunc | base16_capital
- * @example
- *          binary_t source = std::move(str2bin ("hello world"));
- *          std::string encoded;
- *          base16_encode (source, encoded);
- */
-return_t base16_encode(const binary_t& source, std::string& outpart, uint32 flags = 0);
-/*
- * @brief   encode
- * @param   const binary_t& source [in]
- * @param   stream_t* stream [out]
- * @param   uint32 flags [inopt] default 0, possible flags base16_notrunc | base16_capital
- * @example
- *          binary_t source = std::move(str2bin ("hello world"));
- *          basic_stream encoded;
- *          base16_encode (source, &encoded);
- */
-return_t base16_encode(const binary_t& source, stream_t* stream, uint32 flags = 0);
-/*
- * @brief   encode
- * @param   const binary_t& source [in]
- * @example
- *          binary_t source = std::move(str2bin ("hello world"));
- *          std::string encoded = base16_encode (source);;
- */
-std::string base16_encode(const binary_t& source);
-/**
- * @brief   encode
- * @param   const char* source [in]
- */
-std::string base16_encode(const char* source);
-/**
- * @param   const byte_t* source [in]
- * @param   size_t size [in]
- */
-std::string base16_encode(const byte_t* source, size_t size);
-/**
- * @brief   encode
- * @param   const char* source [in]
- * @param   std::string& outpart [out]
- */
-return_t base16_encode(const char* source, std::string& outpart);
-/**
- * @brief   encode
- * @param   const char* source [in]
- * @param   binary_t& outpart [out]
- */
-return_t base16_encode(const char* source, binary_t& outpart);
-/**
- * @brief   encode
- * @param   const std::string& source [in]
- * @param   binary_t& outpart [out]
- */
-return_t base16_encode(const std::string& source, binary_t& outpart);
+template <typename T>
+return_t base16_encode(const binary_t& source, T& streambuf, uint32 flags = 0) {
+    return base16_encode(source.data(), source.size(), streambuf, flags);
+}
 
-/**
- * @brief   decode
- * @param   const char* source [in]
- * @param   size_t size [in]
- * @param   binary_t& outpart [out]
- * @param   uint32 flags [inopt] default 0, possible flags base16_notrunc
- */
-return_t base16_decode(const char* source, size_t size, binary_t& outpart, uint32 flags = 0);
-/**
- * @brief   decode
- * @param   const char* source [in]
- * @param   size_t size [in]
- * @param   stream_t* stream [out]
- * @param   uint32 flags [inopt] default 0, possible flags base16_notrunc
- */
-return_t base16_decode(const char* source, size_t size, stream_t* stream, uint32 flags = 0);
-/**
- * @brief   decode
- * @param   const std::string& source [in]
- * @param   binary_t& outpart [out]
- * @param   uint32 flags [inopt] default 0, possible flags base16_notrunc
- */
-return_t base16_decode(const std::string& source, binary_t& outpart, uint32 flags = 0);
-/**
- * @brief   decode
- * @param   const std::string& source [in]
- * @param   stream_t* stream [out]
- * @param   uint32 flags [inopt] default 0, possible flags base16_notrunc
- */
-return_t base16_decode(const std::string& source, stream_t* stream, uint32 flags = 0);
+std::string base16_encode(const char* source, uint32 flags = 0);
+std::string base16_encode(const byte_t* source, size_t size, uint32 flags = 0);
+std::string base16_encode(const std::string& source, uint32 flags = 0);
+std::string base16_encode(const binary_t& source, uint32 flags = 0);
+std::string base16_encode(const basic_stream& source, uint32 flags = 0);
 
-/**
- * @brief   decode
- * @param   const char* source [in]
- * @return  binary_t
- */
+return_t base16_decode_raw(const char* source, size_t size, byte_t* buf, size_t* buflen);
+return_t base16_decode_raw(const std::string& source, byte_t* buf, size_t* buflen);
+return_t base16_decode_raw(const byte_t* source, size_t size, byte_t* buf, size_t* buflen);
+return_t base16_decode_raw(const binary_t source, byte_t* buf, size_t* buflen);
+
+template <typename T>
+return_t base16_decode(const char* source, size_t size, T& streambuf, uint32 flags = 0) {
+    typedef encoder_stream_traits<T> traits;
+    typedef typename traits::value_type value_type;
+    return_t ret = errorcode_t::success;
+
+    if (0 == (base16_notrunc & flags)) {
+        traits::trunc(streambuf);
+    }
+    size_t size_reserve = 0;
+    ret = base16_decode_raw(source, size, nullptr, &size_reserve);           // required size
+    if (errorcode_t::insufficient_buffer == ret) {                           // how many size required
+        value_type* buf = traits::reserve(streambuf, size_reserve);          // reserve
+        size_t size_written = size_reserve;                                  //
+        ret = base16_decode_raw(source, size, (byte_t*)buf, &size_written);  // decode
+        if (errorcode_t::success == ret) {                                   //
+            traits::commit(streambuf, size_reserve, size_written);           // shrink
+        }
+    }
+    return ret;
+};
+
+template <typename T>
+return_t base16_decode(const std::string& source, T& streambuf, uint32 flags = 0) {
+    return base16_decode(source.c_str(), source.size(), streambuf, flags);
+}
+
 binary_t base16_decode(const char* source);
-/**
- * @brief   decode
- * @param   const char* source [in]
- * @param   size_t size [in]
- * @return  binary_t
- */
 binary_t base16_decode(const char* source, size_t size);
-/**
- * @brief   decode
- * @param   const std::string& source [in]
- * @return  binary_t
- */
+binary_t base16_decode(const byte_t* source, size_t size);
 binary_t base16_decode(const std::string& source);
+binary_t base16_decode(const binary_t& source);
+binary_t base16_decode(const basic_stream& source);
 
 /**
  * @brief   encode (support various rfc-style)

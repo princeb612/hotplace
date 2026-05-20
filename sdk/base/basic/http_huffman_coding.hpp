@@ -8,14 +8,12 @@
  * Date         Name                Description
  */
 
-#ifndef __HOTPLACE_SDK_NET_HTTP_COMPRESSION_HTTPHUFFMANCODING__
-#define __HOTPLACE_SDK_NET_HTTP_COMPRESSION_HTTPHUFFMANCODING__
+#ifndef __HOTPLACE_SDK_BASE_BASIC_HTTPHUFFMANCODING__
+#define __HOTPLACE_SDK_BASE_BASIC_HTTPHUFFMANCODING__
 
 #include <hotplace/sdk/base/basic/huffman_coding.hpp>
-#include <hotplace/sdk/net/http/compression/http_static_table.hpp>
 
 namespace hotplace {
-namespace net {
 
 /*
  * @brief   RFC 7541 Appendix B. Huffman Code
@@ -37,7 +35,6 @@ class http_huffman_coding : public huffman_coding {
     static http_huffman_coding _instance;
 };
 
-}  // namespace net
 }  // namespace hotplace
 
 #endif

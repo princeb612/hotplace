@@ -469,4 +469,18 @@ void wide_string::autoindent(uint8 indent) {
     }
 }
 
+void wide_string::resize(size_t bytes) {
+    auto z = size();
+    auto s = bytes * sizeof(TCHAR);
+    if (0 == s) {
+        clear();
+    } else if (z > s) {
+        // cut
+        cut(s, (z - s));
+    } else {
+        // extend
+        fill(s - z, L'\0');
+    }
+}
+
 }  // namespace hotplace

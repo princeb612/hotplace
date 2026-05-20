@@ -17,7 +17,7 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 
-#include <hotplace/sdk/base/nostd/template.hpp>
+#include <hotplace/sdk/base/nostd/memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/system/multiplexer.hpp>

@@ -347,5 +347,7 @@ return_t file_stream::vprintf(const char* fmt, va_list ap) {
 
 void file_stream::autoindent(uint8 indent) {}
 
+void file_stream::resize(size_t size) { truncate(size); }
+
 }  // namespace io
 }  // namespace hotplace

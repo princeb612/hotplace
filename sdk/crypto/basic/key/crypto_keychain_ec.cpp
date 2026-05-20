@@ -252,6 +252,9 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, encoding_t e
         case encoding_t::encoding_base16rfc:
             ret = add_ec_b16rfc(cryptokey, nid, x, y, d, desc);
             break;
+        default:
+            ret = errorcode_t::not_supported;
+            break;
     }
     return ret;
 }
@@ -382,6 +385,9 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* curve, encod
             break;
         case encoding_t::encoding_base16rfc:
             ret = add_ec_b16rfc(cryptokey, curve, x, y, d, desc);
+            break;
+        default:
+            ret = errorcode_t::not_supported;
             break;
     }
     return ret;

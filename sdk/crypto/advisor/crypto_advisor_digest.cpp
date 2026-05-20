@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/nostd/utility.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 
 namespace hotplace {

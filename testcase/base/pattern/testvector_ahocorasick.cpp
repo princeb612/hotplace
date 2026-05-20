@@ -10,10 +10,6 @@
 
 #include <hotplace/testcase/base/sample.hpp>
 
-struct memberof_tolower {
-    char operator()(const char* source, size_t idx) const { return source ? std::tolower(source[idx]) : char(); }
-};
-
 void test_yaml_testvector_ahocorasick() {
     _test_case.begin("aho corasick YAML");
 
@@ -29,7 +25,7 @@ void test_yaml_testvector_ahocorasick() {
         } else if ((option_wildcards) == (option & (option_wildcards | option_ignorecase))) {
             ac = new t_aho_corasick_wildcard<char>('?', '*');
         } else if ((option_wildcards | option_ignorecase) == (option & (option_wildcards | option_ignorecase))) {
-            ac = new t_aho_corasick_wildcard<char, char, memberof_tolower>('?', '*');
+            ac = new t_aho_corasick_wildcard<char, char, memberof_tolower_handler>('?', '*');
         }
         return ac;
     };

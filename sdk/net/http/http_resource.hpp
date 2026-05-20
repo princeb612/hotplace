@@ -12,6 +12,7 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTPRESOURCE__
 #define __HOTPLACE_SDK_NET_HTTP_HTTPRESOURCE__
 
+#include <hotplace/sdk/base/nostd/utility.hpp>
 #include <hotplace/sdk/net/http/types.hpp>
 #include <map>
 

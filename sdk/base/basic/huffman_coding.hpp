@@ -17,6 +17,7 @@
 #include <hotplace/sdk/base/basic/types.hpp>
 #include <hotplace/sdk/base/nostd/btree.hpp>
 #include <hotplace/sdk/base/nostd/range.hpp>
+#include <hotplace/sdk/base/nostd/utility.hpp>
 #include <hotplace/sdk/base/pattern/trie.hpp>
 #include <map>
 
@@ -60,10 +61,10 @@ class huffman_coding {
         }
         friend bool operator<(const hc_t& lhs, const hc_t& rhs) { return lhs.symbol < rhs.symbol; }
     };
-    struct hc_comparator : t_comparator_base<hc_t> {
+    struct hc_less {
         bool operator()(const hc_t& lhs, const hc_t& rhs) const {
+            // tie is easy, but results is different ..
             bool ret = false;
-
             if (lhs.weight < rhs.weight) {
                 ret = true;
             } else if (lhs.weight == rhs.weight) {
@@ -73,7 +74,6 @@ class huffman_coding {
                     ret = lhs.symbol < rhs.symbol;
                 }
             }
-
             return ret;
         }
     };
@@ -88,9 +88,9 @@ class huffman_coding {
         const char* code;
     };
 
-    typedef t_btree<hc_t> measure_tree_t;          // counting
-    typedef t_btree<hc_t, hc_comparator> btree_t;  // by weight(frequency)
-    typedef std::map<hc_t, typename btree_t::node_t*, hc_comparator> map_t;
+    typedef t_btree<hc_t> measure_tree_t;    // counting
+    typedef t_btree<hc_t, hc_less> btree_t;  // by weight(frequency)
+    typedef std::map<hc_t, typename btree_t::node_t*, hc_less> map_t;
     typedef std::pair<typename map_t::iterator, bool> map_pib_t;
     typedef std::map<uint8, std::string> codetable_t;
     typedef std::map<std::string, uint8> reverse_codetable_t;

@@ -477,4 +477,17 @@ void ansi_string::autoindent(uint8 indent) {
     }
 }
 
+void ansi_string::resize(size_t s) {
+    auto z = size();
+    if (0 == s) {
+        clear();
+    } else if (z > s) {
+        // cut
+        cut(s, z - s);
+    } else {
+        // extend
+        fill(s - z, 0);
+    }
+}
+
 }  // namespace hotplace

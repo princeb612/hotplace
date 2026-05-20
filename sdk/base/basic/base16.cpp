@@ -36,21 +36,17 @@ inline byte_t conv_fast(char c) {
 inline const char* hex_digits(bool uppercase) { return uppercase ? "0123456789ABCDEF" : "0123456789abcdef"; }
 }  // namespace
 
-return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buflen) {
+return_t base16_encode_raw(const byte_t* source, size_t size, char* buf, size_t* buflen, uint32 flags) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr == source) {
-            ret = errorcode_t::no_data;
-            __leave2;
-        }
-        if (nullptr == buflen) {
+        if (nullptr == source || nullptr == buflen) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
         size_t size_buf = *buflen;
-        size_t size_necessary = (size << 1) + 1;
+        size_t size_necessary = (size << 1);
 
         *buflen = size_necessary;
 
@@ -65,156 +61,81 @@ return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buf
         }
 
         // direct copy instead of snprintf
-        const char* digits = hex_digits(false);
+        const bool capital = (encoding_flag_t::base16_capital & flags);
+        const char* digits = hex_digits(capital);
         for (size_t i = 0; i < size; ++i) {
             const byte_t v = source[i];
             buf[(i << 1) + 0] = digits[(v >> 4) & 0x0F];
             buf[(i << 1) + 1] = digits[v & 0x0F];
         }
-        buf[size << 1] = 0;
     }
     __finally2 {}
     return ret;
 }
 
-return_t base16_encode(const byte_t* source, size_t size, std::string& outpart, uint32 flags) {
+return_t base16_encode_raw(const binary_t& source, char* buf, size_t* buflen, uint32 flags) {
     return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (0 == (base16_flag_t::base16_notrunc & flags)) {
-            outpart.clear();
-        }
-
-        if (nullptr == source) {
-            ret = errorcode_t::no_data;
-            __leave2;
-        }
-
-        outpart.reserve(outpart.size() + (size << 1));
-
-        const bool capital = (base16_flag_t::base16_capital & flags);
-        const char* digits = hex_digits(capital);
-        for (size_t i = 0; i < size; ++i) {
-            const byte_t v = source[i];
-            outpart.push_back(digits[(v >> 4) & 0x0F]);
-            outpart.push_back(digits[v & 0x0F]);
-        }
-    }
-    __finally2 {}
+    ret = base16_encode_raw(source.data(), source.size(), buf, buflen, flags);
     return ret;
 }
 
-return_t base16_encode(const byte_t* source, size_t size, stream_t* stream, uint32 flags) {
+return_t base16_encode_raw(const char* source, size_t size, char* buf, size_t* buflen, uint32 flags) {
+    return_t ret = errorcode_t::success;
+    if (source) {
+        ret = base16_encode_raw((byte_t*)source, size, buf, buflen, flags);
+    }
+    return ret;
+}
+
+return_t base16_encode_raw(const std::string& source, char* buf, size_t* buflen, uint32 flags) {
+    return base16_encode_raw(source.c_str(), source.size(), buf, buflen, flags);
+}
+
+std::string base16_encode(const char* source, uint32 flags) {
+    std::string res;
+    if (source) {
+        auto size = strlen(source);
+        base16_encode((byte_t*)source, size, res, flags);
+    }
+    return res;
+}
+
+std::string base16_encode(const byte_t* source, size_t size, uint32 flags) {
+    std::string res;
+    if (source) {
+        base16_encode(source, size, res, flags);
+    }
+    return res;
+}
+
+std::string base16_encode(const std::string& source, uint32 flags) {
+    std::string res;
+    base16_encode((byte_t*)source.c_str(), source.size(), res, flags);
+    return res;
+}
+
+std::string base16_encode(const binary_t& source, uint32 flags) {
+    std::string res;
+    base16_encode(source.data(), source.size(), res, flags);
+    return res;
+}
+
+std::string base16_encode(const basic_stream& source, uint32 flags) {
+    std::string res;
+    base16_encode(source.data(), source.size(), res, flags);
+    return res;
+}
+
+return_t base16_decode_raw(const char* source, size_t size, byte_t* buf, size_t* buflen) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        if (nullptr == source || nullptr == stream) {
+        if (nullptr == source || nullptr == buflen) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        if (0 == (base16_flag_t::base16_notrunc & flags)) {
-            stream->clear();
-        }
-
-        const bool uppercase = (base16_flag_t::base16_capital & flags);
-        const char* digits = hex_digits(uppercase);
-
-        // chunked write to reduce per-byte virtual calls.
-        char outbuf[512];
-        size_t outcur = 0;
-        for (size_t i = 0; i < size; ++i) {
-            const byte_t v = source[i];
-            if (outcur + 2 > sizeof(outbuf)) {
-                stream->write(outbuf, outcur);
-                outcur = 0;
-            }
-            outbuf[outcur++] = digits[(v >> 4) & 0x0F];
-            outbuf[outcur++] = digits[v & 0x0F];
-        }
-        if (outcur) {
-            stream->write(outbuf, outcur);
-        }
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t base16_encode(const binary_t& source, char* buf, size_t* buflen) {
-    return_t ret = errorcode_t::success;
-    ret = base16_encode(source.data(), source.size(), buf, buflen);
-    return ret;
-}
-
-return_t base16_encode(const binary_t& source, std::string& outpart, uint32 flags) {
-    return_t ret = errorcode_t::success;
-    ret = base16_encode(source.data(), source.size(), outpart, flags);
-    return ret;
-}
-
-std::string base16_encode(const binary_t& source) {
-    std::string outpart;
-    base16_encode(source, outpart);
-    return outpart;
-}
-
-return_t base16_encode(const binary_t& source, stream_t* stream, uint32 flags) { return base16_encode(source.data(), source.size(), stream, flags); }
-
-std::string base16_encode(const char* source) {
-    std::string outpart;
-    if (source) {
-        base16_encode((const byte_t*)source, strlen(source), outpart);
-    }
-    return outpart;
-}
-
-std::string base16_encode(const byte_t* source, size_t size) {
-    std::string outpart;
-    if (source) {
-        base16_encode(source, size, outpart);
-    }
-    return outpart;
-}
-
-return_t base16_encode(const char* source, std::string& outpart) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == source) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        base16_encode(reinterpret_cast<const byte_t*>(source), strlen(source), outpart);
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t base16_encode(const char* source, binary_t& outpart) {
-    return_t ret = errorcode_t::success;
-    if (source) {
-        size_t slen = strlen(source);
-        size_t dlen = slen << 1;
-        outpart.resize(dlen);
-        ret = base16_encode(reinterpret_cast<const byte_t*>(source), slen, reinterpret_cast<char*>(outpart.data()), &dlen);
-    }
-    return ret;
-}
-
-return_t base16_encode(const std::string& source, binary_t& outpart) { return base16_encode(source.c_str(), outpart); }
-
-return_t base16_decode(const char* source, size_t size, binary_t& outpart, uint32 flags) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == source) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        if (0 == (base16_flag_t::base16_notrunc & flags)) {
-            outpart.clear();
-        }
+        size_t size_buf = *buflen;
 
         size_t cur = 0;
         /* ignore 0x prefix*/
@@ -226,55 +147,23 @@ return_t base16_decode(const char* source, size_t size, binary_t& outpart, uint3
         {
             const size_t hex_len = (size > cur) ? (size - cur) : 0;
             const size_t expected = (hex_len + 1) >> 1;  // supports odd sizes
-            outpart.reserve(outpart.size() + expected);
+            *buflen = expected;
+
+            if (size_buf < expected) {
+                ret = errorcode_t::insufficient_buffer;
+                __leave2;
+            }
         }
 
-        /* case of an odd size - NIST CAVP test vector */
-        if (size % 2) {
-            byte_t i = conv_fast(source[cur++]);
-            outpart.push_back(i);
-        }
-
-        /* octet */
-        for (; cur < size; cur += 2) {
-            byte_t i = 0;
-            i = conv_fast(source[cur]) << 4;
-            i += conv_fast(source[cur + 1]);
-            outpart.push_back(i);
-        }
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t base16_decode(const char* source, size_t size, stream_t* stream, uint32 flags) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == source || nullptr == stream) {
+        if (nullptr == buf) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
 
-        if (0 == (base16_flag_t::base16_notrunc & flags)) {
-            stream->clear();
-        }
-
-        size_t cur = 0;
-        /* ignore 0x prefix*/
-        if ((size > 2) && (0 == strnicmp(source, "0x", 2))) {
-            cur = 2;
-        }
-
-        // chunked write to reduce per-byte virtual calls.
-        byte_t outbuf[256];
-        size_t outcur = 0;
-
+        size_t pos = 0;
         /* case of an odd size - NIST CAVP test vector */
         if (size % 2) {
-            byte_t i = 0;
-            i += conv_fast(source[cur++]);
-            outbuf[outcur++] = i;
+            buf[pos++] = conv_fast(source[cur++]);
         }
 
         /* octet */
@@ -282,44 +171,57 @@ return_t base16_decode(const char* source, size_t size, stream_t* stream, uint32
             byte_t i = 0;
             i = conv_fast(source[cur]) << 4;
             i += conv_fast(source[cur + 1]);
-            outbuf[outcur++] = i;
-            if (outcur == sizeof(outbuf)) {
-                stream->write(outbuf, outcur);
-                outcur = 0;
-            }
-        }
-        if (outcur) {
-            stream->write(outbuf, outcur);
+            buf[pos++] = i;
         }
     }
     __finally2 {}
     return ret;
 }
 
-return_t base16_decode(const std::string& source, binary_t& outpart, uint32 flags) { return base16_decode(source.c_str(), source.size(), outpart, flags); }
+return_t base16_decode_raw(const std::string& source, byte_t* buf, size_t* buflen) { return base16_decode_raw(source.c_str(), source.size(), buf, buflen); }
 
-return_t base16_decode(const std::string& source, stream_t* stream, uint32 flags) { return base16_decode(source.c_str(), source.size(), stream, flags); }
+return_t base16_decode_raw(const byte_t* source, size_t size, byte_t* buf, size_t* buflen) { return base16_decode_raw((char*)source, size, buf, buflen); }
+
+return_t base16_decode_raw(const binary_t source, byte_t* buf, size_t* buflen) { return base16_decode_raw((char*)source.data(), source.size(), buf, buflen); }
 
 binary_t base16_decode(const char* source) {
-    binary_t outpart;
+    binary_t res;
     if (source) {
-        outpart = base16_decode(source, strlen(source));
+        auto size = strlen(source);
+        base16_decode(source, size, res);
     }
-    return outpart;
+    return res;
 }
 
 binary_t base16_decode(const char* source, size_t size) {
-    binary_t outpart;
+    binary_t res;
+    if (source) {
+        base16_decode(source, size, res);
+    }
+    return res;
+}
 
-    base16_decode(source, size, outpart);
-    return outpart;
+binary_t base16_decode(const byte_t* source, size_t size) {
+    binary_t res;
+    base16_decode((char*)source, size, res);
+    return res;
 }
 
 binary_t base16_decode(const std::string& source) {
-    binary_t outpart;
+    binary_t res;
+    base16_decode(source.c_str(), source.size(), res);
+    return res;
+}
 
-    base16_decode(source, outpart);
-    return outpart;
+binary_t base16_decode(const binary_t& source) {
+    binary_t res;
+    base16_decode((char*)source.data(), source.size(), res);
+    return res;
+}
+binary_t base16_decode(const basic_stream& source) {
+    binary_t res;
+    base16_decode(source.c_str(), source.size(), res);
+    return res;
 }
 
 std::string base16_encode_rfc(const std::string& source) {

@@ -8,12 +8,10 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/net/http/compression/http_huffman_codes.hpp>
-#include <hotplace/sdk/net/http/compression/http_huffman_coding.hpp>
-#include <hotplace/sdk/net/http/http_resource.hpp>
+#include <hotplace/sdk/base/basic/http_huffman_codes.hpp>
+#include <hotplace/sdk/base/basic/http_huffman_coding.hpp>
 
 namespace hotplace {
-namespace net {
 
 http_huffman_coding http_huffman_coding::_instance;
 
@@ -34,5 +32,4 @@ void http_huffman_coding::load() {
     }
 }
 
-}  // namespace net
 }  // namespace hotplace

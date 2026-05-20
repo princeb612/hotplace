@@ -10,7 +10,7 @@
 
 #include <stdio.h>
 
-#include <hotplace/sdk/base/nostd/template.hpp>
+#include <hotplace/sdk/base/nostd/cast.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/io/stream/file_stream.hpp>
 #include <hotplace/sdk/io/string/string.hpp>
@@ -408,6 +408,8 @@ return_t file_stream::vprintf(const char* fmt, va_list ap) {
 }
 
 void file_stream::autoindent(uint8 indent) {}
+
+void file_stream::resize(size_t size) { truncate(size); }
 
 }  // namespace io
 }  // namespace hotplace

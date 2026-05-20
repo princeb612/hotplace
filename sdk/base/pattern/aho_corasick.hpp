@@ -28,7 +28,7 @@ namespace hotplace {
  *          } else if ((option_wildcards) == (option & (option_wildcards | option_ignorecase))) {
  *              ac = new t_aho_corasick_wildcard<char>('?', '*');
  *          } else if ((option_wildcards | option_ignorecase) == (option & (option_wildcards | option_ignorecase))) {
- *              ac = new t_aho_corasick_wildcard<char, char, memberof_tolower>('?', '*');
+ *              ac = new t_aho_corasick_wildcard<char, char, memberof_tolower_handler>('?', '*');
  *          }
  */
 template <typename BT = char, typename T = BT>
@@ -84,10 +84,7 @@ class t_aho_corasick_t {
  *
  *          // sample.2 ignore case
  *          {
- *              struct memberof_tolower {
- *                  char operator()(const char* source, size_t idx) const { return source ? std::tolower(source[idx]) : char(); }
- *              };
- *              t_aho_corasick<char, char, memberof_tolower> ac();
+ *              t_aho_corasick<char, char, memberof_tolower_handler> ac();
  *              ac.insert("hello", 5);
  *              ac.insert("world", 5);
  *              const char* source = "Hello World ";

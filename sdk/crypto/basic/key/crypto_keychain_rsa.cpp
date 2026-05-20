@@ -270,6 +270,9 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, encoding_t 
         case encoding_t::encoding_base16rfc:
             ret = add_rsa_b16rfc(cryptokey, nid, n, e, d, desc);
             break;
+        default:
+            ret = errorcode_t::not_supported;
+            break;
     }
     return ret;
 }

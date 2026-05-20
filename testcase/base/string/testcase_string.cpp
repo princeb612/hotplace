@@ -79,8 +79,7 @@ void test_string_hexbin() {
     base16_encode(inpart, 5, hex);
     _logger->writeln(hex);
 
-    binary_t bin;
-    base16_decode(hex, bin);
+    binary_t bin = base16_decode(hex);
     _logger->dump(bin);
 
     _test_case.assert(true, __FUNCTION__, "base16");
