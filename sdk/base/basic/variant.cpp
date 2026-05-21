@@ -661,20 +661,22 @@ return_t variant::to_binary(binary_t& target, uint32 flags) const {
             }
             break;
 #endif
-        case TYPE_FLOAT:
+        case TYPE_FLOAT: {
+            auto ui32 = binary32_from_fp32(_vt.data.f);
             if (change_endian) {
-                binary_append(target, _vt.data.f, hton32);
+                binary_append(target, ui32, hton32);
             } else {
-                binary_append(target, _vt.data.f);
+                binary_append(target, ui32);
             }
-            break;
-        case TYPE_DOUBLE:
+        } break;
+        case TYPE_DOUBLE: {
+            auto ui64 = binary64_from_fp64(_vt.data.d);
             if (change_endian) {
-                binary_append(target, _vt.data.d, hton64);
+                binary_append(target, ui64, hton64);
             } else {
-                binary_append(target, _vt.data.d);
+                binary_append(target, ui64);
             }
-            break;
+        } break;
         case TYPE_STRING:
             binary_append(target, _vt.data.str);
             break;

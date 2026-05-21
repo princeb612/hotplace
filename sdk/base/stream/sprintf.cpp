@@ -9,7 +9,7 @@
  * 2017.07.26   Soo Han, Kim        sprintf support {1} {2} ... using valist (codename.grape Revision 371)
  * 2024.09.13   Soo Han, Kim        Aho-Corasick algorithm applied (codename.hotplace Revision 607)
  * 2026.05.06   Soo Han, Kim        format string syntax e.g. {1:02x} {1:3d} {2:-10s} (codename.hotplace Revision 977)
- * 2026.05.20   Soo Han, Kim        printable binary data
+ * 2026.05.20   Soo Han, Kim        the format specifier 's' in TYPE_BINARY, it outputs a character if it is printable, and '.' otherwise.
  */
 
 #include <hotplace/sdk/base/basic/base16.hpp>

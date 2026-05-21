@@ -9,20 +9,15 @@
  * Date         Name                Description
  *
  * @example
- *          const char* message = "sample";
- *          std::string hex;
- *          binary_t bin;
- *          base16_encode (message, 6, hex);
- *          std::cout << hex << std::endl;
- *          base16_decode (hex, bin);
- *          basic_stream bs;
- *          dump_memory (bin.data(), bin.size (), &bs);
- *          printf ("%s\n", bs.c_str ());
- *
- *          const char* encoded1 = "01020304";
- *          bin1 = base16_decode (encoded1);
- *          const char* encoded2 = "0x01020304";
- *          bin2 = base16_decode (encoded2);
+ *          const char* sample1 = "We don't playing because we grow old; we grow old because we stop playing.";
+ *          auto encoded = base16_encode(sample1);
+ *          auto decoded = base16_decode(encoded);
+ *          _logger->write([&](basic_stream& bs) -> void {
+ *              valist va;
+ *              va << encoded << decoded;
+ *              bs.vaprintln("encoded {1}", va);
+ *              bs.vaprintln("decoded {2:s}", va);  // printable data
+ *          });
  */
 
 #ifndef __HOTPLACE_SDK_BASE_BASIC_BASE16__
@@ -34,10 +29,19 @@
 
 namespace hotplace {
 
-return_t base16_encode_raw(const byte_t* source, size_t size, char* buf, size_t* buflen, uint32 flags = 0);
-return_t base16_encode_raw(const binary_t& source, char* buf, size_t* buflen, uint32 flags = 0);
-return_t base16_encode_raw(const char* source, size_t size, char* buf, size_t* buflen, uint32 flags = 0);
-return_t base16_encode_raw(const std::string& source, char* buf, size_t* buflen, uint32 flags = 0);
+namespace implementation {
+
+return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buflen, uint32 flags = 0);
+return_t base16_encode(const binary_t& source, char* buf, size_t* buflen, uint32 flags = 0);
+return_t base16_encode(const char* source, size_t size, char* buf, size_t* buflen, uint32 flags = 0);
+return_t base16_encode(const std::string& source, char* buf, size_t* buflen, uint32 flags = 0);
+
+return_t base16_decode(const char* source, size_t size, byte_t* buf, size_t* buflen);
+return_t base16_decode(const std::string& source, byte_t* buf, size_t* buflen);
+return_t base16_decode(const byte_t* source, size_t size, byte_t* buf, size_t* buflen);
+return_t base16_decode(const binary_t source, byte_t* buf, size_t* buflen);
+
+}  // namespace implementation
 
 template <typename T>
 return_t base16_encode(const byte_t* source, size_t size, T& streambuf, uint32 flags = 0) {
@@ -49,13 +53,13 @@ return_t base16_encode(const byte_t* source, size_t size, T& streambuf, uint32 f
         traits::trunc(streambuf);
     }
     size_t size_reserve = 0;
-    ret = base16_encode_raw(source, size, nullptr, &size_reserve, flags);         // required size
-    if (errorcode_t::insufficient_buffer == ret) {                                // how many size required
-        value_type* buf = traits::reserve(streambuf, size_reserve);               // reserve
-        size_t size_written = size_reserve;                                       //
-        ret = base16_encode_raw(source, size, (char*)buf, &size_written, flags);  // encode
-        if (errorcode_t::success == ret) {                                        //
-            traits::commit(streambuf, size_reserve, size_written);                // shrink
+    ret = implementation::base16_encode(source, size, nullptr, &size_reserve, flags);         // required size
+    if (errorcode_t::insufficient_buffer == ret) {                                            // how many size required
+        value_type* buf = traits::reserve(streambuf, size_reserve);                           // reserve
+        size_t size_written = size_reserve;                                                   //
+        ret = implementation::base16_encode(source, size, (char*)buf, &size_written, flags);  // encode
+        if (errorcode_t::success == ret) {                                                    //
+            traits::commit(streambuf, size_reserve, size_written);                            // shrink
         }
     }
     return ret;
@@ -72,11 +76,6 @@ std::string base16_encode(const std::string& source, uint32 flags = 0);
 std::string base16_encode(const binary_t& source, uint32 flags = 0);
 std::string base16_encode(const basic_stream& source, uint32 flags = 0);
 
-return_t base16_decode_raw(const char* source, size_t size, byte_t* buf, size_t* buflen);
-return_t base16_decode_raw(const std::string& source, byte_t* buf, size_t* buflen);
-return_t base16_decode_raw(const byte_t* source, size_t size, byte_t* buf, size_t* buflen);
-return_t base16_decode_raw(const binary_t source, byte_t* buf, size_t* buflen);
-
 template <typename T>
 return_t base16_decode(const char* source, size_t size, T& streambuf, uint32 flags = 0) {
     typedef encoder_stream_traits<T> traits;
@@ -87,13 +86,13 @@ return_t base16_decode(const char* source, size_t size, T& streambuf, uint32 fla
         traits::trunc(streambuf);
     }
     size_t size_reserve = 0;
-    ret = base16_decode_raw(source, size, nullptr, &size_reserve);           // required size
-    if (errorcode_t::insufficient_buffer == ret) {                           // how many size required
-        value_type* buf = traits::reserve(streambuf, size_reserve);          // reserve
-        size_t size_written = size_reserve;                                  //
-        ret = base16_decode_raw(source, size, (byte_t*)buf, &size_written);  // decode
-        if (errorcode_t::success == ret) {                                   //
-            traits::commit(streambuf, size_reserve, size_written);           // shrink
+    ret = implementation::base16_decode(source, size, nullptr, &size_reserve);           // required size
+    if (errorcode_t::insufficient_buffer == ret) {                                       // how many size required
+        value_type* buf = traits::reserve(streambuf, size_reserve);                      // reserve
+        size_t size_written = size_reserve;                                              //
+        ret = implementation::base16_decode(source, size, (byte_t*)buf, &size_written);  // decode
+        if (errorcode_t::success == ret) {                                               //
+            traits::commit(streambuf, size_reserve, size_written);                       // shrink
         }
     }
     return ret;

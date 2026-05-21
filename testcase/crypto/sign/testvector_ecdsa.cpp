@@ -46,7 +46,7 @@ void do_test_ecdsa(const test_vector_nist_cavp_ecdsa_t* entry) {
         if (entry->encoding == "base16") {
             message = base16_decode(entry->m);
         } else if (entry->encoding == "plain") {
-            message = str2bin(entry->m);
+            message = to_binary(entry->m);
         } else {
             _test_case.assert(false, __FUNCTION__, "bad message format");
             __leave2;

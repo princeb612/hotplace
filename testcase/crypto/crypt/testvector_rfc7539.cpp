@@ -44,7 +44,7 @@ void test_yaml_testvector_rfc7539() {
             binary_t key = base16_decode_rfc(entry.key);
             uint32 counter = entry.counter;
             binary_t iv = base16_decode_rfc(entry.iv);
-            binary_t pt = str2bin(entry.pt);
+            binary_t pt = to_binary(entry.pt);
             binary_t aad = base16_decode_rfc(entry.aad);
             binary_t ct = base16_decode_rfc(entry.ct);
             binary_t tag = base16_decode_rfc(entry.tag);

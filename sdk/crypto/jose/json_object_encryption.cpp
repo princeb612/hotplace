@@ -73,7 +73,7 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_
 }
 
 return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const std::string& input, std::string& output, jose_serialization_t type) {
-    return encrypt(handle, enc, alg, str2bin(input), output, type);
+    return encrypt(handle, enc, alg, to_binary(input), output, type);
 }
 
 return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, const std::list<jwa_t>& jwalgs, const binary_t& input, std::string& output,
@@ -139,7 +139,7 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, cons
 
 return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, const std::list<jwa_t>& algs, const std::string& input, std::string& output,
                                          jose_serialization_t type) {
-    return encrypt(handle, enc, algs, str2bin(input), output, type);
+    return encrypt(handle, enc, algs, to_binary(input), output, type);
 }
 
 return_t json_object_encryption::decrypt(jose_context_t* handle, const std::string& input, binary_t& output, bool& result) {
@@ -394,7 +394,7 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
                  * p2c, hash)
                  */
                 binary_t pbkdf2_derived_key;
-                kdf.pbkdf2(pbkdf2_derived_key, alg_hash_alg, alg_keysize, bin2str(oct), salt, p2c);
+                kdf.pbkdf2(pbkdf2_derived_key, alg_hash_alg, alg_keysize, to_string(oct), salt, p2c);
                 ret = crypt.encrypt(alg_crypt_alg, alg_crypt_mode, pbkdf2_derived_key, kw_iv, cek, encrypted_key);
             }
         }
@@ -605,7 +605,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
                  * p2c, hash)
                  */
                 binary_t pbkdf2_derived_key;
-                kdf.pbkdf2(pbkdf2_derived_key, alg_hash_alg, alg_keysize, bin2str(oct), salt, p2c);
+                kdf.pbkdf2(pbkdf2_derived_key, alg_hash_alg, alg_keysize, to_string(oct), salt, p2c);
                 ret = crypt.decrypt(alg_crypt_alg, alg_crypt_mode, pbkdf2_derived_key, kw_iv, encrypted_key, cek);
             }
         }

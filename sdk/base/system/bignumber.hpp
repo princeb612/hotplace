@@ -286,7 +286,7 @@ class bignumber {
      * @brief pow 2^100=1267650600228229401496703205376
      */
     static bignumber pow(bignumber base, bignumber exp);
-    static const bignumber& pow10(uint32 n);
+    static const bignumber& pow10(size_t n);
 
     bignumber& add(const bignumber& other);
     bignumber& sub(const bignumber& other);

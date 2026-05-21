@@ -41,8 +41,8 @@ void test_binary() {
     binary_t bin1;
     binary_t bin2;
     ui32 = 0x12345678;
-    t_binary_load<uint32>(bin1, sizeof(uint16), ui32, hton32);
-    t_binary_append2<uint32>(bin2, sizeof(uint16), ui32, hton32);
+    binary_load(bin1, sizeof(uint16), ui32, hton32);
+    binary_append_n(bin2, sizeof(uint16), ui32, hton32);
     ui16 = t_binary_to_integer<uint16>(bin1, ret);
 
     _logger->hdump("> binary_load (narrow)", bin1);
@@ -55,8 +55,8 @@ void test_binary() {
 
     // wide
     // 00000000 : 00 00 00 00 12 34 56 78 -- -- -- -- -- -- -- -- | .....4Vx
-    t_binary_load<uint32>(bin1, sizeof(uint64), ui32, hton32);
-    t_binary_append2<uint32>(bin2, sizeof(uint64), ui32, hton32);
+    binary_load(bin1, sizeof(uint64), ui32, hton32);
+    binary_append_n(bin2, sizeof(uint64), ui32, hton32);
     ui64 = t_binary_to_integer<uint64>(bin1, ret);
 
     _logger->hdump("> binary_load (wide)", bin1);
@@ -70,8 +70,8 @@ void test_binary() {
 #ifdef __SIZEOF_INT128__
     // wide
     // 00000000 : 00 00 00 00 00 00 00 00 00 00 00 00 12 34 56 78 | .............4Vx
-    t_binary_load<uint32>(bin1, sizeof(uint128), ui32, hton32);
-    t_binary_append2<uint32>(bin2, sizeof(uint128), ui32, hton32);
+    binary_load(bin1, sizeof(uint128), ui32, hton32);
+    binary_append_n(bin2, sizeof(uint128), ui32, hton32);
     ui128 = t_binary_to_integer<uint128>(bin1, ret);
     _logger->hdump("> binary_load (wide)", bin1);
     _logger->hdump("> binary_append2 (wide)", bin2);

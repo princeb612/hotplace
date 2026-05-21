@@ -117,9 +117,9 @@ void test_dhkem_ossl_example() {
     binary_t info;
     binary_t aad;
 
-    pt = str2bin("a message not in a bottle");
-    info = str2bin("Some info");
-    aad = str2bin("\x1\x2\x3\x4\x5\x6\x7\x8");
+    pt = to_binary("a message not in a bottle");
+    info = to_binary("Some info");
+    aad = to_binary("\x1\x2\x3\x4\x5\x6\x7\x8");
 
     __try2 {
         binary_t pub;

@@ -3,31 +3,31 @@ testvector:
     schema: CMDLINE
     template: myoption  # MYOPTION structure
     items:
-      - item:
+      - item: test #1
         args:
           - -in
           - test.in
         expect: false
         reason: missing -out
-      - item:
+      - item: test #2
         args:
         expect: false
         reason: no parameter
-      - item:
+      - item: test #3
         args:
           - -keygen
           - -in
           - test.in
         expect: false
         reason: missing -out
-      - item:
+      - item: test #4
         args:
           - -keygen
           - test.in
           - -in
         expect: false
         reason: missing -in value and -out
-      - item:
+      - item: test #5
         args:
           - -keygen
           - test.in
@@ -35,7 +35,7 @@ testvector:
           - test.out
         expect: false
         reason: missing -out
-      - item:
+      - item: test #6
         args:
           - -keygen
           - test.in
@@ -44,7 +44,7 @@ testvector:
           - out
         expect: false
         reason: missing -out value
-      - item:
+      - item: test #7
         args:
           - -in-
           - test.in
@@ -52,7 +52,7 @@ testvector:
           - test.out
         expect: false
         reason: missing -in
-      - item:
+      - item: test #8
         args:
           - -in
           - test.in
@@ -60,7 +60,7 @@ testvector:
           - test.out
         expect: true
         reason:
-      - item:
+      - item: test #9
         args:
           - -keygen
           - -in
@@ -69,7 +69,7 @@ testvector:
           - test.out
         expect: true
         reason:
-      - item:
+      - item: test #10
         args:
           - -in
           - test.in
@@ -78,7 +78,7 @@ testvector:
           - test.out
         expect: true
         reason:
-      - item:
+      - item: test #11
         args:
           - -in
           - test.in
@@ -86,4 +86,13 @@ testvector:
           - test.out
           - -keygen
         expect: true
+        reason:
+      - item: test #12
+        args:
+          - -in
+          - -out
+          - test.in
+          - test.out
+          - -keygen
+        expect: false
         reason:

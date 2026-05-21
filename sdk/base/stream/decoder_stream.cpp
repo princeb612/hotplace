@@ -17,7 +17,14 @@
 
 namespace hotplace {
 
-decoder_stream::decoder_stream(encoding_t enc) : _encoding(enc) {}
+decoder_stream::decoder_stream(encoding_t enc) : _encoding(enc), _maxsize(1 << 15) {}
+
+decoder_stream& decoder_stream::set_maxsize(size_t size) {
+    _maxsize = size;
+    return *this;
+}
+
+size_t decoder_stream::get_maxsize() { return _maxsize; }
 
 encoding_t decoder_stream::get_encoding() { return _encoding; }
 
@@ -28,6 +35,10 @@ return_t decoder_stream::write(const char* data, size_t size) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
+        if (_buffer.size() + size > _maxsize) {
+            ret = errorcode_t::exceed;
+            __leave2;
+        }
 
         auto unitsize = _encbuf.unitsize(get_encoding());
         switch (get_encoding()) {
@@ -35,7 +46,7 @@ return_t decoder_stream::write(const char* data, size_t size) {
                 size_t pos = 0;
                 // _encbuf
                 if (_encbuf.len > 0) {
-                    size_t need = _encbuf.free_space(_encoding);
+                    auto need = _encbuf.free_space(_encoding);
                     if (size >= need) {
                         memcpy(_encbuf.buf + _encbuf.len, data, need);
                         _encbuf.len += need;
@@ -74,7 +85,7 @@ return_t decoder_stream::write(const char* data, size_t size) {
                 size_t pos = 0;
                 // _encbuf
                 if (_encbuf.len > 0) {
-                    size_t need = _encbuf.free_space(_encoding);
+                    auto need = _encbuf.free_space(_encoding);
                     if (size >= need) {
                         memcpy(_encbuf.buf + _encbuf.len, data, need);
                         _encbuf.len += need;

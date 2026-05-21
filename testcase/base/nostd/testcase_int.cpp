@@ -16,7 +16,7 @@ void test_atoi() {
     auto i0 = t_atoi<int8>("-1");
     _logger->writeln("%i", i0);
     _test_case.assert(i0 == int8(-1), __FUNCTION__, "atoi #0");
-    auto i1 = t_atoi<int8>("-129");  // int8 -128, 127
+    auto i1 = t_atoi<int8>("-129");  // int8 -128..127
     _logger->writeln("%i", i1);
     _test_case.assert(i1 == int8(-129), __FUNCTION__, "atoi #1");
     auto i2 = t_atoi<int8>("-128");
@@ -25,14 +25,12 @@ void test_atoi() {
     auto i3 = t_atoi<int16>("-129");
     _logger->writeln("%i", i3);
     _test_case.assert(i3 == int16(-129), __FUNCTION__, "atoi #3");
-
-    try {
-        auto i4 = t_atoi<uint8>("-1");
-        _logger->writeln("%u", i4);
-        _test_case.assert(i4 == uint8(-1), __FUNCTION__, "atoi #4");
-    } catch (exception& e) {
-        _test_case.test(expect_failure, __FUNCTION__, "exception code [%08x] %s", e.get_errorcode(), e.get_error_message().c_str());
-    }
+    auto i4 = t_atoi<uint8>("-1");
+    _logger->writeln("%u", i4);
+    _test_case.assert(i4 == uint8(-1), __FUNCTION__, "atoi #4");
+    auto i5 = t_atoi<uint8>("129");
+    _logger->writeln("%i", i5);
+    _test_case.assert(i5 == uint8(129), __FUNCTION__, "atoi #5");
 }
 
 void test_htoi() {

@@ -23,21 +23,21 @@ void do_test_cmdline_template_myoption(bool expect, int argc, char** argv) {
 
     t_cmdline_t<MYOPTION> cmdline;
 
-    cmdline << t_cmdarg_t<MYOPTION>("-v", "verbose", [](MYOPTION& o, char* param) -> void { o.verbose = 1; }).optional()
-            << t_cmdarg_t<MYOPTION>("-l", "log file", [](MYOPTION& o, char* param) -> void { o.log = 1; }).optional()
-            << t_cmdarg_t<MYOPTION>("-t", "log time", [](MYOPTION& o, char* param) -> void { o.time = 1; }).optional()
-            << t_cmdarg_t<MYOPTION>("-in", "input", [&](MYOPTION& o, char* param) -> void { o.infile = param; }).preced()
-            << t_cmdarg_t<MYOPTION>("-out", "output", [&](MYOPTION& o, char* param) -> void { o.outfile = param; }).preced()
-            << t_cmdarg_t<MYOPTION>("-keygen", "keygen", [&](MYOPTION& o, char* param) -> void { o.keygen = true; }).optional();
+    cmdline << t_cmdarg_t<MYOPTION>("-v", "verbose", [](MYOPTION& o, const char* param) -> void { o.verbose = 1; }).optional()
+            << t_cmdarg_t<MYOPTION>("-l", "log file", [](MYOPTION& o, const char* param) -> void { o.log = 1; }).optional()
+            << t_cmdarg_t<MYOPTION>("-t", "log time", [](MYOPTION& o, const char* param) -> void { o.time = 1; }).optional()
+            << t_cmdarg_t<MYOPTION>("-in", "input", [&](MYOPTION& o, const char* param) -> void { o.infile = param; }).preced()
+            << t_cmdarg_t<MYOPTION>("-out", "output", [&](MYOPTION& o, const char* param) -> void { o.outfile = param; }).preced()
+            << t_cmdarg_t<MYOPTION>("-keygen", "keygen", [&](MYOPTION& o, const char* param) -> void { o.keygen = true; }).optional();
 
-    std::string args;
+    basic_stream args;
     for (int i = 0; i < argc; i++) {
-        args += argv[i];
+        args.printf("[%i] %s", i, argv[i]);
         if (i + 1 < argc) {
-            args += " ";
+            args.printf(" ");
         }
     }
-    _logger->writeln("condition argc %i argv '%s'", argc, args.c_str());
+    _logger->writeln("condition argc %i args '%s'", argc, args.c_str());
 
     ret = cmdline.parse(argc, argv);
     if (errorcode_t::success != ret) {
@@ -66,9 +66,9 @@ void test_yaml_testvector_cmdline() {
             auto expect = item["expect"].as<bool>();
             auto reason = item["reason"].as<std::string>("");
 
-            int argc = t_narrow_cast(args.size());
-            if (argc > 5) {
-                _test_case.assert(false, __FUNCTION__, "invalid test vector");
+            int argc = t_narrow_cast(args.size() + 1);
+            if (args.size() > 9) {  // 0..9
+                _test_case.assert(false, __FUNCTION__, "bad format");
                 continue;
             }
 
@@ -78,14 +78,15 @@ void test_yaml_testvector_cmdline() {
                 table.push_back(arg.as<std::string>(""));
             }
 
-            char* argv[5] = {};
-            int i = 0;
+            const char* argv[10] = {};
+            int i = 1;
+            argv[0] = "test";
             for (auto& entry : table) {
                 argv[i] = (char*)entry.c_str();
                 ++i;
             }
 
-            do_test_cmdline_template_myoption(expect, argc, argv);
+            do_test_cmdline_template_myoption(expect, argc, (char**)argv);
         }
     };
 

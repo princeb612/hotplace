@@ -77,7 +77,7 @@ return_t tls_extension_sni::do_read_body(tls_direction_t dir, const byte_t* stre
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
                 dbs.println("   > %s %i (%s)", constexpr_name_type, type, tlsadvisor->nameof_sni_nametype(type).c_str());  // 00 host_name
-                dbs.println("   > %s %s", constexpr_hostname, bin2str(hostname).c_str());
+                dbs.println("   > %s %s", constexpr_hostname, to_string(hostname).c_str());
             });
         }
 #endif

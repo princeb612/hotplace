@@ -109,7 +109,7 @@ void test_http2_frame() {
 
     http2_frame_data frame_data;
     frame_data.set_flags(h2_flag_end_stream).set_stream_id(1);
-    frame_data.set_data(str2bin("hello world"));
+    frame_data.set_data(to_binary("hello world"));
 
     // test
     {
@@ -126,7 +126,7 @@ void test_http2_frame() {
     http2_frame_goaway frame_goaway;
     frame_goaway.set_stream_id(1);
     frame_goaway.set_errorcode(h2_protocol_error);
-    frame_goaway.set_debug(str2bin("protocol error cause of .... blah blah ..."));
+    frame_goaway.set_debug(to_binary("protocol error cause of .... blah blah ..."));
 
     // test
     {
@@ -144,8 +144,8 @@ void test_http2_frame() {
 
     http2_frame_alt_svc frame_alt_svc;
     frame_alt_svc.set_stream_id(1);  // ignore stream id
-    frame_alt_svc.set_origin(str2bin("origin"));
-    frame_alt_svc.set_altsvc(str2bin("altsvc"));
+    frame_alt_svc.set_origin(to_binary("origin"));
+    frame_alt_svc.set_altsvc(to_binary("altsvc"));
 
     // test
     {

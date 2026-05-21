@@ -226,7 +226,7 @@ enum errorcode_t : uint32 {
     /* 0xef01001c 4009820188 */ max_reached,
     /* 0xef01001d 4009820189 */ failed,
     /* 0xef01001e 4009820190 */ blocked,
-    /* 0xef01001f 4009820191 */ reserved2,
+    /* 0xef01001f 4009820191 */ error_duplicate,
     /* 0xef010020 4009820192 */ closed,
     /* 0xef010021 4009820193 */ disconnect,
     /* 0xef010022 4009820194 */ error_cipher,

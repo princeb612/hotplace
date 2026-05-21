@@ -27,10 +27,10 @@ void test_rfc7517_C() {
 
     std::string input = "The true sign of intelligence is not knowledge but imagination.";
     constexpr char passphrase[] = "Thus from my lips, by yours, my sin is purged.";
-    keygen.add_oct(&key, jwa_t::jwa_pbes2_hs256_a128kw, str2bin(passphrase), keydesc(crypto_use_t::use_enc));
+    keygen.add_oct(&key, jwa_t::jwa_pbes2_hs256_a128kw, to_binary(passphrase), keydesc(crypto_use_t::use_enc));
 
     jose.open(&context, &key);
-    jose.encrypt(context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_pbes2_hs256_a128kw, str2bin(input), output, jose_serialization_t::jose_compact);
+    jose.encrypt(context, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_pbes2_hs256_a128kw, to_binary(input), output, jose_serialization_t::jose_compact);
     ret = jose.decrypt(context, output, plain, result);
     jose.close(context);
 

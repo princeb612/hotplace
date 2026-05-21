@@ -44,7 +44,7 @@ void test_kdf_pbkdf2_rfc7914() {
     binary_t result;
 
     for (size_t i = 0; i < RTL_NUMBER_OF(vector); i++) {
-        kdf.pbkdf2(result, hash_algorithm_t::sha2_256, vector[i].dlen, vector[i].password, str2bin(vector[i].salt), vector[i].c);
+        kdf.pbkdf2(result, hash_algorithm_t::sha2_256, vector[i].dlen, vector[i].password, to_binary(vector[i].salt), vector[i].c);
 
         if (option.verbose) {
             _logger->dump(result);
@@ -116,7 +116,7 @@ void test_kdf_scrypt_rfc7914() {
         binary_t result;
 
         for (size_t i = 0; i < RTL_NUMBER_OF(vector); i++) {
-            ret = kdf.scrypt(result, vector[i].dlen, vector[i].password, str2bin(vector[i].salt), vector[i].n, vector[i].r, vector[i].p);
+            ret = kdf.scrypt(result, vector[i].dlen, vector[i].password, to_binary(vector[i].salt), vector[i].n, vector[i].r, vector[i].p);
             if (errorcode_t::success == ret) {
                 if (option.verbose) {
                     _logger->dump(result);

@@ -11,7 +11,7 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_ENDIAN__
 #define __HOTPLACE_SDK_BASE_SYSTEM_ENDIAN__
 
-#include <hotplace/sdk/base/types.hpp>
+#include <hotplace/sdk/base/nostd/traits.hpp>
 
 namespace hotplace {
 
@@ -85,86 +85,58 @@ static inline bool is_little_endian(void) {
 }
 
 /*
- * readability
+ * @brief   convert byte order
  */
-#define hton16 htons
-#define ntoh16 ntohs
 
-#define hton32 htonl
-#define ntoh32 ntohl
+namespace implementation {
 
-/**
- * host order to network order (64bits)
- */
-uint64 hton64(uint64 value);
-uint64 ntoh64(uint64 value);
+template <typename T, size_t SIZE = sizeof(T)>
+struct endian_transformer {
+    static inline T transform(T value) {
+        T res = 0;
+        if (is_little_endian()) {
+            using half_type = typename half_type_traits<SIZE>::type;
 
-#if defined __SIZEOF_INT128__
+            half_type mask = ~half_type(0);
+            half_type low = static_cast<half_type>(value & mask);
+            half_type high = static_cast<half_type>((value >> (SIZE << 2)) & mask);
 
-/**
- * host order to network order (128bits)
- */
-uint128 hton128(uint128 value);
-uint128 ntoh128(uint128 value);
+            half_type conv_low = endian_transformer<half_type>::transform(high);
+            half_type conv_high = endian_transformer<half_type>::transform(low);
 
-#endif
-
-#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+            res = ((T)conv_high << (SIZE << 2)) | conv_low;
+        } else {
+            res = value;
+        }
+        return res;
+    }
+};
 
 template <typename T>
-T t_convert_endian(T value);
+struct endian_transformer<T, 1> {
+    static inline T transform(T value) { return value; }
+};
 
-static inline uint16 convert_endian(int16 value) { return t_convert_endian<int16>(value); }
-static inline uint32 convert_endian(int32 value) { return t_convert_endian<int32>(value); }
-static inline uint64 convert_endian(int64 value) { return t_convert_endian<int64>(value); }
-static inline uint16 convert_endian(uint16 value) { return t_convert_endian<uint16>(value); }
-static inline uint32 convert_endian(uint32 value) { return t_convert_endian<uint32>(value); }
-static inline uint64 convert_endian(uint64 value) { return t_convert_endian<uint64>(value); }
+}  // namespace implementation
+
+inline uint16 hton16(uint16 value) { return implementation::endian_transformer<uint16>::transform(value); }
+inline uint32 hton32(uint32 value) { return implementation::endian_transformer<uint32>::transform(value); }
+inline uint64 hton64(uint64 value) { return implementation::endian_transformer<uint64>::transform(value); }
 #if defined __SIZEOF_INT128__
-static inline uint128 convert_endian(int128 value) { return t_convert_endian<int128>(value); }
-static inline uint128 convert_endian(uint128 value) { return t_convert_endian<uint128>(value); }
+inline uint128 hton128(uint128 value) { return implementation::endian_transformer<uint128>::transform(value); }
+#endif
+
+inline uint16 ntoh16(uint16 value) { return implementation::endian_transformer<uint16>::transform(value); }
+inline uint32 ntoh32(uint32 value) { return implementation::endian_transformer<uint32>::transform(value); }
+inline uint64 ntoh64(uint64 value) { return implementation::endian_transformer<uint64>::transform(value); }
+#if defined __SIZEOF_INT128__
+inline uint128 ntoh128(uint128 value) { return implementation::endian_transformer<uint128>::transform(value); }
 #endif
 
 template <typename T>
-T t_convert_endian(T value) {
-    return value;
+T convert_endian(T value) {
+    return implementation::endian_transformer<T>::transform(value);
 }
-
-#elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-
-template <typename T1, typename T2>
-T1 t_convert_endian(T1 value);
-
-static inline int16 convert_endian(int16 value) { return (((((int16)(value) & 0xFF)) << 8) | (((int16)(value) & 0xFF00) >> 8)); }
-static inline uint16 convert_endian(uint16 value) { return (((((uint16)(value) & 0xFF)) << 8) | (((uint16)(value) & 0xFF00) >> 8)); }
-static inline uint32 convert_endian(int32 value) { return t_convert_endian<int32, int16>(value); }
-static inline uint64 convert_endian(int64 value) { return t_convert_endian<int64, int32>(value); }
-static inline uint32 convert_endian(uint32 value) { return t_convert_endian<uint32, uint16>(value); }
-static inline uint64 convert_endian(uint64 value) { return t_convert_endian<uint64, uint32>(value); }
-#if defined __SIZEOF_INT128__
-static inline uint128 convert_endian(int128 value) { return t_convert_endian<int128, int64>(value); }
-static inline uint128 convert_endian(uint128 value) { return t_convert_endian<uint128, uint64>(value); }
-#endif
-
-template <typename T1, typename T2>
-T1 t_convert_endian(T1 value) {
-    union temp {
-        T1 value;
-        struct {
-            T2 high;
-            T2 low;
-        } p;
-    };
-    union temp x, y;
-    x.value = value;
-    y.p.high = convert_endian(x.p.low);
-    y.p.low = convert_endian(x.p.high);
-    return y.value;
-}
-
-#else
-//
-#endif
 
 }  // namespace hotplace
 

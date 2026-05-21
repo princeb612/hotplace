@@ -430,7 +430,7 @@ http_response& http_response::get_response_h2(binary_t& bin) {
         // RFC 7838 4.  The ALTSVC HTTP/2 Frame
         if (altsvc_fieldvalue.size()) {
             http2_frame_alt_svc alt_svc;
-            alt_svc.set_altsvc(str2bin(altsvc_fieldvalue));
+            alt_svc.set_altsvc(to_binary(altsvc_fieldvalue));
 
             alt_svc.write(bin);
 

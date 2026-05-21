@@ -14,10 +14,11 @@
 
 #include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/nostd/traits.hpp>
+#include <limits>
 
 namespace hotplace {
 
-namespace custom {
+namespace implementation {
 template <typename TYPE>
 TYPE t_change_sign(TYPE i, std::true_type) {
     return -i;
@@ -27,11 +28,11 @@ TYPE t_change_sign(TYPE i, std::false_type) {
     throw exception(miscast_unsigned);
     return i;
 }
-}  // namespace custom
+}  // namespace implementation
 
 template <typename TYPE>
 TYPE t_change_sign(TYPE i) {
-    return custom::t_change_sign(i, typename t_is_signed<TYPE>::type());
+    return implementation::t_change_sign(i, typename t_is_signed<TYPE>::type());
 }
 
 /**
@@ -53,44 +54,39 @@ TYPE t_atoi_n(const char* value, size_t size) {
     TYPE res = 0;
 
     __try2 {
-        if (nullptr == value) {
+        if (nullptr == value || 0 == size) {
             __leave2;
         }
 
         size_t i = 0;
-        int sign = 0;
+        bool is_negative = false;
 
         if (value[i] == '-') {
+            is_negative = true;
             ++i;
-            bool is_signed = TYPE(-1) < TYPE(0);
-            if (is_signed) {
-                sign = -1;
-            } else {
-                throw exception(errorcode_t::miscast_unsigned);
-            }
-        }
-
-        if (value[i] == '+') {
+        } else if (value[i] == '+') {
             ++i;
         }
 
         for (; i < size; ++i) {
             const char c = value[i];
-            if (0 == std::isdigit(c)) {
+            if (0 == std::isdigit(static_cast<unsigned char>(c))) {
                 ret = errorcode_t::bad_data;
                 break;
             }
-            res *= 10;
-            res += (c - '0');
+
+            int digit = c - '0';
+
+            res = res * 10 - digit;
         }
 
-        if (errorcode_t::success != ret) {
+        if (errorcode_t::bad_data == ret) {
             res = 0;
             __leave2;
         }
 
-        if (sign < 0) {
-            res = t_change_sign(res);
+        if (!is_negative) {
+            res = -res;
         }
     }
     __finally2 {}

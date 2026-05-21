@@ -26,13 +26,13 @@ struct OPTION : public CMDLINEOPTION {
 
     OPTION() : CMDLINEOPTION(), mode(0) {}
 
-    void set(int m, char* param) {
+    void set(int m, const char* param) {
         mode = m;
         if (param) {
             content = param;
         }
     }
-    void setfile(char* param) {
+    void setfile(const char* param) {
         if (param) {
             filename = param;
         }

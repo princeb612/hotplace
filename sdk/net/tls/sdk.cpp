@@ -148,7 +148,7 @@ bool is_kindof_frame(quic_frame_t type, protection_space_t space) {
 bool is_kindof_alpn(tls_session* session, const std::string& alpn) {
     bool ret = false;
     if (session) {
-        std::string session_alpn = bin2str(session->get_tls_protection().get_secrets().get(tls_context_alpn));
+        std::string session_alpn = to_string(session->get_tls_protection().get_secrets().get(tls_context_alpn));
         ret = (alpn == session_alpn);
     }
     return ret;

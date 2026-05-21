@@ -208,6 +208,7 @@ const error_description error_descriptions[] = {
     errordef(max_reached, "max reached"),
     errordef(failed, "failed"),
     errordef(blocked, "blocked"),
+    errordef(error_duplicate, "duplicate"),
     errordef(closed, "closed"),
     errordef(disconnect, "disconnect"),
     errordef(error_cipher, "error cipher"),

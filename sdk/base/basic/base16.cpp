@@ -17,8 +17,6 @@
 
 namespace hotplace {
 
-namespace {
-
 inline byte_t conv_fast(char c) {
     const unsigned char uc = static_cast<unsigned char>(c);
     if (uc >= '0' && uc <= '9') {
@@ -34,9 +32,10 @@ inline byte_t conv_fast(char c) {
 }
 
 inline const char* hex_digits(bool uppercase) { return uppercase ? "0123456789ABCDEF" : "0123456789abcdef"; }
-}  // namespace
 
-return_t base16_encode_raw(const byte_t* source, size_t size, char* buf, size_t* buflen, uint32 flags) {
+namespace implementation {
+
+return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buflen, uint32 flags) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -73,60 +72,23 @@ return_t base16_encode_raw(const byte_t* source, size_t size, char* buf, size_t*
     return ret;
 }
 
-return_t base16_encode_raw(const binary_t& source, char* buf, size_t* buflen, uint32 flags) {
+return_t base16_encode(const binary_t& source, char* buf, size_t* buflen, uint32 flags) {
     return_t ret = errorcode_t::success;
-    ret = base16_encode_raw(source.data(), source.size(), buf, buflen, flags);
+    ret = base16_encode(source.data(), source.size(), buf, buflen, flags);
     return ret;
 }
 
-return_t base16_encode_raw(const char* source, size_t size, char* buf, size_t* buflen, uint32 flags) {
+return_t base16_encode(const char* source, size_t size, char* buf, size_t* buflen, uint32 flags) {
     return_t ret = errorcode_t::success;
     if (source) {
-        ret = base16_encode_raw((byte_t*)source, size, buf, buflen, flags);
+        ret = base16_encode((byte_t*)source, size, buf, buflen, flags);
     }
     return ret;
 }
 
-return_t base16_encode_raw(const std::string& source, char* buf, size_t* buflen, uint32 flags) {
-    return base16_encode_raw(source.c_str(), source.size(), buf, buflen, flags);
-}
+return_t base16_encode(const std::string& source, char* buf, size_t* buflen, uint32 flags) { return base16_encode(source.c_str(), source.size(), buf, buflen, flags); }
 
-std::string base16_encode(const char* source, uint32 flags) {
-    std::string res;
-    if (source) {
-        auto size = strlen(source);
-        base16_encode((byte_t*)source, size, res, flags);
-    }
-    return res;
-}
-
-std::string base16_encode(const byte_t* source, size_t size, uint32 flags) {
-    std::string res;
-    if (source) {
-        base16_encode(source, size, res, flags);
-    }
-    return res;
-}
-
-std::string base16_encode(const std::string& source, uint32 flags) {
-    std::string res;
-    base16_encode((byte_t*)source.c_str(), source.size(), res, flags);
-    return res;
-}
-
-std::string base16_encode(const binary_t& source, uint32 flags) {
-    std::string res;
-    base16_encode(source.data(), source.size(), res, flags);
-    return res;
-}
-
-std::string base16_encode(const basic_stream& source, uint32 flags) {
-    std::string res;
-    base16_encode(source.data(), source.size(), res, flags);
-    return res;
-}
-
-return_t base16_decode_raw(const char* source, size_t size, byte_t* buf, size_t* buflen) {
+return_t base16_decode(const char* source, size_t size, byte_t* buf, size_t* buflen) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -178,11 +140,48 @@ return_t base16_decode_raw(const char* source, size_t size, byte_t* buf, size_t*
     return ret;
 }
 
-return_t base16_decode_raw(const std::string& source, byte_t* buf, size_t* buflen) { return base16_decode_raw(source.c_str(), source.size(), buf, buflen); }
+return_t base16_decode(const std::string& source, byte_t* buf, size_t* buflen) { return base16_decode(source.c_str(), source.size(), buf, buflen); }
 
-return_t base16_decode_raw(const byte_t* source, size_t size, byte_t* buf, size_t* buflen) { return base16_decode_raw((char*)source, size, buf, buflen); }
+return_t base16_decode(const byte_t* source, size_t size, byte_t* buf, size_t* buflen) { return base16_decode((char*)source, size, buf, buflen); }
 
-return_t base16_decode_raw(const binary_t source, byte_t* buf, size_t* buflen) { return base16_decode_raw((char*)source.data(), source.size(), buf, buflen); }
+return_t base16_decode(const binary_t source, byte_t* buf, size_t* buflen) { return base16_decode((char*)source.data(), source.size(), buf, buflen); }
+
+}  // namespace implementation
+
+std::string base16_encode(const char* source, uint32 flags) {
+    std::string res;
+    if (source) {
+        auto size = strlen(source);
+        base16_encode((byte_t*)source, size, res, flags);
+    }
+    return res;
+}
+
+std::string base16_encode(const byte_t* source, size_t size, uint32 flags) {
+    std::string res;
+    if (source) {
+        base16_encode(source, size, res, flags);
+    }
+    return res;
+}
+
+std::string base16_encode(const std::string& source, uint32 flags) {
+    std::string res;
+    base16_encode((byte_t*)source.c_str(), source.size(), res, flags);
+    return res;
+}
+
+std::string base16_encode(const binary_t& source, uint32 flags) {
+    std::string res;
+    base16_encode(source.data(), source.size(), res, flags);
+    return res;
+}
+
+std::string base16_encode(const basic_stream& source, uint32 flags) {
+    std::string res;
+    base16_encode(source.data(), source.size(), res, flags);
+    return res;
+}
 
 binary_t base16_decode(const char* source) {
     binary_t res;

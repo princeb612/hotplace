@@ -84,12 +84,12 @@ testvector:
     template: myoption                      # [mandatory] "myoption" MYOPTION structure
     items:
       - item: string
-        args:                               # [mandatory] 0..5
-          - param1: string
-          - param2: string
-          - param3: string
-          - param4: string
-          - param5: string
+        args:                               # [mandatory] 0..9
+          - argv1                           # argv[1]
+          - argv2                           # argv[2]
+          - argv3                           # argv[3]
+          - argv4                           # argv[4]
+          - argv5                           # argv[5]
         expect: boolean                     # [mandatory]
         reason: string
 ````

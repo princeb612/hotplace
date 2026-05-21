@@ -18,20 +18,20 @@ struct MYOPTION : public CMDLINEOPTION {
     MYOPTION() : CMDLINEOPTION(), keygen(false) {};
 };
 
-void do_test_cmdline(bool expect, int argc, char** argv) {
+void do_test_cmdline(bool expect, int argc, const char** argv) {
     return_t ret = errorcode_t::success;
 
     t_cmdline_t<MYOPTION> cmdline;
 
-    cmdline << t_cmdarg_t<MYOPTION>("-v", "verbose", [](MYOPTION& o, char* param) -> void { o.verbose = 1; }).optional()
-            << t_cmdarg_t<MYOPTION>("-l", "log file", [](MYOPTION& o, char* param) -> void { o.log = 1; }).optional()
-            << t_cmdarg_t<MYOPTION>("-t", "log time", [](MYOPTION& o, char* param) -> void { o.time = 1; }).optional()
-            << t_cmdarg_t<MYOPTION>("-in", "input", [&](MYOPTION& o, char* param) -> void { o.infile = param; }).preced()
-            << t_cmdarg_t<MYOPTION>("-out", "output", [&](MYOPTION& o, char* param) -> void { o.outfile = param; }).preced()
-            << t_cmdarg_t<MYOPTION>("-keygen", "keygen", [&](MYOPTION& o, char* param) -> void { o.keygen = true; }).optional();
+    cmdline << t_cmdarg_t<MYOPTION>("-v", "verbose", [](MYOPTION& o, const char* param) -> void { o.verbose = 1; }).optional()
+            << t_cmdarg_t<MYOPTION>("-l", "log file", [](MYOPTION& o, const char* param) -> void { o.log = 1; }).optional()
+            << t_cmdarg_t<MYOPTION>("-t", "log time", [](MYOPTION& o, const char* param) -> void { o.time = 1; }).optional()
+            << t_cmdarg_t<MYOPTION>("-in", "input", [&](MYOPTION& o, const char* param) -> void { o.infile = param; }).preced()
+            << t_cmdarg_t<MYOPTION>("-out", "output", [&](MYOPTION& o, const char* param) -> void { o.outfile = param; }).preced()
+            << t_cmdarg_t<MYOPTION>("-keygen", "keygen", [&](MYOPTION& o, const char* param) -> void { o.keygen = true; }).optional();
 
     std::string args;
-    for (int i = 0; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
         args += argv[i];
         if (i + 1 < argc) {
             args += " ";
@@ -39,7 +39,7 @@ void do_test_cmdline(bool expect, int argc, char** argv) {
     }
     _logger->writeln("condition argc %i argv '%s'", argc, args.c_str());
 
-    ret = cmdline.parse(argc, argv);
+    ret = cmdline.parse(argc, (char**)argv);
     if (errorcode_t::success != ret) {
         cmdline.help();
     }
@@ -61,19 +61,20 @@ void test_cmdline() {
     _test_case.begin("commandline");
 
     int argc = 0;
-    char* argv[5] = {};
+    const char* argv[10] = {};
+    argv[0] = "test";
 
-    argc = 2;
-    argv[0] = (char*)"-in";
-    argv[1] = (char*)"test.in";
+    argc = 3;
+    argv[1] = "-in";
+    argv[2] = "test.in";
     do_test_cmdline(false, argc, argv);  // missing -out
 
-    argc = 5;
-    argv[0] = (char*)"-keygen";
-    argv[1] = (char*)"-in";
-    argv[2] = (char*)"test.in";
-    argv[3] = (char*)"-out";
-    argv[4] = (char*)"test.out";
+    argc = 6;
+    argv[1] = "-keygen";
+    argv[2] = "-in";
+    argv[3] = "test.in";
+    argv[4] = "-out";
+    argv[5] = "test.out";
     do_test_cmdline(true, argc, argv);  // -token.preced value -token.optional
 }
 

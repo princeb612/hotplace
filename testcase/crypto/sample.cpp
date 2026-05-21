@@ -21,19 +21,19 @@ int main(int argc, char** argv) {
 #endif
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
-    (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.enable_verbose(); }).optional()
+    (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, const char* param) -> void { o.enable_verbose(); }).optional()
 #if defined DEBUG
-                << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.enable_debug(); }).optional()
-                << t_cmdarg_t<OPTION>("-D", "trace level 0|2", [](OPTION& o, char* param) -> void { o.enable_trace(atoi(param)); }).optional().preced()
-                << t_cmdarg_t<OPTION>("--trace", "trace level [trace]", [](OPTION& o, char* param) -> void { o.enable_trace(loglevel_trace); }).optional()
-                << t_cmdarg_t<OPTION>("--debug", "trace level [debug]", [](OPTION& o, char* param) -> void { o.enable_trace(loglevel_debug); }).optional()
+                << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, const char* param) -> void { o.enable_debug(); }).optional()
+                << t_cmdarg_t<OPTION>("-D", "trace level 0|2", [](OPTION& o, const char* param) -> void { o.enable_trace(atoi(param)); }).optional().preced()
+                << t_cmdarg_t<OPTION>("--trace", "trace level [trace]", [](OPTION& o, const char* param) -> void { o.enable_trace(loglevel_trace); }).optional()
+                << t_cmdarg_t<OPTION>("--debug", "trace level [debug]", [](OPTION& o, const char* param) -> void { o.enable_trace(loglevel_debug); }).optional()
 #endif
-                << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-k", "dump keys", [](OPTION& o, char* param) -> void { o.dump_keys = true; }).optional()
-                << t_cmdarg_t<OPTION>("-s", "test slow pbkdf2/scrypt", [](OPTION& o, char* param) -> void { o.flag_slow_kdf = true; }).optional()
-                << t_cmdarg_t<OPTION>("-argon2", "test argon2d, argon2i, argon2id", [](OPTION& o, char* param) -> void { o.flag_argon2 = true; }).optional()
-                << t_cmdarg_t<OPTION>("-ffdhe", "test FFDHE", [](OPTION& o, char* param) -> void { o.flag_ffdhe = true; }).optional();
+                << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, const char* param) -> void { o.log = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, const char* param) -> void { o.time = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-k", "dump keys", [](OPTION& o, const char* param) -> void { o.dump_keys = true; }).optional()
+                << t_cmdarg_t<OPTION>("-s", "test slow pbkdf2/scrypt", [](OPTION& o, const char* param) -> void { o.flag_slow_kdf = true; }).optional()
+                << t_cmdarg_t<OPTION>("-argon2", "test argon2d, argon2i, argon2id", [](OPTION& o, const char* param) -> void { o.flag_argon2 = true; }).optional()
+                << t_cmdarg_t<OPTION>("-ffdhe", "test FFDHE", [](OPTION& o, const char* param) -> void { o.flag_ffdhe = true; }).optional();
 
     _cmdline->parse(argc, argv);
 

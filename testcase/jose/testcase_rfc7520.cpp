@@ -126,7 +126,7 @@ void test_rfc7520_features() {
         "entrap_o\xe2\x80\x93"
         "peter_long\xe2\x80\x93"
         "credit_tun";
-    keygen.add_oct(&crypto_key2, jwa_t::jwa_pbes2_hs512_a256kw, str2bin(figure96), keydesc(crypto_use_t::use_enc));
+    keygen.add_oct(&crypto_key2, jwa_t::jwa_pbes2_hs512_a256kw, to_binary(figure96), keydesc(crypto_use_t::use_enc));
     do_test_rfc7520_jwe(&crypto_key2, "rfc7520_figure105.jwe", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 105)");
     do_test_rfc7520_jwe(&crypto_key2, "rfc7520_figure106.jwe", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 106)");
     do_test_rfc7520_jwe(&crypto_key2, "rfc7520_figure107.jwe", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 107)");
@@ -247,7 +247,7 @@ void test_jwe_flattened() {
                 if (nameof_alg) {
                     print_text("JWE enc %s alg %s", nameof_enc, nameof_alg);
 
-                    ret = jose.encrypt(handle_encrypt, enc, alg, str2bin(input), encrypted, jose_serialization_t::jose_flatjson);
+                    ret = jose.encrypt(handle_encrypt, enc, alg, to_binary(input), encrypted, jose_serialization_t::jose_flatjson);
                     if (errorcode_t::success == ret) {
                         dump("encrypted", encrypted);
 
@@ -316,7 +316,7 @@ void test_jwe_json(jwe_t enc) {
 
         print_text("JWE enc %s", nameof_enc);
 
-        ret = jose.encrypt(handle_encrypt, enc, algs, str2bin(input), encrypted, jose_serialization_t::jose_json);
+        ret = jose.encrypt(handle_encrypt, enc, algs, to_binary(input), encrypted, jose_serialization_t::jose_json);
         if (errorcode_t::success != ret) {
             __leave2;
         }

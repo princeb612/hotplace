@@ -30,7 +30,7 @@ void test_hkdf() {
     binary_t result;
 
     for (size_t i = 0; i < RTL_NUMBER_OF(vector); i++) {
-        kdf.hmac_kdf(result, hash_algorithm_t::sha2_256, vector[i].dlen, str2bin(vector[i].password), str2bin(vector[i].salt), str2bin(vector[i].info));
+        kdf.hmac_kdf(result, hash_algorithm_t::sha2_256, vector[i].dlen, to_binary(vector[i].password), to_binary(vector[i].salt), to_binary(vector[i].info));
 
         if (option.verbose) {
             _logger->dump(result);

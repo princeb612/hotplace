@@ -27,8 +27,8 @@ void test_kmp() {
     // abacaabaccabacabaabb
     //           abacab
 
-    binary_t data = str2bin("abacaabaccabacabaabb");
-    binary_t pattern = str2bin("abacab");
+    binary_t data = to_binary("abacaabaccabacabaabb");
+    binary_t pattern = to_binary("abacab");
 
     {
         // vector

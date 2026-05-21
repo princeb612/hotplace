@@ -61,13 +61,13 @@ return_t http3_frame_data::do_write(binary_t& bin) {
 
 return_t http3_frame_data::set_contents(const std::string& contents) {
     return_t ret = errorcode_t::success;
-    _payload = str2bin(contents);
+    _payload = to_binary(contents);
     return ret;
 }
 
 std::string http3_frame_data::get_contents() {
     std::string value;
-    value = bin2str(_payload);
+    value = to_string(_payload);
     return value;
 }
 

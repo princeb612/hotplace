@@ -30,7 +30,7 @@ void test_dumpmemory() {
     _logger->hdump("dump", str, 16, 3);
     _test_case.assert(true, __FUNCTION__, "string");
 
-    binary_t bin = str2bin(str);
+    binary_t bin = to_binary(str);
     _logger->hdump("dump", bin, 16, 3);
     _test_case.assert(true, __FUNCTION__, "binary_t");
 

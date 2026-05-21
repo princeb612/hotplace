@@ -175,9 +175,30 @@ void test_valist_formatstring() {
     }
 }
 
+void test_valist_binary() {
+    _test_case.begin("valist");
+
+    binary_t bin;
+    valist va;
+    basic_stream bs;
+
+    for (auto i = 0; i < 256; i++) {
+        bin.push_back(i);
+    }
+
+    va << bin;
+    bs.vaprintf("{1:s}", va);  // the format specifier 's' in TYPE_BINARY, it outputs a character if it is printable, and '.' otherwise.
+    _logger->writeln(bs);
+
+    const char* expect = R"(................................ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~.)"
+                         R"(................................................................................................................................)";
+    _test_case.assert(bs == expect, __FUNCTION__, "valist binary (printable data)");
+}
+
 void testcase_valist() {
     test_valist_sprintf();
     test_valist_cpp14();
     test_valist_stream();
     test_valist_formatstring();
+    test_valist_binary();
 }

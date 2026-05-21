@@ -14,6 +14,7 @@
 
 #include <functional>
 #include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <iostream>
 #include <map>
@@ -22,7 +23,7 @@
 
 namespace hotplace {
 
-enum cmdline_flag_t {
+enum cmdline_flag_t : uint32 {
     cmdline_preced = (1 << 1),
     cmdline_optional = (1 << 2),
 };
@@ -39,109 +40,101 @@ class t_cmdarg_t {
     friend class t_cmdline_t;
 
    public:
-    t_cmdarg_t(const std::string& token, const std::string& desc, std::function<void(T&, char*)> f);
-    t_cmdarg_t(const t_cmdarg_t& other);
-    t_cmdarg_t(t_cmdarg_t&& other);
-    ~t_cmdarg_t();
+    template <typename FN>
+    t_cmdarg_t(std::string token, std::string desc, FN&& f);
+    t_cmdarg_t(const t_cmdarg_t& other) = delete;
+    t_cmdarg_t(t_cmdarg_t&& other) noexcept = default;
+    ~t_cmdarg_t() = default;
 
     /*
      * @brief key-value pair, next parameter is value
      * @example
-     *      -in FILENAME
+     *          -in FILENAME
      *
-     *      cmd << t_cmdarg_t<OPTION> ("-in", "input", [](OPTION& o, char* param) -> void { o.infile = param; }).preced ();
+     *          cmd << t_cmdarg_t<OPTION> ("-in", "input", [](OPTION& o, const char* param) -> void { o.infile = param; }).preced ();
+     * @remarks
+     *          lvalue reference
+     *          rvalue move-chain
      */
-    t_cmdarg_t& preced();
+    t_cmdarg_t& preced() &;
+    t_cmdarg_t&& preced() &&;
     /*
      * @brief optional parameter
      * @remarks
      * @example
      *      -keygen
      *
-     *      cmd << t_cmdarg_t<OPTION> ("-keygen", "generate key", [](OPTION& o, char* param) -> void { o.keygen = true; }).optional ();
+     *      cmd << t_cmdarg_t<OPTION> ("-keygen", "generate key", [](OPTION& o, const char* param) -> void { o.keygen = true; }).optional ();
      */
-    t_cmdarg_t& optional();
+    t_cmdarg_t& optional() &;
+    t_cmdarg_t&& optional() &&;
 
-    const char* token() const;
-    const char* desc() const;
+    const std::string& token() const;
+    const std::string& desc() const;
     uint32 flag() const;
 
-    t_cmdarg_t& operator=(const t_cmdarg_t& other);
-    t_cmdarg_t& operator=(t_cmdarg_t&& other);
+    t_cmdarg_t& operator=(const t_cmdarg_t& other) = delete;
+    t_cmdarg_t& operator=(t_cmdarg_t&& other) noexcept = default;
 
    protected:
-    return_t bind(T& source, char* param);
+    return_t bind(T& source, const char* param);
 
    private:
     std::string _token;
     std::string _desc;
-    std::function<void(T&, char*)> _func;
-    uint32 _flag;
+    std::function<void(T&, const char*)> _func;
+    uint32 _flags;
 };
 
 template <typename T>
-t_cmdarg_t<T>::t_cmdarg_t(const std::string& token, const std::string& desc, std::function<void(T&, char*)> f) : _token(token), _desc(desc), _func(f), _flag(0) {}
+template <typename FN>
+t_cmdarg_t<T>::t_cmdarg_t(std::string token, std::string desc, FN&& f) : _token(std::move(token)), _desc(std::move(desc)), _func(std::forward<FN>(f)), _flags(0) {}
 
 template <typename T>
-t_cmdarg_t<T>::t_cmdarg_t(const t_cmdarg_t& other) : _token(other._token), _desc(other._desc), _func(other._func), _flag(other._flag) {}
-
-template <typename T>
-t_cmdarg_t<T>::t_cmdarg_t(t_cmdarg_t&& other) : _token(std::move(other._token)), _desc(std::move(other._desc)), _func(std::move(other._func)), _flag(other._flag) {}
-
-template <typename T>
-t_cmdarg_t<T>::~t_cmdarg_t() {}
-
-template <typename T>
-t_cmdarg_t<T>& t_cmdarg_t<T>::preced() {
-    _flag |= cmdline_flag_t::cmdline_preced;
+t_cmdarg_t<T>& t_cmdarg_t<T>::preced() & {
+    _flags |= cmdline_flag_t::cmdline_preced;
     return *this;
 }
 
 template <typename T>
-t_cmdarg_t<T>& t_cmdarg_t<T>::optional() {
-    _flag |= cmdline_flag_t::cmdline_optional;
+t_cmdarg_t<T>&& t_cmdarg_t<T>::preced() && {
+    _flags |= cmdline_flag_t::cmdline_preced;
+    return std::move(*this);
+}
+
+template <typename T>
+t_cmdarg_t<T>& t_cmdarg_t<T>::optional() & {
+    _flags |= cmdline_flag_t::cmdline_optional;
     return *this;
 }
 
 template <typename T>
-const char* t_cmdarg_t<T>::token() const {
-    return _token.c_str();
+t_cmdarg_t<T>&& t_cmdarg_t<T>::optional() && {
+    _flags |= cmdline_flag_t::cmdline_optional;
+    return std::move(*this);
 }
 
 template <typename T>
-const char* t_cmdarg_t<T>::desc() const {
-    return _desc.c_str();
+const std::string& t_cmdarg_t<T>::token() const {
+    return _token;
+}
+
+template <typename T>
+const std::string& t_cmdarg_t<T>::desc() const {
+    return _desc;
 }
 
 template <typename T>
 uint32 t_cmdarg_t<T>::flag() const {
-    return _flag;
+    return _flags;
 }
 
 template <typename T>
-return_t t_cmdarg_t<T>::bind(T& source, char* param) {
+return_t t_cmdarg_t<T>::bind(T& source, const char* param) {
     return_t ret = errorcode_t::success;
 
     _func(source, param);
     return ret;
-}
-
-template <typename T>
-t_cmdarg_t<T>& t_cmdarg_t<T>::operator=(const t_cmdarg_t& other) {
-    _token = other._token;
-    _desc = other._desc;
-    _func = other._func;
-    _flag = other._flag;
-    return *this;
-}
-
-template <typename T>
-t_cmdarg_t<T>& t_cmdarg_t<T>::operator=(t_cmdarg_t&& other) {
-    _token = std::move(other._token);
-    _desc = std::move(other._desc);
-    _func = std::move(other._func);
-    _flag = other._flag;
-    return *this;
 }
 
 /*
@@ -158,9 +151,9 @@ t_cmdarg_t<T>& t_cmdarg_t<T>::operator=(t_cmdarg_t&& other) {
  *  t_cmdline_t<OPTION> cmdline;
  *
  *  cmdline
- *      << t_cmdarg_t<OPTION> ("-in", "input", [](OPTION& o, char* param) -> void { o.infile = param; }).preced ()
- *      << t_cmdarg_t<OPTION> ("-out", "output", [](OPTION& o, char* param) -> void { o.outfile = param; }).preced ()
- *      << t_cmdarg_t<OPTION> ("-keygen", "keygen", [](OPTION& o, char* param) -> void { o.keygen = true; }).optional ();
+ *      << t_cmdarg_t<OPTION> ("-in", "input", [](OPTION& o, const char* param) -> void { o.infile = param; }).preced ()
+ *      << t_cmdarg_t<OPTION> ("-out", "output", [](OPTION& o, const char* param) -> void { o.outfile = param; }).preced ()
+ *      << t_cmdarg_t<OPTION> ("-keygen", "keygen", [](OPTION& o, const char* param) -> void { o.keygen = true; }).optional ();
  *  ret = cmdline.parse (argc, argv);
  *  if (errorcode_t::success != ret) {
  *      cmdline.help ();
@@ -181,7 +174,7 @@ class t_cmdline_t {
      * @brief add handler
      * @param t_cmdarg_t<T> cmd [in]
      */
-    t_cmdline_t& operator<<(const t_cmdarg_t<T>& cmd);
+    t_cmdline_t& operator<<(const t_cmdarg_t<T>& cmd) = delete;
     t_cmdline_t& operator<<(t_cmdarg_t<T>&& cmd);
     /*
      * @brief parse
@@ -193,7 +186,7 @@ class t_cmdline_t {
      * @brief return T
      */
     const T& value() const;
-    void help();
+    void help() const;
 
    protected:
    private:
@@ -201,7 +194,6 @@ class t_cmdline_t {
     typedef std::vector<std::string> cmdline_args_list_t;
     typedef std::map<std::string, t_cmdarg_t<T> > cmdline_args_map_t;
     typedef std::set<std::string> cmdline_args_set_t;
-    typedef std::pair<typename cmdline_args_map_t::iterator, bool> cmdline_args_map_pib_t;
     cmdline_args_list_t _list;  // ordered
     cmdline_args_map_t _args;   // arguments
     cmdline_args_set_t _mandatory;
@@ -214,24 +206,14 @@ template <typename T>
 t_cmdline_t<T>::~t_cmdline_t() {}
 
 template <typename T>
-t_cmdline_t<T>& t_cmdline_t<T>::operator<<(const t_cmdarg_t<T>& cmd) {
-    const char* token = cmd.token();
-    cmdline_args_map_pib_t pib = _args.emplace(token, cmd);
-
-    if (pib.second) {
-        _list.emplace_back(token);
-    }
-
-    return *this;
-}
-
-template <typename T>
 t_cmdline_t<T>& t_cmdline_t<T>::operator<<(t_cmdarg_t<T>&& cmd) {
-    const std::string& token = cmd._token;
-    cmdline_args_map_pib_t pib = _args.emplace(token, std::move(cmd));
+    std::string token = cmd._token;
+    auto pib = _args.emplace(token, std::move(cmd));
 
     if (pib.second) {
         _list.emplace_back(token);
+    } else {
+        throw exception(errorcode_t::error_duplicate);
     }
 
     return *this;
@@ -252,30 +234,34 @@ return_t t_cmdline_t<T>::parse(int argc, char** argv) {
         }
     }
 
-    for (index = 0; index < argc; index++) {
+    for (index = 1; index < argc; index++) {
         const char* token = argv[index];
-        typename cmdline_args_map_t::iterator iter = _args.find(token);
+        auto iter = _args.find(token);
         if (_args.end() != iter) {
             if (cmdline_flag_t::cmdline_preced & iter->second.flag()) {  // preced token expect next argument
                 if (index + 1 < argc) {
                     char* next_token = argv[index + 1];
                     typename cmdline_args_map_t::iterator check_iter = _args.find(next_token);  // make sure next argument is not token
                     if (check_iter == _args.end()) {
-                        iter->second.bind(_source, next_token);
+                        iter->second.bind(_source, next_token);  // consume token
                         _mandatory.erase(token);
+                        ++index;  // token in the index has been consumed
+                    } else {
+                        ret = errorcode_t::invalid_parameter;  // -preced parameter waited for an appropriate value, but an argument token appeared
+                        break;
                     }
                 } else {
-                    ret = errorcode_t::invalid_parameter;
+                    ret = errorcode_t::invalid_parameter;  // -preced parameter wait for the next token but not found
                     break;
                 }
             } else {
-                iter->second.bind(_source, (char*)"");
+                iter->second.bind(_source, "");
                 _mandatory.erase(token);
             }
         }
     }
 
-    if (_mandatory.size()) {
+    if (false == _mandatory.empty()) {
         ret = errorcode_t::insufficient;
     }
 
@@ -288,17 +274,14 @@ const T& t_cmdline_t<T>::value() const {
 }
 
 template <typename T>
-void t_cmdline_t<T>::help() {
+void t_cmdline_t<T>::help() const {
     std::cout << "help" << std::endl;
-
-    typename cmdline_args_map_t::iterator map_iter;
-    typename cmdline_args_set_t::iterator set_iter;
 
     size_t maxlen = 5;
     size_t len = 0;
     for (const auto& pair : _args) {
-        const t_cmdarg_t<T>& item = pair.second;
-        len = strlen(item.token());
+        const auto& item = pair.second;
+        len = item.token().size();
         if (len > maxlen) {
             maxlen = len;
         }
@@ -307,17 +290,17 @@ void t_cmdline_t<T>::help() {
     std::string fmt;
     fmt = format(ANSI_ESCAPE "%%im%%-%zis" ANSI_ESCAPE "0m %%c %%s\n", maxlen);
     for (const auto& key : _list) {
-        map_iter = _args.find(key);
+        auto map_iter = _args.find(key);
         if (_args.end() == map_iter) {
             continue;
         }
 
-        t_cmdarg_t<T>& item = map_iter->second;
+        const t_cmdarg_t<T>& item = map_iter->second;
         uint32 flag = item.flag();
         char f = ' ';
         int color = 33;
         if (0 == (cmdline_flag_t::cmdline_optional & flag)) {
-            set_iter = _mandatory.find(key);
+            auto set_iter = _mandatory.find(key);
             if (_mandatory.end() == set_iter) {
                 f = 'v';
             } else {
@@ -328,9 +311,9 @@ void t_cmdline_t<T>::help() {
 
         constexpr char preced[] = "arg";
         constexpr char nopreced[] = "   ";
-        std::string expr_arg = format("%s %s", item.token(), (cmdline_flag_t::cmdline_preced & flag) ? preced : nopreced);
+        std::string expr_arg = format("%s %s", item.token().c_str(), (cmdline_flag_t::cmdline_preced & flag) ? preced : nopreced);
 
-        printf(fmt.c_str(), color, expr_arg.c_str(), f, item.desc());
+        printf(fmt.c_str(), color, expr_arg.c_str(), f, item.desc().c_str());
     }
 }
 

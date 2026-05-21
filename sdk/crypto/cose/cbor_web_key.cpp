@@ -348,7 +348,7 @@ void cwk_writer(crypto_key_object* key, void* param) {
             cose_kty_t cose_kty = advisor->cose_ktyof(kty);
             *keynode << new cbor_pair(cose_key_lable_t::cose_lable_kty, new cbor_data(cose_kty));  // 1
             if (kid.size()) {
-                *keynode << new cbor_pair(cose_key_lable_t::cose_lable_kid, new cbor_data(str2bin(kid)));  // 2
+                *keynode << new cbor_pair(cose_key_lable_t::cose_lable_kid, new cbor_data(to_binary(kid)));  // 2
             }
 
             if (crypto_kty_t::kty_ec == kty || crypto_kty_t::kty_okp == kty) {

@@ -41,7 +41,7 @@ return_t openssl_kdf::hkdf_tls13_label(binary_t& hkdflabel, uint16 length, const
             __leave2;
         }
 
-        ret = hkdf_label(hkdflabel, length, str2bin(constexpr_tls13), str2bin(label), context);
+        ret = hkdf_label(hkdflabel, length, to_binary(constexpr_tls13), to_binary(label), context);
     }
     __finally2 {}
     return ret;
@@ -62,7 +62,7 @@ return_t openssl_kdf::hkdf_dtls13_label(binary_t& hkdflabel, uint16 length, cons
             __leave2;
         }
 
-        ret = hkdf_label(hkdflabel, length, str2bin(constexpr_dtls13), str2bin(label), context);
+        ret = hkdf_label(hkdflabel, length, to_binary(constexpr_dtls13), to_binary(label), context);
     }
     __finally2 {}
     return ret;
@@ -77,12 +77,12 @@ return_t openssl_kdf::hkdf_expand_tls13_label(binary_t& okm, hash_algorithm_t al
 }
 
 return_t openssl_kdf::hkdf_expand_tls13_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const binary_t& label, const binary_t& context) {
-    return hkdf_expand_label(okm, alg, length, secret, str2bin(constexpr_tls13), label, context);
+    return hkdf_expand_label(okm, alg, length, secret, to_binary(constexpr_tls13), label, context);
 }
 
 return_t openssl_kdf::hkdf_expand_tls13_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const binary_t& label,
                                               const binary_t& context) {
-    return hkdf_expand_label(okm, alg, length, secret, str2bin(constexpr_tls13), label, context);
+    return hkdf_expand_label(okm, alg, length, secret, to_binary(constexpr_tls13), label, context);
 }
 
 return_t openssl_kdf::hkdf_expand_dtls13_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const char* label, const binary_t& context) {
@@ -94,12 +94,12 @@ return_t openssl_kdf::hkdf_expand_dtls13_label(binary_t& okm, hash_algorithm_t a
 }
 
 return_t openssl_kdf::hkdf_expand_dtls13_label(binary_t& okm, const char* alg, uint16 length, const binary_t& secret, const binary_t& label, const binary_t& context) {
-    return hkdf_expand_label(okm, alg, length, secret, str2bin(constexpr_dtls13), label, context);
+    return hkdf_expand_label(okm, alg, length, secret, to_binary(constexpr_dtls13), label, context);
 }
 
 return_t openssl_kdf::hkdf_expand_dtls13_label(binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret, const binary_t& label,
                                                const binary_t& context) {
-    return hkdf_expand_label(okm, alg, length, secret, str2bin(constexpr_dtls13), label, context);
+    return hkdf_expand_label(okm, alg, length, secret, to_binary(constexpr_dtls13), label, context);
 }
 
 return_t openssl_kdf::hkdf_label(binary_t& hkdflabel, uint16 length, const binary_t& prefix, const binary_t& label, const binary_t& context) {
@@ -143,7 +143,7 @@ return_t openssl_kdf::hkdf_expand_label(binary_t& okm, const char* alg, uint16 l
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        ret = hkdf_expand_label(okm, alg, length, secret, str2bin(prefix), str2bin(label), context);
+        ret = hkdf_expand_label(okm, alg, length, secret, to_binary(prefix), to_binary(label), context);
     }
     __finally2 {}
     return ret;
@@ -157,7 +157,7 @@ return_t openssl_kdf::hkdf_expand_label(binary_t& okm, hash_algorithm_t alg, uin
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        ret = hkdf_expand_label(okm, alg, length, secret, str2bin(prefix), str2bin(label), context);
+        ret = hkdf_expand_label(okm, alg, length, secret, to_binary(prefix), to_binary(label), context);
     }
     __finally2 {}
     return ret;

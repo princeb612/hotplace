@@ -204,7 +204,7 @@ cose_data& cose_data::set(const binary_t& bin) {
 }
 
 cose_data& cose_data::set(const std::string& value) {
-    _payload = std::move(str2bin(value));
+    _payload = std::move(to_binary(value));
     return *this;
 }
 

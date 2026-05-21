@@ -33,6 +33,38 @@ struct t_is_signed : std::is_signed<T> {};
 template <typename T>
 struct t_is_unsigned : std::is_unsigned<T> {};
 
+template <>
+struct t_is_signed<int8> : std::true_type {};
+template <>
+struct t_is_signed<uint8> : std::false_type {};
+template <>
+struct t_is_unsigned<int8> : std::false_type {};
+template <>
+struct t_is_unsigned<uint8> : std::true_type {};
+template <>
+struct t_is_signed<int16> : std::true_type {};
+template <>
+struct t_is_signed<uint16> : std::false_type {};
+template <>
+struct t_is_unsigned<int16> : std::false_type {};
+template <>
+struct t_is_unsigned<uint16> : std::true_type {};
+template <>
+struct t_is_signed<int32> : std::true_type {};
+template <>
+struct t_is_signed<uint32> : std::false_type {};
+template <>
+struct t_is_unsigned<int32> : std::false_type {};
+template <>
+struct t_is_unsigned<uint32> : std::true_type {};
+template <>
+struct t_is_signed<int64> : std::true_type {};
+template <>
+struct t_is_signed<uint64> : std::false_type {};
+template <>
+struct t_is_unsigned<int64> : std::false_type {};
+template <>
+struct t_is_unsigned<uint64> : std::true_type {};
 #ifdef __SIZEOF_INT128__
 template <>
 struct t_is_signed<int128> : std::true_type {};
@@ -42,6 +74,100 @@ template <>
 struct t_is_unsigned<int128> : std::false_type {};
 template <>
 struct t_is_unsigned<uint128> : std::true_type {};
+#endif
+
+template <typename T>
+struct t_is_integral : std::is_integral<T> {};
+
+template <>
+struct t_is_integral<int8> : std::true_type {};
+template <>
+struct t_is_integral<uint8> : std::true_type {};
+template <>
+struct t_is_integral<int16> : std::true_type {};
+template <>
+struct t_is_integral<uint16> : std::true_type {};
+template <>
+struct t_is_integral<int32> : std::true_type {};
+template <>
+struct t_is_integral<uint32> : std::true_type {};
+template <>
+struct t_is_integral<int64> : std::true_type {};
+template <>
+struct t_is_integral<uint64> : std::true_type {};
+#ifdef __SIZEOF_INT128__
+template <>
+struct t_is_integral<int128> : std::true_type {};
+template <>
+struct t_is_integral<uint128> : std::true_type {};
+#endif
+
+template <typename T>
+struct t_make_unsigned : std::make_unsigned<T> {};
+
+template <>
+struct t_make_unsigned<int8> {
+    using type = uint8;
+};
+template <>
+struct t_make_unsigned<uint8> {
+    using type = uint8;
+};
+template <>
+struct t_make_unsigned<int16> {
+    using type = uint16;
+};
+template <>
+struct t_make_unsigned<uint16> {
+    using type = uint16;
+};
+template <>
+struct t_make_unsigned<int32> {
+    using type = uint32;
+};
+template <>
+struct t_make_unsigned<uint32> {
+    using type = uint32;
+};
+template <>
+struct t_make_unsigned<int64> {
+    using type = uint64;
+};
+template <>
+struct t_make_unsigned<uint64> {
+    using type = uint64;
+};
+#ifdef __SIZEOF_INT128__
+template <>
+struct t_make_unsigned<int128> {
+    using type = uint128;
+};
+template <>
+struct t_make_unsigned<uint128> {
+    using type = uint128;
+};
+#endif
+
+template <size_t size>
+struct half_type_traits;
+
+template <>
+struct half_type_traits<2> {
+    using type = uint8;
+};
+template <>
+struct half_type_traits<4> {
+    using type = uint16;
+};
+template <>
+struct half_type_traits<8> {
+    using type = uint32;
+};
+#ifdef __SIZEOF_INT128__
+template <>
+struct half_type_traits<16> {
+    using type = uint64;
+};
 #endif
 
 /**

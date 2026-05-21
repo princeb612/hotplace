@@ -45,12 +45,13 @@ class encoder_stream {
     encoder_stream& operator=(encoder_stream&& other) = default;
 
     encoder_stream& set_maxsize(size_t size);
+    size_t get_maxsize();
     encoding_t get_encoding();
     encoder_stream& set_endian(bool use_bigendian);
     bool is_bigendian();
 
     /**
-     * @remarks max buffer size 4K
+     * @remarks max buffer size 32K
      *          to change max buffer, use set_maxsize
      */
     return_t write(const byte_t* data, size_t size);
@@ -59,6 +60,20 @@ class encoder_stream {
     encoder_stream& operator<<(const std::string& value);
     encoder_stream& operator<<(const binary_t& value);
     encoder_stream& operator<<(const basic_stream& value);
+    encoder_stream& operator<<(int8 value);
+    encoder_stream& operator<<(int16 value);
+    encoder_stream& operator<<(int32 value);
+    encoder_stream& operator<<(int64 value);
+#if defined __SIZEOF_INT128__
+    encoder_stream& operator<<(int128 value);
+#endif
+    encoder_stream& operator<<(uint8 value);
+    encoder_stream& operator<<(uint16 value);
+    encoder_stream& operator<<(uint32 value);
+    encoder_stream& operator<<(uint64 value);
+#if defined __SIZEOF_INT128__
+    encoder_stream& operator<<(uint128 value);
+#endif
 
     encoder_stream& add(const char* value);
     encoder_stream& add(const byte_t* data, size_t size);
@@ -144,8 +159,14 @@ class decoder_stream {
     decoder_stream& operator=(const decoder_stream& other) = default;
     decoder_stream& operator=(decoder_stream&& other) = default;
 
+    decoder_stream& set_maxsize(size_t size);
+    size_t get_maxsize();
     encoding_t get_encoding();
 
+    /**
+     * @remarks max buffer size 32K
+     *          to change max buffer, use set_maxsize
+     */
     return_t write(const char* data, size_t size);
 
     decoder_stream& operator<<(const char* value);
@@ -193,6 +214,7 @@ class decoder_stream {
     };
 
     encoding_t _encoding;
+    size_t _maxsize;
     binary_t _buffer;
     encbuf_t _encbuf;
 };

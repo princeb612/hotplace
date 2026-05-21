@@ -62,7 +62,7 @@ void test_rfc8037_features() {
     jwk.load_file(&jwk_x25519, key_ownspec, "rfc8037_A_X25519.jwk");
     jwk_x25519.for_each(dump_crypto_key, nullptr);
     jose.open(&handle, &jwk_x25519);
-    ret = jose.encrypt(handle, jwe_t::jwe_a128gcm, jwa_t::jwa_ecdh_es_a128kw, str2bin(claim), encrypted, jose_serialization_t::jose_flatjson);
+    ret = jose.encrypt(handle, jwe_t::jwe_a128gcm, jwa_t::jwa_ecdh_es_a128kw, to_binary(claim), encrypted, jose_serialization_t::jose_flatjson);
     if (errorcode_t::success == ret) {
         dump("RFC 8037 A.6.  ECDH-ES with X25519", encrypted);
     }
@@ -73,7 +73,7 @@ void test_rfc8037_features() {
     jwk.load_file(&jwk_x448, key_ownspec, "rfc8037_A_X448.jwk");
     jwk_x448.for_each(dump_crypto_key, nullptr);
     jose.open(&handle, &jwk_x448);
-    ret = jose.encrypt(handle, jwe_t::jwe_a256gcm, jwa_t::jwa_ecdh_es_a256kw, str2bin(claim), encrypted, jose_serialization_t::jose_flatjson);
+    ret = jose.encrypt(handle, jwe_t::jwe_a256gcm, jwa_t::jwa_ecdh_es_a256kw, to_binary(claim), encrypted, jose_serialization_t::jose_flatjson);
     if (errorcode_t::success == ret) {
         dump("RFC 8037 A.7.  ECDH-ES with X448", encrypted);
     }
@@ -124,7 +124,7 @@ void test_okp() {
             const char* nameof_alg = advisor->nameof_jose_algorithm(algs[j]);
             claim = format("JWE with OKP enc %s alg %s", nameof_enc, nameof_alg);
 
-            ret = jose.encrypt(handle, encs[i], algs[j], str2bin(claim), encrypted, jose_serialization_t::jose_flatjson);
+            ret = jose.encrypt(handle, encs[i], algs[j], to_binary(claim), encrypted, jose_serialization_t::jose_flatjson);
             if (errorcode_t::success == ret) {
                 dump("encrypted", encrypted);
                 ret = jose.decrypt(handle, encrypted, source, result);

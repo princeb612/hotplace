@@ -82,7 +82,7 @@ void whatsthis() {
                 additional << "> b64u\n  " << base64_encode(what, encoding_t::encoding_base64url).c_str() << "\n";
                 break;
             case encode_plaintext:
-                what = std::move(str2bin(o.content));
+                what = std::move(to_binary(o.content));
                 stemp = base16_encode(o.content);
                 additional << "> b16\n  " << stemp.c_str() << "\n";
                 additional << "> b64\n  " << base64_encode(o.content).c_str() << "\n";
@@ -103,7 +103,7 @@ void whatsthis() {
         }
 
         if (encode_plaintext == o.mode) {
-            dump_memory(str2bin(o.content), &bs, 16, 2);
+            dump_memory(to_binary(o.content), &bs, 16, 2);
         } else {
             dump_memory(what, &bs, 16, 2);
         }
@@ -138,21 +138,21 @@ int main(int argc, char** argv) {
 
     constexpr char constexpr_helpmsg_rfc[] = R"(encode base16 from rfc style expression ex. "[1,2,3,4,5]" or "01:02:03:04:05" or "01 02 03 04 05")";
 
-    (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, char* param) -> void { o.enable_verbose(); }).optional()
+    (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, const char* param) -> void { o.enable_verbose(); }).optional()
 #if defined DEBUG
-                << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, char* param) -> void { o.enable_debug(); }).optional()
-                << t_cmdarg_t<OPTION>("-D", "trace level 0|2", [](OPTION& o, char* param) -> void { o.enable_trace(atoi(param)); }).optional().preced()
-                << t_cmdarg_t<OPTION>("--trace", "trace level [trace]", [](OPTION& o, char* param) -> void { o.enable_trace(loglevel_trace); }).optional()
-                << t_cmdarg_t<OPTION>("--debug", "trace level [debug]", [](OPTION& o, char* param) -> void { o.enable_trace(loglevel_debug); }).optional()
+                << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, const char* param) -> void { o.enable_debug(); }).optional()
+                << t_cmdarg_t<OPTION>("-D", "trace level 0|2", [](OPTION& o, const char* param) -> void { o.enable_trace(atoi(param)); }).optional().preced()
+                << t_cmdarg_t<OPTION>("--trace", "trace level [trace]", [](OPTION& o, const char* param) -> void { o.enable_trace(loglevel_trace); }).optional()
+                << t_cmdarg_t<OPTION>("--debug", "trace level [debug]", [](OPTION& o, const char* param) -> void { o.enable_trace(loglevel_debug); }).optional()
 #endif
-                << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, char* param) -> void { o.log = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, char* param) -> void { o.time = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-b64u", "decode base64url", [](OPTION& o, char* param) -> void { o.set(decode_b64u, param); }).preced().optional()
-                << t_cmdarg_t<OPTION>("-b64", "decode base64", [](OPTION& o, char* param) -> void { o.set(decode_b64, param); }).preced().optional()
-                << t_cmdarg_t<OPTION>("-b16", "decode base16", [](OPTION& o, char* param) -> void { o.set(decode_b16, param); }).preced().optional()
-                << t_cmdarg_t<OPTION>("-p", "plaintext", [](OPTION& o, char* param) -> void { o.set(encode_plaintext, param); }).preced().optional()
-                << t_cmdarg_t<OPTION>("-rfc", constexpr_helpmsg_rfc, [](OPTION& o, char* param) -> void { o.set(encode_b16_rfc, param); }).preced().optional()
-                << t_cmdarg_t<OPTION>("-out", "write to file", [](OPTION& o, char* param) -> void { o.setfile(param); }).preced().optional();
+                << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, const char* param) -> void { o.log = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, const char* param) -> void { o.time = 1; }).optional()
+                << t_cmdarg_t<OPTION>("-b64u", "decode base64url", [](OPTION& o, const char* param) -> void { o.set(decode_b64u, param); }).preced().optional()
+                << t_cmdarg_t<OPTION>("-b64", "decode base64", [](OPTION& o, const char* param) -> void { o.set(decode_b64, param); }).preced().optional()
+                << t_cmdarg_t<OPTION>("-b16", "decode base16", [](OPTION& o, const char* param) -> void { o.set(decode_b16, param); }).preced().optional()
+                << t_cmdarg_t<OPTION>("-p", "plaintext", [](OPTION& o, const char* param) -> void { o.set(encode_plaintext, param); }).preced().optional()
+                << t_cmdarg_t<OPTION>("-rfc", constexpr_helpmsg_rfc, [](OPTION& o, const char* param) -> void { o.set(encode_b16_rfc, param); }).preced().optional()
+                << t_cmdarg_t<OPTION>("-out", "write to file", [](OPTION& o, const char* param) -> void { o.setfile(param); }).preced().optional();
 
     _cmdret = _cmdline->parse(argc, argv);
 

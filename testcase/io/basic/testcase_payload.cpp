@@ -25,8 +25,8 @@ void test_payload_write() {
     _test_case.begin("payload");
 
     payload pl;
-    binary_t data = str2bin("data");
-    binary_t pad = str2bin("pad");
+    binary_t data = to_binary("data");
+    binary_t pad = to_binary("pad");
     uint8 padlen = 3;  // "pad"
     binary_t bin_padded;
     binary_t bin_notpadded;
@@ -47,9 +47,9 @@ void test_payload_write() {
         pl.get_binary("data", data);
         pl.get_binary("pad", pad);
         _test_case.assert(3 == padlen, __FUNCTION__, "write #padlen");
-        _test_case.assert(data == str2bin("data"), __FUNCTION__, "write #value");
+        _test_case.assert(data == to_binary("data"), __FUNCTION__, "write #value");
         _test_case.assert(0x1000 == value, __FUNCTION__, "write #data");
-        _test_case.assert(pad == str2bin("pad"), __FUNCTION__, "write #pad");
+        _test_case.assert(pad == to_binary("pad"), __FUNCTION__, "write #pad");
         _logger->hdump("padded", bin_padded, 16, 3);
         _test_case.assert(bin_padded == base16_decode_rfc("03 64 61 74 61 00 00 10 00 70 61 64"), __FUNCTION__,
                           R"(enable "pad" group)");  // 3 || "data" || 0x00001000 || "pad"
@@ -100,9 +100,9 @@ void test_payload_read() {
         pl.get_binary("data", data);
         pl.get_binary("pad", pad);
         _test_case.assert(3 == padlen, __FUNCTION__, "read #padlen");
-        _test_case.assert(data == str2bin("data"), __FUNCTION__, "read #value");
+        _test_case.assert(data == to_binary("data"), __FUNCTION__, "read #value");
         _test_case.assert(0x1000 == value, __FUNCTION__, "read #data");
-        _test_case.assert(pad == str2bin("pad"), __FUNCTION__, "read #pad");
+        _test_case.assert(pad == to_binary("pad"), __FUNCTION__, "read #pad");
     }
     // write
     {
@@ -140,7 +140,7 @@ void test_payload_uint24() {
     // const OPTION& option = _cmdline->value();
     _test_case.begin("payload");
 
-    binary_t pad = str2bin("pad");
+    binary_t pad = to_binary("pad");
     binary_t bin_payload;
     binary_t expect = base16_decode("0310000010000000706164");
 

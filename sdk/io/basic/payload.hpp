@@ -40,8 +40,8 @@ enum payload_member_flag_t : uint8 {
  * @sample
  *          // sketch.1
  *          payload pl;
- *          binary_t data = std::move(str2bin("data"));
- *          binary_t pad = std::move(str2bin("pad"));
+ *          binary_t data = std::move(to_binary("data"));
+ *          binary_t pad = std::move(to_binary("pad"));
  *          uint8 padlen = 3;  // "pad"
  *          basic_stream bs;
  *          binary_t bin_padded;

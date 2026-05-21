@@ -728,7 +728,7 @@ bignumber bignumber::pow(bignumber base, bignumber exp) {
     return res;
 }
 
-const bignumber& bignumber::pow10(uint32 n) {
+const bignumber& bignumber::pow10(size_t n) {
     static std::vector<bignumber> cache = {bignumber(1)};
 
     if (n >= cache.size()) {

@@ -18,7 +18,14 @@
 
 namespace hotplace {
 
-encoder_stream::encoder_stream(encoding_t enc, bool use_bigendian) : _encoding(enc), _use_bigendian(use_bigendian), _maxsize(1 << 12) {}
+encoder_stream::encoder_stream(encoding_t enc, bool use_bigendian) : _encoding(enc), _use_bigendian(use_bigendian), _maxsize(1 << 15) {}
+
+encoder_stream& encoder_stream::set_maxsize(size_t size) {
+    _maxsize = size;
+    return *this;
+}
+
+size_t encoder_stream::get_maxsize() { return _maxsize; }
 
 encoding_t encoder_stream::get_encoding() { return _encoding; }
 
@@ -36,8 +43,9 @@ return_t encoder_stream::write(const byte_t* data, size_t size) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        if (size > _maxsize) {
-            throw exception(errorcode_t::exceed);
+        if (_buffer.size() + size > _maxsize) {
+            ret = errorcode_t::exceed;
+            __leave2;
         }
 
         auto unitsize = _encbuf.unitsize(get_encoding());
@@ -55,7 +63,7 @@ return_t encoder_stream::write(const byte_t* data, size_t size) {
                 size_t pos = 0;
                 // _encbuf
                 if (_encbuf.len > 0) {
-                    size_t need = _encbuf.free_space(_encoding);
+                    auto need = _encbuf.free_space(_encoding);
                     if (size >= need) {
                         memcpy(_encbuf.buf + _encbuf.len, data, need);
                         _encbuf.len += need;
@@ -122,6 +130,30 @@ encoder_stream& encoder_stream::operator<<(const std::string& value) { return ad
 encoder_stream& encoder_stream::operator<<(const binary_t& value) { return add(value); }
 
 encoder_stream& encoder_stream::operator<<(const basic_stream& value) { return add(value); }
+
+encoder_stream& encoder_stream::operator<<(int8 value) { return add(value); }
+
+encoder_stream& encoder_stream::operator<<(int16 value) { return add(value); }
+
+encoder_stream& encoder_stream::operator<<(int32 value) { return add(value); }
+
+encoder_stream& encoder_stream::operator<<(int64 value) { return add(value); }
+
+#if defined __SIZEOF_INT128__
+encoder_stream& encoder_stream::operator<<(int128 value) { return add(value); }
+#endif
+
+encoder_stream& encoder_stream::operator<<(uint8 value) { return add(value); }
+
+encoder_stream& encoder_stream::operator<<(uint16 value) { return add(value); }
+
+encoder_stream& encoder_stream::operator<<(uint32 value) { return add(value); }
+
+encoder_stream& encoder_stream::operator<<(uint64 value) { return add(value); }
+
+#if defined __SIZEOF_INT128__
+encoder_stream& encoder_stream::operator<<(uint128 value) { return add(value); }
+#endif
 
 encoder_stream& encoder_stream::add(const char* value) {
     if (value) {
