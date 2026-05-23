@@ -206,6 +206,35 @@ void test_stream_basic_stream() {
     bs.vaprintf(R"(value={1:04x}, value="{2:-15s}", value={3:le})", va);
     _logger->writeln(bs);
     _test_case.assert(bs == R"(value=0x0100, value="hello world    ", value=3.141592e+00)", __FUNCTION__, "format string syntax");
+
+    const char* expect = "1234hello world 3.141592";
+
+    // test operator <<
+    // ((((((bs2 << 1) << 2) << 3) << 4) << "hello") << ' ') << 3.14;
+    basic_stream bs2;
+    // byte_t and uint8
+    bs2 << (uint8)1 << (uint16)2 << (uint32)3 << (uint64)4 << "hello world" << ' ' << 3.141592;
+    _logger->writeln(bs2);
+    _test_case.assert(bs2 == expect, __FUNCTION__, "operator <<");
+
+    // test operator +=
+    // bs3 += (uint8)1 += (uint16)2 += (uint32)3 += (uint64)4 += "hello world" += ' ' += 3.141592;
+    // bs3 += (1 += (2 += (3 += (4 += ("hello" += (' ' += 3.14))))));
+    basic_stream bs3;
+    bs3 += (uint8)1;
+    bs3 += (uint16)2;
+    bs3 += (uint32)3;
+    bs3 += (uint64)4;
+    bs3 += "hello world";
+    bs3 += ' ';
+    bs3 += 3.141592;
+    _logger->writeln(bs3);
+    _test_case.assert(bs3 == expect, __FUNCTION__, "operator +=");
+
+    basic_stream bs4;
+    ((((((bs4 += (uint8)1) += (uint16)2) += (uint32)3) += (uint64)4) += "hello world") += ' ') += 3.141592;
+    _logger->writeln(bs4);
+    _test_case.assert(bs4 == expect, __FUNCTION__, "operator +=");
 }
 
 void test_stream_vtprintf() {
@@ -213,7 +242,7 @@ void test_stream_vtprintf() {
     basic_stream bs;
     variant v;
 
-    v.set_int32(10);
+    v.set((int32)10);
     vtprintf(&bs, v);
 
     v.set_str_new("sample");

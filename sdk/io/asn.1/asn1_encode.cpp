@@ -188,7 +188,6 @@ asn1_encode& asn1_encode::encode(binary_t& bin, asn1_type_t type, const variant&
             null(bin);
             break;
         case TYPE_BOOL:
-        case TYPE_BOOLEAN:
             primitive(bin, value.content().data.b);
             break;
         case TYPE_INT8:

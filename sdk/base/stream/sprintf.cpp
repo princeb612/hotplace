@@ -178,7 +178,7 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
                     char r = *temp.rbegin();
                     if (b == '%') { /* do nothing */
                     } else {
-                        if (flag_int & vflag) {
+                        if (vt_flag_int & vflag) {
                             switch (r) {
                                 case 'd':
                                 case 'i':
@@ -192,14 +192,14 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
                                     dest.insert(dest.begin(), '0');
                                     break;
                             }
-                        } else if (flag_string & vflag) {
+                        } else if (vt_flag_string & vflag) {
                             switch (r) {
                                 case 's':
                                     dest = std::move(temp);
                                     dest.insert(dest.begin(), '%');
                                     break;
                             }
-                        } else if (flag_float & vflag) {
+                        } else if (vt_flag_float & vflag) {
                             switch (r) {
                                 case 'e':
                                 case 'f':
@@ -208,7 +208,7 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
                                     dest.insert(dest.begin(), '%');
                                     break;
                             }
-                        } else if (flag_binary & vflag) {
+                        } else if (vt_flag_binary & vflag) {
                             switch (r) {
                                 case 's':
                                     auto len = v.size;

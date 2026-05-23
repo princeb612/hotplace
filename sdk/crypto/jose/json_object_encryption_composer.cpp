@@ -493,7 +493,7 @@ return_t json_object_encryption::composer::docompose_encryption_recipient_random
         keyset.add_ec2(&key, nid, keydesc());                     // same "crv"
         recipient.epk = key.select(crypto_use_t::use_enc, true);  // EVP_PKEY_up_ref
         variant vt;
-        vt.set_pointer(recipient.epk);
+        vt.set((void*)recipient.epk);
         variantmap[crypt_item_t::item_epk] = vt.content();
     } else if (jwa_group_t::jwa_group_aesgcmkw == alg_group) {
         // iv, tag
@@ -509,7 +509,7 @@ return_t json_object_encryption::composer::docompose_encryption_recipient_random
         rand.random(recipient.datamap[crypt_item_t::item_p2s], 64);
         rand.random(recipient.p2c, 0xffff);
         variant vt;
-        vt.set_int32(recipient.p2c);
+        vt.set(recipient.p2c);
         datamap[crypt_item_t::item_p2s] = recipient.datamap[crypt_item_t::item_p2s];
         variantmap[crypt_item_t::item_p2c] = vt.content();
     }

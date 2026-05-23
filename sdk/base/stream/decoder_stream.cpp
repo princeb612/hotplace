@@ -152,33 +152,31 @@ return_t decoder_stream::flush() {
     return ret;
 }
 
-decoder_stream& decoder_stream::operator<<(const char* value) { return add(value); }
+binary_t decoder_stream::data() {
+    flush();
+    return _buffer;
+}
 
-decoder_stream& decoder_stream::operator<<(const std::string& value) { return add(value); }
+decoder_stream& decoder_stream::add(const char* data, size_t size) {
+    write(data, size);
+    return *this;
+}
 
-decoder_stream& decoder_stream::operator<<(const basic_stream& value) { return add(value); }
-
-decoder_stream& decoder_stream::add(const char* value) {
+decoder_stream& decoder_stream::operator<<(const char* value) {
     if (value) {
-        auto size = strlen(value);
-        write(value, size);
+        write(value, strlen(value));
     }
     return *this;
 }
 
-decoder_stream& decoder_stream::add(const std::string& value) {
+decoder_stream& decoder_stream::operator<<(const std::string& value) {
     write(value.c_str(), value.size());
     return *this;
 }
 
-decoder_stream& decoder_stream::add(const basic_stream& value) {
+decoder_stream& decoder_stream::operator<<(const basic_stream& value) {
     write(value.c_str(), value.size());
     return *this;
-}
-
-binary_t decoder_stream::data() {
-    flush();
-    return _buffer;
 }
 
 }  // namespace hotplace

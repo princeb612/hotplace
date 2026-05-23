@@ -6,6 +6,15 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2026.05.22   Soo Han and Gemini  Refined with guidance and collaboration from Gemini
+ *
+ * @note
+ *          [Refactoring History]
+ *          - Restructured redundant SFINAE (enable_if) and std::conditional pipelines
+ *            into a centralized Type Traits structure (printf_traits).
+ *          - Consolidated integral, enum, and floating-point stream pipelines.
+ *          - Resolved type-ambiguity and operator associativity (+=) corner cases.
+ *          - Refined with guidance and collaboration from Gemini (AI Peer).
  */
 
 #ifndef __HOTPLACE_SDK_BASE_STREAM_BASICSTREAM__
@@ -15,6 +24,7 @@
 #include <string.h>
 
 #include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/nostd/traits.hpp>
 #include <hotplace/sdk/base/stream/bufferio.hpp>
 #include <hotplace/sdk/base/system/types.hpp>
 #include <iostream>
@@ -24,7 +34,7 @@ namespace hotplace {
 class valist;
 
 /**
- * @brief   basic_stream null-padded
+ * @brief   basic_stream
  */
 class basic_stream : public stream_t {
    public:
@@ -35,11 +45,12 @@ class basic_stream : public stream_t {
      */
     basic_stream(const char* data, ...);
     /**
-     * @brief   constructor
-     * @param   const basic_stream& other [in]
+     * copy/move
      */
     basic_stream(const basic_stream& other);
     basic_stream(basic_stream&& other) noexcept;
+    basic_stream& operator=(const basic_stream& other);
+    basic_stream& operator=(basic_stream&& other) noexcept;
     /**
      * @brief   destructor
      */
@@ -90,12 +101,12 @@ class basic_stream : public stream_t {
      * @param   const char* buf [in]
      */
     virtual return_t vprintf(const char* buf, va_list ap);
+    return_t println(const char* buf, ...);
 #if defined _WIN32 || defined _WIN64
     virtual return_t printf(const wchar_t* buf, ...);
     return_t vwprintf(const wchar_t* buf, va_list ap);
+    return_t println(const wchar_t* buf, ...);
 #endif
-
-    return_t println(const char* buf, ...);
 
     /**
      * @brief   format string syntax
@@ -127,35 +138,6 @@ class basic_stream : public stream_t {
     return_t vaprintf(const char* fmt, valist ap);
     return_t vaprintln(const char* fmt, valist ap);
 
-    basic_stream& operator<<(const char* str);
-    basic_stream& operator<<(char value);
-    basic_stream& operator<<(int value);
-    basic_stream& operator<<(unsigned int value);
-    basic_stream& operator<<(long value);
-    basic_stream& operator<<(unsigned long value);
-    basic_stream& operator<<(long long value);
-    basic_stream& operator<<(unsigned long long value);
-#if defined __SIZEOF_INT128__
-    basic_stream& operator<<(int128 value);
-    basic_stream& operator<<(uint128 value);
-#endif
-    basic_stream& operator<<(float value);
-    basic_stream& operator<<(double value);
-    basic_stream& operator<<(const variant& value);  // using vtprintf_style_debugmode
-    basic_stream& operator<<(const basic_stream& value);
-    basic_stream& operator<<(const std::string& value);
-    basic_stream& operator<<(const binary_t& value);
-    basic_stream& operator<<(const bignumber& value);
-
-    /**
-     * @brief   operator =
-     * @param   basic_stream obj [in]
-     */
-    basic_stream& operator=(const basic_stream& other);
-    basic_stream& operator=(basic_stream&& other) noexcept;
-    basic_stream& operator=(const std::string& str);
-    basic_stream& operator=(const char* str);
-
     /**
      * @brief   compare
      * @param   basic_stream other [in]
@@ -168,6 +150,69 @@ class basic_stream : public stream_t {
      */
     int compare(const basic_stream& lhs, const basic_stream& rhs) const;
     int compare(const basic_stream& lhs, const char* rhs) const;
+
+    virtual void autoindent(uint8 indent);
+    void resize(size_t size) override;
+
+    /**
+     * delegation
+     */
+    template <typename T>
+    basic_stream& add(T&& value) {
+        return *this << std::forward<T>(value);
+    }
+
+    /**
+     * operator =
+     * delegation
+     */
+    template <typename T>
+    basic_stream& operator=(T&& value) {
+        clear();
+        return *this << std::forward<T>(value);
+    }
+
+    /**
+     * operator +=
+     * delegation
+     */
+    template <typename T>
+    basic_stream& operator+=(T&& value) {
+        return *this << std::forward<T>(value);
+    }
+
+    /**
+     * stream implementation
+     */
+    template <typename T,                                                                                 //
+              typename std::enable_if<custom::is_integral_traits<typename std::decay<T>::type>::value ||  //
+                                          std::is_enum<typename std::decay<T>::type>::value ||            //
+                                          std::is_floating_point<typename std::decay<T>::type>::value,
+                                      int>::type = 0>
+    basic_stream& operator<<(T value) {
+        using traits = custom::printf_traits<char, T>;
+        using cast_type = typename traits::cast_type;
+
+        printf(traits::spec(), static_cast<cast_type>(value));
+        return *this;
+    }
+
+    /**
+     * stream implementation
+     * operator <<
+     */
+    basic_stream& operator<<(char value);         // due to performance (write is faster than printf)
+    basic_stream& operator<<(const char* value);  // due to performance (write is faster than printf)
+#if defined _WIN32 || defined _WIN64
+    basic_stream& operator<<(const wchar_t value);
+    basic_stream& operator<<(const wchar_t* value);
+#endif
+    basic_stream& operator<<(const variant& value);
+    basic_stream& operator<<(const basic_stream& value);
+    basic_stream& operator<<(const std::string& value);
+    basic_stream& operator<<(const binary_t& value);
+    basic_stream& operator<<(const bignumber& value);
+
     /**
      * @brief   operator <
      * @param   basic_stream other [in]
@@ -190,13 +235,50 @@ class basic_stream : public stream_t {
     friend std::string& operator<<(std::string& lhs, const basic_stream& rhs);
     friend std::ostream& operator<<(std::ostream& lhs, const basic_stream& rhs);
 
-    virtual void autoindent(uint8 indent);
-    void resize(size_t size) override;
-
    protected:
    private:
     bufferio_context_t* _handle;
 };
+
+namespace custom {
+
+template <>
+struct encoder_stream_traits<stream_t*> {
+    typedef char value_type;
+
+    static constexpr bool value = true;
+    static void trunc(stream_t* buf) { buf->resize(0); }
+    static value_type* reserve(stream_t* buf, size_t size_reserve) {
+        size_t pos = buf->size();
+        buf->resize(pos + size_reserve);
+        return (char*)buf->data() + pos;
+    }
+    static void commit(stream_t* buf, size_t size_reserve, size_t size_written) {
+        if (size_written < size_reserve) {
+            buf->resize(buf->size() - (size_reserve - size_written));
+        }
+    }
+};
+
+template <>
+struct encoder_stream_traits<basic_stream> {
+    typedef byte_t value_type;
+
+    static constexpr bool value = true;
+    static void trunc(basic_stream& buf) { buf.resize(0); }
+    static value_type* reserve(basic_stream& buf, size_t size_reserve) {
+        size_t pos = buf.size();
+        buf.resize(pos + size_reserve);
+        return buf.data() + pos;
+    }
+    static void commit(basic_stream& buf, size_t size_reserve, size_t size_written) {
+        if (size_written < size_reserve) {
+            buf.resize(buf.size() - (size_reserve - size_written));
+        }
+    }
+};
+
+}  // namespace custom
 
 }  // namespace hotplace
 

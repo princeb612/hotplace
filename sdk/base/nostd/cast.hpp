@@ -43,7 +43,7 @@ struct t_narrow_cast_t {
                  */
                 throw exception(errorcode_t::miscast_narrow);
             }
-            if (typename t_is_signed<SOURCE>::type() != typename t_is_signed<TYPE>::type()) {
+            if (typename custom::is_signed_traits<SOURCE>::type() != typename custom::is_signed_traits<TYPE>::type()) {
                 if ((value < 0) != (converted < 0)) {
                     /**
                      * case.3

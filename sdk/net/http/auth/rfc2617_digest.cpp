@@ -17,21 +17,21 @@ namespace net {
 
 rfc2617_digest::rfc2617_digest() {}
 
-rfc2617_digest& rfc2617_digest::add(const char* data) {
-    _stream << data;
-    _sequence << data;
-    return *this;
+std::string rfc2617_digest::get() {
+    std::string ret_value;
+    ret_value = _stream.c_str();
+    return ret_value;
 }
 
-rfc2617_digest& rfc2617_digest::add(const std::string& data) {
-    _stream << data;
-    _sequence << data;
-    return *this;
+std::string rfc2617_digest::get_sequence() {
+    std::string ret_value;
+    ret_value = _sequence.c_str();
+    return ret_value;
 }
 
-rfc2617_digest& rfc2617_digest::add(const basic_stream& data) {
-    _stream << data;
-    _sequence << data;
+rfc2617_digest& rfc2617_digest::clear() {
+    _stream.clear();
+    _sequence.clear();
     return *this;
 }
 
@@ -83,24 +83,6 @@ rfc2617_digest& rfc2617_digest::digest(const std::string& algorithm) {
     _sequence.insert(0, temp.data(), temp.size());
     _sequence.write(")", 1);
 
-    return *this;
-}
-
-std::string rfc2617_digest::get() {
-    std::string ret_value;
-    ret_value = _stream.c_str();
-    return ret_value;
-}
-
-std::string rfc2617_digest::get_sequence() {
-    std::string ret_value;
-    ret_value = _sequence.c_str();
-    return ret_value;
-}
-
-rfc2617_digest& rfc2617_digest::clear() {
-    _stream.clear();
-    _sequence.clear();
     return *this;
 }
 

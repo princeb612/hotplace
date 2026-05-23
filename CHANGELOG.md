@@ -32,7 +32,8 @@
     * CBOR
 
 * details
-  * Revision 1005
+  * Revision 1006
+    * refactoring variant, basic_stream, ansi_string, wide_string
   * Revision 999
     * SLHDSA
   * Revision 998

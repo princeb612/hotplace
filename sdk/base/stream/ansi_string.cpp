@@ -6,6 +6,15 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2026.05.22   Soo Han and Gemini  Refined with guidance and collaboration from Gemini
+ *
+ * @note
+ *          [Refactoring History]
+ *          - Restructured redundant SFINAE (enable_if) and std::conditional pipelines
+ *            into a centralized Type Traits structure (printf_traits).
+ *          - Consolidated integral, enum, and floating-point stream pipelines.
+ *          - Resolved type-ambiguity and operator associativity (+=) corner cases.
+ *          - Refined with guidance and collaboration from Gemini (AI Peer).
  */
 
 #include <hotplace/sdk/base/basic/valist.hpp>
@@ -47,6 +56,21 @@ ansi_string::ansi_string(const ansi_string& other) : stream_t(), _handle(nullptr
 }
 
 ansi_string::ansi_string(ansi_string&& other) : stream_t(), _handle(other._handle) { other._handle = nullptr; }
+
+ansi_string& ansi_string::operator=(const ansi_string& other) {
+    if (this != &other) {
+        ansi_string tmp(other);  // strong exeption guarantee
+        std::swap(_handle, tmp._handle);
+    }
+    return *this;
+}
+
+ansi_string& ansi_string::operator=(ansi_string&& other) {
+    if (this != &other) {
+        std::swap(_handle, other._handle);
+    }
+    return *this;
+}
 
 ansi_string::~ansi_string() {
     if (_handle) {
@@ -229,217 +253,70 @@ return_t ansi_string::getline(size_t pos, size_t* brk, ansi_string& line) {
     return ret;
 }
 
-ansi_string& ansi_string::operator=(const char* buf) {
-    clear();
-    if (buf) {
-        auto len = strlen(buf);
-        write(buf, len);
-    }
-    return *this;
-}
-
-#if defined _WIN32 || defined _WIN64
-ansi_string& ansi_string::operator=(const wchar_t* buf) {
-    clear();
-    if (nullptr != buf) {
-        W2A(this, buf);
-    }
-    return *this;
-}
-#endif
-
-ansi_string& ansi_string::operator=(char buf) {
-    clear();
-    printf("%c", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator=(byte_t buf) {
-    clear();
-    printf("%c", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator=(uint16 buf) {
-    clear();
-    printf("%i", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator=(uint32 buf) {
-    clear();
-    printf("%i", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator=(uint64 buf) {
-    clear();
-    printf("%I64i", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator=(float buf) {
-    clear();
-    printf("%f", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator=(double buf) {
-    clear();
-    printf("%l", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator=(const ansi_string& other) {
-    if (this != &other) {
-        ansi_string tmp(other);  // strong exeption guarantee
-        std::swap(_handle, tmp._handle);
-    }
-    return *this;
-}
-
-ansi_string& ansi_string::operator=(ansi_string&& other) {
-    if (this != &other) {
-        std::swap(_handle, other._handle);
-    }
-    return *this;
-}
-
-ansi_string& ansi_string::operator+=(const char* buf) {
-    if (buf) {
-        auto len = strlen(buf);
-        write(buf, len);
-    }
-    return *this;
-}
-
-#if defined _WIN32 || defined _WIN64
-ansi_string& ansi_string::operator+=(const wchar_t* buf) {
-    if (buf) {
-        W2A(this, buf);
-    }
-    return *this;
-}
-#endif
-
-ansi_string& ansi_string::operator+=(char buf) {
-    printf("%c", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator+=(byte_t buf) {
-    printf("%c", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator+=(uint16 buf) {
-    printf("%i", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator+=(uint32 buf) {
-    printf("%i", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator+=(uint64 buf) {
-    printf("%I64i", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator+=(float buf) {
-    printf("%f", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator+=(double buf) {
-    printf("%l", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator+=(const ansi_string& buf) {
-    write(buf.data(), buf.size());
-    return *this;
-}
-
-ansi_string& ansi_string::operator<<(const char* buf) {
-    if (buf) {
-        auto len = strlen(buf);
-        write(buf, len);
-    }
-    return *this;
-}
-
-#if defined _WIN32 || defined _WIN64
-ansi_string& ansi_string::operator<<(const wchar_t* buf) {
-    if (buf) {
-        W2A(this, buf);
-    }
-    return *this;
-}
-#endif
-
-ansi_string& ansi_string::operator<<(char buf) {
-    printf("%c", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator<<(byte_t buf) {
-    printf("%c", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator<<(uint16 buf) {
-    printf("%i", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator<<(uint32 buf) {
-    printf("%i", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator<<(uint64 buf) {
-    printf("%I64i", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator<<(float buf) {
-    printf("%f", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator<<(double buf) {
-    printf("%l", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator<<(const ansi_string& buf) {
-    write(buf.data(), buf.size());
-    return *this;
-}
-
-#if defined __SIZEOF_INT128__
-ansi_string& ansi_string::operator=(uint128 buf) {
-    clear();
-    printf("%I128i", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator+=(uint128 buf) {
-    printf("%I128i", buf);
-    return *this;
-}
-
-ansi_string& ansi_string::operator<<(uint128 buf) {
-    printf("%I128i", buf);
-    return *this;
-}
-#endif
-
 int ansi_string::compare(const ansi_string& other) { return strcmp(c_str(), other.c_str()); }
 
 int ansi_string::compare(const ansi_string& lhs, const ansi_string& rhs) { return strcmp(lhs.c_str(), rhs.c_str()); }
+
+void ansi_string::autoindent(uint8 indent) {
+    bufferio::autoindent(_handle, indent);
+    if (indent) {
+        fill(indent, ' ');
+    } else {
+        write("\r", 1);
+    }
+}
+
+void ansi_string::resize(size_t s) {
+    auto z = size();
+    if (0 == s) {
+        clear();
+    } else if (z > s) {
+        // cut
+        cut(s, z - s);
+    } else {
+        // extend
+        fill(s - z, 0);
+    }
+}
+
+ansi_string& ansi_string::operator<<(char value) {
+    write(&value, 1);
+    return *this;
+}
+
+ansi_string& ansi_string::operator<<(const char* value) {
+    if (value) {
+        auto len = strlen(value);
+        write(value, len);
+    }
+    return *this;
+}
+
+#if defined _WIN32 || defined _WIN64
+ansi_string& ansi_string::operator<<(const wchar_t value) {
+    if (value) {
+        printf(L"c", value);
+    }
+    return *this;
+}
+
+ansi_string& ansi_string::operator<<(const wchar_t* value) {
+    if (value) {
+        W2A(this, value);
+    }
+    return *this;
+}
+#endif
+
+ansi_string& ansi_string::operator<<(const ansi_string& value) {
+    write(value.data(), value.size());
+    return *this;
+}
+
+ansi_string& ansi_string::operator<<(const std::string& value) {
+    write(value.c_str(), value.size());
+    return *this;
+}
 
 bool ansi_string::operator<(const ansi_string& other) const { return strcmp(c_str(), other.c_str()) < 0; }
 
@@ -466,28 +343,6 @@ std::string& operator<<(std::string& lhs, const ansi_string& rhs) {
 std::ostream& operator<<(std::ostream& lhs, const ansi_string& rhs) {
     lhs << rhs.c_str();
     return lhs;
-}
-
-void ansi_string::autoindent(uint8 indent) {
-    bufferio::autoindent(_handle, indent);
-    if (indent) {
-        fill(indent, ' ');
-    } else {
-        *this << '\r';
-    }
-}
-
-void ansi_string::resize(size_t s) {
-    auto z = size();
-    if (0 == s) {
-        clear();
-    } else if (z > s) {
-        // cut
-        cut(s, z - s);
-    } else {
-        // extend
-        fill(s - z, 0);
-    }
 }
 
 }  // namespace hotplace

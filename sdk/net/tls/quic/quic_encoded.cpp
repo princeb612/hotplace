@@ -33,7 +33,7 @@ quic_encoded::quic_encoded(uint64 data, uint8 prefix) : payload_encoded(), _data
 quic_encoded::quic_encoded(const char* data) : payload_encoded(), _datalink(true) {
     if (data) {
         _value = strlen(data);
-        _data.set_strn_new(data, _value);
+        _data.set_new(data, _value);
         quic_length_vle_int(_value, _sizeof_value);
     }
 }
@@ -55,7 +55,7 @@ quic_encoded::~quic_encoded() { _data.clear(); }
 quic_encoded& quic_encoded::set(const char* data) {
     if (data) {
         _value = strlen(data);
-        _data.clear().set_strn_new(data, _value);
+        _data.clear().set_new(data, _value);
         quic_length_vle_int(_value, _sizeof_value);
     }
     return *this;
@@ -111,7 +111,7 @@ return_t quic_encoded::read(const byte_t* stream, size_t size, size_t& pos) {
         }
 
         if (_datalink) {
-            _data.clear().set_bstr_new(stream + pos - old, _value);
+            _data.clear().set_new(stream + pos - old, _value);
             pos += _value;
             quic_length_vle_int(pos - old, _sizeof_value);
         } else {

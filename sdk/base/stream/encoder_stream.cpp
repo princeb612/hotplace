@@ -123,160 +123,6 @@ return_t encoder_stream::flush() {
     return ret;
 }
 
-encoder_stream& encoder_stream::operator<<(const char* value) { return add(value); }
-
-encoder_stream& encoder_stream::operator<<(const std::string& value) { return add(value); }
-
-encoder_stream& encoder_stream::operator<<(const binary_t& value) { return add(value); }
-
-encoder_stream& encoder_stream::operator<<(const basic_stream& value) { return add(value); }
-
-encoder_stream& encoder_stream::operator<<(int8 value) { return add(value); }
-
-encoder_stream& encoder_stream::operator<<(int16 value) { return add(value); }
-
-encoder_stream& encoder_stream::operator<<(int32 value) { return add(value); }
-
-encoder_stream& encoder_stream::operator<<(int64 value) { return add(value); }
-
-#if defined __SIZEOF_INT128__
-encoder_stream& encoder_stream::operator<<(int128 value) { return add(value); }
-#endif
-
-encoder_stream& encoder_stream::operator<<(uint8 value) { return add(value); }
-
-encoder_stream& encoder_stream::operator<<(uint16 value) { return add(value); }
-
-encoder_stream& encoder_stream::operator<<(uint32 value) { return add(value); }
-
-encoder_stream& encoder_stream::operator<<(uint64 value) { return add(value); }
-
-#if defined __SIZEOF_INT128__
-encoder_stream& encoder_stream::operator<<(uint128 value) { return add(value); }
-#endif
-
-encoder_stream& encoder_stream::add(const char* value) {
-    if (value) {
-        auto size = strlen(value);
-        write((byte_t*)value, size);
-    }
-    return *this;
-}
-
-encoder_stream& encoder_stream::add(const byte_t* data, size_t size) {
-    write(data, size);
-    return *this;
-}
-
-encoder_stream& encoder_stream::add(const std::string& value) {
-    write((byte_t*)value.c_str(), value.size());
-    return *this;
-}
-
-encoder_stream& encoder_stream::add(const binary_t& value) {
-    write(value.data(), value.size());
-    return *this;
-}
-
-encoder_stream& encoder_stream::add(const basic_stream& value) {
-    write(value.data(), value.size());
-    return *this;
-}
-
-encoder_stream& encoder_stream::add(int8 value) {
-    write((byte_t*)&value, 1);
-    return *this;
-}
-
-encoder_stream& encoder_stream::add(int16 value) {
-    if (is_bigendian()) {
-        auto v = hton16(value);
-        write((byte_t*)&v, 2);
-    } else {
-        write((byte_t*)&value, 2);
-    }
-    return *this;
-}
-
-encoder_stream& encoder_stream::add(int32 value) {
-    if (is_bigendian()) {
-        auto v = hton32(value);
-        write((byte_t*)&v, 4);
-    } else {
-        write((byte_t*)&value, 4);
-    }
-    return *this;
-}
-
-encoder_stream& encoder_stream::add(int64 value) {
-    if (is_bigendian()) {
-        auto v = hton64(value);
-        write((byte_t*)&v, 8);
-    } else {
-        write((byte_t*)&value, 8);
-    }
-    return *this;
-}
-
-#if defined __SIZEOF_INT128__
-encoder_stream& encoder_stream::add(int128 value) {
-    if (is_bigendian()) {
-        auto v = hton128(value);
-        write((byte_t*)&v, 16);
-    } else {
-        write((byte_t*)&value, 16);
-    }
-    return *this;
-}
-#endif
-
-encoder_stream& encoder_stream::add(uint8 value) {
-    write((byte_t*)&value, 1);
-    return *this;
-}
-
-encoder_stream& encoder_stream::add(uint16 value) {
-    if (is_bigendian()) {
-        auto v = hton16(value);
-        write((byte_t*)&v, 2);
-    } else {
-        write((byte_t*)&value, 2);
-    }
-    return *this;
-}
-
-encoder_stream& encoder_stream::add(uint32 value) {
-    if (is_bigendian()) {
-        auto v = hton32(value);
-        write((byte_t*)&v, 4);
-    } else {
-        write((byte_t*)&value, 4);
-    }
-    return *this;
-}
-
-encoder_stream& encoder_stream::add(uint64 value) {
-    if (is_bigendian()) {
-        auto v = hton64(value);
-        write((byte_t*)&v, 8);
-    } else {
-        write((byte_t*)&value, 8);
-    }
-    return *this;
-}
-
-#if defined __SIZEOF_INT128__
-encoder_stream& encoder_stream::add(uint128 value) {
-    if (is_bigendian()) {
-        auto v = hton128(value);
-        write((byte_t*)&v, 16);
-    } else {
-        write((byte_t*)&value, 16);
-    }
-    return *this;
-}
-#endif
-
 encoder_stream& encoder_stream::clear() {
     _buffer.clear();
     _encbuf.reset();
@@ -286,6 +132,33 @@ encoder_stream& encoder_stream::clear() {
 std::string encoder_stream::str() {
     flush();
     return _buffer;
+}
+
+encoder_stream& encoder_stream::operator<<(bool value) {
+    uint8 b = value ? 1 : 0;
+    return *this << b;  // unit8 is_integral
+}
+
+encoder_stream& encoder_stream::operator<<(const char* value) {
+    if (value) {
+        write((byte_t*)value, strlen(value));
+    }
+    return *this;
+}
+
+encoder_stream& encoder_stream::operator<<(const std::string& value) {
+    write((byte_t*)value.c_str(), value.size());
+    return *this;
+}
+
+encoder_stream& encoder_stream::operator<<(const binary_t& value) {
+    write(value.data(), value.size());
+    return *this;
+}
+
+encoder_stream& encoder_stream::operator<<(const basic_stream& value) {
+    write(value.data(), value.size());
+    return *this;
 }
 
 }  // namespace hotplace

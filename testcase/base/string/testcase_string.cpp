@@ -360,7 +360,7 @@ void test_string_ansi_string() {
 #endif
              << (uint16)1 << " " << 1.1f;
 
-        _logger->writeln("lhs %s", astr.c_str());
+        _logger->writeln("result %s", astr.c_str());
 
         ansi_string astr2;
         astr2 << "sample "
@@ -368,6 +368,8 @@ void test_string_ansi_string() {
               << "unicode "
 #endif
               << (uint16)1 << " " << 1.1f;
+
+        _logger->writeln("result %s", astr2.c_str());
 
         _test_case.assert(astr == astr2, __FUNCTION__, "ansi_string operator==");
         _test_case.assert(astr == astr2.c_str(), __FUNCTION__, "ansi_string operator==");
@@ -405,10 +407,10 @@ void test_string_wide_string() {
 
     {
         wide_string wstr;
-        wstr << L"sample " << "ansi " << (uint16)1 << " " << 1.1f;
+        wstr << L"sample " << "ansi " << L'c' << (uint16)1 << " " << 1.1f;
         _logger->hdump("lhs", wstr.data(), wstr.size(), 16, 3);
 
-        wide_string wstr2(L"sample ansi 1 1.100000");
+        wide_string wstr2(L"sample ansi c1 1.100000");
         _test_case.assert(wstr == wstr2, __FUNCTION__, "wide_string operator==");
         _test_case.assert(wstr == wstr2.c_str(), __FUNCTION__, "wide_string operator==");
 

@@ -13,6 +13,8 @@
 #define __HOTPLACE_SDK_BASE_STREAM_ENCODERSTREAM__
 
 #include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/nostd/traits.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/stream/types.hpp>
 #include <string>
 
@@ -38,9 +40,11 @@ class encoder_stream {
      */
     encoder_stream(encoding_t enc, bool use_bigendian = true);
 
+    /**
+     * copy/move
+     */
     encoder_stream(const encoder_stream& other) = default;
     encoder_stream(encoder_stream&& other) = default;
-
     encoder_stream& operator=(const encoder_stream& other) = default;
     encoder_stream& operator=(encoder_stream&& other) = default;
 
@@ -50,55 +54,65 @@ class encoder_stream {
     encoder_stream& set_endian(bool use_bigendian);
     bool is_bigendian();
 
+    encoder_stream& clear();
+
+    std::string str();
+
     /**
      * @remarks max buffer size 32K
      *          to change max buffer, use set_maxsize
      */
     return_t write(const byte_t* data, size_t size);
 
+    encoder_stream& add(const byte_t* data, size_t size) {
+        write(data, size);
+        return *this;
+    }
+
+    /**
+     * delegation
+     */
+    template <typename T>
+    encoder_stream& add(T&& value) {
+        return *this << std::forward<T>(value);
+    }
+
+    /**
+     * operator +=
+     * delegation
+     */
+    template <typename T>
+    encoder_stream& operator+=(T&& value) {
+        return *this << std::forward<T>(value);
+    }
+
+    /**
+     * operator <<
+     * stream implementation
+     * is_integral_traits
+     * !bool
+     */
+    template <typename T, typename std::enable_if<custom::is_integral_traits<T>::value && !std::is_same<T, bool>::value, int>::type = 0>
+    encoder_stream& operator<<(T value) {
+        if (is_bigendian()) {
+            auto final_value = convert_endian(value);
+            write((byte_t*)&final_value, sizeof(T));
+        } else {
+            write((byte_t*)&value, sizeof(T));
+        }
+        return *this;
+    }
+    /**
+     * operator <<
+     * stream implementation
+     * bool
+     * !is_integral_traits
+     */
+    encoder_stream& operator<<(bool value);
     encoder_stream& operator<<(const char* value);
     encoder_stream& operator<<(const std::string& value);
     encoder_stream& operator<<(const binary_t& value);
     encoder_stream& operator<<(const basic_stream& value);
-    encoder_stream& operator<<(int8 value);
-    encoder_stream& operator<<(int16 value);
-    encoder_stream& operator<<(int32 value);
-    encoder_stream& operator<<(int64 value);
-#if defined __SIZEOF_INT128__
-    encoder_stream& operator<<(int128 value);
-#endif
-    encoder_stream& operator<<(uint8 value);
-    encoder_stream& operator<<(uint16 value);
-    encoder_stream& operator<<(uint32 value);
-    encoder_stream& operator<<(uint64 value);
-#if defined __SIZEOF_INT128__
-    encoder_stream& operator<<(uint128 value);
-#endif
-
-    encoder_stream& add(const char* value);
-    encoder_stream& add(const byte_t* data, size_t size);
-    encoder_stream& add(const std::string& value);
-    encoder_stream& add(const binary_t& value);
-    encoder_stream& add(const basic_stream& value);
-
-    encoder_stream& add(int8 value);
-    encoder_stream& add(int16 value);
-    encoder_stream& add(int32 value);
-    encoder_stream& add(int64 value);
-#if defined __SIZEOF_INT128__
-    encoder_stream& add(int128 value);
-#endif
-    encoder_stream& add(uint8 value);
-    encoder_stream& add(uint16 value);
-    encoder_stream& add(uint32 value);
-    encoder_stream& add(uint64 value);
-#if defined __SIZEOF_INT128__
-    encoder_stream& add(uint128 value);
-#endif
-
-    encoder_stream& clear();
-
-    std::string str();
 
    protected:
     return_t flush();
@@ -153,9 +167,11 @@ class decoder_stream {
      */
     decoder_stream(encoding_t enc);
 
+    /**
+     * copy/move
+     */
     decoder_stream(const decoder_stream& other) = default;
     decoder_stream(decoder_stream&& other) = default;
-
     decoder_stream& operator=(const decoder_stream& other) = default;
     decoder_stream& operator=(decoder_stream&& other) = default;
 
@@ -163,21 +179,38 @@ class decoder_stream {
     size_t get_maxsize();
     encoding_t get_encoding();
 
+    binary_t data();
+
     /**
      * @remarks max buffer size 32K
      *          to change max buffer, use set_maxsize
      */
     return_t write(const char* data, size_t size);
 
+    decoder_stream& add(const char* data, size_t size);
+
+    /**
+     * delegation
+     */
+    template <typename T>
+    decoder_stream& add(T&& value) {
+        return *this << std::forward<T>(value);
+    }
+
+    /**
+     * delegation
+     */
+    template <typename T>
+    decoder_stream& operator+=(T&& value) {
+        return *this << std::forward<T>(value);
+    }
+
+    /**
+     * stream implementation
+     */
     decoder_stream& operator<<(const char* value);
     decoder_stream& operator<<(const std::string& value);
     decoder_stream& operator<<(const basic_stream& value);
-
-    decoder_stream& add(const char* value);
-    decoder_stream& add(const std::string& value);
-    decoder_stream& add(const basic_stream& value);
-
-    binary_t data();
 
    protected:
     return_t flush();

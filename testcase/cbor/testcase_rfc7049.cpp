@@ -79,7 +79,7 @@ void do_test_cbor_int(int64 value, const char* expect) {
     binary_t bin;
     variant vt;
 
-    vt.set_int64(value);
+    vt.set(value);
     do_encode_test(vt, bin, expect);
 
     cbor_data* cbor = new cbor_data(vt);
@@ -91,7 +91,7 @@ void do_test_cbor_uint(uint64 value, const char* expect) {
     binary_t bin;
     variant vt;
 
-    vt.set_uint64(value);
+    vt.set(value);
     do_encode_test(vt, bin, expect);
 
     cbor_data* cbor = new cbor_data(vt);
@@ -124,7 +124,7 @@ void do_test_cbor_float(float value, const char* expect) {
     binary_t bin;
     variant vt;
 
-    vt.set_float(value);
+    vt.set(value);
     do_encode_test(vt, bin, expect);
 
     cbor_data* cbor = new cbor_data(value);
@@ -136,7 +136,7 @@ void do_test_cbor_double(double value, const char* expect) {
     binary_t bin;
     variant vt;
 
-    vt.set_double(value);
+    vt.set(value);
     do_encode_test(vt, bin, expect);
 
     cbor_data* cbor = new cbor_data(value);
@@ -148,7 +148,7 @@ void do_test_cbor_bool(bool value, const char* expect) {
     binary_t bin;
     variant vt;
 
-    vt.set_bool(value);
+    vt.set(value);
     do_encode_test(vt, bin, expect);
 }
 
@@ -163,7 +163,7 @@ void do_test_cbor_tstr(const char* value, const char* expect) {
     binary_t bin;
     variant vt;
 
-    vt.set_str(value);
+    vt.set(value);
     do_encode_test(vt, bin, expect);
 }
 

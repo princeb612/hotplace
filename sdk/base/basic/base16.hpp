@@ -43,9 +43,9 @@ return_t base16_decode(const binary_t source, byte_t* buf, size_t* buflen);
 
 }  // namespace implementation
 
-template <typename T>
+template <typename T, typename std::enable_if<custom::encoder_stream_traits<T>::value, int>::type = 0>
 return_t base16_encode(const byte_t* source, size_t size, T& streambuf, uint32 flags = 0) {
-    typedef encoder_stream_traits<T> traits;
+    typedef custom::encoder_stream_traits<T> traits;
     typedef typename traits::value_type value_type;
     return_t ret = errorcode_t::success;
 
@@ -76,9 +76,9 @@ std::string base16_encode(const std::string& source, uint32 flags = 0);
 std::string base16_encode(const binary_t& source, uint32 flags = 0);
 std::string base16_encode(const basic_stream& source, uint32 flags = 0);
 
-template <typename T>
+template <typename T, typename std::enable_if<custom::encoder_stream_traits<T>::value, int>::type = 0>
 return_t base16_decode(const char* source, size_t size, T& streambuf, uint32 flags = 0) {
-    typedef encoder_stream_traits<T> traits;
+    typedef custom::encoder_stream_traits<T> traits;
     typedef typename traits::value_type value_type;
     return_t ret = errorcode_t::success;
 

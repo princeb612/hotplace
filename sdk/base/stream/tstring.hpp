@@ -6,23 +6,43 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2026.05.22   Soo Han and Gemini  Refined with guidance and collaboration from Gemini
+ *
+ * @note
+ *          [Refactoring History]
+ *          - Restructured redundant SFINAE (enable_if) and std::conditional pipelines
+ *            into a centralized Type Traits structure (printf_traits).
+ *          - Consolidated integral, enum, and floating-point stream pipelines.
+ *          - Resolved type-ambiguity and operator associativity (+=) corner cases.
+ *          - Refined with guidance and collaboration from Gemini (AI Peer).
  */
 
 #ifndef __HOTPLACE_SDK_BASE_STREAM_TSTRING__
 #define __HOTPLACE_SDK_BASE_STREAM_TSTRING__
 
 #include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/nostd/traits.hpp>
 #include <hotplace/sdk/base/stream/bufferio.hpp>
 #include <ostream>
 
 namespace hotplace {
 
+/**
+ * @brief   string
+ */
 class ansi_string : public stream_t {
    public:
     ansi_string();
     ansi_string(const char* data, ...);
+
+    /**
+     * copy/move
+     */
     ansi_string(const ansi_string& other);
     ansi_string(ansi_string&& other);
+    ansi_string& operator=(const ansi_string& other);
+    ansi_string& operator=(ansi_string&& other);
+
     virtual ~ansi_string();
 
     virtual byte_t* data() const;
@@ -84,54 +104,52 @@ class ansi_string : public stream_t {
      */
     return_t getline(size_t pos, size_t* brk, ansi_string& line);
 
-    ansi_string& operator=(const char* buf);
-#if defined _WIN32 || defined _WIN64
-    ansi_string& operator=(const wchar_t* buf);
-#endif
-    ansi_string& operator=(char buf);
-    ansi_string& operator=(byte_t buf);
-    ansi_string& operator=(uint16 buf);
-    ansi_string& operator=(uint32 buf);
-    ansi_string& operator=(uint64 buf);
-    ansi_string& operator=(float buf);
-    ansi_string& operator=(double buf);
-    ansi_string& operator=(const ansi_string& other);
-    ansi_string& operator=(ansi_string&& other);
-
-    ansi_string& operator+=(const char* buf);
-#if defined _WIN32 || defined _WIN64
-    ansi_string& operator+=(const wchar_t* buf);
-#endif
-    ansi_string& operator+=(char buf);
-    ansi_string& operator+=(byte_t buf);
-    ansi_string& operator+=(uint16 buf);
-    ansi_string& operator+=(uint32 buf);
-    ansi_string& operator+=(uint64 buf);
-    ansi_string& operator+=(float buf);
-    ansi_string& operator+=(double buf);
-    ansi_string& operator+=(const ansi_string& buf);
-
-    ansi_string& operator<<(const char* buf);
-#if defined _WIN32 || defined _WIN64
-    ansi_string& operator<<(const wchar_t* buf);
-#endif
-    ansi_string& operator<<(char buf);
-    ansi_string& operator<<(byte_t buf);
-    ansi_string& operator<<(uint16 buf);
-    ansi_string& operator<<(uint32 buf);
-    ansi_string& operator<<(uint64 buf);
-    ansi_string& operator<<(float buf);
-    ansi_string& operator<<(double buf);
-    ansi_string& operator<<(const ansi_string& buf);
-
-#if defined __SIZEOF_INT128__
-    ansi_string& operator=(uint128 buf);
-    ansi_string& operator+=(uint128 buf);
-    ansi_string& operator<<(uint128 buf);
-#endif
-
     int compare(const ansi_string& buf);
     static int compare(const ansi_string& lhs, const ansi_string& rhs);
+
+    virtual void autoindent(uint8 indent);
+    void resize(size_t size) override;
+
+    /**
+     * delegation
+     */
+    template <typename T>
+    ansi_string& operator=(T&& value) {
+        clear();
+        return *this << std::forward<T>(value);
+    }
+    /**
+     * delegation
+     */
+    template <typename T>
+    ansi_string& operator+=(T&& value) {
+        return *this << std::forward<T>(value);
+    }
+
+    /**
+     * stream implementation
+     */
+    template <typename T,                                                                                 //
+              typename std::enable_if<custom::is_integral_traits<typename std::decay<T>::type>::value ||  //
+                                          std::is_enum<typename std::decay<T>::type>::value ||            //
+                                          std::is_floating_point<typename std::decay<T>::type>::value,
+                                      int>::type = 0>
+    ansi_string& operator<<(T value) {
+        using traits = custom::printf_traits<char, T>;
+        using cast_type = typename traits::cast_type;
+
+        printf(traits::spec(), static_cast<cast_type>(value));
+        return *this;
+    }
+
+    ansi_string& operator<<(char value);         // due to performance (write is faster than printf)
+    ansi_string& operator<<(const char* value);  // due to performance (write is faster than printf)
+#if defined _WIN32 || defined _WIN64
+    ansi_string& operator<<(const wchar_t value);
+    ansi_string& operator<<(const wchar_t* value);
+#endif
+    ansi_string& operator<<(const ansi_string& value);
+    ansi_string& operator<<(const std::string& value);
 
     bool operator<(const ansi_string& buf) const;
     bool operator>(const ansi_string& buf) const;
@@ -146,21 +164,25 @@ class ansi_string : public stream_t {
     friend std::string& operator<<(std::string& lhs, const ansi_string& rhs);
     friend std::ostream& operator<<(std::ostream& lhs, const ansi_string& rhs);
 
-    virtual void autoindent(uint8 indent);
-    void resize(size_t size) override;
-
    protected:
    private:
     bufferio_context_t* _handle;
 };
 
 #if defined _WIN32 || defined _WIN64
+/**
+ * @brief   unicode string
+ */
 class wide_string : public stream_t {
    public:
     wide_string();
     wide_string(const wchar_t* data, ...);
+
     wide_string(const wide_string& other);
     wide_string(wide_string&& other);
+    wide_string& operator=(const wide_string& buf);
+    wide_string& operator=(wide_string&& buf);
+
     virtual ~wide_string();
 
     virtual byte_t* data() const;
@@ -221,64 +243,62 @@ class wide_string : public stream_t {
      */
     return_t getline(size_t pos, size_t* brk, wide_string& line);
 
-    wide_string& operator=(const char* buf);
-    wide_string& operator=(const wchar_t* buf);
-    wide_string& operator=(wchar_t buf);
-    wide_string& operator=(byte_t buf);
-    wide_string& operator=(uint16 buf);
-    wide_string& operator=(uint32 buf);
-    wide_string& operator=(uint64 buf);
-    wide_string& operator=(float buf);
-    wide_string& operator=(double buf);
-    wide_string& operator=(const wide_string& buf);
-    wide_string& operator=(wide_string&& buf);
-
-    wide_string& operator+=(const char* buf);
-    wide_string& operator+=(const wchar_t* buf);
-    wide_string& operator+=(wchar_t buf);
-    wide_string& operator+=(byte_t buf);
-    wide_string& operator+=(uint16 buf);
-    wide_string& operator+=(uint32 buf);
-    wide_string& operator+=(uint64 buf);
-    wide_string& operator+=(float buf);
-    wide_string& operator+=(double buf);
-    wide_string& operator+=(const wide_string& buf);
-
-    wide_string& operator<<(const char* buf);
-    wide_string& operator<<(const wchar_t* buf);
-    wide_string& operator<<(wchar_t buf);
-    wide_string& operator<<(byte_t buf);
-    wide_string& operator<<(uint16 buf);
-    wide_string& operator<<(uint32 buf);
-    wide_string& operator<<(uint64 buf);
-    wide_string& operator<<(float buf);
-    wide_string& operator<<(double buf);
-    wide_string& operator<<(const wide_string& buf);
-
-#if defined __SIZEOF_INT128__
-    wide_string& operator=(uint128 buf);
-    wide_string& operator+=(uint128 buf);
-    wide_string& operator<<(uint128 buf);
-#endif
-
     int compare(const wide_string& buf);
     static int compare(const wide_string& lhs, const wide_string& rhs);
 
-    bool operator<(const wide_string& buf) const;
-    bool operator>(const wide_string& buf) const;
+    virtual void autoindent(uint8 indent);
+    void resize(size_t bytes) override;
 
-    bool operator==(const wide_string& buf) const;
-    bool operator!=(const wide_string& buf) const;
+    /**
+     * delegation
+     */
+    template <typename T>
+    wide_string& operator=(T&& value) {
+        clear();
+        return *this << std::forward<T>(value);
+    }
+    /**
+     * delegation
+     */
+    template <typename T>
+    wide_string& operator+=(T&& value) {
+        return *this << std::forward<T>(value);
+    }
 
-    bool operator==(const wchar_t* input);
-    bool operator!=(const wchar_t* input);
+    /**
+     * stream implementation
+     */
+    template <typename T,                                                                                 //
+              typename std::enable_if<custom::is_integral_traits<typename std::decay<T>::type>::value ||  //
+                                          std::is_enum<typename std::decay<T>::type>::value ||            //
+                                          std::is_floating_point<typename std::decay<T>::type>::value,
+                                      int>::type = 0>
+    wide_string& operator<<(T value) {
+        using traits = custom::printf_traits<wchar_t, T>;
+        using cast_type = typename traits::cast_type;
+
+        printf(traits::spec(), static_cast<cast_type>(value));
+        return *this;
+    }
+
+    wide_string& operator<<(const char value);
+    wide_string& operator<<(const char* value);
+    wide_string& operator<<(const wchar_t value);
+    wide_string& operator<<(const wchar_t* value);
+    wide_string& operator<<(const wide_string& value);
+
+    bool operator<(const wide_string& other) const;
+    bool operator>(const wide_string& other) const;
+
+    bool operator==(const wide_string& other) const;
+    bool operator!=(const wide_string& other) const;
+
+    bool operator==(const wchar_t* other);
+    bool operator!=(const wchar_t* other);
 
     friend std::wstring& operator+=(std::wstring& lhs, const wide_string& rhs);
     friend std::wstring& operator<<(std::wstring& lhs, const wide_string& rhs);
     friend std::ostream& operator<<(std::ostream& lhs, const wide_string& rhs);
-
-    virtual void autoindent(uint8 indent);
-    void resize(size_t bytes) override;
 
    protected:
    private:

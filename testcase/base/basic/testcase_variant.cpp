@@ -18,12 +18,12 @@ void test_variant() {
 
     variant vt;
 
-    vt.clear().set_uint32(32768);
+    vt.clear().set((uint32)32768);
     vt.to_binary(bin, variant_convendian | variant_trunc);
     b16stream = base16_encode(bin);
     _test_case.assert(b16stream == "00008000", __FUNCTION__, "base16");
 
-    vt.clear().set_uint64(0x123456789LL);
+    vt.clear().set((uint64)0x123456789LL);
     vt.to_binary(bin, variant_convendian | variant_trunc);
     b16stream = base16_encode(bin);
     _test_case.assert(b16stream == "0000000123456789", __FUNCTION__, "base16");
@@ -42,7 +42,7 @@ void test_variant() {
     _logger->writeln(bs);
     _test_case.assert(bs == "0123456789abcdef (81985529216486895)", __FUNCTION__, "vtprintf variant.bignumber");
 
-    vt.clear().set_uint32(0).set_flag(flag_negative);  // CBOR style
+    vt.clear().set((uint32)0).set_flag(vt_flag_negative);  // CBOR style
     bignumber bn_neg(vt.content());
     auto neg = bn_neg.t_bntoi<int32>();
     _test_case.assert(neg == -1, __FUNCTION__, "negative");

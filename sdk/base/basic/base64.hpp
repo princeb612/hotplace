@@ -53,9 +53,9 @@ return_t base64_decode(const binary_t& source, byte_t* buffer, size_t* buffer_si
 
 }  // namespace implementation
 
-template <typename T>
+template <typename T, typename std::enable_if<custom::encoder_stream_traits<T>::value, int>::type = 0>
 return_t base64_encode(const byte_t* source, size_t size, T& streambuf, encoding_t encoding = encoding_t::encoding_base64, uint32 flags = 0) {
-    typedef encoder_stream_traits<T> traits;
+    typedef custom::encoder_stream_traits<T> traits;
     typedef typename traits::value_type value_type;
     return_t ret = errorcode_t::success;
 
@@ -77,7 +77,7 @@ return_t base64_encode(const byte_t* source, size_t size, T& streambuf, encoding
     return ret;
 };
 
-template <typename T>
+template <typename T, typename std::enable_if<custom::encoder_stream_traits<T>::value, int>::type = 0>
 return_t base64_encode(const binary_t& source, T& streambuf, encoding_t encoding = encoding_t::encoding_base64, uint32 flags = 0) {
     return base64_encode(source.data(), source.size(), streambuf, encoding, flags);
 }
@@ -88,9 +88,9 @@ std::string base64_encode(const std::string& source, encoding_t encoding = encod
 std::string base64_encode(const binary_t& source, encoding_t encoding = encoding_t::encoding_base64);
 std::string base64_encode(const basic_stream& source, encoding_t encoding = encoding_t::encoding_base64);
 
-template <typename T>
+template <typename T, typename std::enable_if<custom::encoder_stream_traits<T>::value, int>::type = 0>
 return_t base64_decode(const char* source, size_t size, T& streambuf, encoding_t encoding = encoding_t::encoding_base64, uint32 flags = 0) {
-    typedef encoder_stream_traits<T> traits;
+    typedef custom::encoder_stream_traits<T> traits;
     typedef typename traits::value_type value_type;
     return_t ret = errorcode_t::success;
 
@@ -112,7 +112,7 @@ return_t base64_decode(const char* source, size_t size, T& streambuf, encoding_t
     return ret;
 };
 
-template <typename T>
+template <typename T, typename std::enable_if<custom::encoder_stream_traits<T>::value, int>::type = 0>
 return_t base64_decode(const std::string& source, T& streambuf, encoding_t encoding = encoding_t::encoding_base64, uint32 flags = 0) {
     return base64_decode(source.c_str(), source.size(), streambuf, encoding, flags);
 }

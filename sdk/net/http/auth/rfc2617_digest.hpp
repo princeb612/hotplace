@@ -21,16 +21,29 @@ namespace net {
 class rfc2617_digest {
    public:
     rfc2617_digest();
-    rfc2617_digest& add(const char* data);
-    rfc2617_digest& add(const std::string& data);
-    rfc2617_digest& add(const basic_stream& data);
+
+    std::string get();
+    std::string get_sequence();
+    rfc2617_digest& clear();
+
+    /**
+     * delegation
+     */
+    template <typename T>
+    rfc2617_digest& add(T&& value) {
+        return *this << std::forward<T>(value);
+    }
+    template <typename T>
+    rfc2617_digest& operator+=(T&& value) {
+        return *this << std::forward<T>(value);
+    }
+    /**
+     * stream implementation
+     */
     rfc2617_digest& operator<<(const char* data);
     rfc2617_digest& operator<<(const std::string& data);
     rfc2617_digest& operator<<(const basic_stream& data);
     rfc2617_digest& digest(const std::string& algorithm);
-    std::string get();
-    std::string get_sequence();
-    rfc2617_digest& clear();
 
    private:
     basic_stream _sequence;

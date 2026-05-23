@@ -61,7 +61,7 @@ return_t cbor_map::join(cbor_object* object, cbor_object* extra) {
                 cbor_data* inst = (cbor_data*)object;
                 // vartype_t lhs_vtype = inst->data().type;
                 uint16 lhs_flag = inst->data().flag();
-                lhs_ret = (lhs_flag & (variant_flag_t::flag_int | variant_flag_t::flag_string)) ? true : false;
+                lhs_ret = (lhs_flag & (variant_flag_t::vt_flag_int | variant_flag_t::vt_flag_string)) ? true : false;
             }
             switch (rhs_type) {
                 case cbor_type_t::cbor_type_data:
@@ -85,9 +85,9 @@ return_t cbor_map::join(cbor_object* object, cbor_object* extra) {
             _array.push_back(pair);
 
             // uint16 lhs_flag = inst->data().flag();
-            // if (lhs_flag & variant_flag_t::flag_int) {
+            // if (lhs_flag & variant_flag_t::vt_flag_int) {
             //     int key = inst->data().to_int();
-            // } else if (lhs_flag & variant_flag_t::flag_string) {
+            // } else if (lhs_flag & variant_flag_t::vt_flag_string) {
             //     std::string key;
             //     inst->data().to_string(key);
             // }

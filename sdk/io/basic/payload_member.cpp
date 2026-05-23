@@ -16,7 +16,7 @@ namespace io {
 
 payload_member::payload_member(uint8 value, const char* name, const char* group) : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
-    get_variant().set_uint8(value);
+    get_variant().set(value);
 }
 
 payload_member::payload_member(uint8 value, uint16 repeat, const char* name, const char* group)
@@ -33,7 +33,7 @@ payload_member::payload_member(uint8 value, uint16 repeat, const char* name, con
 payload_member::payload_member(uint16 value, bool bigendian, const char* name, const char* group)
     : _bigendian(bigendian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
-    get_variant().set_uint16(value);
+    get_variant().set(value);
 }
 
 payload_member::payload_member(const uint24_t& value, const char* name, const char* group)
@@ -45,7 +45,7 @@ payload_member::payload_member(const uint24_t& value, const char* name, const ch
 payload_member::payload_member(uint32 value, bool bigendian, const char* name, const char* group)
     : _bigendian(bigendian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
-    get_variant().set_uint32(value);
+    get_variant().set(value);
 }
 
 payload_member::payload_member(const uint48_t& value, const char* name, const char* group)
@@ -57,14 +57,14 @@ payload_member::payload_member(const uint48_t& value, const char* name, const ch
 payload_member::payload_member(uint64 value, bool bigendian, const char* name, const char* group)
     : _bigendian(bigendian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
-    get_variant().set_uint64(value);
+    get_variant().set(value);
 }
 
 #if defined __SIZEOF_INT128__
 payload_member::payload_member(uint128 value, bool bigendian, const char* name, const char* group)
     : _bigendian(bigendian), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
-    get_variant().set_uint128(value);
+    get_variant().set(value);
 }
 #endif
 
@@ -78,9 +78,9 @@ payload_member::payload_member(const byte_t* stream, size_t size, bool alloc, co
     : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(nullptr), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
     if (alloc) {
-        get_variant().set_bstr_new(stream, size);
+        get_variant().set_new(stream, size);
     } else {
-        get_variant().set_bstr(stream, size);
+        get_variant().set(stream, size);
     }
 }
 
@@ -155,7 +155,7 @@ size_t payload_member::get_space() {
         space = get_payload_encoded()->lsize();
     } else if (payload_member_reserve_is_set & get_flags()) {
         space = _reserve;
-    } else if (variant_flag_t::flag_int == get_variant().flag()) {
+    } else if (variant_flag_t::vt_flag_int == get_variant().flag()) {
         space = get_variant().size();
     } else if (_ref) {
         space = _ref->get_variant().t_toi<size_t>() * _refmulti;
@@ -234,14 +234,14 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
 
         variant& v = get_variant();
         vartype_t type = v.type();
-        if (variant_flag_t::flag_int == v.flag()) {
+        if (variant_flag_t::vt_flag_int == v.flag()) {
             auto vsize = v.size();
             if (limit >= vsize) {
                 switch (type) {
                     /* int8, uint8 */
                     case TYPE_INT8:
                     case TYPE_UINT8: {
-                        v.clear().set_uint8(*(uint8*)rebase);
+                        v.clear().set(*(uint8*)rebase);
                         *size_read = vsize;
                     } break;
                     /* int16, uint16 */
@@ -251,7 +251,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                         if (get_change_endian()) {
                             temp = ntoh16(temp);
                         }
-                        v.clear().set_uint16(temp);
+                        v.clear().set(temp);
                         *size_read = vsize;
                     } break;
                     /* TLS handshake length */
@@ -269,7 +269,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                         if (get_change_endian()) {
                             temp = ntoh32(temp);
                         }
-                        v.clear().set_uint32(temp);
+                        v.clear().set(temp);
                         *size_read = vsize;
                     } break;
                     /* DTLS record sequence */
@@ -287,7 +287,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                         if (get_change_endian()) {
                             temp = ntoh64(temp);
                         }
-                        v.clear().set_uint64(temp);
+                        v.clear().set(temp);
                         *size_read = vsize;
                     } break;
 #if defined __SIZEOF_INT128__
@@ -298,7 +298,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                         if (get_change_endian()) {
                             temp = ntoh128(temp);
                         }
-                        v.clear().set_uint64(temp);
+                        v.clear().set(temp);
                         *size_read = vsize;
                     } break;
 #endif
@@ -323,11 +323,11 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
             if (limit >= size) {
                 switch (type) {
                     case TYPE_STRING:
-                        v.clear().set_strn_new((char*)rebase, size);
+                        v.clear().set_new((char*)rebase, size);
                         *size_read = size;
                         break;
                     case TYPE_BINARY:
-                        v.clear().set_bstr_new(rebase, size);
+                        v.clear().set_new((byte_t*)rebase, size);
                         *size_read = size;
                         break;
                     case TYPE_BIGNUMBER:

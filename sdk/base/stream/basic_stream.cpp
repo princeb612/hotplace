@@ -6,6 +6,15 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2026.05.22   Soo Han and Gemini  Refined with guidance and collaboration from Gemini
+ *
+ * @note
+ *          [Refactoring History]
+ *          - Restructured redundant SFINAE (enable_if) and std::conditional pipelines
+ *            into a centralized Type Traits structure (printf_traits).
+ *          - Consolidated integral, enum, and floating-point stream pipelines.
+ *          - Resolved type-ambiguity and operator associativity (+=) corner cases.
+ *          - Refined with guidance and collaboration from Gemini (AI Peer).
  */
 
 #include <ctype.h>
@@ -51,6 +60,21 @@ basic_stream::basic_stream(const basic_stream& other) : stream_t(), _handle(null
 }
 
 basic_stream::basic_stream(basic_stream&& other) noexcept : stream_t(), _handle(other._handle) { other._handle = nullptr; }
+
+basic_stream& basic_stream::operator=(const basic_stream& other) {
+    if (this != &other) {
+        basic_stream tmp(other);  // strong exeption guarantee
+        std::swap(_handle, tmp._handle);
+    }
+    return *this;
+}
+
+basic_stream& basic_stream::operator=(basic_stream&& other) noexcept {
+    if (this != &other) {
+        std::swap(_handle, other._handle);
+    }
+    return *this;
+}
 
 basic_stream::~basic_stream() {
     if (_handle) {
@@ -142,28 +166,6 @@ return_t basic_stream::printf(const char* buf, ...) {
 
 return_t basic_stream::vprintf(const char* buf, va_list ap) { return bufferio::vprintf(_handle, buf, ap); }
 
-#if defined _WIN32 || defined _WIN64
-return_t basic_stream::printf(const wchar_t* buf, ...) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == buf) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        va_list ap;
-
-        va_start(ap, buf);
-        ret = bufferio::vprintf(_handle, buf, ap);
-        va_end(ap);
-    }
-    __finally2 {}
-    return ret;
-}
-
-return_t basic_stream::vwprintf(const wchar_t* buf, va_list ap) { return bufferio::vprintf(_handle, buf, ap); }
-#endif
-
 return_t basic_stream::println(const char* buf, ...) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -184,6 +186,48 @@ return_t basic_stream::println(const char* buf, ...) {
     return ret;
 }
 
+#if defined _WIN32 || defined _WIN64
+return_t basic_stream::printf(const wchar_t* buf, ...) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == buf) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        va_list ap;
+
+        va_start(ap, buf);
+        ret = bufferio::vprintf(_handle, buf, ap);
+        va_end(ap);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t basic_stream::vwprintf(const wchar_t* buf, va_list ap) { return bufferio::vprintf(_handle, buf, ap); }
+
+return_t basic_stream::println(const wchar_t* buf, ...) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == buf) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        va_list ap;
+
+        va_start(ap, buf);
+        ret = bufferio::vprintf(_handle, buf, ap);
+        va_end(ap);
+
+        bufferio::write(_handle, L"\n", 2);
+    }
+    __finally2 {}
+    return ret;
+}
+#endif
+
 return_t basic_stream::vaprintf(const char* fmt, valist ap) { return sprintf(this, fmt, ap); }
 
 return_t basic_stream::vaprintln(const char* fmt, valist ap) {
@@ -192,100 +236,72 @@ return_t basic_stream::vaprintln(const char* fmt, valist ap) {
     return rc;
 }
 
-basic_stream& basic_stream::operator=(const basic_stream& other) {
-    if (this != &other) {
-        basic_stream tmp(other);  // strong exeption guarantee
-        std::swap(_handle, tmp._handle);
+int basic_stream::compare(const basic_stream& other) { return compare(*this, other.c_str()); }
+
+int basic_stream::compare(const basic_stream& lhs, const basic_stream& rhs) const { return compare(lhs, rhs.c_str()); }
+
+int basic_stream::compare(const basic_stream& lhs, const char* rhs) const {
+    int ret = -1;
+    if (rhs) {
+        auto ldata = lhs.data();
+        auto lsize = lhs.size();
+        auto rdata = rhs;
+        auto rsize = strlen(rhs);
+        if (lsize == rsize) {
+            ret = memcmp(ldata, rdata, lsize);  // string and binary
+        } else {
+            ret = (lsize < rsize) ? -1 : 1;
+        }
     }
-    return *this;
+    return ret;
 }
 
-basic_stream& basic_stream::operator=(basic_stream&& other) noexcept {
-    if (this != &other) {
-        std::swap(_handle, other._handle);
+void basic_stream::autoindent(uint8 indent) {
+    bufferio::autoindent(_handle, indent);
+    if (indent) {
+        fill(indent, ' ');
+    } else {
+        write("\r", 1);
     }
-    return *this;
 }
 
-basic_stream& basic_stream::operator=(const std::string& other) {
-    clear();
-    write(other.data(), other.size());
-    return *this;
-}
-
-basic_stream& basic_stream::operator=(const char* other) {
-    clear();
-    if (other) {
-        auto len = strlen(other);
-        write(other, len);
+void basic_stream::resize(size_t s) {
+    auto z = size();
+    if (0 == s) {
+        clear();
+    } else if (z > s) {
+        // cut
+        cut(s, z - s);
+    } else {
+        // extend
+        fill(s - z, 0);
     }
-    return *this;
-}
-
-basic_stream& basic_stream::operator<<(const char* other) {
-    if (other) {
-        auto len = strlen(other);
-        write(other, len);
-    }
-    return *this;
 }
 
 basic_stream& basic_stream::operator<<(char value) {
-    printf("%c", value);
+    write(&value, 1);
     return *this;
 }
 
-basic_stream& basic_stream::operator<<(int value) {
-    printf("%i", value);
+basic_stream& basic_stream::operator<<(const char* value) {
+    if (value) {
+        auto len = strlen(value);
+        write(value, len);
+    }
     return *this;
 }
 
-basic_stream& basic_stream::operator<<(unsigned int value) {
-    printf("%u", value);
+#if defined _WIN32 || defined _WIN64
+basic_stream& basic_stream::operator<<(const wchar_t value) {
+    printf(L"c", value);
     return *this;
 }
 
-basic_stream& basic_stream::operator<<(long value) {
-    printf("%li", value);
-    return *this;
-}
-
-basic_stream& basic_stream::operator<<(unsigned long value) {
-    printf("%lu", value);
-    return *this;
-}
-
-basic_stream& basic_stream::operator<<(long long value) {
-    printf("%lli", value);
-    return *this;
-}
-
-basic_stream& basic_stream::operator<<(unsigned long long value) {
-    printf("%llu", value);
-    return *this;
-}
-
-#if defined __SIZEOF_INT128__
-basic_stream& basic_stream::operator<<(int128 value) {
-    printf("%I128i", value);
-    return *this;
-}
-
-basic_stream& basic_stream::operator<<(uint128 value) {
-    printf("%I128u", value);
+basic_stream& basic_stream::operator<<(const wchar_t* value) {
+    printf(L"s", value);
     return *this;
 }
 #endif
-
-basic_stream& basic_stream::operator<<(float value) {
-    printf("%f", value);
-    return *this;
-}
-
-basic_stream& basic_stream::operator<<(double value) {
-    printf("%lf", value);
-    return *this;
-}
 
 basic_stream& basic_stream::operator<<(const variant& value) {
     vtprintf(this, value, vtprintf_style_debugmode);
@@ -312,26 +328,6 @@ basic_stream& basic_stream::operator<<(const bignumber& value) {
     return *this;
 }
 
-int basic_stream::compare(const basic_stream& other) { return compare(*this, other.c_str()); }
-
-int basic_stream::compare(const basic_stream& lhs, const basic_stream& rhs) const { return compare(lhs, rhs.c_str()); }
-
-int basic_stream::compare(const basic_stream& lhs, const char* rhs) const {
-    int ret = -1;
-    if (rhs) {
-        auto ldata = lhs.data();
-        auto lsize = lhs.size();
-        auto rdata = rhs;
-        auto rsize = strlen(rhs);
-        if (lsize == rsize) {
-            ret = memcmp(ldata, rdata, lsize);  // string and binary
-        } else {
-            ret = (lsize < rsize) ? -1 : 1;
-        }
-    }
-    return ret;
-}
-
 bool basic_stream::operator<(const basic_stream& other) const { return compare(*this, other) < 0; }
 
 bool basic_stream::operator>(const basic_stream& other) const { return compare(*this, other) > 0; }
@@ -353,27 +349,5 @@ std::string& operator+=(std::string& lhs, const basic_stream& rhs) { return lhs 
 std::string& operator<<(std::string& lhs, const basic_stream& rhs) { return lhs += rhs.c_str(); }
 
 std::ostream& operator<<(std::ostream& lhs, const basic_stream& rhs) { return lhs << rhs.c_str(); }
-
-void basic_stream::autoindent(uint8 indent) {
-    bufferio::autoindent(_handle, indent);
-    if (indent) {
-        fill(indent, ' ');
-    } else {
-        *this << '\r';
-    }
-}
-
-void basic_stream::resize(size_t s) {
-    auto z = size();
-    if (0 == s) {
-        clear();
-    } else if (z > s) {
-        // cut
-        cut(s, z - s);
-    } else {
-        // extend
-        fill(s - z, 0);
-    }
-}
 
 }  // namespace hotplace

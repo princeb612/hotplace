@@ -95,7 +95,7 @@ struct endian_transformer {
     static inline T transform(T value) {
         T res = 0;
         if (is_little_endian()) {
-            using half_type = typename half_type_traits<SIZE>::type;
+            using half_type = typename custom::half_type_traits<SIZE>::type;
 
             half_type mask = ~half_type(0);
             half_type low = static_cast<half_type>(value & mask);

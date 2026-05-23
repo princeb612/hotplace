@@ -19,7 +19,7 @@
 
 namespace hotplace {
 
-enum console_style_t {
+enum console_style_t : uint8 {
     normal = 0,
     bold = 1,
     dim = 2,
@@ -34,7 +34,7 @@ enum console_style_t {
 #define CONSOLE_COLOR_G 2
 #define CONSOLE_COLOR_B 4
 
-enum console_color_t {
+enum console_color_t : uint8 {
     black = 0,                                                      // 0
     red = (CONSOLE_COLOR_R),                                        // 1
     green = (CONSOLE_COLOR_G),                                      // 2
@@ -106,9 +106,9 @@ class console_color {
         return *this;
     }
     bool get_usage() { return _use; }
-    uint16 get_style() { return _style; }
-    uint16 get_fgcolor() { return CONSOLE_COLOR_FG + _fg; }
-    uint16 get_bgcolor() { return CONSOLE_COLOR_BG + _bg; }
+    uint8 get_style() { return _style; }
+    uint8 get_fgcolor() { return CONSOLE_COLOR_FG + _fg; }
+    uint8 get_bgcolor() { return CONSOLE_COLOR_BG + _bg; }
     console_color& turnon() {
         _use = true;
         return *this;

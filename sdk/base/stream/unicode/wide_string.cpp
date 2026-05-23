@@ -6,6 +6,15 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2026.05.22   Soo Han and Gemini  Refined with guidance and collaboration from Gemini
+ *
+ * @note
+ *          [Refactoring History]
+ *          - Restructured redundant SFINAE (enable_if) and std::conditional pipelines
+ *            into a centralized Type Traits structure (printf_traits).
+ *          - Consolidated integral, enum, and floating-point stream pipelines.
+ *          - Resolved type-ambiguity and operator associativity (+=) corner cases.
+ *          - Refined with guidance and collaboration from Gemini (AI Peer).
  */
 
 #include <hotplace/sdk/base/stream/stream_policy.hpp>
@@ -45,6 +54,21 @@ wide_string::wide_string(const wide_string& other) : stream_t(), _handle(nullptr
 }
 
 wide_string::wide_string(wide_string&& other) : stream_t(), _handle(other._handle) { other._handle = nullptr; }
+
+wide_string& wide_string::operator=(const wide_string& other) {
+    if (this != &other) {
+        wide_string tmp(other);  // strong exception guarantee
+        std::swap(_handle, tmp._handle);
+    }
+    return *this;
+}
+
+wide_string& wide_string::operator=(wide_string&& other) {
+    if (this != &other) {
+        std::swap(_handle, other._handle);
+    }
+    return *this;
+}
 
 wide_string::~wide_string() {
     if (_handle) {
@@ -221,215 +245,62 @@ return_t wide_string::getline(size_t pos, size_t* brk, wide_string& line) {
     return ret;
 }
 
-wide_string& wide_string::operator=(const char* buf) {
-    clear();
-    if (nullptr != buf) {
-        A2W(this, buf);
-    }
-    return *this;
-}
-
-wide_string& wide_string::operator=(const wchar_t* buf) {
-    clear();
-    if (buf) {
-        auto len = wcslen(buf);
-        write(buf, len * sizeof(wchar_t));
-    }
-    return *this;
-}
-
-wide_string& wide_string::operator=(wchar_t buf) {
-    clear();
-    printf(L"%c", buf);
-    return *this;
-}
-
-wide_string& wide_string::operator=(byte_t buf) {
-    clear();
-    printf(L"%c", buf);
-    return *this;
-}
-
-wide_string& wide_string::operator=(uint16 buf) {
-    clear();
-    printf(L"%i", buf);
-    return *this;
-}
-
-wide_string& wide_string::operator=(uint32 buf) {
-    clear();
-    printf(L"%i", buf);
-    return *this;
-}
-
-wide_string& wide_string::operator=(uint64 buf) {
-    clear();
-    printf(L"%I64i", buf);
-    return *this;
-}
-
-#if defined __SIZEOF_INT128__
-wide_string& wide_string::operator=(uint128 buf) {
-    clear();
-    printf(L"%I128i", buf);
-    return *this;
-}
-#endif
-
-wide_string& wide_string::operator=(float buf) {
-    clear();
-    printf(L"%f", buf);
-    return *this;
-}
-
-wide_string& wide_string::operator=(double buf) {
-    clear();
-    printf(L"%l", buf);
-    return *this;
-}
-
-wide_string& wide_string::operator=(const wide_string& other) {
-    if (this != &other) {
-        wide_string tmp(other);  // strong exception guarantee
-        std::swap(_handle, tmp._handle);
-    }
-    return *this;
-}
-
-wide_string& wide_string::operator=(wide_string&& other) {
-    if (this != &other) {
-        std::swap(_handle, other._handle);
-    }
-    return *this;
-}
-
-wide_string& wide_string::operator+=(const char* buf) {
-    if (buf) {
-        A2W(this, buf);
-    }
-    return *this;
-}
-
-wide_string& wide_string::operator+=(const wchar_t* buf) {
-    if (buf) {
-        auto len = wcslen(buf);
-        write(buf, len * sizeof(wchar_t));
-    }
-    return *this;
-}
-
-wide_string& wide_string::operator+=(wchar_t buf) {
-    printf(L"%c", buf);
-    return *this;
-}
-
-wide_string& wide_string::operator+=(byte_t buf) {
-    printf(L"%c", buf);
-    return *this;
-}
-
-wide_string& wide_string::operator+=(uint16 buf) {
-    printf(L"%i", buf);
-    return *this;
-}
-
-wide_string& wide_string::operator+=(uint32 buf) {
-    printf(L"%i", buf);
-    return *this;
-}
-
-wide_string& wide_string::operator+=(uint64 buf) {
-    printf(L"%I64i", buf);
-    return *this;
-}
-
-#if defined __SIZEOF_INT128__
-wide_string& wide_string::operator+=(uint128 buf) {
-    printf(L"%I128i", buf);
-    return *this;
-}
-#endif
-
-wide_string& wide_string::operator+=(float buf) {
-    printf(L"%f", buf);
-    return *this;
-}
-
-wide_string& wide_string::operator+=(double buf) {
-    printf(L"%l", buf);
-    return *this;
-}
-
-wide_string& wide_string::operator+=(const wide_string& buf) {
-    write(buf.data(), buf.size());
-    return *this;
-}
-
-wide_string& wide_string::operator<<(const char* buf) {
-    if (nullptr != buf) {
-        A2W(this, buf);
-    }
-    return *this;
-}
-
-wide_string& wide_string::operator<<(const wchar_t* buf) {
-    if (buf) {
-        auto len = wcslen(buf);
-        write(buf, len * sizeof(wchar_t));
-    }
-    return *this;
-}
-
-wide_string& wide_string::operator<<(wchar_t buf) {
-    printf(L"%c", buf);
-    return *this;
-}
-
-wide_string& wide_string::operator<<(byte_t buf) {
-    printf(L"%c", buf);
-    return *this;
-}
-
-wide_string& wide_string::operator<<(uint16 buf) {
-    printf(L"%i", buf);
-    return *this;
-}
-
-wide_string& wide_string::operator<<(uint32 buf) {
-    printf(L"%i", buf);
-    return *this;
-}
-
-wide_string& wide_string::operator<<(uint64 buf) {
-    printf(L"%I64i", buf);
-    return *this;
-}
-
-#if defined __SIZEOF_INT128__
-wide_string& wide_string::operator<<(uint128 buf) {
-    printf(L"%I128i", buf);
-    return *this;
-}
-#endif
-
-wide_string& wide_string::operator<<(float buf) {
-    printf(L"%f", buf);
-    return *this;
-}
-
-wide_string& wide_string::operator<<(double buf) {
-    printf(L"%l", buf);
-    return *this;
-}
-
-wide_string& wide_string::operator<<(const wide_string& buf) {
-    write(buf.data(), buf.size());
-    return *this;
-}
-
 int wide_string::compare(const wide_string& other) { return wcscmp(c_str(), other.c_str()); }
 
 int wide_string::compare(const wide_string& lhs, const wide_string& rhs) { return wcscmp(lhs.c_str(), rhs.c_str()); }
+
+void wide_string::autoindent(uint8 indent) {
+    bufferio::autoindent(_handle, indent);
+    if (indent) {
+        fill(indent, L' ');
+    } else {
+        write(L"\r", sizeof(wchar_t));
+    }
+}
+
+void wide_string::resize(size_t bytes) {
+    auto z = size();
+    auto s = bytes * sizeof(TCHAR);
+    if (0 == s) {
+        clear();
+    } else if (z > s) {
+        // cut
+        cut(s, (z - s));
+    } else {
+        // extend
+        fill(s - z, L'\0');
+    }
+}
+
+wide_string& wide_string::operator<<(const char value) {
+    printf("%c", value);
+    return *this;
+}
+
+wide_string& wide_string::operator<<(const char* value) {
+    if (nullptr != value) {
+        A2W(this, value);
+    }
+    return *this;
+}
+
+wide_string& wide_string::operator<<(const wchar_t value) {
+    write(&value, sizeof(wchar_t));
+    return *this;
+}
+
+wide_string& wide_string::operator<<(const wchar_t* value) {
+    if (value) {
+        auto len = wcslen(value);
+        write(value, len * sizeof(wchar_t));
+    }
+    return *this;
+}
+
+wide_string& wide_string::operator<<(const wide_string& value) {
+    write(value.data(), value.size());
+    return *this;
+}
 
 bool wide_string::operator<(const wide_string& other) const { return wcscmp(c_str(), other.c_str()) < 0; }
 
@@ -458,29 +329,6 @@ std::ostream& operator<<(std::ostream& lhs, const wide_string& rhs) {
     W2A(&as, rhs.c_str());
     lhs << as.c_str();
     return lhs;
-}
-
-void wide_string::autoindent(uint8 indent) {
-    bufferio::autoindent(_handle, indent);
-    if (indent) {
-        fill(indent, L' ');
-    } else {
-        *this << L'\r';
-    }
-}
-
-void wide_string::resize(size_t bytes) {
-    auto z = size();
-    auto s = bytes * sizeof(TCHAR);
-    if (0 == s) {
-        clear();
-    } else if (z > s) {
-        // cut
-        cut(s, (z - s));
-    } else {
-        // extend
-        fill(s - z, L'\0');
-    }
 }
 
 }  // namespace hotplace

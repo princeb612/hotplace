@@ -31,32 +31,31 @@ return_t cbor_encode::encode(binary_t& bin, variant_t vt) {
     __try2 {
         switch (vt.type) {
             case TYPE_BOOL:
-            case TYPE_BOOLEAN:
                 encode(bin, vt.data.b);
                 break;
             case TYPE_INT8:
                 encode(bin, vt.data.i8);
                 break;
             case TYPE_UINT8:
-                encode(bin, (vt.flag & flag_negative) ? cbor_major_nint : cbor_major_uint, vt.data.ui8);
+                encode(bin, (vt.flag & vt_flag_negative) ? cbor_major_nint : cbor_major_uint, vt.data.ui8);
                 break;
             case TYPE_INT16:
                 encode(bin, vt.data.i16);
                 break;
             case TYPE_UINT16:
-                encode(bin, (vt.flag & flag_negative) ? cbor_major_nint : cbor_major_uint, vt.data.ui16);
+                encode(bin, (vt.flag & vt_flag_negative) ? cbor_major_nint : cbor_major_uint, vt.data.ui16);
                 break;
             case TYPE_INT32:
                 encode(bin, vt.data.i32);
                 break;
             case TYPE_UINT32:
-                encode(bin, (vt.flag & flag_negative) ? cbor_major_nint : cbor_major_uint, vt.data.ui32);
+                encode(bin, (vt.flag & vt_flag_negative) ? cbor_major_nint : cbor_major_uint, vt.data.ui32);
                 break;
             case TYPE_INT64:
                 encode(bin, vt.data.i64);
                 break;
             case TYPE_UINT64:
-                encode(bin, (vt.flag & flag_negative) ? cbor_major_nint : cbor_major_uint, vt.data.ui64);
+                encode(bin, (vt.flag & vt_flag_negative) ? cbor_major_nint : cbor_major_uint, vt.data.ui64);
                 break;
             case TYPE_FP16:
                 encodefp16(bin, vt.data.ui16);
@@ -89,7 +88,7 @@ return_t cbor_encode::encode(binary_t& bin, variant_t vt) {
                     encode(bin, bnbin);
                 } else {
                     auto ui64 = bn.t_bntoi<uint64>();
-                    encode(bin, (vt.flag & flag_negative) ? cbor_major_nint : cbor_major_uint, ui64);
+                    encode(bin, (vt.flag & vt_flag_negative) ? cbor_major_nint : cbor_major_uint, ui64);
                 }
             } break;
             default:

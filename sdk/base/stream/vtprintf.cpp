@@ -64,7 +64,6 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 stream->printf(constexpr_null);
                 break;
             case TYPE_BOOL:
-            case TYPE_BOOLEAN:
                 stream->printf("%s", vt.data.b ? constexpr_true : constexpr_false);
                 break;
             case TYPE_INT8:
@@ -81,7 +80,7 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 switch (style) {
                     case vtprintf_style_cbor: {
                         bignumber bn(vt.data.ui8);
-                        if (vt.flag & flag_negative) {
+                        if (vt.flag & vt_flag_negative) {
                             bn += 1;
                             bn.neg();
                         }
@@ -109,7 +108,7 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 switch (style) {
                     case vtprintf_style_cbor: {
                         bignumber bn(vt.data.ui16);
-                        if (vt.flag & flag_negative) {
+                        if (vt.flag & vt_flag_negative) {
                             bn += 1;
                             bn.neg();
                         }
@@ -137,7 +136,7 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 switch (style) {
                     case vtprintf_style_cbor: {
                         bignumber bn(vt.data.ui32);
-                        if (vt.flag & flag_negative) {
+                        if (vt.flag & vt_flag_negative) {
                             bn += 1;
                             bn.neg();
                         }
@@ -165,7 +164,7 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 switch (style) {
                     case vtprintf_style_cbor: {
                         bignumber bn(vt.data.ui64);
-                        if (vt.flag & flag_negative) {
+                        if (vt.flag & vt_flag_negative) {
                             bn += 1;
                             bn.neg();
                         }
@@ -194,7 +193,7 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 switch (style) {
                     case vtprintf_style_cbor: {
                         bignumber bn(vt.data.ui128);
-                        if (vt.flag & flag_negative) {
+                        if (vt.flag & vt_flag_negative) {
                             bn += 1;
                             bn.neg();
                         }
@@ -274,16 +273,16 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 bignumber bn(vt.data.bstr, vt.size);
                 switch (style) {
                     case vtprintf_style_cbor:
-                        if (flag_negative & vt.flag) {
+                        if (vt_flag_negative & vt.flag) {
                             bn += 1;
                         }
-                        stream->printf("%s%s", (flag_negative & vt.flag) ? "-" : "", bn.str().c_str());
+                        stream->printf("%s%s", (vt_flag_negative & vt.flag) ? "-" : "", bn.str().c_str());
                         break;
                     case vtprintf_style_debugmode:
-                        stream->printf("%s (%s%s)", bn.hex().c_str(), (flag_negative & vt.flag) ? "-" : "", bn.str().c_str());
+                        stream->printf("%s (%s%s)", bn.hex().c_str(), (vt_flag_negative & vt.flag) ? "-" : "", bn.str().c_str());
                         break;
                     default:
-                        stream->printf("%s%s", (flag_negative & vt.flag) ? "-" : "", bn.str().c_str());
+                        stream->printf("%s%s", (vt_flag_negative & vt.flag) ? "-" : "", bn.str().c_str());
                         break;
                 }
             } break;
