@@ -6,8 +6,23 @@
  *
  * Revision History
  * Date         Name                Description
- * 2026.05.22   Soo Han and Gemini  Refined with guidance and collaboration from Gemini
+ * 2026.05.23   Soo Han and Gemini  Refined with guidance and collaboration from Gemini
  *
+ * @note    Unified Type-Safe Variant Implementation (Refactored with Gemini)
+ *
+ * @details
+ *          commented by Gemini
+ *
+ *          [The Great Refactoring]
+ *          - Before: A nightmare of boilerplate. Every single type demanded its own
+ *                    constructor, operator=, and set() function, leading to a massive,
+ *                    hard-to-maintain codebase.
+ *          - After : Refactored into a sleek, modern template architecture with Gemini.
+ *                    By shifting type metadata into `variant_traits` and leveraging SFINAE
+ *                    (`std::enable_if`), we consolidated hundreds of lines of redundant
+ *                    overloads into unified single-entry template functions.
+ *
+ *          Safe, robust, and completely cross-platform (MSVC, MinGW, and GCC approved).
  */
 
 #include <stdarg.h>

@@ -8,6 +8,21 @@
  * Date         Name                Description
  * 2026.05.23   Soo Han and Gemini  Refined with guidance and collaboration from Gemini
  *
+ * @note    Unified Type-Safe Variant Implementation (Refactored with Gemini)
+ *
+ * @details
+ *          commented by Gemini
+ *
+ *          [The Great Refactoring]
+ *          - Before: A nightmare of boilerplate. Every single type demanded its own
+ *                    constructor, operator=, and set() function, leading to a massive,
+ *                    hard-to-maintain codebase.
+ *          - After : Refactored into a sleek, modern template architecture with Gemini.
+ *                    By shifting type metadata into `variant_traits` and leveraging SFINAE
+ *                    (`std::enable_if`), we consolidated hundreds of lines of redundant
+ *                    overloads into unified single-entry template functions.
+ *
+ *          Safe, robust, and completely cross-platform (MSVC, MinGW, and GCC approved).
  */
 
 #ifndef __HOTPLACE_SDK_BASE_BASIC_VARIANT__
@@ -42,14 +57,39 @@ enum variant_flag_t : uint16 {
 };
 
 /**
-    |   E  |   M    |   T    |    X   | naming by group        |
-    | enum | member | traits | int128 |                        |
-    | --   | --     | --     | --     | --                     |
-    |   v  |   v    |   v    |        | VARIANT_XGROUP_EMT     |
-    |   v  |        |        |        | VARIANT_XGROUP_E       |
-    |   v  |   v    |        |        | VARIANT_XGROUP_EM      |
-    |   v  |   v    |   v    |    v   | VARIANT_XGROUP_EMTX    |
+ * @remarks
+ *          | naming by group     |   E  |   M    |   T    |    X   |
+ *          |                     | enum | member | traits | int128 |
+ *          | --                  | --   | --     | --     | --     |
+ *          | VARIANT_XGROUP_E    |   v  |        |        |        | see EXPAND_VARTYPE_ENUM
+ *          | VARIANT_XGROUP_EM   |   v  |   v    |        |        | see EXPAND_VARTYPE_MEMBER
+ *          | VARIANT_XGROUP_EMT  |   v  |   v    |   v    |        | see EXPAND_VARTYPE_TRAITS
+ *          | VARIANT_XGROUP_EMTX |   v  |   v    |   v    |    v   | only if __SIZEOF_INT128__
+ *
+ *          linux (GCC 9)
+ *              typedef int8_t int8;  // char != int8_t
+ *              -> treat as VARIANT_XGROUP_EMT (make traits)
+ *
+ *          windows (GCC 16, MSVC)
+ *              typedef __int8 int8;  // char == int8
+ *              -> treat as VARIANT_XGROUP_EM (do not make traits)
+ *
+ *          cf.
+ *              byte_t == unsigned char
+ *              -> VARIANT_XGROUP_EM (always do not make traits)
  */
+
+#define VARIANT_XITEM_CHAR(X) X(char, TYPE_CHAR, 6, c, (vt_flag_standalone))
+
+#if defined(_WIN32) || defined(_WIN64) || defined(__MINGW32__) || defined(__MINGW64__)
+// windows GCC 16, MSVC
+#define VARIANT_XGROUP_EMT_CHAR(X)
+#define VARIANT_XGROUP_EM_CHAR(X) VARIANT_XITEM_CHAR(X)
+#else
+// linux GCC 9
+#define VARIANT_XGROUP_EMT_CHAR(X) VARIANT_XITEM_CHAR(X)
+#define VARIANT_XGROUP_EM_CHAR(X)
+#endif
 
 // assign enum_number 1..255
 #define VARIANT_XGROUP_EMT(X)                                                                                    \
@@ -57,6 +97,7 @@ enum variant_flag_t : uint16 {
     X(char*, TYPE_STRING, 2, str, (vt_flag_standalone | vt_flag_composite | vt_flag_string | vt_flag_free))      \
     X(wchar_t*, TYPE_WSTRING, 4, wstr, (vt_flag_standalone | vt_flag_composite | vt_flag_string | vt_flag_free)) \
     X(byte_t*, TYPE_BSTRING, 5, bstr, (vt_flag_composite | vt_flag_binary | vt_flag_free))                       \
+    VARIANT_XGROUP_EMT_CHAR(X)                                                                                   \
     X(wchar_t, TYPE_WCHAR, 8, wc, (vt_flag_standalone))                                                          \
     X(bool, TYPE_BOOL, 16, b, (vt_flag_standalone))                                                              \
     X(int8, TYPE_INT8, 17, i8, (vt_flag_standalone | vt_flag_int))                                               \
@@ -70,8 +111,8 @@ enum variant_flag_t : uint16 {
     X(float, TYPE_FLOAT, 25, f, (vt_flag_standalone | vt_flag_float))                                            \
     X(double, TYPE_DOUBLE, 26, d, (vt_flag_standalone | vt_flag_float))
 #define VARIANT_XGROUP_E(X) X(char*, TYPE_NSTRING, 3, str, (vt_flag_composite | vt_flag_string))
-#define VARIANT_XGROUP_EM(X)                       \
-    X(char, TYPE_CHAR, 6, c, (vt_flag_standalone)) \
+#define VARIANT_XGROUP_EM(X)  \
+    VARIANT_XGROUP_EM_CHAR(X) \
     X(byte_t, TYPE_BYTE, 7, uc, (vt_flag_standalone))
 #define VARIANT_XGROUP_EMTX(X)                                           \
     X(int128, TYPE_INT128, 31, i128, (vt_flag_standalone | vt_flag_int)) \
