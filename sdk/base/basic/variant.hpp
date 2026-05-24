@@ -53,7 +53,7 @@ enum variant_flag_t : uint16 {
     vt_flag_user_type = 1 << 15,                                // attribute      : user-defined
     vt_mask_standalone = vt_flag_support | vt_flag_standalone,  // mask           : standalone
     vt_mask_composite = vt_flag_support | vt_flag_composite,    // mask           : composite
-    vt_mask_attr = (uint16)0b1111110000000000,                  // mask           : excluding characteristics
+    vt_mask_attr = (uint16)0b1111110000000000,                  // mask           : excluding characteristics, only for variant_flag_t
 };
 
 /**
@@ -200,7 +200,11 @@ enum vartype_t {
     TYPE_USER = 0x10000,     //
 };
 
-enum variant_control_t {
+/**
+ * variant_flag_t    : characteristic, behavioral, attributes
+ * variant_control_t : operational
+ */
+enum variant_control_t : uint32 {
     variant_trunc = (1 << 16),       // truncate
     variant_convendian = (1 << 17),  // endian conversion
 };

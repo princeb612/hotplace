@@ -22,7 +22,6 @@ namespace hotplace {
 // #define bn_intuitive 1
 // #define base base2p32
 //
-static const uint64 base2p32 = 0x100000000;  // intuitive 2^32
 // static const uint32 base1e9 = 1000000000;    // printf-friendly (setw(9) << limb)
 
 bignumber::bignumber() { set(0); }
@@ -36,28 +35,6 @@ bignumber::bignumber(bignumber&& other) : _sign(1) {
     std::swap(_v, other._v);
     std::swap(_sign, other._sign);
 }
-
-bignumber::bignumber(int8 value) { set(value); }
-
-bignumber::bignumber(uint8 value) { setu(value); }
-
-bignumber::bignumber(int16 value) { set(value); }
-
-bignumber::bignumber(uint16 value) { setu(value); }
-
-bignumber::bignumber(int32 value) { set(value); }
-
-bignumber::bignumber(uint32 value) { setu(value); }
-
-bignumber::bignumber(int64 value) { set(value); }
-
-bignumber::bignumber(uint64 value) { setu(value); }
-
-#ifdef __SIZEOF_INT128__
-bignumber::bignumber(int128 value) { set(value); }
-
-bignumber::bignumber(uint128 value) { setu(value); }
-#endif
 
 bignumber::bignumber(const variant_t& vt) { set(vt); }
 
@@ -80,28 +57,6 @@ bignumber& bignumber::operator=(bignumber&& other) {
     std::swap(_sign, other._sign);
     return *this;
 }
-
-bignumber& bignumber::operator=(int8 value) { return set(value); }
-
-bignumber& bignumber::operator=(uint8 value) { return setu(value); }
-
-bignumber& bignumber::operator=(int16 value) { return set(value); }
-
-bignumber& bignumber::operator=(uint16 value) { return setu(value); }
-
-bignumber& bignumber::operator=(int32 value) { return set(value); }
-
-bignumber& bignumber::operator=(uint32 value) { return setu(value); }
-
-bignumber& bignumber::operator=(int64 value) { return set(value); }
-
-bignumber& bignumber::operator=(uint64 value) { return setu(value); }
-
-#ifdef __SIZEOF_INT128__
-bignumber& bignumber::operator=(int128 value) { return set(value); }
-
-bignumber& bignumber::operator=(uint128 value) { return setu(value); }
-#endif
 
 bignumber& bignumber::operator=(const variant_t& vt) { return set(vt); }
 
@@ -181,45 +136,6 @@ bignumber bignumber::operator--(int) {
     bignumber res(*this);
     res -= 1;
     return res;
-}
-
-#ifdef __SIZEOF_INT128__
-bignumber& bignumber::set(int128 value)
-#else
-bignumber& bignumber::set(int64 value)
-#endif
-{
-    _v.clear();
-    if (value >= 0) {
-        _sign = 1;
-    } else {
-        _sign = -1;
-        value = -value;
-    }
-    while (value) {
-        _v.push_back(value % base2p32);
-        value /= base2p32;
-    }
-    if (_v.empty()) {
-        _sign = 1;
-    }
-    return *this;
-}
-
-#ifdef __SIZEOF_INT128__
-bignumber& bignumber::setu(uint128 value)
-#else
-bignumber& bignumber::setu(uint64 value)
-#endif
-{
-    _sign = 1;
-    _v.clear();
-    while (value) {
-        _v.push_back(value % base2p32);
-        value /= base2p32;
-    }
-    trim();
-    return *this;
 }
 
 bignumber& bignumber::set(const variant_t& vt) {
@@ -512,7 +428,7 @@ bignumber bignumber::div(const bignumber& lhs, const bignumber& rhs) {
 bignumber bignumber::mod(const bignumber& lhs, const bignumber& rhs) { return lhs - (lhs / rhs) * rhs; }
 
 std::pair<bignumber, bignumber> bignumber::divide(const bignumber& lhs, const bignumber& rhs) {
-    std::pair<bignumber, bignumber> res = {{{0}}, {{0}}};
+    std::pair<bignumber, bignumber> res = std::make_pair(bignumber(0), bignumber(0));  // {{{0}}, {{0}}};
     bignumber quotient;
     bignumber remainder;
 
@@ -521,9 +437,9 @@ std::pair<bignumber, bignumber> bignumber::divide(const bignumber& lhs, const bi
     } else if (abscmp(rhs, 1) == 0) {
         quotient = lhs;
         quotient._sign = lhs._sign * rhs._sign;
-        res = {quotient, {{0}}};
+        res = std::make_pair(quotient, bignumber(0));  // {quotient, {{0}}};
     } else if (abscmp(lhs, rhs) < 0) {
-        res = {{{0}}, lhs};
+        res = std::make_pair(bignumber(0), lhs);  // {{{0}}, lhs};
     } else {
         auto a = lhs;
         auto b = rhs;

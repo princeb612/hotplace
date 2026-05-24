@@ -90,23 +90,18 @@ namespace hotplace {
  *          }
  */
 class bignumber {
+    static constexpr uint64 base2p32 = 0x100000000;  // intuitive 2^32
+
    public:
     bignumber();
     bignumber(const bignumber& other);
     bignumber(bignumber&& other);
 
-    bignumber(int8 value);
-    bignumber(uint8 value);
-    bignumber(int16 value);
-    bignumber(uint16 value);
-    bignumber(int32 value);
-    bignumber(uint32 value);
-    bignumber(int64 value);
-    bignumber(uint64 value);
-#ifdef __SIZEOF_INT128__
-    bignumber(int128 value);
-    bignumber(uint128 value);
-#endif
+    template <typename T, typename custom::is_pure_integral_t<T>* = nullptr>
+    bignumber(T value) {
+        set(value);
+    }
+
     bignumber(const variant_t& vt);
     /**
      * @brief   big-endian byte order stream
@@ -131,20 +126,54 @@ class bignumber {
     bignumber(const std::string& value);
     ~bignumber();
 
+    template <typename T, typename custom::is_pure_signed_integral<T>* = nullptr>
+    bignumber& set(T value) {
+        _v.clear();
+
+        using calc_type = typename custom::bn_underlying_type<T>::type;
+
+        calc_type target_value = static_cast<calc_type>(value);
+
+        if (target_value >= 0) {
+            _sign = 1;
+        } else {
+            _sign = -1;
+            target_value = -target_value;
+        }
+
+        while (target_value) {
+            _v.push_back(target_value % base2p32);
+            target_value /= base2p32;
+        }
+
+        if (_v.empty()) {
+            _sign = 1;
+        }
+
+        return *this;
+    }
+    template <typename T, typename custom::is_pure_unsigned_integral<T>* = nullptr>
+    bignumber& set(T value) {
+        _sign = 1;
+        _v.clear();
+        while (value) {
+            _v.push_back(value % base2p32);
+            value /= base2p32;
+        }
+        trim();
+
+        return *this;
+    }
+
     bignumber& operator=(const bignumber& other);
     bignumber& operator=(bignumber&& other);
-    bignumber& operator=(int8 value);
-    bignumber& operator=(uint8 value);
-    bignumber& operator=(int16 value);
-    bignumber& operator=(uint16 value);
-    bignumber& operator=(int32 value);
-    bignumber& operator=(uint32 value);
-    bignumber& operator=(int64 value);
-    bignumber& operator=(uint64 value);
-#ifdef __SIZEOF_INT128__
-    bignumber& operator=(int128 value);
-    bignumber& operator=(uint128 value);
-#endif
+
+    template <typename T, typename custom::is_pure_integral_t<T>* = nullptr>
+    bignumber& operator=(T value) {
+        set(value);
+        return *this;
+    }
+
     bignumber& operator=(const variant_t& vt);
     bignumber& operator=(const binary_t& base16hexstream);
     bignumber& operator=(const char* value);
@@ -244,13 +273,13 @@ class bignumber {
     bignumber operator++(int);
     bignumber operator--(int);
 
-#ifdef __SIZEOF_INT128__
-    bignumber& set(int128 value);
-    bignumber& setu(uint128 value);
-#else
-    bignumber& set(int64 value);
-    bignumber& setu(uint64 value);
-#endif
+    // #ifdef __SIZEOF_INT128__
+    //     bignumber& set(int128 value);
+    //     bignumber& setu(uint128 value);
+    // #else
+    //     bignumber& set(int64 value);
+    //     bignumber& setu(uint64 value);
+    // #endif
     bignumber& set(const variant_t& vt);
     bignumber& set(const byte_t* p, size_t n);
     bignumber& sethex(const binary_t& base16hexstream);

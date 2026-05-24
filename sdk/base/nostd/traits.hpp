@@ -31,6 +31,8 @@ namespace hotplace {
 
 namespace custom {
 
+// clang-format off
+
 /**
  * @brief   custom type traits
  * @refer   Gemini
@@ -41,160 +43,158 @@ namespace custom {
  *          false  UBUNTU 20  GCC 9.4.0
  *          true   MINGW64    GCC 15.2.0
  */
+template <typename T> struct is_signed : std::is_signed<T> {};
+template <typename T> struct is_unsigned : std::is_unsigned<T> {};
+
+template <> struct is_signed<int8> : std::true_type {};
+template <> struct is_signed<uint8> : std::false_type {};
+template <> struct is_unsigned<int8> : std::false_type {};
+template <> struct is_unsigned<uint8> : std::true_type {};
+template <> struct is_signed<int16> : std::true_type {};
+template <> struct is_signed<uint16> : std::false_type {};
+template <> struct is_unsigned<int16> : std::false_type {};
+template <> struct is_unsigned<uint16> : std::true_type {};
+template <> struct is_signed<int32> : std::true_type {};
+template <> struct is_signed<uint32> : std::false_type {};
+template <> struct is_unsigned<int32> : std::false_type {};
+template <> struct is_unsigned<uint32> : std::true_type {};
+template <> struct is_signed<int64> : std::true_type {};
+template <> struct is_signed<uint64> : std::false_type {};
+template <> struct is_unsigned<int64> : std::false_type {};
+template <> struct is_unsigned<uint64> : std::true_type {};
+#ifdef __SIZEOF_INT128__
+template <> struct is_signed<__int128> : std::true_type {};
+template <> struct is_signed<unsigned __int128> : std::false_type {};
+template <> struct is_unsigned<__int128> : std::false_type {};
+template <> struct is_unsigned<unsigned __int128> : std::true_type {};
+#endif
+
+// clang-format on
+
+namespace implementation {
+
+// integral, enum
+template <typename T, bool is_enum_v = std::is_enum<T>::value>
+struct is_integral {
+    static const bool value = std::is_integral<T>::value;
+    static const bool is_signed = std::is_signed<T>::value;
+};
+
+// if enum, determine by tracking the internal integer type
 template <typename T>
-struct is_signed : std::is_signed<T> {};
+struct is_integral<T, true> {
+    using underlying = typename std::underlying_type<T>::type;
+    static const bool value = true;
+    static const bool is_signed = std::is_signed<underlying>::value;
+};
+
+}  // namespace implementation
+
 template <typename T>
-struct is_unsigned : std::is_unsigned<T> {};
+struct is_integral {
+    using raw_t = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
+    static const bool value = implementation::is_integral<raw_t>::value;
+    static const bool is_signed = implementation::is_integral<raw_t>::is_signed;
+};
 
 template <>
-struct is_signed<int8> : std::true_type {};
+struct is_integral<int8> {
+    static const bool value = true;
+    static const bool is_signed = true;
+};
 template <>
-struct is_signed<uint8> : std::false_type {};
+struct is_integral<uint8> {
+    static const bool value = true;
+    static const bool is_signed = false;
+};
 template <>
-struct is_unsigned<int8> : std::false_type {};
+struct is_integral<int16> {
+    static const bool value = true;
+    static const bool is_signed = true;
+};
 template <>
-struct is_unsigned<uint8> : std::true_type {};
+struct is_integral<uint16> {
+    static const bool value = true;
+    static const bool is_signed = false;
+};
 template <>
-struct is_signed<int16> : std::true_type {};
+struct is_integral<int32> {
+    static const bool value = true;
+    static const bool is_signed = true;
+};
 template <>
-struct is_signed<uint16> : std::false_type {};
+struct is_integral<uint32> {
+    static const bool value = true;
+    static const bool is_signed = false;
+};
 template <>
-struct is_unsigned<int16> : std::false_type {};
+struct is_integral<int64> {
+    static const bool value = true;
+    static const bool is_signed = true;
+};
 template <>
-struct is_unsigned<uint16> : std::true_type {};
-template <>
-struct is_signed<int32> : std::true_type {};
-template <>
-struct is_signed<uint32> : std::false_type {};
-template <>
-struct is_unsigned<int32> : std::false_type {};
-template <>
-struct is_unsigned<uint32> : std::true_type {};
-template <>
-struct is_signed<int64> : std::true_type {};
-template <>
-struct is_signed<uint64> : std::false_type {};
-template <>
-struct is_unsigned<int64> : std::false_type {};
-template <>
-struct is_unsigned<uint64> : std::true_type {};
+struct is_integral<uint64> {
+    static const bool value = true;
+    static const bool is_signed = false;
+};
+
 #ifdef __SIZEOF_INT128__
 template <>
-struct is_signed<int128> : std::true_type {};
+struct is_integral<__int128> {
+    static const bool value = true;
+    static const bool is_signed = true;
+};
 template <>
-struct is_signed<uint128> : std::false_type {};
-template <>
-struct is_unsigned<int128> : std::false_type {};
-template <>
-struct is_unsigned<uint128> : std::true_type {};
+struct is_integral<unsigned __int128> {
+    static const bool value = true;
+    static const bool is_signed = false;
+};
 #endif
 
 template <typename T>
-struct is_integral : std::is_integral<T> {};
+struct is_pure_integral {
+   private:
+    // remove cv-qualifier(const, volatile), reference
+    using raw_type = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 
-template <>
-struct is_integral<int8> : std::true_type {};
-template <>
-struct is_integral<uint8> : std::true_type {};
-template <>
-struct is_integral<int16> : std::true_type {};
-template <>
-struct is_integral<uint16> : std::true_type {};
-template <>
-struct is_integral<int32> : std::true_type {};
-template <>
-struct is_integral<uint32> : std::true_type {};
-template <>
-struct is_integral<int64> : std::true_type {};
-template <>
-struct is_integral<uint64> : std::true_type {};
+   public:
+    static const bool value = is_integral<raw_type>::value && !std::is_pointer<typename std::remove_reference<T>::type>::value && !std::is_same<raw_type, bool>::value &&
+                              !std::is_same<raw_type, wchar_t>::value;
+};
+
+// clang-format off
+
+template <typename T> using is_pure_integral_t = typename std::enable_if<is_pure_integral<T>::value>::type;
+template <typename T> using is_pure_signed_integral = typename std::enable_if<is_pure_integral<T>::value && is_integral<T>::is_signed>::type;
+template <typename T> using is_pure_unsigned_integral = typename std::enable_if<is_pure_integral<T>::value && !is_integral<T>::is_signed>::type;
+
+template <typename T> struct make_unsigned : std::make_unsigned<T> {};
+template <> struct make_unsigned<int8> { using type = uint8; };
+template <> struct make_unsigned<uint8> { using type = uint8; };
+template <> struct make_unsigned<int16> { using type = uint16; };
+template <> struct make_unsigned<uint16> { using type = uint16; };
+template <> struct make_unsigned<int32> { using type = uint32; };
+template <> struct make_unsigned<uint32> { using type = uint32; };
+template <> struct make_unsigned<int64> { using type = uint64; };
+template <> struct make_unsigned<uint64> { using type = uint64; };
 #ifdef __SIZEOF_INT128__
-template <>
-struct is_integral<int128> : std::true_type {};
-template <>
-struct is_integral<uint128> : std::true_type {};
+template <> struct make_unsigned<int128> { using type = uint128; };
+template <> struct make_unsigned<uint128> { using type = uint128; };
 #endif
 
-template <typename T, bool enum_type>
-struct integral_type {
-    using type = T;
-};
-
-template <typename T>
-struct integral_type<T, true> {
-    using type = typename std::underlying_type<T>::type;
-};
-
-template <typename T>
-struct make_unsigned : std::make_unsigned<T> {};
-
-template <>
-struct make_unsigned<int8> {
-    using type = uint8;
-};
-template <>
-struct make_unsigned<uint8> {
-    using type = uint8;
-};
-template <>
-struct make_unsigned<int16> {
-    using type = uint16;
-};
-template <>
-struct make_unsigned<uint16> {
-    using type = uint16;
-};
-template <>
-struct make_unsigned<int32> {
-    using type = uint32;
-};
-template <>
-struct make_unsigned<uint32> {
-    using type = uint32;
-};
-template <>
-struct make_unsigned<int64> {
-    using type = uint64;
-};
-template <>
-struct make_unsigned<uint64> {
-    using type = uint64;
-};
+template <size_t size> struct half_type_traits;
+template <> struct half_type_traits<2> { using type = uint8; };
+template <> struct half_type_traits<4> { using type = uint16; };
+template <> struct half_type_traits<8> { using type = uint32; };
 #ifdef __SIZEOF_INT128__
-template <>
-struct make_unsigned<int128> {
-    using type = uint128;
-};
-template <>
-struct make_unsigned<uint128> {
-    using type = uint128;
-};
+template <> struct half_type_traits<16> { using type = uint64; };
 #endif
 
-template <size_t size>
-struct half_type_traits;
-
-template <>
-struct half_type_traits<2> {
-    using type = uint8;
-};
-template <>
-struct half_type_traits<4> {
-    using type = uint16;
-};
-template <>
-struct half_type_traits<8> {
-    using type = uint32;
-};
-#ifdef __SIZEOF_INT128__
-template <>
-struct half_type_traits<16> {
-    using type = uint64;
-};
-#endif
+// clang-format on
 
 /**
  * @brief   format specifier
+ * @sa      printf_traits
  */
 template <typename BT, typename T>
 struct format_specifier_traits {
@@ -361,14 +361,27 @@ struct format_specifier_traits<wchar_t, const wchar_t*> {
     static constexpr const wchar_t* spec = L"%s";
 };
 
+template <typename T, bool enum_type>
+struct integral_type {
+    using type = T;
+};
+
+template <typename T>
+struct integral_type<T, true> {
+    using type = typename std::underlying_type<T>::type;
+};
+
+/**
+ * @breif   printf_traits
+ * @sa      basic_stream, ansi_string, wide_string
+ */
 template <typename BT, typename T, typename enable_t = void>
 struct printf_traits;
 
 template <typename BT, typename T>
-struct printf_traits<BT, T,
-                     typename std::enable_if<custom::is_integral<typename std::decay<T>::type>::value || std::is_enum<typename std::decay<T>::type>::value>::type> {
+struct printf_traits<BT, T, typename std::enable_if<is_integral<typename std::decay<T>::type>::value || std::is_enum<typename std::decay<T>::type>::value>::type> {
     using decay_type = typename std::decay<T>::type;
-    using integral_type = typename custom::integral_type<decay_type, std::is_enum<decay_type>::value>::type;
+    using integral_type = typename integral_type<decay_type, std::is_enum<decay_type>::value>::type;
 
     static constexpr size_t N = sizeof(integral_type);
     static constexpr bool is_signed = std::is_signed<integral_type>::value;
@@ -409,7 +422,7 @@ struct printf_traits<BT, T,
             typename std::conditional<N == 2, unsigned int, typename std::conditional<N == 4, unsigned int, unsigned long long>::type>::type>::type>::type;
 #endif
 
-    static constexpr const BT* spec() { return custom::format_specifier_traits<BT, final_type>::spec; }
+    static constexpr const BT* spec() { return format_specifier_traits<BT, final_type>::spec; }
 };
 
 template <typename BT, typename T>
@@ -419,12 +432,13 @@ struct printf_traits<BT, T, typename std::enable_if<std::is_floating_point<typen
     using final_type = decay_type;
     using cast_type = typename std::conditional<std::is_same<decay_type, long double>::value, long double, double>::type;
 
-    static constexpr const BT* spec() { return custom::format_specifier_traits<BT, final_type>::spec; }
+    static constexpr const BT* spec() { return format_specifier_traits<BT, final_type>::spec; }
 };
 
 /**
  * @brief   encoder stream
  * @refer   GPT
+ * @sa      base16, base64
  * @remarks
  *          // std::string, binary_t, ...
  *          size_t size = 0;
@@ -483,6 +497,9 @@ struct remove_ptr_const {
     using type = typename std::decay<T>::type;
 };
 
+/**
+ * @sa  variant
+ */
 // is_pointer const char*, const char*&
 template <typename T>
 struct remove_ptr_const<T, typename std::enable_if<std::is_pointer<typename std::remove_reference<T>::type>::value>::type> {
@@ -498,6 +515,19 @@ struct remove_ptr_const<T, typename std::enable_if<std::is_pointer<typename std:
 
 template <typename T>
 using remove_ptr_const_t = typename remove_ptr_const<T>::type;
+
+/**
+ * @sa  bignumber
+ */
+template <typename T, bool is_enum_v = std::is_enum<T>::value>
+struct bn_underlying_type {
+    using type = T;
+};
+
+template <typename T>
+struct bn_underlying_type<T, true> {
+    using type = typename std::underlying_type<T>::type;
+};
 
 }  // namespace custom
 
