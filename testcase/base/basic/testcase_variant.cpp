@@ -47,14 +47,8 @@ void test_variant() {
     auto neg = bn_neg.t_bntoi<int32>();
     _test_case.assert(neg == -1, __FUNCTION__, "negative");
 
-    int count_throw = 0;
-    try {
-        auto neg = bn_neg.t_bntoi<uint32>();
-        UNREFERENCED_PARAMETER(neg);
-    } catch (...) {
-        ++count_throw;
-    }
-    _test_case.assert(1 == count_throw, __FUNCTION__, "exception unsigned cast");
+    neg = bn_neg.t_bntoi<uint32>();
+    _test_case.assert(neg == -1, __FUNCTION__, "exception unsigned cast");
 }
 
 void testcase_variant() { test_variant(); }

@@ -329,7 +329,7 @@ T t_vtoi(const variant_t& vt) {
 
     if ((i >= 0) && (vt_flag_negative & vt.flag)) {
         i += 1;
-        i = t_change_sign<T>(i);
+        i = -i;
     }
 
     return i;
@@ -354,9 +354,9 @@ class variant {
         set(std::forward<T>(value));
     };
     // set_new
-    template <typename T,                                                                                                                   //
-              typename std::enable_if<((variant_traits<custom::remove_ptr_const_t<T>>::flags & vt_mask_composite) == vt_mask_composite) &&  //
-                                          ((variant_traits<custom::remove_ptr_const_t<T>>::flags & vt_flag_free) == vt_flag_free),
+    template <typename T,                                                                                                                      //
+              typename std::enable_if<((variant_traits<custom::vt_remove_ptr_const_t<T>>::flags & vt_mask_composite) == vt_mask_composite) &&  //
+                                          ((variant_traits<custom::vt_remove_ptr_const_t<T>>::flags & vt_flag_free) == vt_flag_free),
                                       int>::type = 0>
     variant(T&& value, size_t size) {
         set_new(std::forward<T>(value), size);
@@ -494,16 +494,16 @@ class variant {
      * variant& set(char*, size_t)
      * setter assign only
      */
-    template <typename T,                                                                                                               //
-              typename std::enable_if<(variant_traits<custom::remove_ptr_const_t<T>>::flags & vt_mask_composite) == vt_mask_composite,  //
+    template <typename T,                                                                                                                  //
+              typename std::enable_if<(variant_traits<custom::vt_remove_ptr_const_t<T>>::flags & vt_mask_composite) == vt_mask_composite,  //
                                       int>::type = 0>
     variant& set(T&& value, size_t size) {
-        using traits = variant_traits<custom::remove_ptr_const_t<T>>;
+        using traits = variant_traits<custom::vt_remove_ptr_const_t<T>>;
 
         _vt.type = traits::type;
         _vt.size = size;
         // prevent casting errors
-        auto non_const_value = const_cast<typename custom::remove_ptr_const_t<T>>(value);
+        auto non_const_value = const_cast<typename custom::vt_remove_ptr_const_t<T>>(value);
         _vt.data.*(traits::member) = reinterpret_cast<typename traits::cast_type>(non_const_value);
         _vt.flag = vt_mask_attr & traits::flags;
 
@@ -512,14 +512,14 @@ class variant {
     /**
      * variant& set_new(char*, size_t)
      */
-    template <typename T,                                                                                                                   //
-              typename std::enable_if<((variant_traits<custom::remove_ptr_const_t<T>>::flags & vt_mask_composite) == vt_mask_composite) &&  //
-                                          ((variant_traits<custom::remove_ptr_const_t<T>>::flags & vt_flag_free) == vt_flag_free),
+    template <typename T,                                                                                                                      //
+              typename std::enable_if<((variant_traits<custom::vt_remove_ptr_const_t<T>>::flags & vt_mask_composite) == vt_mask_composite) &&  //
+                                          ((variant_traits<custom::vt_remove_ptr_const_t<T>>::flags & vt_flag_free) == vt_flag_free),
                                       int>::type = 0>
     variant& set_new(T&& value, size_t size) {
         clear();
 
-        using traits = variant_traits<custom::remove_ptr_const_t<T>>;
+        using traits = variant_traits<custom::vt_remove_ptr_const_t<T>>;
 
         _vt.type = traits::type;
         _vt.size = 0;

@@ -18,23 +18,6 @@
 
 namespace hotplace {
 
-namespace implementation {
-template <typename TYPE>
-TYPE t_change_sign(TYPE i, std::true_type) {
-    return -i;
-}
-template <typename TYPE>
-TYPE t_change_sign(TYPE i, std::false_type) {
-    throw exception(miscast_unsigned);
-    return i;
-}
-}  // namespace implementation
-
-template <typename TYPE>
-TYPE t_change_sign(TYPE i) {
-    return implementation::t_change_sign(i, typename custom::is_signed<TYPE>::type());
-}
-
 /**
  * @brief   atoi (int128)
  * @sample

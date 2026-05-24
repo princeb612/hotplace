@@ -131,7 +131,6 @@ class bignumber {
         _v.clear();
 
         using calc_type = typename custom::bn_underlying_type<T>::type;
-
         calc_type target_value = static_cast<calc_type>(value);
 
         if (target_value >= 0) {
@@ -141,9 +140,11 @@ class bignumber {
             target_value = -target_value;
         }
 
-        while (target_value) {
-            _v.push_back(target_value % base2p32);
-            target_value /= base2p32;
+        uint64 temp = static_cast<uint64>(target_value);
+
+        while (temp) {
+            _v.push_back(temp % base2p32);
+            temp /= base2p32;
         }
 
         if (_v.empty()) {
@@ -405,7 +406,7 @@ class bignumber {
             }
         }
         if (bn < 0) {
-            value = t_change_sign<T>(value);  // value = -value
+            value = -value;  // value = -value
         }
         return value;
     }

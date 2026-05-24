@@ -43,7 +43,7 @@ class t_cmdarg_t {
     template <typename FN>
     t_cmdarg_t(std::string token, std::string desc, FN&& f);
     t_cmdarg_t(const t_cmdarg_t& other) = delete;
-    t_cmdarg_t(t_cmdarg_t&& other) noexcept = default;
+    t_cmdarg_t(t_cmdarg_t&& other) = default;  // noexcept = default; GCC 4.8.5 bug
     ~t_cmdarg_t() = default;
 
     /*
@@ -74,7 +74,7 @@ class t_cmdarg_t {
     uint32 flag() const;
 
     t_cmdarg_t& operator=(const t_cmdarg_t& other) = delete;
-    t_cmdarg_t& operator=(t_cmdarg_t&& other) noexcept = default;
+    t_cmdarg_t& operator=(t_cmdarg_t&& other) = default;  // noexcept = default; GCC 4.8.5 bug
 
    protected:
     return_t bind(T& source, const char* param);

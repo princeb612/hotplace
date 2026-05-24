@@ -493,7 +493,7 @@ struct encoder_stream_traits<binary_t> {
 };
 
 template <typename T, typename enable_t = void>
-struct remove_ptr_const {
+struct vt_remove_ptr_const {
     using type = typename std::decay<T>::type;
 };
 
@@ -502,7 +502,7 @@ struct remove_ptr_const {
  */
 // is_pointer const char*, const char*&
 template <typename T>
-struct remove_ptr_const<T, typename std::enable_if<std::is_pointer<typename std::remove_reference<T>::type>::value>::type> {
+struct vt_remove_ptr_const<T, typename std::enable_if<std::is_pointer<typename std::remove_reference<T>::type>::value>::type> {
     // const char*& -> const char*
     using unreferenced_type = typename std::remove_reference<T>::type;
     // const char* -> const char
@@ -514,7 +514,7 @@ struct remove_ptr_const<T, typename std::enable_if<std::is_pointer<typename std:
 };
 
 template <typename T>
-using remove_ptr_const_t = typename remove_ptr_const<T>::type;
+using vt_remove_ptr_const_t = typename vt_remove_ptr_const<T>::type;
 
 /**
  * @sa  bignumber
