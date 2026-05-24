@@ -89,10 +89,10 @@ class encoder_stream {
     /**
      * operator <<
      * stream implementation
-     * is_integral_traits
+     * is_integral
      * !bool
      */
-    template <typename T, typename std::enable_if<custom::is_integral_traits<T>::value && !std::is_same<T, bool>::value, int>::type = 0>
+    template <typename T, typename std::enable_if<custom::is_integral<T>::value && !std::is_same<T, bool>::value, int>::type = 0>
     encoder_stream& operator<<(T value) {
         if (is_bigendian()) {
             auto final_value = convert_endian(value);
@@ -106,7 +106,7 @@ class encoder_stream {
      * operator <<
      * stream implementation
      * bool
-     * !is_integral_traits
+     * !is_integral
      */
     encoder_stream& operator<<(bool value);
     encoder_stream& operator<<(const char* value);

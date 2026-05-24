@@ -35,7 +35,7 @@ struct t_my_narrow_cast_t {
             _logger->writeln("case.1");
             throw exception(miscast_narrow);
         }
-        if (typename custom::is_signed_traits<SOURCE>::type() != typename custom::is_signed_traits<TYPE>::type()) {
+        if (typename custom::is_signed<SOURCE>::type() != typename custom::is_signed<TYPE>::type()) {
             if ((value < 0) != (converted < 0)) {
                 _logger->writeln("case.2");
                 throw exception(miscast_narrow);

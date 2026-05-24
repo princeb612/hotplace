@@ -15,6 +15,7 @@
 #include <stdarg.h>
 
 #include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/nostd/traits.hpp>
 #include <hotplace/sdk/base/stream/types.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <vector>
@@ -89,6 +90,8 @@ class valist {
     valist(const valist& object);
     ~valist();
 
+    valist& operator=(const valist& object);
+
     /**
      * @brief assign
      * @param const valist& object [in]
@@ -96,22 +99,28 @@ class valist {
      */
     valist& assign(const valist& object);
     valist& assign(const std::vector<variant_t>& args);
+
     /**
-     * @brief add
+     * @brief   delegation
      */
-    valist& operator<<(bool value);
-    valist& operator<<(char value);
-    valist& operator<<(unsigned char value);
-    valist& operator<<(short value);
-    valist& operator<<(unsigned short value);
-    valist& operator<<(int value);
-    valist& operator<<(unsigned int value);
-    valist& operator<<(long value);
-    valist& operator<<(unsigned long value);
-    valist& operator<<(long long value);
-    valist& operator<<(unsigned long long value);
-    valist& operator<<(float value);
-    valist& operator<<(double value);
+    template <typename T>
+    valist& add(T&& value) {
+        return *this << std::forward<T>(value);
+    }
+    /**
+     * @brief   stream implementation
+     */
+    template <typename T,                                                                          //
+              typename std::enable_if<custom::is_integral<typename std::decay<T>::type>::value ||  //
+                                          std::is_enum<typename std::decay<T>::type>::value ||     //
+                                          std::is_floating_point<typename std::decay<T>::type>::value,
+                                      int>::type = 0>
+    valist& operator<<(T&& value) {
+        variant v(value);
+        insert(std::move(v.get()));
+        return *this;
+    }
+
     valist& operator<<(void* value);
     valist& operator<<(const char* value);
     valist& operator<<(const std::string& value);
@@ -119,7 +128,6 @@ class valist {
     valist& operator<<(const binary_t& value);
     valist& operator<<(const variant_t& v);
     valist& operator<<(variant_t&& v);
-    valist& operator=(const valist& object);
     /**
      * @brief clear
      */

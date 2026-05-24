@@ -11,7 +11,7 @@
  * @note    Unified Type-Safe Variant Implementation (Refactored with Gemini)
  *
  * @details
- *          commented by Gemini
+ *          Gemini mentioned ...
  *
  *          [The Great Refactoring]
  *          - Before: A nightmare of boilerplate. Every single type demanded its own
@@ -385,7 +385,7 @@ const binary_t variant::to_bin(uint32 flags) const {
     return bin;
 }
 
-int variant::to_int() { return t_toi<int>(); }
+int variant::to_int() const { return t_toi<int>(); }
 
 return_t variant::to_binary(binary_t& target, uint32 flags) const {
     return_t ret = errorcode_t::success;

@@ -11,7 +11,7 @@
  * @note    Unified Type-Safe Variant Implementation (Refactored with Gemini)
  *
  * @details
- *          commented by Gemini
+ *          Gemini mentioned ...
  *
  *          [The Great Refactoring]
  *          - Before: A nightmare of boilerplate. Every single type demanded its own
@@ -58,13 +58,14 @@ enum variant_flag_t : uint16 {
 
 /**
  * @remarks
- *          | naming by group     |   E  |   M    |   T    |    X   |
- *          |                     | enum | member | traits | int128 |
- *          | --                  | --   | --     | --     | --     |
- *          | VARIANT_XGROUP_E    |   v  |        |        |        | see EXPAND_VARTYPE_ENUM
- *          | VARIANT_XGROUP_EM   |   v  |   v    |        |        | see EXPAND_VARTYPE_MEMBER
- *          | VARIANT_XGROUP_EMT  |   v  |   v    |   v    |        | see EXPAND_VARTYPE_TRAITS
- *          | VARIANT_XGROUP_EMTX |   v  |   v    |   v    |    v   | only if __SIZEOF_INT128__
+ *          | naming by group     |   E  |   M    |   I    |   T    |    X   |
+ *          |                     | enum | member |integral| traits | int128 |
+ *          | --                  | --   | --     |        | --     | --     |
+ *          | VARIANT_XGROUP_E    |   v  |        |        |        |        | see EXPAND_VARTYPE_ENUM
+ *          | VARIANT_XGROUP_EM   |   v  |   v    |        |        |        | see EXPAND_VARTYPE_MEMBER
+ *          | VARIANT_XGROUP_EMT  |   v  |   v    |        |   v    |        | see EXPAND_VARTYPE_TRAITS
+ *          | VARIANT_XGROUP_EMIT |   v  |   v    |   v    |   v    |        |
+ *          | VARIANT_XGROUP_EMTX |   v  |   v    |        |   v    |    v   | only if __SIZEOF_INT128__
  *
  *          linux (GCC 9)
  *              typedef int8_t int8;  // char != int8_t
@@ -81,6 +82,7 @@ enum variant_flag_t : uint16 {
 
 #define VARIANT_XITEM_CHAR(X) X(char, TYPE_CHAR, 6, c, (vt_flag_standalone))
 
+// limitations of c++ macro substitution and template instantiation timing ...
 #if defined(_WIN32) || defined(_WIN64) || defined(__MINGW32__) || defined(__MINGW64__)
 // windows GCC 16, MSVC
 #define VARIANT_XGROUP_EMT_CHAR(X)
@@ -99,16 +101,17 @@ enum variant_flag_t : uint16 {
     X(byte_t*, TYPE_BSTRING, 5, bstr, (vt_flag_composite | vt_flag_binary | vt_flag_free))                       \
     VARIANT_XGROUP_EMT_CHAR(X)                                                                                   \
     X(wchar_t, TYPE_WCHAR, 8, wc, (vt_flag_standalone))                                                          \
-    X(bool, TYPE_BOOL, 16, b, (vt_flag_standalone))                                                              \
-    X(int8, TYPE_INT8, 17, i8, (vt_flag_standalone | vt_flag_int))                                               \
-    X(uint8, TYPE_UINT8, 18, ui8, (vt_flag_standalone | vt_flag_int))                                            \
-    X(int16, TYPE_INT16, 19, i16, (vt_flag_standalone | vt_flag_int))                                            \
-    X(uint16, TYPE_UINT16, 20, ui16, (vt_flag_standalone | vt_flag_int))                                         \
-    X(int32, TYPE_INT32, 21, i32, (vt_flag_standalone | vt_flag_int))                                            \
-    X(uint32, TYPE_UINT32, 22, ui32, (vt_flag_standalone | vt_flag_int))                                         \
-    X(int64, TYPE_INT64, 23, i64, (vt_flag_standalone | vt_flag_int))                                            \
-    X(uint64, TYPE_UINT64, 24, ui64, (vt_flag_standalone | vt_flag_int))                                         \
-    X(float, TYPE_FLOAT, 25, f, (vt_flag_standalone | vt_flag_float))                                            \
+    X(bool, TYPE_BOOL, 16, b, (vt_flag_standalone))
+#define VARIANT_XGROUP_EMIT(X)                                           \
+    X(int8, TYPE_INT8, 17, i8, (vt_flag_standalone | vt_flag_int))       \
+    X(uint8, TYPE_UINT8, 18, ui8, (vt_flag_standalone | vt_flag_int))    \
+    X(int16, TYPE_INT16, 19, i16, (vt_flag_standalone | vt_flag_int))    \
+    X(uint16, TYPE_UINT16, 20, ui16, (vt_flag_standalone | vt_flag_int)) \
+    X(int32, TYPE_INT32, 21, i32, (vt_flag_standalone | vt_flag_int))    \
+    X(uint32, TYPE_UINT32, 22, ui32, (vt_flag_standalone | vt_flag_int)) \
+    X(int64, TYPE_INT64, 23, i64, (vt_flag_standalone | vt_flag_int))    \
+    X(uint64, TYPE_UINT64, 24, ui64, (vt_flag_standalone | vt_flag_int)) \
+    X(float, TYPE_FLOAT, 25, f, (vt_flag_standalone | vt_flag_float))    \
     X(double, TYPE_DOUBLE, 26, d, (vt_flag_standalone | vt_flag_float))
 #define VARIANT_XGROUP_E(X) X(char*, TYPE_NSTRING, 3, str, (vt_flag_composite | vt_flag_string))
 #define VARIANT_XGROUP_EM(X)  \
@@ -126,7 +129,7 @@ enum vartype_t {
     TYPE_VOID = TYPE_NULL,
 
 #define EXPAND_VARTYPE_ENUM(cpp_type, enum_type, enum_val, union_member, union_flag) enum_type = enum_val,
-    VARIANT_XGROUP_EMT(EXPAND_VARTYPE_ENUM) VARIANT_XGROUP_E(EXPAND_VARTYPE_ENUM) VARIANT_XGROUP_EM(EXPAND_VARTYPE_ENUM)
+    VARIANT_XGROUP_EMT(EXPAND_VARTYPE_ENUM) VARIANT_XGROUP_EMIT(EXPAND_VARTYPE_ENUM) VARIANT_XGROUP_E(EXPAND_VARTYPE_ENUM) VARIANT_XGROUP_EM(EXPAND_VARTYPE_ENUM)
 #if defined __SIZEOF_INT128__
         VARIANT_XGROUP_EMTX(EXPAND_VARTYPE_ENUM)
 #endif
@@ -203,13 +206,14 @@ enum variant_control_t {
 };
 
 union vartype_union {
-#define EXPAND_VARTYPE_UNION(cpp_type, enum_type, enum_val, union_member, union_flag) cpp_type union_member;
-    VARIANT_XGROUP_EMT(EXPAND_VARTYPE_UNION)
-    VARIANT_XGROUP_EM(EXPAND_VARTYPE_UNION)
+#define EXPAND_VARTYPE_MEMBER(cpp_type, enum_type, enum_val, union_member, union_flag) cpp_type union_member;
+    VARIANT_XGROUP_EMT(EXPAND_VARTYPE_MEMBER)
+    VARIANT_XGROUP_EMIT(EXPAND_VARTYPE_MEMBER)
+    VARIANT_XGROUP_EM(EXPAND_VARTYPE_MEMBER)
 #if defined __SIZEOF_INT128__
-    VARIANT_XGROUP_EMTX(EXPAND_VARTYPE_UNION)
+    VARIANT_XGROUP_EMTX(EXPAND_VARTYPE_MEMBER)
 #endif
-#undef EXPAND_VARTYPE_UNION
+#undef EXPAND_VARTYPE_MEMBER
 
     char jb;
     byte_t jbool;
@@ -233,8 +237,8 @@ struct variant_t {
     variant_t& operator=(const variant_t& other);
     variant_t& operator=(variant_t&& other);
 
-    variant_t& reset();  // do not free
-    variant_t& clear();  // free if vt_flag_free is set
+    variant_t& reset();  // shallow copy, do not free
+    variant_t& clear();  // deep copy, free if vt_flag_free is set
 };
 
 template <typename T>
@@ -251,17 +255,81 @@ struct variant_traits {
         static constexpr cpp_type vartype_union::* member = &vartype_union::union_member; \
     };
 VARIANT_XGROUP_EMT(EXPAND_VARTYPE_TAITS)
+VARIANT_XGROUP_EMIT(EXPAND_VARTYPE_TAITS)
 #if defined __SIZEOF_INT128__
 VARIANT_XGROUP_EMTX(EXPAND_VARTYPE_TAITS)
 #endif
 #undef EXPAND_VARTYPE_TAITS
 
-template <typename T>
-struct variant_descriptor {
-    static const vartype_t type;
-    static void assign(vartype_t&, T);
-    static T get(const vartype_t&);
-};
+template <typename target_type, typename source_type>
+typename std::enable_if<std::is_floating_point<source_type>::value, target_type>::type t_extract_and_cast(source_type val) {
+    return t_narrow_cast(std::round(val));
+}
+
+template <typename target_type, typename source_type>
+typename std::enable_if<!std::is_floating_point<source_type>::value, target_type>::type t_extract_and_cast(source_type val) {
+    return t_narrow_cast(val);
+}
+
+template <typename T, typename = typename std::enable_if<custom::is_integral<T>::value>::type>
+T t_vtoi(const variant_t& vt) {
+    T i = 0;
+
+    switch (vt.type) {
+        case TYPE_BOOL:
+            i = vt.data.b ? 1 : 0;
+            break;
+
+#define EXPAND_INTEGRAL_CASE(cpp_type, enum_type, enum_val, union_member, union_flag) \
+    case enum_type:                                                                   \
+        i = t_extract_and_cast<T>(vt.data.union_member);                              \
+        break;
+
+            VARIANT_XGROUP_EMIT(EXPAND_INTEGRAL_CASE)
+#if defined __SIZEOF_INT128__
+            VARIANT_XGROUP_EMTX(EXPAND_INTEGRAL_CASE)
+#endif
+#undef EXPAND_INTEGRAL_CASE
+
+        case TYPE_INT24:
+            i = t_narrow_cast(vt.data.i32);
+            break;
+        case TYPE_UINT24:
+            i = t_narrow_cast(vt.data.ui32);
+            break;
+        case TYPE_INT48:
+            i = t_narrow_cast(vt.data.i64);
+            break;
+        case TYPE_UINT48:
+            i = t_narrow_cast(vt.data.ui64);
+            break;
+
+        case TYPE_STRING:
+        case TYPE_NSTRING:
+            if (vt.data.str && vt.data.str[0] != '\0') {
+                size_t len = vt.size ? vt.size : strlen(vt.data.str);
+                i = t_atoi_n<T>(vt.data.str, len);
+            }
+            break;
+
+        case TYPE_BINARY: {
+            return_t errorcode = success;
+            if (vt.data.bstr && vt.size > 0) {
+                i = t_binary_to_integer<T>(vt.data.bstr, vt.size, errorcode);
+            }
+        } break;
+
+        default:
+            break;
+    }
+
+    if ((i >= 0) && (vt_flag_negative & vt.flag)) {
+        i += 1;
+        i = t_change_sign<T>(i);
+    }
+
+    return i;
+}
 
 class variant {
    public:
@@ -275,7 +343,9 @@ class variant {
     variant& operator=(variant&& other);
 
     // set
-    template <typename T, typename std::enable_if<(variant_traits<typename std::decay<T>::type>::flags & vt_mask_standalone) == vt_mask_standalone, int>::type = 0>
+    template <typename T,                                                                                                                //
+              typename std::enable_if<(variant_traits<typename std::decay<T>::type>::flags & vt_mask_standalone) == vt_mask_standalone,  //
+                                      int>::type = 0>
     variant(T&& value) {
         set(std::forward<T>(value));
     };
@@ -312,12 +382,12 @@ class variant {
     variant& unset_flag(uint16 flag);
 
     /**
-     * @brief   reset
+     * @brief   reset (shallow copy)
      * @remarks do not free
      */
     variant& reset();
     /**
-     * @brief   clear
+     * @brief   clear (deep copy)
      * @remarks free if vt_flag_free is set
      * @example
      *          vt.clear().set_bool(true);
@@ -383,7 +453,7 @@ class variant {
     /**
      * @brief   to integer
      */
-    int to_int();
+    int to_int() const;
     /*
      * @brief   to binary
      * @param   binary_t& target [out]
@@ -402,7 +472,9 @@ class variant {
     /**
      * variant& set(uint32)
      */
-    template <typename T, typename std::enable_if<(variant_traits<typename std::decay<T>::type>::flags & vt_mask_standalone) == vt_mask_standalone, int>::type = 0>
+    template <typename T,                                                                                                                //
+              typename std::enable_if<(variant_traits<typename std::decay<T>::type>::flags & vt_mask_standalone) == vt_mask_standalone,  //
+                                      int>::type = 0>
     variant& set(T&& value) {
         using decay_type = typename std::decay<T>::type;
         using traits = variant_traits<decay_type>;
@@ -418,12 +490,15 @@ class variant {
      * variant& set(char*, size_t)
      * setter assign only
      */
-    template <typename T, typename std::enable_if<(variant_traits<custom::remove_ptr_const_t<T>>::flags & vt_mask_composite) == vt_mask_composite, int>::type = 0>
+    template <typename T,                                                                                                               //
+              typename std::enable_if<(variant_traits<custom::remove_ptr_const_t<T>>::flags & vt_mask_composite) == vt_mask_composite,  //
+                                      int>::type = 0>
     variant& set(T&& value, size_t size) {
         using traits = variant_traits<custom::remove_ptr_const_t<T>>;
 
         _vt.type = traits::type;
         _vt.size = size;
+        // prevent casting errors
         auto non_const_value = const_cast<typename custom::remove_ptr_const_t<T>>(value);
         _vt.data.*(traits::member) = reinterpret_cast<typename traits::cast_type>(non_const_value);
         _vt.flag = vt_mask_attr & traits::flags;
@@ -438,6 +513,8 @@ class variant {
                                           ((variant_traits<custom::remove_ptr_const_t<T>>::flags & vt_flag_free) == vt_flag_free),
                                       int>::type = 0>
     variant& set_new(T&& value, size_t size) {
+        clear();
+
         using traits = variant_traits<custom::remove_ptr_const_t<T>>;
 
         _vt.type = traits::type;
@@ -479,84 +556,9 @@ class variant {
     variant& operator=(const datetime_t& value);
     variant& operator=(const bignumber& value);
 
-    template <typename T, typename = typename std::enable_if<custom::is_integral_traits<T>::value>::type>
+    template <typename T, typename = typename std::enable_if<custom::is_integral<T>::value>::type>
     T t_toi() const {
-        T i = 0;  // i = T();
-
-        switch (_vt.type) {
-            case TYPE_BOOL:
-                i = _vt.data.b ? 1 : 0;
-                break;
-            case TYPE_INT8:
-                i = _vt.data.i8;
-                break;
-            case TYPE_UINT8:
-                i = _vt.data.ui8;
-                break;
-            case TYPE_INT16:
-                i = t_narrow_cast(_vt.data.i16);
-                break;
-            case TYPE_UINT16:
-                i = t_narrow_cast(_vt.data.ui16);
-                break;
-            case TYPE_INT24:
-                i = t_narrow_cast(_vt.data.i32);
-                break;
-            case TYPE_UINT24:
-                i = t_narrow_cast(_vt.data.ui32);
-                break;
-            case TYPE_INT32:
-                i = t_narrow_cast(_vt.data.i32);
-                break;
-            case TYPE_UINT32:
-                i = t_narrow_cast(_vt.data.ui32);
-                break;
-            case TYPE_INT48:
-                i = t_narrow_cast(_vt.data.i64);
-                break;
-            case TYPE_UINT48:
-                i = t_narrow_cast(_vt.data.ui64);
-                break;
-            case TYPE_INT64:
-                i = (T)_vt.data.i64;
-                break;
-            case TYPE_UINT64:
-                i = (T)_vt.data.ui64;
-                break;
-#if defined __SIZEOF_INT128__
-            case TYPE_INT128:
-                i = (T)_vt.data.i128;
-                break;
-            case TYPE_UINT128:
-                i = (T)_vt.data.ui128;
-                break;
-#endif
-            case TYPE_FLOAT:
-                i = t_narrow_cast(std::round(_vt.data.f));
-                break;
-            case TYPE_DOUBLE:
-                i = t_narrow_cast(std::round(_vt.data.d));
-                break;
-            case TYPE_STRING:
-            case TYPE_NSTRING:
-                if (_vt.size) {
-                    i = t_atoi_n<T>(_vt.data.str, _vt.size);
-                } else {
-                    i = t_atoi_n<T>(_vt.data.str, strlen(_vt.data.str));
-                }
-                break;
-            case TYPE_BINARY: {
-                return_t errorcode = success;
-                i = t_binary_to_integer<T>(_vt.data.bstr, _vt.size, errorcode);
-            } break;
-            default:
-                break;
-        }
-        if ((i >= 0) && (vt_flag_negative & _vt.flag)) {
-            i += 1;
-            i = t_change_sign<T>(i);  // i = -i
-        }
-        return i;
+        return t_vtoi<T>(_vt);
     }
 
    protected:

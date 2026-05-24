@@ -184,9 +184,9 @@ class basic_stream : public stream_t {
     /**
      * stream implementation
      */
-    template <typename T,                                                                                 //
-              typename std::enable_if<custom::is_integral_traits<typename std::decay<T>::type>::value ||  //
-                                          std::is_enum<typename std::decay<T>::type>::value ||            //
+    template <typename T,                                                                          //
+              typename std::enable_if<custom::is_integral<typename std::decay<T>::type>::value ||  //
+                                          std::is_enum<typename std::decay<T>::type>::value ||     //
                                           std::is_floating_point<typename std::decay<T>::type>::value,
                                       int>::type = 0>
     basic_stream& operator<<(T value) {

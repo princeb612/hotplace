@@ -32,7 +32,7 @@ TYPE t_change_sign(TYPE i, std::false_type) {
 
 template <typename TYPE>
 TYPE t_change_sign(TYPE i) {
-    return implementation::t_change_sign(i, typename custom::is_signed_traits<TYPE>::type());
+    return implementation::t_change_sign(i, typename custom::is_signed<TYPE>::type());
 }
 
 /**

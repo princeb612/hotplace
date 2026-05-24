@@ -73,9 +73,9 @@ return_t binary_push(binary_t& target, byte_t value);
  *          #endif
  */
 
-template <typename T, typename transformer_t, typename = typename std::enable_if<custom::is_integral_traits<T>::value>::type>
+template <typename T, typename transformer_t, typename = typename std::enable_if<custom::is_integral<T>::value>::type>
 return_t binary_append(binary_t& target, T value, transformer_t func) {
-    using make_unsigned_t = typename custom::make_unsigned_traits<T>::type;
+    using make_unsigned_t = typename custom::make_unsigned<T>::type;
 
     make_unsigned_t unsigned_value = static_cast<make_unsigned_t>(value);
     make_unsigned_t final_value = (func) ? func(unsigned_value) : unsigned_value;
@@ -88,9 +88,9 @@ return_t binary_append(binary_t& target, T value, transformer_t func) {
     return errorcode_t::success;
 }
 
-template <typename T, typename = typename std::enable_if<custom::is_integral_traits<T>::value>::type>
+template <typename T, typename = typename std::enable_if<custom::is_integral<T>::value>::type>
 return_t binary_append(binary_t& target, T value) {
-    using make_unsigned_t = typename custom::make_unsigned_traits<T>::type;
+    using make_unsigned_t = typename custom::make_unsigned<T>::type;
 
     make_unsigned_t final_value = static_cast<make_unsigned_t>(value);
 
@@ -145,9 +145,9 @@ return_t binary_append(binary_t& target, const byte_t* buf, size_t from, size_t 
  *          binary_append2(bin, 8, ui128, hton128); // append
  *          // 00000000 : 01 23 45 67 89 AB CD EF -- -- -- -- -- -- -- -- | .#Eg....
  */
-template <typename T, typename transformer_t, typename = typename std::enable_if<custom::is_integral_traits<T>::value>::type>
+template <typename T, typename transformer_t, typename = typename std::enable_if<custom::is_integral<T>::value>::type>
 return_t binary_append_n(binary_t& target, uint32 bnlen, T value, transformer_t func) {
-    using make_unsigned_t = typename custom::make_unsigned_traits<T>::type;
+    using make_unsigned_t = typename custom::make_unsigned<T>::type;
 
     make_unsigned_t unsigned_value = static_cast<make_unsigned_t>(value);
     make_unsigned_t final_value = (func) ? func(unsigned_value) : unsigned_value;
@@ -168,9 +168,9 @@ return_t binary_append_n(binary_t& target, uint32 bnlen, T value, transformer_t 
     return errorcode_t::success;
 }
 
-template <typename T, typename = typename std::enable_if<custom::is_integral_traits<T>::value>::type>
+template <typename T, typename = typename std::enable_if<custom::is_integral<T>::value>::type>
 return_t binary_append_n(binary_t& target, uint32 bnlen, T value) {
-    using make_unsigned_t = typename custom::make_unsigned_traits<T>::type;
+    using make_unsigned_t = typename custom::make_unsigned<T>::type;
 
     make_unsigned_t final_value = static_cast<make_unsigned_t>(value);
 
@@ -193,9 +193,9 @@ return_t binary_append_n(binary_t& target, uint32 bnlen, T value) {
 /**
  * @brief   overwrite (resize and fill)
  */
-template <typename T, typename transformer_t, typename = typename std::enable_if<custom::is_integral_traits<T>::value>::type>
+template <typename T, typename transformer_t, typename = typename std::enable_if<custom::is_integral<T>::value>::type>
 return_t binary_load(binary_t& target, size_t bnlen, T value, transformer_t func) {
-    using make_unsigned_t = typename custom::make_unsigned_traits<T>::type;
+    using make_unsigned_t = typename custom::make_unsigned<T>::type;
 
     make_unsigned_t unsigned_value = static_cast<make_unsigned_t>(value);
     make_unsigned_t final_value = (func) ? func(unsigned_value) : unsigned_value;
@@ -213,9 +213,9 @@ return_t binary_load(binary_t& target, size_t bnlen, T value, transformer_t func
     return errorcode_t::success;
 }
 
-template <typename T, typename = typename std::enable_if<custom::is_integral_traits<T>::value>::type>
+template <typename T, typename = typename std::enable_if<custom::is_integral<T>::value>::type>
 return_t binary_load(binary_t& target, size_t bnlen, T value) {
-    using make_unsigned_t = typename custom::make_unsigned_traits<T>::type;
+    using make_unsigned_t = typename custom::make_unsigned<T>::type;
 
     make_unsigned_t final_value = static_cast<make_unsigned_t>(value);
 
@@ -345,14 +345,14 @@ T t_binary_to_integer(const byte_t* bstr, size_t size, return_t& errorcode) {
 
         size_t tsize = sizeof(T);
         if (tsize <= size) {
-            value = *reinterpret_cast<const T*>(bstr);
+            memcpy(&value, bstr, tsize);  // value = *reinterpret_cast<const T*>(bstr);
             if (tsize > 1) {
                 value = convert_endian(value);  // host endian
             }
         } else {
             binary_t bin;
             binary_load(bin, tsize, bstr, size);
-            value = *reinterpret_cast<const T*>(bin.data());
+            memcpy(&value, bin.data(), tsize);  // value = *reinterpret_cast<const T*>(bin.data());
             if (tsize > 1) {
                 value = convert_endian(value);  // host endian
             }

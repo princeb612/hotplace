@@ -18,14 +18,16 @@ namespace hotplace {
 
 valist::valist() : _va_internal(nullptr), _modified(false) {}
 
-valist::valist(const valist& object) : _va_internal(nullptr), _modified(false) { assign(object); }
+valist::valist(const valist& other) : _va_internal(nullptr), _modified(false) { assign(other); }
 
 valist::~valist() { clear(); }
 
-valist& valist::assign(const valist& object) {
+valist& valist::operator=(const valist& other) { return assign(other); }
+
+valist& valist::assign(const valist& other) {
     critical_section_guard guard(_lock);
 
-    _args = object._args;  // copy vector
+    _args = other._args;  // copy vector
     _modified = true;
 
     return *this;
@@ -37,120 +39,6 @@ valist& valist::assign(const std::vector<variant_t>& args) {
     _args = args;  // copy vector
     _modified = true;
 
-    return *this;
-}
-
-valist& valist::operator<<(bool value) {
-    variant v(value);
-    insert(std::move(v.get()));
-    v.reset();
-    return *this;
-}
-
-valist& valist::operator<<(char value) {
-    variant v(value);
-    insert(std::move(v.get()));
-    v.reset();
-    return *this;
-}
-
-valist& valist::operator<<(unsigned char value) {
-    variant v(value);
-    insert(std::move(v.get()));
-    v.reset();
-    return *this;
-}
-
-valist& valist::operator<<(short value) {
-    variant v(value);
-    insert(std::move(v.get()));
-    v.reset();
-    return *this;
-}
-
-valist& valist::operator<<(unsigned short value) {
-    variant v(value);
-    insert(std::move(v.get()));
-    v.reset();
-    return *this;
-}
-
-valist& valist::operator<<(int value) {
-    variant v((int32)value);
-    insert(std::move(v.get()));
-    v.reset();
-    return *this;
-}
-
-valist& valist::operator<<(unsigned int value) {
-    variant v((uint32)value);
-    insert(std::move(v.get()));
-    v.reset();
-    return *this;
-}
-
-valist& valist::operator<<(long value) {
-#if defined __linux__
-#if __WORDSIZE == 64
-    variant v((int64)value);  // LPI64
-#else
-    variant v((int32)value);
-#endif
-#elif defined _WIN32 || defined _WIN64
-    variant v((int32)value);
-#endif
-    insert(std::move(v.get()));
-    v.reset();
-    return *this;
-}
-
-valist& valist::operator<<(unsigned long value) {
-#if defined __linux__
-#if __WORDSIZE == 64
-    variant v((uint64)value);  // LPI64
-#else
-    variant v((uint32)value);
-#endif
-#elif defined _WIN32 || defined _WIN64
-    variant v((uint32)value);
-#endif
-    insert(std::move(v.get()));
-    v.reset();
-    return *this;
-}
-
-valist& valist::operator<<(long long value) {
-    // windows LLPI64
-    variant v((int64)value);
-    insert(std::move(v.get()));
-    v.reset();
-    return *this;
-}
-
-valist& valist::operator<<(unsigned long long value) {
-    variant v((uint64)value);
-    insert(std::move(v.get()));
-    v.reset();
-    return *this;
-}
-
-valist& valist::operator<<(float value) {
-    /* default argument promotions
-     * ‘float’ is promoted to ‘double’ when passed through ‘...’
-     */
-    variant v((double)value);
-    insert(std::move(v.get()));
-    v.reset();
-    return *this;
-}
-
-/**
- * valist << 3.141592
- */
-valist& valist::operator<<(double value) {
-    variant v(value);
-    insert(std::move(v.get()));
-    v.reset();
     return *this;
 }
 
@@ -196,8 +84,6 @@ valist& valist::operator<<(variant_t&& v) {
     insert(std::move(v));
     return *this;
 }
-
-valist& valist::operator=(const valist& object) { return assign(object); }
 
 void valist::clear() {
     critical_section_guard guard(_lock);

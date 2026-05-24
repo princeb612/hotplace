@@ -42,77 +42,77 @@ namespace custom {
  *          true   MINGW64    GCC 15.2.0
  */
 template <typename T>
-struct is_signed_traits : std::is_signed<T> {};
+struct is_signed : std::is_signed<T> {};
 template <typename T>
-struct is_unsigned_traits : std::is_unsigned<T> {};
+struct is_unsigned : std::is_unsigned<T> {};
 
 template <>
-struct is_signed_traits<int8> : std::true_type {};
+struct is_signed<int8> : std::true_type {};
 template <>
-struct is_signed_traits<uint8> : std::false_type {};
+struct is_signed<uint8> : std::false_type {};
 template <>
-struct is_unsigned_traits<int8> : std::false_type {};
+struct is_unsigned<int8> : std::false_type {};
 template <>
-struct is_unsigned_traits<uint8> : std::true_type {};
+struct is_unsigned<uint8> : std::true_type {};
 template <>
-struct is_signed_traits<int16> : std::true_type {};
+struct is_signed<int16> : std::true_type {};
 template <>
-struct is_signed_traits<uint16> : std::false_type {};
+struct is_signed<uint16> : std::false_type {};
 template <>
-struct is_unsigned_traits<int16> : std::false_type {};
+struct is_unsigned<int16> : std::false_type {};
 template <>
-struct is_unsigned_traits<uint16> : std::true_type {};
+struct is_unsigned<uint16> : std::true_type {};
 template <>
-struct is_signed_traits<int32> : std::true_type {};
+struct is_signed<int32> : std::true_type {};
 template <>
-struct is_signed_traits<uint32> : std::false_type {};
+struct is_signed<uint32> : std::false_type {};
 template <>
-struct is_unsigned_traits<int32> : std::false_type {};
+struct is_unsigned<int32> : std::false_type {};
 template <>
-struct is_unsigned_traits<uint32> : std::true_type {};
+struct is_unsigned<uint32> : std::true_type {};
 template <>
-struct is_signed_traits<int64> : std::true_type {};
+struct is_signed<int64> : std::true_type {};
 template <>
-struct is_signed_traits<uint64> : std::false_type {};
+struct is_signed<uint64> : std::false_type {};
 template <>
-struct is_unsigned_traits<int64> : std::false_type {};
+struct is_unsigned<int64> : std::false_type {};
 template <>
-struct is_unsigned_traits<uint64> : std::true_type {};
+struct is_unsigned<uint64> : std::true_type {};
 #ifdef __SIZEOF_INT128__
 template <>
-struct is_signed_traits<int128> : std::true_type {};
+struct is_signed<int128> : std::true_type {};
 template <>
-struct is_signed_traits<uint128> : std::false_type {};
+struct is_signed<uint128> : std::false_type {};
 template <>
-struct is_unsigned_traits<int128> : std::false_type {};
+struct is_unsigned<int128> : std::false_type {};
 template <>
-struct is_unsigned_traits<uint128> : std::true_type {};
+struct is_unsigned<uint128> : std::true_type {};
 #endif
 
 template <typename T>
-struct is_integral_traits : std::is_integral<T> {};
+struct is_integral : std::is_integral<T> {};
 
 template <>
-struct is_integral_traits<int8> : std::true_type {};
+struct is_integral<int8> : std::true_type {};
 template <>
-struct is_integral_traits<uint8> : std::true_type {};
+struct is_integral<uint8> : std::true_type {};
 template <>
-struct is_integral_traits<int16> : std::true_type {};
+struct is_integral<int16> : std::true_type {};
 template <>
-struct is_integral_traits<uint16> : std::true_type {};
+struct is_integral<uint16> : std::true_type {};
 template <>
-struct is_integral_traits<int32> : std::true_type {};
+struct is_integral<int32> : std::true_type {};
 template <>
-struct is_integral_traits<uint32> : std::true_type {};
+struct is_integral<uint32> : std::true_type {};
 template <>
-struct is_integral_traits<int64> : std::true_type {};
+struct is_integral<int64> : std::true_type {};
 template <>
-struct is_integral_traits<uint64> : std::true_type {};
+struct is_integral<uint64> : std::true_type {};
 #ifdef __SIZEOF_INT128__
 template <>
-struct is_integral_traits<int128> : std::true_type {};
+struct is_integral<int128> : std::true_type {};
 template <>
-struct is_integral_traits<uint128> : std::true_type {};
+struct is_integral<uint128> : std::true_type {};
 #endif
 
 template <typename T, bool enum_type>
@@ -126,47 +126,47 @@ struct integral_type<T, true> {
 };
 
 template <typename T>
-struct make_unsigned_traits : std::make_unsigned<T> {};
+struct make_unsigned : std::make_unsigned<T> {};
 
 template <>
-struct make_unsigned_traits<int8> {
+struct make_unsigned<int8> {
     using type = uint8;
 };
 template <>
-struct make_unsigned_traits<uint8> {
+struct make_unsigned<uint8> {
     using type = uint8;
 };
 template <>
-struct make_unsigned_traits<int16> {
+struct make_unsigned<int16> {
     using type = uint16;
 };
 template <>
-struct make_unsigned_traits<uint16> {
+struct make_unsigned<uint16> {
     using type = uint16;
 };
 template <>
-struct make_unsigned_traits<int32> {
+struct make_unsigned<int32> {
     using type = uint32;
 };
 template <>
-struct make_unsigned_traits<uint32> {
+struct make_unsigned<uint32> {
     using type = uint32;
 };
 template <>
-struct make_unsigned_traits<int64> {
+struct make_unsigned<int64> {
     using type = uint64;
 };
 template <>
-struct make_unsigned_traits<uint64> {
+struct make_unsigned<uint64> {
     using type = uint64;
 };
 #ifdef __SIZEOF_INT128__
 template <>
-struct make_unsigned_traits<int128> {
+struct make_unsigned<int128> {
     using type = uint128;
 };
 template <>
-struct make_unsigned_traits<uint128> {
+struct make_unsigned<uint128> {
     using type = uint128;
 };
 #endif
@@ -365,8 +365,8 @@ template <typename BT, typename T, typename enable_t = void>
 struct printf_traits;
 
 template <typename BT, typename T>
-struct printf_traits<
-    BT, T, typename std::enable_if<custom::is_integral_traits<typename std::decay<T>::type>::value || std::is_enum<typename std::decay<T>::type>::value>::type> {
+struct printf_traits<BT, T,
+                     typename std::enable_if<custom::is_integral<typename std::decay<T>::type>::value || std::is_enum<typename std::decay<T>::type>::value>::type> {
     using decay_type = typename std::decay<T>::type;
     using integral_type = typename custom::integral_type<decay_type, std::is_enum<decay_type>::value>::type;
 
