@@ -10,7 +10,6 @@
 
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
-#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>

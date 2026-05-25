@@ -11,6 +11,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
@@ -25,94 +26,88 @@ return_t openssl_crypt::encrypt(const EVP_PKEY* pkey, const binary_t& plaintext,
 }
 
 return_t openssl_crypt::encrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& ciphertext, crypt_enc_t mode) {
-    return_t ret = errorcode_t::success;
+    ciphertext.resize(0);
+
+    EVP_PKEY_CTX_ptr pkey_context;
+    size_t bufsize = 0;
+
     crypto_advisor* advisor = crypto_advisor::get_instance();
-
-    __try2 {
-        int ret_openssl = 1;
-
-        ciphertext.resize(0);
-
-        if (nullptr == pkey || nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        EVP_PKEY_CTX_ptr pkey_context(EVP_PKEY_CTX_new((EVP_PKEY*)pkey, nullptr));
-
-        if (nullptr == pkey_context.get()) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-
-        EVP_PKEY_encrypt_init(pkey_context.get());
-
-        int id = EVP_PKEY_id(pkey);
-        if (EVP_PKEY_RSA == id) {
-            switch (mode) {
-                case crypt_enc_t::rsa_1_5:
-                    // padding
-                    EVP_PKEY_CTX_set_rsa_padding(pkey_context.get(), RSA_PKCS1_PADDING);
-                    break;
-                case crypt_enc_t::rsa_oaep:
-                case crypt_enc_t::rsa_oaep256:
-                case crypt_enc_t::rsa_oaep384:
-                case crypt_enc_t::rsa_oaep512: {
-                    // OAEP
-                    hash_algorithm_t alg = hash_algorithm_t::sha1;
-                    const EVP_MD* md = nullptr;
-
-                    switch (mode) {
-                        case crypt_enc_t::rsa_oaep:
-                            alg = hash_algorithm_t::sha1;
-                            break;
-                        case crypt_enc_t::rsa_oaep256:
-                            alg = hash_algorithm_t::sha2_256;
-                            break;
-                        case crypt_enc_t::rsa_oaep384:
-                            alg = hash_algorithm_t::sha2_384;
-                            break;
-                        case crypt_enc_t::rsa_oaep512:
-                            alg = hash_algorithm_t::sha2_512;
-                            break;
-                        default:
-                            break;
-                    }
-                    md = advisor->find_evp_md(alg);
-
-                    EVP_PKEY_CTX_set_rsa_padding(pkey_context.get(), RSA_PKCS1_OAEP_PADDING);
-                    EVP_PKEY_CTX_set_rsa_oaep_md(pkey_context.get(), md);
-                    EVP_PKEY_CTX_set_rsa_mgf1_md(pkey_context.get(), md);
-                } break;
-                case crypt_enc_undefined:
-                    break;
-                case ecies:
-                default: {
-                    ret = errorcode_t::not_supported;
-                } break;
-            }
-        }
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        size_t bufsize = 0;
-        ret_openssl = EVP_PKEY_encrypt(pkey_context.get(), nullptr, &bufsize, stream, size);
-        if (ret_openssl < 1) {
-            // if (-2 == ret_openssl) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        ciphertext.resize(bufsize);
-        ret_openssl = EVP_PKEY_encrypt(pkey_context.get(), ciphertext.data(), &bufsize, stream, size);
-        if (ret_openssl < 1) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
+    crypto_kty_t kty = kty_unknown;
+    uint32 nid = 0;
+    advisor->ktyof_evp_pkey(pkey, kty, nid);
+    if (kty_rsa == kty) {
+        switch (mode) {
+            case crypt_enc_t::rsa_1_5:
+            case crypt_enc_t::rsa_oaep:
+            case crypt_enc_t::rsa_oaep256:
+            case crypt_enc_t::rsa_oaep384:
+            case crypt_enc_t::rsa_oaep512:
+                break;
+            default:
+                return not_supported;
+                break;
         }
     }
-    __finally2 {}
-    return ret;
+
+    function_pipeline<int> pipeline;
+    pipeline  //
+        .set_tracer(pipeline_trace_dbg_openssl_print)
+        .test_parameter([&]() -> bool { return (nullptr != pkey && nullptr != stream); })
+        .run_pipe([&]() -> int {
+            pkey_context = std::move(EVP_PKEY_CTX_ptr(EVP_PKEY_CTX_new((EVP_PKEY*)pkey, nullptr)));
+            return pkey_context.get() ? 1 : 0;
+        })
+        .run_pipe([&]() -> int { return EVP_PKEY_encrypt_init(pkey_context.get()); })
+        .run_pipe([&]() -> int {
+            int id = EVP_PKEY_id(pkey);
+            if (EVP_PKEY_RSA == id) {
+                switch (mode) {
+                    case crypt_enc_t::rsa_1_5:
+                        // padding
+                        EVP_PKEY_CTX_set_rsa_padding(pkey_context.get(), RSA_PKCS1_PADDING);
+                        break;
+                    case crypt_enc_t::rsa_oaep:
+                    case crypt_enc_t::rsa_oaep256:
+                    case crypt_enc_t::rsa_oaep384:
+                    case crypt_enc_t::rsa_oaep512: {
+                        // OAEP
+                        hash_algorithm_t alg = hash_algorithm_t::sha1;
+                        const EVP_MD* md = nullptr;
+
+                        switch (mode) {
+                            case crypt_enc_t::rsa_oaep:
+                                alg = hash_algorithm_t::sha1;
+                                break;
+                            case crypt_enc_t::rsa_oaep256:
+                                alg = hash_algorithm_t::sha2_256;
+                                break;
+                            case crypt_enc_t::rsa_oaep384:
+                                alg = hash_algorithm_t::sha2_384;
+                                break;
+                            case crypt_enc_t::rsa_oaep512:
+                                alg = hash_algorithm_t::sha2_512;
+                                break;
+                            default:
+                                break;
+                        }
+                        md = advisor->find_evp_md(alg);
+
+                        EVP_PKEY_CTX_set_rsa_padding(pkey_context.get(), RSA_PKCS1_OAEP_PADDING);
+                        EVP_PKEY_CTX_set_rsa_oaep_md(pkey_context.get(), md);
+                        EVP_PKEY_CTX_set_rsa_mgf1_md(pkey_context.get(), md);
+                    } break;
+                    default: {
+                    } break;
+                }
+            }
+            return 1;
+        })
+        .run_pipe([&]() -> int { return EVP_PKEY_encrypt(pkey_context.get(), nullptr, &bufsize, stream, size); })
+        .run_pipe([&]() -> int {
+            ciphertext.resize(bufsize);
+            return EVP_PKEY_encrypt(pkey_context.get(), ciphertext.data(), &bufsize, stream, size);
+        });
+    return pipeline.result_to_return_t();
 }
 
 return_t openssl_crypt::decrypt(const EVP_PKEY* pkey, const binary_t& ciphertext, binary_t& plaintext, crypt_enc_t mode) {
@@ -120,94 +115,79 @@ return_t openssl_crypt::decrypt(const EVP_PKEY* pkey, const binary_t& ciphertext
 }
 
 return_t openssl_crypt::decrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& plaintext, crypt_enc_t mode) {
-    return_t ret = errorcode_t::success;
+    plaintext.resize(0);
+
     crypto_advisor* advisor = crypto_advisor::get_instance();
+    EVP_PKEY_CTX_ptr pkey_context;
+    size_t bufsize = 0;
 
-    __try2 {
-        int ret_openssl = 1;
+    function_pipeline<int> pipeline;
+    pipeline  //
+        .set_tracer(pipeline_trace_dbg_openssl_print)
+        .test_parameter([&]() -> bool { return (nullptr != pkey && nullptr != stream); })
+        .run_pipe([&]() -> int {
+            bool is_private = false;
+            auto rc = is_private_key(pkey, is_private);
+            return (success == rc || is_private) ? 1 : 0;
+        })
+        .run_pipe([&]() -> int {
+            pkey_context = std::move(EVP_PKEY_CTX_ptr(EVP_PKEY_CTX_new((EVP_PKEY*)pkey, nullptr)));
+            return pkey_context.get() ? 1 : 0;
+        })
+        .run_pipe([&]() -> int { return EVP_PKEY_decrypt_init(pkey_context.get()); })
+        .run_pipe([&]() -> int {
+            if (EVP_PKEY_RSA == EVP_PKEY_id(pkey)) {
+                switch (mode) {
+                    case crypt_enc_t::rsa_1_5:
+                        // padding
+                        EVP_PKEY_CTX_set_rsa_padding(pkey_context.get(), RSA_PKCS1_PADDING);
+                        break;
+                    case crypt_enc_t::rsa_oaep:
+                    case crypt_enc_t::rsa_oaep256:
+                    case crypt_enc_t::rsa_oaep384:
+                    case crypt_enc_t::rsa_oaep512: {
+                        // OAEP
+                        hash_algorithm_t alg = hash_algorithm_t::sha1;
+                        const EVP_MD* md = nullptr;
 
-        plaintext.resize(0);
+                        switch (mode) {
+                            case crypt_enc_t::rsa_oaep:
+                                alg = hash_algorithm_t::sha1;
+                                break;
+                            case crypt_enc_t::rsa_oaep256:
+                                alg = hash_algorithm_t::sha2_256;
+                                break;
+                            case crypt_enc_t::rsa_oaep384:
+                                alg = hash_algorithm_t::sha2_384;
+                                break;
+                            case crypt_enc_t::rsa_oaep512:
+                                alg = hash_algorithm_t::sha2_512;
+                                break;
+                            default:
+                                break;
+                        }
+                        md = advisor->find_evp_md(alg);
 
-        if (nullptr == pkey || nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        bool is_private = false;
-        ret = is_private_key(pkey, is_private);
-        if (false == is_private) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        EVP_PKEY_CTX_ptr pkey_context(EVP_PKEY_CTX_new((EVP_PKEY*)pkey, nullptr));
-
-        if (nullptr == pkey_context.get()) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-
-        EVP_PKEY_decrypt_init(pkey_context.get());
-
-        if (EVP_PKEY_RSA == EVP_PKEY_id(pkey)) {
-            switch (mode) {
-                case crypt_enc_t::rsa_1_5:
-                    // padding
-                    EVP_PKEY_CTX_set_rsa_padding(pkey_context.get(), RSA_PKCS1_PADDING);
-                    break;
-                case crypt_enc_t::rsa_oaep:
-                case crypt_enc_t::rsa_oaep256:
-                case crypt_enc_t::rsa_oaep384:
-                case crypt_enc_t::rsa_oaep512: {
-                    // OAEP
-                    hash_algorithm_t alg = hash_algorithm_t::sha1;
-                    const EVP_MD* md = nullptr;
-
-                    switch (mode) {
-                        case crypt_enc_t::rsa_oaep:
-                            alg = hash_algorithm_t::sha1;
-                            break;
-                        case crypt_enc_t::rsa_oaep256:
-                            alg = hash_algorithm_t::sha2_256;
-                            break;
-                        case crypt_enc_t::rsa_oaep384:
-                            alg = hash_algorithm_t::sha2_384;
-                            break;
-                        case crypt_enc_t::rsa_oaep512:
-                            alg = hash_algorithm_t::sha2_512;
-                            break;
-                        default:
-                            break;
-                    }
-                    md = advisor->find_evp_md(alg);
-
-                    EVP_PKEY_CTX_set_rsa_padding(pkey_context.get(), RSA_PKCS1_OAEP_PADDING);
-                    EVP_PKEY_CTX_set_rsa_oaep_md(pkey_context.get(), md);
-                    EVP_PKEY_CTX_set_rsa_mgf1_md(pkey_context.get(), md);
-                } break;
-                default:
-                    break;
+                        EVP_PKEY_CTX_set_rsa_padding(pkey_context.get(), RSA_PKCS1_OAEP_PADDING);
+                        EVP_PKEY_CTX_set_rsa_oaep_md(pkey_context.get(), md);
+                        EVP_PKEY_CTX_set_rsa_mgf1_md(pkey_context.get(), md);
+                    } break;
+                    default:
+                        break;
+                }
+                return 1;
+            } else {
+                return 0;
             }
-        }
-
-        size_t bufsize = 0;
-        ret_openssl = EVP_PKEY_decrypt(pkey_context.get(), nullptr, &bufsize, stream, size);
-        if (ret_openssl < 1) {
-            // if (-2 == ret_openssl) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        plaintext.resize(bufsize);
-        ret_openssl = EVP_PKEY_decrypt(pkey_context.get(), plaintext.data(), &bufsize, stream, size);
-        if (ret_openssl < 1) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-        plaintext.resize(bufsize);
-    }
-    __finally2 {}
-    return ret;
+        })
+        .run_pipe([&]() -> int { return EVP_PKEY_decrypt(pkey_context.get(), nullptr, &bufsize, stream, size); })
+        .run_pipe([&]() -> int {
+            plaintext.resize(bufsize);
+            auto rc = EVP_PKEY_decrypt(pkey_context.get(), plaintext.data(), &bufsize, stream, size);
+            plaintext.resize(bufsize);
+            return rc;
+        });
+    return pipeline.result_to_return_t();
 }
 
 }  // namespace crypto

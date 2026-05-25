@@ -47,7 +47,13 @@ class function_pipeline {
         expect_failure = 2,
         expect_dontcare = 3,
     };
-    function_pipeline() : _lastcode(error_traits<T>::value_success()), _processed_count(0), _total_count(0) { _discriminant = error_traits<T>::is_success; };
+
+    typedef std::function<bool(T)> discriminant_t;
+    typedef std::function<void(const char*, unsigned int, T)> debug_tracer_t;
+
+    function_pipeline() : _lastcode(error_traits<T>::value_success()), _processed_count(0), _total_count(0), _tracer(nullptr) {
+        _discriminant = error_traits<T>::is_success;
+    };
     ~function_pipeline() {
 #if defined DEBUG
         if (processed() != size()) {
@@ -66,13 +72,17 @@ class function_pipeline {
 #endif
     }
 
-    function_pipeline& test_parameter(std::function<bool(void)> checker) {
+    // bool(void)
+    template <typename F>
+    function_pipeline& test_parameter(F checker) {
         if (false == checker()) {
             _lastcode = invalid_parameter;
         }
         return *this;
     }
-    function_pipeline& set(std::function<bool(T)> checker) {
+    // bool(T)
+    template <typename F>
+    function_pipeline& set(F checker) {
         _discriminant = checker;
         return *this;
     }
@@ -84,40 +94,63 @@ class function_pipeline {
         _discriminant = error_traits<T>::is_not_fail;
         return *this;
     }
+    function_pipeline& set_tracer(debug_tracer_t tracer) {
+        _tracer = tracer;
+        return *this;
+    }
 
-    function_pipeline& walk(std::function<void(void)> func) {
+    template <typename F>
+    function_pipeline& walk(F func) {
         auto lambda = [&]() {
             func();
             return _lastcode;
         };
         return runner(lambda, false, expect_success);
     }
-    function_pipeline& walk_trycatch(std::function<void(void)> func) {
+    template <typename F>
+    function_pipeline& walk_trycatch(F func) {
         auto lambda = [&]() {
             func();
             return _lastcode;
         };
         return runner(lambda, true, expect_success);
     }
-    function_pipeline& walk_failed(std::function<void(void)> func) {
+    template <typename F>
+    function_pipeline& walk_failed(F func) {
         auto lambda = [&]() {
             func();
             return _lastcode;
         };
         return runner(lambda, false, expect_failure);
     }
-    function_pipeline& walk_always(std::function<void(T)> func) {
+    template <typename F>
+    function_pipeline& walk_always(F func) {
         auto lambda = [&]() {
-            func(_lastcode);
+            func();
             return _lastcode;
         };
         return runner(lambda, false, expect_dontcare);
     }
 
+    // pure version
     template <typename F>
     function_pipeline& run(F func) {
         return runner(func, false, expect_success);
     }
+
+    /*
+     * @remarks handling both RELEASE(NDEBUG) and DEBUG, MUST use the run_pipe macro.
+     */
+#if defined DEBUG
+#define run_pipe(lambda) run((lambda), __FILE__, __LINE__)
+    template <typename F>
+    function_pipeline& run(F func, const char* file, unsigned int line) {
+        return runner_debug(func, false, expect_success, file, line);
+    }
+#else
+#define run_pipe(lambda) run((lambda))
+#endif
+
     template <typename F>
     function_pipeline& run_trycatch(F func) {
         return runner(func, true, expect_success);
@@ -130,12 +163,13 @@ class function_pipeline {
     size_t size() const { return _total_count; }
     size_t processed() const { return _processed_count; }
     T result() const { return _lastcode; }
+    return_t result_to_return_t() const { return error_traits<T>::to_return_t(_lastcode); }
     bool passed() const { return _discriminant(_lastcode); }
     bool failed() const { return (false == _discriminant(_lastcode)); }
 
    protected:
     template <typename F>
-    function_pipeline& runner(F func, bool use_trycatch, expect_t expect = expect_success) {
+    function_pipeline& runner(F func, bool use_trycatch, expect_t expect) {
         if (expect_failure != expect) {
             ++_total_count;
         }
@@ -149,6 +183,7 @@ class function_pipeline {
 
         try {
             auto rc = func();
+            // trace here in debug version
             test_returncode(rc);
         } catch (...) {
             if (use_trycatch) {
@@ -159,6 +194,36 @@ class function_pipeline {
         }
         return *this;
     }
+#if defined DEBUG
+    template <typename F>
+    function_pipeline& runner_debug(F func, bool use_trycatch, expect_t expect, const char* file, unsigned int line) {
+        if (expect_failure != expect) {
+            ++_total_count;
+        }
+        if (expect_dontcare == expect) {
+        } else {
+            bool expectation = (expect_success == expect) ? true : false;
+            if (expectation != _discriminant(_lastcode)) {
+                return *this;
+            }
+        }
+
+        try {
+            auto rc = func();
+            if ((nullptr != _tracer) && !_discriminant(rc)) {
+                _tracer(file, line, rc);
+            }
+            test_returncode(rc);
+        } catch (...) {
+            if (use_trycatch) {
+                _lastcode = error_traits<T>::value_exception();
+            } else {
+                throw exception(exception_caught);
+            }
+        }
+        return *this;
+    }
+#endif
 
     void test_returncode(T rc) {
         _lastcode = rc;
@@ -171,7 +236,8 @@ class function_pipeline {
     T _lastcode;
     size_t _processed_count;
     size_t _total_count;
-    std::function<bool(T)> _discriminant;
+    discriminant_t _discriminant;
+    debug_tracer_t _tracer;
 };
 
 }  // namespace hotplace

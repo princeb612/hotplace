@@ -32,7 +32,7 @@
     * CBOR
 
 * details
-  * Revision 1010
+  * Revision 1011
   * Revision 1006
     * refactoring variant, basic_stream, ansi_string, wide_string
   * Revision 999

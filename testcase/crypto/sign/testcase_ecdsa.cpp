@@ -94,7 +94,7 @@ void check_ecdsa_size() {
                 ret = sign->sign(pkey, (byte_t*)source, len, sig);
                 auto kid = keyobj->get_desc().get_kid_cstr();
                 basic_stream desc;
-                desc.printf("%-7s using %-20s", alg, kid);
+                desc.printf("%-8s using %-20s", alg, kid);
 
                 if (success == ret) {
                     desc.printf(" signature size %-3zi", sig.size());

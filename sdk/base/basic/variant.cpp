@@ -491,7 +491,6 @@ return_t variant::to_string(std::string& target) const {
         case TYPE_BOOL: {
             target = _vt.data.b ? "true" : "false";
         } break;
-#if 1
         case TYPE_CHAR:
         case TYPE_BYTE: {
             if (isprint(_vt.data.c)) {
@@ -500,14 +499,12 @@ return_t variant::to_string(std::string& target) const {
                 target = ".";
             }
         } break;
-#else
         case TYPE_INT8:
             target = format("%i", _vt.data.i8);
             break;
         case TYPE_UINT8:
             target = format("%u", _vt.data.ui8);
             break;
-#endif
         case TYPE_INT16:
             target = format("%i", _vt.data.i16);
             break;

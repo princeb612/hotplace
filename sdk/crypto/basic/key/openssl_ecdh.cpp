@@ -46,56 +46,32 @@ const EVP_PKEY* get_public_key(const EVP_PKEY* pkey) {
 }
 
 return_t dh_key_agreement(const EVP_PKEY* pkey, const EVP_PKEY* pkey_pub, binary_t& secret) {
-    return_t ret = errorcode_t::success;
-    int ret_test = 0;
+    secret.clear();
 
-    __try2 {
-        secret.clear();
+    EVP_PKEY_CTX_ptr pkey_context;
+    size_t size_secret = 0;
 
-        if (nullptr == pkey || nullptr == pkey_pub) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        bool is_private = false;
-        ret = is_private_key(pkey, is_private);
-        if (false == is_private) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        EVP_PKEY_CTX_ptr pkey_context(EVP_PKEY_CTX_new((EVP_PKEY*)pkey, nullptr));
-        if (nullptr == pkey_context.get()) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-
-        size_t size_secret = 0;
-
-        ret_test = EVP_PKEY_derive_init(pkey_context.get());
-        if (1 > ret_test) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-        ret_test = EVP_PKEY_derive_set_peer(pkey_context.get(), (EVP_PKEY*)pkey_pub);
-        if (1 > ret_test) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-        ret_test = EVP_PKEY_derive(pkey_context.get(), nullptr, &size_secret);
-        if (1 > ret_test) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-        secret.resize(size_secret);
-        ret_test = EVP_PKEY_derive(pkey_context.get(), secret.data(), &size_secret);
-        if (1 > ret_test) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-    }
-    __finally2 {}
-    return ret;
+    function_pipeline<int> pipeline;
+    pipeline  //
+        .set_tracer(pipeline_trace_dbg_openssl_print)
+        .test_parameter([&]() -> bool { return (nullptr != pkey && nullptr != pkey_pub); })
+        .run_pipe([&]() -> int {
+            bool is_private = false;
+            auto rc = is_private_key(pkey, is_private);
+            return (success == rc || is_private) ? 1 : 0;
+        })
+        .run_pipe([&]() -> int {
+            pkey_context = std::move(EVP_PKEY_CTX_ptr(EVP_PKEY_CTX_new((EVP_PKEY*)pkey, nullptr)));
+            return pkey_context.get() ? 1 : 0;
+        })
+        .run_pipe([&]() -> int { return EVP_PKEY_derive_init(pkey_context.get()); })
+        .run_pipe([&]() -> int { return EVP_PKEY_derive_set_peer(pkey_context.get(), (EVP_PKEY*)pkey_pub); })
+        .run_pipe([&]() -> int { return EVP_PKEY_derive(pkey_context.get(), nullptr, &size_secret); })
+        .run_pipe([&]() -> int {
+            secret.resize(size_secret);
+            return EVP_PKEY_derive(pkey_context.get(), secret.data(), &size_secret);
+        });
+    return pipeline.result_to_return_t();
 }
 
 binary_t kdf_parameter_int(uint32 source) {
@@ -132,28 +108,20 @@ binary_t kdf_parameter_string(const byte_t* source, uint32 sourcelen) {
 }
 
 return_t ecdh_es(const EVP_PKEY* pkey, const EVP_PKEY* peer, const char* algid, const char* apu, const char* apv, uint32 keylen, binary_t& derived) {
-    return_t ret = errorcode_t::success;
+    derived.clear();
+
     binary_t dh_secret;
     binary_t otherinfo;
 
-    __try2 {
-        derived.clear();
+    function_pipeline<return_t> pipeline;
+    pipeline  //
+        .set_tracer(pipeline_trace_dbg_openssl_print)
+        .test_parameter([&]() -> bool { return (nullptr != pkey && nullptr != peer); })
+        .run_pipe([&]() -> return_t { return dh_key_agreement(pkey, peer, dh_secret); })
+        .run_pipe([&]() -> return_t { return compose_otherinfo(algid, apu, apv, keylen << 3, otherinfo); })
+        .run_pipe([&]() -> return_t { return concat_kdf(dh_secret, otherinfo, keylen, derived); });
 
-        ret = dh_key_agreement(pkey, peer, dh_secret);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        ret = compose_otherinfo(algid, apu, apv, keylen << 3, otherinfo);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        ret = concat_kdf(dh_secret, otherinfo, keylen, derived);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-    }
-    __finally2 {}
-    return ret;
+    return pipeline.result();
 }
 
 return_t compose_otherinfo(const char* algid, const char* apu, const char* apv, uint32 keybits, binary_t& otherinfo) {
@@ -190,13 +158,14 @@ return_t concat_kdf(binary_t dh_secret, binary_t otherinfo, unsigned int keylen,
             unsigned int alloca_size = t_narrow_cast(hashlen);
             function_pipeline<int> pipeline;
             pipeline  //
-                .run([&]() -> int { return EVP_DigestInit_ex(ctx.get(), dgst, nullptr); })
-                .run([&]() -> int { return EVP_DigestUpdate(ctx.get(), counter.data(), counter.size()); })
-                .run([&]() -> int { return EVP_DigestUpdate(ctx.get(), dh_secret.data(), dh_secret.size()); })
-                .run([&]() -> int { return EVP_DigestUpdate(ctx.get(), otherinfo.data(), otherinfo.size()); })
-                .run([&]() -> int { return EVP_DigestFinal_ex(ctx.get(), hash.data(), &alloca_size); });
+                .set_tracer(pipeline_trace_dbg_openssl_print)
+                .run_pipe([&]() -> int { return EVP_DigestInit_ex(ctx.get(), dgst, nullptr); })
+                .run_pipe([&]() -> int { return EVP_DigestUpdate(ctx.get(), counter.data(), counter.size()); })
+                .run_pipe([&]() -> int { return EVP_DigestUpdate(ctx.get(), dh_secret.data(), dh_secret.size()); })
+                .run_pipe([&]() -> int { return EVP_DigestUpdate(ctx.get(), otherinfo.data(), otherinfo.size()); })
+                .run_pipe([&]() -> int { return EVP_DigestFinal_ex(ctx.get(), hash.data(), &alloca_size); });
             if (pipeline.failed()) {
-                ret = error_traits<int>::to_return_t(pipeline.result());
+                ret = pipeline.result_to_return_t();
                 break;
             }
 

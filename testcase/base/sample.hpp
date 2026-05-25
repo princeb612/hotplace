@@ -30,6 +30,7 @@ void testcase_cmdline();
 void testcase_testvector_cmdline();
 void testcase_dumpmemory();
 void testcase_narrowcast();
+void testcase_pipeline();
 void testcase_valist();
 void testcase_testvector_valist();
 void testcase_variant();

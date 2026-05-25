@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
@@ -36,7 +37,6 @@ return_t openssl_sign::sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t al
     openssl_hash hash;
     hash_context_t* hash_handle = nullptr;
     binary_t hash_value;
-    int ret_openssl = 0;
 
     __try2 {
         signature.clear();
@@ -64,17 +64,18 @@ return_t openssl_sign::sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t al
         int bufsize = RSA_size(rsa);
         buf.resize(bufsize);
 
-        ret_openssl = RSA_padding_add_PKCS1_PSS(rsa, buf.data(), hash_value.data(), evp_md, saltlen);
-        if (ret_openssl < 1) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
+        function_pipeline<int> pipeline;
+        pipeline  //
+            .set_tracer(pipeline_trace_dbg_openssl_print)
+            .run_pipe([&]() -> int { return RSA_padding_add_PKCS1_PSS(rsa, buf.data(), hash_value.data(), evp_md, saltlen); })
+            .walk([&]() -> void { signature.resize(bufsize); })
+            .run_pipe([&]() -> int {
+                auto rc = RSA_private_encrypt(bufsize, buf.data(), signature.data(), rsa, RSA_NO_PADDING);
+                return (rc == bufsize) ? 1 : 0;
+            });
 
-        signature.resize(bufsize);
-        ret_openssl = RSA_private_encrypt(bufsize, buf.data(), signature.data(), rsa, RSA_NO_PADDING);
-        if (ret_openssl != bufsize) {
-            ret = errorcode_t::internal_error;
-            __leave2;
+        if (pipeline.failed()) {
+            ret = pipeline.result_to_return_t();
         }
     }
     __finally2 {}

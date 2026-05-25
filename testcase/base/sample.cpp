@@ -61,6 +61,7 @@ int main(int argc, char** argv) {
     testcase_testvector_cmdline();
     testcase_dumpmemory();
     testcase_narrowcast();
+    testcase_pipeline();
     testcase_valist();
     testcase_testvector_valist();
     testcase_variant();

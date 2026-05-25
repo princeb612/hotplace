@@ -91,5 +91,16 @@ void leave_trace_dbg_openssl_print(const char* file, unsigned int line, return_t
 #endif
 }
 
+void pipeline_trace_dbg_openssl_print(const char* file, unsigned int line, int rc) {
+#if defined DEBUG
+    return_t ret = errorcode_t::success;
+    if (rc < 1) {
+        ret = errorcode_t::internal_error;
+        leave_trace_dbg_print(file, line, false, ret);
+    }
+    trace_openssl(ret);
+#endif
+}
+
 }  // namespace crypto
 }  // namespace hotplace

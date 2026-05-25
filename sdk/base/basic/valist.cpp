@@ -43,49 +43,42 @@ valist& valist::assign(const std::vector<variant_t>& args) {
 valist& valist::operator<<(bool value) {
     variant v(value);
     insert(std::move(v.get()));
-    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(char value) {
     variant v(value);
     insert(std::move(v.get()));
-    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(unsigned char value) {
     variant v(value);
     insert(std::move(v.get()));
-    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(short value) {
     variant v(value);
     insert(std::move(v.get()));
-    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(unsigned short value) {
     variant v(value);
     insert(std::move(v.get()));
-    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(int value) {
     variant v((int32)value);
     insert(std::move(v.get()));
-    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(unsigned int value) {
     variant v((uint32)value);
     insert(std::move(v.get()));
-    v.reset();
     return *this;
 }
 
@@ -100,7 +93,6 @@ valist& valist::operator<<(long value) {
     variant v((int32)value);
 #endif
     insert(std::move(v.get()));
-    v.reset();
     return *this;
 }
 
@@ -115,7 +107,6 @@ valist& valist::operator<<(unsigned long value) {
     variant v((uint32)value);
 #endif
     insert(std::move(v.get()));
-    v.reset();
     return *this;
 }
 
@@ -123,14 +114,12 @@ valist& valist::operator<<(long long value) {
     // windows LLPI64
     variant v((int64)value);
     insert(std::move(v.get()));
-    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(unsigned long long value) {
     variant v((uint64)value);
     insert(std::move(v.get()));
-    v.reset();
     return *this;
 }
 
@@ -140,7 +129,6 @@ valist& valist::operator<<(float value) {
      */
     variant v((double)value);
     insert(std::move(v.get()));
-    v.reset();
     return *this;
 }
 
@@ -150,14 +138,12 @@ valist& valist::operator<<(float value) {
 valist& valist::operator<<(double value) {
     variant v(value);
     insert(std::move(v.get()));
-    v.reset();
     return *this;
 }
 
 valist& valist::operator<<(void* value) {
     variant v(value);
     insert(std::move(v.get()));
-    v.reset();
     return *this;
 }
 
@@ -165,7 +151,6 @@ valist& valist::operator<<(const char* value) {
     if (value) {
         variant v(value);
         insert(std::move(v.get()));
-        v.reset();
     }
     return *this;
 }
@@ -183,7 +168,6 @@ valist& valist::operator<<(const basic_stream& value) {
 valist& valist::operator<<(const binary_t& value) {
     variant v(value);
     insert(std::move(v.get()));
-    v.reset();
     return *this;
 }
 
@@ -307,6 +291,8 @@ void valist::build() {
             switch (vt.type) {
                 case TYPE_CHAR:
                 case TYPE_BYTE:
+                case TYPE_INT8:
+                case TYPE_UINT8:
                     native_data_size = sizeof(char);
                     break;
                 case TYPE_INT16:
@@ -379,6 +365,8 @@ void valist::build() {
             switch (vt.type) {
                 case TYPE_CHAR:
                 case TYPE_BYTE:
+                case TYPE_INT8:
+                case TYPE_UINT8:
                     native_data = &(vt.data.c);
                     native_data_size = sizeof(char);
                     break;
@@ -463,6 +451,8 @@ void valist::build() {
             switch (vt.type) {
                 case TYPE_CHAR:
                 case TYPE_BYTE:
+                case TYPE_INT8:
+                case TYPE_UINT8:
                     va_assign(ap, va_assign_type_promotion_int(char), vt.data.c);
                     break;
                 case TYPE_INT16:

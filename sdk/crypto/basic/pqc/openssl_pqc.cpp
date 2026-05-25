@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_pqc.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
@@ -114,51 +115,33 @@ return_t openssl_pqc::decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** 
 }
 
 return_t openssl_pqc::encapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keycapsule, binary_t& sharedsecret) {
-    return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    EVP_PKEY_CTX_ptr pkey_ctx;
     size_t keycapsule_len = 0;
     size_t sharedsecret_len = 0;
-    int test = 0;
-    __try2 {
-        if (nullptr == pkey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
 
-        EVP_PKEY_CTX_ptr pkey_ctx(EVP_PKEY_CTX_new_from_pkey(nullptr, (EVP_PKEY*)pkey, nullptr));
-        if (nullptr == pkey_ctx.get()) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
+    // oqs-provider/test/oqs_test_kems.c
+    // $ ./oqs_test_kems oqsprovider path/oqs.cnf
 
-        // oqs-provider/test/oqs_test_kems.c
-        // $ ./oqs_test_kems oqsprovider path/oqs.cnf
-
-        test = EVP_PKEY_encapsulate_init(pkey_ctx.get(), nullptr);
-        if (test <= 0) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-        test = EVP_PKEY_encapsulate(pkey_ctx.get(), nullptr, &keycapsule_len, nullptr, &sharedsecret_len);
-        if (test <= 0) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-
-        keycapsule.resize(keycapsule_len);
-        sharedsecret.resize(sharedsecret_len);
-
-        test = EVP_PKEY_encapsulate(pkey_ctx.get(), keycapsule.data(), &keycapsule_len, sharedsecret.data(), &sharedsecret_len);
-        if (test <= 0) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-    }
-    __finally2 {}
+    function_pipeline<int> pipeline;
+    pipeline  //
+        .set_tracer(pipeline_trace_dbg_openssl_print)
+        .test_parameter([&]() -> bool { return nullptr != pkey; })
+        .run_pipe([&]() -> int {
+            pkey_ctx = std::move(EVP_PKEY_CTX_ptr(EVP_PKEY_CTX_new_from_pkey(nullptr, (EVP_PKEY*)pkey, nullptr)));
+            return pkey_ctx.get() ? 1 : 0;
+        })
+        .run_pipe([&]() -> int { return EVP_PKEY_encapsulate_init(pkey_ctx.get(), nullptr); })
+        .run_pipe([&]() -> int { return EVP_PKEY_encapsulate(pkey_ctx.get(), nullptr, &keycapsule_len, nullptr, &sharedsecret_len); })
+        .run_pipe([&]() -> int {
+            keycapsule.resize(keycapsule_len);
+            sharedsecret.resize(sharedsecret_len);
+            return EVP_PKEY_encapsulate(pkey_ctx.get(), keycapsule.data(), &keycapsule_len, sharedsecret.data(), &sharedsecret_len);
+        });
+    return pipeline.result_to_return_t();
 #else
-    ret = errorcode_t::not_supported;
+    return errorcode_t::not_supported;
 #endif
-    return ret;
 }
 
 return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, const binary_t& keycapsule, binary_t& sharedsecret) {
@@ -175,140 +158,78 @@ return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, cons
 }
 
 return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, const byte_t* capsulekeystream, size_t capsulekeysize, binary_t& sharedsecret) {
-    return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
     size_t sharedsecret_len = 0;
-    int test = 0;
-    __try2 {
-        if (nullptr == pkey || nullptr == capsulekeystream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    EVP_PKEY_CTX_ptr pkey_ctx;
 
-        EVP_PKEY_CTX_ptr pkey_ctx(EVP_PKEY_CTX_new_from_pkey(nullptr, (EVP_PKEY*)pkey, nullptr));
-        if (nullptr == pkey_ctx.get()) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-
-        test = EVP_PKEY_decapsulate_init(pkey_ctx.get(), nullptr);
-        if (test <= 0) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-        test = EVP_PKEY_decapsulate(pkey_ctx.get(), nullptr, &sharedsecret_len, capsulekeystream, capsulekeysize);
-        if (test <= 0) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-
-        sharedsecret.resize(sharedsecret_len);
-
-        test = EVP_PKEY_decapsulate(pkey_ctx.get(), sharedsecret.data(), &sharedsecret_len, capsulekeystream, capsulekeysize);
-        if (test <= 0) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-    }
-    __finally2 {}
+    function_pipeline<int> pipeline;
+    pipeline  //
+        .set_tracer(pipeline_trace_dbg_openssl_print)
+        .test_parameter([&]() -> bool { return nullptr != pkey && nullptr != capsulekeystream; })
+        .run_pipe([&]() -> int {
+            pkey_ctx = std::move(EVP_PKEY_CTX_ptr(EVP_PKEY_CTX_new_from_pkey(nullptr, (EVP_PKEY*)pkey, nullptr)));
+            return pkey_ctx.get() ? 1 : 0;
+        })
+        .run_pipe([&]() -> int { return EVP_PKEY_decapsulate_init(pkey_ctx.get(), nullptr); })
+        .run_pipe([&]() -> int { return EVP_PKEY_decapsulate(pkey_ctx.get(), nullptr, &sharedsecret_len, capsulekeystream, capsulekeysize); })
+        .run_pipe([&]() -> int {
+            sharedsecret.resize(sharedsecret_len);
+            return EVP_PKEY_decapsulate(pkey_ctx.get(), sharedsecret.data(), &sharedsecret_len, capsulekeystream, capsulekeysize);
+        });
+    return pipeline.result_to_return_t();
 #else
-    ret = errorcode_t::not_supported;
+    return errorcode_t::not_supported;
 #endif
-    return ret;
 }
 
 return_t openssl_pqc::sign(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature) {
-    return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    int rc = 1;
+    signature.resize(0);
     size_t dgstsize = 0;
-    __try2 {
-        signature.resize(0);
-        if (nullptr == pkey || nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
 
-        EVP_MD_CTX_ptr md_context(EVP_MD_CTX_new());
-        if (nullptr == md_context.get()) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
+    EVP_MD_CTX_ptr md_context;
 
-        rc = EVP_DigestSignInit_ex(md_context.get(), nullptr, nullptr, libctx, nullptr, pkey, nullptr);
-        if (rc < 1) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-        rc = EVP_DigestSignUpdate(md_context.get(), stream, size);
-        if (rc < 1) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-        rc = EVP_DigestSignFinal(md_context.get(), nullptr, &dgstsize);
-        if (rc < 1) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        signature.resize(dgstsize);
-        EVP_DigestSignFinal(md_context.get(), signature.data(), &dgstsize);
-
-        signature.resize(dgstsize);
-    }
-    __finally2 {}
+    function_pipeline<int> pipeline;
+    pipeline  //
+        .set_tracer(pipeline_trace_dbg_openssl_print)
+        .test_parameter([&]() -> bool { return (nullptr != pkey && nullptr != stream); })
+        .run_pipe([&]() -> int {
+            md_context = std::move(EVP_MD_CTX_ptr(EVP_MD_CTX_new()));
+            return md_context.get() ? 1 : 0;
+        })
+        .run_pipe([&]() -> int { return EVP_DigestSignInit_ex(md_context.get(), nullptr, nullptr, libctx, nullptr, pkey, nullptr); })
+        .run_pipe([&]() -> int { return EVP_DigestSignUpdate(md_context.get(), stream, size); })
+        .run_pipe([&]() -> int { return EVP_DigestSignFinal(md_context.get(), nullptr, &dgstsize); })
+        .walk([&]() -> void {
+            signature.resize(dgstsize);
+            EVP_DigestSignFinal(md_context.get(), signature.data(), &dgstsize);
+            signature.resize(dgstsize);
+        });
+    return pipeline.failed() ? error_verify : success;
 #else
-    ret = errorcode_t::not_supported;
+    return errorcode_t::not_supported;
 #endif
-    return ret;
 }
 
 return_t openssl_pqc::verify(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature) {
-    return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    int rc = 1;
+    EVP_MD_CTX_ptr md_context;
 
-    __try2 {
-        if (nullptr == pkey || nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        ret = errorcode_t::error_verify;
-        if (signature.empty()) {
-            __leave2;
-        }
-
-        EVP_MD_CTX_ptr md_context(EVP_MD_CTX_new());
-        if (nullptr == md_context.get()) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        rc = EVP_DigestVerifyInit_ex(md_context.get(), nullptr, nullptr, libctx, nullptr, pkey, nullptr);
-        if (rc < 1) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        rc = EVP_DigestVerifyUpdate(md_context.get(), stream, size);
-        if (rc < 1) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        rc = EVP_DigestVerifyFinal(md_context.get(), signature.data(), signature.size());
-        if (rc < 1) {
-            ret = errorcode_t::error_verify;
-            __leave2_trace_openssl(ret);
-        }
-
-        ret = errorcode_t::success;
-    }
-    __finally2 {}
+    function_pipeline<int> pipeline;
+    pipeline  //
+        .set_tracer(pipeline_trace_dbg_openssl_print)
+        .test_parameter([&]() -> bool { return (nullptr != pkey) && (nullptr != stream) && (false == signature.empty()); })
+        .run_pipe([&]() -> int {
+            md_context = std::move(EVP_MD_CTX_ptr(EVP_MD_CTX_new()));
+            return md_context.get() ? 1 : 0;
+        })
+        .run_pipe([&]() -> int { return EVP_DigestVerifyInit_ex(md_context.get(), nullptr, nullptr, libctx, nullptr, pkey, nullptr); })
+        .run_pipe([&]() -> int { return EVP_DigestVerifyUpdate(md_context.get(), stream, size); })
+        .run_pipe([&]() -> int { return EVP_DigestVerifyFinal(md_context.get(), signature.data(), signature.size()); });
+    return pipeline.failed() ? error_verify : success;
 #else
-    ret = errorcode_t::not_supported;
+    return errorcode_t::not_supported;
 #endif
-    return ret;
 }
 
 }  // namespace crypto

@@ -30,8 +30,9 @@ typedef struct _variant_conversion_t {
 } variant_conversion_t;
 
 static variant_conversion_t type_formatter[] = {
-    {TYPE_CHAR, "%c"},    {TYPE_BYTE, "%c"},    {TYPE_SHORT, "%i"},  {TYPE_USHORT, "%d"}, {TYPE_INT32, "%i"},   {TYPE_UINT32, "%u"}, {TYPE_INT64, "%li"},
-    {TYPE_UINT64, "%lu"}, {TYPE_POINTER, "%p"}, {TYPE_STRING, "%s"}, {TYPE_FLOAT, "%f"},  {TYPE_DOUBLE, "%lf"}, {TYPE_BINARY, "%p"},
+    {TYPE_CHAR, "%c"},    {TYPE_BYTE, "%c"},   {TYPE_INT8, "%i"},   {TYPE_UINT8, "%d"},   {TYPE_INT16, "%i"},
+    {TYPE_UINT16, "%d"},  {TYPE_INT32, "%i"},  {TYPE_UINT32, "%u"}, {TYPE_INT64, "%li"},  {TYPE_UINT64, "%lu"},
+    {TYPE_POINTER, "%p"}, {TYPE_STRING, "%s"}, {TYPE_FLOAT, "%f"},  {TYPE_DOUBLE, "%lf"}, {TYPE_BINARY, "%p"},
 };
 size_t size_type_formatter = RTL_NUMBER_OF(type_formatter);
 

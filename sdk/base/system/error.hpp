@@ -13,6 +13,7 @@
 #define __HOTPLACE_SDK_BASE_SYSTEM_ERROR__
 
 #include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/base/system/error.hpp>
 #include <hotplace/sdk/base/system/types.hpp>
 #include <queue>
 
@@ -63,7 +64,7 @@ class error_advisor {
 template <typename T>
 struct error_traits;
 
-/* hotplace */
+/* hotplace return_t/errorcode_t */
 template <>
 struct error_traits<return_t> {
     static return_t value_success() { return success; }
@@ -83,7 +84,7 @@ struct error_traits<int> {
     static int value_exception() { return -1; }
     static bool is_success(int code) { return code > 0; }
     static bool is_not_fail(int code) { return code > 0; }
-    static return_t to_return_t(return_t code) { return (code > 0) ? success : internal_error; }
+    static return_t to_return_t(int code) { return (code > 0) ? success : internal_error; }
 };
 
 }  // namespace hotplace

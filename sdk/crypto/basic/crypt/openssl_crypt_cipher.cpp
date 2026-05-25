@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/nostd/memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
@@ -92,97 +93,80 @@ typedef struct _openssl_crypt_context_t : public crypt_context_t {
 
 return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key, size_t size_key, const unsigned char* iv,
                              size_t size_iv) {
-    return_t ret = errorcode_t::success;
-    int ret_init = 0;
     binary_t temp_key;
     binary_t temp_iv;
     crypto_advisor* advisor = crypto_advisor::get_instance();
+    const EVP_CIPHER* cipher = advisor->find_evp_cipher(algorithm, mode);
+    if (nullptr == cipher) {
+        return not_supported;
+    }
+    std::unique_ptr<openssl_crypt_context_t> context;
 
-    __try2 {
-        if (nullptr == handle) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    /* EVP_CIPHER_CTX_key_length, EVP_CIPHER_CTX_iv_length
+     * [openssl 3.0.3] compatibility problem
+     * EVP_CIPHER_..._length return EVP_CTRL_RET_UNSUPPORTED(-1)
+     */
 
-        const EVP_CIPHER* cipher = advisor->find_evp_cipher(algorithm, mode);
-        if (nullptr == cipher) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-
-        auto context = custom::make_unique<openssl_crypt_context_t>();
-
-        uint32 internal_size_key = 0;
-        uint32 internal_size_iv = 0;
-
-        context->signature = OPENSSL_CRYPT_CONTEXT_SIGNATURE;
-        context->crypto_type = crypt_poweredby_t::openssl;
-        context->algorithm = algorithm;
-        context->mode = mode;
-
-        EVP_CIPHER_CTX_init(context->encrypt_context);
-        EVP_CIPHER_CTX_init(context->decrypt_context);
-
-        if (crypt_mode_t::wrap == mode) { /* A128KW, A192KW, A256KW*/
-            EVP_CIPHER_CTX_set_flags(context->encrypt_context, EVP_CIPHER_CTX_FLAG_WRAP_ALLOW);
-            EVP_CIPHER_CTX_set_flags(context->decrypt_context, EVP_CIPHER_CTX_FLAG_WRAP_ALLOW);
-        }
-
+    function_pipeline<int> pipeline;
+    pipeline  //
+        .set_tracer(pipeline_trace_dbg_openssl_print)
+        .test_parameter([&]() -> bool { return (nullptr != handle); })
+        .run_pipe([&]() -> int {
+            context = custom::make_unique<openssl_crypt_context_t>();
+            return context.get() ? 1 : 0;
+        })
+        .walk([&]() -> void {
+            context->signature = OPENSSL_CRYPT_CONTEXT_SIGNATURE;
+            context->crypto_type = crypt_poweredby_t::openssl;
+            context->algorithm = algorithm;
+            context->mode = mode;
+        })
         /*
          * openssl-1.0.2k
          * EVP_CipherInit   (&context->encrypt_context, EVP_aes_128_wrap(),          nullptr, nullptr, 1); // error
          * EVP_CipherInit_ex(&context->encrypt_context, EVP_aes_128_wrap(), nullptr, nullptr, nullptr, 1); // success
          */
-
-        ret_init = EVP_CipherInit_ex(context->encrypt_context, cipher, nullptr, nullptr, nullptr, 1);
-        ret_init = EVP_CipherInit_ex(context->decrypt_context, cipher, nullptr, nullptr, nullptr, 0);
-
-        /* EVP_CIPHER_CTX_key_length, EVP_CIPHER_CTX_iv_length
-         * [openssl 3.0.3] compatibility problem
-         * EVP_CIPHER_..._length return EVP_CTRL_RET_UNSUPPORTED(-1)
-         */
-
-        internal_size_key = EVP_CIPHER_CTX_key_length(context->encrypt_context);
-        adjust_range(internal_size_key, 0, EVP_MAX_KEY_LENGTH);
-        temp_key.resize(internal_size_key);
-        memcpy(temp_key.data(), key, (size_key > internal_size_key ? internal_size_key : size_key));
-
-        // EVP_CIPHER_get_iv_length { return cipher(nullptr)->iv_len; }
-        internal_size_iv = EVP_MAX_IV_LENGTH;
-        adjust_range(internal_size_iv, 0, EVP_MAX_IV_LENGTH);
-        temp_iv.resize(internal_size_iv);
-        memcpy(temp_iv.data(), iv, (size_iv > internal_size_iv ? internal_size_iv : size_iv));
-
-        context->datamap.emplace(crypt_item_t::item_cek, temp_key);
-        context->datamap.emplace(crypt_item_t::item_iv, temp_iv);
-
+        .run_pipe([&]() -> int { return EVP_CIPHER_CTX_init(context->encrypt_context); })
+        .run_pipe([&]() -> int { return EVP_CIPHER_CTX_init(context->decrypt_context); })
+        .walk([&]() -> void {
+            if (crypt_mode_t::wrap == mode) { /* A128KW, A192KW, A256KW*/
+                EVP_CIPHER_CTX_set_flags(context->encrypt_context, EVP_CIPHER_CTX_FLAG_WRAP_ALLOW);
+                EVP_CIPHER_CTX_set_flags(context->decrypt_context, EVP_CIPHER_CTX_FLAG_WRAP_ALLOW);
+            }
+        })
+        .run_pipe([&]() -> int { return EVP_CipherInit_ex(context->encrypt_context, cipher, nullptr, nullptr, nullptr, 1); })
+        .run_pipe([&]() -> int { return EVP_CipherInit_ex(context->decrypt_context, cipher, nullptr, nullptr, nullptr, 0); })
         /* key, iv */
+        .walk([&]() -> void {
+            uint32 internal_size_key = EVP_CIPHER_CTX_key_length(context->encrypt_context);
+            adjust_range(internal_size_key, 0, EVP_MAX_KEY_LENGTH);
+            temp_key.resize(internal_size_key);
+            memcpy(temp_key.data(), key, (size_key > internal_size_key ? internal_size_key : size_key));
+
+            uint32 internal_size_iv = 0;
+            // EVP_CIPHER_get_iv_length { return cipher(nullptr)->iv_len; }
+            internal_size_iv = EVP_MAX_IV_LENGTH;
+            adjust_range(internal_size_iv, 0, EVP_MAX_IV_LENGTH);
+            temp_iv.resize(internal_size_iv);
+            memcpy(temp_iv.data(), iv, (size_iv > internal_size_iv ? internal_size_iv : size_iv));
+
+            context->datamap.emplace(crypt_item_t::item_cek, temp_key);
+            context->datamap.emplace(crypt_item_t::item_iv, temp_iv);
+        })
         /* encrypt and decrypt re-initialize iv */
-        ret_init = EVP_CipherInit_ex(context->encrypt_context, cipher, nullptr, temp_key.data(), nullptr, 1);
-        if (1 != ret_init) {
-            ret = errorcode_t::error_cipher;
-            __leave2_trace_openssl(ret);
-        }
-        ret_init = EVP_CipherInit_ex(context->decrypt_context, cipher, nullptr, temp_key.data(), nullptr, 0);
-        if (1 != ret_init) {
-            ret = errorcode_t::error_cipher;
-            __leave2_trace_openssl(ret);
-        }
-
+        .run_pipe([&]() -> int { return EVP_CipherInit_ex(context->encrypt_context, cipher, nullptr, temp_key.data(), nullptr, 1); })
+        .run_pipe([&]() -> int { return EVP_CipherInit_ex(context->decrypt_context, cipher, nullptr, temp_key.data(), nullptr, 0); })
         /* ECB, CBC */
-        EVP_CIPHER_CTX_set_padding(context->encrypt_context, 1);
-        EVP_CIPHER_CTX_set_padding(context->decrypt_context, 1);
+        .run_pipe([&]() -> int { return EVP_CIPHER_CTX_set_padding(context->encrypt_context, 1); })
+        .run_pipe([&]() -> int { return EVP_CIPHER_CTX_set_padding(context->decrypt_context, 1); })
+        .walk([&]() -> void {
+            *handle = context.get();
 
-        *handle = context.get();
-
-        context.release();
-    }
-    __finally2 {
-        std::fill(temp_key.begin(), temp_key.end(), 0);
-        std::fill(temp_iv.begin(), temp_iv.end(), 0);
-    }
-
-    return ret;
+            context.release();
+        });
+    std::fill(temp_key.begin(), temp_key.end(), 0);
+    std::fill(temp_iv.begin(), temp_iv.end(), 0);
+    return pipeline.result_to_return_t();
 }
 
 return_t openssl_crypt::close(crypt_context_t* handle) {

@@ -10,6 +10,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_kdf.hpp>
@@ -137,29 +138,33 @@ return_t openssl_mac::cbc_mac(const char* alg, const binary_t& key, const binary
             __leave2;
         }
 
-        EVP_CIPHER_CTX_ptr context(EVP_CIPHER_CTX_new());
-        if (nullptr == context.get()) {
-            ret = errorcode_t::out_of_memory;
-            __leave2;
-        }
+        EVP_CIPHER_CTX_ptr context;
 
-        EVP_CipherInit_ex(context.get(), cipher, nullptr, key.data(), iv.data(), 1);
-        EVP_CIPHER_CTX_set_padding(context.get(), 1);
-
-        int size_update = 0;
-        size_t size_input = input.size();
-        uint16 blocksize = sizeof_block(hint_cipher);
-        for (size_t i = 0; i < size_input; i += blocksize) {
-            auto remain = size_input - i;
-            // auto size = (remain < blocksize) ? remain : blocksize;
-            if (remain > blocksize) {
-                EVP_CipherUpdate(context.get(), tag.data(), &size_update, &input[i], blocksize);
-            } else {
-                EVP_CipherUpdate(context.get(), tag.data(), &size_update, &input[i], t_narrow_cast(remain));
-                EVP_CipherUpdate(context.get(), tag.data(), &size_update, iv.data(), t_narrow_cast(blocksize - remain));
-            }
-        }
-        tag.resize(tagsize);
+        function_pipeline<int> pipeline;
+        pipeline  //
+            .set_tracer(pipeline_trace_dbg_openssl_print)
+            .run_pipe([&]() -> int {
+                context = std::move(EVP_CIPHER_CTX_ptr(EVP_CIPHER_CTX_new()));
+                return context.get() ? 1 : 0;
+            })
+            .run_pipe([&]() -> int { return EVP_CipherInit_ex(context.get(), cipher, nullptr, key.data(), iv.data(), 1); })
+            .run_pipe([&]() -> int { return EVP_CIPHER_CTX_set_padding(context.get(), 1); })
+            .walk([&]() -> void {
+                int size_update = 0;
+                size_t size_input = input.size();
+                uint16 blocksize = sizeof_block(hint_cipher);
+                for (size_t i = 0; i < size_input; i += blocksize) {
+                    auto remain = size_input - i;
+                    if (remain > blocksize) {
+                        EVP_CipherUpdate(context.get(), tag.data(), &size_update, &input[i], blocksize);
+                    } else {
+                        EVP_CipherUpdate(context.get(), tag.data(), &size_update, &input[i], t_narrow_cast(remain));
+                        EVP_CipherUpdate(context.get(), tag.data(), &size_update, iv.data(), t_narrow_cast(blocksize - remain));
+                    }
+                }
+                tag.resize(tagsize);
+            });
+        ret = pipeline.result_to_return_t();
     }
     __finally2 {}
     return ret;

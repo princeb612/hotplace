@@ -143,6 +143,15 @@ static inline double fp64_from_binary64(uint64 bin) {
     return temp.fp;
 }
 
+// clang-format: off
+
+static inline uint32 fp_to_bin(float fp) { return binary32_from_fp32(fp); }
+static inline uint64 fp_to_bin(double fp) { return binary64_from_fp64(fp); }
+static inline float bin_to_fp(uint32 bin) { return fp32_from_binary32(bin); }
+static inline double bin_to_fp(uint64 bin) { return fp64_from_binary64(bin); }
+
+// clang-format: on
+
 /**
  * @brief   size as small as possible
  * @param   variant& vt [out]

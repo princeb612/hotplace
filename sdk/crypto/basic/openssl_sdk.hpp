@@ -39,6 +39,8 @@ return_t debug_trace_openssl(stream_t* stream);
  *  leave_trace_dbg_openssl_print(__FILE__, __LINE__, ret);
  */
 void leave_trace_dbg_openssl_print(const char* file, unsigned int line, return_t ret);
+/* function_pipeline<int> tracer */
+void pipeline_trace_dbg_openssl_print(const char* file, unsigned int line, int rc);
 #ifdef DEBUG
 #define __leave2_trace_openssl(x)                             \
     {                                                         \

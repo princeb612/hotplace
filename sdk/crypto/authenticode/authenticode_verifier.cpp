@@ -9,7 +9,6 @@
  * 2023.08.27   Soo Han, Kim        get_crl - temporary disabled, under construction
  */
 
-#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/nostd/memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/string/string.hpp>

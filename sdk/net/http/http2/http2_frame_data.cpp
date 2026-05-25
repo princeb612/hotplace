@@ -9,7 +9,6 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
-#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/http/http2/http2_frame_data.hpp>
 #include <hotplace/sdk/net/http/http2/http2_protocol.hpp>

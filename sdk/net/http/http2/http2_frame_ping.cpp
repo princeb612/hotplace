@@ -8,7 +8,6 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/http/http2/http2_frame_ping.hpp>
 #include <hotplace/sdk/net/http/http2/http2_protocol.hpp>

@@ -157,9 +157,12 @@ class bignumber {
     bignumber& set(T value) {
         _sign = 1;
         _v.clear();
-        while (value) {
-            _v.push_back(value % base2p32);
-            value /= base2p32;
+
+        uint64 temp = static_cast<uint64>(value);
+
+        while (temp) {
+            _v.push_back(temp % base2p32);
+            temp /= base2p32;
         }
         trim();
 

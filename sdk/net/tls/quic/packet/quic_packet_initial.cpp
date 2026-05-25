@@ -32,7 +32,6 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
-#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/quic/frame/quic_frame.hpp>

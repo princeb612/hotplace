@@ -15,7 +15,7 @@
 namespace hotplace {
 
 const uint32 basic_stream_policy_minsize = 1 << 3;
-const uint32 basic_stream_policy_allocsize = 1 << 12;
+const uint32 basic_stream_policy_allocsize = 1 << 7;
 
 stream_policy stream_policy::_instance;
 

@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
@@ -23,7 +24,6 @@ return_t openssl_sign::sign_digestsign(const EVP_PKEY* pkey, const binary_t& inp
 
 return_t openssl_sign::sign_digestsign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
-    int ret_test = 0;
 
     __try2 {
         signature.clear();
@@ -47,32 +47,26 @@ return_t openssl_sign::sign_digestsign(const EVP_PKEY* pkey, const byte_t* strea
             __leave2;
         }
 
-        EVP_MD_CTX_ptr ctx(EVP_MD_CTX_new());
-        ret_test = EVP_DigestSignInit(ctx.get(), nullptr, nullptr, nullptr, (EVP_PKEY*)pkey);
-        if (1 != ret_test) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
         /**
          * ML-DSA-44 2420
          * ML-DSA-65 3309
          * ML-DSA-87 4627
          */
-        size_t dgstsize = 0;
-        ret_test = EVP_DigestSign(ctx.get(), nullptr, &dgstsize, stream, size);
-        if (1 != ret_test) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-        signature.resize(dgstsize);
 
-        ret_test = EVP_DigestSign(ctx.get(), signature.data(), &dgstsize, stream, size);
-        if (1 != ret_test) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
+        EVP_MD_CTX_ptr ctx(EVP_MD_CTX_new());
+        size_t dgstsize = 0;
+
+        function_pipeline<int> pipeline;
+        pipeline  //
+            .run_pipe([&]() -> int { return ctx.get() ? 1 : 0; })
+            .run_pipe([&]() -> int { return EVP_DigestSignInit(ctx.get(), nullptr, nullptr, nullptr, (EVP_PKEY*)pkey); })
+            .run_pipe([&]() -> int { return EVP_DigestSign(ctx.get(), nullptr, &dgstsize, stream, size); })
+            .walk([&]() -> void { signature.resize(dgstsize); })
+            .run_pipe([&]() -> int { return EVP_DigestSign(ctx.get(), signature.data(), &dgstsize, stream, size); })
+            .walk([&]() -> void { signature.resize(dgstsize); });
+        if (pipeline.failed()) {
+            ret = pipeline.result_to_return_t();
         }
-        signature.resize(dgstsize);
     }
     __finally2 {}
     return ret;
@@ -84,7 +78,6 @@ return_t openssl_sign::verify_digestsign(const EVP_PKEY* pkey, const binary_t& i
 
 return_t openssl_sign::verify_digestsign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) {
     return_t ret = errorcode_t::success;
-    int ret_test = 0;
 
     __try2 {
         if (nullptr == pkey || nullptr == stream) {
@@ -107,16 +100,15 @@ return_t openssl_sign::verify_digestsign(const EVP_PKEY* pkey, const byte_t* str
         }
 
         EVP_MD_CTX_ptr ctx(EVP_MD_CTX_new());
-        ret_test = EVP_DigestVerifyInit(ctx.get(), nullptr, nullptr, nullptr, (EVP_PKEY*)pkey);
-        if (1 != ret_test) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
 
-        ret_test = EVP_DigestVerify(ctx.get(), signature.data(), signature.size(), stream, size);
-        if (1 != ret_test) {
-            ret = errorcode_t::error_verify;
-            __leave2_trace_openssl(ret);
+        function_pipeline<int> pipeline;
+        pipeline  //
+            .set_tracer(pipeline_trace_dbg_openssl_print)
+            .run_pipe([&]() -> int { return ctx.get() ? 1 : 0; })
+            .run_pipe([&]() -> int { return EVP_DigestVerifyInit(ctx.get(), nullptr, nullptr, nullptr, (EVP_PKEY*)pkey); })
+            .run_pipe([&]() -> int { return EVP_DigestVerify(ctx.get(), signature.data(), signature.size(), stream, size); });
+        if (pipeline.failed()) {
+            ret = pipeline.result_to_return_t();
         }
     }
     __finally2 {}

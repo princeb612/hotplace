@@ -42,41 +42,62 @@ return_t dtls_record_arrange::produce(const sockaddr* addr, socklen_t addrlen, c
         size_t pos = 0;
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-        while (pos < size) {
+        while ((pos < size) && (success == ret)) {
+            if (pos + sizeof(dtls_header) > size) {
+                ret = errorcode_t::bad_data;
+                break;
+            }
+
             dtls_header* header = (dtls_header*)(stream + pos);
 
-            // uint8 type = header->type;
             uint16 version = ntoh16(header->version);
             if (false == tlsadvisor->is_kindof_dtls(version)) {
                 ret = errorcode_t::bad_data;
-                __leave2;
+                break;
             }
             uint16 len = ntoh16(header->length);
 
+            if (pos + sizeof(dtls_header) + len > size) {
+                ret = errorcode_t::bad_data;
+                break;
+            }
+
             uint16 epoch = ntoh16(header->keyepoch);
-            uint64 seq = uint48_t(header->recordseq, 6);
+            uint64 seq = uint48_t(header->recordseq, 6);  // 6 bytes
             uint64 key = make_epoch_seq(epoch, seq);
-            binary_t packet;
-            binary_append(packet, stream + pos, sizeof(dtls_header) + len);
 
             {
                 critical_section_guard guard(_lock);
-                auto& pool = _pool[cookie];
-                if (((epoch == pool.epoch) && (seq < pool.seq)) || ((epoch < pool.epoch))) {
-                    // drop re-transmission
-                } else {
-                    if (0 == pool.addr.ss_family) {
-                        memcpy(&pool.addr, addr, addrlen);
+                auto iter = _pool.find(cookie);
+                if (_pool.end() != iter) {
+                    auto& pool = iter->second;
+                    if (((epoch == pool.epoch) && (seq < pool.seq)) || ((epoch < pool.epoch))) {
+                        // drop re-transmission
+                        pos += sizeof(dtls_header) + len;
+                        continue;
                     }
-#if defined DEBUG
-                    if (istraceable(trace_category_net)) {
-                        trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
-                            dbs.println(ANSI_ESCAPE "1;35mDTLS reorder + epoch %u seq %I64u" ANSI_ESCAPE "0m", epoch, seq);
-                        });
+
+                    if (pool.packets.size() >= 100) {
+                        // MAX_WINDOW_SIZE
+                        pos += sizeof(dtls_header) + len;
+                        continue;
                     }
-#endif
-                    pool.packets.emplace(key, std::move(packet));
                 }
+
+                auto& pool = _pool[cookie];
+                if (0 == pool.addr.ss_family) {
+                    memcpy(&pool.addr, addr, addrlen);
+                }
+#if defined DEBUG
+                if (istraceable(trace_category_net)) {
+                    trace_debug_event(trace_category_net, trace_event_tls_record,
+                                      [&](basic_stream& dbs) -> void { dbs.println(ANSI_ESCAPE "1;35mDTLS reorder + epoch %u seq %I64u" ANSI_ESCAPE "0m", epoch, seq); });
+                }
+#endif
+
+                binary_t& packet = pool.packets[key];
+                packet.clear();
+                binary_append(packet, stream + pos, sizeof(dtls_header) + len);
             }
 
             pos += sizeof(dtls_header) + len;
@@ -156,25 +177,11 @@ return_t dtls_record_arrange::consume(const sockaddr* addr, socklen_t addrlen, u
     return ret;
 }
 
-uint64 dtls_record_arrange::make_epoch_seq(uint16 epoch, uint64 seq) {
-    uint64 value = 0;
-    uint16 e = hton16(epoch);
-    uint48_t s(seq);
-    memcpy((byte_t*)&value, &e, 2);
-    memcpy((byte_t*)&value + 2, s.data, 6);
-    return ntoh64(value);
-}
+uint64 dtls_record_arrange::make_epoch_seq(uint16 epoch, uint64 seq) { return (static_cast<uint64>(epoch) << 48) | (seq & 0x0000FFFFFFFFFFFFULL); }
 
 void dtls_record_arrange::get_epoch_seq(uint64 key, uint16& epoch, uint64& seq) {
-    uint16 etemp = 0;
-    uint64 stemp = hton64(key);
-
-    memcpy((byte_t*)&etemp, (byte_t*)&stemp, 2);
-    epoch = ntoh16(etemp);
-
-    uint48_t s;
-    memcpy(s.data, (byte_t*)&stemp + 2, 6);
-    seq = s;
+    epoch = static_cast<uint16>(key >> 48);
+    seq = key & 0x0000FFFFFFFFFFFFULL;
 }
 
 void dtls_record_arrange::set_session(tls_session* session) { _session = session; }
