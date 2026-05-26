@@ -34,8 +34,8 @@ return_t dump_record(const char* text, tls_session* session, tls_direction_t dir
         tls_records records;
         ret = records.read(session, dir, bin);
 
-        if ((false == expect) && (success != ret)) {
-            ret = expect_failure;
+        if ((false == expect) && (errorcode_t::success != ret)) {
+            ret = errorcode_t::expect_failure;
         }
 
         _test_case.test(ret, __FUNCTION__, "%s : %s", (from_client == dir) ? "C -> S" : "C <- S", text);
@@ -159,24 +159,25 @@ int main(int argc, char** argv) {
 #endif
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
-    (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, const char* param) -> void { o.enable_verbose(); }).optional()
+    (*_cmdline)
+        << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, const char* param) -> void { o.enable_verbose(); }).optional()
 #if defined DEBUG
-                << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, const char* param) -> void { o.enable_debug(); }).optional()
-                << t_cmdarg_t<OPTION>("-D", "trace level 0|2", [](OPTION& o, const char* param) -> void { o.enable_trace(atoi(param)); }).optional().preced()
-                << t_cmdarg_t<OPTION>("--trace", "trace level [trace]", [](OPTION& o, const char* param) -> void { o.enable_trace(loglevel_trace); }).optional()
-                << t_cmdarg_t<OPTION>("--debug", "trace level [debug]", [](OPTION& o, const char* param) -> void { o.enable_trace(loglevel_debug); }).optional()
+        << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, const char* param) -> void { o.enable_debug(); }).optional()
+        << t_cmdarg_t<OPTION>("-D", "trace level 0|2", [](OPTION& o, const char* param) -> void { o.enable_trace(atoi(param)); }).optional().preced()
+        << t_cmdarg_t<OPTION>("--trace", "trace level [trace]", [](OPTION& o, const char* param) -> void { o.enable_trace(loglevel_t::loglevel_trace); }).optional()
+        << t_cmdarg_t<OPTION>("--debug", "trace level [debug]", [](OPTION& o, const char* param) -> void { o.enable_trace(loglevel_t::loglevel_debug); }).optional()
 #endif
-                << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, const char* param) -> void { o.log = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, const char* param) -> void { o.time = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-k", "keylog", [](OPTION& o, const char* param) -> void { o.keylog = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-ffdhe", "test FFDHE", [](OPTION& o, const char* param) -> void { o.test_ffdhe = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-c", "dump clienthello (base16 stream)",
-                                      [](OPTION& o, const char* param) -> void {
-                                          o.enable_debug();
-                                          o.clienthello = std::move(base16_decode_rfc(param));
-                                      })
-                       .optional()
-                       .preced();
+        << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, const char* param) -> void { o.log = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, const char* param) -> void { o.time = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-k", "keylog", [](OPTION& o, const char* param) -> void { o.keylog = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-ffdhe", "test FFDHE", [](OPTION& o, const char* param) -> void { o.test_ffdhe = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-c", "dump clienthello (base16 stream)",
+                              [](OPTION& o, const char* param) -> void {
+                                  o.enable_debug();
+                                  o.clienthello = std::move(base16_decode_rfc(param));
+                              })
+               .optional()
+               .preced();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
@@ -192,7 +193,7 @@ int main(int argc, char** argv) {
     _logger.make_share(builder.build());
 
     if (option.debug) {
-        auto lambda_tracedebug = [&](trace_category_t category, uint32 event, stream_t* s) -> void { _logger->write(s); };
+        auto lambda_tracedebug = [&](trace_category_t category, trace_event_t event, stream_t* s) -> void { _logger->write(s); };
         set_trace_debug(lambda_tracedebug);
         set_trace_option(trace_bt | trace_except | trace_debug);
         set_trace_level(option.trace_level);
@@ -209,7 +210,7 @@ int main(int argc, char** argv) {
     if (option.clienthello.empty()) {
 #if defined DEBUG
         auto lambda = [&](const char* line) -> void { _logger->writeln(line); };
-        if (check_trace_level(loglevel_debug) && istraceable()) {
+        if (check_trace_level(loglevel_t::loglevel_debug) && istraceable()) {
             auto sslkeylog = sslkeylog_exporter::get_instance();
             sslkeylog->set(lambda);
         }

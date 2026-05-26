@@ -86,8 +86,9 @@ return_t openssl_tls::tls_open(socket_context_t** handle, socket_t fd, uint32 fl
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_crypto, loglevel_debug)) {
-            trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream& dbs) -> void { dbs.println("- SSL_new %p", ssl); });
+        if (istraceable(trace_category_t::trace_category_crypto, loglevel_t::loglevel_debug)) {
+            trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_openssl_info,
+                              [&](basic_stream& dbs) -> void { dbs.println("- SSL_new %p", ssl); });
         }
 #endif
 
@@ -133,8 +134,9 @@ return_t openssl_tls::dtls_open(socket_context_t** handle, socket_t fd, uint32 f
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_crypto, loglevel_debug)) {
-            trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream& dbs) -> void { dbs.println("- SSL_new %p", ssl); });
+        if (istraceable(trace_category_t::trace_category_crypto, loglevel_t::loglevel_debug)) {
+            trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_openssl_info,
+                              [&](basic_stream& dbs) -> void { dbs.println("- SSL_new %p", ssl); });
         }
 #endif
 
@@ -436,7 +438,7 @@ return_t openssl_tls::do_connect(socket_context_t* handle, uint32 wto) {
             if (0 == rc) {
                 ret = errorcode_t::disconnect;
             } else {
-                ret = errorcode_t::error_connect;
+                ret = errorcode_t::connect_failure;
             }
         }
     }
@@ -565,7 +567,7 @@ return_t openssl_tls::do_accept(socket_context_t* handle) {
                 if (0 == rc) {
                     ret = errorcode_t::disconnect;
                 } else {
-                    ret = errorcode_t::error_handshake;
+                    ret = errorcode_t::handshake_failure;
                 }
             }
             if (0 == (tlsflags & tls_nbio)) {

@@ -80,7 +80,7 @@ class tls_record_builder {
      *              .add(&records, tls_content_type_handshake, session,  //
      *                   [&](tls_record* record) -> return_t {
      *                       record->add(tls_hs_finished, session);
-     *                       return success;
+     *                       return errorcode_t::success;
      *                   });
      */
     tls_record_builder& set_protected(bool protect);

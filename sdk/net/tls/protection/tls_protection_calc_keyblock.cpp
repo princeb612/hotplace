@@ -139,8 +139,8 @@ return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t
             get_secrets().assign(tls_secret_server_iv, secret_server_iv);
 
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+            if (istraceable(trace_category_t::trace_category_net)) {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                     dbs.printf(ANSI_ESCAPE "1;36m");
                     dbs.println("> cipher_suite %s", tlsadvisor->hintof_cipher_suite(cs)->name_iana);
                     dbs.println("> master_secret %s", base16_encode(master_secret).c_str());

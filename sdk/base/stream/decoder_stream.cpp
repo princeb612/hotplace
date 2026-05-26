@@ -42,7 +42,7 @@ return_t decoder_stream::write(const char* data, size_t size) {
 
         auto unitsize = _encbuf.unitsize(get_encoding());
         switch (get_encoding()) {
-            case encoding_base16: {
+            case encoding_t::encoding_base16: {
                 size_t pos = 0;
                 // _encbuf
                 if (_encbuf.len > 0) {
@@ -50,7 +50,7 @@ return_t decoder_stream::write(const char* data, size_t size) {
                     if (size >= need) {
                         memcpy(_encbuf.buf + _encbuf.len, data, need);
                         _encbuf.len += need;
-                        ret = base16_decode(_encbuf.buf, unitsize, _buffer, base16_notrunc);
+                        ret = base16_decode(_encbuf.buf, unitsize, _buffer, encoding_notrunc);
                         _encbuf.reset();
                         if (errorcode_t::success != ret) {
                             break;
@@ -66,7 +66,7 @@ return_t decoder_stream::write(const char* data, size_t size) {
                 size_t quotient = remain / unitsize;
                 size_t remainder = remain % unitsize;
                 if (quotient > 0) {
-                    ret = base16_decode(data + pos, quotient * unitsize, _buffer, base16_notrunc);
+                    ret = base16_decode(data + pos, quotient * unitsize, _buffer, encoding_notrunc);
                     if (errorcode_t::success != ret) {
                         break;
                     }
@@ -77,11 +77,11 @@ return_t decoder_stream::write(const char* data, size_t size) {
                     _encbuf.len = (uint8)remainder;
                 }
             } break;
-            case encoding_base16rfc: {
+            case encoding_t::encoding_base16rfc: {
                 ret = errorcode_t::not_supported;
             } break;
-            case encoding_base64:
-            case encoding_base64url: {
+            case encoding_t::encoding_base64:
+            case encoding_t::encoding_base64url: {
                 size_t pos = 0;
                 // _encbuf
                 if (_encbuf.len > 0) {
@@ -89,7 +89,7 @@ return_t decoder_stream::write(const char* data, size_t size) {
                     if (size >= need) {
                         memcpy(_encbuf.buf + _encbuf.len, data, need);
                         _encbuf.len += need;
-                        ret = base64_decode(_encbuf.buf, unitsize, _buffer, _encoding, base64_notrunc);
+                        ret = base64_decode(_encbuf.buf, unitsize, _buffer, _encoding, encoding_notrunc);
                         _encbuf.reset();
                         if (errorcode_t::success != ret) {
                             break;
@@ -105,7 +105,7 @@ return_t decoder_stream::write(const char* data, size_t size) {
                 size_t remainder = remain % unitsize;
                 size_t processlen = remain - remainder;
                 if (processlen > 0) {
-                    ret = base64_decode(data + pos, processlen, _buffer, _encoding, base64_notrunc);
+                    ret = base64_decode(data + pos, processlen, _buffer, _encoding, encoding_notrunc);
                     if (errorcode_t::success != ret) {
                         break;
                     }
@@ -128,20 +128,20 @@ return_t decoder_stream::write(const char* data, size_t size) {
 return_t decoder_stream::flush() {
     return_t ret = errorcode_t::success;
     switch (get_encoding()) {
-        case encoding_base16: {
+        case encoding_t::encoding_base16: {
             if (_encbuf.len == 2) {
-                ret = base16_decode(_encbuf.buf, _encbuf.len, _buffer, base16_notrunc);
+                ret = base16_decode(_encbuf.buf, _encbuf.len, _buffer, encoding_notrunc);
                 _encbuf.reset();
             }
         } break;
-        case encoding_base64:
-        case encoding_base64url: {
+        case encoding_t::encoding_base64:
+        case encoding_t::encoding_base64url: {
             if (_encbuf.len == 1) {
                 _encbuf.reset();
                 break;
             }
             if (_encbuf.len > 0) {
-                ret = base64_decode(_encbuf.buf, _encbuf.len, _buffer, _encoding, base64_notrunc);
+                ret = base64_decode(_encbuf.buf, _encbuf.len, _buffer, _encoding, encoding_notrunc);
                 _encbuf.reset();
             }
         } break;

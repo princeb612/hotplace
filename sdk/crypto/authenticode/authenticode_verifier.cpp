@@ -329,7 +329,7 @@ return_t authenticode_verifier::verify(authenticode_context_t* handle, const cha
 
             if (authenticode_engine_id_msi != engine_matched->id()) {
                 if (pkcs7_digest != md_digest) {
-                    ret = errorcode_t::error_digest;
+                    ret = errorcode_t::digest_failure;
                     __leave2;
                 }
             }
@@ -369,7 +369,7 @@ return_t authenticode_verifier::verify_separated(authenticode_context_t* handle,
             __leave2;
         }
 
-        ret = errorcode_t::error_verify;
+        ret = errorcode_t::verification_failure;
         result = authenticode_verify_t::verify_unknown;
 
         if (authenticode_flag_t::flag_separated & flags) {
@@ -577,8 +577,9 @@ int verify_callback(int ok, X509_STORE_CTX* ctx) {
     X509_NAME_to_string(X509_get_subject_name(current_cert), subject);
 
 #if defined DEBUG
-    if (istraceable(trace_category_crypto, loglevel_debug)) {
-        trace_debug_event(trace_category_crypto, trace_event_verify, [&](basic_stream& dbs) -> void { dbs.println("# depth=%i %s", depth, subject.c_str()); });
+    if (istraceable(trace_category_t::trace_category_crypto, loglevel_t::loglevel_debug)) {
+        trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_verify,
+                          [&](basic_stream& dbs) -> void { dbs.println("# depth=%i %s", depth, subject.c_str()); });
     }
 #endif
 
@@ -617,8 +618,8 @@ int verify_callback(int ok, X509_STORE_CTX* ctx) {
 
     if (0 == ok) {
 #if defined DEBUG
-        if (istraceable(trace_category_crypto, loglevel_debug)) {
-            trace_debug_event(trace_category_crypto, trace_event_verify,
+        if (istraceable(trace_category_t::trace_category_crypto, loglevel_t::loglevel_debug)) {
+            trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_verify,
                               [&](basic_stream& dbs) -> void { dbs.println("# verify error:num=%d:%s", err, X509_verify_cert_error_string(err)); });
         }
 #endif
@@ -630,8 +631,9 @@ int verify_callback(int ok, X509_STORE_CTX* ctx) {
             X509* cert = X509_STORE_CTX_get_current_cert(ctx);
             X509_NAME_oneline(X509_get_issuer_name(cert), buf, 256);
 #if defined DEBUG
-            if (istraceable(trace_category_crypto, loglevel_debug)) {
-                trace_debug_event(trace_category_crypto, trace_event_verify, [&](basic_stream& dbs) -> void { dbs.println("# issuer= %s", buf); });
+            if (istraceable(trace_category_t::trace_category_crypto, loglevel_t::loglevel_debug)) {
+                trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_verify,
+                                  [&](basic_stream& dbs) -> void { dbs.println("# issuer= %s", buf); });
             }
 #endif
         } break;
@@ -666,8 +668,9 @@ int verify_callback(int ok, X509_STORE_CTX* ctx) {
         //
     }
 #if defined DEBUG
-    if (istraceable(trace_category_crypto, loglevel_debug)) {
-        trace_debug_event(trace_category_crypto, trace_event_verify, [&](basic_stream& dbs) -> void { dbs.println("# verify return:%d", ok); });
+    if (istraceable(trace_category_t::trace_category_crypto, loglevel_t::loglevel_debug)) {
+        trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_verify,
+                          [&](basic_stream& dbs) -> void { dbs.println("# verify return:%d", ok); });
     }
 #endif
     return ok;
@@ -723,8 +726,8 @@ return_t authenticode_verifier::verify_pkcs7(authenticode_context_t* handle, voi
             X509* cert = sk_X509_value(signers, i);
 
 #if defined DEBUG
-            if (istraceable(trace_category_crypto, loglevel_debug)) {
-                trace_debug_event(trace_category_crypto, trace_event_verify, [&](basic_stream& dbs) -> void {
+            if (istraceable(trace_category_t::trace_category_crypto, loglevel_t::loglevel_debug)) {
+                trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_verify, [&](basic_stream& dbs) -> void {
                     std::string signer;
                     X509_NAME_to_string(X509_get_subject_name(cert), signer);
                     dbs.println("# signer[%i] : %s", i, signer.c_str());
@@ -737,8 +740,9 @@ return_t authenticode_verifier::verify_pkcs7(authenticode_context_t* handle, voi
             crl_distribution_point(cert, crls);
             for (auto crl : crls) {
 #if defined DEBUG
-                if (istraceable(trace_category_crypto, loglevel_debug)) {
-                    trace_debug_event(trace_category_crypto, trace_event_verify, [&](basic_stream& dbs) -> void { dbs.println("# - CRL : %s", crl.c_str()); });
+                if (istraceable(trace_category_t::trace_category_crypto, loglevel_t::loglevel_debug)) {
+                    trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_verify,
+                                      [&](basic_stream& dbs) -> void { dbs.println("# - CRL : %s", crl.c_str()); });
                 }
 #endif
             }
@@ -750,8 +754,8 @@ return_t authenticode_verifier::verify_pkcs7(authenticode_context_t* handle, voi
             X509* cert = sk_X509_value(pkcs7->d.sign->cert, i);
             // print_x509 (cert);
 #if defined DEBUG
-            if (istraceable(trace_category_crypto, loglevel_debug)) {
-                trace_debug_event(trace_category_crypto, trace_event_verify, [&](basic_stream& dbs) -> void {
+            if (istraceable(trace_category_t::trace_category_crypto, loglevel_t::loglevel_debug)) {
+                trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_verify, [&](basic_stream& dbs) -> void {
                     std::string certificate;
                     X509_NAME_to_string(X509_get_subject_name(cert), certificate);
                     dbs.println("# certificate[%i] : %s", i, certificate.c_str());
@@ -762,8 +766,9 @@ return_t authenticode_verifier::verify_pkcs7(authenticode_context_t* handle, voi
             crl_distribution_point(cert, crls);
             for (auto crl : crls) {
 #if defined DEBUG
-                if (istraceable(trace_category_crypto, loglevel_debug)) {
-                    trace_debug_event(trace_category_crypto, trace_event_verify, [&](basic_stream& dbs) -> void { dbs.println("# - CRL : %s", crl.c_str()); });
+                if (istraceable(trace_category_t::trace_category_crypto, loglevel_t::loglevel_debug)) {
+                    trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_verify,
+                                      [&](basic_stream& dbs) -> void { dbs.println("# - CRL : %s", crl.c_str()); });
                 }
 #endif
             }
@@ -829,7 +834,7 @@ return_t authenticode_verifier::verify_pkcs7(authenticode_context_t* handle, voi
         //__trace(0, format("PKCS7_verify %d", ret_verify).c_str());
         // printf("Signature verification: %s\n\n", ret_verify ? "ok" : "failed");
         if (ret_verify < 1) {
-            ret = errorcode_t::error_verify;
+            ret = errorcode_t::verification_failure;
             __leave2_trace_openssl(ret);
         }
     }

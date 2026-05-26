@@ -105,7 +105,7 @@ void test_yaml_testvector_cmdline() {
                 if (templ == "myoption") {
                     lambda_yaml_cmdline(items);
                 } else {
-                    _test_case.test(not_supported, __FUNCTION__, "unknown template");
+                    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "unknown template");
                 }
             } else {
                 _test_case.assert(false, __FUNCTION__, "bad message format");

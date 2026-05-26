@@ -12,7 +12,7 @@
 
 void test_key_rsa() {
     _test_case.begin("RSA");
-    return_t ret = success;
+    return_t ret = errorcode_t::success;
 
     auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
         _logger->write([&](basic_stream& bs) -> void {

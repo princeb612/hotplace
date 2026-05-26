@@ -134,7 +134,7 @@ void test_dhkem_ossl_example() {
 
             rc = OSSL_HPKE_keygen(hpke_suite, pub.data(), &publen, &priv, nullptr, 0, nullptr, nullptr);
             if (1 != rc) {
-                ret = failed;
+                ret = errorcode_t::failed;
                 __leave2;
             }
             pub.resize(publen);
@@ -153,12 +153,12 @@ void test_dhkem_ossl_example() {
             // using the receivers public key
             seal_ctx = OSSL_HPKE_CTX_new(hpke_mode, hpke_suite, OSSL_HPKE_ROLE_SENDER, nullptr, nullptr);
             if (nullptr == seal_ctx) {
-                ret = failed;
+                ret = errorcode_t::failed;
                 __leave2;
             }
             rc = OSSL_HPKE_encap(seal_ctx, encap.data(), &encaplen, pub.data(), pub.size(), info.data(), info.size());
             if (1 != rc) {
-                ret = failed;
+                ret = errorcode_t::failed;
                 __leave2;
             }
             encap.resize(encaplen);
@@ -167,7 +167,7 @@ void test_dhkem_ossl_example() {
             // encrypt data
             rc = OSSL_HPKE_seal(seal_ctx, ct.data(), &ctlen, aad.data(), aad.size(), pt.data(), pt.size());
             if (1 != rc) {
-                ret = failed;
+                ret = errorcode_t::failed;
                 __leave2;
             }
             ct.resize(ctlen);
@@ -181,17 +181,17 @@ void test_dhkem_ossl_example() {
 
             open_ctx = OSSL_HPKE_CTX_new(hpke_mode, hpke_suite, OSSL_HPKE_ROLE_RECEIVER, nullptr, nullptr);
             if (nullptr == open_ctx) {
-                ret = failed;
+                ret = errorcode_t::failed;
                 __leave2;
             }
             rc = OSSL_HPKE_decap(open_ctx, encap.data(), encap.size(), priv, info.data(), info.size());
             if (1 != rc) {
-                ret = failed;
+                ret = errorcode_t::failed;
                 __leave2;
             }
             rc = OSSL_HPKE_open(open_ctx, clear.data(), &clearlen, aad.data(), aad.size(), ct.data(), ct.size());
             if (1 != rc) {
-                ret = failed;
+                ret = errorcode_t::failed;
                 __leave2;
             }
             clear.resize(clearlen);
@@ -205,7 +205,7 @@ void test_dhkem_ossl_example() {
     }
     _test_case.test(ret, __FUNCTION__, "HPKE");
 #else
-    _test_case.test(not_supported, __FUNCTION__, "openssl 3.2 required");
+    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "openssl 3.2 required");
 #endif
 }
 

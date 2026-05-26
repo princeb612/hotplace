@@ -14,14 +14,14 @@
 void test_filestream() {
     _test_case.begin("filestream");
     file_stream fs;
-    return_t ret = success;
+    return_t ret = errorcode_t::success;
     __try2 {
         const char* filename = "testfile";
         size_t filesize = 1024;
 
         ret = fs.open(filename, open_write);
         _test_case.test(ret, __FUNCTION__, "open");
-        if (success != ret) {
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 
@@ -30,7 +30,7 @@ void test_filestream() {
 
         ret = fs.begin_mmap();
         _test_case.test(ret, __FUNCTION__, "mmap");
-        if (success != ret) {
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 

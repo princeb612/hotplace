@@ -14,18 +14,18 @@
 
 namespace hotplace {
 
-static std::function<void(trace_category_t category, uint32 event, stream_t* s)> _internal_debug;
+static std::function<void(trace_category_t category, trace_event_t event, stream_t* s)> _internal_debug;
 static std::map<trace_category_t, bool> _debug_category_filter;
 
-void set_trace_debug(std::function<void(trace_category_t category, uint32 event, stream_t* s)> f) { _internal_debug = f; }
+void set_trace_debug(std::function<void(trace_category_t category, trace_event_t event, stream_t* s)> f) { _internal_debug = f; }
 
-void trace_debug_event_stream(trace_category_t category, uint32 event, stream_t* s) {
+void trace_debug_event_stream(trace_category_t category, trace_event_t event, stream_t* s) {
     if (s && (trace_debug & get_trace_option()) && trace_debug_filtered(category) && _internal_debug) {
         _internal_debug(category, event, s);
     }
 }
 
-void trace_debug_event_printf(trace_category_t category, uint32 event, const char* fmt, ...) {
+void trace_debug_event_printf(trace_category_t category, trace_event_t event, const char* fmt, ...) {
     if (fmt && trace_debug_filtered(category)) {
         basic_stream bs;
         va_list ap;
@@ -38,7 +38,7 @@ void trace_debug_event_printf(trace_category_t category, uint32 event, const cha
     }
 }
 
-void trace_debug_event(trace_category_t category, uint32 event, std::function<void(basic_stream& bs)> f) {
+void trace_debug_event(trace_category_t category, trace_event_t event, std::function<void(basic_stream& bs)> f) {
     if (f && trace_debug_filtered(category)) {
         basic_stream bs;
         f(bs);
@@ -75,18 +75,18 @@ bool istraceable() {
 
 bool istraceable(trace_category_t category) { return (istraceable() && trace_debug_filtered(category)); }
 
-bool istraceable(trace_category_t category, int8 level) { return (istraceable() && trace_debug_filtered(category)) && check_trace_level(level); }
+bool istraceable(trace_category_t category, loglevel_t level) { return (istraceable() && trace_debug_filtered(category)) && check_trace_level(level); }
 
-static int8 _trace_level = 0;
+static loglevel_t _trace_level = loglevel_t::default_loglevel;
 
-bool check_trace_level(int8 level) { return level <= _trace_level; }
+bool check_trace_level(loglevel_t level) { return level <= _trace_level; }
 
-void set_trace_level(int8 level) { _trace_level = level; }
+void set_trace_level(loglevel_t level) { _trace_level = level; }
 
 void leave_trace_dbg_print(const char* file, unsigned int line, bool bt, return_t ret) {
 #if defined DEBUG
-    if (istraceable(trace_category_internal, loglevel_debug)) {
-        trace_debug_event(trace_category_internal, trace_event_internal, [&](basic_stream& dbs) -> void {
+    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_debug)) {
+        trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
             std::string errormsg;
             error_advisor::get_instance()->error_code(ret, errormsg);
             dbs.println("[" ANSI_ESCAPE "36m%08x" ANSI_ESCAPE "0m][%s @ %d][%s]", ret, file, line, errormsg.c_str());
@@ -101,10 +101,10 @@ void leave_trace_dbg_print(const char* file, unsigned int line, bool bt, return_
 
 void leave_trace_dbg_printf(const char* file, unsigned int line, bool bt, return_t ret, const char* msg, ...) {
 #if defined DEBUG
-    if (istraceable(trace_category_internal, loglevel_debug)) {
+    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_debug)) {
         va_list ap;
         va_start(ap, msg);
-        trace_debug_event(trace_category_internal, trace_event_internal, [&](basic_stream& dbs) -> void {
+        trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
             std::string errormsg;
             error_advisor::get_instance()->error_code(ret, errormsg);
             dbs.printf("[" ANSI_ESCAPE "36m%08x" ANSI_ESCAPE "0m][%s @ %d][%s] ", ret, file, line, errormsg.c_str());

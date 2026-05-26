@@ -33,12 +33,12 @@ return_t crypto_keyexchange::keygen(crypto_key* key, const char* kid, binary_t& 
         auto group = get_group();
 
         ret = keygen(group, key, kid);
-        if (success != ret) {
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 
         ret = keyshare(group, key, kid, share);
-        if (success != ret) {
+        if (errorcode_t::success != ret) {
             __leave2;
         }
     }
@@ -53,7 +53,7 @@ return_t crypto_keyexchange::exchange(crypto_key* key, const char* kid, const bi
 
         crypto_key ephemeral;
         ret = exchange(group, key, &ephemeral, kid, "pub", share, sharedsecret);
-        if (success != ret) {
+        if (errorcode_t::success != ret) {
             __leave2;
         }
     }
@@ -67,7 +67,7 @@ return_t crypto_keyexchange::encaps(const binary_t& share, binary_t& keycapsule,
         auto group = get_group();
 
         ret = encaps(group, share, keycapsule, sharedsecret);
-        if (success != ret) {
+        if (errorcode_t::success != ret) {
             __leave2;
         }
     }
@@ -81,7 +81,7 @@ return_t crypto_keyexchange::decaps(crypto_key* key, const char* kid, const bina
         auto group = get_group();
 
         ret = decaps(group, key, kid, share, sharedsecret);
-        if (success != ret) {
+        if (errorcode_t::success != ret) {
             __leave2;
         }
     }
@@ -102,7 +102,7 @@ return_t crypto_keyexchange::keygen(tls_group_t group, crypto_key* key, const ch
         auto advisor = crypto_advisor::get_instance();
         auto hint = advisor->hintof_tls_group(group);
         if (nullptr == hint) {
-            ret = not_supported;
+            ret = errorcode_t::not_supported;
             __leave2;
         }
         auto flags = hint->flags;
@@ -116,7 +116,7 @@ return_t crypto_keyexchange::keygen(tls_group_t group, crypto_key* key, const ch
 
         auto pkey = key->find_nid(kid, nid);
         if (pkey) {
-            ret = already_exist;
+            ret = errorcode_t::already_exist;
             __leave2;
         }
 
@@ -124,7 +124,7 @@ return_t crypto_keyexchange::keygen(tls_group_t group, crypto_key* key, const ch
         crypto_keychain keychain;
         keydesc desc(kid);
         ret = keychain.add(key, nid, desc);
-        if (success != ret) {
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 
@@ -151,7 +151,7 @@ return_t crypto_keyexchange::keyshare(tls_group_t group, crypto_key* key, const 
         auto advisor = crypto_advisor::get_instance();
         auto hint = advisor->hintof_tls_group(group);
         if (nullptr == hint) {
-            ret = not_supported;
+            ret = errorcode_t::not_supported;
             __leave2;
         }
         auto flags = hint->flags;
@@ -169,7 +169,7 @@ return_t crypto_keyexchange::keyshare(tls_group_t group, crypto_key* key, const 
 
         auto prk = key->find_nid(kid, nid);
         ret = key->get_key(prk, public_key, share, bin_privkey, true);
-        if (success != ret) {
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 
@@ -185,7 +185,7 @@ return_t crypto_keyexchange::keyshare(tls_group_t group, crypto_key* key, const 
             binary_t hshare;
             auto hkey = key->find_nid(kid, hybrid.nid);
             ret = key->get_key(hkey, public_key, hshare, bin_privkey, true);
-            if (success != ret) {
+            if (errorcode_t::success != ret) {
                 __leave2;
             }
             binary_append(share, hshare);
@@ -206,7 +206,7 @@ return_t crypto_keyexchange::keystore(tls_group_t group, crypto_key* storage, co
         auto advisor = crypto_advisor::get_instance();
         auto hint = advisor->hintof_tls_group(group);
         if (nullptr == hint) {
-            ret = not_supported;
+            ret = errorcode_t::not_supported;
             __leave2;
         }
         auto flags = hint->flags;
@@ -216,7 +216,7 @@ return_t crypto_keyexchange::keystore(tls_group_t group, crypto_key* storage, co
         }
 
         if (hint->first.keysize + hint->second.keysize != share.size()) {
-            ret = bad_data;
+            ret = errorcode_t::bad_data;
             __leave2;
         }
 
@@ -241,7 +241,7 @@ return_t crypto_keyexchange::keystore(tls_group_t group, crypto_key* storage, co
                 ret = keychain.add_ossl3(storage, nid, share.data(), keysize, key_encoding_pub_raw, desc);
             } break;
             default: {
-                ret = bad_request;
+                ret = errorcode_t::bad_request;
             } break;
         }
         if (errorcode_t::success != ret) {
@@ -258,7 +258,7 @@ return_t crypto_keyexchange::keystore(tls_group_t group, crypto_key* storage, co
                     ret = keychain.add_ossl3(storage, hybrid.nid, &share[keysize], hybrid.keysize, key_encoding_pub_raw, desc);
                 } break;
                 default: {
-                    ret = bad_request;
+                    ret = errorcode_t::bad_request;
                 } break;
             }
         }
@@ -279,7 +279,7 @@ return_t crypto_keyexchange::exchange(tls_group_t group, crypto_key* key, crypto
         auto advisor = crypto_advisor::get_instance();
         auto hint = advisor->hintof_tls_group(group);
         if (nullptr == hint) {
-            ret = not_supported;
+            ret = errorcode_t::not_supported;
             __leave2;
         }
         auto flags = hint->flags;
@@ -288,12 +288,12 @@ return_t crypto_keyexchange::exchange(tls_group_t group, crypto_key* key, crypto
             __leave2;
         }
         if (keyexchange_ecdhe != hint->exch) {
-            ret = bad_request;
+            ret = errorcode_t::bad_request;
             __leave2;
         }
 
         ret = keystore(group, ephemeral, epkid, share);
-        if (success != ret) {
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 
@@ -318,7 +318,7 @@ return_t crypto_keyexchange::exchange(tls_group_t group, crypto_key* key, crypto
         auto advisor = crypto_advisor::get_instance();
         auto hint = advisor->hintof_tls_group(group);
         if (nullptr == hint) {
-            ret = not_supported;
+            ret = errorcode_t::not_supported;
             __leave2;
         }
         auto flags = hint->flags;
@@ -327,7 +327,7 @@ return_t crypto_keyexchange::exchange(tls_group_t group, crypto_key* key, crypto
             __leave2;
         }
         if (keyexchange_ecdhe != hint->exch) {
-            ret = bad_request;
+            ret = errorcode_t::bad_request;
             __leave2;
         }
 
@@ -346,7 +346,7 @@ return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, bi
         auto advisor = crypto_advisor::get_instance();
         auto hint = advisor->hintof_tls_group(group);
         if (nullptr == hint) {
-            ret = not_supported;
+            ret = errorcode_t::not_supported;
             __leave2;
         }
         auto flags = hint->flags;
@@ -355,7 +355,7 @@ return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, bi
             __leave2;
         }
         if (keyexchange_mlkem != hint->exch) {
-            ret = bad_request;
+            ret = errorcode_t::bad_request;
             __leave2;
         }
 
@@ -410,7 +410,7 @@ return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, bi
                     keychain.add(&ephemeral, second.nid, keydesc(epkid));
                 } break;
                 default: {
-                    ret = not_supported;
+                    ret = errorcode_t::not_supported;
                 } break;
             }
 
@@ -420,8 +420,8 @@ return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, bi
             auto pbk = ephemeral.find_nid(kid, (kty_mlkem == first.kty) ? second.nid : first.nid);
 
 #if defined DEBUG
-            if (istraceable(trace_category_crypto, loglevel_debug)) {
-                trace_debug_event(trace_category_crypto, trace_event_keyexchange, [&](basic_stream& dbs) -> void {
+            if (istraceable(trace_category_t::trace_category_crypto, loglevel_t::loglevel_debug)) {
+                trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_keyexchange, [&](basic_stream& dbs) -> void {
                     dbs.println(ANSI_ESCAPE "1;33mepk" ANSI_ESCAPE "0m");
                     dump_key(prk, &dbs, 15, 4, dump_notrunc);
                 });
@@ -429,7 +429,7 @@ return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, bi
 #endif
 
             ret = dh_key_agreement(prk, pbk, hybrid_ss);
-            if (success != ret) {
+            if (errorcode_t::success != ret) {
                 __leave2;
             }
 
@@ -447,7 +447,7 @@ return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, bi
                     binary_append(ss, hybrid_ss);
                 } break;
                 default: {
-                    ret = not_supported;
+                    ret = errorcode_t::not_supported;
                 } break;
             }
         }
@@ -465,7 +465,7 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
         auto advisor = crypto_advisor::get_instance();
         auto hint = advisor->hintof_tls_group(group);
         if (nullptr == hint) {
-            ret = not_supported;
+            ret = errorcode_t::not_supported;
             __leave2;
         }
         auto flags = hint->flags;
@@ -474,7 +474,7 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
             __leave2;
         }
         if (keyexchange_mlkem != hint->exch) {
-            ret = bad_request;
+            ret = errorcode_t::bad_request;
             __leave2;
         }
 
@@ -482,7 +482,7 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
         const auto& second = hint->second;
         size_t expect_size = (kty_mlkem == first.kty) ? first.capsulesize + second.keysize : first.keysize + second.capsulesize;
         if (expect_size != share.size()) {
-            ret = bad_data;
+            ret = errorcode_t::bad_data;
             __leave2;
         }
 
@@ -505,7 +505,7 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
                 ret = keychain.add_ec_uncompressed(&ephemeral, first.nid, share.data(), keysize, nullptr, 0, desc);
             } break;
             default: {
-                ret = not_supported;
+                ret = errorcode_t::not_supported;
             } break;
         }
         if (errorcode_t::success != ret) {
@@ -522,7 +522,7 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
                     ret = keychain.add_okp(&ephemeral, second.nid, &share[capsulesize], second.keysize, nullptr, 0, desc);
                 } break;
                 default: {
-                    ret = not_supported;
+                    ret = errorcode_t::not_supported;
                 } break;
             }
             if (errorcode_t::success != ret) {
@@ -534,8 +534,8 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
             auto pbk = ephemeral.find_nid(sskid, ecnid);
 
 #if defined DEBUG
-            if (istraceable(trace_category_crypto, loglevel_debug)) {
-                trace_debug_event(trace_category_crypto, trace_event_keyexchange, [&](basic_stream& dbs) -> void {
+            if (istraceable(trace_category_t::trace_category_crypto, loglevel_t::loglevel_debug)) {
+                trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_keyexchange, [&](basic_stream& dbs) -> void {
                     dbs.println(ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", kid);
                     dump_key(prk, &dbs, 15, 4, dump_notrunc);
                     dbs.println(ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", sskid);
@@ -546,7 +546,7 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
 
             binary_t hybrid_ss;
             ret = dh_key_agreement(prk, pbk, hybrid_ss);
-            if (success != ret) {
+            if (errorcode_t::success != ret) {
                 __leave2;
             }
 

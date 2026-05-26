@@ -29,9 +29,9 @@ return_t tls_record_change_cipher_spec::do_postprocess(tls_direction_t dir) {
         session->get_session_info(dir).begin_protection();
         session->reset_recordno(dir);
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
+        if (istraceable(trace_category_t::trace_category_net)) {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            trace_debug_event(trace_category_net, trace_event_tls_record,
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_record,
                               [&](basic_stream& dbs) -> void { dbs.println("> change_cipher_spec %s", tlsadvisor->nameof_direction(dir).c_str()); });
         }
 #endif

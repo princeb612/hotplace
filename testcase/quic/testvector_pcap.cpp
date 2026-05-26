@@ -73,7 +73,7 @@ void play_yaml_pcap_http3(const char* filename) {
                 } else if (protocol == "TLS 1.3") {
                     // tls_records records;
                     // ret = records.read(&tlssession, dir, bin_frame);
-                    ret = do_nothing;
+                    ret = errorcode_t::do_nothing;
                 } else {
                     _test_case.assert(false, __FUNCTION__, "bad message format - reason: protocol");
                     continue;

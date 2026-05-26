@@ -55,7 +55,7 @@ return_t is_windows64(BOOL* result) {
         }
 
         TCHAR buffer_wow64_dir[(1 << 8)];
-        DWORD test = get_system_wow64_directory(buffer_wow64_dir, sizeof(buffer_wow64_dir) / sizeof(TCHAR));
+        return_t test = get_system_wow64_directory(buffer_wow64_dir, sizeof(buffer_wow64_dir) / sizeof(TCHAR));
         if (errorcode_t::success != test) {
             ret_result = FALSE;
         } else {

@@ -176,7 +176,7 @@ return_t quic_packet_publisher::probe_spaces(std::set<protection_space_t>& space
                 protection_space_t space;
                 kindof_handshake(handshake, space);
                 temp.insert(space);
-                return (1 == temp.size()) ? success : bad_request;
+                return (1 == temp.size()) ? errorcode_t::success : errorcode_t::bad_request;
             });
             if (errorcode_t::success != ret) {
                 __leave2;
@@ -196,7 +196,7 @@ return_t quic_packet_publisher::probe_spaces(std::set<protection_space_t>& space
                 if (pkns.is_modified()) {
                     spaces.insert(space);
                 }
-                return success;
+                return errorcode_t::success;
             };
 
             lambda_ack(get_session(), protection_initial);
@@ -235,8 +235,8 @@ return_t quic_packet_publisher::prepare_packet_cid(quic_packet* packet, protecti
                     protection.get_secrets().assign(tls_context_quic_dcid, id);
                     protection.calc(session, tls_hs_client_hello, dir);  // calc initial keys
 #if defined DEBUG
-                    if (istraceable(trace_category_net)) {
-                        trace_debug_event(trace_category_net, trace_event_quic_packet,
+                    if (istraceable(trace_category_t::trace_category_net)) {
+                        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_packet,
                                           [&](basic_stream& dbs) -> void { dbs.println("QUIC DCID %s", base16_encode(id).c_str()); });
                     }
 #endif
@@ -250,8 +250,8 @@ return_t quic_packet_publisher::prepare_packet_cid(quic_packet* packet, protecti
                     protection.get_secrets().assign(tls_context_server_cid, id);
                     session->get_quic_session().get_cid_tracker().emplace(0, id);
 #if defined DEBUG
-                    if (istraceable(trace_category_net)) {
-                        trace_debug_event(trace_category_net, trace_event_quic_packet,
+                    if (istraceable(trace_category_t::trace_category_net)) {
+                        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_packet,
                                           [&](basic_stream& dbs) -> void { dbs.println("QUIC Server CID %s", base16_encode(id).c_str()); });
                     }
 #endif

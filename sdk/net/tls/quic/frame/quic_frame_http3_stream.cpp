@@ -114,8 +114,8 @@ return_t quic_frame_http3_stream::do_read_body(tls_direction_t dir, const byte_t
             streams.append(stream_id, stream_data.size() > pos ? &stream_data[pos] : nullptr, stream_data.size() - pos);
 
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+            if (istraceable(trace_category_t::trace_category_net)) {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_frame, [&](basic_stream& dbs) -> void {
                     auto tlsadvisor = tls_advisor::get_instance();
                     dbs.println("   > %s %i", constexpr_fin_bit, finbit);
                     dbs.println("   > %s %i", constexpr_len_bit, lenbit);
@@ -132,7 +132,7 @@ return_t quic_frame_http3_stream::do_read_body(tls_direction_t dir, const byte_t
                         dbs.println("    > %s %s", resource->get_h3_stream_name(unitype).c_str(), is_begin ? "*" : "");
                     }
                     dbs.println("   > %s 0x%zx (%zi)", constexpr_stream_data, stream_data.size(), stream_data.size());
-                    if (check_trace_level(loglevel_debug)) {
+                    if (check_trace_level(loglevel_t::loglevel_debug)) {
                         dump_memory(stream_data, &dbs, 16, 5, 0x0, dump_notrunc);
                     }
                 });
@@ -289,8 +289,8 @@ return_t quic_frame_http3_stream::do_write_body(tls_direction_t dir, const byte_
         pl.write(bin);
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_frame, [&](basic_stream& dbs) -> void {
                 auto tlsadvisor = tls_advisor::get_instance();
                 dbs.println(ANSI_ESCAPE "1;34m  + frame %s 0x%x(%i)" ANSI_ESCAPE "0m", tlsadvisor->nameof_quic_frame(type).c_str(), type, type);
                 dbs.println("   > %s 0x%zx (%zi)", constexpr_offset, pos, pos);

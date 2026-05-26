@@ -123,9 +123,9 @@ return_t create_socket(socket_t* socket_created, sockaddr_storage_t* sockaddr_cr
 #endif
 
 #if defined DEBUG
-                    if (istraceable(trace_category_internal)) {
+                    if (istraceable(trace_category_t::trace_category_internal)) {
                         socket_advisor* advisor = socket_advisor::get_instance();
-                        trace_debug_event(trace_category_internal, trace_event_socket, [&](basic_stream& dbs) -> void {
+                        trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_socket, [&](basic_stream& dbs) -> void {
                             dbs.println("socket %d created family %i(%s) type %i(%s) protocol %i(%s)",  //
                                         s, family, advisor->nameof_family(family).c_str(),              //
                                         socktype, advisor->nameof_type(socktype).c_str(),               //
@@ -252,9 +252,9 @@ return_t create_listener(unsigned int size_vector, unsigned int* vector_family, 
                         }
 
 #if defined DEBUG
-                        if (istraceable(trace_category_internal)) {
+                        if (istraceable(trace_category_t::trace_category_internal)) {
                             socket_advisor* advisor = socket_advisor::get_instance();
-                            trace_debug_event(trace_category_internal, trace_event_socket, [&](basic_stream& dbs) -> void {
+                            trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_socket, [&](basic_stream& dbs) -> void {
                                 dbs.println("socket %d created family %i(%s) type %i(%s) protocol %i(%s)",  //
                                             sock, family, advisor->nameof_family(family).c_str(),           //
                                             socktype, advisor->nameof_type(socktype).c_str(),               //
@@ -397,7 +397,7 @@ return_t connect_socket_addr(socket_t sock, const sockaddr* addr, socklen_t addr
                 FD_SET(sock, &fds);                                      /* VC 6.0 - C4127 */
                 rc = select((int)sock + 1, nullptr, &fds, nullptr, &tv); /* zero if timeout, -1 if an error occurred */
                 if (0 == rc) {
-                    ret = errorcode_t::error_connect;  // timeout
+                    ret = errorcode_t::connect_failure;  // timeout
                 } else if (rc < 0) {
                     ret = get_lasterror(rc, wsaerror);
                 }
@@ -416,8 +416,9 @@ return_t connect_socket_addr(socket_t sock, const sockaddr* addr, socklen_t addr
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_internal)) {
-            trace_debug_event(trace_category_internal, trace_event_socket, [&](basic_stream& dbs) -> void { dbs.println("connect SO_ERROR %i return %i", optval, rc); });
+        if (istraceable(trace_category_t::trace_category_internal)) {
+            trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_socket,
+                              [&](basic_stream& dbs) -> void { dbs.println("connect SO_ERROR %i return %i", optval, rc); });
         }
 #elif defined _WIN32 || defined _WIN64
         // connect SO_ERROR 0 return 0

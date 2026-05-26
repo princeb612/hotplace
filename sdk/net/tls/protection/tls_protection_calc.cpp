@@ -295,7 +295,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
                             uint16 group = t_narrow_cast(session->get_session_info(from_server).get_keyvalue().get(session_hrr));
                             if (group) {
                                 session->get_session_info(from_server).get_keyvalue().remove(session_hrr);
-                                ret = warn_retry;
+                                ret = errorcode_t::warn_retry;
                                 __leave2_trace(ret);
                             }
                         } else {
@@ -547,8 +547,8 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
                 }
 
 #if defined DEBUG
-                if (istraceable(trace_category_net)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                if (istraceable(trace_category_t::trace_category_net)) {
+                    trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                         dbs.printf(ANSI_ESCAPE "1;36m");
                         dbs.println("> hmac alg %x", hmac_alg);
                         dbs.println("> client hello random %s", base16_encode(client_hello_random).c_str());
@@ -623,9 +623,9 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
             }
 
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
+            if (istraceable(trace_category_t::trace_category_net)) {
                 // CLIENT_RANDOM
-                trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                     std::string keylog_client_random = base16_encode(get_secrets().get(tls_context_client_hello_random));
                     std::string keylog_master_secret = base16_encode(master_secret);
                     dbs.printf(ANSI_ESCAPE "1;36m");

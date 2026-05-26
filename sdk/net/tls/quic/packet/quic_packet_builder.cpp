@@ -133,8 +133,8 @@ quic_packet* quic_packet_builder::build() {
 #if defined DEBUG
         if (packet && is_construct()) {
             auto tlsadvisor = tls_advisor::get_instance();
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_quic_packet, [&](basic_stream& dbs) -> void {
+            if (istraceable(trace_category_t::trace_category_net)) {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_packet, [&](basic_stream& dbs) -> void {
                     dbs.println(ANSI_ESCAPE "1;33m+ quic packet %s" ANSI_ESCAPE "0m", tlsadvisor->nameof_quic_packet(type).c_str());
                 });
             }

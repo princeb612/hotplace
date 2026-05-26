@@ -118,7 +118,7 @@ return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, 
     int ret_openssl = 1;
 
     __try2 {
-        ret = errorcode_t::error_verify;
+        ret = errorcode_t::verification_failure;
 
         if (nullptr == pkey || nullptr == stream) {
             ret = errorcode_t::invalid_parameter;
@@ -170,7 +170,7 @@ return_t openssl_sign::verify_ecdsa(const EVP_PKEY* pkey, hash_algorithm_t alg, 
          */
         ret_openssl = ECDSA_do_verify(hash_value.data(), t_narrow_cast(hash_value.size()), ecdsa_sig.get(), ec_key);
         if (1 != ret_openssl) {
-            ret = errorcode_t::error_verify;
+            ret = errorcode_t::verification_failure;
             __leave2_trace_openssl(ret);
         }
 

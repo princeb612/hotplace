@@ -109,9 +109,9 @@ static return_t do_test_construct_encrypted_extensions(tls_session* session, tls
                                            binary_append(protocols, uint8(8));
                                            binary_append(protocols, "http/1.1");
                                            alpn->set_protocols(protocols);
-                                           return success;
+                                           return errorcode_t::success;
                                        });
-                                       return success;
+                                       return errorcode_t::success;
                                    })
                               .write(dir, bin);
                     record->release();
@@ -404,7 +404,7 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
         session->get_alert(dir, lambda_test_fatal_alert);
 
         if (has_fatal) {
-            ret = failed;
+            ret = errorcode_t::failed;
             __leave2;
         }
     }
@@ -790,7 +790,7 @@ void test_construct_tls13_mlkem() {
 
 #else
     _test_case.begin("TLS 1.3 keyshare MLKEM");
-    _test_case.test(not_supported, __FUNCTION__, "openssl 3.5 required");
+    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "openssl 3.5 required");
 #endif
 }
 

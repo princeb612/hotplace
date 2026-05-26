@@ -82,7 +82,7 @@ void test_oqs_kem() {
                     EVP_PKEY_free(pkey_pub);
                     EVP_PKEY_free(pkey_keygen);
                 } else {
-                    _test_case.test(not_supported, __FUNCTION__, "No OID registered for %s", alg.c_str());
+                    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "No OID registered for %s", alg.c_str());
                 }
             });
 

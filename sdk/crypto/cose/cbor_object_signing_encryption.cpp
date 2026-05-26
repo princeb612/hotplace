@@ -784,8 +784,8 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
                 dgst_klen = alg_hint->dgst.dlen;
             }
 #if defined DEBUG
-            if (istraceable(trace_category_crypto)) {
-                trace_debug_event(trace_category_crypto, trace_event_cose_keydistribution,
+            if (istraceable(trace_category_t::trace_category_crypto)) {
+                trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_cose_keydistribution,
                                   [&](basic_stream& dbs) -> void { dbs.println("process_keydistribution alg %i (%s)", alg, hint->name); });
             }
 #endif
@@ -798,7 +798,7 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
             // reversing "AAD_hex", "CEK_hex", "Context_hex", "KEK_hex" from https://github.com/cose-wg/Examples
 
 #if defined DEBUG
-            if (istraceable(trace_category_crypto)) {
+            if (istraceable(trace_category_t::trace_category_crypto)) {
                 constexpr char constexpr_debug_alg[] = "alg %i(group %i) ";
                 handle->debug_stream.printf(constexpr_debug_alg, alg, group);
             }
@@ -904,7 +904,7 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
             layer->setparam(cose_param_t::cose_param_cek, cek);
 
 #if defined DEBUG
-            if (istraceable(trace_category_crypto)) {
+            if (istraceable(trace_category_t::trace_category_crypto)) {
                 layer->get_composer()
                     ->get_unsent()
                     .data()
@@ -916,7 +916,7 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
 
                 auto dump = [&](const char* text, binary_t& bin) -> void {
                     if (bin.size()) {
-                        trace_debug_event(trace_category_crypto, trace_event_cose_keydistribution,
+                        trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_cose_keydistribution,
                                           [&](basic_stream& dbs) -> void { dbs.println("  %-10s %s", text ? text : "", base16_encode(bin).c_str()); });
                     }
                 };

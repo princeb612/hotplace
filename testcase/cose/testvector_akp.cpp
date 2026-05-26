@@ -86,7 +86,7 @@ void test_json_testvector_akp(const char* filename) {
         }
     }
 #else
-    _test_case.test(not_supported, __FUNCTION__, "openssl 3.5 required");
+    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "openssl 3.5 required");
 #endif
 }
 

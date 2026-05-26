@@ -6,7 +6,8 @@
  *
  * Revision History
  * Date         Name                Description
- * 2024.04.26   Soo Han, Kim        sketch (codename.hotplace Revision 505)
+ * 2024.04.25   Soo Han, Kim        study (codename.hotplace Revision 504)
+ * 2026.05.25   Soo Han and Gemini  refactoring
  */
 
 #include <hotplace/sdk/base/basic/huffman_coding.hpp>
@@ -23,12 +24,9 @@ void huffman_coding::reset() {
     _measure.clear();
     _btree.clear();
     _codetable.clear();
-#if SWITCH_HUFFMANCODING_TRIE == 0
-    _reverse_codetable.clear();
-#else
     _trie.reset();
     _range.reset();
-#endif
+    memset(_encode_cache, 0, sizeof(_encode_cache));
 }
 
 huffman_coding& huffman_coding::operator<<(const char* s) { return load(s); }
@@ -49,12 +47,8 @@ huffman_coding& huffman_coding::learn() {
     _btree.clear();
     _m.clear();
     _codetable.clear();
-#if SWITCH_HUFFMANCODING_TRIE == 0
-    _reverse_codetable.clear();
-#else
     _trie.reset();
     _range.reset();
-#endif
 
     /**
      * _measure .. count(weight) by symbol, see hc_t::operator
@@ -83,7 +77,7 @@ huffman_coding& huffman_coding::learn() {
 
         typename btree_t::node_t* newone = _btree.add(k);  // merged
 
-        map_pib_t pib = _m.emplace(k, _btree.clone_nocascade(newone));
+        auto pib = _m.emplace(k, _btree.clone_nocascade(newone));
         pib.first->second->_left = l;
         pib.first->second->_right = r;
     }
@@ -120,14 +114,12 @@ void huffman_coding::infer(hc_temp& hc, typename btree_t::node_t* t) {
         if (0 == t->_key.flags) {
             const auto& sym = t->_key.symbol;
             const auto& code = hc.code;
-            _codetable.emplace(sym, code);
-#if SWITCH_HUFFMANCODING_TRIE == 0
-            _reverse_codetable.emplace(code, sym);
-#else
             size_t size = code.size();
+
+            _codetable.emplace(sym, code);
             _trie.insert(code.c_str(), size, sym);
             _range.sampling(size);
-#endif
+            build_cache(sym, code);
         }
 
         hc.code += "1";
@@ -176,28 +168,25 @@ void huffman_coding::build(typename btree_t::node_t*& p) {
 
 huffman_coding& huffman_coding::imports(const hc_code_t* table) {
     _codetable.clear();
-#if SWITCH_HUFFMANCODING_TRIE == 0
-    _reverse_codetable.clear();
-#else
+
     _trie.reset();
     _range.reset();
-#endif
 
     for (size_t i = 0; table; i++) {
         const hc_code_t* item = table + i;
         if (nullptr == item->code) {
             break;
         }
-        _codetable.emplace(item->sym, item->code);
-#if SWITCH_HUFFMANCODING_TRIE == 0
-        _reverse_codetable.emplace(item->code, item->sym);
-#else
+
         const auto& sym = item->sym;
         const auto& code = item->code;
-        size_t size = strlen(code);
+        std::string code_string = code;
+        size_t size = code_string.size();
+
+        _codetable.emplace(sym, code_string);
         _trie.insert(code, size, sym);
         _range.sampling(size);
-#endif
+        build_cache(sym, code_string);
     }
 
 #if defined DEBUG
@@ -209,22 +198,19 @@ huffman_coding& huffman_coding::imports(const hc_code_t* table) {
 
 huffman_coding& huffman_coding::imports(const std::map<uint8, std::string>& m) {
     _codetable.clear();
-#if SWITCH_HUFFMANCODING_TRIE == 0
-    _reverse_codetable.clear();
-#else
+
     _trie.reset();
     _range.reset();
-#endif
+
     for (const auto& item : m) {
         const auto& sym = item.first;
         const auto& code = item.second;
+        size_t size = code.size();
+
         _codetable.emplace(sym, code);
-#if SWITCH_HUFFMANCODING_TRIE == 0
-        _reverse_codetable.emplace(code, sym);
-#else
-        _trie.insert(code.c_str(), code.size(), sym);
-        _range.sampling(code.size());
-#endif
+        _trie.insert(code.c_str(), size, sym);
+        _range.sampling(size);
+        build_cache(sym, code);
     }
 
 #if defined DEBUG
@@ -312,12 +298,6 @@ return_t huffman_coding::encode(binary_t& bin, const char* source, size_t size, 
 
 return_t huffman_coding::encode(binary_t& bin, const byte_t* source, size_t size, bool usepad) const {
     return_t ret = errorcode_t::success;
-    std::string buf;
-    std::string code;
-
-    const byte_t* p = nullptr;
-    size_t i = 0;
-    t_maphint_const<uint8, std::string> hint(_codetable);
 
     /**
      * RFC 7541 Appendix B.  Huffman Code
@@ -342,80 +322,44 @@ return_t huffman_coding::encode(binary_t& bin, const byte_t* source, size_t size
      *      // 1010 pppp -> AB or A ?
      */
 
-    __try2 {
-        if (nullptr == source) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    if (nullptr == source) return errorcode_t::invalid_parameter;
 
-        size_t code_minsize = 0;
-        size_t code_maxsize = 0;
-#if SWITCH_HUFFMANCODING_TRIE == 0
-        if (_reverse_codetable.empty()) {
-            ret = errorcode_t::not_ready;
-            __leave2;
-        }
+    auto code_minsize = _range.getmin();
+    auto code_maxsize = _range.getmax();
 
-        code_minsize = _reverse_codetable.begin()->first.size();
-        code_maxsize = _reverse_codetable.rbegin()->first.size();
-#else
-        code_minsize = _range.getmin();
-        code_maxsize = _range.getmax();
-#endif
-        usepad &= (code_minsize >= 5);  // overwrite usepad
+    usepad &= (code_minsize >= 5);  // overwrite usepad
 
-        // octet stream byte
-        auto lambda_os_byte = [](const std::string& s, size_t count) -> uint8 {
-            uint8 rc = 0;
-            if (count <= s.size()) {
-                for (size_t n = 0; n < count; n++) {
-                    if ('1' == s[n]) {
-                        rc |= (1 << (7 - n));
-                    }
-                }
-            }
-            return rc;
-        };
+    bin.reserve(bin.size() + ((size * code_maxsize) + 7) / 8);
 
-        // reserve roughly to reduce reallocations
-        bin.reserve(bin.size() + ((size * code_maxsize) + 7) / 8);
+    uint8 bit_buffer = 0;
+    int bit_count = 0;
 
-        // align to MSB
-        for (p = source, i = 0; i < size; i++) {
-            std::string code;
-            hint.find(p[i], &code);
-            buf += code;
+    for (size_t i = 0; i < size; ++i) {
+        uint8 sym = source[i];
+        const auto& cache = get_encode_cache(sym);
+        auto bit_code = cache.bit_code;
+        auto bit_len = cache.bit_len;
 
-            if (usepad) {
-                if (i == (size - 1)) {
-                    size_t mod = (buf.size() % 8);
-                    if (mod) {
-                        size_t padsize = 8 - mod;
-                        while (padsize--) {
-                            buf += '1';
-                        }
-                    }
-                }
-            }
+        for (int8 b = bit_len - 1; b >= 0; --b) {
+            bit_buffer <<= 1;
+            if ((bit_code >> b) & 1) bit_buffer |= 1;
+            ++bit_count;
 
-            while (buf.size() >= 8) {
-                uint8 b = 0;
-                b = lambda_os_byte(buf, 8);
-                bin.insert(bin.end(), b);
-                buf.erase(0, 8);
-            }
-        }
-        if (false == usepad) {
-            size_t remains = buf.size();
-            if (remains) {
-                uint8 b = 0;
-                b = lambda_os_byte(buf, remains);
-                bin.insert(bin.end(), b);
-                buf.erase(0, remains);
+            if (8 == bit_count) {
+                bin.push_back(bit_buffer);
+                bit_buffer = 0;
+                bit_count = 0;
             }
         }
     }
-    __finally2 {}
+    if (bit_count > 0) {
+        if (usepad) {
+            bit_buffer = (bit_buffer << (8 - bit_count)) | ((1 << (8 - bit_count)) - 1);
+        } else {
+            bit_buffer <<= (8 - bit_count);
+        }
+        bin.push_back(bit_buffer);
+    }
     return ret;
 }
 
@@ -423,135 +367,75 @@ return_t huffman_coding::encode(stream_t* stream, const char* source, size_t siz
 
 return_t huffman_coding::encode(stream_t* stream, const byte_t* source, size_t size) const {
     return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == stream || nullptr == source) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        // align to MSB
-        const byte_t* p = nullptr;
-        size_t i = 0;
-        t_maphint_const<uint8, std::string> hint(_codetable);
-        for (p = source, i = 0; i < size; i++) {
-            std::string code;
-            hint.find(p[i], &code);
-            stream->printf("%s ", code.c_str());
-        }
+    if (nullptr == stream || nullptr == source) {
+        return errorcode_t::invalid_parameter;
     }
-    __finally2 {}
+    // align to MSB
+    const byte_t* p = nullptr;
+    size_t i = 0;
+    t_maphint_const<uint8, std::string> hint(_codetable);
+    for (p = source, i = 0; i < size; i++) {
+        std::string code;
+        hint.find(p[i], &code);
+        stream->printf("%s ", code.c_str());
+    }
     return ret;
 }
 
 return_t huffman_coding::decode(stream_t* stream, const byte_t* source, size_t size, uint32 flags) const {
     return_t ret = errorcode_t::success;
-    __try2 {
-        if ((nullptr == stream) || (nullptr == source)) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    if ((nullptr == stream) || (nullptr == source)) {
+        return errorcode_t::invalid_parameter;
+    }
 
-        size_t code_minsize = 0;
-#if SWITCH_HUFFMANCODING_TRIE == 0
-        if (_reverse_codetable.empty()) {
-            ret = errorcode_t::not_ready;
-            __leave2;
-        }
+    size_t code_minsize = 0;
+    code_minsize = _range.getmin();
 
-        code_minsize = _reverse_codetable.begin()->first.size();
-#else
-        code_minsize = _range.getmin();
-#endif
-
-        if (0 == (huffman_coding_flags::manual_decode & flags)) {
-            if (code_minsize <= 4) {
-                // see encode
-                ret = errorcode_t::ambiguous;
-                __leave2;
-            }
-        }
-
-        std::string que;
-        std::string token;
-
-        for (size_t i = 0; i < size; i++) {
-            byte_t b = source[i];
-            for (int n = 7; n >= 0; n--) {
-                que += ((b & (1 << n)) ? '1' : '0');
-            }
-
-            while (que.size() >= code_minsize) {
-#if SWITCH_HUFFMANCODING_TRIE == 0
-                // naive
-                int count = 0;
-                for (size_t l = code_minsize; l <= que.size(); l++) {
-                    token = que.substr(0, l);
-                    std::map<std::string, uint8>::const_iterator iter = _reverse_codetable.find(token);
-                    if (_reverse_codetable.end() != iter) {
-                        stream->printf("%c", iter->second);
-                        que.erase(0, l);
-                        break;
-                    } else {
-                        count++;
-                    }
-                }
-                if ((que.size() - code_minsize + 1) == count) {
-                    break;
-                }
-#else
-                // using trie
-                size_t pos = 0;
-                int rc = 0;
-                rc = _trie.scan(que.c_str(), que.size(), pos);  // scan first occurrence
-                if (-1 == rc) {
-                    break;
-                }
-
-                stream->printf("%c", rc);
-                que.erase(0, pos);
-#endif
-            }
-        }
-
-        for (auto e : que) {
-            if ('1' != e) {
-                if (0 == (huffman_coding_flags::manual_decode & flags)) {
-                    ret = errorcode_t::bad_data;
-                }
-                break;
-            }
+    if (0 == (huffman_coding_flags::manual_decode & flags)) {
+        if (code_minsize <= 4) {
+            // see encode
+            return errorcode_t::ambiguous;
         }
     }
-    __finally2 {}
+
+    std::string que;
+    que.reserve(64);
+
+    for (size_t i = 0; i < size; ++i) {
+        uint8 b = source[i];
+        for (int n = 7; n >= 0; --n) {
+            que.push_back((b & (1 << n)) ? '1' : '0');
+        }
+
+        while (que.size() >= code_minsize) {
+            size_t pos = 0;
+            int rc = _trie.scan(que.c_str(), que.size(), pos);  // scan first occurrence
+            if (-1 == rc) break;
+
+            stream->printf("%c", rc);
+            que.erase(0, pos);
+        }
+    }
+
+    for (char e : que) {
+        if ('1' != e) {
+            if (0 == (huffman_coding_flags::manual_decode & flags)) {
+                return errorcode_t::bad_data;
+            }
+            break;
+        }
+    }
     return ret;
 }
 
-bool huffman_coding::decodable() {
-    bool ret = false;
-    __try2 {
-        size_t code_minsize = 0;
-#if SWITCH_HUFFMANCODING_TRIE == 0
-        if (_reverse_codetable.empty()) {
-            __leave2;
-        }
-
-        code_minsize = _reverse_codetable.begin()->first.size();
-#else
-        code_minsize = _range.getmin();
-#endif
-        if (code_minsize > 4) {
-            ret = true;
-        }
-    }
-    __finally2 {}
-    return ret;
-}
+bool huffman_coding::decodable() { return (_range.getmin() > 4) ? true : false; }
 
 size_t huffman_coding::sizeof_codetable() { return _codetable.size(); }
 
 void huffman_coding::dump() {
 #if defined DEBUG
-    if (istraceable(trace_category_internal, loglevel_debug)) {
-        trace_debug_event(trace_category_internal, trace_event_internal, [&](basic_stream& dbs) -> void {
+    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_debug)) {
+        trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
             dbs.println("- huffman coding table");
             auto lambda_exports = [&](uint8 sym, const char* code) -> void {
                 dbs.println(R"(  - sym %c (0x%02x) code : "%s" (len %zi))", isprint(sym) ? sym : '?', sym, code, strlen(code));
@@ -560,6 +444,18 @@ void huffman_coding::dump() {
         });
     }
 #endif
+}
+
+void huffman_coding::build_cache(uint8 sym, const std::string code) {
+    uint32 bit_code = 0;
+    for (char ch : code) {
+        bit_code <<= 1;
+        if (ch == '1') bit_code |= 1;
+    }
+
+    encode_cache_t& cache_item = _encode_cache[sym];
+    cache_item.bit_code = bit_code;
+    cache_item.bit_len = static_cast<uint8>(code.size());
 }
 
 }  // namespace hotplace

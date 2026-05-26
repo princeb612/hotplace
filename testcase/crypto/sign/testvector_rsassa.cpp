@@ -81,7 +81,7 @@ void test_yaml_testvector_rsassa() {
                         _logger->hdump("> input", msg);
                         _logger->hdump("> sig", sig);
                         if (base16_decode(entry.s) != sig) {
-                            ret = mismatch;
+                            ret = errorcode_t::mismatch;
                         }
                         _test_case.test(ret, __FUNCTION__, R"(sign kid:"%s" hash:%s msg:%s...)", entry.kid.c_str(), entry.alg.c_str(), std::string(entry.m, 8).c_str());
                     }
@@ -89,7 +89,7 @@ void test_yaml_testvector_rsassa() {
                     ret = s->verify(pkey, msg, sig);
                     _test_case.test(ret, __FUNCTION__, R"(verify kid:"%s" hash:%s msg:%s...)", entry.kid.c_str(), entry.alg.c_str(), std::string(entry.m, 8).c_str());
                 } else {
-                    ret = not_found;
+                    ret = errorcode_t::not_found;
                     _test_case.test(ret, __FUNCTION__, R"(sign kid:"%s" hash:%s msg:%s...)", entry.kid.c_str(), entry.alg.c_str(), std::string(entry.m, 8).c_str());
                 }
                 s->release();

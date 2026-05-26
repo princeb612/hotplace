@@ -65,8 +65,8 @@ return_t tls_extension_client_supported_versions::do_read_body(tls_direction_t d
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
                 dbs.println("    > %s (%i ent.)", constexpr_versions, count);
@@ -140,8 +140,8 @@ return_t tls_extension_server_supported_versions::do_read_body(tls_direction_t d
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
                 dbs.println("    > 0x%04x %s", version, tlsadvisor->nameof_tls_version(version).c_str());

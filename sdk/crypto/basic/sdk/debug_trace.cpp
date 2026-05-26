@@ -22,8 +22,9 @@ return_t get_opensslerror(int rc) {
         uint32 option = get_trace_option();
         if (trace_option_t::trace_bt & option) {
 #if defined DEBUG
-            if (istraceable(trace_category_crypto)) {
-                trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream& dbs) -> void { debug_trace_openssl(&dbs); });
+            if (istraceable(trace_category_t::trace_category_crypto)) {
+                trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_openssl_info,
+                                  [&](basic_stream& dbs) -> void { debug_trace_openssl(&dbs); });
             }
 #endif
         }
@@ -38,8 +39,9 @@ return_t trace_openssl(return_t errorcode) {
         uint32 option = get_trace_option();
         if (trace_option_t::trace_bt & option) {
 #if defined DEBUG
-            if (istraceable(trace_category_crypto)) {
-                trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream& dbs) -> void { debug_trace_openssl(&dbs); });
+            if (istraceable(trace_category_t::trace_category_crypto)) {
+                trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_openssl_info,
+                                  [&](basic_stream& dbs) -> void { debug_trace_openssl(&dbs); });
             }
 #endif
         }

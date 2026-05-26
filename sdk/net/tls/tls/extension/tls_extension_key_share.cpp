@@ -59,20 +59,20 @@ return_t tls_extension_key_share::add(uint16 group, tls_direction_t dir) {
 
         crypto_keyexchange keyexchange;
         ret = keyexchange.keygen((tls_group_t)group, &keyshare, privkid);
-        if (success != ret) {
+        if (errorcode_t::success != ret) {
             __leave2;
         }
         auto pkey = keyshare.find_group(privkid, group);
         ret = keyshare.add((EVP_PKEY*)pkey, pubkid, true);
-        if (success != ret) {
+        if (errorcode_t::success != ret) {
             __leave2;
         }
 
         protection.get_protection_context().add_keyshare_group(group);
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 dbs.println(ANSI_ESCAPE "1;32m+ add keypair %s (group %s)" ANSI_ESCAPE "0m", privkid, tlsadvisor->nameof_group(group).c_str());
             });
@@ -108,8 +108,8 @@ return_t tls_extension_key_share::add_pubkey(uint16 group, const binary_t& pubke
         crypto_keyexchange keyexchange;
         ret = keyexchange.keystore((tls_group_t)group, &keyshare, desc.get_kid_cstr(), pubkey);
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 dbs.println(ANSI_ESCAPE "1;32m+ add pub key %s (group %s)" ANSI_ESCAPE "0m", desc.get_kid_cstr(), tlsadvisor->nameof_group(group).c_str());
             });
@@ -192,15 +192,15 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
             add_pubkey(group, pubkey, keydesc(get_kid()), dir);
 
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+            if (istraceable(trace_category_t::trace_category_net)) {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                     auto tlsadvisor = tls_advisor::get_instance();
                     // auto session = get_handshake()->get_session();
                     dbs.println("   > %s %i(0x%04x)", constexpr_len, len, len);
                     dbs.println("    > %s", constexpr_key_share_entry);
                     dbs.println("     > %s 0x%04x (%s)", constexpr_group, group, tlsadvisor->nameof_group(group).c_str());
                     dbs.println("     > %s %04x(%i)", constexpr_pubkey_len, pubkey.size(), pubkey.size());
-                    if (check_trace_level(loglevel_debug)) {
+                    if (check_trace_level(loglevel_t::loglevel_debug)) {
                         dump_memory(pubkey, &dbs, 16, 7, 0x0, dump_notrunc);
                     }
                     dbs.println("       %s", base16_encode(pubkey).c_str());
@@ -235,8 +235,8 @@ return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, bina
             keyexchange.keyshare((tls_group_t)group, &tlskey, KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, pubkey);
 
 #if defined DEBUG
-            if (istraceable(trace_category_net, loglevel_debug)) {
-                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+            if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                     tls_advisor* tlsadvisor = tls_advisor::get_instance();
                     dbs.println("%s", tlsadvisor->nameof_group(group).c_str());
                     dump_memory(pubkey, &dbs, 16, 7, 0x0, dump_notrunc);
@@ -330,13 +330,13 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                 auto tlsadvisor = tls_advisor::get_instance();
                 dbs.println("   > %s 0x%04x (%s)", constexpr_group, group, tlsadvisor->nameof_group(group).c_str());
                 if (pubkeylen) {
                     dbs.println("   > %s %i", constexpr_pubkey_len, pubkeylen);
-                    if (check_trace_level(loglevel_debug)) {
+                    if (check_trace_level(loglevel_t::loglevel_debug)) {
                         dump_memory(pubkey, &dbs, 16, 5, 0x0, dump_notrunc);
                     }
                     dbs.println("     %s", base16_encode(pubkey).c_str());
@@ -409,8 +409,9 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
                 keyexchange.encaps((tls_group_t)group, share, keycapsule, sharedsecret);
                 protection.get_secrets().assign(tls_context_shared_secret, sharedsecret);
 #if defined DEBUG
-                if (istraceable(trace_category_net)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void { dbs.println("   > encaps"); });
+                if (istraceable(trace_category_t::trace_category_net)) {
+                    trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension,
+                                      [&](basic_stream& dbs) -> void { dbs.println("   > encaps"); });
                 }
 #endif
                 pubkey = std::move(keycapsule);
@@ -435,8 +436,8 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
 
 #if defined DEBUG
         if (hint_group) {
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_extension,
+            if (istraceable(trace_category_t::trace_category_net)) {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension,
                                   [&](basic_stream& dbs) -> void { dbs.println("   > group %s %s", hint_group->name, base16_encode(pubkey).c_str()); });
             }
         }
@@ -463,7 +464,7 @@ return_t tls_extension_server_key_share::add_keyshare() {
             auto group = protection.get_protection_context().get0_keyshare_group();
             auto hint = advisor->hintof_tls_group(group);
             if (nullptr == hint) {
-                ret = not_supported;
+                ret = errorcode_t::not_supported;
                 __leave2;
             }
             ret = add(group);

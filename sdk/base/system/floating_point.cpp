@@ -231,7 +231,7 @@ floating_point floating_point::multiply(const floating_point& lhs, const floatin
 floating_point floating_point::divide(const floating_point& lhs, const floating_point& rhs) {
     floating_point fp;
     if ((rhs._type == decimal_type && rhs._storage._d->_mant == 0) || (rhs._type == rational_type && rhs._storage._r->_num == 0)) {
-        throw exception(error_division);
+        throw exception(errorcode_t::divide_by_zero);
     }
     if (lhs._type == decimal_type && rhs._type == decimal_type) {
         auto a = *lhs._storage._d;

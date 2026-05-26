@@ -59,8 +59,8 @@ return_t base64_encode(const byte_t* source, size_t size, T& streambuf, encoding
     typedef typename traits::value_type value_type;
     return_t ret = errorcode_t::success;
 
-    if (encoding_base64 == encoding || encoding_base64url == encoding) {
-        if (0 == (base64_notrunc & flags)) {
+    if (encoding_t::encoding_base64 == encoding || encoding_t::encoding_base64url == encoding) {
+        if (0 == (encoding_notrunc & flags)) {
             traits::trunc(streambuf);
         }
         size_t size_reserve = 0;
@@ -94,8 +94,8 @@ return_t base64_decode(const char* source, size_t size, T& streambuf, encoding_t
     typedef typename traits::value_type value_type;
     return_t ret = errorcode_t::success;
 
-    if (encoding_base64 == encoding || encoding_base64url == encoding) {
-        if (0 == (base64_notrunc & flags)) {
+    if (encoding_t::encoding_base64 == encoding || encoding_t::encoding_base64url == encoding) {
+        if (0 == (encoding_notrunc & flags)) {
             traits::trunc(streambuf);
         }
         size_t size_reserve = 0;

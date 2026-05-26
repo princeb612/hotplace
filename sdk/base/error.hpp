@@ -7,6 +7,7 @@
  * Revision History
  * Date         Name                Description
  * 2023.08.13   Soo Han, Kim        reboot (codename.hotplace)
+ * 2026.05.26   Soo Han and Gemini  refactoring
  */
 
 #ifndef __HOTPLACE_SDK_BASE_ERROR__
@@ -21,12 +22,10 @@
 #endif
 
 namespace hotplace {
-
 #define ERROR_CODE_BEGIN 0xef010000
 #define WARN_CODE_BEGIN 0xff010000
 
-typedef uint32 return_t;
-enum errorcode_t : uint32 {
+enum class errorcode_t : uint32 {
     success = 0,
 
 #if defined __linux__
@@ -211,12 +210,12 @@ enum errorcode_t : uint32 {
     /* 0xef01000e 4009820174 */ exception_caught,
     /* 0xef01000f 4009820175 */ bad_data,
     /* 0xef010010 4009820176 */ bad_format,
-    /* 0xef010011 4009820177 */ error_overflow,
+    /* 0xef010011 4009820177 */ overflow,
     /* 0xef010012 4009820178 */ empty,
     /* 0xef010013 4009820179 */ full,
     /* 0xef010014 4009820180 */ out_of_range,
     /* 0xef010015 4009820181 */ mismatch,
-    /* 0xef010016 4009820182 */ error_integrity,
+    /* 0xef010016 4009820182 */ integrity,
     /* 0xef010017 4009820183 */ expired,
     /* 0xef010018 4009820184 */ canceled,
     /* 0xef010019 4009820185 */ bad_request,
@@ -226,15 +225,15 @@ enum errorcode_t : uint32 {
     /* 0xef01001c 4009820188 */ max_reached,
     /* 0xef01001d 4009820189 */ failed,
     /* 0xef01001e 4009820190 */ blocked,
-    /* 0xef01001f 4009820191 */ error_duplicate,
+    /* 0xef01001f 4009820191 */ duplicate,
     /* 0xef010020 4009820192 */ closed,
     /* 0xef010021 4009820193 */ disconnect,
-    /* 0xef010022 4009820194 */ error_cipher,
-    /* 0xef010023 4009820195 */ error_digest,
-    /* 0xef010024 4009820196 */ error_verify,
+    /* 0xef010022 4009820194 */ cipher_failure,
+    /* 0xef010023 4009820195 */ digest_failure,
+    /* 0xef010024 4009820196 */ verification_failure,
     /* 0xef010025 4009820197 */ no_session,
-    /* 0xef010026 4009820198 */ error_query,
-    /* 0xef010027 4009820199 */ error_fetch,
+    /* 0xef010026 4009820198 */ query_failure,
+    /* 0xef010027 4009820199 */ fetch_failure,
     /* 0xef010028 4009820200 */ insufficient,
     /* 0xef010029 4009820201 */ confidential,
     /* 0xef01002a 4009820202 */ suspicious,
@@ -250,20 +249,20 @@ enum errorcode_t : uint32 {
     /* 0xef010034 4009820212 */ invalid_grant,
     /* 0xef010035 4009820213 */ unsupported_grant_type,
     /* 0xef010036 4009820214 */ assert_failed,
-    /* 0xef010037 4009820215 */ error_socket,
-    /* 0xef010038 4009820216 */ error_bind,
-    /* 0xef010039 4009820217 */ error_handshake,
-    /* 0xef01003a 4009820218 */ error_connect,
-    /* 0xef01003b 4009820219 */ error_send,
-    /* 0xef01003c 4009820220 */ error_recv,
+    /* 0xef010037 4009820215 */ socket_failure,
+    /* 0xef010038 4009820216 */ bind_failure,
+    /* 0xef010039 4009820217 */ handshake_failure,
+    /* 0xef01003a 4009820218 */ connect_failure,
+    /* 0xef01003b 4009820219 */ send_failure,
+    /* 0xef01003c 4009820220 */ recv_failure,
     /* 0xef01003d 4009820221 */ abandoned,
     /* 0xef01003e 4009820222 */ different_type,
     /* 0xef01003f 4009820223 */ narrow_type,
-    /* 0xef010040 4009820224 */ error_certificate,
+    /* 0xef010040 4009820224 */ missing_certificate,
     /* 0xef010041 4009820225 */ exceed,
-    /* 0xef010042 4009820226 */ error_division,
+    /* 0xef010042 4009820226 */ divide_by_zero,
     /* 0xef010043 4009820227 */ not_specified,
-    /* 0xef010044 4009820228 */ error_negotiate,
+    /* 0xef010044 4009820228 */ negotiation_failure,
     /* 0xef010045 4009820229 */ illegal_parameter,
     /* 0xef010046 4009820230 */ reserved4,
     /* 0xef010047 4009820231 */ violation,
@@ -308,6 +307,88 @@ enum errorcode_t : uint32 {
     /* 0xff01000f 4278255631 */ block_segmented,
 };
 
+/**
+ * @sa error_advisor::categoryof
+ */
+enum class error_category_t : uint8 {
+    error_category_success = 0,         // success
+    error_category_expect_failure = 1,  // success (negative test)
+    error_category_severe = 2,          // severe error
+    error_category_not_supported = 3,   // do not support
+    error_category_low_security = 4,    // do not support (security reason)
+    error_category_trivial = 5,         // debugging purpose
+    error_category_warn = 6,            // warning
+};
+
+/**
+ * universal error codes
+ * case                     | type         | space    |
+ * ret = errorcode_t::xxx;  | errorcode_t  | hotplace |
+ * ret = errno;             | int          | linux    |
+ * ret = GetLastError();    | DWORD        | windows  |
+ * ret = ERROR_OUTOFMEMORY; | HRESULT/LONG | windows  |
+ * ret = SQL_ERROR;         | int          | ODBC     |
+ */
+struct return_t {
+    uint32 code;
+
+    return_t() : code(static_cast<uint32>(errorcode_t::success)) {}
+    return_t(uint32 value) : code(value) {}
+    return_t(int value) : code(static_cast<uint32>(value)) {}
+#if defined _WIN32 || defined WIN32
+    return_t(unsigned long value) : code(static_cast<uint32>(value)) {}
+#endif
+    return_t(errorcode_t value) : code(static_cast<uint32>(value)) {}
+
+    std::string error_code() const;
+    std::string error_message() const;
+    error_category_t category() const;
+
+    constexpr operator uint32() const { return code; }
+    constexpr operator errorcode_t() const { return static_cast<errorcode_t>(code); }
+
+    return_t& operator=(uint32 value) noexcept {
+        this->code = value;
+        return *this;
+    }
+    return_t& operator=(int value) noexcept {
+        this->code = static_cast<uint32>(value);
+        return *this;
+    }
+#if defined _WIN32 || defined _WIN64 || defined WIN32
+    return_t& operator=(unsigned long value) noexcept {
+        this->code = static_cast<uint32>(value);
+        return *this;
+    }
+#endif
+    return_t& operator=(errorcode_t value) noexcept {
+        this->code = static_cast<uint32>(value);
+        return *this;
+    }
+
+    constexpr bool operator<(const return_t& other) const noexcept { return this->code < other.code; }
+    constexpr bool operator<=(const return_t& other) const noexcept { return this->code <= other.code; }
+    constexpr bool operator>(const return_t& other) const noexcept { return this->code > other.code; }
+    constexpr bool operator>=(const return_t& other) const noexcept { return this->code >= other.code; }
+
+    constexpr bool operator<(errorcode_t other) const noexcept { return this->code < static_cast<uint32>(other); }
+    constexpr bool operator<=(errorcode_t other) const noexcept { return this->code <= static_cast<uint32>(other); }
+    constexpr bool operator>(errorcode_t other) const noexcept { return this->code > static_cast<uint32>(other); }
+    constexpr bool operator>=(errorcode_t other) const noexcept { return this->code >= static_cast<uint32>(other); }
+
+    constexpr bool operator==(const return_t& other) const noexcept { return this->code == other.code; }
+    constexpr bool operator!=(const return_t& other) const noexcept { return this->code != other.code; }
+
+    constexpr bool operator==(errorcode_t other) const noexcept { return this->code == static_cast<uint32>(other); }
+    constexpr bool operator!=(errorcode_t other) const noexcept { return this->code != static_cast<uint32>(other); }
+};
+
+typedef struct _error_description {
+    errorcode_t error;
+    const char* error_code;
+    const char* error_message;
+} error_description;
+
 /*
  * @sample
  *      errorcode_t ret = errorcode_t::success;
@@ -327,17 +408,18 @@ static inline return_t get_lasterror(int code, int flags = 0) {
     // netdb.h -1~-105 to errorcode_t
     if (code < 0) {
         if (EAI_SYSTEM == code) {
-            ret = errno;
+            ret = (errno > 0) ? errno : static_cast<uint32>(errorcode_t::internal_error);
         } else {
-            if (errno > 0) {
-                // POSIX errno
-                // kernel error code
-                ret = errno;
-            } else {
-                // EAI_
-                ret = errorcode_t::error_eai_base + (-code);
-            }
+            // POSIX errno
+            // kernel error code
+            // EAI_
+            uint32 eai_offset_code = static_cast<uint32>(errorcode_t::error_eai_base) + static_cast<uint32>(-code);
+            ret = eai_offset_code;
         }
+    } else if (code > 0) {
+        ret = code;
+    } else {
+        ret = errorcode_t::success;
     }
 #elif defined _WIN32 || defined _WIN64
     if (0 == flags) {

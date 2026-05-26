@@ -47,7 +47,7 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
                                .add(tls_ext_server_name, dir, handshake,
                                     [](tls_extension* extension) -> return_t {
                                         (*(tls_extension_sni*)extension).set_hostname("test.server.com");
-                                        return success;
+                                        return errorcode_t::success;
                                     })
                                .add(tls_ext_ec_point_formats, dir, handshake,
                                     [](tls_extension* extension) -> return_t {
@@ -56,7 +56,7 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
                                         // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element,
                                         // "uncompressed".
                                         (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
-                                        return success;
+                                        return errorcode_t::success;
                                     })
                                .add(tls_ext_supported_groups, dir, handshake,
                                     [](tls_extension* extension) -> return_t {
@@ -72,7 +72,7 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
                                             .add("ffdhe4096")
                                             .add("ffdhe6144")
                                             .add("ffdhe8192");
-                                        return success;
+                                        return errorcode_t::success;
                                     })
                                .add(tls_ext_encrypt_then_mac, dir, handshake, nullptr)
                                .add(tls_ext_extended_master_secret, dir, handshake, nullptr)
@@ -93,23 +93,23 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
                                             .add("rsa_pss_rsae_sha256")
                                             .add("rsa_pss_rsae_sha384")
                                             .add("rsa_pss_rsae_sha512");
-                                        return success;
+                                        return errorcode_t::success;
                                     })
                                .add(tls_ext_psk_key_exchange_modes, dir, handshake,
                                     [](tls_extension* extension) -> return_t {
                                         (*(tls_extension_psk_key_exchange_modes*)extension).add("psk_dhe_ke");
-                                        return success;
+                                        return errorcode_t::success;
                                     })
                                .add(tls_ext_supported_versions, dir, handshake,
                                     [&](tls_extension* extension) -> return_t {
                                         (*(tls_extension_client_supported_versions*)extension).add(tls_13);
-                                        return success;
+                                        return errorcode_t::success;
                                     })
                                .add(tls_ext_key_share, dir, handshake, [&](tls_extension* extension) -> return_t {
                                    tls_extension_client_key_share* keyshare = (tls_extension_client_key_share*)extension;
                                    keyshare->clear();
                                    keyshare->add(group);
-                                   return success;
+                                   return errorcode_t::success;
                                });
 
                            {
@@ -118,7 +118,7 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
                                _test_case.assert(pkey, __FUNCTION__, "{client} key share (client generated)");
                            }
 
-                           return success;
+                           return errorcode_t::success;
                        })
                   .write(dir, bin);
     }
@@ -182,16 +182,16 @@ static return_t do_test_construct_server_hello(tls_session* session, tls_session
                                .add(tls_ext_supported_versions, dir, handshake,
                                     [&](tls_extension* extension) -> return_t {
                                         (*(tls_extension_server_supported_versions*)extension).set(server_version);
-                                        return success;
+                                        return errorcode_t::success;
                                     })
                                .add(tls_ext_key_share, dir, handshake, [](tls_extension* extension) -> return_t {
                                    tls_extension_server_key_share* keyshare = (tls_extension_server_key_share*)extension;
                                    keyshare->clear();
                                    keyshare->add_keyshare();
-                                   return success;
+                                   return errorcode_t::success;
                                });
 
-                           return success;
+                           return errorcode_t::success;
                        })
                   .write(dir, bin);
     }

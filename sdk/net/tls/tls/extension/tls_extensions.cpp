@@ -47,9 +47,9 @@ return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, con
                     add(extension);
                 } else {
 #if defined DEBUG
-                    if (istraceable(trace_category_net)) {
+                    if (istraceable(trace_category_t::trace_category_net)) {
                         tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                        trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                             dbs.println(ANSI_ESCAPE "1;31m! error while reading extension %s" ANSI_ESCAPE "0m", tlsadvisor->nameof_tls_extension(extension_type).c_str());
                         });
                     }
@@ -74,11 +74,11 @@ return_t tls_extensions::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     auto lambda = [&](tls_extension* extension) -> return_t {
         auto ret = extension->write(dir, bin);
-        if (success != ret) {
+        if (errorcode_t::success != ret) {
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
+            if (istraceable(trace_category_t::trace_category_net)) {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                     dbs.println(ANSI_ESCAPE "1;31m! error while writing extension %s" ANSI_ESCAPE "0m", tlsadvisor->nameof_tls_extension(extension->get_type()).c_str());
                 });
             }
@@ -102,8 +102,8 @@ tls_extensions& tls_extensions::add(uint16 type, tls_direction_t dir, tls_handsh
                 if (errorcode_t::success != test) {
 #if defined DEBUG
                     tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                    if (istraceable(trace_category_net)) {
-                        trace_debug_event(trace_category_net, trace_event_tls_extension,
+                    if (istraceable(trace_category_t::trace_category_net)) {
+                        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension,
                                           [&](basic_stream& dbs) -> void { dbs.println("check %s", tlsadvisor->nameof_tls_extension(type).c_str()); });
                     }
 #endif

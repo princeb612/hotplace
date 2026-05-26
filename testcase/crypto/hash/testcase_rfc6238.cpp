@@ -58,11 +58,11 @@ TOTP_TEST_DATA _totp_test_data[] = {
     }, /* sha512 */
 };
 
-uint32 test_totp_rfc6238(hash_algorithm_t algorithm) {
+return_t test_totp_rfc6238(hash_algorithm_t algorithm) {
     _test_case.begin("TOTP/SHA1 (RFC6238)");
     const OPTION& option = _cmdline->value();
 
-    uint32 ret = errorcode_t::success;
+    return_t ret = errorcode_t::success;
     otp_context_t* handle = nullptr;
     TOTP_TEST_DATA* test_data = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();

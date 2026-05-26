@@ -206,7 +206,7 @@ return_t json_object_signing::verify(jose_context_t* handle, const std::string& 
         }
 
         if (false == result) {
-            ret = errorcode_t::error_verify;
+            ret = errorcode_t::verification_failure;
         }
     }
     __finally2 { json_object_signing_encryption::clear_context(handle); }

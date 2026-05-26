@@ -82,7 +82,7 @@ return_t tls_record_application_data::do_preprocess(tls_direction_t dir) {
     if (0 == (session_status_prerequisite & session_status)) {
         session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
         session->reset_session_status();
-        ret = errorcode_t::error_handshake;
+        ret = errorcode_t::handshake_failure;
     }
     return ret;
 }
@@ -166,8 +166,8 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
                     _bin = std::move(plaintext);
                 }
 #if defined DEBUG
-                if (istraceable(trace_category_net)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                if (istraceable(trace_category_t::trace_category_net)) {
+                    trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_record, [&](basic_stream& dbs) -> void {
                         dbs.autoindent(3);
                         dbs.println(" > %s", constexpr_application_data);  // data
                         dump_memory(_bin, &dbs, 16, 3, 0x0, dump_notrunc);

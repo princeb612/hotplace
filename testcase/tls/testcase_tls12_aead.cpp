@@ -58,7 +58,7 @@ void test_tls12_aead_aes128gcm() {
         auto lambda_test_secret = [&](tls_secret_t secret, const char* value) -> return_t {
             const binary_t& bin_secret = protection.get_secrets().get(secret);
             binary_t bin_value = base16_decode(value);
-            return (bin_secret == bin_value) ? success : mismatch;
+            return (bin_secret == bin_value) ? errorcode_t::success : errorcode_t::mismatch;
         };
 
         ret = lambda_test_secret(tls_secret_client_key, "844cba68a2aada5c04524664ad93b1e7");
@@ -105,7 +105,7 @@ void test_tls12_aead_chacha20poly1305() {
         auto lambda_test_secret = [&](tls_secret_t secret, const char* value) -> return_t {
             const binary_t& bin_secret = protection.get_secrets().get(secret);
             binary_t bin_value = base16_decode(value);
-            return (bin_secret == bin_value) ? success : mismatch;
+            return (bin_secret == bin_value) ? errorcode_t::success : errorcode_t::mismatch;
         };
 
         ret = lambda_test_secret(tls_secret_client_key, "4b403a5ecddb11ca66b808b90086a530ca1b0137a37db67b432dbf83e335f28a");

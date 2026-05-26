@@ -165,7 +165,7 @@ return_t http_dynamic_table::select(uint32 flags, size_t index, std::string& nam
         }
 
         if (errorcode_t::success == ret) {
-            trace_debug_event(trace_category_net, trace_event_header_compression_select,
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_header_compression_select,
                               [&](basic_stream& dbs) -> void { dbs << "index [" << index << "] " << name << "=" << value << "\n"; });
         }
     }
@@ -211,12 +211,12 @@ return_t http_dynamic_table::commit() {
             _dynamic_reversemap.emplace(_inserted, std::make_pair(name, entrysize));
 
             if (_hook) {
-                _hook(trace_category_net, trace_event_header_compression_insert);
+                _hook(trace_category_t::trace_category_net, trace_event_t::trace_event_header_compression_insert);
             }
 
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_header_compression_insert,
+            if (istraceable(trace_category_t::trace_category_net)) {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_header_compression_insert,
                                   [&](basic_stream& dbs) -> void { dbs.println("+ insert entry[%zi] %s=%s", _inserted, name.c_str(), value.c_str()); });
             }
 #endif
@@ -261,12 +261,12 @@ return_t http_dynamic_table::evict() {
                 const auto& ent = v.second;
                 if (ent == t) {
                     if (_hook) {
-                        _hook(trace_category_net, trace_event_header_compression_evict);
+                        _hook(trace_category_t::trace_category_net, trace_event_t::trace_event_header_compression_evict);
                     }
 
 #if defined DEBUG
-                    if (istraceable(trace_category_net)) {
-                        trace_debug_event(trace_category_net, trace_event_header_compression_evict,
+                    if (istraceable(trace_category_t::trace_category_net)) {
+                        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_header_compression_evict,
                                           [&](basic_stream& dbs) -> void { dbs.println("- evict  entry[%zi] %s=%s", entry, name.c_str(), val.c_str()); });
                     }
 #endif
@@ -301,8 +301,9 @@ void http_dynamic_table::set_capacity(size_t capacity) {
     _capacity = capacity;
 
 #if defined DEBUG
-    if (istraceable(trace_category_net)) {
-        trace_debug_event(trace_category_net, trace_event_header_compression_evict, [&](basic_stream& dbs) -> void { dbs.println("> set capacity %zi", capacity); });
+    if (istraceable(trace_category_t::trace_category_net)) {
+        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_header_compression_evict,
+                          [&](basic_stream& dbs) -> void { dbs.println("> set capacity %zi", capacity); });
     }
 #endif
 
@@ -330,7 +331,7 @@ void http_dynamic_table::set_type(uint8 type) { _type = type; }
 
 size_t http_dynamic_table::dynamic_map_size() { return _dynamic_map.size(); }
 
-void http_dynamic_table::set_debug_hook(std::function<void(trace_category_t, uint32 event)> fn) { _hook = fn; }
+void http_dynamic_table::set_debug_hook(std::function<void(trace_category_t, trace_event_t event)> fn) { _hook = fn; }
 
 }  // namespace net
 }  // namespace hotplace

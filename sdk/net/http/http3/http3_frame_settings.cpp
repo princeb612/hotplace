@@ -41,9 +41,9 @@ return_t http3_frame_settings::do_read_payload(const byte_t* stream, size_t size
         id = pl.t_value_of<uint64>(constexpr_identifier);
         value = pl.t_value_of<uint64>(constexpr_value);
 
-        if (istraceable(trace_category_net)) {
+        if (istraceable(trace_category_t::trace_category_net)) {
             auto resource = http_resource::get_instance();
-            trace_debug_event(trace_category_net, trace_event_http3, [&](basic_stream& dbs) -> void {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_http3, [&](basic_stream& dbs) -> void {
                 dbs.println("  > %I64i (%s) 0x%0I64x (%I64i)", id, resource->get_h3_settings_name(id).c_str(), value, value);
             });
         }
@@ -61,9 +61,9 @@ return_t http3_frame_settings::do_write(binary_t& bin) {
         auto& value = item.second;
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
+        if (istraceable(trace_category_t::trace_category_net)) {
             auto resource = http_resource::get_instance();
-            trace_debug_event(trace_category_net, trace_event_http3,
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_http3,
                               [&](basic_stream& dbs) -> void { dbs << "  > " << id << " (" << resource->get_h3_settings_name(id) << ") " << value << "\n"; });
         }
 #endif

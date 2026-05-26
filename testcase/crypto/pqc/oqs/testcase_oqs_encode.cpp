@@ -70,7 +70,7 @@ void test_oqs_encode() {
                     do_encode(context, alg, key_encoding_encrypted_priv_der, passphrase);
                     do_encode(context, alg, key_encoding_pub_der);
                 } else {
-                    _test_case.test(not_supported, __FUNCTION__, "No OID registered for %s", alg.c_str());
+                    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "No OID registered for %s", alg.c_str());
                 }
             });
             pqc.for_each(context, OSSL_OP_SIGNATURE, [&](const std::string& alg, int flags) -> void {
@@ -83,7 +83,7 @@ void test_oqs_encode() {
                     do_encode(context, alg, key_encoding_encrypted_priv_der, passphrase);
                     do_encode(context, alg, key_encoding_pub_der);
                 } else {
-                    _test_case.test(not_supported, __FUNCTION__, "No OID registered for %s", alg.c_str());
+                    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "No OID registered for %s", alg.c_str());
                 }
             });
 

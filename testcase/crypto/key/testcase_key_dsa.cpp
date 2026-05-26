@@ -12,7 +12,7 @@
 
 void test_key_dsa() {
     _test_case.begin("DSA");
-    // return_t ret = success;
+    // return_t ret = errorcode_t::success;
     crypto_key key;
 
     const char* p =

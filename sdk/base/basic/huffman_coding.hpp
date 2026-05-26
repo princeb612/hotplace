@@ -6,6 +6,8 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2024.04.25   Soo Han, Kim        study (codename.hotplace Revision 504)
+ * 2026.05.25   Soo Han and Gemini  refactoring
  *
  */
 
@@ -20,8 +22,6 @@
 #include <hotplace/sdk/base/nostd/utility.hpp>
 #include <hotplace/sdk/base/pattern/trie.hpp>
 #include <map>
-
-#define SWITCH_HUFFMANCODING_TRIE 1
 
 namespace hotplace {
 
@@ -52,29 +52,25 @@ class huffman_coding {
         hc_t() : symbol(0), weight(0), flags(0) {}
         hc_t(uint8 b) : symbol(b), weight(0), flags(0) {}
         hc_t(uint8 b, size_t f) : symbol(b), weight(f), flags(0) {}
-        hc_t(const hc_t& other) : symbol(other.symbol), weight(other.weight), flags(other.flags) {}
-        hc_t& operator=(const hc_t& other) {
-            symbol = other.symbol;
-            weight = other.weight;
-            flags = other.flags;
-            return *this;
-        }
+
+        hc_t(const hc_t& other) = default;
+        hc_t(hc_t&& other) = default;
+
+        hc_t& operator=(const hc_t& other) = default;
+        hc_t& operator=(hc_t&& other) = default;
+
         friend bool operator<(const hc_t& lhs, const hc_t& rhs) { return lhs.symbol < rhs.symbol; }
     };
     struct hc_less {
         bool operator()(const hc_t& lhs, const hc_t& rhs) const {
             // tie is easy, but results is different ..
-            bool ret = false;
-            if (lhs.weight < rhs.weight) {
-                ret = true;
-            } else if (lhs.weight == rhs.weight) {
-                if (lhs.flags < rhs.flags) {
-                    ret = true;
-                } else {
-                    ret = lhs.symbol < rhs.symbol;
-                }
+            if (lhs.weight != rhs.weight) {
+                return (lhs.weight < rhs.weight);
             }
-            return ret;
+            if (lhs.flags < rhs.flags) {
+                return true;
+            }
+            return lhs.symbol < rhs.symbol;
         }
     };
     struct hc_temp {
@@ -91,14 +87,9 @@ class huffman_coding {
     typedef t_btree<hc_t> measure_tree_t;    // counting
     typedef t_btree<hc_t, hc_less> btree_t;  // by weight(frequency)
     typedef std::map<hc_t, typename btree_t::node_t*, hc_less> map_t;
-    typedef std::pair<typename map_t::iterator, bool> map_pib_t;
     typedef std::map<uint8, std::string> codetable_t;
     typedef std::map<std::string, uint8> reverse_codetable_t;
-
     typedef typename btree_t::node_t node_t;
-    typedef typename std::function<void(hc_t const& t)> const_visitor;
-    typedef typename std::function<void(hc_t& t)> visitor;
-    typedef typename std::function<void(hc_t& t, const hc_t& lhs, const hc_t& rhs)> learn_visitor;
 
    public:
     typedef hc_code hc_code_t;
@@ -193,17 +184,23 @@ class huffman_coding {
     void infer(hc_temp& hc, typename btree_t::node_t* t);
     void dump();  // debug
 
+    struct encode_cache_t {
+        uint32 bit_code;
+        uint8 bit_len;
+    };
+    encode_cache_t _encode_cache[256 + 1];  // EOS (End of String)
+
+    void build_cache(uint8 sym, const std::string code);
+    inline const encode_cache_t& get_encode_cache(uint8 sym) const { return _encode_cache[sym >= 256 ? 0 : sym]; }
+
    private:
     measure_tree_t _measure;
     btree_t _btree;
-    map_t _m;
     codetable_t _codetable;
-#if SWITCH_HUFFMANCODING_TRIE == 0
-    reverse_codetable_t _reverse_codetable;
-#else
+    map_t _m;
+
     t_trie<char> _trie;
     t_sampling_range<size_t> _range;
-#endif
 };
 
 }  // namespace hotplace

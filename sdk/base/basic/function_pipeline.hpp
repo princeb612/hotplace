@@ -57,8 +57,8 @@ class function_pipeline {
     ~function_pipeline() {
 #if defined DEBUG
         if (processed() != size()) {
-            if (istraceable(trace_category_internal, loglevel_debug)) {
-                trace_debug_event(trace_category_internal, trace_event_internal, [&](basic_stream& dbs) -> void {
+            if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_debug)) {
+                trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
                     std::string code;
                     auto rc = error_traits<T>::to_return_t(_lastcode);
                     error_advisor::get_instance()->error_code(rc, code);
@@ -76,7 +76,7 @@ class function_pipeline {
     template <typename F>
     function_pipeline& test_parameter(F checker) {
         if (false == checker()) {
-            _lastcode = invalid_parameter;
+            _lastcode = error_traits<T>::value_invalid_parameter();
         }
         return *this;
     }
@@ -189,7 +189,7 @@ class function_pipeline {
             if (use_trycatch) {
                 _lastcode = error_traits<T>::value_exception();
             } else {
-                throw exception(exception_caught);
+                throw exception(errorcode_t::exception_caught);
             }
         }
         return *this;
@@ -218,7 +218,7 @@ class function_pipeline {
             if (use_trycatch) {
                 _lastcode = error_traits<T>::value_exception();
             } else {
-                throw exception(exception_caught);
+                throw exception(errorcode_t::exception_caught);
             }
         }
         return *this;

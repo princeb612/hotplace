@@ -317,7 +317,7 @@ T t_vtoi(const variant_t& vt) {
             break;
 
         case TYPE_BINARY: {
-            return_t errorcode = success;
+            return_t errorcode = errorcode_t::success;
             if (vt.data.bstr && vt.size > 0) {
                 i = t_binary_to_integer<T>(vt.data.bstr, vt.size, errorcode);
             }

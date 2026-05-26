@@ -50,7 +50,7 @@ return_t tls_handshake_certificate::do_preprocess(tls_direction_t dir) {
         if (session_status_prerequisite != (session_status_prerequisite & session_status)) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
             session->reset_session_status();
-            ret = errorcode_t::error_handshake;
+            ret = errorcode_t::handshake_failure;
             __leave2_trace(ret);
         }
     }
@@ -140,8 +140,8 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                 dbs.autoindent(1);
                 dbs.println(" > %s %i", constexpr_request_context_len, request_context_len);
                 dbs.println(" > %s 0x%04x(%i)", constexpr_certificates_len, certificates_len, certificates_len);
@@ -196,8 +196,8 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
             }
 
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+            if (istraceable(trace_category_t::trace_category_net)) {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                     dbs.println("   > %s [%i] 0x%04x(%i)", constexpr_certificate_len, idx, certificate_len, certificate_len);
                     if (is_tls13) {
                         dbs.println("   > %s [%i] 0x%04x(%i)", constexpr_certificate_extensions_len, idx, extensions_len, extensions_len);
@@ -210,7 +210,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
                 keychain.load_der(&servercert, cert.data(), cert.size(), desc);
             } else {
 #if defined DEBUG
-                if (istraceable(trace_category_net, loglevel_debug)) {
+                if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
                     crypto_key temp;
                     keychain.load_der(&temp, cert.data(), cert.size(), desc);
                 }
@@ -226,8 +226,8 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net, loglevel_debug)) {
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                 dbs.autoindent(1);
                 auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
                     if (item->get_desc().get_kid_str() == desc.get_kid_str()) {
@@ -262,7 +262,7 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
         if (nullptr == x509) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_no_certificate);
             session->reset_session_status();
-            ret = errorcode_t::error_certificate;
+            ret = errorcode_t::missing_certificate;
             __leave2;
         }
 
@@ -271,11 +271,11 @@ return_t tls_handshake_certificate::do_write_body(tls_direction_t dir, binary_t&
         keychain.write_der(x509, certificate);
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                 dbs.autoindent(1);
                 dbs.println("> %s", constexpr_certificate);
-                if (check_trace_level(loglevel_debug)) {
+                if (check_trace_level(loglevel_t::loglevel_debug)) {
                     dump_memory(certificate, &dbs, 16, 3, 0x0, dump_notrunc);
                 }
                 dbs.autoindent(0);

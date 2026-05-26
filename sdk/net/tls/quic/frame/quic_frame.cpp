@@ -22,7 +22,7 @@ namespace net {
 
 quic_frame::quic_frame(quic_frame_t type, tls_session* session) : _type(type), _session(session), _publisher(nullptr), _packet(nullptr) {
     if (nullptr == session) {
-        throw exception(not_specified);
+        throw exception(errorcode_t::not_specified);
     }
     _shared.make_share(this);
 }
@@ -44,9 +44,9 @@ return_t quic_frame::read(tls_direction_t dir, const byte_t* stream, size_t size
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
+        if (istraceable(trace_category_t::trace_category_net)) {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
-            trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_frame, [&](basic_stream& dbs) -> void {
                 dbs.println(ANSI_ESCAPE "1;34m  > frame %s 0x%x(%i) @0x%zx" ANSI_ESCAPE "0m", tlsadvisor->nameof_quic_frame(type).c_str(), type, type, begin);
             });
         }
@@ -72,8 +72,9 @@ return_t quic_frame::read(tls_direction_t dir, const byte_t* stream, size_t size
                 }
             }
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void { dbs.println("   > len %zi", pos - tpos + 1); });
+            if (istraceable(trace_category_t::trace_category_net)) {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_frame,
+                                  [&](basic_stream& dbs) -> void { dbs.println("   > len %zi", pos - tpos + 1); });
             }
 #endif
         }

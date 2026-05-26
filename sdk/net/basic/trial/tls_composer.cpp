@@ -73,8 +73,8 @@ return_t tls_composer::session_status_changed(uint32 session_status, tls_directi
     return_t ret = errorcode_t::success;
     __try2 {
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 dbs.println("hook %s (%s)", tlsadvisor->nameof_session_status(session_status).c_str(), tlsadvisor->nameof_direction(dir).c_str());
             });

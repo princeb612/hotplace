@@ -106,7 +106,7 @@ void test_mlkem_encoding() {
         EVP_PKEY_free(pkey);
     }
 #else
-    _test_case.test(not_supported, __FUNCTION__, "openssl 3.5 required");
+    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "openssl 3.5 required");
 #endif
 }
 

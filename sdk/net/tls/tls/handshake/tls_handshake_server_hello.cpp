@@ -139,7 +139,7 @@ return_t tls_handshake_server_hello::do_preprocess(tls_direction_t dir) {
         if (0 == (session_status_client_hello & session_status)) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
             session->reset_session_status();
-            ret = errorcode_t::error_handshake;
+            ret = errorcode_t::handshake_failure;
             __leave2_trace(ret);
         }
     }
@@ -196,7 +196,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
                     if (downgrade) {
                         session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_protocol_version);
                         session->reset_session_status();
-                        ret = errorcode_t::error_handshake;
+                        ret = errorcode_t::handshake_failure;
                     }
                 } break;
                 default:
@@ -214,11 +214,11 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
             session->get_session_info(from_client).set_status(get_type());
 
             if (errorcode_t::warn_retry == test) {
-                if (warn_retry == ret) {
+                if (errorcode_t::warn_retry == ret) {
 #if defined DEBUG
-                    if (istraceable(trace_category_net)) {
+                    if (istraceable(trace_category_t::trace_category_net)) {
                         // CLIENT_RANDOM
-                        trace_debug_event(trace_category_net, trace_event_tls_protection,
+                        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection,
                                           [&](basic_stream& dbs) -> void { dbs.println("* " ANSI_ESCAPE "1;33mHelloRetryRequest" ANSI_ESCAPE "0m"); });
                     }
 #endif
@@ -351,13 +351,13 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
             if (0 == extension_len) {
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
                 session->reset_session_status();
-                ret = errorcode_t::error_handshake;
+                ret = errorcode_t::handshake_failure;
                 __leave2_trace(ret);
             }
 
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+            if (istraceable(trace_category_t::trace_category_net)) {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                     dbs.autoindent(1);
                     dbs.println(" > %s 0x%04x (%s)", constexpr_version, version, tlsadvisor->nameof_tls_version(version).c_str());
                     dbs.println(" > %s", constexpr_random);
@@ -390,7 +390,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                     if (ext_etm) {
                         session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                         session->reset_session_status();
-                        ret = error_handshake;
+                        ret = errorcode_t::handshake_failure;
                         __leave2_trace(ret);
                     }
                 }
@@ -406,7 +406,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
                     if (ext_ems) {
                         session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                         session->reset_session_status();
-                        ret = error_handshake;
+                        ret = errorcode_t::handshake_failure;
                         __leave2_trace(ret);
                     }
                 }
@@ -495,7 +495,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
             if (0 == ext_sg_casted->numberof_groups()) {
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                 session->reset_session_status();
-                ret = errorcode_t::error_handshake;
+                ret = errorcode_t::handshake_failure;
                 __leave2_trace(ret);
             }
         }
@@ -535,8 +535,8 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
         binary_append(bin, extensions);
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                 dbs.println("> encrypt_then_mac %i", kv.get(session_encrypt_then_mac) ? 1 : 0);
                 dbs.println("> extended master secret %i", kv.get(session_extended_master_secret));
             });

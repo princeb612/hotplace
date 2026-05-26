@@ -23,9 +23,9 @@ namespace net {
  * @sample
  *          trial_dtls_client_socket cli;
  *          ret = cli.open(&addr, addr, port)
- *          if (success == ret) {
+ *          if (errorcode_t::success == ret) {
  *              ret = cli.sendto(msg.c_str(), msg.size(), &cbsent, , (sockaddr*)&addr, sizeof(addr));
- *              if (success == ret) {
+ *              if (errorcode_t::success == ret) {
  *                  cli.recvfrom(buf, bufsize, &cbread, (sockaddr*)&addr, &addrlen);
  *              }
  *          }

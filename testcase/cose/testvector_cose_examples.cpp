@@ -58,15 +58,15 @@ void test_yaml_testvector_cose_examples() {
                 auto node_keyalg = item["keyalg"];
                 auto node_keyuse = item["keyuse"];
 
-                encoding_t enctype = encoding_base16;
+                encoding_t enctype = encoding_t::encoding_base16;
                 if (encoding == "base16") {
-                    enctype = encoding_base16;
+                    enctype = encoding_t::encoding_base16;
                 } else if (encoding == "base16rfc") {
-                    enctype = encoding_base16rfc;
+                    enctype = encoding_t::encoding_base16rfc;
                 } else if (encoding == "base64") {
-                    enctype = encoding_base64;
+                    enctype = encoding_t::encoding_base64;
                 } else if (encoding == "base64url") {
-                    enctype = encoding_base64url;
+                    enctype = encoding_t::encoding_base64url;
                 } else {
                     break;
                 }
@@ -203,6 +203,8 @@ void test_yaml_testvector_cose_examples() {
                     publisher.publish(cbor_newone, &bs_diagnostic_composed);
                     dump_test_data("compose", bs_diagnostic_composed);
                     _test_case.assert(bin_composed == bin_cbor, __FUNCTION__, "compose.parse %s", text_item.c_str());
+
+                    cbor_newone->release();
                 }
 
                 basic_stream properties;

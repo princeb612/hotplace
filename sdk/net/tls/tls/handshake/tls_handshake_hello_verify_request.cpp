@@ -40,7 +40,7 @@ return_t tls_handshake_hello_verify_request::do_preprocess(tls_direction_t dir) 
         if (0 == (session_status_client_hello & session_status)) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
             session->reset_session_status();
-            ret = errorcode_t::error_handshake;
+            ret = errorcode_t::handshake_failure;
             __leave2_trace(ret);
         }
     }
@@ -87,8 +87,8 @@ return_t tls_handshake_hello_verify_request::do_read_body(tls_direction_t dir, c
         pl.get_binary(constexpr_cookie, _cookie);
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_handshake,
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake,
                               [&](basic_stream& dbs) -> void { dbs.println("  > cookie %s", base16_encode(_cookie).c_str()); });
         }
 #endif

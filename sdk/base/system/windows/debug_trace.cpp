@@ -33,7 +33,7 @@ return_t trace_backtrace(return_t errorcode) {
     if (errorcode_t::success != errorcode) {
         uint32 option = get_trace_option();
         if (trace_option_t::trace_bt & option) {
-            trace_debug_event(trace_category_internal, trace_event_backtrace, [&](basic_stream& dbs) -> void {
+            trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_backtrace, [&](basic_stream& dbs) -> void {
                 debug_trace_context_t* handle = nullptr;
 
                 std::string errcode;
@@ -497,7 +497,7 @@ LONG __stdcall exception_handler(struct _EXCEPTION_POINTERS* exception_ptr) {
     SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOALIGNMENTFAULTEXCEPT | SEM_NOOPENFILEERRORBOX);
 
     LONG lRet = EXCEPTION_EXECUTE_HANDLER;
-    DWORD ret = errorcode_t::success;
+    return_t ret = errorcode_t::success;
 
     __try2 {
         // __try { ... }

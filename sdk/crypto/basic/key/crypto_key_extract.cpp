@@ -500,7 +500,7 @@ return_t crypto_key::extract_ossl3(const EVP_PKEY* pkey, int flags, crypto_kty_t
             crypt_item_t item = (crypt_access_t::asn1public_key & flags) ? item_asn1der : item_mlkem_pub;
             binary_t bin_pub;
             ret = keychain.pkey_encode(nullptr, pkey, bin_pub, encoding);
-            if (success == ret) {
+            if (errorcode_t::success == ret) {
                 datamap.emplace(item, std::move(bin_pub));
             }
         }
@@ -508,7 +508,7 @@ return_t crypto_key::extract_ossl3(const EVP_PKEY* pkey, int flags, crypto_kty_t
         if (crypt_access_t::private_key & flags) {
             binary_t bin_keypair;
             ret = keychain.pkey_encode(nullptr, pkey, bin_keypair, key_encoding_priv_raw);
-            if (success == ret) {
+            if (errorcode_t::success == ret) {
                 datamap.emplace(crypt_item_t::item_mlkem_priv, std::move(bin_keypair));
             }
         }

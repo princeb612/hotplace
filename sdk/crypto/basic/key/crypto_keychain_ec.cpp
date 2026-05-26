@@ -68,7 +68,7 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, const keydes
             ret = errorcode_t::internal_error;
             __leave2_trace_openssl(ret);
         }
-        if (nullptr == pk) { /* [openssl 3.0.3] return success but pkey is nullptr */
+        if (nullptr == pk) { /* [openssl 3.0.3] return errorcode_t::success but pkey is nullptr */
             ret = errorcode_t::internal_error;
             __leave2;
         }

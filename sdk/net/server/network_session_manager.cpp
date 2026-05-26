@@ -206,8 +206,8 @@ return_t network_session_manager::get_dgram_cookie_session(network_session** ptr
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net, loglevel_debug)) {
-            trace_debug_event(trace_category_net, trace_event_net_produce, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_net_produce, [&](basic_stream& dbs) -> void {
                 std::string address;
                 sockaddr_string(*addr, address);
                 dbs.println("> session %p address %s cookie %s", session_object, address.c_str(), base16_encode(cookie).c_str());

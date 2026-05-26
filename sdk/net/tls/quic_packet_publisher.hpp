@@ -94,7 +94,7 @@ class quic_packet_publisher {
      *                           .add(tls_ext_sni, dir, handshake,
      *                                [](tls_extension* extension) -> return_t {
      *                                    (*(tls_extension_sni*)extension).set_hostname("localhost");
-     *                                    return success;
+     *                                    return errorcode_t::success;
      *                                })
      *                           .add(tls_ext_alpn, dir, handshake,
      *                                [](tls_extension* extension) -> return_t {
@@ -102,7 +102,7 @@ class quic_packet_publisher {
      *                                    binary_append(protocols, uint8(2));
      *                                    binary_append(protocols, "h3");
      *                                    (*(tls_extension_alpn*)extension).set_protocols(protocols);
-     *                                    return success;
+     *                                    return errorcode_t::success;
      *                                })
      *                           .add(tls_ext_quic_transport_parameters, dir, handshake,  //
      *                                [](tls_extension* extension) -> return_t {
@@ -121,9 +121,9 @@ class quic_packet_publisher {
      *                                        .set(quic_param_max_datagram_frame_size, 0x10000)
      *                                        .set(quic_param_max_udp_payload_size, max_udp_payload_size)
      *                                        .set(quic_param_initial_max_streams_bidi, 100);
-     *                                    return success;
+     *                                    return errorcode_t::success;
      *                                });
-     *                       return success;
+     *                       return errorcode_t::success;
      *                   })
      *              .publish(dir, [&](tls_session* session, binary_t& packet) -> void { do_something(); });
      */
@@ -179,7 +179,7 @@ class quic_packet_publisher {
      *                                  .set_capacity(4096)
      *                                  .encode_header(":authority", "localhost")
      *                                  .encode_header("user-agent", "hotplace 1.58.864");
-     *                              return success;
+     *                              return errorcode_t::success;
      *                          })
      *              .publish(dir, [&](tls_session* session, binary_t& packet) -> void { do_something(); });
      */

@@ -218,7 +218,7 @@ void test_case::nassert(bool expect, const char* test_function, const char* mess
 }
 
 void test_case::vnassert(bool expect, const char* test_function, const char* message, va_list ap) {
-    return_t ret = (false == expect) ? expect_failure : unexpected;
+    return_t ret = (false == expect) ? errorcode_t::expect_failure : errorcode_t::unexpected;
     basic_stream title;
     if (message) {
         title.vprintf(message, ap);
@@ -268,28 +268,28 @@ void test_case::vtest(return_t result, const char* test_function, const char* me
         test_status_t& status = it->second;
 
         switch (category) {
-            case error_category_success:  // pass
+            case error_category_t::error_category_success:  // pass
                 _total._count_success++;
                 status._test_stat._count_success++;
                 break;
-            case error_category_expect_failure:  // pass
+            case error_category_t::error_category_expect_failure:  // pass
                 color = console_color_t::cyan;
                 _total._count_success++;
                 status._test_stat._count_success++;
                 break;
-            case error_category_severe:  // fail
+            case error_category_t::error_category_severe:  // fail
                 color = console_color_t::red;
                 _total._count_fail++;
                 status._test_stat._count_fail++;
                 break;
-            case error_category_not_supported:  // skip
+            case error_category_t::error_category_not_supported:  // skip
                 color = console_color_t::cyan;
                 _total._count_not_supported++;
                 status._test_stat._count_not_supported++;
                 break;
-            case error_category_low_security:  // triv
-            case error_category_trivial:
-            case error_category_warn:
+            case error_category_t::error_category_low_security:  // triv
+            case error_category_t::error_category_trivial:
+            case error_category_t::error_category_warn:
                 color = console_color_t::yellow;
                 _total._count_trivial++;
                 status._test_stat._count_trivial++;
@@ -327,7 +327,7 @@ void test_case::ntest(return_t result, const char* test_function, const char* me
 }
 
 void test_case::vntest(return_t result, const char* test_function, const char* message, va_list ap) {
-    return_t ret = (errorcode_t::success != result) ? expect_failure : unexpected;
+    return_t ret = (errorcode_t::success != result) ? errorcode_t::expect_failure : errorcode_t::unexpected;
     vtest(ret, test_function, message, ap);
 }
 
@@ -384,23 +384,23 @@ void test_case::dump_list_into_stream(const unittest_list_t& array, basic_stream
 
         auto category = advisor->categoryof(item._result);
         switch (category) {
-            case error_category_success:
+            case error_category_t::error_category_success:
                 cprint(console_colored_stream, _concolor, console_color_t::white, fgcolor, constexpr_pass);
                 break;
-            case error_category_expect_failure:
+            case error_category_t::error_category_expect_failure:
                 cprint(console_colored_stream, _concolor, console_color_t::cyan, fgcolor, constexpr_expect_failure);
                 break;
-            case error_category_severe:
+            case error_category_t::error_category_severe:
                 cprint(console_colored_stream, _concolor, console_color_t::red, fgcolor, constexpr_fail);
                 break;
-            case error_category_not_supported:
+            case error_category_t::error_category_not_supported:
                 cprint(console_colored_stream, _concolor, console_color_t::cyan, fgcolor, constexpr_skip);
                 break;
-            case error_category_low_security:
-            case error_category_trivial:
+            case error_category_t::error_category_low_security:
+            case error_category_t::error_category_trivial:
                 cprint(console_colored_stream, _concolor, console_color_t::yellow, fgcolor, constexpr_trivial);
                 break;
-            case error_category_warn:
+            case error_category_t::error_category_warn:
                 cprint(console_colored_stream, _concolor, console_color_t::green, fgcolor, constexpr_warn);
                 break;
             default:
@@ -646,7 +646,7 @@ void test_case::report_failed(basic_stream& stream) {
     for (const auto& pair : _test_map) {
         for (const auto& item : pair.second._test_list) {
             auto category = advisor->categoryof(item._result);
-            if (error_category_severe == category) {
+            if (error_category_t::error_category_severe == category) {
                 array.push_back(item);
             }
         }

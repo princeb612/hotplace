@@ -181,7 +181,7 @@ bool quic_frames::is_significant() {
                 ret = true;
             } break;
         }
-        return success;
+        return errorcode_t::success;
     };
     for_each(lambda);
     return ret;

@@ -54,7 +54,7 @@ return_t client_socket_prosumer::connect(const char* address, uint16 port, uint3
     __try2 {
         auto type = socket_type();
         if (SOCK_STREAM != type) {
-            ret = bad_request;
+            ret = errorcode_t::bad_request;
             __leave2;
         }
 
@@ -333,8 +333,8 @@ void client_socket_prosumer::enqueue(socket_buffer_t& item, const char* buf, siz
         _rq.push(item);
     }
 #if defined DEBUG
-    if (istraceable(trace_category_net, loglevel_debug)) {
-        trace_debug_event(trace_category_net, trace_event_net_produce, [&](basic_stream& dbs) -> void {
+    if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
+        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_net_produce, [&](basic_stream& dbs) -> void {
             dbs.println("[ns] read size 0x%x", size);
             dump_memory((byte_t*)buf, size, &dbs, 16, 3, 0, dump_notrunc);
         });
@@ -398,9 +398,9 @@ return_t client_socket_prosumer::do_read(char* ptr_data, size_t size_data, size_
         *cbread = 0;
 
         if (INVALID_SOCKET == _fd) {
-            ret = not_open;
+            ret = errorcode_t::not_open;
         } else {
-            return_t test = success;
+            return_t test = errorcode_t::success;
             if (false == support_tls()) {
                 test = _rsem.wait(get_wto());
             }
@@ -431,7 +431,7 @@ return_t client_socket_prosumer::do_read(char* ptr_data, size_t size_data, size_
                         _rq.pop();
                     }
                     if (false == _rq.empty()) {
-                        ret = more_data;
+                        ret = errorcode_t::more_data;
                     }
                 }
             }

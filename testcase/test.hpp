@@ -32,11 +32,11 @@ using namespace hotplace::net;
 struct CMDLINEOPTION {
     int verbose;
     int debug;
-    int trace_level;
+    loglevel_t trace_level;
     int log;
     int time;
 
-    CMDLINEOPTION() : verbose(0), debug(0), trace_level(0), log(0), time(0) {}
+    CMDLINEOPTION() : verbose(0), debug(0), trace_level(loglevel_t::default_loglevel), log(0), time(0) {}
     void enable_verbose() { verbose = 1; }
     void enable_debug() {
         verbose = 1;
@@ -45,12 +45,17 @@ struct CMDLINEOPTION {
     void enable_trace(int level) {
         verbose = 1;
         debug = 1;
+        trace_level = loglevel_helper::to_loglevel(level);
+    }
+    void enable_trace(loglevel_t level) {
+        verbose = 1;
+        debug = 1;
         trace_level = level;
     }
     bool is_verbose() const { return verbose > 0; }
     bool is_debug() const { return debug > 0; }
-    bool is_loglevel_trace() const { return loglevel_trace == trace_level; }
-    bool is_loglevel_debug() const { return loglevel_debug == trace_level; }
+    bool is_loglevel_trace() const { return loglevel_t::loglevel_trace == trace_level; }
+    bool is_loglevel_debug() const { return loglevel_t::loglevel_debug == trace_level; }
 };
 
 #endif

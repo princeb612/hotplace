@@ -62,17 +62,17 @@ return_t tls_extension_status_request::do_read_body(tls_direction_t dir, const b
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
                 dbs.println("   > %s %i %s", constexpr_cert_status_type, cert_status_type, tlsadvisor->nameof_cert_status_type(cert_status_type).c_str());
                 dbs.println("   > %s %i", constexpr_responderid_info_len, responderid_info_len);
-                if (check_trace_level(loglevel_debug)) {
+                if (check_trace_level(loglevel_t::loglevel_debug)) {
                     dump_memory(responderid_info, &dbs, 16, 4, 0x0, dump_notrunc);
                 }
                 dbs.println("   > %s %i", constexpr_request_ext_info_len, request_ext_info_len);
-                if (check_trace_level(loglevel_debug)) {
+                if (check_trace_level(loglevel_t::loglevel_debug)) {
                     dump_memory(request_ext_info, &dbs, 16, 4, 0x0, dump_notrunc);
                 }
             });
@@ -89,7 +89,7 @@ return_t tls_extension_status_request::do_read_body(tls_direction_t dir, const b
     return ret;
 }
 
-return_t tls_extension_status_request::do_write_body(tls_direction_t dir, binary_t& bin) { return not_supported; }
+return_t tls_extension_status_request::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::not_supported; }
 
 uint8 tls_extension_status_request::get_cert_status_type() { return _cert_status_type; }
 

@@ -125,8 +125,8 @@ class encoder_stream {
         encbuf_t() : len(0) {}
         uint8 unitsize(encoding_t encoding) {
             switch (encoding) {
-                case encoding_base64:
-                case encoding_base64url:
+                case encoding_t::encoding_base64:
+                case encoding_t::encoding_base64url:
                     return 3;
                 default:
                     return 0;
@@ -134,8 +134,8 @@ class encoder_stream {
         }
         uint8 free_space(encoding_t encoding) {
             switch (encoding) {
-                case encoding_base64:
-                case encoding_base64url:
+                case encoding_t::encoding_base64:
+                case encoding_t::encoding_base64url:
                     return 3 - len;  // MUST managed as [0..3]
                 default:
                     return 0;
@@ -223,10 +223,10 @@ class decoder_stream {
         encbuf_t() : len(0) {}
         uint8 unitsize(encoding_t encoding) {
             switch (encoding) {
-                case encoding_base16:
+                case encoding_t::encoding_base16:
                     return 2;
-                case encoding_base64:
-                case encoding_base64url:
+                case encoding_t::encoding_base64:
+                case encoding_t::encoding_base64url:
                     return 4;
                 default:
                     return 0;
@@ -234,10 +234,10 @@ class decoder_stream {
         }
         uint8 free_space(encoding_t encoding) {
             switch (encoding) {
-                case encoding_base16:
+                case encoding_t::encoding_base16:
                     return 2 - len;  // MUST managed as [0..2]
-                case encoding_base64:
-                case encoding_base64url:
+                case encoding_t::encoding_base64:
+                case encoding_t::encoding_base64url:
                     return 4 - len;  // MUST managed as [0..4]
                 default:
                     return 0;

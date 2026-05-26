@@ -19,25 +19,6 @@
 
 namespace hotplace {
 
-/**
- * @sa error_advisor::categoryof
- */
-enum error_category_t : uint8 {
-    error_category_success = 0,         // success
-    error_category_expect_failure = 1,  // success (negative test)
-    error_category_severe = 2,          // severe error
-    error_category_not_supported = 3,   // do not support
-    error_category_low_security = 4,    // do not support (security reason)
-    error_category_trivial = 5,         // debugging purpose
-    error_category_warn = 6,            // warning
-};
-
-typedef struct _error_description {
-    errorcode_t error;
-    const char* error_code;
-    const char* error_message;
-} error_description;
-
 class error_advisor {
    public:
     static error_advisor* get_instance();
@@ -67,24 +48,26 @@ struct error_traits;
 /* hotplace return_t/errorcode_t */
 template <>
 struct error_traits<return_t> {
-    static return_t value_success() { return success; }
-    static return_t value_exception() { return exception_caught; }
-    static bool is_success(return_t code) { return (code == success) || (code == expect_failure); }
+    static return_t value_success() { return errorcode_t::success; }
+    static return_t value_exception() { return errorcode_t::exception_caught; }
+    static return_t value_invalid_parameter() { return errorcode_t::invalid_parameter; }
+    static bool is_success(return_t code) { return (code == errorcode_t::success) || (code == errorcode_t::expect_failure); }
     static bool is_not_fail(return_t code) {
         auto category = error_advisor::get_instance()->categoryof(code);
-        return (error_category_severe != category);
+        return (error_category_t::error_category_severe != category);
     }
     static return_t to_return_t(return_t code) { return code; }
 };
 
-/* openssl */
+/* openssl specialization */
 template <>
 struct error_traits<int> {
     static int value_success() { return 1; }
     static int value_exception() { return -1; }
+    static int value_invalid_parameter() { return 0; }
     static bool is_success(int code) { return code > 0; }
     static bool is_not_fail(int code) { return code > 0; }
-    static return_t to_return_t(int code) { return (code > 0) ? success : internal_error; }
+    static return_t to_return_t(int code) { return (code > 0) ? errorcode_t::success : errorcode_t::internal_error; }
 };
 
 }  // namespace hotplace

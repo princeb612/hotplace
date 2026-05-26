@@ -105,10 +105,10 @@ return_t quic_packet_retry::write(tls_direction_t dir, binary_t& packet) {
 
 void quic_packet_retry::dump() {
 #if defined DEBUG
-    if (istraceable(trace_category_net)) {
+    if (istraceable(trace_category_t::trace_category_net)) {
         quic_packet::dump();
 
-        trace_debug_event(trace_category_net, trace_event_quic_packet, [&](basic_stream& dbs) -> void {
+        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_packet, [&](basic_stream& dbs) -> void {
             dbs.println(" > retry token %s", base16_encode(_retry_token).c_str());
             dbs.println(" > retry integrity tag", base16_encode(_retry_integrity_tag).c_str());
         });

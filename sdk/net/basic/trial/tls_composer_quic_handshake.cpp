@@ -53,7 +53,7 @@ return_t tls_composer::do_quic_client_handshake(unsigned wto, std::function<void
                                       binary_append(protocols, uint8(2));
                                       binary_append(protocols, "h3");
                                       alpn->set_protocols(protocols);
-                                      return success;
+                                      return errorcode_t::success;
                                   })
                              .add(tls_ext_quic_transport_parameters, dir, handshake,  //
                                   [&](tls_extension* extension) -> return_t {
@@ -70,7 +70,7 @@ return_t tls_composer::do_quic_client_handshake(unsigned wto, std::function<void
                                           .set(quic_param_initial_max_stream_data_uni, 0x80000)
                                           .set(quic_param_initial_max_streams_bidi, 100)
                                           .set(quic_param_initial_max_streams_uni, 100);
-                                      return success;
+                                      return errorcode_t::success;
                                   });
                          return ret;
                      })
@@ -82,7 +82,7 @@ return_t tls_composer::do_quic_client_handshake(unsigned wto, std::function<void
             session_status = session->get_session_status();
 
             if (0 == (session_status & session_status_prerequisite)) {
-                ret = error_handshake;
+                ret = errorcode_t::handshake_failure;
                 __leave2_trace(ret);
             }
 
@@ -100,7 +100,7 @@ return_t tls_composer::do_quic_client_handshake(unsigned wto, std::function<void
             session_status = session->get_session_status();
 
             if (0 == (session_status & session_status_prerequisite)) {
-                ret = error_handshake;
+                ret = errorcode_t::handshake_failure;
                 __leave2_trace(ret);
             }
 
@@ -166,9 +166,9 @@ return_t tls_composer::do_quic_server_handshake(std::function<void(tls_session*,
                                      .set(quic_param_max_datagram_frame_size, 0x10000)
                                      .set(quic_param_max_udp_payload_size, max_payload_size)
                                      .set(quic_param_initial_max_streams_bidi, 100);
-                                 return success;
+                                 return errorcode_t::success;
                              });
-                         return success;
+                         return errorcode_t::success;
                      })
                 .add(tls_hs_certificate, dir)
                 .add(tls_hs_certificate_verify, dir)

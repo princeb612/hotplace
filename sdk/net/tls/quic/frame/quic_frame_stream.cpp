@@ -29,7 +29,7 @@ namespace net {
 quic_frame_stream::quic_frame_stream(tls_session* session, uint8 type) : quic_frame((quic_frame_t)type, session), _stream_id(0) {
     if ((quic_frame_type_stream <= type) && (type <= quic_frame_type_stream7)) {
     } else {
-        throw exception(bad_request);
+        throw exception(errorcode_t::bad_request);
     }
 }
 

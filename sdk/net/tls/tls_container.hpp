@@ -88,7 +88,7 @@ class t_tls_container {
     }
     return_t operator<<(TYPE_PTR item) { return add(item); }
     /**
-     * do { } while (success == returnof_func);
+     * do { } while (errorcode_t::success == returnof_func);
      */
     return_t for_each(std::function<return_t(TYPE_PTR)> func) {
         return_t ret = errorcode_t::success;
@@ -127,7 +127,7 @@ class t_tls_container {
                 obj->addref();
             }
         } else {
-            throw exception(out_of_range);
+            throw exception(errorcode_t::out_of_range);
         }
         return obj;
     }

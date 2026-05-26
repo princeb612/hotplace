@@ -76,8 +76,8 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
                 hmac->release();
             }
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+            if (istraceable(trace_category_t::trace_category_net)) {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                     dbs.println("> finished");
                     dbs.println("  key   %s", base16_encode(fin_key).c_str());
                     dbs.println("  hash  %s", base16_encode(fin_hash).c_str());
@@ -114,8 +114,8 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
                 maced.resize(size_maced);
             }
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+            if (istraceable(trace_category_t::trace_category_net)) {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                     dbs.println("> finished");
                     dbs.println("  key   %s", base16_encode(fin_key).c_str());
                     dbs.println("  hash  %s", base16_encode(fin_hash).c_str());

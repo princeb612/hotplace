@@ -44,7 +44,7 @@ return_t openssl_crypt::encrypt(const EVP_PKEY* pkey, const byte_t* stream, size
             case crypt_enc_t::rsa_oaep512:
                 break;
             default:
-                return not_supported;
+                return errorcode_t::not_supported;
                 break;
         }
     }
@@ -128,7 +128,7 @@ return_t openssl_crypt::decrypt(const EVP_PKEY* pkey, const byte_t* stream, size
         .run_pipe([&]() -> int {
             bool is_private = false;
             auto rc = is_private_key(pkey, is_private);
-            return (success == rc || is_private) ? 1 : 0;
+            return (errorcode_t::success == rc || is_private) ? 1 : 0;
         })
         .run_pipe([&]() -> int {
             pkey_context = std::move(EVP_PKEY_CTX_ptr(EVP_PKEY_CTX_new((EVP_PKEY*)pkey, nullptr)));

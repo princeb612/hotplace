@@ -54,7 +54,7 @@ static return_t do_test_construct_hello_verify_request(tls_session* session, tls
 
                        handshake->set_cookie(std::move(cookie));
 
-                       return success;
+                       return errorcode_t::success;
                    });
 
         ret = construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });

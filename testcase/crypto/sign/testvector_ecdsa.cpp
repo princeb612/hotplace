@@ -33,12 +33,12 @@ void do_test_ecdsa(const test_vector_nist_cavp_ecdsa_t* entry) {
         auto advisor = crypto_advisor::get_instance();
         auto spec_crv = advisor->query_feature(entry->curve);
         if (0 == spec_crv) {
-            _test_case.test(not_supported, __FUNCTION__, "skip %s", entry->curve.c_str());
+            _test_case.test(errorcode_t::not_supported, __FUNCTION__, "skip %s", entry->curve.c_str());
             __leave2;
         }
         auto spec_alg = advisor->query_feature(entry->alg);
         if (0 == spec_alg) {
-            _test_case.test(not_supported, __FUNCTION__, "skip %s", entry->alg.c_str());
+            _test_case.test(errorcode_t::not_supported, __FUNCTION__, "skip %s", entry->alg.c_str());
             __leave2;
         }
 

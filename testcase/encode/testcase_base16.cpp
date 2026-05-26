@@ -125,7 +125,7 @@ void test_base16_stream() {
         }
     };
 
-    encoder_stream encoder(encoding_base16);
+    encoder_stream encoder(encoding_t::encoding_base16);
     _logger->writeln("start encoding");
     write_encoder_chunks(encoder, sample.data(), sample.size());
     _logger->writeln("stop encoding");
@@ -138,7 +138,7 @@ void test_base16_stream() {
         bs.vaprintln("{2}", va);
     });
 
-    decoder_stream decoder(encoding_base16);
+    decoder_stream decoder(encoding_t::encoding_base16);
     _logger->writeln("start decoding");
     write_decoder_chunks(decoder, encoded.data(), encoded.size());
     _logger->writeln("stop decoding");

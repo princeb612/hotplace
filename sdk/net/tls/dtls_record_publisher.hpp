@@ -48,15 +48,15 @@ enum dtls_record_publisher_flag_t : uint32 {
  *                           .add(tls_ext_ec_point_formats, dir, handshake,
  *                                [](tls_extension* extension) -> return_t {
  *                                    (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
- *                                    return success;
+ *                                    return errorcode_t::success;
  *                                })
  *                           .add(tls_ext_supported_groups, dir, handshake,  //
  *                                [](tls_extension* extension) -> return_t {
  *                                    (*(tls_extension_supported_groups*)extension).add("x25519");
- *                                    return success;
+ *                                    return errorcode_t::success;
  *                                });
  *
- *                       return success;
+ *                       return errorcode_t::success;
  *                   })
  *              .add(tls_hs_certificate, session)
  *              .add(tls_hs_server_key_exchange, session)

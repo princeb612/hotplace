@@ -113,7 +113,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                      // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".
                      [](tls_extension* extension) -> return_t {
                          (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
-                         return success;
+                         return errorcode_t::success;
                      })
                 .add(tls_ext_supported_groups, dir, hs,
                      [&](tls_extension* extension) -> return_t {
@@ -127,7 +127,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                                  }
                              }
                          });
-                         return success;
+                         return errorcode_t::success;
                      })
                 .add(tls_ext_signature_algorithms, dir, hs, [&](tls_extension* extension) -> return_t {
                     auto ext = (tls_extension_signature_algorithms*)extension;
@@ -138,7 +138,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                             }
                         }
                     });
-                    return success;
+                    return errorcode_t::success;
                 });
 
             if (tls_13 == maxspec) {
@@ -151,12 +151,12 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                              if (tls_12 == minspec) {
                                  (*ext).add(is_dtls ? dtls_12 : tls_12);
                              }
-                             return success;
+                             return errorcode_t::success;
                          })
                     .add(tls_ext_psk_key_exchange_modes, dir, hs,
                          [](tls_extension* extension) -> return_t {
                              (*(tls_extension_psk_key_exchange_modes*)extension).add("psk_dhe_ke");
-                             return success;
+                             return errorcode_t::success;
                          })
                     .add(tls_ext_key_share, dir, hs, [&](tls_extension* extension) -> return_t {
                         tls_extension_client_key_share* keyshare = (tls_extension_client_key_share*)extension;
@@ -204,7 +204,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                                 }
                             }
                         }
-                        return success;
+                        return errorcode_t::success;
                     });
             }
 
@@ -264,14 +264,14 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
                         .add(tls_ext_supported_versions, dir, hs,
                              [&](tls_extension* extension) -> return_t {
                                  (*(tls_extension_server_supported_versions*)extension).set(tlsver);
-                                 return success;
+                                 return errorcode_t::success;
                              })
                         .add(tls_ext_key_share, dir, hs,  //
                              [](tls_extension* extension) -> return_t {
                                  auto keyshare = (tls_extension_server_key_share*)extension;
                                  keyshare->clear();
                                  keyshare->add_keyshare();
-                                 return success;
+                                 return errorcode_t::success;
                              });
                 } else {
                     hs->get_extensions()
@@ -279,13 +279,13 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
                         .add(tls_ext_ec_point_formats, dir, hs,
                              [](tls_extension* extension) -> return_t {
                                  (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
-                                 return success;
+                                 return errorcode_t::success;
                              })
                         .add(tls_ext_supported_groups, dir, hs,  //
                              [&](tls_extension* extension) -> return_t {
                                  auto group = protection.get_protection_context().get0_supported_group();
                                  (*(tls_extension_supported_groups*)extension).add(group);
-                                 return success;
+                                 return errorcode_t::success;
                              });
                 }
 

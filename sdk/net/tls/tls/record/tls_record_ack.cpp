@@ -54,10 +54,10 @@ return_t tls_record_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_record, [&](basic_stream& dbs) -> void {
                 dbs.println("> %s %04x(%i)", constexpr_ack_len, ack_len, ack_len);
-                if (check_trace_level(loglevel_debug)) {
+                if (check_trace_level(loglevel_t::loglevel_debug)) {
                     dump_memory(ack, &dbs, 16, 3, 0x0, dump_notrunc);
                 }
             });

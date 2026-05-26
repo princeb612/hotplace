@@ -71,7 +71,7 @@ void test_huffman() {
     basic_stream dbs;
     if (false == huff.decodable()) {
         ret = huff.decode(&dbs, enc.data(), enc.size());
-        _test_case.assert(success != ret, __FUNCTION__, "error detected");
+        _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "error detected");
 
         ret = huff.decode(&dbs, enc.data(), enc.size(), manual_decode);
         _test_case.test(ret, __FUNCTION__, "error ignored");

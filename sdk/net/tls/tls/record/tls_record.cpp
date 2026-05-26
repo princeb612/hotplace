@@ -86,8 +86,8 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
     auto snapshot = bin.size();
     __try2 {
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_record, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 auto content_type = get_type();
                 dbs.printf(ANSI_ESCAPE "1;36m");
@@ -124,8 +124,8 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
         ret = do_write_header(dir, bin, body);  // encryption
 
 #if defined DEBUG
-        if (istraceable(trace_category_net, loglevel_debug)) {
-            trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_record, [&](basic_stream& dbs) -> void {
                 if (get_flags()) {
                     dbs.printf(ANSI_ESCAPE "0;36m");
                 } else {
@@ -249,7 +249,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
         if (len > 16384 + 2048) {
             // more than 2^14+2048 bytes
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_record_overflow);
-            ret = errorcode_t::error_overflow;
+            ret = errorcode_t::overflow;
             __leave2;
         } else {
             if (size - pos < len) {
@@ -270,14 +270,14 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_record, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 // const auto& range = get_header_range();
 
                 dbs.println("# record (%s) [size 0x%zx(%zi) pos 0x%x]", tlsadvisor->nameof_direction(dir).c_str(), size, size, recpos);
 
-                if (check_trace_level(loglevel_debug)) {
+                if (check_trace_level(loglevel_t::loglevel_debug)) {
                     uint16 content_header_size = 0;
                     if (tlsadvisor->is_kindof_tls(record_version)) {
                         content_header_size = RTL_FIELD_SIZE(tls_content_t, tls);
@@ -313,7 +313,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
     return ret;
 }
 
-return_t tls_record::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) { return not_supported; }
+return_t tls_record::do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) { return errorcode_t::not_supported; }
 
 return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body) {
     return_t ret = errorcode_t::success;
@@ -406,8 +406,8 @@ return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin
         binary_append(bin, body);
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_record, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 // const auto& range = get_header_range();
 

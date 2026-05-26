@@ -44,9 +44,10 @@ return_t crypto_advisor::build() {
 
     uint32 i = 0;
 #if defined DEBUG
-    if (istraceable(trace_category_crypto)) {
+    if (istraceable(trace_category_t::trace_category_crypto)) {
         unsigned long osslver = OpenSSL_version_num();
-        trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream& dbs) -> void { dbs.println("openssl version %x", osslver); });
+        trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_openssl_info,
+                          [&](basic_stream& dbs) -> void { dbs.println("openssl version %x", osslver); });
     }
 #endif
 
@@ -87,12 +88,14 @@ return_t crypto_advisor::build() {
         }
 #endif
 #if defined DEBUG
-        if (istraceable(trace_category_crypto, loglevel_debug)) {
+        if (istraceable(trace_category_t::trace_category_crypto, loglevel_t::loglevel_debug)) {
             // __trace(errorcode_t::debug, "%s", nameof_alg(item));
             if (nullptr == evp_cipher) {
-                trace_debug_event(trace_category_crypto, trace_event_openssl_nosupport, [&](basic_stream& dbs) -> void { dbs.println("no %s", nameof_alg(item)); });
+                trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_openssl_nosupport,
+                                  [&](basic_stream& dbs) -> void { dbs.println("no %s", nameof_alg(item)); });
             } else {
-                trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream& dbs) -> void { dbs.println("%s", nameof_alg(item)); });
+                trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_openssl_info,
+                                  [&](basic_stream& dbs) -> void { dbs.println("%s", nameof_alg(item)); });
             }
         }
 #endif
@@ -136,9 +139,10 @@ return_t crypto_advisor::build() {
 #endif
         if (nullptr == evp_md) {
 #if defined DEBUG
-            if (istraceable(trace_category_crypto, loglevel_debug)) {
+            if (istraceable(trace_category_t::trace_category_crypto, loglevel_t::loglevel_debug)) {
                 // __trace(errorcode_t::debug, "%s", nameof_alg(item));
-                trace_debug_event(trace_category_crypto, trace_event_openssl_nosupport, [&](basic_stream& dbs) -> void { dbs.println("no %s", nameof_alg(item)); });
+                trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_openssl_nosupport,
+                                  [&](basic_stream& dbs) -> void { dbs.println("no %s", nameof_alg(item)); });
             }
 #endif
         }

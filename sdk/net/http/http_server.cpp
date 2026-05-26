@@ -20,7 +20,7 @@ namespace net {
 
 http_server::http_server(server_socket_adapter* adapter) : _server_socket_adapter(adapter), _user_context(nullptr) {
     if (nullptr == adapter) {
-        throw exception(not_specified);
+        throw exception(errorcode_t::not_specified);
     }
     get_server_socket_adapter()->addref();
     get_http_router().set_owner(this);
@@ -172,8 +172,8 @@ return_t http_server::consume(uint32 type, uint32 data_count, void* data_array[]
     size_t bufsize = (size_t)data_array[2];
 
 #if defined DEBUG
-    if (istraceable(trace_category_net, loglevel_debug)) {
-        trace_debug_event(trace_category_net, trace_event_net_consume, [&](basic_stream& dbs) -> void {
+    if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
+        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_net_consume, [&](basic_stream& dbs) -> void {
             netsocket_t* session_socket = (netsocket_t*)data_array[0];  // mux_tryconnect can be nullptr
             switch (type) {
                 case mux_connect: {

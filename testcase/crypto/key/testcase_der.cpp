@@ -12,7 +12,7 @@
 
 void test_der() {
     _test_case.begin("DER");
-    return_t ret = success;
+    return_t ret = errorcode_t::success;
     // RFC 8448
     // 3.  Simple 1-RTT Handshake
     // server certificate

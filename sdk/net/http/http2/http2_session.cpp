@@ -51,8 +51,8 @@ http2_session& http2_session::consume(uint32 type, uint32 data_count, void* data
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net, loglevel_debug)) {
-            trace_debug_event(trace_category_net, trace_event_net_consume, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_net_consume, [&](basic_stream& dbs) -> void {
                 netsocket_t* session_socket = (netsocket_t*)data_array[0];
                 switch (type) {
                     case mux_connect:
@@ -224,8 +224,8 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
             frame->read(buf, bufsize, pos_frame);
             lambda_postread(frame);
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_net_consume, [&](basic_stream& dbs) -> void { frame->dump(&dbs); });
+            if (istraceable(trace_category_t::trace_category_net)) {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_net_consume, [&](basic_stream& dbs) -> void { frame->dump(&dbs); });
             }
 #endif
             frame->release();

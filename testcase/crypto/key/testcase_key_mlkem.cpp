@@ -42,7 +42,7 @@ void test_mlkem_keygen() {
 
     // and then encapsulate, decapsulate ... see example pqc
 #else
-    _test_case.test(not_supported, __FUNCTION__, "openssl 3.5 required");
+    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "openssl 3.5 required");
 #endif
 }
 
@@ -74,10 +74,10 @@ void test_mlkem_keyuse_routine(tls_group_t group, const binary_t& share) {
         ret = keyexchange.encaps(group, share, keycapsule, sharedsecret);
         _test_case.test(ret, __FUNCTION__, "encaps %s", name);
     } else {
-        _test_case.test(not_supported, __FUNCTION__, "unknown");
+        _test_case.test(errorcode_t::not_supported, __FUNCTION__, "unknown");
     }
 #else
-    _test_case.test(not_supported, __FUNCTION__, "openssl 3.5 required");
+    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "openssl 3.5 required");
 #endif
 }
 
@@ -163,7 +163,7 @@ void test_mlkem_keyuse() {
         test_mlkem_keyuse_routine(item->group, share);
     }
 #else
-    _test_case.test(not_supported, __FUNCTION__, "openssl 3.5 required");
+    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "openssl 3.5 required");
 #endif
 }
 

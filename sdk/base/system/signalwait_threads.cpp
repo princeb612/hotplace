@@ -63,8 +63,8 @@ return_t signalwait_threads::create() {
                 threadid_t tid = thread_obj->gettid();
                 _container.emplace(tid, thread_rt.get());
 #if defined DEBUG
-                if (istraceable(trace_category_internal, loglevel_debug)) {
-                    trace_debug_event(trace_category_internal, trace_event_internal,
+                if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_debug)) {
+                    trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal,
                                       [&](basic_stream& dbs) -> void { dbs.println(R"(thread.create  ["%s"] tid %p %p)", _tag.c_str(), tid, thread_rt.get()); });
                 }
 #endif
@@ -112,8 +112,8 @@ void signalwait_threads::join_signaled() {
 
         if (thread) {
 #if defined DEBUG
-            if (istraceable(trace_category_internal, loglevel_debug)) {
-                trace_debug_event(trace_category_internal, trace_event_internal,
+            if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_debug)) {
+                trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal,
                                   [&](basic_stream& dbs) -> void { dbs.println(R"(thread.tryjoin ["%s"] tid %p %p)", _tag.c_str(), tid, thread_context); });
             }
 #endif
@@ -121,8 +121,8 @@ void signalwait_threads::join_signaled() {
             delete thread;
             delete thread_context;
 #if defined DEBUG
-            if (istraceable(trace_category_internal, loglevel_debug)) {
-                trace_debug_event(trace_category_internal, trace_event_internal,
+            if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_debug)) {
+                trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal,
                                   [&](basic_stream& dbs) -> void { dbs.println(R"(thread.join    ["%s"] tid %p %p)", _tag.c_str(), tid, thread_context); });
             }
 #endif

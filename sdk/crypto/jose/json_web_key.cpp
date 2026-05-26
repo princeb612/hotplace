@@ -149,7 +149,7 @@ return_t json_web_key::read_json_keynode(crypto_key* cryptokey, json_t* json) {
                 json_unpack(temp, "{s:s,s:s,s:s}", "alg", &alg_value, "pub", &pub_value, "priv", &priv_value);
 
                 if (nullptr == alg_value || (nullptr == pub_value && nullptr == priv_value)) {
-                    ret = bad_format;
+                    ret = errorcode_t::bad_format;
                     __leave2;
                 }
 

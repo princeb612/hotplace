@@ -176,8 +176,9 @@ return_t cbor_object_signing_encryption::dosign(cose_context_t* handle, crypto_k
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_crypto)) {
-            trace_debug_event(trace_category_crypto, trace_event_cose_signing, [&](basic_stream& dbs) -> void { dbs.println("dosign alg %i (%s)", alg, hint->name); });
+        if (istraceable(trace_category_t::trace_category_crypto)) {
+            trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_cose_signing,
+                              [&](basic_stream& dbs) -> void { dbs.println("dosign alg %i (%s)", alg, hint->name); });
         }
 #endif
 
@@ -230,10 +231,10 @@ return_t cbor_object_signing_encryption::dosign(cose_context_t* handle, crypto_k
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_crypto)) {
+        if (istraceable(trace_category_t::trace_category_crypto)) {
             auto dump = [&](const char* text, binary_t& bin) -> void {
                 if (bin.size()) {
-                    trace_debug_event(trace_category_crypto, trace_event_cose_signing,
+                    trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_cose_signing,
                                       [&](basic_stream& dbs) -> void { dbs.println("  %-10s %s", text ? text : "", base16_encode(bin).c_str()); });
                 }
             };

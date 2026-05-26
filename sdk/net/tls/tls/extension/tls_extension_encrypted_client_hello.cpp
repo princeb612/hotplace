@@ -71,8 +71,8 @@ return_t tls_extension_encrypted_client_hello::do_read_body(tls_direction_t dir,
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
                 dbs.println("   > %s %i", constexpr_client_hello_type, client_hello_type);
@@ -80,11 +80,11 @@ return_t tls_extension_encrypted_client_hello::do_read_body(tls_direction_t dir,
                 dbs.println("   > %s %i %s", constexpr_aead, aead, tlsadvisor->nameof_aead_alg(aead).c_str());
                 dbs.println("   > %s %i", constexpr_config_id, config_id);
                 dbs.println("   > %s %i", constexpr_enc_len, enc_len);
-                if (check_trace_level(loglevel_debug)) {
+                if (check_trace_level(loglevel_t::loglevel_debug)) {
                     dump_memory(enc, &dbs, 16, 4, 0x0, dump_notrunc);
                 }
                 dbs.println("   > %s %i", constexpr_payload_len, enc_payload_len);
-                if (check_trace_level(loglevel_debug)) {
+                if (check_trace_level(loglevel_t::loglevel_debug)) {
                     dump_memory(enc_payload, &dbs, 16, 4, 0x0, dump_notrunc);
                 }
             });
@@ -106,7 +106,7 @@ return_t tls_extension_encrypted_client_hello::do_read_body(tls_direction_t dir,
     return ret;
 }
 
-return_t tls_extension_encrypted_client_hello::do_write_body(tls_direction_t dir, binary_t& bin) { return not_supported; }
+return_t tls_extension_encrypted_client_hello::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

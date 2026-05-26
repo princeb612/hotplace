@@ -113,7 +113,7 @@ return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t 
             __leave2;
         }
 
-        ret = errorcode_t::error_verify;
+        ret = errorcode_t::verification_failure;
 
         hash.open(&hash_handle, alg);
         hash.hash(hash_handle, stream, size, hash_value);
@@ -130,7 +130,7 @@ return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t 
         RSA_public_decrypt(bufsize, signature.data(), buf.data(), rsa, RSA_NO_PADDING);
         ret_openssl = RSA_verify_PKCS1_PSS(rsa, hash_value.data(), evp_md, buf.data(), saltlen);
         if (ret_openssl < 1) {
-            ret = errorcode_t::error_verify;
+            ret = errorcode_t::verification_failure;
             __leave2;
         }
 

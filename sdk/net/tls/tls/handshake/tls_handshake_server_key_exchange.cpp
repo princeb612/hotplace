@@ -51,7 +51,7 @@ return_t tls_handshake_server_key_exchange::do_preprocess(tls_direction_t dir) {
         if (0 == (session_status_server_cert & session_status)) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
             session->reset_session_status();
-            ret = errorcode_t::error_handshake;
+            ret = errorcode_t::handshake_failure;
             __leave2_trace(ret);
         }
     }
@@ -163,8 +163,8 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
             }
 
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+            if (istraceable(trace_category_t::trace_category_net)) {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                     auto advisor = crypto_advisor::get_instance();
                     auto hint = advisor->hintof_sigscheme(sigalg);
                     std::string name;
@@ -177,13 +177,13 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                     dbs.println("> %s 0x%04x %s", constexpr_curve, curve, tlsadvisor->nameof_group(curve).c_str());
                     dbs.println("> %s", constexpr_pubkey);
                     dbs.println(" > %s %i", constexpr_pubkey_len, pubkey_len);
-                    if (check_trace_level(loglevel_debug)) {
+                    if (check_trace_level(loglevel_t::loglevel_debug)) {
                         dump_memory(pubkey, &dbs, 16, 4, 0x0, dump_notrunc);
                     }
                     dbs.println("> %s " ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", constexpr_signature, (errorcode_t::success == ret) ? "true" : "false");
                     dbs.println(" > 0x%04x %s", sigalg, name.c_str());
                     dbs.println(" > %s %i", constexpr_sig_len, sig_len);
-                    if (check_trace_level(loglevel_debug)) {
+                    if (check_trace_level(loglevel_t::loglevel_debug)) {
                         dump_memory(sig, &dbs, 16, 3, 0x0, dump_notrunc);
                     }
                     dbs.autoindent(0);
@@ -282,8 +282,8 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
     }
 
 #if defined DEBUG
-    if (istraceable(trace_category_net)) {
-        trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+    if (istraceable(trace_category_t::trace_category_net)) {
+        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
             auto advisor = crypto_advisor::get_instance();
             auto hint = advisor->hintof_sigscheme(sigalg);
             std::string name;
@@ -296,13 +296,13 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
             dbs.println("> %s 0x%04x %s", constexpr_curve, curve, tlsadvisor->nameof_group(curve).c_str());
             dbs.println("> %s", constexpr_pubkey);
             dbs.println(" > %s %zi", constexpr_pubkey_len, pubkey.size());
-            if (check_trace_level(loglevel_debug)) {
+            if (check_trace_level(loglevel_t::loglevel_debug)) {
                 dump_memory(pubkey, &dbs, 16, 4, 0, dump_notrunc);
             }
             dbs.println("> %s", constexpr_signature);
             dbs.println(" > 0x%04x %s", sigalg, name.c_str());
             dbs.println(" > %s %zi", constexpr_sig_len, sig.size());
-            if (check_trace_level(loglevel_debug)) {
+            if (check_trace_level(loglevel_t::loglevel_debug)) {
                 dump_memory(sig, &dbs, 16, 3, 0, dump_notrunc);
             }
             dbs.autoindent(0);

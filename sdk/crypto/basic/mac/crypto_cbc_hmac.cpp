@@ -316,7 +316,7 @@ return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey
                 // mac
                 (*hmac).update(aad).update(datalen, hton16).update(plaintext).finalize(tag);
                 if (tag != mac) {
-                    ret = errorcode_t::error_verify;
+                    ret = errorcode_t::verification_failure;
                     __leave2;
                 }
             }
@@ -327,7 +327,7 @@ return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey
                 binary_append(mac, ciphertext + datalen, dlen);
                 (*hmac).update(aad).update(uint16(datalen), hton16).update(ciphertext, datalen).finalize(tag);
                 if (tag != mac) {
-                    ret = errorcode_t::error_verify;
+                    ret = errorcode_t::verification_failure;
                     __leave2;
                 }
             }
@@ -499,7 +499,7 @@ return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey
             (*hmac).update(aad).update(iv).update(ciphertext, ciphersize).update(uint64(aad.size() << 3), hton64).finalize(mac);
             mac.resize(digestsize);
             if (tag != mac) {
-                ret = errorcode_t::error_verify;
+                ret = errorcode_t::verification_failure;
                 __leave2;
             }
 

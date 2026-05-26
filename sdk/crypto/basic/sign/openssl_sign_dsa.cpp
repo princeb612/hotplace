@@ -102,7 +102,7 @@ return_t openssl_sign::verify_dsa(const EVP_PKEY* pkey, hash_algorithm_t hashalg
 
         ret_openssl = DSA_do_verify(digest.data(), t_narrow_cast(digest.size()), sig.get(), (DSA*)dsa);
         if (ret_openssl < 1) {
-            ret = errorcode_t::error_verify;
+            ret = errorcode_t::verification_failure;
         }
     }
     __finally2 {}

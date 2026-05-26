@@ -98,7 +98,7 @@ return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorit
     crypto_advisor* advisor = crypto_advisor::get_instance();
     const EVP_CIPHER* cipher = advisor->find_evp_cipher(algorithm, mode);
     if (nullptr == cipher) {
-        return not_supported;
+        return errorcode_t::not_supported;
     }
     std::unique_ptr<openssl_crypt_context_t> context;
 
@@ -343,7 +343,7 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t* handle, const unsigned
 
                     ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, nullptr, t_narrow_cast(plainsize));
                     if (ret_cipher < 1) {
-                        ret = errorcode_t::error_cipher;
+                        ret = errorcode_t::cipher_failure;
                         break;
                     }
                 }
@@ -351,7 +351,7 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t* handle, const unsigned
                 const auto& a = *aad;
                 ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, a.data(), t_narrow_cast(a.size()));
                 if (ret_cipher < 1) {
-                    ret = errorcode_t::error_cipher;
+                    ret = errorcode_t::cipher_failure;
                     break;
                 }
             } break;
@@ -407,14 +407,14 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t* handle, const unsigned
 
             ret_cipher = EVP_CipherUpdate(context->encrypt_context, ciphertext, &size_update, plaintext, t_narrow_cast(plainsize));
             if (1 > ret_cipher) {
-                ret = errorcode_t::error_cipher;
+                ret = errorcode_t::cipher_failure;
                 __leave2_trace_openssl(ret);
             }
         }
 
         ret_cipher = EVP_CipherFinal(context->encrypt_context, ciphertext + size_update, &size_final);
         if (1 > ret_cipher) {
-            ret = errorcode_t::error_cipher;
+            ret = errorcode_t::cipher_failure;
             __leave2_trace_openssl(ret);
         }
 
@@ -425,7 +425,7 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t* handle, const unsigned
                 (*tag).resize(tag_size);
                 ret_cipher = EVP_CIPHER_CTX_ctrl(context->encrypt_context, EVP_CTRL_AEAD_GET_TAG, tag_size, (*tag).data());
                 if (ret_cipher < 1) {
-                    ret = errorcode_t::error_cipher;
+                    ret = errorcode_t::cipher_failure;
                     break;
                 }
             } break;
@@ -498,7 +498,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t* handle, const unsigned
 
                 tag_size = context->tsize ? context->tsize : ((crypt_mode_t::ccm == context->mode) ? 14 : 16);
                 if (tag_size != (*tag).size()) {
-                    ret = errorcode_t::error_verify;
+                    ret = errorcode_t::verification_failure;
                     break;
                 }
                 EVP_CIPHER_CTX_ctrl(context->decrypt_context, EVP_CTRL_AEAD_SET_TAG, t_narrow_cast(tag_size), (void*)(*tag).data());
@@ -522,7 +522,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t* handle, const unsigned
 
                     ret_cipher = EVP_CipherUpdate(context->decrypt_context, nullptr, &size_update, nullptr, t_narrow_cast(ciphersize));
                     if (ret_cipher < 1) {
-                        ret = errorcode_t::error_cipher;
+                        ret = errorcode_t::cipher_failure;
                         break;
                     }
                 }
@@ -530,7 +530,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t* handle, const unsigned
                 const auto& a = *aad;
                 ret_cipher = EVP_CipherUpdate(context->decrypt_context, nullptr, &size_update, a.empty() ? (byte_t*)"" : a.data(), t_narrow_cast(a.size()));
                 if (ret_cipher < 1) {
-                    ret = errorcode_t::error_cipher;
+                    ret = errorcode_t::cipher_failure;
                     break;
                 }
             } break;
@@ -586,12 +586,12 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t* handle, const unsigned
 
             ret_cipher = EVP_CipherUpdate(context->decrypt_context, plaintext, &size_update, ciphertext, t_narrow_cast(ciphersize));
             if (1 != ret_cipher) {
-                ret = errorcode_t::error_cipher;
+                ret = errorcode_t::cipher_failure;
                 __leave2_trace_openssl(ret);
             }
 #if defined DEBUG
-            if (istraceable(trace_category_crypto, loglevel_debug)) {
-                trace_debug_event(trace_category_crypto, trace_event_encryption, [&](basic_stream& dbs) -> void {
+            if (istraceable(trace_category_t::trace_category_crypto, loglevel_t::loglevel_debug)) {
+                trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_encryption, [&](basic_stream& dbs) -> void {
                     dbs.println("> ciphertext");
                     dump_memory(ciphertext, ciphersize, &dbs, 16, 3, 0, dump_notrunc);
                     dbs.println("> plaintext");
@@ -603,7 +603,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t* handle, const unsigned
 
         ret_cipher = EVP_CipherFinal(context->decrypt_context, plaintext + size_update, &size_final);
         if (1 != ret_cipher) {
-            ret = errorcode_t::error_verify;
+            ret = errorcode_t::verification_failure;
             __leave2_trace_openssl(ret);
         }
 

@@ -15,13 +15,13 @@ void test_exception() {
     return_t rc = errorcode_t::success;
     std::string reason;
     try {
-        throw exception(not_specified);
+        throw exception(errorcode_t::not_specified);
     } catch (exception e) {
         rc = e.get_errorcode();
         reason = e.get_error_message();
         _logger->writeln("caught exception 0x%08x %s", rc, reason.c_str());
     }
-    _test_case.assert(not_specified == rc, __FUNCTION__, "exception %s", reason.c_str());
+    _test_case.assert(errorcode_t::not_specified == rc, __FUNCTION__, "exception %s", reason.c_str());
 }
 
 void testcase_exception() { test_exception(); }

@@ -81,9 +81,9 @@ static return_t do_test_construct_encrypted_extensions(tls_session* session, tls
                            .add(tls_ext_supported_groups, dir, handshake,  //
                                 [](tls_extension* extension) -> return_t {
                                     (*(tls_extension_supported_groups*)extension).add("x25519").add("secp256r1").add("x448").add("secp521r1").add("secp384r1");
-                                    return success;
+                                    return errorcode_t::success;
                                 });
-                       return success;
+                       return errorcode_t::success;
                    });
         ret = record.write(dir, bin);
     }

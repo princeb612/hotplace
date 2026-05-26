@@ -50,7 +50,7 @@ return_t windows_registry::enumerate_subkeys(HKEY hkey, ENUM_CALLBACK_HANDLERW c
         DWORD index = 0;
         TCHAR buffer_key[(1 << 10)];
         DWORD buffer_key_cbsize = sizeof(buffer_key);
-        LONG lret = RegEnumKeyEx(hkey, index, buffer_key, &buffer_key_cbsize, 0, 0, 0, 0);
+        return_t lret = RegEnumKeyEx(hkey, index, buffer_key, &buffer_key_cbsize, 0, 0, 0, 0);
         while (errorcode_t::success == lret) {
             callback_handler(buffer_key, param, nullptr);
 
@@ -71,7 +71,7 @@ return_t windows_registry::enumerate_values(HKEY hkey, ENUM_CALLBACK_HANDLERW ca
 #endif
 {
     return_t ret = errorcode_t::success;
-    LONG lret = errorcode_t::success;
+    return_t lret = errorcode_t::success;
 
     __try2 {
         if (nullptr == callback_handler) {

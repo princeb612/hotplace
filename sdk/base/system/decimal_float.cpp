@@ -82,7 +82,7 @@ decimal_float& decimal_float::operator=(const std::string& expr) {
     const size_t n = expr.size();
 
     if (n == 0) {
-        throw exception(bad_format);
+        throw exception(errorcode_t::bad_format);
     }
 
     size_t pos = 0;
@@ -93,7 +93,7 @@ decimal_float& decimal_float::operator=(const std::string& expr) {
         ++pos;
 
         if (pos >= n) {
-            throw exception(bad_format);
+            throw exception(errorcode_t::bad_format);
         }
     }
 
@@ -127,7 +127,7 @@ decimal_float& decimal_float::operator=(const std::string& expr) {
     const size_t fraction_len = fraction_end - fraction_begin;
 
     if (integer_len == 0 && fraction_len == 0) {
-        throw exception(bad_format);
+        throw exception(errorcode_t::bad_format);
     }
 
     int exp = -(int)fraction_len;
@@ -135,7 +135,7 @@ decimal_float& decimal_float::operator=(const std::string& expr) {
     if (pos < n && (expr[pos] == 'e' || expr[pos] == 'E')) {
         ++pos;
 
-        if (pos >= n) throw exception(bad_format);
+        if (pos >= n) throw exception(errorcode_t::bad_format);
 
         bool exp_neg = false;
 
@@ -145,7 +145,7 @@ decimal_float& decimal_float::operator=(const std::string& expr) {
         }
 
         if (pos >= n || !std::isdigit(static_cast<unsigned char>(expr[pos]))) {
-            throw exception(bad_format);
+            throw exception(errorcode_t::bad_format);
         }
 
         int e = 0;
@@ -158,7 +158,7 @@ decimal_float& decimal_float::operator=(const std::string& expr) {
     }
 
     if (pos != n) {
-        throw exception(bad_format);
+        throw exception(errorcode_t::bad_format);
     }
 
     std::string digits;

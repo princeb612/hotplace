@@ -56,7 +56,7 @@ static return_t do_test_construct_hello_verify_request(tls_session* session, tls
 
                        handshake->set_cookie(std::move(cookie));
 
-                       return success;
+                       return errorcode_t::success;
                    });
 
         ret = construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
@@ -105,13 +105,13 @@ static return_t do_test_construct_from_client_key_exchange_to_finished(tls_sessi
             .add(tls_content_type_handshake, session,
                  [&](tls_record* record) -> return_t {
                      (*(tls_record_handshake*)record).add(tls_hs_client_key_exchange, session);
-                     return success;
+                     return errorcode_t::success;
                  })
             .add(tls_content_type_change_cipher_spec, session)
             .add(tls_content_type_handshake, session,  //
                  [&](tls_record* record) -> return_t {
                      (*(tls_record_handshake*)record).add(tls_hs_finished, session);
-                     return success;
+                     return errorcode_t::success;
                  });
 
         ret = construct_record_fragmented(&records, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
@@ -132,7 +132,7 @@ static return_t do_test_construct_from_change_cipher_spec_to_finished(tls_sessio
             .add(tls_content_type_handshake, session,  //
                  [&](tls_record* record) -> return_t {
                      (*(tls_record_handshake*)record).add(tls_hs_finished, session);
-                     return success;
+                     return errorcode_t::success;
                  });
 
         ret = construct_record_fragmented(&records, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
@@ -186,9 +186,9 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
         uint32 retry = 10;  // max elements
         while (retry--) {
             auto test = arrange.consume((sockaddr*)&addr, sizeof(addr), epoch, seq, bin);
-            if (empty == test) {
+            if (errorcode_t::empty == test) {
                 break;
-            } else if (not_ready == test) {
+            } else if (errorcode_t::not_ready == test) {
                 continue;
             }
 

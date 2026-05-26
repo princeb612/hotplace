@@ -78,13 +78,13 @@ return_t quic_frame_new_connection_id::do_read_body(tls_direction_t dir, const b
 
         auto& tracker = session->get_quic_session().get_cid_tracker();
         if (tracker.empty()) {
-            throw exception(internal_error);
+            throw exception(errorcode_t::internal_error);
         }
         uint64 prior = tracker.rbegin()->first;
         if (retire_prior_to != prior) {
             // TODO
             // PROTOCOL_VIOLATION
-            throw exception(internal_error);
+            throw exception(errorcode_t::internal_error);
         }
 
         tracker.emplace(sequence_number, connection_id);
@@ -92,17 +92,17 @@ return_t quic_frame_new_connection_id::do_read_body(tls_direction_t dir, const b
         secrets.assign(tls_context_stateless_reset_token, stateless_reset_token);
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_frame, [&](basic_stream& dbs) -> void {
                 dbs.println("   > %s 0x%I64x (%I64i)", constexpr_sequence_number, sequence_number, sequence_number);
                 dbs.println("   > %s 0x%I64x (%I64i)", constexpr_retire_prior_to, retire_prior_to, retire_prior_to);
                 dbs.println("   > %s 0x%zx (%zi) %s", constexpr_connection_id, connection_id.size(), connection_id.size(), base16_encode(connection_id).c_str());
-                if (check_trace_level(loglevel_debug)) {
+                if (check_trace_level(loglevel_t::loglevel_debug)) {
                     dump_memory(connection_id, &dbs, 16, 5, 0x0, dump_notrunc);
                 }
                 dbs.println("   > %s 0x%zx (%zi) %s", constexpr_stateless_reset_token, stateless_reset_token.size(), stateless_reset_token.size(),
                             base16_encode(stateless_reset_token).c_str());
-                if (check_trace_level(loglevel_debug)) {
+                if (check_trace_level(loglevel_t::loglevel_debug)) {
                     dump_memory(stateless_reset_token, &dbs, 16, 5, 0x0, dump_notrunc);
                 }
             });
@@ -122,7 +122,7 @@ return_t quic_frame_new_connection_id::do_write_body(tls_direction_t dir, binary
         auto& secrets = session->get_tls_protection().get_secrets();
         auto& tracker = session->get_quic_session().get_cid_tracker();
         if (tracker.empty()) {
-            throw exception(internal_error);
+            throw exception(errorcode_t::internal_error);
         }
 
         uint64 prior = tracker.rbegin()->first;
@@ -146,8 +146,8 @@ return_t quic_frame_new_connection_id::do_write_body(tls_direction_t dir, binary
         pl.write(bin);
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_frame, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 dbs.println(ANSI_ESCAPE "1;34m  + frame %s 0x%x(%i)" ANSI_ESCAPE "0m", tlsadvisor->nameof_quic_frame(type).c_str(), type, type);
             });

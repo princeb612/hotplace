@@ -177,7 +177,7 @@ void test_crypto_sign() {
                 sign->release();
             }
         } else {
-            _test_case.test(not_supported, __FUNCTION__, "%s", kid);
+            _test_case.test(errorcode_t::not_supported, __FUNCTION__, "%s", kid);
         }
     };
 

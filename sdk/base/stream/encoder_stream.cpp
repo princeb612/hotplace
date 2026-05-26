@@ -50,16 +50,16 @@ return_t encoder_stream::write(const byte_t* data, size_t size) {
 
         auto unitsize = _encbuf.unitsize(get_encoding());
         switch (get_encoding()) {
-            case encoding_base16: {
-                base16_encode(data, size, _buffer, base16_notrunc);
+            case encoding_t::encoding_base16: {
+                base16_encode(data, size, _buffer, encoding_notrunc);
             } break;
-            case encoding_base16rfc: {
+            case encoding_t::encoding_base16rfc: {
                 std::string buf;
                 buf.assign((char*)data, size);
                 _buffer += base16_encode_rfc(buf);
             } break;
-            case encoding_base64:
-            case encoding_base64url: {
+            case encoding_t::encoding_base64:
+            case encoding_t::encoding_base64url: {
                 size_t pos = 0;
                 // _encbuf
                 if (_encbuf.len > 0) {
@@ -67,7 +67,7 @@ return_t encoder_stream::write(const byte_t* data, size_t size) {
                     if (size >= need) {
                         memcpy(_encbuf.buf + _encbuf.len, data, need);
                         _encbuf.len += need;
-                        ret = base64_encode(_encbuf.buf, unitsize, _buffer, _encoding, base16_notrunc);
+                        ret = base64_encode(_encbuf.buf, unitsize, _buffer, _encoding, encoding_notrunc);
                         _encbuf.reset();
                         if (errorcode_t::success != ret) {
                             break;
@@ -83,7 +83,7 @@ return_t encoder_stream::write(const byte_t* data, size_t size) {
                 size_t remainder = remain % unitsize;
                 size_t processlen = remain - remainder;
                 if (processlen > 0) {
-                    ret = base64_encode(data + pos, processlen, _buffer, _encoding, base64_notrunc);
+                    ret = base64_encode(data + pos, processlen, _buffer, _encoding, encoding_notrunc);
                     if (errorcode_t::success != ret) {
                         break;
                     }
@@ -106,13 +106,13 @@ return_t encoder_stream::write(const byte_t* data, size_t size) {
 return_t encoder_stream::flush() {
     return_t ret = errorcode_t::success;
     switch (get_encoding()) {
-        case encoding_base16: {
+        case encoding_t::encoding_base16: {
             // do nothing
         } break;
-        case encoding_base64:
-        case encoding_base64url: {
+        case encoding_t::encoding_base64:
+        case encoding_t::encoding_base64url: {
             if (_encbuf.len > 0) {
-                ret = base64_encode(_encbuf.buf, _encbuf.len, _buffer, _encoding, base64_notrunc);
+                ret = base64_encode(_encbuf.buf, _encbuf.len, _buffer, _encoding, encoding_notrunc);
                 _encbuf.reset();
             }
         } break;

@@ -16,7 +16,7 @@ void test_pqc_dsa() {
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     // TODO
 #else
-    _test_case.test(not_supported, __FUNCTION__, "openssl 3.5 required");
+    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "openssl 3.5 required");
 #endif
 }
 

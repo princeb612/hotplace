@@ -37,8 +37,8 @@ transcript_hash* tls_protection::get_transcript_hash() {
             _transcript_hash = builder.set(hashalg).build();
 
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+            if (istraceable(trace_category_t::trace_category_net)) {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                     constexpr char constexpr_transcript_hash[] = ANSI_ESCAPE "1;33mstarting transcript_hash" ANSI_ESCAPE "0m";
                     constexpr char constexpr_cipher_suite[] = "cipher suite";
                     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -89,8 +89,8 @@ return_t tls_protection::update_transcript_hash(tls_session* session, const byte
                 // 12.. $ handshake, extension
                 hash->update(stream + offset_body, size - offset_body);
 #if defined DEBUG
-                if (istraceable(trace_category_net, loglevel_debug)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
+                    trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                         binary_t digest;
                         hash->digest(digest);
                         dbs.printf(ANSI_ESCAPE "1;34m");
@@ -111,8 +111,8 @@ return_t tls_protection::update_transcript_hash(tls_session* session, const byte
 
                 hash->update(stream, size);
 #if defined DEBUG
-                if (istraceable(trace_category_net, loglevel_debug)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
+                    trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                         binary_t digest;
                         hash->digest(digest);
                         dbs.printf(ANSI_ESCAPE "1;34m");

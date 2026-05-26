@@ -30,8 +30,8 @@ return_t dtls_handshake_fragmented::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     do_write_header(dir, bin, _fragmented);
 #if defined DEBUG
-    if (istraceable(trace_category_net, loglevel_debug)) {
-        trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+    if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
+        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             dbs.printf(ANSI_ESCAPE "1;36m");
             dbs.println("# generate %s seq %i", tlsadvisor->nameof_tls_handshake(get_type()).c_str(), get_dtls_seq());

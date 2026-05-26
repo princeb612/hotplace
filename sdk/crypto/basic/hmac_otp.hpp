@@ -36,13 +36,13 @@ class hmac_otp {
      *        printf ("%06u", code);
      *        otp.close(handle);
      */
-    uint32 open(otp_context_t** handle, unsigned int digit_length, hash_algorithm_t algorithm, const byte_t* key_data, size_t key_size);
+    return_t open(otp_context_t** handle, unsigned int digit_length, hash_algorithm_t algorithm, const byte_t* key_data, size_t key_size);
     /**
      * @brief close
      * @param otp_context_t* handle [in]
      * @return error code (see error.hpp)
      */
-    uint32 close(otp_context_t* handle);
+    return_t close(otp_context_t* handle);
     /**
      * @brief set count
      * @param otp_context_t* handle [in]
@@ -53,7 +53,7 @@ class hmac_otp {
      *        otp.get(handle, code); // otp.get(handle, 100, code) - same expression
      *        otp.get(handle, code); // otp.get(handle, 101, code) - same expression
      */
-    uint32 set(otp_context_t* handle, uint32 count);
+    return_t set(otp_context_t* handle, uint32 count);
     /**
      * @brief get code
      * @param otp_context_t* handle [in]
@@ -62,7 +62,7 @@ class hmac_otp {
      * @remarks
      *        internal counter is increased automatically
      */
-    uint32 get(otp_context_t* handle, uint32& code);
+    return_t get(otp_context_t* handle, uint32& code);
     /**
      * @brief set count and get code
      * @param otp_context_t* handle [in]
@@ -72,7 +72,7 @@ class hmac_otp {
      * @example
      *        otp.get(handle, 100, code);
      */
-    uint32 get(otp_context_t* handle, uint32 counter, uint32& code);
+    return_t get(otp_context_t* handle, uint32 counter, uint32& code);
     /**
      * @brief set count and get code
      * @param otp_context_t* handle [in]
@@ -80,7 +80,7 @@ class hmac_otp {
      * @param uint32& code [out]
      * @return error code (see error.hpp)
      */
-    uint32 get(otp_context_t* handle, binary_t counter, uint32& code);
+    return_t get(otp_context_t* handle, binary_t counter, uint32& code);
     /**
      * @brief verify
      * @param otp_context_t* handle [in]
@@ -88,7 +88,7 @@ class hmac_otp {
      * @param uint32 code [in]
      * @return error code (see error.hpp)
      */
-    uint32 verify(otp_context_t* handle, uint32 counter, uint32 code);
+    return_t verify(otp_context_t* handle, uint32 counter, uint32 code);
 };
 
 }  // namespace crypto

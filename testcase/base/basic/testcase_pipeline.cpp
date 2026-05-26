@@ -20,7 +20,7 @@ static void test_function(bool expect, std::string& path, const char* lhs, const
         .walk([&]() -> void { path += "walk->"; })
         .run_pipe([&]() -> return_t {
             path += "run_pipe->";
-            return (bignumber(result_expect) == bignumber(lhs) + bignumber(rhs)) ? success : unexpected;
+            return (bignumber(result_expect) == bignumber(lhs) + bignumber(rhs)) ? errorcode_t::success : errorcode_t::unexpected;
         })
         .walk([&]() -> void { path += "walk->"; })
         .walk_failed([&]() -> void { path += "walk_failed->"; })
@@ -54,7 +54,7 @@ void test_pipeline1() {
 
 void test_pipeline2() {
     _test_case.begin("pipeline");
-    return_t ret = success;
+    return_t ret = errorcode_t::success;
 
     function_pipeline<int> pipeline;
     pipeline                                    //
@@ -62,11 +62,11 @@ void test_pipeline2() {
         .run_pipe([&]() -> int { return 1; });  // do not run
 
     if (pipeline.failed()) {
-        ret = expect_failure;
+        ret = errorcode_t::expect_failure;
     } else {
-        ret = success;
+        ret = errorcode_t::success;
     }
-    _test_case.assert(ret != success, __FUNCTION__, "failed pipeline #1");
+    _test_case.assert(ret != errorcode_t::success, __FUNCTION__, "failed pipeline #1");
 
     ret = pipeline.result_to_return_t();
     _test_case.ntest(ret, __FUNCTION__, "failed pipeline #2");

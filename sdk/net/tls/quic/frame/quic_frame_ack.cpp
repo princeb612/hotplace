@@ -57,7 +57,7 @@ constexpr char constexpr_ectce_count[] = "ect-ce count";
 quic_frame_ack::quic_frame_ack(tls_session* session, uint8 type) : quic_frame((quic_frame_t)type, session), _space(protection_default) {
     if ((quic_frame_type_ack == type) || (quic_frame_type_ack1 == type)) {
     } else {
-        throw exception(bad_request);
+        throw exception(errorcode_t::bad_request);
     }
 }
 
@@ -98,7 +98,7 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
 
         basic_stream dbs;
 
-        if (istraceable(trace_category_net)) {
+        if (istraceable(trace_category_t::trace_category_net)) {
             dbs.println("   > %s %I64i", constexpr_largest_ack, largest_ack);
             dbs.println("   > %s %I64i", constexpr_ack_delay, ack_delay);
             dbs.println("   > %s %I64i", constexpr_ack_range_count, ack_range_count);
@@ -121,7 +121,7 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
             uint64 gap = ack_ranges.t_value_of<uint64>(constexpr_gap);
             uint64 range_length = ack_ranges.t_value_of<uint64>(constexpr_range_length);
 
-            if (istraceable(trace_category_net)) {
+            if (istraceable(trace_category_t::trace_category_net)) {
                 dbs.println("   > %s[%I64i]", constexpr_ack_ranges, i);
                 dbs.println("    > %s %I64i", constexpr_gap, gap);
                 dbs.println("    > %s %I64i", constexpr_range_length, range_length);
@@ -147,7 +147,7 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
             uint64 ect1_count = ecn_counts.t_value_of<uint64>(constexpr_ect1_count);
             uint64 ectce_count = ecn_counts.t_value_of<uint64>(constexpr_ectce_count);
 
-            if (istraceable(trace_category_net)) {
+            if (istraceable(trace_category_t::trace_category_net)) {
                 dbs.println("   > %s", constexpr_ecn_counts);
                 dbs.println("    > %s %I64i", constexpr_ect0_count, ect0_count);
                 dbs.println("    > %s %I64i", constexpr_ect1_count, ect1_count);
@@ -157,8 +157,8 @@ return_t quic_frame_ack::do_read_body(tls_direction_t dir, const byte_t* stream,
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event_stream(trace_category_net, trace_event_quic_frame, &dbs);
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event_stream(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_frame, &dbs);
         }
 #endif
     }
@@ -200,8 +200,8 @@ return_t quic_frame_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_frame, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 dbs.println(ANSI_ESCAPE "1;34m  + frame %s 0x%x(%i)" ANSI_ESCAPE "0m", tlsadvisor->nameof_quic_frame(type).c_str(), type, type);
             });

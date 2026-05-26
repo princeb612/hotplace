@@ -87,7 +87,7 @@ return_t secure_prosumer::do_produce(tls_session* session, tls_direction_t dir, 
             while (1) {
                 binary_t packet;
                 auto test = arrange.consume(addr, socklen, packet);
-                if (success == test) {
+                if (errorcode_t::success == test) {
                     pos = 0;
                     ret = do_produce(session, dir, packet.data(), packet.size(), pos, addr, addrlen);
                 } else {
@@ -188,8 +188,8 @@ return_t secure_prosumer::consume(int sock_type, uint32 wto, char* ptr_data, siz
             }
 #if defined DEBUG
             if (*cbread) {
-                if (istraceable(trace_category_net)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                if (istraceable(trace_category_t::trace_category_net)) {
+                    trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_record, [&](basic_stream& dbs) -> void {
                         dbs.println("+ read");
                         dump_memory((byte_t*)ptr_data, *cbread, &dbs, 16, 3, 0x0, dump_notrunc);
                     });

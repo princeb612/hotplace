@@ -103,7 +103,7 @@ class http_dynamic_table {
      */
     uint8 get_type();
 
-    void set_debug_hook(std::function<void(trace_category_t, uint32 event)> fn);
+    void set_debug_hook(std::function<void(trace_category_t, trace_event_t event)> fn);
 
     void ack();
     void cancel();
@@ -138,7 +138,7 @@ class http_dynamic_table {
     commit_queue_t _commit_queue;
 
    private:
-    std::function<void(trace_category_t, uint32 event)> _hook;
+    std::function<void(trace_category_t, trace_event_t event)> _hook;
 };
 
 }  // namespace net

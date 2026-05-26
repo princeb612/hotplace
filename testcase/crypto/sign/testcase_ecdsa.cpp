@@ -80,7 +80,7 @@ void check_ecdsa_size() {
 
             auto spec = advisor->query_feature(alg);
             if (0 == spec) {
-                _test_case.test(not_supported, __FUNCTION__, "not support %s", alg);
+                _test_case.test(errorcode_t::not_supported, __FUNCTION__, "not support %s", alg);
                 continue;
             }
 
@@ -96,7 +96,7 @@ void check_ecdsa_size() {
                 basic_stream desc;
                 desc.printf("%-8s using %-20s", alg, kid);
 
-                if (success == ret) {
+                if (errorcode_t::success == ret) {
                     desc.printf(" signature size %-3zi", sig.size());
                     _logger->hdump(desc.c_str(), sig);
                 } else {

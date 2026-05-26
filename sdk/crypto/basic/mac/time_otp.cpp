@@ -28,8 +28,8 @@ time_otp::time_otp() {}
 
 time_otp::~time_otp() {}
 
-uint32 time_otp::open(otp_context_t** handle, unsigned int digit_length, time_t interval, hash_algorithm_t algorithm, const byte_t* key_data, size_t key_size) {
-    uint32 ret = errorcode_t::success;
+return_t time_otp::open(otp_context_t** handle, unsigned int digit_length, time_t interval, hash_algorithm_t algorithm, const byte_t* key_data, size_t key_size) {
+    return_t ret = errorcode_t::success;
     hmac_otp hotp;
     otp_context_t* hotp_handle = nullptr;
 
@@ -68,8 +68,8 @@ uint32 time_otp::open(otp_context_t** handle, unsigned int digit_length, time_t 
     return ret;
 }
 
-uint32 time_otp::close(otp_context_t* handle) {
-    uint32 ret = errorcode_t::success;
+return_t time_otp::close(otp_context_t* handle) {
+    return_t ret = errorcode_t::success;
     totp_context_t* context = static_cast<totp_context_t*>(handle);
     hmac_otp hotp;
 
@@ -92,8 +92,8 @@ uint32 time_otp::close(otp_context_t* handle) {
     return ret;
 }
 
-uint32 time_otp::get(otp_context_t* handle, time64_t time, uint32& code) {
-    uint32 ret = errorcode_t::success;
+return_t time_otp::get(otp_context_t* handle, time64_t time, uint32& code) {
+    return_t ret = errorcode_t::success;
     totp_context_t* context = static_cast<totp_context_t*>(handle);
     hmac_otp hotp;
 
@@ -114,8 +114,8 @@ uint32 time_otp::get(otp_context_t* handle, time64_t time, uint32& code) {
     return ret;
 }
 
-uint32 time_otp::verify(otp_context_t* handle, time64_t time, uint32 code) {
-    uint32 ret = errorcode_t::success;
+return_t time_otp::verify(otp_context_t* handle, time64_t time, uint32 code) {
+    return_t ret = errorcode_t::success;
     totp_context_t* context = static_cast<totp_context_t*>(handle);
 
     __try2 {

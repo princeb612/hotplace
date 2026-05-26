@@ -165,7 +165,7 @@ return_t crypto_keychain::pkey_encode_raw(OSSL_LIB_CTX* libctx, const EVP_PKEY* 
             case key_encoding_priv_der:
             case key_encoding_encrypted_priv_der:
             case key_encoding_pub_der: {
-                ret = not_supported;
+                ret = errorcode_t::not_supported;
             } break;
             case key_encoding_priv_raw: {
                 EVP_PKEY_get_raw_private_key(pkey, nullptr, &len);
@@ -270,7 +270,7 @@ return_t crypto_keychain::pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name
             selection = EVP_PKEY_PUBLIC_KEY;
         } break;
         default: {
-            return not_supported;
+            return errorcode_t::not_supported;
         } break;
     }
 
@@ -353,7 +353,7 @@ return_t crypto_keychain::pkey_decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, con
         } break;
         case key_encoding_priv_raw:
         case key_encoding_pub_raw: {
-            ret = not_supported;
+            ret = errorcode_t::not_supported;
         } break;
     }
 #else
@@ -535,16 +535,16 @@ return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, encoding_
             __leave2;
         }
         switch (fmt) {
-            case encoding_base64: {
+            case encoding_t::encoding_base64: {
                 ret = add_ossl3_b64(cryptokey, nid, key, encoding, desc);
             } break;
-            case encoding_base64url: {
+            case encoding_t::encoding_base64url: {
                 ret = add_ossl3_b64u(cryptokey, nid, key, encoding, desc);
             } break;
-            case encoding_base16: {
+            case encoding_t::encoding_base16: {
                 ret = add_ossl3_b16(cryptokey, nid, key, encoding, desc);
             } break;
-            case encoding_base16rfc: {
+            case encoding_t::encoding_base16rfc: {
                 ret = add_ossl3_b16rfc(cryptokey, nid, key, encoding, desc);
             } break;
             default: {
@@ -568,16 +568,16 @@ return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, enc
             __leave2;
         }
         switch (fmt) {
-            case encoding_base64: {
+            case encoding_t::encoding_base64: {
                 ret = add_ossl3_b64(cryptokey, name, key, encoding, desc);
             } break;
-            case encoding_base64url: {
+            case encoding_t::encoding_base64url: {
                 ret = add_ossl3_b64u(cryptokey, name, key, encoding, desc);
             } break;
-            case encoding_base16: {
+            case encoding_t::encoding_base16: {
                 ret = add_ossl3_b16(cryptokey, name, key, encoding, desc);
             } break;
-            case encoding_base16rfc: {
+            case encoding_t::encoding_base16rfc: {
                 ret = add_ossl3_b16rfc(cryptokey, name, key, encoding, desc);
             } break;
             default: {

@@ -61,10 +61,10 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
             tls_record_builder builder;
             auto session = get_session();
             if (nullptr == session) {
-                throw exception(no_session);
+                throw exception(errorcode_t::no_session);
             } else {
                 if (session_type_dtls != session->get_type()) {
-                    throw exception(no_session);
+                    throw exception(errorcode_t::no_session);
                 }
             }
             // auto session_type = session->get_type();
@@ -104,8 +104,8 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                         desc.hsseq = hsseq;
 
 #if defined DEBUG
-                        if (istraceable(trace_category_net, loglevel_debug)) {
-                            trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                        if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
+                            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_record, [&](basic_stream& dbs) -> void {
                                 dbs.printf(ANSI_ESCAPE "1;36m");
                                 dbs.println("# publish %s %i %s", tlsadvisor->nameof_tls_handshake(hstype).c_str(), hsseq, tlsadvisor->nameof_direction(dir, 1).c_str());
                                 dbs.printf(ANSI_ESCAPE "0m");
@@ -123,8 +123,8 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
 
                 auto lambda_split = [&](uint32 flags, const byte_t* stream, size_t size, size_t fragoffset, size_t fragsize, const spl_desc& desc) -> void {
 #if defined DEBUG
-                    if (istraceable(trace_category_net, loglevel_debug)) {
-                        trace_debug_event(trace_category_net, trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                    if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
+                        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_record, [&](basic_stream& dbs) -> void {
                             dbs.printf(ANSI_ESCAPE "1;36m");
                             dbs.println("# split %s %i %s", tlsadvisor->nameof_tls_handshake(desc.hstype).c_str(), desc.hsseq,
                                         tlsadvisor->nameof_direction(dir, 1).c_str());
@@ -251,7 +251,7 @@ return_t dtls_record_publisher::publish(tls_records* records, tls_direction_t di
 
 void dtls_record_publisher::set_session(tls_session* session) {
     if (nullptr == session) {
-        throw exception(no_session);
+        throw exception(errorcode_t::no_session);
     }
 
     _session = session;

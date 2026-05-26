@@ -125,8 +125,8 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session* session, tls_direction_t 
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net, loglevel_debug)) {
-            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                 crypto_advisor* advisor = crypto_advisor::get_instance();
                 dbs.println("> encrypt %s", advisor->nameof_authenticated_encryption(flag).c_str());
                 dbs.println(" > aad %s", base16_encode(aad).c_str());
@@ -237,20 +237,22 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session* session, tls_direction_t 
         crypto_cbc_hmac cbchmac;
         cbchmac.set_enc(enc_alg).set_mac(hmac_alg).set_flag(flag);
         ret = cbchmac.decrypt(enckey, mackey, iv, aad, ciphertext, ciphersize, plaintext);
-        switch (ret) {
+        switch ((errorcode_t)ret) {
             case errorcode_t::success:
                 break;
-            case errorcode_t::error_cipher:
+            case errorcode_t::cipher_failure:
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_decryption_failed);
                 break;
-            case errorcode_t::error_verify:
+            case errorcode_t::verification_failure:
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_bad_record_mac);
+                break;
+            default:
                 break;
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net, loglevel_debug)) {
-            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                 crypto_advisor* advisor = crypto_advisor::get_instance();
                 dbs.println("> decrypt %s", advisor->nameof_authenticated_encryption(flag).c_str());
                 dbs.println(" > aad %s", base16_encode(aad).c_str());

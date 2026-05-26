@@ -164,8 +164,8 @@ void test_base64_stream_by_encoding(std::string text, encoding_t encoding) {
 }
 
 void test_base64_stream() {
-    test_base64_stream_by_encoding("base64", encoding_base64);
-    test_base64_stream_by_encoding("base64url", encoding_base64url);
+    test_base64_stream_by_encoding("base64", encoding_t::encoding_base64);
+    test_base64_stream_by_encoding("base64url", encoding_t::encoding_base64url);
 }
 
 void testcase_base64() {

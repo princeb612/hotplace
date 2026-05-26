@@ -67,8 +67,8 @@ return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_
             if (is_nst) {
 #if defined DEBUG
                 max_early_data_size = pl.t_value_of<uint32>(constexpr_max_early_data_size);
-                if (istraceable(trace_category_net)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+                if (istraceable(trace_category_t::trace_category_net)) {
+                    trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                         dbs.println("  > %s 0x%04x(%i)", constexpr_max_early_data_size, max_early_data_size, max_early_data_size);
                     });
                 }

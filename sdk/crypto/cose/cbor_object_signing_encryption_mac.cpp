@@ -182,8 +182,9 @@ return_t cbor_object_signing_encryption::domac(cose_context_t* handle, crypto_ke
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_crypto)) {
-            trace_debug_event(trace_category_crypto, trace_event_cose_mac, [&](basic_stream& dbs) -> void { dbs.println("domac alg %i (%s)", alg, hint->name); });
+        if (istraceable(trace_category_t::trace_category_crypto)) {
+            trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_cose_mac,
+                              [&](basic_stream& dbs) -> void { dbs.println("domac alg %i (%s)", alg, hint->name); });
         }
 #endif
 
@@ -211,7 +212,7 @@ return_t cbor_object_signing_encryption::domac(cose_context_t* handle, crypto_ke
         openssl_mac mac;
         cose_group_t group = hint->group;
         if (cose_group_t::cose_group_hash == group) {
-            throw exception(not_implemented);
+            throw exception(errorcode_t::not_implemented);
         } else if (cose_group_t::cose_group_mac_hmac == group) {
             ret = mac.hmac(hint->dgst.algname, cek, tomac, tag);
             tag.resize(hint->dgst.dlen);  // sha256/64, sha512/256
@@ -233,7 +234,7 @@ return_t cbor_object_signing_encryption::domac(cose_context_t* handle, crypto_ke
             body.get_tag().get(tagvalue);
 
             if (tag != tagvalue) {
-                ret = errorcode_t::error_verify;
+                ret = errorcode_t::verification_failure;
                 __leave2;
             }
         }

@@ -321,7 +321,7 @@ void dtls_client2() {
 
                 test = cli.recvfrom(buffer, option.bufsize, &cbread, (sockaddr*)&peer, &addrlen);
 
-                if (success == test) {
+                if (errorcode_t::success == test) {
                     sockaddr_string(peer, addr);
 
                     _logger->writeln("received response: [%d][len %zi]%.*s", cli.get_socket(), cbread, cbread, buffer);

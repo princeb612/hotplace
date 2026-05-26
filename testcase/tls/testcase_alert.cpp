@@ -76,7 +76,7 @@ void test_alert() {
             "f7";
         binary_t bin_record = base16_decode_rfc(record);
         auto ret = dump_record("server_key_exchange after server_hello (no certificate)", &session, from_server, bin_record, false);
-        _test_case.test(errorcode_t::error_handshake == ret, __FUNCTION__, "server_key_exchange -> {fatal, unexpected message}");
+        _test_case.test(errorcode_t::handshake_failure == ret, __FUNCTION__, "server_key_exchange -> {fatal, unexpected message}");
     }
 
     {

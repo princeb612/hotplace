@@ -32,7 +32,7 @@ rational_float::~rational_float() {}
 
 rational_float& rational_float::normalize() {
     if (_den == 0) {
-        throw exception(error_division);
+        throw exception(errorcode_t::divide_by_zero);
     }
 
     auto g = bignumber::gcd(_num, _den);
@@ -63,11 +63,11 @@ rational_float& rational_float::operator=(const std::string& expr) {
     auto slash = expr.find('/');
 
     if (slash == std::string::npos) {
-        throw exception(bad_format);
+        throw exception(errorcode_t::bad_format);
     }
 
     if (slash == 0 || slash + 1 >= expr.size()) {
-        throw exception(bad_format);
+        throw exception(errorcode_t::bad_format);
     }
 
     bool neg = false;
@@ -80,7 +80,7 @@ rational_float& rational_float::operator=(const std::string& expr) {
         lhs_begin = 1;
 
         if (lhs_begin == lhs_end) {
-            throw exception(bad_format);
+            throw exception(errorcode_t::bad_format);
         }
     }
 
@@ -97,14 +97,14 @@ rational_float& rational_float::operator=(const std::string& expr) {
     };
 
     if (!is_digit_range(lhs_begin, lhs_end) || !is_digit_range(slash + 1, expr.size())) {
-        throw exception(bad_format);
+        throw exception(errorcode_t::bad_format);
     }
 
     bignumber num(expr.substr(lhs_begin, lhs_end - lhs_begin));
     bignumber den(expr.substr(slash + 1));
 
     if (den == 0) {
-        throw exception(error_division);
+        throw exception(errorcode_t::divide_by_zero);
     }
 
     if (neg) {

@@ -143,7 +143,7 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
             if (psk_identity != ticket) {
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
                 session->reset_session_status();
-                ret = errorcode_t::error_handshake;
+                ret = errorcode_t::handshake_failure;
                 __leave2;
             }
             uint32 ticket_lifetime = t_narrow_cast(kv.get(session_ticket_lifetime));
@@ -151,7 +151,7 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
             if (obfuscated_ticket_age - ticket_age_add > ticket_lifetime) {
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
                 session->reset_session_status();
-                ret = errorcode_t::error_handshake;
+                ret = errorcode_t::handshake_failure;
                 __leave2;
             }
         }
@@ -181,10 +181,10 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                 dbs.println("   > %s 0x%04x(%i)", constexpr_psk_identity_len, psk_identity_len, psk_identity_len);
-                if (check_trace_level(loglevel_debug)) {
+                if (check_trace_level(loglevel_t::loglevel_debug)) {
                     dump_memory(psk_identity, &dbs, 16, 4, 0x0, dump_notrunc);
                 }
                 dbs.println("   > %s 0x%08x", constexpr_obfuscated_ticket_age, obfuscated_ticket_age);
@@ -208,7 +208,7 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
     return ret;
 }
 
-return_t tls_extension_client_psk::do_write_body(tls_direction_t dir, binary_t& bin) { return not_supported; }
+return_t tls_extension_client_psk::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::not_supported; }
 
 tls_extension_server_psk::tls_extension_server_psk(tls_handshake* handshake) : tls_extension_psk(handshake), _selected_identity(0) {}
 
@@ -227,8 +227,8 @@ return_t tls_extension_server_psk::do_read_body(tls_direction_t dir, const byte_
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_extension,
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension,
                               [&](basic_stream& dbs) -> void { dbs.println("   > %s %i", constexpr_selected_identity, selected_identity); });
         }
 #endif
@@ -242,7 +242,7 @@ return_t tls_extension_server_psk::do_read_body(tls_direction_t dir, const byte_
     return ret;
 }
 
-return_t tls_extension_server_psk::do_write_body(tls_direction_t dir, binary_t& bin) { return not_supported; }
+return_t tls_extension_server_psk::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::not_supported; }
 
 }  // namespace net
 }  // namespace hotplace

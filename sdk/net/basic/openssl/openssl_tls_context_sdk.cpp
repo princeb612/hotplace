@@ -116,8 +116,8 @@ return_t tlscontext_open_simple(SSL_CTX** context, uint32 flags) {
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_crypto)) {
-            trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_crypto)) {
+            trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_openssl_info, [&](basic_stream& dbs) -> void {
                 dbs.println("flag %08x", flags);
 #if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
                 dbs.println("min proto version %08x", minver);
@@ -199,14 +199,15 @@ return_t openssl_tls_context_open(SSL_CTX** context, uint32 flag, const char* ce
             }
 
 #if defined DEBUG
-            if (istraceable(trace_category_crypto, loglevel_debug)) {
-                trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream& dbs) -> void { dbs.println("- SSL_new %p", ssl); });
+            if (istraceable(trace_category_t::trace_category_crypto, loglevel_t::loglevel_debug)) {
+                trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_openssl_info,
+                                  [&](basic_stream& dbs) -> void { dbs.println("- SSL_new %p", ssl); });
             }
 #endif
 
             X509* x509 = SSL_get_certificate(ssl);
             if (nullptr == x509) {
-                ret = errorcode_t::error_certificate;
+                ret = errorcode_t::missing_certificate;
                 __leave2;
             }
 
@@ -243,12 +244,13 @@ return_t openssl_tls_context_open(SSL_CTX** context, uint32 flag, const char* ce
         if (ssl) {
             SSL_free(ssl);
 #if defined DEBUG
-            if (istraceable(trace_category_crypto, loglevel_debug)) {
-                trace_debug_event(trace_category_crypto, trace_event_openssl_info, [&](basic_stream& dbs) -> void { dbs.println("- SSL_free %p", ssl); });
+            if (istraceable(trace_category_t::trace_category_crypto, loglevel_t::loglevel_debug)) {
+                trace_debug_event(trace_category_t::trace_category_crypto, trace_event_t::trace_event_openssl_info,
+                                  [&](basic_stream& dbs) -> void { dbs.println("- SSL_free %p", ssl); });
             }
 #endif
         }
-        switch (ret) {
+        switch ((errorcode_t)ret) {
             case errorcode_t::success:
             case errorcode_t::expired:
                 break;
@@ -267,7 +269,7 @@ void set_info_callback_routine(const SSL* ssl, int where, int ret) {
             __leave2;
         }
 
-        trace_debug_event(trace_category_net, trace_event_openssl_tls_state, [&](basic_stream& dbs) -> void {
+        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_openssl_tls_state, [&](basic_stream& dbs) -> void {
             valist va;
             const char* state = "*";
 

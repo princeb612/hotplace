@@ -55,8 +55,8 @@ return_t quic_frame_reset_stream::do_read_body(tls_direction_t dir, const byte_t
         uint64 error_code = pl.t_value_of<uint64>(constexpr_error_code);
         uint64 final_size = pl.t_value_of<uint64>(constexpr_final_size);
 
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_frame, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 dbs.println("   > %s %I64i", constexpr_stream_id, stream_id);
                 dbs.println("   > %s %I64i %s", constexpr_error_code, error_code, tlsadvisor->nameof_quic_error(error_code).c_str());

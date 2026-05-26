@@ -14,13 +14,13 @@ void test_loglevel() {
     _test_case.begin("loglevel");
 
     std::map<loglevel_t, std::string> table;
-    table.emplace(loglevel_trace, "trace");
-    table.emplace(loglevel_debug, "debug");
-    table.emplace(loglevel_info, "info");
-    table.emplace(loglevel_warn, "warn");
-    table.emplace(loglevel_error, "error");
-    table.emplace(loglevel_fatal, "fatal");
-    table.emplace(loglevel_notice, "notice");
+    table.emplace(loglevel_t::loglevel_trace, "trace");
+    table.emplace(loglevel_t::loglevel_debug, "debug");
+    table.emplace(loglevel_t::loglevel_info, "info");
+    table.emplace(loglevel_t::loglevel_warn, "warn");
+    table.emplace(loglevel_t::loglevel_error, "error");
+    table.emplace(loglevel_t::loglevel_fatal, "fatal");
+    table.emplace(loglevel_t::loglevel_notice, "notice");
 
     std::list<loglevel_t> cases;
     for (auto lvl : table) {
@@ -44,10 +44,10 @@ void test_loglevel() {
         _test_case.assert(islogged == (_logger->get_implicit_loglevel() >= _logger->get_loglevel()), __FUNCTION__, message);
     };
 
-    _logger->set_loglevel(loglevel_trace).set_implicit_loglevel(loglevel_trace);  // reset
+    _logger->set_loglevel(loglevel_t::default_loglevel).set_implicit_loglevel(loglevel_t::default_loglevel);  // reset
 
     for (auto glevel : cases) {
-        _logger->writeln(loglevel_notice, "set log level %s", table[glevel].c_str());
+        _logger->writeln(loglevel_t::loglevel_notice, "set log level %s", table[glevel].c_str());
         _logger->set_loglevel(glevel);
 
         for (auto lvl : cases) {
@@ -57,7 +57,7 @@ void test_loglevel() {
         }
 
         for (auto ilevel : cases) {
-            _logger->writeln(loglevel_notice, "set log implicit level %s", table[ilevel].c_str());
+            _logger->writeln(loglevel_t::loglevel_notice, "set log implicit level %s", table[ilevel].c_str());
             _logger->set_implicit_loglevel(ilevel);
 
             basic_stream bs;
@@ -67,7 +67,7 @@ void test_loglevel() {
         }
     }
 
-    _logger->set_loglevel(loglevel_trace).set_implicit_loglevel(loglevel_trace);  // reset
+    _logger->set_loglevel(loglevel_t::loglevel_trace).set_implicit_loglevel(loglevel_t::loglevel_trace);  // reset
 }
 
 void testcase_loglevel() { test_loglevel(); }

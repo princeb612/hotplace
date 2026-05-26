@@ -140,8 +140,8 @@ return_t tls_protection::protection_mask(tls_session* session, tls_direction_t d
                 mask.resize(masklen);
 
 #if defined DEBUG
-                if (istraceable(trace_category_net)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                if (istraceable(trace_category_t::trace_category_net)) {
+                    trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                         dbs.println("> protection");
                         dbs.println(" > key[%08x] %s (%s)", secret_key, base16_encode(key).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
                         dbs.println(" > sample %s", base16_encode(stream, samplesize).c_str());

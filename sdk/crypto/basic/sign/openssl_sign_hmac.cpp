@@ -39,7 +39,7 @@ return_t openssl_sign::verify_hmac(const EVP_PKEY* pkey, hash_algorithm_t alg, c
         binary_t result;
         ret = sign_digest(pkey, alg, stream, size, result, flags);
         if (result != signature) {
-            ret = errorcode_t::error_verify;
+            ret = errorcode_t::verification_failure;
         }
     }
     __finally2 {}

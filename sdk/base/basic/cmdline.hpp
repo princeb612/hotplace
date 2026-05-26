@@ -213,7 +213,7 @@ t_cmdline_t<T>& t_cmdline_t<T>::operator<<(t_cmdarg_t<T>&& cmd) {
     if (pib.second) {
         _list.emplace_back(token);
     } else {
-        throw exception(errorcode_t::error_duplicate);
+        throw exception(errorcode_t::duplicate);
     }
 
     return *this;

@@ -28,53 +28,53 @@ void trace_advisor::load() {
             {
                 events e;
                 e.cname = "internal";
-                e.event_map.emplace(trace_event_internal, "");
-                e.event_map.emplace(trace_event_backtrace, "backtrace");
-                e.event_map.emplace(trace_event_multiplexer, "multiplexer");
-                e.event_map.emplace(trace_event_socket, "socket");
-                _resource_map.emplace(trace_category_internal, e);
+                e.event_map.emplace(trace_event_t::trace_event_internal, "");
+                e.event_map.emplace(trace_event_t::trace_event_backtrace, "backtrace");
+                e.event_map.emplace(trace_event_t::trace_event_multiplexer, "multiplexer");
+                e.event_map.emplace(trace_event_t::trace_event_socket, "socket");
+                _resource_map.emplace(trace_category_t::trace_category_internal, e);
             }
             {
                 events e;
                 e.cname = "crypto";
-                e.event_map.emplace(trace_event_openssl_info, "openssl info");
-                e.event_map.emplace(trace_event_openssl_nosupport, "no support");
-                e.event_map.emplace(trace_event_encryption, "encryption");
-                e.event_map.emplace(trace_event_decryption, "decryption");
-                e.event_map.emplace(trace_event_digest, "digest");
-                e.event_map.emplace(trace_event_mac, "mac");
-                e.event_map.emplace(trace_event_jose_encryption, "JOSE encryption");
-                e.event_map.emplace(trace_event_jose_signing, "JOSE signing");
-                e.event_map.emplace(trace_event_cose_keydistribution, "COSE keydistribution");
-                e.event_map.emplace(trace_event_cose_encryption, "COSE encryption");
-                e.event_map.emplace(trace_event_cose_signing, "COSE signing");
-                e.event_map.emplace(trace_event_cose_mac, "COSE mac");
-                e.event_map.emplace(trace_event_keyexchange, "keyexchange");
-                e.event_map.emplace(trace_event_verify, "verify");
-                _resource_map.emplace(trace_category_crypto, e);
+                e.event_map.emplace(trace_event_t::trace_event_openssl_info, "openssl info");
+                e.event_map.emplace(trace_event_t::trace_event_openssl_nosupport, "no support");
+                e.event_map.emplace(trace_event_t::trace_event_encryption, "encryption");
+                e.event_map.emplace(trace_event_t::trace_event_decryption, "decryption");
+                e.event_map.emplace(trace_event_t::trace_event_digest, "digest");
+                e.event_map.emplace(trace_event_t::trace_event_mac, "mac");
+                e.event_map.emplace(trace_event_t::trace_event_jose_encryption, "JOSE encryption");
+                e.event_map.emplace(trace_event_t::trace_event_jose_signing, "JOSE signing");
+                e.event_map.emplace(trace_event_t::trace_event_cose_keydistribution, "COSE keydistribution");
+                e.event_map.emplace(trace_event_t::trace_event_cose_encryption, "COSE encryption");
+                e.event_map.emplace(trace_event_t::trace_event_cose_signing, "COSE signing");
+                e.event_map.emplace(trace_event_t::trace_event_cose_mac, "COSE mac");
+                e.event_map.emplace(trace_event_t::trace_event_keyexchange, "keyexchange");
+                e.event_map.emplace(trace_event_t::trace_event_verify, "verify");
+                _resource_map.emplace(trace_category_t::trace_category_crypto, e);
             }
             {
                 events e;
                 e.cname = "network";
-                e.event_map.emplace(trace_event_net_produce, "produce");
-                e.event_map.emplace(trace_event_net_consume, "consume");
-                e.event_map.emplace(trace_event_net_request, "request");
-                e.event_map.emplace(trace_event_net_response, "response");
-                e.event_map.emplace(trace_event_header_compression_insert, "header compression insert");
-                e.event_map.emplace(trace_event_header_compression_evict, "header compression evict");
-                e.event_map.emplace(trace_event_header_compression_select, "header compression select");
-                e.event_map.emplace(trace_event_http2_push_promise, "push promise");
-                e.event_map.emplace(trace_event_openssl_tls_state, "TLS state");
-                e.event_map.emplace(trace_event_tls_protection, "TLS protection");
-                e.event_map.emplace(trace_event_tls_record, "TLS record");
-                e.event_map.emplace(trace_event_tls_handshake, "TLS handshake");
-                e.event_map.emplace(trace_event_tls_extension, "TLS extension");
-                e.event_map.emplace(trace_event_quic_packet, "QUIC packet");
-                e.event_map.emplace(trace_event_quic_frame, "QUIC frame");
-                e.event_map.emplace(trace_event_http3, "HTTP/3");
-                e.event_map.emplace(trace_event_hpack, "HPACK");
-                e.event_map.emplace(trace_event_qpack, "QPACK");
-                _resource_map.emplace(trace_category_net, e);
+                e.event_map.emplace(trace_event_t::trace_event_net_produce, "produce");
+                e.event_map.emplace(trace_event_t::trace_event_net_consume, "consume");
+                e.event_map.emplace(trace_event_t::trace_event_net_request, "request");
+                e.event_map.emplace(trace_event_t::trace_event_net_response, "response");
+                e.event_map.emplace(trace_event_t::trace_event_header_compression_insert, "header compression insert");
+                e.event_map.emplace(trace_event_t::trace_event_header_compression_evict, "header compression evict");
+                e.event_map.emplace(trace_event_t::trace_event_header_compression_select, "header compression select");
+                e.event_map.emplace(trace_event_t::trace_event_http2_push_promise, "push promise");
+                e.event_map.emplace(trace_event_t::trace_event_openssl_tls_state, "TLS state");
+                e.event_map.emplace(trace_event_t::trace_event_tls_protection, "TLS protection");
+                e.event_map.emplace(trace_event_t::trace_event_tls_record, "TLS record");
+                e.event_map.emplace(trace_event_t::trace_event_tls_handshake, "TLS handshake");
+                e.event_map.emplace(trace_event_t::trace_event_tls_extension, "TLS extension");
+                e.event_map.emplace(trace_event_t::trace_event_quic_packet, "QUIC packet");
+                e.event_map.emplace(trace_event_t::trace_event_quic_frame, "QUIC frame");
+                e.event_map.emplace(trace_event_t::trace_event_http3, "HTTP/3");
+                e.event_map.emplace(trace_event_t::trace_event_hpack, "HPACK");
+                e.event_map.emplace(trace_event_t::trace_event_qpack, "QPACK");
+                _resource_map.emplace(trace_category_t::trace_category_net, e);
             }
         }
     }
@@ -90,7 +90,7 @@ std::string trace_advisor::nameof_category(trace_category_t category) {
     return res;
 }
 
-void trace_advisor::get_names(trace_category_t category, uint32 event, std::string& cvalue, std::string& evalue) {
+void trace_advisor::get_names(trace_category_t category, trace_event_t event, std::string& cvalue, std::string& evalue) {
     cvalue.clear();
     evalue.clear();
 

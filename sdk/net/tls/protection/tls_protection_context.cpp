@@ -202,8 +202,8 @@ return_t protection_context::select_from(const protection_context& other, tls_se
                 certkty_set.insert(hint.kty);  // EC, RSA, DH, OKP, MLDSA
                 certnid_set.insert(hint.nid);
 #if defined DEBUG
-                if (istraceable(trace_category_net)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                if (istraceable(trace_category_t::trace_category_net)) {
+                    trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                         std::string wellknown = namesof(&hint);
                         dbs.println(" ! " ANSI_ESCAPE "1;33m#certificate 0x%04x(%04u) %-7s %-5s %s" ANSI_ESCAPE "0m", hint.nid, hint.nid, k->get_desc().get_kid_cstr(),
                                     hint.hint_kty->name, wellknown.c_str());
@@ -253,8 +253,8 @@ return_t protection_context::select_from(const protection_context& other, tls_se
                         }
                     }
 #if defined DEBUG
-                    if (istraceable(trace_category_net)) {
-                        trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                    if (istraceable(trace_category_t::trace_category_net)) {
+                        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                             dbs.println(" ? " ANSI_ESCAPE "1;33m#ciphersuite 0x%04x(%04u) %s" ANSI_ESCAPE "0m", cs, cs, hint->name_iana);
                         });
                     }
@@ -275,9 +275,9 @@ return_t protection_context::select_from(const protection_context& other, tls_se
                     set_cipher_suite(cs);
                     ret_value = true;
 #if defined DEBUG
-                    if (istraceable(trace_category_net)) {
+                    if (istraceable(trace_category_t::trace_category_net)) {
                         auto hint = tlsadvisor->hintof_cipher_suite(cs);
-                        trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                             dbs.println(" ! " ANSI_ESCAPE "1;33m#supported version 0x%04x" ANSI_ESCAPE "0m", ver);
                             dbs.println(" ! " ANSI_ESCAPE "1;33m#ciphersuite 0x%04x(%04u) %s" ANSI_ESCAPE "0m", cs, cs, hint->name_iana);
                         });
@@ -303,7 +303,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
             }
 
             if (false == test) {
-                ret = errorcode_t::error_handshake;
+                ret = errorcode_t::handshake_failure;
                 __leave2_trace(ret);
             }
         }
@@ -315,8 +315,8 @@ return_t protection_context::select_from(const protection_context& other, tls_se
                     if (certnid_set.end() != certnid_set.find(hint->nid)) {
                         _signature_algorithms.push_back(scheme);
 #if defined DEBUG
-                        if (istraceable(trace_category_net)) {
-                            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                        if (istraceable(trace_category_t::trace_category_net)) {
+                            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                                 dbs.println(" ! " ANSI_ESCAPE "1;33m#signature 0x%04x(%04u) %s" ANSI_ESCAPE "0m", scheme, scheme, hint->name);
                             });
                         }
@@ -365,8 +365,8 @@ return_t protection_context::select_from(const protection_context& other, tls_se
                     }
                     _keyshare_set.insert(group);
 #if defined DEBUG
-                    if (istraceable(trace_category_net)) {
-                        trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+                    if (istraceable(trace_category_t::trace_category_net)) {
+                        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                             dbs.println(" - " ANSI_ESCAPE "1;33m#keyshare 0x%04x(%04u) %s" ANSI_ESCAPE "0m", group, group, tlsadvisor->nameof_group(group).c_str());
                         });
                     }

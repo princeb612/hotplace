@@ -36,7 +36,7 @@ void construct_quic_cli_initial(tls_session* session, tls_direction_t dir, uint3
                           [&](tls_extension* extension) -> return_t {
                               auto sni = (tls_extension_sni*)extension;
                               sni->set_hostname("test.server.com");
-                              return success;
+                              return errorcode_t::success;
                           })
                      .add(tls_ext_alpn, dir, handshake,
                           [&](tls_extension* extension) -> return_t {
@@ -45,7 +45,7 @@ void construct_quic_cli_initial(tls_session* session, tls_direction_t dir, uint3
                               binary_append(protocols, uint8(2));
                               binary_append(protocols, "h3");
                               alpn->set_protocols(protocols);
-                              return success;
+                              return errorcode_t::success;
                           })
                      .add(tls_ext_quic_transport_parameters, dir, handshake,  //
                           [&](tls_extension* extension) -> return_t {
@@ -62,7 +62,7 @@ void construct_quic_cli_initial(tls_session* session, tls_direction_t dir, uint3
                                   .set(quic_param_initial_max_stream_data_uni, 0x80000)
                                   .set(quic_param_initial_max_streams_bidi, 100)
                                   .set(quic_param_initial_max_streams_uni, 100);
-                              return success;
+                              return errorcode_t::success;
                           });
                  return ret;
              })
@@ -118,7 +118,7 @@ void construct_quic_svr_handshakes_settings(tls_session* session, tls_direction_
                      .add(tls_ext_sni, dir, handshake,
                           [](tls_extension* extension) -> return_t {
                               (*(tls_extension_sni*)extension).set_hostname("localhost");
-                              return success;
+                              return errorcode_t::success;
                           })
                      .add(tls_ext_alpn, dir, handshake,
                           [](tls_extension* extension) -> return_t {
@@ -126,7 +126,7 @@ void construct_quic_svr_handshakes_settings(tls_session* session, tls_direction_
                               binary_append(protocols, uint8(2));
                               binary_append(protocols, "h3");
                               (*(tls_extension_alpn*)extension).set_protocols(protocols);
-                              return success;
+                              return errorcode_t::success;
                           })
                      .add(tls_ext_quic_transport_parameters, dir, handshake,  //
                           [](tls_extension* extension) -> return_t {
@@ -145,9 +145,9 @@ void construct_quic_svr_handshakes_settings(tls_session* session, tls_direction_
                                   .set(quic_param_max_datagram_frame_size, 0x10000)
                                   .set(quic_param_max_udp_payload_size, max_udp_payload_size)
                                   .set(quic_param_initial_max_streams_bidi, 100);
-                              return success;
+                              return errorcode_t::success;
                           });
-                 return success;
+                 return errorcode_t::success;
              })
         .add(tls_hs_certificate, dir)
         .add(tls_hs_certificate_verify, dir)
@@ -254,7 +254,7 @@ void construct_quic_cli_encoder(tls_session* session, tls_direction_t dir, uint3
                             .set_capacity(4096)
                             .encode_header(":authority", "localhost")
                             .encode_header("user-agent", "hotplace 1.58.864");
-                        return success;
+                        return errorcode_t::success;
                     })
         .publish(dir,  //
                  [&](tls_session* session, binary_t& packet) -> void {
@@ -347,7 +347,7 @@ void construct_quic_svr_decoder(tls_session* session, tls_direction_t dir, uint3
         .add_stream(7, h3_qpack_decoder_stream,
                     [](qpack_stream& stream) -> return_t {
                         stream.ack(0);  // STREAM(0) HEADERS GET /
-                        return success;
+                        return errorcode_t::success;
                     })
         .publish(dir,  //
                  [&](tls_session* session, binary_t& packet) -> void {
@@ -370,7 +370,7 @@ void construct_http3_svr_ok(tls_session* session, tls_direction_t dir, uint32 fl
         .add_stream(11, h3_qpack_encoder_stream,
                     [](qpack_stream& stream) -> return_t {
                         stream.increment(0);
-                        return success;
+                        return errorcode_t::success;
                     })
         .add_stream(quic_stream_client_bidi, h3_control_stream, h3_frame_headers,
                     [&](http3_frame* frame) -> return_t {

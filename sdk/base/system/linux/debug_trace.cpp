@@ -36,7 +36,7 @@ return_t trace_backtrace(return_t errorcode) {
     if (errorcode_t::success != errorcode) {
         uint32 option = get_trace_option();
         if (trace_option_t::trace_bt & option) {
-            trace_debug_event(trace_category_internal, trace_event_backtrace, [&](basic_stream& dbs) -> void {
+            trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_backtrace, [&](basic_stream& dbs) -> void {
                 std::string errcode;
                 std::string errmsg;
                 error_advisor* advisor = error_advisor::get_instance();

@@ -43,8 +43,8 @@ return_t trial_tls_server_socket::tls_accept(socket_context_t** handle, socket_t
             auto lambda_send = [&](tls_session* sess, binary_t& bin) -> void {
                 socket_context_t* ctx = (socket_context_t*)(sess->get_hook_param());
 #if defined DEBUG
-                if (istraceable(trace_category_net, loglevel_debug)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+                if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
+                    trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                         dbs.println("send %p %i", ctx, ctx->fd);
                         dump_memory(bin, &dbs, 16, 3, 0, dump_notrunc);
                     });

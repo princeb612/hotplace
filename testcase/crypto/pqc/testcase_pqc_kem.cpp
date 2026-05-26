@@ -76,10 +76,10 @@ void test_pqc_kem() {
                 ret = pqc.encapsule(nullptr, pubkey, keycapsule, sharedsecret_bob);
                 _logger->write([&](basic_stream& bs) -> void {
                     bs << "capsule ";
-                    base16_encode(keycapsule, bs, base16_notrunc);
+                    base16_encode(keycapsule, bs, encoding_flag_t::encoding_notrunc);
                     bs << "\n";
                     bs << "shared secret ";
-                    base16_encode(sharedsecret_bob, bs, base16_notrunc);
+                    base16_encode(sharedsecret_bob, bs, encoding_flag_t::encoding_notrunc);
                     bs << "\n";
                 });
                 _test_case.test(ret, __FUNCTION__, "encapsule %s size %zi", alg.c_str(), keycapsule.size());
@@ -89,7 +89,7 @@ void test_pqc_kem() {
                 ret = pqc.decapsule(nullptr, privkey, keycapsule, sharedsecret_alice);
                 _logger->write([&](basic_stream& bs) -> void {
                     bs << "shared secret\n";
-                    base16_encode(sharedsecret_alice, bs, base16_notrunc);
+                    base16_encode(sharedsecret_alice, bs, encoding_flag_t::encoding_notrunc);
                     bs << "\n";
                 });
                 _test_case.test(ret, __FUNCTION__, "decapsule %s", alg.c_str());
@@ -105,7 +105,7 @@ void test_pqc_kem() {
     }
     __finally2 {}
 #else
-    _test_case.test(not_supported, __FUNCTION__, "openssl 3.5 required");
+    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "openssl 3.5 required");
 #endif
 }
 

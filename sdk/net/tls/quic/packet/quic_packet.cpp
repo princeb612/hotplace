@@ -34,7 +34,7 @@ constexpr char constexpr_scid_len[] = "scid len";
 
 quic_packet::quic_packet(tls_session* session) : _type(0), _ht(0), _session(nullptr), _version(1), _pn(0) {
     if (nullptr == session) {
-        throw no_session;
+        throw exception(errorcode_t::no_session);
     }
     set_session(session);
     set_version();
@@ -44,7 +44,7 @@ quic_packet::quic_packet(tls_session* session) : _type(0), _ht(0), _session(null
 
 quic_packet::quic_packet(quic_packet_t type, tls_session* session) : _type(type), _ht(0), _session(nullptr), _version(1), _pn(0) {
     if (nullptr == session) {
-        throw no_session;
+        throw exception(errorcode_t::no_session);
     }
     bool is_longheader = true;
     set_session(session);
@@ -65,7 +65,7 @@ quic_packet::quic_packet(const quic_packet& other)
       _payload(other._payload),
       _tag(other._tag) {
     if (nullptr == other._session) {
-        throw no_session;
+        throw exception(errorcode_t::no_session);
     }
     set_session(other._session);
     set_version();
@@ -202,8 +202,9 @@ return_t quic_packet::do_read_header(tls_direction_t dir, const byte_t* stream, 
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_quic_packet, [&](basic_stream& dbs) -> void { dbs.println("# QUIC packet (size %zi)", size); });
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_packet,
+                              [&](basic_stream& dbs) -> void { dbs.println("# QUIC packet (size %zi)", size); });
         }
 #endif
 
@@ -344,8 +345,8 @@ return_t quic_packet::do_write(tls_direction_t dir, binary_t& header, binary_t& 
 
 void quic_packet::dump() {
 #if defined DEBUG
-    if (istraceable(trace_category_net)) {
-        trace_debug_event(trace_category_net, trace_event_quic_packet, [&](basic_stream& dbs) -> void {
+    if (istraceable(trace_category_t::trace_category_net)) {
+        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_packet, [&](basic_stream& dbs) -> void {
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
             dbs.println("- quic packet %s", tlsadvisor->nameof_quic_packet(get_type()).c_str());
@@ -384,8 +385,8 @@ return_t quic_packet::header_protect(tls_direction_t dir, protection_space_t spa
     return_t ret = errorcode_t::success;
     __try2 {
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_quic_packet, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_packet, [&](basic_stream& dbs) -> void {
                 dbs.println(ANSI_ESCAPE "1;34m > packet number 0x%s (%i)" ANSI_ESCAPE "0m", base16_encode(bin_pn).c_str(), _pn);
                 dbs.println(" > packet number length %i", pn_length);
             });
@@ -466,8 +467,8 @@ return_t quic_packet::header_unprotect(tls_direction_t dir, const byte_t* stream
         pn = t_binary_to_integer<uint32>(bin_pn);
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_quic_packet, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_packet, [&](basic_stream& dbs) -> void {
                 dbs.println(" > protected   packet header byte 0x%02x", hdr_backup);
                 dbs.println(" > unprotected packet header byte 0x%02x", hdr);
                 dbs.println(" > packet number length %i", pn_length);

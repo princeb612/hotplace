@@ -60,7 +60,7 @@ return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buf
         }
 
         // direct copy instead of snprintf
-        const bool capital = (encoding_flag_t::base16_capital & flags);
+        const bool capital = (encoding_flag_t::encoding_base16_capital & flags);
         const char* digits = hex_digits(capital);
         for (size_t i = 0; i < size; ++i) {
             const byte_t v = source[i];

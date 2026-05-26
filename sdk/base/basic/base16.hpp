@@ -49,7 +49,7 @@ return_t base16_encode(const byte_t* source, size_t size, T& streambuf, uint32 f
     typedef typename traits::value_type value_type;
     return_t ret = errorcode_t::success;
 
-    if (0 == (base16_notrunc & flags)) {
+    if (0 == (encoding_notrunc & flags)) {
         traits::trunc(streambuf);
     }
     size_t size_reserve = 0;
@@ -82,7 +82,7 @@ return_t base16_decode(const char* source, size_t size, T& streambuf, uint32 fla
     typedef typename traits::value_type value_type;
     return_t ret = errorcode_t::success;
 
-    if (0 == (base16_notrunc & flags)) {
+    if (0 == (encoding_notrunc & flags)) {
         traits::trunc(streambuf);
     }
     size_t size_reserve = 0;

@@ -58,7 +58,7 @@ void test_slhdsa() {
     lambda("SLH-DSA-SHAKE-256s");
     lambda("SLH-DSA-SHAKE-256f");
 #else
-    _test_case.test(not_supported, __FUNCTION__, "not supported");
+    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "not supported");
 #endif
 }
 

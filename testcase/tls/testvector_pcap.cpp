@@ -75,7 +75,7 @@ void play_yaml_pcap(const char* filename) {
 
                     session.get_alert(direction, lambda_test_fatal_alert);
                     if (has_fatal) {
-                        _test_case.test(failed, __FUNCTION__, "fatal alert");
+                        _test_case.test(errorcode_t::failed, __FUNCTION__, "fatal alert");
                         break;
                     }
                 }

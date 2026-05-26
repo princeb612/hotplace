@@ -433,7 +433,7 @@ std::pair<bignumber, bignumber> bignumber::divide(const bignumber& lhs, const bi
     bignumber remainder;
 
     if (rhs == 0) {
-        throw exception(error_division);  // division by zero
+        throw exception(errorcode_t::divide_by_zero);  // division by zero
     } else if (abscmp(rhs, 1) == 0) {
         quotient = lhs;
         quotient._sign = lhs._sign * rhs._sign;

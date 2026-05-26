@@ -101,7 +101,7 @@ return_t kindof_handshake(tls_handshake* handshake, protection_space_t& space) {
 bool is_kindof_handshake(tls_handshake* handshake, protection_space_t space) {
     bool ret = false;
     protection_space_t sp;
-    if (success == kindof_handshake(handshake, sp)) {
+    if (errorcode_t::success == kindof_handshake(handshake, sp)) {
         ret = (sp == space);
     }
     return ret;
@@ -123,7 +123,7 @@ return_t kindof_frame(quic_frame* frame, protection_space_t& space) {
 bool is_kindof_frame(quic_frame* frame, protection_space_t space) {
     bool ret = false;
     protection_space_t sp;
-    if (success == kindof_frame(frame, sp)) {
+    if (errorcode_t::success == kindof_frame(frame, sp)) {
         ret = (sp == space);
     }
     return ret;
@@ -138,7 +138,7 @@ return_t kindof_frame(quic_frame_t type, protection_space_t& space) {
 bool is_kindof_frame(quic_frame_t type, protection_space_t space) {
     bool ret = false;
     protection_space_t sp;
-    if (success == kindof_frame(type, sp)) {
+    if (errorcode_t::success == kindof_frame(type, sp)) {
         ret = (sp == space);
     }
     return ret;

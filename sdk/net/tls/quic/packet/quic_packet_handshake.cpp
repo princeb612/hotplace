@@ -215,10 +215,10 @@ return_t quic_packet_handshake::do_write(tls_direction_t dir, binary_t& header, 
 
 void quic_packet_handshake::dump() {
 #if defined DEBUG
-    if (istraceable(trace_category_net)) {
+    if (istraceable(trace_category_t::trace_category_net)) {
         quic_packet::dump();
 
-        trace_debug_event(trace_category_net, trace_event_quic_packet, [&](basic_stream& dbs) -> void {
+        trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_packet, [&](basic_stream& dbs) -> void {
             // auto session = get_session();
 
             // length = packet number + payload
@@ -228,7 +228,7 @@ void quic_packet_handshake::dump() {
             dbs.println(" > packet number 0x%08x (%i)", get_pn(), get_pn());
             // payload
             dbs.println(" > payload (len %zi)", _payload.size());
-            if (check_trace_level(loglevel_debug)) {
+            if (check_trace_level(loglevel_t::loglevel_debug)) {
                 dump_memory(_payload, &dbs, 16, 3, 0x0, dump_memory_flag_t::dump_notrunc);
             }
         });

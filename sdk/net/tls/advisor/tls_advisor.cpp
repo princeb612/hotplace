@@ -585,8 +585,9 @@ return_t tls_advisor::set_ciphersuites(const char* ciphersuites) {
         _ciphersuites.clear();
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void { dbs.println("# set ciphersuite(s)"); });
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection,
+                              [&](basic_stream& dbs) -> void { dbs.println("# set ciphersuite(s)"); });
         }
 #endif
 
@@ -597,8 +598,8 @@ return_t tls_advisor::set_ciphersuites(const char* ciphersuites) {
                 auto code = hint->code;
                 _ciphersuites.insert(code);
 #if defined DEBUG
-                if (istraceable(trace_category_net)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_protection,
+                if (istraceable(trace_category_t::trace_category_net)) {
+                    trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection,
                                       [&](basic_stream& dbs) -> void { dbs.println(" > 0x%02x %s", hint->code, hint->name_iana); });
                 }
 #endif
@@ -662,8 +663,8 @@ return_t tls_advisor::set_tls_groups(const char* groups) {
                     }
                 }
 #if defined DEBUG
-                if (istraceable(trace_category_net)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_protection,
+                if (istraceable(trace_category_t::trace_category_net)) {
+                    trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection,
                                       [&](basic_stream& dbs) -> void { dbs.println(" > 0x%02x %s", hint->group, hint->name); });
                 }
 #endif
@@ -752,8 +753,8 @@ return_t tls_advisor::negotiate_alpn(tls_handshake* handshake, const byte_t* alp
         select(0);
 
 #if defined DEBUG
-        if (istraceable(trace_category_net, loglevel_debug)) {
-            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                 dbs.println("> protocols");
                 dump_memory(alpn, size, &dbs, 16, 3, 0, dump_notrunc);
                 dbs.println("> pattern");

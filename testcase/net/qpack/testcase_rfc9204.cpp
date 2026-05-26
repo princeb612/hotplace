@@ -38,14 +38,14 @@ void test_dump(binary_t& bin, const char* text, ...) {
 unsigned int count_evict_client = 0;
 unsigned int count_evict_server = 0;
 
-void debug_qpack_client(trace_category_t, uint32 event) {
-    if (trace_event_header_compression_evict == event) {
+void debug_qpack_client(trace_category_t, trace_event_t event) {
+    if (trace_event_t::trace_event_header_compression_evict == event) {
         count_evict_client++;
     }
 };
 
-void debug_qpack_server(trace_category_t, uint32 event) {
-    if (trace_event_header_compression_evict == event) {
+void debug_qpack_server(trace_category_t, trace_event_t event) {
+    if (trace_event_t::trace_event_header_compression_evict == event) {
         count_evict_server++;
     }
 };
@@ -97,7 +97,7 @@ void test_rfc9204_b1() {
 #else
         ret = enc.unpack(&dyntable, bin.data(), bin.size(), pos, item);
 #endif
-        _test_case.assert((success == ret) && (0 == item.ric) && (0 == item.base), __FUNCTION__, "%s #field section prefix", text1);
+        _test_case.assert((errorcode_t::success == ret) && (0 == item.ric) && (0 == item.base), __FUNCTION__, "%s #field section prefix", text1);
 
         std::string name;
         std::string value;

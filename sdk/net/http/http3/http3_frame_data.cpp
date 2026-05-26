@@ -36,8 +36,9 @@ return_t http3_frame_data::do_read_payload(const byte_t* stream, size_t size, si
     return_t ret = errorcode_t::success;
     __try2 {
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_http3, [&](basic_stream& dbs) -> void { dbs.println("%.*s", (unsigned)size, (char*)stream); });
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_http3,
+                              [&](basic_stream& dbs) -> void { dbs.println("%.*s", (unsigned)size, (char*)stream); });
         }
 #endif
     }

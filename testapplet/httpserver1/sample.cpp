@@ -24,23 +24,24 @@ int main(int argc, char** argv) {
 #endif
 
     _cmdline.make_share(new t_cmdline_t<OPTION>);
-    (*_cmdline) << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, const char* param) -> void { o.enable_verbose(); }).optional()
+    (*_cmdline)
+        << t_cmdarg_t<OPTION>("-v", "verbose", [](OPTION& o, const char* param) -> void { o.enable_verbose(); }).optional()
 #if defined DEBUG
-                << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, const char* param) -> void { o.enable_debug(); }).optional()
-                << t_cmdarg_t<OPTION>("-D", "trace level 0|2", [](OPTION& o, const char* param) -> void { o.enable_trace(atoi(param)); }).optional().preced()
-                << t_cmdarg_t<OPTION>("--trace", "trace level [trace]", [](OPTION& o, const char* param) -> void { o.enable_trace(loglevel_trace); }).optional()
-                << t_cmdarg_t<OPTION>("--debug", "trace level [debug]", [](OPTION& o, const char* param) -> void { o.enable_trace(loglevel_debug); }).optional()
+        << t_cmdarg_t<OPTION>("-d", "debug/trace", [](OPTION& o, const char* param) -> void { o.enable_debug(); }).optional()
+        << t_cmdarg_t<OPTION>("-D", "trace level 0|2", [](OPTION& o, const char* param) -> void { o.enable_trace(atoi(param)); }).optional().preced()
+        << t_cmdarg_t<OPTION>("--trace", "trace level [trace]", [](OPTION& o, const char* param) -> void { o.enable_trace(loglevel_t::loglevel_trace); }).optional()
+        << t_cmdarg_t<OPTION>("--debug", "trace level [debug]", [](OPTION& o, const char* param) -> void { o.enable_trace(loglevel_t::loglevel_debug); }).optional()
 #endif
-                << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, const char* param) -> void { o.log = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, const char* param) -> void { o.time = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-r", "run server", [](OPTION& o, const char* param) -> void { o.run = 1; }).optional()
-                << t_cmdarg_t<OPTION>("-h", "http  port (default 8080)", [](OPTION& o, const char* param) -> void { o.port = atoi(param); }).preced().optional()
-                << t_cmdarg_t<OPTION>("-s", "https port (default 9000)", [](OPTION& o, const char* param) -> void { o.port_tls = atoi(param); }).preced().optional()
-                << t_cmdarg_t<OPTION>("-e", "allow Content-Encoding", [](OPTION& o, const char* param) -> void { o.flags |= option_flag_content_encoding; }).optional()
-                << t_cmdarg_t<OPTION>("-T", "use trial", [](OPTION& o, const char* param) -> void { o.flags |= option_flag_trial; }).optional()
-                << t_cmdarg_t<OPTION>("-k", "keylog", [](OPTION& o, const char* param) -> void { o.flags |= option_flag_keylog; }).optional()
-                << t_cmdarg_t<OPTION>("-cs", "ciphersuite", [](OPTION& o, const char* param) -> void { o.cs = param; }).optional().preced()
-                << t_cmdarg_t<OPTION>("-cert", "rsa|rsapss|ecdsa|mldsa|eddsa|slhdsa", [](OPTION& o, const char* param) -> void { o.cert = param; }).optional().preced();
+        << t_cmdarg_t<OPTION>("-l", "log", [](OPTION& o, const char* param) -> void { o.log = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, const char* param) -> void { o.time = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-r", "run server", [](OPTION& o, const char* param) -> void { o.run = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-h", "http  port (default 8080)", [](OPTION& o, const char* param) -> void { o.port = atoi(param); }).preced().optional()
+        << t_cmdarg_t<OPTION>("-s", "https port (default 9000)", [](OPTION& o, const char* param) -> void { o.port_tls = atoi(param); }).preced().optional()
+        << t_cmdarg_t<OPTION>("-e", "allow Content-Encoding", [](OPTION& o, const char* param) -> void { o.flags |= option_flag_content_encoding; }).optional()
+        << t_cmdarg_t<OPTION>("-T", "use trial", [](OPTION& o, const char* param) -> void { o.flags |= option_flag_trial; }).optional()
+        << t_cmdarg_t<OPTION>("-k", "keylog", [](OPTION& o, const char* param) -> void { o.flags |= option_flag_keylog; }).optional()
+        << t_cmdarg_t<OPTION>("-cs", "ciphersuite", [](OPTION& o, const char* param) -> void { o.cs = param; }).optional().preced()
+        << t_cmdarg_t<OPTION>("-cert", "rsa|rsapss|ecdsa|mldsa|eddsa|slhdsa", [](OPTION& o, const char* param) -> void { o.cert = param; }).optional().preced();
 
     _cmdline->parse(argc, argv);
 
@@ -58,7 +59,7 @@ int main(int argc, char** argv) {
     _logger->setcolor(bold, cyan);
 
     if (option.debug) {
-        auto lambda_tracedebug = [&](trace_category_t category, uint32 event, stream_t* s) -> void { _logger->write(s); };
+        auto lambda_tracedebug = [&](trace_category_t category, trace_event_t event, stream_t* s) -> void { _logger->write(s); };
         set_trace_debug(lambda_tracedebug);
         set_trace_option(trace_bt | trace_except | trace_debug);
         set_trace_level(option.trace_level);

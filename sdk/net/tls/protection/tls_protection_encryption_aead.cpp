@@ -456,8 +456,8 @@ return_t tls_protection::encrypt_aead(tls_session* session, tls_direction_t dir,
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net, loglevel_debug)) {
-            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                 dbs.println("> encrypt");
                 dbs.println(" > key[%08x] %s (%s)", secret_key, base16_encode(key).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
                 dbs.println(" > iv [%08x] %s (%s)", secret_iv, base16_encode(iv).c_str(), tlsadvisor->nameof_secret(secret_iv).c_str());
@@ -608,8 +608,8 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net, loglevel_debug)) {
-            trace_debug_event(trace_category_net, trace_event_tls_protection, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
                 dbs.println("> decrypt");
                 dbs.println(" > key[%08x] %s (%s)", secret_key, base16_encode(key).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
                 dbs.println(" > iv [%08x] %s (%s)", secret_iv, base16_encode(iv).c_str(), tlsadvisor->nameof_secret(secret_iv).c_str());

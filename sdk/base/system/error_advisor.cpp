@@ -6,6 +6,7 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2026.05.26   Soo Han and Gemini  refactoring
  */
 
 #include <hotplace/sdk/base/system/error.hpp>
@@ -194,12 +195,12 @@ const error_description error_descriptions[] = {
     errordef(exception_caught, "exception caught"),
     errordef(bad_data, "bad data"),
     errordef(bad_format, "bad format"),
-    errordef(error_overflow, "overflow"),
+    errordef(overflow, "overflow"),
     errordef(empty, "empty"),
     errordef(full, "full"),
     errordef(out_of_range, "out of range"),
     errordef(mismatch, "mismatch"),
-    errordef(error_integrity, "integrity error"),
+    errordef(integrity, "integrity error"),
     errordef(expired, "expired"),
     errordef(canceled, "canceled"),
     errordef(invalid_request, "invalid request"),  // RFC 6749 4.1.2.1. Error Response
@@ -208,15 +209,15 @@ const error_description error_descriptions[] = {
     errordef(max_reached, "max reached"),
     errordef(failed, "failed"),
     errordef(blocked, "blocked"),
-    errordef(error_duplicate, "duplicate"),
+    errordef(duplicate, "duplicate"),
     errordef(closed, "closed"),
     errordef(disconnect, "disconnect"),
-    errordef(error_cipher, "error cipher"),
-    errordef(error_digest, "error digest"),
-    errordef(error_verify, "error verify"),
+    errordef(cipher_failure, "cipher"),
+    errordef(digest_failure, "digest"),
+    errordef(verification_failure, "verification"),
     errordef(no_session, "no session specified"),
-    errordef(error_query, "query"),
-    errordef(error_fetch, "fetch"),
+    errordef(query_failure, "query"),
+    errordef(fetch_failure, "fetch"),
     errordef(insufficient, "insufficient"),
     errordef(confidential, "confidential"),
     errordef(suspicious, "suspicious"),
@@ -232,22 +233,22 @@ const error_description error_descriptions[] = {
     errordef(invalid_grant, "invalid_grant"),                                           // RFC 6749 5.2. Error Response
     errordef(unsupported_grant_type, "unsupported_grant_type"),                         // RFC 6749 5.2. Error Response
     errordef(assert_failed, "assert_failed"),
-    errordef(error_socket, "socket"),
-    errordef(error_bind, "bind"),
-    errordef(error_handshake, "handshake"),
-    errordef(error_connect, "connect"),
-    errordef(error_send, "send"),
-    errordef(error_recv, "recv"),
+    errordef(socket_failure, "socket"),
+    errordef(bind_failure, "bind"),
+    errordef(handshake_failure, "handshake"),
+    errordef(connect_failure, "connect"),
+    errordef(send_failure, "send"),
+    errordef(recv_failure, "recv"),
     errordef(abandoned, "abandoned"),
     errordef(different_type, "different type"),
     errordef(narrow_type, "narrow type"),
     errordef(narrow_type, "narrow type"),
-    errordef(error_certificate, "certificate"),
+    errordef(missing_certificate, "certificate"),
     errordef(exceed, "exceed the designed size"),
-    errordef(error_division, "e.g. divide by zero"),
+    errordef(divide_by_zero, "e.g. divide by zero"),
     errordef(not_specified, "not specfied"),
-    errordef(error_negotiate, "(re)negotiation failed"),
-    errordef(illegal_parameter, "illegal parameter"),  // ie. invalid_parameter + error_verify
+    errordef(negotiation_failure, "negotiation failed"),
+    errordef(illegal_parameter, "illegal parameter"),  // ie. invalid_parameter + verify
     errordef(violation, "violation"),
     errordef(ambiguous, "ambiguous"),
     errordef(miscast_unsigned, "negative integer to unsigned type"),
@@ -350,33 +351,41 @@ bool error_advisor::error_message(return_t error, std::string& code, std::string
     return ret;
 }
 
-error_category_t error_advisor::categoryof(return_t code) {
-    error_category_t category = error_category_success;
-    switch (code) {
-        case success: {
-            category = error_category_success;
-        } break;
-        case expect_failure: {
-            category = error_category_expect_failure;
-        } break;
-        case not_supported: {
-            category = error_category_not_supported;
-        } break;
-        case low_security: {
-            category = error_category_low_security;
-        } break;
-        case do_nothing: {
-            category = error_category_trivial;
-        } break;
-        default: {
-            if ((code > success) && (code < WARN_CODE_BEGIN)) {
-                category = error_category_severe;
-            } else if (code >= WARN_CODE_BEGIN) {
-                category = error_category_warn;
-            }
-        } break;
+error_category_t error_advisor::categoryof(return_t rc) {
+    const uint32 val = rc.code;
+
+    if (0 == val) return error_category_t::error_category_success;
+
+    if (val >= WARN_CODE_BEGIN) {
+        // OS, third party library - not supporeted feature
+        if (val == static_cast<uint32>(errorcode_t::not_supported)) return error_category_t::error_category_not_supported;
+
+        // negative test
+        if (val == static_cast<uint32>(errorcode_t::expect_failure)) return error_category_t::error_category_expect_failure;
+
+        // security vulnerability policy violation
+        if (val == static_cast<uint32>(errorcode_t::low_security)) return error_category_t::error_category_low_security;
+
+        // debugging
+        if (val == static_cast<uint32>(errorcode_t::do_nothing)) return error_category_t::error_category_trivial;
+
+        // warnings (warn_retry, pending, timeout, ...)
+        return error_category_t::error_category_warn;
     }
-    return category;
+
+    // hotplace error space (0xEF010000 ~ 0xFF00FFFF)
+    if (val >= ERROR_CODE_BEGIN) {
+        return error_category_t::error_category_severe;
+    }
+
+    // native OS (Linux errno / Windows DWORD)
+#if defined __linux__
+    if (val <= 133 || (val >= 0x00001000 && val <= 0x000013ed)) {
+        return error_category_t::error_category_severe;
+    }
+#endif
+
+    return error_category_t::error_category_severe;
 }
 
 }  // namespace hotplace

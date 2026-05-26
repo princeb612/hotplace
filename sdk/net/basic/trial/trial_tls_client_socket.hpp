@@ -23,9 +23,9 @@ namespace net {
  * @sample
  *          trial_tls_client_socket cli;
  *          ret = cli.connect(addr, port, tmo);
- *          if (success == ret) {
+ *          if (errorcode_t::success == ret) {
  *              ret = cli.send(msg.c_str(), msg.size(), &cbsent);
- *              if (success == ret) {
+ *              if (errorcode_t::success == ret) {
  *                  cli.read(buf, bufsize, &cbread);
  *              }
  *          }

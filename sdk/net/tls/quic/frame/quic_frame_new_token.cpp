@@ -50,10 +50,10 @@ return_t quic_frame_new_token::do_read_body(tls_direction_t dir, const byte_t* s
         pl.get_binary(constexpr_token, token);
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_frame, [&](basic_stream& dbs) -> void {
                 dbs.println("   > %s (%zi) %s", constexpr_token, token.size(), base16_encode(token).c_str());
-                if (check_trace_level(loglevel_debug)) {
+                if (check_trace_level(loglevel_t::loglevel_debug)) {
                     dump_memory(token, &dbs, 16, 5, 0x0, dump_notrunc);
                 }
             });
@@ -82,8 +82,8 @@ return_t quic_frame_new_token::do_write_body(tls_direction_t dir, binary_t& bin)
         pl.write(bin);
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_quic_frame, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_frame, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 dbs.println(ANSI_ESCAPE "1;34m  + frame %s 0x%x(%i)" ANSI_ESCAPE "0m", tlsadvisor->nameof_quic_frame(type).c_str(), type, type);
             });

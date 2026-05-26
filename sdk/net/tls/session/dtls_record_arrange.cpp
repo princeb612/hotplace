@@ -42,7 +42,7 @@ return_t dtls_record_arrange::produce(const sockaddr* addr, socklen_t addrlen, c
         size_t pos = 0;
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-        while ((pos < size) && (success == ret)) {
+        while ((pos < size) && (errorcode_t::success == ret)) {
             if (pos + sizeof(dtls_header) > size) {
                 ret = errorcode_t::bad_data;
                 break;
@@ -89,8 +89,8 @@ return_t dtls_record_arrange::produce(const sockaddr* addr, socklen_t addrlen, c
                     memcpy(&pool.addr, addr, addrlen);
                 }
 #if defined DEBUG
-                if (istraceable(trace_category_net)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_record,
+                if (istraceable(trace_category_t::trace_category_net)) {
+                    trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_record,
                                       [&](basic_stream& dbs) -> void { dbs.println(ANSI_ESCAPE "1;35mDTLS reorder + epoch %u seq %I64u" ANSI_ESCAPE "0m", epoch, seq); });
                 }
 #endif
@@ -152,8 +152,8 @@ return_t dtls_record_arrange::consume(const sockaddr* addr, socklen_t addrlen, u
                 }
 
 #if defined DEBUG
-                if (istraceable(trace_category_net)) {
-                    trace_debug_event(trace_category_net, trace_event_tls_record,
+                if (istraceable(trace_category_t::trace_category_net)) {
+                    trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_record,
                                       [&](basic_stream& dbs) -> void { dbs.println(ANSI_ESCAPE "1;35mDTLS reorder ! epoch %u seq %I64u" ANSI_ESCAPE "0m", epoch, seq); });
                 }
 #endif

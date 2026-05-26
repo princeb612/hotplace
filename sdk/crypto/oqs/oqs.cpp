@@ -84,7 +84,7 @@ return_t pqc_oqs::open(oqs_context** context) {
     }
     return ret;
 #else
-    return not_supported;
+    return errorcode_t::not_supported;
 #endif
 }
 
@@ -106,7 +106,7 @@ return_t pqc_oqs::close(oqs_context* context) {
     __finally2 {}
     return ret;
 #else
-    return not_supported;
+    return errorcode_t::not_supported;
 #endif
 }
 
@@ -132,13 +132,13 @@ return_t pqc_oqs::for_each(oqs_context* context, int opid, std::function<void(co
                 func(alg, flags);
             }
         } else {
-            ret = not_supported;
+            ret = errorcode_t::not_supported;
         }
     }
     __finally2 {}
     return ret;
 #else
-    return not_supported;
+    return errorcode_t::not_supported;
 #endif
 }
 
@@ -163,7 +163,7 @@ return_t pqc_oqs::keygen(oqs_context* context, EVP_PKEY** pkey, const std::strin
     __finally2 {}
     return ret;
 #else
-    return not_supported;
+    return errorcode_t::not_supported;
 #endif
 }
 
@@ -186,7 +186,7 @@ return_t pqc_oqs::encode(oqs_context* context, const EVP_PKEY* pkey, binary_t& k
     __finally2 {}
     return ret;
 #else
-    return not_supported;
+    return errorcode_t::not_supported;
 #endif
 }
 
@@ -205,7 +205,7 @@ return_t pqc_oqs::decode(oqs_context* context, EVP_PKEY** pkey, const binary_t& 
     __finally2 {}
     return ret;
 #else
-    return not_supported;
+    return errorcode_t::not_supported;
 #endif
 }
 
@@ -224,7 +224,7 @@ return_t pqc_oqs::encapsule(oqs_context* context, const EVP_PKEY* pkey, binary_t
     __finally2 {}
     return ret;
 #else
-    return not_supported;
+    return errorcode_t::not_supported;
 #endif
 }
 
@@ -243,7 +243,7 @@ return_t pqc_oqs::decapsule(oqs_context* context, const EVP_PKEY* pkey, const bi
     __finally2 {}
     return ret;
 #else
-    return not_supported;
+    return errorcode_t::not_supported;
 #endif
 }
 
@@ -262,7 +262,7 @@ return_t pqc_oqs::sign(oqs_context* context, EVP_PKEY* pkey, const byte_t* strea
     __finally2 {}
     return ret;
 #else
-    return not_supported;
+    return errorcode_t::not_supported;
 #endif
 }
 
@@ -281,7 +281,7 @@ return_t pqc_oqs::verify(oqs_context* context, EVP_PKEY* pkey, const byte_t* str
     __finally2 {}
     return ret;
 #else
-    return not_supported;
+    return errorcode_t::not_supported;
 #endif
 }
 

@@ -24,7 +24,7 @@ namespace net {
 
 http3_frame_headers::http3_frame_headers(tls_session* session) : http3_frame(h3_frame_headers), _session(session) {
     if (nullptr == session) {
-        throw exception(no_session);
+        throw exception(errorcode_t::no_session);
     }
 }
 
@@ -45,8 +45,8 @@ return_t http3_frame_headers::do_read_payload(const byte_t* stream, size_t size,
         std::list<http_compression_decode_t> kv;
         ret = encoder.decode(&dyntable, stream, size, pos, kv, qpack_quic_stream_header);
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_http3, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_http3, [&](basic_stream& dbs) -> void {
                 uint32 mask = qpack_decode_index | qpack_decode_nameref | qpack_decode_namevalue;
                 for (auto entry : kv) {
                     if (mask & entry.flags) {

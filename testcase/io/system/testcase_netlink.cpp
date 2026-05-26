@@ -153,6 +153,6 @@ void testcase_netlink() {
     test_netlink();
 #endif
 #else
-    _test_case.test(not_supported, __FUNCTION__, "linux only");
+    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "linux only");
 #endif
 }

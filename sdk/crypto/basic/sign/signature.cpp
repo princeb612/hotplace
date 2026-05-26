@@ -17,6 +17,7 @@
  */
 
 #include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_sign.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
@@ -176,38 +177,25 @@ return_t rs2sig(const binary_t& r, const binary_t& s, uint16 unitsize, binary_t&
 }
 
 return_t der2sig(const binary_t& asn1der, uint16 unitsize, binary_t& signature) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        binary_t bin_r;
-        binary_t bin_s;
-        ret = der2rs(asn1der, unitsize, bin_r, bin_s);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
+    binary_t bin_r;
+    binary_t bin_s;
 
-        ret = rs2sig(bin_r, bin_s, unitsize, signature);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-    }
-    __finally2 {}
-    return ret;
+    function_pipeline<return_t> pipeline;
+    pipeline  //
+        .run_pipe([&]() -> return_t { return der2rs(asn1der, unitsize, bin_r, bin_s); })
+        .run_pipe([&]() -> return_t { return rs2sig(bin_r, bin_s, unitsize, signature); });
+    return pipeline.result();
 }
 
 return_t sig2der(const binary_t& signature, binary_t& asn1der) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        binary_t bin_r;
-        binary_t bin_s;
+    binary_t bin_r;
+    binary_t bin_s;
 
-        ret = sig2rs(signature, bin_r, bin_s);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        ret = rs2der(bin_r, bin_s, asn1der);
-    }
-    __finally2 {}
-    return ret;
+    function_pipeline<return_t> pipeline;
+    pipeline  //
+        .run_pipe([&]() -> return_t { return sig2rs(signature, bin_r, bin_s); })
+        .run_pipe([&]() -> return_t { return rs2der(bin_r, bin_s, asn1der); });
+    return pipeline.result();
 }
 
 }  // namespace crypto

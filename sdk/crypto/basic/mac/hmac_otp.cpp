@@ -32,8 +32,8 @@ hmac_otp::hmac_otp() {}
 
 hmac_otp::~hmac_otp() {}
 
-uint32 hmac_otp::open(otp_context_t** handle, unsigned int digit_length, hash_algorithm_t algorithm, const byte_t* key_data, size_t key_size) {
-    uint32 ret = errorcode_t::success;
+return_t hmac_otp::open(otp_context_t** handle, unsigned int digit_length, hash_algorithm_t algorithm, const byte_t* key_data, size_t key_size) {
+    return_t ret = errorcode_t::success;
     openssl_hash hash;
     hash_context_t* hash_handle = nullptr;
 
@@ -76,8 +76,8 @@ uint32 hmac_otp::open(otp_context_t** handle, unsigned int digit_length, hash_al
     return ret;
 }
 
-uint32 hmac_otp::close(otp_context_t* handle) {
-    uint32 ret = errorcode_t::success;
+return_t hmac_otp::close(otp_context_t* handle) {
+    return_t ret = errorcode_t::success;
     hotp_context_t* context = static_cast<hotp_context_t*>(handle);
     openssl_hash hash;
 
@@ -100,8 +100,8 @@ uint32 hmac_otp::close(otp_context_t* handle) {
     return ret;
 }
 
-uint32 hmac_otp::set(otp_context_t* handle, uint32 count) {
-    uint32 ret = errorcode_t::success;
+return_t hmac_otp::set(otp_context_t* handle, uint32 count) {
+    return_t ret = errorcode_t::success;
     hotp_context_t* context = static_cast<hotp_context_t*>(handle);
 
     __try2 {
@@ -120,8 +120,8 @@ uint32 hmac_otp::set(otp_context_t* handle, uint32 count) {
     return ret;
 }
 
-uint32 hmac_otp::get(otp_context_t* handle, uint32& code) {
-    uint32 ret = errorcode_t::success;
+return_t hmac_otp::get(otp_context_t* handle, uint32& code) {
+    return_t ret = errorcode_t::success;
     hotp_context_t* context = static_cast<hotp_context_t*>(handle);
 
     __try2 {
@@ -142,7 +142,7 @@ uint32 hmac_otp::get(otp_context_t* handle, uint32& code) {
     return ret;
 }
 
-uint32 hmac_otp::get(otp_context_t* handle, uint32 counter, uint32& code) {
+return_t hmac_otp::get(otp_context_t* handle, uint32 counter, uint32& code) {
     uint64 c = hton64(counter);
     binary_t input;
 
@@ -151,8 +151,8 @@ uint32 hmac_otp::get(otp_context_t* handle, uint32 counter, uint32& code) {
     return get(handle, input, code);
 }
 
-uint32 hmac_otp::get(otp_context_t* handle, binary_t counter, uint32& code) {
-    uint32 ret = errorcode_t::success;
+return_t hmac_otp::get(otp_context_t* handle, binary_t counter, uint32& code) {
+    return_t ret = errorcode_t::success;
     hotp_context_t* context = static_cast<hotp_context_t*>(handle);
     openssl_hash hash;
     byte_t* output_allocated = nullptr;
@@ -200,8 +200,8 @@ uint32 hmac_otp::get(otp_context_t* handle, binary_t counter, uint32& code) {
     return ret;
 }
 
-uint32 hmac_otp::verify(otp_context_t* handle, uint32 counter, uint32 code) {
-    uint32 ret = errorcode_t::success;
+return_t hmac_otp::verify(otp_context_t* handle, uint32 counter, uint32 code) {
+    return_t ret = errorcode_t::success;
     hotp_context_t* context = static_cast<hotp_context_t*>(handle);
 
     __try2 {

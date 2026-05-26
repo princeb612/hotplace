@@ -33,12 +33,12 @@ struct t_my_narrow_cast_t {
 
         if (static_cast<SOURCE>(converted) != value) {
             _logger->writeln("case.1");
-            throw exception(miscast_narrow);
+            throw exception(errorcode_t::miscast_narrow);
         }
         if (typename custom::is_signed<SOURCE>::type() != typename custom::is_signed<TYPE>::type()) {
             if ((value < 0) != (converted < 0)) {
                 _logger->writeln("case.2");
-                throw exception(miscast_narrow);
+                throw exception(errorcode_t::miscast_narrow);
             }
         }
         return static_cast<TYPE>(value);

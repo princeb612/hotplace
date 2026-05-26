@@ -127,7 +127,7 @@ return_t is_private_key(const EVP_PKEY* pkey, bool& result) {
                 result = keychain.pkey_is_private(nullptr, pkey);
             } break;
             default: {
-                ret = not_supported;
+                ret = errorcode_t::not_supported;
             } break;
         }
     }

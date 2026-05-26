@@ -32,9 +32,17 @@
     * CBOR
 
 * details
-  * Revision 1011
+  * Revision 1013
+    * [tested] ubuntu 20, MSVC
+  * Revision 1012
+    * refactoring return_t, huffman_coding
+    * [tested] MINGW64
+  * Revision 1010
+    * gcc 4.8.5 error (noexcept = default;)
   * Revision 1006
     * refactoring variant, basic_stream, ansi_string, wide_string
+  * Revision 1004
+    * refactoring base16, base64
   * Revision 999
     * SLHDSA
   * Revision 998

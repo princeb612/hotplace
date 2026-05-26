@@ -142,7 +142,7 @@ class crypto_keychain {
      * @param EVP_PKEY** pkey [out]
      * @param const char* name [in]
      * @return error code (see error.hpp)
-     *         not_supported - openssl 3.5 required
+     *         errorcode_t::not_supported - openssl 3.5 required
      */
     return_t pkey_keygen_byname(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const char* name);
     /**
@@ -163,7 +163,7 @@ class crypto_keychain {
      *          key_encoding_pub_raw
      * @param const char* passphrase [inopt]
      * @return error code (see error.hpp)
-     *         not_supported - openssl 3.5 required
+     *         errorcode_t::not_supported - openssl 3.5 required
      */
     return_t pkey_encode(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
     return_t pkey_encode_format(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
@@ -183,7 +183,7 @@ class crypto_keychain {
      *          key_encoding_pub_der
      * @param const char* passphrase [inopt]
      * @return error code (see error.hpp)
-     *         not_supported - openssl 3.5 required
+     *         errorcode_t::not_supported - openssl 3.5 required
      */
     return_t pkey_decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
     return_t pkey_decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding, const char* passphrase = nullptr);
@@ -214,7 +214,7 @@ class crypto_keychain {
      * @param OSSL_LIB_CTX* libctx [in]
      * @param EVP_PKEY* pkey [in]
      * @return error code (see error.hpp)
-     *         not_supported - openssl 3.5 required
+     *         errorcode_t::not_supported - openssl 3.5 required
      */
     bool pkey_is_private(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey);
 

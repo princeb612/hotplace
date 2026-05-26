@@ -33,7 +33,7 @@ class tls_extensions {
      *  case 3
      *          handshake->get_extensions().add(tls_ext_ec_point_formats, dir, handshake, [](tls_extension* extension) -> return_t {
      *              (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
-     *              return success;
+     *              return errorcode_t::success;
      *          });
      */
     return_t add(tls_extension* extension, bool upref = false);

@@ -86,7 +86,7 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
         if (session_status_prerequisite != (session_status_prerequisite & session_status)) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
             session->reset_session_status();
-            ret = errorcode_t::error_handshake;
+            ret = errorcode_t::handshake_failure;
             __leave2_trace(ret);
         }
     }
@@ -187,16 +187,16 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
             if (maced.empty() || (verify_data != maced)) {
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                 session->reset_session_status();
-                ret = errorcode_t::error_verify;
+                ret = errorcode_t::verification_failure;
             }
 
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+            if (istraceable(trace_category_t::trace_category_net)) {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                     auto& secrets = protection.get_secrets();
                     dbs.autoindent(1);
                     dbs.println("> %s " ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", constexpr_verify_data, (errorcode_t::success == ret) ? "true" : "false");
-                    if (check_trace_level(loglevel_debug)) {
+                    if (check_trace_level(loglevel_t::loglevel_debug)) {
                         dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
                     }
                     const binary_t ht_secret = secrets.get(typeof_secret);
@@ -256,11 +256,11 @@ return_t tls_handshake_finished::do_write_body(tls_direction_t dir, binary_t& bi
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                 auto& secrets = protection.get_secrets();
                 dbs.println("> %s", constexpr_verify_data);
-                if (check_trace_level(loglevel_debug)) {
+                if (check_trace_level(loglevel_t::loglevel_debug)) {
                     dump_memory(verify_data, &dbs, 16, 3, 0x00, dump_notrunc);
                 }
                 const binary_t ht_secret = secrets.get(typeof_secret);

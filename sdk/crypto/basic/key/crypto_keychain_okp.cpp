@@ -113,7 +113,7 @@ return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const byte_
         } else if (x && pubsize) {
             pkey = std::move(EVP_PKEY_ptr(EVP_PKEY_new_raw_public_key(nid, nullptr, x, pubsize)));
         } else {
-            ret = invalid_parameter;
+            ret = errorcode_t::invalid_parameter;
             __leave2;
         }
         if (nullptr == pkey.get()) {

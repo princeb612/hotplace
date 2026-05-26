@@ -233,7 +233,7 @@ int odbc_query::release() { return _shared.delref(); }
 return_t odbc_query::fetch(odbc_record* odbc_record_ptr) {
     return_t ret = errorcode_t::success;
     odbc_field* odbc_field_ptr = nullptr;
-    SQLRETURN ret_sql = SQL_SUCCESS;
+    return_t ret_sql = SQL_SUCCESS;
 
     basic_stream bio;
 
@@ -260,7 +260,7 @@ return_t odbc_query::fetch(odbc_record* odbc_record_ptr) {
         }
 #endif
         if (!SQL_SUCCEEDED(ret_sql)) {
-            ret = errorcode_t::error_fetch;
+            ret = errorcode_t::fetch_failure;
             __leave2;
         }
 
@@ -374,7 +374,7 @@ return_t odbc_query::fetch(odbc_record* odbc_record_ptr) {
                         nDataLen = 0;
                     }
 
-                    if (nDataLen > sizeof(DataBuf)) {
+                    if ((size_t)nDataLen > sizeof(DataBuf)) {
                         size_t size = sizeof DataBuf;
                         switch (fieldType) {
                             case SQL_C_CHAR:

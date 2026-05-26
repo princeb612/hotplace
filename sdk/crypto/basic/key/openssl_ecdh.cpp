@@ -58,7 +58,7 @@ return_t dh_key_agreement(const EVP_PKEY* pkey, const EVP_PKEY* pkey_pub, binary
         .run_pipe([&]() -> int {
             bool is_private = false;
             auto rc = is_private_key(pkey, is_private);
-            return (success == rc || is_private) ? 1 : 0;
+            return (errorcode_t::success == rc || is_private) ? 1 : 0;
         })
         .run_pipe([&]() -> int {
             pkey_context = std::move(EVP_PKEY_CTX_ptr(EVP_PKEY_CTX_new((EVP_PKEY*)pkey, nullptr)));

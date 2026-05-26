@@ -205,7 +205,7 @@ return_t openssl_pqc::sign(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t* s
             EVP_DigestSignFinal(md_context.get(), signature.data(), &dgstsize);
             signature.resize(dgstsize);
         });
-    return pipeline.failed() ? error_verify : success;
+    return pipeline.failed() ? errorcode_t::verification_failure : errorcode_t::success;
 #else
     return errorcode_t::not_supported;
 #endif
@@ -226,7 +226,7 @@ return_t openssl_pqc::verify(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t*
         .run_pipe([&]() -> int { return EVP_DigestVerifyInit_ex(md_context.get(), nullptr, nullptr, libctx, nullptr, pkey, nullptr); })
         .run_pipe([&]() -> int { return EVP_DigestVerifyUpdate(md_context.get(), stream, size); })
         .run_pipe([&]() -> int { return EVP_DigestVerifyFinal(md_context.get(), signature.data(), signature.size()); });
-    return pipeline.failed() ? error_verify : success;
+    return pipeline.failed() ? errorcode_t::verification_failure : errorcode_t::success;
 #else
     return errorcode_t::not_supported;
 #endif

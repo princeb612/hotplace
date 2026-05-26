@@ -68,7 +68,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                 if (session_status_server_hello & session_status) {
                     session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
                     session->reset_session_status();
-                    ret = errorcode_t::error_handshake;
+                    ret = errorcode_t::handshake_failure;
                     __leave2_trace(ret);
                 }
             } else if ((session_status_server_finished | session_status_client_finished) & session_status) {
@@ -77,7 +77,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                 // not HRR
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
                 session->reset_session_status();
-                ret = errorcode_t::error_handshake;
+                ret = errorcode_t::handshake_failure;
                 __leave2_trace(ret);
             }
         }
@@ -122,7 +122,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                 {
                     session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_no_renegotiation);
                     session->reset_session_status();
-                    ret = errorcode_t::error_negotiate;
+                    ret = errorcode_t::negotiation_failure;
                     __leave2;
                 }
             }
@@ -172,7 +172,7 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
                 // client_hello (cookie)
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                 session->reset_session_status();
-                ret = errorcode_t::error_handshake;
+                ret = errorcode_t::handshake_failure;
                 __leave2_trace(ret);
             }
         }
@@ -183,7 +183,7 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
             if (nullptr == ext_psk) {
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
                 session->reset_session_status();
-                ret = errorcode_t::error_handshake;
+                ret = errorcode_t::handshake_failure;
                 __leave2_trace(ret);
             }
         }
@@ -351,8 +351,8 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                 uint16 i = 0;
 
                 dbs.autoindent(1);
@@ -385,7 +385,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
         if (0 == extension_len) {
             session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
             session->reset_session_status();
-            ret = errorcode_t::error_handshake;
+            ret = errorcode_t::handshake_failure;
             __leave2_trace(ret);
         }
 
@@ -400,7 +400,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
             if (nullptr == ext_renegotiationinfo) {
                 session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
                 session->reset_session_status();
-                ret = errorcode_t::error_handshake;
+                ret = errorcode_t::handshake_failure;
                 __leave2_trace(ret);
             }
         }

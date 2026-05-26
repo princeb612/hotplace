@@ -151,8 +151,8 @@ return_t qpack_encoder::decode(http_dynamic_table* dyntable, const byte_t* sourc
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_qpack, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_qpack, [&](basic_stream& dbs) -> void {
                 dbs.printf("   ");
                 if (qpack_decode_capacity & item.flags) {
                     dbs.println("> capacity %zi", item.capacity);
@@ -585,8 +585,8 @@ return_t qpack_encoder::unpack(http_dynamic_table* dyntable, const byte_t* sourc
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_net)) {
-            trace_debug_event(trace_category_net, trace_event_qpack,
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_qpack,
                               [&](basic_stream& dbs) -> void { dbs.println("   > field section prefix RIC=%zi Base=%zi (IC=%zi)", item.ric, item.base, ic); });
         }
 #endif

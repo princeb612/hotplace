@@ -65,7 +65,7 @@ return_t escape_url(const char* url, stream_t* s, uint32 flags) {
             if (charmap.end() == iter) {
                 // 2.4.1. Escaped Encoding
                 s->printf("%%");
-                base16_encode((byte_t*)&c, 1, s, encoding_flag_t::base16_notrunc | encoding_flag_t::base16_capital);
+                base16_encode((byte_t*)&c, 1, s, encoding_flag_t::encoding_notrunc | encoding_flag_t::encoding_base16_capital);
             } else {
                 s->printf("%c", c);
             }
@@ -91,7 +91,7 @@ return_t unescape_url(const char* url, stream_t* s) {
             char c = url[i];
             if ('%' == c) {
                 if (size >= i + 2) {
-                    base16_decode(url + (i + 1), 2, s, encoding_flag_t::base16_notrunc);
+                    base16_decode(url + (i + 1), 2, s, encoding_flag_t::encoding_notrunc);
                     i += 2;
                 }
             } else {

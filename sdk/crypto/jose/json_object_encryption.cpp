@@ -119,7 +119,7 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, cons
                 check = doencrypt(handle, enc, alg, input, encrypted);
             }
 
-            switch (check) {
+            switch ((errorcode_t)check) {
                 case errorcode_t::success:
                 case errorcode_t::not_supported:
                     break;
@@ -205,7 +205,7 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, const std::stri
             if (1 == results.size() && true == results.front()) {
                 //
             } else {
-                ret = errorcode_t::error_cipher;
+                ret = errorcode_t::cipher_failure;
             }
         }
     }

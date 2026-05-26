@@ -29,14 +29,14 @@ openssl_tls_context::openssl_tls_context(uint32 flag, const char* cert_file, con
 
 openssl_tls_context::openssl_tls_context(const openssl_tls_context& other) : _ctx(other._ctx) {
     if (nullptr == _ctx) {
-        throw exception(not_specified);
+        throw exception(errorcode_t::not_specified);
     }
     SSL_CTX_up_ref(_ctx);
 }
 
 openssl_tls_context::openssl_tls_context(openssl_tls_context&& other) : _ctx(std::move(other._ctx)) {
     if (nullptr == _ctx) {
-        throw exception(not_specified);
+        throw exception(errorcode_t::not_specified);
     }
 }
 
@@ -45,13 +45,13 @@ openssl_tls_context::openssl_tls_context(openssl_tls* tls) {
         _ctx = tls->get();
         SSL_CTX_up_ref(_ctx);
     } else {
-        throw exception(not_specified);
+        throw exception(errorcode_t::not_specified);
     }
 }
 
 openssl_tls_context::openssl_tls_context(SSL_CTX* ctx) : _ctx(ctx) {
     if (nullptr == _ctx) {
-        throw exception(not_specified);
+        throw exception(errorcode_t::not_specified);
     }
     SSL_CTX_up_ref(_ctx);
 }

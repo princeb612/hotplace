@@ -181,8 +181,9 @@ return_t http2_serverpush::do_push_promise(const std::string& promise, uint32 st
             frame.set_fragment(fragment);
 
 #if defined DEBUG
-            if (istraceable(trace_category_net)) {
-                trace_debug_event(trace_category_net, trace_event_http2_push_promise, [&](basic_stream& dbs) -> void { frame.dump(&dbs); });
+            if (istraceable(trace_category_t::trace_category_net)) {
+                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_http2_push_promise,
+                                  [&](basic_stream& dbs) -> void { frame.dump(&dbs); });
             }
 #endif
         }

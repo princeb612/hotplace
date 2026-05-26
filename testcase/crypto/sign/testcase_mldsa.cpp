@@ -39,7 +39,7 @@ void test_mldsa() {
     lambda("NID_ML_DSA_65");
     lambda("NID_ML_DSA_87");
 #else
-    _test_case.test(not_supported, __FUNCTION__, "not supported");
+    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "not supported");
 #endif
 }
 

@@ -55,7 +55,7 @@ return_t crypto_keychain::load(crypto_key* cryptokey, keyflag_t mode, const char
     return ret;
 }
 
-return_t crypto_keychain::load_ownspec(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc, int flag) { return success; }
+return_t crypto_keychain::load_ownspec(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc, int flag) { return errorcode_t::success; }
 
 return_t crypto_keychain::load_pem(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc, int flags) {
     return_t ret = errorcode_t::success;
@@ -180,8 +180,8 @@ return_t crypto_keychain::load_der(crypto_key* cryptokey, const byte_t* buffer, 
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_internal, loglevel_debug)) {
-            trace_debug_event(trace_category_internal, trace_event_internal, [&](basic_stream& dbs) -> void {
+        if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_debug)) {
+            trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
                 BIO_ptr dbio(BIO_new(BIO_s_mem()));
                 X509_print(dbio.get(), x509.get());  // x509 -> dbio
                 read_bio(&dbs, dbio.get());          // dbio -> dbs
@@ -373,7 +373,7 @@ return_t crypto_keychain::add(crypto_key* cryptokey, uint32 nid, const keydesc& 
                 ret = add_ossl3(cryptokey, nid, desc);
             } break;
             default: {
-                ret = not_supported;
+                ret = errorcode_t::not_supported;
             } break;
         }
     }
@@ -382,7 +382,7 @@ return_t crypto_keychain::add(crypto_key* cryptokey, uint32 nid, const keydesc& 
 }
 
 return_t crypto_keychain::add_group(crypto_key* cryptokey, const char* kid, uint16 group, uint8 count, ...) {
-    return_t ret = success;
+    return_t ret = errorcode_t::success;
     va_list ap;
     va_start(ap, count);
     for (uint8 i = 0; i < count; ++i) {
@@ -390,7 +390,7 @@ return_t crypto_keychain::add_group(crypto_key* cryptokey, const char* kid, uint
         keydesc desc(kid);
         desc.set_group(group);
         ret = add(cryptokey, nid, desc);
-        if (success != ret) {
+        if (errorcode_t::success != ret) {
             break;
         }
     }

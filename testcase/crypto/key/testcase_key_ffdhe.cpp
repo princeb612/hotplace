@@ -51,7 +51,7 @@ void test_ffdhe_key() {
         _test_case.assert(bin_pub == base16_decode(pub), __FUNCTION__, "ffdhe2048 public");
         _test_case.assert(bin_priv == base16_decode(priv), __FUNCTION__, "ffdhe2048 private");
     } else {
-        _test_case.test(not_found, __FUNCTION__, "ffdhe2048");
+        _test_case.test(errorcode_t::not_found, __FUNCTION__, "ffdhe2048");
     }
 }
 
