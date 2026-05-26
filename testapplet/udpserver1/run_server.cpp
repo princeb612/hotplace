@@ -150,7 +150,7 @@ return_t udp_server(void* param) {
         msleep(1000);
 
 #if defined __linux__
-        int chk = access(FILENAME_RUN, F_OK);
+        return_t chk = access(FILENAME_RUN, F_OK);
         if (errorcode_t::success != chk) {
             break;
         }

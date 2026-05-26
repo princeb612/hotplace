@@ -32,7 +32,7 @@
     * CBOR
 
 * details
-  * Revision 1013
+  * Revision 1014
     * [tested] ubuntu 20, MSVC
   * Revision 1012
     * refactoring return_t, huffman_coding

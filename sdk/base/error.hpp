@@ -335,10 +335,14 @@ struct return_t {
     return_t() : code(static_cast<uint32>(errorcode_t::success)) {}
     return_t(uint32 value) : code(value) {}
     return_t(int value) : code(static_cast<uint32>(value)) {}
+    return_t(errorcode_t value) : code(static_cast<uint32>(value)) {}
 #if defined _WIN32 || defined WIN32
+    // MINGW64, MSVC
+    return_t(HRESULT value) : code(static_cast<uint32>(value)) {}
+#endif
+#if defined _MSC_VER
     return_t(unsigned long value) : code(static_cast<uint32>(value)) {}
 #endif
-    return_t(errorcode_t value) : code(static_cast<uint32>(value)) {}
 
     std::string error_code() const;
     std::string error_message() const;
@@ -355,16 +359,22 @@ struct return_t {
         this->code = static_cast<uint32>(value);
         return *this;
     }
-#if defined _WIN32 || defined _WIN64 || defined WIN32
+    return_t& operator=(errorcode_t value) noexcept {
+        this->code = static_cast<uint32>(value);
+        return *this;
+    }
+#if defined _WIN32 || defined WIN32
+    return_t& operator=(HRESULT value) noexcept {
+        this->code = static_cast<uint32>(value);
+        return *this;
+    }
+#endif
+#if defined _MSC_VER
     return_t& operator=(unsigned long value) noexcept {
         this->code = static_cast<uint32>(value);
         return *this;
     }
 #endif
-    return_t& operator=(errorcode_t value) noexcept {
-        this->code = static_cast<uint32>(value);
-        return *this;
-    }
 
     constexpr bool operator<(const return_t& other) const noexcept { return this->code < other.code; }
     constexpr bool operator<=(const return_t& other) const noexcept { return this->code <= other.code; }
