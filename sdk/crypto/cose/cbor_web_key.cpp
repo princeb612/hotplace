@@ -165,7 +165,7 @@ return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int f
                     } else if (cose_key_lable_t::cose_lable_alg == label) {  // 3
                         keyobj.alg = rhs->data().to_int();
                     } else if (-1 == label) {  // ec2 curve, symmetric k
-                        if (TYPE_BINARY == vt_rhs.type) {
+                        if (vartype_t::TYPE_BINARY == vt_rhs.type) {
                             // symm
                             binary_t bin;
                             rhs->data().to_binary(bin);

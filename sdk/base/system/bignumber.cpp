@@ -140,70 +140,70 @@ bignumber bignumber::operator--(int) {
 
 bignumber& bignumber::set(const variant_t& vt) {
     switch (vt.type) {
-        case TYPE_BOOL:
+        case vartype_t::TYPE_BOOL:
             set(vt.data.b ? 1 : 0);
             break;
-        case TYPE_INT8:
+        case vartype_t::TYPE_INT8:
             set(vt.data.i8);
             break;
-        case TYPE_UINT8:
+        case vartype_t::TYPE_UINT8:
             set(vt.data.ui8);
             break;
-        case TYPE_INT16:
+        case vartype_t::TYPE_INT16:
             set(vt.data.i16);
             break;
-        case TYPE_UINT16:
+        case vartype_t::TYPE_UINT16:
             set(vt.data.ui16);
             break;
-        case TYPE_INT24:
+        case vartype_t::TYPE_INT24:
             set(vt.data.i32);
             break;
-        case TYPE_UINT24:
+        case vartype_t::TYPE_UINT24:
             set(vt.data.ui32);
             break;
-        case TYPE_INT32:
+        case vartype_t::TYPE_INT32:
             set(vt.data.i32);
             break;
-        case TYPE_UINT32:
+        case vartype_t::TYPE_UINT32:
             set(vt.data.ui32);
             break;
-        case TYPE_INT48:
+        case vartype_t::TYPE_INT48:
             set(vt.data.i64);
             break;
-        case TYPE_UINT48:
+        case vartype_t::TYPE_UINT48:
             set(vt.data.ui64);
             break;
-        case TYPE_INT64:
+        case vartype_t::TYPE_INT64:
             set(vt.data.i64);
             break;
-        case TYPE_UINT64:
+        case vartype_t::TYPE_UINT64:
             set(vt.data.ui64);
             break;
 #if defined __SIZEOF_INT128__
-        case TYPE_INT128:
+        case vartype_t::TYPE_INT128:
             set(vt.data.i128);
             break;
-        case TYPE_UINT128:
+        case vartype_t::TYPE_UINT128:
             set(vt.data.ui128);
             break;
 #endif
-        case TYPE_FLOAT: {
+        case vartype_t::TYPE_FLOAT: {
             uint32 data = t_narrow_cast(std::round(vt.data.f));
             set(data);
         } break;
-        case TYPE_DOUBLE: {
+        case vartype_t::TYPE_DOUBLE: {
             uint64 data = t_narrow_cast(std::round(vt.data.d));
             set(data);
         } break;
-        case TYPE_STRING:
-        case TYPE_NSTRING:
+        case vartype_t::TYPE_STRING:
+        case vartype_t::TYPE_NSTRING:
             if (vt.size) {
                 *this = std::string(vt.data.str, vt.size);
             } else {
                 *this = vt.data.str;
             }
             break;
-        case TYPE_BINARY:
+        case vartype_t::TYPE_BINARY:
             set(vt.data.bstr, vt.size);
             break;
         default:

@@ -183,8 +183,7 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
         binary_t bin;
         uint16 epoch = 0;
         uint64 seq = 0;
-        uint32 retry = 10;  // max elements
-        while (retry--) {
+        while (true) {
             auto test = arrange.consume((sockaddr*)&addr, sizeof(addr), epoch, seq, bin);
             if (errorcode_t::empty == test) {
                 break;

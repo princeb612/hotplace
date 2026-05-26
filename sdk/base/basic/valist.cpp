@@ -289,44 +289,44 @@ void valist::build() {
             unsigned padded_size = 0;
 
             switch (vt.type) {
-                case TYPE_CHAR:
-                case TYPE_BYTE:
-                case TYPE_INT8:
-                case TYPE_UINT8:
+                case vartype_t::TYPE_CHAR:
+                case vartype_t::TYPE_BYTE:
+                case vartype_t::TYPE_INT8:
+                case vartype_t::TYPE_UINT8:
                     native_data_size = sizeof(char);
                     break;
-                case TYPE_INT16:
-                case TYPE_UINT16:
+                case vartype_t::TYPE_INT16:
+                case vartype_t::TYPE_UINT16:
                     native_data_size = sizeof(int16);
                     break;
-                case TYPE_INT32:
-                case TYPE_UINT32:
+                case vartype_t::TYPE_INT32:
+                case vartype_t::TYPE_UINT32:
                     native_data_size = sizeof(int32);
                     break;
-                case TYPE_INT64:
-                case TYPE_UINT64:
+                case vartype_t::TYPE_INT64:
+                case vartype_t::TYPE_UINT64:
                     native_data_size = sizeof(int64);
                     break;
-                case TYPE_FLOAT:
-                case TYPE_DOUBLE:
+                case vartype_t::TYPE_FLOAT:
+                case vartype_t::TYPE_DOUBLE:
                     native_data_size = sizeof(double);
                     break;
-                case TYPE_POINTER:
+                case vartype_t::TYPE_POINTER:
                     native_data_size = sizeof(void*);
                     break;
-                case TYPE_STRING:
+                case vartype_t::TYPE_STRING:
                     native_data_size = sizeof(char*);
                     break;
-                case TYPE_JBOOLEAN:
+                case vartype_t::TYPE_JBOOLEAN:
                     native_data_size = sizeof(byte_t);
                     break;
-                case TYPE_JBYTE:
+                case vartype_t::TYPE_JBYTE:
                     native_data_size = sizeof(char);
                     break;
-                case TYPE_JCHAR:
+                case vartype_t::TYPE_JCHAR:
                     native_data_size = sizeof(uint16);
                     break;
-                case TYPE_JSTRING:
+                case vartype_t::TYPE_JSTRING:
                     native_data_size = sizeof(void*);
                     break;
                 default:
@@ -363,54 +363,54 @@ void valist::build() {
             void* vdata = nullptr;
 
             switch (vt.type) {
-                case TYPE_CHAR:
-                case TYPE_BYTE:
-                case TYPE_INT8:
-                case TYPE_UINT8:
+                case vartype_t::TYPE_CHAR:
+                case vartype_t::TYPE_BYTE:
+                case vartype_t::TYPE_INT8:
+                case vartype_t::TYPE_UINT8:
                     native_data = &(vt.data.c);
                     native_data_size = sizeof(char);
                     break;
-                case TYPE_INT16:
-                case TYPE_UINT16:
+                case vartype_t::TYPE_INT16:
+                case vartype_t::TYPE_UINT16:
                     native_data = &(vt.data.i16);
                     native_data_size = sizeof(int16);
                     break;
-                case TYPE_INT32:
-                case TYPE_UINT32:
+                case vartype_t::TYPE_INT32:
+                case vartype_t::TYPE_UINT32:
                     native_data = &(vt.data.i32);
                     native_data_size = sizeof(int32);
                     break;
-                case TYPE_INT64:
-                case TYPE_UINT64:
+                case vartype_t::TYPE_INT64:
+                case vartype_t::TYPE_UINT64:
                     native_data = &(vt.data.i64);
                     native_data_size = sizeof(int64);
                     break;
-                case TYPE_FLOAT:
-                case TYPE_DOUBLE:
+                case vartype_t::TYPE_FLOAT:
+                case vartype_t::TYPE_DOUBLE:
                     native_data = &(vt.data.d);
                     native_data_size = sizeof(double);
                     break;
-                case TYPE_POINTER:
+                case vartype_t::TYPE_POINTER:
                     native_data = &(vt.data.p);
                     native_data_size = sizeof(void*);
                     break;
-                case TYPE_STRING:
+                case vartype_t::TYPE_STRING:
                     native_data = &(vt.data.p);
                     native_data_size = sizeof(char*);
                     break;
-                case TYPE_JBOOLEAN:
+                case vartype_t::TYPE_JBOOLEAN:
                     native_data = &(vt.data.jbool);
                     native_data_size = sizeof(byte_t);
                     break;
-                case TYPE_JBYTE:
+                case vartype_t::TYPE_JBYTE:
                     native_data = &(vt.data.jb);
                     native_data_size = sizeof(char);
                     break;
-                case TYPE_JCHAR:
+                case vartype_t::TYPE_JCHAR:
                     native_data = &(vt.data.jc);
                     native_data_size = sizeof(uint16);
                     break;
-                case TYPE_JSTRING:
+                case vartype_t::TYPE_JSTRING:
                     native_data = &(vt.data.p);
                     native_data_size = sizeof(char*);
                     break;
@@ -449,46 +449,46 @@ void valist::build() {
 
         for (const auto& vt : _args) {
             switch (vt.type) {
-                case TYPE_CHAR:
-                case TYPE_BYTE:
-                case TYPE_INT8:
-                case TYPE_UINT8:
+                case vartype_t::TYPE_CHAR:
+                case vartype_t::TYPE_BYTE:
+                case vartype_t::TYPE_INT8:
+                case vartype_t::TYPE_UINT8:
                     va_assign(ap, va_assign_type_promotion_int(char), vt.data.c);
                     break;
-                case TYPE_INT16:
-                case TYPE_UINT16:
+                case vartype_t::TYPE_INT16:
+                case vartype_t::TYPE_UINT16:
                     va_assign(ap, va_assign_type_promotion_int(int16), vt.data.i16);
                     break;
-                case TYPE_INT32:
-                case TYPE_UINT32:
+                case vartype_t::TYPE_INT32:
+                case vartype_t::TYPE_UINT32:
                     va_assign(ap, int32, vt.data.i32);
                     break;
-                case TYPE_INT64:
-                case TYPE_UINT64:
+                case vartype_t::TYPE_INT64:
+                case vartype_t::TYPE_UINT64:
                     va_assign(ap, int64, vt.data.i64);
                     break;
-                case TYPE_FLOAT:
+                case vartype_t::TYPE_FLOAT:
                     va_assign(ap, va_assign_type_promotion_double(float), vt.data.f);
                     break;
-                case TYPE_DOUBLE:
+                case vartype_t::TYPE_DOUBLE:
                     va_assign(ap, double, vt.data.d);
                     break;
-                case TYPE_POINTER:
+                case vartype_t::TYPE_POINTER:
                     va_assign(ap, void*, vt.data.p);
                     break;
-                case TYPE_STRING:
+                case vartype_t::TYPE_STRING:
                     va_assign(ap, char*, vt.data.str);
                     break;
-                case TYPE_JBOOLEAN:
+                case vartype_t::TYPE_JBOOLEAN:
                     va_assign(ap, va_assign_type_promotion_int(byte_t), vt.data.jbool);
                     break;
-                case TYPE_JBYTE:
+                case vartype_t::TYPE_JBYTE:
                     va_assign(ap, va_assign_type_promotion_int(char), vt.data.jb);
                     break;
-                case TYPE_JCHAR:
+                case vartype_t::TYPE_JCHAR:
                     va_assign(ap, va_assign_type_promotion_int(uint16), vt.data.jc);
                     break;
-                case TYPE_JSTRING:
+                case vartype_t::TYPE_JSTRING:
                     va_assign(ap, void*, vt.data.p);
                     break;
                 default:

@@ -21,10 +21,10 @@ class udp_traffic {
     }
     return_t recvfrom(binary_t& bin) {
         return_t ret = errorcode_t::success;
+        critical_section_guard guard(_lock);
         if (_packets.empty()) {
             ret = errorcode_t::empty;
         } else {
-            critical_section_guard guard(_lock);
             auto iter = _packets.begin();
             bin = std::move(*iter);
             _packets.erase(iter);
@@ -38,12 +38,17 @@ class udp_traffic {
         std::mt19937 g(rd());
         std::shuffle(_packets.begin(), _packets.end(), g);
     }
-    void consume(std::function<void(const binary_t&)> fn) {
-        critical_section_guard guard(_lock);
-        for (auto packet : _packets) {
-            fn(packet);
+    void consume(std::function<void(binary_t&&)> fn) {
+        std::vector<binary_t> packets;
+
+        {
+            critical_section_guard guard(_lock);
+            packets.swap(_packets);
         }
-        _packets.clear();
+
+        for (auto& packet : packets) {
+            fn(std::move(packet));
+        }
     }
 
    private:

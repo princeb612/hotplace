@@ -30,53 +30,53 @@ return_t cbor_encode::encode(binary_t& bin, variant_t vt) {
 
     __try2 {
         switch (vt.type) {
-            case TYPE_BOOL:
+            case vartype_t::TYPE_BOOL:
                 encode(bin, vt.data.b);
                 break;
-            case TYPE_INT8:
+            case vartype_t::TYPE_INT8:
                 encode(bin, vt.data.i8);
                 break;
-            case TYPE_UINT8:
+            case vartype_t::TYPE_UINT8:
                 encode(bin, (vt.flag & vt_flag_negative) ? cbor_major_nint : cbor_major_uint, vt.data.ui8);
                 break;
-            case TYPE_INT16:
+            case vartype_t::TYPE_INT16:
                 encode(bin, vt.data.i16);
                 break;
-            case TYPE_UINT16:
+            case vartype_t::TYPE_UINT16:
                 encode(bin, (vt.flag & vt_flag_negative) ? cbor_major_nint : cbor_major_uint, vt.data.ui16);
                 break;
-            case TYPE_INT32:
+            case vartype_t::TYPE_INT32:
                 encode(bin, vt.data.i32);
                 break;
-            case TYPE_UINT32:
+            case vartype_t::TYPE_UINT32:
                 encode(bin, (vt.flag & vt_flag_negative) ? cbor_major_nint : cbor_major_uint, vt.data.ui32);
                 break;
-            case TYPE_INT64:
+            case vartype_t::TYPE_INT64:
                 encode(bin, vt.data.i64);
                 break;
-            case TYPE_UINT64:
+            case vartype_t::TYPE_UINT64:
                 encode(bin, (vt.flag & vt_flag_negative) ? cbor_major_nint : cbor_major_uint, vt.data.ui64);
                 break;
-            case TYPE_FP16:
+            case vartype_t::TYPE_FP16:
                 encodefp16(bin, vt.data.ui16);
                 break;
-            case TYPE_FLOAT:
+            case vartype_t::TYPE_FLOAT:
                 encode(bin, vt.data.f);
                 break;
-            case TYPE_DOUBLE:
+            case vartype_t::TYPE_DOUBLE:
                 encode(bin, vt.data.d);
                 break;
-            case TYPE_NULL:
-            case TYPE_STRING:
+            case vartype_t::TYPE_NULL:
+            case vartype_t::TYPE_STRING:
                 encode(bin, vt.data.str);
                 break;
-            case TYPE_NSTRING:
+            case vartype_t::TYPE_NSTRING:
                 encode(bin, vt.data.str, vt.size);
                 break;
-            case TYPE_BINARY:
+            case vartype_t::TYPE_BINARY:
                 encode(bin, vt.data.bstr, vt.size);
                 break;
-            case TYPE_BIGNUMBER: {
+            case vartype_t::TYPE_BIGNUMBER: {
                 bignumber bn(vt.data.bstr, vt.size);
                 binary_t bnbin;
                 bn.get(bnbin, true);

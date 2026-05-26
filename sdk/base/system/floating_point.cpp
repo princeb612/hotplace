@@ -16,7 +16,7 @@ namespace hotplace {
 floating_point::floating_point(int64 value) : _type(fp_type_t::decimal_type) { _storage._d = new decimal_float(value, 0); }
 
 floating_point::floating_point(const floating_point& other) : _type(other._type) {
-    if (_type == decimal_type) {
+    if (_type == fp_type_t::decimal_type) {
         _storage._d = new decimal_float(*other._storage._d);
     } else {
         _storage._r = new rational_float(*other._storage._r);
@@ -50,7 +50,7 @@ floating_point::~floating_point() { release(); }
 
 void floating_point::release() {
     if (_storage._d) {
-        if (_type == decimal_type) {
+        if (_type == fp_type_t::decimal_type) {
             delete _storage._d;
         } else {
             delete _storage._r;
@@ -62,7 +62,7 @@ void floating_point::release() {
 floating_point& floating_point::operator=(const floating_point& other) {
     release();
 
-    if (_type == decimal_type) {
+    if (_type == fp_type_t::decimal_type) {
         _storage._d = new decimal_float(*other._storage._d);
     } else {
         _storage._r = new rational_float(*other._storage._r);
@@ -107,7 +107,7 @@ bool floating_point::operator<=(const floating_point& other) { return compare(*t
 fp_type_t floating_point::get_type() { return _type; }
 
 std::string floating_point::str() {
-    if (_type == decimal_type) {
+    if (_type == fp_type_t::decimal_type) {
         return _storage._d->str();
     } else {
         return _storage._r->str();
@@ -115,7 +115,7 @@ std::string floating_point::str() {
 }
 
 std::string floating_point::fstr(size_t precision) const {
-    if (_type == decimal_type) {
+    if (_type == fp_type_t::decimal_type) {
         return _storage._d->fstr(precision);
     } else {
         return _storage._r->fstr(precision);
@@ -123,9 +123,9 @@ std::string floating_point::fstr(size_t precision) const {
 }
 
 int floating_point::compare(const floating_point& lhs, const floating_point& rhs) {
-    if (lhs._type == decimal_type && rhs._type == decimal_type) {
+    if (lhs._type == fp_type_t::decimal_type && rhs._type == fp_type_t::decimal_type) {
         return decimal_float::compare(*lhs._storage._d, *rhs._storage._d);
-    } else if (lhs._type == decimal_type && rhs._type == rational_type) {
+    } else if (lhs._type == fp_type_t::decimal_type && rhs._type == fp_type_t::rational_type) {
         return rational_float::compare(*lhs._storage._r, *rhs._storage._r);
     } else {
         auto a = floating_point::to_rational(lhs);
@@ -136,7 +136,7 @@ int floating_point::compare(const floating_point& lhs, const floating_point& rhs
 
 floating_point floating_point::add(const floating_point& lhs, const floating_point& rhs) {
     floating_point fp;
-    if (lhs._type == decimal_type && rhs._type == decimal_type) {
+    if (lhs._type == fp_type_t::decimal_type && rhs._type == fp_type_t::decimal_type) {
         auto d1 = *lhs._storage._d;
         auto d2 = *rhs._storage._d;
         auto diff = d1._exp - d2._exp;
@@ -174,7 +174,7 @@ floating_point floating_point::add(const floating_point& lhs, const floating_poi
 
 floating_point floating_point::subtract(const floating_point& lhs, const floating_point& rhs) {
     floating_point fp;
-    if (lhs._type == decimal_type && rhs._type == decimal_type) {
+    if (lhs._type == fp_type_t::decimal_type && rhs._type == fp_type_t::decimal_type) {
         auto d1 = *lhs._storage._d;
         auto d2 = *rhs._storage._d;
         auto diff = d1._exp - d2._exp;
@@ -212,7 +212,7 @@ floating_point floating_point::subtract(const floating_point& lhs, const floatin
 
 floating_point floating_point::multiply(const floating_point& lhs, const floating_point& rhs) {
     floating_point fp;
-    if (lhs._type == decimal_type && rhs._type == decimal_type) {
+    if (lhs._type == fp_type_t::decimal_type && rhs._type == fp_type_t::decimal_type) {
         auto a = *lhs._storage._d;
         auto b = *rhs._storage._d;
         auto m = a._mant * b._mant;
@@ -230,10 +230,10 @@ floating_point floating_point::multiply(const floating_point& lhs, const floatin
 
 floating_point floating_point::divide(const floating_point& lhs, const floating_point& rhs) {
     floating_point fp;
-    if ((rhs._type == decimal_type && rhs._storage._d->_mant == 0) || (rhs._type == rational_type && rhs._storage._r->_num == 0)) {
+    if ((rhs._type == fp_type_t::decimal_type && rhs._storage._d->_mant == 0) || (rhs._type == fp_type_t::rational_type && rhs._storage._r->_num == 0)) {
         throw exception(errorcode_t::divide_by_zero);
     }
-    if (lhs._type == decimal_type && rhs._type == decimal_type) {
+    if (lhs._type == fp_type_t::decimal_type && rhs._type == fp_type_t::decimal_type) {
         auto a = *lhs._storage._d;
         auto b = *rhs._storage._d;
         auto ma = a._mant;
@@ -272,7 +272,7 @@ rational_float floating_point::to_rational() { return to_rational(*this); }
 
 rational_float floating_point::to_rational(const floating_point& f) {
     rational_float fp;
-    if (f._type == rational_type) {
+    if (f._type == fp_type_t::rational_type) {
         auto r = *f._storage._r;
         fp = std::move(r);
     } else {

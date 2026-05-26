@@ -409,7 +409,7 @@ class bignumber {
             }
         }
         if (bn < 0) {
-            value = -value;  // value = -value
+            value = static_cast<T>(0 - value);  // value = -value
         }
         return value;
     }

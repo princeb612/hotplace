@@ -29,9 +29,6 @@
 namespace hotplace {
 namespace crypto {
 
-#define TYPE_STATIC_KEY (TYPE_USER)
-#define TYPE_COUNTER_SIG (vartype_t)(TYPE_USER + 1)
-
 cose_data::cose_data() : _layer(nullptr) {}
 
 cose_data::~cose_data() { clear(); }
@@ -110,7 +107,7 @@ cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, const binary
     auto k = custom::make_unique<cose_key>();
 
     k->set(&get_owner()->get_static_key(), curve, x, y);
-    add(key, TYPE_STATIC_KEY, k.get());
+    add(key, vartype_t::TYPE_STATIC_KEY, k.get());
     _keys.push_back(k.get());
 
     k.release();
@@ -123,7 +120,7 @@ cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, const binary
 
     k->set(&get_owner()->get_static_key(), curve, x, y);
     k->set(order);
-    add(key, TYPE_STATIC_KEY, k.get());
+    add(key, vartype_t::TYPE_STATIC_KEY, k.get());
     _keys.push_back(k.get());
 
     k.release();
@@ -135,7 +132,7 @@ cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, bool ysign) 
     auto k = custom::make_unique<cose_key>();
 
     k->set(&get_owner()->get_static_key(), curve, x, ysign);
-    add(key, TYPE_STATIC_KEY, k.get());
+    add(key, vartype_t::TYPE_STATIC_KEY, k.get());
     _keys.push_back(k.get());
 
     k.release();
@@ -148,7 +145,7 @@ cose_data& cose_data::add(int key, uint16 curve, const binary_t& x, bool ysign, 
 
     k->set(&get_owner()->get_static_key(), curve, x, ysign);
     k->set(order);
-    add(key, TYPE_STATIC_KEY, k.get());
+    add(key, vartype_t::TYPE_STATIC_KEY, k.get());
     _keys.push_back(k.get());
 
     k.release();
@@ -177,7 +174,7 @@ cose_data& cose_data::add(cose_recipient* countersign) {
     cose_countersigns* countersigns = get_owner()->get_countersigns1();
     cose_variantmap_t::iterator iter = _data_map.find(cose_key_t::cose_counter_sig);
     if (_data_map.end() == iter) {
-        add(cose_key_t::cose_counter_sig, TYPE_COUNTER_SIG, countersigns);
+        add(cose_key_t::cose_counter_sig, vartype_t::TYPE_COUNTER_SIG, countersigns);
     }
     countersigns->add(countersign);
     return *this;
@@ -374,10 +371,10 @@ return_t cose_data::build_unprotected(cbor_map** object) {
             variant value = map_iter->second;
             const variant_t& vt = value.content();
 
-            if (TYPE_STATIC_KEY == vt.type) {
+            if (vartype_t::TYPE_STATIC_KEY == vt.type) {
                 cose_key* k = (cose_key*)vt.data.p;
                 *(root.get()) << new cbor_pair(key, k->cbor());
-            } else if (TYPE_COUNTER_SIG == vt.type) {
+            } else if (vartype_t::TYPE_COUNTER_SIG == vt.type) {
                 cose_countersigns* signs = get_owner()->get_countersigns1();
                 *(root.get()) << new cbor_pair(cose_key_t::cose_counter_sig, signs->cbor());
             } else {
@@ -414,10 +411,10 @@ return_t cose_data::build_unprotected(cbor_map** object, cose_variantmap_t& unse
             variant value = map_iter->second;
             const variant_t& vt = value.content();
 
-            if (TYPE_STATIC_KEY == vt.type) {
+            if (vartype_t::TYPE_STATIC_KEY == vt.type) {
                 cose_key* k = (cose_key*)vt.data.p;
                 *(root.get()) << new cbor_pair(key, k->cbor());
-            } else if (TYPE_COUNTER_SIG == vt.type) {
+            } else if (vartype_t::TYPE_COUNTER_SIG == vt.type) {
                 cose_recipient* sign = (cose_recipient*)vt.data.p;
                 *(root.get()) << new cbor_pair(cose_key_t::cose_counter_sig, sign->cbor());
             } else {

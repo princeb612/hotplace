@@ -72,7 +72,7 @@ class file_stream : public stream_t {
      * @remarks
      * @sa
      */
-    int get_stream_type();
+    stream_type_t get_stream_type();
 
     /**
      * @brief data
@@ -246,7 +246,7 @@ class file_stream : public stream_t {
 
     void resize(size_t bytes) override;
 
-    int _stream_type;
+    stream_type_t _stream_type;
 #if defined __linux__
     int _file_handle;
 #elif defined _WIN32 || defined _WIN64

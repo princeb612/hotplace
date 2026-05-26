@@ -239,14 +239,14 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
             if (limit >= vsize) {
                 switch (type) {
                     /* int8, uint8 */
-                    case TYPE_INT8:
-                    case TYPE_UINT8: {
+                    case vartype_t::TYPE_INT8:
+                    case vartype_t::TYPE_UINT8: {
                         v.clear().set(*(uint8*)rebase);
                         *size_read = vsize;
                     } break;
                     /* int16, uint16 */
-                    case TYPE_INT16:
-                    case TYPE_UINT16: {
+                    case vartype_t::TYPE_INT16:
+                    case vartype_t::TYPE_UINT16: {
                         uint16 temp = *(uint16*)rebase;
                         if (get_change_endian()) {
                             temp = ntoh16(temp);
@@ -255,16 +255,16 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                         *size_read = vsize;
                     } break;
                     /* TLS handshake length */
-                    case TYPE_INT24:
-                    case TYPE_UINT24: {
+                    case vartype_t::TYPE_INT24:
+                    case vartype_t::TYPE_UINT24: {
                         uint32 temp = 0;
                         b24_i32(rebase, limit, temp);
                         v.clear().set_uint24(temp);
                         *size_read = vsize;
                     } break;
                     /* int32, uint32 */
-                    case TYPE_INT32:
-                    case TYPE_UINT32: {
+                    case vartype_t::TYPE_INT32:
+                    case vartype_t::TYPE_UINT32: {
                         uint32 temp = *(uint32*)rebase;
                         if (get_change_endian()) {
                             temp = ntoh32(temp);
@@ -273,16 +273,16 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                         *size_read = vsize;
                     } break;
                     /* DTLS record sequence */
-                    case TYPE_INT48:
-                    case TYPE_UINT48: {
+                    case vartype_t::TYPE_INT48:
+                    case vartype_t::TYPE_UINT48: {
                         uint64 temp = 0;
                         b48_i64(rebase, limit, temp);
                         v.clear().set_uint48(temp);
                         *size_read = vsize;
                     } break;
                     /* int64, uint64 */
-                    case TYPE_INT64:
-                    case TYPE_UINT64: {
+                    case vartype_t::TYPE_INT64:
+                    case vartype_t::TYPE_UINT64: {
                         uint64 temp = *(uint64*)rebase;
                         if (get_change_endian()) {
                             temp = ntoh64(temp);
@@ -292,8 +292,8 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                     } break;
 #if defined __SIZEOF_INT128__
                     /* int128, uint128 */
-                    case TYPE_INT128:
-                    case TYPE_UINT128: {
+                    case vartype_t::TYPE_INT128:
+                    case vartype_t::TYPE_UINT128: {
                         uint128 temp = *(uint128*)rebase;
                         if (get_change_endian()) {
                             temp = ntoh128(temp);
@@ -322,15 +322,15 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
 
             if (limit >= size) {
                 switch (type) {
-                    case TYPE_STRING:
+                    case vartype_t::TYPE_STRING:
                         v.clear().set_new((char*)rebase, size);
                         *size_read = size;
                         break;
-                    case TYPE_BINARY:
+                    case vartype_t::TYPE_BINARY:
                         v.clear().set_new((byte_t*)rebase, size);
                         *size_read = size;
                         break;
-                    case TYPE_BIGNUMBER:
+                    case vartype_t::TYPE_BIGNUMBER:
                         v.clear().set_bn(rebase, size);
                         *size_read = size;
                         break;

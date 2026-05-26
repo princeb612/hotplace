@@ -71,17 +71,17 @@ return_t http3_frame_settings::do_write(binary_t& bin) {
         payload pl;
 
         switch (value.content().type) {
-            case TYPE_NULL: {
+            case vartype_t::TYPE_NULL: {
                 pl << new payload_member(new quic_encoded(uint64(id)), constexpr_identifier)  //
                    << new payload_member(new quic_encoded(uint64(0)), constexpr_value);
             } break;
-            case TYPE_UINT64: {
+            case vartype_t::TYPE_UINT64: {
                 auto v = value.content().data.ui64;
 
                 pl << new payload_member(new quic_encoded(uint64(id)), constexpr_identifier)  //
                    << new payload_member(new quic_encoded(v), constexpr_value);
             } break;
-            case TYPE_BINARY: {
+            case vartype_t::TYPE_BINARY: {
                 pl << new payload_member(new quic_encoded(uint64(id)), constexpr_identifier)  //
                    << new payload_member(new quic_encoded(value.to_bin()), constexpr_value);
             } break;

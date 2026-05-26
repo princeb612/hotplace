@@ -42,11 +42,11 @@
 
 namespace hotplace {
 
-variant_t::variant_t() : type(TYPE_NULL), size(0), flag(0) { memset(&data, 0, sizeof(data)); }
+variant_t::variant_t() : type(vartype_t::TYPE_NULL), size(0), flag(0) { memset(&data, 0, sizeof(data)); }
 
-variant_t::variant_t(const variant_t& other) : type(TYPE_NULL), size(0), flag(0) { *this = other; }
+variant_t::variant_t(const variant_t& other) : type(vartype_t::TYPE_NULL), size(0), flag(0) { *this = other; }
 
-variant_t::variant_t(variant_t&& other) : type(TYPE_NULL), size(0), flag(0) { *this = std::move(other); }
+variant_t::variant_t(variant_t&& other) : type(vartype_t::TYPE_NULL), size(0), flag(0) { *this = std::move(other); }
 
 variant_t::~variant_t() { clear(); }
 
@@ -56,16 +56,16 @@ variant_t& variant_t::operator=(const variant_t& other) {
     type = other.type;
     if (variant_flag_t::vt_flag_free & other.flag) {
         switch (other.type) {
-            case TYPE_BINARY:
-            case TYPE_NSTRING:
-            case TYPE_BIGNUMBER:
+            case vartype_t::TYPE_BINARY:
+            case vartype_t::TYPE_NSTRING:
+            case vartype_t::TYPE_BIGNUMBER:
                 data.bstr = (unsigned char*)malloc(other.size + 1);
                 memcpy(data.bstr, other.data.bstr, other.size);
                 break;
-            case TYPE_STRING:
+            case vartype_t::TYPE_STRING:
                 data.str = strdup(other.data.str);
                 break;
-            case TYPE_DATETIME:
+            case vartype_t::TYPE_DATETIME:
                 data.dt = (datetime_t*)malloc(sizeof(datetime_t));
                 memcpy(data.dt, other.data.dt, sizeof(datetime_t));
                 break;
@@ -94,7 +94,7 @@ variant_t& variant_t::operator=(variant_t&& other) {
 }
 
 variant_t& variant_t::reset() {
-    type = TYPE_NULL;
+    type = vartype_t::TYPE_NULL;
     memset(&data, 0, sizeof(data));
     size = 0;
     flag = 0;
@@ -107,7 +107,7 @@ variant_t& variant_t::clear() {
         free(data.p);
     }
 
-    type = TYPE_NULL;
+    type = vartype_t::TYPE_NULL;
     memset(&data, 0, sizeof(data));
     size = 0;
     flag = 0;
@@ -176,7 +176,7 @@ variant& variant::clear() {
 }
 
 variant& variant::set_int24(int32 value) {
-    _vt.type = TYPE_INT24;
+    _vt.type = vartype_t::TYPE_INT24;
     _vt.data.i32 = (value & 0x00ffffff);
     _vt.size = RTL_FIELD_SIZE(uint24_t, data);
     _vt.flag = vt_flag_int;
@@ -184,7 +184,7 @@ variant& variant::set_int24(int32 value) {
 }
 
 variant& variant::set_uint24(uint32 value) {
-    _vt.type = TYPE_UINT24;
+    _vt.type = vartype_t::TYPE_UINT24;
     _vt.data.ui32 = (value & 0x00ffffff);
     _vt.size = RTL_FIELD_SIZE(uint24_t, data);
     _vt.flag = vt_flag_int;
@@ -192,7 +192,7 @@ variant& variant::set_uint24(uint32 value) {
 }
 
 variant& variant::set_uint24(const byte_t* p, size_t len) {
-    _vt.type = TYPE_UINT24;
+    _vt.type = vartype_t::TYPE_UINT24;
     b24_i32(p, len, _vt.data.ui32);
     _vt.size = RTL_FIELD_SIZE(uint24_t, data);
     _vt.flag = vt_flag_int;
@@ -200,7 +200,7 @@ variant& variant::set_uint24(const byte_t* p, size_t len) {
 }
 
 variant& variant::set_uint24(const uint24_t& value) {
-    _vt.type = TYPE_UINT24;
+    _vt.type = vartype_t::TYPE_UINT24;
     b24_i32(value, _vt.data.ui32);
     _vt.size = RTL_FIELD_SIZE(uint24_t, data);
     _vt.flag = vt_flag_int;
@@ -208,7 +208,7 @@ variant& variant::set_uint24(const uint24_t& value) {
 }
 
 variant& variant::set_int48(int64 value) {
-    _vt.type = TYPE_INT48;
+    _vt.type = vartype_t::TYPE_INT48;
     _vt.data.i64 = (value & 0x0000ffffffffffff);
     _vt.size = RTL_FIELD_SIZE(uint48_t, data);
     _vt.flag = vt_flag_int;
@@ -216,7 +216,7 @@ variant& variant::set_int48(int64 value) {
 }
 
 variant& variant::set_uint48(uint64 value) {
-    _vt.type = TYPE_UINT48;
+    _vt.type = vartype_t::TYPE_UINT48;
     _vt.data.ui64 = (value & 0x0000ffffffffffff);
     _vt.size = RTL_FIELD_SIZE(uint48_t, data);
     _vt.flag = vt_flag_int;
@@ -224,7 +224,7 @@ variant& variant::set_uint48(uint64 value) {
 }
 
 variant& variant::set_uint48(const byte_t* p, size_t len) {
-    _vt.type = TYPE_UINT48;
+    _vt.type = vartype_t::TYPE_UINT48;
     b48_i64(p, len, _vt.data.ui64);
     _vt.size = RTL_FIELD_SIZE(uint48_t, data);
     _vt.flag = vt_flag_int;
@@ -232,7 +232,7 @@ variant& variant::set_uint48(const byte_t* p, size_t len) {
 }
 
 variant& variant::set_uint48(const uint48_t& value) {
-    _vt.type = TYPE_UINT48;
+    _vt.type = vartype_t::TYPE_UINT48;
     b48_i64(value, _vt.data.ui64);
     _vt.size = RTL_FIELD_SIZE(uint48_t, data);
     _vt.flag = vt_flag_int;
@@ -240,7 +240,7 @@ variant& variant::set_uint48(const uint48_t& value) {
 }
 
 variant& variant::set_fp16(uint16 value) {
-    _vt.type = TYPE_FP16;
+    _vt.type = vartype_t::TYPE_FP16;
     _vt.data.ui16 = (value);
     _vt.size = sizeof(uint16);
     _vt.flag = vt_flag_float;
@@ -260,7 +260,7 @@ variant& variant::set_user_type(vartype_t vtype, void* value) {
 }
 
 variant& variant::set_str_new(const char* value) {
-    _vt.type = TYPE_STRING;
+    _vt.type = vartype_t::TYPE_STRING;
     _vt.size = 0;
     _vt.flag = vt_flag_string;
     char* p = nullptr;
@@ -276,7 +276,7 @@ variant& variant::set_str_new(const char* value) {
 }
 
 variant& variant::set_string(const std::string& value) {
-    _vt.type = TYPE_STRING;
+    _vt.type = vartype_t::TYPE_STRING;
     _vt.size = 0;
     _vt.flag = vt_flag_string;
     char* p = strdup(value.c_str());
@@ -290,7 +290,7 @@ variant& variant::set_string(const std::string& value) {
 }
 
 variant& variant::set_binary(const binary_t& bin) {
-    _vt.type = TYPE_BINARY;
+    _vt.type = vartype_t::TYPE_BINARY;
     _vt.size = 0;
     _vt.flag = vt_flag_binary;
     unsigned char* p = nullptr;
@@ -309,7 +309,7 @@ variant& variant::set_binary(const binary_t& bin) {
 }
 
 variant& variant::set_stream(const stream_t* s) {
-    _vt.type = TYPE_BINARY;
+    _vt.type = vartype_t::TYPE_BINARY;
     _vt.size = 0;
     _vt.flag = vt_flag_binary;
     unsigned char* p = nullptr;
@@ -331,7 +331,7 @@ variant& variant::set_stream(const stream_t* s) {
 }
 
 variant& variant::set_datetime(const datetime_t& value) {
-    _vt.type = TYPE_DATETIME;
+    _vt.type = vartype_t::TYPE_DATETIME;
     _vt.size = sizeof(datetime_t);
     _vt.flag = 0;
     datetime_t* p = (datetime_t*)malloc(sizeof(datetime_t));
@@ -348,7 +348,7 @@ variant& variant::set_bn(const bignumber& value) {
     binary_t bin;
     value >> bin;
 
-    _vt.type = TYPE_BIGNUMBER;
+    _vt.type = vartype_t::TYPE_BIGNUMBER;
     auto size = bin.size();
     if (false == bin.empty()) {
         _vt.data.bstr = (unsigned char*)malloc(size + 1);
@@ -397,41 +397,41 @@ return_t variant::to_binary(binary_t& target, uint32 flags) const {
     }
 
     switch (_vt.type) {
-        case TYPE_INT8:
-        case TYPE_UINT8:
+        case vartype_t::TYPE_INT8:
+        case vartype_t::TYPE_UINT8:
             binary_push(target, _vt.data.ui8);
             break;
-        case TYPE_INT16:
-        case TYPE_UINT16:
-        case TYPE_FP16:
+        case vartype_t::TYPE_INT16:
+        case vartype_t::TYPE_UINT16:
+        case vartype_t::TYPE_FP16:
             if (change_endian) {
                 binary_append(target, _vt.data.ui16, hton16);
             } else {
                 binary_append(target, _vt.data.ui16);
             }
             break;
-        case TYPE_INT24:
-        case TYPE_UINT24: {
+        case vartype_t::TYPE_INT24:
+        case vartype_t::TYPE_UINT24: {
             uint24_t temp;
             i32_b24(temp, _vt.data.ui32);
             binary_append(target, temp.data, RTL_FIELD_SIZE(uint24_t, data));
         } break;
-        case TYPE_INT32:
-        case TYPE_UINT32:
+        case vartype_t::TYPE_INT32:
+        case vartype_t::TYPE_UINT32:
             if (change_endian) {
                 binary_append(target, _vt.data.ui32, hton32);
             } else {
                 binary_append(target, _vt.data.ui32);
             }
             break;
-        case TYPE_INT48:
-        case TYPE_UINT48: {
+        case vartype_t::TYPE_INT48:
+        case vartype_t::TYPE_UINT48: {
             uint48_t temp;
             i64_b48(temp, _vt.data.ui64);
             binary_append(target, temp.data, RTL_FIELD_SIZE(uint48_t, data));
         } break;
-        case TYPE_INT64:
-        case TYPE_UINT64:
+        case vartype_t::TYPE_INT64:
+        case vartype_t::TYPE_UINT64:
             if (change_endian) {
                 binary_append(target, _vt.data.ui64, hton64);
             } else {
@@ -439,8 +439,8 @@ return_t variant::to_binary(binary_t& target, uint32 flags) const {
             }
             break;
 #if defined __SIZEOF_INT128__
-        case TYPE_INT128:
-        case TYPE_UINT128:
+        case vartype_t::TYPE_INT128:
+        case vartype_t::TYPE_UINT128:
             if (change_endian) {
                 binary_append(target, _vt.data.ui128, hton128);
             } else {
@@ -448,7 +448,7 @@ return_t variant::to_binary(binary_t& target, uint32 flags) const {
             }
             break;
 #endif
-        case TYPE_FLOAT: {
+        case vartype_t::TYPE_FLOAT: {
             auto ui32 = binary32_from_fp32(_vt.data.f);
             if (change_endian) {
                 binary_append(target, ui32, hton32);
@@ -456,7 +456,7 @@ return_t variant::to_binary(binary_t& target, uint32 flags) const {
                 binary_append(target, ui32);
             }
         } break;
-        case TYPE_DOUBLE: {
+        case vartype_t::TYPE_DOUBLE: {
             auto ui64 = binary64_from_fp64(_vt.data.d);
             if (change_endian) {
                 binary_append(target, ui64, hton64);
@@ -464,12 +464,12 @@ return_t variant::to_binary(binary_t& target, uint32 flags) const {
                 binary_append(target, ui64);
             }
         } break;
-        case TYPE_STRING:
+        case vartype_t::TYPE_STRING:
             binary_append(target, _vt.data.str);
             break;
-        case TYPE_BINARY:
-        case TYPE_NSTRING:
-        case TYPE_BIGNUMBER:
+        case vartype_t::TYPE_BINARY:
+        case vartype_t::TYPE_NSTRING:
+        case vartype_t::TYPE_BIGNUMBER:
             binary_append(target, _vt.data.bstr, _vt.size);
             break;
         default:
@@ -485,92 +485,92 @@ return_t variant::to_string(std::string& target) const {
 
     target.clear();
     switch (_vt.type) {
-        case TYPE_NULL:
+        case vartype_t::TYPE_NULL:
             target = "null";
             break;
-        case TYPE_BOOL: {
+        case vartype_t::TYPE_BOOL: {
             target = _vt.data.b ? "true" : "false";
         } break;
-        case TYPE_CHAR:
-        case TYPE_BYTE: {
+        case vartype_t::TYPE_CHAR:
+        case vartype_t::TYPE_BYTE: {
             if (isprint(_vt.data.c)) {
                 target.assign(&_vt.data.c, 1);
             } else {
                 target = ".";
             }
         } break;
-        case TYPE_INT8:
+        case vartype_t::TYPE_INT8:
             target = format("%i", _vt.data.i8);
             break;
-        case TYPE_UINT8:
+        case vartype_t::TYPE_UINT8:
             target = format("%u", _vt.data.ui8);
             break;
-        case TYPE_INT16:
+        case vartype_t::TYPE_INT16:
             target = format("%i", _vt.data.i16);
             break;
-        case TYPE_UINT16:
+        case vartype_t::TYPE_UINT16:
             target = format("%u", _vt.data.ui16);
             break;
-        case TYPE_INT24:
-        case TYPE_INT32:
+        case vartype_t::TYPE_INT24:
+        case vartype_t::TYPE_INT32:
             target = format("%i", _vt.data.i32);
             break;
-        case TYPE_UINT24:
-        case TYPE_UINT32:
+        case vartype_t::TYPE_UINT24:
+        case vartype_t::TYPE_UINT32:
             target = format("%u", _vt.data.ui32);
             break;
-        case TYPE_INT48:
-        case TYPE_INT64: {
+        case vartype_t::TYPE_INT48:
+        case vartype_t::TYPE_INT64: {
             basic_stream bs;
             bs.printf("%I64i", _vt.data.i64);
             target << bs;
         } break;
-        case TYPE_UINT48:
-        case TYPE_UINT64: {
+        case vartype_t::TYPE_UINT48:
+        case vartype_t::TYPE_UINT64: {
             basic_stream bs;
             bs.printf("%I64u", _vt.data.ui64);
             target << bs;
         } break;
 #if defined __SIZEOF_INT128__
-        case TYPE_INT128: {
+        case vartype_t::TYPE_INT128: {
             basic_stream bs;
             bs.printf("%I128i", _vt.data.i128);
             target << bs;
         } break;
-        case TYPE_UINT128: {
+        case vartype_t::TYPE_UINT128: {
             basic_stream bs;
             bs.printf("%I128u", _vt.data.ui128);
             target << bs;
         } break;
 #endif
-        case TYPE_FP16: {
+        case vartype_t::TYPE_FP16: {
             basic_stream bs;
             float f = float_from_fp16(_vt.data.ui16);
             bs.printf("%f", f);
             target << bs;
         } break;
-        case TYPE_FLOAT: {
+        case vartype_t::TYPE_FLOAT: {
             basic_stream bs;
             bs.printf("%f", _vt.data.f);
             target << bs;
         } break;
-        case TYPE_DOUBLE: {
+        case vartype_t::TYPE_DOUBLE: {
             basic_stream bs;
             bs.printf("%lf", _vt.data.d);
             target << bs;
         } break;
-        case TYPE_STRING:
+        case vartype_t::TYPE_STRING:
             if (_vt.data.str) {
                 target = _vt.data.str;
             }
             break;
-        case TYPE_NSTRING:
+        case vartype_t::TYPE_NSTRING:
             if (_vt.data.str) {
                 target.assign(_vt.data.str, _vt.size);
             }
             break;
-        case TYPE_BINARY:
-        case TYPE_BIGNUMBER: {
+        case vartype_t::TYPE_BINARY:
+        case vartype_t::TYPE_BIGNUMBER: {
             if (_vt.data.str) {
                 target.clear();
                 uint32 i = 0;

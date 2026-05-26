@@ -19,7 +19,7 @@
 
 namespace hotplace {
 
-enum stream_type_t {
+enum class stream_type_t {
     undefined = 0,
     memory = 1,
     file = 2,

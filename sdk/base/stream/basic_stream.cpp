@@ -304,7 +304,7 @@ basic_stream& basic_stream::operator<<(const wchar_t* value) {
 #endif
 
 basic_stream& basic_stream::operator<<(const variant& value) {
-    vtprintf(this, value, vtprintf_style_debugmode);
+    vtprintf(this, value, vtprintf_style_t::vtprintf_style_debugmode);
     return *this;
 }
 

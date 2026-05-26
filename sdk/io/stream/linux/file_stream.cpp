@@ -183,7 +183,7 @@ return_t file_stream::end_mmap() {
     return ret;
 }
 
-int file_stream::get_stream_type() { return _stream_type; }
+stream_type_t file_stream::get_stream_type() { return _stream_type; }
 
 byte_t* file_stream::data() const { return _file_data; }
 

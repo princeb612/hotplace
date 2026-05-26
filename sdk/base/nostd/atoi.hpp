@@ -30,49 +30,56 @@ namespace hotplace {
  *
  *          //  170141183460469231731687303715884105727 7fffffffffffffffffffffffffffffff
  *          // -170141183460469231731687303715884105728 80000000000000000000000000000000
+ *
+ *          // c++ standard overflow
+ *          auto i0 = t_atoi<int8>("-1");
+ *          _logger->writeln("%i", i0);
+ *          _test_case.assert(i0 == int8(-1), __FUNCTION__, "atoi #0");
+ *          auto i1 = t_atoi<int8>("-129");  // int8 -128..127
+ *          _logger->writeln("%i", i1);
+ *          _test_case.assert(i1 == int8(-129), __FUNCTION__, "atoi #1");
+ *          auto i2 = t_atoi<int8>("-128");
+ *          _logger->writeln("%i", i2);
+ *          _test_case.assert(i2 == int8(-128), __FUNCTION__, "atoi #2");
+ *          auto i3 = t_atoi<int16>("-129");
+ *          _logger->writeln("%i", i3);
+ *          _test_case.assert(i3 == int16(-129), __FUNCTION__, "atoi #3");
+ *          auto i4 = t_atoi<uint8>("-1");
+ *          _logger->writeln("%u", i4);
+ *          _test_case.assert(i4 == uint8(-1), __FUNCTION__, "atoi #4");
+ *          auto i5 = t_atoi<uint8>("129");
+ *          _logger->writeln("%i", i5);
+ *          _test_case.assert(i5 == uint8(129), __FUNCTION__, "atoi #5");
+ *
  */
 template <typename TYPE>
 TYPE t_atoi_n(const char* value, size_t size) {
-    return_t ret = errorcode_t::success;
+    if (value == nullptr || size == 0) return 0;
+
+    size_t i = 0;
+    bool invert_sign = true;
+
+    if (value[i] == '-') {
+        invert_sign = false;
+        ++i;
+    } else if (value[i] == '+') {
+        ++i;
+    }
+
     TYPE res = 0;
 
-    __try2 {
-        if (nullptr == value || 0 == size) {
-            __leave2;
-        }
+    for (; i < size; ++i) {
+        const unsigned char c = static_cast<unsigned char>(value[i]);
+        if (std::isdigit(c) == 0) return 0;
 
-        size_t i = 0;
-        bool is_negative = false;
-
-        if (value[i] == '-') {
-            is_negative = true;
-            ++i;
-        } else if (value[i] == '+') {
-            ++i;
-        }
-
-        for (; i < size; ++i) {
-            const char c = value[i];
-            if (0 == std::isdigit(static_cast<unsigned char>(c))) {
-                ret = errorcode_t::bad_data;
-                break;
-            }
-
-            int digit = c - '0';
-
-            res = res * 10 - digit;
-        }
-
-        if (errorcode_t::bad_data == ret) {
-            res = 0;
-            __leave2;
-        }
-
-        if (!is_negative) {
-            res = -res;
-        }
+        const TYPE digit = static_cast<TYPE>(c - '0');
+        res = static_cast<TYPE>(res * 10 - digit);
     }
-    __finally2 {}
+
+    if (invert_sign) {
+        res = static_cast<TYPE>(0 - res);
+    }
+
     return res;
 }
 

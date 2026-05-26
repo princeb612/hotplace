@@ -186,10 +186,10 @@ void test_as_small_as_possible() {
         uint8 len = 0;
 
         switch (item.var.type()) {
-            case TYPE_FLOAT:
+            case vartype_t::TYPE_FLOAT:
                 len = ieee754_as_small_as_possible(var, item.var.content().data.f);
                 break;
-            case TYPE_DOUBLE:
+            case vartype_t::TYPE_DOUBLE:
                 len = ieee754_as_small_as_possible(var, item.var.content().data.d);
                 break;
             default:

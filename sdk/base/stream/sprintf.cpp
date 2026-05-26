@@ -25,14 +25,14 @@
 namespace hotplace {
 
 typedef struct _variant_conversion_t {
-    int type;
+    vartype_t type;
     const char* formatter;
 } variant_conversion_t;
 
 static variant_conversion_t type_formatter[] = {
-    {TYPE_CHAR, "%c"},    {TYPE_BYTE, "%c"},   {TYPE_INT8, "%i"},   {TYPE_UINT8, "%d"},   {TYPE_INT16, "%i"},
-    {TYPE_UINT16, "%d"},  {TYPE_INT32, "%i"},  {TYPE_UINT32, "%u"}, {TYPE_INT64, "%li"},  {TYPE_UINT64, "%lu"},
-    {TYPE_POINTER, "%p"}, {TYPE_STRING, "%s"}, {TYPE_FLOAT, "%f"},  {TYPE_DOUBLE, "%lf"}, {TYPE_BINARY, "%p"},
+    {vartype_t::TYPE_CHAR, "%c"},    {vartype_t::TYPE_BYTE, "%c"},   {vartype_t::TYPE_INT8, "%i"},   {vartype_t::TYPE_UINT8, "%d"},   {vartype_t::TYPE_INT16, "%i"},
+    {vartype_t::TYPE_UINT16, "%d"},  {vartype_t::TYPE_INT32, "%i"},  {vartype_t::TYPE_UINT32, "%u"}, {vartype_t::TYPE_INT64, "%li"},  {vartype_t::TYPE_UINT64, "%lu"},
+    {vartype_t::TYPE_POINTER, "%p"}, {vartype_t::TYPE_STRING, "%s"}, {vartype_t::TYPE_FLOAT, "%f"},  {vartype_t::TYPE_DOUBLE, "%lf"}, {vartype_t::TYPE_BINARY, "%p"},
 };
 size_t size_type_formatter = RTL_NUMBER_OF(type_formatter);
 
@@ -71,7 +71,7 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
 
 #endif
 
-        typedef std::map<size_t, std::string> formatter_map_t;
+        typedef std::map<vartype_t, std::string> formatter_map_t;
         formatter_map_t fmtspec;  // format specifier
         for (i = 0; i < RTL_NUMBER_OF(type_formatter); i++) {
             variant_conversion_t* item = type_formatter + i;
@@ -119,7 +119,7 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
             i = 0;
             for (const auto& idx : va_array) {
                 va_new.at(i, v);
-                formatter_map_t::iterator fmt_it = fmtspec.find(v.type);
+                auto fmt_it = fmtspec.find(v.type);
                 if (fmtspec.end() != fmt_it) {
                     formatter.replace(format("{%zi}", idx + 1).c_str(), fmt_it->second.c_str(), 0, bufferio_flag_t::run_once);
                 }
@@ -237,7 +237,7 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
                     }
                 }
 
-                if (TYPE_NULL == vtemp.type()) {
+                if (vartype_t::TYPE_NULL == vtemp.type()) {
                     va_new << v;
                 } else {
                     va_new << std::move(vtemp.get());

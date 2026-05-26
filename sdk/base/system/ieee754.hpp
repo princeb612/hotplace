@@ -174,7 +174,7 @@ double double_from_fp16(uint16 half);
  */
 uint16 fp16_from_fp32(uint32 single);
 
-enum ieee754_typeof_t {
+enum class ieee754_typeof_t {
     ieee754_finite = 0,
     ieee754_pinf,
     ieee754_ninf,

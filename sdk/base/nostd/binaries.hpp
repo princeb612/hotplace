@@ -19,7 +19,7 @@
 
 namespace hotplace {
 
-enum binary_flag_t {
+enum binary_flag_t : uint32 {
     bin_trunc = 0x1,        // truncate
     bin_wait_fin = 0x2,     // wait until the fin
     bin_set_fin = 0x4,      // set fin

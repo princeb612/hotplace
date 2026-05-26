@@ -101,7 +101,7 @@ class rational_float {
 /**
  * @refer ChatGPT
  */
-enum fp_type_t {
+enum class fp_type_t {
     rational_type = 1,
     decimal_type = 2,
 };

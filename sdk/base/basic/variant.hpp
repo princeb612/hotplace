@@ -124,7 +124,7 @@ enum variant_flag_t : uint16 {
 /**
  * @brief   vartype_t
  */
-enum vartype_t {
+enum class vartype_t {
     TYPE_NULL = 0,
     TYPE_VOID = TYPE_NULL,
 
@@ -196,8 +196,10 @@ enum vartype_t {
     TYPE_JCHAR = 270,      // JNI unsigned short
     TYPE_JSTRING = 271,    // JNI java/lang/String
 
-    TYPE_RESERVED = 0x1000,  //
-    TYPE_USER = 0x10000,     //
+    TYPE_RESERVED = 0x1000,           //
+    TYPE_STATIC_KEY = TYPE_RESERVED,  //
+    TYPE_COUNTER_SIG,                 //
+    TYPE_USER = 0x10000,              //
 };
 
 /**
@@ -255,7 +257,7 @@ struct variant_traits {
     struct variant_traits<cpp_type> {                                                     \
         using cast_type = cpp_type;                                                       \
         static constexpr uint16 flags = vt_flag_support | union_flag;                     \
-        static constexpr vartype_t type = enum_type;                                      \
+        static constexpr vartype_t type = vartype_t::enum_type;                           \
         static constexpr cpp_type vartype_union::* member = &vartype_union::union_member; \
     };
 VARIANT_XGROUP_EMT(EXPAND_VARTYPE_TAITS)
@@ -280,12 +282,12 @@ T t_vtoi(const variant_t& vt) {
     T i = 0;
 
     switch (vt.type) {
-        case TYPE_BOOL:
+        case vartype_t::TYPE_BOOL:
             i = vt.data.b ? 1 : 0;
             break;
 
 #define EXPAND_INTEGRAL_CASE(cpp_type, enum_type, enum_val, union_member, union_flag) \
-    case enum_type:                                                                   \
+    case vartype_t::enum_type:                                                        \
         i = t_extract_and_cast<T>(vt.data.union_member);                              \
         break;
 
@@ -295,28 +297,28 @@ T t_vtoi(const variant_t& vt) {
 #endif
 #undef EXPAND_INTEGRAL_CASE
 
-        case TYPE_INT24:
+        case vartype_t::TYPE_INT24:
             i = t_narrow_cast(vt.data.i32);
             break;
-        case TYPE_UINT24:
+        case vartype_t::TYPE_UINT24:
             i = t_narrow_cast(vt.data.ui32);
             break;
-        case TYPE_INT48:
+        case vartype_t::TYPE_INT48:
             i = t_narrow_cast(vt.data.i64);
             break;
-        case TYPE_UINT48:
+        case vartype_t::TYPE_UINT48:
             i = t_narrow_cast(vt.data.ui64);
             break;
 
-        case TYPE_STRING:
-        case TYPE_NSTRING:
+        case vartype_t::TYPE_STRING:
+        case vartype_t::TYPE_NSTRING:
             if (vt.data.str && vt.data.str[0] != '\0') {
                 size_t len = vt.size ? vt.size : strlen(vt.data.str);
                 i = t_atoi_n<T>(vt.data.str, len);
             }
             break;
 
-        case TYPE_BINARY: {
+        case vartype_t::TYPE_BINARY: {
             return_t errorcode = errorcode_t::success;
             if (vt.data.bstr && vt.size > 0) {
                 i = t_binary_to_integer<T>(vt.data.bstr, vt.size, errorcode);
@@ -327,9 +329,8 @@ T t_vtoi(const variant_t& vt) {
             break;
     }
 
-    if ((i >= 0) && (vt_flag_negative & vt.flag)) {
-        i += 1;
-        i = -i;
+    if ((vt_flag_negative & vt.flag) && (i >= 0)) {
+        i = static_cast<T>(0 - (i + 1));
     }
 
     return i;

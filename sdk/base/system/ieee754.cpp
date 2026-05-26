@@ -363,15 +363,15 @@ ieee754_typeof_t ieee754_exp(uint16 value, int* s, int* e, uint16* m) {
 
     if (e && m) {
         switch (type) {
-            case ieee754_zero:
+            case ieee754_typeof_t::ieee754_zero:
                 break;
-            case ieee754_pinf:
+            case ieee754_typeof_t::ieee754_pinf:
                 mantissa = fp16_pinf;
                 break;
-            case ieee754_ninf:
+            case ieee754_typeof_t::ieee754_ninf:
                 mantissa = fp16_ninf;
                 break;
-            case ieee754_nan:
+            case ieee754_typeof_t::ieee754_nan:
                 mantissa = fp16_nan;
                 break;
             default:
@@ -405,15 +405,15 @@ ieee754_typeof_t ieee754_exp(float value, int* s, int* e, float* m) {
 
     if (e && m) {
         switch (type) {
-            case ieee754_zero:
+            case ieee754_typeof_t::ieee754_zero:
                 break;
-            case ieee754_pinf:
+            case ieee754_typeof_t::ieee754_pinf:
                 mantissa = fp32_from_binary32(fp32_pinf);
                 break;
-            case ieee754_ninf:
+            case ieee754_typeof_t::ieee754_ninf:
                 mantissa = fp32_from_binary32(fp32_ninf);
                 break;
-            case ieee754_nan:
+            case ieee754_typeof_t::ieee754_nan:
                 mantissa = fp32_from_binary32(fp32_nan);
                 break;
             default:
@@ -448,16 +448,16 @@ ieee754_typeof_t ieee754_exp(double value, int* s, int* e, double* m) {
 
     if (e && m) {
         switch (type) {
-            case ieee754_zero:
+            case ieee754_typeof_t::ieee754_zero:
                 break;
-            case ieee754_pinf:
-                mantissa = fp64_from_binary64(fp64_pinf);
+            case ieee754_typeof_t::ieee754_pinf:
+                mantissa = fp64_from_binary64(ieee754_t::fp64_pinf);
                 break;
-            case ieee754_ninf:
-                mantissa = fp64_from_binary64(fp64_ninf);
+            case ieee754_typeof_t::ieee754_ninf:
+                mantissa = fp64_from_binary64(ieee754_t::fp64_ninf);
                 break;
-            case ieee754_nan:
-                mantissa = fp64_from_binary64(fp64_nan);
+            case ieee754_typeof_t::ieee754_nan:
+                mantissa = fp64_from_binary64(ieee754_t::fp64_nan);
                 break;
             default:
                 exponent = t_justdoit(((b64 >> 52) & 0x000007ff) - bias_m1);

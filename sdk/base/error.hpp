@@ -314,10 +314,10 @@ enum class error_category_t : uint8 {
     error_category_success = 0,         // success
     error_category_expect_failure = 1,  // success (negative test)
     error_category_severe = 2,          // severe error
-    error_category_not_supported = 3,   // do not support
+    error_category_not_supported = 3,   // do not support (OS, library, constraints)
     error_category_low_security = 4,    // do not support (security reason)
     error_category_trivial = 5,         // debugging purpose
-    error_category_warn = 6,            // warning
+    error_category_warn = 6,            // warning (general)
 };
 
 /**

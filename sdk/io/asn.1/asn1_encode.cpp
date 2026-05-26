@@ -184,54 +184,54 @@ asn1_encode& asn1_encode::encode(binary_t& bin, asn1_type_t type, const binary_t
 
 asn1_encode& asn1_encode::encode(binary_t& bin, asn1_type_t type, const variant& value) {
     switch (value.type()) {
-        case TYPE_NULL:
+        case vartype_t::TYPE_NULL:
             null(bin);
             break;
-        case TYPE_BOOL:
+        case vartype_t::TYPE_BOOL:
             primitive(bin, value.content().data.b);
             break;
-        case TYPE_INT8:
+        case vartype_t::TYPE_INT8:
             primitive(bin, value.content().data.i8);
             break;
-        case TYPE_UINT8:
+        case vartype_t::TYPE_UINT8:
             primitive(bin, value.content().data.ui8);
             break;
-        case TYPE_INT16:
+        case vartype_t::TYPE_INT16:
             primitive(bin, value.content().data.i16);
             break;
-        case TYPE_UINT16:
+        case vartype_t::TYPE_UINT16:
             primitive(bin, value.content().data.ui16);
             break;
-        case TYPE_INT32:
+        case vartype_t::TYPE_INT32:
             primitive(bin, value.content().data.i32);
             break;
-        case TYPE_UINT32:
+        case vartype_t::TYPE_UINT32:
             primitive(bin, value.content().data.ui32);
             break;
-        case TYPE_INT64:
+        case vartype_t::TYPE_INT64:
             primitive(bin, value.content().data.i64);
             break;
-        case TYPE_UINT64:
+        case vartype_t::TYPE_UINT64:
             primitive(bin, value.content().data.ui64);
             break;
 #if defined __SIZEOF_INT128__
-        case TYPE_INT128:
+        case vartype_t::TYPE_INT128:
             primitive(bin, value.content().data.i128);
             break;
-        case TYPE_UINT128:
+        case vartype_t::TYPE_UINT128:
             primitive(bin, value.content().data.ui128);
             break;
 #endif
-        case TYPE_FLOAT:
+        case vartype_t::TYPE_FLOAT:
             primitive(bin, value.content().data.f);
             break;
-        case TYPE_DOUBLE:
+        case vartype_t::TYPE_DOUBLE:
             primitive(bin, value.content().data.d);
             break;
-        case TYPE_STRING:
+        case vartype_t::TYPE_STRING:
             primitive(bin, type, value.content().data.str);
             break;
-        case TYPE_DATETIME:
+        case vartype_t::TYPE_DATETIME:
             switch (type) {
                 case asn1_type_generalizedtime:
                     generalized_time(bin, *value.content().data.dt);

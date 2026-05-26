@@ -32,6 +32,8 @@
     * CBOR
 
 * details
+  * Revision 1015
+    * [fixed] DTLS 1.2 testcase (shuffle UDP traffic)
   * Revision 1014
     * [tested] ubuntu 20, MSVC
   * Revision 1012

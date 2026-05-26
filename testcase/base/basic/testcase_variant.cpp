@@ -38,7 +38,7 @@ void test_variant() {
     _test_case.assert(base16_encode(bin) == "0123456789abcdef", __FUNCTION__, "variant.bignumber");
 
     basic_stream bs;
-    vtprintf(&bs, vt, vtprintf_style_debugmode);
+    vtprintf(&bs, vt, vtprintf_style_t::vtprintf_style_debugmode);
     _logger->writeln(bs);
     _test_case.assert(bs == "0123456789abcdef (81985529216486895)", __FUNCTION__, "vtprintf variant.bignumber");
 

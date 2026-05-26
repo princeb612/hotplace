@@ -163,7 +163,7 @@ size_t t_asn1_encode_real(binary_t& bin, FPTYPE value) {
 
     while (true) {
         auto type = ieee754_typeof(mantissa);
-        if ((ieee754_single_precision == type) || (ieee754_double_precision == type)) {
+        if ((ieee754_typeof_t::ieee754_single_precision == type) || (ieee754_typeof_t::ieee754_double_precision == type)) {
         } else {
             break;
         }
@@ -189,7 +189,7 @@ size_t t_asn1_encode_real(binary_t& bin, FPTYPE value) {
     uint32 size_exponent = 0;
     uint32 size_mantissa = 0;
     switch (type) {
-        case ieee754_zero:
+        case ieee754_typeof_t::ieee754_zero:
             if (sign) {
                 // X.690 8.5.9 minus zero
                 bin.insert(bin.end(), 0x01);
@@ -199,17 +199,17 @@ size_t t_asn1_encode_real(binary_t& bin, FPTYPE value) {
                 bin.insert(bin.end(), 0x00);
             }
             break;
-        case ieee754_pinf:
+        case ieee754_typeof_t::ieee754_pinf:
             // X.690 8.5.9 PLUS-INFINITY
             bin.insert(bin.end(), 0x01);
             bin.insert(bin.end(), 0x40);
             break;
-        case ieee754_ninf:
+        case ieee754_typeof_t::ieee754_ninf:
             // X.690 8.5.9 MINUS-INFINITY
             bin.insert(bin.end(), 0x01);
             bin.insert(bin.end(), 0x41);
             break;
-        case ieee754_nan:
+        case ieee754_typeof_t::ieee754_nan:
             // X.690 8.5.9 NOT-A-NUMBER
             bin.insert(bin.end(), 0x01);
             bin.insert(bin.end(), 0x42);

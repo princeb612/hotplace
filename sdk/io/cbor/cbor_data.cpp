@@ -115,7 +115,7 @@ cbor_data& cbor_data::set_bn(const bignumber& value, uint32 flags) {
 void cbor_data::represent(stream_t* s) {
     if (s) {
         const variant_t& vt = data().content();
-        if (TYPE_BIGNUMBER == vt.type) {
+        if (vartype_t::TYPE_BIGNUMBER == vt.type) {
             vtprintf(s, vt, vtprintf_style_t::vtprintf_style_cbor);
         } else {
             if (tagged()) {
@@ -124,7 +124,7 @@ void cbor_data::represent(stream_t* s) {
                 switch (tag) {
                     case cbor_tag_t::cbor_tag_positive_bignum:
                     case cbor_tag_t::cbor_tag_negative_bignum: {
-                        if ((TYPE_BINARY == vt.type) && (vt.size <= 16)) {
+                        if ((vartype_t::TYPE_BINARY == vt.type) && (vt.size <= 16)) {
                             bignumber bn(vt.data.bstr, vt.size);
                             if (cbor_tag_t::cbor_tag_positive_bignum == tag) {
                                 // do nothing
