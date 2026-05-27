@@ -76,17 +76,17 @@ return_t kindof_handshake(tls_handshake* handshake, protection_space_t& space) {
         }
         auto type = handshake->get_type();
         switch (type) {
-            case tls_hs_client_hello:
-            case tls_hs_server_hello: {
+            case tls_handshake_type_t::client_hello:
+            case tls_handshake_type_t::server_hello: {
                 space = protection_initial;
             } break;
-            case tls_hs_encrypted_extensions:
-            case tls_hs_certificate:
-            case tls_hs_certificate_verify:
-            case tls_hs_finished: {
+            case tls_handshake_type_t::encrypted_extensions:
+            case tls_handshake_type_t::certificate:
+            case tls_handshake_type_t::certificate_verify:
+            case tls_handshake_type_t::finished: {
                 space = protection_handshake;
             } break;
-            case tls_hs_new_session_ticket: {
+            case tls_handshake_type_t::new_session_ticket: {
                 space = protection_application;
             } break;
             default: {

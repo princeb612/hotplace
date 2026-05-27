@@ -21,7 +21,7 @@ struct OPTION : public CMDLINEOPTION {
 };
 
 struct TLS_OPTION {
-    uint16 version;
+    tls_version_t version;
     std::string cipher_suite;
 };
 

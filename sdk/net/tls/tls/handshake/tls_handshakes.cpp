@@ -35,7 +35,7 @@ return_t tls_handshakes::read(tls_session* session, tls_direction_t dir, const b
                 break;
             }
 
-            tls_hs_type_t hs = (tls_hs_type_t)stream[pos];
+            tls_handshake_type_t hs = (tls_handshake_type_t)stream[pos];
             tls_handshake_builder builder;
             auto handshake = builder.set(hs).set(session).build();
             if (handshake) {
@@ -95,7 +95,7 @@ return_t tls_handshakes::write(tls_session* session, tls_direction_t dir, binary
 
 return_t tls_handshakes::add(tls_handshake* handshake, bool upref) { return _handshakes.add(handshake, upref); }
 
-tls_handshakes& tls_handshakes::add(tls_hs_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func, bool upref) {
+tls_handshakes& tls_handshakes::add(tls_handshake_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func, bool upref) {
     __try2 {
         tls_handshake_builder builder;
         auto handshake = builder.set(type).set(session).build();
@@ -121,7 +121,7 @@ tls_handshakes& tls_handshakes::operator<<(tls_handshake* handshake) {
 
 return_t tls_handshakes::for_each(std::function<return_t(tls_handshake*)> func) { return _handshakes.for_each(func); }
 
-tls_handshake* tls_handshakes::get(uint8 type, bool upref) { return _handshakes.get(type, upref); }
+tls_handshake* tls_handshakes::get(tls_handshake_type_t type, bool upref) { return _handshakes.get(type, upref); }
 
 tls_handshake* tls_handshakes::getat(size_t index, bool upref) { return _handshakes.getat(index, upref); }
 
@@ -137,7 +137,7 @@ void tls_handshakes::set_dtls_seq(uint16 seq) { _dtls_seq = seq; }
 
 uint16 tls_handshakes::get_dtls_seq() { return _dtls_seq; }
 
-t_tls_distinct_container<tls_handshake*, uint8>& tls_handshakes::get_container() { return _handshakes; }
+t_tls_distinct_container<tls_handshake*, tls_handshake_type_t>& tls_handshakes::get_container() { return _handshakes; }
 
 }  // namespace net
 }  // namespace hotplace

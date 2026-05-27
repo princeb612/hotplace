@@ -28,7 +28,7 @@ class dtls_handshake_fragmented : public tls_handshake {
     return_t prepare_fragment(const byte_t* stream, uint32 size, uint16 seq, uint32 fragment_offset, uint32 fragment_length);
 
    protected:
-    dtls_handshake_fragmented(tls_hs_type_t type, tls_session* session);
+    dtls_handshake_fragmented(tls_handshake_type_t type, tls_session* session);
 
    private:
     binary_t _fragmented;

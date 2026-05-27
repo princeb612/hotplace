@@ -18,6 +18,21 @@ namespace hotplace {
 
 /**
  * @refer ChatGPT
+ * @example
+ *          decimal_float d1(1, -1);  //  1e-1  0.1
+ *          decimal_float d2(2, -1);  //  2e-1  0.2
+ *          auto res1 = d1 + d2;      //  3e-1  0.3
+ *          auto res2 = d1 - d2;      // -1e-1 -0.1
+ *          auto res3 = d1 * d2;      //  2e-2  0.02
+ *          auto res4 = d1 / d2;      //  5e-1  0.5
+ *
+ *          decimal_float d3("1e-1");
+ *          decimal_float d4("2e-1");
+ *          // ...
+ *
+ *          decimal_float d5("0.1");
+ *          decimal_float d6("0.2");
+ *          // ...
  */
 class decimal_float {
     friend class floating_point;
@@ -44,8 +59,15 @@ class decimal_float {
     bool operator>=(const decimal_float& other);
     bool operator<=(const decimal_float& other);
 
+    /**
+     *  decimal_float d1("1e10");
+     *  decimal_float d2("1e-10");
+     *  auto res = d1 + d2;
+     *  auto str1 = res.str();     // "1.00000000000000000001e+10"
+     *  auto str2 = res.fstr(32);  // "10000000000.0000000001"
+     */
     std::string str();
-    std::string fstr(size_t precision) const;
+    std::string fstr(size_t precision = 32) const;
 
     static int compare(const decimal_float& lhs, const decimal_float& rhs);
 
@@ -59,6 +81,17 @@ class decimal_float {
 
 /**
  * @refer ChatGPT
+ * @example
+ *          rational_float r1(1, 2);  // 1/2
+ *          rational_float r2(1, 3);  // 1/3
+ *          auto res1 = r1 + r2;      // 5/6
+ *          auto res2 = r1 - r2;      // 1/6
+ *          auto res3 = r1 * r2;      // 1/6
+ *          auto res4 = r1 / r2;      // 3/2
+ *
+ *          rational_float r1("1/2");  // 1/2
+ *          rational_float r2("1/3");  // 1/3
+ *          // ...
  */
 class rational_float {
     friend class floating_point;
@@ -85,8 +118,15 @@ class rational_float {
     bool operator>=(const rational_float& other);
     bool operator<=(const rational_float& other);
 
+    /**
+     * rational_float r1("1/2");  // 1/2
+     * rational_float r2("1/3");  // 1/3
+     * auto res = r1 + r2;        // 5/6
+     * auto str1 = res.str();     // "5/6"
+     * auto str2 = res.fstr(32);  // "0.83333333333333333333333333333333"
+     */
     std::string str();
-    std::string fstr(size_t precision) const;
+    std::string fstr(size_t precision = 32) const;
 
     static int compare(const rational_float& lhs, const rational_float& rhs);
 
@@ -100,6 +140,12 @@ class rational_float {
 
 /**
  * @refer ChatGPT
+ * @example
+ *          floating_point f1("0.1");
+ *          floating_point f2("1/3");
+ *          auto res = f1 - f2;
+ *          auto str1 = res.str();     // "-7/30"
+ *          auto str2 = res.fstr(32);  // "-0.23333333333333333333333333333333"
  */
 enum class fp_type_t {
     rational_type = 1,
@@ -147,7 +193,7 @@ class floating_point {
 
     fp_type_t get_type();
     std::string str();
-    std::string fstr(size_t precision) const;
+    std::string fstr(size_t precision = 32) const;
 
     static int compare(const floating_point& lhs, const floating_point& rhs);
 

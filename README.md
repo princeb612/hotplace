@@ -9,7 +9,7 @@
   * ![zlib](https://img.shields.io/badge/zlb-1.3.2-green)
 * language
   * ![c++](https://img.shields.io/badge/c++-c++11-green)
-  * ![gcc](https://img.shields.io/badge/gcc->=4.7-green)
+  * ![gcc](https://img.shields.io/badge/gcc->=4.8.5-green)
   * ![cmake](https://img.shields.io/badge/cmake->=2.6-green)
   * ![MSVC](https://img.shields.io/badge/MSVC-Community-green)
 * platform

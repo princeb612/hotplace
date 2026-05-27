@@ -34,7 +34,7 @@ namespace hotplace {
 namespace net {
 
 return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_session* session, std::function<return_t(tls_handshake*, tls_direction_t)> hook,
-                                              uint16 minspec, uint16 maxspec) {
+                                              tls_version_t minspec, tls_version_t maxspec) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == handshake || nullptr == session) {
@@ -58,7 +58,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
         auto dir = from_client;
 
         tls_handshake_builder builder;
-        *handshake = builder.build(tls_hs_client_hello, session, [&](tls_handshake* h) -> return_t {
+        *handshake = builder.build(tls_handshake_type_t::client_hello, session, [&](tls_handshake* h) -> return_t {
             auto hs = (tls_handshake_client_hello*)h;
 
             // random
@@ -106,7 +106,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
             }
 
             hs->get_extensions()
-                .add(tls_ext_ec_point_formats, dir, hs,
+                .add(tls_extension_type_t::ec_point_formats, dir, hs,
                      // ec_point_formats
                      // RFC 9325 4.2.1
                      // Note that [RFC8422] deprecates all but the uncompressed point format.
@@ -115,7 +115,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                          (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
                          return errorcode_t::success;
                      })
-                .add(tls_ext_supported_groups, dir, hs,
+                .add(tls_extension_type_t::supported_groups, dir, hs,
                      [&](tls_extension* extension) -> return_t {
                          auto ext = (tls_extension_supported_groups*)extension;
                          // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
@@ -129,7 +129,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                          });
                          return errorcode_t::success;
                      })
-                .add(tls_ext_signature_algorithms, dir, hs, [&](tls_extension* extension) -> return_t {
+                .add(tls_extension_type_t::signature_algorithms, dir, hs, [&](tls_extension* extension) -> return_t {
                     auto ext = (tls_extension_signature_algorithms*)extension;
                     advisor->for_each_sigscheme([&](const hint_sigscheme_t* hint) -> void {
                         if (tls_flag_support & hint->flags) {
@@ -144,7 +144,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
             if (tls_13 == maxspec) {
                 // TLS 1.3
                 hs->get_extensions()
-                    .add(tls_ext_supported_versions, dir, hs,
+                    .add(tls_extension_type_t::supported_versions, dir, hs,
                          [&](tls_extension* extension) -> return_t {
                              auto ext = (tls_extension_client_supported_versions*)extension;
                              (*ext).add(is_dtls ? dtls_13 : tls_13);
@@ -153,12 +153,12 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                              }
                              return errorcode_t::success;
                          })
-                    .add(tls_ext_psk_key_exchange_modes, dir, hs,
+                    .add(tls_extension_type_t::psk_key_exchange_modes, dir, hs,
                          [](tls_extension* extension) -> return_t {
                              (*(tls_extension_psk_key_exchange_modes*)extension).add("psk_dhe_ke");
                              return errorcode_t::success;
                          })
-                    .add(tls_ext_key_share, dir, hs, [&](tls_extension* extension) -> return_t {
+                    .add(tls_extension_type_t::key_share, dir, hs, [&](tls_extension* extension) -> return_t {
                         tls_extension_client_key_share* keyshare = (tls_extension_client_key_share*)extension;
                         if (tls_flow_hello_retry_request != protection.get_flow()) {
                             keyshare->clear();
@@ -180,7 +180,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                             });
 
                             if (groups_set.empty()) {
-                                session->push_alert(from_server, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
+                                session->push_alert(from_server, tls_alertlevel_t::fatal, tls_alertdesc_t::handshake_failure);
                                 session->reset_session_status();
                             } else {
                                 auto lambda = [&](std::list<uint16> members) -> void {
@@ -208,16 +208,16 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                     });
             }
 
-            if (tls_12 == minspec) {
+            if (tls_version_t::tls_12 == minspec) {
                 if (session->get_keyvalue().get(session_conf_enable_encrypt_then_mac)) {
-                    hs->get_extensions().add(tls_ext_encrypt_then_mac, dir, hs, nullptr);
+                    hs->get_extensions().add(tls_extension_type_t::encrypt_then_mac, dir, hs, nullptr);
                 }
             }
 
             hs->get_extensions()
-                .add(tls_ext_session_ticket, dir, hs, nullptr)
-                .add(tls_ext_renegotiation_info, dir, hs, nullptr)
-                .add(tls_ext_extended_master_secret, dir, hs, nullptr);
+                .add(tls_extension_type_t::session_ticket, dir, hs, nullptr)
+                .add(tls_extension_type_t::renegotiation_info, dir, hs, nullptr)
+                .add(tls_extension_type_t::extended_master_secret, dir, hs, nullptr);
 
             if (hook) {
                 ret = hook(hs, from_client);
@@ -231,7 +231,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
 }
 
 return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_session* session, std::function<return_t(tls_handshake*, tls_direction_t)> hook,
-                                              uint16 minspec, uint16 maxspec) {
+                                              tls_version_t minspec, tls_version_t maxspec) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == handshake || nullptr == session) {
@@ -248,25 +248,25 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
         }
 
         uint16 cs = 0;
-        uint16 tlsver = 0;
+        tls_version_t tlsver = tls_version_t::unknown;
         auto dir = from_server;
         auto& protection = session->get_tls_protection();
         ret = protection.negotiate(session, minspec, maxspec, cs, tlsver);
         if (errorcode_t::success == ret) {
             tls_handshake_builder builder;
-            *handshake = builder.build(tls_hs_server_hello, session, [&](tls_handshake* h) -> return_t {
+            *handshake = builder.build(tls_handshake_type_t::server_hello, session, [&](tls_handshake* h) -> return_t {
                 auto hs = (tls_handshake_server_hello*)h;
 
                 hs->set_cipher_suite(cs);
 
                 if (tlsadvisor->is_kindof_tls13(tlsver)) {
                     hs->get_extensions()
-                        .add(tls_ext_supported_versions, dir, hs,
+                        .add(tls_extension_type_t::supported_versions, dir, hs,
                              [&](tls_extension* extension) -> return_t {
                                  (*(tls_extension_server_supported_versions*)extension).set(tlsver);
                                  return errorcode_t::success;
                              })
-                        .add(tls_ext_key_share, dir, hs,  //
+                        .add(tls_extension_type_t::key_share, dir, hs,  //
                              [](tls_extension* extension) -> return_t {
                                  auto keyshare = (tls_extension_server_key_share*)extension;
                                  keyshare->clear();
@@ -275,13 +275,13 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
                              });
                 } else {
                     hs->get_extensions()
-                        .add(tls_ext_renegotiation_info, dir, hs, nullptr)
-                        .add(tls_ext_ec_point_formats, dir, hs,
+                        .add(tls_extension_type_t::renegotiation_info, dir, hs, nullptr)
+                        .add(tls_extension_type_t::ec_point_formats, dir, hs,
                              [](tls_extension* extension) -> return_t {
                                  (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
                                  return errorcode_t::success;
                              })
-                        .add(tls_ext_supported_groups, dir, hs,  //
+                        .add(tls_extension_type_t::supported_groups, dir, hs,  //
                              [&](tls_extension* extension) -> return_t {
                                  auto group = protection.get_protection_context().get0_supported_group();
                                  (*(tls_extension_supported_groups*)extension).add(group);
@@ -296,7 +296,7 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
                 return ret;
             });
         } else {
-            session->push_alert(from_server, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
+            session->push_alert(from_server, tls_alertlevel_t::fatal, tls_alertdesc_t::handshake_failure);
             session->reset_session_status();
         }
     }

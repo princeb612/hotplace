@@ -19,7 +19,7 @@ namespace net {
 
 class tls_extension_unknown : public tls_extension {
    public:
-    tls_extension_unknown(uint16 type, tls_handshake* handshake);
+    tls_extension_unknown(tls_extension_type_t type, tls_handshake* handshake);
     virtual ~tls_extension_unknown();
 
    protected:

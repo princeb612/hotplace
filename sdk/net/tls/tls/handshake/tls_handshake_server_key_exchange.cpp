@@ -32,7 +32,7 @@ constexpr char constexpr_signature[] = "signature";
 constexpr char constexpr_sig_len[] = "signature len";
 constexpr char constexpr_sig[] = "computed signature";
 
-tls_handshake_server_key_exchange::tls_handshake_server_key_exchange(tls_session* session) : tls_handshake(tls_hs_server_key_exchange, session) {}
+tls_handshake_server_key_exchange::tls_handshake_server_key_exchange(tls_session* session) : tls_handshake(tls_handshake_type_t::server_key_exchange, session) {}
 
 tls_handshake_server_key_exchange::~tls_handshake_server_key_exchange() {}
 
@@ -49,7 +49,7 @@ return_t tls_handshake_server_key_exchange::do_preprocess(tls_direction_t dir) {
         auto session = get_session();
         auto session_status = session->get_session_status();
         if (0 == (session_status_server_cert & session_status)) {
-            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
             session->reset_session_status();
             ret = errorcode_t::handshake_failure;
             __leave2_trace(ret);

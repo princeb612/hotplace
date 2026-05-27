@@ -31,7 +31,7 @@ constexpr char constexpr_group[] = "group";
 constexpr char constexpr_pubkey_len[] = "public key len";
 constexpr char constexpr_pubkey[] = "public key";
 
-tls_extension_key_share::tls_extension_key_share(tls_handshake* handshake) : tls_extension(tls_ext_key_share, handshake) {}
+tls_extension_key_share::tls_extension_key_share(tls_handshake* handshake) : tls_extension(tls_extension_type_t::key_share, handshake) {}
 
 tls_extension_key_share::~tls_extension_key_share() {}
 

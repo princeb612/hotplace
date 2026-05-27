@@ -35,7 +35,7 @@ class tls_records {
 
    protected:
    private:
-    t_tls_container<tls_record*, uint8> _records;  // tls_content_type_t
+    t_tls_container<tls_record*, tls_content_type_t> _records;
 };
 
 }  // namespace net

@@ -311,7 +311,7 @@ enum ec_curve_t : uint32 {
 /**
  * RFC 8446 4.2.7.  Supported Groups
  * RFC 8422 5.1.1.  Supported Elliptic Curves Extension
- * tls_ext_supported_groups
+ * tls_extension_type_t::supported_groups
  * https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
  */
 enum tls_group_t : uint16 {
@@ -375,7 +375,7 @@ enum tls_group_t : uint16 {
 
 /**
  * RFC 8446 4.2.3.  Signature Algorithms
- * tls_ext_signature_algorithms
+ * tls_extension_type_t::signature_algorithms
  * https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
  */
 enum tls_sigscheme_t : uint16 {

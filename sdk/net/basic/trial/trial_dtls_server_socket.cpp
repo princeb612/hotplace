@@ -152,7 +152,7 @@ return_t trial_dtls_server_socket::sendto(socket_context_t* handle, const char* 
         tls_direction_t dir = from_server;
 
         if (dtls_13 == tlsver) {
-            dtls13_ciphertext record(tls_content_type_application_data, session);
+            dtls13_ciphertext record(tls_content_type_t::application_data, session);
             record.get_records().add(new tls_record_application_data(session, (byte_t*)ptr_data, size_data));
             record.write(dir, bin);
         } else {

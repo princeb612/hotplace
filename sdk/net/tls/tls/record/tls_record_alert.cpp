@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record_alert.hpp>
@@ -23,9 +24,11 @@ constexpr char constexpr_alert[] = "alert";
 constexpr char constexpr_level[] = "alert level";
 constexpr char constexpr_desc[] = "alert desc ";
 
-tls_record_alert::tls_record_alert(tls_session* session) : tls_record(tls_content_type_alert, session), _level(0), _desc(0) {}
+tls_record_alert::tls_record_alert(tls_session* session)
+    : tls_record(tls_content_type_t::alert, session), _level(tls_alertlevel_t::unknown), _desc(tls_alertdesc_t::unknown) {}
 
-tls_record_alert::tls_record_alert(tls_session* session, uint8 level, uint8 desc) : tls_record(tls_content_type_alert, session), _level(level), _desc(desc) {}
+tls_record_alert::tls_record_alert(tls_session* session, tls_alertlevel_t level, tls_alertdesc_t desc)
+    : tls_record(tls_content_type_t::alert, session), _level(level), _desc(desc) {}
 
 tls_record_alert::~tls_record_alert() {}
 
@@ -83,9 +86,11 @@ return_t tls_record_alert::read_plaintext(tls_direction_t dir, const byte_t* str
             level = stream[pos++];
             desc = stream[pos++];
         }
+        t_enum_type<tls_alertlevel_t> etlevel(level);
+        t_enum_type<tls_alertdesc_t> etdesc(desc);
         {
-            _level = level;
-            _desc = desc;
+            _level = etlevel;
+            _desc = etdesc;
         }
 
         check_status(dir);
@@ -96,8 +101,8 @@ return_t tls_record_alert::read_plaintext(tls_direction_t dir, const byte_t* str
                 tls_advisor* advisor = tls_advisor::get_instance();
 
                 dbs.println(ANSI_ESCAPE "1;35m > %s" ANSI_ESCAPE "0m", constexpr_alert);
-                dbs.println(" > %s %i %s", constexpr_level, level, advisor->nameof_tls_alert_level(level).c_str());
-                dbs.println(" > %s %i %s", constexpr_desc, desc, advisor->nameof_tls_alert_desc(desc).c_str());
+                dbs.println(" > %s %i %s", constexpr_level, etlevel, advisor->nameof_tls_alert_level(etlevel).c_str());
+                dbs.println(" > %s %i %s", constexpr_desc, etdesc, advisor->nameof_tls_alert_desc(etdesc).c_str());
             });
         }
 #endif
@@ -115,7 +120,7 @@ return_t tls_record_alert::do_write_body(tls_direction_t dir, binary_t& bin) {
 
 bool tls_record_alert::apply_protection() { return true; }
 
-tls_record_alert& tls_record_alert::set(uint8 level, uint8 desc) {
+tls_record_alert& tls_record_alert::set(tls_alertlevel_t level, tls_alertdesc_t desc) {
     _level = level;
     _desc = desc;
     return *this;
@@ -123,7 +128,7 @@ tls_record_alert& tls_record_alert::set(uint8 level, uint8 desc) {
 
 void tls_record_alert::operator<<(tls_record* record) {
     if (record) {
-        if (tls_content_type_alert == record->get_type()) {
+        if (tls_content_type_t::alert == record->get_type()) {
             tls_record_alert* alert = (tls_record_alert*)record;
             set(alert->get_level(), alert->get_desc());
         }
@@ -131,12 +136,12 @@ void tls_record_alert::operator<<(tls_record* record) {
     }
 }
 
-uint8 tls_record_alert::get_level() const { return _level; }
+tls_alertlevel_t tls_record_alert::get_level() const { return _level; }
 
-uint8 tls_record_alert::get_desc() const { return _desc; }
+tls_alertdesc_t tls_record_alert::get_desc() const { return _desc; }
 
 void tls_record_alert::check_status(tls_direction_t dir) {
-    if ((tls_alertlevel_warning == get_level()) && (tls_alertdesc_close_notify == get_desc())) {
+    if ((tls_alertlevel_t::warning == get_level()) && (tls_alertdesc_t::close_notify == get_desc())) {
         auto session = get_session();
         if (from_client == dir) {
             session->update_session_status(session_status_client_close_notified);

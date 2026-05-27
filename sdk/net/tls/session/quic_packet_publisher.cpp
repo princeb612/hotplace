@@ -64,16 +64,16 @@ uint32 quic_packet_publisher::get_flags() { return _flags; }
 
 tls_handshakes& quic_packet_publisher::get_handshakes() { return _handshakes; }
 
-quic_packet_publisher& quic_packet_publisher::add(tls_hs_type_t type, tls_direction_t dir, std::function<return_t(tls_handshake*, tls_direction_t)> func) {
+quic_packet_publisher& quic_packet_publisher::add(tls_handshake_type_t type, tls_direction_t dir, std::function<return_t(tls_handshake*, tls_direction_t)> func) {
     return_t ret = errorcode_t::success;
     tls_handshake* handshake = nullptr;
     auto session = get_session();
     auto spec = tls_13;
     switch (type) {
-        case tls_hs_client_hello: {
+        case tls_handshake_type_t::client_hello: {
             ret = tls_composer::construct_client_hello(&handshake, session, func, spec, spec);
         } break;
-        case tls_hs_server_hello: {
+        case tls_handshake_type_t::server_hello: {
             ret = tls_composer::construct_server_hello(&handshake, session, func, spec, spec);
         } break;
         default: {
@@ -223,7 +223,7 @@ return_t quic_packet_publisher::prepare_packet_cid(quic_packet* packet, protecti
         auto session = get_session();
         auto& protection = session->get_tls_protection();
 
-        auto ch = get_handshakes().get(tls_hs_client_hello);
+        auto ch = get_handshakes().get(tls_handshake_type_t::client_hello);
         const auto& s_cid = protection.get_secrets().get(tls_context_server_cid);
 
         if (protection_initial == space) {
@@ -233,7 +233,7 @@ return_t quic_packet_publisher::prepare_packet_cid(quic_packet* packet, protecti
                     openssl_prng prng;
                     prng.random(id, 8);
                     protection.get_secrets().assign(tls_context_quic_dcid, id);
-                    protection.calc(session, tls_hs_client_hello, dir);  // calc initial keys
+                    protection.calc(session, tls_handshake_type_t::client_hello, dir);  // calc initial keys
 #if defined DEBUG
                     if (istraceable(trace_category_t::trace_category_net)) {
                         trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_quic_packet,

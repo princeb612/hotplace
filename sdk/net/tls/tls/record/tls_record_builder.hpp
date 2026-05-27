@@ -33,7 +33,7 @@ class tls_record_builder {
     tls_record_builder();
 
     tls_record_builder& set(tls_session* session);
-    tls_record_builder& set(uint8 type);
+    tls_record_builder& set(tls_content_type_t type);
     /**
      * @brief   set direction (C->S, S->C)
      * @remarks get change_cipher_spec status from session
@@ -44,8 +44,8 @@ class tls_record_builder {
      *              // new tls_record_handshake or new tls_record_alert
      *          }
      * @example
-     *          auto record = builder.set(session).set(tls_content_type_handshake).set(from_client).construct().build()
-     *          auto record = builder.set(session).set(tls_content_type_alert).set(from_client).construct().build()
+     *          auto record = builder.set(session).set(tls_content_type_t::handshake).set(from_client).construct().build()
+     *          auto record = builder.set(session).set(tls_content_type_t::alert).set(from_client).construct().build()
      */
     tls_record_builder& set(tls_direction_t dir);
     /**
@@ -61,7 +61,7 @@ class tls_record_builder {
      *          // change_cipher_spec here
      *
      *          tls_record_builder builder;
-     *          auto record = builder.set(session).set(tls_content_type_handshake).set(from_client).construct().build();
+     *          auto record = builder.set(session).set(tls_content_type_t::handshake).set(from_client).construct().build();
      *          if (record) {
      *              *record << new tls_handshake_finished(session);
      *              record->write(dir, bin);
@@ -75,11 +75,11 @@ class tls_record_builder {
      *          builder  //
      *              .set(dir)
      *              .construct()
-     *              .add(&records, tls_content_type_change_cipher_spec, session)
+     *              .add(&records, tls_content_type_t::change_cipher_spec, session)
      *              .set_protected(true)
-     *              .add(&records, tls_content_type_handshake, session,  //
+     *              .add(&records, tls_content_type_t::handshake, session,  //
      *                   [&](tls_record* record) -> return_t {
-     *                       record->add(tls_hs_finished, session);
+     *                       record->add(tls_handshake_type_t::finished, session);
      *                       return errorcode_t::success;
      *                   });
      */
@@ -94,7 +94,7 @@ class tls_record_builder {
      *          tls_record_builder builder;
      *          tls_records records;
      *                  builder                                                  //
-     *                      .add(&records, tls_content_type_handshake, session,  //
+     *                      .add(&records, tls_content_type_t::handshake, session,  //
      *                           [&](tls_record* record) -> return_t {
      *                               return_t ret = errorcode_t::success;
      *                               tls_handshake* handshake = nullptr;
@@ -111,14 +111,14 @@ class tls_record_builder {
     tls_record* build(tls_content_type_t type, tls_session* session, std::function<return_t(tls_record*)> func = nullptr);
 
     tls_session* get_session();
-    uint8 get_type();
+    tls_content_type_t get_type();
     tls_direction_t get_direction();
     bool is_construct();
     bool is_protected();
 
    private:
     tls_session* _session;
-    uint8 _type;
+    tls_content_type_t _type;
     tls_direction_t _dir;
     bool _construct;
     bool _protected;

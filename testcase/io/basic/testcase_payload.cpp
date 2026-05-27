@@ -308,7 +308,8 @@ void test_uint48() {
 
         auto lambda_check_dtls = [&](payload* pl, payload_member* item) -> void {
             auto ver = pl->t_value_of<uint16>(item);
-            pl->set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(ver));
+            t_enum_type<tls_version_t> etver(ver);
+            pl->set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(etver));
         };
         pl.set_condition(constexpr_record_version, lambda_check_dtls);
         size_t pos = 0;
@@ -331,9 +332,12 @@ void test_uint48() {
             dtls_record_epoch = pl.t_value_of<uint16>(constexpr_dtls_epoch);
             dtls_record_seq = pl.t_value_of<uint64>(constexpr_dtls_record_seq);
         }
-        _test_case.assert(tls_content_type_handshake == content_type, __FUNCTION__, "content_type 0x%02x (%s)", content_type,
-                          tlsadvisor->nameof_tls_record(content_type).c_str());
-        _test_case.assert(dtls_12 == record_version, __FUNCTION__, "record_version 0x%04x (%s)", record_version, tlsadvisor->nameof_tls_version(record_version).c_str());
+        t_enum_type<tls_version_t> etrecord_version(record_version);
+        t_enum_type<tls_content_type_t> etcontent_type(content_type);
+        _test_case.assert(tls_content_type_t::handshake == etcontent_type, __FUNCTION__, "content_type 0x%02x (%s)", etcontent_type,
+                          tlsadvisor->nameof_tls_record(etcontent_type).c_str());
+        _test_case.assert(tls_version_t::dtls_12 == etrecord_version, __FUNCTION__, "record_version 0x%04x (%s)", etrecord_version,
+                          tlsadvisor->nameof_tls_version(etrecord_version).c_str());
         _test_case.assert(0 == dtls_record_epoch, __FUNCTION__, "dtls_record_epoch %u", dtls_record_epoch);
         _test_case.assert(1 == dtls_record_seq, __FUNCTION__, "dtls_record_seq %I64u", dtls_record_seq);
         _test_case.assert(0x61 == len, __FUNCTION__, "len %u", len);

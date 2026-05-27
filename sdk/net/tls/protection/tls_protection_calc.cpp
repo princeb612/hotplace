@@ -37,7 +37,7 @@ constexpr char constexpr_quic2_key[] = "quicv2 key";
 constexpr char constexpr_quic2_iv[] = "quicv2 iv";
 constexpr char constexpr_quic2_hp[] = "quicv2 hp";
 
-return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_direction_t dir) {
+return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     // RFC 8446 7.1.  Key Schedule
     __try2 {
@@ -121,7 +121,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
         };
 
         bool cond_trhash = true;
-        if (tls_hs_client_hello == type) {
+        if (tls_handshake_type_t::client_hello == type) {
             if ((session_type_quic == session_type) || (session_type_quic2 == session_type)) {
                 cond_trhash = false;
             }
@@ -140,7 +140,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
 
         auto flow = get_flow();
 
-        if (tls_hs_client_hello == type) {
+        if (tls_handshake_type_t::client_hello == type) {
             /**
              *             0
              *             |
@@ -167,7 +167,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
              *             v
              */
 
-            // res binder (see tls_ext_pre_shared_key)
+            // res binder (see tls_extension_type_t::pre_shared_key)
             // exp master (see tls_context_server_finished)
 
             if ((session_type_tls == session_type) || (session_type_dtls == session_type)) {
@@ -250,7 +250,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
                     get_secrets().assign(tls_secret_initial_quic_server_hp, bin);
                 }
             }
-        } else if (tls_hs_server_hello == type) {
+        } else if (tls_handshake_type_t::server_hello == type) {
             // ~ TLS 1.2 see client_key_exchange, server_key_exchange
             // TLS 1.3 server_hello legacy_version
 
@@ -401,7 +401,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
                     lambda_expand_label(tls_secret_handshake_quic_server_hp, okm, hashalg, keysize, secret_handshake_server, label_quic_hp, empty);
                 }
             }
-        } else if (tls_hs_end_of_early_data == type) {
+        } else if (tls_handshake_type_t::end_of_early_data == type) {
             binary_t okm;
             const binary_t& secret_c_hs_traffic = get_secrets().get(tls_secret_c_hs_traffic);
             lambda_expand_label(tls_secret_handshake_client_key, okm, hashalg, keysize, secret_c_hs_traffic, "key", empty);
@@ -409,7 +409,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
             const binary_t& secret_s_hs_traffic = get_secrets().get(tls_secret_s_hs_traffic);
             lambda_expand_label(tls_secret_handshake_server_key, okm, hashalg, keysize, secret_s_hs_traffic, "key", empty);
             lambda_expand_label(tls_secret_handshake_server_iv, okm, hashalg, 12, secret_s_hs_traffic, "iv", empty);
-        } else if ((tls_hs_finished == type) && is_serverinitiated(dir)) {
+        } else if ((tls_handshake_type_t::finished == type) && is_serverinitiated(dir)) {
             /**
              *   0 -> HKDF-Extract = Master Secret
              *             |
@@ -473,7 +473,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
                 lambda_expand_label(tls_secret_application_quic_server_iv, okm, hashalg, 12, secret_application_server, label_quic_iv, empty);
                 lambda_expand_label(tls_secret_application_quic_server_hp, okm, hashalg, keysize, secret_application_server, label_quic_hp, empty);
             }
-        } else if ((tls_hs_finished == type) && is_clientinitiated(dir)) {
+        } else if ((tls_handshake_type_t::finished == type) && is_clientinitiated(dir)) {
             /**
              *   0 -> HKDF-Extract = Master Secret
              *             |
@@ -501,7 +501,7 @@ return_t tls_protection::calc(tls_session* session, tls_hs_type_t type, tls_dire
                 lambda_expand_label(tls_secret_application_client_sn_key, okm, hashalg, keysize, secret_application_client, "sn", empty);
             }
 
-        } else if (tls_hs_client_key_exchange == type) {
+        } else if (tls_handshake_type_t::client_key_exchange == type) {
             crypto_hmac_builder builder;
             binary_t master_secret;
             hash_algorithm_t hmac_alg = algof_mac(hint_tls_alg);

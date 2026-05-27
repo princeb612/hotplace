@@ -22,7 +22,7 @@ class tls_handshake {
     friend class tls_handshakes;
 
    public:
-    tls_handshake(tls_hs_type_t type, tls_session* session);
+    tls_handshake(tls_handshake_type_t type, tls_session* session);
     virtual ~tls_handshake();
 
     static tls_handshake* read(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
@@ -36,7 +36,7 @@ class tls_handshake {
 
     tls_extensions& get_extensions();
 
-    tls_hs_type_t get_type();
+    tls_handshake_type_t get_type();
     tls_session* get_session();
     size_t get_size();
     const range_t& get_header_range();
@@ -90,7 +90,7 @@ class tls_handshake {
     uint16 _extension_len;
     tls_extensions _extensions;
 
-    tls_hs_type_t _type;
+    tls_handshake_type_t _type;
     tls_session* _session;
     uint32 _bodysize;
     bool _is_dtls;

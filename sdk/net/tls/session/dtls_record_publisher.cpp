@@ -71,7 +71,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
             size_t hdrsize = sizeof(dtls_handshake_t);
 
             struct spl_desc {
-                tls_hs_type_t hstype;
+                tls_handshake_type_t hstype;
                 uint16 hsseq;
             };
 
@@ -150,7 +150,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                     *rec_fragmented << hs_fragmented;
                 };
 
-                if (tls_content_type_handshake == rctype) {
+                if (tls_content_type_t::handshake == rctype) {
                     tls_record_handshake* rec_handshake = static_cast<tls_record_handshake*>(record);
                     // rec_handshake->set_flags(dont_control_dtls_sequence);  // do not change epoch, sequence (record)
 

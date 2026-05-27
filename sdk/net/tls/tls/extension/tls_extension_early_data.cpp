@@ -26,7 +26,7 @@ namespace net {
 const char constexpr_max_early_data_size[] = "max early data size";
 const char constexpr_new_session_ticket[] = "new session ticket";
 
-tls_extension_early_data::tls_extension_early_data(tls_handshake* handshake) : tls_extension(tls_ext_early_data, handshake) {}
+tls_extension_early_data::tls_extension_early_data(tls_handshake* handshake) : tls_extension(tls_extension_type_t::early_data, handshake) {}
 
 tls_extension_early_data::~tls_extension_early_data() {}
 
@@ -59,7 +59,7 @@ return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_
             pl << new payload_member(uint32(0), true, constexpr_max_early_data_size, constexpr_new_session_ticket);
 
             auto is_nst = false;
-            is_nst = (tls_hs_new_session_ticket == get_handshake()->get_type());
+            is_nst = (tls_handshake_type_t::new_session_ticket == get_handshake()->get_type());
             pl.set_group(constexpr_new_session_ticket, is_nst);
 
             pl.read(stream, size, pos);

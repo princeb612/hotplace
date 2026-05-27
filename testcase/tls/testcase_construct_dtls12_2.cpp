@@ -46,7 +46,7 @@ static return_t do_test_construct_hello_verify_request(tls_session* session, tls
     return_t ret = errorcode_t::success;
     __try2 {
         tls_record_handshake record(session);
-        record.add(tls_hs_hello_verify_request, session,  //
+        record.add(tls_handshake_type_t::hello_verify_request, session,  //
                    [&](tls_handshake* hs) -> return_t {
                        auto handshake = (tls_handshake_hello_verify_request*)hs;
 
@@ -83,9 +83,9 @@ static return_t do_test_construct_from_server_hello_to_server_hello_done(tls_ses
 
         record  //
             .add(handshake)
-            .add(tls_hs_certificate, session)
-            .add(tls_hs_server_key_exchange, session)
-            .add(tls_hs_server_hello_done, session);
+            .add(tls_handshake_type_t::certificate, session)
+            .add(tls_handshake_type_t::server_key_exchange, session)
+            .add(tls_handshake_type_t::server_hello_done, session);
 
         ret = construct_record_fragmented(&record, dir, [&](tls_session*, binary_t& bin) -> void { _traffic.sendto(std::move(bin)); });
     }
@@ -102,15 +102,15 @@ static return_t do_test_construct_from_client_key_exchange_to_finished(tls_sessi
     __try2 {
         tls_records records;
         records
-            .add(tls_content_type_handshake, session,
+            .add(tls_content_type_t::handshake, session,
                  [&](tls_record* record) -> return_t {
-                     (*(tls_record_handshake*)record).add(tls_hs_client_key_exchange, session);
+                     (*(tls_record_handshake*)record).add(tls_handshake_type_t::client_key_exchange, session);
                      return errorcode_t::success;
                  })
-            .add(tls_content_type_change_cipher_spec, session)
-            .add(tls_content_type_handshake, session,  //
+            .add(tls_content_type_t::change_cipher_spec, session)
+            .add(tls_content_type_t::handshake, session,  //
                  [&](tls_record* record) -> return_t {
-                     (*(tls_record_handshake*)record).add(tls_hs_finished, session);
+                     (*(tls_record_handshake*)record).add(tls_handshake_type_t::finished, session);
                      return errorcode_t::success;
                  });
 
@@ -128,10 +128,10 @@ static return_t do_test_construct_from_change_cipher_spec_to_finished(tls_sessio
     return_t ret = errorcode_t::success;
     __try2 {
         tls_records records;
-        records.add(tls_content_type_change_cipher_spec, session)
-            .add(tls_content_type_handshake, session,  //
+        records.add(tls_content_type_t::change_cipher_spec, session)
+            .add(tls_content_type_t::handshake, session,  //
                  [&](tls_record* record) -> return_t {
-                     (*(tls_record_handshake*)record).add(tls_hs_finished, session);
+                     (*(tls_record_handshake*)record).add(tls_handshake_type_t::finished, session);
                      return errorcode_t::success;
                  });
 
@@ -169,8 +169,8 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
         _traffic.consume(lambda);
 
         bool has_fatal = false;
-        auto lambda_test_fatal_alert = [&](uint8 level, uint8 desc) -> void {
-            if (tls_alertlevel_fatal == level) {
+        auto lambda_test_fatal_alert = [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
+            if (tls_alertlevel_t::fatal == level) {
                 has_fatal = true;
             }
         };

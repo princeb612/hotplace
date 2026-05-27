@@ -12,6 +12,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
@@ -29,14 +30,14 @@ constexpr char constexpr_extension[] = "extension";
 constexpr char constexpr_ext_len[] = "extension len";
 constexpr char constexpr_extension_type[] = "extension type";
 
-tls_extension::tls_extension(tls_handshake* hs) : _hs(hs), _type(0), _bodysize(0), _size(0) {
+tls_extension::tls_extension(tls_handshake* hs) : _hs(hs), _type(tls_extension_type_t::unknown), _bodysize(0), _size(0) {
     if (nullptr == hs) {
         throw exception(errorcode_t::no_session);
     }
     _shared.make_share(this);
 }
 
-tls_extension::tls_extension(uint16 type, tls_handshake* hs) : _hs(hs), _type(type), _bodysize(0), _size(0) {
+tls_extension::tls_extension(tls_extension_type_t type, tls_handshake* hs) : _hs(hs), _type(type), _bodysize(0), _size(0) {
     if (nullptr == hs) {
         throw exception(errorcode_t::no_session);
     }
@@ -64,8 +65,9 @@ tls_extension* tls_extension::read(tls_handshake* handshake, tls_direction_t dir
 
         {
             auto extension_type = ntoh16(*(uint16*)(stream + pos));
+            t_enum_type<tls_extension_type_t> etextension_type(extension_type);
             tls_extension_builder builder;
-            auto extension = builder.set(handshake).set(dir).set(extension_type).build();
+            auto extension = builder.set(handshake).set(dir).set(etextension_type).build();
             if (extension) {
                 ret = extension->read(dir, stream, size, pos);
                 if (errorcode_t::success == ret) {
@@ -178,10 +180,11 @@ return_t tls_extension::do_read_header(tls_direction_t dir, const byte_t* stream
             __leave2;
         }
 
+        t_enum_type<tls_extension_type_t> etextension_type(extension_type);
         {
             _header_range.begin = extpos;
             _header_range.end = pos;
-            _type = extension_type;
+            _type = etextension_type;
             _bodysize = ext_len;
             _size = 4 + ext_len;  // pos - extpos + ext_len
         }
@@ -191,7 +194,7 @@ return_t tls_extension::do_read_header(tls_direction_t dir, const byte_t* stream
             trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-                dbs.println("  > %s - %04x %s", constexpr_extension, extension_type, tlsadvisor->nameof_tls_extension(extension_type).c_str());
+                dbs.println("  > %s - %04x %s", constexpr_extension, etextension_type, tlsadvisor->nameof_tls_extension(etextension_type).c_str());
                 if (check_trace_level(loglevel_t::loglevel_debug)) {
                     dump_memory(stream + offsetof_header(), get_extsize(), &dbs, 16, 4, 0x0, dump_notrunc);
                 }
@@ -232,9 +235,9 @@ return_t tls_extension::do_write_body(tls_direction_t dir, binary_t& bin) { retu
 
 tls_handshake* tls_extension::get_handshake() { return _hs; }
 
-void tls_extension::set_type(uint16 type) { _type = type; }
+void tls_extension::set_type(tls_extension_type_t type) { _type = type; }
 
-uint16 tls_extension::get_type() { return _type; }
+tls_extension_type_t tls_extension::get_type() { return _type; }
 
 const range_t& tls_extension::get_header_range() { return _header_range; }
 

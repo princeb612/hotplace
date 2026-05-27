@@ -12,6 +12,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/cipher_encrypt.hpp>
@@ -41,7 +42,7 @@ constexpr char constexpr_encdata[] = "enc data + tag";
 constexpr char constexpr_sequence[] = "sequence";
 constexpr char constexpr_recno[] = "record no";
 
-dtls13_ciphertext::dtls13_ciphertext(uint8 type, tls_session* session) : tls_record(type, session), _sequence(0), _sequence_len(0), _offset_encdata(0) {}
+dtls13_ciphertext::dtls13_ciphertext(tls_content_type_t type, tls_session* session) : tls_record(type, session), _sequence(0), _sequence_len(0), _offset_encdata(0) {}
 
 dtls13_ciphertext::~dtls13_ciphertext() {}
 
@@ -132,7 +133,9 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
 #endif
 
         {
-            _content_type = uhdr;
+            t_enum_type<tls_content_type_t> etuhdr(uhdr);
+
+            _content_type = etuhdr;
             _bodysize = len;
 
             _range.begin = recpos;
@@ -216,44 +219,52 @@ return_t dtls13_ciphertext::do_read_body(tls_direction_t dir, const byte_t* stre
         }
 #endif
 
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        uint8 type = *plaintext.rbegin();
+        t_enum_type<tls_content_type_t> ettype(type);
+
         // record
-        if (errorcode_t::success == ret) {
-            uint8 type = *plaintext.rbegin();
-            size_t tpos = 0;
+        size_t tpos = 0;
 
 #if defined DEBUG
-            if (istraceable(trace_category_t::trace_category_net)) {
-                trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_record, [&](basic_stream& dbs) -> void {
-                    tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                    dbs.println("> content type 0x%02x(%i) %s", type, type, tlsadvisor->nameof_tls_record(type).c_str());
+        if (istraceable(trace_category_t::trace_category_net)) {
+            trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_record, [&](basic_stream& dbs) -> void {
+                tls_advisor* tlsadvisor = tls_advisor::get_instance();
+                dbs.println("> content type 0x%02x(%i) %s", ettype, ettype, tlsadvisor->nameof_tls_record(ettype).c_str());
 
-                    if (check_trace_level(loglevel_t::loglevel_debug)) {
-                        switch (type) {
-                            case tls_content_type_application_data: {
-                                dump_memory(plaintext.data(), plaintext.size() - 1, &dbs, 16, 3, 0x0, dump_notrunc);
-                            } break;
-                        }
+                if (check_trace_level(loglevel_t::loglevel_debug)) {
+                    switch (ettype.get()) {
+                        case tls_content_type_t::application_data: {
+                            dump_memory(plaintext.data(), plaintext.size() - 1, &dbs, 16, 3, 0x0, dump_notrunc);
+                        } break;
+                        default:
+                            break;
                     }
-                });
-            }
+                }
+            });
+        }
 #endif
 
-            switch (type) {
-                case tls_content_type_alert: {
-                    tls_record_alert alert(session);
-                    ret = alert.read_plaintext(dir, plaintext.data(), plaintext.size() - 1, tpos);
-                } break;
-                case tls_content_type_handshake: {
-                    auto handshake = tls_handshake::read(session, dir, plaintext.data(), plaintext.size() - 1, tpos);
-                    get_handshakes().add(handshake);
-                } break;
-                case tls_content_type_application_data: {
-                } break;
-                case tls_content_type_ack: {
-                    tls_record_ack ack(session);
-                    ret = ack.do_read_body(dir, plaintext.data(), plaintext.size() - 1, tpos);
-                } break;
-            }
+        switch (ettype.get()) {
+            case tls_content_type_t::alert: {
+                tls_record_alert alert(session);
+                ret = alert.read_plaintext(dir, plaintext.data(), plaintext.size() - 1, tpos);
+            } break;
+            case tls_content_type_t::handshake: {
+                auto handshake = tls_handshake::read(session, dir, plaintext.data(), plaintext.size() - 1, tpos);
+                get_handshakes().add(handshake);
+            } break;
+            case tls_content_type_t::application_data: {
+            } break;
+            case tls_content_type_t::ack: {
+                tls_record_ack ack(session);
+                ret = ack.do_read_body(dir, plaintext.data(), plaintext.size() - 1, tpos);
+            } break;
+            default:
+                break;
         }
     }
     __finally2 {}
@@ -307,8 +318,10 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
             pl.write(header);
         }
 
+        t_enum_type<tls_content_type_t> etuhdr(uhdr);
+
         {
-            _content_type = uhdr;
+            _content_type = etuhdr;
             _bodysize = t_narrow_cast(body.size());
             _range.begin = recpos;
             _range.end = header.size();
@@ -347,15 +360,15 @@ return_t dtls13_ciphertext::do_write_header(tls_direction_t dir, binary_t& bin, 
 
         {
             payload pl;
-            pl << new payload_member(uhdr, constexpr_unified_header)                                  //
+            pl << new payload_member(etuhdr, constexpr_unified_header)                                //
                << new payload_member(_cid, constexpr_connection_id, constexpr_group_c)                // cid    C:1
                << new payload_member(uint16(recno), true, constexpr_sequence16, constexpr_group_s16)  // seq 16 S:1
                << new payload_member(uint8(recno), constexpr_sequence8, constexpr_group_s8)           // seq 8  S:0
                << new payload_member(uint16(block.size()), true, constexpr_len, constexpr_group_l);   // len    L:1
-            pl.set_group(constexpr_group_c, (0x10 & uhdr));
-            pl.set_group(constexpr_group_s16, 0 != (0x08 & uhdr));
-            pl.set_group(constexpr_group_s8, 0 == (0x08 & uhdr));
-            pl.set_group(constexpr_group_l, (0x04 & uhdr));
+            pl.set_group(constexpr_group_c, (0x10 & etuhdr));
+            pl.set_group(constexpr_group_s16, 0 != (0x08 & etuhdr));
+            pl.set_group(constexpr_group_s8, 0 == (0x08 & etuhdr));
+            pl.set_group(constexpr_group_l, (0x04 & etuhdr));
             pl.write(bin);
 
             binary_append(bin, block);
@@ -405,7 +418,7 @@ tls_record& dtls13_ciphertext::add(tls_content_type_t type, tls_session* session
     return *this;
 }
 
-tls_record& dtls13_ciphertext::add(tls_hs_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func, bool upref) {
+tls_record& dtls13_ciphertext::add(tls_handshake_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func, bool upref) {
     get_handshakes().add(type, session, func, upref);
     return *this;
 }

@@ -21,17 +21,17 @@ class tls_extension_builder {
    public:
     tls_extension_builder();
     tls_extension_builder& set(tls_handshake* hs);
-    tls_extension_builder& set(uint16 type);
+    tls_extension_builder& set(tls_extension_type_t type);
     tls_extension_builder& set(tls_direction_t dir);
     tls_extension* build();
 
     tls_handshake* get_handshake();
-    uint16 get_type();
+    tls_extension_type_t get_type();
     tls_direction_t get_direction();
 
    private:
     tls_handshake* _hs;
-    uint16 _type;
+    tls_extension_type_t _type;
     tls_direction_t _dir;
 };
 

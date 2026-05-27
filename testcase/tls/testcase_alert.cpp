@@ -80,17 +80,17 @@ void test_alert() {
     }
 
     {
-        std::set<uint8> fatal_alerts;
+        std::set<tls_alertdesc_t> fatal_alerts;
         // unexpected message
-        auto lambda = [&](uint8 level, uint8 desc) -> void {
-            if (tls_alertlevel_fatal == level) {
+        auto lambda = [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
+            if (tls_alertlevel_t::fatal == level) {
                 fatal_alerts.insert(desc);
             }
             _logger->writeln("level %i desc %i", level, desc);
         };
         session.get_alert(from_server, lambda);
 
-        auto iter = fatal_alerts.find(tls_alertdesc_unexpected_message);
+        auto iter = fatal_alerts.find(tls_alertdesc_t::unexpected_message);
         bool test = (fatal_alerts.end() != iter);
         _test_case.assert(test, __FUNCTION__, "alert == {fatal, unexpected message}");
     }

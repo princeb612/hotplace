@@ -31,8 +31,8 @@ class tls_extension_client_supported_versions : public tls_extension_supported_v
     tls_extension_client_supported_versions(tls_handshake* handshake);
     virtual ~tls_extension_client_supported_versions();
 
-    tls_extension_client_supported_versions& add(uint16 code);
-    const std::list<uint16>& get_versions();
+    tls_extension_client_supported_versions& add(tls_version_t code);
+    const std::list<tls_version_t>& get_versions();
 
    protected:
     virtual return_t do_postprocess(tls_direction_t dir);
@@ -40,7 +40,7 @@ class tls_extension_client_supported_versions : public tls_extension_supported_v
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
    private:
-    std::list<uint16> _versions;
+    std::list<tls_version_t> _versions;
 };
 
 class tls_extension_server_supported_versions : public tls_extension_supported_versions {
@@ -48,8 +48,8 @@ class tls_extension_server_supported_versions : public tls_extension_supported_v
     tls_extension_server_supported_versions(tls_handshake* handshake);
     virtual ~tls_extension_server_supported_versions();
 
-    uint16 get_version();
-    tls_extension_server_supported_versions& set(uint16 code);
+    tls_version_t get_version();
+    tls_extension_server_supported_versions& set(tls_version_t code);
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);

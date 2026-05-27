@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
@@ -23,7 +24,7 @@ namespace net {
 constexpr char constexpr_versions[] = "supported versions";
 constexpr char constexpr_version[] = "version";
 
-tls_extension_supported_versions::tls_extension_supported_versions(tls_handshake* handshake) : tls_extension(tls_ext_supported_versions, handshake) {}
+tls_extension_supported_versions::tls_extension_supported_versions(tls_handshake* handshake) : tls_extension(tls_extension_type_t::supported_versions, handshake) {}
 
 tls_extension_supported_versions::~tls_extension_supported_versions() {}
 
@@ -60,7 +61,8 @@ return_t tls_extension_client_supported_versions::do_read_body(tls_direction_t d
 
             for (auto i = 0; i < count; i++) {
                 auto ver = t_binary_to_integer<uint16>(&versions[i << 1], sizeof(uint16));
-                add(ver);
+                t_enum_type<tls_version_t> etver(ver);
+                add(etver);
             }
         }
 
@@ -104,7 +106,7 @@ return_t tls_extension_client_supported_versions::do_write_body(tls_direction_t 
     return ret;
 }
 
-tls_extension_client_supported_versions& tls_extension_client_supported_versions::add(uint16 code) {
+tls_extension_client_supported_versions& tls_extension_client_supported_versions::add(tls_version_t code) {
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
     auto hint = tlsadvisor->hintof_tls_version(code);
     if (hint && hint->support) {
@@ -113,7 +115,7 @@ tls_extension_client_supported_versions& tls_extension_client_supported_versions
     return *this;
 }
 
-const std::list<uint16>& tls_extension_client_supported_versions::get_versions() { return _versions; }
+const std::list<tls_version_t>& tls_extension_client_supported_versions::get_versions() { return _versions; }
 
 tls_extension_server_supported_versions::tls_extension_server_supported_versions(tls_handshake* handshake) : tls_extension_supported_versions(handshake) {}
 
@@ -134,9 +136,11 @@ return_t tls_extension_server_supported_versions::do_read_body(tls_direction_t d
             version = pl.t_value_of<uint16>(constexpr_version);
         }
 
+        t_enum_type<tls_version_t> etversion(version);
+
         {
             auto& protection = session->get_tls_protection();
-            protection.set_tls_version(version);
+            protection.set_tls_version(etversion);
         }
 
 #if defined DEBUG
@@ -144,7 +148,7 @@ return_t tls_extension_server_supported_versions::do_read_body(tls_direction_t d
             trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-                dbs.println("    > 0x%04x %s", version, tlsadvisor->nameof_tls_version(version).c_str());
+                dbs.println("    > 0x%04x %s", etversion, tlsadvisor->nameof_tls_version(etversion).c_str());
             });
         }
 #endif
@@ -166,8 +170,8 @@ return_t tls_extension_server_supported_versions::do_write_body(tls_direction_t 
     return ret;
 }
 
-uint16 tls_extension_server_supported_versions::get_version() {
-    uint16 version = 0;
+tls_version_t tls_extension_server_supported_versions::get_version() {
+    tls_version_t version = tls_version_t::unknown;
     auto session = get_handshake()->get_session();
     if (session) {
         auto& protection = session->get_tls_protection();
@@ -176,7 +180,7 @@ uint16 tls_extension_server_supported_versions::get_version() {
     return version;
 }
 
-tls_extension_server_supported_versions& tls_extension_server_supported_versions::set(uint16 code) {
+tls_extension_server_supported_versions& tls_extension_server_supported_versions::set(tls_version_t code) {
     auto session = get_handshake()->get_session();
     if (session) {
         tls_advisor* tlsadvisor = tls_advisor::get_instance();

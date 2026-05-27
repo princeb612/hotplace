@@ -23,7 +23,7 @@ constexpr char constexpr_alps_len[] = "alps len";
 constexpr char constexpr_alpn_len[] = "alpn len";
 constexpr char constexpr_alpn[] = "alpn";
 
-tls_extension_alps::tls_extension_alps(tls_handshake* handshake) : tls_extension(tls_ext_application_layer_protocol_settings, handshake), _alps_len(0) {}
+tls_extension_alps::tls_extension_alps(tls_handshake* handshake) : tls_extension(tls_extension_type_t::application_layer_protocol_settings, handshake), _alps_len(0) {}
 
 tls_extension_alps::~tls_extension_alps() {}
 

@@ -26,15 +26,16 @@ namespace net {
  *          |0|0|1|C|S|L|E E|
  *          DTLS 0x20..0x3F
  */
-enum tls_content_type_t : uint8 {
-    tls_content_type_invalid = 0,
-    tls_content_type_change_cipher_spec = 0x14,  // 20, RFC 2246
-    tls_content_type_alert = 0x15,               // 21, RFC 2246
-    tls_content_type_handshake = 0x16,           // 22, RFC 2246
-    tls_content_type_application_data = 0x17,    // 23, RFC 2246
-    tls_content_type_heartbeat = 0x18,           // 24, RFC 6520, RFC 8446
-    tls_content_type_tls12_cid = 0x19,           // 25
-    tls_content_type_ack = 0x1a,                 // 26
+enum class tls_content_type_t : uint8 {
+    unknown = 0,
+    change_cipher_spec = 0x14,        // 20, RFC 2246
+    alert = 0x15,                     // 21, RFC 2246
+    handshake = 0x16,                 // 22, RFC 2246
+    application_data = 0x17,          // 23, RFC 2246
+    heartbeat = 0x18,                 // 24, RFC 6520, RFC 8446
+    tls12_cid = 0x19,                 // 25, RFC 9146 0x19
+    ack = 0x1a,                       // 26, RFC 9147 0x1a
+    return_routability_check = 0x1b,  // draft-ietf-tls-dtls-rrc-10
 };
 
 /*
@@ -43,101 +44,105 @@ enum tls_content_type_t : uint8 {
  * RFC 2246 7.4. Handshake protocol
  * https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
  */
-enum tls_hs_type_t : uint8 {
-    tls_hs_certificate = 11,                 // 0x0b CT  RFC 2246
-    tls_hs_certificate_request = 13,         // 0x0d CR  RFC 2246
-    tls_hs_certificate_status = 22,          // 0x16     RFC 8446
-    tls_hs_certificate_url = 21,             // 0x15     RFC 8446
-    tls_hs_certificate_verify = 15,          // 0x0f     RFC 2246
-    tls_hs_client_certificate_request = 17,  //
-    tls_hs_client_hello = 1,                 // 0x01 CH  RFC 2246
-    tls_hs_client_key_exchange = 16,         // 0x10     RFC 2246
-    tls_hs_compressed_certificate = 25,      //
-    tls_hs_ekt_key = 25,                     //
-    tls_hs_encrypted_extensions = 8,         // 0x08 EE  RFC 8446
-    tls_hs_end_of_early_data = 5,            // 0x05     RFC 8446
-    tls_hs_finished = 20,                    // 0x14     RFC 2246
-    tls_hs_hello_request = 0,                // 0x00     RFC 2246
-    tls_hs_hello_retry_request = 6,          // 0x06     RFC 8446
-    tls_hs_hello_verify_request = 3,         // 0x03     RFC 8446
-    tls_hs_key_update = 24,                  // 0x18     RFC 8446
-    tls_hs_message_hash = 254,               // 0xfe, server hello, RFC 8446 4.4.1.  The Transcript Hash
-    tls_hs_new_connection_id = 10,           // 0x0a     RFC 9147
-    tls_hs_new_session_ticket = 4,           // 0x04 NST RFC 8446
-    tls_hs_request_connection_id = 9,        // 0x09     RFC 9147
-    tls_hs_server_hello = 2,                 // 0x02 SH  RFC 2246
-    tls_hs_server_hello_done = 14,           // 0x0e     RFC 2246
-    tls_hs_server_key_exchange = 12,         // 0x0c     RFC 2246
-    tls_hs_supplemental_data = 23,           // 0x17     RFC 8446
+enum class tls_handshake_type_t : uint8 {
+    certificate = 11,                 // 0x0b CT  RFC 2246
+    certificate_request = 13,         // 0x0d CR  RFC 2246
+    certificate_status = 22,          // 0x16     RFC 8446
+    certificate_url = 21,             // 0x15     RFC 8446
+    certificate_verify = 15,          // 0x0f     RFC 2246
+    client_certificate_request = 17,  //
+    client_hello = 1,                 // 0x01 CH  RFC 2246
+    client_key_exchange = 16,         // 0x10     RFC 2246
+    compressed_certificate = 25,      //
+    ekt_key = 26,                     //
+    encrypted_extensions = 8,         // 0x08 EE  RFC 8446
+    end_of_early_data = 5,            // 0x05     RFC 8446
+    finished = 20,                    // 0x14     RFC 2246
+    hello_request = 0,                // 0x00     RFC 2246
+    hello_retry_request = 6,          // 0x06     RFC 8446
+    hello_verify_request = 3,         // 0x03     RFC 8446
+    key_update = 24,                  // 0x18     RFC 8446
+    message_hash = 254,               // 0xfe, server hello, RFC 8446 4.4.1.  The Transcript Hash
+    new_connection_id = 10,           // 0x0a     RFC 9147
+    new_session_ticket = 4,           // 0x04 NST RFC 8446
+    request_connection_id = 9,        // 0x09     RFC 9147
+    server_hello = 2,                 // 0x02 SH  RFC 2246
+    server_hello_done = 14,           // 0x0e     RFC 2246
+    server_key_exchange = 12,         // 0x0c     RFC 2246
+    supplemental_data = 23,           // 0x17     RFC 8446
 };
 
-enum tls_ext_type_t : uint16 {
-    tls_ext_alpn = 0x0010,                                    // abbr.
-    tls_ext_alps = 0x4469,                                    //
-    tls_ext_application_layer_protocol_negotiation = 0x0010,  // RFC 7301
-    tls_ext_application_layer_protocol_settings = 0x4469,     //
-    tls_ext_cached_info = 0x0019,                             // RFC 7924
-    tls_ext_cert_type = 0x0009,                               //
-    tls_ext_cert_with_extern_psk = 0x0021,                    //
-    tls_ext_certificate_authorities = 0x002f,                 // RFC 8446
-    tls_ext_client_authz = 0x0007,                            //
-    tls_ext_client_certificate_type = 0x0013,                 // RFC 7250
-    tls_ext_client_certificate_url = 0x0002,                  // RFC 4366
-    tls_ext_compress_certificate = 0x001b,                    // RFC 8879
-    tls_ext_connection_id = 0x0036,                           //
-    tls_ext_cookie = 0x002c,                                  // RFC 8446
-    tls_ext_delegated_credential = 0x0022,                    // RFC 9345
-    tls_ext_dnssec_chain = 0x003b,                            //
-    tls_ext_early_data = 0x002a,                              // RFC 8446
-    tls_ext_ec_point_formats = 0x000b,                        // RFC 8422
-    tls_ext_encrypt_then_mac = 0x0016,                        // RFC 7366
-    tls_ext_encrypted_client_hello = 0xfe0d,                  //
-    tls_ext_extended_master_secret = 0x0017,                  // RFC 7627
-    tls_ext_external_id_hash = 0x0037,                        // RFC 8844
-    tls_ext_external_session_id = 0x0038,                     // RFC 8844
-    tls_ext_heartbeat = 0x000f,                               // RFC 6520
-    tls_ext_key_share = 0x0033,                               // RFC 8446
-    tls_ext_max_fragment_length = 0x0001,                     // RFC 6066
-    tls_ext_next_protocol_negotiation = 0x3374,               //
-    tls_ext_oid_filters = 0x0030,                             // RFC 8446
-    tls_ext_padding = 0x0015,                                 // RFC 7685
-    tls_ext_password_salt = 0x001f,                           //
-    tls_ext_post_handshake_auth = 0x0031,                     // RFC 8446
-    tls_ext_pre_shared_key = 0x0029,                          // RFC 8446
-    tls_ext_psk_key_exchange_modes = 0x002d,                  // RFC 8446
-    tls_ext_pwd_clear = 0x001e,                               //
-    tls_ext_pwd_protect = 0x001d,                             //
-    tls_ext_quic_transport_parameters = 0x0039,               // RFC 9001, see quic_param_t
-    tls_ext_record_size_limit = 0x001c,                       // RFC 8449
-    tls_ext_renegotiation_info = 0xff01,                      // RFC 5746 Transport Layer Security (TLS) Renegotiation Indication Extension
-    tls_ext_rrc = 0x003d,                                     //
-    tls_ext_sequence_number_encryption_algorithms = 0x003c,   //
-    tls_ext_server_authz = 0x0008,                            //
-    tls_ext_server_certificate_type = 0x0014,                 // RFC 7250
-    tls_ext_server_name = 0x0000,                             // RFC 6066
-    tls_ext_session_ticket = 0x0023,                          // RFC 5077, 8447
-    tls_ext_signature_algorithms = 0x000d,                    // RFC 8446
-    tls_ext_signature_algorithms_cert = 0x0032,               // RFC 8446
-    tls_ext_signed_certificate_timestamp = 0x0012,            // RFC 6962
-    tls_ext_sni = tls_ext_server_name,                        //
-    tls_ext_srp = 0x000c,                                     // RFC 5054
-    tls_ext_status_request = 0x0005,                          // RFC 6066
-    tls_ext_status_request_v2 = 0x0011,                       // RFC 6961
-    tls_ext_supported_ekt_ciphers = 0x0027,                   // RFC 8870
-    tls_ext_supported_groups = 0x000a,                        // RFC 8422, 7919
-    tls_ext_supported_versions = 0x002b,                      // RFC 8446
-    tls_ext_ticket_pinning = 0x0020,                          //
-    tls_ext_ticket_request = 0x003a,                          // RFC 9149 TLS Ticket Requests
-    tls_ext_tlmsp = 0x0024,                                   // extended master secret
-    tls_ext_tlmsp_delegate = 0x0026,                          //
-    tls_ext_tlmsp_proxying = 0x0025,                          //
-    tls_ext_tls_flags = 0x003e,                               //
-    tls_ext_token_binding = 0x0018,                           // RFC 8472
-    tls_ext_transparency_info = 0x0034,                       // RFC 9162 Certificate Transparency Version 2.0
-    tls_ext_truncated_hmac = 0x0004,                          // RFC 4366
-    tls_ext_trusted_ca_keys = 0x0003,                         // RFC 4366
-    tls_ext_use_srtp = 0x000e,                                // RFC 5764
-    tls_ext_user_mapping = 0x0006,                            // RFC 4681
+enum class tls_extension_type_t : uint16 {
+    unknown = (uint16)-1,
+    alpn = 0x0010,                                   // abbr.
+    alps = 0x4469,                                   //
+    application_layer_protocol_negotiation = alpn,   // RFC 7301
+    application_layer_protocol_settings = alps,      //
+    cached_info = 0x0019,                            // RFC 7924
+    cert_type = 0x0009,                              //
+    cert_with_extern_psk = 0x0021,                   //
+    certificate_authorities = 0x002f,                // RFC 8446
+    client_authz = 0x0007,                           //
+    client_certificate_type = 0x0013,                // RFC 7250
+    client_certificate_url = 0x0002,                 // RFC 4366
+    compress_certificate = 0x001b,                   // RFC 8879
+    connection_id = 0x0036,                          //
+    cookie = 0x002c,                                 // RFC 8446
+    delegated_credential = 0x0022,                   // RFC 9345
+    dnssec_chain = 0x003b,                           //
+    early_data = 0x002a,                             // RFC 8446
+    ec_point_formats = 0x000b,                       // RFC 8422
+    encrypt_then_mac = 0x0016,                       // RFC 7366
+    encrypted_client_hello = 0xfe0d,                 //
+    extended_master_secret = 0x0017,                 // RFC 7627
+    external_id_hash = 0x0037,                       // RFC 8844
+    external_session_id = 0x0038,                    // RFC 8844
+    heartbeat = 0x000f,                              // RFC 6520
+    key_share = 0x0033,                              // RFC 8446
+    max_fragment_length = 0x0001,                    // RFC 6066
+    next_protocol_negotiation = 0x3374,              //
+    oid_filters = 0x0030,                            // RFC 8446
+    padding = 0x0015,                                // RFC 7685
+    password_salt = 0x001f,                          //
+    post_handshake_auth = 0x0031,                    // RFC 8446
+    pre_shared_key = 0x0029,                         // RFC 8446
+    psk_key_exchange_modes = 0x002d,                 // RFC 8446
+    pwd_clear = 0x001e,                              //
+    pwd_protect = 0x001d,                            //
+    quic_transport_parameters = 0x0039,              // RFC 9001, see quic_param_t
+    record_size_limit = 0x001c,                      // RFC 8449
+    renegotiation_info = 0xff01,                     // RFC 5746 Transport Layer Security (TLS) Renegotiation Indication Extension
+    rrc = 0x003d,                                    //
+    sequence_number_encryption_algorithms = 0x003c,  //
+    server_authz = 0x0008,                           //
+    server_certificate_type = 0x0014,                // RFC 7250
+    server_name = 0x0000,                            // RFC 6066
+    session_ticket = 0x0023,                         // RFC 5077, 8447
+    signature_algorithms = 0x000d,                   // RFC 8446
+    signature_algorithms_cert = 0x0032,              // RFC 8446
+    signed_certificate_timestamp = 0x0012,           // RFC 6962
+    sni = server_name,                               //
+    srp = 0x000c,                                    // RFC 5054
+    status_request = 0x0005,                         // RFC 6066
+    status_request_v2 = 0x0011,                      // RFC 6961
+    supported_ekt_ciphers = 0x0027,                  // RFC 8870
+    supported_groups = 0x000a,                       // RFC 8422, 7919
+    supported_versions = 0x002b,                     // RFC 8446
+    ticket_pinning = 0x0020,                         //
+    ticket_request = 0x003a,                         // RFC 9149 TLS Ticket Requests
+    tlmsp = 0x0024,                                  // extended master secret
+    tlmsp_delegate = 0x0026,                         //
+    tlmsp_proxying = 0x0025,                         //
+    tls_flags = 0x003e,                              //
+    token_binding = 0x0018,                          // RFC 8472
+    transparency_info = 0x0034,                      // RFC 9162 Certificate Transparency Version 2.0
+    truncated_hmac = 0x0004,                         // RFC 4366
+    trusted_ca_keys = 0x0003,                        // RFC 4366
+    use_srtp = 0x000e,                               // RFC 5764
+    user_mapping = 0x0006,                           // RFC 4681
+    tls_lts = 0x001a,                                //
+    connection_id_deprecated = 0x0035,               //
+    ech_outer_extensions = 0xfd00,                   //
 };
 
 #define TLS_CONTENT_TYPE_MASK_CIPHERTEXT 0x20
@@ -162,8 +167,8 @@ union tls_content_t {
 #pragma pack(pop)
 
 enum tls_version_t : uint16 {
-    tls_unknown = 0,   // internal
-    tls_draft = 1,     // internal
+    unknown = 0,       // internal
+    draft = 1,         // internal
     tls_13 = 0x0304,   // RFC 8446
     tls_12 = 0x0303,   // RFC 5246
     tls_11 = 0x0302,   // RFC 4346
@@ -177,11 +182,11 @@ enum tls_version_t : uint16 {
 /* RFC 8446 4.  Handshake Protocol */
 #pragma pack(push, 1)
 struct tls_handshake_t {
-    tls_hs_type_t msg_type;
+    tls_handshake_type_t msg_type;
     byte_t length[3];
 };
 struct dtls_handshake_t {
-    tls_hs_type_t msg_type;
+    tls_handshake_type_t msg_type;
     byte_t length[3];
     uint16 seq;
     byte_t fragment_offset[3];
@@ -194,43 +199,49 @@ struct dtls_handshake_t {
  * RFC 5246 7.2.  Alert Protocol
  * RFC 8446 6.  Alert Protocol
  */
-enum tls_alertlevel_t : uint8 {
-    tls_alertlevel_warning = 1,
-    tls_alertlevel_fatal = 2,
+enum class tls_alertlevel_t : uint8 {
+    unknown = 0,
+    warning = 1,
+    fatal = 2,
 };
-enum tls_alertdesc_t : uint8 {
-    tls_alertdesc_close_notify = 0,                       // RFC 2246, RFC 5246 7.2.1. Closure alerts
-    tls_alertdesc_unexpected_message = 10,                // RFC 2246
-    tls_alertdesc_bad_record_mac = 20,                    // RFC 2246
-    tls_alertdesc_decryption_failed = 21,                 // RFC 2246
-    tls_alertdesc_record_overflow = 22,                   // RFC 2246
-    tls_alertdesc_decompression_failure = 30,             // RFC 2246
-    tls_alertdesc_handshake_failure = 40,                 // RFC 2246
-    tls_alertdesc_no_certificate = 41,                    // RFC 5246
-    tls_alertdesc_bad_certificate = 42,                   // RFC 2246
-    tls_alertdesc_unsupported_certificate = 43,           // RFC 2246
-    tls_alertdesc_certificate_revoked = 44,               // RFC 2246
-    tls_alertdesc_certificate_expired = 45,               // RFC 2246
-    tls_alertdesc_certificate_unknown = 46,               // RFC 2246
-    tls_alertdesc_illegal_parameter = 47,                 // RFC 2246
-    tls_alertdesc_unknown_ca = 48,                        // RFC 2246
-    tls_alertdesc_access_denied = 49,                     // RFC 2246
-    tls_alertdesc_decode_error = 50,                      // RFC 2246
-    tls_alertdesc_decrypt_error = 51,                     // RFC 2246
-    tls_alertdesc_export_restriction = 60,                // RFC 2246
-    tls_alertdesc_protocol_version = 70,                  // RFC 2246
-    tls_alertdesc_insufficient_security = 71,             // RFC 2246
-    tls_alertdesc_internal_error = 80,                    // RFC 2246
-    tls_alertdesc_inappropriate_fallback = 86,            // RFC 8446
-    tls_alertdesc_user_canceled = 90,                     // RFC 2246
-    tls_alertdesc_no_renegotiation = 100,                 // RFC 2246
-    tls_alertdesc_missing_extension = 109,                // RFC 8446
-    tls_alertdesc_unsupported_extension = 110,            // RFC 5246
-    tls_alertdesc_unrecognized_name = 112,                // RFC 8446
-    tls_alertdesc_bad_certificate_status_response = 113,  // RFC 8446
-    tls_alertdesc_unknown_psk_identity = 115,             // RFC 8446
-    tls_alertdesc_certificate_required = 116,             // RFC 8446
-    tls_alertdesc_no_application_protocol = 120,          // RFC 8446
+enum class tls_alertdesc_t : uint8 {
+    unknown = (uint8)-1,
+    close_notify = 0,                       // RFC 2246, RFC 5246 7.2.1. Closure alerts
+    unexpected_message = 10,                // RFC 2246
+    bad_record_mac = 20,                    // RFC 2246
+    decryption_failed = 21,                 // RFC 2246
+    record_overflow = 22,                   // RFC 2246
+    decompression_failure = 30,             // RFC 2246
+    handshake_failure = 40,                 // RFC 2246
+    no_certificate = 41,                    // RFC 5246
+    bad_certificate = 42,                   // RFC 2246
+    unsupported_certificate = 43,           // RFC 2246
+    certificate_revoked = 44,               // RFC 2246
+    certificate_expired = 45,               // RFC 2246
+    certificate_unknown = 46,               // RFC 2246
+    illegal_parameter = 47,                 // RFC 2246
+    unknown_ca = 48,                        // RFC 2246
+    access_denied = 49,                     // RFC 2246
+    decode_error = 50,                      // RFC 2246
+    decrypt_error = 51,                     // RFC 2246
+    too_many_cids_requested = 52,           //
+    export_restriction = 60,                // RFC 2246
+    protocol_version = 70,                  // RFC 2246
+    insufficient_security = 71,             // RFC 2246
+    internal_error = 80,                    // RFC 2246
+    inappropriate_fallback = 86,            // RFC 8446
+    user_canceled = 90,                     // RFC 2246
+    no_renegotiation = 100,                 // RFC 2246
+    missing_extension = 109,                // RFC 8446
+    unsupported_extension = 110,            // RFC 5246
+    certificate_unobtainable = 111,         //
+    unrecognized_name = 112,                // RFC 8446
+    bad_certificate_status_response = 113,  // RFC 8446
+    bad_certificate_hash_value = 114,       //
+    unknown_psk_identity = 115,             // RFC 8446
+    certificate_required = 116,             // RFC 8446
+    no_application_protocol = 120,          // RFC 8446
+    ech_required = 121,                     //
 };
 
 struct tls_alert_t {
@@ -557,7 +568,7 @@ enum session_status_t : uint32 {
     session_status_encrypted_extensions = (1 << 3),   // 00000008
     session_status_server_cert = (1 << 4),            // 00000010
     session_status_server_key_exchange = (1 << 5),    // 00000020
-    session_status_server_hello_done = (1 << 6),      // 00000040 tls_hs_server_hello_done
+    session_status_server_hello_done = (1 << 6),      // 00000040 tls_handshake_type_t::server_hello_done
     session_status_server_cert_verified = (1 << 7),   // 00000080 tls_handshake_certificate_verify
     session_status_client_key_exchange = (1 << 8),    // 00000100
     session_status_client_cert = (1 << 9),            // 00000200

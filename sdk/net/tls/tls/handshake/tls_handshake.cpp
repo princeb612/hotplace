@@ -31,7 +31,7 @@ constexpr char constexpr_fragment[] = "fragment";
 constexpr char constexpr_fragment_offset[] = "fragment offset";
 constexpr char constexpr_fragment_len[] = "fragment len";
 
-tls_handshake::tls_handshake(tls_hs_type_t type, tls_session* session)
+tls_handshake::tls_handshake(tls_handshake_type_t type, tls_session* session)
     : _extension_len(0),
       _type(type),
       _session(session),
@@ -74,7 +74,7 @@ tls_handshake* tls_handshake::read(tls_session* session, tls_direction_t dir, co
             __leave2_trace(ret);
         }
 
-        tls_hs_type_t hs = (tls_hs_type_t)stream[pos];
+        tls_handshake_type_t hs = (tls_handshake_type_t)stream[pos];
         tls_handshake_builder builder;
         auto handshake = builder.set(hs).set(session).build();
         if (handshake) {
@@ -156,7 +156,7 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
                 __leave2_trace(ret);
             }
         } else {
-            if (tls_hs_encrypted_extensions == get_type()) {
+            if (tls_handshake_type_t::encrypted_extensions == get_type()) {
                 ret = do_read_body(dir, stream, offsetof_body() + get_body_size(), pos);
             } else {
                 ret = do_read_body(dir, stream, size, pos);
@@ -263,7 +263,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
         auto type = session->get_type();
 
 #if defined DEBUG
-        tls_hs_type_t hstype;
+        tls_handshake_type_t hstype;
 #endif
         uint32 length = 0;
         bool cond_dtls = false;
@@ -273,7 +273,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
         size_t size_header_body = 0;
 
         {
-            uint16 legacy_version = protection.get_lagacy_version();
+            auto legacy_version = protection.get_lagacy_version();
             size_t sizeof_dtls_recons = 0;
             if (tlsadvisor->is_kindof_dtls(legacy_version)) {
                 // checkpoint
@@ -305,7 +305,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
                 pl.read(stream, size, pos);
 
 #if defined DEBUG
-                hstype = (tls_hs_type_t)pl.t_value_of<uint8>(constexpr_message_type);
+                hstype = (tls_handshake_type_t)pl.t_value_of<uint8>(constexpr_message_type);
 #endif
                 length = pl.t_value_of<uint32>(constexpr_len);
 
@@ -499,7 +499,7 @@ void tls_handshake::release() { _shared.delref(); }
 
 tls_extensions& tls_handshake::get_extensions() { return _extensions; }
 
-tls_hs_type_t tls_handshake::get_type() { return _type; }
+tls_handshake_type_t tls_handshake::get_type() { return _type; }
 
 tls_session* tls_handshake::get_session() { return _session; }
 

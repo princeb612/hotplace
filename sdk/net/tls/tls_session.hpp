@@ -106,17 +106,17 @@ class tls_session {
     t_key_value<uint16, uint16>& get_keyvalue();
 
     struct alert {
-        uint8 level;
-        uint8 desc;
-        alert(uint8 l, uint8 d) : level(l), desc(d) {}
+        tls_alertlevel_t level;
+        tls_alertdesc_t desc;
+        alert(tls_alertlevel_t l, tls_alertdesc_t d) : level(l), desc(d) {}
     };
 
     class session_info {
        public:
         session_info();
 
-        void set_status(tls_hs_type_t type);
-        tls_hs_type_t get_status();
+        void set_status(tls_handshake_type_t type);
+        tls_handshake_type_t get_status();
 
         uint64 get_recordno(bool inc = false, protection_space_t space = protection_default);
         void inc_recordno(protection_space_t space = protection_default);
@@ -127,14 +127,14 @@ class tls_session {
         bool apply_protection();
         void reset_protection();
 
-        void push_alert(uint8 level, uint8 desc);
-        void get_alert(std::function<void(uint8, uint8)> func, uint8 flags = 0);
-        bool has_alert(uint8 level = tls_alertlevel_fatal);
+        void push_alert(tls_alertlevel_t level, tls_alertdesc_t desc);
+        void get_alert(std::function<void(tls_alertlevel_t, tls_alertdesc_t)> func, uint8 flags = 0);
+        bool has_alert(tls_alertlevel_t level = tls_alertlevel_t::fatal);
 
         t_key_value<uint8, uint64>& get_keyvalue();
 
        private:
-        tls_hs_type_t _hstype;
+        tls_handshake_type_t _hstype;
         bool _protection;
         // RFC 9000 12.3.  Packet Numbers
         std::map<protection_space_t, uint64> _recordno_spaces;
@@ -162,7 +162,7 @@ class tls_session {
     // tls_extensions
     void schedule_extension(tls_extension* extension);
     void select_into_scheduled_extension(tls_extensions* extensions);
-    void select_into_scheduled_extension(tls_extensions* extensions, tls_ext_type_t type);
+    void select_into_scheduled_extension(tls_extensions* extensions, tls_extension_type_t type);
     void clear_scheduled_extensions();
 
     /**
@@ -177,7 +177,7 @@ class tls_session {
      *      }
      * consume
      *      binanry_t bin;
-     *      auto lambda = [&](uint8 level, uint8 desc) -> void {
+     *      auto lambda = [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
      *          tls_record_application_data record(session);
      *          record.get_records().add(new tls_record_alert(session, level, desc));
      *          record.write(dir, bin);
@@ -185,9 +185,9 @@ class tls_session {
      *      session->get_alert(dir, lambda);
      *       // tcpsession->send(bin.data(), bin.size());
      */
-    void push_alert(tls_direction_t dir, uint8 level, uint8 desc);
-    void get_alert(tls_direction_t dir, std::function<void(uint8, uint8)> func, uint8 flags = 0);
-    bool has_alert(tls_direction_t dir, uint8 level = tls_alertlevel_fatal);
+    void push_alert(tls_direction_t dir, tls_alertlevel_t level, tls_alertdesc_t desc);
+    void get_alert(tls_direction_t dir, std::function<void(tls_alertlevel_t, tls_alertdesc_t)> func, uint8 flags = 0);
+    bool has_alert(tls_direction_t dir, tls_alertlevel_t level = tls_alertlevel_t::fatal);
 
     tls_composer* get_tls_composer();
     secure_prosumer* get_secure_prosumer();

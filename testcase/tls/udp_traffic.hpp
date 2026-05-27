@@ -17,6 +17,7 @@ class udp_traffic {
 
     void sendto(binary_t&& bin) {
         critical_section_guard guard(_lock);
+        if (rand() % 4 == 0) _packets.push_back(bin);  // duplication test
         _packets.push_back(std::move(bin));
     }
     return_t recvfrom(binary_t& bin) {
@@ -31,12 +32,23 @@ class udp_traffic {
         }
         return ret;
     }
-    void shuffle() {
+    void shuffle(uint32 seed = 0) {
         critical_section_guard guard(_lock);
-        // https://en.cppreference.com/w/cpp/algorithm/random_shuffle
-        std::random_device rd;
-        std::mt19937 g(rd());
-        std::shuffle(_packets.begin(), _packets.end(), g);
+        if (0 == seed) {
+            if (rand() % 2 == 0) {
+                // https://en.cppreference.com/w/cpp/algorithm/random_shuffle
+                std::random_device rd;
+                std::mt19937 g(rd());
+                std::shuffle(_packets.begin(), _packets.end(), g);
+
+            } else {
+                std::reverse(_packets.begin(), _packets.end());
+            }
+        } else {
+            // deterministic replay
+            std::mt19937 rng(seed);
+            std::shuffle(_packets.begin(), _packets.end(), rng);
+        }
     }
     void consume(std::function<void(binary_t&&)> fn) {
         std::vector<binary_t> packets;

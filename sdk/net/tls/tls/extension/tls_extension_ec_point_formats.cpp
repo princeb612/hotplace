@@ -23,7 +23,7 @@ namespace net {
 constexpr char constexpr_len[] = "len";
 constexpr char constexpr_formats[] = "formats";
 
-tls_extension_ec_point_formats::tls_extension_ec_point_formats(tls_handshake* handshake) : tls_extension(tls_ext_ec_point_formats, handshake) {}
+tls_extension_ec_point_formats::tls_extension_ec_point_formats(tls_handshake* handshake) : tls_extension(tls_extension_type_t::ec_point_formats, handshake) {}
 
 tls_extension_ec_point_formats::~tls_extension_ec_point_formats() {}
 

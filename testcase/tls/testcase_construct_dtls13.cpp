@@ -73,12 +73,12 @@ static return_t do_test_construct_encrypted_extensions(tls_session* session, tls
             __leave2;
         }
 
-        dtls13_ciphertext record(tls_content_type_handshake, session);
-        record.add(tls_hs_encrypted_extensions, session,  //
+        dtls13_ciphertext record(tls_content_type_t::handshake, session);
+        record.add(tls_handshake_type_t::encrypted_extensions, session,  //
                    [&](tls_handshake* handshake) -> return_t {
                        (*handshake)
                            .get_extensions()
-                           .add(tls_ext_supported_groups, dir, handshake,  //
+                           .add(tls_extension_type_t::supported_groups, dir, handshake,  //
                                 [](tls_extension* extension) -> return_t {
                                     (*(tls_extension_supported_groups*)extension).add("x25519").add("secp256r1").add("x448").add("secp521r1").add("secp384r1");
                                     return errorcode_t::success;
@@ -104,7 +104,7 @@ static return_t do_test_construct_certificate(tls_session* session, tls_directio
         }
 
         dtls13_ciphertext record(content_type, session);
-        record.add(tls_hs_certificate, session);
+        record.add(tls_handshake_type_t::certificate, session);
         ret = record.write(dir, bin);
     }
     __finally2 {
@@ -123,8 +123,8 @@ static return_t do_test_construct_certificate_verify(tls_session* session, tls_d
             __leave2;
         }
 
-        dtls13_ciphertext record(tls_content_type_handshake, session);
-        record.add(tls_hs_certificate_verify, session);
+        dtls13_ciphertext record(tls_content_type_t::handshake, session);
+        record.add(tls_handshake_type_t::certificate_verify, session);
         ret = record.write(dir, bin);
     }
     __finally2 {
@@ -143,8 +143,8 @@ static return_t do_test_construct_server_finished(tls_session* session, tls_dire
             __leave2;
         }
 
-        dtls13_ciphertext record(tls_content_type_handshake, session);
-        record.add(tls_hs_finished, session);
+        dtls13_ciphertext record(tls_content_type_t::handshake, session);
+        record.add(tls_handshake_type_t::finished, session);
         ret = record.write(dir, bin);
     }
     __finally2 {
@@ -163,8 +163,8 @@ static return_t do_test_construct_client_finished(tls_session* session, tls_dire
             __leave2;
         }
 
-        dtls13_ciphertext record(tls_content_type_handshake, session);
-        record.add(tls_hs_finished, session);
+        dtls13_ciphertext record(tls_content_type_t::handshake, session);
+        record.add(tls_handshake_type_t::finished, session);
         ret = record.write(dir, bin);
     }
     __finally2 {
@@ -183,8 +183,8 @@ static return_t do_test_construct_ack(tls_session* session, tls_direction_t dir,
             __leave2;
         }
 
-        dtls13_ciphertext record(tls_content_type_ack, session);
-        record.add(tls_content_type_ack, session);
+        dtls13_ciphertext record(tls_content_type_t::ack, session);
+        record.add(tls_content_type_t::ack, session);
         ret = record.write(dir, bin);
     }
     __finally2 {
@@ -203,7 +203,7 @@ static return_t do_test_construct_client_ping(tls_session* session, tls_directio
             __leave2;
         }
 
-        dtls13_ciphertext record(tls_content_type_application_data, session);
+        dtls13_ciphertext record(tls_content_type_t::application_data, session);
         record.get_records().add(new tls_record_application_data(session, "ping"));
         ret = record.write(dir, bin);
     }
@@ -223,7 +223,7 @@ static return_t do_test_construct_server_pong(tls_session* session, tls_directio
             __leave2;
         }
 
-        dtls13_ciphertext record(tls_content_type_application_data, session);
+        dtls13_ciphertext record(tls_content_type_t::application_data, session);
         record.get_records().add(new tls_record_application_data(session, "pong"));
         ret = record.write(dir, bin);
     }
@@ -243,8 +243,8 @@ static return_t do_test_construct_close_notify(tls_session* session, tls_directi
             __leave2;
         }
 
-        dtls13_ciphertext record(tls_content_type_alert, session);
-        record.get_records().add(new tls_record_alert(session, tls_alertlevel_warning, tls_alertdesc_close_notify));
+        dtls13_ciphertext record(tls_content_type_t::alert, session);
+        record.get_records().add(new tls_record_alert(session, tls_alertlevel_t::warning, tls_alertdesc_t::close_notify));
         ret = record.write(dir, bin);
     }
     __finally2 {
@@ -337,7 +337,7 @@ void test_construct_dtls_routine(const TLS_OPTION& option, const char* group_par
 
         // S -> C SC
         binary_t bin_certificate;
-        do_test_construct_certificate(&server_session, from_server, tls_content_type_handshake, bin_certificate, "construct certificate");
+        do_test_construct_certificate(&server_session, from_server, tls_content_type_t::handshake, bin_certificate, "construct certificate");
         do_test_send_record(&client_session, from_server, bin_certificate, "send cerficate");
 
         {
@@ -413,11 +413,11 @@ void testcase_construct_dtls13() {
     const OPTION& option = _cmdline->value();
 
     TLS_OPTION testvector[] = {
-        {dtls_13, "TLS_AES_128_CCM_8_SHA256"},      //
-        {dtls_13, "TLS_AES_128_CCM_SHA256"},        //
-        {dtls_13, "TLS_AES_128_GCM_SHA256"},        //
-        {dtls_13, "TLS_AES_256_GCM_SHA384"},        //
-        {dtls_13, "TLS_CHACHA20_POLY1305_SHA256"},  //
+        {tls_version_t::dtls_13, "TLS_AES_128_CCM_8_SHA256"},      //
+        {tls_version_t::dtls_13, "TLS_AES_128_CCM_SHA256"},        //
+        {tls_version_t::dtls_13, "TLS_AES_128_GCM_SHA256"},        //
+        {tls_version_t::dtls_13, "TLS_AES_256_GCM_SHA384"},        //
+        {tls_version_t::dtls_13, "TLS_CHACHA20_POLY1305_SHA256"},  //
     };
 
     auto tlsadvisor = tls_advisor::get_instance();

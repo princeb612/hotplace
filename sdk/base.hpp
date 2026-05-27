@@ -47,6 +47,7 @@
 #include <hotplace/sdk/base/nostd/btree.hpp>
 #include <hotplace/sdk/base/nostd/capacity.hpp>
 #include <hotplace/sdk/base/nostd/cast.hpp>
+#include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/nostd/list.hpp>
 #include <hotplace/sdk/base/nostd/memory.hpp>

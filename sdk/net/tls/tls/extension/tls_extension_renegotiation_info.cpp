@@ -24,7 +24,7 @@ namespace net {
 constexpr char constexpr_renegotiation_info_length[] = "renegotiation_info len";
 constexpr char constexpr_renegotiation_info[] = "renegotiation_info";
 
-tls_extension_renegotiation_info::tls_extension_renegotiation_info(tls_handshake* handshake) : tls_extension(tls_ext_renegotiation_info, handshake) {}
+tls_extension_renegotiation_info::tls_extension_renegotiation_info(tls_handshake* handshake) : tls_extension(tls_extension_type_t::renegotiation_info, handshake) {}
 
 tls_extension_renegotiation_info::~tls_extension_renegotiation_info() {}
 
@@ -89,7 +89,7 @@ return_t tls_extension_renegotiation_info::do_read_body(tls_direction_t dir, con
             }
         }
         if (errorcode_t::success != ret) {
-            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
             session->reset_session_status();
             __leave2;
         }

@@ -122,7 +122,7 @@ void test_quic_xargs_org() {
     binary_t bin_scid = base16_decode_rfc(scid);
 
     secrets.assign(tls_context_quic_dcid, bin_dcid);
-    protection.calc(&server_session, tls_hs_client_hello, from_client);
+    protection.calc(&server_session, tls_handshake_type_t::client_hello, from_client);
 
     {
         _logger->colorln("client-initial-keys-calc");

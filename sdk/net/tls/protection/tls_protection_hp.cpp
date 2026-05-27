@@ -40,13 +40,13 @@ return_t tls_protection::get_protection_mask_key(tls_session* session, tls_direc
             case session_type_dtls: {
                 if (is_kindof_dtls()) {
                     if (is_serverinitiated(dir)) {
-                        if (tls_hs_finished == hsstatus) {
+                        if (tls_handshake_type_t::finished == hsstatus) {
                             secret_key = tls_secret_application_server_sn_key;
                         } else {
                             secret_key = tls_secret_handshake_server_sn_key;
                         }
                     } else if (is_clientinitiated(dir)) {
-                        if (tls_hs_finished == hsstatus) {
+                        if (tls_handshake_type_t::finished == hsstatus) {
                             secret_key = tls_secret_application_client_sn_key;
                         } else {
                             secret_key = tls_secret_handshake_client_sn_key;

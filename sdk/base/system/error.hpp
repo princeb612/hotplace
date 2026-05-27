@@ -32,7 +32,6 @@ class error_advisor {
    protected:
     error_advisor();
     void build();
-    bool find(return_t error, const error_description** desc);
 
    private:
     static error_advisor _instance;

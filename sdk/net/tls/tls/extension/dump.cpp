@@ -11,6 +11,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_builder.hpp>
 #include <hotplace/sdk/net/tls/tls/tls.hpp>
@@ -36,8 +37,9 @@ return_t tls_dump_extension(tls_handshake* handshake, tls_direction_t dir, const
 
         {
             auto extension_type = ntoh16(*(uint16*)(stream + pos));
+            t_enum_type<tls_extension_type_t> etextension_type(extension_type);
             tls_extension_builder builder;
-            auto extension = builder.set(handshake).set(dir).set(extension_type).build();
+            auto extension = builder.set(handshake).set(dir).set(etextension_type).build();
             if (extension) {
                 ret = extension->read(dir, stream, size, pos);
                 extension->release();

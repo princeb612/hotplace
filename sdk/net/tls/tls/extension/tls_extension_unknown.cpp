@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace net {
 
-tls_extension_unknown::tls_extension_unknown(uint16 type, tls_handshake* handshake) : tls_extension(type, handshake) {}
+tls_extension_unknown::tls_extension_unknown(tls_extension_type_t type, tls_handshake* handshake) : tls_extension(type, handshake) {}
 
 tls_extension_unknown::~tls_extension_unknown() {}
 

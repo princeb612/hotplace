@@ -96,12 +96,12 @@ static return_t do_test_construct_encrypted_extensions(tls_session* session, tls
         if (tls_13 == session->get_tls_protection().get_tls_version()) {
             if (session->get_session_info(dir).apply_protection()) {
                 tls_record_builder builder;
-                auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+                auto record = builder.set(session).set(tls_content_type_t::handshake).set(dir).construct().build();
                 if (record) {
                     ret = (*record)
-                              .add(tls_hs_encrypted_extensions, session,
+                              .add(tls_handshake_type_t::encrypted_extensions, session,
                                    [&](tls_handshake* handshake) -> return_t {
-                                       handshake->get_extensions().add(tls_ext_alpn, dir, handshake, [](tls_extension* extension) -> return_t {
+                                       handshake->get_extensions().add(tls_extension_type_t::alpn, dir, handshake, [](tls_extension* extension) -> return_t {
                                            auto alpn = (tls_extension_alpn*)extension;
                                            binary_t protocols;
                                            binary_append(protocols, uint8(2));
@@ -137,9 +137,9 @@ static return_t do_test_construct_certificate(tls_session* session, tls_directio
 
         // SC (server certificate)
         tls_record_builder builder;
-        auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+        auto record = builder.set(session).set(tls_content_type_t::handshake).set(dir).construct().build();
         if (record) {
-            ret = (*record).add(tls_hs_certificate, session).write(dir, bin);
+            ret = (*record).add(tls_handshake_type_t::certificate, session).write(dir, bin);
             record->release();
         }
     }
@@ -161,9 +161,9 @@ static return_t do_test_construct_server_key_exchange(tls_session* session, tls_
 
         if (tls_12 == session->get_tls_protection().get_tls_version()) {
             tls_record_builder builder;
-            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+            auto record = builder.set(session).set(tls_content_type_t::handshake).set(dir).construct().build();
             if (record) {
-                ret = (*record).add(tls_hs_server_key_exchange, session).write(dir, bin);
+                ret = (*record).add(tls_handshake_type_t::server_key_exchange, session).write(dir, bin);
                 record->release();
             }
         }
@@ -186,9 +186,9 @@ static return_t do_test_construct_server_hello_done(tls_session* session, tls_di
 
         if (tls_12 == session->get_tls_protection().get_tls_version()) {
             tls_record_builder builder;
-            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+            auto record = builder.set(session).set(tls_content_type_t::handshake).set(dir).construct().build();
             if (record) {
-                ret = (*record).add(tls_hs_server_hello_done, session).write(dir, bin);
+                ret = (*record).add(tls_handshake_type_t::server_hello_done, session).write(dir, bin);
                 record->release();
             }
         }
@@ -211,9 +211,9 @@ static return_t do_test_construct_client_key_exchange(tls_session* session, tls_
 
         if (tls_12 == session->get_tls_protection().get_tls_version()) {
             tls_record_builder builder;
-            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+            auto record = builder.set(session).set(tls_content_type_t::handshake).set(dir).construct().build();
             if (record) {
-                ret = (*record).add(tls_hs_client_key_exchange, session).write(dir, bin);
+                ret = (*record).add(tls_handshake_type_t::client_key_exchange, session).write(dir, bin);
                 record->release();
             }
         }
@@ -236,9 +236,9 @@ static return_t do_test_construct_certificate_verify(tls_session* session, tls_d
 
         if (tls_13 == session->get_tls_protection().get_tls_version()) {
             tls_record_builder builder;
-            auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+            auto record = builder.set(session).set(tls_content_type_t::handshake).set(dir).construct().build();
             if (record) {
-                ret = (*record).add(tls_hs_certificate_verify, session).write(dir, bin);
+                ret = (*record).add(tls_handshake_type_t::certificate_verify, session).write(dir, bin);
                 record->release();
             }
         }
@@ -260,9 +260,9 @@ static return_t do_test_construct_server_finished(tls_session* session, tls_dire
         }
 
         tls_record_builder builder;
-        auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+        auto record = builder.set(session).set(tls_content_type_t::handshake).set(dir).construct().build();
         if (record) {
-            ret = (*record).add(tls_hs_finished, session).write(dir, bin);
+            ret = (*record).add(tls_handshake_type_t::finished, session).write(dir, bin);
             record->release();
         }
     }
@@ -283,9 +283,9 @@ static return_t do_test_construct_client_finished(tls_session* session, tls_dire
         }
 
         tls_record_builder builder;
-        auto record = builder.set(session).set(tls_content_type_handshake).set(dir).construct().build();
+        auto record = builder.set(session).set(tls_content_type_t::handshake).set(dir).construct().build();
         if (record) {
-            ret = (*record).add(tls_hs_finished, session).write(dir, bin);
+            ret = (*record).add(tls_handshake_type_t::finished, session).write(dir, bin);
             record->release();
         }
     }
@@ -365,9 +365,9 @@ static return_t do_test_construct_close_notify(tls_session* session, tls_directi
         }
 
         tls_record_builder builder;
-        auto record = builder.set(session).set(tls_content_type_alert).set(dir).construct().build();
+        auto record = builder.set(session).set(tls_content_type_t::alert).set(dir).construct().build();
         if (record) {
-            *record << new tls_record_alert(session, tls_alertlevel_warning, tls_alertdesc_close_notify);
+            *record << new tls_record_alert(session, tls_alertlevel_t::warning, tls_alertdesc_t::close_notify);
             ret = record->write(dir, bin);
             record->release();
         }
@@ -396,8 +396,8 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
 
         bool has_fatal = false;
 
-        auto lambda_test_fatal_alert = [&](uint8 level, uint8 desc) -> void {
-            if (tls_alertlevel_fatal == level) {
+        auto lambda_test_fatal_alert = [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
+            if (tls_alertlevel_t::fatal == level) {
                 has_fatal = true;
             }
         };

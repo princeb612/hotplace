@@ -23,7 +23,7 @@ namespace net {
 constexpr char constexpr_alpn_len[] = "alpn len";
 constexpr char constexpr_protocol[] = "alpn protocol";
 
-tls_extension_alpn::tls_extension_alpn(tls_handshake* handshake) : tls_extension(tls_ext_application_layer_protocol_negotiation, handshake) {}
+tls_extension_alpn::tls_extension_alpn(tls_handshake* handshake) : tls_extension(tls_extension_type_t::application_layer_protocol_negotiation, handshake) {}
 
 tls_extension_alpn::~tls_extension_alpn() {}
 

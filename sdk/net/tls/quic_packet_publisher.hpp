@@ -59,7 +59,7 @@ struct segment_t {
  *          // ACK, CRYPTO[SH], PADDING
  *          publisher.set_session(session)
  *              .set_flags(flags)
- *              .add(tls_hs_server_hello, dir)
+ *              .add(tls_handshake_type_t::server_hello, dir)
  *              .publish(dir, [&](tls_session* session, binary_t& packet) -> void { do_something(); });
  */
 class quic_packet_publisher {
@@ -81,22 +81,22 @@ class quic_packet_publisher {
 
     /**
      * @param   QUIC FRAME CRYOTO
-     * @param   tls_hs_type_t type [in]
+     * @param   tls_handshake_type_t type [in]
      * @param   tls_direction_t dir [in]
      * @param   std::function<return_t(tls_handshake*, tls_direction_t)> func [inopt]
      * @example
      *          // EE
      *          publisher.set_session(session)
      *              .set_flags(flags)
-     *              .add(tls_hs_encrypted_extensions, dir,
+     *              .add(tls_handshake_type_t::encrypted_extensions, dir,
      *                   [](tls_handshake* handshake, tls_direction_t dir) -> return_t {
      *                       handshake->get_extensions()
-     *                           .add(tls_ext_sni, dir, handshake,
+     *                           .add(tls_extension_type_t::sni, dir, handshake,
      *                                [](tls_extension* extension) -> return_t {
      *                                    (*(tls_extension_sni*)extension).set_hostname("localhost");
      *                                    return errorcode_t::success;
      *                                })
-     *                           .add(tls_ext_alpn, dir, handshake,
+     *                           .add(tls_extension_type_t::alpn, dir, handshake,
      *                                [](tls_extension* extension) -> return_t {
      *                                    binary_t protocols;
      *                                    binary_append(protocols, uint8(2));
@@ -104,7 +104,7 @@ class quic_packet_publisher {
      *                                    (*(tls_extension_alpn*)extension).set_protocols(protocols);
      *                                    return errorcode_t::success;
      *                                })
-     *                           .add(tls_ext_quic_transport_parameters, dir, handshake,  //
+     *                           .add(tls_extension_type_t::quic_transport_parameters, dir, handshake,  //
      *                                [](tls_extension* extension) -> return_t {
      *                                    (*(tls_extension_quic_transport_parameters*)extension)
      *                                        .set(quic_param_initial_max_stream_data_bidi_local, 0x20000)
@@ -127,7 +127,7 @@ class quic_packet_publisher {
      *                   })
      *              .publish(dir, [&](tls_session* session, binary_t& packet) -> void { do_something(); });
      */
-    quic_packet_publisher& add(tls_hs_type_t type, tls_direction_t dir, std::function<return_t(tls_handshake*, tls_direction_t)> func = nullptr);
+    quic_packet_publisher& add(tls_handshake_type_t type, tls_direction_t dir, std::function<return_t(tls_handshake*, tls_direction_t)> func = nullptr);
     /**
      * @brief   QUIC FRAME
      * @param   QUIC FRAME (1-RTT)
@@ -136,8 +136,8 @@ class quic_packet_publisher {
      * @example
      *          publisher.set_session(session)
      *              .set_flags(flags)
-     *              .add(tls_hs_new_session_ticket, dir)
-     *              .add(tls_hs_new_session_ticket, dir)
+     *              .add(tls_handshake_type_t::new_session_ticket, dir)
+     *              .add(tls_handshake_type_t::new_session_ticket, dir)
      *              .publish(dir, [&](tls_session* session, binary_t& packet) -> void { do_something(); });
      */
     quic_packet_publisher& add(quic_frame_t type, std::function<return_t(quic_frame*)> func = nullptr);

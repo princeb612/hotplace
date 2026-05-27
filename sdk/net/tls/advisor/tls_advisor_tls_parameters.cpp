@@ -15,7 +15,7 @@
 namespace hotplace {
 namespace net {
 
-std::string tls_advisor::nameof_tls_alert_level(uint8 code) {
+std::string tls_advisor::nameof_tls_alert_level(tls_alertlevel_t code) {
     std::string value;
     auto iter = _alert_level_codes.find(code);
     if (_alert_level_codes.end() != iter) {
@@ -24,7 +24,7 @@ std::string tls_advisor::nameof_tls_alert_level(uint8 code) {
     }
     return value;
 }
-std::string tls_advisor::nameof_tls_alert_desc(uint8 code) {
+std::string tls_advisor::nameof_tls_alert_desc(tls_alertdesc_t code) {
     /**
      * RFC 5246 7.2.  Alert Protocol
      * RFC 8446 6.  Alert Protocol
@@ -58,7 +58,7 @@ uint16 tls_advisor::valueof_cipher_suite(const std::string& ciphersuite) {
     return code;
 }
 
-std::string tls_advisor::nameof_tls_record(uint8 type) {
+std::string tls_advisor::nameof_tls_record(tls_content_type_t type) {
     std::string value;
     auto iter = _content_type_codes.find(type);
     if (_content_type_codes.end() != iter) {
@@ -98,7 +98,7 @@ uint8 tls_advisor::valueof_ec_point_format(const std::string& name) {
     return value;
 }
 
-std::string tls_advisor::nameof_tls_handshake(uint8 type) {
+std::string tls_advisor::nameof_tls_handshake(tls_handshake_type_t type) {
     std::string value;
     auto iter = _handshake_type_codes.find(type);
     if (_handshake_type_codes.end() != iter) {

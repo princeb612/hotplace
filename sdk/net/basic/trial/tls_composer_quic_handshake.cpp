@@ -42,11 +42,11 @@ return_t tls_composer::do_quic_client_handshake(unsigned wto, std::function<void
             // C->S CRYPTO[CH], PADDING
             publisher.set_session(session)
                 .set_flags(quic_pad_packet)
-                .add(tls_hs_client_hello, dir,
+                .add(tls_handshake_type_t::client_hello, dir,
                      [&](tls_handshake* handshake, tls_direction_t dir) -> return_t {
                          return_t ret = errorcode_t::success;
                          handshake->get_extensions()
-                             .add(tls_ext_alpn, dir, handshake,
+                             .add(tls_extension_type_t::alpn, dir, handshake,
                                   [&](tls_extension* extension) -> return_t {
                                       auto alpn = (tls_extension_alpn*)extension;
                                       binary_t protocols;
@@ -55,7 +55,7 @@ return_t tls_composer::do_quic_client_handshake(unsigned wto, std::function<void
                                       alpn->set_protocols(protocols);
                                       return errorcode_t::success;
                                   })
-                             .add(tls_ext_quic_transport_parameters, dir, handshake,  //
+                             .add(tls_extension_type_t::quic_transport_parameters, dir, handshake,  //
                                   [&](tls_extension* extension) -> return_t {
                                       auto quic_params = (tls_extension_quic_transport_parameters*)(extension);
                                       (*quic_params)
@@ -107,8 +107,8 @@ return_t tls_composer::do_quic_client_handshake(unsigned wto, std::function<void
             // C->S EE
 
             // C->S ACK, CRYPTO[FIN]
-            // publisher.set_session(session).set_flags(quic_pad_packet).add(tls_hs_finished, dir).publish(dir, [&](tls_session* session, binary_t& packet) ->
-            // void {
+            // publisher.set_session(session).set_flags(quic_pad_packet).add(tls_handshake_type_t::finished, dir).publish(dir, [&](tls_session* session, binary_t& packet)
+            // -> void {
             //     func(session, packet);
             // });
         }
@@ -137,7 +137,7 @@ return_t tls_composer::do_quic_server_handshake(std::function<void(tls_session*,
             publisher
                 .set_session(session)  //
                 .set_flags(flags)
-                .add(tls_hs_server_hello, dir)
+                .add(tls_handshake_type_t::server_hello, dir)
                 .publish(dir, [&](tls_session* session, binary_t& packet) -> void { func(session, packet); });
         }
 
@@ -147,10 +147,10 @@ return_t tls_composer::do_quic_server_handshake(std::function<void(tls_session*,
             flags = quic_ack_packet;
             publisher.set_session(session)
                 .set_flags(flags)
-                .add(tls_hs_encrypted_extensions, dir,
+                .add(tls_handshake_type_t::encrypted_extensions, dir,
                      [&](tls_handshake* handshake, tls_direction_t dir) -> return_t {
                          handshake->get_extensions().  //
-                             add(tls_ext_quic_transport_parameters, dir, handshake, [&](tls_extension* extension) -> return_t {
+                             add(tls_extension_type_t::quic_transport_parameters, dir, handshake, [&](tls_extension* extension) -> return_t {
                                  (*(tls_extension_quic_transport_parameters*)extension)
                                      .set(quic_param_initial_max_stream_data_bidi_local, 0x20000)
                                      .set(quic_param_stateless_reset_token, binary_t())
@@ -170,9 +170,9 @@ return_t tls_composer::do_quic_server_handshake(std::function<void(tls_session*,
                              });
                          return errorcode_t::success;
                      })
-                .add(tls_hs_certificate, dir)
-                .add(tls_hs_certificate_verify, dir)
-                .add(tls_hs_finished, dir)
+                .add(tls_handshake_type_t::certificate, dir)
+                .add(tls_handshake_type_t::certificate_verify, dir)
+                .add(tls_handshake_type_t::finished, dir)
                 .publish(dir, [&](tls_session* session, binary_t& packet) -> void { func(session, packet); });
         }
     }

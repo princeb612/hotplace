@@ -33,7 +33,7 @@ return_t tls_dump_handshake(tls_session* session, tls_direction_t dir, const byt
                 __leave2;
             }
 
-            tls_hs_type_t hs = (tls_hs_type_t)stream[pos];
+            tls_handshake_type_t hs = (tls_handshake_type_t)stream[pos];
             tls_handshake_builder builder;
             auto handshake = builder.set(hs).set(session).build();
             if (handshake) {

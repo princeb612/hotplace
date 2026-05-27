@@ -20,7 +20,7 @@
 namespace hotplace {
 namespace net {
 
-tls_handshake_encrypted_extensions::tls_handshake_encrypted_extensions(tls_session* session) : tls_handshake(tls_hs_encrypted_extensions, session) {}
+tls_handshake_encrypted_extensions::tls_handshake_encrypted_extensions(tls_session* session) : tls_handshake(tls_handshake_type_t::encrypted_extensions, session) {}
 
 tls_handshake_encrypted_extensions::~tls_handshake_encrypted_extensions() {}
 

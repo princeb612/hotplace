@@ -10,6 +10,7 @@
 
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
@@ -90,7 +91,8 @@ return_t tls_protection::build_tls12_aad_from_record(tls_session* session, binar
 
         auto lambda_check_dtls = [&](payload* pl, payload_member* item) -> void {
             auto ver = pl->t_value_of<uint16>(item);
-            pl->set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(ver));
+            t_enum_type<tls_version_t> etver(ver);
+            pl->set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(etver));
         };
         pl.set_condition(constexpr_record_version, lambda_check_dtls);
         size_t apos = 0;
@@ -146,8 +148,8 @@ return_t tls_protection::build_tls12_aad_from_record(tls_session* session, binar
     return ret;
 }
 
-return_t tls_protection::write_aad(tls_session* session, tls_direction_t dir, binary_t& aad, uint8 content_type, uint32 version, uint64 recno, uint16 epoch,
-                                   uint64 dtlsseq, uint16 bodysize) {
+return_t tls_protection::write_aad(tls_session* session, tls_direction_t dir, binary_t& aad, tls_content_type_t content_type, tls_version_t version, uint64 recno,
+                                   uint16 epoch, uint64 dtlsseq, uint16 bodysize) {
     return_t ret = errorcode_t::success;
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
@@ -304,7 +306,7 @@ return_t tls_protection::get_aead_key(tls_session* session, tls_direction_t dir,
                         // TLS, DTLS
                         auto flow = get_flow();
                         if (tls_flow_1rtt == flow || tls_flow_hello_retry_request == flow) {
-                            if (tls_hs_finished == hsstatus) {
+                            if (tls_handshake_type_t::finished == hsstatus) {
                                 secret_key = tls_secret_application_client_key;
                                 secret_iv = tls_secret_application_client_iv;
                             } else {
@@ -318,15 +320,15 @@ return_t tls_protection::get_aead_key(tls_session* session, tls_direction_t dir,
                             // end_of_early_data    c hs traffic
                             // finished             c ap traffic
                             switch (hsstatus) {
-                                case tls_hs_end_of_early_data: {
+                                case tls_handshake_type_t::end_of_early_data: {
                                     secret_key = tls_secret_handshake_client_key;
                                     secret_iv = tls_secret_handshake_client_iv;
                                 } break;
-                                case tls_hs_finished: {
+                                case tls_handshake_type_t::finished: {
                                     secret_key = tls_secret_application_client_key;
                                     secret_iv = tls_secret_application_client_iv;
                                 } break;
-                                case tls_hs_client_hello:
+                                case tls_handshake_type_t::client_hello:
                                 default: {
                                     // use early traffic
                                     secret_key = tls_secret_c_e_traffic_key;
@@ -336,7 +338,7 @@ return_t tls_protection::get_aead_key(tls_session* session, tls_direction_t dir,
                         }
                     } else if (is_serverinitiated(dir)) {
                         // from_server
-                        if (tls_hs_finished == hsstatus) {
+                        if (tls_handshake_type_t::finished == hsstatus) {
                             secret_key = tls_secret_application_server_key;
                             secret_iv = tls_secret_application_server_iv;
                         } else {
@@ -604,7 +606,7 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
         }
 
         if (errorcode_t::success != ret) {
-            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_decryption_failed);
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decryption_failed);
         }
 
 #if defined DEBUG

@@ -10,6 +10,7 @@
 
 #include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
@@ -32,17 +33,18 @@ constexpr char constexpr_group_dtls[] = "dtls";
 constexpr char constexpr_key_epoch[] = "key epoch";
 constexpr char constexpr_dtls_record_seq[] = "dtls record sequence number";
 
-tls_record_application_data::tls_record_application_data(tls_session* session) : tls_record(tls_content_type_application_data, session) {}
+tls_record_application_data::tls_record_application_data(tls_session* session) : tls_record(tls_content_type_t::application_data, session) {}
 
-tls_record_application_data::tls_record_application_data(tls_session* session, const std::string& data) : tls_record(tls_content_type_application_data, session) {
+tls_record_application_data::tls_record_application_data(tls_session* session, const std::string& data) : tls_record(tls_content_type_t::application_data, session) {
     binary_append(_bin, data);
 }
 
-tls_record_application_data::tls_record_application_data(tls_session* session, const binary_t& data) : tls_record(tls_content_type_application_data, session) {
+tls_record_application_data::tls_record_application_data(tls_session* session, const binary_t& data) : tls_record(tls_content_type_t::application_data, session) {
     _bin = data;
 }
 
-tls_record_application_data::tls_record_application_data(tls_session* session, const byte_t* data, size_t size) : tls_record(tls_content_type_application_data, session) {
+tls_record_application_data::tls_record_application_data(tls_session* session, const byte_t* data, size_t size)
+    : tls_record(tls_content_type_t::application_data, session) {
     binary_append(_bin, data, size);
 }
 
@@ -80,7 +82,7 @@ return_t tls_record_application_data::do_preprocess(tls_direction_t dir) {
         session_status_prerequisite = session_status_client_hello;
     }
     if (0 == (session_status_prerequisite & session_status)) {
-        session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+        session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
         session->reset_session_status();
         ret = errorcode_t::handshake_failure;
     }
@@ -133,13 +135,14 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
             if (plainsize) {
                 if (protection.is_kindof_tls13()) {
                     // auto tlsversion = protection.get_tls_version();
-                    uint8 last_byte = *plaintext.rbegin();
-                    if (tls_content_type_alert == last_byte) {
+                    uint8 type = *plaintext.rbegin();  // last_byte
+                    t_enum_type<tls_content_type_t> ettype(type);
+                    if (tls_content_type_t::alert == ettype) {
                         tls_record_alert alert(session);
                         alert.read_plaintext(dir, plaintext.data(), plainsize - 1, tpos);
-                    } else if (tls_content_type_handshake == last_byte) {
+                    } else if (tls_content_type_t::handshake == ettype) {
                         ret = get_handshakes().read(session, dir, plaintext.data(), plainsize - 1, tpos);
-                    } else if (tls_content_type_application_data == last_byte) {
+                    } else if (tls_content_type_t::application_data == ettype) {
                         auto flow = protection.get_flow();
                         if (tls_flow_1rtt == flow) {
                             uint32 session_status_prerequisite = 0;
@@ -152,7 +155,7 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
                             if (0 == (session_status_prerequisite & session_status)) {
                                 ret = errorcode_t::unexpected;
                                 session->reset_session_status();
-                                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+                                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
                                 __leave2;
                             }
                         }
@@ -192,7 +195,7 @@ return_t tls_record_application_data::do_write_body(tls_direction_t dir, binary_
     if (handshakes.size()) {
         handshakes.write(get_session(), dir, bin);
         if (is_tls13) {
-            binary_append(bin, uint8(tls_content_type_handshake));
+            binary_append(bin, uint8(tls_content_type_t::handshake));
         }
     } else if (records.size()) {
         auto lambda = [&](tls_record* record) -> return_t {
@@ -208,7 +211,7 @@ return_t tls_record_application_data::do_write_body(tls_direction_t dir, binary_
         // Application Data MUST NOT be sent prior to sending the Finished message
         auto session = get_session();
         auto hsstatus = session->get_session_info(dir).get_status();
-        if (tls_hs_finished == hsstatus) {
+        if (tls_handshake_type_t::finished == hsstatus) {
             binary_append(bin, _bin);
             _bin.clear();
         }
@@ -248,7 +251,7 @@ tls_record& tls_record_application_data::add(tls_content_type_t type, tls_sessio
     return *this;
 }
 
-tls_record& tls_record_application_data::add(tls_hs_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func, bool upref) {
+tls_record& tls_record_application_data::add(tls_handshake_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func, bool upref) {
     get_handshakes().add(type, session, func, upref);
     return *this;
 }

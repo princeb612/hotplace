@@ -11,6 +11,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/net/tls/tls/record/dtls13_ciphertext.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record_ack.hpp>
@@ -25,14 +26,14 @@
 namespace hotplace {
 namespace net {
 
-tls_record_builder::tls_record_builder() : _session(nullptr), _type(0), _dir(from_any), _construct(false), _protected(false) {}
+tls_record_builder::tls_record_builder() : _session(nullptr), _type(tls_content_type_t::unknown), _dir(from_any), _construct(false), _protected(false) {}
 
 tls_record_builder& tls_record_builder::set(tls_session* session) {
     _session = session;
     return *this;
 }
 
-tls_record_builder& tls_record_builder::set(uint8 type) {
+tls_record_builder& tls_record_builder::set(tls_content_type_t type) {
     _type = type;
     return *this;
 }
@@ -77,11 +78,12 @@ tls_record* tls_record_builder::build() {
     auto session = get_session();
     if (session) {
         auto session_type = session->get_type();
-        switch (get_type()) {
-            case tls_content_type_change_cipher_spec: {
+        t_enum_type<tls_content_type_t> ettype(get_type());
+        switch (ettype.get()) {
+            case tls_content_type_t::change_cipher_spec: {
                 record = new tls_record_change_cipher_spec(session);
             } break;
-            case tls_content_type_alert: {
+            case tls_content_type_t::alert: {
                 if (is_construct()) {
                     // bool is_kind_of_tls = session->get_tls_protection().is_kindof_tls();
                     bool is_kind_of_tls13 = session->get_tls_protection().is_kindof_tls13();
@@ -95,7 +97,7 @@ tls_record* tls_record_builder::build() {
                     record = new tls_record_alert(session);
                 }
             } break;
-            case tls_content_type_handshake: {
+            case tls_content_type_t::handshake: {
                 if (is_construct()) {
                     // bool is_kind_of_tls = session->get_tls_protection().is_kindof_tls();
                     bool is_kind_of_tls13 = session->get_tls_protection().is_kindof_tls13();
@@ -109,16 +111,16 @@ tls_record* tls_record_builder::build() {
                     record = new tls_record_handshake(session);
                 }
             } break;
-            case tls_content_type_application_data: {
+            case tls_content_type_t::application_data: {
                 record = new tls_record_application_data(session);
             } break;
-            case tls_content_type_ack: {
+            case tls_content_type_t::ack: {
                 record = new tls_record_ack(session);
             } break;
-            case tls_content_type_heartbeat:
-            case tls_content_type_tls12_cid:
+            case tls_content_type_t::heartbeat:
+            case tls_content_type_t::tls12_cid:
             default: {
-                if (TLS_CONTENT_TYPE_MASK_CIPHERTEXT & get_type()) {
+                if (TLS_CONTENT_TYPE_MASK_CIPHERTEXT & ettype) {
                     if (session_type_tls == session_type) {
                         //
                     } else {
@@ -155,7 +157,7 @@ tls_record* tls_record_builder::build(tls_content_type_t type, tls_session* sess
 
 tls_session* tls_record_builder::get_session() { return _session; }
 
-uint8 tls_record_builder::get_type() { return _type; }
+tls_content_type_t tls_record_builder::get_type() { return _type; }
 
 tls_direction_t tls_record_builder::get_direction() { return _dir; }
 

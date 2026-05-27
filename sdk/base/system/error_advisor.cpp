@@ -9,6 +9,7 @@
  * 2026.05.26   Soo Han and Gemini  refactoring
  */
 
+#include <hotplace/sdk/base/nostd/utility.hpp>
 #include <hotplace/sdk/base/system/error.hpp>
 
 namespace hotplace {
@@ -293,30 +294,13 @@ void error_advisor::build() {
     }
 }
 
-bool error_advisor::find(return_t error, const error_description** desc) {
-    bool ret = false;
-
-    __try2 {
-        if (nullptr == desc) {
-            __leave2;
-        }
-
-        error_description_map_t::iterator iter = _table.find(error);
-        if (_table.end() != iter) {
-            *desc = iter->second;
-            ret = true;
-        }
-    }
-    __finally2 {}
-    return ret;
-}
-
 bool error_advisor::error_code(return_t error, std::string& code) {
     bool ret = false;
     code.clear();
 
     const error_description* item = nullptr;
-    find(error, &item);
+    t_maphint_const<return_t, const error_description*> hint(_table);
+    hint.find(error, &item);
     if (item) {
         code = item->error_code;
         ret = true;
@@ -329,7 +313,8 @@ bool error_advisor::error_message(return_t error, std::string& message) {
     message.clear();
 
     const error_description* item = nullptr;
-    find(error, &item);
+    t_maphint_const<return_t, const error_description*> hint(_table);
+    hint.find(error, &item);
     if (item) {
         message = item->error_message;
         ret = true;
@@ -342,7 +327,8 @@ bool error_advisor::error_message(return_t error, std::string& code, std::string
     message.clear();
 
     const error_description* item = nullptr;
-    find(error, &item);
+    t_maphint_const<return_t, const error_description*> hint(_table);
+    hint.find(error, &item);
     if (item) {
         code = item->error_code;
         message = item->error_message;

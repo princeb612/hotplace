@@ -29,7 +29,7 @@ constexpr char constexpr_group_dtls[] = "dtls";
 constexpr char constexpr_key_epoch[] = "key epoch";
 constexpr char constexpr_dtls_record_seq[] = "dtls record sequence number";
 
-tls_record_handshake::tls_record_handshake(tls_session* session) : tls_record(tls_content_type_handshake, session) {}
+tls_record_handshake::tls_record_handshake(tls_session* session) : tls_record(tls_content_type_t::handshake, session) {}
 
 tls_record_handshake::~tls_record_handshake() {}
 
@@ -122,7 +122,7 @@ tls_record& tls_record_handshake::add(tls_handshake* handshake) {
     return *this;
 }
 
-tls_record& tls_record_handshake::add(tls_hs_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func, bool upref) {
+tls_record& tls_record_handshake::add(tls_handshake_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func, bool upref) {
     get_handshakes().add(type, session, func, upref);
     return *this;
 }

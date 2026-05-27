@@ -53,13 +53,13 @@ namespace net {
 #define define_tls_sizeof_variable(name) const size_t sizeof_tls_##name##s = RTL_NUMBER_OF(tls_##name##s)
 
 // https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
-declare_tls_resource(alert_code, uint8);
-declare_tls_resource(alert_level_code, uint8);
+declare_tls_resource(alert_code, tls_alertdesc_t);
+declare_tls_resource(alert_level_code, tls_alertlevel_t);
 declare_tls_resource(client_cert_type_code, uint8);
-declare_tls_resource(content_type_code, uint8);
+declare_tls_resource(content_type_code, tls_content_type_t);
 declare_tls_resource(ec_curve_type_code, uint8);
 declare_tls_resource(ec_point_format_code, uint8);
-declare_tls_resource(handshake_type_code, uint8);
+declare_tls_resource(handshake_type_code, tls_handshake_type_t);
 declare_tls_resource(hash_alg_code, uint8);
 declare_tls_resource(kdf_id_code, uint16);
 declare_tls_resource(psk_keyexchange_code, uint8);
@@ -69,7 +69,7 @@ declare_tls_resource(sig_alg_code, uint8);
 declare_tls_resource(compression_alg_code, uint16);
 declare_tls_resource(cert_status_type_code, uint8);
 declare_tls_resource(cert_type_code, uint8);
-declare_tls_resource(extension_type_code, uint16);
+declare_tls_resource(extension_type_code, tls_extension_type_t);
 
 // https://www.iana.org/assignments/quic/quic.xhtml
 // declare_tls_resource(quic_trans_param_code, quic_paramt_t);
@@ -90,7 +90,7 @@ enum tls_version_hint_flag_t : uint8 {
     flag_kindof_tls = (1 << 0),
 };
 struct tls_version_hint_t {
-    uint16 code;
+    tls_version_t code;
     /**
      * The DTLS protocol is based on the Transport Layer Security (TLS) protocol and provides equivalent security guarantees.
      * Datagram semantics of the underlying transport are preserved by the DTLS protocol.
@@ -98,7 +98,7 @@ struct tls_version_hint_t {
      *  tls_13  -> tls_13
      *  dtls_13 -> tls_13
      */
-    uint16 spec;
+    tls_version_t spec;
     uint8 support;
     uint8 flags;
     const char* name;
@@ -136,7 +136,7 @@ class tls_advisor {
     static tls_advisor* get_instance();
     ~tls_advisor();
 
-    const tls_version_hint_t* hintof_tls_version(uint16 code);
+    const tls_version_hint_t* hintof_tls_version(tls_version_t code);
     const tls_cipher_suite_t* hintof_cipher_suite(uint16 code);
     const tls_cipher_suite_t* hintof_cipher_suite(const std::string& name);
     const hint_cipher_t* hintof_cipher(uint16 code);
@@ -147,17 +147,17 @@ class tls_advisor {
     hash_algorithm_t algof_hash(uint16 code);
 
     // https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
-    std::string nameof_tls_alert_level(uint8 code);
-    std::string nameof_tls_alert_desc(uint8 code);
+    std::string nameof_tls_alert_level(tls_alertlevel_t code);
+    std::string nameof_tls_alert_desc(tls_alertdesc_t code);
     std::string nameof_tls_cipher_suite(uint16 code);
     uint16 valueof_cipher_suite(const std::string& ciphersuite);
-    std::string nameof_tls_record(uint8 type);       // record->get_type()
-    std::string nameof_ec_curve_type(uint8 code);    // "named_curve"
-    std::string nameof_ec_point_format(uint8 code);  // "uncompressed"
+    std::string nameof_tls_record(tls_content_type_t type);  // record->get_type()
+    std::string nameof_ec_curve_type(uint8 code);            // "named_curve"
+    std::string nameof_ec_point_format(uint8 code);          // "uncompressed"
     uint8 valueof_ec_point_format(const std::string& name);
-    std::string nameof_tls_handshake(uint8 type);          // handshake->get_type()
-    std::string nameof_kdf_id(uint16 type);                // "HKDF_SHA256", "HKDF_SHA384"
-    std::string nameof_psk_key_exchange_mode(uint8 code);  // "psk_ke", "psk_dhe_ke"
+    std::string nameof_tls_handshake(tls_handshake_type_t type);  // handshake->get_type()
+    std::string nameof_kdf_id(uint16 type);                       // "HKDF_SHA256", "HKDF_SHA384"
+    std::string nameof_psk_key_exchange_mode(uint8 code);         // "psk_ke", "psk_dhe_ke"
     uint8 valueof_psk_key_exchange_mode(const std::string& name);
     std::string nameof_group(uint16 code);
     uint16 valueof_group(const std::string& name);
@@ -165,7 +165,7 @@ class tls_advisor {
     // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
     std::string nameof_compression_alg(uint16 code);  // "zlib", "brotli", "zstd"
     uint16 valueof_compression_alg(const std::string& name);
-    std::string nameof_tls_extension(uint16 code);  // extension->get_type()
+    std::string nameof_tls_extension(tls_extension_type_t code);  // extension->get_type()
     std::string nameof_cert_status_type(uint8 code);
 
     // https://www.iana.org/assignments/quic/quic.xhtml
@@ -178,7 +178,7 @@ class tls_advisor {
 
     // etc
 
-    std::string nameof_tls_version(uint16 code);
+    std::string nameof_tls_version(tls_version_t code);
     std::string nameof_compression_method(uint8 code);  // "null", "deflate"
     std::string nameof_sni_nametype(uint16 code);
     std::string nameof_quic_packet(uint8 code);
@@ -186,15 +186,15 @@ class tls_advisor {
     std::string nameof_quic_streamid_type(uint64 streamid);
     std::string nameof_protection_space(protection_space_t code);
 
-    bool is_kindof_tls13(uint16 ver);
-    bool is_kindof_tls12(uint16 ver);
-    bool is_kindof_tls(uint16 ver);
-    bool is_kindof_dtls(uint16 ver);
+    bool is_kindof_tls13(tls_version_t ver);
+    bool is_kindof_tls12(tls_version_t ver);
+    bool is_kindof_tls(tls_version_t ver);
+    bool is_kindof_dtls(tls_version_t ver);
     /**
-     * tlsadvisor->is_kindof(tls_12, dtls_12);
-     * tlsadvisor->is_kindof(tls_13, dtls_13);
+     * tlsadvisor->is_kindof(tls_version_t::tls_12, tls_version_t::dtls_12);
+     * tlsadvisor->is_kindof(tls_version_t::tls_13, tls_version_t::dtls_13);
      */
-    bool is_kindof(uint16 lhs, uint16 rhs);
+    bool is_kindof(tls_version_t lhs, tls_version_t rhs);
 
     std::string nameof_tls_flow(tls_flow_t flow);
 
@@ -265,16 +265,16 @@ class tls_advisor {
     critical_section _lock;
 
     // https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
-    std::map<uint8, const tls_alert_level_code_t*> _alert_level_codes;
-    std::map<uint8, const tls_alert_code_t*> _alert_codes;
+    std::map<tls_alertlevel_t, const tls_alert_level_code_t*> _alert_level_codes;
+    std::map<tls_alertdesc_t, const tls_alert_code_t*> _alert_codes;
     std::map<uint16, const tls_cipher_suite_t*> _cipher_suite_codes;
     std::map<std::string, const tls_cipher_suite_t*> _cipher_suite_names;
     std::map<uint8, const tls_client_cert_type_code_t*> _client_cert_type_codes;
-    std::map<uint8, const tls_content_type_code_t*> _content_type_codes;
+    std::map<tls_content_type_t, const tls_content_type_code_t*> _content_type_codes;
     std::map<uint8, const tls_ec_curve_type_code_t*> _ec_curve_type_codes;
     std::map<uint8, const tls_ec_point_format_code_t*> _ec_point_format_codes;
     std::map<std::string, const tls_ec_point_format_code_t*> _ec_point_format_names;
-    std::map<uint8, const tls_handshake_type_code_t*> _handshake_type_codes;
+    std::map<tls_handshake_type_t, const tls_handshake_type_code_t*> _handshake_type_codes;
     std::map<uint16, const tls_kdf_id_code_t*> _kdf_id_codes;
     std::map<uint8, const tls_psk_keyexchange_code_t*> _psk_keyexchange_codes;
     std::map<std::string, const tls_psk_keyexchange_code_t*> _psk_keyexchange_names;
@@ -282,7 +282,7 @@ class tls_advisor {
     // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
     std::map<uint16, const tls_compression_alg_code_t*> _compression_alg_codes;
     std::map<std::string, const tls_compression_alg_code_t*> _compression_alg_names;
-    std::map<uint16, const tls_extension_type_code_t*> _extension_type_codes;
+    std::map<tls_extension_type_t, const tls_extension_type_code_t*> _extension_type_codes;
     std::map<uint8, const tls_cert_status_type_code_t*> _cert_status_type_codes;
 
     // https://www.iana.org/assignments/quic/quic.xhtml
@@ -294,7 +294,7 @@ class tls_advisor {
     std::map<uint16, const tls_aead_alg_code_t*> _aead_alg_codes;
 
     //
-    std::map<uint16, const tls_version_hint_t*> _tls_version;
+    std::map<tls_version_t, const tls_version_hint_t*> _tls_version;
     std::map<uint8, std::string> _cert_status_types;
     std::map<uint8, const tls_quic_packet_type_code_t*> _quic_packet_type_codes;
     std::map<tls_secret_t, const tls_secret_code_t*> _secret_codes;

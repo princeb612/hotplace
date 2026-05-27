@@ -26,7 +26,7 @@ namespace net {
 constexpr char constexpr_pubkey_len[] = "public key len";
 constexpr char constexpr_pubkey[] = "public key";
 
-tls_handshake_client_key_exchange::tls_handshake_client_key_exchange(tls_session* session) : tls_handshake(tls_hs_client_key_exchange, session) {}
+tls_handshake_client_key_exchange::tls_handshake_client_key_exchange(tls_session* session) : tls_handshake(tls_handshake_type_t::client_key_exchange, session) {}
 
 tls_handshake_client_key_exchange::~tls_handshake_client_key_exchange() {}
 
@@ -43,7 +43,7 @@ return_t tls_handshake_client_key_exchange::do_preprocess(tls_direction_t dir) {
         if (session->get_tls_protection().is_kindof_tls12()) {
             auto session_status = session->get_session_status();
             if (0 == (session_status_server_hello_done & session_status)) {
-                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
                 session->reset_session_status();
                 ret = errorcode_t::handshake_failure;
                 __leave2_trace(ret);
@@ -64,7 +64,7 @@ return_t tls_handshake_client_key_exchange::do_postprocess(tls_direction_t dir, 
 
         {
             protection.update_transcript_hash(session, stream + hspos, hssize);
-            protection.calc(session, tls_hs_client_key_exchange, dir);
+            protection.calc(session, tls_handshake_type_t::client_key_exchange, dir);
             session->update_session_status(session_status_client_key_exchange);
         }
     }

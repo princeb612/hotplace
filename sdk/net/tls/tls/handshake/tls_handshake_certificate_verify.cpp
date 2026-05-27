@@ -31,7 +31,7 @@ constexpr char constexpr_signature[] = "signature";
 
 static return_t construct_certificate_verify_message(tls_session* session, tls_direction_t dir, basic_stream& message);
 
-tls_handshake_certificate_verify::tls_handshake_certificate_verify(tls_session* session) : tls_handshake(tls_hs_certificate_verify, session) {}
+tls_handshake_certificate_verify::tls_handshake_certificate_verify(tls_session* session) : tls_handshake(tls_handshake_type_t::certificate_verify, session) {}
 
 tls_handshake_certificate_verify::~tls_handshake_certificate_verify() {}
 
@@ -47,7 +47,7 @@ return_t tls_handshake_certificate_verify::do_preprocess(tls_direction_t dir) {
             session_status_prerequisite = session_status_server_cert;
         }
         if (session_status_prerequisite != (session_status_prerequisite & session_status)) {
-            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_certificate_required);
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::certificate_required);
             session->reset_session_status();
             ret = errorcode_t::handshake_failure;
             __leave2_trace(ret);
@@ -272,7 +272,7 @@ return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, bi
 
         auto pkey = tlsadvisor->get_key(session, kid);
         if (nullptr == pkey) {
-            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_no_certificate);
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::no_certificate);
             session->reset_session_status();
             ret = errorcode_t::missing_certificate;
             __leave2;

@@ -38,17 +38,17 @@ void tls_protection::set_cipher_suite(uint16 ciphersuite) {
     get_protection_context().set_cipher_suite(ciphersuite);
 }
 
-uint16 tls_protection::get_lagacy_version() {
+tls_version_t tls_protection::get_lagacy_version() {
     auto type = _session->get_type();
-    uint16 version = tls_12;
+    tls_version_t version = tls_version_t::tls_12;
     switch (type) {
         case session_type_tls:
         case session_type_quic:
         case session_type_quic2:
-            version = tls_12;
+            version = tls_version_t::tls_12;
             break;
         case session_type_dtls:
-            version = dtls_12;
+            version = tls_version_t::dtls_12;
             break;
     }
     return version;
@@ -62,9 +62,9 @@ bool tls_protection::is_kindof_tls12() { return tls_advisor::get_instance()->is_
 
 bool tls_protection::is_kindof_tls13() { return tls_advisor::get_instance()->is_kindof_tls13(_version); }
 
-uint16 tls_protection::get_tls_version() { return _version; }
+tls_version_t tls_protection::get_tls_version() { return _version; }
 
-void tls_protection::set_tls_version(uint16 version) { _version = version; }
+void tls_protection::set_tls_version(tls_version_t version) { _version = version; }
 
 crypto_key& tls_protection::get_key() { return _key; }
 
@@ -90,11 +90,11 @@ size_t tls_protection::get_header_size() {
 
 protection_context& tls_protection::get_protection_context() { return _handshake_context; }
 
-return_t tls_protection::negotiate(tls_session* session, uint16& ciphersuite, uint16& tlsversion) {
-    return session->get_tls_protection().get_protection_context().negotiate(session, tls_10, tls_13, ciphersuite, tlsversion);
+return_t tls_protection::negotiate(tls_session* session, uint16& ciphersuite, tls_version_t& tlsversion) {
+    return session->get_tls_protection().get_protection_context().negotiate(session, tls_version_t::tls_10, tls_version_t::tls_13, ciphersuite, tlsversion);
 }
 
-return_t tls_protection::negotiate(tls_session* session, uint16 minspec, uint16 maxspec, uint16& ciphersuite, uint16& tlsversion) {
+return_t tls_protection::negotiate(tls_session* session, tls_version_t minspec, tls_version_t maxspec, uint16& ciphersuite, tls_version_t& tlsversion) {
     return session->get_tls_protection().get_protection_context().negotiate(session, minspec, maxspec, ciphersuite, tlsversion);
 }
 

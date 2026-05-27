@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
@@ -51,7 +52,8 @@ return_t dtls_record_arrange::produce(const sockaddr* addr, socklen_t addrlen, c
             dtls_header* header = (dtls_header*)(stream + pos);
 
             uint16 version = ntoh16(header->version);
-            if (false == tlsadvisor->is_kindof_dtls(version)) {
+            t_enum_type<tls_version_t> etversion(version);
+            if (false == tlsadvisor->is_kindof_dtls(etversion)) {
                 ret = errorcode_t::bad_data;
                 break;
             }
@@ -159,7 +161,9 @@ return_t dtls_record_arrange::consume(const sockaddr* addr, socklen_t addrlen, u
 #endif
 
                 const binary_t& packet = iter->second;
-                if (tls_content_type_change_cipher_spec == packet[0]) {
+                auto type = packet[0];
+                t_enum_type<tls_content_type_t> ettype(type);
+                if (tls_content_type_t::change_cipher_spec == ettype) {
                     pool.epoch++;
                     pool.seq = 0;
                 } else {

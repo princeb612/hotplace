@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace net {
 
-tls_record_change_cipher_spec::tls_record_change_cipher_spec(tls_session* session) : tls_record(tls_content_type_change_cipher_spec, session) {}
+tls_record_change_cipher_spec::tls_record_change_cipher_spec(tls_session* session) : tls_record(tls_content_type_t::change_cipher_spec, session) {}
 
 tls_record_change_cipher_spec::~tls_record_change_cipher_spec() {}
 

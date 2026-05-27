@@ -34,7 +34,7 @@ constexpr char constexpr_group_dtls[] = "dtls";
 constexpr char constexpr_cookie_len[] = "cookie len";
 constexpr char constexpr_cookie[] = "cookie";
 
-tls_handshake_server_hello_done::tls_handshake_server_hello_done(tls_session* session) : tls_handshake(tls_hs_server_hello_done, session) {}
+tls_handshake_server_hello_done::tls_handshake_server_hello_done(tls_session* session) : tls_handshake(tls_handshake_type_t::server_hello_done, session) {}
 
 tls_handshake_server_hello_done::~tls_handshake_server_hello_done() {}
 
@@ -51,7 +51,7 @@ return_t tls_handshake_server_hello_done::do_preprocess(tls_direction_t dir) {
         if (session->get_tls_protection().is_kindof_tls12()) {
             auto session_status = session->get_session_status();
             if (0 == (session_status_server_key_exchange & session_status)) {
-                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
                 session->reset_session_status();
                 ret = errorcode_t::handshake_failure;
                 __leave2_trace(ret);

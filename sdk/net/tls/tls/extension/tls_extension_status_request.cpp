@@ -27,7 +27,7 @@ constexpr char constexpr_responderid_info[] = "responderid information";
 constexpr char constexpr_request_ext_info_len[] = "request extension information len";
 constexpr char constexpr_request_ext_info[] = "request extension information";
 
-tls_extension_status_request::tls_extension_status_request(tls_handshake* handshake) : tls_extension(tls_ext_status_request, handshake) {}
+tls_extension_status_request::tls_extension_status_request(tls_handshake* handshake) : tls_extension(tls_extension_type_t::status_request, handshake) {}
 
 tls_extension_status_request::~tls_extension_status_request() {}
 

@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension_builder.hpp>
@@ -40,7 +41,8 @@ return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, con
             }
 
             auto extension_type = ntoh16(*(uint16*)(stream + pos));
-            auto extension = builder.set(handshake).set(dir).set(extension_type).build();
+            t_enum_type<tls_extension_type_t> etextension_type(extension_type);
+            auto extension = builder.set(handshake).set(dir).set(etextension_type).build();
             if (extension) {
                 ret = extension->read(dir, stream, size, pos);
                 if (errorcode_t::success == ret) {
@@ -50,7 +52,8 @@ return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, con
                     if (istraceable(trace_category_t::trace_category_net)) {
                         tls_advisor* tlsadvisor = tls_advisor::get_instance();
                         trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension, [&](basic_stream& dbs) -> void {
-                            dbs.println(ANSI_ESCAPE "1;31m! error while reading extension %s" ANSI_ESCAPE "0m", tlsadvisor->nameof_tls_extension(extension_type).c_str());
+                            dbs.println(ANSI_ESCAPE "1;31m! error while reading extension %s" ANSI_ESCAPE "0m",
+                                        tlsadvisor->nameof_tls_extension(etextension_type).c_str());
                         });
                     }
 #endif
@@ -92,7 +95,7 @@ return_t tls_extensions::write(tls_direction_t dir, binary_t& bin) {
 
 return_t tls_extensions::add(tls_extension* extension, bool upref) { return _extensions.add(extension, upref); }
 
-tls_extensions& tls_extensions::add(uint16 type, tls_direction_t dir, tls_handshake* handshake, std::function<return_t(tls_extension*)> func, bool upref) {
+tls_extensions& tls_extensions::add(tls_extension_type_t type, tls_direction_t dir, tls_handshake* handshake, std::function<return_t(tls_extension*)> func, bool upref) {
     __try2 {
         tls_extension_builder builder;
         auto extension = builder.set(type).set(dir).set(handshake).build();
@@ -135,7 +138,7 @@ tls_extensions& tls_extensions::operator<<(tls_extensions* extensions) {
 
 return_t tls_extensions::for_each(std::function<return_t(tls_extension*)> func) { return _extensions.for_each(func); }
 
-tls_extension* tls_extensions::get(uint16 type, bool upref) { return _extensions.get(type, upref); }
+tls_extension* tls_extensions::get(tls_extension_type_t type, bool upref) { return _extensions.get(type, upref); }
 
 tls_extension* tls_extensions::getat(size_t index, bool upref) { return _extensions.getat(index, upref); }
 

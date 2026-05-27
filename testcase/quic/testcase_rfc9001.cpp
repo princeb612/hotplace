@@ -26,14 +26,14 @@ void test_rfc_9001_prepare_a1(tls_session* client_session, tls_session* server_s
         auto& protection = server_session->get_tls_protection();
         auto& secrets = protection.get_secrets();
         secrets.assign(tls_context_quic_dcid, bin_dcid);
-        protection.calc(server_session, tls_hs_client_hello, from_client);
+        protection.calc(server_session, tls_handshake_type_t::client_hello, from_client);
     }
 
     {
         auto& protection = client_session->get_tls_protection();
         auto& secrets = protection.get_secrets();
         secrets.assign(tls_context_quic_dcid, bin_dcid);
-        protection.calc(server_session, tls_hs_client_hello, from_client);
+        protection.calc(server_session, tls_handshake_type_t::client_hello, from_client);
     }
 
     _logger->hdump("> DCID", bin_dcid, 16, 3);

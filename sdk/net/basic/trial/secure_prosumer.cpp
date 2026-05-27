@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/net/basic/trial/secure_prosumer.hpp>
@@ -118,12 +119,14 @@ return_t secure_prosumer::do_produce(tls_session* session, tls_direction_t dir, 
         tls_record_builder builder;
 
         while ((errorcode_t::success == ret) && (pos < size)) {
-            uint8 content_type = stream[pos];
+            auto type = stream[pos];
+            t_enum_type<tls_content_type_t> ettype(type);
+            tls_content_type_t content_type = ettype;
             auto record = builder.set(session).set(content_type).build();
             if (record) {
                 ret = record->read(dir, stream, size, pos);
                 if (errorcode_t::success == ret) {
-                    if (tls_content_type_application_data == content_type) {
+                    if (tls_content_type_t::application_data == content_type) {
                         tls_record_application_data* appdata = (tls_record_application_data*)record;
                         const auto& bin = appdata->get_binary();
                         if (false == bin.empty()) {

@@ -28,10 +28,10 @@ class tls_record {
 
     tls_session* get_session();  // session
 
-    tls_content_type_t get_type();  // content type
-    uint16 get_legacy_version();    // legacy version
-    uint16 get_tls_version();
-    void set_tls_version(uint16 version);
+    tls_content_type_t get_type();       // content type
+    tls_version_t get_legacy_version();  // legacy version
+    tls_version_t get_tls_version();
+    void set_tls_version(tls_version_t version);
 
     bool is_dtls();
     uint16 get_key_epoch();        // DTLS key epoch
@@ -41,7 +41,7 @@ class tls_record {
     virtual void operator<<(tls_handshake* handshake);
     virtual tls_record& add(tls_handshake* handshake);
     virtual tls_record& add(tls_content_type_t type, tls_session* session, std::function<return_t(tls_record*)> func = nullptr, bool upref = false);
-    virtual tls_record& add(tls_hs_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func = nullptr, bool upref = false);
+    virtual tls_record& add(tls_handshake_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func = nullptr, bool upref = false);
 
     void addref();
     void release();
@@ -50,7 +50,7 @@ class tls_record {
     uint32 get_flags();
 
    protected:
-    tls_record(uint8 type, tls_session* session);
+    tls_record(tls_content_type_t type, tls_session* session);
 
     virtual return_t do_preprocess(tls_direction_t dir);
     virtual return_t do_postprocess(tls_direction_t dir);
@@ -70,7 +70,7 @@ class tls_record {
     void change_epoch_seq(tls_direction_t dir);
 
    private:
-    uint8 _content_type;
+    tls_content_type_t _content_type;
     bool _cond_dtls;
     uint16 _dtls_epoch;
     uint64 _dtls_record_seq;  // uint48_t

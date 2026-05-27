@@ -80,7 +80,7 @@ constexpr char constexpr_psk_binder_len[] = "psk binder len";
 constexpr char constexpr_psk_binder[] = "psk binder";
 constexpr char constexpr_selected_identity[] = "selected identity";
 
-tls_extension_psk::tls_extension_psk(tls_handshake* handshake) : tls_extension(tls_ext_pre_shared_key, handshake) {}
+tls_extension_psk::tls_extension_psk(tls_handshake* handshake) : tls_extension(tls_extension_type_t::pre_shared_key, handshake) {}
 
 tls_extension_psk::~tls_extension_psk() {}
 
@@ -141,7 +141,7 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
             auto& kv = session->get_session_info(from_server).get_keyvalue();
             const binary_t& ticket = secrets.get(tls_context_new_session_ticket);
             if (psk_identity != ticket) {
-                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
                 session->reset_session_status();
                 ret = errorcode_t::handshake_failure;
                 __leave2;
@@ -149,7 +149,7 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
             uint32 ticket_lifetime = t_narrow_cast(kv.get(session_ticket_lifetime));
             uint32 ticket_age_add = t_narrow_cast(kv.get(session_ticket_age_add));
             if (obfuscated_ticket_age - ticket_age_add > ticket_lifetime) {
-                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_illegal_parameter);
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
                 session->reset_session_status();
                 ret = errorcode_t::handshake_failure;
                 __leave2;

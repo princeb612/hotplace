@@ -7,6 +7,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/net/tls/dtls_record_publisher.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record_builder.hpp>
@@ -28,8 +29,10 @@ return_t tls_records::read(tls_session* session, tls_direction_t dir, const byte
 
         while (pos < size) {
             uint8 content_type = stream[pos];
+            t_enum_type<tls_content_type_t> etcontent_type(content_type);
+
             tls_record_builder builder;
-            auto record = builder.set(session).set(content_type).build();
+            auto record = builder.set(session).set(etcontent_type).build();
             if (record) {
                 ret = record->read(dir, stream, size, pos);
                 if (errorcode_t::success == ret) {

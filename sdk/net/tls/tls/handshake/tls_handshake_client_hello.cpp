@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
@@ -40,7 +41,7 @@ constexpr char constexpr_group_dtls[] = "dtls";
 constexpr char constexpr_cookie_len[] = "cookie len";
 constexpr char constexpr_cookie[] = "cookie";
 
-tls_handshake_client_hello::tls_handshake_client_hello(tls_session* session) : tls_handshake(tls_hs_client_hello, session) {}
+tls_handshake_client_hello::tls_handshake_client_hello(tls_session* session) : tls_handshake(tls_handshake_type_t::client_hello, session) {}
 
 tls_handshake_client_hello::~tls_handshake_client_hello() {}
 
@@ -66,7 +67,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
             if (session_status_hello_verify_request & session_status) {
                 // DTLS cookie
                 if (session_status_server_hello & session_status) {
-                    session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
                     session->reset_session_status();
                     ret = errorcode_t::handshake_failure;
                     __leave2_trace(ret);
@@ -75,7 +76,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                 // 0-RTT, renegotiation
             } else if (~(session_status_client_hello | session_status_server_hello) & session_status) {
                 // not HRR
-                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
                 session->reset_session_status();
                 ret = errorcode_t::handshake_failure;
                 __leave2_trace(ret);
@@ -84,7 +85,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
 
         // finished -> client_hello
         auto hsstatus = session->get_session_info(dir).get_status();
-        if (tls_hs_finished == hsstatus) {
+        if (tls_handshake_type_t::finished == hsstatus) {
             if (protection.is_kindof_tls13()) {
                 // 0-RTT
                 protection.set_flow(tls_flow_0rtt);
@@ -103,7 +104,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                 //   tls_handshake_client_hello
                 //     - test the value of session_conf_enable_renegotiation
                 //       - if zero, renegotiation is prohibited
-                //         - alert(fatal, tls_alertdesc_no_renegotiation)
+                //         - alert(fatal, tls_alertdesc_t::no_renegotiation)
                 //       - else
                 //         - set_flow(tls_flow_renegotiation);
                 //         - renegotiation_info must be the verify data of finished
@@ -120,7 +121,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
                 } else
 #endif
                 {
-                    session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_no_renegotiation);
+                    session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::no_renegotiation);
                     session->reset_session_status();
                     ret = errorcode_t::negotiation_failure;
                     __leave2;
@@ -170,7 +171,7 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
                 // client_hello
                 // hello_verify_request (cookie)
                 // client_hello (cookie)
-                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::handshake_failure);
                 session->reset_session_status();
                 ret = errorcode_t::handshake_failure;
                 __leave2_trace(ret);
@@ -179,9 +180,9 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
 
         // 0-RTT, pre_shared_key extension
         if (tls_flow_0rtt == protection.get_flow()) {
-            auto ext_psk = get_extensions().get(tls_ext_pre_shared_key);
+            auto ext_psk = get_extensions().get(tls_extension_type_t::pre_shared_key);
             if (nullptr == ext_psk) {
-                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::handshake_failure);
                 session->reset_session_status();
                 ret = errorcode_t::handshake_failure;
                 __leave2_trace(ret);
@@ -199,7 +200,7 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
                 case tls_flow_0rtt: {
                     protection.reset_transcript_hash(session);
                     protection.update_transcript_hash(session, stream + hspos, size_header_body /*, handshake_hash */);  // client_hello
-                    ret = protection.calc(session, tls_hs_client_hello, dir);
+                    ret = protection.calc(session, tls_handshake_type_t::client_hello, dir);
                 } break;
                 case tls_flow_hello_retry_request: {
                     protection.update_transcript_hash(session, stream + hspos, size_header_body /*, handshake_hash */);  // client_hello
@@ -218,7 +219,7 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
                 protection_context.add_cipher_suite(cs);
             }
 
-            auto ext_ver = get_extensions().get(tls_ext_supported_versions);
+            auto ext_ver = get_extensions().get(tls_extension_type_t::supported_versions);
             if (nullptr == ext_ver) {  // TLS 1.2
                 protection_context.add_supported_version(protection.get_lagacy_version());
             }
@@ -226,11 +227,11 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
 
         {
             // encrypt_then_mac
-            auto ext_etm = get_extensions().get(tls_ext_encrypt_then_mac);
+            auto ext_etm = get_extensions().get(tls_extension_type_t::encrypt_then_mac);
             session->get_keyvalue().set(session_encrypt_then_mac, (ext_etm) ? 1 : 0);
 
             // enxtended master secret
-            auto ext_ems = get_extensions().get(tls_ext_extended_master_secret);
+            auto ext_ems = get_extensions().get(tls_extension_type_t::extended_master_secret);
             session->get_keyvalue().set(session_extended_master_secret, (ext_ems) ? 1 : 0);
         }
 
@@ -269,7 +270,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
         auto& protection = session->get_tls_protection();
         auto& secrets = protection.get_secrets();
 
-        uint16 legacy_version = protection.get_lagacy_version();
+        auto legacy_version = protection.get_lagacy_version();
 #if defined DEBUG
         uint16 version = 0;
 #endif
@@ -354,9 +355,10 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
         if (istraceable(trace_category_t::trace_category_net)) {
             trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                 uint16 i = 0;
+                t_enum_type<tls_version_t> etversion(version);
 
                 dbs.autoindent(1);
-                dbs.println(" > %s 0x%04x (%s)", constexpr_version, version, tlsadvisor->nameof_tls_version(version).c_str());
+                dbs.println(" > %s 0x%04x (%s)", constexpr_version, etversion, tlsadvisor->nameof_tls_version(etversion).c_str());
                 dbs.println(" > %s", constexpr_random);
                 if (random.size()) {
                     dbs.println("   %s", base16_encode(random).c_str());
@@ -383,7 +385,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
 #endif
 
         if (0 == extension_len) {
-            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::missing_extension);
             session->reset_session_status();
             ret = errorcode_t::handshake_failure;
             __leave2_trace(ret);
@@ -396,9 +398,9 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
 
         if (tls_flow_renegotiation == protection.get_flow()) {
             // client renegotiation
-            auto ext_renegotiationinfo = get_extensions().get(tls_ext_renegotiation_info);
+            auto ext_renegotiationinfo = get_extensions().get(tls_extension_type_t::renegotiation_info);
             if (nullptr == ext_renegotiationinfo) {
-                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_missing_extension);
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::missing_extension);
                 session->reset_session_status();
                 ret = errorcode_t::handshake_failure;
                 __leave2_trace(ret);

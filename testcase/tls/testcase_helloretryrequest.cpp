@@ -20,7 +20,7 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
         tls_record_handshake record(session);
 
         ret = record
-                  .add(tls_hs_client_hello, session,
+                  .add(tls_handshake_type_t::client_hello, session,
                        [&](tls_handshake* hs) -> return_t {
                            auto handshake = (tls_handshake_client_hello*)hs;
 
@@ -44,12 +44,12 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
                            handshake->add_ciphersuites("TLS_AES_128_GCM_SHA256");
 
                            handshake->get_extensions()
-                               .add(tls_ext_server_name, dir, handshake,
+                               .add(tls_extension_type_t::server_name, dir, handshake,
                                     [](tls_extension* extension) -> return_t {
                                         (*(tls_extension_sni*)extension).set_hostname("test.server.com");
                                         return errorcode_t::success;
                                     })
-                               .add(tls_ext_ec_point_formats, dir, handshake,
+                               .add(tls_extension_type_t::ec_point_formats, dir, handshake,
                                     [](tls_extension* extension) -> return_t {
                                         // RFC 9325 4.2.1
                                         // Note that [RFC8422] deprecates all but the uncompressed point format.
@@ -58,7 +58,7 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
                                         (*(tls_extension_ec_point_formats*)extension).add("uncompressed");
                                         return errorcode_t::success;
                                     })
-                               .add(tls_ext_supported_groups, dir, handshake,
+                               .add(tls_extension_type_t::supported_groups, dir, handshake,
                                     [](tls_extension* extension) -> return_t {
                                         // Clients and servers SHOULD support the NIST P-256 (secp256r1) [RFC8422] and X25519 (x25519) [RFC7748] curves
                                         (*(tls_extension_supported_groups*)extension)
@@ -74,9 +74,9 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
                                             .add("ffdhe8192");
                                         return errorcode_t::success;
                                     })
-                               .add(tls_ext_encrypt_then_mac, dir, handshake, nullptr)
-                               .add(tls_ext_extended_master_secret, dir, handshake, nullptr)
-                               .add(tls_ext_signature_algorithms, dir, handshake,
+                               .add(tls_extension_type_t::encrypt_then_mac, dir, handshake, nullptr)
+                               .add(tls_extension_type_t::extended_master_secret, dir, handshake, nullptr)
+                               .add(tls_extension_type_t::signature_algorithms, dir, handshake,
                                     [](tls_extension* extension) -> return_t {
                                         (*(tls_extension_signature_algorithms*)extension)
                                             .add("ecdsa_secp256r1_sha256")
@@ -95,17 +95,17 @@ static return_t do_test_construct_client_hello(tls_session* session, tls_directi
                                             .add("rsa_pss_rsae_sha512");
                                         return errorcode_t::success;
                                     })
-                               .add(tls_ext_psk_key_exchange_modes, dir, handshake,
+                               .add(tls_extension_type_t::psk_key_exchange_modes, dir, handshake,
                                     [](tls_extension* extension) -> return_t {
                                         (*(tls_extension_psk_key_exchange_modes*)extension).add("psk_dhe_ke");
                                         return errorcode_t::success;
                                     })
-                               .add(tls_ext_supported_versions, dir, handshake,
+                               .add(tls_extension_type_t::supported_versions, dir, handshake,
                                     [&](tls_extension* extension) -> return_t {
                                         (*(tls_extension_client_supported_versions*)extension).add(tls_13);
                                         return errorcode_t::success;
                                     })
-                               .add(tls_ext_key_share, dir, handshake, [&](tls_extension* extension) -> return_t {
+                               .add(tls_extension_type_t::key_share, dir, handshake, [&](tls_extension* extension) -> return_t {
                                    tls_extension_client_key_share* keyshare = (tls_extension_client_key_share*)extension;
                                    keyshare->clear();
                                    keyshare->add(group);
@@ -135,7 +135,7 @@ static return_t do_test_construct_server_hello(tls_session* session, tls_session
 
     __try2 {
         uint16 server_cs = 0;
-        uint16 server_version = 0;
+        tls_version_t server_version = tls_version_t{};
 
         auto& protection = session->get_tls_protection();
         protection.negotiate(session, server_cs, server_version);
@@ -154,7 +154,7 @@ static return_t do_test_construct_server_hello(tls_session* session, tls_session
 
         tls_record_handshake record(session);
         ret = record
-                  .add(tls_hs_server_hello, session,
+                  .add(tls_handshake_type_t::server_hello, session,
                        [&](tls_handshake* hs) -> return_t {
                            auto handshake = (tls_handshake_server_hello*)hs;
 
@@ -179,12 +179,12 @@ static return_t do_test_construct_server_hello(tls_session* session, tls_session
                            }
 
                            handshake->get_extensions()
-                               .add(tls_ext_supported_versions, dir, handshake,
+                               .add(tls_extension_type_t::supported_versions, dir, handshake,
                                     [&](tls_extension* extension) -> return_t {
                                         (*(tls_extension_server_supported_versions*)extension).set(server_version);
                                         return errorcode_t::success;
                                     })
-                               .add(tls_ext_key_share, dir, handshake, [](tls_extension* extension) -> return_t {
+                               .add(tls_extension_type_t::key_share, dir, handshake, [](tls_extension* extension) -> return_t {
                                    tls_extension_server_key_share* keyshare = (tls_extension_server_key_share*)extension;
                                    keyshare->clear();
                                    keyshare->add_keyshare();

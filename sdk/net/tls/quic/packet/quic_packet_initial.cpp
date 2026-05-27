@@ -111,7 +111,7 @@ return_t quic_packet_initial::do_read(tls_direction_t dir, const byte_t* stream,
         if (from_client == dir) {
             if (secrets.get(tls_secret_initial_quic_client_hp).empty()) {
                 secrets.assign(tls_context_quic_dcid, get_dcid());
-                protection.calc(session, tls_hs_client_hello, dir);  // calc initial keys
+                protection.calc(session, tls_handshake_type_t::client_hello, dir);  // calc initial keys
             } else {
                 if (false == get_dcid().empty()) {
                     secrets.assign(tls_context_server_cid, get_dcid());

@@ -22,7 +22,7 @@ namespace net {
 constexpr char constexpr_ack_len[] = "ack len";
 constexpr char constexpr_ack[] = "record ack";
 
-tls_record_ack::tls_record_ack(tls_session* session) : tls_record(tls_content_type_ack, session) {}
+tls_record_ack::tls_record_ack(tls_session* session) : tls_record(tls_content_type_t::ack, session) {}
 
 tls_record_ack::~tls_record_ack() {}
 

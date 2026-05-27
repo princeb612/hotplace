@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace net {
 
-tls_handshake_end_of_early_data::tls_handshake_end_of_early_data(tls_session* session) : tls_handshake(tls_hs_end_of_early_data, session) {}
+tls_handshake_end_of_early_data::tls_handshake_end_of_early_data(tls_session* session) : tls_handshake(tls_handshake_type_t::end_of_early_data, session) {}
 
 tls_handshake_end_of_early_data::~tls_handshake_end_of_early_data() {}
 
@@ -30,7 +30,7 @@ return_t tls_handshake_end_of_early_data::do_postprocess(tls_direction_t dir, co
         auto& protection = session->get_tls_protection();
 
         {
-            protection.calc(session, tls_hs_end_of_early_data, dir);
+            protection.calc(session, tls_handshake_type_t::end_of_early_data, dir);
             session->reset_recordno(from_client);
             session->reset_recordno(from_server);
             session->get_session_info(dir).set_status(get_type());

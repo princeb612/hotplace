@@ -16,7 +16,7 @@
 namespace hotplace {
 namespace net {
 
-tls_record_unknown::tls_record_unknown(uint8 type, tls_session* session) : tls_record(type, session) {}
+tls_record_unknown::tls_record_unknown(tls_content_type_t type, tls_session* session) : tls_record(type, session) {}
 
 tls_record_unknown::~tls_record_unknown() {}
 

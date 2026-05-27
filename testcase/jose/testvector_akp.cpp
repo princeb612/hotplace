@@ -19,7 +19,6 @@ void test_json_testvector_akp(const char* filename) {
     json_web_key jwk;
     crypto_key key;
     json_t* json_root = nullptr;
-    json_t* json_jwk = nullptr;
     char* contents = nullptr;
     __try2 {
         ret = json_open_file(&json_root, filename);
@@ -28,6 +27,7 @@ void test_json_testvector_akp(const char* filename) {
             __leave2;
         }
 
+        json_t* json_jwk = nullptr;
         json_unpack(json_root, "{s:o}", "jwk", &json_jwk);
         contents = json_dumps(json_jwk, 0);
 
@@ -78,9 +78,6 @@ void test_json_testvector_akp(const char* filename) {
     __finally2 {
         if (contents) {
             free(contents);
-        }
-        if (json_jwk) {
-            json_decref(json_jwk);
         }
         if (json_root) {
             json_decref(json_root);

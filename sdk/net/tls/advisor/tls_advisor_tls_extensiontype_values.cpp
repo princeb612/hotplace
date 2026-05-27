@@ -35,7 +35,7 @@ uint16 tls_advisor::valueof_compression_alg(const std::string& name) {
     return value;
 }
 
-std::string tls_advisor::nameof_tls_extension(uint16 code) {
+std::string tls_advisor::nameof_tls_extension(tls_extension_type_t code) {
     std::string value;
     auto iter = _extension_type_codes.find(code);
     if (_extension_type_codes.end() != iter) {

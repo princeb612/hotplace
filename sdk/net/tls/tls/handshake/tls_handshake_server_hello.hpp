@@ -64,10 +64,10 @@ class tls_handshake_server_hello : public tls_handshake {
     tls_handshake_server_hello(tls_session* session);
     virtual ~tls_handshake_server_hello();
 
-    void set_version(uint16 version);
+    void set_version(tls_version_t version);
     void set_random(const binary_t& value);
     void set_session_id(const binary_t& value);
-    uint16 get_version();
+    tls_version_t get_version();
     const binary_t& get_random();
     const binary_t& get_session_id();
     uint16 get_cipher_suite();
@@ -82,7 +82,7 @@ class tls_handshake_server_hello : public tls_handshake {
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
    private:
-    uint16 _version;
+    tls_version_t _version;
     binary_t _random;  // 32 bytes
     binary_t _session_id;
     uint8 _compression_method;

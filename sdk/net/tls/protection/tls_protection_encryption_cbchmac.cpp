@@ -241,10 +241,10 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session* session, tls_direction_t 
             case errorcode_t::success:
                 break;
             case errorcode_t::cipher_failure:
-                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_decryption_failed);
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decryption_failed);
                 break;
             case errorcode_t::verification_failure:
-                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_bad_record_mac);
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::bad_record_mac);
                 break;
             default:
                 break;

@@ -12,6 +12,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
@@ -38,7 +39,7 @@ constexpr char constexpr_group_dtls[] = "dtls";
 constexpr char constexpr_dtls_epoch[] = "epoch";
 constexpr char constexpr_dtls_record_seq[] = "sequence number";
 
-tls_record::tls_record(uint8 type, tls_session* session)
+tls_record::tls_record(tls_content_type_t type, tls_session* session)
     : _content_type(type), _cond_dtls(false), _dtls_epoch(0), _dtls_record_seq(0), _bodysize(0), _flags(0), _session(session) {
     if (session) {
         session->addref();
@@ -194,7 +195,6 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
         bool cond_dtls = false;
         uint16 key_epoch = 0;
         uint64 dtls_record_seq = 0;
-        // auto session_type = session->get_type();
 
         {
             /**
@@ -229,7 +229,8 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
 
             auto lambda_check_dtls = [&](payload* pl, payload_member* item) -> void {
                 auto ver = pl->t_value_of<uint16>(item);
-                pl->set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(ver));
+                t_enum_type<tls_version_t> etver(ver);
+                pl->set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(etver));
             };
             pl.set_condition(constexpr_record_version, lambda_check_dtls);
             pl.read(stream, size, pos);
@@ -248,7 +249,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
 
         if (len > 16384 + 2048) {
             // more than 2^14+2048 bytes
-            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_record_overflow);
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::record_overflow);
             ret = errorcode_t::overflow;
             __leave2;
         } else {
@@ -259,7 +260,8 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
         }
 
         {
-            _content_type = content_type;
+            t_enum_type<tls_content_type_t> etcontent_type(content_type);
+            _content_type = etcontent_type;
             _bodysize = len;
             _cond_dtls = cond_dtls;
             if (cond_dtls) {
@@ -269,17 +271,19 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
             _range.end = pos;
         }
 
+        t_enum_type<tls_content_type_t> etcontent_type(content_type);
+
 #if defined DEBUG
         if (istraceable(trace_category_t::trace_category_net)) {
             trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_record, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                // const auto& range = get_header_range();
+                t_enum_type<tls_version_t> etrecord_version(record_version);
 
                 dbs.println("# record (%s) [size 0x%zx(%zi) pos 0x%x]", tlsadvisor->nameof_direction(dir).c_str(), size, size, recpos);
 
                 if (check_trace_level(loglevel_t::loglevel_debug)) {
                     uint16 content_header_size = 0;
-                    if (tlsadvisor->is_kindof_tls(record_version)) {
+                    if (tlsadvisor->is_kindof_tls(etrecord_version)) {
                         content_header_size = RTL_FIELD_SIZE(tls_content_t, tls);
                     } else {
                         content_header_size = RTL_FIELD_SIZE(tls_content_t, dtls);
@@ -287,8 +291,8 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
                     dump_memory(stream + recpos, content_header_size + len, &dbs, 16, 3, 0, dump_notrunc);
                 }
 
-                dbs.println("> %s 0x%02x(%i) (%s)", constexpr_content_type, content_type, content_type, tlsadvisor->nameof_tls_record(content_type).c_str());
-                dbs.println(" > %s 0x%04x (%s)", constexpr_record_version, record_version, tlsadvisor->nameof_tls_version(record_version).c_str());
+                dbs.println("> %s 0x%02x(%i) (%s)", constexpr_content_type, etcontent_type, etcontent_type, tlsadvisor->nameof_tls_record(etcontent_type).c_str());
+                dbs.println(" > %s 0x%04x (%s)", constexpr_record_version, etrecord_version, tlsadvisor->nameof_tls_version(etrecord_version).c_str());
                 if (is_dtls()) {
                     dbs.println(" > %s 0x%04x", constexpr_dtls_epoch, key_epoch);
                     dbs.println(" > %s 0x%012I64x (%I64u)", constexpr_dtls_record_seq, dtls_record_seq, dtls_record_seq);
@@ -327,10 +331,7 @@ return_t tls_record::do_write_header(tls_direction_t dir, binary_t& bin, const b
 
             auto& protection = session->get_tls_protection();
             auto record_version = protection.get_lagacy_version();
-            // auto tagsize = protection.get_tag_size();
-            // auto tlsversion = protection.get_tls_version();
             auto cs = protection.get_cipher_suite();
-            // crypto_advisor* advisor = crypto_advisor::get_instance();
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
             const tls_cipher_suite_t* hint = tlsadvisor->hintof_cipher_suite(cs);
             if (nullptr == hint) {
@@ -381,7 +382,7 @@ return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin
     return_t ret = errorcode_t::success;
     __try2 {
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        uint16 record_version = get_legacy_version();
+        auto record_version = get_legacy_version();
         // auto is_tls = tlsadvisor->is_kindof_tls(record_version);
 
         {
@@ -441,25 +442,25 @@ bool tls_record::apply_protection() { return false; }
 
 tls_session* tls_record::get_session() { return _session; }
 
-tls_content_type_t tls_record::get_type() { return (tls_content_type_t)_content_type; }
+tls_content_type_t tls_record::get_type() { return _content_type; }
 
-uint16 tls_record::get_legacy_version() {
-    uint16 version = 0;
+tls_version_t tls_record::get_legacy_version() {
+    tls_version_t version = tls_version_t{};
     auto session = get_session();
     auto& protection = session->get_tls_protection();
     version = protection.get_lagacy_version();
     return version;
 }
 
-uint16 tls_record::get_tls_version() {
-    uint16 version = 0;
+tls_version_t tls_record::get_tls_version() {
+    tls_version_t version = tls_version_t{};
     auto session = get_session();
     auto& protection = session->get_tls_protection();
     version = protection.get_tls_version();
     return version;
 }
 
-void tls_record::set_tls_version(uint16 version) {
+void tls_record::set_tls_version(tls_version_t version) {
     auto session = get_session();
     auto& protection = session->get_tls_protection();
     protection.set_tls_version(version);
@@ -500,7 +501,7 @@ tls_record& tls_record::add(tls_handshake* handshake) {
 
 tls_record& tls_record::add(tls_content_type_t type, tls_session* session, std::function<return_t(tls_record*)> func, bool upref) { return *this; }
 
-tls_record& tls_record::add(tls_hs_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func, bool upref) { return *this; }
+tls_record& tls_record::add(tls_handshake_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func, bool upref) { return *this; }
 
 void tls_record::addref() { _shared.addref(); }
 
@@ -513,7 +514,7 @@ uint32 tls_record::get_flags() { return _flags; }
 void tls_record::change_epoch_seq(tls_direction_t dir) {
     auto session = get_session();
     auto& kv = session->get_session_info(dir).get_keyvalue();
-    if (tls_content_type_change_cipher_spec == get_type()) {
+    if (tls_content_type_t::change_cipher_spec == get_type()) {
         kv.inc(session_dtls_epoch);
         kv.set(session_dtls_seq, 0);
     } else {

@@ -31,7 +31,7 @@ namespace net {
 
 constexpr char constexpr_verify_data[] = "verify data";
 
-tls_handshake_finished::tls_handshake_finished(tls_session* session) : tls_handshake(tls_hs_finished, session) {}
+tls_handshake_finished::tls_handshake_finished(tls_session* session) : tls_handshake(tls_handshake_type_t::finished, session) {}
 
 tls_handshake_finished::~tls_handshake_finished() {}
 
@@ -84,7 +84,7 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
         }
 
         if (session_status_prerequisite != (session_status_prerequisite & session_status)) {
-            session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_unexpected_message);
+            session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::unexpected_message);
             session->reset_session_status();
             ret = errorcode_t::handshake_failure;
             __leave2_trace(ret);
@@ -107,7 +107,7 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_
 
             // from_server : application, exporter related
             // from_client : resumption related
-            protection.calc(session, tls_hs_finished, dir);
+            protection.calc(session, tls_handshake_type_t::finished, dir);
 
             secrets.erase(tls_context_client_hello_random);
             secrets.erase(tls_context_server_hello_random);
@@ -185,7 +185,7 @@ return_t tls_handshake_finished::do_read_body(tls_direction_t dir, const byte_t*
 
             verify_data.resize(maced.size());
             if (maced.empty() || (verify_data != maced)) {
-                session->push_alert(dir, tls_alertlevel_fatal, tls_alertdesc_handshake_failure);
+                session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::handshake_failure);
                 session->reset_session_status();
                 ret = errorcode_t::verification_failure;
             }

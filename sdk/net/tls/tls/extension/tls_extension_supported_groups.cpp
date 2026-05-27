@@ -24,14 +24,14 @@ namespace net {
 /**
  * RFC 8446 4.2.7.  Supported Groups
  * RFC 8422 5.1.1.  Supported Elliptic Curves Extension
- * tls_ext_supported_groups
+ * tls_extension_type_t::supported_groups
  * https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
  */
 
 constexpr char constexpr_curves[] = "curves";
 constexpr char constexpr_curve[] = "curve";
 
-tls_extension_supported_groups::tls_extension_supported_groups(tls_handshake* handshake) : tls_extension(tls_ext_supported_groups, handshake) {}
+tls_extension_supported_groups::tls_extension_supported_groups(tls_handshake* handshake) : tls_extension(tls_extension_type_t::supported_groups, handshake) {}
 
 tls_extension_supported_groups::~tls_extension_supported_groups() {}
 

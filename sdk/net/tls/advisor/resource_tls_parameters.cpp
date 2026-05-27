@@ -17,48 +17,48 @@ namespace net {
 #define ENDOF_DATA
 
 define_tls_variable(alert_level_code) = {
-    {1, "warning"},
-    {2, "fatal"},
+    {tls_alertlevel_t::warning, "warning"},
+    {tls_alertlevel_t::fatal, "fatal"},
 };
 define_tls_sizeof_variable(alert_level_code);
 
 define_tls_variable(alert_code) = {
-    {0, "close_notify"},
-    {10, "unexpected_message"},
-    {20, "bad_record_mac"},
-    {21, "decryption_failed"},  // _RESERVED
-    {22, "record_overflow"},
-    {30, "decompression_failure"},  // _RESERVED
-    {40, "handshake_failure"},
-    {41, "no_certificate"},  // _RESERVED
-    {42, "bad_certificate"},
-    {43, "unsupported_certificate"},
-    {44, "certificate_revoked"},
-    {45, "certificate_expired"},
-    {46, "certificate_unknown"},
-    {47, "illegal_parameter"},
-    {48, "unknown_ca"},
-    {49, "access_denied"},
-    {50, "decode_error"},
-    {51, "decrypt_error"},
-    {52, "too_many_cids_requested"},
-    {60, "export_restriction"},  // _RESERVED
-    {70, "protocol_version"},
-    {71, "insufficient_security"},
-    {80, "internal_error"},
-    {86, "inappropriate_fallback"},
-    {90, "user_canceled"},
-    {100, "no_renegotiation"},  // _RESERVED
-    {109, "missing_extension"},
-    {110, "unsupported_extension"},
-    {111, "certificate_unobtainable"},  // _RESERVED
-    {112, "unrecognized_name"},
-    {113, "bad_certificate_status_response"},
-    {114, "bad_certificate_hash_value"},  // _RESERVED
-    {115, "unknown_psk_identity"},
-    {116, "certificate_required"},
-    {120, "no_application_protocol"},
-    {121, "ech_required"},
+    {tls_alertdesc_t::close_notify, "close_notify"},                                        // 0
+    {tls_alertdesc_t::unexpected_message, "unexpected_message"},                            // 10
+    {tls_alertdesc_t::bad_record_mac, "bad_record_mac"},                                    // 20
+    {tls_alertdesc_t::decryption_failed, "decryption_failed"},                              // 21
+    {tls_alertdesc_t::record_overflow, "record_overflow"},                                  // 22
+    {tls_alertdesc_t::decompression_failure, "decompression_failure"},                      // 30
+    {tls_alertdesc_t::handshake_failure, "handshake_failure"},                              // 40
+    {tls_alertdesc_t::no_certificate, "no_certificate"},                                    // 41
+    {tls_alertdesc_t::bad_certificate, "bad_certificate"},                                  // 42
+    {tls_alertdesc_t::unsupported_certificate, "unsupported_certificate"},                  // 43
+    {tls_alertdesc_t::certificate_revoked, "certificate_revoked"},                          // 44
+    {tls_alertdesc_t::certificate_expired, "certificate_expired"},                          // 45
+    {tls_alertdesc_t::certificate_unknown, "certificate_unknown"},                          // 46
+    {tls_alertdesc_t::illegal_parameter, "illegal_parameter"},                              // 47
+    {tls_alertdesc_t::unknown_ca, "unknown_ca"},                                            // 48
+    {tls_alertdesc_t::access_denied, "access_denied"},                                      // 49
+    {tls_alertdesc_t::decode_error, "decode_error"},                                        // 50
+    {tls_alertdesc_t::decrypt_error, "decrypt_error"},                                      // 51
+    {tls_alertdesc_t::too_many_cids_requested, "too_many_cids_requested"},                  // 52
+    {tls_alertdesc_t::export_restriction, "export_restriction"},                            // 60
+    {tls_alertdesc_t::protocol_version, "protocol_version"},                                // 70
+    {tls_alertdesc_t::insufficient_security, "insufficient_security"},                      // 71
+    {tls_alertdesc_t::internal_error, "internal_error"},                                    // 80
+    {tls_alertdesc_t::inappropriate_fallback, "inappropriate_fallback"},                    // 86
+    {tls_alertdesc_t::user_canceled, "user_canceled"},                                      // 90
+    {tls_alertdesc_t::no_renegotiation, "no_renegotiation"},                                // 100
+    {tls_alertdesc_t::missing_extension, "missing_extension"},                              // 109
+    {tls_alertdesc_t::unsupported_extension, "unsupported_extension"},                      // 110
+    {tls_alertdesc_t::certificate_unobtainable, "certificate_unobtainable"},                // 111
+    {tls_alertdesc_t::unrecognized_name, "unrecognized_name"},                              // 112
+    {tls_alertdesc_t::bad_certificate_status_response, "bad_certificate_status_response"},  // 113
+    {tls_alertdesc_t::bad_certificate_hash_value, "bad_certificate_hash_value"},            // 114
+    {tls_alertdesc_t::unknown_psk_identity, "unknown_psk_identity"},                        // 115
+    {tls_alertdesc_t::certificate_required, "certificate_required"},                        // 116
+    {tls_alertdesc_t::no_application_protocol, "no_application_protocol"},                  // 120
+    {tls_alertdesc_t::ech_required, "ech_required"},                                        // 121
 };
 define_tls_sizeof_variable(alert_code);
 
@@ -79,14 +79,14 @@ define_tls_variable(client_cert_type_code) = {
 define_tls_sizeof_variable(client_cert_type_code);
 
 define_tls_variable(content_type_code) = {
-    {20, "change_cipher_spec"},        // RFC 8446
-    {21, "alert"},                     // RFC 8446
-    {22, "handshake"},                 // RFC 8446
-    {23, "application_data"},          // RFC 8446
-    {24, "heartbeat"},                 // RFC 6520
-    {25, "tls12_cid"},                 // RFC 9146
-    {26, "ack"},                       // RFC 9147
-    {27, "return_routability_check"},  // draft-ietf-tls-dtls-rrc-10
+    {tls_content_type_t::change_cipher_spec, "change_cipher_spec"},              // RFC 8446 0x14
+    {tls_content_type_t::alert, "alert"},                                        // RFC 8446 0x15
+    {tls_content_type_t::handshake, "handshake"},                                // RFC 8446 0x16
+    {tls_content_type_t::application_data, "application_data"},                  // RFC 8446 0x17
+    {tls_content_type_t::heartbeat, "heartbeat"},                                // RFC 6520 0x18
+    {tls_content_type_t::tls12_cid, "tls12_cid"},                                // RFC 9146 0x19
+    {tls_content_type_t::ack, "ack"},                                            // RFC 9147 0x1a
+    {tls_content_type_t::return_routability_check, "return_routability_check"},  // draft-ietf-tls-dtls-rrc-10
 };
 define_tls_sizeof_variable(content_type_code);
 
@@ -112,30 +112,31 @@ define_tls_variable(kdf_id_code) = {
 define_tls_sizeof_variable(kdf_id_code);
 
 define_tls_variable(handshake_type_code) = {
-    {1, "client_hello"},
-    {2, "server_hello"},
-    {3, "hello_verify_request"},
-    {4, "new_session_ticket"},
-    {5, "end_of_early_data"},
-    {6, "hello_retry_request_RESERVED"},
-    {8, "encrypted_extensions"},
-    {9, "request_connection_id"},
-    {10, "new_connection_id"},
-    {11, "certificate"},
-    {12, "server_key_exchange"},
-    {13, "certificate_request"},
-    {14, "server_hello_done"},
-    {15, "certificate_verify"},
-    {16, "client_key_exchange"},
-    {17, "client_certificate_request"},
-    {20, "finished"},
-    {21, "certificate_url_RESERVED"},
-    {22, "certificate_status_RESERVED"},
-    {23, "supplemental_data_RESERVED"},
-    {24, "key_update"},
-    {25, "compressed_certificate"},
-    {26, "ekt_key"},
-    {254, "message_hash"},
+    {tls_handshake_type_t::hello_request, "hello_request"},                            // 0
+    {tls_handshake_type_t::client_hello, "client_hello"},                              // 1
+    {tls_handshake_type_t::server_hello, "server_hello"},                              // 2
+    {tls_handshake_type_t::hello_verify_request, "hello_verify_request"},              // 3
+    {tls_handshake_type_t::new_session_ticket, "new_session_ticket"},                  // 4
+    {tls_handshake_type_t::end_of_early_data, "end_of_early_data"},                    // 5
+    {tls_handshake_type_t::hello_retry_request, "hello_retry_request_RESERVED"},       // 6
+    {tls_handshake_type_t::encrypted_extensions, "encrypted_extensions"},              // 8
+    {tls_handshake_type_t::request_connection_id, "request_connection_id"},            // 9
+    {tls_handshake_type_t::new_connection_id, "new_connection_id"},                    // 10
+    {tls_handshake_type_t::certificate, "certificate"},                                // 11
+    {tls_handshake_type_t::server_key_exchange, "server_key_exchange"},                // 12
+    {tls_handshake_type_t::certificate_request, "certificate_request"},                // 13
+    {tls_handshake_type_t::server_hello_done, "server_hello_done"},                    // 14
+    {tls_handshake_type_t::certificate_verify, "certificate_verify"},                  // 15
+    {tls_handshake_type_t::client_key_exchange, "client_key_exchange"},                // 16
+    {tls_handshake_type_t::client_certificate_request, "client_certificate_request"},  // 17
+    {tls_handshake_type_t::finished, "finished"},                                      // 20
+    {tls_handshake_type_t::certificate_url, "certificate_url_RESERVED"},               // 21
+    {tls_handshake_type_t::certificate_status, "certificate_status_RESERVED"},         // 22
+    {tls_handshake_type_t::supplemental_data, "supplemental_data_RESERVED"},           // 23
+    {tls_handshake_type_t::key_update, "key_update"},                                  // 24
+    {tls_handshake_type_t::compressed_certificate, "compressed_certificate"},          // 25
+    {tls_handshake_type_t::ekt_key, "ekt_key"},                                        // 26
+    {tls_handshake_type_t::message_hash, "message_hash"},                              // 254
 };
 define_tls_sizeof_variable(handshake_type_code);
 

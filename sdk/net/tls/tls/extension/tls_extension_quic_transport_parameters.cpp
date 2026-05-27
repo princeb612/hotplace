@@ -27,7 +27,7 @@ constexpr char constexpr_param_id[] = "param id";
 constexpr char constexpr_param[] = "param";
 
 tls_extension_quic_transport_parameters::tls_extension_quic_transport_parameters(tls_handshake* handshake)
-    : tls_extension(tls_ext_quic_transport_parameters, handshake) {}
+    : tls_extension(tls_extension_type_t::quic_transport_parameters, handshake) {}
 
 tls_extension_quic_transport_parameters::~tls_extension_quic_transport_parameters() {}
 

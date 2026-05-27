@@ -22,9 +22,9 @@ void play_yaml_pcap_http3(const char* filename) {
     sslkeylog->attach(&quicsession);
 
     bool has_fatal = false;
-    auto lambda_test_fatal_alert = [&](uint8 level, uint8 desc) -> void {
-        if (tls_alertlevel_fatal == level) {
-            if (tls_alertdesc_certificate_unknown != desc) {
+    auto lambda_test_fatal_alert = [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
+        if (tls_alertlevel_t::fatal == level) {
+            if (tls_alertdesc_t::certificate_unknown != desc) {
                 has_fatal = true;
             }
         }

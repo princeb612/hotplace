@@ -43,13 +43,13 @@ class protection_context {
     protection_context(const protection_context& other);
     protection_context(protection_context&& other);
 
-    return_t negotiate(tls_session* session, uint16& cs, uint16& tlsver);
-    return_t negotiate(tls_session* session, uint16 minspec, uint16 maxspec, uint16& cs, uint16& tlsver);
+    return_t negotiate(tls_session* session, uint16& cs, tls_version_t& tlsver);
+    return_t negotiate(tls_session* session, tls_version_t minspec, tls_version_t maxspec, uint16& cs, tls_version_t& tlsver);
 
     void add_cipher_suite(uint16 cs);
     void add_signature_algorithm(uint16 sa);
     void add_supported_group(uint16 sg);
-    void add_supported_version(uint16 sv);
+    void add_supported_version(tls_version_t sv);
     void add_ec_point_format(uint8 epf);
     void add_keyshare_group(uint16 group);
 
@@ -71,20 +71,21 @@ class protection_context {
     void for_each_cipher_suites(std::function<void(uint16, bool*)> fn) const;
     void for_each_signature_algorithms(std::function<void(uint16, bool*)> fn) const;
     void for_each_supported_groups(std::function<void(uint16, bool*)> fn) const;
-    void for_each_supported_versions(std::function<void(uint16, bool*)> fn) const;
+    void for_each_supported_versions(std::function<void(tls_version_t, bool*)> fn) const;
     void for_each_ec_point_formats(std::function<void(uint8, bool*)> fn) const;
     void for_each_keyshare_groups(std::function<void(uint16, bool*)> fn) const;
     bool select_keyshare(uint16 group);
     /**
      * @remarks negotiation
      */
-    return_t select_from(const protection_context& other, tls_session* session, uint16 minspec = tls_12, uint16 maxspec = tls_13);
+    return_t select_from(const protection_context& other, tls_session* session, tls_version_t minspec = tls_version_t::tls_12,
+                         tls_version_t maxspec = tls_version_t::tls_13);
 
     void set_cipher_suite(uint16 cs);
     uint16 get_cipher_suite(uint16 cs);
 
     uint16 get0_cipher_suite();
-    uint16 get0_supported_version();
+    tls_version_t get0_supported_version();
     uint16 get0_supported_group();
     uint16 select_signature_algorithm(crypto_kty_t kty);
     uint16 get0_keyshare_group();
@@ -93,12 +94,12 @@ class protection_context {
 
    protected:
    private:
-    std::list<uint16> _cipher_suites;         // tls_handshake_client_hello
-    std::list<uint16> _signature_algorithms;  // tls_extension_signature_algorithms
-    std::list<uint16> _supported_groups;      // tls_extension_supported_groups
-    std::list<uint16> _supported_versions;    // tls_extension_client_supported_versions
-    std::list<uint8> _ec_point_formats;       // tls_extension_ec_point_formats
-    std::list<uint16> _keyshare_groups;       // tls_ext_key_share
+    std::list<uint16> _cipher_suites;              // tls_handshake_client_hello
+    std::list<uint16> _signature_algorithms;       // tls_extension_signature_algorithms
+    std::list<uint16> _supported_groups;           // tls_extension_supported_groups
+    std::list<tls_version_t> _supported_versions;  // tls_extension_client_supported_versions
+    std::list<uint8> _ec_point_formats;            // tls_extension_ec_point_formats
+    std::list<uint16> _keyshare_groups;            // tls_extension_type_t::key_share
     std::set<uint16> _keyshare_set;
     uint16 _cipher_suite;
 };
@@ -126,13 +127,13 @@ class tls_protection {
      */
     uint16 get_cipher_suite();
     void set_cipher_suite(uint16 ciphersuite);
-    uint16 get_lagacy_version();
+    tls_version_t get_lagacy_version();
     bool is_kindof_tls();
     bool is_kindof_dtls();
     bool is_kindof_tls12();
     bool is_kindof_tls13();
-    uint16 get_tls_version();
-    void set_tls_version(uint16 version);
+    tls_version_t get_tls_version();
+    void set_tls_version(tls_version_t version);
     protection_context& get_protection_context();
 
     crypto_key& get_key();
@@ -144,8 +145,8 @@ class tls_protection {
     t_binaries<tls_secret_t>& get_secrets();
 
     size_t get_header_size();
-    static return_t negotiate(tls_session* session, uint16& ciphersuite, uint16& tlsversion);
-    static return_t negotiate(tls_session* session, uint16 minspec, uint16 maxspec, uint16& ciphersuite, uint16& tlsversion);
+    static return_t negotiate(tls_session* session, uint16& ciphersuite, tls_version_t& tlsversion);
+    static return_t negotiate(tls_session* session, tls_version_t minspec, tls_version_t maxspec, uint16& ciphersuite, tls_version_t& tlsversion);
 
     ///////////////////////////////////////////////////////////////////////////
     // hash
@@ -199,8 +200,8 @@ class tls_protection {
     // decrypt_aead TLS 1.2 AAD
     return_t build_tls12_aad_from_record(tls_session* session, binary_t& aad, const binary_t& record_header, uint64 record_no, uint8 size_nonce_explicit);
     // tls_record::do_write_header
-    return_t write_aad(tls_session* session, tls_direction_t dir, binary_t& aad, uint8 content_type, uint32 version, uint64 recno, uint16 epoch, uint64 dtlsseq,
-                       uint16 bodysize);
+    return_t write_aad(tls_session* session, tls_direction_t dir, binary_t& aad, tls_content_type_t content_type, tls_version_t version, uint64 recno, uint16 epoch,
+                       uint64 dtlsseq, uint16 bodysize);
 
     ///////////////////////////////////////////////////////////////////////////
     // encryption
@@ -262,9 +263,9 @@ class tls_protection {
     /**
      * @brief   calc
      * @param   tls_session* session [in]
-     * @param   tls_hs_type_t type [in]
+     * @param   tls_handshake_type_t type [in]
      */
-    return_t calc(tls_session* session, tls_hs_type_t type, tls_direction_t dir);
+    return_t calc(tls_session* session, tls_handshake_type_t type, tls_direction_t dir);
     return_t calc_keyblock(hash_algorithm_t hmac_alg, const binary_t& master_secret, const binary_t& client_hello_random, const binary_t& server_hello_random, uint16 cs);
     return_t calc_psk(tls_session* session, const binary_t& binder_hash, const binary_t& psk_binder);
     return_t calc_finished(tls_direction_t dir, hash_algorithm_t alg, uint16 dlen, tls_secret_t& secret, binary_t& maced);
@@ -312,7 +313,7 @@ class tls_protection {
     tls_session* _session;              //
     tls_flow_t _flow;                   // TLS flow
     uint16 _ciphersuite;                // cipher suite negotiated
-    uint16 _version;                    // negotiated version
+    tls_version_t _version;             // negotiated version
     transcript_hash* _transcript_hash;  // transcript hash
     critical_section _lock;             // lock
     crypto_key _key;                    // key

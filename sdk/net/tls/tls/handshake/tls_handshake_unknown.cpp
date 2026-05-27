@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace net {
 
-tls_handshake_unknown::tls_handshake_unknown(tls_hs_type_t type, tls_session* session) : tls_handshake(type, session) {}
+tls_handshake_unknown::tls_handshake_unknown(tls_handshake_type_t type, tls_session* session) : tls_handshake(type, session) {}
 
 tls_handshake_unknown::~tls_handshake_unknown() {}
 

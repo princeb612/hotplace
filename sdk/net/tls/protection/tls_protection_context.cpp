@@ -45,11 +45,11 @@ protection_context::protection_context(protection_context&& other) {
     _cipher_suite = other._cipher_suite;
 }
 
-return_t protection_context::negotiate(tls_session* session, uint16 minspec, uint16 maxspec, uint16& cs, uint16& tlsver) {
+return_t protection_context::negotiate(tls_session* session, tls_version_t minspec, tls_version_t maxspec, uint16& cs, tls_version_t& tlsver) {
     return_t ret = errorcode_t::success;
     if (session) {
         cs = 0;
-        tlsver = 0;
+        tlsver = tls_version_t::unknown;
 
         // tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto& protection = session->get_tls_protection();
@@ -72,7 +72,7 @@ void protection_context::add_signature_algorithm(uint16 sa) { _signature_algorit
 
 void protection_context::add_supported_group(uint16 sg) { _supported_groups.push_back(sg); }
 
-void protection_context::add_supported_version(uint16 sv) { _supported_versions.push_back(sv); }
+void protection_context::add_supported_version(tls_version_t sv) { _supported_versions.push_back(sv); }
 
 void protection_context::add_ec_point_format(uint8 epf) { _ec_point_formats.push_back(epf); }
 
@@ -126,7 +126,7 @@ void protection_context::for_each_supported_groups(std::function<void(uint16, bo
     }
 }
 
-void protection_context::for_each_supported_versions(std::function<void(uint16, bool*)> fn) const {
+void protection_context::for_each_supported_versions(std::function<void(tls_version_t, bool*)> fn) const {
     bool cont = false;
     for (auto item : _supported_versions) {
         fn(item, &cont);
@@ -165,7 +165,7 @@ void protection_context::clear() {
     clear_keyshare_groups();
 }
 
-return_t protection_context::select_from(const protection_context& other, tls_session* session, uint16 minspec, uint16 maxspec) {
+return_t protection_context::select_from(const protection_context& other, tls_session* session, tls_version_t minspec, tls_version_t maxspec) {
     return_t ret = errorcode_t::success;
     __try2 {
         clear();
@@ -180,7 +180,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
         crypto_advisor* advisor = crypto_advisor::get_instance();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-        std::set<uint16> specs;
+        std::set<tls_version_t> specs;
         std::set<crypto_kty_t> certkty_set;
         std::set<uint32> certnid_set;
         std::map<uint16, std::list<uint16>> cs_map;
@@ -188,7 +188,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
         // TLS specification
         for (uint16 t = tls_10; t <= tls_13; t++) {
             if ((minspec <= t) && (t <= maxspec)) {
-                specs.insert(t);
+                specs.insert((tls_version_t)t);
             }
         }
 
@@ -264,7 +264,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
             }
         }
 
-        tls_version_t spec = tls_unknown;
+        tls_version_t spec = unknown;
         {
             auto lambda_select_cs = [&](tls_version_t ver) -> bool {
                 bool ret_value = false;
@@ -391,8 +391,8 @@ uint16 protection_context::get0_cipher_suite() {
     return ret_value;
 }
 
-uint16 protection_context::get0_supported_version() {
-    uint16 ret_value = 0;
+tls_version_t protection_context::get0_supported_version() {
+    tls_version_t ret_value = tls_version_t::unknown;
     if (false == _supported_versions.empty()) {
         ret_value = *_supported_versions.begin();
     }

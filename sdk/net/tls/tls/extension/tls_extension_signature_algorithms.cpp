@@ -23,14 +23,14 @@ namespace net {
 
 /**
  * RFC 8446 4.2.3.  Signature Algorithms
- * tls_ext_signature_algorithms
+ * tls_extension_type_t::signature_algorithms
  * https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
  */
 
 constexpr char constexpr_algorithms[] = "algorithms";
 constexpr char constexpr_algorithm[] = "algorithm";
 
-tls_extension_signature_algorithms::tls_extension_signature_algorithms(tls_handshake* handshake) : tls_extension(tls_ext_signature_algorithms, handshake) {}
+tls_extension_signature_algorithms::tls_extension_signature_algorithms(tls_handshake* handshake) : tls_extension(tls_extension_type_t::signature_algorithms, handshake) {}
 
 tls_extension_signature_algorithms::~tls_extension_signature_algorithms() {}
 

@@ -99,11 +99,11 @@ return_t tls_composer::do_tls_client_handshake(unsigned wto, std::function<void(
 
             builder.set(dir)
                 .construct()
-                .add(&records, tls_content_type_change_cipher_spec, session)
+                .add(&records, tls_content_type_t::change_cipher_spec, session)
                 .set_protected(true)
-                .add(&records, tls_content_type_handshake, session,  //
+                .add(&records, tls_content_type_t::handshake, session,  //
                      [&](tls_record* record) -> return_t {
-                         record->add(tls_hs_finished, session);
+                         record->add(tls_handshake_type_t::finished, session);
                          return errorcode_t::success;
                      });
 
@@ -121,16 +121,16 @@ return_t tls_composer::do_tls_client_handshake(unsigned wto, std::function<void(
 
             builder.set(dir)
                 .construct()
-                .add(&records, tls_content_type_handshake, session,
+                .add(&records, tls_content_type_t::handshake, session,
                      [&](tls_record* record) -> return_t {
-                         record->add(tls_hs_client_key_exchange, session);
+                         record->add(tls_handshake_type_t::client_key_exchange, session);
                          return errorcode_t::success;
                      })
-                .add(&records, tls_content_type_change_cipher_spec, session)
+                .add(&records, tls_content_type_t::change_cipher_spec, session)
                 .set_protected(true)
-                .add(&records, tls_content_type_handshake, session,  //
+                .add(&records, tls_content_type_t::handshake, session,  //
                      [&](tls_record* record) -> return_t {
-                         record->add(tls_hs_finished, session);
+                         record->add(tls_handshake_type_t::finished, session);
                          return errorcode_t::success;
                      });
 
@@ -174,7 +174,7 @@ return_t tls_composer::do_tls_client_hello(std::function<void(tls_session*, bina
         // auto session_type = session->get_type();
 
         tls_record_builder builder;
-        record = builder.set(dir).construct().build(tls_content_type_handshake, session, [&](tls_record* record) -> return_t {
+        record = builder.set(dir).construct().build(tls_content_type_t::handshake, session, [&](tls_record* record) -> return_t {
             tls_handshake* ch = nullptr;
             ret = construct_client_hello(&ch, session, nullptr, _minspec, _maxspec);
             if (errorcode_t::success == ret) {
@@ -204,16 +204,16 @@ return_t tls_composer::do_tls_server_handshake_phase1(std::function<void(tls_ses
         auto session_type = session->get_type();
         auto session_status = session->get_session_status();
         auto& protection = session->get_tls_protection();
-        std::set<uint8> fatal_alerts;
+        std::set<tls_alertdesc_t> fatal_alerts;
 
         builder.set(dir).construct();
 
         if ((session_type_dtls == session_type) && (0 == (session_status & session_status_hello_verify_request))) {
             // hello_verify_request cookie
-            builder                                                  //
-                .add(&records, tls_content_type_handshake, session,  //
+            builder                                                     //
+                .add(&records, tls_content_type_t::handshake, session,  //
                      [&](tls_record* record) -> return_t {
-                         record->add(tls_hs_hello_verify_request, session, [&](tls_handshake* handshake) -> return_t {
+                         record->add(tls_handshake_type_t::hello_verify_request, session, [&](tls_handshake* handshake) -> return_t {
                              auto hvr = (tls_handshake_hello_verify_request*)handshake;
                              (*hvr).set_cookie(protection.get_secrets().get(tls_context_dtls_cookie));
                              return errorcode_t::success;
@@ -222,8 +222,8 @@ return_t tls_composer::do_tls_server_handshake_phase1(std::function<void(tls_ses
                      });
         } else {
             // server_hello
-            builder                                                  //
-                .add(&records, tls_content_type_handshake, session,  //
+            builder                                                     //
+                .add(&records, tls_content_type_t::handshake, session,  //
                      [&](tls_record* record) -> return_t {
                          return_t ret = errorcode_t::success;
                          tls_handshake* handshake = nullptr;
@@ -238,19 +238,19 @@ return_t tls_composer::do_tls_server_handshake_phase1(std::function<void(tls_ses
             records.clear();
 
             // unexpected message
-            auto lambda_has_fatal = [&](uint8 level, uint8 desc) -> void {
-                if (tls_alertlevel_fatal == level) {
+            auto lambda_has_fatal = [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
+                if (tls_alertlevel_t::fatal == level) {
                     fatal_alerts.insert(desc);
                 }
             };
 
-            auto lambda_alert = [&](uint8 desc) -> void {
+            auto lambda_alert = [&](tls_alertdesc_t desc) -> void {
                 records.clear();
-                builder                                              //
-                    .add(&records, tls_content_type_alert, session,  //
+                builder                                                 //
+                    .add(&records, tls_content_type_t::alert, session,  //
                          [&](tls_record* record) -> return_t {
                              auto alert = (tls_record_alert*)record;
-                             alert->set(tls_alertlevel_fatal, desc);
+                             alert->set(tls_alertlevel_t::fatal, desc);
                              return ret;
                          });
 
@@ -267,43 +267,43 @@ return_t tls_composer::do_tls_server_handshake_phase1(std::function<void(tls_ses
             auto tlsver = protection.get_protection_context().get0_supported_version();
             if (tlsadvisor->is_kindof_tls13(tlsver)) {
                 builder  //
-                    .add(&records, tls_content_type_change_cipher_spec, session)
+                    .add(&records, tls_content_type_t::change_cipher_spec, session)
                     .set_protected(true)
-                    .add(&records, tls_content_type_handshake, session,
+                    .add(&records, tls_content_type_t::handshake, session,
                          [&](tls_record* record) -> return_t {
-                             record->add(tls_hs_encrypted_extensions, session);
+                             record->add(tls_handshake_type_t::encrypted_extensions, session);
                              return errorcode_t::success;
                          })
-                    .add(&records, tls_content_type_handshake, session,
+                    .add(&records, tls_content_type_t::handshake, session,
                          [&](tls_record* record) -> return_t {
-                             record->add(tls_hs_certificate, session);
+                             record->add(tls_handshake_type_t::certificate, session);
                              return errorcode_t::success;
                          })
-                    .add(&records, tls_content_type_handshake, session,
+                    .add(&records, tls_content_type_t::handshake, session,
                          [&](tls_record* record) -> return_t {
-                             record->add(tls_hs_certificate_verify, session);
+                             record->add(tls_handshake_type_t::certificate_verify, session);
                              return errorcode_t::success;
                          })
-                    .add(&records, tls_content_type_handshake, session,  //
+                    .add(&records, tls_content_type_t::handshake, session,  //
                          [&](tls_record* record) -> return_t {
-                             record->add(tls_hs_finished, session);
+                             record->add(tls_handshake_type_t::finished, session);
                              return errorcode_t::success;
                          });
             } else {
                 builder  //
-                    .add(&records, tls_content_type_handshake, session,
+                    .add(&records, tls_content_type_t::handshake, session,
                          [&](tls_record* record) -> return_t {
-                             record->add(tls_hs_certificate, session);
+                             record->add(tls_handshake_type_t::certificate, session);
                              return errorcode_t::success;
                          })
-                    .add(&records, tls_content_type_handshake, session,
+                    .add(&records, tls_content_type_t::handshake, session,
                          [&](tls_record* record) -> return_t {
-                             record->add(tls_hs_server_key_exchange, session);
+                             record->add(tls_handshake_type_t::server_key_exchange, session);
                              return errorcode_t::success;
                          })
-                    .add(&records, tls_content_type_handshake, session,  //
+                    .add(&records, tls_content_type_t::handshake, session,  //
                          [&](tls_record* record) -> return_t {
-                             record->add(tls_hs_server_hello_done, session);
+                             record->add(tls_handshake_type_t::server_hello_done, session);
                              return errorcode_t::success;
                          });
             }
@@ -333,11 +333,11 @@ return_t tls_composer::do_tls_server_handshake_phase2(std::function<void(tls_ses
         builder  //
             .set(dir)
             .construct()
-            .add(&records, tls_content_type_change_cipher_spec, session)
+            .add(&records, tls_content_type_t::change_cipher_spec, session)
             .set_protected(true)
-            .add(&records, tls_content_type_handshake, session,  //
+            .add(&records, tls_content_type_t::handshake, session,  //
                  [&](tls_record* record) -> return_t {
-                     record->add(tls_hs_finished, session);
+                     record->add(tls_handshake_type_t::finished, session);
                      return errorcode_t::success;
                  });
 

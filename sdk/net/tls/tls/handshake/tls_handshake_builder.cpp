@@ -27,9 +27,9 @@
 namespace hotplace {
 namespace net {
 
-tls_handshake_builder::tls_handshake_builder() : _type(tls_hs_client_hello), _session(nullptr) {}
+tls_handshake_builder::tls_handshake_builder() : _type(tls_handshake_type_t::client_hello), _session(nullptr) {}
 
-tls_handshake_builder& tls_handshake_builder::set(tls_hs_type_t type) {
+tls_handshake_builder& tls_handshake_builder::set(tls_handshake_type_t type) {
     _type = type;
     return *this;
 }
@@ -44,51 +44,51 @@ tls_handshake* tls_handshake_builder::build() {
     auto hstype = get_type();
     auto session = get_session();
     switch (hstype) {
-        case tls_hs_client_hello: {
+        case tls_handshake_type_t::client_hello: {
             handshake = new tls_handshake_client_hello(session);
         } break;
-        case tls_hs_server_hello: {
+        case tls_handshake_type_t::server_hello: {
             handshake = new tls_handshake_server_hello(session);
         } break;
-        case tls_hs_hello_verify_request: {
+        case tls_handshake_type_t::hello_verify_request: {
             handshake = new tls_handshake_hello_verify_request(session);
         } break;
-        case tls_hs_new_session_ticket: {
+        case tls_handshake_type_t::new_session_ticket: {
             handshake = new tls_handshake_new_session_ticket(session);
         } break;
-        case tls_hs_end_of_early_data: {
+        case tls_handshake_type_t::end_of_early_data: {
             handshake = new tls_handshake_end_of_early_data(session);
         } break;
-        case tls_hs_encrypted_extensions: {
+        case tls_handshake_type_t::encrypted_extensions: {
             handshake = new tls_handshake_encrypted_extensions(session);
         } break;
-        case tls_hs_certificate: {
+        case tls_handshake_type_t::certificate: {
             handshake = new tls_handshake_certificate(session);
         } break;
-        case tls_hs_server_key_exchange: {
+        case tls_handshake_type_t::server_key_exchange: {
             handshake = new tls_handshake_server_key_exchange(session);
         } break;
-        case tls_hs_server_hello_done: {
+        case tls_handshake_type_t::server_hello_done: {
             handshake = new tls_handshake_server_hello_done(session);
         } break;
-        case tls_hs_certificate_verify: {
+        case tls_handshake_type_t::certificate_verify: {
             handshake = new tls_handshake_certificate_verify(session);
         } break;
-        case tls_hs_client_key_exchange: {
+        case tls_handshake_type_t::client_key_exchange: {
             handshake = new tls_handshake_client_key_exchange(session);
         } break;
-        case tls_hs_finished: {
+        case tls_handshake_type_t::finished: {
             handshake = new tls_handshake_finished(session);
         } break;
-        case tls_hs_hello_request:
-        case tls_hs_request_connection_id:
-        case tls_hs_new_connection_id:
-        case tls_hs_certificate_request:  // RFC 4346 7.4.4. Certificate request
-        case tls_hs_client_certificate_request:
-        case tls_hs_certificate_url:
-        case tls_hs_certificate_status:
-        case tls_hs_key_update:
-        case tls_hs_compressed_certificate:
+        case tls_handshake_type_t::hello_request:
+        case tls_handshake_type_t::request_connection_id:
+        case tls_handshake_type_t::new_connection_id:
+        case tls_handshake_type_t::certificate_request:  // RFC 4346 7.4.4. Certificate request
+        case tls_handshake_type_t::client_certificate_request:
+        case tls_handshake_type_t::certificate_url:
+        case tls_handshake_type_t::certificate_status:
+        case tls_handshake_type_t::key_update:
+        case tls_handshake_type_t::compressed_certificate:
         default: {
             handshake = new tls_handshake_unknown(hstype, session);
         } break;
@@ -96,7 +96,7 @@ tls_handshake* tls_handshake_builder::build() {
     return handshake;
 }
 
-tls_handshake* tls_handshake_builder::build(tls_hs_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func) {
+tls_handshake* tls_handshake_builder::build(tls_handshake_type_t type, tls_session* session, std::function<return_t(tls_handshake*)> func) {
     tls_handshake* handshake = nullptr;
     auto temp = set(type).set(session).build();
     if (temp) {
@@ -114,7 +114,7 @@ tls_handshake* tls_handshake_builder::build(tls_hs_type_t type, tls_session* ses
     return handshake;
 }
 
-tls_hs_type_t tls_handshake_builder::get_type() { return _type; }
+tls_handshake_type_t tls_handshake_builder::get_type() { return _type; }
 
 tls_session* tls_handshake_builder::get_session() { return _session; }
 

@@ -287,7 +287,7 @@ hash_algorithm_t tls_advisor::algof_hash(uint16 code) {
 
 // etc
 
-const tls_version_hint_t* tls_advisor::hintof_tls_version(uint16 code) {
+const tls_version_hint_t* tls_advisor::hintof_tls_version(tls_version_t code) {
     const tls_version_hint_t* ret_value = nullptr;
     auto iter = _tls_version.find(code);
     if (_tls_version.end() != iter) {
@@ -296,7 +296,7 @@ const tls_version_hint_t* tls_advisor::hintof_tls_version(uint16 code) {
     return ret_value;
 }
 
-std::string tls_advisor::nameof_tls_version(uint16 code) {
+std::string tls_advisor::nameof_tls_version(tls_version_t code) {
     std::string value;
     auto iter = _tls_version.find(code);
     if (_tls_version.end() != iter) {
@@ -382,35 +382,35 @@ std::string tls_advisor::nameof_protection_space(protection_space_t code) {
     return value;
 }
 
-bool tls_advisor::is_kindof_tls13(uint16 ver) {
+bool tls_advisor::is_kindof_tls13(tls_version_t ver) {
     bool ret = false;
     auto hint = hintof_tls_version(ver);
     ret = (hint && hint->spec == tls_13);
     return ret;
 }
 
-bool tls_advisor::is_kindof_tls12(uint16 ver) {
+bool tls_advisor::is_kindof_tls12(tls_version_t ver) {
     bool ret = false;
     auto hint = hintof_tls_version(ver);
     ret = (hint && hint->spec == tls_12);
     return ret;
 }
 
-bool tls_advisor::is_kindof_tls(uint16 ver) {
+bool tls_advisor::is_kindof_tls(tls_version_t ver) {
     bool ret = false;
     auto hint = hintof_tls_version(ver);
     ret = (hint && (hint->flags & flag_kindof_tls));
     return ret;
 }
 
-bool tls_advisor::is_kindof_dtls(uint16 ver) {
+bool tls_advisor::is_kindof_dtls(tls_version_t ver) {
     bool ret = false;
     auto hint = hintof_tls_version(ver);
     ret = (hint && (0 == (hint->flags & flag_kindof_tls)));
     return ret;
 }
 
-bool tls_advisor::is_kindof(uint16 lhs, uint16 rhs) {
+bool tls_advisor::is_kindof(tls_version_t lhs, tls_version_t rhs) {
     bool ret = false;
     auto lhint = hintof_tls_version(lhs);
     auto rhint = hintof_tls_version(rhs);

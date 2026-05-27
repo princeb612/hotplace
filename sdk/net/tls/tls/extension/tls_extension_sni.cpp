@@ -28,7 +28,7 @@ constexpr char constexpr_name_type[] = "name type";
 constexpr char constexpr_hostname_len[] = "hostname len";
 constexpr char constexpr_hostname[] = "hostname";
 
-tls_extension_sni::tls_extension_sni(tls_handshake* handshake) : tls_extension(tls_ext_server_name, handshake), _nametype(0) {}
+tls_extension_sni::tls_extension_sni(tls_handshake* handshake) : tls_extension(tls_extension_type_t::server_name, handshake), _nametype(0) {}
 
 tls_extension_sni::~tls_extension_sni() {}
 

@@ -218,11 +218,11 @@ void tls_session::addref() { _shared.addref(); }
 
 void tls_session::release() { _shared.delref(); }
 
-tls_session::session_info::session_info() : _hstype(tls_hs_client_hello), _protection(false) {}
+tls_session::session_info::session_info() : _hstype(tls_handshake_type_t::client_hello), _protection(false) {}
 
-void tls_session::session_info::set_status(tls_hs_type_t type) { _hstype = type; }
+void tls_session::session_info::set_status(tls_handshake_type_t type) { _hstype = type; }
 
-tls_hs_type_t tls_session::session_info::get_status() { return _hstype; }
+tls_handshake_type_t tls_session::session_info::get_status() { return _hstype; }
 
 void tls_session::session_info::begin_protection() { _protection = true; }
 
@@ -241,7 +241,7 @@ void tls_session::session_info::reset_recordno(protection_space_t space) { _reco
 
 void tls_session::session_info::set_recordno(uint64 recordno, protection_space_t space) { _recordno_spaces[space] = recordno; }
 
-void tls_session::session_info::push_alert(uint8 level, uint8 desc) {
+void tls_session::session_info::push_alert(tls_alertlevel_t level, tls_alertdesc_t desc) {
     critical_section_guard guard(_info_lock);
     _alerts.push_back(alert(level, desc));
 #if defined DEBUG
@@ -255,7 +255,7 @@ void tls_session::session_info::push_alert(uint8 level, uint8 desc) {
 #endif
 }
 
-void tls_session::session_info::get_alert(std::function<void(uint8, uint8)> func, uint8 flags) {
+void tls_session::session_info::get_alert(std::function<void(tls_alertlevel_t, tls_alertdesc_t)> func, uint8 flags) {
     critical_section_guard guard(_info_lock);
     for (auto iter = _alerts.begin(); iter != _alerts.end(); iter++) {
         const auto& item = *iter;
@@ -266,7 +266,7 @@ void tls_session::session_info::get_alert(std::function<void(uint8, uint8)> func
     }
 }
 
-bool tls_session::session_info::has_alert(uint8 level) {
+bool tls_session::session_info::has_alert(tls_alertlevel_t level) {
     bool ret = false;
     critical_section_guard guard(_info_lock);
     for (auto iter = _alerts.begin(); iter != _alerts.end(); iter++) {
@@ -318,7 +318,7 @@ void tls_session::select_into_scheduled_extension(tls_extensions* extensions) {
     }
 }
 
-void tls_session::select_into_scheduled_extension(tls_extensions* extensions, tls_ext_type_t type) {
+void tls_session::select_into_scheduled_extension(tls_extensions* extensions, tls_extension_type_t type) {
     if (extensions) {
         critical_section_guard guard(_lock);
         for (auto iter = _extension_list.begin(); iter != _extension_list.end(); iter++) {
@@ -343,11 +343,13 @@ void tls_session::clear_scheduled_extensions() {
     _extension_list.clear();
 }
 
-void tls_session::push_alert(tls_direction_t dir, uint8 level, uint8 desc) { get_session_info(dir).push_alert(level, desc); }
+void tls_session::push_alert(tls_direction_t dir, tls_alertlevel_t level, tls_alertdesc_t desc) { get_session_info(dir).push_alert(level, desc); }
 
-void tls_session::get_alert(tls_direction_t dir, std::function<void(uint8, uint8)> func, uint8 flags) { get_session_info(dir).get_alert(func, flags); }
+void tls_session::get_alert(tls_direction_t dir, std::function<void(tls_alertlevel_t, tls_alertdesc_t)> func, uint8 flags) {
+    get_session_info(dir).get_alert(func, flags);
+}
 
-bool tls_session::has_alert(tls_direction_t dir, uint8 level) { return get_session_info(dir).has_alert(level); }
+bool tls_session::has_alert(tls_direction_t dir, tls_alertlevel_t level) { return get_session_info(dir).has_alert(level); }
 
 }  // namespace net
 }  // namespace hotplace

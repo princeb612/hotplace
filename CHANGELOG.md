@@ -32,6 +32,7 @@
     * CBOR
 
 * details
+  * Revision 1016
   * Revision 1015
     * [fixed] DTLS 1.2 testcase (shuffle UDP traffic)
   * Revision 1014

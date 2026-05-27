@@ -16,14 +16,14 @@ namespace hotplace {
 namespace net {
 
 const tls_version_hint_t tls_version_hint[] = {
-    {tls_13, tls_13, 1, flag_kindof_tls, "TLS v1.3"},  //
-    {tls_12, tls_12, 1, flag_kindof_tls, "TLS v1.2"},  // RFC 5246 A.1.  Record Layer
-    {tls_11, tls_11, 0, flag_kindof_tls, "TLS v1.1"},  // RFC 4346 A.1. Record Layer
-    {tls_10, tls_10, 0, flag_kindof_tls, "TLS v1.0"},  // RFC 2246 A.1. Record layer
-    {dtls_13, tls_13, 1, 0, "DTLS 1.3"},               //
-    {dtls_12, tls_12, 1, 0, "DTLS 1.2"},               //
-    {dtls_11, tls_11, 0, 0, "DTLS 1.1"},               //
-    {dtls_10, tls_10, 0, 0, "DTLS 1.0"},               //
+    {tls_version_t::tls_13, tls_version_t::tls_13, 1, flag_kindof_tls, "TLS v1.3"},  //
+    {tls_version_t::tls_12, tls_version_t::tls_12, 1, flag_kindof_tls, "TLS v1.2"},  // RFC 5246 A.1.  Record Layer
+    {tls_version_t::tls_11, tls_version_t::tls_11, 0, flag_kindof_tls, "TLS v1.1"},  // RFC 4346 A.1. Record Layer
+    {tls_version_t::tls_10, tls_version_t::tls_10, 0, flag_kindof_tls, "TLS v1.0"},  // RFC 2246 A.1. Record layer
+    {tls_version_t::dtls_13, tls_version_t::tls_13, 1, 0, "DTLS 1.3"},               //
+    {tls_version_t::dtls_12, tls_version_t::tls_12, 1, 0, "DTLS 1.2"},               //
+    {tls_version_t::dtls_11, tls_version_t::tls_11, 0, 0, "DTLS 1.1"},               //
+    {tls_version_t::dtls_10, tls_version_t::tls_10, 0, 0, "DTLS 1.0"},               //
 };
 const size_t sizeof_tls_version_hint = RTL_NUMBER_OF(tls_version_hint);
 
@@ -176,97 +176,97 @@ const tls_layer_hint_t tls_layer_hint[] = {
     // https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
     // TLS HandshakeType
 
-    {tls_layer_handshake, tls_hs_hello_request, tls_10, tls_12},           // RFC 2246, 5246
-    {tls_layer_handshake, tls_hs_client_hello},                            // RFC 2246, 5246, 8446
-    {tls_layer_handshake, tls_hs_server_hello},                            // RFC 2246, 5246, 8446
-    {tls_layer_handshake, tls_hs_hello_verify_request, dtls_12, dtls_13},  // RFC 6347, 9147
-    {tls_layer_handshake, tls_hs_new_session_ticket, tls_13, tls_13},      // RFC 8446
-    {tls_layer_handshake, tls_hs_end_of_early_data},                       // RFC 8446
-    {tls_layer_handshake, tls_hs_hello_retry_request},                     // RFC 9147 reserved
-    {tls_layer_handshake, tls_hs_encrypted_extensions, tls_13, tls_13},    // RFC 8446
-    {tls_layer_handshake, tls_hs_request_connection_id},                   // RFC 9147
-    {tls_layer_handshake, tls_hs_new_connection_id},                       // RFC 9147
-    {tls_layer_handshake, tls_hs_certificate, tls_10, tls_13},             // RFC 2246
-    {tls_layer_handshake, tls_hs_server_key_exchange, tls_10, tls_12},     // RFC 2246, 5246
-    {tls_layer_handshake, tls_hs_certificate_request, tls_10, tls_13},     // RFC 2246, 5246, 8446
-    {tls_layer_handshake, tls_hs_server_hello_done, tls_10, tls_12},       // RFC 2246, 5246
-    {tls_layer_handshake, tls_hs_certificate_verify, tls_10, tls_13},      // RFC 2246, 5246, 8446
-    {tls_layer_handshake, tls_hs_client_key_exchange, tls_10, tls_12},     // RFC 2246, 5246
-    {tls_layer_handshake, tls_hs_certificate_request, tls_10, tls_13},     // RFC 2246, 5246, 8446
-    {tls_layer_handshake, tls_hs_finished, tls_10, tls_13},                // RFC 2246, 5246, 8446
-    {tls_layer_handshake, tls_hs_certificate_url},                         // RFC 8446 reserved
-    {tls_layer_handshake, tls_hs_certificate_status},                      // RFC 8446 reserved
-    {tls_layer_handshake, tls_hs_supplemental_data},                       // RFC 8446 reserved
-    {tls_layer_handshake, tls_hs_key_update, tls_13, tls_13},              // RFC 8446
-    {tls_layer_handshake, tls_hs_compressed_certificate},                  //
-    {tls_layer_handshake, tls_hs_ekt_key},                                 //
+    {tls_layer_handshake, tls_handshake_type_t::hello_request, tls_10, tls_12},           // RFC 2246, 5246
+    {tls_layer_handshake, tls_handshake_type_t::client_hello},                            // RFC 2246, 5246, 8446
+    {tls_layer_handshake, tls_handshake_type_t::server_hello},                            // RFC 2246, 5246, 8446
+    {tls_layer_handshake, tls_handshake_type_t::hello_verify_request, dtls_12, dtls_13},  // RFC 6347, 9147
+    {tls_layer_handshake, tls_handshake_type_t::new_session_ticket, tls_13, tls_13},      // RFC 8446
+    {tls_layer_handshake, tls_handshake_type_t::end_of_early_data},                       // RFC 8446
+    {tls_layer_handshake, tls_handshake_type_t::hello_retry_request},                     // RFC 9147 reserved
+    {tls_layer_handshake, tls_handshake_type_t::encrypted_extensions, tls_13, tls_13},    // RFC 8446
+    {tls_layer_handshake, tls_handshake_type_t::request_connection_id},                   // RFC 9147
+    {tls_layer_handshake, tls_handshake_type_t::new_connection_id},                       // RFC 9147
+    {tls_layer_handshake, tls_handshake_type_t::certificate, tls_10, tls_13},             // RFC 2246
+    {tls_layer_handshake, tls_handshake_type_t::server_key_exchange, tls_10, tls_12},     // RFC 2246, 5246
+    {tls_layer_handshake, tls_handshake_type_t::certificate_request, tls_10, tls_13},     // RFC 2246, 5246, 8446
+    {tls_layer_handshake, tls_handshake_type_t::server_hello_done, tls_10, tls_12},       // RFC 2246, 5246
+    {tls_layer_handshake, tls_handshake_type_t::certificate_verify, tls_10, tls_13},      // RFC 2246, 5246, 8446
+    {tls_layer_handshake, tls_handshake_type_t::client_key_exchange, tls_10, tls_12},     // RFC 2246, 5246
+    {tls_layer_handshake, tls_handshake_type_t::certificate_request, tls_10, tls_13},     // RFC 2246, 5246, 8446
+    {tls_layer_handshake, tls_handshake_type_t::finished, tls_10, tls_13},                // RFC 2246, 5246, 8446
+    {tls_layer_handshake, tls_handshake_type_t::certificate_url},                         // RFC 8446 reserved
+    {tls_layer_handshake, tls_handshake_type_t::certificate_status},                      // RFC 8446 reserved
+    {tls_layer_handshake, tls_handshake_type_t::supplemental_data},                       // RFC 8446 reserved
+    {tls_layer_handshake, tls_handshake_type_t::key_update, tls_13, tls_13},              // RFC 8446
+    {tls_layer_handshake, tls_handshake_type_t::compressed_certificate},                  //
+    {tls_layer_handshake, tls_handshake_type_t::ekt_key},                                 //
 
     // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
     // TLS ExtensionType Values
 
-    {tls_layer_extension, tls1_ext_server_name},                            // RFC 6066, 8446, 9261
-    {tls_layer_extension, tls1_ext_max_fragment_length},                    // RFC 6066, 8446, 8449
-    {tls_layer_extension, tls1_ext_client_certificate_url},                 // RFC 6066
-    {tls_layer_extension, tls1_ext_trusted_ca_keys},                        // RFC 6066
-    {tls_layer_extension, tls1_ext_truncated_hmac},                         // RFC 6066
-    {tls_layer_extension, tls1_ext_status_request},                         // RFC 8446
-    {tls_layer_extension, tls1_ext_user_mapping},                           // RFC 4681
-    {tls_layer_extension, tls1_ext_client_authz},                           // RFC 5878
-    {tls_layer_extension, tls1_ext_server_authz},                           // RFC 5878
-    {tls_layer_extension, tls1_ext_cert_type},                              // RFC 6091
-    {tls_layer_extension, tls1_ext_supported_groups},                       // RFC 7919, 8422, 8446
-    {tls_layer_extension, tls1_ext_ec_point_formats},                       // RFC 8422
-    {tls_layer_extension, tls1_ext_srp},                                    // RFC 5054
-    {tls_layer_extension, tls1_ext_signature_algorithms},                   // RFC 5246, 8446
-    {tls_layer_extension, tls1_ext_use_srtp},                               // RFC 5764, 8446
-    {tls_layer_extension, tls1_ext_heartbeat},                              // RFC 6520, 8446
-    {tls_layer_extension, tls1_ext_alpn},                                   // RFC 7301, 8446
-    {tls_layer_extension, tls1_ext_status_request_v2},                      // RFC 6961
-    {tls_layer_extension, tls1_ext_signed_certificate_timestamp},           // RFC 6962, 8446
-    {tls_layer_extension, tls1_ext_client_certificate_type},                // RFC 7250, 8446
-    {tls_layer_extension, tls1_ext_server_certificate_type},                // RFC 7250, 8446
-    {tls_layer_extension, tls1_ext_padding},                                // RFC 7685, 8446
-    {tls_layer_extension, tls1_ext_encrypt_then_mac},                       // RFC 7366
-    {tls_layer_extension, tls1_ext_extended_master_secret},                 // RFC 7627
-    {tls_layer_extension, tls1_ext_token_binding},                          // RFC 8472
-    {tls_layer_extension, tls1_ext_cached_info},                            // RFC 7924
-    {tls_layer_extension, tls1_ext_compress_certificate},                   // RFC 8879
-    {tls_layer_extension, tls1_ext_record_size_limit},                      // RFC 8449
-    {tls_layer_extension, tls1_ext_pwd_protect},                            // RFC 8492
-    {tls_layer_extension, tls1_ext_pwd_clear},                              // RFC 8492
-    {tls_layer_extension, tls1_ext_password_salt},                          // RFC 8492
-    {tls_layer_extension, tls1_ext_ticket_pinning},                         // RFC 8672
-    {tls_layer_extension, tls1_ext_cert_with_extern_psk},                   // RFC 8773
-    {tls_layer_extension, tls1_ext_delegated_credential},                   // RFC 9345
-    {tls_layer_extension, tls1_ext_session_ticket},                         // RFC 5077, 8447
-    {tls_layer_extension, tls1_ext_tlmsp},                                  //
-    {tls_layer_extension, tls1_ext_tlmsp_proxying},                         //
-    {tls_layer_extension, tls1_ext_tlmsp_delegate},                         //
-    {tls_layer_extension, tls1_ext_supported_ekt_ciphers},                  // RFC 8870
-    {tls_layer_extension, tls1_ext_pre_shared_key},                         // RFC 8446
-    {tls_layer_extension, tls1_ext_early_data},                             // RFC 8446
-    {tls_layer_extension, tls1_ext_supported_versions, tls_13, tls_13, 0},  // RFC 8446
-    {tls_layer_extension, tls1_ext_cookie},                                 // RFC 8446
-    {tls_layer_extension, tls1_ext_psk_key_exchange_modes},                 // RFC 8446
-    {tls_layer_extension, tls1_ext_certificate_authorities},                // RFC 8446
-    {tls_layer_extension, tls1_ext_oid_filters},                            // RFC 8446
-    {tls_layer_extension, tls1_ext_post_handshake_auth},                    // RFC 8446
-    {tls_layer_extension, tls1_ext_signature_algorithms_cert},              // RFC 8446
-    {tls_layer_extension, tls1_ext_key_share, tls_13, tls_13},              // RFC 8446
-    {tls_layer_extension, tls1_ext_transparency_info},                      // RFC 9162
-    {tls_layer_extension, tls1_ext_connection_id},                          // RFC 9146
-    {tls_layer_extension, tls1_ext_external_id_hash},                       // RFC 8844
-    {tls_layer_extension, tls1_ext_external_session_id},                    // RFC 8844
-    {tls_layer_extension, tls1_ext_quic_transport_parameters},              // RFC 9001
-    {tls_layer_extension, tls1_ext_ticket_request},                         // RFC 9149
-    {tls_layer_extension, tls1_ext_dnssec_chain},                           //
-    {tls_layer_extension, tls1_ext_sequence_number_encryption_algorithms},  //
-    {tls_layer_extension, tls1_ext_rrc},                                    //
-    {tls_layer_extension, tls1_ext_tls_flags},                              //
-    {tls_layer_extension, tls1_ext_next_protocol_negotiation},              //
-    {tls_layer_extension, tls1_ext_alps},                                   //
-    {tls_layer_extension, tls1_ext_encrypted_client_hello},                 //
-    {tls_layer_extension, tls1_ext_renegotiation_info},                     //
+    {tls_layer_extension, tls1_extension_type_t::server_name},                            // RFC 6066, 8446, 9261
+    {tls_layer_extension, tls1_extension_type_t::max_fragment_length},                    // RFC 6066, 8446, 8449
+    {tls_layer_extension, tls1_extension_type_t::client_certificate_url},                 // RFC 6066
+    {tls_layer_extension, tls1_extension_type_t::trusted_ca_keys},                        // RFC 6066
+    {tls_layer_extension, tls1_extension_type_t::truncated_hmac},                         // RFC 6066
+    {tls_layer_extension, tls1_extension_type_t::status_request},                         // RFC 8446
+    {tls_layer_extension, tls1_extension_type_t::user_mapping},                           // RFC 4681
+    {tls_layer_extension, tls1_extension_type_t::client_authz},                           // RFC 5878
+    {tls_layer_extension, tls1_extension_type_t::server_authz},                           // RFC 5878
+    {tls_layer_extension, tls1_extension_type_t::cert_type},                              // RFC 6091
+    {tls_layer_extension, tls1_extension_type_t::supported_groups},                       // RFC 7919, 8422, 8446
+    {tls_layer_extension, tls1_extension_type_t::ec_point_formats},                       // RFC 8422
+    {tls_layer_extension, tls1_extension_type_t::srp},                                    // RFC 5054
+    {tls_layer_extension, tls1_extension_type_t::signature_algorithms},                   // RFC 5246, 8446
+    {tls_layer_extension, tls1_extension_type_t::use_srtp},                               // RFC 5764, 8446
+    {tls_layer_extension, tls1_extension_type_t::heartbeat},                              // RFC 6520, 8446
+    {tls_layer_extension, tls1_extension_type_t::alpn},                                   // RFC 7301, 8446
+    {tls_layer_extension, tls1_extension_type_t::status_request_v2},                      // RFC 6961
+    {tls_layer_extension, tls1_extension_type_t::signed_certificate_timestamp},           // RFC 6962, 8446
+    {tls_layer_extension, tls1_extension_type_t::client_certificate_type},                // RFC 7250, 8446
+    {tls_layer_extension, tls1_extension_type_t::server_certificate_type},                // RFC 7250, 8446
+    {tls_layer_extension, tls1_extension_type_t::padding},                                // RFC 7685, 8446
+    {tls_layer_extension, tls1_extension_type_t::encrypt_then_mac},                       // RFC 7366
+    {tls_layer_extension, tls1_extension_type_t::extended_master_secret},                 // RFC 7627
+    {tls_layer_extension, tls1_extension_type_t::token_binding},                          // RFC 8472
+    {tls_layer_extension, tls1_extension_type_t::cached_info},                            // RFC 7924
+    {tls_layer_extension, tls1_extension_type_t::compress_certificate},                   // RFC 8879
+    {tls_layer_extension, tls1_extension_type_t::record_size_limit},                      // RFC 8449
+    {tls_layer_extension, tls1_extension_type_t::pwd_protect},                            // RFC 8492
+    {tls_layer_extension, tls1_extension_type_t::pwd_clear},                              // RFC 8492
+    {tls_layer_extension, tls1_extension_type_t::password_salt},                          // RFC 8492
+    {tls_layer_extension, tls1_extension_type_t::ticket_pinning},                         // RFC 8672
+    {tls_layer_extension, tls1_extension_type_t::cert_with_extern_psk},                   // RFC 8773
+    {tls_layer_extension, tls1_extension_type_t::delegated_credential},                   // RFC 9345
+    {tls_layer_extension, tls1_extension_type_t::session_ticket},                         // RFC 5077, 8447
+    {tls_layer_extension, tls1_extension_type_t::tlmsp},                                  //
+    {tls_layer_extension, tls1_extension_type_t::tlmsp_proxying},                         //
+    {tls_layer_extension, tls1_extension_type_t::tlmsp_delegate},                         //
+    {tls_layer_extension, tls1_extension_type_t::supported_ekt_ciphers},                  // RFC 8870
+    {tls_layer_extension, tls1_extension_type_t::pre_shared_key},                         // RFC 8446
+    {tls_layer_extension, tls1_extension_type_t::early_data},                             // RFC 8446
+    {tls_layer_extension, tls1_extension_type_t::supported_versions, tls_13, tls_13, 0},  // RFC 8446
+    {tls_layer_extension, tls1_extension_type_t::cookie},                                 // RFC 8446
+    {tls_layer_extension, tls1_extension_type_t::psk_key_exchange_modes},                 // RFC 8446
+    {tls_layer_extension, tls1_extension_type_t::certificate_authorities},                // RFC 8446
+    {tls_layer_extension, tls1_extension_type_t::oid_filters},                            // RFC 8446
+    {tls_layer_extension, tls1_extension_type_t::post_handshake_auth},                    // RFC 8446
+    {tls_layer_extension, tls1_extension_type_t::signature_algorithms_cert},              // RFC 8446
+    {tls_layer_extension, tls1_extension_type_t::key_share, tls_13, tls_13},              // RFC 8446
+    {tls_layer_extension, tls1_extension_type_t::transparency_info},                      // RFC 9162
+    {tls_layer_extension, tls1_extension_type_t::connection_id},                          // RFC 9146
+    {tls_layer_extension, tls1_extension_type_t::external_id_hash},                       // RFC 8844
+    {tls_layer_extension, tls1_extension_type_t::external_session_id},                    // RFC 8844
+    {tls_layer_extension, tls1_extension_type_t::quic_transport_parameters},              // RFC 9001
+    {tls_layer_extension, tls1_extension_type_t::ticket_request},                         // RFC 9149
+    {tls_layer_extension, tls1_extension_type_t::dnssec_chain},                           //
+    {tls_layer_extension, tls1_extension_type_t::sequence_number_encryption_algorithms},  //
+    {tls_layer_extension, tls1_extension_type_t::rrc},                                    //
+    {tls_layer_extension, tls1_extension_type_t::tls_flags},                              //
+    {tls_layer_extension, tls1_extension_type_t::next_protocol_negotiation},              //
+    {tls_layer_extension, tls1_extension_type_t::alps},                                   //
+    {tls_layer_extension, tls1_extension_type_t::encrypted_client_hello},                 //
+    {tls_layer_extension, tls1_extension_type_t::renegotiation_info},                     //
 };
 
 #endif
