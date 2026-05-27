@@ -19,7 +19,8 @@
 namespace hotplace {
 namespace net {
 
-tls_protection::tls_protection() : _session(nullptr), _flow(tls_flow_1rtt), _ciphersuite(0), _version(tls_10), _transcript_hash(nullptr), _use_pre_master_secret(false) {}
+tls_protection::tls_protection()
+    : _session(nullptr), _flow(tls_flow_t::one_rtt), _ciphersuite(0), _version(tls_10), _transcript_hash(nullptr), _use_pre_master_secret(false) {}
 
 tls_protection::~tls_protection() {
     if (_transcript_hash) {

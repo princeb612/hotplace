@@ -71,13 +71,13 @@ return_t tls_record_application_data::do_preprocess(tls_direction_t dir) {
     auto session_status = session->get_session_status();
     uint32 session_status_prerequisite = 0;
 
-    if (tls_flow_1rtt == flow) {
+    if (tls_flow_t::one_rtt == flow) {
         if (protection.is_kindof_tls13()) {
             session_status_prerequisite = session_status_server_hello;
         } else {
             session_status_prerequisite = session_status_server_finished;
         }
-    } else if (tls_flow_0rtt == flow) {
+    } else if (tls_flow_t::zero_rtt == flow) {
         // RTF 8448 RFC 8448 4.  Resumed 0-RTT Handshake
         session_status_prerequisite = session_status_client_hello;
     }
@@ -114,14 +114,14 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
          * encryption
          *   TLS 1.3
          *     handshake (server_hello)
-         *       -> tls_secret_handshake_(client|server)_key
+         *       -> tls_secret_t::handshake_(client|server)_key
          *     application_data (handshake)
          *     handshake (finished)
-         *       -> tls_secret_application_(client|server)_key
+         *       -> tls_secret_t::application_(client|server)_key
          *     application_data (application_data)
          *   TLS 1.2
          *     client_key_exchange
-         *       -> tls_secret_(client|server)_key, tls_secret_(client|server)_mac_key
+         *       -> tls_secret_t::(client|server)_key, tls_secret_t::(client|server)_mac_key
          *     handshake (finished)
          *     application_data (application_data)
          */
@@ -144,7 +144,7 @@ return_t tls_record_application_data::do_read_body(tls_direction_t dir, const by
                         ret = get_handshakes().read(session, dir, plaintext.data(), plainsize - 1, tpos);
                     } else if (tls_content_type_t::application_data == ettype) {
                         auto flow = protection.get_flow();
-                        if (tls_flow_1rtt == flow) {
+                        if (tls_flow_t::one_rtt == flow) {
                             uint32 session_status_prerequisite = 0;
                             if (protection.is_kindof_tls13()) {
                                 session_status_prerequisite = session_status_client_finished;

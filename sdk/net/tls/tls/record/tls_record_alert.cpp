@@ -24,8 +24,7 @@ constexpr char constexpr_alert[] = "alert";
 constexpr char constexpr_level[] = "alert level";
 constexpr char constexpr_desc[] = "alert desc ";
 
-tls_record_alert::tls_record_alert(tls_session* session)
-    : tls_record(tls_content_type_t::alert, session), _level(tls_alertlevel_t::unknown), _desc(tls_alertdesc_t::unknown) {}
+tls_record_alert::tls_record_alert(tls_session* session) : tls_record(tls_content_type_t::alert, session), _level(tls_alertlevel_t{}), _desc(tls_alertdesc_t::unknown) {}
 
 tls_record_alert::tls_record_alert(tls_session* session, tls_alertlevel_t level, tls_alertdesc_t desc)
     : tls_record(tls_content_type_t::alert, session), _level(level), _desc(desc) {}

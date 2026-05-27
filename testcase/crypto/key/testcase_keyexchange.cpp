@@ -120,59 +120,59 @@ void test_keyexchange() {
     _test_case.begin("keyexchange");
     const OPTION& option = _cmdline->value();
 
-    test_keyexchange_ecdhe(tls_group_sect163k1);
-    test_keyexchange_ecdhe(tls_group_sect163r1);
-    test_keyexchange_ecdhe(tls_group_sect163r2);
-    test_keyexchange_ecdhe(tls_group_sect193r1);
-    test_keyexchange_ecdhe(tls_group_sect193r2);
-    test_keyexchange_ecdhe(tls_group_sect233k1);
-    test_keyexchange_ecdhe(tls_group_sect233r1);
-    test_keyexchange_ecdhe(tls_group_sect239k1);
-    test_keyexchange_ecdhe(tls_group_sect283k1);
-    test_keyexchange_ecdhe(tls_group_sect283r1);
-    test_keyexchange_ecdhe(tls_group_sect409k1);
-    test_keyexchange_ecdhe(tls_group_sect409r1);
-    test_keyexchange_ecdhe(tls_group_sect571k1);
-    test_keyexchange_ecdhe(tls_group_sect571r1);
-    test_keyexchange_ecdhe(tls_group_secp160k1);
-    test_keyexchange_ecdhe(tls_group_secp160r1);
-    test_keyexchange_ecdhe(tls_group_secp160r2);
-    test_keyexchange_ecdhe(tls_group_secp192k1);
-    test_keyexchange_ecdhe(tls_group_secp192r1);
-    test_keyexchange_ecdhe(tls_group_secp224k1);
-    test_keyexchange_ecdhe(tls_group_secp224r1);
-    test_keyexchange_ecdhe(tls_group_secp256k1);
-    test_keyexchange_ecdhe(tls_group_secp256r1);
-    test_keyexchange_ecdhe(tls_group_secp384r1);
-    test_keyexchange_ecdhe(tls_group_secp521r1);
+    test_keyexchange_ecdhe(tls_group_t::sect163k1);
+    test_keyexchange_ecdhe(tls_group_t::sect163r1);
+    test_keyexchange_ecdhe(tls_group_t::sect163r2);
+    test_keyexchange_ecdhe(tls_group_t::sect193r1);
+    test_keyexchange_ecdhe(tls_group_t::sect193r2);
+    test_keyexchange_ecdhe(tls_group_t::sect233k1);
+    test_keyexchange_ecdhe(tls_group_t::sect233r1);
+    test_keyexchange_ecdhe(tls_group_t::sect239k1);
+    test_keyexchange_ecdhe(tls_group_t::sect283k1);
+    test_keyexchange_ecdhe(tls_group_t::sect283r1);
+    test_keyexchange_ecdhe(tls_group_t::sect409k1);
+    test_keyexchange_ecdhe(tls_group_t::sect409r1);
+    test_keyexchange_ecdhe(tls_group_t::sect571k1);
+    test_keyexchange_ecdhe(tls_group_t::sect571r1);
+    test_keyexchange_ecdhe(tls_group_t::secp160k1);
+    test_keyexchange_ecdhe(tls_group_t::secp160r1);
+    test_keyexchange_ecdhe(tls_group_t::secp160r2);
+    test_keyexchange_ecdhe(tls_group_t::secp192k1);
+    test_keyexchange_ecdhe(tls_group_t::secp192r1);
+    test_keyexchange_ecdhe(tls_group_t::secp224k1);
+    test_keyexchange_ecdhe(tls_group_t::secp224r1);
+    test_keyexchange_ecdhe(tls_group_t::secp256k1);
+    test_keyexchange_ecdhe(tls_group_t::secp256r1);
+    test_keyexchange_ecdhe(tls_group_t::secp384r1);
+    test_keyexchange_ecdhe(tls_group_t::secp521r1);
 
-    test_keyexchange_ecdhe(tls_group_x25519);
-    test_keyexchange_ecdhe(tls_group_x448);
+    test_keyexchange_ecdhe(tls_group_t::x25519);
+    test_keyexchange_ecdhe(tls_group_t::x448);
 
-    test_keyexchange_ecdhe(tls_group_brainpoolP256r1);
-    test_keyexchange_ecdhe(tls_group_brainpoolP384r1);
-    test_keyexchange_ecdhe(tls_group_brainpoolP512r1);
+    test_keyexchange_ecdhe(tls_group_t::brainpoolP256r1);
+    test_keyexchange_ecdhe(tls_group_t::brainpoolP384r1);
+    test_keyexchange_ecdhe(tls_group_t::brainpoolP512r1);
 
-    test_keyexchange_ecdhe(tls_group_brainpoolP256r1tls13);
-    test_keyexchange_ecdhe(tls_group_brainpoolP384r1tls13);
-    test_keyexchange_ecdhe(tls_group_brainpoolP512r1tls13);
+    test_keyexchange_ecdhe(tls_group_t::brainpoolP256r1tls13);
+    test_keyexchange_ecdhe(tls_group_t::brainpoolP384r1tls13);
+    test_keyexchange_ecdhe(tls_group_t::brainpoolP512r1tls13);
 
     if (option.flag_ffdhe) {
-        test_keyexchange_ecdhe(tls_group_ffdhe2048);
-        test_keyexchange_ecdhe(tls_group_ffdhe3072);
-        test_keyexchange_ecdhe(tls_group_ffdhe4096);
-        test_keyexchange_ecdhe(tls_group_ffdhe6144);
-        test_keyexchange_ecdhe(tls_group_ffdhe8192);
+        test_keyexchange_ecdhe(tls_group_t::ffdhe2048);
+        test_keyexchange_ecdhe(tls_group_t::ffdhe3072);
+        test_keyexchange_ecdhe(tls_group_t::ffdhe4096);
+        test_keyexchange_ecdhe(tls_group_t::ffdhe6144);
+        test_keyexchange_ecdhe(tls_group_t::ffdhe8192);
     }
 
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
-    test_keyexchange_mlkem(tls_group_mlkem512);
-    test_keyexchange_mlkem(tls_group_mlkem768);
-    test_keyexchange_mlkem(tls_group_mlkem1024);
+    test_keyexchange_mlkem(tls_group_t::mlkem512);
+    test_keyexchange_mlkem(tls_group_t::mlkem768);
+    test_keyexchange_mlkem(tls_group_t::mlkem1024);
 
-    test_keyexchange_mlkem(tls_group_secp256r1mlkem768);
-    test_keyexchange_mlkem(tls_group_secp384r1mlkem1024);
-    test_keyexchange_mlkem(tls_group_x25519mlkem768);
+    test_keyexchange_mlkem(tls_group_t::secp256r1mlkem768);
+    test_keyexchange_mlkem(tls_group_t::secp384r1mlkem1024);
+    test_keyexchange_mlkem(tls_group_t::x25519mlkem768);
 #endif
 }
 

@@ -78,7 +78,7 @@ return_t network_session::dtls_session_open(handle_t listen_sock, const binary_t
     if (0 == (tls_using_openssl & event_handle->flags)) {
         // DTLS cookie (see tls_handshake_hello_verify_request)
         auto session = event_handle->handle.session;
-        session->get_tls_protection().get_secrets().assign(tls_context_dtls_cookie, cookie);
+        session->get_tls_protection().get_secrets().assign(tls_secret_t::dtls_cookie, cookie);
     }
 
     return ret;

@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace crypto {
 
-crypto_sign_digestsign::crypto_sign_digestsign() : crypto_sign(hash_alg_unknown) {}
+crypto_sign_digestsign::crypto_sign_digestsign() : crypto_sign(hash_algorithm_t{}) {}
 
 crypto_sign_digestsign::~crypto_sign_digestsign() {}
 

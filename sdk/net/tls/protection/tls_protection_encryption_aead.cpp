@@ -182,7 +182,7 @@ return_t tls_protection::write_aad(tls_session* session, tls_direction_t dir, bi
         uint64 dtls_record_seq = 0;
         uint16 len = 0;
 
-        secrets.erase(tls_context_nonce_explicit);
+        secrets.erase(tls_secret_t::nonce_explicit);
         bool tls12_aead = false;
         // uint8 sizeof_nonce_explicit = 0;
 
@@ -230,11 +230,11 @@ return_t tls_protection::write_aad(tls_session* session, tls_direction_t dir, bi
                 len = bodysize;
 
                 // sketch ...
-                // tls_context_nonce_explicit 12-octet
+                // tls_secret_t::nonce_explicit 12-octet
                 openssl_prng prng;
                 binary_t temp;
                 prng.random(temp, 8);
-                secrets.assign(tls_context_nonce_explicit, temp);
+                secrets.assign(tls_secret_t::nonce_explicit, temp);
             } else if (mode_poly1305 == mode) {
                 tls12_aead = true;
                 len = bodysize;
@@ -305,13 +305,13 @@ return_t tls_protection::get_aead_key(tls_session* session, tls_direction_t dir,
                     if (is_clientinitiated(dir)) {
                         // TLS, DTLS
                         auto flow = get_flow();
-                        if (tls_flow_1rtt == flow || tls_flow_hello_retry_request == flow) {
+                        if (tls_flow_t::one_rtt == flow || tls_flow_t::hello_retry_request == flow) {
                             if (tls_handshake_type_t::finished == hsstatus) {
-                                secret_key = tls_secret_application_client_key;
-                                secret_iv = tls_secret_application_client_iv;
+                                secret_key = tls_secret_t::application_client_key;
+                                secret_iv = tls_secret_t::application_client_iv;
                             } else {
-                                secret_key = tls_secret_handshake_client_key;
-                                secret_iv = tls_secret_handshake_client_iv;
+                                secret_key = tls_secret_t::handshake_client_key;
+                                secret_iv = tls_secret_t::handshake_client_iv;
                             }
                         } else {
                             // 1-RTT
@@ -321,39 +321,39 @@ return_t tls_protection::get_aead_key(tls_session* session, tls_direction_t dir,
                             // finished             c ap traffic
                             switch (hsstatus) {
                                 case tls_handshake_type_t::end_of_early_data: {
-                                    secret_key = tls_secret_handshake_client_key;
-                                    secret_iv = tls_secret_handshake_client_iv;
+                                    secret_key = tls_secret_t::handshake_client_key;
+                                    secret_iv = tls_secret_t::handshake_client_iv;
                                 } break;
                                 case tls_handshake_type_t::finished: {
-                                    secret_key = tls_secret_application_client_key;
-                                    secret_iv = tls_secret_application_client_iv;
+                                    secret_key = tls_secret_t::application_client_key;
+                                    secret_iv = tls_secret_t::application_client_iv;
                                 } break;
                                 case tls_handshake_type_t::client_hello:
                                 default: {
                                     // use early traffic
-                                    secret_key = tls_secret_c_e_traffic_key;
-                                    secret_iv = tls_secret_c_e_traffic_iv;
+                                    secret_key = tls_secret_t::c_e_traffic_key;
+                                    secret_iv = tls_secret_t::c_e_traffic_iv;
                                 } break;
                             }
                         }
                     } else if (is_serverinitiated(dir)) {
                         // from_server
                         if (tls_handshake_type_t::finished == hsstatus) {
-                            secret_key = tls_secret_application_server_key;
-                            secret_iv = tls_secret_application_server_iv;
+                            secret_key = tls_secret_t::application_server_key;
+                            secret_iv = tls_secret_t::application_server_iv;
                         } else {
-                            secret_key = tls_secret_handshake_server_key;
-                            secret_iv = tls_secret_handshake_server_iv;
+                            secret_key = tls_secret_t::handshake_server_key;
+                            secret_iv = tls_secret_t::handshake_server_iv;
                         }
                     }
                 } else {
                     // TLS 1.2
                     if (is_clientinitiated(dir)) {
-                        secret_key = tls_secret_client_key;
-                        secret_iv = tls_secret_client_iv;
+                        secret_key = tls_secret_t::client_key;
+                        secret_iv = tls_secret_t::client_iv;
                     } else if (is_serverinitiated(dir)) {
-                        secret_key = tls_secret_server_key;
-                        secret_iv = tls_secret_server_iv;
+                        secret_key = tls_secret_t::server_key;
+                        secret_iv = tls_secret_t::server_iv;
                     }
                 }
             } break;
@@ -361,28 +361,28 @@ return_t tls_protection::get_aead_key(tls_session* session, tls_direction_t dir,
             case session_type_quic2: {
                 // QUIC
                 if (is_clientinitiated(dir)) {
-                    if (protection_initial == space) {
-                        secret_key = tls_secret_initial_quic_client_key;
-                        secret_iv = tls_secret_initial_quic_client_iv;
-                    } else if (protection_handshake == space) {
-                        secret_key = tls_secret_handshake_quic_client_key;
-                        secret_iv = tls_secret_handshake_quic_client_iv;
-                    } else if (protection_application == space) {
-                        secret_key = tls_secret_application_quic_client_key;
-                        secret_iv = tls_secret_application_quic_client_iv;
+                    if (protection_space_t::initial == space) {
+                        secret_key = tls_secret_t::initial_quic_client_key;
+                        secret_iv = tls_secret_t::initial_quic_client_iv;
+                    } else if (protection_space_t::handshake == space) {
+                        secret_key = tls_secret_t::handshake_quic_client_key;
+                        secret_iv = tls_secret_t::handshake_quic_client_iv;
+                    } else if (protection_space_t::application == space) {
+                        secret_key = tls_secret_t::application_quic_client_key;
+                        secret_iv = tls_secret_t::application_quic_client_iv;
                     } else {
                         ret = errorcode_t::invalid_parameter;
                     }
                 } else if (is_serverinitiated(dir)) {
-                    if (protection_initial == space) {
-                        secret_key = tls_secret_initial_quic_server_key;
-                        secret_iv = tls_secret_initial_quic_server_iv;
-                    } else if (protection_handshake == space) {
-                        secret_key = tls_secret_handshake_quic_server_key;
-                        secret_iv = tls_secret_handshake_quic_server_iv;
-                    } else if (protection_application == space) {
-                        secret_key = tls_secret_application_quic_server_key;
-                        secret_iv = tls_secret_application_quic_server_iv;
+                    if (protection_space_t::initial == space) {
+                        secret_key = tls_secret_t::initial_quic_server_key;
+                        secret_iv = tls_secret_t::initial_quic_server_iv;
+                    } else if (protection_space_t::handshake == space) {
+                        secret_key = tls_secret_t::handshake_quic_server_key;
+                        secret_iv = tls_secret_t::handshake_quic_server_iv;
+                    } else if (protection_space_t::application == space) {
+                        secret_key = tls_secret_t::application_quic_server_key;
+                        secret_iv = tls_secret_t::application_quic_server_iv;
                     } else {
                         ret = errorcode_t::invalid_parameter;
                     }
@@ -407,7 +407,7 @@ return_t tls_protection::encrypt_aead(tls_session* session, tls_direction_t dir,
 
         uint16 cs = 0;
         switch (space) {
-            case protection_initial:
+            case protection_space_t::initial:
                 // AEAD_AES_128_GCM, SHA256
                 cs = 0x1301;
                 break;
@@ -446,7 +446,7 @@ return_t tls_protection::encrypt_aead(tls_session* session, tls_direction_t dir,
                 build_iv(session, nonce, iv, record_no);
                 ret = crypt.encrypt(alg, mode, key, nonce, plaintext, ciphertext, aad, tag, options);
             } else if (ccm == mode || gcm == mode) {
-                const binary_t& nonce_explicit = get_secrets().get(tls_context_nonce_explicit);
+                const binary_t& nonce_explicit = get_secrets().get(tls_secret_t::nonce_explicit);
                 binary_append(nonce, iv);
                 binary_append(nonce, nonce_explicit);
                 ret = crypt.encrypt(alg, mode, key, nonce, plaintext, ciphertext, aad, tag, options);
@@ -518,7 +518,7 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         uint16 cs = 0;
         switch (space) {
-            case protection_initial:
+            case protection_space_t::initial:
                 // AEAD_AES_128_GCM, SHA256
                 cs = 0x1301;
                 break;

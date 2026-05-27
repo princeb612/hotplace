@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace crypto {
 
-crypto_hash_builder::crypto_hash_builder() : _alg(hash_alg_unknown) {}
+crypto_hash_builder::crypto_hash_builder() : _alg(hash_algorithm_t{}) {}
 
 crypto_hash* crypto_hash_builder::build() { return new crypto_hash(_alg); }
 

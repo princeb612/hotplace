@@ -71,13 +71,13 @@ return_t tls_composer::do_tls_client_handshake(unsigned wto, std::function<void(
             } else {
                 ret = errorcode_t::handshake_failure;
             }
-        } while ((tls_flow_hello_retry_request == protection.get_flow()) && (--retry));
+        } while ((tls_flow_t::hello_retry_request == protection.get_flow()) && (--retry));
 
         if (errorcode_t::success != ret) {
             __leave2_trace(ret);
         }
         auto flow = protection.get_flow();
-        if (tls_flow_1rtt != flow && tls_flow_hello_retry_request != flow) {
+        if (tls_flow_t::one_rtt != flow && tls_flow_t::hello_retry_request != flow) {
             ret = errorcode_t::handshake_failure;
             __leave2_trace(ret);
         }
@@ -215,7 +215,7 @@ return_t tls_composer::do_tls_server_handshake_phase1(std::function<void(tls_ses
                      [&](tls_record* record) -> return_t {
                          record->add(tls_handshake_type_t::hello_verify_request, session, [&](tls_handshake* handshake) -> return_t {
                              auto hvr = (tls_handshake_hello_verify_request*)handshake;
-                             (*hvr).set_cookie(protection.get_secrets().get(tls_context_dtls_cookie));
+                             (*hvr).set_cookie(protection.get_secrets().get(tls_secret_t::dtls_cookie));
                              return errorcode_t::success;
                          });
                          return errorcode_t::success;

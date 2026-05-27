@@ -158,19 +158,7 @@ void test_crypto_sign() {
 
                 uint16 siglen = 0;
                 if (kty_ec == kty) {
-                    switch (alg) {
-                        case sha2_256:
-                            siglen = 32 << 1;
-                            break;
-                        case sha2_384:
-                            siglen = 48 << 1;
-                            break;
-                        case sha2_512:
-                            siglen = 66 << 1;
-                            break;
-                        default:
-                            break;
-                    }
+                    siglen = advisor->sizeof_ecdsa(alg);
                     _test_case.assert(signature2.size() == siglen, __FUNCTION__, "%s kid:%s signature length %i <> %zi", text, kid, siglen, signature2.size());
                 }
 
@@ -181,76 +169,76 @@ void test_crypto_sign() {
         }
     };
 
-    lambda_sign_kid("EdDSA", "Ed25519", kty_okp, sig_category_eddsa, hash_algorithm_t::hash_alg_unknown, true);
-    lambda_sign_kid("EdDSA", "Ed448", kty_okp, sig_category_eddsa, hash_algorithm_t::hash_alg_unknown, true);
-    lambda_sign_kid("ECDSA", "P-521", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_512, true);
-    lambda_sign_kid("ECDSA", "P-521", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_384, false);
-    lambda_sign_kid("ECDSA", "P-521", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, false);
-    lambda_sign_kid("ECDSA", "P-384", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_512, true);
-    lambda_sign_kid("ECDSA", "P-384", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_384, true);
-    lambda_sign_kid("ECDSA", "P-384", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, false);
-    lambda_sign_kid("ECDSA", "P-256", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "P-256", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_384, true);
-    lambda_sign_kid("ECDSA", "P-256", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_512, true);
-    lambda_sign_kid("RSA.RSA", "RSA", kty_rsa, sig_category_rsassa_pkcs15, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("RSA.RSA", "RSA", kty_rsa, sig_category_rsassa_pkcs15, hash_algorithm_t::sha2_384, true);
-    lambda_sign_kid("RSA.RSA", "RSA", kty_rsa, sig_category_rsassa_pkcs15, hash_algorithm_t::sha2_512, true);
-    lambda_sign_kid("PSS.RSA", "RSA", kty_rsa, sig_category_rsassa_pss, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("PSS.RSA", "RSA", kty_rsa, sig_category_rsassa_pss, hash_algorithm_t::sha2_384, true);
-    lambda_sign_kid("PSS.RSA", "RSA", kty_rsa, sig_category_rsassa_pss, hash_algorithm_t::sha2_512, true);
-    lambda_sign_kid("PSS.PSS", "RSA_PSS", kty_rsa, sig_category_rsassa_pss, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("PSS.PSS", "RSA_PSS", kty_rsa, sig_category_rsassa_pss, hash_algorithm_t::sha2_384, true);
-    lambda_sign_kid("PSS.PSS", "RSA_PSS", kty_rsa, sig_category_rsassa_pss, hash_algorithm_t::sha2_512, true);
+    lambda_sign_kid("EdDSA", "Ed25519", kty_okp, sig_category_t::eddsa, hash_algorithm_t{}, true);
+    lambda_sign_kid("EdDSA", "Ed448", kty_okp, sig_category_t::eddsa, hash_algorithm_t{}, true);
+    lambda_sign_kid("ECDSA", "P-521", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_512, true);
+    lambda_sign_kid("ECDSA", "P-521", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_384, false);
+    lambda_sign_kid("ECDSA", "P-521", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, false);
+    lambda_sign_kid("ECDSA", "P-384", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_512, true);
+    lambda_sign_kid("ECDSA", "P-384", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_384, true);
+    lambda_sign_kid("ECDSA", "P-384", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, false);
+    lambda_sign_kid("ECDSA", "P-256", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "P-256", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_384, true);
+    lambda_sign_kid("ECDSA", "P-256", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_512, true);
+    lambda_sign_kid("RSA.RSA", "RSA", kty_rsa, sig_category_t::rsassa_pkcs15, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("RSA.RSA", "RSA", kty_rsa, sig_category_t::rsassa_pkcs15, hash_algorithm_t::sha2_384, true);
+    lambda_sign_kid("RSA.RSA", "RSA", kty_rsa, sig_category_t::rsassa_pkcs15, hash_algorithm_t::sha2_512, true);
+    lambda_sign_kid("PSS.RSA", "RSA", kty_rsa, sig_category_t::rsassa_pss, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("PSS.RSA", "RSA", kty_rsa, sig_category_t::rsassa_pss, hash_algorithm_t::sha2_384, true);
+    lambda_sign_kid("PSS.RSA", "RSA", kty_rsa, sig_category_t::rsassa_pss, hash_algorithm_t::sha2_512, true);
+    lambda_sign_kid("PSS.PSS", "RSA_PSS", kty_rsa, sig_category_t::rsassa_pss, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("PSS.PSS", "RSA_PSS", kty_rsa, sig_category_t::rsassa_pss, hash_algorithm_t::sha2_384, true);
+    lambda_sign_kid("PSS.PSS", "RSA_PSS", kty_rsa, sig_category_t::rsassa_pss, hash_algorithm_t::sha2_512, true);
 
-    lambda_sign_kid("ECDSA", "NID_secp112r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_secp112r2", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_secp128r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_secp128r2", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_secp160k1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_secp160r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_secp160r2", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_secp192k1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_X9_62_prime192v1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_secp224k1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_secp224r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_secp256k1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_X9_62_prime256v1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_secp384r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_384, true);
-    lambda_sign_kid("ECDSA", "NID_secp521r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_512, true);
-    lambda_sign_kid("ECDSA", "NID_sect113r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_sect113r2", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_sect131r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_sect131r2", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_sect163k1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_sect163r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_sect163r2", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_sect193r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_sect193r2", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_sect233k1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_sect233r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_sect239k1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_sect283k1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_384, true);
-    lambda_sign_kid("ECDSA", "NID_sect283r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_384, true);
-    lambda_sign_kid("ECDSA", "NID_sect409k1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_512, true);
-    lambda_sign_kid("ECDSA", "NID_sect409r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_512, true);
-    // lambda_sign_kid("ECDSA", "NID_sect571k1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_512, true);
-    // lambda_sign_kid("ECDSA", "NID_sect571r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_512, true);
-    lambda_sign_kid("EdDSA", "NID_ED25519", kty_okp, sig_category_eddsa, hash_algorithm_t::hash_alg_unknown, true);
-    lambda_sign_kid("EdDSA", "NID_ED448", kty_okp, sig_category_eddsa, hash_algorithm_t::hash_alg_unknown, true);
-    lambda_sign_kid("ECDSA", "NID_brainpoolP160r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_brainpoolP160t1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_brainpoolP192r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_brainpoolP192t1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_brainpoolP224r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_brainpoolP224t1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_brainpoolP256r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_brainpoolP256t1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_256, true);
-    lambda_sign_kid("ECDSA", "NID_brainpoolP320r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_384, true);
-    lambda_sign_kid("ECDSA", "NID_brainpoolP320t1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_384, true);
-    lambda_sign_kid("ECDSA", "NID_brainpoolP384r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_384, true);
-    lambda_sign_kid("ECDSA", "NID_brainpoolP384t1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_384, true);
-    lambda_sign_kid("ECDSA", "NID_brainpoolP512r1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_512, true);
-    lambda_sign_kid("ECDSA", "NID_brainpoolP512t1", kty_ec, sig_category_ecdsa, hash_algorithm_t::sha2_512, true);
+    lambda_sign_kid("ECDSA", "NID_secp112r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_secp112r2", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_secp128r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_secp128r2", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_secp160k1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_secp160r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_secp160r2", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_secp192k1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_X9_62_prime192v1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_secp224k1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_secp224r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_secp256k1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_X9_62_prime256v1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_secp384r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_384, true);
+    lambda_sign_kid("ECDSA", "NID_secp521r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_512, true);
+    lambda_sign_kid("ECDSA", "NID_sect113r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_sect113r2", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_sect131r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_sect131r2", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_sect163k1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_sect163r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_sect163r2", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_sect193r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_sect193r2", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_sect233k1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_sect233r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_sect239k1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_sect283k1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_384, true);
+    lambda_sign_kid("ECDSA", "NID_sect283r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_384, true);
+    lambda_sign_kid("ECDSA", "NID_sect409k1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_512, true);
+    lambda_sign_kid("ECDSA", "NID_sect409r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_512, true);
+    // lambda_sign_kid("ECDSA", "NID_sect571k1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_512, true);
+    // lambda_sign_kid("ECDSA", "NID_sect571r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_512, true);
+    lambda_sign_kid("EdDSA", "NID_ED25519", kty_okp, sig_category_t::eddsa, hash_algorithm_t{}, true);
+    lambda_sign_kid("EdDSA", "NID_ED448", kty_okp, sig_category_t::eddsa, hash_algorithm_t{}, true);
+    lambda_sign_kid("ECDSA", "NID_brainpoolP160r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_brainpoolP160t1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_brainpoolP192r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_brainpoolP192t1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_brainpoolP224r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_brainpoolP224t1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_brainpoolP256r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_brainpoolP256t1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_256, true);
+    lambda_sign_kid("ECDSA", "NID_brainpoolP320r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_384, true);
+    lambda_sign_kid("ECDSA", "NID_brainpoolP320t1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_384, true);
+    lambda_sign_kid("ECDSA", "NID_brainpoolP384r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_384, true);
+    lambda_sign_kid("ECDSA", "NID_brainpoolP384t1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_384, true);
+    lambda_sign_kid("ECDSA", "NID_brainpoolP512r1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_512, true);
+    lambda_sign_kid("ECDSA", "NID_brainpoolP512t1", kty_ec, sig_category_t::ecdsa, hash_algorithm_t::sha2_512, true);
 }
 
 void testcase_crypto_sign() { test_crypto_sign(); }

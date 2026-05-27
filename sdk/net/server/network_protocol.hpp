@@ -20,14 +20,14 @@ class basic_stream;
 namespace net {
 
 enum protocol_state_t {
-    protocol_state_invalid = 0, /* unknown state */
-    protocol_state_ident,       /* iskindof returns IDENT */
-    protocol_state_header,      /* header completed */
-    protocol_state_data,        /* data complete */
-    protocol_state_complete,    /* all data complete */
-    protocol_state_forged,      /* forgery */
-    protocol_state_crash,       /* reserved */
-    protocol_state_large,       /* constraints */
+    invalid = 0, /* unknown state */
+    ident,       /* iskindof returns IDENT */
+    header,      /* header completed */
+    data,        /* data complete */
+    complete,    /* all data complete */
+    forged,      /* forgery */
+    crash,       /* reserved */
+    large,       /* constraints */
 };
 
 enum protocol_constraints_t {

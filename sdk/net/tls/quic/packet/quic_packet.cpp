@@ -235,9 +235,9 @@ return_t quic_packet::do_read_header(tls_direction_t dir, const byte_t* stream, 
             // Packets with short headers (Section 17.3) only include the Destination Connection ID and omit the explicit length.
             size_t size_dcid = 0;
             if (is_clientinitiated(dir)) {
-                size_dcid = secrets.get(tls_context_server_cid).size();
+                size_dcid = secrets.get(tls_secret_t::server_cid).size();
             } else if (is_serverinitiated(dir)) {
-                size_dcid = secrets.get(tls_context_client_cid).size();
+                size_dcid = secrets.get(tls_secret_t::client_cid).size();
             }
             pl.reserve(constexpr_dcid, size_dcid);
         }

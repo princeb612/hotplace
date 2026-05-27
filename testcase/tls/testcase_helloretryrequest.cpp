@@ -234,12 +234,13 @@ void testcase_helloretryrequest() {
     basic_stream step;
 
     // enforce server key share group 0x001d "x25519"
-    session_server.get_keyvalue().set(session_conf_enforce_key_share_group, tls_group_x25519);
+    t_enum_type<tls_group_t> etcurve(tls_group_t::x25519);
+    session_server.get_keyvalue().set(session_conf_enforce_key_share_group, etcurve);
 
     {
         flow = session_server.get_tls_protection().get_flow();
         flow_status = tlsadvisor->nameof_tls_flow(flow);
-        _test_case.assert(tls_flow_1rtt == flow, __FUNCTION__, "1-RTT");
+        _test_case.assert(tls_flow_t::one_rtt == flow, __FUNCTION__, "1-RTT");
     }
 
     {
@@ -276,7 +277,7 @@ void testcase_helloretryrequest() {
         // test
         session_status = session_server.get_session_status();
         _test_case.assert((session_status_server_hello & session_status), __FUNCTION__, "%s session status 0x%08x", step.c_str(), session_status);
-        _test_case.assert(tls_flow_hello_retry_request == flow, __FUNCTION__, "HelloRetryRequest");
+        _test_case.assert(tls_flow_t::hello_retry_request == flow, __FUNCTION__, "HelloRetryRequest");
     }
 
     {
@@ -313,6 +314,6 @@ void testcase_helloretryrequest() {
     {
         flow = session_server.get_tls_protection().get_flow();
         flow_status = tlsadvisor->nameof_tls_flow(flow);
-        _test_case.assert(tls_flow_1rtt == flow, __FUNCTION__, "%s", flow_status.c_str());
+        _test_case.assert(tls_flow_t::one_rtt == flow, __FUNCTION__, "%s", flow_status.c_str());
     }
 }

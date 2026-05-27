@@ -395,10 +395,10 @@ return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, bi
         if (tls_flag_hybrid & hint->flags) {
             /**
              * kty_ec || kty_mlkem
-             *   tls_group_secp256r1mlkem768
-             *   tls_group_secp384r1mlkem1024
+             *   tls_group_t::secp256r1mlkem768
+             *   tls_group_t::secp384r1mlkem1024
              * kty_mlkem || kty_okp
-             *   tls_group_x25519mlkem768
+             *   tls_group_t::x25519mlkem768
              */
 
             auto hkey = ephemeral.find_nid(kid, second.nid);
@@ -552,11 +552,11 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
 
             // https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/
             switch (group) {
-                case tls_group_secp256r1mlkem768:
-                case tls_group_secp384r1mlkem1024: {
+                case tls_group_t::secp256r1mlkem768:
+                case tls_group_t::secp384r1mlkem1024: {
                     ss.insert(ss.begin(), hybrid_ss.begin(), hybrid_ss.end());
                 } break;
-                case tls_group_x25519mlkem768: {
+                case tls_group_t::x25519mlkem768: {
                     binary_append(ss, hybrid_ss);
                 } break;
                 default:

@@ -85,7 +85,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
             {
                 session_status = session->get_session_status();
                 if (session_status_hello_verify_request & session_status) {
-                    const auto& cookie = protection.get_secrets().get(tls_context_cookie);
+                    const auto& cookie = protection.get_secrets().get(tls_secret_t::cookie);
                     if (false == cookie.empty()) {
                         hs->set_cookie(cookie);
                     }
@@ -160,12 +160,12 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                          })
                     .add(tls_extension_type_t::key_share, dir, hs, [&](tls_extension* extension) -> return_t {
                         tls_extension_client_key_share* keyshare = (tls_extension_client_key_share*)extension;
-                        if (tls_flow_hello_retry_request != protection.get_flow()) {
+                        if (tls_flow_t::hello_retry_request != protection.get_flow()) {
                             keyshare->clear();
 
-                            std::set<uint16> groups_set;
-                            std::list<uint16> groups_list;
-                            std::set<uint16> groups_keyshare;
+                            std::set<tls_group_t> groups_set;
+                            std::list<tls_group_t> groups_list;
+                            std::set<tls_group_t> groups_keyshare;
 
                             advisor->for_each_tls_group([&](const hint_group_t* hint) -> void {
                                 auto group = hint->group;
@@ -183,7 +183,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                                 session->push_alert(from_server, tls_alertlevel_t::fatal, tls_alertdesc_t::handshake_failure);
                                 session->reset_session_status();
                             } else {
-                                auto lambda = [&](std::list<uint16> members) -> void {
+                                auto lambda = [&](std::list<tls_group_t> members) -> void {
                                     for (auto group : members) {
                                         if (groups_set.count(group)) {
                                             keyshare->add(group);
@@ -194,9 +194,9 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                                 };
 
                                 // try to add
-                                lambda({tls_group_x25519mlkem768, tls_group_secp256r1mlkem768, tls_group_secp384r1mlkem1024, tls_group_mlkem768, tls_group_mlkem512,
-                                        tls_group_mlkem1024});
-                                lambda({tls_group_secp256r1, tls_group_secp384r1, tls_group_secp521r1, tls_group_x25519, tls_group_x448});
+                                lambda({tls_group_t::x25519mlkem768, tls_group_t::secp256r1mlkem768, tls_group_t::secp384r1mlkem1024, tls_group_t::mlkem768,
+                                        tls_group_t::mlkem512, tls_group_t::mlkem1024});
+                                lambda({tls_group_t::secp256r1, tls_group_t::secp384r1, tls_group_t::secp521r1, tls_group_t::x25519, tls_group_t::x448});
 
                                 // if not added
                                 if (groups_keyshare.empty()) {
@@ -248,7 +248,7 @@ return_t tls_composer::construct_server_hello(tls_handshake** handshake, tls_ses
         }
 
         uint16 cs = 0;
-        tls_version_t tlsver = tls_version_t::unknown;
+        tls_version_t tlsver = tls_version_t{};
         auto dir = from_server;
         auto& protection = session->get_tls_protection();
         ret = protection.negotiate(session, minspec, maxspec, cs, tlsver);

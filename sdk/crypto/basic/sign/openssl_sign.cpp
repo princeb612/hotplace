@@ -47,10 +47,10 @@ return_t openssl_sign::sign(const EVP_PKEY* pkey, signature_t sig, const byte_t*
         switch (kty) {
             case kty_oct:
                 switch (category) {
-                    case sig_category_t::sig_category_dgst:
+                    case sig_category_t::dgst:
                         ret = sign_digest(pkey, hash_alg, stream, size, signature);
                         break;
-                    case sig_category_t::sig_category_hmac:
+                    case sig_category_t::hmac:
                         ret = sign_hmac(pkey, hash_alg, stream, size, signature);
                         break;
                     default:
@@ -61,10 +61,10 @@ return_t openssl_sign::sign(const EVP_PKEY* pkey, signature_t sig, const byte_t*
             case kty_rsa:
             case kty_rsapss:
                 switch (category) {
-                    case sig_category_t::sig_category_rsassa_pkcs15:
+                    case sig_category_t::rsassa_pkcs15:
                         ret = sign_rsassa_pkcs15(pkey, hash_alg, stream, size, signature);
                         break;
-                    case sig_category_t::sig_category_rsassa_pss:
+                    case sig_category_t::rsassa_pss:
                         ret = sign_rsassa_pss(pkey, hash_alg, stream, size, signature);
                         break;
                     default:
@@ -123,10 +123,10 @@ return_t openssl_sign::verify(const EVP_PKEY* pkey, signature_t sig, const byte_
         switch (kty) {
             case kty_oct:
                 switch (category) {
-                    case sig_category_t::sig_category_dgst:
+                    case sig_category_t::dgst:
                         ret = verify_digest(pkey, hash_alg, stream, size, signature);
                         break;
-                    case sig_category_t::sig_category_hmac:
+                    case sig_category_t::hmac:
                         ret = verify_hmac(pkey, hash_alg, stream, size, signature);
                         break;
                     default:
@@ -137,10 +137,10 @@ return_t openssl_sign::verify(const EVP_PKEY* pkey, signature_t sig, const byte_
             case kty_rsa:
             case kty_rsapss:
                 switch (category) {
-                    case sig_category_t::sig_category_rsassa_pkcs15:
+                    case sig_category_t::rsassa_pkcs15:
                         ret = verify_rsassa_pkcs15(pkey, hash_alg, stream, size, signature);
                         break;
-                    case sig_category_t::sig_category_rsassa_pss:
+                    case sig_category_t::rsassa_pss:
                         ret = verify_rsassa_pss(pkey, hash_alg, stream, size, signature);
                         break;
                     default:

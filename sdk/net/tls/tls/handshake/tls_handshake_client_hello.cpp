@@ -88,25 +88,25 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
         if (tls_handshake_type_t::finished == hsstatus) {
             if (protection.is_kindof_tls13()) {
                 // 0-RTT
-                protection.set_flow(tls_flow_0rtt);
+                protection.set_flow(tls_flow_t::zero_rtt);
                 session->reset_session_status();
             } else {
                 // renegotiation
                 //   review
                 //     - tls12renogotiation.pcapng
-                //       - client finished 92d20ede5b77d916bb376397 (tls_context_client_verifydata)
-                //       - server finished 522748448a013f75119810f6 (tls_context_server_verifydata)
+                //       - client finished 92d20ede5b77d916bb376397 (tls_secret_t::client_verifydata)
+                //       - server finished 522748448a013f75119810f6 (tls_secret_t::server_verifydata)
                 //       - client_hello renegotiation_info 92d20ede5b77d916bb376397
-                //         - must be (tls_context_client_verifydata)
+                //         - must be (tls_secret_t::client_verifydata)
                 //       - server_hello renegotiation_info 92d20ede5b77d916bb376397522748448a013f75119810f6
-                //         - must be (tls_context_client_verifydata || tls_context_server_verifydata)
+                //         - must be (tls_secret_t::client_verifydata || tls_secret_t::server_verifydata)
                 //     - tls12no_renogotiation.pcapng
                 //   tls_handshake_client_hello
                 //     - test the value of session_conf_enable_renegotiation
                 //       - if zero, renegotiation is prohibited
                 //         - alert(fatal, tls_alertdesc_t::no_renegotiation)
                 //       - else
-                //         - set_flow(tls_flow_renegotiation);
+                //         - set_flow(tls_flow_t::renegotiation);
                 //         - renegotiation_info must be the verify data of finished
                 //         - key calcuration (TODO)
                 //   tls_handshake_server_hello
@@ -117,7 +117,7 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
 #if 0
                 auto& kv = session->get_keyvalue();
                 if (kv.get(session_conf_enable_renegotiation)) {
-                    protection.set_flow(tls_flow_renegotiation);
+                    protection.set_flow(tls_flow_t::renegotiation);
                 } else
 #endif
                 {
@@ -130,22 +130,22 @@ return_t tls_handshake_client_hello::do_preprocess(tls_direction_t dir) {
         }
 
         switch (protection.get_flow()) {
-            case tls_flow_1rtt: {
+            case tls_flow_t::one_rtt: {
             } break;
-            case tls_flow_0rtt: {
+            case tls_flow_t::zero_rtt: {
                 protection.get_key().clear();
 
                 session->reset_recordno(from_client);
                 session->reset_recordno(from_server);
             } break;
-            case tls_flow_hello_retry_request: {
+            case tls_flow_t::hello_retry_request: {
                 session->clear_session_status(session_status_server_hello);
 
                 auto& tlskey = protection.get_key();
                 tlskey.erase(KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC);  // client_hello key_share
                 tlskey.erase(KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC);  // server_hello key_share
             } break;
-            case tls_flow_renegotiation: {
+            case tls_flow_t::renegotiation: {
                 // TODO
             } break;
             default: {
@@ -165,8 +165,8 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
         auto session_status = session->get_session_status();
 
         if (session_status_hello_verify_request & session_status) {
-            bool cond1 = (get_random() != secrets.get(tls_context_client_hello_random));
-            bool cond2 = (get_cookie() != secrets.get(tls_context_cookie));
+            bool cond1 = (get_random() != secrets.get(tls_secret_t::client_hello_random));
+            bool cond2 = (get_cookie() != secrets.get(tls_secret_t::cookie));
             if (cond1 || cond2) {
                 // client_hello
                 // hello_verify_request (cookie)
@@ -179,7 +179,7 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
         }
 
         // 0-RTT, pre_shared_key extension
-        if (tls_flow_0rtt == protection.get_flow()) {
+        if (tls_flow_t::zero_rtt == protection.get_flow()) {
             auto ext_psk = get_extensions().get(tls_extension_type_t::pre_shared_key);
             if (nullptr == ext_psk) {
                 session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::handshake_failure);
@@ -194,18 +194,18 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
             auto size_header_body = get_size();
 
             switch (protection.get_flow()) {
-                case tls_flow_1rtt: {
-                    secrets.assign(tls_context_client_hello, stream + hspos, size_header_body);  // transcript hash, see server_hello
+                case tls_flow_t::one_rtt: {
+                    secrets.assign(tls_secret_t::client_hello, stream + hspos, size_header_body);  // transcript hash, see server_hello
                 } break;
-                case tls_flow_0rtt: {
+                case tls_flow_t::zero_rtt: {
                     protection.reset_transcript_hash(session);
                     protection.update_transcript_hash(session, stream + hspos, size_header_body /*, handshake_hash */);  // client_hello
                     ret = protection.calc(session, tls_handshake_type_t::client_hello, dir);
                 } break;
-                case tls_flow_hello_retry_request: {
+                case tls_flow_t::hello_retry_request: {
                     protection.update_transcript_hash(session, stream + hspos, size_header_body /*, handshake_hash */);  // client_hello
                 } break;
-                case tls_flow_renegotiation: {
+                case tls_flow_t::renegotiation: {
                     // TODO
                 } break;
             }
@@ -347,8 +347,8 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
 
         {
             // server_key_update
-            secrets.assign(tls_context_client_hello_random, random);
-            secrets.assign(tls_context_session_id, session_id);  // avoid routines:tls_process_server_hello:invalid session id
+            secrets.assign(tls_secret_t::client_hello_random, random);
+            secrets.assign(tls_secret_t::session_id, session_id);  // avoid routines:tls_process_server_hello:invalid session id
         }
 
 #if defined DEBUG
@@ -396,7 +396,7 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
             __leave2;
         }
 
-        if (tls_flow_renegotiation == protection.get_flow()) {
+        if (tls_flow_t::renegotiation == protection.get_flow()) {
             // client renegotiation
             auto ext_renegotiationinfo = get_extensions().get(tls_extension_type_t::renegotiation_info);
             if (nullptr == ext_renegotiationinfo) {
@@ -436,7 +436,7 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
 
         auto session_status = session->get_session_status();
         if (session_status_hello_verify_request & session_status) {
-            _random = secrets.get(tls_context_client_hello_random);
+            _random = secrets.get(tls_secret_t::client_hello_random);
         } else {
             openssl_prng prng;
             if (32 != _random.size()) {
@@ -476,7 +476,7 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
 
         {
             // finished
-            secrets.assign(tls_context_client_hello_random, _random);
+            secrets.assign(tls_secret_t::client_hello_random, _random);
         }
 
         binary_append(bin, extensions);

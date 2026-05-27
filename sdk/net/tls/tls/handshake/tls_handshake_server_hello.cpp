@@ -44,7 +44,7 @@ constexpr char constexpr_cookie_len[] = "cookie len";
 constexpr char constexpr_cookie[] = "cookie";
 
 tls_handshake_server_hello::tls_handshake_server_hello(tls_session* session)
-    : tls_handshake(tls_handshake_type_t::server_hello, session), _version(tls_version_t::unknown), _compression_method(0) {}
+    : tls_handshake(tls_handshake_type_t::server_hello, session), _version(tls_version_t{}), _compression_method(0) {}
 
 tls_handshake_server_hello::~tls_handshake_server_hello() {}
 
@@ -164,7 +164,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
             auto ext_version = get_extensions().get(tls_extension_type_t::supported_versions);
             if (nullptr == ext_version) {
                 // TLS 1.2
-                protection.set_tls_version(tls_version_t::unknown != _version ? _version : protection.get_lagacy_version());
+                protection.set_tls_version(tls_version_t{} != _version ? _version : protection.get_lagacy_version());
             } else {
                 // TLS 1.3 supported_versions extension
                 // read/write member calls protection.set_tls_version
@@ -175,19 +175,19 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
             // calculates the hash of all handshake messages to this point (ClientHello and ServerHello).
             binary_t hello_hash;
             switch (protection.get_flow()) {
-                case tls_flow_1rtt: {
+                case tls_flow_t::one_rtt: {
                     protection.reset_transcript_hash(session);
 
-                    const binary_t& client_hello = secrets.get(tls_context_client_hello);
+                    const binary_t& client_hello = secrets.get(tls_secret_t::client_hello);
                     protection.update_transcript_hash(session, client_hello.data(), client_hello.size());  // client_hello
                 } break;
-                case tls_flow_0rtt:
-                case tls_flow_hello_retry_request: {
+                case tls_flow_t::zero_rtt:
+                case tls_flow_t::hello_retry_request: {
                     auto hs_finished = kv.get(session_handshake_finished);
                     if (hs_finished) {
-                        protection.set_flow(tls_flow_0rtt);
+                        protection.set_flow(tls_flow_t::zero_rtt);
                     } else {
-                        protection.set_flow(tls_flow_1rtt);
+                        protection.set_flow(tls_flow_t::one_rtt);
                     }
 
                     auto session_version = kv.get(session_tls_version);
@@ -231,7 +231,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
                 // If the client has not provided a sufficient "key_share" extension, the server corrects the mismatch with a
                 // HelloRetryRequest and the client needs to restart the handshake with an appropriate "key_share" extension.
 
-                protection.set_flow(tls_flow_hello_retry_request);
+                protection.set_flow(tls_flow_t::hello_retry_request);
                 session->clear_session_status(session_status_client_hello);
 
                 /**
@@ -254,7 +254,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
                 protection.reset_transcript_hash(session);
 
                 // client_hello
-                const binary_t& client_hello = secrets.get(tls_context_client_hello);
+                const binary_t& client_hello = secrets.get(tls_secret_t::client_hello);
                 protection.calc_transcript_hash(session, client_hello.data(), client_hello.size(), handshake_hash);
                 uint32 hashsize = t_narrow_cast(handshake_hash.size());
                 // uint8(FE) || uint24(hash.size) || hash
@@ -270,7 +270,7 @@ return_t tls_handshake_server_hello::do_postprocess(tls_direction_t dir, const b
                 // server_hello
                 protection.calc_transcript_hash(session, stream + hspos, size_header_body, hello_hash);
 
-                secrets.erase(tls_context_client_hello);
+                secrets.erase(tls_secret_t::client_hello);
             } else {
                 ret = test;
             }
@@ -419,7 +419,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
             set_cipher_suite(cipher_suite);
 
             // server_key_update
-            secrets.assign(tls_context_server_hello_random, random);
+            secrets.assign(tls_secret_t::server_hello_random, random);
 
             _version = etversion;
         }
@@ -516,7 +516,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
 
             _random = std::move(random);
 
-            _session_id = secrets.get(tls_context_session_id);  // avoid routines:tls_process_server_hello:invalid session id
+            _session_id = secrets.get(tls_secret_t::session_id);  // avoid routines:tls_process_server_hello:invalid session id
         }
 
         {
@@ -533,7 +533,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
             pl.write(bin);
         }
 
-        secrets.assign(tls_context_server_hello_random, _random);
+        secrets.assign(tls_secret_t::server_hello_random, _random);
 
         binary_append(bin, extensions);
 

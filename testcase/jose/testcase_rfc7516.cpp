@@ -544,7 +544,7 @@ void test_rfc7516_B() {
         binary_t enckey;
         binary_t mackey;
 
-        cbchmac.set_enc(aes128).set_mac(sha2_256).set_flag(jose_encrypt_then_mac);
+        cbchmac.set_enc(aes128).set_mac(hash_algorithm_t::sha2_256).set_flag(jose_encrypt_then_mac);
         cbchmac.split_key(bin_key, enckey, mackey);
 
         cbchmac.encrypt(enckey, mackey, bin_iv, bin_aad, bin_plain, bin_ct, bin_t);

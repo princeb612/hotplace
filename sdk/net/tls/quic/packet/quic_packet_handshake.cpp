@@ -107,7 +107,7 @@ return_t quic_packet_handshake::do_read(tls_direction_t dir, const byte_t* strea
     __try2 {
         auto session = get_session();
 
-        ret = do_unprotect(dir, stream, size, pos_unprotect, protection_handshake);
+        ret = do_unprotect(dir, stream, size, pos_unprotect, protection_space_t::handshake);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -121,7 +121,7 @@ return_t quic_packet_handshake::do_read(tls_direction_t dir, const byte_t* strea
         }
 
         if (get_quic_frames().is_significant()) {
-            session->get_quic_session().get_pkns(protection_handshake).add(get_pn());
+            session->get_quic_session().get_pkns(protection_space_t::handshake).add(get_pn());
         }
     }
     __finally2 {}
@@ -180,7 +180,7 @@ return_t quic_packet_handshake::do_write(tls_direction_t dir, binary_t& header, 
             binary_t bin_mask;
 
             // AEAD
-            ret = protection.encrypt(session, dir, get_payload(), bin_ciphertext, bin_unprotected_header, bin_tag, protection_handshake);
+            ret = protection.encrypt(session, dir, get_payload(), bin_ciphertext, bin_unprotected_header, bin_tag, protection_space_t::handshake);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
@@ -189,7 +189,7 @@ return_t quic_packet_handshake::do_write(tls_direction_t dir, binary_t& header, 
             // Header Protection
             {
                 uint8 ht = _ht;
-                ret = header_protect(dir, protection_handshake, bin_ciphertext, ht, pn_length, bin_pn, bin_protected_header);
+                ret = header_protect(dir, protection_space_t::handshake, bin_ciphertext, ht, pn_length, bin_pn, bin_protected_header);
                 if (errorcode_t::success != ret) {
                     __leave2;
                 }

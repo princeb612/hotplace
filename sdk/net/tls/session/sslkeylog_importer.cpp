@@ -38,13 +38,13 @@ void sslkeylog_importer::load() {
             };
             const sslkeylog_item resources[] = {
                 // TLS 1.3
-                {"SERVER_HANDSHAKE_TRAFFIC_SECRET", server_handshake_traffic_secret},
-                {"CLIENT_HANDSHAKE_TRAFFIC_SECRET", client_handshake_traffic_secret},
-                {"EXPORTER_SECRET", tls_secret_exp_master},
-                {"SERVER_TRAFFIC_SECRET_0", server_application_traffic_secret_0},
-                {"CLIENT_TRAFFIC_SECRET_0", client_application_traffic_secret_0},
+                {"SERVER_HANDSHAKE_TRAFFIC_SECRET", tls_secret_t::server_handshake_traffic_secret},
+                {"CLIENT_HANDSHAKE_TRAFFIC_SECRET", tls_secret_t::client_handshake_traffic_secret},
+                {"EXPORTER_SECRET", tls_secret_t::exp_master},
+                {"SERVER_TRAFFIC_SECRET_0", tls_secret_t::server_application_traffic_secret_0},
+                {"CLIENT_TRAFFIC_SECRET_0", tls_secret_t::client_application_traffic_secret_0},
                 // TLS 1.2
-                {"CLIENT_RANDOM", tls_secret_master},
+                {"CLIENT_RANDOM", tls_secret_t::master},
             };
             for (size_t i = 0; i < RTL_NUMBER_OF(resources); i++) {
                 const sslkeylog_item* item = resources + i;
@@ -105,7 +105,7 @@ void sslkeylog_importer::session_status_changed(tls_session* session, uint32 sta
     if (session_status_client_hello == status) {
         auto& protection = session->get_tls_protection();
         auto& secrets = protection.get_secrets();
-        const binary_t& client_random = secrets.get(tls_context_client_hello_random);
+        const binary_t& client_random = secrets.get(tls_secret_t::client_hello_random);
         auto instance = sslkeylog_importer::get_instance();
         auto& secret_map = instance->_keylogs[client_random];
 #if defined DEBUG

@@ -495,12 +495,12 @@ void testcase_construct_quic() {
         session_server.get_quic_session().get_setting().set(quic_param_max_udp_payload_size, max_udp_payload_size);
 
         // set PKN for a test
-        session_client.set_recordno(from_client, 10, protection_initial);
-        session_client.set_recordno(from_client, 20, protection_handshake);
-        session_client.set_recordno(from_client, 30, protection_application);
-        session_server.set_recordno(from_server, 10, protection_initial);
-        session_server.set_recordno(from_server, 20, protection_handshake);
-        session_server.set_recordno(from_server, 30, protection_application);
+        session_client.set_recordno(from_client, 10, protection_space_t::initial);
+        session_client.set_recordno(from_client, 20, protection_space_t::handshake);
+        session_client.set_recordno(from_client, 30, protection_space_t::application);
+        session_server.set_recordno(from_server, 10, protection_space_t::initial);
+        session_server.set_recordno(from_server, 20, protection_space_t::handshake);
+        session_server.set_recordno(from_server, 30, protection_space_t::application);
 
         auto lambda_check_pkn = [](tls_session* session, tls_direction_t dir, protection_space_t space, uint32 pkn_expect) -> void {
             uint32 pkn = t_narrow_cast(session->get_recordno(dir, false, space));
@@ -523,11 +523,11 @@ void testcase_construct_quic() {
             size_t range_ch = 0;
             {
                 const char* text = "initial [CRYPTO(CH), PADDING]";
-                lambda_check_pkn(&session_client, from_client, protection_initial, 10);
+                lambda_check_pkn(&session_client, from_client, protection_space_t::initial, 10);
                 construct_quic_cli_initial(&session_client, from_client, quic_pad_packet, bins, text);
                 send_packet(&session_server, from_client, bins, text);
                 range_ch = bins.size() ? (bins.size() - 1) : 0;  // consider fragmentation
-                lambda_test_ready_to_ack(&session_server, protection_initial, t_narrow_cast(10 + range_ch), t_narrow_cast(range_ch));
+                lambda_test_ready_to_ack(&session_server, protection_space_t::initial, t_narrow_cast(10 + range_ch), t_narrow_cast(range_ch));
             }
 
             // cf. http3.pcapng #3
@@ -535,11 +535,11 @@ void testcase_construct_quic() {
             //   PKN 10 initial [ACK (10), CRYOTO(SH), PADDING]
             {
                 const char* text = "initial [ACK, CRYPTO(SH), PADDING]";
-                lambda_check_pkn(&session_server, from_server, protection_initial, 10);
+                lambda_check_pkn(&session_server, from_server, protection_space_t::initial, 10);
                 construct_quic_svr_initial(&session_server, from_server, quic_ack_packet | quic_pad_packet, bins, text);
                 send_packet(&session_client, from_server, bins, text);
                 auto range_sh = bins.size() ? (bins.size() - 1) : 0;
-                lambda_test_ready_to_ack(&session_client, protection_initial, t_narrow_cast(10 + range_sh), t_narrow_cast(range_sh));
+                lambda_test_ready_to_ack(&session_client, protection_space_t::initial, t_narrow_cast(10 + range_sh), t_narrow_cast(range_sh));
             }
 
             // cf. http3.pcapng #4
@@ -547,7 +547,7 @@ void testcase_construct_quic() {
             //   PKN 11 initial [ACK (10), PADDING]
             {
                 const char* text = "initial [ACK, PADDING]";
-                lambda_check_pkn(&session_client, from_client, protection_initial, t_narrow_cast(10 + range_ch + 1));
+                lambda_check_pkn(&session_client, from_client, protection_space_t::initial, t_narrow_cast(10 + range_ch + 1));
                 construct_quic_ack(&session_client, from_client, quic_pad_packet, bins, text);
                 send_packet(&session_server, from_client, bins, text);
             }
@@ -563,19 +563,19 @@ void testcase_construct_quic() {
             //   PKN 30 1-RTT [STREAM(HTTP/3 SETTINGS)]
             {
                 const char* text = "handshake [CRYPTO(EE, CERT, CV, FIN)], 1-RTT [STREAM(HTTP/3 SETTINGS)]";
-                lambda_check_pkn(&session_server, from_server, protection_handshake, 20);
-                lambda_check_pkn(&session_server, from_server, protection_application, 30);
+                lambda_check_pkn(&session_server, from_server, protection_space_t::handshake, 20);
+                lambda_check_pkn(&session_server, from_server, protection_space_t::application, 30);
                 construct_quic_svr_handshakes_settings(&session_server, from_server, quic_ack_packet, bins, text);
                 _test_case.assert(bins.size() > 1, __FUNCTION__, "segmentation");
                 send_packet(&session_client, from_server, bins, text);
-                lambda_test_ready_to_ack(&session_client, protection_handshake, 21, 1);    // CRYPTO(EE, CERT, CV, FIN)
-                lambda_test_ready_to_ack(&session_client, protection_application, 30, 0);  // SETTINGS
+                lambda_test_ready_to_ack(&session_client, protection_space_t::handshake, 21, 1);    // CRYPTO(EE, CERT, CV, FIN)
+                lambda_test_ready_to_ack(&session_client, protection_space_t::application, 30, 0);  // SETTINGS
             }
 
             // EE
             {
                 auto lambda_alpn = [&](tls_session* session, const char* text) -> void {
-                    auto& alpn = session->get_tls_protection().get_secrets().get(tls_context_alpn);
+                    auto& alpn = session->get_tls_protection().get_secrets().get(tls_secret_t::alpn);
                     auto test = alpn.empty() ? false : (0 == memcmp(alpn.data(), "\x2h3", 3));
                     _test_case.assert(test, __FUNCTION__, text);
                 };
@@ -588,25 +588,25 @@ void testcase_construct_quic() {
             //   PKN 20 handshake [ACK (21..20), CRYPTO(FIN)]
             //   PKN 30 1-RTT [ACK (30)]
             {
-                lambda_check_pkn(&session_client, from_client, protection_handshake, 20);
-                lambda_check_pkn(&session_client, from_client, protection_application, 30);
+                lambda_check_pkn(&session_client, from_client, protection_space_t::handshake, 20);
+                lambda_check_pkn(&session_client, from_client, protection_space_t::application, 30);
 
                 const char* text = "handshake [ACK, CRYPTO(FIN)], 1-RTT [ACK]";
                 construct_quic_cli_handshake(&session_client, from_client, quic_ack_packet, bins, text);
                 send_packet(&session_server, from_client, bins, text);
-                lambda_test_ready_to_ack(&session_server, protection_handshake, 20, 0);
-                lambda_test_ready_to_ack(&session_server, protection_application, 30, 0);
+                lambda_test_ready_to_ack(&session_server, protection_space_t::handshake, 20, 0);
+                lambda_test_ready_to_ack(&session_server, protection_space_t::application, 30, 0);
             }
 
             // #Frame S->C
             //   PKN 22 [ACK (20)]
             {
                 const char* text = "handshake [ACK]";
-                lambda_check_pkn(&session_server, from_server, protection_handshake, 22);
+                lambda_check_pkn(&session_server, from_server, protection_space_t::handshake, 22);
                 construct_quic_ack(&session_server, from_server, 0, bins, text);
                 send_packet(&session_client, from_server, bins, text);
-                lambda_test_ready_to_ack(&session_server, protection_handshake, 20, 0);
-                lambda_test_ready_to_ack(&session_server, protection_application, 30, 0);
+                lambda_test_ready_to_ack(&session_server, protection_space_t::handshake, 20, 0);
+                lambda_test_ready_to_ack(&session_server, protection_space_t::application, 30, 0);
             }
         }
 
@@ -619,7 +619,7 @@ void testcase_construct_quic() {
                 const char* text = "1-RTT [ACK, STREAM(HTTP/3 SETTINGS)]";
                 construct_quic_cli_settings(&session_client, from_client, quic_ack_packet, bins, text);
                 send_packet(&session_server, from_client, bins, text);
-                lambda_test_ready_to_ack(&session_server, protection_application, 31, 1);
+                lambda_test_ready_to_ack(&session_server, protection_space_t::application, 31, 1);
             }
 
             // #Frame S->C
@@ -628,7 +628,7 @@ void testcase_construct_quic() {
                 const char* text = "1-RTT [ACK]";
                 construct_quic_ack(&session_server, from_server, 0, bins, text);
                 send_packet(&session_client, from_server, bins, text);
-                lambda_test_ready_to_ack(&session_client, protection_application, 32, 2);
+                lambda_test_ready_to_ack(&session_client, protection_space_t::application, 32, 2);
             }
 
             // cf. http3.pcapng #21
@@ -641,7 +641,7 @@ void testcase_construct_quic() {
                 const char* text = "1-RTT [STREAM(QPACK_DECODER_STREAM)]";
                 construct_quic_cli_decoder(&session_client, from_client, quic_ack_packet, bins, text);
                 send_packet(&session_server, from_client, bins, text);
-                lambda_test_ready_to_ack(&session_server, protection_application, 32, 2);
+                lambda_test_ready_to_ack(&session_server, protection_space_t::application, 32, 2);
             }
 
             // cf. http3.pcapng #22,23
@@ -654,7 +654,7 @@ void testcase_construct_quic() {
                 const char* text = "1-RTT [STREAM(QPACK_ENCODER_STREAM)]";
                 construct_quic_cli_encoder(&session_client, from_client, quic_ack_packet, bins, text);
                 send_packet(&session_server, from_client, bins, text);
-                lambda_test_ready_to_ack(&session_server, protection_application, 33, 3);
+                lambda_test_ready_to_ack(&session_server, protection_space_t::application, 33, 3);
             }
 
             // #Frame S->C
@@ -663,7 +663,7 @@ void testcase_construct_quic() {
                 const char* text = "1-RTT [ACK]";
                 construct_quic_ack(&session_server, from_server, 0, bins, text);
                 send_packet(&session_client, from_server, bins, text);
-                lambda_test_ready_to_ack(&session_client, protection_application, 33, 3);
+                lambda_test_ready_to_ack(&session_client, protection_space_t::application, 33, 3);
             }
 
             // cf. http3.pcapng #24
@@ -674,7 +674,7 @@ void testcase_construct_quic() {
                 const char* text = "1-RTT [ACK, STREAM(HTTP/3 HEADERS)]";
                 construct_http3_cli_get(&session_client, from_client, quic_ack_packet, bins, text);
                 send_packet(&session_server, from_client, bins, text);
-                lambda_test_ready_to_ack(&session_server, protection_application, 34, 4);
+                lambda_test_ready_to_ack(&session_server, protection_space_t::application, 34, 4);
             }
 
             // #Frame S->C
@@ -683,7 +683,7 @@ void testcase_construct_quic() {
                 const char* text = "1-RTT [ACK]";
                 construct_quic_ack(&session_server, from_server, quic_ack_packet, bins, text);
                 send_packet(&session_client, from_server, bins, text);
-                lambda_test_ready_to_ack(&session_client, protection_application, 34, 4);
+                lambda_test_ready_to_ack(&session_client, protection_space_t::application, 34, 4);
             }
 
             // cf. http3.pcapng #28
@@ -694,7 +694,7 @@ void testcase_construct_quic() {
                 const char* text = "1-RTT [CRYPTO(NST, NST)]";
                 construct_quic_svr_nst(&session_server, from_server, quic_ack_packet, bins, text);
                 send_packet(&session_client, from_server, bins, text);
-                lambda_test_ready_to_ack(&session_client, protection_application, 35, 5);
+                lambda_test_ready_to_ack(&session_client, protection_space_t::application, 35, 5);
             }
 
             // cf. http3.pcapng #29
@@ -705,7 +705,7 @@ void testcase_construct_quic() {
                 construct_quic_svr_done_nt_nci(&session_server, from_server, quic_ack_packet, bins, text);
                 // DONE || NT || NCI || 0x80(?) -> bad data
                 send_packet(&session_client, from_server, bins, text);
-                lambda_test_ready_to_ack(&session_client, protection_application, 36, 6);
+                lambda_test_ready_to_ack(&session_client, protection_space_t::application, 36, 6);
             }
 
             // #Frame C->S
@@ -714,7 +714,7 @@ void testcase_construct_quic() {
                 const char* text = "1-RTT [ACK]";
                 construct_quic_ack(&session_client, from_client, quic_ack_packet, bins, text);
                 send_packet(&session_server, from_client, bins, text);
-                lambda_test_ready_to_ack(&session_server, protection_application, 35, 5);
+                lambda_test_ready_to_ack(&session_server, protection_space_t::application, 35, 5);
             }
 
             // #Frame S->C
@@ -723,7 +723,7 @@ void testcase_construct_quic() {
                 const char* text = "1-RTT [ACK]";
                 construct_quic_ack(&session_server, from_server, quic_ack_packet, bins, text);
                 send_packet(&session_client, from_server, bins, text);
-                lambda_test_ready_to_ack(&session_client, protection_application, 37, 7);
+                lambda_test_ready_to_ack(&session_client, protection_space_t::application, 37, 7);
             }
 
             // cf. http3.pcapng #34,36
@@ -733,7 +733,7 @@ void testcase_construct_quic() {
                 const char* text = "1-RTT [STREAM(QPACK_DECODER_STREAM)]";
                 construct_quic_svr_decoder(&session_server, from_server, quic_ack_packet, bins, text);
                 send_packet(&session_client, from_server, bins, text);
-                lambda_test_ready_to_ack(&session_client, protection_application, 38, 8);
+                lambda_test_ready_to_ack(&session_client, protection_space_t::application, 38, 8);
             }
 
             // #Frame C->S
@@ -742,7 +742,7 @@ void testcase_construct_quic() {
                 const char* text = "1-RTT [ACK]";
                 construct_quic_ack(&session_client, from_client, quic_ack_packet, bins, text);
                 send_packet(&session_server, from_client, bins, text);
-                lambda_test_ready_to_ack(&session_server, protection_application, 36, 6);
+                lambda_test_ready_to_ack(&session_server, protection_space_t::application, 36, 6);
             }
 
             // cf. http3.pcapng #38
@@ -752,7 +752,7 @@ void testcase_construct_quic() {
                 const char* text = "1-RTT [STREAM(QPACK_DECODER_STREAM), STREAM(HTTP/3 HEADERS)]";
                 construct_http3_svr_ok(&session_server, from_server, quic_ack_packet, bins, text);
                 send_packet(&session_client, from_server, bins, text);
-                lambda_test_ready_to_ack(&session_client, protection_application, 39, 9);
+                lambda_test_ready_to_ack(&session_client, protection_space_t::application, 39, 9);
             }
 
             // cf. http3.pcapng #39~45
@@ -760,7 +760,7 @@ void testcase_construct_quic() {
                 const char* text = "1-RTT [STREAM(HTTP/3 DATA)]";
                 construct_http3_svr_resp(&session_server, from_server, quic_ack_packet, bins, text);
                 send_packet(&session_client, from_server, bins, text);
-                lambda_test_ready_to_ack(&session_client, protection_application, 40, 10);
+                lambda_test_ready_to_ack(&session_client, protection_space_t::application, 40, 10);
             }
 
             // cf. http3.pcapng #67
@@ -768,7 +768,7 @@ void testcase_construct_quic() {
                 const char* text = "1-RTT [CC]";
                 construct_quic_connection_close(&session_client, from_client, quic_ack_packet, bins, text);
                 send_packet(&session_server, from_client, bins, text);
-                lambda_test_ready_to_ack(&session_server, protection_application, 37, 7);
+                lambda_test_ready_to_ack(&session_server, protection_space_t::application, 37, 7);
             }
         }
     }

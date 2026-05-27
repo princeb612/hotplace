@@ -10,6 +10,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
@@ -35,11 +36,11 @@ tls_extension_key_share::tls_extension_key_share(tls_handshake* handshake) : tls
 
 tls_extension_key_share::~tls_extension_key_share() {}
 
-return_t tls_extension_key_share::add(uint16 group) { return errorcode_t::success; }
+return_t tls_extension_key_share::add(tls_group_t group) { return errorcode_t::success; }
 
 return_t tls_extension_key_share::add(const std::string& group) { return errorcode_t::success; }
 
-return_t tls_extension_key_share::add(uint16 group, tls_direction_t dir) {
+return_t tls_extension_key_share::add(tls_group_t group, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_handshake()->get_session();
@@ -58,7 +59,7 @@ return_t tls_extension_key_share::add(uint16 group, tls_direction_t dir) {
         auto& keyshare = protection.get_key();
 
         crypto_keyexchange keyexchange;
-        ret = keyexchange.keygen((tls_group_t)group, &keyshare, privkid);
+        ret = keyexchange.keygen(group, &keyshare, privkid);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -93,7 +94,7 @@ return_t tls_extension_key_share::add(const std::string& group, tls_direction_t 
     return ret;
 }
 
-return_t tls_extension_key_share::add_pubkey(uint16 group, const binary_t& pubkey, const keydesc& desc, tls_direction_t dir) {
+return_t tls_extension_key_share::add_pubkey(tls_group_t group, const binary_t& pubkey, const keydesc& desc, tls_direction_t dir) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto session = get_handshake()->get_session();
@@ -106,7 +107,7 @@ return_t tls_extension_key_share::add_pubkey(uint16 group, const binary_t& pubke
         auto& keyshare = protection.get_key();
 
         crypto_keyexchange keyexchange;
-        ret = keyexchange.keystore((tls_group_t)group, &keyshare, desc.get_kid_cstr(), pubkey);
+        ret = keyexchange.keystore(group, &keyshare, desc.get_kid_cstr(), pubkey);
 #if defined DEBUG
         if (istraceable(trace_category_t::trace_category_net)) {
             trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension, [&](basic_stream& dbs) -> void {
@@ -126,7 +127,7 @@ tls_extension_client_key_share::tls_extension_client_key_share(tls_handshake* ha
 
 tls_extension_client_key_share::~tls_extension_client_key_share() {}
 
-return_t tls_extension_client_key_share::add(uint16 group) { return tls_extension_key_share::add(group, from_client); }
+return_t tls_extension_client_key_share::add(tls_group_t group) { return tls_extension_key_share::add(group, from_client); }
 
 return_t tls_extension_client_key_share::add(const std::string& group) { return tls_extension_key_share::add(group, from_client); }
 
@@ -187,9 +188,10 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
             group = pl.t_value_of<uint16>(constexpr_group);
             pl.get_binary(constexpr_pubkey, pubkey);
 
-            protection.get_protection_context().add_keyshare_group(group);
+            t_enum_type<tls_group_t> etgroup(group);
+            protection.get_protection_context().add_keyshare_group(etgroup);
 
-            add_pubkey(group, pubkey, keydesc(get_kid()), dir);
+            add_pubkey(etgroup, pubkey, keydesc(get_kid()), dir);
 
 #if defined DEBUG
             if (istraceable(trace_category_t::trace_category_net)) {
@@ -198,7 +200,7 @@ return_t tls_extension_client_key_share::do_read_body(tls_direction_t dir, const
                     // auto session = get_handshake()->get_session();
                     dbs.println("   > %s %i(0x%04x)", constexpr_len, len, len);
                     dbs.println("    > %s", constexpr_key_share_entry);
-                    dbs.println("     > %s 0x%04x (%s)", constexpr_group, group, tlsadvisor->nameof_group(group).c_str());
+                    dbs.println("     > %s 0x%04x (%s)", constexpr_group, etgroup, tlsadvisor->nameof_group(etgroup).c_str());
                     dbs.println("     > %s %04x(%i)", constexpr_pubkey_len, pubkey.size(), pubkey.size());
                     if (check_trace_level(loglevel_t::loglevel_debug)) {
                         dump_memory(pubkey, &dbs, 16, 7, 0x0, dump_notrunc);
@@ -218,21 +220,23 @@ return_t tls_extension_client_key_share::do_write_body(tls_direction_t dir, bina
     __try2 {
         auto session = get_handshake()->get_session();
         auto& protection = session->get_tls_protection();
+        uint16 group = 0;
 
-        if (tls_flow_hello_retry_request == protection.get_flow()) {
+        if (tls_flow_t::hello_retry_request == protection.get_flow()) {
             clear();
-            uint16 group = t_narrow_cast(session->get_session_info(from_server).get_keyvalue().get(session_key_share_group));
-            add(group);
+            group = t_narrow_cast(session->get_session_info(from_server).get_keyvalue().get(session_key_share_group));
+            t_enum_type<tls_group_t> etgroup(group);
+            add(etgroup);
         }
 
         auto& tlskey = protection.get_key();
         binary_t bin_keyshare;
 
-        protection.get_protection_context().for_each_keyshare_groups([&](uint16 group, bool*) -> void {
+        protection.get_protection_context().for_each_keyshare_groups([&](tls_group_t group, bool*) -> void {
             binary_t pubkey;
 
             crypto_keyexchange keyexchange;
-            keyexchange.keyshare((tls_group_t)group, &tlskey, KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, pubkey);
+            keyexchange.keyshare(group, &tlskey, KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, pubkey);
 
 #if defined DEBUG
             if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
@@ -267,7 +271,7 @@ tls_extension_server_key_share::tls_extension_server_key_share(tls_handshake* ha
 
 tls_extension_server_key_share::~tls_extension_server_key_share() {}
 
-return_t tls_extension_server_key_share::add(uint16 group) { return tls_extension_key_share::add(group, from_server); }
+return_t tls_extension_server_key_share::add(tls_group_t group) { return tls_extension_key_share::add(group, from_server); }
 
 return_t tls_extension_server_key_share::add(const std::string& group) { return tls_extension_key_share::add(group, from_server); }
 
@@ -289,7 +293,7 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
         uint16 pubkeylen = 0;
         auto advisor = crypto_advisor::get_instance();
         auto& protection = session->get_tls_protection();
-        protection.get_secrets().erase(tls_context_shared_secret);
+        protection.get_secrets().erase(tls_secret_t::shared_secret);
 
         {
             //  struct {
@@ -308,7 +312,8 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
 
             // RFC 8448 5.  HelloRetryRequest
 
-            auto hint = advisor->hintof_tls_group(group);
+            t_enum_type<tls_group_t> etgroup(group);
+            auto hint = advisor->hintof_tls_group(etgroup);
 
             if (pubkeylen) {
                 crypto_keyexchange keyexchange;
@@ -316,10 +321,10 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
                 binary_t shared_secret;
                 if (tls_flag_pqc & hint->flags) {
                     keyexchange.decaps((tls_group_t)group, &tlskey, KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, pubkey, shared_secret);
-                    protection.get_secrets().assign(tls_context_shared_secret, shared_secret);
+                    protection.get_secrets().assign(tls_secret_t::shared_secret, shared_secret);
                 } else {
                     // RFC 8446 the server's share MUST be in the same group as one of the client's shares.
-                    add_pubkey(group, pubkey, keydesc(get_kid()), dir);
+                    add_pubkey(etgroup, pubkey, keydesc(get_kid()), dir);
                     // and then ECDHE, HRR (see calc)
                 }
             } else {
@@ -333,7 +338,8 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
         if (istraceable(trace_category_t::trace_category_net)) {
             trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                 auto tlsadvisor = tls_advisor::get_instance();
-                dbs.println("   > %s 0x%04x (%s)", constexpr_group, group, tlsadvisor->nameof_group(group).c_str());
+                t_enum_type<tls_group_t> etgroup(group);
+                dbs.println("   > %s 0x%04x (%s)", constexpr_group, etgroup, tlsadvisor->nameof_group(etgroup).c_str());
                 if (pubkeylen) {
                     dbs.println("   > %s %i", constexpr_pubkey_len, pubkeylen);
                     if (check_trace_level(loglevel_t::loglevel_debug)) {
@@ -360,7 +366,8 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
         auto& protection = session->get_tls_protection();
         auto& tlskey = protection.get_key();
         uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
-        auto group = group_enforced ? group_enforced : protection.get_protection_context().get0_keyshare_group();
+        t_enum_type<tls_group_t> etgroup_enforced(group_enforced);
+        auto group = (etgroup_enforced != tls_group_t::unknown) ? etgroup_enforced : protection.get_protection_context().get0_keyshare_group();
         auto hint_group = advisor->hintof_tls_group(group);
         bool correct_group = true;
         bool iskindof_mlkem = false;
@@ -407,7 +414,7 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
 
                 binary_t sharedsecret;
                 keyexchange.encaps((tls_group_t)group, share, keycapsule, sharedsecret);
-                protection.get_secrets().assign(tls_context_shared_secret, sharedsecret);
+                protection.get_secrets().assign(tls_secret_t::shared_secret, sharedsecret);
 #if defined DEBUG
                 if (istraceable(trace_category_t::trace_category_net)) {
                     trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension,
@@ -456,10 +463,12 @@ return_t tls_extension_server_key_share::add_keyshare() {
         auto advisor = crypto_advisor::get_instance();
         // auto tlsadvisor = tls_advisor::get_instance();
         auto& protection = session->get_tls_protection();
-        uint16 group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
+        auto group_enforced = session->get_keyvalue().get(session_conf_enforce_key_share_group);
 
-        if (group_enforced) {
-            add(group_enforced);
+        t_enum_type<tls_group_t> etgroup_enforced(group_enforced);
+
+        if (etgroup_enforced) {
+            add(etgroup_enforced);
         } else {
             auto group = protection.get_protection_context().get0_keyshare_group();
             auto hint = advisor->hintof_tls_group(group);

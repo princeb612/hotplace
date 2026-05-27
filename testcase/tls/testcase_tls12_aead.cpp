@@ -48,7 +48,7 @@ void test_tls12_aead_aes128gcm() {
         binary_t server_hello_random = base16_decode("074a0cb6fe8a12a0470fc32988f98eefee81e3d6a6099ddf444f574e47524401");
         binary_t secret_master = base16_decode("20c27d23fd3f64170b2b63917ccfe7251b792ea9492fa52b59c6adccc71095102e72ad1b08880a78f3f8316c1234a89b");
 
-        ret = protection.calc_keyblock(sha2_256, secret_master, client_hello_random, server_hello_random, cs);
+        ret = protection.calc_keyblock(hash_algorithm_t::sha2_256, secret_master, client_hello_random, server_hello_random, cs);
 
         // > secret_client_key[00000108] 844cba68a2aada5c04524664ad93b1e7
         // > secret_server_key[0000010b] dd6dfdfdee502df4402f56bc5d7b42c5
@@ -61,9 +61,9 @@ void test_tls12_aead_aes128gcm() {
             return (bin_secret == bin_value) ? errorcode_t::success : errorcode_t::mismatch;
         };
 
-        ret = lambda_test_secret(tls_secret_client_key, "844cba68a2aada5c04524664ad93b1e7");
+        ret = lambda_test_secret(tls_secret_t::client_key, "844cba68a2aada5c04524664ad93b1e7");
         _test_case.test(ret, __FUNCTION__, "secret_client_key");
-        ret = lambda_test_secret(tls_secret_client_iv, "1bdcb38a");
+        ret = lambda_test_secret(tls_secret_t::client_iv, "1bdcb38a");
         _test_case.test(ret, __FUNCTION__, "secret_client_iv");
     }
 
@@ -100,7 +100,7 @@ void test_tls12_aead_chacha20poly1305() {
         binary_t server_hello_random = base16_decode("55fb6e5dbe1f6ec97a7e30a6d228abc670793ad3f6e5bba6444f574e47524401");
         binary_t secret_master = base16_decode("6525943d87978a14a4553a956b6f71501d0cbfd97aa856ce69b9aca4a7b5c1209d663b389778393170e9e4c068e51843");
 
-        ret = protection.calc_keyblock(sha2_256, secret_master, client_hello_random, server_hello_random, cs);
+        ret = protection.calc_keyblock(hash_algorithm_t::sha2_256, secret_master, client_hello_random, server_hello_random, cs);
 
         auto lambda_test_secret = [&](tls_secret_t secret, const char* value) -> return_t {
             const binary_t& bin_secret = protection.get_secrets().get(secret);
@@ -108,9 +108,9 @@ void test_tls12_aead_chacha20poly1305() {
             return (bin_secret == bin_value) ? errorcode_t::success : errorcode_t::mismatch;
         };
 
-        ret = lambda_test_secret(tls_secret_client_key, "4b403a5ecddb11ca66b808b90086a530ca1b0137a37db67b432dbf83e335f28a");
+        ret = lambda_test_secret(tls_secret_t::client_key, "4b403a5ecddb11ca66b808b90086a530ca1b0137a37db67b432dbf83e335f28a");
         _test_case.test(ret, __FUNCTION__, "secret_client_key");
-        ret = lambda_test_secret(tls_secret_client_iv, "6918cfa52543e1f89455ca42");
+        ret = lambda_test_secret(tls_secret_t::client_iv, "6918cfa52543e1f89455ca42");
         _test_case.test(ret, __FUNCTION__, "secret_client_iv");
     }
 

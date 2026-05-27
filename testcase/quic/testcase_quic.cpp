@@ -121,17 +121,19 @@ void test_quic_xargs_org() {
     binary_t bin_dcid = base16_decode_rfc(dcid);
     binary_t bin_scid = base16_decode_rfc(scid);
 
-    secrets.assign(tls_context_quic_dcid, bin_dcid);
+    secrets.assign(tls_secret_t::quic_dcid, bin_dcid);
     protection.calc(&server_session, tls_handshake_type_t::client_hello, from_client);
 
     {
         _logger->colorln("client-initial-keys-calc");
-        _test_case.assert(secrets.get(tls_secret_initial_quic_client_key) == base16_decode_rfc("b14b918124fda5c8d79847602fa3520b"), __FUNCTION__, "server initial key");
-        _test_case.assert(secrets.get(tls_secret_initial_quic_client_iv) == base16_decode_rfc("ddbc15dea80925a55686a7df"), __FUNCTION__, "server initial iv");
-        _test_case.assert(secrets.get(tls_secret_initial_quic_client_hp) == base16_decode_rfc("6df4e9d737cdf714711d7c617ee82981"), __FUNCTION__, "server initial hp");
-        _test_case.assert(secrets.get(tls_secret_initial_quic_server_key) == base16_decode_rfc("d77fc4056fcfa32bd1302469ee6ebf90"), __FUNCTION__, "server initial key");
-        _test_case.assert(secrets.get(tls_secret_initial_quic_server_iv) == base16_decode_rfc("fcb748e37ff79860faa07477"), __FUNCTION__, "server initial iv");
-        _test_case.assert(secrets.get(tls_secret_initial_quic_server_hp) == base16_decode_rfc("440b2725e91dc79b370711ef792faa3d"), __FUNCTION__, "server initial hp");
+        _test_case.assert(secrets.get(tls_secret_t::initial_quic_client_key) == base16_decode_rfc("b14b918124fda5c8d79847602fa3520b"), __FUNCTION__,
+                          "server initial key");
+        _test_case.assert(secrets.get(tls_secret_t::initial_quic_client_iv) == base16_decode_rfc("ddbc15dea80925a55686a7df"), __FUNCTION__, "server initial iv");
+        _test_case.assert(secrets.get(tls_secret_t::initial_quic_client_hp) == base16_decode_rfc("6df4e9d737cdf714711d7c617ee82981"), __FUNCTION__, "server initial hp");
+        _test_case.assert(secrets.get(tls_secret_t::initial_quic_server_key) == base16_decode_rfc("d77fc4056fcfa32bd1302469ee6ebf90"), __FUNCTION__,
+                          "server initial key");
+        _test_case.assert(secrets.get(tls_secret_t::initial_quic_server_iv) == base16_decode_rfc("fcb748e37ff79860faa07477"), __FUNCTION__, "server initial iv");
+        _test_case.assert(secrets.get(tls_secret_t::initial_quic_server_hp) == base16_decode_rfc("440b2725e91dc79b370711ef792faa3d"), __FUNCTION__, "server initial hp");
     }
 
     /**
@@ -258,20 +260,20 @@ void test_quic_xargs_org() {
         _test_case.assert(tls_13 == tlsver, __FUNCTION__, "TLS version 0x%04x", tlsver);
 
         binary_t bin;
-        lambda_test_secret(tls_context_shared_secret, bin, "shared_secret", "df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624");
-        lambda_test_secret(tls_context_transcript_hash, bin, "hello_hash", "ff788f9ed09e60d8142ac10a8931cdb6a3726278d3acdba54d9d9ffc7326611b");
-        lambda_test_secret(tls_secret_early_secret, bin, "early_secret", "33ad0a1c607ec03b09e6cd9893680ce210adf300aa1f2660e1b22e10f170f92a");
-        lambda_test_secret(tls_context_empty_hash, bin, "empty_hash", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
-        lambda_test_secret(tls_secret_handshake_derived, bin, "derived_secret", "6f2615a108c702c5678f54fc9dbab69716c076189c48250cebeac3576c3611ba");
-        lambda_test_secret(tls_secret_handshake, bin, "handshake_secret", "fb9fc80689b3a5d02c33243bf69a1b1b20705588a794304a6e7120155edf149a");
-        lambda_test_secret(tls_secret_c_hs_traffic, bin, "client_secret", "b8902ab5f9fe52fdec3aea54e9293e4b8eabf955fcd88536bf44b8b584f14982");
-        lambda_test_secret(tls_secret_s_hs_traffic, bin, "server_secret", "88ad8d3b0986a71965a28d108b0f40ffffe629284a6028c80ddc5dc083b3f5d1");
-        lambda_test_secret(tls_secret_handshake_quic_client_key, bin, "client_handshake_key", "30a7e816f6a1e1b3434cf39cf4b415e7");
-        lambda_test_secret(tls_secret_handshake_quic_client_iv, bin, "client_handshake_iv", "11e70a5d1361795d2bb04465");
-        lambda_test_secret(tls_secret_handshake_quic_client_hp, bin, "client_handshake_hp", "84b3c21cacaf9f54c885e9a506459079");
-        lambda_test_secret(tls_secret_handshake_quic_server_key, bin, "server_handshake_key", "17abbf0a788f96c6986964660414e7ec");
-        lambda_test_secret(tls_secret_handshake_quic_server_iv, bin, "server_handshake_iv", "09597a2ea3b04c00487e71f3");
-        lambda_test_secret(tls_secret_handshake_quic_server_hp, bin, "server_handshake_hp", "2a18061c396c2828582b41b0910ed536");
+        lambda_test_secret(tls_secret_t::shared_secret, bin, "shared_secret", "df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624");
+        lambda_test_secret(tls_secret_t::transcript_hash, bin, "hello_hash", "ff788f9ed09e60d8142ac10a8931cdb6a3726278d3acdba54d9d9ffc7326611b");
+        lambda_test_secret(tls_secret_t::early_secret, bin, "early_secret", "33ad0a1c607ec03b09e6cd9893680ce210adf300aa1f2660e1b22e10f170f92a");
+        lambda_test_secret(tls_secret_t::empty_hash, bin, "empty_hash", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+        lambda_test_secret(tls_secret_t::handshake_derived, bin, "derived_secret", "6f2615a108c702c5678f54fc9dbab69716c076189c48250cebeac3576c3611ba");
+        lambda_test_secret(tls_secret_t::handshake, bin, "handshake_secret", "fb9fc80689b3a5d02c33243bf69a1b1b20705588a794304a6e7120155edf149a");
+        lambda_test_secret(tls_secret_t::c_hs_traffic, bin, "client_secret", "b8902ab5f9fe52fdec3aea54e9293e4b8eabf955fcd88536bf44b8b584f14982");
+        lambda_test_secret(tls_secret_t::s_hs_traffic, bin, "server_secret", "88ad8d3b0986a71965a28d108b0f40ffffe629284a6028c80ddc5dc083b3f5d1");
+        lambda_test_secret(tls_secret_t::handshake_quic_client_key, bin, "client_handshake_key", "30a7e816f6a1e1b3434cf39cf4b415e7");
+        lambda_test_secret(tls_secret_t::handshake_quic_client_iv, bin, "client_handshake_iv", "11e70a5d1361795d2bb04465");
+        lambda_test_secret(tls_secret_t::handshake_quic_client_hp, bin, "client_handshake_hp", "84b3c21cacaf9f54c885e9a506459079");
+        lambda_test_secret(tls_secret_t::handshake_quic_server_key, bin, "server_handshake_key", "17abbf0a788f96c6986964660414e7ec");
+        lambda_test_secret(tls_secret_t::handshake_quic_server_iv, bin, "server_handshake_iv", "09597a2ea3b04c00487e71f3");
+        lambda_test_secret(tls_secret_t::handshake_quic_server_hp, bin, "server_handshake_hp", "2a18061c396c2828582b41b0910ed536");
     }
 
     /**
@@ -420,12 +422,12 @@ void test_quic_xargs_org() {
 
     {
         binary_t bin;
-        lambda_test_secret(tls_secret_application_quic_server_key, bin, "tls_secret_application_quic_server_key", "fd8c7da9de1b2da4d2ef9fd5188922d0");
-        lambda_test_secret(tls_secret_application_quic_server_iv, bin, "tls_secret_application_quic_server_iv", "02f6180e4f4aa456d7e8a602");
-        lambda_test_secret(tls_secret_application_quic_server_hp, bin, "tls_secret_application_quic_server_hp", "b7f6f021453e52b58940e4bba72a35d4");
-        lambda_test_secret(tls_secret_application_quic_client_key, bin, "tls_secret_application_quic_client_key", "e010a295f0c2864f186b2a7e8fdc9ed7");
-        lambda_test_secret(tls_secret_application_quic_client_iv, bin, "tls_secret_application_quic_client_iv", "eb3fbc384a3199dcf6b4c808");
-        lambda_test_secret(tls_secret_application_quic_client_hp, bin, "tls_secret_application_quic_client_hp", "8a6a38bc5cc40cb482a254dac68c9d2f");
+        lambda_test_secret(tls_secret_t::application_quic_server_key, bin, "tls_secret_t::application_quic_server_key", "fd8c7da9de1b2da4d2ef9fd5188922d0");
+        lambda_test_secret(tls_secret_t::application_quic_server_iv, bin, "tls_secret_t::application_quic_server_iv", "02f6180e4f4aa456d7e8a602");
+        lambda_test_secret(tls_secret_t::application_quic_server_hp, bin, "tls_secret_t::application_quic_server_hp", "b7f6f021453e52b58940e4bba72a35d4");
+        lambda_test_secret(tls_secret_t::application_quic_client_key, bin, "tls_secret_t::application_quic_client_key", "e010a295f0c2864f186b2a7e8fdc9ed7");
+        lambda_test_secret(tls_secret_t::application_quic_client_iv, bin, "tls_secret_t::application_quic_client_iv", "eb3fbc384a3199dcf6b4c808");
+        lambda_test_secret(tls_secret_t::application_quic_client_hp, bin, "tls_secret_t::application_quic_client_hp", "8a6a38bc5cc40cb482a254dac68c9d2f");
     }
 
     /**

@@ -90,7 +90,7 @@ return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stre
 
         if (offset) {
             binary_t defragment;
-            secrets.consume(tls_context_fragment, defragment);
+            secrets.consume(tls_secret_t::fragment, defragment);
             binary_append(defragment, crypto_data);
             crypto_data = std::move(defragment);
         }
@@ -98,7 +98,7 @@ return_t quic_frame_crypto::do_read_body(tls_direction_t dir, const byte_t* stre
         size_t hpos = 0;
         while (errorcode_t::success == tls_dump_handshake(session, dir, crypto_data.data(), crypto_data.size(), hpos)) {
             /**
-             * about refeeding the tls_context_fragment
+             * about refeeding the tls_secret_t::fragment
              *   see tls_handshake errorcode_t::fragmented
              *   sample scenario.
              *     EE CERT(fragment) CV FIN -> CERT(fragment) CV FIN

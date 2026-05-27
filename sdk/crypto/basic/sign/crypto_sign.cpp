@@ -13,7 +13,7 @@
 namespace hotplace {
 namespace crypto {
 
-crypto_sign::crypto_sign(hash_algorithm_t hashalg) : _category(sig_category_dgst), _hashalg(hashalg), _saltlen(-1) { _shared.make_share(this); }
+crypto_sign::crypto_sign(hash_algorithm_t hashalg) : _category(sig_category_t::dgst), _hashalg(hashalg), _saltlen(-1) { _shared.make_share(this); }
 
 crypto_sign::~crypto_sign() {}
 

@@ -46,7 +46,7 @@ return_t tls_extension_early_data::do_read_body(tls_direction_t dir, const byte_
         auto& protection = session->get_tls_protection();
 
         // RFC 8446 Early data is not permitted after a HelloRetryRequest
-        if (tls_flow_hello_retry_request == protection.get_flow()) {
+        if (tls_flow_t::hello_retry_request == protection.get_flow()) {
             __leave2;
         }
 

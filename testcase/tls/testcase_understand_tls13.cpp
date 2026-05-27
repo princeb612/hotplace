@@ -149,38 +149,38 @@ void test_tls13_xargs_org() {
      */
     {
         binary_t shared_secret;
-        test_keycalc(&session, tls_context_shared_secret, shared_secret, "shared_secret", "df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624");
+        test_keycalc(&session, tls_secret_t::shared_secret, shared_secret, "shared_secret", "df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624");
         binary_t hello_hash;
-        test_keycalc(&session, tls_context_transcript_hash, hello_hash, "hello_hash",
+        test_keycalc(&session, tls_secret_t::transcript_hash, hello_hash, "hello_hash",
                      "e05f64fcd082bdb0dce473adf669c2769f257a1c75a51b7887468b5e0e7a7de4f4d34555112077f16e079019d5a845bd");
         binary_t early_secret;
-        test_keycalc(&session, tls_secret_early_secret, early_secret, "early_secret",
+        test_keycalc(&session, tls_secret_t::early_secret, early_secret, "early_secret",
                      "7ee8206f5570023e6dc7519eb1073bc4e791ad37b5c382aa10ba18e2357e716971f9362f2c2fe2a76bfd78dfec4ea9b5");
         binary_t empty_hash;
-        test_keycalc(&session, tls_context_empty_hash, empty_hash, "empty_hash",
+        test_keycalc(&session, tls_secret_t::empty_hash, empty_hash, "empty_hash",
                      "38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b");
         binary_t secret_handshake_derived;
-        test_keycalc(&session, tls_secret_handshake_derived, secret_handshake_derived, "secret_handshake_derived",
+        test_keycalc(&session, tls_secret_t::handshake_derived, secret_handshake_derived, "secret_handshake_derived",
                      "1591dac5cbbf0330a4a84de9c753330e92d01f0a88214b4464972fd668049e93e52f2b16fad922fdc0584478428f282b");
         binary_t secret_handshake;
-        test_keycalc(&session, tls_secret_handshake, secret_handshake, "secret_handshake",
+        test_keycalc(&session, tls_secret_t::handshake, secret_handshake, "secret_handshake",
                      "bdbbe8757494bef20de932598294ea65b5e6bf6dc5c02a960a2de2eaa9b07c929078d2caa0936231c38d1725f179d299");
         binary_t secret_handshake_client;
-        test_keycalc(&session, tls_secret_c_hs_traffic, secret_handshake_client, "secret_handshake_client",
+        test_keycalc(&session, tls_secret_t::c_hs_traffic, secret_handshake_client, "secret_handshake_client",
                      "db89d2d6df0e84fed74a2288f8fd4d0959f790ff23946cdf4c26d85e51bebd42ae184501972f8d30c4a3e4a3693d0ef0");
         binary_t secret_handshake_server;
-        test_keycalc(&session, tls_secret_s_hs_traffic, secret_handshake_server, "secret_handshake_server",
+        test_keycalc(&session, tls_secret_t::s_hs_traffic, secret_handshake_server, "secret_handshake_server",
                      "23323da031634b241dd37d61032b62a4f450584d1f7f47983ba2f7cc0cdcc39a68f481f2b019f9403a3051908a5d1622");
         binary_t client_handshake_key;
-        test_keycalc(&session, tls_secret_handshake_client_key, client_handshake_key, "client_handshake_key",
+        test_keycalc(&session, tls_secret_t::handshake_client_key, client_handshake_key, "client_handshake_key",
                      "1135b4826a9a70257e5a391ad93093dfd7c4214812f493b3e3daae1eb2b1ac69");
         binary_t client_handshake_iv;
-        test_keycalc(&session, tls_secret_handshake_client_iv, client_handshake_iv, "client_handshake_iv", "4256d2e0e88babdd05eb2f27");
+        test_keycalc(&session, tls_secret_t::handshake_client_iv, client_handshake_iv, "client_handshake_iv", "4256d2e0e88babdd05eb2f27");
         binary_t server_handshake_key;
-        test_keycalc(&session, tls_secret_handshake_server_key, server_handshake_key, "server_handshake_key",
+        test_keycalc(&session, tls_secret_t::handshake_server_key, server_handshake_key, "server_handshake_key",
                      "9f13575ce3f8cfc1df64a77ceaffe89700b492ad31b4fab01c4792be1b266b7f");
         binary_t server_handshake_iv;
-        test_keycalc(&session, tls_secret_handshake_server_iv, server_handshake_iv, "server_handshake_iv", "9563bc8b590f671f488d2da3");
+        test_keycalc(&session, tls_secret_t::handshake_server_iv, server_handshake_iv, "server_handshake_iv", "9563bc8b590f671f488d2da3");
     }
     /**
      * S -> C
@@ -392,27 +392,27 @@ void test_tls13_xargs_org() {
      */
     {
         binary_t secret_application_derived;
-        test_keycalc(&session, tls_secret_application_derived, secret_application_derived, "secret_application_derived",
+        test_keycalc(&session, tls_secret_t::application_derived, secret_application_derived, "secret_application_derived",
                      "be3a8cdfcd10e46d3fe5d2902568518993ae43f2fb7c5438cde4776d1bc220242041a83f388266fd07b0177bf29e9486");
         binary_t secret_application;
-        test_keycalc(&session, tls_secret_application, secret_application, "secret_application",
+        test_keycalc(&session, tls_secret_t::application, secret_application, "secret_application",
                      "2931209e1b7840e16d0d6bfd4bda1102f3a984f1162dc450f9606654f45bd55d9cb8857a8d14b59b98d7250fee55d3c3");
         binary_t secret_application_client;
-        test_keycalc(&session, tls_secret_c_ap_traffic, secret_application_client, "secret_application_client",
+        test_keycalc(&session, tls_secret_t::c_ap_traffic, secret_application_client, "secret_application_client",
                      "9e47af27cb60d818a9ea7d233cb5ed4cc525fcd74614fb24b0ee59acb8e5aa7ff8d88b89792114208fec291a6fa96bad");
         binary_t secret_application_client_key;
-        test_keycalc(&session, tls_secret_application_client_key, secret_application_client_key, "secret_application_client_key",
+        test_keycalc(&session, tls_secret_t::application_client_key, secret_application_client_key, "secret_application_client_key",
                      "de2f4c7672723a692319873e5c227606691a32d1c59d8b9f51dbb9352e9ca9cc");
         binary_t secret_application_client_iv;
-        test_keycalc(&session, tls_secret_application_client_iv, secret_application_client_iv, "secret_application_client_iv", "bb007956f474b25de902432f");
+        test_keycalc(&session, tls_secret_t::application_client_iv, secret_application_client_iv, "secret_application_client_iv", "bb007956f474b25de902432f");
         binary_t secret_application_server;
-        test_keycalc(&session, tls_secret_s_ap_traffic, secret_application_server, "secret_application_server",
+        test_keycalc(&session, tls_secret_t::s_ap_traffic, secret_application_server, "secret_application_server",
                      "86c967fd7747a36a0685b4ed8d0e6b4c02b4ddaf3cd294aa44e9f6b0183bf911e89a189ba5dfd71fccffb5cc164901f8");
         binary_t secret_application_server_key;
-        test_keycalc(&session, tls_secret_application_server_key, secret_application_server_key, "secret_application_server_key",
+        test_keycalc(&session, tls_secret_t::application_server_key, secret_application_server_key, "secret_application_server_key",
                      "01f78623f17e3edcc09e944027ba3218d57c8e0db93cd3ac419309274700ac27");
         binary_t secret_application_server_iv;
-        test_keycalc(&session, tls_secret_application_server_iv, secret_application_server_iv, "secret_application_server_iv", "196a750b0c5049c0cc51a541");
+        test_keycalc(&session, tls_secret_t::application_server_iv, secret_application_server_iv, "secret_application_server_iv", "196a750b0c5049c0cc51a541");
     }
     /**
      * C -> S

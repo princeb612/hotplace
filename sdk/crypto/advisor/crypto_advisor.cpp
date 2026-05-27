@@ -163,7 +163,7 @@ return_t crypto_advisor::build() {
 
     for (i = 0; i < sizeof_hint_jose_algorithms; ++i) {
         auto item = hint_jose_algorithms + i;
-        _alg_map.emplace(item->type, item);
+        _alg_map.emplace((jwa_t)item->type, item);
         if (item->alg_name) {
             _alg_byname_map.emplace(item->alg_name, item);
         }
@@ -172,7 +172,7 @@ return_t crypto_advisor::build() {
     }
     for (i = 0; i < sizeof_hint_jose_encryptions; ++i) {
         auto item = hint_jose_encryptions + i;
-        _enc_map.emplace(item->type, item);
+        _enc_map.emplace((jwe_t)item->type, item);
         if (item->alg_name) {
             _enc_byname_map.emplace(item->alg_name, item);
         }
@@ -208,7 +208,7 @@ return_t crypto_advisor::build() {
         cose_alg_t cose;
     };
     struct _sig2cose cose2sig[] = {
-        {signature_t::sig_hs256, jws_t::jws_hs256, cose_alg_t::cose_hs256_64},
+        {signature_t::hs256, jws_t::jws_hs256, cose_alg_t::cose_hs256_64},
     };
     for (i = 0; i < RTL_NUMBER_OF(cose2sig); ++i) {
         _cose2sig_map.emplace(cose2sig[i].cose, cose2sig[i].sig);
@@ -216,6 +216,7 @@ return_t crypto_advisor::build() {
 
     for (i = 0; i < sizeof_hint_sigschemes; ++i) {
         auto item = hint_sigschemes + i;
+        _hint_signature_map.emplace(item->sig, item);
         _hint_sigscheme_map.emplace(item->scheme, item);
         _hint_sigscheme_nid_map.emplace(item->nid, item);
         _hint_sigscheme_name_map.emplace(item->name, item);
@@ -279,7 +280,7 @@ return_t crypto_advisor::build() {
                 }
             }
         }
-        if (item->tlsgroup) {
+        if (item->tlsgroup != tls_group_t::unknown) {
             _tls_group_curve_map.emplace(item->tlsgroup, item);
         }
         if (item->name_nist) {
@@ -319,7 +320,7 @@ return_t crypto_advisor::build() {
 
     for (i = 0; i < sizeof_hint_groups; ++i) {
         auto item = hint_groups + i;
-        if (tls_group_unknown != item->group) {
+        if (tls_group_t{} != item->group) {
             _tls_group_map.emplace(item->group, item);
             if (0 == (tls_flag_hybrid & item->flags)) {
                 _tls_group_nid_map.emplace(item->first.nid, item);

@@ -92,7 +92,7 @@ return_t http2_protocol::read_stream(basic_stream* stream, size_t* request_size,
         const uint16 sampling_size = 5;
 
         if (stream_size < sampling_size) {
-            *state = protocol_state_t::protocol_state_data;
+            *state = protocol_state_t::data;
             __leave2;
         }
 
@@ -107,15 +107,15 @@ return_t http2_protocol::read_stream(basic_stream* stream, size_t* request_size,
                         pos = sizeof_preface;
                     } else {
                         // This sequence MUST be followed by a SETTINGS frame (Section 6.5), which MAY be empty.
-                        *state = protocol_state_t::protocol_state_crash;
+                        *state = protocol_state_t::crash;
                         __leave2;
                     }
                 } else {
-                    *state = protocol_state_t::protocol_state_data;
+                    *state = protocol_state_t::data;
                     __leave2;
                 }
             } else {
-                *state = protocol_state_t::protocol_state_data;
+                *state = protocol_state_t::data;
                 __leave2;
             }
         }
@@ -128,17 +128,17 @@ return_t http2_protocol::read_stream(basic_stream* stream, size_t* request_size,
             b24_i32(stream_data + pos, RTL_FIELD_SIZE(http2_frame_header_t, len), len);
 
             if (max_frame_size && (len > max_frame_size)) {
-                *state = protocol_state_t::protocol_state_large;
+                *state = protocol_state_t::large;
                 __leave2;
             }
 
             if (stream_size < frame_header_size + pos) {
-                *state = protocol_state_t::protocol_state_data;
+                *state = protocol_state_t::data;
             } else if (stream_size < frame_header_size + len + pos) {
-                *state = protocol_state_t::protocol_state_header;
+                *state = protocol_state_t::header;
             } else {
                 *request_size = frame_header_size + len + pos;
-                *state = protocol_state_t::protocol_state_complete;
+                *state = protocol_state_t::complete;
             }
         }
     }

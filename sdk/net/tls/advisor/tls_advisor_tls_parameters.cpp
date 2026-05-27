@@ -138,7 +138,7 @@ uint8 tls_advisor::valueof_psk_key_exchange_mode(const std::string& name) {
     return value;
 }
 
-std::string tls_advisor::nameof_group(uint16 code) {
+std::string tls_advisor::nameof_group(tls_group_t code) {
     std::string value;
     auto advisor = crypto_advisor::get_instance();
     auto hint = advisor->hintof_tls_group(code);
@@ -150,8 +150,8 @@ std::string tls_advisor::nameof_group(uint16 code) {
     return value;
 }
 
-uint16 tls_advisor::valueof_group(const std::string& name) {
-    uint16 value = 0;
+tls_group_t tls_advisor::valueof_group(const std::string& name) {
+    tls_group_t value = tls_group_t{};
     auto advisor = crypto_advisor::get_instance();
     auto hint = advisor->hintof_tls_group(name);
     if (hint) {

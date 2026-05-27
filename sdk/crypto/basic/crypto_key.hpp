@@ -381,7 +381,7 @@ class crypto_key {
      * @param bool up_ref [inopt]
      */
     const EVP_PKEY* find(const char* kid, tls_group_t group, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
-    const EVP_PKEY* find_group(const char* kid, uint16 group, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* find_group(const char* kid, tls_group_t group, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
     /**
      * @brief find
      * @param const char* kid [in]

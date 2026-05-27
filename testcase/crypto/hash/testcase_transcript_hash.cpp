@@ -50,7 +50,7 @@ void test_transcript_hash() {
     binary_t case3_hash_stream2;
     {
         transcript_hash_builder builder;
-        auto hash = builder.set(sha2_256).build();
+        auto hash = builder.set(hash_algorithm_t::sha2_256).build();
         if (hash) {
             hash->digest((byte_t*)stream1, strlen(stream1), case3_hash_stream1);
             hash->digest((byte_t*)stream2, strlen(stream2), case3_hash_stream2);

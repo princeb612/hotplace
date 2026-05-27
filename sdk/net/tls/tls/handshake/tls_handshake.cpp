@@ -127,7 +127,7 @@ return_t tls_handshake::read(tls_direction_t dir, const byte_t* stream, size_t s
 
             size_t tpos = 0;
             binary_t assemble;
-            secrets.consume(tls_context_fragment, assemble);  // consume _bodysize
+            secrets.consume(tls_secret_t::fragment, assemble);  // consume _bodysize
 
 #if defined DEBUG
             if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
@@ -347,10 +347,10 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
             if (cond_dtls) {
                 if (fragment_len < length) {
                     if (0 == fragment_offset) {
-                        secrets.erase(tls_context_fragment);
+                        secrets.erase(tls_secret_t::fragment);
                     }
 
-                    secrets.append(tls_context_fragment, stream + pos, fragment_len);
+                    secrets.append(tls_secret_t::fragment, stream + pos, fragment_len);
 
 #if defined DEBUG
                     if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
@@ -363,7 +363,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
                     }
 #endif
 
-                    if (length <= secrets.get(tls_context_fragment).size()) {
+                    if (length <= secrets.get(tls_secret_t::fragment).size()) {
                         pos += _fragment_len;
                         ret = errorcode_t::reassemble;
                     } else {
@@ -380,7 +380,7 @@ return_t tls_handshake::do_read_header(tls_direction_t dir, const byte_t* stream
 
             if (hspos + length > size) {
                 ret = errorcode_t::fragmented;
-                secrets.append(tls_context_fragment, stream + hspos, size - hspos);
+                secrets.append(tls_secret_t::fragment, stream + hspos, size - hspos);
 #if defined DEBUG
                 if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
                     trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {

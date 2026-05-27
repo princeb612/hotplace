@@ -53,7 +53,7 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
         uint32 session_status_prerequisite = 0;
         auto flow = protection.get_flow();
         if (true == tlsadvisor->is_kindof_tls13(tlsver)) {
-            if (tls_flow_1rtt == flow) {
+            if (tls_flow_t::one_rtt == flow) {
                 // RFC 8446 5.  Record Protocol
                 //  The change_cipher_spec record is used only for compatibility purposes.
                 // RFC 8448 3.  Simple 1-RTT Handshake
@@ -63,7 +63,7 @@ return_t tls_handshake_finished::do_preprocess(tls_direction_t dir) {
                 if (from_client == dir) {
                     session_status_prerequisite |= session_status_server_finished;
                 }
-            } else if (tls_flow_0rtt == flow) {
+            } else if (tls_flow_t::zero_rtt == flow) {
                 session_status_prerequisite = session_status_client_hello | session_status_server_hello | session_status_encrypted_extensions;
             }
         } else {
@@ -109,15 +109,15 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_
             // from_client : resumption related
             protection.calc(session, tls_handshake_type_t::finished, dir);
 
-            secrets.erase(tls_context_client_hello_random);
-            secrets.erase(tls_context_server_hello_random);
+            secrets.erase(tls_secret_t::client_hello_random);
+            secrets.erase(tls_secret_t::server_hello_random);
 
             session->get_keyvalue().set(session_handshake_finished, 1);
 
             if (from_client == dir) {
-                secrets.assign(tls_context_client_verifydata, _verify_data);
+                secrets.assign(tls_secret_t::client_verifydata, _verify_data);
             } else if (from_server == dir) {
-                secrets.assign(tls_context_server_verifydata, _verify_data);
+                secrets.assign(tls_secret_t::server_verifydata, _verify_data);
             }
 
             if (from_server == dir) {

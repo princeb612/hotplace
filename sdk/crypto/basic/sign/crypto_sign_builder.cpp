@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace crypto {
 
-crypto_sign_builder::crypto_sign_builder() : _category(sig_category_dgst), _hashalg(0) {}
+crypto_sign_builder::crypto_sign_builder() : _category(sig_category_t::dgst), _hashalg(hash_algorithm_t{}) {}
 
 crypto_sign* crypto_sign_builder::build() {
     crypto_sign* obj = nullptr;
@@ -22,8 +22,8 @@ crypto_sign* crypto_sign_builder::build() {
 #if OPENSSL_VERSION_NUMBER < 0x30000000L
         return_t ret = errorcode_t::success;
         switch (get_digest()) {
-            case sha2_512_224:
-            case sha2_512_256:
+            case hash_algorithm_t::sha2_512_224:
+            case hash_algorithm_t::sha2_512_256:
                 ret = errorcode_t::not_supported;
                 break;
             default:
@@ -34,39 +34,39 @@ crypto_sign* crypto_sign_builder::build() {
         }
 #endif
         switch (get_category()) {
-            case sig_category_dgst: {
+            case sig_category_t::dgst: {
                 obj = new crypto_sign_digest(get_digest());
             } break;
-            case sig_category_hmac: {
+            case sig_category_t::hmac: {
                 obj = new crypto_sign_hmac(get_digest());
             } break;
-            case sig_category_rsassa_pkcs15: {
+            case sig_category_t::rsassa_pkcs15: {
                 obj = new crypto_sign_rsa_pkcs1(get_digest());
             } break;
-            case sig_category_rsassa_pss: {
+            case sig_category_t::rsassa_pss: {
                 obj = new crypto_sign_rsa_pss(get_digest());
             } break;
-            case sig_category_ecdsa: {
+            case sig_category_t::ecdsa: {
                 obj = new crypto_sign_ecdsa(get_digest());
             } break;
-            case sig_category_eddsa: {
+            case sig_category_t::eddsa: {
                 obj = new crypto_sign_eddsa();
             } break;
-            case sig_category_dsa: {
+            case sig_category_t::dsa: {
                 obj = new crypto_sign_dsa(get_digest());
             } break;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
-            case sig_category_mldsa: {
+            case sig_category_t::mldsa: {
                 obj = new crypto_sign_mldsa();
             } break;
-            case sig_category_slhdsa: {
+            case sig_category_t::slhdsa: {
                 obj = new crypto_sign_slhdsa();
             } break;
 #endif
-            case sig_category_brainpool: {
+            case sig_category_t::brainpool: {
                 obj = new crypto_sign_ecdsa(get_digest());
             } break;
-            case sig_category_rsassa_x931:  //
+            case sig_category_t::rsassa_x931:  //
             default: {
             } break;
         }
@@ -85,7 +85,7 @@ crypto_sign_builder& crypto_sign_builder::set_category(sig_category_t category) 
     return *this;
 }
 
-crypto_sign_builder& crypto_sign_builder::set_tls_sign_scheme(uint16 scheme) {
+crypto_sign_builder& crypto_sign_builder::set_tls_sign_scheme(tls_sigscheme_t scheme) {
     crypto_advisor* advisor = crypto_advisor::get_instance();
     auto hint = advisor->hintof_sigscheme(scheme);
     if (hint) {
@@ -116,7 +116,7 @@ crypto_sign_builder& crypto_sign_builder::set_digest(const std::string& hashalg)
 
 crypto_sign_builder& crypto_sign_builder::set_scheme(jws_t type) {
     // jws_t jws_hs256, ...
-    // signature_t sig_hs256
+    // signature_t signature_t::hs256
     auto advisor = crypto_advisor::get_instance();
     auto hint = advisor->hintof_jose_signature(type);
     if (hint) {

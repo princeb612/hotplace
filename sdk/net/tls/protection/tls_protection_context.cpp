@@ -22,34 +22,11 @@ namespace net {
 
 protection_context::protection_context() : _cipher_suite(0) {}
 
-protection_context::protection_context(const protection_context& other) {
-    _cipher_suites = other._cipher_suites;
-    _signature_algorithms = other._signature_algorithms;
-    _supported_groups = other._supported_groups;
-    _supported_versions = other._supported_versions;
-    _ec_point_formats = other._ec_point_formats;
-    _keyshare_groups = other._keyshare_groups;
-    _keyshare_set = other._keyshare_set;
-    _cipher_suite = other._cipher_suite;
-}
-
-protection_context::protection_context(protection_context&& other) {
-    clear();
-    _cipher_suites = std::move(other._cipher_suites);
-    _signature_algorithms = std::move(other._signature_algorithms);
-    _supported_groups = std::move(other._supported_groups);
-    _supported_versions = std::move(other._supported_versions);
-    _ec_point_formats = std::move(other._ec_point_formats);
-    _keyshare_groups = std::move(other._keyshare_groups);
-    _keyshare_set = std::move(other._keyshare_set);
-    _cipher_suite = other._cipher_suite;
-}
-
 return_t protection_context::negotiate(tls_session* session, tls_version_t minspec, tls_version_t maxspec, uint16& cs, tls_version_t& tlsver) {
     return_t ret = errorcode_t::success;
     if (session) {
         cs = 0;
-        tlsver = tls_version_t::unknown;
+        tlsver = tls_version_t{};
 
         // tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto& protection = session->get_tls_protection();
@@ -68,15 +45,15 @@ return_t protection_context::negotiate(tls_session* session, tls_version_t minsp
 
 void protection_context::add_cipher_suite(uint16 cs) { _cipher_suites.push_back(cs); }
 
-void protection_context::add_signature_algorithm(uint16 sa) { _signature_algorithms.push_back(sa); }
+void protection_context::add_signature_algorithm(tls_sigscheme_t sa) { _signature_algorithms.push_back(sa); }
 
-void protection_context::add_supported_group(uint16 sg) { _supported_groups.push_back(sg); }
+void protection_context::add_supported_group(tls_group_t sg) { _supported_groups.push_back(sg); }
 
 void protection_context::add_supported_version(tls_version_t sv) { _supported_versions.push_back(sv); }
 
 void protection_context::add_ec_point_format(uint8 epf) { _ec_point_formats.push_back(epf); }
 
-void protection_context::add_keyshare_group(uint16 group) {
+void protection_context::add_keyshare_group(tls_group_t group) {
     _keyshare_groups.push_back(group);
     _keyshare_set.insert(group);
 }
@@ -106,7 +83,7 @@ void protection_context::for_each_cipher_suites(std::function<void(uint16, bool*
     }
 }
 
-void protection_context::for_each_signature_algorithms(std::function<void(uint16, bool*)> fn) const {
+void protection_context::for_each_signature_algorithms(std::function<void(tls_sigscheme_t, bool*)> fn) const {
     bool cont = false;
     for (auto item : _signature_algorithms) {
         fn(item, &cont);
@@ -116,7 +93,7 @@ void protection_context::for_each_signature_algorithms(std::function<void(uint16
     }
 }
 
-void protection_context::for_each_supported_groups(std::function<void(uint16, bool*)> fn) const {
+void protection_context::for_each_supported_groups(std::function<void(tls_group_t, bool*)> fn) const {
     bool cont = false;
     for (auto item : _supported_groups) {
         fn(item, &cont);
@@ -146,7 +123,7 @@ void protection_context::for_each_ec_point_formats(std::function<void(uint8, boo
     }
 }
 
-void protection_context::for_each_keyshare_groups(std::function<void(uint16, bool*)> fn) const {
+void protection_context::for_each_keyshare_groups(std::function<void(tls_group_t, bool*)> fn) const {
     bool cont = false;
     for (auto item : _keyshare_set) {
         fn(item, &cont);
@@ -309,7 +286,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
         }
 
         {
-            other.for_each_signature_algorithms([&](uint16 scheme, bool*) -> void {
+            other.for_each_signature_algorithms([&](tls_sigscheme_t scheme, bool*) -> void {
                 auto hint = advisor->hintof_sigscheme(scheme);
                 if (hint && (tls_flag_support & hint->flags)) {
                     if (certnid_set.end() != certnid_set.find(hint->nid)) {
@@ -329,7 +306,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
         {
             // _supported_groups
 
-            other.for_each_supported_groups([&](uint16 group, bool*) -> void {
+            other.for_each_supported_groups([&](tls_group_t group, bool*) -> void {
                 auto hint = advisor->hintof_tls_group(group);
                 if (hint && (tls_flag_support & hint->flags)) {
                     bool cond = true;
@@ -355,7 +332,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
 
         {
             // deselect GREASE
-            other.for_each_keyshare_groups([&](uint16 group, bool*) -> void {
+            other.for_each_keyshare_groups([&](tls_group_t group, bool*) -> void {
                 auto hint = advisor->hintof_tls_group(group);
                 if (hint && (tls_flag_support & hint->flags)) {
                     if (tls_flag_secure & hint->flags) {
@@ -379,7 +356,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
     return ret;
 }
 
-bool protection_context::select_keyshare(uint16 group) { return _keyshare_set.count(group) > 0; }
+bool protection_context::select_keyshare(tls_group_t group) { return _keyshare_set.count(group) > 0; }
 
 void protection_context::set_cipher_suite(uint16 cs) { _cipher_suite = cs; }
 
@@ -392,31 +369,31 @@ uint16 protection_context::get0_cipher_suite() {
 }
 
 tls_version_t protection_context::get0_supported_version() {
-    tls_version_t ret_value = tls_version_t::unknown;
+    tls_version_t ret_value = tls_version_t{};
     if (false == _supported_versions.empty()) {
         ret_value = *_supported_versions.begin();
     }
     return ret_value;
 }
 
-uint16 protection_context::get0_supported_group() {
-    uint16 ret_value = 0;
+tls_group_t protection_context::get0_supported_group() {
+    tls_group_t ret_value = tls_group_t{};
     if (false == _supported_groups.empty()) {
         ret_value = *_supported_groups.begin();
     }
     return ret_value;
 }
 
-uint16 protection_context::get0_keyshare_group() {
-    uint16 ret_value = 0;
+tls_group_t protection_context::get0_keyshare_group() {
+    tls_group_t ret_value = tls_group_t{};
     if (false == _keyshare_groups.empty()) {
         ret_value = *_keyshare_groups.begin();
     }
     return ret_value;
 }
 
-uint16 protection_context::select_signature_algorithm(crypto_kty_t kty) {
-    uint16 ret_value = 0;
+tls_sigscheme_t protection_context::select_signature_algorithm(crypto_kty_t kty) {
+    tls_sigscheme_t ret_value = tls_sigscheme_t{};
     auto advisor = crypto_advisor::get_instance();
     for (auto item : _signature_algorithms) {
         auto hint = advisor->hintof_sigscheme(item);

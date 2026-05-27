@@ -64,7 +64,8 @@ return_t tls_extension_signature_algorithms::do_read_body(tls_direction_t dir, c
 
             for (auto i = 0; i < count; i++) {
                 auto alg = t_binary_to_integer<uint16>(&algorithms[i << 1], sizeof(uint16));
-                add(alg);
+                t_enum_type<tls_sigscheme_t> etalg(alg);
+                add(etalg);
             }
         }
 
@@ -113,7 +114,7 @@ return_t tls_extension_signature_algorithms::do_write_body(tls_direction_t dir, 
     return ret;
 }
 
-tls_extension_signature_algorithms& tls_extension_signature_algorithms::add(uint16 code) {
+tls_extension_signature_algorithms& tls_extension_signature_algorithms::add(tls_sigscheme_t code) {
     _algorithms.push_back(code);
     return *this;
 }

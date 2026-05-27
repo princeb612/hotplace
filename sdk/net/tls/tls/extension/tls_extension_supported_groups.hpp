@@ -25,7 +25,7 @@ class tls_extension_supported_groups : public tls_extension {
     tls_extension_supported_groups(tls_handshake* handshake);
     virtual ~tls_extension_supported_groups();
 
-    tls_extension_supported_groups& add(uint16 code);
+    tls_extension_supported_groups& add(tls_group_t code);
     tls_extension_supported_groups& add(const std::string& name);
 
     size_t numberof_groups();
@@ -37,7 +37,7 @@ class tls_extension_supported_groups : public tls_extension {
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
    private:
-    std::list<uint16> _supported_groups;
+    std::list<tls_group_t> _supported_groups;
 };
 
 }  // namespace net

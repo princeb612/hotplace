@@ -54,7 +54,7 @@ constexpr char constexpr_ectce_count[] = "ect-ce count";
  * Figure 25: ACK Frame Format
  */
 
-quic_frame_ack::quic_frame_ack(tls_session* session, uint8 type) : quic_frame((quic_frame_t)type, session), _space(protection_default) {
+quic_frame_ack::quic_frame_ack(tls_session* session, uint8 type) : quic_frame((quic_frame_t)type, session), _space(protection_space_t::tls) {
     if ((quic_frame_type_ack == type) || (quic_frame_type_ack1 == type)) {
     } else {
         throw exception(errorcode_t::bad_request);
@@ -173,7 +173,7 @@ return_t quic_frame_ack::do_write_body(tls_direction_t dir, binary_t& bin) {
         auto space = get_space();
         auto type = get_type();
 
-        if (protection_default == space) {
+        if (protection_space_t::tls == space) {
             ret = errorcode_t::not_ready;
             __leave2;
         }

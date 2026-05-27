@@ -171,7 +171,7 @@ return_t tls_extension_server_supported_versions::do_write_body(tls_direction_t 
 }
 
 tls_version_t tls_extension_server_supported_versions::get_version() {
-    tls_version_t version = tls_version_t::unknown;
+    tls_version_t version = tls_version_t{};
     auto session = get_handshake()->get_session();
     if (session) {
         auto& protection = session->get_tls_protection();

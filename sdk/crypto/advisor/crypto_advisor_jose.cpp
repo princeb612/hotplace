@@ -41,7 +41,7 @@ return_t crypto_advisor::for_each_jws(std::function<void(const hint_signature_t*
 
 const hint_jose_encryption_t* crypto_advisor::hintof_jose_algorithm(jwa_t alg) {
     const hint_jose_encryption_t* item = nullptr;
-    t_maphint<uint32, const hint_jose_encryption_t*> hint(_alg_map);
+    t_maphint<jwa_t, const hint_jose_encryption_t*> hint(_alg_map);
 
     hint.find(alg, &item);
     return item;
@@ -49,7 +49,7 @@ const hint_jose_encryption_t* crypto_advisor::hintof_jose_algorithm(jwa_t alg) {
 
 const hint_jose_encryption_t* crypto_advisor::hintof_jose_encryption(jwe_t enc) {
     const hint_jose_encryption_t* item = nullptr;
-    t_maphint<uint32, const hint_jose_encryption_t*> hint(_enc_map);
+    t_maphint<jwe_t, const hint_jose_encryption_t*> hint(_enc_map);
 
     hint.find(enc, &item);
     return item;
@@ -57,7 +57,7 @@ const hint_jose_encryption_t* crypto_advisor::hintof_jose_encryption(jwe_t enc) 
 
 const hint_signature_t* crypto_advisor::hintof_jose_signature(jws_t sig) {
     const hint_signature_t* item = nullptr;
-    t_maphint<uint32, const hint_signature_t*> hint(_jose_sig_map);
+    t_maphint<jws_t, const hint_signature_t*> hint(_jose_sig_map);
 
     hint.find(sig, &item);
     return item;
@@ -257,7 +257,7 @@ jws_t crypto_advisor::sigof(signature_t sig) {
 }
 
 signature_t crypto_advisor::sigof(jws_t sig) {
-    signature_t type = signature_t::sig_unknown;
+    signature_t type = signature_t{};
     t_maphint<jws_t, signature_t> hint(_jws2sig_map);
 
     hint.find(sig, &type);

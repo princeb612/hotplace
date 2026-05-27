@@ -75,7 +75,8 @@ return_t tls_extension_supported_groups::do_read_body(tls_direction_t dir, const
 
             for (auto i = 0; i < curves; i++) {
                 auto curve = t_binary_to_integer<uint16>(&supported_groups[i << 1], sizeof(uint16));
-                add(curve);
+                t_enum_type<tls_group_t> etcurve(curve);
+                add(etcurve);
             }
         }
 
@@ -124,7 +125,7 @@ return_t tls_extension_supported_groups::do_write_body(tls_direction_t dir, bina
     return ret;
 }
 
-tls_extension_supported_groups& tls_extension_supported_groups::add(uint16 code) {
+tls_extension_supported_groups& tls_extension_supported_groups::add(tls_group_t code) {
     auto advisor = crypto_advisor::get_instance();
     auto hint = advisor->hintof_tls_group(code);
     if (hint && (tls_flag_support & hint->flags)) {

@@ -35,7 +35,7 @@ void test_rsassa_sample() {
 
         binary_t sig;
         crypto_sign_builder builder;
-        auto s = builder.set_category(sig_category_rsassa_pss).set_digest(sha2_256).build();
+        auto s = builder.set_category(sig_category_t::rsassa_pss).set_digest(hash_algorithm_t::sha2_256).build();
         if (s) {
             s->sign(pkey, (byte_t*)message, msglen, sig);
             ret = s->verify(pkey, (byte_t*)message, msglen, sig);

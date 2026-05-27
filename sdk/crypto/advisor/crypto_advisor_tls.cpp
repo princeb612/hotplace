@@ -15,17 +15,17 @@
 namespace hotplace {
 namespace crypto {
 
-const hint_curve_t* crypto_advisor::hintof_curve_tls_group(uint16 group) {
+const hint_curve_t* crypto_advisor::hintof_curve_tls_group(tls_group_t group) {
     const hint_curve_t* item = nullptr;
-    t_maphint<uint16, const hint_curve_t*> hint(_tls_group_curve_map);
+    t_maphint<tls_group_t, const hint_curve_t*> hint(_tls_group_curve_map);
 
     hint.find(group, &item);
     return item;
 }
 
-const hint_group_t* crypto_advisor::hintof_tls_group(uint16 group) {
+const hint_group_t* crypto_advisor::hintof_tls_group(tls_group_t group) {
     const hint_group_t* item = nullptr;
-    t_maphint<uint16, const hint_group_t*> hint(_tls_group_map);
+    t_maphint<tls_group_t, const hint_group_t*> hint(_tls_group_map);
 
     hint.find(group, &item);
     return item;
@@ -58,7 +58,7 @@ const hint_group_t* crypto_advisor::hintof_tls_group_nid(uint32 nid) {
     return item;
 }
 
-return_t crypto_advisor::for_each_tls_group(std::function<void(uint16, uint32)> f) {
+return_t crypto_advisor::for_each_tls_group(std::function<void(tls_group_t, uint32)> f) {
     return_t ret = errorcode_t::success;
     for (size_t i = 0; i < sizeof_hint_groups; ++i) {
         const auto& item = hint_groups + i;
@@ -87,13 +87,13 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, tls_group_t group) {
         nidof_evp_pkey(pkey, nid);
         // cf. multiplicity 1..*
         // - NID_brainpoolP256r1
-        //   -  tls_group_brainpoolP256r1
-        //   -  tls_group_brainpoolP256r1tls13
+        //   -  tls_group_t::brainpoolP256r1
+        //   -  tls_group_t::brainpoolP256r1tls13
         auto hint = hintof_tls_group(group);  // multiplicity 1..1
         if (nullptr == hint) {
             __leave2;
         }
-        if (tls_group_unknown == hint->group) {
+        if (tls_group_t{} == hint->group) {
             __leave2;
         }
         ret = (nid == hint->first.nid || nid == hint->second.nid);

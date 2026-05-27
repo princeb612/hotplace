@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
@@ -76,7 +77,7 @@ return_t tls_handshake_certificate_verify::do_postprocess(tls_direction_t dir, c
     return ret;
 }
 
-return_t tls_handshake_certificate_verify::sign_certverify(const EVP_PKEY* pkey, tls_direction_t dir, uint16& scheme, binary_t& signature) {
+return_t tls_handshake_certificate_verify::sign_certverify(const EVP_PKEY* pkey, tls_direction_t dir, tls_sigscheme_t& scheme, binary_t& signature) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -111,7 +112,7 @@ return_t tls_handshake_certificate_verify::sign_certverify(const EVP_PKEY* pkey,
     return ret;
 }
 
-return_t tls_handshake_certificate_verify::verify_certverify(const EVP_PKEY* pkey, tls_direction_t dir, uint16 scheme, const binary_t& signature) {
+return_t tls_handshake_certificate_verify::verify_certverify(const EVP_PKEY* pkey, tls_direction_t dir, tls_sigscheme_t scheme, const binary_t& signature) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -228,19 +229,20 @@ return_t tls_handshake_certificate_verify::do_read_body(tls_direction_t dir, con
 
         auto pkey = tlsadvisor->get_key(session, kid);
 
-        ret = verify_certverify(pkey, dir, scheme, signature);
+        t_enum_type<tls_sigscheme_t> etscheme(scheme);
+        ret = verify_certverify(pkey, dir, etscheme, signature);
 
 #if defined DEBUG
         if (istraceable(trace_category_t::trace_category_net)) {
             trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                 auto advisor = crypto_advisor::get_instance();
-                auto hint = advisor->hintof_sigscheme(scheme);
+                auto hint = advisor->hintof_sigscheme(etscheme);
                 std::string name;
                 if (hint) {
                     name = hint->name;
                 }
                 dbs.autoindent(1);
-                dbs.println(" > %s 0x%04x %s", constexpr_signature_alg, scheme, name.c_str());
+                dbs.println(" > %s 0x%04x %s", constexpr_signature_alg, etscheme, name.c_str());
                 dbs.println(" > %s 0x%04x(%i)", constexpr_len, len, len);
                 // dbs.println(" > tosign");
                 // dump_memory(tosign, &dbs, 16, 3, 0x00, dump_notrunc);
@@ -278,7 +280,7 @@ return_t tls_handshake_certificate_verify::do_write_body(tls_direction_t dir, bi
             __leave2;
         }
 
-        uint16 scheme = 0;
+        tls_sigscheme_t scheme = tls_sigscheme_t::unknown;
         binary_t signature;
         ret = sign_certverify(pkey, dir, scheme, signature);
 

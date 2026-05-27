@@ -91,19 +91,19 @@ void testcase_rfc8448_6() {
     }
     {
         // {server}  extract secret "early"
-        test_keycalc(&session, tls_secret_early_secret, bin, "early", "33ad0a1c607ec03b09e6cd9893680ce210adf300aa1f2660e1b22e10f170f92a");
+        test_keycalc(&session, tls_secret_t::early_secret, bin, "early", "33ad0a1c607ec03b09e6cd9893680ce210adf300aa1f2660e1b22e10f170f92a");
         // {server}  derive secret for handshake "tls13 derived"
-        test_keycalc(&session, tls_secret_handshake_derived, bin, "derived", "6f2615a108c702c5678f54fc9dbab69716c076189c48250cebeac3576c3611ba");
+        test_keycalc(&session, tls_secret_t::handshake_derived, bin, "derived", "6f2615a108c702c5678f54fc9dbab69716c076189c48250cebeac3576c3611ba");
         // {server}  extract secret "handshake"
-        test_keycalc(&session, tls_secret_handshake, bin, "handshake", "d995243674fb6400d7d37bc0e9861bdbd9ed095601dcf2994874f2803de22e39");
+        test_keycalc(&session, tls_secret_t::handshake, bin, "handshake", "d995243674fb6400d7d37bc0e9861bdbd9ed095601dcf2994874f2803de22e39");
         // {server}  derive secret "tls13 c hs traffic"
-        test_keycalc(&session, tls_secret_c_hs_traffic, bin, "c hs traffic", "cec7a30c6872070f22a7eeb065768db67c45e29533db879908ce6dc66f5911de");
+        test_keycalc(&session, tls_secret_t::c_hs_traffic, bin, "c hs traffic", "cec7a30c6872070f22a7eeb065768db67c45e29533db879908ce6dc66f5911de");
         // {server}  derive secret "tls13 s hs traffic"
-        test_keycalc(&session, tls_secret_s_hs_traffic, bin, "s hs traffic", "8b02d3c00442a2722c4098ebe8675b23e801510f0d7ed778d8eb0b8f42a19a5e");
+        test_keycalc(&session, tls_secret_t::s_hs_traffic, bin, "s hs traffic", "8b02d3c00442a2722c4098ebe8675b23e801510f0d7ed778d8eb0b8f42a19a5e");
         // {server}  derive secret for master "tls13 derived"
-        test_keycalc(&session, tls_secret_application_derived, bin, "application_derived", "74575526b07c81a9c1b17e6b34e0e6d084747a61f396f597ebb92c0736ec60e8");
+        test_keycalc(&session, tls_secret_t::application_derived, bin, "application_derived", "74575526b07c81a9c1b17e6b34e0e6d084747a61f396f597ebb92c0736ec60e8");
         // {server}  extract secret "master"
-        test_keycalc(&session, tls_secret_application, bin, "application", "57c15d7b9d441b3d40a9c6ea8a3d730e07b3a1ea7a3339ed7070b9a74a3f4f28");
+        test_keycalc(&session, tls_secret_t::application, bin, "application", "57c15d7b9d441b3d40a9c6ea8a3d730e07b3a1ea7a3339ed7070b9a74a3f4f28");
     }
     {
         const char* record =
@@ -139,22 +139,22 @@ void testcase_rfc8448_6() {
     }
     {
         // {server}  derive write traffic keys for handshake data
-        test_keycalc(&session, tls_secret_handshake_server_key, bin, "handshake_server_key", "6cb6e60619d8c7355c5d4c4bc2be90d5");
-        test_keycalc(&session, tls_secret_handshake_server_iv, bin, "handshake_server_iv", "64f239530c3b888fde85e0be");
+        test_keycalc(&session, tls_secret_t::handshake_server_key, bin, "handshake_server_key", "6cb6e60619d8c7355c5d4c4bc2be90d5");
+        test_keycalc(&session, tls_secret_t::handshake_server_iv, bin, "handshake_server_iv", "64f239530c3b888fde85e0be");
         // {server}  derive secret "tls13 c ap traffic"
-        test_keycalc(&session, tls_secret_c_ap_traffic, bin, "c ap traffic", "73c2e890fa8d067258d6d50fa92fe456b098cf00d9727eed91e8892ef4e6f860");
+        test_keycalc(&session, tls_secret_t::c_ap_traffic, bin, "c ap traffic", "73c2e890fa8d067258d6d50fa92fe456b098cf00d9727eed91e8892ef4e6f860");
         // {server}  derive secret "tls13 s ap traffic":
-        test_keycalc(&session, tls_secret_s_ap_traffic, bin, "s ap traffic", "c49a91faf57f8c545d5048a015bf849ff63942e4a7edcd319f8b438a97c52e21");
+        test_keycalc(&session, tls_secret_t::s_ap_traffic, bin, "s ap traffic", "c49a91faf57f8c545d5048a015bf849ff63942e4a7edcd319f8b438a97c52e21");
         // {server}  derive secret "tls13 exp master"
-        test_keycalc(&session, tls_secret_exp_master, bin, "exp master", "052e39795e5f2be6e4e0974cfdd86c6a7afe3e57e5589810a3cccf642958beb2");
+        test_keycalc(&session, tls_secret_t::exp_master, bin, "exp master", "052e39795e5f2be6e4e0974cfdd86c6a7afe3e57e5589810a3cccf642958beb2");
         // {server}  derive write traffic keys for application data
-        test_keycalc(&session, tls_secret_application_server_key, bin, "application_server_key", "88b3123ddecadf8c1ba298e2c18176b0");
-        test_keycalc(&session, tls_secret_application_server_iv, bin, "application_server_iv", "4e0978513f9de8327c08e4f3");
+        test_keycalc(&session, tls_secret_t::application_server_key, bin, "application_server_key", "88b3123ddecadf8c1ba298e2c18176b0");
+        test_keycalc(&session, tls_secret_t::application_server_iv, bin, "application_server_iv", "4e0978513f9de8327c08e4f3");
         // {server}  derive read traffic keys for handshake data
-        test_keycalc(&session, tls_secret_handshake_client_key, bin, "handshake_client_key", "916948f728d9823fa41a004d083f217f");
-        test_keycalc(&session, tls_secret_handshake_client_iv, bin, "handshake_client_iv", "64153d79bac9ea10ca5a0a88");
+        test_keycalc(&session, tls_secret_t::handshake_client_key, bin, "handshake_client_key", "916948f728d9823fa41a004d083f217f");
+        test_keycalc(&session, tls_secret_t::handshake_client_iv, bin, "handshake_client_iv", "64153d79bac9ea10ca5a0a88");
         // {client}  derive secret for handshake "tls13 derived"
-        test_keycalc(&session, tls_secret_handshake_derived, bin, "handshake_derived", "6f2615a108c702c5678f54fc9dbab69716c076189c48250cebeac3576c3611ba");
+        test_keycalc(&session, tls_secret_t::handshake_derived, bin, "handshake_derived", "6f2615a108c702c5678f54fc9dbab69716c076189c48250cebeac3576c3611ba");
     }
     {
         // {client}  construct a Certificate handshake message
@@ -199,10 +199,10 @@ void testcase_rfc8448_6() {
     }
     {
         // {client}  derive write traffic keys for application data
-        test_keycalc(&session, tls_secret_application_client_key, bin, "application_client_key", "cdc09c806aa8f86dfcd51efc44a0c039");
-        test_keycalc(&session, tls_secret_application_client_iv, bin, "application_client_iv", "6ef852e78b46d913668e53e7");
+        test_keycalc(&session, tls_secret_t::application_client_key, bin, "application_client_key", "cdc09c806aa8f86dfcd51efc44a0c039");
+        test_keycalc(&session, tls_secret_t::application_client_iv, bin, "application_client_iv", "6ef852e78b46d913668e53e7");
         // {client}  derive secret "tls13 res master"
-        test_keycalc(&session, tls_secret_res_master, bin, "res master", "1006dccbf40eb4eb978bff0392a9e452a4fbad58aa14784d5a241c6b49daccfb");
+        test_keycalc(&session, tls_secret_t::res_master, bin, "res master", "1006dccbf40eb4eb978bff0392a9e452a4fbad58aa14784d5a241c6b49daccfb");
     }
     {
         // {client}  send alert record

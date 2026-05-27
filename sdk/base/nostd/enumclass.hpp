@@ -48,6 +48,11 @@ struct t_enum_type {
     constexpr bool operator>=(const t_enum_type& rhs) const noexcept { return !(*this < rhs); }
 };
 
+template <typename T>
+constexpr typename std::underlying_type<T>::type t_escape(T v) {
+    return static_cast<typename std::underlying_type<T>::type>(v);
+}
+
 }  // namespace hotplace
 
 #endif

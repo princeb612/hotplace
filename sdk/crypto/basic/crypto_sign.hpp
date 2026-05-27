@@ -29,7 +29,7 @@ namespace crypto {
  *          }
  *
  *          // rsa_pss_rsae_sha256
- *          auto sign = builder.set_scheme(sig_category_rsassa_pkcs15).set_digest(sha2_256).build();
+ *          auto sign = builder.set_scheme(sig_category_t::rsassa_pkcs15).set_digest(sha2_256).build();
  *          if (sign) {
  *              ret = sign->verify(pkey, input, signature);
  *              sign->release();
@@ -60,7 +60,7 @@ class crypto_sign_builder {
 
     /**
      * @sample
-     *          auto sign = builder.set_scheme(sig_category_rsassa_pkcs15).set_digest(sha2_256).build();
+     *          auto sign = builder.set_scheme(sig_category_t::rsassa_pkcs15).set_digest(sha2_256).build();
      */
     crypto_sign_builder& set_category(sig_category_t category);
     crypto_sign_builder& set_digest(hash_algorithm_t hashalg);
@@ -69,10 +69,9 @@ class crypto_sign_builder {
 
     /**
      * @sample
-     *          // 0x0804 rsa_pss_rsae_sha256
-     *          auto sign = builder.tls_sign_scheme(0x0804).build();
+     *          auto sign = builder.tls_sign_scheme(tls_sigscheme_t::rsa_pss_rsae_sha256).build();
      */
-    crypto_sign_builder& set_tls_sign_scheme(uint16 scheme);
+    crypto_sign_builder& set_tls_sign_scheme(tls_sigscheme_t scheme);
     /**
      * @sample
      *          auto sign = builder.set_scheme(jws_es256).build();
@@ -85,7 +84,7 @@ class crypto_sign_builder {
    protected:
    private:
     sig_category_t _category;
-    uint16 _hashalg;
+    hash_algorithm_t _hashalg;
 };
 
 class crypto_sign {
@@ -191,7 +190,7 @@ class crypto_sign_eddsa : public crypto_sign_digestsign {
 
 class crypto_sign_dsa : public crypto_sign {
    public:
-    crypto_sign_dsa(hash_algorithm_t hashalg = hash_alg_unknown);
+    crypto_sign_dsa(hash_algorithm_t hashalg = hash_algorithm_t{});
 
     virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
     virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);

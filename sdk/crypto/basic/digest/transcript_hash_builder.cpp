@@ -13,7 +13,7 @@
 namespace hotplace {
 namespace crypto {
 
-transcript_hash_builder::transcript_hash_builder() : _alg(hash_alg_unknown) {}
+transcript_hash_builder::transcript_hash_builder() : _alg(hash_algorithm_t{}) {}
 
 transcript_hash* transcript_hash_builder::build() { return new transcript_hash(_alg); }
 

@@ -138,15 +138,15 @@ void test_rfc_9001_construct_initial(testvector_initial_packet* item, tls_sessio
     auto lambda_dump = [&](const char* text, const binary_t& bin) -> void { _logger->writeln("> %-21s : %s", text, base16_encode(bin).c_str()); };
 
     {
-        lambda_dump("initial secret", secrets.get(tls_secret_initial_quic));
-        lambda_dump("client initial secret", secrets.get(tls_secret_initial_quic_client));
-        lambda_dump("client key", secrets.get(tls_secret_initial_quic_client_key));
-        lambda_dump("client iv", secrets.get(tls_secret_initial_quic_client_iv));
-        lambda_dump("client hp", secrets.get(tls_secret_initial_quic_client_hp));
-        lambda_dump("server initial secret", secrets.get(tls_secret_initial_quic_server));
-        lambda_dump("server key", secrets.get(tls_secret_initial_quic_server_key));
-        lambda_dump("server iv", secrets.get(tls_secret_initial_quic_server_iv));
-        lambda_dump("server hp", secrets.get(tls_secret_initial_quic_server_hp));
+        lambda_dump("initial secret", secrets.get(tls_secret_t::initial_quic));
+        lambda_dump("client initial secret", secrets.get(tls_secret_t::initial_quic_client));
+        lambda_dump("client key", secrets.get(tls_secret_t::initial_quic_client_key));
+        lambda_dump("client iv", secrets.get(tls_secret_t::initial_quic_client_iv));
+        lambda_dump("client hp", secrets.get(tls_secret_t::initial_quic_client_hp));
+        lambda_dump("server initial secret", secrets.get(tls_secret_t::initial_quic_server));
+        lambda_dump("server key", secrets.get(tls_secret_t::initial_quic_server_key));
+        lambda_dump("server iv", secrets.get(tls_secret_t::initial_quic_server_iv));
+        lambda_dump("server hp", secrets.get(tls_secret_t::initial_quic_server_hp));
     }
 
     // write
@@ -162,7 +162,7 @@ void test_rfc_9001_construct_initial(testvector_initial_packet* item, tls_sessio
 
         {
             // [test vector] set record no
-            session->set_recordno(dir, pn, protection_initial);
+            session->set_recordno(dir, pn, protection_space_t::initial);
 
             // packet protection -> protected header, payload + tag
             initial.write(dir, bin_protected_header, bin_payload);

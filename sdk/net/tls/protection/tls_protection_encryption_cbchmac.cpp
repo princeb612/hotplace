@@ -32,11 +32,11 @@ return_t tls_protection::get_cbc_hmac_key(tls_session* session, tls_direction_t 
     return_t ret = errorcode_t::success;
     __try2 {
         if (is_clientinitiated(dir)) {
-            secret_key = tls_secret_client_key;
-            secret_mac_key = tls_secret_client_mac_key;
+            secret_key = tls_secret_t::client_key;
+            secret_mac_key = tls_secret_t::client_mac_key;
         } else if (is_serverinitiated(dir)) {
-            secret_key = tls_secret_server_key;
-            secret_mac_key = tls_secret_server_mac_key;
+            secret_key = tls_secret_t::server_key;
+            secret_mac_key = tls_secret_t::server_mac_key;
         }
     }
     __finally2 {}
@@ -88,9 +88,9 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session* session, tls_direction_t 
         binary_t iv;
         if (etm) {
             if (is_clientinitiated(dir)) {
-                iv = get_secrets().get(tls_secret_client_iv);
+                iv = get_secrets().get(tls_secret_t::client_iv);
             } else if (is_serverinitiated(dir)) {
-                iv = get_secrets().get(tls_secret_server_iv);
+                iv = get_secrets().get(tls_secret_t::server_iv);
             }
         } else {
             auto ivsize = sizeof_iv(hint_cipher);
@@ -223,9 +223,9 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session* session, tls_direction_t 
             ciphertext = stream + pos + bpos;
             ciphersize = size - pos - bpos;
             if (is_clientinitiated(dir)) {
-                iv = get_secrets().get(tls_secret_client_iv);
+                iv = get_secrets().get(tls_secret_t::client_iv);
             } else if (is_serverinitiated(dir)) {
-                iv = get_secrets().get(tls_secret_server_iv);
+                iv = get_secrets().get(tls_secret_t::server_iv);
             }
         } else {
             bpos = content_header_size + ivsize;

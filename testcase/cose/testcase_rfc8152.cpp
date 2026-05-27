@@ -960,9 +960,9 @@ void test_jose_from_cwk() {
 
     const EVP_PKEY* pkey = nullptr;
     std::string kid;
-    pkey = privkey.select(kid, signature_t::sig_es512);
+    pkey = privkey.select(kid, signature_t::es512);
     _test_case.assert(pkey && (kid == "bilbo.baggins@hobbiton.example"), __FUNCTION__, "select key from CWK where type is es512");
-    pkey = privkey.select(kid, signature_t::sig_es256);
+    pkey = privkey.select(kid, signature_t::es256);
     _test_case.assert(pkey && (kid == "11"), __FUNCTION__, "select key from CWK where type is es256");  // alphabetic order...
 
     _test_case.reset_time();

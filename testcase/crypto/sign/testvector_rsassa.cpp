@@ -54,7 +54,7 @@ void test_yaml_testvector_rsassa() {
             entry.alg = item["alg"].as<std::string>("");
             entry.m = item["m"].as<std::string>("");
             entry.s = item["s"].as<std::string>("");
-            if (sig_category_rsassa_pss == category) {
+            if (sig_category_t::rsassa_pss == category) {
                 auto node_salt = item["salt"];
                 // salt:
                 //      as<std::string>("") return null
@@ -66,7 +66,7 @@ void test_yaml_testvector_rsassa() {
             crypto_sign_builder builder;
             auto s = builder.set_category(category).set_digest(entry.alg).build();
             if (s) {
-                if (sig_category_rsassa_pss == category) {
+                if (sig_category_t::rsassa_pss == category) {
                     binary_t salt = base16_decode(entry.salt);
                     s->set_saltlen(t_narrow_cast(salt.size()));
                 }
@@ -76,7 +76,7 @@ void test_yaml_testvector_rsassa() {
                     binary_t msg = base16_decode(entry.m);
                     binary_t sig = base16_decode(entry.s);
 
-                    if (sig_category_rsassa_pkcs15 == category) {
+                    if (sig_category_t::rsassa_pkcs15 == category) {
                         ret = s->sign(pkey, msg, sig);
                         _logger->hdump("> input", msg);
                         _logger->hdump("> sig", sig);
@@ -110,9 +110,9 @@ void test_yaml_testvector_rsassa() {
             if (schema == "RSA KEY") {
                 lambda_yaml_rsa_key(items);
             } else if (schema == "RSA PKCS 1.5") {
-                lambda_yaml_rsa(items, sig_category_rsassa_pkcs15);
+                lambda_yaml_rsa(items, sig_category_t::rsassa_pkcs15);
             } else if (schema == "RSA PSS") {
-                lambda_yaml_rsa(items, sig_category_rsassa_pss);
+                lambda_yaml_rsa(items, sig_category_t::rsassa_pss);
             } else {
                 _test_case.assert(false, __FUNCTION__, "bad message format");
             }

@@ -25,7 +25,7 @@ class tls_extension_signature_algorithms : public tls_extension {
     tls_extension_signature_algorithms(tls_handshake* handshake);
     virtual ~tls_extension_signature_algorithms();
 
-    tls_extension_signature_algorithms& add(uint16 code);
+    tls_extension_signature_algorithms& add(tls_sigscheme_t code);
     tls_extension_signature_algorithms& add(const std::string& name);
 
     void clear();
@@ -36,7 +36,7 @@ class tls_extension_signature_algorithms : public tls_extension {
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
 
    private:
-    std::list<uint16> _algorithms;
+    std::list<tls_sigscheme_t> _algorithms;
 };
 
 }  // namespace net

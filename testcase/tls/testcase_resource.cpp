@@ -110,7 +110,7 @@ static void do_validate_resource_cipher_suite() {
             auto hint_digest = advisor->hintof_digest(item->mac);
             if (hint_digest) {
                 digest_name = hint_digest->fetchname;
-                if (sha1 == item->mac) {
+                if (hash_algorithm_t::sha1 == item->mac) {
                     replace(digest_name, "sha1", "sha");
                 }
             } else {
@@ -171,7 +171,7 @@ static void do_validate_resource_cipher_suite() {
                     }
                 }
                 if (false == test) {
-                    if (sha2_256 == item->mac) {
+                    if (hash_algorithm_t::sha2_256 == item->mac) {
                         std::string name2_iana = name_iana + "_SHA256";
                         test = (name2_iana == name);
                     }

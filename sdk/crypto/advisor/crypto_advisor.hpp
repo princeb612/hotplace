@@ -303,13 +303,14 @@ class crypto_advisor {
 
     uint16 unitsizeof_ecdsa(hash_algorithm_t alg);
     uint16 sizeof_ecdsa(hash_algorithm_t alg);
-    uint16 sizeof_ecdsa(signature_t sig);
+    uint16 sizeof_signature(signature_t sig);
 
     /**
      * @brief TLS signature scheme
      * @param uint16 scheme [in] tls_sigscheme_t
      */
-    const hint_sigscheme_t* hintof_sigscheme(uint16 scheme);
+    const hint_sigscheme_t* hintof_sigscheme(signature_t scheme);
+    const hint_sigscheme_t* hintof_sigscheme(tls_sigscheme_t scheme);
     const hint_sigscheme_t* hintof_sig_nid(uint32 nid);
     const hint_sigscheme_t* hintof_sigscheme(const char* scheme);
     const hint_sigscheme_t* hintof_sigscheme(const std::string& scheme);
@@ -613,13 +614,13 @@ class crypto_advisor {
      * @param uint16 group [in] TLS supported group
      * @return const hint_curve_t*
      */
-    const hint_curve_t* hintof_curve_tls_group(uint16 group);
-    const hint_group_t* hintof_tls_group(uint16 group);
+    const hint_curve_t* hintof_curve_tls_group(tls_group_t group);
+    const hint_group_t* hintof_tls_group(tls_group_t group);
     const hint_group_t* hintof_tls_group(const std::string& name);
     void enum_tls_group(std::function<void(const hint_group_t*)> func);
     const hint_group_t* hintof_tls_group_nid(uint32 nid);
 
-    return_t for_each_tls_group(std::function<void(uint16, uint32)> f);
+    return_t for_each_tls_group(std::function<void(tls_group_t, uint32)> f);
     return_t for_each_tls_group(std::function<void(const hint_group_t*)> f);
 
     ///////////////////////////////////////////////////////////////////////////
@@ -818,7 +819,7 @@ class crypto_advisor {
         md_fetch_block_t() : md(nullptr), hint(nullptr) {}
         md_fetch_block_t(EVP_MD* m, const hint_digest_t* h) : md(m), hint(h) {}
     };
-    typedef std::map<uint32, md_fetch_block_t> md_fetch_map_t;           /* pair (alg+mode, md_fetch_block_t) */
+    typedef std::map<hash_algorithm_t, md_fetch_block_t> md_fetch_map_t; /* pair (alg+mode, md_fetch_block_t) */
     typedef std::map<std::string, const hint_digest_t*> md_byname_map_t; /* "sha256" to hint_digest_t* */
     md_fetch_map_t _md_fetch_map;
     md_byname_map_t _md_byname_map;
@@ -832,11 +833,13 @@ class crypto_advisor {
     ///////////////////////////////////////////////////////////////////////////
     // sign
     ///////////////////////////////////////////////////////////////////////////
-    typedef std::map<uint32, const hint_signature_t*> signature_map_t;
+    typedef std::map<signature_t, const hint_signature_t*> signature_map_t;
     typedef std::map<std::string, const hint_signature_t*> signature_byname_map_t;
     signature_map_t _crypt_sig_map;
     signature_byname_map_t _sig_byname_map;
-    typedef std::map<uint16, const hint_sigscheme_t*> hint_sigscheme_map_t;
+    typedef std::map<signature_t, const hint_sigscheme_t*> hint_signature_map_t;
+    typedef std::map<tls_sigscheme_t, const hint_sigscheme_t*> hint_sigscheme_map_t;
+    hint_signature_map_t _hint_signature_map;
     hint_sigscheme_map_t _hint_sigscheme_map;
     typedef std::map<uint32, const hint_sigscheme_t*> hint_sigscheme_nid_map_t;
     typedef std::map<std::string, const hint_sigscheme_t*> hint_sigscheme_name_map_t;
@@ -850,16 +853,18 @@ class crypto_advisor {
     ///////////////////////////////////////////////////////////////////////////
     // JOSE
     ///////////////////////////////////////////////////////////////////////////
-    typedef std::map<uint32, const hint_jose_encryption_t*> jose_encryption_map_t;
+    typedef std::map<jwa_t, const hint_jose_encryption_t*> jwa_map_t;
+    typedef std::map<jwe_t, const hint_jose_encryption_t*> jwe_map_t;
     typedef std::multimap<uint32, const hint_signature_t*> jose_signature_bynid_map_t;
     typedef std::map<std::string, const hint_jose_encryption_t*> jose_encryption_byname_map_t;
     typedef std::map<std::string, const hint_curve_t*> jose_nid_bycurve_map_t;
     typedef std::map<uint32, const hint_curve_t*> jose_curve_bynid_map_t;
     typedef std::map<signature_t, jws_t> sig2jws_map_t;
     typedef std::map<jws_t, signature_t> jws2sig_map_t;
-    jose_encryption_map_t _alg_map;
-    jose_encryption_map_t _enc_map;
-    signature_map_t _jose_sig_map;
+    jwa_map_t _alg_map;
+    jwe_map_t _enc_map;
+    typedef std::map<jws_t, const hint_signature_t*> jose_signature_map_t;
+    jose_signature_map_t _jose_sig_map;
     jose_signature_bynid_map_t _sig_bynid_map;
     jose_encryption_byname_map_t _alg_byname_map;
     jose_encryption_byname_map_t _enc_byname_map;
@@ -887,9 +892,9 @@ class crypto_advisor {
     ///////////////////////////////////////////////////////////////////////////
     // TLS
     ///////////////////////////////////////////////////////////////////////////
-    typedef std::map<uint16, const hint_group_t*> tls_group_map_t;
+    typedef std::map<tls_group_t, const hint_group_t*> tls_group_map_t;
     typedef std::map<std::string, const hint_group_t*> tls_group_name_map_t;
-    typedef std::map<uint16, const hint_curve_t*> tls_group_curve_map_t;
+    typedef std::map<tls_group_t, const hint_curve_t*> tls_group_curve_map_t;
     typedef std::map<uint32, const hint_group_t*> tls_group_nid_map_t;
     tls_group_map_t _tls_group_map;
     tls_group_nid_map_t _tls_group_nid_map;

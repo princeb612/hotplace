@@ -26,14 +26,14 @@ namespace hotplace {
 namespace net {
 
 hash_algorithm_t algof_mac(const tls_cipher_suite_t* info) {
-    hash_algorithm_t alg = hash_alg_unknown;
+    hash_algorithm_t alg = hash_algorithm_t{};
     if (info) {
         alg = info->mac;
         switch (alg) {
-            case md5:
-            case sha1:
+            case hash_algorithm_t::md5:
+            case hash_algorithm_t::sha1:
                 // insecure algorithm promotion
-                alg = sha2_256;
+                alg = hash_algorithm_t::sha2_256;
                 break;
             default:
                 break;
@@ -277,7 +277,7 @@ const hint_digest_t* tls_advisor::hintof_digest(uint16 code) {
 }
 
 hash_algorithm_t tls_advisor::algof_hash(uint16 code) {
-    hash_algorithm_t alg = hash_alg_unknown;
+    hash_algorithm_t alg = hash_algorithm_t{};
     const tls_cipher_suite_t* hint_tls_alg = hintof_cipher_suite(code);
     if (hint_tls_alg) {
         alg = hint_tls_alg->mac;
@@ -425,16 +425,16 @@ bool tls_advisor::is_kindof(tls_version_t lhs, tls_version_t rhs) {
 std::string tls_advisor::nameof_tls_flow(tls_flow_t flow) {
     std::string value;
     switch (flow) {
-        case tls_flow_1rtt: {
+        case tls_flow_t::one_rtt: {
             value = "1-RTT";
         } break;
-        case tls_flow_0rtt: {
+        case tls_flow_t::zero_rtt: {
             value = "0-RTT";
         } break;
-        case tls_flow_hello_retry_request: {
+        case tls_flow_t::hello_retry_request: {
             value = "HelloRetryRequest";
         } break;
-        case tls_flow_renegotiation: {
+        case tls_flow_t::renegotiation: {
             value = "renegotiation";
         } break;
     }
@@ -655,11 +655,11 @@ return_t tls_advisor::set_tls_groups(const char* groups) {
                 _groups.insert(code);
                 if (tls_flag_hybrid & hint->flags) {
                     // if SecP384r1MLKEM1024, also add SecP384r1, MLKEM1024
-                    if (hint->first.additional) {
-                        _groups.insert(hint->first.additional);
+                    if (hint->first.group != tls_group_t::unknown) {
+                        _groups.insert(hint->first.group);
                     }
-                    if (hint->second.additional) {
-                        _groups.insert(hint->second.additional);
+                    if (hint->second.group != tls_group_t::unknown) {
+                        _groups.insert(hint->second.group);
                     }
                 }
 #if defined DEBUG
@@ -687,7 +687,7 @@ return_t tls_advisor::set_default_tls_groups() {
     return ret;
 }
 
-bool tls_advisor::test_tls_group(uint16 group) {
+bool tls_advisor::test_tls_group(tls_group_t group) {
     bool ret = false;
     if (_groups.empty()) {
         ret = true;

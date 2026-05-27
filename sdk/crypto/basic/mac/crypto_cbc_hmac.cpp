@@ -19,7 +19,7 @@
 namespace hotplace {
 namespace crypto {
 
-crypto_cbc_hmac::crypto_cbc_hmac() : _enc_alg(crypt_alg_unknown), _mac_alg(hash_alg_unknown), _flag(0) { _shared.make_share(this); }
+crypto_cbc_hmac::crypto_cbc_hmac() : _enc_alg(crypt_alg_unknown), _mac_alg(hash_algorithm_t{}), _flag(0) { _shared.make_share(this); }
 
 crypto_cbc_hmac& crypto_cbc_hmac::set_enc(const char* enc_alg) {
     crypto_advisor* advisor = crypto_advisor::get_instance();

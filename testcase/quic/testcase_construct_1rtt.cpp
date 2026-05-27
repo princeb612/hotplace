@@ -17,10 +17,10 @@ void testcase_construct_1rtt() {
     tls_session quicsession(session_type_quic);                      // QUIC 1
     quicsession.get_tls_protection().set_cipher_suite(0x1302);       // TLS_AES_256_GCM_SHA384
     auto& secrets = quicsession.get_tls_protection().get_secrets();  // QUIC client header protection, key, initial vector
-    secrets.assign(tls_secret_application_quic_client_hp, base16_decode("3fdbae30616d0a07cdf5d80ca1bcbc8c70a73ca4aa6344312afe100d28bb5ba5"));
-    secrets.assign(tls_secret_application_quic_client_key, base16_decode("30e8e78feec5efc175e62f42f3fa7888d41123fa87d104c3493311a8047a6c56"));
-    secrets.assign(tls_secret_application_quic_client_iv, base16_decode("097284612fb7e8bbee84fa20"));
-    secrets.assign(tls_context_server_cid, base16_decode("fe21df6a65e76e9e"));  // DCID
+    secrets.assign(tls_secret_t::application_quic_client_hp, base16_decode("3fdbae30616d0a07cdf5d80ca1bcbc8c70a73ca4aa6344312afe100d28bb5ba5"));
+    secrets.assign(tls_secret_t::application_quic_client_key, base16_decode("30e8e78feec5efc175e62f42f3fa7888d41123fa87d104c3493311a8047a6c56"));
+    secrets.assign(tls_secret_t::application_quic_client_iv, base16_decode("097284612fb7e8bbee84fa20"));
+    secrets.assign(tls_secret_t::server_cid, base16_decode("fe21df6a65e76e9e"));  // DCID
 
     return_t ret = errorcode_t::success;
     auto dir = from_client;
@@ -42,7 +42,7 @@ void testcase_construct_1rtt() {
 
     // write & read (PKN 15)
     {
-        uint32 recno = t_narrow_cast(quicsession.get_recordno(dir, false, protection_application));
+        uint32 recno = t_narrow_cast(quicsession.get_recordno(dir, false, protection_space_t::application));
 
         /**
          *  > frame ACK 0x2(2) @0x0
@@ -60,7 +60,7 @@ void testcase_construct_1rtt() {
 
         quic_packet_1rtt packet(&quicsession);
         packet.set_pn(recno, 4);
-        packet.set_dcid(secrets.get(tls_context_server_cid));
+        packet.set_dcid(secrets.get(tls_secret_t::server_cid));
         packet.set_payload(bin_payload);
         ret = packet.write(dir, bin_packet);
 

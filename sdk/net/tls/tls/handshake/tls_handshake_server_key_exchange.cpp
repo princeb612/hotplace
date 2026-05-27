@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
+#include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
@@ -126,6 +127,9 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                 pl.get_binary(constexpr_sig, sig);
             }
 
+            t_enum_type<tls_sigscheme_t> etsigalg(sigalg);
+            t_enum_type<tls_group_t> etcurve(curve);
+
             auto pkey = tlsadvisor->get_key(session, KID_TLS_SERVER_CERTIFICATE_PUBLIC);
             if (nullptr == pkey) {
                 ret = errorcode_t::invalid_context;
@@ -139,21 +143,21 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
                 // 3 named_curve
                 if (3 == curve_info) {
                     crypto_keyexchange keyexchange;
-                    ret = keyexchange.keystore((tls_group_t)curve, &tlskey, KID_TLS_SERVER_KEY_EXCHANGE, pubkey);
+                    ret = keyexchange.keystore(etcurve, &tlskey, KID_TLS_SERVER_KEY_EXCHANGE, pubkey);
                 }
             }
 
             {
                 // hash(client_hello_random + server_hello_random + curve_info + public_key)
                 binary_t message;
-                binary_append(message, secrets.get(tls_context_client_hello_random));
-                binary_append(message, secrets.get(tls_context_server_hello_random));
+                binary_append(message, secrets.get(tls_secret_t::client_hello_random));
+                binary_append(message, secrets.get(tls_secret_t::server_hello_random));
                 binary_append(message, stream + hspos, 3);
                 binary_append(message, pubkey_len);
                 binary_append(message, pubkey);
 
                 crypto_sign_builder builder;
-                auto sign = builder.set_tls_sign_scheme(sigalg).build();
+                auto sign = builder.set_tls_sign_scheme(etsigalg).build();
                 if (sign) {
                     ret = sign->verify(pkey, message, sig, sign_flag_format_der);
                     sign->release();
@@ -166,7 +170,7 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
             if (istraceable(trace_category_t::trace_category_net)) {
                 trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                     auto advisor = crypto_advisor::get_instance();
-                    auto hint = advisor->hintof_sigscheme(sigalg);
+                    auto hint = advisor->hintof_sigscheme(etsigalg);
                     std::string name;
                     if (hint) {
                         name = hint->name;
@@ -174,14 +178,14 @@ return_t tls_handshake_server_key_exchange::do_read_body(tls_direction_t dir, co
 
                     dbs.autoindent(2);
                     dbs.println("> %s %i (%s)", constexpr_curve_info, curve_info, tlsadvisor->nameof_ec_curve_type(curve_info).c_str());
-                    dbs.println("> %s 0x%04x %s", constexpr_curve, curve, tlsadvisor->nameof_group(curve).c_str());
+                    dbs.println("> %s 0x%04x %s", constexpr_curve, etcurve, tlsadvisor->nameof_group(etcurve).c_str());
                     dbs.println("> %s", constexpr_pubkey);
                     dbs.println(" > %s %i", constexpr_pubkey_len, pubkey_len);
                     if (check_trace_level(loglevel_t::loglevel_debug)) {
                         dump_memory(pubkey, &dbs, 16, 4, 0x0, dump_notrunc);
                     }
                     dbs.println("> %s " ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", constexpr_signature, (errorcode_t::success == ret) ? "true" : "false");
-                    dbs.println(" > 0x%04x %s", sigalg, name.c_str());
+                    dbs.println(" > 0x%04x %s", etsigalg, name.c_str());
                     dbs.println(" > %s %i", constexpr_sig_len, sig_len);
                     if (check_trace_level(loglevel_t::loglevel_debug)) {
                         dump_memory(sig, &dbs, 16, 3, 0x0, dump_notrunc);
@@ -210,18 +214,18 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
     auto advisor = crypto_advisor::get_instance();
     auto tlsadvisor = tls_advisor::get_instance();
     uint8 curve_info = 3;  // named curvev
-    uint16 curve = 0;
+    tls_group_t curve = tls_group_t{};
     binary_t pubkey;
     binary_t sig;
     crypto_keychain keychain;
     crypto_keyexchange keyexchange;
 
     {
-        auto lambda = [&](uint16 group, bool* ctrl) -> void {
+        auto lambda = [&](tls_group_t group, bool* ctrl) -> void {
             auto hint = advisor->hintof_curve_tls_group(group);
-            if (hint && hint->tlsgroup) {
-                keyexchange.keygen((tls_group_t)group, &tlskey, KID_TLS_SERVER_KEY_EXCHANGE);
-                keyexchange.keyshare((tls_group_t)group, &tlskey, KID_TLS_SERVER_KEY_EXCHANGE, pubkey);
+            if (hint && (hint->tlsgroup != tls_group_t::unknown)) {
+                keyexchange.keygen(group, &tlskey, KID_TLS_SERVER_KEY_EXCHANGE);
+                keyexchange.keyshare(group, &tlskey, KID_TLS_SERVER_KEY_EXCHANGE, pubkey);
                 curve = group;
                 *ctrl = true;  // stop
             }
@@ -232,9 +236,9 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
     auto pkey_cert = tlsadvisor->get_key(session, KID_TLS_SERVER_CERTIFICATE_PRIVATE);
     auto kty_cert = ktyof_evp_pkey(pkey_cert);
 
-    uint16 sigalg = 0;
+    tls_sigscheme_t sigalg = tls_sigscheme_t{};
     {
-        auto lambda = [&](uint16 sigscheme, bool* ctrl) -> void {
+        auto lambda = [&](tls_sigscheme_t sigscheme, bool* ctrl) -> void {
             auto advisor = crypto_advisor::get_instance();
             auto hint = advisor->hintof_sigscheme(sigscheme);
             bool stop = false;
@@ -252,8 +256,8 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
     {
         // sign(client_hello_random + server_hello_random + curve_info + public_key)
         binary_t message;
-        binary_append(message, secrets.get(tls_context_client_hello_random));
-        binary_append(message, secrets.get(tls_context_server_hello_random));
+        binary_append(message, secrets.get(tls_secret_t::client_hello_random));
+        binary_append(message, secrets.get(tls_secret_t::server_hello_random));
         binary_append(message, uint8(curve_info));
         binary_append(message, uint16(curve), hton16);
         binary_append(message, uint8(pubkey.size()));

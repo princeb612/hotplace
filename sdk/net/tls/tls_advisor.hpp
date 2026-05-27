@@ -159,8 +159,8 @@ class tls_advisor {
     std::string nameof_kdf_id(uint16 type);                       // "HKDF_SHA256", "HKDF_SHA384"
     std::string nameof_psk_key_exchange_mode(uint8 code);         // "psk_ke", "psk_dhe_ke"
     uint8 valueof_psk_key_exchange_mode(const std::string& name);
-    std::string nameof_group(uint16 code);
-    uint16 valueof_group(const std::string& name);
+    std::string nameof_group(tls_group_t code);
+    tls_group_t valueof_group(const std::string& name);
 
     // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
     std::string nameof_compression_alg(uint16 code);  // "zlib", "brotli", "zstd"
@@ -247,7 +247,7 @@ class tls_advisor {
     /**
      * @brief   test group
      */
-    bool test_tls_group(uint16 group);
+    bool test_tls_group(tls_group_t group);
 
    protected:
     tls_advisor();
@@ -303,7 +303,7 @@ class tls_advisor {
     std::map<uint32, const tls_session_status_code_t*> _session_status_codes;
 
     std::set<uint16> _ciphersuites;
-    std::set<uint16> _groups;
+    std::set<tls_group_t> _groups;
     binary_t _prot;
 
     bool _load;

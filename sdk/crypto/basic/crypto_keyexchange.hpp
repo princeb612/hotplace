@@ -21,44 +21,44 @@ namespace crypto {
  * @comments
  *      sketches
  *
- *      tls_group_sect163k1
- *      tls_group_sect163r1
- *      tls_group_sect163r2
- *      tls_group_sect193r1
- *      tls_group_sect193r2
- *      tls_group_sect233k1
- *      tls_group_sect233r1
- *      tls_group_sect239k1
- *      tls_group_sect283k1
- *      tls_group_sect283r1
- *      tls_group_sect409k1
- *      tls_group_sect409r1
- *      tls_group_sect571k1
- *      tls_group_sect571r1
- *      tls_group_secp160k1
- *      tls_group_secp160r1
- *      tls_group_secp160r2
- *      tls_group_secp192k1
- *      tls_group_secp192r1
- *      tls_group_secp224k1
- *      tls_group_secp224r1
- *      tls_group_secp256k1
- *      tls_group_secp256r1
- *      tls_group_secp384r1
- *      tls_group_secp521r1
- *      tls_group_x25519
- *      tls_group_x448
- *      tls_group_brainpoolP256r1
- *      tls_group_brainpoolP384r1
- *      tls_group_brainpoolP512r1
- *      tls_group_brainpoolP256r1tls13
- *      tls_group_brainpoolP384r1tls13
- *      tls_group_brainpoolP512r1tls13
- *      tls_group_ffdhe2048
- *      tls_group_ffdhe3072
- *      tls_group_ffdhe4096
- *      tls_group_ffdhe6144
- *      tls_group_ffdhe8192
+ *      tls_group_t::sect163k1
+ *      tls_group_t::sect163r1
+ *      tls_group_t::sect163r2
+ *      tls_group_t::sect193r1
+ *      tls_group_t::sect193r2
+ *      tls_group_t::sect233k1
+ *      tls_group_t::sect233r1
+ *      tls_group_t::sect239k1
+ *      tls_group_t::sect283k1
+ *      tls_group_t::sect283r1
+ *      tls_group_t::sect409k1
+ *      tls_group_t::sect409r1
+ *      tls_group_t::sect571k1
+ *      tls_group_t::sect571r1
+ *      tls_group_t::secp160k1
+ *      tls_group_t::secp160r1
+ *      tls_group_t::secp160r2
+ *      tls_group_t::secp192k1
+ *      tls_group_t::secp192r1
+ *      tls_group_t::secp224k1
+ *      tls_group_t::secp224r1
+ *      tls_group_t::secp256k1
+ *      tls_group_t::secp256r1
+ *      tls_group_t::secp384r1
+ *      tls_group_t::secp521r1
+ *      tls_group_t::x25519
+ *      tls_group_t::x448
+ *      tls_group_t::brainpoolP256r1
+ *      tls_group_t::brainpoolP384r1
+ *      tls_group_t::brainpoolP512r1
+ *      tls_group_t::brainpoolP256r1tls13
+ *      tls_group_t::brainpoolP384r1tls13
+ *      tls_group_t::brainpoolP512r1tls13
+ *      tls_group_t::ffdhe2048
+ *      tls_group_t::ffdhe3072
+ *      tls_group_t::ffdhe4096
+ *      tls_group_t::ffdhe6144
+ *      tls_group_t::ffdhe8192
  *
  *          // alice
  *          crypto_key keystore_alice;
@@ -72,12 +72,12 @@ namespace crypto {
  *          // bob -> alice
  *          keyexch_alice.exchange(&keystore_alice, "alice", share_bob, sharedsecret_alice);
  *
- *      tls_group_mlkem512
- *      tls_group_mlkem768
- *      tls_group_mlkem1024
- *      tls_group_secp256r1mlkem768
- *      tls_group_secp384r1mlkem1024
- *      tls_group_x25519mlkem768
+ *      tls_group_t::mlkem512
+ *      tls_group_t::mlkem768
+ *      tls_group_t::mlkem1024
+ *      tls_group_t::secp256r1mlkem768
+ *      tls_group_t::secp384r1mlkem1024
+ *      tls_group_t::x25519mlkem768
  *
  *          // alice
  *          crypto_key keystore_alice;
@@ -91,7 +91,7 @@ namespace crypto {
  */
 class crypto_keyexchange {
    public:
-    crypto_keyexchange(tls_group_t group = tls_group_unknown);
+    crypto_keyexchange(tls_group_t group = tls_group_t{});
     ~crypto_keyexchange();
 
     /**
@@ -120,9 +120,9 @@ class crypto_keyexchange {
      *          - decaps    <---- keycapsle     SH
      *
      *          inconsistent concatenation
-     *          - tls_group_secp256r1mlkem768  secp256r1 || mlkem768
-     *          - tls_group_x25519mlkem768     mlkem768  || x25519 (due to historical reasons)
-     *          - tls_group_secp384r1mlkem1024 secp384r1 || mlkem1024
+     *          - tls_group_t::secp256r1mlkem768  secp256r1 || mlkem768
+     *          - tls_group_t::x25519mlkem768     mlkem768  || x25519 (due to historical reasons)
+     *          - tls_group_t::secp384r1mlkem1024 secp384r1 || mlkem1024
      * @refer
      *          [draft-ietf-tls-mlkem-05](https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/)
      *          [draft-ietf-tls-ecdhe-mlkem-03](https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/)

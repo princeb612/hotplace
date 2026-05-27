@@ -703,7 +703,7 @@ const EVP_PKEY* crypto_key::find(const char* kid, tls_group_t group, crypto_use_
     return ret_value;
 }
 
-const EVP_PKEY* crypto_key::find_group(const char* kid, uint16 group, crypto_use_t use, bool up_ref) { return find(kid, (tls_group_t)group, use, up_ref); }
+const EVP_PKEY* crypto_key::find_group(const char* kid, tls_group_t group, crypto_use_t use, bool up_ref) { return find(kid, (tls_group_t)group, use, up_ref); }
 
 const EVP_PKEY* crypto_key::find(const char* kid, jwa_t alg, crypto_use_t use, bool up_ref) {
     const EVP_PKEY* ret_value = nullptr;

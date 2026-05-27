@@ -335,11 +335,11 @@ struct tls_alert_t {
  *          keysize             cipher key size
  *          ivsize              12
  */
-enum tls_secret_t : uint16 {
-    tls_secret_unknown = 0,
+enum class tls_secret_t : uint16 {
+    unknown = 0,
 
     // HKDF_Extract(hashalg, salt, empty_ikm)
-    tls_secret_early_secret = (TLS_SECRET | TLS_SECRET_EARLY),
+    early_secret = (TLS_SECRET | TLS_SECRET_EARLY),
     // RFC 2246 6.3. Key calculation
     // RFC 5246 5.  HMAC and the Pseudorandom Function
     // key_block = PRF(SecurityParameters.master_secret,
@@ -353,162 +353,162 @@ enum tls_secret_t : uint16 {
     // server_write_key[SecurityParameters.key_material_length]
     // client_write_IV[SecurityParameters.IV_size]
     // server_write_IV[SecurityParameters.IV_size]
-    tls_secret_master = (TLS_SECRET_INITIAL | TLS_SECRET_MASTER),
-    tls_secret_client_mac_key = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT_MAC_KEY),
-    tls_secret_server_mac_key = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER_MAC_KEY),
-    tls_secret_client_key = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT_KEY),
-    tls_secret_client_iv = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT_IV),
-    tls_secret_server_key = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER_KEY),
-    tls_secret_server_iv = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER_IV),
+    master = (TLS_SECRET_INITIAL | TLS_SECRET_MASTER),
+    client_mac_key = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT_MAC_KEY),
+    server_mac_key = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER_MAC_KEY),
+    client_key = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT_KEY),
+    client_iv = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT_IV),
+    server_key = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER_KEY),
+    server_iv = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER_IV),
 
-    tls_secret_initial_quic = (TLS_SECRET_INITIAL | TLS_SECRET_MASTER),
-    tls_secret_initial_quic_client = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT),
-    tls_secret_initial_quic_server = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER),
-    tls_secret_initial_quic_client_key = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT_QUIC_KEY),
-    tls_secret_initial_quic_server_key = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER_QUIC_KEY),
-    tls_secret_initial_quic_client_iv = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT_QUIC_IV),
-    tls_secret_initial_quic_server_iv = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER_QUIC_IV),
-    tls_secret_initial_quic_client_hp = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT_QUIC_HP),
-    tls_secret_initial_quic_server_hp = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER_QUIC_HP),
+    initial_quic = (TLS_SECRET_INITIAL | TLS_SECRET_MASTER),
+    initial_quic_client = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT),
+    initial_quic_server = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER),
+    initial_quic_client_key = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT_QUIC_KEY),
+    initial_quic_server_key = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER_QUIC_KEY),
+    initial_quic_client_iv = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT_QUIC_IV),
+    initial_quic_server_iv = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER_QUIC_IV),
+    initial_quic_client_hp = (TLS_SECRET_INITIAL | TLS_SECRET_CLIENT_QUIC_HP),
+    initial_quic_server_hp = (TLS_SECRET_INITIAL | TLS_SECRET_SERVER_QUIC_HP),
 
-    // HKDF_Expand(hashalg, dlen, value(tls_secret_early_secret), tls_label("derived"), empty_hash)
-    tls_secret_handshake_derived = (TLS_SECRET_HANDSHAKE | TLS_SECRET_DERIVED),
-    // CLIENT_HANDSHAKE_TRAFFIC_SECRET, client_handshake_traffic_secret
-    // HKDF_Extract(hashalg, value(tls_secret_handshake_derived), shared_secret)
-    tls_secret_handshake = (TLS_SECRET_HANDSHAKE | TLS_SECRET_MASTER),
-    tls_secret_c_hs_traffic = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT),
-    tls_client_handshake_server = tls_secret_c_hs_traffic,
-    client_handshake_traffic_secret = tls_secret_c_hs_traffic,
-    // SERVER_HANDSHAKE_TRAFFIC_SECRET, server_handshake_traffic_secret
-    // HKDF_Expand(hashalg, dlen, value(tls_secret_handshake), tls_label("c hs traffic"), context_hash)
-    tls_secret_s_hs_traffic = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER),
-    // HKDF_Expand(hashalg, dlen, value(tls_secret_handshake), tls_label("s hs traffic"), context_hash)
-    tls_secret_handshake_server = tls_secret_s_hs_traffic,
-    server_handshake_traffic_secret = tls_secret_s_hs_traffic,
-    // HKDF_Expand(hashalg, keysize, value(tls_secret_c_hs_traffic), tls_label("key"), empty)
-    tls_secret_handshake_client_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_KEY),
-    // HKDF_Expand(hashalg, keysize, value(tls_secret_s_hs_traffic), tls_label("key"), empty)
-    tls_secret_handshake_server_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_KEY),
-    // HKDF_Expand(hashalg, ivsize, value(tls_secret_c_hs_traffic), tls_label("iv"), empty)
-    tls_secret_handshake_client_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_IV),
-    // HKDF_Expand(hashalg, ivsize, value(tls_secret_s_hs_traffic), tls_label("iv"), empty)
-    tls_secret_handshake_server_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_IV),
-    // HKDF_Expand(hashalg, keysize, value(tls_secret_c_hs_traffic), tls_label("sn"), empty)
-    tls_secret_handshake_client_sn_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_SN_KEY),  // DTLS
-    // HKDF_Expand(hashalg, keysize, value(tls_secret_s_hs_traffic), tls_label("sn"), empty)
-    tls_secret_handshake_server_sn_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_SN_KEY),  // DTLS
-    // HKDF_Expand(hashalg, keysize, value(tls_secret_c_hs_traffic), tls_label("quic key"), empty)
-    tls_secret_handshake_quic_client_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_QUIC_KEY),
-    // HKDF_Expand(hashalg, keysize, value(tls_secret_s_hs_traffic), tls_label("quic key"), empty)
-    tls_secret_handshake_quic_server_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_QUIC_KEY),
-    // HKDF_Expand(hashalg, ivsize, value(tls_secret_c_hs_traffic), tls_label("quic iv"), empty)
-    tls_secret_handshake_quic_client_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_QUIC_IV),
-    // HKDF_Expand(hashalg, ivsize, value(tls_secret_s_hs_traffic), tls_label("quic iv"), empty)
-    tls_secret_handshake_quic_server_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_QUIC_IV),
-    // HKDF_Expand(hashalg, keysize, value(tls_secret_c_hs_traffic), tls_label("quic hp"), empty)
-    tls_secret_handshake_quic_client_hp = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_QUIC_HP),
-    // HKDF_Expand(hashalg, keysize, value(tls_secret_s_hs_traffic), tls_label("quic hp"), empty)
-    tls_secret_handshake_quic_server_hp = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_QUIC_HP),
+    // HKDF_Expand(hashalg, dlen, value(tls_secret_t::early_secret), tls_label("derived"), empty_hash)
+    handshake_derived = (TLS_SECRET_HANDSHAKE | TLS_SECRET_DERIVED),
+    // CLIENT_HANDSHAKE_TRAFFIC_SECRET, tls_secret_t::client_handshake_traffic_secret
+    // HKDF_Extract(hashalg, value(tls_secret_t::handshake_derived), shared_secret)
+    handshake = (TLS_SECRET_HANDSHAKE | TLS_SECRET_MASTER),
+    c_hs_traffic = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT),
+    tls_client_handshake_server = c_hs_traffic,
+    client_handshake_traffic_secret = c_hs_traffic,
+    // SERVER_HANDSHAKE_TRAFFIC_SECRET, tls_secret_t::server_handshake_traffic_secret
+    // HKDF_Expand(hashalg, dlen, value(tls_secret_t::handshake), tls_label("c hs traffic"), context_hash)
+    s_hs_traffic = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER),
+    // HKDF_Expand(hashalg, dlen, value(tls_secret_t::handshake), tls_label("s hs traffic"), context_hash)
+    handshake_server = s_hs_traffic,
+    server_handshake_traffic_secret = s_hs_traffic,
+    // HKDF_Expand(hashalg, keysize, value(tls_secret_t::c_hs_traffic), tls_label("key"), empty)
+    handshake_client_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_KEY),
+    // HKDF_Expand(hashalg, keysize, value(tls_secret_t::s_hs_traffic), tls_label("key"), empty)
+    handshake_server_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_KEY),
+    // HKDF_Expand(hashalg, ivsize, value(tls_secret_t::c_hs_traffic), tls_label("iv"), empty)
+    handshake_client_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_IV),
+    // HKDF_Expand(hashalg, ivsize, value(tls_secret_t::s_hs_traffic), tls_label("iv"), empty)
+    handshake_server_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_IV),
+    // HKDF_Expand(hashalg, keysize, value(tls_secret_t::c_hs_traffic), tls_label("sn"), empty)
+    handshake_client_sn_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_SN_KEY),  // DTLS
+    // HKDF_Expand(hashalg, keysize, value(tls_secret_t::s_hs_traffic), tls_label("sn"), empty)
+    handshake_server_sn_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_SN_KEY),  // DTLS
+    // HKDF_Expand(hashalg, keysize, value(tls_secret_t::c_hs_traffic), tls_label("quic key"), empty)
+    handshake_quic_client_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_QUIC_KEY),
+    // HKDF_Expand(hashalg, keysize, value(tls_secret_t::s_hs_traffic), tls_label("quic key"), empty)
+    handshake_quic_server_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_QUIC_KEY),
+    // HKDF_Expand(hashalg, ivsize, value(tls_secret_t::c_hs_traffic), tls_label("quic iv"), empty)
+    handshake_quic_client_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_QUIC_IV),
+    // HKDF_Expand(hashalg, ivsize, value(tls_secret_t::s_hs_traffic), tls_label("quic iv"), empty)
+    handshake_quic_server_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_QUIC_IV),
+    // HKDF_Expand(hashalg, keysize, value(tls_secret_t::c_hs_traffic), tls_label("quic hp"), empty)
+    handshake_quic_client_hp = (TLS_SECRET_HANDSHAKE | TLS_SECRET_CLIENT_QUIC_HP),
+    // HKDF_Expand(hashalg, keysize, value(tls_secret_t::s_hs_traffic), tls_label("quic hp"), empty)
+    handshake_quic_server_hp = (TLS_SECRET_HANDSHAKE | TLS_SECRET_SERVER_QUIC_HP),
 
-    // HKDF_Expand(hashalg, dlen, value(tls_secret_resumption_early), tls_label("c e traffic"), context_hash)
-    tls_secret_c_e_traffic = (TLS_SECRET_HANDSHAKE | TLS_SECRET_EARLY | TLS_SECRET_CLIENT),
-    // HKDF_Expand(hashalg, keysize, value(tls_secret_c_e_traffic), tls_label("key"), empty)
-    tls_secret_c_e_traffic_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_EARLY | TLS_SECRET_CLIENT_KEY),
-    // HKDF_Expand(hashalg, ivsize, value(tls_secret_c_e_traffic), tls_label("iv"), empty)
-    tls_secret_c_e_traffic_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_EARLY | TLS_SECRET_CLIENT_IV),
+    // HKDF_Expand(hashalg, dlen, value(tls_secret_t::resumption_early), tls_label("c e traffic"), context_hash)
+    c_e_traffic = (TLS_SECRET_HANDSHAKE | TLS_SECRET_EARLY | TLS_SECRET_CLIENT),
+    // HKDF_Expand(hashalg, keysize, value(tls_secret_t::c_e_traffic), tls_label("key"), empty)
+    c_e_traffic_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_EARLY | TLS_SECRET_CLIENT_KEY),
+    // HKDF_Expand(hashalg, ivsize, value(tls_secret_t::c_e_traffic), tls_label("iv"), empty)
+    c_e_traffic_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_EARLY | TLS_SECRET_CLIENT_IV),
 
-    // tls_secret_s_e_traffic = (TLS_SECRET_HANDSHAKE | TLS_SECRET_EARLY | TLS_SECRET_SERVER),
-    // tls_secret_s_e_traffic_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_EARLY | TLS_SECRET_SERVER_KEY),
-    // tls_secret_s_e_traffic_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_EARLY | TLS_SECRET_SERVER_IV),
+    // s_e_traffic = (TLS_SECRET_HANDSHAKE | TLS_SECRET_EARLY | TLS_SECRET_SERVER),
+    // s_e_traffic_key = (TLS_SECRET_HANDSHAKE | TLS_SECRET_EARLY | TLS_SECRET_SERVER_KEY),
+    // s_e_traffic_iv = (TLS_SECRET_HANDSHAKE | TLS_SECRET_EARLY | TLS_SECRET_SERVER_IV),
 
-    // HKDF_Expand(hashalg, dlen, value(tls_secret_handshake), tls_label("derived"), empty_hash)
-    tls_secret_application_derived = (TLS_SECRET_APPLICATION | TLS_SECRET_DERIVED),
-    // HKDF_Extract(hashalg, value(tls_secret_application_derived), empty_ikm)
-    tls_secret_application = (TLS_SECRET_APPLICATION | TLS_SECRET_MASTER),
-    // CLIENT_TRAFFIC_SECRET_0, client_application_traffic_secret_0
-    // HKDF_Expand(hashalg, dlen, value(tls_secret_application), "c ap traffic", context_hash)
-    tls_secret_c_ap_traffic = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT),
-    tls_secret_application_client = tls_secret_c_ap_traffic,
-    client_application_traffic_secret_0 = tls_secret_c_ap_traffic,
-    // SERVER_TRAFFIC_SECRET_0, server_application_traffic_secret_0
-    // HKDF_Expand(hashalg, dlen, value(tls_secret_application), "s ap traffic", context_hash)
-    tls_secret_s_ap_traffic = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER),
-    tls_secret_application_server = tls_secret_s_ap_traffic,
-    server_application_traffic_secret_0 = tls_secret_s_ap_traffic,
-    // HKDF_Expand(hashalg, keysize, value(tls_secret_application_client), tls_label("key"), empty)
-    tls_secret_application_client_key = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_KEY),
-    // HKDF_Expand(hashalg, keysize, value(tls_secret_application_server), tls_label("key"), empty)
-    tls_secret_application_server_key = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_KEY),
-    // HKDF_Expand(hashalg, ivsize, value(tls_secret_application_client), tls_label("iv"), empty)
-    tls_secret_application_client_iv = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_IV),
-    // HKDF_Expand(hashalg, ivsize, value(tls_secret_application_server), tls_label("iv"), empty)
-    tls_secret_application_server_iv = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_IV),
-    // HKDF_Expand(hashalg, keysize, value(tls_secret_application_client), tls_label("sn"), empty)
-    tls_secret_application_client_sn_key = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_SN_KEY),
-    // HKDF_Expand(hashalg, keysize, value(tls_secret_application_server), tls_label("sn"), empty)
-    tls_secret_application_server_sn_key = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_SN_KEY),
+    // HKDF_Expand(hashalg, dlen, value(tls_secret_t::handshake), tls_label("derived"), empty_hash)
+    application_derived = (TLS_SECRET_APPLICATION | TLS_SECRET_DERIVED),
+    // HKDF_Extract(hashalg, value(tls_secret_t::application_derived), empty_ikm)
+    application = (TLS_SECRET_APPLICATION | TLS_SECRET_MASTER),
+    // CLIENT_TRAFFIC_SECRET_0, tls_secret_t::client_application_traffic_secret_0
+    // HKDF_Expand(hashalg, dlen, value(tls_secret_t::application), "c ap traffic", context_hash)
+    c_ap_traffic = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT),
+    application_client = c_ap_traffic,
+    client_application_traffic_secret_0 = c_ap_traffic,
+    // SERVER_TRAFFIC_SECRET_0, tls_secret_t::server_application_traffic_secret_0
+    // HKDF_Expand(hashalg, dlen, value(tls_secret_t::application), "s ap traffic", context_hash)
+    s_ap_traffic = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER),
+    application_server = s_ap_traffic,
+    server_application_traffic_secret_0 = s_ap_traffic,
+    // HKDF_Expand(hashalg, keysize, value(tls_secret_t::application_client), tls_label("key"), empty)
+    application_client_key = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_KEY),
+    // HKDF_Expand(hashalg, keysize, value(tls_secret_t::application_server), tls_label("key"), empty)
+    application_server_key = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_KEY),
+    // HKDF_Expand(hashalg, ivsize, value(tls_secret_t::application_client), tls_label("iv"), empty)
+    application_client_iv = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_IV),
+    // HKDF_Expand(hashalg, ivsize, value(tls_secret_t::application_server), tls_label("iv"), empty)
+    application_server_iv = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_IV),
+    // HKDF_Expand(hashalg, keysize, value(tls_secret_t::application_client), tls_label("sn"), empty)
+    application_client_sn_key = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_SN_KEY),
+    // HKDF_Expand(hashalg, keysize, value(tls_secret_t::application_server), tls_label("sn"), empty)
+    application_server_sn_key = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_SN_KEY),
 
-    // HKDF_Expand(hashalg, keysize, value(tls_secret_application_client), tls_label("quic key"), empty)
-    tls_secret_application_quic_client_key = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_QUIC_KEY),
-    // HKDF_Expand(hashalg, keysize, value(tls_secret_application_server), tls_label("quic key"), empty)
-    tls_secret_application_quic_server_key = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_QUIC_KEY),
-    // HKDF_Expand(hashalg, ivsize, value(tls_secret_application_client), tls_label("quic iv"), empty)
-    tls_secret_application_quic_client_iv = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_QUIC_IV),
-    // HKDF_Expand(hashalg, ivsize, value(tls_secret_application_server), tls_label("quic iv"), empty)
-    tls_secret_application_quic_server_iv = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_QUIC_IV),
-    // HKDF_Expand(hashalg, keysize, value(tls_secret_application_client), tls_label("quic hp"), empty)
-    tls_secret_application_quic_client_hp = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_QUIC_HP),
-    // HKDF_Expand(hashalg, keysize, value(tls_secret_application_server), tls_label("quic hp"), empty)
-    tls_secret_application_quic_server_hp = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_QUIC_HP),
+    // HKDF_Expand(hashalg, keysize, value(tls_secret_t::application_client), tls_label("quic key"), empty)
+    application_quic_client_key = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_QUIC_KEY),
+    // HKDF_Expand(hashalg, keysize, value(tls_secret_t::application_server), tls_label("quic key"), empty)
+    application_quic_server_key = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_QUIC_KEY),
+    // HKDF_Expand(hashalg, ivsize, value(tls_secret_t::application_client), tls_label("quic iv"), empty)
+    application_quic_client_iv = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_QUIC_IV),
+    // HKDF_Expand(hashalg, ivsize, value(tls_secret_t::application_server), tls_label("quic iv"), empty)
+    application_quic_server_iv = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_QUIC_IV),
+    // HKDF_Expand(hashalg, keysize, value(tls_secret_t::application_client), tls_label("quic hp"), empty)
+    application_quic_client_hp = (TLS_SECRET_APPLICATION | TLS_SECRET_CLIENT_QUIC_HP),
+    // HKDF_Expand(hashalg, keysize, value(tls_secret_t::application_server), tls_label("quic hp"), empty)
+    application_quic_server_hp = (TLS_SECRET_APPLICATION | TLS_SECRET_SERVER_QUIC_HP),
 
     // EXPORTER_SECRET, exporter_master_secret, secret_exporter_master
-    // HKDF_Expand(hashalg, dlen, vale(tls_secret_application), tls_label("exp master", context_hash)
-    tls_secret_exp_master = (TLS_SECRET_EXPORTER | TLS_SECRET_MASTER),
-    tls_secret_exporter_master = tls_secret_exp_master,
+    // HKDF_Expand(hashalg, dlen, vale(tls_secret_t::application), tls_label("exp master", context_hash)
+    exp_master = (TLS_SECRET_EXPORTER | TLS_SECRET_MASTER),
+    exporter_master = exp_master,
 
-    // HKDF_Expand(hashalg, dlen, value(tls_secret_resumption_early), "e exp master", context_hash)
-    tls_secret_e_exp_master = (TLS_SECRET_EXPORTER | TLS_SECRET_EARLY | TLS_SECRET_MASTER),
+    // HKDF_Expand(hashalg, dlen, value(tls_secret_t::resumption_early), "e exp master", context_hash)
+    e_exp_master = (TLS_SECRET_EXPORTER | TLS_SECRET_EARLY | TLS_SECRET_MASTER),
 
-    // tls_secret_resumption_binder = (TLS_SECRET_RESUMPTION | TLS_SECRET_BINDER),
+    // tls_secret_t::resumption_binder = (TLS_SECRET_RESUMPTION | TLS_SECRET_BINDER),
 
-    // HKDF_Expand(hashalg, dlen, value(tls_secret_application), tls_label("res master"), context_hash)
-    tls_secret_res_master = (TLS_SECRET_RESUMPTION | TLS_SECRET_MASTER),  // secret_resumption_master
-    tls_secret_resumption_master = tls_secret_res_master,
-    // HKDF_Expand(hashalg, dlen, value(tls_secret_res_master), tls_label(resumption), reshash)
-    tls_secret_resumption = (TLS_SECRET_RESUMPTION),
-    // HKDF_Extract(hashalg, empty_ikm, value(tls_secret_resumption))
-    tls_secret_resumption_early = (TLS_SECRET_RESUMPTION | TLS_SECRET_EARLY),
+    // HKDF_Expand(hashalg, dlen, value(tls_secret_t::application), tls_label("res master"), context_hash)
+    res_master = (TLS_SECRET_RESUMPTION | TLS_SECRET_MASTER),  // secret_resumption_master
+    resumption_master = res_master,
+    // HKDF_Expand(hashalg, dlen, value(tls_secret_t::res_master), tls_label(resumption), reshash)
+    resumption = (TLS_SECRET_RESUMPTION),
+    // HKDF_Extract(hashalg, empty_ikm, value(tls_secret_t::resumption))
+    resumption_early = (TLS_SECRET_RESUMPTION | TLS_SECRET_EARLY),
 
     /* TLS_SECRET_USERCONTEXT+0 ~ TLS_SECRET_USERCONTEXT+0xff */
-    tls_context_shared_secret = (TLS_SECRET_USERCONTEXT | 0x01),
-    tls_context_transcript_hash = (TLS_SECRET_USERCONTEXT | 0x02),
-    tls_context_empty_hash = (TLS_SECRET_USERCONTEXT | 0x04),
-    tls_context_client_hello = (TLS_SECRET_USERCONTEXT | 0x05),             // CH client_hello
-    tls_context_server_hello = (TLS_SECRET_USERCONTEXT | 0x06),             // SH server_hello (handshake)
-    tls_context_server_finished = (TLS_SECRET_USERCONTEXT | 0x07),          // F server finished (application, exporter)
-    tls_context_client_finished = (TLS_SECRET_USERCONTEXT | 0x08),          // F client finished (resumption)
-    tls_context_client_hello_random = (TLS_SECRET_USERCONTEXT | 0x09),      // CH client_hello (server_key_update)
-    tls_context_server_hello_random = (TLS_SECRET_USERCONTEXT | 0x0a),      // SH server_hello (server_key_update)
-    tls_context_server_key_exchange = (TLS_SECRET_USERCONTEXT | 0x0b),      // SKE server_key_exchange (pre_master_secret)
-    tls_context_client_key_exchange = (TLS_SECRET_USERCONTEXT | 0x0c),      // CKE client_key_exchange (pre_master_secret)
-    tls_context_session_id = (TLS_SECRET_USERCONTEXT | 0x0d),               //
-    tls_context_cookie = (TLS_SECRET_USERCONTEXT | 0x0e),                   //
-    tls_context_nonce_explicit = (TLS_SECRET_USERCONTEXT | 0x0f),           //
-    tls_context_alpn = (TLS_SECRET_USERCONTEXT | 0x11),                     //
-    tls_context_client_verifydata = (TLS_SECRET_USERCONTEXT | 0x12),        //
-    tls_context_server_verifydata = (TLS_SECRET_USERCONTEXT | 0x13),        //
-    tls_context_segment = (TLS_SECRET_USERCONTEXT | 0x1a),                  //
-    tls_context_fragment = (TLS_SECRET_USERCONTEXT | 0x1b),                 // DTLS Handshake, QUIC FRAME CRYPTO
-    tls_context_new_session_ticket = (TLS_SECRET_USERCONTEXT | 0x1d),       // RFC 8446 4.6.1. ticket
-    tls_context_resumption_binder_key = (TLS_SECRET_USERCONTEXT | 0x21),    // CH 0-RTT
-    tls_context_resumption_finished_key = (TLS_SECRET_USERCONTEXT | 0x22),  // CH 0-RTT
-    tls_context_resumption_finished = (TLS_SECRET_USERCONTEXT | 0x23),      // CH 0-RTT
-    tls_context_resumption_binder_hash = (TLS_SECRET_USERCONTEXT | 0x24),   // CH 0-RTT
-    tls_context_quic_dcid = (TLS_SECRET_USERCONTEXT | 0x31),                //
-    tls_context_client_cid = (TLS_SECRET_USERCONTEXT | 0x32),               //
-    tls_context_server_cid = (TLS_SECRET_USERCONTEXT | 0x33),               //
-    tls_context_dtls_cookie = (TLS_SECRET_USERCONTEXT | 0x34),              // network_session level
-    tls_context_stateless_reset_token = (TLS_SECRET_USERCONTEXT | 0x35),    //
+    shared_secret = (TLS_SECRET_USERCONTEXT | 0x01),
+    transcript_hash = (TLS_SECRET_USERCONTEXT | 0x02),
+    empty_hash = (TLS_SECRET_USERCONTEXT | 0x04),
+    client_hello = (TLS_SECRET_USERCONTEXT | 0x05),             // CH client_hello
+    server_hello = (TLS_SECRET_USERCONTEXT | 0x06),             // SH server_hello (handshake)
+    server_finished = (TLS_SECRET_USERCONTEXT | 0x07),          // F server finished (application, exporter)
+    client_finished = (TLS_SECRET_USERCONTEXT | 0x08),          // F client finished (resumption)
+    client_hello_random = (TLS_SECRET_USERCONTEXT | 0x09),      // CH client_hello (server_key_update)
+    server_hello_random = (TLS_SECRET_USERCONTEXT | 0x0a),      // SH server_hello (server_key_update)
+    server_key_exchange = (TLS_SECRET_USERCONTEXT | 0x0b),      // SKE server_key_exchange (pre_master_secret)
+    client_key_exchange = (TLS_SECRET_USERCONTEXT | 0x0c),      // CKE client_key_exchange (pre_master_secret)
+    session_id = (TLS_SECRET_USERCONTEXT | 0x0d),               //
+    cookie = (TLS_SECRET_USERCONTEXT | 0x0e),                   //
+    nonce_explicit = (TLS_SECRET_USERCONTEXT | 0x0f),           //
+    alpn = (TLS_SECRET_USERCONTEXT | 0x11),                     //
+    client_verifydata = (TLS_SECRET_USERCONTEXT | 0x12),        //
+    server_verifydata = (TLS_SECRET_USERCONTEXT | 0x13),        //
+    segment = (TLS_SECRET_USERCONTEXT | 0x1a),                  //
+    fragment = (TLS_SECRET_USERCONTEXT | 0x1b),                 // DTLS Handshake, QUIC FRAME CRYPTO
+    new_session_ticket = (TLS_SECRET_USERCONTEXT | 0x1d),       // RFC 8446 4.6.1. ticket
+    resumption_binder_key = (TLS_SECRET_USERCONTEXT | 0x21),    // CH 0-RTT
+    resumption_finished_key = (TLS_SECRET_USERCONTEXT | 0x22),  // CH 0-RTT
+    resumption_finished = (TLS_SECRET_USERCONTEXT | 0x23),      // CH 0-RTT
+    resumption_binder_hash = (TLS_SECRET_USERCONTEXT | 0x24),   // CH 0-RTT
+    quic_dcid = (TLS_SECRET_USERCONTEXT | 0x31),                //
+    client_cid = (TLS_SECRET_USERCONTEXT | 0x32),               //
+    server_cid = (TLS_SECRET_USERCONTEXT | 0x33),               //
+    dtls_cookie = (TLS_SECRET_USERCONTEXT | 0x34),              // network_session level
+    stateless_reset_token = (TLS_SECRET_USERCONTEXT | 0x35),    //
 };
 
 /**
@@ -536,11 +536,11 @@ bool is_bidirection(tls_direction_t dir);
 bool is_clientinitiated(tls_direction_t dir);
 bool is_serverinitiated(tls_direction_t dir);
 
-enum tls_flow_t {
-    tls_flow_1rtt = 0,
-    tls_flow_0rtt = 1,                 // TLS 1.3
-    tls_flow_hello_retry_request = 2,  // TLS 1.3
-    tls_flow_renegotiation = 3,        // TLS 1.2
+enum class tls_flow_t {
+    one_rtt = 0,
+    zero_rtt = 1,             // TLS 1.3
+    hello_retry_request = 2,  // TLS 1.3
+    renegotiation = 3,        // TLS 1.2
 };
 
 /**
@@ -548,17 +548,17 @@ enum tls_flow_t {
  * @remarks
  *          TLS, DTLS
  *          RFC 9000 12.3.  Packet Numbers
- *          |           | space                  | cryptographic separation | protection space       |
- *          | TLS, DTLS | N/A                    | N/A                      | protection_default     |
- *          | QUIC      | initial space          | initial packets          | protection_initial     |
- *          | QUIC      | handshake space        | handshake packets        | protection_handshake   |
- *          | QUIC      | application data space | 0-RTT and 1-RTT packets  | protection_application |
+ *          |           | space                  | cryptographic separation | protection space                |
+ *          | TLS, DTLS | N/A                    | N/A                      | protection_space_t::tls         |
+ *          | QUIC      | initial space          | initial packets          | protection_space_t::initial     |
+ *          | QUIC      | handshake space        | handshake packets        | protection_space_t::handshake   |
+ *          | QUIC      | application data space | 0-RTT and 1-RTT packets  | protection_space_t::application |
  */
-enum protection_space_t : uint8 {
-    protection_default = 0,
-    protection_initial = 1,
-    protection_handshake = 2,
-    protection_application = 3,
+enum class protection_space_t : uint8 {
+    tls = 0,
+    initial = 1,
+    handshake = 2,
+    application = 3,
 };
 
 enum session_status_t : uint32 {

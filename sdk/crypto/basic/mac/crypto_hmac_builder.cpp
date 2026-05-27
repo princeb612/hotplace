@@ -13,7 +13,7 @@
 namespace hotplace {
 namespace crypto {
 
-crypto_hmac_builder::crypto_hmac_builder() : _alg(hash_alg_unknown) {}
+crypto_hmac_builder::crypto_hmac_builder() : _alg(hash_algorithm_t{}) {}
 
 crypto_hmac_builder& crypto_hmac_builder::set(hash_algorithm_t alg) {
     _alg = alg;

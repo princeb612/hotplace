@@ -38,29 +38,29 @@ return_t tls_protection::calc_psk(tls_session* session, const binary_t& binder_h
             __leave2;
         }
 
-        get_secrets().assign(tls_context_resumption_binder_hash, binder_hash);  // debug
+        get_secrets().assign(tls_secret_t::resumption_binder_hash, binder_hash);  // debug
 
         // RFC 8448 4.  Resumed 0-RTT Handshake
 
         openssl_kdf kdf;
         // PRK
         binary_t context_resumption_binder_key;
-        const binary_t& secret_resumption_early = get_secrets().get(tls_secret_resumption_early);
-        const binary_t& context_empty_hash = get_secrets().get(tls_context_empty_hash);
-        kdf.hkdf_expand_tls13_label(context_resumption_binder_key, sha2_256, 32, secret_resumption_early, "res binder", context_empty_hash);
-        get_secrets().assign(tls_context_resumption_binder_key, context_resumption_binder_key);
+        const binary_t& secret_resumption_early = get_secrets().get(tls_secret_t::resumption_early);
+        const binary_t& context_empty_hash = get_secrets().get(tls_secret_t::empty_hash);
+        kdf.hkdf_expand_tls13_label(context_resumption_binder_key, hash_algorithm_t::sha2_256, 32, secret_resumption_early, "res binder", context_empty_hash);
+        get_secrets().assign(tls_secret_t::resumption_binder_key, context_resumption_binder_key);
 
         // expanded
         binary_t context_resumption_finished_key;
         binary_t empty_ikm;
-        kdf.hkdf_expand_tls13_label(context_resumption_finished_key, sha2_256, 32, context_resumption_binder_key, "finished", empty_ikm);
-        get_secrets().assign(tls_context_resumption_finished_key, context_resumption_finished_key);
+        kdf.hkdf_expand_tls13_label(context_resumption_finished_key, hash_algorithm_t::sha2_256, 32, context_resumption_binder_key, "finished", empty_ikm);
+        get_secrets().assign(tls_secret_t::resumption_finished_key, context_resumption_finished_key);
 
         // finished
         binary_t context_resumption_finished;
         openssl_mac mac;
-        mac.hmac(sha2_256, context_resumption_finished_key, binder_hash, context_resumption_finished);
-        get_secrets().assign(tls_context_resumption_finished, context_resumption_finished);
+        mac.hmac(hash_algorithm_t::sha2_256, context_resumption_finished_key, binder_hash, context_resumption_finished);
+        get_secrets().assign(tls_secret_t::resumption_finished, context_resumption_finished);
 
         if (psk_binder != context_resumption_finished) {
             ret = errorcode_t::mismatch;

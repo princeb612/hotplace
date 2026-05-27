@@ -33,13 +33,13 @@ quic_packet_builder& quic_packet_builder::set(quic_packet_t type) {
 
 quic_packet_builder& quic_packet_builder::set(protection_space_t space) {
     switch (space) {
-        case protection_initial: {
+        case protection_space_t::initial: {
             _type = quic_packet_type_initial;
         } break;
-        case protection_handshake: {
+        case protection_space_t::handshake: {
             _type = quic_packet_type_handshake;
         } break;
-        case protection_application: {
+        case protection_space_t::application: {
             _type = quic_packet_type_1_rtt;
         } break;
         default:
@@ -100,7 +100,7 @@ quic_packet* quic_packet_builder::build() {
                 packet = new quic_packet_initial(session);
                 if (is_construct() && (is_unidirection(get_direction()))) {
                     openssl_prng prng;
-                    uint32 pn = t_narrow_cast(session->get_recordno(get_direction(), false, protection_initial));
+                    uint32 pn = t_narrow_cast(session->get_recordno(get_direction(), false, protection_space_t::initial));
                     uint8 pnl = uint8((prng.rand32() % 4) + 1);
                     packet->set_pn(pn, pnl);
                 }
@@ -112,7 +112,7 @@ quic_packet* quic_packet_builder::build() {
                 packet = new quic_packet_handshake(session);
                 if (is_construct() && (is_unidirection(get_direction()))) {
                     openssl_prng prng;
-                    uint32 pn = t_narrow_cast(session->get_recordno(get_direction(), false, protection_handshake));
+                    uint32 pn = t_narrow_cast(session->get_recordno(get_direction(), false, protection_space_t::handshake));
                     uint8 pnl = uint8((prng.rand32() % 4) + 1);
                     packet->set_pn(pn, pnl);
                 }
@@ -124,7 +124,7 @@ quic_packet* quic_packet_builder::build() {
                 packet = new quic_packet_1rtt(session);
                 if (is_construct()) {
                     openssl_prng prng;
-                    uint32 pn = t_narrow_cast(session->get_recordno(get_direction(), false, protection_application));
+                    uint32 pn = t_narrow_cast(session->get_recordno(get_direction(), false, protection_space_t::application));
                     uint8 pnl = uint8((prng.rand32() % 4) + 1);
                     packet->set_pn(pn, pnl);
                 }

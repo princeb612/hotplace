@@ -74,23 +74,23 @@ return_t sslkeylog_exporter::log(tls_session* session, tls_secret_t secret) {
             _keylog_hook(bs);
         };
         switch (secret) {
-            case tls_secret_c_ap_traffic: {
-                lambda("CLIENT_TRAFFIC_SECRET_0", secrets.get(tls_context_client_hello_random), secrets.get(secret));
+            case tls_secret_t::c_ap_traffic: {
+                lambda("CLIENT_TRAFFIC_SECRET_0", secrets.get(tls_secret_t::client_hello_random), secrets.get(secret));
             } break;
-            case tls_secret_s_ap_traffic: {
-                lambda("SERVER_TRAFFIC_SECRET_0", secrets.get(tls_context_client_hello_random), secrets.get(secret));
+            case tls_secret_t::s_ap_traffic: {
+                lambda("SERVER_TRAFFIC_SECRET_0", secrets.get(tls_secret_t::client_hello_random), secrets.get(secret));
             } break;
-            case tls_secret_exp_master: {
-                lambda("EXPORTER_SECRET", secrets.get(tls_context_client_hello_random), secrets.get(secret));
+            case tls_secret_t::exp_master: {
+                lambda("EXPORTER_SECRET", secrets.get(tls_secret_t::client_hello_random), secrets.get(secret));
             } break;
-            case tls_secret_c_hs_traffic: {
-                lambda("CLIENT_HANDSHAKE_TRAFFIC_SECRET", secrets.get(tls_context_client_hello_random), secrets.get(secret));
+            case tls_secret_t::c_hs_traffic: {
+                lambda("CLIENT_HANDSHAKE_TRAFFIC_SECRET", secrets.get(tls_secret_t::client_hello_random), secrets.get(secret));
             } break;
-            case tls_secret_s_hs_traffic: {
-                lambda("SERVER_HANDSHAKE_TRAFFIC_SECRET", secrets.get(tls_context_client_hello_random), secrets.get(secret));
+            case tls_secret_t::s_hs_traffic: {
+                lambda("SERVER_HANDSHAKE_TRAFFIC_SECRET", secrets.get(tls_secret_t::client_hello_random), secrets.get(secret));
             } break;
-            case tls_secret_master: {
-                lambda("CLIENT_RANDOM", secrets.get(tls_context_client_hello_random), secrets.get(secret));
+            case tls_secret_t::master: {
+                lambda("CLIENT_RANDOM", secrets.get(tls_secret_t::client_hello_random), secrets.get(secret));
             } break;
             default:
                 break;

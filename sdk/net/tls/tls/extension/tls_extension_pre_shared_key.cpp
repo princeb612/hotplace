@@ -139,7 +139,7 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
 
         {
             auto& kv = session->get_session_info(from_server).get_keyvalue();
-            const binary_t& ticket = secrets.get(tls_context_new_session_ticket);
+            const binary_t& ticket = secrets.get(tls_secret_t::new_session_ticket);
             if (psk_identity != ticket) {
                 session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::illegal_parameter);
                 session->reset_session_status();
@@ -172,7 +172,8 @@ return_t tls_extension_client_psk::do_read_body(tls_direction_t dir, const byte_
                     content_header_size = RTL_FIELD_SIZE(tls_content_t, dtls);
                     // sizeof_dtls_recons = 8;
                 }
-                ret = protection.calc_context_hash(session, sha2_256, stream + content_header_size, offset_psk_binders_len - 1, context_resumption_binder_hash);
+                ret = protection.calc_context_hash(session, hash_algorithm_t::sha2_256, stream + content_header_size, offset_psk_binders_len - 1,
+                                                   context_resumption_binder_hash);
                 // if (errorcode_t::success != ret) do something
             }
 

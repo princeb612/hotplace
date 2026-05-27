@@ -74,7 +74,7 @@ return_t http_protocol::read_stream(basic_stream* stream, size_t* request_size, 
 
         size_t packet_size = get_constraints(protocol_constraints_t::protocol_packet_size);
         if (packet_size && (stream_size > packet_size)) {
-            *state = protocol_state_t::protocol_state_large;
+            *state = protocol_state_t::large;
             __leave2;
         }
 
@@ -94,19 +94,19 @@ return_t http_protocol::read_stream(basic_stream* stream, size_t* request_size, 
                 size_t size_need = (search_carragereturn_newline - stream_data) + 4 + ret_atoi;
 
                 if (size_need > stream_size) {
-                    *state = protocol_state_t::protocol_state_data;
+                    *state = protocol_state_t::data;
                 } else {
                     *request_size = size_need;
-                    *state = protocol_state_t::protocol_state_complete;
+                    *state = protocol_state_t::complete;
                 }
             }
         } else {
-            *state = protocol_state_t::protocol_state_data;
+            *state = protocol_state_t::data;
 
             const char* search_carragereturn_newline = strstr(search_stream_data, "\r\n\r\n");
             if (search_carragereturn_newline) {
                 *request_size = (search_carragereturn_newline - stream_data + 4);
-                *state = protocol_state_t::protocol_state_complete;
+                *state = protocol_state_t::complete;
             }
         }
     }

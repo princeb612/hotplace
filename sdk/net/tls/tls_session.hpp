@@ -118,10 +118,10 @@ class tls_session {
         void set_status(tls_handshake_type_t type);
         tls_handshake_type_t get_status();
 
-        uint64 get_recordno(bool inc = false, protection_space_t space = protection_default);
-        void inc_recordno(protection_space_t space = protection_default);
-        void reset_recordno(protection_space_t space = protection_default);
-        void set_recordno(uint64 recordno, protection_space_t space = protection_default);  // for test vector
+        uint64 get_recordno(bool inc = false, protection_space_t space = protection_space_t::tls);
+        void inc_recordno(protection_space_t space = protection_space_t::tls);
+        void reset_recordno(protection_space_t space = protection_space_t::tls);
+        void set_recordno(uint64 recordno, protection_space_t space = protection_space_t::tls);  // for test vector
 
         void begin_protection();
         bool apply_protection();
@@ -145,13 +145,13 @@ class tls_session {
     };
 
     session_info& get_session_info(tls_direction_t dir);
-    uint64 get_recordno(tls_direction_t dir, bool inc = false, protection_space_t space = protection_default);
-    void reset_recordno(tls_direction_t dir, protection_space_t space = protection_default);
+    uint64 get_recordno(tls_direction_t dir, bool inc = false, protection_space_t space = protection_space_t::tls);
+    void reset_recordno(tls_direction_t dir, protection_space_t space = protection_space_t::tls);
 
     /*
      * set test vector
      */
-    void set_recordno(tls_direction_t dir, uint64 recno, protection_space_t space = protection_default);
+    void set_recordno(tls_direction_t dir, uint64 recno, protection_space_t space = protection_space_t::tls);
 
     void addref();
     void release();

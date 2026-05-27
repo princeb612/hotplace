@@ -159,7 +159,7 @@ return_t network_stream::do_writep(network_protocol_group* protocol_group, netwo
 
     basic_stream bufstream;
 
-    protocol_state_t state = protocol_state_t::protocol_state_invalid;
+    protocol_state_t state = protocol_state_t::invalid;
     size_t message_size = 0;
     size_t roll_count = 0;
     bool _run = true;
@@ -183,7 +183,7 @@ return_t network_stream::do_writep(network_protocol_group* protocol_group, netwo
 
             protocol_ptr.get()->read_stream(&bufstream, &message_size, &state, &priority);
             switch (state) {
-                case protocol_state_t::protocol_state_complete: {
+                case protocol_state_t::complete: {
                     target->produce(bufstream.data(), message_size, buffer_object->get_sockaddr());
                     _run = false;
 #if defined DEBUG
@@ -194,9 +194,9 @@ return_t network_stream::do_writep(network_protocol_group* protocol_group, netwo
 #endif
 
                 } break;
-                case protocol_state_t::protocol_state_forged:
-                case protocol_state_t::protocol_state_crash:
-                case protocol_state_t::protocol_state_large: {
+                case protocol_state_t::forged:
+                case protocol_state_t::crash:
+                case protocol_state_t::large: {
                     _run = false;
                 } break;
                 default:
@@ -219,7 +219,7 @@ return_t network_stream::do_writep(network_protocol_group* protocol_group, netwo
     }  // for-loop
 
     switch (state) {
-        case protocol_state_t::protocol_state_complete: {
+        case protocol_state_t::complete: {
             size_t content_pos = 0;
             size_t content_size = 0;
             network_stream_list_t::iterator iter;
@@ -246,9 +246,9 @@ return_t network_stream::do_writep(network_protocol_group* protocol_group, netwo
                 }
             }
         } break;
-        case protocol_state_t::protocol_state_forged:
-        case protocol_state_t::protocol_state_crash:
-        case protocol_state_t::protocol_state_large:
+        case protocol_state_t::forged:
+        case protocol_state_t::crash:
+        case protocol_state_t::large:
             for (network_stream_data* buffer_object : _queue) {
                 buffer_object->release();
             }

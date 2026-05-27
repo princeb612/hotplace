@@ -89,7 +89,7 @@ void check_ecdsa_size() {
             auto hint = advisor->hintof_curve_nid(nid);
             bool check_support = support(hint, alg);
 
-            crypto_sign* sign = builder.set_category(sig_category_ecdsa).set_digest(alg).build();
+            crypto_sign* sign = builder.set_category(sig_category_t::ecdsa).set_digest(alg).build();
             if (sign) {
                 ret = sign->sign(pkey, (byte_t*)source, len, sig);
                 auto kid = keyobj->get_desc().get_kid_cstr();

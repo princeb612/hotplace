@@ -73,7 +73,7 @@ return_t quic_packet_1rtt::do_read(tls_direction_t dir, const byte_t* stream, si
     __try2 {
         auto session = get_session();
 
-        ret = do_unprotect(dir, stream, size, pos_unprotect, protection_application);
+        ret = do_unprotect(dir, stream, size, pos_unprotect, protection_space_t::application);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -83,7 +83,7 @@ return_t quic_packet_1rtt::do_read(tls_direction_t dir, const byte_t* stream, si
         size_t tpos = 0;
         get_quic_frames().read(dir, _payload.data(), _payload.size(), tpos);
 
-        session->get_quic_session().get_pkns(protection_application).add(get_pn());  // including ACK packet
+        session->get_quic_session().get_pkns(protection_space_t::application).add(get_pn());  // including ACK packet
     }
     __finally2 {}
     return ret;
@@ -137,7 +137,7 @@ return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binar
             binary_t bin_mask;
 
             // AEAD (PT:payload, CT:ciphertext, AAD:unprotected header, TAG:tag, space:application)
-            ret = protection.encrypt(session, dir, get_payload(), bin_ciphertext, bin_unprotected_header, bin_tag, protection_application);
+            ret = protection.encrypt(session, dir, get_payload(), bin_ciphertext, bin_unprotected_header, bin_tag, protection_space_t::application);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
@@ -146,7 +146,7 @@ return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binar
             // Header Protection
             {
                 uint8 ht = _ht;
-                ret = header_protect(dir, protection_application, bin_ciphertext, ht, pn_length, bin_pn, bin_protected_header);
+                ret = header_protect(dir, protection_space_t::application, bin_ciphertext, ht, pn_length, bin_pn, bin_protected_header);
                 if (errorcode_t::success != ret) {
                     __leave2;
                 }

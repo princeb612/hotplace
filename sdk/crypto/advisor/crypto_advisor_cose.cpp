@@ -134,7 +134,7 @@ crypt_category_t crypto_advisor::categoryof(cose_alg_t alg) {
 }
 
 signature_t crypto_advisor::sigof(cose_alg_t sig) {
-    signature_t type = signature_t::sig_unknown;
+    signature_t type = signature_t{};
     t_maphint<cose_alg_t, signature_t> hint(_cose2sig_map);
 
     hint.find(sig, &type);

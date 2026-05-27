@@ -40,18 +40,22 @@ namespace net {
 class protection_context {
    public:
     protection_context();
-    protection_context(const protection_context& other);
-    protection_context(protection_context&& other);
+
+    protection_context(const protection_context& other) = default;
+    protection_context(protection_context&& other) = default;
+
+    protection_context& operator=(const protection_context& other) = default;
+    protection_context& operator=(protection_context&& other) = default;
 
     return_t negotiate(tls_session* session, uint16& cs, tls_version_t& tlsver);
     return_t negotiate(tls_session* session, tls_version_t minspec, tls_version_t maxspec, uint16& cs, tls_version_t& tlsver);
 
     void add_cipher_suite(uint16 cs);
-    void add_signature_algorithm(uint16 sa);
-    void add_supported_group(uint16 sg);
+    void add_signature_algorithm(tls_sigscheme_t sa);
+    void add_supported_group(tls_group_t sg);
     void add_supported_version(tls_version_t sv);
     void add_ec_point_format(uint8 epf);
-    void add_keyshare_group(uint16 group);
+    void add_keyshare_group(tls_group_t group);
 
     void clear_cipher_suites();
     void clear_signature_algorithms();
@@ -69,12 +73,12 @@ class protection_context {
      *          };
      */
     void for_each_cipher_suites(std::function<void(uint16, bool*)> fn) const;
-    void for_each_signature_algorithms(std::function<void(uint16, bool*)> fn) const;
-    void for_each_supported_groups(std::function<void(uint16, bool*)> fn) const;
+    void for_each_signature_algorithms(std::function<void(tls_sigscheme_t, bool*)> fn) const;
+    void for_each_supported_groups(std::function<void(tls_group_t, bool*)> fn) const;
     void for_each_supported_versions(std::function<void(tls_version_t, bool*)> fn) const;
     void for_each_ec_point_formats(std::function<void(uint8, bool*)> fn) const;
-    void for_each_keyshare_groups(std::function<void(uint16, bool*)> fn) const;
-    bool select_keyshare(uint16 group);
+    void for_each_keyshare_groups(std::function<void(tls_group_t, bool*)> fn) const;
+    bool select_keyshare(tls_group_t group);
     /**
      * @remarks negotiation
      */
@@ -86,21 +90,21 @@ class protection_context {
 
     uint16 get0_cipher_suite();
     tls_version_t get0_supported_version();
-    uint16 get0_supported_group();
-    uint16 select_signature_algorithm(crypto_kty_t kty);
-    uint16 get0_keyshare_group();
+    tls_group_t get0_supported_group();
+    tls_sigscheme_t select_signature_algorithm(crypto_kty_t kty);
+    tls_group_t get0_keyshare_group();
 
     void clear();
 
    protected:
    private:
-    std::list<uint16> _cipher_suites;              // tls_handshake_client_hello
-    std::list<uint16> _signature_algorithms;       // tls_extension_signature_algorithms
-    std::list<uint16> _supported_groups;           // tls_extension_supported_groups
-    std::list<tls_version_t> _supported_versions;  // tls_extension_client_supported_versions
-    std::list<uint8> _ec_point_formats;            // tls_extension_ec_point_formats
-    std::list<uint16> _keyshare_groups;            // tls_extension_type_t::key_share
-    std::set<uint16> _keyshare_set;
+    std::list<uint16> _cipher_suites;                  // tls_handshake_client_hello
+    std::list<tls_sigscheme_t> _signature_algorithms;  // tls_extension_signature_algorithms
+    std::list<tls_group_t> _supported_groups;          // tls_extension_supported_groups
+    std::list<tls_version_t> _supported_versions;      // tls_extension_client_supported_versions
+    std::list<uint8> _ec_point_formats;                // tls_extension_ec_point_formats
+    std::list<tls_group_t> _keyshare_groups;           // tls_extension_type_t::key_share
+    std::set<tls_group_t> _keyshare_set;
     uint16 _cipher_suite;
 };
 
@@ -246,16 +250,16 @@ class tls_protection {
      *          RFC 5246 6.2.3.3.  AEAD Ciphers
      */
     return_t encrypt(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& additional, binary_t& tag,
-                     protection_space_t space = protection_default);
+                     protection_space_t space = protection_space_t::tls);
 
     // stream include a tag
     return_t decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
-                     protection_space_t space = protection_default);
+                     protection_space_t space = protection_space_t::tls);
     return_t decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, binary_t& aad,
-                     protection_space_t space = protection_default);
+                     protection_space_t space = protection_space_t::tls);
     // stream do not include a tag
     return_t decrypt(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad,
-                     const binary_t& tag, protection_space_t space = protection_default);
+                     const binary_t& tag, protection_space_t space = protection_space_t::tls);
 
     ///////////////////////////////////////////////////////////////////////////
     // calc
@@ -275,11 +279,11 @@ class tls_protection {
     ///////////////////////////////////////////////////////////////////////////
     return_t get_protection_mask_key(tls_session* session, tls_direction_t dir, protection_space_t space, tls_secret_t& secret);
     return_t protection_mask(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, binary_t& mask, size_t masklen,
-                             protection_space_t space = protection_default);
+                             protection_space_t space = protection_space_t::tls);
 
    protected:
     return_t encrypt_aead(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& aad, binary_t& tag,
-                          protection_space_t space = protection_default);
+                          protection_space_t space = protection_space_t::tls);
     return_t encrypt_cbc_hmac(tls_session* session, tls_direction_t dir, const binary_t& plaintext, binary_t& ciphertext, const binary_t& iv, binary_t& maced);
     /**
      * @brief   TLS 1.3 decrypt
@@ -295,13 +299,13 @@ class tls_protection {
      *          stream include a tag
      */
     return_t decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext,
-                          protection_space_t space = protection_default);
+                          protection_space_t space = protection_space_t::tls);
     /**
      * @brief   decrypt
      * @remarks stream do not include a tag
      */
     return_t decrypt_aead(tls_session* session, tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, binary_t& plaintext, const binary_t& aad,
-                          const binary_t& tag, protection_space_t space = protection_default);
+                          const binary_t& tag, protection_space_t space = protection_space_t::tls);
     /**
      * @brief   TLS 1 decrypt
      */

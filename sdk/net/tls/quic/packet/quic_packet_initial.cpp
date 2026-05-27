@@ -109,30 +109,30 @@ return_t quic_packet_initial::do_read(tls_direction_t dir, const byte_t* stream,
         auto& tracker = session->get_quic_session().get_cid_tracker();
 
         if (from_client == dir) {
-            if (secrets.get(tls_secret_initial_quic_client_hp).empty()) {
-                secrets.assign(tls_context_quic_dcid, get_dcid());
+            if (secrets.get(tls_secret_t::initial_quic_client_hp).empty()) {
+                secrets.assign(tls_secret_t::quic_dcid, get_dcid());
                 protection.calc(session, tls_handshake_type_t::client_hello, dir);  // calc initial keys
             } else {
                 if (false == get_dcid().empty()) {
-                    secrets.assign(tls_context_server_cid, get_dcid());
+                    secrets.assign(tls_secret_t::server_cid, get_dcid());
                     tracker.emplace(0, get_dcid());
                 }
             }
         } else if (from_server == dir) {
             if (false == get_scid().empty()) {
-                if (secrets.get(tls_context_server_cid).empty()) {
-                    secrets.assign(tls_context_server_cid, get_scid());
+                if (secrets.get(tls_secret_t::server_cid).empty()) {
+                    secrets.assign(tls_secret_t::server_cid, get_scid());
                     tracker.emplace(0, get_scid());
                 }
             }
             if (false == get_dcid().empty()) {
-                if (secrets.get(tls_context_client_cid).empty()) {
-                    secrets.assign(tls_context_client_cid, get_dcid());
+                if (secrets.get(tls_secret_t::client_cid).empty()) {
+                    secrets.assign(tls_secret_t::client_cid, get_dcid());
                 }
             }
         }
 
-        ret = do_unprotect(dir, stream, size, pos_unprotect, protection_initial);
+        ret = do_unprotect(dir, stream, size, pos_unprotect, protection_space_t::initial);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -146,7 +146,7 @@ return_t quic_packet_initial::do_read(tls_direction_t dir, const byte_t* stream,
         }
 
         if (get_quic_frames().is_significant()) {
-            session->get_quic_session().get_pkns(protection_initial).add(get_pn());
+            session->get_quic_session().get_pkns(protection_space_t::initial).add(get_pn());
         }
     }
     __finally2 {}
@@ -209,7 +209,7 @@ return_t quic_packet_initial::do_write(tls_direction_t dir, binary_t& header, bi
             binary_t bin_mask;
 
             // AEAD
-            ret = protection.encrypt(session, dir, get_payload(), bin_ciphertext, bin_unprotected_header, bin_tag, protection_initial);
+            ret = protection.encrypt(session, dir, get_payload(), bin_ciphertext, bin_unprotected_header, bin_tag, protection_space_t::initial);
             if (errorcode_t::success != ret) {
                 __leave2;
             }
@@ -218,7 +218,7 @@ return_t quic_packet_initial::do_write(tls_direction_t dir, binary_t& header, bi
             // Header Protection
             {
                 uint8 ht = _ht;
-                ret = header_protect(dir, protection_initial, bin_ciphertext, ht, pn_length, bin_pn, bin_protected_header);
+                ret = header_protect(dir, protection_space_t::initial, bin_ciphertext, ht, pn_length, bin_pn, bin_protected_header);
                 if (errorcode_t::success != ret) {
                     __leave2;
                 }

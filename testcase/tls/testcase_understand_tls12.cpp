@@ -190,20 +190,20 @@ void test_tls12_xargs_org() {
     // https://tls12.xargs.org/#client-encryption-keys-calculation
     {
         binary_t secret_master;
-        test_keycalc(&session, tls_secret_master, secret_master, "secret_master",
+        test_keycalc(&session, tls_secret_t::master, secret_master, "secret_master",
                      "916abf9da55973e13614ae0a3f5d3f37b023ba129aee02cc9134338127cd7049781c8e19fc1eb2a7387ac06ae237344c");
         binary_t secret_client_mac_key;
-        test_keycalc(&session, tls_secret_client_mac_key, secret_client_mac_key, "secret_client_mac_key", "1b7d117c7d5f690bc263cae8ef60af0f1878acc2");
+        test_keycalc(&session, tls_secret_t::client_mac_key, secret_client_mac_key, "secret_client_mac_key", "1b7d117c7d5f690bc263cae8ef60af0f1878acc2");
         binary_t secret_server_mac_key;
-        test_keycalc(&session, tls_secret_server_mac_key, secret_server_mac_key, "secret_server_mac_key", "2ad8bdd8c601a617126f63540eb20906f781fad2");
+        test_keycalc(&session, tls_secret_t::server_mac_key, secret_server_mac_key, "secret_server_mac_key", "2ad8bdd8c601a617126f63540eb20906f781fad2");
         binary_t secret_client_key;
-        test_keycalc(&session, tls_secret_client_key, secret_client_key, "secret_client_key", "f656d037b173ef3e11169f27231a84b6");
+        test_keycalc(&session, tls_secret_t::client_key, secret_client_key, "secret_client_key", "f656d037b173ef3e11169f27231a84b6");
         binary_t secret_server_key;
-        test_keycalc(&session, tls_secret_server_key, secret_server_key, "secret_server_key", "752a18e7a9fcb7cbcdd8f98dd8f769eb");
+        test_keycalc(&session, tls_secret_t::server_key, secret_server_key, "secret_server_key", "752a18e7a9fcb7cbcdd8f98dd8f769eb");
         binary_t secret_client_iv;
-        test_keycalc(&session, tls_secret_client_iv, secret_client_iv, "secret_client_iv", "a0d2550c9238eebfef5c32251abb67d6");
+        test_keycalc(&session, tls_secret_t::client_iv, secret_client_iv, "secret_client_iv", "a0d2550c9238eebfef5c32251abb67d6");
         binary_t secret_server_iv;
-        test_keycalc(&session, tls_secret_server_iv, secret_server_iv, "secret_server_iv", "434528db4937d540d393135e06a11bb8");
+        test_keycalc(&session, tls_secret_t::server_iv, secret_server_iv, "secret_server_iv", "434528db4937d540d393135e06a11bb8");
     }  // https://tls12.xargs.org/#client-change-cipher-spec/
     {
         const char* record = "14 03 03 00 01 01";

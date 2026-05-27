@@ -8,6 +8,7 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/nostd/utility.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
@@ -214,14 +215,14 @@ cose_ec_curve_t coseof(const hint_curve_t* hint) {
     return value;
 }
 crypto_kty_t ktyof(const hint_curve_t* hint) {
-    crypto_kty_t value = kty_unknown;
+    crypto_kty_t value = crypto_kty_t{};
     if (hint) {
         value = hint->kty;
     }
     return value;
 }
-uint16 tlsgroupof(const hint_curve_t* hint) {
-    uint16 value = 0;
+tls_group_t tlsgroupof(const hint_curve_t* hint) {
+    tls_group_t value = tls_group_t{};
     if (hint) {
         value = hint->tlsgroup;
     }
@@ -245,20 +246,21 @@ const char* oidof(const hint_curve_t* hint) {
 bool support(const hint_curve_t* hint, hash_algorithm_t alg) {
     bool ret_value = false;
     if (hint) {
+        t_enum_type<hash_algorithm_t> etalg(alg);
         switch (alg) {
-            case sha1:
+            case hash_algorithm_t::sha1:
                 ret_value = hint->flags & ECDSA_SUPPORT_SHA1;
                 break;
-            case sha2_224:
+            case hash_algorithm_t::sha2_224:
                 ret_value = hint->flags & ECDSA_SUPPORT_SHA2_224;
                 break;
-            case sha2_256:
+            case hash_algorithm_t::sha2_256:
                 ret_value = hint->flags & ECDSA_SUPPORT_SHA2_256;
                 break;
-            case sha2_384:
+            case hash_algorithm_t::sha2_384:
                 ret_value = hint->flags & ECDSA_SUPPORT_SHA2_384;
                 break;
-            case sha2_512:
+            case hash_algorithm_t::sha2_512:
                 ret_value = hint->flags & ECDSA_SUPPORT_SHA2_512;
                 break;
             default:

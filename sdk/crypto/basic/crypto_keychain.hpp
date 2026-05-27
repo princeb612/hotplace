@@ -610,10 +610,10 @@ class crypto_keychain {
      * @example
      *          // the secp256r1 keys of kid1 and kid2 are different.
      *          keychain.add_ec2(&key, "secp256r1", keydesc(kid1"));
-     *          keychain.add_group(&key, keydesc("kid2"), tls_group_secp256r1mlkem768, 2, NID_X9_62_prime256v1, nid_mlkem768);
+     *          keychain.add_group(&key, keydesc("kid2"), tls_group_t::secp256r1mlkem768, 2, NID_X9_62_prime256v1, nid_mlkem768);
      *
-     *          keychain.add_group(&key, keydesc("kid3"), tls_group_x25519mlkem768, 2, NID_X25519, nid_mlkem768);
-     *          keychain.add_group(&key, keydesc("kid4"), tls_group_secp384r1mlkem1024, 2, NID_secp384r1, nid_mlkem1024);
+     *          keychain.add_group(&key, keydesc("kid3"), tls_group_t::x25519mlkem768, 2, NID_X25519, nid_mlkem768);
+     *          keychain.add_group(&key, keydesc("kid4"), tls_group_t::secp384r1mlkem1024, 2, NID_secp384r1, nid_mlkem1024);
      */
     return_t add_group(crypto_key* cryptokey, const char* kid, uint16 group, uint8 count, ...);
 

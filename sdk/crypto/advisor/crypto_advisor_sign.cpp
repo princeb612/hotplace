@@ -16,9 +16,9 @@ namespace hotplace {
 namespace crypto {
 
 hash_algorithm_t crypto_advisor::get_algorithm(signature_t sig) {
-    hash_algorithm_t ret_value = hash_algorithm_t::hash_alg_unknown;
+    hash_algorithm_t ret_value = hash_algorithm_t{};
     const hint_signature_t* item = nullptr;
-    t_maphint<uint32, const hint_signature_t*> hint(_crypt_sig_map);
+    t_maphint<signature_t, const hint_signature_t*> hint(_crypt_sig_map);
 
     hint.find(sig, &item);
     if (item) {
@@ -28,9 +28,9 @@ hash_algorithm_t crypto_advisor::get_algorithm(signature_t sig) {
 }
 
 hash_algorithm_t crypto_advisor::get_algorithm(jws_t sig) {
-    hash_algorithm_t ret_value = hash_algorithm_t::hash_alg_unknown;
+    hash_algorithm_t ret_value = hash_algorithm_t{};
     const hint_signature_t* item = nullptr;
-    t_maphint<uint32, const hint_signature_t*> hint(_jose_sig_map);
+    t_maphint<jws_t, const hint_signature_t*> hint(_jose_sig_map);
 
     hint.find(sig, &item);
     if (item) {
@@ -41,7 +41,7 @@ hash_algorithm_t crypto_advisor::get_algorithm(jws_t sig) {
 
 const hint_signature_t* crypto_advisor::hintof_signature(signature_t sig) {
     const hint_signature_t* item = nullptr;
-    t_maphint<uint32, const hint_signature_t*> hint(_crypt_sig_map);
+    t_maphint<signature_t, const hint_signature_t*> hint(_crypt_sig_map);
 
     hint.find(sig, &item);
     return item;
@@ -113,34 +113,29 @@ uint16 crypto_advisor::unitsizeof_ecdsa(hash_algorithm_t alg) {
 
 uint16 crypto_advisor::sizeof_ecdsa(hash_algorithm_t alg) { return unitsizeof_ecdsa(alg) << 1; }
 
-uint16 crypto_advisor::sizeof_ecdsa(signature_t sig) {
+uint16 crypto_advisor::sizeof_signature(signature_t sig) {
     uint16 ret_value = 0;
-    switch (sig) {
-        case sig_sha1:
-            ret_value = 20 << 1;
-            break;
-        case sig_sha224:
-            ret_value = 28 << 1;
-            break;
-        case sig_sha256:
-            ret_value = 32 << 1;
-            break;
-        case sig_sha384:
-            ret_value = 48 << 1;
-            break;
-        case sig_sha512:
-            ret_value = 66 << 1;
-            break;
-        default:
-            break;
+    auto hint = hintof_sigscheme(sig);
+    if (hint) {
+        ret_value = hint->size.signature;  // kty_ec, kty_okp, kty_mldsa, kty_slhdsa
+        if (hint->kty == kty_ec) {
+            ret_value <<= 1;
+        }
     }
     return ret_value;
 }
 
 // hint_sigscheme_t
-const hint_sigscheme_t* crypto_advisor::hintof_sigscheme(uint16 scheme) {
+const hint_sigscheme_t* crypto_advisor::hintof_sigscheme(signature_t scheme) {
     const hint_sigscheme_t* item = nullptr;
-    t_maphint<uint16, const hint_sigscheme_t*> hint(_hint_sigscheme_map);
+    t_maphint<signature_t, const hint_sigscheme_t*> hint(_hint_signature_map);
+    hint.find(scheme, &item);
+    return item;
+}
+
+const hint_sigscheme_t* crypto_advisor::hintof_sigscheme(tls_sigscheme_t scheme) {
+    const hint_sigscheme_t* item = nullptr;
+    t_maphint<tls_sigscheme_t, const hint_sigscheme_t*> hint(_hint_sigscheme_map);
     hint.find(scheme, &item);
     return item;
 }
@@ -190,7 +185,7 @@ return_t crypto_advisor::for_each_sigscheme(std::function<void(const hint_sigsch
 // hint_signature_t
 
 sig_category_t categoryof(const hint_signature_t* hint) {
-    sig_category_t type = sig_category_unknown;
+    sig_category_t type = sig_category_t{};
     if (hint) {
         type = hint->category;
     }
@@ -198,7 +193,7 @@ sig_category_t categoryof(const hint_signature_t* hint) {
 }
 
 signature_t typeof_sig(const hint_signature_t* hint) {
-    signature_t type = sig_unknown;
+    signature_t type = signature_t{};
     if (hint) {
         type = hint->sig;
     }
@@ -230,7 +225,7 @@ const char* nameof_jws(const hint_signature_t* hint) {
 }
 
 hash_algorithm_t typeof_alg(const hint_signature_t* hint) {
-    hash_algorithm_t type = hash_alg_unknown;
+    hash_algorithm_t type = hash_algorithm_t{};
     if (hint) {
         type = hint->alg;
     }

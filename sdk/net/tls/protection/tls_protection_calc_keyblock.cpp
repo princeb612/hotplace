@@ -130,13 +130,13 @@ return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t
             offset += ivsize;
 
             if (is_cbc) {
-                get_secrets().assign(tls_secret_client_mac_key, secret_client_mac_key);
-                get_secrets().assign(tls_secret_server_mac_key, secret_server_mac_key);
+                get_secrets().assign(tls_secret_t::client_mac_key, secret_client_mac_key);
+                get_secrets().assign(tls_secret_t::server_mac_key, secret_server_mac_key);
             }
-            get_secrets().assign(tls_secret_client_key, secret_client_key);
-            get_secrets().assign(tls_secret_server_key, secret_server_key);
-            get_secrets().assign(tls_secret_client_iv, secret_client_iv);
-            get_secrets().assign(tls_secret_server_iv, secret_server_iv);
+            get_secrets().assign(tls_secret_t::client_key, secret_client_key);
+            get_secrets().assign(tls_secret_t::server_key, secret_server_key);
+            get_secrets().assign(tls_secret_t::client_iv, secret_client_iv);
+            get_secrets().assign(tls_secret_t::server_iv, secret_server_iv);
 
 #if defined DEBUG
             if (istraceable(trace_category_t::trace_category_net)) {
@@ -148,15 +148,15 @@ return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t
                     dbs.println("> server_hello_random %s", base16_encode(server_hello_random).c_str());
                     dbs.println("> keyblock %s", base16_encode(p).c_str());
                     if (is_cbc) {
-                        dbs.println("> secret_client_mac_key[%08x] %s (%zi-octet)", tls_secret_client_mac_key, base16_encode(secret_client_mac_key).c_str(),
+                        dbs.println("> secret_client_mac_key[%08x] %s (%zi-octet)", tls_secret_t::client_mac_key, base16_encode(secret_client_mac_key).c_str(),
                                     secret_client_mac_key.size());
-                        dbs.println("> secret_server_mac_key[%08x] %s (%zi-octet)", tls_secret_server_mac_key, base16_encode(secret_server_mac_key).c_str(),
+                        dbs.println("> secret_server_mac_key[%08x] %s (%zi-octet)", tls_secret_t::server_mac_key, base16_encode(secret_server_mac_key).c_str(),
                                     secret_server_mac_key.size());
                     }
-                    dbs.println("> secret_client_key[%08x] %s (%zi-octet)", tls_secret_client_key, base16_encode(secret_client_key).c_str(), secret_client_key.size());
-                    dbs.println("> secret_server_key[%08x] %s (%zi-octet)", tls_secret_server_key, base16_encode(secret_server_key).c_str(), secret_server_key.size());
-                    dbs.println("> secret_client_iv[%08x] %s (%zi-octet)", tls_secret_client_iv, base16_encode(secret_client_iv).c_str(), secret_client_iv.size());
-                    dbs.println("> secret_server_iv[%08x] %s (%zi-octet)", tls_secret_server_iv, base16_encode(secret_server_iv).c_str(), secret_server_iv.size());
+                    dbs.println("> secret_client_key[%08x] %s (%zi-octet)", tls_secret_t::client_key, base16_encode(secret_client_key).c_str(), secret_client_key.size());
+                    dbs.println("> secret_server_key[%08x] %s (%zi-octet)", tls_secret_t::server_key, base16_encode(secret_server_key).c_str(), secret_server_key.size());
+                    dbs.println("> secret_client_iv[%08x] %s (%zi-octet)", tls_secret_t::client_iv, base16_encode(secret_client_iv).c_str(), secret_client_iv.size());
+                    dbs.println("> secret_server_iv[%08x] %s (%zi-octet)", tls_secret_t::server_iv, base16_encode(secret_server_iv).c_str(), secret_server_iv.size());
                     dbs.printf(ANSI_ESCAPE "0m");
                 });
             }

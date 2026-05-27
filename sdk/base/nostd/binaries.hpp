@@ -33,13 +33,13 @@ enum binary_flag_t : uint32 {
  *          openssl_digest dgst;
  *          binary_t empty_hash;
  *          dgst.digest(hashalg, empty, empty_hash);
- *          secrets.assign(tls_context_empty_hash, empty_hash);
+ *          secrets.assign(tls_secret_t::empty_hash, empty_hash);
  *          // get
- *          empty_hash = get_secrets().get(tls_context_empty_hash);
+ *          empty_hash = get_secrets().get(tls_secret_t::empty_hash);
  *          // append
- *          secrets.append(tls_context_fragment, stream + pos, fragment_len);
+ *          secrets.append(tls_secret_t::fragment, stream + pos, fragment_len);
  *          // erase
- *          secrets.erase(tls_context_fragment);
+ *          secrets.erase(tls_secret_t::fragment);
  */
 template <typename T, typename TAG = uint8>
 class t_binaries {

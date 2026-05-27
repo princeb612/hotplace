@@ -60,18 +60,18 @@ return_t tls_extension_renegotiation_info::do_read_body(tls_direction_t dir, con
 #endif
 
         auto flow = protection.get_flow();
-        if (tls_flow_renegotiation == flow) {
+        if (tls_flow_t::renegotiation == flow) {
             // client renegotiation
             if (info.empty()) {
                 ret = errorcode_t::illegal_parameter;
             } else {
-                const auto& client_verifydata = secrets.get(tls_context_client_verifydata);
+                const auto& client_verifydata = secrets.get(tls_secret_t::client_verifydata);
                 if (from_client == dir) {
                     if (client_verifydata != info) {
                         ret = errorcode_t::illegal_parameter;
                     }
                 } else if (from_server == dir) {
-                    const auto& server_verifydata = secrets.get(tls_context_server_verifydata);
+                    const auto& server_verifydata = secrets.get(tls_secret_t::server_verifydata);
                     binary_t verifydata;
                     binary_append(verifydata, client_verifydata);
                     binary_append(verifydata, server_verifydata);
@@ -107,13 +107,13 @@ return_t tls_extension_renegotiation_info::do_write_body(tls_direction_t dir, bi
         auto& protection = session->get_tls_protection();
         auto& secrets = protection.get_secrets();
         auto flow = protection.get_flow();
-        if (tls_flow_renegotiation == flow) {
+        if (tls_flow_t::renegotiation == flow) {
             // 0 != session_conf_enable_renegotiation
-            const auto& client_verifydata = secrets.get(tls_context_client_verifydata);
+            const auto& client_verifydata = secrets.get(tls_secret_t::client_verifydata);
             if (from_client == dir) {
                 binary_append(renegotiation_info, client_verifydata);
             } else if (from_server == dir) {
-                const auto& server_verifydata = secrets.get(tls_context_server_verifydata);
+                const auto& server_verifydata = secrets.get(tls_secret_t::server_verifydata);
                 binary_append(renegotiation_info, client_verifydata);
                 binary_append(renegotiation_info, server_verifydata);
             }

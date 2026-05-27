@@ -26,7 +26,7 @@ const EVP_MD* crypto_advisor::find_evp_md(hash_algorithm_t algorithm) {
 const EVP_MD* crypto_advisor::find_evp_md(signature_t sig) {
     const EVP_MD* ret_value = nullptr;
     const hint_signature_t* item = nullptr;
-    t_maphint<uint32, const hint_signature_t*> hint(_crypt_sig_map);
+    t_maphint<signature_t, const hint_signature_t*> hint(_crypt_sig_map);
     hint.find(sig, &item);
     if (item) {
         ret_value = find_evp_md(item->alg);
@@ -37,7 +37,7 @@ const EVP_MD* crypto_advisor::find_evp_md(signature_t sig) {
 const EVP_MD* crypto_advisor::find_evp_md(jws_t sig) {
     const EVP_MD* ret_value = nullptr;
     const hint_signature_t* item = nullptr;
-    t_maphint<uint32, const hint_signature_t*> hint(_jose_sig_map);
+    t_maphint<jws_t, const hint_signature_t*> hint(_jose_sig_map);
     hint.find(sig, &item);
     if (item) {
         ret_value = find_evp_md(item->alg);
@@ -79,7 +79,7 @@ const hint_digest_t* crypto_advisor::hintof_digest(const std::string& name) {
 const char* crypto_advisor::nameof_md(hash_algorithm_t algorithm) {
     const char* ret_value = nullptr;
     md_fetch_block_t block;
-    t_maphint<uint32, md_fetch_block_t> hint(_md_fetch_map);
+    t_maphint<hash_algorithm_t, md_fetch_block_t> hint(_md_fetch_map);
 
     hint.find(algorithm, &block);
     ret_value = nameof_alg(block.hint);
@@ -108,7 +108,7 @@ return_t crypto_advisor::for_each_md(std::function<void(const hint_digest_t*)> f
 // hint_digest_t
 
 hash_algorithm_t typeof_alg(const hint_digest_t* hint) {
-    hash_algorithm_t ret_value = hash_algorithm_t::hash_alg_unknown;
+    hash_algorithm_t ret_value = hash_algorithm_t{};
     if (hint) {
         ret_value = hint->algorithm;
     }

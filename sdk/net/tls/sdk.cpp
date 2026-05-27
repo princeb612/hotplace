@@ -68,7 +68,7 @@ bool is_serverinitiated(tls_direction_t dir) { return (server_initiated_uni == d
 return_t kindof_handshake(tls_handshake* handshake, protection_space_t& space) {
     return_t ret = errorcode_t::success;
     __try2 {
-        space = protection_default;
+        space = protection_space_t::tls;
 
         if (nullptr == handshake) {
             ret = errorcode_t::invalid_parameter;
@@ -78,16 +78,16 @@ return_t kindof_handshake(tls_handshake* handshake, protection_space_t& space) {
         switch (type) {
             case tls_handshake_type_t::client_hello:
             case tls_handshake_type_t::server_hello: {
-                space = protection_initial;
+                space = protection_space_t::initial;
             } break;
             case tls_handshake_type_t::encrypted_extensions:
             case tls_handshake_type_t::certificate:
             case tls_handshake_type_t::certificate_verify:
             case tls_handshake_type_t::finished: {
-                space = protection_handshake;
+                space = protection_space_t::handshake;
             } break;
             case tls_handshake_type_t::new_session_ticket: {
-                space = protection_application;
+                space = protection_space_t::application;
             } break;
             default: {
                 ret = errorcode_t::not_supported;
@@ -114,7 +114,7 @@ return_t kindof_frame(quic_frame* frame, protection_space_t& space) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        space = protection_application;
+        space = protection_space_t::application;
     }
     __finally2 {}
     return ret;
@@ -131,7 +131,7 @@ bool is_kindof_frame(quic_frame* frame, protection_space_t space) {
 
 return_t kindof_frame(quic_frame_t type, protection_space_t& space) {
     return_t ret = errorcode_t::success;
-    space = protection_application;
+    space = protection_space_t::application;
     return ret;
 }
 
@@ -148,7 +148,7 @@ bool is_kindof_frame(quic_frame_t type, protection_space_t space) {
 bool is_kindof_alpn(tls_session* session, const std::string& alpn) {
     bool ret = false;
     if (session) {
-        std::string session_alpn = to_string(session->get_tls_protection().get_secrets().get(tls_context_alpn));
+        std::string session_alpn = to_string(session->get_tls_protection().get_secrets().get(tls_secret_t::alpn));
         ret = (alpn == session_alpn);
     }
     return ret;

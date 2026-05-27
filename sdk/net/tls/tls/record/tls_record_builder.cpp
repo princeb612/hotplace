@@ -26,7 +26,7 @@
 namespace hotplace {
 namespace net {
 
-tls_record_builder::tls_record_builder() : _session(nullptr), _type(tls_content_type_t::unknown), _dir(from_any), _construct(false), _protected(false) {}
+tls_record_builder::tls_record_builder() : _session(nullptr), _type(tls_content_type_t{}), _dir(from_any), _construct(false), _protected(false) {}
 
 tls_record_builder& tls_record_builder::set(tls_session* session) {
     _session = session;

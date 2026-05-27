@@ -186,7 +186,7 @@ return_t quic_packet_publisher::probe_spaces(std::set<protection_space_t>& space
         }
 
         if (_frame_layout.size()) {
-            spaces.insert(protection_application);
+            spaces.insert(protection_space_t::application);
         }
 
         if (quic_ack_packet & get_flags()) {
@@ -199,9 +199,9 @@ return_t quic_packet_publisher::probe_spaces(std::set<protection_space_t>& space
                 return errorcode_t::success;
             };
 
-            lambda_ack(get_session(), protection_initial);
-            lambda_ack(get_session(), protection_handshake);
-            lambda_ack(get_session(), protection_application);
+            lambda_ack(get_session(), protection_space_t::initial);
+            lambda_ack(get_session(), protection_space_t::handshake);
+            lambda_ack(get_session(), protection_space_t::application);
         }
 
         if (spaces.empty()) {
@@ -224,15 +224,15 @@ return_t quic_packet_publisher::prepare_packet_cid(quic_packet* packet, protecti
         auto& protection = session->get_tls_protection();
 
         auto ch = get_handshakes().get(tls_handshake_type_t::client_hello);
-        const auto& s_cid = protection.get_secrets().get(tls_context_server_cid);
+        const auto& s_cid = protection.get_secrets().get(tls_secret_t::server_cid);
 
-        if (protection_initial == space) {
+        if (protection_space_t::initial == space) {
             if (from_client == dir) {
                 if (ch) {
                     binary_t id;
                     openssl_prng prng;
                     prng.random(id, 8);
-                    protection.get_secrets().assign(tls_context_quic_dcid, id);
+                    protection.get_secrets().assign(tls_secret_t::quic_dcid, id);
                     protection.calc(session, tls_handshake_type_t::client_hello, dir);  // calc initial keys
 #if defined DEBUG
                     if (istraceable(trace_category_t::trace_category_net)) {
@@ -242,12 +242,12 @@ return_t quic_packet_publisher::prepare_packet_cid(quic_packet* packet, protecti
 #endif
                 }
             } else if (from_server == dir) {
-                // tls_context_server_cid
+                // tls_secret_t::server_cid
                 if (s_cid.empty()) {
                     binary_t id;
                     openssl_prng prng;
                     prng.random(id, 8);
-                    protection.get_secrets().assign(tls_context_server_cid, id);
+                    protection.get_secrets().assign(tls_secret_t::server_cid, id);
                     session->get_quic_session().get_cid_tracker().emplace(0, id);
 #if defined DEBUG
                     if (istraceable(trace_category_t::trace_category_net)) {
@@ -261,7 +261,7 @@ return_t quic_packet_publisher::prepare_packet_cid(quic_packet* packet, protecti
 
         if (from_client == dir) {
             if (ch) {
-                const auto& dcid = protection.get_secrets().get(tls_context_quic_dcid);
+                const auto& dcid = protection.get_secrets().get(tls_secret_t::quic_dcid);
                 packet->set_dcid(dcid);
             } else {
                 if (s_cid.empty()) {
@@ -272,8 +272,8 @@ return_t quic_packet_publisher::prepare_packet_cid(quic_packet* packet, protecti
             }
         } else if (from_server == dir) {
             switch (space) {
-                case protection_initial:
-                case protection_handshake: {
+                case protection_space_t::initial:
+                case protection_space_t::handshake: {
                     if (s_cid.empty()) {
                         // do nothing
                     } else {
@@ -313,7 +313,7 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
                 }
             }
 
-            if (protection_application == space) {
+            if (protection_space_t::application == space) {
                 for (auto& item : _frame_layout) {
                     entry_t entry;
                     entry.how = item.how;
@@ -397,7 +397,7 @@ return_t quic_packet_publisher::publish_space(protection_space_t space, tls_dire
                         }
                     }
                 }
-                if (protection_application == space) {
+                if (protection_space_t::application == space) {
                     for (auto& item : _frame_layout) {
                         if (frame_entry_quic == item.how) {
                             auto frame = framebuilder.set(item.type).set(session).set(packet).build();
@@ -511,13 +511,13 @@ return_t quic_packet_publisher::consume(quic_packet* packet, size_t paid, std::f
         {
             switch (packet->get_type()) {
                 case quic_packet_type_initial: {
-                    space = protection_initial;
+                    space = protection_space_t::initial;
                 } break;
                 case quic_packet_type_handshake: {
-                    space = protection_handshake;
+                    space = protection_space_t::handshake;
                 } break;
                 case quic_packet_type_1_rtt: {
-                    space = protection_application;
+                    space = protection_space_t::application;
                 } break;
                 default: {
                     ret = errorcode_t::bad_request;

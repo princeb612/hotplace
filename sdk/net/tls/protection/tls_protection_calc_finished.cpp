@@ -32,7 +32,7 @@ namespace net {
 return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg, uint16 dlen, tls_secret_t& typeof_secret, binary_t& maced) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (hash_alg_unknown == alg) {
+        if (hash_algorithm_t{} == alg) {
             ret = errorcode_t::unknown;
             __leave2;
         }
@@ -56,9 +56,9 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
         binary_t fin_key;
         if (is_kindof_tls13()) {
             if (is_serverinitiated(dir)) {
-                typeof_secret = tls_secret_s_hs_traffic;
+                typeof_secret = tls_secret_t::s_hs_traffic;
             } else if (is_clientinitiated(dir)) {
-                typeof_secret = tls_secret_c_hs_traffic;
+                typeof_secret = tls_secret_t::c_hs_traffic;
             }
             const binary_t& ht_secret = get_secrets().get(typeof_secret);
             hash_algorithm_t hashalg = tlsadvisor->algof_hash(get_cipher_suite());
@@ -94,7 +94,7 @@ return_t tls_protection::calc_finished(tls_direction_t dir, hash_algorithm_t alg
             }
             binary_append(seed, fin_hash);
 
-            typeof_secret = tls_secret_master;
+            typeof_secret = tls_secret_t::master;
             const binary_t& fin_key = get_secrets().get(typeof_secret);
 
             crypto_hmac_builder builder;
