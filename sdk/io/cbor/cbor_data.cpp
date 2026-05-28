@@ -19,63 +19,57 @@
 namespace hotplace {
 namespace io {
 
-cbor_data::cbor_data() : cbor_object(cbor_type_t::cbor_type_data) {}
+cbor_data::cbor_data() : cbor_object(cbor_type_t::data) {}
 
-cbor_data::cbor_data(bool value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set(value); }
+cbor_data::cbor_data(bool value) : cbor_object(cbor_type_t::data) { _vt.set(value); }
 
-cbor_data::cbor_data(int8 value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set(value); }
+cbor_data::cbor_data(int8 value) : cbor_object(cbor_type_t::data) { _vt.set(value); }
 
-cbor_data::cbor_data(int16 value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set(value); }
+cbor_data::cbor_data(int16 value) : cbor_object(cbor_type_t::data) { _vt.set(value); }
 
-cbor_data::cbor_data(int32 value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set(value); }
+cbor_data::cbor_data(int32 value) : cbor_object(cbor_type_t::data) { _vt.set(value); }
 
-cbor_data::cbor_data(int64 value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set(value); }
+cbor_data::cbor_data(int64 value) : cbor_object(cbor_type_t::data) { _vt.set(value); }
 
-cbor_data::cbor_data(uint8 value, uint32 flags) : cbor_object(cbor_type_t::cbor_type_data, flags) {
+cbor_data::cbor_data(uint8 value, uint32 flags) : cbor_object(cbor_type_t::data, flags) { _vt.set(value).set_flag((cbor_data_flag_nint & flags) ? vt_flag_negative : 0); }
+
+cbor_data::cbor_data(uint16 value, uint32 flags) : cbor_object(cbor_type_t::data, flags) {
     _vt.set(value).set_flag((cbor_data_flag_nint & flags) ? vt_flag_negative : 0);
 }
 
-cbor_data::cbor_data(uint16 value, uint32 flags) : cbor_object(cbor_type_t::cbor_type_data, flags) {
+cbor_data::cbor_data(uint32 value, uint32 flags) : cbor_object(cbor_type_t::data, flags) {
     _vt.set(value).set_flag((cbor_data_flag_nint & flags) ? vt_flag_negative : 0);
 }
 
-cbor_data::cbor_data(uint32 value, uint32 flags) : cbor_object(cbor_type_t::cbor_type_data, flags) {
+cbor_data::cbor_data(uint64 value, uint32 flags) : cbor_object(cbor_type_t::data, flags) {
     _vt.set(value).set_flag((cbor_data_flag_nint & flags) ? vt_flag_negative : 0);
 }
 
-cbor_data::cbor_data(uint64 value, uint32 flags) : cbor_object(cbor_type_t::cbor_type_data, flags) {
-    _vt.set(value).set_flag((cbor_data_flag_nint & flags) ? vt_flag_negative : 0);
-}
+cbor_data::cbor_data(const bignumber& value, uint32 flags) : cbor_object(cbor_type_t::data, flags) { set_bn(value, flags); }
 
-cbor_data::cbor_data(const bignumber& value, uint32 flags) : cbor_object(cbor_type_t::cbor_type_data, flags) { set_bn(value, flags); }
+cbor_data::cbor_data(const byte_t* bstr, size_t size) : cbor_object(cbor_type_t::data) { _vt.set_new(bstr, size); }
 
-cbor_data::cbor_data(const byte_t* bstr, size_t size) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_new(bstr, size); }
+cbor_data::cbor_data(const binary_t& data) : cbor_object(cbor_type_t::data) { _vt.set_binary(data); }
 
-cbor_data::cbor_data(const binary_t& data) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_binary(data); }
+cbor_data::cbor_data(const char* tstr) : cbor_object(cbor_type_t::data) { _vt.set_new(tstr, strlen(tstr)); }
 
-cbor_data::cbor_data(const char* tstr) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_new(tstr, strlen(tstr)); }
+cbor_data::cbor_data(const char* tstr, size_t length) : cbor_object(cbor_type_t::data) { _vt.set_new(tstr, length); }
 
-cbor_data::cbor_data(const char* tstr, size_t length) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_new(tstr, length); }
+cbor_data::cbor_data(const std::string& data) : cbor_object(cbor_type_t::data) { _vt.set_new(data.c_str(), data.size()); }
 
-cbor_data::cbor_data(const std::string& data) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_new(data.c_str(), data.size()); }
+cbor_data::cbor_data(const fp16_t& value) : cbor_object(cbor_type_t::data) { _vt.set_fp16(value.storage); }
 
-cbor_data::cbor_data(const fp16_t& value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set_fp16(value.storage); }
+cbor_data::cbor_data(float value) : cbor_object(cbor_type_t::data) { _vt.set(value); }
 
-cbor_data::cbor_data(float value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set(value); }
+cbor_data::cbor_data(double value) : cbor_object(cbor_type_t::data) { _vt.set(value); }
 
-cbor_data::cbor_data(double value) : cbor_object(cbor_type_t::cbor_type_data) { _vt.set(value); }
+cbor_data::cbor_data(const variant_t& vt) : cbor_object(cbor_type_t::data), _vt(vt) { set_flags((vt.flag & vt_flag_negative) ? cbor_data_flag_nint : 0); }
 
-cbor_data::cbor_data(const variant_t& vt) : cbor_object(cbor_type_t::cbor_type_data), _vt(vt) { set_flags((vt.flag & vt_flag_negative) ? cbor_data_flag_nint : 0); }
+cbor_data::cbor_data(variant_t&& vt) : cbor_object(cbor_type_t::data), _vt(std::move(vt)) { set_flags((vt.flag & vt_flag_negative) ? cbor_data_flag_nint : 0); }
 
-cbor_data::cbor_data(variant_t&& vt) : cbor_object(cbor_type_t::cbor_type_data), _vt(std::move(vt)) { set_flags((vt.flag & vt_flag_negative) ? cbor_data_flag_nint : 0); }
+cbor_data::cbor_data(const variant& other) : cbor_object(cbor_type_t::data), _vt(other) { set_flags((other.flag() & vt_flag_negative) ? cbor_data_flag_nint : 0); }
 
-cbor_data::cbor_data(const variant& other) : cbor_object(cbor_type_t::cbor_type_data), _vt(other) {
-    set_flags((other.flag() & vt_flag_negative) ? cbor_data_flag_nint : 0);
-}
-
-cbor_data::cbor_data(variant&& other) : cbor_object(cbor_type_t::cbor_type_data), _vt(std::move(other)) {
-    set_flags((other.flag() & vt_flag_negative) ? cbor_data_flag_nint : 0);
-}
+cbor_data::cbor_data(variant&& other) : cbor_object(cbor_type_t::data), _vt(std::move(other)) { set_flags((other.flag() & vt_flag_negative) ? cbor_data_flag_nint : 0); }
 
 cbor_data::~cbor_data() {}
 
@@ -97,9 +91,9 @@ cbor_data& cbor_data::set_bn(const bignumber& value, uint32 flags) {
     if (bn.capacity() > 2) {
         // case greater than uint64
         if (sign > 0) {
-            tag(cbor_tag_positive_bignum);
+            tag(cbor_tag_t::positive_bignum);
         } else {
-            tag(cbor_tag_negative_bignum);
+            tag(cbor_tag_t::negative_bignum);
         }
     }
 
@@ -122,13 +116,13 @@ void cbor_data::represent(stream_t* s) {
                 cbor_tag_t tag = tag_value();
 
                 switch (tag) {
-                    case cbor_tag_t::cbor_tag_positive_bignum:
-                    case cbor_tag_t::cbor_tag_negative_bignum: {
+                    case cbor_tag_t::positive_bignum:
+                    case cbor_tag_t::negative_bignum: {
                         if ((vartype_t::TYPE_BINARY == vt.type) && (vt.size <= 16)) {
                             bignumber bn(vt.data.bstr, vt.size);
-                            if (cbor_tag_t::cbor_tag_positive_bignum == tag) {
+                            if (cbor_tag_t::positive_bignum == tag) {
                                 // do nothing
-                            } else if (cbor_tag_t::cbor_tag_negative_bignum == tag) {
+                            } else if (cbor_tag_t::negative_bignum == tag) {
                                 bn += 1;
                                 bn.neg();
                             }

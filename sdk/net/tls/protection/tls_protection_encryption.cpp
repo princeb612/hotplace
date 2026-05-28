@@ -44,11 +44,11 @@ uint8 tls_protection::get_tag_size() {
         auto dlen = sizeof_digest(hint_digest);
 
         switch (mode) {
-            case gcm:
-            case mode_poly1305:  // RFC 7905
+            case crypt_mode_t::gcm:
+            case crypt_mode_t::poly1305:  // RFC 7905
                 ret_value = 16;
                 break;
-            case ccm:
+            case crypt_mode_t::ccm:
                 /**
                  * RFC 6655 AES-CCM Cipher Suites for Transport Layer Security (TLS)
                  *   3.  RSA-Based AES-CCM Cipher Suites
@@ -156,8 +156,8 @@ return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, cons
         }
         auto session_type = session->get_type();
         switch (session_type) {
-            case session_type_tls:
-            case session_type_dtls: {
+            case session_type_t::tls:
+            case session_type_t::dtls: {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 bool is_kindof_cbc = tlsadvisor->is_kindof_cbc(get_cipher_suite());
                 if (is_kindof_cbc) {
@@ -176,8 +176,8 @@ return_t tls_protection::decrypt(tls_session* session, tls_direction_t dir, cons
                     session->push_alert(dir, tls_alertlevel_t::fatal, tls_alertdesc_t::decryption_failed);
                 }
             } break;
-            case session_type_quic:
-            case session_type_quic2: {
+            case session_type_t::quic:
+            case session_type_t::quic2: {
                 ret = errorcode_t::not_supported;
             } break;
         }

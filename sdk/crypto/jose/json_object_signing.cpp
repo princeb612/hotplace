@@ -85,11 +85,11 @@ return_t json_object_signing::sign(jose_context_t* handle, std::list<std::string
         }
 
         for (const auto& header : headers) {
-            jws_t sig = jws_t::jws_unknown;
+            jws_t sig = jws_t::unknown;
             std::string kid;
 
             composer.parse_signature_protected_header(handle, header.c_str(), sig, kid);
-            if (jws_t::jws_unknown == sig) {
+            if (jws_t::unknown == sig) {
                 size_t header_size = headers.size();
                 if (header_size > 1) {
                     continue;
@@ -160,13 +160,13 @@ return_t json_object_signing::verify(jose_context_t* handle, const std::string& 
             bool result_per_signature = false;
 
             std::string protected_header = base64_decode_careful(item.header, encoding_t::encoding_base64url);
-            jws_t sig = jws_t::jws_unknown;
+            jws_t sig = jws_t::unknown;
             std::string header_kid;
 
             composer.parse_signature_protected_header(handle, protected_header.c_str(), sig, header_kid);
-            if (jws_t::jws_unknown == sig) {
+            if (jws_t::unknown == sig) {
                 // RFC 7520 4.7. Protecting Content Only
-                if (jws_t::jws_unknown == item.sig) {
+                if (jws_t::unknown == item.sig) {
                     continue;
                 } else {
                     sig = item.sig;
@@ -245,23 +245,23 @@ return_t json_object_signing::dosign(crypto_key* key, jws_t sig, const binary_t&
 
         // RFC 7515 A.1.  Example JWS Using HMAC SHA-256
         // RFC 7520 4.4.  HMAC-SHA2 Integrity Protection
-        // jws_group_t::jws_group_hmac,
+        // jws_group_t::hmac,
 
         // RFC 7515 A.2.  Example JWS Using RSASSA-PKCS1-v1_5 SHA-256
         // RFC 7520 4.1.  RSA v1.5 Signature
-        // jws_group_t::jws_group_rsassa_pkcs15,
+        // jws_group_t::rsassa_pkcs15,
 
         // RFC 7515 A.3.  Example JWS Using ECDSA P-256 SHA-256
         // RFC 7515 A.4.  Example JWS Using ECDSA P-521 SHA-512
         // RFC 7520 4.3.  ECDSA Signature
-        // jws_group_t::jws_group_ecdsa,
+        // jws_group_t::ecdsa,
 
         // RFC 7520 4.2.  RSA-PSS Signature
-        // jws_group_t::jws_group_rsassa_pss,
+        // jws_group_t::rsassa_pss,
 
         // RFC 8037 A.4.  Ed25519 Signing
         // RFC 8037 A.5.  Ed25519 Validation
-        // jws_group_t::jws_group_eddsa,
+        // jws_group_t::eddsa,
 
         crypto_sign_builder builder;
         auto sign = builder.set_scheme(sig).build();
@@ -308,23 +308,23 @@ return_t json_object_signing::doverify(crypto_key* key, const char* kid, jws_t s
 
         // RFC 7515 A.1.  Example JWS Using HMAC SHA-256
         // RFC 7520 4.4.  HMAC-SHA2 Integrity Protection
-        // jws_group_t::jws_group_hmac,
+        // jws_group_t::hmac,
 
         // RFC 7515 A.2.  Example JWS Using RSASSA-PKCS1-v1_5 SHA-256
         // RFC 7520 4.1.  RSA v1.5 Signature
-        // jws_group_t::jws_group_rsassa_pkcs15,
+        // jws_group_t::rsassa_pkcs15,
 
         // RFC 7515 A.3.  Example JWS Using ECDSA P-256 SHA-256
         // RFC 7515 A.4.  Example JWS Using ECDSA P-521 SHA-512
         // RFC 7520 4.3.  ECDSA Signature
-        // jws_group_t::jws_group_ecdsa,
+        // jws_group_t::ecdsa,
 
         // RFC 7520 4.2.  RSA-PSS Signature
-        // jws_group_t::jws_group_rsassa_pss,
+        // jws_group_t::rsassa_pss,
 
         // RFC 8037 A.4.  Ed25519 Signing
         // RFC 8037 A.5.  Ed25519 Validation
-        // jws_group_t::jws_group_eddsa,
+        // jws_group_t::eddsa,
 
         crypto_sign_builder builder;
         auto sign = builder.set_scheme(sig).build();
@@ -360,10 +360,10 @@ return_t json_object_signing::check_constraints(jws_t sig, const EVP_PKEY* pkey)
             ret = errorcode_t::bad_request;
             __leave2;
         }
-        int group = hint->group;
+        auto group = hint->group;
         switch (group) {
-            case jws_group_t::jws_group_rsassa_pkcs15:
-            case jws_group_t::jws_group_rsassa_pss: {
+            case jws_group_t::rsassa_pkcs15:
+            case jws_group_t::rsassa_pss: {
                 int bits = EVP_PKEY_bits(pkey);
                 if (bits < 2048) {
                     ret = errorcode_t::low_security;

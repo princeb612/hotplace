@@ -249,8 +249,8 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
 void do_test_construct_dtls12_1(const char* ciphersuite) {
     _test_case.begin("construct DTLS 1.2 %s (wo segmentation)", ciphersuite);
 
-    tls_session session_client(session_type_dtls);
-    tls_session session_server(session_type_dtls);
+    tls_session session_client(session_type_t::dtls);
+    tls_session session_server(session_type_t::dtls);
 
     session_client.get_dtls_record_publisher().set_fragment_size(128);
     session_server.get_dtls_record_publisher().set_fragment_size(128);

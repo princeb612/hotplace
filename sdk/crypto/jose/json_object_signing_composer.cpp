@@ -65,7 +65,7 @@ return_t json_object_signing::composer::parse_signature(jose_context_t* handle, 
                     for (size_t index = 0; index < array_size; index++) {
                         json_t* json_signature = json_array_get(json_signatures, index);
 
-                        jws_t sig = jws_t::jws_unknown;
+                        jws_t sig = jws_t::unknown;
                         const char* protected_value = nullptr; /* protected:base64_url_encode(header) */
                         const char* kid_value = nullptr;       /* header:{kid:kid_value} */
                         const char* alg_value = nullptr;       /* header:{alg:alg_value} */
@@ -107,7 +107,7 @@ return_t json_object_signing::composer::parse_signature(jose_context_t* handle, 
             } else {
                 // 7.2.2.  Flattened JWS JSON Serialization Syntax
 
-                jws_t sig = jws_t::jws_unknown;
+                jws_t sig = jws_t::unknown;
                 const char* protected_value = nullptr; /* protected:base64_url_encode(header) */
                 const char* kid_value = nullptr;       /* header:{kid:kid_value} */
                 const char* alg_value = nullptr;       /* header:{alg:alg_value} */
@@ -184,7 +184,7 @@ return_t json_object_signing::composer::parse_signature_protected_header(jose_co
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
     __try2 {
-        sig = jws_t::jws_unknown;
+        sig = jws_t::unknown;
         keyid.clear();
 
         if (nullptr == handle) {

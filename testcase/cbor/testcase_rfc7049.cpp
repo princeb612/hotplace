@@ -260,7 +260,7 @@ void test_rfc7049_table4_1() {
     do_test_cbor_intstring("0xffffffffffffffff", "1bffffffffffffffff");
 
     // uint64   0 ~ 18446744073709551615
-    do_test_cbor_intstring("18446744073709551616", "c249010000000000000000");  // cbor_tag_positive_bignum
+    do_test_cbor_intstring("18446744073709551616", "c249010000000000000000");  // cbor_tag_t::positive_bignum
     do_test_cbor_intstring("0x10000000000000000", "c249010000000000000000");
     do_test_cbor_intstring("-18446744073709551616", "3bffffffffffffffff");
     do_test_cbor_intstring("-18446744073709551617", "c349010000000000000000");
@@ -312,21 +312,21 @@ void test_rfc7049_table4_1() {
     do_test_cbor_double(fp64_from_binary64(0xfff0000000000000), "fbfff0000000000000");  // negative infinity
 
     do_test_cbor_bool(false, "f4");
-    do_test_cbor_simple(cbor_simple_t::cbor_simple_false, "f4");
+    do_test_cbor_simple((uint8)cbor_simple_t::_false, "f4");
     do_test_cbor_bool(true, "f5");
-    do_test_cbor_simple(cbor_simple_t::cbor_simple_true, "f5");
-    do_test_cbor_simple(cbor_simple_t::cbor_simple_null, "f6");
-    do_test_cbor_simple(cbor_simple_t::cbor_simple_undef, "f7");
+    do_test_cbor_simple((uint8)cbor_simple_t::_true, "f5");
+    do_test_cbor_simple((uint8)cbor_simple_t::null, "f6");
+    do_test_cbor_simple((uint8)cbor_simple_t::undef, "f7");
     do_test_cbor_simple(16, "f0");
     do_test_cbor_simple(24, "f818");
     do_test_cbor_simple(255, "f8ff");
 
-    do_test_cbor_tstr_tag("2013-03-21T20:04:00Z", cbor_tag_t::cbor_tag_std_datetime, "c074323031332d30332d32315432303a30343a30305a");
-    do_test_cbor_uint_tag(1363896240, cbor_tag_t::cbor_tag_epoch_datetime, "c11a514b67b0");
-    do_test_cbor_double_tag(1363896240.5, cbor_tag_t::cbor_tag_epoch_datetime, "c1fb41d452d9ec200000");
-    do_test_cbor_bstr_tag(base16_decode("01020304"), cbor_tag_t::cbor_tag_base16, "d74401020304");
-    do_test_cbor_bstr_tag(base16_decode("6449455446"), cbor_tag_t::cbor_tag_encoded, "d818456449455446");
-    do_test_cbor_tstr_tag("http://www.example.com", cbor_tag_t::cbor_tag_uri, "d82076687474703a2f2f7777772e6578616d706c652e636f6d");
+    do_test_cbor_tstr_tag("2013-03-21T20:04:00Z", cbor_tag_t::std_datetime, "c074323031332d30332d32315432303a30343a30305a");
+    do_test_cbor_uint_tag(1363896240, cbor_tag_t::epoch_datetime, "c11a514b67b0");
+    do_test_cbor_double_tag(1363896240.5, cbor_tag_t::epoch_datetime, "c1fb41d452d9ec200000");
+    do_test_cbor_bstr_tag(base16_decode("01020304"), cbor_tag_t::base16, "d74401020304");
+    do_test_cbor_bstr_tag(base16_decode("6449455446"), cbor_tag_t::encoded, "d818456449455446");
+    do_test_cbor_tstr_tag("http://www.example.com", cbor_tag_t::uri, "d82076687474703a2f2f7777772e6578616d706c652e636f6d");
 
     do_test_cbor_bstr(base16_decode(""), "40");
     do_test_cbor_bstr(base16_decode("01020304"), "4401020304");

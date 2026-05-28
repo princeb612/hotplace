@@ -121,7 +121,7 @@ tls_record* tls_record_builder::build() {
             case tls_content_type_t::tls12_cid:
             default: {
                 if (TLS_CONTENT_TYPE_MASK_CIPHERTEXT & ettype) {
-                    if (session_type_tls == session_type) {
+                    if (session_type_t::tls == session_type) {
                         //
                     } else {
                         // DTLS 1.3 Ciphertext

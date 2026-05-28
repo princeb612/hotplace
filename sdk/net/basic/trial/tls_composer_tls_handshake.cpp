@@ -44,7 +44,7 @@ return_t tls_composer::do_tls_client_handshake(unsigned wto, std::function<void(
             }
 
             // if DTLS(HVR), then CH(cookie)
-            if (session_type_dtls == session_type) {
+            if (session_type_t::dtls == session_type) {
                 // S->C HVR
                 session->wait_change_session_status(session_status_hello_verify_request, wto);
                 session_status = session->get_session_status();
@@ -208,7 +208,7 @@ return_t tls_composer::do_tls_server_handshake_phase1(std::function<void(tls_ses
 
         builder.set(dir).construct();
 
-        if ((session_type_dtls == session_type) && (0 == (session_status & session_status_hello_verify_request))) {
+        if ((session_type_t::dtls == session_type) && (0 == (session_status & session_status_hello_verify_request))) {
             // hello_verify_request cookie
             builder                                                     //
                 .add(&records, tls_content_type_t::handshake, session,  //
@@ -357,7 +357,7 @@ return_t tls_composer::do_tls_compose(tls_record* record, tls_direction_t dir, s
 
         auto session = get_session();
         auto session_type = session->get_type();
-        if (session_type_dtls == session_type) {
+        if (session_type_t::dtls == session_type) {
             // fragmentation
             session->get_dtls_record_publisher().publish(record, dir, func);
         } else {
@@ -380,7 +380,7 @@ return_t tls_composer::do_tls_compose(tls_records* records, tls_direction_t dir,
 
         auto session = get_session();
         auto session_type = session->get_type();
-        if (session_type_dtls == session_type) {
+        if (session_type_t::dtls == session_type) {
             // fragmentation
             session->get_dtls_record_publisher().publish(records, dir, func);
         } else {

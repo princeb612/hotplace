@@ -343,8 +343,8 @@ void test_rfc_9001_a5() {
 }
 
 void testcase_rfc_9001() {
-    tls_session server_session(session_type_quic);
-    tls_session client_session(session_type_quic);
+    tls_session server_session(session_type_t::quic);
+    tls_session client_session(session_type_t::quic);
 
     test_rfc_9001_section4();
     test_rfc_9001_a1(&client_session, &server_session);

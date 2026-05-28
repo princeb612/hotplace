@@ -29,10 +29,10 @@ namespace hotplace {
 namespace net {
 
 enum session_type_t {
-    session_type_tls = 1,    // TLS session
-    session_type_dtls = 2,   // DTLS session
-    session_type_quic = 3,   // QUIC
-    session_type_quic2 = 4,  // QUIC Version 2
+    tls = 1,    // TLS session
+    dtls = 2,   // DTLS session
+    quic = 3,   // QUIC
+    quic2 = 4,  // QUIC Version 2
 };
 
 enum session_alert_flag_t : uint8 {
@@ -210,7 +210,7 @@ class tls_session {
     void* _hook_param;
 
     /**
-     * session_type_dtls
+     * session_type_t::dtls
      * unnecessary if session_type is TLS
      */
     critical_section _dtls_lock;

@@ -21,7 +21,7 @@
 namespace hotplace {
 namespace io {
 
-cbor_pair::cbor_pair(const bignumber& value, cbor_data* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
+cbor_pair::cbor_pair(const bignumber& value, cbor_data* object) : cbor_object(cbor_type_t::pair), _lhs(nullptr), _rhs(object) {
     __try2 {
         if (nullptr == object) {
             throw exception(errorcode_t::not_specified);
@@ -31,7 +31,7 @@ cbor_pair::cbor_pair(const bignumber& value, cbor_data* object) : cbor_object(cb
     __finally2 {}
 }
 
-cbor_pair::cbor_pair(const bignumber& value, cbor_map* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
+cbor_pair::cbor_pair(const bignumber& value, cbor_map* object) : cbor_object(cbor_type_t::pair), _lhs(nullptr), _rhs(object) {
     __try2 {
         if (nullptr == object) {
             throw exception(errorcode_t::not_specified);
@@ -41,7 +41,7 @@ cbor_pair::cbor_pair(const bignumber& value, cbor_map* object) : cbor_object(cbo
     __finally2 {}
 }
 
-cbor_pair::cbor_pair(const bignumber& value, cbor_array* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
+cbor_pair::cbor_pair(const bignumber& value, cbor_array* object) : cbor_object(cbor_type_t::pair), _lhs(nullptr), _rhs(object) {
     __try2 {
         if (nullptr == object) {
             throw exception(errorcode_t::not_specified);
@@ -51,7 +51,7 @@ cbor_pair::cbor_pair(const bignumber& value, cbor_array* object) : cbor_object(c
     __finally2 {}
 }
 
-cbor_pair::cbor_pair(const char* key, cbor_data* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
+cbor_pair::cbor_pair(const char* key, cbor_data* object) : cbor_object(cbor_type_t::pair), _lhs(nullptr), _rhs(object) {
     __try2 {
         if (nullptr == object) {
             throw exception(errorcode_t::not_specified);
@@ -61,7 +61,7 @@ cbor_pair::cbor_pair(const char* key, cbor_data* object) : cbor_object(cbor_type
     __finally2 {}
 }
 
-cbor_pair::cbor_pair(const char* key, cbor_map* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
+cbor_pair::cbor_pair(const char* key, cbor_map* object) : cbor_object(cbor_type_t::pair), _lhs(nullptr), _rhs(object) {
     __try2 {
         if (nullptr == object) {
             throw exception(errorcode_t::not_specified);
@@ -71,7 +71,7 @@ cbor_pair::cbor_pair(const char* key, cbor_map* object) : cbor_object(cbor_type_
     __finally2 {}
 }
 
-cbor_pair::cbor_pair(const char* key, cbor_array* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(nullptr), _rhs(object) {
+cbor_pair::cbor_pair(const char* key, cbor_array* object) : cbor_object(cbor_type_t::pair), _lhs(nullptr), _rhs(object) {
     __try2 {
         if (nullptr == object) {
             throw exception(errorcode_t::not_specified);
@@ -81,25 +81,25 @@ cbor_pair::cbor_pair(const char* key, cbor_array* object) : cbor_object(cbor_typ
     __finally2 {}
 }
 
-cbor_pair::cbor_pair(cbor_data* key, cbor_data* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(key), _rhs(object) {
+cbor_pair::cbor_pair(cbor_data* key, cbor_data* object) : cbor_object(cbor_type_t::pair), _lhs(key), _rhs(object) {
     if (nullptr == key || nullptr == object) {
         throw exception(errorcode_t::not_specified);
     }
 }
 
-cbor_pair::cbor_pair(cbor_data* key, cbor_map* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(key), _rhs(object) {
+cbor_pair::cbor_pair(cbor_data* key, cbor_map* object) : cbor_object(cbor_type_t::pair), _lhs(key), _rhs(object) {
     if (nullptr == key || nullptr == object) {
         throw exception(errorcode_t::not_specified);
     }
 }
 
-cbor_pair::cbor_pair(cbor_data* key, cbor_array* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(key), _rhs(object) {
+cbor_pair::cbor_pair(cbor_data* key, cbor_array* object) : cbor_object(cbor_type_t::pair), _lhs(key), _rhs(object) {
     if (nullptr == key || nullptr == object) {
         throw exception(errorcode_t::not_specified);
     }
 }
 
-cbor_pair::cbor_pair(cbor_data* key, cbor_object* object) : cbor_object(cbor_type_t::cbor_type_pair), _lhs(key), _rhs(object) {
+cbor_pair::cbor_pair(cbor_data* key, cbor_object* object) : cbor_object(cbor_type_t::pair), _lhs(key), _rhs(object) {
     if (nullptr == key || nullptr == object) {
         throw exception(errorcode_t::not_specified);
     }

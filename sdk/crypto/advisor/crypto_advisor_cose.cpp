@@ -106,7 +106,7 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, cose_alg_t alg) {
 }
 
 cose_kty_t crypto_advisor::cose_ktyof(crypto_kty_t kty) {
-    cose_kty_t cose_kty = cose_kty_t::cose_kty_unknown;
+    cose_kty_t cose_kty{};
     t_maphint<crypto_kty_t, cose_kty_t> hint(_kty2cose_map);
 
     hint.find(kty, &cose_kty);

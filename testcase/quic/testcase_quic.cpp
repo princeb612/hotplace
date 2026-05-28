@@ -75,7 +75,7 @@ void test_quic_xargs_org() {
     _test_case.begin("https://quic.xargs.org/");
 
     return_t ret = errorcode_t::success;
-    tls_session server_session(session_type_quic);
+    tls_session server_session(session_type_t::quic);
 
     tls_protection& protection = server_session.get_tls_protection();
     auto& secrets = protection.get_secrets();

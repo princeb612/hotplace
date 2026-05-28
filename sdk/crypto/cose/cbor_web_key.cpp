@@ -66,13 +66,13 @@ return_t cbor_web_key::load_b16(crypto_key* cryptokey, const char* buffer, size_
 }
 
 typedef struct _cose_object_key {
-    int type;
+    cose_kty_t type;
     int curve;
     int alg;
     std::string kid;
     std::map<int, binary_t> attrib;
 
-    _cose_object_key() : type(0), curve(0), alg(0) {}
+    _cose_object_key() : type(cose_kty_t{}), curve(0), alg(0) {}
 } cose_key_object;
 
 return_t cbor_web_key::load(crypto_key* cryptokey, const byte_t* buffer, size_t size, int flag) {
@@ -125,12 +125,12 @@ return_t cbor_web_key::load(crypto_key* key, cbor_object* root, int flag) {
             __leave2;
         }
 
-        if (cbor_type_t::cbor_type_array == root->type()) {
+        if (cbor_type_t::array == root->type()) {
             const std::list<cbor_object*>& keys = ((cbor_array*)root)->accessor();
             for (cbor_object* child : keys) {
                 do_load(key, child, flag);
             }
-        } else if (cbor_type_t::cbor_type_map == root->type()) {
+        } else if (cbor_type_t::map == root->type()) {
             do_load(key, root, flag);
         }
     }
@@ -148,20 +148,22 @@ return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int f
             __leave2;
         }
 
-        if (cbor_type_t::cbor_type_map == object->type()) {
+        if (cbor_type_t::map == object->type()) {
             cose_key_object keyobj;
             const std::list<cbor_pair*>& key_contents = ((cbor_map*)object)->accessor();
             for (cbor_pair* pair : key_contents) {
                 cbor_data* lhs = (cbor_data*)pair->left();
                 cbor_data* rhs = (cbor_data*)pair->right();
                 // (nullptr != lhs) && (nullptr != rhs)
-                if ((lhs->type() == rhs->type()) && (cbor_type_t::cbor_type_data == lhs->type())) {
+                if ((lhs->type() == rhs->type()) && (cbor_type_t::data == lhs->type())) {
                     int label = lhs->data().to_int();
                     const variant_t& vt_rhs = rhs->data().content();
                     if (cose_key_lable_t::cose_lable_kid == label) {  // 2
                         rhs->data().to_string(keyobj.kid);
                     } else if (cose_key_lable_t::cose_lable_kty == label) {  // 1
-                        keyobj.type = rhs->data().to_int();
+                        auto kty = rhs->data().to_int();
+                        t_enum_type<cose_kty_t> etkty(kty);
+                        keyobj.type = etkty;
                     } else if (cose_key_lable_t::cose_lable_alg == label) {  // 3
                         keyobj.alg = rhs->data().to_int();
                     } else if (-1 == label) {  // ec2 curve, symmetric k
@@ -183,7 +185,7 @@ return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int f
             }
             t_maphint<int, binary_t> hint_key(keyobj.attrib);
             keydesc desc(keyobj.kid);
-            if (cose_kty_t::cose_kty_okp == keyobj.type || cose_kty_t::cose_kty_ec2 == keyobj.type) {  // 1, 2
+            if (cose_kty_t::okp == keyobj.type || cose_kty_t::ec2 == keyobj.type) {  // 1, 2
                 uint32 nid = advisor->nidof((cose_ec_curve_t)keyobj.curve);
                 binary_t x;
                 binary_t y;
@@ -192,7 +194,7 @@ return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int f
                 hint_key.find(cose_key_lable_t::cose_ec_y, &y);  // -3
                 hint_key.find(cose_key_lable_t::cose_ec_d, &d);  // -4
                 add_ec2(cryptokey, nid, x, y, d, desc);
-            } else if (cose_kty_t::cose_kty_rsa == keyobj.type) {  // 3
+            } else if (cose_kty_t::rsa == keyobj.type) {  // 3
                 binary_t n;
                 binary_t e;
                 binary_t d;
@@ -200,11 +202,11 @@ return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int f
                 hint_key.find(cose_key_lable_t::cose_rsa_e, &e);  // -2
                 hint_key.find(cose_key_lable_t::cose_rsa_d, &d);  // -3
                 add_rsa(cryptokey, nid_rsa, n, e, d, desc);
-            } else if (cose_kty_t::cose_kty_symm == keyobj.type) {  // 4
+            } else if (cose_kty_t::symm == keyobj.type) {  // 4
                 binary_t k;
                 hint_key.find(cose_key_lable_t::cose_symm_k, &k);  // -1
                 add_oct(cryptokey, k, desc);
-            } else if (cose_kty_t::cose_kty_akp == keyobj.type) {
+            } else if (cose_kty_t::akp == keyobj.type) {
                 uint32 nid = 0;
                 {
                     auto hint = advisor->hintof_cose_algorithm((cose_alg_t)keyobj.alg);

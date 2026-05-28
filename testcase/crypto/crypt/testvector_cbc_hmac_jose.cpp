@@ -113,7 +113,7 @@ return_t do_test_aead_aes_cbc_hmac_sha2_testvector1(const test_vector_aead_aes_c
         crypt_context_t* crypt_handle = nullptr;
         openssl_crypt crypt;
         crypt.open(&crypt_handle, encalg, enc_key, iv);
-        crypt.set(crypt_handle, crypt_ctrl_t::crypt_ctrl_padding, 0);
+        crypt.set(crypt_handle, crypt_ctrl_t::padding, 0);
         crypt.encrypt(crypt_handle, p1, q);
         crypt.close(crypt_handle);
 

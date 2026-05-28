@@ -49,14 +49,14 @@ class cbor_object_signing_encryption {
      * @param   uint32 flags [in] see cose_flag_t
      * @return  error code (see error.hpp)
      * @example
-     *      cose.set (handle, cose_flag_t::cose_flag_auto_keygen);
+     *      cose.set (handle, cose_flag_t::auto_keygen);
      */
     return_t set(cose_context_t* handle, uint32 flags, uint32 debug_flags = 0);
     return_t get(cose_context_t* handle, uint32& flags, uint32& debug_flags);
     /**
      * @brief   set
      * @param   cose_context_t* handle [in]
-     * @param   cose_param_t id [in] cose_external, cose_public, cose_private
+     * @param   cose_param_t id [in] cose_param_external, cose_public, cose_private
      * @param   const binary_t& bin [in]
      * @return  error code (see error.hpp)
      */
@@ -110,10 +110,10 @@ class cbor_object_signing_encryption {
      *          cose.open(&handle);
      *          // sketch
      *          cose_layer& body = handle->composer->get_layer();
-     *          body.get_protected().add(cose_key_t::cose_alg, alg);
+     *          body.get_protected().add(cose_key_t::alg, alg);
      *          if (cose_alg_t::cose_unknown != keyalg) {
      *              cose_recipient& recipient = body.get_recipients().add(new cose_recipient);
-     *              recipient.get_protected().add(cose_key_t::cose_alg, keyalg);
+     *              recipient.get_protected().add(cose_key_t::alg, keyalg);
      *
      *              // fill others and compose
      *              ret = cose.encrypt(handle, key, input, cbor);
@@ -178,7 +178,7 @@ class cbor_object_signing_encryption {
      *          cose.open(&handle);
      *          // sketch
      *          cose_layer& body = handle->composer->get_layer();
-     *          body.get_protected().add(cose_key_t::cose_alg, alg);
+     *          body.get_protected().add(cose_key_t::alg, alg);
      *
      *          // fill others and compose
      *          ret = cose.sign(handle, key, input, cbor);
@@ -234,10 +234,10 @@ class cbor_object_signing_encryption {
      *          cose.open(&handle);
      *          // sketch
      *          cose_layer& body = handle->composer->get_layer();
-     *          body.get_protected().add(cose_key_t::cose_alg, alg);
+     *          body.get_protected().add(cose_key_t::alg, alg);
      *          if (cose_alg_t::cose_unknown != keyalg) {
      *              cose_recipient& recipient = body.get_recipients().add(new cose_recipient);
-     *              recipient.get_protected().add(cose_key_t::cose_alg, keyalg);
+     *              recipient.get_protected().add(cose_key_t::alg, keyalg);
      *
      *              // fill others and compose
      *              ret = cose.mac(handle, key, input, cbor);

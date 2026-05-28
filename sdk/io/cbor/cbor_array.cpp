@@ -20,9 +20,9 @@
 namespace hotplace {
 namespace io {
 
-cbor_array::cbor_array() : cbor_object(cbor_type_t::cbor_type_array) {}
+cbor_array::cbor_array() : cbor_object(cbor_type_t::array) {}
 
-cbor_array::cbor_array(uint32 flags) : cbor_object(cbor_type_t::cbor_type_array, flags) {}
+cbor_array::cbor_array(uint32 flags) : cbor_object(cbor_type_t::array, flags) {}
 
 cbor_array::~cbor_array() {}
 
@@ -36,10 +36,10 @@ return_t cbor_array::join(cbor_object* object, cbor_object* extra) {
         }
 
         switch (object->type()) {
-            case cbor_type_t::cbor_type_array:
-            case cbor_type_t::cbor_type_data:
-            case cbor_type_t::cbor_type_map:
-            case cbor_type_t::cbor_type_simple:
+            case cbor_type_t::array:
+            case cbor_type_t::data:
+            case cbor_type_t::map:
+            case cbor_type_t::simple:
                 _array.push_back(object);
                 break;
             default:
@@ -148,17 +148,17 @@ void cbor_array::represent(binary_t* b) {
 
     if (b) {
         if (tagged()) {
-            enc.encode(*b, cbor_major_t::cbor_major_tag, (uint64)tag_value());
+            enc.encode(*b, cbor_major_t::tag, (uint64)tag_value());
         }
 
-        enc.encode(*b, cbor_major_t::cbor_major_array, cbor_control_t::cbor_control_begin, this);
+        enc.encode(*b, cbor_major_t::array, cbor_control_t::cbor_control_begin, this);
 
         // for each member
         for (auto item : _array) {
             item->represent(b);
         }
 
-        enc.encode(*b, cbor_major_t::cbor_major_array, cbor_control_t::cbor_control_end, this);
+        enc.encode(*b, cbor_major_t::array, cbor_control_t::cbor_control_end, this);
     }
 }
 

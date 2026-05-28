@@ -73,7 +73,7 @@ return_t secure_prosumer::do_produce(tls_session* session, tls_direction_t dir, 
         auto session_type = session->get_type();
         size_t pos = 0;
 
-        if (session_type_dtls == session_type) {
+        if (session_type_t::dtls == session_type) {
             // DTLS (built-in reorder feature)
             if (nullptr == addr || nullptr == addrlen) {
                 ret = errorcode_t::invalid_parameter;

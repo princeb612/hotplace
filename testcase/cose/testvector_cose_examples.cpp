@@ -25,19 +25,18 @@ void test_yaml_testvector_cose_examples() {
     size_t i = 0;
     cbor_encode e;
 
-    std::map<std::string, int> dictionary;
-    std::map<std::string, int>::iterator iter;
-    uint16 table[] = {
-        cbor_tag_t::cose_tag_encrypt0,  // 16
-        cbor_tag_t::cose_tag_mac0,      // 17
-        cbor_tag_t::cose_tag_sign1,     // 18
-        cbor_tag_t::cose_tag_encrypt,   // 96
-        cbor_tag_t::cose_tag_mac,       // 97
-        cbor_tag_t::cose_tag_sign,      // 98
+    std::map<std::string, cbor_tag_t> dictionary;
+    cbor_tag_t table[] = {
+        cbor_tag_t::encrypt0,  // 16
+        cbor_tag_t::mac0,      // 17
+        cbor_tag_t::sign1,     // 18
+        cbor_tag_t::encrypt,   // 96
+        cbor_tag_t::mac,       // 97
+        cbor_tag_t::sign,      // 98
     };
     for (i = 0; i < RTL_NUMBER_OF(table); i++) {
         binary_t bin;
-        e.encode(bin, cbor_major_t::cbor_major_tag, table[i]);
+        e.encode(bin, cbor_major_t::tag, (uint8)table[i]);
         std::string keyword = uppername(base16_encode(bin));
         dictionary.emplace(keyword, table[i]);
         _logger->writeln("%s => %i", keyword.c_str(), table[i]);
@@ -222,16 +221,16 @@ void test_yaml_testvector_cose_examples() {
                 lambda_dump_subnode("CEK", node_enc, "cek");
                 lambda_dump_subnode("tomac", node_enc, "tomac");
 
-                lambda_set_param("external", node_shared, "external", handle, cose_param_t::cose_external, properties);
-                lambda_set_param("unsent iv", node_shared, "iv", handle, cose_param_t::cose_unsent_iv, properties);
-                lambda_set_param("unsent partyu id", node_shared, "apu_id", handle, cose_param_t::cose_unsent_apu_id, properties);
-                lambda_set_param("unsent partyu nonce", node_shared, "apu_nonce", handle, cose_param_t::cose_unsent_apu_nonce, properties);
-                lambda_set_param("unsent partyu other", node_shared, "apu_other", handle, cose_param_t::cose_unsent_apu_other, properties);
-                lambda_set_param("unsent partyv id", node_shared, "apv_id", handle, cose_param_t::cose_unsent_apv_id, properties);
-                lambda_set_param("unsent partyv nonce", node_shared, "apv_nonce", handle, cose_param_t::cose_unsent_apv_nonce, properties);
-                lambda_set_param("unsent partyv other", node_shared, "apv_other", handle, cose_param_t::cose_unsent_apv_other, properties);
-                lambda_set_param("unsent pub other", node_shared, "pub_other", handle, cose_param_t::cose_unsent_pub_other, properties);
-                lambda_set_param("unsent private", node_shared, "priv", handle, cose_param_t::cose_unsent_priv_other, properties);
+                lambda_set_param("external", node_shared, "external", handle, cose_param_external, properties);
+                lambda_set_param("unsent iv", node_shared, "iv", handle, cose_param_unsent_iv, properties);
+                lambda_set_param("unsent partyu id", node_shared, "apu_id", handle, cose_param_unsent_apu_id, properties);
+                lambda_set_param("unsent partyu nonce", node_shared, "apu_nonce", handle, cose_param_unsent_apu_nonce, properties);
+                lambda_set_param("unsent partyu other", node_shared, "apu_other", handle, cose_param_unsent_apu_other, properties);
+                lambda_set_param("unsent partyv id", node_shared, "apv_id", handle, cose_param_unsent_apv_id, properties);
+                lambda_set_param("unsent partyv nonce", node_shared, "apv_nonce", handle, cose_param_unsent_apv_nonce, properties);
+                lambda_set_param("unsent partyv other", node_shared, "apv_other", handle, cose_param_unsent_apv_other, properties);
+                lambda_set_param("unsent pub other", node_shared, "pub_other", handle, cose_param_unsent_pub_other, properties);
+                lambda_set_param("unsent private", node_shared, "priv", handle, cose_param_unsent_priv_other, properties);
 
                 binary_t output;
                 ret = cose.process(handle, &mapped_key, cbor, output);
@@ -240,13 +239,13 @@ void test_yaml_testvector_cose_examples() {
                     uint32 flags = 0;
                     uint32 debug_flags = 0;
                     cose.get(handle, flags, debug_flags);
-                    if (debug_flags & cose_debug_notfound_key) {
+                    if (debug_flags & cose_flag_t::debug_notfound_key) {
                         reason << "!key ";
                     }
-                    if (debug_flags & cose_debug_partial_iv) {
+                    if (debug_flags & cose_flag_t::debug_partial_iv) {
                         reason << "partial_iv ";
                     }
-                    if (debug_flags & cose_debug_counter_sig) {
+                    if (debug_flags & cose_flag_t::debug_counter_sig) {
                         reason << "counter_sig ";
                     }
                     debug_stream = handle->debug_stream;
@@ -261,8 +260,12 @@ void test_yaml_testvector_cose_examples() {
 
                 cose.close(handle);
 
-                _test_case.test(ret, __FUNCTION__, "%s %s %s%s%s%s", text_item.c_str(), properties.c_str(), reason.size() ? "[ debug : " : "", reason.c_str(),
-                                reason.size() ? "] " : " ", debug_stream.c_str());
+                basic_stream dbg;
+                dbg << text_item << " " << properties;
+                if (false == reason.empty()) {
+                    dbg << "[ debug : " << reason << "] " << debug_stream;
+                }
+                _test_case.test(ret, __FUNCTION__, dbg.c_str());
             }
         }
     };

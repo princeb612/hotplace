@@ -107,8 +107,8 @@ void test_rfc7919() {
         crypt_datamap_t datamap;
         crypto_key::extract(pkey, public_key | private_key, kty, datamap, false);  // do not preserve leading zero octects to compare
 
-        _test_case.assert(datamap[item_dh_p] == base16_decode_rfc(item.p), __FUNCTION__, "check p");
-        _test_case.assert(datamap[item_dh_q] == base16_decode_rfc(item.q), __FUNCTION__, "check q");
+        _test_case.assert(datamap[crypt_item_t::dh_p] == base16_decode_rfc(item.p), __FUNCTION__, "check p");
+        _test_case.assert(datamap[crypt_item_t::dh_q] == base16_decode_rfc(item.q), __FUNCTION__, "check q");
     }
     auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
         _logger->write([&](basic_stream& bs) -> void {

@@ -43,8 +43,8 @@ class cose_composer {
      *          composer.get_payload().set("This is the content.");
      *
      *          cose_recipient& signature = composer.get_recipients().add(new cose_recipient);
-     *          signature.get_protected().add(cose_key_t::cose_alg, cose_alg_t::cose_es256);
-     *          signature.get_unprotected().add(cose_key_t::cose_kid, "11");
+     *          signature.get_protected().add(cose_key_t::alg, cose_alg_t::cose_es256);
+     *          signature.get_unprotected().add(cose_key_t::kid, "11");
      *          signature.get_payload().set_b16("e2aeafd40d69d19dfe6e52077c5d7ff4e408282cbefb5d06cbf414af2e19d982ac45ac98b8544c908b4507de1e90b717c3d34816fe926a2b98f53afd2fa0f30a");
      *          composer.compose(&root, true); // true for tagged message , false for untagged message
      *          // ... (see cbor_publisher)
@@ -67,12 +67,12 @@ class cose_composer {
      * @desc
      *                      protected  unprotected      payload     singleitem/multiitems
      *                      [0]        [1]              [2]         [3]             [4]
-     * cose_tag_encrypt     protected, unprotected_map, ciphertext, [+recipient]
-     * cose_tag_encrypt0    protected, unprotected_map, ciphertext
-     * cose_tag_mac         protected, unprotected_map, payload,    tag,            [+recipient]
-     * cose_tag_mac0        protected, unprotected_map, payload,    tag
-     * cose_tag_sign        protected, unprotected_map, payload,    [+signature]
-     * cose_tag_sign1       protected, unprotected_map, payload,    signature
+     * cbor_tag_t::encrypt     protected, unprotected_map, ciphertext, [+recipient]
+     * cbor_tag_t::encrypt0    protected, unprotected_map, ciphertext
+     * cbor_tag_t::mac         protected, unprotected_map, payload,    tag,            [+recipient]
+     * cbor_tag_t::mac0        protected, unprotected_map, payload,    tag
+     * cbor_tag_t::sign        protected, unprotected_map, payload,    [+signature]
+     * cbor_tag_t::sign1       protected, unprotected_map, payload,    signature
      */
     cose_protected& get_protected();
     cose_unprotected& get_unprotected();

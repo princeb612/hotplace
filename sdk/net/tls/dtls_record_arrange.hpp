@@ -32,7 +32,7 @@ namespace net {
  *            record epoch:0 seq:1
  *            record epoch:0 seq:2
  * @example
- *          tls_session session(session_type_dtls);
+ *          tls_session session(session_type_t::dtls);
  *          auto& arrange = session.get_dtls_record_arrange();
  *          arrange.produce(addr, addrlen, dgram, dgramsize);
  *          arrange.consume(addr, addrlen, epoch, seq, packet);  // reorder

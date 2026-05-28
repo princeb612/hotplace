@@ -99,7 +99,7 @@ void test_hash_hmac_sign() {
         std::string signature;
         bool res = false;
         ;
-        ret = jose.sign(jose_context, jws_t::jws_hs256, in_source, signature);
+        ret = jose.sign(jose_context, jws_t::hs256, in_source, signature);
         _logger->writeln(signature);
         _test_case.test(ret, __FUNCTION__, "HS256 - Sign");
         ret = jose.verify(jose_context, signature, res);

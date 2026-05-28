@@ -40,7 +40,7 @@ class json_object_signing {
      *
      *          jose_context_t* jose_context = nullptr;
      *          jose.open (&jose_context, &crypto_key);
-     *          jose.sign (jose_context, jws_t::jws_hs256, claim, jws_result);
+     *          jose.sign (jose_context, jws_t::hs256, claim, jws_result);
      *          jose.verify (jose_context, jws_result, result);
      *          jose.close (jose_context);
      */
@@ -61,9 +61,9 @@ class json_object_signing {
      *          bool result = false;
      *          std::string jws_result;
      *          std::list <jws_t> methods;
-     *          methods.push_back (jws_t::jws_hs256);
-     *          methods.push_back (jws_t::jws_rs256);
-     *          methods.push_back (jws_t::jws_es256);
+     *          methods.push_back (jws_t::hs256);
+     *          methods.push_back (jws_t::rs256);
+     *          methods.push_back (jws_t::es256);
      *
      *          jose_context_t* jose_context = nullptr;
      *          jose.open (&jose_context, &crypto_key);

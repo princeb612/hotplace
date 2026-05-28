@@ -249,8 +249,8 @@ void test_rfc_9369_a5() {
 }
 
 void testcase_rfc_9369() {
-    tls_session server_session(session_type_quic2);
-    tls_session client_session(session_type_quic2);
+    tls_session server_session(session_type_t::quic2);
+    tls_session client_session(session_type_t::quic2);
 
     test_rfc_9369_a1(&client_session, &server_session);
     test_rfc_9369_a2(&client_session, &server_session);

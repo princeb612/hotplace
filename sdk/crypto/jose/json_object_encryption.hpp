@@ -27,7 +27,7 @@ class json_object_encryption {
      * @brief encrypt
      * @param jose_context_t* context [in]
      * @param jwe_t enc [in]
-     * @param jwa_t alg [in] support all algorithms including jwa_t::jwa_dir, jwa_t::jwa_ecdh_es
+     * @param jwa_t alg [in] support all algorithms including jwa_t::dir, jwa_t::ecdh_es
      * @param const binary_t& input [in]
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
@@ -44,7 +44,7 @@ class json_object_encryption {
      *          jose_context_t* handle_decrypt = nullptr;
      *          jose.open (&handle_encrypt, &crypto_pubkey);
      *          jose.open (&handle_decrypt, &crypto_privkey);
-     *          ret = jose.encrypt (handle_encrypt, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_ecdh_es, to_string (input), encrypted, jose_serialization_t::jose_json);
+     *          ret = jose.encrypt (handle_encrypt, jwe_t::a128cbc_hs256, jwa_t::ecdh_es, to_string (input), encrypted, jose_serialization_t::jose_json);
      *          ret = jose.decrypt (handle_decrypt, encrypted, output, result);
      *          jose.close (handle_encrypt);
      *          jose.close (handle_decrypt);
@@ -58,7 +58,7 @@ class json_object_encryption {
      * @param jose_context_t* context [in]
      * @param jwe_t enc [in]
      * @param const std::list <jwa_t>& alg [in]
-     *  do not support jwa_t::jwa_dir, jwa_t::jwa_ecdh_es
+     *  do not support jwa_t::dir, jwa_t::ecdh_es
      *  case "dir"
      *      read cek from HMAC key and then make it the only one cek
      *      protected, iv, ciphertext, tag, recipients:[ header {alg:dir}, encrypted_key(empty) ]
@@ -79,22 +79,22 @@ class json_object_encryption {
      *          jose_context_t* handle_encrypt = nullptr;
      *          jose.open (&handle_encrypt, &crypto_pubkey);
      *          std::list<jwa_t> algs;
-     *          algs.push_back (jwa_t::jwa_rsa_1_5);
-     *          algs.push_back (jwa_t::jwa_rsa_oaep);
-     *          algs.push_back (jwa_t::jwa_rsa_oaep_256);
-     *          algs.push_back (jwa_t::jwa_a128kw);
-     *          algs.push_back (jwa_t::jwa_a192kw);
-     *          algs.push_back (jwa_t::jwa_a256kw);
-     *          algs.push_back (jwa_t::jwa_ecdh_es_a128kw);
-     *          algs.push_back (jwa_t::jwa_ecdh_es_a192kw);
-     *          algs.push_back (jwa_t::jwa_ecdh_es_a256kw);
-     *          algs.push_back (jwa_t::jwa_a128gcmkw);
-     *          algs.push_back (jwa_t::jwa_a192gcmkw);
-     *          algs.push_back (jwa_t::jwa_a256gcmkw);
-     *          algs.push_back (jwa_t::jwa_pbes2_hs256_a128kw);
-     *          algs.push_back (jwa_t::jwa_pbes2_hs384_a192kw);
-     *          algs.push_back (jwa_t::jwa_pbes2_hs512_a256kw);
-     *          ret = jose.encrypt (handle_encrypt, jwe_t::jwe_a128cbc_hs256, algs, to_string (input), encrypted, jose_serialization_t::jose_json);
+     *          algs.push_back (jwa_t::rsa_1_5);
+     *          algs.push_back (jwa_t::rsa_oaep);
+     *          algs.push_back (jwa_t::rsa_oaep_256);
+     *          algs.push_back (jwa_t::a128kw);
+     *          algs.push_back (jwa_t::a192kw);
+     *          algs.push_back (jwa_t::a256kw);
+     *          algs.push_back (jwa_t::ecdh_es_a128kw);
+     *          algs.push_back (jwa_t::ecdh_es_a192kw);
+     *          algs.push_back (jwa_t::ecdh_es_a256kw);
+     *          algs.push_back (jwa_t::a128gcmkw);
+     *          algs.push_back (jwa_t::a192gcmkw);
+     *          algs.push_back (jwa_t::a256gcmkw);
+     *          algs.push_back (jwa_t::pbes2_hs256_a128kw);
+     *          algs.push_back (jwa_t::pbes2_hs384_a192kw);
+     *          algs.push_back (jwa_t::pbes2_hs512_a256kw);
+     *          ret = jose.encrypt (handle_encrypt, jwe_t::a128cbc_hs256, algs, to_string (input), encrypted, jose_serialization_t::jose_json);
      *          jose.close (handle_encrypt);
      */
     return_t encrypt(jose_context_t* context, jwe_t enc, const std::list<jwa_t>& algs, const binary_t& input, std::string& output,
@@ -208,7 +208,7 @@ class json_object_encryption {
          * @param const std::string& kid [in]
          * @param uint32 flags [inopt] see setoption
          * @remarks
-         *      docompose_protected_header (header, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_unknown, jose_compose_t::jose_enc_alg, "");
+         *      docompose_protected_header (header, jwe_t::a128cbc_hs256, jwa_t::unknown, jose_compose_t::jose_enc_alg, "");
          */
         return_t docompose_protected_header(binary_t& header, jwe_t enc, jwa_t alg, jose_compose_t flag, const std::string& kid, uint32 flags = 0);
         /**
@@ -234,9 +234,9 @@ class json_object_encryption {
          * @remarks
          *      read from key or generate random value
          *
-         *      jwa_group_t::jwa_group_ecdh, jwa_group_t::jwa_group_ecdh_aeskw : epk
-         *      jwa_group_t::jwa_group_aesgcmkw : iv, tag
-         *      jwa_group_t::jwa_group_pbes_hs_aeskw : p2s, p2c
+         *      jwa_group_t::ecdh, jwa_group_t::ecdh_aeskw : epk
+         *      jwa_group_t::aesgcmkw : iv, tag
+         *      jwa_group_t::pbes_hs_aeskw : p2s, p2c
          */
         return_t docompose_encryption_recipient_random(jwa_t alg, const EVP_PKEY* pkey, jose_recipient_t& recipient, crypt_datamap_t& datamap,
                                                        crypt_variantmap_t& variantmap);

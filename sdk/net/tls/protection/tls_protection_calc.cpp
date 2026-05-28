@@ -56,12 +56,12 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
         const char* label_quic_iv = nullptr;
         const char* label_quic_hp = nullptr;
 
-        if ((session_type_quic == session_type) || (session_type_quic2 == session_type)) {
+        if ((session_type_t::quic == session_type) || (session_type_t::quic2 == session_type)) {
             if (0 == cipher_suite) {
                 cipher_suite = 0x1301;  // TLS_AES_128_GCM_SHA256
             }
 
-            if (session_type_quic == session_type) {
+            if (session_type_t::quic == session_type) {
                 label_quic_key = constexpr_quic_key;
                 label_quic_iv = constexpr_quic_iv;
                 label_quic_hp = constexpr_quic_hp;
@@ -122,7 +122,7 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
 
         bool cond_trhash = true;
         if (tls_handshake_type_t::client_hello == type) {
-            if ((session_type_quic == session_type) || (session_type_quic2 == session_type)) {
+            if ((session_type_t::quic == session_type) || (session_type_t::quic2 == session_type)) {
                 cond_trhash = false;
             }
         }
@@ -170,7 +170,7 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
             // res binder (see tls_extension_type_t::pre_shared_key)
             // exp master (see tls_secret_t::server_finished)
 
-            if ((session_type_tls == session_type) || (session_type_dtls == session_type)) {
+            if ((session_type_t::tls == session_type) || (session_type_t::dtls == session_type)) {
                 if (is_kindof_tls13()) {
                     if (tls_flow_t::zero_rtt == flow) {
                         // 0-RTT
@@ -193,14 +193,14 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                         // TODO
                     }
                 }
-            } else if ((session_type_quic == session_type) || (session_type_quic2 == session_type)) {
+            } else if ((session_type_t::quic == session_type) || (session_type_t::quic2 == session_type)) {
                 const binary_t& salt = get_secrets().get(tls_secret_t::quic_dcid);
                 if ((false == salt.empty()) && get_secrets().get(tls_secret_t::initial_quic).empty()) {
                     binary_t bin_initial_salt;
-                    if (session_type_quic == session_type) {
+                    if (session_type_t::quic == session_type) {
                         // RFC 9001 5.2.  Initial Secrets
                         bin_initial_salt = std::move(base16_decode("0x38762cf7f55934b34d179ae6a4c80cadccbb7f0a"));
-                    } else if (session_type_quic2 == session_type) {
+                    } else if (session_type_t::quic2 == session_type) {
                         // RFC 9369 3.3.1.  Initial Salt
                         bin_initial_salt = std::move(base16_decode("0x0dede3def700a6db819381be6e269dcbf9bd2ed9"));
                     }  // else do not reach
@@ -392,7 +392,7 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                     lambda_expand_label(tls_secret_t::handshake_client_sn_key, okm, hashalg, keysize, secret_handshake_client, "sn", empty);
                     lambda_expand_label(tls_secret_t::handshake_server_sn_key, okm, hashalg, keysize, secret_handshake_server, "sn", empty);
                 }
-                if ((session_type_quic == session_type) || (session_type_quic2 == session_type)) {
+                if ((session_type_t::quic == session_type) || (session_type_t::quic2 == session_type)) {
                     lambda_expand_label(tls_secret_t::handshake_quic_client_key, okm, hashalg, keysize, secret_handshake_client, label_quic_key, empty);
                     lambda_expand_label(tls_secret_t::handshake_quic_client_iv, okm, hashalg, 12, secret_handshake_client, label_quic_iv, empty);
                     lambda_expand_label(tls_secret_t::handshake_quic_client_hp, okm, hashalg, keysize, secret_handshake_client, label_quic_hp, empty);
@@ -465,7 +465,7 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
             if (is_kindof_dtls()) {
                 lambda_expand_label(tls_secret_t::application_server_sn_key, okm, hashalg, keysize, secret_application_server, "sn", empty);
             }
-            if ((session_type_quic == session_type) || (session_type_quic2 == session_type)) {
+            if ((session_type_t::quic == session_type) || (session_type_t::quic2 == session_type)) {
                 lambda_expand_label(tls_secret_t::application_quic_client_key, okm, hashalg, keysize, secret_application_client, label_quic_key, empty);
                 lambda_expand_label(tls_secret_t::application_quic_client_iv, okm, hashalg, 12, secret_application_client, label_quic_iv, empty);
                 lambda_expand_label(tls_secret_t::application_quic_client_hp, okm, hashalg, keysize, secret_application_client, label_quic_hp, empty);

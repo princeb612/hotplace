@@ -14,7 +14,7 @@ void testcase_construct_1rtt() {
 
     // http3.pcapng WIRESHARK#62 ACK
 
-    tls_session quicsession(session_type_quic);                      // QUIC 1
+    tls_session quicsession(session_type_t::quic);                   // QUIC 1
     quicsession.get_tls_protection().set_cipher_suite(0x1302);       // TLS_AES_256_GCM_SHA384
     auto& secrets = quicsession.get_tls_protection().get_secrets();  // QUIC client header protection, key, initial vector
     secrets.assign(tls_secret_t::application_quic_client_hp, base16_decode("3fdbae30616d0a07cdf5d80ca1bcbc8c70a73ca4aa6344312afe100d28bb5ba5"));

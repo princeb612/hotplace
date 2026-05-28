@@ -13,7 +13,7 @@
 namespace hotplace {
 namespace crypto {
 
-crypto_encrypt_builder::crypto_encrypt_builder() : _enc(crypt_enc_undefined) {}
+crypto_encrypt_builder::crypto_encrypt_builder() : _enc(crypt_enc_t::unknown) {}
 
 crypto_encrypt* crypto_encrypt_builder::build() { return new crypto_encrypt(_enc); }
 

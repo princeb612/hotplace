@@ -52,8 +52,8 @@ typedef struct _openssl_crypt_context_t : public crypt_context_t {
     _openssl_crypt_context_t()
         : signature(0),
           crypto_type(crypt_poweredby_t::openssl),
-          algorithm(crypt_algorithm_t::crypt_alg_unknown),
-          mode(crypt_mode_t::mode_unknown),
+          algorithm(crypt_algorithm_t{}),
+          mode(crypt_mode_t::unknown),
           encrypt_context(nullptr),
           decrypt_context(nullptr),
           key(nullptr),
@@ -150,8 +150,8 @@ return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorit
             temp_iv.resize(internal_size_iv);
             memcpy(temp_iv.data(), iv, (size_iv > internal_size_iv ? internal_size_iv : size_iv));
 
-            context->datamap.emplace(crypt_item_t::item_cek, temp_key);
-            context->datamap.emplace(crypt_item_t::item_iv, temp_iv);
+            context->datamap.emplace(crypt_item_t::cek, temp_key);
+            context->datamap.emplace(crypt_item_t::iv, temp_iv);
         })
         /* encrypt and decrypt re-initialize iv */
         .run_pipe([&]() -> int { return EVP_CipherInit_ex(context->encrypt_context, cipher, nullptr, temp_key.data(), nullptr, 1); })
@@ -207,17 +207,17 @@ return_t openssl_crypt::set(crypt_context_t* handle, crypt_ctrl_t id, uint16 par
             __leave2;
         }
         switch (id) {
-            case crypt_ctrl_t::crypt_ctrl_padding:
+            case crypt_ctrl_t::padding:
                 if (param) {
                     context->flag |= openssl_crypt_flag_t::crypt_blockcipher_padding;
                 } else {
                     context->flag &= ~openssl_crypt_flag_t::crypt_blockcipher_padding;
                 }
                 break;
-            case crypt_ctrl_t::crypt_ctrl_nsize:
+            case crypt_ctrl_t::nsize:
                 context->nsize = param;
                 break;
-            case crypt_ctrl_t::crypt_ctrl_tsize:
+            case crypt_ctrl_t::tsize:
                 context->tsize = param;
                 break;
             default:
@@ -262,14 +262,14 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t* handle, const unsigned
         int size_update = 0;
         int size_final = 0;
         int tag_size = 0;
-        binary_t& iv = context->datamap[crypt_item_t::item_iv];
+        binary_t& iv = context->datamap[crypt_item_t::iv];
 
         EVP_CipherInit(context->encrypt_context, nullptr, nullptr, iv.data(), 1);
 
         switch (context->mode) {
             case crypt_mode_t::ccm:
             case crypt_mode_t::gcm:
-            case crypt_mode_t::mode_poly1305: {
+            case crypt_mode_t::poly1305: {
                 if ((nullptr == aad) || (nullptr == tag)) {
                     ret = errorcode_t::invalid_parameter;
                     break;
@@ -338,7 +338,7 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t* handle, const unsigned
                 }
 
                 if (crypt_mode_t::ccm == context->mode) {
-                    binary_t& key = context->datamap[crypt_item_t::item_cek];
+                    binary_t& key = context->datamap[crypt_item_t::cek];
                     EVP_CipherInit_ex(context->encrypt_context, nullptr, nullptr, key.data(), iv.data(), 1);
 
                     ret_cipher = EVP_CipherUpdate(context->encrypt_context, nullptr, &size_update, nullptr, t_narrow_cast(plainsize));
@@ -421,7 +421,7 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t* handle, const unsigned
         switch (context->mode) {
             case crypt_mode_t::gcm:
             case crypt_mode_t::ccm:
-            case crypt_mode_t::mode_poly1305: {
+            case crypt_mode_t::poly1305: {
                 (*tag).resize(tag_size);
                 ret_cipher = EVP_CIPHER_CTX_ctrl(context->encrypt_context, EVP_CTRL_AEAD_GET_TAG, tag_size, (*tag).data());
                 if (ret_cipher < 1) {
@@ -483,14 +483,14 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t* handle, const unsigned
         int size_update = 0;
         int size_final = 0;
         size_t tag_size = 0;
-        binary_t& iv = context->datamap[crypt_item_t::item_iv];
+        binary_t& iv = context->datamap[crypt_item_t::iv];
 
         EVP_CipherInit(context->decrypt_context, nullptr, nullptr, iv.data(), 0);
 
         switch (context->mode) {
             case crypt_mode_t::gcm:
             case crypt_mode_t::ccm:
-            case crypt_mode_t::mode_poly1305: {
+            case crypt_mode_t::poly1305: {
                 if ((nullptr == aad) || (nullptr == tag)) {
                     ret = errorcode_t::invalid_parameter;
                     break;
@@ -517,7 +517,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t* handle, const unsigned
                 }
 
                 if (crypt_mode_t::ccm == context->mode) {
-                    binary_t& key = context->datamap[crypt_item_t::item_cek];
+                    binary_t& key = context->datamap[crypt_item_t::cek];
                     EVP_CipherInit_ex(context->decrypt_context, nullptr, nullptr, key.data(), iv.data(), 0);
 
                     ret_cipher = EVP_CipherUpdate(context->decrypt_context, nullptr, &size_update, nullptr, t_narrow_cast(ciphersize));

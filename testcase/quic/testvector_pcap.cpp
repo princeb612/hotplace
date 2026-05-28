@@ -15,8 +15,8 @@
 void play_yaml_pcap_http3(const char* filename) {
     auto sslkeylog = sslkeylog_importer::get_instance();
 
-    tls_session tlssession(session_type_tls);
-    tls_session quicsession(session_type_quic);
+    tls_session tlssession(session_type_t::tls);
+    tls_session quicsession(session_type_t::quic);
     sslkeylog->clear();
     sslkeylog->attach(&tlssession);
     sslkeylog->attach(&quicsession);

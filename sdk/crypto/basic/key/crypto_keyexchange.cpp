@@ -287,7 +287,7 @@ return_t crypto_keyexchange::exchange(tls_group_t group, crypto_key* key, crypto
             ret = errorcode_t::not_supported;
             __leave2;
         }
-        if (keyexchange_ecdhe != hint->exch) {
+        if (keyexchange_t::ecdhe != hint->exch) {
             ret = errorcode_t::bad_request;
             __leave2;
         }
@@ -326,7 +326,7 @@ return_t crypto_keyexchange::exchange(tls_group_t group, crypto_key* key, crypto
             ret = errorcode_t::not_supported;
             __leave2;
         }
-        if (keyexchange_ecdhe != hint->exch) {
+        if (keyexchange_t::ecdhe != hint->exch) {
             ret = errorcode_t::bad_request;
             __leave2;
         }
@@ -354,7 +354,7 @@ return_t crypto_keyexchange::encaps(tls_group_t group, const binary_t& share, bi
             ret = errorcode_t::not_supported;
             __leave2;
         }
-        if (keyexchange_mlkem != hint->exch) {
+        if (keyexchange_t::mlkem != hint->exch) {
             ret = errorcode_t::bad_request;
             __leave2;
         }
@@ -473,7 +473,7 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
             ret = errorcode_t::not_supported;
             __leave2;
         }
-        if (keyexchange_mlkem != hint->exch) {
+        if (keyexchange_t::mlkem != hint->exch) {
             ret = errorcode_t::bad_request;
             __leave2;
         }

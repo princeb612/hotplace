@@ -77,7 +77,7 @@ return_t tls_records::write(tls_session* session, tls_direction_t dir, std::func
             __leave2;
         }
 
-        if (session_type_dtls == session->get_type()) {
+        if (session_type_t::dtls == session->get_type()) {
             // fragmentation
             session->get_dtls_record_publisher().publish(this, dir, func);
         } else {

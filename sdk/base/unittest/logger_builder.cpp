@@ -61,7 +61,7 @@ logger* logger_builder::build() {
     lambda_banner(R"(|  _  | | (_) | | |_  | |_) | | | | (_| | | (__  |  __/)");
     lambda_banner(R"(|_| |_|  \___/   \__| | .__/  |_|  \__,_|  \___|  \___|)");
     lambda_banner(R"(                      |_|                              )");
-    p->consoleln(stream);
+    *p << stream;
 
     return p;
 }

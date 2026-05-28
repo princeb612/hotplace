@@ -23,35 +23,35 @@ const hint_group_t hint_groups[] = {
 
     {
         tls_group_t::secp256r1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "secp256r1",
         {kty_ec, NID_X9_62_prime256v1, 65},
     },  // P-256, prime256v1, RFC 8446 9.1 MUST
     {
         tls_group_t::secp384r1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "secp384r1",
         {kty_ec, NID_secp384r1, 97},
     },  // P-384, ansip384r1
     {
         tls_group_t::secp521r1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "secp521r1",
         {kty_ec, NID_secp521r1, 133},
     },  // P-521, ansip521r1
     {
         tls_group_t::x25519,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "x25519",
         {kty_okp, NID_X25519, 32},
     },  // RFC 8446 8446 9.1 MUST
     {
         tls_group_t::x448,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "x448",
         {kty_okp, NID_X448, 56},
@@ -61,21 +61,21 @@ const hint_group_t hint_groups[] = {
     // https://datatracker.ietf.org/doc/draft-ietf-tls-mlkem/
     {
         tls_group_t::mlkem512,
-        keyexchange_mlkem,
+        keyexchange_t::mlkem,
         tls_flag_support | tls_flag_secure | tls_flag_pqc,
         "MLKEM512",
         {kty_mlkem, nid_mlkem512, 800, 768},
     },
     {
         tls_group_t::mlkem768,
-        keyexchange_mlkem,
+        keyexchange_t::mlkem,
         tls_flag_support | tls_flag_secure | tls_flag_pqc,
         "MLKEM768",
         {kty_mlkem, nid_mlkem768, 1184, 1088},
     },
     {
         tls_group_t::mlkem1024,
-        keyexchange_mlkem,
+        keyexchange_t::mlkem,
         tls_flag_support | tls_flag_secure | tls_flag_pqc,
         "MLKEM1024",
         {kty_mlkem, nid_mlkem1024, 1568, 1568},
@@ -83,7 +83,7 @@ const hint_group_t hint_groups[] = {
     // https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/
     {
         tls_group_t::secp256r1mlkem768,
-        keyexchange_mlkem,
+        keyexchange_t::mlkem,
         tls_flag_support | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
         "SecP256r1MLKEM768",
         {kty_ec, NID_X9_62_prime256v1, 65, 0, tls_group_t::secp256r1},
@@ -91,7 +91,7 @@ const hint_group_t hint_groups[] = {
     },
     {
         tls_group_t::x25519mlkem768,
-        keyexchange_mlkem,
+        keyexchange_t::mlkem,
         tls_flag_support | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
         "X25519MLKEM768",
         // no consistency
@@ -100,7 +100,7 @@ const hint_group_t hint_groups[] = {
     },
     {
         tls_group_t::secp384r1mlkem1024,
-        keyexchange_mlkem,
+        keyexchange_t::mlkem,
         tls_flag_support | tls_flag_secure | tls_flag_pqc | tls_flag_hybrid,
         "SecP384r1MLKEM1024",
         {kty_ec, NID_secp384r1, 97, 0, tls_group_t::secp384r1},
@@ -110,300 +110,300 @@ const hint_group_t hint_groups[] = {
 
     {
         tls_group_t::sect163k1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "sect163k1",
         {kty_ec, NID_sect163k1, 43},
     },  // K-163, ansit163k1
     {
         tls_group_t::sect163r1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "sect163r1",
         {kty_ec, NID_sect163r1, 43},
     },  // ansit163r1
     {
         tls_group_t::sect163r2,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "sect163r2",
         {kty_ec, NID_sect163r2, 43},
     },  // B-163, ansit163r2
     {
         tls_group_t::sect193r1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "sect193r1",
         {kty_ec, NID_sect193r1, 51},
     },  // ansit193r1
     {
         tls_group_t::sect193r2,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "sect193r2",
         {kty_ec, NID_sect193r2, 51},
     },  // sect193r2
     {
         tls_group_t::sect233k1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "sect233k1",
         {kty_ec, NID_sect233k1, 61},
     },  // K-233, ansit233k1
     {
         tls_group_t::sect233r1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "sect233r1",
         {kty_ec, NID_sect233r1, 61},
     },  // B-233, ansit233r1
     {
         tls_group_t::sect239k1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "sect239k1",
         {kty_ec, NID_sect239k1, 61},
     },  // ansit239k1
     {
         tls_group_t::sect283k1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "sect283k1",
         {kty_ec, NID_sect283k1, 73},
     },  // K-283, ansit283k1
     {
         tls_group_t::sect283r1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "sect283r1",
         {kty_ec, NID_sect283r1, 73},
     },  // B-283, ansit283r1
     {
         tls_group_t::sect409k1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "sect409k1",
         {kty_ec, NID_sect409k1, 105},
     },  // K-409, ansit409k1
     {
         tls_group_t::sect409r1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "sect409r1",
         {kty_ec, NID_sect409r1, 105},
     },  // B-409, ansit409r1
     {
         tls_group_t::sect571k1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "sect571k1",
         {kty_ec, NID_sect571k1, 145},
     },  // K-571, ansit571k1
     {
         tls_group_t::sect571r1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "sect571r1",
         {kty_ec, NID_sect571r1, 145},
     },  // B-571, ansit571r1
     {
         tls_group_t::secp160k1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "secp160k1",
         {kty_ec, NID_secp160k1, 41},
     },  // ansip160k1
     {
         tls_group_t::secp160r1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "secp160r1",
         {kty_ec, NID_secp160r1, 41},
     },  // ansip160r1
     {
         tls_group_t::secp160r2,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "secp160r2",
         {kty_ec, NID_secp160r2, 41},
     },  // ansip160r2
     {
         tls_group_t::secp192k1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "secp192k1",
         {kty_ec, NID_secp192k1, 49},
     },  // ansip192k1
     {
         tls_group_t::secp192r1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "secp192r1",
         {kty_ec, NID_X9_62_prime192v1, 49},
     },  // P-192, prime192v1
     {
         tls_group_t::secp224k1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "secp224k1",
         {kty_ec, NID_secp224k1, 57},
     },  // ansip224k1
     {
         tls_group_t::secp224r1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "secp224r1",
         {kty_ec, NID_secp224r1, 57},
     },  // ansip224r1
     {
         tls_group_t::secp256k1,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "secp256k1",
         {kty_ec, NID_secp256k1, 65},
     },  // ansip256k1
     {
         tls_group_t::brainpoolP256r1,  //  RFC 7027
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "brainpoolP256r1",
         {kty_ec, NID_brainpoolP256r1, 65},
     },
     {
         tls_group_t::brainpoolP384r1,  //  RFC 7027
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "brainpoolP384r1",
         {kty_ec, NID_brainpoolP384r1, 97},
     },
     {
         tls_group_t::brainpoolP512r1,  //  RFC 7027
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "brainpoolP512r1",
         {kty_ec, NID_brainpoolP512r1, 129},
     },
     {
         tls_group_t::brainpoolP256r1tls13,  //  RFC 8734
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "brainpoolP256r1tls13",
         {kty_ec, NID_brainpoolP256r1, 65},
     },
     {
         tls_group_t::brainpoolP384r1tls13,  //  RFC 8734
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "brainpoolP384r1tls13",
         {kty_ec, NID_brainpoolP384r1, 97},
     },
     {
         tls_group_t::brainpoolP512r1tls13,  //  RFC 8734
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "brainpoolP512r1tls13",
         {kty_ec, NID_brainpoolP512r1, 129},
     },
     {
         tls_group_t::GC256A,
-        keyexchange_unknown,
+        keyexchange_t::unknown,
         0,
         "GC256A",
         {kty_unknown, 0},
     },
     {
         tls_group_t::GC256B,
-        keyexchange_unknown,
+        keyexchange_t::unknown,
         0,
         "GC256B",
         {kty_unknown, 0},
     },
     {
         tls_group_t::GC256C,
-        keyexchange_unknown,
+        keyexchange_t::unknown,
         0,
         "GC256C",
         {kty_unknown, 0},
     },
     {
         tls_group_t::GC256D,
-        keyexchange_unknown,
+        keyexchange_t::unknown,
         0,
         "GC256D",
         {kty_unknown, 0},
     },
     {
         tls_group_t::GC512A,
-        keyexchange_unknown,
+        keyexchange_t::unknown,
         0,
         "GC512A",
         {kty_unknown, 0},
     },
     {
         tls_group_t::GC512B,
-        keyexchange_unknown,
+        keyexchange_t::unknown,
         0,
         "GC512B",
         {kty_unknown, 0},
     },
     {
         tls_group_t::GC512C,
-        keyexchange_unknown,
+        keyexchange_t::unknown,
         0,
         "GC512C",
         {kty_unknown, 0},
     },
     {
         tls_group_t::curveSM2,
-        keyexchange_unknown,
+        keyexchange_t::unknown,
         0,
         "curveSM2",
         {kty_unknown, 0},
     },
     {
         tls_group_t::ffdhe2048,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "ffdhe2048",
         {kty_dh, NID_ffdhe2048, 256},
     },
     {
         tls_group_t::ffdhe3072,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "ffdhe3072",
         {kty_dh, NID_ffdhe3072, 384},
     },
     {
         tls_group_t::ffdhe4096,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "ffdhe4096",
         {kty_dh, NID_ffdhe4096, 512},
     },
     {
         tls_group_t::ffdhe6144,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "ffdhe6144",
         {kty_dh, NID_ffdhe6144, 768},
     },
     {
         tls_group_t::ffdhe8192,
-        keyexchange_ecdhe,
+        keyexchange_t::ecdhe,
         tls_flag_support,
         "ffdhe8192",
         {kty_dh, NID_ffdhe8192, 1024},
     },
     {
         tls_group_t::arbitrary_explicit_prime_curves,
-        keyexchange_unknown,
+        keyexchange_t::unknown,
         0,
         "arbitrary_explicit_prime_curves",
     },
     {
         tls_group_t::arbitrary_explicit_char2_curves,
-        keyexchange_unknown,
+        keyexchange_t::unknown,
         0,
         "arbitrary_explicit_char2_curves",
     },

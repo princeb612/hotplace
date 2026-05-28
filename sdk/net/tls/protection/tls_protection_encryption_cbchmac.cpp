@@ -100,9 +100,9 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session* session, tls_direction_t 
 
         binary_t verifydata;
         binary_t aad;
-        if (session_type_dtls == session_type) {
+        if (session_type_t::dtls == session_type) {
             // in case of DTLS 1.2 chacha20-poly1305, true == is_kindof_dtls()
-            // in case of CBC-HMAC, session_type_dtls == session->get_type
+            // in case of CBC-HMAC, session_type_t::dtls == session->get_type
             auto& kv = session->get_session_info(dir).get_keyvalue();
             uint16 epoch = t_narrow_cast(kv.get(session_dtls_epoch));
             uint64 seq = kv.get(session_dtls_seq);
@@ -130,7 +130,7 @@ return_t tls_protection::encrypt_cbc_hmac(tls_session* session, tls_direction_t 
                 crypto_advisor* advisor = crypto_advisor::get_instance();
                 dbs.println("> encrypt %s", advisor->nameof_authenticated_encryption(flag).c_str());
                 dbs.println(" > aad %s", base16_encode(aad).c_str());
-                dbs.println(" > enc %s", advisor->nameof_cipher(enc_alg, cbc));
+                dbs.println(" > enc %s", advisor->nameof_cipher(enc_alg, crypt_mode_t::cbc));
                 dbs.println(" > enckey[%08x] %s (%s)", secret_key, base16_encode(enckey).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
                 dbs.println(" > iv %s", base16_encode(iv).c_str());
                 dbs.println(" > mac %s", advisor->nameof_md(hmac_alg));
@@ -196,9 +196,9 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session* session, tls_direction_t 
         binary_t verifydata;
         binary_t aad;
         binary_t tag;
-        if (session_type_dtls == session_type) {
+        if (session_type_t::dtls == session_type) {
             // in case of DTLS 1.2 chacha20-poly1305, true == is_kindof_dtls()
-            // in case of CBC-HMAC, session_type_dtls == session->get_type
+            // in case of CBC-HMAC, session_type_t::dtls == session->get_type
             auto& kv = session->get_session_info(dir).get_keyvalue();
             uint16 epoch = t_narrow_cast(kv.get(session_dtls_epoch));
             uint64 seq = kv.get(session_dtls_seq);
@@ -256,7 +256,7 @@ return_t tls_protection::decrypt_cbc_hmac(tls_session* session, tls_direction_t 
                 crypto_advisor* advisor = crypto_advisor::get_instance();
                 dbs.println("> decrypt %s", advisor->nameof_authenticated_encryption(flag).c_str());
                 dbs.println(" > aad %s", base16_encode(aad).c_str());
-                dbs.println(" > enc %s", advisor->nameof_cipher(enc_alg, cbc));
+                dbs.println(" > enc %s", advisor->nameof_cipher(enc_alg, crypt_mode_t::cbc));
                 dbs.println(" > enckey[%08x] %s (%s)", secret_key, base16_encode(enckey).c_str(), tlsadvisor->nameof_secret(secret_key).c_str());
                 dbs.println(" > iv %s", base16_encode(iv).c_str());
                 dbs.println(" > mac %s", advisor->nameof_md(hmac_alg));

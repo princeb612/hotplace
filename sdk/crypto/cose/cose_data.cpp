@@ -58,9 +58,9 @@ cose_data& cose_data::add(int key, const char* value) {
     if (value) {
         variant var;
         switch (key) {
-            case cose_kid:                                               // 4
-            case cose_static_key_id:                                     // -3
-            case cose_salt:                                              // -20
+            case cose_key_t::kid:                                               // 4
+            case cose_key_t::static_key_id:                                     // -3
+            case cose_key_t::salt:                                              // -20
                 var.set_new((byte_t*)value, value ? strlen(value) : 0);  // as BSTRING
                 break;
             default:
@@ -158,9 +158,9 @@ cose_data& cose_data::add(cose_alg_t alg, const char* kid, const binary_t& signa
 
     countersign->set_upperlayer(get_owner());
     countersign->set_property(cose_property_t::cose_property_countersign);
-    countersign->get_protected().add(cose_key_t::cose_alg, alg);
+    countersign->get_protected().add(cose_key_t::alg, alg);
     if (kid) {
-        countersign->get_unprotected().add(cose_key_t::cose_kid, kid);
+        countersign->get_unprotected().add(cose_key_t::kid, kid);
     }
     countersign->get_signature().set(signature);
     add(countersign.get());
@@ -172,9 +172,9 @@ cose_data& cose_data::add(cose_alg_t alg, const char* kid, const binary_t& signa
 
 cose_data& cose_data::add(cose_recipient* countersign) {
     cose_countersigns* countersigns = get_owner()->get_countersigns1();
-    cose_variantmap_t::iterator iter = _data_map.find(cose_key_t::cose_counter_sig);
+    cose_variantmap_t::iterator iter = _data_map.find(cose_key_t::counter_sig);
     if (_data_map.end() == iter) {
-        add(cose_key_t::cose_counter_sig, vartype_t::TYPE_COUNTER_SIG, countersigns);
+        add(cose_key_t::counter_sig, vartype_t::TYPE_COUNTER_SIG, countersigns);
     }
     countersigns->add(countersign);
     return *this;
@@ -376,7 +376,7 @@ return_t cose_data::build_unprotected(cbor_map** object) {
                 *(root.get()) << new cbor_pair(key, k->cbor());
             } else if (vartype_t::TYPE_COUNTER_SIG == vt.type) {
                 cose_countersigns* signs = get_owner()->get_countersigns1();
-                *(root.get()) << new cbor_pair(cose_key_t::cose_counter_sig, signs->cbor());
+                *(root.get()) << new cbor_pair(cose_key_t::counter_sig, signs->cbor());
             } else {
                 *(root.get()) << new cbor_pair(new cbor_data(key), new cbor_data(value));
             }
@@ -416,7 +416,7 @@ return_t cose_data::build_unprotected(cbor_map** object, cose_variantmap_t& unse
                 *(root.get()) << new cbor_pair(key, k->cbor());
             } else if (vartype_t::TYPE_COUNTER_SIG == vt.type) {
                 cose_recipient* sign = (cose_recipient*)vt.data.p;
-                *(root.get()) << new cbor_pair(cose_key_t::cose_counter_sig, sign->cbor());
+                *(root.get()) << new cbor_pair(cose_key_t::counter_sig, sign->cbor());
             } else {
                 *(root.get()) << new cbor_pair(new cbor_data(key), new cbor_data(value));
             }
@@ -465,7 +465,7 @@ return_t cose_data::parse_protected(cbor_data* object) {
         if (errorcode_t::success != ret) {
             __leave2;
         }
-        cbor_map* datamap = cbor_typeof<cbor_map>(root, cbor_type_t::cbor_type_map);
+        cbor_map* datamap = cbor_typeof<cbor_map>(root, cbor_type_t::map);
         if (nullptr == datamap) {
             ret = errorcode_t::bad_format;
             __leave2;
@@ -530,20 +530,20 @@ return_t cose_data::parse(cbor_map* object) {
 
             cbor_object* pair_value = pair->right();
 
-            cbor_data* data = cbor_typeof<cbor_data>(pair_value, cbor_type_t::cbor_type_data);
+            cbor_data* data = cbor_typeof<cbor_data>(pair_value, cbor_type_t::data);
             if (data) {
                 add(keyid, data->data());
                 continue;
             }
 
-            cbor_simple* simple = cbor_typeof<cbor_simple>(pair_value, cbor_type_t::cbor_type_simple);
+            cbor_simple* simple = cbor_typeof<cbor_simple>(pair_value, cbor_type_t::simple);
             if (simple) {
                 cbor_simple_t simple_type = simple->simple_type();
                 switch (simple_type) {
-                    case cbor_simple_true:
+                    case cbor_simple_t::_true:
                         add_bool(keyid, true);
                         break;
-                    case cbor_simple_false:
+                    case cbor_simple_t::_false:
                         add_bool(keyid, false);
                         break;
                     default:
@@ -552,31 +552,31 @@ return_t cose_data::parse(cbor_map* object) {
                 continue;
             }
 
-            cbor_map* map = cbor_typeof<cbor_map>(pair_value, cbor_type_t::cbor_type_map);
+            cbor_map* map = cbor_typeof<cbor_map>(pair_value, cbor_type_t::map);
             if (map) {
                 parse_static_key(map, keyid);
                 continue;
             }
 
-            cbor_array* array = cbor_typeof<cbor_array>(pair_value, cbor_type_t::cbor_type_array);
+            cbor_array* array = cbor_typeof<cbor_array>(pair_value, cbor_type_t::array);
             if (array) {
                 switch (keyid) {
-                    case cose_counter_sig:  // (7)
+                    case cose_key_t::counter_sig:  // (7)
                     {
-                        cbor_data* countersig_protected = cbor_typeof<cbor_data>((*array)[0], cbor_type_t::cbor_type_data);
+                        cbor_data* countersig_protected = cbor_typeof<cbor_data>((*array)[0], cbor_type_t::data);
                         if (countersig_protected) {
                             parse_counter_signs(array, keyid);
                         } else {
-                            cbor_array* countersigns = cbor_typeof<cbor_array>((*array)[0], cbor_type_t::cbor_type_array);
+                            cbor_array* countersigns = cbor_typeof<cbor_array>((*array)[0], cbor_type_t::array);
                             if (countersigns) {
                                 for (size_t size = 0; size < countersigns->size(); size++) {
-                                    cbor_array* countersign = cbor_typeof<cbor_array>((*array)[size], cbor_type_t::cbor_type_array);
+                                    cbor_array* countersign = cbor_typeof<cbor_array>((*array)[size], cbor_type_t::array);
                                     parse_counter_signs(countersign, keyid);
                                 }
                             }
                         }
                     } break;
-                    case cose_crit:  // (2)
+                    case cose_key_t::crit:  // (2)
                     default:
                         break;
                 }
@@ -614,10 +614,10 @@ return_t cose_data::parse_static_key(cbor_map* object, int keyid) {
         hint.get_order(order);
 
         if (cbor_curve && cbor_x) {
-            cbor_data* cbor_data_curve = cbor_typeof<cbor_data>(cbor_curve, cbor_type_t::cbor_type_data);
-            cbor_data* cbor_data_x = cbor_typeof<cbor_data>(cbor_x, cbor_type_t::cbor_type_data);
-            cbor_data* cbor_data_y = cbor_typeof<cbor_data>(cbor_y, cbor_type_t::cbor_type_data);
-            cbor_simple* cbor_simple_y = cbor_typeof<cbor_simple>(cbor_y, cbor_type_t::cbor_type_simple);
+            cbor_data* cbor_data_curve = cbor_typeof<cbor_data>(cbor_curve, cbor_type_t::data);
+            cbor_data* cbor_data_x = cbor_typeof<cbor_data>(cbor_x, cbor_type_t::data);
+            cbor_data* cbor_data_y = cbor_typeof<cbor_data>(cbor_y, cbor_type_t::data);
+            cbor_simple* cbor_simple_y = cbor_typeof<cbor_simple>(cbor_y, cbor_type_t::simple);
 
             curve = cbor_data_curve->data().to_int();
             cbor_data_x->data().to_binary(bin_x);
@@ -630,7 +630,7 @@ return_t cose_data::parse_static_key(cbor_map* object, int keyid) {
                         cbor_data_y->data().to_binary(bin_y);
                         add(keyid, curve, bin_x, bin_y, order);
                     } else if (cbor_simple_y) {
-                        add(keyid, curve, bin_x, cbor_simple_true == cbor_simple_y->simple_type(), order);
+                        add(keyid, curve, bin_x, cbor_simple_t::_true == cbor_simple_y->simple_type(), order);
                     } else {
                         ret = errorcode_t::bad_format;
                     }
@@ -664,9 +664,9 @@ return_t cose_data::parse_counter_signs(cbor_array* object, int keyid) {
         }
 
         if (object->size() == 3) {
-            cbor_data* countersig_protected = cbor_typeof<cbor_data>((*object)[0], cbor_type_t::cbor_type_data);
-            cbor_map* countersig_unprotected = cbor_typeof<cbor_map>((*object)[1], cbor_type_t::cbor_type_map);
-            cbor_data* countersig_signature = cbor_typeof<cbor_data>((*object)[2], cbor_type_t::cbor_type_data);
+            cbor_data* countersig_protected = cbor_typeof<cbor_data>((*object)[0], cbor_type_t::data);
+            cbor_map* countersig_unprotected = cbor_typeof<cbor_map>((*object)[1], cbor_type_t::map);
+            cbor_data* countersig_signature = cbor_typeof<cbor_data>((*object)[2], cbor_type_t::data);
             if (countersig_protected && countersig_unprotected && countersig_signature) {
                 cose_countersign* countersign = new cose_countersign;
 

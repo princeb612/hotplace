@@ -131,11 +131,11 @@ const char* crypto_advisor::nameof_jose_signature(jws_t sig) {
 return_t crypto_advisor::typeof_jose_algorithm(const char* alg, jwa_t& type) {
     return_t ret = errorcode_t::success;
 
-    type = jwa_t::jwa_unknown;
+    type = jwa_t::unknown;
     const hint_jose_encryption_t* item = hintof_jose_algorithm(alg);
 
     if (item) {
-        type = (jwa_t)item->type;
+        type = item->u.alg.type;
     } else {
         ret = errorcode_t::not_found;
     }
@@ -145,11 +145,11 @@ return_t crypto_advisor::typeof_jose_algorithm(const char* alg, jwa_t& type) {
 return_t crypto_advisor::typeof_jose_encryption(const char* enc, jwe_t& type) {
     return_t ret = errorcode_t::success;
 
-    type = jwe_t::jwe_unknown;
+    type = jwe_t::unknown;
     const hint_jose_encryption_t* item = hintof_jose_encryption(enc);
 
     if (item) {
-        type = (jwe_t)item->type;
+        type = item->u.enc.type;
     } else {
         ret = errorcode_t::not_found;
     }
@@ -159,7 +159,7 @@ return_t crypto_advisor::typeof_jose_encryption(const char* enc, jwe_t& type) {
 return_t crypto_advisor::typeof_jose_signature(const char* sig, jws_t& type) {
     return_t ret = errorcode_t::success;
 
-    type = jws_t::jws_unknown;
+    type = jws_t::unknown;
     const hint_signature_t* item = hintof_jose_signature(sig);
 
     if (item) {
@@ -231,9 +231,11 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, const char* alg) {
     __try2 {
         const hint_jose_encryption_t* hint_alg = hintof_jose_algorithm(alg);
         if (hint_alg) {
-            test = is_kindof(pkey, (jwa_t)hint_alg->type);
-            if (test) {
-                __leave2;
+            if (hint_alg->htype == jose_hint_type_t::jwa) {
+                test = is_kindof(pkey, hint_alg->u.alg.type);
+                if (test) {
+                    __leave2;
+                }
             }
         }
         const hint_signature_t* hint_sig = hintof_jose_signature(alg);
@@ -249,7 +251,7 @@ bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, const char* alg) {
 }
 
 jws_t crypto_advisor::sigof(signature_t sig) {
-    jws_t type = jws_t::jws_unknown;
+    jws_t type = jws_t::unknown;
     t_maphint<signature_t, jws_t> hint(_sig2jws_map);
 
     hint.find(sig, &type);

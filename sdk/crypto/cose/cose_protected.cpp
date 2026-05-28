@@ -35,7 +35,7 @@ cose_protected& cose_protected::set(const binary_t& bin) {
     cbor_object* root = nullptr;
     cbor_parse(&root, bin);
     if (root) {
-        cbor_data* object = cbor_typeof<cbor_data>(root, cbor_type_t::cbor_type_data);
+        cbor_data* object = cbor_typeof<cbor_data>(root, cbor_type_t::data);
         if (object) {
             set(object);
         }

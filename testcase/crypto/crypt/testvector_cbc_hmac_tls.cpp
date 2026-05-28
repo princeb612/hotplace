@@ -45,7 +45,7 @@ void test_cbc_hmac(test_vector_cbchmac_tls_t* entry) {
     }
     desc.printf(R"( "%s")", entry->item.c_str());
 
-    cbchmac.set_enc(aes128).set_mac(entry->macalg).set_flag(flag);
+    cbchmac.set_enc(crypt_algorithm_t::aes128).set_mac(entry->macalg).set_flag(flag);
 
     _logger->writeln("> enckey %s", base16_encode(enckey).c_str());
     _logger->writeln("> iv     %s", base16_encode(iv).c_str());

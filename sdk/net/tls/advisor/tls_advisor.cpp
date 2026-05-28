@@ -261,7 +261,7 @@ bool tls_advisor::is_kindof_cbc(uint16 code) {
         auto item = iter->second;
         crypto_advisor* advisor = crypto_advisor::get_instance();
         auto hint_cipher = advisor->hintof_cipher(item->scheme);
-        ret = (cbc == typeof_mode(hint_cipher));
+        ret = (crypt_mode_t::cbc == typeof_mode(hint_cipher));
     }
     return ret;
 }
@@ -522,10 +522,10 @@ const EVP_PKEY* tls_advisor::get_key(tls_session* session, const char* kid) {
         auto cs = protection.get_cipher_suite();
         auto hint = hintof_cipher_suite(cs);
         switch (hint->auth) {
-            case auth_rsa:
+            case auth_t::rsa:
                 kty = kty_rsa;
                 break;
-            case auth_ecdsa:
+            case auth_t::ecdsa:
                 kty = kty_ec;
                 break;
             default:
@@ -554,10 +554,10 @@ const X509* tls_advisor::get_cert(tls_session* session, const char* kid) {
         auto cs = protection.get_cipher_suite();
         auto hint = hintof_cipher_suite(cs);
         switch (hint->auth) {
-            case auth_rsa:
+            case auth_t::rsa:
                 kty = kty_rsa;
                 break;
-            case auth_ecdsa:
+            case auth_t::ecdsa:
                 kty = kty_ec;
                 break;
             default:

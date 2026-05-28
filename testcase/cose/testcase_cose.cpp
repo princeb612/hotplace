@@ -189,10 +189,10 @@ void do_test_cose_encrypt(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, co
     if (errorcode_t::success == ret) {
         // sketch
         cose_layer& body = handle->composer->get_layer();
-        body.get_protected().add(cose_key_t::cose_alg, alg);
+        body.get_protected().add(cose_key_t::alg, alg);
         if (cose_alg_t::cose_unknown != keyalg) {
             cose_recipient& recipient = body.get_recipients().add(new cose_recipient);
-            recipient.get_protected().add(cose_key_t::cose_alg, keyalg);
+            recipient.get_protected().add(cose_key_t::alg, keyalg);
 
             // fill others and compose
             ret = cose.encrypt(handle, key, input, cbor);
@@ -228,7 +228,7 @@ void do_test_cose_sign(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const
     if (errorcode_t::success == ret) {
         // sketch
         cose_layer& body = handle->composer->get_layer();
-        body.get_protected().add(cose_key_t::cose_alg, alg);
+        body.get_protected().add(cose_key_t::alg, alg);
 
         // fill others and compose
         ret = cose.sign(handle, key, input, cbor);
@@ -262,10 +262,10 @@ void do_test_cose_mac(crypto_key* key, cose_alg_t alg, cose_alg_t keyalg, const 
     if (errorcode_t::success == ret) {
         // sketch
         cose_layer& body = handle->composer->get_layer();
-        body.get_protected().add(cose_key_t::cose_alg, alg);
+        body.get_protected().add(cose_key_t::alg, alg);
         if (cose_alg_t::cose_unknown != keyalg) {
             cose_recipient& recipient = body.get_recipients().add(new cose_recipient);
-            recipient.get_protected().add(cose_key_t::cose_alg, keyalg);
+            recipient.get_protected().add(cose_key_t::alg, keyalg);
 
             // fill others and compose
             ret = cose.mac(handle, key, input, cbor);

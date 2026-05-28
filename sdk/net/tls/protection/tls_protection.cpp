@@ -43,12 +43,12 @@ tls_version_t tls_protection::get_lagacy_version() {
     auto type = _session->get_type();
     tls_version_t version = tls_version_t::tls_12;
     switch (type) {
-        case session_type_tls:
-        case session_type_quic:
-        case session_type_quic2:
+        case session_type_t::tls:
+        case session_type_t::quic:
+        case session_type_t::quic2:
             version = tls_version_t::tls_12;
             break;
-        case session_type_dtls:
+        case session_type_t::dtls:
             version = tls_version_t::dtls_12;
             break;
     }

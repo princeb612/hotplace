@@ -165,14 +165,14 @@ class openssl_crypt : public crypt_t {
      *              //   00000010 : AC 73 EF E1 9F E2 5B A1 AF 59 C2 0B E9 4F C0 1B | .s....[..Y...O..
      *              //   00000020 : DA 2D 68 00 29 8B 73 A7 E8 49 D7 4B D4 94 CF 7D | .-h.).s..I.K...}
      *
-     *              crypt.set(handle, crypt_ctrl_padding, 1);
+     *              crypt.set(handle, crypt_ctrl_t::padding, 1);
      *
      *              // > plaintext
      *              //   00000000 : 14 00 00 0C 84 4D 3C 10 74 6D D7 22 F9 2F 0C 7E | .....M<.tm."./.~
      *              //   00000010 : 20 C4 97 46 D2 A3 0F 23 57 39 90 58 07 53 52 43 |  ..F...#W9.X.SRC
      *              //   00000020 : AF F2 BF E0 0B -- -- -- -- -- -- -- -- -- -- -- | .....
      *
-     *              crypt.set(handle, crypt_ctrl_padding, 0);
+     *              crypt.set(handle, crypt_ctrl_t::padding, 0);
      *
      *              // > plaintext
      *              //   00000000 : 14 00 00 0C 84 4D 3C 10 74 6D D7 22 F9 2F 0C 7E | .....M<.tm."./.~
@@ -182,7 +182,7 @@ class openssl_crypt : public crypt_t {
      *
      *          {
      *              // AES-128-CCM8
-     *              crypt.set(handle, crypt_ctrl_tsize, 8);
+     *              crypt.set(handle, crypt_ctrl_t::tsize, 8);
      *
      *              // > key
      *              //    00000000 : 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F | ................
@@ -209,7 +209,7 @@ class openssl_crypt : public crypt_t {
      *
      *          {
      *              // AES-128-CCM
-     *              // crypt.set(handle, crypt_ctrl_tsize, 14);
+     *              // crypt.set(handle, crypt_ctrl_t::tsize, 14);
      *
      *              // > ciphertext
      *              //    00000000 : 00 71 93 88 52 E8 26 7B 8C 7C C3 84 ED 8F 69 D8 | .q..R.&{.|....i.
@@ -385,7 +385,7 @@ class openssl_crypt : public crypt_t {
      * @return error code (see error.hpp)
      * @example
      *      encrypt_option_t options[] = {
-     *          { crypt_ctrl_padding, 0 }, { },
+     *          { crypt_ctrl_t::padding, 0 }, { },
      *      };
      *      encrypt("aes-128-cbc", cek, iv, plaintext, ciphertext, options);
      */
@@ -492,7 +492,7 @@ class openssl_crypt : public crypt_t {
  *
  *          // stream cipher
  *          {
- *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::mode_cipher, key, iv);
+ *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::unknown, key, iv);
  *              crypt.encrypt (handle, plaintext, plainsize, ciphertext);
  *              crypt.decrypt (handle, ciphertext, plaintext);
  *              crypt.close (handle);
@@ -504,7 +504,7 @@ class openssl_crypt : public crypt_t {
  *              binary_t tag;
  *              openssl_prng rand;
  *              rand.random (aad, 32);
- *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::mode_poly1305, key, iv);
+ *              crypt.open (&handle, crypt_algorithm_t::chacha20, crypt_mode_t::poly1305, key, iv);
  *              crypt.encrypt (handle, plaintext, plainsize, ciphertext, &aad, &tag);
  *              crypt.decrypt (handle, ciphertext, plaintext, &aad, &tag);
  *              crypt.close (handle);

@@ -36,8 +36,8 @@ return_t tls_protection::get_protection_mask_key(tls_session* session, tls_direc
         auto hsstatus = session->get_session_info(dir).get_status();
 
         switch (session_type) {
-            case session_type_tls:
-            case session_type_dtls: {
+            case session_type_t::tls:
+            case session_type_t::dtls: {
                 if (is_kindof_dtls()) {
                     if (is_serverinitiated(dir)) {
                         if (tls_handshake_type_t::finished == hsstatus) {
@@ -54,8 +54,8 @@ return_t tls_protection::get_protection_mask_key(tls_session* session, tls_direc
                     }
                 }
             } break;
-            case session_type_quic:
-            case session_type_quic2: {
+            case session_type_t::quic:
+            case session_type_t::quic2: {
                 if (protection_space_t::initial == space) {
                     if (is_serverinitiated(dir)) {
                         secret_key = tls_secret_t::initial_quic_server_hp;
@@ -101,7 +101,7 @@ return_t tls_protection::protection_mask(tls_session* session, tls_direction_t d
         crypto_advisor* advisor = crypto_advisor::get_instance();
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
-        auto alg = aes128;  // DTLS, QUIC initial
+        auto alg = crypt_algorithm_t::aes128;  // DTLS, QUIC initial
 
         // QUIC handshake, application
         if (space == protection_space_t::handshake || space == protection_space_t::application) {
@@ -126,7 +126,7 @@ return_t tls_protection::protection_mask(tls_session* session, tls_direction_t d
             get_protection_mask_key(session, dir, space, secret_key);
 
             cipher_encrypt_builder builder;
-            cipher = builder.set(alg, ecb).build();
+            cipher = builder.set(alg, crypt_mode_t::ecb).build();
             if (cipher) {
                 const auto& key = get_secrets().get(secret_key);
 #if 0

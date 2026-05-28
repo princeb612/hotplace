@@ -76,7 +76,7 @@ void test_yaml_testvector_rfc7539() {
                 t.clear();
 
                 crypto_aead_builder builder;
-                auto aead = builder.set_scheme(crypto_scheme_tls_chacha20_poly1305).build();
+                auto aead = builder.set_scheme(crypto_scheme_t::tls_chacha20_poly1305).build();
                 if (aead) {
                     ret = aead->encrypt(key, n, pt, c, aad, t);
                     _logger->hdump("> ciphertext", c, 16, 3);

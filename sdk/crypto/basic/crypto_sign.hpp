@@ -74,10 +74,10 @@ class crypto_sign_builder {
     crypto_sign_builder& set_tls_sign_scheme(tls_sigscheme_t scheme);
     /**
      * @sample
-     *          auto sign = builder.set_scheme(jws_es256).build();
-     *          auto sign = builder.set_scheme(jws_hs256).build();
-     *          auto sign = builder.set_scheme(jws_ps256).build();
-     *          auto sign = builder.set_scheme(jws_rs256).build();
+     *          auto sign = builder.set_scheme(jws_t::es256).build();
+     *          auto sign = builder.set_scheme(jws_t::hs256).build();
+     *          auto sign = builder.set_scheme(jws_t::ps256).build();
+     *          auto sign = builder.set_scheme(jws_t::rs256).build();
      */
     crypto_sign_builder& set_scheme(jws_t type);
 

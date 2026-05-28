@@ -38,7 +38,7 @@ void test_yaml_cavp_blockciphers() {
             binary_t plaintext;
             crypt_context_t* handle = nullptr;
             crypt.open(&handle, entry.alg, base16_decode(entry.key), base16_decode(entry.iv));
-            crypt.set(handle, crypt_ctrl_t::crypt_ctrl_padding, 0);
+            crypt.set(handle, crypt_ctrl_t::padding, 0);
             crypt.encrypt(handle, base16_decode(entry.pt), ciphertext);
             crypt.decrypt(handle, base16_decode(entry.ct), plaintext);
             crypt.close(handle);

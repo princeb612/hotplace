@@ -49,7 +49,7 @@ struct t_enum_type {
 };
 
 template <typename T>
-constexpr typename std::underlying_type<T>::type t_escape(T v) {
+constexpr typename std::underlying_type<T>::type t_underlying(T v) {
     return static_cast<typename std::underlying_type<T>::type>(v);
 }
 

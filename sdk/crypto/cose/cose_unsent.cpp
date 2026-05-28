@@ -30,18 +30,18 @@ cose_data& cose_unsent::data() { return _unsent; }
 bool cose_unsent::isvalid(int key) {
     bool ret = true;
     switch (key) {
-        case cose_param_t::cose_external:
-        case cose_param_t::cose_unsent_apu_id:
-        case cose_param_t::cose_unsent_apu_nonce:
-        case cose_param_t::cose_unsent_apu_other:
-        case cose_param_t::cose_unsent_apv_id:
-        case cose_param_t::cose_unsent_apv_nonce:
-        case cose_param_t::cose_unsent_apv_other:
-        case cose_param_t::cose_unsent_pub_other:
-        case cose_param_t::cose_unsent_priv_other:
-        case cose_param_t::cose_unsent_iv:
-        case cose_param_t::cose_unsent_alg:
-        case cose_param_t::cose_param_cek:
+        case cose_param_external:
+        case cose_param_unsent_apu_id:
+        case cose_param_unsent_apu_nonce:
+        case cose_param_unsent_apu_other:
+        case cose_param_unsent_apv_id:
+        case cose_param_unsent_apv_nonce:
+        case cose_param_unsent_apv_other:
+        case cose_param_unsent_pub_other:
+        case cose_param_unsent_priv_other:
+        case cose_param_unsent_iv:
+        case cose_param_unsent_alg:
+        case cose_param_cek:
             break;
         default:
             ret = false;

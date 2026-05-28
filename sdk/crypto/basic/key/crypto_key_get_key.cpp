@@ -36,36 +36,36 @@ return_t crypto_key::get_public_key(const EVP_PKEY* pkey, binary_t& pub1, binary
             case crypto_kty_t::kty_rsa:
             case crypto_kty_t::kty_rsapss: {
                 // n, e
-                iter = datamap.find(crypt_item_t::item_rsa_n);
+                iter = datamap.find(crypt_item_t::rsa_n);
                 if (datamap.end() != iter) {
                     pub1 = iter->second;
                 }
-                iter = datamap.find(crypt_item_t::item_rsa_e);
+                iter = datamap.find(crypt_item_t::rsa_e);
                 if (datamap.end() != iter) {
                     pub2 = iter->second;
                 }
             } break;
             case crypto_kty_t::kty_ec: {
                 // x, y
-                iter = datamap.find(crypt_item_t::item_ec_x);
+                iter = datamap.find(crypt_item_t::ec_x);
                 if (datamap.end() != iter) {
                     pub1 = iter->second;
                 }
-                iter = datamap.find(crypt_item_t::item_ec_y);
+                iter = datamap.find(crypt_item_t::ec_y);
                 if (datamap.end() != iter) {
                     pub2 = iter->second;
                 }
             } break;
             case crypto_kty_t::kty_okp: {
                 // x
-                iter = datamap.find(crypt_item_t::item_ec_x);
+                iter = datamap.find(crypt_item_t::ec_x);
                 if (datamap.end() != iter) {
                     pub1 = iter->second;
                 }
             } break;
             case crypto_kty_t::kty_dh: {
                 // pub
-                iter = datamap.find(crypt_item_t::item_dh_pub);
+                iter = datamap.find(crypt_item_t::dh_pub);
                 if (datamap.end() != iter) {
                     pub1 = iter->second;
                 }
@@ -77,7 +77,7 @@ return_t crypto_key::get_public_key(const EVP_PKEY* pkey, binary_t& pub1, binary
             case crypto_kty_t::kty_mldsa:
             case crypto_kty_t::kty_slhdsa: {
                 // pub
-                iter = datamap.find(crypt_item_t::item_pubkey);
+                iter = datamap.find(crypt_item_t::pubkey);
                 if (datamap.end() != iter) {
                     pub1 = iter->second;
                 }
@@ -165,7 +165,7 @@ return_t crypto_key::get_private_key(const EVP_PKEY* pkey, binary_t& priv) {
         switch (type) {
             case crypto_kty_t::kty_oct: {
                 // k
-                iter = datamap.find(crypt_item_t::item_hmac_k);
+                iter = datamap.find(crypt_item_t::hmac_k);
                 if (datamap.end() != iter) {
                     priv = iter->second;
                 }
@@ -173,7 +173,7 @@ return_t crypto_key::get_private_key(const EVP_PKEY* pkey, binary_t& priv) {
             case crypto_kty_t::kty_rsa:
             case crypto_kty_t::kty_rsapss: {
                 // d
-                iter = datamap.find(crypt_item_t::item_rsa_d);
+                iter = datamap.find(crypt_item_t::rsa_d);
                 if (datamap.end() != iter) {
                     priv = iter->second;
                 }
@@ -181,21 +181,21 @@ return_t crypto_key::get_private_key(const EVP_PKEY* pkey, binary_t& priv) {
             case crypto_kty_t::kty_ec:
             case crypto_kty_t::kty_okp: {
                 // d
-                iter = datamap.find(crypt_item_t::item_ec_d);
+                iter = datamap.find(crypt_item_t::ec_d);
                 if (datamap.end() != iter) {
                     priv = iter->second;
                 }
             } break;
             case crypto_kty_t::kty_dh: {
                 // priv
-                iter = datamap.find(crypt_item_t::item_dh_priv);
+                iter = datamap.find(crypt_item_t::dh_priv);
                 if (datamap.end() != iter) {
                     priv = iter->second;
                 }
             } break;
             case crypto_kty_t::kty_dsa: {
                 // x
-                iter = datamap.find(crypt_item_t::item_dsa_x);
+                iter = datamap.find(crypt_item_t::dsa_x);
                 if (datamap.end() != iter) {
                     priv = iter->second;
                 }
@@ -203,7 +203,7 @@ return_t crypto_key::get_private_key(const EVP_PKEY* pkey, binary_t& priv) {
             case crypto_kty_t::kty_mlkem:
             case crypto_kty_t::kty_mldsa:
             case crypto_kty_t::kty_slhdsa: {
-                iter = datamap.find(crypt_item_t::item_privkey);
+                iter = datamap.find(crypt_item_t::privekey);
                 if (datamap.end() != iter) {
                     priv = iter->second;
                 }
@@ -282,64 +282,64 @@ return_t crypto_key::get_key(const EVP_PKEY* pkey, int flags, binary_t& pub, bin
         switch (kty) {
             case kty_oct: {
                 if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::item_hmac_k, priv);
+                    lambda_get_item(crypt_item_t::hmac_k, priv);
                 }
             } break;
             case kty_rsa:
             case kty_rsapss: {
                 if (asn1public_key & flags) {
-                    lambda_get_item(crypt_item_t::item_asn1der, pub);
+                    lambda_get_item(crypt_item_t::asn1der, pub);
                 }
                 if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::item_rsa_d, priv);
+                    lambda_get_item(crypt_item_t::rsa_d, priv);
                 }
             } break;
             case kty_ec: {
                 if (asn1public_key & flags) {
-                    lambda_get_item(crypt_item_t::item_asn1der, pub);
+                    lambda_get_item(crypt_item_t::asn1der, pub);
                 } else if (public_key & flags) {
-                    lambda_get_item(crypt_item_t::item_ec_pub_uncompressed, pub);
+                    lambda_get_item(crypt_item_t::ec_pub_uncompressed, pub);
                 }
                 if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::item_ec_d, priv);
+                    lambda_get_item(crypt_item_t::ec_d, priv);
                 }
             } break;
             case kty_okp: {
                 if (asn1public_key & flags) {
-                    lambda_get_item(crypt_item_t::item_asn1der, pub);
+                    lambda_get_item(crypt_item_t::asn1der, pub);
                 } else if (public_key & flags) {
-                    lambda_get_item(crypt_item_t::item_ec_x, pub);
+                    lambda_get_item(crypt_item_t::ec_x, pub);
                 }
                 if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::item_ec_d, priv);
+                    lambda_get_item(crypt_item_t::ec_d, priv);
                 }
             } break;
             case kty_dh: {
                 if (asn1public_key & flags) {
-                    lambda_get_item(crypt_item_t::item_asn1der, pub);
+                    lambda_get_item(crypt_item_t::asn1der, pub);
                 } else if (public_key & flags) {
-                    lambda_get_item(crypt_item_t::item_dh_pub, pub);
+                    lambda_get_item(crypt_item_t::dh_pub, pub);
                 }
                 if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::item_dh_priv, priv);
+                    lambda_get_item(crypt_item_t::dh_priv, priv);
                 }
             } break;
             case kty_dsa: {
                 if (asn1public_key & flags) {
-                    lambda_get_item(crypt_item_t::item_asn1der, pub);
+                    lambda_get_item(crypt_item_t::asn1der, pub);
                 }
                 if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::item_dsa_priv, priv);
+                    lambda_get_item(crypt_item_t::dsa_priv, priv);
                 }
             } break;
             case kty_mlkem:
             case kty_mldsa:
             case kty_slhdsa: {
                 if (public_key & flags) {
-                    lambda_get_item(crypt_item_t::item_mlkem_pub, pub);
+                    lambda_get_item(crypt_item_t::mlkem_pub, pub);
                 }
                 if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::item_mlkem_priv, priv);
+                    lambda_get_item(crypt_item_t::mlkem_priv, priv);
                 }
             } break;
             default: {
@@ -385,57 +385,57 @@ return_t crypto_key::get_key(const EVP_PKEY* pkey, int flags, crypto_kty_t& type
         switch (type) {
             case crypto_kty_t::kty_oct: {
                 if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::item_hmac_k, priv);
+                    lambda_get_item(crypt_item_t::hmac_k, priv);
                 }
             } break;
             case crypto_kty_t::kty_rsa:
             case crypto_kty_t::kty_rsapss: {
                 if (public_key & flags) {
-                    lambda_get_item(crypt_item_t::item_rsa_n, pub1);
-                    lambda_get_item(crypt_item_t::item_rsa_e, pub2);
+                    lambda_get_item(crypt_item_t::rsa_n, pub1);
+                    lambda_get_item(crypt_item_t::rsa_e, pub2);
                 }
                 if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::item_rsa_d, priv);
+                    lambda_get_item(crypt_item_t::rsa_d, priv);
                 }
             } break;
             case crypto_kty_t::kty_ec: {
                 if (public_key & flags) {
-                    lambda_get_item(crypt_item_t::item_ec_x, pub1);
-                    lambda_get_item(crypt_item_t::item_ec_y, pub2);
+                    lambda_get_item(crypt_item_t::ec_x, pub1);
+                    lambda_get_item(crypt_item_t::ec_y, pub2);
                 }
                 if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::item_ec_d, priv);
+                    lambda_get_item(crypt_item_t::ec_d, priv);
                 }
             } break;
             case crypto_kty_t::kty_okp: {
                 if (public_key & flags) {
-                    lambda_get_item(crypt_item_t::item_ec_x, pub1);
+                    lambda_get_item(crypt_item_t::ec_x, pub1);
                 }
                 if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::item_ec_d, priv);
+                    lambda_get_item(crypt_item_t::ec_d, priv);
                 }
             } break;
             case crypto_kty_t::kty_dh: {
                 if (public_key & flags) {
-                    lambda_get_item(crypt_item_t::item_dh_pub, pub1);
+                    lambda_get_item(crypt_item_t::dh_pub, pub1);
                 }
                 if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::item_dh_priv, priv);
+                    lambda_get_item(crypt_item_t::dh_priv, priv);
                 }
             } break;
             case crypto_kty_t::kty_dsa: {
                 if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::item_dsa_priv, priv);
+                    lambda_get_item(crypt_item_t::dsa_priv, priv);
                 }
             } break;
             case crypto_kty_t::kty_mlkem:
             case crypto_kty_t::kty_mldsa:
             case crypto_kty_t::kty_slhdsa: {
                 if (public_key & flags) {
-                    lambda_get_item(crypt_item_t::item_pubkey, pub1);
+                    lambda_get_item(crypt_item_t::pubkey, pub1);
                 }
                 if (private_key & flags) {
-                    lambda_get_item(crypt_item_t::item_privkey, priv);
+                    lambda_get_item(crypt_item_t::privekey, priv);
                 }
             } break;
             default:
@@ -459,37 +459,37 @@ return_t crypto_key::get_privkey(const EVP_PKEY* pkey, crypto_kty_t& type, binar
     if (errorcode_t::success == ret) {
         switch (type) {
             case crypto_kty_t::kty_oct: {
-                iter = datamap.find(crypt_item_t::item_hmac_k);
+                iter = datamap.find(crypt_item_t::hmac_k);
                 if (datamap.end() != iter) {
                     priv = iter->second;
                 }
             } break;
             case crypto_kty_t::kty_rsa: {
-                iter = datamap.find(crypt_item_t::item_rsa_d);
+                iter = datamap.find(crypt_item_t::rsa_d);
                 if (datamap.end() != iter) {
                     priv = iter->second;
                 }
             } break;
             case crypto_kty_t::kty_ec: {
-                iter = datamap.find(crypt_item_t::item_ec_d);
+                iter = datamap.find(crypt_item_t::ec_d);
                 if (datamap.end() != iter) {
                     priv = iter->second;
                 }
             } break;
             case crypto_kty_t::kty_okp: {
-                iter = datamap.find(crypt_item_t::item_ec_d);
+                iter = datamap.find(crypt_item_t::ec_d);
                 if (datamap.end() != iter) {
                     priv = iter->second;
                 }
             } break;
             case crypto_kty_t::kty_dh: {
-                iter = datamap.find(crypt_item_t::item_dh_priv);
+                iter = datamap.find(crypt_item_t::dh_priv);
                 if (datamap.end() != iter) {
                     priv = iter->second;
                 }
             } break;
             case crypto_kty_t::kty_dsa: {
-                iter = datamap.find(crypt_item_t::item_dsa_priv);
+                iter = datamap.find(crypt_item_t::dsa_priv);
                 if (datamap.end() != iter) {
                     priv = iter->second;
                 }
@@ -497,7 +497,7 @@ return_t crypto_key::get_privkey(const EVP_PKEY* pkey, crypto_kty_t& type, binar
             case crypto_kty_t::kty_mlkem:
             case crypto_kty_t::kty_mldsa:
             case crypto_kty_t::kty_slhdsa: {
-                iter = datamap.find(crypt_item_t::item_privkey);
+                iter = datamap.find(crypt_item_t::privekey);
                 if (datamap.end() != iter) {
                     priv = iter->second;
                 }

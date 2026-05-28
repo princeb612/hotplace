@@ -201,7 +201,7 @@ signature_t typeof_sig(const hint_signature_t* hint) {
 }
 
 jws_t typeof_jws(const hint_signature_t* hint) {
-    jws_t type = jws_unknown;
+    jws_t type = jws_t::unknown;
     if (hint) {
         type = hint->jws_type;
     }

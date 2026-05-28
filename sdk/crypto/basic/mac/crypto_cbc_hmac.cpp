@@ -19,7 +19,7 @@
 namespace hotplace {
 namespace crypto {
 
-crypto_cbc_hmac::crypto_cbc_hmac() : _enc_alg(crypt_alg_unknown), _mac_alg(hash_algorithm_t{}), _flag(0) { _shared.make_share(this); }
+crypto_cbc_hmac::crypto_cbc_hmac() : _enc_alg(crypt_algorithm_t{}), _mac_alg(hash_algorithm_t{}), _flag(0) { _shared.make_share(this); }
 
 crypto_cbc_hmac& crypto_cbc_hmac::set_enc(const char* enc_alg) {
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -80,7 +80,7 @@ return_t crypto_cbc_hmac::split_key(const binary_t key, binary_t& enckey, binary
         auto enc_alg = get_enc_alg();
         auto mac_alg = get_mac_alg();
 
-        auto hint_cipher = advisor->hintof_cipher(enc_alg, cbc);
+        auto hint_cipher = advisor->hintof_cipher(enc_alg, crypt_mode_t::cbc);
         if (nullptr == hint_cipher) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -157,7 +157,7 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
 
         uint16 blocksize = sizeof_block(hint_blockcipher);
 
-        ret = crypt.open(&crypt_handle, enc_alg, cbc, enckey, iv);
+        ret = crypt.open(&crypt_handle, enc_alg, crypt_mode_t::cbc, enckey, iv);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -193,7 +193,7 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
                 temp.insert(temp.end(), padvalue);
 #else
                 temp.insert(temp.end(), imod, padvalue);
-                crypt.set(crypt_handle, crypt_ctrl_padding, 0);
+                crypt.set(crypt_handle, crypt_ctrl_t::padding, 0);
 #endif
                 ret = crypt.encrypt(crypt_handle, temp, ciphertext);
                 if (errorcode_t::success != ret) {
@@ -223,7 +223,7 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
                 temp.insert(temp.end(), padvalue);
 #else
                 temp.insert(temp.end(), imod, padvalue);
-                crypt.set(crypt_handle, crypt_ctrl_padding, 0);
+                crypt.set(crypt_handle, crypt_ctrl_t::padding, 0);
 #endif
                 ret = crypt.encrypt(crypt_handle, temp, ciphertext);
             }
@@ -282,7 +282,7 @@ return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey
         auto dlen = sizeof_digest(hint_md);
         uint16 datalen = 0;
 
-        ret = crypt.open(&crypt_handle, enc_alg, cbc, enckey, iv);
+        ret = crypt.open(&crypt_handle, enc_alg, crypt_mode_t::cbc, enckey, iv);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -399,7 +399,7 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
         uint16 digestsize = sizeof_digest(hint_digest);
         digestsize >>= 1;  // truncate
 
-        ret = crypt.open(&crypt_handle, enc_alg, cbc, enckey, iv);
+        ret = crypt.open(&crypt_handle, enc_alg, crypt_mode_t::cbc, enckey, iv);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -421,7 +421,7 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
             binary_t p1;
             p1.insert(p1.end(), plaintext, plaintext + plainsize);
             p1.insert(p1.end(), ps.begin(), ps.end());
-            crypt.set(crypt_handle, crypt_ctrl_t::crypt_ctrl_padding, 0);
+            crypt.set(crypt_handle, crypt_ctrl_t::padding, 0);
             crypt.encrypt(crypt_handle, p1, ciphertext);
 #else  // using openssl pkcs #7 padding
             crypt.encrypt(crypt_handle, plaintext, plainsize, ciphertext);
@@ -480,7 +480,7 @@ return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey
         uint16 digestsize = sizeof_digest(hint_digest);
         digestsize >>= 1;  // truncate
 
-        ret = crypt.open(&crypt_handle, enc_alg, cbc, enckey, iv);
+        ret = crypt.open(&crypt_handle, enc_alg, crypt_mode_t::cbc, enckey, iv);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -507,7 +507,7 @@ return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey
 
             /* Q = CBC-ENC(ENC_KEY, P || PS) */
 #if 0  // documents described
-            crypt.set(crypt_handle, crypt_ctrl_t::crypt_ctrl_padding, 0);
+            crypt.set(crypt_handle, crypt_ctrl_t::padding, 0);
             crypt.decrypt(crypt_handle, ciphertext, ciphersize, plaintext);
             /* P || PS */
             // binary_t p1;

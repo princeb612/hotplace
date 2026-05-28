@@ -210,7 +210,7 @@ class json_object_signing_encryption {
      * @brief encrypt
      * @param jose_context_t* context [in]
      * @param jwe_t enc [in]
-     * @param jwa_t alg [in] support all algorithms including jwa_t::jwa_dir, jwa_t::jwa_ecdh_es
+     * @param jwa_t alg [in] support all algorithms including jwa_t::dir, jwa_t::ecdh_es
      * @param const binary_t& input [in]
      * @param std::string& output [out]
      * @param jose_serialization_t type [inopt]
@@ -227,7 +227,7 @@ class json_object_signing_encryption {
      *          jose_context_t* handle_decrypt = nullptr;
      *          jose.open (&handle_encrypt, &crypto_pubkey);
      *          jose.open (&handle_decrypt, &crypto_privkey);
-     *          ret = jose.encrypt (handle_encrypt, jwe_t::jwe_a128cbc_hs256, jwa_t::jwa_ecdh_es, to_string (input), encrypted, jose_serialization_t::jose_json);
+     *          ret = jose.encrypt (handle_encrypt, jwe_t::a128cbc_hs256, jwa_t::ecdh_es, to_string (input), encrypted, jose_serialization_t::jose_json);
      *          ret = jose.decrypt (handle_decrypt, encrypted, output, result);
      *          jose.close (handle_encrypt);
      *          jose.close (handle_decrypt);
@@ -241,7 +241,7 @@ class json_object_signing_encryption {
      * @param jose_context_t* context [in]
      * @param jwe_t enc [in]
      * @param const std::list <jwa_t>& alg [in]
-     *  do not support jwa_t::jwa_dir, jwa_t::jwa_ecdh_es
+     *  do not support jwa_t::dir, jwa_t::ecdh_es
      *  case "dir"
      *      read cek from HMAC key and then make it the only one cek
      *      protected, iv, ciphertext, tag, recipients:[ header {alg:dir}, encrypted_key(empty) ]
@@ -262,22 +262,22 @@ class json_object_signing_encryption {
      *          jose_context_t* handle_encrypt = nullptr;
      *          jose.open (&handle_encrypt, &crypto_pubkey);
      *          std::list<jwa_t> algs;
-     *          algs.push_back (jwa_t::jwa_rsa_1_5);
-     *          algs.push_back (jwa_t::jwa_rsa_oaep);
-     *          algs.push_back (jwa_t::jwa_rsa_oaep_256);
-     *          algs.push_back (jwa_t::jwa_a128kw);
-     *          algs.push_back (jwa_t::jwa_a192kw);
-     *          algs.push_back (jwa_t::jwa_a256kw);
-     *          algs.push_back (jwa_t::jwa_ecdh_es_a128kw);
-     *          algs.push_back (jwa_t::jwa_ecdh_es_a192kw);
-     *          algs.push_back (jwa_t::jwa_ecdh_es_a256kw);
-     *          algs.push_back (jwa_t::jwa_a128gcmkw);
-     *          algs.push_back (jwa_t::jwa_a192gcmkw);
-     *          algs.push_back (jwa_t::jwa_a256gcmkw);
-     *          algs.push_back (jwa_t::jwa_pbes2_hs256_a128kw);
-     *          algs.push_back (jwa_t::jwa_pbes2_hs384_a192kw);
-     *          algs.push_back (jwa_t::jwa_pbes2_hs512_a256kw);
-     *          ret = jose.encrypt (handle_encrypt, jwe_t::jwe_a128cbc_hs256, algs, to_string (input), encrypted, jose_serialization_t::jose_json);
+     *          algs.push_back (jwa_t::rsa_1_5);
+     *          algs.push_back (jwa_t::rsa_oaep);
+     *          algs.push_back (jwa_t::rsa_oaep_256);
+     *          algs.push_back (jwa_t::a128kw);
+     *          algs.push_back (jwa_t::a192kw);
+     *          algs.push_back (jwa_t::a256kw);
+     *          algs.push_back (jwa_t::ecdh_es_a128kw);
+     *          algs.push_back (jwa_t::ecdh_es_a192kw);
+     *          algs.push_back (jwa_t::ecdh_es_a256kw);
+     *          algs.push_back (jwa_t::a128gcmkw);
+     *          algs.push_back (jwa_t::a192gcmkw);
+     *          algs.push_back (jwa_t::a256gcmkw);
+     *          algs.push_back (jwa_t::pbes2_hs256_a128kw);
+     *          algs.push_back (jwa_t::pbes2_hs384_a192kw);
+     *          algs.push_back (jwa_t::pbes2_hs512_a256kw);
+     *          ret = jose.encrypt (handle_encrypt, jwe_t::a128cbc_hs256, algs, to_string (input), encrypted, jose_serialization_t::jose_json);
      *          jose.close (handle_encrypt);
      */
     return_t encrypt(jose_context_t* context, jwe_t enc, const std::list<jwa_t>& algs, const binary_t& input, std::string& output,
@@ -321,7 +321,7 @@ class json_object_signing_encryption {
      *
      *          jose_context_t* jose_context = nullptr;
      *          jose.open (&jose_context, &crypto_key);
-     *          jose.sign (jose_context, jws_t::jws_hs256, claim, jws_result);
+     *          jose.sign (jose_context, jws_t::hs256, claim, jws_result);
      *          jose.verify (jose_context, jws_result, result);
      *          jose.close (jose_context);
      */
@@ -342,9 +342,9 @@ class json_object_signing_encryption {
      *          bool result = false;
      *          std::string jws_result;
      *          std::list <jws_t> methods;
-     *          methods.push_back (jws_t::jws_hs256);
-     *          methods.push_back (jws_t::jws_rs256);
-     *          methods.push_back (jws_t::jws_es256);
+     *          methods.push_back (jws_t::hs256);
+     *          methods.push_back (jws_t::rs256);
+     *          methods.push_back (jws_t::es256);
      *
      *          jose_context_t* jose_context = nullptr;
      *          jose.open (&jose_context, &crypto_key);

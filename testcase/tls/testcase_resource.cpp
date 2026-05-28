@@ -22,24 +22,25 @@ static void do_validate_resource_cipher_suite() {
         keyexchange_t keyex;
         const char* name;
     } keyex_table[] = {
-        {keyexchange_unknown, "NULL"},
-        {keyexchange_rsa, "RSA"},
-        {keyexchange_dh, "DH"},
-        {keyexchange_dhe, "DHE"},
-        {keyexchange_krb5, "KRB5"},
-        {keyexchange_psk, "PSK"},
-        {keyexchange_ecdh, "ECDH"},
-        {keyexchange_ecdhe, "ECDHE"},
-        {keyexchange_srp, "SRP"},
-        {keyexchange_eccpwd, "ECCPWD"},
-        {keyexchange_gost, "GOSTR341112_256"},
+        {keyexchange_t::unknown, "NULL"},
+        {keyexchange_t::rsa, "RSA"},
+        {keyexchange_t::dh, "DH"},
+        {keyexchange_t::dhe, "DHE"},
+        {keyexchange_t::krb5, "KRB5"},
+        {keyexchange_t::psk, "PSK"},
+        {keyexchange_t::ecdh, "ECDH"},
+        {keyexchange_t::ecdhe, "ECDHE"},
+        {keyexchange_t::srp, "SRP"},
+        {keyexchange_t::eccpwd, "ECCPWD"},
+        {keyexchange_t::gost, "GOSTR341112_256"},
     };
     struct auth_item_t {
         auth_t auth;
         const char* name;
     } auth_table[] = {
-        {auth_unknown, "NULL"}, {auth_dss, "DSS"},  {auth_rsa, "RSA"},         {auth_anon, "anon"},       {auth_krb5, "KRB5"},     {auth_psk, "PSK"},
-        {auth_ecdsa, "ECDSA"},  {auth_sha1, "SHA"}, {auth_sha2_256, "SHA256"}, {auth_sha2_384, "SHA384"}, {auth_eccpwd, "ECCPWD"}, {auth_gost, "GOSTR341112_256"},
+        {auth_t::unknown, "NULL"},    {auth_t::dss, "DSS"},         {auth_t::rsa, "RSA"},       {auth_t::anon, "anon"},
+        {auth_t::krb5, "KRB5"},       {auth_t::psk, "PSK"},         {auth_t::ecdsa, "ECDSA"},   {auth_t::sha1, "SHA"},
+        {auth_t::sha2_256, "SHA256"}, {auth_t::sha2_384, "SHA384"}, {auth_t::eccpwd, "ECCPWD"}, {auth_t::gost, "GOSTR341112_256"},
     };
 #if 0
     struct alg_t {
@@ -47,7 +48,11 @@ static void do_validate_resource_cipher_suite() {
         crypt_mode_t mode;
         const char* name;
     } alg_table[] = {
-        {idea, cbc, "IDEA"}, {aes128, cbc, "AES_128_CBC"}, {aes256, cbc, "AES_256_CBC"}, {aes128, cbc, "AES_128_CBC"}, {aes256, cbc, "AES_256_CBC"},
+        {crypt_algorithm_t::idea, crypt_mode_t::cbc, "IDEA"},
+        {crypt_algorithm_t::aes128, crypt_mode_t::cbc, "AES_128_CBC"},
+        {crypt_algorithm_t::aes256, crypt_mode_t::cbc, "AES_256_CBC"},
+        {crypt_algorithm_t::aes128, crypt_mode_t::cbc, "AES_128_CBC"},
+        {crypt_algorithm_t::aes256, crypt_mode_t::cbc, "AES_256_CBC"},
     };
     struct mac_t {
         hash_algorithm_t alg;
@@ -71,8 +76,8 @@ static void do_validate_resource_cipher_suite() {
         //   https://ciphersuite.info/cs/TLS_PSK_DHE_WITH_AES_256_CCM_8/
         // so name must be TLS_DHE_PSK_...
         // but registered as TLS_PSK_DHE_...
-        {keyexchange_dhe, auth_psk, "TLS_PSK_DHE_WITH_AES_128_CCM_8", "TLS_DHE_PSK_WITH_AES_128_CCM_8_SHA256", "DHE_PSK as PSK_DHE"},
-        {keyexchange_dhe, auth_psk, "TLS_PSK_DHE_WITH_AES_256_CCM_8", "TLS_DHE_PSK_WITH_AES_256_CCM_8_SHA256", "DHE_PSK as PSK_DHE"},
+        {keyexchange_t::dhe, auth_t::psk, "TLS_PSK_DHE_WITH_AES_128_CCM_8", "TLS_DHE_PSK_WITH_AES_128_CCM_8_SHA256", "DHE_PSK as PSK_DHE"},
+        {keyexchange_t::dhe, auth_t::psk, "TLS_PSK_DHE_WITH_AES_256_CCM_8", "TLS_DHE_PSK_WITH_AES_256_CCM_8_SHA256", "DHE_PSK as PSK_DHE"},
     };
 
     std::map<keyexchange_t, std::string> keyex_map;
@@ -122,7 +127,7 @@ static void do_validate_resource_cipher_suite() {
             std::string cipher_name;
 
             cipher_name = hint_scheme->fetchname;
-            if ((ccm == mode) && (8 == tsize)) {
+            if ((crypt_mode_t::ccm == mode) && (8 == tsize)) {
                 replace(cipher_name, "ccm", "CCM_8");
             }
             replace(cipher_name, "-", "_");

@@ -29,7 +29,7 @@ enum dtls_record_publisher_flag_t : uint32 {
 /**
  * @brief   fragmentation
  * @example
- *          tls_session session_client(session_type_dtls);
+ *          tls_session session_client(session_type_t::dtls);
  *          session_server.get_dtls_record_publisher().set_flags(dtls_record_publisher_multi_handshakes);
  *          session_client.get_dtls_record_publisher().set_fragment_size(1024);
  *

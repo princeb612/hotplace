@@ -341,13 +341,13 @@ class crypto_advisor {
      * @example
      *          crypto_advisor* advisor = crypto_advisor::get_instance ();
      *
-     *          auto lambda1 = [] (const hint_jose_encryption_t* item) -> void { printf ("    %s\n", item->alg_name); };
-     *          auto lambda2 = [] (const hint_signature_t* item) -> void { printf ("    %s\n", item->jws_name); };
+     *          auto lambda_jwa = [] (const hint_jose_encryption_t* item) -> void { printf ("    %s\n", item->alg_name); };
+     *          auto lambda_jwe = [] (const hint_jose_encryption_t* item) -> void { printf ("    %s\n", item->alg_name); };
+     *          auto lambda_jws = [] (const hint_signature_t* item) -> void { printf ("    %s\n", item->jws_name); };
      *
-     *          advisor->for_each_jwa (lambda1);
-     *          advisor->for_each_jwe (lambda1);
-     *
-     *          advisor->for_each_jws (lambda2);
+     *          advisor->for_each_jwa (lambda_jwa);
+     *          advisor->for_each_jwe (lambda_jwe);
+     *          advisor->for_each_jws (lambda_jws);
      */
     return_t for_each_jwa(std::function<void(const hint_jose_encryption_t*)> f);
     return_t for_each_jwe(std::function<void(const hint_jose_encryption_t*)> f);
@@ -356,9 +356,9 @@ class crypto_advisor {
     /**
      * @brief hint
      * @param jwa_t alg [in]
-     *          jwa_t::jwa_rsa_1_5, jwa_t::jwa_rsa_oaep, jwa_t::jwa_rsa_oaep_256,jwa_t::jwa_a128kw series,
-     *          jwa_t::jwa_ecdh_es, jwa_t::jwa_ecdh_es_a128kw series,
-     *          jwa_t::jwa_a128gcmkw series, jwa_t::jwa_pbes2_hs256_a128kw series
+     *          jwa_t::rsa_1_5, jwa_t::rsa_oaep, jwa_t::rsa_oaep_256,jwa_t::a128kw series,
+     *          jwa_t::ecdh_es, jwa_t::ecdh_es_a128kw series,
+     *          jwa_t::a128gcmkw series, jwa_t::pbes2_hs256_a128kw series
      * @return const hint_jose_encryption_t*
      * @example
      *          const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm (alg);
@@ -367,7 +367,7 @@ class crypto_advisor {
     /**
      * @brief hint
      * @param jwe_t enc [in]
-     *          jwe_t::jwe_a128cbc_hs256 series, jwe_t::jwe_a128gcm series
+     *          jwe_t::a128cbc_hs256 series, jwe_t::a128gcm series
      * @return const hint_jose_encryption_t*
      * @example
      *          const hint_jose_encryption_t* enc_info = advisor->hintof_jose_encryption (enc);
@@ -376,7 +376,7 @@ class crypto_advisor {
     /**
      * @brief hint
      * @param jws_t sig [in]
-     *          jws_t::jws_hs256 series, jws_t::jws_rs256 series, jws_t::jws_es256 series, jws_t::jws_ps256 series, jws_t::jws_eddsa
+     *          jws_t::hs256 series, jws_t::rs256 series, jws_t::es256 series, jws_t::ps256 series, jws_t::eddsa
      * @return const hint_signature_t*
      */
     const hint_signature_t* hintof_jose_signature(jws_t sig);
@@ -465,23 +465,23 @@ class crypto_advisor {
      * @param jwa_t& type [out]
      * @remarks
      *          --------------------+-----------------------------
-     *          "RSA1_5"            | jwa_t::jwa_rsa_1_5
-     *          "RSA-OAEP"          | jwa_t::jwa_rsa_oaep
-     *          "RSA-OAEP-256"      | jwa_t::jwa_rsa_oaep_256
-     *          "A128KW"            | jwa_t::jwa_a128kw
-     *          "A192KW"            | jwa_t::jwa_a192kw
-     *          "A256KW"            | jwa_t::jwa_a256kw
-     *          "dir"               | jwa_t::jwa_dir
-     *          "ECDH-ES"           | jwa_t::jwa_ecdh_es
-     *          "ECDH-ES+A128KW"    | jwa_t::jwa_ecdh_es_a128kw
-     *          "ECDH-ES+A192KW"    | jwa_t::jwa_ecdh_es_a192kw
-     *          "ECDH-ES+A256KW"    | jwa_t::jwa_ecdh_es_a256kw
-     *          "A128GCMKW"         | jwa_t::jwa_a128gcmkw
-     *          "A192GCMKW"         | jwa_t::jwa_a192gcmkw
-     *          "A256GCMKW"         | jwa_t::jwa_a256gcmkw
-     *          "PBES2-HS256+A128KW"| jwa_t::jwa_pbes2_hs256_a128kw
-     *          "PBES2-HS384+A192KW"| jwa_t::jwa_pbes2_hs384_a192kw
-     *          "PBES2-HS512+A256KW"| jwa_t::jwa_pbes2_hs512_a256kw
+     *          "RSA1_5"            | jwa_t::rsa_1_5
+     *          "RSA-OAEP"          | jwa_t::rsa_oaep
+     *          "RSA-OAEP-256"      | jwa_t::rsa_oaep_256
+     *          "A128KW"            | jwa_t::a128kw
+     *          "A192KW"            | jwa_t::a192kw
+     *          "A256KW"            | jwa_t::a256kw
+     *          "dir"               | jwa_t::dir
+     *          "ECDH-ES"           | jwa_t::ecdh_es
+     *          "ECDH-ES+A128KW"    | jwa_t::ecdh_es_a128kw
+     *          "ECDH-ES+A192KW"    | jwa_t::ecdh_es_a192kw
+     *          "ECDH-ES+A256KW"    | jwa_t::ecdh_es_a256kw
+     *          "A128GCMKW"         | jwa_t::a128gcmkw
+     *          "A192GCMKW"         | jwa_t::a192gcmkw
+     *          "A256GCMKW"         | jwa_t::a256gcmkw
+     *          "PBES2-HS256+A128KW"| jwa_t::pbes2_hs256_a128kw
+     *          "PBES2-HS384+A192KW"| jwa_t::pbes2_hs384_a192kw
+     *          "PBES2-HS512+A256KW"| jwa_t::pbes2_hs512_a256kw
      *          --------------------+-----------------------------
      */
     return_t typeof_jose_algorithm(const char* alg, jwa_t& type);
@@ -491,12 +491,12 @@ class crypto_advisor {
      * @param jwe_t& type [out]
      * @remarks
      *          --------------------+------------------------
-     *          "A128CBC-HS256"     | jwe_t::jwe_a128cbc_hs256
-     *          "A192CBC-HS384"     | jwe_t::jwe_a192cbc_hs384
-     *          "A256CBC-HS512"     | jwe_t::jwe_a256cbc_hs512
-     *          "A128GCM"           | jwe_t::jwe_a128gcm
-     *          "A192GCM"           | jwe_t::jwe_a192gcm
-     *          "A256GCM"           | jwe_t::jwe_a256gcm
+     *          "A128CBC-HS256"     | jwe_t::a128cbc_hs256
+     *          "A192CBC-HS384"     | jwe_t::a192cbc_hs384
+     *          "A256CBC-HS512"     | jwe_t::a256cbc_hs512
+     *          "A128GCM"           | jwe_t::a128gcm
+     *          "A192GCM"           | jwe_t::a192gcm
+     *          "A256GCM"           | jwe_t::a256gcm
      *          --------------------+------------------------
      */
     return_t typeof_jose_encryption(const char* enc, jwe_t& type);
@@ -506,19 +506,19 @@ class crypto_advisor {
      * @param jws_t& type [out]
      * @remarks
      *          --------------------+-----------
-     *          "HS256"             | jws_t::jws_hs256
-     *          "HS384"             | jws_t::jws_hs384
-     *          "HS512"             | jws_t::jws_hs512
-     *          "RS256"             | jws_t::jws_rs256
-     *          "RS384"             | jws_t::jws_rs384
-     *          "RS512"             | jws_t::jws_rs512
-     *          "ES256"             | jws_t::jws_es256
-     *          "ES384"             | jws_t::jws_es384
-     *          "ES512"             | jws_t::jws_es512
-     *          "PS256"             | jws_t::jws_ps256
-     *          "PS384"             | jws_t::jws_ps384
-     *          "PS512"             | jws_t::jws_ps512
-     *          "EdDSA"             | jws_t::jws_eddsa
+     *          "HS256"             | jws_t::hs256
+     *          "HS384"             | jws_t::hs384
+     *          "HS512"             | jws_t::hs512
+     *          "RS256"             | jws_t::rs256
+     *          "RS384"             | jws_t::rs384
+     *          "RS512"             | jws_t::rs512
+     *          "ES256"             | jws_t::es256
+     *          "ES384"             | jws_t::es384
+     *          "ES512"             | jws_t::es512
+     *          "PS256"             | jws_t::ps256
+     *          "PS384"             | jws_t::ps384
+     *          "PS512"             | jws_t::ps512
+     *          "EdDSA"             | jws_t::eddsa
      *          --------------------+-----------
      */
     return_t typeof_jose_signature(const char* sig, jws_t& type);
@@ -792,7 +792,7 @@ class crypto_advisor {
     ///////////////////////////////////////////////////////////////////////////
     // crypt
     ///////////////////////////////////////////////////////////////////////////
-    typedef std::map<uint32, const hint_blockcipher_t*> blockcipher_map_t; /* pair (alg, hint_blockcipher_t*) */
+    typedef std::map<crypt_algorithm_t, const hint_blockcipher_t*> blockcipher_map_t; /* pair (alg, hint_blockcipher_t*) */
     struct cipher_fetch_block_t {
         EVP_CIPHER* cipher;
         const hint_cipher_t* hint;
@@ -800,7 +800,7 @@ class crypto_advisor {
         cipher_fetch_block_t() : cipher(nullptr), hint(nullptr) {}
         cipher_fetch_block_t(EVP_CIPHER* c, const hint_cipher_t* h) : cipher(c), hint(h) {}
     };
-    typedef std::map<uint32, cipher_fetch_block_t> cipher_fetch_map_t; /* pair (alg+mode, cipher_fetch_block_t) */
+    typedef std::map<crypto_scheme_t, cipher_fetch_block_t> cipher_fetch_map_t; /* pair (alg+mode, cipher_fetch_block_t) */
     typedef std::map<const EVP_CIPHER*, const hint_cipher_t*> evp_cipher_map_t;
     typedef std::map<std::string, const hint_cipher_t*> cipher_byname_map_t; /* "aes-256-cbc" to hint_cipher_t* */
     typedef std::map<crypto_scheme_t, const hint_cipher_t*> cipher_scheme_map_t;

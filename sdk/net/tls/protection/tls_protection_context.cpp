@@ -211,14 +211,14 @@ return_t protection_context::select_from(const protection_context& other, tls_se
                             continue;
                         }
                         switch (hint->auth) {
-                            case auth_rsa: {
+                            case auth_t::rsa: {
                                 // allow TLS_ECDHE_RSA if RSA certificate exist
                                 auto iter = certkty_set.find(kty_rsa);
                                 if (certkty_set.end() == iter) {
                                     continue;
                                 }
                             } break;
-                            case auth_ecdsa: {
+                            case auth_t::ecdsa: {
                                 // allow TLS_ECDHE_ECDSA if EC certificate exist
                                 auto iter = certkty_set.find(kty_ec);
                                 if (certkty_set.end() == iter) {
@@ -267,7 +267,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
 
             bool test = false;
             test = lambda_select_cs(tls_13);
-            if ((session_type_tls == session_type) || (session_type_dtls == session_type)) {  // not QUIC, QUIC2
+            if ((session_type_t::tls == session_type) || (session_type_t::dtls == session_type)) {  // not QUIC, QUIC2
                 if (false == test) {
                     test = lambda_select_cs(tls_12);
                 }

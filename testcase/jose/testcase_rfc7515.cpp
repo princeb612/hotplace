@@ -176,19 +176,19 @@ void test_rfc7515_HS() {
     jose_context_t* jose_context = nullptr;
     jose.open(&jose_context, &key);
 
-    ret = jose.sign(jose_context, jws_t::jws_hs256, claim, signature);
+    ret = jose.sign(jose_context, jws_t::hs256, claim, signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 JWS Using HMAC SHA-256 (JWS compact) - Sign");
     ret = jose.verify(jose_context, signature, result);
     dump("JWS Compact", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 JWS Using HMAC SHA-256 (JWS compact) - Verify");
 
-    ret = jose.sign(jose_context, jws_t::jws_hs256, claim, signature, jose_serialization_t::jose_flatjson);
+    ret = jose.sign(jose_context, jws_t::hs256, claim, signature, jose_serialization_t::jose_flatjson);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 JWS Using HMAC SHA-256 (JWS flat) - Sign");
     ret = jose.verify(jose_context, signature, result);
     dump("JWS JSON flattened", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 JWS Using HMAC SHA-256 (JWS flat) - Verify");
 
-    ret = jose.sign(jose_context, jws_t::jws_hs256, claim, signature, jose_serialization_t::jose_json);
+    ret = jose.sign(jose_context, jws_t::hs256, claim, signature, jose_serialization_t::jose_json);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 JWS Using HMAC SHA-256 (JWS json) - Sign");
     ret = jose.verify(jose_context, signature, result);
     dump("JWS JSON serialization", signature);
@@ -287,7 +287,7 @@ void test_rfc7515_A3() {
        pmWQxfKTUJqPP3-Kg6NU1Q
      */
 
-    ret = jws.sign(&key, jws_t::jws_es256, claim, signature);
+    ret = jws.sign(&key, jws_t::es256, claim, signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (JWS compact) - Sign");
     ret = jws.verify(&key, signature, result);
     dump("JWS Compact", signature);
@@ -295,13 +295,13 @@ void test_rfc7515_A3() {
     // so test in https://jwt.io
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (JWS compact) - Verify");
 
-    ret = jws.sign(&key, jws_t::jws_es256, claim, signature, jose_serialization_t::jose_flatjson);
+    ret = jws.sign(&key, jws_t::es256, claim, signature, jose_serialization_t::jose_flatjson);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (JWS JSON flattended) - Sign");
     ret = jws.verify(&key, signature, result);
     dump("JWS JSON flattened", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (JWS JSON flattended) - Verify");
 
-    ret = jws.sign(&key, jws_t::jws_es256, claim, signature, jose_serialization_t::jose_json);
+    ret = jws.sign(&key, jws_t::es256, claim, signature, jose_serialization_t::jose_json);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.3. Example JWS Using ECDSA P-256 SHA-256 (JWS JSON serialization) - Sign");
     ret = jws.verify(&key, signature, result);
     dump("JWS JSON serialization", signature);
@@ -344,7 +344,7 @@ void test_rfc7515_A4() {
 
     // claimconst char payload[] = { 80, 97, 121, 108, 111, 97, 100, 0 };
 
-    ret = jws.sign(&key, jws_t::jws_es512, claim, signature);
+    ret = jws.sign(&key, jws_t::es512, claim, signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (JWS compact) - Sign");
     ret = jws.verify(&key, signature, result);
     dump("JWS Compact", signature);
@@ -352,13 +352,13 @@ void test_rfc7515_A4() {
     // so test in https://jwt.io
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (JWS compact) - Verify");
 
-    ret = jws.sign(&key, jws_t::jws_es512, claim, signature, jose_serialization_t::jose_flatjson);
+    ret = jws.sign(&key, jws_t::es512, claim, signature, jose_serialization_t::jose_flatjson);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (JWS JSON flattened) - Sign");
     ret = jws.verify(&key, signature, result);
     dump("JWS JSON flattened", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (JWS JSON flattened) - Verify");
 
-    ret = jws.sign(&key, jws_t::jws_es512, claim, signature, jose_serialization_t::jose_json);
+    ret = jws.sign(&key, jws_t::es512, claim, signature, jose_serialization_t::jose_json);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.4. Example JWS Using ECDSA P-521 SHA-512 (JWS JSON serialization) - Sign");
     ret = jws.verify(&key, signature, result);
     dump("JWS JSON serialization", signature);
@@ -425,8 +425,8 @@ void test_rfc7515_A6() {
     bool result = false;
 
     std::list<jws_t> headers;
-    headers.push_back(jws_t::jws_rs256);
-    headers.push_back(jws_t::jws_es256);
+    headers.push_back(jws_t::rs256);
+    headers.push_back(jws_t::es256);
     jws.sign(&key, headers, claim, signature, jose_serialization_t::jose_json);
     ret = jws.verify(&key, signature, result);
     dump("JWS JSON serialization", signature);
@@ -448,7 +448,7 @@ void test_rfc7515_A7() {
     std::string signature;
     bool result = false;
 
-    jws.sign(&key, jws_t::jws_rs256, claim, signature, jose_serialization_t::jose_flatjson);
+    jws.sign(&key, jws_t::rs256, claim, signature, jose_serialization_t::jose_flatjson);
     ret = jws.verify(&key, signature, result);
     dump("JWS JSON flattened", signature);
     _test_case.test(ret, __FUNCTION__, "RFC 7515 A.7. Example JWS Using Flattened JWS JSON Serialization");
@@ -685,22 +685,22 @@ void key_match_test() {
         jwk.load_file(&key, key_ownspec, "keys.jwk");
         key.for_each(dump_crypto_key, nullptr);
 
-        jwa_t algs[] = {jwa_t::jwa_rsa_1_5,
-                        jwa_t::jwa_rsa_oaep,
-                        jwa_t::jwa_rsa_oaep_256,
-                        jwa_t::jwa_a128kw,
-                        jwa_t::jwa_a192kw,
-                        jwa_t::jwa_a256kw,
-                        jwa_t::jwa_ecdh_es,
-                        jwa_t::jwa_ecdh_es_a128kw,
-                        jwa_t::jwa_ecdh_es_a192kw,
-                        jwa_t::jwa_ecdh_es_a256kw,
-                        jwa_t::jwa_a128gcmkw,
-                        jwa_t::jwa_a192gcmkw,
-                        jwa_t::jwa_a256gcmkw,
-                        jwa_t::jwa_pbes2_hs256_a128kw,
-                        jwa_t::jwa_pbes2_hs384_a192kw,
-                        jwa_t::jwa_pbes2_hs512_a256kw};
+        jwa_t algs[] = {jwa_t::rsa_1_5,
+                        jwa_t::rsa_oaep,
+                        jwa_t::rsa_oaep_256,
+                        jwa_t::a128kw,
+                        jwa_t::a192kw,
+                        jwa_t::a256kw,
+                        jwa_t::ecdh_es,
+                        jwa_t::ecdh_es_a128kw,
+                        jwa_t::ecdh_es_a192kw,
+                        jwa_t::ecdh_es_a256kw,
+                        jwa_t::a128gcmkw,
+                        jwa_t::a192gcmkw,
+                        jwa_t::a256gcmkw,
+                        jwa_t::pbes2_hs256_a128kw,
+                        jwa_t::pbes2_hs384_a192kw,
+                        jwa_t::pbes2_hs512_a256kw};
         for (unsigned int i = 0; i < RTL_NUMBER_OF(algs); i++) {
             do_key_match(&key, algs[i], crypto_use_t::use_enc);
         }
@@ -713,8 +713,8 @@ void key_match_test() {
         key.for_each(dump_crypto_key, nullptr);
 
         jws_t algs[] = {
-            jws_t::jws_hs256, jws_t::jws_hs384, jws_t::jws_hs512, jws_t::jws_rs256, jws_t::jws_rs384, jws_t::jws_rs512,
-            jws_t::jws_es256, jws_t::jws_es384, jws_t::jws_es512, jws_t::jws_ps256, jws_t::jws_ps384, jws_t::jws_ps512,
+            jws_t::hs256, jws_t::hs384, jws_t::hs512, jws_t::rs256, jws_t::rs384, jws_t::rs512,
+            jws_t::es256, jws_t::es384, jws_t::es512, jws_t::ps256, jws_t::ps384, jws_t::ps512,
         };
         for (unsigned int i = 0; i < RTL_NUMBER_OF(algs); i++) {
             do_key_match(&key, algs[i], crypto_use_t::use_sig);

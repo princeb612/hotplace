@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace io {
 
-cbor_bstrings::cbor_bstrings() : cbor_object(cbor_type_t::cbor_type_bstrs, cbor_flag_t::cbor_indef) {}
+cbor_bstrings::cbor_bstrings() : cbor_object(cbor_type_t::bstrs, cbor_flag_t::cbor_indef) {}
 
 cbor_bstrings::~cbor_bstrings() {}
 
@@ -31,7 +31,7 @@ return_t cbor_bstrings::join(cbor_object* object, cbor_object* extra) {
             __leave2;
         }
 
-        if (cbor_type_t::cbor_type_data == object->type()) {
+        if (cbor_type_t::data == object->type()) {
             cbor_data* inst = (cbor_data*)object;
             if (vartype_t::TYPE_BINARY == inst->data().type()) {
                 _array.push_back(inst);
@@ -103,14 +103,14 @@ void cbor_bstrings::represent(binary_t* b) {
     cbor_encode enc;
 
     if (b) {
-        enc.encode(*b, cbor_major_t::cbor_major_bstr, cbor_control_t::cbor_control_begin, this);
+        enc.encode(*b, cbor_major_t::bstr, cbor_control_t::cbor_control_begin, this);
 
         // for each member
         for (auto item : _array) {
             item->represent(b);
         }
 
-        enc.encode(*b, cbor_major_t::cbor_major_bstr, cbor_control_t::cbor_control_end, this);
+        enc.encode(*b, cbor_major_t::bstr, cbor_control_t::cbor_control_end, this);
     }
 }
 

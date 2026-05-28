@@ -87,9 +87,11 @@ static bool find_discriminant(crypto_key_object item, const char* kid, const cha
         if (alg) {
             const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm(alg);
             if (alg_info) {
-                ret = find_discriminant<jwa_t>(item, kid, (jwa_t)alg_info->type, kt, alt, use, flags);
-                if (ret) {
-                    __leave2;
+                if (alg_info->htype == jose_hint_type_t::jwa) {
+                    ret = find_discriminant<jwa_t>(item, kid, alg_info->u.alg.type, kt, alt, use, flags);
+                    if (ret) {
+                        __leave2;
+                    }
                 }
             }
             const hint_signature_t* sig_info = advisor->hintof_jose_signature(alg);

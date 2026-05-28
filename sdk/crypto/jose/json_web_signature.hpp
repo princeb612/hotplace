@@ -80,7 +80,7 @@ class json_web_signature {
      *          crypto_key key;
      *          json_web_key jwk;
      *          jwk.load_file (&key, "rfc7515.jwk", 0);
-     *          jws.sign (&key, jws_t::jws_es256, claim, signature);
+     *          jws.sign (&key, jws_t::es256, claim, signature);
      *          //  eyJhbGciOiJFUzI1NiJ9
      *          //  .
      *          //  eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ
@@ -117,7 +117,7 @@ class json_web_signature {
      * @return error code (see error.hpp)
      * @remarks see json_object_signing_encryption::sign
      * @example
-     *          jws.sign (&crypto_key, jws_t::jws_hs256, claim, signature);
+     *          jws.sign (&crypto_key, jws_t::hs256, claim, signature);
      */
     return_t sign(crypto_key* crypto_key, jws_t alg, const std::string& claims, std::string& signature, jose_serialization_t mode = jose_serialization_t::jose_compact);
     /**
@@ -130,10 +130,10 @@ class json_web_signature {
      * @return error code (see error.hpp)
      * @remarks see json_object_signing_encryption::sign
      * @example
-     *          algs.push_back (jws_t::jws_hs256);
-     *          algs.push_back (jws_t::jws_rs256);
-     *          algs.push_back (jws_t::jws_es256);
-     *          algs.push_back (jws_t::jws_ps256);
+     *          algs.push_back (jws_t::hs256);
+     *          algs.push_back (jws_t::rs256);
+     *          algs.push_back (jws_t::es256);
+     *          algs.push_back (jws_t::ps256);
      *          jws.sign (&crypto_key, algs, claim, signature);
      */
     return_t sign(crypto_key* crypto_key, std::list<jws_t> const& algs, const std::string& claims, std::string& signature,

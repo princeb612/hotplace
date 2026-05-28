@@ -54,11 +54,11 @@ void test_crypto_encrypt() {
 
     constexpr char sample[] = "We don't playing because we grow old; we grow old because we stop playing.";
     size_t len = strlen(sample);
-    lambda_test(rsa_1_5, (byte_t*)sample, len);
-    lambda_test(rsa_oaep, (byte_t*)sample, len);
-    lambda_test(rsa_oaep256, (byte_t*)sample, len);
-    lambda_test(rsa_oaep384, (byte_t*)sample, len);
-    lambda_test(rsa_oaep512, (byte_t*)sample, len);
+    lambda_test(crypt_enc_t::rsa_1_5, (byte_t*)sample, len);
+    lambda_test(crypt_enc_t::rsa_oaep, (byte_t*)sample, len);
+    lambda_test(crypt_enc_t::rsa_oaep256, (byte_t*)sample, len);
+    lambda_test(crypt_enc_t::rsa_oaep384, (byte_t*)sample, len);
+    lambda_test(crypt_enc_t::rsa_oaep512, (byte_t*)sample, len);
 }
 
 void testcase_crypto_encrypt() { test_crypto_encrypt(); }

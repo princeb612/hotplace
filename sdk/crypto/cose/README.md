@@ -1,14 +1,14 @@
 #### message
 
 ````
-                      protected  unprotected      payload     singleitem/multiitems
-                      [0]        [1]              [2]         [3]             [4]
- cose_tag_encrypt     protected, unprotected_map, ciphertext, [+recipient]
- cose_tag_encrypt0    protected, unprotected_map, ciphertext
- cose_tag_mac         protected, unprotected_map, payload,    tag,            [+recipient]
- cose_tag_mac0        protected, unprotected_map, payload,    tag
- cose_tag_sign        protected, unprotected_map, payload,    [+signature]
- cose_tag_sign1       protected, unprotected_map, payload,    signature
+                       protected  unprotected      payload     singleitem/multiitems
+                       [0]        [1]              [2]         [3]             [4]
+ cbor_tag_t::encrypt   protected, unprotected_map, ciphertext, [+recipient]
+ cbor_tag_t::encrypt0  protected, unprotected_map, ciphertext
+ cbor_tag_t::mac       protected, unprotected_map, payload,    tag,            [+recipient]
+ cbor_tag_t::mac0      protected, unprotected_map, payload,    tag
+ cbor_tag_t::sign      protected, unprotected_map, payload,    [+signature]
+ cbor_tag_t::sign1     protected, unprotected_map, payload,    signature
 ````
 
 #### algorithm

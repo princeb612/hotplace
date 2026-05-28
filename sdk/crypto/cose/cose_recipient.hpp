@@ -73,10 +73,10 @@ class cose_recipient {
     cose_recipient& set_property(uint16 property);
     uint16 get_property();
 
-    bool exist(int key, int scope = cose_scope_layer);
-    return_t finditem(int key, int& value, int scope = cose_scope_layer);
-    return_t finditem(int key, std::string& value, int scope = cose_scope_layer);
-    return_t finditem(int key, binary_t& value, int scope = cose_scope_layer);
+    bool exist(int key, int scope = cose_scope_t::layer);
+    return_t finditem(int key, int& value, int scope = cose_scope_t::layer);
+    return_t finditem(int key, std::string& value, int scope = cose_scope_t::layer);
+    return_t finditem(int key, binary_t& value, int scope = cose_scope_t::layer);
 
     return_t setparam(cose_param_t id, const binary_t& bin);
     return_t getparam(cose_param_t id, binary_t& bin);

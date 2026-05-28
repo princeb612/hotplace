@@ -33,8 +33,8 @@ void test_aead_ccm() {
 
         crypt.open(&handle, typeof_alg(hint), typeof_mode(hint), key.data(), key.size(), iv.data(), iv.size());
 
-        crypt.set(handle, crypt_ctrl_nsize, hint->nsize);  // IV
-        crypt.set(handle, crypt_ctrl_tsize, hint->tsize);  // TAG
+        crypt.set(handle, crypt_ctrl_t::nsize, hint->nsize);  // IV
+        crypt.set(handle, crypt_ctrl_t::tsize, hint->tsize);  // TAG
 
         ret = crypt.encrypt(handle, stream, size, ciphertext, aad, tag);
 
@@ -57,22 +57,22 @@ void test_aead_ccm() {
     };
 
     // TAG 16
-    lambda("AES_128_GCM", crypto_scheme_aes_128_ccm, key, iv, (byte_t*)sample, size, aad);
-    lambda("AES_192_GCM", crypto_scheme_aes_192_ccm, key, iv, (byte_t*)sample, size, aad);
-    lambda("AES_256_GCM", crypto_scheme_aes_256_ccm, key, iv, (byte_t*)sample, size, aad);
+    lambda("AES_128_GCM", crypto_scheme_t::aes_128_ccm, key, iv, (byte_t*)sample, size, aad);
+    lambda("AES_192_GCM", crypto_scheme_t::aes_192_ccm, key, iv, (byte_t*)sample, size, aad);
+    lambda("AES_256_GCM", crypto_scheme_t::aes_256_ccm, key, iv, (byte_t*)sample, size, aad);
 
     // TAG 14
-    lambda("AES_128_CCM", crypto_scheme_aes_128_ccm, key, iv, (byte_t*)sample, size, aad);
-    lambda("AES_192_CCM", crypto_scheme_aes_192_ccm, key, iv, (byte_t*)sample, size, aad);
-    lambda("AES_256_CCM", crypto_scheme_aes_256_ccm, key, iv, (byte_t*)sample, size, aad);
+    lambda("AES_128_CCM", crypto_scheme_t::aes_128_ccm, key, iv, (byte_t*)sample, size, aad);
+    lambda("AES_192_CCM", crypto_scheme_t::aes_192_ccm, key, iv, (byte_t*)sample, size, aad);
+    lambda("AES_256_CCM", crypto_scheme_t::aes_256_ccm, key, iv, (byte_t*)sample, size, aad);
 
     // SET_L=3, SET_IVLEN=15-L=12, AEAD_SET_TAG=16
-    lambda("AEAD_AES_128_CCM", crypto_scheme_tls_aes_128_ccm, key, iv, (byte_t*)sample, size, aad);
-    lambda("AEAD_AES_256_CCM", crypto_scheme_tls_aes_256_ccm, key, iv, (byte_t*)sample, size, aad);
+    lambda("AEAD_AES_128_CCM", crypto_scheme_t::tls_aes_128_ccm, key, iv, (byte_t*)sample, size, aad);
+    lambda("AEAD_AES_256_CCM", crypto_scheme_t::tls_aes_256_ccm, key, iv, (byte_t*)sample, size, aad);
 
     // SET_L=3, SET_IVLEN=15-L=12, AEAD_SET_TAG=8
-    lambda("AEAD_AES_128_CCM", crypto_scheme_tls_aes_128_ccm_8, key, iv, (byte_t*)sample, size, aad);
-    lambda("AEAD_AES_192_CCM", crypto_scheme_tls_aes_256_ccm_8, key, iv, (byte_t*)sample, size, aad);
+    lambda("AEAD_AES_128_CCM", crypto_scheme_t::tls_aes_128_ccm_8, key, iv, (byte_t*)sample, size, aad);
+    lambda("AEAD_AES_192_CCM", crypto_scheme_t::tls_aes_256_ccm_8, key, iv, (byte_t*)sample, size, aad);
 }
 
 void testcase_aead_ccm() { test_aead_ccm(); }

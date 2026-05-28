@@ -29,7 +29,7 @@ trial_tls_server_socket::~trial_tls_server_socket() {}
 return_t trial_tls_server_socket::tls_accept(socket_context_t** handle, socket_t cli_socket) {
     return_t ret = errorcode_t::success;
     __try2 {
-        auto session = new tls_session(session_type_tls);
+        auto session = new tls_session(session_type_t::tls);
         auto context = new socket_context_t(cli_socket);
 
         context->handle.session = session;

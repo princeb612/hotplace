@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace crypto {
 
-cipher_encrypt_builder::cipher_encrypt_builder() : _alg(crypt_alg_unknown), _mode(mode_unknown) {}
+cipher_encrypt_builder::cipher_encrypt_builder() : _alg(crypt_algorithm_t{}), _mode(crypt_mode_t::unknown) {}
 
 cipher_encrypt* cipher_encrypt_builder::build() { return new cipher_encrypt(_alg, _mode); }
 

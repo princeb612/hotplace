@@ -12,6 +12,7 @@
  */
 
 #include <hotplace/sdk/base/basic/base16.hpp>
+#include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/cbor/cbor_array.hpp>
@@ -37,7 +38,7 @@ typedef struct _cbor_reader_context_temp_t {
     cbor_item_dequeue_t parents;
     cbor_item_dequeue_t items;
 
-    _cbor_reader_context_temp_t() : indef(0), tag_value(cbor_tag_t::cbor_tag_unknown), tag_flag(false) {}
+    _cbor_reader_context_temp_t() : indef(0), tag_value(cbor_tag_t::unknown), tag_flag(false) {}
 } cbor_reader_context_temp_t;
 
 typedef struct _cbor_reader_context_t {
@@ -142,14 +143,14 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const byte_t* data, s
             uint64 value = lead_value;
             flags = 0;
 
-            // cbor_simple_t::cbor_simple_break
+            // cbor_simple_t::simple_break
             if ((0xff == cur) && handle->temp.indef) {
                 handle->temp.indef--;
                 handle->temp.parents.pop_back();
                 continue;
             }
 
-            // including cbor_major_t::cbor_major_tag
+            // including cbor_major_t::tag
             if (lead_value >= 24) {
                 if (24 == lead_value) {
                     value = *(byte_t*)(data + i + 1);
@@ -172,58 +173,60 @@ return_t cbor_reader::parse(cbor_reader_context_t* handle, const byte_t* data, s
                 }
             }
 
-            if (cbor_major_t::cbor_major_uint == lead_type) {
-                push(handle, lead_type, value, 0);
-            } else if (cbor_major_t::cbor_major_nint == lead_type) {
-                push(handle, lead_type, value, 0);
-            } else if (cbor_major_t::cbor_major_bstr == lead_type) {
+            t_enum_type<cbor_major_t> etlead_type(lead_type);
+
+            if (cbor_major_t::uint == etlead_type) {
+                push(handle, etlead_type, value, 0);
+            } else if (cbor_major_t::nint == etlead_type) {
+                push(handle, etlead_type, value, 0);
+            } else if (cbor_major_t::bstr == etlead_type) {
                 if (0 == (cbor_flag_t::cbor_indef & flags)) {
                     if (i + 1 + value > size) {
                         ret = errorcode_t::bad_format;
                         break;
                     }
                 }
-                push(handle, lead_type, (byte_t*)data + i + 1, value, flags);
+                push(handle, etlead_type, (byte_t*)data + i + 1, value, flags);
                 if (0 == (cbor_flag_t::cbor_indef & flags)) {
                     i += value;
                 }
-            } else if (cbor_major_t::cbor_major_tstr == lead_type) {
+            } else if (cbor_major_t::tstr == etlead_type) {
                 if (0 == (cbor_flag_t::cbor_indef & flags)) {
                     if (i + 1 + value > size) {
                         ret = errorcode_t::bad_format;
                         break;
                     }
                 }
-                push(handle, lead_type, (char*)data + i + 1, value, flags);
+                push(handle, etlead_type, (char*)data + i + 1, value, flags);
                 if (0 == (cbor_flag_t::cbor_indef & flags)) {
                     i += value;
                 }
-            } else if (cbor_major_t::cbor_major_array == lead_type) {
-                push(handle, lead_type, value, flags);
-            } else if (cbor_major_t::cbor_major_map == lead_type) {
-                push(handle, lead_type, value, flags);
-            } else if (cbor_major_t::cbor_major_tag == lead_type) {
+            } else if (cbor_major_t::array == etlead_type) {
+                push(handle, etlead_type, value, flags);
+            } else if (cbor_major_t::map == etlead_type) {
+                push(handle, etlead_type, value, flags);
+            } else if (cbor_major_t::tag == etlead_type) {
                 handle->temp.tag_value = (cbor_tag_t)value;
                 continue;
-            } else if (cbor_major_t::cbor_major_simple == lead_type) {
+            } else if (cbor_major_t::simple == etlead_type) {
                 cbor_simple_t simple_type = cbor_simple::is_kind_of(cur);
                 switch (simple_type) {
-                    case cbor_simple_t::cbor_simple_half_fp:
-                        push(handle, lead_type, float_from_fp16(t_narrow_cast(value)), 0);
+                    case cbor_simple_t::half_fp:
+                        push(handle, etlead_type, float_from_fp16(t_narrow_cast(value)), 0);
                         break;
-                    case cbor_simple_t::cbor_simple_single_fp:
-                        push(handle, lead_type, fp32_from_binary32(t_narrow_cast(value)), 0);
+                    case cbor_simple_t::single_fp:
+                        push(handle, etlead_type, fp32_from_binary32(t_narrow_cast(value)), 0);
                         break;
-                    case cbor_simple_t::cbor_simple_double_fp:
-                        push(handle, lead_type, fp64_from_binary64(value), 0);
+                    case cbor_simple_t::double_fp:
+                        push(handle, etlead_type, fp64_from_binary64(value), 0);
                         break;
                     default:
-                        push(handle, lead_type, value, 0);
+                        push(handle, etlead_type, value, 0);
                         break;
                 }
             }
 
-            handle->temp.tag_value = cbor_tag_t::cbor_tag_unknown;
+            handle->temp.tag_value = cbor_tag_t::unknown;
         }
     }
     __finally2 {}
@@ -261,30 +264,31 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, uint64 dat
             __leave2;
         }
 
-        if (cbor_major_t::cbor_major_uint == type) {
+        t_enum_type<cbor_major_t> ettype(type);
+        if (cbor_major_t::uint == ettype) {
             cbor_data* temp = new cbor_data(data, 0);
             temp->tag(handle->temp.tag_value);
             insert(handle, temp);
-        } else if (cbor_major_t::cbor_major_nint == type) {
+        } else if (cbor_major_t::nint == ettype) {
             cbor_data* temp = new cbor_data(data, cbor_data_flag_nint);
             temp->tag(handle->temp.tag_value);
             insert(handle, temp);
-        } else if (cbor_major_t::cbor_major_array == type) {
+        } else if (cbor_major_t::array == ettype) {
             cbor_array* temp = new cbor_array(flags);
             temp->tag(handle->temp.tag_value);
             if (0 == flags) {
                 temp->reserve(data);
             }
             insert(handle, temp);
-        } else if (cbor_major_t::cbor_major_map == type) {
+        } else if (cbor_major_t::map == ettype) {
             cbor_map* temp = new cbor_map(flags);
             temp->tag(handle->temp.tag_value);
             if (0 == flags) {
                 temp->reserve(data);
             }
             insert(handle, temp);
-        } else if (cbor_major_t::cbor_major_tag == type) {
-        } else if (cbor_major_t::cbor_major_simple == type) {
+        } else if (cbor_major_t::tag == ettype) {
+        } else if (cbor_major_t::simple == ettype) {
             uint8 t = t_narrow_cast(data);
             cbor_simple* temp = new cbor_simple(t);
             temp->tag(handle->temp.tag_value);
@@ -304,7 +308,8 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, const char
             __leave2;
         }
 
-        if (cbor_major_t::cbor_major_tstr == type) {
+        t_enum_type<cbor_major_t> ettype(type);
+        if (cbor_major_t::tstr == ettype) {
             if (cbor_flag_t::cbor_indef & flags) {
                 cbor_tstrings* temp = new cbor_tstrings();
                 insert(handle, temp);
@@ -328,7 +333,8 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, const byte
             __leave2;
         }
 
-        if (cbor_major_t::cbor_major_bstr == type) {
+        t_enum_type<cbor_major_t> ettype(type);
+        if (cbor_major_t::bstr == ettype) {
             if (cbor_flag_t::cbor_indef & flags) {
                 cbor_bstrings* temp = new cbor_bstrings();
                 insert(handle, temp);
@@ -338,9 +344,9 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, const byte
                 // Decoders that understand these tags MUST be able to decode bignums that do have leading zeroes.
 
                 cbor_data* temp = nullptr;
-                if (cbor_tag_positive_bignum == handle->temp.tag_value) {
+                if (cbor_tag_t::positive_bignum == handle->temp.tag_value) {
                     temp = new cbor_data(bignumber(data, size), 0);
-                } else if (cbor_tag_negative_bignum == handle->temp.tag_value) {
+                } else if (cbor_tag_t::negative_bignum == handle->temp.tag_value) {
                     temp = new cbor_data(bignumber(data, size), cbor_data_flag_nint);
                 } else {
                     temp = new cbor_data(data, size);
@@ -363,7 +369,7 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, float data
             __leave2;
         }
 
-        if (cbor_major_t::cbor_major_float == type) {
+        if (t_underlying(cbor_major_t::fp) == type) {
             cbor_data* temp = new cbor_data(data);
             temp->tag(handle->temp.tag_value);
             insert(handle, temp);
@@ -382,7 +388,7 @@ return_t cbor_reader::push(cbor_reader_context_t* handle, uint8 type, double dat
             __leave2;
         }
 
-        if (cbor_major_t::cbor_major_float == type) {
+        if (t_underlying(cbor_major_t::fp) == type) {
             cbor_data* temp = new cbor_data(data);
             temp->tag(handle->temp.tag_value);
             insert(handle, temp);
@@ -409,7 +415,7 @@ return_t cbor_reader::insert(cbor_reader_context_t* handle, cbor_object* object)
         cbor_type_t type = object->type();
 
         if (parent) {
-            if (cbor_type_t::cbor_type_map == parent->type()) {
+            if (cbor_type_t::map == parent->type()) {
                 handle->temp.items.push_back(object);
                 if (handle->temp.items.size() >= 2) {
                     cbor_object* lhs = handle->temp.items.at(0);
@@ -428,10 +434,10 @@ return_t cbor_reader::insert(cbor_reader_context_t* handle, cbor_object* object)
         }
 
         switch (type) {
-            case cbor_type_t::cbor_type_array:
-            case cbor_type_t::cbor_type_map:
-            case cbor_type_t::cbor_type_bstrs:
-            case cbor_type_t::cbor_type_tstrs:
+            case cbor_type_t::array:
+            case cbor_type_t::map:
+            case cbor_type_t::bstrs:
+            case cbor_type_t::tstrs:
                 if (object->capacity() || (cbor_flag_t::cbor_indef & object->get_flags())) {
                     handle->temp.parents.push_back(object);
                 }

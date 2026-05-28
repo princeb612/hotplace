@@ -23,7 +23,7 @@
 namespace hotplace {
 namespace crypto {
 
-cose_composer::cose_composer() : _cbor_tag(cbor_tag_t::cbor_tag_unknown) { get_layer().set_composer(this); }
+cose_composer::cose_composer() : _cbor_tag(cbor_tag_t::unknown) { get_layer().set_composer(this); }
 
 return_t cose_composer::compose(cbor_array** object, bool tagged) {
     return_t ret = errorcode_t::success;
@@ -37,21 +37,21 @@ return_t cose_composer::compose(cbor_array** object, bool tagged) {
     //   case cose_group_sign_eddsa:
     //   case cose_group_sign_rsassa_pss:
     //   case cose_group_sign_rsassa_pkcs15:
-    //      if(sizeof_recipients) tag = cose_tag_sign;
-    //      else tag = cose_tag_sign1;
+    //      if(sizeof_recipients) tag = cbor_tag_t::sign;
+    //      else tag = cbor_tag_t::sign1;
     //   case cose_group_enc_aesgcm:
     //   case cose_group_enc_aesccm:
     //   case cose_group_enc_chacha20_poly1305:
-    //      if(sizeof_recipients) tag = cose_tag_encrypt
-    //      else tag = cose_tag_encrypt0;
+    //      if(sizeof_recipients) tag = cbor_tag_t::encrypt
+    //      else tag = cbor_tag_t::encrypt0;
     //   case cose_group_mac_hmac:
     //   case cose_group_mac_aes:
-    //      if(sizeof_recipients) tag = cose_tag_mac
-    //      else tag = cose_tag_mac0;
+    //      if(sizeof_recipients) tag = cbor_tag_t::mac
+    //      else tag = cbor_tag_t::mac0;
 
     //   then call compose(tag, object);
 
-    cbor_tag_t cbor_tag = cbor_tag_t::cbor_tag_unknown;
+    cbor_tag_t cbor_tag = cbor_tag_t::unknown;
 
     __try2 {
         if (nullptr == object) {
@@ -62,18 +62,18 @@ return_t cose_composer::compose(cbor_array** object, bool tagged) {
         {
             crypto_advisor* advisor = crypto_advisor::get_instance();
             int alg = 0;
-            get_layer().finditem(cose_key_t::cose_alg, alg, cose_scope_protected | cose_scope_unprotected | cose_scope_children);
+            get_layer().finditem(cose_key_t::alg, alg, cose_scope_t::_protected | cose_scope_t::unprotected | cose_scope_t::children);
             crypt_category_t category = advisor->categoryof((cose_alg_t)alg);
             size_t size_recipients = get_recipients().size();
             switch (category) {
                 case crypt_category_t::crypt_category_crypt:
-                    cbor_tag = size_recipients ? cose_tag_encrypt : cose_tag_encrypt0;
+                    cbor_tag = size_recipients ? cbor_tag_t::encrypt : cbor_tag_t::encrypt0;
                     break;
                 case crypt_category_t::crypt_category_mac:
-                    cbor_tag = size_recipients ? cose_tag_mac : cose_tag_mac0;
+                    cbor_tag = size_recipients ? cbor_tag_t::mac : cbor_tag_t::mac0;
                     break;
                 case crypt_category_t::crypt_category_sign:
-                    cbor_tag = size_recipients ? cose_tag_sign : cose_tag_sign1;
+                    cbor_tag = size_recipients ? cbor_tag_t::sign : cbor_tag_t::sign1;
                     break;
                 default:
                     break;
@@ -88,10 +88,10 @@ return_t cose_composer::compose(cbor_array** object, bool tagged) {
             root->tag(cbor_tag);
         }
 
-        if ((cbor_tag_t::cose_tag_mac == cbor_tag) || (cbor_tag_t::cose_tag_mac0 == cbor_tag) || (cbor_tag_t::cose_tag_sign1 == cbor_tag)) {
+        if ((cbor_tag_t::mac == cbor_tag) || (cbor_tag_t::mac0 == cbor_tag) || (cbor_tag_t::sign1 == cbor_tag)) {
             *root << get_singleitem().cbor();
         }
-        if ((cbor_tag_t::cose_tag_encrypt == cbor_tag) || (cbor_tag_t::cose_tag_sign == cbor_tag) || (cbor_tag_t::cose_tag_mac == cbor_tag)) {
+        if ((cbor_tag_t::encrypt == cbor_tag) || (cbor_tag_t::sign == cbor_tag) || (cbor_tag_t::mac == cbor_tag)) {
             if (get_recipients().size()) {
                 *root << get_recipients().cbor();
             }
@@ -156,7 +156,7 @@ return_t cose_composer::parse(const binary_t& input) {
         }
 
         // check
-        cbor_array* cbor_message = cbor_typeof<cbor_array>(root, cbor_type_t::cbor_type_array);
+        cbor_array* cbor_message = cbor_typeof<cbor_array>(root, cbor_type_t::array);
         if (nullptr == cbor_message) {
             ret = errorcode_t::bad_format;
             __leave2;

@@ -275,7 +275,7 @@ return_t openssl_crypt::encrypt(const char* alg, const binary_t& key, const bina
         }
 
         if (options) {
-            for (encrypt_option_t* option = options; option->ctrl; option++) {
+            for (encrypt_option_t* option = options; option->ctrl != crypt_ctrl_t::unknown; option++) {
                 set(crypt_handle, option->ctrl, option->value);
             }
         }
@@ -303,7 +303,7 @@ return_t openssl_crypt::encrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, 
         }
 
         if (options) {
-            for (encrypt_option_t* option = options; option->ctrl; option++) {
+            for (encrypt_option_t* option = options; option->ctrl != crypt_ctrl_t::unknown; option++) {
                 set(crypt_handle, option->ctrl, option->value);
             }
         }
@@ -326,7 +326,7 @@ return_t openssl_crypt::encrypt(const char* alg, const binary_t& key, const bina
         }
 
         if (options) {
-            for (encrypt_option_t* option = options; option->ctrl; option++) {
+            for (encrypt_option_t* option = options; option->ctrl != crypt_ctrl_t::unknown; option++) {
                 set(crypt_handle, option->ctrl, option->value);
             }
         }
@@ -354,7 +354,7 @@ return_t openssl_crypt::encrypt(const char* alg, const binary_t& key, const bina
         }
 
         if (options) {
-            for (encrypt_option_t* option = options; option->ctrl; option++) {
+            for (encrypt_option_t* option = options; option->ctrl != crypt_ctrl_t::unknown; option++) {
                 set(crypt_handle, option->ctrl, option->value);
             }
         }
@@ -382,7 +382,7 @@ return_t openssl_crypt::encrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, 
         }
 
         if (options) {
-            for (encrypt_option_t* option = options; option->ctrl; option++) {
+            for (encrypt_option_t* option = options; option->ctrl != crypt_ctrl_t::unknown; option++) {
                 set(crypt_handle, option->ctrl, option->value);
             }
         }
@@ -404,7 +404,7 @@ return_t openssl_crypt::encrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, 
         }
 
         if (options) {
-            for (encrypt_option_t* option = options; option->ctrl; option++) {
+            for (encrypt_option_t* option = options; option->ctrl != crypt_ctrl_t::unknown; option++) {
                 set(crypt_handle, option->ctrl, option->value);
             }
         }
@@ -426,7 +426,7 @@ return_t openssl_crypt::decrypt(const char* alg, const binary_t& key, const bina
         }
 
         if (options) {
-            for (encrypt_option_t* option = options; option->ctrl; option++) {
+            for (encrypt_option_t* option = options; option->ctrl != crypt_ctrl_t::unknown; option++) {
                 set(crypt_handle, option->ctrl, option->value);
             }
         }
@@ -454,7 +454,7 @@ return_t openssl_crypt::decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, 
         }
 
         if (options) {
-            for (encrypt_option_t* option = options; option->ctrl; option++) {
+            for (encrypt_option_t* option = options; option->ctrl != crypt_ctrl_t::unknown; option++) {
                 set(crypt_handle, option->ctrl, option->value);
             }
         }
@@ -477,7 +477,7 @@ return_t openssl_crypt::decrypt(const char* alg, const binary_t& key, const bina
         }
 
         if (options) {
-            for (encrypt_option_t* option = options; option->ctrl; option++) {
+            for (encrypt_option_t* option = options; option->ctrl != crypt_ctrl_t::unknown; option++) {
                 set(crypt_handle, option->ctrl, option->value);
             }
         }
@@ -505,7 +505,7 @@ return_t openssl_crypt::decrypt(const char* alg, const binary_t& key, const bina
         }
 
         if (options) {
-            for (encrypt_option_t* option = options; option->ctrl; option++) {
+            for (encrypt_option_t* option = options; option->ctrl != crypt_ctrl_t::unknown; option++) {
                 set(crypt_handle, option->ctrl, option->value);
             }
         }
@@ -533,7 +533,7 @@ return_t openssl_crypt::decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, 
         }
 
         if (options) {
-            for (encrypt_option_t* option = options; option->ctrl; option++) {
+            for (encrypt_option_t* option = options; option->ctrl != crypt_ctrl_t::unknown; option++) {
                 set(crypt_handle, option->ctrl, option->value);
             }
         }
@@ -556,7 +556,7 @@ return_t openssl_crypt::decrypt(crypt_algorithm_t algorithm, crypt_mode_t mode, 
         }
 
         if (options) {
-            for (encrypt_option_t* option = options; option->ctrl; option++) {
+            for (encrypt_option_t* option = options; option->ctrl != crypt_ctrl_t::unknown; option++) {
                 set(crypt_handle, option->ctrl, option->value);
             }
         }

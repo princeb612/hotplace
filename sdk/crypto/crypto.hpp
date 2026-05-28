@@ -16,10 +16,11 @@
 namespace hotplace {
 namespace crypto {
 
-enum crypt_ctrl_t {
-    crypt_ctrl_padding = 1,  // EVP_CIPHER_CTX_set_padding
-    crypt_ctrl_nsize = 2,    // SET_IVLEN=15-L
-    crypt_ctrl_tsize = 3,    // AEAD_SET_TAG
+enum class crypt_ctrl_t {
+    unknown = 0,
+    padding = 1,  // EVP_CIPHER_CTX_set_padding
+    nsize = 2,    // SET_IVLEN=15-L
+    tsize = 3,    // AEAD_SET_TAG
 };
 
 class crypt_t {

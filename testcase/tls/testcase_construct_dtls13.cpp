@@ -286,8 +286,8 @@ void test_construct_dtls_routine(const TLS_OPTION& option, const char* group_par
     return_t ret = errorcode_t::success;
 
     __try2 {
-        tls_session client_session(session_type_dtls);
-        tls_session server_session(session_type_dtls);
+        tls_session client_session(session_type_t::dtls);
+        tls_session server_session(session_type_t::dtls);
 
         // C -> S CH
         binary_t bin_client_hello;

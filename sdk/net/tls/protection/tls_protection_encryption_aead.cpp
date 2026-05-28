@@ -222,7 +222,7 @@ return_t tls_protection::write_aad(tls_session* session, tls_direction_t dir, bi
                     // Mac-then-Encrypt
                     len = bodysize + tagsize + ivsize;
                 }
-            } else if (ccm == mode || gcm == mode) {
+            } else if (crypt_mode_t::ccm == mode || crypt_mode_t::gcm == mode) {
                 tls12_aead = true;
                 // sizeof_nonce_explicit = 8;
 
@@ -235,7 +235,7 @@ return_t tls_protection::write_aad(tls_session* session, tls_direction_t dir, bi
                 binary_t temp;
                 prng.random(temp, 8);
                 secrets.assign(tls_secret_t::nonce_explicit, temp);
-            } else if (mode_poly1305 == mode) {
+            } else if (crypt_mode_t::poly1305 == mode) {
                 tls12_aead = true;
                 len = bodysize;
             }
@@ -298,8 +298,8 @@ return_t tls_protection::get_aead_key(tls_session* session, tls_direction_t dir,
         auto hsstatus = session->get_session_info(dir).get_status();
 
         switch (session_type) {
-            case session_type_tls:
-            case session_type_dtls: {
+            case session_type_t::tls:
+            case session_type_t::dtls: {
                 if (is_kindof_tls13()) {
                     // TLS 1.3
                     if (is_clientinitiated(dir)) {
@@ -357,8 +357,8 @@ return_t tls_protection::get_aead_key(tls_session* session, tls_direction_t dir,
                     }
                 }
             } break;
-            case session_type_quic:
-            case session_type_quic2: {
+            case session_type_t::quic:
+            case session_type_t::quic2: {
                 // QUIC
                 if (is_clientinitiated(dir)) {
                     if (protection_space_t::initial == space) {
@@ -429,15 +429,15 @@ return_t tls_protection::encrypt_aead(tls_session* session, tls_direction_t dir,
         const auto& key = get_secrets().get(secret_key);
         const auto& iv = get_secrets().get(secret_iv);
         binary_t nonce;
-        encrypt_option_t options[] = {{crypt_ctrl_nsize, hint_cipher->nsize}, {crypt_ctrl_tsize, hint_cipher->tsize}, {}};
+        encrypt_option_t options[] = {{crypt_ctrl_t::nsize, hint_cipher->nsize}, {crypt_ctrl_t::tsize, hint_cipher->tsize}, {}};
 
         auto alg = typeof_alg(hint_cipher);
         auto mode = typeof_mode(hint_cipher);
         if (is_kindof_tls12()) {
-            if (mode_poly1305 == mode) {
+            if (crypt_mode_t::poly1305 == mode) {
                 if (is_kindof_dtls()) {
                     // in case of DTLS 1.2 chacha20-poly1305, true == is_kindof_dtls()
-                    // in case of CBC-HMAC, session_type_dtls == session->get_type
+                    // in case of CBC-HMAC, session_type_t::dtls == session->get_type
                     auto& kv = session->get_session_info(dir).get_keyvalue();
                     uint16 epoch = t_narrow_cast(kv.get(session_dtls_epoch));
                     uint64 seq = kv.get(session_dtls_seq);
@@ -445,7 +445,7 @@ return_t tls_protection::encrypt_aead(tls_session* session, tls_direction_t dir,
                 }
                 build_iv(session, nonce, iv, record_no);
                 ret = crypt.encrypt(alg, mode, key, nonce, plaintext, ciphertext, aad, tag, options);
-            } else if (ccm == mode || gcm == mode) {
+            } else if (crypt_mode_t::ccm == mode || crypt_mode_t::gcm == mode) {
                 const binary_t& nonce_explicit = get_secrets().get(tls_secret_t::nonce_explicit);
                 binary_append(nonce, iv);
                 binary_append(nonce, nonce_explicit);
@@ -527,7 +527,7 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
                 break;
         }
         auto hint_cipher = tlsadvisor->hintof_cipher(cs);
-        encrypt_option_t options[] = {{crypt_ctrl_nsize, hint_cipher->nsize}, {crypt_ctrl_tsize, hint_cipher->tsize}, {}};
+        encrypt_option_t options[] = {{crypt_ctrl_t::nsize, hint_cipher->nsize}, {crypt_ctrl_t::tsize, hint_cipher->tsize}, {}};
 
         openssl_crypt crypt;
 
@@ -547,7 +547,7 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
         if (is_kindof_tls12()) {
             uint8 size_nonce_explicit = 8;
 
-            if (mode_poly1305 == mode) {
+            if (crypt_mode_t::poly1305 == mode) {
                 /**
                  * RFC 7905 2.  ChaCha20 Cipher Suites
                  *   AEAD_CHACHA20_POLY1305 requires a 96-bit nonce, which is formed as
@@ -565,7 +565,7 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
 
                 if (is_kindof_dtls()) {
                     // in case of DTLS 1.2 chacha20-poly1305, true == is_kindof_dtls()
-                    // in case of CBC-HMAC, session_type_dtls == session->get_type
+                    // in case of CBC-HMAC, session_type_t::dtls == session->get_type
                     auto& kv = session->get_session_info(dir).get_keyvalue();
                     uint16 epoch = t_narrow_cast(kv.get(session_dtls_epoch));
                     uint64 seq = kv.get(session_dtls_seq);
@@ -573,7 +573,7 @@ return_t tls_protection::decrypt_aead(tls_session* session, tls_direction_t dir,
                 }
 
                 build_iv(session, nonce, iv, record_no);
-            } else if (ccm == mode || gcm == mode) {
+            } else if (crypt_mode_t::ccm == mode || crypt_mode_t::gcm == mode) {
                 /**
                  * RFC 5246 6.2.3.3.  AEAD Ciphers
                  *   struct {

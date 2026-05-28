@@ -63,7 +63,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
             if (nullptr == session) {
                 throw exception(errorcode_t::no_session);
             } else {
-                if (session_type_dtls != session->get_type()) {
+                if (session_type_t::dtls != session->get_type()) {
                     throw exception(errorcode_t::no_session);
                 }
             }

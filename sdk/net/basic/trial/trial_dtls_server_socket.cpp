@@ -40,7 +40,7 @@ return_t trial_dtls_server_socket::dtls_open(socket_context_t** handle, socket_t
 
         context = new socket_context_t;
 
-        auto session = new tls_session(session_type_dtls);
+        auto session = new tls_session(session_type_t::dtls);
         context->fd = fd;
         context->handle.session = session;
         context->flags = 0;

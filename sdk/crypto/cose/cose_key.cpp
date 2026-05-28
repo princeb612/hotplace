@@ -62,10 +62,10 @@ cbor_map* cose_data::cose_key::cbor() {
             case cose_ec_p256:
             case cose_ec_p384:
             case cose_ec_p521:
-                kty = cose_kty_t::cose_kty_ec2;
+                kty = cose_kty_t::ec2;
                 break;
             default:
-                kty = cose_kty_t::cose_kty_okp;
+                kty = cose_kty_t::okp;
                 break;
         }
 
@@ -97,7 +97,7 @@ cbor_map* cose_data::cose_key::cbor() {
                     << new cbor_pair(cose_key_lable_t::cose_ec_crv, new cbor_data(_curve))  // crv(-1)
                     << new cbor_pair(cose_key_lable_t::cose_ec_x, new cbor_data(_x));       // x(-2)
 
-            if (cose_kty_t::cose_kty_ec2 == kty) {
+            if (cose_kty_t::ec2 == kty) {
                 if (_compressed) {
                     /*
                      * RFC 8152 13.1.1.  Double Coordinate Curves

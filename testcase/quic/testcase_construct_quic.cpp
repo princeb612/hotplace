@@ -488,8 +488,8 @@ void testcase_construct_quic() {
         load_certificate("server-mldsa.crt", "server-mldsa.key", nullptr);
 
         std::list<binary_t> bins;
-        tls_session session_client(session_type_quic);
-        tls_session session_server(session_type_quic);
+        tls_session session_client(session_type_t::quic);
+        tls_session session_server(session_type_t::quic);
 
         session_client.get_quic_session().get_setting().set(quic_param_max_udp_payload_size, max_udp_payload_size);
         session_server.get_quic_session().get_setting().set(quic_param_max_udp_payload_size, max_udp_payload_size);

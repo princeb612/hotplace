@@ -13,41 +13,41 @@
 namespace hotplace {
 namespace crypto {
 
-crypto_aead_builder::crypto_aead_builder() : _scheme(crypto_scheme_unknown) {}
+crypto_aead_builder::crypto_aead_builder() : _scheme(crypto_scheme_t::unknown) {}
 
 crypto_aead* crypto_aead_builder::build() {
     crypto_aead* obj = nullptr;
     auto scheme = get_scheme();
     switch (scheme) {
-        case crypto_scheme_aes_128_ccm:
-        case crypto_scheme_aes_128_gcm:
-        case crypto_scheme_aes_192_ccm:
-        case crypto_scheme_aes_192_gcm:
-        case crypto_scheme_aes_256_ccm:
-        case crypto_scheme_aes_256_gcm:
-        case crypto_scheme_aria_128_ccm:
-        case crypto_scheme_aria_128_gcm:
-        case crypto_scheme_aria_192_ccm:
-        case crypto_scheme_aria_192_gcm:
-        case crypto_scheme_aria_256_ccm:
-        case crypto_scheme_aria_256_gcm:
-        case crypto_scheme_camellia_128_gcm:
-        case crypto_scheme_camellia_192_gcm:
-        case crypto_scheme_camellia_256_gcm:
-        case crypto_scheme_chacha20_poly1305:
-        case crypto_scheme_tls_aes_128_ccm:
-        case crypto_scheme_tls_aes_256_ccm:
-        case crypto_scheme_tls_aes_128_ccm_8:
-        case crypto_scheme_tls_aes_256_ccm_8:
-        case crypto_scheme_tls_aes_128_gcm:
-        case crypto_scheme_tls_aes_256_gcm:
-        case crypto_scheme_tls_chacha20_poly1305:
-        case crypto_scheme_tls_aria_128_ccm:
-        case crypto_scheme_tls_aria_256_ccm:
-        case crypto_scheme_tls_aria_128_gcm:
-        case crypto_scheme_tls_aria_256_gcm:
-        case crypto_scheme_tls_camellia_128_gcm:
-        case crypto_scheme_tls_camellia_256_gcm: {
+        case crypto_scheme_t::aes_128_ccm:
+        case crypto_scheme_t::aes_128_gcm:
+        case crypto_scheme_t::aes_192_ccm:
+        case crypto_scheme_t::aes_192_gcm:
+        case crypto_scheme_t::aes_256_ccm:
+        case crypto_scheme_t::aes_256_gcm:
+        case crypto_scheme_t::aria_128_ccm:
+        case crypto_scheme_t::aria_128_gcm:
+        case crypto_scheme_t::aria_192_ccm:
+        case crypto_scheme_t::aria_192_gcm:
+        case crypto_scheme_t::aria_256_ccm:
+        case crypto_scheme_t::aria_256_gcm:
+        case crypto_scheme_t::camellia_128_gcm:
+        case crypto_scheme_t::camellia_192_gcm:
+        case crypto_scheme_t::camellia_256_gcm:
+        case crypto_scheme_t::chacha20_poly1305:
+        case crypto_scheme_t::tls_aes_128_ccm:
+        case crypto_scheme_t::tls_aes_256_ccm:
+        case crypto_scheme_t::tls_aes_128_ccm_8:
+        case crypto_scheme_t::tls_aes_256_ccm_8:
+        case crypto_scheme_t::tls_aes_128_gcm:
+        case crypto_scheme_t::tls_aes_256_gcm:
+        case crypto_scheme_t::tls_chacha20_poly1305:
+        case crypto_scheme_t::tls_aria_128_ccm:
+        case crypto_scheme_t::tls_aria_256_ccm:
+        case crypto_scheme_t::tls_aria_128_gcm:
+        case crypto_scheme_t::tls_aria_256_gcm:
+        case crypto_scheme_t::tls_camellia_128_gcm:
+        case crypto_scheme_t::tls_camellia_256_gcm: {
             obj = new crypto_aead(scheme);
         } break;
         default: {

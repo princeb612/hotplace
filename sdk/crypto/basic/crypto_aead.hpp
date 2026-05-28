@@ -20,7 +20,7 @@ namespace crypto {
 
 /**
  * @sample
- *          auto aead = builder.set_scheme(crypto_scheme_aes_128_gcm).build();
+ *          auto aead = builder.set_scheme(crypto_scheme_t::aes_128_gcm).build();
  *          if (aead) {
  *              // do something
  *              aead->release();

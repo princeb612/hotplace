@@ -37,16 +37,16 @@ void test_cipher_encrypt() {
     binary_t iv = base16_decode("000102030405060708090a0b0c0d0e0f");
     constexpr char sample[] = "We don't playing because we grow old; we grow old because we stop playing.";
     size_t len = strlen(sample);
-    lambda_test(aes128, cbc, key, iv, (byte_t*)sample, len);
-    lambda_test(aes128, cfb, key, iv, (byte_t*)sample, len);
-    lambda_test(aes128, ofb, key, iv, (byte_t*)sample, len);
-    lambda_test(aes192, cbc, key, iv, (byte_t*)sample, len);
-    lambda_test(aes192, cfb, key, iv, (byte_t*)sample, len);
-    lambda_test(aes192, ofb, key, iv, (byte_t*)sample, len);
-    lambda_test(aes256, cbc, key, iv, (byte_t*)sample, len);
-    lambda_test(aes256, cfb, key, iv, (byte_t*)sample, len);
-    lambda_test(aes256, ofb, key, iv, (byte_t*)sample, len);
-    lambda_test(chacha20, mode_cipher, key, iv, (byte_t*)sample, len);
+    lambda_test(crypt_algorithm_t::aes128, crypt_mode_t::cbc, key, iv, (byte_t*)sample, len);
+    lambda_test(crypt_algorithm_t::aes128, crypt_mode_t::cfb, key, iv, (byte_t*)sample, len);
+    lambda_test(crypt_algorithm_t::aes128, crypt_mode_t::ofb, key, iv, (byte_t*)sample, len);
+    lambda_test(crypt_algorithm_t::aes192, crypt_mode_t::cbc, key, iv, (byte_t*)sample, len);
+    lambda_test(crypt_algorithm_t::aes192, crypt_mode_t::cfb, key, iv, (byte_t*)sample, len);
+    lambda_test(crypt_algorithm_t::aes192, crypt_mode_t::ofb, key, iv, (byte_t*)sample, len);
+    lambda_test(crypt_algorithm_t::aes256, crypt_mode_t::cbc, key, iv, (byte_t*)sample, len);
+    lambda_test(crypt_algorithm_t::aes256, crypt_mode_t::cfb, key, iv, (byte_t*)sample, len);
+    lambda_test(crypt_algorithm_t::aes256, crypt_mode_t::ofb, key, iv, (byte_t*)sample, len);
+    lambda_test(crypt_algorithm_t::chacha20, crypt_mode_t::unknown, key, iv, (byte_t*)sample, len);
 }
 
 void testcase_cipher_encrypt() { test_cipher_encrypt(); }

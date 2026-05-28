@@ -110,7 +110,7 @@ return_t tls_record::write(tls_direction_t dir, binary_t& bin) {
 
         auto session_type = session->get_type();
         // auto& protection = session->get_tls_protection();
-        auto is_dtls = (session_type == session_type_dtls);
+        auto is_dtls = (session_type == session_type_t::dtls);
 
         if (is_dtls) {
             auto& kv = session->get_session_info(dir).get_keyvalue();
@@ -178,7 +178,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
         }
 
         auto session = get_session();
-        size_t minsize = (session_type_dtls == session->get_type()) ? sizeof(dtls_header) : sizeof(tls_header);
+        size_t minsize = (session_type_t::dtls == session->get_type()) ? sizeof(dtls_header) : sizeof(tls_header);
 
         if ((size < pos) || (size - pos < minsize)) {
             ret = errorcode_t::no_more;
@@ -418,7 +418,7 @@ return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin
                 auto len = body.size();
                 dbs.println("> %s 0x%02x(%i) (%s)", constexpr_content_type, content_type, content_type, tlsadvisor->nameof_tls_record(content_type).c_str());
                 dbs.println(" > %s 0x%04x (%s)", constexpr_record_version, record_version, tlsadvisor->nameof_tls_version(record_version).c_str());
-                if (session_type_dtls == get_session()->get_type()) {
+                if (session_type_t::dtls == get_session()->get_type()) {
                     if (dont_control_dtls_sequence & get_flags()) {
                     } else {
                         uint16 key_epoch = get_key_epoch();

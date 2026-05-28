@@ -93,7 +93,7 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, cons
         std::list<jwa_t> algs = jwalgs;
 
         for (std::list<jwa_t>::iterator it = algs.begin(); it != algs.end();) {
-            if (jwa_t::jwa_dir == *it || jwa_t::jwa_ecdh_es == *it) {
+            if (jwa_t::dir == *it || jwa_t::ecdh_es == *it) {
                 // support "dir" for decryption only ...
                 it = algs.erase(it);
             } else {
@@ -165,7 +165,7 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, const std::stri
             jose_encryption_t& item = epair.second;
             binary_t zip;
             t_maphint<crypt_item_t, binary_t> hint(item.datamap);
-            hint.find(crypt_item_t::item_zip, &zip);
+            hint.find(crypt_item_t::zip, &zip);
 
             for (auto& rpair : item.recipients) {
                 const jwa_t& alg = rpair.first;
@@ -182,9 +182,9 @@ return_t json_object_encryption::decrypt(jose_context_t* handle, const std::stri
                     }
 
                     if (kid.empty()) {
-                        ret_test = dodecrypt(handle, enc, alg, item.datamap[crypt_item_t::item_ciphertext], output);
+                        ret_test = dodecrypt(handle, enc, alg, item.datamap[crypt_item_t::ciphertext], output);
                     } else {
-                        ret_test = dodecrypt(handle, enc, alg, kid.c_str(), item.datamap[crypt_item_t::item_ciphertext], output);
+                        ret_test = dodecrypt(handle, enc, alg, kid.c_str(), item.datamap[crypt_item_t::ciphertext], output);
                     }
                     if ((errorcode_t::success == ret_test) && zip.size() && (0 == memcmp(zip.data(), "DEF", 3))) {
                         // RFC 7520 5.9.  Compressed Content
@@ -237,21 +237,21 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
         const hint_jose_encryption_t* enc_hint = advisor->hintof_jose_encryption(enc);  // content encryption
 
         jose_encryption_t& item = iter->second;
-        binary_t cek = item.datamap[crypt_item_t::item_cek];                                      // in, enc
-        binary_t iv = item.datamap[crypt_item_t::item_iv];                                        // in, enc
-        binary_t& aad = item.datamap[crypt_item_t::item_aad];                                     // in, enc
-        binary_t& encrypted_key = item.recipients[alg].datamap[crypt_item_t::item_encryptedkey];  // out, alg
-        binary_t& tag = item.datamap[crypt_item_t::item_tag];                                     // out, enc
-        binary_t& ciphertext = item.datamap[crypt_item_t::item_ciphertext];                       // out, enc
+        binary_t cek = item.datamap[crypt_item_t::cek];                                      // in, enc
+        binary_t iv = item.datamap[crypt_item_t::iv];                                        // in, enc
+        binary_t& aad = item.datamap[crypt_item_t::aad];                                     // in, enc
+        binary_t& encrypted_key = item.recipients[alg].datamap[crypt_item_t::encryptedkey];  // out, alg
+        binary_t& tag = item.datamap[crypt_item_t::tag];                                     // out, enc
+        binary_t& ciphertext = item.datamap[crypt_item_t::ciphertext];                       // out, enc
 
         // alg part - encrypted_key from cek
         {
             const char* alg_name = alg_hint->alg_name;
-            crypt_enc_t crypt_mode = (crypt_enc_t)alg_hint->mode;
-            crypt_algorithm_t alg_crypt_alg = (crypt_algorithm_t)alg_hint->crypt_alg;
-            crypt_mode_t alg_crypt_mode = (crypt_mode_t)alg_hint->crypt_mode;
+            crypt_enc_t crypt_enc = alg_hint->enc;
+            crypt_algorithm_t alg_crypt_alg = alg_hint->crypt_alg;
+            crypt_mode_t alg_crypt_mode = alg_hint->crypt_mode;
             int alg_keysize = alg_hint->keysize;
-            hash_algorithm_t alg_hash_alg = (hash_algorithm_t)alg_hint->hash_alg;
+            hash_algorithm_t alg_hash_alg = alg_hint->hash_alg;
 
             binary_t oct;
             /* RFC3394 Advanced Encryption Standard (AES) Key Wrap Algorithm
@@ -280,8 +280,8 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
                 crypto_key::get_privkey(pkey, kty, oct, true);
             }
 
-            uint32 alg_group = alg_hint->group;
-            if (jwa_group_t::jwa_group_rsa == alg_group) {
+            auto alg_group = alg_hint->u.alg.group;
+            if (jwa_group_t::rsa == alg_group) {
                 /*
                  * RSA1_5, RSA-OAEP, RSA-OAEP-256
                  * RFC7518 4.2.  Key Encryption with RSAES-PKCS1-v1_5
@@ -291,15 +291,15 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
                  * RFC7520 5.1. Key Encryption Using RSA v1.5 and AES-HMAC-SHA2
                  * RFC7520 5.2. Key Encryption Using RSA-OAEP with AES-GCM
                  */
-                ret = crypt.encrypt(pkey, cek, encrypted_key, crypt_mode);
-            } else if (jwa_group_t::jwa_group_aeskw == alg_group) {
+                ret = crypt.encrypt(pkey, cek, encrypted_key, crypt_enc);
+            } else if (jwa_group_t::aeskw == alg_group) {
                 /*
                  * A128KW, A192KW, A256KW
                  * RFC7518 4.4. Key Wrapping with AES Key Wrap
                  * RFC7520 5.8. Key Wrap Using AES-KeyWrap with AES-GCM
                  */
                 ret = crypt.encrypt(alg_crypt_alg, alg_crypt_mode, oct, kw_iv, cek, encrypted_key);
-            } else if (jwa_group_t::jwa_group_dir == alg_group) {
+            } else if (jwa_group_t::dir == alg_group) {
                 /*
                  * dir
                  * RFC7518 4.5. Direct Encryption with a Shared Symmetric Key
@@ -308,7 +308,7 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
 
                 /* read cek from HMAC key and then make it the only one cek */
                 cek = oct;
-            } else if (jwa_group_t::jwa_group_ecdh == alg_group) {
+            } else if (jwa_group_t::ecdh == alg_group) {
                 /*
                  * ECDH-ES
                  * RFC7518 4.6. Key Agreement with Elliptic Curve Diffie-Hellman
@@ -319,14 +319,14 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
                  */
                 const EVP_PKEY* epk = item.recipients[alg].epk;
                 int keylen = enc_hint->keysize;
-                uint32 enc_group = enc_hint->group;
-                if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
+                auto enc_group = enc_hint->u.enc.group;
+                if (jwe_group_t::aescbc_hs == enc_group) {
                     keylen *= 2;
                 }
 
                 ret = ecdh_es(epk, pkey, enc_hint->alg_name, "", "", keylen, cek);
                 encrypted_key = cek;
-            } else if (jwa_group_t::jwa_group_ecdh_aeskw == alg_group) {
+            } else if (jwa_group_t::ecdh_aeskw == alg_group) {
                 /*
                  * ECDH-ES+A128KW, ECDH-ES+A192KW, ECDH-ES+A256KW
                  * RFC7518 4.6. Key Agreement with Elliptic Curve Diffie-Hellman
@@ -338,22 +338,22 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
                 binary_t derived_key;
                 const EVP_PKEY* epk = item.recipients[alg].epk;
                 int keylen = alg_hint->keysize;
-                uint32 enc_group = enc_hint->group;
-                if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
+                auto enc_group = enc_hint->u.enc.group;
+                if (jwe_group_t::aescbc_hs == enc_group) {
                     // keylen *= 2;
                 }
                 ret = ecdh_es(epk, pkey, alg_hint->alg_name, "", "", keylen, derived_key);
 
                 ret = crypt.encrypt(alg_crypt_alg, alg_crypt_mode, derived_key, kw_iv, cek, encrypted_key);
-            } else if (jwa_group_t::jwa_group_aesgcmkw == alg_group) {
+            } else if (jwa_group_t::aesgcmkw == alg_group) {
                 /*
                  * A128GCMKW, A192GCMKW, A256GCMKW
                  * RFC7518 4.7. Key Encryption with AES GCM
                  * RFC7520 5.7. Key Wrap Using AES-GCM KeyWrap with AES-CBC-HMAC-SHA2
                  */
-                binary_t iv1 = item.recipients[alg].datamap[crypt_item_t::item_iv];
-                binary_t aad1;                                                          // empty
-                binary_t& tag1 = item.recipients[alg].datamap[crypt_item_t::item_tag];  // compute authencation tag here
+                binary_t iv1 = item.recipients[alg].datamap[crypt_item_t::iv];
+                binary_t aad1;                                                     // empty
+                binary_t& tag1 = item.recipients[alg].datamap[crypt_item_t::tag];  // compute authencation tag here
 
                 ret = crypt.encrypt(alg_crypt_alg, alg_crypt_mode, oct, iv1, cek, encrypted_key, aad1, tag1);
 
@@ -371,13 +371,13 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
                         item.header = header;
                     }
                 }
-            } else if (jwa_group_t::jwa_group_pbes_hs_aeskw == alg_group) {
+            } else if (jwa_group_t::pbes_hs_aeskw == alg_group) {
                 /*
                  * RFC7518 4.8. Key Encryption with PBES2
                  * PBES2-HS256+A128KW, PBES2-HS384+A192KW, PBES2-HS512+A256KW
                  * RFC7520 5.3. Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2
                  */
-                binary_t p2s = item.recipients[alg].datamap[crypt_item_t::item_p2s];
+                binary_t p2s = item.recipients[alg].datamap[crypt_item_t::p2s];
                 uint32 p2c = item.recipients[alg].p2c;
 
                 binary_t salt;
@@ -405,12 +405,12 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
 
         // enc part - ciphertext using cek, iv
         {
-            crypt_algorithm_t enc_crypt_alg = (crypt_algorithm_t)enc_hint->crypt_alg;
-            crypt_mode_t enc_crypt_mode = (crypt_mode_t)enc_hint->crypt_mode;
-            hash_algorithm_t enc_hash_alg = (hash_algorithm_t)enc_hint->hash_alg;
+            crypt_algorithm_t enc_crypt_alg = enc_hint->crypt_alg;
+            crypt_mode_t enc_crypt_mode = enc_hint->crypt_mode;
+            hash_algorithm_t enc_hash_alg = enc_hint->hash_alg;
 
-            uint32 enc_group = enc_hint->group;
-            if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
+            auto enc_group = enc_hint->u.enc.group;
+            if (jwe_group_t::aescbc_hs == enc_group) {
                 // RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation
                 crypto_cbc_hmac cbchmac;
                 cbchmac.set_enc(enc_crypt_alg).set_mac(enc_hash_alg).set_flag(jose_encrypt_then_mac);
@@ -418,7 +418,7 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
                 binary_t mackey;
                 cbchmac.split_key(cek, enckey, mackey);
                 ret = cbchmac.encrypt(enckey, mackey, iv, aad, input, ciphertext, tag);
-            } else if (jwe_group_t::jwe_group_aesgcm == enc_group) {
+            } else if (jwe_group_t::aesgcm == enc_group) {
                 ret = crypt.encrypt(enc_crypt_alg, enc_crypt_mode, cek, iv, input, ciphertext, aad, tag);
             }
         }
@@ -459,23 +459,23 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
         }
 
         jose_encryption_t& item = iter->second;
-        binary_t cek;                                                                            // local, enc, from encrypted_key
-        binary_t iv = item.datamap[crypt_item_t::item_iv];                                       // in, enc
-        binary_t aad = item.datamap[crypt_item_t::item_aad];                                     // in, enc
-        binary_t encrypted_key = item.recipients[alg].datamap[crypt_item_t::item_encryptedkey];  // in, alg
-        binary_t tag = item.datamap[crypt_item_t::item_tag];                                     // in, enc
-        binary_t ciphertext = item.datamap[crypt_item_t::item_ciphertext];                       // in, enc
-        binary_t apu = item.recipients[alg].datamap[crypt_item_t::item_apu];
-        binary_t apv = item.recipients[alg].datamap[crypt_item_t::item_apv];
+        binary_t cek;                                                                       // local, enc, from encrypted_key
+        binary_t iv = item.datamap[crypt_item_t::iv];                                       // in, enc
+        binary_t aad = item.datamap[crypt_item_t::aad];                                     // in, enc
+        binary_t encrypted_key = item.recipients[alg].datamap[crypt_item_t::encryptedkey];  // in, alg
+        binary_t tag = item.datamap[crypt_item_t::tag];                                     // in, enc
+        binary_t ciphertext = item.datamap[crypt_item_t::ciphertext];                       // in, enc
+        binary_t apu = item.recipients[alg].datamap[crypt_item_t::apu];
+        binary_t apv = item.recipients[alg].datamap[crypt_item_t::apv];
 
         // alg part - encrypted_key from cek
         {
             const char* alg_name = alg_hint->alg_name;
-            crypt_enc_t crypt_mode = (crypt_enc_t)alg_hint->mode;
-            crypt_algorithm_t alg_crypt_alg = (crypt_algorithm_t)alg_hint->crypt_alg;
-            crypt_mode_t alg_crypt_mode = (crypt_mode_t)alg_hint->crypt_mode;
+            crypt_enc_t crypt_enc = alg_hint->enc;
+            crypt_algorithm_t alg_crypt_alg = alg_hint->crypt_alg;
+            crypt_mode_t alg_crypt_mode = alg_hint->crypt_mode;
             int alg_keysize = alg_hint->keysize;
-            hash_algorithm_t alg_hash_alg = (hash_algorithm_t)alg_hint->hash_alg;
+            hash_algorithm_t alg_hash_alg = alg_hint->hash_alg;
 
             binary_t oct;
             /* RFC3394 Advanced Encryption Standard (AES) Key Wrap Algorithm
@@ -508,8 +508,8 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
                 crypto_key::get_privkey(pkey, kty, oct, true);
             }
 
-            uint32 alg_group = alg_hint->group;
-            if (jwa_group_t::jwa_group_rsa == alg_group) {
+            auto alg_group = alg_hint->u.alg.group;
+            if (jwa_group_t::rsa == alg_group) {
                 /*
                  * RSA1_5, RSA-OAEP, RSA-OAEP-256
                  * RFC7518 4.2.  Key Encryption with RSAES-PKCS1-v1_5
@@ -519,22 +519,22 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
                  * RFC7520 5.1. Key Encryption Using RSA v1.5 and AES-HMAC-SHA2
                  * RFC7520 5.2. Key Encryption Using RSA-OAEP with AES-GCM
                  */
-                ret = crypt.decrypt(pkey, encrypted_key, cek, crypt_mode);
-            } else if (jwa_group_t::jwa_group_aeskw == alg_group) {
+                ret = crypt.decrypt(pkey, encrypted_key, cek, crypt_enc);
+            } else if (jwa_group_t::aeskw == alg_group) {
                 /*
                  * A128KW, A192KW, A256KW
                  * RFC7518 4.4. Key Wrapping with AES Key Wrap
                  * RFC7520 5.8. Key Wrap Using AES-KeyWrap with AES-GCM
                  */
                 ret = crypt.decrypt(alg_crypt_alg, alg_crypt_mode, oct, kw_iv, encrypted_key, cek);
-            } else if (jwa_group_t::jwa_group_dir == alg_group) {
+            } else if (jwa_group_t::dir == alg_group) {
                 /*
                  * dir
                  * RFC7518 4.5. Direct Encryption with a Shared Symmetric Key
                  * RFC7520 5.6. Direct Encryption Using AES-GCM
                  */
                 cek = oct;
-            } else if (jwa_group_t::jwa_group_ecdh == alg_group) {
+            } else if (jwa_group_t::ecdh == alg_group) {
                 /*
                  * ECDH-ES
                  * RFC7518 4.6. Key Agreement with Elliptic Curve Diffie-Hellman
@@ -545,13 +545,13 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
                  */
                 const EVP_PKEY* epk = item.recipients[alg].epk;
                 int keylen = enc_hint->keysize;
-                uint32 enc_group = enc_hint->group;
-                if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
+                auto enc_group = enc_hint->u.enc.group;
+                if (jwe_group_t::aescbc_hs == enc_group) {
                     keylen *= 2;
                 }
 
                 ret = ecdh_es(pkey, epk, enc_hint->alg_name, "", "", keylen, cek);
-            } else if (jwa_group_t::jwa_group_ecdh_aeskw == alg_group) {
+            } else if (jwa_group_t::ecdh_aeskw == alg_group) {
                 /*
                  * ECDH-ES+A128KW, ECDH-ES+A192KW, ECDH-ES+A256KW
                  * RFC7518 4.6. Key Agreement with Elliptic Curve Diffie-Hellman
@@ -565,31 +565,31 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
                 binary_t derived_key;
                 const EVP_PKEY* epk = item.recipients[alg].epk;
                 int keylen = alg_hint->keysize;
-                uint32 enc_group = enc_hint->group;
-                if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
+                auto enc_group = enc_hint->u.enc.group;
+                if (jwe_group_t::aescbc_hs == enc_group) {
                     // keylen *= 2;
                 }
                 ret = ecdh_es(pkey, epk, alg_hint->alg_name, "", "", keylen, derived_key);
 
                 ret = crypt.decrypt(alg_crypt_alg, alg_crypt_mode, derived_key, kw_iv, encrypted_key, cek);
-            } else if (jwa_group_t::jwa_group_aesgcmkw == alg_group) {
+            } else if (jwa_group_t::aesgcmkw == alg_group) {
                 /*
                  * A128GCMKW, A192GCMKW, A256GCMKW
                  * RFC7518 4.7. Key Encryption with AES GCM
                  * RFC7520 5.7. Key Wrap Using AES-GCM KeyWrap with AES-CBC-HMAC-SHA2
                  */
-                binary_t iv1 = item.recipients[alg].datamap[crypt_item_t::item_iv];
+                binary_t iv1 = item.recipients[alg].datamap[crypt_item_t::iv];
                 binary_t aad1;  // empty
-                binary_t tag1 = item.recipients[alg].datamap[crypt_item_t::item_tag];
+                binary_t tag1 = item.recipients[alg].datamap[crypt_item_t::tag];
 
                 ret = crypt.decrypt(alg_crypt_alg, alg_crypt_mode, oct, iv1, encrypted_key, cek, aad1, tag1);
-            } else if (jwa_group_t::jwa_group_pbes_hs_aeskw == alg_group) {
+            } else if (jwa_group_t::pbes_hs_aeskw == alg_group) {
                 /*
                  * RFC7518 4.8. Key Encryption with PBES2
                  * PBES2-HS256+A128KW, PBES2-HS384+A192KW, PBES2-HS512+A256KW
                  * RFC7520 5.3. Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2
                  */
-                binary_t p2s = item.recipients[alg].datamap[crypt_item_t::item_p2s];
+                binary_t p2s = item.recipients[alg].datamap[crypt_item_t::p2s];
                 uint32 p2c = item.recipients[alg].p2c;
 
                 binary_t salt;
@@ -616,12 +616,12 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
 
         // enc part - ciphertext using cek, iv
         {
-            crypt_algorithm_t enc_crypt_alg = (crypt_algorithm_t)enc_hint->crypt_alg;
-            crypt_mode_t enc_crypt_mode = (crypt_mode_t)enc_hint->crypt_mode;
-            hash_algorithm_t enc_hash_alg = (hash_algorithm_t)enc_hint->hash_alg;
+            crypt_algorithm_t enc_crypt_alg = enc_hint->crypt_alg;
+            crypt_mode_t enc_crypt_mode = enc_hint->crypt_mode;
+            hash_algorithm_t enc_hash_alg = enc_hint->hash_alg;
 
-            uint32 enc_group = enc_hint->group;
-            if (jwe_group_t::jwe_group_aescbc_hs == enc_group) {
+            auto enc_group = enc_hint->u.enc.group;
+            if (jwe_group_t::aescbc_hs == enc_group) {
                 // RFC 7516 Appendix B.  Example AES_128_CBC_HMAC_SHA_256 Computation
                 crypto_cbc_hmac cbchmac;
                 cbchmac.set_enc(enc_crypt_alg).set_mac(enc_hash_alg).set_flag(jose_encrypt_then_mac);
@@ -629,7 +629,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
                 binary_t mackey;
                 cbchmac.split_key(cek, enckey, mackey);
                 ret = cbchmac.decrypt(enckey, mackey, iv, aad, ciphertext, output, tag);
-            } else if (jwe_group_t::jwe_group_aesgcm == enc_group) {
+            } else if (jwe_group_t::aesgcm == enc_group) {
                 ret = crypt.decrypt(enc_crypt_alg, enc_crypt_mode, cek, iv, ciphertext, output, aad, tag);
             }
         }
@@ -652,9 +652,9 @@ return_t json_object_encryption::check_constraints(jwa_t alg, const EVP_PKEY* pk
          * A key of size 2048 bits or larger MUST be used with this algorithm.
          */
         switch (alg) {
-            case jwa_t::jwa_rsa_1_5:
-            case jwa_t::jwa_rsa_oaep:
-            case jwa_t::jwa_rsa_oaep_256: {
+            case jwa_t::rsa_1_5:
+            case jwa_t::rsa_oaep:
+            case jwa_t::rsa_oaep_256: {
                 int bits = EVP_PKEY_bits(pkey);
                 if (bits < 2048) {
                     ret = errorcode_t::low_security;

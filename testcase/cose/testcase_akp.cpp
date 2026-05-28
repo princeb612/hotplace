@@ -42,7 +42,7 @@ void test_akp() {
         ret = cose.open(&handle);
         if (errorcode_t::success == ret) {
             cose_layer& body = handle->composer->get_layer();
-            body.get_protected().add(cose_key_t::cose_alg, alg);
+            body.get_protected().add(cose_key_t::alg, alg);
 
             ret = cose.sign(handle, &key, to_binary(payload), cbor);
             _test_case.test(ret, __FUNCTION__, "sign");

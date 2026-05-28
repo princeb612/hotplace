@@ -40,7 +40,7 @@ class cipher_encrypt {
 /**
  * @sample
  *          cipher_encrypt_builder builder;
- *          auto cipher = builder.set(aes128, cbc).build();
+ *          auto cipher = builder.set(aes128, crypt_mode_t::cbc).build();
  *          if(cipher) {
  *              cipher->encrypt(key, iv, plaintext, ciphertext);
  *              cipher->decrypt(key, iv, ciphertext, plaintext);
@@ -63,46 +63,46 @@ class cipher_encrypt_builder {
 
 class cipher_encrypt_aes128cbc : public cipher_encrypt {
    public:
-    cipher_encrypt_aes128cbc() : cipher_encrypt(aes128, cbc) {}
+    cipher_encrypt_aes128cbc() : cipher_encrypt(crypt_algorithm_t::aes128, crypt_mode_t::cbc) {}
 };
 class cipher_encrypt_aes128cfb : public cipher_encrypt {
    public:
-    cipher_encrypt_aes128cfb() : cipher_encrypt(aes128, cfb) {}
+    cipher_encrypt_aes128cfb() : cipher_encrypt(crypt_algorithm_t::aes128, crypt_mode_t::cfb) {}
 };
 class cipher_encrypt_aes128ofb : public cipher_encrypt {
    public:
-    cipher_encrypt_aes128ofb() : cipher_encrypt(aes128, ofb) {}
+    cipher_encrypt_aes128ofb() : cipher_encrypt(crypt_algorithm_t::aes128, crypt_mode_t::ofb) {}
 };
 
 class cipher_encrypt_aes192cbc : public cipher_encrypt {
    public:
-    cipher_encrypt_aes192cbc() : cipher_encrypt(aes192, cbc) {}
+    cipher_encrypt_aes192cbc() : cipher_encrypt(crypt_algorithm_t::aes192, crypt_mode_t::cbc) {}
 };
 class cipher_encrypt_aes192cfb : public cipher_encrypt {
    public:
-    cipher_encrypt_aes192cfb() : cipher_encrypt(aes192, cfb) {}
+    cipher_encrypt_aes192cfb() : cipher_encrypt(crypt_algorithm_t::aes192, crypt_mode_t::cfb) {}
 };
 class cipher_encrypt_aes192ofb : public cipher_encrypt {
    public:
-    cipher_encrypt_aes192ofb() : cipher_encrypt(aes192, ofb) {}
+    cipher_encrypt_aes192ofb() : cipher_encrypt(crypt_algorithm_t::aes192, crypt_mode_t::ofb) {}
 };
 
 class cipher_encrypt_aes256cbc : public cipher_encrypt {
    public:
-    cipher_encrypt_aes256cbc() : cipher_encrypt(aes256, cbc) {}
+    cipher_encrypt_aes256cbc() : cipher_encrypt(crypt_algorithm_t::aes256, crypt_mode_t::cbc) {}
 };
 class cipher_encrypt_aes256cfb : public cipher_encrypt {
    public:
-    cipher_encrypt_aes256cfb() : cipher_encrypt(aes256, cfb) {}
+    cipher_encrypt_aes256cfb() : cipher_encrypt(crypt_algorithm_t::aes256, crypt_mode_t::cfb) {}
 };
 class cipher_encrypt_aes256ofb : public cipher_encrypt {
    public:
-    cipher_encrypt_aes256ofb() : cipher_encrypt(aes256, ofb) {}
+    cipher_encrypt_aes256ofb() : cipher_encrypt(crypt_algorithm_t::aes256, crypt_mode_t::ofb) {}
 };
 
 class cipher_encrypt_chacha20 : public cipher_encrypt {
    public:
-    cipher_encrypt_chacha20() : cipher_encrypt(chacha20, mode_cipher) {}
+    cipher_encrypt_chacha20() : cipher_encrypt(crypt_algorithm_t::chacha20, crypt_mode_t::unknown) {}
 };
 
 }  // namespace crypto

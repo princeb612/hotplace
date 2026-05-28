@@ -28,8 +28,6 @@ namespace crypto {
 #define CRYPTO_SCHEME_CATEGORY_CBCHMAC 0x01000000
 #define CRYPTO_SCHEME_CATEGORY_TLS 0x02000000
 #define CRYPTO_SCHEME_HINT_CCM8 0x00010000
-#define CRYPTO_SCHEME16(c, m) uint16((c << 8) | (m & 0xff))
-#define CRYPTO_SCHEME32(d, c, m) uint32((d & 0xffff0000) | (c << 8) | (m & 0xff))
 
 ///////////////////////////////////////////////////////////////////////////
 // crypt
@@ -50,8 +48,8 @@ namespace crypto {
  *
  * International Data Encryption Algorithm (1991)
  */
-enum crypt_algorithm_t : uint8 {
-    crypt_alg_unknown = 0,
+enum class crypt_algorithm_t : uint8 {
+    unknown = 0,
 
     aes128 = 0x01,
     aes192 = 0x02,
@@ -112,8 +110,9 @@ enum crypt_algorithm_t : uint8 {
  *      EVP_CIPHER_CTX_ctrl(context, EVP_CTRL_AEAD_SET_TAG, 8, nullptr);
  *      EVP_CIPHER_free(cipher);
  */
-enum crypt_mode_t : uint8 {
-    mode_unknown = 0,
+enum class crypt_mode_t : uint8 {
+    unknown = 0,
+
     ecb = 1,
     cbc = 2,
     cfb = 3,
@@ -125,14 +124,12 @@ enum crypt_mode_t : uint8 {
     wrap = 9,
     ccm = 10,  // 14-octet authentication tag
 
-    mode_cipher = 11,
-    mode_chacha20 = mode_cipher,
-    mode_aead = 12,
-    mode_poly1305 = mode_aead,
+    poly1305 = 12,
 };
 
-enum crypt_enc_t {
-    crypt_enc_undefined = 0,
+enum class crypt_enc_t {
+    unknown = 0,
+
     rsa_1_5 = 1,
     rsa_oaep = 2,
     rsa_oaep256 = 3,
@@ -202,64 +199,63 @@ enum class sig_category_t : uint8 {
     slhdsa = 11,        // SHL-DSA
 };
 
-constexpr uint16 t_make_sigscheme(sig_category_t c, hash_algorithm_t h) { return static_cast<uint16>((t_escape(c) << 8) | t_escape(h)); }
-constexpr uint16 t_make_sigscheme(uint8 c, hash_algorithm_t h) { return static_cast<uint16>((c << 8) | t_escape(h)); }
-constexpr uint16 t_make_sigscheme(sig_category_t c, uint8 h) { return static_cast<uint16>((t_escape(c) << 8) | h); }
+constexpr uint16 make_sigscheme(sig_category_t c, hash_algorithm_t h) { return static_cast<uint16>((t_underlying(c) << 8) | t_underlying(h)); }
+constexpr uint16 make_sigscheme(sig_category_t c, uint8 h) { return static_cast<uint16>((t_underlying(c) << 8) | h); }
 /**
  * (sig_category_t << 8) | hash_algorithm_t
  */
 enum class signature_t : uint16 {
     unknown = 0,
 
-    hs256 = t_make_sigscheme(sig_category_t::hmac, hash_algorithm_t::sha2_256),
-    hs384 = t_make_sigscheme(sig_category_t::hmac, hash_algorithm_t::sha2_384),
-    hs512 = t_make_sigscheme(sig_category_t::hmac, hash_algorithm_t::sha2_512),
+    hs256 = make_sigscheme(sig_category_t::hmac, hash_algorithm_t::sha2_256),
+    hs384 = make_sigscheme(sig_category_t::hmac, hash_algorithm_t::sha2_384),
+    hs512 = make_sigscheme(sig_category_t::hmac, hash_algorithm_t::sha2_512),
 
-    rs256 = t_make_sigscheme(sig_category_t::rsassa_pkcs15, hash_algorithm_t::sha2_256),
-    rs384 = t_make_sigscheme(sig_category_t::rsassa_pkcs15, hash_algorithm_t::sha2_384),
-    rs512 = t_make_sigscheme(sig_category_t::rsassa_pkcs15, hash_algorithm_t::sha2_512),
-    rs1 = t_make_sigscheme(sig_category_t::rsassa_pkcs15, hash_algorithm_t::sha1),
+    rs256 = make_sigscheme(sig_category_t::rsassa_pkcs15, hash_algorithm_t::sha2_256),
+    rs384 = make_sigscheme(sig_category_t::rsassa_pkcs15, hash_algorithm_t::sha2_384),
+    rs512 = make_sigscheme(sig_category_t::rsassa_pkcs15, hash_algorithm_t::sha2_512),
+    rs1 = make_sigscheme(sig_category_t::rsassa_pkcs15, hash_algorithm_t::sha1),
 
-    es256 = t_make_sigscheme(sig_category_t::ecdsa, hash_algorithm_t::sha2_256),
-    es384 = t_make_sigscheme(sig_category_t::ecdsa, hash_algorithm_t::sha2_384),
-    es512 = t_make_sigscheme(sig_category_t::ecdsa, hash_algorithm_t::sha2_512),
+    es256 = make_sigscheme(sig_category_t::ecdsa, hash_algorithm_t::sha2_256),
+    es384 = make_sigscheme(sig_category_t::ecdsa, hash_algorithm_t::sha2_384),
+    es512 = make_sigscheme(sig_category_t::ecdsa, hash_algorithm_t::sha2_512),
 
-    ps256 = t_make_sigscheme(sig_category_t::rsassa_pss, hash_algorithm_t::sha2_256),
-    ps384 = t_make_sigscheme(sig_category_t::rsassa_pss, hash_algorithm_t::sha2_384),
-    ps512 = t_make_sigscheme(sig_category_t::rsassa_pss, hash_algorithm_t::sha2_512),
+    ps256 = make_sigscheme(sig_category_t::rsassa_pss, hash_algorithm_t::sha2_256),
+    ps384 = make_sigscheme(sig_category_t::rsassa_pss, hash_algorithm_t::sha2_384),
+    ps512 = make_sigscheme(sig_category_t::rsassa_pss, hash_algorithm_t::sha2_512),
 
-    eddsa = t_make_sigscheme(sig_category_t::eddsa, hash_algorithm_t{}),
+    eddsa = make_sigscheme(sig_category_t::eddsa, hash_algorithm_t{}),
 
-    sha1 = t_make_sigscheme(0, hash_algorithm_t::sha1),
-    sha224 = t_make_sigscheme(0, hash_algorithm_t::sha2_224),
-    sha256 = t_make_sigscheme(0, hash_algorithm_t::sha2_256),
-    sha384 = t_make_sigscheme(0, hash_algorithm_t::sha2_384),
-    sha512 = t_make_sigscheme(0, hash_algorithm_t::sha2_512),
-    shake128 = t_make_sigscheme(0, hash_algorithm_t::shake128),
-    shake256 = t_make_sigscheme(0, hash_algorithm_t::shake256),
+    sha1 = make_sigscheme(sig_category_t::dgst, hash_algorithm_t::sha1),
+    sha224 = make_sigscheme(sig_category_t::dgst, hash_algorithm_t::sha2_224),
+    sha256 = make_sigscheme(sig_category_t::dgst, hash_algorithm_t::sha2_256),
+    sha384 = make_sigscheme(sig_category_t::dgst, hash_algorithm_t::sha2_384),
+    sha512 = make_sigscheme(sig_category_t::dgst, hash_algorithm_t::sha2_512),
+    shake128 = make_sigscheme(sig_category_t::dgst, hash_algorithm_t::shake128),
+    shake256 = make_sigscheme(sig_category_t::dgst, hash_algorithm_t::shake256),
 
-    es256k = t_make_sigscheme(sig_category_t::ecdsa, hash_algorithm_t::sha2_256),  // ES256K, NID_secp256k1
+    es256k = make_sigscheme(sig_category_t::ecdsa, hash_algorithm_t::sha2_256),  // ES256K, NID_secp256k1
 
-    mldsa44 = t_make_sigscheme(sig_category_t::mldsa, 0xf1),  // NIST security level 2
-    mldsa65 = t_make_sigscheme(sig_category_t::mldsa, 0xf2),  // NIST security level 3
-    mldsa87 = t_make_sigscheme(sig_category_t::mldsa, 0xf3),  // NIST security level 5
+    mldsa44 = make_sigscheme(sig_category_t::mldsa, 0xf1),  // NIST security level 2
+    mldsa65 = make_sigscheme(sig_category_t::mldsa, 0xf2),  // NIST security level 3
+    mldsa87 = make_sigscheme(sig_category_t::mldsa, 0xf3),  // NIST security level 5
 
-    brainpool256 = t_make_sigscheme(sig_category_t::brainpool, hash_algorithm_t::sha2_256),
-    brainpool384 = t_make_sigscheme(sig_category_t::brainpool, hash_algorithm_t::sha2_384),
-    brainpool512 = t_make_sigscheme(sig_category_t::brainpool, hash_algorithm_t::sha2_512),
+    brainpool256 = make_sigscheme(sig_category_t::brainpool, hash_algorithm_t::sha2_256),
+    brainpool384 = make_sigscheme(sig_category_t::brainpool, hash_algorithm_t::sha2_384),
+    brainpool512 = make_sigscheme(sig_category_t::brainpool, hash_algorithm_t::sha2_512),
 
-    slhdsa_sha2_128s = t_make_sigscheme(sig_category_t::slhdsa, 0xf1),
-    slhdsa_sha2_128f = t_make_sigscheme(sig_category_t::slhdsa, 0xf2),
-    slhdsa_sha2_192s = t_make_sigscheme(sig_category_t::slhdsa, 0xf3),
-    slhdsa_sha2_192f = t_make_sigscheme(sig_category_t::slhdsa, 0xf4),
-    slhdsa_sha2_256s = t_make_sigscheme(sig_category_t::slhdsa, 0xf5),
-    slhdsa_sha2_256f = t_make_sigscheme(sig_category_t::slhdsa, 0xf6),
-    slhdsa_shake_128s = t_make_sigscheme(sig_category_t::slhdsa, 0xf7),
-    slhdsa_shake_128f = t_make_sigscheme(sig_category_t::slhdsa, 0xf8),
-    slhdsa_shake_192s = t_make_sigscheme(sig_category_t::slhdsa, 0xf9),
-    slhdsa_shake_192f = t_make_sigscheme(sig_category_t::slhdsa, 0xfa),
-    slhdsa_shake_256s = t_make_sigscheme(sig_category_t::slhdsa, 0xfb),
-    slhdsa_shake_256f = t_make_sigscheme(sig_category_t::slhdsa, 0xfc),
+    slhdsa_sha2_128s = make_sigscheme(sig_category_t::slhdsa, 0xf1),
+    slhdsa_sha2_128f = make_sigscheme(sig_category_t::slhdsa, 0xf2),
+    slhdsa_sha2_192s = make_sigscheme(sig_category_t::slhdsa, 0xf3),
+    slhdsa_sha2_192f = make_sigscheme(sig_category_t::slhdsa, 0xf4),
+    slhdsa_sha2_256s = make_sigscheme(sig_category_t::slhdsa, 0xf5),
+    slhdsa_sha2_256f = make_sigscheme(sig_category_t::slhdsa, 0xf6),
+    slhdsa_shake_128s = make_sigscheme(sig_category_t::slhdsa, 0xf7),
+    slhdsa_shake_128f = make_sigscheme(sig_category_t::slhdsa, 0xf8),
+    slhdsa_shake_192s = make_sigscheme(sig_category_t::slhdsa, 0xf9),
+    slhdsa_shake_192f = make_sigscheme(sig_category_t::slhdsa, 0xfa),
+    slhdsa_shake_256s = make_sigscheme(sig_category_t::slhdsa, 0xfb),
+    slhdsa_shake_256f = make_sigscheme(sig_category_t::slhdsa, 0xfc),
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -452,15 +448,15 @@ enum class tls_sigscheme_t : uint16 {
  * @remarks
  * if there are both public_key | asn1public_key in the flag, asn1public_key has higher priority.
  * | key type   | public_key               | asn1public_key | private_key     |
- * | kty_oct    | N/A                      | N/A            | item_hmac_k     |
- * | kty_okp    | item_ec_x                | item_asn1der   | item_ec_d       |
- * | kty_mldsa  | item_ec_x                | item_asn1der   | item_ec_d       |
- * | kty_ec     | item_ec_pub_uncompressed | item_asn1der   | item_ec_d       |
- * | kty_rsa    | N/A                      | item_asn1der   | item_rsa_d      |
- * | kty_rsapss | N/A                      | item_asn1der   | item_rsa_d      |
- * | kty_dh     | item_dh_pub              | item_asn1der   | item_dh_priv    |
- * | kty_dsa    | N/A                      | item_asn1der   | item_dsa_x      |
- * | kty_mlkem  | TODO                     | TODO           | item_mlkem_priv |
+ * | kty_oct    | N/A                      | N/A            | crypt_item_t::hmac_k     |
+ * | kty_okp    | crypt_item_t::ec_x                | crypt_item_t::asn1der   | crypt_item_t::ec_d       |
+ * | kty_mldsa  | crypt_item_t::ec_x                | crypt_item_t::asn1der   | crypt_item_t::ec_d       |
+ * | kty_ec     | crypt_item_t::ec_pub_uncompressed | crypt_item_t::asn1der   | crypt_item_t::ec_d       |
+ * | kty_rsa    | N/A                      | crypt_item_t::asn1der   | crypt_item_t::rsa_d      |
+ * | kty_rsapss | N/A                      | crypt_item_t::asn1der   | crypt_item_t::rsa_d      |
+ * | kty_dh     | crypt_item_t::dh_pub              | crypt_item_t::asn1der   | crypt_item_t::dh_priv    |
+ * | kty_dsa    | N/A                      | crypt_item_t::asn1der   | crypt_item_t::dsa_x      |
+ * | kty_mlkem  | TODO                     | TODO           | crypt_item_t::mlkem_priv |
  */
 enum crypt_access_t {
     public_key = (1 << 0),      // simple and common representation
@@ -516,45 +512,46 @@ enum crypto_use_t : uint16 {
     use_any = (0xffff),
 };
 
-enum crypt_item_t : uint16 {
+enum class crypt_item_t : uint16 {
+    unknown = 0,
     /* binary */
-    item_aad = 1,           // P - protected_header.encoded, additional authenticated data
-    item_cek = 2,           // k - content encryption key
-    item_encryptedkey = 3,  // K - encrypted cek
-    item_iv = 4,            // I - initial vector
-    item_ciphertext = 5,    // C - ciphertext
-    item_tag = 6,           // T - authentication tag
-    item_apu = 7,           // APU - agreement partyUinfo
-    item_apv = 8,           // APV - agreement partyVinfo
-    item_p2s = 9,           // P2S - PBES2 salt
+    aad = 1,           // P - protected_header.encoded, additional authenticated data
+    cek = 2,           // k - content encryption key
+    encryptedkey = 3,  // K - encrypted cek
+    iv = 4,            // I - initial vector
+    ciphertext = 5,    // C - ciphertext
+    tag = 6,           // T - authentication tag
+    apu = 7,           // APU - agreement partyUinfo
+    apv = 8,           // APV - agreement partyVinfo
+    p2s = 9,           // P2S - PBES2 salt
 
-    item_asn1der = 63,
-    item_rsa_pub = item_asn1der,
-    item_rsa_n = 64,
-    item_rsa_e = 65,
-    item_rsa_d = 66,
-    item_rsa_priv = item_rsa_d,
-    item_rsa_p = 67,
-    item_rsa_q = 68,
-    item_rsa_dp = 69,
-    item_rsa_dq = 70,
-    item_rsa_qi = 71,
+    asn1der = 63,
+    rsa_pub = asn1der,
+    rsa_n = 64,
+    rsa_e = 65,
+    rsa_d = 66,
+    rsa_priv = rsa_d,
+    rsa_p = 67,
+    rsa_q = 68,
+    rsa_dp = 69,
+    rsa_dq = 70,
+    rsa_qi = 71,
 
-    item_ec_crv = 72,
-    item_ec_x = 73,
-    item_ec_y = 74,
-    item_ec_d = 75,
+    ec_crv = 72,
+    ec_x = 73,
+    ec_y = 74,
+    ec_d = 75,
 
-    item_hmac_k = 76,
+    hmac_k = 76,
 
-    item_ec_pub_uncompressed = 77,
-    item_ec_pub = item_ec_pub_uncompressed,
+    ec_pub_uncompressed = 77,
+    ec_pub = ec_pub_uncompressed,
 
-    item_pubkey = 78,
-    item_privkey = 79,
+    pubkey = 78,
+    privekey = 79,
 
-    item_dh_pub = item_pubkey,    // sa item_dh_p, item_dh_g, item_dh_y
-    item_dh_priv = item_privkey,  // sa item_dh_x
+    dh_pub = pubkey,     // sa dh_p, dh_g, dh_y
+    dh_priv = privekey,  // sa dh_x
 
     /**
      * DSA
@@ -570,20 +567,20 @@ enum crypt_item_t : uint16 {
      *     r (signature 1)
      *     s (signature 2)
      */
-    item_dsa_pub = item_asn1der,
-    item_dsa_priv = 80,
-    item_dsa_p = 81,
-    item_dsa_q = 82,
-    item_dsa_g = 83,
-    item_dsa_y = 84,
-    item_dsa_x = item_dsa_priv,
+    dsa_pub = asn1der,
+    dsa_priv = 80,
+    dsa_p = 81,
+    dsa_q = 82,
+    dsa_g = 83,
+    dsa_y = 84,
+    dsa_x = dsa_priv,
 
-    item_mlkem_pub = item_pubkey,
-    item_mlkem_priv = item_privkey,
-    item_mldsa_pub = item_pubkey,
-    item_mldsa_priv = item_privkey,
-    item_slhdsa_pub = item_pubkey,
-    item_slhdsa_priv = item_privkey,
+    mlkem_pub = pubkey,
+    mlkem_priv = privekey,
+    mldsa_pub = pubkey,
+    mldsa_priv = privekey,
+    slhdsa_pub = pubkey,
+    slhdsa_priv = privekey,
 
     /**
      *   y = g^x mod p
@@ -592,20 +589,20 @@ enum crypt_item_t : uint16 {
      *     x : xate key
      *     y : ylic key
      */
-    item_dh_p = 89,
-    item_dh_q = 90,
-    item_dh_g = 91,
-    item_dh_y = item_dh_pub,
-    item_dh_x = item_dh_priv,
+    dh_p = 89,
+    dh_q = 90,
+    dh_g = 91,
+    dh_y = dh_pub,
+    dh_x = dh_priv,
 
     /* string */
-    item_header = 128,  // p - header (protected_header.decoded)
-    item_kid = 129,     // kid
-    item_zip = 130,     // zip "DEF"
+    header = 128,  // p - header (protected_header.decoded)
+    kid = 129,     // kid
+    zip = 130,     // zip "DEF"
 
     /* variant */
-    item_epk = 256,  // ephemeral public key (pointer to EVP_PKEY*)
-    item_p2c = 257,  // PBES2 count (int32)
+    epk = 256,  // ephemeral public key (pointer to EVP_PKEY*)
+    p2c = 257,  // PBES2 count (int32)
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -613,105 +610,105 @@ enum crypt_item_t : uint16 {
 ///////////////////////////////////////////////////////////////////////////
 
 // TLS key exchange
-enum keyexchange_t {
-    keyexchange_unknown = 0,
-    keyexchange_rsa = 1,           // Rivest Shamir Adleman algorithm (RSA)
-    keyexchange_dh = 2,            // Diffie-Hellman (DH)
-    keyexchange_dhe = 3,           // Diffie-Hellman Ephemeral (DHE)
-    keyexchange_krb5 = 4,          // Kerberos 5 (KRB5)
-    keyexchange_psk = 5,           // Pre-Shared Key (PSK)
-    keyexchange_ecdh = 6,          // Elliptic Curve Diffie-Hellman (ECDH)
-    keyexchange_ecdhe = 7,         // Elliptic Curve Diffie-Hellman Ephemeral (ECDHE)
-    keyexchange_srp = 8,           // Secure Remote Password (SRP)
-    keyexchange_eccpwd = 9,        // ECCPWD
-    keyexchange_gost = 10,         // Russian cryptographic standard algorithms
-    keyexchange_rsa_export = 11,   // TLS 1.0
-    keyexchange_dss_export = 12,   // TLS 1.0
-    keyexchange_anon_export = 13,  // TLS 1.0
-    keyexchange_krb5_export = 14,  // TLS 1.0
-    keyexchange_mlkem = 15,        // MLKEM
+enum class keyexchange_t {
+    unknown = 0,
+    rsa = 1,           // Rivest Shamir Adleman algorithm (RSA)
+    dh = 2,            // Diffie-Hellman (DH)
+    dhe = 3,           // Diffie-Hellman Ephemeral (DHE)
+    krb5 = 4,          // Kerberos 5 (KRB5)
+    psk = 5,           // Pre-Shared Key (PSK)
+    ecdh = 6,          // Elliptic Curve Diffie-Hellman (ECDH)
+    ecdhe = 7,         // Elliptic Curve Diffie-Hellman Ephemeral (ECDHE)
+    srp = 8,           // Secure Remote Password (SRP)
+    eccpwd = 9,        // ECCPWD
+    gost = 10,         // Russian cryptographic standard algorithms
+    rsa_export = 11,   // TLS 1.0
+    dss_export = 12,   // TLS 1.0
+    anon_export = 13,  // TLS 1.0
+    krb5_export = 14,  // TLS 1.0
+    mlkem = 15,        // MLKEM
 };
 
 // TLS authentication
-enum auth_t {
-    auth_unknown = 0,
-    auth_dss = 1,       // Digital Signature Standard (DSS)
-    auth_rsa = 2,       // Rivest Shamir Adleman algorithm (RSA)
-    auth_anon = 3,      // Anonymous (anon)
-    auth_krb5 = 4,      // Kerberos 5 (KRB5)
-    auth_psk = 5,       // Pre-Shared Key (PSK)
-    auth_ecdsa = 6,     // Elliptic Curve Digital Signature Algorithm (ECDSA)
-    auth_sha1 = 7,      // Secure Hash Algorithm 1 with Rivest Shamir Adleman algorithm (SHA RSA)
-    auth_sha2_256 = 8,  // SHA256
-    auth_sha2_384 = 9,  // SHA384
-    auth_eccpwd = 10,   // ECCPWD
-    auth_gost = 11,     // GOST R 34.10-2012 Digital Signature Algorithm (GOSTR341012)
+enum class auth_t {
+    unknown = 0,
+    dss = 1,       // Digital Signature Standard (DSS)
+    rsa = 2,       // Rivest Shamir Adleman algorithm (RSA)
+    anon = 3,      // Anonymous (anon)
+    krb5 = 4,      // Kerberos 5 (KRB5)
+    psk = 5,       // Pre-Shared Key (PSK)
+    ecdsa = 6,     // Elliptic Curve Digital Signature Algorithm (ECDSA)
+    sha1 = 7,      // Secure Hash Algorithm 1 with Rivest Shamir Adleman algorithm (SHA RSA)
+    sha2_256 = 8,  // SHA256
+    sha2_384 = 9,  // SHA384
+    eccpwd = 10,   // ECCPWD
+    gost = 11,     // GOST R 34.10-2012 Digital Signature Algorithm (GOSTR341012)
 };
 
 ///////////////////////////////////////////////////////////////////////////
 // JOSE
 ///////////////////////////////////////////////////////////////////////////
-enum jwa_group_t {
-    jwa_group_rsa = 1,
-    jwa_group_aeskw = 2,
-    jwa_group_dir = 3,
-    jwa_group_ecdh = 4,
-    jwa_group_ecdh_aeskw = 5,
-    jwa_group_aesgcmkw = 6,
-    jwa_group_pbes_hs_aeskw = 7,
+enum class jwa_group_t {
+    rsa = 1,
+    aeskw = 2,
+    dir = 3,
+    ecdh = 4,
+    ecdh_aeskw = 5,
+    aesgcmkw = 6,
+    pbes_hs_aeskw = 7,
 };
 
 /**
  * @brief Cryptographic Algorithms for Key Management
  */
-enum jwa_t {
-    jwa_unknown = 0,
-    jwa_rsa_1_5 = 1,              // RSA1_5
-    jwa_rsa_oaep = 2,             // RSA-OAEP
-    jwa_rsa_oaep_256 = 3,         // RSA-OAEP-256
-    jwa_a128kw = 4,               // A128KW
-    jwa_a192kw = 5,               // A192KW
-    jwa_a256kw = 6,               // A256KW
-    jwa_dir = 7,                  // dir
-    jwa_ecdh_es = 8,              // ECDH-ES
-    jwa_ecdh_es_a128kw = 9,       // ECDH-ES+A128KW
-    jwa_ecdh_es_a192kw = 10,      // ECDH-ES+A192KW
-    jwa_ecdh_es_a256kw = 11,      // ECDH-ES+A256KW
-    jwa_a128gcmkw = 12,           // A128GCMKW
-    jwa_a192gcmkw = 13,           // A192GCMKW
-    jwa_a256gcmkw = 14,           // A256GCMKW
-    jwa_pbes2_hs256_a128kw = 15,  // PBES2-HS256+A128KW
-    jwa_pbes2_hs384_a192kw = 16,  // PBES2-HS384+A192KW
-    jwa_pbes2_hs512_a256kw = 17,  // PBES2-HS512+A256KW
+enum class jwa_t {
+    unknown = 0,
+    rsa_1_5 = 1,              // RSA1_5
+    rsa_oaep = 2,             // RSA-OAEP
+    rsa_oaep_256 = 3,         // RSA-OAEP-256
+    a128kw = 4,               // A128KW
+    a192kw = 5,               // A192KW
+    a256kw = 6,               // A256KW
+    dir = 7,                  // dir
+    ecdh_es = 8,              // ECDH-ES
+    ecdh_es_a128kw = 9,       // ECDH-ES+A128KW
+    ecdh_es_a192kw = 10,      // ECDH-ES+A192KW
+    ecdh_es_a256kw = 11,      // ECDH-ES+A256KW
+    a128gcmkw = 12,           // A128GCMKW
+    a192gcmkw = 13,           // A192GCMKW
+    a256gcmkw = 14,           // A256GCMKW
+    pbes2_hs256_a128kw = 15,  // PBES2-HS256+A128KW
+    pbes2_hs384_a192kw = 16,  // PBES2-HS384+A192KW
+    pbes2_hs512_a256kw = 17,  // PBES2-HS512+A256KW
 };
 
-enum jwe_group_t {
-    jwe_group_aescbc_hs = 1,
-    jwe_group_aesgcm = 2,
+enum class jwe_group_t {
+    aescbc_hs = 1,
+    aesgcm = 2,
 };
 
 /**
  * @brief Cryptographic Algorithms for Content Encryption
  */
-enum jwe_t {
-    jwe_unknown = 0,
-    jwe_a128cbc_hs256 = 1,  // A128CBC-HS256
-    jwe_a192cbc_hs384 = 2,  // A192CBC-HS384
-    jwe_a256cbc_hs512 = 3,  // A256CBC-HS512
-    jwe_a128gcm = 4,        // A128GCM
-    jwe_a192gcm = 5,        // A192GCM
-    jwe_a256gcm = 6,        // A256GCM
+enum class jwe_t {
+    unknown = 0,
+    a128cbc_hs256 = 1,  // A128CBC-HS256
+    a192cbc_hs384 = 2,  // A192CBC-HS384
+    a256cbc_hs512 = 3,  // A256CBC-HS512
+    a128gcm = 4,        // A128GCM
+    a192gcm = 5,        // A192GCM
+    a256gcm = 6,        // A256GCM
 };
 
-enum jws_group_t : uint8 {
-    jws_group_unknown = 0,
-    jws_group_hmac = static_cast<uint8>(sig_category_t::hmac),                    // HS256, HS384, HS512
-    jws_group_rsassa_pkcs15 = static_cast<uint8>(sig_category_t::rsassa_pkcs15),  // RS256, RS384, RS512
-    jws_group_ecdsa = static_cast<uint8>(sig_category_t::ecdsa),                  // ES256, ES384, ES512
-    jws_group_rsassa_pss = static_cast<uint8>(sig_category_t::rsassa_pss),        // PS256, PS384, PS512
-    jws_group_eddsa = static_cast<uint8>(sig_category_t::eddsa),                  // EdDSA
-    jws_group_mldsa = static_cast<uint8>(sig_category_t::mldsa),                  // MLDSA
-    jws_group_slhdsa = static_cast<uint8>(sig_category_t::slhdsa),                // SLH-DSA
+enum class jws_group_t : uint8 {
+    unknown = 0,
+    hmac = t_underlying(sig_category_t::hmac),                    // HS256, HS384, HS512
+    rsassa_pkcs15 = t_underlying(sig_category_t::rsassa_pkcs15),  // RS256, RS384, RS512
+    ecdsa = t_underlying(sig_category_t::ecdsa),                  // ES256, ES384, ES512
+    rsassa_pss = t_underlying(sig_category_t::rsassa_pss),        // PS256, PS384, PS512
+    eddsa = t_underlying(sig_category_t::eddsa),                  // EdDSA
+    mldsa = t_underlying(sig_category_t::mldsa),                  // MLDSA
+    slhdsa = t_underlying(sig_category_t::slhdsa),                // SLH-DSA
 };
 
 /**
@@ -719,24 +716,24 @@ enum jws_group_t : uint8 {
  * RFC 7515 JSON Web Signature (JWS)
  * RFC 8037 CFRG Elliptic Curve Diffie-Hellman (ECDH) and Signatures in JSON Object Signing and Encryption (JOSE)
  */
-enum jws_t : uint16 {
-    jws_unknown = 0,
-    jws_hs256 = static_cast<uint16>(signature_t::hs256),
-    jws_hs384 = static_cast<uint16>(signature_t::hs384),
-    jws_hs512 = static_cast<uint16>(signature_t::hs512),
-    jws_rs256 = static_cast<uint16>(signature_t::rs256),
-    jws_rs384 = static_cast<uint16>(signature_t::rs384),
-    jws_rs512 = static_cast<uint16>(signature_t::rs512),
-    jws_es256 = static_cast<uint16>(signature_t::es256),
-    jws_es384 = static_cast<uint16>(signature_t::es384),
-    jws_es512 = static_cast<uint16>(signature_t::es512),
-    jws_ps256 = static_cast<uint16>(signature_t::ps256),
-    jws_ps384 = static_cast<uint16>(signature_t::ps384),
-    jws_ps512 = static_cast<uint16>(signature_t::ps512),
-    jws_eddsa = static_cast<uint16>(signature_t::eddsa),
-    jws_mldsa44 = static_cast<uint16>(signature_t::mldsa44),
-    jws_mldsa65 = static_cast<uint16>(signature_t::mldsa65),
-    jws_mldsa87 = static_cast<uint16>(signature_t::mldsa87),
+enum class jws_t : uint16 {
+    unknown = 0,
+    hs256 = t_underlying(signature_t::hs256),
+    hs384 = t_underlying(signature_t::hs384),
+    hs512 = t_underlying(signature_t::hs512),
+    rs256 = t_underlying(signature_t::rs256),
+    rs384 = t_underlying(signature_t::rs384),
+    rs512 = t_underlying(signature_t::rs512),
+    es256 = t_underlying(signature_t::es256),
+    es384 = t_underlying(signature_t::es384),
+    es512 = t_underlying(signature_t::es512),
+    ps256 = t_underlying(signature_t::ps256),
+    ps384 = t_underlying(signature_t::ps384),
+    ps512 = t_underlying(signature_t::ps512),
+    eddsa = t_underlying(signature_t::eddsa),
+    mldsa44 = t_underlying(signature_t::mldsa44),
+    mldsa65 = t_underlying(signature_t::mldsa65),
+    mldsa87 = t_underlying(signature_t::mldsa87),
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -746,38 +743,39 @@ enum cose_key_t {
     cose_key_unknown = 0,
     // RFC 8152 Table 2: Common Header Parameters
     // RFC 8152 Table 3: Common Header Parameters
-    cose_alg = 1,           // int / tstr
-    cose_crit = 2,          // [+ label]
-    cose_content_type = 3,  // tstr / uint
-    cose_kid = 4,           // bstr
-    cose_iv = 5,            // bstr
-    cose_partial_iv = 6,    // bstr
+    alg = 1,           // int / tstr
+    crit = 2,          // [+ label]
+    content_type = 3,  // tstr / uint
+    kid = 4,           // bstr
+    iv = 5,            // bstr
+    partial_iv = 6,    // bstr
 
-    cose_counter_sig = 7,  // COSE_Signature / [+ COSE_Signature]
+    counter_sig = 7,  // COSE_Signature / [+ COSE_Signature]
 
     // RFC 8152 Table 27: Header Parameter for CounterSignature0
-    cose_counter_sig0 = 9,
+    counter_sig0 = 9,
 
     // RFC 9338 Table 1: Common Header Parameters
     // RFC 9338 Table 2: New Common Header Parameters
-    cose_counter_sig_v2 = 11,
-    cose_counter_sig0_v2 = 12,
+    counter_sig_v2 = 11,
+    counter_sig0_v2 = 12,
 
     // RFC 9360 Table 1: X.509 COSE Header Parameters
-    cose_x5bag = 32,
-    cose_x5chain = 33,
-    cose_x5t = 34,
-    cose_x5u = 35,
+    x5bag = 32,
+    x5chain = 33,
+    x5t = 34,
+    x5u = 35,
 
     // RFC 8152 Table 19: ECDH Algorithm Parameters
     // RFC 9053 Table 15: ECDH Algorithm Parameters
-    cose_ephemeral_key = -1,
-    cose_static_key = -2,
-    cose_static_key_id = -3,
+    epk = -1,
+    ephemeral_key = epk,
+    static_key = -2,
+    static_key_id = -3,
 
     // RFC 8152 Table 13: HKDF Algorithm Parameters
     // RFC 9053 Table 9: HKDF Algorithm Parameters
-    cose_salt = -20,
+    salt = -20,
 
     // RFC 8152 Table 14: Context Algorithm Parameters
     // RFC 9053 Table 10: Context Algorithm Parameters
@@ -789,9 +787,9 @@ enum cose_key_t {
     cose_partyv_other = -26,
 
     // RFC 9360 Table 2: Static ECDH Algorithm Values
-    cose_x5t_sender = -27,
-    cose_x5u_sender = -28,
-    cose_x5chain_sender = -29,
+    x5t_sender = -27,
+    x5u_sender = -28,
+    x5chain_sender = -29,
 };
 /**
  * https://www.iana.org/assignments/cose/cose.xhtml
@@ -810,7 +808,7 @@ enum cose_key_lable_t {
 
     // RFC 8152 Table 23: EC Key Parameters
     // RFC 9053 Table 19: EC Key Parameters
-    // cose_kty_t::cose_kty_ec2(2)
+    // cose_kty_t::ec2(2)
     cose_ec_crv = -1,
     cose_ec_x = -2,
     cose_ec_y = -3,
@@ -818,18 +816,18 @@ enum cose_key_lable_t {
 
     // RFC 8152 Table 24: Octet Key Pair Parameters
     // RFC 9053 Table 20: Octet Key Pair Parameters
-    // cose_kty_t::cose_kty_okp(1)
+    // cose_kty_t::okp(1)
     cose_okp_crv = -1,
     cose_okp_x = -2,
     cose_okp_d = -4,
 
     // RFC 8152 Table 25: Symmetric Key Parameters
     // RFC 9053 Table 21: Symmetric Key Parameters
-    // cose_kty_t::cose_kty_symm(4)
+    // cose_kty_t::symm(4)
     cose_symm_k = -1,
 
     // RSA 8230 Table 4: RSA Key Parameters
-    // cose_kty_t::cose_kty_rsa(3)
+    // cose_kty_t::rsa(3)
     cose_rsa_n = -1,
     cose_rsa_e = -2,
     cose_rsa_d = -3,
@@ -843,9 +841,9 @@ enum cose_key_lable_t {
     cose_rsa_di = -11,
     cose_rsa_ti = -12,
 
-    // cose_kty_t::cose_kty_hss_lms(5)
+    // cose_kty_t::hss_lms(5)
 
-    // cose_kty_t::cose_kty_walnutdsa(6)
+    // cose_kty_t::walnutdsa(6)
 
     // cose_kty_t::cose_kry_akp(7)
     cose_pub = -1,
@@ -856,38 +854,38 @@ enum cose_key_lable_t {
  * @brief   cose key types
  *          https://www.iana.org/assignments/cose
  */
-enum cose_kty_t {
+enum class cose_kty_t {
     // RFC 8152 Table 21: Key Type Values
     // RFC 9053 Table 17: Key Type Values
     // RFC 9053 Table 22: Key Type Capabilities
-    cose_kty_unknown = 0,
-    cose_kty_okp = 1,
-    cose_kty_ec2 = 2,
-    cose_kty_symm = 4,
+    unknown = 0,
+    okp = 1,
+    ec2 = 2,
+    symm = 4,
 
     // RFC 8230 Table 3: Key Type Values
     // RFC 9053 Table 22: Key Type Capabilities
-    cose_kty_rsa = 3,
+    rsa = 3,
 
     // RFC 9053 Table 22: Key Type Capabilities
-    cose_kty_hss_lms = 5,
-    cose_kty_walnutdsa = 6,
+    hss_lms = 5,
+    walnutdsa = 6,
     // https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/
-    cose_kty_akp = 7,
+    akp = 7,
 };
-enum cose_keyop_t {
+enum class cose_keyop_t {
     // RFC 8152 Table 4: Key Operation Values
     // RFC 8152 Table 5: Key Operation Values
-    cose_keyop_sign = 1,
-    cose_keyop_verify = 2,
-    cose_keyop_encrypt = 3,
-    cose_keyop_decrypt = 4,
-    cose_keyop_wrap = 5,
-    cose_keyop_unwrap = 6,
-    cose_keyop_derive_key = 7,
-    cose_keyop_derive_bits = 8,
-    cose_keyop_mac_create = 9,
-    cose_keyop_mac_verify = 10,
+    sign = 1,
+    verify = 2,
+    encrypt = 3,
+    decrypt = 4,
+    wrap = 5,
+    unwrap = 6,
+    derive_key = 7,
+    derive_bits = 8,
+    mac_create = 9,
+    mac_verify = 10,
 };
 
 /**
@@ -1169,128 +1167,134 @@ enum cose_hint_flag_t {
  *    \ \--- hint
  *     \---- category
  */
-enum crypto_scheme_t : uint32 {
-    crypto_scheme_unknown = 0,
 
-    crypto_scheme_aes_128_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::aes128, crypt_mode_t::cbc),
-    crypto_scheme_aes_128_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::aes128, crypt_mode_t::cfb),
-    crypto_scheme_aes_128_cfb1 = CRYPTO_SCHEME16(crypt_algorithm_t::aes128, crypt_mode_t::cfb1),
-    crypto_scheme_aes_128_cfb8 = CRYPTO_SCHEME16(crypt_algorithm_t::aes128, crypt_mode_t::cfb8),
-    crypto_scheme_aes_128_ctr = CRYPTO_SCHEME16(crypt_algorithm_t::aes128, crypt_mode_t::ctr),
-    crypto_scheme_aes_128_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::aes128, crypt_mode_t::ecb),
-    crypto_scheme_aes_128_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::aes128, crypt_mode_t::ofb),
-    crypto_scheme_aes_128_wrap = CRYPTO_SCHEME16(crypt_algorithm_t::aes128, crypt_mode_t::wrap),
-    crypto_scheme_aes_192_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::aes192, crypt_mode_t::cbc),
-    crypto_scheme_aes_192_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::aes192, crypt_mode_t::cfb),
-    crypto_scheme_aes_192_cfb1 = CRYPTO_SCHEME16(crypt_algorithm_t::aes192, crypt_mode_t::cfb1),
-    crypto_scheme_aes_192_cfb8 = CRYPTO_SCHEME16(crypt_algorithm_t::aes192, crypt_mode_t::cfb8),
-    crypto_scheme_aes_192_ctr = CRYPTO_SCHEME16(crypt_algorithm_t::aes192, crypt_mode_t::ctr),
-    crypto_scheme_aes_192_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::aes192, crypt_mode_t::ecb),
-    crypto_scheme_aes_192_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::aes192, crypt_mode_t::ofb),
-    crypto_scheme_aes_192_wrap = CRYPTO_SCHEME16(crypt_algorithm_t::aes192, crypt_mode_t::wrap),
-    crypto_scheme_aes_256_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::aes256, crypt_mode_t::cbc),
-    crypto_scheme_aes_256_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::aes256, crypt_mode_t::cfb),
-    crypto_scheme_aes_256_cfb1 = CRYPTO_SCHEME16(crypt_algorithm_t::aes256, crypt_mode_t::cfb1),
-    crypto_scheme_aes_256_cfb8 = CRYPTO_SCHEME16(crypt_algorithm_t::aes256, crypt_mode_t::cfb8),
-    crypto_scheme_aes_256_ctr = CRYPTO_SCHEME16(crypt_algorithm_t::aes256, crypt_mode_t::ctr),
-    crypto_scheme_aes_256_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::aes256, crypt_mode_t::ecb),
-    crypto_scheme_aes_256_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::aes256, crypt_mode_t::ofb),
-    crypto_scheme_aes_256_wrap = CRYPTO_SCHEME16(crypt_algorithm_t::aes256, crypt_mode_t::wrap),
+constexpr uint32 make_cryptoscheme(crypt_algorithm_t c, crypt_mode_t m) { return static_cast<uint32>((t_underlying(c) << 8) | t_underlying(m)); }
+constexpr uint32 make_cryptoscheme(uint32 d, crypt_algorithm_t c, crypt_mode_t m) {
+    return static_cast<uint32>((d & 0xffff0000) | (t_underlying(c) << 8) | t_underlying(m));
+}
 
-    crypto_scheme_aria_128_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::aria128, crypt_mode_t::cbc),
-    crypto_scheme_aria_128_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::aria128, crypt_mode_t::cfb),
-    crypto_scheme_aria_128_cfb1 = CRYPTO_SCHEME16(crypt_algorithm_t::aria128, crypt_mode_t::cfb1),
-    crypto_scheme_aria_128_cfb8 = CRYPTO_SCHEME16(crypt_algorithm_t::aria128, crypt_mode_t::cfb8),
-    crypto_scheme_aria_128_ctr = CRYPTO_SCHEME16(crypt_algorithm_t::aria128, crypt_mode_t::ctr),
-    crypto_scheme_aria_128_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::aria128, crypt_mode_t::ecb),
-    crypto_scheme_aria_128_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::aria128, crypt_mode_t::ofb),
-    crypto_scheme_aria_192_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::aria192, crypt_mode_t::cbc),
-    crypto_scheme_aria_192_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::aria192, crypt_mode_t::cfb),
-    crypto_scheme_aria_192_cfb1 = CRYPTO_SCHEME16(crypt_algorithm_t::aria192, crypt_mode_t::cfb1),
-    crypto_scheme_aria_192_cfb8 = CRYPTO_SCHEME16(crypt_algorithm_t::aria192, crypt_mode_t::cfb8),
-    crypto_scheme_aria_192_ctr = CRYPTO_SCHEME16(crypt_algorithm_t::aria192, crypt_mode_t::ctr),
-    crypto_scheme_aria_192_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::aria192, crypt_mode_t::ecb),
-    crypto_scheme_aria_192_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::aria192, crypt_mode_t::ofb),
-    crypto_scheme_aria_256_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::aria256, crypt_mode_t::cbc),
-    crypto_scheme_aria_256_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::aria256, crypt_mode_t::cfb),
-    crypto_scheme_aria_256_cfb1 = CRYPTO_SCHEME16(crypt_algorithm_t::aria256, crypt_mode_t::cfb1),
-    crypto_scheme_aria_256_cfb8 = CRYPTO_SCHEME16(crypt_algorithm_t::aria256, crypt_mode_t::cfb8),
-    crypto_scheme_aria_256_ctr = CRYPTO_SCHEME16(crypt_algorithm_t::aria256, crypt_mode_t::ctr),
-    crypto_scheme_aria_256_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::aria256, crypt_mode_t::ecb),
-    crypto_scheme_aria_256_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::aria256, crypt_mode_t::ofb),
+enum class crypto_scheme_t : uint32 {
+    unknown = 0,
 
-    crypto_scheme_bf_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::blowfish, crypt_mode_t::cbc),
-    crypto_scheme_bf_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::blowfish, crypt_mode_t::cfb),
-    crypto_scheme_bf_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::blowfish, crypt_mode_t::ecb),
-    crypto_scheme_bf_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::blowfish, crypt_mode_t::ofb),
+    aes_128_cbc = make_cryptoscheme(crypt_algorithm_t::aes128, crypt_mode_t::cbc),
+    aes_128_cfb = make_cryptoscheme(crypt_algorithm_t::aes128, crypt_mode_t::cfb),
+    aes_128_cfb1 = make_cryptoscheme(crypt_algorithm_t::aes128, crypt_mode_t::cfb1),
+    aes_128_cfb8 = make_cryptoscheme(crypt_algorithm_t::aes128, crypt_mode_t::cfb8),
+    aes_128_ctr = make_cryptoscheme(crypt_algorithm_t::aes128, crypt_mode_t::ctr),
+    aes_128_ecb = make_cryptoscheme(crypt_algorithm_t::aes128, crypt_mode_t::ecb),
+    aes_128_ofb = make_cryptoscheme(crypt_algorithm_t::aes128, crypt_mode_t::ofb),
+    aes_128_wrap = make_cryptoscheme(crypt_algorithm_t::aes128, crypt_mode_t::wrap),
+    aes_192_cbc = make_cryptoscheme(crypt_algorithm_t::aes192, crypt_mode_t::cbc),
+    aes_192_cfb = make_cryptoscheme(crypt_algorithm_t::aes192, crypt_mode_t::cfb),
+    aes_192_cfb1 = make_cryptoscheme(crypt_algorithm_t::aes192, crypt_mode_t::cfb1),
+    aes_192_cfb8 = make_cryptoscheme(crypt_algorithm_t::aes192, crypt_mode_t::cfb8),
+    aes_192_ctr = make_cryptoscheme(crypt_algorithm_t::aes192, crypt_mode_t::ctr),
+    aes_192_ecb = make_cryptoscheme(crypt_algorithm_t::aes192, crypt_mode_t::ecb),
+    aes_192_ofb = make_cryptoscheme(crypt_algorithm_t::aes192, crypt_mode_t::ofb),
+    aes_192_wrap = make_cryptoscheme(crypt_algorithm_t::aes192, crypt_mode_t::wrap),
+    aes_256_cbc = make_cryptoscheme(crypt_algorithm_t::aes256, crypt_mode_t::cbc),
+    aes_256_cfb = make_cryptoscheme(crypt_algorithm_t::aes256, crypt_mode_t::cfb),
+    aes_256_cfb1 = make_cryptoscheme(crypt_algorithm_t::aes256, crypt_mode_t::cfb1),
+    aes_256_cfb8 = make_cryptoscheme(crypt_algorithm_t::aes256, crypt_mode_t::cfb8),
+    aes_256_ctr = make_cryptoscheme(crypt_algorithm_t::aes256, crypt_mode_t::ctr),
+    aes_256_ecb = make_cryptoscheme(crypt_algorithm_t::aes256, crypt_mode_t::ecb),
+    aes_256_ofb = make_cryptoscheme(crypt_algorithm_t::aes256, crypt_mode_t::ofb),
+    aes_256_wrap = make_cryptoscheme(crypt_algorithm_t::aes256, crypt_mode_t::wrap),
 
-    crypto_scheme_camellia_128_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::camellia128, crypt_mode_t::cbc),
-    crypto_scheme_camellia_128_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::camellia128, crypt_mode_t::cfb),
-    crypto_scheme_camellia_128_cfb1 = CRYPTO_SCHEME16(crypt_algorithm_t::camellia128, crypt_mode_t::cfb1),
-    crypto_scheme_camellia_128_cfb8 = CRYPTO_SCHEME16(crypt_algorithm_t::camellia128, crypt_mode_t::cfb8),
-    crypto_scheme_camellia_128_ctr = CRYPTO_SCHEME16(crypt_algorithm_t::camellia128, crypt_mode_t::ctr),
-    crypto_scheme_camellia_128_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::camellia128, crypt_mode_t::ecb),
-    crypto_scheme_camellia_128_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::camellia128, crypt_mode_t::ofb),
-    crypto_scheme_camellia_192_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::camellia192, crypt_mode_t::cbc),
-    crypto_scheme_camellia_192_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::camellia192, crypt_mode_t::cfb),
-    crypto_scheme_camellia_192_cfb1 = CRYPTO_SCHEME16(crypt_algorithm_t::camellia192, crypt_mode_t::cfb1),
-    crypto_scheme_camellia_192_cfb8 = CRYPTO_SCHEME16(crypt_algorithm_t::camellia192, crypt_mode_t::cfb8),
-    crypto_scheme_camellia_192_ctr = CRYPTO_SCHEME16(crypt_algorithm_t::camellia192, crypt_mode_t::ctr),
-    crypto_scheme_camellia_192_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::camellia192, crypt_mode_t::ecb),
-    crypto_scheme_camellia_192_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::camellia192, crypt_mode_t::ofb),
-    crypto_scheme_camellia_256_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::camellia256, crypt_mode_t::cbc),
-    crypto_scheme_camellia_256_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::camellia256, crypt_mode_t::cfb),
-    crypto_scheme_camellia_256_cfb1 = CRYPTO_SCHEME16(crypt_algorithm_t::camellia256, crypt_mode_t::cfb1),
-    crypto_scheme_camellia_256_cfb8 = CRYPTO_SCHEME16(crypt_algorithm_t::camellia256, crypt_mode_t::cfb8),
-    crypto_scheme_camellia_256_ctr = CRYPTO_SCHEME16(crypt_algorithm_t::camellia256, crypt_mode_t::ctr),
-    crypto_scheme_camellia_256_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::camellia256, crypt_mode_t::ecb),
-    crypto_scheme_camellia_256_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::camellia256, crypt_mode_t::ofb),
+    aria_128_cbc = make_cryptoscheme(crypt_algorithm_t::aria128, crypt_mode_t::cbc),
+    aria_128_cfb = make_cryptoscheme(crypt_algorithm_t::aria128, crypt_mode_t::cfb),
+    aria_128_cfb1 = make_cryptoscheme(crypt_algorithm_t::aria128, crypt_mode_t::cfb1),
+    aria_128_cfb8 = make_cryptoscheme(crypt_algorithm_t::aria128, crypt_mode_t::cfb8),
+    aria_128_ctr = make_cryptoscheme(crypt_algorithm_t::aria128, crypt_mode_t::ctr),
+    aria_128_ecb = make_cryptoscheme(crypt_algorithm_t::aria128, crypt_mode_t::ecb),
+    aria_128_ofb = make_cryptoscheme(crypt_algorithm_t::aria128, crypt_mode_t::ofb),
+    aria_192_cbc = make_cryptoscheme(crypt_algorithm_t::aria192, crypt_mode_t::cbc),
+    aria_192_cfb = make_cryptoscheme(crypt_algorithm_t::aria192, crypt_mode_t::cfb),
+    aria_192_cfb1 = make_cryptoscheme(crypt_algorithm_t::aria192, crypt_mode_t::cfb1),
+    aria_192_cfb8 = make_cryptoscheme(crypt_algorithm_t::aria192, crypt_mode_t::cfb8),
+    aria_192_ctr = make_cryptoscheme(crypt_algorithm_t::aria192, crypt_mode_t::ctr),
+    aria_192_ecb = make_cryptoscheme(crypt_algorithm_t::aria192, crypt_mode_t::ecb),
+    aria_192_ofb = make_cryptoscheme(crypt_algorithm_t::aria192, crypt_mode_t::ofb),
+    aria_256_cbc = make_cryptoscheme(crypt_algorithm_t::aria256, crypt_mode_t::cbc),
+    aria_256_cfb = make_cryptoscheme(crypt_algorithm_t::aria256, crypt_mode_t::cfb),
+    aria_256_cfb1 = make_cryptoscheme(crypt_algorithm_t::aria256, crypt_mode_t::cfb1),
+    aria_256_cfb8 = make_cryptoscheme(crypt_algorithm_t::aria256, crypt_mode_t::cfb8),
+    aria_256_ctr = make_cryptoscheme(crypt_algorithm_t::aria256, crypt_mode_t::ctr),
+    aria_256_ecb = make_cryptoscheme(crypt_algorithm_t::aria256, crypt_mode_t::ecb),
+    aria_256_ofb = make_cryptoscheme(crypt_algorithm_t::aria256, crypt_mode_t::ofb),
 
-    crypto_scheme_chacha20 = CRYPTO_SCHEME16(crypt_algorithm_t::chacha20, crypt_mode_t::mode_chacha20),
-    crypto_scheme_chacha20_poly1305 = CRYPTO_SCHEME16(crypt_algorithm_t::chacha20, crypt_mode_t::mode_poly1305),
+    bf_cbc = make_cryptoscheme(crypt_algorithm_t::blowfish, crypt_mode_t::cbc),
+    bf_cfb = make_cryptoscheme(crypt_algorithm_t::blowfish, crypt_mode_t::cfb),
+    bf_ecb = make_cryptoscheme(crypt_algorithm_t::blowfish, crypt_mode_t::ecb),
+    bf_ofb = make_cryptoscheme(crypt_algorithm_t::blowfish, crypt_mode_t::ofb),
 
-    crypto_scheme_cast5_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::cast, crypt_mode_t::cbc),
-    crypto_scheme_cast5_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::cast, crypt_mode_t::cfb),
-    crypto_scheme_cast5_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::cast, crypt_mode_t::ecb),
-    crypto_scheme_cast5_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::cast, crypt_mode_t::ofb),
-    crypto_scheme_idea_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::idea, crypt_mode_t::cbc),
-    crypto_scheme_idea_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::idea, crypt_mode_t::cfb),
-    crypto_scheme_idea_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::idea, crypt_mode_t::ecb),
-    crypto_scheme_idea_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::idea, crypt_mode_t::ofb),
-    crypto_scheme_rc2_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::rc2, crypt_mode_t::cbc),
-    crypto_scheme_rc2_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::rc2, crypt_mode_t::cfb),
-    crypto_scheme_rc2_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::rc2, crypt_mode_t::ecb),
-    crypto_scheme_rc2_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::rc2, crypt_mode_t::ofb),
-    crypto_scheme_rc5_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::rc5, crypt_mode_t::cbc),
-    crypto_scheme_rc5_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::rc5, crypt_mode_t::cfb),
-    crypto_scheme_rc5_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::rc5, crypt_mode_t::ecb),
-    crypto_scheme_rc5_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::rc5, crypt_mode_t::ofb),
-    crypto_scheme_sm4_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::sm4, crypt_mode_t::cbc),
-    crypto_scheme_sm4_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::sm4, crypt_mode_t::cfb),
-    crypto_scheme_sm4_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::sm4, crypt_mode_t::ecb),
-    crypto_scheme_sm4_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::sm4, crypt_mode_t::ofb),
-    crypto_scheme_sm4_ctr = CRYPTO_SCHEME16(crypt_algorithm_t::sm4, crypt_mode_t::ctr),
-    crypto_scheme_seed_cbc = CRYPTO_SCHEME16(crypt_algorithm_t::seed, crypt_mode_t::cbc),
-    crypto_scheme_seed_cfb = CRYPTO_SCHEME16(crypt_algorithm_t::seed, crypt_mode_t::cfb),
-    crypto_scheme_seed_ecb = CRYPTO_SCHEME16(crypt_algorithm_t::seed, crypt_mode_t::ecb),
-    crypto_scheme_seed_ofb = CRYPTO_SCHEME16(crypt_algorithm_t::seed, crypt_mode_t::ofb),
-    crypto_scheme_rc4 = CRYPTO_SCHEME16(crypt_algorithm_t::rc4, crypt_mode_t::mode_cipher),
+    camellia_128_cbc = make_cryptoscheme(crypt_algorithm_t::camellia128, crypt_mode_t::cbc),
+    camellia_128_cfb = make_cryptoscheme(crypt_algorithm_t::camellia128, crypt_mode_t::cfb),
+    camellia_128_cfb1 = make_cryptoscheme(crypt_algorithm_t::camellia128, crypt_mode_t::cfb1),
+    camellia_128_cfb8 = make_cryptoscheme(crypt_algorithm_t::camellia128, crypt_mode_t::cfb8),
+    camellia_128_ctr = make_cryptoscheme(crypt_algorithm_t::camellia128, crypt_mode_t::ctr),
+    camellia_128_ecb = make_cryptoscheme(crypt_algorithm_t::camellia128, crypt_mode_t::ecb),
+    camellia_128_ofb = make_cryptoscheme(crypt_algorithm_t::camellia128, crypt_mode_t::ofb),
+    camellia_192_cbc = make_cryptoscheme(crypt_algorithm_t::camellia192, crypt_mode_t::cbc),
+    camellia_192_cfb = make_cryptoscheme(crypt_algorithm_t::camellia192, crypt_mode_t::cfb),
+    camellia_192_cfb1 = make_cryptoscheme(crypt_algorithm_t::camellia192, crypt_mode_t::cfb1),
+    camellia_192_cfb8 = make_cryptoscheme(crypt_algorithm_t::camellia192, crypt_mode_t::cfb8),
+    camellia_192_ctr = make_cryptoscheme(crypt_algorithm_t::camellia192, crypt_mode_t::ctr),
+    camellia_192_ecb = make_cryptoscheme(crypt_algorithm_t::camellia192, crypt_mode_t::ecb),
+    camellia_192_ofb = make_cryptoscheme(crypt_algorithm_t::camellia192, crypt_mode_t::ofb),
+    camellia_256_cbc = make_cryptoscheme(crypt_algorithm_t::camellia256, crypt_mode_t::cbc),
+    camellia_256_cfb = make_cryptoscheme(crypt_algorithm_t::camellia256, crypt_mode_t::cfb),
+    camellia_256_cfb1 = make_cryptoscheme(crypt_algorithm_t::camellia256, crypt_mode_t::cfb1),
+    camellia_256_cfb8 = make_cryptoscheme(crypt_algorithm_t::camellia256, crypt_mode_t::cfb8),
+    camellia_256_ctr = make_cryptoscheme(crypt_algorithm_t::camellia256, crypt_mode_t::ctr),
+    camellia_256_ecb = make_cryptoscheme(crypt_algorithm_t::camellia256, crypt_mode_t::ecb),
+    camellia_256_ofb = make_cryptoscheme(crypt_algorithm_t::camellia256, crypt_mode_t::ofb),
 
-    crypto_scheme_aes_128_ccm = CRYPTO_SCHEME16(crypt_algorithm_t::aes128, crypt_mode_t::ccm),
-    crypto_scheme_aes_128_gcm = CRYPTO_SCHEME16(crypt_algorithm_t::aes128, crypt_mode_t::gcm),
-    crypto_scheme_aes_192_ccm = CRYPTO_SCHEME16(crypt_algorithm_t::aes192, crypt_mode_t::ccm),
-    crypto_scheme_aes_192_gcm = CRYPTO_SCHEME16(crypt_algorithm_t::aes192, crypt_mode_t::gcm),
-    crypto_scheme_aes_256_ccm = CRYPTO_SCHEME16(crypt_algorithm_t::aes256, crypt_mode_t::ccm),
-    crypto_scheme_aes_256_gcm = CRYPTO_SCHEME16(crypt_algorithm_t::aes256, crypt_mode_t::gcm),
-    crypto_scheme_aria_128_ccm = CRYPTO_SCHEME16(crypt_algorithm_t::aria128, crypt_mode_t::ccm),
-    crypto_scheme_aria_128_gcm = CRYPTO_SCHEME16(crypt_algorithm_t::aria128, crypt_mode_t::gcm),
-    crypto_scheme_aria_192_ccm = CRYPTO_SCHEME16(crypt_algorithm_t::aria192, crypt_mode_t::ccm),
-    crypto_scheme_aria_192_gcm = CRYPTO_SCHEME16(crypt_algorithm_t::aria192, crypt_mode_t::gcm),
-    crypto_scheme_aria_256_ccm = CRYPTO_SCHEME16(crypt_algorithm_t::aria256, crypt_mode_t::ccm),
-    crypto_scheme_aria_256_gcm = CRYPTO_SCHEME16(crypt_algorithm_t::aria256, crypt_mode_t::gcm),
-    crypto_scheme_camellia_128_gcm = CRYPTO_SCHEME16(crypt_algorithm_t::camellia128, crypt_mode_t::gcm),
-    crypto_scheme_camellia_192_gcm = CRYPTO_SCHEME16(crypt_algorithm_t::camellia192, crypt_mode_t::gcm),
-    crypto_scheme_camellia_256_gcm = CRYPTO_SCHEME16(crypt_algorithm_t::camellia256, crypt_mode_t::gcm),
+    chacha20 = make_cryptoscheme(crypt_algorithm_t::chacha20, crypt_mode_t::unknown),
+    chacha20_poly1305 = make_cryptoscheme(crypt_algorithm_t::chacha20, crypt_mode_t::poly1305),
+
+    cast5_cbc = make_cryptoscheme(crypt_algorithm_t::cast, crypt_mode_t::cbc),
+    cast5_cfb = make_cryptoscheme(crypt_algorithm_t::cast, crypt_mode_t::cfb),
+    cast5_ecb = make_cryptoscheme(crypt_algorithm_t::cast, crypt_mode_t::ecb),
+    cast5_ofb = make_cryptoscheme(crypt_algorithm_t::cast, crypt_mode_t::ofb),
+    idea_cbc = make_cryptoscheme(crypt_algorithm_t::idea, crypt_mode_t::cbc),
+    idea_cfb = make_cryptoscheme(crypt_algorithm_t::idea, crypt_mode_t::cfb),
+    idea_ecb = make_cryptoscheme(crypt_algorithm_t::idea, crypt_mode_t::ecb),
+    idea_ofb = make_cryptoscheme(crypt_algorithm_t::idea, crypt_mode_t::ofb),
+    rc2_cbc = make_cryptoscheme(crypt_algorithm_t::rc2, crypt_mode_t::cbc),
+    rc2_cfb = make_cryptoscheme(crypt_algorithm_t::rc2, crypt_mode_t::cfb),
+    rc2_ecb = make_cryptoscheme(crypt_algorithm_t::rc2, crypt_mode_t::ecb),
+    rc2_ofb = make_cryptoscheme(crypt_algorithm_t::rc2, crypt_mode_t::ofb),
+    rc5_cbc = make_cryptoscheme(crypt_algorithm_t::rc5, crypt_mode_t::cbc),
+    rc5_cfb = make_cryptoscheme(crypt_algorithm_t::rc5, crypt_mode_t::cfb),
+    rc5_ecb = make_cryptoscheme(crypt_algorithm_t::rc5, crypt_mode_t::ecb),
+    rc5_ofb = make_cryptoscheme(crypt_algorithm_t::rc5, crypt_mode_t::ofb),
+    sm4_cbc = make_cryptoscheme(crypt_algorithm_t::sm4, crypt_mode_t::cbc),
+    sm4_cfb = make_cryptoscheme(crypt_algorithm_t::sm4, crypt_mode_t::cfb),
+    sm4_ecb = make_cryptoscheme(crypt_algorithm_t::sm4, crypt_mode_t::ecb),
+    sm4_ofb = make_cryptoscheme(crypt_algorithm_t::sm4, crypt_mode_t::ofb),
+    sm4_ctr = make_cryptoscheme(crypt_algorithm_t::sm4, crypt_mode_t::ctr),
+    seed_cbc = make_cryptoscheme(crypt_algorithm_t::seed, crypt_mode_t::cbc),
+    seed_cfb = make_cryptoscheme(crypt_algorithm_t::seed, crypt_mode_t::cfb),
+    seed_ecb = make_cryptoscheme(crypt_algorithm_t::seed, crypt_mode_t::ecb),
+    seed_ofb = make_cryptoscheme(crypt_algorithm_t::seed, crypt_mode_t::ofb),
+    rc4 = make_cryptoscheme(crypt_algorithm_t::rc4, crypt_mode_t::unknown),
+
+    aes_128_ccm = make_cryptoscheme(crypt_algorithm_t::aes128, crypt_mode_t::ccm),
+    aes_128_gcm = make_cryptoscheme(crypt_algorithm_t::aes128, crypt_mode_t::gcm),
+    aes_192_ccm = make_cryptoscheme(crypt_algorithm_t::aes192, crypt_mode_t::ccm),
+    aes_192_gcm = make_cryptoscheme(crypt_algorithm_t::aes192, crypt_mode_t::gcm),
+    aes_256_ccm = make_cryptoscheme(crypt_algorithm_t::aes256, crypt_mode_t::ccm),
+    aes_256_gcm = make_cryptoscheme(crypt_algorithm_t::aes256, crypt_mode_t::gcm),
+    aria_128_ccm = make_cryptoscheme(crypt_algorithm_t::aria128, crypt_mode_t::ccm),
+    aria_128_gcm = make_cryptoscheme(crypt_algorithm_t::aria128, crypt_mode_t::gcm),
+    aria_192_ccm = make_cryptoscheme(crypt_algorithm_t::aria192, crypt_mode_t::ccm),
+    aria_192_gcm = make_cryptoscheme(crypt_algorithm_t::aria192, crypt_mode_t::gcm),
+    aria_256_ccm = make_cryptoscheme(crypt_algorithm_t::aria256, crypt_mode_t::ccm),
+    aria_256_gcm = make_cryptoscheme(crypt_algorithm_t::aria256, crypt_mode_t::gcm),
+    camellia_128_gcm = make_cryptoscheme(crypt_algorithm_t::camellia128, crypt_mode_t::gcm),
+    camellia_192_gcm = make_cryptoscheme(crypt_algorithm_t::camellia192, crypt_mode_t::gcm),
+    camellia_256_gcm = make_cryptoscheme(crypt_algorithm_t::camellia256, crypt_mode_t::gcm),
 
     /**
      * CCM, GCM
@@ -1298,23 +1302,23 @@ enum crypto_scheme_t : uint32 {
      * CCM8
      *   SET_L=3, SET_IVLEN=15-L=12, AEAD_SET_TAG=8
      */
-    crypto_scheme_tls_aes_128_ccm = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aes128, crypt_mode_t::ccm),
-    crypto_scheme_tls_aes_256_ccm = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aes256, crypt_mode_t::ccm),
-    crypto_scheme_tls_aes_128_ccm_8 = CRYPTO_SCHEME32((CRYPTO_SCHEME_CATEGORY_TLS | CRYPTO_SCHEME_HINT_CCM8), crypt_algorithm_t::aes128, crypt_mode_t::ccm),
-    crypto_scheme_tls_aes_256_ccm_8 = CRYPTO_SCHEME32((CRYPTO_SCHEME_CATEGORY_TLS | CRYPTO_SCHEME_HINT_CCM8), crypt_algorithm_t::aes256, crypt_mode_t::ccm),
-    crypto_scheme_tls_aes_128_gcm = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aes128, crypt_mode_t::gcm),
-    crypto_scheme_tls_aes_256_gcm = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aes256, crypt_mode_t::gcm),
-    crypto_scheme_tls_chacha20_poly1305 = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::chacha20, crypt_mode_t::mode_poly1305),
-    crypto_scheme_tls_aria_128_ccm = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aria128, crypt_mode_t::ccm),
-    crypto_scheme_tls_aria_256_ccm = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aria256, crypt_mode_t::ccm),
-    crypto_scheme_tls_aria_128_gcm = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aria128, crypt_mode_t::gcm),
-    crypto_scheme_tls_aria_256_gcm = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aria256, crypt_mode_t::gcm),
-    crypto_scheme_tls_camellia_128_gcm = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::camellia128, crypt_mode_t::gcm),
-    crypto_scheme_tls_camellia_256_gcm = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::camellia256, crypt_mode_t::gcm),
+    tls_aes_128_ccm = make_cryptoscheme(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aes128, crypt_mode_t::ccm),
+    tls_aes_256_ccm = make_cryptoscheme(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aes256, crypt_mode_t::ccm),
+    tls_aes_128_ccm_8 = make_cryptoscheme((CRYPTO_SCHEME_CATEGORY_TLS | CRYPTO_SCHEME_HINT_CCM8), crypt_algorithm_t::aes128, crypt_mode_t::ccm),
+    tls_aes_256_ccm_8 = make_cryptoscheme((CRYPTO_SCHEME_CATEGORY_TLS | CRYPTO_SCHEME_HINT_CCM8), crypt_algorithm_t::aes256, crypt_mode_t::ccm),
+    tls_aes_128_gcm = make_cryptoscheme(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aes128, crypt_mode_t::gcm),
+    tls_aes_256_gcm = make_cryptoscheme(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aes256, crypt_mode_t::gcm),
+    tls_chacha20_poly1305 = make_cryptoscheme(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::chacha20, crypt_mode_t::poly1305),
+    tls_aria_128_ccm = make_cryptoscheme(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aria128, crypt_mode_t::ccm),
+    tls_aria_256_ccm = make_cryptoscheme(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aria256, crypt_mode_t::ccm),
+    tls_aria_128_gcm = make_cryptoscheme(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aria128, crypt_mode_t::gcm),
+    tls_aria_256_gcm = make_cryptoscheme(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::aria256, crypt_mode_t::gcm),
+    tls_camellia_128_gcm = make_cryptoscheme(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::camellia128, crypt_mode_t::gcm),
+    tls_camellia_256_gcm = make_cryptoscheme(CRYPTO_SCHEME_CATEGORY_TLS, crypt_algorithm_t::camellia256, crypt_mode_t::gcm),
 
-    crypto_scheme_aead_aes_128_cbc_hmac_sha2 = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_CBCHMAC, crypt_algorithm_t::aes128, crypt_mode_t::cbc),
-    crypto_scheme_aead_aes_192_cbc_hmac_sha2 = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_CBCHMAC, crypt_algorithm_t::aes192, crypt_mode_t::cbc),
-    crypto_scheme_aead_aes_256_cbc_hmac_sha2 = CRYPTO_SCHEME32(CRYPTO_SCHEME_CATEGORY_CBCHMAC, crypt_algorithm_t::aes256, crypt_mode_t::cbc),
+    aead_aes_128_cbc_hmac_sha2 = make_cryptoscheme(CRYPTO_SCHEME_CATEGORY_CBCHMAC, crypt_algorithm_t::aes128, crypt_mode_t::cbc),
+    aead_aes_192_cbc_hmac_sha2 = make_cryptoscheme(CRYPTO_SCHEME_CATEGORY_CBCHMAC, crypt_algorithm_t::aes192, crypt_mode_t::cbc),
+    aead_aes_256_cbc_hmac_sha2 = make_cryptoscheme(CRYPTO_SCHEME_CATEGORY_CBCHMAC, crypt_algorithm_t::aes256, crypt_mode_t::cbc),
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1375,8 +1379,8 @@ typedef struct _otp_context_t otp_context_t;
 ///////////////////////////////////////////////////////////////////////////
 typedef struct _hint_signature_t {
     signature_t sig;          // ex. signature_t::eddsa
-    jws_t jws_type;           // ex. jws_eddsa
-    jws_group_t group;        // ex. jws_group_eddsa
+    jws_t jws_type;           // ex. jws_t::eddsa
+    jws_group_t group;        // ex. jws_group_t::eddsa
     sig_category_t category;  // ex. sig_category_t::eddsa
     cose_alg_t cosealg;       //
     crypto_kty_t kty;         // ex. kty_okp
@@ -1497,7 +1501,7 @@ struct hint_group_item_t {
 
 struct hint_group_t {
     tls_group_t group;
-    keyexchange_t exch;  // keyexchange_ecdhe, keyexchange_mlkem
+    keyexchange_t exch;  // keyexchange_t::ecdhe, keyexchange_t::mlkem
     uint8 flags;         // tls_resource_flag_t
     const char* name;
     hint_group_item_t first;
@@ -1529,20 +1533,46 @@ typedef std::map<crypt_item_t, variant_t> crypt_variantmap_t;
 ///////////////////////////////////////////////////////////////////////////
 // JOSE
 ///////////////////////////////////////////////////////////////////////////
-typedef struct _hint_jose_encryption_t {
+enum jose_hint_type_t {
+    jwa = 1,
+    jwe = 2,
+    // jws = 3,
+};
+struct hint_jose_encryption_t {
     const char* alg_name;
-
-    int type;          // jwa_t, jwe_t
-    int group;         // jwa_group_t, jwe_group_t
+    jose_hint_type_t htype;
+    union {
+        struct {
+            jwa_t type;         // type
+            jwa_group_t group;  // group
+        } alg;
+        struct {
+            jwe_t type;         // type
+            jwe_group_t group;  // group
+        } enc;
+    } u;
     crypto_kty_t kty;  // crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec, crypto_kty_t::kty_oct
     crypto_kty_t alt;  // for example crypto_kty_t::kty_okp, if kt is crypto_kty_t::kty_ec
-    int mode;          // crypt_enc_t::rsa_1_5, crypt_enc_t::rsa_oaep, crypt_enc_t::rsa_oaep256
+    crypt_enc_t enc;  // crypt_enc_t::rsa_1_5, crypt_enc_t::rsa_oaep, crypt_enc_t::rsa_oaep256
 
     crypt_algorithm_t crypt_alg;  // algorithm for keywrap or GCM
     crypt_mode_t crypt_mode;      // crypt_mode_t::wrap, crypt_mode_t::gcm
     int keysize;                  // 16, 24, 32
     hash_algorithm_t hash_alg;
-} hint_jose_encryption_t;
+
+    hint_jose_encryption_t(const char* name, jose_hint_type_t ht, jwa_t type, jwa_group_t group, crypto_kty_t kt, crypto_kty_t at, crypt_enc_t ce = crypt_enc_t{},
+                           crypt_algorithm_t ca = {}, crypt_mode_t cm = {}, int ks = 0, hash_algorithm_t ha = {})
+        : alg_name(name), htype(ht), kty(kt), alt(at), enc(ce), crypt_alg(ca), crypt_mode(cm), keysize(ks), hash_alg(ha) {
+        u.alg.type = type;
+        u.alg.group = group;
+    }
+    hint_jose_encryption_t(const char* name, jose_hint_type_t ht, jwe_t type, jwe_group_t group, crypto_kty_t kt, crypto_kty_t at, crypt_enc_t ce = crypt_enc_t{},
+                           crypt_algorithm_t ca = {}, crypt_mode_t cm = {}, int ks = 0, hash_algorithm_t ha = {})
+        : alg_name(name), htype(ht), kty(kt), alt(at), enc(ce), crypt_alg(ca), crypt_mode(cm), keysize(ks), hash_alg(ha) {
+        u.enc.type = type;
+        u.enc.group = group;
+    }
+};
 const char* nameof_alg(const hint_jose_encryption_t* hint);
 
 enum jose_serialization_t {

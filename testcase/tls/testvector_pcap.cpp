@@ -28,11 +28,11 @@ void play_yaml_pcap(const char* filename) {
         __try2 {
             auto protocol = example["protocol"].as<std::string>("");
 
-            session_type_t session_type = session_type_tls;
+            session_type_t session_type = session_type_t::tls;
             if (protocol == "TLS") {
-                session_type = session_type_tls;
+                session_type = session_type_t::tls;
             } else if (protocol == "DTLS") {
-                session_type = session_type_dtls;
+                session_type = session_type_t::dtls;
             } else {
                 _test_case.assert(false, __FUNCTION__, "bad message format - reason: protocol");
                 __leave2;

@@ -74,14 +74,14 @@ return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t
             // TLS 1.2 GCM nonce = fixed iv (4) + explitcit iv (8) = 12
             auto ivsize = 0;
             switch (mode) {
-                case cbc: {
+                case crypt_mode_t::cbc: {
                     ivsize = sizeof_iv(hint_blockcipher);
                 } break;
-                case mode_poly1305: {
+                case crypt_mode_t::poly1305: {
                     ivsize = 12;
                 } break;
-                case ccm:
-                case gcm: {
+                case crypt_mode_t::ccm:
+                case crypt_mode_t::gcm: {
                     ivsize = 4;
                 } break;
                 default:

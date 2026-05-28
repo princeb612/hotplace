@@ -43,7 +43,7 @@ class cose_unprotected {
     cose_unprotected& add(cose_key_t key, const binary_t& value);
     /**
      * @brief ephemeral key
-     * @param cose_key_t key [in] cose_key_t::cose_ephemeral_key
+     * @param cose_key_t key [in] cose_key_t::epk
      * @param uint16 curve [in]
      * @param const binary_t& x [in]
      * @param const binary_t& y [in]

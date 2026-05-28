@@ -52,7 +52,7 @@ return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key
             __leave2;
         }
 
-        handle->composer->_cbor_tag = cbor_tag_unknown;
+        handle->composer->_cbor_tag = cbor_tag_t::unknown;
         ret = process(handle, key, input, output, cose_mode_t::cose_mode_send);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -85,7 +85,7 @@ return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key
             __leave2;
         }
 
-        handle->composer->_cbor_tag = cbor_tag_unknown;
+        handle->composer->_cbor_tag = cbor_tag_t::unknown;
         ret = process(handle, key, input, output, cose_mode_t::cose_mode_send);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -122,12 +122,12 @@ return_t cbor_object_signing_encryption::compose_sign_context(cose_context_t* ha
         size_t size_recipients = body.get_recipients().size();
         binary_t external;
         binary_t payload;
-        layer->finditem(cose_param_t::cose_external, external, cose_scope::cose_scope_unsent);
+        layer->finditem(cose_param_external, external, cose_scope_t::unsent);
         body.get_payload().get(payload);
 
         /**
-         * cose_tag_sign        protected, unprotected_map, payload,    [+signature]
-         * cose_tag_sign1       protected, unprotected_map, payload,    signature
+         * cbor_tag_t::sign        protected, unprotected_map, payload,    [+signature]
+         * cbor_tag_t::sign1       protected, unprotected_map, payload,    signature
          */
 
         root = new cbor_array();

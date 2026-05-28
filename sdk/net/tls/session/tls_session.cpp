@@ -25,7 +25,7 @@ namespace hotplace {
 namespace net {
 
 tls_session::tls_session()
-    : _type(session_type_tls),
+    : _type(session_type_t::tls),
       _status(0),
       _hook_param(nullptr),
       _composer(nullptr),
@@ -108,7 +108,7 @@ quic_packet_publisher& tls_session::get_quic_packet_publisher() { return get_qui
 void tls_session::set_type(session_type_t type) {
     _type = type;
     _tls_protection.set_session(this);
-    if (session_type_quic == type || session_type_quic2 == type) {
+    if (session_type_t::quic == type || session_type_t::quic2 == type) {
         _tls_protection.set_cipher_suite(0x1301);
     }
 }

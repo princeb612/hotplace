@@ -49,7 +49,7 @@ void test_key_rsa() {
         auto pkey_priv = key.find("RSA priv");
 
         crypto_encrypt_builder builder;
-        auto crypto = builder.set(rsa_oaep256).build();
+        auto crypto = builder.set(crypt_enc_t::rsa_oaep256).build();
 
         ret = crypto->encrypt(pkey_pub, (byte_t*)message, strlen(message), ciphertext);
         _logger->dump(ciphertext);

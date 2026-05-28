@@ -132,11 +132,14 @@ void test_resources() {
 
     crypto_advisor* advisor = crypto_advisor::get_instance();
     auto lambda = [&](const hint_cipher_t* hint) -> void {
-        auto test = ((hint->scheme & 0x0000ffff) == CRYPTO_SCHEME16(hint->algorithm, hint->mode));
+        t_enum_type<crypto_scheme_t> etscheme(hint->scheme);
+        auto scheme1 = make_cryptoscheme(hint->algorithm, hint->mode);
+        auto test = ((etscheme & 0x0000ffff) == scheme1);
         _test_case.assert(test, __FUNCTION__, "%s test scheme and {algorithm, mode}", hint->fetchname);
 
         auto hint_crosscheck = advisor->hintof_cipher(hint->fetchname);
-        auto test_crosscheck = ((hint->scheme & 0x0000ffff) == CRYPTO_SCHEME16(hint_crosscheck->algorithm, hint_crosscheck->mode));
+        auto scheme2 = make_cryptoscheme(hint_crosscheck->algorithm, hint_crosscheck->mode);
+        auto test_crosscheck = ((etscheme & 0x0000ffff) == scheme2);
         _test_case.assert(test_crosscheck, __FUNCTION__, "%s test fetchname and {algorithm, mode}", hint->fetchname);
     };
     advisor->for_each_cipher(lambda);

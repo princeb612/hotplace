@@ -22,11 +22,11 @@
 namespace hotplace {
 namespace io {
 
-cbor_map::cbor_map() : cbor_object(cbor_type_t::cbor_type_map) {}
+cbor_map::cbor_map() : cbor_object(cbor_type_t::map) {}
 
-cbor_map::cbor_map(uint32 flags) : cbor_object(cbor_type_t::cbor_type_map, flags) {}
+cbor_map::cbor_map(uint32 flags) : cbor_object(cbor_type_t::map, flags) {}
 
-cbor_map::cbor_map(cbor_pair* object, uint32 flags) : cbor_object(cbor_type_t::cbor_type_map, flags) { *this << object; }
+cbor_map::cbor_map(cbor_pair* object, uint32 flags) : cbor_object(cbor_type_t::map, flags) { *this << object; }
 
 cbor_map::~cbor_map() {}
 
@@ -39,7 +39,7 @@ return_t cbor_map::join(cbor_object* object, cbor_object* extra) {
             __leave2;
         }
 
-        if (cbor_type_t::cbor_type_pair == object->type()) {
+        if (cbor_type_t::pair == object->type()) {
             cbor_pair* inst = (cbor_pair*)object;
             _array.push_back(inst);
         } else {
@@ -57,17 +57,17 @@ return_t cbor_map::join(cbor_object* object, cbor_object* extra) {
             cbor_type_t lhs_type = object->type();
             cbor_type_t rhs_type = extra->type();
 
-            if (cbor_type_t::cbor_type_data == lhs_type) {
+            if (cbor_type_t::data == lhs_type) {
                 cbor_data* inst = (cbor_data*)object;
                 // vartype_t lhs_vtype = inst->data().type;
                 uint16 lhs_flag = inst->data().flag();
                 lhs_ret = (lhs_flag & (variant_flag_t::vt_flag_int | variant_flag_t::vt_flag_string)) ? true : false;
             }
             switch (rhs_type) {
-                case cbor_type_t::cbor_type_data:
-                case cbor_type_t::cbor_type_array:
-                case cbor_type_t::cbor_type_map:
-                case cbor_type_t::cbor_type_simple:
+                case cbor_type_t::data:
+                case cbor_type_t::array:
+                case cbor_type_t::map:
+                case cbor_type_t::simple:
                     rhs_ret = true;
                 default:
                     break;
@@ -167,14 +167,14 @@ void cbor_map::represent(binary_t* b) {
     cbor_encode enc;
 
     if (b) {
-        enc.encode(*b, cbor_major_t::cbor_major_map, cbor_control_t::cbor_control_begin, this);
+        enc.encode(*b, cbor_major_t::map, cbor_control_t::cbor_control_begin, this);
 
         // for each member
         for (auto item : _array) {
             item->represent(b);
         }
 
-        enc.encode(*b, cbor_major_t::cbor_major_map, cbor_control_t::cbor_control_end, this);
+        enc.encode(*b, cbor_major_t::map, cbor_control_t::cbor_control_end, this);
     }
 }
 

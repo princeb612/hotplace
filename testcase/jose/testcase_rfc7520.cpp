@@ -126,7 +126,7 @@ void test_rfc7520_features() {
         "entrap_o\xe2\x80\x93"
         "peter_long\xe2\x80\x93"
         "credit_tun";
-    keygen.add_oct(&crypto_key2, jwa_t::jwa_pbes2_hs512_a256kw, to_binary(figure96), keydesc(crypto_use_t::use_enc));
+    keygen.add_oct(&crypto_key2, jwa_t::pbes2_hs512_a256kw, to_binary(figure96), keydesc(crypto_use_t::use_enc));
     do_test_rfc7520_jwe(&crypto_key2, "rfc7520_figure105.jwe", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 105)");
     do_test_rfc7520_jwe(&crypto_key2, "rfc7520_figure106.jwe", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 106)");
     do_test_rfc7520_jwe(&crypto_key2, "rfc7520_figure107.jwe", "RFC 7520 5.3.  Key Wrap Using PBES2-AES-KeyWrap with AES-CBC-HMAC-SHA2 (figure 107)");
@@ -215,26 +215,26 @@ void test_jwe_flattened() {
         jose.open(&handle_decrypt, &crypto_privkey);
 
         jwe_t encs[] = {
-            jwe_t::jwe_a128cbc_hs256, jwe_t::jwe_a192cbc_hs384, jwe_t::jwe_a256cbc_hs512, jwe_t::jwe_a128gcm, jwe_t::jwe_a192gcm, jwe_t::jwe_a256gcm,
+            jwe_t::a128cbc_hs256, jwe_t::a192cbc_hs384, jwe_t::a256cbc_hs512, jwe_t::a128gcm, jwe_t::a192gcm, jwe_t::a256gcm,
         };
         jwa_t algs[] = {
-            jwa_t::jwa_rsa_1_5,
-            jwa_t::jwa_rsa_oaep,
-            jwa_t::jwa_rsa_oaep_256,
-            jwa_t::jwa_a128kw,
-            jwa_t::jwa_a192kw,
-            jwa_t::jwa_a256kw,
-            jwa_t::jwa_dir,
-            jwa_t::jwa_ecdh_es,
-            jwa_t::jwa_ecdh_es_a128kw,
-            jwa_t::jwa_ecdh_es_a192kw,
-            jwa_t::jwa_ecdh_es_a256kw,
-            jwa_t::jwa_a128gcmkw,
-            jwa_t::jwa_a192gcmkw,
-            jwa_t::jwa_a256gcmkw,
-            jwa_t::jwa_pbes2_hs256_a128kw,
-            jwa_t::jwa_pbes2_hs384_a192kw,
-            jwa_t::jwa_pbes2_hs512_a256kw,
+            jwa_t::rsa_1_5,
+            jwa_t::rsa_oaep,
+            jwa_t::rsa_oaep_256,
+            jwa_t::a128kw,
+            jwa_t::a192kw,
+            jwa_t::a256kw,
+            jwa_t::dir,
+            jwa_t::ecdh_es,
+            jwa_t::ecdh_es_a128kw,
+            jwa_t::ecdh_es_a192kw,
+            jwa_t::ecdh_es_a256kw,
+            jwa_t::a128gcmkw,
+            jwa_t::a192gcmkw,
+            jwa_t::a256gcmkw,
+            jwa_t::pbes2_hs256_a128kw,
+            jwa_t::pbes2_hs384_a192kw,
+            jwa_t::pbes2_hs512_a256kw,
         };
 
         for (size_t i = 0; i < RTL_NUMBER_OF(encs); i++) {
@@ -296,23 +296,23 @@ void test_jwe_json(jwe_t enc) {
         jose.open(&handle_decrypt, &crypto_privkey);
         std::list<jwa_t> algs;
 
-        algs.push_back(jwa_t::jwa_rsa_1_5);
-        algs.push_back(jwa_t::jwa_rsa_oaep);
-        algs.push_back(jwa_t::jwa_rsa_oaep_256);
-        algs.push_back(jwa_t::jwa_a128kw);
-        algs.push_back(jwa_t::jwa_a192kw);
-        algs.push_back(jwa_t::jwa_a256kw);
-        algs.push_back(jwa_t::jwa_dir);
-        // algs.push_back (jwa_t::jwa_ecdh_es);
-        algs.push_back(jwa_t::jwa_ecdh_es_a128kw);
-        algs.push_back(jwa_t::jwa_ecdh_es_a192kw);
-        algs.push_back(jwa_t::jwa_ecdh_es_a256kw);
-        algs.push_back(jwa_t::jwa_a128gcmkw);
-        algs.push_back(jwa_t::jwa_a192gcmkw);
-        algs.push_back(jwa_t::jwa_a256gcmkw);
-        algs.push_back(jwa_t::jwa_pbes2_hs256_a128kw);
-        algs.push_back(jwa_t::jwa_pbes2_hs384_a192kw);
-        algs.push_back(jwa_t::jwa_pbes2_hs512_a256kw);
+        algs.push_back(jwa_t::rsa_1_5);
+        algs.push_back(jwa_t::rsa_oaep);
+        algs.push_back(jwa_t::rsa_oaep_256);
+        algs.push_back(jwa_t::a128kw);
+        algs.push_back(jwa_t::a192kw);
+        algs.push_back(jwa_t::a256kw);
+        algs.push_back(jwa_t::dir);
+        // algs.push_back (jwa_t::ecdh_es);
+        algs.push_back(jwa_t::ecdh_es_a128kw);
+        algs.push_back(jwa_t::ecdh_es_a192kw);
+        algs.push_back(jwa_t::ecdh_es_a256kw);
+        algs.push_back(jwa_t::a128gcmkw);
+        algs.push_back(jwa_t::a192gcmkw);
+        algs.push_back(jwa_t::a256gcmkw);
+        algs.push_back(jwa_t::pbes2_hs256_a128kw);
+        algs.push_back(jwa_t::pbes2_hs384_a192kw);
+        algs.push_back(jwa_t::pbes2_hs512_a256kw);
 
         print_text("JWE enc %s", nameof_enc);
 
@@ -341,10 +341,10 @@ void testcase_rfc7520() {
     test_rfc7520_6_nesting_sig_and_enc();
 
     test_jwe_flattened();
-    test_jwe_json(jwe_t::jwe_a128cbc_hs256);
-    test_jwe_json(jwe_t::jwe_a192cbc_hs384);
-    test_jwe_json(jwe_t::jwe_a256cbc_hs512);
-    test_jwe_json(jwe_t::jwe_a128gcm);
-    test_jwe_json(jwe_t::jwe_a192gcm);
-    test_jwe_json(jwe_t::jwe_a256gcm);
+    test_jwe_json(jwe_t::a128cbc_hs256);
+    test_jwe_json(jwe_t::a192cbc_hs384);
+    test_jwe_json(jwe_t::a256cbc_hs512);
+    test_jwe_json(jwe_t::a128gcm);
+    test_jwe_json(jwe_t::a192gcm);
+    test_jwe_json(jwe_t::a256gcm);
 }

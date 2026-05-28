@@ -120,7 +120,7 @@ struct tls_cipher_suite_t {
     uint8 flags;                // tls_resource_flag_t
     const char* name_iana;      // TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
     const char* name_ossl;      // ECDHE-ECDSA-AES128-SHA256
-    keyexchange_t keyexchange;  // keyexchange_ecdhe
+    keyexchange_t keyexchange;  // keyexchange_t::ecdhe
     auth_t auth;                // auth_ecdsa
     crypto_scheme_t scheme;     //
     hash_algorithm_t mac;       // sha2_256

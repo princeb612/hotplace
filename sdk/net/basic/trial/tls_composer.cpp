@@ -27,14 +27,14 @@ namespace net {
 tls_composer::tls_composer(tls_session* session) : _session(session), _minspec(tls_12), _maxspec(tls_13) {
     auto session_type = session->get_type();
     switch (session_type) {
-        case session_type_dtls: {
+        case session_type_t::dtls: {
             auto& publisher = session->get_dtls_record_publisher();
             publisher.set_fragment_size(1024);
             publisher.set_segment_size(1024);
             publisher.set_flags(dtls_record_publisher_multi_handshakes);
         } break;
-        case session_type_quic:
-        case session_type_quic2: {
+        case session_type_t::quic:
+        case session_type_t::quic2: {
             _minspec = tls_13;
         } break;
         default:
@@ -49,16 +49,16 @@ return_t tls_composer::handshake(tls_direction_t dir, unsigned wto, std::functio
     auto session = get_session();
     auto session_type = session->get_type();
     switch (session_type) {
-        case session_type_tls:
-        case session_type_dtls: {
+        case session_type_t::tls:
+        case session_type_t::dtls: {
             if (from_client == dir) {
                 ret = do_tls_client_handshake(wto, func);
             } else if (from_server == dir) {
                 ret = errorcode_t::not_supported;  // session_status_changed
             }
         } break;
-        case session_type_quic:
-        case session_type_quic2: {
+        case session_type_t::quic:
+        case session_type_t::quic2: {
             if (from_client == dir) {
                 ret = do_quic_client_handshake(wto, func);
             } else if (from_server == dir) {
@@ -97,8 +97,8 @@ return_t tls_composer::session_status_changed(uint32 session_status, tls_directi
             //   C client_key_exchange, change_cipher_spec, finished
             //   S change_cipher_spec, finished
             switch (session_type) {
-                case session_type_tls:
-                case session_type_dtls: {
+                case session_type_t::tls:
+                case session_type_t::dtls: {
                     switch (session_status) {
                         case session_status_client_hello: {
                             ret = do_tls_server_handshake_phase1(func);
@@ -111,8 +111,8 @@ return_t tls_composer::session_status_changed(uint32 session_status, tls_directi
                         } break;
                     }
                 } break;
-                case session_type_quic:
-                case session_type_quic2: {
+                case session_type_t::quic:
+                case session_type_t::quic2: {
                     switch (session_status) {
                         case session_status_client_hello: {
                             ret = do_quic_server_handshake(func);

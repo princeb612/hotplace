@@ -94,7 +94,7 @@ crypto_sign_builder& crypto_sign_builder::set_tls_sign_scheme(tls_sigscheme_t sc
     return *this;
 }
 
-hash_algorithm_t crypto_sign_builder::get_digest() { return (hash_algorithm_t)_hashalg; }
+hash_algorithm_t crypto_sign_builder::get_digest() { return _hashalg; }
 
 crypto_sign_builder& crypto_sign_builder::set_digest(hash_algorithm_t hashalg) {
     _hashalg = hashalg;
@@ -115,7 +115,7 @@ crypto_sign_builder& crypto_sign_builder::set_digest(const std::string& hashalg)
 }
 
 crypto_sign_builder& crypto_sign_builder::set_scheme(jws_t type) {
-    // jws_t jws_hs256, ...
+    // jws_t jws_t::hs256, ...
     // signature_t signature_t::hs256
     auto advisor = crypto_advisor::get_instance();
     auto hint = advisor->hintof_jose_signature(type);

@@ -44,7 +44,7 @@ return_t cbor_object_signing_encryption::mac(cose_context_t* handle, crypto_key*
             __leave2;
         }
 
-        handle->composer->_cbor_tag = cbor_tag_unknown;
+        handle->composer->_cbor_tag = cbor_tag_t::unknown;
         ret = process(handle, key, input, output, cose_mode_t::cose_mode_send);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -77,7 +77,7 @@ return_t cbor_object_signing_encryption::mac(cose_context_t* handle, crypto_key*
             __leave2;
         }
 
-        handle->composer->_cbor_tag = cbor_tag_unknown;
+        handle->composer->_cbor_tag = cbor_tag_t::unknown;
         ret = process(handle, key, input, output, cose_mode_t::cose_mode_send);
         if (errorcode_t::success != ret) {
             __leave2;
@@ -113,12 +113,12 @@ return_t cbor_object_signing_encryption::compose_mac_context(cose_context_t* han
         size_t size_recipients = body.get_recipients().size();
         binary_t external;
         binary_t payload;
-        layer->finditem(cose_param_t::cose_external, external, cose_scope::cose_scope_unsent);
+        layer->finditem(cose_param_external, external, cose_scope_t::unsent);
         body.get_payload().get(payload);
 
         /**
-         * cose_tag_mac         protected, unprotected_map, payload,    tag,            [+recipient]
-         * cose_tag_mac0        protected, unprotected_map, payload,    tag
+         * cbor_tag_t::mac         protected, unprotected_map, payload,    tag,            [+recipient]
+         * cbor_tag_t::mac0        protected, unprotected_map, payload,    tag
          */
 
         root = new cbor_array();
@@ -169,12 +169,12 @@ return_t cbor_object_signing_encryption::domac(cose_context_t* handle, crypto_ke
             __leave2;
         }
 
-        check = layer->finditem(cose_key_t::cose_iv, iv, cose_scope::cose_scope_unprotected);
+        check = layer->finditem(cose_key_t::iv, iv, cose_scope_t::unprotected);
         if (errorcode_t::success != check) {
-            source->finditem(cose_param_t::cose_unsent_iv, iv, cose_scope::cose_scope_unsent);
+            source->finditem(cose_param_unsent_iv, iv, cose_scope_t::unsent);
         }
-        layer->finditem(cose_key_t::cose_partial_iv, partial_iv, cose_scope::cose_scope_unprotected);
-        layer->finditem(cose_param_t::cose_param_cek, cek, cose_scope::cose_scope_params | cose_scope::cose_scope_children);
+        layer->finditem(cose_key_t::partial_iv, partial_iv, cose_scope_t::unprotected);
+        layer->finditem(cose_param_cek, cek, cose_scope_t::params | cose_scope_t::children);
 
         if (0 == cek.size()) {
             ret = errorcode_t::no_data;
@@ -204,7 +204,7 @@ return_t cbor_object_signing_encryption::domac(cose_context_t* handle, crypto_ke
             //     iv[i] ^= aligned_partial_iv[i];
             // }
 
-            handle->debug_flags |= cose_flag_t::cose_debug_partial_iv;
+            handle->debug_flags |= cose_flag_t::debug_partial_iv;
         }
 
         compose_mac_context(handle, layer, tomac);

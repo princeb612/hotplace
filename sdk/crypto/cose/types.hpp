@@ -26,53 +26,49 @@
 namespace hotplace {
 namespace crypto {
 
-typedef struct _cose_context_t cose_context_t;
-// typedef struct _cose_structure_t cose_structure_t;
+enum cose_param_t : uint16 {
+    cose_param_unknown = 0,
 
-enum cose_param_t {
-    cose_param_base = 0x1000,
+    cose_param_external,
+    cose_param_unsent_apu_id,
+    cose_param_unsent_apu_nonce,
+    cose_param_unsent_apu_other,
+    cose_param_unsent_apv_id,
+    cose_param_unsent_apv_nonce,
+    cose_param_unsent_apv_other,
+    cose_param_unsent_pub_other,
+    cose_param_unsent_priv_other,
+    cose_param_unsent_iv,
+    cose_param_unsent_alg,
 
-    cose_external = cose_param_base + 1,
-    cose_unsent_apu_id = cose_param_base + 2,
-    cose_unsent_apu_nonce = cose_param_base + 3,
-    cose_unsent_apu_other = cose_param_base + 4,
-    cose_unsent_apv_id = cose_param_base + 5,
-    cose_unsent_apv_nonce = cose_param_base + 6,
-    cose_unsent_apv_other = cose_param_base + 7,
-    cose_unsent_pub_other = cose_param_base + 8,
-    cose_unsent_priv_other = cose_param_base + 9,
-    cose_unsent_iv = cose_param_base + 10,
-    cose_unsent_alg = cose_param_base + 11,
-
-    cose_param_aad = cose_param_base + 13,
-    cose_param_cek = cose_param_base + 14,
-    cose_param_context = cose_param_base + 15,
-    cose_param_iv = cose_param_base + 16,
-    cose_param_kek = cose_param_base + 17,
-    cose_param_salt = cose_param_base + 18,
-    cose_param_secret = cose_param_base + 19,
-    cose_param_tobesigned = cose_param_base + 20,
-    cose_param_tomac = cose_param_base + 21,
-    cose_param_apu_id = cose_param_base + 22,
-    cose_param_apu_nonce = cose_param_base + 23,
-    cose_param_apu_other = cose_param_base + 24,
-    cose_param_apv_id = cose_param_base + 25,
-    cose_param_apv_nonce = cose_param_base + 26,
-    cose_param_apv_other = cose_param_base + 27,
-    cose_param_pub_other = cose_param_base + 28,
-    cose_param_priv_other = cose_param_base + 29,
-    cose_param_ciphertext = cose_param_base + 30,
-    cose_param_plaintext = cose_param_base + 31,
+    cose_param_aad,
+    cose_param_cek,
+    cose_param_context,
+    cose_param_iv,
+    cose_param_kek,
+    cose_param_salt,
+    cose_param_secret,
+    cose_param_tobesigned,
+    cose_param_tomac,
+    cose_param_apu_id,
+    cose_param_apu_nonce,
+    cose_param_apu_other,
+    cose_param_apv_id,
+    cose_param_apv_nonce,
+    cose_param_apv_other,
+    cose_param_pub_other,
+    cose_param_priv_other,
+    cose_param_ciphertext,
+    cose_param_plaintext,
 };
 
 enum cose_flag_t {
-    cose_flag_allow_debug = 0,  // deprecated, use trace.hpp
-    cose_flag_auto_keygen = (1 << 2),
+    auto_keygen = (1 << 2),
 
     // debug
-    cose_debug_notfound_key = (1 << 16),
-    cose_debug_partial_iv = (1 << 17),
-    cose_debug_counter_sig = (1 << 18),
+    debug_notfound_key = (1 << 16),
+    debug_partial_iv = (1 << 17),
+    debug_counter_sig = (1 << 18),
 };
 
 typedef std::list<int> cose_orderlist_t;
@@ -80,7 +76,7 @@ typedef std::map<cose_param_t, binary_t> cose_binarymap_t;
 typedef std::map<int, variant> cose_variantmap_t;
 
 class cose_composer;
-struct _cose_context_t {
+struct cose_context_t {
     uint32 flags;
     uint32 debug_flags;
     basic_stream debug_stream;
@@ -88,8 +84,8 @@ struct _cose_context_t {
     // see cbor_object_signing_encryption::open() and close()
     cose_composer* composer;
 
-    _cose_context_t() : flags(0), debug_flags(0) {}
-    ~_cose_context_t() { clearall(); }
+    cose_context_t() : flags(0), debug_flags(0) {}
+    ~cose_context_t() { clearall(); }
     void clearall() {
         flags = 0;
         debug_flags = 0;
@@ -97,23 +93,23 @@ struct _cose_context_t {
     }
 };
 
-enum cose_message_type_t {
-    cose_message_unknown = 0,
-    cose_message_protected = 1,
-    cose_message_unprotected = 2,
-    cose_message_payload = 3,
-    cose_message_singleitem = 4,
-    cose_message_layered = 5,  // recipients, signatures
+enum class cose_message_t : uint8 {
+    unknown = 0,
+    _protected = 1,
+    unprotected = 2,
+    payload = 3,
+    singleitem = 4,
+    layered = 5,  // recipients, signatures
 };
 
-enum cose_scope {
-    cose_scope_protected = (1 << 0),
-    cose_scope_unprotected = (1 << 1),
-    cose_scope_unsent = (1 << 2),
-    cose_scope_params = (1 << 3),
-    cose_scope_layer = 0x1111,
-    cose_scope_children = (1 << 4),
-    cose_scope_all = 0x11111111,
+enum cose_scope_t : uint32 {
+    _protected = 0x00000001,
+    unprotected = 0x00000010,
+    unsent = 0x00000100,
+    params = 0x00001000,
+    layer = 0x00001111,
+    children = 0x00010000,
+    all = 0x11111111,
 };
 
 class cbor_object_encryption;

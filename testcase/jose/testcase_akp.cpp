@@ -43,9 +43,9 @@ void test_akp() {
         _test_case.test(ret, __FUNCTION__, "verify");
     };
 
-    lambda_test(jws_mldsa44);
-    lambda_test(jws_mldsa65);
-    lambda_test(jws_mldsa87);
+    lambda_test(jws_t::mldsa44);
+    lambda_test(jws_t::mldsa65);
+    lambda_test(jws_t::mldsa87);
 #else
     _test_case.test(errorcode_t::not_supported, __FUNCTION__, "openssl 3.5 required");
 #endif

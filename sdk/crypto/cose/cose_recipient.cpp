@@ -24,12 +24,7 @@ namespace hotplace {
 namespace crypto {
 
 cose_recipient::cose_recipient()
-    : _upperlayer(nullptr),
-      _depth(0),
-      _property(cose_property_t::cose_property_normal),
-      _composer(nullptr),
-      _cbor_tag(cbor_tag_t::cbor_tag_unknown),
-      _countersigns(nullptr) {
+    : _upperlayer(nullptr), _depth(0), _property(cose_property_t::cose_property_normal), _composer(nullptr), _cbor_tag(cbor_tag_t::unknown), _countersigns(nullptr) {
     get_protected().data().set_owner(this);
     get_unprotected().data().set_owner(this);
     get_payload().data().set_owner(this);
@@ -92,25 +87,25 @@ cose_recipient& cose_recipient::add(cose_recipient* recipient) {
 bool cose_recipient::exist(int key, int scope) {
     bool ret = false;
     __try2 {
-        if (cose_scope::cose_scope_unsent & scope) {
+        if (cose_scope_t::unsent & scope) {
             ret = get_composer()->get_unsent().data().exist(key);
             if (ret) {
                 __leave2;
             }
         }
-        if (cose_scope::cose_scope_protected & scope) {
+        if (cose_scope_t::_protected & scope) {
             ret = get_protected().data().exist(key);
             if (ret) {
                 __leave2;
             }
         }
-        if (cose_scope::cose_scope_unprotected & scope) {
+        if (cose_scope_t::unprotected & scope) {
             ret = get_unprotected().data().exist(key);
             if (ret) {
                 __leave2;
             }
         }
-        if (cose_scope::cose_scope_children & scope) {
+        if (cose_scope_t::children & scope) {
             ret = get_recipients().exist(key, scope);
         }
     }
@@ -121,25 +116,25 @@ bool cose_recipient::exist(int key, int scope) {
 return_t cose_recipient::finditem(int key, int& value, int scope) {
     return_t ret = errorcode_t::not_found;
     __try2 {
-        if (cose_scope::cose_scope_unsent & scope) {
+        if (cose_scope_t::unsent & scope) {
             ret = get_composer()->get_unsent().data().finditem(key, value);
             if (errorcode_t::success == ret) {
                 __leave2;
             }
         }
-        if (cose_scope::cose_scope_protected & scope) {
+        if (cose_scope_t::_protected & scope) {
             ret = get_protected().data().finditem(key, value);
             if (errorcode_t::success == ret) {
                 __leave2;
             }
         }
-        if (cose_scope::cose_scope_unprotected & scope) {
+        if (cose_scope_t::unprotected & scope) {
             ret = get_unprotected().data().finditem(key, value);
             if (errorcode_t::success == ret) {
                 __leave2;
             }
         }
-        if (cose_scope::cose_scope_children & scope) {
+        if (cose_scope_t::children & scope) {
             ret = get_recipients().finditem(key, value, scope);
         }
     }
@@ -150,25 +145,25 @@ return_t cose_recipient::finditem(int key, int& value, int scope) {
 return_t cose_recipient::finditem(int key, std::string& value, int scope) {
     return_t ret = errorcode_t::not_found;
     __try2 {
-        if (cose_scope::cose_scope_unsent & scope) {
+        if (cose_scope_t::unsent & scope) {
             ret = get_composer()->get_unsent().data().finditem(key, value);
             if (errorcode_t::success == ret) {
                 __leave2;
             }
         }
-        if (cose_scope::cose_scope_protected & scope) {
+        if (cose_scope_t::_protected & scope) {
             ret = get_protected().data().finditem(key, value);
             if (errorcode_t::success == ret) {
                 __leave2;
             }
         }
-        if (cose_scope::cose_scope_unprotected & scope) {
+        if (cose_scope_t::unprotected & scope) {
             ret = get_unprotected().data().finditem(key, value);
             if (errorcode_t::success == ret) {
                 __leave2;
             }
         }
-        if (cose_scope::cose_scope_children & scope) {
+        if (cose_scope_t::children & scope) {
             ret = get_recipients().finditem(key, value, scope);
             if (errorcode_t::success == ret) {
                 __leave2;
@@ -182,31 +177,31 @@ return_t cose_recipient::finditem(int key, std::string& value, int scope) {
 return_t cose_recipient::finditem(int key, binary_t& value, int scope) {
     return_t ret = errorcode_t::not_found;
     __try2 {
-        if (cose_scope::cose_scope_unsent & scope) {
+        if (cose_scope_t::unsent & scope) {
             ret = get_composer()->get_unsent().data().finditem(key, value);
             if (errorcode_t::success == ret) {
                 __leave2;
             }
         }
-        if (cose_scope::cose_scope_params & scope) {
+        if (cose_scope_t::params & scope) {
             ret = get_params().finditem(key, value);
             if (errorcode_t::success == ret) {
                 __leave2;
             }
         }
-        if (cose_scope::cose_scope_protected & scope) {
+        if (cose_scope_t::_protected & scope) {
             ret = get_protected().data().finditem(key, value);
             if (errorcode_t::success == ret) {
                 __leave2;
             }
         }
-        if (cose_scope::cose_scope_unprotected & scope) {
+        if (cose_scope_t::unprotected & scope) {
             ret = get_unprotected().data().finditem(key, value);
             if (errorcode_t::success == ret) {
                 __leave2;
             }
         }
-        if (cose_scope::cose_scope_children & scope) {
+        if (cose_scope_t::children & scope) {
             ret = get_recipients().finditem(key, value, scope);
         }
     }
@@ -218,10 +213,10 @@ return_t cose_recipient::setparam(cose_param_t id, const binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         switch (id) {
-            case cose_param_t::cose_param_cek:
-            case cose_param_t::cose_param_ciphertext:
-            case cose_param_t::cose_param_secret:
-            case cose_param_t::cose_param_plaintext:
+            case cose_param_cek:
+            case cose_param_ciphertext:
+            case cose_param_secret:
+            case cose_param_plaintext:
                 get_params().replace(id, bin);
                 break;
             default:
@@ -237,10 +232,10 @@ return_t cose_recipient::getparam(cose_param_t id, binary_t& bin) {
     return_t ret = errorcode_t::success;
     __try2 {
         switch (id) {
-            case cose_param_t::cose_param_cek:
-            case cose_param_t::cose_param_ciphertext:
-            case cose_param_t::cose_param_secret:
-            case cose_param_t::cose_param_plaintext:
+            case cose_param_cek:
+            case cose_param_ciphertext:
+            case cose_param_secret:
+            case cose_param_plaintext:
                 get_params().replace(id, bin);
                 break;
             default:
@@ -255,7 +250,7 @@ return_t cose_recipient::getparam(cose_param_t id, binary_t& bin) {
 return_t cose_recipient::parse(cbor_array* root) {
     return_t ret = errorcode_t::success;
     // crypto_advisor* advisor = crypto_advisor::get_instance();
-    // cbor_tag_t cbor_tag = cbor_tag_t::cbor_tag_unknown;
+    // cbor_tag_t cbor_tag = cbor_tag_t::unknown;
 
     __try2 {
         clear();
@@ -330,18 +325,18 @@ return_t cose_recipient::parse_message(cbor_array* root) {
         for (i = 3; i < size_message; i++) {
             cbor_object* cbor_item = (*root)[i];
 
-            // in case of cose_tag_mac/cose_tag_mac0
-            cbor_data* cbor_singleitem = cbor_typeof<cbor_data>(cbor_item, cbor_type_t::cbor_type_data);
+            // in case of cbor_tag_t::mac/cbor_tag_t::mac0
+            cbor_data* cbor_singleitem = cbor_typeof<cbor_data>(cbor_item, cbor_type_t::data);
             if (cbor_singleitem) {
                 parse_singleitem(cbor_item);
                 continue;
             }
 
-            // in case of cose_tag_encrypt/cose_tag_mac/cose_tag_sign
-            cbor_array* cbor_recipients = cbor_typeof<cbor_array>(cbor_item, cbor_type_t::cbor_type_array);
+            // in case of cbor_tag_t::encrypt/cbor_tag_t::mac/cbor_tag_t::sign
+            cbor_array* cbor_recipients = cbor_typeof<cbor_array>(cbor_item, cbor_type_t::array);
             if (cbor_recipients) {
                 for (size_t size = 0; size < cbor_recipients->size(); size++) {
-                    cbor_array* cbor_recipient = cbor_typeof<cbor_array>((*cbor_recipients)[size], cbor_type_t::cbor_type_array);
+                    cbor_array* cbor_recipient = cbor_typeof<cbor_array>((*cbor_recipients)[size], cbor_type_t::array);
                     if (cbor_recipient) {
                         add().parse(cbor_recipient);
                     }
@@ -363,7 +358,7 @@ return_t cose_recipient::parse_protected(cbor_object* object) {
             __leave2;
         }
 
-        cbor_data* cbor_protected = cbor_typeof<cbor_data>(object, cbor_type_t::cbor_type_data);
+        cbor_data* cbor_protected = cbor_typeof<cbor_data>(object, cbor_type_t::data);
         if (nullptr == cbor_protected) {
             ret = errorcode_t::bad_format;
             __leave2;
@@ -383,7 +378,7 @@ return_t cose_recipient::parse_unprotected(cbor_object* object) {
             __leave2;
         }
 
-        cbor_map* cbor_unprotected = cbor_typeof<cbor_map>(object, cbor_type_t::cbor_type_map);
+        cbor_map* cbor_unprotected = cbor_typeof<cbor_map>(object, cbor_type_t::map);
         if (nullptr == cbor_unprotected) {
             ret = errorcode_t::bad_format;
             __leave2;
@@ -404,7 +399,7 @@ return_t cose_recipient::parse_payload(cbor_object* object) {
             __leave2;
         }
 
-        cbor_data* cbor_payload = cbor_typeof<cbor_data>(object, cbor_type_t::cbor_type_data);
+        cbor_data* cbor_payload = cbor_typeof<cbor_data>(object, cbor_type_t::data);
         if (nullptr == cbor_payload) {
             ret = errorcode_t::bad_format;
             __leave2;
@@ -425,7 +420,7 @@ return_t cose_recipient::parse_singleitem(cbor_object* object) {
             __leave2;
         }
 
-        cbor_data* cbor_singleitem = cbor_typeof<cbor_data>(object, cbor_type_t::cbor_type_data);
+        cbor_data* cbor_singleitem = cbor_typeof<cbor_data>(object, cbor_type_t::data);
         if (nullptr == cbor_singleitem) {
             ret = errorcode_t::bad_format;
             __leave2;
@@ -466,7 +461,7 @@ cose_countersigns* cose_recipient::get_countersigns1() {
 }
 
 cose_recipient& cose_recipient::clear() {
-    _cbor_tag = cbor_tag_t::cbor_tag_unknown;
+    _cbor_tag = cbor_tag_t::unknown;
     get_protected().clear();
     get_unprotected().clear();
     get_payload().clear();
@@ -483,16 +478,16 @@ cose_recipient& cose_recipient::clear() {
 
 cose_alg_t cose_recipient::get_algorithm() {
     int alg = cose_alg_t::cose_unknown;
-    get_protected().data().finditem(cose_key_t::cose_alg, alg);
+    get_protected().data().finditem(cose_key_t::alg, alg);
     if (cose_alg_t::cose_unknown == alg) {
-        get_unprotected().data().finditem(cose_key_t::cose_alg, alg);
+        get_unprotected().data().finditem(cose_key_t::alg, alg);
     }
     return (cose_alg_t)alg;
 }
 
 std::string cose_recipient::get_kid() {
     std::string kid;
-    get_unprotected().data().finditem(cose_key_t::cose_kid, kid);
+    get_unprotected().data().finditem(cose_key_t::kid, kid);
     return kid;
 }
 

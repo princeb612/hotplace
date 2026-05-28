@@ -83,7 +83,7 @@ return_t crypto_advisor::build() {
 #else
         const EVP_CIPHER* evp_cipher = EVP_get_cipherbyname(nameof_alg(item));
         if (evp_cipher) {
-            _cipher_fetch_map.emplace(CRYPTO_SCHEME16(typeof_alg(item), typeof_mode(item)), cipher_fetch_block_t((EVP_CIPHER*)evp_cipher, item));
+            _cipher_fetch_map.emplace(item->scheme, cipher_fetch_block_t((EVP_CIPHER*)evp_cipher, item));
             _evp_cipher_map.emplace(evp_cipher, item);
         }
 #endif
@@ -115,8 +115,8 @@ return_t crypto_advisor::build() {
         auto item = ossl1_aes_wrap_methods + i;
         if (item->_cipher) {
             cipher_fetch_block_t block((EVP_CIPHER*)item->_cipher, &item->hint);
-            // distinguish between crypto_scheme_aes_128_gcm and crypto_scheme_tls_aes_128_gcm
-            _cipher_fetch_map.emplace(CRYPTO_SCHEME16(item->hint.algorithm, item->hint.mode), std::move(block));
+            // distinguish between crypto_scheme_t::aes_128_gcm and crypto_scheme_t::tls_aes_128_gcm
+            _cipher_fetch_map.emplace(item->hint.scheme, std::move(block));
             _evp_cipher_map.emplace(item->_cipher, &item->hint);
 
             set_feature(item->hint.fetchname, advisor_feature_wrap);
@@ -163,7 +163,7 @@ return_t crypto_advisor::build() {
 
     for (i = 0; i < sizeof_hint_jose_algorithms; ++i) {
         auto item = hint_jose_algorithms + i;
-        _alg_map.emplace((jwa_t)item->type, item);
+        _alg_map.emplace(item->u.alg.type, item);
         if (item->alg_name) {
             _alg_byname_map.emplace(item->alg_name, item);
         }
@@ -172,7 +172,7 @@ return_t crypto_advisor::build() {
     }
     for (i = 0; i < sizeof_hint_jose_encryptions; ++i) {
         auto item = hint_jose_encryptions + i;
-        _enc_map.emplace((jwe_t)item->type, item);
+        _enc_map.emplace(item->u.enc.type, item);
         if (item->alg_name) {
             _enc_byname_map.emplace(item->alg_name, item);
         }
@@ -185,7 +185,7 @@ return_t crypto_advisor::build() {
         if (item->jws_name) {
             _sig_byname_map.emplace(item->jws_name, item);
         }
-        if (item->jws_type) {
+        if (item->jws_type != jws_t::unknown) {
             _jose_sig_map.emplace(item->jws_type, item);
             _sig2jws_map.emplace(item->sig, item->jws_type);
         }
@@ -208,7 +208,7 @@ return_t crypto_advisor::build() {
         cose_alg_t cose;
     };
     struct _sig2cose cose2sig[] = {
-        {signature_t::hs256, jws_t::jws_hs256, cose_alg_t::cose_hs256_64},
+        {signature_t::hs256, jws_t::hs256, cose_alg_t::cose_hs256_64},
     };
     for (i = 0; i < RTL_NUMBER_OF(cose2sig); ++i) {
         _cose2sig_map.emplace(cose2sig[i].cose, cose2sig[i].sig);
@@ -301,15 +301,15 @@ return_t crypto_advisor::build() {
         _nid2curve_map.emplace(item->id, item);
     }
 
-    _kty2cose_map.emplace(crypto_kty_t::kty_ec, cose_kty_t::cose_kty_ec2);
-    _kty2cose_map.emplace(crypto_kty_t::kty_oct, cose_kty_t::cose_kty_symm);
-    _kty2cose_map.emplace(crypto_kty_t::kty_okp, cose_kty_t::cose_kty_okp);
-    _kty2cose_map.emplace(crypto_kty_t::kty_rsa, cose_kty_t::cose_kty_rsa);
+    _kty2cose_map.emplace(crypto_kty_t::kty_ec, cose_kty_t::ec2);
+    _kty2cose_map.emplace(crypto_kty_t::kty_oct, cose_kty_t::symm);
+    _kty2cose_map.emplace(crypto_kty_t::kty_okp, cose_kty_t::okp);
+    _kty2cose_map.emplace(crypto_kty_t::kty_rsa, cose_kty_t::rsa);
 
-    _cose2kty_map.emplace(cose_kty_t::cose_kty_ec2, crypto_kty_t::kty_ec);
-    _cose2kty_map.emplace(cose_kty_t::cose_kty_symm, crypto_kty_t::kty_oct);
-    _cose2kty_map.emplace(cose_kty_t::cose_kty_okp, crypto_kty_t::kty_okp);
-    _cose2kty_map.emplace(cose_kty_t::cose_kty_rsa, crypto_kty_t::kty_rsa);
+    _cose2kty_map.emplace(cose_kty_t::ec2, crypto_kty_t::kty_ec);
+    _cose2kty_map.emplace(cose_kty_t::symm, crypto_kty_t::kty_oct);
+    _cose2kty_map.emplace(cose_kty_t::okp, crypto_kty_t::kty_okp);
+    _cose2kty_map.emplace(cose_kty_t::rsa, crypto_kty_t::kty_rsa);
 
     for (i = 0; i < sizeof_hint_kty_names; ++i) {
         auto item = hint_kty_names + i;
