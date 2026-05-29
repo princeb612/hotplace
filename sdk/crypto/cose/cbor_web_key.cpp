@@ -171,7 +171,7 @@ return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int f
                             // symm
                             binary_t bin;
                             rhs->data().to_binary(bin);
-                            keyobj.attrib.emplace(label, bin);
+                            keyobj.attrib.emplace(label, std::move(bin));
                         } else {
                             // curve if okp, ec2
                             keyobj.curve = rhs->data().to_int();
@@ -179,7 +179,7 @@ return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int f
                     } else if (label < -1) {  // ec2 (-2 x, -3 y, -4 d), rsa (-1 n, -2 e, -3 d, ..., -12 ti), mldsa (-1 pub, -2 priv)
                         binary_t bin;
                         rhs->data().to_binary(bin);
-                        keyobj.attrib.emplace(label, bin);
+                        keyobj.attrib.emplace(label, std::move(bin));
                     }
                 }
             }

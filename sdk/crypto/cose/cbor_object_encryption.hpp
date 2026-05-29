@@ -26,7 +26,7 @@ class cbor_object_encryption {
      * @brief   encrypt ("Encrypt0")
      * @param   cose_context_t* handle [in]
      * @param   crypto_key* key [in]
-     * @param   cose_alg_t method [in] must specify an encryption algoritm (see cose_group_enc_aesgcm/cose_group_enc_aesccm)
+     * @param   cose_alg_t method [in] must specify an encryption algoritm (see cose_group_t::enc_aesgcm/cose_group_t::enc_aesccm)
      * @param   const binary_t& input [in]
      * @param   binary_t& output [out]
      * @return  error code (see error.hpp)
@@ -44,7 +44,7 @@ class cbor_object_encryption {
      * @return  error code (see error.hpp)
      * @example
      *          algs.push_back(cose_aes256gcm); // one of cose_group_enc_xxx
-     *          algs.push_back(cose_group_key_ecdhss_hmac); // cose_group_key_xxx
+     *          algs.push_back(cose_group_t::key_ecdhss_hmac); // cose_group_key_xxx
      *          encrypt (handle, key, algs, input, output);
      */
     return_t encrypt(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, const binary_t& input, binary_t& output);
@@ -60,7 +60,7 @@ class cbor_object_encryption {
      * @example
      *          cose_alg_t algs[] = { cose_aesccm_16_64_256 };
      *          cose.encrypt (handle, key, algs, 1, input, output);
-     *          cose_alg_t algs2[] = { cose_aesccm_64_64_256, cose_group_key_ecdhss_hmac, cose_group_key_hkdf_aes, };
+     *          cose_alg_t algs2[] = { cose_aesccm_64_64_256, cose_group_t::key_ecdhss_hmac, cose_group_t::key_hkdf_aes, };
      *          encrypt (handle, key, algs2, 2, input, output);
      */
     return_t encrypt(cose_context_t* handle, crypto_key* key, cose_alg_t* methods, size_t size_method, const binary_t& input, binary_t& output);

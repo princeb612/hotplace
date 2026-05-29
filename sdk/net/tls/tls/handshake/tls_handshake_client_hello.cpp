@@ -347,8 +347,8 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
 
         {
             // server_key_update
-            secrets.assign(tls_secret_t::client_hello_random, random);
-            secrets.assign(tls_secret_t::session_id, session_id);  // avoid routines:tls_process_server_hello:invalid session id
+            secrets.assign(tls_secret_t::client_hello_random, std::move(random));
+            secrets.assign(tls_secret_t::session_id, std::move(session_id));  // avoid routines:tls_process_server_hello:invalid session id
         }
 
 #if defined DEBUG
@@ -476,7 +476,7 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
 
         {
             // finished
-            secrets.assign(tls_secret_t::client_hello_random, _random);
+            secrets.assign(tls_secret_t::client_hello_random, _random);  // copy
         }
 
         binary_append(bin, extensions);

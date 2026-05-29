@@ -163,7 +163,7 @@ return_t crypto_advisor::typeof_jose_signature(const char* sig, jws_t& type) {
     const hint_signature_t* item = hintof_jose_signature(sig);
 
     if (item) {
-        type = (jws_t)item->jws_type;
+        type = item->jws_type;
     } else {
         ret = errorcode_t::not_found;
     }

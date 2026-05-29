@@ -33,19 +33,19 @@ return_t cose_composer::compose(cbor_array** object, bool tagged) {
     // read algorithm from protected or unprotected
     // sizeof_recipients = get_recipients().size()
     // switch(cose_group_t)
-    //   case cose_group_sign_ecdsa:
-    //   case cose_group_sign_eddsa:
-    //   case cose_group_sign_rsassa_pss:
-    //   case cose_group_sign_rsassa_pkcs15:
+    //   case cose_group_t::sign_ecdsa:
+    //   case cose_group_t::sign_eddsa:
+    //   case cose_group_t::sign_rsassa_pss:
+    //   case cose_group_t::sign_rsassa_pkcs15:
     //      if(sizeof_recipients) tag = cbor_tag_t::sign;
     //      else tag = cbor_tag_t::sign1;
-    //   case cose_group_enc_aesgcm:
-    //   case cose_group_enc_aesccm:
-    //   case cose_group_enc_chacha20_poly1305:
+    //   case cose_group_t::enc_aesgcm:
+    //   case cose_group_t::enc_aesccm:
+    //   case cose_group_t::enc_chacha20_poly1305:
     //      if(sizeof_recipients) tag = cbor_tag_t::encrypt
     //      else tag = cbor_tag_t::encrypt0;
-    //   case cose_group_mac_hmac:
-    //   case cose_group_mac_aes:
+    //   case cose_group_t::mac_hmac:
+    //   case cose_group_t::mac_aes:
     //      if(sizeof_recipients) tag = cbor_tag_t::mac
     //      else tag = cbor_tag_t::mac0;
 
@@ -66,13 +66,13 @@ return_t cose_composer::compose(cbor_array** object, bool tagged) {
             crypt_category_t category = advisor->categoryof((cose_alg_t)alg);
             size_t size_recipients = get_recipients().size();
             switch (category) {
-                case crypt_category_t::crypt_category_crypt:
+                case crypt_category_t::crypt:
                     cbor_tag = size_recipients ? cbor_tag_t::encrypt : cbor_tag_t::encrypt0;
                     break;
-                case crypt_category_t::crypt_category_mac:
+                case crypt_category_t::mac:
                     cbor_tag = size_recipients ? cbor_tag_t::mac : cbor_tag_t::mac0;
                     break;
-                case crypt_category_t::crypt_category_sign:
+                case crypt_category_t::sign:
                     cbor_tag = size_recipients ? cbor_tag_t::sign : cbor_tag_t::sign1;
                     break;
                 default:

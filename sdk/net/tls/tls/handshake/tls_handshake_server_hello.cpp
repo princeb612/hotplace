@@ -419,7 +419,7 @@ return_t tls_handshake_server_hello::do_read_body(tls_direction_t dir, const byt
             set_cipher_suite(cipher_suite);
 
             // server_key_update
-            secrets.assign(tls_secret_t::server_hello_random, random);
+            secrets.assign(tls_secret_t::server_hello_random, std::move(random));
 
             _version = etversion;
         }
@@ -533,7 +533,7 @@ return_t tls_handshake_server_hello::do_write_body(tls_direction_t dir, binary_t
             pl.write(bin);
         }
 
-        secrets.assign(tls_secret_t::server_hello_random, _random);
+        secrets.assign(tls_secret_t::server_hello_random, _random);  // copy
 
         binary_append(bin, extensions);
 

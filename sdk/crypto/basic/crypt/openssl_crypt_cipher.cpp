@@ -149,9 +149,6 @@ return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorit
             adjust_range(internal_size_iv, 0, EVP_MAX_IV_LENGTH);
             temp_iv.resize(internal_size_iv);
             memcpy(temp_iv.data(), iv, (size_iv > internal_size_iv ? internal_size_iv : size_iv));
-
-            context->datamap.emplace(crypt_item_t::cek, temp_key);
-            context->datamap.emplace(crypt_item_t::iv, temp_iv);
         })
         /* encrypt and decrypt re-initialize iv */
         .run_pipe([&]() -> int { return EVP_CipherInit_ex(context->encrypt_context, cipher, nullptr, temp_key.data(), nullptr, 1); })
@@ -160,12 +157,13 @@ return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorit
         .run_pipe([&]() -> int { return EVP_CIPHER_CTX_set_padding(context->encrypt_context, 1); })
         .run_pipe([&]() -> int { return EVP_CIPHER_CTX_set_padding(context->decrypt_context, 1); })
         .walk([&]() -> void {
+            context->datamap.emplace(crypt_item_t::cek, std::move(temp_key));
+            context->datamap.emplace(crypt_item_t::iv, std::move(temp_iv));
+
             *handle = context.get();
 
             context.release();
         });
-    std::fill(temp_key.begin(), temp_key.end(), 0);
-    std::fill(temp_iv.begin(), temp_iv.end(), 0);
     return pipeline.result_to_return_t();
 }
 

@@ -101,7 +101,6 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
         if (empty_hash.empty()) {
             openssl_digest dgst;
             dgst.digest(hashalg, empty, empty_hash);
-            get_secrets().assign(tls_secret_t::empty_hash, empty_hash);
         }
         empty_ikm.resize(dlen);
 
@@ -113,11 +112,11 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
             } else {
                 kdf.hkdf_expand_tls13_label(okm, hashalg, dlen, secret, label, context);
             }
-            get_secrets().assign(sec, okm);
+            get_secrets().assign(sec, okm);  // copy
         };
         auto lambda_extract = [&](tls_secret_t sec, binary_t& prk, const char* hashalg, const binary_t& salt, const binary_t& ikm) -> void {
             kdf.hmac_kdf_extract(prk, hashalg, salt, ikm);
-            get_secrets().assign(sec, prk);
+            get_secrets().assign(sec, prk);  // copy
         };
 
         bool cond_trhash = true;
@@ -134,7 +133,6 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
             if (tshash) {
                 tshash->digest(context_hash);
                 tshash->release();
-                get_secrets().assign(tls_secret_t::transcript_hash, context_hash);
             }
         }
 
@@ -225,29 +223,20 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                     ret = kdf.hmac_kdf_extract(bin_initial_secret, alg, bin_initial_salt, salt);
                     get_secrets().assign(tls_secret_t::initial_quic, bin_initial_secret);
 
-                    kdf.hkdf_expand_tls13_label(bin_client_initial_secret, alg, 32, bin_initial_secret, "client in", context);
-                    get_secrets().assign(tls_secret_t::initial_quic_client, bin_client_initial_secret);
+                    auto lambda_hkdf_expand_tls13_label = [&](tls_secret_t sec, binary_t& okm, hash_algorithm_t alg, uint16 length, const binary_t& secret,
+                                                              const char* label, const binary_t& context) -> void {
+                        kdf.hkdf_expand_tls13_label(okm, alg, length, secret, label, context);
+                        get_secrets().assign(sec, okm);  // copy
+                    };
 
-                    kdf.hkdf_expand_tls13_label(bin, alg, keysize, bin_client_initial_secret, label_quic_key, context);
-                    get_secrets().assign(tls_secret_t::initial_quic_client_key, bin);
-
-                    kdf.hkdf_expand_tls13_label(bin, alg, 12, bin_client_initial_secret, label_quic_iv, context);
-                    get_secrets().assign(tls_secret_t::initial_quic_client_iv, bin);
-
-                    kdf.hkdf_expand_tls13_label(bin, alg, 16, bin_client_initial_secret, label_quic_hp, context);
-                    get_secrets().assign(tls_secret_t::initial_quic_client_hp, bin);
-
-                    kdf.hkdf_expand_tls13_label(bin_server_initial_secret, alg, 32, bin_initial_secret, "server in", context);
-                    get_secrets().assign(tls_secret_t::initial_quic_server, bin_server_initial_secret);
-
-                    kdf.hkdf_expand_tls13_label(bin, alg, keysize, bin_server_initial_secret, label_quic_key, context);
-                    get_secrets().assign(tls_secret_t::initial_quic_server_key, bin);
-
-                    kdf.hkdf_expand_tls13_label(bin, alg, 12, bin_server_initial_secret, label_quic_iv, context);
-                    get_secrets().assign(tls_secret_t::initial_quic_server_iv, bin);
-
-                    kdf.hkdf_expand_tls13_label(bin, alg, 16, bin_server_initial_secret, label_quic_hp, context);
-                    get_secrets().assign(tls_secret_t::initial_quic_server_hp, bin);
+                    lambda_hkdf_expand_tls13_label(tls_secret_t::initial_quic_client, bin_client_initial_secret, alg, 32, bin_initial_secret, "client in", context);
+                    lambda_hkdf_expand_tls13_label(tls_secret_t::initial_quic_client_key, bin, alg, keysize, bin_client_initial_secret, label_quic_key, context);
+                    lambda_hkdf_expand_tls13_label(tls_secret_t::initial_quic_client_iv, bin, alg, 12, bin_client_initial_secret, label_quic_iv, context);
+                    lambda_hkdf_expand_tls13_label(tls_secret_t::initial_quic_client_hp, bin, alg, 16, bin_client_initial_secret, label_quic_hp, context);
+                    lambda_hkdf_expand_tls13_label(tls_secret_t::initial_quic_server, bin_server_initial_secret, alg, 32, bin_initial_secret, "server in", context);
+                    lambda_hkdf_expand_tls13_label(tls_secret_t::initial_quic_server_key, bin, alg, keysize, bin_server_initial_secret, label_quic_key, context);
+                    lambda_hkdf_expand_tls13_label(tls_secret_t::initial_quic_server_iv, bin, alg, 12, bin_server_initial_secret, label_quic_iv, context);
+                    lambda_hkdf_expand_tls13_label(tls_secret_t::initial_quic_server_hp, bin, alg, 16, bin_server_initial_secret, label_quic_hp, context);
                 }
             }
         } else if (tls_handshake_type_t::server_hello == type) {
@@ -332,8 +321,6 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                             }
 
                             ret = dh_key_agreement(pkey_priv, pkey_pub, shared_secret);
-
-                            get_secrets().assign(tls_secret_t::shared_secret, shared_secret);
                         }
                     } else {
                         ret = errorcode_t::warn_retry;  // HRR
@@ -378,6 +365,9 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                     auto sslkeylog = sslkeylog_exporter::get_instance();
                     sslkeylog->log(session, tls_secret_t::c_hs_traffic);
                     sslkeylog->log(session, tls_secret_t::s_hs_traffic);
+
+                    // move
+                    get_secrets().assign(tls_secret_t::shared_secret, std::move(shared_secret));
                 }
 
                 // calc
@@ -433,8 +423,6 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
             // secret_exporter_master
             binary_t secret_exporter_master;
 
-            get_secrets().assign(tls_secret_t::server_finished, context_hash);
-
             if (use_pre_master_secret()) {
                 // from SSLKEYLOGFILE
                 secret_application_client = get_secrets().get(tls_secret_t::c_ap_traffic);
@@ -473,6 +461,8 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
                 lambda_expand_label(tls_secret_t::application_quic_server_iv, okm, hashalg, 12, secret_application_server, label_quic_iv, empty);
                 lambda_expand_label(tls_secret_t::application_quic_server_hp, okm, hashalg, keysize, secret_application_server, label_quic_hp, empty);
             }
+
+            get_secrets().assign(tls_secret_t::server_finished, context_hash);  // copy
         } else if ((tls_handshake_type_t::finished == type) && is_clientinitiated(dir)) {
             /**
              *   0 -> HKDF-Extract = Master Secret
@@ -610,8 +600,6 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
 
                     master_secret.resize(48);  // 48 bytes
 
-                    get_secrets().assign(tls_secret_t::master, master_secret);
-
                     hmac_master->release();
 
                     auto sslkeylog = sslkeylog_exporter::get_instance();
@@ -637,6 +625,15 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
 
             auto cs = get_cipher_suite();
             ret = calc_keyblock(hmac_alg, master_secret, client_hello_random, server_hello_random, cs);
+
+            // move
+            get_secrets().assign(tls_secret_t::master, std::move(master_secret));
+        }
+
+        // move
+        get_secrets().assign(tls_secret_t::empty_hash, std::move(empty_hash));
+        if (cond_trhash) {
+            get_secrets().assign(tls_secret_t::transcript_hash, std::move(context_hash));
         }
     }
     __finally2 {}

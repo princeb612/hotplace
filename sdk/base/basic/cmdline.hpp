@@ -211,7 +211,7 @@ t_cmdline_t<T>& t_cmdline_t<T>::operator<<(t_cmdarg_t<T>&& cmd) {
     auto pib = _args.emplace(token, std::move(cmd));
 
     if (pib.second) {
-        _list.emplace_back(token);
+        _list.emplace_back(std::move(token));
     } else {
         throw exception(errorcode_t::duplicate);
     }

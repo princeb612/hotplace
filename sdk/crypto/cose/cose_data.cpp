@@ -58,9 +58,9 @@ cose_data& cose_data::add(int key, const char* value) {
     if (value) {
         variant var;
         switch (key) {
-            case cose_key_t::kid:                                               // 4
-            case cose_key_t::static_key_id:                                     // -3
-            case cose_key_t::salt:                                              // -20
+            case cose_key_t::kid:                                        // 4
+            case cose_key_t::static_key_id:                              // -3
+            case cose_key_t::salt:                                       // -20
                 var.set_new((byte_t*)value, value ? strlen(value) : 0);  // as BSTRING
                 break;
             default:

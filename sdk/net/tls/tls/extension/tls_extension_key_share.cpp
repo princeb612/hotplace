@@ -321,7 +321,8 @@ return_t tls_extension_server_key_share::do_read_body(tls_direction_t dir, const
                 binary_t shared_secret;
                 if (tls_flag_pqc & hint->flags) {
                     keyexchange.decaps((tls_group_t)group, &tlskey, KID_TLS_CLIENTHELLO_KEYSHARE_PRIVATE, pubkey, shared_secret);
-                    protection.get_secrets().assign(tls_secret_t::shared_secret, shared_secret);
+                    // move
+                    protection.get_secrets().assign(tls_secret_t::shared_secret, std::move(shared_secret));
                 } else {
                     // RFC 8446 the server's share MUST be in the same group as one of the client's shares.
                     add_pubkey(etgroup, pubkey, keydesc(get_kid()), dir);
@@ -414,16 +415,18 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
 
                 binary_t sharedsecret;
                 keyexchange.encaps((tls_group_t)group, share, keycapsule, sharedsecret);
-                protection.get_secrets().assign(tls_secret_t::shared_secret, sharedsecret);
 #if defined DEBUG
                 if (istraceable(trace_category_t::trace_category_net)) {
                     trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension,
                                       [&](basic_stream& dbs) -> void { dbs.println("   > encaps"); });
                 }
 #endif
+                // move
                 pubkey = std::move(keycapsule);
+                protection.get_secrets().assign(tls_secret_t::shared_secret, std::move(sharedsecret));
             } else {
                 keyexchange.keyshare((tls_group_t)group, &tlskey, KID_TLS_SERVERHELLO_KEYSHARE_PUBLIC, share);
+                // move
                 pubkey = std::move(share);
             }
             pubkeylen = t_narrow_cast(pubkey.size());

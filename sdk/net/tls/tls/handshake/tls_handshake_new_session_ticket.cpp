@@ -115,8 +115,6 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
             auto& kv = session->get_session_info(from_server).get_keyvalue();
             kv.set(session_ticket_lifetime, ticket_lifetime);
             kv.set(session_ticket_age_add, ticket_age_add);
-            secrets.assign(tls_secret_t::new_session_ticket, session_ticket);
-
             kv.set(session_ticket_timestamp, time(nullptr));
         }
 
@@ -142,6 +140,8 @@ return_t tls_handshake_new_session_ticket::do_read_body(tls_direction_t dir, con
             tls_extensions extensions;
             extensions.read(this, dir, ticket_extensions);
         }
+
+        secrets.assign(tls_secret_t::new_session_ticket, std::move(session_ticket));
     }
     __finally2 {}
     return ret;
@@ -169,7 +169,6 @@ return_t tls_handshake_new_session_ticket::do_write_body(tls_direction_t dir, bi
             auto& kv = session->get_session_info(from_server).get_keyvalue();
             kv.set(session_ticket_lifetime, ticket_lifetime);
             kv.set(session_ticket_age_add, ticket_age_add);
-            secrets.assign(tls_secret_t::new_session_ticket, session_ticket);
         }
         {
             payload pl;
@@ -183,6 +182,8 @@ return_t tls_handshake_new_session_ticket::do_write_body(tls_direction_t dir, bi
                << new payload_member(ticket_extensions, constexpr_ticket_extensions);
             pl.write(bin);
         }
+
+        secrets.assign(tls_secret_t::new_session_ticket, std::move(session_ticket));
     }
     __finally2 {}
     return ret;

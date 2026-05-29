@@ -739,8 +739,12 @@ enum class jws_t : uint16 {
 ///////////////////////////////////////////////////////////////////////////
 // COSE
 ///////////////////////////////////////////////////////////////////////////
+// https://www.iana.org/assignments/cose/cose.xhtml
 enum cose_key_t {
-    cose_key_unknown = 0,
+    // COSE Header Parameters
+
+    cose_key_reserved = 0,
+
     // RFC 8152 Table 2: Common Header Parameters
     // RFC 8152 Table 3: Common Header Parameters
     alg = 1,           // int / tstr
@@ -753,18 +757,32 @@ enum cose_key_t {
     counter_sig = 7,  // COSE_Signature / [+ COSE_Signature]
 
     // RFC 8152 Table 27: Header Parameter for CounterSignature0
-    counter_sig0 = 9,
+    counter_sig0 = 9,  // bstr
+    kid_context = 10,  // bstr
 
     // RFC 9338 Table 1: Common Header Parameters
     // RFC 9338 Table 2: New Common Header Parameters
-    counter_sig_v2 = 11,
-    counter_sig0_v2 = 12,
+    counter_sig_v2 = 11,   // COSE_CounterSignature / [+COSE_CounterSignature]
+    counter_sig0_v2 = 12,  // COSE_CounterSignature0
+
+    // kccs = 14,        // map
+    // cwt_claims = 15,  // map
+    // typ = 16,         // uint / tstr
+    // sd_claims = 17,   // [+bstr]
+    // c5t = 22,         // COSE_CertHash
+    // c5u = 23,         // url
+    // c5b = 24,         // COSE_C509
+    // c5c = 25,         // COSE_C509
 
     // RFC 9360 Table 1: X.509 COSE Header Parameters
     x5bag = 32,
     x5chain = 33,
     x5t = 34,
     x5u = 35,
+
+    // sd_alg = 170,                    // int
+    // sd_aead_encrypted_claims = 171,  // [+[bstr,bstr,bstr]]
+    // sd_aead = 172,                   // uint .size 2
 
     // RFC 8152 Table 19: ECDH Algorithm Parameters
     // RFC 9053 Table 15: ECDH Algorithm Parameters
@@ -805,6 +823,8 @@ enum cose_key_lable_t {
     cose_lable_alg = 3,
     cose_lable_keyops = 4,
     cose_lable_base_iv = 5,
+
+    // COSE Key Type Parameters
 
     // RFC 8152 Table 23: EC Key Parameters
     // RFC 9053 Table 19: EC Key Parameters
@@ -910,95 +930,95 @@ enum cose_ec_curve_t {
     cose_ec_brainpoolp512r1 = 259,
 };
 
-enum crypt_category_t {
-    crypt_category_not_classified = 0,
-    crypt_category_unknown = crypt_category_not_classified,
-    crypt_category_crypt = 1,
-    crypt_category_mac = 2,
-    crypt_category_sign = 3,
-    crypt_category_hash = 4,
-    crypt_category_keydistribution = 5,
+enum class crypt_category_t {
+    not_classified = 0,
+    unknown = not_classified,
+    crypt = 1,
+    mac = 2,
+    sign = 3,
+    hash = 4,
+    keydistribution = 5,
 };
 
-enum cose_group_t {
+enum class cose_group_t {
     // RFC 8152 8. Signature Algorithms
     //   8.1.  ECDSA
     //   Table 5, ES256, ES284, ES512
-    cose_group_sign_ecdsa = 1,
+    sign_ecdsa = 1,
     // RFC 8152 8. Signature Algorithms
     //   8.2.  Edwards-Curve Digital Signature Algorithms (EdDSAs)
     //   Table 6, EdDSA
-    cose_group_sign_eddsa = 2,
+    sign_eddsa = 2,
     // RFC 8152 9. Message Authentication Code (MAC) Algorithms
     //   9.1.  Hash-Based Message Authentication Codes (HMACs)
     //   Table 7, HMAC 256/64, HMAC 256/256, HMAC 384/384, HMAC 512/512
-    cose_group_mac_hmac = 3,
+    mac_hmac = 3,
     // RFC 8152 9. Message Authentication Code (MAC) Algorithms
     //   9.2.  AES Message Authentication Code (AES-CBC-MAC)
     //   Table 8, AES-MAC 128/64, AES-MAC 256/64, AES-MAC 128/128, AES-MAC 256/128
-    cose_group_mac_aes = 4,
+    mac_aes = 4,
     // RFC 8152 10. Content Encryption Algorithms
     //   10.1.  AES GCM
     //   Table 9, A128GCM, A192GCM, A256GCM
-    cose_group_enc_aesgcm = 5,
+    enc_aesgcm = 5,
     // RFC 8152 10. Content Encryption Algorithms
     //   10.2.  AES CCM
     //   Table 10, AES-CCM-16-64-128, ...
-    cose_group_enc_aesccm = 6,
+    enc_aesccm = 6,
     // RFC 8152 10. Content Encryption Algorithms
     //   10.3.  ChaCha20 and Poly1305
     //   Table 11, ChaCha20/Poly1305
-    cose_group_enc_chacha20_poly1305 = 7,
+    enc_chacha20_poly1305 = 7,
     // RFC 8152 12. Content Key Distribution Methods
     //   12.1. Direct Encryption
     //   12.1.1.  Direct Key
     //   Table 15, direct
-    cose_group_key_direct = 8,
+    key_direct = 8,
     // RFC 8152 12. Content Key Distribution Methods
     //   12.1. Direct Encryption
     //   12.1.2.  Direct Key with KDF
     //   Table 16, direct+HKDF-SHA-256, direct+HKDF-SHA-512
-    cose_group_key_hkdf_hmac = 9,
+    key_hkdf_hmac = 9,
     // RFC 8152 12. Content Key Distribution Methods
     //   12.1. Direct Encryption
     //   12.1.2.  Direct Key with KDF
     //   Table 16,  direct+HKDF-AES-128, direct+HKDF-AES-256
-    cose_group_key_hkdf_aes = 10,
+    key_hkdf_aes = 10,
     // RFC 8152 12. Content Key Distribution Methods
     //   12.2. Key Wrap
     //   12.2.1.  AES Key Wrap
     //   Table 17, A128KW, A192KW, A256KW
-    cose_group_key_aeskw = 11,
+    key_aeskw = 11,
     // RFC 8152 12. Content Key Distribution Methods
     //   12.4. Direct Key Agreement
     //   12.4.1.  ECDH
     //   Table 18 ECDH-ES+HKDF-256, ECDH-ES+HKDF-512, ECDH-SS+HKDF-256, ECDH-SS+HKDF-512
-    cose_group_key_ecdhes_hmac = 12,
-    cose_group_key_ecdhss_hmac = 13,
+    key_ecdhes_hmac = 12,
+    key_ecdhss_hmac = 13,
     // RFC 8152 12. Content Key Distribution Methods
     //   12.5. Key Agreement with Key Wrap
     //   12.5.1.  ECDH
     //   Table 20 ECDH-ES+A128KW,ECDH-ES+A192KW, ECDH-ES+A256KW, ECDH-SS+A128KW,ECDH-SS+A192KW, ECDH-SS+A256KW
-    cose_group_key_ecdhes_aeskw = 14,
-    cose_group_key_ecdhss_aeskw = 15,
+    key_ecdhes_aeskw = 14,
+    key_ecdhss_aeskw = 15,
     // RFC 8230 2.  RSASSA-PSS Signature Algorithm
     //   Table 1, PS256, PS384, PS512
-    cose_group_sign_rsassa_pss = 16,
+    sign_rsassa_pss = 16,
     // RFC 8230 3.  RSAES-OAEP Key Encryption Algorithm
     //   Table 2, RSAES-OAEP w/ SHA-1, RSAES-OAEP w/ SHA-256, RSAES-OAEP w/ SHA-512
-    cose_group_key_rsa_oaep = 17,
+    key_rsa_oaep = 17,
     // RFC 8812 2.  RSASSA-PKCS1-v1_5 Signature Algorithm
     //   Table 1, RS256, RS384, RS512, RS1
-    cose_group_sign_rsassa_pkcs15 = 18,
+    sign_rsassa_pkcs15 = 18,
     // RFC 9053 10.  IANA Considerations
     //   10.2.  Changes to the "COSE Algorithms" Registry
     //   Table 23, IV-GENERATION
-    cose_group_iv_generate = 19,
+    iv_generate = 19,
     // RFC 9054 3.  Hash Algorithm Identifiers
     //   Table 1, SHA-1
     //   Table 2, SHA-256/64, SHA-256, SHA-384, SHA-512, SHA-512/256
-    cose_group_hash = 20,
-    cose_group_sign_mldsa = 21,
+    hash = 20,
+    sign_mldsa = 21,
 };
 /**
  * @breif   cose algorithms
@@ -1099,6 +1119,21 @@ enum cose_alg_t {
     cose_aes128ccb = -65531,  // RFC 9459 5.2 deprecated
     cose_aes192ccb = -65530,  // RFC 9459 5.2 deprecated
     cose_aes256ccb = -65529,  // RFC 9459 5.2 deprecated
+
+    cose_esb512 = -268,  // ECDSA using BrainpoolP512r1 curve and SHA-512
+    cose_esb384 = -267,  // ECDSA using BrainpoolP384r1 curve and SHA-384
+    cose_esb320 = -266,  // ECDSA using BrainpoolP320r1 curve and SHA-384
+    cose_esb256 = -265,  // ECDSA using BrainpoolP256r1 curve and SHA-256
+
+    cose_kt256 = -264,          // KT256 XOF
+    cose_kt128 = -263,          // KT128 XOF
+    cose_turboshake256 = -262,  // KT256 XOF
+    cose_turboshake128 = -261,  // KT128 XOF
+    cose_walnutdsa = -260,
+
+    cose_ed448 = -53,   // EdDSA using the Ed448 parameter set in Section 5.2 of [RFC8032
+    cose_esp512 = -52,  // ECDSA using P-521 curve and SHA-512
+    cose_esp384 = -51,  // ECDSA using P-384 curve and SHA-384
 
     // RFC 8152 Table 9: Algorithm Value for AES-GCM
     // RFC 9053 Table 5: Algorithm Values for AES-GCM
@@ -1553,7 +1588,7 @@ struct hint_jose_encryption_t {
     } u;
     crypto_kty_t kty;  // crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec, crypto_kty_t::kty_oct
     crypto_kty_t alt;  // for example crypto_kty_t::kty_okp, if kt is crypto_kty_t::kty_ec
-    crypt_enc_t enc;  // crypt_enc_t::rsa_1_5, crypt_enc_t::rsa_oaep, crypt_enc_t::rsa_oaep256
+    crypt_enc_t enc;   // crypt_enc_t::rsa_1_5, crypt_enc_t::rsa_oaep, crypt_enc_t::rsa_oaep256
 
     crypt_algorithm_t crypt_alg;  // algorithm for keywrap or GCM
     crypt_mode_t crypt_mode;      // crypt_mode_t::wrap, crypt_mode_t::gcm

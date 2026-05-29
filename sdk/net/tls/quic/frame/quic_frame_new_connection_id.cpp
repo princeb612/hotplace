@@ -88,8 +88,6 @@ return_t quic_frame_new_connection_id::do_read_body(tls_direction_t dir, const b
         }
 
         tracker.emplace(sequence_number, connection_id);
-        secrets.assign(tls_secret_t::server_cid, connection_id);
-        secrets.assign(tls_secret_t::stateless_reset_token, stateless_reset_token);
 
 #if defined DEBUG
         if (istraceable(trace_category_t::trace_category_net)) {
@@ -108,6 +106,9 @@ return_t quic_frame_new_connection_id::do_read_body(tls_direction_t dir, const b
             });
         }
 #endif
+
+        secrets.assign(tls_secret_t::server_cid, std::move(connection_id));
+        secrets.assign(tls_secret_t::stateless_reset_token, std::move(stateless_reset_token));
     }
     __finally2 {}
     return ret;
@@ -134,8 +135,6 @@ return_t quic_frame_new_connection_id::do_write_body(tls_direction_t dir, binary
         prng.random(token, 16);
 
         tracker.emplace(seq, cid);
-        secrets.assign(tls_secret_t::server_cid, cid);
-        secrets.assign(tls_secret_t::stateless_reset_token, token);
 
         payload pl;
         pl << new payload_member(new quic_encoded(uint8(type)), constexpr_type)       //
@@ -153,6 +152,9 @@ return_t quic_frame_new_connection_id::do_write_body(tls_direction_t dir, binary
             });
         }
 #endif
+
+        secrets.assign(tls_secret_t::server_cid, std::move(cid));
+        secrets.assign(tls_secret_t::stateless_reset_token, std::move(token));
     }
     __finally2 {}
     return ret;

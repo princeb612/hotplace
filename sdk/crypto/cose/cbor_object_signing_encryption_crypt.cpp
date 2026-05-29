@@ -39,7 +39,7 @@ return_t cbor_object_signing_encryption::encrypt(cose_context_t* handle, crypto_
             __leave2;
         }
 
-        ret = preprocess(handle, key, algs, crypt_category_t::crypt_category_crypt, input);
+        ret = preprocess(handle, key, algs, crypt_category_t::crypt, input);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -240,7 +240,7 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
         }
 
         cose_group_t group = hint->group;
-        if (cose_group_t::cose_group_enc_aesgcm == group) {
+        if (cose_group_t::enc_aesgcm == group) {
             if (mode) {
                 ret = crypt.encrypt(hint->enc.algname, cek, iv, input, ciphertext, aad, tag);
             } else {
@@ -250,7 +250,7 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
                 // RFC 8152 10.1.  AES GCM
                 ret = crypt.decrypt(hint->enc.algname, cek, iv, payload.data(), enc_size, output, aad, tag);
             }
-        } else if (cose_group_t::cose_group_enc_aesccm == group) {
+        } else if (cose_group_t::enc_aesccm == group) {
             // RFC 8152 10.2.  AES CCM - explains about L and M parameters
             encrypt_option_t options[] = {
                 {crypt_ctrl_t::tsize, hint->enc.tsize},
@@ -265,7 +265,7 @@ return_t cbor_object_signing_encryption::docrypt(cose_context_t* handle, crypto_
 
                 ret = crypt.decrypt(hint->enc.algname, cek, iv, payload.data(), enc_size, output, aad, tag, options);
             }
-        } else if (cose_group_t::cose_group_enc_chacha20_poly1305 == group) {
+        } else if (cose_group_t::enc_chacha20_poly1305 == group) {
             // RFC 7539 ChaCha20 and Poly1305 for IETF Protocols
             // RFC 8439 ChaCha20 and Poly1305 for IETF Protocols
             //     chacha20_aead_encrypt(aad, key, iv, constant, plaintext):

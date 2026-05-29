@@ -122,7 +122,7 @@ crypto_kty_t crypto_advisor::ktyof(cose_kty_t kty) {
 }
 
 crypt_category_t crypto_advisor::categoryof(cose_alg_t alg) {
-    crypt_category_t category = crypt_category_t::crypt_category_not_classified;
+    crypt_category_t category = crypt_category_t::not_classified;
     t_maphint<int32, const hint_cose_algorithm_t*> hint(_cose_alg_map);
 
     const hint_cose_algorithm_t* item = nullptr;

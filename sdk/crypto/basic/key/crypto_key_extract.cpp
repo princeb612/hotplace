@@ -87,7 +87,7 @@ return_t crypto_key::extract_oct(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
             bin_k.resize(key_length);
             EVP_PKEY_get_raw_private_key(pkey, bin_k.data(), &key_length);
 
-            datamap.emplace(crypt_item_t::hmac_k, bin_k);
+            datamap.emplace(crypt_item_t::hmac_k, std::move(bin_k));
         }
     }
     __finally2 {}
@@ -131,14 +131,14 @@ return_t crypto_key::extract_rsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
              */
             binary_t bin_pub;
             get_asn1public_key(pkey, bin_pub);
-            datamap.emplace(crypt_item_t::asn1der, bin_pub);
+            datamap.emplace(crypt_item_t::asn1der, std::move(bin_pub));
         } else if (crypt_access_t::public_key & flags) {
             binary_t bin_n;
             binary_t bin_e;
             bn2bin(bn_n, bin_n);
             bn2bin(bn_e, bin_e);
-            datamap.emplace(crypt_item_t::rsa_n, bin_n);
-            datamap.emplace(crypt_item_t::rsa_e, bin_e);
+            datamap.emplace(crypt_item_t::rsa_n, std::move(bin_n));
+            datamap.emplace(crypt_item_t::rsa_e, std::move(bin_e));
         }
 
         if (crypt_access_t::private_key & flags) {
@@ -147,7 +147,7 @@ return_t crypto_key::extract_rsa(const EVP_PKEY* pkey, int flags, crypto_kty_t& 
                 int len_d = BN_num_bytes(bn_d);
                 bin_d.resize(len_d);
                 BN_bn2bin(bn_d, bin_d.data());
-                datamap.emplace(crypt_item_t::rsa_d, bin_d);
+                datamap.emplace(crypt_item_t::rsa_d, std::move(bin_d));
             }
         }
     }
@@ -187,7 +187,7 @@ return_t crypto_key::extract_ec(const EVP_PKEY* pkey, int flags, crypto_kty_t& t
         if (crypt_access_t::asn1public_key & flags) {
             binary_t bin_pub;
             get_asn1public_key(pkey, bin_pub);
-            datamap.emplace(crypt_item_t::asn1der, bin_pub);
+            datamap.emplace(crypt_item_t::asn1der, std::move(bin_pub));
         } else if (crypt_access_t::public_key & flags) {
             BN_ptr bn_x(BN_new());
             BN_ptr bn_y(BN_new());
@@ -216,14 +216,14 @@ return_t crypto_key::extract_ec(const EVP_PKEY* pkey, int flags, crypto_kty_t& t
                     }
                 }
 
-                datamap.emplace(crypt_item_t::ec_x, bin_x);
-                datamap.emplace(crypt_item_t::ec_y, bin_y);
-
                 binary_t uncompressed;
                 binary_append(uncompressed, uint8(4));
                 binary_append(uncompressed, bin_x);
                 binary_append(uncompressed, bin_y);
-                datamap.emplace(crypt_item_t::ec_pub_uncompressed, uncompressed);
+
+                datamap.emplace(crypt_item_t::ec_x, std::move(bin_x));
+                datamap.emplace(crypt_item_t::ec_y, std::move(bin_y));
+                datamap.emplace(crypt_item_t::ec_pub_uncompressed, std::move(uncompressed));
             }
         }
         if (crypt_access_t::private_key & flags) {
@@ -240,7 +240,7 @@ return_t crypto_key::extract_ec(const EVP_PKEY* pkey, int flags, crypto_kty_t& t
                     }
                 }
 
-                datamap.emplace(crypt_item_t::ec_d, bin_d);
+                datamap.emplace(crypt_item_t::ec_d, std::move(bin_d));
             }
         }
     }
@@ -359,11 +359,6 @@ return_t crypto_key::extract_dh(const EVP_PKEY* pkey, int flags, crypto_kty_t& t
             get_asn1public_key(pkey, bin_pub);
             datamap.emplace(crypt_item_t::asn1der, std::move(bin_pub));
         } else if (crypt_access_t::public_key & flags) {
-            if (bn_pub) {
-                bn2bin(bn_pub, bin_pub);
-                datamap.emplace(crypt_item_t::dh_pub, std::move(bin_pub));
-            }
-
             const BIGNUM* bn_p = nullptr;
             const BIGNUM* bn_q = nullptr;
             const BIGNUM* bn_g = nullptr;
@@ -382,9 +377,14 @@ return_t crypto_key::extract_dh(const EVP_PKEY* pkey, int flags, crypto_kty_t& t
                     bin_q.erase(bin_q.begin());
                 }
             }
+
             datamap.emplace(crypt_item_t::dh_p, std::move(bin_p));
             datamap.emplace(crypt_item_t::dh_q, std::move(bin_q));
             datamap.emplace(crypt_item_t::dh_g, std::move(bin_g));
+            if (bn_pub) {
+                bn2bin(bn_pub, bin_pub);
+                datamap.emplace(crypt_item_t::dh_pub, std::move(bin_pub));
+            }
         }
 
         if (crypt_access_t::private_key & flags) {

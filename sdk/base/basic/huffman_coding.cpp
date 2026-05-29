@@ -183,10 +183,10 @@ huffman_coding& huffman_coding::imports(const hc_code_t* table) {
         std::string code_string = code;
         size_t size = code_string.size();
 
-        _codetable.emplace(sym, code_string);
         _trie.insert(code, size, sym);
         _range.sampling(size);
         build_cache(sym, code_string);
+        _codetable.emplace(sym, std::move(code_string));
     }
 
 #if defined DEBUG
@@ -272,12 +272,11 @@ return_t huffman_coding::expect(const byte_t* source, size_t size, size_t& size_
             __leave2;
         }
 
-        t_maphint_const<uint8, std::string> hint(_codetable);
         size_t i = 0;
         const byte_t* p = source;
         for (i = 0; i < size; i++) {
-            std::string code;
-            hint.find(p[i], &code);
+            auto iter = _codetable.find(p[i]);
+            const std::string& code = iter->second;
             sum += code.size();
         }
 

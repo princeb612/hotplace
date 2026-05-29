@@ -47,7 +47,7 @@ return_t cbor_object_signing_encryption::sign(cose_context_t* handle, crypto_key
             __leave2;
         }
 
-        ret = preprocess(handle, key, algs, crypt_category_t::crypt_category_sign, input);
+        ret = preprocess(handle, key, algs, crypt_category_t::sign, input);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -204,11 +204,11 @@ return_t cbor_object_signing_encryption::dosign(cose_context_t* handle, crypto_k
 
         cose_group_t group = hint->group;
         switch (group) {
-            case cose_group_sign_ecdsa:
-            case cose_group_sign_eddsa:
-            case cose_group_sign_rsassa_pss:
-            case cose_group_sign_rsassa_pkcs15:
-            case cose_group_sign_mldsa:
+            case cose_group_t::sign_ecdsa:
+            case cose_group_t::sign_eddsa:
+            case cose_group_t::sign_rsassa_pss:
+            case cose_group_t::sign_rsassa_pkcs15:
+            case cose_group_t::sign_mldsa:
                 if (mode) {
                     binary_t sign;
                     ret = signprocessor.sign(pkey, sig, tobesigned, signature);

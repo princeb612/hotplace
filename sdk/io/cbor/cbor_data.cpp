@@ -150,11 +150,9 @@ void cbor_data::represent(stream_t* s) {
 void cbor_data::represent(binary_t* b) {
     if (b) {
         cbor_encode enc;
-        binary_t temp;
 
-        enc.add_tag(temp, this);
-        enc.encode(temp, data().content());
-        (*b).insert((*b).end(), temp.begin(), temp.end());
+        enc.add_tag(*b, this);
+        enc.encode(*b, data().content());
     }
 }
 

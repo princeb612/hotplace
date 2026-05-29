@@ -58,7 +58,7 @@ return_t tls_handshake_hello_verify_request::do_postprocess(tls_direction_t dir,
         auto& secrets = protection.get_secrets();
         // auto size_header_body = get_size();
 
-        secrets.assign(tls_secret_t::cookie, _cookie);
+        secrets.assign(tls_secret_t::cookie, _cookie);  // copy
 
         session->clear_session_status(session_status_client_hello);
         session->update_session_status(session_status_hello_verify_request);

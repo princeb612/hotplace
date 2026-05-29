@@ -333,8 +333,8 @@ return_t json_object_encryption::composer::compose_encryption_dorandom(jose_cont
                 base64_encode(protected_header.data(), protected_header.size(), item.datamap[crypt_item_t::aad], encoding_t::encoding_base64url);
 
                 recipient.header = std::string((char*)header.data(), header.size());
-                recipient.kid = kid;
-                item.recipients.emplace(alg, recipient);
+                recipient.kid = std::move(kid);
+                item.recipients.emplace(alg, std::move(recipient));
             } else if (algs.size() > 1) {
                 docompose_protected_header(protected_header, enc, jwa_t::unknown, jose_compose_t::jose_enc_only, "", handle->flags);
                 item.header.assign((char*)protected_header.data(), protected_header.size());
@@ -356,12 +356,12 @@ return_t json_object_encryption::composer::compose_encryption_dorandom(jose_cont
                     binary_t header;
                     docompose_encryption_header_parameter(header, jwe_t::unknown, alg, jose_compose_t::jose_alg_only, kid, datamap, variantmap);
                     recipient.header = std::string((char*)header.data(), header.size());
-                    item.recipients.emplace(alg, recipient);
+                    item.recipients.emplace(alg, std::move(recipient));
                 }
             }
 
-            handle->protected_header = protected_header;
-            handle->encryptions.emplace(enc, item);
+            handle->protected_header = std::move(protected_header);
+            handle->encryptions.emplace(enc, std::move(item));
         }
     }
     __finally2 {}
@@ -621,9 +621,9 @@ return_t json_object_encryption::composer::parse_decryption(jose_context_t* hand
                         json_unpack(json_recipient, "{s:s}", "encrypted_key", &encrypted_key);
 
                         doparse_decryption_recipient(handle, protected_header, encrypted_key, json_root, json_header, alg_type, recipient);
-                        item.recipients.emplace(alg_type, recipient);
+                        item.recipients.emplace(alg_type, std::move(recipient));
                     }
-                    handle->encryptions.emplace(enc_type, item);
+                    handle->encryptions.emplace(enc_type, std::move(item));
                 } else {
                     ret = errorcode_t::bad_data;
                     __leave2;
@@ -646,8 +646,8 @@ return_t json_object_encryption::composer::parse_decryption(jose_context_t* hand
                 doparse_decryption(handle, protected_header, encrypted_key, iv, ciphertext, tag, json_root, enc_type, item);
                 doparse_decryption_recipient(handle, protected_header, encrypted_key, json_root, nullptr, alg_type, recipient);
 
-                item.recipients.emplace(alg_type, recipient);
-                handle->encryptions.emplace(enc_type, item);
+                item.recipients.emplace(alg_type, std::move(recipient));
+                handle->encryptions.emplace(enc_type, std::move(item));
             }
         } else {  // jose_serialization_t::jose_compact
             size_t count = 0;
@@ -678,8 +678,8 @@ return_t json_object_encryption::composer::parse_decryption(jose_context_t* hand
             doparse_decryption(handle, protected_header.c_str(), encrypted_key.c_str(), iv.c_str(), ciphertext.c_str(), tag.c_str(), nullptr, enc_type, item);
             doparse_decryption_recipient(handle, protected_header.c_str(), encrypted_key.c_str(), nullptr, nullptr, alg_type, recipient);
 
-            item.recipients.emplace(alg_type, recipient);
-            handle->encryptions.emplace(enc_type, item);
+            item.recipients.emplace(alg_type, std::move(recipient));
+            handle->encryptions.emplace(enc_type, std::move(item));
         }
     }
     __finally2 {

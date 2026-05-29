@@ -95,7 +95,6 @@ typedef struct _jose_encryption_t {
     _jose_encryption_t() : enc_info(nullptr) {}
 } jose_encryption_t;
 typedef std::map<jwe_t, jose_encryption_t> jose_encryptions_map_t;
-typedef std::pair<jose_encryptions_map_t::iterator, bool> jose_encryptions_map_pib_t;
 
 /* JWS */
 typedef struct _jose_sign_t {

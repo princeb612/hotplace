@@ -39,7 +39,7 @@ return_t cbor_object_signing_encryption::mac(cose_context_t* handle, crypto_key*
             __leave2;
         }
 
-        ret = preprocess(handle, key, algs, crypt_category_t::crypt_category_mac, input);
+        ret = preprocess(handle, key, algs, crypt_category_t::mac, input);
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -211,12 +211,12 @@ return_t cbor_object_signing_encryption::domac(cose_context_t* handle, crypto_ke
 
         openssl_mac mac;
         cose_group_t group = hint->group;
-        if (cose_group_t::cose_group_hash == group) {
+        if (cose_group_t::hash == group) {
             throw exception(errorcode_t::not_implemented);
-        } else if (cose_group_t::cose_group_mac_hmac == group) {
+        } else if (cose_group_t::mac_hmac == group) {
             ret = mac.hmac(hint->dgst.algname, cek, tomac, tag);
             tag.resize(hint->dgst.dlen);  // sha256/64, sha512/256
-        } else if (cose_group_t::cose_group_mac_aes == group) {
+        } else if (cose_group_t::mac_aes == group) {
             binary_t q;
             binary_t iv;
             iv.resize(16);  // If the IV can be modified, then messages can be forged.  This is addressed by fixing the IV to all zeros.

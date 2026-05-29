@@ -115,9 +115,9 @@ return_t tls_handshake_finished::do_postprocess(tls_direction_t dir, const byte_
             session->get_keyvalue().set(session_handshake_finished, 1);
 
             if (from_client == dir) {
-                secrets.assign(tls_secret_t::client_verifydata, _verify_data);
+                secrets.assign(tls_secret_t::client_verifydata, _verify_data);  // copy
             } else if (from_server == dir) {
-                secrets.assign(tls_secret_t::server_verifydata, _verify_data);
+                secrets.assign(tls_secret_t::server_verifydata, _verify_data);  // copy
             }
 
             if (from_server == dir) {

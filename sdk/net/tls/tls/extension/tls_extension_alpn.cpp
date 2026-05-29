@@ -73,7 +73,7 @@ return_t tls_extension_alpn::do_read_body(tls_direction_t dir, const byte_t* str
         }
 
         if (from_server == dir) {
-            secrets.assign(tls_secret_t::alpn, _protocols);
+            secrets.assign(tls_secret_t::alpn, _protocols);  // copy
         }
     }
     __finally2 {}
@@ -89,7 +89,7 @@ return_t tls_extension_alpn::do_write_body(tls_direction_t dir, binary_t& bin) {
         pl.write(bin);
     }
     if (from_server == dir) {
-        get_handshake()->get_session()->get_tls_protection().get_secrets().assign(tls_secret_t::alpn, _protocols);
+        get_handshake()->get_session()->get_tls_protection().get_secrets().assign(tls_secret_t::alpn, _protocols);  // copy
     }
     return ret;
 }

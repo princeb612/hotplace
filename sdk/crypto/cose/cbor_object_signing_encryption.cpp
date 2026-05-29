@@ -236,7 +236,7 @@ return_t cbor_object_signing_encryption::subprocess(cose_context_t* handle, cryp
         cose_alg_t alg = layer->get_algorithm();
         crypt_category_t category = advisor->categoryof(alg);
 
-        if (crypt_category_t::crypt_category_keydistribution == category) {
+        if (crypt_category_t::keydistribution == category) {
             ret = process_keydistribution(handle, key, layer, mode);
             if (errorcode_t::success != ret) {
                 __leave2;
@@ -260,17 +260,17 @@ return_t cbor_object_signing_encryption::subprocess(cose_context_t* handle, cryp
                 handler = _handlermap[composer->get_cbor_tag()];
                 ret = (this->*handler)(handle, key, layer, mode);
             }
-        } else if (crypt_category_t::crypt_category_crypt == category) {
+        } else if (crypt_category_t::crypt == category) {
             if (body.get_recipients().empty()) {
                 ret = process_keydistribution(handle, key, layer, mode);
             }
             ret = docrypt(handle, key, layer, mode);
-        } else if (crypt_category_t::crypt_category_mac == category) {
+        } else if (crypt_category_t::mac == category) {
             if (body.get_recipients().empty()) {
                 ret = process_keydistribution(handle, key, layer, mode);
             }
             ret = domac(handle, key, layer, mode);
-        } else if (crypt_category_t::crypt_category_sign == category) {
+        } else if (crypt_category_t::sign == category) {
             ret = dosign(handle, key, layer, mode);
         }
     }
@@ -343,11 +343,11 @@ return_t cbor_object_signing_encryption::preprocess_skeleton(cose_context_t* han
 
         // test
         uint32 mask = 0;
-        if (crypt_category_t::crypt_category_crypt == category) {
+        if (crypt_category_t::crypt == category) {
             mask = cose_hint_enc | cose_hint_agree;
-        } else if (crypt_category_t::crypt_category_mac == category) {
+        } else if (crypt_category_t::mac == category) {
             mask = cose_hint_mac | cose_hint_agree;
-        } else if (crypt_category_t::crypt_category_sign == category) {
+        } else if (crypt_category_t::sign == category) {
             mask = cose_hint_sign;
         }
 
@@ -362,12 +362,12 @@ return_t cbor_object_signing_encryption::preprocess_skeleton(cose_context_t* han
         main_alg = algmap_iter->second;
         body.get_protected().add(cose_key_t::alg, main_alg);
         switch (category) {
-            case crypt_category_t::crypt_category_crypt:
+            case crypt_category_t::crypt:
                 break;
-            case crypt_category_t::crypt_category_mac:
+            case crypt_category_t::mac:
                 body.get_payload().set(input);
                 break;
-            case crypt_category_t::crypt_category_sign: {
+            case crypt_category_t::sign: {
                 std::string kid;
                 key->select(kid, main_alg);
                 body.get_unprotected().add(cose_key_t::kid, kid);
@@ -377,10 +377,10 @@ return_t cbor_object_signing_encryption::preprocess_skeleton(cose_context_t* han
                 break;
         }
 
-        if (crypt_category_t::crypt_category_crypt == category || crypt_category_t::crypt_category_mac == category) {
+        if (crypt_category_t::crypt == category || crypt_category_t::mac == category) {
             std::multimap<crypt_category_t, cose_alg_t>::iterator lower_bound, upper_bound;
-            lower_bound = algmap.lower_bound(crypt_category_keydistribution);
-            upper_bound = algmap.upper_bound(crypt_category_keydistribution);
+            lower_bound = algmap.lower_bound(crypt_category_t::keydistribution);
+            upper_bound = algmap.upper_bound(crypt_category_t::keydistribution);
             for (algmap_iter = lower_bound; algmap_iter != upper_bound; algmap_iter++) {
                 cose_alg_t alg = algmap_iter->second;
                 std::string kid;
@@ -475,7 +475,7 @@ return_t cbor_object_signing_encryption::preprocess_dorandom(cose_context_t* han
         }
 
         // if kid not provided
-        if (crypt_category_t::crypt_category_keydistribution == category && kid.empty()) {
+        if (crypt_category_t::keydistribution == category && kid.empty()) {
             key->select(kid, alg);
             layer->get_unprotected().add(cose_key_t::kid, kid);
         }
@@ -498,7 +498,7 @@ return_t cbor_object_signing_encryption::preprocess_dorandom(cose_context_t* han
             binary_t bin_x;
             binary_t bin_y;
             cose_ec_curve_t curve = hint->keyinfo.curve;
-            cose_key_t cosekey = cose_key_t::cose_key_unknown;
+            cose_key_t cosekey = cose_key_t::cose_key_reserved;
             if (cose_hint_flag_t::cose_hint_epk & flags) {
                 cosekey = cose_key_t::epk;  // -1
             }
@@ -702,10 +702,10 @@ return_t cbor_object_signing_encryption::preprocess_keydistribution(cose_context
                         epk = layer->get_static_key().any();
                     }
                     switch (group) {
-                        case cose_group_t::cose_group_key_ecdhes_hmac:
-                        case cose_group_t::cose_group_key_ecdhss_hmac:
-                        case cose_group_t::cose_group_key_ecdhes_aeskw:
-                        case cose_group_t::cose_group_key_ecdhss_aeskw:
+                        case cose_group_t::key_ecdhes_hmac:
+                        case cose_group_t::key_ecdhss_hmac:
+                        case cose_group_t::key_ecdhes_aeskw:
+                        case cose_group_t::key_ecdhss_aeskw:
                             dh_key_agreement(pkey, epk, secret);
                             break;
                         default:
@@ -804,10 +804,10 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
             }
 #endif
 
-            if (cose_group_t::cose_group_key_direct == group) {
+            if (cose_group_t::key_direct == group) {
                 // RFC 8152 12.1. Direct Encryption
                 cek = secret;
-            } else if (cose_group_t::cose_group_key_hkdf_hmac == group) {
+            } else if (cose_group_t::key_hkdf_hmac == group) {
                 // RFC 8152 12.1.2.  Direct Key with KDF
                 compose_kdf_context(handle, layer, context);
 
@@ -815,7 +815,7 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
                 // either the 'salt' parameter of HKDF ot the 'PartyU nonce' parameter of the context structure MUST be present.
                 ret = kdf.hmac_kdf(cek, digest_alg, dgst_klen, secret, salt, context);
                 // CEK solved
-            } else if (cose_group_t::cose_group_key_hkdf_aes == group) {
+            } else if (cose_group_t::key_hkdf_aes == group) {
                 compose_kdf_context(handle, layer, context);
 
                 // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
@@ -824,7 +824,7 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
                 //      HKDF AES-MAC-256, AES-CBC-MAC-256, HKDF using AES-MAC as the PRF w/ 256-bit key
 
                 ret = kdf.hkdf_expand_aes_rfc8152(cek, digest_alg, dgst_klen, secret, context);
-            } else if (cose_group_t::cose_group_key_aeskw == group) {
+            } else if (cose_group_t::key_aeskw == group) {
                 kek = secret;
                 binary_t payload;
                 // layer->get_payload().get(payload);
@@ -840,7 +840,7 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
                     layer->get_payload().get(payload);
                     ret = crypt.decrypt(enc_alg, kek, kwiv, payload, cek);
                 }
-            } else if ((cose_group_t::cose_group_key_ecdhes_hmac == group) || (cose_group_t::cose_group_key_ecdhss_hmac == group)) {
+            } else if ((cose_group_t::key_ecdhes_hmac == group) || (cose_group_t::key_ecdhss_hmac == group)) {
                 // RFC 8152 12.4.1. ECDH
                 // RFC 8152 11.1.  HMAC-Based Extract-and-Expand Key Derivation Function (HKDF)
                 // dh_key_agreement(pkey, epk, secret);
@@ -849,7 +849,7 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
 
                 salt.resize(digest_dlen);
                 ret = kdf.hmac_kdf(cek, digest_alg, dgst_klen, secret, salt, context);
-            } else if ((cose_group_t::cose_group_key_ecdhes_aeskw == group) || (cose_group_t::cose_group_key_ecdhss_aeskw == group)) {
+            } else if ((cose_group_t::key_ecdhes_aeskw == group) || (cose_group_t::key_ecdhss_aeskw == group)) {
                 // RFC 8152 12.5.1. ECDH
                 // RFC 8152 12.2.1. AES Key Wrap
                 // dh_key_agreement(pkey, epk, secret);
@@ -872,7 +872,7 @@ return_t cbor_object_signing_encryption::process_keydistribution(cose_context_t*
                     layer->get_payload().get(payload);
                     ret = crypt.decrypt(enc_alg, kek, kwiv, payload, cek);
                 }
-            } else if (cose_group_t::cose_group_key_rsa_oaep == group) {
+            } else if (cose_group_t::key_rsa_oaep == group) {
                 crypt_enc_t encmode = crypt_enc_t::unknown;
                 switch (alg) {
                     case cose_alg_t::cose_rsaoaep1:

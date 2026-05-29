@@ -232,7 +232,6 @@ return_t quic_packet_publisher::prepare_packet_cid(quic_packet* packet, protecti
                     binary_t id;
                     openssl_prng prng;
                     prng.random(id, 8);
-                    protection.get_secrets().assign(tls_secret_t::quic_dcid, id);
                     protection.calc(session, tls_handshake_type_t::client_hello, dir);  // calc initial keys
 #if defined DEBUG
                     if (istraceable(trace_category_t::trace_category_net)) {
@@ -240,6 +239,7 @@ return_t quic_packet_publisher::prepare_packet_cid(quic_packet* packet, protecti
                                           [&](basic_stream& dbs) -> void { dbs.println("QUIC DCID %s", base16_encode(id).c_str()); });
                     }
 #endif
+                    protection.get_secrets().assign(tls_secret_t::quic_dcid, std::move(id));
                 }
             } else if (from_server == dir) {
                 // tls_secret_t::server_cid
@@ -247,7 +247,6 @@ return_t quic_packet_publisher::prepare_packet_cid(quic_packet* packet, protecti
                     binary_t id;
                     openssl_prng prng;
                     prng.random(id, 8);
-                    protection.get_secrets().assign(tls_secret_t::server_cid, id);
                     session->get_quic_session().get_cid_tracker().emplace(0, id);
 #if defined DEBUG
                     if (istraceable(trace_category_t::trace_category_net)) {
@@ -255,6 +254,7 @@ return_t quic_packet_publisher::prepare_packet_cid(quic_packet* packet, protecti
                                           [&](basic_stream& dbs) -> void { dbs.println("QUIC Server CID %s", base16_encode(id).c_str()); });
                     }
 #endif
+                    protection.get_secrets().assign(tls_secret_t::server_cid, std::move(id));
                 }
             }
         }

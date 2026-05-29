@@ -72,6 +72,18 @@ class t_binaries {
      * @param   uint32 flags [inopt]
      */
     void assign(T id, const binary_t& bin, uint32 flags = 0) { assign(id, bin.data(), bin.size(), flags); }
+    void assign(T id, binary_t&& bin, uint32 flags = 0) {
+        critical_section_guard guard(_lock);
+        auto& entry = _map[id];
+        entry.clear();
+        auto size = bin.size();
+        entry.part.add(0, size);
+        entry.bin = std::move(bin);
+        entry.flags |= (flags & bin_set_fin);
+        if (bin_set_fin & flags) {
+            entry.finsize = size;
+        }
+    }
 
     /**
      * @brief   append

@@ -234,7 +234,7 @@ return_t tls_protection::write_aad(tls_session* session, tls_direction_t dir, bi
                 openssl_prng prng;
                 binary_t temp;
                 prng.random(temp, 8);
-                secrets.assign(tls_secret_t::nonce_explicit, temp);
+                secrets.assign(tls_secret_t::nonce_explicit, std::move(temp));
             } else if (crypt_mode_t::poly1305 == mode) {
                 tls12_aead = true;
                 len = bodysize;

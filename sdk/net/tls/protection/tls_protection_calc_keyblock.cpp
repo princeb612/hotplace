@@ -129,15 +129,6 @@ return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t
             binary_append(secret_server_iv, &p[offset], ivsize);
             offset += ivsize;
 
-            if (is_cbc) {
-                get_secrets().assign(tls_secret_t::client_mac_key, secret_client_mac_key);
-                get_secrets().assign(tls_secret_t::server_mac_key, secret_server_mac_key);
-            }
-            get_secrets().assign(tls_secret_t::client_key, secret_client_key);
-            get_secrets().assign(tls_secret_t::server_key, secret_server_key);
-            get_secrets().assign(tls_secret_t::client_iv, secret_client_iv);
-            get_secrets().assign(tls_secret_t::server_iv, secret_server_iv);
-
 #if defined DEBUG
             if (istraceable(trace_category_t::trace_category_net)) {
                 trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_protection, [&](basic_stream& dbs) -> void {
@@ -163,6 +154,16 @@ return_t tls_protection::calc_keyblock(hash_algorithm_t hmac_alg, const binary_t
 #endif
 
             hmac_expansion->release();
+
+            // move
+            if (is_cbc) {
+                get_secrets().assign(tls_secret_t::client_mac_key, std::move(secret_client_mac_key));
+                get_secrets().assign(tls_secret_t::server_mac_key, std::move(secret_server_mac_key));
+            }
+            get_secrets().assign(tls_secret_t::client_key, std::move(secret_client_key));
+            get_secrets().assign(tls_secret_t::server_key, std::move(secret_server_key));
+            get_secrets().assign(tls_secret_t::client_iv, std::move(secret_client_iv));
+            get_secrets().assign(tls_secret_t::server_iv, std::move(secret_server_iv));
         } else {
             ret = errorcode_t::not_supported;
             __leave2;

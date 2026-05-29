@@ -166,13 +166,13 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                     for (auto item : records) {
                         binary_t bin;
                         item->write(dir, bin);
-                        container.push_back(bin);
+                        container.push_back(std::move(bin));
                         item->release();
                     }
                 } else {
                     binary_t bin;
                     ret = record->write(dir, bin);
-                    container.push_back(bin);
+                    container.push_back(std::move(bin));
                 }
             }
         }

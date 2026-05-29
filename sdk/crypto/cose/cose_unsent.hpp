@@ -13,6 +13,7 @@
 #define __HOTPLACE_SDK_CRYPTO_COSE_COSEUNSENT__
 
 #include <hotplace/sdk/crypto/basic/types.hpp>
+#include <hotplace/sdk/crypto/cose/cose_data.hpp>
 #include <hotplace/sdk/crypto/cose/types.hpp>
 #include <hotplace/sdk/io/cbor/cbor.hpp>
 

@@ -68,7 +68,7 @@ std::wstring tokenize(const std::wstring& source, const std::wstring& tokens, si
 
         if (tokenpos.empty()) {
             if (startpos < source.size()) {
-                ret_value.assign(source.substr(startpos));
+                ret_value.assign(std::move(source.substr(startpos)));
             }
             pos = (size_t)(-1);
         } else {
@@ -77,7 +77,7 @@ std::wstring tokenize(const std::wstring& source, const std::wstring& tokens, si
                 pos++;
                 ret_value = tokenize(source, tokens, pos);
             } else {
-                ret_value.assign(source.substr(startpos, first - startpos));
+                ret_value.assign(std::move(source.substr(startpos, first - startpos)));
                 pos = startpos + (first - startpos) + 1;
             }
         }
