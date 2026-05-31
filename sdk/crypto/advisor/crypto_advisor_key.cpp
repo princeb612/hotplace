@@ -41,8 +41,8 @@ const char* crypto_advisor::nameof_kty(crypto_kty_t kty) {
     return value;
 }
 
-crypto_kty_t crypto_advisor::ktyof_ossl_nid(uint32 nid) {
-    crypto_kty_t kty = crypto_kty_t::kty_unknown;
+crypto_kty_t crypto_advisor::ktyof_nid(uint32 nid) {
+    crypto_kty_t kty = {};
     switch (nid) {
         case EVP_PKEY_HMAC: {
             kty = crypto_kty_t::kty_oct;
@@ -111,6 +111,8 @@ crypto_kty_t crypto_advisor::ktyof_ossl_nid(uint32 nid) {
     }
     return kty;
 }
+
+crypto_kty_t crypto_advisor::ktyof_name(const std::string& name) { return ktyof_nid(nidof_name(name)); }
 
 return_t crypto_advisor::ktyof_evp_pkey(const EVP_PKEY* pkey, crypto_kty_t& kty, uint32& nid) {
     return_t ret = errorcode_t::success;
@@ -234,6 +236,40 @@ return_t crypto_advisor::ktyof_evp_pkey(const EVP_PKEY* pkey, crypto_kty_t& kty,
     }
     __finally2 {}
     return ret;
+}
+
+uint32 crypto_advisor::nidof_name(const std::string& name) {
+    uint32 ret_value = OBJ_txt2nid(name.c_str());
+    if (0 == ret_value) {
+        auto feature = query_feature(name);
+        if (feature & advisor_feature_curve) {
+            nidof_ec_curve(name.c_str(), ret_value);
+        }
+    }
+    return ret_value;
+}
+
+crypt_item_t crypto_advisor::itemof(const std::string& name) {
+    auto iter = _crypt_item_name_rev_map.find(name);
+    return (_crypt_item_name_rev_map.end() == iter) ? crypt_item_t{} : iter->second;
+}
+
+const char* crypto_advisor::nameof(crypt_item_t item) {
+    auto iter = _crypt_item_name_map.find(item);
+    return (_crypt_item_name_map.end() == iter) ? "" : iter->second.c_str();
+}
+
+const char* crypto_advisor::valueof_crypt_item(crypto_kty_t kty, crypt_item_t item) {
+    const char* ret_value = "";
+    auto iter = _crypt_item_dict.find(kty);
+    if (_crypt_item_dict.end() != iter) {
+        const auto& item_map = iter->second;
+        auto iter_item = item_map.find(item);
+        if (item_map.end() != iter_item) {
+            ret_value = iter_item->second.c_str();
+        }
+    }
+    return ret_value;
 }
 
 }  // namespace crypto

@@ -16,7 +16,7 @@
 namespace hotplace {
 namespace crypto {
 
-return_t crypto_keychain::add_oct(crypto_key* cryptokey, size_t size, const keydesc& desc) {
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, size_t size, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -35,7 +35,7 @@ return_t crypto_keychain::add_oct(crypto_key* cryptokey, size_t size, const keyd
             __leave2_trace_openssl(ret);
         }
 
-        crypto_key_object key(pkey.get(), desc);
+        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
         ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
@@ -47,9 +47,11 @@ return_t crypto_keychain::add_oct(crypto_key* cryptokey, size_t size, const keyd
     return ret;
 }
 
-return_t crypto_keychain::add_oct(crypto_key* cryptokey, const binary_t& k, const keydesc& desc) { return add_oct(cryptokey, k.data(), k.size(), desc); }
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, const binary_t& k, keydesc&& desc) {
+    return add_oct(cryptokey, k.data(), k.size(), std::forward<keydesc>(desc));
+}
 
-return_t crypto_keychain::add_oct(crypto_key* cryptokey, const byte_t* k, size_t size, const keydesc& desc) {
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, const byte_t* k, size_t size, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -64,7 +66,7 @@ return_t crypto_keychain::add_oct(crypto_key* cryptokey, const byte_t* k, size_t
             __leave2_trace_openssl(ret);
         }
 
-        crypto_key_object key(pkey.get(), desc);
+        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
         ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
@@ -76,30 +78,30 @@ return_t crypto_keychain::add_oct(crypto_key* cryptokey, const byte_t* k, size_t
     return ret;
 }
 
-return_t crypto_keychain::add_oct(crypto_key* cryptokey, jwa_t alg, const binary_t& k, const keydesc& desc) {
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, jwa_t alg, const binary_t& k, keydesc&& desc) {
     crypto_advisor* advisor = crypto_advisor::get_instance();
     const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm(alg);
-    keydesc kd(desc);
+    keydesc kd(std::forward<keydesc>(desc));
     if (hint) {
         kd.set_alg(nameof_alg(hint));
     }
-    return add_oct(cryptokey, k, kd);
+    return add_oct(cryptokey, k, std::move(kd));
 }
 
-return_t crypto_keychain::add_oct(crypto_key* cryptokey, encoding_t encoding, const char* k, const keydesc& desc) {
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, encoding_t encoding, const char* k, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     switch (encoding) {
         case encoding_t::encoding_base64:
-            ret = add_oct_b64(cryptokey, k, desc);
+            ret = add_oct_b64(cryptokey, k, std::forward<keydesc>(desc));
             break;
         case encoding_t::encoding_base64url:
-            ret = add_oct_b64u(cryptokey, k, desc);
+            ret = add_oct_b64u(cryptokey, k, std::forward<keydesc>(desc));
             break;
         case encoding_t::encoding_base16:
-            ret = add_oct_b16(cryptokey, k, desc);
+            ret = add_oct_b16(cryptokey, k, std::forward<keydesc>(desc));
             break;
         case encoding_t::encoding_base16rfc:
-            ret = add_oct_b16rfc(cryptokey, k, desc);
+            ret = add_oct_b16rfc(cryptokey, k, std::forward<keydesc>(desc));
             break;
         default:
             ret = errorcode_t::not_supported;
@@ -108,7 +110,7 @@ return_t crypto_keychain::add_oct(crypto_key* cryptokey, encoding_t encoding, co
     return ret;
 }
 
-return_t crypto_keychain::add_oct_b64(crypto_key* cryptokey, const char* k, const keydesc& desc) {
+return_t crypto_keychain::add_oct_b64(crypto_key* cryptokey, const char* k, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == k) {
@@ -126,13 +128,13 @@ return_t crypto_keychain::add_oct_b64(crypto_key* cryptokey, const char* k, cons
 
         os2b(k, bin_k);
 
-        ret = add_oct(cryptokey, bin_k, desc);
+        ret = add_oct(cryptokey, bin_k, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_oct_b64u(crypto_key* cryptokey, const char* k, const keydesc& desc) {
+return_t crypto_keychain::add_oct_b64u(crypto_key* cryptokey, const char* k, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == k) {
@@ -150,13 +152,13 @@ return_t crypto_keychain::add_oct_b64u(crypto_key* cryptokey, const char* k, con
 
         os2b(k, bin_k);
 
-        ret = add_oct(cryptokey, bin_k, desc);
+        ret = add_oct(cryptokey, bin_k, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_oct_b16(crypto_key* cryptokey, const char* k, const keydesc& desc) {
+return_t crypto_keychain::add_oct_b16(crypto_key* cryptokey, const char* k, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == k) {
@@ -173,13 +175,13 @@ return_t crypto_keychain::add_oct_b16(crypto_key* cryptokey, const char* k, cons
         binary_t bin_k;
         os2b(k, bin_k);
 
-        ret = add_oct(cryptokey, bin_k, desc);
+        ret = add_oct(cryptokey, bin_k, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_oct_b16rfc(crypto_key* cryptokey, const char* k, const keydesc& desc) {
+return_t crypto_keychain::add_oct_b16rfc(crypto_key* cryptokey, const char* k, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == k) {
@@ -196,7 +198,7 @@ return_t crypto_keychain::add_oct_b16rfc(crypto_key* cryptokey, const char* k, c
         binary_t bin_k;
         os2b(k, bin_k);
 
-        ret = add_oct(cryptokey, bin_k, desc);
+        ret = add_oct(cryptokey, bin_k, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;

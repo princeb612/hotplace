@@ -67,8 +67,7 @@ const hint_blockcipher_t* crypto_advisor::find_evp_cipher(const EVP_CIPHER* ciph
 const EVP_CIPHER* crypto_advisor::find_evp_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode) {
     const EVP_CIPHER* ret_value = nullptr;
     auto key = make_cryptoscheme(algorithm, mode);
-    t_enum_type<crypto_scheme_t> etkey(key);
-    auto iter = _cipher_fetch_map.find(etkey);
+    auto iter = _cipher_fetch_map.find((crypto_scheme_t)key);
     if (_cipher_fetch_map.end() != iter) {
         ret_value = iter->second.cipher;
     }
@@ -103,8 +102,7 @@ const hint_cipher_t* crypto_advisor::hintof_cipher(const std::string& name) {
 const hint_cipher_t* crypto_advisor::hintof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode) {
     const hint_cipher_t* ret_value = nullptr;
     auto key = make_cryptoscheme(algorithm, mode);
-    t_enum_type<crypto_scheme_t> etkey(key);
-    auto iter = _cipher_fetch_map.find(etkey);
+    auto iter = _cipher_fetch_map.find((crypto_scheme_t)key);
     if (_cipher_fetch_map.end() != iter) {
         ret_value = iter->second.hint;
     }
@@ -130,8 +128,7 @@ const hint_cipher_t* crypto_advisor::hintof_cipher(crypto_scheme_t scheme) {
 const char* crypto_advisor::nameof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode) {
     const char* ret_value = nullptr;
     auto key = make_cryptoscheme(algorithm, mode);
-    t_enum_type<crypto_scheme_t> etkey(key);
-    auto iter = _cipher_fetch_map.find(etkey);
+    auto iter = _cipher_fetch_map.find((crypto_scheme_t)key);
     if (_cipher_fetch_map.end() != iter) {
         auto hint = iter->second.hint;
         ret_value = nameof_alg(hint);
@@ -201,7 +198,7 @@ uint16 sizeof_block(const hint_blockcipher_t* hint) {
 // hint_cipher_t
 
 crypto_scheme_t typeof_sheme(const hint_cipher_t* hint) {
-    crypto_scheme_t ret_value = crypto_scheme_t::unknown;
+    crypto_scheme_t ret_value = {};
     if (hint) {
         ret_value = hint->scheme;
     }
@@ -209,7 +206,7 @@ crypto_scheme_t typeof_sheme(const hint_cipher_t* hint) {
 }
 
 crypt_algorithm_t typeof_alg(const hint_cipher_t* hint) {
-    crypt_algorithm_t ret_value = crypt_algorithm_t{};
+    crypt_algorithm_t ret_value = {};
     if (hint) {
         ret_value = hint->algorithm;
     }
@@ -217,7 +214,7 @@ crypt_algorithm_t typeof_alg(const hint_cipher_t* hint) {
 }
 
 crypt_mode_t typeof_mode(const hint_cipher_t* hint) {
-    crypt_mode_t ret_value = crypt_mode_t::unknown;
+    crypt_mode_t ret_value = {};
     if (hint) {
         ret_value = hint->mode;
     }

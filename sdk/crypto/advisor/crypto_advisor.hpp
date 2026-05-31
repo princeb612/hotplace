@@ -329,8 +329,17 @@ class crypto_advisor {
      */
     return_t nameof_kty(crypto_kty_t kty, std::string& name);
     const char* nameof_kty(crypto_kty_t kty);
-    crypto_kty_t ktyof_ossl_nid(uint32 nid);
+    crypto_kty_t ktyof_nid(uint32 nid);
+    crypto_kty_t ktyof_name(const std::string& name);
     return_t ktyof_evp_pkey(const EVP_PKEY* pkey, crypto_kty_t& kty, uint32& nid);
+    uint32 nidof_name(const std::string& name);
+
+    // "x" to crypt_item_t::x
+    crypt_item_t itemof(const std::string& name);
+    // crypt_item_t::x to "x"
+    const char* nameof(crypt_item_t item);
+    // description of item
+    const char* valueof_crypt_item(crypto_kty_t kty, crypt_item_t item);
 
     ///////////////////////////////////////////////////////////////////////////
     // JOSE
@@ -850,6 +859,15 @@ class crypto_advisor {
     ///////////////////////////////////////////////////////////////////////////
     typedef std::map<crypto_kty_t, const hint_kty_name_t*> kty_name_t;
     kty_name_t _kty_names;
+
+    // except CRYPT_ITEM_XGROUP_ALIAS_xxx
+    typedef std::map<crypt_item_t, std::string> crypt_item_name_map_t;
+    typedef std::map<std::string, crypt_item_t> crypt_item_name_rev_map_t;
+    crypt_item_name_map_t _crypt_item_name_map;
+    crypt_item_name_rev_map_t _crypt_item_name_rev_map;
+    // CRYPT_ITEM_XGROUP_ALIAS_xxx by kty
+    typedef std::map<crypto_kty_t, std::map<crypt_item_t, std::string>> crypt_item_dict_map_t;
+    crypt_item_dict_map_t _crypt_item_dict;
     ///////////////////////////////////////////////////////////////////////////
     // JOSE
     ///////////////////////////////////////////////////////////////////////////

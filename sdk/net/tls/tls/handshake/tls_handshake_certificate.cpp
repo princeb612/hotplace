@@ -206,13 +206,14 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
             }
 #endif
 
+            keydesc kd(desc);
             if (0 == idx) {
-                keychain.load_der(&servercert, cert.data(), cert.size(), desc);
+                keychain.load_der(&servercert, cert.data(), cert.size(), std::move(kd));
             } else {
 #if defined DEBUG
                 if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
                     crypto_key temp;
-                    keychain.load_der(&temp, cert.data(), cert.size(), desc);
+                    keychain.load_der(&temp, cert.data(), cert.size(), std::move(kd));
                 }
 #endif
             }

@@ -59,7 +59,7 @@ crypto_kty_t ktyof_evp_pkey(const EVP_PKEY* pkey) {
     return kty;
 }
 
-crypto_kty_t ktyof_nid(uint32 nid) { return crypto_advisor::get_instance()->ktyof_ossl_nid(nid); }
+crypto_kty_t ktyof_nid(uint32 nid) { return crypto_advisor::get_instance()->ktyof_nid(nid); }
 
 return_t is_private_key(const EVP_PKEY* pkey, bool& result) {
     return_t ret = errorcode_t::success;

@@ -22,7 +22,7 @@
 namespace hotplace {
 namespace crypto {
 
-return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const keydesc& desc) {
+return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     int ret_openssl = 0;
 
@@ -75,7 +75,7 @@ return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const keydes
         }
         EVP_PKEY_ptr pkey(pk);
 
-        crypto_key_object key(pkey.get(), desc);
+        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
         ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
@@ -91,17 +91,17 @@ return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const keydes
     return ret;
 }
 
-return_t crypto_keychain::add_dh(crypto_key* cryptokey, const char* curve, const keydesc& desc) {
+return_t crypto_keychain::add_dh(crypto_key* cryptokey, const char* curve, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     auto hint = advisor->hintof_curve(curve);
     if (hint) {
-        ret = add_dh(cryptokey, hint->nid, desc);
+        ret = add_dh(cryptokey, hint->nid, std::forward<keydesc>(desc));
     }
     return ret;
 }
 
-return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& y, const binary_t& x, const keydesc& desc) {
+return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& y, const binary_t& x, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     int ret_openssl = 0;
     __try2 {
@@ -144,7 +144,7 @@ return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary
 
         dh.release();  // pkey own dh
 
-        crypto_key_object key(pkey.get(), desc);
+        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
         ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
@@ -156,7 +156,7 @@ return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary
     return ret;
 }
 
-return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& p, const binary_t& q, const binary_t& g, const binary_t& x, const keydesc& desc) {
+return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& p, const binary_t& q, const binary_t& g, const binary_t& x, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     int ret_openssl = 0;
     __try2 {
@@ -252,7 +252,7 @@ return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary
 
         dh.release();  // pkey own dh
 
-        crypto_key_object key(pkey.get(), desc);
+        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
         ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
@@ -265,20 +265,20 @@ return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, const binary
     // free bn_ctx
 }
 
-return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* y, const char* x, const keydesc& desc) {
+return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* y, const char* x, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     switch (encoding) {
         case encoding_t::encoding_base64:
-            ret = add_dh_b64(cryptokey, nid, y, x, desc);
+            ret = add_dh_b64(cryptokey, nid, y, x, std::forward<keydesc>(desc));
             break;
         case encoding_t::encoding_base64url:
-            ret = add_dh_b64u(cryptokey, nid, y, x, desc);
+            ret = add_dh_b64u(cryptokey, nid, y, x, std::forward<keydesc>(desc));
             break;
         case encoding_t::encoding_base16:
-            ret = add_dh_b16(cryptokey, nid, y, x, desc);
+            ret = add_dh_b16(cryptokey, nid, y, x, std::forward<keydesc>(desc));
             break;
         case encoding_t::encoding_base16rfc:
-            ret = add_dh_b16rfc(cryptokey, nid, y, x, desc);
+            ret = add_dh_b16rfc(cryptokey, nid, y, x, std::forward<keydesc>(desc));
             break;
         default:
             ret = errorcode_t::not_supported;
@@ -287,7 +287,7 @@ return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, encoding_t e
     return ret;
 }
 
-return_t crypto_keychain::add_dh_b64(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const keydesc& desc) {
+return_t crypto_keychain::add_dh_b64(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == y) {
@@ -307,13 +307,13 @@ return_t crypto_keychain::add_dh_b64(crypto_key* cryptokey, uint32 nid, const ch
         os2b(y, bin_y);
         os2b(x, bin_x);
 
-        ret = add_dh(cryptokey, nid, bin_y, bin_x, desc);
+        ret = add_dh(cryptokey, nid, bin_y, bin_x, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_dh_b64u(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const keydesc& desc) {
+return_t crypto_keychain::add_dh_b64u(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == y) {
@@ -333,13 +333,13 @@ return_t crypto_keychain::add_dh_b64u(crypto_key* cryptokey, uint32 nid, const c
         os2b(y, bin_y);
         os2b(x, bin_x);
 
-        ret = add_dh(cryptokey, nid, bin_y, bin_x, desc);
+        ret = add_dh(cryptokey, nid, bin_y, bin_x, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_dh_b16(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const keydesc& desc) {
+return_t crypto_keychain::add_dh_b16(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == y) {
@@ -359,13 +359,13 @@ return_t crypto_keychain::add_dh_b16(crypto_key* cryptokey, uint32 nid, const ch
         os2b(y, bin_y);
         os2b(x, bin_x);
 
-        ret = add_dh(cryptokey, nid, bin_y, bin_x, desc);
+        ret = add_dh(cryptokey, nid, bin_y, bin_x, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const keydesc& desc) {
+return_t crypto_keychain::add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == y) {
@@ -385,27 +385,26 @@ return_t crypto_keychain::add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const
         os2b(y, bin_y);
         os2b(x, bin_x);
 
-        ret = add_dh(cryptokey, nid, bin_y, bin_x, desc);
+        ret = add_dh(cryptokey, nid, bin_y, bin_x, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* p, const char* q, const char* g, const char* x,
-                                 const keydesc& desc) {
+return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* p, const char* q, const char* g, const char* x, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     switch (encoding) {
         case encoding_t::encoding_base64:
-            ret = add_dh_b64(cryptokey, nid, p, q, g, x, desc);
+            ret = add_dh_b64(cryptokey, nid, p, q, g, x, std::forward<keydesc>(desc));
             break;
         case encoding_t::encoding_base64url:
-            ret = add_dh_b64u(cryptokey, nid, p, q, g, x, desc);
+            ret = add_dh_b64u(cryptokey, nid, p, q, g, x, std::forward<keydesc>(desc));
             break;
         case encoding_t::encoding_base16:
-            ret = add_dh_b16(cryptokey, nid, p, q, g, x, desc);
+            ret = add_dh_b16(cryptokey, nid, p, q, g, x, std::forward<keydesc>(desc));
             break;
         case encoding_t::encoding_base16rfc:
-            ret = add_dh_b16rfc(cryptokey, nid, p, q, g, x, desc);
+            ret = add_dh_b16rfc(cryptokey, nid, p, q, g, x, std::forward<keydesc>(desc));
             break;
         default:
             ret = errorcode_t::not_supported;
@@ -414,7 +413,7 @@ return_t crypto_keychain::add_dh(crypto_key* cryptokey, uint32 nid, encoding_t e
     return ret;
 }
 
-return_t crypto_keychain::add_dh_b64(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, const keydesc& desc) {
+return_t crypto_keychain::add_dh_b64(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == p || nullptr == g || (nullptr == q && nullptr == x)) {
@@ -438,13 +437,13 @@ return_t crypto_keychain::add_dh_b64(crypto_key* cryptokey, uint32 nid, const ch
         os2b(g, bin_g);
         os2b(x, bin_x);
 
-        ret = add_dh(cryptokey, nid, bin_p, bin_q, bin_g, bin_x, desc);
+        ret = add_dh(cryptokey, nid, bin_p, bin_q, bin_g, bin_x, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_dh_b64u(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, const keydesc& desc) {
+return_t crypto_keychain::add_dh_b64u(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == p || nullptr == g || (nullptr == q && nullptr == x)) {
@@ -468,13 +467,13 @@ return_t crypto_keychain::add_dh_b64u(crypto_key* cryptokey, uint32 nid, const c
         os2b(g, bin_g);
         os2b(x, bin_x);
 
-        ret = add_dh(cryptokey, nid, bin_p, bin_q, bin_g, bin_x, desc);
+        ret = add_dh(cryptokey, nid, bin_p, bin_q, bin_g, bin_x, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_dh_b16(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, const keydesc& desc) {
+return_t crypto_keychain::add_dh_b16(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == p || nullptr == g || (nullptr == q && nullptr == x)) {
@@ -498,13 +497,13 @@ return_t crypto_keychain::add_dh_b16(crypto_key* cryptokey, uint32 nid, const ch
         os2b(g, bin_g);
         os2b(x, bin_x);
 
-        ret = add_dh(cryptokey, nid, bin_p, bin_q, bin_g, bin_x, desc);
+        ret = add_dh(cryptokey, nid, bin_p, bin_q, bin_g, bin_x, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, const keydesc& desc) {
+return_t crypto_keychain::add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == p || nullptr == g || (nullptr == q && nullptr == x)) {
@@ -528,7 +527,7 @@ return_t crypto_keychain::add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const
         os2b(g, bin_g);
         os2b(x, bin_x);
 
-        ret = add_dh(cryptokey, nid, bin_p, bin_q, bin_g, bin_x, desc);
+        ret = add_dh(cryptokey, nid, bin_p, bin_q, bin_g, bin_x, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;

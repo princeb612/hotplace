@@ -30,6 +30,7 @@
 #include <hotplace/sdk/crypto/basic/crypto_key.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keyexchange.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keygen.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_sign.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/crypto/basic/hmac_otp.hpp>

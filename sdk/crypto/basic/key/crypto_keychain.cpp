@@ -25,7 +25,7 @@ crypto_keychain::crypto_keychain() {}
 
 crypto_keychain::~crypto_keychain() {}
 
-return_t crypto_keychain::load(crypto_key* cryptokey, keyflag_t mode, const char* buffer, size_t size, const keydesc& desc, int flags) {
+return_t crypto_keychain::load(crypto_key* cryptokey, keyflag_t mode, const char* buffer, size_t size, keydesc&& desc, int flags) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == buffer) {
@@ -35,16 +35,16 @@ return_t crypto_keychain::load(crypto_key* cryptokey, keyflag_t mode, const char
 
         switch (mode) {
             case key_ownspec:
-                ret = load_ownspec(cryptokey, buffer, size, desc, flags);
+                ret = load_ownspec(cryptokey, buffer, size, std::forward<keydesc>(desc), flags);
                 break;
             case key_pemfile:
-                ret = load_pem(cryptokey, buffer, size, desc, flags);
+                ret = load_pem(cryptokey, buffer, size, std::forward<keydesc>(desc), flags);
                 break;
             case key_certfile:
-                ret = load_cert(cryptokey, buffer, size, desc, flags);
+                ret = load_cert(cryptokey, buffer, size, std::forward<keydesc>(desc), flags);
                 break;
             case key_derfile:
-                ret = load_der(cryptokey, (byte_t*)buffer, size, desc, flags);
+                ret = load_der(cryptokey, (byte_t*)buffer, size, std::forward<keydesc>(desc), flags);
                 break;
             default:
                 ret = errorcode_t::not_supported;
@@ -55,9 +55,9 @@ return_t crypto_keychain::load(crypto_key* cryptokey, keyflag_t mode, const char
     return ret;
 }
 
-return_t crypto_keychain::load_ownspec(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc, int flag) { return errorcode_t::success; }
+return_t crypto_keychain::load_ownspec(crypto_key* cryptokey, const char* buffer, size_t size, keydesc&& desc, int flag) { return errorcode_t::success; }
 
-return_t crypto_keychain::load_pem(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc, int flags) {
+return_t crypto_keychain::load_pem(crypto_key* cryptokey, const char* buffer, size_t size, keydesc&& desc, int flags) {
     return_t ret = errorcode_t::success;
     /**
      * RFC 7468 Textual Encodings of PKIX, PKCS, and CMS Structures
@@ -82,7 +82,7 @@ return_t crypto_keychain::load_pem(crypto_key* cryptokey, const char* buffer, si
         while (1) {
             EVP_PKEY_ptr pkey_pub(PEM_read_bio_PUBKEY(bio_pub.get(), nullptr, nullptr, nullptr));
             if (pkey_pub.get()) {
-                crypto_key_object key(pkey_pub.get(), desc);
+                crypto_key_object key(pkey_pub.get(), std::forward<keydesc>(desc));
                 auto test = cryptokey->add(std::move(key));
                 if (errorcode_t::success == test) {
                     pkey_pub.release();  // cryptokey own pkey_pub
@@ -110,7 +110,7 @@ return_t crypto_keychain::load_pem(crypto_key* cryptokey, const char* buffer, si
     return ret;
 }
 
-return_t crypto_keychain::load_cert(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc, int flags) {
+return_t crypto_keychain::load_cert(crypto_key* cryptokey, const char* buffer, size_t size, keydesc&& desc, int flags) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == buffer) {
@@ -137,7 +137,7 @@ return_t crypto_keychain::load_cert(crypto_key* cryptokey, const char* buffer, s
             __leave2;
         }
 
-        crypto_key_object key(pkey.get(), cert.get(), desc);
+        crypto_key_object key(pkey.get(), cert.get(), std::forward<keydesc>(desc));
         ret = cryptokey->add(std::move(key));
         if (errorcode_t::success == ret) {
             pkey.release();  // cryptokey own pkey
@@ -150,7 +150,7 @@ return_t crypto_keychain::load_cert(crypto_key* cryptokey, const char* buffer, s
     return ret;
 }
 
-return_t crypto_keychain::load_der(crypto_key* cryptokey, const byte_t* buffer, size_t size, const keydesc& desc, int flags) {
+return_t crypto_keychain::load_der(crypto_key* cryptokey, const byte_t* buffer, size_t size, keydesc&& desc, int flags) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == buffer) {
@@ -189,7 +189,7 @@ return_t crypto_keychain::load_der(crypto_key* cryptokey, const byte_t* buffer, 
         }
 #endif
 
-        crypto_key_object key(pkey.get(), x509.get(), desc);
+        crypto_key_object key(pkey.get(), x509.get(), std::forward<keydesc>(desc));
         ret = cryptokey->add(std::move(key));
         if (errorcode_t::success == ret) {
             pkey.release();  // cryptokey own pkey
@@ -305,7 +305,7 @@ return_t crypto_keychain::write_der(const X509* x509, binary_t& bin) {
     return ret;
 }
 
-return_t crypto_keychain::load_file(crypto_key* cryptokey, keyflag_t mode, const char* filename, const keydesc& desc, int flags) {
+return_t crypto_keychain::load_file(crypto_key* cryptokey, keyflag_t mode, const char* filename, keydesc&& desc, int flags) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == filename) {
@@ -317,7 +317,7 @@ return_t crypto_keychain::load_file(crypto_key* cryptokey, keyflag_t mode, const
         ret = fs.open(filename);
         if (errorcode_t::success == ret) {
             fs.begin_mmap();
-            ret = load(cryptokey, mode, (char*)fs.data(), fs.size(), desc, flags);
+            ret = load(cryptokey, mode, (char*)fs.data(), fs.size(), std::forward<keydesc>(desc), flags);
             fs.close();
         }
     }
@@ -347,30 +347,31 @@ return_t crypto_keychain::write_file(crypto_key* cryptokey, keyflag_t mode, cons
     return ret;
 }
 
-return_t crypto_keychain::add(crypto_key* cryptokey, uint32 nid, const keydesc& desc) {
+return_t crypto_keychain::add(crypto_key* cryptokey, uint32 nid, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         auto kty = ktyof_nid(nid);
         switch (kty) {
             case kty_dh: {
-                ret = add_dh(cryptokey, nid, desc);
+                ret = add_dh(cryptokey, nid, std::forward<keydesc>(desc));
             } break;
             case kty_dsa: {
-                ret = add_dsa(cryptokey, nid, desc);
+                ret = add_dsa(cryptokey, nid, std::forward<keydesc>(desc));
             } break;
             case kty_ec: {
-                ret = add_ec(cryptokey, nid, desc);
+                ret = add_ec(cryptokey, nid, std::forward<keydesc>(desc));
             } break;
             case kty_okp: {
-                ret = add_okp(cryptokey, nid, desc);
+                ret = add_okp(cryptokey, nid, std::forward<keydesc>(desc));
             } break;
-            case kty_rsa: {
-                ret = add_rsa(cryptokey, nid, 2048, desc);
+            case kty_rsa:
+            case kty_rsapss: {
+                ret = add_rsa(cryptokey, nid, 2048, std::forward<keydesc>(desc));
             } break;
             case kty_mlkem:
             case kty_mldsa:
             case kty_slhdsa: {
-                ret = add_ossl3(cryptokey, nid, desc);
+                ret = add_ossl3(cryptokey, nid, std::forward<keydesc>(desc));
             } break;
             default: {
                 ret = errorcode_t::not_supported;
@@ -389,7 +390,7 @@ return_t crypto_keychain::add_group(crypto_key* cryptokey, const char* kid, uint
         int nid = va_arg(ap, int);
         keydesc desc(kid);
         desc.set_group(group);
-        ret = add(cryptokey, nid, desc);
+        ret = add(cryptokey, nid, std::move(desc));
         if (errorcode_t::success != ret) {
             break;
         }

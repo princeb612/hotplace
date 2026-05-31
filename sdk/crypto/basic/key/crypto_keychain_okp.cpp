@@ -15,7 +15,7 @@
 namespace hotplace {
 namespace crypto {
 
-return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const keydesc& desc) {
+return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     int ret_openssl = 0;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -60,7 +60,7 @@ return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const keyde
 
         EVP_PKEY_ptr pkey(pk);
 
-        crypto_key_object key(pkey.get(), desc);
+        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
         ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
@@ -72,21 +72,31 @@ return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const keyde
     return ret;
 }
 
-return_t crypto_keychain::add_okp(crypto_key* cryptokey, const char* curve, const keydesc& desc) {
+return_t crypto_keychain::add_okp(crypto_key* cryptokey, const char* curve, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     auto hint = advisor->hintof_curve(curve);
     if (hint) {
-        ret = add_okp(cryptokey, hint->nid, desc);
+        ret = add_okp(cryptokey, hint->nid, std::forward<keydesc>(desc));
     }
     return ret;
 }
 
-return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& d, const keydesc& desc) {
-    return add_okp(cryptokey, nid, x.data(), x.size(), d.data(), d.size(), desc);
+return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& d, keydesc&& desc) {
+    return add_okp(cryptokey, nid, x.data(), x.size(), d.data(), d.size(), std::forward<keydesc>(desc));
 }
 
-return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const byte_t* x, size_t pubsize, const byte_t* d, size_t privsize, const keydesc& desc) {
+return_t crypto_keychain::add_okp(crypto_key* cryptokey, const char* curve, const binary_t& x, const binary_t& d, keydesc&& desc) {
+    return_t ret = errorcode_t::success;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    auto hint = advisor->hintof_curve(curve);
+    if (hint) {
+        ret = add_okp(cryptokey, hint->nid, x.data(), x.size(), d.data(), d.size(), std::forward<keydesc>(desc));
+    }
+    return ret;
+}
+
+return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const byte_t* x, size_t pubsize, const byte_t* d, size_t privsize, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -121,7 +131,7 @@ return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const byte_
             __leave2_trace_openssl(ret);
         }
 
-        crypto_key_object key(pkey.get(), desc);
+        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
         ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
@@ -132,20 +142,20 @@ return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, const byte_
     return ret;
 }
 
-return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* x, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* x, const char* d, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     switch (encoding) {
         case encoding_t::encoding_base64:
-            ret = add_okp_b64(cryptokey, nid, x, d, desc);
+            ret = add_okp_b64(cryptokey, nid, x, d, std::forward<keydesc>(desc));
             break;
         case encoding_t::encoding_base64url:
-            ret = add_okp_b64u(cryptokey, nid, x, d, desc);
+            ret = add_okp_b64u(cryptokey, nid, x, d, std::forward<keydesc>(desc));
             break;
         case encoding_t::encoding_base16:
-            ret = add_okp_b16(cryptokey, nid, x, d, desc);
+            ret = add_okp_b16(cryptokey, nid, x, d, std::forward<keydesc>(desc));
             break;
         case encoding_t::encoding_base16rfc:
-            ret = add_okp_b16rfc(cryptokey, nid, x, d, desc);
+            ret = add_okp_b16rfc(cryptokey, nid, x, d, std::forward<keydesc>(desc));
             break;
         default:
             ret = errorcode_t::not_supported;
@@ -154,7 +164,7 @@ return_t crypto_keychain::add_okp(crypto_key* cryptokey, uint32 nid, encoding_t 
     return ret;
 }
 
-return_t crypto_keychain::add_okp_b64(crypto_key* cryptokey, uint32 nid, const char* x, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_okp_b64(crypto_key* cryptokey, uint32 nid, const char* x, const char* d, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == cryptokey) || (nullptr == x && nullptr == d)) {
@@ -174,13 +184,13 @@ return_t crypto_keychain::add_okp_b64(crypto_key* cryptokey, uint32 nid, const c
         os2b(x, bin_x);
         os2b(d, bin_d);
 
-        ret = add_okp(cryptokey, nid, bin_x, bin_d, desc);
+        ret = add_okp(cryptokey, nid, bin_x, bin_d, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_okp_b64u(crypto_key* cryptokey, uint32 nid, const char* x, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_okp_b64u(crypto_key* cryptokey, uint32 nid, const char* x, const char* d, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == cryptokey) || (nullptr == x && nullptr == d)) {
@@ -200,13 +210,13 @@ return_t crypto_keychain::add_okp_b64u(crypto_key* cryptokey, uint32 nid, const 
         os2b(x, bin_x);
         os2b(d, bin_d);
 
-        ret = add_okp(cryptokey, nid, bin_x, bin_d, desc);
+        ret = add_okp(cryptokey, nid, bin_x, bin_d, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_okp_b16(crypto_key* cryptokey, uint32 nid, const char* x, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_okp_b16(crypto_key* cryptokey, uint32 nid, const char* x, const char* d, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == cryptokey) || (nullptr == x && nullptr == d)) {
@@ -226,13 +236,13 @@ return_t crypto_keychain::add_okp_b16(crypto_key* cryptokey, uint32 nid, const c
         os2b(x, bin_x);
         os2b(d, bin_d);
 
-        ret = add_okp(cryptokey, nid, bin_x, bin_d, desc);
+        ret = add_okp(cryptokey, nid, bin_x, bin_d, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_okp_b16rfc(crypto_key* cryptokey, uint32 nid, const char* x, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_okp_b16rfc(crypto_key* cryptokey, uint32 nid, const char* x, const char* d, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == cryptokey) || (nullptr == x && nullptr == d)) {
@@ -252,26 +262,26 @@ return_t crypto_keychain::add_okp_b16rfc(crypto_key* cryptokey, uint32 nid, cons
         os2b(x, bin_x);
         os2b(d, bin_d);
 
-        ret = add_okp(cryptokey, nid, bin_x, bin_d, desc);
+        ret = add_okp(cryptokey, nid, bin_x, bin_d, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_okp(crypto_key* cryptokey, const char* curve, encoding_t encoding, const char* x, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_okp(crypto_key* cryptokey, const char* curve, encoding_t encoding, const char* x, const char* d, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     switch (encoding) {
         case encoding_t::encoding_base64:
-            ret = add_okp_b64(cryptokey, curve, x, d, desc);
+            ret = add_okp_b64(cryptokey, curve, x, d, std::forward<keydesc>(desc));
             break;
         case encoding_t::encoding_base64url:
-            ret = add_okp_b64u(cryptokey, curve, x, d, desc);
+            ret = add_okp_b64u(cryptokey, curve, x, d, std::forward<keydesc>(desc));
             break;
         case encoding_t::encoding_base16:
-            ret = add_okp_b16(cryptokey, curve, x, d, desc);
+            ret = add_okp_b16(cryptokey, curve, x, d, std::forward<keydesc>(desc));
             break;
         case encoding_t::encoding_base16rfc:
-            ret = add_okp_b16rfc(cryptokey, curve, x, d, desc);
+            ret = add_okp_b16rfc(cryptokey, curve, x, d, std::forward<keydesc>(desc));
             break;
         default:
             ret = errorcode_t::not_supported;
@@ -280,7 +290,7 @@ return_t crypto_keychain::add_okp(crypto_key* cryptokey, const char* curve, enco
     return ret;
 }
 
-return_t crypto_keychain::add_okp_b64(crypto_key* cryptokey, const char* curve, const char* x, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_okp_b64(crypto_key* cryptokey, const char* curve, const char* x, const char* d, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == cryptokey) || nullptr == curve || (nullptr == x && nullptr == d)) {
@@ -295,13 +305,13 @@ return_t crypto_keychain::add_okp_b64(crypto_key* cryptokey, const char* curve, 
             __leave2;
         }
 
-        ret = add_okp_b64(cryptokey, nid, x, d, desc);
+        ret = add_okp_b64(cryptokey, nid, x, d, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_okp_b64u(crypto_key* cryptokey, const char* curve, const char* x, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_okp_b64u(crypto_key* cryptokey, const char* curve, const char* x, const char* d, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == cryptokey) || nullptr == curve || (nullptr == x && nullptr == d)) {
@@ -316,13 +326,13 @@ return_t crypto_keychain::add_okp_b64u(crypto_key* cryptokey, const char* curve,
             __leave2;
         }
 
-        ret = add_okp_b64u(cryptokey, nid, x, d, desc);
+        ret = add_okp_b64u(cryptokey, nid, x, d, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_okp_b16(crypto_key* cryptokey, const char* curve, const char* x, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_okp_b16(crypto_key* cryptokey, const char* curve, const char* x, const char* d, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == cryptokey) || nullptr == curve || (nullptr == x && nullptr == d)) {
@@ -337,13 +347,13 @@ return_t crypto_keychain::add_okp_b16(crypto_key* cryptokey, const char* curve, 
             __leave2;
         }
 
-        ret = add_okp_b16(cryptokey, nid, x, d, desc);
+        ret = add_okp_b16(cryptokey, nid, x, d, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_okp_b16rfc(crypto_key* cryptokey, const char* curve, const char* x, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_okp_b16rfc(crypto_key* cryptokey, const char* curve, const char* x, const char* d, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == cryptokey) || nullptr == curve || (nullptr == x && nullptr == d)) {
@@ -358,7 +368,7 @@ return_t crypto_keychain::add_okp_b16rfc(crypto_key* cryptokey, const char* curv
             __leave2;
         }
 
-        ret = add_okp_b16rfc(cryptokey, nid, x, d, desc);
+        ret = add_okp_b16rfc(cryptokey, nid, x, d, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;

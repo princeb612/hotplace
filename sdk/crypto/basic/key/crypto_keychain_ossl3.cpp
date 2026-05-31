@@ -374,7 +374,6 @@ bool crypto_keychain::pkey_is_private(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey
 
     function_pipeline<int> pipeline;
     pipeline  //
-        .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != pkey); })
         .walk([&]() -> void { advisor->get_encoding_params(key_encoding_priv_der, params); })
         .run_pipe([&]() -> int {
@@ -397,7 +396,7 @@ bool crypto_keychain::pkey_is_private(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey
 #endif
 }
 
-return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, const keydesc& desc) {
+return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     __try2 {
@@ -419,7 +418,7 @@ return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, const key
         }
 
         EVP_PKEY_ptr pkey(pk);
-        crypto_key_object key(pkey.get(), desc);
+        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
         ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
@@ -433,7 +432,7 @@ return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, const key
     return ret;
 }
 
-return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, const keydesc& desc) {
+return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     __try2 {
@@ -449,7 +448,7 @@ return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, con
         }
 
         EVP_PKEY_ptr pkey(pk);
-        crypto_key_object key(pkey.get(), desc);
+        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
         ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
@@ -463,11 +462,11 @@ return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, con
     return ret;
 }
 
-return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, const binary_t& keydata, key_encoding_t encoding, const keydesc& desc) {
-    return add_ossl3(cryptokey, nid, keydata.data(), keydata.size(), encoding, desc);
+return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, const binary_t& keydata, key_encoding_t encoding, keydesc&& desc) {
+    return add_ossl3(cryptokey, nid, keydata.data(), keydata.size(), encoding, std::forward<keydesc>(desc));
 }
 
-return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, const byte_t* keydata, size_t keysize, key_encoding_t encoding, const keydesc& desc) {
+return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, const byte_t* keydata, size_t keysize, key_encoding_t encoding, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     __try2 {
@@ -482,7 +481,7 @@ return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, const byt
             __leave2;
         }
 
-        ret = add_ossl3(cryptokey, name, keydata, keysize, encoding, desc);
+        ret = add_ossl3(cryptokey, name, keydata, keysize, encoding, std::forward<keydesc>(desc));
     }
     __finally2 {}
 #else
@@ -491,11 +490,11 @@ return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, const byt
     return ret;
 }
 
-return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, const binary_t& keydata, key_encoding_t encoding, const keydesc& desc) {
-    return add_ossl3(cryptokey, name, keydata.data(), keydata.size(), encoding, desc);
+return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, const binary_t& keydata, key_encoding_t encoding, keydesc&& desc) {
+    return add_ossl3(cryptokey, name, keydata.data(), keydata.size(), encoding, std::forward<keydesc>(desc));
 }
 
-return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, const byte_t* keydata, size_t keysize, key_encoding_t encoding, const keydesc& desc) {
+return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, const byte_t* keydata, size_t keysize, key_encoding_t encoding, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     __try2 {
@@ -512,7 +511,7 @@ return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, con
 
         EVP_PKEY_ptr pkey(pk);
 
-        crypto_key_object key(pkey.get(), desc);
+        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
         ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
@@ -526,7 +525,7 @@ return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, con
     return ret;
 }
 
-return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, encoding_t fmt, const char* key, key_encoding_t encoding, const keydesc& desc) {
+return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, encoding_t fmt, const char* key, key_encoding_t encoding, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     __try2 {
@@ -536,16 +535,16 @@ return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, encoding_
         }
         switch (fmt) {
             case encoding_t::encoding_base64: {
-                ret = add_ossl3_b64(cryptokey, nid, key, encoding, desc);
+                ret = add_ossl3_b64(cryptokey, nid, key, encoding, std::forward<keydesc>(desc));
             } break;
             case encoding_t::encoding_base64url: {
-                ret = add_ossl3_b64u(cryptokey, nid, key, encoding, desc);
+                ret = add_ossl3_b64u(cryptokey, nid, key, encoding, std::forward<keydesc>(desc));
             } break;
             case encoding_t::encoding_base16: {
-                ret = add_ossl3_b16(cryptokey, nid, key, encoding, desc);
+                ret = add_ossl3_b16(cryptokey, nid, key, encoding, std::forward<keydesc>(desc));
             } break;
             case encoding_t::encoding_base16rfc: {
-                ret = add_ossl3_b16rfc(cryptokey, nid, key, encoding, desc);
+                ret = add_ossl3_b16rfc(cryptokey, nid, key, encoding, std::forward<keydesc>(desc));
             } break;
             default: {
                 ret = errorcode_t::bad_request;
@@ -559,7 +558,7 @@ return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, encoding_
     return ret;
 }
 
-return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, encoding_t fmt, const char* key, key_encoding_t encoding, const keydesc& desc) {
+return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, encoding_t fmt, const char* key, key_encoding_t encoding, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     __try2 {
@@ -569,16 +568,16 @@ return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, enc
         }
         switch (fmt) {
             case encoding_t::encoding_base64: {
-                ret = add_ossl3_b64(cryptokey, name, key, encoding, desc);
+                ret = add_ossl3_b64(cryptokey, name, key, encoding, std::forward<keydesc>(desc));
             } break;
             case encoding_t::encoding_base64url: {
-                ret = add_ossl3_b64u(cryptokey, name, key, encoding, desc);
+                ret = add_ossl3_b64u(cryptokey, name, key, encoding, std::forward<keydesc>(desc));
             } break;
             case encoding_t::encoding_base16: {
-                ret = add_ossl3_b16(cryptokey, name, key, encoding, desc);
+                ret = add_ossl3_b16(cryptokey, name, key, encoding, std::forward<keydesc>(desc));
             } break;
             case encoding_t::encoding_base16rfc: {
-                ret = add_ossl3_b16rfc(cryptokey, name, key, encoding, desc);
+                ret = add_ossl3_b16rfc(cryptokey, name, key, encoding, std::forward<keydesc>(desc));
             } break;
             default: {
                 ret = errorcode_t::bad_request;
@@ -592,7 +591,7 @@ return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, enc
     return ret;
 }
 
-return_t crypto_keychain::add_ossl3_b64(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, const keydesc& desc) {
+return_t crypto_keychain::add_ossl3_b64(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     __try2 {
@@ -611,7 +610,7 @@ return_t crypto_keychain::add_ossl3_b64(crypto_key* cryptokey, uint32 nid, const
 
         os2b(key, bin);
 
-        ret = add_ossl3(cryptokey, nid, bin, encoding, desc);
+        ret = add_ossl3(cryptokey, nid, bin, encoding, std::forward<keydesc>(desc));
     }
     __finally2 {}
 #else
@@ -620,7 +619,7 @@ return_t crypto_keychain::add_ossl3_b64(crypto_key* cryptokey, uint32 nid, const
     return ret;
 }
 
-return_t crypto_keychain::add_ossl3_b64u(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, const keydesc& desc) {
+return_t crypto_keychain::add_ossl3_b64u(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     __try2 {
@@ -639,7 +638,7 @@ return_t crypto_keychain::add_ossl3_b64u(crypto_key* cryptokey, uint32 nid, cons
 
         os2b(key, bin);
 
-        ret = add_ossl3(cryptokey, nid, bin, encoding, desc);
+        ret = add_ossl3(cryptokey, nid, bin, encoding, std::forward<keydesc>(desc));
     }
     __finally2 {}
 #else
@@ -648,7 +647,7 @@ return_t crypto_keychain::add_ossl3_b64u(crypto_key* cryptokey, uint32 nid, cons
     return ret;
 }
 
-return_t crypto_keychain::add_ossl3_b16(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, const keydesc& desc) {
+return_t crypto_keychain::add_ossl3_b16(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     __try2 {
@@ -667,7 +666,7 @@ return_t crypto_keychain::add_ossl3_b16(crypto_key* cryptokey, uint32 nid, const
 
         os2b(key, bin);
 
-        ret = add_ossl3(cryptokey, nid, bin, encoding, desc);
+        ret = add_ossl3(cryptokey, nid, bin, encoding, std::forward<keydesc>(desc));
     }
     __finally2 {}
 #else
@@ -676,7 +675,7 @@ return_t crypto_keychain::add_ossl3_b16(crypto_key* cryptokey, uint32 nid, const
     return ret;
 }
 
-return_t crypto_keychain::add_ossl3_b16rfc(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, const keydesc& desc) {
+return_t crypto_keychain::add_ossl3_b16rfc(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     __try2 {
@@ -695,7 +694,7 @@ return_t crypto_keychain::add_ossl3_b16rfc(crypto_key* cryptokey, uint32 nid, co
 
         os2b(key, bin);
 
-        ret = add_ossl3(cryptokey, nid, bin, encoding, desc);
+        ret = add_ossl3(cryptokey, nid, bin, encoding, std::forward<keydesc>(desc));
     }
     __finally2 {}
 #else
@@ -704,7 +703,7 @@ return_t crypto_keychain::add_ossl3_b16rfc(crypto_key* cryptokey, uint32 nid, co
     return ret;
 }
 
-return_t crypto_keychain::add_ossl3_b64(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, const keydesc& desc) {
+return_t crypto_keychain::add_ossl3_b64(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     __try2 {
@@ -723,7 +722,7 @@ return_t crypto_keychain::add_ossl3_b64(crypto_key* cryptokey, const char* name,
 
         os2b(key, bin);
 
-        ret = add_ossl3(cryptokey, name, bin, encoding, desc);
+        ret = add_ossl3(cryptokey, name, bin, encoding, std::forward<keydesc>(desc));
     }
     __finally2 {}
 #else
@@ -732,7 +731,7 @@ return_t crypto_keychain::add_ossl3_b64(crypto_key* cryptokey, const char* name,
     return ret;
 }
 
-return_t crypto_keychain::add_ossl3_b64u(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, const keydesc& desc) {
+return_t crypto_keychain::add_ossl3_b64u(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     __try2 {
@@ -751,7 +750,7 @@ return_t crypto_keychain::add_ossl3_b64u(crypto_key* cryptokey, const char* name
 
         os2b(key, bin);
 
-        ret = add_ossl3(cryptokey, name, bin, encoding, desc);
+        ret = add_ossl3(cryptokey, name, bin, encoding, std::forward<keydesc>(desc));
     }
     __finally2 {}
 #else
@@ -760,7 +759,7 @@ return_t crypto_keychain::add_ossl3_b64u(crypto_key* cryptokey, const char* name
     return ret;
 }
 
-return_t crypto_keychain::add_ossl3_b16(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, const keydesc& desc) {
+return_t crypto_keychain::add_ossl3_b16(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     __try2 {
@@ -779,7 +778,7 @@ return_t crypto_keychain::add_ossl3_b16(crypto_key* cryptokey, const char* name,
 
         os2b(key, bin);
 
-        ret = add_ossl3(cryptokey, name, bin, encoding, desc);
+        ret = add_ossl3(cryptokey, name, bin, encoding, std::forward<keydesc>(desc));
     }
     __finally2 {}
 #else
@@ -788,7 +787,7 @@ return_t crypto_keychain::add_ossl3_b16(crypto_key* cryptokey, const char* name,
     return ret;
 }
 
-return_t crypto_keychain::add_ossl3_b16rfc(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, const keydesc& desc) {
+return_t crypto_keychain::add_ossl3_b16rfc(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
     __try2 {
@@ -807,7 +806,7 @@ return_t crypto_keychain::add_ossl3_b16rfc(crypto_key* cryptokey, const char* na
 
         os2b(key, bin);
 
-        ret = add_ossl3(cryptokey, name, bin, encoding, desc);
+        ret = add_ossl3(cryptokey, name, bin, encoding, std::forward<keydesc>(desc));
     }
     __finally2 {}
 #else

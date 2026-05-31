@@ -46,11 +46,11 @@ class json_web_key : public crypto_keychain {
      * @param keyflag_t mode [in] see keyflag_t
      * @param const char* buffer [in]
      * @param size_t size [in]
-     * @param const keydesc& desc [inopt]
+     * @param keydesc&& desc [inopt]
      * @param int flag [inopt]
      * @return error code (see error.hpp)
      */
-    virtual return_t load_ownspec(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc = keydesc(), int flag = 0);
+    virtual return_t load_ownspec(crypto_key* cryptokey, const char* buffer, size_t size, keydesc&& desc = {}, int flag = 0);
     /**
      * @brief write
      * @brief write into buffer

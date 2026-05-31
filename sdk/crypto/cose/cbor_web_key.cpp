@@ -29,7 +29,7 @@ cbor_web_key::cbor_web_key() : crypto_keychain() {}
 
 cbor_web_key::~cbor_web_key() {}
 
-return_t cbor_web_key::load(crypto_key* cryptokey, keyflag_t mode, const char* buffer, size_t size, const keydesc& desc, int flag) {
+return_t cbor_web_key::load(crypto_key* cryptokey, keyflag_t mode, const char* buffer, size_t size, keydesc&& desc, int flag) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -41,7 +41,7 @@ return_t cbor_web_key::load(crypto_key* cryptokey, keyflag_t mode, const char* b
         if (key_ownspec == mode) {
             ret = load(cryptokey, (byte_t*)buffer, size, flag);  // binary
         } else {
-            ret = crypto_keychain::load(cryptokey, mode, buffer, size, desc, flag);
+            ret = crypto_keychain::load(cryptokey, mode, buffer, size, std::forward<keydesc>(desc), flag);
         }
     }
     __finally2 {}
@@ -154,7 +154,6 @@ return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int f
             for (cbor_pair* pair : key_contents) {
                 cbor_data* lhs = (cbor_data*)pair->left();
                 cbor_data* rhs = (cbor_data*)pair->right();
-                // (nullptr != lhs) && (nullptr != rhs)
                 if ((lhs->type() == rhs->type()) && (cbor_type_t::data == lhs->type())) {
                     int label = lhs->data().to_int();
                     const variant_t& vt_rhs = rhs->data().content();
@@ -193,7 +192,7 @@ return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int f
                 hint_key.find(cose_key_lable_t::cose_ec_x, &x);  // -2
                 hint_key.find(cose_key_lable_t::cose_ec_y, &y);  // -3
                 hint_key.find(cose_key_lable_t::cose_ec_d, &d);  // -4
-                add_ec2(cryptokey, nid, x, y, d, desc);
+                add_ec2(cryptokey, nid, x, y, d, std::move(desc));
             } else if (cose_kty_t::rsa == keyobj.type) {  // 3
                 binary_t n;
                 binary_t e;
@@ -201,11 +200,11 @@ return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int f
                 hint_key.find(cose_key_lable_t::cose_rsa_n, &n);  // -1
                 hint_key.find(cose_key_lable_t::cose_rsa_e, &e);  // -2
                 hint_key.find(cose_key_lable_t::cose_rsa_d, &d);  // -3
-                add_rsa(cryptokey, nid_rsa, n, e, d, desc);
+                add_rsa(cryptokey, nid_rsa, n, e, d, std::move(desc));
             } else if (cose_kty_t::symm == keyobj.type) {  // 4
                 binary_t k;
                 hint_key.find(cose_key_lable_t::cose_symm_k, &k);  // -1
-                add_oct(cryptokey, k, desc);
+                add_oct(cryptokey, k, std::move(desc));
             } else if (cose_kty_t::akp == keyobj.type) {
                 uint32 nid = 0;
                 {
@@ -225,9 +224,9 @@ return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int f
                         hint_key.find(cose_key_lable_t::cose_priv, &bin_priv);
 
                         if (bin_priv.size() == hint.hint_sigscheme->size.privkey) {
-                            ret = add_ossl3(cryptokey, nid, bin_priv, key_encoding_priv_raw, desc);
+                            ret = add_ossl3(cryptokey, nid, bin_priv, key_encoding_priv_raw, std::move(desc));
                         } else if (bin_pub.size() == hint.hint_sigscheme->size.pubkey) {
-                            ret = add_ossl3(cryptokey, nid, bin_pub, key_encoding_pub_raw, desc);
+                            ret = add_ossl3(cryptokey, nid, bin_pub, key_encoding_pub_raw, std::move(desc));
                         }
                     }
                 }

@@ -122,8 +122,7 @@ return_t crypto_keyexchange::keygen(tls_group_t group, crypto_key* key, const ch
 
         // keygen
         crypto_keychain keychain;
-        keydesc desc(kid);
-        ret = keychain.add(key, nid, desc);
+        ret = keychain.add(key, nid, std::move(keydesc(kid)));
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -131,7 +130,7 @@ return_t crypto_keyexchange::keygen(tls_group_t group, crypto_key* key, const ch
         if (tls_flag_hybrid & hint->flags) {
             // keygen
             const auto& hybrid = hint->second;
-            ret = keychain.add(key, hybrid.nid, desc);
+            ret = keychain.add(key, hybrid.nid, std::move(keydesc(kid)));
         }
     }
     __finally2 {}
@@ -226,19 +225,18 @@ return_t crypto_keyexchange::keystore(tls_group_t group, crypto_key* storage, co
 
         crypto_keychain keychain;
         binary_t bin_privkey;  // dummy
-        keydesc desc(kid);
         switch (kty) {
             case kty_dh: {
-                ret = keychain.add_dh(storage, nid, share, bin_privkey, desc);
+                ret = keychain.add_dh(storage, nid, share, bin_privkey, std::move(keydesc(kid)));
             } break;
             case kty_ec: {
-                ret = keychain.add_ec_uncompressed(storage, nid, share.data(), keysize, nullptr, 0, desc);
+                ret = keychain.add_ec_uncompressed(storage, nid, share.data(), keysize, nullptr, 0, std::move(keydesc(kid)));
             } break;
             case kty_okp: {
-                ret = keychain.add_okp(storage, nid, share.data(), keysize, nullptr, 0, desc);
+                ret = keychain.add_okp(storage, nid, share.data(), keysize, nullptr, 0, std::move(keydesc(kid)));
             } break;
             case kty_mlkem: {
-                ret = keychain.add_ossl3(storage, nid, share.data(), keysize, key_encoding_pub_raw, desc);
+                ret = keychain.add_ossl3(storage, nid, share.data(), keysize, key_encoding_pub_raw, std::move(keydesc(kid)));
             } break;
             default: {
                 ret = errorcode_t::bad_request;
@@ -252,10 +250,10 @@ return_t crypto_keyexchange::keystore(tls_group_t group, crypto_key* storage, co
             const auto& hybrid = hint->second;
             switch (hybrid.kty) {
                 case kty_okp: {
-                    ret = keychain.add_okp(storage, hybrid.nid, &share[keysize], hybrid.keysize, nullptr, 0, desc);
+                    ret = keychain.add_okp(storage, hybrid.nid, &share[keysize], hybrid.keysize, nullptr, 0, std::move(keydesc(kid)));
                 } break;
                 case kty_mlkem: {
-                    ret = keychain.add_ossl3(storage, hybrid.nid, &share[keysize], hybrid.keysize, key_encoding_pub_raw, desc);
+                    ret = keychain.add_ossl3(storage, hybrid.nid, &share[keysize], hybrid.keysize, key_encoding_pub_raw, std::move(keydesc(kid)));
                 } break;
                 default: {
                     ret = errorcode_t::bad_request;
@@ -494,7 +492,6 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
         binary_t ss;
         auto capsulesize = first.capsulesize;
         auto keysize = first.keysize;
-        keydesc desc(sskid);
 
         switch (first.kty) {
             case kty_mlkem: {
@@ -502,7 +499,7 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
                 ret = pqc.decapsule(nullptr, pkey, share.data(), capsulesize, ss);
             } break;
             case kty_ec: {
-                ret = keychain.add_ec_uncompressed(&ephemeral, first.nid, share.data(), keysize, nullptr, 0, desc);
+                ret = keychain.add_ec_uncompressed(&ephemeral, first.nid, share.data(), keysize, nullptr, 0, std::move(keydesc(sskid)));
             } break;
             default: {
                 ret = errorcode_t::not_supported;
@@ -519,7 +516,7 @@ return_t crypto_keyexchange::decaps(tls_group_t group, crypto_key* key, const ch
                     ret = pqc.decapsule(nullptr, pkey, &share[keysize], second.capsulesize, ss);
                 } break;
                 case kty_okp: {
-                    ret = keychain.add_okp(&ephemeral, second.nid, &share[capsulesize], second.keysize, nullptr, 0, desc);
+                    ret = keychain.add_okp(&ephemeral, second.nid, &share[capsulesize], second.keysize, nullptr, 0, std::move(keydesc(sskid)));
                 } break;
                 default: {
                     ret = errorcode_t::not_supported;

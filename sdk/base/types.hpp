@@ -147,11 +147,11 @@ class loglevel_helper {
 #undef LOGLEVEL_XGROUP
 
 enum class encoding_t : uint8 {
-    encoding_base16 = 1,     // BASE16
+    encoding_base16 = 0,     // BASE16
+    encoding_base16rfc = 1,  // see base16_encode_rfc, base16_decode_rfc
     encoding_base64 = 2,     // BASE64    + /
     encoding_base64url = 3,  // BASE64URL - _ without padding
-    encoding_base16rfc = 4,  // see base16_encode_rfc, base16_decode_rfc
-    encoding_h2hcodes = 5,   // HTTP/2 huffman coding
+    encoding_h2hcodes = 4,   // HTTP/2 huffman coding
 };
 
 enum encoding_flag_t : uint8 {

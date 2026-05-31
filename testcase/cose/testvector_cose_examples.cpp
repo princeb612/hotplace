@@ -86,23 +86,23 @@ void test_yaml_testvector_cose_examples() {
 
                 if (kty == "oct") {
                     auto k = item["k"].as<std::string>("");
-                    cwk.add_oct(&key, enctype, k.c_str(), desc);
+                    cwk.add_oct(&key, enctype, k.c_str(), std::move(desc));
                 } else if (kty == "ec") {
                     auto crv = item["crv"].as<std::string>("");
                     auto x = item["x"].as<std::string>("");
                     auto y = item["y"].as<std::string>("");
                     auto d = item["d"].as<std::string>("");
-                    cwk.add_ec(&key, crv.c_str(), enctype, x.c_str(), y.c_str(), d.c_str(), desc);
+                    cwk.add_ec(&key, crv.c_str(), enctype, x.c_str(), y.c_str(), d.c_str(), std::move(desc));
                 } else if (kty == "okp") {
                     auto crv = item["crv"].as<std::string>("");
                     auto x = item["x"].as<std::string>("");
                     auto d = item["d"].as<std::string>("");
-                    cwk.add_okp(&key, crv.c_str(), enctype, x.c_str(), d.c_str(), desc);
+                    cwk.add_okp(&key, crv.c_str(), enctype, x.c_str(), d.c_str(), std::move(desc));
                 } else if (kty == "rsa") {
                     auto n = item["n"].as<std::string>("");
                     auto e = item["e"].as<std::string>("");
                     auto d = item["d"].as<std::string>("");
-                    cwk.add_rsa(&key, nid_rsa, enctype, n.c_str(), e.c_str(), d.c_str(), desc);
+                    cwk.add_rsa(&key, nid_rsa, enctype, n.c_str(), e.c_str(), d.c_str(), std::move(desc));
                 }
             }
         }

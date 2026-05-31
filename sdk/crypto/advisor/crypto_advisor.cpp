@@ -317,6 +317,46 @@ return_t crypto_advisor::build() {
             _kty_names.emplace(item->kty, item);
         }
     }
+#define EXPAND_CRYPTITEM_BUILD(enum_type, enum_val, enum_text, desc) _crypt_item_name_map.emplace(crypt_item_t::enum_type, enum_text);
+    CRYPT_ITEM_XGROUP_BINARY(EXPAND_CRYPTITEM_BUILD)
+    CRYPT_ITEM_XGROUP_VARIANT(EXPAND_CRYPTITEM_BUILD)
+#undef EXPAND_CRYPTITEM_BUILD
+
+#define EXPAND_CRYPTITEM_BUILD(enum_type, enum_val, enum_text, desc) _crypt_item_name_rev_map.emplace(enum_text, crypt_item_t::enum_type);
+    CRYPT_ITEM_XGROUP_BINARY(EXPAND_CRYPTITEM_BUILD)
+    CRYPT_ITEM_XGROUP_VARIANT(EXPAND_CRYPTITEM_BUILD)
+#undef EXPAND_CRYPTITEM_BUILD
+
+#define EXPAND_CRYPTITEM_BUILD(enum_type, enum_val, enum_text, desc) _crypt_item_dict[crypto_kty_t::kty_oct].emplace(crypt_item_t::enum_type, desc);
+    CRYPT_ITEM_XGROUP_ALIAS_OCT(EXPAND_CRYPTITEM_BUILD)
+#undef EXPAND_CRYPTITEM_BUILD
+#define EXPAND_CRYPTITEM_BUILD(enum_type, enum_val, enum_text, desc) _crypt_item_dict[crypto_kty_t::kty_rsa].emplace(crypt_item_t::enum_type, desc);
+    CRYPT_ITEM_XGROUP_ALIAS_RSA(EXPAND_CRYPTITEM_BUILD)
+#undef EXPAND_CRYPTITEM_BUILD
+#define EXPAND_CRYPTITEM_BUILD(enum_type, enum_val, enum_text, desc) _crypt_item_dict[crypto_kty_t::kty_rsapss].emplace(crypt_item_t::enum_type, desc);
+    CRYPT_ITEM_XGROUP_ALIAS_RSA(EXPAND_CRYPTITEM_BUILD)
+#undef EXPAND_CRYPTITEM_BUILD
+#define EXPAND_CRYPTITEM_BUILD(enum_type, enum_val, enum_text, desc) _crypt_item_dict[crypto_kty_t::kty_ec].emplace(crypt_item_t::enum_type, desc);
+    CRYPT_ITEM_XGROUP_ALIAS_EC2(EXPAND_CRYPTITEM_BUILD)
+#undef EXPAND_CRYPTITEM_BUILD
+#define EXPAND_CRYPTITEM_BUILD(enum_type, enum_val, enum_text, desc) _crypt_item_dict[crypto_kty_t::kty_okp].emplace(crypt_item_t::enum_type, desc);
+    CRYPT_ITEM_XGROUP_ALIAS_OKP(EXPAND_CRYPTITEM_BUILD)
+#undef EXPAND_CRYPTITEM_BUILD
+#define EXPAND_CRYPTITEM_BUILD(enum_type, enum_val, enum_text, desc) _crypt_item_dict[crypto_kty_t::kty_dh].emplace(crypt_item_t::enum_type, desc);
+    CRYPT_ITEM_XGROUP_ALIAS_DH(EXPAND_CRYPTITEM_BUILD)
+#undef EXPAND_CRYPTITEM_BUILD
+#define EXPAND_CRYPTITEM_BUILD(enum_type, enum_val, enum_text, desc) _crypt_item_dict[crypto_kty_t::kty_dsa].emplace(crypt_item_t::enum_type, desc);
+    CRYPT_ITEM_XGROUP_ALIAS_DSA(EXPAND_CRYPTITEM_BUILD)
+#undef EXPAND_CRYPTITEM_BUILD
+#define EXPAND_CRYPTITEM_BUILD(enum_type, enum_val, enum_text, desc) _crypt_item_dict[crypto_kty_t::kty_mlkem].emplace(crypt_item_t::enum_type, desc);
+    CRYPT_ITEM_XGROUP_ALIAS_MLKEM(EXPAND_CRYPTITEM_BUILD)
+#undef EXPAND_CRYPTITEM_BUILD
+#define EXPAND_CRYPTITEM_BUILD(enum_type, enum_val, enum_text, desc) _crypt_item_dict[crypto_kty_t::kty_mldsa].emplace(crypt_item_t::enum_type, desc);
+    CRYPT_ITEM_XGROUP_ALIAS_MLDSA(EXPAND_CRYPTITEM_BUILD)
+#undef EXPAND_CRYPTITEM_BUILD
+#define EXPAND_CRYPTITEM_BUILD(enum_type, enum_val, enum_text, desc) _crypt_item_dict[crypto_kty_t::kty_slhdsa].emplace(crypt_item_t::enum_type, desc);
+    CRYPT_ITEM_XGROUP_ALIAS_SLHDSA(EXPAND_CRYPTITEM_BUILD)
+#undef EXPAND_CRYPTITEM_BUILD
 
     for (i = 0; i < sizeof_hint_groups; ++i) {
         auto item = hint_groups + i;

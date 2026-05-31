@@ -92,15 +92,15 @@ class crypto_keychain {
      * @param keyflag_t mode [in] see keyflag_t
      * @param const char* buffer [in]
      * @param size_t size [in]
-     * @param const keydesc& desc [inopt]
+     * @param keydesc&& desc [inopt]
      * @param int flag [inopt]
      * @return error code (see error.hpp)
      */
-    virtual return_t load(crypto_key* cryptokey, keyflag_t mode, const char* buffer, size_t size, const keydesc& desc = keydesc(), int flag = 0);
-    virtual return_t load_ownspec(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc = keydesc(), int flag = 0);
-    return_t load_pem(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc = keydesc(), int flag = 0);
-    return_t load_cert(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc = keydesc(), int flag = 0);
-    return_t load_der(crypto_key* cryptokey, const byte_t* buffer, size_t size, const keydesc& desc = keydesc(), int flag = 0);
+    virtual return_t load(crypto_key* cryptokey, keyflag_t mode, const char* buffer, size_t size, keydesc&& desc = keydesc(), int flag = 0);
+    virtual return_t load_ownspec(crypto_key* cryptokey, const char* buffer, size_t size, keydesc&& desc = keydesc(), int flag = 0);
+    return_t load_pem(crypto_key* cryptokey, const char* buffer, size_t size, keydesc&& desc = keydesc(), int flag = 0);
+    return_t load_cert(crypto_key* cryptokey, const char* buffer, size_t size, keydesc&& desc = keydesc(), int flag = 0);
+    return_t load_der(crypto_key* cryptokey, const byte_t* buffer, size_t size, keydesc&& desc = keydesc(), int flag = 0);
     /**
      * @brief write into buffer
      * @param crypto_key* cryptokey [in]
@@ -121,11 +121,11 @@ class crypto_keychain {
      * @param crypto_key * crypto_key [in]
      * @param keyflag_t mode [in] see keyflag_t
      * @param const char* file [in]
-     * @param const keydesc& desc [in]
+     * @param keydesc&& desc [in]
      * @param int flag [in] reserved
      * @return error code (see error.hpp)
      */
-    virtual return_t load_file(crypto_key* cryptokey, keyflag_t mode, const char* file, const keydesc& desc = keydesc(), int flag = 0);
+    virtual return_t load_file(crypto_key* cryptokey, keyflag_t mode, const char* file, keydesc&& desc = keydesc(), int flag = 0);
     /**
      * @brief write to file
      * @param crypto_key * cryptokey [in]
@@ -221,33 +221,33 @@ class crypto_keychain {
     /**
      * @brief add
      */
-    return_t add(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
+    return_t add(crypto_key* cryptokey, uint32 nid, keydesc&& desc);
 
     /**
      * @brief   RSA
      */
-    return_t add_rsa(crypto_key* cryptokey, uint32 nid, size_t bits, const keydesc& desc);
-    return_t add_rsa(crypto_key* cryptokey, jwa_t alg, size_t bits, const keydesc& desc);
-    return_t add_rsa(crypto_key* cryptokey, uint32 nid, const binary_t& n, const binary_t& e, const binary_t& d, const keydesc& desc);
-    return_t add_rsa(crypto_key* cryptokey, jwa_t alg, const binary_t& n, const binary_t& e, const binary_t& d, const keydesc& desc);
+    return_t add_rsa(crypto_key* cryptokey, uint32 nid, size_t bits, keydesc&& desc);
+    return_t add_rsa(crypto_key* cryptokey, jwa_t alg, size_t bits, keydesc&& desc);
+    return_t add_rsa(crypto_key* cryptokey, uint32 nid, const binary_t& n, const binary_t& e, const binary_t& d, keydesc&& desc);
+    return_t add_rsa(crypto_key* cryptokey, jwa_t alg, const binary_t& n, const binary_t& e, const binary_t& d, keydesc&& desc);
     return_t add_rsa(crypto_key* cryptokey, uint32 nid, const binary_t& n, const binary_t& e, const binary_t& d, const binary_t& p, const binary_t& q, const binary_t& dp,
-                     const binary_t& dq, const binary_t& qi, const keydesc& desc);
+                     const binary_t& dq, const binary_t& qi, keydesc&& desc);
     return_t add_rsa(crypto_key* cryptokey, jwa_t alg, const binary_t& n, const binary_t& e, const binary_t& p, const binary_t& q, const binary_t& dp, const binary_t& dq,
-                     const binary_t& qi, const binary_t& d, const keydesc& desc);
+                     const binary_t& qi, const binary_t& d, keydesc&& desc);
 
-    return_t add_rsa(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* n, const char* e, const char* d, const keydesc& desc);
-    return_t add_rsa_b64(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const keydesc& desc);
+    return_t add_rsa(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* n, const char* e, const char* d, keydesc&& desc);
+    return_t add_rsa_b64(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, keydesc&& desc);
     return_t add_rsa_b64(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const char* p, const char* q, const char* dp, const char* dq,
-                         const char* qi, const keydesc& desc);
-    return_t add_rsa_b64u(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const keydesc& desc);
+                         const char* qi, keydesc&& desc);
+    return_t add_rsa_b64u(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, keydesc&& desc);
     return_t add_rsa_b64u(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const char* p, const char* q, const char* dp, const char* dq,
-                          const char* qi, const keydesc& desc);
-    return_t add_rsa_b16(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const keydesc& desc);
+                          const char* qi, keydesc&& desc);
+    return_t add_rsa_b16(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, keydesc&& desc);
     return_t add_rsa_b16(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const char* p, const char* q, const char* dp, const char* dq,
-                         const char* qi, const keydesc& desc);
-    return_t add_rsa_b16rfc(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const keydesc& desc);
+                         const char* qi, keydesc&& desc);
+    return_t add_rsa_b16rfc(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, keydesc&& desc);
     return_t add_rsa_b16rfc(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const char* p, const char* q, const char* dp, const char* dq,
-                            const char* qi, const keydesc& desc);
+                            const char* qi, keydesc&& desc);
 
     /**
      * add_ec2 support EC and OKP
@@ -312,10 +312,10 @@ class crypto_keychain {
      * @brief   generate EC/OKP
      * @param   crypto_key* cryptokey [in]
      * @param   uint32 nid [in]
-     * @param   const keydesc& desc [in]
+     * @param   keydesc&& desc [in]
      */
-    return_t add_ec2(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
-    return_t add_ec2(crypto_key* cryptokey, const char* curve, const keydesc& desc);
+    return_t add_ec2(crypto_key* cryptokey, uint32 nid, keydesc&& desc);
+    return_t add_ec2(crypto_key* cryptokey, const char* curve, keydesc&& desc);
     /**
      * @brief   ECC/OKP
      * @param   crypto_key* cryptokey [in]
@@ -323,20 +323,20 @@ class crypto_keychain {
      * @param   const binary_t& x [in]
      * @param   const binary_t& y [in]
      * @param   const binary_t& d [in]
-     * @param   const keydesc& desc [in]
+     * @param   keydesc&& desc [in]
      */
-    return_t add_ec2(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& y, const binary_t& d, const keydesc& desc);
-    return_t add_ec2(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* x, const char* y, const char* d, const keydesc& desc);
-    return_t add_ec2_b64(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, const keydesc& desc);
-    return_t add_ec2_b64u(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, const keydesc& desc);
-    return_t add_ec2_b16(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, const keydesc& desc);
-    return_t add_ec2_b16rfc(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, const keydesc& desc);
+    return_t add_ec2(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& y, const binary_t& d, keydesc&& desc);
+    return_t add_ec2(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* x, const char* y, const char* d, keydesc&& desc);
+    return_t add_ec2_b64(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, keydesc&& desc);
+    return_t add_ec2_b64u(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, keydesc&& desc);
+    return_t add_ec2_b16(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, keydesc&& desc);
+    return_t add_ec2_b16rfc(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, keydesc&& desc);
 
-    return_t add_ec2(crypto_key* cryptokey, const char* curve, encoding_t encoding, const char* x, const char* y, const char* d, const keydesc& desc);
-    return_t add_ec2_b64(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, const keydesc& desc);
-    return_t add_ec2_b64u(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, const keydesc& desc);
-    return_t add_ec2_b16(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, const keydesc& desc);
-    return_t add_ec2_b16rfc(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, const keydesc& desc);
+    return_t add_ec2(crypto_key* cryptokey, const char* curve, encoding_t encoding, const char* x, const char* y, const char* d, keydesc&& desc);
+    return_t add_ec2_b64(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, keydesc&& desc);
+    return_t add_ec2_b64u(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, keydesc&& desc);
+    return_t add_ec2_b16(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, keydesc&& desc);
+    return_t add_ec2_b16rfc(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, keydesc&& desc);
 
     /**
      * @brief   load ECC
@@ -345,11 +345,11 @@ class crypto_keychain {
      * @param   const binary_t& x [in]
      * @param   const binary_t& y [in]
      * @param   const binary_t& d [in]
-     * @param   const keydesc& desc [in]
+     * @param   keydesc&& desc [in]
      */
-    return_t add_ec(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
+    return_t add_ec(crypto_key* cryptokey, uint32 nid, keydesc&& desc);
 
-    return_t add_ec(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& y, const binary_t& d, const keydesc& desc);
+    return_t add_ec(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& y, const binary_t& d, keydesc&& desc);
     /**
      * @brief   load OKP
      * @param   crypto_key* cryptokey [in]
@@ -357,34 +357,36 @@ class crypto_keychain {
      * @param   const binary_t& x [in]
      * @param   const binary_t& y [in]
      * @param   const binary_t& d [in]
-     * @param   const keydesc& desc [in]
+     * @param   keydesc&& desc [in]
      */
-    return_t add_okp(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
-    return_t add_okp(crypto_key* cryptokey, const char* curve, const keydesc& desc);
+    return_t add_okp(crypto_key* cryptokey, uint32 nid, keydesc&& desc);
+    return_t add_okp(crypto_key* cryptokey, const char* curve, keydesc&& desc);
 
-    return_t add_okp(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& d, const keydesc& desc);
-    return_t add_okp(crypto_key* cryptokey, uint32 nid, const byte_t* x, size_t pubsize, const byte_t* d, size_t privsize, const keydesc& desc);
+    return_t add_okp(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& d, keydesc&& desc);
+    return_t add_okp(crypto_key* cryptokey, const char* curve, const binary_t& x, const binary_t& d, keydesc&& desc);
+
+    return_t add_okp(crypto_key* cryptokey, uint32 nid, const byte_t* x, size_t pubsize, const byte_t* d, size_t privsize, keydesc&& desc);
 
     /**
      * @brief   EC
      */
 
-    return_t add_ec(crypto_key* cryptokey, uint32 nid, jwa_t alg, const binary_t& x, const binary_t& y, const binary_t& d, const keydesc& desc);
+    return_t add_ec(crypto_key* cryptokey, uint32 nid, jwa_t alg, const binary_t& x, const binary_t& y, const binary_t& d, keydesc&& desc);
 
-    return_t add_ec(crypto_key* cryptokey, const char* curve, const keydesc& desc);
-    return_t add_ec(crypto_key* cryptokey, const char* curve, const binary_t& x, const binary_t& y, const binary_t& d, const keydesc& desc);
+    return_t add_ec(crypto_key* cryptokey, const char* curve, keydesc&& desc);
+    return_t add_ec(crypto_key* cryptokey, const char* curve, const binary_t& x, const binary_t& y, const binary_t& d, keydesc&& desc);
 
-    return_t add_ec(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* x, const char* y, const char* d, const keydesc& desc);
-    return_t add_ec_b64(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, const keydesc& desc);
-    return_t add_ec_b64u(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, const keydesc& desc);
-    return_t add_ec_b16(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, const keydesc& desc);
-    return_t add_ec_b16rfc(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, const keydesc& desc);
+    return_t add_ec(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* x, const char* y, const char* d, keydesc&& desc);
+    return_t add_ec_b64(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, keydesc&& desc);
+    return_t add_ec_b64u(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, keydesc&& desc);
+    return_t add_ec_b16(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, keydesc&& desc);
+    return_t add_ec_b16rfc(crypto_key* cryptokey, uint32 nid, const char* x, const char* y, const char* d, keydesc&& desc);
 
-    return_t add_ec(crypto_key* cryptokey, const char* curve, encoding_t encoding, const char* x, const char* y, const char* d, const keydesc& desc);
-    return_t add_ec_b64(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, const keydesc& desc);
-    return_t add_ec_b64u(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, const keydesc& desc);
-    return_t add_ec_b16(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, const keydesc& desc);
-    return_t add_ec_b16rfc(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, const keydesc& desc);
+    return_t add_ec(crypto_key* cryptokey, const char* curve, encoding_t encoding, const char* x, const char* y, const char* d, keydesc&& desc);
+    return_t add_ec_b64(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, keydesc&& desc);
+    return_t add_ec_b64u(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, keydesc&& desc);
+    return_t add_ec_b16(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, keydesc&& desc);
+    return_t add_ec_b16rfc(crypto_key* cryptokey, const char* curve, const char* x, const char* y, const char* d, keydesc&& desc);
 
     /**
      * @brief   EC compressed
@@ -403,17 +405,19 @@ class crypto_keychain {
      *          02 || x (32 bytes)
      *          03 || x (32 bytes)
      */
-    return_t add_ec_compressed(crypto_key* cryptokey, uint32 nid, const binary_t& x, bool ysign, const binary_t& d, const keydesc& desc);
-    return_t add_ec_compressed(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* x, bool ysign, const char* d, const keydesc& desc);
-    return_t add_ec_compressed_b64(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc);
-    return_t add_ec_compressed_b64u(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc);
-    return_t add_ec_compressed_b16(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc);
-    return_t add_ec_compressed_b16rfc(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, const keydesc& desc);
-    return_t add_ec_compressed(crypto_key* cryptokey, const char* curve, encoding_t encoding, const char* x, bool ysign, const char* d, const keydesc& desc);
-    return_t add_ec_compressed_b64(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, const keydesc& desc);
-    return_t add_ec_compressed_b64u(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, const keydesc& desc);
-    return_t add_ec_compressed_b16(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, const keydesc& desc);
-    return_t add_ec_compressed_b16rfc(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, const keydesc& desc);
+    return_t add_ec_compressed(crypto_key* cryptokey, uint32 nid, const binary_t& x, bool ysign, const binary_t& d, keydesc&& desc);
+    return_t add_ec_compressed(crypto_key* cryptokey, const char* curve, const binary_t& x, bool ysign, const binary_t& d, keydesc&& desc);
+
+    return_t add_ec_compressed(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* x, bool ysign, const char* d, keydesc&& desc);
+    return_t add_ec_compressed_b64(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, keydesc&& desc);
+    return_t add_ec_compressed_b64u(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, keydesc&& desc);
+    return_t add_ec_compressed_b16(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, keydesc&& desc);
+    return_t add_ec_compressed_b16rfc(crypto_key* cryptokey, uint32 nid, const char* x, bool ysign, const char* d, keydesc&& desc);
+    return_t add_ec_compressed(crypto_key* cryptokey, const char* curve, encoding_t encoding, const char* x, bool ysign, const char* d, keydesc&& desc);
+    return_t add_ec_compressed_b64(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, keydesc&& desc);
+    return_t add_ec_compressed_b64u(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, keydesc&& desc);
+    return_t add_ec_compressed_b16(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, keydesc&& desc);
+    return_t add_ec_compressed_b16rfc(crypto_key* cryptokey, const char* curve, const char* x, bool ysign, const char* d, keydesc&& desc);
 
     /**
      * @brief   EC uncompressed
@@ -433,19 +437,19 @@ class crypto_keychain {
      *          ex. P-256 65 bytes
      *          04 || x (32 bytes) || y (32 bytes)
      */
-    return_t add_ec_uncompressed(crypto_key* cryptokey, uint32 nid, const binary_t& pubkey, const binary_t& privkey, const keydesc& desc);
-    return_t add_ec_uncompressed(crypto_key* cryptokey, uint32 nid, const byte_t* pubkey, size_t pubsize, const byte_t* privkey, size_t privsize, const keydesc& desc);
-    return_t add_ec_uncompressed(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* pubkey, const char* privkey, const keydesc& desc);
-    return_t add_ec_uncompressed_b64(crypto_key* cryptokey, uint32 nid, const char* pubkey, const char* privkey, const keydesc& desc);
-    return_t add_ec_uncompressed_b64u(crypto_key* cryptokey, uint32 nid, const char* pubkey, const char* privkey, const keydesc& desc);
-    return_t add_ec_uncompressed_b16(crypto_key* cryptokey, uint32 nid, const char* pubkey, const char* privkey, const keydesc& desc);
-    return_t add_ec_uncompressed_b16rfc(crypto_key* cryptokey, uint32 nid, const char* pubkey, const char* privkey, const keydesc& desc);
-    return_t add_ec_uncompressed(crypto_key* cryptokey, const char* curve, const binary_t& pubkey, const binary_t& privkey, const keydesc& desc);
-    return_t add_ec_uncompressed(crypto_key* cryptokey, const char* curve, encoding_t encoding, const char* pubkey, const char* privkey, const keydesc& desc);
-    return_t add_ec_uncompressed_b64(crypto_key* cryptokey, const char* curve, const char* pubkey, const char* privkey, const keydesc& desc);
-    return_t add_ec_uncompressed_b64u(crypto_key* cryptokey, const char* curve, const char* pubkey, const char* privkey, const keydesc& desc);
-    return_t add_ec_uncompressed_b16(crypto_key* cryptokey, const char* curve, const char* pubkey, const char* privkey, const keydesc& desc);
-    return_t add_ec_uncompressed_b16rfc(crypto_key* cryptokey, const char* curve, const char* pubkey, const char* privkey, const keydesc& desc);
+    return_t add_ec_uncompressed(crypto_key* cryptokey, uint32 nid, const binary_t& pubkey, const binary_t& privkey, keydesc&& desc);
+    return_t add_ec_uncompressed(crypto_key* cryptokey, uint32 nid, const byte_t* pubkey, size_t pubsize, const byte_t* privkey, size_t privsize, keydesc&& desc);
+    return_t add_ec_uncompressed(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* pubkey, const char* privkey, keydesc&& desc);
+    return_t add_ec_uncompressed_b64(crypto_key* cryptokey, uint32 nid, const char* pubkey, const char* privkey, keydesc&& desc);
+    return_t add_ec_uncompressed_b64u(crypto_key* cryptokey, uint32 nid, const char* pubkey, const char* privkey, keydesc&& desc);
+    return_t add_ec_uncompressed_b16(crypto_key* cryptokey, uint32 nid, const char* pubkey, const char* privkey, keydesc&& desc);
+    return_t add_ec_uncompressed_b16rfc(crypto_key* cryptokey, uint32 nid, const char* pubkey, const char* privkey, keydesc&& desc);
+    return_t add_ec_uncompressed(crypto_key* cryptokey, const char* curve, const binary_t& pubkey, const binary_t& privkey, keydesc&& desc);
+    return_t add_ec_uncompressed(crypto_key* cryptokey, const char* curve, encoding_t encoding, const char* pubkey, const char* privkey, keydesc&& desc);
+    return_t add_ec_uncompressed_b64(crypto_key* cryptokey, const char* curve, const char* pubkey, const char* privkey, keydesc&& desc);
+    return_t add_ec_uncompressed_b64u(crypto_key* cryptokey, const char* curve, const char* pubkey, const char* privkey, keydesc&& desc);
+    return_t add_ec_uncompressed_b16(crypto_key* cryptokey, const char* curve, const char* pubkey, const char* privkey, keydesc&& desc);
+    return_t add_ec_uncompressed_b16rfc(crypto_key* cryptokey, const char* curve, const char* pubkey, const char* privkey, keydesc&& desc);
 
     /**
      * @brief   OKP
@@ -453,31 +457,31 @@ class crypto_keychain {
      * @param   uint32 nid            [in] NID_X25519, NID_X448, NID_ED25519, NID_ED448
      * @param   const char* x         [in] "X25519", "X448", "Ed25519", "Ed448"
      * @param   const char* d         [in]
-     * @param   const keydesc& desc   [in]
+     * @param   keydesc&& desc   [in]
      */
-    return_t add_okp(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* x, const char* d, const keydesc& desc);
-    return_t add_okp_b64(crypto_key* cryptokey, uint32 nid, const char* x, const char* d, const keydesc& desc);
-    return_t add_okp_b64u(crypto_key* cryptokey, uint32 nid, const char* x, const char* d, const keydesc& desc);
-    return_t add_okp_b16(crypto_key* cryptokey, uint32 nid, const char* x, const char* d, const keydesc& desc);
-    return_t add_okp_b16rfc(crypto_key* cryptokey, uint32 nid, const char* x, const char* d, const keydesc& desc);
-    return_t add_okp(crypto_key* cryptokey, const char* curve, encoding_t encoding, const char* x, const char* d, const keydesc& desc);
-    return_t add_okp_b64(crypto_key* cryptokey, const char* curve, const char* x, const char* d, const keydesc& desc);
-    return_t add_okp_b64u(crypto_key* cryptokey, const char* curve, const char* x, const char* d, const keydesc& desc);
-    return_t add_okp_b16(crypto_key* cryptokey, const char* curve, const char* x, const char* d, const keydesc& desc);
-    return_t add_okp_b16rfc(crypto_key* cryptokey, const char* curve, const char* x, const char* d, const keydesc& desc);
+    return_t add_okp(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* x, const char* d, keydesc&& desc);
+    return_t add_okp_b64(crypto_key* cryptokey, uint32 nid, const char* x, const char* d, keydesc&& desc);
+    return_t add_okp_b64u(crypto_key* cryptokey, uint32 nid, const char* x, const char* d, keydesc&& desc);
+    return_t add_okp_b16(crypto_key* cryptokey, uint32 nid, const char* x, const char* d, keydesc&& desc);
+    return_t add_okp_b16rfc(crypto_key* cryptokey, uint32 nid, const char* x, const char* d, keydesc&& desc);
+    return_t add_okp(crypto_key* cryptokey, const char* curve, encoding_t encoding, const char* x, const char* d, keydesc&& desc);
+    return_t add_okp_b64(crypto_key* cryptokey, const char* curve, const char* x, const char* d, keydesc&& desc);
+    return_t add_okp_b64u(crypto_key* cryptokey, const char* curve, const char* x, const char* d, keydesc&& desc);
+    return_t add_okp_b16(crypto_key* cryptokey, const char* curve, const char* x, const char* d, keydesc&& desc);
+    return_t add_okp_b16rfc(crypto_key* cryptokey, const char* curve, const char* x, const char* d, keydesc&& desc);
 
     /**
      * @brief   OCT
      */
-    return_t add_oct(crypto_key* cryptokey, size_t size, const keydesc& desc);
-    return_t add_oct(crypto_key* cryptokey, const binary_t& k, const keydesc& desc);
-    return_t add_oct(crypto_key* cryptokey, const byte_t* k, size_t size, const keydesc& desc);
-    return_t add_oct(crypto_key* cryptokey, jwa_t alg, const binary_t& k, const keydesc& desc);
-    return_t add_oct(crypto_key* cryptokey, encoding_t encoding, const char* k, const keydesc& desc);
-    return_t add_oct_b64(crypto_key* cryptokey, const char* k, const keydesc& desc);
-    return_t add_oct_b64u(crypto_key* cryptokey, const char* k, const keydesc& desc);
-    return_t add_oct_b16(crypto_key* cryptokey, const char* k, const keydesc& desc);
-    return_t add_oct_b16rfc(crypto_key* cryptokey, const char* k, const keydesc& desc);
+    return_t add_oct(crypto_key* cryptokey, size_t size, keydesc&& desc);
+    return_t add_oct(crypto_key* cryptokey, const binary_t& k, keydesc&& desc);
+    return_t add_oct(crypto_key* cryptokey, const byte_t* k, size_t size, keydesc&& desc);
+    return_t add_oct(crypto_key* cryptokey, jwa_t alg, const binary_t& k, keydesc&& desc);
+    return_t add_oct(crypto_key* cryptokey, encoding_t encoding, const char* k, keydesc&& desc);
+    return_t add_oct_b64(crypto_key* cryptokey, const char* k, keydesc&& desc);
+    return_t add_oct_b64u(crypto_key* cryptokey, const char* k, keydesc&& desc);
+    return_t add_oct_b16(crypto_key* cryptokey, const char* k, keydesc&& desc);
+    return_t add_oct_b16rfc(crypto_key* cryptokey, const char* k, keydesc&& desc);
 
     /**
      * @brief   DH
@@ -496,16 +500,16 @@ class crypto_keychain {
      *          keychain.add_dh(&key, NID_ffdhe6144, keydesc("ffdhe6144"));
      *          keychain.add_dh(&key, NID_ffdhe8192, keydesc("ffdhe8192"));
      */
-    return_t add_dh(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
-    return_t add_dh(crypto_key* cryptokey, const char* curve, const keydesc& desc);
+    return_t add_dh(crypto_key* cryptokey, uint32 nid, keydesc&& desc);
+    return_t add_dh(crypto_key* cryptokey, const char* curve, keydesc&& desc);
 
-    return_t add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& y, const binary_t& x, const keydesc& desc);
-    return_t add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& p, const binary_t& q, const binary_t& g, const binary_t& x, const keydesc& desc);
-    return_t add_dh(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* y, const char* x, const keydesc& desc);
-    return_t add_dh_b64(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const keydesc& desc);
-    return_t add_dh_b64u(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const keydesc& desc);
-    return_t add_dh_b16(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const keydesc& desc);
-    return_t add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const keydesc& desc);
+    return_t add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& y, const binary_t& x, keydesc&& desc);
+    return_t add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& p, const binary_t& q, const binary_t& g, const binary_t& x, keydesc&& desc);
+    return_t add_dh(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* y, const char* x, keydesc&& desc);
+    return_t add_dh_b64(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, keydesc&& desc);
+    return_t add_dh_b64u(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, keydesc&& desc);
+    return_t add_dh_b16(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, keydesc&& desc);
+    return_t add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, keydesc&& desc);
     /**
      * @refer   GPT (y from pgq or pgx)
      * @remarks
@@ -513,11 +517,11 @@ class crypto_keychain {
      *          add_dh(key, NID_ffdhe2048, p, q, g, nullptr, desc);        // ok (y from pgq)
      *          add_dh(key, NID_ffdhe2048, p, nullptr, g, nullptr, desc);  // error
      */
-    return_t add_dh(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* p, const char* q, const char* g, const char* x, const keydesc& desc);
-    return_t add_dh_b64(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, const keydesc& desc);
-    return_t add_dh_b64u(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, const keydesc& desc);
-    return_t add_dh_b16(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, const keydesc& desc);
-    return_t add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, const keydesc& desc);
+    return_t add_dh(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* p, const char* q, const char* g, const char* x, keydesc&& desc);
+    return_t add_dh_b64(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, keydesc&& desc);
+    return_t add_dh_b64u(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, keydesc&& desc);
+    return_t add_dh_b16(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, keydesc&& desc);
+    return_t add_dh_b16rfc(crypto_key* cryptokey, uint32 nid, const char* p, const char* q, const char* g, const char* x, keydesc&& desc);
 
     /**
      * @brief DSA
@@ -532,11 +536,10 @@ class crypto_keychain {
      *          keychain.add_dsa_b16(&key, nid_dsa, y, x, p, q, g, keydesc("DSA private"));
      *          keychain.add_dsa_b16(&key, nid_dsa, y, nullptr, p, q, g, keydesc("DSA public"));
      */
-    return_t add_dsa(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
-    return_t add_dsa(crypto_key* cryptokey, const char* name, const keydesc& desc);
+    return_t add_dsa(crypto_key* cryptokey, uint32 nid, keydesc&& desc);
+    return_t add_dsa(crypto_key* cryptokey, const char* name, keydesc&& desc);
 
-    return_t add_dsa(crypto_key* cryptokey, uint32 nid, const binary_t& y, const binary_t& x, const binary_t& p, const binary_t& q, const binary_t& g,
-                     const keydesc& desc);
+    return_t add_dsa(crypto_key* cryptokey, uint32 nid, const binary_t& y, const binary_t& x, const binary_t& p, const binary_t& q, const binary_t& g, keydesc&& desc);
     /**
      * @remarks
      *          add_dsa(key, nid_dsa, y, x, nullptr, nullptr, nullptr, desc);        // ok
@@ -548,11 +551,11 @@ class crypto_keychain {
      *          add_dsa(key, nid_dsa, y, nullptr, p, nullptr, g, desc);              // ok (use y)
      *          add_dsa(key, nid_dsa, nullptr, nullptr, p, nullptr, g, desc);        // error
      */
-    return_t add_dsa(crypto_key* cryptokey, uint32 nid, encoding_t, const char* y, const char* x, const char* p, const char* q, const char* g, const keydesc& desc);
-    return_t add_dsa_b64(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const char* p, const char* q, const char* g, const keydesc& desc);
-    return_t add_dsa_b64u(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const char* p, const char* q, const char* g, const keydesc& desc);
-    return_t add_dsa_b16(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const char* p, const char* q, const char* g, const keydesc& desc);
-    return_t add_dsa_b16rfc(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const char* p, const char* q, const char* g, const keydesc& desc);
+    return_t add_dsa(crypto_key* cryptokey, uint32 nid, encoding_t, const char* y, const char* x, const char* p, const char* q, const char* g, keydesc&& desc);
+    return_t add_dsa_b64(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const char* p, const char* q, const char* g, keydesc&& desc);
+    return_t add_dsa_b64u(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const char* p, const char* q, const char* g, keydesc&& desc);
+    return_t add_dsa_b16(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const char* p, const char* q, const char* g, keydesc&& desc);
+    return_t add_dsa_b16rfc(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const char* p, const char* q, const char* g, keydesc&& desc);
 
     /*
      * @brief   ML-KEM, ML-DSA
@@ -584,26 +587,26 @@ class crypto_keychain {
      * @remarks openssl-3.5 required
      *          ML-KEM, ML-DSA share same function body (except only kty)
      */
-    return_t add_ossl3(crypto_key* cryptokey, uint32 nid, const keydesc& desc);
-    return_t add_ossl3(crypto_key* cryptokey, const char* name, const keydesc& desc);
+    return_t add_ossl3(crypto_key* cryptokey, uint32 nid, keydesc&& desc);
+    return_t add_ossl3(crypto_key* cryptokey, const char* name, keydesc&& desc);
 
-    return_t add_ossl3(crypto_key* cryptokey, uint32 nid, const binary_t& key, key_encoding_t encoding, const keydesc& desc);
-    return_t add_ossl3(crypto_key* cryptokey, uint32 nid, const byte_t* key, size_t keysize, key_encoding_t encoding, const keydesc& desc);
-    return_t add_ossl3(crypto_key* cryptokey, const char* name, const binary_t& key, key_encoding_t encoding, const keydesc& desc);
-    return_t add_ossl3(crypto_key* cryptokey, const char* name, const byte_t* key, size_t keysize, key_encoding_t encoding, const keydesc& desc);
+    return_t add_ossl3(crypto_key* cryptokey, uint32 nid, const binary_t& key, key_encoding_t encoding, keydesc&& desc);
+    return_t add_ossl3(crypto_key* cryptokey, uint32 nid, const byte_t* key, size_t keysize, key_encoding_t encoding, keydesc&& desc);
+    return_t add_ossl3(crypto_key* cryptokey, const char* name, const binary_t& key, key_encoding_t encoding, keydesc&& desc);
+    return_t add_ossl3(crypto_key* cryptokey, const char* name, const byte_t* key, size_t keysize, key_encoding_t encoding, keydesc&& desc);
 
-    return_t add_ossl3(crypto_key* cryptokey, uint32 nid, encoding_t fmt, const char* key, key_encoding_t encoding, const keydesc& desc);
-    return_t add_ossl3(crypto_key* cryptokey, const char* name, encoding_t fmt, const char* key, key_encoding_t encoding, const keydesc& desc);
+    return_t add_ossl3(crypto_key* cryptokey, uint32 nid, encoding_t fmt, const char* key, key_encoding_t encoding, keydesc&& desc);
+    return_t add_ossl3(crypto_key* cryptokey, const char* name, encoding_t fmt, const char* key, key_encoding_t encoding, keydesc&& desc);
 
-    return_t add_ossl3_b64(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, const keydesc& desc);
-    return_t add_ossl3_b64u(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, const keydesc& desc);
-    return_t add_ossl3_b16(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, const keydesc& desc);
-    return_t add_ossl3_b16rfc(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, const keydesc& desc);
+    return_t add_ossl3_b64(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, keydesc&& desc);
+    return_t add_ossl3_b64u(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, keydesc&& desc);
+    return_t add_ossl3_b16(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, keydesc&& desc);
+    return_t add_ossl3_b16rfc(crypto_key* cryptokey, uint32 nid, const char* key, key_encoding_t encoding, keydesc&& desc);
 
-    return_t add_ossl3_b64(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, const keydesc& desc);
-    return_t add_ossl3_b64u(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, const keydesc& desc);
-    return_t add_ossl3_b16(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, const keydesc& desc);
-    return_t add_ossl3_b16rfc(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, const keydesc& desc);
+    return_t add_ossl3_b64(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, keydesc&& desc);
+    return_t add_ossl3_b64u(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, keydesc&& desc);
+    return_t add_ossl3_b16(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, keydesc&& desc);
+    return_t add_ossl3_b16rfc(crypto_key* cryptokey, const char* name, const char* key, key_encoding_t encoding, keydesc&& desc);
 
     /**
      * @brief   group

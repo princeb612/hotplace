@@ -63,6 +63,7 @@ void testcase_key_ffdhe();
 void testcase_key_mlkem();
 void testcase_key_rsa();
 void testcase_keyexchange();
+void testcase_keygen();
 
 void testcase_pqc_dsa();
 void testcase_pqc_encode();

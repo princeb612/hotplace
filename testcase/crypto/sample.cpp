@@ -104,6 +104,7 @@ int main(int argc, char** argv) {
         testcase_key_mlkem();
         testcase_key_rsa();
         testcase_keyexchange();
+        testcase_keygen();
 
         testcase_pqc_dsa();
         testcase_pqc_encode();

@@ -512,97 +512,151 @@ enum crypto_use_t : uint16 {
     use_any = (0xffff),
 };
 
+/**
+ * RSA
+ *   param
+ *     n : RSA modulus (n)
+ *     e : RSA public exponent (e)
+ *     d : RSA private exponent (d)
+ *     p : prime factor (p)
+ *     q : q, "q", "prime factor (q)
+ *     dp : CRT exponent (dp = d mod p-1)
+ *     dq : CRT exponent (dq = d mod q-1)
+ *     qi : CRT coefficient (qi = q^-1 mod p)
+ * EC
+ *   param
+ *     x : EC public point x-coordinate
+ *     y : EC public point y-coordinate
+ *     d : EC private key
+ *   signature
+ *     r : signature component r
+ *     s : signature component s
+ * DH
+ *   y = g^x mod p
+ *     p : prime modulus
+ *     q : subgroup order
+ *     g : generator
+ *     x : private key
+ *     y : public key
+ * DSA
+ *   param
+ *     p : prime modulus
+ *     q : subgroup order
+ *     g : generator
+ *     x : private key
+ *     y : public key
+ *   signature
+ *     k : nonce
+ *     r : signature component r
+ *     s : signature component s
+ */
+
+// (enum_type, enum_val, enum_text, desc)
+#define CRYPT_ITEM_XGROUP_NULL(X) X(unknown, 0, "unknown", "")
+#define CRYPT_ITEM_XGROUP_BINARY(X)                             \
+    X(aad, 0x1, "aad", "additional authenticated data")         \
+    X(cek, 0x2, "cek", "content encryption key")                \
+    X(encryptedkey, 0x3, "encryptedkey", "encrypted CEK")       \
+    X(iv, 0x4, "iv", "initialization vector")                   \
+    X(nonce, 0x5, "nonce", "nonce")                             \
+    X(ciphertext, 0x6, "ciphertext", "encrypted data")          \
+    X(tag, 0x7, "tag", "authentication tag")                    \
+    X(apu, 0x8, "apu", "agreement partyUInfo")                  \
+    X(apv, 0x9, "apv", "agreement partyVInfo")                  \
+    X(p2s, 0xa, "p2s", "PBES2 salt")                            \
+    X(asn1der, 0xb, "der", "ASN.1 DER encoding")                \
+    X(pubkey, 0xc, "pub", "public key")                         \
+    X(privkey, 0xd, "priv", "private key")                      \
+    X(k, 0xe, "k", "nonce or ephemeral secret")                 \
+    X(n, 0xf, "n", "modulus")                                   \
+    X(e, 0x10, "e", "public exponent")                          \
+    X(d, 0x11, "d", "private exponent")                         \
+    X(p, 0x12, "p", "prime modulus or prime factor")            \
+    X(q, 0x13, "q", "subgroup order or prime factor")           \
+    X(g, 0x14, "g", "generator")                                \
+    X(dp, 0x15, "dp", "CRT exponent1")                          \
+    X(dq, 0x16, "dq", "CRT exponent2")                          \
+    X(qi, 0x17, "qi", "CRT coefficient")                        \
+    X(x, 0x18, "x", "private value or x-coordinate")            \
+    X(y, 0x19, "y", "public value or y-coordinate")             \
+    X(uncompressed, 0x1a, "uncompressed", "uncompressed point") \
+    X(r, 0x1b, "r", "signature component r")                    \
+    X(s, 0x1c, "s", "signature component s")
+/**
+ * crv      const char*
+ * header   const char*
+ * kid      const char*
+ * zip      const char*
+ * epk      EVP_PKEY*
+ * p2c      int32
+ * ybit     bool
+ */
+#define CRYPT_ITEM_XGROUP_VARIANT(X)             \
+    X(crv, 0x100, "crv", "crv")                  \
+    X(header, 0x101, "header", "header")         \
+    X(kid, 0x102, "kid", "kid")                  \
+    X(zip, 0x103, "zip", "zip DEF")              \
+    X(epk, 0x300, "epk", "ephemeral public key") \
+    X(p2c, 0x301, "p2c", "PBES2 count")          \
+    X(ybit, 0x302, "ybit", "EC compressed ybit")
+
+#define CRYPT_ITEM_XGROUP_ALIAS_OCT(X) X(hmac_k, k, "k", "k")
+#define CRYPT_ITEM_XGROUP_ALIAS_RSA(X)                       \
+    X(rsa_n, n, "n", "RSA modulus (n)")                      \
+    X(rsa_e, e, "e", "RSA public exponent (e)")              \
+    X(rsa_d, d, "d", "RSA private exponent (d)")             \
+    X(rsa_p, p, "p", "prime factor (p)")                     \
+    X(rsa_q, q, "q", "prime factor (q)")                     \
+    X(rsa_dp, dp, "dp", "CRT exponent (dp = d mod p-1)")     \
+    X(rsa_dq, dq, "dq", "CRT exponent (dq = d mod q-1)")     \
+    X(rsa_qi, qi, "qi", "CRT coefficient (qi = q^-1 mod p)") \
+    X(rsa_pub, asn1der, "der", "RSA public key (ASN.1 DER)") \
+    X(rsa_priv, d, "priv", "RSA private key")
+#define CRYPT_ITEM_XGROUP_ALIAS_EC2(X)                                    \
+    X(ec_x, x, "x", "EC public point x-coordinate (x)")                   \
+    X(ec_y, y, "y", "EC public point y-coordinate (y)")                   \
+    X(ec_d, d, "d", "EC private key (d)")                                 \
+    X(ec_pub_uncompressed, uncompressed, "uncompressed", "EC public key") \
+    X(ec_pub, ec_pub_uncompressed, "pub", "EC public key")                \
+    X(ec_ybit, ybit, "ybit", "EC compressed point y-bit")                 \
+    X(ec_crv, crv, "crv", "elliptic curve")
+#define CRYPT_ITEM_XGROUP_ALIAS_OKP(X) \
+    X(okp_x, x, "x", "OKP public (x)") \
+    X(okp_d, d, "d", "OKP private key (d)")
+#define CRYPT_ITEM_XGROUP_ALIAS_DH(X)                      \
+    X(dh_p, p, "p", "DH prime modulus (p)")                \
+    X(dh_q, q, "q", "DH subgroup order (q)")               \
+    X(dh_g, g, "g", "DH generator (g)")                    \
+    X(dh_y, y, "y", "DH public value (y = g^x mod p)")     \
+    X(dh_x, x, "x", "DH private exponent (x)")             \
+    X(dh_pub, asn1der, "pub", "DH public key (ASN.1 DER)") \
+    X(dh_priv, privkey, "priv", "DH private key")
+#define CRYPT_ITEM_XGROUP_ALIAS_DSA(X)                       \
+    X(dsa_p, p, "p", "DSA prime modulus (p)")                \
+    X(dsa_q, q, "q", "DSA subgroup order (q)")               \
+    X(dsa_g, g, "g", "DSA generator (g)")                    \
+    X(dsa_y, y, "y", "DSA public key (y)")                   \
+    X(dsa_x, x, "x", "DSA private key (x)")                  \
+    X(dsa_pub, asn1der, "der", "DSA public key (ASN.1 DER)") \
+    X(dsa_priv, x, "priv", "DSA private key")
+#define CRYPT_ITEM_XGROUP_ALIAS_MLKEM(X)      \
+    X(mlkem_pub, pubkey, "pub", "public key") \
+    X(mlkem_priv, privkey, "priv", "private key")
+#define CRYPT_ITEM_XGROUP_ALIAS_MLDSA(X)      \
+    X(mldsa_pub, pubkey, "pub", "public key") \
+    X(mldsa_priv, privkey, "priv", "private key")
+#define CRYPT_ITEM_XGROUP_ALIAS_SLHDSA(X)      \
+    X(slhdsa_pub, pubkey, "pub", "public key") \
+    X(slhdsa_priv, privkey, "priv", "private key")
+
 enum class crypt_item_t : uint16 {
-    unknown = 0,
-    /* binary */
-    aad = 1,           // P - protected_header.encoded, additional authenticated data
-    cek = 2,           // k - content encryption key
-    encryptedkey = 3,  // K - encrypted cek
-    iv = 4,            // I - initial vector
-    ciphertext = 5,    // C - ciphertext
-    tag = 6,           // T - authentication tag
-    apu = 7,           // APU - agreement partyUinfo
-    apv = 8,           // APV - agreement partyVinfo
-    p2s = 9,           // P2S - PBES2 salt
-
-    asn1der = 63,
-    rsa_pub = asn1der,
-    rsa_n = 64,
-    rsa_e = 65,
-    rsa_d = 66,
-    rsa_priv = rsa_d,
-    rsa_p = 67,
-    rsa_q = 68,
-    rsa_dp = 69,
-    rsa_dq = 70,
-    rsa_qi = 71,
-
-    ec_crv = 72,
-    ec_x = 73,
-    ec_y = 74,
-    ec_d = 75,
-
-    hmac_k = 76,
-
-    ec_pub_uncompressed = 77,
-    ec_pub = ec_pub_uncompressed,
-
-    pubkey = 78,
-    privekey = 79,
-
-    dh_pub = pubkey,     // sa dh_p, dh_g, dh_y
-    dh_priv = privekey,  // sa dh_x
-
-    /**
-     * DSA
-     *   public key
-     *     p (prime)
-     *     q (subprime)
-     *     g (generator)
-     *     y (public key)
-     *   private key
-     *     x (private key)
-     *   signature
-     *     k (nonce)
-     *     r (signature 1)
-     *     s (signature 2)
-     */
-    dsa_pub = asn1der,
-    dsa_priv = 80,
-    dsa_p = 81,
-    dsa_q = 82,
-    dsa_g = 83,
-    dsa_y = 84,
-    dsa_x = dsa_priv,
-
-    mlkem_pub = pubkey,
-    mlkem_priv = privekey,
-    mldsa_pub = pubkey,
-    mldsa_priv = privekey,
-    slhdsa_pub = pubkey,
-    slhdsa_priv = privekey,
-
-    /**
-     *   y = g^x mod p
-     *     p : prime
-     *     g : generator
-     *     x : xate key
-     *     y : ylic key
-     */
-    dh_p = 89,
-    dh_q = 90,
-    dh_g = 91,
-    dh_y = dh_pub,
-    dh_x = dh_priv,
-
-    /* string */
-    header = 128,  // p - header (protected_header.decoded)
-    kid = 129,     // kid
-    zip = 130,     // zip "DEF"
-
-    /* variant */
-    epk = 256,  // ephemeral public key (pointer to EVP_PKEY*)
-    p2c = 257,  // PBES2 count (int32)
+#define EXPAND_CRYPTITEM_ENUM(enum_type, enum_val, enum_text, desc) enum_type = enum_val,
+    CRYPT_ITEM_XGROUP_NULL(EXPAND_CRYPTITEM_ENUM) CRYPT_ITEM_XGROUP_BINARY(EXPAND_CRYPTITEM_ENUM) CRYPT_ITEM_XGROUP_VARIANT(EXPAND_CRYPTITEM_ENUM)
+        CRYPT_ITEM_XGROUP_ALIAS_OCT(EXPAND_CRYPTITEM_ENUM) CRYPT_ITEM_XGROUP_ALIAS_RSA(EXPAND_CRYPTITEM_ENUM) CRYPT_ITEM_XGROUP_ALIAS_EC2(EXPAND_CRYPTITEM_ENUM)
+            CRYPT_ITEM_XGROUP_ALIAS_OKP(EXPAND_CRYPTITEM_ENUM) CRYPT_ITEM_XGROUP_ALIAS_DH(EXPAND_CRYPTITEM_ENUM) CRYPT_ITEM_XGROUP_ALIAS_DSA(EXPAND_CRYPTITEM_ENUM)
+                CRYPT_ITEM_XGROUP_ALIAS_MLKEM(EXPAND_CRYPTITEM_ENUM) CRYPT_ITEM_XGROUP_ALIAS_MLDSA(EXPAND_CRYPTITEM_ENUM)
+                    CRYPT_ITEM_XGROUP_ALIAS_SLHDSA(EXPAND_CRYPTITEM_ENUM)
+#undef EXPAND_CRYPTITEM_ENUM
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -743,7 +797,7 @@ enum class jws_t : uint16 {
 enum cose_key_t {
     // COSE Header Parameters
 
-    cose_key_reserved = 0,
+    reserved = 0,
 
     // RFC 8152 Table 2: Common Header Parameters
     // RFC 8152 Table 3: Common Header Parameters

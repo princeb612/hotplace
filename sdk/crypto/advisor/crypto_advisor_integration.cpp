@@ -88,7 +88,7 @@ return_t crypto_advisor::hintof_ossl_nid(uint32 nid, hint_advisor_t& hint) {
 
     hint.clear();
 
-    auto kty = ktyof_ossl_nid(nid);
+    auto kty = ktyof_nid(nid);
 
     hint.kty = kty;
     hint.nid = nid;

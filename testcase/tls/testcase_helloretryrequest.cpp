@@ -234,8 +234,7 @@ void testcase_helloretryrequest() {
     basic_stream step;
 
     // enforce server key share group 0x001d "x25519"
-    t_enum_type<tls_group_t> etcurve(tls_group_t::x25519);
-    session_server.get_keyvalue().set(session_conf_enforce_key_share_group, etcurve);
+    session_server.get_keyvalue().set(session_conf_enforce_key_share_group, t_underlying(tls_group_t::x25519));
 
     {
         flow = session_server.get_tls_protection().get_flow();

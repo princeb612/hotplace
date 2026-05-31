@@ -101,7 +101,7 @@ void test_base16_stream() {
     binary_t sample;
     sample.reserve(bufsize_test);
     for (size_t i = 0; i < bufsize_test; ++i) {
-        sample.push_back(i);
+        sample.push_back((uint8)i);
     }
 
     auto write_encoder_chunks = [&](encoder_stream& encoder, const byte_t* stream, size_t stream_size) -> void {

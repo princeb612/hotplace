@@ -28,11 +28,11 @@ class cbor_web_key : public crypto_keychain {
      * @param keyflag_t mode [in] see keyflag_t
      * @param const char* buffer [in]
      * @param size_t size [in]
-     * @param const keydesc& desc [inopt]
+     * @param keydesc&& desc [inopt]
      * @param int flag [inopt]
      * @return error code (see error.hpp)
      */
-    virtual return_t load(crypto_key* cryptokey, keyflag_t mode, const char* buffer, size_t size, const keydesc& desc = keydesc(), int flag = 0);
+    virtual return_t load(crypto_key* cryptokey, keyflag_t mode, const char* buffer, size_t size, keydesc&& desc = {}, int flag = 0);
     /**
      * @brief   load key from a buffer
      * @param   crypto_key * crypto_key [in]

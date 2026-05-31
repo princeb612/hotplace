@@ -15,7 +15,7 @@
 namespace hotplace {
 namespace crypto {
 
-return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, size_t bits, const keydesc& desc) {
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, size_t bits, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     int ret_openssl = 1;
 
@@ -55,7 +55,7 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, size_t bits
         }
         EVP_PKEY_ptr pkey(pk);
 
-        crypto_key_object key(pkey.get(), desc);
+        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
 
         ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
@@ -70,17 +70,17 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, size_t bits
     return ret;
 }
 
-return_t crypto_keychain::add_rsa(crypto_key* cryptokey, jwa_t alg, size_t bits, const keydesc& desc) {
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, jwa_t alg, size_t bits, keydesc&& desc) {
     crypto_advisor* advisor = crypto_advisor::get_instance();
     const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm(alg);
-    keydesc kd(desc);
+    keydesc kd(std::forward<keydesc>(desc));
     if (hint) {
         kd.set_alg(nameof_alg(hint));
     }
-    return add_rsa(cryptokey, nid_rsa, bits, kd);
+    return add_rsa(cryptokey, nid_rsa, bits, std::move(kd));
 }
 
-return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, const binary_t& n, const binary_t& e, const binary_t& d, const keydesc& desc) {
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, const binary_t& n, const binary_t& e, const binary_t& d, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     int ret_openssl = 1;
 
@@ -126,7 +126,7 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, const binar
         }
         rsa.release();  // pkey own rsa
 
-        crypto_key_object key(pkey.get(), desc);
+        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
         ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
             __leave2;
@@ -137,18 +137,18 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, const binar
     return ret;
 }
 
-return_t crypto_keychain::add_rsa(crypto_key* cryptokey, jwa_t alg, const binary_t& n, const binary_t& e, const binary_t& d, const keydesc& desc) {
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, jwa_t alg, const binary_t& n, const binary_t& e, const binary_t& d, keydesc&& desc) {
     crypto_advisor* advisor = crypto_advisor::get_instance();
     const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm(alg);
-    keydesc kd(desc);
+    keydesc kd(std::forward<keydesc>(desc));
     if (hint) {
         kd.set_alg(nameof_alg(hint));
     }
-    return add_rsa(cryptokey, nid_rsa, n, e, d, kd);
+    return add_rsa(cryptokey, nid_rsa, n, e, d, std::move(kd));
 }
 
 return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, const binary_t& n, const binary_t& e, const binary_t& d, const binary_t& p, const binary_t& q,
-                                  const binary_t& dp, const binary_t& dq, const binary_t& qi, const keydesc& desc) {
+                                  const binary_t& dp, const binary_t& dq, const binary_t& qi, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     int ret_openssl = 1;
 
@@ -232,7 +232,7 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, const binar
 
         rsa.release();  // pkey own rsa
 
-        crypto_key_object key(pkey.get(), desc);
+        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
 
         ret = cryptokey->add(std::move(key));
         if (errorcode_t::success != ret) {
@@ -245,30 +245,30 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, const binar
 }
 
 return_t crypto_keychain::add_rsa(crypto_key* cryptokey, jwa_t alg, const binary_t& n, const binary_t& e, const binary_t& d, const binary_t& p, const binary_t& q,
-                                  const binary_t& dp, const binary_t& dq, const binary_t& qi, const keydesc& desc) {
+                                  const binary_t& dp, const binary_t& dq, const binary_t& qi, keydesc&& desc) {
     crypto_advisor* advisor = crypto_advisor::get_instance();
     const hint_jose_encryption_t* hint = advisor->hintof_jose_algorithm(alg);
-    keydesc kd(desc);
+    keydesc kd(std::forward<keydesc>(desc));
     if (hint) {
         kd.set_alg(nameof_alg(hint));
     }
-    return add_rsa(cryptokey, nid_rsa, n, e, d, p, q, dp, dq, qi, kd);
+    return add_rsa(cryptokey, nid_rsa, n, e, d, p, q, dp, dq, qi, std::move(kd));
 }
 
-return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* n, const char* e, const char* d, const keydesc& desc) {
+return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* n, const char* e, const char* d, keydesc&& desc) {
     return_t ret = errorcode_t::success;
     switch (encoding) {
         case encoding_t::encoding_base64:
-            ret = add_rsa_b64(cryptokey, nid, n, e, d, desc);
+            ret = add_rsa_b64(cryptokey, nid, n, e, d, std::forward<keydesc>(desc));
             break;
         case encoding_t::encoding_base64url:
-            ret = add_rsa_b64u(cryptokey, nid, n, e, d, desc);
+            ret = add_rsa_b64u(cryptokey, nid, n, e, d, std::forward<keydesc>(desc));
             break;
         case encoding_t::encoding_base16:
-            ret = add_rsa_b16(cryptokey, nid, n, e, d, desc);
+            ret = add_rsa_b16(cryptokey, nid, n, e, d, std::forward<keydesc>(desc));
             break;
         case encoding_t::encoding_base16rfc:
-            ret = add_rsa_b16rfc(cryptokey, nid, n, e, d, desc);
+            ret = add_rsa_b16rfc(cryptokey, nid, n, e, d, std::forward<keydesc>(desc));
             break;
         default:
             ret = errorcode_t::not_supported;
@@ -277,12 +277,12 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, encoding_t 
     return ret;
 }
 
-return_t crypto_keychain::add_rsa_b64(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const keydesc& desc) {
-    return add_rsa_b64(cryptokey, nid, n, e, d, nullptr, nullptr, nullptr, nullptr, nullptr, desc);
+return_t crypto_keychain::add_rsa_b64(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, keydesc&& desc) {
+    return add_rsa_b64(cryptokey, nid, n, e, d, nullptr, nullptr, nullptr, nullptr, nullptr, std::forward<keydesc>(desc));
 }
 
 return_t crypto_keychain::add_rsa_b64(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const char* p, const char* q, const char* dp,
-                                      const char* dq, const char* qi, const keydesc& desc) {
+                                      const char* dq, const char* qi, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -318,21 +318,21 @@ return_t crypto_keychain::add_rsa_b64(crypto_key* cryptokey, uint32 nid, const c
             os2b(dq, bin_dq);
             os2b(qi, bin_qi);
 
-            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, desc);
+            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, std::forward<keydesc>(desc));
         } else {
-            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, desc);
+            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, std::forward<keydesc>(desc));
         }
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_rsa_b64u(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const keydesc& desc) {
-    return add_rsa_b64u(cryptokey, nid, n, e, d, nullptr, nullptr, nullptr, nullptr, nullptr, desc);
+return_t crypto_keychain::add_rsa_b64u(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, keydesc&& desc) {
+    return add_rsa_b64u(cryptokey, nid, n, e, d, nullptr, nullptr, nullptr, nullptr, nullptr, std::forward<keydesc>(desc));
 }
 
 return_t crypto_keychain::add_rsa_b64u(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const char* p, const char* q, const char* dp,
-                                       const char* dq, const char* qi, const keydesc& desc) {
+                                       const char* dq, const char* qi, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -367,21 +367,21 @@ return_t crypto_keychain::add_rsa_b64u(crypto_key* cryptokey, uint32 nid, const 
             os2b(dp, bin_dp);
             os2b(dq, bin_dq);
             os2b(qi, bin_qi);
-            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, desc);
+            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, std::forward<keydesc>(desc));
         } else {
-            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, desc);
+            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, std::forward<keydesc>(desc));
         }
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_rsa_b16(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const keydesc& desc) {
-    return add_rsa_b16(cryptokey, nid, n, e, d, nullptr, nullptr, nullptr, nullptr, nullptr, desc);
+return_t crypto_keychain::add_rsa_b16(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, keydesc&& desc) {
+    return add_rsa_b16(cryptokey, nid, n, e, d, nullptr, nullptr, nullptr, nullptr, nullptr, std::forward<keydesc>(desc));
 }
 
 return_t crypto_keychain::add_rsa_b16(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const char* p, const char* q, const char* dp,
-                                      const char* dq, const char* qi, const keydesc& desc) {
+                                      const char* dq, const char* qi, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -416,21 +416,21 @@ return_t crypto_keychain::add_rsa_b16(crypto_key* cryptokey, uint32 nid, const c
             os2b(dp, bin_dp);
             os2b(dq, bin_dq);
             os2b(qi, bin_qi);
-            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, desc);
+            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, std::forward<keydesc>(desc));
         } else {
-            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, desc);
+            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, std::forward<keydesc>(desc));
         }
     }
     __finally2 {}
     return ret;
 }
 
-return_t crypto_keychain::add_rsa_b16rfc(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const keydesc& desc) {
-    return add_rsa_b16rfc(cryptokey, nid, n, e, d, nullptr, nullptr, nullptr, nullptr, nullptr, desc);
+return_t crypto_keychain::add_rsa_b16rfc(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, keydesc&& desc) {
+    return add_rsa_b16rfc(cryptokey, nid, n, e, d, nullptr, nullptr, nullptr, nullptr, nullptr, std::forward<keydesc>(desc));
 }
 
 return_t crypto_keychain::add_rsa_b16rfc(crypto_key* cryptokey, uint32 nid, const char* n, const char* e, const char* d, const char* p, const char* q, const char* dp,
-                                         const char* dq, const char* qi, const keydesc& desc) {
+                                         const char* dq, const char* qi, keydesc&& desc) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -465,9 +465,9 @@ return_t crypto_keychain::add_rsa_b16rfc(crypto_key* cryptokey, uint32 nid, cons
             os2b(dp, bin_dp);
             os2b(dq, bin_dq);
             os2b(qi, bin_qi);
-            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, desc);
+            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, std::forward<keydesc>(desc));
         } else {
-            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, desc);
+            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, std::forward<keydesc>(desc));
         }
     }
     __finally2 {}

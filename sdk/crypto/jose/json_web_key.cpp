@@ -27,7 +27,7 @@ json_web_key::json_web_key() : crypto_keychain() {}
 
 json_web_key::~json_web_key() {}
 
-return_t json_web_key::load_ownspec(crypto_key* cryptokey, const char* buffer, size_t size, const keydesc& desc, int flag) {
+return_t json_web_key::load_ownspec(crypto_key* cryptokey, const char* buffer, size_t size, keydesc&& desc, int flag) {
     return_t ret = errorcode_t::success;
     json_t* root = nullptr;
 
@@ -111,7 +111,7 @@ return_t json_web_key::read_json_keynode(crypto_key* cryptokey, json_t* json) {
                 const char* k_value = nullptr;
                 json_unpack(temp, "{s:s}", "k", &k_value);
 
-                add_oct_b64u(cryptokey, k_value, desc);
+                add_oct_b64u(cryptokey, k_value, std::move(desc));
             } else if (0 == strcmp(kty, "RSA")) {
                 const char* n_value = nullptr;
                 const char* e_value = nullptr;
@@ -125,7 +125,7 @@ return_t json_web_key::read_json_keynode(crypto_key* cryptokey, json_t* json) {
                 const char* qi_value = nullptr;
                 json_unpack(temp, "{s:s,s:s,s:s,s:s,s:s}", "p", &p_value, "q", &q_value, "dp", &dp_value, "dq", &dq_value, "qi", &qi_value);
 
-                add_rsa_b64u(cryptokey, nid_rsa, n_value, e_value, d_value, p_value, q_value, dp_value, dq_value, qi_value, desc);
+                add_rsa_b64u(cryptokey, nid_rsa, n_value, e_value, d_value, p_value, q_value, dp_value, dq_value, qi_value, std::move(desc));
             } else if (0 == strcmp(kty, "EC")) {
                 const char* crv_value = nullptr;
                 const char* x_value = nullptr;
@@ -133,14 +133,14 @@ return_t json_web_key::read_json_keynode(crypto_key* cryptokey, json_t* json) {
                 const char* d_value = nullptr;
                 json_unpack(temp, "{s:s,s:s,s:s,s:s}", "crv", &crv_value, "x", &x_value, "y", &y_value, "d", &d_value);
 
-                ret = add_ec_b64u(cryptokey, crv_value, x_value, y_value, d_value, desc);
+                ret = add_ec_b64u(cryptokey, crv_value, x_value, y_value, d_value, std::move(desc));
             } else if (0 == strcmp(kty, "OKP")) {
                 const char* crv_value = nullptr;
                 const char* x_value = nullptr;
                 const char* d_value = nullptr;
                 json_unpack(temp, "{s:s,s:s,s:s}", "crv", &crv_value, "x", &x_value, "d", &d_value);
 
-                ret = add_ec_b64u(cryptokey, crv_value, x_value, nullptr, d_value, desc);
+                ret = add_ec_b64u(cryptokey, crv_value, x_value, nullptr, d_value, std::move(desc));
             } else if (0 == strcmp(kty, "AKP")) {
                 // https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/
                 const char* alg_value = nullptr;
@@ -179,9 +179,9 @@ return_t json_web_key::read_json_keynode(crypto_key* cryptokey, json_t* json) {
                 advisor->hintof_name(alg_value, hint);
                 if (hint.hint_sigscheme) {
                     if (bin_priv.size() == hint.hint_sigscheme->size.privkey) {
-                        ret = add_ossl3(cryptokey, alg_value, bin_priv, key_encoding_priv_raw, desc);
+                        ret = add_ossl3(cryptokey, alg_value, bin_priv, key_encoding_priv_raw, std::move(desc));
                     } else if (bin_pub.size() == hint.hint_sigscheme->size.pubkey) {
-                        ret = add_ossl3(cryptokey, alg_value, bin_pub, key_encoding_pub_raw, desc);
+                        ret = add_ossl3(cryptokey, alg_value, bin_pub, key_encoding_pub_raw, std::move(desc));
                     }
                 }
             }

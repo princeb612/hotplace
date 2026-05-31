@@ -246,7 +246,6 @@ const char* oidof(const hint_curve_t* hint) {
 bool support(const hint_curve_t* hint, hash_algorithm_t alg) {
     bool ret_value = false;
     if (hint) {
-        t_enum_type<hash_algorithm_t> etalg(alg);
         switch (alg) {
             case hash_algorithm_t::sha1:
                 ret_value = hint->flags & ECDSA_SUPPORT_SHA1;

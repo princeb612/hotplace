@@ -51,7 +51,7 @@
 namespace hotplace {
 namespace io {
 
-enum class cbor_major_t {
+enum class cbor_major_t : uint8 {
     uint = 0,    ///<< 0000 0
     nint = 1,    ///<< 0010 2
     bstr = 2,    ///<< 0100 4, 0101 1111 5f (indefinite-length)
@@ -63,8 +63,8 @@ enum class cbor_major_t {
     simple = 7,  ///<< 111x e or f, see additional info
 };
 
-enum class cbor_tag_t {
-    unknown = -1,
+enum class cbor_tag_t : uint8 {
+    unknown = (uint8)-1,
     std_datetime = 0,
     epoch_datetime = 1,
     positive_bignum = 2,
@@ -91,7 +91,7 @@ enum class cbor_tag_t {
     mac0 = 17,      // COSE Mac w/o Recipients Object
 };
 
-enum class cbor_type_t {
+enum class cbor_type_t : uint8 {
     null = 0,
     array = 1,
     data = 2,
@@ -109,7 +109,7 @@ enum class cbor_type_t {
  *      (major type 7, additional information 24) and continue with a byte
  *      less than 0x20 (32 decimal).
  */
-enum class cbor_simple_t {
+enum class cbor_simple_t : uint8 {
     unknown = 0,        // Not applicable, not a type, ...
     value = 19,         // additional info 0..19 : unassigned
                         // additional info 24 : following byte (value 32-255)
