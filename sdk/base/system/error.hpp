@@ -50,12 +50,14 @@ struct error_traits<return_t> {
     static return_t value_success() { return errorcode_t::success; }
     static return_t value_exception() { return errorcode_t::exception_caught; }
     static return_t value_invalid_parameter() { return errorcode_t::invalid_parameter; }
+    static return_t value_internal_error() { return errorcode_t::internal_error; }
     static bool is_success(return_t code) { return (code == errorcode_t::success) || (code == errorcode_t::expect_failure); }
     static bool is_not_fail(return_t code) {
         auto category = error_advisor::get_instance()->categoryof(code);
         return (error_category_t::error_category_severe != category);
     }
     static return_t to_return_t(return_t code) { return code; }
+    static return_t from_return_t(return_t code) { return code; }
 };
 
 /* openssl specialization */
@@ -64,9 +66,11 @@ struct error_traits<int> {
     static int value_success() { return 1; }
     static int value_exception() { return -1; }
     static int value_invalid_parameter() { return 0; }
+    static int value_internal_error() { return 0; }
     static bool is_success(int code) { return code > 0; }
     static bool is_not_fail(int code) { return code > 0; }
     static return_t to_return_t(int code) { return (code > 0) ? errorcode_t::success : errorcode_t::internal_error; }
+    static int from_return_t(return_t code) { return error_traits<return_t>::is_success(code) ? value_success() : value_internal_error(); }
 };
 
 }  // namespace hotplace

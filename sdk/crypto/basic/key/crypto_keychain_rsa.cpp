@@ -10,64 +10,14 @@
 
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keygen.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 
 namespace hotplace {
 namespace crypto {
 
 return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, size_t bits, keydesc&& desc) {
-    return_t ret = errorcode_t::success;
-    int ret_openssl = 1;
-
-    __try2 {
-        if (nullptr == cryptokey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        if (bits < 2048) {
-            bits = 2048;
-        }
-
-        EVP_PKEY_CTX_ptr pkey_context(EVP_PKEY_CTX_new_id(nid, nullptr));
-        if (nullptr == pkey_context.get()) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        ret_openssl = EVP_PKEY_keygen_init(pkey_context.get());
-        if (ret_openssl <= 0) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        ret_openssl = EVP_PKEY_CTX_set_rsa_keygen_bits(pkey_context.get(), t_narrow_cast(bits));
-        if (ret_openssl <= 0) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        EVP_PKEY* pk = nullptr;
-        ret_openssl = EVP_PKEY_keygen(pkey_context.get(), &pk);
-        if (ret_openssl <= 0) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-        EVP_PKEY_ptr pkey(pk);
-
-        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
-
-        ret = cryptokey->add(std::move(key));
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        pkey.release();  // cryptokey own pkey
-
-        // free pkey_context
-    }
-    __finally2 {}
-    return ret;
+    return crypto_keygen::add_rsa(cryptokey, nid, bits, std::forward<keydesc>(desc));
 }
 
 return_t crypto_keychain::add_rsa(crypto_key* cryptokey, jwa_t alg, size_t bits, keydesc&& desc) {
@@ -81,60 +31,16 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, jwa_t alg, size_t bits,
 }
 
 return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, const binary_t& n, const binary_t& e, const binary_t& d, keydesc&& desc) {
-    return_t ret = errorcode_t::success;
-    int ret_openssl = 1;
-
-    __try2 {
-        if (nullptr == cryptokey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        if (0 == n.size() || 0 == e.size()) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        RSA_ptr rsa(RSA_new());
-        if (nullptr == rsa.get()) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-
-        BN_ptr bn_n(BN_bin2bn(n.data(), t_narrow_cast(n.size()), nullptr));
-        BN_ptr bn_e(BN_bin2bn(e.data(), t_narrow_cast(e.size()), nullptr));
-        BN_ptr bn_d;
-        if (0 != d.size()) {
-            bn_d = std::move(BN_ptr(BN_bin2bn(d.data(), t_narrow_cast(d.size()), nullptr)));
-        }
-
-        RSA_set0_key(rsa.get(), bn_n.get(), bn_e.get(), bn_d.get());
-        bn_n.release();  // rsa own bn_n
-        bn_e.release();  // rsa own bn_e
-        bn_d.release();  // rsa own bn_d
-
-        EVP_PKEY_ptr pkey(EVP_PKEY_new());
-        ret_openssl = EVP_PKEY_set_type(pkey.get(), nid);  // NID_rsaEncryption, NID_rsa, NID_rsassaPss
-        if (ret_openssl <= 0) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        ret_openssl = EVP_PKEY_assign_RSA(pkey.get(), rsa.get());
-        if (ret_openssl <= 0) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-        rsa.release();  // pkey own rsa
-
-        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
-        ret = cryptokey->add(std::move(key));
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        pkey.release();  // cryptokey own pkey
+    // EVP_PKEY_RSA, NID_rsaEncryption
+    // EVP_PKEY_RSA2, NID_rsa
+    // EVP_PKEY_RSA_PSS, NID_rsassaPss
+    if (EVP_PKEY_RSA == nid || EVP_PKEY_RSA2 == nid) {
+        return crypto_keygen::add_rsa(cryptokey, nid, n, e, d, std::forward<keydesc>(desc));
+    } else if (EVP_PKEY_RSA_PSS == nid) {
+        return crypto_keygen::add_rsapss(cryptokey, nid, n, e, d, std::forward<keydesc>(desc));
+    } else {
+        return errorcode_t::bad_request;
     }
-    __finally2 {}
-    return ret;
 }
 
 return_t crypto_keychain::add_rsa(crypto_key* cryptokey, jwa_t alg, const binary_t& n, const binary_t& e, const binary_t& d, keydesc&& desc) {
@@ -149,99 +55,7 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, jwa_t alg, const binary
 
 return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, const binary_t& n, const binary_t& e, const binary_t& d, const binary_t& p, const binary_t& q,
                                   const binary_t& dp, const binary_t& dq, const binary_t& qi, keydesc&& desc) {
-    return_t ret = errorcode_t::success;
-    int ret_openssl = 1;
-
-    __try2 {
-        if (nullptr == cryptokey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        if (0 == n.size() || 0 == e.size()) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        RSA_ptr rsa(RSA_new());
-        if (nullptr == rsa.get()) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-
-        BN_ptr bn_n(BN_bin2bn(n.data(), t_narrow_cast(n.size()), nullptr));
-        BN_ptr bn_e(BN_bin2bn(e.data(), t_narrow_cast(e.size()), nullptr));
-        BN_ptr bn_d;
-        BN_ptr bn_p;
-        BN_ptr bn_q;
-        BN_ptr bn_dmp1;
-        BN_ptr bn_dmq1;
-        BN_ptr bn_iqmp;
-
-        if (0 != d.size()) {
-            bn_d = std::move(BN_ptr(BN_bin2bn(d.data(), t_narrow_cast(d.size()), nullptr)));
-        }
-
-        if (0 != p.size()) {
-            bn_p = std::move(BN_ptr(BN_bin2bn(p.data(), t_narrow_cast(p.size()), nullptr)));
-        }
-        if (0 != q.size()) {
-            bn_q = std::move(BN_ptr(BN_bin2bn(q.data(), t_narrow_cast(q.size()), nullptr)));
-        }
-        if (0 != dp.size()) {
-            bn_dmp1 = std::move(BN_ptr(BN_bin2bn(dp.data(), t_narrow_cast(dp.size()), nullptr)));
-        }
-        if (0 != dq.size()) {
-            bn_dmq1 = std::move(BN_ptr(BN_bin2bn(dq.data(), t_narrow_cast(dq.size()), nullptr)));
-        }
-        if (0 != qi.size()) {
-            bn_iqmp = std::move(BN_ptr(BN_bin2bn(qi.data(), t_narrow_cast(qi.size()), nullptr)));
-        }
-
-        RSA_set0_key(rsa.get(), bn_n.get(), bn_e.get(), bn_d.get());
-        bn_n.release();  // rsa own bn_n
-        bn_e.release();  // rsa own bn_e
-        bn_d.release();  // rsa own bn_d
-        RSA_set0_factors(rsa.get(), bn_p.get(), bn_q.get());
-        bn_p.release();  // rsa own bn_p
-        bn_q.release();  // rsa own bn_q
-        RSA_set0_crt_params(rsa.get(), bn_dmp1.get(), bn_dmq1.get(), bn_iqmp.get());
-        bn_dmp1.release();  // rsa own bn_dmp1
-        bn_dmq1.release();  // rsa own bn_dmq1
-        bn_iqmp.release();  // rsa own bn_iqmp
-
-        /* verify */
-        ret_openssl = RSA_check_key(rsa.get());
-        if (ret_openssl <= 0) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2_trace_openssl(ret);
-        }
-
-        EVP_PKEY_ptr pkey(EVP_PKEY_new());
-
-        ret_openssl = EVP_PKEY_set_type(pkey.get(), nid);  // NID_rsaEncryption, NID_rsa, NID_rsassaPss
-        if (ret_openssl <= 0) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        ret_openssl = EVP_PKEY_assign_RSA(pkey.get(), rsa.get());
-        if (ret_openssl <= 0) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        rsa.release();  // pkey own rsa
-
-        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
-
-        ret = cryptokey->add(std::move(key));
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        pkey.release();  // cryptokey own pkey
-    }
-    __finally2 {}
-    return ret;
+    return add_rsa(cryptokey, nid, n, e, d, std::forward<keydesc>(desc));
 }
 
 return_t crypto_keychain::add_rsa(crypto_key* cryptokey, jwa_t alg, const binary_t& n, const binary_t& e, const binary_t& d, const binary_t& p, const binary_t& q,
@@ -252,7 +66,7 @@ return_t crypto_keychain::add_rsa(crypto_key* cryptokey, jwa_t alg, const binary
     if (hint) {
         kd.set_alg(nameof_alg(hint));
     }
-    return add_rsa(cryptokey, nid_rsa, n, e, d, p, q, dp, dq, qi, std::move(kd));
+    return add_rsa(cryptokey, nid_rsa, n, e, d, std::move(kd));
 }
 
 return_t crypto_keychain::add_rsa(crypto_key* cryptokey, uint32 nid, encoding_t encoding, const char* n, const char* e, const char* d, keydesc&& desc) {
@@ -305,23 +119,7 @@ return_t crypto_keychain::add_rsa_b64(crypto_key* cryptokey, uint32 nid, const c
         os2b(e, bin_e);
         os2b(d, bin_d);
 
-        if (p && q && dp && dq && qi) {
-            binary_t bin_p;
-            binary_t bin_q;
-            binary_t bin_dp;
-            binary_t bin_dq;
-            binary_t bin_qi;
-
-            os2b(p, bin_p);
-            os2b(q, bin_q);
-            os2b(dp, bin_dp);
-            os2b(dq, bin_dq);
-            os2b(qi, bin_qi);
-
-            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, std::forward<keydesc>(desc));
-        } else {
-            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, std::forward<keydesc>(desc));
-        }
+        ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;
@@ -355,22 +153,7 @@ return_t crypto_keychain::add_rsa_b64u(crypto_key* cryptokey, uint32 nid, const 
         os2b(e, bin_e);
         os2b(d, bin_d);
 
-        binary_t bin_p;
-        binary_t bin_q;
-        binary_t bin_dp;
-        binary_t bin_dq;
-        binary_t bin_qi;
-
-        if (p && q && dp && dq && qi) {
-            os2b(p, bin_p);
-            os2b(q, bin_q);
-            os2b(dp, bin_dp);
-            os2b(dq, bin_dq);
-            os2b(qi, bin_qi);
-            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, std::forward<keydesc>(desc));
-        } else {
-            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, std::forward<keydesc>(desc));
-        }
+        ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;
@@ -404,22 +187,7 @@ return_t crypto_keychain::add_rsa_b16(crypto_key* cryptokey, uint32 nid, const c
         os2b(e, bin_e);
         os2b(d, bin_d);
 
-        binary_t bin_p;
-        binary_t bin_q;
-        binary_t bin_dp;
-        binary_t bin_dq;
-        binary_t bin_qi;
-
-        if (p && q && dp && dq && qi) {
-            os2b(p, bin_p);
-            os2b(q, bin_q);
-            os2b(dp, bin_dp);
-            os2b(dq, bin_dq);
-            os2b(qi, bin_qi);
-            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, std::forward<keydesc>(desc));
-        } else {
-            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, std::forward<keydesc>(desc));
-        }
+        ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;
@@ -453,22 +221,7 @@ return_t crypto_keychain::add_rsa_b16rfc(crypto_key* cryptokey, uint32 nid, cons
         os2b(e, bin_e);
         os2b(d, bin_d);
 
-        binary_t bin_p;
-        binary_t bin_q;
-        binary_t bin_dp;
-        binary_t bin_dq;
-        binary_t bin_qi;
-
-        if (p && q && dp && dq && qi) {
-            os2b(p, bin_p);
-            os2b(q, bin_q);
-            os2b(dp, bin_dp);
-            os2b(dq, bin_dq);
-            os2b(qi, bin_qi);
-            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, bin_p, bin_q, bin_dp, bin_dq, bin_qi, std::forward<keydesc>(desc));
-        } else {
-            ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, std::forward<keydesc>(desc));
-        }
+        ret = add_rsa(cryptokey, nid, bin_n, bin_e, bin_d, std::forward<keydesc>(desc));
     }
     __finally2 {}
     return ret;

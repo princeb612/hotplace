@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   testcase_key_dsa.cpp
+ * @file   testcase_keygen.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -19,10 +19,12 @@ void test_keygen() {
     auto advisor = crypto_advisor::get_instance();
 
     auto lambda_gen = [&](const char* name, const char* kid) -> void {
-        crypto_keygen keygen_p256(&key, name);
-        keygen_p256.set(keydesc(kid)).gen();
+        crypto_keygen keygen(&key, name);
+        keygen.set(keydesc(kid)).gen();
     };
 
+    lambda_gen("rsaEncryption", "RSA gen");
+    lambda_gen("RSASSA-PSS", "RSASSA-PSS gen");
     lambda_gen("P-256", "P-256 gen");
     lambda_gen("X25519", "X25519 gen");
     lambda_gen("X448", "X448 gen");
@@ -59,9 +61,13 @@ void test_keygen() {
         .build();
 
     crypto_keygen keygen_p256compressed(&key, "P-256");
-    keygen_p256compressed.set(keydesc("P-256 compressed public")).set("x", "98F50A4FF6C05861C8860D13A638EA56C3F5AD7590BBFBF054E1C7B4D91D6280").set("ybit", true).build();
+    keygen_p256compressed                                                              //
+        .set(keydesc("P-256 compressed public"))                                       //
+        .set("x", "98F50A4FF6C05861C8860D13A638EA56C3F5AD7590BBFBF054E1C7B4D91D6280")  //
+        .set("ybit", true)
+        .build();
 
-    crypto_keygen keygen_rsa(&key, "RSA");
+    crypto_keygen keygen_rsa(&key, "rsaEncryption");
     keygen_rsa.set(keydesc("RSA"))
         .set("n",
              "bc7e29d0df7e20cc9dc8d509e0f68895922af0ef452190d402c61b554334a7bf91c9a570240f994fae1b69035bcfad4f7e249eb26087c2665e7c958c967b1517413dc3f97a431691a5999b257cc"
@@ -74,6 +80,21 @@ void test_keygen() {
              "d406981c7b81fce54861cebfb85ad23a8b4833c1bee18c05e4e436a869636980646eecb839e4daf434c9c6dfbf3a55ce1db73e4902f89384bd6f9ecd3399fb1ed4b83f28d356c8e619f1f0dc96b"
              "be8b75c1812ca58f360259eaeb1d17130c3c0a2715a99be49898e871f6088a29570dc2ffa0cefffa27f1f055cbaabfd8894e0cc24f176e34ebad32278a466f8a34a685acc8207d9ec1fcbbd0949"
              "96dc73c6305fca31668be57b1699d0bb456cc8871bffbcd")
+        .build();
+
+    crypto_keygen keygen_rsapss(&key, "RSASSA-PSS");
+    keygen_rsapss.set(keydesc("RSAPSS"))
+        .set("n",
+             "d2d9bf31a452e1a771207bdd1ca2a4331aac9f1963cb772c79fe79aaad6e5b4ad740311d7fb4d4543e5fe696e7ddca4ec4256246d95519139614df94cb58bf5ef434c032d70cd177435fbf76c1b"
+             "239f19305f98d56e350b5ef5adbd210aff95958f5cd0396fe21bf8ddec4348071624111ed8f73e2a73514a2584184afd5c3b99ce7c7a6fca72ee8dd1358f616b638c1d1b416f0134993cad96611"
+             "8f3e5af2301bde6fc9e643f9a64cd41ab61be9a3431607d734dc90e82447e5045f7239959e227078dab21c9f4f22fd94fda81139ce8fbaff96f6989a4be353aa74b2ac50ceb03b743eb8233df7c"
+             "11adfa4953a25ab8bde948c9d1a6c8e595f692f89c2f97f")
+        .set("e", "010001")
+        .set("d",
+             "05285ca40acd53c11086b38c07fa3fe5266f8aef122d48b0808f995a38ba5f26c72b14ed68c2cf46fc1dec5a561b1c970ae35586214c4dcac497565a269d8c543bc9df50a183f8dea96648c4595"
+             "488548d1a53813816283f130fb0f317dc40948f4668963b50f6cae967ed2c0cfcbdf6e3702fef8f90d17028958c795a78d50ad3465fe1d3b5f0dee17b39a5ffe602a053ca7e3cbc25484c13f86d"
+             "7c563f657f5eda9e9b5abd301d380e26b85182d2d1edf8271ac3c1c9abba24712ed9f03e2765be19f7965ae81a06330fa4beb14283fd2c44a528277dbb242bf0719ab8187caac3f3a1ea9e60db5"
+             "1e965c0378c97816ff0747d34f6a8d21ee515f18a515029")
         .build();
 
     crypto_keygen keygen_dsa(&key, "DSA");
@@ -135,9 +156,11 @@ void test_keygen() {
         uint32 id = 0;
         advisor->ktyof_evp_pkey(pkey, kty, id);
 
-        _test_case.assert(keymap[kid] && (nid == id), function, "%s", kid);
+        _test_case.assert(keymap[kid] && (nid == id), function, "%s nid %u %u", kid, nid, id);
     };
 
+    lambda_check(__FUNCTION__, nid_rsa, "RSA gen");
+    lambda_check(__FUNCTION__, nid_rsapss, "RSASSA-PSS gen");
     lambda_check(__FUNCTION__, NID_X9_62_prime256v1, "P-256 gen");
     lambda_check(__FUNCTION__, NID_X25519, "X25519 gen");
     lambda_check(__FUNCTION__, NID_ED25519, "Ed25519 gen");
@@ -149,6 +172,7 @@ void test_keygen() {
     lambda_check(__FUNCTION__, NID_secp521r1, "P-521");
     lambda_check(__FUNCTION__, NID_X25519, "X25519");
     lambda_check(__FUNCTION__, NID_rsaEncryption, "RSA");
+    lambda_check(__FUNCTION__, NID_rsassaPss, "RSAPSS");
     lambda_check(__FUNCTION__, NID_dsa, "DSA");
     lambda_check(__FUNCTION__, nid_ffdhe2048, "ffdhe2048");
 }

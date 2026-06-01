@@ -84,6 +84,67 @@ class crypto_keygen {
     crypto_keygen& build();
     return_t result();
 
+    /**
+     * @brief   OCT
+     */
+    static return_t add_oct(crypto_key* cryptokey, size_t size, keydesc&& desc);
+    static return_t add_oct(crypto_key* cryptokey, const byte_t* k, size_t size, keydesc&& desc);
+    /**
+     * @param   uint32 nid [in] "rsaEncryption" EVP_PKEY_RSA (NID_rsaEncryption)
+     * @remarks
+     *          RSA2 not supported
+     *              "RSA" EVP_PKEY_RSA2 (NID_rsa)
+     */
+    static return_t add_rsa(crypto_key* cryptokey, uint32 nid, size_t bits, keydesc&& desc);
+    static return_t add_rsa(crypto_key* cryptokey, uint32 nid, const binary_t& n, const binary_t& e, const binary_t& d, keydesc&& desc);
+    static return_t add_rsa(crypto_key* cryptokey, uint32 nid, const binary_t& n, const binary_t& e, const binary_t& d, const binary_t& p, const binary_t& q,
+                            const binary_t& dp, const binary_t& dq, const binary_t& qi, keydesc&& desc);
+    /**
+     * @param   uint32 nid [in] "RSASSA-PSS"    EVP_PKEY_RSA_PSS (NID_rsassaPss)
+     */
+    static return_t add_rsapss(crypto_key* cryptokey, uint32 nid, const binary_t& n, const binary_t& e, const binary_t& d, keydesc&& desc);
+    /**
+     * @brief   EC
+     */
+    static return_t add_ec(crypto_key* cryptokey, uint32 nid, keydesc&& desc);
+    static return_t add_ec(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& y, const binary_t& d, keydesc&& desc);
+    static return_t add_ec_compressed(crypto_key* cryptokey, uint32 nid, const binary_t& x, bool ysign, const binary_t& d, keydesc&& desc);
+    static return_t add_ec_uncompressed(crypto_key* cryptokey, uint32 nid, const byte_t* pubkey, size_t pubsize, const byte_t* privkey, size_t privsize, keydesc&& desc);
+    /**
+     * @brief   OKP
+     */
+    static return_t add_okp(crypto_key* cryptokey, uint32 nid, keydesc&& desc);
+    static return_t add_okp(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& d, keydesc&& desc);
+    static return_t add_okp(crypto_key* cryptokey, uint32 nid, const byte_t* x, size_t pubsize, const byte_t* d, size_t privsize, keydesc&& desc);
+    /**
+     * @brief   DH
+     */
+    static return_t add_dh(crypto_key* cryptokey, uint32 nid, keydesc&& desc);
+    static return_t add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& y, const binary_t& x, keydesc&& desc);
+    static return_t add_dh(crypto_key* cryptokey, uint32 nid, const binary_t& p, const binary_t& q, const binary_t& g, const binary_t& x, keydesc&& desc);
+    /**
+     * @brief   DSA
+     */
+    static return_t add_dsa(crypto_key* cryptokey, uint32 nid, keydesc&& desc);
+    static return_t add_dsa(crypto_key* cryptokey, uint32 nid, const binary_t& y, const binary_t& x, const binary_t& p, const binary_t& q, const binary_t& g,
+                            keydesc&& desc);
+    /**
+     * @brief   ML-KEM, ML-DSA, SLH-DSA
+     */
+    static return_t pkey_keygen_byname(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const char* name);
+    static return_t pkey_encode_format(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
+    static return_t pkey_decode_format(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
+    static return_t pkey_decode_format(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding,
+                                       const char* passphrase = nullptr);
+    static return_t pkey_encode_raw(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keydata, key_encoding_t encoding);
+    static return_t pkey_decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding,
+                                const char* passphrase = nullptr);
+    static return_t pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding);
+    static bool pkey_is_private(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey);
+    static return_t add_ossl3(crypto_key* cryptokey, uint32 nid, keydesc&& desc);
+    static return_t add_ossl3(crypto_key* cryptokey, const char* name, keydesc&& desc);
+    static return_t add_ossl3(crypto_key* cryptokey, const char* name, const byte_t* keydata, size_t keysize, key_encoding_t encoding, keydesc&& desc);
+
    protected:
    private:
     critical_section _lock;

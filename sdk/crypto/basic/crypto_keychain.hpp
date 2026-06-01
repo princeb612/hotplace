@@ -224,7 +224,8 @@ class crypto_keychain {
     return_t add(crypto_key* cryptokey, uint32 nid, keydesc&& desc);
 
     /**
-     * @brief   RSA
+     * @brief   "RSA"
+     * @param   uint32 nid [in] EVP_PKEY_RSA (NID_rsaEncryption), EVP_PKEY_RSA2 (NID_rsa)
      */
     return_t add_rsa(crypto_key* cryptokey, uint32 nid, size_t bits, keydesc&& desc);
     return_t add_rsa(crypto_key* cryptokey, jwa_t alg, size_t bits, keydesc&& desc);
@@ -364,8 +365,7 @@ class crypto_keychain {
 
     return_t add_okp(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& d, keydesc&& desc);
     return_t add_okp(crypto_key* cryptokey, const char* curve, const binary_t& x, const binary_t& d, keydesc&& desc);
-
-    return_t add_okp(crypto_key* cryptokey, uint32 nid, const byte_t* x, size_t pubsize, const byte_t* d, size_t privsize, keydesc&& desc);
+    return_t add_okp(crypto_key* cryptokey, uint32 nid, const byte_t* x, size_t xsize, const byte_t* d, size_t dsize, keydesc&& desc);
 
     /**
      * @brief   EC
@@ -558,7 +558,7 @@ class crypto_keychain {
     return_t add_dsa_b16rfc(crypto_key* cryptokey, uint32 nid, const char* y, const char* x, const char* p, const char* q, const char* g, keydesc&& desc);
 
     /*
-     * @brief   ML-KEM, ML-DSA
+     * @brief   ML-KEM, ML-DSA, SLH-DSA
      * @param   uint32 nid [in]
      *              NID_ML_KEM_512, NID_ML_KEM_768, NID_ML_KEM_1024
      *              NID_ML_DSA_44, NID_ML_DSA_65, NID_ML_DSA_87
@@ -583,9 +583,9 @@ class crypto_keychain {
      *              key_encoding_pub_der
      *              key_encoding_priv_raw
      *              key_encoding_pub_raw
-     * @param   const binary_t& key [in] MLKEM, MLDSA public key or private key
+     * @param   const binary_t& key [in] ML-KEM, ML-DSA, SLH-DSA public key or private key
      * @remarks openssl-3.5 required
-     *          ML-KEM, ML-DSA share same function body (except only kty)
+     *          ML-KEM, ML-DSA, SLH-DSA share same function body (except only kty)
      */
     return_t add_ossl3(crypto_key* cryptokey, uint32 nid, keydesc&& desc);
     return_t add_ossl3(crypto_key* cryptokey, const char* name, keydesc&& desc);

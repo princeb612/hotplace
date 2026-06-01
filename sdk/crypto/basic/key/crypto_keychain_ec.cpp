@@ -10,87 +10,13 @@
 
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keygen.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 
 namespace hotplace {
 namespace crypto {
 
-return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, keydesc&& desc) {
-    return_t ret = errorcode_t::success;
-    int rc = 0;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-
-    __try2 {
-        if (nullptr == cryptokey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        int type = EVP_PKEY_EC;  // EVP_PKEY_CTX_new_id type
-
-        auto hint = advisor->hintof_curve_nid(nid);
-        if (nullptr == hint) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-        auto kty = ktyof(hint);
-        if (kty_ec != kty) {
-            ret = errorcode_t::different_type;
-            __leave2;
-        }
-
-        EVP_PKEY_CTX_ptr ctx(EVP_PKEY_CTX_new_id(type, nullptr));
-        if (nullptr == ctx.get()) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-        rc = EVP_PKEY_keygen_init(ctx.get());
-        if (rc < 1) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-        rc = EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx.get(), nid);
-        if (rc < 1) {
-            ret = errorcode_t::not_supported;
-            __leave2_trace_openssl(ret);
-        }
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-        rc = EVP_PKEY_CTX_set_ec_param_enc(ctx.get(), OPENSSL_EC_NAMED_CURVE);
-        if (rc < 1) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-#endif
-
-        EVP_PKEY* pk = nullptr;
-        rc = EVP_PKEY_keygen(ctx.get(), &pk);
-        if (rc < 1) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-        if (nullptr == pk) { /* [openssl 3.0.3] return errorcode_t::success but pkey is nullptr */
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-
-        EVP_PKEY_ptr pkey(pk);
-
-#if OPENSSL_VERSION_NUMBER < 0x30000000L
-        // set ASN.1 OPENSSL_EC_NAMED_CURVE flag for PEM export (PEM_write_bio_PUBKEY, PEM_write_bio_PrivateKey)
-        // openssl 3.0 EVP_PKEY_get0 family return const key pointer
-        EC_KEY_set_asn1_flag((EC_KEY*)EVP_PKEY_get0_EC_KEY(pkey.get()), OPENSSL_EC_NAMED_CURVE);
-#endif
-
-        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
-        ret = cryptokey->add(std::move(key));
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        pkey.release();  // cryptokey own pkey
-    }
-    __finally2 {}
-    return ret;
-}
+return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, keydesc&& desc) { return crypto_keygen::add_ec(cryptokey, nid, std::forward<keydesc>(desc)); }
 
 return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* curve, keydesc&& desc) {
     return_t ret = errorcode_t::success;
@@ -115,94 +41,7 @@ return_t crypto_keychain::add_ec(crypto_key* cryptokey, const char* curve, keyde
 }
 
 return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& y, const binary_t& d, keydesc&& desc) {
-    return_t ret = errorcode_t::success;
-    int rc = 1;
-
-    __try2 {
-        if (nullptr == cryptokey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        crypto_advisor* advisor = crypto_advisor::get_instance();
-        auto hint = advisor->hintof_curve_nid(nid);
-        if (nullptr == hint) {
-            ret = errorcode_t::bad_request;
-            __leave2;
-        }
-        auto kty = ktyof(hint);
-        if (kty_ec != kty) {
-            ret = errorcode_t::different_type;
-            __leave2;
-        }
-
-        BN_ptr bn_x(BN_bin2bn(x.data(), t_narrow_cast(x.size()), nullptr));
-        BN_ptr bn_y(BN_bin2bn(y.data(), t_narrow_cast(y.size()), nullptr));
-        BN_ptr bn_d;
-        if (d.size() > 0) {
-            bn_d = std::move(BN_ptr(BN_bin2bn(d.data(), t_narrow_cast(d.size()), nullptr)));
-        }
-
-        if (nullptr == bn_x.get() && nullptr == bn_y.get()) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-
-        EC_KEY_ptr ec(EC_KEY_new_by_curve_name(nid));
-        if (nullptr == ec.get()) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        const EC_GROUP* group = EC_KEY_get0_group(ec.get());
-        EC_POINT_ptr point(EC_POINT_new(group));
-        if (nullptr == point.get()) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        if (nullptr != bn_d) {
-            rc = EC_KEY_set_private_key(ec.get(), bn_d.get());
-            if (rc != 1) {
-                ret = errorcode_t::internal_error;
-                __leave2_trace_openssl(ret);
-            }
-
-            rc = EC_POINT_mul(group, point.get(), bn_d.get(), nullptr, nullptr, nullptr);
-            if (rc != 1) {
-                ret = errorcode_t::internal_error;
-                __leave2_trace_openssl(ret);
-            }
-        } else {
-            rc = EC_POINT_set_affine_coordinates(group, point.get(), bn_x.get(), bn_y.get(), nullptr);  // EC_POINT_set_affine_coordinates_GFp
-            if (rc != 1) {
-                ret = errorcode_t::internal_error;
-                __leave2_trace_openssl(ret);
-            }
-        }
-
-        rc = EC_KEY_set_public_key(ec.get(), point.get());
-        if (rc != 1) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        EVP_PKEY_ptr pkey(EVP_PKEY_new());
-        EVP_PKEY_set1_EC_KEY(pkey.get(), ec.get());  // EC_KEY_up_ref
-        if (rc != 1) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
-        ret = cryptokey->add(std::move(key));
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        pkey.release();  // cryptokey own pkey
-    }
-    __finally2 {}
-    return ret;
+    return crypto_keygen::add_ec(cryptokey, nid, x, y, d, std::forward<keydesc>(desc));
 }
 
 return_t crypto_keychain::add_ec(crypto_key* cryptokey, uint32 nid, jwa_t alg, const binary_t& x, const binary_t& y, const binary_t& d, keydesc&& desc) {

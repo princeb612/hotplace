@@ -32,7 +32,9 @@
     * CBOR
 
 * details
+  * Revision 1021
   * Revision 1020
+    * [added] crypto_keygen
   * Revision 1015
     * [fixed] DTLS 1.2 testcase (shuffle UDP traffic)
   * Revision 1014

@@ -10,72 +10,20 @@
 
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
-#include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
+#include <hotplace/sdk/crypto/basic/crypto_keygen.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 
 namespace hotplace {
 namespace crypto {
 
-return_t crypto_keychain::add_oct(crypto_key* cryptokey, size_t size, keydesc&& desc) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == cryptokey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        openssl_prng r;
-        binary_t temp;
-        r.random(temp, size);
-
-        EVP_PKEY_ptr pkey(EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, nullptr, temp.data(), t_narrow_cast(size)));
-        if (nullptr == pkey.get()) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
-        ret = cryptokey->add(std::move(key));
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        pkey.release();  // cryptokey own pkey
-    }
-    __finally2 {}
-    return ret;
-}
+return_t crypto_keychain::add_oct(crypto_key* cryptokey, size_t size, keydesc&& desc) { return crypto_keygen::add_oct(cryptokey, size, std::forward<keydesc>(desc)); }
 
 return_t crypto_keychain::add_oct(crypto_key* cryptokey, const binary_t& k, keydesc&& desc) {
     return add_oct(cryptokey, k.data(), k.size(), std::forward<keydesc>(desc));
 }
 
 return_t crypto_keychain::add_oct(crypto_key* cryptokey, const byte_t* k, size_t size, keydesc&& desc) {
-    return_t ret = errorcode_t::success;
-
-    __try2 {
-        if (nullptr == cryptokey || nullptr == k) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        EVP_PKEY_ptr pkey(EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, nullptr, k, t_narrow_cast(size)));
-        if (nullptr == pkey.get()) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
-        ret = cryptokey->add(std::move(key));
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        pkey.release();  // cryptokey own pkey
-    }
-    __finally2 {}
-    return ret;
+    return crypto_keygen::add_oct(cryptokey, k, size, std::forward<keydesc>(desc));
 }
 
 return_t crypto_keychain::add_oct(crypto_key* cryptokey, jwa_t alg, const binary_t& k, keydesc&& desc) {

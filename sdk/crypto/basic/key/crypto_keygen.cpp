@@ -86,7 +86,7 @@ crypto_keygen& crypto_keygen::set(const char* item, bool value) {
 
 crypto_keygen& crypto_keygen::gen() {
     auto advisor = crypto_advisor::get_instance();
-    auto nid = advisor->nidof_name(_name.c_str());
+    auto nid = advisor->nidof_name(_name);
 
     crypto_keychain keychain;
     keychain.add(_key, nid, std::move(_desc));
@@ -237,10 +237,8 @@ crypto_keygen& crypto_keygen::build() {
 
             keychain.add_rsa(_key, nid, bin_n, bin_e, bin_d, std::move(_desc));
         } break;
-        case kty_mldsa: {
-        } break;
-        case kty_mlkem: {
-        } break;
+        case kty_mldsa:
+        case kty_mlkem:
         case kty_slhdsa: {
         } break;
         default: {

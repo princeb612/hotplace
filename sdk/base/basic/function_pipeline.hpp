@@ -38,6 +38,12 @@ namespace hotplace {
  *          printf("%zu/%zu\n", pipeline.processed(), pipeline.size());
  *
  *          return pipeline.result();
+ *
+ *          // improvement (codename.hotplace Revision 1021)
+ *          function_pipeline<int> pipeline;
+ *                  .run([&]() -> int { return my.a(); })
+ *                  .run([&]() -> return_t { return errorcode_t::internal_error; });  // also support
+ *          return pipeline.result_to_return_t();  // return errorcode_t::internal_error
  */
 template <typename T = return_t>
 class function_pipeline {
@@ -51,7 +57,7 @@ class function_pipeline {
     typedef std::function<bool(T)> discriminant_t;
     typedef std::function<void(const char*, unsigned int, T)> debug_tracer_t;
 
-    function_pipeline() : _lastcode(error_traits<T>::value_success()), _processed_count(0), _total_count(0), _tracer(nullptr) {
+    function_pipeline() : _lastcode(error_traits<T>::value_success()), _processed_count(0), _total_count(0), _tracer(nullptr), _returncode(errorcode_t::success) {
         _discriminant = error_traits<T>::is_success;
     };
     ~function_pipeline() {
@@ -132,13 +138,16 @@ class function_pipeline {
         return runner(lambda, false, expect_dontcare);
     }
 
-    // pure version
+    /**
+     * @brief   for RELEASE
+     */
     template <typename F>
     function_pipeline& run(F func) {
         return runner(func, false, expect_success);
     }
 
     /*
+     * @brief   DEBUG only (see run_pipe macro)
      * @remarks handling both RELEASE(NDEBUG) and DEBUG, MUST use the run_pipe macro.
      */
 #if defined DEBUG
@@ -163,19 +172,21 @@ class function_pipeline {
     size_t size() const { return _total_count; }
     size_t processed() const { return _processed_count; }
     T result() const { return _lastcode; }
-    return_t result_to_return_t() const { return error_traits<T>::to_return_t(_lastcode); }
+    return_t result_to_return_t() const { return (_returncode != errorcode_t::success) ? _returncode : error_traits<T>::to_return_t(_lastcode); }
     bool passed() const { return _discriminant(_lastcode); }
     bool failed() const { return (false == _discriminant(_lastcode)); }
 
    protected:
+    template <typename RT, typename CT = return_t>
+    struct is_return_type : std::is_same<typename std::decay<RT>::type, CT> {};
+
     template <typename F>
     function_pipeline& runner(F func, bool use_trycatch, expect_t expect) {
         if (expect_failure != expect) {
             ++_total_count;
         }
-        if (expect_dontcare == expect) {
-        } else {
-            bool expectation = (expect_success == expect) ? true : false;
+        if (expect_dontcare != expect) {
+            bool expectation = (expect_success == expect);
             if (expectation != _discriminant(_lastcode)) {
                 return *this;
             }
@@ -184,7 +195,7 @@ class function_pipeline {
         try {
             auto rc = func();
             // trace here in debug version
-            test_returncode(rc);
+            handle_result(rc, typename is_return_type<decltype(rc), return_t>::type());
         } catch (...) {
             if (use_trycatch) {
                 _lastcode = error_traits<T>::value_exception();
@@ -210,10 +221,7 @@ class function_pipeline {
 
         try {
             auto rc = func();
-            if ((nullptr != _tracer) && !_discriminant(rc)) {
-                _tracer(file, line, rc);
-            }
-            test_returncode(rc);
+            handle_result(rc, typename is_return_type<decltype(rc), return_t>::type(), file, line);
         } catch (...) {
             if (use_trycatch) {
                 _lastcode = error_traits<T>::value_exception();
@@ -224,7 +232,6 @@ class function_pipeline {
         return *this;
     }
 #endif
-
     void test_returncode(T rc) {
         _lastcode = rc;
         if (_discriminant(rc)) {
@@ -232,12 +239,44 @@ class function_pipeline {
         }
     }
 
+    // F -> T
+    template <typename RT>
+    void handle_result(RT rc, std::false_type) {
+        test_returncode(rc);
+    }
+    // F -> return_t
+    void handle_result(return_t rc, std::true_type) {
+        auto code = error_traits<T>::from_return_t(rc);
+        _returncode = rc;
+        test_returncode(code);
+    }
+
+#if defined DEBUG
+    template <typename RT>
+    void handle_result(RT rc, std::false_type, const char* file, unsigned int line) {
+        if ((nullptr != _tracer) && !_discriminant(rc)) {
+            _tracer(file, line, rc);
+        }
+
+        test_returncode(rc);
+    }
+    void handle_result(return_t rc, std::true_type, const char* file, unsigned int line) {
+        auto code = error_traits<T>::from_return_t(rc);
+        if ((nullptr != _tracer) && !_discriminant(code)) {
+            _tracer(file, line, code);
+        }
+        _returncode = rc;
+        test_returncode(code);
+    }
+#endif
+
    private:
     T _lastcode;
     size_t _processed_count;
     size_t _total_count;
     discriminant_t _discriminant;
     debug_tracer_t _tracer;
+    return_t _returncode;
 };
 
 }  // namespace hotplace

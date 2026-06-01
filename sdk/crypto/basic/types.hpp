@@ -41,6 +41,7 @@
 #include <openssl/core_names.h>
 #include <openssl/decoder.h>
 #include <openssl/encoder.h>
+#include <openssl/param_build.h>
 #include <openssl/params.h>
 #include <openssl/provider.h>
 #else
@@ -196,11 +197,19 @@ struct OSSL_DECODER_CTX_deleter {
 struct OSSL_ENCODER_CTX_deleter {
     void operator()(OSSL_ENCODER_CTX* osslencoder) const { OSSL_ENCODER_CTX_free(osslencoder); }
 };
+struct OSSL_PARAM_BLD_deleter {
+    void operator()(OSSL_PARAM_BLD* osslparambld) const { OSSL_PARAM_BLD_free(osslparambld); }
+};
+struct OSSL_PARAM_deleter {
+    void operator()(OSSL_PARAM* osslparam) const { OSSL_PARAM_free(osslparam); }
+};
 
 using EVP_CIPHER_ptr = std::unique_ptr<EVP_CIPHER, EVP_CIPHER_deleter>;
 using EVP_MD_ptr = std::unique_ptr<EVP_MD, EVP_MD_deleter>;
 using OSSL_DECODER_CTX_ptr = std::unique_ptr<OSSL_DECODER_CTX, OSSL_DECODER_CTX_deleter>;
 using OSSL_ENCODER_CTX_ptr = std::unique_ptr<OSSL_ENCODER_CTX, OSSL_ENCODER_CTX_deleter>;
+using OSSL_PARAM_BLD_ptr = std::unique_ptr<OSSL_PARAM_BLD, OSSL_PARAM_BLD_deleter>;
+using OSSL_PARAM_ptr = std::unique_ptr<OSSL_PARAM, OSSL_PARAM_deleter>;
 #endif
 
 }  // namespace crypto

@@ -161,8 +161,6 @@ fi
 # update_fileheader directory
 function update_fileheader() (
     find $1 -name "*.?pp" -type f | while read file; do
-        # dir=$(dirname "$file")
-        # base=$(basename "$file")
         dir="${file%/*}"
         base="${file##*/}"
 
