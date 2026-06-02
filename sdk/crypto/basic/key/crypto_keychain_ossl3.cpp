@@ -146,7 +146,9 @@ bool crypto_keychain::pkey_is_private(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey
 
 return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, keydesc&& desc) { return crypto_keygen::add_ossl3(cryptokey, nid, std::forward<keydesc>(desc)); }
 
-return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, keydesc&& desc) { return crypto_keygen::add_ossl3(cryptokey, name, std::forward<keydesc>(desc)); }
+return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, const char* name, keydesc&& desc) {
+    return crypto_keygen::add_ossl3(cryptokey, name, std::forward<keydesc>(desc));
+}
 
 return_t crypto_keychain::add_ossl3(crypto_key* cryptokey, uint32 nid, const binary_t& keydata, key_encoding_t encoding, keydesc&& desc) {
     return add_ossl3(cryptokey, nid, keydata.data(), keydata.size(), encoding, std::forward<keydesc>(desc));

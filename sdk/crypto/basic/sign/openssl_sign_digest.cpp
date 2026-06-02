@@ -24,16 +24,19 @@ return_t openssl_sign::sign_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, c
 return_t openssl_sign::sign_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) {
     signature.resize(0);
 
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-    EVP_MD* evp_md = (EVP_MD*)advisor->find_evp_md(alg);
-    size_t dgstsize = 0;
-
+    EVP_MD* evp_md = nullptr;
     EVP_MD_CTX_ptr md_context;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    size_t dgstsize = 0;
 
     function_pipeline<int> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != pkey && nullptr != stream); })
+        .run_pipe([&]() -> int {
+            evp_md = (EVP_MD*)advisor->find_evp_md(alg);
+            return evp_md ? 1 : 0;
+        })
         .run_pipe([&]() -> int {
             md_context = std::move(EVP_MD_CTX_ptr(EVP_MD_CTX_new()));
             return md_context.get() ? 1 : 0;
@@ -42,8 +45,13 @@ return_t openssl_sign::sign_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, c
         .run_pipe([&]() -> int { return EVP_DigestSignInit(md_context.get(), nullptr, evp_md, nullptr, (EVP_PKEY*)pkey); })
         .run_pipe([&]() -> int { return EVP_DigestSignUpdate(md_context.get(), stream, size); })
         .run_pipe([&]() -> int { return EVP_DigestSignFinal(md_context.get(), nullptr, &dgstsize); })
-        .walk([&]() -> void { signature.resize(dgstsize); })
-        .run_pipe([&]() -> int { return EVP_DigestSignFinal(md_context.get(), signature.data(), &dgstsize); });
+        .run_pipe([&]() -> int {
+            signature.resize(dgstsize);
+            auto rc = EVP_DigestSignFinal(md_context.get(), signature.data(), &dgstsize);
+            signature.resize(dgstsize);
+            return rc;
+        });
+
     return pipeline.result_to_return_t();
 }
 
@@ -52,15 +60,18 @@ return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t alg,
 }
 
 return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) {
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-    EVP_MD* evp_md = (EVP_MD*)advisor->find_evp_md(alg);
-
+    EVP_MD* evp_md = nullptr;
     EVP_MD_CTX_ptr md_context;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
 
     function_pipeline<int> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != pkey && nullptr != stream); })
+        .run_pipe([&]() -> int {
+            evp_md = (EVP_MD*)advisor->find_evp_md(alg);
+            return evp_md ? 1 : 0;
+        })
         .run_pipe([&]() -> int {
             md_context = std::move(EVP_MD_CTX_ptr(EVP_MD_CTX_new()));
             return md_context.get() ? 1 : 0;
@@ -69,6 +80,7 @@ return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t alg,
         .run_pipe([&]() -> int { return EVP_DigestVerifyInit(md_context.get(), nullptr, evp_md, nullptr, (EVP_PKEY*)pkey); })
         .run_pipe([&]() -> int { return EVP_DigestVerifyUpdate(md_context.get(), stream, size); })
         .run_pipe([&]() -> int { return EVP_DigestVerifyFinal(md_context.get(), signature.data(), signature.size()); });
+
     return pipeline.result_to_return_t();
 }
 

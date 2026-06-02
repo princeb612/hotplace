@@ -118,56 +118,50 @@ return_t openssl_mac::cmac(crypt_algorithm_t alg, const binary_t& key, const bin
 }
 
 return_t openssl_mac::cbc_mac(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& input, binary_t& tag, size_t tagsize) {
-    return_t ret = errorcode_t::success;
+    tag.resize(input.size() + EVP_MAX_BLOCK_LENGTH);
+
+    EVP_CIPHER_CTX_ptr context;
+    const EVP_CIPHER* cipher = nullptr;
+    const hint_blockcipher_t* hint_cipher = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    __try2 {
-        tag.resize(input.size() + EVP_MAX_BLOCK_LENGTH);
 
-        if (nullptr == alg) {
-            __leave2;
-        }
-
-        const EVP_CIPHER* cipher = advisor->find_evp_cipher(alg);
-        if (nullptr == cipher) {
-            ret = errorcode_t::not_supported;
-            __leave2;
-        }
-        const hint_blockcipher_t* hint_cipher = advisor->hintof_blockcipher(alg);
-        if (nullptr == hint_cipher) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-
-        EVP_CIPHER_CTX_ptr context;
-
-        function_pipeline<int> pipeline;
-        pipeline  //
-            .set_tracer(pipeline_trace_dbg_openssl_print)
-            .run_pipe([&]() -> int {
-                context = std::move(EVP_CIPHER_CTX_ptr(EVP_CIPHER_CTX_new()));
-                return context.get() ? 1 : 0;
-            })
-            .run_pipe([&]() -> int { return EVP_CipherInit_ex(context.get(), cipher, nullptr, key.data(), iv.data(), 1); })
-            .run_pipe([&]() -> int { return EVP_CIPHER_CTX_set_padding(context.get(), 1); })
-            .walk([&]() -> void {
-                int size_update = 0;
-                size_t size_input = input.size();
-                uint16 blocksize = sizeof_block(hint_cipher);
-                for (size_t i = 0; i < size_input; i += blocksize) {
-                    auto remain = size_input - i;
-                    if (remain > blocksize) {
-                        EVP_CipherUpdate(context.get(), tag.data(), &size_update, &input[i], blocksize);
-                    } else {
-                        EVP_CipherUpdate(context.get(), tag.data(), &size_update, &input[i], t_narrow_cast(remain));
-                        EVP_CipherUpdate(context.get(), tag.data(), &size_update, iv.data(), t_narrow_cast(blocksize - remain));
-                    }
+    function_pipeline<int> pipeline;
+    pipeline  //
+        .set_tracer(pipeline_trace_dbg_openssl_print)
+        .test_parameter([&]() -> bool { return (nullptr != alg); })
+        .run_pipe([&]() -> return_t {
+            cipher = advisor->find_evp_cipher(alg);
+            return cipher ? errorcode_t::success : errorcode_t::not_supported;
+        })
+        .run_pipe([&]() -> int {
+            hint_cipher = advisor->hintof_blockcipher(alg);
+            return hint_cipher ? 1 : 0;
+        })
+        .run_pipe([&]() -> int {
+            context = std::move(EVP_CIPHER_CTX_ptr(EVP_CIPHER_CTX_new()));
+            return context.get() ? 1 : 0;
+        })
+        .run_pipe([&]() -> int { return EVP_CipherInit_ex(context.get(), cipher, nullptr, key.data(), iv.data(), 1); })
+        .run_pipe([&]() -> int { return EVP_CIPHER_CTX_set_padding(context.get(), 1); })
+        .run_pipe([&]() -> int {
+            int rc = 1;
+            int size_update = 0;
+            size_t size_input = input.size();
+            uint16 blocksize = sizeof_block(hint_cipher);
+            for (size_t i = 0; i < size_input; i += blocksize) {
+                auto remain = size_input - i;
+                if (remain > blocksize) {
+                    rc = EVP_CipherUpdate(context.get(), tag.data(), &size_update, &input[i], blocksize);
+                } else {
+                    EVP_CipherUpdate(context.get(), tag.data(), &size_update, &input[i], t_narrow_cast(remain));
+                    rc = EVP_CipherUpdate(context.get(), tag.data(), &size_update, iv.data(), t_narrow_cast(blocksize - remain));
                 }
-                tag.resize(tagsize);
-            });
-        ret = pipeline.result_to_return_t();
-    }
-    __finally2 {}
-    return ret;
+            }
+            tag.resize(tagsize);
+            return rc;
+        });
+
+    return pipeline.result_to_return_t();
 }
 
 }  // namespace crypto

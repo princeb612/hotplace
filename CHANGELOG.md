@@ -32,7 +32,7 @@
     * CBOR
 
 * details
-  * Revision 1021
+  * Revision 1022
   * Revision 1020
     * [added] crypto_keygen
   * Revision 1015

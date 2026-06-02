@@ -28,34 +28,37 @@ return_t openssl_crypt::encrypt(const EVP_PKEY* pkey, const binary_t& plaintext,
 return_t openssl_crypt::encrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& ciphertext, crypt_enc_t mode) {
     ciphertext.resize(0);
 
+    crypto_advisor* advisor = crypto_advisor::get_instance();
     EVP_PKEY_CTX_ptr pkey_context;
     size_t bufsize = 0;
-
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-    crypto_kty_t kty = kty_unknown;
-    uint32 nid = 0;
-    advisor->ktyof_evp_pkey(pkey, kty, nid);
-    if (kty_rsa == kty) {
-        switch (mode) {
-            case crypt_enc_t::rsa_1_5:
-            case crypt_enc_t::rsa_oaep:
-            case crypt_enc_t::rsa_oaep256:
-            case crypt_enc_t::rsa_oaep384:
-            case crypt_enc_t::rsa_oaep512:
-                break;
-            default:
-                return errorcode_t::not_supported;
-                break;
-        }
-    }
 
     function_pipeline<int> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
-        .test_parameter([&]() -> bool { return (nullptr != pkey && nullptr != stream); })
+        .test_parameter([&]() -> bool { return (nullptr != pkey) && (nullptr != stream); })
         .run_pipe([&]() -> int {
             pkey_context = std::move(EVP_PKEY_CTX_ptr(EVP_PKEY_CTX_new((EVP_PKEY*)pkey, nullptr)));
             return pkey_context.get() ? 1 : 0;
+        })
+        .run_pipe([&]() -> return_t {
+            crypto_kty_t kty = kty_unknown;
+            uint32 nid = 0;
+            advisor->ktyof_evp_pkey(pkey, kty, nid);
+            if (kty_rsa == kty) {
+                switch (mode) {
+                    case crypt_enc_t::rsa_1_5:
+                    case crypt_enc_t::rsa_oaep:
+                    case crypt_enc_t::rsa_oaep256:
+                    case crypt_enc_t::rsa_oaep384:
+                    case crypt_enc_t::rsa_oaep512:
+                        return errorcode_t::success;
+                    default:
+                        return errorcode_t::not_supported;
+                }
+            } else {
+                // kty_rsapss signing only
+                return errorcode_t::bad_request;
+            }
         })
         .run_pipe([&]() -> int { return EVP_PKEY_encrypt_init(pkey_context.get()); })
         .run_pipe([&]() -> int {
@@ -105,7 +108,9 @@ return_t openssl_crypt::encrypt(const EVP_PKEY* pkey, const byte_t* stream, size
         .run_pipe([&]() -> int { return EVP_PKEY_encrypt(pkey_context.get(), nullptr, &bufsize, stream, size); })
         .run_pipe([&]() -> int {
             ciphertext.resize(bufsize);
-            return EVP_PKEY_encrypt(pkey_context.get(), ciphertext.data(), &bufsize, stream, size);
+            auto rc = EVP_PKEY_encrypt(pkey_context.get(), ciphertext.data(), &bufsize, stream, size);
+            ciphertext.resize(bufsize);
+            return rc;
         });
     return pipeline.result_to_return_t();
 }
@@ -140,8 +145,7 @@ return_t openssl_crypt::decrypt(const EVP_PKEY* pkey, const byte_t* stream, size
                 switch (mode) {
                     case crypt_enc_t::rsa_1_5:
                         // padding
-                        EVP_PKEY_CTX_set_rsa_padding(pkey_context.get(), RSA_PKCS1_PADDING);
-                        break;
+                        return EVP_PKEY_CTX_set_rsa_padding(pkey_context.get(), RSA_PKCS1_PADDING);
                     case crypt_enc_t::rsa_oaep:
                     case crypt_enc_t::rsa_oaep256:
                     case crypt_enc_t::rsa_oaep384:
@@ -170,15 +174,15 @@ return_t openssl_crypt::decrypt(const EVP_PKEY* pkey, const byte_t* stream, size
 
                         EVP_PKEY_CTX_set_rsa_padding(pkey_context.get(), RSA_PKCS1_OAEP_PADDING);
                         EVP_PKEY_CTX_set_rsa_oaep_md(pkey_context.get(), md);
-                        EVP_PKEY_CTX_set_rsa_mgf1_md(pkey_context.get(), md);
+                        return EVP_PKEY_CTX_set_rsa_mgf1_md(pkey_context.get(), md);
                     } break;
-                    default:
-                        break;
+                    default: {
+                        // do nothing
+                    } break;
+                        return 0;
                 }
-                return 1;
-            } else {
-                return 0;
             }
+            return 0;
         })
         .run_pipe([&]() -> int { return EVP_PKEY_decrypt(pkey_context.get(), nullptr, &bufsize, stream, size); })
         .run_pipe([&]() -> int {

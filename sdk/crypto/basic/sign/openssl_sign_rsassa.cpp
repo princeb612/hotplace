@@ -31,55 +31,52 @@ return_t openssl_sign::sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t al
 }
 
 return_t openssl_sign::sign_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, binary_t& signature, int saltlen) {
-    return_t ret = errorcode_t::success;
+    signature.clear();
 
     crypto_advisor* advisor = crypto_advisor::get_instance();
-    openssl_hash hash;
-    hash_context_t* hash_handle = nullptr;
+    EVP_MD* evp_md = nullptr;
+    RSA* rsa = nullptr;
+    binary_t buf;
     binary_t hash_value;
+    int bufsize = 0;
 
-    __try2 {
-        signature.clear();
+    function_pipeline<int> pipeline;
+    pipeline  //
+        .set_tracer(pipeline_trace_dbg_openssl_print)
+        .test_parameter([&]() -> bool { return (nullptr != pkey) && (nullptr != stream); })
+        .run_pipe([&]() -> int {
+            auto kty = ktyof_evp_pkey(pkey);
+            return (kty_rsa == kty || kty_rsapss == kty) ? 1 : 0;
+        })
+        .run_pipe([&]() -> int {
+            evp_md = (EVP_MD*)advisor->find_evp_md(alg);
+            return evp_md ? 1 : 0;
+        })
+        .run_pipe([&]() -> return_t {
+            openssl_hash hash;
+            hash_context_t* hash_handle = nullptr;
+            auto ret = hash.open(&hash_handle, alg);
+            if (errorcode_t::success == ret) {
+                ret = hash.hash(hash_handle, stream, size, hash_value);
+                hash.close(hash_handle);
+            }
+            return ret;
+        })
+        .run_pipe([&]() -> int {
+            rsa = (RSA*)EVP_PKEY_get0_RSA((EVP_PKEY*)pkey);
+            if (nullptr == rsa) return 0;
+            bufsize = RSA_size(rsa);
+            buf.resize(bufsize);
+            signature.resize(bufsize);
+            return 1;
+        })
+        .run_pipe([&]() -> int { return RSA_padding_add_PKCS1_PSS(rsa, buf.data(), hash_value.data(), evp_md, saltlen); })
+        .run_pipe([&]() -> int {
+            auto rc = RSA_private_encrypt(bufsize, buf.data(), signature.data(), rsa, RSA_NO_PADDING);
+            return (rc == bufsize) ? 1 : 0;
+        });
 
-        if (nullptr == pkey || nullptr == stream) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        auto kty = ktyof_evp_pkey(pkey);
-        if ((kty_rsa != kty) && (kty_rsapss != kty)) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
-
-        hash.open(&hash_handle, alg);
-        hash.hash(hash_handle, stream, size, hash_value);
-        hash.close(hash_handle);
-
-        EVP_MD* evp_md = (EVP_MD*)advisor->find_evp_md(alg);
-
-        binary_t buf;
-        const EVP_PKEY* key = pkey;
-        RSA* rsa = (RSA*)EVP_PKEY_get0_RSA((EVP_PKEY*)key);  // openssl 3.0 EVP_PKEY_get0 family return const key pointer
-        int bufsize = RSA_size(rsa);
-        buf.resize(bufsize);
-
-        function_pipeline<int> pipeline;
-        pipeline  //
-            .set_tracer(pipeline_trace_dbg_openssl_print)
-            .run_pipe([&]() -> int { return RSA_padding_add_PKCS1_PSS(rsa, buf.data(), hash_value.data(), evp_md, saltlen); })
-            .walk([&]() -> void { signature.resize(bufsize); })
-            .run_pipe([&]() -> int {
-                auto rc = RSA_private_encrypt(bufsize, buf.data(), signature.data(), rsa, RSA_NO_PADDING);
-                return (rc == bufsize) ? 1 : 0;
-            });
-
-        if (pipeline.failed()) {
-            ret = pipeline.result_to_return_t();
-        }
-    }
-    __finally2 {}
-    return ret;
+    return pipeline.result_to_return_t();
 }
 
 return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t alg, const binary_t& input, const binary_t& signature, uint32 flags) {
@@ -95,49 +92,50 @@ return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t 
 }
 
 return_t openssl_sign::verify_rsassa_pss(const EVP_PKEY* pkey, hash_algorithm_t alg, const byte_t* stream, size_t size, const binary_t& signature, int saltlen) {
-    return_t ret = errorcode_t::success;
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-    openssl_hash hash;
-    hash_context_t* hash_handle = nullptr;
+    EVP_MD* evp_md = nullptr;
+    RSA* rsa = nullptr;
+    binary_t buf;
     binary_t hash_value;
-    int ret_openssl = 0;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    int bufsize = 0;
 
-    __try2 {
-        if (nullptr == pkey || signature.empty()) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        auto kty = ktyof_evp_pkey(pkey);
-        if ((kty_rsa != kty) && (kty_rsapss != kty)) {
-            ret = errorcode_t::invalid_context;
-            __leave2;
-        }
+    function_pipeline<int> pipeline;
+    pipeline  //
+        .set_tracer(pipeline_trace_dbg_openssl_print)
+        .test_parameter([&]() -> bool { return (nullptr != pkey) && (false == signature.empty()); })
+        .run_pipe([&]() -> int {
+            auto kty = ktyof_evp_pkey(pkey);
+            return ((kty_rsa == kty) || (kty_rsapss == kty)) ? 1 : 0;
+        })
+        .run_pipe([&]() -> return_t {
+            openssl_hash hash;
+            hash_context_t* hash_handle = nullptr;
+            auto ret = hash.open(&hash_handle, alg);
+            if (errorcode_t::success == ret) {
+                ret = hash.hash(hash_handle, stream, size, hash_value);
+                hash.close(hash_handle);
+            }
+            return ret;
+        })
+        .run_pipe([&]() -> int {
+            evp_md = (EVP_MD*)advisor->find_evp_md(alg);
+            return evp_md ? 1 : 0;
+        })
+        .run_pipe([&]() -> int {
+            rsa = (RSA*)EVP_PKEY_get0_RSA((EVP_PKEY*)pkey);
+            if (nullptr == rsa) return 0;
 
-        ret = errorcode_t::verification_failure;
+            bufsize = RSA_size(rsa);
+            buf.resize(bufsize);
+            return 1;
+        })
+        .run_pipe([&]() -> int { return RSA_public_decrypt(bufsize, signature.data(), buf.data(), rsa, RSA_NO_PADDING); })
+        .run_pipe([&]() -> return_t {
+            auto rc = RSA_verify_PKCS1_PSS(rsa, hash_value.data(), evp_md, buf.data(), saltlen);
+            return (rc > 0) ? errorcode_t::success : errorcode_t::verification_failure;
+        });
 
-        hash.open(&hash_handle, alg);
-        hash.hash(hash_handle, stream, size, hash_value);
-        hash.close(hash_handle);
-
-        EVP_MD* evp_md = (EVP_MD*)advisor->find_evp_md(alg);
-
-        binary_t buf;
-        const EVP_PKEY* key = pkey;
-        RSA* rsa = (RSA*)EVP_PKEY_get0_RSA((EVP_PKEY*)key);  // openssl 3.0 EVP_PKEY_get0 family return const key pointer
-        int bufsize = RSA_size(rsa);
-        buf.resize(bufsize);
-
-        RSA_public_decrypt(bufsize, signature.data(), buf.data(), rsa, RSA_NO_PADDING);
-        ret_openssl = RSA_verify_PKCS1_PSS(rsa, hash_value.data(), evp_md, buf.data(), saltlen);
-        if (ret_openssl < 1) {
-            ret = errorcode_t::verification_failure;
-            __leave2;
-        }
-
-        ret = errorcode_t::success;
-    }
-    __finally2 {}
-    return ret;
+    return pipeline.result_to_return_t();
 }
 
 }  // namespace crypto

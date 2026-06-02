@@ -18,7 +18,6 @@ namespace hotplace {
 namespace crypto {
 
 return_t crypto_keygen::add_oct(crypto_key* cryptokey, size_t size, keydesc&& desc) {
-    openssl_prng r;
     EVP_PKEY_ptr pkey;
     binary_t temp;
 
@@ -27,6 +26,7 @@ return_t crypto_keygen::add_oct(crypto_key* cryptokey, size_t size, keydesc&& de
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != cryptokey); })
         .run_pipe([&]() -> int {
+            openssl_prng r;
             r.random(temp, size);
 
             pkey = std::move(EVP_PKEY_ptr(EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, nullptr, temp.data(), t_narrow_cast(size))));

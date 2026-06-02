@@ -101,7 +101,7 @@ void test_base64_stream_by_encoding(std::string text, encoding_t encoding) {
     binary_t sample;
     sample.reserve(bufsize_test);
     for (size_t i = 0; i < bufsize_test; ++i) {
-        sample.push_back(i);
+        sample.push_back(t_narrow_cast(i));
     }
 
     auto write_encoder_chunks = [&](encoder_stream& encoder, const byte_t* stream, size_t stream_size, size_t chunk_size) -> void {

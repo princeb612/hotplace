@@ -18,7 +18,7 @@ namespace crypto {
 
 return_t crypto_keygen::pkey_keygen_byname(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const char* name) {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    EVP_PKEY_CTX_ptr pkey_ctx(EVP_PKEY_CTX_new_from_name(libctx, name, nullptr));
+    EVP_PKEY_CTX_ptr pkey_ctx;
 
     function_pipeline<int> pipeline;
     pipeline  //
@@ -41,12 +41,11 @@ return_t crypto_keygen::pkey_encode_format(OSSL_LIB_CTX* libctx, const EVP_PKEY*
     // https://docs.openssl.org/3.5/man3/OSSL_ENCODER_CTX_new_for_pkey/
     // https://docs.openssl.org/3.5/man3/OSSL_ENCODER_to_bio/
 
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-    key_encoding_params_t params;
-
-    OSSL_ENCODER_CTX_ptr encoder_context;
     BIO_ptr mem;
     BUF_MEM* buf = nullptr;
+    OSSL_ENCODER_CTX_ptr encoder_context;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    key_encoding_params_t params;
 
     function_pipeline<int> pipeline;
     pipeline  //
@@ -112,11 +111,10 @@ return_t crypto_keygen::pkey_decode_format(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey
 return_t crypto_keygen::pkey_decode_format(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding,
                                            const char* passphrase) {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-    key_encoding_params_t params;
-
     BIO_ptr buf;
     OSSL_DECODER_CTX_ptr decoder_context;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    key_encoding_params_t params;
 
     function_pipeline<int> pipeline;
     pipeline  //
@@ -221,31 +219,31 @@ return_t crypto_keygen::pkey_decode(OSSL_LIB_CTX* libctx, const char* name, EVP_
 
 return_t crypto_keygen::pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding) {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    return_t ret = errorcode_t::success;
+    EVP_PKEY_CTX_ptr pctx;
     OSSL_PARAM params[3];
     const char* param = nullptr;
     int selection = 0;
-
-    switch (encoding) {
-        case key_encoding_priv_raw: {
-            param = OSSL_PKEY_PARAM_PRIV_KEY;
-            selection = EVP_PKEY_PRIVATE_KEY;
-        } break;
-        case key_encoding_pub_raw: {
-            param = OSSL_PKEY_PARAM_PUB_KEY;
-            selection = EVP_PKEY_PUBLIC_KEY;
-        } break;
-        default: {
-            return errorcode_t::not_supported;
-        } break;
-    }
-
-    EVP_PKEY_CTX_ptr pctx;
 
     function_pipeline<int> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != name && nullptr != pkey && nullptr != keystream); })
+        .run_pipe([&]() -> return_t {
+            switch (encoding) {
+                case key_encoding_priv_raw: {
+                    param = OSSL_PKEY_PARAM_PRIV_KEY;
+                    selection = EVP_PKEY_PRIVATE_KEY;
+                } break;
+                case key_encoding_pub_raw: {
+                    param = OSSL_PKEY_PARAM_PUB_KEY;
+                    selection = EVP_PKEY_PUBLIC_KEY;
+                } break;
+                default: {
+                    return errorcode_t::not_supported;
+                } break;
+            }
+            return errorcode_t::success;
+        })
         .run_pipe([&]() -> int {
             pctx = std::move(EVP_PKEY_CTX_ptr(EVP_PKEY_CTX_new_from_name(NULL, name, NULL)));
             return pctx.get() ? 1 : 0;
@@ -257,9 +255,8 @@ return_t crypto_keygen::pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name, 
 
             return EVP_PKEY_fromdata(pctx.get(), pkey, selection, params);
         });
-    ret = pipeline.result_to_return_t();
 
-    return ret;
+    return pipeline.result_to_return_t();
 #else
     return errorcode_t::not_supported;
 #endif
@@ -267,13 +264,11 @@ return_t crypto_keygen::pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name, 
 
 bool crypto_keygen::pkey_is_private(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey) {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-
-    key_encoding_params_t params;
-    BUF_MEM* buf = nullptr;
-
-    OSSL_ENCODER_CTX_ptr encoder_context;
     BIO_ptr mem;
+    BUF_MEM* buf = nullptr;
+    OSSL_ENCODER_CTX_ptr encoder_context;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    key_encoding_params_t params;
 
     function_pipeline<int> pipeline;
     pipeline  //
@@ -293,7 +288,7 @@ bool crypto_keygen::pkey_is_private(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey) 
             return (nullptr == buf || 0 == buf->length) ? 0 : 1;
         });
 
-    return pipeline.failed() ? false : true;
+    return (false == pipeline.failed());
 #else
     return false;
 #endif

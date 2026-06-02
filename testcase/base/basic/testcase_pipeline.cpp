@@ -54,6 +54,22 @@ void test_pipeline1() {
 
 void test_pipeline2() {
     _test_case.begin("pipeline");
+    int flag = 0;
+    function_pipeline<return_t> pipeline;
+    pipeline.goahead_if_not_fail()
+        .run_pipe([&]() -> return_t { return errorcode_t::debug; })  // not severe category
+        .run_pipe([&]() -> return_t {
+            flag = 1;
+            return errorcode_t::success;
+        });
+    _test_case.assert(1 == flag, __FUNCTION__, "pipeline goahead_if_not_fail");
+
+    auto ret = pipeline.result();
+    _test_case.assert(errorcode_t::success == ret, __FUNCTION__, "pipeline goahead_if_not_fail erorcode");
+}
+
+void test_pipeline3() {
+    _test_case.begin("pipeline");
     return_t ret = errorcode_t::success;
 
     function_pipeline<int> pipeline;
@@ -66,13 +82,30 @@ void test_pipeline2() {
     } else {
         ret = errorcode_t::success;
     }
-    _test_case.assert(ret != errorcode_t::success, __FUNCTION__, "failed pipeline #1");
+    _test_case.assert(ret != errorcode_t::success, __FUNCTION__, "failed pipeline #1 failed");
+
+    auto rc = pipeline.result();
+    _test_case.assert(error_traits<int>::to_return_t(rc) == errorcode_t::internal_error, __FUNCTION__, "failed pipeline #2 result");
 
     ret = pipeline.result_to_return_t();
-    _test_case.ntest(ret, __FUNCTION__, "failed pipeline #2");
+    _test_case.assert(ret == errorcode_t::internal_error, __FUNCTION__, "failed pipeline #3 result_to_return_t");
+}
+
+void test_pipeline4() {
+    _test_case.begin("pipeline");
+
+    function_pipeline<int> pipeline;
+    pipeline                                                            //
+        .run_pipe([&]() -> int { return 1; })                           //
+        .run_pipe([&]() -> return_t { return errorcode_t::unknown; });  // override errorcode_t::internal_error
+
+    auto ret = pipeline.result_to_return_t();
+    _test_case.assert(errorcode_t::unknown == ret, __FUNCTION__, "pipeline<int> return_t");
 }
 
 void testcase_pipeline() {
     test_pipeline1();
     test_pipeline2();
+    test_pipeline3();
+    test_pipeline4();
 }

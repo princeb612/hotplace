@@ -18,65 +18,52 @@ namespace crypto {
 
 return_t crypto_keygen::add_ec_uncompressed(crypto_key* cryptokey, uint32 nid, const byte_t* pubkey, size_t pubsize, const byte_t* privkey, size_t privsize,
                                             keydesc&& desc) {
-    return_t ret = errorcode_t::success;
     EC_KEY* eck = nullptr;
-    int rc = 1;
-    __try2 {
-        if (nullptr == cryptokey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
+    EC_KEY_ptr eckey;
+    EVP_PKEY_ptr pkey;
 
-        EVP_PKEY_ptr pkey(EVP_PKEY_new());
-        if (nullptr == pkey.get()) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-
-        eck = EC_KEY_new_by_curve_name(nid);
-        if (nullptr == eck) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        // call both o2i_ECPublicKey and EC_KEY_set_private_key
-        if (pubkey && pubsize) {
-            o2i_ECPublicKey(/* inout */ &eck, &pubkey, t_narrow_cast(pubsize));
-        }
-
-        EC_KEY_ptr eckey(eck);
-        eck = nullptr;  // eckey own eck
-
-        if (privkey && privsize) {
-            BN_ptr bn_priv(BN_bin2bn(privkey, t_narrow_cast(privsize), nullptr));
-
-            rc = EC_KEY_set_private_key(eckey.get(), bn_priv.get());
-            if (rc != 1) {
-                ret = errorcode_t::internal_error;
-                __leave2_trace_openssl(ret);
+    function_pipeline<int> pipeline;
+    pipeline  //
+        .set_tracer(pipeline_trace_dbg_openssl_print)
+        .test_parameter([&]() -> bool { return (nullptr != cryptokey) && (pubkey && pubsize); })
+        .run_pipe([&]() -> int {
+            pkey = std::move(EVP_PKEY_ptr(EVP_PKEY_new()));
+            return pkey.get() ? 1 : 0;
+        })
+        .run_pipe([&]() -> int {
+            eck = EC_KEY_new_by_curve_name(nid);
+            return eck ? 1 : 0;
+        })
+        .run_pipe([&]() -> int {
+            // call both o2i_ECPublicKey and EC_KEY_set_private_key
+            int rc = 1;
+            if (pubkey && pubsize) {
+                o2i_ECPublicKey(/* inout */ &eck, &pubkey, t_narrow_cast(pubsize));
+                eckey = std::move(EC_KEY_ptr(eck));
             }
-        }
+            if (privkey && privsize) {
+                BN_ptr bn_priv(BN_bin2bn(privkey, t_narrow_cast(privsize), nullptr));
+                rc = EC_KEY_set_private_key(eckey.get(), bn_priv.get());  // free bn_priv
+            }
+            return rc;
+        })
+        .run_pipe([&]() -> int {
+            auto rc = EVP_PKEY_assign_EC_KEY(pkey.get(), eckey.get());
+            if (rc > 0) {
+                eckey.release();  // pkey own eckey
+            }
+            return rc;
+        })
+        .run_pipe([&]() -> return_t {
+            crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
+            auto ret = cryptokey->add(std::move(key));
+            if (errorcode_t::success == ret) {
+                pkey.release();  // cryptokey own pkey
+            }
+            return ret;
+        });
 
-        rc = EVP_PKEY_assign_EC_KEY(pkey.get(), eckey.get());
-        if (rc < 1) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-        eckey.release();  // pkey own eckey
-
-        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
-        ret = cryptokey->add(std::move(key));
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        pkey.release();  // cryptokey own pkey
-    }
-    __finally2 {
-        if (eck) {
-            EC_KEY_free(eck);
-        }
-    }
-    return ret;
+    return pipeline.result_to_return_t();
 }
 
 }  // namespace crypto

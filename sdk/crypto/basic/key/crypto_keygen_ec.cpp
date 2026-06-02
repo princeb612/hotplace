@@ -17,11 +17,11 @@ namespace hotplace {
 namespace crypto {
 
 return_t crypto_keygen::add_ec(crypto_key* cryptokey, uint32 nid, keydesc&& desc) {
-    crypto_advisor* advisor = crypto_advisor::get_instance();
-    EVP_PKEY_CTX_ptr ctx;
-    int type = EVP_PKEY_EC;  // EVP_PKEY_CTX_new_id type
     EVP_PKEY* pk = nullptr;
+    EVP_PKEY_CTX_ptr ctx;
     EVP_PKEY_ptr pkey;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
+    int type = EVP_PKEY_EC;  // EVP_PKEY_CTX_new_id type
 
     function_pipeline<int> pipeline;
     pipeline  //
@@ -46,7 +46,7 @@ return_t crypto_keygen::add_ec(crypto_key* cryptokey, uint32 nid, keydesc&& desc
         .run_pipe([&]() -> int {
             // [openssl 3.0.3] return errorcode_t::success but pkey is nullptr
             auto rc = EVP_PKEY_keygen(ctx.get(), &pk);
-            return (rc > 0) && pk ? 1 : 0;
+            return ((rc > 0) && pk) ? 1 : 0;
         })
         .run_pipe([&]() -> int {
             pkey = std::move(EVP_PKEY_ptr(pk));
@@ -72,7 +72,6 @@ return_t crypto_keygen::add_ec(crypto_key* cryptokey, uint32 nid, keydesc&& desc
 }
 
 return_t crypto_keygen::add_ec(crypto_key* cryptokey, uint32 nid, const binary_t& x, const binary_t& y, const binary_t& d, keydesc&& desc) {
-    crypto_advisor* advisor = crypto_advisor::get_instance();
     BN_ptr bn_x;
     BN_ptr bn_y;
     BN_ptr bn_d;
@@ -80,12 +79,12 @@ return_t crypto_keygen::add_ec(crypto_key* cryptokey, uint32 nid, const binary_t
     EC_POINT_ptr point;
     EVP_PKEY_ptr pkey;
     const EC_GROUP* group = nullptr;
+    crypto_advisor* advisor = crypto_advisor::get_instance();
 
     function_pipeline<int> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
-        .test_parameter([&]() -> bool { return (nullptr != cryptokey); })
-        .walk([&]() -> void {})
+        .test_parameter([&]() -> bool { return (nullptr != cryptokey) && (false == x.empty() && false == y.empty()); })
         .run_pipe([&]() -> return_t {
             auto hint = advisor->hintof_curve_nid(nid);
             if (nullptr == hint) return errorcode_t::bad_request;
@@ -96,10 +95,10 @@ return_t crypto_keygen::add_ec(crypto_key* cryptokey, uint32 nid, const binary_t
         .run_pipe([&]() -> int {
             bn_x = std::move(BN_ptr(BN_bin2bn(x.data(), t_narrow_cast(x.size()), nullptr)));
             bn_y = std::move(BN_ptr(BN_bin2bn(y.data(), t_narrow_cast(y.size()), nullptr)));
-            if (d.size() > 0) {
+            if (false == d.empty()) {
                 bn_d = std::move(BN_ptr(BN_bin2bn(d.data(), t_narrow_cast(d.size()), nullptr)));
             }
-            return (bn_x.get() && bn_y.get()) ? 1 : 0;
+            return (bn_x.get() && bn_y.get() && (d.empty() || bn_d.get())) ? 1 : 0;
         })
         .run_pipe([&]() -> int {
             ec = std::move(EC_KEY_ptr(EC_KEY_new_by_curve_name(nid)));
@@ -110,9 +109,15 @@ return_t crypto_keygen::add_ec(crypto_key* cryptokey, uint32 nid, const binary_t
             point = std::move(EC_POINT_ptr(EC_POINT_new(group)));
             return point.get() ? 1 : 0;
         })
-        .run_pipe([&]() -> int { return bn_d.get() ? EC_KEY_set_private_key(ec.get(), bn_d.get()) : 1; })
-        .run_pipe([&]() -> int { return bn_d.get() ? EC_POINT_mul(group, point.get(), bn_d.get(), nullptr, nullptr, nullptr) : 1; })
-        .run_pipe([&]() -> int { return (nullptr == bn_d.get()) ? EC_POINT_set_affine_coordinates(group, point.get(), bn_x.get(), bn_y.get(), nullptr) : 1; })
+        .run_pipe([&]() -> int {
+            if (bn_d.get()) {
+                auto rc = EC_KEY_set_private_key(ec.get(), bn_d.get());
+                if (rc < 1) return rc;
+                return EC_POINT_mul(group, point.get(), bn_d.get(), nullptr, nullptr, nullptr);
+            } else {
+                return EC_POINT_set_affine_coordinates(group, point.get(), bn_x.get(), bn_y.get(), nullptr);
+            }
+        })
         .run_pipe([&]() -> int { return EC_KEY_set_public_key(ec.get(), point.get()); })
         .run_pipe([&]() -> int {
             pkey = std::move(EVP_PKEY_ptr(EVP_PKEY_new()));

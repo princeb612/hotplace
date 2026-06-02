@@ -93,14 +93,15 @@ typedef struct _openssl_crypt_context_t : public crypt_context_t {
 
 return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key, size_t size_key, const unsigned char* iv,
                              size_t size_iv) {
-    binary_t temp_key;
     binary_t temp_iv;
+    binary_t temp_key;
     crypto_advisor* advisor = crypto_advisor::get_instance();
+    std::unique_ptr<openssl_crypt_context_t> context;
+
     const EVP_CIPHER* cipher = advisor->find_evp_cipher(algorithm, mode);
     if (nullptr == cipher) {
         return errorcode_t::not_supported;
     }
-    std::unique_ptr<openssl_crypt_context_t> context;
 
     /* EVP_CIPHER_CTX_key_length, EVP_CIPHER_CTX_iv_length
      * [openssl 3.0.3] compatibility problem
@@ -162,7 +163,7 @@ return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorit
 
             *handle = context.get();
 
-            context.release();
+            context.release();  // handle own context
         });
     return pipeline.result_to_return_t();
 }

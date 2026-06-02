@@ -180,6 +180,13 @@ class function_pipeline {
     template <typename RT, typename CT = return_t>
     struct is_return_type : std::is_same<typename std::decay<RT>::type, CT> {};
 
+    void test_returncode(T rc) {
+        _lastcode = rc;
+        if (_discriminant(rc)) {
+            ++_processed_count;
+        }
+    }
+
     template <typename F>
     function_pipeline& runner(F func, bool use_trycatch, expect_t expect) {
         if (expect_failure != expect) {
@@ -205,6 +212,19 @@ class function_pipeline {
         }
         return *this;
     }
+
+    // F -> T
+    template <typename RT>
+    void handle_result(RT rc, std::false_type) {
+        test_returncode(rc);
+    }
+    // F -> return_t
+    void handle_result(return_t rc, std::true_type) {
+        auto code = error_traits<T>::from_return_t(rc);
+        _returncode = rc;
+        test_returncode(code);
+    }
+
 #if defined DEBUG
     template <typename F>
     function_pipeline& runner_debug(F func, bool use_trycatch, expect_t expect, const char* file, unsigned int line) {
@@ -231,27 +251,7 @@ class function_pipeline {
         }
         return *this;
     }
-#endif
-    void test_returncode(T rc) {
-        _lastcode = rc;
-        if (_discriminant(rc)) {
-            ++_processed_count;
-        }
-    }
 
-    // F -> T
-    template <typename RT>
-    void handle_result(RT rc, std::false_type) {
-        test_returncode(rc);
-    }
-    // F -> return_t
-    void handle_result(return_t rc, std::true_type) {
-        auto code = error_traits<T>::from_return_t(rc);
-        _returncode = rc;
-        test_returncode(code);
-    }
-
-#if defined DEBUG
     template <typename RT>
     void handle_result(RT rc, std::false_type, const char* file, unsigned int line) {
         if ((nullptr != _tracer) && !_discriminant(rc)) {

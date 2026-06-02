@@ -17,83 +17,65 @@ namespace hotplace {
 namespace crypto {
 
 return_t crypto_keygen::add_ec_compressed(crypto_key* cryptokey, uint32 nid, const binary_t& x, bool ysign, const binary_t& d, keydesc&& desc) {
-    return_t ret = errorcode_t::success;
-    int ret_openssl = 1;
+    BN_ptr bn_x;
+    BN_ptr bn_d;
+    EC_KEY_ptr ec;
+    EC_POINT_ptr point;
+    EVP_PKEY_ptr pkey;
+    const EC_GROUP* group = nullptr;
 
-    __try2 {
-        if (nullptr == cryptokey) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        BN_ptr bn_x(BN_bin2bn(x.data(), t_narrow_cast(x.size()), nullptr));
-        BN_ptr bn_d;
-        if (d.size() > 0) {
-            bn_d = std::move(BN_ptr(BN_bin2bn(d.data(), t_narrow_cast(d.size()), nullptr)));
-        }
-
-        if (nullptr == bn_x.get()) {
-            ret = errorcode_t::internal_error;
-            __leave2;
-        }
-
-        EC_KEY_ptr ec(EC_KEY_new_by_curve_name(nid));
-        if (nullptr == ec.get()) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        const EC_GROUP* group = EC_KEY_get0_group(ec.get());
-        EC_POINT_ptr point(EC_POINT_new(group));
-        if (nullptr == point.get()) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        if (nullptr != bn_d.get()) {
-            ret_openssl = EC_KEY_set_private_key(ec.get(), bn_d.get());
-            if (ret_openssl != 1) {
-                ret = errorcode_t::internal_error;
-                __leave2_trace_openssl(ret);
+    function_pipeline<int> pipeline;
+    pipeline  //
+        .set_tracer(pipeline_trace_dbg_openssl_print)
+        .test_parameter([&]() -> bool { return (nullptr != cryptokey) && (false == x.empty() || false == d.empty()); })
+        .run_pipe([&]() -> int {
+            bn_x = std::move(BN_ptr(BN_bin2bn(x.data(), t_narrow_cast(x.size()), nullptr)));
+            if (false == d.empty()) {
+                bn_d = std::move(BN_ptr(BN_bin2bn(d.data(), t_narrow_cast(d.size()), nullptr)));
             }
-            bn_d.release();  // ec own bn_d
-
-            ret_openssl = EC_POINT_mul(group, point.get(), bn_d.get(), nullptr, nullptr, nullptr);
-            if (ret_openssl != 1) {
-                ret = errorcode_t::internal_error;
-                __leave2_trace_openssl(ret);
+            return (bn_x.get() && (d.empty() || bn_d.get())) ? 1 : 0;
+        })
+        .run_pipe([&]() -> int {
+            ec = std::move(EC_KEY_ptr(EC_KEY_new_by_curve_name(nid)));
+            return ec.get() ? 1 : 0;
+        })
+        .run_pipe([&]() -> int {
+            group = EC_KEY_get0_group(ec.get());
+            point = std::move(EC_POINT_ptr(EC_POINT_new(group)));
+            return point.get() ? 1 : 0;
+        })
+        .run_pipe([&]() -> int {
+            int rc = 1;
+            if (bn_d.get()) {
+                rc = EC_KEY_set_private_key(ec.get(), bn_d.get());
+                if (rc > 0) {
+                    bn_d.release();  // ec own bn_d
+                } else {
+                    return rc;
+                }
+                rc = EC_POINT_mul(group, point.get(), bn_d.get(), nullptr, nullptr, nullptr);
+            } else {
+                // EC_POINT_set_compressed_coordinates_GFp
+                rc = EC_POINT_set_compressed_coordinates(group, point.get(), bn_x.get(), ysign, nullptr);
             }
-        } else {
-            ret_openssl = EC_POINT_set_compressed_coordinates(group, point.get(), bn_x.get(), ysign, nullptr);  // EC_POINT_set_compressed_coordinates_GFp
-            if (ret_openssl != 1) {
-                ret = errorcode_t::internal_error;
-                __leave2_trace_openssl(ret);
+            return rc;
+        })
+        .run_pipe([&]() -> int { return EC_KEY_set_public_key(ec.get(), point.get()); })
+        .run_pipe([&]() -> int {
+            pkey = std::move(EVP_PKEY_ptr(EVP_PKEY_new()));
+            return pkey.get() ? 1 : 0;
+        })
+        .run_pipe([&]() -> int { return EVP_PKEY_set1_EC_KEY(pkey.get(), ec.get()); })
+        .run_pipe([&]() -> return_t {
+            crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
+            auto ret = cryptokey->add(std::move(key));
+            if (errorcode_t::success == ret) {
+                pkey.release();  // cryptokey own pkey
             }
-        }
+            return ret;
+        });
 
-        ret_openssl = EC_KEY_set_public_key(ec.get(), point.get());
-        if (ret_openssl != 1) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-
-        EVP_PKEY_ptr pkey(EVP_PKEY_new());
-        EVP_PKEY_set1_EC_KEY(pkey.get(), ec.get());
-        if (ret_openssl != 1) {
-            ret = errorcode_t::internal_error;
-            __leave2_trace_openssl(ret);
-        }
-        // ec using set1_family (internally upref)
-
-        crypto_key_object key(pkey.get(), std::forward<keydesc>(desc));
-        ret = cryptokey->add(std::move(key));
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-        pkey.release();  // cryptokey own pkey
-    }
-    __finally2 {}
-    return ret;
+    return pipeline.result_to_return_t();
 }
 
 }  // namespace crypto
