@@ -123,7 +123,7 @@ return_t openssl_pqc::encapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, bina
     // oqs-provider/test/oqs_test_kems.c
     // $ ./oqs_test_kems oqsprovider path/oqs.cnf
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return nullptr != pkey; })
@@ -162,7 +162,7 @@ return_t openssl_pqc::decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, cons
     size_t sharedsecret_len = 0;
     EVP_PKEY_CTX_ptr pkey_ctx;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return nullptr != pkey && nullptr != capsulekeystream; })
@@ -189,7 +189,7 @@ return_t openssl_pqc::sign(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t* s
 
     EVP_MD_CTX_ptr md_context;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != pkey && nullptr != stream); })
@@ -215,7 +215,7 @@ return_t openssl_pqc::verify(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t*
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
     EVP_MD_CTX_ptr md_context;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != pkey) && (nullptr != stream) && (false == signature.empty()); })

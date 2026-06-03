@@ -23,7 +23,7 @@ return_t crypto_keygen::add_ec(crypto_key* cryptokey, uint32 nid, keydesc&& desc
     crypto_advisor* advisor = crypto_advisor::get_instance();
     int type = EVP_PKEY_EC;  // EVP_PKEY_CTX_new_id type
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != cryptokey); })
@@ -81,7 +81,7 @@ return_t crypto_keygen::add_ec(crypto_key* cryptokey, uint32 nid, const binary_t
     const EC_GROUP* group = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != cryptokey) && (false == x.empty() && false == y.empty()); })

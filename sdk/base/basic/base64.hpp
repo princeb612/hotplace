@@ -39,7 +39,7 @@ namespace hotplace {
  *          BASE64 (D)    {"typ":"JWT",\n "alg":"HS256"}
  */
 
-namespace implementation {
+namespace detail {
 
 return_t base64_encode(const byte_t* source, size_t source_size, char* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
 return_t base64_encode(const binary_t& source, char* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
@@ -51,7 +51,7 @@ return_t base64_decode(const std::string& source, byte_t* buffer, size_t* buffer
 return_t base64_decode(const byte_t* source, size_t source_size, byte_t* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
 return_t base64_decode(const binary_t& source, byte_t* buffer, size_t* buffer_size, encoding_t encoding = encoding_t::encoding_base64);
 
-}  // namespace implementation
+}  // namespace detail
 
 template <typename T, typename std::enable_if<custom::encoder_stream_traits<T>::value, int>::type = 0>
 return_t base64_encode(const byte_t* source, size_t size, T& streambuf, encoding_t encoding = encoding_t::encoding_base64, uint32 flags = 0) {
@@ -64,13 +64,13 @@ return_t base64_encode(const byte_t* source, size_t size, T& streambuf, encoding
             traits::trunc(streambuf);
         }
         size_t size_reserve = 0;
-        ret = implementation::base64_encode(source, size, nullptr, &size_reserve, encoding);         // required size
-        if (errorcode_t::insufficient_buffer == ret) {                                               // how many size required
-            value_type* buf = traits::reserve(streambuf, size_reserve);                              // reserve
-            size_t size_written = size_reserve;                                                      //
-            ret = implementation::base64_encode(source, size, (char*)buf, &size_written, encoding);  // encode
-            if (errorcode_t::success == ret) {                                                       //
-                traits::commit(streambuf, size_reserve, size_written);                               // shrink
+        ret = detail::base64_encode(source, size, nullptr, &size_reserve, encoding);         // required size
+        if (errorcode_t::insufficient_buffer == ret) {                                       // how many size required
+            value_type* buf = traits::reserve(streambuf, size_reserve);                      // reserve
+            size_t size_written = size_reserve;                                              //
+            ret = detail::base64_encode(source, size, (char*)buf, &size_written, encoding);  // encode
+            if (errorcode_t::success == ret) {                                               //
+                traits::commit(streambuf, size_reserve, size_written);                       // shrink
             }
         }
     }
@@ -99,13 +99,13 @@ return_t base64_decode(const char* source, size_t size, T& streambuf, encoding_t
             traits::trunc(streambuf);
         }
         size_t size_reserve = 0;
-        ret = implementation::base64_decode(source, size, nullptr, &size_reserve, encoding);           // required size
-        if (errorcode_t::insufficient_buffer == ret) {                                                 // how many size required
-            value_type* buf = traits::reserve(streambuf, size_reserve);                                // reserve
-            size_t size_written = size_reserve;                                                        //
-            ret = implementation::base64_decode(source, size, (byte_t*)buf, &size_written, encoding);  // decode
-            if (errorcode_t::success == ret) {                                                         //
-                traits::commit(streambuf, size_reserve, size_written);                                 // shrink
+        ret = detail::base64_decode(source, size, nullptr, &size_reserve, encoding);           // required size
+        if (errorcode_t::insufficient_buffer == ret) {                                         // how many size required
+            value_type* buf = traits::reserve(streambuf, size_reserve);                        // reserve
+            size_t size_written = size_reserve;                                                //
+            ret = detail::base64_decode(source, size, (byte_t*)buf, &size_written, encoding);  // decode
+            if (errorcode_t::success == ret) {                                                 //
+                traits::commit(streambuf, size_reserve, size_written);                         // shrink
             }
         }
     }

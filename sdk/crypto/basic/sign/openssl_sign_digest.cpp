@@ -29,7 +29,7 @@ return_t openssl_sign::sign_digest(const EVP_PKEY* pkey, hash_algorithm_t alg, c
     crypto_advisor* advisor = crypto_advisor::get_instance();
     size_t dgstsize = 0;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != pkey && nullptr != stream); })
@@ -64,7 +64,7 @@ return_t openssl_sign::verify_digest(const EVP_PKEY* pkey, hash_algorithm_t alg,
     EVP_MD_CTX_ptr md_context;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != pkey && nullptr != stream); })

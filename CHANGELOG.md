@@ -32,7 +32,8 @@
     * CBOR
 
 * details
-  * Revision 1022
+  * Revision 1023
+    * [improvement] error_traits
   * Revision 1020
     * [added] crypto_keygen
   * Revision 1015

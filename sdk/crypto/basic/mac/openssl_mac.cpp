@@ -125,7 +125,7 @@ return_t openssl_mac::cbc_mac(const char* alg, const binary_t& key, const binary
     const hint_blockcipher_t* hint_cipher = nullptr;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != alg); })

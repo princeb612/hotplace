@@ -17,7 +17,7 @@
 
 namespace hotplace {
 
-namespace implementation {
+namespace detail {
 
 inline byte_t conv_fast(char c) {
     const unsigned char uc = static_cast<unsigned char>(c);
@@ -146,6 +146,6 @@ return_t base16_decode(const byte_t* source, size_t size, byte_t* buf, size_t* b
 
 return_t base16_decode(const binary_t source, byte_t* buf, size_t* buflen) { return base16_decode((char*)source.data(), source.size(), buf, buflen); }
 
-}  // namespace implementation
+}  // namespace detail
 
 }  // namespace hotplace

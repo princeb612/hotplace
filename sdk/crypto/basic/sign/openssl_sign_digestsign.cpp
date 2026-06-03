@@ -34,7 +34,7 @@ return_t openssl_sign::sign_digestsign(const EVP_PKEY* pkey, const byte_t* strea
     EVP_MD_CTX_ptr ctx;
     size_t dgstsize = 0;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .test_parameter([&]() -> bool { return (nullptr != pkey) && (nullptr != stream); })
         .run_pipe([&]() -> return_t {
@@ -71,7 +71,7 @@ return_t openssl_sign::verify_digestsign(const EVP_PKEY* pkey, const binary_t& i
 return_t openssl_sign::verify_digestsign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) {
     EVP_MD_CTX_ptr ctx;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != pkey) && (nullptr != stream); })

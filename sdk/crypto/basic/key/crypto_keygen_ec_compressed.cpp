@@ -24,7 +24,7 @@ return_t crypto_keygen::add_ec_compressed(crypto_key* cryptokey, uint32 nid, con
     EVP_PKEY_ptr pkey;
     const EC_GROUP* group = nullptr;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != cryptokey) && (false == x.empty() || false == d.empty()); })

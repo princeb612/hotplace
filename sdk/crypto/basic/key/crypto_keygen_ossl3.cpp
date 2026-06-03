@@ -20,7 +20,7 @@ return_t crypto_keygen::pkey_keygen_byname(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
     EVP_PKEY_CTX_ptr pkey_ctx;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != pkey && nullptr != name); })
@@ -47,7 +47,7 @@ return_t crypto_keygen::pkey_encode_format(OSSL_LIB_CTX* libctx, const EVP_PKEY*
     crypto_advisor* advisor = crypto_advisor::get_instance();
     key_encoding_params_t params;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != pkey); })
@@ -116,7 +116,7 @@ return_t crypto_keygen::pkey_decode_format(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey
     crypto_advisor* advisor = crypto_advisor::get_instance();
     key_encoding_params_t params;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != pkey && nullptr != keystream); })
@@ -224,7 +224,7 @@ return_t crypto_keygen::pkey_decode_raw(OSSL_LIB_CTX* libctx, const char* name, 
     const char* param = nullptr;
     int selection = 0;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != name && nullptr != pkey && nullptr != keystream); })
@@ -270,7 +270,7 @@ bool crypto_keygen::pkey_is_private(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey) 
     crypto_advisor* advisor = crypto_advisor::get_instance();
     key_encoding_params_t params;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .test_parameter([&]() -> bool { return (nullptr != pkey); })
         .walk([&]() -> void { advisor->get_encoding_params(key_encoding_priv_der, params); })

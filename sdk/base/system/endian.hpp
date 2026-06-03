@@ -88,7 +88,7 @@ static inline bool is_little_endian(void) {
  * @brief   convert byte order
  */
 
-namespace implementation {
+namespace detail {
 
 template <typename T, size_t SIZE = sizeof(T)>
 struct endian_transformer {
@@ -117,25 +117,25 @@ struct endian_transformer<T, 1> {
     static inline T transform(T value) { return value; }
 };
 
-}  // namespace implementation
+}  // namespace detail
 
-inline uint16 hton16(uint16 value) { return implementation::endian_transformer<uint16>::transform(value); }
-inline uint32 hton32(uint32 value) { return implementation::endian_transformer<uint32>::transform(value); }
-inline uint64 hton64(uint64 value) { return implementation::endian_transformer<uint64>::transform(value); }
+inline uint16 hton16(uint16 value) { return detail::endian_transformer<uint16>::transform(value); }
+inline uint32 hton32(uint32 value) { return detail::endian_transformer<uint32>::transform(value); }
+inline uint64 hton64(uint64 value) { return detail::endian_transformer<uint64>::transform(value); }
 #if defined __SIZEOF_INT128__
-inline uint128 hton128(uint128 value) { return implementation::endian_transformer<uint128>::transform(value); }
+inline uint128 hton128(uint128 value) { return detail::endian_transformer<uint128>::transform(value); }
 #endif
 
-inline uint16 ntoh16(uint16 value) { return implementation::endian_transformer<uint16>::transform(value); }
-inline uint32 ntoh32(uint32 value) { return implementation::endian_transformer<uint32>::transform(value); }
-inline uint64 ntoh64(uint64 value) { return implementation::endian_transformer<uint64>::transform(value); }
+inline uint16 ntoh16(uint16 value) { return detail::endian_transformer<uint16>::transform(value); }
+inline uint32 ntoh32(uint32 value) { return detail::endian_transformer<uint32>::transform(value); }
+inline uint64 ntoh64(uint64 value) { return detail::endian_transformer<uint64>::transform(value); }
 #if defined __SIZEOF_INT128__
-inline uint128 ntoh128(uint128 value) { return implementation::endian_transformer<uint128>::transform(value); }
+inline uint128 ntoh128(uint128 value) { return detail::endian_transformer<uint128>::transform(value); }
 #endif
 
 template <typename T>
 T convert_endian(T value) {
-    return implementation::endian_transformer<T>::transform(value);
+    return detail::endian_transformer<T>::transform(value);
 }
 
 }  // namespace hotplace

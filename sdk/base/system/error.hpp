@@ -41,7 +41,10 @@ class error_advisor {
     error_description_map_t _table;
 };
 
-template <typename T>
+struct errno_category {};
+struct osslerror_category {};
+
+template <typename T, typename category = void>
 struct error_traits;
 
 /* hotplace return_t/errorcode_t */
@@ -60,16 +63,29 @@ struct error_traits<return_t> {
     static return_t from_return_t(return_t code) { return code; }
 };
 
+/* linux errno */
+template <>
+struct error_traits<int, errno_category> {
+    static int value_success() { return 0; }
+    static int value_exception() { return /* eai_fail */ -4; }
+    static int value_invalid_parameter() { return /* ebadrqc */ 56; }
+    static int value_internal_error() { return /* eai_fail */ -4; }
+    static bool is_success(int code) { return code == 0; }
+    static bool is_not_fail(int code) { return code == 0; }
+    static return_t to_return_t(int code) { return is_success(code) ? errorcode_t::success : errorcode_t::internal_error; }
+    static int from_return_t(return_t code) { return error_traits<return_t>::is_success(code) ? value_success() : value_internal_error(); }
+};
+
 /* openssl specialization */
 template <>
-struct error_traits<int> {
+struct error_traits<int, osslerror_category> {
     static int value_success() { return 1; }
     static int value_exception() { return -1; }
     static int value_invalid_parameter() { return 0; }
     static int value_internal_error() { return 0; }
     static bool is_success(int code) { return code > 0; }
     static bool is_not_fail(int code) { return code > 0; }
-    static return_t to_return_t(int code) { return (code > 0) ? errorcode_t::success : errorcode_t::internal_error; }
+    static return_t to_return_t(int code) { return is_success(code) ? errorcode_t::success : errorcode_t::error_openssl_inside; }
     static int from_return_t(return_t code) { return error_traits<return_t>::is_success(code) ? value_success() : value_internal_error(); }
 };
 

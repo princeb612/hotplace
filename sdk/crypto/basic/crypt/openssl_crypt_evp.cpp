@@ -32,7 +32,7 @@ return_t openssl_crypt::encrypt(const EVP_PKEY* pkey, const byte_t* stream, size
     EVP_PKEY_CTX_ptr pkey_context;
     size_t bufsize = 0;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != pkey) && (nullptr != stream); })
@@ -126,7 +126,7 @@ return_t openssl_crypt::decrypt(const EVP_PKEY* pkey, const byte_t* stream, size
     EVP_PKEY_CTX_ptr pkey_context;
     size_t bufsize = 0;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != pkey && nullptr != stream); })

@@ -29,7 +29,7 @@
 
 namespace hotplace {
 
-namespace implementation {
+namespace detail {
 
 return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buflen, uint32 flags = 0);
 return_t base16_encode(const binary_t& source, char* buf, size_t* buflen, uint32 flags = 0);
@@ -41,7 +41,7 @@ return_t base16_decode(const std::string& source, byte_t* buf, size_t* buflen);
 return_t base16_decode(const byte_t* source, size_t size, byte_t* buf, size_t* buflen);
 return_t base16_decode(const binary_t source, byte_t* buf, size_t* buflen);
 
-}  // namespace implementation
+}  // namespace detail
 
 template <typename T, typename std::enable_if<custom::encoder_stream_traits<T>::value, int>::type = 0>
 return_t base16_encode(const byte_t* source, size_t size, T& streambuf, uint32 flags = 0) {
@@ -53,13 +53,13 @@ return_t base16_encode(const byte_t* source, size_t size, T& streambuf, uint32 f
         traits::trunc(streambuf);
     }
     size_t size_reserve = 0;
-    ret = implementation::base16_encode(source, size, nullptr, &size_reserve, flags);         // required size
-    if (errorcode_t::insufficient_buffer == ret) {                                            // how many size required
-        value_type* buf = traits::reserve(streambuf, size_reserve);                           // reserve
-        size_t size_written = size_reserve;                                                   //
-        ret = implementation::base16_encode(source, size, (char*)buf, &size_written, flags);  // encode
-        if (errorcode_t::success == ret) {                                                    //
-            traits::commit(streambuf, size_reserve, size_written);                            // shrink
+    ret = detail::base16_encode(source, size, nullptr, &size_reserve, flags);         // required size
+    if (errorcode_t::insufficient_buffer == ret) {                                    // how many size required
+        value_type* buf = traits::reserve(streambuf, size_reserve);                   // reserve
+        size_t size_written = size_reserve;                                           //
+        ret = detail::base16_encode(source, size, (char*)buf, &size_written, flags);  // encode
+        if (errorcode_t::success == ret) {                                            //
+            traits::commit(streambuf, size_reserve, size_written);                    // shrink
         }
     }
     return ret;
@@ -86,13 +86,13 @@ return_t base16_decode(const char* source, size_t size, T& streambuf, uint32 fla
         traits::trunc(streambuf);
     }
     size_t size_reserve = 0;
-    ret = implementation::base16_decode(source, size, nullptr, &size_reserve);           // required size
-    if (errorcode_t::insufficient_buffer == ret) {                                       // how many size required
-        value_type* buf = traits::reserve(streambuf, size_reserve);                      // reserve
-        size_t size_written = size_reserve;                                              //
-        ret = implementation::base16_decode(source, size, (byte_t*)buf, &size_written);  // decode
-        if (errorcode_t::success == ret) {                                               //
-            traits::commit(streambuf, size_reserve, size_written);                       // shrink
+    ret = detail::base16_decode(source, size, nullptr, &size_reserve);           // required size
+    if (errorcode_t::insufficient_buffer == ret) {                               // how many size required
+        value_type* buf = traits::reserve(streambuf, size_reserve);              // reserve
+        size_t size_written = size_reserve;                                      //
+        ret = detail::base16_decode(source, size, (byte_t*)buf, &size_written);  // decode
+        if (errorcode_t::success == ret) {                                       //
+            traits::commit(streambuf, size_reserve, size_written);               // shrink
         }
     }
     return ret;

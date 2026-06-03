@@ -21,7 +21,7 @@ return_t crypto_keygen::add_rsa(crypto_key* cryptokey, uint32 nid, size_t bits, 
     EVP_PKEY_CTX_ptr pkey_context;
     EVP_PKEY_ptr pkey;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool {
@@ -65,7 +65,7 @@ return_t crypto_keygen::add_rsa(crypto_key* cryptokey, uint32 nid, const binary_
     EVP_PKEY_ptr pkey;
     RSA_ptr rsa;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return ((nullptr != cryptokey) && (nid_rsa == nid) && (false == n.empty() && false == e.empty())); })
@@ -122,7 +122,7 @@ return_t crypto_keygen::add_rsa(crypto_key* cryptokey, uint32 nid, const binary_
     EVP_PKEY_ptr pkey;
     RSA_ptr rsa;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != cryptokey) && (nid_rsa == nid) && (false == n.empty() && false == e.empty()); })
@@ -225,7 +225,7 @@ return_t crypto_keygen::add_rsapss(crypto_key* cryptokey, uint32 nid, const bina
     OSSL_PARAM_BLD_ptr bld;
     OSSL_PARAM_ptr params;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != cryptokey) && (nid_rsapss == nid) && (false == n.empty() && false == e.empty()); })

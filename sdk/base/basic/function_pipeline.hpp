@@ -40,12 +40,12 @@ namespace hotplace {
  *          return pipeline.result();
  *
  *          // improvement (codename.hotplace Revision 1021)
- *          function_pipeline<int> pipeline;
+ *          function_pipeline<int, osslerror_category> pipeline;
  *                  .run([&]() -> int { return my.a(); })
  *                  .run([&]() -> return_t { return errorcode_t::internal_error; });  // also support
  *          return pipeline.result_to_return_t();  // return errorcode_t::internal_error
  */
-template <typename T = return_t>
+template <typename T = return_t, typename category = void>
 class function_pipeline {
    public:
     enum expect_t {
@@ -57,8 +57,9 @@ class function_pipeline {
     typedef std::function<bool(T)> discriminant_t;
     typedef std::function<void(const char*, unsigned int, T)> debug_tracer_t;
 
-    function_pipeline() : _lastcode(error_traits<T>::value_success()), _processed_count(0), _total_count(0), _tracer(nullptr), _returncode(errorcode_t::success) {
-        _discriminant = error_traits<T>::is_success;
+    function_pipeline()
+        : _lastcode(error_traits<T, category>::value_success()), _processed_count(0), _total_count(0), _tracer(nullptr), _returncode(errorcode_t::success) {
+        _discriminant = error_traits<T, category>::is_success;
     };
     ~function_pipeline() {
 #if defined DEBUG
@@ -66,7 +67,7 @@ class function_pipeline {
             if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_debug)) {
                 trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
                     std::string code;
-                    auto rc = error_traits<T>::to_return_t(_lastcode);
+                    auto rc = error_traits<T, category>::to_return_t(_lastcode);
                     error_advisor::get_instance()->error_code(rc, code);
 
                     dbs.println("pipeline report");
@@ -82,7 +83,7 @@ class function_pipeline {
     template <typename F>
     function_pipeline& test_parameter(F checker) {
         if (false == checker()) {
-            _lastcode = error_traits<T>::value_invalid_parameter();
+            _lastcode = error_traits<T, category>::value_invalid_parameter();
         }
         return *this;
     }
@@ -93,11 +94,11 @@ class function_pipeline {
         return *this;
     }
     function_pipeline& goahead_if_success() {
-        _discriminant = error_traits<T>::_discriminant;
+        _discriminant = error_traits<T, category>::_discriminant;
         return *this;
     }
     function_pipeline& goahead_if_not_fail() {
-        _discriminant = error_traits<T>::is_not_fail;
+        _discriminant = error_traits<T, category>::is_not_fail;
         return *this;
     }
     function_pipeline& set_tracer(debug_tracer_t tracer) {
@@ -138,6 +139,12 @@ class function_pipeline {
         return runner(lambda, false, expect_dontcare);
     }
 
+#if defined DEBUG
+#define run_pipe(lambda) run((lambda), __FILE__, __LINE__)
+#else
+#define run_pipe(lambda) run((lambda))
+#endif
+
     /**
      * @brief   for RELEASE
      */
@@ -151,13 +158,10 @@ class function_pipeline {
      * @remarks handling both RELEASE(NDEBUG) and DEBUG, MUST use the run_pipe macro.
      */
 #if defined DEBUG
-#define run_pipe(lambda) run((lambda), __FILE__, __LINE__)
     template <typename F>
     function_pipeline& run(F func, const char* file, unsigned int line) {
         return runner_debug(func, false, expect_success, file, line);
     }
-#else
-#define run_pipe(lambda) run((lambda))
 #endif
 
     template <typename F>
@@ -172,7 +176,7 @@ class function_pipeline {
     size_t size() const { return _total_count; }
     size_t processed() const { return _processed_count; }
     T result() const { return _lastcode; }
-    return_t result_to_return_t() const { return (_returncode != errorcode_t::success) ? _returncode : error_traits<T>::to_return_t(_lastcode); }
+    return_t result_to_return_t() const { return (_returncode != errorcode_t::success) ? _returncode : error_traits<T, category>::to_return_t(_lastcode); }
     bool passed() const { return _discriminant(_lastcode); }
     bool failed() const { return (false == _discriminant(_lastcode)); }
 
@@ -205,7 +209,7 @@ class function_pipeline {
             handle_result(rc, typename is_return_type<decltype(rc), return_t>::type());
         } catch (...) {
             if (use_trycatch) {
-                _lastcode = error_traits<T>::value_exception();
+                _lastcode = error_traits<T, category>::value_exception();
             } else {
                 throw exception(errorcode_t::exception_caught);
             }
@@ -220,7 +224,7 @@ class function_pipeline {
     }
     // F -> return_t
     void handle_result(return_t rc, std::true_type) {
-        auto code = error_traits<T>::from_return_t(rc);
+        auto code = error_traits<T, category>::from_return_t(rc);
         _returncode = rc;
         test_returncode(code);
     }
@@ -244,7 +248,7 @@ class function_pipeline {
             handle_result(rc, typename is_return_type<decltype(rc), return_t>::type(), file, line);
         } catch (...) {
             if (use_trycatch) {
-                _lastcode = error_traits<T>::value_exception();
+                _lastcode = error_traits<T, category>::value_exception();
             } else {
                 throw exception(errorcode_t::exception_caught);
             }
@@ -261,7 +265,7 @@ class function_pipeline {
         test_returncode(rc);
     }
     void handle_result(return_t rc, std::true_type, const char* file, unsigned int line) {
-        auto code = error_traits<T>::from_return_t(rc);
+        auto code = error_traits<T, category>::from_return_t(rc);
         if ((nullptr != _tracer) && !_discriminant(code)) {
             _tracer(file, line, code);
         }

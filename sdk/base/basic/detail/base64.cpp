@@ -15,7 +15,7 @@
 
 namespace hotplace {
 
-namespace implementation {
+namespace detail {
 
 /*
     BASE64
@@ -283,6 +283,6 @@ return_t base64_decode(const binary_t& source, byte_t* buffer, size_t* buffer_si
     return base64_decode(source.data(), source.size(), buffer, buffer_size, encoding);
 }
 
-}  // namespace implementation
+}  // namespace detail
 
 }  // namespace hotplace

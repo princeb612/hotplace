@@ -71,7 +71,7 @@ template <> struct is_unsigned<unsigned __int128> : std::true_type {};
 
 // clang-format on
 
-namespace implementation {
+namespace detail {
 
 // integral, enum
 template <typename T, bool is_enum_v = std::is_enum<T>::value>
@@ -88,13 +88,13 @@ struct is_integral<T, true> {
     static const bool is_signed = std::is_signed<underlying>::value;
 };
 
-}  // namespace implementation
+}  // namespace detail
 
 template <typename T>
 struct is_integral {
     using raw_t = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
-    static const bool value = implementation::is_integral<raw_t>::value;
-    static const bool is_signed = implementation::is_integral<raw_t>::is_signed;
+    static const bool value = detail::is_integral<raw_t>::value;
+    static const bool is_signed = detail::is_integral<raw_t>::is_signed;
 };
 
 template <>

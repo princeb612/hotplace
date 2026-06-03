@@ -347,18 +347,19 @@ class variant {
     variant& operator=(const variant& other);
     variant& operator=(variant&& other);
 
-    // set
-    template <typename T,                                                                                                                //
-              typename std::enable_if<(variant_traits<typename std::decay<T>::type>::flags & vt_mask_standalone) == vt_mask_standalone,  //
-                                      int>::type = 0>
+    /**
+     * void*, char*, wchar_t*, char, byte_t, wchar_t, bool, int8, uint8, int16, uint16, int32, uint32, int64, uint64, int128, uint128, float, double
+     */
+    template <typename T, typename std::enable_if<(variant_traits<typename std::decay<T>::type>::flags & vt_mask_standalone) == vt_mask_standalone, int>::type = 0>
     variant(T&& value) {
         set(std::forward<T>(value));
     };
-    // set_new
-    template <typename T,                                                                                                                      //
-              typename std::enable_if<((variant_traits<custom::vt_remove_ptr_const_t<T>>::flags & vt_mask_composite) == vt_mask_composite) &&  //
-                                          ((variant_traits<custom::vt_remove_ptr_const_t<T>>::flags & vt_flag_free) == vt_flag_free),
-                                      int>::type = 0>
+    /**
+     * char*, wchar_t*, byte_t* and size_t
+     */
+    template <typename T, typename std::enable_if<((variant_traits<custom::vt_remove_ptr_const_t<T>>::flags & vt_mask_composite) == vt_mask_composite) &&
+                                                      ((variant_traits<custom::vt_remove_ptr_const_t<T>>::flags & vt_flag_free) == vt_flag_free),
+                                                  int>::type = 0>
     variant(T&& value, size_t size) {
         set_new(std::forward<T>(value), size);
     };
@@ -475,7 +476,8 @@ class variant {
     variant& operator=(variant_t&& other);
 
     /**
-     * variant& set(uint32)
+     * variant& set
+     * void*, char*, wchar_t*, char, byte_t, wchar_t, bool, int8, uint8, int16, uint16, int32, uint32, int64, uint64, int128, uint128, float, double
      */
     template <typename T,                                                                                                                //
               typename std::enable_if<(variant_traits<typename std::decay<T>::type>::flags & vt_mask_standalone) == vt_mask_standalone,  //
@@ -492,8 +494,8 @@ class variant {
         return *this;
     };
     /**
-     * variant& set(char*, size_t)
-     * setter assign only
+     * variant& set
+     * char*, wchar_t*, byte_t* and size_t
      */
     template <typename T,                                                                                                                  //
               typename std::enable_if<(variant_traits<custom::vt_remove_ptr_const_t<T>>::flags & vt_mask_composite) == vt_mask_composite,  //
@@ -511,7 +513,8 @@ class variant {
         return *this;
     };
     /**
-     * variant& set_new(char*, size_t)
+     * variant& set_new
+     * char*, wchar_t*, byte_t* and size_t
      */
     template <typename T,                                                                                                                      //
               typename std::enable_if<((variant_traits<custom::vt_remove_ptr_const_t<T>>::flags & vt_mask_composite) == vt_mask_composite) &&  //

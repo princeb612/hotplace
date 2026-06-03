@@ -21,7 +21,7 @@ return_t crypto_keygen::add_oct(crypto_key* cryptokey, size_t size, keydesc&& de
     EVP_PKEY_ptr pkey;
     binary_t temp;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != cryptokey); })
@@ -47,7 +47,7 @@ return_t crypto_keygen::add_oct(crypto_key* cryptokey, size_t size, keydesc&& de
 return_t crypto_keygen::add_oct(crypto_key* cryptokey, const byte_t* k, size_t size, keydesc&& desc) {
     EVP_PKEY_ptr pkey;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != cryptokey) && (nullptr != k); })

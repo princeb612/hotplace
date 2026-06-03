@@ -69,10 +69,10 @@ void test_pipeline2() {
 }
 
 void test_pipeline3() {
-    _test_case.begin("pipeline");
+    _test_case.begin("pipeline openssl");
     return_t ret = errorcode_t::success;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline                                    //
         .run_pipe([&]() -> int { return 0; })   // run
         .run_pipe([&]() -> int { return 1; });  // do not run
@@ -85,19 +85,17 @@ void test_pipeline3() {
     _test_case.assert(ret != errorcode_t::success, __FUNCTION__, "failed pipeline #1 failed");
 
     auto rc = pipeline.result();
-    _test_case.assert(error_traits<int>::to_return_t(rc) == errorcode_t::internal_error, __FUNCTION__, "failed pipeline #2 result");
+    _test_case.assert(error_traits<int, osslerror_category>::to_return_t(rc) == errorcode_t::error_openssl_inside, __FUNCTION__, "failed pipeline #2 result");
 
     ret = pipeline.result_to_return_t();
-    _test_case.assert(ret == errorcode_t::internal_error, __FUNCTION__, "failed pipeline #3 result_to_return_t");
+    _test_case.assert(ret == errorcode_t::error_openssl_inside, __FUNCTION__, "failed pipeline #3 result_to_return_t");
 }
 
 void test_pipeline4() {
-    _test_case.begin("pipeline");
+    _test_case.begin("pipeline linux errno");
 
-    function_pipeline<int> pipeline;
-    pipeline                                                            //
-        .run_pipe([&]() -> int { return 1; })                           //
-        .run_pipe([&]() -> return_t { return errorcode_t::unknown; });  // override errorcode_t::internal_error
+    function_pipeline<int, errno_category> pipeline;
+    pipeline.run_pipe([&]() -> int { return 0; }).run_pipe([&]() -> return_t { return errorcode_t::unknown; });  // override errorcode_t::error_internal_error
 
     auto ret = pipeline.result_to_return_t();
     _test_case.assert(errorcode_t::unknown == ret, __FUNCTION__, "pipeline<int> return_t");

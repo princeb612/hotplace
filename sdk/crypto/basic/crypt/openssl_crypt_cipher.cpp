@@ -108,7 +108,7 @@ return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorit
      * EVP_CIPHER_..._length return EVP_CTRL_RET_UNSUPPORTED(-1)
      */
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != handle); })

@@ -33,7 +33,7 @@ return_t openssl_kdf::scrypt(binary_t& derived, size_t dlen, const std::string& 
 
     EVP_PKEY_CTX_ptr ctx;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .run_pipe([&]() -> int {

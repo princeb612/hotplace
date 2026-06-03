@@ -51,7 +51,7 @@ return_t dh_key_agreement(const EVP_PKEY* pkey, const EVP_PKEY* pkey_pub, binary
     EVP_PKEY_CTX_ptr pkey_context;
     size_t size_secret = 0;
 
-    function_pipeline<int> pipeline;
+    function_pipeline<int, osslerror_category> pipeline;
     pipeline  //
         .set_tracer(pipeline_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != pkey && nullptr != pkey_pub); })
@@ -156,7 +156,7 @@ return_t concat_kdf(binary_t dh_secret, binary_t otherinfo, unsigned int keylen,
             hash.resize(hashlen);
 
             unsigned int alloca_size = t_narrow_cast(hashlen);
-            function_pipeline<int> pipeline;
+            function_pipeline<int, osslerror_category> pipeline;
             pipeline  //
                 .set_tracer(pipeline_trace_dbg_openssl_print)
                 .run_pipe([&]() -> int { return EVP_DigestInit_ex(ctx.get(), dgst, nullptr); })
