@@ -324,10 +324,11 @@ class t_binaries {
     /**
      * @brief   consume
      * @param   T id [in]
-     * @param   std::function<return_t(const binary_t&, size_t&)> func [in]
+     * @param   return_t(const binary_t&, size_t&) [in]
      * @param   uint32 flags [inopt]
      */
-    return_t consume(T id, std::function<return_t(const binary_t&, size_t&)> func, uint32 flags = 0) {
+    template <typename F>
+    return_t consume(T id, F func, uint32 flags = 0) {
         return_t ret = errorcode_t::success;
         __try2 {
             critical_section_guard guard(_lock);
@@ -428,9 +429,10 @@ class t_binaries {
         return ret;
     }
     /**
-     * @param   std::function<void(const T&, const binary_t&)> func [in]
+     * @param   void(const T&, const binary_t&) [in]
      */
-    void for_each(std::function<void(const T&, const binary_t&)> func) {
+    template <typename F>
+    void for_each(F func) {
         if (func) {
             critical_section_guard guard(_lock);
             for (const auto& pair : _map) {

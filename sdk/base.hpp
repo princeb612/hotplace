@@ -55,6 +55,8 @@
 #include <hotplace/sdk/base/nostd/pq.hpp>
 #include <hotplace/sdk/base/nostd/range.hpp>
 #include <hotplace/sdk/base/nostd/traits.hpp>
+#include <hotplace/sdk/base/nostd/traits_encoder.hpp>
+#include <hotplace/sdk/base/nostd/traits_printf.hpp>
 #include <hotplace/sdk/base/nostd/utility.hpp>
 #include <hotplace/sdk/base/nostd/vector.hpp>
 
@@ -72,9 +74,11 @@
 /* stream */
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/stream/bufferio.hpp>
+#include <hotplace/sdk/base/stream/decoder_stream.hpp>
 #include <hotplace/sdk/base/stream/encoder_stream.hpp>
 #include <hotplace/sdk/base/stream/printf.hpp>
 #include <hotplace/sdk/base/stream/split.hpp>
+#include <hotplace/sdk/base/stream/stream.hpp>
 #include <hotplace/sdk/base/stream/stream_policy.hpp>
 #include <hotplace/sdk/base/stream/tstring.hpp>
 #include <hotplace/sdk/base/stream/types.hpp>

@@ -64,16 +64,6 @@ class cbor_array : public cbor_object {
      *          root->release();
      */
 
-    template <typename T>
-    cbor_array& add(std::function<void(T*)> func, uint32 flags = 0) {
-        if (func) {
-            auto obj = new T(flags);
-            func(obj);
-            *this << obj;
-        }
-        return *this;
-    }
-
     cbor_array& add(std::function<void(cbor_array*)> func, uint32 flags = 0);
     cbor_array& add(std::function<void(cbor_map*)> func, uint32 flags = 0);
 
@@ -91,6 +81,16 @@ class cbor_array : public cbor_object {
    protected:
     virtual void represent(stream_t* s);
     virtual void represent(binary_t* b);
+
+    template <typename T, typename F>  // F void(T*)
+    cbor_array& add(F&& func, uint32 flags = 0) {
+        auto obj = new T(flags);
+
+        std::forward<F>(func)(obj);
+
+        *this << obj;
+        return *this;
+    }
 
    private:
     std::list<cbor_object*> _array;

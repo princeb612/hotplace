@@ -586,7 +586,7 @@ class crypto_key {
 
     /**
      * @brief dump
-     * @param std::function<void(crypto_key_object*, void*)> func [in]
+     * @param void(crypto_key_object*, void*) func [in]
      * @param void* param [inopt]
      * @example
      *  void dump_crypto_key (crypto_key_object* key, void*)
@@ -603,7 +603,15 @@ class crypto_key {
      *      key.for_each (dump_crypto_key, nullptr);
      *  }
      */
-    void for_each(std::function<void(crypto_key_object*, void*)> func, void* param = nullptr);
+    template <typename F>  // void(crypto_key_object*, void*)
+    void for_each(F&& func, void* param = nullptr) {
+        critical_section_guard guard(_lock);
+
+        for (auto& pair : _key_map) {
+            crypto_key_object& keyobj = pair.second;
+            std::forward<F>(func)(&keyobj, param);
+        }
+    }
 
     void erase(const std::string& kid);
 

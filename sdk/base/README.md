@@ -24,6 +24,9 @@ mindmap
         single-precision
         double-precision
       bignumber
+      floating point
+        decimal float
+        rational float
     unittest
       testcase
       logger

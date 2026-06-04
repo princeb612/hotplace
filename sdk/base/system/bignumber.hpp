@@ -15,13 +15,49 @@
 #include <hotplace/sdk/base/nostd/atoi.hpp>
 #include <hotplace/sdk/base/nostd/cast.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
-#include <hotplace/sdk/base/system/endian.hpp>
+#include <hotplace/sdk/base/system/endian.hpp>  // is_little_endian
 #include <hotplace/sdk/base/system/types.hpp>
 #include <iomanip>
 #include <sstream>
 #include <type_traits>
 
 namespace hotplace {
+
+namespace custom {
+
+/**
+ * @sa  bignumber
+ */
+template <typename T>
+struct is_pure_integral {
+   private:
+    // remove cv-qualifier(const, volatile), reference
+    using raw_type = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
+
+   public:
+    static const bool value = is_integral<raw_type>::value && !std::is_pointer<typename std::remove_reference<T>::type>::value && !std::is_same<raw_type, bool>::value &&
+                              !std::is_same<raw_type, wchar_t>::value;
+};
+
+// clang-format off
+
+template <typename T> using is_pure_integral_t = typename std::enable_if<is_pure_integral<T>::value>::type;
+template <typename T> using is_pure_signed_integral = typename std::enable_if<is_pure_integral<T>::value && is_integral<T>::is_signed>::type;
+template <typename T> using is_pure_unsigned_integral = typename std::enable_if<is_pure_integral<T>::value && !is_integral<T>::is_signed>::type;
+
+// clang-format on
+
+template <typename T, bool is_enum_v = std::is_enum<T>::value>
+struct bn_underlying_type {
+    using type = T;
+};
+
+template <typename T>
+struct bn_underlying_type<T, true> {
+    using type = typename std::underlying_type<T>::type;
+};
+
+}  // namespace custom
 
 /*
  * @brief   big number
@@ -359,7 +395,21 @@ class bignumber {
     /**
      * @brief   dump (debugging purpose)
      */
-    void dump(std::function<void(const binary_t&)> func) const;
+    template <typename F>  // void(const binary_t&)
+    void dump(F func) const {
+        binary_t out;
+        for (size_t i = _v.size(); i > 0; --i) {
+            size_t idx = i - 1;
+            auto x = _v[idx];
+            if (is_little_endian()) {
+                x = hton32(x);
+            }
+            for (int j = 0; j < 4; j++) {
+                out.push_back((x >> (8 * j)) & 0xFF);
+            }
+        }
+        func(out);
+    }
     /**
      * @brief   base16 hexdecimal stream
      * @param   binary_t &base16hexstream [out]

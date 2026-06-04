@@ -10,7 +10,7 @@
 
 #include <hotplace/testcase/base/sample.hpp>
 
-void test_binary() {
+void test_binary1() {
     _test_case.begin("binary");
     binary_t bin;
 #ifdef __SIZEOF_INT128__
@@ -96,4 +96,23 @@ void test_binary() {
     _test_case.assert(1 == ui32, __FUNCTION__, "bin8 to uint32 %u", ui32);
 }
 
-void testcase_binary() { test_binary(); }
+void test_binary2() {
+    _test_case.begin("binary");
+
+    binary_t bin1;
+    binary_append(bin1, uint16(32768));  // wo endian_transformer
+    std::string str1;
+    base16_encode(bin1, str1);
+    _test_case.assert(str1 == "0080", __FUNCTION__, "%s", str1.c_str());
+
+    binary_t bin2;
+    binary_append(bin2, uint16(32768), [](uint16 v) -> uint16 { return hton16(v); });  // lambda
+    std::string str2;
+    base16_encode(bin2, str2);
+    _test_case.assert(str2 == "8000", __FUNCTION__, "%s", str2.c_str());
+}
+
+void testcase_binary() {
+    test_binary1();
+    test_binary2();
+}

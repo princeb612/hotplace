@@ -299,10 +299,11 @@ class t_stringkey_value {
 
     /**
      * @brief   foreach
-     * @param   std::function<void(const std::string&, const std::string&, void*)> func [in]
+     * @param   void(const std::string&, const TYPE&, void*)
      * @param   void* param [inopt]
      */
-    void foreach (std::function<void(const std::string&, const TYPE&, void*)> func, void* param = nullptr) {
+    template <typename F>
+    void foreach (F func, void* param = nullptr) {
         critical_section_guard guard(_lock);
         for (const auto& pair : _order_map) {
             typename keyvalue_map_t::iterator iter = _keyvalues.find(pair.second);

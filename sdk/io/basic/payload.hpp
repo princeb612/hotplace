@@ -369,7 +369,13 @@ class payload {
     return_t read(const binary_t& bin, size_t& pos);
     return_t read(const byte_t* p, size_t size, size_t& pos);
 
-    payload& for_each(std::function<void(payload_member*)> func);
+    template <typename F>  // void(payload_member*)
+    payload& for_each(F func) {
+        for (auto item : _members) {
+            func(item);
+        }
+        return *this;
+    }
     payload_member* select(const std::string& name);
     size_t offset_of(const std::string& name);
     size_t numberof_members();

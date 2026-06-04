@@ -59,16 +59,6 @@ class cbor_map : public cbor_object {
      *          root->release();
      */
 
-    template <typename K, typename V>
-    cbor_map& add(K value, std::function<void(V* object)> f, uint32 flags = 0) {
-        if (f) {
-            auto obj = new V(flags);
-            f(obj);
-            *this << new cbor_pair(value, obj);
-        }
-        return *this;
-    }
-
     cbor_map& add(const bignumber& value, cbor_data* object);
     cbor_map& add(const bignumber& value, cbor_map* object);
     cbor_map& add(const bignumber& value, cbor_array* object);
@@ -95,6 +85,16 @@ class cbor_map : public cbor_object {
    protected:
     virtual void represent(stream_t* s);
     virtual void represent(binary_t* b);
+
+    template <typename K, typename V, typename F>  // F void(V* object)
+    cbor_map& add(K value, F&& f, uint32 flags = 0) {
+        auto obj = new V(flags);
+
+        std::forward<F>(f)(obj);
+
+        *this << new cbor_pair(value, obj);
+        return *this;
+    }
 
    private:
     std::list<cbor_pair*> _array; /* unordered */

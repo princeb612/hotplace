@@ -76,33 +76,30 @@ return_t dh_key_agreement(const EVP_PKEY* pkey, const EVP_PKEY* pkey_pub, binary
 
 binary_t kdf_parameter_int(uint32 source) {
     binary_t value;
-    uint32 be_source = hton32(source);
-    value.insert(value.end(), (byte_t*)&be_source, (byte_t*)&be_source + sizeof(be_source));
+    binary_append(value, source, hton32);
     return value;
 }
 
 binary_t kdf_parameter_string(const char* source) {
     binary_t value;
-    size_t len = 0;
+    uint32 len = 0;
     if (source) {
-        len = strlen(source);
+        len = t_narrow_cast(strlen(source));
     }
     value.reserve(sizeof(uint32) + len);
-    uint32 be_len = hton32(t_narrow_cast(len));
-    value.insert(value.end(), (byte_t*)&be_len, (byte_t*)&be_len + sizeof(be_len));
+    binary_append(value, len, hton32);
     if (len) {
-        value.insert(value.end(), (byte_t*)source, (byte_t*)source + len);
+        binary_append(value, source, len);
     }
     return value;
 }
 
 binary_t kdf_parameter_string(const byte_t* source, uint32 sourcelen) {
     binary_t value;
-    uint32 be_len = hton32(sourcelen);
     value.reserve(sizeof(uint32) + sourcelen);
-    value.insert(value.end(), (byte_t*)&be_len, (byte_t*)&be_len + sizeof(be_len));
+    binary_append(value, sourcelen, hton32);
     if (sourcelen) {
-        value.insert(value.end(), source, source + sourcelen);
+        binary_append(value, source, sourcelen);
     }
     return value;
 }
@@ -115,7 +112,7 @@ return_t ecdh_es(const EVP_PKEY* pkey, const EVP_PKEY* peer, const char* algid, 
 
     function_pipeline<return_t> pipeline;
     pipeline  //
-        .set_tracer(pipeline_trace_dbg_openssl_print)
+        .set_tracer(leave_trace_dbg_openssl_print)
         .test_parameter([&]() -> bool { return (nullptr != pkey && nullptr != peer); })
         .run_pipe([&]() -> return_t { return dh_key_agreement(pkey, peer, dh_secret); })
         .run_pipe([&]() -> return_t { return compose_otherinfo(algid, apu, apv, keylen << 3, otherinfo); })

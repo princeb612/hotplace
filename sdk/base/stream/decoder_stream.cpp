@@ -11,9 +11,9 @@
 
 #include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/basic/base64.hpp>
+#include <hotplace/sdk/base/basic/http_huffman_coding.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/stream/encoder_stream.hpp>
-#include <hotplace/sdk/base/system/endian.hpp>
+#include <hotplace/sdk/base/stream/decoder_stream.hpp>
 
 namespace hotplace {
 
@@ -116,6 +116,10 @@ return_t decoder_stream::write(const char* data, size_t size) {
                     _encbuf.len = (uint8)remainder;
                 }
             } break;
+            case encoding_t::encoding_h2hcodes: {
+                auto* huff = http_huffman_coding::get_instance();
+                ret = huff->decoding(_buffer, _huffbuf, (byte_t*)data, size);
+            } break;
             default: {
                 ret = errorcode_t::not_supported;
             } break;
@@ -124,6 +128,8 @@ return_t decoder_stream::write(const char* data, size_t size) {
     __finally2 {}
     return ret;
 }
+
+return_t decoder_stream::write(const byte_t* data, size_t size) { return write((char*)data, size); }
 
 return_t decoder_stream::flush() {
     return_t ret = errorcode_t::success;
@@ -145,6 +151,21 @@ return_t decoder_stream::flush() {
                 _encbuf.reset();
             }
         } break;
+        case encoding_t::encoding_h2hcodes: {
+            if (false == _huffbuf.empty()) {
+                if (_huffbuf.size() >= 8) {
+                    ret = errorcode_t::bad_data;
+                } else {
+                    for (char e : _huffbuf) {
+                        if ('1' != e) {
+                            ret = errorcode_t::bad_data;
+                            break;
+                        }
+                    }
+                }
+                _huffbuf.clear();
+            }
+        } break;
         default: {
             // do nothing
         } break;
@@ -158,6 +179,11 @@ binary_t decoder_stream::data() {
 }
 
 decoder_stream& decoder_stream::add(const char* data, size_t size) {
+    write(data, size);
+    return *this;
+}
+
+decoder_stream& decoder_stream::add(const byte_t* data, size_t size) {
     write(data, size);
     return *this;
 }

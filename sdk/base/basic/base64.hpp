@@ -26,7 +26,7 @@
 #define __HOTPLACE_SDK_BASE_BASIC_BASE64__
 
 #include <hotplace/sdk/base/basic/types.hpp>
-#include <hotplace/sdk/base/nostd/traits.hpp>
+#include <hotplace/sdk/base/nostd/traits_encoder.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 
 namespace hotplace {

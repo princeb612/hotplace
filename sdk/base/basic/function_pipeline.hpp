@@ -54,9 +54,6 @@ class function_pipeline {
         expect_dontcare = 3,
     };
 
-    typedef std::function<bool(T)> discriminant_t;
-    typedef std::function<void(const char*, unsigned int, T)> debug_tracer_t;
-
     function_pipeline()
         : _lastcode(error_traits<T, category>::value_success()), _processed_count(0), _total_count(0), _tracer(nullptr), _returncode(errorcode_t::success) {
         _discriminant = error_traits<T, category>::is_success;
@@ -101,7 +98,16 @@ class function_pipeline {
         _discriminant = error_traits<T, category>::is_not_fail;
         return *this;
     }
-    function_pipeline& set_tracer(debug_tracer_t tracer) {
+    /**
+     * @sa
+     *      function_pipeline<return_t> pipeline;
+     *      pipeline.set_tracer(leave_trace_dbg_openssl_print);
+     *
+     *      function_pipeline<int, osslerror_category> pipeline;
+     *      pipeline.set_tracer(pipeline_trace_dbg_openssl_print);
+     */
+    template <typename F>
+    function_pipeline& set_tracer(F tracer) {
         _tracer = tracer;
         return *this;
     }
@@ -278,8 +284,8 @@ class function_pipeline {
     T _lastcode;
     size_t _processed_count;
     size_t _total_count;
-    discriminant_t _discriminant;
-    debug_tracer_t _tracer;
+    bool (*_discriminant)(T);
+    void (*_tracer)(const char* file, unsigned int line, T rc);
     return_t _returncode;
 };
 

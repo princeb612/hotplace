@@ -149,7 +149,17 @@ return_t split_count(split_context_t* handle, size_t& result);
 return_t split_get(split_context_t* handle, size_t index, binary_t& data);
 return_t split_get(split_context_t* handle, size_t index, std::string& data);
 return_t split_end(split_context_t* handle);
-return_t split_foreach(split_context_t* handle, std::function<void(const std::string&)> func);
+template <typename F>  // void(const std::string&)
+return_t split_foreach(split_context_t* handle, F func) {
+    if (nullptr == handle) return errorcode_t::invalid_parameter;
+
+    for (const auto& item : handle->info) {
+        std::string data;
+        data.assign(handle->source.c_str() + item.begin, item.length);
+        func(data);
+    }
+    return errorcode_t::success;
+}
 
 }  // namespace hotplace
 

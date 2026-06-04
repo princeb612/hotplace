@@ -164,31 +164,6 @@ bool logger::test_logging_file() {
     return do_file ? true : false;
 }
 
-logger& logger::do_console(std::function<void(logger_item*)> f) {
-    std::string datefmt;
-    {
-        critical_section_guard guard(_lock);
-        datefmt = _skeyvalue.get("datefmt");
-    }
-
-    logger_item* item = get_context();
-    if (item) {
-        if (false == datefmt.empty()) {
-            datetime dt;
-            dt.format(1, item->bs, datefmt);
-        }
-
-        f(item);
-
-        stdout_handler(item->bs);
-        item->bs.clear();
-
-        item->release();
-    }
-
-    return *this;
-}
-
 logger& logger::do_console_vprintf(const char* fmt, va_list ap, bool lf) {
     auto lambda = [&](logger_item* item) -> void {
         item->bs.vprintf(fmt, ap);
@@ -219,29 +194,6 @@ logger& logger::do_console_stream(stream_t* s, bool lf) {
         }
     };
     return do_console(lambda);
-}
-
-logger& logger::do_write(std::function<void(logger_item*)> f) {
-    std::string datefmt;
-    {
-        critical_section_guard guard(_lock);
-        datefmt = _skeyvalue.get("datefmt");
-    }
-    if (test_logging_stdout() || test_logging_file()) {
-        logger_item* item = get_context();
-        if (item) {
-            if (false == datefmt.empty()) {
-                datetime dt;
-                dt.format(1, item->bs, datefmt);
-            }
-
-            f(item);
-
-            touch(item);
-            item->release();
-        }
-    }
-    return *this;
 }
 
 logger& logger::do_write_vprintf(const char* fmt, va_list ap, bool lf) {

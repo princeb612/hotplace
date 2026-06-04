@@ -24,8 +24,9 @@
 #include <string.h>
 
 #include <hotplace/sdk/base/basic/types.hpp>
-#include <hotplace/sdk/base/nostd/traits.hpp>
+#include <hotplace/sdk/base/nostd/traits_printf.hpp>
 #include <hotplace/sdk/base/stream/bufferio.hpp>
+#include <hotplace/sdk/base/stream/stream.hpp>
 #include <hotplace/sdk/base/system/types.hpp>
 #include <iostream>
 #include <ostream>
@@ -184,11 +185,12 @@ class basic_stream : public stream_t {
     /**
      * stream implementation
      */
-    template <typename T,                                                                          //
-              typename std::enable_if<custom::is_integral<typename std::decay<T>::type>::value ||  //
-                                          std::is_enum<typename std::decay<T>::type>::value ||     //
-                                          std::is_floating_point<typename std::decay<T>::type>::value,
-                                      int>::type = 0>
+    template <typename T,                                                      //
+              typename std::enable_if<                                         //
+                  custom::is_integral<typename std::decay<T>::type>::value ||  //
+                      std::is_enum<typename std::decay<T>::type>::value ||     //
+                      std::is_floating_point<typename std::decay<T>::type>::value,
+                  int>::type = 0>
     basic_stream& operator<<(T value) {
         using traits = custom::printf_traits<char, T>;
         using cast_type = typename traits::cast_type;
@@ -243,24 +245,6 @@ class basic_stream : public stream_t {
 namespace custom {
 
 template <>
-struct encoder_stream_traits<stream_t*> {
-    typedef char value_type;
-
-    static constexpr bool value = true;
-    static void trunc(stream_t* buf) { buf->resize(0); }
-    static value_type* reserve(stream_t* buf, size_t size_reserve) {
-        size_t pos = buf->size();
-        buf->resize(pos + size_reserve);
-        return (char*)buf->data() + pos;
-    }
-    static void commit(stream_t* buf, size_t size_reserve, size_t size_written) {
-        if (size_written < size_reserve) {
-            buf->resize(buf->size() - (size_reserve - size_written));
-        }
-    }
-};
-
-template <>
 struct encoder_stream_traits<basic_stream> {
     typedef byte_t value_type;
 
@@ -274,6 +258,15 @@ struct encoder_stream_traits<basic_stream> {
     static void commit(basic_stream& buf, size_t size_reserve, size_t size_written) {
         if (size_written < size_reserve) {
             buf.resize(buf.size() - (size_reserve - size_written));
+        }
+    }
+
+    static void preempt(binary_t& buf, size_t size) {}
+    static void push(basic_stream& buf, value_type c) { buf.write(&c, sizeof(value_type)); }
+    static void append(basic_stream& buf, const char* msg) {
+        if (msg) {
+            auto len = strlen(msg);
+            buf.write(msg, len);
         }
     }
 };

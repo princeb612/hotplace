@@ -166,12 +166,11 @@ class t_merge_ovl_intervals {
         return l == r;
     }
 
-    void for_each(std::function<void(const T&, const T&)> func) {
-        if (func) {
-            critical_section_guard guard(_lock);
-            for (const auto& item : _arr) {
-                func(item.s, item.e);
-            }
+    template <typename F>  // void(const T&, const T&)
+    void for_each(F func) {
+        critical_section_guard guard(_lock);
+        for (const auto& item : _arr) {
+            func(item.s, item.e);
         }
     }
 
@@ -333,12 +332,11 @@ class t_ovl_points {
         return l == r;
     }
 
-    void for_each(std::function<void(const T&, const T&)> func) {
-        if (func) {
-            critical_section_guard guard(_lock);
-            for (const auto& item : _arr) {
-                func(item.s, item.e);
-            }
+    template <typename F>  // void(const T&, const T&)
+    void for_each(F func) {
+        critical_section_guard guard(_lock);
+        for (const auto& item : _arr) {
+            func(item.s, item.e);
         }
     }
 

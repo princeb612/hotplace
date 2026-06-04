@@ -90,12 +90,24 @@ static inline bool is_little_endian(void) {
 
 namespace detail {
 
+// clang-format off
+
+template <size_t size> struct half_type_traits;
+template <> struct half_type_traits<2> { using type = uint8; };
+template <> struct half_type_traits<4> { using type = uint16; };
+template <> struct half_type_traits<8> { using type = uint32; };
+#ifdef __SIZEOF_INT128__
+template <> struct half_type_traits<16> { using type = uint64; };
+#endif
+
+// clang-format on
+
 template <typename T, size_t SIZE = sizeof(T)>
 struct endian_transformer {
     static inline T transform(T value) {
         T res = 0;
         if (is_little_endian()) {
-            using half_type = typename custom::half_type_traits<SIZE>::type;
+            using half_type = typename half_type_traits<SIZE>::type;
 
             half_type mask = ~half_type(0);
             half_type low = static_cast<half_type>(value & mask);

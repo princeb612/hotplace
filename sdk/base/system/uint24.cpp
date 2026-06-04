@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/system/endian.hpp>
+#include <hotplace/sdk/base/system/endian.hpp>  // hton32
 #include <hotplace/sdk/base/system/uint.hpp>
 #if defined __linux__
 #include <arpa/inet.h>

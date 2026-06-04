@@ -261,15 +261,6 @@ return_t payload::write(binary_t& bin, const std::set<std::string>& groups) {
     return ret;
 }
 
-payload& payload::for_each(std::function<void(payload_member*)> func) {
-    if (func) {
-        for (auto item : _members) {
-            func(item);
-        }
-    }
-    return *this;
-}
-
 payload_member* payload::select(const std::string& name) {
     payload_member* item = nullptr;
     t_maphint<std::string, payload_member*> hint(_members_map);

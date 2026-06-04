@@ -32,6 +32,8 @@
     * CBOR
 
 * details
+  * Revision 1024
+    * encoder_stream/decode_stream intergrates http_huffman_encoding
   * Revision 1023
     * [improvement] error_traits
   * Revision 1020

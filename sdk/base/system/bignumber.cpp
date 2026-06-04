@@ -15,7 +15,6 @@
 #include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/system/bignumber.hpp>
-#include <hotplace/sdk/base/system/endian.hpp>
 
 namespace hotplace {
 
@@ -952,23 +951,6 @@ std::string bignumber::hex() const {
     std::string b16str;
     *this >> b16str;
     return b16str;
-}
-
-void bignumber::dump(std::function<void(const binary_t&)> func) const {
-    binary_t out;
-    for (size_t i = _v.size(); i > 0; --i) {
-        size_t idx = i - 1;
-        auto x = _v[idx];
-        if (is_little_endian()) {
-            x = hton32(x);
-        }
-        for (int j = 0; j < 4; j++) {
-            out.push_back((x >> (8 * j)) & 0xFF);
-        }
-    }
-    if (func) {
-        func(out);
-    }
 }
 
 int bignumber::get(binary_t& base16hexstream, bool trimzero) const {

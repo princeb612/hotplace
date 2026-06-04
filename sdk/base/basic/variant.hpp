@@ -202,6 +202,34 @@ enum class vartype_t {
     TYPE_USER = 0x10000,              //
 };
 
+namespace custom {
+
+template <typename T, typename enable_t = void>
+struct vt_remove_ptr_const {
+    using type = typename std::decay<T>::type;
+};
+
+/**
+ * @sa  variant
+ */
+// is_pointer const char*, const char*&
+template <typename T>
+struct vt_remove_ptr_const<T, typename std::enable_if<std::is_pointer<typename std::remove_reference<T>::type>::value>::type> {
+    // const char*& -> const char*
+    using unreferenced_type = typename std::remove_reference<T>::type;
+    // const char* -> const char
+    using base_type = typename std::remove_pointer<unreferenced_type>::type;
+    // const char -> char
+    using unconst_type = typename std::remove_const<base_type>::type;
+    // char -> char*
+    using type = typename std::add_pointer<unconst_type>::type;
+};
+
+template <typename T>
+using vt_remove_ptr_const_t = typename vt_remove_ptr_const<T>::type;
+
+}  // namespace custom
+
 /**
  * variant_flag_t    : characteristic, behavioral, attributes
  * variant_control_t : operational

@@ -140,37 +140,85 @@ class logger {
     logger& consoleln(const std::string& msg);
     logger& consoleln(const basic_stream& msg);
     logger& consoleln(stream_t* s);
-    logger& consoleln(std::function<void(basic_stream& bs)> f);
+    template <typename F>  // void(basic_stream& bs)
+    logger& consoleln(F f) {
+        if (test_loglevel()) {
+            basic_stream bs;
+            f(bs);
+            colorln(bs);
+        }
+        return *this;
+    }
 
     logger& consoleln(loglevel_t level, const char* fmt, ...);
     logger& consoleln(loglevel_t level, const std::string& msg);
     logger& consoleln(loglevel_t level, const basic_stream& msg);
     logger& consoleln(loglevel_t level, stream_t* s);
-    logger& consoleln(loglevel_t level, std::function<void(basic_stream& bs)> f);
+    template <typename F>  // void(basic_stream& bs)
+    logger& consoleln(loglevel_t level, F f) {
+        if (test_loglevel(level)) {
+            basic_stream bs;
+            f(bs);
+            colorln(bs);
+        }
+        return *this;
+    }
 
     logger& writeln(const char* fmt, ...);
     logger& writeln(const std::string& msg);
     logger& writeln(const basic_stream& msg);
     logger& writeln(stream_t* s);
-    logger& writeln(std::function<void(basic_stream& bs)> f);
+    template <typename F>  // void(basic_stream& bs)
+    logger& writeln(F f) {
+        if (test_loglevel()) {
+            basic_stream bs;
+            f(bs);
+            writeln(bs);
+        }
+        return *this;
+    }
 
     logger& writeln(loglevel_t level, const char* fmt, ...);
     logger& writeln(loglevel_t level, const std::string& msg);
     logger& writeln(loglevel_t level, const basic_stream& msg);
     logger& writeln(loglevel_t level, stream_t* s);
-    logger& writeln(loglevel_t level, std::function<void(basic_stream& bs)> f);
+    template <typename F>  //  void(basic_stream& bs)
+    logger& writeln(loglevel_t level, F f) {
+        if (test_loglevel(level)) {
+            basic_stream bs;
+            f(bs);
+            writeln(level, bs);
+        }
+        return *this;
+    }
 
     logger& write(const char* fmt, ...);
     logger& write(const std::string& msg);
     logger& write(const basic_stream& msg);
     logger& write(stream_t* s);
-    logger& write(std::function<void(basic_stream& bs)> f);
+    template <typename F>  // void(basic_stream& bs)
+    logger& write(F f) {
+        if (test_loglevel()) {
+            basic_stream bs;
+            f(bs);
+            write(bs);
+        }
+        return *this;
+    }
 
     logger& write(loglevel_t level, const char* fmt, ...);
     logger& write(loglevel_t level, const std::string& msg);
     logger& write(loglevel_t level, const basic_stream& msg);
     logger& write(loglevel_t level, stream_t* s);
-    logger& write(loglevel_t level, std::function<void(basic_stream& bs)> f);
+    template <typename F>  // void(basic_stream& bs)
+    logger& write(loglevel_t level, F f) {
+        if (test_loglevel(level)) {
+            basic_stream bs;
+            f(bs);
+            write(level, bs);
+        }
+        return *this;
+    }
 
     logger& dump(const byte_t* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
     logger& dump(const char* addr, size_t size, unsigned hexpart = 16, unsigned indent = 0);
@@ -207,7 +255,15 @@ class logger {
     logger& colorln(const std::string& msg);
     logger& colorln(const basic_stream& msg);
     logger& colorln(stream_t* s);
-    logger& colorln(std::function<void(basic_stream& bs)> f);
+    template <typename F>  // void(basic_stream& bs)
+    logger& colorln(F f) {
+        if (test_loglevel()) {
+            basic_stream bs;
+            f(bs);
+            colorln(bs);
+        }
+        return *this;
+    }
 
     logger& attach(test_case* testcase);
 
@@ -215,12 +271,57 @@ class logger {
     logger();
     void clear();
 
-    logger& do_console(std::function<void(logger_item*)> f);
+    template <typename F>  // void(logger_item*)
+    logger& do_console(F f) {
+        std::string datefmt;
+        {
+            critical_section_guard guard(_lock);
+            datefmt = _skeyvalue.get("datefmt");
+        }
+
+        logger_item* item = get_context();
+        if (item) {
+            if (false == datefmt.empty()) {
+                datetime dt;
+                dt.format(1, item->bs, datefmt);
+            }
+
+            f(item);
+
+            stdout_handler(item->bs);
+            item->bs.clear();
+
+            item->release();
+        }
+
+        return *this;
+    }
     logger& do_console_vprintf(const char* fmt, va_list ap, bool lf = false);
     logger& do_console_raw(const char* buf, size_t bufsize, bool lf = false);
     logger& do_console_stream(stream_t* s, bool lf = false);
+    template <typename F>  // void(logger_item*)
+    logger& do_write(F f) {
+        std::string datefmt;
+        {
+            critical_section_guard guard(_lock);
+            datefmt = _skeyvalue.get("datefmt");
+        }
+        if (test_logging_stdout() || test_logging_file()) {
+            logger_item* item = get_context();
+            if (item) {
+                if (false == datefmt.empty()) {
+                    datetime dt;
+                    dt.format(1, item->bs, datefmt);
+                }
 
-    logger& do_write(std::function<void(logger_item*)> f);
+                f(item);
+
+                touch(item);
+                item->release();
+            }
+        }
+        return *this;
+    }
     logger& do_write_vprintf(const char* fmt, va_list ap, bool lf = false);
     logger& do_write_raw(const char* buf, size_t bufsize, bool lf = false);
     logger& do_write_stream(stream_t* s, bool lf = false);

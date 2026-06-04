@@ -11,10 +11,10 @@
 
 #include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/basic/base64.hpp>
+#include <hotplace/sdk/base/basic/http_huffman_coding.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/stream/encoder_stream.hpp>
-#include <hotplace/sdk/base/system/endian.hpp>
 
 namespace hotplace {
 
@@ -94,6 +94,25 @@ return_t encoder_stream::write(const byte_t* data, size_t size) {
                     _encbuf.len = (uint8)remainder;
                 }
             } break;
+            case encoding_t::encoding_h2hcodes: {
+                auto* huff = http_huffman_coding::get_instance();
+                for (size_t i = 0; i < size; ++i) {
+                    uint8 sym = data[i];
+                    const auto& cache = huff->get_encode_cache(sym);
+                    uint32 bits = cache.bit_code;
+                    uint8 len = cache.bit_len;
+                    for (int8 b = len - 1; b >= 0; --b) {
+                        _bitbuf.buf <<= 1;
+                        if ((bits >> b) & 1) _bitbuf.buf |= 1;
+                        ++_bitbuf.len;
+
+                        if (8 == _bitbuf.len) {
+                            _bin.push_back((char)_bitbuf.buf);
+                            _bitbuf.reset();
+                        }
+                    }
+                }
+            } break;
             default: {
                 ret = errorcode_t::not_supported;
             } break;
@@ -116,6 +135,17 @@ return_t encoder_stream::flush() {
                 _encbuf.reset();
             }
         } break;
+        case encoding_t::encoding_h2hcodes: {
+            if (_bitbuf.len > 0) {
+                // auto* huff = http_huffman_coding::get_instance();
+                uint8 shift = 8 - _bitbuf.len;
+                _bitbuf.buf <<= shift;
+                _bitbuf.buf |= ((1 << shift) - 1);  // huff->decodable() always true
+
+                _bin.push_back((char)_bitbuf.buf);
+                _bitbuf.reset();
+            }
+        } break;
         default: {
             // do nothing
         } break;
@@ -132,6 +162,11 @@ encoder_stream& encoder_stream::clear() {
 std::string encoder_stream::str() {
     flush();
     return _buffer;
+}
+
+binary_t encoder_stream::bin() {
+    flush();
+    return _bin;
 }
 
 encoder_stream& encoder_stream::operator<<(bool value) {

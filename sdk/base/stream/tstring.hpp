@@ -21,7 +21,7 @@
 #define __HOTPLACE_SDK_BASE_STREAM_TSTRING__
 
 #include <hotplace/sdk/base/basic/types.hpp>
-#include <hotplace/sdk/base/nostd/traits.hpp>
+#include <hotplace/sdk/base/nostd/traits_printf.hpp>
 #include <hotplace/sdk/base/stream/bufferio.hpp>
 #include <ostream>
 
@@ -129,11 +129,12 @@ class ansi_string : public stream_t {
     /**
      * stream implementation
      */
-    template <typename T,                                                                          //
-              typename std::enable_if<custom::is_integral<typename std::decay<T>::type>::value ||  //
-                                          std::is_enum<typename std::decay<T>::type>::value ||     //
-                                          std::is_floating_point<typename std::decay<T>::type>::value,
-                                      int>::type = 0>
+    template <typename T,                                                      //
+              typename std::enable_if<                                         //
+                  custom::is_integral<typename std::decay<T>::type>::value ||  //
+                      std::is_enum<typename std::decay<T>::type>::value ||     //
+                      std::is_floating_point<typename std::decay<T>::type>::value,
+                  int>::type = 0>
     ansi_string& operator<<(T value) {
         using traits = custom::printf_traits<char, T>;
         using cast_type = typename traits::cast_type;

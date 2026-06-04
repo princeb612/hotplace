@@ -9,6 +9,8 @@
  */
 
 #include <hotplace/sdk/base/basic/http_huffman_coding.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/stream/stream.hpp>
 #include <hotplace/sdk/net/http/compression/http_dynamic_table.hpp>
 #include <hotplace/sdk/net/http/compression/http_header_compression.hpp>
 #include <hotplace/sdk/net/http/compression/http_static_table.hpp>
@@ -197,7 +199,7 @@ return_t http_header_compression::decode_string(const byte_t* p, size_t& pos, ui
             decode_int(p, pos, 0x80, 7, len);
             basic_stream bs;
             auto huffcode = http_huffman_coding::get_instance();
-            huffcode->decode(&bs, p + pos, len);
+            huffcode->decode(bs, p + pos, len);
             value = bs.c_str();
         } else {
             // string
@@ -222,7 +224,7 @@ return_t http_header_compression::decode_name_reference(const byte_t* p, size_t&
         if (qpack_huffman & flags) {
             basic_stream bs;
             auto huffcode = http_huffman_coding::get_instance();
-            huffcode->decode(&bs, p + pos, namelen);
+            huffcode->decode(bs, p + pos, namelen);
             name = bs.c_str();
         } else {
             name.assign((char*)p + pos, namelen);

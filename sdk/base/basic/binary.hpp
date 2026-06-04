@@ -127,7 +127,7 @@ return_t binary_append(binary_t& target, const byte_t* buf, size_t from, size_t 
  * @param   uint32 len [in] limited up to sizeof(T)
  *          in case of (len == sizeof(T)) it works like binary_append
  * @param   T value [in]
- * @param   std::function<T(const T&)> func [inopt] hton16, ..., hton128
+ * @param   transformer_t func [inopt] hton16, ..., hton128
  * @sample
  *          uint32 ui32 = 0x12345678;
  *

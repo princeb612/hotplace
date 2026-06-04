@@ -130,21 +130,4 @@ return_t split_end(split_context_t* handle) {
     return ret;
 }
 
-return_t split_foreach(split_context_t* handle, std::function<void(const std::string&)> func) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == handle || nullptr == func) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        for (const auto& item : handle->info) {
-            std::string data;
-            data.assign(handle->source.c_str() + item.begin, item.length);
-            func(data);
-        }
-    }
-    __finally2 {}
-    return ret;
-}
-
 }  // namespace hotplace

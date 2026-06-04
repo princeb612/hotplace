@@ -57,7 +57,7 @@ void test_huffman() {
 
         ret = huff.encode(enc, sample, samplesize);
         _logger->dump(enc);
-        ret = huff.encode(&ebs, sample, samplesize);
+        ret = huff.diag(ebs, sample, samplesize);
         _logger->writeln(ebs);
         _test_case.test(ret, __FUNCTION__, "encode");
 
@@ -70,10 +70,10 @@ void test_huffman() {
 
     basic_stream dbs;
     if (false == huff.decodable()) {
-        ret = huff.decode(&dbs, enc.data(), enc.size());
+        ret = huff.decode(dbs, enc.data(), enc.size());
         _test_case.assert(errorcode_t::success != ret, __FUNCTION__, "error detected");
 
-        ret = huff.decode(&dbs, enc.data(), enc.size(), manual_decode);
+        ret = huff.decode(dbs, enc.data(), enc.size(), manual_decode);
         _test_case.test(ret, __FUNCTION__, "error ignored");
 
         dbs.resize(samplesize);
@@ -96,12 +96,12 @@ void test_huffman() {
         // encode
         ret = huff2.encode(enc2, sample, samplesize);
         _logger->dump(enc2);
-        ret = huff2.encode(&ebs2, sample, samplesize);
+        ret = huff2.diag(ebs2, sample, samplesize);
         _logger->writeln(ebs2);
         _test_case.assert(enc == enc2, __FUNCTION__, "imports+encode");
         // decode
         uint32 flags = huff2.decodable() ? 0 : manual_decode;
-        ret = huff2.decode(&dbs2, enc2.data(), enc2.size(), flags);
+        ret = huff2.decode(dbs2, enc2.data(), enc2.size(), flags);
         if (flags & manual_decode) {
             dbs2.resize(samplesize);
         }
@@ -121,12 +121,12 @@ void test_huffman() {
         // encode
         ret = huff3.encode(enc3, sample, samplesize);
         _logger->dump(enc3);
-        ret = huff3.encode(&ebs3, sample, samplesize);
+        ret = huff3.diag(ebs3, sample, samplesize);
         _logger->writeln(ebs3);
         _test_case.test(ret, __FUNCTION__, "RFC 7541 Appendix B. Huffman Code");
         // decode
         uint32 flags = huff3.decodable() ? 0 : manual_decode;
-        ret = huff3.decode(&dbs3, enc3.data(), enc3.size(), flags);
+        ret = huff3.decode(dbs3, enc3.data(), enc3.size(), flags);
         if (flags & manual_decode) {
             dbs3.resize(samplesize);
         }
@@ -135,4 +135,69 @@ void test_huffman() {
     }
 }
 
-void testcase_huffman() { test_huffman(); }
+void test_huffman_stream() {
+    _test_case.begin("huffman codes");
+
+    const char* sample1 = "We don't playing because we grow old; we grow old because we stop playing.";
+    binary_t sample = to_binary(sample1);
+
+    binary_t encoded;
+    http_huffman_coding::get_instance()->encode(encoded, sample.data(), sample.size());
+    binary_t expect_encoded = encoded;
+
+    auto write_encoder_chunks = [&](encoder_stream& encoder, const byte_t* stream, size_t stream_size, size_t chunk_size) -> void {
+        size_t pos = 0;
+        while (pos < stream_size) {
+            size_t len = std::min(chunk_size, stream_size - pos);
+            encoder.write(stream + pos, len);
+            pos += len;
+        }
+    };
+    auto write_decoder_chunks = [&](decoder_stream& decoder, const byte_t* stream, size_t stream_size, size_t chunk_size) -> void {
+        size_t pos = 0;
+        while (pos < stream_size) {
+            size_t len = std::min(chunk_size, stream_size - pos);
+            decoder.write(stream + pos, len);
+            pos += len;
+        }
+    };
+
+    for (size_t chunk = 1; chunk <= 16; ++chunk) {
+        encoder_stream encoder(encoding_t::encoding_h2hcodes);
+        _logger->writeln("start encoding");
+        write_encoder_chunks(encoder, sample.data(), sample.size(), chunk);
+        _logger->writeln("stop encoding");
+        auto encoded = encoder.bin();  // always even size
+
+        valist va;
+        va << chunk << sample << encoded;
+        _logger->writeln([&](basic_stream& bs) -> void {
+            bs.vaprintln("chunk   {1:s}", va);
+            bs.vaprintln("source  {2:s}", va);  // printable data
+            bs.vaprintln("encoded {3:s}", va);
+        });
+
+        _test_case.assert(encoded == expect_encoded, __FUNCTION__, "http_huffman_coding encoder stream chunk %zi", chunk);
+    }
+
+    for (size_t chunk = 1; chunk <= 16; ++chunk) {
+        decoder_stream decoder(encoding_t::encoding_h2hcodes);
+        _logger->writeln("start decoding");
+        write_decoder_chunks(decoder, encoded.data(), encoded.size(), chunk);
+        _logger->writeln("stop decoding");
+        auto decoded = decoder.data();
+
+        valist va;
+        va << chunk << decoded;
+        _logger->writeln([&](basic_stream& bs) -> void {
+            bs.vaprintln("chunk   {1:s}", va);
+            bs.vaprintln("decoded {2:s}", va);  // printable data
+        });
+        _test_case.assert(decoded == sample, __FUNCTION__, "http_huffman_coding decoder stream chunk %zi", chunk);
+    }
+}
+
+void testcase_huffman() {
+    test_huffman();
+    test_huffman_stream();
+}
