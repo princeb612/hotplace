@@ -12,13 +12,17 @@
 
 #include <stdio.h>
 
-#include <hotplace/testcase/base/pattern/test.hpp>
 #include <hotplace/testcase/test.hpp>
 
 struct OPTION : public CMDLINEOPTION {
     int attach;
 
     OPTION() : CMDLINEOPTION(), attach(0) {}
+};
+
+struct pattern_t {
+    const char* pattern;
+    unsigned len;
 };
 
 extern test_case _test_case;

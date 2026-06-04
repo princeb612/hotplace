@@ -161,6 +161,21 @@ int crypto_key::addref() { return _shared.addref(); }
 
 int crypto_key::release() { return _shared.delref(); }
 
+void crypto_key::for_each(std::function<void(crypto_key_object*, void*)> fp_dump, void* param) {
+    critical_section_guard guard(_lock);
+    __try2 {
+        if (nullptr == fp_dump) {
+            __leave2;
+        }
+
+        for (auto& pair : _key_map) {
+            crypto_key_object& keyobj = pair.second;
+            fp_dump(&keyobj, param);
+        }
+    }
+    __finally2 {}
+}
+
 void crypto_key::erase(const std::string& kid) {
     critical_section_guard guard(_lock);
     auto lbound = _key_map.lower_bound(kid);

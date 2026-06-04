@@ -10,6 +10,9 @@
 #ifndef __HOTPLACE_TEST_TLS13_UDPTRAFFIC__
 #define __HOTPLACE_TEST_TLS13_UDPTRAFFIC__
 
+#include <random>
+#include "sample.hpp"
+
 // simulate traffic
 class udp_traffic {
    public:

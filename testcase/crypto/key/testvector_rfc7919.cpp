@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/testcase/crypto/key/testvector.hpp>
+#include <hotplace/testcase/crypto/sample.hpp>
 
 extern const test_vector_rfc7919_t test_vector_rfc7919[] = {
     {

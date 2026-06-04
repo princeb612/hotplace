@@ -8,7 +8,6 @@
  * Date         Name                Description
  */
 
-#include <hotplace/testcase/crypto/key/testvector.hpp>
 #include <hotplace/testcase/crypto/sample.hpp>
 
 void test_ffdhe_key() {

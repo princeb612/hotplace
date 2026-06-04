@@ -25,6 +25,21 @@ extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
+// hash
+void test_hash_routine(hash_algorithm_t algorithm, const byte_t* key_data, unsigned key_size, byte_t* data, size_t size);
+return_t test_hash_routine(hash_algorithm_t algorithm, binary_t key, binary_t data, binary_t expect, const char* text);
+
+// key
+struct test_vector_rfc7919_t {
+    const char* desc;
+    uint32 nid;
+    const char* p;
+    const char* q;
+    const char* g;
+};
+extern const test_vector_rfc7919_t test_vector_rfc7919[];
+extern const size_t sizeof_test_vector_rfc7919;
+
 void testcase_advisor();
 
 void testcase_aead_ccm();

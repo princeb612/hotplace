@@ -10,9 +10,6 @@
 #ifndef __HOTPLACE_TEST_NET__
 #define __HOTPLACE_TEST_NET__
 
-#include <hotplace/testcase/net/hpack/test.hpp>
-#include <hotplace/testcase/net/http/test.hpp>
-#include <hotplace/testcase/net/qpack/test.hpp>
 #include <hotplace/testcase/test.hpp>
 
 struct OPTION : public CMDLINEOPTION {
@@ -26,6 +23,24 @@ struct OPTION : public CMDLINEOPTION {
 extern test_case _test_case;
 extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
+
+// hpack
+extern t_shared_instance<hpack_encoder> encoder;
+void dump_hpack_session_routine(const char* stream, size_t size);
+
+// http
+struct testvector_http_t {
+    tls_direction_t dir;
+    const char* desc;
+    const char* frame;
+};
+extern const testvector_http_t testvector_h2frame[];
+extern const size_t sizeof_testvector_h2;
+
+// qpack
+void dump_qpack_session_routine(const char* stream, size_t size);
+void test_expect(binary_t& bin, const char* expect, const char* func, const char* text, ...);
+void test_dump(binary_t& bin, const char* text, ...);
 
 // HTTP
 void testcase_http();

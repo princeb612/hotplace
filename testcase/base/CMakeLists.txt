@@ -16,6 +16,7 @@ file (GLOB SOURCE_FILES
     system/*.cpp
     unittest/*.cpp
 )
+file (GLOB HEADER_FILES *.hpp ${PROJECT_SOURCE_DIR}/testcase/*.hpp)
 file (GLOB DATA_FILES
     *.yml
     basic/*.yml
@@ -34,4 +35,4 @@ endif ()
 
 file (COPY ${DATA_FILES} DESTINATION ${PROJECT_SOURCE_DIR}/${SET_BUILDDIR}/testcase/${module}/)
 
-maketest (${module} SOURCE_FILES PROJECT_SDK_MODULE_DEPENDENCIES PROJECT_SDK_PLATFORM_DEPENDENCIES 1)
+maketest (${module} SOURCE_FILES HEADER_FILES PROJECT_SDK_MODULE_DEPENDENCIES PROJECT_SDK_PLATFORM_DEPENDENCIES 1)

@@ -65,6 +65,17 @@ logger& logger::consoleln(stream_t* s) {
     return *this;
 }
 
+logger& logger::consoleln(std::function<void(basic_stream& bs)> f) {
+    if (test_loglevel()) {
+        if (f) {
+            basic_stream bs;
+            f(bs);
+            colorln(bs);
+        }
+    }
+    return *this;
+}
+
 logger& logger::consoleln(loglevel_t level, const char* fmt, ...) {
     if (test_loglevel(level)) {
         va_list ap;
@@ -92,6 +103,17 @@ logger& logger::consoleln(loglevel_t level, const basic_stream& msg) {
 logger& logger::consoleln(loglevel_t level, stream_t* s) {
     if (test_loglevel(level)) {
         do_console_stream(s, true);
+    }
+    return *this;
+}
+
+logger& logger::consoleln(loglevel_t level, std::function<void(basic_stream& bs)> f) {
+    if (test_loglevel(level)) {
+        if (f) {
+            basic_stream bs;
+            f(bs);
+            colorln(bs);
+        }
     }
     return *this;
 }
@@ -158,6 +180,28 @@ logger& logger::write(loglevel_t level, stream_t* s) {
     return *this;
 }
 
+logger& logger::write(std::function<void(basic_stream& bs)> f) {
+    if (test_loglevel()) {
+        if (f) {
+            basic_stream bs;
+            f(bs);
+            write(bs);
+        }
+    }
+    return *this;
+}
+
+logger& logger::write(loglevel_t level, std::function<void(basic_stream& bs)> f) {
+    if (test_loglevel(level)) {
+        if (f) {
+            basic_stream bs;
+            f(bs);
+            write(level, bs);
+        }
+    }
+    return *this;
+}
+
 logger& logger::writeln(const char* fmt, ...) {
     if (test_loglevel()) {
         va_list ap;
@@ -220,6 +264,28 @@ logger& logger::writeln(loglevel_t level, stream_t* s) {
     return *this;
 }
 
+logger& logger::writeln(std::function<void(basic_stream& bs)> f) {
+    if (test_loglevel()) {
+        if (f) {
+            basic_stream bs;
+            f(bs);
+            writeln(bs);
+        }
+    }
+    return *this;
+}
+
+logger& logger::writeln(loglevel_t level, std::function<void(basic_stream& bs)> f) {
+    if (test_loglevel(level)) {
+        if (f) {
+            basic_stream bs;
+            f(bs);
+            writeln(level, bs);
+        }
+    }
+    return *this;
+}
+
 logger& logger::colorln(const char* fmt, ...) {
     if (test_loglevel()) {
         va_list ap;
@@ -235,5 +301,16 @@ logger& logger::colorln(const std::string& msg) { return do_color_write_raw(msg.
 logger& logger::colorln(const basic_stream& msg) { return do_color_write_raw(msg.c_str(), msg.size(), true); }
 
 logger& logger::colorln(stream_t* s) { return do_color_write_stream(s, true); }
+
+logger& logger::colorln(std::function<void(basic_stream& bs)> f) {
+    if (test_loglevel()) {
+        if (f) {
+            basic_stream bs;
+            f(bs);
+            colorln(bs);
+        }
+    }
+    return *this;
+}
 
 }  // namespace hotplace

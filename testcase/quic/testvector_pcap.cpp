@@ -10,7 +10,7 @@
  *
  */
 
-#include <hotplace/testcase/tls/sample.hpp>
+#include "sample.hpp"
 
 void play_yaml_pcap_http3(const char* filename) {
     auto sslkeylog = sslkeylog_importer::get_instance();
