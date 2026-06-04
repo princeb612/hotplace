@@ -23,7 +23,7 @@ void do_test_huffman_codes_routine(const char* sample, const char* expect) {
         // encode
         {
             basic_stream bs;
-            huffcode->encode(&bs, (byte_t*)sample, strlen(sample));
+            huffcode->encode(bs, (byte_t*)sample, strlen(sample));
             if (option.verbose) {
                 test_case_notimecheck notimecheck(_test_case);
                 _logger->writeln("%s", bs.c_str());
@@ -41,7 +41,7 @@ void do_test_huffman_codes_routine(const char* sample, const char* expect) {
         // decode
         {
             basic_stream bs;
-            ret = huffcode->decode(&bs, bin.data(), bin.size());
+            ret = huffcode->decode(bs, bin.data(), bin.size());
             if (option.verbose) {
                 test_case_notimecheck notimecheck(_test_case);
                 _logger->writeln("%s", bs.c_str());

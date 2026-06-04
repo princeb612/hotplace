@@ -171,7 +171,7 @@ void test_huffman_stream() {
 
         valist va;
         va << chunk << sample << encoded;
-        _logger->writeln([&](basic_stream& bs) -> void {
+        _logger->write([&](basic_stream& bs) -> void {
             bs.vaprintln("chunk   {1:s}", va);
             bs.vaprintln("source  {2:s}", va);  // printable data
             bs.vaprintln("encoded {3:s}", va);
@@ -189,7 +189,7 @@ void test_huffman_stream() {
 
         valist va;
         va << chunk << decoded;
-        _logger->writeln([&](basic_stream& bs) -> void {
+        _logger->write([&](basic_stream& bs) -> void {
             bs.vaprintln("chunk   {1:s}", va);
             bs.vaprintln("decoded {2:s}", va);  // printable data
         });

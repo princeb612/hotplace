@@ -261,7 +261,7 @@ struct encoder_stream_traits<basic_stream> {
         }
     }
 
-    static void preempt(binary_t& buf, size_t size) {}
+    static void preempt(basic_stream& buf, size_t size) {}
     static void push(basic_stream& buf, value_type c) { buf.write(&c, sizeof(value_type)); }
     static void append(basic_stream& buf, const char* msg) {
         if (msg) {
