@@ -10,7 +10,7 @@
 #ifndef __HOTPLACE_TEST_ENCODE__
 #define __HOTPLACE_TEST_ENCODE__
 
-#include <hotplace/testcase/test.hpp>
+#include <hotplace/test.hpp>
 
 enum {
     decode_b64u = 1,
@@ -39,8 +39,6 @@ struct OPTION : public CMDLINEOPTION {
     }
 };
 
-extern test_case _test_case;
-extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 void testcase_base16();

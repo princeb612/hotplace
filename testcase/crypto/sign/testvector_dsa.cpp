@@ -36,7 +36,7 @@ void test_yaml_testvector_dsa() {
     return_t ret = errorcode_t::success;
     std::map<std::string, test_vector_nist_cavp_dsa_param_t> dsa_params;
 
-    auto lambda_yaml_dsa_param = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_dsa_param = [&](const YAML::Node& example, const YAML::Node& items) -> void {
         for (const auto& item : items) {
             test_vector_nist_cavp_dsa_param_t entry;
 
@@ -48,7 +48,7 @@ void test_yaml_testvector_dsa() {
             dsa_params.emplace(entry.item, entry);
         }
     };
-    auto lambda_yaml_dsa_testvector = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_dsa_testvector = [&](const YAML::Node& example, const YAML::Node& items) -> void {
         for (const auto& item : items) {
             test_vector_nist_cavp_dsa_t entry;
 
@@ -97,25 +97,8 @@ void test_yaml_testvector_dsa() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("testvector_dsa.yml");
-    auto examples = testvector["testvector"];
-    if (examples && examples.IsSequence()) {
-        for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>("");
-            _logger->writeln("example: %s", text_example.c_str());
-
-            auto schema = example["schema"].as<std::string>("");
-            auto items = example["items"];
-
-            if (schema == "DSA PARAMETER") {
-                lambda_yaml_dsa_param(items);
-            } else if (schema == "DSA TESTVECTOR") {
-                lambda_yaml_dsa_testvector(items);
-            } else {
-                _test_case.assert(false, __FUNCTION__, "bad message format");
-            }
-        }
-    }
+    yaml_testcase test;
+    test.add("DSA PARAMETER", lambda_yaml_dsa_param).add("DSA TESTVECTOR", lambda_yaml_dsa_testvector).run("testvector_dsa.yml");
 }
 
 void testcase_testvector_dsa() { test_yaml_testvector_dsa(); }

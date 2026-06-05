@@ -1,0 +1,53 @@
+testvector:
+  - example: RFC 4615
+    schema: RFC 4615
+    items:
+    - item: RFC 4615 4.  Test Vectors #1
+      salt: 000102030405060708090a0b0c0d0e0fedcb
+      ikm:  000102030405060708090a0b0c0d0e0f10111213
+      prk:  84a348a4a45d235babfffc0d2b4da09a
+    - item: RFC 4615 4.  Test Vectors #2
+      salt: 000102030405060708090a0b0c0d0e0f
+      ikm:  000102030405060708090a0b0c0d0e0f10111213
+      prk:  980ae87b5f4c9c5214f5b6a8455e4c2d
+    - item: RFC 4615 4.  Test Vectors #3
+      salt: 00010203040506070809
+      ikm:  000102030405060708090a0b0c0d0e0f10111213
+      prk:  290d9e112edb09ee141fcf64c0b72f3d
+    - item: RFC 4493 4.  Test Vectors Example 1
+      salt: 2b7e151628aed2a6abf7158809cf4f3c
+      ikm:
+      prk:  bb1d6929e95937287fa37d129b756746
+    - item: RFC 4493 4.  Test Vectors Example 2
+      salt: 2b7e151628aed2a6abf7158809cf4f3c
+      ikm:  6bc1bee22e409f96e93d7e117393172a
+      prk:  070a16b46b4d4144f79bdd9dd04a287c
+    - item: RFC 4493 4.  Test Vectors Example 3
+      salt: 2b7e151628aed2a6abf7158809cf4f3c
+      ikm:  6bc1bee2 2e409f96 e93d7e11 7393172a ae2d8a57 1e03ac9c 9eb76fac 45af8e51 30c81c46 a35ce411
+      prk:  dfa66747 de9ae630 30ca3261 1497c827
+    - item: RFC 4493 4.  Test Vectors Example 4
+      salt: 2b7e151628aed2a6abf7158809cf4f3c
+      ikm:  6bc1bee2 2e409f96 e93d7e11 7393172a ae2d8a57 1e03ac9c 9eb76fac 45af8e51 30c81c46 a35ce411 e5fbc119 1a0a52ef f69f2445 df4f9b17 ad2b417b e66c3710
+      prk:  51f0bebf 7e3b9d92 fc497417 79363cfe
+    - item: draft-agl-ckdf-01 Test Case (empty salt)
+      salt:
+      ikm:  736563726574206b6579
+      prk:  6f79b401ea761a0100b7ca60c178b69d
+  - example: draft-agl-ckdf-01
+    schema: CKDF
+    items:
+    - item: case 1
+      salt:
+      ikm:  736563726574206b6579
+      prk:  6f79b401ea761a0100b7ca60c178b69d
+      len:  32
+      info:
+      okm:  922da31d7e1955f06a56464b5feb7032f3e996295165f6c60e08ba432dd9058b
+    - item: case 2
+      salt:
+      ikm:  736563726574206b6579
+      prk:  6f79b401ea761a0100b7ca60c178b69d
+      len:  256
+      info: 696e666f20737472696e67
+      okm:  6174e67212e1234b6e05bfd31043422c7ab6dc315db7d98d013ab332924b7fe90ae9a89d09c93be40ce525e0b6f0d37df38181913aa3d588f75a3594ef7a93acd791331e7929de8bc8c8a6ee2dd9960ec57fe159610676a7c118c4aac2d34a896edd3691f0e922a30eecc7b3ec3eaa9113d4ee518b0a4c7ed0b475dfbd07ee02a3470832da247ef3b07f9acd8ddbb7657369e1c52942fab211d47c440d6818f829cdd8dad84b825e1166cbdcdbb13904d6753de76070a145a8572496c28085679459d801f14449fbf3430a83685a4b8d091dc2fc85b8209d7cfd5dbd39d79a8dd7c6f981af064ce69e58a99fbd9ffd58a2d93d60972ec873f27feaedeed73f0a

@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/testcase/test.hpp>
+#include <hotplace/test.hpp>
 
 test_case _test_case;
 t_shared_instance<logger> _logger;

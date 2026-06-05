@@ -102,7 +102,9 @@ void do_test_ecdsa(const test_vector_nist_cavp_ecdsa_t* entry) {
 void test_yaml_testvector_ecdsa() {
     _test_case.begin("ECDSA YAML");
 
-    auto lambda_yaml_ecdsa_testvector = [&](const YAML::Node& items, const std::string& encoding) -> void {
+    auto lambda_yaml_ecdsa_testvector = [&](const YAML::Node& example, const YAML::Node& items) -> void {
+        auto encoding = example["encoding"].as<std::string>("");
+
         for (const auto& item : items) {
             test_vector_nist_cavp_ecdsa_t entry;
 
@@ -122,25 +124,8 @@ void test_yaml_testvector_ecdsa() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("testvector_ecdsa.yml");
-    auto examples = testvector["testvector"];
-    if (examples && examples.IsSequence()) {
-        for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>("");
-            _logger->writeln("example: %s", text_example.c_str());
-
-            auto schema = example["schema"].as<std::string>("");
-            auto items = example["items"];
-
-            if (schema == "ECDSA TESTVECTOR") {
-                auto encoding = example["encoding"].as<std::string>("");
-
-                lambda_yaml_ecdsa_testvector(items, encoding);
-            } else {
-                _test_case.assert(false, __FUNCTION__, "bad message format");
-            }
-        }
-    }
+    yaml_testcase test;
+    test.add("ECDSA TESTVECTOR", lambda_yaml_ecdsa_testvector).run("testvector_ecdsa.yml");
 }
 
 void testcase_testvector_ecdsa() { test_yaml_testvector_ecdsa(); }

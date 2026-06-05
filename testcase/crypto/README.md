@@ -204,6 +204,54 @@ testvector:
         keydata: hexstring      # [mandatory] key data
 ````
 
+* RFC 4615 schema
+  * RFC 4615 The Advanced Encryption Standard-Cipher-based Message Authentication Code-Pseudo-Random Function-128 (AES-CMAC-PRF-128) Algorithm for the Internet Key Exchange Protocol (IKE)
+
+````
+testvector:
+  - example: string             # [mandatory] testcase
+    schema: RFC 4615            # [mandatory] "RFC 4615"
+    items:
+      - item: string            # [mandatory] 
+        salt: hexstring         # [mandatory] key
+        ikm: hexstring          # [mandatory] message
+        prk: hexstring          # [mandatory] RFC 4493 AES-CMAC, RFC 4615 PRF output
+````
+
+* CKDF schema
+
+````
+testvector:
+  - example: string             # [mandatory] testcase
+    schema: CKDF                # [mandatory] CKDF
+    items:
+      - item: string            # [mandatory] 
+        salt: hexstring         # [mandatory] key
+        ikm: hexstring          # [mandatory] message
+        prk: hexstring          # [mandatory] RFC 4493 AES-CMAC, RFC 4615 PRF output
+        len: int                # [mandatory]
+        info: hexstring         # [mandatory]
+        okm: hexstring          # [mandatory]
+````
+
+* RFC 5869 schema
+  * RFC 5869 HMAC-based Extract-and-Expand Key Derivation Function (HKDF)
+
+````
+testvector:
+  - example: string             # [mandatory] testcase
+    schema: RFC 5869            # [mandatory] "RFC 5869"
+    items:
+      - item: string            # [mandatory] 
+        alg: string             # [mandatory]
+        dlen: int               # [mandatory]
+        ikm: hexstring          # [mandatory]
+        salt: hexstring         # [mandatory]
+        info: hexstring         # [mandatory]
+        prk: hexstring          # [mandatory]
+        okm: hexstring          # [mandatory]
+````
+
 * RFC 7439 schema
 
 ````
@@ -211,7 +259,7 @@ testvector:
   - example: string             # [mandatory] testcase
     schema: RFC 7539            # [mandatory] "RFC 7539"
     items:
-      - item: string            #
+      - item: string            # [mandatory] 
         alg: string             # [mandatory] "chacha20"|"chacha20-poly1305"
         key: hexstring          # [mandatory] key
         counter: int            # [mandatory] counter
@@ -220,6 +268,20 @@ testvector:
         tag: hexstring          # mandatory if chacha20-poly1305
         pt: string              # [mandatory] plaintext
         ct: hexstring           # [mandatory] ciphertext
+````
+
+* RFC 7919 schema
+
+````
+testvector:
+  - example: string             # [mandatory] testcase
+    schema: RFC 7919            # [mandatory] "RFC 7919"
+    items:
+      - item: string            #
+        group: string           # [mandatory]
+        p: hexstring            # [mandatory] p
+        q: hexstring            # [mandatory] q
+        g: hexstring            # [mandatory] g
 ````
 
 * NIST CAVP ECDSA schema

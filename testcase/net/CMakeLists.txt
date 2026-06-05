@@ -12,7 +12,7 @@ file (GLOB SOURCE_FILES
     http/*.cpp
     qpack/*.cpp
 )
-file (GLOB HEADER_FILES *.hpp ${PROJECT_SOURCE_DIR}/testcase/*.hpp)
+file (GLOB HEADER_FILES *.hpp ${PROJECT_SOURCE_DIR}/*.hpp)
 
 if(NOT ${CMAKE_VERSION} VERSION_LESS "3.8.0")
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${SOURCE_FILES})

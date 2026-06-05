@@ -27,7 +27,7 @@ void test_yaml_testvector_rfc7539() {
 
     return_t ret = errorcode_t::success;
 
-    auto lambda_yaml_rfc7539 = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_rfc7539 = [&](const YAML::Node& example, const YAML::Node& items) -> void {
         for (const auto& item : items) {
             test_vector_rfc7539_t entry;
 
@@ -94,23 +94,8 @@ void test_yaml_testvector_rfc7539() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("testvector_rfc7539.yml");
-    auto examples = testvector["testvector"];
-    if (examples && examples.IsSequence()) {
-        for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>("");
-            _logger->writeln("example: %s", text_example.c_str());
-
-            auto schema = example["schema"].as<std::string>("");
-            auto items = example["items"];
-
-            if (schema == "RFC 7539") {
-                lambda_yaml_rfc7539(items);
-            } else {
-                _test_case.assert(false, __FUNCTION__, "bad message format");
-            }
-        }
-    }
+    yaml_testcase test;
+    test.add("RFC 7539", lambda_yaml_rfc7539).run("testvector_rfc7539.yml");
 }
 
 void testcase_testvector_rfc7539() { test_yaml_testvector_rfc7539(); }

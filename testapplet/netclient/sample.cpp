@@ -14,7 +14,6 @@
 
 #include <algorithm>
 #include <functional>
-#include <hotplace/testcase/test.hpp>
 
 using namespace hotplace;
 using namespace hotplace::crypto;

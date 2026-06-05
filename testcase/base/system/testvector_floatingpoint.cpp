@@ -70,7 +70,7 @@ void test_yaml_testvector_floatingpoint() {
         }
     };
 
-    auto lambda_yaml_floatingpoint = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_floatingpoint = [&](const YAML::Node& example, const YAML::Node& items) -> void {
         if (items && items.IsSequence()) {
             for (const auto& item : items) {
                 auto node_float1 = item["float1"];
@@ -109,23 +109,8 @@ void test_yaml_testvector_floatingpoint() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("testvector_floatingpoint.yml");
-    auto examples = testvector["testvector"];
-    if (examples && examples.IsSequence()) {
-        for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>("");
-            _logger->writeln("example: %s", text_example.c_str());
-
-            auto schema = example["schema"].as<std::string>("");
-            auto items = example["items"];
-
-            if (schema == "FLOATINGPOINT") {
-                lambda_yaml_floatingpoint(items);
-            } else {
-                _test_case.assert(false, __FUNCTION__, "bad message format");
-            }
-        }
-    }
+    yaml_testcase test;
+    test.add("FLOATINGPOINT", lambda_yaml_floatingpoint).run("testvector_floatingpoint.yml");
 }
 
 void testcase_testvector_floatingpoint() { test_yaml_testvector_floatingpoint(); }

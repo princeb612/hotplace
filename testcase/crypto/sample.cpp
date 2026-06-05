@@ -81,8 +81,8 @@ int main(int argc, char** argv) {
         testcase_transcript_hash();
 
         testcase_hkdf();
-        testcase_rfc4615();
-        testcase_rfc5869();
+        testcase_testvector_rfc4615();
+        testcase_testvector_rfc5869();
         if (option.flag_slow_kdf) {
             testcase_rfc6070();
             testcase_rfc7914();
@@ -100,6 +100,7 @@ int main(int argc, char** argv) {
         testcase_key_dsa();
         if (option.flag_ffdhe) {
             testcase_key_ffdhe();
+            testcase_testvector_rfc7919();
         }
         testcase_key_mlkem();
         testcase_key_rsa();

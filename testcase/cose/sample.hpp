@@ -10,7 +10,7 @@
 #ifndef __HOTPLACE_TEST_COSE__
 #define __HOTPLACE_TEST_COSE__
 
-#include <hotplace/testcase/test.hpp>
+#include <hotplace/test.hpp>
 
 struct OPTION : public CMDLINEOPTION {
     bool dump_keys;
@@ -21,8 +21,6 @@ struct OPTION : public CMDLINEOPTION {
     OPTION() : CMDLINEOPTION(), dump_keys(false), dump_diagnostic(false), skip_cbor_basic(false), skip_gen(false) {}
 };
 
-extern test_case _test_case;
-extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
 extern crypto_key rfc8152_privkeys;

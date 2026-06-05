@@ -10,7 +10,7 @@
 #ifndef __HOTPLACE_TEST_TLS__
 #define __HOTPLACE_TEST_TLS__
 
-#include <hotplace/testcase/test.hpp>
+#include <hotplace/test.hpp>
 
 struct OPTION : public CMDLINEOPTION {
     int keylog;
@@ -25,8 +25,6 @@ struct TLS_OPTION {
     std::string cipher_suite;
 };
 
-extern test_case _test_case;
-extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 return_t dump_record(const char* text, tls_session* session, tls_direction_t dir, const binary_t& bin, bool expect = true);

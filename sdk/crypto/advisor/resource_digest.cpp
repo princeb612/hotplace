@@ -17,14 +17,14 @@ const hint_digest_t evp_md_methods[] = {
     {hash_algorithm_t::md4, "md4", 128 >> 3},
     {hash_algorithm_t::md5, "md5", 128 >> 3},
 
-    {hash_algorithm_t::sha1, "sha1", 160 >> 3},
+    {hash_algorithm_t::sha1, "sha1", 160 >> 3, nullptr, "sha-1"},
 
-    {hash_algorithm_t::sha2_224, "sha224", 224 >> 3, "sha2-224"},
-    {hash_algorithm_t::sha2_256, "sha256", 256 >> 3, "sha2-256"},
-    {hash_algorithm_t::sha2_384, "sha384", 384 >> 3, "sha2-384"},
-    {hash_algorithm_t::sha2_512, "sha512", 512 >> 3, "sha2-512"},
-    {hash_algorithm_t::sha2_512_224, "sha2-512/224", 224 >> 3, "sha512-224"},
-    {hash_algorithm_t::sha2_512_256, "sha2-512/256", 256 >> 3, "sha512-256"},
+    {hash_algorithm_t::sha2_224, "sha224", 224 >> 3, "sha2-224", "sha-224"},
+    {hash_algorithm_t::sha2_256, "sha256", 256 >> 3, "sha2-256", "sha-256"},
+    {hash_algorithm_t::sha2_384, "sha384", 384 >> 3, "sha2-384", "sha-384"},
+    {hash_algorithm_t::sha2_512, "sha512", 512 >> 3, "sha2-512", "sha-512"},
+    {hash_algorithm_t::sha2_512_224, "sha2-512/224", 224 >> 3, "sha512-224", "sha-512-224"},
+    {hash_algorithm_t::sha2_512_256, "sha2-512/256", 256 >> 3, "sha512-256", "sha-512-256"},
 
     {hash_algorithm_t::sha3_224, "sha3-224", 224 >> 3},
     {hash_algorithm_t::sha3_256, "sha3-256", 256 >> 3},

@@ -10,9 +10,6 @@
 #ifndef __HOTPLACE_TESTAPPLET_AUTHENTICODE__
 #define __HOTPLACE_TESTAPPLET_AUTHENTICODE__
 
-#include <hotplace/testcase/test.hpp>
-
-extern test_case _test_case;
-extern t_shared_instance<logger> _logger;
+#include <hotplace/test.hpp>
 
 #endif

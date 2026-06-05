@@ -147,7 +147,10 @@ void test_yaml_testvector_cose_examples() {
             }
         }
     };
-    auto lambda_yaml_cose_examples = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_cose_examples = [&](const YAML::Node& example, const YAML::Node& items) -> void {
+        auto keys = example["keys"];
+        lambda_load_keys(keys);
+
         if (items && items.IsSequence()) {
             for (const auto& item : items) {
                 auto text_item = item["item"].as<std::string>("");
@@ -270,23 +273,8 @@ void test_yaml_testvector_cose_examples() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("testvector_cose_examples.yml");
-    auto examples = testvector["testvector"];
-    if (examples && examples.IsSequence()) {
-        for (const auto& example : examples) {
-            auto schema = example["schema"].as<std::string>("");
-
-            if (schema == "COSE EXAMPLES") {
-                auto keys = example["keys"];
-                lambda_load_keys(keys);
-
-                auto items = example["items"];
-                lambda_yaml_cose_examples(items);
-            } else {
-                _test_case.assert(false, __FUNCTION__, "bad message format");
-            }
-        }
-    }
+    yaml_testcase test;
+    test.add("COSE EXAMPLES", lambda_yaml_cose_examples).run("testvector_cose_examples.yml");
 }
 
 void testcase_testvector_cose_examples() { test_yaml_testvector_cose_examples(); }

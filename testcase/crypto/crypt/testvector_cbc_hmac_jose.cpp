@@ -206,7 +206,7 @@ void do_test_aead_aes_cbc_hmac_sha2_testvector2(const test_vector_aead_aes_cbc_h
 void test_yaml_testvector_cbc_hmac_jose() {
     _test_case.begin("Authenticated Encryption with AES-CBC and HMAC-SHA YAML");
 
-    auto lambda_yaml_cbchmac_jose = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_cbchmac_jose = [&](const YAML::Node& example, const YAML::Node& items) -> void {
         for (const auto& item : items) {
             test_vector_aead_aes_cbc_hmac_sha2_t entry;
 
@@ -227,23 +227,8 @@ void test_yaml_testvector_cbc_hmac_jose() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("testvector_cbc_hmac_jose.yml");
-    auto examples = testvector["testvector"];
-    if (examples && examples.IsSequence()) {
-        for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>("");
-            _logger->writeln("example: %s", text_example.c_str());
-
-            auto schema = example["schema"].as<std::string>("");
-            auto items = example["items"];
-
-            if (schema == "CBC-HMAC JOSE") {
-                lambda_yaml_cbchmac_jose(items);
-            } else {
-                _test_case.assert(false, __FUNCTION__, "bad message format");
-            }
-        }
-    }
+    yaml_testcase test;
+    test.add("CBC-HMAC JOSE", lambda_yaml_cbchmac_jose).run("testvector_cbc_hmac_jose.yml");
 }
 
 void testcase_testvector_cbc_hmac_jose() { test_yaml_testvector_cbc_hmac_jose(); }

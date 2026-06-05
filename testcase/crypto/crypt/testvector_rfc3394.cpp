@@ -92,7 +92,7 @@ void do_test_keywrap_rfc3394_testvector(const test_vector_rfc3394_t* entry) {
 void test_yaml_testvector_rfc3394() {
     _test_case.begin("RFC 3394 keywrap YAML");
 
-    auto lambda_yaml_rfc3394 = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_rfc3394 = [&](const YAML::Node& example, const YAML::Node& items) -> void {
         for (const auto& item : items) {
             test_vector_rfc3394_t entry;
 
@@ -106,23 +106,8 @@ void test_yaml_testvector_rfc3394() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("testvector_rfc3394.yml");
-    auto examples = testvector["testvector"];
-    if (examples && examples.IsSequence()) {
-        for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>("");
-            _logger->writeln("example: %s", text_example.c_str());
-
-            auto schema = example["schema"].as<std::string>("");
-            auto items = example["items"];
-
-            if (schema == "RFC 3394") {
-                lambda_yaml_rfc3394(items);
-            } else {
-                _test_case.assert(false, __FUNCTION__, "bad message format");
-            }
-        }
-    }
+    yaml_testcase test;
+    test.add("RFC 3394", lambda_yaml_rfc3394).run("testvector_rfc3394.yml");
 }
 
 void testcase_testvector_rfc3394() { test_yaml_testvector_rfc3394(); }

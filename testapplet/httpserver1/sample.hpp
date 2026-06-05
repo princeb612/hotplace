@@ -10,7 +10,7 @@
 #ifndef __HOTPLACE_TESTAPPLET_HTTPSERVER__
 #define __HOTPLACE_TESTAPPLET_HTTPSERVER__
 
-#include <hotplace/testcase/test.hpp>
+#include <hotplace/test.hpp>
 
 enum option_flag_t {
     option_flag_trial = (1 << 1),
@@ -28,8 +28,6 @@ struct OPTION : public CMDLINEOPTION {
     OPTION() : CMDLINEOPTION(), run(0), port(8080), port_tls(9000), flags(0) {}
 };
 
-extern test_case _test_case;
-extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 extern t_shared_instance<http_server> _http_server;
 

@@ -1451,6 +1451,7 @@ typedef struct _hint_digest_t {
     const char* fetchname;  // advisor->hintof_digest("sha256")
     uint16 digest_size;
     const char* altname;  // advisor->hintof_digest("sha2-256")
+    const char* rfcname;  // IANA style, SHA-256, SHA-1
 } hint_digest_t;
 
 hash_algorithm_t typeof_alg(const hint_digest_t* hint);

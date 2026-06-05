@@ -10,7 +10,7 @@
 #ifndef __HOTPLACE_TEST_QUIC__
 #define __HOTPLACE_TEST_QUIC__
 
-#include <hotplace/testcase/test.hpp>
+#include <hotplace/test.hpp>
 
 enum test_flag_t {
     test_flag_quic = 1,
@@ -30,8 +30,6 @@ struct OPTION : public CMDLINEOPTION {
     }
 };
 
-extern test_case _test_case;
-extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
 struct testvector_initial_packet {

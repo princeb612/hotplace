@@ -10,7 +10,7 @@
 #ifndef __HOTPLACE_TEST_JOSE__
 #define __HOTPLACE_TEST_JOSE__
 
-#include <hotplace/testcase/test.hpp>
+#include <hotplace/test.hpp>
 
 struct OPTION : public CMDLINEOPTION {
     bool dump_keys;
@@ -18,8 +18,6 @@ struct OPTION : public CMDLINEOPTION {
     OPTION() : CMDLINEOPTION(), dump_keys(false) {}
 };
 
-extern test_case _test_case;
-extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
 void print_text(const char* text, ...);

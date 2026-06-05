@@ -10,7 +10,7 @@
 #ifndef __HOTPLACE_TEST_CRYPTO__
 #define __HOTPLACE_TEST_CRYPTO__
 
-#include <hotplace/testcase/test.hpp>
+#include <hotplace/test.hpp>
 
 struct OPTION : public CMDLINEOPTION {
     bool dump_keys;
@@ -21,24 +21,11 @@ struct OPTION : public CMDLINEOPTION {
     OPTION() : CMDLINEOPTION(), dump_keys(false), flag_slow_kdf(false), flag_argon2(false), flag_ffdhe(false) {}
 };
 
-extern test_case _test_case;
-extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 // hash
 void test_hash_routine(hash_algorithm_t algorithm, const byte_t* key_data, unsigned key_size, byte_t* data, size_t size);
 return_t test_hash_routine(hash_algorithm_t algorithm, binary_t key, binary_t data, binary_t expect, const char* text);
-
-// key
-struct test_vector_rfc7919_t {
-    const char* desc;
-    uint32 nid;
-    const char* p;
-    const char* q;
-    const char* g;
-};
-extern const test_vector_rfc7919_t test_vector_rfc7919[];
-extern const size_t sizeof_test_vector_rfc7919;
 
 void testcase_advisor();
 
@@ -61,8 +48,8 @@ void testcase_rfc6238();  // TOTP
 void testcase_transcript_hash();
 
 void testcase_hkdf();
-void testcase_rfc4615();
-void testcase_rfc5869();
+void testcase_testvector_rfc4615();
+void testcase_testvector_rfc5869();
 void testcase_rfc6070();
 void testcase_rfc7914();
 void testcase_rfc9106();
@@ -75,6 +62,7 @@ void testcase_ec();
 void testcase_hpke();
 void testcase_key_dsa();
 void testcase_key_ffdhe();
+void testcase_testvector_rfc7919();
 void testcase_key_mlkem();
 void testcase_key_rsa();
 void testcase_keyexchange();

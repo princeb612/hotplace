@@ -13,7 +13,9 @@
 void test_yaml_testvector_valist() {
     _test_case.begin("valist YAML");
 
-    auto lambda_yaml_valist_sprintf = [&](const YAML::Node& args, const YAML::Node& items) -> void {
+    auto lambda_yaml_valist_sprintf = [&](const YAML::Node& example, const YAML::Node& items) -> void {
+        auto args = example["args"];
+
         valist va;
         for (const auto& arg : args) {
             std::string type = arg["type"].as<std::string>("");
@@ -39,24 +41,8 @@ void test_yaml_testvector_valist() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("testvector_valist.yml");
-    auto examples = testvector["testvector"];
-    if (examples && examples.IsSequence()) {
-        for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>("");
-            _logger->writeln("example: %s", text_example.c_str());
-
-            auto schema = example["schema"].as<std::string>("");
-
-            if (schema == "VALIST") {
-                auto args = example["args"];
-                auto items = example["items"];
-                lambda_yaml_valist_sprintf(args, items);
-            } else {
-                _test_case.assert(false, __FUNCTION__, "bad message format");
-            }
-        }
-    }
+    yaml_testcase test;
+    test.add("VALIST", lambda_yaml_valist_sprintf).run("testvector_valist.yml");
 }
 
 void testcase_testvector_valist() { test_yaml_testvector_valist(); }

@@ -60,7 +60,13 @@ void do_test_cmdline_template_myoption(bool expect, int argc, char** argv) {
 void test_yaml_testvector_cmdline() {
     _test_case.begin("commandline YAML");
 
-    auto lambda_yaml_cmdline = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_cmdline = [&](const YAML::Node& example, const YAML::Node& items) -> void {
+        auto templ = example["template"].as<std::string>("");
+        if (templ != "myoption") {
+            _test_case.assert(false, __FUNCTION__, "bad template");
+            return;
+        }
+
         for (const auto& item : items) {
             auto args = item["args"];
             auto expect = item["expect"].as<bool>();
@@ -90,28 +96,8 @@ void test_yaml_testvector_cmdline() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("testvector_cmdline.yml");
-    auto examples = testvector["testvector"];
-    if (examples && examples.IsSequence()) {
-        for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>("");
-            _logger->writeln("example: %s", text_example.c_str());
-
-            auto schema = example["schema"].as<std::string>("");
-            auto templ = example["template"].as<std::string>("");
-            auto items = example["items"];
-
-            if (schema == "CMDLINE") {
-                if (templ == "myoption") {
-                    lambda_yaml_cmdline(items);
-                } else {
-                    _test_case.test(errorcode_t::not_supported, __FUNCTION__, "unknown template");
-                }
-            } else {
-                _test_case.assert(false, __FUNCTION__, "bad message format");
-            }
-        }
-    }
+    yaml_testcase test;
+    test.add("CMDLINE", lambda_yaml_cmdline).run("testvector_cmdline.yml");
 }
 
 void testcase_testvector_cmdline() { test_yaml_testvector_cmdline(); }

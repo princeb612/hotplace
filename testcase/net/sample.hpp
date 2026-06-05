@@ -10,7 +10,7 @@
 #ifndef __HOTPLACE_TEST_NET__
 #define __HOTPLACE_TEST_NET__
 
-#include <hotplace/testcase/test.hpp>
+#include <hotplace/test.hpp>
 
 struct OPTION : public CMDLINEOPTION {
     std::string url;
@@ -20,8 +20,6 @@ struct OPTION : public CMDLINEOPTION {
     OPTION() : CMDLINEOPTION(), url("https://localhost:9000/"), mode(0), connect(0) {}
 };
 
-extern test_case _test_case;
-extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 // hpack

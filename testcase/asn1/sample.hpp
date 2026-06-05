@@ -12,10 +12,7 @@
 
 #include <stdio.h>
 
-#include <hotplace/testcase/test.hpp>
-
-extern test_case _test_case;
-extern t_shared_instance<logger> _logger;
+#include <hotplace/test.hpp>
 
 void testcase_asn1();
 

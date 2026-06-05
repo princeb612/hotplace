@@ -92,6 +92,7 @@ class encoder_stream {
      * stream implementation
      * is_integral
      * !bool
+     * encoder << int8, int16, int32, int64, uint8, uint16, uint32, uint64 (gcc int128, uint128)
      */
     template <typename T, typename std::enable_if<custom::is_integral<T>::value && !std::is_same<T, bool>::value, int>::type = 0>
     encoder_stream& operator<<(T value) {

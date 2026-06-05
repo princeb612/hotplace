@@ -10,7 +10,7 @@
 #ifndef __HOTPLACE_TESTAPPLET_TLSSERVER__
 #define __HOTPLACE_TESTAPPLET_TLSSERVER__
 
-#include <hotplace/testcase/test.hpp>
+#include <hotplace/test.hpp>
 
 enum option_flag_t {
     option_flag_allow_tls13 = (1 << 0),
@@ -32,8 +32,6 @@ struct OPTION : public CMDLINEOPTION {
     OPTION() : CMDLINEOPTION(), run(0), port(9000), flags(0) {}
 };
 
-extern test_case _test_case;
-extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
 void run_server();

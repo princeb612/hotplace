@@ -49,9 +49,11 @@ const EVP_MD* crypto_advisor::find_evp_md(const char* name) { return name ? find
 
 const EVP_MD* crypto_advisor::find_evp_md(const std::string& name) {
     const EVP_MD* ret_value = nullptr;
+    auto lname = name;
+    std::transform(lname.begin(), lname.end(), lname.begin(), tolower);
     t_maphint<std::string, const hint_digest_t*> hint(_md_byname_map);
     const hint_digest_t* item = nullptr;
-    hint.find(name, &item);
+    hint.find(lname, &item);
     if (item) {
         ret_value = _md_fetch_map[typeof_alg(item)].md;
     }

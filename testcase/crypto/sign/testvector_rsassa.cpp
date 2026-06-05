@@ -33,7 +33,7 @@ void test_yaml_testvector_rsassa() {
     crypto_keychain keychain;
     return_t ret = errorcode_t::success;
 
-    auto lambda_yaml_rsa_key = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_rsa_key = [&](const YAML::Node& example, const YAML::Node& items) -> void {
         for (const auto& item : items) {
             test_vector_nist_cavp_rsa_key_t entry;
 
@@ -45,7 +45,14 @@ void test_yaml_testvector_rsassa() {
             keychain.add_rsa_b16(&key, nid_rsa, entry.n.c_str(), entry.e.c_str(), entry.d.c_str(), keydesc(entry.item));
         };
     };
-    auto lambda_yaml_rsa = [&](const YAML::Node& items, sig_category_t category) -> void {
+    auto lambda_yaml_rsa = [&](const YAML::Node& example, const YAML::Node& items) -> void {
+        sig_category_t category = {};
+        auto schema = example["schema"].as<std::string>("");
+        if (schema == "RSA PKCS 1.5")
+            category = sig_category_t::rsassa_pkcs15;
+        else if (schema == "RSA PSS")
+            category = sig_category_t::rsassa_pss;
+
         for (const auto& item : items) {
             test_vector_nist_cavp_rsa_t entry;
 
@@ -97,27 +104,8 @@ void test_yaml_testvector_rsassa() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("testvector_rsassa.yml");
-    auto examples = testvector["testvector"];
-    if (examples && examples.IsSequence()) {
-        for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>("");
-            _logger->writeln("example: %s", text_example.c_str());
-
-            auto schema = example["schema"].as<std::string>("");
-            auto items = example["items"];
-
-            if (schema == "RSA KEY") {
-                lambda_yaml_rsa_key(items);
-            } else if (schema == "RSA PKCS 1.5") {
-                lambda_yaml_rsa(items, sig_category_t::rsassa_pkcs15);
-            } else if (schema == "RSA PSS") {
-                lambda_yaml_rsa(items, sig_category_t::rsassa_pss);
-            } else {
-                _test_case.assert(false, __FUNCTION__, "bad message format");
-            }
-        }
-    }
+    yaml_testcase test;
+    test.add("RSA KEY", lambda_yaml_rsa_key).add("RSA PKCS 1.5", lambda_yaml_rsa).add("RSA PSS", lambda_yaml_rsa).run("testvector_rsassa.yml");
 }
 
 void testcase_testvector_rsassa() { test_yaml_testvector_rsassa(); }

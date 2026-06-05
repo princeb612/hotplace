@@ -16,7 +16,7 @@ file (GLOB SOURCE_FILES
     system/*.cpp
     unittest/*.cpp
 )
-file (GLOB HEADER_FILES *.hpp ${PROJECT_SOURCE_DIR}/testcase/*.hpp)
+file (GLOB HEADER_FILES *.hpp ${PROJECT_SOURCE_DIR}/*.hpp)
 file (GLOB DATA_FILES
     *.yml
     basic/*.yml

@@ -10,7 +10,7 @@
 #ifndef __HOTPLACE_TESTAPPLET_UDPSERVER__
 #define __HOTPLACE_TESTAPPLET_UDPSERVER__
 
-#include <hotplace/testcase/test.hpp>
+#include <hotplace/test.hpp>
 
 struct OPTION : public CMDLINEOPTION {
     int run;
@@ -19,8 +19,6 @@ struct OPTION : public CMDLINEOPTION {
     OPTION() : CMDLINEOPTION(), run(0), port(9000) {}
 };
 
-extern test_case _test_case;
-extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
 void run_server();

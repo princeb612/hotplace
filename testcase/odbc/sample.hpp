@@ -10,15 +10,13 @@
 #ifndef __HOTPLACE_TEST_ODBC__
 #define __HOTPLACE_TEST_ODBC__
 
-#include <hotplace/testcase/test.hpp>
+#include <hotplace/test.hpp>
 
 struct OPTION : public CMDLINEOPTION {
     std::string connstr;
     std::string tablename;
 };
 
-extern test_case _test_case;
-extern t_shared_instance<logger> _logger;
 extern t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
 #endif

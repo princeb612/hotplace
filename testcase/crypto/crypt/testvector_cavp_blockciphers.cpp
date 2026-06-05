@@ -24,7 +24,7 @@ void test_yaml_cavp_blockciphers() {
 
     openssl_crypt crypt;
 
-    auto lambda_yaml_block_ciphers = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_block_ciphers = [&](const YAML::Node& example, const YAML::Node& items) -> void {
         for (const auto& item : items) {
             test_vector_nist_cavp_blockcipher_t entry;
             entry.item = std::move(item["item"].as<std::string>(""));
@@ -51,23 +51,8 @@ void test_yaml_cavp_blockciphers() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("testvector_cavp_blockciphers.yml");
-    auto examples = testvector["testvector"];
-    if (examples && examples.IsSequence()) {
-        for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>("");
-            _logger->writeln("example: %s", text_example.c_str());
-
-            auto schema = example["schema"].as<std::string>("");
-            auto items = example["items"];
-
-            if (schema == "BLOCK CIPHERS") {
-                lambda_yaml_block_ciphers(items);
-            } else {
-                _test_case.assert(false, __FUNCTION__, "bad message format");
-            }
-        }
-    }
+    yaml_testcase test;
+    test.add("BLOCK CIPHERS", lambda_yaml_block_ciphers).run("testvector_cavp_blockciphers.yml");
 }
 
 void testcase_testvector_cavp_blockciphers() {

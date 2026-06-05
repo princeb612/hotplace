@@ -75,7 +75,7 @@ void test_cbc_hmac(test_vector_cbchmac_tls_t* entry) {
 void test_yaml_testvector_cbc_hmac_tls() {
     _test_case.begin("CBC-HMAC TLS 1.2 YAML");
 
-    auto lambda_yaml_cbchmac_tls = [&](const YAML::Node& items) -> void {
+    auto lambda_yaml_cbchmac_tls = [&](const YAML::Node& example, const YAML::Node& items) -> void {
         for (const auto& item : items) {
             test_vector_cbchmac_tls_t entry;
 
@@ -93,23 +93,8 @@ void test_yaml_testvector_cbc_hmac_tls() {
         }
     };
 
-    YAML::Node testvector = YAML::LoadFile("testvector_cbc_hmac_tls.yml");
-    auto examples = testvector["testvector"];
-    if (examples && examples.IsSequence()) {
-        for (const auto& example : examples) {
-            auto text_example = example["example"].as<std::string>("");
-            _logger->writeln("example: %s", text_example.c_str());
-
-            auto schema = example["schema"].as<std::string>("");
-            auto items = example["items"];
-
-            if (schema == "CBC-HMAC TLS") {
-                lambda_yaml_cbchmac_tls(items);
-            } else {
-                _test_case.assert(false, __FUNCTION__, "bad message format");
-            }
-        }
-    }
+    yaml_testcase test;
+    test.add("CBC-HMAC TLS", lambda_yaml_cbchmac_tls).run("testvector_cbc_hmac_tls.yml");
 }
 
 void testcase_testvector_cbc_hmac_tls() { test_yaml_testvector_cbc_hmac_tls(); }
