@@ -357,3 +357,38 @@ testvector:
         s: hexstring            # [mandatory] signature
         salt: hexstring         # [mandatory] salt
 ````
+
+* CLIENT SHARE schema
+
+````
+testvector:
+  - example: string             # [mandatory] testcase
+    schema: CLIENT SHARE        # [mandatory] "CLIENT SHARE"
+    items:
+    - item: string              # [mandatory]
+      group: string             # [mandatory]
+      share: hexstring          # [mandatory]
+````
+
+* KEY GEN schema
+
+````
+testvector:
+  - example: string             # [mandatory] testcase
+    schema: KEY GEN             # [mandatory] "KEY GEN"
+    items:
+    - item: string              # [mandatory]
+      kty: string               # [mandatory] rsaEncryption, RSASSA-PSS, X25519, Ed25519, P-256, P-384, P-521, DSA, ffdhe2048, ...
+      kid: string               # [mandatory]
+      param:                    #
+        x: encoded              # DH, DSA, EC, OKP
+        y: encoded              # DH, DSA, EC
+        d: encoded              # EC, OKP, RSA
+        n: encoded              # RSA
+        e: encoded              # RSA
+        p: encoded              # DH, DSA
+        q: encoded              # DH, DSA
+        g: encoded              # DH, DSA
+        uncompressed: encoded   # EC
+        ybit: bool              # EC
+````

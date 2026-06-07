@@ -63,22 +63,36 @@ class crypto_keygen {
     /**
      * @brief   key generator
      * @param   crypto_key* key [in]
-     * @param   const std::string& name [in]
+     * @param   const std::string& kty [in] rsaEncryption, RSASSA-PSS, X25519, Ed25519, P-256, P-384, P-521, DSA, ffdhe2048, ...
      * @param   encoding_t encoding [inopt] default encoding_base16
      */
-    crypto_keygen(crypto_key* key, const std::string& name, encoding_t encoding = {});
+    crypto_keygen(crypto_key* key, const std::string& kty, encoding_t encoding = {});
 
     crypto_keygen& set(keydesc&& desc);
     crypto_keygen& set(crypt_item_t item, binary_t&& value);
     crypto_keygen& set(crypt_item_t item, const char* value);
     crypto_keygen& set(crypt_item_t item, bool value);
+    /*
+     *   "x"            encoded // DH, DSA, EC, OKP
+     *   "y"            encoded // DH, DSA, EC
+     *   "d"            encoded // EC, OKP, RSA
+     *   "n"            encoded // RSA
+     *   "e"            encoded // RSA
+     *   "p"            encoded // DH, DSA
+     *   "q"            encoded // DH, DSA
+     *   "g"            encoded // DH, DSA
+     *   "uncompressed" encoded // EC
+     *   "ybit"         bool    // EC
+     */
     crypto_keygen& set(const char* item, binary_t&& value);
     crypto_keygen& set(const char* item, const char* value);
     crypto_keygen& set(const char* item, bool value);
-
+    /**
+     * generate (wo param)
+     */
     crypto_keygen& gen();
     /**
-     * @brief   generate pkey into crypto_key
+     * @brief   generate pkey into crypto_key (/w param)
      * @remarks clear all crypt_item_t
      */
     crypto_keygen& build();

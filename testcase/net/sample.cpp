@@ -62,10 +62,6 @@ int main(int argc, char** argv) {
 #endif
         openssl_startup();
 
-        testcase_http();
-        testcase_http2();
-        testcase_http2_frame();
-
         testcase_acl();
 
         _test_case.reset_time();
@@ -82,7 +78,11 @@ int main(int argc, char** argv) {
         testcase_huffman();
         // HPACK
         testcase_rfc7541();
-        testcase_h2();
+        testcase_testvector_hpack();
+
+        testcase_http();
+        testcase_http2_frame();
+        testcase_testvector_http2();
 
         // QPACK
         testcase_rfc9204();

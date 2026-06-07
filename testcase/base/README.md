@@ -138,7 +138,7 @@ testvector:
         div: string                         #
 ````
 
-* aho corasick YAML scheme
+* aho corasick YAML schema
 
 ````
 testvector:
@@ -153,7 +153,7 @@ testvector:
           words: array of range pair        # [mandatory] ex. "words": [[begin1, end1], [begin2, end2], ...]
 ````
 
-* KMP YAML scheme
+* KMP YAML schema
 
 ````
 testvector:

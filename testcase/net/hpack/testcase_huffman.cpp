@@ -17,16 +17,22 @@ void do_test_huffman_codes_routine(const char* sample, const char* expect) {
 
         return_t ret = errorcode_t::success;
         binary_t bin;
+        binary_t bin_sample = to_binary(sample);
 
         auto huffcode = http_huffman_coding::get_instance();
 
         // encode
         {
-            basic_stream bs;
-            huffcode->encode(bs, (byte_t*)sample, strlen(sample));
+            binary_t ebin;
+            huffcode->encode(ebin, (byte_t*)sample, strlen(sample));
             if (option.verbose) {
                 test_case_notimecheck notimecheck(_test_case);
-                _logger->writeln("%s", bs.c_str());
+                valist va;
+                va << sample << ebin;
+                _logger->write([&](basic_stream& ebin) -> void {
+                    ebin.vaprintln("chunk   {1:s}", va);
+                    ebin.vaprintln("decoded {2:s}", va);  // printable data
+                });
             }
 
             huffcode->encode(bin, (byte_t*)sample, strlen(sample));
@@ -40,14 +46,19 @@ void do_test_huffman_codes_routine(const char* sample, const char* expect) {
 
         // decode
         {
-            basic_stream bs;
-            ret = huffcode->decode(bs, bin.data(), bin.size());
+            binary_t ebin;
+            ret = huffcode->decode(ebin, bin.data(), bin.size());
             if (option.verbose) {
                 test_case_notimecheck notimecheck(_test_case);
-                _logger->writeln("%s", bs.c_str());
+                valist va;
+                va << sample << ebin;
+                _logger->write([&](basic_stream& ebin) -> void {
+                    ebin.vaprintln("chunk   {1:s}", va);
+                    ebin.vaprintln("decoded {2:s}", va);  // printable data
+                });
             }
 
-            _test_case.assert(((errorcode_t::success == ret) && (bs == basic_stream(sample))), __FUNCTION__, "decode %s", sample);
+            _test_case.assert(((errorcode_t::success == ret) && (ebin == bin_sample)), __FUNCTION__, "decode %s", sample);
         }
     }
 }

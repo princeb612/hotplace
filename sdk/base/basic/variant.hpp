@@ -507,9 +507,7 @@ class variant {
      * variant& set
      * void*, char*, wchar_t*, char, byte_t, wchar_t, bool, int8, uint8, int16, uint16, int32, uint32, int64, uint64, int128, uint128, float, double
      */
-    template <typename T,                                                                                                                //
-              typename std::enable_if<(variant_traits<typename std::decay<T>::type>::flags & vt_mask_standalone) == vt_mask_standalone,  //
-                                      int>::type = 0>
+    template <typename T, typename std::enable_if<(variant_traits<typename std::decay<T>::type>::flags & vt_mask_standalone) == vt_mask_standalone, int>::type = 0>
     variant& set(T&& value) {
         using decay_type = typename std::decay<T>::type;
         using traits = variant_traits<decay_type>;
@@ -525,9 +523,7 @@ class variant {
      * variant& set
      * char*, wchar_t*, byte_t* and size_t
      */
-    template <typename T,                                                                                                                  //
-              typename std::enable_if<(variant_traits<custom::vt_remove_ptr_const_t<T>>::flags & vt_mask_composite) == vt_mask_composite,  //
-                                      int>::type = 0>
+    template <typename T, typename std::enable_if<(variant_traits<custom::vt_remove_ptr_const_t<T>>::flags & vt_mask_composite) == vt_mask_composite, int>::type = 0>
     variant& set(T&& value, size_t size) {
         using traits = variant_traits<custom::vt_remove_ptr_const_t<T>>;
 
@@ -544,10 +540,9 @@ class variant {
      * variant& set_new
      * char*, wchar_t*, byte_t* and size_t
      */
-    template <typename T,                                                                                                                      //
-              typename std::enable_if<((variant_traits<custom::vt_remove_ptr_const_t<T>>::flags & vt_mask_composite) == vt_mask_composite) &&  //
-                                          ((variant_traits<custom::vt_remove_ptr_const_t<T>>::flags & vt_flag_free) == vt_flag_free),
-                                      int>::type = 0>
+    template <typename T, typename std::enable_if<((variant_traits<custom::vt_remove_ptr_const_t<T>>::flags & vt_mask_composite) == vt_mask_composite) &&
+                                                      ((variant_traits<custom::vt_remove_ptr_const_t<T>>::flags & vt_flag_free) == vt_flag_free),
+                                                  int>::type = 0>
     variant& set_new(T&& value, size_t size) {
         clear();
 

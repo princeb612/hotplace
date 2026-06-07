@@ -40,11 +40,6 @@ void dump_qpack_session_routine(const char* stream, size_t size);
 void test_expect(binary_t& bin, const char* expect, const char* func, const char* text, ...);
 void test_dump(binary_t& bin, const char* text, ...);
 
-// HTTP
-void testcase_http();
-void testcase_http2();
-void testcase_http2_frame();
-
 // ipaddr
 void testcase_acl();
 
@@ -52,7 +47,12 @@ void testcase_acl();
 
 void testcase_huffman();
 void testcase_rfc7541();
-void testcase_h2();
+void testcase_testvector_hpack();
+
+// HTTP
+void testcase_http();
+void testcase_http2_frame();
+void testcase_testvector_http2();
 
 // QPACK
 

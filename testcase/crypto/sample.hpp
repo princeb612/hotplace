@@ -64,9 +64,11 @@ void testcase_key_dsa();
 void testcase_key_ffdhe();
 void testcase_testvector_rfc7919();
 void testcase_key_mlkem();
+void testcase_testvector_keyshare();
 void testcase_key_rsa();
 void testcase_keyexchange();
 void testcase_keygen();
+void testcase_testvector_keygen();
 
 void testcase_pqc_dsa();
 void testcase_pqc_encode();

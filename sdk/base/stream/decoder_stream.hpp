@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   encoder_stream.hpp
+ * @file   decoder_stream.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *

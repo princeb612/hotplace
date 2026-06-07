@@ -44,7 +44,6 @@ class udp_traffic {
                 std::random_device rd;
                 std::mt19937 g(rd());
                 std::shuffle(_packets.begin(), _packets.end(), g);
-
             } else {
                 std::reverse(_packets.begin(), _packets.end());
             }

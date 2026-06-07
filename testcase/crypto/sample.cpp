@@ -103,9 +103,11 @@ int main(int argc, char** argv) {
             testcase_testvector_rfc7919();
         }
         testcase_key_mlkem();
+        testcase_testvector_keyshare();
         testcase_key_rsa();
         testcase_keyexchange();
         testcase_keygen();
+        testcase_testvector_keygen();
 
         testcase_pqc_dsa();
         testcase_pqc_encode();
