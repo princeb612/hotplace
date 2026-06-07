@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   testcase_h2.cpp
+ * @file   testvector_hpack.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @remarks
  *      RFC 7541 HPACK: Header Compression for HTTP/2
@@ -20,11 +20,6 @@ void test_h2() {
     // const OPTION& option = _cmdline->value();
 
     // [test vector] chrome generated header
-
-    struct testvector {
-        const char* key;
-        const char* value;
-    };
 
     auto lambda_decode = [&](hpack_dynamic_table* sess, std::multimap<std::string, std::string>& kv, const binary_t bin) -> void {
         size_t pos = 0;

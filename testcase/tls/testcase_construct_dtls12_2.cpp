@@ -275,11 +275,11 @@ void do_test_construct_dtls12_2(uint32 flags) {
             __leave2;
         }
 
-        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::transcript_hash, "tls_secret_t::transcript_hash");
-        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::client_hello_random, "tls_secret_t::client_hello_random");
-        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::server_hello_random, "tls_secret_t::server_hello_random");
-        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::empty_hash, "tls_secret_t::empty_hash");
-        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::transcript_hash, "tls_secret_t::transcript_hash");
+        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::transcript_hash, "transcript_hash");
+        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::client_hello_random, "client_hello_random");
+        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::server_hello_random, "server_hello_random");
+        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::empty_hash, "empty_hash");
+        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::transcript_hash, "transcript_hash");
 
         // C->S
         // case dtls_record_publisher().set_flags(0)
@@ -296,11 +296,11 @@ void do_test_construct_dtls12_2(uint32 flags) {
             __leave2;
         }
 
-        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::transcript_hash, "tls_secret_t::transcript_hash");
-        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::server_key, "tls_secret_t::server_key");
-        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::server_mac_key, "tls_secret_t::server_mac_key");
-        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::client_key, "tls_secret_t::client_key");
-        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::client_mac_key, "tls_secret_t::client_mac_key");
+        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::transcript_hash, "transcript_hash");
+        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::server_key, "server_key");
+        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::server_mac_key, "server_mac_key");
+        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::client_key, "client_key");
+        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::client_mac_key, "client_mac_key");
 
         // S->C
         // case dtls_record_publisher().set_flags(0)
@@ -319,9 +319,9 @@ void do_test_construct_dtls12_2(uint32 flags) {
             __leave2;
         }
 
-        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::transcript_hash, "tls_secret_t::transcript_hash");
-        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::res_master, "tls_secret_t::res_master");
-        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::resumption, "tls_secret_t::resumption");
+        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::transcript_hash, "transcript_hash");
+        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::res_master, "res_master");
+        do_cross_check_keycalc(&session_client, &session_server, tls_secret_t::resumption, "resumption");
 
         // skip followings
         // - application data

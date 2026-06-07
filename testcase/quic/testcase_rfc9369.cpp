@@ -51,7 +51,7 @@ void test_rfc_9369_a1(tls_session* client_session, tls_session* server_session) 
         binary_t bin_expect;
 
         bin_expect = base16_decode("2062e8b3cd8d52092614b8071d0aa1fb7c2e3ac193f78b280e72d8f5751f6aba");
-        lambda_test(__FUNCTION__, "tls_secret_t::initial_quic", secrets.get(tls_secret_t::initial_quic), bin_expect);
+        lambda_test(__FUNCTION__, "initial_quic", secrets.get(tls_secret_t::initial_quic), bin_expect);
 
         bin_expect = base16_decode("14ec9d6eb9fd7af83bf5a668bc17a7e283766aade7ecd0891f70f9ff7f4bf47b");
         lambda_test(__FUNCTION__, "client_initial_secret", secrets.get(tls_secret_t::initial_quic_client), bin_expect);

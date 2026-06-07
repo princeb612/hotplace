@@ -422,12 +422,12 @@ void test_quic_xargs_org() {
 
     {
         binary_t bin;
-        lambda_test_secret(tls_secret_t::application_quic_server_key, bin, "tls_secret_t::application_quic_server_key", "fd8c7da9de1b2da4d2ef9fd5188922d0");
-        lambda_test_secret(tls_secret_t::application_quic_server_iv, bin, "tls_secret_t::application_quic_server_iv", "02f6180e4f4aa456d7e8a602");
-        lambda_test_secret(tls_secret_t::application_quic_server_hp, bin, "tls_secret_t::application_quic_server_hp", "b7f6f021453e52b58940e4bba72a35d4");
-        lambda_test_secret(tls_secret_t::application_quic_client_key, bin, "tls_secret_t::application_quic_client_key", "e010a295f0c2864f186b2a7e8fdc9ed7");
-        lambda_test_secret(tls_secret_t::application_quic_client_iv, bin, "tls_secret_t::application_quic_client_iv", "eb3fbc384a3199dcf6b4c808");
-        lambda_test_secret(tls_secret_t::application_quic_client_hp, bin, "tls_secret_t::application_quic_client_hp", "8a6a38bc5cc40cb482a254dac68c9d2f");
+        lambda_test_secret(tls_secret_t::application_quic_server_key, bin, "application_quic_server_key", "fd8c7da9de1b2da4d2ef9fd5188922d0");
+        lambda_test_secret(tls_secret_t::application_quic_server_iv, bin, "application_quic_server_iv", "02f6180e4f4aa456d7e8a602");
+        lambda_test_secret(tls_secret_t::application_quic_server_hp, bin, "application_quic_server_hp", "b7f6f021453e52b58940e4bba72a35d4");
+        lambda_test_secret(tls_secret_t::application_quic_client_key, bin, "application_quic_client_key", "e010a295f0c2864f186b2a7e8fdc9ed7");
+        lambda_test_secret(tls_secret_t::application_quic_client_iv, bin, "application_quic_client_iv", "eb3fbc384a3199dcf6b4c808");
+        lambda_test_secret(tls_secret_t::application_quic_client_hp, bin, "application_quic_client_hp", "8a6a38bc5cc40cb482a254dac68c9d2f");
     }
 
     /**

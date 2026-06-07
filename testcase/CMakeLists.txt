@@ -14,7 +14,7 @@ add_subdirectory (encode)
 # io
 add_subdirectory (io)
 add_subdirectory (cbor)
-add_subdirectory (asn1)
+add_subdirectory (asn.1)
 
 # crypto
 add_subdirectory (crypto)

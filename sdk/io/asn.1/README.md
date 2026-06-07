@@ -19,6 +19,10 @@
 
 * [A Layman's Guide to a Subset of ASN.1, BER, and DER](https://luca.ntop.org/Teaching/Appunti/asn1.html)
 
+* RFC 2986 PKCS #10: Certification Request Syntax Specification Version 1.7
+
+* RFC 5280 Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
+
 ## BER/CER/DER
 
 - X.690 8 Basic encoding rules

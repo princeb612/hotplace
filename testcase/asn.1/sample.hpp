@@ -15,5 +15,6 @@
 #include <hotplace/test.hpp>
 
 void testcase_asn1();
+void testcase_parser();
 
 #endif

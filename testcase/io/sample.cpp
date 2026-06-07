@@ -54,8 +54,6 @@ int main(int argc, char** argv) {
         set_trace_level(option.trace_level);
     }
 
-    testcase_parser();
-
     testcase_payload();
     testcase_payload_quic();
 

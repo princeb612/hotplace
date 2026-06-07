@@ -32,7 +32,7 @@
     * CBOR
 
 * details
-  * Revision 1028
+  * Revision 1029
   * Revision 1024
     * encoder_stream/decode_stream intergrates http_huffman_encoding
   * Revision 1023
@@ -64,8 +64,6 @@
     * [tested] sprintf (format string syntax)
   * Revision 969-971
     * [tested] gcc warnings
-  * Revision 968
-    * github workflow problem
   * Revision 966
     * [fixed] MSVC compiler warning
   * Revision 958 (Tag 1.93)

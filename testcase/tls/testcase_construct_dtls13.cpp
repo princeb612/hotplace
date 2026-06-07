@@ -12,8 +12,7 @@
 
 #include "sample.hpp"
 
-static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_session* session, tls_direction_t dir, binary_t& bin, const char* group_param,
-                                               const char* message) {
+static return_t do_test_construct_client_hello(const TLS_OPTION& option, tls_session* session, tls_direction_t dir, binary_t& bin, const char* message) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -277,6 +276,9 @@ static return_t do_test_send_record(tls_session* session, tls_direction_t dir, c
 void test_construct_dtls_routine(const TLS_OPTION& option, const char* group_param) {
     tls_advisor* tlsadvisor = tls_advisor::get_instance();
 
+    tlsadvisor->set_default_ciphersuites();
+    tlsadvisor->set_default_tls_groups();
+    tlsadvisor->set_ciphersuites(option.cipher_suite.c_str());
     tlsadvisor->set_tls_groups(group_param);
 
     auto ver = tlsadvisor->nameof_tls_version(option.version);
@@ -291,7 +293,7 @@ void test_construct_dtls_routine(const TLS_OPTION& option, const char* group_par
 
         // C -> S CH
         binary_t bin_client_hello;
-        ret = do_test_construct_client_hello(option, &client_session, from_client, bin_client_hello, group_param, "construct client hello");
+        ret = do_test_construct_client_hello(option, &client_session, from_client, bin_client_hello, "construct client hello");
         if (errorcode_t::success != ret) {
             __leave2;
         }
@@ -306,22 +308,22 @@ void test_construct_dtls_routine(const TLS_OPTION& option, const char* group_par
         do_test_send_record(&client_session, from_server, bin_server_hello, "send server hello");
 
         {
-            do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::transcript_hash, "tls_secret_t::transcript_hash");
-            do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::client_hello_random, "tls_secret_t::client_hello_random");
-            do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::server_hello_random, "tls_secret_t::server_hello_random");
-            do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::empty_hash, "tls_secret_t::empty_hash");
-            do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::transcript_hash, "tls_secret_t::transcript_hash");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::transcript_hash, "transcript_hash");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::client_hello_random, "client_hello_random");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::server_hello_random, "server_hello_random");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::empty_hash, "empty_hash");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::transcript_hash, "transcript_hash");
             if (server_session.get_tls_protection().is_kindof_tls13()) {
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::shared_secret, "tls_secret_t::shared_secret");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::early_secret, "tls_secret_t::early_secret");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::handshake_derived, "tls_secret_t::handshake_derived");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::handshake, "tls_secret_t::handshake");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::c_hs_traffic, "tls_secret_t::c_hs_traffic");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::s_hs_traffic, "tls_secret_t::s_hs_traffic");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::handshake_client_key, "tls_secret_t::handshake_client_key");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::handshake_client_iv, "tls_secret_t::handshake_client_iv");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::handshake_server_key, "tls_secret_t::handshake_server_key");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::handshake_server_iv, "tls_secret_t::handshake_server_iv");
+                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::shared_secret, "shared_secret");
+                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::early_secret, "early_secret");
+                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::handshake_derived, "handshake_derived");
+                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::handshake, "handshake");
+                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::c_hs_traffic, "c_hs_traffic");
+                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::s_hs_traffic, "s_hs_traffic");
+                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::handshake_client_key, "handshake_client_key");
+                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::handshake_client_iv, "handshake_client_iv");
+                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::handshake_server_key, "handshake_server_key");
+                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::handshake_server_iv, "handshake_server_iv");
             }
         }
 
@@ -332,7 +334,7 @@ void test_construct_dtls_routine(const TLS_OPTION& option, const char* group_par
 
         {
             //
-            do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::transcript_hash, "tls_secret_t::transcript_hash");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::transcript_hash, "transcript_hash");
         }
 
         // S -> C SC
@@ -342,7 +344,7 @@ void test_construct_dtls_routine(const TLS_OPTION& option, const char* group_par
 
         {
             //
-            do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::transcript_hash, "tls_secret_t::transcript_hash");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::transcript_hash, "transcript_hash");
         }
 
         // S -> C SCV
@@ -352,7 +354,7 @@ void test_construct_dtls_routine(const TLS_OPTION& option, const char* group_par
 
         {
             //
-            do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::transcript_hash, "tls_secret_t::transcript_hash");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::transcript_hash, "transcript_hash");
         }
 
         // S -> C SF
@@ -361,17 +363,17 @@ void test_construct_dtls_routine(const TLS_OPTION& option, const char* group_par
         do_test_send_record(&client_session, from_server, bin_server_finished, "send server finished");
 
         {
-            do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::transcript_hash, "tls_secret_t::transcript_hash");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::transcript_hash, "transcript_hash");
             if (server_session.get_tls_protection().is_kindof_tls13()) {
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::application_derived, "tls_secret_t::application_derived");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::application, "tls_secret_t::application");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::c_ap_traffic, "tls_secret_t::c_ap_traffic");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::application_client_key, "tls_secret_t::application_client_key");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::application_client_iv, "tls_secret_t::application_client_iv");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::s_ap_traffic, "tls_secret_t::s_ap_traffic");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::application_server_key, "tls_secret_t::application_server_key");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::application_server_iv, "tls_secret_t::application_server_iv");
-                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::exp_master, "tls_secret_t::exp_master");
+                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::application_derived, "application_derived");
+                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::application, "application");
+                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::c_ap_traffic, "c_ap_traffic");
+                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::application_client_key, "application_client_key");
+                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::application_client_iv, "application_client_iv");
+                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::s_ap_traffic, "s_ap_traffic");
+                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::application_server_key, "application_server_key");
+                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::application_server_iv, "application_server_iv");
+                do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::exp_master, "exp_master");
             }
         }
 
@@ -381,9 +383,9 @@ void test_construct_dtls_routine(const TLS_OPTION& option, const char* group_par
         do_test_send_record(&server_session, from_client, bin_client_finished, "send client finished");
 
         {
-            do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::transcript_hash, "tls_secret_t::transcript_hash");
-            // do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::res_master, "tls_secret_t::res_master");
-            // do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::resumption, "tls_secret_t::resumption");
+            do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::transcript_hash, "transcript_hash");
+            // do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::res_master, "res_master");
+            // do_cross_check_keycalc(&client_session, &server_session, tls_secret_t::resumption, "resumption");
         }
 
         // C->S ack
@@ -422,8 +424,6 @@ void testcase_construct_dtls13() {
 
     auto tlsadvisor = tls_advisor::get_instance();
     for (auto item : testvector) {
-        tlsadvisor->set_ciphersuites(item.cipher_suite.c_str());
-
         test_construct_dtls_routine(item, "secp256r1");
         test_construct_dtls_routine(item, "secp384r1");
         test_construct_dtls_routine(item, "secp521r1");
