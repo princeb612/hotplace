@@ -11,30 +11,159 @@
 
 #include "sample.hpp"
 
+// X.690 8.1.2.3 Figure 3 - Identifier octet (low tag number)
+// X.690 8.1.2.4.5 Figure 4 - Identifier octet (high tag number)
+void test_x690_8_1_2_identifier_octects() {
+    // ChatGPT test vector
+    struct testvector {
+        bool ispositive;
+        uint8 ident;
+        uint64 tag;
+        const char* expr;
+        const char* der;
+    } table[] = {
+        // 8.1.2.4
+        {true, asn1_class_universal | asn1_tag_primitive, asn1_tag_boolean, "BOOLEAN", "01"},
+        {true, asn1_class_universal | asn1_tag_primitive, asn1_tag_integer, "INTEGER", "02"},
+        {true, asn1_class_universal | asn1_tag_primitive, asn1_tag_octstring, "OCTET STRING", "04"},
+        {true, asn1_class_universal | asn1_tag_primitive, asn1_tag_null, "NULL", "05"},
+        {true, asn1_class_universal | asn1_tag_primitive, asn1_tag_objid, "OBJECT IDENTIFIER", "06"},
+        {true, asn1_class_universal | asn1_tag_constructed, asn1_tag_sequence, "SEQUENCE", "30"},  // 0x20 | 0x10
+        {true, asn1_class_universal | asn1_tag_constructed, asn1_tag_set, "SET", "31"},            // 0x20 | 0x11
+        {true, asn1_class_context | asn1_tag_primitive, 0, "[0]", "80"},
+        {true, asn1_class_context | asn1_tag_primitive, 1, "[1]", "81"},
+        {true, asn1_class_context | asn1_tag_primitive, 2, "[2]", "82"},
+        {true, asn1_class_context | asn1_tag_primitive, 15, "[15]", "8f"},
+        {true, asn1_class_context | asn1_tag_primitive, 16, "[16]", "90"},
+        {true, asn1_class_context | asn1_tag_primitive, 17, "[17]", "91"},
+        {true, asn1_class_context | asn1_tag_primitive, 30, "[30]", "9e"},
+        {true, asn1_class_context | asn1_tag_constructed, 0, "[0]", "a0"},
+        {true, asn1_class_context | asn1_tag_constructed, 1, "[1]", "a1"},
+        {true, asn1_class_context | asn1_tag_constructed, 15, "[15]", "af"},
+        {true, asn1_class_context | asn1_tag_constructed, 30, "[30]", "be"},
+        {true, asn1_class_application | asn1_tag_primitive, 0, "[APPLICATION 0]", "40"},
+        {true, asn1_class_application | asn1_tag_primitive, 3, "[APPLICATION 3]", "43"},
+        {true, asn1_class_application | asn1_tag_constructed, 3, "63", "63"},
+        {true, asn1_class_private | asn1_tag_primitive, 0, "[PRIVATE 0]", "c0"},
+        {true, asn1_class_private | asn1_tag_primitive, 15, "[PRIVATE 15]", "cf"},
+        // 8.1.2.4.3 he form of the identifier octets for a type with a tag whose number is greater than 30
+        {true, asn1_class_universal | asn1_tag_primitive, 31, "Tag 31", "1f 1f"},                   // tag >= 31, 31
+        {true, asn1_class_universal | asn1_tag_primitive, 32, "Tag 32", "1f 20"},                   // tag >= 31, 32
+        {true, asn1_class_universal | asn1_tag_primitive, 33, "Tag 33", "1f 21"},                   // tag >= 31, 33
+        {true, asn1_class_universal | asn1_tag_primitive, 127, "Tag 127", "1f 7f"},                 // tag >= 31, 127
+        {true, asn1_class_universal | asn1_tag_primitive, 128, "Tag 128", "1f 81 00"},              // // tag >= 31, 128 = (1 * 128) + 0
+        {true, asn1_class_universal | asn1_tag_primitive, 255, "Tag 255", "1f 81 7f"},              // // tag >= 31, 255 = (1 * 128) + 127
+        {true, asn1_class_universal | asn1_tag_primitive, 256, "Tag 256", "1f 82 00"},              // // tag >= 31, 256 = (2 * 128) + 0
+        {true, asn1_class_universal | asn1_tag_primitive, 16383, "Tag 16383", "1f ff 7f"},          // tag >= 31, 16383 = (127 * 128) + 127
+        {true, asn1_class_universal | asn1_tag_primitive, 16384, "Tag 16384", "1f 81 80 00"},       // tag >= 31, 16384 = (1 * 128 * 128) + (0 * 128) + 0
+        {true, asn1_class_context | asn1_tag_primitive, 31, "[31]", "9f 1f"},                       // tag >= 31, 31
+        {true, asn1_class_context | asn1_tag_primitive, 32, "[32]", "9f 20"},                       // tag >= 31, 32
+        {true, asn1_class_context | asn1_tag_primitive, 128, "[128]", "9f 81 00"},                  // tag >= 31, 128 = (1 * 128) + 0
+        {true, asn1_class_application | asn1_tag_primitive, 31, "[APPLICATION 31]", "5f 1f"},       // tag >= 31, 31
+        {true, asn1_class_application | asn1_tag_primitive, 128, "[APPLICATION 128]", "5f 81 00"},  // tag >= 31, 128 = (1 * 128) + 0
+        {true, asn1_class_context | asn1_tag_constructed, 31, "[31] EXPLICIT", "bf 1f"},
+        {true, asn1_class_context | asn1_tag_constructed, 128, "[128] EXPLICIT", "bf 81 00"},
+        // negative/invalid test vector
+        {false, asn1_class_universal | asn1_tag_primitive, 31, "Tag 31", "1f"},           // high-tag form but no followings
+        {false, asn1_class_universal | asn1_tag_primitive, 31, "Tag 31", "1f 80"},        // continuation bit not terminated
+        {false, asn1_class_universal | asn1_tag_primitive, 31, "Tag 31", "1f 80 80 80"},  // continuation ...
+        {false, asn1_class_universal | asn1_tag_primitive, 31, "Tag 31", "1f 80 1f"},     // non-minimal encoding (denied if DER)
+    };
+    asn1_encode enc;
+    for (size_t i = 0; i < RTL_NUMBER_OF(table); ++i) {
+        const auto& item = table[i];
+        binary_t bin;
+
+        uint8 ident = 0;
+        uint64 tag = 0;
+        if (item.ispositive) {
+            enc.asn1_ident_octets(bin, item.ident, item.tag);
+            _test_case.assert(bin == base16_decode_rfc(item.der), __FUNCTION__, "%s", item.expr);
+
+            auto ret = enc.read_asn1_ident_octets(bin.data(), bin.size(), ident, tag);
+            _test_case.test(ret, __FUNCTION__, "read %02x %I64u", ident, tag);
+            _test_case.assert(ident == item.ident && tag == item.tag, __FUNCTION__, "read %02x %I64u", ident, tag);
+        } else {
+            // check bad_data
+            bin = base16_decode_rfc(item.der);
+            auto ret = enc.read_asn1_ident_octets(bin.data(), bin.size(), ident, tag);
+            _test_case.assert(ret == errorcode_t::bad_data, __FUNCTION__, "read %s", item.der);
+        }
+    }
+}
+
 // X.690 8.1.3 Length octets
 void test_x690_8_1_3_length_octets() {
     _test_case.begin("ITU-T X.690 8.1.3");
     struct testvector {
-        uint32 i;
+        uint64 i;
         const char* expect;
     } _table[] = {
-        {38, "26"}, {50, "32"}, {100, "64"}, {127, "7f"}, {128, "81 80"}, {200, "81 c8"}, {201, "81 c9"}, {300, "82 01 2c"}, {1024, "82 04 00"}, {65535, "82 ff ff"},
+        // short form
+        {0, "00"},
+        {1, "01"},
+        {2, "02"},
+        {10, "0a"},
+        {16, "10"},
+        {32, "20"},
+        {38, "26"},
+        {50, "32"},
+        {64, "40"},
+        {100, "64"},
+        {126, "7e"},
+        {127, "7f"},
+        // long form
+        {128, "81 80"},
+        {129, "81 81"},
+        {200, "81 c8"},
+        {201, "81 c9"},
+        {255, "81 ff"},
+        {256, "82 01 00"},
+        {257, "82 01 01"},
+        {300, "82 01 2c"},
+        {512, "82 02 00"},
+        {1024, "82 04 00"},
+        {4096, "82 10 00"},
+        {65535, "82 ff ff"},
+        {65536, "83 01 00 00"},
+        {16777215, "83 ff ff ff"},
+        {16777216, "84 01 00 00 00"},
+        {2147483647, "84 7f ff ff ff"},
+        {4294967295, "84 ff ff ff ff"},
+        {4294967296ULL, "85 01 00 00 00 00"},
+        {18446744073709551615ULL, "88 ff ff ff ff ff ff ff ff"},
+        // BER Indefinite Length
+        // Empty Constructed Object
+        // 30 80 00 00
+        // SEQUENCE Length = indefinite EOC
+        // Nested
+        // 30 80
+        //    30 80
+        //       02 01 01
+        //    00 00
+        // 00 00
     };
-
-    binary_t bin;
-
-    auto lambda_encode_length_octet = [&](const testvector& entry, binary_t& bin) -> void { t_asn1_length_octets<uint32>(bin, entry.i); };
+    // DER invalid cases
+    // 127 "81 7f"
+    // 1   "81 01"
+    // 0   "81 00"
+    // 128 "82 00 80"
+    // 256 "83 00 01 00"
+    // "81" long form, no length octet
+    // "82 01"    2 bytes required, 1 byte exist
+    // "83 01 00" 3 ...
+    // "ff"       X.690 reserved
 
     for (auto entry : _table) {
-        lambda_encode_length_octet(entry, bin);
+        binary_t bin;
+        t_asn1_length_octets<uint64>(bin, entry.i);
 
         {
             test_case_notimecheck notimecheck(_test_case);
 
-            _logger->writeln("%i -> %s", entry.i, base16_encode(bin).c_str());
+            _logger->writeln("%I64u -> %s", entry.i, base16_encode(bin).c_str());
             bool test = (bin == base16_decode_rfc(entry.expect));
-            _test_case.assert(test, __FUNCTION__, "X.690 8.1.3 length octets [%i] expect [%s]", entry.i, entry.expect);
-            bin.clear();
+            _test_case.assert(test, __FUNCTION__, "X.690 8.1.3 length octets [%I64u] expect [%s]", entry.i, entry.expect);
         }
     }
 }
@@ -220,10 +349,9 @@ void test_x690_encoding_value() {
     binary_t bin;
     asn1_encode enc;
 
-    auto encode_routine = [&](binary_t& bin, const variant& v) -> void { enc.encode(bin, asn1_type_primitive, v); };
-
     for (auto entry : _table) {
-        encode_routine(bin, entry.var);
+        // encode_routine(bin, entry.var);
+        enc.encode(bin, asn1_type_primitive, entry.var);
 
         {
             test_case_notimecheck notimecheck(_test_case);
@@ -263,9 +391,9 @@ void test_x690_encoding_typevalue() {
     // X.690 8.14 encoding of a tagged value
     auto type1 = new asn1_object(asn1_type_visiblestring);
     auto type2 = new asn1_object(asn1_type_visiblestring, new asn1_tag(asn1_class_application, 3, asn1_implicit));
-    auto type3 = new asn1_composite(asn1_type_constructed, type2->clone(), new asn1_tag(2));
+    auto type3 = new asn1_composite(asn1_type_constructed, type2->clone(), new asn1_tag(asn1_class_context, 2));
     auto type4 = new asn1_composite(asn1_type_constructed, type3->clone(), new asn1_tag(asn1_class_application, 7, asn1_implicit));
-    auto type5 = new asn1_composite(asn1_type_primitive, type2->clone(), new asn1_tag(2, asn1_implicit));
+    auto type5 = new asn1_composite(asn1_type_primitive, type2->clone(), new asn1_tag(asn1_class_context, 2, asn1_implicit));
 
     struct testvector {
         asn1_object* obj;
@@ -459,12 +587,17 @@ void test_asn1_object() {
         asn1_object* asn1obj;
     };
     testvector2 table2[] = {
-        {"NULL", new asn1_object(asn1_type_null)},
-        {"INTEGER", new asn1_object(asn1_type_integer)},
-        {"REAL", new asn1_object(asn1_type_real)},
+        {"BOOLEAN", new asn1_object(asn1_type_boolean, new asn1_tag(asn1_class_universal))},
+        {"INTEGER", new asn1_object(asn1_type_integer, new asn1_tag(asn1_class_universal))},
+        {"OCTET STRING", new asn1_object(asn1_type_octstring, new asn1_tag(asn1_class_universal))},
+        {"NULL", new asn1_object(asn1_type_null, new asn1_tag(asn1_class_universal))},
+        {"OBJECT IDENTIFIER", new asn1_object(asn1_type_objid, new asn1_tag(asn1_class_universal))},
+        {"REAL", new asn1_object(asn1_type_real, new asn1_tag(asn1_class_universal))},
         {"SEQUENCE {name IA5String, ok BOOLEAN}", new asn1_sequence(2, new asn1_object("name", asn1_type_ia5string), new asn1_object("ok", asn1_type_boolean))},
         {"Date ::= VisibleString", new asn1_object("Date", asn1_type_visiblestring)},
         {"Date ::= [APPLICATION 3] IMPLICIT VisibleString", new asn1_object("Date", asn1_type_visiblestring, new asn1_tag(asn1_class_application, 3, asn1_implicit))},
+        {"Date ::= [0] IMPLICIT VisibleString", new asn1_object("Date", asn1_type_visiblestring, new asn1_tag(asn1_class_context, 0, asn1_implicit))},
+        {"Date ::= [PRIVATE 0] IMPLICIT VisibleString", new asn1_object("Date", asn1_type_visiblestring, new asn1_tag(asn1_class_private, 0, asn1_implicit))},
     };
 
     basic_stream bs;
@@ -549,29 +682,51 @@ void test_x690_annex_a_1() {
     {
         asn1* object = new asn1;
 
-        auto node_personal = new asn1_set("PersonnelRecord", new asn1_tag(asn1_class_application, 0, asn1_implicit));
-        *node_personal << new asn1_object("name", new asn1_object("Name", asn1_type_referenced)) << new asn1_object("title", asn1_type_visiblestring, new asn1_tag(0))
-                       << new asn1_object("number", new asn1_object("EmployeeNumber", asn1_type_referenced))
-                       << new asn1_object("dateOfHire", new asn1_object("Date", asn1_type_referenced, new asn1_tag(1)))
-                       << new asn1_object("nameOfSpouse", new asn1_object("Name", asn1_type_referenced, new asn1_tag(2)))
-                       << new asn1_object("children", &(new asn1_sequence_of("ChildInformation", new asn1_tag(3, asn1_implicit)))->as_default());
-        *object << node_personal;
-
-        auto node_childinfo = new asn1_set("ChildInformation");
-        *node_childinfo << new asn1_object("name", new asn1_object("Name", asn1_type_referenced))
-                        << new asn1_object("dateOfBirth", new asn1_object("Date", asn1_type_referenced, new asn1_tag(0)));
-        *object << node_childinfo;
-
-        auto node_name = new asn1_sequence("Name", new asn1_tag(asn1_class_application, 1, asn1_implicit));
-        *node_name << new asn1_object("givenName", new asn1_object(asn1_type_visiblestring)) << new asn1_object("initial", new asn1_object(asn1_type_visiblestring))
-                   << new asn1_object("familyName", new asn1_object(asn1_type_visiblestring));
-        *object << node_name;
-
-        auto node_employeenumber = new asn1_object("EmployeeNumber", asn1_type_integer, new asn1_tag(asn1_class_application, 2, asn1_implicit));
-        *object << node_employeenumber;
-
-        auto node_date = new asn1_object("Date", asn1_type_visiblestring, new asn1_tag(asn1_class_application, 3, asn1_implicit));
-        *object << node_date;
+        (*object)
+            // auto node_personal = new asn1_set("PersonnelRecord", new asn1_tag(asn1_class_application, 0, asn1_implicit));
+            // *node_personal << new asn1_object("name", new asn1_object("Name", asn1_type_referenced))                  //
+            //                << new asn1_object("title", asn1_type_visiblestring, new asn1_tag(asn1_class_context, 0))  //
+            //                << new asn1_object("number", new asn1_object("EmployeeNumber", asn1_type_referenced))
+            //                << new asn1_object("dateOfHire", new asn1_object("Date", asn1_type_referenced, new asn1_tag(asn1_class_context, 1)))
+            //                << new asn1_object("nameOfSpouse", new asn1_object("Name", asn1_type_referenced, new asn1_tag(asn1_class_context, 2)))
+            //                << new asn1_object("children", &(new asn1_sequence_of("ChildInformation", new asn1_tag(asn1_class_context, 3,
+            //                asn1_implicit)))->as_default());
+            // *object << node_personal;
+            .add(new asn1_set("PersonnelRecord", new asn1_tag(asn1_class_application, 0, asn1_implicit)),
+                 [](asn1_set* set) -> void {
+                     (*set) << new asn1_object("name", new asn1_object("Name", asn1_type_referenced))
+                            << new asn1_object("title", asn1_type_visiblestring, new asn1_tag(asn1_class_context, 0))
+                            << new asn1_object("number", new asn1_object("EmployeeNumber", asn1_type_referenced))
+                            << new asn1_object("dateOfHire", new asn1_object("Date", asn1_type_referenced, new asn1_tag(asn1_class_context, 1)))
+                            << new asn1_object("nameOfSpouse", new asn1_object("Name", asn1_type_referenced, new asn1_tag(asn1_class_context, 2)))
+                            << new asn1_object("children", &(new asn1_sequence_of("ChildInformation", new asn1_tag(asn1_class_context, 3, asn1_implicit)))->as_default());
+                 })
+            // auto node_childinfo = new asn1_set("ChildInformation");
+            // *node_childinfo << new asn1_object("name", new asn1_object("Name", asn1_type_referenced))
+            //                 << new asn1_object("dateOfBirth", new asn1_object("Date", asn1_type_referenced, new asn1_tag(asn1_class_context, 0)));
+            // *object << node_childinfo;
+            .add(new asn1_set("ChildInformation"),  //
+                 [](asn1_set* set) -> void {
+                     (*set) << new asn1_object("name", new asn1_object("Name", asn1_type_referenced))
+                            << new asn1_object("dateOfBirth", new asn1_object("Date", asn1_type_referenced, new asn1_tag(asn1_class_context, 0)));
+                 })
+            // auto node_name = new asn1_sequence("Name", new asn1_tag(asn1_class_application, 1, asn1_implicit));
+            // *node_name << new asn1_object("givenName", new asn1_object(asn1_type_visiblestring)) << new asn1_object("initial", new
+            // asn1_object(asn1_type_visiblestring))
+            //            << new asn1_object("familyName", new asn1_object(asn1_type_visiblestring));
+            // *object << node_name;
+            .add(new asn1_sequence("Name", new asn1_tag(asn1_class_application, 1, asn1_implicit)),  //
+                 [](asn1_sequence* seq) -> void {
+                     (*seq) << new asn1_object("givenName", new asn1_object(asn1_type_visiblestring))  //
+                            << new asn1_object("initial", new asn1_object(asn1_type_visiblestring))    //
+                            << new asn1_object("familyName", new asn1_object(asn1_type_visiblestring));
+                 })
+            // auto node_employeenumber = new asn1_object("EmployeeNumber", asn1_type_integer, new asn1_tag(asn1_class_application, 2, asn1_implicit));
+            // *object << node_employeenumber;
+            .add(new asn1_object("EmployeeNumber", asn1_type_integer, new asn1_tag(asn1_class_application, 2, asn1_implicit)))
+            // auto node_date = new asn1_object("Date", asn1_type_visiblestring, new asn1_tag(asn1_class_application, 3, asn1_implicit));
+            // *object << node_date;
+            .add(new asn1_object("Date", asn1_type_visiblestring, new asn1_tag(asn1_class_application, 3, asn1_implicit)));
 
         basic_stream bs1;
         basic_stream bs2;
@@ -609,6 +764,7 @@ void test_x690_annex_a_2() {
 
 void testcase_asn1() {
     // studying ...
+    test_x690_8_1_2_identifier_octects();
     test_x690_8_1_3_length_octets();
     test_x690_8_1_5_end_of_contents();
     test_x690_encoding_value();

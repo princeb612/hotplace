@@ -108,8 +108,8 @@ asn1_encode& asn1_encode::primitive(binary_t& bin, double value) {
 }
 
 asn1_encode& asn1_encode::primitive(binary_t& bin, asn1_type_t type, const std::string& value) {
-    if (type < asn1_type_special) {
-        binary_push(bin, type);
+    if (type < asn1_type_userdef) {
+        asn1_ident_octets(bin, asn1_class_universal | asn1_tag_primitive, type);
     }
     t_asn1_length_octets<size_t>(bin, value.size());
     binary_append(bin, value);
@@ -117,7 +117,7 @@ asn1_encode& asn1_encode::primitive(binary_t& bin, asn1_type_t type, const std::
 }
 
 asn1_encode& asn1_encode::primitive(binary_t& bin, asn1_tag_t type, const std::string& value) {
-    binary_push(bin, type);
+    asn1_ident_octets(bin, asn1_class_universal | asn1_tag_primitive, type);
     t_asn1_length_octets<size_t>(bin, value.size());
     binary_append(bin, value);
     return *this;
@@ -177,7 +177,8 @@ asn1_encode& asn1_encode::reloid(binary_t& bin, const std::string& value) {
 }
 
 asn1_encode& asn1_encode::encode(binary_t& bin, asn1_type_t type, const binary_t& value) {
-    t_asn1_length_octets<uint32>(bin, t_narrow_cast(value.size()));
+    uint32 tval = t_narrow_cast(value.size());
+    t_asn1_length_octets(bin, tval);
     binary_append(bin, value);
     return *this;
 }
@@ -274,7 +275,8 @@ asn1_encode& asn1_encode::bitstring(binary_t& bin, const std::string& value) {
         temp += "0";
     }
     binary_push(bin, asn1_tag_bitstring);
-    t_asn1_length_octets<uint16>(bin, t_narrow_cast(1 + (temp.size() / 2)));
+    uint16 tval = t_narrow_cast(1 + (temp.size() / 2));
+    t_asn1_length_octets(bin, tval);
     binary_push(bin, pad);
     binary_append(bin, base16_decode(temp));
     return *this;
@@ -386,6 +388,62 @@ asn1_encode& asn1_encode::end_contents(binary_t& bin) {
     binary_push(bin, 0x00);
     binary_push(bin, 0x00);
     return *this;
+}
+
+void asn1_encode::asn1_ident_octets(binary_t& bin, uint8 enc, uint64 tag) {
+    if (tag > 30) {
+        std::vector<uint8> v;
+        while (tag >= 0x80) {
+            v.push_back(tag & 0x7f);
+            tag >>= 7;
+        }
+        if (tag) v.push_back(tag & 0x7f);
+
+        bin.reserve(bin.size() + v.size() + 1);
+        bin.push_back(enc | 0x1f);
+        for (auto i = v.size(); i > 0; --i) {
+            size_t idx = i - 1;
+            uint8 contflag = (idx == 0) ? 0x00 : 0x80;
+            bin.push_back(contflag | v[idx]);
+        }
+    } else {
+        bin.push_back(enc | tag);
+    }
+}
+
+return_t asn1_encode::read_asn1_ident_octets(const byte_t* stream, size_t size, uint8& ident, uint64& tag) {
+    if (nullptr == stream || 0 == size) {
+        return errorcode_t::invalid_parameter;
+    }
+
+    size_t pos = 0;
+    uint8 b = stream[pos];
+    ident = b & ~asn1_tag_number_mask;
+    tag = 0;
+
+    uint8 val = b & asn1_tag_number_mask;
+    uint8 iscont = (asn1_tag_number_mask == val);
+    size_t que = 0;
+    if (iscont) {
+        ++que;
+        if (pos + 1 < size) {
+            if (0x80 == stream[pos + 1]) return errorcode_t::bad_data;
+        }
+        while (++pos < size) {
+            b = stream[pos];
+            uint8 m = (b & 0x80);
+            uint8 c = (b & 0x7f);
+            if (m) ++que;
+            tag <<= 7;
+            tag += c;
+            --que;
+            if (0 == m) break;
+        }
+        if (que) return errorcode_t::bad_data;
+    } else {
+        tag = val;
+    }
+    return errorcode_t::success;
 }
 
 }  // namespace io

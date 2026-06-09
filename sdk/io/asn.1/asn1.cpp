@@ -12,6 +12,7 @@
  */
 
 #include <hotplace/sdk/io/asn.1/asn1.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_container.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_visitor.hpp>
 
@@ -27,15 +28,22 @@ asn1::asn1() {
 asn1::asn1(const asn1& other) {
     _ref.make_share(this);
     for (auto item : other._types) {
-        add_type(item->clone());
+        add(item->clone());
     }
+}
+
+asn1& asn1::operator=(const asn1& other) {
+    for (auto item : other._types) {
+        add(item->clone());
+    }
+    return *this;
 }
 
 asn1* asn1::clone() { return new asn1(*this); }
 
 asn1::~asn1() { clear(); }
 
-asn1& asn1::add_type(asn1_object* item) {
+asn1& asn1::add(asn1_object* item) {
     if (item) {
         _types.push_back(item);
         const std::string& name = item->get_name();
@@ -46,7 +54,7 @@ asn1& asn1::add_type(asn1_object* item) {
     return *this;
 }
 
-asn1& asn1::operator<<(asn1_object* item) { return add_type(item); }
+asn1& asn1::operator<<(asn1_object* item) { return add(item); }
 
 asn1& asn1::set_value_byname(const std::string& name, const variant& value) {
     auto iter = _dictionary.find(name);

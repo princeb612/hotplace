@@ -20,12 +20,6 @@
 namespace hotplace {
 namespace io {
 
-asn1_tag::asn1_tag(int cnumber, asn1_tag* tag)
-    : asn1_object(asn1_type_tagged, tag), _class_type(asn1_class_empty), _class_number(cnumber), _tag_mode(0), _suppress(false) {}
-
-asn1_tag::asn1_tag(int cnumber, int tmode, asn1_tag* tag)
-    : asn1_object(asn1_type_tagged, tag), _class_type(asn1_class_empty), _class_number(cnumber), _tag_mode(tmode), _suppress(false) {}
-
 asn1_tag::asn1_tag(int ctype, int cnumber, int tmode, asn1_tag* tag)
     : asn1_object(asn1_type_tagged, tag), _class_type(ctype), _class_number(cnumber), _tag_mode(tmode), _suppress(false) {}
 
@@ -62,15 +56,17 @@ bool asn1_tag::is_suppressed() const { return _suppress; }
 
 void asn1_tag::represent(stream_t* s) {
     if (s) {
-        s->printf("[");
-        s->printf("%s", asn1_resource::get_instance()->get_class_name(get_class()).c_str());
-        if (asn1_class_empty != get_class()) {
-            s->printf(" ");
-        }
-        s->printf("%i", get_class_number());
-        s->printf("] ");
-        if (get_tag_type()) {
-            s->printf("%s ", asn1_resource::get_instance()->get_tagtype_name(get_tag_type()).c_str());
+        if (get_class() & asn1_class_mask) {
+            s->printf("[");
+            s->printf("%s", asn1_resource::get_instance()->get_class_name(get_class()).c_str());
+            if (asn1_class_empty != get_class()) {
+                s->printf(" ");
+            }
+            s->printf("%i", get_class_number());
+            s->printf("] ");
+            if (get_tag_type()) {
+                s->printf("%s ", asn1_resource::get_instance()->get_tagtype_name(get_tag_type()).c_str());
+            }
         }
     }
 }
@@ -80,7 +76,7 @@ void asn1_tag::represent(binary_t* b) {
         bool tagmode_explicit = true;
         if (get_tag()) {
             get_tag()->represent(b);
-            if (asn1_implicit == get_tag()->get_tag_type()) {
+            if (asn1_implicit & get_tag()->get_tag_type()) {
                 tagmode_explicit = false;
             } else {
                 //

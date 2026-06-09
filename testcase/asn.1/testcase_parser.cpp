@@ -10,7 +10,7 @@
  * comments
  */
 
-#include <hotplace/testcase/io/sample.hpp>
+#include "sample.hpp"
 
 constexpr char asn1_structure[] =
     R"(PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {
@@ -488,4 +488,5 @@ void testcase_parser() {
     test_parser_compare();
     test_multipattern_search();
     test_patterns();
+    // [sketch] Abstract Syntax Tree
 }

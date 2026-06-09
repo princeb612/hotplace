@@ -60,7 +60,7 @@ enum asn1_tag_t {
 
 };
 
-enum asn1_bits_t {
+enum asn1_bits_t : uint8 {
     // X.680 8.1.2.2 Table 1 - encoding of class of tag
     // class            bit8 bit7
     // universal        0    0
@@ -72,6 +72,7 @@ enum asn1_bits_t {
     asn1_class_context = 0x80,
     asn1_class_empty = asn1_class_context,
     asn1_class_private = 0xc0,
+    asn1_class_mask = 0xc0,
 
     // X.680 8.1.2.3 Figure 3 - identifier octet
     // identifier       bit6
@@ -79,20 +80,11 @@ enum asn1_bits_t {
     // constructed      1
     asn1_tag_primitive = 0x00,
     asn1_tag_constructed = 0x20,
+
+    asn1_tag_number_mask = 0x1f,
 };
 
 enum asn1_type_t {
-    asn1_type_special = 0x1000,
-    asn1_type_primitive = 0,
-    asn1_type_constructed = (asn1_type_special + 1),
-    asn1_type_referenced = (asn1_type_special + 2),
-
-    // TaggedType ::= Tag Type | Tag IMPLICIT Type | Tag EXPLICIT Type
-    // Tag ::= "[" Class ClassNumber "]"
-    asn1_type_tagged = (asn1_type_special + 3),
-    // NamedType ::= identifier Type
-    asn1_type_named = (asn1_type_special + 4),
-
     asn1_type_boolean = asn1_tag_boolean,
     asn1_type_integer = asn1_tag_integer,
     asn1_type_bitstring = asn1_tag_bitstring,
@@ -107,9 +99,7 @@ enum asn1_type_t {
     asn1_type_utf8string = asn1_tag_utf8string,
     asn1_type_reloid = asn1_tag_relobjid,
     asn1_type_sequence = asn1_tag_sequence,
-    asn1_type_sequence_of = (asn1_type_special + 5),
     asn1_type_set = asn1_tag_set,
-    asn1_type_set_of = (asn1_type_special + 6),
     asn1_type_numstring = asn1_tag_numstring,
     asn1_type_printstring = asn1_tag_printstring,
     asn1_type_teletexstring = asn1_tag_teletexstring,
@@ -129,6 +119,19 @@ enum asn1_type_t {
     asn1_type_timeofday = asn1_tag_timeofday,
     asn1_type_datetime = asn1_tag_datetime,
     asn1_type_duration = asn1_tag_duration,
+
+    asn1_type_userdef = 0x1000,
+    asn1_type_primitive = 0,
+    asn1_type_constructed = (asn1_type_userdef + 1),
+    asn1_type_referenced = (asn1_type_userdef + 2),
+
+    // TaggedType ::= Tag Type | Tag IMPLICIT Type | Tag EXPLICIT Type
+    // Tag ::= "[" Class ClassNumber "]"
+    asn1_type_tagged = (asn1_type_userdef + 3),
+    // NamedType ::= identifier Type
+    asn1_type_named = (asn1_type_userdef + 4),
+    asn1_type_sequence_of = (asn1_type_userdef + 5),
+    asn1_type_set_of = (asn1_type_userdef + 6),
 };
 
 enum asn1_tagtype_t {

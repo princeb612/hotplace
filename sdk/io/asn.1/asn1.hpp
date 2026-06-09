@@ -26,10 +26,22 @@ class asn1 {
     asn1(const asn1& other);
     virtual ~asn1();
 
+    asn1& operator=(const asn1& other);
+
     asn1* clone();
 
-    // types
-    asn1& add_type(asn1_object* item);
+    asn1& add(asn1_object* item);
+    /**
+     * (*obj)
+     *  .add(new asn1_sequence("name"), [](asn1_sequence* seq) -> void { seq->do_something(); });
+     *  .add(new asn1_set("name"), [](asn1_set* set) -> void { set->do_something(); });
+     */
+    template <typename T, typename F>
+    asn1& add(T* item, F&& fn) {
+        add(item);
+        fn(item);
+        return *this;
+    }
     asn1& operator<<(asn1_object* item);
 
     /**

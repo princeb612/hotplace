@@ -48,7 +48,7 @@ void test_variant() {
     _test_case.assert(neg == -1, __FUNCTION__, "negative");
 
     neg = bn_neg.t_bntoi<uint32>();
-    _test_case.assert(neg == -1, __FUNCTION__, "exception unsigned cast");
+    _test_case.assert(neg == -1, __FUNCTION__, "negative");
 }
 
 void testcase_variant() { test_variant(); }

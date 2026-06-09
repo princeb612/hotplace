@@ -44,6 +44,14 @@ asn1_container& asn1_container::operator<<(asn1_object* other) {
     return *this;
 }
 
+asn1_container& asn1_container::add(std::function<asn1_object*(asn1_container*)> func) {
+    if (func) {
+        auto obj = func(this);
+        return *this << obj;
+    }
+    return *this;
+}
+
 void asn1_container::represent(stream_t* s) {
     if (s) {
         if (false == get_name().empty()) {

@@ -135,7 +135,7 @@ void test_base64_stream_by_encoding(std::string text, encoding_t encoding) {
         valist va;
         va << chunk << sample << encoded;
         _logger->write([&](basic_stream& bs) -> void {
-            bs.vaprintln("chunk   {1:s}", va);
+            bs.vaprintln("chunk   {1}", va);
             bs.vaprintln("source  {2:s}", va);  // printable data
             bs.vaprintln("encoded {3:s}", va);
         });
@@ -156,7 +156,7 @@ void test_base64_stream_by_encoding(std::string text, encoding_t encoding) {
         valist va;
         va << chunk << decoded;
         _logger->write([&](basic_stream& bs) -> void {
-            bs.vaprintln("chunk   {1:s}", va);
+            bs.vaprintln("chunk   {1}", va);
             bs.vaprintln("decoded {2:s}", va);  // printable data
         });
         _test_case.assert(decoded == sample, __FUNCTION__, "base64 decoder stream chunk %zi", chunk);

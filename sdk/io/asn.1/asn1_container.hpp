@@ -29,6 +29,7 @@ class asn1_container : public asn1_object {
     virtual void represent(binary_t* b);
 
     asn1_container& operator<<(asn1_object* other);
+    asn1_container& add(std::function<asn1_object*(asn1_container*)> func);
 
     void addref();
     void release();

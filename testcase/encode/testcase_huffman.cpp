@@ -172,9 +172,9 @@ void test_huffman_stream() {
         valist va;
         va << chunk << sample << encoded;
         _logger->write([&](basic_stream& bs) -> void {
-            bs.vaprintln("chunk   {1:s}", va);
-            bs.vaprintln("source  {2:s}", va);  // printable data
-            bs.vaprintln("encoded {3:s}", va);
+            bs.vaprintln("chunk   {1}", va);
+            bs.vaprintln("source  {2:s}", va);
+            bs.vaprintln("encoded {3:s}", va);  // printable data
         });
 
         _test_case.assert(encoded == expect_encoded, __FUNCTION__, "http_huffman_coding encoder stream chunk %zi", chunk);
@@ -190,7 +190,7 @@ void test_huffman_stream() {
         valist va;
         va << chunk << decoded;
         _logger->write([&](basic_stream& bs) -> void {
-            bs.vaprintln("chunk   {1:s}", va);
+            bs.vaprintln("chunk   {1}", va);
             bs.vaprintln("decoded {2:s}", va);  // printable data
         });
         _test_case.assert(decoded == sample, __FUNCTION__, "http_huffman_coding decoder stream chunk %zi", chunk);
