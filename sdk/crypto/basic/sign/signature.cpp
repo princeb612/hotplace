@@ -21,7 +21,7 @@
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_sign.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
-#include <hotplace/sdk/io/asn.1/types.hpp>
+#include <hotplace/sdk/io/asn.1/types.hpp>  // asn1_class_universal, asn1_tag_constructed, asn1_tag_sequence, asn1_tag_integer
 #include <hotplace/sdk/io/basic/payload.hpp>
 
 namespace hotplace {
@@ -61,8 +61,11 @@ return_t rs2der(const binary_t& r, const binary_t& s, binary_t& asn1der) {
             s1.insert(s1.begin(), prefix.begin(), prefix.end());
         }
 
+        // asn1_encode::asn1_ident_octets(bin, asn1_class_universal | asn1_tag_constructed, asn1_tag_sequence);
+        uint8 ident = asn1_class_universal | asn1_tag_constructed | asn1_tag_sequence;  // 0x30
+
         payload pl;
-        pl << new payload_member(uint8(0x30))                       //
+        pl << new payload_member(uint8(ident))                      //
            << new payload_member(uint8(r1.size() + s1.size() + 4))  //
            << new payload_member(uint8(asn1_tag_integer))           //
            << new payload_member(uint8(r1.size()))                  //

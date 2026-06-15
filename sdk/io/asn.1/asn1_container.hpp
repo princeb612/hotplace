@@ -13,7 +13,7 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_ASN1CONTAINER__
 #define __HOTPLACE_SDK_IO_ASN1_ASN1CONTAINER__
 
-#include <hotplace/sdk/io/asn.1/asn1_object.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_type.hpp>
 
 namespace hotplace {
 namespace io {
@@ -21,12 +21,10 @@ namespace io {
 /**
  * @brief   SequenceType, SequenceOfType, SetType, SetOfType
  */
-class asn1_container : public asn1_object {
+class asn1_container : public asn1_type {
    public:
     virtual ~asn1_container();
-
-    virtual void represent(stream_t* s);
-    virtual void represent(binary_t* b);
+    asn1_container& operator=(const asn1_container& other);
 
     asn1_container& operator<<(asn1_object* other);
     asn1_container& add(std::function<asn1_object*(asn1_container*)> func);
@@ -35,9 +33,11 @@ class asn1_container : public asn1_object {
     void release();
 
    protected:
-    asn1_container(asn1_tag* tag);
-    asn1_container(const std::string& name, asn1_tag* tag);
+    asn1_container(asn1_entity_t entity, const std::string& name, asn1_object* object);
     asn1_container(const asn1_container& other);
+
+    virtual void represent(uint32 depth, stream_t* s);
+    virtual void represent(uint32 depth, binary_t* b, asn1_value* value = nullptr);
 
    private:
     std::list<asn1_object*> _list;

@@ -12,7 +12,10 @@
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_IEEE754__
 #define __HOTPLACE_SDK_BASE_SYSTEM_IEEE754__
 
+#include <math.h>
+
 #include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/nostd/capacity.hpp>
 #include <string>
 
 namespace hotplace {
@@ -195,6 +198,9 @@ ieee754_typeof_t ieee754_typeof(double d);
 ieee754_typeof_t ieee754_exp(uint16 value, int* s, int* e, uint* m);
 ieee754_typeof_t ieee754_exp(float value, int* s, int* e, float* m);
 ieee754_typeof_t ieee754_exp(double value, int* s, int* e, double* m);
+
+static inline float ieee754_fabs(float v) { return fabsf(v); }
+static inline double ieee754_fabs(double v) { return fabs(v); }
 
 }  // namespace hotplace
 

@@ -16,25 +16,23 @@
 namespace hotplace {
 namespace io {
 
-asn1_set::asn1_set(asn1_tag* tag) : asn1_container(tag) { set_type(asn1_type_set); }
+asn1_set::asn1_set() : asn1_container(asn1_entity_set, "", nullptr) {}
 
-asn1_set::asn1_set(const std::string& name, asn1_tag* tag) : asn1_container(name, tag) { set_type(asn1_type_set); }
+asn1_set::asn1_set(const std::string& name) : asn1_container(asn1_entity_set, name, nullptr) {}
 
-asn1_set::asn1_set(const asn1_set& other) : asn1_container(other) { set_type(asn1_type_set); }
+asn1_set::asn1_set(const asn1_set& other) : asn1_container(other) {}
 
-asn1_object* asn1_set::clone() { return new asn1_set(*this); }
+asn1_set::~asn1_set() {}
 
-void asn1_set::represent(binary_t* b) {}
+asn1_set* asn1_set::clone() { return new asn1_set(*this); }
 
-asn1_set_of::asn1_set_of(asn1_tag* tag) : asn1_container(tag) { set_type(asn1_type_set_of); }
+asn1_set_of::asn1_set_of() : asn1_container(asn1_entity_set_of, "", nullptr) {}
 
-asn1_set_of::asn1_set_of(const std::string& name, asn1_tag* tag) : asn1_container(name, tag) { set_type(asn1_type_set_of); }
+asn1_set_of::asn1_set_of(const std::string& name) : asn1_container(asn1_entity_set_of, name, nullptr) {}
 
-asn1_set_of::asn1_set_of(const asn1_set_of& other) : asn1_container(other) { set_type(asn1_type_set_of); }
+asn1_set_of::asn1_set_of(const asn1_set_of& other) : asn1_container(other) {}
 
-asn1_object* asn1_set_of::clone() { return new asn1_set_of(*this); }
-
-void asn1_set_of::represent(binary_t* b) {}
+asn1_set_of* asn1_set_of::clone() { return new asn1_set_of(*this); }
 
 }  // namespace io
 }  // namespace hotplace

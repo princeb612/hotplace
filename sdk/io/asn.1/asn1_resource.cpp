@@ -11,6 +11,7 @@
  *
  */
 
+#include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 
 namespace hotplace {
@@ -37,44 +38,57 @@ void asn1_resource::load_resource() {
 void asn1_resource::doload_resource() {
     if (_type_id.empty()) {
         struct builtintypes {
-            asn1_type_t type;
+            asn1_entity_t type;
             const char* type_name;
+            asn1_perm_t permission;
         } _types[] = {
-            {asn1_type_boolean, "BOOLEAN"},
-            {asn1_type_integer, "INTEGER"},
-            {asn1_type_bitstring, "BIT STRING"},
-            {asn1_type_octstring, "OCTET STRING"},
-            {asn1_type_null, "NULL"},
-            {asn1_type_objid, "OBJECT IDENTIFIER"},
-            {asn1_type_objdesc, "ObjectDescriptor"},
-            {asn1_type_extern, "EXTERNAL"},
-            {asn1_type_real, "REAL"},
-            {asn1_type_enum, "ENUMERATED"},
-            {asn1_type_embedpdv, "EMBEDDED PDV"},
-            {asn1_type_utf8string, "UTF8String"},
-            {asn1_type_reloid, "RELATIVE-OID"},
-            {asn1_type_sequence, "SEQUENCE"},
-            {asn1_type_sequence_of, "SEQUENCE OF"},
-            {asn1_type_set, "SET"},
-            {asn1_type_set_of, "SET OF"},
-            {asn1_type_numstring, "NumericString"},
-            {asn1_type_printstring, "PrintableString"},
-            {asn1_type_teletexstring, "TeletexString"},
-            {asn1_type_videotexstring, "VideotexString"},
-            {asn1_type_ia5string, "IA5String"},
-            {asn1_type_utctime, "UTCTime"},
-            {asn1_type_generalizedtime, "GeneralizedTime"},
-            {asn1_type_graphicstring, "GraphicString"},
-            {asn1_type_visiblestring, "VisibleString"},
-            {asn1_type_generalstring, "GeneralString"},
-            {asn1_type_universalstring, "UniversalString"},
-            {asn1_type_cstring, "CHARACTER STRING"},
-            {asn1_type_bmpstring, "BMPString"},
-            {asn1_type_date, "DATE"},
+            {asn1_entity_boolean, "BOOLEAN", asn1_perm_primitive},
+            {asn1_entity_integer, "INTEGER", asn1_perm_primitive},
+            {asn1_entity_bitstring, "BIT STRING", asn1_perm_both},
+            {asn1_entity_octstring, "OCTET STRING", asn1_perm_both},
+            {asn1_entity_null, "NULL", asn1_perm_primitive},
+            {asn1_entity_objid, "OBJECT IDENTIFIER", asn1_perm_primitive},
+            {asn1_entity_objdesc, "ObjectDescriptor", asn1_perm_primitive},
+            {asn1_entity_extern, "EXTERNAL", asn1_perm_constructed},
+            {asn1_entity_real, "REAL", asn1_perm_both},
+            {asn1_entity_enum, "ENUMERATED", asn1_perm_primitive},
+            {asn1_entity_embedpdv, "EMBEDDED PDV", asn1_perm_constructed},
+            {asn1_entity_utf8string, "UTF8String", asn1_perm_both},
+            {asn1_entity_reloid, "RELATIVE-OID", asn1_perm_primitive},
+            {asn1_entity_sequence, "SEQUENCE", asn1_perm_constructed},
+            {asn1_entity_set, "SET", asn1_perm_constructed},
+            {asn1_entity_numstring, "NumericString", asn1_perm_both},
+            {asn1_entity_printstring, "PrintableString", asn1_perm_both},
+            {asn1_entity_teletexstring, "TeletexString", asn1_perm_both},
+            {asn1_entity_videotexstring, "VideotexString", asn1_perm_both},
+            {asn1_entity_ia5string, "IA5String", asn1_perm_both},
+            {asn1_entity_utctime, "UTCTime", asn1_perm_primitive},
+            {asn1_entity_generalizedtime, "GeneralizedTime", asn1_perm_primitive},
+            {asn1_entity_graphicstring, "GraphicString", asn1_perm_both},
+            {asn1_entity_visiblestring, "VisibleString", asn1_perm_both},
+            {asn1_entity_generalstring, "GeneralString", asn1_perm_both},
+            {asn1_entity_universalstring, "UniversalString", asn1_perm_both},
+            {asn1_entity_cstring, "CHARACTER STRING", asn1_perm_both},
+            {asn1_entity_bmpstring, "BMPString", asn1_perm_both},
+            {asn1_entity_date, "DATE", asn1_perm_primitive},
+            {asn1_entity_timeofday, "TIME-OF-DAY", asn1_perm_primitive},
+            {asn1_entity_datetime, "DATE-TIME", asn1_perm_primitive},
+            {asn1_entity_duration, "DURATION", asn1_perm_primitive},
+
+            {asn1_entity_sequence_of, "SEQUENCE OF", asn1_perm_constructed},
+            {asn1_entity_set_of, "SET OF", asn1_perm_constructed},
+            {asn1_entity_choice, "CHOICE", asn1_perm_constructed},
+
+            {asn1_entity_builtin_type, "builtin type"},
+            {asn1_entity_referenced_type, "referenced type"},
+            {asn1_entity_tag, "tag type"},
+            {asn1_entity_tagged_type, "tagged type"},
+            {asn1_entity_named_type, "named type"},
         };
         for (auto item : _types) {
             _type_id.emplace(item.type, item.type_name);
             _type_rid.emplace(item.type_name, item.type);
+            _type_perm.emplace(item.type, item.permission);
         }
 
         _class_id.emplace(asn1_class_universal, "UNIVERSAL");
@@ -84,27 +98,48 @@ void asn1_resource::doload_resource() {
     }
 }  // namespace io
 
-std::string asn1_resource::get_type_name(asn1_type_t t) {
+std::string asn1_resource::get_entity_name(uint8 ident, asn1_entity_t entity) {
     std::string name;
-    auto iter = _type_id.find(t);
-    if (_type_id.end() != iter) {
-        name = iter->second;
+    auto c = (ident & asn1_class_mask);
+    switch (c) {
+        case asn1_class_universal: {
+            auto iter = _type_id.find(entity);
+            if (_type_id.end() != iter) {
+                name = iter->second;
+            } else {
+                name = format("[UNIVERSAL %u]", (unsigned int)entity);
+            }
+        } break;
+        case asn1_class_application: {
+            name = format("[APPLICATION %u]", (unsigned int)entity);
+        } break;
+        case asn1_class_context: {
+            name = format("[%u]", (unsigned int)entity);
+        } break;
+        case asn1_class_private: {
+            name = format("[PRIVATE %u]", (unsigned int)entity);
+        } break;
     }
     return name;
 }
 
-asn1_type_t asn1_resource::get_type(const std::string& name) {
-    asn1_type_t type = asn1_type_primitive;
+asn1_entity_t asn1_resource::get_entity(const std::string& name) {
+    asn1_entity_t entity = {};
     auto iter = _type_rid.find(name);
     if (_type_rid.end() != iter) {
-        type = iter->second;
+        entity = iter->second;
     }
-    return type;
+    return entity;
+}
+
+asn1_perm_t asn1_resource::get_perm(asn1_entity_t entity) {
+    auto iter = _type_perm.find(entity);
+    return (_type_perm.end() == iter) ? asn1_perm_none : iter->second;
 }
 
 std::string asn1_resource::get_class_name(int c) {
     std::string name;
-    auto iter = _class_id.find(c);
+    auto iter = _class_id.find(c & asn1_class_mask);
     if (_class_id.end() != iter) {
         name = iter->second;
     }
@@ -137,7 +172,7 @@ std::string asn1_resource::get_componenttype_name(uint32 t) {
     return name;
 }
 
-void asn1_resource::for_each_type_name(std::function<void(asn1_type_t, const std::string&)> f) {
+void asn1_resource::for_each_type_name(std::function<void(asn1_entity_t, const std::string&)> f) {
     if (f) {
         for (auto item : _type_id) {
             f(item.first, item.second);

@@ -10,6 +10,7 @@
  * 2024.09.13   Soo Han, Kim        Aho-Corasick algorithm applied (codename.hotplace Revision 607)
  * 2026.05.06   Soo Han, Kim        format string syntax e.g. {1:02x} {1:3d} {2:-10s} (codename.hotplace Revision 977)
  * 2026.05.20   Soo Han, Kim        the format specifier 's' in TYPE_BINARY, it outputs a character if it is printable, and '.' otherwise.
+ * 2026.06.10   Soo Han, Kim        the format specifier 'x' in TYPE_BINARY, base16 encoding.
  */
 
 #include <hotplace/sdk/base/basic/base16.hpp>
@@ -51,84 +52,12 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
         ansi_string formatter;
         formatter.write((void*)fmt, strlen(fmt));
 
-#if 0
-
-        // simple implementation to support only {1} {2} {3}
-        // it can't be {3} {2} {1}
-
-        for (i = 0; i != va.size (); i++) {
-            va.at (i, v);
-            int order = i + 1;
-            for (size_t table_index = 0; table_index != RTL_NUMBER_OF (type_formatter); table_index++) {
-                if (type_formatter[table_index].type == v.type) {
-                    formatter.replace (format ("{%d}", order).c_str (), type_formatter[table_index].formatter);
-                    break;
-                }
-            }
-        }
-
-        stream->vprintf ((char *) formatter.data (), va.get ());
-
-#endif
-
         typedef std::map<vartype_t, std::string> formatter_map_t;
         formatter_map_t fmtspec;  // format specifier
-        for (i = 0; i < RTL_NUMBER_OF(type_formatter); i++) {
+        for (i = 0; i < size_type_formatter; i++) {
             variant_conversion_t* item = type_formatter + i;
             fmtspec.emplace(item->type, item->formatter);
         }
-
-#if 0
-        {
-            /**
-             * Aho-Corasick
-             *
-             * {1} {2} {3}
-             * {3} {2} {1}
-             * ...
-             */
-
-            // Step1. check order using map ...
-            typedef std::map<size_t, size_t> va_map_t;
-            typedef std::list<size_t> va_array_t;
-            va_map_t va_map; /* pair(position, {id}) */
-            va_array_t va_array;
-            t_aho_corasick<char> ac;
-            for (i = 0; i < va.size(); i++) {
-                auto pat = format("{%zi}", i + 1);
-                ac.insert(pat.c_str(), pat.size());
-            }
-            ac.build();
-            auto result = ac.search(formatter.c_str(), formatter.size());
-            for (auto item : result) {
-                const range_t& range = item.first;
-                auto patid = item.second;
-                va_map.insert({range.begin, patid});
-            }
-
-            // Step2. relocate valist, build list
-            valist va_new;
-            for (const auto& pair : va_map) {
-                const auto& idx = pair.second;
-                va.at(idx, v);
-                va_new << v;
-                va_array.push_back(idx);
-            }
-
-            // Step3. replace format specifier
-            i = 0;
-            for (const auto& idx : va_array) {
-                va_new.at(i, v);
-                auto fmt_it = fmtspec.find(v.type);
-                if (fmtspec.end() != fmt_it) {
-                    formatter.replace(format("{%zi}", idx + 1).c_str(), fmt_it->second.c_str(), 0, bufferio_flag_t::run_once);
-                }
-                i++;
-            }
-
-            stream->vprintf((char*)formatter.data(), va_new.get());
-        }
-#endif
 
         {
             /**
@@ -211,7 +140,7 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
                             }
                         } else if (vt_flag_binary & vflag) {
                             switch (r) {
-                                case 's':
+                                case 's': {
                                     auto len = v.size;
                                     std::string str;
                                     str.reserve(len + 1);
@@ -225,6 +154,9 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
 
                                     dest = std::move(temp);
                                     dest.insert(dest.begin(), '%');
+                                } break;
+                                case 'x':
+                                    dest = std::move(base16_encode(v.data.bstr, v.size));
                                     break;
                             }
                         }

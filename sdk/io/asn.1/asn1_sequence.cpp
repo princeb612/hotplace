@@ -18,14 +18,14 @@
 namespace hotplace {
 namespace io {
 
-asn1_sequence::asn1_sequence(asn1_tag* tag) : asn1_container(tag) { set_type(asn1_type_sequence); }
+asn1_sequence::asn1_sequence() : asn1_container(asn1_entity_sequence, "", nullptr) {}
 
-asn1_sequence::asn1_sequence(const std::string& name, asn1_tag* tag) : asn1_container(name, tag) { set_type(asn1_type_sequence); }
+asn1_sequence::asn1_sequence(const std::string& name) : asn1_container(asn1_entity_sequence, name, nullptr) {}
 
-asn1_sequence::asn1_sequence(const asn1_sequence& other) : asn1_container(other) { set_type(asn1_type_sequence); }
+asn1_sequence::asn1_sequence(const asn1_sequence& other) : asn1_container(other) {}
 
-asn1_sequence::asn1_sequence(int count, ...) : asn1_container(nullptr) {
-    set_type(asn1_type_sequence);
+asn1_sequence::asn1_sequence(int count, ...) : asn1_container(asn1_entity_sequence, "", nullptr) {
+    set_entity(asn1_entity_sequence);
     va_list ap;
     va_start(ap, count);
     for (int i = 0; i < count; i++) {
@@ -35,30 +35,17 @@ asn1_sequence::asn1_sequence(int count, ...) : asn1_container(nullptr) {
     va_end(ap);
 }
 
-asn1_sequence::asn1_sequence(asn1_tag* tag, int count, ...) : asn1_container(tag) {
-    set_type(asn1_type_sequence);
-    va_list ap;
-    va_start(ap, count);
-    for (int i = 0; i < count; i++) {
-        asn1_object* item = va_arg(ap, asn1_object*);
-        (*this) << item;
-    }
-    va_end(ap);
-}
+asn1_sequence::~asn1_sequence() {}
 
-asn1_object* asn1_sequence::clone() { return new asn1_sequence(*this); }
+asn1_sequence* asn1_sequence::clone() { return new asn1_sequence(*this); }
 
-void asn1_sequence::represent(binary_t* b) {}
+asn1_sequence_of::asn1_sequence_of() : asn1_container(asn1_entity_sequence_of, "", nullptr) {}
 
-asn1_sequence_of::asn1_sequence_of(asn1_tag* tag) : asn1_container(tag) { set_type(asn1_type_sequence_of); }
+asn1_sequence_of::asn1_sequence_of(const std::string& name) : asn1_container(asn1_entity_sequence_of, name, nullptr) {}
 
-asn1_sequence_of::asn1_sequence_of(const std::string& name, asn1_tag* tag) : asn1_container(name, tag) { set_type(asn1_type_sequence_of); }
+asn1_sequence_of::asn1_sequence_of(const asn1_sequence_of& other) : asn1_container(other) {}
 
-asn1_sequence_of::asn1_sequence_of(const asn1_sequence_of& other) : asn1_container(other) { set_type(asn1_type_sequence_of); }
-
-asn1_object* asn1_sequence_of::clone() { return new asn1_sequence_of(*this); }
-
-void asn1_sequence_of::represent(binary_t* b) {}
+asn1_sequence_of* asn1_sequence_of::clone() { return new asn1_sequence_of(*this); }
 
 }  // namespace io
 }  // namespace hotplace

@@ -20,7 +20,6 @@
 #include <hotplace/sdk/crypto/basic/crypto_cbc_hmac.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
-#include <hotplace/sdk/io/asn.1/types.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
 #include <hotplace/sdk/net/tls/tls_protection.hpp>

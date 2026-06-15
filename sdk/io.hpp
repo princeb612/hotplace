@@ -62,16 +62,20 @@
 
 /* asn.1 */
 #include <hotplace/sdk/io/asn.1/asn1.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_composite.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_builtin_type.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_container.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_named_type.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_object.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_referenced_type.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_sequence.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_set.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_tag.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_tagged_type.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_type.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_visitor.hpp>
-#include <hotplace/sdk/io/asn.1/template.hpp>
 #include <hotplace/sdk/io/asn.1/types.hpp>
 
 #endif

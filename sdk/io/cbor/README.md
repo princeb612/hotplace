@@ -1,4 +1,4 @@
-## RFC 8949 CBOR Appendix A.  Examples of Encoded CBOR Data Items
+#### RFC 8949 CBOR Appendix A.  Examples of Encoded CBOR Data Items
 
    | Diagnostic                   | Encoded                            |
    |--                            |--                                  |
@@ -86,7 +86,7 @@
    | ["a", {_ "b": "c"}]          | 0x826161bf61626163ff               |
    | {_ "Fun": true, "Amt": -2}   | 0xbf6346756ef563416d7421ff         |
 
-## references
+#### references
 
  * RFC 7049 Concise Binary Object Representation (CBOR)
  * RFC 8949 Concise Binary Object Representation (CBOR)

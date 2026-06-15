@@ -23,22 +23,20 @@ namespace io {
  * @example
  *          // snippet 1
  *          auto seq = new asn1_sequence;
- *          *seq << new asn1_object("name", asn1_type_ia5string) << new asn1_object("ok", asn1_type_boolean);
+ *          *seq << new asn1_object("name", asn1_entity_ia5string) << new asn1_object("ok", asn1_entity_boolean);
  *
  *          // snippet 2
- *          auto seq = new asn1_sequence(2, new asn1_object("name", asn1_type_ia5string), new asn1_object("ok", asn1_type_boolean));
+ *          auto seq = new asn1_sequence(2, new asn1_object("name", asn1_entity_ia5string), new asn1_object("ok", asn1_entity_boolean));
  */
 class asn1_sequence : public asn1_container {
    public:
-    asn1_sequence(asn1_tag* tag = nullptr);
-    asn1_sequence(const std::string& name, asn1_tag* tag = nullptr);
+    asn1_sequence();
+    asn1_sequence(const std::string& name);
     asn1_sequence(const asn1_sequence& other);
     asn1_sequence(int count, ...);
-    asn1_sequence(asn1_tag* tag, int count, ...);
+    virtual ~asn1_sequence();
 
-    virtual asn1_object* clone();
-
-    virtual void represent(binary_t* b);
+    asn1_sequence* clone();
 
    protected:
 };
@@ -48,13 +46,11 @@ class asn1_sequence : public asn1_container {
  */
 class asn1_sequence_of : public asn1_container {
    public:
-    asn1_sequence_of(asn1_tag* tag = nullptr);
-    asn1_sequence_of(const std::string& name, asn1_tag* tag = nullptr);
+    asn1_sequence_of();
+    asn1_sequence_of(const std::string& name);
     asn1_sequence_of(const asn1_sequence_of& other);
 
-    virtual asn1_object* clone();
-
-    virtual void represent(binary_t* b);
+    asn1_sequence_of* clone();
 
    protected:
 };

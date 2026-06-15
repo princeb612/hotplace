@@ -23,8 +23,9 @@ class asn1_resource {
    public:
     static asn1_resource* get_instance();
 
-    std::string get_type_name(asn1_type_t t);
-    asn1_type_t get_type(const std::string& name);
+    std::string get_entity_name(uint8 ident, asn1_entity_t entity);
+    asn1_entity_t get_entity(const std::string& name);
+    asn1_perm_t get_perm(asn1_entity_t entity);
     std::string get_class_name(int c);
     /**
      * @brief   IMPLICIT/EXPLICIT
@@ -32,7 +33,7 @@ class asn1_resource {
     std::string get_tagtype_name(uint32 t);
     std::string get_componenttype_name(uint32 t);
 
-    void for_each_type_name(std::function<void(asn1_type_t, const std::string&)> f);
+    void for_each_type_name(std::function<void(asn1_entity_t, const std::string&)> f);
 
    protected:
     asn1_resource();
@@ -43,8 +44,9 @@ class asn1_resource {
     static asn1_resource _instance;
 
     critical_section _lock;
-    std::map<asn1_type_t, std::string> _type_id;
-    std::map<std::string, asn1_type_t> _type_rid;
+    std::map<asn1_entity_t, std::string> _type_id;
+    std::map<std::string, asn1_entity_t> _type_rid;
+    std::map<asn1_entity_t, asn1_perm_t> _type_perm;
     std::map<int, std::string> _class_id;
 };
 

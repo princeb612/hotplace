@@ -25,7 +25,7 @@ constexpr char asn1_structure[] =
         EmployeeNumber ::= [APPLICATION 2] IMPLICIT INTEGER
         Date ::= [APPLICATION 3] IMPLICIT VisibleString -- YYYYMMDD)";
 
-constexpr char asn1_value[] =
+constexpr char asn1_sample[] =
     R"({ name {givenName "John",initial "P",familyName "Smith"},
         title "Director",
         number 51,
@@ -46,8 +46,8 @@ void test_dump_testdata() {
     // _test_case.begin("parser");
     // _logger->writeln(asn1_structure);
     // _logger->dump(asn1_structure, strlen(asn1_structure));
-    // _logger->writeln(asn1_value);
-    // _logger->dump(asn1_value, strlen(asn1_value));
+    // _logger->writeln(asn1_sample);
+    // _logger->dump(asn1_sample, strlen(asn1_sample));
 }
 
 void test_parser_sample() {
@@ -109,7 +109,7 @@ void test_parser_options() {
     }
 
     p.get_config().set("handle_quoted", 0);
-    ret = p.parse(context2, asn1_value, strlen(asn1_value));
+    ret = p.parse(context2, asn1_sample, strlen(asn1_sample));
 
     {
         test_case_notimecheck notimecheck(_test_case);
@@ -121,7 +121,7 @@ void test_parser_options() {
     }
 
     p.get_config().set("handle_token", 0);
-    ret = p.parse(context3, asn1_value, strlen(asn1_value));
+    ret = p.parse(context3, asn1_sample, strlen(asn1_sample));
 
     {
         test_case_notimecheck notimecheck(_test_case);

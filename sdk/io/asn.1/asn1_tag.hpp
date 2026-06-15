@@ -24,30 +24,28 @@ namespace io {
  *          Tag ::= "[" Class ClassNumber "]"
  */
 class asn1_tag : public asn1_object {
+    friend class asn1_tagged_type;
+
    public:
-    asn1_tag(int ctype, int cnumber = 0, int tmode = asn1_automatic, asn1_tag* tag = nullptr);
+    asn1_tag(int ctype, int cnumber = 0, int tmode = asn1_automatic);
     asn1_tag(const asn1_tag& other);
+    virtual ~asn1_tag();
 
-    virtual asn1_object* clone();
-
-    virtual void represent(stream_t* s);
-    virtual void represent(binary_t* b);
+    asn1_tag* clone();
 
     int get_class() const;
     int get_class_number() const;
     int get_tag_type() const;
     bool is_implicit() const;
-    void suppress();
-    void unsuppress();
 
    protected:
-    bool is_suppressed() const;
+    virtual void represent(uint32 depth, stream_t* s);
+    virtual void represent(uint32 depth, binary_t* b, asn1_value* value = nullptr);
 
    private:
     int _class_type;    // Application
     int _class_number;  // 1
     int _tag_mode;      // implicit
-    bool _suppress;
 };
 
 }  // namespace io

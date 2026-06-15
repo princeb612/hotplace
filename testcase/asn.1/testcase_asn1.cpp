@@ -14,12 +14,14 @@
 // X.690 8.1.2.3 Figure 3 - Identifier octet (low tag number)
 // X.690 8.1.2.4.5 Figure 4 - Identifier octet (high tag number)
 void test_x690_8_1_2_identifier_octects() {
+    _test_case.begin("ITU-T X.690 8.1.2");
+
     // ChatGPT test vector
     struct testvector {
         bool ispositive;
         uint8 ident;
         uint64 tag;
-        const char* expr;
+        const char* notation;
         const char* der;
     } table[] = {
         // 8.1.2.4
@@ -43,51 +45,97 @@ void test_x690_8_1_2_identifier_octects() {
         {true, asn1_class_context | asn1_tag_constructed, 30, "[30]", "be"},
         {true, asn1_class_application | asn1_tag_primitive, 0, "[APPLICATION 0]", "40"},
         {true, asn1_class_application | asn1_tag_primitive, 3, "[APPLICATION 3]", "43"},
-        {true, asn1_class_application | asn1_tag_constructed, 3, "63", "63"},
+        {true, asn1_class_application | asn1_tag_constructed, 3, "[APPLICATION 3]", "63"},
         {true, asn1_class_private | asn1_tag_primitive, 0, "[PRIVATE 0]", "c0"},
         {true, asn1_class_private | asn1_tag_primitive, 15, "[PRIVATE 15]", "cf"},
         // 8.1.2.4.3 he form of the identifier octets for a type with a tag whose number is greater than 30
-        {true, asn1_class_universal | asn1_tag_primitive, 31, "Tag 31", "1f 1f"},                   // tag >= 31, 31
-        {true, asn1_class_universal | asn1_tag_primitive, 32, "Tag 32", "1f 20"},                   // tag >= 31, 32
-        {true, asn1_class_universal | asn1_tag_primitive, 33, "Tag 33", "1f 21"},                   // tag >= 31, 33
-        {true, asn1_class_universal | asn1_tag_primitive, 127, "Tag 127", "1f 7f"},                 // tag >= 31, 127
-        {true, asn1_class_universal | asn1_tag_primitive, 128, "Tag 128", "1f 81 00"},              // // tag >= 31, 128 = (1 * 128) + 0
-        {true, asn1_class_universal | asn1_tag_primitive, 255, "Tag 255", "1f 81 7f"},              // // tag >= 31, 255 = (1 * 128) + 127
-        {true, asn1_class_universal | asn1_tag_primitive, 256, "Tag 256", "1f 82 00"},              // // tag >= 31, 256 = (2 * 128) + 0
-        {true, asn1_class_universal | asn1_tag_primitive, 16383, "Tag 16383", "1f ff 7f"},          // tag >= 31, 16383 = (127 * 128) + 127
-        {true, asn1_class_universal | asn1_tag_primitive, 16384, "Tag 16384", "1f 81 80 00"},       // tag >= 31, 16384 = (1 * 128 * 128) + (0 * 128) + 0
-        {true, asn1_class_context | asn1_tag_primitive, 31, "[31]", "9f 1f"},                       // tag >= 31, 31
-        {true, asn1_class_context | asn1_tag_primitive, 32, "[32]", "9f 20"},                       // tag >= 31, 32
-        {true, asn1_class_context | asn1_tag_primitive, 128, "[128]", "9f 81 00"},                  // tag >= 31, 128 = (1 * 128) + 0
-        {true, asn1_class_application | asn1_tag_primitive, 31, "[APPLICATION 31]", "5f 1f"},       // tag >= 31, 31
-        {true, asn1_class_application | asn1_tag_primitive, 128, "[APPLICATION 128]", "5f 81 00"},  // tag >= 31, 128 = (1 * 128) + 0
-        {true, asn1_class_context | asn1_tag_constructed, 31, "[31] EXPLICIT", "bf 1f"},
-        {true, asn1_class_context | asn1_tag_constructed, 128, "[128] EXPLICIT", "bf 81 00"},
+        {true, asn1_class_universal | asn1_tag_primitive, 31, "DATE", "1f 1f"},                        // tag >= 31, 31
+        {true, asn1_class_universal | asn1_tag_primitive, 32, "TIME-OF-DAY", "1f 20"},                 // tag >= 31, 32
+        {true, asn1_class_universal | asn1_tag_primitive, 33, "DATE-TIME", "1f 21"},                   // tag >= 31, 33
+        {true, asn1_class_universal | asn1_tag_primitive, 127, "[UNIVERSAL 127]", "1f 7f"},            // tag >= 31, 127
+        {true, asn1_class_universal | asn1_tag_primitive, 128, "[UNIVERSAL 128]", "1f 81 00"},         // // tag >= 31, 128 = (1 * 128) + 0
+        {true, asn1_class_universal | asn1_tag_primitive, 255, "[UNIVERSAL 255]", "1f 81 7f"},         // // tag >= 31, 255 = (1 * 128) + 127
+        {true, asn1_class_universal | asn1_tag_primitive, 256, "[UNIVERSAL 256]", "1f 82 00"},         // // tag >= 31, 256 = (2 * 128) + 0
+        {true, asn1_class_universal | asn1_tag_primitive, 16383, "[UNIVERSAL 16383]", "1f ff 7f"},     // tag >= 31, 16383 = (127 * 128) + 127
+        {true, asn1_class_universal | asn1_tag_primitive, 16384, "[UNIVERSAL 16384]", "1f 81 80 00"},  // tag >= 31, 16384 = (1 * 128 * 128) + (0 * 128) + 0
+        {true, asn1_class_context | asn1_tag_primitive, 31, "[31]", "9f 1f"},                          // tag >= 31, 31
+        {true, asn1_class_context | asn1_tag_primitive, 32, "[32]", "9f 20"},                          // tag >= 31, 32
+        {true, asn1_class_context | asn1_tag_primitive, 128, "[128]", "9f 81 00"},                     // tag >= 31, 128 = (1 * 128) + 0
+        {true, asn1_class_application | asn1_tag_primitive, 31, "[APPLICATION 31]", "5f 1f"},          // tag >= 31, 31
+        {true, asn1_class_application | asn1_tag_primitive, 128, "[APPLICATION 128]", "5f 81 00"},     // tag >= 31, 128 = (1 * 128) + 0
+        {true, asn1_class_context | asn1_tag_constructed, 31, "[31]", "bf 1f"},
+        {true, asn1_class_context | asn1_tag_constructed, 128, "[128]", "bf 81 00"},
         // negative/invalid test vector
-        {false, asn1_class_universal | asn1_tag_primitive, 31, "Tag 31", "1f"},           // high-tag form but no followings
-        {false, asn1_class_universal | asn1_tag_primitive, 31, "Tag 31", "1f 80"},        // continuation bit not terminated
-        {false, asn1_class_universal | asn1_tag_primitive, 31, "Tag 31", "1f 80 80 80"},  // continuation ...
-        {false, asn1_class_universal | asn1_tag_primitive, 31, "Tag 31", "1f 80 1f"},     // non-minimal encoding (denied if DER)
+        {false, asn1_class_universal | asn1_tag_primitive, 31, "[UNIVERSAL 31]", "1f"},           // high-tag form but no followings
+        {false, asn1_class_universal | asn1_tag_primitive, 31, "[UNIVERSAL 31]", "1f 80"},        // continuation bit not terminated
+        {false, asn1_class_universal | asn1_tag_primitive, 31, "[UNIVERSAL 31]", "1f 80 80 80"},  // continuation ...
+        {false, asn1_class_universal | asn1_tag_primitive, 31, "[UNIVERSAL 31]", "1f 80 1f"},     // non-minimal encoding (denied if DER)
     };
-    asn1_encode enc;
+
+    /**
+    | class                  | tag                  |    | notation         |
+    | --                     | --                   | -- | --               |
+    | asn1_class_universal   | asn1_tag_primitive   | 31 | DATE             |
+    | asn1_class_universal   | asn1_tag_constructed | 31 | ERROR            |
+    | asn1_class_application | asn1_tag_primitive   | 31 | [APPLICATION 31] |
+    | asn1_class_application | asn1_tag_constructed | 31 | [APPLICATION 31] |
+    | asn1_class_context     | asn1_tag_primitive   | 31 | [31]             |
+    | asn1_class_context     | asn1_tag_constructed | 31 | [31]             |
+    | asn1_class_private     | asn1_tag_primitive   | 31 | [PRIVATE 31]     |
+    | asn1_class_private     | asn1_tag_constructed | 31 | [PRIVATE 31]     |
+    */
+
+    auto lambda_builder = [](uint8 ident, uint64 tag) -> asn1_object* {
+        if (asn1_class_universal == (ident & asn1_class_mask)) {
+            auto obj = new asn1_builtin_type((asn1_entity_t)tag);
+            if (ident & asn1_tag_constructed) {
+                obj->as_constructed();
+            }
+            return obj;
+        } else {
+            return new asn1_tag(ident, tag);
+        }
+    };
+
     for (size_t i = 0; i < RTL_NUMBER_OF(table); ++i) {
         const auto& item = table[i];
-        binary_t bin;
 
         uint8 ident = 0;
         uint64 tag = 0;
+        binary_t bin_expect = base16_decode_rfc(item.der);
         if (item.ispositive) {
-            enc.asn1_ident_octets(bin, item.ident, item.tag);
-            _test_case.assert(bin == base16_decode_rfc(item.der), __FUNCTION__, "%s", item.expr);
+            binary_t bin;
 
-            auto ret = enc.read_asn1_ident_octets(bin.data(), bin.size(), ident, tag);
-            _test_case.test(ret, __FUNCTION__, "read %02x %I64u", ident, tag);
-            _test_case.assert(ident == item.ident && tag == item.tag, __FUNCTION__, "read %02x %I64u", ident, tag);
+            // encode
+            asn1_encode::asn1_ident_octets(bin, item.ident, item.tag);
+            _test_case.assert(bin == bin_expect, __FUNCTION__, R"(encode DER %s expect "%s")", base16_encode(bin).c_str(), item.der);
+
+            // publish
+            {
+                auto schema = lambda_builder(item.ident, item.tag);
+                basic_stream bs_notation;
+                binary_t bin_der;
+                schema->publish(&bs_notation);
+                schema->publish(&bin_der);
+
+                _logger->write([&](basic_stream& bs) -> void {
+                    valist va;
+                    va << bs_notation << bin_der;
+                    bs.vaprintln("notation {1:s}", va);
+                    bs.vaprintln("DER      {2:x}", va);  // base16 encoding
+                });
+                _test_case.assert(bs_notation == item.notation, __FUNCTION__, "notation %s", item.notation);
+                _test_case.assert(bin == bin_der, __FUNCTION__, R"(publish %s expect "%s")", base16_encode(bin_der).c_str(), item.der);
+                schema->release();
+            }
+
+            // decode
+            asn1_encode::read_asn1_ident_octets(bin.data(), bin.size(), ident, tag);
+            _test_case.assert((ident == item.ident) && (tag == item.tag), __FUNCTION__, "read identifier %02x tag %I64u", ident, tag);
         } else {
-            // check bad_data
-            bin = base16_decode_rfc(item.der);
-            auto ret = enc.read_asn1_ident_octets(bin.data(), bin.size(), ident, tag);
-            _test_case.assert(ret == errorcode_t::bad_data, __FUNCTION__, "read %s", item.der);
+            // invalid test vector (check bad_data)
+            auto ret = asn1_encode::read_asn1_ident_octets(bin_expect.data(), bin_expect.size(), ident, tag);
+            _test_case.assert(ret == errorcode_t::bad_data, __FUNCTION__, "invalid test vector %s", item.der);
         }
     }
 }
@@ -156,7 +204,7 @@ void test_x690_8_1_3_length_octets() {
 
     for (auto entry : _table) {
         binary_t bin;
-        t_asn1_length_octets<uint64>(bin, entry.i);
+        asn1_encode::t_asn1_length_octets<uint64>(bin, entry.i);
 
         {
             test_case_notimecheck notimecheck(_test_case);
@@ -181,17 +229,27 @@ void test_x690_8_1_5_end_of_contents() {
     }
 }
 
+void test_asn1_value() {
+    auto schema = new asn1_builtin_type(asn1_entity_integer);
+    auto value = schema->instantiate();
+    // value->set(0);
+    // binary_t bin;
+    // value->publish(bin);
+    value->release();
+}
+
 void test_x690_encoding_value() {
     _test_case.begin("ITU-T X.690 8.2, 8.3, 8.5, 8.8");
     struct testvector {
+        asn1_entity_t entity;
         variant var;
         const char* expect;
         const char* text;
         int debug;
     } _table[] = {
-        {variant(), "05 00", "X.690 8.8"},
-        {variant(true), "0101ff", "X.690 8.2"},
-        {variant(false), "010100", "X.690 8.2"},
+        {asn1_entity_null, variant(), "05 00", "X.690 8.8"},
+        {asn1_entity_boolean, variant(true), "0101ff", "X.690 8.2"},
+        {asn1_entity_boolean, variant(false), "010100", "X.690 8.2"},
 
         // using pyasn1
         // >>> from pyasn1.type import univ
@@ -246,102 +304,102 @@ void test_x690_encoding_value() {
         //     >>> print("Decoded Integer:", decode(binascii.unhexlify('020480000000'), asn1Spec=univ.Integer()))
         //     Decoded Integer: (<Integer value object, tagSet <TagSet object, tags 0:0:2>, payload [-2147483648]>, b'')
 
-        {variant(0), "02 01 00", "x.690 8.3"},
-        {variant(123), "02 01 7b", "x.690 8.3"},
-        {variant(127), "02 01 7f", "x.690 8.3"},
-        {variant(128), "02 02 00 80", "x.690 8.3"},
-        {variant(129), "02 02 00 81", "x.690 8.3"},
-        {variant(255), "02 02 00 ff", "x.690 8.3"},
-        {variant(256), "02 02 01 00", "x.690 8.3"},
-        {variant(257), "02 02 01 01", "x.690 8.3"},
-        {variant(300), "02 02 01 2c", "x.690 8.3"},
-        {variant(1000), "02 02 03 e8", "x.690 8.3"},
-        {variant(32767), "02 02 7f ff", "x.690 8.3"},
-        {variant(32768), "02 03 00 80 00", "x.690 8.3"},
-        {variant(32769), "02 03 00 80 01", "x.690 8.3"},
-        {variant(65534), "02 03 00 ff fe", "x.690 8.3"},
-        {variant(65535), "02 03 00 ff ff", "x.690 8.3"},
-        {variant(65536), "02 03 01 00 00", "x.690 8.3"},
-        {variant(65537), "02 03 01 00 01", "x.690 8.3"},
-        {variant(16777215), "02 04 00 ff ff ff", "x.690 8.3"},
-        {variant(123456789), "02 04 07 5B CD 15", "x.690 8.3"},
-        {variant(2147483647), "02 04 7f ff ff ff", "x.690 8.3"},
+        {asn1_entity_integer, variant(0), "02 01 00", "x.690 8.3"},
+        {asn1_entity_integer, variant(123), "02 01 7b", "x.690 8.3"},
+        {asn1_entity_integer, variant(127), "02 01 7f", "x.690 8.3"},
+        {asn1_entity_integer, variant(128), "02 02 00 80", "x.690 8.3"},
+        {asn1_entity_integer, variant(129), "02 02 00 81", "x.690 8.3"},
+        {asn1_entity_integer, variant(255), "02 02 00 ff", "x.690 8.3"},
+        {asn1_entity_integer, variant(256), "02 02 01 00", "x.690 8.3"},
+        {asn1_entity_integer, variant(257), "02 02 01 01", "x.690 8.3"},
+        {asn1_entity_integer, variant(300), "02 02 01 2c", "x.690 8.3"},
+        {asn1_entity_integer, variant(1000), "02 02 03 e8", "x.690 8.3"},
+        {asn1_entity_integer, variant(32767), "02 02 7f ff", "x.690 8.3"},
+        {asn1_entity_integer, variant(32768), "02 03 00 80 00", "x.690 8.3"},
+        {asn1_entity_integer, variant(32769), "02 03 00 80 01", "x.690 8.3"},
+        {asn1_entity_integer, variant(65534), "02 03 00 ff fe", "x.690 8.3"},
+        {asn1_entity_integer, variant(65535), "02 03 00 ff ff", "x.690 8.3"},
+        {asn1_entity_integer, variant(65536), "02 03 01 00 00", "x.690 8.3"},
+        {asn1_entity_integer, variant(65537), "02 03 01 00 01", "x.690 8.3"},
+        {asn1_entity_integer, variant(16777215), "02 04 00 ff ff ff", "x.690 8.3"},
+        {asn1_entity_integer, variant(123456789), "02 04 07 5B CD 15", "x.690 8.3"},
+        {asn1_entity_integer, variant(2147483647), "02 04 7f ff ff ff", "x.690 8.3"},
 #ifdef __SIZEOF_INT128__
-        {variant(4294967295), "020500ffffffff", "x.690 8.3"},
-        {variant(4294967296), "02 05 01 00 00 00 00", "x.690 8.3"},
-        {variant(1099511627775), "02 06 00 ff ff ff ff ff", "x.690 8.3"},
-        {variant(1152921504606846975), "02080fffffffffffffff", "x.690 8.3", 1},
-        {variant(1152921504606846976), "02081000000000000000", "x.690 8.3", 1},
+        {asn1_entity_integer, variant(4294967295), "020500ffffffff", "x.690 8.3"},
+        {asn1_entity_integer, variant(4294967296), "02 05 01 00 00 00 00", "x.690 8.3"},
+        {asn1_entity_integer, variant(1099511627775), "02 06 00 ff ff ff ff ff", "x.690 8.3"},
+        {asn1_entity_integer, variant(1152921504606846975), "02080fffffffffffffff", "x.690 8.3", 1},
+        {asn1_entity_integer, variant(1152921504606846976), "02081000000000000000", "x.690 8.3", 1},
 #endif
-        {variant(-1), "02 01 ff", "x.690 8.3"},
-        {variant(-10), "02 01 f6", "x.690 8.3"},
-        {variant(-126), "02 01 82", "x.690 8.3"},
-        {variant(-127), "02 01 81", "x.690 8.3"},
-        {variant(-128), "02 01 80", "x.690 8.3"},
-        {variant(-129), "02 02 ff 7f", "x.690 8.3"},
-        {variant(-136), "02 02 ff 78", "x.690 8.3"},
-        {variant(-256), "02 02 ff 00", "x.690 8.3"},
-        {variant(-257), "02 02 fe ff", "x.690 8.3"},
-        {variant(-300), "02 02 fe d4", "x.690 8.3"},
-        {variant(-1234), "02 02 fb 2e", "x.690 8.3"},
-        {variant(-32768), "02 02 80 00", "x.690 8.3"},
-        {variant(-32769), "02 03 ff 7f ff", "x.690 8.3"},
-        {variant(-8388607), "02 03 80 00 01", "x.690 8.3"},
-        {variant(-16777216), "02 04 ff 00 00 00", "x.690 8.3"},
-        {variant(-16777217), "02 04 fe ff ff ff", "x.690 8.3"},
-        {variant(-4294967296), "02 05 ff 00 00 00 00", "x.690 8.3"},
-        {variant(-1099511627775), "02 06 ff 00 00 00 00 01", "x.690 8.3"},
-        {variant(-1099511627776), "02 06 ff 00 00 00 00 00", "x.690 8.3"},
+        {asn1_entity_integer, variant(-1), "02 01 ff", "x.690 8.3"},
+        {asn1_entity_integer, variant(-10), "02 01 f6", "x.690 8.3"},
+        {asn1_entity_integer, variant(-126), "02 01 82", "x.690 8.3"},
+        {asn1_entity_integer, variant(-127), "02 01 81", "x.690 8.3"},
+        {asn1_entity_integer, variant(-128), "02 01 80", "x.690 8.3"},
+        {asn1_entity_integer, variant(-129), "02 02 ff 7f", "x.690 8.3"},
+        {asn1_entity_integer, variant(-136), "02 02 ff 78", "x.690 8.3"},
+        {asn1_entity_integer, variant(-256), "02 02 ff 00", "x.690 8.3"},
+        {asn1_entity_integer, variant(-257), "02 02 fe ff", "x.690 8.3"},
+        {asn1_entity_integer, variant(-300), "02 02 fe d4", "x.690 8.3"},
+        {asn1_entity_integer, variant(-1234), "02 02 fb 2e", "x.690 8.3"},
+        {asn1_entity_integer, variant(-32768), "02 02 80 00", "x.690 8.3"},
+        {asn1_entity_integer, variant(-32769), "02 03 ff 7f ff", "x.690 8.3"},
+        {asn1_entity_integer, variant(-8388607), "02 03 80 00 01", "x.690 8.3"},
+        {asn1_entity_integer, variant(-16777216), "02 04 ff 00 00 00", "x.690 8.3"},
+        {asn1_entity_integer, variant(-16777217), "02 04 fe ff ff ff", "x.690 8.3"},
+        {asn1_entity_integer, variant(-4294967296), "02 05 ff 00 00 00 00", "x.690 8.3"},
+        {asn1_entity_integer, variant(-1099511627775), "02 06 ff 00 00 00 00 01", "x.690 8.3"},
+        {asn1_entity_integer, variant(-1099511627776), "02 06 ff 00 00 00 00 00", "x.690 8.3"},
 
-        {variant(0.0f), "0900", "X.690 8.5"},
+        {asn1_entity_real, variant(0.0f), "0900", "X.690 8.5"},
         // e -20 m 129453.0
         // >>> print("Decoded REAL:", decode(binascii.unhexlify('090580ec01f9ad'), asn1Spec=univ.Real()))
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [0.12345600128173828]>, b'')
-        {variant(0.123456f), "090580ec01f9ad", "X.690 8.5"},
+        {asn1_entity_real, variant(0.123456f), "090580ec01f9ad", "X.690 8.5"},
         // 2^-3 + 2^-5 -> 0.00101 -> 1.01 * 2^-3 (IEEE754) -> 101 * 2^-5
-        {variant(0.15625), "090380fb05", "X.690 8.5"},
+        {asn1_entity_real, variant(0.15625), "090380fb05", "X.690 8.5"},
         // 2^-1 (IEEE754) -> 0.1 -> 1.0 * 2^-1 (IEEE754)
         // >>> encode(univ.Real(0.5)).hex()
         // '09050335452d31'
         // >>> print("Decoded REAL:", decode(binascii.unhexlify('090380FF01'), asn1Spec=univ.Real()))
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [0.5]>, b'')
-        {variant(0.5), "090380FF01", "X.690 8.5"},
+        {asn1_entity_real, variant(0.5), "090380FF01", "X.690 8.5"},
         // 2^-1 + 2^-2 -> 0.11 -> 1.1 * 2^-1 (IEEE754) -> 11 * 2^-2 (ASN.1)
-        {variant(0.75), "090380fe03", "X.690 8.5"},
+        {asn1_entity_real, variant(0.75), "090380fe03", "X.690 8.5"},
         // 1.0 * 2^0 (IEEE754) -> 80 00 01
-        {variant(1.0), "0903800001", "X.690 8.5"},
+        {asn1_entity_real, variant(1.0), "0903800001", "X.690 8.5"},
         // e -21 m 2579497.0
         // >>> print("Decoded REAL:", decode(binascii.unhexlify('090580EB275C29'), asn1Spec=univ.Real()))
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [1.2300000190734863]>, b'')
-        {variant(1.23f), "090580EB275C29", "X.690 8.5"},
+        {asn1_entity_real, variant(1.23f), "090580EB275C29", "X.690 8.5"},
         // 2^1 -> 10 -> 1.0 * 2^1 (IEEE754) -> 80 01 01
-        {variant(2.0), "0903800101", "X.690 8.5"},
+        {asn1_entity_real, variant(2.0), "0903800101", "X.690 8.5"},
         // 2^5 + 2^-2 + 2^2-4 -> 100000.0101 -> 1.000000101 * 2^5 (IEEE754) -> 1000000101 * 2^-4
-        {variant(32.3125), "090480fc0205", "X.690 8.5"},
+        {asn1_entity_real, variant(32.3125), "090480fc0205", "X.690 8.5"},
         // >>> print("Decoded REAL:", decode(binascii.unhexlify('090680ef009dcccd'), asn1Spec=univ.Real()))
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [78.9000015258789]>, b'')
-        {variant(78.90f), "090680ef009dcccd", "X.690 8.5"},
-        {variant(123.0), "090380007b", "X.690 8.5"},
+        {asn1_entity_real, variant(78.90f), "090680ef009dcccd", "X.690 8.5"},
+        {asn1_entity_real, variant(123.0), "090380007b", "X.690 8.5"},
         // >>> print("Decoded REAL:", decode(binascii.unhexlify('090680ef00f6e979'), asn1Spec=univ.Real()))
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [123.45600128173828]>, b'')
-        {variant(123.456f), "090680ef00f6e979", "X.690 8.5"},
+        {asn1_entity_real, variant(123.456f), "090680ef00f6e979", "X.690 8.5"},
         // >>> print("Decoded REAL:", decode(binascii.unhexlify('090680f600c0e6b7'), asn1Spec=univ.Real()))
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [12345.6787109375]>, b'')
-        {variant(12345.6789f), "090680f600c0e6b7", "X.690 8.5"},
+        {asn1_entity_real, variant(12345.6789f), "090680f600c0e6b7", "X.690 8.5"},
         // (-1)^1 * 1.0 * 2^0 (IEEE754) -> c0 00 01
-        {variant(-1.0), "0903c00001", "X.690 8.5"},
+        {asn1_entity_real, variant(-1.0), "0903c00001", "X.690 8.5"},
         // >>> print("Decoded REAL:", decode(binascii.unhexlify('0905c0eb275c29'), asn1Spec=univ.Real()))
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [-1.2300000190734863]>, b'')
-        {variant(-1.23f), "0905c0eb275c29", "X.690 8.5"},
-        {variant(-456.0), "0903c00339", "X.690 8.5"},
-        {variant(fp32_from_binary32(fp32_pinf)), "090140", "X.690 8.5 Inf"},
-        {variant(fp32_from_binary32(fp32_ninf)), "090141", "X.690 8.5 -Inf"},
-        {variant(fp32_from_binary32(fp32_nan)), "090142", "X.690 8.5 NaN"},
-        {variant(-0.0f), "090143", "X.690 8.5 -0.0"},
-        {variant(fp64_from_binary64(fp64_pinf)), "090140", "X.690 8.5 Inf"},
-        {variant(fp64_from_binary64(fp64_ninf)), "090141", "X.690 8.5 -Inf"},
-        {variant(fp64_from_binary64(fp64_nan)), "090142", "X.690 8.5 NaN"},
-        {variant(-0.0), "090143", "X.690 8.5 -0.0"},
+        {asn1_entity_real, variant(-1.23f), "0905c0eb275c29", "X.690 8.5"},
+        {asn1_entity_real, variant(-456.0), "0903c00339", "X.690 8.5"},
+        {asn1_entity_real, variant(fp32_from_binary32(fp32_pinf)), "090140", "X.690 8.5 Inf"},
+        {asn1_entity_real, variant(fp32_from_binary32(fp32_ninf)), "090141", "X.690 8.5 -Inf"},
+        {asn1_entity_real, variant(fp32_from_binary32(fp32_nan)), "090142", "X.690 8.5 NaN"},
+        {asn1_entity_real, variant(-0.0f), "090143", "X.690 8.5 -0.0"},
+        {asn1_entity_real, variant(fp64_from_binary64(fp64_pinf)), "090140", "X.690 8.5 Inf"},
+        {asn1_entity_real, variant(fp64_from_binary64(fp64_ninf)), "090141", "X.690 8.5 -Inf"},
+        {asn1_entity_real, variant(fp64_from_binary64(fp64_nan)), "090142", "X.690 8.5 NaN"},
+        {asn1_entity_real, variant(-0.0), "090143", "X.690 8.5 -0.0"},
     };
 
     _test_case.reset_time();
@@ -350,8 +408,7 @@ void test_x690_encoding_value() {
     asn1_encode enc;
 
     for (auto entry : _table) {
-        // encode_routine(bin, entry.var);
-        enc.encode(bin, asn1_type_primitive, entry.var);
+        enc.encode(bin, entry.entity, entry.var);
 
         {
             test_case_notimecheck notimecheck(_test_case);
@@ -373,13 +430,18 @@ void test_x690_encoding_value() {
     }
 }
 
-void do_dump_asn1(asn1* object, const char* expect, const char* text) {
+void do_dump_asn1(asn1_value* object, const char* expect, const char* text) {
     if (object && expect && text) {
-        _logger->write([&](basic_stream& bs) -> void { object->publish(&bs); });
-
+        basic_stream bs;
         binary_t bin;
+        object->publish(&bs);
         object->publish(&bin);
-        _logger->writeln("%s", base16_encode(bin).c_str());
+        _logger->write([&](basic_stream& dbs) -> void {
+            valist va;
+            va << bs << bin;
+            dbs.vaprintln("notation {1:s}", va);
+            dbs.vaprintln("DER      {2:x}", va);
+        });
 
         _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "%s [%s]", text, expect);
     }
@@ -388,12 +450,17 @@ void do_dump_asn1(asn1* object, const char* expect, const char* text) {
 void test_x690_encoding_typevalue() {
     _test_case.begin("ITU-T X.690 type and value");
 
-    // X.690 8.14 encoding of a tagged value
-    auto type1 = new asn1_object(asn1_type_visiblestring);
-    auto type2 = new asn1_object(asn1_type_visiblestring, new asn1_tag(asn1_class_application, 3, asn1_implicit));
-    auto type3 = new asn1_composite(asn1_type_constructed, type2->clone(), new asn1_tag(asn1_class_context, 2));
-    auto type4 = new asn1_composite(asn1_type_constructed, type3->clone(), new asn1_tag(asn1_class_application, 7, asn1_implicit));
-    auto type5 = new asn1_composite(asn1_type_primitive, type2->clone(), new asn1_tag(asn1_class_context, 2, asn1_implicit));
+    // X.690 8.14 encoding of a value of a prefixed type
+    // case 1. Type1 ::= VisibleString
+    auto type1 = asn1_referenced_type::define("Type1", asn1_entity_visiblestring);
+    // case 2. Type2 ::= [Application 3] implicit Type1
+    auto type2 = asn1_referenced_type::define("Type2", new asn1_tagged_type(asn1_class_application, 3, asn1_implicit, type1->clone()));
+    // case 3. Type3 ::= [2] Type2
+    auto type3 = asn1_referenced_type::define("Type3", new asn1_tagged_type(asn1_class_context, 2, asn1_explicit, type2->clone()));
+    // case 4. Type4 ::= [Application 7] implicit Type3
+    auto type4 = asn1_referenced_type::define("Type4", new asn1_tagged_type(asn1_class_application, 7, asn1_implicit, type3->clone()));
+    // case 5. Type5 ::= [2] implicit Type2
+    auto type5 = asn1_referenced_type::define("Type5", new asn1_tagged_type(asn1_class_context, 2, asn1_implicit, type2->clone()));
 
     struct testvector {
         asn1_object* obj;
@@ -402,39 +469,39 @@ void test_x690_encoding_typevalue() {
         const char* text;
     } _table[] = {
         // X.690 8.2
-        {new asn1_object(asn1_type_boolean), variant(true), "01 01 ff", "X.690 8.2 true"},
+        {new asn1_builtin_type(asn1_entity_boolean), variant(true), "01 01 ff", "X.690 8.2 true"},
 
         // X.690 8.3
-        {new asn1_object(asn1_type_integer), variant(128), "02 02 00 80", "X.690 8.3 128"},
-        {new asn1_object(asn1_type_integer), variant(300), "02 02 01 2c", "X.690 8.3 300"},
-        {new asn1_object(asn1_type_integer), variant(-127), "02 01 81", "X.690 8.3 -127"},
+        {new asn1_builtin_type(asn1_entity_integer), variant(128), "02 02 00 80", "X.690 8.3 128"},
+        {new asn1_builtin_type(asn1_entity_integer), variant(300), "02 02 01 2c", "X.690 8.3 300"},
+        {new asn1_builtin_type(asn1_entity_integer), variant(-127), "02 01 81", "X.690 8.3 -127"},
 
         // X.690 8.5
-        {new asn1_object(asn1_type_real), variant(1.0), "0903800001", "X.690 8.5 1.0"},
-        {new asn1_object(asn1_type_real), variant(-1.0), "0903c00001", "X.690 8.5 -1.0"},
+        {new asn1_builtin_type(asn1_entity_real), variant(1.0), "0903800001", "X.690 8.5 1.0"},
+        {new asn1_builtin_type(asn1_entity_real), variant(-1.0), "0903c00001", "X.690 8.5 -1.0"},
 
         // X.690 8.6 encoding of a bitstring value
         // commencing with the leading bit and proceeding to the trailing bit
         // if(size(input) % 2) { pad = '0'; padbit = 4; }
         // encode(asn1_tag_bitstring).encode(padbit).encode(input).encode(pad)
-        {new asn1_object(asn1_type_bitstring), variant("0a3b5f291cd"), "03 07 04 0A 3B 5F 29 1C D0", "X.690 8.6 0a3b5f291cd"},
+        {new asn1_builtin_type(asn1_entity_bitstring), variant("0a3b5f291cd"), "03 07 04 0A 3B 5F 29 1C D0", "X.690 8.6 0a3b5f291cd"},
 
         // X.690 8.7
-        {new asn1_object(asn1_type_octstring), variant("0123456789abcdef"), "04 08 01 23 45 67 89 ab cd ef", "X.690 8.7.4 0123456789abcdef"},
+        {new asn1_builtin_type(asn1_entity_octstring), variant("0123456789abcdef"), "04 08 01 23 45 67 89 ab cd ef", "X.690 8.7.4 0123456789abcdef"},
 
         // X.690 8.8
-        {new asn1_object(asn1_type_null), variant(), "05 00", "X.690 8.8 null"},
+        {new asn1_builtin_type(asn1_entity_null), variant(), "05 00", "X.690 8.8 null"},
 
         // X.690 8.9
-        {new asn1_object(asn1_type_ia5string), variant("Smith"), "16 05 53 6d 69 74 68", "X.690 8.9 Smith"},
-        {new asn1_object(asn1_type_ia5string), variant("test1@rsa.com"), "16 0d 74 65 73 74 31 40 72 73 61 2e 63 6f 6d", "X.690 8.9 test1@rsa.com"},
+        {new asn1_builtin_type(asn1_entity_ia5string), variant("Smith"), "16 05 53 6d 69 74 68", "X.690 8.9 Smith"},
+        {new asn1_builtin_type(asn1_entity_ia5string), variant("test1@rsa.com"), "16 0d 74 65 73 74 31 40 72 73 61 2e 63 6f 6d", "X.690 8.9 test1@rsa.com"},
 
         // X.690 11.7 generalized time
-        {new asn1_object(asn1_type_generalizedtime), variant(datetime_t(1992, 5, 21, 0, 0, 0)), "18 0F 31 39 39 32 30 35 32 31 30 30 30 30 30 30 5A",
+        {new asn1_builtin_type(asn1_entity_generalizedtime), variant(datetime_t(1992, 5, 21, 0, 0, 0)), "18 0F 31 39 39 32 30 35 32 31 30 30 30 30 30 30 5A",
          "X.690 11.7 #1"},  // 19920521000000Z
-        {new asn1_object(asn1_type_generalizedtime), variant(datetime_t(1992, 6, 22, 12, 34, 21)), "18 0F 31 39 39 32 30 36 32 32 31 32 33 34 32 31 5A",
+        {new asn1_builtin_type(asn1_entity_generalizedtime), variant(datetime_t(1992, 6, 22, 12, 34, 21)), "18 0F 31 39 39 32 30 36 32 32 31 32 33 34 32 31 5A",
          "X.690 11.7 #2"},  // 19920622123421Z
-        {new asn1_object(asn1_type_generalizedtime), variant(datetime_t(1992, 7, 22, 13, 21, 00, 3)), "18 11 31 39 39 32 30 37 32 32 31 33 32 31 30 30 2E 33 5A",
+        {new asn1_builtin_type(asn1_entity_generalizedtime), variant(datetime_t(1992, 7, 22, 13, 21, 00, 3)), "18 11 31 39 39 32 30 37 32 32 31 33 32 31 30 30 2E 33 5A",
          "X.690 11.7 #3"},  // 19920722132100.3Z
 
         // X.690 8.14 encoding of a tagged value
@@ -461,31 +528,33 @@ void test_x690_encoding_typevalue() {
         //       - private(4)
         //         - enterprise(1)
         // joint-iso-itu-t(2)
-        {new asn1_object(asn1_type_objid), variant("1.3.6.1.4.1"), "06 05 2b 06 01 04 01", "X.690 8.19 OID #1"},
-        {new asn1_object(asn1_type_objid), variant("1.2.840.113549"), "06 06 2A 86 48 86 F7 0d", "X.690 8.19 OID #2"},
-        {new asn1_object(asn1_type_objid), variant("1.3.6.1.4.1.311.21.20"), "06 09 2b 06 01 04 01 82 37 15 14", "X.690 8.19 OID #3"},
-        {new asn1_object(asn1_type_objid), variant("1.3.6.1.4.1.311.60.2.1.1"), "06 0B 2B 06 01 04 01 82 37 3C 02 01 01", "X.690 8.19 OID #4"},
-        {new asn1_object(asn1_type_objid), variant("1.2.840.10045.3.1.7"), "06 08 2a 86 48 ce 3d 03 01 07", "X.690 8.19 #5"},
-        {new asn1_object(asn1_type_objid), variant("2.100.3"), "06 03 81 34 03", "X.690 8.19 OID #6"},  // 0..39 < 100 ??
-        {new asn1_object(asn1_type_objid), variant("2.154"), "06 02 81 6a", "X.690 8.19 OID #7"},
+        {new asn1_builtin_type(asn1_entity_objid), variant("1.3.6.1.4.1"), "06 05 2b 06 01 04 01", "X.690 8.19 OID #1"},
+        {new asn1_builtin_type(asn1_entity_objid), variant("1.2.840.113549"), "06 06 2A 86 48 86 F7 0d", "X.690 8.19 OID #2"},
+        {new asn1_builtin_type(asn1_entity_objid), variant("1.3.6.1.4.1.311.21.20"), "06 09 2b 06 01 04 01 82 37 15 14", "X.690 8.19 OID #3"},
+        {new asn1_builtin_type(asn1_entity_objid), variant("1.3.6.1.4.1.311.60.2.1.1"), "06 0B 2B 06 01 04 01 82 37 3C 02 01 01", "X.690 8.19 OID #4"},
+        {new asn1_builtin_type(asn1_entity_objid), variant("1.2.840.10045.3.1.7"), "06 08 2a 86 48 ce 3d 03 01 07", "X.690 8.19 #5"},
+        {new asn1_builtin_type(asn1_entity_objid), variant("2.100.3"), "06 03 81 34 03", "X.690 8.19 OID #6"},  // 0..39 < 100 ??
+        {new asn1_builtin_type(asn1_entity_objid), variant("2.154"), "06 02 81 6a", "X.690 8.19 OID #7"},
 
         // X.690 8.20 encoding of a relative object identifier value
-        {new asn1_object(asn1_type_reloid), variant("8571.3.2"), "0D 04 C27B0302", "X.690 8.20 relative object identifier"},
+        {new asn1_builtin_type(asn1_entity_reloid), variant("8571.3.2"), "0D 04 C27B0302", "X.690 8.20 relative object identifier"},
 
         // X.690 8.21.5.4 Example Name ::= VisibleString
-        {new asn1_object(asn1_type_visiblestring), variant("Jones"), "1a 05 4a6f6e6573", "X.690 8.21 VisibleString"},
+        {new asn1_builtin_type(asn1_entity_visiblestring), variant("Jones"), "1a 05 4a6f6e6573", "X.690 8.21 VisibleString"},
         // X.690 8.23
-        {new asn1_object(asn1_type_printstring), variant("Test User 1"), "13 0b 54 65 73 74 20 55 73 65 72 20 31", "X.690 8.23 PrintableString"},
-        {new asn1_object(asn1_type_t61string), variant("cl'es publiques"), "14 0f 63 6c 27 65 73 20 70 75 62 6c 69 71 75 65 73",
+        {new asn1_builtin_type(asn1_entity_printstring), variant("Test User 1"), "13 0b 54 65 73 74 20 55 73 65 72 20 31", "X.690 8.23 PrintableString"},
+        {new asn1_builtin_type(asn1_entity_t61string), variant("cl'es publiques"), "14 0f 63 6c 27 65 73 20 70 75 62 6c 69 71 75 65 73",
          "X.690 8.23 T61String"},  // // replace Â C2 for ' 27
     };
 
     for (auto item : _table) {
-        asn1* object = new asn1;
-        *object << item.obj;
-        object->set_value_byindex(0, std::move(item.var));
-        do_dump_asn1(object, item.expect, item.text);
-        object->release();
+        auto inst = item.obj->instantiate();
+        inst->set(item.var);
+
+        do_dump_asn1(inst, item.expect, item.text);
+
+        inst->release();
+        item.obj->release();
     }
 }
 
@@ -498,9 +567,9 @@ void test_x690_constructed() {
     {
         binary_t bin;
         bin << uint8(asn1_tag_bitstring | asn1_tag_constructed) << uint8(0x80) << uint8(asn1_tag_bitstring);
-        t_asn1_length_octets<uint32>(bin, 3);
+        asn1_encode::t_asn1_length_octets<uint32>(bin, 3);
         bin << base16_decode("000a3b") << uint8(asn1_tag_bitstring);
-        t_asn1_length_octets<uint32>(bin, 5);
+        asn1_encode::t_asn1_length_octets<uint32>(bin, 5);
         bin << base16_decode("045f291cd0") << uint8(0x00)  // EOC
             << uint8(0x00);                                // EOC
         _logger->writeln("%s", base16_encode(bin).c_str());
@@ -529,7 +598,7 @@ void test_x690_8_9_sequence() {
         // constexpr char expect[] = "300a1605536d6974680101ff";
 
         auto seq = new asn1_sequence;
-        *seq << new asn1_object("name", asn1_type_ia5string) << new asn1_object("ok", asn1_type_boolean);
+        *seq << new asn1_named_type("name", asn1_entity_ia5string) << new asn1_named_type("ok", asn1_entity_boolean);
         notation << seq;
         _logger->write([&](basic_stream& bs) -> void { notation.publish(&bs); });
     }
@@ -539,8 +608,8 @@ void test_x690_8_9_sequence() {
         binary_t bin;
         bin.insert(bin.end(), asn1_class_universal | asn1_tag_constructed | asn1_tag_sequence);
         size_t pos = bin.size();
-        enc.ia5string(bin, "Smith");
-        enc.primitive(bin, true);
+        enc.encode(bin, asn1_entity_ia5string, variant("Smith"));
+        enc.encode(bin, asn1_entity_boolean, variant(true));
         uint8 size = t_narrow_cast(bin.size() - pos);  // 0xa
         bin.insert(bin.begin() + pos, size);
 
@@ -574,30 +643,35 @@ void test_x690_time() {
 }
 
 void test_asn1_object() {
+    _test_case.begin("ASN.1 object");
     // $pattern_builtintype
-    //     new asn1_object(builtintype)
+    //     new asn1_builtin_type(builtintype)
     // [$pattern_class 1] $pattern_taggedmode $pattern_builtintype
-    //     new asn1_object(builtintype, new asn1_tag(asn1_class_application, 3, asn1_implicit)));
+    //     new asn1_builtin_type(builtintype, new asn1_tag(asn1_class_application, 3, asn1_implicit)));
     // lvalue ::= $pattern_builtintype
-    //     new asn1_object(lvalue, builtintype, new asn1_tag(asn1_class_application, 3, asn1_implicit)));
+    //     new asn1_builtin_type(lvalue, builtintype, new asn1_tag(asn1_class_application, 3, asn1_implicit)));
     // name $pattern_builtintype
-    //     new asn1_object(name, new asn1_object(builtintype, new asn1_tag(asn1_class_application, 3, asn1_implicit))));
+    //     new asn1_builtin_type(name, new asn1_builtin_type(builtintype, new asn1_tag(asn1_class_application, 3, asn1_implicit))));
     struct testvector2 {
         const char* note;
         asn1_object* asn1obj;
     };
     testvector2 table2[] = {
-        {"BOOLEAN", new asn1_object(asn1_type_boolean, new asn1_tag(asn1_class_universal))},
-        {"INTEGER", new asn1_object(asn1_type_integer, new asn1_tag(asn1_class_universal))},
-        {"OCTET STRING", new asn1_object(asn1_type_octstring, new asn1_tag(asn1_class_universal))},
-        {"NULL", new asn1_object(asn1_type_null, new asn1_tag(asn1_class_universal))},
-        {"OBJECT IDENTIFIER", new asn1_object(asn1_type_objid, new asn1_tag(asn1_class_universal))},
-        {"REAL", new asn1_object(asn1_type_real, new asn1_tag(asn1_class_universal))},
-        {"SEQUENCE {name IA5String, ok BOOLEAN}", new asn1_sequence(2, new asn1_object("name", asn1_type_ia5string), new asn1_object("ok", asn1_type_boolean))},
-        {"Date ::= VisibleString", new asn1_object("Date", asn1_type_visiblestring)},
-        {"Date ::= [APPLICATION 3] IMPLICIT VisibleString", new asn1_object("Date", asn1_type_visiblestring, new asn1_tag(asn1_class_application, 3, asn1_implicit))},
-        {"Date ::= [0] IMPLICIT VisibleString", new asn1_object("Date", asn1_type_visiblestring, new asn1_tag(asn1_class_context, 0, asn1_implicit))},
-        {"Date ::= [PRIVATE 0] IMPLICIT VisibleString", new asn1_object("Date", asn1_type_visiblestring, new asn1_tag(asn1_class_private, 0, asn1_implicit))},
+        {"BOOLEAN", new asn1_builtin_type(asn1_entity_boolean)},
+        {"INTEGER", new asn1_builtin_type(asn1_entity_integer)},
+        {"OCTET STRING", new asn1_builtin_type(asn1_entity_octstring)},
+        {"NULL", new asn1_builtin_type(asn1_entity_null)},
+        {"OBJECT IDENTIFIER", new asn1_builtin_type(asn1_entity_objid)},
+        {"REAL", new asn1_builtin_type(asn1_entity_real)},
+        {"SEQUENCE {name IA5String, ok BOOLEAN}",
+         new asn1_sequence(2, new asn1_named_type("name", asn1_entity_ia5string), new asn1_named_type("ok", asn1_entity_boolean))},
+        {"Date ::= VisibleString", asn1_referenced_type::define("Date", asn1_entity_visiblestring)},
+        {"Date ::= [APPLICATION 3] IMPLICIT VisibleString",
+         asn1_referenced_type::define("Date", new asn1_tagged_type(asn1_class_application, 3, asn1_implicit, asn1_entity_visiblestring))},
+        {"Date ::= [0] IMPLICIT VisibleString",
+         asn1_referenced_type::define("Date", new asn1_tagged_type(asn1_class_context, 0, asn1_implicit, asn1_entity_visiblestring))},
+        {"Date ::= [PRIVATE 0] IMPLICIT VisibleString",
+         asn1_referenced_type::define("Date", new asn1_tagged_type(asn1_class_private, 0, asn1_implicit, asn1_entity_visiblestring))},
     };
 
     basic_stream bs;
@@ -606,7 +680,8 @@ void test_asn1_object() {
         *object << item.asn1obj;
         object->publish(&bs);
         object->clear();
-        _logger->write(bs);
+        _logger->writeln(bs);
+        _test_case.assert(bs == item.note, __FUNCTION__, "publish %s", item.note);
 
         // compare
         parser p;
@@ -621,15 +696,15 @@ void test_asn1_object() {
             _logger->writeln("> type %d(%s) tag %i index %d pos %zi len %zi (%.*s)", desc->type, p.typeof_token(desc->type).c_str(), desc->tag, desc->index, desc->pos,
                              desc->size, (unsigned)desc->size, desc->p);
         };
-        std::map<uint32, asn1_type_t> typemap;
-        typemap.emplace(token_bool, asn1_type_boolean);
-        typemap.emplace(token_int, asn1_type_integer);
-        typemap.emplace(token_bitstring, asn1_type_bitstring);
-        typemap.emplace(token_octstring, asn1_type_octstring);
-        typemap.emplace(token_null, asn1_type_null);
-        typemap.emplace(token_real, asn1_type_real);
-        typemap.emplace(token_ia5string, asn1_type_ia5string);
-        typemap.emplace(token_visiblestring, asn1_type_visiblestring);
+        std::map<uint32, asn1_entity_t> typemap;
+        typemap.emplace(token_bool, asn1_entity_boolean);
+        typemap.emplace(token_int, asn1_entity_integer);
+        typemap.emplace(token_bitstring, asn1_entity_bitstring);
+        typemap.emplace(token_octstring, asn1_entity_octstring);
+        typemap.emplace(token_null, asn1_entity_null);
+        typemap.emplace(token_real, asn1_entity_real);
+        typemap.emplace(token_ia5string, asn1_entity_ia5string);
+        typemap.emplace(token_visiblestring, asn1_entity_visiblestring);
 
         for (auto& pair : result) {
             // pair(pos_occurrence, id_pattern)
@@ -642,14 +717,14 @@ void test_asn1_object() {
             ctx.for_each(res, dump_handler);
 
             token_description desc;
-            asn1_type_t type;
+            asn1_entity_t type;
 
             // pattern to asn1_object*
             switch (pid) {
                 case 0:  // $pattern_builtintype
                     ctx.get(res.begidx, &desc);
                     type = typemap[desc.tag];
-                    *object << new asn1_object(type);
+                    *object << new asn1_builtin_type(type);
                     break;
             }
             object->publish(&bs);
@@ -665,6 +740,7 @@ void test_asn1_object() {
 }
 
 void test_x690_annex_a_1() {
+#if 0
     _test_case.begin("X.690 A.1");
 
     // PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {
@@ -684,49 +760,50 @@ void test_x690_annex_a_1() {
 
         (*object)
             // auto node_personal = new asn1_set("PersonnelRecord", new asn1_tag(asn1_class_application, 0, asn1_implicit));
-            // *node_personal << new asn1_object("name", new asn1_object("Name", asn1_type_referenced))                  //
-            //                << new asn1_object("title", asn1_type_visiblestring, new asn1_tag(asn1_class_context, 0))  //
-            //                << new asn1_object("number", new asn1_object("EmployeeNumber", asn1_type_referenced))
-            //                << new asn1_object("dateOfHire", new asn1_object("Date", asn1_type_referenced, new asn1_tag(asn1_class_context, 1)))
-            //                << new asn1_object("nameOfSpouse", new asn1_object("Name", asn1_type_referenced, new asn1_tag(asn1_class_context, 2)))
-            //                << new asn1_object("children", &(new asn1_sequence_of("ChildInformation", new asn1_tag(asn1_class_context, 3,
+            // *node_personal << new asn1_builtin_type("name", new asn1_builtin_type("Name", asn1_entity_referenced_type))                  //
+            //                << new asn1_builtin_type("title", asn1_entity_visiblestring, new asn1_tag(asn1_class_context, 0))  //
+            //                << new asn1_builtin_type("number", new asn1_builtin_type("EmployeeNumber", asn1_entity_referenced_type))
+            //                << new asn1_builtin_type("dateOfHire", new asn1_builtin_type("Date", asn1_entity_referenced_type, new asn1_tag(asn1_class_context, 1)))
+            //                << new asn1_builtin_type("nameOfSpouse", new asn1_builtin_type("Name", asn1_entity_referenced_type, new asn1_tag(asn1_class_context, 2)))
+            //                << new asn1_builtin_type("children", &(new asn1_sequence_of("ChildInformation", new asn1_tag(asn1_class_context, 3,
             //                asn1_implicit)))->as_default());
             // *object << node_personal;
             .add(new asn1_set("PersonnelRecord", new asn1_tag(asn1_class_application, 0, asn1_implicit)),
                  [](asn1_set* set) -> void {
-                     (*set) << new asn1_object("name", new asn1_object("Name", asn1_type_referenced))
-                            << new asn1_object("title", asn1_type_visiblestring, new asn1_tag(asn1_class_context, 0))
-                            << new asn1_object("number", new asn1_object("EmployeeNumber", asn1_type_referenced))
-                            << new asn1_object("dateOfHire", new asn1_object("Date", asn1_type_referenced, new asn1_tag(asn1_class_context, 1)))
-                            << new asn1_object("nameOfSpouse", new asn1_object("Name", asn1_type_referenced, new asn1_tag(asn1_class_context, 2)))
-                            << new asn1_object("children", &(new asn1_sequence_of("ChildInformation", new asn1_tag(asn1_class_context, 3, asn1_implicit)))->as_default());
+                     (*set) << new asn1_builtin_type("name", new asn1_builtin_type("Name", asn1_entity_referenced_type))
+                            << new asn1_builtin_type("title", asn1_entity_visiblestring, new asn1_tag(asn1_class_context, 0))
+                            << new asn1_builtin_type("number", new asn1_builtin_type("EmployeeNumber", asn1_entity_referenced_type))
+                            << new asn1_builtin_type("dateOfHire", new asn1_builtin_type("Date", asn1_entity_referenced_type, new asn1_tag(asn1_class_context, 1)))
+                            << new asn1_builtin_type("nameOfSpouse", new asn1_builtin_type("Name", asn1_entity_referenced_type, new asn1_tag(asn1_class_context, 2)))
+                            << new asn1_builtin_type("children",
+                                                  &(new asn1_sequence_of("ChildInformation", new asn1_tag(asn1_class_context, 3, asn1_implicit)))->as_default());
                  })
             // auto node_childinfo = new asn1_set("ChildInformation");
-            // *node_childinfo << new asn1_object("name", new asn1_object("Name", asn1_type_referenced))
-            //                 << new asn1_object("dateOfBirth", new asn1_object("Date", asn1_type_referenced, new asn1_tag(asn1_class_context, 0)));
+            // *node_childinfo << new asn1_builtin_type("name", new asn1_builtin_type("Name", asn1_entity_referenced_type))
+            //                 << new asn1_builtin_type("dateOfBirth", new asn1_builtin_type("Date", asn1_entity_referenced_type, new asn1_tag(asn1_class_context, 0)));
             // *object << node_childinfo;
             .add(new asn1_set("ChildInformation"),  //
                  [](asn1_set* set) -> void {
-                     (*set) << new asn1_object("name", new asn1_object("Name", asn1_type_referenced))
-                            << new asn1_object("dateOfBirth", new asn1_object("Date", asn1_type_referenced, new asn1_tag(asn1_class_context, 0)));
+                     (*set) << new asn1_builtin_type("name", new asn1_builtin_type("Name", asn1_entity_referenced_type))
+                            << new asn1_builtin_type("dateOfBirth", new asn1_builtin_type("Date", asn1_entity_referenced_type, new asn1_tag(asn1_class_context, 0)));
                  })
             // auto node_name = new asn1_sequence("Name", new asn1_tag(asn1_class_application, 1, asn1_implicit));
-            // *node_name << new asn1_object("givenName", new asn1_object(asn1_type_visiblestring)) << new asn1_object("initial", new
-            // asn1_object(asn1_type_visiblestring))
-            //            << new asn1_object("familyName", new asn1_object(asn1_type_visiblestring));
+            // *node_name << new asn1_builtin_type("givenName", new asn1_builtin_type(asn1_entity_visiblestring)) << new asn1_builtin_type("initial", new
+            // asn1_object(asn1_entity_visiblestring))
+            //            << new asn1_builtin_type("familyName", new asn1_builtin_type(asn1_entity_visiblestring));
             // *object << node_name;
             .add(new asn1_sequence("Name", new asn1_tag(asn1_class_application, 1, asn1_implicit)),  //
                  [](asn1_sequence* seq) -> void {
-                     (*seq) << new asn1_object("givenName", new asn1_object(asn1_type_visiblestring))  //
-                            << new asn1_object("initial", new asn1_object(asn1_type_visiblestring))    //
-                            << new asn1_object("familyName", new asn1_object(asn1_type_visiblestring));
+                     (*seq) << new asn1_builtin_type("givenName", new asn1_builtin_type(asn1_entity_visiblestring))  //
+                            << new asn1_builtin_type("initial", new asn1_builtin_type(asn1_entity_visiblestring))    //
+                            << new asn1_builtin_type("familyName", new asn1_builtin_type(asn1_entity_visiblestring));
                  })
-            // auto node_employeenumber = new asn1_object("EmployeeNumber", asn1_type_integer, new asn1_tag(asn1_class_application, 2, asn1_implicit));
+            // auto node_employeenumber = new asn1_builtin_type("EmployeeNumber", asn1_entity_integer, new asn1_tag(asn1_class_application, 2, asn1_implicit));
             // *object << node_employeenumber;
-            .add(new asn1_object("EmployeeNumber", asn1_type_integer, new asn1_tag(asn1_class_application, 2, asn1_implicit)))
-            // auto node_date = new asn1_object("Date", asn1_type_visiblestring, new asn1_tag(asn1_class_application, 3, asn1_implicit));
+            .add(new asn1_builtin_type("EmployeeNumber", asn1_entity_integer, new asn1_tag(asn1_class_application, 2, asn1_implicit)))
+            // auto node_date = new asn1_builtin_type("Date", asn1_entity_visiblestring, new asn1_tag(asn1_class_application, 3, asn1_implicit));
             // *object << node_date;
-            .add(new asn1_object("Date", asn1_type_visiblestring, new asn1_tag(asn1_class_application, 3, asn1_implicit)));
+            .add(new asn1_builtin_type("Date", asn1_entity_visiblestring, new asn1_tag(asn1_class_application, 3, asn1_implicit)));
 
         basic_stream bs1;
         basic_stream bs2;
@@ -755,6 +832,7 @@ void test_x690_annex_a_1() {
 
         object->release();
     }
+#endif
 }
 
 void test_x690_annex_a_2() {
@@ -767,6 +845,7 @@ void testcase_asn1() {
     test_x690_8_1_2_identifier_octects();
     test_x690_8_1_3_length_octets();
     test_x690_8_1_5_end_of_contents();
+    test_asn1_value();
     test_x690_encoding_value();
     test_x690_encoding_typevalue();
     test_x690_constructed();

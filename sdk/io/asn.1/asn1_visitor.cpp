@@ -12,20 +12,29 @@
  */
 
 #include <hotplace/sdk/io/asn.1/asn1_object.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_visitor.hpp>
 
 namespace hotplace {
 namespace io {
 
-asn1_basic_encoding_visitor::asn1_basic_encoding_visitor(binary_t* b) : _b(b) {}
+asn1_der_visitor::asn1_der_visitor(binary_t* b) : _b(b), _value(nullptr) {}
 
-void asn1_basic_encoding_visitor::visit(asn1_object* object) { object->represent(get_binary()); }
+asn1_der_visitor::asn1_der_visitor(binary_t* b, asn1_value* value) : _b(b), _value(value) {
+    if (_value) _value->addref();
+}
 
-binary_t* asn1_basic_encoding_visitor::get_binary() { return _b; }
+asn1_der_visitor::~asn1_der_visitor() {
+    if (_value) _value->release();
+}
+
+void asn1_der_visitor::visit(asn1_object* object) { object->represent(0, get_binary(), _value); }
+
+binary_t* asn1_der_visitor::get_binary() { return _b; }
 
 asn1_notation_visitor::asn1_notation_visitor(stream_t* s) : _s(s) {}
 
-void asn1_notation_visitor::visit(asn1_object* object) { object->represent(get_stream()); }
+void asn1_notation_visitor::visit(asn1_object* object) { object->represent(0, get_stream()); }
 
 stream_t* asn1_notation_visitor::get_stream() { return _s; }
 

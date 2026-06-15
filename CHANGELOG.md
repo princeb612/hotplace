@@ -7,6 +7,8 @@
   * [study] CBOR/COSE (RFC 7049, 8949, 8152)
 
 * understanding
+  * Revision 1031-
+    * ASN.1 runtime
   * Revision 927-933 (Tag 1.92, Revision 957)
     * MSVC environment (beta status) - application verifier (basics)
   * Revision 910-926
@@ -32,7 +34,7 @@
     * CBOR
 
 * details
-  * Revision 1030
+  * Revision 1031
   * Revision 1024
     * encoder_stream/decode_stream intergrates http_huffman_encoding
   * Revision 1023

@@ -13,9 +13,10 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_ASN1__
 #define __HOTPLACE_SDK_IO_ASN1_ASN1__
 
+#include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/io/asn.1/types.hpp>
-#include <hotplace/sdk/io/basic/parser.hpp>
+// #include <hotplace/sdk/io/basic/parser.hpp>
 
 namespace hotplace {
 namespace io {
@@ -44,18 +45,6 @@ class asn1 {
     }
     asn1& operator<<(asn1_object* item);
 
-    /**
-     * @brief   values
-     * @sample
-     *          set_value_byname("name", "Smith").set_value_byname("ok", true);
-     */
-    asn1& set_value_byname(const std::string& name, const variant& value);
-    asn1& set_value_byname(const std::string& name, variant&& value);
-    asn1& set_value_byindex(unsigned index, const variant& value);
-    asn1& set_value_byindex(unsigned index, variant&& value);
-    asn1_object* operator[](const std::string& name);
-    asn1_object* operator[](unsigned index);
-
     void publish(binary_t* b);
     void publish(stream_t* s);
 
@@ -66,7 +55,7 @@ class asn1 {
 
    protected:
    private:
-    t_shared_reference<asn1> _ref;
+    t_shared_reference<asn1> _shared;
     std::list<asn1_object*> _types;
 
     typedef std::map<std::string, asn1_object*> dictionary_t;
@@ -77,7 +66,7 @@ class asn1 {
     namevalues_t _namevalues;
     indexvalues_t _idxvalues;
 
-    parser _parser;
+    // parser _parser;
 };
 
 }  // namespace io

@@ -13,7 +13,6 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_ASN1VISOTOR__
 #define __HOTPLACE_SDK_IO_ASN1_ASN1VISOTOR__
 
-#include <hotplace/sdk/base/basic/types.hpp>
 #include <hotplace/sdk/io/asn.1/types.hpp>
 
 namespace hotplace {
@@ -27,9 +26,12 @@ class asn1_visitor {
     virtual void visit(asn1_object* object) = 0;
 };
 
-class asn1_basic_encoding_visitor : public asn1_visitor {
+class asn1_der_visitor : public asn1_visitor {
    public:
-    asn1_basic_encoding_visitor(binary_t* b);
+    asn1_der_visitor(binary_t* b);
+    asn1_der_visitor(binary_t* b, asn1_value* value);
+    ~asn1_der_visitor();
+
     virtual void visit(asn1_object* object);
 
    protected:
@@ -37,6 +39,7 @@ class asn1_basic_encoding_visitor : public asn1_visitor {
 
    private:
     binary_t* _b;
+    asn1_value* _value;
 };
 
 class asn1_notation_visitor : public asn1_visitor {

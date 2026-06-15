@@ -11,59 +11,94 @@
  *
  */
 
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_container.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_tag.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_visitor.hpp>
-#include <hotplace/sdk/io/asn.1/template.hpp>
 
 namespace hotplace {
 namespace io {
 
-asn1_object::asn1_object(asn1_type_t type, asn1_tag* tag) : _type(type), _tag(tag), _component_type(0), _parent(nullptr), _object(nullptr) { _ref.make_share(this); }
-
-asn1_object::asn1_object(const std::string& name, asn1_type_t type, asn1_tag* tag)
-    : _name(name), _type(type), _tag(tag), _component_type(0), _parent(nullptr), _object(nullptr) {
-    _ref.make_share(this);
+asn1_object::asn1_object(asn1_entity_t entity, const std::string& name, asn1_object* object, asn1_tag* tag)
+    : _ident(0), _name(name), _entity(entity), _component_type(0), _suppress(false), _parent(nullptr), _tag(tag), _object(object) {
+    _shared.make_share(this);
+    if (tag) tag->set_parent(this);
+    if (object) object->set_parent(this);
 }
 
-asn1_object::asn1_object(const std::string& name, asn1_object* object, asn1_tag* tag)
-    : _name(name), _type(asn1_type_named), _tag(tag), _component_type(0), _parent(nullptr), _object(object) {
-    _ref.make_share(this);
-}
+asn1_object::asn1_object(const asn1_object& other) : asn1_object(asn1_entity_builtin_type, "", nullptr, nullptr) { *this = other; }
 
-asn1_object::asn1_object(const asn1_object& other)
-    : _name(other._name), _type(other._type), _tag(nullptr), _component_type(other._component_type), _parent(nullptr), _object(nullptr) {
-    _ref.make_share(this);
-    if (other._tag) {
-        _tag = (asn1_tag*)other._tag->clone();
-    }
-    if (other._object) {
-        _object = other._object->clone();
-    }
-}
+asn1_object::asn1_object(asn1_object&& other) : asn1_object(asn1_entity_builtin_type, "", nullptr, nullptr) { *this = std::move(other); }
 
 asn1_object::~asn1_object() { clear(); }
 
+asn1_object& asn1_object::operator=(const asn1_object& other) {
+    _ident = other._ident;
+    _name = other._name;
+    _entity = other._entity;
+    _component_type = other._component_type;
+    _suppress = other._suppress;
+    _parent = other._parent;
+    if (other._tag) _tag = (asn1_tag*)other._tag->addref();
+    if (other._object) _object = other._object->addref();
+    return *this;
+}
+
+asn1_object& asn1_object::operator=(asn1_object&& other) {
+    std::swap(_ident, other._ident);
+    std::swap(_name, other._name);
+    std::swap(_entity, other._entity);
+    std::swap(_component_type, other._component_type);
+    std::swap(_suppress, other._suppress);
+    std::swap(_parent, other._parent);
+    std::swap(_tag, other._tag);
+    std::swap(_object, other._object);
+    return *this;
+}
+
 asn1_object* asn1_object::clone() { return new asn1_object(*this); }
+
+asn1_value* asn1_object::instantiate() { return new asn1_value(this); }
+
+void asn1_object::publish(binary_t* b) {
+    asn1_der_visitor encoder(b);
+    accept(&encoder);
+}
+
+void asn1_object::publish(stream_t* s) {
+    asn1_notation_visitor notation(s);
+    accept(&notation);
+}
+
+asn1_object& asn1_object::set_name(const std::string& name) {
+    _name = name;
+    return *this;
+}
 
 asn1_object& asn1_object::set_parent(asn1_object* parent) {
     _parent = parent;
     return *this;
 }
 
+uint8 asn1_object::get_ident() const { return _ident; }
+
 asn1_object* asn1_object::get_parent() const { return _parent; }
+
+asn1_object* asn1_object::get_object() const { return _object; }
 
 const std::string& asn1_object::get_name() const { return _name; }
 
-asn1_object& asn1_object::set_type(asn1_type_t type) {
-    _type = type;
+asn1_object& asn1_object::set_entity(asn1_entity_t entity) {
+    _entity = entity;
     return *this;
 }
 
-asn1_type_t asn1_object::get_type() const { return _type; }
+asn1_entity_t asn1_object::get_entity() const { return _entity; }
 
 asn1_tag* asn1_object::get_tag() const { return _tag; }
 
@@ -79,113 +114,70 @@ asn1_object& asn1_object::as_optional() {
     return *this;
 }
 
-variant& asn1_object::get_data() { return _var; }
+asn1_object& asn1_object::as_primitive() {
+    _ident &= ~asn1_tag_constructed;
+    if (_object) {
+        _object->_ident = _ident;
+    }
+    return *this;
+}
 
-const variant& asn1_object::get_data() const { return _var; }
+asn1_object& asn1_object::as_constructed() {
+    _ident |= asn1_tag_constructed;
+    if (_object) {
+        _object->_ident = _ident;
+    }
+    return *this;
+}
+
+bool asn1_object::is_primitive() { return (_ident & asn1_tag_mask) ? false : true; }
+
+bool asn1_object::is_constructed() { return (_ident & asn1_tag_mask) ? true : false; }
+
+bool asn1_object::is_tagged() const { return _tag ? true : false; }
 
 void asn1_object::accept(asn1_visitor* v) { v->visit(this); }
 
-void asn1_object::represent(stream_t* s) {
+void asn1_object::represent(uint32 depth, stream_t* s) {
     if (s) {
-        switch (get_type()) {
-            case asn1_type_named:
-                s->printf("%s ", get_name().c_str());
-                if (_object) {
-                    _object->represent(s);
-                }
-                break;
-            case asn1_type_referenced:
-                if (get_tag()) {
-                    get_tag()->represent(s);
-                }
-                s->printf("%s", get_name().c_str());
-                break;
-            default:
-                if (false == get_name().empty()) {
-                    s->printf("%s ", get_name().c_str());
-                    if (nullptr == get_parent()) {
-                        s->printf("::= ");
-                    }
-                }
-                if (get_tag()) {
-                    get_tag()->represent(s);
-                }
-                s->printf("%s", asn1_resource::get_instance()->get_type_name(get_type()).c_str());
-                break;
-        }
+        auto entity = get_entity();
+        if (asn1_entity_referenced_type == entity)
+            s->printf("%s", _name.c_str());
+        else
+            s->printf("%s", asn1_resource::get_instance()->get_entity_name(get_ident(), entity).c_str());
     }
 }
 
-void asn1_object::represent(binary_t* b) {
-    if (b) {
-        asn1_type_t type = get_type();
+void asn1_object::represent(uint32 depth, binary_t* b, asn1_value* value) {
+    auto entity = get_entity();
 
-        // Type1 ::= VisibleString
-        //      1A 05 4A 6F 6E 65 73
-        //      -- VisibleString
-        // Type2 ::= [Application 3] implicit Type1
-        //      43 05 4A 6F 6E 65 73
-        //      -- asn1_class_application | 3
-        // Type3 ::= [2] Type2
-        //      A2 07 43 05 4A 6F 6E 65 73
-        //      -- asn1_class_context | asn1_tag_constructed | 2
-        // Type4 ::= [Application 7] implicit Type3
-        //      67 07 43 05 4A 6F 6E 65 73
-        //      -- asn1_class_application | asn1_tag_constructed | 7
-        // Type5 ::= [2] implicit Type2
-        //      82 05 4A 6F 6E 65 73
-        //      -- asn1_class_context | 2
+#if defined DEBUG
+    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_debug)) {
+        trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
+            dbs.fill(depth << 1, ' ');
+            dbs.println("ASN.1 object");
+            if (false == get_name().empty()) {
+                dbs.fill(depth << 1, ' ');
+                dbs.println("- name " ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", get_name().c_str());
+            }
+            dbs.fill(depth << 1, ' ');
+            dbs.println("- entity " ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", asn1_resource::get_instance()->get_entity_name(get_ident(), entity).c_str());
+            // dbs.fill(depth << 1, ' ');
+            // dbs.println("- suppressed %s", is_suppressed() ? "true" : "false");
+        });
+    }
+#endif
 
-        if (get_tag()) {
-            get_tag()->represent(b);
-            if (get_tag()->is_implicit()) {
-                type = asn1_type_tagged;
-            } else {
-                //
-            }
-        }
+    if (false == is_suppressed()) {
+        asn1_encode::asn1_ident_octets(*b, get_ident(), get_entity());
+    }
 
-        if (type == asn1_type_named) {
-            if (_object) {
-                _object->represent(b);
-            }
-        } else {
-            asn1_encode enc;
-            switch (type) {
-                case asn1_type_tagged:
-                    enc.encode(*b, get_type(), _var.to_bin());
-                    break;
-                case asn1_type_boolean:
-                case asn1_type_integer:
-                case asn1_type_null:
-                case asn1_type_real:
-                case asn1_type_generalizedtime:
-                    enc.encode(*b, get_type(), _var);
-                    break;
-                case asn1_type_bitstring:
-                    enc.bitstring(*b, _var.to_str());
-                    break;
-                case asn1_type_octstring:
-                    enc.octstring(*b, _var.to_str());
-                    break;
-                case asn1_type_cstring:
-                case asn1_type_generalstring:
-                case asn1_type_ia5string:
-                case asn1_type_printstring:
-                case asn1_type_t61string:
-                case asn1_type_universalstring:
-                case asn1_type_visiblestring:
-                    enc.primitive(*b, get_type(), _var.to_str());
-                    break;
-                case asn1_type_objid:
-                    enc.oid(*b, _var.to_str());
-                    break;
-                case asn1_type_reloid:
-                    enc.reloid(*b, _var.to_str());
-                    break;
-                default:
-                    break;
-            }
+    if (value) {
+        auto pos = b->size();
+        bool do_len = false;
+        value->encode_value(*b, this, get_name(), do_len);
+        if (do_len && (false == is_suppressed())) {
+            asn1_encode::t_asn1_length_octets<size_t>(*b, b->size() - pos, pos);
         }
     }
 }
@@ -201,9 +193,28 @@ void asn1_object::clear() {
     }
 }
 
-void asn1_object::addref() { _ref.addref(); }
+asn1_object& asn1_object::suppress() {
+    _suppress = true;
+    if (_tag) _tag->suppress();
+    if (_object) _object->suppress();
+    return *this;
+}
 
-void asn1_object::release() { _ref.delref(); }
+asn1_object& asn1_object::unsuppress() {
+    _suppress = false;
+    if (_tag) _tag->unsuppress();
+    if (_object) _object->unsuppress();
+    return *this;
+}
+
+bool asn1_object::is_suppressed() { return _suppress; }
+
+asn1_object* asn1_object::addref() {
+    _shared.addref();
+    return this;
+}
+
+void asn1_object::release() { _shared.delref(); }
 
 }  // namespace io
 }  // namespace hotplace
