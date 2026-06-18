@@ -38,6 +38,11 @@ asn1_set::~asn1_set() {}
 
 asn1_set* asn1_set::clone() { return new asn1_set(*this); }
 
+asn1_set* asn1_set::addref() {
+    asn1_container::addref();
+    return this;
+}
+
 asn1_set_of::asn1_set_of() : asn1_container(asn1_entity_set_of, "", nullptr) {}
 
 asn1_set_of::asn1_set_of(const std::string& name) : asn1_container(asn1_entity_set_of, name, nullptr) {}
@@ -45,6 +50,11 @@ asn1_set_of::asn1_set_of(const std::string& name) : asn1_container(asn1_entity_s
 asn1_set_of::asn1_set_of(const asn1_set_of& other) : asn1_container(other) {}
 
 asn1_set_of* asn1_set_of::clone() { return new asn1_set_of(*this); }
+
+asn1_set_of* asn1_set_of::addref() {
+    asn1_container::addref();
+    return this;
+}
 
 }  // namespace io
 }  // namespace hotplace

@@ -35,7 +35,7 @@ asn1_object::asn1_object(const asn1_object& other) : asn1_object(asn1_entity_bui
 
 asn1_object::asn1_object(asn1_object&& other) : asn1_object(asn1_entity_builtin_type, "", nullptr, nullptr) { *this = std::move(other); }
 
-asn1_object::~asn1_object() { clear(); }
+asn1_object::~asn1_object() {}
 
 asn1_object& asn1_object::operator=(const asn1_object& other) {
     _ident = other._ident;
@@ -44,7 +44,7 @@ asn1_object& asn1_object::operator=(const asn1_object& other) {
     _component_type = other._component_type;
     _suppress = other._suppress;
     _parent = other._parent;
-    if (other._tag) _tag = (asn1_tag*)other._tag->addref();
+    if (other._tag) _tag = other._tag->addref();
     if (other._object) _object = other._object->addref();
     return *this;
 }
@@ -64,6 +64,19 @@ asn1_object& asn1_object::operator=(asn1_object&& other) {
 asn1_object* asn1_object::clone() { return new asn1_object(*this); }
 
 asn1_value* asn1_object::instantiate() { return new asn1_value(this); }
+
+asn1_object* asn1_object::addref() {
+    if (_tag) _tag->addref();
+    if (_object) _object->addref();
+    _shared.addref();
+    return this;
+}
+
+void asn1_object::release() {
+    if (_tag) _tag->release();
+    if (_object) _object->release();
+    _shared.delref();
+}
 
 void asn1_object::publish(binary_t* b) {
     asn1_der_visitor encoder(b);
@@ -187,17 +200,6 @@ void asn1_object::represent(uint32 depth, binary_t* b, asn1_value* value) {
     }
 }
 
-void asn1_object::clear() {
-    if (_tag) {
-        _tag->release();
-        _tag = nullptr;
-    }
-    if (_object) {
-        _object->release();
-        _object = nullptr;
-    }
-}
-
 asn1_object& asn1_object::suppress() {
     _suppress = true;
     if (_tag) _tag->suppress();
@@ -213,13 +215,6 @@ asn1_object& asn1_object::unsuppress() {
 }
 
 bool asn1_object::is_suppressed() { return _suppress; }
-
-asn1_object* asn1_object::addref() {
-    _shared.addref();
-    return this;
-}
-
-void asn1_object::release() { _shared.delref(); }
 
 }  // namespace io
 }  // namespace hotplace

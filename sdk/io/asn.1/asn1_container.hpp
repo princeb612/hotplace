@@ -26,11 +26,12 @@ class asn1_container : public asn1_type {
     virtual ~asn1_container();
     asn1_container& operator=(const asn1_container& other);
 
+    virtual asn1_container* clone();
+    virtual asn1_container* addref();
+    virtual void release();
+
     asn1_container& operator<<(asn1_object* other);
     asn1_container& add(std::function<asn1_object*(asn1_container*)> func);
-
-    void addref();
-    void release();
 
    protected:
     asn1_container(asn1_entity_t entity, const std::string& name, asn1_object* object);

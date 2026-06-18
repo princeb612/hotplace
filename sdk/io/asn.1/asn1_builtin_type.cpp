@@ -27,6 +27,11 @@ asn1_builtin_type::~asn1_builtin_type() {}
 
 asn1_builtin_type* asn1_builtin_type::clone() { return new asn1_builtin_type(*this); }
 
+asn1_builtin_type* asn1_builtin_type::addref() {
+    asn1_object::addref();
+    return this;
+}
+
 void asn1_builtin_type::represent(uint32 depth, stream_t* s, asn1_value* value) { get_object()->represent(depth + 1, s, value); }
 
 void asn1_builtin_type::represent(uint32 depth, binary_t* b, asn1_value* value) {

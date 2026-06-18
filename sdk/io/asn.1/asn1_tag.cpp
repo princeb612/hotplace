@@ -30,6 +30,11 @@ asn1_tag::~asn1_tag() {}
 
 asn1_tag* asn1_tag::clone() { return new asn1_tag(*this); }
 
+asn1_tag* asn1_tag::addref() {
+    asn1_object::addref();
+    return this;
+}
+
 int asn1_tag::get_class() const { return _class_type; }
 
 int asn1_tag::get_class_number() const { return _class_number; }

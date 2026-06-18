@@ -29,6 +29,11 @@ asn1_referenced_type::~asn1_referenced_type() {}
 
 asn1_referenced_type* asn1_referenced_type::clone() { return new asn1_referenced_type(*this); }
 
+asn1_referenced_type* asn1_referenced_type::addref() {
+    asn1_object::addref();
+    return this;
+}
+
 asn1_referenced_type* asn1_referenced_type::define(const std::string& name, asn1_entity_t entity) {
     return new asn1_referenced_type(asn1_entity_referenced_type, name, new asn1_builtin_type(entity));
 }

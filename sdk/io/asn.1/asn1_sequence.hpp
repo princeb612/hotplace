@@ -41,7 +41,8 @@ class asn1_sequence : public asn1_container {
     asn1_sequence(const std::string& name, const std::initializer_list<asn1_object*>& items);
     virtual ~asn1_sequence();
 
-    asn1_sequence* clone();
+    virtual asn1_sequence* clone();
+    virtual asn1_sequence* addref();
 
    protected:
 };
@@ -55,7 +56,8 @@ class asn1_sequence_of : public asn1_container {
     asn1_sequence_of(const std::string& name);
     asn1_sequence_of(const asn1_sequence_of& other);
 
-    asn1_sequence_of* clone();
+    virtual asn1_sequence_of* clone();
+    virtual asn1_sequence_of* addref();
 
    protected:
 };

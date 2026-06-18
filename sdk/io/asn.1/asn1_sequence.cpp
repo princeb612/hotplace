@@ -41,6 +41,11 @@ asn1_sequence::~asn1_sequence() {}
 
 asn1_sequence* asn1_sequence::clone() { return new asn1_sequence(*this); }
 
+asn1_sequence* asn1_sequence::addref() {
+    asn1_container::addref();
+    return this;
+}
+
 asn1_sequence_of::asn1_sequence_of() : asn1_container(asn1_entity_sequence_of, "", nullptr) {}
 
 asn1_sequence_of::asn1_sequence_of(const std::string& name) : asn1_container(asn1_entity_sequence_of, name, nullptr) {}
@@ -48,6 +53,11 @@ asn1_sequence_of::asn1_sequence_of(const std::string& name) : asn1_container(asn
 asn1_sequence_of::asn1_sequence_of(const asn1_sequence_of& other) : asn1_container(other) {}
 
 asn1_sequence_of* asn1_sequence_of::clone() { return new asn1_sequence_of(*this); }
+
+asn1_sequence_of* asn1_sequence_of::addref() {
+    asn1_container::addref();
+    return this;
+}
 
 }  // namespace io
 }  // namespace hotplace

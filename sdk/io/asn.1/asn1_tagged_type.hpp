@@ -39,7 +39,8 @@ class asn1_tagged_type : public asn1_type {
     asn1_tagged_type(asn1_tag* tag, asn1_object* object);
     virtual ~asn1_tagged_type();
 
-    asn1_tagged_type* clone();
+    virtual asn1_tagged_type* clone();
+    virtual asn1_tagged_type* addref();
 
     asn1_tag* get_tag() const;
 

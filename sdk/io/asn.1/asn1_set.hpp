@@ -36,7 +36,8 @@ class asn1_set : public asn1_container {
     asn1_set(const asn1_set& other);
     virtual ~asn1_set();
 
-    asn1_set* clone();
+    virtual asn1_set* clone();
+    virtual asn1_set* addref();
 
    protected:
 };
@@ -50,7 +51,8 @@ class asn1_set_of : public asn1_container {
     asn1_set_of(const std::string& name);
     asn1_set_of(const asn1_set_of& other);
 
-    asn1_set_of* clone();
+    virtual asn1_set_of* clone();
+    virtual asn1_set_of* addref();
 
    protected:
 };

@@ -35,7 +35,7 @@
     * CBOR
 
 * details
-  * Revision 1032
+  * Revision 1033
   * Revision 1024
     * encoder_stream/decode_stream intergrates http_huffman_encoding
   * Revision 1023

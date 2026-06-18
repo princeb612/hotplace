@@ -39,7 +39,8 @@ class asn1_referenced_type : public asn1_type {
     asn1_referenced_type(const std::string& name);
     virtual ~asn1_referenced_type();
 
-    asn1_referenced_type* clone();
+    virtual asn1_referenced_type* clone();
+    virtual asn1_referenced_type* addref();
 
     /**
      * definition

@@ -607,7 +607,6 @@ void test_x690_8_9_sequence() {
     //                  Boolean    Length  Contents
     //                  01_16      01_16   FF_16
 
-    asn1 notation;
     asn1_encode enc;
 
     constexpr char type[] = R"(SEQUENCE {name IA5String, ok BOOLEAN})";
@@ -617,7 +616,6 @@ void test_x690_8_9_sequence() {
 
     auto seq = new asn1_sequence;
     *seq << new asn1_builtin_type("name", asn1_entity_ia5string) << new asn1_builtin_type("ok", asn1_entity_boolean);
-    notation << seq;
     auto value = seq->instantiate();
     (*value).set("name", "Smith").set("ok", true);
 
@@ -639,6 +637,9 @@ void test_x690_8_9_sequence() {
     _test_case.assert(bs_type == type, __FUNCTION__, "type %s", type);
     _test_case.assert(bs_value == val, __FUNCTION__, "value %s", val);
     _test_case.assert(bin_expect == bin, __FUNCTION__, "expect %s", expect);
+
+    value->release();
+    seq->release();
 }
 
 void test_testvector_chatgpt() {

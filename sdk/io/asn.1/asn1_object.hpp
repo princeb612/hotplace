@@ -54,8 +54,11 @@ class asn1_object {
 
     asn1_object& operator=(const asn1_object& other);
     asn1_object& operator=(asn1_object&& other);
-    asn1_object* clone();
+
+    virtual asn1_object* clone();
     virtual asn1_value* instantiate();
+    virtual asn1_object* addref();
+    virtual void release();
 
     void publish(binary_t* b);
     void publish(stream_t* s);
@@ -87,17 +90,12 @@ class asn1_object {
     asn1_object& unsuppress();
     bool is_suppressed();
 
-    asn1_object* addref();
-    void release();
-
    protected:
     asn1_object(asn1_entity_t entity, const std::string& name = "", asn1_object* object = nullptr, asn1_tag* tag = nullptr);
     asn1_object(const asn1_object& other);
     asn1_object(asn1_object&& other);
 
     asn1_object& set_entity(asn1_entity_t entity);
-
-    void clear();
 
     virtual void accept(asn1_visitor* v);
     virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);

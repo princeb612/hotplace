@@ -35,6 +35,11 @@ asn1_tagged_type::~asn1_tagged_type() {}
 
 asn1_tagged_type* asn1_tagged_type::clone() { return new asn1_tagged_type(*this); }
 
+asn1_tagged_type* asn1_tagged_type::addref() {
+    asn1_object::addref();
+    return this;
+}
+
 void asn1_tagged_type::represent(uint32 depth, stream_t* s, asn1_value* value) {
     get_tag()->represent(depth + 1, s, value);
 

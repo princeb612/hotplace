@@ -31,7 +31,8 @@ class asn1_tag : public asn1_object {
     asn1_tag(const asn1_tag& other);
     virtual ~asn1_tag();
 
-    asn1_tag* clone();
+    virtual asn1_tag* clone();
+    virtual asn1_tag* addref();
 
     int get_class() const;
     int get_class_number() const;

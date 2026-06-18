@@ -56,6 +56,23 @@ asn1_container::asn1_container(const asn1_container& other) : asn1_type(other) {
 
 asn1_container::~asn1_container() {}
 
+asn1_container* asn1_container::clone() { return new asn1_container(*this); }
+
+asn1_container* asn1_container::addref() {
+    for (auto item : _list) {
+        item->addref();
+    }
+    asn1_object::addref();
+    return this;
+}
+
+void asn1_container::release() {
+    for (auto item : _list) {
+        item->release();
+    }
+    asn1_object::release();
+}
+
 asn1_container& asn1_container::operator=(const asn1_container& other) {
     asn1_object::operator=(other);
     for (const auto& item : other._list) {
@@ -158,20 +175,6 @@ void asn1_container::represent(uint32 depth, binary_t* b, asn1_value* value) {
     if (false == is_suppressed()) {
         asn1_encode::t_asn1_length_octets<size_t>(*b, b->size() - pos, pos);
     }
-}
-
-void asn1_container::addref() {
-    for (auto item : _list) {
-        item->addref();
-    }
-    asn1_object::addref();
-}
-
-void asn1_container::release() {
-    for (auto item : _list) {
-        item->release();
-    }
-    asn1_object::release();
 }
 
 }  // namespace io

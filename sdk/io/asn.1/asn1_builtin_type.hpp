@@ -50,12 +50,12 @@ class asn1_builtin_type : public asn1_type {
     asn1_builtin_type(const std::string& name, asn1_entity_t entity);
     virtual ~asn1_builtin_type();
 
-    asn1_builtin_type* clone();
-
-    virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
-    virtual void represent(uint32 depth, binary_t* b, asn1_value* value = nullptr);
+    virtual asn1_builtin_type* clone();
+    virtual asn1_builtin_type* addref();
 
    protected:
+    virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
+    virtual void represent(uint32 depth, binary_t* b, asn1_value* value = nullptr);
 };
 
 }  // namespace io
