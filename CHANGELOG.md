@@ -1,6 +1,7 @@
 # history
 
 * topic
+  * [study] ITU-T X.690 ISO/IEC 8825-1 ASN.1 encoding rules: Specification of Basic Encoding Rules (BER), Canonical Encoding Rules (CER) and Distinguished Encoding Rules (DER)
   * [study] QUIC (RFC 9001, 9369)
   * [study] TLS (RFC 4346, 5246, 8446, 8448)
   * [study] HTTP/2 (RFC 7541, 7540, 9113)
@@ -34,7 +35,7 @@
     * CBOR
 
 * details
-  * Revision 1031
+  * Revision 1032
   * Revision 1024
     * encoder_stream/decode_stream intergrates http_huffman_encoding
   * Revision 1023

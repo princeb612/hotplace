@@ -44,7 +44,7 @@ class asn1_tagged_type : public asn1_type {
     asn1_tag* get_tag() const;
 
    protected:
-    virtual void represent(uint32 depth, stream_t* s);
+    virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
     virtual void represent(uint32 depth, binary_t* b, asn1_value* value = nullptr);
 };
 

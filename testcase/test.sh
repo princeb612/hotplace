@@ -12,7 +12,7 @@ valgrind --help > /dev/null 2>&1 || test_valgrind=$?
 if [ $# -eq 0 ]; then
     array=(base encode) # base
     array+=(io cbor asn.1) # io
-    array+=(authenticode crypto cose jose) # crypto
+    array+=(crypto cose jose) # crypto
     array+=(net tls quic) # net
     if [[ $OSTYPE = "cygwin" || $OSTYPE = "msys" ]]; then
         array+=(windows)

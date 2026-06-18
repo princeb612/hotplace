@@ -54,7 +54,7 @@ class asn1_referenced_type : public asn1_type {
    protected:
     asn1_referenced_type(asn1_entity_t entity, const std::string& name = "", asn1_object* object = nullptr);
 
-    virtual void represent(uint32 depth, stream_t* s);
+    virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
     virtual void represent(uint32 depth, binary_t* b, asn1_value* value = nullptr);
 };
 

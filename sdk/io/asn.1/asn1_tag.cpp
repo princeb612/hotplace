@@ -38,7 +38,7 @@ int asn1_tag::get_tag_type() const { return _tag_mode; }
 
 bool asn1_tag::is_implicit() const { return asn1_implicit == get_tag_type(); }
 
-void asn1_tag::represent(uint32 depth, stream_t* s) {
+void asn1_tag::represent(uint32 depth, stream_t* s, asn1_value* value) {
     if (s) {
         if (get_class() & asn1_class_mask) {
             s->printf("[");
@@ -58,7 +58,6 @@ void asn1_tag::represent(uint32 depth, stream_t* s) {
 }
 
 void asn1_tag::represent(uint32 depth, binary_t* b, asn1_value* value) {
-    auto has_explicit = false;
     auto parent = get_parent();
     if (parent && (asn1_entity_tagged_type == parent->get_entity())) {
         asn1_object* node = parent;
@@ -66,22 +65,31 @@ void asn1_tag::represent(uint32 depth, binary_t* b, asn1_value* value) {
             auto tag = node->get_tag();
             if (tag) {
                 if (false == tag->is_implicit()) {
-                    has_explicit = true;
+                    as_constructed();
                     break;
                 }
             }
             node = node->_object;
         }
+        if (is_primitive()) {
+            node = parent;
+            while (node) {
+                if (node->is_constructed()) {
+                    as_constructed();
+                    break;
+                }
+                node = node->_object;
+            }
+        }
     }
 
     uint8 ident = get_class() | get_ident();
-    if (has_explicit) ident |= asn1_tag_constructed;
     if (b && (false == is_suppressed())) {
         asn1_encode::asn1_ident_octets(*b, ident, get_class_number());
     }
 
 #if defined DEBUG
-    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_debug)) {
+    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
         trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
             dbs.fill(depth << 1, ' ');
             dbs.println("ASN.1 tag");

@@ -21,19 +21,17 @@ namespace io {
 
 asn1_builtin_type::asn1_builtin_type(asn1_entity_t entity) : asn1_type(asn1_entity_builtin_type, "", new asn1_type(entity)) {}
 
-asn1_builtin_type::asn1_builtin_type(const std::string& name, asn1_entity_t entity) : asn1_type(asn1_entity_builtin_type, name, new asn1_type(entity)) {}
-
-asn1_builtin_type::asn1_builtin_type(const std::string& name, asn1_type* object) : asn1_type(asn1_entity_builtin_type, name, object) {}
+asn1_builtin_type::asn1_builtin_type(const std::string& name, asn1_entity_t entity) : asn1_type(asn1_entity_builtin_type, "", new asn1_object(entity, name)) {}
 
 asn1_builtin_type::~asn1_builtin_type() {}
 
 asn1_builtin_type* asn1_builtin_type::clone() { return new asn1_builtin_type(*this); }
 
-void asn1_builtin_type::represent(uint32 depth, stream_t* s) { get_object()->represent(depth + 1, s); }
+void asn1_builtin_type::represent(uint32 depth, stream_t* s, asn1_value* value) { get_object()->represent(depth + 1, s, value); }
 
 void asn1_builtin_type::represent(uint32 depth, binary_t* b, asn1_value* value) {
 #if defined DEBUG
-    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_debug)) {
+    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
         trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
             dbs.fill(depth << 1, ' ');
             dbs.println("ASN.1 builtin type");

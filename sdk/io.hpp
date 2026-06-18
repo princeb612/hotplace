@@ -65,7 +65,6 @@
 #include <hotplace/sdk/io/asn.1/asn1_builtin_type.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_container.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_named_type.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_referenced_type.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_resource.hpp>

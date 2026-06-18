@@ -1,12 +1,11 @@
-
-## Notes
+### Notes
 
 - [Release](#release)
 - [Plan](#plan)
 - [Memo](#memo)
 - [TODO](#todo)
 
-### Plan
+#### Plan
 
 - in progress
   - ASN.1
@@ -129,16 +128,38 @@ flowchart LR
   DC6 -.-> DD;
 ```
 
-## Memo
+### TODO
 
-### MSYS2
+- [ ] ASN.1
+  - in progress
+    - [ ] ASN.1 runtime
+    - [ ] ASN.1 AST (Abstract Syntax Tree)
+  - TODO
+    - [ ] ASN.1 compiler
+    - [ ] ASN.1 repository, builder
+- [ ] HTTP/3
+  - [x] [The Illustrated QUIC Connection](https://quic.xargs.org/)
+  - [x] http3.pcapng
+    - [x] pcap
+  - [ ] integration - network_server
+
+sub-tasks
+
+- [ ] COSE partial iv
+- [ ] shutdown DTLS peer connection
+- [ ] br(Brotli), zstd(Zstandard) HTTP encoding
+- [ ] HTTP/2 Authentication Scheme
+
+### Memo
+
+#### MSYS2
 
 - debug build not work (gcc >= 15.0)
   - [__glibcxx_requires_subscript assertion](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111250)
   - debugging in the gdb
     - b abort
 
-### openssl
+#### openssl
 
 - execution failure cause of DLL binding error
 ; after updating MINGW (pacman -Suy), test application do not work
@@ -159,28 +180,6 @@ flowchart LR
 | KDF     | OSSL_set_max_threads       | openssl 3.2~    |
 | MLKEM   |                            | openssl 3.5~    |
 
-### MSVC
+#### MSVC
 - windbg symbol path
   - srv*C:\home\symbols*https://msdl.microsoft.com/download/symbols
-
-## TODO
-
-- [ ] ASN.1
-  - in progress
-    - [ ] ASN.1 runtime
-    - [ ] ASN.1 AST (Abstract Syntax Tree)
-  - TODO
-    - [ ] ASN.1 compiler
-    - [ ] ASN.1 repository
-- [ ] HTTP/3
-  - [x] [The Illustrated QUIC Connection](https://quic.xargs.org/)
-  - [x] http3.pcapng
-    - [x] pcap
-  - [ ] integration - network_server
-
-sub-tasks
-
-- [ ] COSE partial iv
-- [ ] shutdown DTLS peer connection
-- [ ] br(Brotli), zstd(Zstandard) HTTP encoding
-- [ ] HTTP/2 Authentication Scheme

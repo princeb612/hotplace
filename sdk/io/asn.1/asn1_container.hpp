@@ -34,13 +34,17 @@ class asn1_container : public asn1_type {
 
    protected:
     asn1_container(asn1_entity_t entity, const std::string& name, asn1_object* object);
+    asn1_container(asn1_entity_t entity, const std::string& name, const std::initializer_list<asn1_entity_t>& items);
+    asn1_container(asn1_entity_t entity, const std::string& name, const std::initializer_list<std::pair<std::string, asn1_entity_t>>& items);
+    asn1_container(asn1_entity_t entity, const std::string& name, const std::initializer_list<asn1_object*>& items);
     asn1_container(const asn1_container& other);
 
-    virtual void represent(uint32 depth, stream_t* s);
+    virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
     virtual void represent(uint32 depth, binary_t* b, asn1_value* value = nullptr);
 
    private:
     std::list<asn1_object*> _list;
+    std::map<size_t, asn1_object*> _map;
 };
 
 }  // namespace io

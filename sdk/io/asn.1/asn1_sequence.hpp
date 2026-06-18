@@ -23,17 +23,22 @@ namespace io {
  * @example
  *          // snippet 1
  *          auto seq = new asn1_sequence;
- *          *seq << new asn1_object("name", asn1_entity_ia5string) << new asn1_object("ok", asn1_entity_boolean);
+ *          *seq << new asn1_builtin_type("name", asn1_entity_ia5string) << new asn1_builtin_type("ok", asn1_entity_boolean);
  *
  *          // snippet 2
- *          auto seq = new asn1_sequence(2, new asn1_object("name", asn1_entity_ia5string), new asn1_object("ok", asn1_entity_boolean));
+ *          auto seq = new asn1_sequence(2, new asn1_builtin_type("name", asn1_entity_ia5string), new asn1_builtin_type("ok", asn1_entity_boolean));
  */
 class asn1_sequence : public asn1_container {
    public:
     asn1_sequence();
     asn1_sequence(const std::string& name);
     asn1_sequence(const asn1_sequence& other);
-    asn1_sequence(int count, ...);
+    asn1_sequence(const std::initializer_list<asn1_entity_t>& items);
+    asn1_sequence(const std::initializer_list<std::pair<std::string, asn1_entity_t>>& items);
+    asn1_sequence(const std::initializer_list<asn1_object*>& items);
+    asn1_sequence(const std::string& name, const std::initializer_list<asn1_entity_t>& items);
+    asn1_sequence(const std::string& name, const std::initializer_list<std::pair<std::string, asn1_entity_t>>& items);
+    asn1_sequence(const std::string& name, const std::initializer_list<asn1_object*>& items);
     virtual ~asn1_sequence();
 
     asn1_sequence* clone();

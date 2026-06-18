@@ -35,13 +35,13 @@ asn1_tagged_type::~asn1_tagged_type() {}
 
 asn1_tagged_type* asn1_tagged_type::clone() { return new asn1_tagged_type(*this); }
 
-void asn1_tagged_type::represent(uint32 depth, stream_t* s) {
-    get_tag()->represent(depth + 1, s);
+void asn1_tagged_type::represent(uint32 depth, stream_t* s, asn1_value* value) {
+    get_tag()->represent(depth + 1, s, value);
 
     auto obj = get_object();
     if (obj) {
         s->printf(" ");
-        obj->represent(depth + 1, s);
+        obj->represent(depth + 1, s, value);
     }
 }
 
@@ -53,12 +53,11 @@ void asn1_tagged_type::represent(uint32 depth, binary_t* b, asn1_value* value) {
     if (is_implicit) {
         obj->suppress();
     } else {
-        tag->as_constructed();
         obj->unsuppress();
     }
 
 #if defined DEBUG
-    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_debug)) {
+    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
         trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
             dbs.fill(depth << 1, ' ');
             dbs.println("ASN.1 tagged type");

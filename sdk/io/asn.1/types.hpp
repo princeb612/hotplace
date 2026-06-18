@@ -165,7 +165,6 @@ enum asn1_perm_t : uint8 {
 class asn1_object;
 class asn1_type;
 class asn1_builtin_type;
-class asn1_named_type;
 class asn1_referenced_type;
 
 class asn1_container;

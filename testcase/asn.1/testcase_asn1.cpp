@@ -229,15 +229,6 @@ void test_x690_8_1_5_end_of_contents() {
     }
 }
 
-void test_asn1_value() {
-    auto schema = new asn1_builtin_type(asn1_entity_integer);
-    auto value = schema->instantiate();
-    // value->set(0);
-    // binary_t bin;
-    // value->publish(bin);
-    value->release();
-}
-
 void test_x690_encoding_value() {
     _test_case.begin("ITU-T X.690 8.2, 8.3, 8.5, 8.8");
     struct testvector {
@@ -404,28 +395,56 @@ void test_x690_encoding_value() {
 
     _test_case.reset_time();
 
-    binary_t bin;
     asn1_encode enc;
 
     for (auto entry : _table) {
-        enc.encode(bin, entry.entity, entry.var);
+        binary_t bin_expect = base16_decode_rfc(entry.expect);
 
+        // encoding routine
         {
+            binary_t bin;
+            enc.encode(bin, entry.entity, entry.var);
+
             test_case_notimecheck notimecheck(_test_case);
 
             _logger->writeln("%s", base16_encode(bin).c_str());
 
-            binary_t bin_expect = base16_decode_rfc(entry.expect);
             return_t ret = errorcode_t::success;
             if (bin_expect.empty()) {
                 ret = errorcode_t::not_supported;
             } else if (bin != bin_expect) {
                 ret = errorcode_t::mismatch;
             }
+
             basic_stream bs;
             vtprintf(&bs, entry.var);
             _test_case.test(ret, __FUNCTION__, "%s [%s] expect [%s]", entry.text, bs.c_str(), entry.expect);
             bin.clear();
+        }
+
+        // asn1_builtin_type
+        auto builtin = new asn1_builtin_type(entry.entity);
+        {
+            auto value = builtin->instantiate();
+            binary_t bin;
+            basic_stream bs;
+
+            value->set(entry.var);
+
+            builtin->publish(&bs);
+            value->publish(&bin);
+
+            _logger->write([&](basic_stream& dbs) -> void {
+                valist va;
+                va << bs << bin;
+                dbs.vaprintln("notation {1}", va);
+                dbs.vaprintln("DER      {2:x}", va);
+            });
+
+            _test_case.assert(bin_expect == bin, __FUNCTION__, "%s [%s] expect [%s]", entry.text, bs.c_str(), entry.expect);
+
+            value->release();
+            builtin->release();
         }
     }
 }
@@ -484,7 +503,7 @@ void test_x690_encoding_typevalue() {
         // commencing with the leading bit and proceeding to the trailing bit
         // if(size(input) % 2) { pad = '0'; padbit = 4; }
         // encode(asn1_tag_bitstring).encode(padbit).encode(input).encode(pad)
-        {new asn1_builtin_type(asn1_entity_bitstring), variant("0a3b5f291cd"), "03 07 04 0A 3B 5F 29 1C D0", "X.690 8.6 0a3b5f291cd"},
+        {new asn1_builtin_type(asn1_entity_bitstring), variant("0a3b5f291cd"), "03 07 04 0A 3B 5F 29 1C D0", "X.690 8.6.4.2 0a3b5f291cd"},
 
         // X.690 8.7
         {new asn1_builtin_type(asn1_entity_octstring), variant("0123456789abcdef"), "04 08 01 23 45 67 89 ab cd ef", "X.690 8.7.4 0123456789abcdef"},
@@ -591,45 +610,136 @@ void test_x690_8_9_sequence() {
     asn1 notation;
     asn1_encode enc;
 
-    // SEQUENCE {name IA5String , ok BOOLEAN }
+    constexpr char type[] = R"(SEQUENCE {name IA5String, ok BOOLEAN})";
+    constexpr char val[] = R"(SEQUENCE {name "Smith", ok TRUE})";
+    constexpr char expect[] = "30 0A 16 05 53 6D 69 74 68 01 01 FF";
+    binary_t bin_expect = base16_decode_rfc(expect);
+
+    auto seq = new asn1_sequence;
+    *seq << new asn1_builtin_type("name", asn1_entity_ia5string) << new asn1_builtin_type("ok", asn1_entity_boolean);
+    notation << seq;
+    auto value = seq->instantiate();
+    (*value).set("name", "Smith").set("ok", true);
+
+    binary_t bin;
+    basic_stream bs_type;
+    basic_stream bs_value;
+
+    seq->publish(&bs_type);
+    value->publish(&bs_value);
+    value->publish(&bin);
+    _logger->write([&](basic_stream& dbs) -> void {
+        valist va;
+        va << bs_type << bs_value << bin;
+        dbs.vaprintln("type  {1}", va);
+        dbs.vaprintln("value {2}", va);
+        dbs.vaprintln("DER   {3:x}", va);
+    });
+
+    _test_case.assert(bs_type == type, __FUNCTION__, "type %s", type);
+    _test_case.assert(bs_value == val, __FUNCTION__, "value %s", val);
+    _test_case.assert(bin_expect == bin, __FUNCTION__, "expect %s", expect);
+}
+
+void test_testvector_chatgpt() {
+    _test_case.begin("testvector GPT");
+
+    // Test 1 Length aggregation
+    // Test 2. IMPLICIT Replace
+    // Test 3. EXPLICIT Wrap
+    // Test 4. IMPLICIT + EXPLICIT Chain
+    // Test 5. Primitive / Constructed Bit propagation
+    // Test 6. Constructed Type propagation
+    // Test 7. Nested Length
+    // Test 8. DER SET Ordering
     {
-        // constexpr char type[] = R"(SEQUENCE {name IA5String, ok BOOLEAN})";
-        // constexpr char value[] = R"({name "Smith", ok TRUE})";
-        // constexpr char expect[] = "300a1605536d6974680101ff";
+        auto case1_type1 = new asn1_sequence({new asn1_builtin_type("name", asn1_entity_visiblestring), new asn1_builtin_type("ok", asn1_entity_boolean)});
+        auto case1_type2 = new asn1_sequence({{"name", asn1_entity_visiblestring}, {"ok", asn1_entity_boolean}});
 
-        auto seq = new asn1_sequence;
-        *seq << new asn1_named_type("name", asn1_entity_ia5string) << new asn1_named_type("ok", asn1_entity_boolean);
-        notation << seq;
-        _logger->write([&](basic_stream& bs) -> void { notation.publish(&bs); });
+        auto case2_type1 = asn1_referenced_type::define("Type1", asn1_entity_visiblestring);
+        auto case2_type2 = asn1_referenced_type::define("Type2", new asn1_tagged_type(asn1_class_application, 3, asn1_implicit, case2_type1->clone()));
+
+        auto case3_type1 = asn1_referenced_type::define("Type1", asn1_entity_visiblestring);
+        auto case3_type2 = asn1_referenced_type::define("Type2", new asn1_tagged_type(asn1_class_context, 2, asn1_explicit, case3_type1->clone()));
+
+        auto case4_type1 = asn1_referenced_type::define("Type1", asn1_entity_visiblestring);
+        auto case4_type2 = asn1_referenced_type::define("Type2", new asn1_tagged_type(asn1_class_application, 3, asn1_implicit, case4_type1->clone()));
+        auto case4_type3 = asn1_referenced_type::define("Type3", new asn1_tagged_type(asn1_class_context, 2, asn1_explicit, case4_type2->clone()));
+        auto case4_type4 = asn1_referenced_type::define("Type4", new asn1_tagged_type(asn1_class_application, 7, asn1_implicit, case4_type3->clone()));
+        auto case4_type5 = asn1_referenced_type::define("Type5", new asn1_tagged_type(asn1_class_context, 2, asn1_implicit, case4_type2->clone()));
+
+        auto case5_type1 = asn1_referenced_type::define("Type1", asn1_entity_real);
+        auto case5_type2 = asn1_referenced_type::define("Type2", new asn1_tagged_type(asn1_class_application, 3, asn1_implicit, case5_type1->clone()));
+
+        auto case6_type1 = asn1_referenced_type::define("Type1", new asn1_sequence({new asn1_builtin_type("name", asn1_entity_visiblestring)}));
+        auto case6_type2 = asn1_referenced_type::define("Type2", new asn1_tagged_type(asn1_class_application, 3, asn1_implicit, case6_type1->clone()));
+        auto case6_type3 = asn1_referenced_type::define("Type1", new asn1_sequence({{"name", asn1_entity_visiblestring}}));
+        auto case6_type4 = asn1_referenced_type::define("Type2", new asn1_tagged_type(asn1_class_application, 3, asn1_implicit, case6_type3->clone()));
+
+        auto case7_outer =
+            asn1_referenced_type::define("Outer", new asn1_sequence({new asn1_sequence("Inner", {new asn1_builtin_type("name", asn1_entity_visiblestring)})}));
+
+        auto case8_type1 = new asn1_set({new asn1_builtin_type("a", asn1_entity_integer), new asn1_builtin_type("b", asn1_entity_boolean)});
+        auto case8_type2 = new asn1_set({{"a", asn1_entity_integer}, {"b", asn1_entity_boolean}});
+
+        struct testvector {
+            asn1_object* obj;
+            const char* name;
+            variant vt;
+            const char* notation;
+            const char* der;
+        } table[] = {
+            {case1_type1, "Test 1 Length aggregation", 0, "SEQUENCE {name VisibleString, ok BOOLEAN}", "30 0A 1A 05 4A 6F 6E 65 73 01 01 FF"},
+            {case1_type2, "Test 1 Length aggregation", 0, "SEQUENCE {name VisibleString, ok BOOLEAN}", "30 0A 1A 05 4A 6F 6E 65 73 01 01 FF"},
+
+            {case2_type1, "Test 2. IMPLICIT Replace", "Jones", "Type1 ::= VisibleString", "1A 05 4A 6F 6E 65 73"},
+            {case2_type2, "Test 2. IMPLICIT Replace", "Jones", "Type2 ::= [APPLICATION 3] IMPLICIT Type1", "43 05 4A 6F 6E 65 73"},
+
+            {case3_type1, "Test 3. EXPLICIT Wrap", "Jones", "Type1 ::= VisibleString", "1A 05 4A 6F 6E 65 73"},
+            {case3_type2, "Test 3. EXPLICIT Wrap", "Jones", "Type2 ::= [2] EXPLICIT Type1", "A2 07 1A 05 4A 6F 6E 65 73"},
+
+            {case4_type1, "Test 4. IMPLICIT + EXPLICIT Chain", "Jones", "Type1 ::= VisibleString", "1A 05 4A 6F 6E 65 73"},
+            {case4_type2, "Test 4. IMPLICIT + EXPLICIT Chain", "Jones", "Type2 ::= [APPLICATION 3] IMPLICIT Type1", "43 05 4A 6F 6E 65 73"},
+            {case4_type3, "Test 4. IMPLICIT + EXPLICIT Chain", "Jones", "Type3 ::= [2] EXPLICIT Type2", "A2 07 43 05 4A 6F 6E 65 73"},
+            {case4_type4, "Test 4. IMPLICIT + EXPLICIT Chain", "Jones", "Type4 ::= [APPLICATION 7] IMPLICIT Type3", "67 07 43 05 4A 6F 6E 65 73"},
+            {case4_type5, "Test 4. IMPLICIT + EXPLICIT Chain", "Jones", "Type5 ::= [2] IMPLICIT Type2", "82 05 4A 6F 6E 65 73"},
+
+            {case5_type1, "Test 5. Primitive / Constructed Bit propagation", 1.0, "Type1 ::= REAL", "09 03 80 00 01"},
+            {case5_type2, "Test 5. Primitive / Constructed Bit propagation", 1.0, "Type2 ::= [APPLICATION 3] IMPLICIT Type1", "43 03 80 00 01"},
+
+            {case6_type1, "Test 6. Constructed Type propagation", 0, "Type1 ::= SEQUENCE {name VisibleString}", "30 07 1A 05 4A 6F 6E 65 73"},
+            {case6_type2, "Test 6. Constructed Type propagation", 0, "Type2 ::= [APPLICATION 3] IMPLICIT Type1", "63 07 1A 05 4A 6F 6E 65 73"},
+            {case6_type3, "Test 6. Constructed Type propagation", 0, "Type1 ::= SEQUENCE {name VisibleString}", "30 07 1A 05 4A 6F 6E 65 73"},
+            {case6_type4, "Test 6. Constructed Type propagation", 0, "Type2 ::= [APPLICATION 3] IMPLICIT Type1", "63 07 1A 05 4A 6F 6E 65 73"},
+
+            {case7_outer, "Test 7. Nested Length", 0, "Outer ::= SEQUENCE {Inner SEQUENCE {name VisibleString}}", "30 09 30 07 1A 05 4A 6F 6E 65 73"},
+
+            {case8_type1, "Test 8. DER SET Ordering", 0, "SET {a INTEGER, b BOOLEAN}", "31 06 01 01 FF 02 01 05"},
+            {case8_type2, "Test 8. DER SET Ordering", 0, "SET {a INTEGER, b BOOLEAN}", "31 06 01 01 FF 02 01 05"},
+        };
+        for (const auto& item : table) {
+            basic_stream bs;
+            binary_t bin;
+            auto value = item.obj->instantiate();
+            (*value).set(item.vt).set("name", "Jones").set("ok", true).set("a", 5).set("b", true);
+
+            item.obj->publish(&bs);
+            value->publish(&bin);
+
+            _logger->write([&](basic_stream& dbs) -> void {
+                valist va;
+                va << bs << bin;
+                dbs.vaprintln("type {1}", va);
+                dbs.vaprintln("DER  {2:x}", va);
+            });
+
+            _test_case.assert(bs == item.notation, __FUNCTION__, "%s : %s", item.name, item.notation);
+            _test_case.assert(bin == base16_decode_rfc(item.der), __FUNCTION__, "%s : %s", item.name, item.der);
+
+            value->release();
+            item.obj->release();
+        }
     }
-
-    // 00000000 : 30 0A 16 05 53 6D 69 74 68 01 01 FF -- -- -- -- | 0...Smith...
-    {
-        binary_t bin;
-        bin.insert(bin.end(), asn1_class_universal | asn1_tag_constructed | asn1_tag_sequence);
-        size_t pos = bin.size();
-        enc.encode(bin, asn1_entity_ia5string, variant("Smith"));
-        enc.encode(bin, asn1_entity_boolean, variant(true));
-        uint8 size = t_narrow_cast(bin.size() - pos);  // 0xa
-        bin.insert(bin.begin() + pos, size);
-
-        _logger->writeln("%s", base16_encode(bin).c_str());
-        _test_case.assert(bin == base16_decode_rfc("30 0A 16 05 53 6D 69 74 68 01 01 FF"), __FUNCTION__, "X.690 8.9 Sequence");
-    }
-
-#if 0
-    {
-        binary_t bin;
-        auto n = notation.clone();
-        n->set_value_byname("name", "Smith").set_value_byname("ok", true);
-        n->publish(&bin);
-        _logger->writeln("%s", base16_encode(bin).c_str());
-        _logger->write([&](basic_stream& bs) -> void {
-            n->publish(&bs);
-        });
-        n->release();
-    }
-#endif
 }
 
 void test_x690_time() {
@@ -664,7 +774,7 @@ void test_asn1_object() {
         {"OBJECT IDENTIFIER", new asn1_builtin_type(asn1_entity_objid)},
         {"REAL", new asn1_builtin_type(asn1_entity_real)},
         {"SEQUENCE {name IA5String, ok BOOLEAN}",
-         new asn1_sequence(2, new asn1_named_type("name", asn1_entity_ia5string), new asn1_named_type("ok", asn1_entity_boolean))},
+         new asn1_sequence({new asn1_builtin_type("name", asn1_entity_ia5string), new asn1_builtin_type("ok", asn1_entity_boolean)})},
         {"Date ::= VisibleString", asn1_referenced_type::define("Date", asn1_entity_visiblestring)},
         {"Date ::= [APPLICATION 3] IMPLICIT VisibleString",
          asn1_referenced_type::define("Date", new asn1_tagged_type(asn1_class_application, 3, asn1_implicit, asn1_entity_visiblestring))},
@@ -845,11 +955,11 @@ void testcase_asn1() {
     test_x690_8_1_2_identifier_octects();
     test_x690_8_1_3_length_octets();
     test_x690_8_1_5_end_of_contents();
-    test_asn1_value();
     test_x690_encoding_value();
     test_x690_encoding_typevalue();
     test_x690_constructed();
     test_x690_8_9_sequence();
+    test_testvector_chatgpt();
     test_x690_time();
     test_asn1_object();
 

@@ -22,16 +22,17 @@ namespace io {
  * @brief   SetType
  * @sample
  *      ChildInformation ::= SET {name Name, dateOfBirth [0] Date}
- *
- *      asn1_set* node_childinfo = new asn1_set("ChildInformation");
- *      *node_childinfo << new asn1_named_type("name", new asn1_assignment("Name"))
- *                      << new asn1_named_type("dateOfBirth", new asn1_assignment("Date", new asn1_tag(0)));
- *      node_childinfo->release();
  */
 class asn1_set : public asn1_container {
    public:
     asn1_set();
     asn1_set(const std::string& name);
+    asn1_set(const std::initializer_list<asn1_entity_t>& items);
+    asn1_set(const std::initializer_list<std::pair<std::string, asn1_entity_t>>& items);
+    asn1_set(const std::initializer_list<asn1_object*>& items);
+    asn1_set(const std::string& name, const std::initializer_list<asn1_entity_t>& items);
+    asn1_set(const std::string& name, const std::initializer_list<std::pair<std::string, asn1_entity_t>>& items);
+    asn1_set(const std::string& name, const std::initializer_list<asn1_object*>& items);
     asn1_set(const asn1_set& other);
     virtual ~asn1_set();
 

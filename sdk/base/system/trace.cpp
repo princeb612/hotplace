@@ -79,7 +79,7 @@ bool istraceable(trace_category_t category, loglevel_t level) { return (istracea
 
 static loglevel_t _trace_level = loglevel_t::default_loglevel;
 
-bool check_trace_level(loglevel_t level) { return level >= _trace_level; }
+bool check_trace_level(loglevel_t level) { return level <= _trace_level; }
 
 void set_trace_level(loglevel_t level) { _trace_level = level; }
 

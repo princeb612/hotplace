@@ -52,8 +52,17 @@ void asn1_value::publish(binary_t* b) {
 }
 
 void asn1_value::publish(stream_t* s) {
-    asn1_notation_visitor notation(s);
+    asn1_notation_visitor notation(s, this);
     notation.visit(get_schema());
+}
+
+void asn1_value::write(stream_t* s, const std::string& name) {
+    if (nullptr == s) return;
+    auto iter = _values.find(name);
+    if (_values.end() != iter) {
+        const variant& v = iter->second;
+        vtprintf(s, v, vtprintf_style_t::vtprintf_style_asn1);
+    }
 }
 
 void asn1_value::encode_value(binary_t& bin, asn1_object* object, const std::string& name, bool& do_len) {

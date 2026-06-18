@@ -18,9 +18,7 @@
 namespace hotplace {
 namespace io {
 
-asn1_der_visitor::asn1_der_visitor(binary_t* b) : _b(b), _value(nullptr) {}
-
-asn1_der_visitor::asn1_der_visitor(binary_t* b, asn1_value* value) : _b(b), _value(value) {
+asn1_der_visitor::asn1_der_visitor(binary_t* b, asn1_value* value) : asn1_visitor(), _b(b), _value(value) {
     if (_value) _value->addref();
 }
 
@@ -32,9 +30,15 @@ void asn1_der_visitor::visit(asn1_object* object) { object->represent(0, get_bin
 
 binary_t* asn1_der_visitor::get_binary() { return _b; }
 
-asn1_notation_visitor::asn1_notation_visitor(stream_t* s) : _s(s) {}
+asn1_notation_visitor::asn1_notation_visitor(stream_t* s, asn1_value* value) : asn1_visitor(), _s(s), _value(value) {
+    if (_value) _value->addref();
+}
 
-void asn1_notation_visitor::visit(asn1_object* object) { object->represent(0, get_stream()); }
+asn1_notation_visitor::~asn1_notation_visitor() {
+    if (_value) _value->release();
+}
+
+void asn1_notation_visitor::visit(asn1_object* object) { object->represent(0, get_stream(), _value); }
 
 stream_t* asn1_notation_visitor::get_stream() { return _s; }
 

@@ -24,8 +24,6 @@ namespace io {
  * @remarks
  *          // sketch
  *          asn1_object
- *            asn1_named_type
- *            asn1_tag
  *            asn1_type
  *              asn1_builtin_type
  *              asn1_referenced_type
@@ -42,7 +40,6 @@ namespace io {
  */
 class asn1_object {
     friend class asn1;
-    friend class asn1_named_type;
     friend class asn1_tag;
     friend class asn1_type;
     friend class asn1_builtin_type;
@@ -93,9 +90,6 @@ class asn1_object {
     asn1_object* addref();
     void release();
 
-    static asn1_referenced_type* define(const std::string& name, asn1_entity_t entity, asn1_tag* tag = nullptr);
-    static asn1_referenced_type* define(const std::string& name, asn1_object* object, asn1_tag* tag = nullptr);
-
    protected:
     asn1_object(asn1_entity_t entity, const std::string& name = "", asn1_object* object = nullptr, asn1_tag* tag = nullptr);
     asn1_object(const asn1_object& other);
@@ -106,7 +100,7 @@ class asn1_object {
     void clear();
 
     virtual void accept(asn1_visitor* v);
-    virtual void represent(uint32 depth, stream_t* s);
+    virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
     virtual void represent(uint32 depth, binary_t* b, asn1_value* value = nullptr);
 
    private:

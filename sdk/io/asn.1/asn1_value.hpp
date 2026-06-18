@@ -62,6 +62,7 @@ class asn1_value {
 
     void publish(stream_t* b);
     void publish(binary_t* b);
+    void write(stream_t* s, const std::string& name);
     void encode_value(binary_t& bin, asn1_object* object, const std::string& name, bool& do_len);
 
     void addref();

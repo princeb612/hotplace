@@ -23,14 +23,16 @@ class asn1_tag;
 
 class asn1_visitor {
    public:
-    virtual void visit(asn1_object* object) = 0;
+    asn1_visitor() {}
+    virtual ~asn1_visitor() {}
+
+    virtual void visit(asn1_object* object) {}
 };
 
 class asn1_der_visitor : public asn1_visitor {
    public:
-    asn1_der_visitor(binary_t* b);
-    asn1_der_visitor(binary_t* b, asn1_value* value);
-    ~asn1_der_visitor();
+    asn1_der_visitor(binary_t* b, asn1_value* value = nullptr);
+    virtual ~asn1_der_visitor();
 
     virtual void visit(asn1_object* object);
 
@@ -44,7 +46,9 @@ class asn1_der_visitor : public asn1_visitor {
 
 class asn1_notation_visitor : public asn1_visitor {
    public:
-    asn1_notation_visitor(stream_t* s);
+    asn1_notation_visitor(stream_t* s, asn1_value* value = nullptr);
+    virtual ~asn1_notation_visitor();
+
     virtual void visit(asn1_object* object);
 
    protected:
@@ -52,6 +56,7 @@ class asn1_notation_visitor : public asn1_visitor {
 
    private:
     stream_t* _s;
+    asn1_value* _value;
 };
 
 }  // namespace io

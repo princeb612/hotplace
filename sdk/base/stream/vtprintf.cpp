@@ -25,19 +25,38 @@ void vprintf_floating_point(T1 t1, T2 t2, stream_t* stream, vtprintf_style_t sty
     ieee754_typeof_t t = ieee754_typeof(t1);
     switch (t) {
         case ieee754_typeof_t::ieee754_nan:
-            if (vtprintf_style_t::vtprintf_style_cbor == style) {
-                stream->printf("NaN");
-            } else {
-                stream->printf("nan");
+            switch (style) {
+                case vtprintf_style_t::vtprintf_style_asn1:
+                    stream->printf("NOT-A-NUMBER");
+                    break;
+                case vtprintf_style_t::vtprintf_style_cbor:
+                    stream->printf("NaN");
+                    break;
+                default:
+                    stream->printf("nan");
+                    break;
+            }
+        case ieee754_typeof_t::ieee754_ninf:
+            switch (style) {
+                case vtprintf_style_t::vtprintf_style_asn1:
+                    stream->printf("MINUS-INFINITY");
+                    break;
+                default:
+                    stream->printf("-");
+                    break;
             }
             break;
-        case ieee754_typeof_t::ieee754_ninf:
-            stream->printf("-");
         case ieee754_typeof_t::ieee754_pinf:
-            if (vtprintf_style_t::vtprintf_style_cbor == style) {
-                stream->printf("Infinity");
-            } else {
-                stream->printf("inf");
+            switch (style) {
+                case vtprintf_style_t::vtprintf_style_asn1:
+                    stream->printf("PLUS-INFINITY");
+                    break;
+                case vtprintf_style_t::vtprintf_style_cbor:
+                    stream->printf("Infinity");
+                    break;
+                default:
+                    stream->printf("inf");
+                    break;
             }
             break;
         default:
@@ -55,16 +74,33 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
             __leave2;
         }
 
-        constexpr char constexpr_false[] = "false";
-        constexpr char constexpr_null[] = "null";
-        constexpr char constexpr_true[] = "true";
+        constexpr char constexpr_lfalse[] = "false";
+        constexpr char constexpr_ufalse[] = "FALSE";
+        constexpr char constexpr_lnull[] = "null";
+        constexpr char constexpr_unull[] = "NULL";
+        constexpr char constexpr_ltrue[] = "true";
+        constexpr char constexpr_utrue[] = "TRUE";
 
         switch (vt.type) {
             case vartype_t::TYPE_NULL:
-                stream->printf(constexpr_null);
+                switch (style) {
+                    case vtprintf_style_t::vtprintf_style_asn1:
+                        stream->printf(constexpr_unull);
+                        break;
+                    default:
+                        stream->printf(constexpr_lnull);
+                        break;
+                }
                 break;
             case vartype_t::TYPE_BOOL:
-                stream->printf("%s", vt.data.b ? constexpr_true : constexpr_false);
+                switch (style) {
+                    case vtprintf_style_t::vtprintf_style_asn1:
+                        stream->printf("%s", vt.data.b ? constexpr_utrue : constexpr_ufalse);
+                        break;
+                    default:
+                        stream->printf("%s", vt.data.b ? constexpr_ltrue : constexpr_lfalse);
+                        break;
+                }
                 break;
             case vartype_t::TYPE_INT8:
                 switch (style) {
@@ -226,8 +262,9 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 break;
             case vartype_t::TYPE_STRING:
                 switch (style) {
+                    case vtprintf_style_t::vtprintf_style_asn1:
                     case vtprintf_style_t::vtprintf_style_cbor:
-                        stream->printf("\"%s\"", vt.data.str ? vt.data.str : "");
+                        stream->printf(R"("%s")", vt.data.str ? vt.data.str : "");
                         break;
                     case vtprintf_style_t::vtprintf_style_base16:
                         stream->printf("%s", base16_encode(vt.data.str).c_str());
@@ -240,8 +277,9 @@ return_t vtprintf(stream_t* stream, const variant_t& vt, vtprintf_style_t style)
                 break;
             case vartype_t::TYPE_NSTRING:
                 switch (style) {
+                    case vtprintf_style_t::vtprintf_style_asn1:
                     case vtprintf_style_t::vtprintf_style_cbor:
-                        stream->printf("\"%.*s\"", vt.size, vt.data.str);
+                        stream->printf(R"("%.*s")", vt.size, vt.data.str);
                         break;
                     case vtprintf_style_t::vtprintf_style_base16:
                         stream->printf("%s", base16_encode((byte_t*)vt.data.str, vt.size).c_str());

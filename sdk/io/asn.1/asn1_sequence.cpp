@@ -22,18 +22,20 @@ asn1_sequence::asn1_sequence() : asn1_container(asn1_entity_sequence, "", nullpt
 
 asn1_sequence::asn1_sequence(const std::string& name) : asn1_container(asn1_entity_sequence, name, nullptr) {}
 
-asn1_sequence::asn1_sequence(const asn1_sequence& other) : asn1_container(other) {}
+asn1_sequence::asn1_sequence(const std::initializer_list<asn1_entity_t>& items) : asn1_container(asn1_entity_sequence, "", items) {}
 
-asn1_sequence::asn1_sequence(int count, ...) : asn1_container(asn1_entity_sequence, "", nullptr) {
-    set_entity(asn1_entity_sequence);
-    va_list ap;
-    va_start(ap, count);
-    for (int i = 0; i < count; i++) {
-        asn1_object* item = va_arg(ap, asn1_object*);
-        (*this) << item;
-    }
-    va_end(ap);
-}
+asn1_sequence::asn1_sequence(const std::initializer_list<std::pair<std::string, asn1_entity_t>>& items) : asn1_container(asn1_entity_sequence, "", items) {}
+
+asn1_sequence::asn1_sequence(const std::initializer_list<asn1_object*>& items) : asn1_container(asn1_entity_sequence, "", items) {}
+
+asn1_sequence::asn1_sequence(const std::string& name, const std::initializer_list<asn1_entity_t>& items) : asn1_container(asn1_entity_sequence, name, items) {}
+
+asn1_sequence::asn1_sequence(const std::string& name, const std::initializer_list<std::pair<std::string, asn1_entity_t>>& items)
+    : asn1_container(asn1_entity_sequence, name, items) {}
+
+asn1_sequence::asn1_sequence(const std::string& name, const std::initializer_list<asn1_object*>& items) : asn1_container(asn1_entity_sequence, name, items) {}
+
+asn1_sequence::asn1_sequence(const asn1_sequence& other) : asn1_container(other) {}
 
 asn1_sequence::~asn1_sequence() {}
 

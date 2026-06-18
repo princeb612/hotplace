@@ -39,7 +39,7 @@ class asn1_tag : public asn1_object {
     bool is_implicit() const;
 
    protected:
-    virtual void represent(uint32 depth, stream_t* s);
+    virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
     virtual void represent(uint32 depth, binary_t* b, asn1_value* value = nullptr);
 
    private:

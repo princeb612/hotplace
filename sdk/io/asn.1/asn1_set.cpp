@@ -20,6 +20,18 @@ asn1_set::asn1_set() : asn1_container(asn1_entity_set, "", nullptr) {}
 
 asn1_set::asn1_set(const std::string& name) : asn1_container(asn1_entity_set, name, nullptr) {}
 
+asn1_set::asn1_set(const std::initializer_list<asn1_entity_t>& items) : asn1_container(asn1_entity_set, "", items) {}
+
+asn1_set::asn1_set(const std::initializer_list<std::pair<std::string, asn1_entity_t>>& items) : asn1_container(asn1_entity_set, "", items) {}
+
+asn1_set::asn1_set(const std::initializer_list<asn1_object*>& items) : asn1_container(asn1_entity_set, "", items) {}
+
+asn1_set::asn1_set(const std::string& name, const std::initializer_list<asn1_entity_t>& items) : asn1_container(asn1_entity_set, name, items) {}
+
+asn1_set::asn1_set(const std::string& name, const std::initializer_list<std::pair<std::string, asn1_entity_t>>& items) : asn1_container(asn1_entity_set, name, items) {}
+
+asn1_set::asn1_set(const std::string& name, const std::initializer_list<asn1_object*>& items) : asn1_container(asn1_entity_set, name, items) {}
+
 asn1_set::asn1_set(const asn1_set& other) : asn1_container(other) {}
 
 asn1_set::~asn1_set() {}

@@ -13,6 +13,7 @@
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_builtin_type.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_referenced_type.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
@@ -29,20 +30,20 @@ asn1_referenced_type::~asn1_referenced_type() {}
 asn1_referenced_type* asn1_referenced_type::clone() { return new asn1_referenced_type(*this); }
 
 asn1_referenced_type* asn1_referenced_type::define(const std::string& name, asn1_entity_t entity) {
-    return new asn1_referenced_type(asn1_entity_referenced_type, name, new asn1_type(entity));
+    return new asn1_referenced_type(asn1_entity_referenced_type, name, new asn1_builtin_type(entity));
 }
 
 asn1_referenced_type* asn1_referenced_type::define(const std::string& name, asn1_object* object) {
     return new asn1_referenced_type(asn1_entity_referenced_type, name, object);
 }
 
-void asn1_referenced_type::represent(uint32 depth, stream_t* s) {
+void asn1_referenced_type::represent(uint32 depth, stream_t* s, asn1_value* value) {
     s->printf("%s", get_name().c_str());
 
     if ((nullptr == get_parent()) && is_definition()) {
         auto obj = get_object();
         s->printf(" ::= ");
-        obj->represent(depth + 1, s);
+        obj->represent(depth + 1, s, value);
     }
 }
 
@@ -50,7 +51,7 @@ void asn1_referenced_type::represent(uint32 depth, binary_t* b, asn1_value* valu
     auto obj = get_object();
 
 #if defined DEBUG
-    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_debug)) {
+    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
         trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
             dbs.fill(depth << 1, ' ');
             dbs.println("ASN.1 referenced type");

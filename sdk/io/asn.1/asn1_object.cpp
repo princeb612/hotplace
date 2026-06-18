@@ -138,13 +138,19 @@ bool asn1_object::is_tagged() const { return _tag ? true : false; }
 
 void asn1_object::accept(asn1_visitor* v) { v->visit(this); }
 
-void asn1_object::represent(uint32 depth, stream_t* s) {
+void asn1_object::represent(uint32 depth, stream_t* s, asn1_value* value) {
     if (s) {
         auto entity = get_entity();
         if (asn1_entity_referenced_type == entity)
             s->printf("%s", _name.c_str());
-        else
-            s->printf("%s", asn1_resource::get_instance()->get_entity_name(get_ident(), entity).c_str());
+        else {
+            if (false == get_name().empty()) s->printf("%s ", get_name().c_str());
+            if (value) {
+                value->write(s, get_name());
+            } else {
+                s->printf("%s", asn1_resource::get_instance()->get_entity_name(get_ident(), entity).c_str());
+            }
+        }
     }
 }
 
@@ -152,18 +158,16 @@ void asn1_object::represent(uint32 depth, binary_t* b, asn1_value* value) {
     auto entity = get_entity();
 
 #if defined DEBUG
-    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_debug)) {
+    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
         trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
             dbs.fill(depth << 1, ' ');
             dbs.println("ASN.1 object");
-            if (false == get_name().empty()) {
-                dbs.fill(depth << 1, ' ');
-                dbs.println("- name " ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", get_name().c_str());
-            }
             dbs.fill(depth << 1, ' ');
-            dbs.println("- entity " ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", asn1_resource::get_instance()->get_entity_name(get_ident(), entity).c_str());
-            // dbs.fill(depth << 1, ' ');
-            // dbs.println("- suppressed %s", is_suppressed() ? "true" : "false");
+            dbs << "- ";
+            if (false == get_name().empty()) {
+                dbs << get_name() << " ";
+            }
+            dbs.println(ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", asn1_resource::get_instance()->get_entity_name(get_ident(), entity).c_str());
         });
     }
 #endif
@@ -174,6 +178,7 @@ void asn1_object::represent(uint32 depth, binary_t* b, asn1_value* value) {
 
     if (value) {
         auto pos = b->size();
+
         bool do_len = false;
         value->encode_value(*b, this, get_name(), do_len);
         if (do_len && (false == is_suppressed())) {
