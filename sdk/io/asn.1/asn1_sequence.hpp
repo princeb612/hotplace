@@ -32,32 +32,16 @@ class asn1_sequence : public asn1_container {
    public:
     asn1_sequence();
     asn1_sequence(const std::string& name);
-    asn1_sequence(const asn1_sequence& other);
-    asn1_sequence(const std::initializer_list<asn1_entity_t>& items);
+    asn1_sequence(asn1_object* inner);
+    asn1_sequence(const std::string& name, asn1_object* inner);
     asn1_sequence(const std::initializer_list<std::pair<std::string, asn1_entity_t>>& items);
     asn1_sequence(const std::initializer_list<asn1_object*>& items);
-    asn1_sequence(const std::string& name, const std::initializer_list<asn1_entity_t>& items);
     asn1_sequence(const std::string& name, const std::initializer_list<std::pair<std::string, asn1_entity_t>>& items);
     asn1_sequence(const std::string& name, const std::initializer_list<asn1_object*>& items);
     virtual ~asn1_sequence();
 
     virtual asn1_sequence* clone();
     virtual asn1_sequence* addref();
-
-   protected:
-};
-
-/**
- * @brief   SequenceOfType ::= SEQUENCE OF Type | SEQUENCE OF NamedType
- */
-class asn1_sequence_of : public asn1_container {
-   public:
-    asn1_sequence_of();
-    asn1_sequence_of(const std::string& name);
-    asn1_sequence_of(const asn1_sequence_of& other);
-
-    virtual asn1_sequence_of* clone();
-    virtual asn1_sequence_of* addref();
 
    protected:
 };

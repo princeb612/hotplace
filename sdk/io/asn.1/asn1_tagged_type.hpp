@@ -37,6 +37,10 @@ class asn1_tagged_type : public asn1_type {
     asn1_tagged_type(int ctype, int cnumber, int tmode, asn1_object* object);
     asn1_tagged_type(asn1_tag* tag, asn1_entity_t entity);
     asn1_tagged_type(asn1_tag* tag, asn1_object* object);
+    asn1_tagged_type(const std::string& name, int ctype, int cnumber, int tmode, asn1_entity_t entity);
+    asn1_tagged_type(const std::string& name, int ctype, int cnumber, int tmode, asn1_object* object);
+    asn1_tagged_type(const std::string& name, asn1_tag* tag, asn1_entity_t entity);
+    asn1_tagged_type(const std::string& name, asn1_tag* tag, asn1_object* object);
     virtual ~asn1_tagged_type();
 
     virtual asn1_tagged_type* clone();
@@ -46,7 +50,7 @@ class asn1_tagged_type : public asn1_type {
 
    protected:
     virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
-    virtual void represent(uint32 depth, binary_t* b, asn1_value* value = nullptr);
+    virtual bool represent(uint32 depth, binary_t* b, asn1_value* value = nullptr, uint16 flags = 0);
 };
 
 }  // namespace io

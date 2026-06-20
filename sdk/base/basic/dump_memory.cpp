@@ -15,7 +15,7 @@
 #include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/stream/bufferio.hpp>
-#include <hotplace/sdk/base/stream/printf.hpp>
+#include <hotplace/sdk/base/stream/vtprintf.hpp>
 
 namespace hotplace {
 

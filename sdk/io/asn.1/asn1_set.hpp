@@ -27,32 +27,14 @@ class asn1_set : public asn1_container {
    public:
     asn1_set();
     asn1_set(const std::string& name);
-    asn1_set(const std::initializer_list<asn1_entity_t>& items);
     asn1_set(const std::initializer_list<std::pair<std::string, asn1_entity_t>>& items);
     asn1_set(const std::initializer_list<asn1_object*>& items);
-    asn1_set(const std::string& name, const std::initializer_list<asn1_entity_t>& items);
     asn1_set(const std::string& name, const std::initializer_list<std::pair<std::string, asn1_entity_t>>& items);
     asn1_set(const std::string& name, const std::initializer_list<asn1_object*>& items);
-    asn1_set(const asn1_set& other);
     virtual ~asn1_set();
 
     virtual asn1_set* clone();
     virtual asn1_set* addref();
-
-   protected:
-};
-
-/**
- * @brief   SetOfType ::= SET OF Type | SET OF NamedType
- */
-class asn1_set_of : public asn1_container {
-   public:
-    asn1_set_of();
-    asn1_set_of(const std::string& name);
-    asn1_set_of(const asn1_set_of& other);
-
-    virtual asn1_set_of* clone();
-    virtual asn1_set_of* addref();
 
    protected:
 };

@@ -12,8 +12,8 @@
 #include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/pattern/aho_corasick.hpp>
-#include <hotplace/sdk/base/stream/printf.hpp>
-#include <hotplace/sdk/base/stream/tstring.hpp>
+#include <hotplace/sdk/base/stream/types.hpp>
+#include <hotplace/sdk/base/stream/vtprintf.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/base/system/ieee754.hpp>
@@ -36,13 +36,17 @@ void vprintf_floating_point(T1 t1, T2 t2, stream_t* stream, vtprintf_style_t sty
                     stream->printf("nan");
                     break;
             }
+            break;
         case ieee754_typeof_t::ieee754_ninf:
             switch (style) {
                 case vtprintf_style_t::vtprintf_style_asn1:
                     stream->printf("MINUS-INFINITY");
                     break;
+                case vtprintf_style_t::vtprintf_style_cbor:
+                    stream->printf("-Infinity");
+                    break;
                 default:
-                    stream->printf("-");
+                    stream->printf("-inf");
                     break;
             }
             break;

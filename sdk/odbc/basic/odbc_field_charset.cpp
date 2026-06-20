@@ -9,7 +9,9 @@
  */
 
 #include <hotplace/sdk/base/basic/base16.hpp>
-#include <hotplace/sdk/base/stream/tstring.hpp>
+#include <hotplace/sdk/base/stream/ansi_string.hpp>
+#include <hotplace/sdk/base/stream/types.hpp>
+#include <hotplace/sdk/base/stream/unicode/wide_string.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/odbc/basic/odbc_field.hpp>
 

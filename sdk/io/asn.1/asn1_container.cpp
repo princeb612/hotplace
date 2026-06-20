@@ -22,14 +22,12 @@
 namespace hotplace {
 namespace io {
 
-asn1_container::asn1_container(asn1_entity_t entity, const std::string& name, asn1_object* object) : asn1_type(entity, name, object, nullptr) { as_constructed(); }
-
-asn1_container::asn1_container(asn1_entity_t entity, const std::string& name, const std::initializer_list<asn1_entity_t>& items) : asn1_container(entity, name, nullptr) {
-    for (const auto& item : items) {
-        auto obj = new asn1_builtin_type(item);
-        _list.push_back(obj);
-        _map.emplace(item, obj);
-        obj->set_parent(this);
+asn1_container::asn1_container(asn1_entity_t entity, const std::string& name, asn1_object* object) : asn1_type(entity, name, nullptr, nullptr) {
+    as_constructed();
+    if (object) {
+        if (object->is_named_type()) {
+            *this << object;
+        }
     }
 }
 
@@ -48,7 +46,11 @@ asn1_container::asn1_container(asn1_entity_t entity, const std::string& name, co
 
 asn1_container::asn1_container(asn1_entity_t entity, const std::string& name, const std::initializer_list<asn1_object*>& items) : asn1_container(entity, name, nullptr) {
     for (const auto& item : items) {
-        *this << item;
+        if (item) {
+            if (item->is_named_type()) {
+                *this << item;
+            }
+        }
     }
 }
 
@@ -85,9 +87,7 @@ asn1_container& asn1_container::operator<<(asn1_object* other) {
     if (other) {
         _list.push_back(other);
         auto entity = other->get_entity();
-        if (asn1_entity_builtin_type == entity) {
-            _map.emplace(other->get_object()->get_entity(), other);
-        }
+        _map.emplace(entity, other);
         other->set_parent(this);
     }
     return *this;
@@ -109,35 +109,23 @@ void asn1_container::represent(uint32 depth, stream_t* s, asn1_value* value) {
             s->printf("%s ", get_name().c_str());
         }
         s->printf("%s ", asn1_resource::get_instance()->get_entity_name(get_ident(), entity).c_str());
-        // if (get_componenttype()) {
-        //     s->printf("%s ", asn1_resource::get_instance()->get_componenttype_name(get_componenttype()).c_str());
-        // }
 
-        switch (entity) {
-            case asn1_entity_sequence:
-            case asn1_entity_sequence_of:
-            case asn1_entity_set:
-            case asn1_entity_set_of: {
-                s->printf("{");
-                for (auto iter = _list.begin(); iter != _list.end(); ++iter) {
-                    if (_list.begin() != iter) {
-                        s->printf(", ");
-                    }
-                    (*iter)->represent(depth + 1, s, value);
-                }
-                s->printf("}");
-            } break;
-            default: {
-            } break;
+        s->printf("{");
+        for (auto iter = _list.begin(); iter != _list.end(); ++iter) {
+            if (_list.begin() != iter) {
+                s->printf(", ");
+            }
+            (*iter)->represent(depth + 1, s, value);
         }
+        s->printf("}");
     }
 }
 
-void asn1_container::represent(uint32 depth, binary_t* b, asn1_value* value) {
+bool asn1_container::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) {
     auto entity = get_entity();
 
     size_t pos = 0;
-    if (false == is_suppressed()) {
+    if ((false == is_suppressed()) && (asn1_entity_choice != entity)) {
         asn1_encode::asn1_ident_octets(*b, get_ident(), entity);
         pos = b->size();
     }
@@ -155,26 +143,37 @@ void asn1_container::represent(uint32 depth, binary_t* b, asn1_value* value) {
 #endif
 
     switch (entity) {
-        case asn1_entity_sequence:
-        case asn1_entity_sequence_of: {
+        case asn1_entity_sequence: {
+            // asn1_sequence : asn1_container
             for (auto item : _list) {
                 item->represent(depth + 1, b, value);
             }
         } break;
-        case asn1_entity_set:
-        case asn1_entity_set_of: {
+        case asn1_entity_set: {
+            // asn1_set : asn1_container
             for (auto item : _map) {
                 auto obj = item.second;
                 obj->represent(depth + 1, b, value);
             }
         } break;
+        case asn1_entity_choice: {
+            // asn1_choice : asn1_container
+            for (auto item : _map) {
+                auto obj = item.second;
+                auto test = obj->represent(depth + 1, b, value, asn1_visitor_choice);
+                if (test) break;
+            }
+        } break;
         default: {
+            // impossible
         } break;
     }
 
-    if (false == is_suppressed()) {
+    if ((false == is_suppressed()) && (asn1_entity_choice != entity)) {
         asn1_encode::t_asn1_length_octets<size_t>(*b, b->size() - pos, pos);
     }
+
+    return true;
 }
 
 }  // namespace io

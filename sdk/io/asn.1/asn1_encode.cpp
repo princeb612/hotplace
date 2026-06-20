@@ -25,7 +25,12 @@ namespace io {
 
 asn1_encode::asn1_encode() {}
 
-void asn1_encode::asn1_ident_octets(binary_t& bin, uint8 enc, uint64 tag) {
+void asn1_encode::asn1_ident_octets(binary_t& bin, uint8 enc, uint64 tag, size_t pos) {
+    if ((size_t)-1 == pos) {
+        pos = bin.size();
+    }
+
+    binary_t temp;
     if (tag >= 31) {
         std::vector<uint8> v;
         while (tag >= 0x80) {
@@ -34,16 +39,19 @@ void asn1_encode::asn1_ident_octets(binary_t& bin, uint8 enc, uint64 tag) {
         }
         if (tag) v.push_back(tag & 0x7f);
 
-        bin.reserve(bin.size() + v.size() + 1);
-        bin.push_back(enc | 0x1f);
+        temp.reserve(temp.size() + v.size() + 1);
+        temp.push_back(enc | 0x1f);
         for (auto i = v.size(); i > 0; --i) {
             size_t idx = i - 1;
             uint8 contflag = (idx == 0) ? 0x00 : 0x80;
-            bin.push_back(contflag | v[idx]);
+            temp.push_back(contflag | v[idx]);
         }
     } else {
-        bin.push_back(enc | tag);
+        temp.push_back(enc | (uint8)tag);
     }
+
+    bin.reserve(bin.size() + temp.size());
+    bin.insert(bin.begin() + pos, temp.begin(), temp.end());
 }
 
 return_t asn1_encode::read_asn1_ident_octets(const byte_t* stream, size_t size, uint8& ident, uint64& tag) {

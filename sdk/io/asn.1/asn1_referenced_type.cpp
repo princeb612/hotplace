@@ -52,7 +52,7 @@ void asn1_referenced_type::represent(uint32 depth, stream_t* s, asn1_value* valu
     }
 }
 
-void asn1_referenced_type::represent(uint32 depth, binary_t* b, asn1_value* value) {
+bool asn1_referenced_type::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) {
     auto obj = get_object();
 
 #if defined DEBUG
@@ -62,13 +62,15 @@ void asn1_referenced_type::represent(uint32 depth, binary_t* b, asn1_value* valu
             dbs.println("ASN.1 referenced type");
             if (is_definition()) {
                 dbs.fill(depth << 1, ' ');
-                dbs.println("- name " ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", get_name().c_str());
+                dbs.println("- " ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", get_name().c_str());
             }
         });
     }
 #endif
 
     if (is_definition()) obj->represent(depth + 1, b, value);
+
+    return true;
 }
 
 bool asn1_referenced_type::is_reference() const { return get_object() ? false : true; }

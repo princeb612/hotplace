@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/stream/tstring.hpp>
+#include <hotplace/sdk/base/stream/types.hpp>
 #include <hotplace/sdk/odbc/basic/odbc_diagnose.hpp>
 #include <hotplace/sdk/odbc/basic/odbc_query.hpp>
 

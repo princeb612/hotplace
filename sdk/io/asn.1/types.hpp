@@ -128,15 +128,16 @@ enum asn1_entity_t {
     asn1_entity_datetime = asn1_tag_datetime,
     asn1_entity_duration = asn1_tag_duration,
 
-    asn1_entity_builtin_type = 0x1000,
+    asn1_entity_syntax = 0x1000,
+    asn1_entity_builtin_type,
+    // NamedType ::= identifier Type
+    asn1_entity_named_type,
     // ReferencedType ::= DefinedType | UsefulType | SelectionType | TypeFromObject | ValueSetFromObjects -- type assignment
     asn1_entity_referenced_type,
     // TaggedType ::= Tag Type | Tag IMPLICIT Type | Tag EXPLICIT Type
     // Tag ::= "[" Class ClassNumber "]"
     asn1_entity_tag,
     asn1_entity_tagged_type,
-    // NamedType ::= identifier Type
-    asn1_entity_named_type,
     // SequenceOfType ::= SEQUENCE OF Type | SEQUENCE OF NamedType
     asn1_entity_sequence_of,
     // SetOfType ::= SET OF Type | SET OF NamedType
@@ -160,6 +161,12 @@ enum asn1_perm_t : uint8 {
     asn1_perm_primitive = 1 << 0,
     asn1_perm_constructed = 1 << 1,
     asn1_perm_both = (asn1_perm_primitive | asn1_perm_constructed),
+};
+
+enum asn1_visitor_flag_t : uint16 {
+    asn1_visitor_sequence_of = 1,
+    asn1_visitor_set_of = 2,
+    asn1_visitor_choice = 3,
 };
 
 class asn1_object;

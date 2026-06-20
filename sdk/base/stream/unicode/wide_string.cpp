@@ -8,17 +8,11 @@
  * Date         Name                Description
  * 2026.05.22   Soo Han and Gemini  Refined with guidance and collaboration from Gemini
  *
- * @note
- *          [Refactoring History]
- *          - Restructured redundant SFINAE (enable_if) and std::conditional pipelines
- *            into a centralized Type Traits structure (printf_traits).
- *          - Consolidated integral, enum, and floating-point stream pipelines.
- *          - Resolved type-ambiguity and operator associativity (+=) corner cases.
- *          - Refined with guidance and collaboration from Gemini (AI Peer).
  */
 
+#include <hotplace/sdk/base/stream/ansi_string.hpp>
 #include <hotplace/sdk/base/stream/stream_policy.hpp>
-#include <hotplace/sdk/base/stream/tstring.hpp>
+#include <hotplace/sdk/base/stream/unicode/wide_string.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 
 namespace hotplace {

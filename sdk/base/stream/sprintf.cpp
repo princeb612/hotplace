@@ -17,8 +17,8 @@
 #include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/pattern/aho_corasick.hpp>
 #include <hotplace/sdk/base/pattern/regex.hpp>
-#include <hotplace/sdk/base/stream/printf.hpp>
-#include <hotplace/sdk/base/stream/tstring.hpp>
+#include <hotplace/sdk/base/stream/ansi_string.hpp>
+#include <hotplace/sdk/base/stream/sprintf.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/base/system/ieee754.hpp>

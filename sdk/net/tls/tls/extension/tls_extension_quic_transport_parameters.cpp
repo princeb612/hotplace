@@ -10,6 +10,7 @@
 
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/stream/vtprintf.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/quic/quic.hpp>

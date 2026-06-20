@@ -26,14 +26,15 @@ namespace io {
  *          asn1_object
  *            asn1_type
  *              asn1_builtin_type
- *              asn1_referenced_type
  *              asn1_tagged_type
+ *              asn1_referenced_type
  *              asn1_container
  *                asn1_sequence
- *                asn1_sequence_of
  *                asn1_set
- *                asn1_set_of
  *                asn1_choice
+ *              asn1_container_of
+ *                asn1_sequence_of
+ *                asn1_set_of
  *          asn1_visitor
  *            asn1_der_visitor
  *            asn1_notation_visitor
@@ -46,6 +47,7 @@ class asn1_object {
     friend class asn1_referenced_type;
     friend class asn1_tagged_type;
     friend class asn1_container;
+    friend class asn1_container_of;
     friend class asn1_der_visitor;
     friend class asn1_notation_visitor;
 
@@ -71,6 +73,7 @@ class asn1_object {
     asn1_object* get_object() const;
     const std::string& get_name() const;
     asn1_entity_t get_entity() const;
+    asn1_entity_t get_component_entity() const;
     asn1_tag* get_tag() const;
 
     // ComponentType
@@ -80,8 +83,10 @@ class asn1_object {
 
     asn1_object& as_primitive();
     asn1_object& as_constructed();
-    bool is_primitive();
-    bool is_constructed();
+
+    bool is_named_type() const;
+    bool is_primitive() const;
+    bool is_constructed() const;
 
     bool is_tagged() const;  // nullptr != _tag
 
@@ -96,15 +101,17 @@ class asn1_object {
     asn1_object(asn1_object&& other);
 
     asn1_object& set_entity(asn1_entity_t entity);
+    asn1_object& set_component_entity(asn1_entity_t entity);
 
     virtual void accept(asn1_visitor* v);
     virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
-    virtual void represent(uint32 depth, binary_t* b, asn1_value* value = nullptr);
+    virtual bool represent(uint32 depth, binary_t* b, asn1_value* value = nullptr, uint16 flags = 0);
 
    private:
     uint8 _ident;
     std::string _name;
     asn1_entity_t _entity;
+    asn1_entity_t _component_entity;
     int _component_type;  // default, optional
     bool _suppress;
 

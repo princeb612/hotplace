@@ -11,7 +11,7 @@
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/stream/split.hpp>
+#include <hotplace/sdk/base/stream/splitter.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/dtls_record_publisher.hpp>

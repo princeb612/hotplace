@@ -72,16 +72,20 @@
 #include <hotplace/sdk/base/pattern/wildcard.hpp>
 
 /* stream */
+#include <hotplace/sdk/base/stream/ansi_string.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/stream/bufferio.hpp>
 #include <hotplace/sdk/base/stream/decoder_stream.hpp>
 #include <hotplace/sdk/base/stream/encoder_stream.hpp>
 #include <hotplace/sdk/base/stream/printf.hpp>
 #include <hotplace/sdk/base/stream/split.hpp>
+#include <hotplace/sdk/base/stream/splitter.hpp>
+#include <hotplace/sdk/base/stream/sprintf.hpp>
 #include <hotplace/sdk/base/stream/stream.hpp>
 #include <hotplace/sdk/base/stream/stream_policy.hpp>
-#include <hotplace/sdk/base/stream/tstring.hpp>
 #include <hotplace/sdk/base/stream/types.hpp>
+#include <hotplace/sdk/base/stream/unicode/wide_string.hpp>
+#include <hotplace/sdk/base/stream/vtprintf.hpp>
 
 /* string */
 #include <hotplace/sdk/base/string/constexpr_obfuscate.hpp>

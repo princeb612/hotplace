@@ -57,13 +57,18 @@ class asn1_value {
     asn1_object* get_schema();
 
     asn1_value& set(const variant& vt);
+    asn1_value& set(std::initializer_list<variant> items);
     asn1_value& set(const std::string& name, const variant& vt);
+    asn1_value& set(const std::string& name, std::initializer_list<variant> items);
     asn1_value& set(const std::string& name, variant&& vt);
 
     void publish(stream_t* b);
     void publish(binary_t* b);
     void write(stream_t* s, const std::string& name);
+    bool find(const std::string& name);
     void encode_value(binary_t& bin, asn1_object* object, const std::string& name, bool& do_len);
+    void encode_sequenceof_value(binary_t& bin, asn1_object* object, const std::string& name);
+    void encode_setof_value(binary_t& bin, asn1_object* object, const std::string& name);
 
     void addref();
     void release();
@@ -71,7 +76,7 @@ class asn1_value {
    protected:
    private:
     asn1_object* _schema;
-    std::map<std::string, variant> _values;
+    std::multimap<std::string, variant> _values;
 
     t_shared_reference<asn1_value> _shared;
 };

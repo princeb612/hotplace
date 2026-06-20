@@ -103,8 +103,8 @@ ASN.1 referenced type
             - entity [APPLICATION 3] IMPLICIT
             ASN.1 referenced type
             - name Type1
-              ASN.1 object
-              - entity VisibleString
+              ASN.1 builtin type
+              - VisibleString
 
 ASN.1 referenced type
 - name Type5
@@ -118,8 +118,8 @@ ASN.1 referenced type
         - entity [APPLICATION 3] IMPLICIT
         ASN.1 referenced type
         - name Type1
-          ASN.1 object
-          - entity VisibleString
+          ASN.1 builtin type
+          - VisibleString
 ````
 
 #### ITU-T X.680

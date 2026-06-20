@@ -43,7 +43,7 @@ class asn1_encode {
    public:
     asn1_encode();
 
-    static void asn1_ident_octets(binary_t& bin, uint8 enc, uint64 tag);
+    static void asn1_ident_octets(binary_t& bin, uint8 enc, uint64 tag, size_t pos = -1);
     static return_t read_asn1_ident_octets(const byte_t* stream, size_t size, uint8& ident, uint64& tag);
 
     /**

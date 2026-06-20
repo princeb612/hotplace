@@ -62,7 +62,7 @@ void asn1_tag::represent(uint32 depth, stream_t* s, asn1_value* value) {
     }
 }
 
-void asn1_tag::represent(uint32 depth, binary_t* b, asn1_value* value) {
+bool asn1_tag::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) {
     auto parent = get_parent();
     if (parent && (asn1_entity_tagged_type == parent->get_entity())) {
         asn1_object* node = parent;
@@ -99,8 +99,8 @@ void asn1_tag::represent(uint32 depth, binary_t* b, asn1_value* value) {
             dbs.fill(depth << 1, ' ');
             dbs.println("ASN.1 tag");
             dbs.fill(depth << 1, ' ');
-            dbs.println("- entity " ANSI_ESCAPE "1;33m%s %s" ANSI_ESCAPE "0m",
-                        asn1_resource::get_instance()->get_entity_name(ident, (asn1_entity_t)get_class_number()).c_str(), is_implicit() ? "IMPLICIT" : "EXPLICIT");
+            dbs.println("- " ANSI_ESCAPE "1;33m%s %s" ANSI_ESCAPE "0m", asn1_resource::get_instance()->get_entity_name(ident, (asn1_entity_t)get_class_number()).c_str(),
+                        is_implicit() ? "IMPLICIT" : "EXPLICIT");
             // dbs.fill(depth << 1, ' ');
             // dbs.println("- suppressed %s", is_suppressed() ? "true" : "false");
             // if (b && (false == is_suppressed())) {
@@ -110,6 +110,8 @@ void asn1_tag::represent(uint32 depth, binary_t* b, asn1_value* value) {
         });
     }
 #endif
+
+    return true;
 }
 
 }  // namespace io
