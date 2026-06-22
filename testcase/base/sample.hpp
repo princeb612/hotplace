@@ -14,10 +14,15 @@
 
 #include <hotplace/test.hpp>
 
+enum option_flag_t : uint16 {
+    option_attach = 1 << 0,
+    option_thread = 1 << 1,
+    option_notimecheck = 1 << 2,
+};
 struct OPTION : public CMDLINEOPTION {
-    int attach;
+    uint16 flags;
 
-    OPTION() : CMDLINEOPTION(), attach(0) {}
+    OPTION() : CMDLINEOPTION(), flags(0) {}
 };
 
 struct pattern_t {

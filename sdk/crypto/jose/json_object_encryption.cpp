@@ -93,7 +93,7 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, cons
         std::list<jwa_t> algs = jwalgs;
 
         for (std::list<jwa_t>::iterator it = algs.begin(); it != algs.end();) {
-            if (jwa_t::dir == *it || jwa_t::ecdh_es == *it) {
+            if (jwa_t::dir == *it || jwa_t::rsa_1_5 == *it) {
                 // support "dir" for decryption only ...
                 it = algs.erase(it);
             } else {

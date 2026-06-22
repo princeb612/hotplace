@@ -65,3 +65,11 @@
 
 * https://github.com/miloyip/nativejson-benchmark
 * https://github.com/fabienrenaud/java-json-benchmark
+
+## TODO
+
+- [ ] disable RSA1_5
+- [ ] JWK SHA-256 Thumbprint
+- [ ] draft-ietf-jose-fully-post-quantum-03
+- [ ] draft-prorock-cose-post-quantum-key-agreement
+- [ ] enc (Edwards-curve)

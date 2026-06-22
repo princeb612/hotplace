@@ -481,7 +481,7 @@ class variant {
     const std::string to_hex() const;
     /**
      * @brief   to binary
-     * @param   uint32 flags [inopt] see variant_control_flag_t
+     * @param   uint32 flags [inopt] see variant_control_t
      */
     const binary_t to_bin(uint32 flags = 0) const;
     /**
@@ -491,7 +491,7 @@ class variant {
     /*
      * @brief   to binary
      * @param   binary_t& target [out]
-     * @param   uint32 flags [inopt] see variant_control_flag_t
+     * @param   uint32 flags [inopt] see variant_control_t
      */
     return_t to_binary(binary_t& target, uint32 flags = 0) const;
     /**

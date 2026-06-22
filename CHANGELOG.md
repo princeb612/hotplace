@@ -35,7 +35,16 @@
     * CBOR
 
 * details
+  * Revision 1035
+    * ASN.1 DEFAULT, ENUMERATED, ANY
   * Revision 1034
+    * ASN.1 SEQUENCE, SEQUENCE OF, SET, SET OF, CHOICE, value binding
+  * Revision 1033
+    * sanitizer
+  * Revision 1032
+    * ASN.1 length aggregation, IMPLICIT, EXPLICIT, constructed bit propagation
+  * Revision 1031
+    * ASN.1 builtin type, referenced type
   * Revision 1024
     * encoder_stream/decode_stream intergrates http_huffman_encoding
   * Revision 1023

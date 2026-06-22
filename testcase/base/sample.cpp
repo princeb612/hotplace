@@ -30,7 +30,9 @@ int main(int argc, char** argv) {
 #endif
         << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, const char* param) -> void { o.log = 1; }).optional()
         << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, const char* param) -> void { o.time = 1; }).optional()
-        << t_cmdarg_t<OPTION>("-a", "attach", [](OPTION& o, const char* param) -> void { o.attach = 1; }).optional();
+        << t_cmdarg_t<OPTION>("-a", "attach", [](OPTION& o, const char* param) -> void { o.flags |= option_attach; }).optional()
+        << t_cmdarg_t<OPTION>("-thread", "test thread", [](OPTION& o, const char* param) -> void { o.flags |= option_thread; }).optional()
+        << t_cmdarg_t<OPTION>("-timecheck", "test_case_notimecheck", [](OPTION& o, const char* param) -> void { o.flags |= option_notimecheck; }).optional();
     _cmdline->parse(argc, argv);
 
     const OPTION& option = _cmdline->value();
@@ -53,7 +55,7 @@ int main(int argc, char** argv) {
         set_trace_level(option.trace_level);
     }
 
-    if (option.attach) {
+    if (option.flags & option_attach) {
         _test_case.attach(_logger);
     }
 
@@ -107,7 +109,10 @@ int main(int argc, char** argv) {
     testcase_testvector_floatingpoint();
     testcase_ieee754();
     testcase_shared();
-    testcase_signalwait_threads();
+
+    if (option.flags & option_thread) {
+        testcase_signalwait_threads();
+    }
 
     testcase_consolecolor();
     testcase_loglevel();

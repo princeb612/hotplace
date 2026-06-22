@@ -24,34 +24,18 @@ namespace io {
 
 asn1_container::asn1_container(asn1_entity_t entity, const std::string& name, asn1_object* object) : asn1_type(entity, name, nullptr, nullptr) {
     as_constructed();
-    if (object) {
-        if (object->is_named_type()) {
-            *this << object;
-        }
-    }
+    add(object);
 }
 
 asn1_container::asn1_container(asn1_entity_t entity, const std::string& name, const std::initializer_list<std::pair<std::string, asn1_entity_t>>& items)
     : asn1_container(entity, name, nullptr) {
-    for (const auto& item : items) {
-        const auto& name = item.first;
-        const auto& entity = item.second;
-
-        auto obj = new asn1_builtin_type(name, entity);
-        _list.push_back(obj);
-        _map.emplace(entity, obj);
-        obj->set_parent(this);
-    }
+    as_constructed();
+    add(items);
 }
 
 asn1_container::asn1_container(asn1_entity_t entity, const std::string& name, const std::initializer_list<asn1_object*>& items) : asn1_container(entity, name, nullptr) {
-    for (const auto& item : items) {
-        if (item) {
-            if (item->is_named_type()) {
-                *this << item;
-            }
-        }
-    }
+    as_constructed();
+    add(items);
 }
 
 asn1_container::asn1_container(const asn1_container& other) : asn1_type(other) { *this = other; }
@@ -83,20 +67,44 @@ asn1_container& asn1_container::operator=(const asn1_container& other) {
     return *this;
 }
 
-asn1_container& asn1_container::operator<<(asn1_object* other) {
-    if (other) {
-        _list.push_back(other);
-        auto entity = other->get_entity();
-        _map.emplace(entity, other);
-        other->set_parent(this);
+asn1_container& asn1_container::operator<<(const std::initializer_list<std::pair<std::string, asn1_entity_t>>& items) { return add(items); }
+
+asn1_container& asn1_container::add(const std::initializer_list<std::pair<std::string, asn1_entity_t>>& items) {
+    for (const auto& item : items) {
+        const auto& name = item.first;
+        const auto& entity = item.second;
+
+        auto obj = new asn1_builtin_type(name, entity);
+        _list.push_back(obj);
+        _map.emplace(entity, obj);
+        obj->set_parent(this);
     }
     return *this;
 }
 
-asn1_container& asn1_container::add(std::function<asn1_object*(asn1_container*)> func) {
-    if (func) {
-        auto obj = func(this);
-        return *this << obj;
+asn1_container& asn1_container::operator<<(const std::initializer_list<asn1_object*>& items) { return add(items); }
+
+asn1_container& asn1_container::add(const std::initializer_list<asn1_object*>& items) {
+    for (const auto& item : items) {
+        if (item) {
+            if (item->is_named_type()) {
+                *this << item;
+            }
+        }
+    }
+    return *this;
+}
+
+asn1_container& asn1_container::operator<<(asn1_object* other) { return add(other); }
+
+asn1_container& asn1_container::add(asn1_object* other) {
+    if (other) {
+        if (other->is_named_type()) {
+            _list.push_back(other);
+            auto entity = other->get_entity();
+            _map.emplace(entity, other);
+            other->set_parent(this);
+        }
     }
     return *this;
 }
@@ -115,7 +123,9 @@ void asn1_container::represent(uint32 depth, stream_t* s, asn1_value* value) {
             if (_list.begin() != iter) {
                 s->printf(", ");
             }
-            (*iter)->represent(depth + 1, s, value);
+
+            auto object = *iter;
+            object->represent(depth + 1, s, value);
         }
         s->printf("}");
     }

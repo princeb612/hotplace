@@ -20,16 +20,24 @@ namespace io {
 
 /**
  * @brief   ReferencedType ::= DefinedType | UsefulType | SelectionType | TypeFromObject | ValueSetFromObjects
- * @remarks
+ * @example
+ *          // sketch
+ *
  *          // definitions
  *          // Type1 ::= VisibleString
+ *          auto type1 = asn1_referenced_type::define("Type1", asn1_entity_visiblestring);
  *          // Type2 ::= [Application 3] implicit Type1
+ *          auto type2 = asn1_referenced_type::define("Type2", new asn1_tagged_type(asn1_class_application, 3, asn1_implicit, type1->clone()));
  *          // Type3 ::= [2] Type2
+ *          auto type3 = asn1_referenced_type::define("Type3", new asn1_tagged_type(asn1_class_context, 2, asn1_explicit, type2->clone()));
  *          // Type4 ::= [Application 7] implicit Type3
+ *          auto type4 = asn1_referenced_type::define("Type4", new asn1_tagged_type(asn1_class_application, 7, asn1_implicit, type3->clone()));
  *          // Type5 ::= [2] implicit Type2
+ *          auto type5 = asn1_referenced_type::define("Type5", new asn1_tagged_type(asn1_class_context, 2, asn1_implicit, type2->clone()));
  *
  *          // reference
- *          Type1
+ *          // Type1
+ *          auto type = new asn1_referenced_type("Type1");  // using context pool (asn1 class)
  */
 class asn1_referenced_type : public asn1_type {
    public:

@@ -21,6 +21,14 @@ namespace io {
 /**
  * @brief   CHOICE
  * @example
+ *          auto type = asn1_referenced_type::define("Person",
+ *                          new asn1_sequence(new asn1_choice("id", {{"num", asn1_entity_integer}, {"name", asn1_entity_visiblestring}})));
+ *          type->publish(&bs);  // Person ::= SEQUENCE {id CHOICE {num INTEGER, name VisibleString}}
+ *          auto value = type->instantiate();
+ *          (*value).set("id.name", "Jones");
+ *          value->publish(&bin);  // 30 07 1A 05 4A 6F 6E 65 73
+ *          value->release();
+ *          type->release();
  */
 class asn1_choice : public asn1_container {
    public:

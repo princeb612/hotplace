@@ -182,7 +182,7 @@ void test_valist_binary() {
     valist va;
     basic_stream bs;
 
-    for (auto i = 0; i < 256; i++) {
+    for (auto i = 0; i < 128; i++) {
         bin.push_back(i);
     }
 
@@ -190,9 +190,30 @@ void test_valist_binary() {
     bs.vaprintf("{1:s}", va);  // the format specifier 's' in TYPE_BINARY, it outputs a character if it is printable, and '.' otherwise.
     _logger->writeln(bs);
 
-    const char* expect = R"(................................ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~.)"
-                         R"(................................................................................................................................)";
+    const char* expect = R"(................................ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~.)";
     _test_case.assert(bs == expect, __FUNCTION__, "valist binary (printable data)");
+
+    bs.clear();
+
+    bs.vaprintf("{1:x}", va);
+    _logger->writeln(bs);
+    const char* expect2 =
+        "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"
+        "404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f";
+    _test_case.assert(bs == expect2, __FUNCTION__, "valist base16");
+}
+
+void test_valist_empty() {
+    _test_case.begin("valist");
+    basic_stream dbs;
+    binary_t bin;
+    valist va;
+    va << bin;
+
+    // basically treat binary as pointer
+    // base16_decode(empty) return ""
+    dbs.vaprintf("{1:x}", va);
+    _test_case.assert(dbs.empty(), __FUNCTION__, "empty binary");
 }
 
 void testcase_valist() {
@@ -201,4 +222,5 @@ void testcase_valist() {
     test_valist_stream();
     test_valist_formatstring();
     test_valist_binary();
+    test_valist_empty();
 }

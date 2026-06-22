@@ -25,7 +25,7 @@ namespace hotplace {
 namespace io {
 
 asn1_object::asn1_object(asn1_entity_t entity, const std::string& name, asn1_object* object, asn1_tag* tag)
-    : _ident(0), _name(name), _entity(entity), _component_entity(entity), _component_type(0), _suppress(false), _parent(nullptr), _tag(tag), _object(object) {
+    : _ident(0), _name(name), _entity(entity), _component_type(0), _suppress(false), _parent(nullptr), _tag(tag), _object(object) {
     _shared.make_share(this);
     if (tag) tag->set_parent(this);
     if (object) object->set_parent(this);
@@ -41,7 +41,6 @@ asn1_object& asn1_object::operator=(const asn1_object& other) {
     _ident = other._ident;
     _name = other._name;
     _entity = other._entity;
-    _component_entity = other._component_entity;
     _component_type = other._component_type;
     _suppress = other._suppress;
     _parent = other._parent;
@@ -53,6 +52,7 @@ asn1_object& asn1_object::operator=(const asn1_object& other) {
         _object = other._object->clone();
         _object->set_parent(this);
     }
+    _vt = other._vt;
     return *this;
 }
 
@@ -60,12 +60,12 @@ asn1_object& asn1_object::operator=(asn1_object&& other) {
     std::swap(_ident, other._ident);
     std::swap(_name, other._name);
     std::swap(_entity, other._entity);
-    std::swap(_component_entity, other._component_entity);
     std::swap(_component_type, other._component_type);
     std::swap(_suppress, other._suppress);
     std::swap(_parent, other._parent);
     std::swap(_tag, other._tag);
     std::swap(_object, other._object);
+    std::swap(_vt, other._vt);
     return *this;
 }
 
@@ -119,18 +119,76 @@ asn1_object& asn1_object::set_entity(asn1_entity_t entity) {
     return *this;
 }
 
-asn1_object& asn1_object::set_component_entity(asn1_entity_t entity) {
-    _component_entity = entity;
+asn1_object& asn1_object::set_default_value(const variant_t& value) {
+    _vt = value;
+    _component_type = asn1_default;
+    return *this;
+}
+
+asn1_object& asn1_object::set_default_value(variant_t&& value) {
+    _vt = std::move(value);
+    _component_type = asn1_default;
     return *this;
 }
 
 asn1_entity_t asn1_object::get_entity() const { return _entity; }
 
-asn1_entity_t asn1_object::get_component_entity() const { return _component_entity; }
+asn1_entity_t asn1_object::get_component_entity() const { return _entity; }
+
+int asn1_object::get_componenttype() { return _component_type; }
+
+uint16 asn1_object::get_component_type() const { return _component_type; }
 
 asn1_tag* asn1_object::get_tag() const { return _tag; }
 
-int asn1_object::get_componenttype() { return _component_type; }
+const variant_t& asn1_object::get_default_value() const { return _vt; }
+
+std::string asn1_object::resolve_name() {
+    std::string name;
+
+    auto lambda_join = [](const std::vector<std::string>& path, const std::string& word) -> std::string {
+        std::string value;
+        for (auto iter = path.begin(); iter != path.end(); ++iter) {
+            if (iter != path.begin()) {
+                value += word;
+            }
+            value += *iter;
+        }
+        return value;
+    };
+
+    asn1_object* node = this;
+    std::vector<std::string> path;
+    while (node) {
+        auto entity = node->get_component_entity();
+        switch (entity) {
+            case asn1_entity_builtin_type:
+            case asn1_entity_tagged_type:
+            case asn1_entity_sequence:
+            case asn1_entity_sequence_of:
+            case asn1_entity_set:
+            case asn1_entity_set_of:
+            case asn1_entity_choice:
+            case asn1_entity_enum_type:
+            case asn1_entity_any: {
+                const auto& nodename = node->get_name();
+                if (false == nodename.empty()) {
+                    path.push_back(nodename);
+                }
+            } break;
+            case asn1_entity_referenced_type:
+            default:
+                break;
+        }
+
+        node = node->get_parent();  // transparent
+    };
+
+    std::reverse(path.begin(), path.end());
+    name = lambda_join(path, ".");
+
+    return name;
+}
 
 asn1_object& asn1_object::as_default() {
     _component_type = asn1_default;
@@ -142,18 +200,22 @@ asn1_object& asn1_object::as_optional() {
     return *this;
 }
 
-asn1_object& asn1_object::as_primitive() {
+asn1_object& asn1_object::as_primitive(bool cascade) {
     _ident &= ~asn1_tag_constructed;
-    if (_object) {
-        _object->_ident = _ident;
+    if (cascade) {
+        if (_object) {
+            _object->_ident &= ~asn1_tag_constructed;
+        }
     }
     return *this;
 }
 
-asn1_object& asn1_object::as_constructed() {
+asn1_object& asn1_object::as_constructed(bool cascade) {
     _ident |= asn1_tag_constructed;
-    if (_object) {
-        _object->_ident = _ident;
+    if (cascade) {
+        if (_object) {
+            _object->_ident |= asn1_tag_constructed;
+        }
     }
     return *this;
 }
@@ -166,11 +228,9 @@ bool asn1_object::is_constructed() const { return (_ident & asn1_tag_mask) ? tru
 
 bool asn1_object::is_tagged() const { return _tag ? true : false; }
 
+bool asn1_object::is_default() const { return asn1_default == _component_type; }
+
 void asn1_object::accept(asn1_visitor* v) { v->visit(this); }
-
-void asn1_object::represent(uint32 depth, stream_t* s, asn1_value* value) {}
-
-bool asn1_object::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) { return true; }
 
 asn1_object& asn1_object::suppress() {
     _suppress = true;
@@ -187,6 +247,10 @@ asn1_object& asn1_object::unsuppress() {
 }
 
 bool asn1_object::is_suppressed() { return _suppress; }
+
+void asn1_object::represent(uint32 depth, stream_t* s, asn1_value* value) {}
+
+bool asn1_object::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) { return true; }
 
 }  // namespace io
 }  // namespace hotplace

@@ -24,8 +24,8 @@
   * HTTP/2 ![implemented](https://img.shields.io/badge/implemented+SDK-green)
   * TLS over TCP ![implemented](https://img.shields.io/badge/implemented+SDK-green)
   * DTLS over UDP ![implemented](https://img.shields.io/badge/implemented+SDK-green)
-  * QUIC ![studying](https://img.shields.io/badge/studying-magenta)
-  * HTTP/3 ![studying](https://img.shields.io/badge/studying-magenta)
+  * QUIC ![holding](https://img.shields.io/badge/holding-magenta)
+  * HTTP/3 ![holding](https://img.shields.io/badge/holding-magenta)
   * ASN.1 ![studying](https://img.shields.io/badge/studying-magenta)
 * link
   * [changelog](CHANGELOG.md)
@@ -197,7 +197,7 @@
       * ITU-T X.692 ISO/IEC 8825-3 ASN.1 encoding rules: Specification of Encoding Control Notation (ECN)
       * ITU-T X.693 ISO/IEC 8825-4 ASN.1 encoding rules: XML Encoding Rules (XER)
 * Neural Networks / Machine Learning
-  * sketch repository (private, spin off, in progress)
+  * sketch repository (private, spin off, holding)
 * Format String Syntax
   * https://fmt.dev/dev/syntax/
 

@@ -21,7 +21,15 @@ namespace io {
 /**
  * @brief   SetType
  * @sample
- *      ChildInformation ::= SET {name Name, dateOfBirth [0] Date}
+ *          auto type = new asn1_set({{"z", asn1_entity_boolean}, {"a", asn1_entity_integer}});;
+ *          type->publish(&bs);
+ *          // SET {z BOOLEAN, a INTEGER}
+ *          auto value = type->instantiate();
+ *          (*value).set("z", true).set("a", 5);
+ *          value->publish(&bin);
+ *          // 31 06 01 01 FF 02 01 05
+ *          value->release();
+ *          type->release();
  */
 class asn1_set : public asn1_container {
    public:

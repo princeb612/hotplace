@@ -11,6 +11,7 @@
  *
  */
 
+#include <hotplace/sdk/base/stream/vtprintf.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_builtin_type.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
@@ -19,9 +20,13 @@
 namespace hotplace {
 namespace io {
 
-asn1_builtin_type::asn1_builtin_type(asn1_entity_t entity) : asn1_type(entity, "", new asn1_type(entity)) { set_component_entity(asn1_entity_builtin_type); }
+asn1_builtin_type::asn1_builtin_type(asn1_entity_t entity) : asn1_type(entity, "", new asn1_type(entity)) {}
 
-asn1_builtin_type::asn1_builtin_type(const std::string& name, asn1_entity_t entity) : asn1_type(entity, name, nullptr) { set_component_entity(asn1_entity_builtin_type); }
+asn1_builtin_type::asn1_builtin_type(const std::string& name, asn1_entity_t entity) : asn1_type(entity, name, nullptr) {}
+
+asn1_builtin_type::asn1_builtin_type(const std::string& name, asn1_entity_t entity, const variant& value) : asn1_type(entity, name, nullptr) {
+    set_default_value(value.content());
+}
 
 asn1_builtin_type::~asn1_builtin_type() {}
 
@@ -32,9 +37,13 @@ asn1_builtin_type* asn1_builtin_type::addref() {
     return this;
 }
 
+asn1_entity_t asn1_builtin_type::get_component_entity() const { return asn1_entity_builtin_type; }
+
 void asn1_builtin_type::represent(uint32 depth, stream_t* s, asn1_value* value) {
     if (s) {
+        auto resource = asn1_resource::get_instance();
         auto entity = get_entity();
+
         if (asn1_entity_referenced_type == entity)
             s->printf("%s", _name.c_str());
         else {
@@ -42,7 +51,20 @@ void asn1_builtin_type::represent(uint32 depth, stream_t* s, asn1_value* value) 
             if (value) {
                 value->write(s, get_name());
             } else {
-                s->printf("%s", asn1_resource::get_instance()->get_entity_name(get_ident(), entity).c_str());
+                s->printf("%s", resource->get_entity_name(get_ident(), entity).c_str());
+            }
+            auto type = get_component_type();
+            switch (type) {
+                case asn1_default:
+                case asn1_optional: {
+                    s->printf(" %s", resource->get_tagtype_name(type).c_str());
+                } break;
+                default: {
+                } break;
+            }
+            if (asn1_default == type) {
+                s->printf(" ");
+                vtprintf(s, _vt, vtprintf_style_t::vtprintf_style_asn1);
             }
         }
     }
@@ -54,14 +76,15 @@ bool asn1_builtin_type::represent(uint32 depth, binary_t* b, asn1_value* value, 
 #if defined DEBUG
     if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
         trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
+            auto resource = asn1_resource::get_instance();
             dbs.fill(depth << 1, ' ');
-            dbs.println("ASN.1 builtin type");
+            dbs.println("%s", resource->get_component_entity_name(get_component_entity()).c_str());
             dbs.fill(depth << 1, ' ');
             dbs << "- ";
             if (false == get_name().empty()) {
                 dbs << get_name() << " ";
             }
-            dbs.println(ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", asn1_resource::get_instance()->get_entity_name(get_ident(), entity).c_str());
+            dbs.println(ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", resource->get_entity_name(get_ident(), entity).c_str());
         });
     }
 #endif
@@ -69,44 +92,7 @@ bool asn1_builtin_type::represent(uint32 depth, binary_t* b, asn1_value* value, 
     // value binding
     std::string name;
     if (value) {
-        auto lambda_join = [](const std::vector<std::string>& path, const std::string& word) -> std::string {
-            std::string value;
-            for (auto iter = path.begin(); iter != path.end(); ++iter) {
-                if (iter != path.begin()) {
-                    value += word;
-                }
-                value += *iter;
-            }
-            return value;
-        };
-        auto lambda_resolve = [&](asn1_object* node) -> std::string {
-            std::vector<std::string> path;
-            while (node) {
-                auto entity = node->get_component_entity();
-                switch (entity) {
-                    case asn1_entity_builtin_type:
-                    case asn1_entity_tagged_type:
-                    case asn1_entity_sequence:
-                    case asn1_entity_set:
-                    case asn1_entity_choice: {
-                        const auto& nodename = node->get_name();
-                        if (false == nodename.empty()) {
-                            path.push_back(nodename);
-                        }
-                    } break;
-                    case asn1_entity_referenced_type:
-                    default:
-                        break;
-                }
-
-                node = node->get_parent();  // transparent
-            }
-
-            std::reverse(path.begin(), path.end());
-            return lambda_join(path, ".");
-        };
-
-        name = lambda_resolve(this);
+        name = resolve_name();
 #if defined DEBUG
         if (false == name.empty()) {
             if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {

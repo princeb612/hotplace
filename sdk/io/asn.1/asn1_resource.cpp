@@ -75,15 +75,16 @@ void asn1_resource::doload_resource() {
             {asn1_entity_datetime, "DATE-TIME", asn1_perm_primitive},
             {asn1_entity_duration, "DURATION", asn1_perm_primitive},
 
-            {asn1_entity_sequence_of, "SEQUENCE OF", asn1_perm_constructed},
-            {asn1_entity_set_of, "SET OF", asn1_perm_constructed},
-            {asn1_entity_choice, "CHOICE", asn1_perm_constructed},
-
             {asn1_entity_builtin_type, "builtin type"},
+            {asn1_entity_named_type, "named type"},
             {asn1_entity_referenced_type, "referenced type"},
             {asn1_entity_tag, "tag type"},
             {asn1_entity_tagged_type, "tagged type"},
-            {asn1_entity_named_type, "named type"},
+            {asn1_entity_sequence_of, "SEQUENCE OF", asn1_perm_constructed},
+            {asn1_entity_set_of, "SET OF", asn1_perm_constructed},
+            {asn1_entity_choice, "CHOICE", asn1_perm_constructed},
+            {asn1_entity_enum_type, "ENUMERATED", asn1_perm_constructed},
+            {asn1_entity_any, "ANY", asn1_perm_both},
         };
         for (auto item : _types) {
             _type_id.emplace(item.type, item.type_name);
@@ -97,6 +98,15 @@ void asn1_resource::doload_resource() {
         // _class_id.emplace(asn1_class_empty, "");
     }
 }  // namespace io
+
+std::string asn1_resource::get_component_entity_name(asn1_entity_t entity) {
+    std::string name;
+    auto iter = _type_id.find(entity);
+    if (_type_id.end() != iter) {
+        name = iter->second;
+    }
+    return name;
+}
 
 std::string asn1_resource::get_entity_name(uint8 ident, asn1_entity_t entity) {
     std::string name;
@@ -146,7 +156,7 @@ std::string asn1_resource::get_class_name(int c) {
     return name;
 }
 
-std::string asn1_resource::get_tagtype_name(uint32 t) {
+std::string asn1_resource::get_tagtype_name(uint16 t) {
     std::string name;
     switch (t) {
         case asn1_implicit:
@@ -155,13 +165,6 @@ std::string asn1_resource::get_tagtype_name(uint32 t) {
         case asn1_explicit:
             name = "EXPLICIT";
             break;
-    }
-    return name;
-}
-
-std::string asn1_resource::get_componenttype_name(uint32 t) {
-    std::string name;
-    switch (t) {
         case asn1_default:
             name = "DEFAULT";
             break;

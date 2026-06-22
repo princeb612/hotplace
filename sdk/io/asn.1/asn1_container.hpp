@@ -34,8 +34,14 @@ class asn1_container : public asn1_type {
     virtual asn1_container* addref();
     virtual void release();
 
+    // named type
+    asn1_container& operator<<(const std::initializer_list<std::pair<std::string, asn1_entity_t>>& items);
+    asn1_container& add(const std::initializer_list<std::pair<std::string, asn1_entity_t>>& items);
+    // is_named_type MUST be true
+    asn1_container& operator<<(const std::initializer_list<asn1_object*>& items);
+    asn1_container& add(const std::initializer_list<asn1_object*>& items);
     asn1_container& operator<<(asn1_object* other);
-    asn1_container& add(std::function<asn1_object*(asn1_container*)> func);
+    asn1_container& add(asn1_object* other);
 
    protected:
     asn1_container(asn1_entity_t entity, const std::string& name, asn1_object* object);
@@ -51,7 +57,7 @@ class asn1_container : public asn1_type {
 
    private:
     std::list<asn1_object*> _list;             // 1..*
-    std::multimap<size_t, asn1_object*> _map;  // SET OF : Lexicographical (order by tag)
+    std::multimap<size_t, asn1_object*> _map;  // SET, CHOICE : Lexicographical (order by tag)
 };
 
 }  // namespace io

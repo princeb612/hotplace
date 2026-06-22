@@ -21,12 +21,16 @@ namespace io {
 /**
  * @brief   SequenceType
  * @example
- *          // snippet 1
- *          auto seq = new asn1_sequence;
- *          *seq << new asn1_builtin_type("name", asn1_entity_ia5string) << new asn1_builtin_type("ok", asn1_entity_boolean);
- *
- *          // snippet 2
- *          auto seq = new asn1_sequence(2, new asn1_builtin_type("name", asn1_entity_ia5string), new asn1_builtin_type("ok", asn1_entity_boolean));
+ *          // sketch
+ *          auto type = asn1_referenced_type::define("Type1", new asn1_sequence({{"name", asn1_entity_visiblestring}, {"ok", asn1_entity_boolean}}));
+ *          type->publish(&bs);
+ *          // Type1 ::= SEQUENCE {name VisibleString, ok BOOLEAN}
+ *          value = type->instantiate();
+ *          (*value).set("name", "Jones").set("ok", true);
+ *          value->publish(&bin);
+ *          // 30 0A 1A 05 4A 6F 6E 65 73 01 01 FF
+ *          value->release();
+ *          type->release();
  */
 class asn1_sequence : public asn1_container {
    public:

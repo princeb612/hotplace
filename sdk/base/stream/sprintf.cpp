@@ -101,6 +101,7 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
 
                 // format specifier
                 std::string dest;
+                bool force_dest = false;
                 auto fmtovl = match[2];
                 if (fmtovl.begin != fmtovl.end) {
                     std::string temp(formatter.c_str() + fmtovl.begin, fmtovl.end - fmtovl.begin);
@@ -157,12 +158,13 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
                                 } break;
                                 case 'x':
                                     dest = std::move(base16_encode(v.data.bstr, v.size));
+                                    force_dest = true;
                                     break;
                             }
                         }
                     }
                 }
-                if (dest.empty()) {
+                if (dest.empty() && (false == force_dest)) {
                     auto it = fmtspec.find(vtype);
                     if (fmtspec.end() != it) {
                         dest = it->second;

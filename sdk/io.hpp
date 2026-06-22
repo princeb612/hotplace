@@ -62,11 +62,14 @@
 
 /* asn.1 */
 #include <hotplace/sdk/io/asn.1/asn1.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_any.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_builtin_type.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_choice.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_container.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_container_of.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_enum.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_integer.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_referenced_type.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_resource.hpp>

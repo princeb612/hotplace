@@ -23,6 +23,7 @@ class asn1_resource {
    public:
     static asn1_resource* get_instance();
 
+    std::string get_component_entity_name(asn1_entity_t entity);
     std::string get_entity_name(uint8 ident, asn1_entity_t entity);
     asn1_entity_t get_entity(const std::string& name);
     asn1_perm_t get_perm(asn1_entity_t entity);
@@ -30,8 +31,7 @@ class asn1_resource {
     /**
      * @brief   IMPLICIT/EXPLICIT
      */
-    std::string get_tagtype_name(uint32 t);
-    std::string get_componenttype_name(uint32 t);
+    std::string get_tagtype_name(uint16 t);
 
     void for_each_type_name(std::function<void(asn1_entity_t, const std::string&)> f);
 

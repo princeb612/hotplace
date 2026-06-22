@@ -65,10 +65,13 @@ class asn1_value {
     void publish(stream_t* b);
     void publish(binary_t* b);
     void write(stream_t* s, const std::string& name);
+
     bool find(const std::string& name);
+    bool find(const std::string& name, variant& copy);
     void encode_value(binary_t& bin, asn1_object* object, const std::string& name, bool& do_len);
     void encode_sequenceof_value(binary_t& bin, asn1_object* object, const std::string& name);
     void encode_setof_value(binary_t& bin, asn1_object* object, const std::string& name);
+    void add_binary(binary_t& bin, const std::string& name);
 
     void addref();
     void release();

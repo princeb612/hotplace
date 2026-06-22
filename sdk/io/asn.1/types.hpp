@@ -143,6 +143,8 @@ enum asn1_entity_t {
     // SetOfType ::= SET OF Type | SET OF NamedType
     asn1_entity_set_of,
     asn1_entity_choice,
+    asn1_entity_enum_type,
+    asn1_entity_any,
 };
 
 enum asn1_tagtype_t {

@@ -22,11 +22,11 @@
 namespace hotplace {
 namespace io {
 
-asn1_container_of::asn1_container_of(asn1_entity_t entity, const std::string& name, asn1_entity_t item) : asn1_type(entity, name, new asn1_builtin_type(item), nullptr) {
-    _ident |= asn1_tag_constructed;
-}
+asn1_container_of::asn1_container_of(asn1_entity_t entity, const std::string& name, asn1_entity_t item) : asn1_container_of(entity, name, new asn1_builtin_type(item)) {}
 
-asn1_container_of::asn1_container_of(asn1_entity_t entity, const std::string& name, asn1_object* object) : asn1_type(entity, name, object, nullptr) { as_constructed(); }
+asn1_container_of::asn1_container_of(asn1_entity_t entity, const std::string& name, asn1_object* object) : asn1_type(entity, name, object, nullptr) {
+    as_constructed(false); /* no cascade */
+}
 
 asn1_container_of::~asn1_container_of() {}
 
@@ -67,11 +67,12 @@ bool asn1_container_of::represent(uint32 depth, binary_t* b, asn1_value* value, 
 #if defined DEBUG
     if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
         trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
+            auto resource = asn1_resource::get_instance();
             dbs.fill(depth << 1, ' ');
             if (false == get_name().empty()) {
                 dbs << get_name() << " ";
             }
-            dbs.println(ANSI_ESCAPE "1;33m%s OF" ANSI_ESCAPE "0m", asn1_resource::get_instance()->get_entity_name(get_ident(), entity).c_str());
+            dbs.println(ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", resource->get_component_entity_name(get_component_entity()).c_str());
         });
     }
 #endif

@@ -41,6 +41,15 @@ namespace io {
  *           | SetType
  *           | SetOfType
  *           | TaggedType
+ * @example
+ *          // sketch
+ *          auto type = asn1_referenced_type::define("Type1", new asn1_builtin_type(asn1_entity_visiblestring));
+ *          type->publish(&bs);  // Type1 ::= VisibleString
+ *          auto value = type->instantiate();
+ *          value->set("Jones");
+ *          value->publish(&bin);  // 1A 05 4A 6F 6E 65 73
+ *          value->release();
+ *          type->release();
  */
 class asn1_builtin_type : public asn1_type {
    public:
@@ -48,10 +57,13 @@ class asn1_builtin_type : public asn1_type {
     asn1_builtin_type(asn1_entity_t entity);
     // name UTF8String
     asn1_builtin_type(const std::string& name, asn1_entity_t entity);
+    asn1_builtin_type(const std::string& name, asn1_entity_t entity, const variant& value);
     virtual ~asn1_builtin_type();
 
     virtual asn1_builtin_type* clone();
     virtual asn1_builtin_type* addref();
+
+    virtual asn1_entity_t get_component_entity() const;
 
    protected:
     virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);

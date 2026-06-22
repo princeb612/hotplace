@@ -42,6 +42,8 @@
   - [x] DTLS
     - [x] DTLS 1.2 fragmentation (Revision 781)
   - [x] sslkeylog
+  - [ ] TODO
+    - [ ] 0-RTT performance optimization
 
 #### packet capture
 
@@ -77,8 +79,8 @@
 | 0xc077 | TLS 1.2 | TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384    | tested |
 | 0xcca8 | TLS 1.2 | TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256   | tested |
 | 0xcca9 | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256 | tested |
-| 0xc0ac | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_128_CCM              | -      |
-| 0xc0ad | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_256_CCM              | -      |
+| 0xc0ac | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_128_CCM              | tested |
+| 0xc0ad | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_256_CCM              | tested |
 | 0xc0ae | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8            | -      |
 | 0xc0af | TLS 1.2 | TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8            | -      |
 

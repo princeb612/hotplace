@@ -16,6 +16,7 @@
 #include <hotplace/sdk/io/asn.1/asn1_builtin_type.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_referenced_type.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_tagged_type.hpp>
 
 namespace hotplace {
@@ -51,6 +52,8 @@ asn1_tagged_type* asn1_tagged_type::addref() {
     return this;
 }
 
+asn1_tag* asn1_tagged_type::get_tag() const { return (asn1_tag*)asn1_object::get_tag(); }
+
 void asn1_tagged_type::represent(uint32 depth, stream_t* s, asn1_value* value) {
     if (false == get_name().empty()) s->printf("%s ", get_name().c_str());
 
@@ -70,8 +73,9 @@ bool asn1_tagged_type::represent(uint32 depth, binary_t* b, asn1_value* value, u
 #if defined DEBUG
     if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
         trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
+            auto resource = asn1_resource::get_instance();
             dbs.fill(depth << 1, ' ');
-            dbs.println("ASN.1 tagged type");
+            dbs.println("%s", resource->get_component_entity_name(get_component_entity()).c_str());
             if (false == get_name().empty()) {
                 dbs.fill(depth << 1, ' ');
                 dbs.println("- %s", get_name().c_str());
@@ -106,8 +110,6 @@ bool asn1_tagged_type::represent(uint32 depth, binary_t* b, asn1_value* value, u
 
     return ret;
 }
-
-asn1_tag* asn1_tagged_type::get_tag() const { return (asn1_tag*)asn1_object::get_tag(); }
 
 }  // namespace io
 }  // namespace hotplace

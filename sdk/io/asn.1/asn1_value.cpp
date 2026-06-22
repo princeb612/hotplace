@@ -83,16 +83,31 @@ void asn1_value::write(stream_t* s, const std::string& name) {
 
 bool asn1_value::find(const std::string& name) { return _values.count(name) > 0; }
 
+bool asn1_value::find(const std::string& name, variant& copy) {
+    bool ret = false;
+    auto iter = _values.find(name);
+    if (_values.end() != iter) {
+        copy = iter->second;
+        ret = true;
+    }
+    return ret;
+}
+
 void asn1_value::encode_value(binary_t& bin, asn1_object* object, const std::string& name, bool& do_len) {
     if (nullptr == object) return;
 
+    asn1_encode enc;
+    auto entity = object->get_entity();
+
     auto iter = _values.find(name);
     if (_values.end() != iter) {
-        auto entity = object->get_entity();
         const variant& v = iter->second;
-        asn1_encode enc;
         enc.encode_value(bin, entity, v, do_len);
     } else {
+        if (object->is_default()) {
+            const auto& v = object->get_default_value();
+            enc.encode_value(bin, entity, v, do_len);
+        }
     }
 }
 
@@ -144,6 +159,18 @@ void asn1_value::encode_setof_value(binary_t& bin, asn1_object* object, const st
 
     for (const auto& item : ordered) {
         bin.insert(bin.end(), item.begin(), item.end());
+    }
+}
+
+void asn1_value::add_binary(binary_t& bin, const std::string& name) {
+    auto iter = _values.find(name);
+    if (_values.end() != iter) {
+        const variant& v = iter->second;
+        if (v.flag() & vt_flag_binary) {
+            binary_t temp;
+            v.to_binary(temp);
+            bin.insert(bin.end(), temp.begin(), temp.end());
+        }
     }
 }
 

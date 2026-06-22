@@ -335,13 +335,57 @@ void do_test_construct_dtls12_2(uint32 flags) {
 }
 
 void testcase_construct_dtls12_2() {
-    // tasks
-    //  [x] dtls_record_publisher
-    //    [x] each handshake starts a new record (easy to control max record size)
-    //    [x] record consist of handshakes in the segment
-    //  [x] finished
-    _test_case.begin("construct DTLS 1.2 (record-handshake 1..1)");
-    do_test_construct_dtls12_2(0);
-    _test_case.begin("construct DTLS 1.2 (record-handshake 1..*)");
-    do_test_construct_dtls12_2(dtls_record_publisher_multi_handshakes);
+    TLS_OPTION testvector[] = {
+        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256"},
+        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"},
+        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"},
+        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"},
+        {tls_12, "TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256"},
+        {tls_12, "TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_CBC_SHA384"},
+        {tls_12, "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256"},
+        {tls_12, "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"},
+        {tls_12, "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"},
+        {tls_12, "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384"},
+        {tls_12, "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"},
+        {tls_12, "TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256"},
+        {tls_12, "TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384"},
+        {tls_12, "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256"},
+
+        // TLS 1.2, httpserver1, curl
+        // SSLKEYLOGFILE=sslkeylog curl -s https://localhost:9000/ -v --tlsv1.2 --tls-max 1.2 --http1.1 -k --ciphers TLS_ECDHE_ECDSA_WITH_AES_256_CCM
+
+        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_CCM"},
+        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_CCM"},
+        {tls_12, "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256"},
+        {tls_12, "TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384"},
+        {tls_12, "TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256"},
+        {tls_12, "TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384"},
+
+#if 1
+        // no test vector (feat. s_server and s_client)
+        // so the actual authenticity cannot be verified...
+
+        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8"},
+        {tls_12, "TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8"},
+#endif
+    };
+
+    auto tlsadvisor = tls_advisor::get_instance();
+
+    for (const auto& item : testvector) {
+        tlsadvisor->set_default_ciphersuites();  // allow all possible cipher suites
+        tlsadvisor->set_ciphersuites(item.cipher_suite.c_str());
+
+        // tasks
+        //  [x] dtls_record_publisher
+        //    [x] each handshake starts a new record (easy to control max record size)
+        //    [x] record consist of handshakes in the segment
+        //  [x] finished
+        _test_case.begin("construct DTLS 1.2 (record-handshake 1..1 and rearrange/reassemble %s)", item.cipher_suite.c_str());
+        do_test_construct_dtls12_2(0);
+        _test_case.begin("construct DTLS 1.2 (record-handshake 1..* and rearrange/reassemble %s)", item.cipher_suite.c_str());
+        do_test_construct_dtls12_2(dtls_record_publisher_multi_handshakes);
+    }
+
+    tlsadvisor->set_default_ciphersuites();  // allow all possible cipher suites
 }

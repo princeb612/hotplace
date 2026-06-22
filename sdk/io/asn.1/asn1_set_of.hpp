@@ -20,6 +20,16 @@ namespace io {
 
 /**
  * @brief   SetOfType ::= SET OF Type | SET OF NamedType
+ * @example
+ *          // sketch
+ *          auto type = new asn1_set_of(asn1_entity_visiblestring);
+ *          type->publish(&bs);
+ *          // SET OF VisibleString
+ *          auto value = type->instantiate();
+ *          (*value).set({"Z", "A"});
+ *          // 31 06 1A 01 41 1A 01 5A
+ *          value->release();
+ *          type->release();
  */
 class asn1_set_of : public asn1_container_of {
    public:
@@ -31,6 +41,8 @@ class asn1_set_of : public asn1_container_of {
 
     virtual asn1_set_of* clone();
     virtual asn1_set_of* addref();
+
+    virtual asn1_entity_t get_component_entity() const;
 
    protected:
 };

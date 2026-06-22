@@ -11,13 +11,15 @@
 #include <hotplace/testcase/base/sample.hpp>
 
 void test_testcase() {
+    const OPTION& option = _cmdline->value();
+
     _test_case.begin("test_case");
     _test_case.test(errorcode_t::success, "function1", "case desc 1");  // pass
     // _test_case.test(errorcode_t::invalid_parameter, "function2", "case desc 2 - intentional fail");  // fail
     _test_case.test(errorcode_t::not_supported, "function3", "case desc 4");  // skip
     _test_case.test(errorcode_t::low_security, "function4", "case desc 5");   // low
 
-    {
+    if (option.flags & option_notimecheck) {
         test_case_notimecheck notimecheck(_test_case);
         _logger->consoleln("pause, resume and estimate time");
         msleep(1000);

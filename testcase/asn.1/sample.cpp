@@ -56,6 +56,7 @@ int main(int argc, char** argv) {
     }
 
     testcase_asn1();
+    testcase_gpt();
     testcase_parser();
 
     _logger->flush();
