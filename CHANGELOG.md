@@ -35,6 +35,8 @@
     * CBOR
 
 * details
+  * Revision 1036
+    * ASN.1 BIT STRING
   * Revision 1035
     * ASN.1 DEFAULT, ENUMERATED, ANY
   * Revision 1034

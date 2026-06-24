@@ -47,7 +47,7 @@ void asn1_resource::doload_resource() {
             {asn1_entity_bitstring, "BIT STRING", asn1_perm_both},
             {asn1_entity_octstring, "OCTET STRING", asn1_perm_both},
             {asn1_entity_null, "NULL", asn1_perm_primitive},
-            {asn1_entity_objid, "OBJECT IDENTIFIER", asn1_perm_primitive},
+            {asn1_entity_oid, "OBJECT IDENTIFIER", asn1_perm_primitive},
             {asn1_entity_objdesc, "ObjectDescriptor", asn1_perm_primitive},
             {asn1_entity_extern, "EXTERNAL", asn1_perm_constructed},
             {asn1_entity_real, "REAL", asn1_perm_both},

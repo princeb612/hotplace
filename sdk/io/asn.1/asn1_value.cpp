@@ -11,11 +11,12 @@
  *
  */
 
+#include <hotplace/sdk/base/nostd/bitset.hpp>
 #include <hotplace/sdk/base/stream/vtprintf.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
 #include <set>
 
 namespace hotplace {
@@ -83,12 +84,34 @@ void asn1_value::write(stream_t* s, const std::string& name) {
 
 bool asn1_value::find(const std::string& name) { return _values.count(name) > 0; }
 
-bool asn1_value::find(const std::string& name, variant& copy) {
+bool asn1_value::find(const std::string& name, std::list<variant>& values, uint16 vtflags) {
     bool ret = false;
-    auto iter = _values.find(name);
-    if (_values.end() != iter) {
-        copy = iter->second;
-        ret = true;
+    auto liter = _values.lower_bound(name);
+    auto uiter = _values.upper_bound(name);
+    for (auto iter = liter; iter != uiter; ++iter) {
+        const auto& v = iter->second;
+        auto flag = v.flag();
+        if (vtflags & flag) {
+            values.push_back(v);
+            ret = true;
+        }
+    }
+    return ret;
+}
+
+bool asn1_value::find(const std::string& name, std::list<std::string>& values, uint16 vtflags) {
+    bool ret = false;
+    auto liter = _values.lower_bound(name);
+    auto uiter = _values.upper_bound(name);
+    for (auto iter = liter; iter != uiter; ++iter) {
+        const auto& v = iter->second;
+        auto flag = v.flag();
+        if (vtflags & flag) {
+            std::string key;
+            v.to_string(key);
+            values.push_back(key);
+            ret = true;
+        }
     }
     return ret;
 }
@@ -125,7 +148,7 @@ void asn1_value::encode_sequenceof_value(binary_t& bin, asn1_object* object, con
         asn1_encode enc;
         bool do_len = false;
 
-        asn1_encode::asn1_ident_octets(bin, ident, entity);  // T
+        asn1_encode::write_ident_octets(bin, ident, entity);  // T
         auto pos = bin.size();
         enc.encode_value(bin, entity, v, do_len);                               // V
         asn1_encode::t_asn1_length_octets<size_t>(bin, bin.size() - pos, pos);  // insert L between T and V
@@ -149,7 +172,7 @@ void asn1_value::encode_setof_value(binary_t& bin, asn1_object* object, const st
         asn1_encode enc;
         bool do_len = false;
 
-        asn1_encode::asn1_ident_octets(b, ident, entity);  // T
+        asn1_encode::write_ident_octets(b, ident, entity);  // T
         auto pos = b.size();
         enc.encode_value(b, entity, v, do_len);                             // V
         asn1_encode::t_asn1_length_octets<size_t>(b, b.size() - pos, pos);  // insert L between T and V
@@ -160,6 +183,95 @@ void asn1_value::encode_setof_value(binary_t& bin, asn1_object* object, const st
     for (const auto& item : ordered) {
         bin.insert(bin.end(), item.begin(), item.end());
     }
+}
+
+bool asn1_value::encode_namedlist(binary_t& bin, asn1_object* object, const std::string& name, const std::map<std::string, int>& namedlist) {
+    if (nullptr == object) return false;
+
+    auto entity = object->get_entity();
+
+    auto lambda_enum2eval = [&](const std::string& ename, int& evalue) -> bool {
+        evalue = 0;
+        bool ret = false;
+        auto iter = namedlist.find(ename);
+        if (namedlist.end() != iter) {
+            evalue = iter->second;
+            ret = true;
+        }
+        return ret;
+    };
+
+    uint16 vtflags = 0;
+    switch (entity) {
+        case asn1_entity_bitstring:
+        case asn1_entity_enum:
+            vtflags = vt_flag_string;
+            break;
+        case asn1_entity_integer:
+            vtflags = vt_flag_string | vt_flag_int;
+            break;
+        default:
+            break;
+    }
+
+    switch (entity) {
+        case asn1_entity_bitstring: {
+            std::list<std::string> values;
+            std::set<int> evalues;
+            find(name, values, vtflags);
+            for (const auto& item : values) {
+                int evalue = 0;
+                auto check = lambda_enum2eval(item, evalue);
+                if (check & (evalue >= 0)) {
+                    evalues.insert(evalue);
+                }
+            }
+            if (false == evalues.empty()) {
+                // std::bitset
+                int minvalue = *evalues.begin();
+                int maxvalue = *evalues.rbegin();
+                bitset bs(minvalue, maxvalue);
+                for (const auto& item : evalues) {
+                    bs.add(item);
+                }
+                binary_t temp = bs.get();
+                bin.insert(bin.end(), bs.unused_bit());
+                bin.insert(bin.end(), temp.begin(), temp.end());
+            } else {
+                return false;
+            }
+        } break;
+        case asn1_entity_enum:
+        case asn1_entity_integer: {
+            std::list<variant> values;
+            auto test = find(name, values, vtflags);
+            if (test && (values.size() == 1)) {
+                const auto& v = *values.begin();
+                auto flag = v.flag();
+                int evalue = 0;
+                asn1_encode enc;
+                if (vt_flag_string & flag) {
+                    std::string key;
+                    v.to_string(key);
+                    auto test = lambda_enum2eval(key, evalue);
+                    if (test) {
+                        enc.t_asn1_integer_value(bin, evalue);
+                    }
+                } else if (vt_flag_int & flag) {
+                    evalue = v.t_toi<int>();
+                    enc.t_asn1_integer_value(bin, evalue);
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } break;
+        default:
+            break;
+    }
+
+    return true;
 }
 
 void asn1_value::add_binary(binary_t& bin, const std::string& name) {

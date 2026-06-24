@@ -98,7 +98,7 @@ enum asn1_entity_t {
     asn1_entity_bitstring = asn1_tag_bitstring,
     asn1_entity_octstring = asn1_tag_octstring,
     asn1_entity_null = asn1_tag_null,
-    asn1_entity_objid = asn1_tag_objid,
+    asn1_entity_oid = asn1_tag_objid,
     asn1_entity_objdesc = asn1_tag_objdesc,
     asn1_entity_extern = asn1_tag_extern,
     asn1_entity_real = asn1_tag_real,
@@ -145,6 +145,15 @@ enum asn1_entity_t {
     asn1_entity_choice,
     asn1_entity_enum_type,
     asn1_entity_any,
+
+    asn1_entity_constraints = 0x2000,
+    asn1_entity_constraints_single,
+    asn1_entity_constraints_size,
+    asn1_entity_constraints_range,
+    asn1_entity_constraints_from,
+    asn1_entity_constraints_pattern,
+    asn1_entity_constraints_including,
+    asn1_entity_constraints_containing,
 };
 
 enum asn1_tagtype_t {
@@ -188,6 +197,13 @@ class asn1_value;
 class asn1_visitor;
 class asn1_der_visitor;
 class asn1_notation_visitor;
+
+class asn1_constraints;
+class asn1_constraints_from;
+class asn1_constraints_pattern;
+class asn1_constraints_range;
+class asn1_constraints_single;
+class asn1_constraints_size;
 
 }  // namespace io
 }  // namespace hotplace

@@ -107,7 +107,7 @@ void test_x690_8_1_2_identifier_octects() {
             binary_t bin;
 
             // encode
-            asn1_encode::asn1_ident_octets(bin, item.ident, item.tag);
+            asn1_encode::write_ident_octets(bin, item.ident, item.tag);
             _test_case.assert(bin == bin_expect, __FUNCTION__, R"(encode DER %s expect "%s")", base16_encode(bin).c_str(), item.der);
 
             // publish
@@ -333,6 +333,7 @@ void test_x690_encoding_value() {
         {asn1_entity_integer, variant(-257), "02 02 fe ff", "x.690 8.3"},
         {asn1_entity_integer, variant(-300), "02 02 fe d4", "x.690 8.3"},
         {asn1_entity_integer, variant(-1234), "02 02 fb 2e", "x.690 8.3"},
+        {asn1_entity_integer, variant(-27066), "02 02 96 46", "ASN.1 - Communication between Heterogeneous Systems 18.2.3 INTEGER value"},
         {asn1_entity_integer, variant(-32768), "02 02 80 00", "x.690 8.3"},
         {asn1_entity_integer, variant(-32769), "02 03 ff 7f ff", "x.690 8.3"},
         {asn1_entity_integer, variant(-8388607), "02 03 80 00 01", "x.690 8.3"},
@@ -500,10 +501,6 @@ void test_x690_encoding_typevalue() {
         {new asn1_builtin_type(asn1_entity_real), variant(-1.0), "0903c00001", "X.690 8.5 -1.0"},
 
         // X.690 8.6 encoding of a bitstring value
-        // commencing with the leading bit and proceeding to the trailing bit
-        // if(size(input) % 2) { pad = '0'; padbit = 4; }
-        // encode(asn1_tag_bitstring).encode(padbit).encode(input).encode(pad)
-        {new asn1_builtin_type(asn1_entity_bitstring), variant("0a3b5f291cd"), "03 07 04 0A 3B 5F 29 1C D0", "X.690 8.6.4.2 0a3b5f291cd"},
 
         // X.690 8.7
         {new asn1_builtin_type(asn1_entity_octstring), variant("0123456789abcdef"), "04 08 01 23 45 67 89 ab cd ef", "X.690 8.7.4 0123456789abcdef"},
@@ -547,13 +544,13 @@ void test_x690_encoding_typevalue() {
         //       - private(4)
         //         - enterprise(1)
         // joint-iso-itu-t(2)
-        {new asn1_builtin_type(asn1_entity_objid), variant("1.3.6.1.4.1"), "06 05 2b 06 01 04 01", "X.690 8.19 OID #1"},
-        {new asn1_builtin_type(asn1_entity_objid), variant("1.2.840.113549"), "06 06 2A 86 48 86 F7 0d", "X.690 8.19 OID #2"},
-        {new asn1_builtin_type(asn1_entity_objid), variant("1.3.6.1.4.1.311.21.20"), "06 09 2b 06 01 04 01 82 37 15 14", "X.690 8.19 OID #3"},
-        {new asn1_builtin_type(asn1_entity_objid), variant("1.3.6.1.4.1.311.60.2.1.1"), "06 0B 2B 06 01 04 01 82 37 3C 02 01 01", "X.690 8.19 OID #4"},
-        {new asn1_builtin_type(asn1_entity_objid), variant("1.2.840.10045.3.1.7"), "06 08 2a 86 48 ce 3d 03 01 07", "X.690 8.19 #5"},
-        {new asn1_builtin_type(asn1_entity_objid), variant("2.100.3"), "06 03 81 34 03", "X.690 8.19 OID #6"},  // 0..39 < 100 ??
-        {new asn1_builtin_type(asn1_entity_objid), variant("2.154"), "06 02 81 6a", "X.690 8.19 OID #7"},
+        {new asn1_builtin_type(asn1_entity_oid), variant("1.3.6.1.4.1"), "06 05 2b 06 01 04 01", "X.690 8.19 OID #1"},
+        {new asn1_builtin_type(asn1_entity_oid), variant("1.2.840.113549"), "06 06 2A 86 48 86 F7 0d", "X.690 8.19 OID #2"},
+        {new asn1_builtin_type(asn1_entity_oid), variant("1.3.6.1.4.1.311.21.20"), "06 09 2b 06 01 04 01 82 37 15 14", "X.690 8.19 OID #3"},
+        {new asn1_builtin_type(asn1_entity_oid), variant("1.3.6.1.4.1.311.60.2.1.1"), "06 0B 2B 06 01 04 01 82 37 3C 02 01 01", "X.690 8.19 OID #4"},
+        {new asn1_builtin_type(asn1_entity_oid), variant("1.2.840.10045.3.1.7"), "06 08 2a 86 48 ce 3d 03 01 07", "X.690 8.19 #5"},
+        {new asn1_builtin_type(asn1_entity_oid), variant("2.100.3"), "06 03 81 34 03", "X.690 8.19 OID #6"},  // 0..39 < 100 ??
+        {new asn1_builtin_type(asn1_entity_oid), variant("2.154"), "06 02 81 6a", "X.690 8.19 OID #7"},
 
         // X.690 8.20 encoding of a relative object identifier value
         {new asn1_builtin_type(asn1_entity_reloid), variant("8571.3.2"), "0D 04 C27B0302", "X.690 8.20 relative object identifier"},
@@ -574,26 +571,6 @@ void test_x690_encoding_typevalue() {
 
         inst->release();
         item.obj->release();
-    }
-}
-
-void test_x690_constructed() {
-    _test_case.begin("ITU-T X.690 constructed");
-
-    // constructed
-    // X.690 10.2 String encoding forms
-    // For bitstring, octetstring and restricted character string types, the constructed form of encoding shall not be used. (Contrast with 8.23.6.)
-    {
-        binary_t bin;
-        bin << uint8(asn1_tag_bitstring | asn1_tag_constructed) << uint8(0x80) << uint8(asn1_tag_bitstring);
-        asn1_encode::t_asn1_length_octets<uint32>(bin, 3);
-        bin << base16_decode("000a3b") << uint8(asn1_tag_bitstring);
-        asn1_encode::t_asn1_length_octets<uint32>(bin, 5);
-        bin << base16_decode("045f291cd0") << uint8(0x00)  // EOC
-            << uint8(0x00);                                // EOC
-        _logger->writeln("%s", base16_encode(bin).c_str());
-        const char* expect_constructed = "23 80 03 03 00 0A 3B 03 05 04 5F 29 1C D0 00 00";
-        _test_case.assert(bin == base16_decode_rfc(expect_constructed), __FUNCTION__, "X.690 8.6.4 BitString constructed");
     }
 }
 
@@ -671,7 +648,7 @@ void test_asn1_object() {
         {"INTEGER", new asn1_builtin_type(asn1_entity_integer)},
         {"OCTET STRING", new asn1_builtin_type(asn1_entity_octstring)},
         {"NULL", new asn1_builtin_type(asn1_entity_null)},
-        {"OBJECT IDENTIFIER", new asn1_builtin_type(asn1_entity_objid)},
+        {"OBJECT IDENTIFIER", new asn1_builtin_type(asn1_entity_oid)},
         {"REAL", new asn1_builtin_type(asn1_entity_real)},
         {"SEQUENCE {name IA5String, ok BOOLEAN}", new asn1_sequence({{"name", asn1_entity_ia5string}, {"ok", asn1_entity_boolean}})},
         {"Date ::= VisibleString", asn1_referenced_type::define("Date", asn1_entity_visiblestring)},
@@ -856,7 +833,6 @@ void testcase_asn1() {
     test_x690_8_1_5_end_of_contents();
     test_x690_encoding_value();
     test_x690_encoding_typevalue();
-    test_x690_constructed();
     test_x690_8_9_sequence();
     test_x690_time();
     test_asn1_object();

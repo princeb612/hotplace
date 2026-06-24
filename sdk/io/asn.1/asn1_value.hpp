@@ -14,6 +14,7 @@
 #define __HOTPLACE_SDK_IO_ASN1_ASN1VALUE__
 
 #include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/io/asn.1/types.hpp>
 
 namespace hotplace {
@@ -67,10 +68,15 @@ class asn1_value {
     void write(stream_t* s, const std::string& name);
 
     bool find(const std::string& name);
-    bool find(const std::string& name, variant& copy);
+    /**
+     * value->find(name, values, vt_flag_string);
+     */
+    bool find(const std::string& name, std::list<variant>& values, uint16 vtflags);
+    bool find(const std::string& name, std::list<std::string>& values, uint16 vtflags);
     void encode_value(binary_t& bin, asn1_object* object, const std::string& name, bool& do_len);
     void encode_sequenceof_value(binary_t& bin, asn1_object* object, const std::string& name);
     void encode_setof_value(binary_t& bin, asn1_object* object, const std::string& name);
+    bool encode_namedlist(binary_t& bin, asn1_object* object, const std::string& name, const std::map<std::string, int>& namedlist);
     void add_binary(binary_t& bin, const std::string& name);
 
     void addref();

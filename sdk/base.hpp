@@ -44,6 +44,7 @@
 #include <hotplace/sdk/base/nostd/atoi.hpp>
 #include <hotplace/sdk/base/nostd/avltree.hpp>
 #include <hotplace/sdk/base/nostd/binaries.hpp>
+#include <hotplace/sdk/base/nostd/bitset.hpp>
 #include <hotplace/sdk/base/nostd/btree.hpp>
 #include <hotplace/sdk/base/nostd/capacity.hpp>
 #include <hotplace/sdk/base/nostd/cast.hpp>

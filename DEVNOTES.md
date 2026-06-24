@@ -1,20 +1,36 @@
-### Notes
+## Notes
 
-- [Release](#release)
 - [Plan](#plan)
 - [Memo](#memo)
-- [TODO](#todo)
 
-#### Plan
+### Plan
 
 - in progress
-  - ASN.1
+  - ASN.1 (reboot)
 - holding
   - QUIC
   - HTTP/3
 - flowchart
   - line : implemented
   - dot-line : not implemented yet
+
+- TODO
+  - [ ] ASN.1
+    - in progress
+      - [ ] ASN.1 runtime
+      - [ ] ASN.1 AST (Abstract Syntax Tree)
+      - [ ] ASN.1 compiler
+      - [ ] ASN.1 repository
+  - [ ] HTTP/3
+    - [x] [The Illustrated QUIC Connection](https://quic.xargs.org/)
+    - [x] http3.pcapng
+      - [x] pcap
+    - [ ] integration - network_server
+  - sub-tasks
+    - [ ] COSE partial iv
+    - [ ] shutdown DTLS peer connection
+    - [ ] br(Brotli), zstd(Zstandard) HTTP encoding
+    - [ ] HTTP/2 Authentication Scheme
 
 ```mermaid
 flowchart LR
@@ -127,28 +143,6 @@ flowchart LR
   DC3 ---> DD;
   DC6 -.-> DD;
 ```
-
-### TODO
-
-- [ ] ASN.1
-  - in progress
-    - [ ] ASN.1 runtime
-    - [ ] ASN.1 AST (Abstract Syntax Tree)
-  - TODO
-    - [ ] ASN.1 compiler
-    - [ ] ASN.1 repository, builder
-- [ ] HTTP/3
-  - [x] [The Illustrated QUIC Connection](https://quic.xargs.org/)
-  - [x] http3.pcapng
-    - [x] pcap
-  - [ ] integration - network_server
-
-sub-tasks
-
-- [ ] COSE partial iv
-- [ ] shutdown DTLS peer connection
-- [ ] br(Brotli), zstd(Zstandard) HTTP encoding
-- [ ] HTTP/2 Authentication Scheme
 
 ### Memo
 

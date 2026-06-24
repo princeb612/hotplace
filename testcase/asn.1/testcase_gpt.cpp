@@ -149,6 +149,21 @@ void test_testvector_chatgpt() {
 
         auto case27_type1 = asn1_referenced_type::define("Test", new asn1_sequence({new asn1_builtin_type("id", asn1_entity_integer), new asn1_any("data")}));
 
+        auto case28_type1 = asn1_referenced_type::define("Flags", new asn1_bitstring);
+        auto case28_type2 = case28_type1->clone();
+        auto case28_type3 = asn1_referenced_type::define("Flags", new asn1_bitstring({{"read", 0}, {"write", 1}, {"execute", 2}}));
+
+        auto case29_type1 = asn1_referenced_type::define("Data", new asn1_builtin_type(asn1_entity_octstring));
+        auto case29_type2 = asn1_referenced_type::define("Oid", new asn1_builtin_type(asn1_entity_oid));
+        auto case29_type3 = asn1_referenced_type::define("RelOid", new asn1_builtin_type(asn1_entity_reloid));
+        auto case29_type4 = case29_type3->clone();
+        auto case29_type5 = case29_type3->clone();
+        auto case29_type6 = case29_type3->clone();
+        auto case29_type7 = case29_type3->clone();
+
+        auto case30_type1 = asn1_referenced_type::define("Time", new asn1_builtin_type(asn1_entity_utctime));
+        auto case30_type2 = asn1_referenced_type::define("Time", new asn1_builtin_type(asn1_entity_generalizedtime));
+
         // clang-format off
         const char* longform_string = R"(You and I in a little toy shop / Buy a bag of balloons with the money we've got / Set them free at the break of dawn / 'Til one by one they were gone / Back at base bugs in the software)"
                                       R"( / Back at base bugs in the software / Flash the message: "something's out there!" / Floating in the summer sky / Ninety-nine red balloons go by)";
@@ -182,6 +197,18 @@ void test_testvector_chatgpt() {
             flag_nnl_homeoffice,        // "homeOffice"
             flag_unnamed_30,            // 30
             flag_value_der,             // id 1, data 0x1A03616263
+            flag_value_bitstring,       // 10101010
+            flag_value_bitstring2,      // 1011011101011
+            flag_value_nbl,             // ["read", "execute"]
+            flag_value_deadbeef,        // DE AD BE EF
+            flag_value_oid,             // 1.2.840.113549
+            flag_value_reloid,          // 8571.3.2
+            flag_value_reloid2,
+            flag_value_reloid3,
+            flag_value_reloid4,
+            flag_value_reloid5,
+            flag_value_utctime,
+            flag_value_generalizedtime,
         };
         struct testvector {
             asn1_object* obj;
@@ -307,6 +334,21 @@ void test_testvector_chatgpt() {
             {case26_type4, "Test 26. Named Number List", "Location ::= INTEGER {homeOffice(0), fieldOffice(1), roving(2)}", "02 01 1e", flag_unnamed_30},
 
             {case27_type1, "Test 27. ANY", "Test ::= SEQUENCE {id INTEGER, data ANY}", "30 08 / 02 01 01 / 1A 03 61 62 63", flag_value_der},
+
+            {case28_type1, "Test 28. BIT STRING", "Flags ::= BIT STRING", "03 02 00 AA", flag_value_bitstring},
+            {case28_type2, "Test 28. BIT STRING", "Flags ::= BIT STRING", "03 03 03 B7 58", flag_value_bitstring2},
+            {case28_type3, "Test 28. BIT STRING NamedBitList", "Flags ::= BIT STRING {read(0), write(1), execute(2)}", "03 02 05 A0", flag_value_nbl},
+
+            {case29_type1, "Test 29. OCTET STRING", "Data ::= OCTET STRING", "04 04 DE AD BE EF", flag_value_deadbeef},
+            {case29_type2, "Test 29. OBJECT IDENTIFIER", "Oid ::= OBJECT IDENTIFIER", "06 06 2A 86 48 86 F7 0D", flag_value_oid},
+            {case29_type3, "Test 29. RELATIVE-OID", "RelOid ::= RELATIVE-OID", "0D 04 C2 7B 03 02", flag_value_reloid},
+            {case29_type4, "Test 29. RELATIVE-OID", "RelOid ::= RELATIVE-OID", "0D 06 01 03 06 01 04 01", flag_value_reloid2},
+            {case29_type5, "Test 29. RELATIVE-OID", "RelOid ::= RELATIVE-OID", "0D 02 81 00", flag_value_reloid3},
+            {case29_type6, "Test 29. RELATIVE-OID", "RelOid ::= RELATIVE-OID", "0D 06 C2 7B 81 48 82 2C", flag_value_reloid4},
+            {case29_type7, "Test 29. Empty RELATIVE-OID", "RelOid ::= RELATIVE-OID", "0D 00", flag_value_reloid5},
+
+            {case30_type1, "Test 30. UTCTime", "Time ::= UTCTime", "17 0D 3235303130313132303030305A", flag_value_utctime},
+            {case30_type2, "Test 30. GeneralizedTime", "Time ::= GeneralizedTime", "18 0F 32303235303130313132303030305A", flag_value_generalizedtime},
         };
 
         for (const auto& item : table) {
@@ -393,6 +435,43 @@ void test_testvector_chatgpt() {
                     break;
                 case flag_value_der:
                     (*value).set("id", 1).set("data", base16_decode_rfc("1A 03 61 62 63"));
+                    break;
+                case flag_value_bitstring:
+                    (*value).set("10101010");
+                    break;
+                case flag_value_bitstring2:
+                    (*value).set("1011011101011");
+                    break;
+                case flag_value_nbl:
+                    (*value).set("read").set("execute");
+                    break;
+                case flag_value_deadbeef:
+                    (*value).set("DEADBEEF");
+                    break;
+                case flag_value_oid:
+                    (*value).set("1.2.840.113549");
+                    break;
+                case flag_value_reloid:
+                    (*value).set("8571.3.2");
+                    break;
+                case flag_value_reloid2:
+                    (*value).set("1.3.6.1.4.1");
+                    break;
+                case flag_value_reloid3:
+                    (*value).set("128");
+                    break;
+                case flag_value_reloid4:
+                    (*value).set("8571.200.300");
+                    break;
+                case flag_value_reloid5:
+                    (*value).set("");
+                    break;
+                case flag_value_utctime:
+                    (*value).set("250101120000Z");
+                    break;
+                case flag_value_generalizedtime:
+                    (*value).set("20250101120000Z");
+                    break;
                 default:
                     break;
             }

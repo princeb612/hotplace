@@ -16,8 +16,10 @@
 
 #include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
 #include <hotplace/sdk/io/basic/oid.hpp>
 
 namespace hotplace {
@@ -25,7 +27,7 @@ namespace io {
 
 asn1_encode::asn1_encode() {}
 
-void asn1_encode::asn1_ident_octets(binary_t& bin, uint8 enc, uint64 tag, size_t pos) {
+return_t asn1_encode::write_ident_octets(binary_t& bin, uint8 enc, uint64 tag, size_t pos) {
     if ((size_t)-1 == pos) {
         pos = bin.size();
     }
@@ -52,6 +54,15 @@ void asn1_encode::asn1_ident_octets(binary_t& bin, uint8 enc, uint64 tag, size_t
 
     bin.reserve(bin.size() + temp.size());
     bin.insert(bin.begin() + pos, temp.begin(), temp.end());
+
+    return errorcode_t::success;
+}
+
+return_t asn1_encode::write_ident_octets(binary_t& bin, asn1_object* object, size_t pos) {
+    return_t ret = errorcode_t::success;
+    if (nullptr == object) return errorcode_t::invalid_parameter;
+    ret = write_ident_octets(bin, object->get_ident(), object->get_entity(), pos);
+    return ret;
 }
 
 return_t asn1_encode::read_asn1_ident_octets(const byte_t* stream, size_t size, uint8& ident, uint64& tag) {
@@ -90,7 +101,7 @@ return_t asn1_encode::read_asn1_ident_octets(const byte_t* stream, size_t size, 
 }
 
 asn1_encode& asn1_encode::encode(binary_t& bin, asn1_entity_t entity, const variant& vt) {
-    asn1_ident_octets(bin, asn1_class_universal | asn1_tag_primitive, entity);
+    write_ident_octets(bin, asn1_class_universal | asn1_tag_primitive, entity);
     auto pos = bin.size();
     bool do_len = true;
     encode_value(bin, entity, vt, do_len);
@@ -102,23 +113,19 @@ asn1_encode& asn1_encode::encode(binary_t& bin, asn1_entity_t entity, const vari
 
 asn1_encode& asn1_encode::encode_value(binary_t& bin, asn1_entity_t entity, const variant& vt, bool& do_len) {
     do_len = true;
-    auto v = vt.content();
+    const auto& v = vt.content();
     switch (entity) {
-        // case asn1_entity_tagged_type: {
-        //     auto b = vt.to_bin();
-        //     // t_asn1_length_octets(bin, b.size());
-        //     binary_append(bin, b);
-        // } break;
         case asn1_entity_boolean:
             // X.690 8.2 encoding of a boolean value
-            // bin.insert(bin.end(), 1);
+            // ASN.1 - Communication between Heterogeneous Systems 18.2.1 BOOLEAN value
             if (v.data.b) {
-                bin.insert(bin.end(), 0xff);
+                bin.insert(bin.end(), 0xff);  // any single not-null octet
             } else {
                 bin.insert(bin.end(), 0x00);
             }
             break;
         case asn1_entity_integer: {
+            // ASN.1 - Communication between Heterogeneous Systems 18.2.3 INTEGER value
             switch (vt.type()) {
                 case vartype_t::TYPE_INT8:
                     t_asn1_integer_value(bin, v.data.i8);
@@ -159,8 +166,9 @@ asn1_encode& asn1_encode::encode_value(binary_t& bin, asn1_entity_t entity, cons
         } break;
         case asn1_entity_null:
             // X.690 8.8 encoding of a null value
-            bin.insert(bin.end(), 0x00);
-            do_len = false;
+
+            // ASN.1 - Communication between Heterogeneous Systems 18.2.2 NULL value
+            // encoded without value octet
             break;
         case asn1_entity_real: {
             ieee754_typeof_t type = {};
@@ -185,27 +193,52 @@ asn1_encode& asn1_encode::encode_value(binary_t& bin, asn1_entity_t entity, cons
                     break;
             }
         } break;
+        case asn1_entity_utctime: {
+            // YYMMDDhhmm[ss]Z
+            auto size = v.size ? v.size : strlen(v.data.str);
+            if (0) t_asn1_length_octets(bin, size);
+            binary_append(bin, v.data.str, size);
+        } break;
         case asn1_entity_generalizedtime: {
-            basic_stream bs;
-            generalized_time(bs, *v.data.dt);
-            // t_asn1_length_octets<uint16>(bin, t_narrow_cast(bs.size()));
-            bin.insert(bin.end(), bs.data(), bs.data() + bs.size());
+            switch (v.type) {
+                case vartype_t::TYPE_STRING:
+                case vartype_t::TYPE_NSTRING: {
+                    // YYYYMMDDhhmm[ss[.fff]]Z
+                    // YYYYMMDDhhmm[ss[.fff]]+hhmm
+                    auto size = v.size ? v.size : strlen(v.data.str);
+                    if (0) t_asn1_length_octets(bin, size);
+                    binary_append(bin, v.data.str, size);
+                } break;
+                case vartype_t::TYPE_DATETIME: {
+                    basic_stream bs;
+                    generalized_time(bs, *v.data.dt);
+                    // t_asn1_length_octets<uint16>(bin, t_narrow_cast(bs.size()));
+                    bin.insert(bin.end(), bs.data(), bs.data() + bs.size());
+                } break;
+                default:
+                    break;
+            }
         } break;
         case asn1_entity_bitstring: {
-            // X.690 8.6 encoding of a bitstring value
-            // X.690 8.6.2.2 The initial octet shall encode, as an unsigned binary integer with bit 1 as the least significant bit,
-            // the number of unused bits in the final subsequent octet. The number shall be in the range zero to seven.
-            auto size = v.size ? v.size : strlen(v.data.str);
-            bool is_odd = (size % 2) ? true : false;
-            uint8 pad = is_odd ? 4 : 0;
-            std::string temp = v.data.str;
-            if (is_odd) {
-                temp += "0";
+            // ASN.1 - Communication between Heterogeneous Systems 18.2.6 BIT STRING value
+            char* p = v.data.str;
+            auto size = v.size ? v.size : strlen(p);
+            uint8 unused = (8 - (size & 7)) & 7;  // 13 = 8 + 5 ununsed 3
+            bin.insert(bin.end(), unused);
+            uint8 b = 0;
+            for (size_t idx = 0; idx < size;) {
+                char c = p[idx++];
+                b <<= 1;
+                if (c == '1') b |= 1;
+                if (idx % 8 == 0) {
+                    bin.insert(bin.end(), b);
+                    b = 0;
+                }
             }
-            // uint16 tval = t_narrow_cast(1 + (temp.size() / 2));
-            // t_asn1_length_octets(bin, tval);
-            binary_push(bin, pad);
-            binary_append(bin, base16_decode(temp));
+            if (unused) {
+                b <<= unused;
+                bin.insert(bin.end(), b);
+            }
         } break;
         case asn1_entity_octstring: {
             auto size = v.size ? v.size : strlen(v.data.str);
@@ -224,7 +257,7 @@ asn1_encode& asn1_encode::encode_value(binary_t& bin, asn1_entity_t entity, cons
             if (0) t_asn1_length_octets(bin, size);
             binary_append(bin, v.data.str, size);
         } break;
-        case asn1_entity_objid: {
+        case asn1_entity_oid: {
             oid_t oid;
             str_to_oid(v.data.str, oid);
 
