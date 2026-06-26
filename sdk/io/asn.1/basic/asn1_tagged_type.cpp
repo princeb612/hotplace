@@ -67,23 +67,10 @@ void asn1_tagged_type::represent(uint32 depth, stream_t* s, asn1_value* value) {
 }
 
 bool asn1_tagged_type::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) {
+    debug_print(depth);
+
     auto tag = get_tag();
     auto obj = get_object();
-
-#if defined DEBUG
-    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
-        trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
-            auto resource = asn1_resource::get_instance();
-            dbs.fill(depth << 1, ' ');
-            dbs.println("%s", resource->get_component_entity_name(get_component_entity()).c_str());
-            if (false == get_name().empty()) {
-                dbs.fill(depth << 1, ' ');
-                dbs.println("- %s", get_name().c_str());
-            }
-        });
-    }
-#endif
-
     bool ret = true;
     size_t snapshot = b->size();
 

@@ -25,7 +25,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_QUIC_PACKET_QUICPACKET__
 #define __HOTPLACE_SDK_NET_TLS_QUIC_PACKET_QUICPACKET__
 
-#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/nostd/binary.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/net/tls/quic/frame/quic_frames.hpp>
 #include <hotplace/sdk/net/tls/quic/types.hpp>

@@ -7,6 +7,7 @@
 file (GLOB FILEGROUP_SDK_HEADER_BASE
     ${PROJECT_SOURCE_DIR}/sdk/base/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/base/basic/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/base/encoding/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/base/graph/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/base/nostd/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/base/pattern/*.hpp
@@ -19,7 +20,8 @@ file (GLOB FILEGROUP_SDK_HEADER_BASE
 file (GLOB FILEGROUP_SDK_SOURCE_BASE
     ${PROJECT_SOURCE_DIR}/sdk/base/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/base/basic/*.cpp
-    ${PROJECT_SOURCE_DIR}/sdk/base/basic/detail/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/base/encoding/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/base/encoding/detail/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/base/nostd/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/base/pattern/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/base/stream/*.cpp

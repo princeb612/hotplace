@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/basic/base16.hpp>
+#include <hotplace/sdk/base/encoding/base16.hpp>
 #include <hotplace/sdk/base/stream/ansi_string.hpp>
 #include <hotplace/sdk/base/stream/types.hpp>
 #include <hotplace/sdk/base/stream/unicode/wide_string.hpp>

@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/nostd/binary.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_crypt.hpp>
 
 namespace hotplace {

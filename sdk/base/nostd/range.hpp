@@ -23,7 +23,7 @@ struct t_range_t {
     T begin;
     T end;
     t_range_t() : begin(0), end(0) {}
-    t_range_t(size_t b, size_t e) : begin(std::min(b, e)), end(std::max(b, e)) {}
+    t_range_t(T b, T e) : begin(std::min(b, e)), end(std::max(b, e)) {}
     bool operator<(const t_range_t& other) const {
         bool ret = false;
         if (begin < other.begin) {

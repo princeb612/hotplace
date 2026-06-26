@@ -12,7 +12,7 @@
  */
 
 #include <hotplace/sdk/base/nostd/exception.hpp>
-#include <hotplace/sdk/base/nostd/ovl.hpp>
+#include <hotplace/sdk/base/nostd/range_set.hpp>
 #include <hotplace/sdk/base/pattern/kmp.hpp>
 #include <hotplace/sdk/io/basic/parser.hpp>
 
@@ -393,7 +393,7 @@ std::multimap<range_t, size_t> parser::context::psearchex(parser* obj) const {
         ac->build();
         auto acres = ac->search(_tokens.data(), _tokens.size());
 
-        t_merge_ovl_intervals<size_t, size_t> moi;
+        t_tagged_range_set<size_t, size_t> rs;
         search_result r;
 
         for (const auto& pair : acres) {
@@ -401,9 +401,9 @@ std::multimap<range_t, size_t> parser::context::psearchex(parser* obj) const {
             const auto& range = pair.first;
             const auto& pid = pair.second;
             psearch_result(r, range);
-            moi.add(r.begidx, r.endidx, pid);
+            rs.add(r.begidx, r.endidx, pid);
         }
-        auto moires = moi.merge();
+        auto moires = rs.merge();
         for (auto item : moires) {
             range_t range(item.s, item.e);
             result.emplace(range, item.t);

@@ -19,7 +19,7 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_AUTH_DIGESTACCESSAUTHENTICATIONPROVIDER__
 #define __HOTPLACE_SDK_NET_HTTP_AUTH_DIGESTACCESSAUTHENTICATIONPROVIDER__
 
-#include <hotplace/sdk/base/basic/keyvalue.hpp>
+#include <hotplace/sdk/base/nostd/keyvalue.hpp>
 #include <hotplace/sdk/net/http/http_authentication_provider.hpp>
 #include <hotplace/sdk/net/types.hpp>
 #include <map>

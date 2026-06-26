@@ -12,7 +12,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLS_EXTENSION_TLSEXTENSIONECPOINTFORMATS__
 #define __HOTPLACE_SDK_NET_TLS_TLS_EXTENSION_TLSEXTENSIONECPOINTFORMATS__
 
-#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/nostd/binary.hpp>
 #include <hotplace/sdk/net/tls/tls/extension/tls_extension.hpp>
 
 namespace hotplace {

@@ -12,7 +12,7 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTPURI__
 #define __HOTPLACE_SDK_NET_HTTP_HTTPURI__
 
-#include <hotplace/sdk/base/basic/keyvalue.hpp>
+#include <hotplace/sdk/base/nostd/keyvalue.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/net/http/types.hpp>
 #include <map>

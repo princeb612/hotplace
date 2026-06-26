@@ -41,6 +41,12 @@ namespace io {
  *          asn1_visitor
  *            asn1_der_visitor
  *            asn1_notation_visitor
+ *          asn1_constraints
+ *            asn1_constraints_single
+ *            asn1_constraints_size
+ *            asn1_constraints_range
+ *            asn1_constraints_from
+ *            asn1_constraints_pattern
  */
 class asn1_object {
     friend class asn1;
@@ -107,16 +113,8 @@ class asn1_object {
     asn1_object& suppress();
     asn1_object& unsuppress();
 
-    /**
-     * @example
-     *          //sketch
-     *          auto type = new asn1_builtin_type(asn1_entity_integer);
-     *          type->constraints(new asn1_constraints_single(10));
-     *
-     *          auto type = new asn1_builtin_type(asn1_entity_visiblestring);
-     *          type->constraints(new asn1_constraints_size(32));
-     */
-    asn1_object& constraints(asn1_constraints* c);
+    void set_constraints(asn1_constraints* cons);
+    asn1_constraints* get_constraints();
 
    protected:
     asn1_object(asn1_entity_t entity, const std::string& name = "", asn1_object* object = nullptr, asn1_tag* tag = nullptr);
@@ -131,6 +129,9 @@ class asn1_object {
     virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
     virtual bool represent(uint32 depth, binary_t* b, asn1_value* value = nullptr, uint16 flags = 0);
 
+    virtual void debug_print(uint32 depth);
+    virtual void debug_print(uint32 depth, const std::string& name);
+
    private:
     uint8 _ident;
     std::string _name;
@@ -143,7 +144,7 @@ class asn1_object {
     asn1_object* _object;
     variant_t _vt;
 
-    std::map<asn1_entity_t, asn1_constraints*> _constraints;
+    asn1_constraints* _constraints;
 
     t_shared_reference<asn1_object> _shared;
 };

@@ -9,7 +9,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLS_RECORD_TLSRECORDAPPLICATIONDATA__
 #define __HOTPLACE_SDK_NET_TLS_TLS_RECORD_TLSRECORDAPPLICATIONDATA__
 
-#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/nostd/binary.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshakes.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_record.hpp>
 #include <hotplace/sdk/net/tls/tls/record/tls_records.hpp>

@@ -11,10 +11,10 @@
 #ifndef __HOTPLACE_SDK_CRYPTO_TYPES__
 #define __HOTPLACE_SDK_CRYPTO_TYPES__
 
-#include <hotplace/sdk/base/basic/base16.hpp>
-#include <hotplace/sdk/base/basic/base64.hpp>
 #include <hotplace/sdk/base/basic/types.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/encoding/base16.hpp>
+#include <hotplace/sdk/base/encoding/base64.hpp>
 #include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
 #include <hotplace/sdk/io/types.hpp>

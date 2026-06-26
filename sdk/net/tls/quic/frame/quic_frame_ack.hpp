@@ -12,6 +12,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_QUIC_FRAME_QUICFRAMEACK__
 #define __HOTPLACE_SDK_NET_TLS_QUIC_FRAME_QUICFRAMEACK__
 
+#include <hotplace/sdk/base/nostd/point_set.hpp>
 #include <hotplace/sdk/net/tls/quic/frame/quic_frame.hpp>
 
 namespace hotplace {
@@ -31,7 +32,7 @@ struct ack_range_t {
 /**
  * @example
  *          ack_t ack;
- *          t_ovl_points<uint32> part;
+ *          t_point_set<uint32> part;
  *          // ACK(21, FAR:0, [0]G:1,R:4, [1]G:0,R:5)
  *          part.add(7, 12).add(14, 18).add(21);
  *          ack << part;
@@ -59,7 +60,7 @@ struct ack_t {
         return ((largest_ack == other.largest_ack) && (first_ack_range == other.first_ack_range) && (ack_ranges == other.ack_ranges));
     }
 
-    friend ack_t& operator<<(ack_t& ack, t_ovl_points<uint32>& part) {
+    friend ack_t& operator<<(ack_t& ack, t_point_set<uint32>& part) {
         ack.clear();
 
         auto res = part.merge();
@@ -84,7 +85,7 @@ struct ack_t {
 
         return ack;
     }
-    friend t_ovl_points<uint32>& operator>>(const ack_t& ack, t_ovl_points<uint32>& part) {
+    friend t_point_set<uint32>& operator>>(const ack_t& ack, t_point_set<uint32>& part) {
         part.clear();
         auto smallest = ack.largest_ack - ack.first_ack_range;
         part.add(smallest, ack.largest_ack);

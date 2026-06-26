@@ -14,9 +14,9 @@
  *  X.690 11 Restrictions on BER employed by both CER and DER
  */
 
-#include <hotplace/sdk/base/basic/base16.hpp>
-#include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/encoding/base16.hpp>
+#include <hotplace/sdk/base/nostd/binary.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>

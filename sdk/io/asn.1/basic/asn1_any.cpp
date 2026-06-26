@@ -57,37 +57,11 @@ void asn1_any::represent(uint32 depth, stream_t* s, asn1_value* value) {
 }
 
 bool asn1_any::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) {
-    auto entity = get_entity();
+    debug_print(depth);
 
-#if defined DEBUG
-    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
-        trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
-            auto resource = asn1_resource::get_instance();
-            dbs.fill(depth << 1, ' ');
-            dbs.println("%s", resource->get_component_entity_name(get_component_entity()).c_str());
-            dbs.fill(depth << 1, ' ');
-            dbs << "- ";
-            if (false == get_name().empty()) {
-                dbs << get_name() << " ";
-            }
-            dbs.println(ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", resource->get_entity_name(get_ident(), entity).c_str());
-        });
-    }
-#endif
-
-    std::string name;
     if (value) {
-        name = resolve_name();
-#if defined DEBUG
-        if (false == name.empty()) {
-            if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
-                trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
-                    dbs.fill(depth << 1, ' ');
-                    dbs.println("- resolving " ANSI_ESCAPE "1;36m%s" ANSI_ESCAPE "0m", name.c_str());
-                });
-            }
-        }
-#endif
+        auto name = resolve_name();
+        debug_print(depth, name);
 
         value->add_binary(*b, name);
     }

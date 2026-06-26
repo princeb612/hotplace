@@ -1,0 +1,28 @@
+/* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
+/**
+ * @file   http_huffman_codes.hpp
+ * @author Soo Han, Kim (princeb612.kr@gmail.com)
+ * @desc
+ *
+ * Revision History
+ * Date         Name                Description
+ */
+
+#ifndef __HOTPLACE_SDK_BASE_ENCODING_HTTPHUFFMANCODES__
+#define __HOTPLACE_SDK_BASE_ENCODING_HTTPHUFFMANCODES__
+
+#include <hotplace/sdk/base/encoding/huffman_coding.hpp>
+
+namespace hotplace {
+
+/*
+ * @brief   RFC 7541 Appendix B. Huffman Code
+ * @sample
+ *          huffman_coding huff;
+ *          huff.imports(_h2hcodes);
+ */
+extern const huffman_coding::hc_code_t _h2hcodes[];
+
+}  // namespace hotplace
+
+#endif

@@ -10,7 +10,7 @@
  *
  */
 
-#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/nostd/binary.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/nostd/memory.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>

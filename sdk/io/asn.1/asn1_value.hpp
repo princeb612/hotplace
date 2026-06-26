@@ -26,22 +26,18 @@ namespace io {
         auto schema = new asn1_builtin_type(asn1_entity_visiblestring);
         auto instance = schema->instantiate();
 
-        (*instance) << "sample";      // operator <<
-
         (*instance)[""] = "sample";   // operator [](const std::string&)
 
         instance->set("", "sample");  // set
     }
 
-    // scketch.2
+    // sketch.2
     {
         auto schema = new asn1_sequence;
         (*schema) << new asn1_builtin_type("name", asn1_entity_utf8string)
                   << new asn1_builtin_type("age", asn1_entity_utf8string)
                   << new asn1_builtin_type("profile", new asn1_builtin_type("Profile", asn1_entity_referenced_type));
         auto instance = schema->instantiate();
-
-        (*instance) << "john" << "20" << "...";
 
         (*instance)["name"] = "john";
         (*instance)["age"] = "20";

@@ -12,7 +12,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLSSESSION__
 #define __HOTPLACE_SDK_NET_TLS_TLSSESSION__
 
-#include <hotplace/sdk/base/basic/keyvalue.hpp>
+#include <hotplace/sdk/base/nostd/keyvalue.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/semaphore.hpp>

@@ -8,9 +8,9 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/basic/valist.hpp>
+#include <hotplace/sdk/base/nostd/binary.hpp>
 #include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>

@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/valist.hpp>
+#include <hotplace/sdk/base/nostd/binary.hpp>
 #include <hotplace/sdk/base/pattern/aho_corasick.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>

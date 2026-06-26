@@ -9,7 +9,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_TLS_HANDSHAKE_TLSHANDSHAKESERVERHELLODONE__
 #define __HOTPLACE_SDK_NET_TLS_TLS_HANDSHAKE_TLSHANDSHAKESERVERHELLODONE__
 
-#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/nostd/binary.hpp>
 #include <hotplace/sdk/net/tls/tls/handshake/tls_handshake.hpp>
 
 namespace hotplace {

@@ -9,10 +9,10 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/basic/base16.hpp>
-#include <hotplace/sdk/base/basic/base64.hpp>
-#include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/encoding/base16.hpp>
+#include <hotplace/sdk/base/encoding/base64.hpp>
+#include <hotplace/sdk/base/nostd/binary.hpp>
 #include <hotplace/sdk/base/nostd/utility.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>

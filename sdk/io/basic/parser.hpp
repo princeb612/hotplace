@@ -12,7 +12,7 @@
 #ifndef __HOTPLACE_SDK_IO_BASIC_PARSER__
 #define __HOTPLACE_SDK_IO_BASIC_PARSER__
 
-#include <hotplace/sdk/base/basic/keyvalue.hpp>
+#include <hotplace/sdk/base/nostd/keyvalue.hpp>
 #include <hotplace/sdk/base/pattern/aho_corasick.hpp>
 #include <hotplace/sdk/base/pattern/trie.hpp>
 #include <hotplace/sdk/base/stream/types.hpp>
@@ -501,7 +501,7 @@ class parser {
     /**
      * @brief   pattern search
      * @remarks merge all overlapping patterns
-     * @sa      t_merge_ovl_intervals
+     * @sa      t_range_set
      */
     std::multimap<range_t, size_t> psearchex(const parser::context& context);
 

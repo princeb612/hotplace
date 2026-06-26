@@ -13,8 +13,8 @@
  * 2026.06.10   Soo Han, Kim        the format specifier 'x' in TYPE_BINARY, base16 encoding.
  */
 
-#include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/basic/valist.hpp>
+#include <hotplace/sdk/base/encoding/base16.hpp>
 #include <hotplace/sdk/base/pattern/aho_corasick.hpp>
 #include <hotplace/sdk/base/pattern/regex.hpp>
 #include <hotplace/sdk/base/stream/ansi_string.hpp>

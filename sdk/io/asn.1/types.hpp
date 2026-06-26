@@ -147,6 +147,10 @@ enum asn1_entity_t {
     asn1_entity_any,
 
     asn1_entity_constraints = 0x2000,
+    asn1_entity_constraints_union,
+    asn1_entity_constraints_intersection,
+    asn1_entity_constraints_except,
+    asn1_entity_constraints_all_except,
     asn1_entity_constraints_single,
     asn1_entity_constraints_size,
     asn1_entity_constraints_range,
@@ -184,25 +188,36 @@ class asn1_object;
 class asn1_type;
 class asn1_builtin_type;
 class asn1_referenced_type;
-
-class asn1_container;
-class asn1_encode;
-class asn1_resource;
+class asn1_tag;
+class asn1_tagged_type;
 class asn1_sequence;
 class asn1_sequence_of;
 class asn1_set;
 class asn1_set_of;
-class asn1_tag;
+class asn1_choice;
+class asn1_enum;
+class asn1_bitstring;  // named bit list
+class asn1_integer;    // named number list
+
+class asn1_encode;
+class asn1_resource;
+
 class asn1_value;
+
 class asn1_visitor;
 class asn1_der_visitor;
 class asn1_notation_visitor;
+class asn1_constraints_visitor;
 
 class asn1_constraints;
+class asn1_constraints_union;
+class asn1_constraints_intersection;
+class asn1_constraints_except;
+class asn1_constraints_allexcept;
 class asn1_constraints_from;
 class asn1_constraints_pattern;
 class asn1_constraints_range;
-class asn1_constraints_single;
+class asn1_constraints_single_value;
 class asn1_constraints_size;
 
 }  // namespace io

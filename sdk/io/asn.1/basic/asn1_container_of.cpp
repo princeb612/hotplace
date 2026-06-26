@@ -56,7 +56,7 @@ void asn1_container_of::represent(uint32 depth, stream_t* s, asn1_value* value) 
 }
 
 bool asn1_container_of::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) {
-    auto entity = get_entity();
+    debug_print(depth);
 
     size_t pos = 0;
     if (false == is_suppressed()) {
@@ -64,19 +64,7 @@ bool asn1_container_of::represent(uint32 depth, binary_t* b, asn1_value* value, 
         pos = b->size();
     }
 
-#if defined DEBUG
-    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
-        trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
-            auto resource = asn1_resource::get_instance();
-            dbs.fill(depth << 1, ' ');
-            if (false == get_name().empty()) {
-                dbs << get_name() << " ";
-            }
-            dbs.println(ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", resource->get_component_entity_name(get_component_entity()).c_str());
-        });
-    }
-#endif
-
+    auto entity = get_entity();
     if (entity == asn1_entity_sequence) {
         // asn1_sequence_of : asn1_container_of
         get_object()->represent(depth + 1, b, value, asn1_visitor_sequence_of);

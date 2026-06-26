@@ -11,8 +11,8 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
-#include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/nostd/binary.hpp>
 #include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/base/system/ieee754.hpp>

@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/nostd/binary.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/transcript_hash.hpp>

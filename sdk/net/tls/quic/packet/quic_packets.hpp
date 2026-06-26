@@ -12,9 +12,6 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_QUIC_PACKET_QUICPACKETS__
 #define __HOTPLACE_SDK_NET_TLS_QUIC_PACKET_QUICPACKETS__
 
-#include <hotplace/sdk/base/system/critical_section.hpp>
-#include <hotplace/sdk/io/basic/payload.hpp>
-#include <hotplace/sdk/net/tls/quic/packet/quic_packet.hpp>
 #include <hotplace/sdk/net/tls/quic/types.hpp>
 #include <hotplace/sdk/net/tls/tls_container.hpp>
 #include <hotplace/sdk/net/tls/types.hpp>

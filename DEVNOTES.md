@@ -18,6 +18,14 @@
   - [ ] ASN.1
     - in progress
       - [ ] ASN.1 runtime
+        - [ ] constraints
+          - [ ] constraints evaluation
+          - [ ] disjoint set (intersection)
+          - [x] union
+          - [x] intersection
+          - [x] except
+          - [ ] all_except
+        - [ ] decode
       - [ ] ASN.1 AST (Abstract Syntax Tree)
       - [ ] ASN.1 compiler
       - [ ] ASN.1 repository

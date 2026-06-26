@@ -25,8 +25,6 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_QUIC_FRAME_QUICFRAMES__
 #define __HOTPLACE_SDK_NET_TLS_QUIC_FRAME_QUICFRAMES__
 
-#include <hotplace/sdk/base/system/critical_section.hpp>
-#include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/net/tls/quic/frame/quic_frame.hpp>
 #include <hotplace/sdk/net/tls/quic/types.hpp>
 #include <hotplace/sdk/net/tls/tls_container.hpp>

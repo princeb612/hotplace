@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/basic/http_huffman_coding.hpp>
+#include <hotplace/sdk/base/encoding/http_huffman_coding.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/stream/stream.hpp>
 #include <hotplace/sdk/net/http/compression/http_dynamic_table.hpp>

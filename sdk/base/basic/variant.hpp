@@ -31,9 +31,9 @@
 #include <string.h>
 
 #include <cmath>
-#include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/types.hpp>
 #include <hotplace/sdk/base/nostd/atoi.hpp>
+#include <hotplace/sdk/base/nostd/binary.hpp>
 #include <hotplace/sdk/base/nostd/cast.hpp>
 #include <hotplace/sdk/base/stream/types.hpp>
 #include <hotplace/sdk/base/system/types.hpp>

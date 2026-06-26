@@ -10,9 +10,9 @@
  */
 
 #include <cmath>
-#include <hotplace/sdk/base/basic/base16.hpp>
-#include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/encoding/base16.hpp>
+#include <hotplace/sdk/base/nostd/binary.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/system/bignumber.hpp>
 

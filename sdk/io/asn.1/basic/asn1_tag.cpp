@@ -98,16 +98,13 @@ bool asn1_tag::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 fl
         trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
             auto resource = asn1_resource::get_instance();
             dbs.fill(depth << 1, ' ');
-            dbs.println("%s", resource->get_component_entity_name(get_component_entity()).c_str());
+            dbs.println(ANSI_ESCAPE
+                        "1;33m"
+                        "%s" ANSI_ESCAPE "0m",
+                        resource->get_component_entity_name(get_component_entity()).c_str());
             dbs.fill(depth << 1, ' ');
             dbs.println("- " ANSI_ESCAPE "1;33m%s %s" ANSI_ESCAPE "0m", asn1_resource::get_instance()->get_entity_name(ident, (asn1_entity_t)get_class_number()).c_str(),
                         is_implicit() ? "IMPLICIT" : "EXPLICIT");
-            // dbs.fill(depth << 1, ' ');
-            // dbs.println("- suppressed %s", is_suppressed() ? "true" : "false");
-            // if (b && (false == is_suppressed())) {
-            //     dbs.fill(depth << 1, ' ');
-            //     dbs.println("- identifier octet %02x tag %i", ident, get_class_number());
-            // }
         });
     }
 #endif

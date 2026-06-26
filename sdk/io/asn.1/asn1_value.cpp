@@ -11,7 +11,7 @@
  *
  */
 
-#include <hotplace/sdk/base/nostd/bitset.hpp>
+#include <hotplace/sdk/base/nostd/bit_set.hpp>
 #include <hotplace/sdk/base/stream/vtprintf.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_value.hpp>
@@ -227,10 +227,10 @@ bool asn1_value::encode_namedlist(binary_t& bin, asn1_object* object, const std:
                 }
             }
             if (false == evalues.empty()) {
-                // std::bitset
+                // std::bit_set
                 int minvalue = *evalues.begin();
                 int maxvalue = *evalues.rbegin();
-                bitset bs(minvalue, maxvalue);
+                bit_set bs(minvalue, maxvalue);
                 for (const auto& item : evalues) {
                     bs.add(item);
                 }

@@ -15,7 +15,7 @@
 
 #include <functional>
 #include <hotplace/sdk/base/basic/types.hpp>
-#include <hotplace/sdk/base/nostd/ovl.hpp>
+#include <hotplace/sdk/base/nostd/range_set.hpp>
 
 namespace hotplace {
 
@@ -448,7 +448,7 @@ class t_binaries {
         uint32 flags;
         size_t finsize;
         size_t pos;
-        t_merge_ovl_intervals<size_t> part;
+        t_range_set<size_t> part;
         binary_t bin;
 
         entry_t() : tag(TAG()), flags(0), finsize(0), pos(0) {}

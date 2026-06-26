@@ -16,6 +16,7 @@
 
 void testcase_asn1();
 void testcase_gpt();
+void testcase_constraints();
 void testcase_parser();
 
 #endif

@@ -8,8 +8,8 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/basic/binary.hpp>
 #include <hotplace/sdk/base/basic/function_pipeline.hpp>
+#include <hotplace/sdk/base/nostd/binary.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_ecdh.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>

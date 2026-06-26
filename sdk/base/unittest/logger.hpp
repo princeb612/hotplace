@@ -12,9 +12,9 @@
 #ifndef __HOTPLACE_SDK_BASE_UNITTEST_LOGGER__
 #define __HOTPLACE_SDK_BASE_UNITTEST_LOGGER__
 
-#include <hotplace/sdk/base/basic/keyvalue.hpp>
 #include <hotplace/sdk/base/charset.hpp>
 #include <hotplace/sdk/base/error.hpp>
+#include <hotplace/sdk/base/nostd/keyvalue.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/syntax.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>

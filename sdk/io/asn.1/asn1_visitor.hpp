@@ -18,9 +18,6 @@
 namespace hotplace {
 namespace io {
 
-class asn1_object;
-class asn1_tag;
-
 class asn1_visitor {
    public:
     asn1_visitor() {}
@@ -50,6 +47,21 @@ class asn1_notation_visitor : public asn1_visitor {
     virtual ~asn1_notation_visitor();
 
     virtual void visit(asn1_object* object);
+
+   protected:
+    stream_t* get_stream();
+
+   private:
+    stream_t* _s;
+    asn1_value* _value;
+};
+
+class asn1_constraints_visitor {
+   public:
+    asn1_constraints_visitor(stream_t* s, asn1_value* value = nullptr);
+    virtual ~asn1_constraints_visitor();
+
+    virtual void visit(asn1_constraints* object);
 
    protected:
     stream_t* get_stream();

@@ -10,7 +10,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/basic/binary.hpp>
+#include <hotplace/sdk/base/nostd/binary.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>

@@ -26,7 +26,7 @@ namespace hotplace {
 namespace io {
 
 asn1_object::asn1_object(asn1_entity_t entity, const std::string& name, asn1_object* object, asn1_tag* tag)
-    : _ident(0), _name(name), _entity(entity), _component_type(0), _suppress(false), _parent(nullptr), _tag(tag), _object(object) {
+    : _ident(0), _name(name), _entity(entity), _component_type(0), _suppress(false), _parent(nullptr), _tag(tag), _object(object), _constraints(nullptr) {
     _shared.make_share(this);
     if (tag) tag->set_parent(this);
     if (object) object->set_parent(this);
@@ -54,6 +54,9 @@ asn1_object& asn1_object::operator=(const asn1_object& other) {
         _object->set_parent(this);
     }
     _vt = other._vt;
+    if (other._constraints) {
+        _constraints = other._constraints->clone();
+    }
     return *this;
 }
 
@@ -67,6 +70,7 @@ asn1_object& asn1_object::operator=(asn1_object&& other) {
     std::swap(_tag, other._tag);
     std::swap(_object, other._object);
     std::swap(_vt, other._vt);
+    std::swap(_constraints, other._constraints);
     return *this;
 }
 
@@ -77,9 +81,7 @@ asn1_value* asn1_object::instantiate() { return new asn1_value(this); }
 asn1_object* asn1_object::addref() {
     if (_tag) _tag->addref();
     if (_object) _object->addref();
-    for (auto item : _constraints) {
-        item.second->addref();
-    }
+    if (_constraints) _constraints->addref();
     _shared.addref();
     return this;
 }
@@ -87,9 +89,7 @@ asn1_object* asn1_object::addref() {
 void asn1_object::release() {
     if (_tag) _tag->release();
     if (_object) _object->release();
-    for (auto item : _constraints) {
-        item.second->release();
-    }
+    if (_constraints) _constraints->release();
     _shared.delref();
 }
 
@@ -259,15 +259,91 @@ void asn1_object::represent(uint32 depth, stream_t* s, asn1_value* value) {}
 
 bool asn1_object::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) { return true; }
 
-asn1_object& asn1_object::constraints(asn1_constraints* c) {
-    if (c) {
-        auto pib = _constraints.emplace(c->get_entity(), c);
-        if (false == pib.second) {
-            c->release();
+void asn1_object::debug_print(uint32 depth) {
+#if defined DEBUG
+    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
+        trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
+            auto resource = asn1_resource::get_instance();
+            auto component = get_component_entity();
+            auto entity = get_entity();
+
+            switch (component) {
+                case asn1_entity_tagged_type:
+                case asn1_entity_choice:
+                case asn1_entity_sequence:
+                case asn1_entity_sequence_of:
+                case asn1_entity_set:
+                case asn1_entity_set_of:
+                    dbs.fill(depth << 1, ' ');
+                    if (false == get_name().empty()) {
+                        dbs << ANSI_ESCAPE << "1;36m" << get_name() << ANSI_ESCAPE << "0m" << " ";
+                    }
+                    dbs.println(ANSI_ESCAPE
+                                "1;33m"
+                                "%s" ANSI_ESCAPE "0m",
+                                resource->get_component_entity_name(get_component_entity()).c_str());
+
+                    break;
+                case asn1_entity_referenced_type:
+                    dbs.fill(depth << 1, ' ');
+                    if (get_object()) {
+                        dbs << ANSI_ESCAPE << "1;36m" << get_name() << ANSI_ESCAPE << "0m ";
+                    }
+                    dbs.println(ANSI_ESCAPE
+                                "1;33m"
+                                "%s" ANSI_ESCAPE "0m",
+                                resource->get_component_entity_name(get_component_entity()).c_str());
+
+                    break;
+                default:
+                    dbs.fill(depth << 1, ' ');
+                    dbs.println(ANSI_ESCAPE
+                                "1;33m"
+                                "%s" ANSI_ESCAPE "0m",
+                                resource->get_component_entity_name(component).c_str());
+
+                    dbs.fill(depth << 1, ' ');
+                    dbs << "- ";
+                    if (false == get_name().empty()) {
+                        dbs.printf(ANSI_ESCAPE
+                                   "1;36m"
+                                   "%s" ANSI_ESCAPE "0m ",
+                                   get_name().c_str());
+                    }
+                    dbs.println(ANSI_ESCAPE
+                                "1;33m"
+                                "%s" ANSI_ESCAPE "0m",
+                                resource->get_entity_name(get_ident(), entity).c_str());
+
+                    break;
+            }
+        });
+    }
+#endif
+}
+
+void asn1_object::debug_print(uint32 depth, const std::string& name) {
+#if defined DEBUG
+    if (false == name.empty()) {
+        if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
+            trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
+                dbs.fill(depth << 1, ' ');
+                dbs.println("# resolving " ANSI_ESCAPE
+                            "1;36m"
+                            "%s" ANSI_ESCAPE "0m",
+                            name.c_str());
+            });
         }
     }
-    return *this;
+#endif
 }
+
+void asn1_object::set_constraints(asn1_constraints* cons) {
+    if (_constraints) _constraints->release();
+    _constraints = cons;
+}
+
+asn1_constraints* asn1_object::get_constraints() { return _constraints; }
 
 }  // namespace io
 }  // namespace hotplace

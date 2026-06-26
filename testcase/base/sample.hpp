@@ -32,7 +32,6 @@ struct pattern_t {
 
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
-void testcase_binary();
 void testcase_cmdline();
 void testcase_testvector_cmdline();
 void testcase_dumpmemory();
@@ -45,15 +44,16 @@ void testcase_variant();
 void testcase_graph();
 
 void testcase_avltree();
+void testcase_binary();
 void testcase_btree();
 void testcase_exception();
 void testcase_findlte();
 void testcase_int();
 void testcase_list();
 void testcase_map();
-void testcase_ovl();
 void testcase_pq();
 void testcase_range();
+void testcase_set();
 void testcase_vector();
 
 void testcase_aho_corasick();

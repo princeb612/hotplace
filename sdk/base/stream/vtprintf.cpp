@@ -9,8 +9,8 @@
  * 2017.07.26   Soo Han, Kim        sprintf support {1} {2} ... using valist (codename.grape Revision 371)
  */
 
-#include <hotplace/sdk/base/basic/base16.hpp>
 #include <hotplace/sdk/base/basic/valist.hpp>
+#include <hotplace/sdk/base/encoding/base16.hpp>
 #include <hotplace/sdk/base/pattern/aho_corasick.hpp>
 #include <hotplace/sdk/base/stream/types.hpp>
 #include <hotplace/sdk/base/stream/vtprintf.hpp>

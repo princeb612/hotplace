@@ -57,23 +57,9 @@ void asn1_referenced_type::represent(uint32 depth, stream_t* s, asn1_value* valu
 }
 
 bool asn1_referenced_type::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) {
-    auto obj = get_object();
+    debug_print(depth);
 
-#if defined DEBUG
-    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
-        trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
-            auto resource = asn1_resource::get_instance();
-            dbs.fill(depth << 1, ' ');
-            dbs.println("%s", resource->get_component_entity_name(get_component_entity()).c_str());
-            if (is_definition()) {
-                dbs.fill(depth << 1, ' ');
-                dbs.println("- " ANSI_ESCAPE "1;33m%s" ANSI_ESCAPE "0m", get_name().c_str());
-            }
-        });
-    }
-#endif
-
-    if (is_definition()) obj->represent(depth + 1, b, value);
+    if (is_definition()) get_object()->represent(depth + 1, b, value);
 
     return true;
 }

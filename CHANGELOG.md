@@ -35,6 +35,10 @@
     * CBOR
 
 * details
+  * Revision 1038
+    * ASN.1 constraints evaluation
+  * Revision 1037
+    * ASN.1 constraints
   * Revision 1036
     * ASN.1 BIT STRING
   * Revision 1035

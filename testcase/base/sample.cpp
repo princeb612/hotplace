@@ -59,7 +59,6 @@ int main(int argc, char** argv) {
         _test_case.attach(_logger);
     }
 
-    testcase_binary();
     testcase_cmdline();
     testcase_testvector_cmdline();
     testcase_dumpmemory();
@@ -72,15 +71,16 @@ int main(int argc, char** argv) {
     testcase_graph();
 
     testcase_avltree();
+    testcase_binary();
     testcase_btree();
     testcase_exception();
     testcase_findlte();
     testcase_int();
     testcase_list();
     testcase_map();
-    testcase_ovl();
     testcase_pq();
     testcase_range();
+    testcase_set();
     testcase_vector();
 
     testcase_aho_corasick();

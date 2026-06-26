@@ -11,7 +11,7 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
-#include <hotplace/sdk/base/basic/base16.hpp>
+#include <hotplace/sdk/base/encoding/base16.hpp>
 #include <hotplace/sdk/base/nostd/enumclass.hpp>
 #include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
