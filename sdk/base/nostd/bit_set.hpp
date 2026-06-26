@@ -65,7 +65,6 @@ class t_bit_set : public t_set_t<T> {
         return ret;
     }
     void add(T start, T end) {
-        return_t ret = errorcode_t::success;
         auto lval = std::min(start, end);
         auto mval = std::max(start, end);
         for (T i = lval; i <= mval; ++i) {
@@ -84,7 +83,6 @@ class t_bit_set : public t_set_t<T> {
         return ret;
     }
     void subtract(T start, T end) {
-        return_t ret = errorcode_t::success;
         auto lval = std::min(start, end);
         auto mval = std::max(start, end);
         for (T i = lval; i <= mval; ++i) {

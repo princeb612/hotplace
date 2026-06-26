@@ -285,10 +285,17 @@ void test_subtraction() {
     }
 }
 
+void test_set() {
+    t_set<int> range_set(set_type_t::range);
+    t_set<int> point_set(set_type_t::point);
+    t_set<int> bit_set(set_type_t::bit, 0, 100);
+}
+
 void testcase_set() {
     test_range_set1();
     test_range_set2();
     // RFC 9000 19.3 ACK Frames
     test_ack();
     test_subtraction();
+    test_set();
 }

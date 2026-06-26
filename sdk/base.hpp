@@ -60,6 +60,7 @@
 #include <hotplace/sdk/base/nostd/pq.hpp>
 #include <hotplace/sdk/base/nostd/range.hpp>
 #include <hotplace/sdk/base/nostd/range_set.hpp>
+#include <hotplace/sdk/base/nostd/set.hpp>
 #include <hotplace/sdk/base/nostd/traits.hpp>
 #include <hotplace/sdk/base/nostd/traits_encoder.hpp>
 #include <hotplace/sdk/base/nostd/traits_printf.hpp>

@@ -35,7 +35,7 @@
     * CBOR
 
 * details
-  * Revision 1038
+  * Revision 1039
     * ASN.1 constraints evaluation
   * Revision 1037
     * ASN.1 constraints
