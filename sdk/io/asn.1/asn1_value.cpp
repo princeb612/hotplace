@@ -140,7 +140,7 @@ void asn1_value::encode_sequenceof_value(binary_t& bin, asn1_object* object, con
     auto liter = _values.lower_bound(name);
     auto uiter = _values.upper_bound(name);
     for (auto iter = liter; iter != uiter; ++iter) {
-        auto ident = object->get_ident();
+        // auto ident = object->get_ident();
         auto entity = object->get_entity();
 
         const variant& v = iter->second;
@@ -148,7 +148,7 @@ void asn1_value::encode_sequenceof_value(binary_t& bin, asn1_object* object, con
         asn1_encode enc;
         bool do_len = false;
 
-        asn1_encode::write_ident_octets(bin, ident, entity);  // T
+        asn1_encode::write_ident_octets2(bin, object);  // T
         auto pos = bin.size();
         enc.encode_value(bin, entity, v, do_len);                               // V
         asn1_encode::t_asn1_length_octets<size_t>(bin, bin.size() - pos, pos);  // insert L between T and V
@@ -163,7 +163,7 @@ void asn1_value::encode_setof_value(binary_t& bin, asn1_object* object, const st
     auto liter = _values.lower_bound(name);
     auto uiter = _values.upper_bound(name);
     for (auto iter = liter; iter != uiter; ++iter) {
-        auto ident = object->get_ident();
+        // auto ident = object->get_ident();
         auto entity = object->get_entity();
 
         const variant& v = iter->second;
@@ -172,7 +172,7 @@ void asn1_value::encode_setof_value(binary_t& bin, asn1_object* object, const st
         asn1_encode enc;
         bool do_len = false;
 
-        asn1_encode::write_ident_octets(b, ident, entity);  // T
+        asn1_encode::write_ident_octets2(b, object);  // T
         auto pos = b.size();
         enc.encode_value(b, entity, v, do_len);                             // V
         asn1_encode::t_asn1_length_octets<size_t>(b, b.size() - pos, pos);  // insert L between T and V

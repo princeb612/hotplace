@@ -245,6 +245,11 @@ void test_case::vtest(return_t result, const char* test_function, const char* me
         basic_stream title;
         if (message) {
             title.vprintf(message, ap);
+            const size_t line_limit = 117;
+            if (title.size() > line_limit) {
+                title.resize(line_limit);
+                title << "...";
+            }
         }
 
         critical_section_guard guard(_lock);

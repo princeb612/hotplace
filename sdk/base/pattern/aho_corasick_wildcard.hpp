@@ -8,7 +8,7 @@
  * Date         Name                Description
  * 2024.08.23   Soo Han, Kim        wildcards (codename.hotplace Revision 578)
  * 2026.05.19   Soo Han, Kim        replace std::function with functor (codename.hotplace Revision 1003)
- *
+ * 2026.06.29   Soo Han, Kim        code review - Gemini (reset fixed)
  */
 
 #ifndef __HOTPLACE_SDK_BASE_PATTERN_AHOCORASICKWILDCARD__
@@ -153,6 +153,11 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T, memberof_t> {
         : t_aho_corasick<BT, T, memberof_t>(memberof), _wildcard_single(wildcard_single), _wildcard_any(wildcard_any) {}
     virtual ~t_aho_corasick_wildcard() {}
 
+    void reset() override {
+        t_aho_corasick<BT, T, memberof_t>::reset();
+        _hidden.clear();
+    }
+
    protected:
     virtual void doinsert(const T* pattern, size_t size) {
         // sketch - same as t_aho_corasick<BT, T>::doinsert but added flag
@@ -213,6 +218,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T, memberof_t> {
             std::queue<pair_t> q;
 
             // remember without duplicates
+            // [TODO] see 4. comments
             auto enqueue = [&](trienode* node, size_t idx) -> void {
                 if (idx < size) {
                     pair_t p = {node, idx};
@@ -230,7 +236,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T, memberof_t> {
                 auto pair = q.front();  // gdb problem in MINGW (const auto& pair)
                 trienode* current = pair.first;
                 const auto& i = pair.second;
-                visit.insert({current, i});
+                // visit.insert({current, i});
                 q.pop();
 
                 const BT& t = _memberof(source, i);

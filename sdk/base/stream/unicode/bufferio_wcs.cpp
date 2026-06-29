@@ -12,7 +12,7 @@
 #undef MBCS
 #define _UNICODE
 #define UNICODE
-#include "../bufferio_charset.cpp"
+#include "../lowlevel/bufferio_charset.cpp"
 #undef _UNICODE
 #undef UNICODE
 #define _MBCS

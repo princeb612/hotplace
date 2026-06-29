@@ -20,13 +20,13 @@
 #include <hotplace/sdk/io/asn.1/basic/asn1_container.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_tag.hpp>
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraints.hpp>
+#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint.hpp>
 
 namespace hotplace {
 namespace io {
 
 asn1_object::asn1_object(asn1_entity_t entity, const std::string& name, asn1_object* object, asn1_tag* tag)
-    : _ident(0), _name(name), _entity(entity), _component_type(0), _suppress(false), _parent(nullptr), _tag(tag), _object(object), _constraints(nullptr) {
+    : _ident(0), _name(name), _entity(entity), _component_type(0), _suppress(false), _parent(nullptr), _tag(tag), _object(object) {
     _shared.make_share(this);
     if (tag) tag->set_parent(this);
     if (object) object->set_parent(this);
@@ -54,9 +54,7 @@ asn1_object& asn1_object::operator=(const asn1_object& other) {
         _object->set_parent(this);
     }
     _vt = other._vt;
-    if (other._constraints) {
-        _constraints = other._constraints->clone();
-    }
+    _constraints = other._constraints;
     return *this;
 }
 
@@ -70,7 +68,7 @@ asn1_object& asn1_object::operator=(asn1_object&& other) {
     std::swap(_tag, other._tag);
     std::swap(_object, other._object);
     std::swap(_vt, other._vt);
-    std::swap(_constraints, other._constraints);
+    _constraints = std::move(other._constraints);
     return *this;
 }
 
@@ -81,7 +79,7 @@ asn1_value* asn1_object::instantiate() { return new asn1_value(this); }
 asn1_object* asn1_object::addref() {
     if (_tag) _tag->addref();
     if (_object) _object->addref();
-    if (_constraints) _constraints->addref();
+    get_constraints().addref();
     _shared.addref();
     return this;
 }
@@ -89,7 +87,7 @@ asn1_object* asn1_object::addref() {
 void asn1_object::release() {
     if (_tag) _tag->release();
     if (_object) _object->release();
-    if (_constraints) _constraints->release();
+    get_constraints().release();
     _shared.delref();
 }
 
@@ -328,7 +326,7 @@ void asn1_object::debug_print(uint32 depth, const std::string& name) {
         if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
             trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
                 dbs.fill(depth << 1, ' ');
-                dbs.println("# resolving " ANSI_ESCAPE
+                dbs.println("-- resolving " ANSI_ESCAPE
                             "1;36m"
                             "%s" ANSI_ESCAPE "0m",
                             name.c_str());
@@ -338,12 +336,7 @@ void asn1_object::debug_print(uint32 depth, const std::string& name) {
 #endif
 }
 
-void asn1_object::set_constraints(asn1_constraints* cons) {
-    if (_constraints) _constraints->release();
-    _constraints = cons;
-}
-
-asn1_constraints* asn1_object::get_constraints() { return _constraints; }
+asn1_constraints& asn1_object::get_constraints() { return _constraints; }
 
 }  // namespace io
 }  // namespace hotplace

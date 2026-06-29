@@ -58,7 +58,7 @@ return_t asn1_encode::write_ident_octets(binary_t& bin, uint8 enc, uint64 tag, s
     return errorcode_t::success;
 }
 
-return_t asn1_encode::write_ident_octets(binary_t& bin, asn1_object* object, size_t pos) {
+return_t asn1_encode::write_ident_octets2(binary_t& bin, asn1_object* object, size_t pos) {
     return_t ret = errorcode_t::success;
     if (nullptr == object) return errorcode_t::invalid_parameter;
     ret = write_ident_octets(bin, object->get_ident(), object->get_entity(), pos);

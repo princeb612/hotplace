@@ -36,7 +36,7 @@
 
 * details
   * Revision 1039
-    * ASN.1 constraints evaluation
+    * [improvement] range_set
   * Revision 1037
     * ASN.1 constraints
   * Revision 1036

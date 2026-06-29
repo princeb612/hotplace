@@ -15,6 +15,7 @@
 
 #include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <hotplace/sdk/io/asn.1/constraints/asn1_constraints.hpp>
 #include <hotplace/sdk/io/asn.1/types.hpp>
 
 namespace hotplace {
@@ -41,12 +42,12 @@ namespace io {
  *          asn1_visitor
  *            asn1_der_visitor
  *            asn1_notation_visitor
- *          asn1_constraints
- *            asn1_constraints_single
- *            asn1_constraints_size
- *            asn1_constraints_range
- *            asn1_constraints_from
- *            asn1_constraints_pattern
+ *          asn1_constraint
+ *            asn1_constraint_single
+ *            asn1_constraint_size
+ *            asn1_constraint_range
+ *            asn1_constraint_from
+ *            asn1_constraint_pattern
  */
 class asn1_object {
     friend class asn1;
@@ -113,8 +114,7 @@ class asn1_object {
     asn1_object& suppress();
     asn1_object& unsuppress();
 
-    void set_constraints(asn1_constraints* cons);
-    asn1_constraints* get_constraints();
+    asn1_constraints& get_constraints();
 
    protected:
     asn1_object(asn1_entity_t entity, const std::string& name = "", asn1_object* object = nullptr, asn1_tag* tag = nullptr);
@@ -144,8 +144,7 @@ class asn1_object {
     asn1_object* _object;
     variant_t _vt;
 
-    asn1_constraints* _constraints;
-
+    asn1_constraints _constraints;
     t_shared_reference<asn1_object> _shared;
 };
 

@@ -12,7 +12,7 @@
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
-#include <hotplace/sdk/net/basic/util/sdk.hpp>
+#include <hotplace/sdk/net/basic/ipaddr/sdk.hpp>
 #include <hotplace/sdk/net/tls/dtls_record_arrange.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
 #include <hotplace/sdk/net/tls/tls_protection.hpp>

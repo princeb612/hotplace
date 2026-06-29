@@ -14,7 +14,6 @@
 
 #include <hotplace/sdk/base/nostd/bit_set.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
-#include <hotplace/sdk/base/nostd/point_set.hpp>
 #include <hotplace/sdk/base/nostd/range_set.hpp>
 
 namespace hotplace {
@@ -25,10 +24,11 @@ enum class set_type_t {
     bit,
 };
 
-template <typename T = uint64>
+template <typename T, typename std::enable_if<custom::is_integral<typename std::decay<T>::type>::value, int>::type = 0>
 class t_set {
    public:
     t_set(set_type_t type) { build(type); }
+    /* set the universe */
     t_set(set_type_t type, T start, T end) { build(type, start, end); }
     ~t_set() {}
 
@@ -56,21 +56,29 @@ class t_set {
 
    protected:
     void build(set_type_t type) {
-        if (set_type_t::range == type) {
-            _worker = std::unique_ptr<t_range_set<T>>(new t_range_set<T>());
-        } else if (set_type_t::point == type) {
-            _worker = std::unique_ptr<t_point_set<T>>(new t_point_set<T>());
-        } else if (set_type_t::bit == type) {
-            throw exception(errorcode_t::bad_request);
+        switch (type) {
+            case set_type_t::range:
+            case set_type_t::point:
+                _worker = std::unique_ptr<t_range_set<T>>(new t_range_set<T>());
+                break;
+            case set_type_t::bit:
+            default:
+                throw exception(errorcode_t::bad_request);
+                break;
         }
     }
     void build(set_type_t type, T start, T end) {
-        if (set_type_t::range == type) {
-            _worker = std::unique_ptr<t_range_set<T>>(new t_range_set<T>());
-        } else if (set_type_t::point == type) {
-            _worker = std::unique_ptr<t_point_set<T>>(new t_point_set<T>());
-        } else if (set_type_t::bit == type) {
-            _worker = std::unique_ptr<t_bit_set<T>>(new t_bit_set<T>(start, end));
+        switch (type) {
+            case set_type_t::range:
+            case set_type_t::point:
+                _worker = std::unique_ptr<t_range_set<T>>(new t_range_set<T>());
+                break;
+            case set_type_t::bit:
+                _worker = std::unique_ptr<t_bit_set<T>>(new t_bit_set<T>(start, end));
+                break;
+            default:
+                throw exception(errorcode_t::bad_request);
+                break;
         }
     }
 

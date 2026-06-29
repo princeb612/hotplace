@@ -12,7 +12,7 @@
  */
 
 #include <hotplace/sdk/base/nostd/exception.hpp>
-#include <hotplace/sdk/base/nostd/range_set.hpp>
+#include <hotplace/sdk/base/nostd/tagged_range_set.hpp>
 #include <hotplace/sdk/base/pattern/kmp.hpp>
 #include <hotplace/sdk/io/basic/parser.hpp>
 

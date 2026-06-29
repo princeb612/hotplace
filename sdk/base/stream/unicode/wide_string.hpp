@@ -14,7 +14,6 @@
 #define __HOTPLACE_SDK_BASE_STREAM_WIDESTRING__
 
 #include <hotplace/sdk/base/nostd/traits_printf.hpp>
-#include <hotplace/sdk/base/stream/bufferio.hpp>
 #include <hotplace/sdk/base/stream/types.hpp>
 #include <ostream>
 

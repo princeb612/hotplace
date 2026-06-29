@@ -69,13 +69,7 @@ void asn1_builtin_type::represent(uint32 depth, stream_t* s, asn1_value* value) 
                 vtprintf(s, _vt, vtprintf_style_t::vtprintf_style_asn1);
             }
 
-            auto cons = get_constraints();
-            if (cons) {
-                s->printf(" (");
-                asn1_constraints_visitor visitor(s);
-                cons->accept(&visitor);
-                s->printf(")");
-            }
+            get_constraints().represent(s, this, value);
         }
     }
 }
@@ -105,7 +99,7 @@ bool asn1_builtin_type::represent(uint32 depth, binary_t* b, asn1_value* value, 
                 break;
             case asn1_visitor_choice:
             default:
-                asn1_encode::write_ident_octets(*b, this);
+                asn1_encode::write_ident_octets2(*b, this);
                 break;
         }
     }

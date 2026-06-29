@@ -190,7 +190,7 @@ class t_binaries {
             if (1 < parts) {
                 ret = true;
             } else if (1 == parts) {
-                bool check = ((0 == res[0].s) && (entry.bin.size() == res[0].e));
+                bool check = ((0 == res[0].begin) && (entry.bin.size() == res[0].end));
                 if (bin_set_fin & entry.flags) {
                     check = (check && (entry.bin.size() == entry.finsize));
                 }

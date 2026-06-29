@@ -22,7 +22,7 @@ template <typename T = size_t>
 struct t_range_t {
     T begin;
     T end;
-    t_range_t() : begin(0), end(0) {}
+    t_range_t() : begin(T()), end(T()) {}
     t_range_t(T b, T e) : begin(std::min(b, e)), end(std::max(b, e)) {}
     bool operator<(const t_range_t& other) const {
         bool ret = false;

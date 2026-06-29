@@ -92,14 +92,15 @@
 #include <hotplace/sdk/io/asn.1/basic/detail/asn1_integer.hpp>
 
 /* asn.1/constraints */
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraints.hpp>
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraints_except.hpp>
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraints_from.hpp>
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraints_intersection.hpp>
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraints_pattern.hpp>
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraints_range.hpp>
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraints_single_value.hpp>
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraints_size.hpp>
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraints_union.hpp>
+#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint.hpp>
+#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint_all_except.hpp>
+#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint_except.hpp>
+#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint_from.hpp>
+#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint_intersection.hpp>
+#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint_pattern.hpp>
+#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint_range.hpp>
+#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint_single_value.hpp>
+#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint_size.hpp>
+#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint_union.hpp>
 
 #endif

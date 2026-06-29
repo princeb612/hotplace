@@ -77,7 +77,7 @@ bool asn1_bitstring::represent(uint32 depth, binary_t* b, asn1_value* value, uin
         auto snapshot = b->size();
         bool test = true;
 
-        asn1_encode::write_ident_octets(*b, this);
+        asn1_encode::write_ident_octets2(*b, this);
         auto pos = b->size();
         bool do_len = true;
         if (_nbl.empty()) {

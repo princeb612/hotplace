@@ -12,8 +12,8 @@
 #ifndef __HOTPLACE_SDK_NET_HTTP_HTTPSERVER__
 #define __HOTPLACE_SDK_NET_HTTP_HTTPSERVER__
 
+#include <hotplace/sdk/net/basic/ipaddr/ipaddr_acl.hpp>  // ipaddr_acl
 #include <hotplace/sdk/net/basic/server_socket_adapter.hpp>
-#include <hotplace/sdk/net/basic/util/ipaddr_acl.hpp>      // ipaddr_acl
 #include <hotplace/sdk/net/http/http1/http_protocol.hpp>   // http_protocol
 #include <hotplace/sdk/net/http/http2/http2_protocol.hpp>  // http2_protocol
 #include <hotplace/sdk/net/http/http_router.hpp>           // http_router

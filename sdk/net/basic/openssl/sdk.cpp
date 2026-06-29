@@ -12,8 +12,8 @@
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
 #include <hotplace/sdk/io/system/socket.hpp>
+#include <hotplace/sdk/net/basic/ipaddr/sdk.hpp>
 #include <hotplace/sdk/net/basic/openssl/sdk.hpp>
-#include <hotplace/sdk/net/basic/util/sdk.hpp>
 
 namespace hotplace {
 namespace net {

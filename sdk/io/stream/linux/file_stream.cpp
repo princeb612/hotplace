@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/stream/lowlevel/bufferio.hpp>
 #include <hotplace/sdk/io/stream/file_stream.hpp>
 
 namespace hotplace {

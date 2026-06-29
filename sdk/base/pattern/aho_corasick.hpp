@@ -8,6 +8,7 @@
  * Date         Name                Description
  * 2024.07.05   Soo Han, Kim        study (codename.hotplace Revision 548)
  * 2026.05.19   Soo Han, Kim        replace std::function with functor (codename.hotplace Revision 1003)
+ * 2026.06.29   Soo Han, Kim        code review - Gemini (reset fixed)
  */
 
 #ifndef __HOTPLACE_SDK_BASE_PATTERN_AHOCORASICK__
@@ -44,6 +45,7 @@ class t_aho_corasick_t {
     virtual size_t get_pattern_size(size_t index) = 0;
     virtual void order_by_pattern(const std::multimap<range_t, size_t>& input, std::multimap<size_t, range_t>& output) = 0;
     virtual return_t get_pattern(size_t index, std::vector<BT>& pattern) = 0;
+    virtual void reset() = 0;
 };
 
 /**
@@ -174,9 +176,11 @@ class t_aho_corasick : public t_aho_corasick_t<BT, T> {
         }
     }
 
-    void reset() {
-        delete _root;
-        _root = new trienode;
+    void reset() override {
+        if (_root) {
+            delete _root;
+            _root = new trienode;
+        }
         _patterns.clear();
     }
 

@@ -44,7 +44,7 @@ class asn1_encode {
     asn1_encode();
 
     static return_t write_ident_octets(binary_t& bin, uint8 enc, uint64 tag, size_t pos = -1);
-    static return_t write_ident_octets(binary_t& bin, asn1_object* object, size_t pos = -1);
+    static return_t write_ident_octets2(binary_t& bin, asn1_object* object, size_t pos = -1);
     static return_t read_asn1_ident_octets(const byte_t* stream, size_t size, uint8& ident, uint64& tag);
 
     /**

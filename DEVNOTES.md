@@ -18,8 +18,10 @@
   - [ ] ASN.1
     - in progress
       - [ ] ASN.1 runtime
+        - [ ] BER encoding
+          - [ ] encode/decode
         - [ ] constraints
-          - [ ] constraints evaluation
+          - [ ] constraints validation
           - [ ] disjoint set (intersection)
           - [x] union
           - [x] intersection

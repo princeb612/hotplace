@@ -23,7 +23,7 @@ t_key_value<uint64, uint64>& quic_session::get_setting() { return _setting; }
 
 qpack_dynamic_table& quic_session::get_dynamic_table() { return _qpack_dyntable; }
 
-t_point_set<uint32>& quic_session::get_pkns(protection_space_t space) { return _pkn[space]; }
+t_range_set<uint32>& quic_session::get_pkns(protection_space_t space) { return _pkn[space]; }
 
 quic_streams& quic_session::get_streams() { return _streams; }
 

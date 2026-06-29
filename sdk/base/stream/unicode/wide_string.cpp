@@ -11,6 +11,7 @@
  */
 
 #include <hotplace/sdk/base/stream/ansi_string.hpp>
+#include <hotplace/sdk/base/stream/lowlevel/bufferio.hpp>
 #include <hotplace/sdk/base/stream/stream_policy.hpp>
 #include <hotplace/sdk/base/stream/unicode/wide_string.hpp>
 #include <hotplace/sdk/base/string/string.hpp>

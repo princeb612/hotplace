@@ -12,7 +12,7 @@
 #undef MBCS
 #define _UNICODE
 #define UNICODE
-#include "../printf_charset.cpp"
+#include "../lowlevel/printf_charset.cpp"
 #undef _UNICODE
 #undef UNICODE
 #define _MBCS

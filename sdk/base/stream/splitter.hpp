@@ -12,43 +12,45 @@
 #define __HOTPLACE_SDK_BASE_STREAM_SPLITTER__
 
 #include <hotplace/sdk/base/stream/split.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
 
 namespace hotplace {
 namespace io {
 
 /**
- * @brief splitter
+ * @brief   splitter
+ * @sa      dtls_record_publisher
  * @example
- *      // input
- *      //   group stream1 size 100
- *      //   group stream2 size 210
- *      //   group stream3 size 30
- *      //   segment size 80
- *      // output
- *      //   segment #0 group #0 "group1" fragment offset   0 fragment size 80
- *      //   segment #1 group #0 "group1" fragment offset  80 fragment size 20
- *      //   segment #1 group #1 "group2" fragment offset   0 fragment size 60
- *      //   segment #2 group #1 "group2" fragment offset  60 fragment size 80
- *      //   segment #3 group #1 "group2" fragment offset 140 fragment size 70
- *      //   segment #3 group #2 "group3" fragment offset   0 fragment size 10
- *      //   segment #4 group #2 "group3" fragment offset  10 fragment size 20
- *      splitter<std::string> spl;
- *      spl.set_segment_size(80);
- *      spl.add(std::move(stream1), std::move(std::string("group1")));
- *      spl.add(std::move(stream2), std::move(std::string("group2")));
- *      spl.add(std::move(stream3), std::move(std::string("group3")));
- *      int segment = -1;
- *      int group = -1;
- *      auto lambda = [&](uint32 flags, const byte_t* stream, size_t size, size_t fragoffset, size_t fragsize, const std::string& desc) -> void {
- *          if (splitter_flag_t::splitter_new_segment & flags) {
- *              ++segment;
- *          }
- *          if (splitter_flag_t::splitter_new_group & flags) {
- *              ++group;
- *          }
- *          _logger->writeln(R"(segment #%i group #%i "%s" fragment offset %3zi fragment size %zi)", segment, group, desc.c_str(), fragoffset, fragsize);
- *      };
- *      spl.run(lambda);
+ *          // input
+ *          //   group stream1 size 100
+ *          //   group stream2 size 210
+ *          //   group stream3 size 30
+ *          //   segment size 80
+ *          // output
+ *          //   segment #0 group #0 "group1" fragment offset   0 fragment size 80
+ *          //   segment #1 group #0 "group1" fragment offset  80 fragment size 20
+ *          //   segment #1 group #1 "group2" fragment offset   0 fragment size 60
+ *          //   segment #2 group #1 "group2" fragment offset  60 fragment size 80
+ *          //   segment #3 group #1 "group2" fragment offset 140 fragment size 70
+ *          //   segment #3 group #2 "group3" fragment offset   0 fragment size 10
+ *          //   segment #4 group #2 "group3" fragment offset  10 fragment size 20
+ *          splitter<std::string> spl;
+ *          spl.set_segment_size(80);
+ *          spl.add(std::move(stream1), std::move(std::string("group1")));
+ *          spl.add(std::move(stream2), std::move(std::string("group2")));
+ *          spl.add(std::move(stream3), std::move(std::string("group3")));
+ *          int segment = -1;
+ *          int group = -1;
+ *          auto lambda = [&](uint32 flags, const byte_t* stream, size_t size, size_t fragoffset, size_t fragsize, const std::string& desc) -> void {
+ *              if (splitter_flag_t::splitter_new_segment & flags) {
+ *                  ++segment;
+ *              }
+ *              if (splitter_flag_t::splitter_new_group & flags) {
+ *                  ++group;
+ *              }
+ *              _logger->writeln(R"(segment #%i group #%i "%s" fragment offset %3zi fragment size %zi)", segment, group, desc.c_str(), fragoffset, fragsize);
+ *          };
+ *          spl.run(lambda);
  */
 template <typename DESCRIPTOR_T>
 class splitter {

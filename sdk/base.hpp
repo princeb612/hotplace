@@ -35,9 +35,15 @@
 #include <hotplace/sdk/base/encoding/base64.hpp>
 #include <hotplace/sdk/base/encoding/decoder_stream.hpp>
 #include <hotplace/sdk/base/encoding/encoder_stream.hpp>
-#include <hotplace/sdk/base/encoding/http_huffman_codes.hpp>
 #include <hotplace/sdk/base/encoding/http_huffman_coding.hpp>
 #include <hotplace/sdk/base/encoding/huffman_coding.hpp>
+
+/* encoding/lowlevel */
+#include <hotplace/sdk/base/encoding/lowlevel/base16.hpp>
+#include <hotplace/sdk/base/encoding/lowlevel/base64.hpp>
+
+/* encoding/detail */
+#include <hotplace/sdk/base/encoding/detail/http_huffman_codes.hpp>
 
 /* graph */
 #include <hotplace/sdk/base/graph/graph.hpp>
@@ -56,11 +62,11 @@
 #include <hotplace/sdk/base/nostd/keyvalue.hpp>
 #include <hotplace/sdk/base/nostd/list.hpp>
 #include <hotplace/sdk/base/nostd/memory.hpp>
-#include <hotplace/sdk/base/nostd/point_set.hpp>
 #include <hotplace/sdk/base/nostd/pq.hpp>
 #include <hotplace/sdk/base/nostd/range.hpp>
 #include <hotplace/sdk/base/nostd/range_set.hpp>
 #include <hotplace/sdk/base/nostd/set.hpp>
+#include <hotplace/sdk/base/nostd/tagged_range_set.hpp>
 #include <hotplace/sdk/base/nostd/traits.hpp>
 #include <hotplace/sdk/base/nostd/traits_encoder.hpp>
 #include <hotplace/sdk/base/nostd/traits_printf.hpp>
@@ -81,7 +87,6 @@
 /* stream */
 #include <hotplace/sdk/base/stream/ansi_string.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/stream/bufferio.hpp>
 #include <hotplace/sdk/base/stream/printf.hpp>
 #include <hotplace/sdk/base/stream/split.hpp>
 #include <hotplace/sdk/base/stream/splitter.hpp>
@@ -91,6 +96,9 @@
 #include <hotplace/sdk/base/stream/types.hpp>
 #include <hotplace/sdk/base/stream/unicode/wide_string.hpp>
 #include <hotplace/sdk/base/stream/vtprintf.hpp>
+
+/* stream/lowlevel */
+#include <hotplace/sdk/base/stream/lowlevel/bufferio.hpp>
 
 /* string */
 #include <hotplace/sdk/base/string/constexpr_obfuscate.hpp>

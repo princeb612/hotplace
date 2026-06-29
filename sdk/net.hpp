@@ -57,7 +57,7 @@
 #include <hotplace/sdk/net/basic/trial/types.hpp>
 
 // basic/util
-#include <hotplace/sdk/net/basic/util/ipaddr_acl.hpp>
+#include <hotplace/sdk/net/basic/ipaddr/ipaddr_acl.hpp>
 
 /* http */
 #include <hotplace/sdk/net/http/html_documents.hpp>

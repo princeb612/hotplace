@@ -18,6 +18,7 @@ namespace hotplace {
 template <typename T>
 class t_set_t {
    public:
+    virtual ~t_set_t() = default;
     virtual void insert(T value) = 0;
     virtual void insert_range(T start, T end) = 0;
     virtual void erase(T value) = 0;

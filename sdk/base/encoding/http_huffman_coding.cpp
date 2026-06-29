@@ -8,7 +8,7 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/encoding/http_huffman_codes.hpp>
+#include <hotplace/sdk/base/encoding/detail/http_huffman_codes.hpp>
 #include <hotplace/sdk/base/encoding/http_huffman_coding.hpp>
 
 namespace hotplace {

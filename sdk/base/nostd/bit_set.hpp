@@ -12,6 +12,7 @@
 #define __HOTPLACE_SDK_BASE_NOSTD_BITSET__
 
 #include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/nostd/traits.hpp>
 #include <hotplace/sdk/base/nostd/types.hpp>
 
 namespace hotplace {
@@ -22,7 +23,7 @@ namespace hotplace {
  *          ASN.1 BIT STRING
  *          std::bitset is not enough
  */
-template <typename T>
+template <typename T, typename std::enable_if<custom::is_integral<typename std::decay<T>::type>::value, int>::type = 0>
 class t_bit_set : public t_set_t<T> {
    public:
     virtual void insert(T value) override { add(value); }
@@ -49,7 +50,7 @@ class t_bit_set : public t_set_t<T> {
     t_bit_set& operator=(t_bit_set&& other) {
         std::swap(_low, other._low);
         std::swap(_high, other._high);
-        std::swap(_bitset, other._bitset);
+        _bitset = std::move(other._bitset);
         return *this;
     }
 

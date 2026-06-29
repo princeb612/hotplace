@@ -14,7 +14,7 @@
 
 #include <hotplace/sdk/base/nostd/binaries.hpp>
 #include <hotplace/sdk/base/nostd/keyvalue.hpp>
-#include <hotplace/sdk/base/nostd/point_set.hpp>
+#include <hotplace/sdk/base/nostd/range_set.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/net/http/qpack/qpack_dynamic_table.hpp>
 #include <hotplace/sdk/net/http/qpack/qpack_encoder.hpp>
@@ -48,7 +48,7 @@ class quic_session {
      * add pkn when reading packet
      * quic_frame_ack reference this
      */
-    t_point_set<uint32>& get_pkns(protection_space_t space);
+    t_range_set<uint32>& get_pkns(protection_space_t space);
     /**
      * stream
      */
@@ -67,7 +67,7 @@ class quic_session {
     // settings, headers
     qpack_dynamic_table _qpack_dyntable;
     // ack
-    std::map<protection_space_t, t_point_set<uint32>> _pkn;
+    std::map<protection_space_t, t_range_set<uint32>> _pkn;
     // stream
     quic_streams _streams;
     // publisjer

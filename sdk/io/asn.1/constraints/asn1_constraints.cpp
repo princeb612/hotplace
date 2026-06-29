@@ -13,56 +13,79 @@
 
 #include <hotplace/sdk/io/asn.1/asn1_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
+#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint.hpp>
 #include <hotplace/sdk/io/asn.1/constraints/asn1_constraints.hpp>
 
 namespace hotplace {
 namespace io {
 
-asn1_constraints::asn1_constraints(asn1_entity_t entity) : _entity(entity), _parent(nullptr) { _shared.make_share(this); }
-
-asn1_constraints::~asn1_constraints() {}
+asn1_constraints::asn1_constraints() {}
 
 asn1_constraints::asn1_constraints(const asn1_constraints& other) { *this = other; }
 
+asn1_constraints::asn1_constraints(asn1_constraints&& other) { *this = std::move(other); }
+
+asn1_constraints::~asn1_constraints() {}
+
 asn1_constraints& asn1_constraints::operator=(const asn1_constraints& other) {
-    _entity = other._entity;
+    if (false == other._constraints.empty()) {
+        for (auto item : other._constraints) {
+            add(item->clone());
+        }
+    }
     return *this;
 }
 
-asn1_constraints* asn1_constraints::clone() { return new asn1_constraints(*this); }
+asn1_constraints& asn1_constraints::operator=(asn1_constraints&& other) {
+    _constraints = std::move(other._constraints);
+    return *this;
+}
 
-bool asn1_constraints::is_applicable(asn1_object* object) { return object ? is_applicable(object->get_component_entity()) : false; }
+asn1_constraints& asn1_constraints::add(asn1_constraint* cons, std::function<void(asn1_constraint*)> f) {
+    if (cons) {
+        if (f) {
+            f(cons);
+        }
+        _constraints.push_back(cons);
+    }
+    return *this;
+}
 
-bool asn1_constraints::is_applicable(asn1_entity_t entity) { return false; }
+void asn1_constraints::represent(stream_t* s, asn1_object* object, asn1_value* value) {
+    if (false == _constraints.empty()) {
+        for (auto item : _constraints) {
+            s->printf(" (");
+            asn1_constraint_visitor visitor(s, object);
+            item->accept(&visitor);
+            s->printf(")");
+        }
+    }
+}
 
-asn1_entity_t asn1_constraints::get_entity() { return _entity; }
-
-bool asn1_constraints::is_set_family() {
-    bool ret = false;
-    switch (_entity) {
-        case asn1_entity_constraints_union:
-        case asn1_entity_constraints_intersection:
-        case asn1_entity_constraints_except:
-        case asn1_entity_constraints_all_except:
-            ret = true;
-            break;
-        default:
-            break;
+return_t asn1_constraints::validate(asn1_object* object, const variant& v) {
+    return_t ret = errorcode_t::success;
+    if (false == _constraints.empty()) {
+        for (auto item : _constraints) {
+        }
     }
     return ret;
 }
 
-asn1_constraints* asn1_constraints::get_parent() { return _parent; }
+void asn1_constraints::addref() {
+    if (false == _constraints.empty()) {
+        for (auto item : _constraints) {
+            item->addref();
+        }
+    }
+}
 
-void asn1_constraints::set_parent(asn1_constraints* parent) { _parent = parent; }
-
-void asn1_constraints::addref() { _shared.addref(); }
-
-void asn1_constraints::release() { _shared.delref(); }
-
-void asn1_constraints::accept(asn1_constraints_visitor* v) { v->visit(this); }
-
-void asn1_constraints::represent(stream_t* s, asn1_value* value) {}
+void asn1_constraints::release() {
+    if (false == _constraints.empty()) {
+        for (auto item : _constraints) {
+            item->release();
+        }
+    }
+}
 
 }  // namespace io
 }  // namespace hotplace

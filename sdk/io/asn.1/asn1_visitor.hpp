@@ -56,17 +56,18 @@ class asn1_notation_visitor : public asn1_visitor {
     asn1_value* _value;
 };
 
-class asn1_constraints_visitor {
+class asn1_constraint_visitor {
    public:
-    asn1_constraints_visitor(stream_t* s, asn1_value* value = nullptr);
-    virtual ~asn1_constraints_visitor();
+    asn1_constraint_visitor(stream_t* s, asn1_object* object, asn1_value* value = nullptr);
+    virtual ~asn1_constraint_visitor();
 
-    virtual void visit(asn1_constraints* object);
+    virtual void visit(asn1_constraint* cons);
 
    protected:
     stream_t* get_stream();
 
    private:
+    asn1_object* _object;
     stream_t* _s;
     asn1_value* _value;
 };

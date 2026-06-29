@@ -16,6 +16,8 @@
 
 namespace hotplace {
 
+struct bufferio_context_t;
+
 class ansi_string;
 class basic_stream;
 class bufferio;

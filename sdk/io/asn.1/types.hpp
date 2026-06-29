@@ -146,18 +146,18 @@ enum asn1_entity_t {
     asn1_entity_enum_type,
     asn1_entity_any,
 
-    asn1_entity_constraints = 0x2000,
-    asn1_entity_constraints_union,
-    asn1_entity_constraints_intersection,
-    asn1_entity_constraints_except,
-    asn1_entity_constraints_all_except,
-    asn1_entity_constraints_single,
-    asn1_entity_constraints_size,
-    asn1_entity_constraints_range,
-    asn1_entity_constraints_from,
-    asn1_entity_constraints_pattern,
-    asn1_entity_constraints_including,
-    asn1_entity_constraints_containing,
+    asn1_entity_constraint = 0x2000,
+    asn1_entity_constraint_union,
+    asn1_entity_constraint_intersection,
+    asn1_entity_constraint_except,
+    asn1_entity_constraint_all_except,
+    asn1_entity_constraint_single,
+    asn1_entity_constraint_size,
+    asn1_entity_constraint_range,
+    asn1_entity_constraint_from,
+    asn1_entity_constraint_pattern,
+    asn1_entity_constraint_including,
+    asn1_entity_constraint_containing,
 };
 
 enum asn1_tagtype_t {
@@ -207,18 +207,20 @@ class asn1_value;
 class asn1_visitor;
 class asn1_der_visitor;
 class asn1_notation_visitor;
-class asn1_constraints_visitor;
+class asn1_constraint_visitor;
+
+class asn1_constraint;
+class asn1_constraint_union;
+class asn1_constraint_intersection;
+class asn1_constraint_except;
+class asn1_constraint_allexcept;
+class asn1_constraint_from;
+class asn1_constraint_pattern;
+class asn1_constraint_range;
+class asn1_constraint_single_value;
+class asn1_constraint_size;
 
 class asn1_constraints;
-class asn1_constraints_union;
-class asn1_constraints_intersection;
-class asn1_constraints_except;
-class asn1_constraints_allexcept;
-class asn1_constraints_from;
-class asn1_constraints_pattern;
-class asn1_constraints_range;
-class asn1_constraints_single_value;
-class asn1_constraints_size;
 
 }  // namespace io
 }  // namespace hotplace

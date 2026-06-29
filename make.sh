@@ -153,8 +153,7 @@ if [ $do_clangformat = 1 ]; then
     if [[ $MSYSTEM = 'MINGW64' ]]; then
         # clang-format version 21.1.8 (https://github.com/msys2/MSYS2-packages ...)
         clang-format -i `find sdk -name \*.\?pp`
-        clang-format -i `find testcase -name \*.\?pp`
-        clang-format -i `find testapplet -name \*.\?pp`
+        clang-format -i `find test -name \*.\?pp`
     fi
 fi
 
@@ -176,8 +175,7 @@ function update_fileheader() (
 )
 if [[ $do_updateheader = 1 ]]; then
     update_fileheader sdk
-    update_fileheader testcase
-    update_fileheader testapplet
+    update_fileheader test
 fi
 
 # redist mingw binaries
@@ -209,6 +207,6 @@ if [[ $do_ctest = 1 ]]; then
 fi
 # run build/test/test.sh
 if [[ $do_test = 1 ]]; then
-    cd ${HOTPLACE_HOME}/${builddir}/testcase/
+    cd ${HOTPLACE_HOME}/${builddir}/test/testcase/
     ./test.sh
 fi

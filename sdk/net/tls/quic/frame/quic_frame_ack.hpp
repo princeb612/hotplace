@@ -12,7 +12,7 @@
 #ifndef __HOTPLACE_SDK_NET_TLS_QUIC_FRAME_QUICFRAMEACK__
 #define __HOTPLACE_SDK_NET_TLS_QUIC_FRAME_QUICFRAMEACK__
 
-#include <hotplace/sdk/base/nostd/point_set.hpp>
+#include <hotplace/sdk/base/nostd/range_set.hpp>
 #include <hotplace/sdk/net/tls/quic/frame/quic_frame.hpp>
 
 namespace hotplace {
@@ -32,13 +32,13 @@ struct ack_range_t {
 /**
  * @example
  *          ack_t ack;
- *          t_point_set<uint32> part;
+ *          t_range_set<uint32> part;
  *          // ACK(21, FAR:0, [0]G:1,R:4, [1]G:0,R:5)
  *          part.add(7, 12).add(14, 18).add(21);
  *          ack << part;
  *
  *          // (gdb) p part
- *          // $1 = {_arr = std::vector of length 3, capacity 4 = {{s = 7, e = 12}, {s = 14, e = 18}, {s = 21, e = 21}}}
+ *          // $1 = {_arr = std::vector of length 3, capacity 4 = {{begin = 7, end = 12}, {begin = 14, end = 18}, {begin = 21, end = 21}}}
  *
  *          // (gdb) p ack
  *          // $2 = {largest_ack = 21, first_ack_range = 0,
@@ -60,7 +60,7 @@ struct ack_t {
         return ((largest_ack == other.largest_ack) && (first_ack_range == other.first_ack_range) && (ack_ranges == other.ack_ranges));
     }
 
-    friend ack_t& operator<<(ack_t& ack, t_point_set<uint32>& part) {
+    friend ack_t& operator<<(ack_t& ack, t_range_set<uint32>& part) {
         ack.clear();
 
         auto res = part.merge();
@@ -70,22 +70,22 @@ struct ack_t {
             uint32 smallest = 0;
             {
                 const auto& ent = res[size - 1];
-                ack.largest_ack = ent.e;
-                ack.first_ack_range = ent.e - ent.s;
-                smallest = ent.s;
+                ack.largest_ack = ent.end;
+                ack.first_ack_range = ent.end - ent.begin;
+                smallest = ent.begin;
             }
             if (size > 1) {
                 for (auto i = size - 1; i > 0; i--) {
                     const auto& ent = res[i - 1];
-                    ack.ack_ranges.push_back(ack_range_t(smallest - ent.e - 2, ent.e - ent.s));
-                    smallest = ent.s;
+                    ack.ack_ranges.push_back(ack_range_t(smallest - ent.end - 2, ent.end - ent.begin));
+                    smallest = ent.begin;
                 }
             }
         }
 
         return ack;
     }
-    friend t_point_set<uint32>& operator>>(const ack_t& ack, t_point_set<uint32>& part) {
+    friend t_range_set<uint32>& operator>>(const ack_t& ack, t_range_set<uint32>& part) {
         part.clear();
         auto smallest = ack.largest_ack - ack.first_ack_range;
         part.add(smallest, ack.largest_ack);
