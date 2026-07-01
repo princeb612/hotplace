@@ -13,8 +13,7 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTS__
 #define __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTS__
 
-#include <hotplace/sdk/base/system/shared_instance.hpp>
-#include <hotplace/sdk/io/asn.1/types.hpp>
+#include <hotplace/sdk/io/asn.1/constraints/types.hpp>
 
 namespace hotplace {
 namespace io {
@@ -24,18 +23,18 @@ namespace io {
  */
 class asn1_constraints {
    public:
-    asn1_constraints();
+    asn1_constraints() = default;
     asn1_constraints(const asn1_constraints& other);
     asn1_constraints(asn1_constraints&& other);
-    ~asn1_constraints();
+    virtual ~asn1_constraints() = default;
 
     asn1_constraints& operator=(const asn1_constraints& other);
     asn1_constraints& operator=(asn1_constraints&& other);
 
-    asn1_constraints& add(asn1_constraint*, std::function<void(asn1_constraint*)> f = nullptr);
+    asn1_constraints& add(asn1_constraint* cons, std::function<void(asn1_constraint*)> f = nullptr);
+
     void represent(stream_t* s, asn1_object* object, asn1_value* value);
 
-    // validation
     return_t validate(asn1_object* object, const variant& v);
 
     void addref();

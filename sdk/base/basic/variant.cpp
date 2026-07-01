@@ -624,4 +624,71 @@ variant& variant::operator=(const datetime_t& value) { return set_datetime(value
 
 variant& variant::operator=(const bignumber& other) { return set_bn(other); }
 
+bool variant::operator==(const variant& other) const {
+    bool ret = false;
+    auto t = type();
+    if (t == other.type()) {
+        switch (t) {
+            case vartype_t::TYPE_NULL:
+                ret = true;
+                break;
+            case vartype_t::TYPE_BOOL:
+                ret = (_vt.data.b == other._vt.data.b);
+                break;
+            case vartype_t::TYPE_CHAR:
+            case vartype_t::TYPE_BYTE:
+            case vartype_t::TYPE_INT8:
+            case vartype_t::TYPE_UINT8:
+                ret = (_vt.data.ui8 == other._vt.data.ui8);
+                break;
+            case vartype_t::TYPE_INT16:
+            case vartype_t::TYPE_UINT16:
+            case vartype_t::TYPE_FP16:
+                ret = (_vt.data.ui16 == other._vt.data.ui16);
+                break;
+            case vartype_t::TYPE_INT24:
+            case vartype_t::TYPE_INT32:
+            case vartype_t::TYPE_UINT24:
+            case vartype_t::TYPE_UINT32:
+                ret = (_vt.data.ui32 == other._vt.data.ui32);
+                break;
+            case vartype_t::TYPE_INT48:
+            case vartype_t::TYPE_INT64:
+            case vartype_t::TYPE_UINT48:
+            case vartype_t::TYPE_UINT64:
+                ret = (_vt.data.ui64 == other._vt.data.ui64);
+                break;
+            case vartype_t::TYPE_INT128:
+            case vartype_t::TYPE_UINT128:
+                ret = (_vt.data.ui128 == other._vt.data.ui128);
+                break;
+            case vartype_t::TYPE_FLOAT:
+                ret = (_vt.data.f == other._vt.data.f);
+                break;
+            case vartype_t::TYPE_DOUBLE:
+                ret = (_vt.data.d == other._vt.data.d);
+                break;
+            case vartype_t::TYPE_STRING:
+                ret = (0 == strcmp(_vt.data.str, other._vt.data.str));
+                break;
+            case vartype_t::TYPE_NSTRING:
+                if (_vt.size == other._vt.size) {
+                    ret = (0 == strcmp(_vt.data.str, other._vt.data.str));
+                }
+                break;
+            case vartype_t::TYPE_BINARY:
+            case vartype_t::TYPE_BIGNUMBER:
+                if (_vt.size == other._vt.size) {
+                    ret = (0 == memcmp(_vt.data.bstr, other._vt.data.bstr, _vt.size));
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    return ret;
+}
+
+bool variant::operator!=(const variant& other) const { return (*this == other) ? false : true; }
+
 }  // namespace hotplace

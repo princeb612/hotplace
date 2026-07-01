@@ -15,7 +15,7 @@
 #ifndef __HOTPLACE_SDK_ODBC_BASIC_ODBCQUERY__
 #define __HOTPLACE_SDK_ODBC_BASIC_ODBCQUERY__
 
-#include <hotplace/sdk/base.hpp>
+#include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/odbc/basic/odbc_record.hpp>
 #include <hotplace/sdk/odbc/types.hpp>
 

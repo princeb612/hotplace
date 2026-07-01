@@ -189,8 +189,7 @@ class payload_member {
  */
 class payload_encoded {
    public:
-    payload_encoded() {}
-    virtual ~payload_encoded() {}
+    virtual ~payload_encoded() = default;
 
     virtual size_t lsize() = 0;
     virtual size_t value() = 0;

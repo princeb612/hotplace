@@ -41,7 +41,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <hotplace/sdk/base/stream/printf.hpp>
+#include <hotplace/sdk/base/stream/lowlevel/printf.hpp>
 #include <hotplace/sdk/base/system/ieee754.hpp>
 
 namespace hotplace {

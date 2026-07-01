@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   range_set.hpp
+ * @file   tagged_range_set.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -23,7 +23,7 @@ namespace hotplace {
 
 /**
  * @remarks
- *          parser search result {begin, end, AC-pattern-id}
+ *          parser search result {begin, to, AC-pattern-id}
  * @example
  *          rs.clear().add(9, 10, 3).add(6, 8, 2).add(1, 3, 0).add(2, 4, 1).add(1, 8, 4);
  *          res = rs.merge(); // {1, 8, 4}, {9, 10, 3}
@@ -32,32 +32,32 @@ template <typename T, typename TAGTYPE = char, typename std::enable_if<custom::i
 class t_tagged_range_set {
    public:
     struct interval {
-        T s;
-        T e;
+        T begin;
+        T end;
         TAGTYPE t;  // tag
 
-        interval() : s(0), e(0), t(TAGTYPE()) {}
-        interval(T start, T end) : s(std::min(start, end)), e(std::max(start, end)), t(TAGTYPE()) {}
-        interval(T start, T end, const TAGTYPE& tag) : s(std::min(start, end)), e(std::max(start, end)), t(tag) {}
-        interval(T start, T end, TAGTYPE&& tag) : s(std::min(start, end)), e(std::max(start, end)), t(std::move(tag)) {}
-        interval(const interval& other) : s(other.s), e(other.e), t(other.t) {}
-        interval(interval&& other) : s(other.s), e(other.e), t(std::move(other.t)) {}
+        interval() : begin(0), end(0), t(TAGTYPE()) {}
+        interval(T from, T to) : begin(std::min(from, to)), end(std::max(from, to)), t(TAGTYPE()) {}
+        interval(T from, T to, const TAGTYPE& tag) : begin(std::min(from, to)), end(std::max(from, to)), t(tag) {}
+        interval(T from, T to, TAGTYPE&& tag) : begin(std::min(from, to)), end(std::max(from, to)), t(std::move(tag)) {}
+        interval(const interval& other) : begin(other.begin), end(other.end), t(other.t) {}
+        interval(interval&& other) : begin(other.begin), end(other.end), t(std::move(other.t)) {}
         interval& operator=(const interval& other) {
-            s = other.s;
-            e = other.e;
+            begin = other.begin;
+            end = other.end;
             t = other.t;
             return *this;
         }
         interval& operator=(interval&& other) {
-            s = std::move(other.s);
-            e = std::move(other.e);
+            begin = std::move(other.begin);
+            end = std::move(other.end);
             t = std::move(other.t);
             return *this;
         }
-        bool operator==(const interval& other) const { return (s == other.s) && (e == other.e) && (t == other.t); }
+        bool operator==(const interval& other) const { return (begin == other.begin) && (end == other.end) && (t == other.t); }
     };
 
-    static bool compare(const interval& lhs, const interval& rhs) { return lhs.s < rhs.s; }
+    static bool compare(const interval& lhs, const interval& rhs) { return lhs.begin < rhs.begin; }
 
     t_tagged_range_set() {}
     t_tagged_range_set(const t_tagged_range_set& other) { *this = other; }
@@ -69,9 +69,9 @@ class t_tagged_range_set {
         return *this;
     }
 
-    t_tagged_range_set& add(T start, T end, const TAGTYPE& t = {}) {
+    t_tagged_range_set& add(T from, T to, const TAGTYPE& t = {}) {
         critical_section_guard guard(_lock);
-        _arr.push_back(interval(start, end, t));
+        _arr.push_back(interval(from, to, t));
         return *this;
     }
     t_tagged_range_set& add(const interval& value) {
@@ -91,33 +91,33 @@ class t_tagged_range_set {
     }
 
     t_tagged_range_set& subtract(T value) { return subtract(value, value); }
-    t_tagged_range_set& subtract(T start, T end) {
+    t_tagged_range_set& subtract(T from, T to) {
         critical_section_guard guard(_lock);
 
         t_tagged_range_set<T, TAGTYPE> temp;
         temp._arr = std::move(_arr);
         temp.merge();
         for (const auto& item : temp._arr) {
-            if ((item.e < start) || (end < item.s)) {
+            if ((item.end < from) || (to < item.begin)) {
                 add(std::move(item));
             } else {
-                if (item.s < start) {
-                    add(item.s, start - 1);
+                if (item.begin < from) {
+                    add(item.begin, from - 1);
                 }
-                if (end < item.e) {
-                    add(end + 1, item.e);
+                if (to < item.end) {
+                    add(to + 1, item.end);
                 }
             }
         }
         return *this;
     }
-    t_tagged_range_set& subtract(const interval& value) { return subtract(value.s, value.e); }
-    t_tagged_range_set& subtract(const t_range_t<T>& range) { return subtract(range.begin, range.end); }
+    t_tagged_range_set& subtract(const interval& value) { return subtract(value.begin, value.end); }
+    t_tagged_range_set& subtract(const t_range_t<T>& range) { return subtract(range.begin, range.to); }
     t_tagged_range_set& subtract(t_tagged_range_set& other) {
         // do not hold _lock while calling other.merge() to avoid deadlock if other == *this or cross-lock.
         auto temp = other.merge();
         for (const auto& item : temp) {
-            subtract(item.s, item.e);
+            subtract(item.begin, item.end);
         }
         return *this;
     }
@@ -126,12 +126,12 @@ class t_tagged_range_set {
         critical_section_guard guard(_lock);
         merge_internal();
         auto it = std::lower_bound(_arr.begin(), _arr.end(), interval(value, value), compare);
-        if (it != _arr.end() && it->s <= value && value <= it->e) {
+        if (it != _arr.end() && it->begin <= value && value <= it->end) {
             return true;
         }
         if (it != _arr.begin()) {
             auto prev = std::prev(it);
-            if (prev->s <= value && value <= prev->e) {
+            if (prev->begin <= value && value <= prev->end) {
                 return true;
             }
         }
@@ -154,13 +154,13 @@ class t_tagged_range_set {
         size_t i = 0;
         size_t j = 0;
         while (i < lhs.size() && j < rhs.size()) {
-            T start = std::max(lhs[i].s, rhs[j].s);
-            T end = std::min(lhs[i].e, rhs[j].e);
+            T from = std::max(lhs[i].begin, rhs[j].begin);
+            T to = std::min(lhs[i].end, rhs[j].end);
 
-            if (start <= end) {
-                _arr.push_back(interval(start, end));
+            if (from <= to) {
+                _arr.push_back(interval(from, to));
             }
-            if (lhs[i].e < rhs[j].e) {
+            if (lhs[i].end < rhs[j].end) {
                 i++;
             } else {
                 j++;
@@ -184,23 +184,23 @@ class t_tagged_range_set {
     void for_each(F func) {
         critical_section_guard guard(_lock);
         for (const auto& item : _arr) {
-            func(item.s, item.e);
+            func(item.begin, item.end);
         }
     }
 
    protected:
     void merge_internal() {
         if (false == _arr.empty()) {
-            std::sort(_arr.begin(), _arr.end(), compare);  // sort intervals in increasing order of start time
+            std::sort(_arr.begin(), _arr.end(), compare);  // sort intervals in increasing order of from time
 
             size_t index = 0;  // stores index of last element in output array (modified _arr[])
             // traverse all input intervals
             for (size_t i = 1; i < _arr.size(); i++) {
                 // if this is not first interval and overlaps with the previous one
-                if (_arr[index].e >= _arr[i].s) {
+                if (_arr[index].end >= _arr[i].begin) {
                     // merge previous and current intervals
-                    if (_arr[index].e < _arr[i].e) {
-                        _arr[index].e = _arr[i].e;
+                    if (_arr[index].end < _arr[i].end) {
+                        _arr[index].end = _arr[i].end;
                         _arr[index].t = _arr[i].t;
                     }
                 } else {

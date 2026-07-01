@@ -13,7 +13,7 @@
 #include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/stream/ansi_string.hpp>
 #include <hotplace/sdk/base/stream/lowlevel/bufferio.hpp>
-#include <hotplace/sdk/base/stream/printf.hpp>
+#include <hotplace/sdk/base/stream/lowlevel/printf.hpp>
 #include <hotplace/sdk/base/stream/sprintf.hpp>
 #include <hotplace/sdk/base/stream/stream_policy.hpp>
 #include <hotplace/sdk/base/stream/unicode/wide_string.hpp>

@@ -42,7 +42,7 @@ namespace io {
  *          asn1_visitor
  *            asn1_der_visitor
  *            asn1_notation_visitor
- *          asn1_constraint
+ *          asn1_constraint_base
  *            asn1_constraint_single
  *            asn1_constraint_size
  *            asn1_constraint_range
@@ -115,6 +115,7 @@ class asn1_object {
     asn1_object& unsuppress();
 
     asn1_constraints& get_constraints();
+    const asn1_constraints& get_constraints() const;
 
    protected:
     asn1_object(asn1_entity_t entity, const std::string& name = "", asn1_object* object = nullptr, asn1_tag* tag = nullptr);
@@ -135,14 +136,14 @@ class asn1_object {
    private:
     uint8 _ident;
     std::string _name;
-    asn1_entity_t _entity;
+    asn1_entity_t _entity;   //
     uint16 _component_type;  // default, optional
     bool _suppress;
 
-    asn1_object* _parent;
-    asn1_tag* _tag;
-    asn1_object* _object;
-    variant_t _vt;
+    asn1_object* _parent;  // parent (bottom-up)
+    asn1_tag* _tag;        // tagged type
+    asn1_object* _object;  // type (top-down)
+    variant_t _vt;         // default value
 
     asn1_constraints _constraints;
     t_shared_reference<asn1_object> _shared;

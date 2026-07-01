@@ -15,7 +15,7 @@
 #ifndef __HOTPLACE_SDK_ODBC_BASIC_ODBCDIAGNOSE__
 #define __HOTPLACE_SDK_ODBC_BASIC_ODBCDIAGNOSE__
 
-#include <hotplace/sdk/base.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/odbc/types.hpp>
 
 namespace hotplace {

@@ -338,5 +338,7 @@ void asn1_object::debug_print(uint32 depth, const std::string& name) {
 
 asn1_constraints& asn1_object::get_constraints() { return _constraints; }
 
+const asn1_constraints& asn1_object::get_constraints() const { return _constraints; }
+
 }  // namespace io
 }  // namespace hotplace

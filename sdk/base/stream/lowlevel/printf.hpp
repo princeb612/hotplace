@@ -25,8 +25,8 @@
  *
  */
 
-#ifndef __HOTPLACE_SDK_BASE_STREAM_PRINTF__
-#define __HOTPLACE_SDK_BASE_STREAM_PRINTF__
+#ifndef __HOTPLACE_SDK_BASE_STREAM_LOWLEVEL_PRINTF__
+#define __HOTPLACE_SDK_BASE_STREAM_LOWLEVEL_PRINTF__
 
 #include <hotplace/sdk/base/basic/types.hpp>
 #include <string>

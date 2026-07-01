@@ -30,10 +30,11 @@ enum class range_type_t : int8 {
     maxvalue = 1,     // +inf
     inf = maxvalue,   // positive inf
 };
-enum range_flag_t : uint8 {
-    excluded = 0,  // open
-    included = 1,  // closed
-    closed = included,
+enum class range_flag_t : uint8 {
+    excluded = 0,       // open
+    open = excluded,    //
+    included = 1,       // closed
+    closed = included,  //
 };
 
 template <typename T>
@@ -43,8 +44,8 @@ struct t_interval {
     range_flag_t begin_flag;
     range_flag_t end_flag;
 
-    t_interval() : begin(T()), end(T()), begin_flag(range_flag_t::excluded), end_flag(range_flag_t::excluded) {}
-    t_interval(T start, T end, range_flag_t sflag = range_flag_t::included, range_flag_t eflag = range_flag_t::included)
+    t_interval() : begin(T()), end(T()), begin_flag(range_flag_t::open), end_flag(range_flag_t::open) {}
+    t_interval(T start, T end, range_flag_t sflag = range_flag_t::closed, range_flag_t eflag = range_flag_t::closed)
         : begin(start < end ? start : end), end(start < end ? end : start), begin_flag(sflag), end_flag(eflag) {}
     t_interval(const t_interval& other) : begin(other.begin), end(other.end), begin_flag(other.begin_flag), end_flag(other.end_flag) {}
     t_interval& operator=(const t_interval& other) {
@@ -74,7 +75,7 @@ struct range_traits<T, typename std::enable_if<std::is_floating_point<T>::value>
     static bool is_mergeable_with(const t_interval<T>& current, const t_interval<T>& next) {
         if (current.end < next.begin) return false;
         if (current.end == next.begin) {
-            return (current.end_flag == range_flag_t::included) || (next.begin_flag == range_flag_t::included);
+            return (current.end_flag == range_flag_t::closed) || (next.begin_flag == range_flag_t::closed);
         }
         return true;  // overlapped
     }
@@ -102,7 +103,7 @@ struct range_traits<t_range_value<T>> {
 
         if (current.end < next.begin) return false;
         if (current.end == next.begin) {
-            return (current.end_flag == range_flag_t::included) || (next.begin_flag == range_flag_t::included);
+            return (current.end_flag == range_flag_t::closed) || (next.begin_flag == range_flag_t::closed);
         }
         return true;  // overlapped
     }
@@ -127,15 +128,31 @@ struct t_range_value {
     T value;
 
     t_range_value() : type(range_type_t::value), value(T()) {}
-    t_range_value(T v) : type(range_type_t::value), value(v) {}
+    t_range_value(T v) : type(range_type_t::value), value(std::move(v)) {}
+    template <typename U>
+    t_range_value(const U& v) : type(range_type_t::value), value(v) {}
     t_range_value(range_type_t t) : type(t), value(T()) {}
     t_range_value(const t_range_value& other) : type(other.type), value(other.value) {}
+    template <typename U>
+    t_range_value(const t_range_value<U>& other) : type(other.type), value(other.value) {}
 
     t_range_value& operator=(const t_range_value& other) {
         if (this != &other) {
             type = other.type;
             value = other.value;
         }
+        return *this;
+    }
+    template <typename U>
+    t_range_value& operator=(const t_range_value<U>& other) {
+        type = other.type;
+        value = other.value;
+        return *this;
+    }
+    template <typename U>
+    t_range_value& operator=(const U& value) {
+        type = range_type_t::value;
+        value = value;
         return *this;
     }
 
@@ -176,8 +193,13 @@ struct t_range_value {
 
 /**
  * @brief   range set (QUIC ACK Ranges)
- * @refer   https://www.geeksforgeeks.org/merging-intervals/
+ * @refer
+ *          1. merge
+ *          https://www.geeksforgeeks.org/merging-intervals/
  *          merge all overlapping intervals into one and output the result which should have only mutually exclusive intervals
+ *
+ *          2. subtract, intersect, [closed, open)
+ *          collaboration Gemini
  *
  * @sample
  *          // merge - range
@@ -192,35 +214,51 @@ struct t_range_value {
  *          // (gdb) p res
  *          // $1 = std::vector of length 3, capacity 3 = {{begin = 7, end = 12}, {begin = 14, end = 18}, {begin = 21, end = 21}}
  *
- *          // floating point
- *          t_range_set<float> rs;
+ *          // [1.0..1.5)(3.5..4.0]
+ *          using range_set = t_range_set<float>;
+ *          using interval = t_interval<float>;
+ *          range_set rs;
  *          rs.clear().add(1.0, 2.0).add(3.0, 4.0).subtract(1.5, 3.5);
  *          t_range_set<float> expect;
- *          expect.clear().add(1.0, 1.5).add(3.5, 4.0);
- *          _test_case.assert(rs == expect, __FUNCTION__, "1.0..1.5 | 3.5..4.0");
+ *          expect  //
+ *              .clear()
+ *              .add(interval(1.0, 1.5, range_flag_t::closed, range_flag_t::open))
+ *              .add(interval(3.5, 4.0, range_flag_t::open, range_flag_t::closed));
+ *          _test_case.assert(rs == expect, __FUNCTION__, "[1.0..1.5)(3.5..4.0]");
  *
- *          // -inf
- *          t_range_set<t_range_value<float>> rs;
+ *          // [MIN, -1.0] [1.0, 1.5) (3.5, 4.0]
+ *          using range_set = t_range_set<t_range_value<float>>;
+ *          using interval = t_interval<t_range_value<float>>;
+ *          range_set rs;
  *          rs.clear().add(range_type_t::minvalue, -1.0).add(1.0, 2.0).add(3.0, 4.0).subtract(1.5, 3.5);
  *          t_range_set<t_range_value<float>> expect;
- *          expect.clear().add(range_type_t::minvalue, -1.0).add(1.0, 1.5).add(3.5, 4.0);
- *          _test_case.assert(rs == expect, __FUNCTION__, "-Inf..-1.0 | 1.0..1.5 | 3.5..4.0");
+ *          expect  //
+ *              .clear()
+ *              .add(range_type_t::minvalue, -1.0)
+ *              .add(interval(1.0, 1.5, range_flag_t::closed, range_flag_t::open))
+ *              .add(interval(3.5, 4.0, range_flag_t::open, range_flag_t::closed));
+ *          _test_case.assert(rs == expect, __FUNCTION__, "[MIN..-1.0][1.0..1.5)(3.5..4.0]");
  *
  * @sa      quic_frame_ack, ack_t
  */
 template <typename T>
-class t_range_set : public t_set_t<T> {
+class t_range_set : public t_set_base_t<T>, public t_set_arithmetic_t<T> {
    public:
     t_range_set() : _status(0) {}
     t_range_set(const t_range_set& other) { *this = other; }
     t_range_set(t_range_set&& other) { *this = std::move(other); }
 
-    virtual void insert(T value) override { add(value, value); }
-    virtual void insert_range(T start, T end) override { add(start, end); }
-    virtual void erase(T value) override { subtract(value); }
-    virtual void erase_range(T start, T end) override { subtract(start, end); }
-    virtual bool contains(T value) override { return has(value); }
-    virtual void reset() override { clear(); }
+    void reset() override { clear(); }
+    void insert(const T& value) override { add(value, value); }
+    void erase(const T& value) override { subtract(value); }
+    bool contains(const T& value) override { return has(value); }
+    void insert_range(const T& start, const T& end) override { add(start, end); }
+    void erase_range(const T& start, const T& end) override { subtract(start, end); }
+
+    t_range_set& union_with(t_range_set& other) { return add(other); }
+    t_range_set& erase_from(t_range_set& other) { return subtract(other); }
+    t_range_set& intersect_with(t_range_set& other) { return intersect(other); }
+    bool contains_all(const t_range_set& other) { return has(other); }
 
     t_range_set& clear() {
         critical_section_guard guard(_lock);
@@ -272,11 +310,11 @@ class t_range_set : public t_set_t<T> {
                 _arr.push_back(item);
             } else {
                 if (item.begin < start) {
-                    range_flag_t updated_end_flag = erased_type ? range_flag_t::excluded : range_flag_t::included;
+                    range_flag_t updated_end_flag = erased_type ? range_flag_t::open : range_flag_t::closed;
                     _arr.push_back(t_interval<T>(item.begin, range_traits<T>::prev(start), item.begin_flag, updated_end_flag));
                 }
                 if (end < item.end) {
-                    range_flag_t updated_begin_flag = erased_type ? range_flag_t::excluded : range_flag_t::included;
+                    range_flag_t updated_begin_flag = erased_type ? range_flag_t::open : range_flag_t::closed;
                     _arr.push_back(t_interval<T>(range_traits<T>::next(end), item.end, updated_begin_flag, item.end_flag));
                 }
             }
@@ -294,33 +332,6 @@ class t_range_set : public t_set_t<T> {
         return *this;
     }
 
-    bool has(T value) {
-        critical_section_guard guard(_lock);
-        merge_internal();
-
-        for (const auto& item : _arr) {
-            if (item.begin > value) {
-                break;
-            }
-
-            bool lower_cond = (item.begin_flag == included) ? (item.begin <= value) : (item.begin < value);
-            if (lower_cond) {
-                bool upper_cond = (item.end_flag == included) ? (value <= item.end) : (value < item.end);
-                if (upper_cond) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    std::vector<t_interval<T>> merge() {
-        critical_section_guard guard(_lock);
-        merge_internal();
-        return _arr;
-    }
-
     t_range_set& intersect(t_range_set& other) {
         auto lhs = merge();
         auto rhs = other.merge();
@@ -334,23 +345,23 @@ class t_range_set : public t_set_t<T> {
             T end = lhs[i].end < rhs[j].end ? lhs[i].end : rhs[j].end;
 
             if (start <= end) {
-                range_flag_t start_flag = range_flag_t::included;
+                range_flag_t start_flag = range_flag_t::closed;
                 if (lhs[i].begin == rhs[j].begin) {
-                    auto cond = ((lhs[i].begin_flag == range_flag_t::included) && (rhs[j].begin_flag == range_flag_t::included));
-                    start_flag = cond ? range_flag_t::included : range_flag_t::excluded;
+                    auto cond = ((lhs[i].begin_flag == range_flag_t::closed) && (rhs[j].begin_flag == range_flag_t::closed));
+                    start_flag = cond ? range_flag_t::closed : range_flag_t::open;
                 } else {
                     start_flag = (lhs[i].begin < rhs[j].begin) ? rhs[j].begin_flag : lhs[i].begin_flag;
                 }
 
-                range_flag_t end_flag = range_flag_t::included;
+                range_flag_t end_flag = range_flag_t::closed;
                 if (lhs[i].end == rhs[j].end) {
-                    auto cond = ((lhs[i].end_flag == range_flag_t::included) && (rhs[j].end_flag == range_flag_t::included));
-                    end_flag = cond ? range_flag_t::included : range_flag_t::excluded;
+                    auto cond = ((lhs[i].end_flag == range_flag_t::closed) && (rhs[j].end_flag == range_flag_t::closed));
+                    end_flag = cond ? range_flag_t::closed : range_flag_t::open;
                 } else {
                     end_flag = (lhs[i].end < rhs[j].end) ? lhs[i].end_flag : rhs[j].end_flag;
                 }
 
-                if ((start == end) && ((start_flag == range_flag_t::excluded) || (end_flag == range_flag_t::excluded))) {
+                if ((start == end) && ((start_flag == range_flag_t::open) || (end_flag == range_flag_t::open))) {
                     // invalid empty set
                 } else {
                     _arr.push_back(t_interval<T>(start, end, start_flag, end_flag));
@@ -364,6 +375,88 @@ class t_range_set : public t_set_t<T> {
         }
         set_modified();
         return *this;
+    }
+
+    bool has(T value) {
+        critical_section_guard guard(_lock);
+        merge_internal();
+
+        for (const auto& item : _arr) {
+            if (item.begin > value) {
+                break;
+            }
+
+            bool lower_cond = (item.begin_flag == range_flag_t::closed) ? (item.begin <= value) : (item.begin < value);
+            if (lower_cond) {
+                bool upper_cond = (item.end_flag == range_flag_t::closed) ? (value <= item.end) : (value < item.end);
+                if (upper_cond) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+    bool has(const t_interval<T>& interval, bool merge_always = true) {
+        critical_section_guard guard(_lock);
+        if (merge_always) {
+            merge_internal();
+        }
+
+        for (const auto& item : _arr) {
+            if (item.begin > interval.end) {
+                break;
+            }
+
+            bool lower_cond = false;
+            if (item.begin < interval.begin) {
+                lower_cond = true;
+            } else if (item.begin == interval.begin) {
+                if (item.begin_flag == range_flag_t::closed || interval.begin_flag == range_flag_t::open) {
+                    lower_cond = true;
+                }
+            }
+
+            if (lower_cond) {
+                bool upper_cond = false;
+                if (item.end > interval.end) {
+                    upper_cond = true;
+                } else if (item.end == interval.end) {
+                    if (item.end_flag == range_flag_t::closed || interval.end_flag == range_flag_t::open) {
+                        upper_cond = true;
+                    }
+                }
+
+                if (upper_cond) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+    bool has(const t_range_set& other) {
+        if (this == &other) return true;
+
+        auto temp = other.merge();
+        if (temp.empty()) return true;
+
+        critical_section_guard guard(_lock);
+        merge_internal();
+
+        for (const auto& item : temp) {
+            if (false == has(item, false)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    std::vector<t_interval<T>> merge() {
+        critical_section_guard guard(_lock);
+        merge_internal();
+        return _arr;
     }
 
     size_t size() const { return _arr.size(); }
@@ -425,8 +518,8 @@ class t_range_set : public t_set_t<T> {
                         _arr[index].end = _arr[i].end;
                         _arr[index].end_flag = _arr[i].end_flag;
                     } else if (_arr[index].end == _arr[i].end) {
-                        if (_arr[i].end_flag == range_flag_t::included) {
-                            _arr[index].end_flag = range_flag_t::included;
+                        if (_arr[i].end_flag == range_flag_t::closed) {
+                            _arr[index].end_flag = range_flag_t::closed;
                         }
                     }
                 } else {

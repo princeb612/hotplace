@@ -405,7 +405,7 @@ std::multimap<range_t, size_t> parser::context::psearchex(parser* obj) const {
         }
         auto moires = rs.merge();
         for (auto item : moires) {
-            range_t range(item.s, item.e);
+            range_t range(item.begin, item.end);
             result.emplace(range, item.t);
         }
     }

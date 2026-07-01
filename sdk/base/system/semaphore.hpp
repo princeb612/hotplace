@@ -20,6 +20,7 @@ namespace hotplace {
  */
 class semaphore_t {
    public:
+    virtual ~semaphore_t() = default;
     /**
      * @brief signal
      */

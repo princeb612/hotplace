@@ -25,6 +25,7 @@ enum class crypt_ctrl_t {
 
 class crypt_t {
    public:
+    virtual ~crypt_t() = default;
     /**
      * @brief create a context handle
      * @param crypt_context_t** handle [out]
@@ -209,6 +210,7 @@ class crypt_t {
 
 class hash_t {
    public:
+    virtual ~hash_t() = default;
     /**
      * @brief open (hash, HMAC, CMAC)
      * @param hash_context_t** handle [out]

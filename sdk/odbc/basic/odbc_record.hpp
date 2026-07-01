@@ -15,7 +15,7 @@
 #ifndef __HOTPLACE_SDK_ODBC_BASIC_ODBCRECORD__
 #define __HOTPLACE_SDK_ODBC_BASIC_ODBCRECORD__
 
-#include <hotplace/sdk/base.hpp>
+#include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/odbc/types.hpp>
 
 namespace hotplace {

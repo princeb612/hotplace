@@ -7,8 +7,8 @@
  * Revision History
  * Date         Name                Description
  */
-#ifndef __HOTPLACE_TEST__
-#define __HOTPLACE_TEST__
+#ifndef __HOTPLACE_TEST_TEST__
+#define __HOTPLACE_TEST_TEST__
 
 #include <math.h>
 #include <signal.h>

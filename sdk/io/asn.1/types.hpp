@@ -210,17 +210,19 @@ class asn1_notation_visitor;
 class asn1_constraint_visitor;
 
 class asn1_constraint;
-class asn1_constraint_union;
-class asn1_constraint_intersection;
-class asn1_constraint_except;
-class asn1_constraint_allexcept;
-class asn1_constraint_from;
-class asn1_constraint_pattern;
-class asn1_constraint_range;
-class asn1_constraint_single_value;
-class asn1_constraint_size;
-
 class asn1_constraints;
+// clang-format off
+template <typename T> class asn1_constraint_base;
+template <typename T> class asn1_constraint_union;
+template <typename T> class asn1_constraint_intersection;
+template <typename T> class asn1_constraint_except;
+template <typename T> class asn1_constraint_allexcept;
+template <typename T> class asn1_constraint_from;
+template <typename T> class asn1_constraint_pattern;
+template <typename T> class asn1_constraint_range;
+template <typename T> class asn1_constraint_single_value;
+template <typename T> class asn1_constraint_size;
+// clang-format on
 
 }  // namespace io
 }  // namespace hotplace

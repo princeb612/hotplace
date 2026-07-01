@@ -12,7 +12,6 @@
 
 #include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/stream/printf.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
 #if defined __linux__
 #include <dlfcn.h>

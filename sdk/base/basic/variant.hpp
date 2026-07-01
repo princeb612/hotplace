@@ -587,6 +587,9 @@ class variant {
     variant& operator=(const datetime_t& value);
     variant& operator=(const bignumber& value);
 
+    bool operator==(const variant& other) const;
+    bool operator!=(const variant& other) const;
+
     template <typename T, typename = typename std::enable_if<custom::is_integral<T>::value>::type>
     T t_toi() const {
         return t_vtoi<T>(_vt);

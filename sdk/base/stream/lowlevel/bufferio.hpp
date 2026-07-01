@@ -12,7 +12,7 @@
 #define __HOTPLACE_SDK_BASE_STREAM_LOWLEVEL_BUFFERIO__
 
 #include <hotplace/sdk/base/basic/types.hpp>
-#include <hotplace/sdk/base/stream/printf.hpp>
+#include <hotplace/sdk/base/stream/lowlevel/printf.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <list>
 

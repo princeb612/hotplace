@@ -16,7 +16,7 @@
 #include <string.h>
 
 #include <hotplace/sdk/base/stream/lowlevel/bufferio.hpp>
-#include <hotplace/sdk/base/stream/printf.hpp>
+#include <hotplace/sdk/base/stream/lowlevel/printf.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 
 namespace hotplace {

@@ -29,6 +29,7 @@ typedef pthread_t threadid_t;
 
 class thread_t {
    public:
+    virtual ~thread_t() = default;
     virtual return_t start() = 0;
     virtual return_t join() = 0;
     virtual return_t wait(unsigned msec) = 0;

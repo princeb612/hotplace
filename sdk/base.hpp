@@ -66,6 +66,7 @@
 #include <hotplace/sdk/base/nostd/range.hpp>
 #include <hotplace/sdk/base/nostd/range_set.hpp>
 #include <hotplace/sdk/base/nostd/set.hpp>
+#include <hotplace/sdk/base/nostd/string_set.hpp>
 #include <hotplace/sdk/base/nostd/tagged_range_set.hpp>
 #include <hotplace/sdk/base/nostd/traits.hpp>
 #include <hotplace/sdk/base/nostd/traits_encoder.hpp>
@@ -87,7 +88,6 @@
 /* stream */
 #include <hotplace/sdk/base/stream/ansi_string.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/stream/printf.hpp>
 #include <hotplace/sdk/base/stream/split.hpp>
 #include <hotplace/sdk/base/stream/splitter.hpp>
 #include <hotplace/sdk/base/stream/sprintf.hpp>
@@ -99,6 +99,7 @@
 
 /* stream/lowlevel */
 #include <hotplace/sdk/base/stream/lowlevel/bufferio.hpp>
+#include <hotplace/sdk/base/stream/lowlevel/printf.hpp>
 
 /* string */
 #include <hotplace/sdk/base/string/constexpr_obfuscate.hpp>
@@ -111,9 +112,11 @@
 #include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
+#include <hotplace/sdk/base/system/decimal_float.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
 #include <hotplace/sdk/base/system/error.hpp>
 #include <hotplace/sdk/base/system/floating_point.hpp>
+#include <hotplace/sdk/base/system/rational_float.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #if defined __linux__
 #include <hotplace/sdk/base/system/linux/debug_trace.hpp>

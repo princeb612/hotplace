@@ -35,6 +35,8 @@
     * CBOR
 
 * details
+  * Revision 1040
+    * set runtime for constraints
   * Revision 1039
     * [improvement] range_set
   * Revision 1037

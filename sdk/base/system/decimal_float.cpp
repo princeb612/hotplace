@@ -9,7 +9,7 @@
  *
  */
 
-#include <hotplace/sdk/base/system/floating_point.hpp>
+#include <hotplace/sdk/base/system/decimal_float.hpp>
 
 namespace hotplace {
 

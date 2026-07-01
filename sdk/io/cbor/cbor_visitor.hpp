@@ -22,6 +22,7 @@ namespace io {
 
 class cbor_visitor {
    public:
+    virtual ~cbor_visitor() = default;
     virtual return_t visit(cbor_object* object) = 0;
 };
 

@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/nostd/exception.hpp>
+#include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/io/stream/string.hpp>
 #include <hotplace/sdk/odbc/basic/odbc_diagnose.hpp>
 #include <hotplace/sdk/odbc/basic/odbc_query.hpp>

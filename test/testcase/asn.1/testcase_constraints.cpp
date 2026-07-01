@@ -11,6 +11,20 @@
 
 #include "sample.hpp"
 
+using asn1_constraint_except_f = asn1_constraint_except<double>;
+using asn1_constraint_range_f = asn1_constraint_range<double>;
+using asn1_constraint_size_f = asn1_constraint_size<double>;
+using asn1_constraint_single_value_f = asn1_constraint_single_value<double>;
+using asn1_constraint_union_f = asn1_constraint_union<double>;
+using asn1_constraint_all_except_i = asn1_constraint_all_except<int64>;
+using asn1_constraint_except_i = asn1_constraint_except<int64>;
+using asn1_constraint_intersection_i = asn1_constraint_intersection<int64>;
+using asn1_constraint_range_i = asn1_constraint_range<int64>;
+using asn1_constraint_size_i = asn1_constraint_size<int64>;
+using asn1_constraint_single_value_i = asn1_constraint_single_value<int64>;
+using asn1_constraint_union_i = asn1_constraint_union<int64>;
+using asn1_constraint_union_s = asn1_constraint_union<std::string>;
+
 void test_testvector_constraints() {
     _test_case.begin("ASN.1 constraints");
 
@@ -20,39 +34,39 @@ void test_testvector_constraints() {
             asn1_builder::build(asn1_entity_integer,
                         [&](asn1_builtin_type* builtin) -> void {
                             builtin->get_constraints().add(
-                                    new asn1_constraint_single_value(1));
+                                    new asn1_constraint_single_value_i(1));
                         }));
     auto cons_single_type2 =
         asn1_referenced_type::define("type",
             asn1_builder::build(asn1_entity_integer,
                         [&](asn1_builtin_type* builtin) -> void {
                             builtin->get_constraints().add(
-                                    new asn1_constraint_union(
-                                        new asn1_constraint_single_value(1),
-                                        new asn1_constraint_single_value(2)));
+                                    new asn1_constraint_union_i(
+                                        new asn1_constraint_single_value_i(1),
+                                        new asn1_constraint_single_value_i(2)));
                         }));
     auto cons_single_type3 =
         asn1_referenced_type::define("type",
             asn1_builder::build(asn1_entity_integer,
                         [&](asn1_builtin_type* builtin) -> void {
                             builtin->get_constraints().add(
-                                    new asn1_constraint_union({1, 2, 3, 6}));
+                                    new asn1_constraint_union_i({1, 2, 3, 6}));
                         }));
     auto cons_single_type4 =
         asn1_referenced_type::define("type",
             asn1_builder::build(asn1_entity_visiblestring,
                         [&](asn1_builtin_type* builtin) -> void {
                             builtin->get_constraints().add(
-                                    new asn1_constraint_union({"A", "B", "C", "D"}));
+                                    new asn1_constraint_union_s({"A", "B", "C", "D"}));
                         }));
     auto cons_range_type1 =
         asn1_referenced_type::define("type",
             asn1_builder::build(asn1_entity_integer,
                         [&](asn1_builtin_type* builtin) -> void {
                             builtin->get_constraints().add(
-                                    new asn1_constraint_union(
-                                        new asn1_constraint_range(1, 10),
-                                        new asn1_constraint_range(20, 30)));
+                                    new asn1_constraint_union_i(
+                                        new asn1_constraint_range_i(1, 10),
+                                        new asn1_constraint_range_i(20, 30)));
                         }));
     // 50..100
     auto cons_range_type2 =
@@ -60,9 +74,9 @@ void test_testvector_constraints() {
             asn1_builder::build(asn1_entity_integer,
                         [&](asn1_builtin_type* builtin) -> void {
                             builtin->get_constraints().add(
-                                    new asn1_constraint_intersection(
-                                        new asn1_constraint_range(1, 100),
-                                        new asn1_constraint_range(50, 200)));
+                                    new asn1_constraint_intersection_i(
+                                        new asn1_constraint_range_i(1, 100),
+                                        new asn1_constraint_range_i(50, 200)));
                         }));
     // 1..49 | 51..100
     auto cons_range_type3 =
@@ -70,9 +84,9 @@ void test_testvector_constraints() {
             asn1_builder::build(asn1_entity_integer,
                         [&](asn1_builtin_type* builtin) -> void {
                             builtin->get_constraints().add(
-                                    new asn1_constraint_except(
-                                        new asn1_constraint_range(1, 100),
-                                        new asn1_constraint_single_value(50)));
+                                    new asn1_constraint_except_i(
+                                        new asn1_constraint_range_i(1, 100),
+                                        new asn1_constraint_single_value_i(50)));
                         }));
     // 1..4 | 6..10 | 20..24 | 26..30
     auto cons_range_type4 =
@@ -80,54 +94,84 @@ void test_testvector_constraints() {
             asn1_builder::build(asn1_entity_integer,
                         [&](asn1_builtin_type* builtin) -> void {
                             builtin->get_constraints().add(
-                                new asn1_constraint_except(
-                                    new asn1_constraint_union(
-                                        new asn1_constraint_range(1, 10),
-                                        new asn1_constraint_range(20, 30)),
-                                    new asn1_constraint_union(
-                                        new asn1_constraint_single_value(5),
-                                        new asn1_constraint_single_value(25))));
+                                new asn1_constraint_except_i(
+                                    new asn1_constraint_union_i(
+                                        new asn1_constraint_range_i(1, 10),
+                                        new asn1_constraint_range_i(20, 30)),
+                                    new asn1_constraint_union_i(
+                                        new asn1_constraint_single_value_i(5),
+                                        new asn1_constraint_single_value_i(25))));
+                        }));
+    auto cons_range_type5 =
+        asn1_referenced_type::define("temperature",
+            asn1_builder::build(asn1_entity_real,
+                        [&](asn1_builtin_type* builtin) -> void {
+                            builtin->get_constraints().add(
+                                new asn1_constraint_range_f(0.0, 100.0));
+                        }));
+    auto cons_range_type6 =
+        asn1_referenced_type::define("positive",
+            asn1_builder::build(asn1_entity_real,
+                        [&](asn1_builtin_type* builtin) -> void {
+                            builtin->get_constraints().add(
+                                new asn1_constraint_range_f(0.0, range_type_t::maxvalue));
+                        }));
+    auto cons_range_type7 =
+        asn1_referenced_type::define("negative",
+            asn1_builder::build(asn1_entity_real,
+                        [&](asn1_builtin_type* builtin) -> void {
+                            builtin->get_constraints().add(
+                                new asn1_constraint_range_f(range_type_t::minvalue, 0.0));
+                        }));
+    auto cons_range_type8 =
+        asn1_referenced_type::define("type",
+            asn1_builder::build(asn1_entity_real,
+                        [&](asn1_builtin_type* builtin) -> void {
+                            builtin->get_constraints().add(
+                                new asn1_constraint_except_f(
+                                    new asn1_constraint_range_f(0.0, 100.0),
+                                    new asn1_constraint_single_value_f(50.0)));
                         }));
     auto cons_size_type1 =
         asn1_referenced_type::define("name",
             asn1_builder::build(asn1_entity_ia5string,
                         [&](asn1_builtin_type* builtin) -> void {
                             builtin->get_constraints().add(
-                                    new asn1_constraint_size(
-                                        new asn1_constraint_single_value(1)));
+                                    new asn1_constraint_size_i(
+                                        new asn1_constraint_single_value_i(1)));
                         }));
     auto cons_size_type2 =
         asn1_referenced_type::define("name",
             asn1_builder::build(asn1_entity_ia5string,
                         [&](asn1_builtin_type* builtin) -> void {
                             builtin->get_constraints().add(
-                                    new asn1_constraint_size(
-                                        new asn1_constraint_union({1, 2, 5})));
+                                    new asn1_constraint_size_i(
+                                        new asn1_constraint_union_i({1, 2, 5})));
                         }));
     auto cons_size_type3 =
         asn1_referenced_type::define("name",
             asn1_builder::build(asn1_entity_ia5string,
                         [&](asn1_builtin_type* builtin) -> void {
                             builtin->get_constraints().add(
-                                    new asn1_constraint_size(
-                                        new asn1_constraint_range(1, 20)));
+                                    new asn1_constraint_size_i(
+                                        new asn1_constraint_range_i(1, 20)));
                         }));
     auto cons_except_type1 =
         asn1_referenced_type::define("type",
             asn1_builder::build(asn1_entity_integer,
                         [&](asn1_builtin_type* builtin) -> void {
                             builtin->get_constraints().add(
-                                    new asn1_constraint_except(
-                                        new asn1_constraint_range(1, 50),
-                                        new asn1_constraint_range(20, 30)));
+                                    new asn1_constraint_except_i(
+                                        new asn1_constraint_range_i(1, 50),
+                                        new asn1_constraint_range_i(20, 30)));
                         }));
     auto cons_allexcept_type1 =
         asn1_referenced_type::define("type",
             asn1_builder::build(asn1_entity_integer,
                         [&](asn1_builtin_type* builtin) -> void {
                             builtin->get_constraints().add(
-                                    new asn1_constraint_all_except(
-                                        new asn1_constraint_range(1, 10)));
+                                    new asn1_constraint_all_except_i(
+                                        new asn1_constraint_range_i(1, 10)));
                         }));
     // clang-format on
 
@@ -141,6 +185,9 @@ void test_testvector_constraints() {
         flag_value_a,
         flag_value_string20,
         flag_value_string30,
+        flag_value_float0,
+        flag_value_float50,
+        flag_value_floatm1,
     };
 
     struct testvector {
@@ -163,6 +210,12 @@ void test_testvector_constraints() {
         {"range", cons_range_type3->clone(), "type ::= INTEGER (1..100 EXCEPT 50)", false, flag_value_int50},
         {"range", cons_range_type4, "type ::= INTEGER ((1..10 | 20..30) EXCEPT (5 | 25))", true, flag_value_int2},
         {"range", cons_range_type4->clone(), "type ::= INTEGER ((1..10 | 20..30) EXCEPT (5 | 25))", false, flag_value_int5},
+        {"range", cons_range_type5, "temperature ::= REAL (0.0..100.0)", true, flag_value_float0},
+        {"range", cons_range_type5->clone(), "temperature ::= REAL (0.0..100.0)", true, flag_value_floatm1},
+        {"range", cons_range_type6, "positive ::= REAL (0.0..MAX)", true, flag_value_float0},
+        {"range", cons_range_type7, "negative ::= REAL (MIN..0.0)", true, flag_value_float0},
+        {"range", cons_range_type8, "type ::= REAL (0.0..100.0 EXCEPT 50.0)", true, flag_value_float0},
+        {"range", cons_range_type8->clone(), "type ::= REAL (0.0..100.0 EXCEPT 50.0)", false, flag_value_float50},
         {"size", cons_size_type1, "name ::= IA5String (SIZE(1))", true, flag_value_string20},
         {"size", cons_size_type2, "name ::= IA5String (SIZE(1 | 2 | 5))", true, flag_value_string20},
         {"size", cons_size_type3, "name ::= IA5String (SIZE(1..20))", true, flag_value_string20},
@@ -210,6 +263,15 @@ void test_testvector_constraints() {
                 break;
             case flag_value_string30:
                 (*value).set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcd");
+                break;
+            case flag_value_float0:
+                (*value).set(0.0);
+                break;
+            case flag_value_float50:
+                (*value).set(50.0);
+                break;
+            case flag_value_floatm1:
+                (*value).set(-1.0);
                 break;
         }
 

@@ -18,10 +18,11 @@
 namespace hotplace {
 namespace io {
 
-class asn1_constraint_pattern : public asn1_constraint {
+template <typename T>
+class asn1_constraint_pattern : public asn1_constraint_base<T> {
    public:
-    asn1_constraint_pattern();
-    virtual ~asn1_constraint_pattern();
+    asn1_constraint_pattern() : asn1_constraint_base<T>(asn1_entity_constraint_pattern) {}
+    virtual ~asn1_constraint_pattern() = default;
 };
 
 }  // namespace io

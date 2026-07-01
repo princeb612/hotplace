@@ -43,7 +43,6 @@
 #define __HOTPLACE_SDK_IO_CBOR_CBOR__
 
 #include <deque>
-#include <hotplace/sdk/base/stream/printf.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/io/system/types.hpp>

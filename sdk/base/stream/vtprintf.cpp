@@ -20,6 +20,58 @@
 
 namespace hotplace {
 
+/**
+ * Gemini
+ */
+template <typename T, typename std::enable_if<std::is_floating_point<typename std::decay<T>::type>::value, int>::type = 0>
+void as_asn1_real(T value, stream_t* s) {
+    /*
+    if (std::isnan(value)) {
+        s->printf("NOT-A-NUMBER");
+        return;
+    }
+    if (std::isinf(value)) {
+        if (value > 0) s->printf("PLUS-INFINITY");
+        else           s->printf("MINUS-INFINITY");
+        return;
+    }
+    */
+
+    if (value == 0.0) {
+        // also -0.0
+        s->printf("0.0");
+        return;
+    }
+
+    T absVal = std::abs(value);
+    if (absVal >= 1e6 || absVal < 1e-3) {
+        std::string buf(format("%E", value));
+        size_t ePos = buf.find('E');
+        if (ePos != std::string::npos) {
+            std::string mant = buf.substr(0, ePos);
+            std::string exp = buf.substr(ePos);
+
+            while (mant.size() > 2 && mant.back() == '0' && mant[mant.size() - 2] != '.') mant.pop_back();
+            if (exp[1] == '+') exp.erase(1, 1);
+            while (exp.size() > 2 && exp[1] == '0') exp.erase(1, 1);
+            if (exp.size() > 3 && exp[1] == '-' && exp[2] == '0') exp.erase(2, 1);
+
+            s->printf("%buf%buf", mant.c_str(), exp.c_str());
+            return;
+        }
+    }
+
+    std::string buf(format("%.6f", value));
+
+    while (!buf.empty() && buf.back() == '0') {
+        buf.pop_back();
+    }
+    if (!buf.empty() && buf.back() == '.') {
+        buf.push_back('0');
+    }
+    s->printf("%s", buf.c_str());
+}
+
 template <typename T1, typename T2>
 void vprintf_floating_point(T1 t1, T2 t2, stream_t* stream, vtprintf_style_t style) {
     ieee754_typeof_t t = ieee754_typeof(t1);
@@ -64,7 +116,14 @@ void vprintf_floating_point(T1 t1, T2 t2, stream_t* stream, vtprintf_style_t sty
             }
             break;
         default:
-            stream->printf("%g", t2);
+            switch (style) {
+                case vtprintf_style_t::vtprintf_style_asn1:
+                    as_asn1_real<T2>(t2, stream);
+                    break;
+                default:
+                    stream->printf("%g", t2);
+                    break;
+            }
             break;
     }
 }

@@ -17,7 +17,7 @@ namespace hotplace {
 
 class critical_section_t {
    public:
-    virtual ~critical_section_t() {}
+    virtual ~critical_section_t() = default;
     virtual void enter() = 0;
     virtual void leave() = 0;
 };

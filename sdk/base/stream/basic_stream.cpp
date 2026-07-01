@@ -24,7 +24,7 @@
 #include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/stream/lowlevel/bufferio.hpp>
-#include <hotplace/sdk/base/stream/printf.hpp>
+#include <hotplace/sdk/base/stream/lowlevel/printf.hpp>
 #include <hotplace/sdk/base/stream/sprintf.hpp>
 #include <hotplace/sdk/base/stream/stream_policy.hpp>
 #include <hotplace/sdk/base/stream/vtprintf.hpp>

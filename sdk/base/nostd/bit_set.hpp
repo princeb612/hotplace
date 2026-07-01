@@ -24,14 +24,14 @@ namespace hotplace {
  *          std::bitset is not enough
  */
 template <typename T, typename std::enable_if<custom::is_integral<typename std::decay<T>::type>::value, int>::type = 0>
-class t_bit_set : public t_set_t<T> {
+class t_bit_set {
    public:
-    virtual void insert(T value) override { add(value); }
-    virtual void insert_range(T start, T end) override { add(start, end); }
-    virtual void erase(T value) override { subtract(value); }
-    virtual void erase_range(T start, T end) override { subtract(start, end); }
-    virtual bool contains(T value) override { return has(value); }
-    virtual void reset() override { clear(); }
+    virtual void insert(T value) { add(value); }
+    virtual void insert_range(T start, T end) { add(start, end); }
+    virtual void erase(T value) { subtract(value); }
+    virtual void erase_range(T start, T end) { subtract(start, end); }
+    virtual bool contains(T value) { return has(value); }
+    virtual void reset() { clear(); }
 
     t_bit_set(T low, T high) : _low(std::min(low, high)), _high(std::max(low, high)) {
         size_t allocsize = (_high - _low + 8) / 8;
