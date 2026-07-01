@@ -15,6 +15,7 @@
 
 #include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/nostd/range_set.hpp>
+#include <hotplace/sdk/base/stream/vtprintf.hpp>
 #include <hotplace/sdk/io/asn.1/constraints/asn1_constraint.hpp>
 
 namespace hotplace {
