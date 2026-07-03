@@ -15,8 +15,9 @@
 #include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_value.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_builtin_type.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_der_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_notation_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/constraints/asn1_constraints.hpp>
 
 namespace hotplace {

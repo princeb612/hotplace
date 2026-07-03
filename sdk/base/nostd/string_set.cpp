@@ -12,11 +12,11 @@
 
 namespace hotplace {
 
-string_set::string_set() {}
+string_set::string_set() : _invert(false) {}
 
-string_set::string_set(const string_set& other) { *this = other; }
+string_set::string_set(const string_set& other) : string_set() { *this = other; }
 
-string_set::string_set(string_set&& other) { *this = std::move(other); }
+string_set::string_set(string_set&& other) : string_set() { *this = std::move(other); }
 
 string_set::~string_set() {}
 
@@ -38,13 +38,63 @@ void string_set::erase(const std::string& value) { subtract(value); }
 
 bool string_set::contains(const std::string& value) { return has(value); }
 
-string_set& string_set::union_with(const string_set& other) { return add(other); }
+void string_set::union_with(const string_set& other) {
+    // see t_range_set
+    uint8 lhs_inverted = is_inverted() ? 1 : 0;
+    uint8 rhs_inverted = other.is_inverted() ? 1 : 0;
+    if ((0 == lhs_inverted) && (0 == (lhs_inverted ^ rhs_inverted))) {
+        add(other);
+    } else if ((0 == lhs_inverted) && (1 == (lhs_inverted ^ rhs_inverted))) {
+        string_set temp(other);
+        temp.subtract(*this);
+        *this = std::move(temp);  // other.is_inverted=true
+    } else if ((1 == lhs_inverted) && (1 == (lhs_inverted ^ rhs_inverted))) {
+        subtract(other);  // is_inverted=true
+    } else if ((1 == lhs_inverted) && (0 == (lhs_inverted ^ rhs_inverted))) {
+        intersect(other);  // is_inverted=true
+    }
+}
 
-string_set& string_set::erase_from(const string_set& other) { return subtract(other); }
+void string_set::erase_from(const string_set& other) {
+    uint8 lhs_inverted = is_inverted() ? 1 : 0;
+    uint8 rhs_inverted = other.is_inverted() ? 1 : 0;
+    if ((0 == lhs_inverted) && (0 == (lhs_inverted ^ rhs_inverted))) {
+        subtract(other);  // is_inverted=false
+    } else if ((0 == lhs_inverted) && (1 == (lhs_inverted ^ rhs_inverted))) {
+        intersect(other);  // is_inverted=false
+    } else if ((1 == lhs_inverted) && (1 == (lhs_inverted ^ rhs_inverted))) {
+        add(other);  // is_inverted=true
+    } else if ((1 == lhs_inverted) && (0 == (lhs_inverted ^ rhs_inverted))) {
+        string_set temp(other);
+        temp.intersect(*this);
+        *this = std::move(temp);  // other.is_inverted=false
+    }
+}
 
-string_set& string_set::intersect_with(const string_set& other) { return intersect(other); }
+void string_set::intersect_with(const string_set& other) {
+    uint8 lhs_inverted = is_inverted() ? 1 : 0;
+    uint8 rhs_inverted = other.is_inverted() ? 1 : 0;
+    if ((0 == lhs_inverted) && (0 == (lhs_inverted ^ rhs_inverted))) {
+        intersect(other);  // is_inverted=false
+    } else if ((0 == lhs_inverted) && (1 == (lhs_inverted ^ rhs_inverted))) {
+        subtract(other);  // is_inverted=false
+    } else if ((1 == lhs_inverted) && (1 == (lhs_inverted ^ rhs_inverted))) {
+        string_set temp(other);
+        temp.subtract(*this);
+        *this = std::move(temp);  // other.is_inverted=false
+    } else if ((1 == lhs_inverted) && (0 == (lhs_inverted ^ rhs_inverted))) {
+        add(other);  // is_inverted=true
+    }
+}
 
 bool string_set::contains_all(const string_set& other) { return has(other); }
+
+bool string_set::is_inverted() const { return _invert; }
+
+string_set& string_set::invert() {
+    _invert = !_invert;
+    return *this;
+}
 
 string_set& string_set::clear() {
     _set.clear();
@@ -91,7 +141,13 @@ string_set& string_set::intersect(const string_set& other) {
     return *this;
 }
 
-bool string_set::has(const std::string& value) { return _set.count(value) > 0; }
+bool string_set::has(const std::string& value) {
+    auto test = _set.count(value) > 0;
+    if (false == _invert)
+        return test;
+    else
+        return !test;
+}
 
 bool string_set::has(const string_set& other) {
     if (this == &other) return true;
@@ -99,7 +155,8 @@ bool string_set::has(const string_set& other) {
     if (other._set.empty()) return true;
 
     for (const auto& item : other._set) {
-        if (false == has(item)) {
+        auto expect = (false == _invert) ? false : true;
+        if (expect == has(item)) {
             return false;
         }
     }

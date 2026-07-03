@@ -13,7 +13,6 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTRANGE__
 #define __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTRANGE__
 
-#include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/nostd/range_set.hpp>
 #include <hotplace/sdk/base/stream/vtprintf.hpp>
 #include <hotplace/sdk/io/asn.1/constraints/asn1_constraint.hpp>
@@ -25,7 +24,7 @@ namespace io {
  * @example
  *          auto type =
  *              asn1_referenced_type::define("type",
- *                  asn1_builder::build(asn1_entity_integer,
+ *                  asn1_builtin_type::build(asn1_entity_integer,
  *                              [&](asn1_builtin_type* builtin) -> void {
  *                                  builtin->get_constraints().add(
  *                                          new asn1_constraint_intersection<int>(
@@ -34,9 +33,9 @@ namespace io {
  *                              }));
  */
 template <typename T>
-class asn1_constraint_range : public asn1_constraint_base<T> {
+class asn1_constraint_range : public asn1_constraint<T> {
    public:
-    asn1_constraint_range(t_range_value<T> low, t_range_value<T> high) : asn1_constraint_base<T>(asn1_entity_constraint_range), _low(low), _high(high) {}
+    asn1_constraint_range(t_range_value<T> low, t_range_value<T> high) : asn1_constraint<T>(asn1_entity_constraint_range), _low(low), _high(high) {}
     virtual ~asn1_constraint_range() = default;
 
     asn1_constraint_range* clone() { return new asn1_constraint_range<T>(*this); }
@@ -54,7 +53,7 @@ class asn1_constraint_range : public asn1_constraint_base<T> {
     }
 
    protected:
-    asn1_constraint_range(const asn1_constraint_range& other) : asn1_constraint_base<T>(asn1_entity_constraint_range) {
+    asn1_constraint_range(const asn1_constraint_range& other) : asn1_constraint<T>(asn1_entity_constraint_range) {
         _low = other._low;
         _high = other._high;
     }
@@ -64,9 +63,11 @@ class asn1_constraint_range : public asn1_constraint_base<T> {
         return *this;
     }
 
+    virtual void accept(asn1_constraint_evaluator<T>* v) { v->get_result_set().insert_range(_low, _high); }
+
     virtual void represent(stream_t* s, asn1_object* object, asn1_value* value = nullptr) {
         auto parenthesis = false;
-        auto parent = asn1_constraint_base<T>::get_parent();
+        auto parent = asn1_constraint<T>::get_parent();
         if (parent) {
             auto entity = parent->get_entity();
             switch (entity) {

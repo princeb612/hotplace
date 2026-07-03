@@ -116,6 +116,27 @@ class asn1_object {
 
     asn1_constraints& get_constraints();
     const asn1_constraints& get_constraints() const;
+    bool validate(asn1_value* value) {
+        if (nullptr == value) return false;
+
+        asn1_object* node = this;
+        while (node) {
+            auto constraints = node->get_constraints();
+            if (false == constraints.empty()) {
+                bool test = constraints.validate(node, value);
+                if (false == test) return false;
+            }
+            node = node->get_object();
+        }
+        return true;
+    }
+
+    static asn1_object* build(asn1_object* object, std::function<void(asn1_object*)> f = nullptr) {
+        if (object && f) {
+            f(object);
+        }
+        return object;
+    }
 
    protected:
     asn1_object(asn1_entity_t entity, const std::string& name = "", asn1_object* object = nullptr, asn1_tag* tag = nullptr);

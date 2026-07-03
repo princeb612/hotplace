@@ -22,17 +22,17 @@ namespace io {
  * @example
  *          auto type =
  *              asn1_referenced_type::define("type",
- *                  asn1_builder::build(asn1_entity_integer,
+ *                  asn1_builtin_type::build(asn1_entity_integer,
  *                              [&](asn1_builtin_type* builtin) -> void {
  *                                  builtin->get_constraints().add(
  *                                          new asn1_constraint_single_value<int>(1));
  *                              }));
  */
 template <typename T>
-class asn1_constraint_single_value : public asn1_constraint_base<T> {
+class asn1_constraint_single_value : public asn1_constraint<T> {
    public:
-    asn1_constraint_single_value(const T& value) : asn1_constraint_base<T>(asn1_entity_constraint_single), _v(value) {}
-    asn1_constraint_single_value(T&& value) : asn1_constraint_base<T>(asn1_entity_constraint_single), _v(std::move(value)) {}
+    asn1_constraint_single_value(const T& value) : asn1_constraint<T>(asn1_entity_constraint_single), _value(value) {}
+    asn1_constraint_single_value(T&& value) : asn1_constraint<T>(asn1_entity_constraint_single), _value(std::move(value)) {}
     virtual ~asn1_constraint_single_value() = default;
 
     asn1_constraint_single_value* clone() { return new asn1_constraint_single_value(*this); }
@@ -40,19 +40,22 @@ class asn1_constraint_single_value : public asn1_constraint_base<T> {
     virtual bool is_applicable(asn1_entity_t entity) { return true; }
 
    protected:
-    asn1_constraint_single_value(const asn1_constraint_single_value& other) : asn1_constraint_base<T>(asn1_entity_constraint_single) { *this = other; }
+    asn1_constraint_single_value(const asn1_constraint_single_value& other) : asn1_constraint<T>(asn1_entity_constraint_single) { *this = other; }
     asn1_constraint_single_value& operator=(const asn1_constraint_single_value& other) {
-        _v = other._v;
+        _value = other._value;
         return *this;
     }
 
+    virtual void accept(asn1_constraint_evaluator<T>* v) { v->get_result_set().insert(_value); }
+
     virtual void represent(stream_t* s, asn1_object* object, asn1_value* value = nullptr) {
-        variant vt(_v);
+        variant vt(_value);
         vtprintf(s, vt, vtprintf_style_t::vtprintf_style_asn1);
     }
 
+   protected:
    private:
-    T _v;
+    T _value;
 };
 
 }  // namespace io

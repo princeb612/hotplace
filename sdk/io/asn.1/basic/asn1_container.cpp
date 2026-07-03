@@ -14,7 +14,6 @@
 #include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_value.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_builtin_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_container.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_tag.hpp>

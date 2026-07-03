@@ -13,7 +13,6 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTFROM__
 #define __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTFROM__
 
-#include <hotplace/sdk/base/nostd/range.hpp>
 #include <hotplace/sdk/io/asn.1/constraints/asn1_constraint.hpp>
 
 namespace hotplace {
@@ -25,9 +24,9 @@ namespace io {
  *         reject
  */
 template <typename T>
-class asn1_constraint_from : public asn1_constraint_base<T> {
+class asn1_constraint_from : public asn1_constraint<T> {
    public:
-    asn1_constraint_from(asn1_constraint* cons) : asn1_constraint_base<T>(asn1_entity_constraint_size), _cons(cons) {
+    asn1_constraint_from(asn1_constraint<T>* cons) : asn1_constraint<T>(asn1_entity_constraint_size), _cons(cons) {
         if (nullptr == cons) {
             throw exception(errorcode_t::not_specified);
         }
@@ -35,7 +34,7 @@ class asn1_constraint_from : public asn1_constraint_base<T> {
     virtual ~asn1_constraint_from() = default;
 
     asn1_constraint_from* clone() {
-        auto entity = asn1_constraint_base<T>::get_entity();
+        auto entity = asn1_constraint<T>::get_entity();
         switch (entity) {
             // TODO
             case asn1_entity_printstring:
@@ -58,16 +57,16 @@ class asn1_constraint_from : public asn1_constraint_base<T> {
     virtual bool is_applicable(asn1_entity_t entity);
 
     virtual void addref() {
-        asn1_constraint_base<T>::addref();
+        asn1_constraint<T>::addref();
         _cons->addref();
     }
     virtual void release() {
         _cons->release();
-        asn1_constraint_base<T>::release();
+        asn1_constraint<T>::release();
     }
 
    protected:
-    asn1_constraint_from(const asn1_constraint_from& other) : asn1_constraint_base<T>(asn1_entity_constraint_size) { *this = other; }
+    asn1_constraint_from(const asn1_constraint_from& other) : asn1_constraint<T>(asn1_entity_constraint_size) { *this = other; }
     asn1_constraint_from& operator=(const asn1_constraint_from& other) {
         _cons = other._cons->clone();
         return *this;
@@ -80,7 +79,7 @@ class asn1_constraint_from : public asn1_constraint_base<T> {
     }
 
    private:
-    asn1_constraint* _cons;
+    asn1_constraint<T>* _cons;
 };
 
 }  // namespace io

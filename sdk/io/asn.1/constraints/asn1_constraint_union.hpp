@@ -22,7 +22,7 @@ namespace io {
  * @example
  *          auto type =
  *              asn1_referenced_type::define("type",
- *                  asn1_builder::build(asn1_entity_integer,
+ *                  asn1_builtin_type::build(asn1_entity_integer,
  *                              [&](asn1_builtin_type* builtin) -> void {
  *                                  builtin->get_constraints().add(
  *                                          new asn1_constraint_union<int>(
@@ -31,9 +31,9 @@ namespace io {
  *                              }));
  */
 template <typename T>
-class asn1_constraint_union : public asn1_constraint_base<T> {
+class asn1_constraint_union : public asn1_constraint<T> {
    public:
-    asn1_constraint_union(asn1_constraint* lhs, asn1_constraint* rhs) : asn1_constraint_base<T>(asn1_entity_constraint_union) {
+    asn1_constraint_union(asn1_constraint<T>* lhs, asn1_constraint<T>* rhs) : asn1_constraint<T>(asn1_entity_constraint_union) {
         if (nullptr == lhs || nullptr == rhs) {
             // throw exception(errorcode_t::invalid_parameter);
         }
@@ -44,33 +44,33 @@ class asn1_constraint_union : public asn1_constraint_base<T> {
         _items.push_back(lhs);
         _items.push_back(rhs);
     }
-    asn1_constraint_union(const std::initializer_list<asn1_constraint*>& items) : asn1_constraint_base<T>(asn1_entity_constraint_union) {
+    asn1_constraint_union(const std::initializer_list<asn1_constraint<T>*>& items) : asn1_constraint<T>(asn1_entity_constraint_union) {
         if (items.size() < 2) {
             // throw exception(errorcode_t::invalid_parameter);
         }
 
-        for (auto item : items) {
+        for (const auto& item : items) {
             item->set_parent(this);
             _items.push_back(item);
         }
     }
-    asn1_constraint_union(const std::initializer_list<int>& items) : asn1_constraint_base<T>(asn1_entity_constraint_union) {
+    asn1_constraint_union(const std::initializer_list<int>& items) : asn1_constraint<T>(asn1_entity_constraint_union) {
         if (items.size() < 2) {
             // throw exception(errorcode_t::invalid_parameter);
         }
 
-        for (auto item : items) {
+        for (const auto& item : items) {
             auto obj = new asn1_constraint_single_value<T>(item);
             obj->set_parent(this);
             _items.push_back(obj);
         }
     }
-    asn1_constraint_union(const std::initializer_list<std::string>& items) : asn1_constraint_base<T>(asn1_entity_constraint_union) {
+    asn1_constraint_union(const std::initializer_list<std::string>& items) : asn1_constraint<T>(asn1_entity_constraint_union) {
         if (items.size() < 2) {
             // throw exception(errorcode_t::invalid_parameter);
         }
 
-        for (auto item : items) {
+        for (const auto& item : items) {
             auto obj = new asn1_constraint_single_value<T>(item);
             obj->set_parent(this);
             _items.push_back(obj);
@@ -80,6 +80,17 @@ class asn1_constraint_union : public asn1_constraint_base<T> {
     virtual ~asn1_constraint_union() = default;
 
     asn1_constraint_union* clone() { return new asn1_constraint_union<T>(*this); }
+
+    virtual void accept(asn1_constraint_evaluator<T>* v) {
+        asn1_constraint_evaluator<T> visitor;
+        for (const auto& item : _items) {
+            item->accept(&visitor);
+        }
+
+        auto& result = visitor.get_result_set();
+        auto& rs = v->get_result_set();
+        rs = std::move(result);
+    }
 
     virtual bool is_applicable(asn1_entity_t entity) {
         switch (entity) {
@@ -102,22 +113,22 @@ class asn1_constraint_union : public asn1_constraint_base<T> {
     }
 
     virtual void addref() {
-        asn1_constraint_base<T>::addref();
-        for (auto item : _items) {
+        asn1_constraint<T>::addref();
+        for (const auto& item : _items) {
             item->addref();
         }
     }
     virtual void release() {
-        for (auto item : _items) {
+        for (const auto& item : _items) {
             item->release();
         }
-        asn1_constraint_base<T>::release();
+        asn1_constraint<T>::release();
     }
 
    protected:
-    asn1_constraint_union(const asn1_constraint_union& other) : asn1_constraint_base<T>(asn1_entity_constraint_union) { *this = other; }
+    asn1_constraint_union(const asn1_constraint_union& other) : asn1_constraint<T>(asn1_entity_constraint_union) { *this = other; }
     asn1_constraint_union& operator=(const asn1_constraint_union& other) {
-        for (auto item : other._items) {
+        for (const auto& item : other._items) {
             auto obj = item->clone();
             obj->set_parent(this);
             _items.push_back(obj);
@@ -137,7 +148,7 @@ class asn1_constraint_union : public asn1_constraint_base<T> {
     }
 
    private:
-    std::list<asn1_constraint*> _items;
+    std::list<asn1_constraint<T>*> _items;
 };
 
 }  // namespace io

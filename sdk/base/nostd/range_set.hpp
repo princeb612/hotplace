@@ -242,22 +242,88 @@ struct t_range_value {
  * @sa      quic_frame_ack, ack_t
  */
 template <typename T>
-class t_range_set : public t_set_base_t<T>, public t_set_arithmetic_t<T> {
+class t_range_set {
    public:
-    t_range_set() : _status(0) {}
-    t_range_set(const t_range_set& other) { *this = other; }
-    t_range_set(t_range_set&& other) { *this = std::move(other); }
+    t_range_set() : _status(0), _invert(0) {}
+    t_range_set(const t_range_set& other) : t_range_set() { *this = other; }
+    t_range_set(t_range_set&& other) : t_range_set() { *this = std::move(other); }
 
-    void reset() override { clear(); }
-    void insert(const T& value) override { add(value, value); }
-    void erase(const T& value) override { subtract(value); }
-    bool contains(const T& value) override { return has(value); }
-    void insert_range(const T& start, const T& end) override { add(start, end); }
-    void erase_range(const T& start, const T& end) override { subtract(start, end); }
+    void reset() { clear(); }
+    void insert(const T& value) { add(value, value); }
+    void erase(const T& value) { subtract(value); }
+    bool contains(const T& value) { return has(value); }
+    void insert_range(const T& start, const T& end) { add(start, end); }
+    void erase_range(const T& start, const T& end) { subtract(start, end); }
 
-    t_range_set& union_with(t_range_set& other) { return add(other); }
-    t_range_set& erase_from(t_range_set& other) { return subtract(other); }
-    t_range_set& intersect_with(t_range_set& other) { return intersect(other); }
+    /**
+     * @brief   union
+     * @remarks ALL EXCEPT
+     *          S1  UNION S2  = S1.union_with(S2)       is_inverted=false
+     *          S   UNION AE  = AE.erase_from(S)        is_inverted=true
+     *          AE  UNION S   = AE.erase_from(S)        is_inverted=true
+     *          AE1 UNION AE2 = AE1.intersect_with(AE2) is_inverted=true
+     */
+    void union_with(t_range_set& other) {
+        uint8 lhs_inverted = is_inverted() ? 1 : 0;
+        uint8 rhs_inverted = other.is_inverted() ? 1 : 0;
+        if ((0 == lhs_inverted) && (0 == (lhs_inverted ^ rhs_inverted))) {
+            add(other);
+        } else if ((0 == lhs_inverted) && (1 == (lhs_inverted ^ rhs_inverted))) {
+            t_range_set<T> temp(other);
+            temp.subtract(*this);
+            *this = std::move(temp);  // other.is_inverted=true
+        } else if ((1 == lhs_inverted) && (1 == (lhs_inverted ^ rhs_inverted))) {
+            subtract(other);  // is_inverted=true
+        } else if ((1 == lhs_inverted) && (0 == (lhs_inverted ^ rhs_inverted))) {
+            intersect(other);  // is_inverted=true
+        }
+    }
+    /**
+     * @brief   subtract
+     * @remarks ALL EXCEPT
+     *          S1  ERASE FROM S2  = S1.erase_from(S2)       is_inverted=false
+     *          S   ERASE FROM AE  = S.intersect_with(AE)    is_inverted=false
+     *          AE  ERASE FROM S   = AE.union_with(S)        is_inverted=true
+     *          AE1 ERASE FROM AE2 = AE2.intersect_with(AE1) is_inverted=false
+     */
+    void erase_from(t_range_set& other) {
+        uint8 lhs_inverted = is_inverted() ? 1 : 0;
+        uint8 rhs_inverted = other.is_inverted() ? 1 : 0;
+        if ((0 == lhs_inverted) && (0 == (lhs_inverted ^ rhs_inverted))) {
+            subtract(other);  // is_inverted=false
+        } else if ((0 == lhs_inverted) && (1 == (lhs_inverted ^ rhs_inverted))) {
+            intersect(other);  // is_inverted=false
+        } else if ((1 == lhs_inverted) && (1 == (lhs_inverted ^ rhs_inverted))) {
+            add(other);  // is_inverted=true
+        } else if ((1 == lhs_inverted) && (0 == (lhs_inverted ^ rhs_inverted))) {
+            t_range_set<T> temp(other);
+            temp.intersect(*this);
+            *this = std::move(temp);  // other.is_inverted=false
+        }
+    }
+    /**
+     * @brief   intersection
+     * @remarks ALL EXCEPT
+     *          S1  INTERSECT S2  = S1.intersect_with(S2)   is_inverted=false
+     *          S   INTERSECT AE  = S.erase_from(AE)        is_inverted=false
+     *          AE  INTERSECT S   = S.erase_from(AE)        is_inverted=false
+     *          AE1 INTERSECT AE2 = AE1.union_with(AE2)     is_inverted=true
+     */
+    void intersect_with(t_range_set& other) {
+        uint8 lhs_inverted = is_inverted() ? 1 : 0;
+        uint8 rhs_inverted = other.is_inverted() ? 1 : 0;
+        if ((0 == lhs_inverted) && (0 == (lhs_inverted ^ rhs_inverted))) {
+            intersect(other);  // is_inverted=false
+        } else if ((0 == lhs_inverted) && (1 == (lhs_inverted ^ rhs_inverted))) {
+            subtract(other);  // is_inverted=false
+        } else if ((1 == lhs_inverted) && (1 == (lhs_inverted ^ rhs_inverted))) {
+            t_range_set<T> temp(other);
+            temp.subtract(*this);
+            *this = std::move(temp);  // other.is_inverted=false
+        } else if ((1 == lhs_inverted) && (0 == (lhs_inverted ^ rhs_inverted))) {
+            add(other);  // is_inverted=true
+        }
+    }
     bool contains_all(const t_range_set& other) { return has(other); }
 
     t_range_set& clear() {
@@ -390,12 +456,12 @@ class t_range_set : public t_set_base_t<T>, public t_set_arithmetic_t<T> {
             if (lower_cond) {
                 bool upper_cond = (item.end_flag == range_flag_t::closed) ? (value <= item.end) : (value < item.end);
                 if (upper_cond) {
-                    return true;
+                    return (false == _invert) ? true : false;
                 }
             }
         }
 
-        return false;
+        return (false == _invert) ? false : true;
     }
     bool has(const t_interval<T>& interval, bool merge_always = true) {
         critical_section_guard guard(_lock);
@@ -428,12 +494,12 @@ class t_range_set : public t_set_base_t<T>, public t_set_arithmetic_t<T> {
                 }
 
                 if (upper_cond) {
-                    return true;
+                    return (false == _invert) ? true : false;
                 }
             }
         }
 
-        return false;
+        return (false == _invert) ? false : true;
     }
     bool has(const t_range_set& other) {
         if (this == &other) return true;
@@ -445,7 +511,8 @@ class t_range_set : public t_set_base_t<T>, public t_set_arithmetic_t<T> {
         merge_internal();
 
         for (const auto& item : temp) {
-            if (false == has(item, false)) {
+            auto expect = (false == _invert) ? false : true;
+            if (expect == has(item, false)) {
                 return false;
             }
         }
@@ -465,14 +532,15 @@ class t_range_set : public t_set_base_t<T>, public t_set_arithmetic_t<T> {
         if (this != &other) {
             _arr = other._arr;
             _status = other._status;
+            _invert = other._invert;
         }
         return *this;
     }
     t_range_set& operator=(t_range_set&& other) {
         if (this != &other) {
             _arr = std::move(other._arr);
-            _status = other._status;
-            other._status = 0;
+            std::swap(_status, other._status);
+            std::swap(_invert, other._invert);
         }
         return *this;
     }
@@ -506,6 +574,12 @@ class t_range_set : public t_set_base_t<T>, public t_set_arithmetic_t<T> {
     void set_status(uint8 status) { _status = status; }
     uint8 get_status() { return _status; }
 
+    bool is_inverted() const { return _invert; }
+    t_range_set<T>& invert() {
+        _invert = !_invert;
+        return *this;
+    }
+
    protected:
     void merge_internal() {
         if (false == _arr.empty()) {
@@ -535,6 +609,7 @@ class t_range_set : public t_set_base_t<T>, public t_set_arithmetic_t<T> {
     critical_section _lock;
     std::vector<t_interval<T>> _arr;
     uint8 _status;
+    bool _invert;
 };
 
 }  // namespace hotplace

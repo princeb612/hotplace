@@ -34,15 +34,21 @@ template <typename T, typename std::enable_if<custom::is_integral<typename std::
 class t_set_runtime {
    public:
     using decayed_t = typename std::decay<T>::type;
-    using concrete_set_t = typename std::conditional<std::is_same<decayed_t, std::string>::value, string_set, t_range_set<decayed_t>>::type;
+    using concrete_set_t = typename std::conditional<std::is_same<decayed_t, std::string>::value, string_set, t_range_set<t_range_value<decayed_t>>>::type;
 
     t_set_runtime() {
         _shared.make_share(this);
         _target.reset(new concrete_set_t());
     }
     t_set_runtime(const t_set_runtime<T>& other) : t_set_runtime() { *this = other; }
+    t_set_runtime(t_set_runtime<T>&& other) : t_set_runtime() { *this = std::move(other); }
     t_set_runtime& operator=(const t_set_runtime<T>& other) {
         _target->operator=(*other._target);
+        return *this;
+    }
+    t_set_runtime& operator=(t_set_runtime<T>&& other) {
+        auto inst = _target.get();
+        *inst = std::move(*other._target);
         return *this;
     }
 
@@ -72,19 +78,32 @@ class t_set_runtime {
         return *this;
     }
     bool contains(const decayed_t& value) { return _target->contains(value); }
+    template <typename U = decayed_t>
+    typename std::enable_if<std::is_arithmetic<U>::value, bool>::type contains(const t_range_value<U>& value) {
+        return _target->contains(value);
+    }
 
     template <typename U = decayed_t>
     typename std::enable_if<std::is_arithmetic<U>::value, t_set_runtime&>::type insert_range(const U& start, const U& end) {
         _target->insert_range(start, end);
         return *this;
     }
-
     template <typename U = decayed_t>
     typename std::enable_if<std::is_arithmetic<U>::value, t_set_runtime&>::type erase_range(const U& start, const U& end) {
         _target->erase_range(start, end);
         return *this;
     }
 
+    template <typename U = decayed_t>
+    typename std::enable_if<std::is_arithmetic<U>::value, t_set_runtime&>::type insert_range(const t_range_value<U>& start, const t_range_value<U>& end) {
+        _target->insert_range(start, end);
+        return *this;
+    }
+    template <typename U = decayed_t>
+    typename std::enable_if<std::is_arithmetic<U>::value, t_set_runtime&>::type erase_range(const t_range_value<U>& start, const t_range_value<U>& end) {
+        _target->erase_range(start, end);
+        return *this;
+    }
     t_set_runtime& union_with(const t_set_runtime<T>& other) {
         _target->union_with(*other._target);
         return *this;
@@ -98,6 +117,13 @@ class t_set_runtime {
         return *this;
     }
     t_set_runtime& contains_all(const t_set_runtime<T>& other) const { return _target->contains_all(*other._target); }
+
+    /* ALL EXCEPT */
+    t_set_runtime& invert() {
+        _target->invert();
+        return *this;
+    }
+    bool is_inverted() const { return _target->is_inverted(); }
 
     bool operator==(const t_set_runtime& other) { return _target->operator==(*other._target); }
     bool operator!=(const t_set_runtime& other) { return (*this == other) ? false : true; }

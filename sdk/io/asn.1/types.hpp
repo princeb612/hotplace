@@ -207,22 +207,43 @@ class asn1_value;
 class asn1_visitor;
 class asn1_der_visitor;
 class asn1_notation_visitor;
-class asn1_constraint_visitor;
 
-class asn1_constraint;
+class asn1_constraint_visitor;
+class asn1_constraint_notation_visitor;
+template <typename T>
+class asn1_constraint_evaluator;
+
+class asn1_constraint_t;
 class asn1_constraints;
 // clang-format off
-template <typename T> class asn1_constraint_base;
+template <typename T> class asn1_constraint;
 template <typename T> class asn1_constraint_union;
 template <typename T> class asn1_constraint_intersection;
 template <typename T> class asn1_constraint_except;
-template <typename T> class asn1_constraint_allexcept;
+template <typename T> class asn1_constraint_all_except;
 template <typename T> class asn1_constraint_from;
 template <typename T> class asn1_constraint_pattern;
 template <typename T> class asn1_constraint_range;
 template <typename T> class asn1_constraint_single_value;
 template <typename T> class asn1_constraint_size;
 // clang-format on
+
+asn1_entity_t get_entity(asn1_object* object, bool component = false);
+std::string nameof(asn1_object* object);
+
+bool is_kind_of_integer(asn1_object* object);
+bool is_kind_of_real(asn1_object* object);
+bool is_kind_of_cstring(asn1_object* object);
+bool is_kind_of_bstring(asn1_object* object);
+bool is_kind_of_container(asn1_object* object);
+bool is_kind_of_container_of(asn1_object* object);
+
+bool is_kind_of_integer(asn1_entity_t entity);
+bool is_kind_of_real(asn1_entity_t entity);
+bool is_kind_of_cstring(asn1_entity_t entity);
+bool is_kind_of_bstring(asn1_entity_t entity);
+bool is_kind_of_container(asn1_entity_t entity);
+bool is_kind_of_container_of(asn1_entity_t entity);
 
 }  // namespace io
 }  // namespace hotplace

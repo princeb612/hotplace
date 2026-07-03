@@ -21,9 +21,9 @@ namespace io {
 /**
  */
 template <typename T>
-class asn1_constraint_except : public asn1_constraint_base<T> {
+class asn1_constraint_except : public asn1_constraint<T> {
    public:
-    asn1_constraint_except(asn1_constraint* lhs, asn1_constraint* rhs) : asn1_constraint_base<T>(asn1_entity_constraint_except), _lhs(lhs), _rhs(rhs) {
+    asn1_constraint_except(asn1_constraint<T>* lhs, asn1_constraint<T>* rhs) : asn1_constraint<T>(asn1_entity_constraint_except), _lhs(lhs), _rhs(rhs) {
         if (nullptr == lhs || nullptr == rhs) {
             // throw exception(errorcode_t::invalid_parameter);
         }
@@ -53,24 +53,38 @@ class asn1_constraint_except : public asn1_constraint_base<T> {
     }
 
     virtual void addref() {
-        asn1_constraint_base<T>::addref();
+        asn1_constraint<T>::addref();
         _lhs->addref();
         _rhs->addref();
     }
     virtual void release() {
         _lhs->release();
         _rhs->release();
-        asn1_constraint_base<T>::release();
+        asn1_constraint<T>::release();
     }
 
    protected:
-    asn1_constraint_except(const asn1_constraint_except& other) : asn1_constraint_base<T>(asn1_entity_constraint_except) { *this = other; }
+    asn1_constraint_except(const asn1_constraint_except& other) : asn1_constraint<T>(asn1_entity_constraint_except) { *this = other; }
     asn1_constraint_except& operator=(const asn1_constraint_except& other) {
         _lhs = other._lhs->clone();
         _rhs = other._rhs->clone();
         _lhs->set_parent(this);
         _rhs->set_parent(this);
         return *this;
+    }
+
+    virtual void accept(asn1_constraint_evaluator<T>* v) {
+        asn1_constraint_evaluator<T> visitor_lhs;
+        asn1_constraint_evaluator<T> visitor_rhs;
+        _lhs->accept(&visitor_lhs);
+        _rhs->accept(&visitor_rhs);
+
+        auto& result_lhs = visitor_lhs.get_result_set();
+        auto& result_rhs = visitor_rhs.get_result_set();
+        result_lhs.erase_from(result_rhs);
+
+        auto& rs = v->get_result_set();
+        rs = std::move(result_lhs);
     }
 
     virtual void represent(stream_t* s, asn1_object* object, asn1_value* value = nullptr) {
@@ -87,8 +101,8 @@ class asn1_constraint_except : public asn1_constraint_base<T> {
     }
 
    private:
-    asn1_constraint* _lhs;
-    asn1_constraint* _rhs;
+    asn1_constraint<T>* _lhs;
+    asn1_constraint<T>* _rhs;
 };
 
 }  // namespace io

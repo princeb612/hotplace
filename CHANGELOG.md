@@ -35,7 +35,8 @@
     * CBOR
 
 * details
-  * Revision 1041
+  * Revision 1042
+    * ASN.1 constraints
   * Revision 1040
     * set runtime for constraints
   * Revision 1039

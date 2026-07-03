@@ -22,7 +22,7 @@
 
 namespace hotplace {
 
-class string_set : public t_set_base_t<std::string> {
+class string_set {
    public:
     string_set();
     string_set(const string_set& other);
@@ -31,15 +31,18 @@ class string_set : public t_set_base_t<std::string> {
     string_set& operator=(const string_set& other);
     string_set& operator=(string_set&& other);
 
-    void reset() override;
-    void insert(const std::string& value) override;
-    void erase(const std::string& value) override;
-    bool contains(const std::string& value) override;
+    void reset();
+    void insert(const std::string& value);
+    void erase(const std::string& value);
+    bool contains(const std::string& value);
 
-    string_set& union_with(const string_set& other);
-    string_set& erase_from(const string_set& other);
-    string_set& intersect_with(const string_set& other);
+    void union_with(const string_set& other);
+    void erase_from(const string_set& other);
+    void intersect_with(const string_set& other);
     bool contains_all(const string_set& other);
+
+    bool is_inverted() const;
+    string_set& invert();
 
     string_set& clear();
     string_set& add(const std::string& value);
@@ -51,6 +54,7 @@ class string_set : public t_set_base_t<std::string> {
     bool has(const string_set& other);
 
    private:
+    bool _invert;
     std::multiset<std::string> _set;
 };
 

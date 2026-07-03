@@ -15,7 +15,8 @@
 #include <hotplace/sdk/base/stream/vtprintf.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_value.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_der_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_notation_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
 #include <set>
 

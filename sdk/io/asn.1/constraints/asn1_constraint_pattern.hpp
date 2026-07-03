@@ -19,9 +19,9 @@ namespace hotplace {
 namespace io {
 
 template <typename T>
-class asn1_constraint_pattern : public asn1_constraint_base<T> {
+class asn1_constraint_pattern : public asn1_constraint<T> {
    public:
-    asn1_constraint_pattern() : asn1_constraint_base<T>(asn1_entity_constraint_pattern) {}
+    asn1_constraint_pattern() : asn1_constraint<T>(asn1_entity_constraint_pattern) {}
     virtual ~asn1_constraint_pattern() = default;
 };
 

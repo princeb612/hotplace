@@ -11,7 +11,7 @@
  *
  */
 
-#include <hotplace/sdk/base/string/string.hpp>
+#include <hotplace/sdk/base/string/string.hpp>  // format
 #include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 
 namespace hotplace {

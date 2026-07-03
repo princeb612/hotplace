@@ -12,7 +12,6 @@
  */
 
 #include <hotplace/sdk/io/asn.1/asn1_value.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/constraints/asn1_constraint.hpp>
 #include <hotplace/sdk/io/asn.1/constraints/asn1_constraints.hpp>
@@ -38,7 +37,7 @@ asn1_constraints& asn1_constraints::operator=(asn1_constraints&& other) {
     return *this;
 }
 
-asn1_constraints& asn1_constraints::add(asn1_constraint* cons, std::function<void(asn1_constraint*)> f) {
+asn1_constraints& asn1_constraints::add(asn1_constraint_t* cons, std::function<void(asn1_constraint_t*)> f) {
     if (cons) {
         if (f) {
             f(cons);
@@ -48,24 +47,17 @@ asn1_constraints& asn1_constraints::add(asn1_constraint* cons, std::function<voi
     return *this;
 }
 
+bool asn1_constraints::empty() { return _constraints.empty(); }
+
 void asn1_constraints::represent(stream_t* s, asn1_object* object, asn1_value* value) {
     if (false == _constraints.empty()) {
         for (auto& item : _constraints) {
             s->printf(" (");
-            asn1_constraint_visitor visitor(s, object);
+            asn1_constraint_notation_visitor visitor(s, object);
             item->accept(&visitor);
             s->printf(")");
         }
     }
-}
-
-return_t asn1_constraints::validate(asn1_object* object, const variant& v) {
-    return_t ret = errorcode_t::success;
-    // if (false == _constraints.empty()) {
-    //     for (auto item : _constraints) {
-    //     }
-    // }
-    return ret;
 }
 
 void asn1_constraints::addref() {

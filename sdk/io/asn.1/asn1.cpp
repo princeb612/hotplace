@@ -12,8 +12,9 @@
  */
 
 #include <hotplace/sdk/io/asn.1/asn1.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_container.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_der_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_notation_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
 
 namespace hotplace {

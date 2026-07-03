@@ -13,16 +13,15 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTSIZE__
 #define __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTSIZE__
 
-#include <hotplace/sdk/base/nostd/range.hpp>
 #include <hotplace/sdk/io/asn.1/constraints/asn1_constraint.hpp>
 
 namespace hotplace {
 namespace io {
 
 template <typename T>
-class asn1_constraint_size : public asn1_constraint_base<T> {
+class asn1_constraint_size : public asn1_constraint<T> {
    public:
-    asn1_constraint_size(asn1_constraint* cons) : asn1_constraint_base<T>(asn1_entity_constraint_size), _cons(cons) {
+    asn1_constraint_size(asn1_constraint<T>* cons) : asn1_constraint<T>(asn1_entity_constraint_size), _cons(cons) {
         if (nullptr == cons) {
             throw exception(errorcode_t::not_specified);
         }
@@ -47,19 +46,28 @@ class asn1_constraint_size : public asn1_constraint_base<T> {
     }
 
     virtual void addref() {
-        asn1_constraint_base<T>::addref();
+        asn1_constraint<T>::addref();
         _cons->addref();
     }
     virtual void release() {
         _cons->release();
-        asn1_constraint_base<T>::release();
+        asn1_constraint<T>::release();
     }
 
    protected:
-    asn1_constraint_size(const asn1_constraint_size& other) : asn1_constraint_base<T>(asn1_entity_constraint_size) { *this = other; }
+    asn1_constraint_size(const asn1_constraint_size& other) : asn1_constraint<T>(asn1_entity_constraint_size) { *this = other; }
     asn1_constraint_size& operator=(const asn1_constraint_size& other) {
         _cons = other._cons->clone();
         return *this;
+    }
+
+    virtual void accept(asn1_constraint_evaluator<T>* v) {
+        asn1_constraint_evaluator<T> visitor;
+        _cons->accept(&visitor);
+
+        auto& result = visitor.get_result_set();
+        auto& rs = v->get_result_set();
+        rs = std::move(result);
     }
 
     virtual void represent(stream_t* s, asn1_object* object, asn1_value* value = nullptr) {
@@ -69,7 +77,7 @@ class asn1_constraint_size : public asn1_constraint_base<T> {
     }
 
    private:
-    asn1_constraint* _cons;
+    asn1_constraint<T>* _cons;
 };
 
 }  // namespace io
