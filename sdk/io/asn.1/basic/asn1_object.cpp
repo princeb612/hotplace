@@ -31,6 +31,7 @@ asn1_object::asn1_object(asn1_entity_t entity, const std::string& name, asn1_obj
     _shared.make_share(this);
     if (tag) tag->set_parent(this);
     if (object) object->set_parent(this);
+    get_constraints().set_owner(this);
 }
 
 asn1_object::asn1_object(const asn1_object& other) : asn1_object(asn1_entity_syntax, "", nullptr, nullptr) { *this = other; }
@@ -340,6 +341,21 @@ void asn1_object::debug_print(uint32 depth, const std::string& name) {
 asn1_constraints& asn1_object::get_constraints() { return _constraints; }
 
 const asn1_constraints& asn1_object::get_constraints() const { return _constraints; }
+
+bool asn1_object::validate(asn1_value* value) {
+    if (nullptr == value) return false;
+
+    asn1_object* node = this;
+    while (node) {
+        auto& constraints = node->get_constraints();
+        if (false == constraints.empty()) {
+            bool test = constraints.validate(node, value);
+            if (false == test) return false;
+        }
+        node = node->get_object();
+    }
+    return true;
+}
 
 }  // namespace io
 }  // namespace hotplace

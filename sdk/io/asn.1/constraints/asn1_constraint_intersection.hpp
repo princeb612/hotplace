@@ -33,10 +33,12 @@ namespace io {
 template <typename T>
 class asn1_constraint_intersection : public asn1_constraint<T> {
    public:
-    asn1_constraint_intersection(asn1_constraint<T>* lhs, asn1_constraint<T>* rhs) : asn1_constraint<T>(asn1_entity_constraint_intersection), _lhs(lhs), _rhs(rhs) {
+    asn1_constraint_intersection(asn1_constraint<T>* lhs, asn1_constraint<T>* rhs) : asn1_constraint<T>(asn1_entity_constraint_intersection) {
         if (nullptr == lhs || nullptr == rhs) {
             // throw exception(errorcode_t::invalid_parameter);
         }
+        _lhs = lhs;
+        _rhs = rhs;
         _lhs->set_parent(this);
         _rhs->set_parent(this);
     }
@@ -65,43 +67,70 @@ class asn1_constraint_intersection : public asn1_constraint<T> {
 
     virtual void addref() {
         asn1_constraint<T>::addref();
-        _lhs->addref();
-        _rhs->addref();
+        if (_lhs) _lhs->addref();
+        if (_rhs) _rhs->addref();
     }
     virtual void release() {
-        _lhs->release();
-        _rhs->release();
+        if (_lhs) _lhs->release();
+        if (_rhs) _rhs->release();
         asn1_constraint<T>::release();
     }
 
    protected:
-    asn1_constraint_intersection(const asn1_constraint_intersection& other) : asn1_constraint<T>(asn1_entity_constraint_intersection) { *this = other; }
+    asn1_constraint_intersection() : asn1_constraint<T>(asn1_entity_constraint_intersection), _lhs(nullptr), _rhs(nullptr) {}
+    asn1_constraint_intersection(const asn1_constraint_intersection& other) : asn1_constraint_intersection() { *this = other; }
+    asn1_constraint_intersection(asn1_constraint_intersection&& other) : asn1_constraint_intersection() { *this = std::move(other); }
     asn1_constraint_intersection& operator=(const asn1_constraint_intersection& other) {
-        _lhs = other._lhs->clone();
-        _rhs = other._rhs->clone();
-        _lhs->set_parent(this);
-        _rhs->set_parent(this);
+        if (_lhs) {
+            _lhs->release();
+            _lhs = nullptr;
+        }
+        if (_rhs) {
+            _rhs->release();
+            _rhs = nullptr;
+        }
+        if (other._lhs) {
+            _lhs = other._lhs->clone();
+            _lhs->set_parent(this);
+        }
+        if (other._rhs) {
+            _rhs = other._rhs->clone();
+            _rhs->set_parent(this);
+        }
+        return *this;
+    }
+    asn1_constraint_intersection& operator=(asn1_constraint_intersection&& other) {
+        std::swap(_lhs, other._lhs);
+        std::swap(_rhs, other._rhs);
         return *this;
     }
 
     virtual void accept(asn1_constraint_evaluator<T>* v) {
-        asn1_constraint_evaluator<T> visitor_lhs;
-        asn1_constraint_evaluator<T> visitor_rhs;
-        _lhs->accept(&visitor_lhs);
-        _rhs->accept(&visitor_rhs);
+        if (_lhs && _rhs) {
+            asn1_constraint_evaluator<T> visitor_lhs;
+            asn1_constraint_evaluator<T> visitor_rhs;
+            _lhs->accept(&visitor_lhs);
+            _rhs->accept(&visitor_rhs);
 
-        auto& result_lhs = visitor_lhs.get_result_set();
-        auto& result_rhs = visitor_rhs.get_result_set();
-        result_lhs.intersect_with(result_rhs);
+            auto& result_lhs = visitor_lhs.get_result_set();
+            auto& result_rhs = visitor_rhs.get_result_set();
+            result_lhs.intersect_with(result_rhs);
 
-        auto& rs = v->get_result_set();
-        rs = std::move(result_lhs);
+            auto& rs = v->get_result_set();
+            rs = std::move(result_lhs);
+        } else {
+            // throw
+        }
     }
 
     virtual void represent(stream_t* s, asn1_object* object, asn1_value* value = nullptr) {
-        _lhs->represent(s, object, value);
-        s->printf(" INTERSECTION ");
-        _rhs->represent(s, object, value);
+        if (_lhs && _rhs) {
+            _lhs->represent(s, object, value);
+            s->printf(" INTERSECTION ");
+            _rhs->represent(s, object, value);
+        } else {
+            // throw
+        }
     }
 
    private:

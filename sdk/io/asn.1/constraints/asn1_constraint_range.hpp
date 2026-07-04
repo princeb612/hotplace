@@ -35,7 +35,10 @@ namespace io {
 template <typename T>
 class asn1_constraint_range : public asn1_constraint<T> {
    public:
-    asn1_constraint_range(t_range_value<T> low, t_range_value<T> high) : asn1_constraint<T>(asn1_entity_constraint_range), _low(low), _high(high) {}
+    asn1_constraint_range(t_range_value<T> low, t_range_value<T> high) : asn1_constraint_range() {
+        _low = low;
+        _high = high;
+    }
     virtual ~asn1_constraint_range() = default;
 
     asn1_constraint_range* clone() { return new asn1_constraint_range<T>(*this); }
@@ -53,13 +56,17 @@ class asn1_constraint_range : public asn1_constraint<T> {
     }
 
    protected:
-    asn1_constraint_range(const asn1_constraint_range& other) : asn1_constraint<T>(asn1_entity_constraint_range) {
-        _low = other._low;
-        _high = other._high;
-    }
+    asn1_constraint_range() : asn1_constraint<T>(asn1_entity_constraint_range), _low(T()), _high(T()) {}
+    asn1_constraint_range(const asn1_constraint_range& other) : asn1_constraint_range() { *this = other; }
+    asn1_constraint_range(asn1_constraint_range&& other) : asn1_constraint_range() { *this = std::move(other); }
     asn1_constraint_range& operator=(const asn1_constraint_range& other) {
         _low = other._low;
         _high = other._high;
+        return *this;
+    }
+    asn1_constraint_range& operator=(asn1_constraint_range&& other) {
+        _low = std::move(other._low);
+        _high = std::move(other._high);
         return *this;
     }
 

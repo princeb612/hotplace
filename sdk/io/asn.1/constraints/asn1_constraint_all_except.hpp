@@ -23,10 +23,11 @@ namespace io {
 template <typename T>
 class asn1_constraint_all_except : public asn1_constraint<T> {
    public:
-    asn1_constraint_all_except(asn1_constraint<T>* cons) : asn1_constraint<T>(asn1_entity_constraint_all_except), _cons(cons) {
+    asn1_constraint_all_except(asn1_constraint<T>* cons) : asn1_constraint_all_except() {
         if (nullptr == cons) {
             // throw exception(errorcode_t::invalid_parameter);
         }
+        _cons = cons;
         _cons->set_parent(this);
     }
     virtual ~asn1_constraint_all_except() = default;
@@ -51,37 +52,57 @@ class asn1_constraint_all_except : public asn1_constraint<T> {
 
     virtual void addref() {
         asn1_constraint<T>::addref();
-        _cons->addref();
+        if (_cons) _cons->addref();
     }
     virtual void release() {
-        _cons->release();
+        if (_cons) _cons->release();
         asn1_constraint<T>::release();
     }
 
    protected:
-    asn1_constraint_all_except(const asn1_constraint_all_except& other) : asn1_constraint<T>(asn1_entity_constraint_all_except) { *this = other; }
+    asn1_constraint_all_except() : asn1_constraint<T>(asn1_entity_constraint_all_except), _cons(nullptr) {}
+    asn1_constraint_all_except(const asn1_constraint_all_except& other) : asn1_constraint_all_except() { *this = other; }
+    asn1_constraint_all_except(asn1_constraint_all_except&& other) : asn1_constraint_all_except() { *this = std::move(other); }
     asn1_constraint_all_except& operator=(const asn1_constraint_all_except& other) {
-        _cons = other._cons->clone();
-        _cons->set_parent(this);
+        if (_cons) {
+            _cons->release();
+            _cons = nullptr;
+        }
+        if (other._cons) {
+            _cons = other._cons->clone();
+            _cons->set_parent(this);
+        }
+        return *this;
+    }
+    asn1_constraint_all_except& operator=(asn1_constraint_all_except&& other) {
+        std::swap(_cons, other._cons);
         return *this;
     }
 
     virtual void accept(asn1_constraint_evaluator<T>* v) {
-        asn1_constraint_evaluator<T> visitor;
-        _cons->accept(&visitor);
+        if (_cons) {
+            asn1_constraint_evaluator<T> visitor;
+            _cons->accept(&visitor);
 
-        auto& result = visitor.get_result_set().invert();
+            auto& result = visitor.get_result_set().invert();
 
-        auto& rs = v->get_result_set();
-        rs = std::move(result);
+            auto& rs = v->get_result_set();
+            rs = std::move(result);
+        } else {
+            // throw
+        }
     }
     virtual void represent(stream_t* s, asn1_object* object, asn1_value* value = nullptr) {
-        auto rparenthesis = _cons->is_operation();
+        if (_cons) {
+            auto rparenthesis = _cons->is_operation();
 
-        s->printf("ALL EXCEPT ");
-        if (rparenthesis) s->printf("(");
-        _cons->represent(s, object, value);
-        if (rparenthesis) s->printf(")");
+            s->printf("ALL EXCEPT ");
+            if (rparenthesis) s->printf("(");
+            _cons->represent(s, object, value);
+            if (rparenthesis) s->printf(")");
+        } else {
+            // throw
+        }
     }
 
    private:

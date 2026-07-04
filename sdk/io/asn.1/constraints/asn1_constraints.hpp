@@ -14,6 +14,7 @@
 #define __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTS__
 
 #include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/constraints/asn1_constraint.hpp>
 
@@ -24,8 +25,9 @@ namespace io {
  * ITU-T X.682 ISO/IEC 8824-3
  */
 class asn1_constraints {
+    friend class asn1_object;
    public:
-    asn1_constraints() = default;
+    asn1_constraints();
     asn1_constraints(const asn1_constraints& other);
     asn1_constraints(asn1_constraints&& other);
     virtual ~asn1_constraints() = default;
@@ -34,36 +36,11 @@ class asn1_constraints {
     asn1_constraints& operator=(asn1_constraints&& other);
 
     asn1_constraints& add(asn1_constraint_t* cons, std::function<void(asn1_constraint_t*)> f = nullptr);
-    bool empty();
+    bool empty() const;
 
     void represent(stream_t* s, asn1_object* object, asn1_value* value);
 
-    bool validate(asn1_object* node, asn1_value* value) {
-        if (nullptr == node || nullptr == value) return false;
-
-        if (false == _constraints.empty()) {
-            for (auto item : _constraints) {
-                bool test = false;
-                auto entity = item->get_entity();
-                if (is_kind_of_integer(node)) {
-                    test = do_validate<int64>(item, node, value);
-                } else if (is_kind_of_real(node)) {
-                    test = do_validate<double>(item, node, value);
-                } else if (is_kind_of_cstring(node)) {
-                    switch (entity) {
-                        case asn1_entity_constraint_size:
-                            test = do_validate<int64>(item, node, value);
-                            break;
-                        default:
-                            test = do_validate<std::string>(item, node, value);
-                            break;
-                    }
-                }
-                if (false == test) return false;
-            }
-        }
-        return true;
-    }
+    bool validate(asn1_object* node, asn1_value* value);
 
     void addref();
     void release();
@@ -147,7 +124,11 @@ class asn1_constraints {
         return true;
     }
 
+    void set_owner(asn1_object* object);
+    asn1_object* get_owner() const;
+
    private:
+    asn1_object* _owner;
     std::list<asn1_constraint_t*> _constraints;
 };
 

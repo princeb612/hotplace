@@ -26,10 +26,12 @@ namespace io {
 template <typename T>
 class asn1_constraint_from : public asn1_constraint<T> {
    public:
-    asn1_constraint_from(asn1_constraint<T>* cons) : asn1_constraint<T>(asn1_entity_constraint_size), _cons(cons) {
+    asn1_constraint_from(asn1_constraint<T>* cons) : asn1_constraint_from() {
         if (nullptr == cons) {
             throw exception(errorcode_t::not_specified);
         }
+        _cons = cons;
+        _cons->set_parent(this);
     }
     virtual ~asn1_constraint_from() = default;
 
@@ -66,16 +68,34 @@ class asn1_constraint_from : public asn1_constraint<T> {
     }
 
    protected:
-    asn1_constraint_from(const asn1_constraint_from& other) : asn1_constraint<T>(asn1_entity_constraint_size) { *this = other; }
+    asn1_constraint_from() : asn1_constraint<T>(asn1_entity_constraint_size), _cons(nullptr) {}
+    asn1_constraint_from(const asn1_constraint_from& other) : asn1_constraint_from() { *this = other; }
+    asn1_constraint_from(asn1_constraint_from&& other) : asn1_constraint_from() { *this = std::move(other); }
     asn1_constraint_from& operator=(const asn1_constraint_from& other) {
-        _cons = other._cons->clone();
+        if (_cons) {
+            _cons->release();
+            _cons = nullptr;
+        }
+        if (other._cons) {
+            _cons = other._cons->clone();
+            _cons->set_parent(this);
+        }
+        return *this;
+    }
+    asn1_constraint_from& operator=(asn1_constraint_from&& other) {
+        std::swap(_cons, other._cons);
+        if (_cons) _cons->set_parent(this);
         return *this;
     }
 
     virtual void represent(stream_t* s, asn1_object* object, asn1_value* value = nullptr) {
-        s->printf("FROM (");
-        _cons->represent(s, object, value);
-        s->printf(")");
+        if (_cons) {
+            s->printf("FROM (");
+            _cons->represent(s, object, value);
+            s->printf(")");
+        } else {
+            // throw
+        }
     }
 
    private:

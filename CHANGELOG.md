@@ -35,6 +35,8 @@
     * CBOR
 
 * details
+  * Revision 1043
+    * [tested] application verifier, sanitizer
   * Revision 1042
     * ASN.1 constraints
   * Revision 1040

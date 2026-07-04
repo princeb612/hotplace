@@ -72,11 +72,19 @@ class asn1_constraint : public asn1_constraint_t {
     virtual void release() { _shared.delref(); }
 
    protected:
-    asn1_constraint(asn1_entity_t entity) : _entity(entity), _parent(nullptr) { _shared.make_share(this); }
+    asn1_constraint() : _entity(asn1_entity_syntax), _parent(nullptr) { _shared.make_share(this); }
+    asn1_constraint(asn1_entity_t entity) : asn1_constraint() { _entity = entity; }
 
-    asn1_constraint(const asn1_constraint& other) { *this = other; }
+    asn1_constraint(const asn1_constraint& other) : asn1_constraint() { *this = other; }
+    asn1_constraint(asn1_constraint&& other) : asn1_constraint() { *this = std::move(other); }
     asn1_constraint& operator=(const asn1_constraint& other) {
         _entity = other._entity;
+        _parent = other._parent;
+        return *this;
+    }
+    asn1_constraint& operator=(asn1_constraint&& other) {
+        std::swap(_entity, other._entity);
+        std::swap(_parent, other._parent);
         return *this;
     }
 

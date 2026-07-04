@@ -31,8 +31,8 @@ namespace io {
 template <typename T>
 class asn1_constraint_single_value : public asn1_constraint<T> {
    public:
-    asn1_constraint_single_value(const T& value) : asn1_constraint<T>(asn1_entity_constraint_single), _value(value) {}
-    asn1_constraint_single_value(T&& value) : asn1_constraint<T>(asn1_entity_constraint_single), _value(std::move(value)) {}
+    asn1_constraint_single_value(const T& value) : asn1_constraint_single_value() { _value = value; }
+    asn1_constraint_single_value(T&& value) : asn1_constraint_single_value() { _value = std::move(value); }
     virtual ~asn1_constraint_single_value() = default;
 
     asn1_constraint_single_value* clone() { return new asn1_constraint_single_value(*this); }
@@ -40,9 +40,15 @@ class asn1_constraint_single_value : public asn1_constraint<T> {
     virtual bool is_applicable(asn1_entity_t entity) { return true; }
 
    protected:
-    asn1_constraint_single_value(const asn1_constraint_single_value& other) : asn1_constraint<T>(asn1_entity_constraint_single) { *this = other; }
+    asn1_constraint_single_value() : asn1_constraint<T>(asn1_entity_constraint_single), _value(_T()) {}
+    asn1_constraint_single_value(const asn1_constraint_single_value& other) : asn1_constraint_single_value() { *this = other; }
+    asn1_constraint_single_value(asn1_constraint_single_value&& other) : asn1_constraint_single_value() { *this = std::move(other); }
     asn1_constraint_single_value& operator=(const asn1_constraint_single_value& other) {
         _value = other._value;
+        return *this;
+    }
+    asn1_constraint_single_value& operator=(asn1_constraint_single_value&& other) {
+        _value = std::move(other._value);
         return *this;
     }
 

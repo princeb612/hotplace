@@ -21,10 +21,12 @@ namespace io {
 template <typename T>
 class asn1_constraint_size : public asn1_constraint<T> {
    public:
-    asn1_constraint_size(asn1_constraint<T>* cons) : asn1_constraint<T>(asn1_entity_constraint_size), _cons(cons) {
+    asn1_constraint_size(asn1_constraint<T>* cons) : asn1_constraint_size() {
         if (nullptr == cons) {
             throw exception(errorcode_t::not_specified);
         }
+        _cons = cons;
+        _cons->set_parent(this);
     }
     virtual ~asn1_constraint_size() = default;
 
@@ -47,33 +49,54 @@ class asn1_constraint_size : public asn1_constraint<T> {
 
     virtual void addref() {
         asn1_constraint<T>::addref();
-        _cons->addref();
+        if (_cons) _cons->addref();
     }
     virtual void release() {
-        _cons->release();
+        if (_cons) _cons->release();
         asn1_constraint<T>::release();
     }
 
    protected:
-    asn1_constraint_size(const asn1_constraint_size& other) : asn1_constraint<T>(asn1_entity_constraint_size) { *this = other; }
+    asn1_constraint_size() : asn1_constraint<T>(asn1_entity_constraint_size), _cons(nullptr) {}
+    asn1_constraint_size(const asn1_constraint_size& other) : asn1_constraint_size() { *this = other; }
+    asn1_constraint_size(asn1_constraint_size&& other) : asn1_constraint_size() { *this = std::move(other); }
     asn1_constraint_size& operator=(const asn1_constraint_size& other) {
-        _cons = other._cons->clone();
+        if (_cons) {
+            _cons->release();
+            _cons = nullptr;
+        }
+        if (other._cons) {
+            _cons = other._cons->clone();
+            _cons->set_parent(this);
+        }
+        return *this;
+    }
+    asn1_constraint_size& operator=(asn1_constraint_size&& other) {
+        std::swap(_cons, other._cons);
         return *this;
     }
 
     virtual void accept(asn1_constraint_evaluator<T>* v) {
-        asn1_constraint_evaluator<T> visitor;
-        _cons->accept(&visitor);
+        if (_cons) {
+            asn1_constraint_evaluator<T> visitor;
+            _cons->accept(&visitor);
 
-        auto& result = visitor.get_result_set();
-        auto& rs = v->get_result_set();
-        rs = std::move(result);
+            auto& result = visitor.get_result_set();
+            auto& rs = v->get_result_set();
+            rs = std::move(result);
+        } else {
+            // throw
+        }
     }
 
     virtual void represent(stream_t* s, asn1_object* object, asn1_value* value = nullptr) {
-        s->printf("SIZE(");
-        _cons->represent(s, object, value);
-        s->printf(")");
+        if (_cons) {
+            s->printf("SIZE(");
+            _cons->represent(s, object, value);
+            s->printf(")");
+        } else {
+            // throw
+        }
     }
 
    private:

@@ -116,20 +116,7 @@ class asn1_object {
 
     asn1_constraints& get_constraints();
     const asn1_constraints& get_constraints() const;
-    bool validate(asn1_value* value) {
-        if (nullptr == value) return false;
-
-        asn1_object* node = this;
-        while (node) {
-            auto constraints = node->get_constraints();
-            if (false == constraints.empty()) {
-                bool test = constraints.validate(node, value);
-                if (false == test) return false;
-            }
-            node = node->get_object();
-        }
-        return true;
-    }
+    bool validate(asn1_value* value);
 
     static asn1_object* build(asn1_object* object, std::function<void(asn1_object*)> f = nullptr) {
         if (object && f) {
