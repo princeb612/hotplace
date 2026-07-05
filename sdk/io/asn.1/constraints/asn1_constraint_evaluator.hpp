@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   asn1_constraint_visitor.hpp
+ * @file   asn1_constraint_evaluator.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *

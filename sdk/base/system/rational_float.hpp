@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   floating_point.hpp
+ * @file   rational_float.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *

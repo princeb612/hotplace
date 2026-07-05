@@ -342,14 +342,25 @@ asn1_constraints& asn1_object::get_constraints() { return _constraints; }
 
 const asn1_constraints& asn1_object::get_constraints() const { return _constraints; }
 
+bool asn1_object::have_constraints() const { return false == get_constraints().empty(); }
+
 bool asn1_object::validate(asn1_value* value) {
+    if (nullptr == value || nullptr == value) return false;
+
+    return validate_node(this, value);
+}
+
+bool asn1_object::validate_node(asn1_object* node, asn1_value* value) {
     if (nullptr == value) return false;
 
-    asn1_object* node = this;
     while (node) {
-        auto& constraints = node->get_constraints();
-        if (false == constraints.empty()) {
-            bool test = constraints.validate(node, value);
+        if (node->have_constraints()) {
+            // (false == get_constraints.empty()) || (asn1_enum return true)
+            return node->get_constraints().validate(node, value);
+        }
+        if (is_kind_of_container(node)) {
+            asn1_container* container = dynamic_cast<asn1_container*>(node);
+            auto test = container->for_each([&](asn1_object* item) -> bool { return item->validate_node(item, value); });
             if (false == test) return false;
         }
         node = node->get_object();

@@ -17,6 +17,7 @@
 #include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_enum.hpp>
+#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint_single_value.hpp>
 
 namespace hotplace {
 namespace io {
@@ -49,12 +50,15 @@ asn1_enum& asn1_enum::add(const std::string& en, int value) {
     return *this;
 }
 
+bool asn1_enum::have_constraints() const { return true; }
+
+bool asn1_enum::evaluate(const std::string& name) { return _enum.count(name) > 0; }
+
 asn1_enum& asn1_enum::operator<<(const std::initializer_list<std::pair<std::string, int>>& items) { return add(items); }
 
 asn1_enum& asn1_enum::add(const std::initializer_list<std::pair<std::string, int>>& items) {
     for (const auto& item : items) {
-        _enum.emplace(item.first, item.second);
-        _reverse.emplace(item.second, item.first);
+        add(item.first, item.second);
     }
     return *this;
 }

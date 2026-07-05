@@ -49,7 +49,13 @@ void asn1_container_of::represent(uint32 depth, stream_t* s, asn1_value* value) 
         if (false == get_name().empty()) {
             s->printf("%s ", get_name().c_str());
         }
-        s->printf("%s OF ", asn1_resource::get_instance()->get_entity_name(get_ident(), entity).c_str());
+        s->printf("%s", asn1_resource::get_instance()->get_entity_name(get_ident(), entity).c_str());
+
+        if (false == get_constraints().empty()) {
+            get_constraints().represent(s, this, value);
+        }
+
+        s->printf(" OF ");
 
         get_object()->represent(depth + 1, s, value);
     }

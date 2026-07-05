@@ -35,10 +35,12 @@
     * CBOR
 
 * details
+  * Revision 1044
+    * ASN.1 constraints (FROM, SEQUENCE OF, SET OF, ENUMERATED, OCTET STRING, BIT STRING)
   * Revision 1043
     * [tested] application verifier, sanitizer
   * Revision 1042
-    * ASN.1 constraints
+    * ASN.1 constraints (UNION, INTERSECT, EXCEPT, ALL EXCEPT, single value, size, range)
   * Revision 1040
     * set runtime for constraints
   * Revision 1039
@@ -77,7 +79,7 @@
   * Revision 1004
     * refactoring base16, base64
   * Revision 999
-    * SLHDSA
+    * [Use of SLH-DSA in TLS 1.3](https://www.ietf.org/archive/id/draft-reddy-tls-slhdsa-02.txt)
   * Revision 998
     * [tested] ML-DSA for JOSE and COSE
   * Revision 994

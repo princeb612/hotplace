@@ -35,6 +35,7 @@ class string_set {
     void insert(const std::string& value);
     void erase(const std::string& value);
     bool contains(const std::string& value);
+    bool match(const std::string& value);
 
     void union_with(const string_set& other);
     void erase_from(const string_set& other);
@@ -52,6 +53,7 @@ class string_set {
     string_set& intersect(const string_set& other);
     bool has(const std::string& value);
     bool has(const string_set& other);
+    bool find(const std::string& value);
 
    private:
     bool _invert;

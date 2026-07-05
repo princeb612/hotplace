@@ -116,14 +116,8 @@ class asn1_object {
 
     asn1_constraints& get_constraints();
     const asn1_constraints& get_constraints() const;
+    virtual bool have_constraints() const;
     bool validate(asn1_value* value);
-
-    static asn1_object* build(asn1_object* object, std::function<void(asn1_object*)> f = nullptr) {
-        if (object && f) {
-            f(object);
-        }
-        return object;
-    }
 
    protected:
     asn1_object(asn1_entity_t entity, const std::string& name = "", asn1_object* object = nullptr, asn1_tag* tag = nullptr);
@@ -137,6 +131,7 @@ class asn1_object {
     virtual void accept(asn1_visitor* v);
     virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
     virtual bool represent(uint32 depth, binary_t* b, asn1_value* value = nullptr, uint16 flags = 0);
+    bool validate_node(asn1_object* node, asn1_value* value);
 
     virtual void debug_print(uint32 depth);
     virtual void debug_print(uint32 depth, const std::string& name);

@@ -38,6 +38,8 @@ void string_set::erase(const std::string& value) { subtract(value); }
 
 bool string_set::contains(const std::string& value) { return has(value); }
 
+bool string_set::match(const std::string& value) { return find(value); }
+
 void string_set::union_with(const string_set& other) {
     // see t_range_set
     uint8 lhs_inverted = is_inverted() ? 1 : 0;
@@ -162,6 +164,15 @@ bool string_set::has(const string_set& other) {
     }
 
     return true;
+}
+
+/* ASN.1 FROM */
+bool string_set::find(const std::string& value) {
+    for (const auto& item : _set) {
+        auto pos = item.find_first_of(value);
+        if (std::string::npos != pos) return true;
+    }
+    return false;
 }
 
 }  // namespace hotplace

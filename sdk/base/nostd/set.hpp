@@ -79,6 +79,11 @@ class t_set_runtime {
     }
     bool contains(const decayed_t& value) { return _target->contains(value); }
     template <typename U = decayed_t>
+    typename std::enable_if<std::is_same<U, std::string>::value, bool>::type match(const decayed_t& value) {
+        return _target->match(value);
+    }
+
+    template <typename U = decayed_t>
     typename std::enable_if<std::is_arithmetic<U>::value, bool>::type contains(const t_range_value<U>& value) {
         return _target->contains(value);
     }

@@ -56,10 +56,12 @@ bool asn1_constraints::empty() const { return _constraints.empty(); }
 void asn1_constraints::represent(stream_t* s, asn1_object* object, asn1_value* value) {
     if (false == _constraints.empty()) {
         for (auto& item : _constraints) {
-            s->printf(" (");
+            bool parenthesis = (false == is_kind_of_container_of(object));
+            s->printf(" ");
+            if (parenthesis) s->printf("(");
             asn1_constraint_notation_visitor visitor(s, object);
             item->accept(&visitor);
-            s->printf(")");
+            if (parenthesis) s->printf(")");
         }
     }
 }
@@ -71,11 +73,11 @@ bool asn1_constraints::validate(asn1_object* node, asn1_value* value) {
         for (auto item : _constraints) {
             bool test = false;
             auto entity = item->get_entity();
-            if (is_kind_of_integer(node)) {
+            if (is_kind_of_integer(node) || is_kind_of_container_of(node)) {
                 test = do_validate<int64>(item, node, value);
             } else if (is_kind_of_real(node)) {
                 test = do_validate<double>(item, node, value);
-            } else if (is_kind_of_cstring(node)) {
+            } else if (is_kind_of_cstring(node) || is_kind_of_bstring(node)) {
                 switch (entity) {
                     case asn1_entity_constraint_size:
                         test = do_validate<int64>(item, node, value);
@@ -87,11 +89,13 @@ bool asn1_constraints::validate(asn1_object* node, asn1_value* value) {
             }
             if (false == test) return false;
         }
+    } else if (is_kind_of(node, asn1_entity_enum)) {
+        return do_validate<std::string>(nullptr, node, value);
     }
     return true;
 }
 
-void asn1_constraints::set_owner(asn1_object* object) { _owner = object;}
+void asn1_constraints::set_owner(asn1_object* object) { _owner = object; }
 
 asn1_object* asn1_constraints::get_owner() const { return _owner; }
 

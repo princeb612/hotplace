@@ -228,8 +228,26 @@ template <typename T> class asn1_constraint_single_value;
 template <typename T> class asn1_constraint_size;
 // clang-format on
 
+using asn1_constraint_except_f = asn1_constraint_except<double>;
+using asn1_constraint_range_f = asn1_constraint_range<double>;
+using asn1_constraint_size_f = asn1_constraint_size<double>;
+using asn1_constraint_single_value_f = asn1_constraint_single_value<double>;
+using asn1_constraint_union_f = asn1_constraint_union<double>;
+using asn1_constraint_all_except_i = asn1_constraint_all_except<int64>;
+using asn1_constraint_except_i = asn1_constraint_except<int64>;
+using asn1_constraint_intersection_i = asn1_constraint_intersection<int64>;
+using asn1_constraint_range_i = asn1_constraint_range<int64>;
+using asn1_constraint_size_i = asn1_constraint_size<int64>;
+using asn1_constraint_single_value_i = asn1_constraint_single_value<int64>;
+using asn1_constraint_union_i = asn1_constraint_union<int64>;
+using asn1_constraint_from_s = asn1_constraint_from<std::string>;
+using asn1_constraint_single_value_s = asn1_constraint_single_value<std::string>;
+using asn1_constraint_union_s = asn1_constraint_union<std::string>;
+
 asn1_entity_t get_entity(asn1_object* object, bool component = false);
 std::string nameof(asn1_object* object);
+
+bool is_kind_of(asn1_object* object, asn1_entity_t entity);
 
 bool is_kind_of_integer(asn1_object* object);
 bool is_kind_of_real(asn1_object* object);
@@ -244,6 +262,8 @@ bool is_kind_of_cstring(asn1_entity_t entity);
 bool is_kind_of_bstring(asn1_entity_t entity);
 bool is_kind_of_container(asn1_entity_t entity);
 bool is_kind_of_container_of(asn1_entity_t entity);
+
+bool evaluate(asn1_object* obj, const std::string& value);
 
 }  // namespace io
 }  // namespace hotplace

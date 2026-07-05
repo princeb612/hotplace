@@ -43,6 +43,8 @@ class asn1_container : public asn1_type {
     asn1_container& operator<<(asn1_object* other);
     asn1_container& add(asn1_object* other);
 
+    bool for_each(std::function<bool(asn1_object*)>);
+
    protected:
     asn1_container(asn1_entity_t entity, const std::string& name, asn1_object* object);
     asn1_container(asn1_entity_t entity, const std::string& name, const std::initializer_list<std::pair<std::string, asn1_entity_t>>& items);

@@ -35,28 +35,9 @@ class asn1_constraint_from : public asn1_constraint<T> {
     }
     virtual ~asn1_constraint_from() = default;
 
-    asn1_constraint_from* clone() {
-        auto entity = asn1_constraint<T>::get_entity();
-        switch (entity) {
-            // TODO
-            case asn1_entity_printstring:
-            case asn1_entity_teletexstring:
-            case asn1_entity_videotexstring:
-            case asn1_entity_ia5string:
-            case asn1_entity_graphicstring:
-            case asn1_entity_visiblestring:
-            case asn1_entity_generalstring:
-            case asn1_entity_universalstring:
-            case asn1_entity_cstring:
-                return true;
-                break;
-            default:
-                return false;
-                break;
-        }
-    }
+    asn1_constraint_from* clone() { return new asn1_constraint_from(*this); }
 
-    virtual bool is_applicable(asn1_entity_t entity);
+    virtual bool is_applicable(asn1_entity_t entity) { return is_kind_of_cstring(entity); }
 
     virtual void addref() {
         asn1_constraint<T>::addref();
@@ -68,7 +49,7 @@ class asn1_constraint_from : public asn1_constraint<T> {
     }
 
    protected:
-    asn1_constraint_from() : asn1_constraint<T>(asn1_entity_constraint_size), _cons(nullptr) {}
+    asn1_constraint_from() : asn1_constraint<T>(asn1_entity_constraint_from), _cons(nullptr) {}
     asn1_constraint_from(const asn1_constraint_from& other) : asn1_constraint_from() { *this = other; }
     asn1_constraint_from(asn1_constraint_from&& other) : asn1_constraint_from() { *this = std::move(other); }
     asn1_constraint_from& operator=(const asn1_constraint_from& other) {
@@ -88,6 +69,18 @@ class asn1_constraint_from : public asn1_constraint<T> {
         return *this;
     }
 
+    virtual void accept(asn1_constraint_evaluator<T>* v) {
+        if (_cons) {
+            asn1_constraint_evaluator<T> visitor;
+            _cons->accept(&visitor);
+
+            auto& result = visitor.get_result_set();
+            auto& rs = v->get_result_set();
+            rs = std::move(result);
+        } else {
+            // throw
+        }
+    }
     virtual void represent(stream_t* s, asn1_object* object, asn1_value* value = nullptr) {
         if (_cons) {
             s->printf("FROM (");

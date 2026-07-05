@@ -46,6 +46,8 @@ class asn1_enum : public asn1_type {
     asn1_enum& add(const std::initializer_list<std::pair<std::string, int>>& items);
 
     virtual asn1_entity_t get_component_entity() const;
+    virtual bool have_constraints() const;
+    bool evaluate(const std::string& name);
 
    protected:
     virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);

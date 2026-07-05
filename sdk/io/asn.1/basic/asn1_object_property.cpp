@@ -11,6 +11,7 @@
  *
  */
 
+#include <hotplace/sdk/io/asn.1/basic/asn1_enum.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
 
 namespace hotplace {
@@ -29,6 +30,17 @@ std::string nameof(asn1_object* object) {
         return object->resolve_name();
     else
         return "";
+}
+
+bool is_kind_of(asn1_object* object, asn1_entity_t entity) {
+    if (nullptr == object)
+        return false;
+    else if (entity == get_entity(object))
+        return true;
+    else if (entity == get_entity(object, true))
+        return true;
+    else
+        return false;
 }
 
 bool is_kind_of_integer(asn1_object* object) {
@@ -127,6 +139,12 @@ bool is_kind_of_container_of(asn1_entity_t entity) {
         default:
             return false;
     }
+}
+
+bool evaluate(asn1_object* obj, const std::string& value) {
+    if (nullptr == obj) return false;
+    asn1_enum* en = dynamic_cast<asn1_enum*>(obj);
+    return en ? en->evaluate(value) : false;
 }
 
 }  // namespace io

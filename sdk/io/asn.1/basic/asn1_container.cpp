@@ -108,6 +108,16 @@ asn1_container& asn1_container::add(asn1_object* other) {
     return *this;
 }
 
+bool asn1_container::for_each(std::function<bool(asn1_object*)> f) {
+    if (f) {
+        for (const auto& item : _list) {
+            auto test = f(item);
+            if (false == test) return false;
+        }
+    }
+    return true;
+}
+
 void asn1_container::represent(uint32 depth, stream_t* s, asn1_value* value) {
     if (s) {
         auto entity = get_entity();
