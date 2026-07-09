@@ -82,7 +82,7 @@ bool asn1_container_of::represent(uint32 depth, binary_t* b, asn1_value* value, 
     }
 
     if (false == is_suppressed()) {
-        asn1_encode::t_asn1_length_octets<size_t>(*b, b->size() - pos, pos);
+        asn1_encode::write_length_octets<size_t>(*b, b->size() - pos, pos);
     }
 
     return true;

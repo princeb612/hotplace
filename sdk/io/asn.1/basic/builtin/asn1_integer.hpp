@@ -45,23 +45,23 @@ class asn1_integer : public asn1_builtin_type {
     asn1_integer();
     asn1_integer(const std::string& name);
     // INTEGER "{" NamedNumberList "}"
-    asn1_integer(const std::initializer_list<std::pair<std::string, int>>& items);
-    asn1_integer(const std::string& name, const std::initializer_list<std::pair<std::string, int>>& items);
+    asn1_integer(const std::initializer_list<std::pair<std::string, asn1_native_int_t>>& items);
+    asn1_integer(const std::string& name, const std::initializer_list<std::pair<std::string, asn1_native_int_t>>& items);
     virtual ~asn1_integer();
 
     virtual asn1_integer* clone();
     virtual asn1_integer* addref();
 
-    asn1_integer& operator<<(const std::initializer_list<std::pair<std::string, int>>& items);
-    asn1_integer& add(const std::initializer_list<std::pair<std::string, int>>& items);
+    asn1_integer& operator<<(const std::initializer_list<std::pair<std::string, asn1_native_int_t>>& items);
+    asn1_integer& add(const std::initializer_list<std::pair<std::string, asn1_native_int_t>>& items);
 
    protected:
     virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
     virtual bool represent(uint32 depth, binary_t* b, asn1_value* value = nullptr, uint16 flags = 0);
 
    private:
-    std::map<std::string, int> _nnl;
-    std::map<int, std::string> _reverse;
+    std::map<std::string, asn1_native_int_t> _nnl;
+    std::map<asn1_native_int_t, std::string> _reverse;
 };
 
 }  // namespace io

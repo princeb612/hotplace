@@ -15,7 +15,7 @@
 #include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_value.hpp>
-#include <hotplace/sdk/io/asn.1/basic/detail/asn1_bitstring.hpp>
+#include <hotplace/sdk/io/asn.1/basic/builtin/asn1_bitstring.hpp>
 
 namespace hotplace {
 namespace io {
@@ -24,9 +24,10 @@ asn1_bitstring::asn1_bitstring() : asn1_bitstring("") {}
 
 asn1_bitstring::asn1_bitstring(const std::string& name) : asn1_builtin_type("", asn1_entity_bitstring) {}
 
-asn1_bitstring::asn1_bitstring(const std::initializer_list<std::pair<std::string, int>> items) : asn1_bitstring("", items) {}
+asn1_bitstring::asn1_bitstring(const std::initializer_list<std::pair<std::string, asn1_native_int_t>> items) : asn1_bitstring("", items) {}
 
-asn1_bitstring::asn1_bitstring(const std::string& name, const std::initializer_list<std::pair<std::string, int>> items) : asn1_builtin_type("", asn1_entity_bitstring) {
+asn1_bitstring::asn1_bitstring(const std::string& name, const std::initializer_list<std::pair<std::string, asn1_native_int_t>> items)
+    : asn1_builtin_type("", asn1_entity_bitstring) {
     add(items);
 }
 
@@ -39,9 +40,9 @@ asn1_bitstring* asn1_bitstring::addref() {
     return this;
 }
 
-asn1_bitstring& asn1_bitstring::operator<<(const std::initializer_list<std::pair<std::string, int>> items) { return add(items); }
+asn1_bitstring& asn1_bitstring::operator<<(const std::initializer_list<std::pair<std::string, asn1_native_int_t>> items) { return add(items); }
 
-asn1_bitstring& asn1_bitstring::add(const std::initializer_list<std::pair<std::string, int>> items) {
+asn1_bitstring& asn1_bitstring::add(const std::initializer_list<std::pair<std::string, asn1_native_int_t>> items) {
     for (const auto& item : items) {
         _nbl.emplace(item.first, item.second);
         _reverse.emplace(item.second, item.first);
@@ -86,7 +87,7 @@ bool asn1_bitstring::represent(uint32 depth, binary_t* b, asn1_value* value, uin
             test = value->encode_namedlist(*b, this, name, _nbl);
         }
         if (true == do_len) {
-            asn1_encode::t_asn1_length_octets<size_t>(*b, b->size() - pos, pos);
+            asn1_encode::write_length_octets<size_t>(*b, b->size() - pos, pos);
         }
 
         if (false == test) {

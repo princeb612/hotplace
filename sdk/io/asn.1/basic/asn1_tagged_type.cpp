@@ -88,7 +88,7 @@ bool asn1_tagged_type::represent(uint32 depth, binary_t* b, asn1_value* value, u
     ret = obj->represent(depth + 1, b, value, flags);
 
     if (false == is_suppressed()) {
-        asn1_encode::t_asn1_length_octets<size_t>(*b, b->size() - pos, pos);
+        asn1_encode::write_length_octets<size_t>(*b, b->size() - pos, pos);
     }
 
     if ((asn1_visitor_choice == flags) && (false == ret)) {

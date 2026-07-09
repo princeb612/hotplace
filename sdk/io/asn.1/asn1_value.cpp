@@ -128,7 +128,9 @@ void asn1_value::encode_value(binary_t& bin, asn1_object* object, const std::str
         const variant& v = iter->second;
         enc.encode_value(bin, entity, v, do_len);
     } else {
-        if (object->is_default()) {
+        if (asn1_entity_null == entity) {
+            enc.encode_value(bin, entity, variant(), do_len);
+        } else if (object->is_default()) {
             const auto& v = object->get_default_value();
             enc.encode_value(bin, entity, v, do_len);
         }
@@ -151,8 +153,8 @@ void asn1_value::encode_sequenceof_value(binary_t& bin, asn1_object* object, con
 
         asn1_encode::write_ident_octets2(bin, object);  // T
         auto pos = bin.size();
-        enc.encode_value(bin, entity, v, do_len);                               // V
-        asn1_encode::t_asn1_length_octets<size_t>(bin, bin.size() - pos, pos);  // insert L between T and V
+        enc.encode_value(bin, entity, v, do_len);                              // V
+        asn1_encode::write_length_octets<size_t>(bin, bin.size() - pos, pos);  // insert L between T and V
     }
 }
 
@@ -175,8 +177,8 @@ void asn1_value::encode_setof_value(binary_t& bin, asn1_object* object, const st
 
         asn1_encode::write_ident_octets2(b, object);  // T
         auto pos = b.size();
-        enc.encode_value(b, entity, v, do_len);                             // V
-        asn1_encode::t_asn1_length_octets<size_t>(b, b.size() - pos, pos);  // insert L between T and V
+        enc.encode_value(b, entity, v, do_len);                            // V
+        asn1_encode::write_length_octets<size_t>(b, b.size() - pos, pos);  // insert L between T and V
 
         ordered.insert(std::move(b));
     }
@@ -186,12 +188,12 @@ void asn1_value::encode_setof_value(binary_t& bin, asn1_object* object, const st
     }
 }
 
-bool asn1_value::encode_namedlist(binary_t& bin, asn1_object* object, const std::string& name, const std::map<std::string, int>& namedlist) {
+bool asn1_value::encode_namedlist(binary_t& bin, asn1_object* object, const std::string& name, const std::map<std::string, asn1_native_int_t>& namedlist) {
     if (nullptr == object) return false;
 
     auto entity = object->get_entity();
 
-    auto lambda_enum2eval = [&](const std::string& ename, int& evalue) -> bool {
+    auto lambda_enum2eval = [&](const std::string& ename, asn1_native_int_t& evalue) -> bool {
         evalue = 0;
         bool ret = false;
         auto iter = namedlist.find(ename);
@@ -218,10 +220,10 @@ bool asn1_value::encode_namedlist(binary_t& bin, asn1_object* object, const std:
     switch (entity) {
         case asn1_entity_bitstring: {
             std::list<std::string> values;
-            std::set<int> evalues;
+            std::set<asn1_native_int_t> evalues;
             find(name, values, vtflags);
             for (const auto& item : values) {
-                int evalue = 0;
+                asn1_native_int_t evalue = 0;
                 auto check = lambda_enum2eval(item, evalue);
                 if (check & (evalue >= 0)) {
                     evalues.insert(evalue);
@@ -229,8 +231,8 @@ bool asn1_value::encode_namedlist(binary_t& bin, asn1_object* object, const std:
             }
             if (false == evalues.empty()) {
                 // std::bit_set
-                int minvalue = *evalues.begin();
-                int maxvalue = *evalues.rbegin();
+                asn1_native_int_t minvalue = *evalues.begin();
+                asn1_native_int_t maxvalue = *evalues.rbegin();
                 bit_set bs(minvalue, maxvalue);
                 for (const auto& item : evalues) {
                     bs.add(item);
@@ -249,18 +251,18 @@ bool asn1_value::encode_namedlist(binary_t& bin, asn1_object* object, const std:
             if (test && (values.size() == 1)) {
                 const auto& v = *values.begin();
                 auto flag = v.flag();
-                int evalue = 0;
+                asn1_native_int_t evalue = 0;
                 asn1_encode enc;
                 if (vt_flag_string & flag) {
                     std::string key;
                     v.to_string(key);
                     auto test = lambda_enum2eval(key, evalue);
                     if (test) {
-                        enc.t_asn1_integer_value(bin, evalue);
+                        enc.write_integer_value(bin, evalue);
                     }
                 } else if (vt_flag_int & flag) {
-                    evalue = v.t_toi<int>();
-                    enc.t_asn1_integer_value(bin, evalue);
+                    evalue = v.t_toi<asn1_native_int_t>();
+                    enc.write_integer_value(bin, evalue);
                 } else {
                     return false;
                 }

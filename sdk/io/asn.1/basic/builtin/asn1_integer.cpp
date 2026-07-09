@@ -15,7 +15,7 @@
 #include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_value.hpp>
-#include <hotplace/sdk/io/asn.1/basic/detail/asn1_integer.hpp>
+#include <hotplace/sdk/io/asn.1/basic/builtin/asn1_integer.hpp>
 
 namespace hotplace {
 namespace io {
@@ -24,9 +24,10 @@ asn1_integer::asn1_integer() : asn1_integer("") {}
 
 asn1_integer::asn1_integer(const std::string& name) : asn1_builtin_type(name, asn1_entity_integer) {}
 
-asn1_integer::asn1_integer(const std::initializer_list<std::pair<std::string, int>>& items) : asn1_integer("", items) {}
+asn1_integer::asn1_integer(const std::initializer_list<std::pair<std::string, asn1_native_int_t>>& items) : asn1_integer("", items) {}
 
-asn1_integer::asn1_integer(const std::string& name, const std::initializer_list<std::pair<std::string, int>>& items) : asn1_builtin_type("", asn1_entity_integer) {
+asn1_integer::asn1_integer(const std::string& name, const std::initializer_list<std::pair<std::string, asn1_native_int_t>>& items)
+    : asn1_builtin_type("", asn1_entity_integer) {
     add(items);
 }
 
@@ -39,9 +40,9 @@ asn1_integer* asn1_integer::addref() {
     return this;
 }
 
-asn1_integer& asn1_integer::operator<<(const std::initializer_list<std::pair<std::string, int>>& items) { return add(items); }
+asn1_integer& asn1_integer::operator<<(const std::initializer_list<std::pair<std::string, asn1_native_int_t>>& items) { return add(items); }
 
-asn1_integer& asn1_integer::add(const std::initializer_list<std::pair<std::string, int>>& items) {
+asn1_integer& asn1_integer::add(const std::initializer_list<std::pair<std::string, asn1_native_int_t>>& items) {
     for (const auto& item : items) {
         _nnl.emplace(item.first, item.second);
         _reverse.emplace(item.second, item.first);
@@ -79,7 +80,7 @@ bool asn1_integer::represent(uint32 depth, binary_t* b, asn1_value* value, uint1
         asn1_encode::write_ident_octets2(*b, this);
         auto pos = b->size();
         auto test = value->encode_namedlist(*b, this, name, _nnl);
-        asn1_encode::t_asn1_length_octets<size_t>(*b, b->size() - pos, pos);
+        asn1_encode::write_length_octets<size_t>(*b, b->size() - pos, pos);
 
         if (false == test) {
             b->resize(snapshot);  // rollback

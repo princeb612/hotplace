@@ -202,14 +202,16 @@ void test_testvector_constraints() {
             new asn1_enum({{"red", 0}, {"green", 1}, {"blue", 2}}));
     auto cons_nested = asn1_referenced_type::define("Person",
             new asn1_sequence({
-                asn1_builtin_type::build("age", asn1_entity_integer, [&](asn1_builtin_type* builtin) -> void {
-                    builtin->get_constraints().add(
-                        new asn1_constraint_range_i(0, 120));
+                asn1_builtin_type::build("age", asn1_entity_integer,
+                        [&](asn1_builtin_type* builtin) -> void {
+                            builtin->get_constraints().add(
+                                new asn1_constraint_range_i(0, 120));
                 }),
-                asn1_builtin_type::build("name", asn1_entity_utf8string, [&](asn1_builtin_type* builtin) -> void {
-                    builtin->get_constraints().add(
-                        new asn1_constraint_size_i(
-                            new asn1_constraint_range_i(1, 20)));
+                asn1_builtin_type::build("name", asn1_entity_utf8string,
+                        [&](asn1_builtin_type* builtin) -> void {
+                            builtin->get_constraints().add(
+                                new asn1_constraint_size_i(
+                                    new asn1_constraint_range_i(1, 20)));
                 })
             }));
     // clang-format on

@@ -37,7 +37,7 @@ bignumber::bignumber(bignumber&& other) : _sign(1) {
 
 bignumber::bignumber(const variant_t& vt) { set(vt); }
 
-bignumber::bignumber(const byte_t* p, size_t n) { set(p, n); }
+bignumber::bignumber(const byte_t* p, size_t n, bool isunsigned) { set(p, n, isunsigned); }
 
 bignumber::bignumber(const binary_t& base16hexstream) { sethex(base16hexstream); }
 
@@ -215,10 +215,10 @@ bignumber& bignumber::set(const variant_t& vt) {
     return *this;
 }
 
-bignumber& bignumber::set(const byte_t* p, size_t n) {
+bignumber& bignumber::set(const byte_t* p, size_t n, bool isunsigned) {
     _sign = 1;
     _v.clear();
-    if (p) {
+    if (p && n) {
         binary_t bin;
         bin.insert(bin.end(), p, p + n);
 
@@ -235,6 +235,22 @@ bignumber& bignumber::set(const byte_t* p, size_t n) {
             _v.insert(_v.begin(), t);
             bin.erase(bin.begin(), bin.begin() + 4);
         }
+
+        if (false == isunsigned) {
+            // int8  00....7f   (0..127),   ff....80   (-1..-128)
+            // int16 0000..7fff (0..32767), ffff..8000 (-1..-32768)
+            if (p[0] > 0x7f) {
+                binary_t bin_adjust;
+                bin_adjust.reserve(n + 1);
+                bin_adjust.resize(n, 00);
+                bin_adjust.insert(bin_adjust.begin(), 0x1);
+
+                bignumber bn_adjust(bin_adjust);
+                *this = std::move(bn_adjust - *this);
+                (*this).neg();  // set the minus sign
+            }
+        }
+
         trim();
     }
     return *this;
@@ -642,6 +658,17 @@ bignumber bignumber::pow(bignumber base, bignumber exp) {
     return res;
 }
 
+const bignumber& bignumber::pow2(size_t n) {
+    static std::vector<bignumber> cache = {bignumber(1)};
+
+    if (n >= cache.size()) {
+        for (size_t i = cache.size(); i <= n; ++i) {
+            cache.push_back(cache.back() << 1);
+        }
+    }
+    return cache[n];
+}
+
 const bignumber& bignumber::pow10(size_t n) {
     static std::vector<bignumber> cache = {bignumber(1)};
 
@@ -653,26 +680,38 @@ const bignumber& bignumber::pow10(size_t n) {
     return cache[n];
 }
 
+bool bignumber::ispow2(const bignumber& bn) {
+    // 0001, 0010, 0100, 1000
+    // 0001 0000, 0010 0000, 0100 0000, 1000 0000
+    return (bn > 0) && ((bn & (bn - 1)) == 0);
+}
+
 int bignumber::compare(const bignumber& lhs, const bignumber& rhs) {
-    if (lhs._sign != rhs._sign) {
-        return lhs._sign < rhs._sign ? -1 : 1;
+    auto a = lhs;
+    auto b = rhs;
+
+    a.trim();
+    b.trim();
+
+    if (a._sign != b._sign) {
+        return a._sign < b._sign ? -1 : 1;
     }
 
-    if (lhs._v.size() != rhs._v.size()) {
-        if (lhs._sign == 1) {
-            return lhs._v.size() < rhs._v.size() ? -1 : 1;
+    if (a._v.size() != b._v.size()) {
+        if (a._sign == 1) {
+            return a._v.size() < b._v.size() ? -1 : 1;
         } else {
-            return lhs._v.size() < rhs._v.size() ? 1 : -1;
+            return a._v.size() < b._v.size() ? 1 : -1;
         }
     }
 
-    for (size_t i = lhs._v.size(); i > 0; --i) {
+    for (size_t i = a._v.size(); i > 0; --i) {
         size_t idx = i - 1;
-        if (lhs._v[idx] != rhs._v[idx]) {
-            if (lhs._sign == 1) {
-                return lhs._v[idx] < rhs._v[idx] ? -1 : 1;
+        if (a._v[idx] != b._v[idx]) {
+            if (a._sign == 1) {
+                return a._v[idx] < b._v[idx] ? -1 : 1;
             } else {
-                return lhs._v[idx] < rhs._v[idx] ? 1 : -1;
+                return a._v[idx] < b._v[idx] ? 1 : -1;
             }
         }
     }

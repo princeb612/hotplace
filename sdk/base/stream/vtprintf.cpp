@@ -39,6 +39,11 @@ void as_asn1_real(T value, stream_t* s) {
 
     if (value == 0.0) {
         // also -0.0
+        int sign = 0;
+        int e = 0;
+        T m = T{};
+        ieee754_exp(value, &sign, &e, &m);
+        if (sign) s->printf("-");
         s->printf("0.0");
         return;
     }

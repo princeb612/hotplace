@@ -62,6 +62,7 @@
 
 /* asn.1 */
 #include <hotplace/sdk/io/asn.1/asn1.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_builder.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_value.hpp>
@@ -88,9 +89,9 @@
 #include <hotplace/sdk/io/asn.1/basic/asn1_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_visitor.hpp>
 
-/* asn.1/basic/detail */
-#include <hotplace/sdk/io/asn.1/basic/detail/asn1_bitstring.hpp>
-#include <hotplace/sdk/io/asn.1/basic/detail/asn1_integer.hpp>
+/* asn.1/basic/builtin */
+#include <hotplace/sdk/io/asn.1/basic/builtin/asn1_bitstring.hpp>
+#include <hotplace/sdk/io/asn.1/basic/builtin/asn1_integer.hpp>
 
 /* asn.1/constraints */
 #include <hotplace/sdk/io/asn.1/constraints/asn1_constraint.hpp>

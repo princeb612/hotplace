@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   testcase_gpt.cpp
+ * @file   testcase_basic2.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -511,4 +511,4 @@ void test_testvector_chatgpt() {
     }
 }
 
-void testcase_gpt() { test_testvector_chatgpt(); }
+void testcase_basic2() { test_testvector_chatgpt(); }

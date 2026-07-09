@@ -142,7 +142,7 @@ class bignumber {
     /**
      * @brief   big-endian byte order stream
      */
-    bignumber(const byte_t* p, size_t n);
+    bignumber(const byte_t* p, size_t n, bool isunsigned = true);
     /**
      * @brief   base16 hex-stream
      */
@@ -321,7 +321,7 @@ class bignumber {
     //     bignumber& setu(uint64 value);
     // #endif
     bignumber& set(const variant_t& vt);
-    bignumber& set(const byte_t* p, size_t n);
+    bignumber& set(const byte_t* p, size_t n, bool isunsigned = true);
     bignumber& sethex(const binary_t& base16hexstream);
     bignumber& setstring(const char* value);
     bignumber& setstring(const std::string& value);
@@ -355,7 +355,12 @@ class bignumber {
      * @brief pow 2^100=1267650600228229401496703205376
      */
     static bignumber pow(bignumber base, bignumber exp);
+    /* 2^n */
+    static const bignumber& pow2(size_t n);
+    /* 10^n */
     static const bignumber& pow10(size_t n);
+    /* is 2^n */
+    static bool ispow2(const bignumber& bn);
 
     bignumber& add(const bignumber& other);
     bignumber& sub(const bignumber& other);

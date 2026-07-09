@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   testcase_asn1.cpp
+ * @file   testcase_basic1.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -102,11 +102,12 @@ void test_x690_8_1_2_identifier_octects() {
 
         uint8 ident = 0;
         uint64 tag = 0;
+        size_t pos = 0;
         binary_t bin_expect = base16_decode_rfc(item.der);
         if (item.ispositive) {
             binary_t bin;
 
-            // encode
+            // encode identifier octets
             asn1_encode::write_ident_octets(bin, item.ident, item.tag);
             _test_case.assert(bin == bin_expect, __FUNCTION__, R"(encode DER %s expect "%s")", base16_encode(bin).c_str(), item.der);
 
@@ -129,12 +130,12 @@ void test_x690_8_1_2_identifier_octects() {
                 schema->release();
             }
 
-            // decode
-            asn1_encode::read_asn1_ident_octets(bin.data(), bin.size(), ident, tag);
+            // decode identifier octets
+            asn1_encode::read_ident_octets(bin.data(), bin.size(), pos, ident, tag);
             _test_case.assert((ident == item.ident) && (tag == item.tag), __FUNCTION__, "read identifier %02x tag %I64u", ident, tag);
         } else {
             // invalid test vector (check bad_data)
-            auto ret = asn1_encode::read_asn1_ident_octets(bin_expect.data(), bin_expect.size(), ident, tag);
+            auto ret = asn1_encode::read_ident_octets(bin_expect.data(), bin_expect.size(), pos, ident, tag);
             _test_case.assert(ret == errorcode_t::bad_data, __FUNCTION__, "invalid test vector %s", item.der);
         }
     }
@@ -145,7 +146,7 @@ void test_x690_8_1_3_length_octets() {
     _test_case.begin("ITU-T X.690 8.1.3");
     struct testvector {
         uint64 i;
-        const char* expect;
+        const char* der;
     } _table[] = {
         // short form
         {0, "00"},
@@ -191,56 +192,65 @@ void test_x690_8_1_3_length_octets() {
         //    00 00
         // 00 00
     };
-    // DER invalid cases
-    // 127 "81 7f"
-    // 1   "81 01"
-    // 0   "81 00"
-    // 128 "82 00 80"
-    // 256 "83 00 01 00"
-    // "81" long form, no length octet
-    // "82 01"    2 bytes required, 1 byte exist
-    // "83 01 00" 3 ...
-    // "ff"       X.690 reserved
 
     for (auto entry : _table) {
+        // encode length octets
         binary_t bin;
-        asn1_encode::t_asn1_length_octets<uint64>(bin, entry.i);
+        asn1_encode::write_length_octets<uint64>(bin, entry.i);
 
         {
             test_case_notimecheck notimecheck(_test_case);
 
             _logger->writeln("%I64u -> %s", entry.i, base16_encode(bin).c_str());
-            bool test = (bin == base16_decode_rfc(entry.expect));
-            _test_case.assert(test, __FUNCTION__, "X.690 8.1.3 length octets [%I64u] expect [%s]", entry.i, entry.expect);
+            bool test = (bin == base16_decode_rfc(entry.der));
+            _test_case.assert(test, __FUNCTION__, "X.690 8.1.3 length octets [%I64u] der [%s]", entry.i, entry.der);
         }
+
+        // decode length octets
+        uint64 len = 0;
+        size_t pos = 0;
+        auto ret = asn1_encode::read_length_octets(bin.data(), bin.size(), pos, len);
+        _test_case.assert((errorcode_t::success == ret) && (entry.i == len), __FUNCTION__, "read_length_octets %I64u", len);
+    }
+
+    // DER invalid cases
+    testvector _badtable[] = {
+        {127, "81 7f"},        // 7f
+        {1, "81 01"},          // 01
+        {0, "81 00"},          // 00
+        {128, "82 00 80"},     // 81 80
+        {256, "83 00 01 00"},  // 82 01 00
+        {1, "81"},             // long form, no length octet
+        {1, "82 01"},          // 2 bytes required, 1 byte exist
+        {1, "83 01 00"},       // 3 ...
+        {1, "ff"},             // X.690 reserved
+    };
+
+    for (auto entry : _badtable) {
+        binary_t bin = base16_decode_rfc(entry.der);
+        uint64 len = 0;
+        size_t pos = 0;
+        auto ret = asn1_encode::read_length_octets(bin.data(), bin.size(), pos, len);
+        _test_case.ntest(ret, __FUNCTION__, "invalid case %s", entry.der);
     }
 }
 
 // X.690 8.1.5 end-of-contents octets
-void test_x690_8_1_5_end_of_contents() {
-    _test_case.begin("ITU-T X.690");
-    asn1_encode enc;
-    binary_t bin;
-    enc.end_contents(bin);
-    {
-        test_case_notimecheck notimecheck(_test_case);
-        _logger->writeln("end of contents -> %s", base16_encode(bin).c_str());
-        _test_case.assert(bin == base16_decode("0000"), __FUNCTION__, "X.690 8.1.5 end-of-contents octets");
-    }
-}
+
+// X.690 8
 
 void test_x690_encoding_value() {
     _test_case.begin("ITU-T X.690 8.2, 8.3, 8.5, 8.8");
+
     struct testvector {
         asn1_entity_t entity;
-        variant var;
-        const char* expect;
+        variant value;
         const char* text;
-        int debug;
+        const char* der;
     } _table[] = {
-        {asn1_entity_null, variant(), "05 00", "X.690 8.8"},
-        {asn1_entity_boolean, variant(true), "0101ff", "X.690 8.2"},
-        {asn1_entity_boolean, variant(false), "010100", "X.690 8.2"},
+        {asn1_entity_null, variant(), "NULL", "05 00"},
+        {asn1_entity_boolean, variant(true), "TRUE", "0101ff"},
+        {asn1_entity_boolean, variant(false), "FALSE", "010100"},
 
         // using pyasn1
         // >>> from pyasn1.type import univ
@@ -295,103 +305,103 @@ void test_x690_encoding_value() {
         //     >>> print("Decoded Integer:", decode(binascii.unhexlify('020480000000'), asn1Spec=univ.Integer()))
         //     Decoded Integer: (<Integer value object, tagSet <TagSet object, tags 0:0:2>, payload [-2147483648]>, b'')
 
-        {asn1_entity_integer, variant(0), "02 01 00", "x.690 8.3"},
-        {asn1_entity_integer, variant(123), "02 01 7b", "x.690 8.3"},
-        {asn1_entity_integer, variant(127), "02 01 7f", "x.690 8.3"},
-        {asn1_entity_integer, variant(128), "02 02 00 80", "x.690 8.3"},
-        {asn1_entity_integer, variant(129), "02 02 00 81", "x.690 8.3"},
-        {asn1_entity_integer, variant(255), "02 02 00 ff", "x.690 8.3"},
-        {asn1_entity_integer, variant(256), "02 02 01 00", "x.690 8.3"},
-        {asn1_entity_integer, variant(257), "02 02 01 01", "x.690 8.3"},
-        {asn1_entity_integer, variant(300), "02 02 01 2c", "x.690 8.3"},
-        {asn1_entity_integer, variant(1000), "02 02 03 e8", "x.690 8.3"},
-        {asn1_entity_integer, variant(32767), "02 02 7f ff", "x.690 8.3"},
-        {asn1_entity_integer, variant(32768), "02 03 00 80 00", "x.690 8.3"},
-        {asn1_entity_integer, variant(32769), "02 03 00 80 01", "x.690 8.3"},
-        {asn1_entity_integer, variant(65534), "02 03 00 ff fe", "x.690 8.3"},
-        {asn1_entity_integer, variant(65535), "02 03 00 ff ff", "x.690 8.3"},
-        {asn1_entity_integer, variant(65536), "02 03 01 00 00", "x.690 8.3"},
-        {asn1_entity_integer, variant(65537), "02 03 01 00 01", "x.690 8.3"},
-        {asn1_entity_integer, variant(16777215), "02 04 00 ff ff ff", "x.690 8.3"},
-        {asn1_entity_integer, variant(123456789), "02 04 07 5B CD 15", "x.690 8.3"},
-        {asn1_entity_integer, variant(2147483647), "02 04 7f ff ff ff", "x.690 8.3"},
-#ifdef __SIZEOF_INT128__
-        {asn1_entity_integer, variant(4294967295), "020500ffffffff", "x.690 8.3"},
-        {asn1_entity_integer, variant(4294967296), "02 05 01 00 00 00 00", "x.690 8.3"},
-        {asn1_entity_integer, variant(1099511627775), "02 06 00 ff ff ff ff ff", "x.690 8.3"},
-        {asn1_entity_integer, variant(1152921504606846975), "02080fffffffffffffff", "x.690 8.3", 1},
-        {asn1_entity_integer, variant(1152921504606846976), "02081000000000000000", "x.690 8.3", 1},
-#endif
-        {asn1_entity_integer, variant(-1), "02 01 ff", "x.690 8.3"},
-        {asn1_entity_integer, variant(-10), "02 01 f6", "x.690 8.3"},
-        {asn1_entity_integer, variant(-126), "02 01 82", "x.690 8.3"},
-        {asn1_entity_integer, variant(-127), "02 01 81", "x.690 8.3"},
-        {asn1_entity_integer, variant(-128), "02 01 80", "x.690 8.3"},
-        {asn1_entity_integer, variant(-129), "02 02 ff 7f", "x.690 8.3"},
-        {asn1_entity_integer, variant(-136), "02 02 ff 78", "x.690 8.3"},
-        {asn1_entity_integer, variant(-256), "02 02 ff 00", "x.690 8.3"},
-        {asn1_entity_integer, variant(-257), "02 02 fe ff", "x.690 8.3"},
-        {asn1_entity_integer, variant(-300), "02 02 fe d4", "x.690 8.3"},
-        {asn1_entity_integer, variant(-1234), "02 02 fb 2e", "x.690 8.3"},
-        {asn1_entity_integer, variant(-27066), "02 02 96 46", "ASN.1 - Communication between Heterogeneous Systems 18.2.3 INTEGER value"},
-        {asn1_entity_integer, variant(-32768), "02 02 80 00", "x.690 8.3"},
-        {asn1_entity_integer, variant(-32769), "02 03 ff 7f ff", "x.690 8.3"},
-        {asn1_entity_integer, variant(-8388607), "02 03 80 00 01", "x.690 8.3"},
-        {asn1_entity_integer, variant(-16777216), "02 04 ff 00 00 00", "x.690 8.3"},
-        {asn1_entity_integer, variant(-16777217), "02 04 fe ff ff ff", "x.690 8.3"},
-        {asn1_entity_integer, variant(-4294967296), "02 05 ff 00 00 00 00", "x.690 8.3"},
-        {asn1_entity_integer, variant(-1099511627775), "02 06 ff 00 00 00 00 01", "x.690 8.3"},
-        {asn1_entity_integer, variant(-1099511627776), "02 06 ff 00 00 00 00 00", "x.690 8.3"},
+        {asn1_entity_integer, variant(0), "0", "02 01 00"},
+        {asn1_entity_integer, variant(123), "123", "02 01 7b"},
+        {asn1_entity_integer, variant(127), "127", "02 01 7f"},
+        {asn1_entity_integer, variant(128), "128", "02 02 00 80"},
+        {asn1_entity_integer, variant(129), "129", "02 02 00 81"},
+        {asn1_entity_integer, variant(255), "255", "02 02 00 ff"},
+        {asn1_entity_integer, variant(256), "256", "02 02 01 00"},
+        {asn1_entity_integer, variant(257), "257", "02 02 01 01"},
+        {asn1_entity_integer, variant(300), "300", "02 02 01 2c"},
+        {asn1_entity_integer, variant(1000), "1000", "02 02 03 e8"},
+        {asn1_entity_integer, variant(32767), "32767", "02 02 7f ff"},
+        {asn1_entity_integer, variant(32768), "32768", "02 03 00 80 00"},
+        {asn1_entity_integer, variant(32769), "32769", "02 03 00 80 01"},
+        {asn1_entity_integer, variant(65534), "65534", "02 03 00 ff fe"},
+        {asn1_entity_integer, variant(65535), "65535", "02 03 00 ff ff"},
+        {asn1_entity_integer, variant(65536), "65536", "02 03 01 00 00"},
+        {asn1_entity_integer, variant(65537), "65537", "02 03 01 00 01"},
+        {asn1_entity_integer, variant(16777215), "16777215", "02 04 00 ff ff ff"},
+        {asn1_entity_integer, variant(123456789), "123456789", "02 04 07 5B CD 15"},
+        {asn1_entity_integer, variant(2147483647), "2147483647", "02 04 7f ff ff ff"},
 
-        {asn1_entity_real, variant(0.0f), "0900", "X.690 8.5"},
+        {asn1_entity_integer, variant(4294967295), "4294967295", "020500ffffffff"},
+        {asn1_entity_integer, variant(4294967296), "4294967296", "02 05 01 00 00 00 00"},
+        {asn1_entity_integer, variant(1099511627775), "1099511627775", "02 06 00 ff ff ff ff ff"},
+        {asn1_entity_integer, variant(1152921504606846975), "1152921504606846975", "02080fffffffffffffff"},
+        {asn1_entity_integer, variant(1152921504606846976), "1152921504606846976", "02081000000000000000"},
+
+        {asn1_entity_integer, variant(-1), "-1", "02 01 ff"},
+        {asn1_entity_integer, variant(-10), "-10", "02 01 f6"},
+        {asn1_entity_integer, variant(-126), "-126", "02 01 82"},
+        {asn1_entity_integer, variant(-127), "-127", "02 01 81"},
+        {asn1_entity_integer, variant(-128), "-128", "02 01 80"},
+        {asn1_entity_integer, variant(-129), "-129", "02 02 ff 7f"},
+        {asn1_entity_integer, variant(-136), "-136", "02 02 ff 78"},
+        {asn1_entity_integer, variant(-256), "-256", "02 02 ff 00"},
+        {asn1_entity_integer, variant(-257), "-257", "02 02 fe ff"},
+        {asn1_entity_integer, variant(-300), "-300", "02 02 fe d4"},
+        {asn1_entity_integer, variant(-1234), "-1234", "02 02 fb 2e"},
+        {asn1_entity_integer, variant(-27066), "-27066", "02 02 96 46"},
+        {asn1_entity_integer, variant(-32768), "-32768", "02 02 80 00"},
+        {asn1_entity_integer, variant(-32769), "-32769", "02 03 ff 7f ff"},
+        {asn1_entity_integer, variant(-8388607), "-8388607", "02 03 80 00 01"},
+        {asn1_entity_integer, variant(-16777216), "-16777216", "02 04 ff 00 00 00"},
+        {asn1_entity_integer, variant(-16777217), "-16777217", "02 04 fe ff ff ff"},
+        {asn1_entity_integer, variant(-4294967296), "-4294967296", "02 05 ff 00 00 00 00"},
+        {asn1_entity_integer, variant(-1099511627775), "-1099511627775", "02 06 ff 00 00 00 00 01"},
+        {asn1_entity_integer, variant(-1099511627776), "-1099511627776", "02 06 ff 00 00 00 00 00"},
+
+        {asn1_entity_real, variant(0.0f), "0.0", "0900"},
         // e -20 m 129453.0
         // >>> print("Decoded REAL:", decode(binascii.unhexlify('090580ec01f9ad'), asn1Spec=univ.Real()))
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [0.12345600128173828]>, b'')
-        {asn1_entity_real, variant(0.123456f), "090580ec01f9ad", "X.690 8.5"},
+        {asn1_entity_real, variant(0.123456f), "0.123456", "090580ec01f9ad"},
         // 2^-3 + 2^-5 -> 0.00101 -> 1.01 * 2^-3 (IEEE754) -> 101 * 2^-5
-        {asn1_entity_real, variant(0.15625), "090380fb05", "X.690 8.5"},
+        {asn1_entity_real, variant(0.15625), "0.15625", "090380fb05"},
         // 2^-1 (IEEE754) -> 0.1 -> 1.0 * 2^-1 (IEEE754)
         // >>> encode(univ.Real(0.5)).hex()
         // '09050335452d31'
         // >>> print("Decoded REAL:", decode(binascii.unhexlify('090380FF01'), asn1Spec=univ.Real()))
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [0.5]>, b'')
-        {asn1_entity_real, variant(0.5), "090380FF01", "X.690 8.5"},
+        {asn1_entity_real, variant(0.5), "0.5", "090380FF01"},
         // 2^-1 + 2^-2 -> 0.11 -> 1.1 * 2^-1 (IEEE754) -> 11 * 2^-2 (ASN.1)
-        {asn1_entity_real, variant(0.75), "090380fe03", "X.690 8.5"},
+        {asn1_entity_real, variant(0.75), "0.75", "090380fe03"},
         // 1.0 * 2^0 (IEEE754) -> 80 00 01
-        {asn1_entity_real, variant(1.0), "0903800001", "X.690 8.5"},
+        {asn1_entity_real, variant(1.0), "1.0", "0903800001"},
         // e -21 m 2579497.0
         // >>> print("Decoded REAL:", decode(binascii.unhexlify('090580EB275C29'), asn1Spec=univ.Real()))
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [1.2300000190734863]>, b'')
-        {asn1_entity_real, variant(1.23f), "090580EB275C29", "X.690 8.5"},
+        {asn1_entity_real, variant(1.23f), "1.23", "090580EB275C29"},
         // 2^1 -> 10 -> 1.0 * 2^1 (IEEE754) -> 80 01 01
-        {asn1_entity_real, variant(2.0), "0903800101", "X.690 8.5"},
+        {asn1_entity_real, variant(2.0), "2.0", "0903800101"},
         // 2^5 + 2^-2 + 2^2-4 -> 100000.0101 -> 1.000000101 * 2^5 (IEEE754) -> 1000000101 * 2^-4
-        {asn1_entity_real, variant(32.3125), "090480fc0205", "X.690 8.5"},
+        {asn1_entity_real, variant(32.3125), "32.3125", "090480fc0205"},
         // >>> print("Decoded REAL:", decode(binascii.unhexlify('090680ef009dcccd'), asn1Spec=univ.Real()))
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [78.9000015258789]>, b'')
-        {asn1_entity_real, variant(78.90f), "090680ef009dcccd", "X.690 8.5"},
-        {asn1_entity_real, variant(123.0), "090380007b", "X.690 8.5"},
+        {asn1_entity_real, variant(78.90f), "78.90", "090680ef009dcccd"},
+        {asn1_entity_real, variant(123.0), "123.0", "090380007b"},
         // >>> print("Decoded REAL:", decode(binascii.unhexlify('090680ef00f6e979'), asn1Spec=univ.Real()))
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [123.45600128173828]>, b'')
-        {asn1_entity_real, variant(123.456f), "090680ef00f6e979", "X.690 8.5"},
+        {asn1_entity_real, variant(123.456f), "123.456", "090680ef00f6e979"},
         // >>> print("Decoded REAL:", decode(binascii.unhexlify('090680f600c0e6b7'), asn1Spec=univ.Real()))
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [12345.6787109375]>, b'')
-        {asn1_entity_real, variant(12345.6789f), "090680f600c0e6b7", "X.690 8.5"},
+        {asn1_entity_real, variant(12345.6789f), "12345.6789", "090680f600c0e6b7"},
         // (-1)^1 * 1.0 * 2^0 (IEEE754) -> c0 00 01
-        {asn1_entity_real, variant(-1.0), "0903c00001", "X.690 8.5"},
+        {asn1_entity_real, variant(-1.0), "-1.0", "0903c00001"},
         // >>> print("Decoded REAL:", decode(binascii.unhexlify('0905c0eb275c29'), asn1Spec=univ.Real()))
         // Decoded REAL: (<Real value object, tagSet <TagSet object, tags 0:0:9>, payload [-1.2300000190734863]>, b'')
-        {asn1_entity_real, variant(-1.23f), "0905c0eb275c29", "X.690 8.5"},
-        {asn1_entity_real, variant(-456.0), "0903c00339", "X.690 8.5"},
-        {asn1_entity_real, variant(fp32_from_binary32(fp32_pinf)), "090140", "X.690 8.5 Inf"},
-        {asn1_entity_real, variant(fp32_from_binary32(fp32_ninf)), "090141", "X.690 8.5 -Inf"},
-        {asn1_entity_real, variant(fp32_from_binary32(fp32_nan)), "090142", "X.690 8.5 NaN"},
-        {asn1_entity_real, variant(-0.0f), "090143", "X.690 8.5 -0.0"},
-        {asn1_entity_real, variant(fp64_from_binary64(fp64_pinf)), "090140", "X.690 8.5 Inf"},
-        {asn1_entity_real, variant(fp64_from_binary64(fp64_ninf)), "090141", "X.690 8.5 -Inf"},
-        {asn1_entity_real, variant(fp64_from_binary64(fp64_nan)), "090142", "X.690 8.5 NaN"},
-        {asn1_entity_real, variant(-0.0), "090143", "X.690 8.5 -0.0"},
+        {asn1_entity_real, variant(-1.23f), "-1.23", "0905c0eb275c29"},
+        {asn1_entity_real, variant(-456.0), "-456.0", "0903c00339"},
+        {asn1_entity_real, variant(fp32_from_binary32(fp32_pinf)), "PLUS-INFINITY", "090140"},
+        {asn1_entity_real, variant(fp32_from_binary32(fp32_ninf)), "MINUS-INFINITY", "090141"},
+        {asn1_entity_real, variant(fp32_from_binary32(fp32_nan)), "NOT-A-NUMBER", "090142"},
+        {asn1_entity_real, variant(-0.0f), "-0.0", "090143"},
+        {asn1_entity_real, variant(fp64_from_binary64(fp64_pinf)), "PLUS-INFINITY", "090140"},
+        {asn1_entity_real, variant(fp64_from_binary64(fp64_ninf)), "MINUS-INFINITY", "090141"},
+        {asn1_entity_real, variant(fp64_from_binary64(fp64_nan)), "NOT-A-NUMBER", "090142"},
+        {asn1_entity_real, variant(-0.0), "-0.0", "090143"},
     };
 
     _test_case.reset_time();
@@ -399,12 +409,12 @@ void test_x690_encoding_value() {
     asn1_encode enc;
 
     for (auto entry : _table) {
-        binary_t bin_expect = base16_decode_rfc(entry.expect);
+        binary_t bin_expect = base16_decode_rfc(entry.der);
 
-        // encoding routine
+        // test encoding routine
         {
             binary_t bin;
-            enc.encode(bin, entry.entity, entry.var);
+            enc.encode(bin, entry.entity, entry.value);
 
             test_case_notimecheck notimecheck(_test_case);
 
@@ -418,19 +428,19 @@ void test_x690_encoding_value() {
             }
 
             basic_stream bs;
-            vtprintf(&bs, entry.var);
-            _test_case.test(ret, __FUNCTION__, "%s [%s] expect [%s]", entry.text, bs.c_str(), entry.expect);
+            vtprintf(&bs, entry.value);
+            _test_case.test(ret, __FUNCTION__, "%s [%s] expect [%s]", entry.text, bs.c_str(), entry.der);
             bin.clear();
         }
 
-        // asn1_builtin_type
-        auto builtin = new asn1_builtin_type(entry.entity);
+        // test instantiate asn1_builtin_type and set value
         {
+            auto builtin = new asn1_builtin_type(entry.entity);
             auto value = builtin->instantiate();
             binary_t bin;
             basic_stream bs;
 
-            value->set(entry.var);
+            value->set(entry.value);
 
             builtin->publish(&bs);
             value->publish(&bin);
@@ -438,14 +448,40 @@ void test_x690_encoding_value() {
             _logger->write([&](basic_stream& dbs) -> void {
                 valist va;
                 va << bs << bin;
-                dbs.vaprintln("notation {1}", va);
-                dbs.vaprintln("DER      {2:x}", va);
+                dbs.println("encode");
+                dbs.vaprintln("> notation {1}", va);
+                dbs.vaprintln("> DER      {2:x}", va);
             });
 
-            _test_case.assert(bin_expect == bin, __FUNCTION__, "%s [%s] expect [%s]", entry.text, bs.c_str(), entry.expect);
+            _test_case.assert(bin_expect == bin, __FUNCTION__, "%s [%s] expect [%s]", entry.text, bs.c_str(), entry.der);
 
             value->release();
             builtin->release();
+        }
+
+        // test decode
+        // without notation, weakly-typed raw TLV tree
+        {
+            asn1 reader;
+            size_t pos = 0;
+            reader.read(bin_expect.data(), bin_expect.size(), pos);
+
+            basic_stream bs_type;
+            basic_stream bs_value;
+            binary_t bin;
+            reader.notation(&bs_type);
+            reader.publish(&bs_value);
+            reader.publish(&bin);
+
+            _logger->write([&](basic_stream& dbs) -> void {
+                valist va;
+                va << bs_type << bs_value << bin;
+                dbs.println("decode and encode");
+                dbs.vaprintln("> notation {1}", va);
+                dbs.vaprintln("> value    {2}", va);
+                dbs.vaprintln("> DER      {3:x}", va);
+            });
+            _test_case.assert(bin == bin_expect, __FUNCTION__, "decode and encode %s", entry.der);
         }
     }
 }
@@ -462,6 +498,36 @@ void do_dump_asn1(asn1_value* object, const char* expect, const char* text) {
             dbs.vaprintln("notation {1:s}", va);
             dbs.vaprintln("DER      {2:x}", va);
         });
+
+        // decode
+        // - [x] bool
+        // - [x] integer
+        // - [x] read
+        // - [ ] oct string
+        // - [ ] bit string
+        // - [ ] xxx string
+        if (0) {
+            asn1 reader;
+            size_t pos = 0;
+            reader.read(bin.data(), bin.size(), pos);
+
+            basic_stream bs_type;
+            basic_stream bs_value;
+            binary_t bin_recode;
+            reader.notation(&bs_type);
+            reader.publish(&bs_value);
+            reader.publish(&bin_recode);
+
+            _logger->write([&](basic_stream& dbs) -> void {
+                valist va;
+                va << bs_type << bs_value << bin_recode;
+                dbs.println("decode and encode");
+                dbs.vaprintln("> notation {1}", va);
+                dbs.vaprintln("> value    {2}", va);
+                dbs.vaprintln("> DER      {3:x}", va);
+            });
+            _test_case.assert(bin_recode == bin, __FUNCTION__, "decode and encode %s", text);
+        }
 
         _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "%s [%s]", text, expect);
     }
@@ -631,14 +697,6 @@ void test_x690_time() {
 
 void test_asn1_object() {
     _test_case.begin("ASN.1 object");
-    // $pattern_builtintype
-    //     new asn1_builtin_type(builtintype)
-    // [$pattern_class 1] $pattern_taggedmode $pattern_builtintype
-    //     new asn1_builtin_type(builtintype, new asn1_tag(asn1_class_application, 3, asn1_implicit)));
-    // lvalue ::= $pattern_builtintype
-    //     new asn1_builtin_type(lvalue, builtintype, new asn1_tag(asn1_class_application, 3, asn1_implicit)));
-    // name $pattern_builtintype
-    //     new asn1_builtin_type(name, new asn1_builtin_type(builtintype, new asn1_tag(asn1_class_application, 3, asn1_implicit))));
     struct testvector2 {
         const char* note;
         asn1_object* asn1obj;
@@ -660,12 +718,22 @@ void test_asn1_object() {
          asn1_referenced_type::define("Date", new asn1_tagged_type(asn1_class_private, 0, asn1_implicit, asn1_entity_visiblestring))},
     };
 
+    std::map<uint32, asn1_entity_t> typemap;
+    typemap.emplace(token_bool, asn1_entity_boolean);
+    typemap.emplace(token_int, asn1_entity_integer);
+    typemap.emplace(token_bitstring, asn1_entity_bitstring);
+    typemap.emplace(token_octstring, asn1_entity_octstring);
+    typemap.emplace(token_null, asn1_entity_null);
+    typemap.emplace(token_real, asn1_entity_real);
+    typemap.emplace(token_ia5string, asn1_entity_ia5string);
+    typemap.emplace(token_visiblestring, asn1_entity_visiblestring);
+
     basic_stream bs;
-    asn1* object = new asn1;
+    asn1* inst = new asn1;
     for (auto item : table2) {
-        *object << item.asn1obj;
-        object->publish(&bs);
-        object->clear();
+        *inst << item.asn1obj;
+        inst->notation(&bs);
+        inst->clear();
         _logger->writeln(bs);
         _test_case.assert(bs == item.note, __FUNCTION__, "publish %s", item.note);
 
@@ -682,15 +750,6 @@ void test_asn1_object() {
             _logger->writeln("> type %d(%s) tag %i index %d pos %zi len %zi (%.*s)", desc->type, p.typeof_token(desc->type).c_str(), desc->tag, desc->index, desc->pos,
                              desc->size, (unsigned)desc->size, desc->p);
         };
-        std::map<uint32, asn1_entity_t> typemap;
-        typemap.emplace(token_bool, asn1_entity_boolean);
-        typemap.emplace(token_int, asn1_entity_integer);
-        typemap.emplace(token_bitstring, asn1_entity_bitstring);
-        typemap.emplace(token_octstring, asn1_entity_octstring);
-        typemap.emplace(token_null, asn1_entity_null);
-        typemap.emplace(token_real, asn1_entity_real);
-        typemap.emplace(token_ia5string, asn1_entity_ia5string);
-        typemap.emplace(token_visiblestring, asn1_entity_visiblestring);
 
         for (auto& pair : result) {
             // pair(pos_occurrence, id_pattern)
@@ -710,11 +769,11 @@ void test_asn1_object() {
                 case 0:  // $pattern_builtintype
                     ctx.get(res.begidx, &desc);
                     type = typemap[desc.tag];
-                    *object << new asn1_builtin_type(type);
+                    *inst << new asn1_builtin_type(type);
                     break;
             }
-            object->publish(&bs);
-            object->clear();
+            inst->publish(&bs);
+            inst->clear();
             _logger->write(bs);
         }
 
@@ -722,11 +781,10 @@ void test_asn1_object() {
 
         bs.clear();
     }
-    object->release();
+    inst->release();
 }
 
 void test_x690_annex_a_1() {
-#if 0
     _test_case.begin("X.690 A.1");
 
     // PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {
@@ -738,87 +796,59 @@ void test_x690_annex_a_1() {
     //      children [3] IMPLICIT SEQUENCE OF ChildInformation DEFAULT {}}
     // ChildInformation ::= SET {name Name, dateOfBirth [0] Date}
     // Name ::= [APPLICATION 1] IMPLICIT SEQUENCE {givenName VisibleString, initial VisibleString, familyName VisibleString}
-    // EmployeeNumber ::= [APPLICATION 2] IMPLICIT  INTEGER
-    // Date ::= [APPLICATION 3] IMPLICIT  VisibleString
+    // EmployeeNumber ::= [APPLICATION 2] IMPLICIT INTEGER
+    // Date ::= [APPLICATION 3] IMPLICIT VisibleString
 
-    {
-        asn1* object = new asn1;
+    auto inst = new asn1;
 
-        (*object)
-            // auto node_personal = new asn1_set("PersonnelRecord", new asn1_tag(asn1_class_application, 0, asn1_implicit));
-            // *node_personal << new asn1_builtin_type("name", new asn1_builtin_type("Name", asn1_entity_referenced_type))                  //
-            //                << new asn1_builtin_type("title", asn1_entity_visiblestring, new asn1_tag(asn1_class_context, 0))  //
-            //                << new asn1_builtin_type("number", new asn1_builtin_type("EmployeeNumber", asn1_entity_referenced_type))
-            //                << new asn1_builtin_type("dateOfHire", new asn1_builtin_type("Date", asn1_entity_referenced_type, new asn1_tag(asn1_class_context, 1)))
-            //                << new asn1_builtin_type("nameOfSpouse", new asn1_builtin_type("Name", asn1_entity_referenced_type, new asn1_tag(asn1_class_context, 2)))
-            //                << new asn1_builtin_type("children", &(new asn1_sequence_of("ChildInformation", new asn1_tag(asn1_class_context, 3,
-            //                asn1_implicit)))->as_default());
-            // *object << node_personal;
-            .add(new asn1_set("PersonnelRecord", new asn1_tag(asn1_class_application, 0, asn1_implicit)),
-                 [](asn1_set* set) -> void {
-                     (*set) << new asn1_builtin_type("name", new asn1_builtin_type("Name", asn1_entity_referenced_type))
-                            << new asn1_builtin_type("title", asn1_entity_visiblestring, new asn1_tag(asn1_class_context, 0))
-                            << new asn1_builtin_type("number", new asn1_builtin_type("EmployeeNumber", asn1_entity_referenced_type))
-                            << new asn1_builtin_type("dateOfHire", new asn1_builtin_type("Date", asn1_entity_referenced_type, new asn1_tag(asn1_class_context, 1)))
-                            << new asn1_builtin_type("nameOfSpouse", new asn1_builtin_type("Name", asn1_entity_referenced_type, new asn1_tag(asn1_class_context, 2)))
-                            << new asn1_builtin_type("children",
-                                                  &(new asn1_sequence_of("ChildInformation", new asn1_tag(asn1_class_context, 3, asn1_implicit)))->as_default());
-                 })
-            // auto node_childinfo = new asn1_set("ChildInformation");
-            // *node_childinfo << new asn1_builtin_type("name", new asn1_builtin_type("Name", asn1_entity_referenced_type))
-            //                 << new asn1_builtin_type("dateOfBirth", new asn1_builtin_type("Date", asn1_entity_referenced_type, new asn1_tag(asn1_class_context, 0)));
-            // *object << node_childinfo;
-            .add(new asn1_set("ChildInformation"),  //
-                 [](asn1_set* set) -> void {
-                     (*set) << new asn1_builtin_type("name", new asn1_builtin_type("Name", asn1_entity_referenced_type))
-                            << new asn1_builtin_type("dateOfBirth", new asn1_builtin_type("Date", asn1_entity_referenced_type, new asn1_tag(asn1_class_context, 0)));
-                 })
-            // auto node_name = new asn1_sequence("Name", new asn1_tag(asn1_class_application, 1, asn1_implicit));
-            // *node_name << new asn1_builtin_type("givenName", new asn1_builtin_type(asn1_entity_visiblestring)) << new asn1_builtin_type("initial", new
-            // asn1_object(asn1_entity_visiblestring))
-            //            << new asn1_builtin_type("familyName", new asn1_builtin_type(asn1_entity_visiblestring));
-            // *object << node_name;
-            .add(new asn1_sequence("Name", new asn1_tag(asn1_class_application, 1, asn1_implicit)),  //
-                 [](asn1_sequence* seq) -> void {
-                     (*seq) << new asn1_builtin_type("givenName", new asn1_builtin_type(asn1_entity_visiblestring))  //
-                            << new asn1_builtin_type("initial", new asn1_builtin_type(asn1_entity_visiblestring))    //
-                            << new asn1_builtin_type("familyName", new asn1_builtin_type(asn1_entity_visiblestring));
-                 })
-            // auto node_employeenumber = new asn1_builtin_type("EmployeeNumber", asn1_entity_integer, new asn1_tag(asn1_class_application, 2, asn1_implicit));
-            // *object << node_employeenumber;
-            .add(new asn1_builtin_type("EmployeeNumber", asn1_entity_integer, new asn1_tag(asn1_class_application, 2, asn1_implicit)))
-            // auto node_date = new asn1_builtin_type("Date", asn1_entity_visiblestring, new asn1_tag(asn1_class_application, 3, asn1_implicit));
-            // *object << node_date;
-            .add(new asn1_builtin_type("Date", asn1_entity_visiblestring, new asn1_tag(asn1_class_application, 3, asn1_implicit)));
+    // clang-format off
+    *inst << asn1_referenced_type::define("PersonnelRecord",
+                new asn1_tagged_type(asn1_class_application, 0, asn1_implicit,
+                    new asn1_set({
+                        asn1_referenced_type::refer("name", "Name"),
+                        new asn1_tagged_type("title", asn1_class_context, 0, asn1_automatic, asn1_entity_visiblestring),
+                        asn1_referenced_type::refer("number", "EmployeeNumber"),
+                        new asn1_tagged_type("dateOfHire", asn1_class_context, 1, asn1_automatic, new asn1_referenced_type("Date")),
+                        new asn1_tagged_type("nameOfSpouse", asn1_class_context, 2, asn1_automatic, new asn1_referenced_type("Name")),
+                        new asn1_tagged_type("children", asn1_class_context, 3, asn1_implicit, new asn1_sequence_of(new asn1_referenced_type("ChildInformation")))
+                        // TODO DEFAULT {}
+                    })));
+    *inst << asn1_referenced_type::define("ChildInformation",
+                new asn1_set({
+                    asn1_referenced_type::refer("name", "Name"),
+                    new asn1_tagged_type("dateOfBirth", asn1_class_context, 0, asn1_automatic, new asn1_referenced_type("Date"))
+                }));
+    *inst << asn1_referenced_type::define("Name",
+                new asn1_tagged_type(asn1_class_application, 1, asn1_implicit,
+                    new asn1_sequence({
+                        {"givenName", asn1_entity_visiblestring},
+                        {"initial", asn1_entity_visiblestring},
+                        {"familyName", asn1_entity_visiblestring}
+                    })));
+    *inst << asn1_referenced_type::define("EmployeeNumber", new asn1_tagged_type(asn1_class_application, 2, asn1_implicit, asn1_entity_integer));
+    *inst << asn1_referenced_type::define("Date", new asn1_tagged_type(asn1_class_application, 3, asn1_implicit, asn1_entity_visiblestring));
+    // clang-format on
 
-        basic_stream bs1;
-        basic_stream bs2;
+    basic_stream bs_type;
+    basic_stream bs_value;
+    binary_t bin_value;
 
-        // publish
-        {
-            object->publish(&bs1);
-            _logger->colorln("compose");
-            _logger->write(bs1);
-        }
+    inst->notation(&bs_type);
+    // inst->publish(&bs_value);
+    // inst->publish(&bin_value);
 
-        // clone
-        asn1* n = nullptr;
-        __try2 {
-            n = object->clone();
+    _logger->write([&](basic_stream& dbs) -> void {
+        valist va;
+        va << bs_type << bs_value << bin_value;
+        dbs.println("type");
+        dbs.vaprintln("{1}", va);
+        dbs.println("value");
+        // dbs.vaprintln("{2}", va);
+        dbs.println("DER");
+        // dbs.vaprintln("{3:x}", va);
+    });
 
-            binary_t bin;
-            n->publish(&bs2);
-            _logger->colorln("clone");
-            _logger->write(bs2);
-        }
-        __finally2 {
-            n->release();
-            _test_case.assert(bs1 == bs2, __FUNCTION__, "publish");
-        }
-
-        object->release();
-    }
-#endif
+    inst->release();
 }
 
 void test_x690_annex_a_2() {
@@ -826,18 +856,18 @@ void test_x690_annex_a_2() {
     //
 }
 
-void testcase_asn1() {
+void testcase_basic1() {
     // studying ...
     test_x690_8_1_2_identifier_octects();
     test_x690_8_1_3_length_octets();
-    test_x690_8_1_5_end_of_contents();
+    // test_x690_8_1_5_end_of_contents();
     test_x690_encoding_value();
     test_x690_encoding_typevalue();
     test_x690_8_9_sequence();
     test_x690_time();
     test_asn1_object();
 
-    // TODO
+    // project reboot - TODO
     test_x690_annex_a_1();
     test_x690_annex_a_2();
 }

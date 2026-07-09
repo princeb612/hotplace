@@ -26,9 +26,10 @@ asn1_enum::asn1_enum() : asn1_enum("") {}
 
 asn1_enum::asn1_enum(const std::string& name) : asn1_type(asn1_entity_enum, name, nullptr) { as_primitive(false); }
 
-asn1_enum::asn1_enum(const std::initializer_list<std::pair<std::string, int>>& items) : asn1_enum("", items) {}
+asn1_enum::asn1_enum(const std::initializer_list<std::pair<std::string, asn1_native_int_t>>& items) : asn1_enum("", items) {}
 
-asn1_enum::asn1_enum(const std::string& name, const std::initializer_list<std::pair<std::string, int>>& items) : asn1_type(asn1_entity_enum, name, nullptr) {
+asn1_enum::asn1_enum(const std::string& name, const std::initializer_list<std::pair<std::string, asn1_native_int_t>>& items)
+    : asn1_type(asn1_entity_enum, name, nullptr) {
     as_primitive(false);
     add(items);
 }
@@ -44,7 +45,7 @@ asn1_enum* asn1_enum::addref() {
 
 asn1_entity_t asn1_enum::get_component_entity() const { return asn1_entity_enum_type; }
 
-asn1_enum& asn1_enum::add(const std::string& en, int value) {
+asn1_enum& asn1_enum::add(const std::string& en, asn1_native_int_t value) {
     _enum.emplace(en, value);
     _reverse.emplace(value, en);
     return *this;
@@ -54,9 +55,9 @@ bool asn1_enum::have_constraints() const { return true; }
 
 bool asn1_enum::evaluate(const std::string& name) { return _enum.count(name) > 0; }
 
-asn1_enum& asn1_enum::operator<<(const std::initializer_list<std::pair<std::string, int>>& items) { return add(items); }
+asn1_enum& asn1_enum::operator<<(const std::initializer_list<std::pair<std::string, asn1_native_int_t>>& items) { return add(items); }
 
-asn1_enum& asn1_enum::add(const std::initializer_list<std::pair<std::string, int>>& items) {
+asn1_enum& asn1_enum::add(const std::initializer_list<std::pair<std::string, asn1_native_int_t>>& items) {
     for (const auto& item : items) {
         add(item.first, item.second);
     }
@@ -95,7 +96,7 @@ bool asn1_enum::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 f
         asn1_encode::write_ident_octets2(*b, this);
         auto pos = b->size();
         auto test = value->encode_namedlist(*b, this, name, _enum);
-        asn1_encode::t_asn1_length_octets<size_t>(*b, b->size() - pos, pos);
+        asn1_encode::write_length_octets<size_t>(*b, b->size() - pos, pos);
 
         if (false == test) {
             b->resize(snapshot);  // rollback

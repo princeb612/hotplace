@@ -14,8 +14,8 @@
 
 #include <hotplace/test/test.hpp>
 
-void testcase_asn1();
-void testcase_gpt();
+void testcase_basic1();
+void testcase_basic2();
 void testcase_constraints();
 void testcase_parser();
 

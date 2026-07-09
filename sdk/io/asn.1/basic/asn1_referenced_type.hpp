@@ -41,14 +41,16 @@ namespace io {
  */
 class asn1_referenced_type : public asn1_type {
    public:
+    asn1_referenced_type(const asn1_referenced_type& other);
+    virtual ~asn1_referenced_type();
+
+    virtual asn1_referenced_type* clone();
+    asn1_referenced_type& operator=(const asn1_referenced_type& other);
+
     /**
      * reference
      */
     asn1_referenced_type(const std::string& name);
-    virtual ~asn1_referenced_type();
-
-    virtual asn1_referenced_type* clone();
-    virtual asn1_referenced_type* addref();
 
     /**
      * definition
@@ -56,15 +58,21 @@ class asn1_referenced_type : public asn1_type {
      */
     static asn1_referenced_type* define(const std::string& name, asn1_entity_t entity);
     static asn1_referenced_type* define(const std::string& name, asn1_object* object);
+    static asn1_referenced_type* refer(const std::string& name, const std::string& reference);
 
     bool is_reference() const;
     bool is_definition() const;
+    const std::string& get_reference() const;
 
    protected:
-    asn1_referenced_type(asn1_entity_t entity, const std::string& name = "", asn1_object* object = nullptr);
+    asn1_referenced_type(const std::string& name, asn1_object* object);
+    asn1_referenced_type(const std::string& name, const std::string& reference);
 
     virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
     virtual bool represent(uint32 depth, binary_t* b, asn1_value* value = nullptr, uint16 flags = 0);
+
+   private:
+    std::string _reference;
 };
 
 }  // namespace io

@@ -35,23 +35,23 @@ class asn1_bitstring : public asn1_builtin_type {
    public:
     asn1_bitstring();
     asn1_bitstring(const std::string& name);
-    asn1_bitstring(const std::initializer_list<std::pair<std::string, int>> items);
-    asn1_bitstring(const std::string& name, const std::initializer_list<std::pair<std::string, int>> items);
+    asn1_bitstring(const std::initializer_list<std::pair<std::string, asn1_native_int_t>> items);
+    asn1_bitstring(const std::string& name, const std::initializer_list<std::pair<std::string, asn1_native_int_t>> items);
     virtual ~asn1_bitstring();
 
     virtual asn1_bitstring* clone();
     virtual asn1_bitstring* addref();
 
-    asn1_bitstring& operator<<(const std::initializer_list<std::pair<std::string, int>> items);
-    asn1_bitstring& add(const std::initializer_list<std::pair<std::string, int>> items);
+    asn1_bitstring& operator<<(const std::initializer_list<std::pair<std::string, asn1_native_int_t>> items);
+    asn1_bitstring& add(const std::initializer_list<std::pair<std::string, asn1_native_int_t>> items);
 
    protected:
     virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
     virtual bool represent(uint32 depth, binary_t* b, asn1_value* value = nullptr, uint16 flags = 0);
 
    private:
-    std::map<std::string, int> _nbl;
-    std::map<int, std::string> _reverse;
+    std::map<std::string, asn1_native_int_t> _nbl;
+    std::map<asn1_native_int_t, std::string> _reverse;
 };
 
 }  // namespace io

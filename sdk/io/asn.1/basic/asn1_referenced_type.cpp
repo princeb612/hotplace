@@ -21,38 +21,56 @@
 namespace hotplace {
 namespace io {
 
-asn1_referenced_type::asn1_referenced_type(asn1_entity_t entity, const std::string& name, asn1_object* object) : asn1_type(entity, name, object, nullptr) {}
-
 asn1_referenced_type::asn1_referenced_type(const std::string& name) : asn1_type(asn1_entity_referenced_type, name, nullptr, nullptr) {}
+
+asn1_referenced_type::asn1_referenced_type(const std::string& name, asn1_object* object) : asn1_type(asn1_entity_referenced_type, name, object, nullptr) {}
+
+asn1_referenced_type::asn1_referenced_type(const std::string& name, const std::string& reference) : asn1_type(asn1_entity_referenced_type, name, nullptr, nullptr) {
+    _reference = reference;
+}
+
+asn1_referenced_type::asn1_referenced_type(const asn1_referenced_type& other) : asn1_type(asn1_entity_referenced_type) { *this = other; }
 
 asn1_referenced_type::~asn1_referenced_type() {}
 
 asn1_referenced_type* asn1_referenced_type::clone() { return new asn1_referenced_type(*this); }
 
-asn1_referenced_type* asn1_referenced_type::addref() {
-    asn1_object::addref();
-    return this;
+asn1_referenced_type& asn1_referenced_type::operator=(const asn1_referenced_type& other) {
+    asn1_object::operator=(other);
+    _reference = other._reference;
+    return *this;
 }
 
 asn1_referenced_type* asn1_referenced_type::define(const std::string& name, asn1_entity_t entity) {
-    return new asn1_referenced_type(asn1_entity_referenced_type, name, new asn1_builtin_type(entity));
+    return new asn1_referenced_type(name, new asn1_builtin_type(entity));
 }
 
-asn1_referenced_type* asn1_referenced_type::define(const std::string& name, asn1_object* object) {
-    return new asn1_referenced_type(asn1_entity_referenced_type, name, object);
+asn1_referenced_type* asn1_referenced_type::define(const std::string& name, asn1_object* object) { return new asn1_referenced_type(name, object); }
+
+asn1_referenced_type* asn1_referenced_type::refer(const std::string& name, const std::string& reference) {
+    auto ref = new asn1_referenced_type(name, nullptr);
+    ref->_reference = reference;
+    return ref;
 }
 
 bool asn1_referenced_type::is_reference() const { return get_object() ? false : true; }
 
 bool asn1_referenced_type::is_definition() const { return get_object() ? true : false; }
 
+const std::string& asn1_referenced_type::get_reference() const { return _reference; }
+
 void asn1_referenced_type::represent(uint32 depth, stream_t* s, asn1_value* value) {
     s->printf("%s", get_name().c_str());
 
-    if ((nullptr == get_parent()) && is_definition()) {
-        auto obj = get_object();
-        s->printf(" ::= ");
-        obj->represent(depth + 1, s, value);
+    if (is_definition()) {
+        if (nullptr == get_parent()) {
+            auto obj = get_object();
+            s->printf(" ::= ");
+            obj->represent(depth + 1, s, value);
+        }
+    } else if (false == _reference.empty()) {
+        if (false == get_name().empty()) s->printf(" ");
+        s->printf("%s", _reference.c_str());
     }
 }
 

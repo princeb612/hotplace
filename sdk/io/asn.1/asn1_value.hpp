@@ -72,7 +72,7 @@ class asn1_value {
     void encode_value(binary_t& bin, asn1_object* object, const std::string& name, bool& do_len);
     void encode_sequenceof_value(binary_t& bin, asn1_object* object, const std::string& name);
     void encode_setof_value(binary_t& bin, asn1_object* object, const std::string& name);
-    bool encode_namedlist(binary_t& bin, asn1_object* object, const std::string& name, const std::map<std::string, int>& namedlist);
+    bool encode_namedlist(binary_t& bin, asn1_object* object, const std::string& name, const std::map<std::string, asn1_native_int_t>& namedlist);
     void add_binary(binary_t& bin, const std::string& name);
 
     void addref();

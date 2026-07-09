@@ -19,14 +19,13 @@
 namespace hotplace {
 namespace io {
 
-asn1_constraints::asn1_constraints() : _owner(nullptr) {}
+asn1_constraints::asn1_constraints() {}
 
 asn1_constraints::asn1_constraints(const asn1_constraints& other) : asn1_constraints() { *this = other; }
 
 asn1_constraints::asn1_constraints(asn1_constraints&& other) : asn1_constraints() { *this = std::move(other); }
 
 asn1_constraints& asn1_constraints::operator=(const asn1_constraints& other) {
-    set_owner(other.get_owner());
     if (false == other._constraints.empty()) {
         for (auto& item : other._constraints) {
             add(item->clone());
@@ -36,7 +35,6 @@ asn1_constraints& asn1_constraints::operator=(const asn1_constraints& other) {
 }
 
 asn1_constraints& asn1_constraints::operator=(asn1_constraints&& other) {
-    std::swap(_owner, other._owner);
     std::swap(_constraints, other._constraints);
     return *this;
 }
@@ -73,18 +71,15 @@ bool asn1_constraints::validate(asn1_object* node, asn1_value* value) {
         for (auto item : _constraints) {
             bool test = false;
             auto entity = item->get_entity();
-            if (is_kind_of_integer(node) || is_kind_of_container_of(node)) {
+            if (asn1_entity_constraint_size == entity) {
                 test = do_validate<int64>(item, node, value);
-            } else if (is_kind_of_real(node)) {
-                test = do_validate<double>(item, node, value);
-            } else if (is_kind_of_cstring(node) || is_kind_of_bstring(node)) {
-                switch (entity) {
-                    case asn1_entity_constraint_size:
-                        test = do_validate<int64>(item, node, value);
-                        break;
-                    default:
-                        test = do_validate<std::string>(item, node, value);
-                        break;
+            } else {
+                if (is_kind_of_integer(node) || is_kind_of_container_of(node)) {
+                    test = do_validate<int64>(item, node, value);
+                } else if (is_kind_of_real(node)) {
+                    test = do_validate<double>(item, node, value);
+                } else if (is_kind_of_cstring(node) || is_kind_of_bstring(node)) {
+                    test = do_validate<std::string>(item, node, value);
                 }
             }
             if (false == test) return false;
@@ -94,10 +89,6 @@ bool asn1_constraints::validate(asn1_object* node, asn1_value* value) {
     }
     return true;
 }
-
-void asn1_constraints::set_owner(asn1_object* object) { _owner = object; }
-
-asn1_object* asn1_constraints::get_owner() const { return _owner; }
 
 void asn1_constraints::addref() {
     if (false == _constraints.empty()) {

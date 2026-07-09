@@ -8,7 +8,7 @@ file (GLOB FILEGROUP_SDK_HEADER_IO
     ${PROJECT_SOURCE_DIR}/sdk/io/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/*.hpp
-    ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/detail/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/builtin/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/constraints/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/basic/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/cbor/*.hpp
@@ -21,7 +21,7 @@ file (GLOB FILEGROUP_SDK_SOURCE_IO
     ${PROJECT_SOURCE_DIR}/sdk/io/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/*.cpp
-    ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/detail/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/builtin/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/constraints/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/basic/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/cbor/*.cpp

@@ -79,33 +79,39 @@ class t_set_runtime {
     }
     bool contains(const decayed_t& value) { return _target->contains(value); }
     template <typename U = decayed_t>
-    typename std::enable_if<std::is_same<U, std::string>::value, bool>::type match(const decayed_t& value) {
+    typename std::enable_if<std::is_same<U, std::string>::value, bool>::type  //
+    match(const decayed_t& value) {
         return _target->match(value);
     }
 
     template <typename U = decayed_t>
-    typename std::enable_if<std::is_arithmetic<U>::value, bool>::type contains(const t_range_value<U>& value) {
+    typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, bool>::type  //
+    contains(const t_range_value<U>& value) {
         return _target->contains(value);
     }
 
     template <typename U = decayed_t>
-    typename std::enable_if<std::is_arithmetic<U>::value, t_set_runtime&>::type insert_range(const U& start, const U& end) {
+    typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, t_set_runtime&>::type  //
+    insert_range(const U& start, const U& end) {
         _target->insert_range(start, end);
         return *this;
     }
     template <typename U = decayed_t>
-    typename std::enable_if<std::is_arithmetic<U>::value, t_set_runtime&>::type erase_range(const U& start, const U& end) {
+    typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, t_set_runtime&>::type  //
+    erase_range(const U& start, const U& end) {
         _target->erase_range(start, end);
         return *this;
     }
 
     template <typename U = decayed_t>
-    typename std::enable_if<std::is_arithmetic<U>::value, t_set_runtime&>::type insert_range(const t_range_value<U>& start, const t_range_value<U>& end) {
+    typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, t_set_runtime&>::type  //
+    insert_range(const t_range_value<U>& start, const t_range_value<U>& end) {
         _target->insert_range(start, end);
         return *this;
     }
     template <typename U = decayed_t>
-    typename std::enable_if<std::is_arithmetic<U>::value, t_set_runtime&>::type erase_range(const t_range_value<U>& start, const t_range_value<U>& end) {
+    typename std::enable_if<custom::is_integral<U>::valu || std::is_floating_point<U>::value, t_set_runtime&>::type  //
+    erase_range(const t_range_value<U>& start, const t_range_value<U>& end) {
         _target->erase_range(start, end);
         return *this;
     }

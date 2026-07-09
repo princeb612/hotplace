@@ -65,12 +65,11 @@ return_t asn1_encode::write_ident_octets2(binary_t& bin, asn1_object* object, si
     return ret;
 }
 
-return_t asn1_encode::read_asn1_ident_octets(const byte_t* stream, size_t size, uint8& ident, uint64& tag) {
-    if (nullptr == stream || 0 == size) {
+return_t asn1_encode::read_ident_octets(const byte_t* stream, size_t size, size_t& pos, uint8& ident, uint64& tag) {
+    if (nullptr == stream || 0 == size || (pos >= size)) {
         return errorcode_t::invalid_parameter;
     }
 
-    size_t pos = 0;
     uint8 b = stream[pos];
     ident = b & ~asn1_tag_number_mask;
     tag = 0;
@@ -95,6 +94,7 @@ return_t asn1_encode::read_asn1_ident_octets(const byte_t* stream, size_t size, 
         }
         if (que) return errorcode_t::bad_data;
     } else {
+        ++pos;
         tag = val;
     }
     return errorcode_t::success;
@@ -106,7 +106,7 @@ asn1_encode& asn1_encode::encode(binary_t& bin, asn1_entity_t entity, const vari
     bool do_len = true;
     encode_value(bin, entity, vt, do_len);
     if (do_len) {
-        asn1_encode::t_asn1_length_octets<size_t>(bin, bin.size() - pos, pos);
+        asn1_encode::write_length_octets<size_t>(bin, bin.size() - pos, pos);
     }
     return *this;
 }
@@ -128,39 +128,39 @@ asn1_encode& asn1_encode::encode_value(binary_t& bin, asn1_entity_t entity, cons
             // ASN.1 - Communication between Heterogeneous Systems 18.2.3 INTEGER value
             switch (vt.type()) {
                 case vartype_t::TYPE_INT8:
-                    t_asn1_integer_value(bin, v.data.i8);
+                    write_integer_value(bin, v.data.i8);
                     break;
                 case vartype_t::TYPE_UINT8:
-                    t_asn1_integer_value(bin, v.data.ui8);
+                    write_integer_value(bin, v.data.ui8);
                     break;
                 case vartype_t::TYPE_INT16:
-                    t_asn1_integer_value(bin, v.data.i16);
+                    write_integer_value(bin, v.data.i16);
                     break;
                 case vartype_t::TYPE_UINT16:
-                    t_asn1_integer_value(bin, v.data.ui16);
+                    write_integer_value(bin, v.data.ui16);
                     break;
                 case vartype_t::TYPE_INT32:
-                    t_asn1_integer_value(bin, v.data.i32);
+                    write_integer_value(bin, v.data.i32);
                     break;
                 case vartype_t::TYPE_UINT32:
-                    t_asn1_integer_value(bin, v.data.ui32);
+                    write_integer_value(bin, v.data.ui32);
                     break;
                 case vartype_t::TYPE_INT64:
-                    t_asn1_integer_value(bin, v.data.i64);
+                    write_integer_value(bin, v.data.i64);
                     break;
                 case vartype_t::TYPE_UINT64:
-                    t_asn1_integer_value(bin, v.data.ui64);
+                    write_integer_value(bin, v.data.ui64);
                     break;
 #if defined __SIZEOF_INT128__
                 case vartype_t::TYPE_INT128:
-                    t_asn1_integer_value(bin, v.data.i128);
+                    write_integer_value(bin, v.data.i128);
                     break;
                 case vartype_t::TYPE_UINT128:
-                    t_asn1_integer_value(bin, v.data.ui128);
+                    write_integer_value(bin, v.data.ui128);
                     break;
 #endif
                 default:
-                    t_asn1_integer_value(bin, vt.t_toi<int64>());
+                    write_integer_value(bin, vt.t_toi<int64>());
                     break;
             }
         } break;
@@ -174,10 +174,10 @@ asn1_encode& asn1_encode::encode_value(binary_t& bin, asn1_entity_t entity, cons
             ieee754_typeof_t type = {};
             switch (vt.type()) {
                 case vartype_t::TYPE_FLOAT:
-                    type = t_asn1_encode_real<float, uint32>(bin, v.data.f);
+                    type = encode_real<float>(bin, v.data.f);
                     break;
                 case vartype_t::TYPE_DOUBLE:
-                    type = t_asn1_encode_real<double, uint64>(bin, v.data.d);
+                    type = encode_real<double>(bin, v.data.d);
                     break;
                 default:
                     break;
@@ -187,7 +187,6 @@ asn1_encode& asn1_encode::encode_value(binary_t& bin, asn1_entity_t entity, cons
                 case ieee754_typeof_t::ieee754_pinf:
                 case ieee754_typeof_t::ieee754_ninf:
                 case ieee754_typeof_t::ieee754_nan:
-                    do_len = false;
                     break;
                 default:
                     break;
@@ -196,7 +195,7 @@ asn1_encode& asn1_encode::encode_value(binary_t& bin, asn1_entity_t entity, cons
         case asn1_entity_utctime: {
             // YYMMDDhhmm[ss]Z
             auto size = v.size ? v.size : strlen(v.data.str);
-            if (0) t_asn1_length_octets(bin, size);
+            if (0) write_length_octets(bin, size);
             binary_append(bin, v.data.str, size);
         } break;
         case asn1_entity_generalizedtime: {
@@ -206,13 +205,13 @@ asn1_encode& asn1_encode::encode_value(binary_t& bin, asn1_entity_t entity, cons
                     // YYYYMMDDhhmm[ss[.fff]]Z
                     // YYYYMMDDhhmm[ss[.fff]]+hhmm
                     auto size = v.size ? v.size : strlen(v.data.str);
-                    if (0) t_asn1_length_octets(bin, size);
+                    if (0) write_length_octets(bin, size);
                     binary_append(bin, v.data.str, size);
                 } break;
                 case vartype_t::TYPE_DATETIME: {
                     basic_stream bs;
                     generalized_time(bs, *v.data.dt);
-                    // t_asn1_length_octets<uint16>(bin, t_narrow_cast(bs.size()));
+                    // write_length_octets<uint16>(bin, t_narrow_cast(bs.size()));
                     bin.insert(bin.end(), bs.data(), bs.data() + bs.size());
                 } break;
                 default:
@@ -243,7 +242,7 @@ asn1_encode& asn1_encode::encode_value(binary_t& bin, asn1_entity_t entity, cons
         case asn1_entity_octstring: {
             auto size = v.size ? v.size : strlen(v.data.str);
             binary_t oct = base16_decode(v.data.bstr, size);
-            if (0) t_asn1_length_octets<uint16>(bin, t_narrow_cast(oct.size()));
+            if (0) write_length_octets<uint16>(bin, t_narrow_cast(oct.size()));
             binary_append(bin, oct);
         } break;
         case asn1_entity_cstring:
@@ -254,7 +253,7 @@ asn1_encode& asn1_encode::encode_value(binary_t& bin, asn1_entity_t entity, cons
         case asn1_entity_universalstring:
         case asn1_entity_visiblestring: {
             auto size = v.size ? v.size : strlen(v.data.str);
-            if (0) t_asn1_length_octets(bin, size);
+            if (0) write_length_octets(bin, size);
             binary_append(bin, v.data.str, size);
         } break;
         case asn1_entity_oid: {
@@ -265,7 +264,7 @@ asn1_encode& asn1_encode::encode_value(binary_t& bin, asn1_entity_t entity, cons
                 uint32 size_encode = 0;
                 auto pos = bin.size();
 
-                size_encode += t_asn1_oid_value<uint32>(bin, (oid[0] * 40) + oid[1]);
+                size_encode += encode_oid_value<uint32>(bin, (oid[0] * 40) + oid[1]);
                 size_t size = oid.size();
                 for (size_t i = 2; i < size; i++) {
                     uint32 node = oid[i];
@@ -275,10 +274,10 @@ asn1_encode& asn1_encode::encode_value(binary_t& bin, asn1_entity_t entity, cons
                         binary_push(bin, node);
                         size_encode++;
                     } else {
-                        size_encode += t_asn1_oid_value<uint32>(bin, node);
+                        size_encode += encode_oid_value<uint32>(bin, node);
                     }
                 }
-                if (0) t_asn1_length_octets<uint32>(bin, size_encode, pos);
+                if (0) write_length_octets<uint32>(bin, size_encode, pos);
             }
         } break;
         case asn1_entity_reloid: {
@@ -297,10 +296,10 @@ asn1_encode& asn1_encode::encode_value(binary_t& bin, asn1_entity_t entity, cons
                     binary_push(bin, node);
                     size_encode++;
                 } else {
-                    size_encode += t_asn1_oid_value<uint32>(bin, node);
+                    size_encode += encode_oid_value<uint32>(bin, node);
                 }
             }
-            if (0) t_asn1_length_octets<uint32>(bin, size_encode, pos);
+            if (0) write_length_octets<uint32>(bin, size_encode, pos);
         } break;
         default:
             break;
@@ -321,7 +320,7 @@ asn1_encode& asn1_encode::utctime(binary_t& bin, const datetime_t& dt, int tzoff
     basic_stream bs;
     utctime(bs, dt, tzoffset);
     binary_push(bin, asn1_tag_utctime);
-    t_asn1_length_octets<uint16>(bin, t_narrow_cast(bs.size()));
+    write_length_octets<uint16>(bin, t_narrow_cast(bs.size()));
     bin.insert(bin.end(), bs.data(), bs.data() + bs.size());
     return *this;
 }

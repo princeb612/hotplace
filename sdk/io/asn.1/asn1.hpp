@@ -32,39 +32,28 @@ class asn1 {
     asn1* clone();
 
     asn1& add(asn1_object* item);
-    /**
-     * (*obj)
-     *  .add(new asn1_sequence("name"), [](asn1_sequence* seq) -> void { seq->do_something(); });
-     *  .add(new asn1_set("name"), [](asn1_set* set) -> void { set->do_something(); });
-     */
-    template <typename T, typename F>
-    asn1& add(T* item, F&& fn) {
-        add(item);
-        fn(item);
-        return *this;
-    }
+    asn1& add(asn1_object* item, std::function<void(asn1_object*)> f);
     asn1& operator<<(asn1_object* item);
 
-    void publish(binary_t* b);
+    return_t read(const byte_t* stream, size_t size, size_t& pos);
+    void for_each(std::function<void(asn1_object*)> f);
+    void for_each(std::function<void(asn1_value*)> f);
+    void notation(stream_t* s);
     void publish(stream_t* s);
+    void publish(binary_t* b);
+
+    void clear();
 
     void addref();
     void release();
 
-    void clear();
-
    protected:
    private:
     t_shared_reference<asn1> _shared;
+
+    std::map<std::string, asn1_object*> _dictionary;
     std::list<asn1_object*> _types;
-
-    typedef std::map<std::string, asn1_object*> dictionary_t;
-    typedef std::map<std::string, variant> namevalues_t;
-    typedef std::map<unsigned, variant> indexvalues_t;
-
-    dictionary_t _dictionary;
-    namevalues_t _namevalues;
-    indexvalues_t _idxvalues;
+    std::list<asn1_value*> _values;
 
     // parser _parser;
 };

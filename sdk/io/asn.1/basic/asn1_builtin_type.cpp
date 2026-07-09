@@ -51,7 +51,7 @@ void asn1_builtin_type::represent(uint32 depth, stream_t* s, asn1_value* value) 
             s->printf("%s", _name.c_str());
         else {
             if (false == get_name().empty()) s->printf("%s ", get_name().c_str());
-            if (value) {
+            if (value && (asn1_entity_null != entity)) {
                 value->write(s, get_name());
             } else {
                 s->printf("%s", resource->get_entity_name(get_ident(), entity).c_str());
@@ -119,7 +119,7 @@ bool asn1_builtin_type::represent(uint32 depth, binary_t* b, asn1_value* value, 
                 value->encode_value(*b, this, name, do_len);
                 if (do_len && (false == is_suppressed())) {
                     // insert L between L and V
-                    asn1_encode::t_asn1_length_octets<size_t>(*b, b->size() - pos, pos);
+                    asn1_encode::write_length_octets<size_t>(*b, b->size() - pos, pos);
                 }
             } break;
         }

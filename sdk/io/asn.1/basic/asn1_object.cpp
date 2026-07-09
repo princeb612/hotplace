@@ -31,7 +31,6 @@ asn1_object::asn1_object(asn1_entity_t entity, const std::string& name, asn1_obj
     _shared.make_share(this);
     if (tag) tag->set_parent(this);
     if (object) object->set_parent(this);
-    get_constraints().set_owner(this);
 }
 
 asn1_object::asn1_object(const asn1_object& other) : asn1_object(asn1_entity_syntax, "", nullptr, nullptr) { *this = other; }

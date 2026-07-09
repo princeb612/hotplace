@@ -192,11 +192,7 @@ class asn1_constraints {
         return true;
     }
 
-    void set_owner(asn1_object* object);
-    asn1_object* get_owner() const;
-
    private:
-    asn1_object* _owner;
     std::list<asn1_constraint_t*> _constraints;
 };
 

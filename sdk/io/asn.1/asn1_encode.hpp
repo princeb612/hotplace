@@ -15,6 +15,7 @@
 
 #include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/asn.1/types.hpp>
 
@@ -45,7 +46,7 @@ class asn1_encode {
 
     static return_t write_ident_octets(binary_t& bin, uint8 enc, uint64 tag, size_t pos = -1);
     static return_t write_ident_octets2(binary_t& bin, asn1_object* object, size_t pos = -1);
-    static return_t read_asn1_ident_octets(const byte_t* stream, size_t size, uint8& ident, uint64& tag);
+    static return_t read_ident_octets(const byte_t* stream, size_t size, size_t& pos, uint8& ident, uint64& tag);
 
     /**
      * @brief   length octets
@@ -53,12 +54,12 @@ class asn1_encode {
      *          X.690 8.1.3 Length octets
      */
     template <typename TYPE>
-    static uint32 t_asn1_length_octets(binary_t& bin, TYPE len, size_t pos = -1) {
+    static TYPE write_length_octets(binary_t& bin, TYPE len, size_t pos = -1) {
         if ((size_t)-1 == pos) {
             pos = bin.size();
         }
 
-        uint32 size_encode = 0;
+        TYPE size_encode = TYPE();
         if (len > 0x7f) {
             int bytesize = byte_capacity(len);
             TYPE temp = convert_endian(len);
@@ -73,9 +74,39 @@ class asn1_encode {
         return size_encode;
     }
 
+    template <typename TYPE>
+    static return_t read_length_octets(const byte_t* stream, size_t size, size_t& pos, TYPE& len) {
+        if (nullptr == stream || 0 == size || pos >= size) return errorcode_t::invalid_parameter;
+
+        auto msb = stream[pos];
+        ++pos;
+        if (0x80 & msb) {
+            uint8 bytesize = msb & ~0x80;
+            auto tsize = sizeof(TYPE);
+            if (bytesize > tsize) return errorcode_t::insufficient;
+            if (pos + bytesize > size) return errorcode_t::bad_data;
+
+            bignumber bn(stream + pos, bytesize);
+            len = bn.t_bntoi<TYPE>();
+
+            int capacity = byte_capacity(len);
+            if (len > 0x7f) {
+                if (capacity != bytesize) return errorcode_t::bad_data;
+            } else {
+                if (bytesize != 0) return errorcode_t::bad_data;
+            }
+
+            pos += bytesize;
+        } else {
+            len = msb;
+        }
+
+        return errorcode_t::success;
+    }
+
     // X.690 8.19.2
     template <typename TYPE>
-    static uint32 t_asn1_oid_value(binary_t& bin, TYPE v, size_t pos = -1) {
+    static uint32 encode_oid_value(binary_t& bin, TYPE v, size_t pos = -1) {
         if (size_t(-1) == pos) {
             pos = bin.size();
         }
@@ -92,7 +123,7 @@ class asn1_encode {
     }
 
     template <typename TYPE>
-    static uint32 t_asn1_integer_value(binary_t& bin, TYPE v, size_t pos = -1) {
+    static uint32 write_integer_value(binary_t& bin, TYPE v, size_t pos = -1) {
         if (size_t(-1) == pos) {
             pos = bin.size();
         }
@@ -104,10 +135,10 @@ class asn1_encode {
 
     // X.690 8.3 encoding of an integer value
     template <typename TYPE>
-    static void t_asn1_encode_integer(binary_t& bin, TYPE value) {
+    static void encode_integer(binary_t& bin, TYPE value) {
         size_t pos = bin.size();
-        size_t size_encode = t_asn1_integer_value<TYPE>(bin, value, pos);  // X.690 8.3.3
-        t_asn1_length_octets<size_t>(bin, size_encode, pos);
+        size_t size_encode = write_integer_value<TYPE>(bin, value, pos);  // X.690 8.3.3
+        write_length_octets<size_t>(bin, size_encode, pos);
     }
 
     /**
@@ -130,8 +161,8 @@ class asn1_encode {
      *             exponent -2(FE)
      *             N 5(5)
      */
-    template <typename FPTYPE, typename BINTYPE>
-    static ieee754_typeof_t t_asn1_encode_real(binary_t& bin, FPTYPE value) {
+    template <typename FPTYPE>
+    static ieee754_typeof_t encode_real(binary_t& bin, FPTYPE value) {
         // Step.1
         // ASN.1 by simple words - Chapter 2. Encoding of REAL type
 
@@ -190,32 +221,27 @@ class asn1_encode {
             case ieee754_typeof_t::ieee754_zero:
                 if (sign) {
                     // X.690 8.5.9 minus zero
-                    bin.insert(bin.end(), 0x01);
                     bin.insert(bin.end(), 0x43);
                 } else {
                     // X.690 8.5.2 plus zero
-                    bin.insert(bin.end(), 0x00);
                 }
                 break;
             case ieee754_typeof_t::ieee754_pinf:
                 // X.690 8.5.9 PLUS-INFINITY
-                bin.insert(bin.end(), 0x01);
                 bin.insert(bin.end(), 0x40);
                 break;
             case ieee754_typeof_t::ieee754_ninf:
                 // X.690 8.5.9 MINUS-INFINITY
-                bin.insert(bin.end(), 0x01);
                 bin.insert(bin.end(), 0x41);
                 break;
             case ieee754_typeof_t::ieee754_nan:
                 // X.690 8.5.9 NOT-A-NUMBER
-                bin.insert(bin.end(), 0x01);
                 bin.insert(bin.end(), 0x42);
                 break;
             default:
                 // V(e m)
-                size_exponent = t_asn1_integer_value<int>(bin, exponent);
-                size_mantissa = t_asn1_integer_value<int>(bin, int(ieee754_fabs(mantissa)));
+                size_exponent = write_integer_value<int>(bin, exponent);
+                size_mantissa = write_integer_value<int>(bin, int(ieee754_fabs(mantissa)));
                 // T(info_octet)
                 uint8 info = sign ? asn1_real_binary_neg : asn1_real_binary;
                 switch (size_exponent) {
@@ -231,14 +257,14 @@ class asn1_encode {
                     default:
                         // T:83 L:elen V(e m)
                         info |= asn1_real_exp_octs;  // 03
-                        size_exponent = t_asn1_integer_value<size_t>(bin, size_exponent, pos);
+                        size_exponent = write_integer_value<size_t>(bin, size_exponent, pos);
                         break;
                 }
 
                 // T(info_octet)
                 bin.insert(bin.begin() + pos, info);
                 // L
-                if (0) t_asn1_integer_value<uint32>(bin, size_exponent + size_mantissa + 1, pos);
+                if (0) write_integer_value<uint32>(bin, size_exponent + size_mantissa + 1, pos);
                 break;
         }
         return type;

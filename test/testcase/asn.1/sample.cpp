@@ -55,8 +55,8 @@ int main(int argc, char** argv) {
         set_trace_level(option.trace_level);
     }
 
-    testcase_asn1();
-    testcase_gpt();
+    testcase_basic1();
+    testcase_basic2();
     testcase_constraints();
     // testcase_parser();
 

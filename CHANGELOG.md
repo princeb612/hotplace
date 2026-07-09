@@ -35,6 +35,8 @@
     * CBOR
 
 * details
+  * Revision 1045-
+    * ASN.1 decode
   * Revision 1044
     * ASN.1 constraints (FROM, SEQUENCE OF, SET OF, ENUMERATED, OCTET STRING, BIT STRING)
   * Revision 1043
