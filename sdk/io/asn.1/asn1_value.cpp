@@ -277,18 +277,6 @@ bool asn1_value::encode_namedlist(binary_t& bin, asn1_object* object, const std:
     return true;
 }
 
-void asn1_value::add_binary(binary_t& bin, const std::string& name) {
-    auto iter = _values.find(name);
-    if (_values.end() != iter) {
-        const variant& v = iter->second;
-        if (v.flag() & vt_flag_binary) {
-            binary_t temp;
-            v.to_binary(temp);
-            bin.insert(bin.end(), temp.begin(), temp.end());
-        }
-    }
-}
-
 void asn1_value::addref() { _shared.addref(); }
 
 void asn1_value::release() { _shared.delref(); }

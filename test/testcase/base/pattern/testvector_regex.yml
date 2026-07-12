@@ -1,6 +1,7 @@
 # \{, \}      brace
 # ()          grouping
 # (\d+)       one or more number
+# ?:          Non-Capturing Group
 # (?: ... )?  there may or may not be an internal pattern
 # ([^}]+)     find one or more characters that are not }.
 testvector:
@@ -60,3 +61,13 @@ testvector:
       expr: https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)
       results:
       - "https://github.com/princeb612/hotplace" # [0] https://github.com/princeb612/hotplace [2] /princeb612/hotplace
+    - item: Generalized Time
+      input: 20180104055220.698Z
+      expr: ^\d{4}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])(?:[01]\d|2[0-3])(?:[0-5]\d)(?:[0-5]\d)?(?:\.\d+)?(?:Z|[+\-](?:0\d|1[0-2])[0-5]\d)$
+      results:
+      - "20180104055220.698Z"
+    - item: Generalized Time
+      input: 20260710123456.0+0900
+      expr: ^(\d{4})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])([01]\d|2[0-3])([0-5]\d)([0-5]\d)?(\.\d+)?(Z|[+\-](0\d|1[0-2])[0-5]\d)$
+      results:
+      - "20260710123456.0+0900"

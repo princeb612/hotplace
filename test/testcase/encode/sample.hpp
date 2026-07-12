@@ -44,5 +44,6 @@ extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 void testcase_base16();
 void testcase_base64();
 void testcase_huffman();
+void testcase_base128();
 
 #endif

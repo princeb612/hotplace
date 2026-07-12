@@ -62,7 +62,6 @@
 
 /* asn.1 */
 #include <hotplace/sdk/io/asn.1/asn1.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_builder.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_value.hpp>

@@ -34,8 +34,7 @@ namespace io {
  */
 class asn1_any : public asn1_type {
    public:
-    asn1_any(const std::string& name, bool optional = false);
-    // asn1_any(const std::string& name, const std::string& ref);
+    asn1_any(const std::string& name = "", bool optional = false);
     virtual ~asn1_any();
 
     virtual asn1_any* clone();

@@ -21,29 +21,14 @@ namespace hotplace {
 namespace io {
 
 /**
-    // sketch.1
-    {
-        auto schema = new asn1_builtin_type(asn1_entity_visiblestring);
-        auto instance = schema->instantiate();
-
-        (*instance)[""] = "sample";   // operator [](const std::string&)
-
-        instance->set("", "sample");  // set
-    }
-
-    // sketch.2
+    // sketch
     {
         auto schema = new asn1_sequence;
         (*schema) << new asn1_builtin_type("name", asn1_entity_utf8string)
-                  << new asn1_builtin_type("age", asn1_entity_utf8string)
-                  << new asn1_builtin_type("profile", new asn1_builtin_type("Profile", asn1_entity_referenced_type));
+                  << new asn1_builtin_type("age", asn1_entity_integer);
         auto instance = schema->instantiate();
 
-        (*instance)["name"] = "john";
-        (*instance)["age"] = "20";
-        (*instance)["profile"] = "...";
-
-        (*instance).set("name", "john").set("age", "20").set("profile", "...");
+        (*instance).set("name", "john").set("age", 20)
     }
  */
 class asn1_value {
@@ -73,7 +58,6 @@ class asn1_value {
     void encode_sequenceof_value(binary_t& bin, asn1_object* object, const std::string& name);
     void encode_setof_value(binary_t& bin, asn1_object* object, const std::string& name);
     bool encode_namedlist(binary_t& bin, asn1_object* object, const std::string& name, const std::map<std::string, asn1_native_int_t>& namedlist);
-    void add_binary(binary_t& bin, const std::string& name);
 
     void addref();
     void release();

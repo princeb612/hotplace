@@ -31,11 +31,14 @@ class asn1 {
 
     asn1* clone();
 
+    static asn1_object* build(asn1_entity_t entity, std::function<void(asn1_object*)> f = nullptr);
+
     asn1& add(asn1_object* item);
     asn1& add(asn1_object* item, std::function<void(asn1_object*)> f);
     asn1& operator<<(asn1_object* item);
 
     return_t read(const byte_t* stream, size_t size, size_t& pos);
+    return_t read(asn1_object* parent, const byte_t* stream, size_t size, size_t& pos);
     void for_each(std::function<void(asn1_object*)> f);
     void for_each(std::function<void(asn1_value*)> f);
     void notation(stream_t* s);

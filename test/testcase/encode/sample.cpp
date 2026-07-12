@@ -179,6 +179,7 @@ int main(int argc, char** argv) {
     testcase_base16();
     testcase_base64();
     testcase_huffman();
+    testcase_base128();
 
     _logger->flush();
 

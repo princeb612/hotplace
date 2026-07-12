@@ -57,7 +57,6 @@ enum asn1_tag_t {
     asn1_tag_timeofday = 32,        // TIME-OF-DAY
     asn1_tag_datetime = 33,         // DATE-TIME
     asn1_tag_duration = 34,         // DURATION
-
 };
 
 enum asn1_bits_t : uint8 {

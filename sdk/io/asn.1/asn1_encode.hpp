@@ -104,24 +104,6 @@ class asn1_encode {
         return errorcode_t::success;
     }
 
-    // X.690 8.19.2
-    template <typename TYPE>
-    static uint32 encode_oid_value(binary_t& bin, TYPE v, size_t pos = -1) {
-        if (size_t(-1) == pos) {
-            pos = bin.size();
-        }
-        uint32 len = 0;
-        uint8 m = 0;
-        while (v > 0x7f) {
-            bin.insert(bin.begin() + pos, ((byte_t)v & 0x7f) | m);
-            v >>= 7;
-            m = 0x80;
-            len++;
-        }
-        bin.insert(bin.begin() + pos, v | m);
-        return len + 1;
-    }
-
     template <typename TYPE>
     static uint32 write_integer_value(binary_t& bin, TYPE v, size_t pos = -1) {
         if (size_t(-1) == pos) {
@@ -273,7 +255,7 @@ class asn1_encode {
     asn1_encode& encode(binary_t& bin, asn1_entity_t entity, const variant& vt);
     asn1_encode& encode_value(binary_t& bin, asn1_entity_t entity, const variant& vt, bool& do_len);
 
-    asn1_encode& generalized_time(basic_stream& bs, const datetime_t& dt);
+    asn1_encode& generalized_time(basic_stream& bs, const datetime_t& dt, bool isutc = true);
     asn1_encode& utctime(binary_t& bin, const datetime_t& dt, int tzoffset = 0);
     asn1_encode& utctime(basic_stream& bs, const datetime_t& dt, int tzoffset = 0);
 

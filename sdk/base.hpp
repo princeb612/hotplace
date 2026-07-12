@@ -31,6 +31,7 @@
 #include <hotplace/sdk/base/basic/variant.hpp>
 
 /* encoding */
+#include <hotplace/sdk/base/encoding/base128.hpp>
 #include <hotplace/sdk/base/encoding/base16.hpp>
 #include <hotplace/sdk/base/encoding/base64.hpp>
 #include <hotplace/sdk/base/encoding/decoder_stream.hpp>

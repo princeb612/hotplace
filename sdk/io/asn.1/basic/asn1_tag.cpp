@@ -42,6 +42,21 @@ int asn1_tag::get_tag_type() const { return _tag_mode; }
 
 bool asn1_tag::is_implicit() const { return asn1_implicit == get_tag_type(); }
 
+asn1_tag& asn1_tag::as_explicit() {
+    _tag_mode = asn1_explicit;
+    return *this;
+}
+
+asn1_tag& asn1_tag::as_implicit() {
+    _tag_mode = asn1_implicit;
+    return *this;
+}
+
+asn1_tag& asn1_tag::as_automatic() {
+    _tag_mode = asn1_automatic;
+    return *this;
+}
+
 void asn1_tag::represent(uint32 depth, stream_t* s, asn1_value* value) {
     if (s) {
         if (get_class() & asn1_class_mask) {

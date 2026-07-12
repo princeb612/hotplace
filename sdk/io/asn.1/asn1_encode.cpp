@@ -15,6 +15,7 @@
  */
 
 #include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/encoding/base128.hpp>
 #include <hotplace/sdk/base/encoding/base16.hpp>
 #include <hotplace/sdk/base/nostd/binary.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
@@ -195,7 +196,6 @@ asn1_encode& asn1_encode::encode_value(binary_t& bin, asn1_entity_t entity, cons
         case asn1_entity_utctime: {
             // YYMMDDhhmm[ss]Z
             auto size = v.size ? v.size : strlen(v.data.str);
-            if (0) write_length_octets(bin, size);
             binary_append(bin, v.data.str, size);
         } break;
         case asn1_entity_generalizedtime: {
@@ -205,7 +205,6 @@ asn1_encode& asn1_encode::encode_value(binary_t& bin, asn1_entity_t entity, cons
                     // YYYYMMDDhhmm[ss[.fff]]Z
                     // YYYYMMDDhhmm[ss[.fff]]+hhmm
                     auto size = v.size ? v.size : strlen(v.data.str);
-                    if (0) write_length_octets(bin, size);
                     binary_append(bin, v.data.str, size);
                 } break;
                 case vartype_t::TYPE_DATETIME: {
@@ -242,7 +241,6 @@ asn1_encode& asn1_encode::encode_value(binary_t& bin, asn1_entity_t entity, cons
         case asn1_entity_octstring: {
             auto size = v.size ? v.size : strlen(v.data.str);
             binary_t oct = base16_decode(v.data.bstr, size);
-            if (0) write_length_octets<uint16>(bin, t_narrow_cast(oct.size()));
             binary_append(bin, oct);
         } break;
         case asn1_entity_cstring:
@@ -253,53 +251,39 @@ asn1_encode& asn1_encode::encode_value(binary_t& bin, asn1_entity_t entity, cons
         case asn1_entity_universalstring:
         case asn1_entity_visiblestring: {
             auto size = v.size ? v.size : strlen(v.data.str);
-            if (0) write_length_octets(bin, size);
             binary_append(bin, v.data.str, size);
         } break;
         case asn1_entity_oid: {
             oid_t oid;
             str_to_oid(v.data.str, oid);
 
+            // X.690 8.19.2
             if (oid.size() >= 2) {
-                uint32 size_encode = 0;
-                auto pos = bin.size();
-
-                size_encode += encode_oid_value<uint32>(bin, (oid[0] * 40) + oid[1]);
+                base128_encode((oid[0] * 40) + oid[1], bin);
                 size_t size = oid.size();
-                for (size_t i = 2; i < size; i++) {
+                for (size_t i = 2; i < size; ++i) {
                     uint32 node = oid[i];
                     if (0 == node) {
                         break;
-                    } else if (node <= 127) {
-                        binary_push(bin, node);
-                        size_encode++;
                     } else {
-                        size_encode += encode_oid_value<uint32>(bin, node);
+                        base128_encode(node, bin);
                     }
                 }
-                if (0) write_length_octets<uint32>(bin, size_encode, pos);
             }
         } break;
         case asn1_entity_reloid: {
-            uint32 size_encode = 0;
-            auto pos = bin.size();
-
             oid_t oid;
             str_to_oid(v.data.str, oid);
 
             size_t size = oid.size();
-            for (size_t i = 0; i < size; i++) {
+            for (size_t i = 0; i < size; ++i) {
                 uint32 node = oid[i];
                 if (0 == node) {
                     break;
-                } else if (node <= 127) {
-                    binary_push(bin, node);
-                    size_encode++;
                 } else {
-                    size_encode += encode_oid_value<uint32>(bin, node);
+                    base128_encode(node, bin);
                 }
             }
-            if (0) write_length_octets<uint32>(bin, size_encode, pos);
         } break;
         default:
             break;
@@ -307,12 +291,11 @@ asn1_encode& asn1_encode::encode_value(binary_t& bin, asn1_entity_t entity, cons
     return *this;
 }
 
-asn1_encode& asn1_encode::generalized_time(basic_stream& bs, const datetime_t& dt) {
-    if (dt.milliseconds) {
-        bs.printf("%04d%02d%02d%02d%02d%02d.%dZ", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, dt.milliseconds);
-    } else {
-        bs.printf("%04d%02d%02d%02d%02d%02dZ", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
-    }
+asn1_encode& asn1_encode::generalized_time(basic_stream& bs, const datetime_t& dt, bool isutc) {
+    bs.printf("%04d%02d%02d%02d%02d%02d", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
+
+    if (dt.milliseconds) bs.printf(".%d", dt.milliseconds);
+    if (isutc) bs.printf("Z");
     return *this;
 }
 

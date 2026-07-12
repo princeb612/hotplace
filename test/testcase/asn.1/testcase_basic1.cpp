@@ -464,7 +464,11 @@ void test_x690_encoding_value() {
         {
             asn1 reader;
             size_t pos = 0;
-            reader.read(bin_expect.data(), bin_expect.size(), pos);
+            auto stream = bin_expect.data();
+            auto size = bin_expect.size();
+            auto test = reader.read(stream, size, pos);
+            _test_case.test(test, __FUNCTION__, "read and decode %s", entry.text);
+            _test_case.assert(pos == size, __FUNCTION__, "complete stream consumed %s", entry.text);
 
             basic_stream bs_type;
             basic_stream bs_value;
@@ -481,7 +485,7 @@ void test_x690_encoding_value() {
                 dbs.vaprintln("> value    {2}", va);
                 dbs.vaprintln("> DER      {3:x}", va);
             });
-            _test_case.assert(bin == bin_expect, __FUNCTION__, "decode and encode %s", entry.der);
+            _test_case.assert(bin == bin_expect, __FUNCTION__, "decode and encode %s", entry.text);
         }
     }
 }
@@ -506,7 +510,7 @@ void do_dump_asn1(asn1_value* object, const char* expect, const char* text) {
         // - [ ] oct string
         // - [ ] bit string
         // - [ ] xxx string
-        if (0) {
+        {
             asn1 reader;
             size_t pos = 0;
             reader.read(bin.data(), bin.size(), pos);

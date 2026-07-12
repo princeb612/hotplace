@@ -146,7 +146,7 @@ class bignumber {
     /**
      * @brief   base16 hex-stream
      */
-    bignumber(const binary_t& base16hexstream);
+    bignumber(const binary_t& b);
     /**
      * @brief   numeric, hexdecimal string
      * @example
@@ -161,49 +161,6 @@ class bignumber {
      */
     bignumber(const std::string& value);
     ~bignumber();
-
-    template <typename T, typename custom::is_pure_signed_integral<T>* = nullptr>
-    bignumber& set(T value) {
-        _v.clear();
-
-        using calc_type = typename custom::bn_underlying_type<T>::type;
-        calc_type target_value = static_cast<calc_type>(value);
-
-        if (target_value >= 0) {
-            _sign = 1;
-        } else {
-            _sign = -1;
-            target_value = -target_value;
-        }
-
-        uint64 temp = static_cast<uint64>(target_value);
-
-        while (temp) {
-            _v.push_back(temp % base2p32);
-            temp /= base2p32;
-        }
-
-        if (_v.empty()) {
-            _sign = 1;
-        }
-
-        return *this;
-    }
-    template <typename T, typename custom::is_pure_unsigned_integral<T>* = nullptr>
-    bignumber& set(T value) {
-        _sign = 1;
-        _v.clear();
-
-        uint64 temp = static_cast<uint64>(value);
-
-        while (temp) {
-            _v.push_back(temp % base2p32);
-            temp /= base2p32;
-        }
-        trim();
-
-        return *this;
-    }
 
     bignumber& operator=(const bignumber& other);
     bignumber& operator=(bignumber&& other);
@@ -313,6 +270,62 @@ class bignumber {
     bignumber operator++(int);
     bignumber operator--(int);
 
+    explicit operator bool() const;
+    explicit operator uint8() const;
+    explicit operator uint16() const;
+    explicit operator uint32() const;
+
+    /**
+     * @brief   bignumber to bytestream (BE) and vice versa.
+     */
+    friend binary_t& operator<<(binary_t& lhs, const bignumber& rhs);
+    friend std::string& operator<<(std::string& lhs, const bignumber& rhs);
+    friend binary_t& operator>>(const bignumber& lhs, binary_t& rhs);
+    friend std::string& operator>>(const bignumber& lhs, std::string& rhs);
+
+    template <typename T, typename custom::is_pure_signed_integral<T>* = nullptr>
+    bignumber& set(T value) {
+        _v.clear();
+
+        using calc_type = typename custom::bn_underlying_type<T>::type;
+        calc_type target_value = static_cast<calc_type>(value);
+
+        if (target_value >= 0) {
+            _sign = 1;
+        } else {
+            _sign = -1;
+            target_value = -target_value;
+        }
+
+        uint64 temp = static_cast<uint64>(target_value);
+
+        while (temp) {
+            _v.push_back(temp % base2p32);
+            temp /= base2p32;
+        }
+
+        if (_v.empty()) {
+            _sign = 1;
+        }
+
+        return *this;
+    }
+    template <typename T, typename custom::is_pure_unsigned_integral<T>* = nullptr>
+    bignumber& set(T value) {
+        _sign = 1;
+        _v.clear();
+
+        uint64 temp = static_cast<uint64>(value);
+
+        while (temp) {
+            _v.push_back(temp % base2p32);
+            temp /= base2p32;
+        }
+        trim();
+
+        return *this;
+    }
+
     // #ifdef __SIZEOF_INT128__
     //     bignumber& set(int128 value);
     //     bignumber& setu(uint128 value);
@@ -322,9 +335,9 @@ class bignumber {
     // #endif
     bignumber& set(const variant_t& vt);
     bignumber& set(const byte_t* p, size_t n, bool isunsigned = true);
-    bignumber& sethex(const binary_t& base16hexstream);
+    bignumber& set(const binary_t& base16hexstream);
+    bignumber& set(const std::string& value);
     bignumber& setstring(const char* value);
-    bignumber& setstring(const std::string& value);
 
     static bignumber add(const bignumber& lhs, const bignumber& rhs);
     static bignumber sub(const bignumber& lhs, const bignumber& rhs);
@@ -422,14 +435,6 @@ class bignumber {
      * @return  sign 1 positive, -1 negative
      */
     int get(binary_t& base16hexstream, bool trimzero = true) const;
-
-    /**
-     * @brief   bignumber to bytestream (BE) and vice versa.
-     */
-    friend binary_t& operator<<(binary_t& lhs, const bignumber& rhs);
-    friend std::string& operator<<(std::string& lhs, const bignumber& rhs);
-    friend binary_t& operator>>(const bignumber& lhs, binary_t& rhs);
-    friend std::string& operator>>(const bignumber& lhs, std::string& rhs);
 
     /*
      * @return T

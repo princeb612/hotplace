@@ -24,8 +24,6 @@ asn1_any::asn1_any(const std::string& name, bool optional) : asn1_type(asn1_enti
     if (optional) as_optional();
 }
 
-// asn1_any::asn1_any(const std::string& name, const std::string& ref) : asn1_type(asn1_entity_any, name, nullptr) { _ref = ref; }
-
 asn1_any::~asn1_any() {}
 
 asn1_any* asn1_any::clone() { return new asn1_any(*this); }
@@ -63,7 +61,14 @@ bool asn1_any::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 fl
         auto name = resolve_name();
         debug_print(depth, name);
 
-        value->add_binary(*b, name);
+        std::list<variant> values;
+        value->find(name, values, vt_flag_binary);
+
+        for (const auto& v : values) {
+            binary_t temp;
+            v.to_binary(temp);
+            b->insert(b->end(), temp.begin(), temp.end());
+        }
     }
 
     return true;
