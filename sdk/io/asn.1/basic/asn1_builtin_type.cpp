@@ -100,7 +100,7 @@ bool asn1_builtin_type::represent(uint32 depth, binary_t* b, asn1_value* value, 
                 break;
             case asn1_visitor_choice:
             default:
-                asn1_encode::write_ident_octets2(*b, this);
+                asn1_encode::write_identifier2(*b, this);
                 break;
         }
     }
@@ -116,10 +116,10 @@ bool asn1_builtin_type::represent(uint32 depth, binary_t* b, asn1_value* value, 
             default: {
                 bool do_len = false;
                 auto pos = b->size();
-                value->encode_value(*b, this, name, do_len);
+                value->write(*b, this, name, do_len);
                 if (do_len && (false == is_suppressed())) {
                     // insert L between L and V
-                    asn1_encode::write_length_octets<size_t>(*b, b->size() - pos, pos);
+                    asn1_encode::write_length(*b, b->size() - pos, pos);
                 }
             } break;
         }

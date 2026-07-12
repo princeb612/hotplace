@@ -104,7 +104,7 @@ bool asn1_tag::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 fl
 
     uint8 ident = get_class() | get_ident();
     if (b && (false == is_suppressed())) {
-        asn1_encode::write_ident_octets(*b, ident, get_class_number());
+        asn1_encode::write_identifier(*b, ident, get_class_number());
     }
 
 #if defined DEBUG

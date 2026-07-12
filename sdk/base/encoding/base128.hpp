@@ -17,6 +17,8 @@
 
 namespace hotplace {
 
+// ASN.1 OID
+
 return_t base128_encode(uint64 value, binary_t& bin);
 return_t base128_decode(const byte_t* stream, size_t size, size_t& pos, uint64& value);
 

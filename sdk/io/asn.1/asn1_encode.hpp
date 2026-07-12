@@ -44,68 +44,21 @@ class asn1_encode {
    public:
     asn1_encode();
 
-    static return_t write_ident_octets(binary_t& bin, uint8 enc, uint64 tag, size_t pos = -1);
-    static return_t write_ident_octets2(binary_t& bin, asn1_object* object, size_t pos = -1);
-    static return_t read_ident_octets(const byte_t* stream, size_t size, size_t& pos, uint8& ident, uint64& tag);
+    static return_t write_identifier(binary_t& bin, uint8 enc, uint64 tag, size_t pos = -1);
+    static return_t write_identifier2(binary_t& bin, asn1_object* object, size_t pos = -1);
+    static return_t read_identifier(const byte_t* stream, size_t size, size_t& pos, uint8& ident, uint64& tag);
 
     /**
      * @brief   length octets
      * @sa
      *          X.690 8.1.3 Length octets
      */
-    template <typename TYPE>
-    static TYPE write_length_octets(binary_t& bin, TYPE len, size_t pos = -1) {
-        if ((size_t)-1 == pos) {
-            pos = bin.size();
-        }
+    static return_t write_length(binary_t& bin, uint64 len, size_t pos = -1);
+    static return_t read_length(const byte_t* stream, size_t size, size_t& pos, uint64& len);
 
-        TYPE size_encode = TYPE();
-        if (len > 0x7f) {
-            int bytesize = byte_capacity(len);
-            TYPE temp = convert_endian(len);
-            bin.insert(bin.begin() + pos, 0x80 | bytesize);  // X.690 8.1.3.5
-            bin.insert(bin.begin() + pos + 1, (byte_t*)&temp + sizeof(TYPE) - bytesize, (byte_t*)&temp + sizeof(TYPE));
-            size_encode = 1 + bytesize;
-        } else {
-            // X.690 8.1.3.4
-            bin.insert(bin.begin() + pos, (byte_t)len);
-            size_encode = 1;
-        }
-        return size_encode;
-    }
-
-    template <typename TYPE>
-    static return_t read_length_octets(const byte_t* stream, size_t size, size_t& pos, TYPE& len) {
-        if (nullptr == stream || 0 == size || pos >= size) return errorcode_t::invalid_parameter;
-
-        auto msb = stream[pos];
-        ++pos;
-        if (0x80 & msb) {
-            uint8 bytesize = msb & ~0x80;
-            auto tsize = sizeof(TYPE);
-            if (bytesize > tsize) return errorcode_t::insufficient;
-            if (pos + bytesize > size) return errorcode_t::bad_data;
-
-            bignumber bn(stream + pos, bytesize);
-            len = bn.t_bntoi<TYPE>();
-
-            int capacity = byte_capacity(len);
-            if (len > 0x7f) {
-                if (capacity != bytesize) return errorcode_t::bad_data;
-            } else {
-                if (bytesize != 0) return errorcode_t::bad_data;
-            }
-
-            pos += bytesize;
-        } else {
-            len = msb;
-        }
-
-        return errorcode_t::success;
-    }
-
-    template <typename TYPE>
-    static uint32 write_integer_value(binary_t& bin, TYPE v, size_t pos = -1) {
+    // X.690 8.3 encoding of an integer value
+    template <typename TYPE, typename std::enable_if<custom::is_integral<TYPE>::value, int>::type = 0>
+    static uint32 write(binary_t& bin, TYPE v, size_t pos = -1) {
         if (size_t(-1) == pos) {
             pos = bin.size();
         }
@@ -113,14 +66,6 @@ class asn1_encode {
         TYPE temp = convert_endian(v);
         bin.insert(bin.begin() + pos, (byte_t*)&temp + sizeof(TYPE) - len, (byte_t*)&temp + sizeof(TYPE));
         return len;
-    }
-
-    // X.690 8.3 encoding of an integer value
-    template <typename TYPE>
-    static void encode_integer(binary_t& bin, TYPE value) {
-        size_t pos = bin.size();
-        size_t size_encode = write_integer_value<TYPE>(bin, value, pos);  // X.690 8.3.3
-        write_length_octets<size_t>(bin, size_encode, pos);
     }
 
     /**
@@ -143,8 +88,8 @@ class asn1_encode {
      *             exponent -2(FE)
      *             N 5(5)
      */
-    template <typename FPTYPE>
-    static ieee754_typeof_t encode_real(binary_t& bin, FPTYPE value) {
+    template <typename FPTYPE, typename std::enable_if<std::is_floating_point<FPTYPE>::value, int>::type = 0>
+    static ieee754_typeof_t write(binary_t& bin, FPTYPE value) {
         // Step.1
         // ASN.1 by simple words - Chapter 2. Encoding of REAL type
 
@@ -222,8 +167,8 @@ class asn1_encode {
                 break;
             default:
                 // V(e m)
-                size_exponent = write_integer_value<int>(bin, exponent);
-                size_mantissa = write_integer_value<int>(bin, int(ieee754_fabs(mantissa)));
+                size_exponent = write(bin, exponent);
+                size_mantissa = write(bin, int(ieee754_fabs(mantissa)));
                 // T(info_octet)
                 uint8 info = sign ? asn1_real_binary_neg : asn1_real_binary;
                 switch (size_exponent) {
@@ -239,21 +184,22 @@ class asn1_encode {
                     default:
                         // T:83 L:elen V(e m)
                         info |= asn1_real_exp_octs;  // 03
-                        size_exponent = write_integer_value<size_t>(bin, size_exponent, pos);
+                        size_exponent = write(bin, size_exponent, pos);
                         break;
                 }
 
                 // T(info_octet)
                 bin.insert(bin.begin() + pos, info);
                 // L
-                if (0) write_integer_value<uint32>(bin, size_exponent + size_mantissa + 1, pos);
+                if (0) write(bin, size_exponent + size_mantissa + 1, pos);
                 break;
         }
         return type;
     }
+    static return_t read(const byte_t* stream, size_t size, size_t& pos, asn1_entity_t entity, size_t len, asn1_value* value);
 
-    asn1_encode& encode(binary_t& bin, asn1_entity_t entity, const variant& vt);
-    asn1_encode& encode_value(binary_t& bin, asn1_entity_t entity, const variant& vt, bool& do_len);
+    asn1_encode& write_tlv(binary_t& bin, asn1_entity_t entity, const variant& vt);
+    asn1_encode& write(binary_t& bin, asn1_entity_t entity, const variant& vt, bool& do_len);
 
     asn1_encode& generalized_time(basic_stream& bs, const datetime_t& dt, bool isutc = true);
     asn1_encode& utctime(binary_t& bin, const datetime_t& dt, int tzoffset = 0);

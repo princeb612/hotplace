@@ -54,7 +54,7 @@ class asn1_value {
      */
     bool find(const std::string& name, std::list<variant>& values, uint16 vtflags);
     bool find(const std::string& name, std::list<std::string>& values, uint16 vtflags);
-    void encode_value(binary_t& bin, asn1_object* object, const std::string& name, bool& do_len);
+    void write(binary_t& bin, asn1_object* object, const std::string& name, bool& do_len);
     void encode_sequenceof_value(binary_t& bin, asn1_object* object, const std::string& name);
     void encode_setof_value(binary_t& bin, asn1_object* object, const std::string& name);
     bool encode_namedlist(binary_t& bin, asn1_object* object, const std::string& name, const std::map<std::string, asn1_native_int_t>& namedlist);

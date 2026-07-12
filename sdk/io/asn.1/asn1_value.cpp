@@ -117,7 +117,7 @@ bool asn1_value::find(const std::string& name, std::list<std::string>& values, u
     return ret;
 }
 
-void asn1_value::encode_value(binary_t& bin, asn1_object* object, const std::string& name, bool& do_len) {
+void asn1_value::write(binary_t& bin, asn1_object* object, const std::string& name, bool& do_len) {
     if (nullptr == object) return;
 
     asn1_encode enc;
@@ -126,13 +126,13 @@ void asn1_value::encode_value(binary_t& bin, asn1_object* object, const std::str
     auto iter = _values.find(name);
     if (_values.end() != iter) {
         const variant& v = iter->second;
-        enc.encode_value(bin, entity, v, do_len);
+        enc.write(bin, entity, v, do_len);
     } else {
         if (asn1_entity_null == entity) {
-            enc.encode_value(bin, entity, variant(), do_len);
+            enc.write(bin, entity, variant(), do_len);
         } else if (object->is_default()) {
             const auto& v = object->get_default_value();
-            enc.encode_value(bin, entity, v, do_len);
+            enc.write(bin, entity, v, do_len);
         }
     }
 }
@@ -151,10 +151,10 @@ void asn1_value::encode_sequenceof_value(binary_t& bin, asn1_object* object, con
         asn1_encode enc;
         bool do_len = false;
 
-        asn1_encode::write_ident_octets2(bin, object);  // T
+        asn1_encode::write_identifier2(bin, object);  // T
         auto pos = bin.size();
-        enc.encode_value(bin, entity, v, do_len);                              // V
-        asn1_encode::write_length_octets<size_t>(bin, bin.size() - pos, pos);  // insert L between T and V
+        enc.write(bin, entity, v, do_len);                      // V
+        asn1_encode::write_length(bin, bin.size() - pos, pos);  // insert L between T and V
     }
 }
 
@@ -175,10 +175,10 @@ void asn1_value::encode_setof_value(binary_t& bin, asn1_object* object, const st
         asn1_encode enc;
         bool do_len = false;
 
-        asn1_encode::write_ident_octets2(b, object);  // T
+        asn1_encode::write_identifier2(b, object);  // T
         auto pos = b.size();
-        enc.encode_value(b, entity, v, do_len);                            // V
-        asn1_encode::write_length_octets<size_t>(b, b.size() - pos, pos);  // insert L between T and V
+        enc.write(b, entity, v, do_len);                    // V
+        asn1_encode::write_length(b, b.size() - pos, pos);  // insert L between T and V
 
         ordered.insert(std::move(b));
     }
@@ -258,11 +258,11 @@ bool asn1_value::encode_namedlist(binary_t& bin, asn1_object* object, const std:
                     v.to_string(key);
                     auto test = lambda_enum2eval(key, evalue);
                     if (test) {
-                        enc.write_integer_value(bin, evalue);
+                        enc.write(bin, evalue);
                     }
                 } else if (vt_flag_int & flag) {
                     evalue = v.t_toi<asn1_native_int_t>();
-                    enc.write_integer_value(bin, evalue);
+                    enc.write(bin, evalue);
                 } else {
                     return false;
                 }

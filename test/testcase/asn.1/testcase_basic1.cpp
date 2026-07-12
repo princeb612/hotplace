@@ -108,7 +108,7 @@ void test_x690_8_1_2_identifier_octects() {
             binary_t bin;
 
             // encode identifier octets
-            asn1_encode::write_ident_octets(bin, item.ident, item.tag);
+            asn1_encode::write_identifier(bin, item.ident, item.tag);
             _test_case.assert(bin == bin_expect, __FUNCTION__, R"(encode DER %s expect "%s")", base16_encode(bin).c_str(), item.der);
 
             // publish
@@ -131,11 +131,11 @@ void test_x690_8_1_2_identifier_octects() {
             }
 
             // decode identifier octets
-            asn1_encode::read_ident_octets(bin.data(), bin.size(), pos, ident, tag);
+            asn1_encode::read_identifier(bin.data(), bin.size(), pos, ident, tag);
             _test_case.assert((ident == item.ident) && (tag == item.tag), __FUNCTION__, "read identifier %02x tag %I64u", ident, tag);
         } else {
             // invalid test vector (check bad_data)
-            auto ret = asn1_encode::read_ident_octets(bin_expect.data(), bin_expect.size(), pos, ident, tag);
+            auto ret = asn1_encode::read_identifier(bin_expect.data(), bin_expect.size(), pos, ident, tag);
             _test_case.assert(ret == errorcode_t::bad_data, __FUNCTION__, "invalid test vector %s", item.der);
         }
     }
@@ -196,7 +196,7 @@ void test_x690_8_1_3_length_octets() {
     for (auto entry : _table) {
         // encode length octets
         binary_t bin;
-        asn1_encode::write_length_octets<uint64>(bin, entry.i);
+        asn1_encode::write_length(bin, entry.i);
 
         {
             test_case_notimecheck notimecheck(_test_case);
@@ -209,8 +209,8 @@ void test_x690_8_1_3_length_octets() {
         // decode length octets
         uint64 len = 0;
         size_t pos = 0;
-        auto ret = asn1_encode::read_length_octets(bin.data(), bin.size(), pos, len);
-        _test_case.assert((errorcode_t::success == ret) && (entry.i == len), __FUNCTION__, "read_length_octets %I64u", len);
+        auto ret = asn1_encode::read_length(bin.data(), bin.size(), pos, len);
+        _test_case.assert((errorcode_t::success == ret) && (entry.i == len), __FUNCTION__, "read_length %I64u", len);
     }
 
     // DER invalid cases
@@ -230,7 +230,7 @@ void test_x690_8_1_3_length_octets() {
         binary_t bin = base16_decode_rfc(entry.der);
         uint64 len = 0;
         size_t pos = 0;
-        auto ret = asn1_encode::read_length_octets(bin.data(), bin.size(), pos, len);
+        auto ret = asn1_encode::read_length(bin.data(), bin.size(), pos, len);
         _test_case.ntest(ret, __FUNCTION__, "invalid case %s", entry.der);
     }
 }
@@ -414,7 +414,7 @@ void test_x690_encoding_value() {
         // test encoding routine
         {
             binary_t bin;
-            enc.encode(bin, entry.entity, entry.value);
+            enc.write_tlv(bin, entry.entity, entry.value);
 
             test_case_notimecheck notimecheck(_test_case);
 

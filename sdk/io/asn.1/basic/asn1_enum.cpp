@@ -93,10 +93,10 @@ bool asn1_enum::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 f
 
         auto snapshot = b->size();
 
-        asn1_encode::write_ident_octets2(*b, this);
+        asn1_encode::write_identifier2(*b, this);
         auto pos = b->size();
         auto test = value->encode_namedlist(*b, this, name, _enum);
-        asn1_encode::write_length_octets<size_t>(*b, b->size() - pos, pos);
+        asn1_encode::write_length(*b, b->size() - pos, pos);
 
         if (false == test) {
             b->resize(snapshot);  // rollback
