@@ -127,9 +127,7 @@ asn1& asn1::add(asn1_object* item, std::function<void(asn1_object*)> f) {
 
 asn1& asn1::operator<<(asn1_object* item) { return add(item); }
 
-return_t asn1::read(const byte_t* stream, size_t size, size_t& pos) { return read(nullptr, stream, size, pos); }
-
-return_t asn1::read(asn1_object* parent, const byte_t* stream, size_t size, size_t& pos) {
+return_t asn1::read(const byte_t* stream, size_t size, size_t& pos) {
     // without notation, weakly-typed raw TLV tree
     return_t ret = errorcode_t::success;
 
@@ -149,14 +147,15 @@ return_t asn1::read(asn1_object* parent, const byte_t* stream, size_t size, size
     asn1_object* object = nullptr;
     asn1_value* value = nullptr;
 
+    auto entity = (asn1_entity_t)tag;
     uint8 class_value = ident & asn1_class_mask;
     uint8 pcbit = ident & asn1_tag_mask;
     if (asn1_class_universal == class_value) {
         // UNIVERSAL
-        object = build((asn1_entity_t)tag);
+        object = build(entity);
     } else {
         // APPLICATION, PRIVATE, Context-specific
-        object = new asn1_tagged_type(class_value, tag, asn1_automatic, new asn1_any);
+        object = new asn1_tagged_type(class_value, entity, asn1_automatic, new asn1_any);
 
         // check IMPLICIT
         if (asn1_tag_primitive == pcbit) {
@@ -194,13 +193,10 @@ return_t asn1::read(asn1_object* parent, const byte_t* stream, size_t size, size
     _types.push_back(object);
     _values.push_back(value);
 
-    auto name = object->get_name();
-    // size_t snapshot = pos;
-
     if (asn1_class_universal != class_value) {
         if (asn1_tag_primitive == pcbit) {
             variant vt(stream + pos, len);
-            value->set(name, std::move(vt));
+            value->set(std::move(vt));
             pos += len;
         } else {
 #if 0
@@ -214,12 +210,12 @@ return_t asn1::read(asn1_object* parent, const byte_t* stream, size_t size, size
 #else
             // temporary
             variant vt(stream + pos, len);
-            value->set(name, std::move(vt));
+            value->set(std::move(vt));
             pos += len;
 #endif
         }
     } else {
-        ret = asn1_encode::read(stream, size, pos, (asn1_entity_t)tag, len, value);
+        ret = asn1_encode::read(stream, size, pos, entity, len, value);
     }
 
     return ret;

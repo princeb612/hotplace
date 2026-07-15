@@ -129,6 +129,7 @@ class asn1_object {
     asn1_object& set_default_value(variant_t&& value);
 
     virtual void accept(asn1_visitor* v);
+    virtual void accept(asn1_ast_visitor* v);
     virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
     virtual bool represent(uint32 depth, binary_t* b, asn1_value* value = nullptr, uint16 flags = 0);
     bool validate_node(asn1_object* node, asn1_value* value);

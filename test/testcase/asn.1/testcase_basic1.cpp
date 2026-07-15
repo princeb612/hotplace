@@ -639,6 +639,8 @@ void test_x690_encoding_typevalue() {
 
         do_dump_asn1(inst, item.expect, item.text);
 
+        _logger->write([&](basic_stream& dbs) -> void { print_ast(item.obj, dbs); });
+
         inst->release();
         item.obj->release();
     }

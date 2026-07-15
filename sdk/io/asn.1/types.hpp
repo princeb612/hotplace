@@ -206,6 +206,7 @@ class asn1_value;
 class asn1_visitor;
 class asn1_der_visitor;
 class asn1_notation_visitor;
+class asn1_ast_visitor;
 
 class asn1_constraint_visitor;
 class asn1_constraint_notation_visitor;

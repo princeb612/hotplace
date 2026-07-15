@@ -502,6 +502,8 @@ void test_testvector_chatgpt() {
                 dbs.vaprintln("DER  {2:x}", va);
             });
 
+            _logger->write([&](basic_stream& dbs) -> void { print_ast(item.obj, dbs); });
+
             _test_case.assert(bs == item.notation, __FUNCTION__, "%s : %s", item.name, item.notation);
             _test_case.assert(bin == base16_decode_rfc(item.der), __FUNCTION__, "%s : %s", item.name, item.der);
 

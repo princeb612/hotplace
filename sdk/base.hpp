@@ -72,6 +72,7 @@
 #include <hotplace/sdk/base/nostd/traits.hpp>
 #include <hotplace/sdk/base/nostd/traits_encoder.hpp>
 #include <hotplace/sdk/base/nostd/traits_printf.hpp>
+#include <hotplace/sdk/base/nostd/tree.hpp>
 #include <hotplace/sdk/base/nostd/utility.hpp>
 #include <hotplace/sdk/base/nostd/vector.hpp>
 

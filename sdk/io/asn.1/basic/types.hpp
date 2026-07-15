@@ -17,6 +17,7 @@ namespace hotplace {
 namespace io {
 
 asn1_entity_t get_entity(asn1_object* object, bool component = false);
+std::string get_entity_name(asn1_object* object, bool component = false);
 std::string nameof(asn1_object* object);
 
 bool is_kind_of(asn1_object* object, asn1_entity_t entity);

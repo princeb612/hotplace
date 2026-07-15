@@ -16,6 +16,7 @@
 #include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/asn1_value.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_ast_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_container.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_der_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_notation_visitor.hpp>
@@ -259,7 +260,7 @@ void asn1_object::represent(uint32 depth, stream_t* s, asn1_value* value) {}
 bool asn1_object::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) { return true; }
 
 void asn1_object::debug_print(uint32 depth) {
-#if defined DEBUG
+#if 0  // defined DEBUG
     if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
         trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
             auto resource = asn1_resource::get_instance();
@@ -280,7 +281,7 @@ void asn1_object::debug_print(uint32 depth) {
                     dbs.println(ANSI_ESCAPE
                                 "1;33m"
                                 "%s" ANSI_ESCAPE "0m",
-                                resource->get_component_entity_name(get_component_entity()).c_str());
+                                resource->get_component_entity_name(component).c_str());
 
                     break;
                 case asn1_entity_referenced_type:
@@ -291,7 +292,7 @@ void asn1_object::debug_print(uint32 depth) {
                     dbs.println(ANSI_ESCAPE
                                 "1;33m"
                                 "%s" ANSI_ESCAPE "0m",
-                                resource->get_component_entity_name(get_component_entity()).c_str());
+                                resource->get_component_entity_name(component).c_str());
 
                     break;
                 default:
@@ -322,7 +323,7 @@ void asn1_object::debug_print(uint32 depth) {
 }
 
 void asn1_object::debug_print(uint32 depth, const std::string& name) {
-#if defined DEBUG
+#if 0  // defined DEBUG
     if (false == name.empty()) {
         if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
             trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
@@ -335,6 +336,10 @@ void asn1_object::debug_print(uint32 depth, const std::string& name) {
         }
     }
 #endif
+}
+
+void asn1_object::accept(asn1_ast_visitor* v) {
+    if (v) v->visit(this);
 }
 
 asn1_constraints& asn1_object::get_constraints() { return _constraints; }

@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   asn1_object_property.cpp
+ * @file   types.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -11,6 +11,7 @@
  *
  */
 
+#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_enum.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
 
@@ -23,6 +24,18 @@ asn1_entity_t get_entity(asn1_object* object, bool component) {
         return object->get_component_entity();
     else
         return object->get_entity();
+}
+
+std::string get_entity_name(asn1_object* object, bool component) {
+    auto resource = asn1_resource::get_instance();
+    if (component) {
+        auto entity = get_entity(object, true);
+        return resource->get_component_entity_name(entity);
+    } else {
+        auto ident = object->get_ident();
+        auto entity = get_entity(object, false);
+        return resource->get_entity_name(ident, entity);
+    }
 }
 
 std::string nameof(asn1_object* object) {

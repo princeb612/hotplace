@@ -54,6 +54,7 @@ void testcase_narrowcast();
 void testcase_pq();
 void testcase_range();
 void testcase_set();
+void testcase_tree();
 void testcase_vector();
 
 void testcase_aho_corasick();

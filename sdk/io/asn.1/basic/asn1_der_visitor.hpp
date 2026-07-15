@@ -13,7 +13,6 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_ASN1DERVISOTOR__
 #define __HOTPLACE_SDK_IO_ASN1_BASIC_ASN1DERVISOTOR__
 
-#include <hotplace/sdk/base/nostd/set.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/types.hpp>
 

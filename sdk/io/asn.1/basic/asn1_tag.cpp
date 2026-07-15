@@ -107,7 +107,7 @@ bool asn1_tag::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 fl
         asn1_encode::write_identifier(*b, ident, get_class_number());
     }
 
-#if defined DEBUG
+#if 0  // defined DEBUG
     if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
         trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
             auto resource = asn1_resource::get_instance();

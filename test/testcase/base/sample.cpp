@@ -81,6 +81,7 @@ int main(int argc, char** argv) {
     testcase_pq();
     testcase_range();
     testcase_set();
+    testcase_tree();
     testcase_vector();
 
     testcase_aho_corasick();
