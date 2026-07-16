@@ -23,7 +23,7 @@ class asn1_notation_visitor : public asn1_visitor {
     asn1_notation_visitor(stream_t* s, asn1_value* value = nullptr);
     virtual ~asn1_notation_visitor();
 
-    virtual void visit(asn1_object* object);
+    virtual void visit(const asn1_object* object);
 
    protected:
     stream_t* get_stream();

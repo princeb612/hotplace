@@ -843,6 +843,10 @@ void test_x690_annex_a_1() {
     // inst->publish(&bs_value);
     // inst->publish(&bin_value);
 
+    basic_stream ast;
+    print_ast(inst, ast);
+    _logger->write(ast);
+
     _logger->write([&](basic_stream& dbs) -> void {
         valist va;
         va << bs_type << bs_value << bin_value;

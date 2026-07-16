@@ -34,23 +34,23 @@ cbor_object& cbor_object::add(cbor_object* object, cbor_object* extra) {
     return *this;
 }
 
-cbor_type_t cbor_object::type() { return _type; }
+cbor_type_t cbor_object::type() const { return _type; }
 
-size_t cbor_object::size() { return 1; }
+size_t cbor_object::size() const { return 1; }
 
 void cbor_object::set_flags(uint32 flags) { _flags = flags; }
 
-uint32 cbor_object::get_flags() { return _flags; }
+uint32 cbor_object::get_flags() const { return _flags; }
 
 void cbor_object::tag(cbor_tag_t tag) { _tag = tag; }
 
-bool cbor_object::tagged() { return cbor_tag_t::unknown != _tag; }
+bool cbor_object::tagged() const { return cbor_tag_t::unknown != _tag; }
 
-cbor_tag_t cbor_object::tag_value() { return _tag; }
+cbor_tag_t cbor_object::tag_value() const { return _tag; }
 
 void cbor_object::reserve(size_t size) { _reserved_size = size; }
 
-size_t cbor_object::capacity() { return _reserved_size; }
+size_t cbor_object::capacity() const { return _reserved_size; }
 
 cbor_object& cbor_object::operator=(const cbor_object& other) {
     _type = other._type;

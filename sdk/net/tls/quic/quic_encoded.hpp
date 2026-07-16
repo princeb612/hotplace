@@ -89,13 +89,13 @@ class quic_encoded : public payload_encoded {
 
     virtual ~quic_encoded();
 
-    virtual size_t lsize();  // length size
-    virtual size_t value();
-    virtual const byte_t* data();
+    virtual size_t lsize() const;  // length size
+    virtual size_t value() const;
+    virtual const byte_t* data() const;
     virtual void write(binary_t& target);
 
-    virtual size_t lsize(const byte_t* stream, size_t size);
-    virtual size_t value(const byte_t* stream, size_t size);
+    virtual size_t lsize(const byte_t* stream, size_t size) const;
+    virtual size_t value(const byte_t* stream, size_t size) const;
     virtual return_t read(const byte_t* stream, size_t size, size_t& pos);
 
     virtual variant& get_variant();

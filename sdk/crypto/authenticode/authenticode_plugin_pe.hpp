@@ -70,7 +70,7 @@ class authenticode_plugin_pe : public authenticode_plugin {
     /**
      * @brief is a signed separated file
      */
-    virtual bool separated();
+    virtual bool separated() const;
     /**
      * @brief find a separated file list
      * @param std::list<std::string> pathlist [in]
@@ -104,7 +104,7 @@ class authenticode_plugin_pe : public authenticode_plugin {
     /**
      * @return authenticode_engine_id_t
      */
-    virtual authenticode_engine_id_t id();
+    virtual authenticode_engine_id_t id() const;
 };
 
 }  // namespace crypto

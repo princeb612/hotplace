@@ -26,7 +26,7 @@ asn1_notation_visitor::~asn1_notation_visitor() {
     if (_value) _value->release();
 }
 
-void asn1_notation_visitor::visit(asn1_object* object) { object->represent(0, get_stream(), _value); }
+void asn1_notation_visitor::visit(const asn1_object* object) { object->represent(get_stream(), _value); }
 
 stream_t* asn1_notation_visitor::get_stream() { return _s; }
 

@@ -286,11 +286,11 @@ return_t huffman_coding::expect(const byte_t* source, size_t size, size_t& size_
     return ret;
 }
 
-bool huffman_coding::decodable() { return (_range.getmin() > 4) ? true : false; }
+bool huffman_coding::decodable() const { return (_range.getmin() > 4) ? true : false; }
 
-size_t huffman_coding::sizeof_codetable() { return _codetable.size(); }
+size_t huffman_coding::sizeof_codetable() const { return _codetable.size(); }
 
-void huffman_coding::dump() {
+void huffman_coding::dump() const {
 #if defined DEBUG
     if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_debug)) {
         trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {

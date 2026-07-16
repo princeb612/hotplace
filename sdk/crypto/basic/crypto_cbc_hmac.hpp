@@ -99,9 +99,9 @@ class crypto_cbc_hmac {
     crypto_cbc_hmac& set_mac(hash_algorithm_t mac_alg);
     crypto_cbc_hmac& set_flag(uint16 flag);
 
-    crypt_algorithm_t get_enc_alg();
-    hash_algorithm_t get_mac_alg();
-    uint16 get_flag();
+    crypt_algorithm_t get_enc_alg() const;
+    hash_algorithm_t get_mac_alg() const;
+    uint16 get_flag() const;
 
     /**
      * key = enckey || mackey

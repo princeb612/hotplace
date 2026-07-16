@@ -28,7 +28,7 @@ trial_quic_client_socket::trial_quic_client_socket() : secure_client_socket(tls_
 
 trial_quic_client_socket::~trial_quic_client_socket() {}
 
-uint32 trial_quic_client_socket::get_scheme() { return socket_scheme_quic | socket_scheme_trial | socket_scheme_client; }
+uint32 trial_quic_client_socket::get_scheme() const { return socket_scheme_quic | socket_scheme_trial | socket_scheme_client; }
 
 }  // namespace net
 }  // namespace hotplace

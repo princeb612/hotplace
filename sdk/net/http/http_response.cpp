@@ -502,9 +502,9 @@ http_response& http_response::set_stream_id(uint32 stream_id) {
 
 hpack_dynamic_table* http_response::get_hpack_dyntable() { return _dyntable; }
 
-uint8 http_response::get_version() { return _version; }
+uint8 http_response::get_version() const { return _version; }
 
-uint32 http_response::get_stream_id() { return _stream_id; }
+uint32 http_response::get_stream_id() const { return _stream_id; }
 
 void http_response::addref() { _shared.addref(); }
 

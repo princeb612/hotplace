@@ -145,9 +145,9 @@ return_t basic_stream::fill(size_t l, char c) {
 
 return_t basic_stream::clear() { return bufferio::clear(_handle); }
 
-bool basic_stream::empty() { return bufferio::empty(_handle); }
+bool basic_stream::empty() const { return bufferio::empty(_handle); }
 
-bool basic_stream::occupied() { return bufferio::occupied(_handle); }
+bool basic_stream::occupied() const { return bufferio::occupied(_handle); }
 
 return_t basic_stream::printf(const char* buf, ...) {
     return_t ret = errorcode_t::success;

@@ -21,17 +21,17 @@ namespace io {
 
 class asn1_der_visitor : public asn1_visitor {
    public:
-    asn1_der_visitor(binary_t* b, asn1_value* value = nullptr);
+    asn1_der_visitor(binary_t* b, const asn1_value* value = nullptr);
     virtual ~asn1_der_visitor();
 
-    virtual void visit(asn1_object* object);
+    virtual void visit(const asn1_object* object);
 
    protected:
     binary_t* get_binary();
 
    private:
     binary_t* _b;
-    asn1_value* _value;
+    const asn1_value* _value;
 };
 
 }  // namespace io

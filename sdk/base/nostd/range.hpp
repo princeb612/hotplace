@@ -34,7 +34,7 @@ struct t_range_t {
         return ret;
     }
     bool operator==(const t_range_t& other) const { return (begin == other.begin) && (end == other.end); }
-    size_t width() {
+    size_t width() const {
         size_t ret_value = 0;
         if (begin <= end) {
             ret_value = end - begin;

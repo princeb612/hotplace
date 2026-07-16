@@ -32,8 +32,8 @@ class quic_packets {
     return_t for_each(std::function<return_t(quic_packet*)> func);
     quic_packet* getat(size_t index, bool upref = false);
     quic_packet* operator[](size_t index);
-    bool empty();
-    size_t size();
+    bool empty() const;
+    size_t size() const;
     void clear();
 
    protected:

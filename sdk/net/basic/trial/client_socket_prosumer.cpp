@@ -189,7 +189,7 @@ return_t client_socket_prosumer::sendto(const char* ptr_data, size_t size_data, 
     return ret;
 }
 
-socket_t client_socket_prosumer::get_socket() { return _fd; }
+socket_t client_socket_prosumer::get_socket() const { return _fd; }
 
 return_t client_socket_prosumer::start_consumer() {
     return_t ret = errorcode_t::success;

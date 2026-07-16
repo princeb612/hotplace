@@ -87,7 +87,7 @@ class crypto_hmac {
     crypto_hmac& digest(binary_t& md);
     crypto_hmac& finalize(binary_t& md);
 
-    hash_algorithm_t get_digest();
+    hash_algorithm_t get_digest() const;
 
     void addref();
     void release();

@@ -242,8 +242,8 @@ class logger {
 
     bool test_logging_stdout();
     bool test_logging_file();
-    bool test_loglevel(loglevel_t level);
-    bool test_loglevel();
+    bool test_loglevel(loglevel_t level) const;
+    bool test_loglevel() const;
 };
 
 }  // namespace hotplace

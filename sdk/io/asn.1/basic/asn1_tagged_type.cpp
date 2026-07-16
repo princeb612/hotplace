@@ -23,23 +23,21 @@ namespace hotplace {
 namespace io {
 
 asn1_tagged_type::asn1_tagged_type(int ctype, int cnumber, int tmode, asn1_entity_t entity)
-    : asn1_type(asn1_entity_tagged_type, "", new asn1_builtin_type(entity), new asn1_tag(ctype, cnumber, tmode)) {}
+    : asn1_tagged_type("", new asn1_tag(ctype, cnumber, tmode), new asn1_builtin_type(entity)) {}
 
-asn1_tagged_type::asn1_tagged_type(int ctype, int cnumber, int tmode, asn1_object* object)
-    : asn1_type(asn1_entity_tagged_type, "", object, new asn1_tag(ctype, cnumber, tmode)) {}
+asn1_tagged_type::asn1_tagged_type(int ctype, int cnumber, int tmode, asn1_object* object) : asn1_tagged_type("", new asn1_tag(ctype, cnumber, tmode), object) {}
 
-asn1_tagged_type::asn1_tagged_type(asn1_tag* tag, asn1_entity_t entity) : asn1_type(asn1_entity_tagged_type, "", new asn1_builtin_type(entity)) {}
+asn1_tagged_type::asn1_tagged_type(asn1_tag* tag, asn1_entity_t entity) : asn1_tagged_type("", tag, new asn1_builtin_type(entity)) {}
 
-asn1_tagged_type::asn1_tagged_type(asn1_tag* tag, asn1_object* object) : asn1_type(asn1_entity_tagged_type, "", object, tag) {}
+asn1_tagged_type::asn1_tagged_type(asn1_tag* tag, asn1_object* object) : asn1_tagged_type("", tag, object) {}
 
 asn1_tagged_type::asn1_tagged_type(const std::string& name, int ctype, int cnumber, int tmode, asn1_entity_t entity)
-    : asn1_type(asn1_entity_tagged_type, name, new asn1_builtin_type(entity), new asn1_tag(ctype, cnumber, tmode)) {}
+    : asn1_tagged_type(name, new asn1_tag(ctype, cnumber, tmode), new asn1_builtin_type(entity)) {}
 
 asn1_tagged_type::asn1_tagged_type(const std::string& name, int ctype, int cnumber, int tmode, asn1_object* object)
-    : asn1_type(asn1_entity_tagged_type, name, object, new asn1_tag(ctype, cnumber, tmode)) {}
+    : asn1_tagged_type(name, new asn1_tag(ctype, cnumber, tmode), object) {}
 
-asn1_tagged_type::asn1_tagged_type(const std::string& name, asn1_tag* tag, asn1_entity_t entity)
-    : asn1_type(asn1_entity_tagged_type, name, new asn1_builtin_type(entity)) {}
+asn1_tagged_type::asn1_tagged_type(const std::string& name, asn1_tag* tag, asn1_entity_t entity) : asn1_tagged_type(name, tag, new asn1_builtin_type(entity)) {}
 
 asn1_tagged_type::asn1_tagged_type(const std::string& name, asn1_tag* tag, asn1_object* object) : asn1_type(asn1_entity_tagged_type, name, object, tag) {}
 
@@ -54,21 +52,19 @@ asn1_tagged_type* asn1_tagged_type::addref() {
 
 asn1_tag* asn1_tagged_type::get_tag() const { return (asn1_tag*)asn1_object::get_tag(); }
 
-void asn1_tagged_type::represent(uint32 depth, stream_t* s, asn1_value* value) {
+void asn1_tagged_type::represent(stream_t* s, const asn1_value* value) const {
     if (false == get_name().empty()) s->printf("%s ", get_name().c_str());
 
-    get_tag()->represent(depth + 1, s, value);
+    get_tag()->represent(s, value);
 
     auto obj = get_object();
     if (obj) {
         s->printf(" ");
-        obj->represent(depth + 1, s, value);
+        obj->represent(s, value);
     }
 }
 
-bool asn1_tagged_type::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) {
-    debug_print(depth);
-
+bool asn1_tagged_type::represent(binary_t* b, const asn1_value* value, uint16 flags) const {
     auto tag = get_tag();
     auto obj = get_object();
     bool ret = true;
@@ -81,11 +77,12 @@ bool asn1_tagged_type::represent(uint32 depth, binary_t* b, asn1_value* value, u
         obj->unsuppress();
     }
 
-    tag->represent(depth + 1, b, value);
+    tag->test_constructed();  // TODO
+    tag->represent(b, value);
 
     size_t pos = b->size();
 
-    ret = obj->represent(depth + 1, b, value, flags);
+    ret = obj->represent(b, value, flags);
 
     if (false == is_suppressed()) {
         asn1_encode::write_length(*b, b->size() - pos, pos);

@@ -109,7 +109,7 @@ cbor_data& cbor_data::set_bn(const bignumber& value, uint32 flags) {
 
 void cbor_data::represent(stream_t* s) {
     if (s) {
-        const variant_t& vt = data().content();
+        const variant_t& vt = data().get();
         if (vartype_t::TYPE_BIGNUMBER == vt.type) {
             vtprintf(s, vt, vtprintf_style_t::vtprintf_style_cbor);
         } else {
@@ -153,7 +153,7 @@ void cbor_data::represent(binary_t* b) {
         cbor_encode enc;
 
         enc.add_tag(*b, this);
-        enc.encode(*b, data().content());
+        enc.encode(*b, data().get());
     }
 }
 

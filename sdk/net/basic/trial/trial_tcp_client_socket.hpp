@@ -24,9 +24,9 @@ class trial_tcp_client_socket : public client_socket_prosumer {
     trial_tcp_client_socket();
     virtual ~trial_tcp_client_socket();
 
-    virtual int socket_type();
+    virtual int socket_type() const;
 
-    virtual uint32 get_scheme();
+    virtual uint32 get_scheme() const;
 };
 
 }  // namespace net

@@ -66,11 +66,11 @@ obfuscate_string& obfuscate_string::append(const char* source, size_t size) {
     return *this;
 }
 
-size_t obfuscate_string::size() { return _contents.size(); }
+size_t obfuscate_string::size() const { return _contents.size(); }
 
-bool obfuscate_string::empty() { return (0 == _contents.size()) ? true : false; }
+bool obfuscate_string::empty() const { return (0 == _contents.size()) ? true : false; }
 
-bool obfuscate_string::compare(obfuscate_string& o) {
+bool obfuscate_string::compare(obfuscate_string& o) const {
     bool ret = false;
 
     if (size() == o.size()) {
@@ -154,9 +154,9 @@ obfuscate_string& obfuscate_string::operator<<(basic_stream& source) {
     return *this;
 }
 
-bool obfuscate_string::operator==(obfuscate_string& o) { return true == compare(o); }
+bool obfuscate_string::operator==(obfuscate_string& o) const { return true == compare(o); }
 
-bool obfuscate_string::operator!=(obfuscate_string& o) { return false == compare(o); }
+bool obfuscate_string::operator!=(obfuscate_string& o) const { return false == compare(o); }
 
 std::string& operator<<(std::string& lhs, const obfuscate_string& rhs) {
     for (const auto& item : rhs._contents) {

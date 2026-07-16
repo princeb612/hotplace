@@ -90,7 +90,7 @@ return_t openssl_dtls_server_socket::sendto(socket_context_t* handle, const char
     return ret;
 }
 
-bool openssl_dtls_server_socket::support_tls() { return true; }
+bool openssl_dtls_server_socket::support_tls() const { return true; }
 
 openssl_tls* openssl_dtls_server_socket::get_openssl_tls() { return _tls; }
 
@@ -104,7 +104,7 @@ int openssl_dtls_server_socket::release() {
     return basic_socket::release();
 }
 
-uint32 openssl_dtls_server_socket::get_scheme() { return socket_scheme_dtls | socket_scheme_openssl | socket_scheme_server; }
+uint32 openssl_dtls_server_socket::get_scheme() const { return socket_scheme_dtls | socket_scheme_openssl | socket_scheme_server; }
 
 }  // namespace net
 }  // namespace hotplace

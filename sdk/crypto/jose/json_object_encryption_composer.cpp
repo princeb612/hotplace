@@ -494,7 +494,7 @@ return_t json_object_encryption::composer::docompose_encryption_recipient_random
         recipient.epk = key.select(crypto_use_t::use_enc, true);  // EVP_PKEY_up_ref
         variant vt;
         vt.set((void*)recipient.epk);
-        variantmap[crypt_item_t::epk] = vt.content();
+        variantmap[crypt_item_t::epk] = vt.get();
     } else if (jwa_group_t::aesgcmkw == alg_group) {
         // iv, tag
         const EVP_CIPHER* alg_evp_cipher = advisor->find_evp_cipher(alg_hint->crypt_alg, alg_hint->crypt_mode);
@@ -511,7 +511,7 @@ return_t json_object_encryption::composer::docompose_encryption_recipient_random
         variant vt;
         vt.set(recipient.p2c);
         datamap[crypt_item_t::p2s] = recipient.datamap[crypt_item_t::p2s];
-        variantmap[crypt_item_t::p2c] = vt.content();
+        variantmap[crypt_item_t::p2c] = vt.get();
     }
     return ret;
 }

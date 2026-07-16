@@ -170,7 +170,7 @@ server_socket_adapter* server_socket_builder::build_adapter() {
     return adapter;
 }
 
-uint32 server_socket_builder::get_scheme() { return _scheme; }
+uint32 server_socket_builder::get_scheme() const { return _scheme; }
 
 }  // namespace net
 }  // namespace hotplace

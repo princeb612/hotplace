@@ -82,7 +82,7 @@ crypto_hmac& crypto_hmac::finalize(binary_t& md) {
     return *this;
 }
 
-hash_algorithm_t crypto_hmac::get_digest() { return _alg; }
+hash_algorithm_t crypto_hmac::get_digest() const { return _alg; }
 
 void crypto_hmac::addref() { _shared.addref(); }
 

@@ -35,7 +35,7 @@ class basic_socket {
      *          openssl_tls_server_socket, openssl_dtls_server_socket
      *            return true
      */
-    virtual bool support_tls(); /* override */
+    virtual bool support_tls() const; /* override */
     /**
      * @override
      * @return
@@ -46,7 +46,7 @@ class basic_socket {
      *          naive_udp_client_socket, openssl_dtls_client_socket
      *            return SOCK_DGRAM
      */
-    virtual int socket_type(); /* override */
+    virtual int socket_type() const; /* override */
 
     virtual int addref();
     virtual int release();
@@ -69,7 +69,7 @@ class basic_socket {
      *          trial_dtls_client_socket   - socket_scheme_dtls | socket_scheme_trial | socket_scheme_client
      *          trial_dtls_server_socket   - socket_scheme_dtls | socket_scheme_trial | socket_scheme_server
      */
-    virtual uint32 get_scheme();
+    virtual uint32 get_scheme() const;
 
    protected:
     basic_socket();

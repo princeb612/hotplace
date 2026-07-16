@@ -46,8 +46,8 @@ class asn1_bitstring : public asn1_builtin_type {
     asn1_bitstring& add(const std::initializer_list<std::pair<std::string, asn1_native_int_t>> items);
 
    protected:
-    virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
-    virtual bool represent(uint32 depth, binary_t* b, asn1_value* value = nullptr, uint16 flags = 0);
+    virtual void represent(stream_t* s, const asn1_value* value = nullptr) const;
+    virtual bool represent(binary_t* b, const asn1_value* value = nullptr, uint16 flags = 0) const;
 
    private:
     std::map<std::string, asn1_native_int_t> _nbl;

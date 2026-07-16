@@ -21,11 +21,11 @@ void crypto_sign::set_category(sig_category_t category) { _category = category; 
 
 void crypto_sign::set_saltlen(int saltlen) { _saltlen = saltlen; }
 
-sig_category_t crypto_sign::get_category() { return _category; }
+sig_category_t crypto_sign::get_category() const { return _category; }
 
-hash_algorithm_t crypto_sign::get_digest() { return _hashalg; }
+hash_algorithm_t crypto_sign::get_digest() const { return _hashalg; }
 
-int crypto_sign::get_saltlen() { return _saltlen; }
+int crypto_sign::get_saltlen() const { return _saltlen; }
 
 void crypto_sign::addref() { _shared.addref(); }
 

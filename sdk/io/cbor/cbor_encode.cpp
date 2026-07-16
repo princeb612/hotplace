@@ -333,7 +333,7 @@ return_t cbor_encode::encode(binary_t& target, float value) {
         ieee754_as_small_as_possible(var, value);
         auto major = t_underlying(cbor_major_t::fp);
 
-        const variant_t& vt = var.content();
+        const variant_t& vt = var.get();
         switch (vt.type) {
             case vartype_t::TYPE_FP16:
                 binary_push(target, (major << 5) | 25);
@@ -360,7 +360,7 @@ return_t cbor_encode::encode(binary_t& target, double value) {
         ieee754_as_small_as_possible(var, value);
         auto major = t_underlying(cbor_major_t::fp);
 
-        const variant_t& vt = var.content();
+        const variant_t& vt = var.get();
         switch (vt.type) {
             case vartype_t::TYPE_FP16:
                 binary_push(target, (major << 5) | 25);

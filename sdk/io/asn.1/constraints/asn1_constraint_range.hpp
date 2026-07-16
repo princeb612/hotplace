@@ -43,7 +43,7 @@ class asn1_constraint_range : public asn1_constraint<T> {
 
     asn1_constraint_range* clone() { return new asn1_constraint_range<T>(*this); }
 
-    virtual bool is_applicable(asn1_entity_t entity) {
+    virtual bool is_applicable(asn1_entity_t entity) const {
         switch (entity) {
             case asn1_entity_integer:
             case asn1_entity_real:
@@ -72,7 +72,7 @@ class asn1_constraint_range : public asn1_constraint<T> {
 
     virtual void accept(asn1_constraint_evaluator<T>* v) { v->get_result_set().insert_range(_low, _high); }
 
-    virtual void represent(stream_t* s, asn1_object* object, asn1_value* value = nullptr) {
+    virtual void represent(stream_t* s, const asn1_object* object, const asn1_value* value = nullptr) const {
         auto parenthesis = false;
         auto parent = asn1_constraint<T>::get_parent();
         if (parent) {

@@ -859,7 +859,7 @@ return_t openssl_tls::sendto(socket_context_t* handle, int mode, const char* dat
     return ret;
 }
 
-socket_t openssl_tls::get_socket(socket_context_t* handle) {
+socket_t openssl_tls::get_socket(socket_context_t* handle) const {
     socket_t fd = INVALID_SOCKET;
 
     if (nullptr != handle) {

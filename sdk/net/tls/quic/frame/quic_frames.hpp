@@ -59,8 +59,8 @@ class quic_frames {
     quic_frame* get(uint8 type, bool upref = false);
     quic_frame* getat(size_t index, bool upref = false);
     quic_frame* operator[](size_t index);
-    bool empty();
-    size_t size();
+    bool empty() const;
+    size_t size() const;
     void clear();
 
     tls_session* get_session();

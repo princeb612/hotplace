@@ -43,10 +43,10 @@ namespace io {
  */
 struct asn1_ast_descriptor {
     std::string name;     //
-    basic_stream syntax;  // builtin type
-    basic_stream detail;  // - VisibleString
+    basic_stream syntax;  // tag type
+    basic_stream detail;  // [APPLICATION 7] IMPLICIT
     basic_stream cons;    //
-    asn1_object* object;
+    const asn1_object* object;
 
     asn1_ast_descriptor() : object(nullptr) {}
 };
@@ -59,16 +59,20 @@ class asn1_ast_visitor {
     asn1_ast_visitor();
     ~asn1_ast_visitor() = default;
 
-    t_tree<asn1_ast_descriptor>* visit(asn1_object* object);
+    t_tree<asn1_ast_descriptor>* visit(const asn1_object* object) const;
+    void visit(const asn1_object* object, asn1_treenode* parent) const;
 
    protected:
-    void visit(asn1_object* object, asn1_treenode* parent);
-    asn1_ast_descriptor describe(asn1_object* object);
+    asn1_ast_descriptor describe(const asn1_object* object) const;
 
    private:
 };
 
-return_t print_ast(asn1_object* object, basic_stream& bs, bool ansicolor = true);
+enum asn1_ast_flags : uint32 {
+    asn1_ast_flag_ansicolor = 1 << 0,
+};
+return_t print_ast(const asn1_object* object, basic_stream& bs, uint32 flags = asn1_ast_flag_ansicolor);
+return_t print_ast(const asn1* object, basic_stream& bs, uint32 flags = asn1_ast_flag_ansicolor);
 
 }  // namespace io
 }  // namespace hotplace

@@ -213,7 +213,7 @@ class openssl_hash : public hash_t {
      * @brief type
      * @return crypt_poweredby_t
      */
-    virtual crypt_poweredby_t get_type();
+    virtual crypt_poweredby_t get_type() const;
 };
 
 class openssl_digest : public openssl_hash {

@@ -92,19 +92,19 @@ floating_point floating_point::operator/(const floating_point& other) const { re
 
 floating_point& floating_point::operator/=(const floating_point& other) { return *this = divide(*this, other); }
 
-bool floating_point::operator==(const floating_point& other) { return compare(*this, other) == 0; }
+bool floating_point::operator==(const floating_point& other) const { return compare(*this, other) == 0; }
 
-bool floating_point::operator!=(const floating_point& other) { return compare(*this, other) != 0; }
+bool floating_point::operator!=(const floating_point& other) const { return compare(*this, other) != 0; }
 
-bool floating_point::operator>(const floating_point& other) { return compare(*this, other) > 0; }
+bool floating_point::operator>(const floating_point& other) const { return compare(*this, other) > 0; }
 
-bool floating_point::operator<(const floating_point& other) { return compare(*this, other) < 0; }
+bool floating_point::operator<(const floating_point& other) const { return compare(*this, other) < 0; }
 
-bool floating_point::operator>=(const floating_point& other) { return compare(*this, other) >= 0; }
+bool floating_point::operator>=(const floating_point& other) const { return compare(*this, other) >= 0; }
 
-bool floating_point::operator<=(const floating_point& other) { return compare(*this, other) <= 0; }
+bool floating_point::operator<=(const floating_point& other) const { return compare(*this, other) <= 0; }
 
-fp_type_t floating_point::get_type() { return _type; }
+fp_type_t floating_point::get_type() const { return _type; }
 
 std::string floating_point::str() {
     if (_type == fp_type_t::decimal_type) {

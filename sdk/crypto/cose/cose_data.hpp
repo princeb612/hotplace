@@ -74,22 +74,22 @@ class cose_data {
     /**
      * @brief   find
      */
-    bool exist(int key);
+    bool exist(int key) const;
     /**
      * @brief   find
      * @return  error code (see error.hpp)
      */
-    return_t finditem(int key, int& value);
+    return_t finditem(int key, int& value) const;
     /**
      * @brief   find
      * @return  error code (see error.hpp)
      */
-    return_t finditem(int key, std::string& value);
+    return_t finditem(int key, std::string& value) const;
     /**
      * @brief   find
      * @return  error code (see error.hpp)
      */
-    return_t finditem(int key, binary_t& value);
+    return_t finditem(int key, binary_t& value) const;
 
    protected:
     cose_data& set_owner(cose_recipient* layer);
@@ -126,8 +126,8 @@ class cose_data {
     return_t parse_static_key(cbor_map* object, int keyid);
     return_t parse_counter_signs(cbor_array* object, int keyid);
 
-    bool empty_binary();
-    size_t size_binary();
+    bool is_binary_empty() const;
+    size_t sizeof_binary() const;
     void get_binary(binary_t& bin);
 
     class cose_key {

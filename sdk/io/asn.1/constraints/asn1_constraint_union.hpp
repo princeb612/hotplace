@@ -92,7 +92,7 @@ class asn1_constraint_union : public asn1_constraint<T> {
         rs = std::move(result);
     }
 
-    virtual bool is_applicable(asn1_entity_t entity) {
+    virtual bool is_applicable(asn1_entity_t entity) const {
         switch (entity) {
             case asn1_entity_constraint_single:
             case asn1_entity_constraint_size:
@@ -146,7 +146,7 @@ class asn1_constraint_union : public asn1_constraint<T> {
         return *this;
     }
 
-    virtual void represent(stream_t* s, asn1_object* object, asn1_value* value = nullptr) {
+    virtual void represent(stream_t* s, const asn1_object* object, const asn1_value* value = nullptr) const {
         if (false == _items.empty()) {
             auto iter = _items.begin();
             (*iter)->represent(s, object, value);

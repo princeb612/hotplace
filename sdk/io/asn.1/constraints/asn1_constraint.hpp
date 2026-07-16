@@ -47,11 +47,11 @@ class asn1_constraint : public asn1_constraint_t {
 
     virtual asn1_constraint* clone() = 0;
 
-    bool is_applicable(asn1_object* object) { return object ? is_applicable(get_entity(object, true)) : false; }
-    virtual bool is_applicable(asn1_entity_t entity) { return true; }
+    bool is_applicable(asn1_object* object) const { return object ? is_applicable(get_entity(object, true)) : false; }
+    virtual bool is_applicable(asn1_entity_t entity) const { return true; }
 
-    asn1_entity_t get_entity() { return _entity; }
-    bool is_operation() {
+    asn1_entity_t get_entity() const { return _entity; }
+    bool is_operation() const {
         bool ret = false;
         switch (_entity) {
             case asn1_entity_constraint_union:
@@ -65,7 +65,7 @@ class asn1_constraint : public asn1_constraint_t {
         }
         return ret;
     }
-    asn1_constraint<T>* get_parent() { return _parent; }
+    asn1_constraint<T>* get_parent() const { return _parent; }
     void set_parent(asn1_constraint<T>* parent) { _parent = parent; }
 
     virtual void addref() { _shared.addref(); }
@@ -90,7 +90,7 @@ class asn1_constraint : public asn1_constraint_t {
 
     virtual void accept(asn1_constraint_visitor* v) { v->visit(this); }
     virtual void accept(asn1_constraint_evaluator<T>* v) { v->visit(this); }
-    virtual void represent(stream_t* s, asn1_object* object, asn1_value* value = nullptr) {}
+    virtual void represent(stream_t* s, const asn1_object* object, const asn1_value* value = nullptr) const {}
 
    private:
     asn1_entity_t _entity;

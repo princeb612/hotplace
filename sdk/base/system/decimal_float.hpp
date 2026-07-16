@@ -52,12 +52,12 @@ class decimal_float {
     // 123.45, -0.00123 1.2e8 ...
     decimal_float& operator=(const std::string& expr);
 
-    bool operator==(const decimal_float& other);
-    bool operator!=(const decimal_float& other);
-    bool operator>(const decimal_float& other);
-    bool operator<(const decimal_float& other);
-    bool operator>=(const decimal_float& other);
-    bool operator<=(const decimal_float& other);
+    bool operator==(const decimal_float& other) const;
+    bool operator!=(const decimal_float& other) const;
+    bool operator>(const decimal_float& other) const;
+    bool operator<(const decimal_float& other) const;
+    bool operator>=(const decimal_float& other) const;
+    bool operator<=(const decimal_float& other) const;
 
     /**
      *  decimal_float d1("1e10");

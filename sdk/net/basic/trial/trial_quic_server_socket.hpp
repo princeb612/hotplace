@@ -24,7 +24,7 @@ class trial_quic_server_socket : public trial_dtls_server_socket {
     trial_quic_server_socket();
     virtual ~trial_quic_server_socket();
 
-    virtual uint32 get_scheme();
+    virtual uint32 get_scheme() const;
 
    protected:
    private:

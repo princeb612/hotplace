@@ -17,15 +17,15 @@ basic_socket::basic_socket() { _shared.make_share(this); }
 
 basic_socket::~basic_socket() {}
 
-bool basic_socket::support_tls() { return false; }
+bool basic_socket::support_tls() const { return false; }
 
-int basic_socket::socket_type() { return 0; }
+int basic_socket::socket_type() const { return 0; }
 
 int basic_socket::addref() { return _shared.addref(); }
 
 int basic_socket::release() { return _shared.delref(); }
 
-uint32 basic_socket::get_scheme() { return 0; }
+uint32 basic_socket::get_scheme() const { return 0; }
 
 }  // namespace net
 }  // namespace hotplace

@@ -85,7 +85,7 @@ cbor_array& cbor_array::operator<<(cbor_map* object) {
     return *this;
 }
 
-size_t cbor_array::size() { return _array.size(); }
+size_t cbor_array::size() const { return _array.size(); }
 
 cbor_object* cbor_array::operator[](size_t index) {
     cbor_object* item = nullptr;

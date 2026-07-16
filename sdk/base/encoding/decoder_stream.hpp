@@ -45,8 +45,8 @@ class decoder_stream {
     decoder_stream& operator=(decoder_stream&& other) = default;
 
     decoder_stream& set_maxsize(size_t size);
-    size_t get_maxsize();
-    encoding_t get_encoding();
+    size_t get_maxsize() const;
+    encoding_t get_encoding() const;
 
     binary_t data();
 

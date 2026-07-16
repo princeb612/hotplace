@@ -47,7 +47,7 @@ class asn1_constraint_intersection : public asn1_constraint<T> {
 
     asn1_constraint_intersection* clone() { return new asn1_constraint_intersection<T>(*this); }
 
-    virtual bool is_applicable(asn1_entity_t entity) {
+    virtual bool is_applicable(asn1_entity_t entity) const {
         switch (entity) {
             case asn1_entity_constraint_single:
             case asn1_entity_constraint_size:
@@ -123,7 +123,7 @@ class asn1_constraint_intersection : public asn1_constraint<T> {
         }
     }
 
-    virtual void represent(stream_t* s, asn1_object* object, asn1_value* value = nullptr) {
+    virtual void represent(stream_t* s, const asn1_object* object, const asn1_value* value = nullptr) const {
         if (_lhs && _rhs) {
             _lhs->represent(s, object, value);
             s->printf(" INTERSECTION ");

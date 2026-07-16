@@ -33,11 +33,11 @@ class openssl_tls_client_socket : public client_socket {
     virtual return_t more(char* ptr_data, size_t size_data, size_t* cbread);
     virtual return_t send(const char* ptr_data, size_t size_data, size_t* cbsent);
 
-    virtual bool support_tls();
-    virtual int socket_type();
-    virtual socket_t get_socket();
+    virtual bool support_tls() const;
+    virtual int socket_type() const;
+    virtual socket_t get_socket() const;
 
-    virtual uint32 get_scheme();
+    virtual uint32 get_scheme() const;
 
    protected:
    private:

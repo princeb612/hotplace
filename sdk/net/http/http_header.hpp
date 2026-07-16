@@ -73,8 +73,8 @@ class http_header {
      * @sample
      *          header.get ("Content-Length", conent_length);
      */
-    std::string get(const std::string& name, std::string& value);
-    std::string get(const std::string& name);
+    std::string get(const std::string& name, std::string& value) const;
+    std::string get(const std::string& name) const;
     /**
      * @brief   contains
      * @param   const std::string& name [in]
@@ -83,7 +83,7 @@ class http_header {
      *          header.add("Content-Type", "text/html;charset=UTF-8");
      *          test = header.contains("Content-Type", "text/html");
      */
-    bool contains(const std::string& name, const std::string& value);
+    bool contains(const std::string& name, const std::string& value) const;
     /**
      * @brief   read a header token
      * @param   const std::string& name [in]
@@ -97,7 +97,7 @@ class http_header {
      *          if (auth_type == "Basic") ...
      *          else if (auth_type == "Digest") ...
      */
-    const char* get_token(const std::string& name, unsigned index, std::string& token);
+    const char* get_token(const std::string& name, unsigned index, std::string& token) const;
 
     /**
      * @brief read all headers
@@ -111,7 +111,7 @@ class http_header {
     http_header& operator=(http_header&& object);
 
     http_header& set_version(uint8 version);
-    uint8 get_version();
+    uint8 get_version() const;
 
    protected:
    private:

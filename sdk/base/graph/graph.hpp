@@ -102,7 +102,7 @@ class t_graph {
         edge(const vertex& from, const vertex& to, int weight = 1, graph_direction_t d = graph_directed) : _from(from), _to(to), _weight(weight), _direction(d) {
             adjust();
         }
-        edge(vertex&& from, vertex&& to, graph_direction_t d = graph_directed, int weight = 1)
+        edge(vertex&& from, vertex&& to, int weight = 1, graph_direction_t d = graph_directed)
             : _from(std::move(from)), _to(std::move(to)), _weight(weight), _direction(d) {
             adjust();
         }
@@ -111,16 +111,16 @@ class t_graph {
         edge(edge&& other) : _from(std::move(other._from)), _to(std::move(other._to)), _weight(other._weight), _direction(other._direction) {}
 
         void set_weight(int weight) { _weight = weight; }
-        int get_weight() { return _weight; }
+        int get_weight() const { return _weight; }
         void set_direction(graph_direction_t d) { _direction = d; }
-        graph_direction_t get_direction() { return _direction; }
+        graph_direction_t get_direction() const { return _direction; }
 
         void adjust() {
             if (_from == _to) {
                 _weight = 0;
             }
         }
-        void change_vertex() { std::swap(_from, _to); }
+        void change_vertex() { std::move(_from, _to); }
 
         edge& operator=(const edge& other) {
             _from = other._from;
@@ -153,13 +153,13 @@ class t_graph {
         tag(const tag& other) : _label(other._label), _weight(other._weight), _distance(other._distance) {}
 
         void set_label(label_t tag) { _label = tag; }
-        label_t get_label() { return _label; }
+        label_t get_label() const { return _label; }
 
         void unvisit() { set_label(label_unvisited); }
         void visit() { set_label(label_visited); }
 
-        bool is_unvisited() { return label_unvisited == get_label(); }
-        bool is_visited() { return label_visited == get_label(); }
+        bool is_unvisited() const { return label_unvisited == get_label(); }
+        bool is_visited() const { return label_visited == get_label(); }
 
         tag& operator=(const tag& other) {
             _label = other._label;
@@ -376,7 +376,7 @@ class t_graph {
         /*
          * @brief   weight = directed(from -> to).weight, or weight = undirected(from <-> to).weight
          */
-        int get_weight(const T& from, const T& to) {
+        int get_weight(const T& from, const T& to) const {
             int rc = 0;
             __try2 {
                 if (from == to) {

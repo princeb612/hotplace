@@ -262,7 +262,7 @@ return_t openssl_crypt::free_data(unsigned char* data) {
     return ret;
 }
 
-crypt_poweredby_t openssl_crypt::get_type() { return crypt_poweredby_t::openssl; }
+crypt_poweredby_t openssl_crypt::get_type() const { return crypt_poweredby_t::openssl; }
 
 return_t openssl_crypt::encrypt(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& plaintext, binary_t& ciphertext, encrypt_option_t* options) {
     return_t ret = errorcode_t::success;

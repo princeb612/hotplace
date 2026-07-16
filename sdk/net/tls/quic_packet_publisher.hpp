@@ -77,9 +77,9 @@ class quic_packet_publisher {
      */
     quic_packet_publisher& set_flags(uint32 flags);
 
-    tls_session* get_session();
-    size_t get_payload_size();
-    uint32 get_flags();
+    tls_session* get_session() const;
+    size_t get_payload_size() const;
+    uint32 get_flags() const;
 
     /**
      * @param   QUIC FRAME CRYOTO

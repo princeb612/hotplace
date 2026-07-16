@@ -156,7 +156,7 @@ return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int f
                 cbor_data* rhs = (cbor_data*)pair->right();
                 if ((lhs->type() == rhs->type()) && (cbor_type_t::data == lhs->type())) {
                     int label = lhs->data().to_int();
-                    const variant_t& vt_rhs = rhs->data().content();
+                    const variant_t& vt_rhs = rhs->data().get();
                     if (cose_key_lable_t::cose_lable_kid == label) {  // 2
                         rhs->data().to_string(keyobj.kid);
                     } else if (cose_key_lable_t::cose_lable_kty == label) {  // 1

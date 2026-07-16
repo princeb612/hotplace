@@ -132,7 +132,7 @@ class test_case {
      *          errorcode_t::internal_error
      *          errorcode_t::success
      */
-    return_t result();
+    return_t result() const;
 
     void lock();
     void unlock();

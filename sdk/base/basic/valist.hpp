@@ -128,7 +128,7 @@ class valist {
     /**
      * @brief size
      */
-    size_t size();
+    size_t size() const;
     /**
      * @brief at
      * @param size_t index [in]

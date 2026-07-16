@@ -48,12 +48,12 @@ class rational_float {
     // 1/3 355/113 22/7 ...
     rational_float& operator=(const std::string& expr);
 
-    bool operator==(const rational_float& other);
-    bool operator!=(const rational_float& other);
-    bool operator>(const rational_float& other);
-    bool operator<(const rational_float& other);
-    bool operator>=(const rational_float& other);
-    bool operator<=(const rational_float& other);
+    bool operator==(const rational_float& other) const;
+    bool operator!=(const rational_float& other) const;
+    bool operator>(const rational_float& other) const;
+    bool operator<(const rational_float& other) const;
+    bool operator>=(const rational_float& other) const;
+    bool operator<=(const rational_float& other) const;
 
     /**
      * rational_float r1("1/2");  // 1/2

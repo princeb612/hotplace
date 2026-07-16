@@ -50,8 +50,8 @@ asn1_bitstring& asn1_bitstring::add(const std::initializer_list<std::pair<std::s
     return *this;
 }
 
-void asn1_bitstring::represent(uint32 depth, stream_t* s, asn1_value* value) {
-    asn1_builtin_type::represent(depth, s, value);
+void asn1_bitstring::represent(stream_t* s, const asn1_value* value) const {
+    asn1_builtin_type::represent(s, value);
 
     if (false == _reverse.empty()) {
         s->printf(" {");
@@ -68,13 +68,9 @@ void asn1_bitstring::represent(uint32 depth, stream_t* s, asn1_value* value) {
     }
 }
 
-bool asn1_bitstring::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) {
-    debug_print(depth);
-
+bool asn1_bitstring::represent(binary_t* b, const asn1_value* value, uint16 flags) const {
     if (value) {
         auto name = resolve_name();
-        debug_print(depth, name);
-
         auto snapshot = b->size();
         bool test = true;
 

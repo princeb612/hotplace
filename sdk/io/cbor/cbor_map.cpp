@@ -113,7 +113,7 @@ cbor_map& cbor_map::operator<<(cbor_pair* object) {
     return *this;
 }
 
-size_t cbor_map::size() { return _array.size(); }
+size_t cbor_map::size() const { return _array.size(); }
 
 cbor_pair* cbor_map::operator[](size_t index) {
     cbor_pair* item = nullptr;

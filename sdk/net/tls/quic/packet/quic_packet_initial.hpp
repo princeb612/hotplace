@@ -29,8 +29,8 @@ class quic_packet_initial : public quic_packet {
     quic_packet_initial& set_token(const binary_t& token);
     const binary_t& get_token();
 
-    uint64 get_bodysize();
-    virtual size_t estimate_overhead();
+    uint64 get_bodysize() const;
+    virtual size_t estimate_overhead() const;
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t& pos_unprotect);

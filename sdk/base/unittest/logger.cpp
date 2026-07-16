@@ -404,9 +404,9 @@ logger& logger::do_color_write_stream(stream_t* s, bool lf) {
     return do_write(lambda);
 }
 
-bool logger::test_loglevel(loglevel_t level) { return level >= _log_level; }
+bool logger::test_loglevel(loglevel_t level) const { return level >= _log_level; }
 
-bool logger::test_loglevel() { return _implicit_level >= _log_level; }
+bool logger::test_loglevel() const { return _implicit_level >= _log_level; }
 
 logger& logger::attach(test_case* testcase) {
     if (testcase) {

@@ -99,7 +99,7 @@ void asn1_resource::doload_resource() {
     }
 }  // namespace io
 
-std::string asn1_resource::get_component_entity_name(asn1_entity_t entity) {
+std::string asn1_resource::get_component_entity_name(asn1_entity_t entity) const {
     std::string name;
     auto iter = _type_id.find(entity);
     if (_type_id.end() != iter) {
@@ -108,7 +108,7 @@ std::string asn1_resource::get_component_entity_name(asn1_entity_t entity) {
     return name;
 }
 
-std::string asn1_resource::get_entity_name(uint8 ident, asn1_entity_t entity) {
+std::string asn1_resource::get_entity_name(uint8 ident, asn1_entity_t entity) const {
     std::string name;
     auto c = (ident & asn1_class_mask);
     switch (c) {
@@ -133,7 +133,7 @@ std::string asn1_resource::get_entity_name(uint8 ident, asn1_entity_t entity) {
     return name;
 }
 
-asn1_entity_t asn1_resource::get_entity(const std::string& name) {
+asn1_entity_t asn1_resource::get_entity(const std::string& name) const {
     asn1_entity_t entity = {};
     auto iter = _type_rid.find(name);
     if (_type_rid.end() != iter) {
@@ -142,12 +142,12 @@ asn1_entity_t asn1_resource::get_entity(const std::string& name) {
     return entity;
 }
 
-asn1_perm_t asn1_resource::get_perm(asn1_entity_t entity) {
+asn1_perm_t asn1_resource::get_perm(asn1_entity_t entity) const {
     auto iter = _type_perm.find(entity);
     return (_type_perm.end() == iter) ? asn1_perm_none : iter->second;
 }
 
-std::string asn1_resource::get_class_name(int c) {
+std::string asn1_resource::get_class_name(int c) const {
     std::string name;
     auto iter = _class_id.find(c & asn1_class_mask);
     if (_class_id.end() != iter) {
@@ -156,7 +156,7 @@ std::string asn1_resource::get_class_name(int c) {
     return name;
 }
 
-std::string asn1_resource::get_tagtype_name(uint16 t) {
+std::string asn1_resource::get_tagtype_name(uint16 t) const {
     std::string name;
     switch (t) {
         case asn1_implicit:
@@ -175,7 +175,7 @@ std::string asn1_resource::get_tagtype_name(uint16 t) {
     return name;
 }
 
-void asn1_resource::for_each_type_name(std::function<void(asn1_entity_t, const std::string&)> f) {
+void asn1_resource::for_each_type_name(std::function<void(asn1_entity_t, const std::string&)> f) const {
     if (f) {
         for (auto item : _type_id) {
             f(item.first, item.second);

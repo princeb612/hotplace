@@ -32,7 +32,7 @@ class asn1_constraint_size : public asn1_constraint<T> {
 
     asn1_constraint_size* clone() { return new asn1_constraint_size<T>(*this); }
 
-    virtual bool is_applicable(asn1_entity_t entity) {
+    virtual bool is_applicable(asn1_entity_t entity) const {
         switch (entity) {
             case asn1_entity_bitstring:
             case asn1_entity_octstring:
@@ -89,7 +89,7 @@ class asn1_constraint_size : public asn1_constraint<T> {
         }
     }
 
-    virtual void represent(stream_t* s, asn1_object* object, asn1_value* value = nullptr) {
+    virtual void represent(stream_t* s, const asn1_object* object, const asn1_value* value = nullptr) const {
         if (_cons) {
             s->printf("SIZE(");
             _cons->represent(s, object, value);

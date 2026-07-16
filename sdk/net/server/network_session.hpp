@@ -114,7 +114,7 @@ class network_session {
     /**
      * @brief return priority
      */
-    int get_priority();
+    int get_priority() const;
     /**
      * @brief elevate priority
      * @param   int priority        [IN]

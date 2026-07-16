@@ -38,7 +38,7 @@ class cbor_tstrings : public cbor_object {
     cbor_tstrings& add(const char* str);
     cbor_tstrings& operator<<(const char* str);
 
-    virtual size_t size();
+    virtual size_t size() const;
 
     virtual int addref();
     virtual int release();

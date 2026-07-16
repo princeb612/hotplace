@@ -50,7 +50,7 @@ class network_protocol {
      * @return  errorcode_t::success
      *          errorcode_t::not_supported (if error, do not return errorcode_t::success)
      */
-    virtual return_t is_kind_of(void* stream, size_t stream_size);
+    virtual return_t is_kind_of(void* stream, size_t stream_size) const;
     /**
      * @brief read stream
      * @param   IBufferStream*      stream          [IN]
@@ -68,7 +68,7 @@ class network_protocol {
     /**
      * @brief   id
      */
-    virtual const char* protocol_id() = 0;
+    virtual const char* protocol_id() const = 0;
     /**
      *  bool is_h3 = false;
      *  if (protocol->use_alpn()) {

@@ -154,7 +154,7 @@ return_t ossl_set_cooltime(uint32 ms);
  */
 return_t ossl_set_cooltime_max(uint32 ms);
 /**
- * @biref return a cooltime
+ * @brief return a cooltime
  */
 uint32 ossl_get_cooltime();
 /**

@@ -287,7 +287,7 @@ return_t multiplexer_iocp::setoption(multiplexer_context_t* handle, arch_t optio
     return errorcode_t::not_supported;
 }
 
-multiplexer_type_t multiplexer_iocp::type() { return mux_type_completionport; }
+multiplexer_type_t multiplexer_iocp::type() const { return mux_type_completionport; }
 
 }  // namespace io
 }  // namespace hotplace

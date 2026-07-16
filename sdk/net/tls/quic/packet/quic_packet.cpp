@@ -79,9 +79,9 @@ quic_packet::~quic_packet() {
     }
 }
 
-uint8 quic_packet::get_type() { return _type; }
+uint8 quic_packet::get_type() const { return _type; }
 
-void quic_packet::get_type(uint8 hdr, uint8& type, bool& is_longheader) { quic_packet_get_type(_version, hdr, type, is_longheader); }
+void quic_packet::get_type(uint8 hdr, uint8& type, bool& is_longheader) const { quic_packet_get_type(_version, hdr, type, is_longheader); }
 
 void quic_packet::set_type(uint8 type, uint8& hdr, bool& is_longheader) {
     quic_packet_set_type(session_type_t::quic == get_session()->get_type() ? quic_1 : quic_2, type, hdr, is_longheader);
@@ -98,7 +98,7 @@ quic_packet& quic_packet::set_version() {
     return *this;
 }
 
-uint32 quic_packet::get_version() { return _version; }
+uint32 quic_packet::get_version() const { return _version; }
 
 quic_packet& quic_packet::set_dcid(const binary_t& cid) {
     _dcid = cid;
@@ -110,9 +110,9 @@ quic_packet& quic_packet::set_scid(const binary_t& cid) {
     return *this;
 }
 
-const binary_t& quic_packet::get_dcid() { return _dcid; }
+const binary_t& quic_packet::get_dcid() const { return _dcid; }
 
-const binary_t& quic_packet::get_scid() { return _scid; }
+const binary_t& quic_packet::get_scid() const { return _scid; }
 
 return_t quic_packet::read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos) {
     return_t ret = errorcode_t::success;
@@ -518,9 +518,9 @@ void quic_packet::set_pn(uint32 pn, uint8 len) {
     }
 }
 
-uint8 quic_packet::get_pn_length() { return get_pn_length(_ht); }
+uint8 quic_packet::get_pn_length() const { return get_pn_length(_ht); }
 
-uint8 quic_packet::get_pn_length(uint8 ht) {
+uint8 quic_packet::get_pn_length(uint8 ht) const {
     // RFC 9001 5.4.1.  Header Protection Application
     uint8 len = 0;
     switch (get_type()) {
@@ -536,7 +536,7 @@ uint8 quic_packet::get_pn_length(uint8 ht) {
     return len;
 }
 
-uint32 quic_packet::get_pn() { return _pn; }
+uint32 quic_packet::get_pn() const { return _pn; }
 
 quic_frames& quic_packet::get_quic_frames() { return _frames; }
 
@@ -558,7 +558,7 @@ quic_packet& quic_packet::set_payload(const byte_t* stream, size_t size) {
 
 const binary_t& quic_packet::get_payload() { return _payload; }
 
-tls_session* quic_packet::get_session() { return _session; }
+tls_session* quic_packet::get_session() const { return _session; }
 
 void quic_packet::set_session(tls_session* session) {
     if (_session) {
@@ -575,11 +575,11 @@ void quic_packet::addref() { _shared.addref(); }
 
 void quic_packet::release() { _shared.delref(); }
 
-uint32 quic_packet::get_flags() { return 0; }
+uint32 quic_packet::get_flags() const { return 0; }
 
-size_t quic_packet::get_max_payload_size() { return get_session()->get_quic_session().get_setting().get(quic_param_max_udp_payload_size); }
+size_t quic_packet::get_max_payload_size() const { return get_session()->get_quic_session().get_setting().get(quic_param_max_udp_payload_size); }
 
-size_t quic_packet::estimate_overhead() { return 0; }
+size_t quic_packet::estimate_overhead() const { return 0; }
 
 }  // namespace net
 }  // namespace hotplace

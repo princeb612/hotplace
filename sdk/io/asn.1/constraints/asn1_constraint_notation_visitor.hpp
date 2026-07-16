@@ -22,18 +22,18 @@ namespace io {
 
 class asn1_constraint_notation_visitor : public asn1_constraint_visitor {
    public:
-    asn1_constraint_notation_visitor(stream_t* s, asn1_object* object, asn1_value* value = nullptr);
+    asn1_constraint_notation_visitor(stream_t* s, const asn1_object* object, const asn1_value* value = nullptr);
     virtual ~asn1_constraint_notation_visitor();
 
-    virtual void visit(asn1_constraint_t* cons);
+    virtual void visit(const asn1_constraint_t* cons);
 
    protected:
     stream_t* get_stream();
 
    private:
-    asn1_object* _object;
+    const asn1_object* _object;
     stream_t* _s;
-    asn1_value* _value;
+    const asn1_value* _value;
 };
 
 }  // namespace io

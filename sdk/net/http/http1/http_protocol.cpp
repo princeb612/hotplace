@@ -20,7 +20,7 @@ http_protocol::http_protocol() : network_protocol() {}
 
 http_protocol::~http_protocol() {}
 
-return_t http_protocol::is_kind_of(void* stream, size_t stream_size) {
+return_t http_protocol::is_kind_of(void* stream, size_t stream_size) const {
     return_t ret = errorcode_t::success;
     bool found = false;
 
@@ -114,7 +114,7 @@ return_t http_protocol::read_stream(basic_stream* stream, size_t* request_size, 
     return errorcode_t::success;
 }
 
-const char* http_protocol::protocol_id() { return "http"; }
+const char* http_protocol::protocol_id() const { return "http"; }
 
 }  // namespace net
 }  // namespace hotplace

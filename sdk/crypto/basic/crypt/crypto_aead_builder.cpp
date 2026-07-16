@@ -56,7 +56,7 @@ crypto_aead* crypto_aead_builder::build() {
     return obj;
 }
 
-crypto_scheme_t crypto_aead_builder::get_scheme() { return _scheme; }
+crypto_scheme_t crypto_aead_builder::get_scheme() const { return _scheme; }
 
 crypto_aead_builder& crypto_aead_builder::set_scheme(crypto_scheme_t scheme) {
     _scheme = scheme;

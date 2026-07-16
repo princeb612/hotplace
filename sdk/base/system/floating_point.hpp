@@ -64,14 +64,14 @@ class floating_point {
     floating_point operator/(const floating_point& other) const;
     floating_point& operator/=(const floating_point& other);
 
-    bool operator==(const floating_point& other);
-    bool operator!=(const floating_point& other);
-    bool operator>(const floating_point& other);
-    bool operator<(const floating_point& other);
-    bool operator>=(const floating_point& other);
-    bool operator<=(const floating_point& other);
+    bool operator==(const floating_point& other) const;
+    bool operator!=(const floating_point& other) const;
+    bool operator>(const floating_point& other) const;
+    bool operator<(const floating_point& other) const;
+    bool operator>=(const floating_point& other) const;
+    bool operator<=(const floating_point& other) const;
 
-    fp_type_t get_type();
+    fp_type_t get_type() const;
     std::string str();
     std::string fstr(size_t precision = 32) const;
 

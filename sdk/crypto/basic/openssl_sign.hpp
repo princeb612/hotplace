@@ -54,7 +54,7 @@ class openssl_sign {
     virtual ~openssl_sign();
 
     /**
-     * @biref   sign
+     * @brief   sign
      * @param   const EVP_PKEY* pkey [in]
      * @param   signature_t mode [in]
      * @param   const binary_t& input [in]
@@ -64,7 +64,7 @@ class openssl_sign {
     return_t sign(const EVP_PKEY* pkey, signature_t mode, const binary_t& input, binary_t& signature, uint32 flags = 0);
     return_t sign(const EVP_PKEY* pkey, signature_t mode, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
     /**
-     * @biref   verify
+     * @brief   verify
      * @param   const EVP_PKEY* pkey [in]
      * @param   signature_t mode [in]
      * @param   const binary_t& input [in]

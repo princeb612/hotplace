@@ -30,7 +30,7 @@ class quic_streams : public t_binaries<uint64, uint8> {
     // get_tag
     return_t get_unistream_type(uint64 stream_id, uint8& type);
 
-    bool is_unidirectional_stream(uint64 stream_id);
+    bool is_unidirectional_stream(uint64 stream_id) const;
 
    protected:
    private:

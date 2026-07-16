@@ -137,7 +137,7 @@ void signalwait_threads::signal_and_wait_all(int reserved) {
     }
 }
 
-size_t signalwait_threads::capacity() { return _capacity; }
+size_t signalwait_threads::capacity() const { return _capacity; }
 
 size_t signalwait_threads::running() {
     size_t size = 0;

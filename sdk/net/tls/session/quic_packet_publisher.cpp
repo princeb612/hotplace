@@ -56,11 +56,11 @@ quic_packet_publisher& quic_packet_publisher::set_flags(uint32 flags) {
     return *this;
 }
 
-tls_session* quic_packet_publisher::get_session() { return _session; }
+tls_session* quic_packet_publisher::get_session() const { return _session; }
 
-size_t quic_packet_publisher::get_payload_size() { return _payload_size; }
+size_t quic_packet_publisher::get_payload_size() const { return _payload_size; }
 
-uint32 quic_packet_publisher::get_flags() { return _flags; }
+uint32 quic_packet_publisher::get_flags() const { return _flags; }
 
 tls_handshakes& quic_packet_publisher::get_handshakes() { return _handshakes; }
 

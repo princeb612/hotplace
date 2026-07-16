@@ -149,7 +149,9 @@ payload_member& payload_member::set_group(const char* group) {
 
 variant& payload_member::get_variant() { return _vt; }
 
-size_t payload_member::get_space() {
+const variant& payload_member::get_variant() const { return _vt; }
+
+size_t payload_member::get_space() const {
     size_t space = 0;
     if (encoded()) {
         space = get_payload_encoded()->lsize();
@@ -163,7 +165,7 @@ size_t payload_member::get_space() {
     return space;
 }
 
-size_t payload_member::get_capacity() {
+size_t payload_member::get_capacity() const {
     size_t space = 0;
     if (encoded()) {
         space = get_payload_encoded()->lsize();
@@ -177,7 +179,7 @@ size_t payload_member::get_capacity() {
     return space;
 }
 
-size_t payload_member::get_reference_value() {
+size_t payload_member::get_reference_value() const {
     size_t size = 0;
     if (encoded()) {
         size = get_payload_encoded()->value();
@@ -191,7 +193,7 @@ size_t payload_member::get_reference_value() {
     return size;
 }
 
-payload_member* payload_member::get_reference_of() { return _ref; }
+payload_member* payload_member::get_reference_of() const { return _ref; }
 
 payload_member& payload_member::set_reference_of(payload_member* member, uint8 multiple) {
     _ref = member;
@@ -394,9 +396,9 @@ payload_member& payload_member::reserve(size_t size) {
     return *this;
 }
 
-payload_encoded* payload_member::get_payload_encoded() { return _vl; }
+payload_encoded* payload_member::get_payload_encoded() const { return _vl; }
 
-uint8 payload_member::get_flags() { return _flags; }
+uint8 payload_member::get_flags() const { return _flags; }
 
 }  // namespace io
 }  // namespace hotplace

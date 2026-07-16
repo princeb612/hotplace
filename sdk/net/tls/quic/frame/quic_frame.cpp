@@ -129,11 +129,11 @@ return_t quic_frame::do_write_body(tls_direction_t dir, binary_t& bin) { return 
 
 return_t quic_frame::do_write_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, size_t len, binary_t& bin) { return errorcode_t::success; }
 
-quic_frame_t quic_frame::get_type() { return _type; }
+quic_frame_t quic_frame::get_type() const { return _type; }
 
 void quic_frame::set_type(uint64 type) { _type = (quic_frame_t)type; }
 
-tls_session* quic_frame::get_session() { return _session; }
+tls_session* quic_frame::get_session() const { return _session; }
 
 void quic_frame::addref() { _shared.addref(); }
 

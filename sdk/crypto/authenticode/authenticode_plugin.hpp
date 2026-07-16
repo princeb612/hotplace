@@ -72,7 +72,7 @@ class authenticode_plugin {
     /**
      * @brief is a signed separated file
      */
-    virtual bool separated() = 0;
+    virtual bool separated() const = 0;
     /**
      * @brief find a separated file list
      * @param std::list<std::string> pathlist [in]
@@ -91,7 +91,7 @@ class authenticode_plugin {
     /**
      * @return authenticode_engine_id_t
      */
-    virtual authenticode_engine_id_t id() = 0;
+    virtual authenticode_engine_id_t id() const = 0;
 
    private:
     t_shared_reference<authenticode_plugin> _shared;

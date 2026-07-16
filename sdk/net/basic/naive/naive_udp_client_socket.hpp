@@ -48,10 +48,10 @@ class naive_udp_client_socket : public client_socket {
     virtual return_t recvfrom(char* ptr_data, size_t size_data, size_t* cbread, struct sockaddr* addr, socklen_t* addrlen);
     virtual return_t sendto(const char* ptr_data, size_t size_data, size_t* cbsent, const struct sockaddr* addr, socklen_t addrlen);
 
-    virtual int socket_type();
-    virtual socket_t get_socket();
+    virtual int socket_type() const;
+    virtual socket_t get_socket() const;
 
-    virtual uint32 get_scheme();
+    virtual uint32 get_scheme() const;
 
    protected:
    private:

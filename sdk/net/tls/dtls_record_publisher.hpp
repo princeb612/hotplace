@@ -75,7 +75,7 @@ class dtls_record_publisher {
      *  RTL_FIELD_SIZE(tls_content_t, dtls) + sizeof(dtls_handshake_t) + fragment
      */
     void set_fragment_size(uint16 size);
-    uint16 get_fragment_size();
+    uint16 get_fragment_size() const;
 
     /**
      * @comments
@@ -83,7 +83,7 @@ class dtls_record_publisher {
      *      cf. quic_packet_publisher::set_payload_size
      */
     void set_segment_size(uint16 size);
-    uint16 get_max_size();
+    uint16 get_max_size() const;
 
     /**
      * @brief publish
@@ -96,11 +96,11 @@ class dtls_record_publisher {
     return_t publish(tls_records* records, tls_direction_t dir, std::function<void(tls_session*, binary_t&)> func);
 
     void set_flags(uint32 flags);
-    uint32 get_flags();
+    uint32 get_flags() const;
 
    protected:
     void set_session(tls_session* session);
-    tls_session* get_session();
+    tls_session* get_session() const;
 
    private:
     tls_session* _session;

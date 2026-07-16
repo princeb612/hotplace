@@ -128,20 +128,21 @@ class payload_member {
     payload_member& set_group(const char* group);
 
     variant& get_variant();
+    const variant& get_variant() const;
 
-    size_t get_space();
-    size_t get_capacity();
-    size_t get_reference_value();
-    payload_member* get_reference_of();
+    size_t get_space() const;
+    size_t get_capacity() const;
+    size_t get_reference_value() const;
+    payload_member* get_reference_of() const;
     payload_member& set_reference_of(payload_member* member, uint8 multiple = 1);
 
     payload_member& write(binary_t& bin);
     payload_member& read(const byte_t* ptr, size_t size_ptr, size_t offset, size_t* size_read);
     payload_member& reserve(size_t size);
 
-    payload_encoded* get_payload_encoded();
+    payload_encoded* get_payload_encoded() const;
 
-    uint8 get_flags();
+    uint8 get_flags() const;
 
    protected:
     return_t doread(const byte_t* ptr, size_t size_ptr, size_t offset, size_t* size_read);
@@ -191,13 +192,13 @@ class payload_encoded {
    public:
     virtual ~payload_encoded() = default;
 
-    virtual size_t lsize() = 0;
-    virtual size_t value() = 0;
-    virtual const byte_t* data() = 0;
+    virtual size_t lsize() const = 0;
+    virtual size_t value() const = 0;
+    virtual const byte_t* data() const = 0;
     virtual void write(binary_t& target) = 0;
 
-    virtual size_t lsize(const byte_t* stream, size_t size) = 0;
-    virtual size_t value(const byte_t* stream, size_t size) = 0;
+    virtual size_t lsize(const byte_t* stream, size_t size) const = 0;
+    virtual size_t value(const byte_t* stream, size_t size) const = 0;
     virtual return_t read(const byte_t* stream, size_t size, size_t& pos) = 0;
     virtual variant& get_variant() = 0;
 
@@ -375,7 +376,7 @@ class payload {
         }
         return *this;
     }
-    payload_member* select(const std::string& name);
+    payload_member* select(const std::string& name) const;
     size_t offset_of(const std::string& name);
     size_t numberof_members();
 
@@ -416,7 +417,7 @@ class payload {
     }
     void get_binary(const std::string& name, binary_t& bin, uint32 flags = 0);
     return_t reserve(const std::string& name, size_t size);
-    size_t get_space(const std::string& name);
+    size_t get_space(const std::string& name) const;
 
    private:
     /**

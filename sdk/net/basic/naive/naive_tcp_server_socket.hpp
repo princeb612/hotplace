@@ -63,9 +63,9 @@ class naive_tcp_server_socket : public server_socket {
      * @override
      * @return  return SOCK_STREAM
      */
-    virtual int socket_type();
+    virtual int socket_type() const;
 
-    virtual uint32 get_scheme();
+    virtual uint32 get_scheme() const;
 
    protected:
 };

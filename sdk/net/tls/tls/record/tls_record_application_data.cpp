@@ -219,7 +219,7 @@ return_t tls_record_application_data::do_write_body(tls_direction_t dir, binary_
     return ret;
 }
 
-bool tls_record_application_data::apply_protection() { return true; }
+bool tls_record_application_data::apply_protection() const { return true; }
 
 return_t tls_record_application_data::get_application_data(binary_t& message, bool untag) {
     return_t ret = errorcode_t::success;

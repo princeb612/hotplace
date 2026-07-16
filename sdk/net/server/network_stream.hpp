@@ -35,7 +35,7 @@ class network_stream_data {
     /**
      * @brief content size
      */
-    size_t size();
+    size_t size() const;
     /**
      * @brief content
      */
@@ -47,7 +47,7 @@ class network_stream_data {
     network_stream_data* next();
     void set_next(network_stream_data* next);
 
-    int get_priority();
+    int get_priority() const;
     void set_priority(int priority);
 
     int addref();

@@ -37,13 +37,13 @@ class tls_extension {
 
     tls_handshake* get_handshake();
     void set_type(tls_extension_type_t type);
-    tls_extension_type_t get_type();
-    const range_t& get_header_range();
-    size_t offsetof_header();
-    size_t offsetof_body();
-    uint16 get_body_size();
-    size_t get_extsize();
-    size_t endpos_extension();
+    tls_extension_type_t get_type() const;
+    const range_t& get_header_range() const;
+    size_t offsetof_header() const;
+    size_t offsetof_body() const;
+    uint16 get_body_size() const;
+    size_t get_extsize() const;
+    size_t endpos_extension() const;
 
     void addref();
     void release();

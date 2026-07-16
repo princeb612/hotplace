@@ -151,7 +151,7 @@ return_t tls_extension_quic_transport_parameters::read_quic_params(const byte_t*
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
                 for (auto item : params) {
                     auto param_id = item.first;
-                    const auto& v = item.second.content();
+                    const auto& v = item.second.get();
 
                     dbs.printf("    > %I64i (%s) ", param_id, tlsadvisor->nameof_quic_param(param_id).c_str());
                     switch (v.type) {
@@ -179,14 +179,14 @@ return_t tls_extension_quic_transport_parameters::read_quic_params(const byte_t*
 return_t tls_extension_quic_transport_parameters::write_quic_param(uint64 id, const variant& value, binary_t& params) {
     return_t ret = errorcode_t::success;
     payload pl;
-    switch (value.content().type) {
+    switch (value.get().type) {
         case vartype_t::TYPE_NULL: {
             pl << new payload_member(new quic_encoded(id), constexpr_param_id)  //
                << new payload_member(new quic_encoded(uint64(0)), constexpr_param);
         } break;
         case vartype_t::TYPE_UINT64: {
             binary_t temp;
-            quic_write_vle_int(value.content().data.ui64, temp);
+            quic_write_vle_int(value.get().data.ui64, temp);
             pl << new payload_member(new quic_encoded(id), constexpr_param_id)  //
                << new payload_member(new quic_encoded(temp), constexpr_param);
         } break;

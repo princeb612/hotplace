@@ -190,7 +190,7 @@ void dtls_record_arrange::get_epoch_seq(uint64 key, uint16& epoch, uint64& seq) 
 
 void dtls_record_arrange::set_session(tls_session* session) { _session = session; }
 
-tls_session* dtls_record_arrange::get_session() { return _session; }
+tls_session* dtls_record_arrange::get_session() const { return _session; }
 
 }  // namespace net
 }  // namespace hotplace

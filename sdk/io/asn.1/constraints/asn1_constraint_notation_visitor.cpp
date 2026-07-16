@@ -19,15 +19,12 @@
 namespace hotplace {
 namespace io {
 
-asn1_constraint_notation_visitor::asn1_constraint_notation_visitor(stream_t* s, asn1_object* object, asn1_value* value) : _object(object), _s(s), _value(value) {
-    if (_value) _value->addref();
-}
+asn1_constraint_notation_visitor::asn1_constraint_notation_visitor(stream_t* s, const asn1_object* object, const asn1_value* value)
+    : _object(object), _s(s), _value(value) {}
 
-asn1_constraint_notation_visitor::~asn1_constraint_notation_visitor() {
-    if (_value) _value->release();
-}
+asn1_constraint_notation_visitor::~asn1_constraint_notation_visitor() {}
 
-void asn1_constraint_notation_visitor::visit(asn1_constraint_t* cons) { cons->represent(get_stream(), _object, _value); }
+void asn1_constraint_notation_visitor::visit(const asn1_constraint_t* cons) { cons->represent(get_stream(), _object, _value); }
 
 stream_t* asn1_constraint_notation_visitor::get_stream() { return _s; }
 

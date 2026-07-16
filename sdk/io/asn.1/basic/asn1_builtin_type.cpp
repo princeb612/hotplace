@@ -28,7 +28,7 @@ asn1_builtin_type::asn1_builtin_type(asn1_entity_t entity) : asn1_type(entity, "
 asn1_builtin_type::asn1_builtin_type(const std::string& name, asn1_entity_t entity) : asn1_type(entity, name, nullptr) {}
 
 asn1_builtin_type::asn1_builtin_type(const std::string& name, asn1_entity_t entity, const variant& value) : asn1_type(entity, name, nullptr) {
-    set_default_value(value.content());
+    set_default_value(value.get());
 }
 
 asn1_builtin_type::~asn1_builtin_type() {}
@@ -42,7 +42,7 @@ asn1_builtin_type* asn1_builtin_type::addref() {
 
 asn1_entity_t asn1_builtin_type::get_component_entity() const { return asn1_entity_builtin_type; }
 
-void asn1_builtin_type::represent(uint32 depth, stream_t* s, asn1_value* value) {
+void asn1_builtin_type::represent(stream_t* s, const asn1_value* value) const {
     if (s) {
         auto resource = asn1_resource::get_instance();
         auto entity = get_entity();
@@ -75,14 +75,11 @@ void asn1_builtin_type::represent(uint32 depth, stream_t* s, asn1_value* value) 
     }
 }
 
-bool asn1_builtin_type::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) {
-    debug_print(depth);
-
+bool asn1_builtin_type::represent(binary_t* b, const asn1_value* value, uint16 flags) const {
     // value binding
     std::string name;
     if (value) {
         name = resolve_name();
-        debug_print(depth, name);
 
         if (asn1_visitor_choice == flags) {
             if (false == value->find(name)) {

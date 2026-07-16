@@ -24,9 +24,9 @@ decoder_stream& decoder_stream::set_maxsize(size_t size) {
     return *this;
 }
 
-size_t decoder_stream::get_maxsize() { return _maxsize; }
+size_t decoder_stream::get_maxsize() const { return _maxsize; }
 
-encoding_t decoder_stream::get_encoding() { return _encoding; }
+encoding_t decoder_stream::get_encoding() const { return _encoding; }
 
 return_t decoder_stream::write(const char* data, size_t size) {
     return_t ret = errorcode_t::success;

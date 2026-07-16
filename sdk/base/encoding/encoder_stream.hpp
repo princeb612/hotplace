@@ -49,10 +49,10 @@ class encoder_stream {
     encoder_stream& operator=(encoder_stream&& other) = default;
 
     encoder_stream& set_maxsize(size_t size);
-    size_t get_maxsize();
-    encoding_t get_encoding();
+    size_t get_maxsize() const;
+    encoding_t get_encoding() const;
     encoder_stream& set_endian(bool use_bigendian);
-    bool is_bigendian();
+    bool is_bigendian() const;
 
     encoder_stream& clear();
 

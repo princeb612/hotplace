@@ -31,7 +31,7 @@ class http_protocol : public network_protocol {
      * @param   size_t          stream_size     [IN]
      * @return  error code (see error.hpp)
      */
-    virtual return_t is_kind_of(void* stream, size_t stream_size);
+    virtual return_t is_kind_of(void* stream, size_t stream_size) const;
     /**
      * @brief   read stream
      * @param   IBufferStream*  stream          [IN]
@@ -47,7 +47,7 @@ class http_protocol : public network_protocol {
     /**
      * @brief   id
      */
-    virtual const char* protocol_id();
+    virtual const char* protocol_id() const;
 };
 
 }  // namespace net

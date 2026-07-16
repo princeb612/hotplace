@@ -75,7 +75,7 @@ void socket_advisor::build() {
     }
 }
 
-std::string socket_advisor::nameof_family(int code) {
+std::string socket_advisor::nameof_family(int code) const {
     std::string value;
     auto iter = _family.find(code);
     if (_family.end() != iter) {
@@ -84,7 +84,7 @@ std::string socket_advisor::nameof_family(int code) {
     return value;
 }
 
-std::string socket_advisor::nameof_type(int code) {
+std::string socket_advisor::nameof_type(int code) const {
     std::string value;
     auto iter = _type.find(code);
     if (_type.end() != iter) {
@@ -93,7 +93,7 @@ std::string socket_advisor::nameof_type(int code) {
     return value;
 }
 
-std::string socket_advisor::nameof_protocol(int code) {
+std::string socket_advisor::nameof_protocol(int code) const {
     std::string value;
     auto iter = _protocol.find(code);
     if (_protocol.end() != iter) {

@@ -67,7 +67,7 @@ class server_socket_builder {
      */
     server_socket_adapter* build_adapter();
 
-    uint32 get_scheme();
+    uint32 get_scheme() const;
 
    protected:
    private:

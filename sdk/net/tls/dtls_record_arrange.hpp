@@ -84,7 +84,7 @@ class dtls_record_arrange {
 
    protected:
     void set_session(tls_session* session);
-    tls_session* get_session();
+    tls_session* get_session() const;
 
    private:
     tls_session* _session;

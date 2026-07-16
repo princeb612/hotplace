@@ -25,7 +25,7 @@ class asn1_constraint_evaluator : public asn1_constraint_visitor {
    public:
     virtual ~asn1_constraint_evaluator() = default;
 
-    virtual void visit(asn1_constraint_t* cons);
+    virtual void visit(const asn1_constraint_t* cons);
     virtual void visit(asn1_constraint<T>* cons);
     t_set_runtime<T>& get_result_set();
 
@@ -34,9 +34,9 @@ class asn1_constraint_evaluator : public asn1_constraint_visitor {
 };
 
 template <typename T>
-void asn1_constraint_evaluator<T>::visit(asn1_constraint_t* cons) {
+void asn1_constraint_evaluator<T>::visit(const asn1_constraint_t* cons) {
     if (nullptr == cons) return;
-    auto cont = dynamic_cast<asn1_constraint<T>*>(cons);
+    auto cont = (asn1_constraint<T>*)cons;
     if (cont) {
         cont->accept(this);
     }

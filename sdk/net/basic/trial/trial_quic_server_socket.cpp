@@ -28,7 +28,7 @@ trial_quic_server_socket::trial_quic_server_socket() : trial_dtls_server_socket(
 
 trial_quic_server_socket::~trial_quic_server_socket() {}
 
-uint32 trial_quic_server_socket::get_scheme() { return socket_scheme_quic | socket_scheme_trial | socket_scheme_server; }
+uint32 trial_quic_server_socket::get_scheme() const { return socket_scheme_quic | socket_scheme_trial | socket_scheme_server; }
 
 }  // namespace net
 }  // namespace hotplace

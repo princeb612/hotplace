@@ -193,17 +193,17 @@ decimal_float& decimal_float::operator=(const std::string& expr) {
     return *this;
 }
 
-bool decimal_float::operator==(const decimal_float& other) { return compare(*this, other) == 0; }
+bool decimal_float::operator==(const decimal_float& other) const { return compare(*this, other) == 0; }
 
-bool decimal_float::operator!=(const decimal_float& other) { return compare(*this, other) != 0; }
+bool decimal_float::operator!=(const decimal_float& other) const { return compare(*this, other) != 0; }
 
-bool decimal_float::operator>(const decimal_float& other) { return compare(*this, other) > 0; }
+bool decimal_float::operator>(const decimal_float& other) const { return compare(*this, other) > 0; }
 
-bool decimal_float::operator<(const decimal_float& other) { return compare(*this, other) < 0; }
+bool decimal_float::operator<(const decimal_float& other) const { return compare(*this, other) < 0; }
 
-bool decimal_float::operator>=(const decimal_float& other) { return compare(*this, other) >= 0; }
+bool decimal_float::operator>=(const decimal_float& other) const { return compare(*this, other) >= 0; }
 
-bool decimal_float::operator<=(const decimal_float& other) { return compare(*this, other) <= 0; }
+bool decimal_float::operator<=(const decimal_float& other) const { return compare(*this, other) <= 0; }
 
 std::string decimal_float::str() {
     std::string res;

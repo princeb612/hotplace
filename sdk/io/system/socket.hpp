@@ -123,9 +123,9 @@ void winsock_cleanup();
 class socket_advisor {
    public:
     static socket_advisor* get_instance();
-    std::string nameof_family(int code);
-    std::string nameof_type(int code);
-    std::string nameof_protocol(int code);
+    std::string nameof_family(int code) const;
+    std::string nameof_type(int code) const;
+    std::string nameof_protocol(int code) const;
 
    protected:
     socket_advisor();

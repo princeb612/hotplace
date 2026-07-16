@@ -25,16 +25,16 @@ encoder_stream& encoder_stream::set_maxsize(size_t size) {
     return *this;
 }
 
-size_t encoder_stream::get_maxsize() { return _maxsize; }
+size_t encoder_stream::get_maxsize() const { return _maxsize; }
 
-encoding_t encoder_stream::get_encoding() { return _encoding; }
+encoding_t encoder_stream::get_encoding() const { return _encoding; }
 
 encoder_stream& encoder_stream::set_endian(bool use_bigendian) {
     _use_bigendian = use_bigendian;
     return *this;
 }
 
-bool encoder_stream::is_bigendian() { return _use_bigendian; }
+bool encoder_stream::is_bigendian() const { return _use_bigendian; }
 
 return_t encoder_stream::write(const byte_t* data, size_t size) {
     return_t ret = errorcode_t::success;

@@ -237,19 +237,19 @@ tls_handshake* tls_extension::get_handshake() { return _hs; }
 
 void tls_extension::set_type(tls_extension_type_t type) { _type = type; }
 
-tls_extension_type_t tls_extension::get_type() { return _type; }
+tls_extension_type_t tls_extension::get_type() const { return _type; }
 
-const range_t& tls_extension::get_header_range() { return _header_range; }
+const range_t& tls_extension::get_header_range() const { return _header_range; }
 
-size_t tls_extension::offsetof_header() { return _header_range.begin; }
+size_t tls_extension::offsetof_header() const { return _header_range.begin; }
 
-size_t tls_extension::offsetof_body() { return _header_range.end; }
+size_t tls_extension::offsetof_body() const { return _header_range.end; }
 
-uint16 tls_extension::get_body_size() { return _bodysize; }
+uint16 tls_extension::get_body_size() const { return _bodysize; }
 
-size_t tls_extension::get_extsize() { return _size; }
+size_t tls_extension::get_extsize() const { return _size; }
 
-size_t tls_extension::endpos_extension() { return _header_range.end + _bodysize; }
+size_t tls_extension::endpos_extension() const { return _header_range.end + _bodysize; }
 
 void tls_extension::addref() { _shared.addref(); }
 

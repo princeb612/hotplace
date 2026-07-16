@@ -61,7 +61,7 @@ cbor_bstrings& cbor_bstrings::operator<<(binary_t bin) {
     return *this;
 }
 
-size_t cbor_bstrings::size() { return _array.size(); }
+size_t cbor_bstrings::size() const { return _array.size(); }
 
 int cbor_bstrings::addref() {
     for (cbor_data* item : _array) {

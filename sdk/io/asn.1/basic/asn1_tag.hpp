@@ -38,14 +38,16 @@ class asn1_tag : public asn1_object {
     int get_class_number() const;
     int get_tag_type() const;
     bool is_implicit() const;
+    bool is_explicit() const;
 
     asn1_tag& as_explicit();
     asn1_tag& as_implicit();
     asn1_tag& as_automatic();
 
    protected:
-    virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
-    virtual bool represent(uint32 depth, binary_t* b, asn1_value* value = nullptr, uint16 flags = 0);
+    virtual void represent(stream_t* s, const asn1_value* value = nullptr) const;
+    virtual bool represent(binary_t* b, const asn1_value* value = nullptr, uint16 flags = 0) const;
+    void test_constructed();
 
    private:
     int _class_type;    // Application

@@ -49,14 +49,14 @@ http_header& http_header::clear() {
     return *this;
 }
 
-std::string http_header::get(const std::string& name, std::string& value) {
+std::string http_header::get(const std::string& name, std::string& value) const {
     std::string ret_value;
 
     value.clear();
 
     std::string key = (1 == get_version()) ? name : lowername(name);
 
-    http_header_map_t::iterator iter = _headers.find(key);
+    auto iter = _headers.find(key);
     if (_headers.end() != iter) {
         value = iter->second;
         ret_value = value.c_str();
@@ -65,24 +65,24 @@ std::string http_header::get(const std::string& name, std::string& value) {
     return ret_value;
 }
 
-std::string http_header::get(const std::string& name) {
+std::string http_header::get(const std::string& name) const {
     std::string ret_value;
 
     std::string key = (1 == get_version()) ? name : lowername(name);
 
-    http_header_map_t::iterator iter = _headers.find(key);
+    auto iter = _headers.find(key);
     if (_headers.end() != iter) {
         ret_value = iter->second;
     }
     return ret_value;
 }
 
-bool http_header::contains(const std::string& name, const std::string& value) {
+bool http_header::contains(const std::string& name, const std::string& value) const {
     bool ret_value = false;
 
     std::string key = (1 == get_version()) ? name : lowername(name);
 
-    http_header_map_t::iterator iter = _headers.find(key);
+    auto iter = _headers.find(key);
     if (_headers.end() != iter) {
         std::string body = iter->second;
         size_t pos = body.find(value);
@@ -93,7 +93,7 @@ bool http_header::contains(const std::string& name, const std::string& value) {
     return ret_value;
 }
 
-const char* http_header::get_token(const std::string& name, unsigned index, std::string& token) {
+const char* http_header::get_token(const std::string& name, unsigned index, std::string& token) const {
     const char* ret_value = nullptr;
 
     token.clear();
@@ -103,7 +103,7 @@ const char* http_header::get_token(const std::string& name, unsigned index, std:
 
     std::string key = (1 == get_version()) ? name : lowername(name);
 
-    http_header_map_t::iterator iter = _headers.find(key);
+    auto iter = _headers.find(key);
     if (_headers.end() != iter) {
         content = iter->second;
 
@@ -213,7 +213,7 @@ http_header& http_header::set_version(uint8 version) {
     return *this;
 }
 
-uint8 http_header::get_version() { return _version; }
+uint8 http_header::get_version() const { return _version; }
 
 }  // namespace net
 }  // namespace hotplace

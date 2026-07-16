@@ -310,9 +310,9 @@ http_request& http_request::set_stream_id(uint32 stream_id) {
 
 hpack_dynamic_table* http_request::get_hpack_dyntable() { return _hpsess; }
 
-uint8 http_request::get_version() { return _version; }
+uint8 http_request::get_version() const { return _version; }
 
-uint32 http_request::get_stream_id() { return _stream_id; }
+uint32 http_request::get_stream_id() const { return _stream_id; }
 
 void http_request::addref() { _shared.addref(); }
 

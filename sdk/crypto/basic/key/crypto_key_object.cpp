@@ -104,7 +104,7 @@ const EVP_PKEY* crypto_key_object::get_pkey() const { return _pkey; }
 
 const X509* crypto_key_object::get_x509() const { return _x509; }
 
-uint16 crypto_key_object::get_group() { return _desc.get_group(); }
+uint16 crypto_key_object::get_group() const { return _desc.get_group(); }
 
 crypto_key_object& crypto_key_object::set_desc(const keydesc& desc) {
     _desc = desc;

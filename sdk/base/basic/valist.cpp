@@ -194,7 +194,7 @@ void valist::clear() {
     }
 }
 
-size_t valist::size() { return _args.size(); }
+size_t valist::size() const { return _args.size(); }
 
 return_t valist::at(size_t index, variant_t& v) {
     return_t ret = errorcode_t::success;

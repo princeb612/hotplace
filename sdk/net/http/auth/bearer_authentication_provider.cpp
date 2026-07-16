@@ -61,7 +61,7 @@ return_t bearer_authentication_provider::request_auth(network_session* session, 
     return ret;
 }
 
-std::string bearer_authentication_provider::get_challenge(http_request* request) {
+std::string bearer_authentication_provider::get_challenge(http_request* request) const {
     std::string challenge;
 
     __try2 { request->get_http_header().get("Authorization", challenge); }

@@ -261,9 +261,9 @@ return_t payload::write(binary_t& bin, const std::set<std::string>& groups) {
     return ret;
 }
 
-payload_member* payload::select(const std::string& name) {
+payload_member* payload::select(const std::string& name) const {
     payload_member* item = nullptr;
-    t_maphint<std::string, payload_member*> hint(_members_map);
+    t_maphint_const<std::string, payload_member*> hint(_members_map);
     hint.find(name, &item);
     return item;
 }
@@ -341,7 +341,7 @@ return_t payload::reserve(const std::string& name, size_t size) {
     return ret;
 }
 
-size_t payload::get_space(const std::string& name) {
+size_t payload::get_space(const std::string& name) const {
     size_t value = 0;
     auto item = select(name);
     if (item) {

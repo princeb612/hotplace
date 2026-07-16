@@ -158,7 +158,7 @@ class multiplexer_iocp {
     /**
      * @brief   mux_type_completionport
      */
-    multiplexer_type_t type();
+    multiplexer_type_t type() const;
 
    protected:
 };
@@ -280,7 +280,7 @@ class multiplexer_epoll {
     /**
      * @brief mux_type_epoll
      */
-    multiplexer_type_t type();
+    multiplexer_type_t type() const;
 
    protected:
 };

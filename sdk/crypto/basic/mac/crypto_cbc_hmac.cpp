@@ -59,16 +59,16 @@ crypto_cbc_hmac& crypto_cbc_hmac::set_mac(hash_algorithm_t mac_alg) {
     return *this;
 }
 
-crypt_algorithm_t crypto_cbc_hmac::get_enc_alg() { return _enc_alg; }
+crypt_algorithm_t crypto_cbc_hmac::get_enc_alg() const { return _enc_alg; }
 
-hash_algorithm_t crypto_cbc_hmac::get_mac_alg() { return _mac_alg; }
+hash_algorithm_t crypto_cbc_hmac::get_mac_alg() const { return _mac_alg; }
 
 crypto_cbc_hmac& crypto_cbc_hmac::set_flag(uint16 flag) {
     _flag = flag;
     return *this;
 }
 
-uint16 crypto_cbc_hmac::get_flag() { return _flag; }
+uint16 crypto_cbc_hmac::get_flag() const { return _flag; }
 
 return_t crypto_cbc_hmac::split_key(const binary_t key, binary_t& enckey, binary_t& mackey) {
     return_t ret = errorcode_t::success;

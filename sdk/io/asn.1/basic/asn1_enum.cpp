@@ -53,7 +53,7 @@ asn1_enum& asn1_enum::add(const std::string& en, asn1_native_int_t value) {
 
 bool asn1_enum::have_constraints() const { return true; }
 
-bool asn1_enum::evaluate(const std::string& name) { return _enum.count(name) > 0; }
+bool asn1_enum::evaluate(const std::string& name) const { return _enum.count(name) > 0; }
 
 asn1_enum& asn1_enum::operator<<(const std::initializer_list<std::pair<std::string, asn1_native_int_t>>& items) { return add(items); }
 
@@ -64,7 +64,7 @@ asn1_enum& asn1_enum::add(const std::initializer_list<std::pair<std::string, asn
     return *this;
 }
 
-void asn1_enum::represent(uint32 depth, stream_t* s, asn1_value* value) {
+void asn1_enum::represent(stream_t* s, const asn1_value* value) const {
     auto resource = asn1_resource::get_instance();
     auto entity = get_entity();
 
@@ -84,13 +84,9 @@ void asn1_enum::represent(uint32 depth, stream_t* s, asn1_value* value) {
     s->printf("}");
 }
 
-bool asn1_enum::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) {
-    debug_print(depth);
-
+bool asn1_enum::represent(binary_t* b, const asn1_value* value, uint16 flags) const {
     if (value) {
         auto name = resolve_name();
-        debug_print(depth, name);
-
         auto snapshot = b->size();
 
         asn1_encode::write_identifier2(*b, this);

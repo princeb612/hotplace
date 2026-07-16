@@ -123,17 +123,17 @@ rational_float& rational_float::operator=(const std::string& expr) {
     return *this;
 }
 
-bool rational_float::operator==(const rational_float& other) { return compare(*this, other) == 0; }
+bool rational_float::operator==(const rational_float& other) const { return compare(*this, other) == 0; }
 
-bool rational_float::operator!=(const rational_float& other) { return compare(*this, other) != 0; }
+bool rational_float::operator!=(const rational_float& other) const { return compare(*this, other) != 0; }
 
-bool rational_float::operator>(const rational_float& other) { return compare(*this, other) > 0; }
+bool rational_float::operator>(const rational_float& other) const { return compare(*this, other) > 0; }
 
-bool rational_float::operator<(const rational_float& other) { return compare(*this, other) < 0; }
+bool rational_float::operator<(const rational_float& other) const { return compare(*this, other) < 0; }
 
-bool rational_float::operator>=(const rational_float& other) { return compare(*this, other) >= 0; }
+bool rational_float::operator>=(const rational_float& other) const { return compare(*this, other) >= 0; }
 
-bool rational_float::operator<=(const rational_float& other) { return compare(*this, other) <= 0; }
+bool rational_float::operator<=(const rational_float& other) const { return compare(*this, other) <= 0; }
 
 std::string rational_float::str() {
     normalize();

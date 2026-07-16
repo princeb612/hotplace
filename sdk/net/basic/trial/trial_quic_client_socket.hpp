@@ -24,7 +24,7 @@ class trial_quic_client_socket : public secure_client_socket {
     trial_quic_client_socket();
     virtual ~trial_quic_client_socket();
 
-    virtual uint32 get_scheme();
+    virtual uint32 get_scheme() const;
 
    protected:
    private:

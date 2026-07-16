@@ -33,7 +33,7 @@ asn1_any* asn1_any::addref() {
     return this;
 }
 
-void asn1_any::represent(uint32 depth, stream_t* s, asn1_value* value) {
+void asn1_any::represent(stream_t* s, const asn1_value* value) const {
     auto resource = asn1_resource::get_instance();
     auto entity = get_entity();
 
@@ -54,12 +54,9 @@ void asn1_any::represent(uint32 depth, stream_t* s, asn1_value* value) {
     }
 }
 
-bool asn1_any::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) {
-    debug_print(depth);
-
+bool asn1_any::represent(binary_t* b, const asn1_value* value, uint16 flags) const {
     if (value) {
         auto name = resolve_name();
-        debug_print(depth, name);
 
         std::list<variant> values;
         value->find(name, values, vt_flag_binary);

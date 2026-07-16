@@ -333,7 +333,7 @@ return_t multiplexer_epoll::post(multiplexer_context_t* handle, uint32 size_veco
 
 return_t multiplexer_epoll::setoption(multiplexer_context_t* handle, arch_t optionvalue, size_t size_optionvalue) { return errorcode_t::not_supported; }
 
-multiplexer_type_t multiplexer_epoll::type() { return mux_type_epoll; }
+multiplexer_type_t multiplexer_epoll::type() const { return mux_type_epoll; }
 
 }  // namespace io
 }  // namespace hotplace

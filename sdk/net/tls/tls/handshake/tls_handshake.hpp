@@ -36,22 +36,22 @@ class tls_handshake {
 
     tls_extensions& get_extensions();
 
-    tls_handshake_type_t get_type();
-    tls_session* get_session();
-    size_t get_size();
-    const range_t& get_header_range();
-    size_t offsetof_header();
-    size_t offsetof_body();
-    uint32 get_body_size();
+    tls_handshake_type_t get_type() const;
+    tls_session* get_session() const;
+    size_t get_size() const;
+    const range_t& get_header_range() const;
+    size_t offsetof_header() const;
+    size_t offsetof_body() const;
+    uint32 get_body_size() const;
 
     return_t prepare_fragment(const byte_t* stream, uint32 size, uint16 seq, uint32 fragment_offset, uint32 fragment_length);
     void set_dtls_seq(uint16 seq);
-    uint16 get_dtls_seq();
-    uint32 get_fragment_offset();
-    uint32 get_fragment_len();
+    uint16 get_dtls_seq() const;
+    uint32 get_fragment_offset() const;
+    uint32 get_fragment_len() const;
 
     void set_flags(uint32 flags);
-    uint32 get_flags();
+    uint32 get_flags() const;
 
    protected:
     /**

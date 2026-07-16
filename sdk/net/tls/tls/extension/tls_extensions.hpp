@@ -45,8 +45,8 @@ class tls_extensions {
     tls_extension* get(tls_extension_type_t type, bool upref = false);
     tls_extension* getat(size_t index, bool upref = false);
     tls_extension* operator[](size_t index);
-    bool empty();
-    size_t size();
+    bool empty() const;
+    size_t size() const;
     void clear();
 
    protected:

@@ -43,7 +43,7 @@ void test_variant() {
     _test_case.assert(bs == "0123456789abcdef (81985529216486895)", __FUNCTION__, "vtprintf variant.bignumber");
 
     vt.clear().set((uint32)0).set_flag(vt_flag_negative);  // CBOR style
-    bignumber bn_neg(vt.content());
+    bignumber bn_neg(vt.get());
     auto neg = bn_neg.t_bntoi<int32>();
     _test_case.assert(neg == -1, __FUNCTION__, "negative");
 

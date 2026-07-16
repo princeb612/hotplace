@@ -24,11 +24,11 @@ class asn1_constraint_t {
 
     virtual asn1_constraint_t* clone() = 0;
 
-    virtual asn1_entity_t get_entity() = 0;
-    virtual bool is_operation() = 0;
+    virtual asn1_entity_t get_entity() const = 0;
+    virtual bool is_operation() const = 0;
 
     virtual void accept(asn1_constraint_visitor* v) = 0;
-    virtual void represent(stream_t* s, asn1_object* object, asn1_value* value = nullptr) = 0;
+    virtual void represent(stream_t* s, const asn1_object* object, const asn1_value* value = nullptr) const = 0;
 
     virtual void addref() = 0;
     virtual void release() = 0;

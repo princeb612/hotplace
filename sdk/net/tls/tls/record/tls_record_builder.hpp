@@ -110,11 +110,11 @@ class tls_record_builder {
     tls_record* build();
     tls_record* build(tls_content_type_t type, tls_session* session, std::function<return_t(tls_record*)> func = nullptr);
 
-    tls_session* get_session();
-    tls_content_type_t get_type();
-    tls_direction_t get_direction();
-    bool is_construct();
-    bool is_protected();
+    tls_session* get_session() const;
+    tls_content_type_t get_type() const;
+    tls_direction_t get_direction() const;
+    bool is_construct() const;
+    bool is_protected() const;
 
    private:
     tls_session* _session;

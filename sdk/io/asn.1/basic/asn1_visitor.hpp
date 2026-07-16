@@ -24,7 +24,7 @@ class asn1_visitor {
     asn1_visitor() = default;
     virtual ~asn1_visitor() = default;
 
-    virtual void visit(asn1_object* object) = 0;
+    virtual void visit(const asn1_object* object) = 0;
 };
 
 }  // namespace io

@@ -573,7 +573,7 @@ return_t openssl_hash::dup(hash_context_t** duplicated, hash_context_t* handle) 
     return ret;
 }
 
-crypt_poweredby_t openssl_hash::get_type() { return crypt_poweredby_t::openssl; }
+crypt_poweredby_t openssl_hash::get_type() const { return crypt_poweredby_t::openssl; }
 
 }  // namespace crypto
 }  // namespace hotplace

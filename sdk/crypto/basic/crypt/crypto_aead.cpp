@@ -17,7 +17,7 @@ namespace crypto {
 
 crypto_aead::crypto_aead(crypto_scheme_t scheme) : _scheme(scheme) { _shared.make_share(this); }
 
-crypto_scheme_t crypto_aead::get_scheme() { return _scheme; }
+crypto_scheme_t crypto_aead::get_scheme() const { return _scheme; }
 
 void crypto_aead::addref() { _shared.addref(); }
 

@@ -55,8 +55,8 @@ class crypto_sign_builder {
      * @sample
      */
     crypto_sign* build();
-    sig_category_t get_category();
-    hash_algorithm_t get_digest();
+    sig_category_t get_category() const;
+    hash_algorithm_t get_digest() const;
 
     /**
      * @sample
@@ -100,9 +100,9 @@ class crypto_sign {
 
     void set_saltlen(int saltlen);  // RSA PSS (-1)
 
-    sig_category_t get_category();
-    hash_algorithm_t get_digest();
-    int get_saltlen();
+    sig_category_t get_category() const;
+    hash_algorithm_t get_digest() const;
+    int get_saltlen() const;
 
     void addref();
     void release();

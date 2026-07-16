@@ -187,10 +187,10 @@ void test_as_small_as_possible() {
 
         switch (item.var.type()) {
             case vartype_t::TYPE_FLOAT:
-                len = ieee754_as_small_as_possible(var, item.var.content().data.f);
+                len = ieee754_as_small_as_possible(var, item.var.get().data.f);
                 break;
             case vartype_t::TYPE_DOUBLE:
-                len = ieee754_as_small_as_possible(var, item.var.content().data.d);
+                len = ieee754_as_small_as_possible(var, item.var.get().data.d);
                 break;
             default:
                 break;
@@ -201,7 +201,7 @@ void test_as_small_as_possible() {
         item.var.to_binary(bin, variant_convendian);
         _logger->writeln(tostr);
         _logger->dump(bin);
-        bool expect = (var.content().data.ui16 == item.fp16);
+        bool expect = (var.get().data.ui16 == item.fp16);
         _test_case.assert(expect, __FUNCTION__, "ieee754_as_small_as_possible [len %u] %s fp16 %04x fp32 %f fp64 %lf", len, tostr.c_str(), item.fp16, f, d);
     }
 }

@@ -51,7 +51,7 @@ asn1_constraints& asn1_constraints::add(asn1_constraint_t* cons, std::function<v
 
 bool asn1_constraints::empty() const { return _constraints.empty(); }
 
-void asn1_constraints::represent(stream_t* s, asn1_object* object, asn1_value* value) {
+void asn1_constraints::represent(stream_t* s, const asn1_object* object, const asn1_value* value) const {
     if (false == _constraints.empty()) {
         for (auto& item : _constraints) {
             bool parenthesis = (false == is_kind_of_container_of(object));
@@ -64,7 +64,7 @@ void asn1_constraints::represent(stream_t* s, asn1_object* object, asn1_value* v
     }
 }
 
-bool asn1_constraints::validate(asn1_object* node, asn1_value* value) {
+bool asn1_constraints::validate(const asn1_object* node, const asn1_value* value) const {
     if (nullptr == node || nullptr == value) return false;
 
     if (false == _constraints.empty()) {

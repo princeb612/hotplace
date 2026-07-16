@@ -405,7 +405,7 @@ class variant {
     variant(const bignumber& value);
     ~variant();
 
-    const variant_t& content() const;
+    const variant_t& get() const;
     variant_t& get();
 
     vartype_t type() const;

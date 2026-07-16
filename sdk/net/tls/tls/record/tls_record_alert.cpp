@@ -117,7 +117,7 @@ return_t tls_record_alert::do_write_body(tls_direction_t dir, binary_t& bin) {
     return ret;
 }
 
-bool tls_record_alert::apply_protection() { return true; }
+bool tls_record_alert::apply_protection() const { return true; }
 
 tls_record_alert& tls_record_alert::set(tls_alertlevel_t level, tls_alertdesc_t desc) {
     _level = level;

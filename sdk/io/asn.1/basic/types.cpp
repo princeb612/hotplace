@@ -18,7 +18,7 @@
 namespace hotplace {
 namespace io {
 
-asn1_entity_t get_entity(asn1_object* object, bool component) {
+asn1_entity_t get_entity(const asn1_object* object, bool component) {
     if (nullptr == object) return asn1_entity_syntax;
     if (component)
         return object->get_component_entity();
@@ -26,7 +26,7 @@ asn1_entity_t get_entity(asn1_object* object, bool component) {
         return object->get_entity();
 }
 
-std::string get_entity_name(asn1_object* object, bool component) {
+std::string get_entity_name(const asn1_object* object, bool component) {
     auto resource = asn1_resource::get_instance();
     if (component) {
         auto entity = get_entity(object, true);
@@ -38,14 +38,14 @@ std::string get_entity_name(asn1_object* object, bool component) {
     }
 }
 
-std::string nameof(asn1_object* object) {
+std::string nameof(const asn1_object* object) {
     if (object)
         return object->resolve_name();
     else
         return "";
 }
 
-bool is_kind_of(asn1_object* object, asn1_entity_t entity) {
+bool is_kind_of(const asn1_object* object, asn1_entity_t entity) {
     if (nullptr == object)
         return false;
     else if (entity == get_entity(object))
@@ -56,32 +56,32 @@ bool is_kind_of(asn1_object* object, asn1_entity_t entity) {
         return false;
 }
 
-bool is_kind_of_integer(asn1_object* object) {
+bool is_kind_of_integer(const asn1_object* object) {
     if (nullptr == object) return false;
     return is_kind_of_integer(get_entity(object));
 }
 
-bool is_kind_of_real(asn1_object* object) {
+bool is_kind_of_real(const asn1_object* object) {
     if (nullptr == object) return false;
     return is_kind_of_real(get_entity(object));
 }
 
-bool is_kind_of_cstring(asn1_object* object) {
+bool is_kind_of_cstring(const asn1_object* object) {
     if (nullptr == object) return false;
     return is_kind_of_cstring(get_entity(object));
 }
 
-bool is_kind_of_bstring(asn1_object* object) {
+bool is_kind_of_bstring(const asn1_object* object) {
     if (nullptr == object) return false;
     return is_kind_of_bstring(get_entity(object));
 }
 
-bool is_kind_of_container(asn1_object* object) {
+bool is_kind_of_container(const asn1_object* object) {
     if (nullptr == object) return false;
     return is_kind_of_container(get_entity(object, true));
 }
 
-bool is_kind_of_container_of(asn1_object* object) {
+bool is_kind_of_container_of(const asn1_object* object) {
     if (nullptr == object) return false;
     return is_kind_of_container_of(get_entity(object, true));
 }
@@ -154,9 +154,10 @@ bool is_kind_of_container_of(asn1_entity_t entity) {
     }
 }
 
-bool evaluate(asn1_object* obj, const std::string& value) {
+bool evaluate(const asn1_object* obj, const std::string& value) {
     if (nullptr == obj) return false;
-    asn1_enum* en = dynamic_cast<asn1_enum*>(obj);
+    if (asn1_entity_enum != obj->get_entity()) return false;
+    auto* en = (asn1_enum*)obj;
     return en ? en->evaluate(value) : false;
 }
 

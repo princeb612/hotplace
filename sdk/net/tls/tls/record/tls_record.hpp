@@ -26,16 +26,16 @@ class tls_record {
     virtual return_t read(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t write(tls_direction_t dir, binary_t& bin);
 
-    tls_session* get_session();  // session
+    tls_session* get_session() const;  // session
 
-    tls_content_type_t get_type();       // content type
-    tls_version_t get_legacy_version();  // legacy version
-    tls_version_t get_tls_version();
+    tls_content_type_t get_type() const;       // content type
+    tls_version_t get_legacy_version() const;  // legacy version
+    tls_version_t get_tls_version() const;
     void set_tls_version(tls_version_t version);
 
-    bool is_dtls();
-    uint16 get_key_epoch();        // DTLS key epoch
-    uint64 get_dtls_record_seq();  // DTLS record sequence number
+    bool is_dtls() const;
+    uint16 get_key_epoch() const;        // DTLS key epoch
+    uint64 get_dtls_record_seq() const;  // DTLS record sequence number
 
     virtual void operator<<(tls_record* record);
     virtual void operator<<(tls_handshake* handshake);
@@ -47,7 +47,7 @@ class tls_record {
     void release();
 
     void set_flags(uint32 flags);
-    uint32 get_flags();
+    uint32 get_flags() const;
 
    protected:
     tls_record(tls_content_type_t type, tls_session* session);
@@ -59,13 +59,13 @@ class tls_record {
     virtual return_t do_write_header(tls_direction_t dir, binary_t& bin, const binary_t& body);
     return_t do_write_header_internal(tls_direction_t dir, binary_t& bin, const binary_t& body);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
-    virtual bool apply_protection();
+    virtual bool apply_protection() const;
 
-    size_t get_record_size();
-    const range_t& get_header_range();
-    uint16 get_body_size();
-    size_t offsetof_header();
-    size_t offsetof_body();
+    size_t get_record_size() const;
+    const range_t& get_header_range() const;
+    uint16 get_body_size() const;
+    size_t offsetof_header() const;
+    size_t offsetof_body() const;
 
     void change_epoch_seq(tls_direction_t dir);
 

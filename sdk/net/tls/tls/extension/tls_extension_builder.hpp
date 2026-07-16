@@ -25,9 +25,9 @@ class tls_extension_builder {
     tls_extension_builder& set(tls_direction_t dir);
     tls_extension* build();
 
-    tls_handshake* get_handshake();
-    tls_extension_type_t get_type();
-    tls_direction_t get_direction();
+    tls_handshake* get_handshake() const;
+    tls_extension_type_t get_type() const;
+    tls_direction_t get_direction() const;
 
    private:
     tls_handshake* _hs;

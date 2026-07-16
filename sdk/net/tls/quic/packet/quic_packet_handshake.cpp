@@ -236,14 +236,14 @@ void quic_packet_handshake::dump() {
 #endif
 }
 
-uint64 quic_packet_handshake::get_bodysize() {
+uint64 quic_packet_handshake::get_bodysize() const {
     auto session = get_session();
     auto& protection = session->get_tls_protection();
     auto tagsize = protection.get_tag_size();
     return get_pn_length() + _payload.size() + tagsize;
 }
 
-size_t quic_packet_handshake::estimate_overhead() {
+size_t quic_packet_handshake::estimate_overhead() const {
     auto session = get_session();
     auto& protection = session->get_tls_protection();
     auto tagsize = protection.get_tag_size();

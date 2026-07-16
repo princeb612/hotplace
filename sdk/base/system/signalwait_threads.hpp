@@ -31,8 +31,8 @@ class thread_info {
     void set_thread(thread* obj) { _thread = obj; }
     void set_container(signalwait_threads* container) { _container = container; }
 
-    thread* get_thread() { return _thread; }
-    signalwait_threads* get_container() { return _container; }
+    thread* get_thread() const { return _thread; }
+    signalwait_threads* get_container() const { return _container; }
 
    protected:
    private:
@@ -89,7 +89,7 @@ class signalwait_threads {
     /**
      * @brief limit
      */
-    size_t capacity();
+    size_t capacity() const;
     /**
      * @brief number of threads running
      */

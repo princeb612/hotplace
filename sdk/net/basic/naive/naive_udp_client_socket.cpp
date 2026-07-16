@@ -106,11 +106,11 @@ return_t naive_udp_client_socket::sendto(const char* ptr_data, size_t size_data,
     return ret;
 }
 
-int naive_udp_client_socket::socket_type() { return SOCK_DGRAM; }
+int naive_udp_client_socket::socket_type() const { return SOCK_DGRAM; }
 
-socket_t naive_udp_client_socket::get_socket() { return _fd; }
+socket_t naive_udp_client_socket::get_socket() const { return _fd; }
 
-uint32 naive_udp_client_socket::get_scheme() { return socket_scheme_udp | socket_scheme_client; }
+uint32 naive_udp_client_socket::get_scheme() const { return socket_scheme_udp | socket_scheme_client; }
 
 }  // namespace net
 }  // namespace hotplace

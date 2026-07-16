@@ -63,14 +63,14 @@ class cbor_object {
     virtual return_t join(cbor_object* object, cbor_object* extra = nullptr);
     cbor_object& add(cbor_object* object, cbor_object* extra = nullptr);
 
-    cbor_type_t type();
-    virtual size_t size();
+    cbor_type_t type() const;
+    virtual size_t size() const;
     void set_flags(uint32 flags);
-    uint32 get_flags();
+    uint32 get_flags() const;
 
     void tag(cbor_tag_t tag);
-    bool tagged();
-    cbor_tag_t tag_value();
+    bool tagged() const;
+    cbor_tag_t tag_value() const;
 
     cbor_object& operator=(const cbor_object& other);
 
@@ -79,7 +79,7 @@ class cbor_object {
 
    protected:
     void reserve(size_t size);  ///<< reserve a capacity while parsing
-    size_t capacity();          ///<< reserved size
+    size_t capacity() const;    ///<< reserved size
 
     virtual void accept(cbor_visitor* v);
     virtual void represent(stream_t* s);
@@ -105,7 +105,7 @@ T* cbor_typeof(cbor_object* object, cbor_type_t type) {
             __leave2;
         }
         if (type == object->type()) {
-            ret_value = (T*)object;
+            ret_value = static_cast<T*>(object);
         }
     }
     __finally2 {}

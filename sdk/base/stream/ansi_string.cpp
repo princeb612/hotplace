@@ -103,9 +103,9 @@ return_t ansi_string::fill(size_t l, char c) {
 
 return_t ansi_string::clear() { return bufferio::clear(_handle); }
 
-bool ansi_string::empty() { return bufferio::empty(_handle); }
+bool ansi_string::empty() const { return bufferio::empty(_handle); }
 
-bool ansi_string::occupied() { return bufferio::occupied(_handle); }
+bool ansi_string::occupied() const { return bufferio::occupied(_handle); }
 
 return_t ansi_string::printf(const char* buf, ...) {
     return_t ret = errorcode_t::success;

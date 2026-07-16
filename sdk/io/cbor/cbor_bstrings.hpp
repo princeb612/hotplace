@@ -38,7 +38,7 @@ class cbor_bstrings : public cbor_object {
     cbor_bstrings& add(const byte_t* bstr, size_t size);
     cbor_bstrings& operator<<(binary_t bin);
 
-    virtual size_t size();
+    virtual size_t size() const;
 
     virtual int addref();
     virtual int release();

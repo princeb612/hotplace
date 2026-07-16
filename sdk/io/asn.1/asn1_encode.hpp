@@ -45,7 +45,7 @@ class asn1_encode {
     asn1_encode();
 
     static return_t write_identifier(binary_t& bin, uint8 enc, uint64 tag, size_t pos = -1);
-    static return_t write_identifier2(binary_t& bin, asn1_object* object, size_t pos = -1);
+    static return_t write_identifier2(binary_t& bin, const asn1_object* object, size_t pos = -1);
     static return_t read_identifier(const byte_t* stream, size_t size, size_t& pos, uint8& ident, uint64& tag);
 
     /**

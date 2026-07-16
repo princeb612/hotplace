@@ -729,7 +729,7 @@ void test_case::report_testtime(basic_stream& stream, uint32 top_count) {
     console_colored_stream << _concolor.turnoff();
 }
 
-return_t test_case::result() { return _total._count_fail > 0 ? errorcode_t::internal_error : errorcode_t::success; }
+return_t test_case::result() const { return _total._count_fail > 0 ? errorcode_t::internal_error : errorcode_t::success; }
 
 void test_case::lock() { _lock.enter(); }
 

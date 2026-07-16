@@ -112,7 +112,7 @@ class crypto_key_object {
     const keydesc& get_desc() const;
     const EVP_PKEY* get_pkey() const;
     const X509* get_x509() const;
-    uint16 get_group();
+    uint16 get_group() const;
 
     crypto_key_object& set_desc(const keydesc& desc);
     crypto_key_object& set_desc(keydesc&& desc);

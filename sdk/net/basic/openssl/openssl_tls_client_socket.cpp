@@ -103,11 +103,11 @@ return_t openssl_tls_client_socket::send(const char* ptr_data, size_t size_data,
     return ret;
 }
 
-bool openssl_tls_client_socket::support_tls() { return true; }
+bool openssl_tls_client_socket::support_tls() const { return true; }
 
-int openssl_tls_client_socket::socket_type() { return SOCK_STREAM; }
+int openssl_tls_client_socket::socket_type() const { return SOCK_STREAM; }
 
-socket_t openssl_tls_client_socket::get_socket() {
+socket_t openssl_tls_client_socket::get_socket() const {
     socket_t sock = INVALID_SOCKET;
     if (_handle) {
         sock = _handle->fd;
@@ -115,7 +115,7 @@ socket_t openssl_tls_client_socket::get_socket() {
     return sock;
 }
 
-uint32 openssl_tls_client_socket::get_scheme() { return socket_scheme_tls | socket_scheme_openssl | socket_scheme_client; }
+uint32 openssl_tls_client_socket::get_scheme() const { return socket_scheme_tls | socket_scheme_openssl | socket_scheme_client; }
 
 }  // namespace net
 }  // namespace hotplace

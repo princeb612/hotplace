@@ -1,5 +1,7 @@
 ## Notes
 
+![hotplace](https://github.com/princeb612/hotplace/blob/master/hotplace.png?raw=true)
+
 - [Plan](#plan)
 - [Memo](#memo)
 

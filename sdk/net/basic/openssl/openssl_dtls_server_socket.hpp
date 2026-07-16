@@ -65,14 +65,14 @@ class openssl_dtls_server_socket : public naive_udp_server_socket {
      * @override
      * @return  return true
      */
-    virtual bool support_tls();
+    virtual bool support_tls() const;
 
     openssl_tls* get_openssl_tls();
 
     virtual int addref();
     virtual int release();
 
-    virtual uint32 get_scheme();
+    virtual uint32 get_scheme() const;
 
    protected:
    private:

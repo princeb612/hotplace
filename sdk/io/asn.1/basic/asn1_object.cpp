@@ -142,15 +142,13 @@ asn1_entity_t asn1_object::get_entity() const { return _entity; }
 
 asn1_entity_t asn1_object::get_component_entity() const { return _entity; }
 
-int asn1_object::get_componenttype() { return _component_type; }
-
 uint16 asn1_object::get_component_type() const { return _component_type; }
 
 asn1_tag* asn1_object::get_tag() const { return _tag; }
 
 const variant_t& asn1_object::get_default_value() const { return _vt; }
 
-std::string asn1_object::resolve_name() {
+std::string asn1_object::resolve_name() const {
     std::string name;
 
     auto lambda_join = [](const std::vector<std::string>& path, const std::string& word) -> std::string {
@@ -164,7 +162,7 @@ std::string asn1_object::resolve_name() {
         return value;
     };
 
-    asn1_object* node = this;
+    const asn1_object* node = this;
     std::vector<std::string> path;
     while (node) {
         auto entity = node->get_component_entity();
@@ -253,90 +251,11 @@ asn1_object& asn1_object::unsuppress() {
     return *this;
 }
 
-bool asn1_object::is_suppressed() { return _suppress; }
+bool asn1_object::is_suppressed() const { return _suppress; }
 
-void asn1_object::represent(uint32 depth, stream_t* s, asn1_value* value) {}
+void asn1_object::represent(stream_t* s, const asn1_value* value) const {}
 
-bool asn1_object::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) { return true; }
-
-void asn1_object::debug_print(uint32 depth) {
-#if 0  // defined DEBUG
-    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
-        trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
-            auto resource = asn1_resource::get_instance();
-            auto component = get_component_entity();
-            auto entity = get_entity();
-
-            switch (component) {
-                case asn1_entity_tagged_type:
-                case asn1_entity_choice:
-                case asn1_entity_sequence:
-                case asn1_entity_sequence_of:
-                case asn1_entity_set:
-                case asn1_entity_set_of:
-                    dbs.fill(depth << 1, ' ');
-                    if (false == get_name().empty()) {
-                        dbs << ANSI_ESCAPE << "1;36m" << get_name() << ANSI_ESCAPE << "0m" << " ";
-                    }
-                    dbs.println(ANSI_ESCAPE
-                                "1;33m"
-                                "%s" ANSI_ESCAPE "0m",
-                                resource->get_component_entity_name(component).c_str());
-
-                    break;
-                case asn1_entity_referenced_type:
-                    dbs.fill(depth << 1, ' ');
-                    if (get_object()) {
-                        dbs << ANSI_ESCAPE << "1;36m" << get_name() << ANSI_ESCAPE << "0m ";
-                    }
-                    dbs.println(ANSI_ESCAPE
-                                "1;33m"
-                                "%s" ANSI_ESCAPE "0m",
-                                resource->get_component_entity_name(component).c_str());
-
-                    break;
-                default:
-                    dbs.fill(depth << 1, ' ');
-                    dbs.println(ANSI_ESCAPE
-                                "1;33m"
-                                "%s" ANSI_ESCAPE "0m",
-                                resource->get_component_entity_name(component).c_str());
-
-                    dbs.fill(depth << 1, ' ');
-                    dbs << "- ";
-                    if (false == get_name().empty()) {
-                        dbs.printf(ANSI_ESCAPE
-                                   "1;36m"
-                                   "%s" ANSI_ESCAPE "0m ",
-                                   get_name().c_str());
-                    }
-                    dbs.println(ANSI_ESCAPE
-                                "1;33m"
-                                "%s" ANSI_ESCAPE "0m",
-                                resource->get_entity_name(get_ident(), entity).c_str());
-
-                    break;
-            }
-        });
-    }
-#endif
-}
-
-void asn1_object::debug_print(uint32 depth, const std::string& name) {
-#if 0  // defined DEBUG
-    if (false == name.empty()) {
-        if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
-            trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
-                dbs.fill(depth << 1, ' ');
-                dbs.println("-- resolving " ANSI_ESCAPE
-                            "1;36m"
-                            "%s" ANSI_ESCAPE "0m",
-                            name.c_str());
-            });
-        }
-    }
-#endif
-}
+bool asn1_object::represent(binary_t* b, const asn1_value* value, uint16 flags) const { return true; }
 
 void asn1_object::accept(asn1_ast_visitor* v) {
     if (v) v->visit(this);
@@ -348,13 +267,13 @@ const asn1_constraints& asn1_object::get_constraints() const { return _constrain
 
 bool asn1_object::have_constraints() const { return false == get_constraints().empty(); }
 
-bool asn1_object::validate(asn1_value* value) {
+bool asn1_object::validate(const asn1_value* value) {
     if (nullptr == value || nullptr == value) return false;
 
     return validate_node(this, value);
 }
 
-bool asn1_object::validate_node(asn1_object* node, asn1_value* value) {
+bool asn1_object::validate_node(const asn1_object* node, const asn1_value* value) {
     if (nullptr == value) return false;
 
     while (node) {
@@ -363,7 +282,7 @@ bool asn1_object::validate_node(asn1_object* node, asn1_value* value) {
             return node->get_constraints().validate(node, value);
         }
         if (is_kind_of_container(node)) {
-            asn1_container* container = dynamic_cast<asn1_container*>(node);
+            auto container = dynamic_cast<const asn1_container*>(node);
             auto test = container->for_each([&](asn1_object* item) -> bool { return item->validate_node(item, value); });
             if (false == test) return false;
         }

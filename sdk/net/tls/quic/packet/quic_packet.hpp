@@ -47,14 +47,14 @@ class quic_packet {
     /**
      * @brief   type
      */
-    uint8 get_type();
+    uint8 get_type() const;
     /**
      * @brief   type
      * @param   uint8 hdr [in]
      * @param   uint8& type [out]
      * @param   bool& is_longheader [out]
      */
-    void get_type(uint8 hdr, uint8& type, bool& is_longheader);
+    void get_type(uint8 hdr, uint8& type, bool& is_longheader) const;
     /**
      * @brief   type
      * @param   uint8 type [in]
@@ -65,7 +65,7 @@ class quic_packet {
     /**
      * @brief   version
      */
-    uint32 get_version();
+    uint32 get_version() const;
     /**
      * @brief   DCID
      * @param   const binary_t& cid [in] DCID
@@ -79,11 +79,11 @@ class quic_packet {
     /**
      * @brief   DCID
      */
-    const binary_t& get_dcid();
+    const binary_t& get_dcid() const;
     /**
      * @brief   SCID
      */
-    const binary_t& get_scid();
+    const binary_t& get_scid() const;
 
     /**
      * @brief   read
@@ -130,9 +130,9 @@ class quic_packet {
      *
      */
     virtual void set_pn(uint32 pn, uint8 len = 0);
-    uint8 get_pn_length();
-    uint8 get_pn_length(uint8 ht);
-    uint32 get_pn();
+    uint8 get_pn_length() const;
+    uint8 get_pn_length(uint8 ht) const;
+    uint32 get_pn() const;
 
     quic_frames& get_quic_frames();
     quic_packet& operator<<(quic_frame* frame);
@@ -144,15 +144,15 @@ class quic_packet {
     quic_packet& set_payload(const byte_t* stream, size_t size);
     const binary_t& get_payload();
 
-    tls_session* get_session();
+    tls_session* get_session() const;
     void set_session(tls_session* session);
 
     void addref();
     void release();
-    uint32 get_flags();
+    uint32 get_flags() const;
 
-    size_t get_max_payload_size();
-    virtual size_t estimate_overhead();
+    size_t get_max_payload_size() const;
+    virtual size_t estimate_overhead() const;
 
    protected:
     virtual return_t do_read_header(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);

@@ -22,7 +22,7 @@ class asn1_constraint_visitor {
    public:
     ~asn1_constraint_visitor() = default;
 
-    virtual void visit(asn1_constraint_t* cons) = 0;
+    virtual void visit(const asn1_constraint_t* cons) = 0;
 };
 
 }  // namespace io

@@ -20,7 +20,7 @@ namespace hotplace {
 namespace io {
 
 /*
- * @biref   map type
+ * @brief   map type
  * @example
  *          // {1:2,3:4}
  *          cbor_map* root = new cbor_map ();
@@ -75,7 +75,7 @@ class cbor_map : public cbor_object {
     cbor_map& add(cbor_data* key, std::function<void(cbor_map*)> f, uint32 flags = 0);
     cbor_map& add(cbor_data* key, std::function<void(cbor_array*)> f, uint32 flags = 0);
 
-    virtual size_t size();
+    virtual size_t size() const;
     cbor_pair* operator[](size_t index);
     std::list<cbor_pair*>& accessor();
 

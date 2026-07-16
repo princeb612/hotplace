@@ -37,7 +37,7 @@ class asn1_constraint_from : public asn1_constraint<T> {
 
     asn1_constraint_from* clone() { return new asn1_constraint_from(*this); }
 
-    virtual bool is_applicable(asn1_entity_t entity) { return is_kind_of_cstring(entity); }
+    virtual bool is_applicable(asn1_entity_t entity) const { return is_kind_of_cstring(entity); }
 
     virtual void addref() {
         asn1_constraint<T>::addref();
@@ -81,7 +81,7 @@ class asn1_constraint_from : public asn1_constraint<T> {
             // throw
         }
     }
-    virtual void represent(stream_t* s, asn1_object* object, asn1_value* value = nullptr) {
+    virtual void represent(stream_t* s, const asn1_object* object, const asn1_value* value = nullptr) const {
         if (_cons) {
             s->printf("FROM (");
             _cons->represent(s, object, value);

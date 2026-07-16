@@ -37,7 +37,7 @@ class asn1_constraint_single_value : public asn1_constraint<T> {
 
     asn1_constraint_single_value* clone() { return new asn1_constraint_single_value(*this); }
 
-    virtual bool is_applicable(asn1_entity_t entity) { return true; }
+    virtual bool is_applicable(asn1_entity_t entity) const { return true; }
 
    protected:
     asn1_constraint_single_value() : asn1_constraint<T>(asn1_entity_constraint_single), _value(_T()) {}
@@ -54,7 +54,7 @@ class asn1_constraint_single_value : public asn1_constraint<T> {
 
     virtual void accept(asn1_constraint_evaluator<T>* v) { v->get_result_set().insert(_value); }
 
-    virtual void represent(stream_t* s, asn1_object* object, asn1_value* value = nullptr) {
+    virtual void represent(stream_t* s, const asn1_object* object, const asn1_value* value = nullptr) const {
         variant vt(_value);
         vtprintf(s, vt, vtprintf_style_t::vtprintf_style_asn1);
     }

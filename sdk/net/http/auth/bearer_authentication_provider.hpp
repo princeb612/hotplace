@@ -40,7 +40,7 @@ class bearer_authentication_provider : public http_authentication_provider {
      */
     virtual return_t request_auth(network_session* session, http_request* request, http_response* response);
 
-    virtual std::string get_challenge(http_request* request);
+    virtual std::string get_challenge(http_request* request) const;
 };
 
 }  // namespace net

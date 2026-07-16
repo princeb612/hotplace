@@ -94,7 +94,7 @@ tls_session* secure_client_socket::get_session() { return &_session; }
 
 tls_version_t secure_client_socket::get_version() { return _spec; }
 
-bool secure_client_socket::support_tls() { return true; }
+bool secure_client_socket::support_tls() const { return true; }
 
 secure_prosumer* secure_client_socket::get_secure_prosumer() { return &_secure; }
 

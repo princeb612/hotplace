@@ -31,8 +31,8 @@ class tls_handshakes {
     tls_handshake* get(tls_handshake_type_t type, bool upref = false);
     tls_handshake* getat(size_t index, bool upref = false);
     tls_handshake* operator[](size_t index);
-    bool empty();
-    size_t size();
+    bool empty() const;
+    size_t size() const;
     void clear();
 
     void set_dtls_seq(uint16 seq);

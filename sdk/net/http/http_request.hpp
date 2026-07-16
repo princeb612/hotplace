@@ -97,8 +97,8 @@ class http_request {
     http_request& set_version(uint8 version);
     http_request& set_stream_id(uint32 stream_id);
     hpack_dynamic_table* get_hpack_dyntable();
-    uint8 get_version();
-    uint32 get_stream_id();
+    uint8 get_version() const;
+    uint32 get_stream_id() const;
 
     void addref();
     void release();

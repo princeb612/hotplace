@@ -99,9 +99,9 @@ quic_packet* quic_packets::getat(size_t index, bool upref) { return _packets.get
 
 quic_packet* quic_packets::operator[](size_t index) { return _packets[index]; }
 
-bool quic_packets::empty() { return _packets.empty(); }
+bool quic_packets::empty() const { return _packets.empty(); }
 
-size_t quic_packets::size() { return _packets.size(); }
+size_t quic_packets::size() const { return _packets.size(); }
 
 void quic_packets::clear() { _packets.clear(); }
 

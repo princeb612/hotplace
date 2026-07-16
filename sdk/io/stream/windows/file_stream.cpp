@@ -323,9 +323,9 @@ return_t file_stream::read(void* data, size_t size, size_t* size_read) {
 
 return_t file_stream::clear() { return errorcode_t::success; }
 
-bool file_stream::empty() { return 0 == size(); }
+bool file_stream::empty() const { return 0 == size(); }
 
-bool file_stream::occupied() { return 0 != size(); }
+bool file_stream::occupied() const { return 0 != size(); }
 
 return_t file_stream::flush() {
     if (is_mmapped()) {

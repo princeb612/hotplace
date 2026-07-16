@@ -113,7 +113,7 @@ return_t tls_record_handshake::do_write_body(tls_direction_t dir, binary_t& bin)
     return ret;
 }
 
-bool tls_record_handshake::apply_protection() { return true; }
+bool tls_record_handshake::apply_protection() const { return true; }
 
 void tls_record_handshake::operator<<(tls_handshake* handshake) { get_handshakes().add(handshake); }
 

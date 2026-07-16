@@ -438,13 +438,13 @@ return_t tls_record::do_write_header_internal(tls_direction_t dir, binary_t& bin
 
 return_t tls_record::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::success; }
 
-bool tls_record::apply_protection() { return false; }
+bool tls_record::apply_protection() const { return false; }
 
-tls_session* tls_record::get_session() { return _session; }
+tls_session* tls_record::get_session() const { return _session; }
 
-tls_content_type_t tls_record::get_type() { return _content_type; }
+tls_content_type_t tls_record::get_type() const { return _content_type; }
 
-tls_version_t tls_record::get_legacy_version() {
+tls_version_t tls_record::get_legacy_version() const {
     tls_version_t version = tls_version_t{};
     auto session = get_session();
     auto& protection = session->get_tls_protection();
@@ -452,7 +452,7 @@ tls_version_t tls_record::get_legacy_version() {
     return version;
 }
 
-tls_version_t tls_record::get_tls_version() {
+tls_version_t tls_record::get_tls_version() const {
     tls_version_t version = tls_version_t{};
     auto session = get_session();
     auto& protection = session->get_tls_protection();
@@ -466,21 +466,21 @@ void tls_record::set_tls_version(tls_version_t version) {
     protection.set_tls_version(version);
 }
 
-bool tls_record::is_dtls() { return _cond_dtls; }
+bool tls_record::is_dtls() const { return _cond_dtls; }
 
-uint16 tls_record::get_key_epoch() { return _dtls_epoch; }
+uint16 tls_record::get_key_epoch() const { return _dtls_epoch; }
 
-uint64 tls_record::get_dtls_record_seq() { return _dtls_record_seq; }
+uint64 tls_record::get_dtls_record_seq() const { return _dtls_record_seq; }
 
-uint16 tls_record::get_body_size() { return _bodysize; }
+uint16 tls_record::get_body_size() const { return _bodysize; }
 
-size_t tls_record::get_record_size() { return _range.width() + _bodysize; }
+size_t tls_record::get_record_size() const { return _range.width() + _bodysize; }
 
-const range_t& tls_record::get_header_range() { return _range; }
+const range_t& tls_record::get_header_range() const { return _range; }
 
-size_t tls_record::offsetof_header() { return _range.begin; }
+size_t tls_record::offsetof_header() const { return _range.begin; }
 
-size_t tls_record::offsetof_body() { return _range.end; }
+size_t tls_record::offsetof_body() const { return _range.end; }
 
 void tls_record::operator<<(tls_record* record) {
     if (record) {
@@ -509,7 +509,7 @@ void tls_record::release() { _shared.delref(); }
 
 void tls_record::set_flags(uint32 flags) { _flags = flags; }
 
-uint32 tls_record::get_flags() { return _flags; }
+uint32 tls_record::get_flags() const { return _flags; }
 
 void tls_record::change_epoch_seq(tls_direction_t dir) {
     auto session = get_session();

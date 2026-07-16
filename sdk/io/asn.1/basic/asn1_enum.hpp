@@ -47,11 +47,11 @@ class asn1_enum : public asn1_type {
 
     virtual asn1_entity_t get_component_entity() const;
     virtual bool have_constraints() const;
-    bool evaluate(const std::string& name);
+    bool evaluate(const std::string& name) const;
 
    protected:
-    virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
-    virtual bool represent(uint32 depth, binary_t* b, asn1_value* value = nullptr, uint16 flags = 0);
+    virtual void represent(stream_t* s, const asn1_value* value = nullptr) const;
+    virtual bool represent(binary_t* b, const asn1_value* value = nullptr, uint16 flags = 0) const;
 
    private:
     std::map<std::string, asn1_native_int_t> _enum;

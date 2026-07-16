@@ -169,7 +169,7 @@ return_t quic_packet_1rtt::do_write(tls_direction_t dir, binary_t& header, binar
     return ret;
 }
 
-size_t quic_packet_1rtt::estimate_overhead() {
+size_t quic_packet_1rtt::estimate_overhead() const {
     auto session = get_session();
     auto& protection = session->get_tls_protection();
     auto tagsize = protection.get_tag_size();

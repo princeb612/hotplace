@@ -89,8 +89,8 @@ class basic_stream : public stream_t {
      * @brief   clear
      */
     virtual return_t clear();
-    virtual bool empty();
-    virtual bool occupied();
+    virtual bool empty() const;
+    virtual bool occupied() const;
 
     /**
      * @brief   printf

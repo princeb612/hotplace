@@ -190,7 +190,7 @@ class openssl_tls {
      * @brief   socket related
      * @param   socket_context_t*  handle  [in]
      */
-    socket_t get_socket(socket_context_t* handle);
+    socket_t get_socket(socket_context_t* handle) const;
 
     int addref();
     int release();

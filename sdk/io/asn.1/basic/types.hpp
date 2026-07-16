@@ -16,18 +16,18 @@
 namespace hotplace {
 namespace io {
 
-asn1_entity_t get_entity(asn1_object* object, bool component = false);
-std::string get_entity_name(asn1_object* object, bool component = false);
-std::string nameof(asn1_object* object);
+asn1_entity_t get_entity(const asn1_object* object, bool component = false);
+std::string get_entity_name(const asn1_object* object, bool component = false);
+std::string nameof(const asn1_object* object);
 
-bool is_kind_of(asn1_object* object, asn1_entity_t entity);
+bool is_kind_of(const asn1_object* object, asn1_entity_t entity);
 
-bool is_kind_of_integer(asn1_object* object);
-bool is_kind_of_real(asn1_object* object);
-bool is_kind_of_cstring(asn1_object* object);
-bool is_kind_of_bstring(asn1_object* object);
-bool is_kind_of_container(asn1_object* object);
-bool is_kind_of_container_of(asn1_object* object);
+bool is_kind_of_integer(const asn1_object* object);
+bool is_kind_of_real(const asn1_object* object);
+bool is_kind_of_cstring(const asn1_object* object);
+bool is_kind_of_bstring(const asn1_object* object);
+bool is_kind_of_container(const asn1_object* object);
+bool is_kind_of_container_of(const asn1_object* object);
 
 bool is_kind_of_integer(asn1_entity_t entity);
 bool is_kind_of_real(asn1_entity_t entity);
@@ -36,7 +36,7 @@ bool is_kind_of_bstring(asn1_entity_t entity);
 bool is_kind_of_container(asn1_entity_t entity);
 bool is_kind_of_container_of(asn1_entity_t entity);
 
-bool evaluate(asn1_object* obj, const std::string& value);
+bool evaluate(const asn1_object* obj, const std::string& value);
 
 }  // namespace io
 }  // namespace hotplace

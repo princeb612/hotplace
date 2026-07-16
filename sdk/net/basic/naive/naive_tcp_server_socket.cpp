@@ -121,9 +121,9 @@ return_t naive_tcp_server_socket::send(socket_context_t* handle, const char* ptr
     return ret;
 }
 
-int naive_tcp_server_socket::socket_type() { return SOCK_STREAM; }
+int naive_tcp_server_socket::socket_type() const { return SOCK_STREAM; }
 
-uint32 naive_tcp_server_socket::get_scheme() { return socket_scheme_tcp | socket_scheme_server; }
+uint32 naive_tcp_server_socket::get_scheme() const { return socket_scheme_tcp | socket_scheme_server; }
 
 }  // namespace net
 }  // namespace hotplace

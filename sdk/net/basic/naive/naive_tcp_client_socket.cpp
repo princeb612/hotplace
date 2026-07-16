@@ -118,11 +118,11 @@ return_t naive_tcp_client_socket::send(const char* ptr_data, size_t size_data, s
     return ret;
 }
 
-int naive_tcp_client_socket::socket_type() { return SOCK_STREAM; }
+int naive_tcp_client_socket::socket_type() const { return SOCK_STREAM; }
 
-socket_t naive_tcp_client_socket::get_socket() { return _fd; }
+socket_t naive_tcp_client_socket::get_socket() const { return _fd; }
 
-uint32 naive_tcp_client_socket::get_scheme() { return socket_scheme_tcp | socket_scheme_client; }
+uint32 naive_tcp_client_socket::get_scheme() const { return socket_scheme_tcp | socket_scheme_client; }
 
 }  // namespace net
 }  // namespace hotplace

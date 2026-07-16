@@ -228,20 +228,20 @@ cose_data& cose_data::clear() {
     return *this;
 }
 
-bool cose_data::exist(int key) {
+bool cose_data::exist(int key) const {
     bool ret_value = false;
 
-    std::map<int, variant>::iterator iter = _data_map.find(key);
+    auto iter = _data_map.find(key);
     if (_data_map.end() != iter) {
         ret_value = true;
     }
     return ret_value;
 }
 
-return_t cose_data::finditem(int key, int& value) {
+return_t cose_data::finditem(int key, int& value) const {
     return_t ret = errorcode_t::success;
 
-    std::map<int, variant>::iterator iter = _data_map.find(key);
+    auto iter = _data_map.find(key);
     if (_data_map.end() == iter) {
         ret = errorcode_t::not_found;
     } else {
@@ -250,10 +250,10 @@ return_t cose_data::finditem(int key, int& value) {
     return ret;
 }
 
-return_t cose_data::finditem(int key, std::string& value) {
+return_t cose_data::finditem(int key, std::string& value) const {
     return_t ret = errorcode_t::success;
 
-    std::map<int, variant>::iterator iter = _data_map.find(key);
+    auto iter = _data_map.find(key);
     if (_data_map.end() == iter) {
         ret = errorcode_t::not_found;
     } else {
@@ -262,11 +262,11 @@ return_t cose_data::finditem(int key, std::string& value) {
     return ret;
 }
 
-return_t cose_data::finditem(int key, binary_t& value) {
+return_t cose_data::finditem(int key, binary_t& value) const {
     return_t ret = errorcode_t::success;
     variant vt;
 
-    std::map<int, variant>::iterator iter = _data_map.find(key);
+    auto iter = _data_map.find(key);
     if (_data_map.end() == iter) {
         ret = errorcode_t::not_found;
     } else {
@@ -369,7 +369,7 @@ return_t cose_data::build_unprotected(cbor_map** object) {
         for (const auto& key : _order) {
             cose_variantmap_t::iterator map_iter = _data_map.find(key);
             variant value = map_iter->second;
-            const variant_t& vt = value.content();
+            const variant_t& vt = value.get();
 
             if (vartype_t::TYPE_STATIC_KEY == vt.type) {
                 cose_key* k = (cose_key*)vt.data.p;
@@ -409,7 +409,7 @@ return_t cose_data::build_unprotected(cbor_map** object, cose_variantmap_t& unse
 
             cose_variantmap_t::iterator map_iter = _data_map.find(key);
             variant value = map_iter->second;
-            const variant_t& vt = value.content();
+            const variant_t& vt = value.get();
 
             if (vartype_t::TYPE_STATIC_KEY == vt.type) {
                 cose_key* k = (cose_key*)vt.data.p;
@@ -686,9 +686,9 @@ return_t cose_data::parse_counter_signs(cbor_array* object, int keyid) {
     return ret;
 }
 
-bool cose_data::empty_binary() { return 0 == _payload.size(); }
+bool cose_data::is_binary_empty() const { return 0 == _payload.size(); }
 
-size_t cose_data::size_binary() { return _payload.size(); }
+size_t cose_data::sizeof_binary() const { return _payload.size(); }
 
 void cose_data::get_binary(binary_t& bin) { bin = _payload; }
 

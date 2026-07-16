@@ -68,18 +68,18 @@ class obfuscate_string {
      * @brief   size
      * @return  size_t
      */
-    size_t size();
+    size_t size() const;
     /**
      * @brief   is empty
      * @return  bool
      */
-    bool empty();
+    bool empty() const;
     /**
      * @brief   compare
      * @param   obfuscate_string& o [in]
      * @return  bool
      */
-    bool compare(obfuscate_string& o);
+    bool compare(obfuscate_string& o) const;
 
     /**
      * @brief   assign
@@ -141,13 +141,13 @@ class obfuscate_string {
      * @param   obfuscate_string& o [in]
      * @return  bool
      */
-    bool operator==(obfuscate_string& o);
+    bool operator==(obfuscate_string& o) const;
     /**
      * @brief   compre not equal
      * @param   obfuscate_string& o [in]
      * @return  bool
      */
-    bool operator!=(obfuscate_string& o);
+    bool operator!=(obfuscate_string& o) const;
 
     /**
      * @brief   append

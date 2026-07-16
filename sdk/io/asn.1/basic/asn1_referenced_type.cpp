@@ -59,14 +59,14 @@ bool asn1_referenced_type::is_definition() const { return get_object() ? true : 
 
 const std::string& asn1_referenced_type::get_reference() const { return _reference; }
 
-void asn1_referenced_type::represent(uint32 depth, stream_t* s, asn1_value* value) {
+void asn1_referenced_type::represent(stream_t* s, const asn1_value* value) const {
     s->printf("%s", get_name().c_str());
 
     if (is_definition()) {
         if (nullptr == get_parent()) {
             auto obj = get_object();
             s->printf(" ::= ");
-            obj->represent(depth + 1, s, value);
+            obj->represent(s, value);
         }
     } else if (false == _reference.empty()) {
         if (false == get_name().empty()) s->printf(" ");
@@ -74,10 +74,8 @@ void asn1_referenced_type::represent(uint32 depth, stream_t* s, asn1_value* valu
     }
 }
 
-bool asn1_referenced_type::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) {
-    debug_print(depth);
-
-    if (is_definition()) get_object()->represent(depth + 1, b, value);
+bool asn1_referenced_type::represent(binary_t* b, const asn1_value* value, uint16 flags) const {
+    if (is_definition()) get_object()->represent(b, value);
 
     return true;
 }

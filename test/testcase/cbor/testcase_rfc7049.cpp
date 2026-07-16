@@ -19,7 +19,7 @@ void do_encode_test(variant& vt, binary_t& bin, std::string expect) {
     std::string hex;
 
     bin.clear();
-    enc.encode(bin, vt.content());
+    enc.encode(bin, vt.get());
 
     if (1) {
         test_case_notimecheck notimecheck(_test_case);

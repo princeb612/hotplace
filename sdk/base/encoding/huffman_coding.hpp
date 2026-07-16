@@ -135,11 +135,10 @@ class huffman_coding {
      *          huff.imports(_h2hcodes).exports(lambda_exports);
      */
     template <typename F>
-    huffman_coding& exports(F fn) {
+    void exports(F fn) const {
         for (auto item : _codetable) {
             fn(item.first, item.second.c_str());
         }
-        return *this;
     }
 
     return_t expect(const char* source, size_t& size_expected) const;
@@ -349,9 +348,9 @@ class huffman_coding {
     /**
      * @brief   check min(code len in bits) >= 5
      */
-    bool decodable();
+    bool decodable() const;
 
-    size_t sizeof_codetable();
+    size_t sizeof_codetable() const;
 
     struct encode_cache_t {
         uint32 bit_code;
@@ -363,7 +362,7 @@ class huffman_coding {
     node_t* build(node_t** root = nullptr);
     void build(typename btree_t::node_t*& p);
     void infer(hc_temp& hc, typename btree_t::node_t* t);
-    void dump();  // debug
+    void dump() const;  // debug
 
     encode_cache_t _encode_cache[256 + 1];  // EOS (End of String)
 

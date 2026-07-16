@@ -195,7 +195,7 @@ class crypt_t {
      * @brief crypt_poweredby_t
      * @return see crypt_poweredby_t
      */
-    virtual crypt_poweredby_t get_type() = 0;
+    virtual crypt_poweredby_t get_type() const = 0;
     /**
      * @brief query
      * @param crypt_context_t* handle [in]
@@ -357,7 +357,7 @@ class hash_t {
      * @brief type
      * @return see crypt_poweredby_t
      */
-    virtual crypt_poweredby_t get_type() = 0;
+    virtual crypt_poweredby_t get_type() const = 0;
 };
 
 }  // namespace crypto

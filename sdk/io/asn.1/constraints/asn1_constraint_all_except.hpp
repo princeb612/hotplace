@@ -34,7 +34,7 @@ class asn1_constraint_all_except : public asn1_constraint<T> {
 
     asn1_constraint_all_except* clone() { return new asn1_constraint_all_except<T>(*this); }
 
-    virtual bool is_applicable(asn1_entity_t entity) {
+    virtual bool is_applicable(asn1_entity_t entity) const {
         switch (entity) {
             // TODO
             case asn1_entity_constraint_single:
@@ -92,7 +92,7 @@ class asn1_constraint_all_except : public asn1_constraint<T> {
             // throw
         }
     }
-    virtual void represent(stream_t* s, asn1_object* object, asn1_value* value = nullptr) {
+    virtual void represent(stream_t* s, const asn1_object* object, const asn1_value* value = nullptr) const {
         if (_cons) {
             auto rparenthesis = _cons->is_operation();
 

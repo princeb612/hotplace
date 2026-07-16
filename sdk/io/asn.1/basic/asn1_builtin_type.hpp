@@ -79,8 +79,8 @@ class asn1_builtin_type : public asn1_type {
     }
 
    protected:
-    virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
-    virtual bool represent(uint32 depth, binary_t* b, asn1_value* value = nullptr, uint16 flags = 0);
+    virtual void represent(stream_t* s, const asn1_value* value = nullptr) const;
+    virtual bool represent(binary_t* b, const asn1_value* value = nullptr, uint16 flags = 0) const;
 };
 
 }  // namespace io

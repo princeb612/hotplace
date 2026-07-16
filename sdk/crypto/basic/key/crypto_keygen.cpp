@@ -132,7 +132,7 @@ crypto_keygen& crypto_keygen::build() {
                 variant vt;
                 vt = std::move(vtiter->second);
                 if (vartype_t::TYPE_STRING == vt.type()) {
-                    os2b(vt.content().data.str, vt.size(), value);
+                    os2b(vt.get().data.str, vt.size(), value);
                     ret = true;
                 }
             }
@@ -146,7 +146,7 @@ crypto_keygen& crypto_keygen::build() {
             variant vt;
             vt = std::move(vtiter->second);
             if (vartype_t::TYPE_BOOL == vt.type()) {
-                value = vt.content().data.b;
+                value = vt.get().data.b;
                 ret = true;
             }
         }

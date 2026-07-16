@@ -21,7 +21,7 @@ http_authentication_provider::http_authentication_provider(const std::string& re
 
 http_authentication_provider::~http_authentication_provider() {}
 
-std::string http_authentication_provider::get_challenge(http_request* request) {
+std::string http_authentication_provider::get_challenge(http_request* request) const {
     std::string token_auth;
     request->get_http_header().get("Authorization", token_auth);
     return token_auth;

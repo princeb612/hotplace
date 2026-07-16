@@ -30,7 +30,7 @@ class secure_client_socket : public client_socket_prosumer {
 
     tls_session* get_session();
     tls_version_t get_version();
-    virtual bool support_tls();
+    virtual bool support_tls() const;
     secure_prosumer* get_secure_prosumer();
 
    protected:

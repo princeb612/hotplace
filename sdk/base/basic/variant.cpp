@@ -144,7 +144,7 @@ variant::variant(const bignumber& value) { set_bn(value); }
 
 variant::~variant() { _vt.clear(); }
 
-const variant_t& variant::content() const { return _vt; }
+const variant_t& variant::get() const { return _vt; }
 
 variant_t& variant::get() { return _vt; }
 

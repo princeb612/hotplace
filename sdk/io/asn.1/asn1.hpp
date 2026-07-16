@@ -38,8 +38,8 @@ class asn1 {
     asn1& operator<<(asn1_object* item);
 
     return_t read(const byte_t* stream, size_t size, size_t& pos);
-    void for_each(std::function<void(asn1_object*)> f);
-    void for_each(std::function<void(asn1_value*)> f);
+    void for_each(std::function<void(asn1_object*)> f) const;
+    void for_each(std::function<void(asn1_value*)> f) const;
     void notation(stream_t* s);
     void publish(stream_t* s);
     void publish(binary_t* b);

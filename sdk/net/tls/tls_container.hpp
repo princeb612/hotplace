@@ -132,8 +132,8 @@ class t_tls_container {
         return obj;
     }
     TYPE_PTR operator[](size_t index) { return getat(index); }
-    bool empty() { return _members.empty(); }
-    size_t size() { return _members.size(); }
+    bool empty() const { return _members.empty(); }
+    size_t size() const { return _members.size(); }
     void clear() {
         critical_section_guard guard(_lock);
         for (auto item : _members) {
@@ -143,7 +143,7 @@ class t_tls_container {
         _dictionary.clear();
     }
 
-    uint32 get_flags() { return _flags; }
+    uint32 get_flags() const { return _flags; }
 
     /**
      * sketch

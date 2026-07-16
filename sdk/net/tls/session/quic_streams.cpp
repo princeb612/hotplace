@@ -20,7 +20,7 @@ return_t quic_streams::set_unistream_type(uint64 stream_id, uint8 type) { return
 
 return_t quic_streams::get_unistream_type(uint64 stream_id, uint8& type) { return get_tag(stream_id, type); }
 
-bool quic_streams::is_unidirectional_stream(uint64 stream_id) { return (quic_stream_unidirectional == (stream_id & quic_stream_unidirectional)); }
+bool quic_streams::is_unidirectional_stream(uint64 stream_id) const { return (quic_stream_unidirectional == (stream_id & quic_stream_unidirectional)); }
 
 }  // namespace net
 }  // namespace hotplace

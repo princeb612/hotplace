@@ -73,7 +73,7 @@ quic_encoded& quic_encoded::set(const binary_t& data) {
     return *this;
 }
 
-size_t quic_encoded::lsize() {
+size_t quic_encoded::lsize() const {
     /* quic_length_vle_int is minimum size */
     size_t value = 0;
     if (_sizeof_value) {
@@ -86,12 +86,12 @@ size_t quic_encoded::lsize() {
     return value;
 }
 
-size_t quic_encoded::value() { return _value; }
+size_t quic_encoded::value() const { return _value; }
 
-const byte_t* quic_encoded::data() {
+const byte_t* quic_encoded::data() const {
     const byte_t* p = nullptr;
     if (_datalink) {
-        p = _data.content().data.bstr;
+        p = _data.get().data.bstr;
     }
     return p;
 }
@@ -130,14 +130,14 @@ void quic_encoded::write(binary_t& target) {
     }
 }
 
-size_t quic_encoded::lsize(const byte_t* stream, size_t size) {
+size_t quic_encoded::lsize(const byte_t* stream, size_t size) const {
     size_t pos = 0;
     uint64 value = 0;
     quic_read_vle_int(stream, size, pos, value);
     return pos;
 }
 
-size_t quic_encoded::value(const byte_t* stream, size_t size) {
+size_t quic_encoded::value(const byte_t* stream, size_t size) const {
     size_t pos = 0;
     uint64 value = 0;
     quic_read_vle_int(stream, size, pos, value);

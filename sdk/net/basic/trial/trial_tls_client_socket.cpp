@@ -63,9 +63,9 @@ return_t trial_tls_client_socket::do_send(binary_t& bin) {
     return ret;
 }
 
-int trial_tls_client_socket::socket_type() { return SOCK_STREAM; }
+int trial_tls_client_socket::socket_type() const { return SOCK_STREAM; }
 
-uint32 trial_tls_client_socket::get_scheme() { return socket_scheme_tls | socket_scheme_trial | socket_scheme_client; }
+uint32 trial_tls_client_socket::get_scheme() const { return socket_scheme_tls | socket_scheme_trial | socket_scheme_client; }
 
 }  // namespace net
 }  // namespace hotplace

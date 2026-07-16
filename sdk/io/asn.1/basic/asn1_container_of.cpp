@@ -42,7 +42,7 @@ void asn1_container_of::release() {
     asn1_object::release();
 }
 
-void asn1_container_of::represent(uint32 depth, stream_t* s, asn1_value* value) {
+void asn1_container_of::represent(stream_t* s, const asn1_value* value) const {
     if (s) {
         auto entity = get_entity();
 
@@ -57,13 +57,11 @@ void asn1_container_of::represent(uint32 depth, stream_t* s, asn1_value* value) 
 
         s->printf(" OF ");
 
-        get_object()->represent(depth + 1, s, value);
+        get_object()->represent(s, value);
     }
 }
 
-bool asn1_container_of::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) {
-    debug_print(depth);
-
+bool asn1_container_of::represent(binary_t* b, const asn1_value* value, uint16 flags) const {
     size_t pos = 0;
     if (false == is_suppressed()) {
         asn1_encode::write_identifier2(*b, this);
@@ -73,10 +71,10 @@ bool asn1_container_of::represent(uint32 depth, binary_t* b, asn1_value* value, 
     auto entity = get_entity();
     if (entity == asn1_entity_sequence) {
         // asn1_sequence_of : asn1_container_of
-        get_object()->represent(depth + 1, b, value, asn1_visitor_sequence_of);
+        get_object()->represent(b, value, asn1_visitor_sequence_of);
     } else if (entity == asn1_entity_set) {
         // asn1_set_of : asn1_container_of
-        get_object()->represent(depth + 1, b, value, asn1_visitor_set_of);
+        get_object()->represent(b, value, asn1_visitor_set_of);
     } else {
         // impossible
     }

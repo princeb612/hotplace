@@ -30,9 +30,9 @@ class asn1_container_of : public asn1_type {
     asn1_container_of(asn1_entity_t entity, const std::string& name, asn1_entity_t item);
     asn1_container_of(asn1_entity_t entity, const std::string& name, asn1_object* object);
 
-    virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
+    virtual void represent(stream_t* s, const asn1_value* value = nullptr) const;
     // SET OF : Lexicographical encoded octet stream
-    virtual bool represent(uint32 depth, binary_t* b, asn1_value* value = nullptr, uint16 flags = 0);
+    virtual bool represent(binary_t* b, const asn1_value* value = nullptr, uint16 flags = 0) const;
 
    private:
 };

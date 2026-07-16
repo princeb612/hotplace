@@ -182,7 +182,7 @@ void test_graph2() {
 
     g.add_edge("get up", "eat breakfast", 15_min);
 
-    g.add_edge("eat breakfast", "brush teeath (morning)", 3_min);
+    g.add_edge("eat breakfast", "brush teeth (morning)", 3_min);
     g.add_edge("eat breakfast", "go to work", 1_hour);
 
     g.add_edge("go to work", "work", 8_hour);
@@ -191,7 +191,7 @@ void test_graph2() {
     g.add_edge("go home", "shower", 15_min);
     g.add_edge("shower", "eat dinner", 15_min);
 
-    g.add_edge("eat dinner", "brush teeath (evening)", 3_min);
+    g.add_edge("eat dinner", "brush teeth (evening)", 3_min);
     g.add_edge("eat dinner", "watch tv", 1.5_hour);
     g.add_edge("eat dinner", "go to bed", 0.5_hour);
 

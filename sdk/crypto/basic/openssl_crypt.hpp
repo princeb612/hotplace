@@ -341,7 +341,7 @@ class openssl_crypt : public crypt_t {
     virtual return_t free_data(unsigned char* data);
 
     /**
-     * @biref asymmetric encrypt
+     * @brief asymmetric encrypt
      * @param const EVP_PKEY* pkey [in]
      * @param const binary_t& plaintext [in]
      * @param binary_t& ciphertext [out]
@@ -370,7 +370,7 @@ class openssl_crypt : public crypt_t {
     return_t encrypt(const EVP_PKEY* pkey, const binary_t& plaintext, binary_t& ciphertext, crypt_enc_t mode);
     return_t encrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& ciphertext, crypt_enc_t mode);
     /**
-     * @biref asymmetric decrypt
+     * @brief asymmetric decrypt
      * @param const EVP_PKEY* pkey [in]
      * @param const binary_t& ciphertext [in]
      * @param binary_t& plaintext [out]
@@ -436,7 +436,7 @@ class openssl_crypt : public crypt_t {
      * @brief crypt_poweredby_t
      * @return see crypt_poweredby_t
      */
-    virtual crypt_poweredby_t get_type();
+    virtual crypt_poweredby_t get_type() const;
 
     /**
      * @brief query

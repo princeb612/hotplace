@@ -276,14 +276,14 @@ quic_packet_initial& quic_packet_initial::set_token(const binary_t& token) {
 
 const binary_t& quic_packet_initial::get_token() { return _token; }
 
-uint64 quic_packet_initial::get_bodysize() {
+uint64 quic_packet_initial::get_bodysize() const {
     auto session = get_session();
     auto& protection = session->get_tls_protection();
     auto tagsize = protection.get_tag_size();
     return get_pn_length() + _payload.size() + tagsize;
 }
 
-size_t quic_packet_initial::estimate_overhead() {
+size_t quic_packet_initial::estimate_overhead() const {
     auto session = get_session();
     auto& protection = session->get_tls_protection();
     auto tagsize = protection.get_tag_size();

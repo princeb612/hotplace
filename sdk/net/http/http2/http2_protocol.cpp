@@ -22,7 +22,7 @@ http2_protocol::http2_protocol() : network_protocol() {}
 
 http2_protocol::~http2_protocol() {}
 
-return_t http2_protocol::is_kind_of(void* stream, size_t stream_size) {
+return_t http2_protocol::is_kind_of(void* stream, size_t stream_size) const {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == stream) {
@@ -146,7 +146,7 @@ return_t http2_protocol::read_stream(basic_stream* stream, size_t* request_size,
     return ret;
 }
 
-const char* http2_protocol::protocol_id() { return "h2"; }
+const char* http2_protocol::protocol_id() const { return "h2"; }
 
 }  // namespace net
 }  // namespace hotplace

@@ -41,8 +41,8 @@ class wide_string : public stream_t {
     virtual return_t fill(size_t l, char c);
     virtual return_t clear();
 
-    virtual bool empty();
-    virtual bool occupied();
+    virtual bool empty() const;
+    virtual bool occupied() const;
 
     virtual return_t printf(const char* buf, ...);
     virtual return_t vprintf(const char* buf, va_list ap);

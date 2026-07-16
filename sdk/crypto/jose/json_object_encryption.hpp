@@ -225,7 +225,7 @@ class json_object_encryption {
         return_t docompose_encryption_header_parameter(binary_t& header, jwe_t enc, jwa_t alg, jose_compose_t flag, const std::string& kid, crypt_datamap_t& datamap,
                                                        crypt_variantmap_t& variantmap, uint32 flags = 0);
         /**
-         * @biref recipient
+         * @brief recipient
          * @param jwa_t alg [in]
          * @param const EVP_PKEY* pkey [in]
          * @param jose_recipient_t& recipient [out]

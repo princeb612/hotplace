@@ -108,7 +108,7 @@ asn1_container& asn1_container::add(asn1_object* other) {
     return *this;
 }
 
-bool asn1_container::for_each(std::function<bool(asn1_object*)> f) {
+bool asn1_container::for_each(std::function<bool(asn1_object*)> f) const {
     if (f) {
         for (const auto& item : _list) {
             auto test = f(item);
@@ -118,7 +118,7 @@ bool asn1_container::for_each(std::function<bool(asn1_object*)> f) {
     return true;
 }
 
-void asn1_container::represent(uint32 depth, stream_t* s, asn1_value* value) {
+void asn1_container::represent(stream_t* s, const asn1_value* value) const {
     if (s) {
         auto entity = get_entity();
 
@@ -134,15 +134,13 @@ void asn1_container::represent(uint32 depth, stream_t* s, asn1_value* value) {
             }
 
             auto object = *iter;
-            object->represent(depth + 1, s, value);
+            object->represent(s, value);
         }
         s->printf("}");
     }
 }
 
-bool asn1_container::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) {
-    debug_print(depth);
-
+bool asn1_container::represent(binary_t* b, const asn1_value* value, uint16 flags) const {
     auto entity = get_entity();
 
     size_t pos = 0;
@@ -155,21 +153,21 @@ bool asn1_container::represent(uint32 depth, binary_t* b, asn1_value* value, uin
         case asn1_entity_sequence: {
             // asn1_sequence : asn1_container
             for (auto item : _list) {
-                item->represent(depth + 1, b, value);
+                item->represent(b, value);
             }
         } break;
         case asn1_entity_set: {
             // asn1_set : asn1_container
             for (auto item : _map) {
                 auto obj = item.second;
-                obj->represent(depth + 1, b, value);
+                obj->represent(b, value);
             }
         } break;
         case asn1_entity_choice: {
             // asn1_choice : asn1_container
             for (auto item : _map) {
                 auto obj = item.second;
-                auto test = obj->represent(depth + 1, b, value, asn1_visitor_choice);
+                auto test = obj->represent(b, value, asn1_visitor_choice);
                 if (test) break;
             }
         } break;

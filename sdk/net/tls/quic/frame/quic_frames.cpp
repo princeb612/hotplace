@@ -159,9 +159,9 @@ quic_frame* quic_frames::getat(size_t index, bool upref) { return _frames.getat(
 
 quic_frame* quic_frames::operator[](size_t index) { return _frames[index]; }
 
-bool quic_frames::empty() { return _frames.empty(); }
+bool quic_frames::empty() const { return _frames.empty(); }
 
-size_t quic_frames::size() { return _frames.size(); }
+size_t quic_frames::size() const { return _frames.size(); }
 
 void quic_frames::clear() { return _frames.clear(); }
 

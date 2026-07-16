@@ -42,15 +42,15 @@ class asn1_constraints {
     asn1_constraints& add(asn1_constraint_t* cons, std::function<void(asn1_constraint_t*)> f = nullptr);
     bool empty() const;
 
-    void represent(stream_t* s, asn1_object* object, asn1_value* value);
+    void represent(stream_t* s, const asn1_object* object, const asn1_value* value) const;
 
-    bool validate(asn1_object* node, asn1_value* value);
+    bool validate(const asn1_object* node, const asn1_value* value) const;
 
     void addref();
     void release();
 
    protected:
-    void dump(const variant& vt, bool test) {
+    void dump(const variant& vt, bool test) const {
 #if defined DEBUG
         if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
             trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
@@ -63,7 +63,7 @@ class asn1_constraints {
     }
 
     template <typename T, typename std::enable_if<custom::is_integral<typename std::decay<T>::type>::value, int>::type = 0>
-    bool do_validate(asn1_constraint_t* cons, asn1_object* object, asn1_value* value) {
+    bool do_validate(asn1_constraint_t* cons, const asn1_object* object, const asn1_value* value) const {
         asn1_constraint_evaluator<T> visitor;
         cons->accept(&visitor);
 
@@ -109,7 +109,7 @@ class asn1_constraints {
                         test = visitor.get_result_set().contains(size);
                     }
                 } else if (vt_flag_int & flags) {
-                    auto t = t_vtoi<int64>(vt.content());
+                    auto t = t_vtoi<int64>(vt.get());
                     test = visitor.get_result_set().contains(t);
                 }
                 dump(vt, test);
@@ -119,7 +119,7 @@ class asn1_constraints {
         }
     }
     template <typename T, typename std::enable_if<std::is_floating_point<typename std::decay<T>::type>::value, int>::type = 0>
-    bool do_validate(asn1_constraint_t* cons, asn1_object* object, asn1_value* value) {
+    bool do_validate(asn1_constraint_t* cons, const asn1_object* object, const asn1_value* value) const {
         asn1_constraint_evaluator<T> visitor;
         cons->accept(&visitor);
 
@@ -133,7 +133,7 @@ class asn1_constraints {
         bool test = false;
         for (const auto& vt : values) {
             if (vt_flag_float & flags) {
-                auto d = vt.content().data.d;
+                auto d = vt.get().data.d;
                 test = visitor.get_result_set().contains(d);
                 dump(vt, test);
                 if (false == test) return false;
@@ -147,7 +147,7 @@ class asn1_constraints {
      * @param   asn1_value* value [in]
      */
     template <typename T, typename std::enable_if<std::is_same<T, std::string>::value, int>::type = 0>
-    bool do_validate(asn1_constraint_t* cons, asn1_object* object, asn1_value* value) {
+    bool do_validate(asn1_constraint_t* cons, const asn1_object* object, const asn1_value* value) const {
         auto name = nameof(object);  // object->resolve_name()
 
         uint16 flags = vt_flag_string;

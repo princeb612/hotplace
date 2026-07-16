@@ -52,11 +52,11 @@ tls_extension_builder& tls_extension_builder::set(tls_direction_t dir) {
     return *this;
 }
 
-tls_handshake* tls_extension_builder::get_handshake() { return _hs; }
+tls_handshake* tls_extension_builder::get_handshake() const { return _hs; }
 
-tls_extension_type_t tls_extension_builder::get_type() { return _type; }
+tls_extension_type_t tls_extension_builder::get_type() const { return _type; }
 
-tls_direction_t tls_extension_builder::get_direction() { return _dir; }
+tls_direction_t tls_extension_builder::get_direction() const { return _dir; }
 
 tls_extension* tls_extension_builder::build() {
     tls_extension* extension = nullptr;

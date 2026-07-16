@@ -60,7 +60,7 @@ return_t asn1_encode::write_identifier(binary_t& bin, uint8 enc, uint64 tag, siz
     return errorcode_t::success;
 }
 
-return_t asn1_encode::write_identifier2(binary_t& bin, asn1_object* object, size_t pos) {
+return_t asn1_encode::write_identifier2(binary_t& bin, const asn1_object* object, size_t pos) {
     return_t ret = errorcode_t::success;
     if (nullptr == object) return errorcode_t::invalid_parameter;
     ret = write_identifier(bin, object->get_ident(), object->get_entity(), pos);
@@ -236,13 +236,8 @@ return_t asn1_encode::read(const byte_t* stream, size_t size, size_t& pos, asn1_
 #if defined DEBUG
                                 if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_debug)) {
                                     trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
-                                        dbs << ANSI_ESCAPE
-                                            "1;36m"
-                                            "REAL"
-                                            << " : " << "exponent " << exponent << " mantissa " << mantissa
-                                            << ANSI_ESCAPE
-                                            "0m"
-                                            "\n";
+                                        dbs << ANSI_ESCAPE << "1;36m" << "REAL" << " : " << "exponent " << exponent << " mantissa " << mantissa << ANSI_ESCAPE << "0m"
+                                            << "\n";
                                     });
                                 }
 #endif
@@ -366,7 +361,7 @@ asn1_encode& asn1_encode::write_tlv(binary_t& bin, asn1_entity_t entity, const v
 
 asn1_encode& asn1_encode::write(binary_t& bin, asn1_entity_t entity, const variant& vt, bool& do_len) {
     do_len = true;
-    const auto& v = vt.content();
+    const auto& v = vt.get();
     switch (entity) {
         case asn1_entity_boolean:
             // X.690 8.2 encoding of a boolean value

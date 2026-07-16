@@ -21,7 +21,7 @@ network_protocol::network_protocol() {
 
 network_protocol::~network_protocol() {}
 
-return_t network_protocol::is_kind_of(void* stream, size_t stream_size) { return errorcode_t::success; }
+return_t network_protocol::is_kind_of(void* stream, size_t stream_size) const { return errorcode_t::success; }
 
 return_t network_protocol::read_stream(basic_stream* stream, size_t* request_size, protocol_state_t* state, int* priority) {
     *state = protocol_state_t::complete;

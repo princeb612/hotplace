@@ -499,33 +499,33 @@ void tls_handshake::release() { _shared.delref(); }
 
 tls_extensions& tls_handshake::get_extensions() { return _extensions; }
 
-tls_handshake_type_t tls_handshake::get_type() { return _type; }
+tls_handshake_type_t tls_handshake::get_type() const { return _type; }
 
-tls_session* tls_handshake::get_session() { return _session; }
+tls_session* tls_handshake::get_session() const { return _session; }
 
-size_t tls_handshake::get_size() { return _size; }
+size_t tls_handshake::get_size() const { return _size; }
 
-const range_t& tls_handshake::get_header_range() { return _range; }
+const range_t& tls_handshake::get_header_range() const { return _range; }
 
-size_t tls_handshake::offsetof_header() { return _range.begin; }
+size_t tls_handshake::offsetof_header() const { return _range.begin; }
 
-size_t tls_handshake::offsetof_body() { return _range.end; }
+size_t tls_handshake::offsetof_body() const { return _range.end; }
 
-uint32 tls_handshake::get_body_size() { return _fragment_len ? _fragment_len : _bodysize; }
+uint32 tls_handshake::get_body_size() const { return _fragment_len ? _fragment_len : _bodysize; }
 
 void tls_handshake::set_extension_len(uint16 len) { _extension_len = len; }
 
 void tls_handshake::set_dtls_seq(uint16 seq) { _dtls_seq = seq; }
 
-uint16 tls_handshake::get_dtls_seq() { return _dtls_seq; }
+uint16 tls_handshake::get_dtls_seq() const { return _dtls_seq; }
 
-uint32 tls_handshake::get_fragment_offset() { return _fragment_offset; }
+uint32 tls_handshake::get_fragment_offset() const { return _fragment_offset; }
 
-uint32 tls_handshake::get_fragment_len() { return _fragment_len; }
+uint32 tls_handshake::get_fragment_len() const { return _fragment_len; }
 
 void tls_handshake::set_flags(uint32 flags) { _flags = flags; }
 
-uint32 tls_handshake::get_flags() { return _flags; }
+uint32 tls_handshake::get_flags() const { return _flags; }
 
 }  // namespace net
 }  // namespace hotplace

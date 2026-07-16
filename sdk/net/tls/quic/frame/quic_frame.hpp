@@ -41,8 +41,8 @@ class quic_frame {
     virtual return_t write(tls_direction_t dir, binary_t& bin);
     virtual return_t write(tls_direction_t dir, const byte_t* stream, size_t size, size_t pos, size_t len, binary_t& bin);
 
-    quic_frame_t get_type();
-    tls_session* get_session();
+    quic_frame_t get_type() const;
+    tls_session* get_session() const;
 
     void addref();
     void release();

@@ -92,12 +92,12 @@ class tls_session {
     quic_packet_publisher& get_quic_packet_publisher();
 
     void set_type(session_type_t type);
-    session_type_t get_type();
+    session_type_t get_type() const;
 
     void update_session_status(session_status_t status);
     void clear_session_status(uint32 status);
     void reset_session_status();
-    uint32 get_session_status();
+    uint32 get_session_status() const;
     return_t wait_change_session_status(uint32 status, unsigned msec, bool waitall = true);
     void set_hook_change_session_status(std::function<void(tls_session*, uint32)> func);
     void set_hook_param(void* param);
@@ -116,7 +116,7 @@ class tls_session {
         session_info();
 
         void set_status(tls_handshake_type_t type);
-        tls_handshake_type_t get_status();
+        tls_handshake_type_t get_status() const;
 
         uint64 get_recordno(bool inc = false, protection_space_t space = protection_space_t::tls);
         void inc_recordno(protection_space_t space = protection_space_t::tls);
@@ -124,7 +124,7 @@ class tls_session {
         void set_recordno(uint64 recordno, protection_space_t space = protection_space_t::tls);  // for test vector
 
         void begin_protection();
-        bool apply_protection();
+        bool apply_protection() const;
         void reset_protection();
 
         void push_alert(tls_alertlevel_t level, tls_alertdesc_t desc);

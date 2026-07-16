@@ -114,9 +114,9 @@ tls_handshake* tls_handshake_builder::build(tls_handshake_type_t type, tls_sessi
     return handshake;
 }
 
-tls_handshake_type_t tls_handshake_builder::get_type() { return _type; }
+tls_handshake_type_t tls_handshake_builder::get_type() const { return _type; }
 
-tls_session* tls_handshake_builder::get_session() { return _session; }
+tls_session* tls_handshake_builder::get_session() const { return _session; }
 
 }  // namespace net
 }  // namespace hotplace

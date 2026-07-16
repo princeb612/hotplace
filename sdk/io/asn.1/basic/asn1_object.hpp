@@ -87,9 +87,7 @@ class asn1_object {
     uint16 get_component_type() const;
     asn1_tag* get_tag() const;
     const variant_t& get_default_value() const;
-    std::string resolve_name();
-    // ComponentType
-    int get_componenttype();
+    std::string resolve_name() const;
 
     // NamedType ::= identifier Type
     bool is_named_type() const;
@@ -102,7 +100,7 @@ class asn1_object {
     // DEFAULT
     bool is_default() const;
     // IMPLICIT
-    bool is_suppressed();
+    bool is_suppressed() const;
 
     asn1_object& as_default();
     asn1_object& as_optional();
@@ -117,7 +115,7 @@ class asn1_object {
     asn1_constraints& get_constraints();
     const asn1_constraints& get_constraints() const;
     virtual bool have_constraints() const;
-    bool validate(asn1_value* value);
+    bool validate(const asn1_value* value);
 
    protected:
     asn1_object(asn1_entity_t entity, const std::string& name = "", asn1_object* object = nullptr, asn1_tag* tag = nullptr);
@@ -130,12 +128,9 @@ class asn1_object {
 
     virtual void accept(asn1_visitor* v);
     virtual void accept(asn1_ast_visitor* v);
-    virtual void represent(uint32 depth, stream_t* s, asn1_value* value = nullptr);
-    virtual bool represent(uint32 depth, binary_t* b, asn1_value* value = nullptr, uint16 flags = 0);
-    bool validate_node(asn1_object* node, asn1_value* value);
-
-    virtual void debug_print(uint32 depth);
-    virtual void debug_print(uint32 depth, const std::string& name);
+    virtual void represent(stream_t* s, const asn1_value* value = nullptr) const;
+    virtual bool represent(binary_t* b, const asn1_value* value = nullptr, uint16 flags = 0) const;
+    bool validate_node(const asn1_object* node, const asn1_value* value);
 
    private:
     uint8 _ident;

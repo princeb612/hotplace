@@ -59,7 +59,7 @@ cbor_tstrings& cbor_tstrings::operator<<(const char* str) {
     return *this;
 }
 
-size_t cbor_tstrings::size() { return _array.size(); }
+size_t cbor_tstrings::size() const { return _array.size(); }
 
 int cbor_tstrings::addref() {
     for (cbor_data* item : _array) {

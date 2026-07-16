@@ -78,7 +78,7 @@ crypto_sign* crypto_sign_builder::build() {
     return obj;
 }
 
-sig_category_t crypto_sign_builder::get_category() { return _category; }
+sig_category_t crypto_sign_builder::get_category() const { return _category; }
 
 crypto_sign_builder& crypto_sign_builder::set_category(sig_category_t category) {
     _category = category;
@@ -94,7 +94,7 @@ crypto_sign_builder& crypto_sign_builder::set_tls_sign_scheme(tls_sigscheme_t sc
     return *this;
 }
 
-hash_algorithm_t crypto_sign_builder::get_digest() { return _hashalg; }
+hash_algorithm_t crypto_sign_builder::get_digest() const { return _hashalg; }
 
 crypto_sign_builder& crypto_sign_builder::set_digest(hash_algorithm_t hashalg) {
     _hashalg = hashalg;

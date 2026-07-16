@@ -74,7 +74,7 @@ void asn1_value::publish(stream_t* s) {
     notation.visit(get_schema());
 }
 
-void asn1_value::write(stream_t* s, const std::string& name) {
+void asn1_value::write(stream_t* s, const std::string& name) const {
     if (nullptr == s) return;
     auto iter = _values.find(name);
     if (_values.end() != iter) {
@@ -83,9 +83,9 @@ void asn1_value::write(stream_t* s, const std::string& name) {
     }
 }
 
-bool asn1_value::find(const std::string& name) { return _values.count(name) > 0; }
+bool asn1_value::find(const std::string& name) const { return _values.count(name) > 0; }
 
-bool asn1_value::find(const std::string& name, std::list<variant>& values, uint16 vtflags) {
+bool asn1_value::find(const std::string& name, std::list<variant>& values, uint16 vtflags) const {
     bool ret = false;
     auto liter = _values.lower_bound(name);
     auto uiter = _values.upper_bound(name);
@@ -100,7 +100,7 @@ bool asn1_value::find(const std::string& name, std::list<variant>& values, uint1
     return ret;
 }
 
-bool asn1_value::find(const std::string& name, std::list<std::string>& values, uint16 vtflags) {
+bool asn1_value::find(const std::string& name, std::list<std::string>& values, uint16 vtflags) const {
     bool ret = false;
     auto liter = _values.lower_bound(name);
     auto uiter = _values.upper_bound(name);
@@ -117,7 +117,7 @@ bool asn1_value::find(const std::string& name, std::list<std::string>& values, u
     return ret;
 }
 
-void asn1_value::write(binary_t& bin, asn1_object* object, const std::string& name, bool& do_len) {
+void asn1_value::write(binary_t& bin, const asn1_object* object, const std::string& name, bool& do_len) const {
     if (nullptr == object) return;
 
     asn1_encode enc;
@@ -137,7 +137,7 @@ void asn1_value::write(binary_t& bin, asn1_object* object, const std::string& na
     }
 }
 
-void asn1_value::encode_sequenceof_value(binary_t& bin, asn1_object* object, const std::string& name) {
+void asn1_value::encode_sequenceof_value(binary_t& bin, const asn1_object* object, const std::string& name) const {
     if (nullptr == object) return;
 
     auto liter = _values.lower_bound(name);
@@ -158,7 +158,7 @@ void asn1_value::encode_sequenceof_value(binary_t& bin, asn1_object* object, con
     }
 }
 
-void asn1_value::encode_setof_value(binary_t& bin, asn1_object* object, const std::string& name) {
+void asn1_value::encode_setof_value(binary_t& bin, const asn1_object* object, const std::string& name) const {
     if (nullptr == object) return;
 
     std::set<binary_t> ordered;
@@ -188,7 +188,7 @@ void asn1_value::encode_setof_value(binary_t& bin, asn1_object* object, const st
     }
 }
 
-bool asn1_value::encode_namedlist(binary_t& bin, asn1_object* object, const std::string& name, const std::map<std::string, asn1_native_int_t>& namedlist) {
+bool asn1_value::encode_namedlist(binary_t& bin, const asn1_object* object, const std::string& name, const std::map<std::string, asn1_native_int_t>& namedlist) const {
     if (nullptr == object) return false;
 
     auto entity = object->get_entity();

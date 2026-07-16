@@ -75,9 +75,9 @@ return_t trial_dtls_client_socket::do_send(binary_t& bin) {
     return ret;
 }
 
-int trial_dtls_client_socket::socket_type() { return SOCK_DGRAM; }
+int trial_dtls_client_socket::socket_type() const { return SOCK_DGRAM; }
 
-uint32 trial_dtls_client_socket::get_scheme() { return socket_scheme_dtls | socket_scheme_trial | socket_scheme_client; }
+uint32 trial_dtls_client_socket::get_scheme() const { return socket_scheme_dtls | socket_scheme_trial | socket_scheme_client; }
 
 }  // namespace net
 }  // namespace hotplace

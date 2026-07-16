@@ -105,9 +105,9 @@ return_t naive_udp_server_socket::sendto(socket_context_t* handle, const char* p
     return ret;
 }
 
-int naive_udp_server_socket::socket_type() { return SOCK_DGRAM; }
+int naive_udp_server_socket::socket_type() const { return SOCK_DGRAM; }
 
-uint32 naive_udp_server_socket::get_scheme() { return socket_scheme_udp | socket_scheme_server; }
+uint32 naive_udp_server_socket::get_scheme() const { return socket_scheme_udp | socket_scheme_server; }
 
 }  // namespace net
 }  // namespace hotplace

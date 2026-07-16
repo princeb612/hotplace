@@ -42,6 +42,8 @@ int asn1_tag::get_tag_type() const { return _tag_mode; }
 
 bool asn1_tag::is_implicit() const { return asn1_implicit == get_tag_type(); }
 
+bool asn1_tag::is_explicit() const { return asn1_explicit == get_tag_type(); }
+
 asn1_tag& asn1_tag::as_explicit() {
     _tag_mode = asn1_explicit;
     return *this;
@@ -57,7 +59,32 @@ asn1_tag& asn1_tag::as_automatic() {
     return *this;
 }
 
-void asn1_tag::represent(uint32 depth, stream_t* s, asn1_value* value) {
+void asn1_tag::test_constructed() {
+    auto parent = get_parent();
+    if (parent && (asn1_entity_tagged_type == parent->get_entity())) {
+        asn1_object* node = parent;
+        while (node) {
+            auto tag = node->get_tag();
+            if (tag && tag->is_explicit()) {
+                as_constructed();
+                break;
+            }
+            node = node->_object;
+        }
+        if (is_primitive()) {
+            node = parent;
+            while (node) {
+                if (node->is_constructed()) {
+                    as_constructed();
+                    break;
+                }
+                node = node->_object;
+            }
+        }
+    }
+}
+
+void asn1_tag::represent(stream_t* s, const asn1_value* value) const {
     if (s) {
         if (get_class() & asn1_class_mask) {
             s->printf("[");
@@ -76,52 +103,11 @@ void asn1_tag::represent(uint32 depth, stream_t* s, asn1_value* value) {
     }
 }
 
-bool asn1_tag::represent(uint32 depth, binary_t* b, asn1_value* value, uint16 flags) {
-    auto parent = get_parent();
-    if (parent && (asn1_entity_tagged_type == parent->get_entity())) {
-        asn1_object* node = parent;
-        while (node) {
-            auto tag = node->get_tag();
-            if (tag) {
-                if (false == tag->is_implicit()) {
-                    as_constructed();
-                    break;
-                }
-            }
-            node = node->_object;
-        }
-        if (is_primitive()) {
-            node = parent;
-            while (node) {
-                if (node->is_constructed()) {
-                    as_constructed();
-                    break;
-                }
-                node = node->_object;
-            }
-        }
-    }
-
+bool asn1_tag::represent(binary_t* b, const asn1_value* value, uint16 flags) const {
     uint8 ident = get_class() | get_ident();
     if (b && (false == is_suppressed())) {
         asn1_encode::write_identifier(*b, ident, get_class_number());
     }
-
-#if 0  // defined DEBUG
-    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
-        trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
-            auto resource = asn1_resource::get_instance();
-            dbs.fill(depth << 1, ' ');
-            dbs.println(ANSI_ESCAPE
-                        "1;33m"
-                        "%s" ANSI_ESCAPE "0m",
-                        resource->get_component_entity_name(get_component_entity()).c_str());
-            dbs.fill(depth << 1, ' ');
-            dbs.println("- " ANSI_ESCAPE "1;33m%s %s" ANSI_ESCAPE "0m", asn1_resource::get_instance()->get_entity_name(ident, (asn1_entity_t)get_class_number()).c_str(),
-                        is_implicit() ? "IMPLICIT" : "EXPLICIT");
-        });
-    }
-#endif
 
     return true;
 }

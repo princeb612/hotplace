@@ -18,15 +18,11 @@
 namespace hotplace {
 namespace io {
 
-asn1_der_visitor::asn1_der_visitor(binary_t* b, asn1_value* value) : asn1_visitor(), _b(b), _value(value) {
-    if (_value) _value->addref();
-}
+asn1_der_visitor::asn1_der_visitor(binary_t* b, const asn1_value* value) : asn1_visitor(), _b(b), _value(value) {}
 
-asn1_der_visitor::~asn1_der_visitor() {
-    if (_value) _value->release();
-}
+asn1_der_visitor::~asn1_der_visitor() {}
 
-void asn1_der_visitor::visit(asn1_object* object) { object->represent(0, get_binary(), _value); }
+void asn1_der_visitor::visit(const asn1_object* object) { object->represent(get_binary(), _value); }
 
 binary_t* asn1_der_visitor::get_binary() { return _b; }
 

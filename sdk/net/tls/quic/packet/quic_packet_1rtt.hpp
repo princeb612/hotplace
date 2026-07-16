@@ -30,7 +30,7 @@ class quic_packet_1rtt : public quic_packet {
     quic_packet_1rtt(const quic_packet_1rtt& other);
     virtual ~quic_packet_1rtt();
 
-    virtual size_t estimate_overhead();
+    virtual size_t estimate_overhead() const;
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t& pos_unprotect);

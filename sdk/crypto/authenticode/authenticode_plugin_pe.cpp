@@ -427,7 +427,7 @@ return_t authenticode_plugin_pe::digest(file_stream* filestream, const char* alg
     return ret;
 }
 
-bool authenticode_plugin_pe::separated() { return false; }
+bool authenticode_plugin_pe::separated() const { return false; }
 
 return_t authenticode_plugin_pe::find_if_separated(std::string filepathname_not_signed, std::list<std::string> pathlist, std::list<std::string>& filelist) {
     return errorcode_t::not_available;
@@ -637,7 +637,7 @@ return_t authenticode_plugin_pe::update_checksum(file_stream* filestream, uint32
     return ret;
 }
 
-authenticode_engine_id_t authenticode_plugin_pe::id() { return authenticode_engine_id_t::authenticode_engine_id_pe; }
+authenticode_engine_id_t authenticode_plugin_pe::id() const { return authenticode_engine_id_t::authenticode_engine_id_pe; }
 
 }  // namespace crypto
 }  // namespace hotplace

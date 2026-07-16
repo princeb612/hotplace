@@ -155,15 +155,15 @@ tls_record* tls_record_builder::build(tls_content_type_t type, tls_session* sess
     return record;
 }
 
-tls_session* tls_record_builder::get_session() { return _session; }
+tls_session* tls_record_builder::get_session() const { return _session; }
 
-tls_content_type_t tls_record_builder::get_type() { return _type; }
+tls_content_type_t tls_record_builder::get_type() const { return _type; }
 
-tls_direction_t tls_record_builder::get_direction() { return _dir; }
+tls_direction_t tls_record_builder::get_direction() const { return _dir; }
 
-bool tls_record_builder::is_construct() { return _construct; }
+bool tls_record_builder::is_construct() const { return _construct; }
 
-bool tls_record_builder::is_protected() { return _protected; }
+bool tls_record_builder::is_protected() const { return _protected; }
 
 }  // namespace net
 }  // namespace hotplace

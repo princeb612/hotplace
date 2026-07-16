@@ -57,7 +57,7 @@ class http_authentication_provider {
      * @brief   challenge
      * @param   http_request* request [in]
      */
-    virtual std::string get_challenge(http_request* request);
+    virtual std::string get_challenge(http_request* request) const;
 
     virtual int addref();
     virtual int release();

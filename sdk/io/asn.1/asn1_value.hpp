@@ -46,18 +46,18 @@ class asn1_value {
 
     void publish(stream_t* b);
     void publish(binary_t* b);
-    void write(stream_t* s, const std::string& name);
+    void write(stream_t* s, const std::string& name) const;
 
-    bool find(const std::string& name);
+    bool find(const std::string& name) const;
     /**
      * value->find(name, values, vt_flag_string);
      */
-    bool find(const std::string& name, std::list<variant>& values, uint16 vtflags);
-    bool find(const std::string& name, std::list<std::string>& values, uint16 vtflags);
-    void write(binary_t& bin, asn1_object* object, const std::string& name, bool& do_len);
-    void encode_sequenceof_value(binary_t& bin, asn1_object* object, const std::string& name);
-    void encode_setof_value(binary_t& bin, asn1_object* object, const std::string& name);
-    bool encode_namedlist(binary_t& bin, asn1_object* object, const std::string& name, const std::map<std::string, asn1_native_int_t>& namedlist);
+    bool find(const std::string& name, std::list<variant>& values, uint16 vtflags) const;
+    bool find(const std::string& name, std::list<std::string>& values, uint16 vtflags) const;
+    void write(binary_t& bin, const asn1_object* object, const std::string& name, bool& do_len) const;
+    void encode_sequenceof_value(binary_t& bin, const asn1_object* object, const std::string& name) const;
+    void encode_setof_value(binary_t& bin, const asn1_object* object, const std::string& name) const;
+    bool encode_namedlist(binary_t& bin, const asn1_object* object, const std::string& name, const std::map<std::string, asn1_native_int_t>& namedlist) const;
 
     void addref();
     void release();

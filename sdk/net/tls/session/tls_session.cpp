@@ -113,7 +113,7 @@ void tls_session::set_type(session_type_t type) {
     }
 }
 
-session_type_t tls_session::get_type() { return _type; }
+session_type_t tls_session::get_type() const { return _type; }
 
 void tls_session::update_session_status(session_status_t status) {
     _status |= status;
@@ -142,7 +142,7 @@ void tls_session::clear_session_status(uint32 status) {
 
 void tls_session::reset_session_status() { _status = 0; }
 
-uint32 tls_session::get_session_status() { return _status; }
+uint32 tls_session::get_session_status() const { return _status; }
 
 return_t tls_session::wait_change_session_status(uint32 status, unsigned msec, bool waitall) {
     return_t ret = errorcode_t::mismatch;
@@ -222,11 +222,11 @@ tls_session::session_info::session_info() : _hstype(tls_handshake_type_t::client
 
 void tls_session::session_info::set_status(tls_handshake_type_t type) { _hstype = type; }
 
-tls_handshake_type_t tls_session::session_info::get_status() { return _hstype; }
+tls_handshake_type_t tls_session::session_info::get_status() const { return _hstype; }
 
 void tls_session::session_info::begin_protection() { _protection = true; }
 
-bool tls_session::session_info::apply_protection() { return _protection; }
+bool tls_session::session_info::apply_protection() const { return _protection; }
 
 void tls_session::session_info::reset_protection() { _protection = false; }
 

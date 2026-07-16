@@ -221,13 +221,13 @@ return_t asn1::read(const byte_t* stream, size_t size, size_t& pos) {
     return ret;
 }
 
-void asn1::for_each(std::function<void(asn1_object*)> f) {
+void asn1::for_each(std::function<void(asn1_object*)> f) const {
     for (const auto& item : _types) {
         f(item);
     }
 }
 
-void asn1::for_each(std::function<void(asn1_value*)> f) {
+void asn1::for_each(std::function<void(asn1_value*)> f) const {
     for (const auto& item : _values) {
         f(item);
     }

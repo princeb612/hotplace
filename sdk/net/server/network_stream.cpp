@@ -292,7 +292,7 @@ return_t network_stream_data::assign(byte_t* ptr, size_t size) {
     return ret;
 }
 
-size_t network_stream_data::size() { return _size; }
+size_t network_stream_data::size() const { return _size; }
 
 byte_t* network_stream_data::content() { return _ptr; }
 
@@ -300,7 +300,7 @@ network_stream_data* network_stream_data::next() { return _next; }
 
 void network_stream_data::set_next(network_stream_data* next) { _next = next; }
 
-int network_stream_data::get_priority() { return _priority; }
+int network_stream_data::get_priority() const { return _priority; }
 
 void network_stream_data::set_priority(int priority) { _priority = priority; }
 

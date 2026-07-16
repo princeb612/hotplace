@@ -211,7 +211,7 @@ network_stream* network_session::getstream() { return &_stream; }
 
 network_stream* network_session::getrequest() { return &_request; }
 
-int network_session::get_priority() { return _session.priority; }
+int network_session::get_priority() const { return _session.priority; }
 
 void network_session::set_priority(int priority) { _session.priority = priority; }
 
