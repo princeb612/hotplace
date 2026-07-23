@@ -10,15 +10,15 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINT__
-#define __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINT__
+#ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_CONSTRAINTS_ASN1CONSTRAINT__
+#define __HOTPLACE_SDK_IO_ASN1_BASIC_CONSTRAINTS_ASN1CONSTRAINT__
 
 #include <hotplace/sdk/base/nostd/set.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint_evaluator.hpp>
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint_notation_visitor.hpp>
-#include <hotplace/sdk/io/asn.1/constraints/types.hpp>
+#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint_evaluator.hpp>
+#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint_notation_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/constraints/types.hpp>
 #include <hotplace/sdk/io/asn.1/types.hpp>
 
 namespace hotplace {

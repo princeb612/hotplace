@@ -10,12 +10,12 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTRANGE__
-#define __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTRANGE__
+#ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_CONSTRAINTS_ASN1CONSTRAINTRANGE__
+#define __HOTPLACE_SDK_IO_ASN1_BASIC_CONSTRAINTS_ASN1CONSTRAINTRANGE__
 
 #include <hotplace/sdk/base/nostd/range_set.hpp>
 #include <hotplace/sdk/base/stream/vtprintf.hpp>
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint.hpp>
+#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint.hpp>
 
 namespace hotplace {
 namespace io {

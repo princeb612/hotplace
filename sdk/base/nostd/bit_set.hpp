@@ -12,6 +12,7 @@
 #define __HOTPLACE_SDK_BASE_NOSTD_BITSET__
 
 #include <hotplace/sdk/base/basic/types.hpp>
+#include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/nostd/traits.hpp>
 #include <hotplace/sdk/base/nostd/types.hpp>
 
@@ -35,6 +36,9 @@ class t_bit_set {
 
     t_bit_set(T low, T high) : _low(std::min(low, high)), _high(std::max(low, high)) {
         size_t allocsize = (_high - _low + 8) / 8;
+        if (allocsize > (1 << 20)) {
+            throw exception(errorcode_t::too_large_data);
+        }
         _bitset.resize(allocsize, 0);
     }
     t_bit_set(const t_bit_set& other) { *this = other; }
@@ -137,7 +141,7 @@ class t_bit_set {
     binary_t _bitset;
 };
 
-typedef t_bit_set<int> bit_set;
+typedef t_bit_set<int32> bit_set;
 
 }  // namespace hotplace
 

@@ -337,7 +337,7 @@ class bignumber {
     bignumber& set(const byte_t* p, size_t n, bool isunsigned = true);
     bignumber& set(const binary_t& base16hexstream);
     bignumber& set(const std::string& value);
-    bignumber& setstring(const char* value);
+    bignumber& set(const char* value);
 
     static bignumber add(const bignumber& lhs, const bignumber& rhs);
     static bignumber sub(const bignumber& lhs, const bignumber& rhs);

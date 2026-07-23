@@ -90,8 +90,7 @@ void test_alert() {
         };
         session.get_alert(from_server, lambda);
 
-        auto iter = fatal_alerts.find(tls_alertdesc_t::unexpected_message);
-        bool test = (fatal_alerts.end() != iter);
+        bool test = fatal_alerts.count(tls_alertdesc_t::unexpected_message) > 0;
         _test_case.assert(test, __FUNCTION__, "alert == {fatal, unexpected message}");
     }
 }

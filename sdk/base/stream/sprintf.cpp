@@ -158,7 +158,7 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
                                     dest.insert(dest.begin(), '%');
                                 } break;
                                 case 'x':
-                                    dest = std::move(base16_encode(v.data.bstr, v.size));
+                                    dest = base16_encode(v.data.bstr, v.size);
                                     force_dest = true;
                                     break;
                             }

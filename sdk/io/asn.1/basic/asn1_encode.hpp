@@ -10,8 +10,8 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_ASN1ENCODE__
-#define __HOTPLACE_SDK_IO_ASN1_ASN1ENCODE__
+#ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_ASN1ENCODE__
+#define __HOTPLACE_SDK_IO_ASN1_BASIC_ASN1ENCODE__
 
 #include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>

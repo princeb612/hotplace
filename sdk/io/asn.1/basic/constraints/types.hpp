@@ -10,8 +10,8 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_TYPES__
-#define __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_TYPES__
+#ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_CONSTRAINTS_TYPES__
+#define __HOTPLACE_SDK_IO_ASN1_BASIC_CONSTRAINTS_TYPES__
 
 #include <hotplace/sdk/io/asn.1/types.hpp>
 

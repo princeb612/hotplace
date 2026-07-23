@@ -10,10 +10,10 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTSIZE__
-#define __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTSIZE__
+#ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_CONSTRAINTS_ASN1CONSTRAINTSIZE__
+#define __HOTPLACE_SDK_IO_ASN1_BASIC_CONSTRAINTS_ASN1CONSTRAINTSIZE__
 
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint.hpp>
+#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint.hpp>
 
 namespace hotplace {
 namespace io {

@@ -10,12 +10,12 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTNOTATIONVISOTOR__
-#define __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTNOTATIONVISOTOR__
+#ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_CONSTRAINTS_ASN1CONSTRAINTNOTATIONVISOTOR__
+#define __HOTPLACE_SDK_IO_ASN1_BASIC_CONSTRAINTS_ASN1CONSTRAINTNOTATIONVISOTOR__
 
 #include <hotplace/sdk/base/nostd/set.hpp>
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint_visitor.hpp>
-#include <hotplace/sdk/io/asn.1/constraints/types.hpp>
+#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/constraints/types.hpp>
 
 namespace hotplace {
 namespace io {

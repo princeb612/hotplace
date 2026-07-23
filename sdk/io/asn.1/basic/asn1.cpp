@@ -15,15 +15,18 @@
 #include <hotplace/sdk/base/encoding/base16.hpp>
 #include <hotplace/sdk/base/nostd/atoi.hpp>
 #include <hotplace/sdk/base/system/ieee754.hpp>
-#include <hotplace/sdk/io/asn.1/asn1.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_any.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_builtin_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_container.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_der_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_notation_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_tagged_type.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_weak_typed.hpp>
 #include <hotplace/sdk/io/asn.1/basic/builtin/asn1_bitstring.hpp>
 #include <hotplace/sdk/io/asn.1/basic/builtin/asn1_integer.hpp>
 #include <hotplace/sdk/io/basic/oid.hpp>
@@ -54,7 +57,7 @@ asn1& asn1::operator=(const asn1& other) {
 
 asn1* asn1::clone() { return new asn1(*this); }
 
-asn1_object* asn1::build(asn1_entity_t entity, std::function<void(asn1_object*)> f) {
+asn1_object* asn1::make_builtin_type(asn1_entity_t entity, std::function<void(asn1_object*)> f) {
     asn1_object* object = nullptr;
     switch (entity) {
         case asn1_entity_integer:
@@ -128,97 +131,61 @@ asn1& asn1::add(asn1_object* item, std::function<void(asn1_object*)> f) {
 asn1& asn1::operator<<(asn1_object* item) { return add(item); }
 
 return_t asn1::read(const byte_t* stream, size_t size, size_t& pos) {
-    // without notation, weakly-typed raw TLV tree
-    return_t ret = errorcode_t::success;
+    asn1_weak_typed awt;
+    auto test = awt.read(stream, size, pos);
+    if (errorcode_t::success != test) return test;
 
-    if (pos >= size) return errorcode_t::bad_data;
+    // build asn1_object
+    // auto value = object->instantiate();
+    // ret = asn1_encode::read(stream, size, pos, entity, len, value);
 
-    uint8 ident = 0;
-    uint64 tag = 0;
-    size_t len = 0;
+    using asn1_tlv_t = asn1_weak_typed::asn1_tlv_t;
+    // using TLV_tree = t_tree<asn1_tlv_t>;
+    using TLV_node = t_treenode<asn1_tlv_t>;
 
-    ret = asn1_encode::read_identifier(stream, size, pos, ident, tag);  // T
-    if (errorcode_t::success != ret) return ret;
-    ret = asn1_encode::read_length(stream, size, pos, len);  // L
-    if (errorcode_t::success != ret) return ret;
+    auto lambda = [&](TLV_node* node) -> void {
+        if (node->is_leaf()) {
+            const auto& leaf_tlv = node->get();
+            asn1_object* obj = nullptr;
 
-    if (pos + len > size) return errorcode_t::bad_data;
+            if (asn1_class_universal == (leaf_tlv.ident & asn1_class_mask)) {
+                obj = new asn1_builtin_type((asn1_entity_t)leaf_tlv.tag);
+            } else {
+                obj = new asn1_tagged_type(leaf_tlv.ident & asn1_class_mask, leaf_tlv.tag, leaf_tlv.mode, new asn1_any);
+            }
+            if (leaf_tlv.ident & asn1_tag_constructed) {
+                obj->as_constructed();
+            }
 
-    asn1_object* object = nullptr;
-    asn1_value* value = nullptr;
-
-    auto entity = (asn1_entity_t)tag;
-    uint8 class_value = ident & asn1_class_mask;
-    uint8 pcbit = ident & asn1_tag_mask;
-    if (asn1_class_universal == class_value) {
-        // UNIVERSAL
-        object = build(entity);
-    } else {
-        // APPLICATION, PRIVATE, Context-specific
-        object = new asn1_tagged_type(class_value, entity, asn1_automatic, new asn1_any);
-
-        // check IMPLICIT
-        if (asn1_tag_primitive == pcbit) {
-            // Primitive and APPLICATION, PRIVATE, Context-specific
-            // cf. EXPLICIT has Constructed bit
-            object->get_tag()->as_implicit();
-        } else if (asn1_tag_constructed == pcbit) {
-            object->as_constructed();
-
-            return_t test = errorcode_t::success;
-            size_t tpos = pos;
-            uint8 tident = 0;
-            uint64 ttag = 0;
-            size_t tlen = 0;
-            __try2 {
-                test = asn1_encode::read_identifier(stream, size, tpos, tident, ttag);
-                if (errorcode_t::success != test) __leave2;
-                test = asn1_encode::read_length(stream, size, tpos, tlen);
-                if (errorcode_t::success != test) __leave2;
-
-                if (asn1_class_application == class_value || asn1_class_private == class_value) {
-                    if (asn1_class_universal == (tident & asn1_class_mask)) {
-                        object->get_tag()->as_explicit();
-                    } else {
-                        // maybe implicit (not 100%)
-                    }
+            auto temp = node->parent();
+            while (awt._tree.root() != temp) {
+                const auto& tlv = temp->get();
+                obj = new asn1_tagged_type(tlv.ident & asn1_class_mask, tlv.tag, tlv.mode, obj);
+                if (tlv.ident & asn1_tag_constructed) {
+                    obj->as_constructed();
                 }
+                temp = temp->parent();
             }
-            __finally2 {}
-        }
-    }
 
-    value = object->instantiate();
+            asn1_object* type = obj;
+            asn1_value* value = obj->instantiate();
 
-    _types.push_back(object);
-    _values.push_back(value);
-
-    if (asn1_class_universal != class_value) {
-        if (asn1_tag_primitive == pcbit) {
-            variant vt(stream + pos, len);
-            value->set(std::move(vt));
-            pos += len;
-        } else {
-#if 0
-            // TODO TL TLV
-            size_t limit = pos + len;
-            while (pos < limit) {
-                ret = read(object, stream, size, pos);
-                if (errorcode_t::success != ret) return ret;
+            if (asn1_class_universal == (leaf_tlv.ident & asn1_class_mask)) {
+                auto pos = leaf_tlv.pos;
+                asn1_encode::read(stream, size, pos, (asn1_entity_t)leaf_tlv.tag, leaf_tlv.len, value);
+            } else {
+                variant vt(stream + leaf_tlv.pos, leaf_tlv.len);
+                value->set(std::move(vt));
             }
-            pos = limit;
-#else
-            // temporary
-            variant vt(stream + pos, len);
-            value->set(std::move(vt));
-            pos += len;
-#endif
-        }
-    } else {
-        ret = asn1_encode::read(stream, size, pos, entity, len, value);
-    }
 
-    return ret;
+            _types.push_back(type);
+            _values.push_back(value);
+        }
+    };
+    t_tree_visitor<asn1_tlv_t> visitor(lambda);
+    visitor.visit(&awt._tree);
+
+    return errorcode_t::success;
 }
 
 void asn1::for_each(std::function<void(asn1_object*)> f) const {

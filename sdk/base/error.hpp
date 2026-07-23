@@ -264,7 +264,7 @@ enum class errorcode_t : uint32 {
     /* 0xef010043 4009820227 */ not_specified,
     /* 0xef010044 4009820228 */ negotiation_failure,
     /* 0xef010045 4009820229 */ illegal_parameter,
-    /* 0xef010046 4009820230 */ reserved4,
+    /* 0xef010046 4009820230 */ too_large_data,
     /* 0xef010047 4009820231 */ violation,
     /* 0xef010048 4009820232 */ ambiguous,
     /* 0xef010049 4009820233 */ miscast_unsigned,
@@ -411,35 +411,7 @@ typedef struct _error_description {
 enum errorflag_t {
     wsaerror = 1,
 };
-static inline return_t get_lasterror(int code, int flags = 0) {
-    return_t ret = errorcode_t::success;
-#if defined __linux__
-    // errno.h 1~133
-    // netdb.h -1~-105 to errorcode_t
-    if (code < 0) {
-        if (EAI_SYSTEM == code) {
-            ret = (errno > 0) ? errno : static_cast<uint32>(errorcode_t::internal_error);
-        } else {
-            // POSIX errno
-            // kernel error code
-            // EAI_
-            uint32 eai_offset_code = static_cast<uint32>(errorcode_t::error_eai_base) + static_cast<uint32>(-code);
-            ret = eai_offset_code;
-        }
-    } else if (code > 0) {
-        ret = code;
-    } else {
-        ret = errorcode_t::success;
-    }
-#elif defined _WIN32 || defined _WIN64
-    if (0 == flags) {
-        ret = GetLastError();
-    } else if (errorflag_t::wsaerror & flags) {
-        ret = WSAGetLastError();
-    }
-#endif
-    return ret;
-}
+return_t get_lasterror(int code, int flags = 0);
 
 }  // namespace hotplace
 

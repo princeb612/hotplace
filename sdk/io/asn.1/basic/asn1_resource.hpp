@@ -10,8 +10,8 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_ASN1RESOURCE__
-#define __HOTPLACE_SDK_IO_ASN1_ASN1RESOURCE__
+#ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_ASN1RESOURCE__
+#define __HOTPLACE_SDK_IO_ASN1_BASIC_ASN1RESOURCE__
 
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/io/asn.1/types.hpp>

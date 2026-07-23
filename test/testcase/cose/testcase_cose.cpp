@@ -112,6 +112,9 @@ void test_keygen(crypto_key* key) {
     keychain.add_ec2(key, ec_curve_t::ec_p521, keydesc("kid_ec521", crypto_use_t::use_any));
     keychain.add_ec2(key, ec_curve_t::ec_x25519, keydesc("kid_x25519", crypto_use_t::use_enc));
     keychain.add_ec2(key, ec_curve_t::ec_ed25519, keydesc("kid_ed25519", crypto_use_t::use_sig));
+    keychain.add_ossl3(key, nid_ml_dsa_44, keydesc("kid_mldsa44", crypto_use_t::use_sig));
+    keychain.add_ossl3(key, nid_ml_dsa_65, keydesc("kid_mldsa65", crypto_use_t::use_sig));
+    keychain.add_ossl3(key, nid_ml_dsa_87, keydesc("kid_mldsa87", crypto_use_t::use_sig));
     key->for_each(dump_crypto_key, nullptr);
     _test_case.assert(key->size() > 0, __FUNCTION__, "key generation");
 }
@@ -121,7 +124,8 @@ const cose_alg_t enc_algs[] = {
     cose_aesccm_64_64_256, cose_aesccm_16_128_128, cose_aesccm_16_128_256, cose_aesccm_64_128_128, cose_aesccm_64_128_256,
 };
 const cose_alg_t sign_algs[] = {
-    cose_es256, cose_es384, cose_es512, cose_eddsa, cose_ps256, cose_ps384, cose_ps512, cose_es256k, cose_rs256, cose_rs384, cose_rs512, cose_rs1,
+    cose_es256, cose_es384, cose_es512, cose_eddsa, cose_ps256,   cose_ps384,   cose_ps512,   cose_es256k,
+    cose_rs256, cose_rs384, cose_rs512, cose_rs1,   cose_mldsa44, cose_mldsa65, cose_mldsa87,
 };
 const cose_alg_t mac_algs[] = {
     cose_hs256_64, cose_hs256, cose_hs384, cose_hs512, cose_aesmac_128_64, cose_aesmac_256_64, cose_aesmac_128_128, cose_aesmac_256_128,

@@ -15,8 +15,8 @@
 
 #include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraints.hpp>
 #include <hotplace/sdk/io/asn.1/basic/types.hpp>
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraints.hpp>
 
 namespace hotplace {
 namespace io {
@@ -105,8 +105,8 @@ class asn1_object {
     asn1_object& as_default();
     asn1_object& as_optional();
 
-    asn1_object& as_primitive(bool cascade = true);
-    asn1_object& as_constructed(bool cascade = true);
+    asn1_object& as_primitive();
+    asn1_object& as_constructed();
 
     // suppress identifier octets
     asn1_object& suppress();

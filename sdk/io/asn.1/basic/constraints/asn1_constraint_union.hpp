@@ -10,10 +10,10 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTUNION__
-#define __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTUNION__
+#ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_CONSTRAINTS_ASN1CONSTRAINTUNION__
+#define __HOTPLACE_SDK_IO_ASN1_BASIC_CONSTRAINTS_ASN1CONSTRAINTUNION__
 
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint.hpp>
+#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint.hpp>
 
 namespace hotplace {
 namespace io {

@@ -10,10 +10,10 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTSINGLEVALUE__
-#define __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTSINGLEVALUE__
+#ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_CONSTRAINTS_ASN1CONSTRAINTSINGLEVALUE__
+#define __HOTPLACE_SDK_IO_ASN1_BASIC_CONSTRAINTS_ASN1CONSTRAINTSINGLEVALUE__
 
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint.hpp>
+#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint.hpp>
 
 namespace hotplace {
 namespace io {
@@ -40,7 +40,7 @@ class asn1_constraint_single_value : public asn1_constraint<T> {
     virtual bool is_applicable(asn1_entity_t entity) const { return true; }
 
    protected:
-    asn1_constraint_single_value() : asn1_constraint<T>(asn1_entity_constraint_single), _value(_T()) {}
+    asn1_constraint_single_value() : asn1_constraint<T>(asn1_entity_constraint_single), _value(T()) {}
     asn1_constraint_single_value(const asn1_constraint_single_value& other) : asn1_constraint_single_value() { *this = other; }
     asn1_constraint_single_value(asn1_constraint_single_value&& other) : asn1_constraint_single_value() { *this = std::move(other); }
     asn1_constraint_single_value& operator=(const asn1_constraint_single_value& other) {

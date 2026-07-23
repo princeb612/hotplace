@@ -12,7 +12,7 @@
  */
 
 #include <hotplace/sdk/base/stream/vtprintf.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_information_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
 #include <set>

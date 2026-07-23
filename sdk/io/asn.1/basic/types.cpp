@@ -11,9 +11,10 @@
  *
  */
 
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_enum.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/basic/types.hpp>
 
 namespace hotplace {
 namespace io {

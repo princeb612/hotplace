@@ -326,7 +326,7 @@ void test_x690_encoding_value() {
         {asn1_entity_integer, variant(123456789), "123456789", "02 04 07 5B CD 15"},
         {asn1_entity_integer, variant(2147483647), "2147483647", "02 04 7f ff ff ff"},
 
-        {asn1_entity_integer, variant(4294967295), "4294967295", "020500ffffffff"},
+        {asn1_entity_integer, variant(4294967295LL), "4294967295", "020500ffffffff"},
         {asn1_entity_integer, variant(4294967296), "4294967296", "02 05 01 00 00 00 00"},
         {asn1_entity_integer, variant(1099511627775), "1099511627775", "02 06 00 ff ff ff ff ff"},
         {asn1_entity_integer, variant(1152921504606846975), "1152921504606846975", "02080fffffffffffffff"},
@@ -543,13 +543,13 @@ void test_x690_encoding_typevalue() {
     // X.690 8.14 encoding of a value of a prefixed type
     // case 1. Type1 ::= VisibleString
     auto type1 = asn1_referenced_type::define("Type1", asn1_entity_visiblestring);
-    // case 2. Type2 ::= [Application 3] implicit Type1
+    // case 2. Type2 ::= [Application 3] IMPLICIT Type1
     auto type2 = asn1_referenced_type::define("Type2", new asn1_tagged_type(asn1_class_application, 3, asn1_implicit, type1->clone()));
     // case 3. Type3 ::= [2] Type2
     auto type3 = asn1_referenced_type::define("Type3", new asn1_tagged_type(asn1_class_context, 2, asn1_explicit, type2->clone()));
-    // case 4. Type4 ::= [Application 7] implicit Type3
+    // case 4. Type4 ::= [Application 7] IMPLICIT Type3
     auto type4 = asn1_referenced_type::define("Type4", new asn1_tagged_type(asn1_class_application, 7, asn1_implicit, type3->clone()));
-    // case 5. Type5 ::= [2] implicit Type2
+    // case 5. Type5 ::= [2] IMPLICIT Type2
     auto type5 = asn1_referenced_type::define("Type5", new asn1_tagged_type(asn1_class_context, 2, asn1_implicit, type2->clone()));
 
     struct testvector {
@@ -590,18 +590,6 @@ void test_x690_encoding_typevalue() {
         {new asn1_builtin_type(asn1_entity_generalizedtime), variant(datetime_t(1992, 7, 22, 13, 21, 00, 3)), "18 11 31 39 39 32 30 37 32 32 31 33 32 31 30 30 2E 33 5A",
          "X.690 11.7 #3"},  // 19920722132100.3Z
 
-        // X.690 8.14 encoding of a tagged value
-        // case 1. Type1 ::= VisibleString
-        {type1, variant("Jones"), "1A 05 4A 6F 6E 65 73", "X.690 8.14 Type1"},
-        // case 2. Type2 ::= [Application 3] implicit Type1
-        {type2, variant("Jones"), "43 05 4A 6F 6E 65 73", "X.690 8.14 Type2"},
-        // case 3. Type3 ::= [2] Type2
-        {type3, variant("Jones"), "a2 07 43 05 4A 6F 6E 65 73", "X.690 8.14 Type3"},
-        // case 4. Type4 ::= [Application 7] implicit Type3
-        {type4, variant("Jones"), "67 07 43 05 4A 6F 6E 65 73", "X.690 8.14 Type4"},
-        // case 5. Type5 ::= [2] implicit Type2
-        {type5, variant("Jones"), "82 05 4A 6F 6E 65 73", "X.690 8.14 Type5"},
-
         // X.690 8.19 object identifier
         // http://oid-info.com/cgi-bin/display?tree=
         // ITU-T(0)
@@ -631,6 +619,18 @@ void test_x690_encoding_typevalue() {
         {new asn1_builtin_type(asn1_entity_printstring), variant("Test User 1"), "13 0b 54 65 73 74 20 55 73 65 72 20 31", "X.690 8.23 PrintableString"},
         {new asn1_builtin_type(asn1_entity_t61string), variant("cl'es publiques"), "14 0f 63 6c 27 65 73 20 70 75 62 6c 69 71 75 65 73",
          "X.690 8.23 T61String"},  // // replace Â C2 for ' 27
+
+        // X.690 8.14 encoding of a tagged value
+        // case 1. Type1 ::= VisibleString
+        {type1, variant("Jones"), "1A 05 4A 6F 6E 65 73", "X.690 8.14 Type1"},
+        // case 2. Type2 ::= [Application 3] IMPLICIT Type1
+        {type2, variant("Jones"), "43 05 4A 6F 6E 65 73", "X.690 8.14 Type2"},
+        // case 3. Type3 ::= [2] Type2
+        {type3, variant("Jones"), "a2 07 43 05 4A 6F 6E 65 73", "X.690 8.14 Type3"},
+        // case 4. Type4 ::= [Application 7] IMPLICIT Type3
+        {type4, variant("Jones"), "67 07 43 05 4A 6F 6E 65 73", "X.690 8.14 Type4"},
+        // case 5. Type5 ::= [2] IMPLICIT Type2
+        {type5, variant("Jones"), "82 05 4A 6F 6E 65 73", "X.690 8.14 Type5"},
     };
 
     for (auto item : _table) {

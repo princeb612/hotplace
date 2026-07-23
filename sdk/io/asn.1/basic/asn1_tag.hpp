@@ -27,16 +27,16 @@ class asn1_tag : public asn1_object {
     friend class asn1_tagged_type;
 
    public:
-    asn1_tag(int ctype, int cnumber = 0, int tmode = asn1_automatic);
+    asn1_tag(uint8 ctype, uint64 cnumber = 0, uint8 tmode = asn1_automatic);
     asn1_tag(const asn1_tag& other);
     virtual ~asn1_tag();
 
     virtual asn1_tag* clone();
     virtual asn1_tag* addref();
 
-    int get_class() const;
-    int get_class_number() const;
-    int get_tag_type() const;
+    uint8 get_class() const;
+    uint64 get_class_number() const;
+    uint8 get_tag_type() const;
     bool is_implicit() const;
     bool is_explicit() const;
 
@@ -47,12 +47,12 @@ class asn1_tag : public asn1_object {
    protected:
     virtual void represent(stream_t* s, const asn1_value* value = nullptr) const;
     virtual bool represent(binary_t* b, const asn1_value* value = nullptr, uint16 flags = 0) const;
-    void test_constructed();
+    void test_and_set_constructed();
 
    private:
-    int _class_type;    // Application
-    int _class_number;  // 1
-    int _tag_mode;      // implicit
+    uint8 _class_type;     // Application
+    uint64 _class_number;  // 1
+    uint8 _tag_mode;       // implicit
 };
 
 }  // namespace io

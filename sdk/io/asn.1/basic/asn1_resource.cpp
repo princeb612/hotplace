@@ -12,7 +12,7 @@
  */
 
 #include <hotplace/sdk/base/string/string.hpp>  // format
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
 
 namespace hotplace {
 namespace io {

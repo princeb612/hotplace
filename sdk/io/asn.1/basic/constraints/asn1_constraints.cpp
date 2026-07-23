@@ -11,10 +11,10 @@
  *
  */
 
-#include <hotplace/sdk/io/asn.1/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint.hpp>
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraints.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
+#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint.hpp>
+#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraints.hpp>
 
 namespace hotplace {
 namespace io {

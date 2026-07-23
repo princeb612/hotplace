@@ -11,12 +11,12 @@
  *
  */
 
-#include <hotplace/sdk/io/asn.1/asn1.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_ast_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_container.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_referenced_type.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_tag.hpp>
 
 namespace hotplace {
@@ -81,11 +81,15 @@ asn1_ast_descriptor asn1_ast_visitor::describe(const asn1_object* object) const 
         case asn1_entity_tagged_type:
         case asn1_entity_choice:
         case asn1_entity_sequence:
+        case asn1_entity_set: {
+            if (false == name.empty()) desc.name = name;
+            syntax << get_entity_name(object, true);
+        } break;
         case asn1_entity_sequence_of:
-        case asn1_entity_set:
         case asn1_entity_set_of: {
             if (false == name.empty()) desc.name = name;
             syntax << get_entity_name(object, true);
+            object->get_constraints().represent(&desc.cons, object, nullptr);
         } break;
         case asn1_entity_referenced_type: {
             auto ref = (asn1_referenced_type*)object;
@@ -121,12 +125,7 @@ asn1_ast_descriptor asn1_ast_visitor::describe(const asn1_object* object) const 
     return desc;
 }
 
-return_t print_ast(const asn1_object* object, basic_stream& bs, uint32 flags) {
-    if (nullptr == object) return errorcode_t::invalid_parameter;
-
-    asn1_ast_visitor visitor;
-    auto tree = visitor.visit(object);
-
+static return_t print_ast(t_tree<asn1_ast_descriptor>* tree, basic_stream& bs, uint32 flags) {
     bool ansicolor = (flags & asn1_ast_flag_ansicolor);
 
     if (ansicolor) bs << ANSI_ESCAPE << "1;32m";
@@ -178,6 +177,15 @@ return_t print_ast(const asn1_object* object, basic_stream& bs, uint32 flags) {
     return errorcode_t::success;
 }
 
+return_t print_ast(const asn1_object* object, basic_stream& bs, uint32 flags) {
+    if (nullptr == object) return errorcode_t::invalid_parameter;
+
+    asn1_ast_visitor visitor;
+    auto tree = visitor.visit(object);
+
+    return print_ast(tree, bs, flags);
+}
+
 return_t print_ast(const asn1* object, basic_stream& bs, uint32 flags) {
     if (nullptr == object) return errorcode_t::invalid_parameter;
 
@@ -186,55 +194,7 @@ return_t print_ast(const asn1* object, basic_stream& bs, uint32 flags) {
     asn1_ast_visitor visitor;
     object->for_each([&](asn1_object* item) -> void { visitor.visit(item, tree->root()); });
 
-    bool ansicolor = (flags & asn1_ast_flag_ansicolor);
-
-    if (ansicolor) bs << ANSI_ESCAPE << "1;32m";
-    bs << "AST";
-    if (ansicolor) bs << ANSI_ESCAPE << "0m";
-    bs << "\n";
-
-    auto lambda = [&](t_treenode<asn1_ast_descriptor>* node) -> void {
-        if (node) {
-            int depth = node->depth();
-            auto& descriptor = node->_data;
-
-            bs.fill(depth << 1, ' ');
-            bs << "- ";
-            if (false == descriptor.name.empty()) {
-                if (ansicolor) bs << ANSI_ESCAPE << "1;36m";
-                bs << descriptor.name;
-                if (ansicolor) bs << ANSI_ESCAPE << "0m";
-                bs << " ";
-            }
-            if (ansicolor) bs << ANSI_ESCAPE << "1;33m";
-            bs << descriptor.syntax;
-            if (ansicolor) bs << ANSI_ESCAPE << "0m";
-            bs << "\n";
-
-            if (false == descriptor.detail.empty()) {
-                bs.fill((depth + 1) << 1, ' ');
-                bs << "- ";
-                if (ansicolor) bs << ANSI_ESCAPE << "1;33m";
-                bs << descriptor.detail;
-                if (ansicolor) bs << ANSI_ESCAPE << "0m";
-                bs << "\n";
-            }
-            if (false == descriptor.cons.empty()) {
-                bs.fill((depth + 1) << 1, ' ');
-                bs << "- [constraints]";
-                if (ansicolor) bs << ANSI_ESCAPE << "1;33m";
-                bs << descriptor.cons;
-                if (ansicolor) bs << ANSI_ESCAPE << "0m";
-                bs << "\n";
-            }
-        }
-    };
-
-    t_tree_visitor<asn1_ast_descriptor> treevisitor(lambda);
-    treevisitor.visit(tree);
-    tree->release();
-
-    return errorcode_t::success;
+    return print_ast(tree, bs, flags);
 }
 
 }  // namespace io

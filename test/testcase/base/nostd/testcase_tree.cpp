@@ -22,9 +22,9 @@ void test_tree() {
     using tree = t_tree<std::string>;
     tree ast;
     ast.add("SEQUENCE", [](treenode* node) -> void {
-        (*node)
-            .add_child("builtin type", [](treenode* node) -> void { treenode::add("name VisibleString", node); })
-            .add_child("builtin type", [](treenode* node) -> void { treenode::add("ok BOOLEAN", node); });
+        (*node).add_child("builtin type", [](treenode* child) -> void { child->add_child("name VisibleString"); }).add_child("builtin type", [](treenode* child) -> void {
+            child->add_child("ok BOOLEAN");
+        });
     });
 
     t_tree_visitor<std::string> visitor([&](treenode* node) -> void {

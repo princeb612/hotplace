@@ -20,7 +20,7 @@
 #include <hotplace/sdk/base/nostd/binary.hpp>
 #include <hotplace/sdk/base/pattern/regex.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
 #include <hotplace/sdk/io/basic/oid.hpp>
 
@@ -508,7 +508,7 @@ asn1_encode& asn1_encode::write(binary_t& bin, asn1_entity_t entity, const varia
                 base128_encode((oid[0] * 40) + oid[1], bin);
                 size_t size = oid.size();
                 for (size_t i = 2; i < size; ++i) {
-                    uint32 node = oid[i];
+                    auto node = oid[i];
                     if (0 == node) {
                         break;
                     } else {
@@ -523,7 +523,7 @@ asn1_encode& asn1_encode::write(binary_t& bin, asn1_entity_t entity, const varia
 
             size_t size = oid.size();
             for (size_t i = 0; i < size; ++i) {
-                uint32 node = oid[i];
+                auto node = oid[i];
                 if (0 == node) {
                     break;
                 } else {

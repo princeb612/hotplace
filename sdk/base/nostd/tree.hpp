@@ -23,6 +23,9 @@ template <typename TYPE> class t_tree_visitor;
 template <typename TYPE> class t_tree;
 // clang-format on
 
+/**
+ * AST (Abstract Syntax Tree), DFS (Depth-First Search)
+ */
 template <typename TYPE>
 struct t_treenode {
     TYPE _data;
@@ -66,9 +69,14 @@ struct t_treenode {
         return node;
     }
 
+    t_treenode<TYPE>& add_child(const TYPE& data) {
+        add(data, this);
+        return *this;
+    }
+
     t_treenode<TYPE>& add_child(const TYPE& data, std::function<void(t_treenode<TYPE>*)> func) {
         auto node = add(data, this);
-        func(node);
+        if (func) func(node);
         return *this;
     }
 
@@ -88,6 +96,10 @@ struct t_treenode {
         }
         return depth;
     }
+
+    const TYPE& get() const { return _data; }
+    bool is_leaf() { return _children.empty(); }
+    t_treenode<TYPE>* parent() { return _parent; }
 };
 
 template <typename TYPE>
@@ -112,14 +124,20 @@ class t_tree_visitor {
  * @brief   tree
  * @example
  *          // sketch
+ *          - SEQUENCE
+ *            - builtin type
+ *              - name VisibleString
+ *            - builtin type
+ *              - ok BOOLEAN
+ *
  *          using treenode = t_treenode<std::string>;
  *          using tree = t_tree<std::string>;
  *
  *          tree ast;
  *          ast.add("SEQUENCE", [](treenode* node) -> void {
  *              (*node)
- *                  .add_child("builtin type", [](treenode* node) -> void { treenode::add("name VisibleString", node); })
- *                  .add_child("builtin type", [](treenode* node) -> void { treenode::add("name VisibleString", node); });
+ *                  .add_child("builtin type", [](treenode* child) -> void { child->add_child("name VisibleString"); })
+ *                  .add_child("builtin type", [](treenode* child) -> void { child->add_child("ok BOOLEAN"); });
  *          });
  *
  *          t_tree_visitor<std::string> visitor([&](treenode* node) -> void {
@@ -136,13 +154,14 @@ class t_tree_visitor {
 template <typename TYPE>
 class t_tree {
    public:
-    t_tree() : _root(t_treenode<TYPE>::add(TYPE(), nullptr)) { _shared.make_share(this); }
+    t_tree() : _root(t_treenode<TYPE>::add(TYPE(), nullptr)), _size(0) { _shared.make_share(this); }
     ~t_tree() { delete _root; }
 
     t_treenode<TYPE>* root() const { return _root; }
 
     t_treenode<TYPE>* add_node(const TYPE& data, t_treenode<TYPE>* parent) {
         auto node = t_treenode<TYPE>::add(data, parent ? parent : _root);
+        ++_size;
         return node;
     }
 
@@ -157,7 +176,10 @@ class t_tree {
         return *this;
     }
 
-    void clear() { _root->clear(); }
+    void clear() {
+        _root->clear();
+        _size = 0;
+    }
 
     void accept(t_tree_visitor<TYPE>* visitor) {
         for (auto& child : _root->_children) {
@@ -165,12 +187,16 @@ class t_tree {
         }
     }
 
+    size_t size() { return _size; }
+    bool empty() { return 0 == _size; }
+
     void addref() { _shared.addref(); }
     void release() { _shared.delref(); }
 
    protected:
    private:
     t_treenode<TYPE>* _root;
+    size_t _size;
     t_shared_reference<t_tree<TYPE>> _shared;
 };
 

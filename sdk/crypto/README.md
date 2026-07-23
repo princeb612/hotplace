@@ -91,6 +91,7 @@ mindmap
   * IANA
     * https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml
   * JSON parser performance comparison
+    * https://www.iana.org/assignments/jose/jose.xhtml
     * https://github.com/miloyip/nativejson-benchmark
     * https://github.com/fabienrenaud/java-json-benchmark
   * openssl documentation

@@ -658,10 +658,12 @@ bool variant::operator==(const variant& other) const {
             case vartype_t::TYPE_UINT64:
                 ret = (_vt.data.ui64 == other._vt.data.ui64);
                 break;
+#if defined __SIZEOF_INT128__
             case vartype_t::TYPE_INT128:
             case vartype_t::TYPE_UINT128:
                 ret = (_vt.data.ui128 == other._vt.data.ui128);
                 break;
+#endif
             case vartype_t::TYPE_FLOAT:
                 ret = (_vt.data.f == other._vt.data.f);
                 break;

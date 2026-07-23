@@ -13,16 +13,16 @@
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_ast_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_container.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_der_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_notation_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_tag.hpp>
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
+#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint.hpp>
 
 namespace hotplace {
 namespace io {
@@ -205,23 +205,13 @@ asn1_object& asn1_object::as_optional() {
     return *this;
 }
 
-asn1_object& asn1_object::as_primitive(bool cascade) {
+asn1_object& asn1_object::as_primitive() {
     _ident &= ~asn1_tag_constructed;
-    if (cascade) {
-        if (_object) {
-            _object->_ident &= ~asn1_tag_constructed;
-        }
-    }
     return *this;
 }
 
-asn1_object& asn1_object::as_constructed(bool cascade) {
+asn1_object& asn1_object::as_constructed() {
     _ident |= asn1_tag_constructed;
-    if (cascade) {
-        if (_object) {
-            _object->_ident |= asn1_tag_constructed;
-        }
-    }
     return *this;
 }
 

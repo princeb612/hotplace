@@ -10,10 +10,10 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTVISOTOR__
-#define __HOTPLACE_SDK_IO_ASN1_CONSTRAINTS_ASN1CONSTRAINTVISOTOR__
+#ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_CONSTRAINTS_ASN1CONSTRAINTVISOTOR__
+#define __HOTPLACE_SDK_IO_ASN1_BASIC_CONSTRAINTS_ASN1CONSTRAINTVISOTOR__
 
-#include <hotplace/sdk/io/asn.1/constraints/types.hpp>
+#include <hotplace/sdk/io/asn.1/basic/constraints/types.hpp>
 
 namespace hotplace {
 namespace io {

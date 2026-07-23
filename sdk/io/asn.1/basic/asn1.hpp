@@ -10,11 +10,13 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_ASN1__
-#define __HOTPLACE_SDK_IO_ASN1_ASN1__
+#ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_ASN1__
+#define __HOTPLACE_SDK_IO_ASN1_BASIC_ASN1__
 
 #include <hotplace/sdk/base/basic/variant.hpp>
+#include <hotplace/sdk/base/nostd/tree.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_weak_typed.hpp>
 #include <hotplace/sdk/io/asn.1/types.hpp>
 // #include <hotplace/sdk/io/basic/parser.hpp>
 
@@ -31,7 +33,7 @@ class asn1 {
 
     asn1* clone();
 
-    static asn1_object* build(asn1_entity_t entity, std::function<void(asn1_object*)> f = nullptr);
+    static asn1_object* make_builtin_type(asn1_entity_t entity, std::function<void(asn1_object*)> f = nullptr);
 
     asn1& add(asn1_object* item);
     asn1& add(asn1_object* item, std::function<void(asn1_object*)> f);

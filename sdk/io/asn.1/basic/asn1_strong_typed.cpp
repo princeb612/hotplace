@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   asn1_object_class.cpp
+ * @file   asn1_strong_typed.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -11,22 +11,18 @@
  *
  */
 
-#include <hotplace/sdk/base/stream/vtprintf.hpp>
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_builtin_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_object_class.hpp>
-#include <set>
+#include <hotplace/sdk/io/asn.1/basic/asn1_strong_typed.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_tag.hpp>
 
 namespace hotplace {
 namespace io {
 
-asn1_object_class::asn1_object_class() {}
-
-asn1_object_class::~asn1_object_class() {}
-
-void asn1_object_class::addref() { _shared.addref(); }
-
-void asn1_object_class::release() { _shared.delref(); }
+asn1_strong_typed::asn1_strong_typed() {}
 
 }  // namespace io
 }  // namespace hotplace

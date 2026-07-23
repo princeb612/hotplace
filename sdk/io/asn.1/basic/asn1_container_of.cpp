@@ -11,22 +11,20 @@
  *
  */
 
-#include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_builtin_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_container_of.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_tag.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
 
 namespace hotplace {
 namespace io {
 
 asn1_container_of::asn1_container_of(asn1_entity_t entity, const std::string& name, asn1_entity_t item) : asn1_container_of(entity, name, new asn1_builtin_type(item)) {}
 
-asn1_container_of::asn1_container_of(asn1_entity_t entity, const std::string& name, asn1_object* object) : asn1_type(entity, name, object, nullptr) {
-    as_constructed(false); /* no cascade */
-}
+asn1_container_of::asn1_container_of(asn1_entity_t entity, const std::string& name, asn1_object* object) : asn1_type(entity, name, object, nullptr) { as_constructed(); }
 
 asn1_container_of::~asn1_container_of() {}
 
@@ -37,10 +35,7 @@ asn1_container_of* asn1_container_of::addref() {
     return this;
 }
 
-void asn1_container_of::release() {
-    //
-    asn1_object::release();
-}
+void asn1_container_of::release() { asn1_object::release(); }
 
 void asn1_container_of::represent(stream_t* s, const asn1_value* value) const {
     if (s) {

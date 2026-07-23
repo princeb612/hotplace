@@ -135,7 +135,12 @@ return_t dtls_record_arrange::consume(const sockaddr* addr, socklen_t addrlen, u
 
         critical_section_guard guard(_lock);
         {
-            auto& pool = _pool[cookie];
+            // auto& pool = _pool[cookie];
+            auto piter = _pool.find(cookie);
+            if (_pool.end() == piter) {
+                piter = _pool.emplace(cookie, per_cookie_t()).first;
+            }
+            auto& pool = piter->second;
 
             auto& packets = pool.packets;
             if (packets.empty()) {

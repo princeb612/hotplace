@@ -13,11 +13,11 @@
 
 #include <hotplace/sdk/base/nostd/bit_set.hpp>
 #include <hotplace/sdk/base/stream/vtprintf.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_der_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_notation_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
 #include <set>
 
 namespace hotplace {
@@ -233,7 +233,7 @@ bool asn1_value::encode_namedlist(binary_t& bin, const asn1_object* object, cons
                 // std::bit_set
                 asn1_native_int_t minvalue = *evalues.begin();
                 asn1_native_int_t maxvalue = *evalues.rbegin();
-                bit_set bs(minvalue, maxvalue);
+                t_bit_set<asn1_native_int_t> bs(minvalue, maxvalue);
                 for (const auto& item : evalues) {
                     bs.add(item);
                 }

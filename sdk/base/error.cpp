@@ -47,4 +47,34 @@ std::string return_t::error_message() const {
 
 error_category_t return_t::category() const { return error_advisor::get_instance()->categoryof(*this); }
 
+return_t get_lasterror(int code, int flags) {
+    return_t ret = errorcode_t::success;
+#if defined __linux__
+    // errno.h 1~133
+    // netdb.h -1~-105 to errorcode_t
+    if (code < 0) {
+        if (EAI_SYSTEM == code) {
+            ret = (errno > 0) ? errno : static_cast<uint32>(errorcode_t::internal_error);
+        } else {
+            // POSIX errno
+            // kernel error code
+            // EAI_
+            uint32 eai_offset_code = static_cast<uint32>(errorcode_t::error_eai_base) + static_cast<uint32>(-code);
+            ret = eai_offset_code;
+        }
+    } else if (code > 0) {
+        ret = code;
+    } else {
+        ret = errorcode_t::success;
+    }
+#elif defined _WIN32 || defined _WIN64
+    if (0 == flags) {
+        ret = GetLastError();
+    } else if (errorflag_t::wsaerror & flags) {
+        ret = WSAGetLastError();
+    }
+#endif
+    return ret;
+}
+
 }  // namespace hotplace

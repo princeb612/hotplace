@@ -13,24 +13,24 @@
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_encode.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
-#include <hotplace/sdk/io/asn.1/asn1_value.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_enum.hpp>
-#include <hotplace/sdk/io/asn.1/constraints/asn1_constraint_single_value.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
+#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint_single_value.hpp>
 
 namespace hotplace {
 namespace io {
 
 asn1_enum::asn1_enum() : asn1_enum("") {}
 
-asn1_enum::asn1_enum(const std::string& name) : asn1_type(asn1_entity_enum, name, nullptr) { as_primitive(false); }
+asn1_enum::asn1_enum(const std::string& name) : asn1_type(asn1_entity_enum, name, nullptr) { as_primitive(); }
 
 asn1_enum::asn1_enum(const std::initializer_list<std::pair<std::string, asn1_native_int_t>>& items) : asn1_enum("", items) {}
 
 asn1_enum::asn1_enum(const std::string& name, const std::initializer_list<std::pair<std::string, asn1_native_int_t>>& items)
     : asn1_type(asn1_entity_enum, name, nullptr) {
-    as_primitive(false);
+    as_primitive();
     add(items);
 }
 
