@@ -325,8 +325,11 @@ void test_x690_encoding_value() {
         {asn1_entity_integer, variant(16777215), "16777215", "02 04 00 ff ff ff"},
         {asn1_entity_integer, variant(123456789), "123456789", "02 04 07 5B CD 15"},
         {asn1_entity_integer, variant(2147483647), "2147483647", "02 04 7f ff ff ff"},
-
+#if defined _MSC_VER
         {asn1_entity_integer, variant(4294967295LL), "4294967295", "020500ffffffff"},
+#else
+        {asn1_entity_integer, variant(4294967295), "4294967295", "020500ffffffff"},
+#endif
         {asn1_entity_integer, variant(4294967296), "4294967296", "02 05 01 00 00 00 00"},
         {asn1_entity_integer, variant(1099511627775), "1099511627775", "02 06 00 ff ff ff ff ff"},
         {asn1_entity_integer, variant(1152921504606846975), "1152921504606846975", "02080fffffffffffffff"},
