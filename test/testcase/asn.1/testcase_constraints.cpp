@@ -17,15 +17,15 @@ void test_testvector_constraints() {
     // clang-format off
     auto cons_single_type1 =
         asn1_referenced_type::define("type",
-            asn1_builtin_type::build(asn1_entity_integer,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_integer,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_single_value_i(1));
                         }));
     auto cons_single_type2 =
         asn1_referenced_type::define("type",
-            asn1_builtin_type::build(asn1_entity_integer,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_integer,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_union_i(
                                     new asn1_constraint_single_value_i(1),
@@ -33,22 +33,22 @@ void test_testvector_constraints() {
                         }));
     auto cons_single_type3 =
         asn1_referenced_type::define("type",
-            asn1_builtin_type::build(asn1_entity_integer,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_integer,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_union_i({1, 2, 3, 6}));
                         }));
     auto cons_single_type4 =
         asn1_referenced_type::define("type",
-            asn1_builtin_type::build(asn1_entity_visiblestring,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_visiblestring,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_union_s({"A", "B", "C", "D"}));
                         }));
     auto cons_range_type1 =
         asn1_referenced_type::define("type",
-            asn1_builtin_type::build(asn1_entity_integer,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_integer,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_union_i(
                                     new asn1_constraint_range_i(1, 10),
@@ -57,8 +57,8 @@ void test_testvector_constraints() {
     // 50..100
     auto cons_range_type2 =
         asn1_referenced_type::define("type",
-            asn1_builtin_type::build(asn1_entity_integer,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_integer,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_intersection_i(
                                     new asn1_constraint_range_i(1, 100),
@@ -67,8 +67,8 @@ void test_testvector_constraints() {
     // 1..49 | 51..100
     auto cons_range_type3 =
         asn1_referenced_type::define("type",
-            asn1_builtin_type::build(asn1_entity_integer,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_integer,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_except_i(
                                     new asn1_constraint_range_i(1, 100),
@@ -77,8 +77,8 @@ void test_testvector_constraints() {
     // 1..4 | 6..10 | 20..24 | 26..30
     auto cons_range_type4 =
         asn1_referenced_type::define("type",
-            asn1_builtin_type::build(asn1_entity_integer,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_integer,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_except_i(
                                     new asn1_constraint_union_i(
@@ -90,29 +90,29 @@ void test_testvector_constraints() {
                         }));
     auto cons_range_type5 =
         asn1_referenced_type::define("temperature",
-            asn1_builtin_type::build(asn1_entity_real,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_real,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_range_f(0.0, 100.0));
                         }));
     auto cons_range_type6 =
         asn1_referenced_type::define("positive",
-            asn1_builtin_type::build(asn1_entity_real,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_real,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_range_f(0.0, range_type_t::maxvalue));
                         }));
     auto cons_range_type7 =
         asn1_referenced_type::define("negative",
-            asn1_builtin_type::build(asn1_entity_real,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_real,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_range_f(range_type_t::minvalue, 0.0));
                         }));
     auto cons_range_type8 =
         asn1_referenced_type::define("type",
-            asn1_builtin_type::build(asn1_entity_real,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_real,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_except_f(
                                     new asn1_constraint_range_f(0.0, 100.0),
@@ -120,32 +120,32 @@ void test_testvector_constraints() {
                         }));
     auto cons_size_type1 =
         asn1_referenced_type::define("name",
-            asn1_builtin_type::build(asn1_entity_ia5string,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_ia5string,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_size_i(
                                     new asn1_constraint_single_value_i(1)));
                         }));
     auto cons_size_type2 =
         asn1_referenced_type::define("name",
-            asn1_builtin_type::build(asn1_entity_ia5string,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_ia5string,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_size_i(
                                     new asn1_constraint_union_i({1, 2, 5})));
                         }));
     auto cons_size_type3 =
         asn1_referenced_type::define("name",
-            asn1_builtin_type::build(asn1_entity_ia5string,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_ia5string,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_size_i(
                                     new asn1_constraint_range_i(1, 20)));
                         }));
     auto cons_except_type1 =
         asn1_referenced_type::define("type",
-            asn1_builtin_type::build(asn1_entity_integer,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_integer,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_except_i(
                                     new asn1_constraint_range_i(1, 50),
@@ -153,8 +153,8 @@ void test_testvector_constraints() {
                         }));
     auto cons_allexcept_type1 =
         asn1_referenced_type::define("type",
-            asn1_builtin_type::build(asn1_entity_integer,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_integer,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_all_except_i(
                                     new asn1_constraint_range_i(1, 10)));
@@ -162,38 +162,38 @@ void test_testvector_constraints() {
 
     auto cons_integer_range =
         asn1_referenced_type::define("type",
-            asn1_builtin_type::build(asn1_entity_integer,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_integer,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_range_i(0, 255));
                         }));
     auto cons_octstring_size =
         asn1_referenced_type::define("type",
-            asn1_builtin_type::build(asn1_entity_octstring,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_octstring,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_size_i(
                                     new asn1_constraint_single_value_i(16)));
                         }));
     auto cons_ie5string_alphabet =
         asn1_referenced_type::define("name",
-            asn1_builtin_type::build(asn1_entity_ia5string,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_ia5string,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_from_s(
                                     new asn1_constraint_single_value_s("ABC")));
                         }));
     auto cons_sequence_of_range =
         asn1_referenced_type::define("Numbers",
-            asn1_type::build(new asn1_sequence_of(asn1_entity_integer),
-                        [&](asn1_type* object) -> void {
-                            object->get_constraints().add(
+            asn1_builder::build(new asn1_sequence_of(asn1_entity_integer),
+                        [&](asn1_object* builtin) -> void {
+                            builtin->get_constraints().add(
                                 new asn1_constraint_size_i(
                                     new asn1_constraint_range_i(1, 4)));
                         }));
     auto cons_bitstring = asn1_referenced_type::define("Flags",
-            asn1_builtin_type::build(asn1_entity_bitstring,
-                        [&](asn1_builtin_type* builtin) -> void {
+            asn1_builder::build(asn1_entity_bitstring,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_size_i(
                                     new asn1_constraint_single_value_i(8)));
@@ -202,13 +202,13 @@ void test_testvector_constraints() {
             new asn1_enum({{"red", 0}, {"green", 1}, {"blue", 2}}));
     auto cons_nested = asn1_referenced_type::define("Person",
             new asn1_sequence({
-                asn1_builtin_type::build("age", asn1_entity_integer,
-                        [&](asn1_builtin_type* builtin) -> void {
+                asn1_builder::build("age", asn1_entity_integer,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_range_i(0, 120));
                 }),
-                asn1_builtin_type::build("name", asn1_entity_utf8string,
-                        [&](asn1_builtin_type* builtin) -> void {
+                asn1_builder::build("name", asn1_entity_utf8string,
+                        [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_size_i(
                                     new asn1_constraint_range_i(1, 20)));

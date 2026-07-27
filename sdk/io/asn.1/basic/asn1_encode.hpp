@@ -196,7 +196,7 @@ class asn1_encode {
         }
         return type;
     }
-    static return_t read(const byte_t* stream, size_t size, size_t& pos, asn1_entity_t entity, size_t len, asn1_value* value);
+    static return_t read(const byte_t* stream, size_t size, size_t& pos, asn1_entity_t entity, size_t len, const std::string& name, asn1_value* value);
 
     asn1_encode& write_tlv(binary_t& bin, asn1_entity_t entity, const variant& vt);
     asn1_encode& write(binary_t& bin, asn1_entity_t entity, const variant& vt, bool& do_len);

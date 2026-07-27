@@ -86,9 +86,7 @@ asn1_container& asn1_container::operator<<(const std::initializer_list<asn1_obje
 asn1_container& asn1_container::add(const std::initializer_list<asn1_object*>& items) {
     for (const auto& item : items) {
         if (item) {
-            if (item->is_named_type()) {
-                *this << item;
-            }
+            *this << item;
         }
     }
     return *this;
@@ -98,12 +96,10 @@ asn1_container& asn1_container::operator<<(asn1_object* other) { return add(othe
 
 asn1_container& asn1_container::add(asn1_object* other) {
     if (other) {
-        if (other->is_named_type()) {
-            _list.push_back(other);
-            auto entity = other->get_entity();
-            _map.emplace(entity, other);
-            other->set_parent(this);
-        }
+        _list.push_back(other);
+        auto entity = other->get_entity();
+        _map.emplace(entity, other);
+        other->set_parent(this);
     }
     return *this;
 }

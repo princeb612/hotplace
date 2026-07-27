@@ -24,6 +24,8 @@ namespace hotplace {
 namespace io {
 
 class asn1 {
+    friend class asn1_weak_typed;
+
    public:
     asn1();
     asn1(const asn1& other);
@@ -32,8 +34,6 @@ class asn1 {
     asn1& operator=(const asn1& other);
 
     asn1* clone();
-
-    static asn1_object* make_builtin_type(asn1_entity_t entity, std::function<void(asn1_object*)> f = nullptr);
 
     asn1& add(asn1_object* item);
     asn1& add(asn1_object* item, std::function<void(asn1_object*)> f);
@@ -52,6 +52,8 @@ class asn1 {
     void release();
 
    protected:
+    return_t postread(const byte_t* stream, size_t size);
+
    private:
     t_shared_reference<asn1> _shared;
 

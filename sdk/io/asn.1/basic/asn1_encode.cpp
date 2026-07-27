@@ -151,9 +151,8 @@ return_t asn1_encode::read_length(const byte_t* stream, size_t size, size_t& pos
     return errorcode_t::success;
 }
 
-return_t asn1_encode::read(const byte_t* stream, size_t size, size_t& pos, asn1_entity_t entity, size_t len, asn1_value* value) {
+return_t asn1_encode::read(const byte_t* stream, size_t size, size_t& pos, asn1_entity_t entity, size_t len, const std::string& name, asn1_value* value) {
     return_t ret = errorcode_t::success;
-    const std::string name;
     switch (entity) {
         case asn1_entity_null: {
             // pos += len;  // len == 0
@@ -174,8 +173,10 @@ return_t asn1_encode::read(const byte_t* stream, size_t size, size_t& pos, asn1_
         } break;
         case asn1_entity_integer: {
             bignumber bn(stream + pos, len, false);  // signed integer
-            auto i = bn.t_bntoi<int64>();
-            value->set(name, i);
+            if (bn.signed_byte_capacity() > 8)
+                value->set(name, bn);
+            else
+                value->set(name, bn.t_bntoi<int64>());
             pos += len;
         } break;
         case asn1_entity_real: {
@@ -261,6 +262,7 @@ return_t asn1_encode::read(const byte_t* stream, size_t size, size_t& pos, asn1_
                 }
             }
         } break;
+        case asn1_entity_bitstring:
         case asn1_entity_octstring: {
             auto p = stream + pos;
             auto ostr = base16_encode(p, len);
@@ -284,6 +286,13 @@ return_t asn1_encode::read(const byte_t* stream, size_t size, size_t& pos, asn1_
                     value->set(name, std::move(vt));
                 }
             }
+            pos += len;
+        } break;
+        case asn1_entity_utctime: {
+            char* p = (char*)stream + pos;
+            variant vt(p, len);
+            value->set(name, std::move(vt));
+            pos += len;
         } break;
         case asn1_entity_oid: {
             oid_t oid;
@@ -327,6 +336,7 @@ return_t asn1_encode::read(const byte_t* stream, size_t size, size_t& pos, asn1_
             variant vt(bs);
             value->set(name, std::move(vt));
         } break;
+        case asn1_entity_utf8string:
         case asn1_entity_printstring:
         case asn1_entity_teletexstring:
         case asn1_entity_videotexstring:
@@ -340,8 +350,13 @@ return_t asn1_encode::read(const byte_t* stream, size_t size, size_t& pos, asn1_
             char* p = (char*)stream + pos;
             variant vt(p, len);
             value->set(name, std::move(vt));
+            pos += len;
         } break;
         default: {
+            auto p = stream + pos;
+            auto ostr = base16_encode(p, len);
+            value->set(name, std::move(ostr));
+            pos += len;
         } break;
     }
 

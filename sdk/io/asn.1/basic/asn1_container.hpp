@@ -10,8 +10,8 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_BNASIC_ASN1CONTAINER__
-#define __HOTPLACE_SDK_IO_ASN1_BNASIC_ASN1CONTAINER__
+#ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_ASN1CONTAINER__
+#define __HOTPLACE_SDK_IO_ASN1_BASIC_ASN1CONTAINER__
 
 #include <hotplace/sdk/io/asn.1/basic/asn1_type.hpp>
 

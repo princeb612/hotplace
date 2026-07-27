@@ -277,6 +277,12 @@ bool asn1_value::encode_namedlist(binary_t& bin, const asn1_object* object, cons
     return true;
 }
 
+void asn1_value::for_each(std::function<void(const std::string& name, const variant& vt)> f) {
+    for (const auto& pair : _values) {
+        f(pair.first, pair.second);
+    }
+}
+
 void asn1_value::addref() { _shared.addref(); }
 
 void asn1_value::release() { _shared.delref(); }

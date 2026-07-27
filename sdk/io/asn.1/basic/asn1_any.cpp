@@ -39,7 +39,8 @@ void asn1_any::represent(stream_t* s, const asn1_value* value) const {
 
     if (false == get_name().empty()) s->printf("%s ", get_name().c_str());
     if (value) {
-        value->write(s, get_name());
+        const auto& name = resolve_name();
+        value->write(s, name);
     } else {
         s->printf("%s", resource->get_entity_name(get_ident(), entity).c_str());
     }

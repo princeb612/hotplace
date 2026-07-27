@@ -65,19 +65,6 @@ class asn1_builtin_type : public asn1_type {
 
     virtual asn1_entity_t get_component_entity() const;
 
-    static asn1_builtin_type* build(asn1_entity_t entity, std::function<void(asn1_builtin_type*)> f = nullptr) { return build("", entity, f); }
-
-    static asn1_builtin_type* build(const std::string& name, asn1_entity_t entity, std::function<void(asn1_builtin_type*)> f = nullptr) {
-        asn1_builtin_type* object = nullptr;
-        if (entity < asn1_entity_syntax) {
-            object = new asn1_builtin_type(name, entity);
-            if (object && f) {
-                f(object);
-            }
-        }
-        return object;
-    }
-
    protected:
     virtual void represent(stream_t* s, const asn1_value* value = nullptr) const;
     virtual bool represent(binary_t* b, const asn1_value* value = nullptr, uint16 flags = 0) const;

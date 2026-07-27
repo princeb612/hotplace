@@ -27,13 +27,6 @@ class asn1_type : public asn1_object {
    public:
     virtual ~asn1_type();
 
-    static asn1_type* build(asn1_type* object, std::function<void(asn1_type*)> f = nullptr) {
-        if (object && f) {
-            f(object);
-        }
-        return object;
-    }
-
    protected:
     asn1_type(asn1_entity_t entity, const std::string& name = "", asn1_object* object = nullptr, asn1_tag* tag = nullptr);
 };

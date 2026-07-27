@@ -69,6 +69,7 @@
 /* asn.1/basic */
 #include <hotplace/sdk/io/asn.1/basic/asn1_any.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_ast_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_builder.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_builtin_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_choice.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_container_of.hpp>

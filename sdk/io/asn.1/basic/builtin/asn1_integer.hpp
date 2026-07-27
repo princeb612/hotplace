@@ -10,8 +10,8 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_DETAIL_ASN1INTEGER__
-#define __HOTPLACE_SDK_IO_ASN1_BASIC_DETAIL_ASN1INTEGER__
+#ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_BUILTIN_ASN1INTEGER__
+#define __HOTPLACE_SDK_IO_ASN1_BASIC_BUILTIN_ASN1INTEGER__
 
 #include <hotplace/sdk/io/asn.1/basic/asn1_builtin_type.hpp>
 

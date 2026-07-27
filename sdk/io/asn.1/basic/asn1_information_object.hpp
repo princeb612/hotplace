@@ -10,8 +10,8 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_ASN1INFORMATIONOBJECT__
-#define __HOTPLACE_SDK_IO_ASN1_ASN1INFORMATIONOBJECT__
+#ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_ASN1INFORMATIONOBJECT__
+#define __HOTPLACE_SDK_IO_ASN1_BASIC_ASN1INFORMATIONOBJECT__
 
 #include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>

@@ -59,6 +59,8 @@ class asn1_value {
     void encode_setof_value(binary_t& bin, const asn1_object* object, const std::string& name) const;
     bool encode_namedlist(binary_t& bin, const asn1_object* object, const std::string& name, const std::map<std::string, asn1_native_int_t>& namedlist) const;
 
+    void for_each(std::function<void(const std::string&, const variant& vt)> f);
+
     void addref();
     void release();
 

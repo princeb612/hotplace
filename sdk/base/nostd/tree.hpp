@@ -97,9 +97,18 @@ struct t_treenode {
         return depth;
     }
 
+    void for_each(std::function<void(t_treenode<TYPE>*)> f) const {
+        for (const auto& child : _children) {
+            f(child);
+        }
+    }
+
+    TYPE& get() { return _data; }
     const TYPE& get() const { return _data; }
+    bool is_root() { return nullptr == _parent; }
     bool is_leaf() { return _children.empty(); }
-    t_treenode<TYPE>* parent() { return _parent; }
+    bool is_branch() { return (false == _children.empty()); }
+    t_treenode<TYPE>* parent() const { return _parent; }
 };
 
 template <typename TYPE>
