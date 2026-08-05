@@ -445,27 +445,36 @@ void valist::build() {
 
         /* avoid compiler warning */
 #define va_assign_type_promotion_int(x) int
+#define va_assign_type_promotion_uint(x) uint
 #define va_assign_type_promotion_double(x) double
 
         for (const auto& vt : _args) {
             switch (vt.type) {
                 case vartype_t::TYPE_CHAR:
-                case vartype_t::TYPE_BYTE:
                 case vartype_t::TYPE_INT8:
-                case vartype_t::TYPE_UINT8:
                     va_assign(ap, va_assign_type_promotion_int(char), vt.data.c);
                     break;
+                case vartype_t::TYPE_BYTE:
+                case vartype_t::TYPE_UINT8:
+                    va_assign(ap, va_assign_type_promotion_uint(char), vt.data.ui8);
+                    break;
                 case vartype_t::TYPE_INT16:
-                case vartype_t::TYPE_UINT16:
                     va_assign(ap, va_assign_type_promotion_int(int16), vt.data.i16);
                     break;
+                case vartype_t::TYPE_UINT16:
+                    va_assign(ap, va_assign_type_promotion_uint(int16), vt.data.ui16);
+                    break;
                 case vartype_t::TYPE_INT32:
+                    va_assign(ap, int32, vt.data.ui32);
+                    break;
                 case vartype_t::TYPE_UINT32:
-                    va_assign(ap, int32, vt.data.i32);
+                    va_assign(ap, uint32, vt.data.ui32);
                     break;
                 case vartype_t::TYPE_INT64:
-                case vartype_t::TYPE_UINT64:
                     va_assign(ap, int64, vt.data.i64);
+                    break;
+                case vartype_t::TYPE_UINT64:
+                    va_assign(ap, uint64, vt.data.ui64);
                     break;
                 case vartype_t::TYPE_FLOAT:
                     va_assign(ap, va_assign_type_promotion_double(float), vt.data.f);

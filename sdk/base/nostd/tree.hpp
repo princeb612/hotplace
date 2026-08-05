@@ -108,6 +108,7 @@ struct t_treenode {
     bool is_root() { return nullptr == _parent; }
     bool is_leaf() { return _children.empty(); }
     bool is_branch() { return (false == _children.empty()); }
+    size_t numberof_children() { return _children.size(); }
     t_treenode<TYPE>* parent() const { return _parent; }
 };
 

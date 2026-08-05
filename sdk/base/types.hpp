@@ -155,8 +155,9 @@ enum class encoding_t : uint8 {
 };
 
 enum encoding_flag_t : uint8 {
-    encoding_notrunc = (1 << 0),
-    encoding_base16_capital = (1 << 1),
+    encoding_notrunc = (1 << 0),         // encode, decode
+    encoding_base16_capital = (1 << 1),  // encode
+    encoding_base16_space = (1 << 2),    // encode
 };
 
 #ifndef _WIN32  // winnt.h

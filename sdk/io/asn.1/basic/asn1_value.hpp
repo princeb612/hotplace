@@ -15,26 +15,30 @@
 
 #include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
-#include <hotplace/sdk/io/asn.1/types.hpp>
+#include <hotplace/sdk/io/asn.1/basic/types.hpp>
 
 namespace hotplace {
 namespace io {
 
 /**
-    // sketch
-    {
-        auto schema = new asn1_sequence;
-        (*schema) << new asn1_builtin_type("name", asn1_entity_utf8string)
-                  << new asn1_builtin_type("age", asn1_entity_integer);
-        auto instance = schema->instantiate();
-
-        (*instance).set("name", "john").set("age", 20)
-    }
+ * @comments
+ *          // sketch
+ *          {
+ *              auto schema = new asn1_sequence;
+ *              (*schema) << new asn1_builtin_type("name", asn1_entity_utf8string)
+ *                        << new asn1_builtin_type("age", asn1_entity_integer);
+ *              auto instance = schema->instantiate();
+ *
+ *              (*instance).set("name", "john").set("age", 20)
+ *          }
  */
 class asn1_value {
    public:
     asn1_value(asn1_object* schema);
+    asn1_value(const asn1_value& other);
     ~asn1_value();
+
+    asn1_value& operator=(const asn1_value& other);
 
     asn1_object* get_schema();
 

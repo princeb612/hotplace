@@ -302,6 +302,7 @@ void test_testvector_constraints() {
         {"enum", cons_enum->clone(), "Color ::= ENUMERATED {red(0), green(1), blue(2)}", true, flag_value_green},
         {"enum", cons_enum->clone(), "Color ::= ENUMERATED {red(0), green(1), blue(2)}", true, flag_value_blue},
         {"enum", cons_enum->clone(), "Color ::= ENUMERATED {red(0), green(1), blue(2)}", false, flag_value_yellow},
+        {"enum", cons_enum->clone(), "Color ::= ENUMERATED {red(0), green(1), blue(2)}", false, flag_value_int1},
         {"nested constraint", cons_nested, "Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))}", true, flag_value_nested30_short},
         {"nested constraint", cons_nested->clone(), "Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))}", false, flag_value_nested130_short},
         {"nested constraint", cons_nested->clone(), "Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))}", false, flag_value_nested30_long},

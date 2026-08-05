@@ -21,7 +21,7 @@
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_sign.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sign.hpp>
-#include <hotplace/sdk/io/asn.1/types.hpp>  // asn1_class_universal, asn1_tag_constructed, asn1_tag_sequence, asn1_tag_integer
+#include <hotplace/sdk/io/asn.1/basic/types.hpp>  // asn1_class_universal, asn1_tag_constructed, asn1_tag_sequence, asn1_tag_integer
 #include <hotplace/sdk/io/basic/payload.hpp>
 
 namespace hotplace {

@@ -118,6 +118,7 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
                                     dest.insert(dest.begin(), '%');
                                     break;
                                 case 'x':  // 0x
+                                case 'X':
                                     dest = std::move(temp);
                                     dest.insert(dest.begin(), '%');
                                     dest.insert(dest.begin(), 'x');
@@ -157,10 +158,14 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
                                     dest = std::move(temp);
                                     dest.insert(dest.begin(), '%');
                                 } break;
-                                case 'x':
+                                case 'x': {
                                     dest = base16_encode(v.data.bstr, v.size);
                                     force_dest = true;
-                                    break;
+                                } break;
+                                case 'X': {
+                                    dest = base16_encode(v.data.bstr, v.size, encoding_base16_capital);
+                                    force_dest = true;
+                                } break;
                             }
                         }
                     }

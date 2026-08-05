@@ -21,7 +21,7 @@
 #include <hotplace/sdk/base/pattern/regex.hpp>
 #include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 #include <hotplace/sdk/io/basic/oid.hpp>
 
 namespace hotplace {
@@ -94,6 +94,7 @@ return_t asn1_encode::read_identifier(const byte_t* stream, size_t size, size_t&
             --que;
             if (0 == m) break;
         }
+        ++pos;
         if (que) return errorcode_t::bad_data;
     } else {
         ++pos;
@@ -123,7 +124,8 @@ return_t asn1_encode::write_length(binary_t& bin, uint64 len, size_t pos) {
 }
 
 return_t asn1_encode::read_length(const byte_t* stream, size_t size, size_t& pos, uint64& len) {
-    if (nullptr == stream || 0 == size || pos >= size) return errorcode_t::invalid_parameter;
+    if (pos == size) return errorcode_t::do_nothing;
+    if (nullptr == stream || 0 == size || pos > size) return errorcode_t::invalid_parameter;
 
     auto msb = stream[pos];
     ++pos;
@@ -534,7 +536,7 @@ asn1_encode& asn1_encode::write(binary_t& bin, asn1_entity_t entity, const varia
         } break;
         case asn1_entity_reloid: {
             oid_t oid;
-            str_to_oid(v.data.str, oid);
+            if (v.data.str) str_to_oid(v.data.str, oid);
 
             size_t size = oid.size();
             for (size_t i = 0; i < size; ++i) {

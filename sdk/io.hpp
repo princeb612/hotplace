@@ -61,52 +61,71 @@
 #endif
 
 /* asn.1 */
-#include <hotplace/sdk/io/asn.1/basic/asn1.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
-#include <hotplace/sdk/io/asn.1/types.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
 
 /* asn.1/basic */
-#include <hotplace/sdk/io/asn.1/basic/asn1_any.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_ast_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_builder.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_builtin_type.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_choice.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_container_of.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_der_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_enum.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_information_object.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_notation_visitor.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_object_class.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_referenced_type.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_sequence.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_sequence_of.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_set.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_set_of.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_strong_typed.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_tag.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_tagged_type.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_type.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_visitor.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_weak_typed.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
+#include <hotplace/sdk/io/asn.1/basic/types.hpp>
 
-/* asn.1/basic/builtin */
-#include <hotplace/sdk/io/asn.1/basic/builtin/asn1_bitstring.hpp>
-#include <hotplace/sdk/io/asn.1/basic/builtin/asn1_integer.hpp>
+/* asn.1/basic/semantic */
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_any.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_builtin_type.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_choice.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_container_of.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_enum.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_information_object.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object_class.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_referenced_type.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_sequence.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_sequence_of.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_set.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_set_of.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tagged_type.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_type.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
 
-/* asn.1/basic/constraints */
-#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint.hpp>
-#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint_all_except.hpp>
-#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint_except.hpp>
-#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint_from.hpp>
-#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint_intersection.hpp>
-#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint_pattern.hpp>
-#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint_range.hpp>
-#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint_single_value.hpp>
-#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint_size.hpp>
-#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint_union.hpp>
-#include <hotplace/sdk/io/asn.1/basic/constraints/asn1_constraint_visitor.hpp>
+/* asn.1/basic/semantic/builtin */
+#include <hotplace/sdk/io/asn.1/basic/semantic/builtin/asn1_bitstring.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/builtin/asn1_integer.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/builtin/types.hpp>
+
+/* asn.1/basic/semantic/constraints */
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_all_except.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_except.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_from.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_intersection.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_pattern.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_range.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_single_value.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_size.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_union.hpp>
+
+/* asn.1/basic/structural */
+#include <hotplace/sdk/io/asn.1/basic/structural/asn1_constructed_node.hpp>
+#include <hotplace/sdk/io/asn.1/basic/structural/asn1_node.hpp>
+#include <hotplace/sdk/io/asn.1/basic/structural/asn1_primitive_node.hpp>
+
+/* asn.1/basic/visitor */
+#include <hotplace/sdk/io/asn.1/basic/visitor/asn1_ast_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/visitor/asn1_constraint_notation_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/visitor/asn1_constraint_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/visitor/asn1_der_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/visitor/asn1_notation_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/visitor/asn1_visitor.hpp>
+
+/* asn.1/runtime */
+#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_strongly_typed.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_weakly_typed.hpp>
+
+/* asn.1/compiler */
+
+/* asn.1/loader */
 
 #endif

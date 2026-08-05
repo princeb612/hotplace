@@ -41,10 +41,7 @@ struct CMDLINEOPTION {
 
     CMDLINEOPTION() : verbose(0), debug(0), trace_level(loglevel_t::default_loglevel), log(0), time(0) {}
     void enable_verbose() { verbose = 1; }
-    void enable_debug() {
-        verbose = 1;
-        debug = 1;
-    }
+    void enable_debug() { enable_trace(loglevel_t::loglevel_trace); }
     void enable_trace(int level) {
         verbose = 1;
         debug = 1;

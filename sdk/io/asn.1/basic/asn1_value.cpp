@@ -13,11 +13,11 @@
 
 #include <hotplace/sdk/base/nostd/bit_set.hpp>
 #include <hotplace/sdk/base/stream/vtprintf.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_der_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_notation_visitor.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
+#include <hotplace/sdk/io/asn.1/basic/visitor/asn1_der_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/visitor/asn1_notation_visitor.hpp>
 #include <set>
 
 namespace hotplace {
@@ -31,7 +31,18 @@ asn1_value::asn1_value(asn1_object* schema) : _schema(schema) {
     _shared.make_share(this);
 }
 
+asn1_value::asn1_value(const asn1_value& other) {
+    *this = other;
+    _shared.make_share(this);
+}
+
 asn1_value::~asn1_value() { _schema->release(); }
+
+asn1_value& asn1_value::operator=(const asn1_value& other) {
+    _schema = other._schema->clone();
+    _values = other._values;
+    return *this;
+}
 
 asn1_object* asn1_value::get_schema() { return _schema; }
 
@@ -132,6 +143,9 @@ void asn1_value::write(binary_t& bin, const asn1_object* object, const std::stri
             enc.write(bin, entity, variant(), do_len);
         } else if (object->is_default()) {
             const auto& v = object->get_default_value();
+            enc.write(bin, entity, v, do_len);
+        } else {
+            variant v;
             enc.write(bin, entity, v, do_len);
         }
     }

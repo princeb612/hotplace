@@ -465,7 +465,7 @@ void test_x690_encoding_value() {
         // test decode
         // without notation, weakly-typed raw TLV tree
         {
-            asn1 reader;
+            asn1_runtime reader;
             size_t pos = 0;
             auto stream = bin_expect.data();
             auto size = bin_expect.size();
@@ -514,7 +514,7 @@ void do_dump_asn1(asn1_value* object, const char* expect, const char* text) {
         // - [ ] bit string
         // - [ ] xxx string
         {
-            asn1 reader;
+            asn1_runtime reader;
             size_t pos = 0;
             reader.read(bin.data(), bin.size(), pos);
 
@@ -738,7 +738,7 @@ void test_asn1_object() {
     typemap.emplace(token_visiblestring, asn1_entity_visiblestring);
 
     basic_stream bs;
-    asn1* inst = new asn1;
+    asn1_runtime* inst = new asn1_runtime;
     for (auto item : table2) {
         *inst << item.asn1obj;
         inst->notation(&bs);
@@ -808,7 +808,7 @@ void test_x690_annex_a_1() {
     // EmployeeNumber ::= [APPLICATION 2] IMPLICIT INTEGER
     // Date ::= [APPLICATION 3] IMPLICIT VisibleString
 
-    auto inst = new asn1;
+    auto inst = new asn1_runtime;
 
     // clang-format off
     *inst << asn1_referenced_type::define("PersonnelRecord",

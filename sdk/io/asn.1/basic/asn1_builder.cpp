@@ -11,23 +11,23 @@
  *
  */
 
-#include <hotplace/sdk/io/asn.1/basic/asn1_any.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_builder.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_builtin_type.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_enum.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_sequence.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_set.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_tag.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_tagged_type.hpp>
-#include <hotplace/sdk/io/asn.1/basic/builtin/asn1_bitstring.hpp>
-#include <hotplace/sdk/io/asn.1/basic/builtin/asn1_integer.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_any.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_builtin_type.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_enum.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_sequence.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_set.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tagged_type.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/builtin/asn1_bitstring.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/builtin/asn1_integer.hpp>
 
 namespace hotplace {
 namespace io {
 
 asn1_builder::asn1_builder() {}
 
-asn1_object* asn1_builder::build(uint8 ident, uint64 tag, bool as_tagged_any) {
+asn1_object* asn1_builder::build(uint8 ident, uint64 tag, uint32 flags) {
     asn1_object* obj = nullptr;
     if (asn1_class_universal == (ident & asn1_class_mask)) {
         obj = build((asn1_entity_t)tag);
@@ -35,11 +35,20 @@ asn1_object* asn1_builder::build(uint8 ident, uint64 tag, bool as_tagged_any) {
             obj->as_constructed();
         }
     } else {
-        auto tagobj = new asn1_tag(ident, tag, asn1_automatic);
-        if (as_tagged_any)
-            obj = new asn1_tagged_type(tagobj, new asn1_any);
-        else
-            obj = tagobj;
+        if (flags & asn1_builder_flag_t::flag_as_sequence) {
+            auto tagobj = new asn1_tag(ident, tag, asn1_implicit);
+            obj = new asn1_tagged_type(tagobj, new asn1_sequence);
+        } else if (flags & asn1_builder_flag_t::flag_as_constructed) {
+            auto tagobj = new asn1_tag(ident, tag, asn1_explicit);
+            obj = new asn1_tagged_type(tagobj, nullptr);
+        } else {
+            auto tagobj = new asn1_tag(ident, tag, asn1_automatic);
+            if (flags & asn1_builder_flag_t::flag_is_leaf) {
+                obj = new asn1_tagged_type(tagobj, new asn1_any);
+            } else {
+                obj = tagobj;
+            }
+        }
     }
     return obj;
 }
@@ -106,6 +115,13 @@ asn1_object* asn1_builder::build(const std::string& name, asn1_entity_t entity, 
     auto obj = build(entity, f);
     if (obj) obj->set_name(name);
     return obj;
+}
+
+asn1_object* asn1_builder::build(asn1_object* object, std::function<void(asn1_object*)> f) {
+    if (object && f) {
+        f(object);
+    }
+    return object;
 }
 
 }  // namespace io

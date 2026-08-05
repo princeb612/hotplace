@@ -45,6 +45,9 @@ return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buf
 
         size_t size_buf = *buflen;
         size_t size_necessary = (size << 1);
+        if (encoding_flag_t::encoding_base16_space & flags) {
+            if (size > 1) size_necessary += (size - 1);
+        }
 
         *buflen = size_necessary;
 
@@ -63,8 +66,14 @@ return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buf
         const char* digits = hex_digits(capital);
         for (size_t i = 0; i < size; ++i) {
             const byte_t v = source[i];
-            buf[(i << 1) + 0] = digits[(v >> 4) & 0x0F];
-            buf[(i << 1) + 1] = digits[v & 0x0F];
+            if (encoding_flag_t::encoding_base16_space & flags) {
+                buf[(i * 3) + 0] = digits[(v >> 4) & 0x0F];
+                buf[(i * 3) + 1] = digits[v & 0x0F];
+                if (i + 1 < size) buf[(i * 3) + 2] = ' ';
+            } else {
+                buf[(i << 1) + 0] = digits[(v >> 4) & 0x0F];
+                buf[(i << 1) + 1] = digits[v & 0x0F];
+            }
         }
     }
     __finally2 {}

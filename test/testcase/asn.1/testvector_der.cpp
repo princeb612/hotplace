@@ -21,7 +21,7 @@ void test_yaml_testvector_der() {
             binary_t bin = base16_decode_rfc(text_der);
 
             {
-                asn1 reader;
+                asn1_runtime reader;
                 size_t pos = 0;
                 auto stream = bin.data();
                 auto size = bin.size();

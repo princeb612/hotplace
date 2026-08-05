@@ -226,6 +226,11 @@ void test_testvector_chatgpt() {
             flag_value_utctime,
             flag_value_generalizedtime,
         };
+        enum weakly_flag_t : uint8 {
+            flag_tlv = 0,
+            flag_type_only = 1,
+            flag_schema_dependent = 2,  // ENUMERATED
+        };
         struct testvector {
             asn1_object* obj;
             const char* name;
@@ -233,6 +238,8 @@ void test_testvector_chatgpt() {
             const char* der;
             testvector_flag_t flag;
             int longform_len;  // flag_longform
+            uint8 weakflag;    // weakly_flag_t
+            int debug;
         } table[] = {
             {case1_type1, "Test 1 Length aggregation", "SEQUENCE {name VisibleString, ok BOOLEAN}", "30 0A 1A 05 4A 6F 6E 65 73 01 01 FF", flag_value_name_ok},
 
@@ -261,7 +268,7 @@ void test_testvector_chatgpt() {
             {case7_type2, "Test 7. Nested Explicit Length Cascade", "Type1 ::= VisibleString", "1A 05 4A 6F 6E 65 73", flag_unnamed_string},
             {case7_type3, "Test 7. Nested Explicit Length Cascade", "Type2 ::= [1] EXPLICIT Type1", "A1 07 1A 05 4A 6F 6E 65 73", flag_unnamed_string},
             {case7_type4, "Test 7. Nested Explicit Length Cascade", "Type3 ::= [2] EXPLICIT Type2", "A2 09 A1 07 1A 05 4A 6F 6E 65 73", flag_unnamed_string},
-            {case7_type5, "Test 7. Nested Explicit Length Cascade", "Type4 ::= [3] EXPLICIT Type3", "A3 0B A2 09 A1 07 1A 05 4A 6F 6E 65 73", flag_unnamed_string},
+            {case7_type5, "Test 7. Nested Explicit Length Cascade", "Type4 ::= [3] EXPLICIT Type3", "A3 0B A2 09 A1 07 1A 05 4A 6F 6E 65 73", flag_unnamed_string, 1},
 
             {case8_type1, "Test 8. DER SET Ordering", "SET {a INTEGER, b BOOLEAN}", "31 06 01 01 FF 02 01 05", flag_value_a_b},
             {case8_type2, "Test 8. DER SET Ordering", "SET {a INTEGER, b BOOLEAN}", "31 06 01 01 FF 02 01 05", flag_value_a_b},
@@ -285,8 +292,8 @@ void test_testvector_chatgpt() {
              flag_longform, 329},
             // clang-format on
 
-            {case10_type1, "Test 10. High Tag Number", "[APPLICATION 31]", "5f 1f"},
-            {case10_type2, "Test 10. High Tag Number", "[APPLICATION 32]", "5f 20"},
+            {case10_type1, "Test 10. High Tag Number", "[APPLICATION 31]", "5f 1f", flag_blank, 0, flag_type_only},
+            {case10_type2, "Test 10. High Tag Number", "[APPLICATION 32]", "5f 20", flag_blank, 0, flag_type_only},
             {case10_type3, "Test 10. Multi-byte Tag Number", "Type1 ::= [APPLICATION 128] IMPLICIT INTEGER", "5f 81 00 01 00", flag_unnamed_zero},
             {case10_type4, "Test 10. Multi-byte Tag Number", "Type2 ::= [APPLICATION 201] IMPLICIT INTEGER", "5f 81 49 01 00", flag_unnamed_zero},
 
@@ -340,9 +347,9 @@ void test_testvector_chatgpt() {
             {case24_type2, "Test 24. DEFAULT", "Person ::= SEQUENCE {name VisibleString, age INTEGER DEFAULT 20}", "30 0A / 1A 05 4A 6F 6E 65 73 / 02 01 1e",
              flag_value_name_age},  // set("name", "Jones").set("age", 30)
 
-            {case25_type1, "Test 25. ENUMERATED", "Color ::= ENUMERATED {red(0), green(1), blue(2)}", "0A 01 01", flag_value_green},
+            {case25_type1, "Test 25. ENUMERATED", "Color ::= ENUMERATED {red(0), green(1), blue(2)}", "0A 01 01", flag_value_green, 0, flag_schema_dependent},
             {case25_type2, "Test 25. ENUMERATED", "Person ::= SEQUENCE {name VisibleString, color ENUMERATED {red(0), green(1), blue(2)}}",
-             "30 0A / 1A 05 4A 6F 6E 65 73 / 0A 01 01", flag_value_namegreen},
+             "30 0A / 1A 05 4A 6F 6E 65 73 / 0A 01 01", flag_value_namegreen, 0, flag_schema_dependent},
 
             {case26_type1, "Test 26. INTEGER", "Number ::= INTEGER", "02 01 00", flag_unnamed_zero},
             {case26_type2, "Test 26. Named Number List", "Location ::= INTEGER {homeOffice(0), fieldOffice(1), roving(2)}", "02 01 00", flag_nnl_homeoffice},
@@ -351,9 +358,10 @@ void test_testvector_chatgpt() {
 
             {case27_type1, "Test 27. ANY", "Test ::= SEQUENCE {id INTEGER, data ANY}", "30 08 / 02 01 01 / 1A 03 61 62 63", flag_value_der},
 
-            {case28_type1, "Test 28. BIT STRING", "Flags ::= BIT STRING", "03 02 00 AA", flag_value_bitstring},
-            {case28_type2, "Test 28. BIT STRING", "Flags ::= BIT STRING", "03 03 03 B7 58", flag_value_bitstring2},
-            {case28_type3, "Test 28. BIT STRING NamedBitList", "Flags ::= BIT STRING {read(0), write(1), execute(2)}", "03 02 05 A0", flag_value_nbl},
+            {case28_type1, "Test 28. BIT STRING", "Flags ::= BIT STRING", "03 02 00 AA", flag_value_bitstring, 0, flag_schema_dependent},
+            {case28_type2, "Test 28. BIT STRING", "Flags ::= BIT STRING", "03 03 03 B7 58", flag_value_bitstring2, 0, flag_schema_dependent},
+            {case28_type3, "Test 28. BIT STRING NamedBitList", "Flags ::= BIT STRING {read(0), write(1), execute(2)}", "03 02 05 A0", flag_value_nbl, 0,
+             flag_schema_dependent},
 
             {case29_type1, "Test 29. OCTET STRING", "Data ::= OCTET STRING", "04 04 DE AD BE EF", flag_value_deadbeef},
             {case29_type2, "Test 29. OBJECT IDENTIFIER", "Oid ::= OBJECT IDENTIFIER", "06 06 2A 86 48 86 F7 0D", flag_value_oid},
@@ -361,7 +369,7 @@ void test_testvector_chatgpt() {
             {case29_type4, "Test 29. RELATIVE-OID", "RelOid ::= RELATIVE-OID", "0D 06 01 03 06 01 04 01", flag_value_reloid2},
             {case29_type5, "Test 29. RELATIVE-OID", "RelOid ::= RELATIVE-OID", "0D 02 81 00", flag_value_reloid3},
             {case29_type6, "Test 29. RELATIVE-OID", "RelOid ::= RELATIVE-OID", "0D 06 C2 7B 81 48 82 2C", flag_value_reloid4},
-            {case29_type7, "Test 29. Empty RELATIVE-OID", "RelOid ::= RELATIVE-OID", "0D 00", flag_value_reloid5},
+            {case29_type7, "Test 29. Empty RELATIVE-OID", "RelOid ::= RELATIVE-OID", "0D 00", flag_value_reloid5, 0, flag_tlv, 1},
 
             {case30_type1, "Test 30. UTCTime", "Time ::= UTCTime", "17 0D 3235303130313132303030305A", flag_value_utctime},
             {case30_type2, "Test 30. GeneralizedTime", "Time ::= GeneralizedTime", "18 0F 32303235303130313132303030305A", flag_value_generalizedtime},
@@ -506,6 +514,42 @@ void test_testvector_chatgpt() {
 
             _test_case.assert(bs == item.notation, __FUNCTION__, "%s : %s", item.name, item.notation);
             _test_case.assert(bin == base16_decode_rfc(item.der), __FUNCTION__, "%s : %s", item.name, item.der);
+
+            {
+                if (item.debug) {
+                    int breakpoint = 1;
+                }
+
+                if (item.weakflag == flag_schema_dependent)
+                    ;
+                else {
+                    asn1_runtime reader;
+                    size_t pos = 0;
+                    const byte_t* stream = bin.data();
+                    size_t size = bin.size();
+                    reader.read(stream, size, pos);
+
+                    basic_stream bs_type;
+                    basic_stream bs_value;
+                    binary_t bin_recode;
+                    reader.notation(&bs_type);
+                    reader.publish(&bs_value);
+                    reader.publish(&bin_recode);
+                    if (item.weakflag == flag_type_only) {
+                        if (false == bin_recode.empty()) bin_recode.pop_back();
+                    }
+
+                    _logger->write([&](basic_stream& dbs) -> void {
+                        valist va;
+                        va << bs_type << bs_value << bin_recode;
+                        dbs.println("decode and encode");
+                        dbs.vaprintln("> notation {1}", va);
+                        dbs.vaprintln("> value    {2}", va);
+                        dbs.vaprintln("> DER      {3:x}", va);
+                    });
+                    _test_case.assert(bin_recode == bin, __FUNCTION__, "decode and encode %s", item.name);
+                }
+            }
 
             value->release();
             item.obj->release();

@@ -19,6 +19,8 @@ namespace io {
 void str_to_oid(const std::string& value, oid_t& oid) { str_to_oid(value.c_str(), value.size(), oid); }
 
 void str_to_oid(const char* value, size_t size, oid_t& oid) {
+    if (nullptr == value) return;
+    oid.clear();
     return_t ret = errorcode_t::success;
     size_t pos = 0;
     size_t brk = 0;

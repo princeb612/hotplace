@@ -14,7 +14,7 @@
 #define __HOTPLACE_SDK_IO_ASN1_BASIC_ASN1RESOURCE__
 
 #include <hotplace/sdk/base/system/critical_section.hpp>
-#include <hotplace/sdk/io/asn.1/types.hpp>
+#include <hotplace/sdk/io/asn.1/basic/types.hpp>
 
 namespace hotplace {
 namespace io {
