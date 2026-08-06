@@ -40,6 +40,7 @@ class asn1_value {
 
     asn1_value& operator=(const asn1_value& other);
 
+    void set_schema(asn1_object* schema);
     asn1_object* get_schema();
 
     asn1_value& set(const variant& vt);

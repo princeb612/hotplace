@@ -19,16 +19,22 @@ namespace io {
 
 asn1_node::asn1_node(uint8 identifier, uint64 tag, uint64 len) : _parent(nullptr), _identifier(identifier), _tag(tag), _len(len) { _shared.make_share(this); }
 
-asn1_node::asn1_node(const asn1_node& other) { *this = other; }
+asn1_node::asn1_node(const asn1_node& other) : asn1_node(other._identifier, other._tag, other._len) {
+    _parent = other._parent;
+    _children = other._children;
+    for (auto& child : _children) child->addref();
+}
 
 asn1_node::~asn1_node() { clear(); }
 
 asn1_node& asn1_node::operator=(const asn1_node& other) {
     clear();
+    _parent = other._parent;
     _identifier = other._identifier;
     _tag = other._tag;
     _len = other._len;
     _children = other._children;
+    for (auto& child : _children) child->addref();
     return *this;
 }
 

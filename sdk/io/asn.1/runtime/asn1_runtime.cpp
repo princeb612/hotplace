@@ -83,17 +83,13 @@ asn1_runtime& asn1_runtime::add(asn1_object* item, std::function<void(asn1_objec
 
 asn1_runtime& asn1_runtime::operator<<(asn1_object* item) { return add(item); }
 
-return_t asn1_runtime::set(asn1_object* item, asn1_value* value, uint32 flags) {
+return_t asn1_runtime::set(asn1_object* item, asn1_value* value) {
     return_t ret = errorcode_t::success;
     if (item && value) {
-        if (value->get_schema() == item) {
-            auto pib = _values.emplace(item, value);
-            if (pib.second) {
-                if (1 == flags) add(item);
-            } else
-                ret = errorcode_t::already_exist;
-        } else
-            ret = errorcode_t::mismatch;
+        auto pib = _values.emplace(item, value);
+        if (false == pib.second) {
+            ret = errorcode_t::already_exist;
+        }
     } else
         ret = errorcode_t::invalid_parameter;
     return ret;
@@ -158,8 +154,8 @@ void asn1_runtime::publish(binary_t* b) {
 }
 
 void asn1_runtime::clear() {
-    // for (auto item : _types) item->release();
-    // for (auto& pair : _values) pair.second->release();
+    for (auto item : _types) item->release();
+    for (auto& pair : _values) pair.second->release();
     _types.clear();
     _values.clear();
 }

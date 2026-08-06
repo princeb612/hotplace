@@ -113,6 +113,7 @@
 
 /* asn.1/basic/visitor */
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_ast_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/visitor/asn1_constraint_evaluator.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_constraint_notation_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_constraint_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_der_visitor.hpp>

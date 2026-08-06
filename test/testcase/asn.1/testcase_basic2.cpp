@@ -241,7 +241,7 @@ void test_testvector_chatgpt() {
             uint8 weakflag;    // weakly_flag_t
             int debug;
         } table[] = {
-            {case1_type1, "Test 1 Length aggregation", "SEQUENCE {name VisibleString, ok BOOLEAN}", "30 0A 1A 05 4A 6F 6E 65 73 01 01 FF", flag_value_name_ok},
+            {case1_type1, "Test 1. Length aggregation", "SEQUENCE {name VisibleString, ok BOOLEAN}", "30 0A 1A 05 4A 6F 6E 65 73 01 01 FF", flag_value_name_ok},
 
             {case2_type1, "Test 2. IMPLICIT Replace", "Type1 ::= VisibleString", "1A 05 4A 6F 6E 65 73", flag_unnamed_string},
             {case2_type2, "Test 2. IMPLICIT Replace", "Type2 ::= [APPLICATION 3] IMPLICIT Type1", "43 05 4A 6F 6E 65 73", flag_unnamed_string},
@@ -268,26 +268,26 @@ void test_testvector_chatgpt() {
             {case7_type2, "Test 7. Nested Explicit Length Cascade", "Type1 ::= VisibleString", "1A 05 4A 6F 6E 65 73", flag_unnamed_string},
             {case7_type3, "Test 7. Nested Explicit Length Cascade", "Type2 ::= [1] EXPLICIT Type1", "A1 07 1A 05 4A 6F 6E 65 73", flag_unnamed_string},
             {case7_type4, "Test 7. Nested Explicit Length Cascade", "Type3 ::= [2] EXPLICIT Type2", "A2 09 A1 07 1A 05 4A 6F 6E 65 73", flag_unnamed_string},
-            {case7_type5, "Test 7. Nested Explicit Length Cascade", "Type4 ::= [3] EXPLICIT Type3", "A3 0B A2 09 A1 07 1A 05 4A 6F 6E 65 73", flag_unnamed_string, 1},
+            {case7_type5, "Test 7. Nested Explicit Length Cascade", "Type4 ::= [3] EXPLICIT Type3", "A3 0B A2 09 A1 07 1A 05 4A 6F 6E 65 73", flag_unnamed_string},
 
             {case8_type1, "Test 8. DER SET Ordering", "SET {a INTEGER, b BOOLEAN}", "31 06 01 01 FF 02 01 05", flag_value_a_b},
             {case8_type2, "Test 8. DER SET Ordering", "SET {a INTEGER, b BOOLEAN}", "31 06 01 01 FF 02 01 05", flag_value_a_b},
             {case8_type3, "Test 8. DER SET OF Ordering", "SET OF VisibleString", "31 06 1A 01 41 1A 01 5A", flag_value_setof},
 
             // clang-format off
-            {case9_type1, "Test 9.Long-form Length", "long VisibleString",
+            {case9_type1, "Test 9. Long-form Length", "long VisibleString",
              "1a7f536f6d657768657265206f76657220746865207261696e626f77207761792075702068696768202f546865726527732061206c616e6420746861742049277665206865617264206f66206f6e636520696e2061206c756c6c616279202f536f6d657768657265206f76657220746865207261696e626f7720736b6965732061",
              flag_longform, 127},
-            {case9_type2, "Test 9.Long-form Length", "long VisibleString",
+            {case9_type2, "Test 9. Long-form Length", "long VisibleString",
              "1a8180536f6d657768657265206f76657220746865207261696e626f77207761792075702068696768202f546865726527732061206c616e6420746861742049277665206865617264206f66206f6e636520696e2061206c756c6c616279202f536f6d657768657265206f76657220746865207261696e626f7720736b696573206172",
              flag_longform, 128},
-            {case9_type3, "Test 9.Long-form Length", "long VisibleString",
+            {case9_type3, "Test 9. Long-form Length", "long VisibleString",
              "1a81b9536f6d657768657265206f76657220746865207261696e626f77207761792075702068696768202f546865726527732061206c616e6420746861742049277665206865617264206f66206f6e636520696e2061206c756c6c616279202f536f6d657768657265206f76657220746865207261696e626f7720736b6965732061726520626c7565202f416e642074686520647265616d73207468617420796f75206461726520746f20647265616d207265616c6c7920646f2063",
              flag_longform, 185},
-            {case9_type4, "Test 9.Long-form Length", "long VisibleString",
+            {case9_type4, "Test 9. Long-form Length", "long VisibleString",
              "1a82012c536f6d657768657265206f76657220746865207261696e626f77207761792075702068696768202f546865726527732061206c616e6420746861742049277665206865617264206f66206f6e636520696e2061206c756c6c616279202f536f6d657768657265206f76657220746865207261696e626f7720736b6965732061726520626c7565202f416e642074686520647265616d73207468617420796f75206461726520746f20647265616d207265616c6c7920646f20636f6d652074727565202f536f6d656461792049276c6c20776973682075706f6e20612073746172202f416e642077616b652075702077686572652074686520636c6f756473206172652066617220626568696e64206d65202f57686572652074726f75626c6573206d656c74206c696b65206c",
              flag_longform, 300},
-            {case9_type5, "Test 9.Long-form Length", "long VisibleString",
+            {case9_type5, "Test 9. Long-form Length", "long VisibleString",
              "1a820149536f6d657768657265206f76657220746865207261696e626f77207761792075702068696768202f546865726527732061206c616e6420746861742049277665206865617264206f66206f6e636520696e2061206c756c6c616279202f536f6d657768657265206f76657220746865207261696e626f7720736b6965732061726520626c7565202f416e642074686520647265616d73207468617420796f75206461726520746f20647265616d207265616c6c7920646f20636f6d652074727565202f536f6d656461792049276c6c20776973682075706f6e20612073746172202f416e642077616b652075702077686572652074686520636c6f756473206172652066617220626568696e64206d65202f57686572652074726f75626c6573206d656c74206c696b65206c656d6f6e2064726f7073202f417761792061626f766520746865206368",
              flag_longform, 329},
             // clang-format on
@@ -547,7 +547,7 @@ void test_testvector_chatgpt() {
                         dbs.vaprintln("> value    {2}", va);
                         dbs.vaprintln("> DER      {3:x}", va);
                     });
-                    _test_case.assert(bin_recode == bin, __FUNCTION__, "decode and encode %s", item.name);
+                    _test_case.assert(bin_recode == bin, __FUNCTION__, "%s : decode and encode", item.name);
                 }
             }
 

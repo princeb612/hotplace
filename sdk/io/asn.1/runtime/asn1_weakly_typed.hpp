@@ -52,6 +52,7 @@ class asn1_weakly_typed {
     using TLV_node = t_treenode<asn1_tlv_t>;
 
     asn1_weakly_typed();
+    ~asn1_weakly_typed();
 
     /**
      * DER parser

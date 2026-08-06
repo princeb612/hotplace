@@ -39,10 +39,7 @@ class asn1_runtime {
     asn1_runtime& add(asn1_object* item, std::function<void(asn1_object*)> f);
     asn1_runtime& operator<<(asn1_object* item);
 
-    /**
-     * @param uint32 flags [inopt] 1 add
-     */
-    return_t set(asn1_object* item, asn1_value* value, uint32 flags = 0);
+    return_t set(asn1_object* item, asn1_value* value);
     asn1_value* get(asn1_object* item) const;
 
     return_t read(const byte_t* stream, size_t size, size_t& pos);

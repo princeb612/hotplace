@@ -24,10 +24,7 @@ namespace hotplace {
 namespace io {
 
 asn1_value::asn1_value(asn1_object* schema) : _schema(schema) {
-    if (schema)
-        schema->addref();
-    else
-        throw exception(errorcode_t::not_specified);
+    if (schema) schema->addref();
     _shared.make_share(this);
 }
 
@@ -36,12 +33,24 @@ asn1_value::asn1_value(const asn1_value& other) {
     _shared.make_share(this);
 }
 
-asn1_value::~asn1_value() { _schema->release(); }
+asn1_value::~asn1_value() {
+    if (_schema) _schema->release();
+}
 
 asn1_value& asn1_value::operator=(const asn1_value& other) {
-    _schema = other._schema->clone();
+    set_schema(other._schema);
     _values = other._values;
     return *this;
+}
+
+void asn1_value::set_schema(asn1_object* schema) {
+    if (_schema) {
+        _schema->release();
+        _schema = nullptr;
+    }
+    if (schema) {
+        _schema = schema->clone();
+    }
 }
 
 asn1_object* asn1_value::get_schema() { return _schema; }

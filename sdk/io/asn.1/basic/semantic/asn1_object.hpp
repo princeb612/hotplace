@@ -47,8 +47,6 @@ struct asn1_default_t {
  */
 class asn1_object {
     friend class asn1_runtime;
-    // friend class asn1_tag;
-    // friend class asn1_type;
     friend class asn1_referenced_type;
     friend class asn1_tagged_type;
     friend class asn1_container;

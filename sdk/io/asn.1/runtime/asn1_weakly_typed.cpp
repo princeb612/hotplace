@@ -13,6 +13,7 @@
 
 #include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/encoding/base16.hpp>
+#include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
@@ -35,6 +36,8 @@ namespace io {
 
 asn1_weakly_typed::asn1_weakly_typed() {}
 
+asn1_weakly_typed::~asn1_weakly_typed() { clear(); }
+
 return_t asn1_weakly_typed::read(asn1_runtime* target, const byte_t* stream, size_t size, size_t& pos) {
     if (nullptr == target || nullptr == stream) return errorcode_t::invalid_parameter;
 
@@ -51,7 +54,7 @@ return_t asn1_weakly_typed::read(asn1_runtime* target, const byte_t* stream, siz
             structural_node = new asn1_constructed_node(tlv.ident, tlv.tag, tlv.len);
         }
 
-        structural_node->set_name(format("NAME%u", tlv.node_id));
+        structural_node->set_name(format("NODE%u", tlv.node_id));
 
         auto& parent_tlv = node->_parent->_data;
         auto parent_structural_node = parent_tlv.asn1node;
@@ -170,6 +173,8 @@ return_t asn1_weakly_typed::transform(asn1_runtime* target) {
         auto obj = transform(target, node->_data.asn1node);
         if (obj) {
             target->add(obj);
+            auto value = target->get(obj);
+            value->set_schema(obj);
         }
     };
     _tree.root()->for_each(lambda);
@@ -220,10 +225,10 @@ asn1_object* asn1_weakly_typed::transform(asn1_runtime* target, const asn1_node*
 
         if (container)
             ((asn1_container*)container)->add(obj);
-        else if (tagobj) {
+        else if (tagobj)
             tagobj->set_object(obj);
-        } else
-            throw;
+        else
+            throw exception(errorcode_t::unexpected);
     }
 
     // top-down
@@ -236,7 +241,7 @@ asn1_object* asn1_weakly_typed::transform(asn1_runtime* target, const asn1_node*
         }
         auto value = target->get(top);
         if (nullptr == value) {
-            value = top->instantiate();
+            value = new asn1_value(nullptr);
 
             auto test = target->set(top, value);
             if (errorcode_t::success != test) throw;
@@ -256,7 +261,15 @@ asn1_object* asn1_weakly_typed::transform(asn1_runtime* target, const asn1_node*
     return obj;
 }
 
-void asn1_weakly_typed::clear() { _tree.clear(); }
+void asn1_weakly_typed::clear() {
+    auto lambda = [&](TLV_node* node) -> void {
+        auto& tlv = node->_data;
+        tlv.asn1node->release();
+    };
+    _tree.root()->for_each(lambda);
+
+    _tree.clear();
+}
 
 }  // namespace io
 }  // namespace hotplace

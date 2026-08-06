@@ -318,7 +318,7 @@ void test_testvector_constraints() {
 
         type->publish(&bs);
         _logger->writeln(bs);
-        _test_case.assert(bs == expect, __FUNCTION__, "notation %s : %s", item.text, item.notation);
+        _test_case.assert(bs == expect, __FUNCTION__, "notation   %s : %s", item.text, item.notation);
 
         _logger->write([&](basic_stream& dbs) -> void { print_ast(item.object, dbs); });
 

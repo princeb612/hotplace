@@ -23,7 +23,7 @@
 namespace hotplace {
 namespace io {
 
-asn1_builtin_type::asn1_builtin_type(asn1_entity_t entity) : asn1_type(entity, "", new asn1_type(entity)) {}
+asn1_builtin_type::asn1_builtin_type(asn1_entity_t entity) : asn1_type(entity, "", nullptr) {}
 
 asn1_builtin_type::asn1_builtin_type(const std::string& name, asn1_entity_t entity) : asn1_type(entity, name, nullptr) {}
 

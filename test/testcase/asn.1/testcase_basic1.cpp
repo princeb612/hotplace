@@ -470,8 +470,8 @@ void test_x690_encoding_value() {
             auto stream = bin_expect.data();
             auto size = bin_expect.size();
             auto test = reader.read(stream, size, pos);
-            _test_case.test(test, __FUNCTION__, "read and decode %s", entry.text);
-            _test_case.assert(pos == size, __FUNCTION__, "complete stream consumed %s", entry.text);
+            _test_case.test(test, __FUNCTION__, "%s read and decode", entry.text);
+            _test_case.assert(pos == size, __FUNCTION__, "%s complete stream consumed", entry.text);
 
             basic_stream bs_type;
             basic_stream bs_value;
@@ -488,7 +488,7 @@ void test_x690_encoding_value() {
                 dbs.vaprintln("> value    {2}", va);
                 dbs.vaprintln("> DER      {3:x}", va);
             });
-            _test_case.assert(bin == bin_expect, __FUNCTION__, "decode and encode %s", entry.text);
+            _test_case.assert(bin == bin_expect, __FUNCTION__, "%s decode and encode", entry.text);
         }
     }
 }
@@ -533,7 +533,7 @@ void do_dump_asn1(asn1_value* object, const char* expect, const char* text) {
                 dbs.vaprintln("> value    {2}", va);
                 dbs.vaprintln("> DER      {3:x}", va);
             });
-            _test_case.assert(bin_recode == bin, __FUNCTION__, "decode and encode %s", text);
+            _test_case.assert(bin_recode == bin, __FUNCTION__, "%s decode and encode", text);
         }
 
         _test_case.assert(bin == base16_decode_rfc(expect), __FUNCTION__, "%s [%s]", text, expect);
@@ -744,7 +744,7 @@ void test_asn1_object() {
         inst->notation(&bs);
         inst->clear();
         _logger->writeln(bs);
-        _test_case.assert(bs == item.note, __FUNCTION__, "publish %s", item.note);
+        _test_case.assert(bs == item.note, __FUNCTION__, "%s (publish)", item.note);
 
         // compare
         parser p;
