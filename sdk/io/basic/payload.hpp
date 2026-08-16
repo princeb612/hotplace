@@ -110,12 +110,8 @@ class payload_member {
     payload_member(const byte_t* stream, size_t size, bool alloc, const char* name = nullptr, const char* group = nullptr);
     payload_member(const std::string& value, const char* name = nullptr, const char* group = nullptr);
     payload_member(const stream_t* value, const char* name = nullptr, const char* group = nullptr);
-    /**
-     * @sa      t_pointer_proxy
-     *          understanding object << new A << new B << new C;
-     */
-    payload_member(std::unique_ptr<payload_encoded> value, const char* name = nullptr, const char* group = nullptr);
-    payload_member(t_pointer_proxy<payload_encoded> value, const char* name = nullptr, const char* group = nullptr);
+
+    payload_member(payload_encoded* value, const char* name = nullptr, const char* group = nullptr);
     payload_member(const bignumber& value, const char* name = nullptr, const char* group = nullptr);
     ~payload_member();
 

@@ -272,7 +272,7 @@ return_t crypto_key::get_key(const EVP_PKEY* pkey, int flags, binary_t& pub, bin
             __leave2;
         }
 
-        auto lambda_get_item = [&](crypt_item_t item, binary_t& bin) -> void {
+        auto lambda_get_item = [&datamap](crypt_item_t item, binary_t& bin) -> void {
             auto iter = datamap.find(item);
             if (datamap.end() != iter) {
                 bin = iter->second;
@@ -375,7 +375,7 @@ return_t crypto_key::get_key(const EVP_PKEY* pkey, int flags, crypto_kty_t& type
     crypt_datamap_t::iterator iter;
     ret = extract(pkey, flags, type, datamap, preserve);
     if (errorcode_t::success == ret) {
-        auto lambda_get_item = [&](crypt_item_t item, binary_t& bin) -> void {
+        auto lambda_get_item = [&datamap](crypt_item_t item, binary_t& bin) -> void {
             auto iter = datamap.find(item);
             if (datamap.end() != iter) {
                 bin = iter->second;

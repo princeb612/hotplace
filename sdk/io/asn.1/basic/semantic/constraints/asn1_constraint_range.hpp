@@ -22,14 +22,14 @@ namespace io {
 
 /**
  * @example
- *          auto type =
+ *          auto cons_range_type1 =
  *              asn1_referenced_type::define("type",
  *                  asn1_builder::build(asn1_entity_integer,
- *                              [&](asn1_builtin_type* builtin) -> void {
+ *                              [&](asn1_object* builtin) -> void {
  *                                  builtin->get_constraints().add(
- *                                          new asn1_constraint_intersection<int>(
- *                                              new asn1_constraint_range<int>(1, 100),
- *                                              new asn1_constraint_range<int>(50, 200)));
+ *                                      new asn1_constraint_union_i(
+ *                                          new asn1_constraint_range_i(1, 10),
+ *                                          new asn1_constraint_range_i(20, 30)));
  *                              }));
  */
 template <typename T>

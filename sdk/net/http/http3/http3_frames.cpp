@@ -68,7 +68,7 @@ return_t http3_frames::read(tls_session* session, const byte_t* stream, size_t s
 
 return_t http3_frames::write(tls_session* session, binary_t& bin) {
     return_t ret = errorcode_t::success;
-    auto lambda = [&](http3_frame* frame) -> return_t { return frame->write(bin); };
+    auto lambda = [&bin](http3_frame* frame) -> return_t { return frame->write(bin); };
     ret = for_each(lambda);
     return ret;
 }

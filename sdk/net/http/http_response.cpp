@@ -370,7 +370,7 @@ http_response& http_response::get_response_h2(binary_t& bin) {
             .set_encode_flags(hpack_wo_indexing | hpack_huffman)  // chrome test
             .encode_header(":status", format("%i", status_code()).c_str())
             .encode_header("content-type", content_type());
-        auto lambda_enc_headder = [&](const std::string& name, const std::string& value) -> void {
+        auto lambda_enc_headder = [&hp, &altsvc_fieldvalue](const std::string& name, const std::string& value) -> void {
             if ("alt-svc" == name) {
                 altsvc_fieldvalue = value;
             } else {
@@ -416,7 +416,7 @@ http_response& http_response::get_response_h2(binary_t& bin) {
             }
         }
 
-        auto lambda_debug = [&](http2_frame* frame) -> void {
+        auto lambda_debug = [](http2_frame* frame) -> void {
 #if defined DEBUG
             if (istraceable(trace_category_t::trace_category_net)) {
                 trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_net_response, [&](basic_stream& dbs) -> void {

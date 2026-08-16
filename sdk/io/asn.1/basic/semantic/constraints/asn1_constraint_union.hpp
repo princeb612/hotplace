@@ -20,14 +20,14 @@ namespace io {
 
 /**
  * @example
- *          auto type =
+ *          auto cons_single_type2 =
  *              asn1_referenced_type::define("type",
  *                  asn1_builder::build(asn1_entity_integer,
- *                              [&](asn1_builtin_type* builtin) -> void {
+ *                              [&](asn1_object* builtin) -> void {
  *                                  builtin->get_constraints().add(
- *                                          new asn1_constraint_union<int>(
- *                                              new asn1_constraint_range<int>(1, 10),
- *                                              new asn1_constraint_range<int>(20, 30)));
+ *                                      new asn1_constraint_union_i(
+ *                                          new asn1_constraint_single_value_i(1),
+ *                                          new asn1_constraint_single_value_i(2)));
  *                              }));
  */
 template <typename T>

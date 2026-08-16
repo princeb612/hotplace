@@ -79,7 +79,7 @@ return_t quic_packets::write(tls_session* session, tls_direction_t dir, binary_t
             __leave2;
         }
 
-        auto lambda = [&](quic_packet* packet) -> return_t { return packet->write(dir, bin); };
+        auto lambda = [&dir, &bin](quic_packet* packet) -> return_t { return packet->write(dir, bin); };
         for_each(lambda);
     }
     __finally2 {}

@@ -14,7 +14,7 @@
 #define __HOTPLACE_SDK_IO_ASN1_BASIC_VISITOR_ASN1ASTVISOTOR__
 
 #include <hotplace/sdk/base/nostd/tree.hpp>
-#include <hotplace/sdk/base/stream/basic_stream.hpp>
+// #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/io/asn.1/basic/types.hpp>
 
 namespace hotplace {
@@ -67,12 +67,6 @@ class asn1_ast_visitor {
 
    private:
 };
-
-enum asn1_ast_flags : uint32 {
-    asn1_ast_flag_ansicolor = 1 << 0,
-};
-return_t print_ast(const asn1_object* object, basic_stream& bs, uint32 flags = asn1_ast_flag_ansicolor);
-return_t print_ast(const asn1_runtime* object, basic_stream& bs, uint32 flags = asn1_ast_flag_ansicolor);
 
 }  // namespace io
 }  // namespace hotplace

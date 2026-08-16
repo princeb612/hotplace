@@ -18,6 +18,17 @@
 namespace hotplace {
 namespace io {
 
+/**
+ * @example
+ *          auto cons_size_type1 =
+ *              asn1_referenced_type::define("name",
+ *                  asn1_builder::build(asn1_entity_ia5string,
+ *                              [&](asn1_object* builtin) -> void {
+ *                                  builtin->get_constraints().add(
+ *                                      new asn1_constraint_size_i(
+ *                                          new asn1_constraint_single_value_i(1)));
+ *                              }));
+ */
 template <typename T>
 class asn1_constraint_size : public asn1_constraint<T> {
    public:

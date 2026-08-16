@@ -320,7 +320,7 @@ class huffman_coding {
             que.reserve(64);
         }
 
-        auto lambda = [&]() -> void {
+        auto lambda = [this, &streambuf, &que, &code_minsize]() -> void {
             while (que.size() >= code_minsize) {
                 size_t pos = 0;
                 int rc = _trie.scan(que.c_str(), que.size(), pos);  // scan first occurrence

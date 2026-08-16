@@ -19,9 +19,19 @@ namespace hotplace {
 namespace io {
 
 /**
- * for each ch
- *     if ch not in alphabet
- *         reject
+ * @remarks
+ *          for each ch
+ *              if ch not in alphabet
+ *                  reject
+ * @example
+ *          auto cons_ie5string_alphabet =
+ *              asn1_referenced_type::define("name",
+ *                  asn1_builder::build(asn1_entity_ia5string,
+ *                              [&](asn1_object* builtin) -> void {
+ *                                  builtin->get_constraints().add(
+ *                                      new asn1_constraint_from_s(
+ *                                          new asn1_constraint_single_value_s("ABC")));
+ *                              }));
  */
 template <typename T>
 class asn1_constraint_from : public asn1_constraint<T> {

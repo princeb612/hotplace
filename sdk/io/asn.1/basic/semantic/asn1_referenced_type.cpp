@@ -11,12 +11,15 @@
  *
  */
 
+// #include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/system/trace.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
+// #include <hotplace/sdk/base/system/trace.hpp>
+// #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
+// #include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_builtin_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_referenced_type.hpp>
+// #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
+// #include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
 
 namespace hotplace {
 namespace io {
@@ -47,11 +50,9 @@ asn1_referenced_type* asn1_referenced_type::define(const std::string& name, asn1
 
 asn1_referenced_type* asn1_referenced_type::define(const std::string& name, asn1_object* object) { return new asn1_referenced_type(name, object); }
 
-asn1_referenced_type* asn1_referenced_type::refer(const std::string& name, const std::string& reference) {
-    auto ref = new asn1_referenced_type(name, nullptr);
-    ref->_reference = reference;
-    return ref;
-}
+asn1_referenced_type* asn1_referenced_type::refer(const std::string& name, const std::string& reference) { return new asn1_referenced_type(name, reference); }
+
+asn1_referenced_type* asn1_referenced_type::refer(const std::string& reference) { return new asn1_referenced_type("", reference); }
 
 bool asn1_referenced_type::is_reference() const { return get_object() ? false : true; }
 
@@ -75,7 +76,19 @@ void asn1_referenced_type::represent(stream_t* s, const asn1_value* value) const
 }
 
 bool asn1_referenced_type::represent(binary_t* b, const asn1_value* value, uint16 flags) const {
-    if (is_definition()) get_object()->represent(b, value);
+    auto obj = get_object();
+    if (obj) {
+        /**
+         * if (is_definition())
+         *     get_object()->represent(...);
+         * if (is_reference()) {
+         *     schema = runtime->get(get_reference());
+         *     if (schema) schema->represent(...);
+         *     else error
+         * }
+         */
+        obj->represent(b, value);
+    }
 
     return true;
 }

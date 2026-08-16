@@ -82,7 +82,7 @@ return_t tls_records::write(tls_session* session, tls_direction_t dir, std::func
             session->get_dtls_record_publisher().publish(this, dir, func);
         } else {
             binary_t bin;
-            auto lambda = [&](tls_record* record) -> return_t { return record->write(dir, bin); };
+            auto lambda = [&dir, &bin](tls_record* record) -> return_t { return record->write(dir, bin); };
             ret = for_each(lambda);
             func(session, bin);
         }

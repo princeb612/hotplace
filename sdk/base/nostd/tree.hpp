@@ -14,13 +14,15 @@
 
 #include <hotplace/sdk/base/basic/types.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
+#include <stack>
 
 namespace hotplace {
 
 // clang-format off
 template <typename TYPE> struct t_treenode;
-template <typename TYPE> class t_tree_visitor;
 template <typename TYPE> class t_tree;
+template <typename TYPE> class t_tree_cursor;
+template <typename TYPE> class t_tree_visitor;
 // clang-format on
 
 /**
@@ -101,6 +103,16 @@ struct t_treenode {
         for (const auto& child : _children) {
             f(child);
         }
+    }
+
+    t_treenode<TYPE>* operator[](size_t index) const {
+        t_treenode<TYPE>* child = nullptr;
+        if (index < _children.size()) {
+            auto iter = _children.begin();
+            std::advance(iter, index);
+            child = *iter;
+        }
+        return child;
     }
 
     TYPE& get() { return _data; }
@@ -203,11 +215,89 @@ class t_tree {
     void addref() { _shared.addref(); }
     void release() { _shared.delref(); }
 
+    t_tree_cursor<TYPE> create_cursor() const {
+        if (_root && !_root->_children.empty()) {
+            return t_tree_cursor<TYPE>(_root->_children.front());
+        }
+        return t_tree_cursor<TYPE>(nullptr);
+    }
+
    protected:
    private:
     t_treenode<TYPE>* _root;
     size_t _size;
     t_shared_reference<t_tree<TYPE>> _shared;
+};
+
+/**
+ * @brief   cursor
+ * @example
+ *          auto cursor = ast.create_cursor();
+ *          while (cursor.valid()) {
+ *              int depth = cursor->depth();
+ *              std::string indent(depth * 2, ' ');
+ *
+ *              _logger->writeln("%s- %s", indent.c_str(), cursor->get().c_str());
+ *
+ *              cursor.next();
+ *          }
+ *
+ *          for (auto cur = ast.create_cursor(); cur; ++cur) {
+ *              _logger->writeln("Node Data: %s (depth: %d)", cur->get().c_str(), cur->depth());
+ *          }
+ */
+template <typename TYPE>
+class t_tree_cursor {
+   public:
+    using treenode = t_treenode<TYPE>;
+
+    t_tree_cursor() : _current(nullptr) {}
+    explicit t_tree_cursor(treenode* root) : _current(nullptr) { reset(root); }
+
+    void reset(treenode* root) {
+        while (!_stack.empty()) _stack.pop();
+        _current = nullptr;
+
+        if (root) {
+            _stack.push(root);
+            next();
+        }
+    }
+
+    treenode* next() {
+        if (_stack.empty()) {
+            _current = nullptr;
+            return nullptr;
+        }
+
+        _current = _stack.top();
+        _stack.pop();
+
+        const auto& children = _current->_children;
+        for (auto it = children.rbegin(); it != children.rend(); ++it) {
+            _stack.push(*it);
+        }
+
+        return _current;
+    }
+
+    treenode* current() const { return _current; }
+
+    bool has_next() const { return !_stack.empty() || _current != nullptr; }
+    bool valid() const { return _current != nullptr; }
+
+    treenode* operator->() const { return _current; }
+    treenode& operator*() const { return *_current; }
+    explicit operator bool() const { return valid(); }
+
+    t_tree_cursor& operator++() {
+        next();
+        return *this;
+    }
+
+   private:
+    treenode* _current;
+    std::stack<treenode*> _stack;
 };
 
 }  // namespace hotplace

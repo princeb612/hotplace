@@ -75,7 +75,7 @@ return_t tls_extensions::read(tls_handshake* handshake, tls_direction_t dir, con
 
 return_t tls_extensions::write(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
-    auto lambda = [&](tls_extension* extension) -> return_t {
+    auto lambda = [&dir, &bin](tls_extension* extension) -> return_t {
         auto ret = extension->write(dir, bin);
         if (errorcode_t::success != ret) {
 #if defined DEBUG
@@ -128,7 +128,7 @@ tls_extensions& tls_extensions::operator<<(tls_extension* extension) {
 
 tls_extensions& tls_extensions::operator<<(tls_extensions* extensions) {
     if (extensions) {
-        auto lambda = [&](tls_extension* ext) -> return_t { return add(ext, true); };
+        auto lambda = [this, &extensions](tls_extension* ext) -> return_t { return add(ext, true); };
 
         critical_section_guard guard(_lock);
         extensions->for_each(lambda);

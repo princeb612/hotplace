@@ -19,6 +19,15 @@ namespace hotplace {
 namespace io {
 
 /**
+ * @example
+ *          auto cons_allexcept_type1 =
+ *              asn1_referenced_type::define("type",
+ *                  asn1_builder::build(asn1_entity_integer,
+ *                              [&](asn1_object* builtin) -> void {
+ *                                  builtin->get_constraints().add(
+ *                                      new asn1_constraint_all_except_i(
+ *                                          new asn1_constraint_range_i(1, 10)));
+ *                              }));
  */
 template <typename T>
 class asn1_constraint_all_except : public asn1_constraint<T> {

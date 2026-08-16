@@ -12,10 +12,10 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/system/trace.hpp>
+// #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
+// #include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
 
 namespace hotplace {
@@ -59,33 +59,14 @@ asn1_tag& asn1_tag::as_automatic() {
     return *this;
 }
 
-void asn1_tag::test_and_set_constructed() {
-    if (is_primitive()) {
-        asn1_object* node = get_parent();
-        while (node) {
-            auto tag = node->get_tag();
-            if (tag && tag->is_explicit()) {
-                as_constructed();
-                break;
-            }
-
-            if (asn1_entity_any == node->get_entity()) break;
-            if (node->is_constructed()) {
-                as_constructed();
-                break;
-            }
-
-            node = node->get_object();
-        }
-    }
-}
-
 void asn1_tag::represent(stream_t* s, const asn1_value* value) const {
     if (s) {
         if (get_class() & asn1_class_mask) {
+            auto resource = asn1_resource::get_instance();
+
             s->printf("[");
             if (false == asn1_is_context(get_class())) {
-                s->printf("%s", asn1_resource::get_instance()->get_class_name(get_class()).c_str());
+                s->printf("%s", resource->get_class_name(get_class()).c_str());
                 s->printf(" ");
             }
 
@@ -93,7 +74,7 @@ void asn1_tag::represent(stream_t* s, const asn1_value* value) const {
 
             s->printf("]");
             if (get_tag_type()) {
-                s->printf(" %s", asn1_resource::get_instance()->get_tagtype_name(get_tag_type()).c_str());
+                s->printf(" %s", resource->get_tagtype_name(get_tag_type()).c_str());
             }
         }
     }

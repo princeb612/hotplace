@@ -12,11 +12,12 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/system/trace.hpp>
+// #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
+// #include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_builtin_type.hpp>
-#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_referenced_type.hpp>
+// #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_referenced_type.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tagged_type.hpp>
 
 namespace hotplace {
@@ -52,6 +53,32 @@ asn1_tagged_type* asn1_tagged_type::addref() {
 
 asn1_tag* asn1_tagged_type::get_tag() const { return (asn1_tag*)asn1_object::get_tag(); }
 
+void asn1_tagged_type::update_linkage() {
+    // _object may be nullptr (see asn1_weakly_typed)
+    if (nullptr == _object) return;
+
+    // inner TLV
+    if (_tag->is_implicit()) {
+        _object->suppress();  // IMPLICIT replace
+    } else {
+        _object->unsuppress();  // EXPLICIT wrap
+    }
+
+    // CONSTRUCTED bit propagation
+    if (_tag->is_primitive()) {
+        asn1_object* node = this;
+        while (node) {
+            auto tag = node->get_tag();
+            if ((tag && tag->is_explicit()) || node->is_constructed()) {
+                _tag->as_constructed();
+                break;
+            }
+
+            node = node->get_object();
+        }
+    }
+}
+
 void asn1_tagged_type::represent(stream_t* s, const asn1_value* value) const {
     if (false == get_name().empty()) s->printf("%s ", get_name().c_str());
 
@@ -70,14 +97,6 @@ bool asn1_tagged_type::represent(binary_t* b, const asn1_value* value, uint16 fl
     bool ret = true;
     size_t snapshot = b->size();
 
-    auto is_implicit = tag->is_implicit();
-    if (is_implicit) {
-        obj->suppress();
-    } else {
-        obj->unsuppress();
-    }
-
-    tag->test_and_set_constructed();  // TODO
     tag->represent(b, value);
 
     size_t pos = b->size();

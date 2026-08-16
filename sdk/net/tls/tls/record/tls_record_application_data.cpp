@@ -198,7 +198,7 @@ return_t tls_record_application_data::do_write_body(tls_direction_t dir, binary_
             binary_append(bin, uint8(tls_content_type_t::handshake));
         }
     } else if (records.size()) {
-        auto lambda = [&](tls_record* record) -> return_t {
+        auto lambda = [&dir, &bin, &ret, &is_tls13](tls_record* record) -> return_t {
             ret = record->do_write_body(dir, bin);
             if ((errorcode_t::success == ret) && is_tls13) {
                 binary_append(bin, uint8(record->get_type()));
@@ -224,7 +224,7 @@ bool tls_record_application_data::apply_protection() const { return true; }
 return_t tls_record_application_data::get_application_data(binary_t& message, bool untag) {
     return_t ret = errorcode_t::success;
     // auto& protection = get_session()->get_tls_protection();
-    auto lambda = [&](const binary_t& msg, uint8 trail) -> void {
+    auto lambda = [this](const binary_t& msg, uint8 trail) -> void {
         if (msg.size() > trail) {
             _bin.clear();
             binary_append(_bin, msg.data(), msg.size() - trail);

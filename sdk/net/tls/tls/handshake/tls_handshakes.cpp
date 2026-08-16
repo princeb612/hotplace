@@ -86,7 +86,7 @@ return_t tls_handshakes::write(tls_session* session, tls_direction_t dir, binary
             __leave2;
         }
 
-        auto lambda = [&](tls_handshake* handshake) -> return_t { return handshake->write(dir, bin); };
+        auto lambda = [&dir, &bin](tls_handshake* handshake) -> return_t { return handshake->write(dir, bin); };
         ret = for_each(lambda);
     }
     __finally2 {}

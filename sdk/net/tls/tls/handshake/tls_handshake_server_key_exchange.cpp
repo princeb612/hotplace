@@ -221,7 +221,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
     crypto_keyexchange keyexchange;
 
     {
-        auto lambda = [&](tls_group_t group, bool* ctrl) -> void {
+        auto lambda = [&advisor, &keyexchange, &tlskey, &pubkey, &curve](tls_group_t group, bool* ctrl) -> void {
             auto hint = advisor->hintof_curve_tls_group(group);
             if (hint && (hint->tlsgroup != tls_group_t::unknown)) {
                 keyexchange.keygen(group, &tlskey, KID_TLS_SERVER_KEY_EXCHANGE);
@@ -238,8 +238,7 @@ return_t tls_handshake_server_key_exchange::do_write_body(tls_direction_t dir, b
 
     tls_sigscheme_t sigalg = tls_sigscheme_t{};
     {
-        auto lambda = [&](tls_sigscheme_t sigscheme, bool* ctrl) -> void {
-            auto advisor = crypto_advisor::get_instance();
+        auto lambda = [&advisor, &kty_cert, &sigalg](tls_sigscheme_t sigscheme, bool* ctrl) -> void {
             auto hint = advisor->hintof_sigscheme(sigscheme);
             bool stop = false;
             if (hint) {

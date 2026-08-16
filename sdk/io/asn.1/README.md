@@ -71,10 +71,9 @@
       - asn1_constructed_node
       - asn1_primitive_node
   - [ ] asn.1/basic/visitor
-    - asn1_visitor
-      - asn1_ast_visitor
-      - asn1_notation_visitor
-      - asn1_der_visitor
+    - asn1_ast_visitor
+    - asn1_notation_visitor
+    - asn1_der_visitor
 - [ ] asn.1/runtime
   - asn1_runtime
   - asn1_weakly_typed

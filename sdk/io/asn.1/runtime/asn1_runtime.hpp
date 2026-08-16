@@ -13,11 +13,11 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1__
 #define __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1__
 
-#include <hotplace/sdk/base/basic/variant.hpp>
-#include <hotplace/sdk/base/nostd/tree.hpp>
+// #include <hotplace/sdk/base/basic/variant.hpp>
+// #include <hotplace/sdk/base/nostd/tree.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_weakly_typed.hpp>
+// #include <hotplace/sdk/io/asn.1/runtime/asn1_weakly_typed.hpp>
 // #include <hotplace/sdk/io/basic/parser.hpp>
 
 namespace hotplace {
@@ -35,19 +35,64 @@ class asn1_runtime {
 
     asn1_runtime* clone();
 
-    asn1_runtime& add(asn1_object* item);
+    return_t add(asn1_object* item);
     asn1_runtime& add(asn1_object* item, std::function<void(asn1_object*)> f);
     asn1_runtime& operator<<(asn1_object* item);
 
     return_t set(asn1_object* item, asn1_value* value);
+    asn1_object* get(const std::string& name) const;
     asn1_value* get(asn1_object* item) const;
 
-    return_t read(const byte_t* stream, size_t size, size_t& pos);
+    /**
+     * @brief   weakly-typed (schema-less)
+     * @sample
+     *          asn1_runtime runtime;
+     *          asn1_weakly_typed weaktype;
+     *          size_t pos = 0;
+     *          weaktype.read_weakly_typed(&runtime, stream, size, pos);
+     */
+    return_t read_weakly_typed(const byte_t* stream, size_t size, size_t& pos);
+
+    // strongly-typed
+    return_t add_schema(const std::string& schema, asn1_object* item);
+    // TODO
+    // - add_schema skip from_schema
+    asn1_object* from_schema(const std::string& schema);
+    /**
+     * @brief   strongly-typed
+     * @sample
+     *          const char* schema1 = "Type1 ::= VisibleString";
+     *          asn1_object* type1 = asn1_referenced_type::define("type1", new asn1_visiblestring);
+     *          const char* schema2 = "Type2 ::= [APPLICATION 3] IMPLICIT Type1";
+     *          asn1_object* type2 = asn1_referenced_type::define("type2", new asn1_tagged_type(asn1_class_application, 3, asn1_implicit,
+     * asn1_referenced_type::refer("type1"))); const char* schema3 = "Type3 ::= [2] EXPLICIT Type2"; asn1_object* type3 = asn1_referenced_type::define("type3", new
+     * asn1_tagged_type(asn1_class_context, 2, asn1_explicit, asn1_referenced_type::refer("type2")));
+     *
+     *          asn1_runtime runtime;
+     *          runtime.add_schema(schema1, type1);
+     *          runtime.add_schema(schema2, type2);
+     *          runtime.add_schema(schema3, type3);
+     *
+     *          const char* bytestream = "A2 07 43 05 4A 6F 6E 65 73";
+     *          binary_t bin_stream = base16_decode_rfc(bytestream);
+     *          auto stream = bin_stream.data();
+     *          auto size = bin_stream.size();
+     *          size_t pos = 0;
+     *          runtime.read("type3", stream, size, pos);
+     */
+    return_t read(const std::string& name, const byte_t* stream, size_t size, size_t& pos);
+
     void for_each(std::function<void(asn1_object*)> f) const;
     void for_each(std::function<void(asn1_value*)> f) const;
     void notation(stream_t* s);
     void publish(stream_t* s);
     void publish(binary_t* b);
+    void notation(const std::string& name, stream_t* s);
+    void publish(const std::string& name, stream_t* s);
+    void publish(const std::string& name, binary_t* b);
+
+    // replace reference
+    void update_linkage(asn1_object* object);
 
     void clear();
 
@@ -63,6 +108,7 @@ class asn1_runtime {
     std::map<std::string, asn1_object*> _dictionary;
     std::list<asn1_object*> _types;
     std::map<asn1_object*, asn1_value*> _values;
+    std::map<asn1_object*, std::string> _schema;  // strongly-typed
 
     // parser _parser;
 };

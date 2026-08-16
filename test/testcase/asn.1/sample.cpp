@@ -59,6 +59,7 @@ int main(int argc, char** argv) {
     testcase_basic2();
     testcase_constraints();
     testcase_testvector_der();
+    testcase_basic3();
     // testcase_parser();
 
     _logger->flush();

@@ -19,6 +19,16 @@ namespace hotplace {
 namespace io {
 
 /**
+ * @example
+ *          auto cons_except_type1 =
+ *              asn1_referenced_type::define("type",
+ *                  asn1_builder::build(asn1_entity_integer,
+ *                              [&](asn1_object* builtin) -> void {
+ *                                  builtin->get_constraints().add(
+ *                                      new asn1_constraint_except_i(
+ *                                          new asn1_constraint_range_i(1, 50),
+ *                                          new asn1_constraint_range_i(20, 30)));
+ *                              }));
  */
 template <typename T>
 class asn1_constraint_except : public asn1_constraint<T> {

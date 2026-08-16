@@ -55,9 +55,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
         __try2 {
             record->addref();
 
-#if defined DEBUG
             tls_advisor* tlsadvisor = tls_advisor::get_instance();
-#endif
             tls_record_builder builder;
             auto session = get_session();
             if (nullptr == session) {
@@ -85,7 +83,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
 
                 std::list<tls_record*> records;
 
-                auto lambda_handshake = [&](tls_handshake* handshake) -> return_t {
+                auto lambda_handshake = [&dir, &tlsadvisor, &spl, &hdrsize, &hsseq](tls_handshake* handshake) -> return_t {
                     return_t ret = errorcode_t::success;
                     binary_t bin;
                     __try2 {
@@ -121,7 +119,8 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                     return ret;
                 };
 
-                auto lambda_split = [&](uint32 flags, const byte_t* stream, size_t size, size_t fragoffset, size_t fragsize, const spl_desc& desc) -> void {
+                auto lambda_split = [this, &dir, &tlsadvisor, &builder, &records, &session, &rctype](uint32 flags, const byte_t* stream, size_t size, size_t fragoffset,
+                                                                                                     size_t fragsize, const spl_desc& desc) -> void {
 #if defined DEBUG
                     if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
                         trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_record, [&](basic_stream& dbs) -> void {
@@ -215,7 +214,7 @@ return_t dtls_record_publisher::publish(tls_records* records, tls_direction_t di
         std::list<std::queue<binary_t>> temp;
         std::queue<binary_t> q;
         size_t size = 0;
-        auto lambda = [&](tls_record* record) -> return_t { return publish(record, dir, container); };
+        auto lambda = [this, &dir, &container](tls_record* record) -> return_t { return publish(record, dir, container); };
         ret = records->for_each(lambda);
 
         for (auto& item : container) {

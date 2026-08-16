@@ -513,8 +513,8 @@ asn1_encode& asn1_encode::write(binary_t& bin, asn1_entity_t entity, const varia
         case asn1_entity_t61string:
         case asn1_entity_universalstring:
         case asn1_entity_visiblestring: {
-            auto size = v.size ? v.size : strlen(v.data.str);
-            binary_append(bin, v.data.str, size);
+            auto size = v.size ? v.size : (v.data.str ? strlen(v.data.str) : 0);
+            if (size) binary_append(bin, v.data.str, size);
         } break;
         case asn1_entity_oid: {
             oid_t oid;

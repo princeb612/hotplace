@@ -13,7 +13,7 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_ASN1TAGGEDTYPE__
 #define __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_ASN1TAGGEDTYPE__
 
-#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
+// #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_type.hpp>
 
 namespace hotplace {
@@ -54,6 +54,8 @@ class asn1_tagged_type : public asn1_type {
     virtual asn1_tagged_type* addref();
 
     asn1_tag* get_tag() const;
+
+    virtual void update_linkage();
 
    protected:
     virtual void represent(stream_t* s, const asn1_value* value = nullptr) const;

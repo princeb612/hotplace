@@ -1,0 +1,22 @@
+#### applets
+
+- authenticode
+  - windows executable file authenticode verification
+- dtlsserver
+  - DTLS 1.2 server
+- httpserver1
+  - HTTP/1.1 server
+- httpserver2
+  - HTTP/2 server
+- netclient
+  - client
+- tcpserver1
+  - multiplexer-intergrated TCP server
+- tcpserver2
+  - networkserver-intergrated TCP server
+- tlsserver
+  - TLS 1.2/1.3 server
+- udpserver1
+  - multiplexer-intergrated UDP server
+- udpserver2
+  - networkserver-intergrated UDP server

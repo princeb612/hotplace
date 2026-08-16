@@ -244,7 +244,7 @@ void http2_frame::dump(stream_t* s) {
         s->printf("\n");
         s->printf(" > %s [ ", constexpr_frame_flags);
 
-        auto lambda = [&](uint8 flag, const std::string& name) -> void { s->printf("%s ", name.c_str()); };
+        auto lambda = [&s](uint8 flag, const std::string& name) -> void { s->printf("%s ", name.c_str()); };
         resource->for_each_h2_frame_flag_names(get_type(), get_flags(), lambda);
 
         s->printf("]\n");
@@ -298,7 +298,9 @@ return_t http2_frame::write_compressed_header(http_header* header, binary_t& fra
         }
 
         hpack_encoder encoder;
-        auto lambda = [&](const std::string& name, const std::string& value) -> void { encoder.encode_header(get_hpack_dyntable(), frag, name, value, flags); };
+        auto lambda = [this, &frag, &flags, &encoder](const std::string& name, const std::string& value) -> void {
+            encoder.encode_header(get_hpack_dyntable(), frag, name, value, flags);
+        };
         header->get_headers(lambda);
         get_hpack_dyntable()->commit();
     }

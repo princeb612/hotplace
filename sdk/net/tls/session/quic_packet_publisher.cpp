@@ -190,7 +190,7 @@ return_t quic_packet_publisher::probe_spaces(std::set<protection_space_t>& space
         }
 
         if (quic_ack_packet & get_flags()) {
-            auto lambda_ack = [&](tls_session* session, protection_space_t space) -> return_t {
+            auto lambda_ack = [&spaces](tls_session* session, protection_space_t space) -> return_t {
                 auto& pkns = session->get_quic_session().get_pkns(space);
                 critical_section_guard guard(pkns.get_lock());
                 if (pkns.is_modified()) {

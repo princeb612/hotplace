@@ -436,7 +436,7 @@ return_t tls_extension_server_key_share::do_write_body(tls_direction_t dir, bina
         pl << new payload_member(uint16(group), true, constexpr_group)           //
            << new payload_member(uint16(pubkeylen), true, constexpr_pubkey_len)  //
            << new payload_member(pubkey, constexpr_pubkey);
-        auto lambda_hook = [&](payload* pl, payload_member* member) -> void {
+        auto lambda_hook = [&correct_group](payload* pl, payload_member* member) -> void {
             // if do_helloretryrequest is false, do HelloRetryRequest
             pl->set_group(constexpr_pubkey_len, correct_group);
             pl->set_group(constexpr_pubkey, correct_group);

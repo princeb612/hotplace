@@ -49,7 +49,7 @@ void hpack_dynamic_table::dump(const std::string& desc, std::function<void(const
 
         bs << "> " << desc;
         f(bs.c_str(), bs.size());
-        auto lambda = [&](size_t entno, size_t entsize, const std::string& name, const std::string& value) -> void {
+        auto lambda = [&f, &bs](size_t entno, size_t entsize, const std::string& name, const std::string& value) -> void {
             bs.clear();
             bs.printf(" [%3zi](s = %zi) %s: %s", entno, entsize, name.c_str(), value.c_str());
             f(bs.c_str(), bs.size());

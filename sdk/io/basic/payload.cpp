@@ -110,7 +110,7 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
         std::list<payload_member*> list_size_unknown;
         std::set<payload_member*> set_once_read;
 
-        auto lambda_readitem = [&](payload_member* item, const byte_t* ptr, size_t size_ptr, size_t offset, size_t* size_read) -> void {
+        auto lambda_readitem = [this](payload_member* item, const byte_t* ptr, size_t size_ptr, size_t offset, size_t* size_read) -> void {
             item->read(ptr, size_ptr, offset, size_read);
             if (false == _cond_map.empty()) {
                 const auto& name = item->get_name();

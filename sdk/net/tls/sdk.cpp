@@ -43,7 +43,7 @@ return_t load_certificate(const char* certfile, const char* keyfile, const char*
         // copy pointers and increase reference counter
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
         auto& keys = tlsadvisor->get_certs();
-        auto lambda = [&](crypto_key_object* k, void*) -> void { keys.add(*k, true); };
+        auto lambda = [&keys](crypto_key_object* k, void*) -> void { keys.add(*k, true); };
         temp.for_each(lambda, nullptr);
     }
     __finally2 {}

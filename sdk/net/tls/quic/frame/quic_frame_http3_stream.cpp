@@ -142,7 +142,7 @@ return_t quic_frame_http3_stream::do_read_body(tls_direction_t dir, const byte_t
 
         switch (unitype) {
             case h3_control_stream: {
-                auto lambda_decoder = [&](const binary_t& bin, size_t& pos) -> return_t {
+                auto lambda_decoder = [&session](const binary_t& bin, size_t& pos) -> return_t {
                     return_t ret = errorcode_t::success;
                     qpack_encoder encoder;
                     std::list<http_compression_decode_t> kv;
@@ -150,7 +150,7 @@ return_t quic_frame_http3_stream::do_read_body(tls_direction_t dir, const byte_t
                     ret = encoder.decode(&dyntable, bin.data(), bin.size(), pos, kv, qpack_quic_stream_decoder);
                     return ret;
                 };
-                auto lambda_encoder = [&](const binary_t& bin, size_t& pos) -> return_t {
+                auto lambda_encoder = [&session](const binary_t& bin, size_t& pos) -> return_t {
                     return_t ret = errorcode_t::success;
                     qpack_encoder encoder;
                     std::list<http_compression_decode_t> kv;
@@ -158,7 +158,7 @@ return_t quic_frame_http3_stream::do_read_body(tls_direction_t dir, const byte_t
                     ret = encoder.decode(&dyntable, bin.data(), bin.size(), pos, kv, qpack_quic_stream_encoder);
                     return ret;
                 };
-                auto lambda_control = [&](const binary_t& bin, size_t& pos) -> return_t {
+                auto lambda_control = [&session](const binary_t& bin, size_t& pos) -> return_t {
                     return_t ret = errorcode_t::success;
                     http3_frames frames;
                     ret = frames.read(session, bin.data(), bin.size(), pos);

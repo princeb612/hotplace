@@ -54,15 +54,15 @@ class asn1_object {
     friend class asn1_der_visitor;
     friend class asn1_notation_visitor;
     friend class asn1_weakly_typed;
+    friend class asn1_strongly_typed;
 
    public:
     virtual ~asn1_object();
 
     asn1_object& operator=(const asn1_object& other);
-    asn1_object& operator=(asn1_object&& other);
 
     virtual asn1_object* clone();
-    virtual asn1_value* instantiate();
+    asn1_value* instantiate();
     virtual asn1_object* addref();
     virtual void release();
 
@@ -70,7 +70,7 @@ class asn1_object {
     void publish(stream_t* s);
 
     asn1_object& set_name(const std::string& name);
-    asn1_object& set_parent(asn1_object* parent);
+    virtual void set_parent(asn1_object* parent);
 
     uint8 get_ident() const;
     asn1_object* get_parent() const;
@@ -93,8 +93,6 @@ class asn1_object {
     bool is_tagged() const;
     // DEFAULT
     bool is_default() const;
-    // IMPLICIT
-    bool is_suppressed() const;
 
     asn1_object& as_default();
     asn1_object& as_optional();
@@ -102,29 +100,47 @@ class asn1_object {
     asn1_object& as_primitive();
     asn1_object& as_constructed();
 
-    // suppress identifier octets
-    asn1_object& suppress();
-    asn1_object& unsuppress();
+    // IMPLICIT
+    void suppress();
+    // EXPLICIT
+    void unsuppress();
+    // is IMPLICIT
+    bool is_suppressed() const;
 
+    // constraints
     asn1_constraints& get_constraints();
     const asn1_constraints& get_constraints() const;
     virtual bool have_constraints() const;
     bool validate(const asn1_value* value);
 
+    virtual void update_linkage();
+
    protected:
     asn1_object(asn1_entity_t entity, const std::string& name = "", asn1_object* object = nullptr, asn1_tag* tag = nullptr);
     asn1_object(const asn1_object& other);
-    asn1_object(asn1_object&& other);
 
     asn1_object& set_entity(asn1_entity_t entity);
     asn1_object& set_default_value(const variant_t& value);
     asn1_object& set_default_value(variant_t&& value);
-    asn1_object& set_object(asn1_object* object);
+    void set_tag(asn1_tag* tag);
+    void set_object(asn1_object* object);
 
-    virtual void accept(asn1_visitor* v);
-    virtual void accept(asn1_ast_visitor* v);
+    /**
+     * @brief   accept (asn1_ast_visitor, asn1_notation_visitor)
+     * @param   stream_t* s [out]
+     * @param   const asn1_value* value [inopt]
+     */
     virtual void represent(stream_t* s, const asn1_value* value = nullptr) const;
+    /**
+     * @brief   accept (asn1_der_visitor)
+     * @param   binary_t* b [out]
+     * @param   const asn1_value* value [inopt]
+     * @param   uint16 flags [inopt] see asn1_visitor_set_of
+     */
     virtual bool represent(binary_t* b, const asn1_value* value = nullptr, uint16 flags = 0) const;
+    /**
+     * @brief   validate constraints
+     */
     bool validate_node(const asn1_object* node, const asn1_value* value);
 
    private:
@@ -136,7 +152,7 @@ class asn1_object {
 
     asn1_object* _parent;      // parent (bottom-up)
     asn1_tag* _tag;            // tagged type
-    asn1_object* _object;      // type (top-down)
+    asn1_object* _object;      // inner TLV (top-down)
     asn1_default_t* _default;  // default value
 
     asn1_constraints _constraints;

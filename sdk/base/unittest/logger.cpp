@@ -190,7 +190,7 @@ logger& logger::do_console(std::function<void(logger_item*)> f) {
 }
 
 logger& logger::do_console_vprintf(const char* fmt, va_list ap, bool lf) {
-    auto lambda = [&](logger_item* item) -> void {
+    auto lambda = [&fmt, &ap, &lf](logger_item* item) -> void {
         item->bs.vprintf(fmt, ap);
         if (lf) {
             item->bs.printf("\n");
@@ -200,7 +200,7 @@ logger& logger::do_console_vprintf(const char* fmt, va_list ap, bool lf) {
 }
 
 logger& logger::do_console_raw(const char* buf, size_t bufsize, bool lf) {
-    auto lambda = [&](logger_item* item) -> void {
+    auto lambda = [&buf, &bufsize, &lf](logger_item* item) -> void {
         item->bs.write(buf, bufsize);
         if (lf) {
             item->bs.printf("\n");
@@ -210,7 +210,7 @@ logger& logger::do_console_raw(const char* buf, size_t bufsize, bool lf) {
 }
 
 logger& logger::do_console_stream(stream_t* s, bool lf) {
-    auto lambda = [&](logger_item* item) -> void {
+    auto lambda = [&s, &lf](logger_item* item) -> void {
         if (s) {
             item->bs.write(s->data(), s->size());
             if (lf) {
@@ -245,7 +245,7 @@ logger& logger::do_write(std::function<void(logger_item*)> f) {
 }
 
 logger& logger::do_write_vprintf(const char* fmt, va_list ap, bool lf) {
-    auto lambda = [&](logger_item* item) -> void {
+    auto lambda = [&fmt, &ap, &lf](logger_item* item) -> void {
         item->bs.vprintf(fmt, ap);
         if (lf) {
             item->bs.printf("\n");
@@ -255,7 +255,7 @@ logger& logger::do_write_vprintf(const char* fmt, va_list ap, bool lf) {
 }
 
 logger& logger::do_write_raw(const char* buf, size_t bufsize, bool lf) {
-    auto lambda = [&](logger_item* item) -> void {
+    auto lambda = [&buf, &bufsize, &lf](logger_item* item) -> void {
         item->bs.write(buf, bufsize);
         if (lf) {
             item->bs.printf("\n");
@@ -265,7 +265,7 @@ logger& logger::do_write_raw(const char* buf, size_t bufsize, bool lf) {
 }
 
 logger& logger::do_write_stream(stream_t* s, bool lf) {
-    auto lambda = [&](logger_item* item) -> void {
+    auto lambda = [&s, &lf](logger_item* item) -> void {
         if (s) {
             item->bs.write(s->data(), s->size());
             if (lf) {
@@ -278,14 +278,16 @@ logger& logger::do_write_stream(stream_t* s, bool lf) {
 
 logger& logger::do_dump(const byte_t* addr, size_t size, unsigned hexpart, unsigned indent) {
     if (addr) {
-        auto lambda = [&](logger_item* item) -> void { dump_memory(addr, size, &item->bs, hexpart, indent, 0, dump_memory_flag_t::dump_notrunc); };
+        auto lambda = [&addr, &size, &hexpart, &indent](logger_item* item) -> void {
+            dump_memory(addr, size, &item->bs, hexpart, indent, 0, dump_memory_flag_t::dump_notrunc);
+        };
         do_write(lambda);
     }
     return *this;
 }
 
 logger& logger::do_hdump(const std::string& header, const byte_t* addr, size_t size, unsigned hexpart, unsigned indent) {
-    auto lambda = [&](logger_item* item) -> void {
+    auto lambda = [&header, &addr, &size, &hexpart, &indent](logger_item* item) -> void {
         item->bs.printf("%s\n", header.c_str());
         dump_memory(addr, size, &item->bs, hexpart, indent, 0, dump_memory_flag_t::dump_notrunc);
     };
@@ -358,7 +360,7 @@ logger& logger::setcolor(console_style_t style, console_color_t fgcolor, console
 }
 
 logger& logger::do_color_write_vprintf(const char* fmt, va_list ap, bool lf) {
-    auto lambda = [&](logger_item* item) -> void {
+    auto lambda = [this, &fmt, &ap, &lf](logger_item* item) -> void {
         console_color color;
         color.set_style(_style).set_fgcolor(_fgcolor).set_bgcolor(_bgcolor);
         color.printf(&item->bs);
@@ -373,7 +375,7 @@ logger& logger::do_color_write_vprintf(const char* fmt, va_list ap, bool lf) {
 }
 
 logger& logger::do_color_write_raw(const char* buf, size_t bufsize, bool lf) {
-    auto lambda = [&](logger_item* item) -> void {
+    auto lambda = [this, &buf, &bufsize, &lf](logger_item* item) -> void {
         console_color color;
         color.set_style(_style).set_fgcolor(_fgcolor).set_bgcolor(_bgcolor);
         color.printf(&item->bs);
@@ -388,7 +390,7 @@ logger& logger::do_color_write_raw(const char* buf, size_t bufsize, bool lf) {
 }
 
 logger& logger::do_color_write_stream(stream_t* s, bool lf) {
-    auto lambda = [&](logger_item* item) -> void {
+    auto lambda = [this, &s, &lf](logger_item* item) -> void {
         if (s) {
             console_color color;
             color.set_style(_style).set_fgcolor(_fgcolor).set_bgcolor(_bgcolor);

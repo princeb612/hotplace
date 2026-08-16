@@ -79,7 +79,7 @@ return_t dtls13_ciphertext::do_read_header(tls_direction_t dir, const byte_t* st
              * +-+-+-+-+-+-+-+-+
              */
 
-            auto lambda_condition = [&](payload* pl, payload_member* item) -> void {
+            auto lambda_condition = [](payload* pl, payload_member* item) -> void {
                 auto uhdr = pl->t_value_of<uint8>(item);
                 pl->set_group(constexpr_group_c, (0x10 & uhdr));
                 pl->set_group(constexpr_group_s16, 0 != (0x08 & uhdr));
@@ -397,7 +397,7 @@ return_t dtls13_ciphertext::do_write_body(tls_direction_t dir, binary_t& bin) {
         handshakes.write(get_session(), dir, bin);
         binary_append(bin, uint8(get_type()));
     } else if (records.size()) {
-        auto lambda = [&](tls_record* record) -> return_t {
+        auto lambda = [&dir, &bin, &ret](tls_record* record) -> return_t {
             ret = record->do_write_body(dir, bin);
             if (errorcode_t::success == ret) {
                 binary_append(bin, uint8(record->get_type()));

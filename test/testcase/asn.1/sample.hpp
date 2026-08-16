@@ -18,6 +18,7 @@ void testcase_basic1();
 void testcase_basic2();
 void testcase_constraints();
 void testcase_testvector_der();
+void testcase_basic3();
 void testcase_parser();
 
 #endif

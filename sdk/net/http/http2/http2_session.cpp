@@ -131,7 +131,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
         bool completion = (mask == (mask & flags)) ? true : false;
         bool reset = false;
 
-        auto lambda_postread = [&](http2_frame* frame) -> void {
+        auto lambda_postread = [this, &bin_resp, &stream_id, &type, &req, &reset](http2_frame* frame) -> void {
             if (h2_frame_t::h2_frame_data == type) {
                 http2_frame_data* frame_data = (http2_frame_data*)frame;
                 req->add_content(frame_data->get_data());
@@ -142,7 +142,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
                 }
             } else if (h2_frame_t::h2_frame_headers == type) {
                 http2_frame_headers* frame_headers = (http2_frame_headers*)frame;
-                auto lambda = [&](const std::string& name, const std::string& value) -> void {
+                auto lambda = [&req](const std::string& name, const std::string& value) -> void {
                     if (":path" == name) {
                         req->get_http_uri().open(value);
                     }
@@ -204,7 +204,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
                 }
             } else if (h2_frame_t::h2_frame_push_promise == type) {
                 http2_frame_push_promise* frame_push_promise = (http2_frame_push_promise*)frame;
-                auto lambda = [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); };
+                auto lambda = [&req](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); };
                 frame_push_promise->read_compressed_header(frame_push_promise->get_fragment(), lambda);
             } else if (h2_frame_t::h2_frame_ping == type) {
                 frame->set_flags(h2_flag_ack);
@@ -213,7 +213,7 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
             } else if (h2_frame_t::h2_frame_window_update == type) {
             } else if (h2_frame_t::h2_frame_continuation == type) {
                 http2_frame_continuation* frame_continuation = (http2_frame_continuation*)frame;
-                auto lambda = [&](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); };
+                auto lambda = [&req](const std::string& name, const std::string& value) -> void { req->get_http_header().add(name, value); };
                 frame_continuation->read_compressed_header(frame_continuation->get_fragment(), lambda);
             }
         };

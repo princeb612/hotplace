@@ -40,7 +40,7 @@ return_t trial_tls_server_socket::tls_accept(socket_context_t** handle, socket_t
         composer->set_maxver(_maxspec);
 
         {
-            auto lambda_send = [&](tls_session* sess, binary_t& bin) -> void {
+            auto lambda_send = [this](tls_session* sess, binary_t& bin) -> void {
                 socket_context_t* ctx = (socket_context_t*)(sess->get_hook_param());
 #if defined DEBUG
                 if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
@@ -53,7 +53,9 @@ return_t trial_tls_server_socket::tls_accept(socket_context_t** handle, socket_t
                 size_t sent = 0;
                 naive_tcp_server_socket::send(ctx, (char*)bin.data(), bin.size(), &sent);
             };
-            auto lambda = [&](tls_session* sess, uint32 status) -> void { sess->get_tls_composer()->session_status_changed(status, from_server, 1000, lambda_send); };
+            auto lambda = [&lambda_send](tls_session* sess, uint32 status) -> void {
+                sess->get_tls_composer()->session_status_changed(status, from_server, 1000, lambda_send);
+            };
 
             session->set_hook_change_session_status(lambda);
             session->set_hook_param(context);

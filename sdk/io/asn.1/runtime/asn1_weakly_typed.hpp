@@ -13,8 +13,9 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1WEAKLYTYPED__
 #define __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1WEAKLYTYPED__
 
-#include <hotplace/sdk/base/nostd/tree.hpp>
+// #include <hotplace/sdk/base/nostd/tree.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_bytestream.hpp>
 
 namespace hotplace {
 namespace io {
@@ -37,19 +38,9 @@ class asn1_weakly_typed {
     friend class asn1_runtime;
 
    public:
-    struct asn1_tlv_t {
-        uint8 ident;
-        uint64 tag;
-        size_t len;
-        size_t pos;
-        uint32 node_id;
-        asn1_node* asn1node;
-        asn1_object* asn1obj;
-
-        asn1_tlv_t() : ident(0), tag(0), len(0), pos(0), node_id(0), asn1node(nullptr), asn1obj(nullptr) {}
-    };
-    using TLV_tree = t_tree<asn1_tlv_t>;
-    using TLV_node = t_treenode<asn1_tlv_t>;
+    using asn1_tlv_t = asn1_bytestream::asn1_tlv_t;
+    using TLV_tree = asn1_bytestream::TLV_tree;
+    using TLV_node = asn1_bytestream::TLV_node;
 
     asn1_weakly_typed();
     ~asn1_weakly_typed();
@@ -58,24 +49,18 @@ class asn1_weakly_typed {
      * DER parser
      */
     return_t read(asn1_runtime* target, const byte_t* stream, size_t size, size_t& pos);
+
+    void clear();
+
+   protected:
+    static asn1_object* transform(asn1_runtime* target, const asn1_node* node, asn1_object* parent = nullptr);
     /**
      * schema-less transform
      */
     return_t transform(asn1_runtime* target);
 
-    void clear();
-
-   protected:
-    /**
-     * @brief   binary stream to t_tree<asn1_tlv_t>
-     * @sa      read
-     */
-    return_t read_node(const byte_t* stream, size_t size, size_t& pos, TLV_tree* tree, TLV_node* parent);
-
-    static asn1_object* transform(asn1_runtime* target, const asn1_node* node, asn1_object* parent = nullptr);
-
    private:
-    TLV_tree _tree;
+    asn1_bytestream _stream;
 };
 
 }  // namespace io

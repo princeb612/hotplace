@@ -18,7 +18,7 @@ namespace crypto {
 return_t crypto_advisor::for_each_jwa(std::function<void(const hint_jose_encryption_t*)> f) {
     return_t ret = errorcode_t::success;
 
-    auto lambda = [&](const hint_jose_encryption_t& item) { return f(&item); };
+    auto lambda = [&f](const hint_jose_encryption_t& item) { return f(&item); };
     std::for_each(hint_jose_algorithms, hint_jose_algorithms + sizeof_hint_jose_algorithms, lambda);
     return ret;
 }
@@ -26,7 +26,7 @@ return_t crypto_advisor::for_each_jwa(std::function<void(const hint_jose_encrypt
 return_t crypto_advisor::for_each_jwe(std::function<void(const hint_jose_encryption_t*)> f) {
     return_t ret = errorcode_t::success;
 
-    auto lambda = [&](const hint_jose_encryption_t& item) { return f(&item); };
+    auto lambda = [&f](const hint_jose_encryption_t& item) { return f(&item); };
     std::for_each(hint_jose_encryptions, hint_jose_encryptions + sizeof_hint_jose_encryptions, lambda);
     return ret;
 }
@@ -34,7 +34,7 @@ return_t crypto_advisor::for_each_jwe(std::function<void(const hint_jose_encrypt
 return_t crypto_advisor::for_each_jws(std::function<void(const hint_signature_t*)> f) {
     return_t ret = errorcode_t::success;
 
-    auto lambda = [&](const hint_signature_t& item) { return f(&item); };
+    auto lambda = [&f](const hint_signature_t& item) { return f(&item); };
     std::for_each(hint_signatures, hint_signatures + sizeof_hint_signatures, lambda);
     return ret;
 }

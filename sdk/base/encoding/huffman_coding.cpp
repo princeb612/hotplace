@@ -55,7 +55,7 @@ huffman_coding& huffman_coding::learn() {
      * _btree   .. merge by weight until (1 == size()), see hc_comparator::operator
      */
 
-    auto lambda = [&](hc_t const& t) -> void { _btree.insert(t); };
+    auto lambda = [this](hc_t const& t) -> void { _btree.insert(t); };
     _measure.for_each(lambda);  // insert into _btree select * from _measure
 
     while (_btree.size() > 1) {
@@ -295,7 +295,7 @@ void huffman_coding::dump() const {
     if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_debug)) {
         trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
             dbs.println("- huffman coding table");
-            auto lambda_exports = [&](uint8 sym, const char* code) -> void {
+            auto lambda_exports = [this, &dbs](uint8 sym, const char* code) -> void {
                 dbs.println(R"(  - sym %c (0x%02x) code : "%s" (len %zi))", isprint(sym) ? sym : '?', sym, code, strlen(code));
             };
             exports(lambda_exports);

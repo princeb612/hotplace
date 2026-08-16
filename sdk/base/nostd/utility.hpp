@@ -315,7 +315,7 @@ void for_each(container_t& c, typename std::function<void(typename container_t::
 template <typename container_t, typename stream_type>
 void print(const container_t& c, stream_type& s, const std::string& mark_prologue = "[", const std::string& mark_delimiter = ", ",
            const std::string& mark_epilogue = "]") {
-    auto lambda = [&](typename container_t::const_iterator iter, int where) -> void {
+    auto lambda = [&s, &mark_prologue, &mark_delimiter, &mark_epilogue](typename container_t::const_iterator iter, int where) -> void {
         switch (where) {
             case seek_t::seek_begin:
                 s << mark_prologue << *iter;
@@ -334,7 +334,7 @@ void print(const container_t& c, stream_type& s, const std::string& mark_prologu
 template <typename container_t, typename stream_type>
 void print_pair(const container_t& c, stream_type& s, const std::string& mark_prologue = "[", const std::string& mark_delimiter = ", ",
                 const std::string& mark_epilogue = "]") {
-    auto lambda = [&](typename container_t::const_iterator iter, int where) -> void {
+    auto lambda = [&s, &mark_prologue, &mark_delimiter, &mark_epilogue](typename container_t::const_iterator iter, int where) -> void {
         switch (where) {
             case seek_t::seek_begin:
                 s << mark_prologue << "{" << iter->first << "," << iter->second << "}";
@@ -363,7 +363,7 @@ void print_pair(const container_t& c, stream_type& s, const std::string& mark_pr
 template <typename container_t, typename stream_type>
 void print_pair(const container_t& c, stream_type& s, std::function<void(typename container_t::const_iterator, stream_type&)> f, const std::string& mark_prologue = "[",
                 const std::string& mark_delimiter = ", ", const std::string& mark_epilogue = "]") {
-    auto lambda = [&](typename container_t::const_iterator iter, int where) -> void {
+    auto lambda = [&s, &f, &mark_prologue, &mark_delimiter, &mark_epilogue](typename container_t::const_iterator iter, int where) -> void {
         switch (where) {
             case seek_t::seek_begin:
                 s << mark_prologue << "{";

@@ -183,6 +183,11 @@ enum asn1_visitor_flag_t : uint16 {
     asn1_visitor_choice = 3,
 };
 
+// print_ast
+enum asn1_ast_flags : uint32 {
+    asn1_ast_flag_ansicolor = 1 << 0,
+};
+
 class asn1_object;
 class asn1_type;
 class asn1_builtin_type;

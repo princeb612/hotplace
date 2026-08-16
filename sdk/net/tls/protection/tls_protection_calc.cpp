@@ -104,8 +104,8 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
         }
         empty_ikm.resize(dlen);
 
-        auto lambda_expand_label = [&](tls_secret_t sec, binary_t& okm, const char* hashalg, uint16 dlen, const binary_t& secret, const char* label,
-                                       const binary_t& context) -> void {
+        auto lambda_expand_label = [this, &kdf](tls_secret_t sec, binary_t& okm, const char* hashalg, uint16 dlen, const binary_t& secret, const char* label,
+                                                const binary_t& context) -> void {
             okm.clear();
             if (is_kindof_dtls()) {
                 kdf.hkdf_expand_dtls13_label(okm, hashalg, dlen, secret, label, context);
@@ -114,7 +114,7 @@ return_t tls_protection::calc(tls_session* session, tls_handshake_type_t type, t
             }
             get_secrets().assign(sec, okm);  // copy
         };
-        auto lambda_extract = [&](tls_secret_t sec, binary_t& prk, const char* hashalg, const binary_t& salt, const binary_t& ikm) -> void {
+        auto lambda_extract = [this, &kdf](tls_secret_t sec, binary_t& prk, const char* hashalg, const binary_t& salt, const binary_t& ikm) -> void {
             kdf.hmac_kdf_extract(prk, hashalg, salt, ikm);
             get_secrets().assign(sec, prk);  // copy
         };

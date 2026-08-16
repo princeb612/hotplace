@@ -10,6 +10,7 @@
  *
  */
 
+#include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/stream/ansi_string.hpp>
 #include <hotplace/sdk/base/stream/lowlevel/bufferio.hpp>
 #include <hotplace/sdk/base/stream/stream_policy.hpp>
@@ -34,7 +35,7 @@ wide_string::wide_string(const wchar_t* data, ...) : wide_string() {
         bufferio::vprintf(_handle, data, ap);  // consume va_list just one time, so do not va_copy
     } catch (...) {
         va_end(ap);
-        throw;
+        throw exception(errorcode_t::unexpected);
     }
     va_end(ap);
 }

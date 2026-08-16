@@ -85,7 +85,7 @@ asn1_value& asn1_value::set(const std::string& name, variant&& vt) {
 }
 
 void asn1_value::publish(binary_t* b) {
-    asn1_der_visitor encoder(b, this);
+    asn1_der_visitor encoder(b, nullptr, this);
     encoder.visit(get_schema());
 }
 
@@ -216,7 +216,7 @@ bool asn1_value::encode_namedlist(binary_t& bin, const asn1_object* object, cons
 
     auto entity = object->get_entity();
 
-    auto lambda_enum2eval = [&](const std::string& ename, asn1_native_int_t& evalue) -> bool {
+    auto lambda_enum2eval = [&namedlist](const std::string& ename, asn1_native_int_t& evalue) -> bool {
         evalue = 0;
         bool ret = false;
         auto iter = namedlist.find(ename);

@@ -592,7 +592,7 @@ return_t tls_advisor::set_ciphersuites(const char* ciphersuites) {
 #endif
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        auto lambda = [&](const std::string& item) -> void {
+        auto lambda = [this, &tlsadvisor](const std::string& item) -> void {
             auto hint = tlsadvisor->hintof_cipher_suite(item);
             if (hint && (tls_flag_support & hint->flags)) {
                 auto code = hint->code;
@@ -648,7 +648,7 @@ return_t tls_advisor::set_tls_groups(const char* groups) {
         _groups.clear();
 
         auto advisor = crypto_advisor::get_instance();
-        auto lambda = [&](const std::string& item) -> void {
+        auto lambda = [this, &advisor](const std::string& item) -> void {
             auto hint = advisor->hintof_tls_group(item);
             if (hint && (tls_flag_support & hint->flags)) {
                 auto code = hint->group;

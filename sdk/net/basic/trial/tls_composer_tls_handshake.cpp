@@ -238,13 +238,13 @@ return_t tls_composer::do_tls_server_handshake_phase1(std::function<void(tls_ses
             records.clear();
 
             // unexpected message
-            auto lambda_has_fatal = [&](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
+            auto lambda_has_fatal = [&fatal_alerts](tls_alertlevel_t level, tls_alertdesc_t desc) -> void {
                 if (tls_alertlevel_t::fatal == level) {
                     fatal_alerts.insert(desc);
                 }
             };
 
-            auto lambda_alert = [&](tls_alertdesc_t desc) -> void {
+            auto lambda_alert = [this, &func, &ret, &session, &dir, &builder, &records](tls_alertdesc_t desc) -> void {
                 records.clear();
                 builder                                                 //
                     .add(&records, tls_content_type_t::alert, session,  //

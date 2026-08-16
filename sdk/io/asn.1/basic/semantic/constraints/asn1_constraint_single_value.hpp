@@ -20,12 +20,12 @@ namespace io {
 
 /**
  * @example
- *          auto type =
+ *          auto cons_single_type1 =
  *              asn1_referenced_type::define("type",
  *                  asn1_builder::build(asn1_entity_integer,
- *                              [&](asn1_builtin_type* builtin) -> void {
+ *                              [&](asn1_object* builtin) -> void {
  *                                  builtin->get_constraints().add(
- *                                          new asn1_constraint_single_value<int>(1));
+ *                                      new asn1_constraint_single_value_i(1));
  *                              }));
  */
 template <typename T>

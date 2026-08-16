@@ -469,7 +469,7 @@ void test_x690_encoding_value() {
             size_t pos = 0;
             auto stream = bin_expect.data();
             auto size = bin_expect.size();
-            auto test = reader.read(stream, size, pos);
+            auto test = reader.read_weakly_typed(stream, size, pos);
             _test_case.test(test, __FUNCTION__, "%s read and decode", entry.text);
             _test_case.assert(pos == size, __FUNCTION__, "%s complete stream consumed", entry.text);
 
@@ -516,7 +516,7 @@ void do_dump_asn1(asn1_value* object, const char* expect, const char* text) {
         {
             asn1_runtime reader;
             size_t pos = 0;
-            reader.read(bin.data(), bin.size(), pos);
+            reader.read_weakly_typed(bin.data(), bin.size(), pos);
 
             basic_stream bs_type;
             basic_stream bs_value;
@@ -808,46 +808,46 @@ void test_x690_annex_a_1() {
     // EmployeeNumber ::= [APPLICATION 2] IMPLICIT INTEGER
     // Date ::= [APPLICATION 3] IMPLICIT VisibleString
 
-    auto inst = new asn1_runtime;
+    auto runtime = new asn1_runtime;
 
     // clang-format off
-    *inst << asn1_referenced_type::define("PersonnelRecord",
+    *runtime << asn1_referenced_type::define("PersonnelRecord",
                 new asn1_tagged_type(asn1_class_application, 0, asn1_implicit,
                     new asn1_set({
                         asn1_referenced_type::refer("name", "Name"),
                         new asn1_tagged_type("title", asn1_class_context, 0, asn1_automatic, asn1_entity_visiblestring),
                         asn1_referenced_type::refer("number", "EmployeeNumber"),
-                        new asn1_tagged_type("dateOfHire", asn1_class_context, 1, asn1_automatic, new asn1_referenced_type("Date")),
-                        new asn1_tagged_type("nameOfSpouse", asn1_class_context, 2, asn1_automatic, new asn1_referenced_type("Name")),
-                        new asn1_tagged_type("children", asn1_class_context, 3, asn1_implicit, new asn1_sequence_of(new asn1_referenced_type("ChildInformation")))
+                        new asn1_tagged_type("dateOfHire", asn1_class_context, 1, asn1_automatic, asn1_referenced_type::refer("Date")),
+                        new asn1_tagged_type("nameOfSpouse", asn1_class_context, 2, asn1_automatic, asn1_referenced_type::refer("Name")),
+                        new asn1_tagged_type("children", asn1_class_context, 3, asn1_implicit, new asn1_sequence_of(asn1_referenced_type::refer("ChildInformation")))
                         // TODO DEFAULT {}
                     })));
-    *inst << asn1_referenced_type::define("ChildInformation",
+    *runtime << asn1_referenced_type::define("ChildInformation",
                 new asn1_set({
                     asn1_referenced_type::refer("name", "Name"),
-                    new asn1_tagged_type("dateOfBirth", asn1_class_context, 0, asn1_automatic, new asn1_referenced_type("Date"))
+                    new asn1_tagged_type("dateOfBirth", asn1_class_context, 0, asn1_automatic, asn1_referenced_type::refer("Date"))
                 }));
-    *inst << asn1_referenced_type::define("Name",
+    *runtime << asn1_referenced_type::define("Name",
                 new asn1_tagged_type(asn1_class_application, 1, asn1_implicit,
                     new asn1_sequence({
                         {"givenName", asn1_entity_visiblestring},
                         {"initial", asn1_entity_visiblestring},
                         {"familyName", asn1_entity_visiblestring}
                     })));
-    *inst << asn1_referenced_type::define("EmployeeNumber", new asn1_tagged_type(asn1_class_application, 2, asn1_implicit, asn1_entity_integer));
-    *inst << asn1_referenced_type::define("Date", new asn1_tagged_type(asn1_class_application, 3, asn1_implicit, asn1_entity_visiblestring));
+    *runtime << asn1_referenced_type::define("EmployeeNumber", new asn1_tagged_type(asn1_class_application, 2, asn1_implicit, asn1_entity_integer));
+    *runtime << asn1_referenced_type::define("Date", new asn1_tagged_type(asn1_class_application, 3, asn1_implicit, asn1_entity_visiblestring));
     // clang-format on
 
     basic_stream bs_type;
     basic_stream bs_value;
     binary_t bin_value;
 
-    inst->notation(&bs_type);
-    // inst->publish(&bs_value);
-    // inst->publish(&bin_value);
+    runtime->notation(&bs_type);
+    // runtime->publish(&bs_value);
+    // runtime->publish(&bin_value);
 
     basic_stream ast;
-    print_ast(inst, ast);
+    print_ast(runtime, ast);
     _logger->write(ast);
 
     _logger->write([&](basic_stream& dbs) -> void {
@@ -861,7 +861,7 @@ void test_x690_annex_a_1() {
         // dbs.vaprintln("{3:x}", va);
     });
 
-    inst->release();
+    runtime->release();
 }
 
 void test_x690_annex_a_2() {

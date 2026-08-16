@@ -15,7 +15,7 @@
 
 #include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/system/bignumber.hpp>
+// #include <hotplace/sdk/base/system/bignumber.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/asn.1/basic/types.hpp>
 

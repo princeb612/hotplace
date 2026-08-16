@@ -99,7 +99,7 @@ return_t quic_frames::write(tls_direction_t dir, binary_t& bin) {
             __leave2;
         }
 
-        auto lambda = [&](quic_frame* frame) -> return_t { return frame->write(dir, bin); };
+        auto lambda = [&dir, &bin](quic_frame* frame) -> return_t { return frame->write(dir, bin); };
         for_each(lambda);
     }
     __finally2 {}
@@ -171,7 +171,7 @@ void quic_frames::set_session(tls_session* session) { _session = session; }
 
 bool quic_frames::is_significant() {
     bool ret = false;
-    auto lambda = [&](quic_frame* frame) -> return_t {
+    auto lambda = [&ret](quic_frame* frame) -> return_t {
         auto type = frame->get_type();
         switch (type) {
             case quic_frame_type_padding:

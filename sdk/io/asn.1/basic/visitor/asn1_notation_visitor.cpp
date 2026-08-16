@@ -11,14 +11,14 @@
  *
  */
 
-#include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
+// #include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_notation_visitor.hpp>
 
 namespace hotplace {
 namespace io {
 
-asn1_notation_visitor::asn1_notation_visitor(stream_t* s, asn1_value* value) : asn1_visitor(), _s(s), _value(value) {
+asn1_notation_visitor::asn1_notation_visitor(stream_t* s, asn1_value* value) : _s(s), _value(value) {
     if (_value) _value->addref();
 }
 

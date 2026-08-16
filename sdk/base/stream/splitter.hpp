@@ -173,7 +173,7 @@ return_t splitter<DESCRIPTOR_T>::run(std::function<void(uint32, const byte_t*, s
             blockstream = item.bin.data();
             blocksize = item.bin.size();
         }
-        auto lambda = [&](const byte_t* stream, size_t size, size_t fragoffset, size_t fragsize) -> void {
+        auto lambda = [this, &func, &pre, &item](const byte_t* stream, size_t size, size_t fragoffset, size_t fragsize) -> void {
             uint32 flags = 0;
             if (0 == pre) {
                 flags |= splitter_new_segment;

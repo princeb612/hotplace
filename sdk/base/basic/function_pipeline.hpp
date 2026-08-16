@@ -114,7 +114,7 @@ class function_pipeline {
 
     template <typename F>
     function_pipeline& walk(F func) {
-        auto lambda = [&]() {
+        auto lambda = [this, &func]() {
             func();
             return _lastcode;
         };
@@ -122,7 +122,7 @@ class function_pipeline {
     }
     template <typename F>
     function_pipeline& walk_trycatch(F func) {
-        auto lambda = [&]() {
+        auto lambda = [this, &func]() {
             func();
             return _lastcode;
         };
@@ -130,7 +130,7 @@ class function_pipeline {
     }
     template <typename F>
     function_pipeline& walk_failed(F func) {
-        auto lambda = [&]() {
+        auto lambda = [this, &func]() {
             func();
             return _lastcode;
         };
@@ -138,7 +138,7 @@ class function_pipeline {
     }
     template <typename F>
     function_pipeline& walk_always(F func) {
-        auto lambda = [&]() {
+        auto lambda = [this, &func]() {
             func();
             return _lastcode;
         };

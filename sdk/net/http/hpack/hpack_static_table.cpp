@@ -29,7 +29,7 @@ void hpack_static_table::load() {
         if (_static_table.empty()) {
             // RFC 7541 Appendix A.  Static Table Definition
             // if (_static_table.empty()) ...
-            auto lambda = [&](uint32 index, const char* name, const char* value) -> void {
+            auto lambda = [this](uint32 index, const char* name, const char* value) -> void {
                 _static_table.emplace(name, std::make_pair(value ? value : "", index));
                 _static_table_index.emplace(index, std::make_pair(name, value ? value : ""));
             };

@@ -48,7 +48,7 @@ void qpack_dynamic_table::dump(const std::string& desc, std::function<void(const
         bs << "> " << desc;
         f(bs.c_str(), bs.size());
 
-        auto lambda = [&]() -> void {
+        auto lambda = [&f, &bs]() -> void {
             bs.clear();
             bs << "  ^-- acknowledged --^";
             f(bs.c_str(), bs.size());

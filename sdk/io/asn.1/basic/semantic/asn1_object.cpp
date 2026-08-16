@@ -11,16 +11,15 @@
  *
  */
 
-#include <hotplace/sdk/base/stream/basic_stream.hpp>
-#include <hotplace/sdk/base/system/trace.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
+// #include <hotplace/sdk/base/stream/basic_stream.hpp>
+// #include <hotplace/sdk/base/system/trace.hpp>
+// #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
+// #include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
+// #include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_container.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
-#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint.hpp>
-#include <hotplace/sdk/io/asn.1/basic/visitor/asn1_ast_visitor.hpp>
+// #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_der_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_notation_visitor.hpp>
 
@@ -28,15 +27,13 @@ namespace hotplace {
 namespace io {
 
 asn1_object::asn1_object(asn1_entity_t entity, const std::string& name, asn1_object* object, asn1_tag* tag)
-    : _ident(0), _name(name), _entity(entity), _component_type(0), _suppress(false), _parent(nullptr), _tag(tag), _object(object), _default(nullptr) {
+    : _ident(0), _name(name), _entity(entity), _component_type(0), _suppress(false), _parent(nullptr), _tag(nullptr), _object(nullptr), _default(nullptr) {
     _shared.make_share(this);
-    if (tag) tag->set_parent(this);
-    if (object) object->set_parent(this);
+    set_object(object);
+    set_tag(tag);
 }
 
 asn1_object::asn1_object(const asn1_object& other) : asn1_object(asn1_entity_syntax, "", nullptr, nullptr) { *this = other; }
-
-asn1_object::asn1_object(asn1_object&& other) : asn1_object(asn1_entity_syntax, "", nullptr, nullptr) { *this = std::move(other); }
 
 asn1_object::~asn1_object() {
     if (_default) delete _default;
@@ -49,30 +46,10 @@ asn1_object& asn1_object::operator=(const asn1_object& other) {
     _component_type = other._component_type;
     _suppress = other._suppress;
     _parent = other._parent;
-    if (other._tag) {
-        _tag = other._tag->clone();
-        _tag->set_parent(this);
-    }
-    if (other._object) {
-        _object = other._object->clone();
-        _object->set_parent(this);
-    }
+    set_object(other._object ? other._object->clone() : nullptr);
+    set_tag(other._tag ? other._tag->clone() : nullptr);
     if (other._default) set_default_value(other._default->vt);
     _constraints = other._constraints;
-    return *this;
-}
-
-asn1_object& asn1_object::operator=(asn1_object&& other) {
-    std::swap(_ident, other._ident);
-    std::swap(_name, other._name);
-    std::swap(_entity, other._entity);
-    std::swap(_component_type, other._component_type);
-    std::swap(_suppress, other._suppress);
-    std::swap(_parent, other._parent);
-    std::swap(_tag, other._tag);
-    std::swap(_object, other._object);
-    if (other._default) set_default_value(std::move(other._default->vt));
-    _constraints = std::move(other._constraints);
     return *this;
 }
 
@@ -96,13 +73,13 @@ void asn1_object::release() {
 }
 
 void asn1_object::publish(binary_t* b) {
-    asn1_der_visitor encoder(b);
-    accept(&encoder);
+    asn1_der_visitor encoder(b, nullptr);
+    encoder.visit(this);
 }
 
 void asn1_object::publish(stream_t* s) {
     asn1_notation_visitor notation(s);
-    accept(&notation);
+    notation.visit(this);
 }
 
 asn1_object& asn1_object::set_name(const std::string& name) {
@@ -110,10 +87,7 @@ asn1_object& asn1_object::set_name(const std::string& name) {
     return *this;
 }
 
-asn1_object& asn1_object::set_parent(asn1_object* parent) {
-    _parent = parent;
-    return *this;
-}
+void asn1_object::set_parent(asn1_object* parent) { _parent = parent; }
 
 uint8 asn1_object::get_ident() const { return _ident; }
 
@@ -142,11 +116,16 @@ asn1_object& asn1_object::set_default_value(variant_t&& value) {
     return *this;
 }
 
-asn1_object& asn1_object::set_object(asn1_object* object) {
+void asn1_object::set_tag(asn1_tag* tag) {
+    if (_tag) _tag->release();
+    _tag = tag;
+    if (tag) tag->set_parent(this);
+}
+
+void asn1_object::set_object(asn1_object* object) {
     if (_object) _object->release();
     _object = object;
     if (object) object->set_parent(this);
-    return *this;
 }
 
 asn1_entity_t asn1_object::get_entity() const { return _entity; }
@@ -240,20 +219,16 @@ bool asn1_object::is_tagged() const { return _tag ? true : false; }
 
 bool asn1_object::is_default() const { return asn1_default == _component_type; }
 
-void asn1_object::accept(asn1_visitor* v) { v->visit(this); }
-
-asn1_object& asn1_object::suppress() {
+void asn1_object::suppress() {
     _suppress = true;
     if (_tag) _tag->suppress();
     if (_object) _object->suppress();
-    return *this;
 }
 
-asn1_object& asn1_object::unsuppress() {
+void asn1_object::unsuppress() {
     _suppress = false;
     if (_tag) _tag->unsuppress();
     if (_object) _object->unsuppress();
-    return *this;
 }
 
 bool asn1_object::is_suppressed() const { return _suppress; }
@@ -261,10 +236,6 @@ bool asn1_object::is_suppressed() const { return _suppress; }
 void asn1_object::represent(stream_t* s, const asn1_value* value) const {}
 
 bool asn1_object::represent(binary_t* b, const asn1_value* value, uint16 flags) const { return true; }
-
-void asn1_object::accept(asn1_ast_visitor* v) {
-    if (v) v->visit(this);
-}
 
 asn1_constraints& asn1_object::get_constraints() { return _constraints; }
 
@@ -295,6 +266,8 @@ bool asn1_object::validate_node(const asn1_object* node, const asn1_value* value
     }
     return true;
 }
+
+void asn1_object::update_linkage() {}
 
 }  // namespace io
 }  // namespace hotplace

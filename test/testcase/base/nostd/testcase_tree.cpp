@@ -37,6 +37,21 @@ void test_tree() {
         }
     });
     visitor.visit(&ast);
+
+    auto cursor = ast.create_cursor();
+    while (cursor.valid()) {
+        int depth = cursor->depth();
+        std::string indent(depth * 2, ' ');
+
+        _logger->writeln("%s- %s", indent.c_str(), cursor->get().c_str());
+
+        cursor.next();
+    }
+
+    for (auto cur = ast.create_cursor(); cur; ++cur) {
+        _logger->writeln("Node Data: %s (depth: %d)", cur->get().c_str(), cur->depth());
+    }
+
     _test_case.assert(true, __FUNCTION__, "tree");
 }
 

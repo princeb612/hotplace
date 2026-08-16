@@ -68,7 +68,7 @@ return_t sslkeylog_exporter::log(tls_session* session, tls_secret_t secret) {
         auto& protection = session->get_tls_protection();
         auto& secrets = protection.get_secrets();
 
-        auto lambda = [&](const char* name, const binary_t& client_random, const binary_t& value) -> void {
+        auto lambda = [this](const char* name, const binary_t& client_random, const binary_t& value) -> void {
             basic_stream bs;
             bs << name << " " << base16_encode(client_random) << " " << base16_encode(value);
             _keylog_hook(bs);

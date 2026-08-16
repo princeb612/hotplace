@@ -29,7 +29,7 @@ return_t secure_client_socket::do_handshake() {
         composer.set_minver(_spec);
         composer.set_maxver(_spec);
 
-        auto lambda = [&](tls_session*, binary_t& bin) -> void { do_send(bin); };
+        auto lambda = [this](tls_session*, binary_t& bin) -> void { do_send(bin); };
         // TLS  client_hello,                                             server_hello, ...
         // DTLS client_hello, hello_verify_request, client_hello(cookie), server_hello, ...
         ret = composer.handshake(from_client, get_wto(), lambda);

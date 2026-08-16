@@ -87,7 +87,7 @@ class cbor_map : public cbor_object {
     virtual void represent(binary_t* b);
 
     template <typename K, typename V, typename F>  // F void(V* object)
-    cbor_map& add(K value, F&& f, uint32 flags = 0) {
+    cbor_map& add(const K& value, F&& f, uint32 flags = 0) {
         auto obj = new V(flags);
 
         std::forward<F>(f)(obj);
@@ -113,12 +113,12 @@ class cbor_map : public cbor_object {
 
 template <typename KTY>
 struct cbor_map_int_binder {
-    KTY bind(variant vt) { return vt.t_toi<KTY>(); }
+    KTY bind(const variant& vt) { return vt.t_toi<KTY>(); }
 };
 
 template <typename KTY>
 struct cbor_map_string_binder {
-    KTY bind(variant vt) {
+    KTY bind(const variant& vt) {
         KTY value;
         vt.to_string(value);
         return value;
@@ -148,7 +148,7 @@ class cbor_map_hint {
      *              item->release();
      *          }
      */
-    return_t find(KTY key, cbor_object** item) {
+    return_t find(const KTY& key, cbor_object** item) {
         return_t ret = errorcode_t::success;
         __try2 {
             if (nullptr == item) {

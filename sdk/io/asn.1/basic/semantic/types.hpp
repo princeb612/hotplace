@@ -11,6 +11,7 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_TYPES__
 #define __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_TYPES__
 
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/io/asn.1/basic/types.hpp>
 
 namespace hotplace {
@@ -37,6 +38,9 @@ bool is_kind_of_container(asn1_entity_t entity);
 bool is_kind_of_container_of(asn1_entity_t entity);
 
 bool evaluate(const asn1_object* obj, const std::string& value);
+
+return_t print_ast(const asn1_object* object, basic_stream& bs, uint32 flags = asn1_ast_flag_ansicolor);
+return_t print_ast(const asn1_runtime* object, basic_stream& bs, uint32 flags = asn1_ast_flag_ansicolor);
 
 }  // namespace io
 }  // namespace hotplace

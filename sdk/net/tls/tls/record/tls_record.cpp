@@ -227,7 +227,7 @@ return_t tls_record::do_read_header(tls_direction_t dir, const byte_t* stream, s
                << new payload_member(uint48_t(0), constexpr_dtls_record_seq, constexpr_group_dtls)  // dtls
                << new payload_member(uint16(0), true, constexpr_len);                               // tls, dtls
 
-            auto lambda_check_dtls = [&](payload* pl, payload_member* item) -> void {
+            auto lambda_check_dtls = [&tlsadvisor](payload* pl, payload_member* item) -> void {
                 auto ver = pl->t_value_of<uint16>(item);
                 t_enum_type<tls_version_t> etver(ver);
                 pl->set_group(constexpr_group_dtls, tlsadvisor->is_kindof_dtls(etver));

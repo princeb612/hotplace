@@ -13,15 +13,28 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1STRONGTYPED__
 #define __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1STRONGTYPED__
 
-#include <hotplace/sdk/base/nostd/tree.hpp>
+// #include <hotplace/sdk/base/nostd/tree.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_bytestream.hpp>
 
 namespace hotplace {
 namespace io {
 
 class asn1_strongly_typed {
+    friend class asn1_runtime;
+
    public:
+    // using asn1_tlv_t = asn1_bytestream::asn1_tlv_t;
+    // using TLV_tree = asn1_bytestream::TLV_tree;
+    // using TLV_node = asn1_bytestream::TLV_node;
+
     asn1_strongly_typed();
+    ~asn1_strongly_typed();
+
+    return_t read(asn1_runtime* target, const std::string& name, const byte_t* stream, size_t size, size_t& pos);
+
+   protected:
+    return_t read_node(asn1_bytestream::TLV_node* node, asn1_object* object);
 
    private:
 };

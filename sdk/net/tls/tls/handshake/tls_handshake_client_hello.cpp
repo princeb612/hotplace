@@ -510,7 +510,7 @@ return_t tls_handshake_client_hello::add_ciphersuites(const char* ciphersuites) 
         }
 
         tls_advisor* tlsadvisor = tls_advisor::get_instance();
-        auto lambda = [&](const std::string& item) -> void {
+        auto lambda = [this, &tlsadvisor](const std::string& item) -> void {
             auto hint = tlsadvisor->hintof_cipher_suite(item);
             if (hint && (tls_flag_support & hint->flags)) {
                 auto code = hint->code;

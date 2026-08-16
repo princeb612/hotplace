@@ -59,6 +59,7 @@ class asn1_referenced_type : public asn1_type {
     static asn1_referenced_type* define(const std::string& name, asn1_entity_t entity);
     static asn1_referenced_type* define(const std::string& name, asn1_object* object);
     static asn1_referenced_type* refer(const std::string& name, const std::string& reference);
+    static asn1_referenced_type* refer(const std::string& reference);
 
     bool is_reference() const;
     bool is_definition() const;

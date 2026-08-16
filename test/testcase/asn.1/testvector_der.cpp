@@ -25,7 +25,7 @@ void test_yaml_testvector_der() {
                 size_t pos = 0;
                 auto stream = bin.data();
                 auto size = bin.size();
-                auto test = reader.read(stream, size, pos);
+                auto test = reader.read_weakly_typed(stream, size, pos);
 
                 basic_stream bs_type;
                 basic_stream bs_value;
@@ -42,6 +42,7 @@ void test_yaml_testvector_der() {
                     dbs.vaprintln("> value    {2}", va);
                     dbs.vaprintln("> DER      {3:x}", va);
                 });
+                _logger->dump(bin_encoded);
 
                 _test_case.test(test, __FUNCTION__, "read and decode %s", text_item.c_str());
                 _test_case.assert(pos == size, __FUNCTION__, "complete stream consumed %s", text_item.c_str());

@@ -39,13 +39,13 @@
     * https://ftp.kaist.ac.kr/gnu/bash/bash-4.4.tar.gz
     * https://ftp.kaist.ac.kr/gnu/bash/bash-5.3.tar.gz
   * cmake 2.8 to 3.16
-    * # manual build (step by step 2.8 -> 3.1 -> 3.16)
-    * declare -A oss_cmake301=([name]=cmake [url]=https://github.com/Kitware/CMake/archive/refs/tags/v3.1.0.tar.gz [dir]=CMake-3.1.0 [build]=build_tool [buildscript]=)
-    * declare -A oss_cmake310=([name]=cmake [url]=https://github.com/Kitware/CMake/archive/refs/tags/v3.10.0.tar.gz [dir]=CMake-3.10.0 [build]=build_tool [buildscript]=)
-    * # -j parallel (3.12.?)
-    * declare -A oss_cmake312=([name]=cmake [url]=https://github.com/Kitware/CMake/archive/refs/tags/v3.12.0.tar.gz [dir]=CMake-3.10.0 [build]=build_tool [buildscript]=)
-    * # Unknown CMake command "target_link_options".
-    * declare -A oss_cmake313=([name]=cmake [url]=https://github.com/Kitware/CMake/archive/refs/tags/v3.13.0.tar.gz [dir]=CMake-3.13.0 [build]=build_tool [buildscript]=)
-    * # -B option   (3.13.?)
-    * # Unknown CMake command "target_precompile_headers".
-    * declare -A oss_cmake316=([name]=cmake [url]=https://github.com/Kitware/CMake/archive/refs/tags/v3.16.0.tar.gz [dir]=CMake-3.16.0 [build]=build_tool [buildscript]=)
+    * manual build (step by step 2.8 -> 3.1 -> 3.16)
+      * declare -A oss_cmake301=([name]=cmake [url]=https://github.com/Kitware/CMake/archive/refs/tags/v3.1.0.tar.gz [dir]=CMake-3.1.0 [build]=build_tool [buildscript]=)
+      * declare -A oss_cmake310=([name]=cmake [url]=https://github.com/Kitware/CMake/archive/refs/tags/v3.10.0.tar.gz [dir]=CMake-3.10.0 [build]=build_tool [buildscript]=)
+    * -j parallel (3.12.?)
+      * declare -A oss_cmake312=([name]=cmake [url]=https://github.com/Kitware/CMake/archive/refs/tags/v3.12.0.tar.gz [dir]=CMake-3.10.0 [build]=build_tool [buildscript]=)
+    * Unknown CMake command "target_link_options".
+      * declare -A oss_cmake313=([name]=cmake [url]=https://github.com/Kitware/CMake/archive/refs/tags/v3.13.0.tar.gz [dir]=CMake-3.13.0 [build]=build_tool [buildscript]=)
+    * -B option   (3.13.?)
+    * Unknown CMake command "target_precompile_headers".
+      * declare -A oss_cmake316=([name]=cmake [url]=https://github.com/Kitware/CMake/archive/refs/tags/v3.16.0.tar.gz [dir]=CMake-3.16.0 [build]=build_tool [buildscript]=)

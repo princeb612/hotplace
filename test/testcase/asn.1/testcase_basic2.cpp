@@ -11,7 +11,31 @@
 
 #include "sample.hpp"
 
-void test_testvector_chatgpt() {
+/**
+ * Gemini Review - weakly typed
+ *
+ * [ DER Stream ]
+ *       │
+ *       ▼ (Step 1: Structural Parsing)
+ *
+ * [ asn1_node* Tree ]
+ *   ├── asn1_constructed_node (child management, parent-child)
+ *   └── asn1_primitive_node (Raw TLV, binary)
+ *       │
+ *       ▼ (Step 2: Heuristic Promotion & Transformation)
+ *
+ * [ asn1_weakly_typed::transform() ]
+ *
+ *   ├── 1) Builder: Reconstruct asn1_object* (Semantic) based on identifier, P/C bit, size/leaf flag
+ *   ├── 2) Tree Binding: Connect parent, container (Sequence/Set), or tagobj
+ *   └── 3) Value Extraction: Process/inject leaf node data (variant) after top-down traversal
+ *       │
+ *       ▼ (Step 3: Verification Cycle)
+ *
+ * [ Round-Trip Test ]
+ *   └── asn1_object* (DER reissue) ──> bin_recode == original_bin verification
+ */
+void test_testvector_gpt_gemini() {
     _test_case.begin("testvector GPT");
 
     // Test 1 Length aggregation
@@ -516,18 +540,18 @@ void test_testvector_chatgpt() {
             _test_case.assert(bin == base16_decode_rfc(item.der), __FUNCTION__, "%s : %s", item.name, item.der);
 
             {
-                if (item.debug) {
-                    int breakpoint = 1;
-                }
+                // if (item.debug) {
+                //     int breakpoint = 1;
+                // }
 
-                if (item.weakflag == flag_schema_dependent)
-                    ;
-                else {
+                if (item.weakflag == flag_schema_dependent) {
+                    // do nothing
+                } else {
                     asn1_runtime reader;
                     size_t pos = 0;
                     const byte_t* stream = bin.data();
                     size_t size = bin.size();
-                    reader.read(stream, size, pos);
+                    reader.read_weakly_typed(stream, size, pos);
 
                     basic_stream bs_type;
                     basic_stream bs_value;
@@ -557,4 +581,4 @@ void test_testvector_chatgpt() {
     }
 }
 
-void testcase_basic2() { test_testvector_chatgpt(); }
+void testcase_basic2() { test_testvector_gpt_gemini(); }

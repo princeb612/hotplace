@@ -11,23 +11,16 @@
  *
  */
 
-#include <hotplace/sdk/base/basic/valist.hpp>
-#include <hotplace/sdk/base/encoding/base16.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>
-#include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
-#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_builder.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
-#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_builtin_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_container.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
-#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
-#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tagged_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/structural/asn1_constructed_node.hpp>
 #include <hotplace/sdk/io/asn.1/basic/structural/asn1_node.hpp>
 #include <hotplace/sdk/io/asn.1/basic/structural/asn1_primitive_node.hpp>
+// #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_ast_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_weakly_typed.hpp>
 
@@ -41,10 +34,12 @@ asn1_weakly_typed::~asn1_weakly_typed() { clear(); }
 return_t asn1_weakly_typed::read(asn1_runtime* target, const byte_t* stream, size_t size, size_t& pos) {
     if (nullptr == target || nullptr == stream) return errorcode_t::invalid_parameter;
 
-    auto test = read_node(stream, size, pos, &_tree, nullptr);
+    // make a tree
+    auto test = _stream.read(stream, size, pos);
     if (errorcode_t::success != test) return test;
 
-    auto lambda = [&](TLV_node* node) -> void {
+    // traverse handler
+    auto lambda = [&stream, &size](TLV_node* node) -> void {
         auto& tlv = node->_data;
         asn1_node* structural_node = nullptr;
 
@@ -63,102 +58,13 @@ return_t asn1_weakly_typed::read(asn1_runtime* target, const byte_t* stream, siz
         tlv.asn1node = structural_node;
     };
 
+    // traverse a tree
     t_tree_visitor<asn1_tlv_t> visitor(lambda);
-    visitor.visit(&_tree);
+    visitor.visit(&_stream.get_tree());
 
+    // create a hierarchical structure
     test = transform(target);
     if (errorcode_t::success != test) return test;
-
-    return errorcode_t::success;
-}
-
-return_t asn1_weakly_typed::read_node(const byte_t* stream, size_t size, size_t& pos, TLV_tree* tree, TLV_node* parent) {
-    if (pos >= size) return errorcode_t::bad_data;
-
-    while (pos < size) {
-        if (parent) {
-            const auto& outer = parent->_data;
-            if (pos >= outer.pos + outer.len) {
-                break;
-            }
-        }
-
-        size_t tpos = pos;
-
-        uint8 ident = 0;
-        uint64 tag = 0;
-        size_t len = 0;
-        return_t test = errorcode_t::success;
-
-        test = asn1_encode::read_identifier(stream, size, tpos, ident, tag);  // T
-        if (errorcode_t::success != test) return test;
-        test = asn1_encode::read_length(stream, size, tpos, len);  // L
-        if (errorcode_t::do_nothing == test)
-            ;  // case [APPLICATION 31]
-        else if (errorcode_t::success != test)
-            return test;
-
-        if (tpos + len > size) return errorcode_t::bad_data;
-        if (parent) {
-            const auto& outer = parent->_data;
-            if (tpos + len > outer.pos + outer.len) {
-                return errorcode_t::bad_data;
-            }
-        }
-
-        asn1_tlv_t item;
-        item.ident = ident;
-        item.tag = tag;
-        item.pos = tpos;
-        item.len = len;
-        item.node_id = 1 + tree->size();  // increment start with 1
-
-        bool is_constructed = (ident & asn1_tag_constructed) != 0;
-        auto node = tree->add_node(item, parent);
-
-        if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
-            trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
-                auto depth = node->depth();
-                dbs.fill(depth << 1, ' ');
-                dbs << "- [x] " << ANSI_ESCAPE << "1;36m" << "TL" << ANSI_ESCAPE << "0m" << " "
-                    << base16_encode(stream + pos, tpos - pos, encoding_base16_capital | encoding_base16_space);
-
-                if (false == is_constructed) {
-                    dbs << " " << ANSI_ESCAPE << "1;36m" << "V" << ANSI_ESCAPE << "0m" << " "
-                        << base16_encode(stream + tpos, len, encoding_base16_capital | encoding_base16_space);
-                }
-                dbs << "\n";
-
-                dbs.fill(depth << 1, ' ');
-                std::string identifier_desc;
-                switch (ident & asn1_class_mask) {
-                    case asn1_class_application:
-                        identifier_desc = "APPLICATION";
-                        break;
-                    case asn1_class_context:
-                        identifier_desc = "CONTEXT";
-                        break;
-                    case asn1_class_private:
-                        identifier_desc = "PRIVATE";
-                        break;
-                    case asn1_class_universal:
-                        identifier_desc = "UNIVERSAL";
-                        break;
-                }
-                if (ident & asn1_tag_constructed) identifier_desc += "+CONSTRUCTED";
-                auto resource = asn1_resource::get_instance();
-                valist va;
-                va << item.node_id << ident << identifier_desc << tag << resource->get_entity_name(ident, (asn1_entity_t)tag) << len;
-                dbs.vaprintf("- node {1} I {2:02X} ({3}) T {4} ({5}) L {6}\n", va);
-            });
-        }
-
-        if (is_constructed && len) {
-            size_t cpos = tpos;
-            read_node(stream, tpos + len, cpos, tree, node);
-        }
-        pos = tpos + len;
-    }
 
     return errorcode_t::success;
 }
@@ -169,15 +75,23 @@ return_t asn1_weakly_typed::transform(asn1_runtime* target) {
     target->clear();
 
     // top-down
-    auto lambda = [&](TLV_node* node) -> void {
+    auto lambda = [this, &target](TLV_node* node) -> void {
         auto obj = transform(target, node->_data.asn1node);
         if (obj) {
             target->add(obj);
             auto value = target->get(obj);
             value->set_schema(obj);
+
+#if defined DEBUG
+            // comparison
+            if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
+                trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal,
+                                  [&](basic_stream& dbs) -> void { print_ast(obj, dbs, asn1_ast_flag_ansicolor); });
+            }
+#endif
         }
     };
-    _tree.root()->for_each(lambda);
+    _stream.get_tree().root()->for_each(lambda);
 
     return errorcode_t::success;
 }
@@ -192,7 +106,7 @@ asn1_object* asn1_weakly_typed::transform(asn1_runtime* target, const asn1_node*
         flags |= flag_is_leaf;
     else {
         if (0 == size)
-            throw;
+            throw exception(errorcode_t::unexpected);
         else if (size > 1)
             flags |= flag_as_sequence;
         else
@@ -244,7 +158,7 @@ asn1_object* asn1_weakly_typed::transform(asn1_runtime* target, const asn1_node*
             value = new asn1_value(nullptr);
 
             auto test = target->set(top, value);
-            if (errorcode_t::success != test) throw;
+            if (errorcode_t::success != test) throw exception(errorcode_t::unexpected);
         }
 
         const auto& bin = ((asn1_primitive_node*)node)->get();
@@ -262,13 +176,13 @@ asn1_object* asn1_weakly_typed::transform(asn1_runtime* target, const asn1_node*
 }
 
 void asn1_weakly_typed::clear() {
+    auto& tree = _stream.get_tree();
     auto lambda = [&](TLV_node* node) -> void {
         auto& tlv = node->_data;
         tlv.asn1node->release();
     };
-    _tree.root()->for_each(lambda);
-
-    _tree.clear();
+    tree.root()->for_each(lambda);
+    tree.clear();
 }
 
 }  // namespace io

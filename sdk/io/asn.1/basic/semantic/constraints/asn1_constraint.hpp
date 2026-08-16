@@ -15,7 +15,7 @@
 
 #include <hotplace/sdk/base/nostd/set.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
-#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
+// #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/types.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_constraint_evaluator.hpp>

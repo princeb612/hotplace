@@ -96,16 +96,9 @@ payload_member::payload_member(const stream_t* value, const char* name, const ch
     get_variant().set_stream(value);
 }
 
-payload_member::payload_member(std::unique_ptr<payload_encoded> value, const char* name, const char* group)
-    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(value.get()), _reserve(0), _flags(0) {
+payload_member::payload_member(payload_encoded* value, const char* name, const char* group)
+    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(value), _reserve(0), _flags(0) {
     set_name(name).set_group(group);
-    value.release();
-}
-
-payload_member::payload_member(t_pointer_proxy<payload_encoded> value, const char* name, const char* group)
-    : _bigendian(false), _ref(nullptr), _refmulti(1), _vl(value.get()), _reserve(0), _flags(0) {
-    set_name(name).set_group(group);
-    value.release();
 }
 
 payload_member::payload_member(const bignumber& value, const char* name, const char* group)

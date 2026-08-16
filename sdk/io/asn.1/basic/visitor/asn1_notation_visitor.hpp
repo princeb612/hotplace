@@ -13,12 +13,12 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_VISITOR_ASN1NOTATIONVISOTOR__
 #define __HOTPLACE_SDK_IO_ASN1_BASIC_VISITOR_ASN1NOTATIONVISOTOR__
 
-#include <hotplace/sdk/io/asn.1/basic/visitor/asn1_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/types.hpp>
 
 namespace hotplace {
 namespace io {
 
-class asn1_notation_visitor : public asn1_visitor {
+class asn1_notation_visitor {
    public:
     asn1_notation_visitor(stream_t* s, asn1_value* value = nullptr);
     virtual ~asn1_notation_visitor();

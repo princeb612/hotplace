@@ -37,7 +37,7 @@ std::string base16_encode_rfc(const std::string& source) {
             std::string data;
             binary_t temp;
             split_begin(&handle, inpart.c_str(), ",");
-            auto lambda = [&](const std::string& item) -> void {
+            auto lambda = [&data, &temp](const std::string& item) -> void {
                 int value = atoi(data.c_str());
                 if (value < 256) {
                     temp.push_back((byte_t)value);

@@ -95,7 +95,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
             {
                 // cipher suites
                 uint8 mask = tls_flag_secure | tls_flag_support;
-                auto lambda_cs = [&](const tls_cipher_suite_t* cs) -> void {
+                auto lambda_cs = [&minspec, &maxspec, &tlsadvisor, &hs, &mask](const tls_cipher_suite_t* cs) -> void {
                     if ((mask & cs->flags) && (cs->spec >= minspec) && (cs->spec <= maxspec)) {
                         if (tlsadvisor->test_ciphersuite(cs->code)) {
                             hs->add_ciphersuite(cs->code);
@@ -183,7 +183,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                                 session->push_alert(from_server, tls_alertlevel_t::fatal, tls_alertdesc_t::handshake_failure);
                                 session->reset_session_status();
                             } else {
-                                auto lambda = [&](std::list<tls_group_t> members) -> void {
+                                auto lambda = [&keyshare, &groups_set, &groups_keyshare](std::list<tls_group_t> members) -> void {
                                     for (auto group : members) {
                                         if (groups_set.count(group)) {
                                             keyshare->add(group);
