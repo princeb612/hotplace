@@ -69,9 +69,9 @@ return_t asn1_strongly_typed::read(asn1_runtime* target, const std::string& name
 
                 const auto& tlv = cursor->get();
                 if ((tlv.get_class() == c) && (tlv.get_tag() == n)) {
-                    int debug = 0;  // on my way
+                    // on my way
                 } else if (asn1_explicit != mode) {
-                    int debug = 0;  // replaced - do nothing
+                    // replaced - do nothing
                 } else {
                     throw exception(errorcode_t::mismatch);
                 }
@@ -80,6 +80,17 @@ return_t asn1_strongly_typed::read(asn1_runtime* target, const std::string& name
             } break;
             case asn1_entity_sequence:
             case asn1_entity_set: {
+                const auto& tlv = cursor->get();
+
+                auto entity = item->get_entity();
+                if (tlv.get_class() == asn1_class_universal && tlv.get_tag() == entity) {
+                    // on my way
+                } else if (asn1_explicit != mode) {
+                    // replaced - do nothing
+                } else {
+                    throw exception(errorcode_t::mismatch);
+                }
+                cursor.next();
             } break;
             case asn1_entity_builtin_type: {
                 if (cursor->is_leaf()) {
@@ -88,28 +99,18 @@ return_t asn1_strongly_typed::read(asn1_runtime* target, const std::string& name
 
                     size_t pos = tlv.pos;
                     const auto& nodename = item->resolve_name();
-                    if (tlv.get_class() == asn1_class_universal && tlv.get_tag() == entity) {
+                    if (asn1_explicit != mode) {
                         asn1_encode::read(stream, size, pos, (asn1_entity_t)entity, tlv.len, nodename, value);
-                    } else if (asn1_explicit != mode) {
+                    } else if (tlv.get_class() == asn1_class_universal && tlv.get_tag() == entity) {
                         asn1_encode::read(stream, size, pos, (asn1_entity_t)entity, tlv.len, nodename, value);
                     } else {
-                        throw;
+                        throw exception(errorcode_t::unexpected);
                     }
+                    cursor.next();
                 } else {
-                    throw;
-                    // cursor.next();
+                    throw exception(errorcode_t::not_implemented);
                 }
-                int n = 0;
             } break;
-            // case asn1_entity_referenced_type: {
-            // } break;
-            // case asn1_entity_any: {
-            // } break;
-            // case asn1_entity_sequence_of:
-            // case asn1_entity_set_of:
-            // case asn1_entity_choice:
-            // case asn1_entity_enum_type: {
-            // } break;
             default: {
             } break;
         }

@@ -119,7 +119,7 @@
           - Type1 referenced type
             - VisibleString
 
-#### Type2 ::= [2] EXPLICIT Type1
+#### Type6 ::= [2] EXPLICIT Type1
 
 - DER
   - A2 07 1A 05 4A 6F 6E 65 73
@@ -134,7 +134,7 @@
       - [2] EXPLICIT
     - NODE2 VisibleString
 - strongly-typed AST
-  - Type2 referenced type
+  - Type6 referenced type
     - tagged type
       - tag type
         - [2] EXPLICIT

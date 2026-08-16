@@ -230,7 +230,7 @@ class t_tree {
 };
 
 /**
- * @brief   cursor
+ * @brief   cursor (DFS)
  * @example
  *          auto cursor = ast.create_cursor();
  *          while (cursor.valid()) {
