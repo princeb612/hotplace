@@ -11,29 +11,17 @@
  *
  */
 
-// #include <hotplace/sdk/base/encoding/base128.hpp>
-// #include <hotplace/sdk/base/encoding/base16.hpp>
-// #include <hotplace/sdk/base/nostd/atoi.hpp>
-// #include <hotplace/sdk/base/stream/vtprintf.hpp>
-// #include <hotplace/sdk/base/system/ieee754.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/asn1_builder.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_any.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_builtin_type.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_container.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_referenced_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tagged_type.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/semantic/builtin/asn1_bitstring.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/semantic/builtin/asn1_integer.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_der_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_notation_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_strongly_typed.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_weakly_typed.hpp>
-// #include <hotplace/sdk/io/basic/oid.hpp>
 
 namespace hotplace {
 namespace io {
@@ -42,7 +30,10 @@ asn1_runtime::asn1_runtime() {
     _shared.make_share(this);
     // get_parser().get_config().set("handle_quot_as_unquoted", 1);
     // get_parser().add_token("::=", token_assign).add_token("--", token_comments);
+    _automatic = asn1_explicit;
 }
+
+asn1_runtime::asn1_runtime(const std::string& name) : asn1_runtime() { _name = name; }
 
 asn1_runtime::asn1_runtime(const asn1_runtime& other) : asn1_runtime() { *this = other; }
 
@@ -240,6 +231,14 @@ void asn1_runtime::publish(const std::string& name, binary_t* b) {
     asn1_der_visitor encoder(b, this, value);
     encoder.visit(schema);
 }
+
+void asn1_runtime::set_name(const std::string& name) { _name = name; }
+
+std::string asn1_runtime::get_name() { return _name; }
+
+void asn1_runtime::set_automatic(uint8 runas) { _automatic = runas; }
+
+uint8 asn1_runtime::runas_automatic() { return _automatic; }
 
 void asn1_runtime::clear() {
     for (auto item : _types) item->release();

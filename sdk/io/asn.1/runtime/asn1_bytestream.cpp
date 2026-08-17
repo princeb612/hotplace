@@ -15,7 +15,6 @@
 #include <hotplace/sdk/base/encoding/base16.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/asn1_builder.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_bytestream.hpp>

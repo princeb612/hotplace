@@ -24,8 +24,7 @@ namespace io {
  *          Tag ::= "[" Class ClassNumber "]"
  */
 class asn1_tag : public asn1_object {
-    friend class asn1_tagged_type;  // represent
-                                    // friend class asn1_der_visitor;
+    friend class asn1_tagged_type;
 
    public:
     asn1_tag(uint8 ctype, uint64 cnumber = 0, uint8 tmode = asn1_automatic);
@@ -40,10 +39,6 @@ class asn1_tag : public asn1_object {
     uint8 get_tag_type() const;
     bool is_implicit() const;
     bool is_explicit() const;
-
-    asn1_tag& as_explicit();
-    asn1_tag& as_implicit();
-    asn1_tag& as_automatic();
 
    protected:
     virtual void represent(stream_t* s, const asn1_value* value = nullptr) const;

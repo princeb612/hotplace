@@ -10,15 +10,12 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1__
-#define __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1__
+#ifndef __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1RUNTIME__
+#define __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1RUNTIME__
 
-// #include <hotplace/sdk/base/basic/variant.hpp>
-// #include <hotplace/sdk/base/nostd/tree.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
-// #include <hotplace/sdk/io/asn.1/runtime/asn1_weakly_typed.hpp>
-// #include <hotplace/sdk/io/basic/parser.hpp>
+#include <set>
 
 namespace hotplace {
 namespace io {
@@ -28,6 +25,7 @@ class asn1_runtime {
 
    public:
     asn1_runtime();
+    asn1_runtime(const std::string& name);
     asn1_runtime(const asn1_runtime& other);
     virtual ~asn1_runtime();
 
@@ -94,6 +92,20 @@ class asn1_runtime {
     // replace reference
     void update_linkage(asn1_object* object);
 
+    void set_name(const std::string& name);
+    std::string get_name();
+
+    /**
+     * - module-level
+     *   - MyModule DEFINITIONS ::= BEGIN ...
+     *   - MyModule DEFINITIONS IMPLICIT TAGS ::= BEGIN ...
+     *   - MyModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN ...
+     * - default EXPLICIT
+     * - CHOICE, ANY MUST be EXPLICIT
+     */
+    void set_automatic(uint8 runas);
+    uint8 runas_automatic();
+
     void clear();
 
     void addref();
@@ -109,8 +121,9 @@ class asn1_runtime {
     std::list<asn1_object*> _types;
     std::map<asn1_object*, asn1_value*> _values;
     std::map<asn1_object*, std::string> _schema;  // strongly-typed
-
+    std::string _name;
     // parser _parser;
+    uint8 _automatic;
 };
 
 }  // namespace io

@@ -11,15 +11,9 @@
  *
  */
 
-// #include <hotplace/sdk/base/stream/basic_stream.hpp>
-// #include <hotplace/sdk/base/system/trace.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_container.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_der_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_notation_visitor.hpp>
 

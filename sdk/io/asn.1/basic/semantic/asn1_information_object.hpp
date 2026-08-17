@@ -13,7 +13,6 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_ASN1INFORMATIONOBJECT__
 #define __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_ASN1INFORMATIONOBJECT__
 
-#include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
 

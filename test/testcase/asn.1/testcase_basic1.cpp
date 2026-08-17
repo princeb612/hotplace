@@ -549,7 +549,7 @@ void test_x690_encoding_typevalue() {
     // case 2. Type2 ::= [Application 3] IMPLICIT Type1
     auto type2 = asn1_referenced_type::define("Type2", new asn1_tagged_type(asn1_class_application, 3, asn1_implicit, type1->clone()));
     // case 3. Type3 ::= [2] Type2
-    auto type3 = asn1_referenced_type::define("Type3", new asn1_tagged_type(asn1_class_context, 2, asn1_explicit, type2->clone()));
+    auto type3 = asn1_referenced_type::define("Type3", new asn1_tagged_type(asn1_class_context, 2, asn1_automatic, type2->clone()));
     // case 4. Type4 ::= [Application 7] IMPLICIT Type3
     auto type4 = asn1_referenced_type::define("Type4", new asn1_tagged_type(asn1_class_application, 7, asn1_implicit, type3->clone()));
     // case 5. Type5 ::= [2] IMPLICIT Type2
@@ -629,7 +629,7 @@ void test_x690_encoding_typevalue() {
         // case 2. Type2 ::= [Application 3] IMPLICIT Type1
         {type2, variant("Jones"), "43 05 4A 6F 6E 65 73", "X.690 8.14 Type2"},
         // case 3. Type3 ::= [2] Type2
-        {type3, variant("Jones"), "a2 07 43 05 4A 6F 6E 65 73", "X.690 8.14 Type3"},
+        {type3, variant("Jones"), "A2 07 43 05 4A 6F 6E 65 73", "X.690 8.14 Type3"},
         // case 4. Type4 ::= [Application 7] IMPLICIT Type3
         {type4, variant("Jones"), "67 07 43 05 4A 6F 6E 65 73", "X.690 8.14 Type4"},
         // case 5. Type5 ::= [2] IMPLICIT Type2

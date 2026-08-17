@@ -13,7 +13,6 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1WEAKLYTYPED__
 #define __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1WEAKLYTYPED__
 
-// #include <hotplace/sdk/base/nostd/tree.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_bytestream.hpp>
 

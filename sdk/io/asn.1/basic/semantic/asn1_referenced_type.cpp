@@ -11,15 +11,9 @@
  *
  */
 
-// #include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-// #include <hotplace/sdk/base/system/trace.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_builtin_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_referenced_type.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
-// #include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
 
 namespace hotplace {
 namespace io {

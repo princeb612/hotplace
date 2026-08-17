@@ -13,7 +13,6 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_VISITOR_ASN1VISOTOR__
 #define __HOTPLACE_SDK_IO_ASN1_BASIC_VISITOR_ASN1VISOTOR__
 
-// #include <hotplace/sdk/base/nostd/set.hpp>
 #include <hotplace/sdk/io/asn.1/basic/types.hpp>
 
 namespace hotplace {

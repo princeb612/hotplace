@@ -35,7 +35,7 @@ static void testcode_strongly_typed(asn1_runtime& runtime, const testvector& ent
         valist va;
         va << bs_notation << bin_stream << bin_der;
         bs.vaprintln("notation   {1}", va);
-        bs.vaprintln("expext     {2:x}", va);
+        bs.vaprintln("expect     {2:x}", va);
         bs.vaprintln("re-encoded {3:x}", va);
     });
 
@@ -43,7 +43,7 @@ static void testcode_strongly_typed(asn1_runtime& runtime, const testvector& ent
     _test_case.assert(bin_stream == bin_der, __FUNCTION__, "DER    %s", entry.schema);
 }
 
-void test_decode_stronly_typed1() {
+void test_decode_strongly_typed1() {
     _test_case.begin("stronly-typed");
 
     auto schema1 = "Type1 ::= VisibleString";
@@ -58,6 +58,10 @@ void test_decode_stronly_typed1() {
     auto type5 = asn1_referenced_type::define("Type5", new asn1_tagged_type(asn1_class_context, 2, asn1_implicit, asn1_referenced_type::refer("Type2")));
     auto schema6 = "Type6 ::= [2] EXPLICIT Type1";
     auto type6 = asn1_referenced_type::define("Type6", new asn1_tagged_type(asn1_class_context, 2, asn1_explicit, asn1_referenced_type::refer("Type1")));
+    auto schema7 = "Type7 ::= [2] Type2";
+    auto type7 = asn1_referenced_type::define("Type7", new asn1_tagged_type(asn1_class_context, 2, asn1_automatic, asn1_referenced_type::refer("Type2")));
+    auto schema8 = "Type8 ::= [APPLICATION 7] IMPLICIT Type7";
+    auto type8 = asn1_referenced_type::define("Type8", new asn1_tagged_type(asn1_class_application, 7, asn1_implicit, asn1_referenced_type::refer("Type7")));
 
     asn1_runtime runtime;
     runtime.add_schema(schema1, type1);
@@ -66,6 +70,8 @@ void test_decode_stronly_typed1() {
     runtime.add_schema(schema4, type4);
     runtime.add_schema(schema5, type5);
     runtime.add_schema(schema6, type6);
+    runtime.add_schema(schema7, type7);
+    runtime.add_schema(schema8, type8);
 
     // clang-format off
     struct testvector table[] = {
@@ -75,6 +81,8 @@ void test_decode_stronly_typed1() {
         {schema4, type4, "67 07 43 05 4A 6F 6E 65 73"},
         {schema5, type5, "82 05 4A 6F 6E 65 73"},
         {schema6, type6, "A2 07 1A 05 4A 6F 6E 65 73"},
+        {schema7, type7, "A2 07 43 05 4A 6F 6E 65 73"},
+        {schema8, type8, "67 07 43 05 4A 6F 6E 65 73"},
     };
     // clang-format on
 
@@ -83,8 +91,9 @@ void test_decode_stronly_typed1() {
     }
 }
 
-void test_decode_stronly_typed2() {
+void test_decode_strongly_typed2() {
     _test_case.begin("stronly-typed");
+
     auto schema1 = "Type1 ::= SEQUENCE {name VisibleString, ok BOOLEAN}";
     auto type1 = asn1_referenced_type::define("Type1", new asn1_sequence({{"name", asn1_entity_visiblestring}, {"ok", asn1_entity_boolean}}));
     auto schema2 = "Type2 ::= [APPLICATION 5] IMPLICIT Type1";
@@ -106,7 +115,19 @@ void test_decode_stronly_typed2() {
     }
 }
 
+void test_decode_strongly_typed3() {
+    _test_case.begin("stronly-typed");
+    //
+}
+
+void test_decode_strongly_typed4() {
+    _test_case.begin("stronly-typed");
+    //
+}
+
 void testcase_basic3() {
-    test_decode_stronly_typed1();
-    test_decode_stronly_typed2();
+    test_decode_strongly_typed1();
+    test_decode_strongly_typed2();
+    test_decode_strongly_typed3();
+    test_decode_strongly_typed4();
 }

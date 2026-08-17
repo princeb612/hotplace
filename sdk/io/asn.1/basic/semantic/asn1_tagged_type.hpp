@@ -13,7 +13,6 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_ASN1TAGGEDTYPE__
 #define __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_ASN1TAGGEDTYPE__
 
-// #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_type.hpp>
 
 namespace hotplace {

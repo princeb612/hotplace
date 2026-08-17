@@ -12,11 +12,11 @@
  */
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
-// #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime_context.hpp>
 
 namespace hotplace {
 namespace io {
@@ -40,23 +40,24 @@ uint64 asn1_tag::get_class_number() const { return _class_number; }
 
 uint8 asn1_tag::get_tag_type() const { return _tag_mode; }
 
-bool asn1_tag::is_implicit() const { return asn1_implicit == get_tag_type(); }
-
-bool asn1_tag::is_explicit() const { return asn1_explicit == get_tag_type(); }
-
-asn1_tag& asn1_tag::as_explicit() {
-    _tag_mode = asn1_explicit;
-    return *this;
+bool asn1_tag::is_implicit() const {
+    auto mode = _tag_mode;
+    if (mode == asn1_automatic) {
+        auto contexts = asn1_runtime_context::get_instance();
+        auto runtime = contexts->current();
+        mode = runtime->runas_automatic();
+    }
+    return (asn1_implicit == mode);
 }
 
-asn1_tag& asn1_tag::as_implicit() {
-    _tag_mode = asn1_implicit;
-    return *this;
-}
-
-asn1_tag& asn1_tag::as_automatic() {
-    _tag_mode = asn1_automatic;
-    return *this;
+bool asn1_tag::is_explicit() const {
+    auto mode = _tag_mode;
+    if (mode == asn1_automatic) {
+        auto contexts = asn1_runtime_context::get_instance();
+        auto runtime = contexts->current();
+        mode = runtime->runas_automatic();
+    }
+    return (asn1_explicit == mode);
 }
 
 void asn1_tag::represent(stream_t* s, const asn1_value* value) const {
@@ -73,6 +74,7 @@ void asn1_tag::represent(stream_t* s, const asn1_value* value) const {
             s->printf("%i", get_class_number());
 
             s->printf("]");
+
             if (get_tag_type()) {
                 s->printf(" %s", resource->get_tagtype_name(get_tag_type()).c_str());
             }

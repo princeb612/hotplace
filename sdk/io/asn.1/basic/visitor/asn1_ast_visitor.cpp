@@ -17,7 +17,6 @@
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_referenced_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_ast_visitor.hpp>
-// #include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
 
 namespace hotplace {
 namespace io {

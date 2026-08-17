@@ -11,16 +11,8 @@
  *
  */
 
-// #include <hotplace/sdk/base/stream/basic_stream.hpp>
-// #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/asn1_builder.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_builtin_type.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_referenced_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
-// #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tagged_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_strongly_typed.hpp>
@@ -32,6 +24,8 @@ asn1_strongly_typed::asn1_strongly_typed() {}
 
 asn1_strongly_typed::~asn1_strongly_typed() {}
 
+// prototype
+// - throw exception (to be removed)
 return_t asn1_strongly_typed::read(asn1_runtime* target, const std::string& name, const byte_t* stream, size_t size, size_t& pos) {
     if (nullptr == target || nullptr == stream) return errorcode_t::invalid_parameter;
 
@@ -70,12 +64,12 @@ return_t asn1_strongly_typed::read(asn1_runtime* target, const std::string& name
                 const auto& tlv = cursor->get();
                 if ((tlv.get_class() == c) && (tlv.get_tag() == n)) {
                     // on my way
-                } else if (asn1_explicit != mode) {
+                } else if (asn1_implicit == mode) {
                     // replaced - do nothing
                 } else {
                     throw exception(errorcode_t::mismatch);
                 }
-                if (t == asn1_explicit) cursor.next();
+                if (t != asn1_implicit) cursor.next();
                 mode = t;
             } break;
             case asn1_entity_sequence:
@@ -85,7 +79,7 @@ return_t asn1_strongly_typed::read(asn1_runtime* target, const std::string& name
                 auto entity = item->get_entity();
                 if (tlv.get_class() == asn1_class_universal && tlv.get_tag() == entity) {
                     // on my way
-                } else if (asn1_explicit != mode) {
+                } else if (asn1_implicit == mode) {
                     // replaced - do nothing
                 } else {
                     throw exception(errorcode_t::mismatch);
@@ -99,7 +93,7 @@ return_t asn1_strongly_typed::read(asn1_runtime* target, const std::string& name
 
                     size_t pos = tlv.pos;
                     const auto& nodename = item->resolve_name();
-                    if (asn1_explicit != mode) {
+                    if (asn1_implicit == mode) {
                         asn1_encode::read(stream, size, pos, (asn1_entity_t)entity, tlv.len, nodename, value);
                     } else if (tlv.get_class() == asn1_class_universal && tlv.get_tag() == entity) {
                         asn1_encode::read(stream, size, pos, (asn1_entity_t)entity, tlv.len, nodename, value);

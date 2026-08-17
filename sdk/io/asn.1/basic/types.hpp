@@ -205,6 +205,7 @@ class asn1_bitstring;  // named bit list
 class asn1_integer;    // named number list
 
 class asn1_runtime;
+class asn1_runtime_context;
 class asn1_encode;
 class asn1_resource;
 

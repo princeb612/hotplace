@@ -42,7 +42,7 @@ asn1_object* asn1_builder::build(uint8 ident, uint64 tag, uint32 flags) {
             auto tagobj = new asn1_tag(ident, tag, asn1_explicit);
             obj = new asn1_tagged_type(tagobj, nullptr);
         } else {
-            auto tagobj = new asn1_tag(ident, tag, asn1_automatic);
+            auto tagobj = new asn1_tag(ident, tag, asn1_implicit);
             if (flags & asn1_builder_flag_t::flag_is_leaf) {
                 obj = new asn1_tagged_type(tagobj, new asn1_any);
             } else {
