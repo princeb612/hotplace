@@ -110,9 +110,6 @@ class http_authentication_resolver {
     typedef std::map<std::string, basic_credentials> realm_basic_credentials_t;
     typedef std::map<std::string, digest_credentials> realm_digest_credentials_t;
     typedef std::map<std::string, bearer_credentials> realm_bearer_credentials_t;
-    typedef std::pair<realm_basic_credentials_t::iterator, bool> realm_basic_credentials_pib_t;
-    typedef std::pair<realm_digest_credentials_t::iterator, bool> realm_digest_credentials_pib_t;
-    typedef std::pair<realm_bearer_credentials_t::iterator, bool> realm_bearer_credentials_pib_t;
 
     realm_basic_credentials_t _realm_basic_credentials;    // map<realm, credentials>
     realm_digest_credentials_t _realm_digest_credentials;  // map<realm, credentials>

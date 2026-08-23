@@ -133,7 +133,7 @@ void crypto_key::clear() {
     _key_map.clear();
 }
 
-size_t crypto_key::size() { return _key_map.size(); }
+size_t crypto_key::size() const { return _key_map.size(); }
 
 return_t crypto_key::append(crypto_key* source) {
     return_t ret = errorcode_t::success;
@@ -161,7 +161,7 @@ int crypto_key::addref() { return _shared.addref(); }
 
 int crypto_key::release() { return _shared.delref(); }
 
-void crypto_key::for_each(std::function<void(crypto_key_object*, void*)> fp_dump, void* param) {
+void crypto_key::for_each(std::function<void(const crypto_key_object*, void*)> fp_dump, void* param) const {
     critical_section_guard guard(_lock);
     __try2 {
         if (nullptr == fp_dump) {
@@ -169,7 +169,7 @@ void crypto_key::for_each(std::function<void(crypto_key_object*, void*)> fp_dump
         }
 
         for (auto& pair : _key_map) {
-            crypto_key_object& keyobj = pair.second;
+            const auto& keyobj = pair.second;
             fp_dump(&keyobj, param);
         }
     }

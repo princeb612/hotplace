@@ -196,7 +196,7 @@ void valist::clear() {
 
 size_t valist::size() const { return _args.size(); }
 
-return_t valist::at(size_t index, variant_t& v) {
+return_t valist::at(size_t index, variant_t& v) const {
     return_t ret = errorcode_t::success;
 
     critical_section_guard guard(_lock);

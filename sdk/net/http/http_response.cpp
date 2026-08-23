@@ -246,13 +246,13 @@ return_t http_response::respond(network_session* session) {
     return ret;
 }
 
-const char* http_response::content_type() { return _content_type.c_str(); }
+const char* http_response::content_type() const { return _content_type.c_str(); }
 
-const char* http_response::content() { return _content.c_str(); }
+const char* http_response::content() const { return _content.c_str(); }
 
-size_t http_response::content_size() { return _content.size(); }
+size_t http_response::content_size() const { return _content.size(); }
 
-int http_response::status_code() { return _statuscode; }
+int http_response::status_code() const { return _statuscode; }
 
 http_header& http_response::get_http_header() { return _header; }
 

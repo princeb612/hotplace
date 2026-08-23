@@ -26,11 +26,11 @@ class http2_frame {
     http2_frame(const http2_frame& other);
     virtual ~http2_frame();
 
-    uint32 get_frame_size();
-    size_t get_payload_size();
-    uint8 get_type();
-    uint8 get_flags();
-    uint32 get_stream_id();
+    uint32 get_frame_size() const;
+    size_t get_payload_size() const;
+    uint8 get_type() const;
+    uint8 get_flags() const;
+    uint32 get_stream_id() const;
 
     http2_frame& set_type(h2_frame_t type);
     http2_frame& set_flags(uint8 flags);

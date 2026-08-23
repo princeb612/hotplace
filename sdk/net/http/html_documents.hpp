@@ -44,7 +44,7 @@ class html_documents {
      *          docs.get_content_type("/style.css", content_type);  // text/css
      *          docs.get_content_type("/index.json", content_type); // text/json
      */
-    return_t get_content_type(const std::string& uri, std::string& content_type);
+    return_t get_content_type(const std::string& uri, std::string& content_type) const;
 
     /**
      * @brief   load
@@ -58,7 +58,7 @@ class html_documents {
      * @param   const std::string& uri [in]
      * @param   std::string& content_type [out]
      */
-    return_t loadable(const std::string& uri, std::string& content_type);
+    return_t loadable(const std::string& uri, std::string& content_type) const;
     /**
      * @brief   compose response
      * @param   const std::string& uri [in]
@@ -74,7 +74,7 @@ class html_documents {
      *          get_html_documents().add_documents_root("/", ".").set_default_document("index.html");
      *          get_html_documents().get_local("/", local); // linux-style (../index.html) or window-style (.\index.html)
      */
-    bool get_local(const std::string& uri, std::string& local);
+    bool get_local(const std::string& uri, std::string& local) const;
 
    protected:
     return_t search_cache(const std::string& uri, binary_t& content);
@@ -82,7 +82,7 @@ class html_documents {
     return_t loadfile(const std::string& uri, binary_t& content);
 
    private:
-    critical_section _lock;
+    mutable critical_section _lock;
     std::map<std::string, std::string> _urimap;         // map(uri, directory)
     std::map<std::string, time_t> _timestamp_map;       // store file timestamp
     std::map<std::string, binary_t> _cache_map;         // cache

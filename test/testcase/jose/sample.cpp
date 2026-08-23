@@ -115,7 +115,7 @@ void dump_elem(const std::string& source) {
     }
 }
 
-void dump_crypto_key(crypto_key_object* key, void*) {
+void dump_crypto_key(const crypto_key_object* key, void*) {
     const OPTION option = _cmdline->value();  // (*_cmdline).value () is ok
 
     if (option.dump_keys) {

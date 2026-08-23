@@ -35,9 +35,9 @@ quic_frame_stream::quic_frame_stream(tls_session* session, uint8 type) : quic_fr
 
 quic_frame_stream::~quic_frame_stream() {}
 
-uint8 quic_frame_stream::get_flags() { return (quic_frame_stream_mask & get_type()); }
+uint8 quic_frame_stream::get_flags() const { return (quic_frame_stream_mask & get_type()); }
 
-uint64 quic_frame_stream::get_streamid() { return _stream_id; }
+uint64 quic_frame_stream::get_streamid() const { return _stream_id; }
 
 void quic_frame_stream::set(uint64 stream_id, uint8 unitype) { _stream_id = stream_id; }
 

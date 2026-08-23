@@ -21,11 +21,11 @@
 namespace hotplace {
 namespace crypto {
 
-return_t openssl_crypt::encrypt(const EVP_PKEY* pkey, const binary_t& plaintext, binary_t& ciphertext, crypt_enc_t mode) {
+return_t openssl_crypt::encrypt(const EVP_PKEY* pkey, const binary_t& plaintext, binary_t& ciphertext, crypt_enc_t mode) const {
     return encrypt(pkey, plaintext.data(), plaintext.size(), ciphertext, mode);
 }
 
-return_t openssl_crypt::encrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& ciphertext, crypt_enc_t mode) {
+return_t openssl_crypt::encrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& ciphertext, crypt_enc_t mode) const {
     ciphertext.resize(0);
 
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -115,11 +115,11 @@ return_t openssl_crypt::encrypt(const EVP_PKEY* pkey, const byte_t* stream, size
     return pipeline.result_to_return_t();
 }
 
-return_t openssl_crypt::decrypt(const EVP_PKEY* pkey, const binary_t& ciphertext, binary_t& plaintext, crypt_enc_t mode) {
+return_t openssl_crypt::decrypt(const EVP_PKEY* pkey, const binary_t& ciphertext, binary_t& plaintext, crypt_enc_t mode) const {
     return decrypt(pkey, ciphertext.data(), ciphertext.size(), plaintext, mode);
 }
 
-return_t openssl_crypt::decrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& plaintext, crypt_enc_t mode) {
+return_t openssl_crypt::decrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& plaintext, crypt_enc_t mode) const {
     plaintext.resize(0);
 
     crypto_advisor* advisor = crypto_advisor::get_instance();

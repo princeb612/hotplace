@@ -230,7 +230,7 @@ return_t tls_handshake_certificate::do_read_body(tls_direction_t dir, const byte
         if (istraceable(trace_category_t::trace_category_net, loglevel_t::loglevel_debug)) {
             trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_handshake, [&](basic_stream& dbs) -> void {
                 dbs.autoindent(1);
-                auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
+                auto dump_crypto_key = [&](const crypto_key_object* item, void*) -> void {
                     if (item->get_desc().get_kid_str() == desc.get_kid_str()) {
                         dbs.println(R"(> kid "%s")", item->get_desc().get_kid_cstr());
                         dump_key(item->get_pkey(), &dbs, 16, 3, dump_notrunc);

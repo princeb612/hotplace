@@ -29,7 +29,7 @@ class cbor_object_signing_encryption {
 
    public:
     cbor_object_signing_encryption();
-    ~cbor_object_signing_encryption();
+    ~cbor_object_signing_encryption() = default;
 
     /**
      * @brief   open
@@ -52,7 +52,7 @@ class cbor_object_signing_encryption {
      *      cose.set (handle, cose_flag_t::auto_keygen);
      */
     return_t set(cose_context_t* handle, uint32 flags, uint32 debug_flags = 0);
-    return_t get(cose_context_t* handle, uint32& flags, uint32& debug_flags);
+    return_t get(cose_context_t* handle, uint32& flags, uint32& debug_flags) const;
     /**
      * @brief   set
      * @param   cose_context_t* handle [in]

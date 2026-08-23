@@ -63,18 +63,18 @@ quic_packet_builder& quic_packet_builder::set(tls_direction_t dir) {
     return *this;
 }
 
-uint8 quic_packet_builder::get_msb() { return _msb; }
+uint8 quic_packet_builder::get_msb() const { return _msb; }
 
 tls_session* quic_packet_builder::get_session() { return _session; }
 
-tls_direction_t quic_packet_builder::get_direction() { return _dir; }
+tls_direction_t quic_packet_builder::get_direction() const { return _dir; }
 
 quic_packet_builder& quic_packet_builder::construct() {
     _construct = true;
     return *this;
 }
 
-bool quic_packet_builder::is_construct() { return _construct; }
+bool quic_packet_builder::is_construct() const { return _construct; }
 
 quic_packet* quic_packet_builder::build() {
     quic_packet* packet = nullptr;

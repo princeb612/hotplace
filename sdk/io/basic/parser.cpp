@@ -16,198 +16,223 @@
 namespace hotplace {
 namespace io {
 
-parser::parser() : _ac(nullptr) {
-    _ac = new t_aho_corasick<int, token*, tokenptr_to_int_t>();
+parser::parser() : _acparser(nullptr), _ac(nullptr) {
+    _acparser = new t_aho_corasick_parser<uint32>();
+    _ac = new t_aho_corasick<uint32, parser_token*, tokenptr_to_int_t>();
+
     get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1);
 
-#if 1
-    // debug
+    // nameof_token
+    _token_dbg.emplace(token_alpha, "alpha");
+    _token_dbg.emplace(token_number, "number");
+    _token_dbg.emplace(token_space, "space");
+    _token_dbg.emplace(token_lparen, "lparen");
+    _token_dbg.emplace(token_rparen, "rparen");
+    _token_dbg.emplace(token_lbracket, "lbracket");
+    _token_dbg.emplace(token_rbracket, "rbracket");
+    _token_dbg.emplace(token_lbrace, "lbrace");
+    _token_dbg.emplace(token_rbrace, "rbrace");
+    _token_dbg.emplace(token_squote, "squote");
+    _token_dbg.emplace(token_dquote, "dquote");
+    _token_dbg.emplace(token_greater, "greater");
+    _token_dbg.emplace(token_lesser, "lesser");
+    _token_dbg.emplace(token_equal, "equal");
+    _token_dbg.emplace(token_plus, "plus");
+    _token_dbg.emplace(token_minus, "minus");
+    _token_dbg.emplace(token_multi, "multi");
+    _token_dbg.emplace(token_divide, "divide");
+    _token_dbg.emplace(token_colon, "colon");
+    _token_dbg.emplace(token_semicolon, "semicolon");
+    _token_dbg.emplace(token_comma, "comma");
+    _token_dbg.emplace(token_dot, "dot");
+    _token_dbg.emplace(token_newline, "newline");
+    _token_dbg.emplace(token_and, "and");
+    _token_dbg.emplace(token_isequal, "==");
+    _token_dbg.emplace(token_notequal, "!=");
+    _token_dbg.emplace(token_identifier, "identifier");
+    _token_dbg.emplace(token_quot_string, "quot_string");
+    _token_dbg.emplace(token_comments, "comments");
+    _token_dbg.emplace(token_assign, "assign");
+    _token_dbg.emplace(token_lvalue, "lvalue");
+    _token_dbg.emplace(token_emphasis, "emphasis");
+    _token_dbg.emplace(token_type, "type");
+    _token_dbg.emplace(token_sentence, "sentence");
+    _token_dbg.emplace(token_element, "element");
+    _token_dbg.emplace(token_usertype, "usertype");
 
-    _token_id.emplace(token_alpha, "alpha");
-    _token_id.emplace(token_number, "number");
-    _token_id.emplace(token_space, "space");
-    _token_id.emplace(token_lparen, "lparen");
-    _token_id.emplace(token_rparen, "rparen");
-    _token_id.emplace(token_lbracket, "lbracket");
-    _token_id.emplace(token_rbracket, "rbracket");
-    _token_id.emplace(token_lbrace, "lbrace");
-    _token_id.emplace(token_rbrace, "rbrace");
-    _token_id.emplace(token_squote, "squote");
-    _token_id.emplace(token_dquote, "dquote");
-    _token_id.emplace(token_greater, "greater");
-    _token_id.emplace(token_lesser, "lesser");
-    _token_id.emplace(token_equal, "equal");
-    _token_id.emplace(token_plus, "plus");
-    _token_id.emplace(token_minus, "minus");
-    _token_id.emplace(token_multi, "multi");
-    _token_id.emplace(token_divide, "divide");
-    _token_id.emplace(token_colon, "colon");
-    _token_id.emplace(token_semicolon, "semiconlon");
-    _token_id.emplace(token_comma, "comma");
-    _token_id.emplace(token_dot, "dot");
-    _token_id.emplace(token_newline, "newline");
-    _token_id.emplace(token_and, "and");
-    _token_id.emplace(token_or, "or");
-    _token_id.emplace(token_word, "identifier");
-    _token_id.emplace(token_quot_string, "quot_string");
-    _token_id.emplace(token_comments, "comments");
-    _token_id.emplace(token_assign, "assign");
-    _token_id.emplace(token_lvalue, "lvalue");
-    _token_id.emplace(token_emphasis, "emphasis");
-    _token_id.emplace(token_type, "type");
-    _token_id.emplace(token_class, "class");
-    _token_id.emplace(token_tag, "tag");
-    _token_id.emplace(token_bool, "bool");
-    _token_id.emplace(token_int, "int");
-    _token_id.emplace(token_bitstring, "bitstring");
-    _token_id.emplace(token_octstring, "octstring");
-    _token_id.emplace(token_null, "null");
-    _token_id.emplace(token_oid, "oid");
-    _token_id.emplace(token_objdesc, "objdesc");
-    _token_id.emplace(token_extern, "extern");
-    _token_id.emplace(token_real, "real");
-    _token_id.emplace(token_enum, "enum");
-    _token_id.emplace(token_embedpdv, "emdedpdv");
-    _token_id.emplace(token_utf8string, "utf8string");
-    _token_id.emplace(token_reloid, "reloid");
-    _token_id.emplace(token_sequence, "sequence");
-    _token_id.emplace(token_sequenceof, "sequenceof");
-    _token_id.emplace(token_set, "set");
-    _token_id.emplace(token_setof, "setof");
-    _token_id.emplace(token_numstring, "numstring");
-    _token_id.emplace(token_printstring, "printstring");
-    _token_id.emplace(token_t61string, "t61string");
-    _token_id.emplace(token_videotexstring, "videotexstring");
-    _token_id.emplace(token_ia5string, "ia5string");
-    _token_id.emplace(token_utctime, "utctime");
-    _token_id.emplace(token_generalizedtime, "generalizedtime");
-    _token_id.emplace(token_graphicstring, "graphicstring");
-    _token_id.emplace(token_visiblestring, "visiblestring");
-    _token_id.emplace(token_genaralstring, "generalstring");
-    _token_id.emplace(token_universalstring, "universalstring");
-    _token_id.emplace(token_bmpstring, "bmpstring");
-    _token_id.emplace(token_date, "date");
-    _token_id.emplace(token_timeofday, "timeofday");
-    _token_id.emplace(token_datetime, "datetime");
-    _token_id.emplace(token_duration, "duration");
-    _token_id.emplace(token_true, "true");
-    _token_id.emplace(token_false, "false");
-    _token_id.emplace(token_universal, "universal");
-    _token_id.emplace(token_application, "application");
-    _token_id.emplace(token_private, "private");
-    _token_id.emplace(token_implicit, "implicit");
-    _token_id.emplace(token_explicit, "explicit");
-    _token_id.emplace(token_builtintype, "builtintype");
-    _token_id.emplace(token_taggedmode, "taggedmode");
-    _token_id.emplace(token_char, "char");
-    _token_id.emplace(token_usertype, "usertype");
-#endif
+    _token_dbg.emplace(token_bool, "bool");
+    _token_dbg.emplace(token_int, "int");
+    _token_dbg.emplace(token_bitstring, "bitstring");
+    _token_dbg.emplace(token_octstring, "octstring");
+    _token_dbg.emplace(token_null, "null");
+    _token_dbg.emplace(token_oid, "oid");
+    _token_dbg.emplace(token_objdesc, "objdesc");
+    _token_dbg.emplace(token_extern, "extern");
+    _token_dbg.emplace(token_real, "real");
+    _token_dbg.emplace(token_enum, "enum");
+    _token_dbg.emplace(token_embedpdv, "embedpdv");
+    _token_dbg.emplace(token_utf8string, "utf8string");
+    _token_dbg.emplace(token_reloid, "reloid");
+    _token_dbg.emplace(token_of, "of");
+    _token_dbg.emplace(token_sequence, "sequence");
+    _token_dbg.emplace(token_sequenceof, "sequenceof");
+    _token_dbg.emplace(token_set, "set");
+    _token_dbg.emplace(token_setof, "setof");
+    _token_dbg.emplace(token_numstring, "numstring");
+    _token_dbg.emplace(token_printstring, "printstring");
+    _token_dbg.emplace(token_t61string, "t61string");
+    _token_dbg.emplace(token_videotexstring, "videotexstring");
+    _token_dbg.emplace(token_ia5string, "ia5string");
+    _token_dbg.emplace(token_utctime, "utctime");
+    _token_dbg.emplace(token_generalizedtime, "generalizedtime");
+    _token_dbg.emplace(token_graphicstring, "graphicstring");
+    _token_dbg.emplace(token_visiblestring, "visiblestring");
+    _token_dbg.emplace(token_genaralstring, "genaralstring");
+    _token_dbg.emplace(token_universalstring, "universalstring");
+    _token_dbg.emplace(token_cstring, "cstring");
+    _token_dbg.emplace(token_bmpstring, "bmpstring");
+    _token_dbg.emplace(token_date, "date");
+    _token_dbg.emplace(token_timeofday, "timeofday");
+    _token_dbg.emplace(token_datetime, "datetime");
+    _token_dbg.emplace(token_duration, "duration");
+    _token_dbg.emplace(token_any, "any");
+    _token_dbg.emplace(token_choice, "choice");
+
+    _token_dbg.emplace(token_boolvalue, "boolvalue");
+    _token_dbg.emplace(token_true, "true");
+    _token_dbg.emplace(token_false, "false");
+
+    _token_dbg.emplace(token_class, "class");
+    _token_dbg.emplace(token_universal, "universal");
+    _token_dbg.emplace(token_application, "application");
+    _token_dbg.emplace(token_private, "private");
+
+    _token_dbg.emplace(token_taggedmode, "taggedmode");
+    _token_dbg.emplace(token_implicit, "implicit");
+    _token_dbg.emplace(token_explicit, "explicit");
+
+    _token_dbg.emplace(token_builtintype, "builtintype");
+    _token_dbg.emplace(token_namedtype, "namedtype");
+    _token_dbg.emplace(token_tag, "tag");
+    _token_dbg.emplace(token_taggedtype, "taggedtype");
+    _token_dbg.emplace(token_referencedtype, "referencedtype");
+
+    _token_dbg.emplace(token_union, "union");
+    _token_dbg.emplace(token_intersection, "intersection");
+    _token_dbg.emplace(token_except, "except");
+    _token_dbg.emplace(token_allexcept, "allexcept");
+
+    _token_dbg.emplace(token_default, "default");
 }
 
-parser::~parser() { delete _ac; }
-
-return_t parser::parse(parser::context& context, const char* p, size_t size) { return context.parse(this, p, size); }
-
-return_t parser::parse(parser::context& context, const char* p) {
-    return_t ret = errorcode_t::success;
-    if (p) {
-        ret = context.parse(this, p, strlen(p));
-    } else {
-        ret = errorcode_t::invalid_parameter;
-    }
-    return ret;
+parser::~parser() {
+    delete _acparser;
+    delete _ac;
 }
 
-return_t parser::parse(parser::context& context, const std::string& p) { return parse(context, p.c_str(), p.size()); }
-
-return_t parser::parse(parser::context& context, const basic_stream& p) { return parse(context, p.c_str(), p.size()); }
-
-parser::search_result parser::csearch(const parser::context& context, const char* pattern, size_t size_pattern, size_t pos) {
-    return context.csearch(this, pattern, size_pattern, pos);  // handle by characters
-}
-
-parser::search_result parser::csearch(const parser::context& context, const std::string& pattern, size_t pos) {
-    return context.csearch(this, pattern, pos);  // handle by characters
-}
-
-parser::search_result parser::csearch(const parser::context& context, const basic_stream& pattern, size_t pos) {
-    return context.csearch(this, pattern, pos);  // handle by characters
-}
-
-parser::search_result parser::wsearch(const parser::context& context, const char* pattern, size_t size_pattern, size_t pos) {
-    return context.wsearch(this, pattern, size_pattern, pos);
-}
-
-parser::search_result parser::wsearch(const parser::context& context, const std::string& pattern, size_t pos) { return context.wsearch(this, pattern, pos); }
-
-parser::search_result parser::wsearch(const parser::context& context, const basic_stream& pattern, size_t pos) { return context.wsearch(this, pattern, pos); }
-
-bool parser::compare(parser* obj, const char* lhs, const char* rhs) {
-    bool ret = false;
-    if (obj && lhs && rhs) {
-        ret = obj->compare(lhs, rhs);
-    }
-    return ret;
-}
-
-bool parser::compare(const char* lhs, const char* rhs) {
-    bool ret = false;
-    if (lhs && rhs) {
-        parser::context context_lhs;
-        parser::context context_rhs;
-        parse(context_lhs, lhs, strlen(lhs));
-        parse(context_rhs, rhs, strlen(rhs));
-        ret = compare(context_lhs, context_rhs);
-    }
-    return ret;
-}
-
-bool parser::compare(const parser::context& lhs, const parser::context& rhs) { return lhs.compare(this, rhs); }
-
-parser& parser::add_pattern(const char* p, size_t size) {
-    if (p) {
-        parser::context context;
-        parse(context, p, size);
-        context.add_pattern(this);
-    }
-    return *this;
-}
-
-parser& parser::add_pattern(const std::string& pattern) { return add_pattern(pattern.c_str(), pattern.size()); }
-
-std::multimap<range_t, size_t> parser::psearch(const parser::context& context) { return context.psearch(this); }
-
-std::multimap<range_t, size_t> parser::psearchex(const parser::context& context) { return context.psearchex(this); }
-
-parser& parser::add_token(const std::string& token_name, uint32 attr, uint32 tag) {
+parser& parser::add_token(const std::string& token_name, uint32 token) {
     if (false == token_name.empty()) {
-        _tokens.add(token_name.c_str(), token_name.size(), new token_attr_tag(attr, tag));
+        _tokens.add(token_name.c_str(), token_name.size(), new token_attr_tag(token));
+        _token_dbg.emplace(token, token_name);  // do not overwrite
     }
     return *this;
 }
 
-parser& parser::add_tokenn(const char* token, size_t size, uint32 attr, uint32 tag) {
-    if (token && size) {
-        _tokens.add(token, size, new token_attr_tag(attr, tag));
-    }
-    return *this;
-}
-
-t_key_value<std::string, uint16>& parser::get_config() { return _keyvalue; }
-
-std::string parser::typeof_token(uint32 type) {
+std::string parser::nameof_token(uint32 token) {
     std::string id;
-    auto iter = _token_id.find(type);
-    if (_token_id.end() != iter) {
+    auto iter = _token_dbg.find(token);
+    if (_token_dbg.end() != iter) {
         id = iter->second;
     }
     return id;
 }
 
+// parser& parser::set_group(uint32 groupid, const std::vector<uint32>& tokens) {
+//     //
+//     return *this;
+// }
+//
+// parser& parser::add_pattern(uint32 tokenid, const std::vector<uint32>& tokens, uint32 flags, uint32 delimiter) {
+//     _patterns.emplace(tokenid, tokens);
+//     return *this;
+// }
+
+return_t parser::parse(parser_context& context, const char* p, size_t size) { return context.lexparse(this, p, size); }
+
+return_t parser::parse(parser_context& context, const char* p) {
+    if (nullptr == p) return errorcode_t::invalid_parameter;
+    return context.lexparse(this, p, strlen(p));
+}
+
+return_t parser::parse(parser_context& context, const std::string& p) { return parse(context, p.c_str(), p.size()); }
+
+return_t parser::parse(parser_context& context, const basic_stream& p) { return parse(context, p.c_str(), p.size()); }
+
+// search_result parser::csearch(const parser_context& context, const char* pattern, size_t size_pattern, size_t pos) {
+//     return context.csearch(this, pattern, size_pattern, pos);  // handle by characters
+// }
+//
+// search_result parser::csearch(const parser_context& context, const std::string& pattern, size_t pos) {
+//     return context.csearch(this, pattern, pos);  // handle by characters
+// }
+//
+// search_result parser::csearch(const parser_context& context, const basic_stream& pattern, size_t pos) {
+//     return context.csearch(this, pattern, pos);  // handle by characters
+// }
+//
+// search_result parser::wsearch(const parser_context& context, const char* pattern, size_t size_pattern, size_t pos) {
+//     return context.wsearch(this, pattern, size_pattern, pos);
+// }
+//
+// search_result parser::wsearch(const parser_context& context, const std::string& pattern, size_t pos) { return context.wsearch(this, pattern, pos); }
+//
+// search_result parser::wsearch(const parser_context& context, const basic_stream& pattern, size_t pos) { return context.wsearch(this, pattern, pos); }
+//
+// bool parser::compare(parser* obj, const char* lhs, const char* rhs) {
+//     bool ret = false;
+//     if (obj && lhs && rhs) {
+//         ret = obj->compare(lhs, rhs);
+//     }
+//     return ret;
+// }
+//
+// bool parser::compare(const char* lhs, const char* rhs) {
+//     bool ret = false;
+//     if (lhs && rhs) {
+//         parser_context context_lhs;
+//         parser_context context_rhs;
+//         parse(context_lhs, lhs, strlen(lhs));
+//         parse(context_rhs, rhs, strlen(rhs));
+//         ret = compare(context_lhs, context_rhs);
+//     }
+//     return ret;
+// }
+
+// bool parser::compare(const parser_context& lhs, const parser_context& rhs) { return lhs.compare(this, rhs); }
+
+// parser& parser::add_pattern(const char* p, size_t size) {
+//     if (p) {
+//         parser_context context;
+//         parse(context, p, size);
+//         context.add_pattern(this);
+//     }
+//     return *this;
+// }
+//
+// parser& parser::add_pattern(const std::string& pattern) { return add_pattern(pattern.c_str(), pattern.size()); }
+//
+// std::multimap<range_t, size_t> parser::psearch(const parser_context& context) { return context.psearch(this); }
+//
+// std::multimap<range_t, size_t> parser::psearchex(const parser_context& context) { return context.psearchex(this); }
+
+t_aho_corasick_parser<uint32>* parser::get_ac() { return _acparser; }
+
+t_key_value<std::string, uint16>& parser::get_config() { return _keyvalue; }
+
 bool parser::lookup(const std::string& word, int& index, uint32 flags) {
     bool ret = true;
     int idx = -1;
-    if (parse_lookup_readonly & flags) {
+    if (flat_lookup_readonly & flags) {
         idx = _dictionary.find(word.c_str(), word.size());
         if (-1 == idx) {
             ret = false;
@@ -231,7 +256,7 @@ bool parser::rlookup(int index, std::string& word) {
     return ret;
 }
 
-bool parser::lookup(const char* p, size_t size, std::string& token_name, uint32& token_type, uint32& token_tag) {
+bool parser::lookup(const char* p, size_t size, std::string& token_name, uint32& token_type /*, uint32& token_tag*/) {
     bool ret = false;
     __try2 {
         if (nullptr == p) {
@@ -239,14 +264,14 @@ bool parser::lookup(const char* p, size_t size, std::string& token_name, uint32&
         }
 
         token_type = 0;
-        token_tag = 0;
+        // token_tag = 0;
         token_attr_tag* tag = nullptr;
         size_t len = _tokens.lookup(p, size, &tag);
         if (len) {
             token_name.assign(p, len);
             if (tag) {
                 token_type = tag->attr;
-                token_tag = tag->tag;
+                // token_tag = tag->tag;
             }
             ret = true;
         }
@@ -255,7 +280,7 @@ bool parser::lookup(const char* p, size_t size, std::string& token_name, uint32&
     return ret;
 }
 
-void parser::dump(const parser::context& context, basic_stream& bs) {
+void parser::dump(const parser_context& context, basic_stream& bs) {
     size_t line = 1;
     std::map<int, std::string> color;
     color.emplace(token_lvalue, "1;34");

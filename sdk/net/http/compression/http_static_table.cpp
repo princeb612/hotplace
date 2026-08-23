@@ -43,7 +43,7 @@ match_result_t http_static_table::match(uint32 flags, const std::string& name, c
 return_t http_static_table::select(uint32 flags, size_t index, std::string& name, std::string& value) {
     return_t ret = errorcode_t::not_found;
     __try2 {
-        static_table_index_t::iterator iter = _static_table_index.find(index);
+        auto iter = _static_table_index.find(index);
         if (_static_table_index.end() == iter) {
             ret = errorcode_t::not_found;
             __leave2;
@@ -59,7 +59,7 @@ return_t http_static_table::select(uint32 flags, size_t index, std::string& name
     return ret;
 }
 
-size_t http_static_table::size() { return _static_table.size(); }
+size_t http_static_table::size() const { return _static_table.size(); }
 
 void http_static_table::load() {}
 

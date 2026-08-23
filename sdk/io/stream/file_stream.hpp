@@ -95,7 +95,7 @@ class file_stream : public stream_t {
      * @remarks
      * @sa
      */
-    bool is_open();
+    bool is_open() const;
     /**
      * @brief open
      * @param   LPCTSTR filename    [IN] filename
@@ -140,7 +140,7 @@ class file_stream : public stream_t {
      * @remarks
      * @sa
      */
-    bool is_mmapped();
+    bool is_mmapped() const;
     /**
      * @brief mmap, filemap
      * @param

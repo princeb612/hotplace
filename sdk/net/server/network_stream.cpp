@@ -222,8 +222,7 @@ return_t network_stream::do_writep(network_protocol_group* protocol_group, netwo
         case protocol_state_t::complete: {
             size_t content_pos = 0;
             size_t content_size = 0;
-            network_stream_list_t::iterator iter;
-            for (iter = _queue.begin(); iter != _queue.end();) {
+            for (auto iter = _queue.begin(); iter != _queue.end();) {
                 auto buffer_object = *iter;
                 content_pos = content_size;
                 content_size += buffer_object->size();

@@ -25,7 +25,7 @@ class tls_extension_alpn : public tls_extension {
     tls_extension_alpn(tls_handshake* handshake);
     virtual ~tls_extension_alpn();
 
-    const binary_t& get_protocols();
+    const binary_t& get_protocols() const;
     void set_protocols(const binary_t& protocols);
 
    protected:

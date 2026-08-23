@@ -76,7 +76,7 @@ class cbor_map : public cbor_object {
     cbor_map& add(cbor_data* key, std::function<void(cbor_array*)> f, uint32 flags = 0);
 
     virtual size_t size() const;
-    cbor_pair* operator[](size_t index);
+    cbor_pair* operator[](size_t index) const;
     std::list<cbor_pair*>& accessor();
 
     virtual int addref();
@@ -156,8 +156,7 @@ class cbor_map_hint {
                 __leave2;
             }
 
-            typename std::map<KTY, cbor_object*>::iterator iter;
-            iter = _index.find(key);
+            auto iter = _index.find(key);
             if (_index.end() == iter) {
                 ret = errorcode_t::not_found;
             } else {

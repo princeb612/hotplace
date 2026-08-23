@@ -25,7 +25,7 @@ class tls_extension_sni : public tls_extension {
     tls_extension_sni(tls_handshake* handshake);
     virtual ~tls_extension_sni();
 
-    uint8 get_nametype();
+    uint8 get_nametype() const;
     binary_t& get_hostname();
     void set_hostname(const std::string server);
 

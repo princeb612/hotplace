@@ -68,8 +68,8 @@ class t_suffixtree {
         return *this;
     }
 
-    std::set<size_t> search(const std::vector<T>& pattern) { return search(pattern.data(), pattern.size()); }
-    std::set<size_t> search(const T* pattern, size_t size) {
+    std::set<size_t> search(const std::vector<T>& pattern) const { return search(pattern.data(), pattern.size()); }
+    std::set<size_t> search(const T* pattern, size_t size) const {
         std::set<size_t> index;
         if (pattern) {
             trienode* current = _root;

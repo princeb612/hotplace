@@ -39,7 +39,7 @@ void testcase_rfc8152_read_cbor();
 // Test Vector comparison
 return_t dump_test_data(const char* text, basic_stream& diagnostic);
 return_t dump_test_data(const char* text, const binary_t& cbor);
-void dump_crypto_key(crypto_key_object* key, void*);
+void dump_crypto_key(const crypto_key_object* key, void*);
 void testcase_rfc8152();
 
 // part 3 https://github.com/cose-wg/Examples

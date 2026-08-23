@@ -184,7 +184,7 @@ class crypto_key_object {
  *        keychain.add_dh(&key, NID_ffdhe6144, "ffdhe6144");
  *        keychain.add_dh(&key, NID_ffdhe8192, "ffdhe8192");
  *
- *        auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
+ *        auto dump_crypto_key = [&](const crypto_key_object* item, void*) -> void {
  *            bs.printf(R"(> kid "%s")", item->get_desc().get_kid_cstr());
  *            bs.printf("\n");
  *            dump_key(item->get_pkey(), &bs, 16, 3, dump_notrunc);
@@ -237,55 +237,55 @@ class crypto_key {
      * @brief return any key
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* any(bool up_ref = false);
+    const EVP_PKEY* any(bool up_ref = false) const;
     /**
      * @brief select
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select(crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* select(crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
     /**
      * @brief select
      * @param crypto_kty_t kty [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select(crypto_kty_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* select(crypto_kty_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
     /**
      * @brief select
      * @param uint32 nid [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select_nid(uint32 nid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* select_nid(uint32 nid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
     /**
      * @brief select
      * @param tls_group_t group [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select(tls_group_t group, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* select(tls_group_t group, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
     /**
      * @brief select
      * @param jwa_t alg [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select(jwa_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* select(jwa_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
     /**
      * @brief select
      * @param signature_t alg [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select(signature_t sig, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* select(signature_t sig, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
     /**
      * @brief select
      * @param jws_t alg [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select(jws_t sig, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* select(jws_t sig, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
     /**
      * @brief select
      * @param std::string& kid [out]
@@ -293,14 +293,14 @@ class crypto_key {
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select(std::string& kid, crypto_kty_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* select(std::string& kid, crypto_kty_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
     /**
      * @brief select
      * @param std::string& kid [out]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select(std::string& kid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* select(std::string& kid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
     /**
      * @brief select
      * @param std::string& kid [out]
@@ -308,7 +308,7 @@ class crypto_key {
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select(std::string& kid, jwa_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* select(std::string& kid, jwa_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
     /**
      * @brief select
      * @param std::string& kid [out]
@@ -316,7 +316,7 @@ class crypto_key {
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select(std::string& kid, signature_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* select(std::string& kid, signature_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
     /**
      * @brief select
      * @param std::string& kid [out]
@@ -324,7 +324,7 @@ class crypto_key {
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select(std::string& kid, jws_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* select(std::string& kid, jws_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
     /**
      * @brief select
      * @param std::string& kid [out]
@@ -332,14 +332,14 @@ class crypto_key {
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* select(std::string& kid, cose_alg_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* select(std::string& kid, cose_alg_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
     /**
      * @brief find
      * @param const char* kid [in]
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* find(const char* kid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* find(const char* kid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
     /**
      * @brief find
      * @param const char* kid [in]
@@ -347,7 +347,7 @@ class crypto_key {
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* find(const char* kid, crypto_kty_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* find(const char* kid, crypto_kty_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
     /**
      * @brief find
      * @param const char* kid [in]
@@ -355,7 +355,7 @@ class crypto_key {
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* find_nid(const char* kid, uint32 nid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* find_nid(const char* kid, uint32 nid, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
     /**
      * @brief find
      * @param const char* kid [in]
@@ -363,8 +363,8 @@ class crypto_key {
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* find(const char* kid, tls_group_t group, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
-    const EVP_PKEY* find_group(const char* kid, tls_group_t group, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* find(const char* kid, tls_group_t group, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
+    const EVP_PKEY* find_group(const char* kid, tls_group_t group, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
     /**
      * @brief find
      * @param const char* kid [in]
@@ -372,7 +372,7 @@ class crypto_key {
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* find(const char* kid, jwa_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* find(const char* kid, jwa_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
     /**
      * @brief find
      * @param const char* kid [in]
@@ -380,7 +380,7 @@ class crypto_key {
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* find(const char* kid, signature_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* find(const char* kid, signature_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
     /**
      * @brief find
      * @param const char* kid [in]
@@ -388,14 +388,14 @@ class crypto_key {
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const EVP_PKEY* find(const char* kid, jws_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const EVP_PKEY* find(const char* kid, jws_t alg, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
 
     /**
      * @brief find
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const X509* select_x509(crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const X509* select_x509(crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
     /**
      * @brief find
      * @param const char* kid [in]
@@ -403,7 +403,7 @@ class crypto_key {
      * @param crypto_use_t use [inopt] crypto_use_t::use_any
      * @param bool up_ref [inopt]
      */
-    const X509* find_x509(const char* kid, crypto_kty_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false);
+    const X509* find_x509(const char* kid, crypto_kty_t kty, crypto_use_t use = crypto_use_t::use_any, bool up_ref = false) const;
 
     /**
      * @brief public key
@@ -577,7 +577,7 @@ class crypto_key {
     /**
      * size
      */
-    size_t size();
+    size_t size() const;
 
     return_t append(crypto_key* source);
 
@@ -589,7 +589,7 @@ class crypto_key {
      * @param std::function<void(crypto_key_object*, void*)> func [in]
      * @param void* param [inopt]
      * @example
-     *  void dump_crypto_key (crypto_key_object* key, void*)
+     *  void dump_crypto_key (const crypto_key_object* key, void*)
      *  {
      *      uint32 nid = 0;
      *      nidof_evp_pkey (key->get_pkey(), nid);
@@ -603,7 +603,7 @@ class crypto_key {
      *      key.for_each (dump_crypto_key, nullptr);
      *  }
      */
-    void for_each(std::function<void(crypto_key_object*, void*)> func, void* param = nullptr);
+    void for_each(std::function<void(const crypto_key_object*, void*)> func, void* param = nullptr) const;
 
     void erase(const std::string& kid);
 
@@ -617,7 +617,7 @@ class crypto_key {
      *          return key, errorcode_t::inaccurate    : not found kid, but kty exists
      *          return nullptr, errorcode_t::not_exist : not exist kid nor kty
      */
-    const EVP_PKEY* choose(const std::string& kid, crypto_kty_t kty, return_t& code);
+    const EVP_PKEY* choose(const std::string& kid, crypto_kty_t kty, return_t& code) const;
     /**
      * @brief   copy pointer (EVP_PKEY_up_ref, X509_up_ref)
      * @param   crypto_key* skeys [in]
@@ -665,7 +665,7 @@ class crypto_key {
     typedef std::multimap<std::string, crypto_key_object> crypto_key_map_t;
     crypto_key_map_t _key_map;
 
-    critical_section _lock;
+    mutable critical_section _lock;
     t_shared_reference<crypto_key> _shared;
 };
 

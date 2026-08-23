@@ -241,7 +241,7 @@ return_t t_cmdline_t<T>::parse(int argc, char** argv) {
             if (cmdline_flag_t::cmdline_preced & iter->second.flag()) {  // preced token expect next argument
                 if (index + 1 < argc) {
                     char* next_token = argv[index + 1];
-                    typename cmdline_args_map_t::iterator check_iter = _args.find(next_token);  // make sure next argument is not token
+                    auto check_iter = _args.find(next_token);  // make sure next argument is not token
                     if (check_iter == _args.end()) {
                         iter->second.bind(_source, next_token);  // consume token
                         _mandatory.erase(token);

@@ -15,25 +15,25 @@
 namespace hotplace {
 namespace crypto {
 
-const hint_curve_t* crypto_advisor::hintof_curve_tls_group(tls_group_t group) {
+const hint_curve_t* crypto_advisor::hintof_curve_tls_group(tls_group_t group) const {
     const hint_curve_t* item = nullptr;
-    t_maphint<tls_group_t, const hint_curve_t*> hint(_tls_group_curve_map);
+    t_maphint_const<tls_group_t, const hint_curve_t*> hint(_tls_group_curve_map);
 
     hint.find(group, &item);
     return item;
 }
 
-const hint_group_t* crypto_advisor::hintof_tls_group(tls_group_t group) {
+const hint_group_t* crypto_advisor::hintof_tls_group(tls_group_t group) const {
     const hint_group_t* item = nullptr;
-    t_maphint<tls_group_t, const hint_group_t*> hint(_tls_group_map);
+    t_maphint_const<tls_group_t, const hint_group_t*> hint(_tls_group_map);
 
     hint.find(group, &item);
     return item;
 }
 
-const hint_group_t* crypto_advisor::hintof_tls_group(const std::string& name) {
+const hint_group_t* crypto_advisor::hintof_tls_group(const std::string& name) const {
     const hint_group_t* item = nullptr;
-    t_maphint<std::string, const hint_group_t*> hint(_tls_group_name_map);
+    t_maphint_const<std::string, const hint_group_t*> hint(_tls_group_name_map);
 
     std::string key = name;
     std::transform(key.begin(), key.end(), key.begin(), tolower);
@@ -41,7 +41,7 @@ const hint_group_t* crypto_advisor::hintof_tls_group(const std::string& name) {
     return item;
 }
 
-void crypto_advisor::enum_tls_group(std::function<void(const hint_group_t*)> func) {
+void crypto_advisor::enum_tls_group(std::function<void(const hint_group_t*)> func) const {
     if (func) {
         for (size_t i = 0; i < sizeof_hint_groups; i++) {
             auto item = hint_groups + i;
@@ -50,15 +50,15 @@ void crypto_advisor::enum_tls_group(std::function<void(const hint_group_t*)> fun
     }
 }
 
-const hint_group_t* crypto_advisor::hintof_tls_group_nid(uint32 nid) {
+const hint_group_t* crypto_advisor::hintof_tls_group_nid(uint32 nid) const {
     const hint_group_t* item = nullptr;
-    t_maphint<uint32, const hint_group_t*> hint(_tls_group_nid_map);
+    t_maphint_const<uint32, const hint_group_t*> hint(_tls_group_nid_map);
 
     hint.find(nid, &item);
     return item;
 }
 
-return_t crypto_advisor::for_each_tls_group(std::function<void(tls_group_t, uint32)> f) {
+return_t crypto_advisor::for_each_tls_group(std::function<void(tls_group_t, uint32)> f) const {
     return_t ret = errorcode_t::success;
     for (size_t i = 0; i < sizeof_hint_groups; ++i) {
         const auto& item = hint_groups + i;
@@ -68,7 +68,7 @@ return_t crypto_advisor::for_each_tls_group(std::function<void(tls_group_t, uint
     return ret;
 }
 
-return_t crypto_advisor::for_each_tls_group(std::function<void(const hint_group_t*)> f) {
+return_t crypto_advisor::for_each_tls_group(std::function<void(const hint_group_t*)> f) const {
     return_t ret = errorcode_t::success;
     for (size_t i = 0; i < sizeof_hint_groups; ++i) {
         const auto& item = hint_groups + i;
@@ -77,7 +77,7 @@ return_t crypto_advisor::for_each_tls_group(std::function<void(const hint_group_
     return ret;
 }
 
-bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, tls_group_t group) {
+bool crypto_advisor::is_kindof(const EVP_PKEY* pkey, tls_group_t group) const {
     bool ret = false;
     __try2 {
         if (nullptr == pkey) {

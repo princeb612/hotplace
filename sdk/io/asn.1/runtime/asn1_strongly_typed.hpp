@@ -23,10 +23,6 @@ class asn1_strongly_typed {
     friend class asn1_runtime;
 
    public:
-    // using asn1_tlv_t = asn1_bytestream::asn1_tlv_t;
-    // using TLV_tree = asn1_bytestream::TLV_tree;
-    // using TLV_node = asn1_bytestream::TLV_node;
-
     asn1_strongly_typed();
     ~asn1_strongly_typed();
 

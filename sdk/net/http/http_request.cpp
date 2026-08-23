@@ -254,7 +254,7 @@ http_request& http_request::get_request(basic_stream& bs) {
     return *this;
 }
 
-std::string http_request::get_version_str() {
+std::string http_request::get_version_str() const {
     constexpr char ver1[] = "HTTP/1.1";  // RFC 2616 3.1 HTTP Version
     constexpr char ver2[] = "HTTP/2";
 

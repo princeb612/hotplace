@@ -47,7 +47,7 @@ void test_json_testvector_akp(const char* filename) {
         ret = jwk.load(&key, key_ownspec, contents, strlen(contents));
         _test_case.test(ret, __FUNCTION__, "load jwk %s", filename);
 
-        auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
+        auto dump_crypto_key = [&](const crypto_key_object* item, void*) -> void {
             auto pkey = item->get_pkey();
 
             _logger->write([&](basic_stream& bs) -> void {

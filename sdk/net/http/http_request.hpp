@@ -85,7 +85,7 @@ class http_request {
      */
     http_request& get_request(basic_stream& stream);
 
-    virtual std::string get_version_str();
+    std::string get_version_str() const;
 
     http_request& operator=(const http_request& other);
 

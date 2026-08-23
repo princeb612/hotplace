@@ -49,7 +49,7 @@ class t_maphint {
         return_t ret = errorcode_t::success;
 
         if (value) {
-            typename std::map<K, V>::iterator iter = _source.find(key);
+            auto iter = _source.find(key);
             if (_source.end() == iter) {
                 ret = errorcode_t::not_found;
             } else {

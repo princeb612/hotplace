@@ -115,11 +115,11 @@ class payload_member {
     payload_member(const bignumber& value, const char* name = nullptr, const char* group = nullptr);
     ~payload_member();
 
-    bool get_change_endian();
+    bool is_big_endian() const;
     std::string get_name() const;
     std::string get_group() const;
     bool encoded() const;  // nullptr != _vl
-    payload_member& set_change_endian(bool enable = true);
+    payload_member& set_big_endian(bool enable = true);
     payload_member& set_name(const char* name);
     payload_member& set_group(const char* group);
 
@@ -231,7 +231,7 @@ class payload {
     /**
      * @brief   group status
      */
-    bool get_group_condition(const std::string& name);
+    bool get_group_condition(const std::string& name) const;
     /**
      * @brief
      * @sample
@@ -373,8 +373,8 @@ class payload {
         return *this;
     }
     payload_member* select(const std::string& name) const;
-    size_t offset_of(const std::string& name);
-    size_t numberof_members();
+    size_t offset_of(const std::string& name) const;
+    size_t numberof_members() const;
 
     /**
      * @sample
@@ -424,8 +424,8 @@ class payload {
      *              pl.read(stream, stream_size);
      *          }
      */
-    size_t size_estimated();
-    size_t size_occupied();
+    size_t size_estimated() const;
+    size_t size_occupied() const;
     payload& clear();
 
     // members

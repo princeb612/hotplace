@@ -54,7 +54,7 @@ html_documents& html_documents::set_default_document(const std::string& document
     return *this;
 }
 
-bool html_documents::get_local(const std::string& uri, std::string& local) {
+bool html_documents::get_local(const std::string& uri, std::string& local) const {
     bool ret_value = false;
 
     local.clear();
@@ -102,7 +102,7 @@ return_t html_documents::load(const std::string& uri, std::string& content_type,
     return ret;
 }
 
-return_t html_documents::loadable(const std::string& uri, std::string& content_type) {
+return_t html_documents::loadable(const std::string& uri, std::string& content_type) const {
     return_t ret = errorcode_t::success;
     __try2 {
         // todo compare timestamp
@@ -111,7 +111,7 @@ return_t html_documents::loadable(const std::string& uri, std::string& content_t
 
         // search from cache
         critical_section_guard guard(_lock);
-        std::map<std::string, binary_t>::iterator iter = _cache_map.find(uri);
+        auto iter = _cache_map.find(uri);
         if (_cache_map.end() != iter) {
             __leave2;
         }
@@ -147,7 +147,7 @@ return_t html_documents::compose(const std::string& uri, http_response* response
 return_t html_documents::search_cache(const std::string& uri, binary_t& content) {
     return_t ret = errorcode_t::success;
     critical_section_guard guard(_lock);
-    std::map<std::string, binary_t>::iterator iter = _cache_map.find(uri);
+    auto iter = _cache_map.find(uri);
     if (_cache_map.end() != iter) {
         content = iter->second;
     } else {
@@ -183,7 +183,7 @@ return_t html_documents::loadfile(const std::string& uri, binary_t& content) {
     return ret;
 }
 
-return_t html_documents::get_content_type(const std::string& uri, std::string& content_type) {
+return_t html_documents::get_content_type(const std::string& uri, std::string& content_type) const {
     return_t ret = errorcode_t::success;
     critical_section_guard guard(_lock);
 
@@ -194,7 +194,7 @@ return_t html_documents::get_content_type(const std::string& uri, std::string& c
     if (std::string::npos != pos) {
         std::string dot_ext = local.substr(pos);
 
-        std::map<std::string, std::string>::iterator iter = _content_types.find(dot_ext);
+        auto iter = _content_types.find(dot_ext);
         if (_content_types.end() != iter) {
             content_type = iter->second;
         } else {

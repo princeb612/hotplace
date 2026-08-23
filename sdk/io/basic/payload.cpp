@@ -50,9 +50,9 @@ payload& payload::set_group(const std::string& name, bool enable) {
     return *this;
 }
 
-bool payload::get_group_condition(const std::string& name) {
+bool payload::get_group_condition(const std::string& name) const {
     bool ret = true;
-    t_maphint<std::string, bool> hint(_option);
+    t_maphint_const<std::string, bool> hint(_option);
     hint.find(name, &ret);
     return ret;
 }
@@ -268,7 +268,7 @@ payload_member* payload::select(const std::string& name) const {
     return item;
 }
 
-size_t payload::offset_of(const std::string& name) {
+size_t payload::offset_of(const std::string& name) const {
     size_t offset = 0;
     for (auto item : _members) {
         if (false == get_group_condition(item->get_group())) {
@@ -282,7 +282,7 @@ size_t payload::offset_of(const std::string& name) {
     return offset;
 }
 
-size_t payload::size_estimated() {
+size_t payload::size_estimated() const {
     size_t ret_value = 0;
     for (auto item : _members) {
         bool condition = get_group_condition(item->get_group());
@@ -295,7 +295,7 @@ size_t payload::size_estimated() {
     return ret_value;
 }
 
-size_t payload::size_occupied() {
+size_t payload::size_occupied() const {
     size_t ret_value = 0;
     for (auto item : _members) {
         bool condition = get_group_condition(item->get_group());
@@ -316,7 +316,7 @@ payload& payload::clear() {
     return *this;
 }
 
-size_t payload::numberof_members() { return _members.size(); }
+size_t payload::numberof_members() const { return _members.size(); }
 
 void payload::get_binary(const std::string& name, binary_t& bin, uint32 flags) {
     auto item = select(name);

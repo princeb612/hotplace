@@ -44,21 +44,21 @@ class http_uri {
     /**
      * @brief URI
      */
-    const char* get_uri();
-    const char* get_uripath();
-    const char* get_query();
+    const char* get_uri() const;
+    const char* get_uripath() const;
+    const char* get_query() const;
     /**
      * @brief   read a param
      * @param   const std::string& key [in]
      * @param   std::string& value [out]
      * @return  error code (see error.hpp)
      */
-    return_t query(const std::string& key, std::string& value);
+    return_t query(const std::string& key, std::string& value) const;
     /**
      * @brief count of query
      * @remarks
      */
-    size_t countof_query();
+    size_t countof_query() const;
 
     /*
      * @brief   conversion

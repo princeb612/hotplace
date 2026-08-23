@@ -34,13 +34,13 @@ class time_otp {
      *        otp.open(&handle, 8, 30, HASH_ALGORITHM_SHA_512, key, keysize);
      *        otp.close(handle);
      */
-    return_t open(otp_context_t** handle, unsigned int digit_length, time_t interval, hash_algorithm_t algorithm, const byte_t* key_data, size_t key_size);
+    static return_t open(otp_context_t** handle, unsigned int digit_length, time_t interval, hash_algorithm_t algorithm, const byte_t* key_data, size_t key_size);
     /**
      * @brief close
      * @param otp_context_t* handle [in]
      * @return error code (see error.hpp)
      */
-    return_t close(otp_context_t* handle);
+    static return_t close(otp_context_t* handle);
     /**
      * @brief close
      * @param otp_context_t* handle [in]
@@ -50,7 +50,7 @@ class time_otp {
      * @example
      *        otp.get(handle, time, code);
      */
-    return_t get(otp_context_t* handle, time64_t time, uint32& code);
+    static return_t get(otp_context_t* handle, time64_t time, uint32& code);
     /**
      * @brief close
      * @param otp_context_t* handle [in]
@@ -58,7 +58,7 @@ class time_otp {
      * @param uint32 code [in]
      * @return error code (see error.hpp)
      */
-    return_t verify(otp_context_t* handle, time64_t time, uint32 code);
+    static return_t verify(otp_context_t* handle, time64_t time, uint32 code);
 };
 
 }  // namespace crypto

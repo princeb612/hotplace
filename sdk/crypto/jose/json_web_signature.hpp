@@ -87,8 +87,8 @@ class json_web_signature {
      *          //  .
      *          // DtEhU3ljbEg8L38VWAfUAqOyKAM6-Xx-F4GawxaepmXFCgfTjDxw5djxLa8ISlSApmWQxfKTUJqPP3-Kg6NU1Q
      */
-    return_t sign(crypto_key* crypto_key, const std::string& header, const std::string& claims, std::string& signature,
-                  jose_serialization_t mode = jose_serialization_t::jose_compact);
+    static return_t sign(crypto_key* crypto_key, const std::string& header, const std::string& claims, std::string& signature,
+                         jose_serialization_t mode = jose_serialization_t::jose_compact);
     /**
      * @brief sign
      * @param crypto_key* crypto_key [in]
@@ -105,8 +105,8 @@ class json_web_signature {
      *          headers.push_back (ps256_header);
      *          jws.sign (&crypto_key, headers, claim, signature);
      */
-    return_t sign(crypto_key* crypto_key, const std::list<std::string>& headers, const std::string& claims, std::string& signature,
-                  jose_serialization_t mode = jose_serialization_t::jose_compact);
+    static return_t sign(crypto_key* crypto_key, const std::list<std::string>& headers, const std::string& claims, std::string& signature,
+                         jose_serialization_t mode = jose_serialization_t::jose_compact);
     /**
      * @brief sign
      * @param crypto_key* crypto_key [in]
@@ -119,7 +119,8 @@ class json_web_signature {
      * @example
      *          jws.sign (&crypto_key, jws_t::hs256, claim, signature);
      */
-    return_t sign(crypto_key* crypto_key, jws_t alg, const std::string& claims, std::string& signature, jose_serialization_t mode = jose_serialization_t::jose_compact);
+    static return_t sign(crypto_key* crypto_key, jws_t alg, const std::string& claims, std::string& signature,
+                         jose_serialization_t mode = jose_serialization_t::jose_compact);
     /**
      * @brief sign
      * @param crypto_key* crypto_key [in]
@@ -136,8 +137,8 @@ class json_web_signature {
      *          algs.push_back (jws_t::ps256);
      *          jws.sign (&crypto_key, algs, claim, signature);
      */
-    return_t sign(crypto_key* crypto_key, std::list<jws_t> const& algs, const std::string& claims, std::string& signature,
-                  jose_serialization_t mode = jose_serialization_t::jose_compact);
+    static return_t sign(crypto_key* crypto_key, std::list<jws_t> const& algs, const std::string& claims, std::string& signature,
+                         jose_serialization_t mode = jose_serialization_t::jose_compact);
     /**
      * @brief verify
      * @param crypto_key* crypto_key [in]
@@ -146,7 +147,7 @@ class json_web_signature {
      * @return error code (see error.hpp)
      * @remarks see json_object_signing_encryption::verify
      */
-    return_t verify(crypto_key* crypto_key, const std::string& signature, bool& result);
+    static return_t verify(crypto_key* crypto_key, const std::string& signature, bool& result);
 };
 
 }  // namespace crypto

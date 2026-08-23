@@ -85,34 +85,34 @@ return_t http_uri::set_query(const std::string& query) {
     return ret;
 }
 
-const char* http_uri::get_uri() {
+const char* http_uri::get_uri() const {
     const char* ret_value = nullptr;
 
     ret_value = _uri.c_str();
     return ret_value;
 }
 
-const char* http_uri::get_uripath() {
+const char* http_uri::get_uripath() const {
     const char* ret_value = nullptr;
 
     ret_value = _uripath.c_str();
     return ret_value;
 }
 
-const char* http_uri::get_query() {
+const char* http_uri::get_query() const {
     const char* ret_value = nullptr;
 
     ret_value = _query.c_str();
     return ret_value;
 }
 
-return_t http_uri::query(const std::string& key, std::string& value) {
+return_t http_uri::query(const std::string& key, std::string& value) const {
     return_t ret = errorcode_t::success;
     ret = _query_kv.query(key, value);
     return ret;
 }
 
-size_t http_uri::countof_query() { return _query_kv.size(); }
+size_t http_uri::countof_query() const { return _query_kv.size(); }
 
 return_t http_uri::to_keyvalue(const std::string& value, skey_value& kv) {
     return_t ret = errorcode_t::success;

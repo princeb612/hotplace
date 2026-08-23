@@ -40,9 +40,9 @@ class cose_recipients {
      */
     cose_recipients& clear();
 
-    bool empty();
-    size_t size();
-    cose_recipient* operator[](size_t index);
+    bool empty() const;
+    size_t size() const;
+    cose_recipient* operator[](size_t index) const;
 
     virtual cbor_array* cbor();
 

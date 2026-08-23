@@ -286,7 +286,7 @@ return_t json_object_signing::composer::compose_signature(jose_context_t* handle
                 }
 
                 json_object_set_new(json_serialization, "payload", json_string(item.payload.c_str()));
-                for (jose_signs_t::iterator iter = handle->signs.begin(); iter != handle->signs.end(); iter++) {
+                for (auto iter = handle->signs.begin(); iter != handle->signs.end(); iter++) {
                     jose_sign_t item = *iter;
 
                     json_signature = json_object();

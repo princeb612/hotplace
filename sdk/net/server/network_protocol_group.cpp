@@ -28,7 +28,7 @@ return_t network_protocol_group::add(network_protocol* protocol) {
         }
 
         critical_section_guard guard(_lock);
-        protocol_map_pib_t pib = _protocols.emplace(protocol->protocol_id(), protocol);
+        auto pib = _protocols.emplace(protocol->protocol_id(), protocol);
         if (true == pib.second) {
             protocol->addref();
         }
@@ -53,7 +53,7 @@ return_t network_protocol_group::find(const std::string& protocol_id, network_pr
         }
 
         critical_section_guard guard(_lock);
-        protocol_map_t::iterator iter = _protocols.find(protocol_id);
+        auto iter = _protocols.find(protocol_id);
         if (_protocols.end() == iter) {
             ret = errorcode_t::not_found;
         } else {
@@ -84,7 +84,7 @@ return_t network_protocol_group::remove(network_protocol* protocol) {
         }
 
         critical_section_guard guard(_lock);
-        protocol_map_t::iterator iter = _protocols.find(protocol->protocol_id());
+        auto iter = _protocols.find(protocol->protocol_id());
         if (_protocols.end() != iter) {
             network_protocol* protocol_ref = iter->second;
             protocol_ref->release();

@@ -182,7 +182,7 @@ class t_tls_container {
    protected:
    private:
     uint32 _flags;
-    critical_section _lock;
+    mutable critical_section _lock;
     std::map<ENTITY_TYPE, TYPE_PTR> _dictionary;
     std::vector<TYPE_PTR> _members;
 };

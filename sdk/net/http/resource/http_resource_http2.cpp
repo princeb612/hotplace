@@ -67,21 +67,21 @@ void http_resource::doload_resources_h2() {
     }
 }
 
-std::string http_resource::get_h2_frame_name(uint8 type) {
+std::string http_resource::get_h2_frame_name(uint8 type) const {
     std::string name;
-    t_maphint<uint8, std::string> hint(_h2_frame_names);
+    t_maphint_const<uint8, std::string> hint(_h2_frame_names);
     hint.find(type, &name);
     return name;
 }
 
-std::string http_resource::get_h2_frame_flag(uint8 flag) {
+std::string http_resource::get_h2_frame_flag(uint8 flag) const {
     std::string flag_name;
-    t_maphint<uint8, std::string> hint(_h2_frame_flags);
+    t_maphint_const<uint8, std::string> hint(_h2_frame_flags);
     hint.find(flag, &flag_name);
     return flag_name;
 }
 
-void http_resource::for_each_h2_frame_flag_names(uint8 type, uint8 flags, std::function<void(uint8, const std::string&)> func) {
+void http_resource::for_each_h2_frame_flag_names(uint8 type, uint8 flags, std::function<void(uint8, const std::string&)> func) const {
     if (flags && func) {
         switch (type) {
             case h2_frame_t::h2_frame_settings:
@@ -105,14 +105,14 @@ void http_resource::for_each_h2_frame_flag_names(uint8 type, uint8 flags, std::f
     }
 }
 
-std::string http_resource::get_h2_settings_name(uint16 type) {
+std::string http_resource::get_h2_settings_name(uint16 type) const {
     std::string name;
-    t_maphint<uint16, std::string> hint(_h2_frame_settings);
+    t_maphint_const<uint16, std::string> hint(_h2_frame_settings);
     hint.find(type, &name);
     return name;
 }
 
-std::string http_resource::get_h2_error_string(uint16 code) {
+std::string http_resource::get_h2_error_string(uint16 code) const {
     std::string ret_value;
     auto iter = _h2_error_codes.find(code);
     if (_h2_error_codes.end() != iter) {
@@ -185,7 +185,7 @@ http_static_table_entry h2_static_entries[] = {
     {61, "www-authenticate"},
 };
 
-void http_resource::for_each_hpack_static_table(std::function<void(uint32 index, const char* name, const char* value)> func) {
+void http_resource::for_each_hpack_static_table(std::function<void(uint32 index, const char* name, const char* value)> func) const {
     /**
      * RFC 7541 HPACK: Header Compression for HTTP/2
      * Appendix A.  Static Table Definition
@@ -199,7 +199,7 @@ void http_resource::for_each_hpack_static_table(std::function<void(uint32 index,
     }
 }
 
-size_t http_resource::sizeof_hpack_static_table_entries() { return RTL_NUMBER_OF(h2_static_entries); }
+size_t http_resource::sizeof_hpack_static_table_entries() const { return RTL_NUMBER_OF(h2_static_entries); }
 
 }  // namespace net
 }  // namespace hotplace

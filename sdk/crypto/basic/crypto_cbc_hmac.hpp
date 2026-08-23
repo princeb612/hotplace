@@ -106,7 +106,7 @@ class crypto_cbc_hmac {
     /**
      * key = enckey || mackey
      */
-    return_t split_key(const binary_t key, binary_t& enckey, binary_t& mackey);
+    return_t split_key(const binary_t key, binary_t& enckey, binary_t& mackey) const;
 
     /* concatenated/nested tag
      * case tls_encrypt_then_mac:
@@ -116,25 +116,25 @@ class crypto_cbc_hmac {
      *      nested tag
      *      ciphertext = ENC (plaintext || tag || pad)
      */
-    return_t encrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const binary_t& plaintext, binary_t& ciphertext);
+    return_t encrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const binary_t& plaintext, binary_t& ciphertext) const;
     return_t encrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const byte_t* plaintext, size_t plainsize,
-                     binary_t& ciphertext);
-    return_t decrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const binary_t& ciphertext, binary_t& plaintext);
+                     binary_t& ciphertext) const;
+    return_t decrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const binary_t& ciphertext, binary_t& plaintext) const;
     return_t decrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const byte_t* ciphertext, size_t ciphersize,
-                     binary_t& plaintext);
+                     binary_t& plaintext) const;
 
     /* separated tag
      * case jose_encrypt_then_mac :
      *      separated tag
      */
     return_t encrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const binary_t& plaintext, binary_t& ciphertext,
-                     binary_t& tag);
+                     binary_t& tag) const;
     return_t encrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const byte_t* plaintext, size_t plainsize,
-                     binary_t& ciphertext, binary_t& tag);
+                     binary_t& ciphertext, binary_t& tag) const;
     return_t decrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const binary_t& ciphertext, binary_t& plaintext,
-                     const binary_t& tag);
+                     const binary_t& tag) const;
     return_t decrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const byte_t* ciphertext, size_t ciphersize,
-                     binary_t& plaintext, const binary_t& tag);
+                     binary_t& plaintext, const binary_t& tag) const;
 
     void addref();
     void release();

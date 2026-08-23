@@ -113,7 +113,7 @@ payload_member::~payload_member() {
     }
 }
 
-bool payload_member::get_change_endian() { return _bigendian; }
+bool payload_member::is_big_endian() const { return _bigendian; }
 
 std::string payload_member::get_name() const { return _name; }
 
@@ -121,7 +121,7 @@ std::string payload_member::get_group() const { return _group; }
 
 bool payload_member::encoded() const { return nullptr != _vl; }
 
-payload_member& payload_member::set_change_endian(bool enable) {
+payload_member& payload_member::set_big_endian(bool enable) {
     _bigendian = enable;
     return *this;
 }
@@ -199,7 +199,7 @@ payload_member& payload_member::write(binary_t& bin) {
     if (encoded()) {
         get_payload_encoded()->write(bin);
     } else {
-        if (get_change_endian()) {
+        if (is_big_endian()) {
             flags |= variant_convendian;
         }
         get_variant().to_binary(bin, flags);
@@ -243,7 +243,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                     case vartype_t::TYPE_INT16:
                     case vartype_t::TYPE_UINT16: {
                         uint16 temp = *(uint16*)rebase;
-                        if (get_change_endian()) {
+                        if (is_big_endian()) {
                             temp = ntoh16(temp);
                         }
                         v.clear().set(temp);
@@ -261,7 +261,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                     case vartype_t::TYPE_INT32:
                     case vartype_t::TYPE_UINT32: {
                         uint32 temp = *(uint32*)rebase;
-                        if (get_change_endian()) {
+                        if (is_big_endian()) {
                             temp = ntoh32(temp);
                         }
                         v.clear().set(temp);
@@ -279,7 +279,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                     case vartype_t::TYPE_INT64:
                     case vartype_t::TYPE_UINT64: {
                         uint64 temp = *(uint64*)rebase;
-                        if (get_change_endian()) {
+                        if (is_big_endian()) {
                             temp = ntoh64(temp);
                         }
                         v.clear().set(temp);
@@ -290,7 +290,7 @@ return_t payload_member::doread(const byte_t* ptr, size_t size_ptr, size_t offse
                     case vartype_t::TYPE_INT128:
                     case vartype_t::TYPE_UINT128: {
                         uint128 temp = *(uint128*)rebase;
-                        if (get_change_endian()) {
+                        if (is_big_endian()) {
                             temp = ntoh128(temp);
                         }
                         v.clear().set(temp);

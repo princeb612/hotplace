@@ -109,7 +109,7 @@ return_t tls_extension_sni::do_write_body(tls_direction_t dir, binary_t& bin) {
     return ret;
 }
 
-uint8 tls_extension_sni::get_nametype() { return _nametype; }
+uint8 tls_extension_sni::get_nametype() const { return _nametype; }
 
 binary_t& tls_extension_sni::get_hostname() { return _hostname; }
 

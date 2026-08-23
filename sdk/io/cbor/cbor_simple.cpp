@@ -20,7 +20,7 @@ namespace io {
 
 cbor_simple::cbor_simple(uint8 value) : cbor_object(cbor_type_t::simple), _value(value) { _type = is_kind_of_value(value); }
 
-cbor_simple_t cbor_simple::simple_type() { return is_kind_of_value(_value); }
+cbor_simple_t cbor_simple::simple_type() const { return is_kind_of_value(_value); }
 
 cbor_simple_t cbor_simple::is_kind_of(uint8 first) {
     cbor_simple_t type = cbor_simple_t::unknown;

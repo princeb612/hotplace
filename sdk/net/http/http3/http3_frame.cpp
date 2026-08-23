@@ -112,7 +112,7 @@ return_t http3_frame::do_read_payload(const byte_t* stream, size_t size, size_t&
 
 return_t http3_frame::do_write(binary_t& bin) { return errorcode_t::success; }
 
-h3_frame_t http3_frame::get_type() { return _type; }
+h3_frame_t http3_frame::get_type() const { return _type; }
 
 void http3_frame::addref() { _shared.addref(); }
 

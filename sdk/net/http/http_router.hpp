@@ -81,7 +81,7 @@ class http_router {
      * @param   http_authentication_provider** provider [out]
      * @return  result
      */
-    bool get_auth_provider(http_request* request, http_response* response, http_authentication_provider** provider);
+    bool get_auth_provider(http_request* request, http_response* response, http_authentication_provider** provider) const;
 
     void set_owner(http_server* server);
 
@@ -97,9 +97,8 @@ class http_router {
     typedef std::map<std::string, http_router_t> handler_map_t;
     typedef std::map<int, http_router_t> status_handler_map_t;
     typedef std::map<std::string, http_authentication_provider*> authenticate_map_t;
-    typedef std::pair<authenticate_map_t::iterator, bool> authenticate_map_pib_t;
 
-    critical_section _lock;
+    mutable critical_section _lock;
     handler_map_t _handler_map;
     status_handler_map_t _status_handler_map;
     authenticate_map_t _authenticate_map;

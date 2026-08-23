@@ -62,12 +62,12 @@ class t_trie {
         /**
          * is
          */
-        bool islast() { return children.empty(); }
-        bool iseow() { return eow; }
+        bool islast() const { return children.empty(); }
+        bool iseow() const { return eow; }
         /**
          * getter
          */
-        int getindex() { return index; }
+        int getindex() const { return index; }
         /**
          * setter
          */

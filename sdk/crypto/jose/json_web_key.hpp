@@ -54,7 +54,7 @@ class json_web_key : public crypto_keychain {
     /**
      * @brief write
      * @brief write into buffer
-     * @param crypto_key* cryptokey [in]
+     * @param const crypto_key* cryptokey [in]
      * @param keyflag_t mode [in] see keyflag_t
      * @param stream_t* stream [in]
      * @param int flags [in] public_key | private_key
@@ -67,21 +67,21 @@ class json_web_key : public crypto_keychain {
      *          bin.resize (size);
      *          jwk.write (&privkey, bin.data(), &size);
      */
-    virtual return_t write(crypto_key* cryptokey, keyflag_t mode, stream_t* stream, int flags = public_key);
+    virtual return_t write(const crypto_key* cryptokey, keyflag_t mode, stream_t* stream, int flags = public_key);
     /**
      * @brief   write
-     * @param   crypto_key* cryptokey [in]
+     * @param   const crypto_key* cryptokey [in]
      * @param   std::string& buf [out]
      * @param   int flags [inopt] public_key | private_key
      */
-    return_t write(crypto_key* cryptokey, std::string& buf, int flags = public_key);
+    return_t write(const crypto_key* cryptokey, std::string& buf, int flags = public_key);
     /**
      * @brief   write
-     * @param   crypto_key* cryptokey [in]
+     * @param   const crypto_key* cryptokey [in]
      * @param   stream_t* buf [out]
      * @param   int flags [inopt] public_key | private_key
      */
-    return_t write(crypto_key* cryptokey, stream_t* buf, int flags = public_key);
+    return_t write(const crypto_key* cryptokey, stream_t* buf, int flags = public_key);
 
    protected:
     return_t read_json_keynode(crypto_key* cryptokey, json_t* json);

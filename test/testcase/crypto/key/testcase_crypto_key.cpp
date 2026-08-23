@@ -83,7 +83,7 @@ void test_crypto_key() {
         keychain.add_dh(&key, item.nid, keydesc(item.name));
     }
 
-    auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
+    auto dump_crypto_key = [&](const crypto_key_object* item, void*) -> void {
         auto pkey = item->get_pkey();
 
         _logger->write([&](basic_stream& bs) -> void {

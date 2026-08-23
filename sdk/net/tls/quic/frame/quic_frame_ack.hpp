@@ -106,7 +106,7 @@ class quic_frame_ack : public quic_frame {
     virtual ~quic_frame_ack();
 
     quic_frame_ack& set_space(protection_space_t space);
-    protection_space_t get_space();
+    protection_space_t get_space() const;
 
    protected:
     virtual return_t do_postprocess(tls_direction_t dir);

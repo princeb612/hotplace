@@ -48,7 +48,7 @@ bool digest_credentials::verify(http_authentication_provider* provider, skey_val
         std::string username = kv.get("username");
         std::string password;
         if (digest_provider->get_userhash()) {
-            std::map<std::string, std::string>::iterator iter_userhash = _digest_access_userhash.find(username);
+            auto iter_userhash = _digest_access_userhash.find(username);
             if (_digest_access_userhash.end() == iter_userhash) {
                 __leave2;
             } else {
@@ -58,7 +58,7 @@ bool digest_credentials::verify(http_authentication_provider* provider, skey_val
                 ret = true;
             }
         } else {
-            std::map<std::string, std::string>::iterator iter = _digest_access_credential.find(username);
+            auto iter = _digest_access_credential.find(username);
             if (_digest_access_credential.end() == iter) {
                 __leave2;
             } else {

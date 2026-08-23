@@ -80,7 +80,7 @@ void trace_advisor::load() {
     }
 }
 
-std::string trace_advisor::nameof_category(trace_category_t category) {
+std::string trace_advisor::nameof_category(trace_category_t category) const {
     std::string res;
     critical_section_guard guard(_lock);
     auto iter = _resource_map.find(category);
@@ -90,7 +90,7 @@ std::string trace_advisor::nameof_category(trace_category_t category) {
     return res;
 }
 
-void trace_advisor::get_names(trace_category_t category, trace_event_t event, std::string& cvalue, std::string& evalue) {
+void trace_advisor::get_names(trace_category_t category, trace_event_t event, std::string& cvalue, std::string& evalue) const {
     cvalue.clear();
     evalue.clear();
 

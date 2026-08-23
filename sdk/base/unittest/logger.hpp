@@ -90,9 +90,8 @@ class logger {
     } logger_item;
 
     typedef std::map<arch_t, logger_item*> logger_stream_map_t;
-    typedef std::pair<logger_stream_map_t::iterator, bool> logger_stream_map_pib_t;
 
-    critical_section _lock;
+    mutable critical_section _lock;
     logger_stream_map_t _logger_stream_map;
     t_key_value<logger_t, uint16> _keyvalue;
     skey_value _skeyvalue;
@@ -133,8 +132,8 @@ class logger {
      */
     logger& set_loglevel(loglevel_t level);
     logger& set_implicit_loglevel(loglevel_t level);
-    loglevel_t get_loglevel();
-    loglevel_t get_implicit_loglevel();
+    loglevel_t get_loglevel() const;
+    loglevel_t get_implicit_loglevel() const;
 
     logger& consoleln(const char* fmt, ...);
     logger& consoleln(const std::string& msg);
@@ -240,8 +239,8 @@ class logger {
     void stdout_handler(const basic_stream& bs);
     logger& touch(logger_item* item);
 
-    bool test_logging_stdout();
-    bool test_logging_file();
+    bool test_logging_stdout() const;
+    bool test_logging_file() const;
     bool test_loglevel(loglevel_t level) const;
     bool test_loglevel() const;
 };

@@ -23,14 +23,14 @@ http2_frame_settings::http2_frame_settings(const http2_frame_settings& other) : 
 http2_frame_settings::~http2_frame_settings() {}
 
 http2_frame_settings& http2_frame_settings::add(uint16 id, uint32 value) {
-    h2_setting_map_pib_t pib = _settings.emplace(id, value);
+    auto pib = _settings.emplace(id, value);
     if (false == pib.second) {
         pib.first->second = value;
     }
     return *this;
 }
 
-return_t http2_frame_settings::find(uint16 id, uint32& value) {
+return_t http2_frame_settings::find(uint16 id, uint32& value) const {
     return_t ret = errorcode_t::success;
     auto iter = _settings.find(id);
     if (_settings.end() == iter) {
@@ -88,7 +88,6 @@ void http2_frame_settings::dump(stream_t* s) {
         http2_frame::dump(s);
 
         auto resource = http_resource::get_instance();
-        h2_setting_map_t::iterator iter;
         for (const auto& pair : _settings) {
             const auto& k = pair.first;
             const auto& v = pair.second;

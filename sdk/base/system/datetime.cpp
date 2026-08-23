@@ -71,7 +71,7 @@ bool datetime::update_if_elapsed(unsigned long msecs) {
     return ret;
 }
 
-bool datetime::elapsed(timespan_t ts) {
+bool datetime::elapsed(timespan_t ts) const {
     bool ret = false;
     datetime now;
     datetime temp(_timespec);
@@ -82,7 +82,7 @@ bool datetime::elapsed(timespan_t ts) {
     return ret;
 }
 
-return_t datetime::gettimespec(struct timespec* ts) {
+return_t datetime::gettimespec(struct timespec* ts) const {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -96,39 +96,39 @@ return_t datetime::gettimespec(struct timespec* ts) {
     return ret;
 }
 
-return_t datetime::gettime(struct tm* tm, long* nsec) { return getlocaltime(tm, nsec); }
+return_t datetime::gettime(struct tm* tm, long* nsec) const { return getlocaltime(tm, nsec); }
 
-return_t datetime::getlocaltime(struct tm* tm, long* nsec) {
+return_t datetime::getlocaltime(struct tm* tm, long* nsec) const {
     return_t ret = errorcode_t::success;
 
     ret = timespec_to_tm(1, _timespec, tm, nsec);
     return ret;
 }
 
-return_t datetime::getgmtime(struct tm* tm, long* nsec) {
+return_t datetime::getgmtime(struct tm* tm, long* nsec) const {
     return_t ret = errorcode_t::success;
 
     ret = timespec_to_tm(0, _timespec, tm, nsec);
     return ret;
 }
 
-return_t datetime::gettime(datetime_t* dt, long* nsec) { return getlocaltime(dt, nsec); }
+return_t datetime::gettime(datetime_t* dt, long* nsec) const { return getlocaltime(dt, nsec); }
 
-return_t datetime::getlocaltime(datetime_t* dt, long* nsec) {
+return_t datetime::getlocaltime(datetime_t* dt, long* nsec) const {
     return_t ret = errorcode_t::success;
 
     ret = timespec_to_datetime(1, _timespec, dt, nsec);
     return ret;
 }
 
-return_t datetime::getgmtime(datetime_t* dt, long* nsec) {
+return_t datetime::getgmtime(datetime_t* dt, long* nsec) const {
     return_t ret = errorcode_t::success;
 
     ret = timespec_to_datetime(0, _timespec, dt, nsec);
     return ret;
 }
 
-return_t datetime::getgmtime(stream_t* stream) {
+return_t datetime::getgmtime(stream_t* stream) const {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -145,7 +145,7 @@ return_t datetime::getgmtime(stream_t* stream) {
     return ret;
 }
 
-return_t datetime::getfiletime(filetime_t* ft) {
+return_t datetime::getfiletime(filetime_t* ft) const {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -162,7 +162,7 @@ return_t datetime::getfiletime(filetime_t* ft) {
     return ret;
 }
 
-return_t datetime::getsystemtime(int mode, systemtime_t* ft) {
+return_t datetime::getsystemtime(int mode, systemtime_t* ft) const {
     return_t ret = errorcode_t::success;
 
     ret = timespec_to_systemtime(mode, _timespec, ft);
@@ -477,7 +477,7 @@ return_t datetime::systemtime_to_timespec(const systemtime_t& st, struct timespe
     return ret;
 }
 
-void datetime::format(int mode, basic_stream& bs, const std::string& fmt) {
+void datetime::format(int mode, basic_stream& bs, const std::string& fmt) const {
     datetime_t dt;
     basic_stream fmtbs;
     valist va;
@@ -486,31 +486,31 @@ void datetime::format(int mode, basic_stream& bs, const std::string& fmt) {
     for (auto item : fmt) {
         switch (item) {
             case 'Y':
-                fmtbs << "%%04d";
+                fmtbs << "%04d";
                 va << dt.year;
                 break;
             case 'M':
-                fmtbs << "%%02d";
+                fmtbs << "%02d";
                 va << dt.month;
                 break;
             case 'D':
-                fmtbs << "%%02d";
+                fmtbs << "%02d";
                 va << dt.day;
                 break;
             case 'h':
-                fmtbs << "%%02d";
+                fmtbs << "%02d";
                 va << dt.hour;
                 break;
             case 'm':
-                fmtbs << "%%02d";
+                fmtbs << "%02d";
                 va << dt.minute;
                 break;
             case 's':
-                fmtbs << "%%02d";
+                fmtbs << "%02d";
                 va << dt.second;
                 break;
             case 'f':
-                fmtbs << "%%03d";
+                fmtbs << "%03d";
                 va << dt.milliseconds;
                 break;
             default:

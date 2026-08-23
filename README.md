@@ -227,9 +227,13 @@
     * libssl-dev libjansson-dev zlib1g-dev unixodbc-dev (ubuntu)
     * valgrind (linux)
     * clang-tools-extra
+  * windows
+    * Visual Studio Community
 * build script
-  * cd hotplace
-  * ./make.sh debug pch
+  * mingw, linux
+    * ./make.sh debug pch
+  * windows
+    * msbuild.cmd
 * os support (x64)
   * tested
     * RHEL 7 and newer, (including CentOS, Rocky Linux)

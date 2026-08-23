@@ -115,11 +115,11 @@ cbor_map& cbor_map::operator<<(cbor_pair* object) {
 
 size_t cbor_map::size() const { return _array.size(); }
 
-cbor_pair* cbor_map::operator[](size_t index) {
+cbor_pair* cbor_map::operator[](size_t index) const {
     cbor_pair* item = nullptr;
 
     if (_array.size() > index) {
-        std::list<cbor_pair*>::iterator it = _array.begin();
+        auto it = _array.begin();
         std::advance(it, index);
         item = *it;
     }

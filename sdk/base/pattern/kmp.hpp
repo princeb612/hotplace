@@ -143,7 +143,7 @@ class t_kmp {
         return *this;
     }
 
-    size_t search(const std::vector<T>& data, size_t pos = 0) { return search(data.data(), data.size(), pos); }
+    size_t search(const std::vector<T>& data, size_t pos = 0) const { return search(data.data(), data.size(), pos); }
     size_t search(const std::vector<T>& data, const std::vector<T>& pattern, size_t pos = 0) {
         return search(data.data(), data.size(), pattern.data(), pattern.size(), pos);
     }
@@ -152,7 +152,7 @@ class t_kmp {
      * @brief   search
      * @return  index, -1 (not found)
      */
-    size_t search(const T* data, size_t size_data, size_t pos = 0) {
+    size_t search(const T* data, size_t size_data, size_t pos = 0) const {
         size_t ret = npos;
         if (data) {
             auto m = _failure.size();

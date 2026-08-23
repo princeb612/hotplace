@@ -26,7 +26,7 @@ hpack_dynamic_table::hpack_dynamic_table() : http_dynamic_table() {
 
 hpack_dynamic_table::~hpack_dynamic_table() {}
 
-void hpack_dynamic_table::for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f) {
+void hpack_dynamic_table::for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f) const {
     if (f) {
         critical_section_guard guard(_lock);
         auto entries = _dynamic_reversemap.size();
@@ -42,7 +42,7 @@ void hpack_dynamic_table::for_each(std::function<void(size_t, size_t, const std:
     }
 }
 
-void hpack_dynamic_table::dump(const std::string& desc, std::function<void(const char*, size_t)> f) {
+void hpack_dynamic_table::dump(const std::string& desc, std::function<void(const char*, size_t)> f) const {
     if (f) {
         critical_section_guard guard(_lock);
         basic_stream bs;
@@ -61,7 +61,7 @@ void hpack_dynamic_table::dump(const std::string& desc, std::function<void(const
     }
 }
 
-return_t hpack_dynamic_table::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) {
+return_t hpack_dynamic_table::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) const {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == resp) || (respsize < sizeof(size_t))) {

@@ -78,14 +78,14 @@ class openssl_hash : public hash_t {
      *    hash.hash(handle, source, source_size, hash_data);
      *    hash.close(handle)
      */
-    virtual return_t open(hash_context_t** handle, const char* algorithm, const unsigned char* key = nullptr, size_t keysize = 0);
+    virtual return_t open(hash_context_t** handle, const char* algorithm, const unsigned char* key = nullptr, size_t keysize = 0) const;
     /**
      * @brief open (HMAC, CMAC)
      * @param hash_context_t** handle [out]
      * @param const char* algorithm [in]
      * @param const binary_t& key [in]
      */
-    virtual return_t open(hash_context_t** handle, const char* algorithm, const binary_t& key);
+    virtual return_t open(hash_context_t** handle, const char* algorithm, const binary_t& key) const;
 
     /**
      * @brief open (hash, HMAC)
@@ -95,11 +95,11 @@ class openssl_hash : public hash_t {
      * @param size_t keysize [inopt]
      * @return error code (see error.hpp)
      */
-    virtual return_t open(hash_context_t** handle, hash_algorithm_t alg, const unsigned char* key = nullptr, size_t keysize = 0);
+    virtual return_t open(hash_context_t** handle, hash_algorithm_t alg, const unsigned char* key = nullptr, size_t keysize = 0) const;
     /**
      * @brief open (HMAC)
      */
-    virtual return_t open(hash_context_t** handle, hash_algorithm_t alg, const binary_t& key);
+    virtual return_t open(hash_context_t** handle, hash_algorithm_t alg, const binary_t& key) const;
     /**
      * @brief open (CMAC)
      * @param hash_context_t** handle [out]
@@ -109,17 +109,17 @@ class openssl_hash : public hash_t {
      * @param size_t keysize [inopt]
      * @return error code (see error.hpp)
      */
-    virtual return_t open(hash_context_t** handle, crypt_algorithm_t alg, crypt_mode_t mode, const unsigned char* key, size_t keysize);
+    virtual return_t open(hash_context_t** handle, crypt_algorithm_t alg, crypt_mode_t mode, const unsigned char* key, size_t keysize) const;
     /**
      * @brief open (CMAC)
      */
-    virtual return_t open(hash_context_t** handle, crypt_algorithm_t alg, crypt_mode_t mode, const binary_t& key);
+    virtual return_t open(hash_context_t** handle, crypt_algorithm_t alg, crypt_mode_t mode, const binary_t& key) const;
     /**
      * @brief close
      * @param hash_context_t* handle [in]
      * @return error code (see error.hpp)
      */
-    virtual return_t close(hash_context_t* handle);
+    virtual return_t close(hash_context_t* handle) const;
     /**
      * @brief init
      * @param hash_context_t* handle [in]
@@ -130,7 +130,7 @@ class openssl_hash : public hash_t {
      *        hash.finalize(handle, &output_data, &output_size);
      *        hash.free_data(output_data);
      */
-    virtual return_t init(hash_context_t* handle);
+    virtual return_t init(hash_context_t* handle) const;
     /**
      * @brief update
      * @param hash_context_t* handle [in]
@@ -143,8 +143,8 @@ class openssl_hash : public hash_t {
      *        hash.finalize(handle, &output_data, &output_size);
      *        hash.free_data(output_data);
      */
-    virtual return_t update(hash_context_t* handle, const byte_t* data, size_t datasize);
-    virtual return_t update(hash_context_t* handle, const binary_t& input);
+    virtual return_t update(hash_context_t* handle, const byte_t* data, size_t datasize) const;
+    virtual return_t update(hash_context_t* handle, const binary_t& input) const;
 
     /**
      * @brief   transcript-hash function
@@ -157,8 +157,8 @@ class openssl_hash : public hash_t {
      *          _logger->hdump("stream1", hash_stream2);
      *          hash.close(handle);
      */
-    virtual return_t update(hash_context_t* handle, const byte_t* data, size_t datasize, binary_t& digest);
-    virtual return_t update(hash_context_t* handle, const binary_t& input, binary_t& digest);
+    virtual return_t update(hash_context_t* handle, const byte_t* data, size_t datasize, binary_t& digest) const;
+    virtual return_t update(hash_context_t* handle, const binary_t& input, binary_t& digest) const;
 
     /**
      * @brief hash
@@ -172,13 +172,13 @@ class openssl_hash : public hash_t {
      *        hash.finalize(handle, &output_data, &output_size);
      *        hash.free_data(output_data);
      */
-    virtual return_t finalize(hash_context_t* handle, byte_t** output, size_t* outputsize);
+    virtual return_t finalize(hash_context_t* handle, byte_t** output, size_t* outputsize) const;
     /**
      * @brief finalize
      * @param hash_context_t* handle [in]
      * @param binary_t& output [out]
      */
-    virtual return_t finalize(hash_context_t* handle, binary_t& output);
+    virtual return_t finalize(hash_context_t* handle, binary_t& output) const;
     /**
      * @brief free
      * @param void* data [in]
@@ -189,7 +189,7 @@ class openssl_hash : public hash_t {
      *        hash.finalize(handle, &output_data, &output_size);
      *        hash.free_data(output_data);
      */
-    virtual return_t free_data(void* data);
+    virtual return_t free_data(void* data) const;
     /**
      * @brief hash
      * @param hash_context_t* handle [in]
@@ -200,14 +200,14 @@ class openssl_hash : public hash_t {
      * @remarks
      *        simply replace a serial method call (init, update, finalize, free_data in a low)
      */
-    virtual return_t hash(hash_context_t* handle, const byte_t* data, size_t datasize, binary_t& output);
+    virtual return_t hash(hash_context_t* handle, const byte_t* data, size_t datasize, binary_t& output) const;
 
     /**
      * @brief duplicate
      * @param hash_context_t** duplicated [out]
      * @param hash_context_t* handle [in]
      */
-    return_t dup(hash_context_t** duplicated, hash_context_t* handle);
+    return_t dup(hash_context_t** duplicated, hash_context_t* handle) const;
 
     /**
      * @brief type
@@ -221,24 +221,24 @@ class openssl_digest : public openssl_hash {
     openssl_digest();
     virtual ~openssl_digest();
 
-    return_t digest(const char* alg, const binary_t& input, binary_t& output);
-    return_t digest(hash_algorithm_t alg, const binary_t& input, binary_t& output);
+    return_t digest(const char* alg, const binary_t& input, binary_t& output) const;
+    return_t digest(hash_algorithm_t alg, const binary_t& input, binary_t& output) const;
 
-    return_t digest(const char* alg, const basic_stream& input, binary_t& output);
-    return_t digest(const char* alg, const basic_stream& input, std::string& hashstring, encoding_t encoding = encoding_t::encoding_base16);
+    return_t digest(const char* alg, const basic_stream& input, binary_t& output) const;
+    return_t digest(const char* alg, const basic_stream& input, std::string& hashstring, encoding_t encoding = encoding_t::encoding_base16) const;
 
-    return_t digest(const char* alg, const std::string& input, binary_t& output);
-    return_t digest(const char* alg, const std::string& input, std::string& hashstring, encoding_t encoding = encoding_t::encoding_base16);
+    return_t digest(const char* alg, const std::string& input, binary_t& output) const;
+    return_t digest(const char* alg, const std::string& input, std::string& hashstring, encoding_t encoding = encoding_t::encoding_base16) const;
 };
 
 class openssl_mac {
    public:
     openssl_mac();
 
-    return_t hmac(const char* alg, const binary_t& key, const binary_t& input, binary_t& output);
-    return_t hmac(const char* alg, const binary_t& key, const byte_t* stream, size_t size, binary_t& output);
-    return_t hmac(hash_algorithm_t alg, const binary_t& key, const binary_t& input, binary_t& output);
-    return_t hmac(hash_algorithm_t alg, const binary_t& key, const byte_t* stream, size_t size, binary_t& output);
+    static return_t hmac(const char* alg, const binary_t& key, const binary_t& input, binary_t& output);
+    static return_t hmac(const char* alg, const binary_t& key, const byte_t* stream, size_t size, binary_t& output);
+    static return_t hmac(hash_algorithm_t alg, const binary_t& key, const binary_t& input, binary_t& output);
+    static return_t hmac(hash_algorithm_t alg, const binary_t& key, const byte_t* stream, size_t size, binary_t& output);
     /**
      * @brief   AES Cipher-Based Message Authentication Code (AES-CMAC)
      * @desc    RFC 4493 The AES-CMAC Algorithm
@@ -250,8 +250,8 @@ class openssl_mac {
      *          not the same algorithm AES-CBC-MAC
      *          see also RFC 8152 9.2.  AES Message Authentication Code (AES-CBC-MAC)
      */
-    return_t cmac(const char* alg, const binary_t& key, const binary_t& input, binary_t& output);
-    return_t cmac(crypt_algorithm_t alg, const binary_t& key, const binary_t& input, binary_t& output);
+    static return_t cmac(const char* alg, const binary_t& key, const binary_t& input, binary_t& output);
+    static return_t cmac(crypt_algorithm_t alg, const binary_t& key, const binary_t& input, binary_t& output);
 
     /**
      * @brief   CBC-MAC
@@ -281,7 +281,7 @@ class openssl_mac {
      *          reference https://travis-ci.org/cose-wg/
      *          cbc_mac_rfc3610 difference ... encrypt final block w/ IV
      */
-    return_t cbc_mac(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& input, binary_t& tag, size_t tagsize);
+    static return_t cbc_mac(const char* alg, const binary_t& key, const binary_t& iv, const binary_t& input, binary_t& tag, size_t tagsize);
 };
 
 }  // namespace crypto

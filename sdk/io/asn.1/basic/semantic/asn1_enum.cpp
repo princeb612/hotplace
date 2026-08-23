@@ -41,7 +41,7 @@ asn1_enum* asn1_enum::addref() {
     return this;
 }
 
-asn1_entity_t asn1_enum::get_component_entity() const { return asn1_entity_enum_type; }
+asn1_entity_t asn1_enum::get_component_entity() const { return asn1_entity_enum; }
 
 asn1_enum& asn1_enum::add(const std::string& en, asn1_native_int_t value) {
     _enum.emplace(en, value);

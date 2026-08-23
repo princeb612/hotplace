@@ -108,7 +108,7 @@ class crypto_keyexchange {
     return_t encaps(const binary_t& share, binary_t& keycapsule, binary_t& sharedsecret);
     return_t decaps(crypto_key* key, const char* kid, const binary_t& share, binary_t& sharedsecret);
 
-    tls_group_t get_group();
+    tls_group_t get_group() const;
 
     /**
      * @brief group

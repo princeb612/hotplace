@@ -31,8 +31,8 @@ class quic_packet_retry : public quic_packet {
     quic_packet_retry& set_retry_token(const binary_t& token);
     quic_packet_retry& set_integrity_tag(const binary_t& tag);
 
-    const binary_t& get_retry_token();
-    const binary_t& get_integrity_tag();
+    const binary_t& get_retry_token() const;
+    const binary_t& get_integrity_tag() const;
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos, size_t& pos_unprotect);

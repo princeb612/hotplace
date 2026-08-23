@@ -68,16 +68,16 @@ class http_response {
     /**
      * @brief   Content-Type
      */
-    const char* content_type();
+    const char* content_type() const;
     /**
      * @brief   content
      */
-    const char* content();
-    size_t content_size();
+    const char* content() const;
+    size_t content_size() const;
     /**
      * @brief   status code
      */
-    int status_code();
+    int status_code() const;
     /**
      * @brief   header
      */

@@ -38,7 +38,7 @@ bool basic_credentials::verify(http_authentication_provider* provider, const std
     bool ret = false;
 
     critical_section_guard guard(_lock);
-    std::set<std::string>::iterator iter = _basic_credential.find(credential);
+    auto iter = _basic_credential.find(credential);
     ret = (_basic_credential.end() != iter);
 
     return ret;

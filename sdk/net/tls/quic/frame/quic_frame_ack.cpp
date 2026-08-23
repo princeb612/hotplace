@@ -68,7 +68,7 @@ quic_frame_ack& quic_frame_ack::set_space(protection_space_t space) {
     return *this;
 }
 
-protection_space_t quic_frame_ack::get_space() { return _space; }
+protection_space_t quic_frame_ack::get_space() const { return _space; }
 
 return_t quic_frame_ack::do_postprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;

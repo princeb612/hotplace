@@ -25,7 +25,7 @@ qpack_dynamic_table::qpack_dynamic_table() : http_dynamic_table() {
 
 qpack_dynamic_table::~qpack_dynamic_table() {}
 
-void qpack_dynamic_table::for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f) {
+void qpack_dynamic_table::for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f) const {
     if (f) {
         critical_section_guard guard(_lock);
         for (auto iter = _dynamic_reversemap.begin(); iter != _dynamic_reversemap.end(); ++iter) {
@@ -40,7 +40,7 @@ void qpack_dynamic_table::for_each(std::function<void(size_t, size_t, const std:
     }
 }
 
-void qpack_dynamic_table::dump(const std::string& desc, std::function<void(const char*, size_t)> f) {
+void qpack_dynamic_table::dump(const std::string& desc, std::function<void(const char*, size_t)> f) const {
     if (f) {
         critical_section_guard guard(_lock);
         basic_stream bs;
@@ -84,7 +84,7 @@ void qpack_dynamic_table::dump(const std::string& desc, std::function<void(const
     }
 }
 
-return_t qpack_dynamic_table::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) {
+return_t qpack_dynamic_table::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) const {
     return_t ret = errorcode_t::success;
     __try2 {
         if ((nullptr == resp) || (respsize < sizeof(size_t))) {

@@ -17,6 +17,7 @@
 #include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraints.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/types.hpp>
 
 namespace hotplace {
 namespace io {

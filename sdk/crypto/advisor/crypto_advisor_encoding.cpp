@@ -20,7 +20,7 @@ constexpr char constexpr_privkeyinfo[] = "PrivateKeyInfo";
 constexpr char constexpr_encryptedprivkeyinfo[] = "EncryptedPrivateKeyInfo";
 constexpr char constexpr_pubkeyinfo[] = "SubjectPublicKeyInfo";
 
-return_t crypto_advisor::get_encoding_params(key_encoding_t encoding, key_encoding_params_t& params) {
+return_t crypto_advisor::get_encoding_params(key_encoding_t encoding, key_encoding_params_t& params) const {
     return_t ret = errorcode_t::success;
     __try2 {
         switch (encoding) {
@@ -74,7 +74,7 @@ return_t crypto_advisor::get_encoding_params(key_encoding_t encoding, key_encodi
     return ret;
 }
 
-std::string crypto_advisor::nameof_encoding(key_encoding_t encoding) {
+std::string crypto_advisor::nameof_encoding(key_encoding_t encoding) const {
     std::string value;
     switch (encoding) {
         case key_encoding_priv_pem: {

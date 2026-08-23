@@ -58,7 +58,7 @@ return_t oauth2_credentials::add(std::string& client_id, std::string& client_sec
         openssl_prng prng;
         do {
             client_id = prng.rand(16, encoding_t::encoding_base64url, false);
-            webapps_t::iterator iter = _webapps.find(client_id);
+            auto iter = _webapps.find(client_id);
             if (_webapps.end() == iter) {
                 break;
             }
@@ -101,7 +101,7 @@ return_t oauth2_credentials::remove(const std::string& client_id) {
         std::string userid;
 
         {
-            webapps_t::iterator iter = _webapps.find(client_id);
+            auto iter = _webapps.find(client_id);
             if (_webapps.end() == iter) {
                 ret = errorcode_t::not_found;
                 __leave2;
@@ -110,10 +110,9 @@ return_t oauth2_credentials::remove(const std::string& client_id) {
         }
 
         {
-            user_clientid_t::iterator liter = _user_clientid.lower_bound(userid);
-            user_clientid_t::iterator uiter = _user_clientid.upper_bound(userid);
-            user_clientid_t::iterator iter;
-            for (iter = liter; iter != uiter; iter++) {
+            auto liter = _user_clientid.lower_bound(userid);
+            auto uiter = _user_clientid.upper_bound(userid);
+            for (auto iter = liter; iter != uiter; iter++) {
                 if (iter->second == client_id) {
                     _user_clientid.erase(iter);
                     break;
@@ -135,7 +134,7 @@ return_t oauth2_credentials::check(const std::string& client_id, const std::stri
             __leave2;
         }
 
-        webapps_t::iterator iter = _webapps.find(client_id);
+        auto iter = _webapps.find(client_id);
         if (_webapps.end() == iter) {
             ret = errorcode_t::unauthorized_client;
             __leave2;
@@ -158,10 +157,9 @@ return_t oauth2_credentials::list(const std::string& userid, std::list<std::stri
         critical_section_guard guard(_lock);
 
         {
-            user_clientid_t::iterator liter = _user_clientid.lower_bound(userid);
-            user_clientid_t::iterator uiter = _user_clientid.upper_bound(userid);
-            user_clientid_t::iterator iter;
-            for (iter = liter; iter != uiter; iter++) {
+            auto liter = _user_clientid.lower_bound(userid);
+            auto uiter = _user_clientid.upper_bound(userid);
+            for (auto iter = liter; iter != uiter; iter++) {
                 clientids.push_back(iter->second);
             }
         }
@@ -222,7 +220,7 @@ return_t oauth2_credentials::grant(std::string& access_token, std::string& refre
             __leave2;
         }
 
-        webapps_t::iterator iter = _webapps.find(client_id);
+        auto iter = _webapps.find(client_id);
         if (_webapps.end() == iter) {
             ret = errorcode_t::invalid_client;
             __leave2;
@@ -303,7 +301,7 @@ return_t oauth2_credentials::isvalid(const std::string& access_token) {
 
         // client_id validation
         std::string client_id = token->client_id();
-        webapps_t::iterator appiter = _webapps.find(client_id);
+        auto appiter = _webapps.find(client_id);
         if (_webapps.end() == appiter) {
             ret = errorcode_t::expired;
             __leave2;

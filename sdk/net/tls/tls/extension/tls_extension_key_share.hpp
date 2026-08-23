@@ -30,7 +30,7 @@ class tls_extension_key_share : public tls_extension {
 
    protected:
     tls_extension_key_share(tls_handshake* handshake);
-    virtual std::string get_kid();
+    virtual std::string get_kid() const;
 
     return_t add(tls_group_t group, tls_direction_t dir);
     return_t add(const std::string& group, tls_direction_t dir);
@@ -49,7 +49,7 @@ class tls_extension_client_key_share : public tls_extension_key_share {
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
-    virtual std::string get_kid();
+    virtual std::string get_kid() const;
 
    private:
 };
@@ -70,7 +70,7 @@ class tls_extension_server_key_share : public tls_extension_key_share {
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);
     virtual return_t do_write_body(tls_direction_t dir, binary_t& bin);
-    virtual std::string get_kid();
+    virtual std::string get_kid() const;
 
     virtual return_t add(tls_group_t group);
     virtual return_t add(const std::string& group);

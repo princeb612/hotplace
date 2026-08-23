@@ -482,8 +482,7 @@ return_t bufferio::cut(bufferio_context_t* handle, size_t begin_pos, size_t leng
         size_t base = 0;
         size_t limit = 0;
 
-        bufferin_queue_t::iterator iter;
-        for (iter = handle->bufferio_queue.begin(); iter != handle->bufferio_queue.end();) {
+        for (auto iter = handle->bufferio_queue.begin(); iter != handle->bufferio_queue.end();) {
             bufferio_t* bufferio_item = *iter;
 
             base = limit;
@@ -579,8 +578,7 @@ return_t bufferio::insert(bufferio_context_t* handle, size_t begin_pos, const vo
             size_t base = 0;
             size_t limit = 0;
 
-            bufferin_queue_t::iterator iter;
-            for (iter = handle->bufferio_queue.begin(); iter != handle->bufferio_queue.end();) {
+            for (auto iter = handle->bufferio_queue.begin(); iter != handle->bufferio_queue.end();) {
                 bufferio_t* bufferio_item = *iter;
 
                 base = limit;

@@ -36,7 +36,7 @@ class tls_record_application_data : public tls_record {
     tls_records& get_records();
     void set_binary(const binary_t bin);
     void set_binary(const byte_t* data, size_t size);
-    const binary_t& get_binary();
+    const binary_t& get_binary() const;
 
     virtual void operator<<(tls_record* record);
     virtual void operator<<(tls_handshake* handshake);

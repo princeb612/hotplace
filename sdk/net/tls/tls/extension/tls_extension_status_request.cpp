@@ -91,15 +91,15 @@ return_t tls_extension_status_request::do_read_body(tls_direction_t dir, const b
 
 return_t tls_extension_status_request::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::not_supported; }
 
-uint8 tls_extension_status_request::get_cert_status_type() { return _cert_status_type; }
+uint8 tls_extension_status_request::get_cert_status_type() const { return _cert_status_type; }
 
 void tls_extension_status_request::set_responderid_info(const binary_t& info) { _responderid_info = info; }
 
-const binary_t& tls_extension_status_request::get_responderid_info() { return _responderid_info; }
+const binary_t& tls_extension_status_request::get_responderid_info() const { return _responderid_info; }
 
 void tls_extension_status_request::set_request_ext_info(const binary_t& info) { _request_ext_info = info; }
 
-const binary_t& tls_extension_status_request::get_request_ext_info() { return _request_ext_info; }
+const binary_t& tls_extension_status_request::get_request_ext_info() const { return _request_ext_info; }
 
 }  // namespace net
 }  // namespace hotplace

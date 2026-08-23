@@ -360,7 +360,7 @@ oauth2_provider& oauth2_provider::add(oauth2_grant_provider* provider) {
 
         critical_section_guard guard(_lock);
 
-        oauth2_grant_provider_map_pib_t pib = _providers.emplace(provider->type(), provider);
+        auto pib = _providers.emplace(provider->type(), provider);
         if (pib.second) {
             std::string response_type = provider->response_type();
             if (response_type.size()) {
@@ -384,7 +384,7 @@ oauth2_provider& oauth2_provider::set(oauth2_provider_key_t key, const std::stri
 
 std::string oauth2_provider::get(oauth2_provider_key_t key) {
     std::string ret_value;
-    std::map<oauth2_provider_key_t, std::string>::iterator iter = _values.find(key);
+    auto iter = _values.find(key);
     if (_values.end() != iter) {
         ret_value = iter->second;
     }
@@ -438,9 +438,9 @@ return_t oauth2_provider::choose(oauth2_grant_provider_ref_map_t& object, const 
 
         critical_section_guard guard(_lock);
 
-        oauth2_grant_provider_ref_map_t::iterator iter = object.find(key);
+        auto iter = object.find(key);
         if (object.end() == iter) {
-            oauth2_grant_provider_map_t::iterator piter = _providers.find(oauth2_grant_t::oauth2_unsupported);
+            auto piter = _providers.find(oauth2_grant_t::oauth2_unsupported);
             if (_providers.end() == piter) {
                 provider = new oauth2_unsupported_provider;
             } else {

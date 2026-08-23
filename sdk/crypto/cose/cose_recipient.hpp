@@ -67,11 +67,11 @@ class cose_recipient {
     void set_upperlayer(cose_recipient* layer);
     cose_recipient* get_upperlayer();
     cose_recipient* get_upperlayer2();
-    uint16 get_depth();
+    uint16 get_depth() const;
     void set_composer(cose_composer* composer);
     cose_composer* get_composer();
     cose_recipient& set_property(uint16 property);
-    uint16 get_property();
+    uint16 get_property() const;
 
     /**
      * @param   int key [in] cose_key_t, cose_param_t

@@ -74,7 +74,7 @@ void check_ecdsa_size() {
     crypto_sign_builder builder;
     binary_t sig;
 
-    auto lambda = [&](crypto_key_object* keyobj, void*) -> void {
+    auto lambda = [&](const crypto_key_object* keyobj, void*) -> void {
         for (auto alg : algs) {
             auto pkey = keyobj->get_pkey();
 

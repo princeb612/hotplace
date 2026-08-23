@@ -23,8 +23,8 @@ class quic_frame_stream : public quic_frame {
     quic_frame_stream(tls_session* session, uint8 type = quic_frame_type_stream);
     virtual ~quic_frame_stream();
 
-    uint8 get_flags();
-    uint64 get_streamid();
+    uint8 get_flags() const;
+    uint64 get_streamid() const;
 
     virtual void set(uint64 stream_id, uint8 unitype);
     quic_frame_stream& set(const binary_t& bin);

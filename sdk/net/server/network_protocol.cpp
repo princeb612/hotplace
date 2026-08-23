@@ -38,7 +38,7 @@ return_t network_protocol::set_constraints(protocol_constraints_t id, size_t val
     return ret;
 }
 
-size_t network_protocol::get_constraints(protocol_constraints_t id) {
+size_t network_protocol::get_constraints(protocol_constraints_t id) const {
     size_t ret_value = 0;
     if (id < protocol_constraints_t::protocol_constraints_the_end) {
         ret_value = _constraints[id];
@@ -46,7 +46,7 @@ size_t network_protocol::get_constraints(protocol_constraints_t id) {
     return ret_value;
 }
 
-bool network_protocol::use_alpn() { return false; }
+bool network_protocol::use_alpn() const { return false; }
 
 int network_protocol::addref() { return _shared.addref(); }
 

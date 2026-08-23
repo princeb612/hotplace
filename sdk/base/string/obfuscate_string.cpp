@@ -75,7 +75,6 @@ bool obfuscate_string::compare(obfuscate_string& o) const {
 
     if (size() == o.size()) {
         typedef std::set<byte_t> differ_set_t;
-        std::pair<differ_set_t::iterator, bool> differ_set_pib_t;
         differ_set_t differ_set;
         for (size_t i = 0; i < size(); i++) {
             byte_t diff = _contents[i] - o._contents[i];

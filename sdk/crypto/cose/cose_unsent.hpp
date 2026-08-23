@@ -35,7 +35,7 @@ class cose_unsent {
     cose_data& data();
 
    protected:
-    bool isvalid(int key);
+    bool isvalid(int key) const;
 
    private:
     cose_data _unsent;

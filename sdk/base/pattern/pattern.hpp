@@ -53,7 +53,7 @@ namespace hotplace {
  */
 template <typename BT = char, typename T = BT>
 struct memberof_defhandler {
-    BT operator()(const T* source, size_t idx) const { return source ? static_cast<BT>(source[idx]) : BT(); }
+    const BT operator()(const T* source, size_t idx) const { return source ? static_cast<BT>(source[idx]) : BT(); }
 };
 
 /**

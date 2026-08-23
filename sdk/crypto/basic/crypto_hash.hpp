@@ -29,8 +29,8 @@ class crypto_hash {
    public:
     crypto_hash(hash_algorithm_t alg);
 
-    return_t digest(const binary_t& message, binary_t& result);
-    return_t digest(const byte_t* stream, size_t size, binary_t& result);
+    return_t digest(const binary_t& message, binary_t& result) const;
+    return_t digest(const byte_t* stream, size_t size, binary_t& result) const;
 
     void addref();
     void release();

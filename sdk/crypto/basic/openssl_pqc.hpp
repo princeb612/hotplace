@@ -49,7 +49,7 @@ class openssl_pqc {
      * @param key_encoding_t encoding [in]
      * @param const char* passphrase [inopt]
      */
-    return_t encode(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
+    static return_t encode(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
     /**
      * @param OSSL_LIB_CTX* libctx [in]
      * @param EVP_PKEY** pkey [out]
@@ -63,8 +63,8 @@ class openssl_pqc {
      *          key_encoding_pub_der
      * @param const char* passphrase [inopt]
      */
-    return_t decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
-    return_t decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding, const char* passphrase = nullptr);
+    static return_t decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
+    static return_t decode(OSSL_LIB_CTX* libctx, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding, const char* passphrase = nullptr);
     /**
      * @param OSSL_LIB_CTX* libctx [in]
      * @param const char* name [in]
@@ -81,9 +81,9 @@ class openssl_pqc {
      *          key_encoding_pub_raw
      * @param const char* passphrase [inopt]
      */
-    return_t decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
-    return_t decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding,
-                    const char* passphrase = nullptr);
+    static return_t decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const binary_t& keydata, key_encoding_t encoding, const char* passphrase = nullptr);
+    static return_t decode(OSSL_LIB_CTX* libctx, const char* name, EVP_PKEY** pkey, const byte_t* keystream, size_t keysize, key_encoding_t encoding,
+                           const char* passphrase = nullptr);
     /**
      * @brief encaps
      * @param OSSL_LIB_CTX* libctx [in]
@@ -91,7 +91,7 @@ class openssl_pqc {
      * @param binary_t& keycapsule [out]
      * @param binary_t& sharedsecret [out]
      */
-    return_t encapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keycapsule, binary_t& sharedsecret);
+    static return_t encapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, binary_t& keycapsule, binary_t& sharedsecret);
     /**
      * @brief decaps
      * @param OSSL_LIB_CTX* libctx [in]
@@ -99,8 +99,8 @@ class openssl_pqc {
      * @param const binary_t& keycapsule [in] see encapsule
      * @param binary_t& sharedsecret [out]
      */
-    return_t decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, const binary_t& keycapsule, binary_t& sharedsecret);
-    return_t decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, const byte_t* capsulekeystream, size_t capsulekeysize, binary_t& sharedsecret);
+    static return_t decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, const binary_t& keycapsule, binary_t& sharedsecret);
+    static return_t decapsule(OSSL_LIB_CTX* libctx, const EVP_PKEY* pkey, const byte_t* capsulekeystream, size_t capsulekeysize, binary_t& sharedsecret);
     /**
      * @brief sign
      * @param OSSL_LIB_CTX* libctx [in]
@@ -109,7 +109,7 @@ class openssl_pqc {
      * @param size_t size [in]
      * @param binary_t& signature [out]
      */
-    return_t sign(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature);
+    static return_t sign(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature);
     /**
      * @brief verify
      * @param OSSL_LIB_CTX* libctx [in]
@@ -118,7 +118,7 @@ class openssl_pqc {
      * @param size_t size [in]
      * @param const binary_t& signature [in]
      */
-    return_t verify(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature);
+    static return_t verify(OSSL_LIB_CTX* libctx, EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature);
 };
 
 }  // namespace crypto

@@ -51,7 +51,7 @@ static return_t do_test_construct_server_hello(const TLS_OPTION& option, tls_ses
         ret = record.write(dir, bin);
 
         auto& tlskey = session->get_tls_protection().get_key();
-        tlskey.for_each([&](crypto_key_object* obj, void* user) -> void {
+        tlskey.for_each([&](const crypto_key_object* obj, void* user) -> void {
             if (KID_TLS_CLIENTHELLO_KEYSHARE_PUBLIC == obj->get_desc().get_kid_str()) {
                 auto pkey = obj->get_pkey();
                 _logger->write([&](basic_stream& bs) -> void { dump_key(pkey, &bs); });

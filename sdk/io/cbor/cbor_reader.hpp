@@ -101,8 +101,8 @@ class cbor_reader {
     /**
      * @brief   foreach
      */
-    return_t cbor_foreach(cbor_reader_context_t* handle, void (*function)(unsigned, cbor_object*, binary_t*), binary_t* param);
-    return_t cbor_foreach(cbor_reader_context_t* handle, void (*function)(unsigned, cbor_object*, stream_t*), stream_t* param);
+    return_t cbor_foreach(cbor_reader_context_t* handle, void (*function)(unsigned, cbor_object*, binary_t*), binary_t* param) const;
+    return_t cbor_foreach(cbor_reader_context_t* handle, void (*function)(unsigned, cbor_object*, stream_t*), stream_t* param) const;
 
    protected:
     return_t clear(cbor_reader_context_t* handle);

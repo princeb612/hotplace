@@ -32,7 +32,7 @@ class http2_frame_data : public http2_frame {
 
     void set_data(const binary_t& data);
     void set_data(const char* data, size_t size);
-    const binary_t& get_data();
+    const binary_t& get_data() const;
 
    protected:
     virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos);

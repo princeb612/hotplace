@@ -36,7 +36,7 @@ class http2_frame_goaway : public http2_frame {
     http2_frame_goaway& set_errorcode(uint32 errorcode);
 
     void set_debug(const binary_t& debug);
-    const binary_t& get_debug();
+    const binary_t& get_debug() const;
 
    protected:
     virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos);

@@ -22,7 +22,6 @@ namespace io {
 #define MULTIPLEXER_EVENT_LOOP_CONTROLLER_CONTEXT_SIGNATURE 0x20151208
 
 typedef std::map<arch_t, uint32> multiplexer_event_loop_controler_map_t;
-typedef std::pair<multiplexer_event_loop_controler_map_t::iterator, bool> multiplexer_event_loop_controler_map_pib_t;
 
 typedef struct _multiplexer_event_loop_controller_context_t : public multiplexer_controller_context_t {
     uint32 signature;
@@ -95,7 +94,7 @@ return_t multiplexer_controller::event_loop_new(multiplexer_controller_context_t
 
         critical_section_guard guard(context->lock);
 
-        multiplexer_event_loop_controler_map_pib_t pib = context->control.emplace(tid, 1);
+        auto pib = context->control.emplace(tid, 1);
         if (false == pib.second) {
             ret = errorcode_t::already_exist;
         }
@@ -119,8 +118,6 @@ return_t multiplexer_controller::event_loop_break(multiplexer_controller_context
     return_t ret = errorcode_t::success;
     multiplexer_event_loop_controller_context_t* context = static_cast<multiplexer_event_loop_controller_context_t*>(handle);
 
-    multiplexer_event_loop_controler_map_t::iterator iter;
-
     __try2 {
         if (nullptr == handle) {
             ret = errorcode_t::invalid_parameter;
@@ -140,7 +137,7 @@ return_t multiplexer_controller::event_loop_break(multiplexer_controller_context
                 pair.second = 0;
             }
         } else {
-            iter = context->control.find(*token_handle);
+            auto iter = context->control.find(*token_handle);
             if (context->control.end() != iter) {
                 iter->second = 0;
             }
@@ -153,8 +150,6 @@ return_t multiplexer_controller::event_loop_break(multiplexer_controller_context
 return_t multiplexer_controller::event_loop_break_concurrent(multiplexer_controller_context_t* handle, size_t concurrent) {
     return_t ret = errorcode_t::success;
     multiplexer_event_loop_controller_context_t* context = static_cast<multiplexer_event_loop_controller_context_t*>(handle);
-
-    multiplexer_event_loop_controler_map_t::iterator iter;
 
     __try2 {
         if (nullptr == handle) {
@@ -196,11 +191,9 @@ bool multiplexer_controller::event_loop_test_broken(multiplexer_controller_conte
     // return_t ret = errorcode_t::success;
     multiplexer_event_loop_controller_context_t* context = static_cast<multiplexer_event_loop_controller_context_t*>(handle);
 
-    multiplexer_event_loop_controler_map_t::iterator iter;
-
     __try2 {
         critical_section_guard guard(context->lock);
-        iter = context->control.find(token_handle);
+        auto iter = context->control.find(token_handle);
         if (context->control.end() != iter) {
             if (0 == iter->second) {
                 ret_value = true;
@@ -225,10 +218,8 @@ return_t multiplexer_controller::event_loop_close(multiplexer_controller_context
     multiplexer_event_loop_controller_context_t* context = static_cast<multiplexer_event_loop_controller_context_t*>(handle);
 
     __try2 {
-        multiplexer_event_loop_controler_map_t::iterator iter;
-
         critical_section_guard guard(context->lock);
-        iter = context->control.find(token_handle);
+        auto iter = context->control.find(token_handle);
         if (context->control.end() != iter) {
             context->control.erase(iter);
         }

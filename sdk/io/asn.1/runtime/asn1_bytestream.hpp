@@ -46,10 +46,9 @@ class asn1_bytestream {
         size_t len;           // V length
         size_t pos;           // V offet, V := [stream + pos .. stream + pos + len]
         uint32 node_id;       // debug
-        uint32 flags;         // asn1_builder_flag_t
         asn1_node* asn1node;  // [optional] asn1_weakly_typed intermediate
 
-        asn1_tlv_t() : ident(0), tag(0), begin(0), len(0), pos(0), node_id(0), flags(0), asn1node(nullptr) {}
+        asn1_tlv_t() : ident(0), tag(0), begin(0), len(0), pos(0), node_id(0), asn1node(nullptr) {}
 
         uint8 get_class() const { return (ident & asn1_class_mask); }
         bool is_constructed() const { return (ident & asn1_tag_mask) ? true : false; }

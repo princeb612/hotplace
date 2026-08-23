@@ -30,7 +30,7 @@ class http3_frame {
     return_t read(const byte_t* stream, size_t size, size_t& pos);
     return_t write(binary_t& bin);
 
-    h3_frame_t get_type();
+    h3_frame_t get_type() const;
 
     void addref();
     void release();

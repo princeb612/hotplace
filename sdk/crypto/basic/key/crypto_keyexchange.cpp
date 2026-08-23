@@ -89,7 +89,7 @@ return_t crypto_keyexchange::decaps(crypto_key* key, const char* kid, const bina
     return ret;
 }
 
-tls_group_t crypto_keyexchange::get_group() { return _group; }
+tls_group_t crypto_keyexchange::get_group() const { return _group; }
 
 return_t crypto_keyexchange::keygen(tls_group_t group, crypto_key* key, const char* kid) {
     return_t ret = errorcode_t::success;

@@ -30,7 +30,7 @@ class http2_frame_headers : public http2_frame {
     virtual void dump(stream_t* s);
 
     void set_fragment(const binary_t& fragment);
-    const binary_t& get_fragment();
+    const binary_t& get_fragment() const;
 
    protected:
     virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos);

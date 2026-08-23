@@ -94,7 +94,7 @@ return_t tls_extension_alpn::do_write_body(tls_direction_t dir, binary_t& bin) {
     return ret;
 }
 
-const binary_t& tls_extension_alpn::get_protocols() { return _protocols; }
+const binary_t& tls_extension_alpn::get_protocols() const { return _protocols; }
 
 void tls_extension_alpn::set_protocols(const binary_t& protocols) { _protocols = protocols; }
 

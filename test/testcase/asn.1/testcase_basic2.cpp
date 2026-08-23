@@ -25,7 +25,6 @@
  *       ▼ (Step 2: Heuristic Promotion & Transformation)
  *
  * [ asn1_weakly_typed::transform() ]
- *
  *   ├── 1) Builder: Reconstruct asn1_object* (Semantic) based on identifier, P/C bit, size/leaf flag
  *   ├── 2) Tree Binding: Connect parent, container (Sequence/Set), or tagobj
  *   └── 3) Value Extraction: Process/inject leaf node data (variant) after top-down traversal

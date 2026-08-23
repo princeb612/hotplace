@@ -117,10 +117,10 @@ struct t_treenode {
 
     TYPE& get() { return _data; }
     const TYPE& get() const { return _data; }
-    bool is_root() { return nullptr == _parent; }
-    bool is_leaf() { return _children.empty(); }
-    bool is_branch() { return (false == _children.empty()); }
-    size_t size() { return _children.size(); }
+    bool is_root() const { return nullptr == _parent; }
+    bool is_leaf() const { return _children.empty(); }
+    bool is_branch() const { return (false == _children.empty()); }
+    size_t size() const { return _children.size(); }
     t_treenode<TYPE>* parent() const { return _parent; }
 };
 
@@ -134,7 +134,7 @@ class t_tree_visitor {
     void visit(t_tree<TYPE>* tree) {
         if (tree) tree->accept(this);
     };
-    void describe(treenode* node) {
+    void describe(treenode* node) const {
         if (_descriptor) _descriptor(node);
     }
 
@@ -255,7 +255,7 @@ class t_tree_cursor {
     explicit t_tree_cursor(treenode* root) : _current(nullptr) { reset(root); }
 
     void reset(treenode* root) {
-        while (!_stack.empty()) _stack.pop();
+        while (false == _stack.empty()) _stack.pop();
         _current = nullptr;
 
         if (root) {
@@ -283,7 +283,7 @@ class t_tree_cursor {
 
     treenode* current() const { return _current; }
 
-    bool has_next() const { return !_stack.empty() || _current != nullptr; }
+    bool has_next() const { return (false == _stack.empty()) || (_current != nullptr); }
     bool valid() const { return _current != nullptr; }
 
     treenode* operator->() const { return _current; }

@@ -16,7 +16,7 @@
 namespace hotplace {
 namespace crypto {
 
-return_t crypto_advisor::for_each_curve(std::function<void(const char*, uint32)> f) {
+return_t crypto_advisor::for_each_curve(std::function<void(const char*, uint32)> f) const {
     return_t ret = errorcode_t::success;
     for (size_t i = 0; i < sizeof_hint_curves; i++) {
         const hint_curve_t* item = hint_curves + i;
@@ -44,7 +44,7 @@ return_t crypto_advisor::for_each_curve(std::function<void(const char*, uint32)>
     return ret;
 }
 
-return_t crypto_advisor::for_each_curve_hint(std::function<void(const hint_curve_t*)> f) {
+return_t crypto_advisor::for_each_curve_hint(std::function<void(const hint_curve_t*)> f) const {
     return_t ret = errorcode_t::success;
     for (size_t i = 0; i < sizeof_hint_curves; i++) {
         const hint_curve_t* item = hint_curves + i;
@@ -53,46 +53,46 @@ return_t crypto_advisor::for_each_curve_hint(std::function<void(const hint_curve
     return ret;
 }
 
-const hint_curve_t* crypto_advisor::hintof_curve_nid(uint32 nid) {
+const hint_curve_t* crypto_advisor::hintof_curve_nid(uint32 nid) const {
     const hint_curve_t* item = nullptr;
-    t_maphint<uint32, const hint_curve_t*> hint(_curve_bynid_map);
+    t_maphint_const<uint32, const hint_curve_t*> hint(_curve_bynid_map);
     hint.find(nid, &item);
     return item;
 }
 
-const hint_curve_t* crypto_advisor::hintof_curve_name(const char* name) {
+const hint_curve_t* crypto_advisor::hintof_curve_name(const char* name) const {
     const hint_curve_t* item = nullptr;
     if (name) {
-        t_maphint<std::string, const hint_curve_t*> hint(_curve_name_map);
+        t_maphint_const<std::string, const hint_curve_t*> hint(_curve_name_map);
         hint.find(name, &item);
     }
     return item;
 }
 
-const hint_curve_t* crypto_advisor::hintof_curve_name(const std::string& name) {
+const hint_curve_t* crypto_advisor::hintof_curve_name(const std::string& name) const {
     const hint_curve_t* item = nullptr;
-    t_maphint<std::string, const hint_curve_t*> hint(_curve_name_map);
+    t_maphint_const<std::string, const hint_curve_t*> hint(_curve_name_map);
     hint.find(name, &item);
     return item;
 }
 
-const hint_curve_t* crypto_advisor::hintof_curve(const char* curve) {
+const hint_curve_t* crypto_advisor::hintof_curve(const char* curve) const {
     const hint_curve_t* item = nullptr;
     if (curve) {
-        t_maphint<std::string, const hint_curve_t*> hint(_curve_name_map);
+        t_maphint_const<std::string, const hint_curve_t*> hint(_curve_name_map);
         hint.find(curve, &item);
     }
     return item;
 }
 
-const hint_curve_t* crypto_advisor::hintof_curve(const std::string& curve) {
+const hint_curve_t* crypto_advisor::hintof_curve(const std::string& curve) const {
     const hint_curve_t* item = nullptr;
-    t_maphint<std::string, const hint_curve_t*> hint(_curve_name_map);
+    t_maphint_const<std::string, const hint_curve_t*> hint(_curve_name_map);
     hint.find(curve, &item);
     return item;
 }
 
-const hint_curve_t* crypto_advisor::hintof_curve_eckey(const EVP_PKEY* pkey) {
+const hint_curve_t* crypto_advisor::hintof_curve_eckey(const EVP_PKEY* pkey) const {
     const hint_curve_t* item = nullptr;
     if (pkey) {
         uint32 nid = 0;
@@ -102,7 +102,7 @@ const hint_curve_t* crypto_advisor::hintof_curve_eckey(const EVP_PKEY* pkey) {
     return item;
 }
 
-return_t crypto_advisor::nidof_ec_curve(const char* curve, uint32& nid) {
+return_t crypto_advisor::nidof_ec_curve(const char* curve, uint32& nid) const {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -124,7 +124,7 @@ return_t crypto_advisor::nidof_ec_curve(const char* curve, uint32& nid) {
     return ret;
 }
 
-return_t crypto_advisor::ktyof_ec_curve(const char* curve, uint32& kty) {
+return_t crypto_advisor::ktyof_ec_curve(const char* curve, uint32& kty) const {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -144,7 +144,7 @@ return_t crypto_advisor::ktyof_ec_curve(const char* curve, uint32& kty) {
     return ret;
 }
 
-return_t crypto_advisor::ktyof_ec_curve(const EVP_PKEY* pkey, std::string& kty) {
+return_t crypto_advisor::ktyof_ec_curve(const EVP_PKEY* pkey, std::string& kty) const {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -169,7 +169,7 @@ return_t crypto_advisor::ktyof_ec_curve(const EVP_PKEY* pkey, std::string& kty) 
     return ret;
 }
 
-return_t crypto_advisor::nameof_ec_curve(const EVP_PKEY* pkey, std::string& name) {
+return_t crypto_advisor::nameof_ec_curve(const EVP_PKEY* pkey, std::string& name) const {
     return_t ret = errorcode_t::success;
     uint32 nid = 0;
 
@@ -179,7 +179,7 @@ return_t crypto_advisor::nameof_ec_curve(const EVP_PKEY* pkey, std::string& name
         nidof_evp_pkey(pkey, nid);
 
         const hint_curve_t* item = nullptr;
-        t_maphint<uint32, const hint_curve_t*> hint(_curve_bynid_map);
+        t_maphint_const<uint32, const hint_curve_t*> hint(_curve_bynid_map);
         ret = hint.find(nid, &item);
         if (errorcode_t::success == ret) {
             if (item->name_nist) {

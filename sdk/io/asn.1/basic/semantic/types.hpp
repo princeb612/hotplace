@@ -13,6 +13,7 @@
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/io/asn.1/basic/types.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/types.hpp>
 
 namespace hotplace {
 namespace io {

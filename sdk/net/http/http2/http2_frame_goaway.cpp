@@ -80,7 +80,7 @@ http2_frame_goaway& http2_frame_goaway::set_errorcode(uint32 errorcode) {
 
 void http2_frame_goaway::set_debug(const binary_t& debug) { _debug = debug; }
 
-const binary_t& http2_frame_goaway::get_debug() { return _debug; }
+const binary_t& http2_frame_goaway::get_debug() const { return _debug; }
 
 }  // namespace net
 }  // namespace hotplace

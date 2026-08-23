@@ -42,13 +42,13 @@ class cbor_publisher {
     /*
      * concise
      */
-    return_t publish(cbor_object* object, binary_t* b);
-    return_t publish(cbor_reader_context_t* handle, binary_t* b);
+    static return_t publish(cbor_object* object, binary_t* b);
+    static return_t publish(cbor_reader_context_t* handle, binary_t* b);
     /*
      * diagnostic
      */
-    return_t publish(cbor_object* object, stream_t* s);
-    return_t publish(cbor_reader_context_t* handle, stream_t* b);
+    static return_t publish(cbor_object* object, stream_t* s);
+    static return_t publish(cbor_reader_context_t* handle, stream_t* b);
 };
 
 }  // namespace io

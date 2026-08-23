@@ -24,7 +24,7 @@ asn1_primitive_node::asn1_primitive_node(uint8 identifier, uint64 tag, uint64 le
     } else if (0 == len) {
         // do nothing
     } else {
-        throw exception(errorcode_t::bad_data);
+        // throw exception(errorcode_t::bad_data);
     }
 }
 

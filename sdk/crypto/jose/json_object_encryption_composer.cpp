@@ -49,13 +49,13 @@ return_t json_object_encryption::composer::compose_encryption(jose_context_t* ha
             __leave2;
         }
 
-        jose_encryptions_map_t::iterator eit = handle->encryptions.begin();
+        auto eit = handle->encryptions.begin();
         jose_encryption_t& encryption = eit->second;
         if (encryption.recipients.empty()) {
             __leave2;
         }
 
-        jose_recipients_t::iterator rit = encryption.recipients.begin();
+        auto rit = encryption.recipients.begin();
         jose_recipient_t& recipient = rit->second;
 
         std::string b64_header;
@@ -272,7 +272,7 @@ return_t json_object_encryption::composer::compose_encryption_dorandom(jose_cont
             __leave2;
         }
 
-        jose_encryptions_map_t::iterator iter = handle->encryptions.find(enc);
+        auto iter = handle->encryptions.find(enc);
         if (handle->encryptions.end() == iter) {
             const hint_jose_encryption_t* enc_hint = advisor->hintof_jose_encryption(enc);  // content encryption
             if (nullptr == enc_hint) {

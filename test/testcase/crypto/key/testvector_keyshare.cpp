@@ -56,7 +56,7 @@ void testcase_yaml_keyshare() {
 
                 auto ret = keyexchange.keystore(group, &key, "store", share);
                 _test_case.test(ret, __FUNCTION__, "store %s", name);
-                auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
+                auto dump_crypto_key = [&](const crypto_key_object* item, void*) -> void {
                     auto kid = item->get_desc().get_kid_cstr();
 
                     _logger->write([&](basic_stream& bs) -> void {

@@ -109,8 +109,8 @@ class crypto_keychain {
      * @param int flag [in] public_key | private_key
      * @return error code (see error.hpp)
      */
-    virtual return_t write(crypto_key* cryptokey, keyflag_t mode, stream_t* stream, int flag = 0);
-    return_t write_pem(crypto_key* cryptokey, stream_t* stream, int flag = 0);
+    virtual return_t write(const crypto_key* cryptokey, keyflag_t mode, stream_t* stream, int flag = 0);
+    return_t write_pem(const crypto_key* cryptokey, stream_t* stream, int flag = 0);
 
     template <typename TYPE>
     return_t t_write_der(const X509* x509, TYPE& buffer, std::function<void(const byte_t*, int, TYPE&)> func);
@@ -134,7 +134,7 @@ class crypto_keychain {
      * @param int flag [in] reserved
      * @return error code (see error.hpp)
      */
-    virtual return_t write_file(crypto_key* cryptokey, keyflag_t mode, const char* file, int flag = 0);
+    virtual return_t write_file(const crypto_key* cryptokey, keyflag_t mode, const char* file, int flag = 0);
 
     /**
      * @brief keygen

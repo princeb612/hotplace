@@ -181,7 +181,7 @@ class t_tagged_range_set {
     }
 
     template <typename F>  // void(const T&, const T&)
-    void for_each(F func) {
+    void for_each(F func) const {
         critical_section_guard guard(_lock);
         for (const auto& item : _arr) {
             func(item.begin, item.end);
@@ -213,7 +213,7 @@ class t_tagged_range_set {
     }
 
    private:
-    critical_section _lock;
+    mutable critical_section _lock;
     std::vector<interval> _arr;
 };
 

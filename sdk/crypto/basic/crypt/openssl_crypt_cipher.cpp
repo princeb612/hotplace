@@ -92,7 +92,7 @@ typedef struct _openssl_crypt_context_t : public crypt_context_t {
 } openssl_crypt_context_t;
 
 return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key, size_t size_key, const unsigned char* iv,
-                             size_t size_iv) {
+                             size_t size_iv) const {
     binary_t temp_iv;
     binary_t temp_key;
     crypto_advisor* advisor = crypto_advisor::get_instance();
@@ -168,7 +168,7 @@ return_t openssl_crypt::open(crypt_context_t** handle, crypt_algorithm_t algorit
     return pipeline.result_to_return_t();
 }
 
-return_t openssl_crypt::close(crypt_context_t* handle) {
+return_t openssl_crypt::close(crypt_context_t* handle) const {
     return_t ret = errorcode_t::success;
     openssl_crypt_context_t* context = static_cast<openssl_crypt_context_t*>(handle);
 
@@ -196,7 +196,7 @@ return_t openssl_crypt::close(crypt_context_t* handle) {
     return ret;
 }
 
-return_t openssl_crypt::set(crypt_context_t* handle, crypt_ctrl_t id, uint16 param) {
+return_t openssl_crypt::set(crypt_context_t* handle, crypt_ctrl_t id, uint16 param) const {
     return_t ret = errorcode_t::success;
     openssl_crypt_context_t* context = static_cast<openssl_crypt_context_t*>(handle);
 
@@ -229,7 +229,7 @@ return_t openssl_crypt::set(crypt_context_t* handle, crypt_ctrl_t id, uint16 par
 }
 
 return_t openssl_crypt::encrypt_internal(crypt_context_t* handle, const unsigned char* plaintext, size_t plainsize, unsigned char* ciphertext, size_t* ciphersize,
-                                         const binary_t* aad, binary_t* tag) {
+                                         const binary_t* aad, binary_t* tag) const {
     return_t ret = errorcode_t::success;
     openssl_crypt_context_t* context = static_cast<openssl_crypt_context_t*>(handle);
 
@@ -450,7 +450,7 @@ return_t openssl_crypt::encrypt_internal(crypt_context_t* handle, const unsigned
 }
 
 return_t openssl_crypt::decrypt_internal(crypt_context_t* handle, const unsigned char* ciphertext, size_t ciphersize, unsigned char* plaintext, size_t* plainsize,
-                                         const binary_t* aad, const binary_t* tag) {
+                                         const binary_t* aad, const binary_t* tag) const {
     return_t ret = errorcode_t::success;
     openssl_crypt_context_t* context = static_cast<openssl_crypt_context_t*>(handle);
 
@@ -619,7 +619,7 @@ return_t openssl_crypt::decrypt_internal(crypt_context_t* handle, const unsigned
     return ret;
 }
 
-return_t openssl_crypt::query(crypt_context_t* handle, size_t cmd, size_t& value) {
+return_t openssl_crypt::query(crypt_context_t* handle, size_t cmd, size_t& value) const {
     return_t ret = errorcode_t::success;
     openssl_crypt_context_t* context = static_cast<openssl_crypt_context_t*>(handle);
 

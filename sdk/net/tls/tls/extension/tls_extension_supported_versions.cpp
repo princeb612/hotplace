@@ -115,7 +115,7 @@ tls_extension_client_supported_versions& tls_extension_client_supported_versions
     return *this;
 }
 
-const std::list<tls_version_t>& tls_extension_client_supported_versions::get_versions() { return _versions; }
+const std::list<tls_version_t>& tls_extension_client_supported_versions::get_versions() const { return _versions; }
 
 tls_extension_server_supported_versions::tls_extension_server_supported_versions(tls_handshake* handshake) : tls_extension_supported_versions(handshake) {}
 

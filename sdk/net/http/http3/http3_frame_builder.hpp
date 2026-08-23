@@ -25,7 +25,7 @@ class http3_frame_builder {
     http3_frame_builder& set(tls_session* session);
     http3_frame* build();
 
-    h3_frame_t get_type();
+    h3_frame_t get_type() const;
 
    private:
     h3_frame_t _type;

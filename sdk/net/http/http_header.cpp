@@ -31,7 +31,7 @@ http_header& http_header::add(const std::string& name, const std::string& value)
 
         std::string key = (1 == get_version()) ? name : lowername(name);
 
-        http_header_map_pib_t pib = _headers.emplace(key, value);
+        auto pib = _headers.emplace(key, value);
         if (true == pib.second) {
             _names.push_back(key);
         } else {
@@ -125,7 +125,7 @@ const char* http_header::get_token(const std::string& name, unsigned index, std:
     return ret_value;
 }
 
-return_t http_header::get_headers(std::string& contents) {
+return_t http_header::get_headers(std::string& contents) const {
     return_t ret = errorcode_t::success;
 
     auto lambda = [&contents](const std::string& name, const std::string& value) -> void { contents += format("%s: %s\r\n", name.c_str(), value.c_str()); };
@@ -134,7 +134,7 @@ return_t http_header::get_headers(std::string& contents) {
     return ret;
 }
 
-return_t http_header::get_headers(std::function<void(const std::string&, const std::string&)> f) {
+return_t http_header::get_headers(std::function<void(const std::string&, const std::string&)> f) const {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -144,7 +144,7 @@ return_t http_header::get_headers(std::function<void(const std::string&, const s
         }
 
         critical_section_guard guard(_lock);
-        t_maphint<std::string, std::string> hint(_headers);
+        t_maphint_const<std::string, std::string> hint(_headers);
         for (const auto& key : _names) {
             std::string value;
             hint.find(key, &value);

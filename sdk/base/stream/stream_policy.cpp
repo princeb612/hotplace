@@ -27,7 +27,7 @@ stream_policy& stream_policy::set_allocsize(size_t allocsize) {
     if (allocsize < basic_stream_policy_minsize) {
         allocsize = basic_stream_policy_minsize;
     }
-    std::pair<basic_stream_policy_map_t::iterator, bool> pib = _config.emplace("allocsize", allocsize);
+    auto pib = _config.emplace("allocsize", allocsize);
     if (false == pib.second) {
         pib.first->second = allocsize;
     }

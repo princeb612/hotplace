@@ -104,8 +104,8 @@ class http_header {
      * @param std::string& contents [out]
      * @return error code (see error.hpp)
      */
-    return_t get_headers(std::string& contents);
-    return_t get_headers(std::function<void(const std::string&, const std::string&)> f);
+    return_t get_headers(std::string& contents) const;
+    return_t get_headers(std::function<void(const std::string&, const std::string&)> f) const;
 
     http_header& operator=(const http_header& object);
     http_header& operator=(http_header&& object);
@@ -117,11 +117,10 @@ class http_header {
    private:
     typedef std::list<std::string> http_header_list_t;
     typedef std::map<std::string, std::string> http_header_map_t;
-    typedef std::pair<http_header_map_t::iterator, bool> http_header_map_pib_t;
     http_header_list_t _names;
     http_header_map_t _headers;
     uint8 _version;
-    critical_section _lock;
+    mutable critical_section _lock;
 };
 
 }  // namespace net

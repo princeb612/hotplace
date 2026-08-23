@@ -29,7 +29,7 @@ void dump2(const char* text, binary_t const bin);
 void dump2(const char* text, const byte_t* addr, size_t size);
 void dump_elem(const binary_t& source);
 void dump_elem(const std::string& source);
-void dump_crypto_key(crypto_key_object* key, void*);
+void dump_crypto_key(const crypto_key_object* key, void*);
 return_t hash_stream(const char* algorithm, byte_t* stream, size_t size, binary_t& value);
 
 void testcase_rfc7515();

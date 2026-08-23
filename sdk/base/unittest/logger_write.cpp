@@ -7,23 +7,9 @@
  * Revision History
  * Date         Name                Description
  *
- * Comments
- *  logger_stdout       test
- *  logger_file         test
- *  logger_interval     test
- *  logger_flush_time   test
- *  logger_flush_size   test
- *  logger_rotate_size  not_yet
- *  logger_max_file     not_yet
- *  datefmt             test
  */
 
-#include <fstream>
-#include <hotplace/sdk/base/basic/dump_memory.hpp>
-#include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/base/unittest/logger.hpp>
-#include <hotplace/sdk/base/unittest/testcase.hpp>
-#include <iostream>
 
 namespace hotplace {
 

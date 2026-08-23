@@ -16,7 +16,7 @@ namespace crypto {
 
 crypto_sign_ecdsa::crypto_sign_ecdsa(hash_algorithm_t hashalg) : crypto_sign(hashalg) {}
 
-return_t crypto_sign_ecdsa::sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) {
+return_t crypto_sign_ecdsa::sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) const {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey || nullptr == stream) {
@@ -30,7 +30,7 @@ return_t crypto_sign_ecdsa::sign(const EVP_PKEY* pkey, const byte_t* stream, siz
     return ret;
 }
 
-return_t crypto_sign_ecdsa::verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) {
+return_t crypto_sign_ecdsa::verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) const {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey || nullptr == stream) {
@@ -44,7 +44,7 @@ return_t crypto_sign_ecdsa::verify(const EVP_PKEY* pkey, const byte_t* stream, s
     return ret;
 }
 
-return_t crypto_sign_ecdsa::sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags) {
+return_t crypto_sign_ecdsa::sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags) const {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey) {
@@ -58,7 +58,7 @@ return_t crypto_sign_ecdsa::sign(const EVP_PKEY* pkey, const binary_t& input, bi
     return ret;
 }
 
-return_t crypto_sign_ecdsa::verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags) {
+return_t crypto_sign_ecdsa::verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags) const {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey) {

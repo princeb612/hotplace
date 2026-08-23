@@ -89,7 +89,7 @@ class t_stringkey_value {
 
             critical_section_guard guard(_lock);
 
-            keyvalue_map_pib_t pib = _keyvalues.insert(std::make_pair(key, value));
+            auto pib = _keyvalues.insert(std::make_pair(key, value));
             if (false == pib.second) {
                 if (key_value_mode_t::kv_update == mode) {
                     pib.first->second = value;
@@ -130,12 +130,12 @@ class t_stringkey_value {
 
             critical_section_guard guard(_lock);
 
-            typename keyvalue_map_t::iterator iter = _keyvalues.find(key);
+            auto iter = _keyvalues.find(key);
             if (_keyvalues.end() != iter) {
                 _keyvalues.erase(iter);
             }
 
-            typename key_reverse_order_map_t::iterator reverse_order_iter = _reverse_order_map.find(key);
+            auto reverse_order_iter = _reverse_order_map.find(key);
             _order_map.erase(reverse_order_iter->second);
             _reverse_order_map.erase(reverse_order_iter);
         }
@@ -166,7 +166,7 @@ class t_stringkey_value {
      *          result = exist ("key"); // true
      *          result = exist ("value"); // false
      */
-    bool exist(const std::string& name) {
+    bool exist(const std::string& name) const {
         bool ret_value = false;
 
         __try2 {
@@ -176,7 +176,7 @@ class t_stringkey_value {
             }
 
             critical_section_guard guard(_lock);
-            typename keyvalue_map_t::iterator iter = _keyvalues.find(key);
+            auto iter = _keyvalues.find(key);
             if (_keyvalues.end() != iter) {
                 ret_value = true;
             }
@@ -192,7 +192,7 @@ class t_stringkey_value {
      *          value = kv ["key"]; // "value"
      *          value = kv ["value"]; // nullptr
      */
-    TYPE operator[](const std::string& name) {
+    TYPE operator[](const std::string& name) const {
         TYPE ret_value = TYPE();
 
         __try2 {
@@ -202,7 +202,7 @@ class t_stringkey_value {
             }
 
             critical_section_guard guard(_lock);
-            typename keyvalue_map_t::iterator iter = _keyvalues.find(key);
+            auto iter = _keyvalues.find(key);
             if (_keyvalues.end() != iter) {
                 ret_value = iter->second.c_str();
             }
@@ -220,7 +220,7 @@ class t_stringkey_value {
      *          kv.query ("key", value); // "value"
      *          kv.query ("value", value); // ""
      */
-    return_t query(const std::string& name, TYPE& value) {
+    return_t query(const std::string& name, TYPE& value) const {
         return_t ret = errorcode_t::success;
 
         __try2 {
@@ -230,7 +230,7 @@ class t_stringkey_value {
             }
 
             critical_section_guard guard(_lock);
-            typename keyvalue_map_t::iterator iter = _keyvalues.find(key);
+            auto iter = _keyvalues.find(key);
             if (_keyvalues.end() != iter) {
                 value = iter->second;
             } else {
@@ -240,7 +240,7 @@ class t_stringkey_value {
         __finally2 {}
         return ret;
     }
-    TYPE get(const std::string& name) {
+    TYPE get(const std::string& name) const {
         TYPE ret_value = TYPE();
         query(name, ret_value);
         return ret_value;
@@ -303,10 +303,10 @@ class t_stringkey_value {
      * @param   void* param [inopt]
      */
     template <typename F>
-    void foreach (F func, void* param = nullptr) {
+    void foreach (F func, void* param = nullptr) const {
         critical_section_guard guard(_lock);
         for (const auto& pair : _order_map) {
-            typename keyvalue_map_t::iterator iter = _keyvalues.find(pair.second);
+            auto iter = _keyvalues.find(pair.second);
             func(iter->first, iter->second, param);
         }
     }
@@ -331,19 +331,18 @@ class t_stringkey_value {
         return *this;
     }
 
-    bool empty() { return _keyvalues.size() == 0; }
-    size_t size() { return _keyvalues.size(); }
+    bool empty() const { return _keyvalues.size() == 0; }
+    size_t size() const { return _keyvalues.size(); }
 
    protected:
    private:
     /* key, value */
     typedef std::map<std::string, TYPE> keyvalue_map_t;
-    typedef std::pair<typename keyvalue_map_t::iterator, bool> keyvalue_map_pib_t;
 
     typedef std::map<int, std::string> key_order_map_t;
     typedef std::map<std::string, int> key_reverse_order_map_t;
 
-    critical_section _lock;
+    mutable critical_section _lock;
     keyvalue_map_t _keyvalues;
     key_order_map_t _order_map;
     key_reverse_order_map_t _reverse_order_map;
@@ -360,21 +359,26 @@ template <typename KET, typename TYPE>
 class t_key_value {
    public:
     typedef std::map<KET, TYPE> keyvalue_map_t;
-    typedef std::pair<typename keyvalue_map_t::iterator, bool> keyvalue_map_pib_t;
 
     t_key_value() {}
     t_key_value(const t_key_value& other) { _keyvalue_map = other._keyvalue_map; }
 
     t_key_value& set(KET key, const TYPE& value) {
         critical_section_guard guard(_lock);
-        keyvalue_map_pib_t pib = _keyvalue_map.insert(std::make_pair(key, value));
+        auto pib = _keyvalue_map.insert(std::make_pair(key, value));
         if (false == pib.second) {
             pib.first->second = value;
         }
 
         return *this;
     }
-    TYPE get(const KET& key, bool get_then_inc = false) {
+    TYPE get(const KET& key) const {
+        critical_section_guard guard(_lock);
+        auto iter = _keyvalue_map.find(key);
+        if (_keyvalue_map.end() != iter) return iter->second;
+        return TYPE{};
+    }
+    TYPE access(const KET& key, bool get_then_inc) {
         critical_section_guard guard(_lock);
         auto value = _keyvalue_map[key];
         if (get_then_inc) {
@@ -390,7 +394,7 @@ class t_key_value {
     }
     void remove(const KET& key) {
         critical_section_guard guard(_lock);
-        typename keyvalue_map_t::iterator iter = _keyvalue_map.find(key);
+        auto iter = _keyvalue_map.find(key);
         if (_keyvalue_map.end() != iter) {
             _keyvalue_map.erase(iter);
         }
@@ -414,7 +418,7 @@ class t_key_value {
     }
 
    private:
-    critical_section _lock;
+    mutable critical_section _lock;
     keyvalue_map_t _keyvalue_map;
 };
 

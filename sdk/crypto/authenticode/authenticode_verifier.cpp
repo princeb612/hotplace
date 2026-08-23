@@ -59,7 +59,6 @@ struct authenticode_context_t {
 };
 
 typedef std::map<arch_t, authenticode_context_t*> authenticode_contexts_map_t;
-typedef std::pair<authenticode_contexts_map_t::iterator, bool> authenticode_contexts_map_pib_t;
 typedef std::list<authenticode_plugin*> authenticode_engine_list_t;
 critical_section _contexts_lock;
 authenticode_contexts_map_t _contexts;
@@ -103,9 +102,8 @@ return_t authenticode_verifier::add_engine(authenticode_context_t* handle, authe
         }
 
         critical_section_guard guard(handle->lock);
-        std::pair<authenticode_engines_map_t::iterator, bool> result;
-        result = handle->engines.emplace(engine->id(), engine);
-        if (false == result.second) {
+        auto pib = handle->engines.emplace(engine->id(), engine);
+        if (false == pib.second) {
             ret = errorcode_t::already_exist;
             engine->release();
         }
@@ -484,7 +482,7 @@ return_t authenticode_verifier::remove_trusted_signer(authenticode_context_t* ha
 
         critical_section_guard guard(handle->lock);
 
-        authenticode_signer_set_t::iterator iter = handle->signer.find(std::string(signer));
+        auto iter = handle->signer.find(std::string(signer));
         if (handle->signer.end() == iter) {
             ret = errorcode_t::not_found;
         } else {
@@ -588,7 +586,7 @@ int verify_callback(int ok, X509_STORE_CTX* ctx) {
         authenticode_context_t* context = nullptr;
         {
             critical_section_guard guard(_contexts_lock);
-            authenticode_contexts_map_t::iterator iter = _contexts.find(get_thread_id());
+            auto iter = _contexts.find(get_thread_id());
             context = iter->second;
         }
 
@@ -892,7 +890,7 @@ static return_t get_crl(authenticode_context_t* context, X509* cert, authenticod
             {
                 critical_section_guard guard(context->crl_lock);
 
-                authenticode_crl_map_t::iterator crl_it = context->crl_map.find(crl_url);
+                auto crl_it = context->crl_map.find(crl_url);
                 if (context->crl_map.end() != crl_it) {
                     // no matter what crl is null or not
                     crl_map.emplace(crl_it->first, crl_it->second);

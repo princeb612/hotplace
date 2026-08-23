@@ -440,7 +440,7 @@ return_t crypto_advisor::cleanup() {
     return ret;
 }
 
-uint32 crypto_advisor::query_feature(const char* feature, uint32 spec) {
+uint32 crypto_advisor::query_feature(const char* feature, uint32 spec) const {
     uint32 ret = 0;
     if (feature) {
         ret = query_feature(std::string(feature), spec);
@@ -448,15 +448,18 @@ uint32 crypto_advisor::query_feature(const char* feature, uint32 spec) {
     return ret;
 }
 
-uint32 crypto_advisor::query_feature(const std::string& feature, uint32 spec) {
+uint32 crypto_advisor::query_feature(const std::string& feature, uint32 spec) const {
     uint32 ret = 0;
     auto iter = _features.find(feature);
     if (_features.end() != iter) {
         const uint32& flags = iter->second;
         if (advisor_feature_version & flags) {
             unsigned long osslver = OpenSSL_version_num();
-            auto ver = _versions[feature];
-            ret = (osslver >= ver);
+            auto iter = _versions.find(feature);
+            if (_versions.end() != iter) {
+                auto ver = iter->second;
+                ret = (osslver >= ver);
+            }
         } else if (spec) {
             ret = (flags & spec);
         } else {
@@ -466,12 +469,12 @@ uint32 crypto_advisor::query_feature(const std::string& feature, uint32 spec) {
     return ret;
 }
 
-bool crypto_advisor::check_minimum_version(unsigned long osslver) {
+bool crypto_advisor::check_minimum_version(unsigned long osslver) const {
     unsigned long ver = OpenSSL_version_num();
     return (ver >= osslver) ? true : false;
 }
 
-void crypto_advisor::for_each_features(std::function<void(const char* name, uint32 spec)> fn) {
+void crypto_advisor::for_each_features(std::function<void(const char* name, uint32 spec)> fn) const {
     if (fn) {
         for (auto item : _features) {
             fn(item.first.c_str(), item.second);
@@ -490,7 +493,7 @@ void crypto_advisor::get_cookie_secret(uint8 key, size_t secret_size, binary_t& 
     }
 }
 
-std::string crypto_advisor::nameof_authenticated_encryption(uint16 code) {
+std::string crypto_advisor::nameof_authenticated_encryption(uint16 code) const {
     std::string value;
     auto iter = _ae_names.find(code);
     if (_ae_names.end() != iter) {

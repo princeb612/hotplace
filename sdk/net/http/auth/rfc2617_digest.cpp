@@ -69,7 +69,7 @@ rfc2617_digest& rfc2617_digest::digest(const std::string& algorithm) {
     algmap.emplace("SHA-256-sess", "sha256");
 
     std::string hashalg;
-    std::map<std::string, std::string>::iterator alg_iter = algmap.find(algorithm);
+    auto alg_iter = algmap.find(algorithm);
     if (algmap.end() != alg_iter) {
         hashalg = alg_iter->second;
     } else {

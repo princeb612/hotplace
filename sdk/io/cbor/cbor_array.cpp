@@ -87,11 +87,11 @@ cbor_array& cbor_array::operator<<(cbor_map* object) {
 
 size_t cbor_array::size() const { return _array.size(); }
 
-cbor_object* cbor_array::operator[](size_t index) {
+cbor_object* cbor_array::operator[](size_t index) const {
     cbor_object* item = nullptr;
 
     if (_array.size() > index) {
-        std::list<cbor_object*>::iterator it = _array.begin();
+        auto it = _array.begin();
         std::advance(it, index);
         item = *it;
     }

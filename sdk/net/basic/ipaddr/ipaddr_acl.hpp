@@ -170,7 +170,6 @@ class ipaddr_acl {
         bool allow;  // allow/deny
     } ipaddress_rule_item_t;
     typedef std::map<ipaddr_t, ipaddress_rule_item_t> ipaddress_rule_map_t;
-    typedef std::pair<ipaddress_rule_map_t::iterator, bool> ipaddress_rule_map_pib_t;
 
     critical_section _lock;
     ipaddress_rule_map_t _single_type_rule;  // 0 single

@@ -28,7 +28,7 @@ cose_recipients::~cose_recipients() { clear(); }
 
 cose_recipient& cose_recipients::add(cose_recipient* recipient) {
     recipient->set_upperlayer(get_upperlayer());
-    std::list<cose_recipient*>::iterator iter = _recipients.insert(_recipients.end(), recipient);
+    auto iter = _recipients.insert(_recipients.end(), recipient);
     return **iter;
 }
 
@@ -40,14 +40,14 @@ cose_recipients& cose_recipients::clear() {
     return *this;
 }
 
-bool cose_recipients::empty() { return (0 == _recipients.size()); }
+bool cose_recipients::empty() const { return (0 == _recipients.size()); }
 
-size_t cose_recipients::size() { return _recipients.size(); }
+size_t cose_recipients::size() const { return _recipients.size(); }
 
-cose_recipient* cose_recipients::operator[](size_t index) {
+cose_recipient* cose_recipients::operator[](size_t index) const {
     cose_recipient* object = nullptr;
     if (index < _recipients.size()) {
-        std::list<cose_recipient*>::iterator iter = _recipients.begin();
+        auto iter = _recipients.begin();
         std::advance(iter, index);
         object = *iter;
     }

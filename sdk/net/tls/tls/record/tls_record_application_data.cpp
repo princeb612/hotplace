@@ -61,7 +61,7 @@ void tls_record_application_data::set_binary(const byte_t* data, size_t size) {
     binary_append(_bin, data, size);
 }
 
-const binary_t& tls_record_application_data::get_binary() { return _bin; }
+const binary_t& tls_record_application_data::get_binary() const { return _bin; }
 
 return_t tls_record_application_data::do_preprocess(tls_direction_t dir) {
     return_t ret = errorcode_t::success;

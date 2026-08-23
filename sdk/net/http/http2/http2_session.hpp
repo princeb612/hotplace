@@ -51,8 +51,6 @@ class http2_session {
     critical_section _lock;
     typedef std::map<uint32, uint8> flags_t;
     typedef std::map<uint32, http_request> headers_t;
-    typedef std::pair<flags_t::iterator, bool> flags_pib_t;
-    typedef std::pair<headers_t::iterator, bool> headers_pib_t;
     flags_t _flags;
     headers_t _headers;  // map<stream_identifier, http_request>
     hpack_dynamic_table _hpack_dyntable;

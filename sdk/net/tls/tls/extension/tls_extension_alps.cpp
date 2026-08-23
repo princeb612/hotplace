@@ -66,7 +66,7 @@ return_t tls_extension_alps::do_read_body(tls_direction_t dir, const byte_t* str
 
 return_t tls_extension_alps::do_write_body(tls_direction_t dir, binary_t& bin) { return errorcode_t::not_supported; }
 
-const binary_t& tls_extension_alps::get_alpn() { return _alpn; }
+const binary_t& tls_extension_alps::get_alpn() const { return _alpn; }
 
 }  // namespace net
 }  // namespace hotplace

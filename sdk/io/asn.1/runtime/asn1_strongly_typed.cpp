@@ -25,7 +25,6 @@ asn1_strongly_typed::asn1_strongly_typed() {}
 asn1_strongly_typed::~asn1_strongly_typed() {}
 
 // prototype
-// - throw exception (to be removed)
 return_t asn1_strongly_typed::read(asn1_runtime* target, const std::string& name, const byte_t* stream, size_t size, size_t& pos) {
     if (nullptr == target || nullptr == stream) return errorcode_t::invalid_parameter;
 
@@ -39,7 +38,7 @@ return_t asn1_strongly_typed::read(asn1_runtime* target, const std::string& name
         value = new asn1_value(nullptr);
 
         auto test = target->set(schema, value);
-        if (errorcode_t::success != test) throw exception(errorcode_t::unexpected);
+        if (errorcode_t::success != test) return errorcode_t::unexpected;
         value->set_schema(schema);
     }
 
@@ -51,7 +50,7 @@ return_t asn1_strongly_typed::read(asn1_runtime* target, const std::string& name
     uint8 mode = asn1_explicit;
 
     auto lambda = [&stream, &size, &value, &cursor, &mode](asn1_object* item) -> void {
-        if (false == cursor.valid()) throw exception(errorcode_t::invalid_context);
+        if (false == cursor.valid()) return;
 
         auto entity = item->get_component_entity();
         switch (entity) {
@@ -67,7 +66,7 @@ return_t asn1_strongly_typed::read(asn1_runtime* target, const std::string& name
                 } else if (asn1_implicit == mode) {
                     // replaced - do nothing
                 } else {
-                    throw exception(errorcode_t::mismatch);
+                    return;
                 }
                 if (t != asn1_implicit) cursor.next();
                 mode = t;
@@ -82,7 +81,7 @@ return_t asn1_strongly_typed::read(asn1_runtime* target, const std::string& name
                 } else if (asn1_implicit == mode) {
                     // replaced - do nothing
                 } else {
-                    throw exception(errorcode_t::mismatch);
+                    return;
                 }
                 cursor.next();
             } break;
@@ -98,11 +97,11 @@ return_t asn1_strongly_typed::read(asn1_runtime* target, const std::string& name
                     } else if (tlv.get_class() == asn1_class_universal && tlv.get_tag() == entity) {
                         asn1_encode::read(stream, size, pos, (asn1_entity_t)entity, tlv.len, nodename, value);
                     } else {
-                        throw exception(errorcode_t::unexpected);
+                        return;
                     }
                     cursor.next();
                 } else {
-                    throw exception(errorcode_t::not_implemented);
+                    return;
                 }
             } break;
             default: {

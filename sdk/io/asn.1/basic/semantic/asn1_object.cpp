@@ -162,7 +162,7 @@ std::string asn1_object::resolve_name() const {
             case asn1_entity_set:
             case asn1_entity_set_of:
             case asn1_entity_choice:
-            case asn1_entity_enum_type:
+            case asn1_entity_enum:
             case asn1_entity_any: {
                 const auto& nodename = node->get_name();
                 if (false == nodename.empty()) {

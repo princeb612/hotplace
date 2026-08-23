@@ -28,7 +28,7 @@ class tls_extension_supported_groups : public tls_extension {
     tls_extension_supported_groups& add(tls_group_t code);
     tls_extension_supported_groups& add(const std::string& name);
 
-    size_t numberof_groups();
+    size_t numberof_groups() const;
     void clear();
 
    protected:

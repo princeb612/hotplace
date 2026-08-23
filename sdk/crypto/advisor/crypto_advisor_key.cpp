@@ -13,7 +13,7 @@
 namespace hotplace {
 namespace crypto {
 
-return_t crypto_advisor::nameof_kty(crypto_kty_t kty, std::string& name) {
+return_t crypto_advisor::nameof_kty(crypto_kty_t kty, std::string& name) const {
     return_t ret = errorcode_t::success;
     __try2 {
         name.clear();
@@ -31,7 +31,7 @@ return_t crypto_advisor::nameof_kty(crypto_kty_t kty, std::string& name) {
     return ret;
 }
 
-const char* crypto_advisor::nameof_kty(crypto_kty_t kty) {
+const char* crypto_advisor::nameof_kty(crypto_kty_t kty) const {
     const char* value = "";
     auto iter = _kty_names.find(kty);
     if (_kty_names.end() != iter) {
@@ -41,7 +41,7 @@ const char* crypto_advisor::nameof_kty(crypto_kty_t kty) {
     return value;
 }
 
-crypto_kty_t crypto_advisor::ktyof_nid(uint32 nid) {
+crypto_kty_t crypto_advisor::ktyof_nid(uint32 nid) const {
     crypto_kty_t kty = {};
     switch (nid) {
         case EVP_PKEY_HMAC: {
@@ -112,9 +112,9 @@ crypto_kty_t crypto_advisor::ktyof_nid(uint32 nid) {
     return kty;
 }
 
-crypto_kty_t crypto_advisor::ktyof_name(const std::string& name) { return ktyof_nid(nidof_name(name)); }
+crypto_kty_t crypto_advisor::ktyof_name(const std::string& name) const { return ktyof_nid(nidof_name(name)); }
 
-return_t crypto_advisor::ktyof_evp_pkey(const EVP_PKEY* pkey, crypto_kty_t& kty, uint32& nid) {
+return_t crypto_advisor::ktyof_evp_pkey(const EVP_PKEY* pkey, crypto_kty_t& kty, uint32& nid) const {
     return_t ret = errorcode_t::success;
     __try2 {
         kty = kty_unknown;
@@ -238,7 +238,7 @@ return_t crypto_advisor::ktyof_evp_pkey(const EVP_PKEY* pkey, crypto_kty_t& kty,
     return ret;
 }
 
-uint32 crypto_advisor::nidof_name(const std::string& name) {
+uint32 crypto_advisor::nidof_name(const std::string& name) const {
     uint32 ret_value = OBJ_txt2nid(name.c_str());
     if (0 == ret_value) {
         auto feature = query_feature(name);
@@ -249,17 +249,17 @@ uint32 crypto_advisor::nidof_name(const std::string& name) {
     return ret_value;
 }
 
-crypt_item_t crypto_advisor::itemof(const std::string& name) {
+crypt_item_t crypto_advisor::itemof(const std::string& name) const {
     auto iter = _crypt_item_name_rev_map.find(name);
     return (_crypt_item_name_rev_map.end() == iter) ? crypt_item_t{} : iter->second;
 }
 
-const char* crypto_advisor::nameof(crypt_item_t item) {
+const char* crypto_advisor::nameof(crypt_item_t item) const {
     auto iter = _crypt_item_name_map.find(item);
     return (_crypt_item_name_map.end() == iter) ? "" : iter->second.c_str();
 }
 
-const char* crypto_advisor::valueof_crypt_item(crypto_kty_t kty, crypt_item_t item) {
+const char* crypto_advisor::valueof_crypt_item(crypto_kty_t kty, crypt_item_t item) const {
     const char* ret_value = "";
     auto iter = _crypt_item_dict.find(kty);
     if (_crypt_item_dict.end() != iter) {

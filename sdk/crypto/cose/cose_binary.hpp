@@ -45,9 +45,9 @@ class cose_binary {
     /**
      * @brief empty, size
      */
-    bool empty();
-    size_t size();
-    void get(binary_t& bin);
+    bool empty() const;
+    size_t size() const;
+    void get(binary_t& bin) const;
     /**
      * @brief clear
      */

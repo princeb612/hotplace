@@ -172,7 +172,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
         {
             // check certificate type(s), see load_certificate
             auto& keys = tlsadvisor->get_certs();
-            auto lambda = [&advisor, &certkty_set, &certnid_set](crypto_key_object* k, void* param) -> void {
+            auto lambda = [&advisor, &certkty_set, &certnid_set](const crypto_key_object* k, void* param) -> void {
                 auto pkey = k->get_pkey();
                 hint_advisor_t hint;
                 advisor->hintof_pkey(pkey, hint);

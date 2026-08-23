@@ -21,8 +21,8 @@ class qpack_dynamic_table : public http_dynamic_table {
     qpack_dynamic_table();
     virtual ~qpack_dynamic_table();
 
-    virtual void for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f);
-    virtual void dump(const std::string& desc, std::function<void(const char*, size_t)> f);
+    virtual void for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f) const;
+    virtual void dump(const std::string& desc, std::function<void(const char*, size_t)> f) const;
 
     /**
      * @brief   QPACK query function
@@ -33,7 +33,7 @@ class qpack_dynamic_table : public http_dynamic_table {
      * @param   size_t& respsize [inout]
      * @return  error code (see error.hpp)
      */
-    virtual return_t query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize);
+    virtual return_t query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) const;
 };
 
 }  // namespace net

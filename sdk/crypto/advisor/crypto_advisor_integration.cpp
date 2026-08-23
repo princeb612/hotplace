@@ -17,7 +17,7 @@ namespace crypto {
 
 // integration in progress
 
-return_t crypto_advisor::hintof_pkey(const EVP_PKEY* pkey, hint_advisor_t& hint) {
+return_t crypto_advisor::hintof_pkey(const EVP_PKEY* pkey, hint_advisor_t& hint) const {
     return_t ret = errorcode_t::success;
     crypto_kty_t kty = kty_unknown;
     uint32 nid = 0;
@@ -43,7 +43,7 @@ return_t crypto_advisor::hintof_pkey(const EVP_PKEY* pkey, hint_advisor_t& hint)
     return ret;
 }
 
-return_t crypto_advisor::hintof_name(const char* name, hint_advisor_t& hint) {
+return_t crypto_advisor::hintof_name(const char* name, hint_advisor_t& hint) const {
     return_t ret = errorcode_t::success;
     __try2 {
         hint.clear();
@@ -66,7 +66,7 @@ return_t crypto_advisor::hintof_name(const char* name, hint_advisor_t& hint) {
             } else if (advisor_feature_cose & feature) {
             } else if (advisor_feature_curve & feature) {
                 const hint_curve_t* item = nullptr;
-                t_maphint<std::string, const hint_curve_t*> curve_hint(_curve_name_map);
+                t_maphint_const<std::string, const hint_curve_t*> curve_hint(_curve_name_map);
                 ret = curve_hint.find(name, &item);
                 if (errorcode_t::success != ret) {
                     __leave2;
@@ -83,7 +83,7 @@ return_t crypto_advisor::hintof_name(const char* name, hint_advisor_t& hint) {
     return ret;
 }
 
-return_t crypto_advisor::hintof_ossl_nid(uint32 nid, hint_advisor_t& hint) {
+return_t crypto_advisor::hintof_ossl_nid(uint32 nid, hint_advisor_t& hint) const {
     return_t ret = errorcode_t::success;
 
     hint.clear();
@@ -93,13 +93,13 @@ return_t crypto_advisor::hintof_ossl_nid(uint32 nid, hint_advisor_t& hint) {
     hint.kty = kty;
     hint.nid = nid;
 
-    t_maphint<crypto_kty_t, const hint_kty_name_t*> kty_map(_kty_names);
+    t_maphint_const<crypto_kty_t, const hint_kty_name_t*> kty_map(_kty_names);
     kty_map.find(kty, &hint.hint_kty);
 
-    t_maphint<uint32, const hint_curve_t*> curve_map(_curve_bynid_map);
+    t_maphint_const<uint32, const hint_curve_t*> curve_map(_curve_bynid_map);
     curve_map.find(nid, &hint.hint_curve);
 
-    t_maphint<uint32, const hint_sigscheme_t*> sigscheme_nid_map(_hint_sigscheme_nid_map);
+    t_maphint_const<uint32, const hint_sigscheme_t*> sigscheme_nid_map(_hint_sigscheme_nid_map);
     sigscheme_nid_map.find(nid, &hint.hint_sigscheme);
 
     return ret;

@@ -111,7 +111,7 @@ return_t file_stream::open(const char* file_name, uint32 flag) {
     return ret;
 }
 
-bool file_stream::is_open() { return (-1 != _file_handle) ? true : false; }
+bool file_stream::is_open() const { return (-1 != _file_handle) ? true : false; }
 
 return_t file_stream::close() {
     return_t ret = errorcode_t::success;
@@ -137,7 +137,7 @@ return_t file_stream::close() {
     return ret;
 }
 
-bool file_stream::is_mmapped() { return nullptr != _filemap_handle && nullptr != _file_data; }
+bool file_stream::is_mmapped() const { return nullptr != _filemap_handle && nullptr != _file_data; }
 
 return_t file_stream::begin_mmap() {
     return_t ret = errorcode_t::success;

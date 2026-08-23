@@ -155,7 +155,7 @@ void huffman_coding::build(typename btree_t::node_t*& p) {
         if (p->_right) {
             build(p->_right);
         }
-        typename map_t::iterator iter = _m.find(p->_key);
+        auto iter = _m.find(p->_key);
         if (_m.end() != iter) {
             typename btree_t::node_t* t = iter->second;
 

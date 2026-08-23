@@ -1,0 +1,168 @@
+testvector:
+  - example: "example - VisibleString"
+    schema: ASN.1
+    values:
+      - item : ""
+        type : string
+        value : "Jones"
+    items:
+      - item: "Type1 ::= VisibleString"
+        der: "1A 05 4A 6F 6E 65 73"
+      - item: "Type2 ::= [APPLICATION 3] IMPLICIT Type1"
+        der: "43 05 4A 6F 6E 65 73"
+      - item: "Type3 ::= [2] EXPLICIT Type2"
+        der: "A2 07 43 05 4A 6F 6E 65 73"
+      - item: "Type4 ::= [APPLICATION 7] IMPLICIT Type3"
+        der: "67 07 43 05 4A 6F 6E 65 73"
+      - item: "Type5 ::= [2] IMPLICIT Type2"
+        der: "82 05 4A 6F 6E 65 73"
+      - item: "Type6 ::= [2] EXPLICIT Type1"
+        der: "A2 07 1A 05 4A 6F 6E 65 73"
+      - item: "Type7 ::= [1] EXPLICIT Type1"
+        der: "A1 07 1A 05 4A 6F 6E 65 73"
+      - item: "Type8 ::= [2] EXPLICIT Type7"
+        der: "A2 09 A1 07 1A 05 4A 6F 6E 65 73"
+      - item: "Type9 ::= [3] EXPLICIT Type8"
+        der: "A3 0B A2 09 A1 07 1A 05 4A 6F 6E 65 73"
+  - example: "example - REAL"
+    schema: ASN.1
+    values:
+      - item : ""
+        type : float
+        value : 1.0
+    items:
+      - item: "Type1 ::= REAL"
+        der: "09 03 80 00 01"
+      - item: "Type2 ::= [APPLICATION 3] IMPLICIT Type1"
+        der: "43 03 80 00 01"
+  - example: "example - INTEGER"
+    schema: ASN.1
+    values:
+      - item : ""
+        type : int
+        value : 0
+    items:
+      - item: "Location ::= INTEGER {homeOffice(0), fieldOffice(1), roving(2)}"
+        der: "02 01 00"
+  - example: "example - INTEGER"
+    schema: ASN.1
+    values:
+      - item : ""
+        type : int
+        value : 30
+    items:
+      - item: "Location ::= INTEGER {homeOffice(0), fieldOffice(1), roving(2)}"
+        der: "02 01 1E"
+  - example: "example - INTEGER NamedNumberList"
+    schema: ASN.1
+    values:
+      - item : ""
+        type : string
+        value : homeOffice
+    items:
+      - item: "Location ::= INTEGER {homeOffice(0), fieldOffice(1), roving(2)}"
+        der: "02 01 00"
+  - example: "example - BIT STRING"
+    schema: ASN.1
+    values:
+      - item : ""
+        type : string
+        value : 1011011101011
+    items:
+      - item: "Flags ::= BIT STRING"
+        der: "03 03 03 B7 58"
+  - example: "example - ENUMERATED"
+    schema: ASN.1
+    values:
+      - item : name
+        type : string
+        value : Jones
+      - item : color
+        type : string
+        value : green
+    items:
+      - item: "Color ::= ENUMERATED {red(0), green(1), blue(2)}"
+        der: "0A 01 01"
+      - item: "Person ::= SEQUENCE {name VisibleString, color ENUMERATED {red(0), green(1), blue(2)}}"
+        der: "30 0A 1A 05 4A 6F 6E 65 73 0A 01 01"
+  - example: "example - SEQUENCE"
+    schema: ASN.1
+    values:
+      - item : name
+        type : string
+        value : Jones
+      - item : ok
+        type : bool
+        value : true
+      - item : firstName
+        type : string
+        value : John
+      - item : lastName
+        type : string
+        value : Smith
+      - item : inner.name
+        type : string
+        value : Jones
+    items:
+      - item: "Type1 ::= SEQUENCE {name VisibleString, ok BOOLEAN}"
+        der: "30 0A 1A 05 4A 6F 6E 65 73 01 01 FF"
+      - item: "Type2 ::= [APPLICATION 5] IMPLICIT Type1"
+        der: "65 0A 1A 05 4A 6F 6E 65 73 01 01 FF"
+      - item: "Person ::= SEQUENCE {firstName VisibleString, lastName VisibleString}"
+        der: "30 0D 1A 04 4A 6F 68 6E 1A 05 53 6D 69 74 68"
+      - item: "Person1 ::= SEQUENCE {name VisibleString}"
+        der: "30 07 1A 05 4A 6F 6E 65 73"
+      - item: "Person2 ::= SEQUENCE {name [0] IMPLICIT VisibleString}"
+        der: "30 07 80 05 4A 6F 6E 65 73"
+      - item: "Person3 ::= SEQUENCE {name VisibleString, age INTEGER DEFAULT 20}"
+        der: "30 0A 1A 05 4A 6F 6E 65 73 02 01 14"
+      - item: "Outer1 ::= SEQUENCE {inner SEQUENCE {name VisibleString}}"
+        der: "30 09 30 07 1A 05 4A 6F 6E 65 73"
+      - item: "Outer2 ::= SEQUENCE {inner [0] EXPLICIT SEQUENCE {name VisibleString}}"
+        der: "30 0B A0 09 30 07 1A 05 4A 6F 6E 65 73"
+  - example: "example - SEQUENCE"
+    schema: ASN.1
+    values:
+      - item : name
+        type : string
+        value : Jones
+      - item : age
+        type : int
+        value : 30
+    items:
+      - item: "Person ::= SEQUENCE {name VisibleString, age INTEGER DEFAULT 20}"
+        der: "30 0A 1A 05 4A 6F 6E 65 73 02 01 1E"
+  - example: "example - SET"
+    schema: ASN.1
+    values:
+      - item : z
+        type : bool
+        value : true
+      - item : a
+        type : int
+        value : 5
+    items:
+      - item: "Type1 ::= SET {z BOOLEAN, a INTEGER}"
+        der: "31 06 01 01 FF 02 01 05"
+  - example: "example - CHOICE"
+    schema: ASN.1
+    values:
+      - item : i
+        type : int
+        value : 5
+    items:
+      - item: "Value ::= CHOICE {i INTEGER, s VisibleString}"
+        der: "02 01 05"
+  - example: "example - CHOICE"
+    schema: ASN.1
+    values:
+      - item : s
+        type : string
+        value : Jones
+    items:
+      - item: "Value1 ::= CHOICE {i INTEGER, s VisibleString}"
+        der: "1A 05 4A 6F 6E 65 73"
+      - item: "Value2 ::= CHOICE {i [0] IMPLICIT INTEGER, s [1] IMPLICIT VisibleString}"
+        der: "81 05 4A 6F 6E 65 73"
+      - item: "Value3 ::= [0] EXPLICIT CHOICE {i INTEGER, s VisibleString}"
+        der: "A0 07 1A 05 4A 6F 6E 65 73"

@@ -64,7 +64,7 @@ void test_yaml_testvector_keygen() {
     test.add("KEY GEN", lambda_yaml_keygen).run("testvector_keygen.yml");
 
     std::map<std::string, bool> keymap;
-    auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
+    auto dump_crypto_key = [&](const crypto_key_object* item, void*) -> void {
         keymap.emplace(item->get_desc().get_kid_str(), true);
 
         auto pkey = item->get_pkey();

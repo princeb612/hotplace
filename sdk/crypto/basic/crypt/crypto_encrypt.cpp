@@ -16,22 +16,22 @@ namespace crypto {
 
 crypto_encrypt::crypto_encrypt(crypt_enc_t enc) : _enc(enc) { _shared.make_share(this); }
 
-return_t crypto_encrypt::encrypt(const EVP_PKEY* pkey, const binary_t& plaintext, binary_t& ciphertext) {
+return_t crypto_encrypt::encrypt(const EVP_PKEY* pkey, const binary_t& plaintext, binary_t& ciphertext) const {
     return encrypt(pkey, plaintext.data(), plaintext.size(), ciphertext);
 }
 
-return_t crypto_encrypt::encrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& ciphertext) {
+return_t crypto_encrypt::encrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& ciphertext) const {
     return_t ret = errorcode_t::success;
     openssl_crypt crypt;
     ret = crypt.encrypt(pkey, stream, size, ciphertext, _enc);
     return ret;
 }
 
-return_t crypto_encrypt::decrypt(const EVP_PKEY* pkey, const binary_t& ciphertext, binary_t& plaintext) {
+return_t crypto_encrypt::decrypt(const EVP_PKEY* pkey, const binary_t& ciphertext, binary_t& plaintext) const {
     return decrypt(pkey, ciphertext.data(), ciphertext.size(), plaintext);
 }
 
-return_t crypto_encrypt::decrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& plaintext) {
+return_t crypto_encrypt::decrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& plaintext) const {
     return_t ret = errorcode_t::success;
     openssl_crypt crypt;
     ret = crypt.decrypt(pkey, stream, size, plaintext, _enc);

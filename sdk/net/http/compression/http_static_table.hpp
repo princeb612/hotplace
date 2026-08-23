@@ -44,7 +44,7 @@ class http_static_table {
      * @brief   size
      * @return  size of static table
      */
-    virtual size_t size();
+    size_t size() const;
 
    protected:
     http_static_table();

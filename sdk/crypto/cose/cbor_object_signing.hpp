@@ -21,7 +21,7 @@ namespace crypto {
 class cbor_object_signing {
    public:
     cbor_object_signing();
-    ~cbor_object_signing();
+    ~cbor_object_signing() = default;
 
     /**
      * @brief   sign
@@ -33,7 +33,7 @@ class cbor_object_signing {
      * @return  error code (see error.hpp)
      * @remarks see json_object_signing_encryption::sign
      */
-    return_t sign(cose_context_t* handle, crypto_key* key, cose_alg_t method, const binary_t& input, binary_t& output);
+    static return_t sign(cose_context_t* handle, crypto_key* key, cose_alg_t method, const binary_t& input, binary_t& output);
     /**
      * @brief   sign
      * @param   cose_context_t* handle [in]
@@ -44,7 +44,7 @@ class cbor_object_signing {
      * @return  error code (see error.hpp)
      * @remarks see json_object_signing_encryption::sign
      */
-    return_t sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, const binary_t& input, binary_t& output);
+    static return_t sign(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, const binary_t& input, binary_t& output);
     /**
      * @brief   mac
      * @param   cose_context_t* handle [in]
@@ -54,7 +54,7 @@ class cbor_object_signing {
      * @param   binary_t& output [out]
      * @return  error code (see error.hpp)
      */
-    return_t mac(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, const binary_t& input, binary_t& output);
+    static return_t mac(cose_context_t* handle, crypto_key* key, std::list<cose_alg_t> methods, const binary_t& input, binary_t& output);
 
     /**
      * @brief   verify with kid
@@ -65,7 +65,7 @@ class cbor_object_signing {
      * @return  error code (see error.hpp)
      * @remarks see json_object_signing_encryption::verify
      */
-    return_t verify(cose_context_t* handle, crypto_key* key, const binary_t& input, bool& result);
+    static return_t verify(cose_context_t* handle, crypto_key* key, const binary_t& input, bool& result);
 
    protected:
 };

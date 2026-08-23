@@ -18,7 +18,7 @@ void test_dh_rfc7748() {
     crypto_key key;
     crypto_keychain keychain;
 
-    auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
+    auto dump_crypto_key = [&](const crypto_key_object* item, void*) -> void {
         _logger->write([&](basic_stream& bs) -> void {
             bs.println(ANSI_ESCAPE "1;32m> kid \"%s\"" ANSI_ESCAPE "0m", item->get_desc().get_kid_cstr());
             dump_key(item->get_pkey(), &bs, 16, 3, dump_notrunc);

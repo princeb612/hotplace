@@ -205,7 +205,7 @@ bool decimal_float::operator>=(const decimal_float& other) const { return compar
 
 bool decimal_float::operator<=(const decimal_float& other) const { return compare(*this, other) <= 0; }
 
-std::string decimal_float::str() {
+std::string decimal_float::str() const {
     std::string res;
     if (_mant == 0) {
         res = "0";

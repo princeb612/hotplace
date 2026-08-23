@@ -27,7 +27,7 @@ cose_unsent::~cose_unsent() {}
 
 cose_data& cose_unsent::data() { return _unsent; }
 
-bool cose_unsent::isvalid(int key) {
+bool cose_unsent::isvalid(int key) const {
     bool ret = true;
     switch (key) {
         case cose_param_external:

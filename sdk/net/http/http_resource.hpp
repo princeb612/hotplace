@@ -43,40 +43,40 @@ class http_resource {
     /**
      * @brief   method
      */
-    std::string get_method(http_method_t method);
+    std::string get_method(http_method_t method) const;
     /**
      * @brief   frame name
      */
-    std::string get_h2_frame_name(uint8 type);
+    std::string get_h2_frame_name(uint8 type) const;
     /**
      * @brief   frame flag
      */
-    std::string get_h2_frame_flag(uint8 flag);
-    void for_each_h2_frame_flag_names(uint8 type, uint8 flags, std::function<void(uint8, const std::string&)> func);
+    std::string get_h2_frame_flag(uint8 flag) const;
+    void for_each_h2_frame_flag_names(uint8 type, uint8 flags, std::function<void(uint8, const std::string&)> func) const;
 
     /**
      * @brief   SETTINGS
      * @remarks RFC 7540 6.5.2.  Defined SETTINGS Parameters
      */
-    std::string get_h2_settings_name(uint16 type);
+    std::string get_h2_settings_name(uint16 type) const;
 
     /**
      * @brief   RFC 7541 Appendix A.  Static Table Definition
      */
-    void for_each_hpack_static_table(std::function<void(uint32 index, const char* name, const char* value)> func);
-    size_t sizeof_hpack_static_table_entries();
+    void for_each_hpack_static_table(std::function<void(uint32 index, const char* name, const char* value)> func) const;
+    size_t sizeof_hpack_static_table_entries() const;
     /**
      * @brief   RFC 9204 Appendix A.  Static Table
      */
-    void for_each_qpack_static_table(std::function<void(uint32 index, const char* name, const char* value)> func);
-    size_t sizeof_qpack_static_table_entries();
+    void for_each_qpack_static_table(std::function<void(uint32 index, const char* name, const char* value)> func) const;
+    size_t sizeof_qpack_static_table_entries() const;
 
-    std::string get_h2_error_string(uint16 code);
+    std::string get_h2_error_string(uint16 code) const;
 
-    std::string get_h3_stream_name(uint8 type);
-    std::string get_h3_frame_name(uint64 type);
-    std::string get_h3_error_string(uint16 code);
-    std::string get_h3_settings_name(uint64 id);
+    std::string get_h3_stream_name(uint8 type) const;
+    std::string get_h3_frame_name(uint64 type) const;
+    std::string get_h3_error_string(uint16 code) const;
+    std::string get_h3_settings_name(uint64 id) const;
 
    protected:
     http_resource();

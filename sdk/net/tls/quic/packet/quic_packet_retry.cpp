@@ -126,9 +126,9 @@ quic_packet_retry& quic_packet_retry::set_integrity_tag(const binary_t& tag) {
     return *this;
 }
 
-const binary_t& quic_packet_retry::get_retry_token() { return _retry_token; }
+const binary_t& quic_packet_retry::get_retry_token() const { return _retry_token; }
 
-const binary_t& quic_packet_retry::get_integrity_tag() { return _retry_integrity_tag; }
+const binary_t& quic_packet_retry::get_integrity_tag() const { return _retry_integrity_tag; }
 
 return_t quic_packet_retry::retry_integrity_tag(const quic_packet_retry& retry_packet, binary_t& tag) {
     return_t ret = errorcode_t::success;

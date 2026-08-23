@@ -135,7 +135,7 @@ class valist {
      * @param variant_t& v [out]
      * @return error code (see error.hpp)
      */
-    return_t at(size_t index, variant_t& v);
+    return_t at(size_t index, variant_t& v) const;
     variant_t& operator[](size_t index);
 
     /**
@@ -162,7 +162,7 @@ class valist {
     void* _va_internal;
     bool _modified;
 
-    critical_section _lock;
+    mutable critical_section _lock;
     args_t _args;
 };
 

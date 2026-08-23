@@ -105,7 +105,7 @@ asn1_object* asn1_weakly_typed::transform(asn1_runtime* target, const asn1_node*
         flags |= flag_is_leaf;
     else {
         if (0 == size)
-            throw exception(errorcode_t::unexpected);
+            return nullptr;
         else if (size > 1)
             flags |= flag_as_sequence;
         else
@@ -141,7 +141,7 @@ asn1_object* asn1_weakly_typed::transform(asn1_runtime* target, const asn1_node*
         else if (tagobj)
             tagobj->set_object(obj);
         else
-            throw exception(errorcode_t::unexpected);
+            return nullptr;
     }
 
     // top-down
@@ -157,7 +157,7 @@ asn1_object* asn1_weakly_typed::transform(asn1_runtime* target, const asn1_node*
             value = new asn1_value(nullptr);
 
             auto test = target->set(top, value);
-            if (errorcode_t::success != test) throw exception(errorcode_t::unexpected);
+            if (errorcode_t::success != test) return nullptr;
         }
 
         const auto& bin = ((asn1_primitive_node*)node)->get();

@@ -172,7 +172,7 @@ http_static_table_entry quic_static_entries[] = {
     {98, "x-frame-options", "sameorigin"},
 };
 
-void http_resource::for_each_qpack_static_table(std::function<void(uint32 index, const char* name, const char* value)> func) {
+void http_resource::for_each_qpack_static_table(std::function<void(uint32 index, const char* name, const char* value)> func) const {
     /**
      * RFC 9204 QPACK: Field Compression for HTTP/3
      * Appendix A.  Static Table
@@ -186,9 +186,9 @@ void http_resource::for_each_qpack_static_table(std::function<void(uint32 index,
     }
 }
 
-size_t http_resource::sizeof_qpack_static_table_entries() { return RTL_NUMBER_OF(quic_static_entries); }
+size_t http_resource::sizeof_qpack_static_table_entries() const { return RTL_NUMBER_OF(quic_static_entries); }
 
-std::string http_resource::get_h3_stream_name(uint8 type) {
+std::string http_resource::get_h3_stream_name(uint8 type) const {
     std::string ret_value;
     auto iter = _h3_stream_names.find(type);
     if (_h3_stream_names.end() != iter) {
@@ -197,7 +197,7 @@ std::string http_resource::get_h3_stream_name(uint8 type) {
     return ret_value;
 }
 
-std::string http_resource::get_h3_frame_name(uint64 type) {
+std::string http_resource::get_h3_frame_name(uint64 type) const {
     std::string ret_value;
     auto iter = _h3_frame_names.find(type);
     if (_h3_frame_names.end() != iter) {
@@ -206,7 +206,7 @@ std::string http_resource::get_h3_frame_name(uint64 type) {
     return ret_value;
 }
 
-std::string http_resource::get_h3_error_string(uint16 code) {
+std::string http_resource::get_h3_error_string(uint16 code) const {
     std::string ret_value;
     auto iter = _h3_error_codes.find(code);
     if (_h3_error_codes.end() != iter) {
@@ -215,7 +215,7 @@ std::string http_resource::get_h3_error_string(uint16 code) {
     return ret_value;
 }
 
-std::string http_resource::get_h3_settings_name(uint64 id) {
+std::string http_resource::get_h3_settings_name(uint64 id) const {
     std::string ret_value;
     auto iter = _h3_frame_settings.find(id);
     if (_h3_frame_settings.end() != iter) {

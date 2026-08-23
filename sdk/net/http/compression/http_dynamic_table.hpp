@@ -33,8 +33,8 @@ class http_dynamic_table {
      *          };
      *
      */
-    virtual void for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f);
-    virtual void dump(const std::string& desc, std::function<void(const char*, size_t)> f);
+    virtual void for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f) const;
+    virtual void dump(const std::string& desc, std::function<void(const char*, size_t)> f) const;
     /**
      * @brief   compare
      */
@@ -78,15 +78,15 @@ class http_dynamic_table {
      * @brief   capacity (SETTINGS_QPACK_MAX_TABLE_CAPACITY)
      */
     void set_capacity(size_t capacity);
-    size_t get_capacity();
+    size_t get_capacity() const;
     /**
      * @brief   table size
      */
-    size_t get_tablesize();
+    size_t get_tablesize() const;
     /**
      * @brief   entries
      */
-    size_t get_entries();
+    size_t get_entries() const;
     /**
      * @brief   HPACK/QPACK query function
      * @param   int cmd [in] see header_compression_cmd_t
@@ -96,12 +96,12 @@ class http_dynamic_table {
      * @param   size_t& respsize [inout]
      * @return  error code (see error.hpp)
      */
-    virtual return_t query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize);
+    virtual return_t query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) const;
     /**
      * @brief   type
      * @return  see header_compression_type_t
      */
-    uint8 get_type();
+    uint8 get_type() const;
 
     void set_debug_hook(std::function<void(trace_category_t, trace_event_t event)> fn);
 
@@ -113,10 +113,10 @@ class http_dynamic_table {
     http_dynamic_table();
 
     void set_type(uint8 type);
-    size_t dynamic_map_size();
-    void pick(size_t entry, const std::string& name, std::string& value);
+    size_t dynamic_map_size() const;
+    void pick(size_t entry, const std::string& name, std::string& value) const;
 
-    critical_section _lock;
+    mutable critical_section _lock;
     uint8 _type;  // see header_compression_type_t
     size_t _tablesize;
     size_t _capacity;

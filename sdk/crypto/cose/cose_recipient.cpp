@@ -59,7 +59,7 @@ cose_recipient* cose_recipient::get_upperlayer2() {
     return layer;
 }
 
-uint16 cose_recipient::get_depth() { return _depth; }
+uint16 cose_recipient::get_depth() const { return _depth; }
 
 void cose_recipient::set_composer(cose_composer* composer) { _composer = composer; }
 
@@ -70,7 +70,7 @@ cose_recipient& cose_recipient::set_property(uint16 property) {
     return *this;
 }
 
-uint16 cose_recipient::get_property() { return _property; }
+uint16 cose_recipient::get_property() const { return _property; }
 
 cose_recipient& cose_recipient::add(cose_recipient* recipient) {
     cose_recipient* object = recipient;

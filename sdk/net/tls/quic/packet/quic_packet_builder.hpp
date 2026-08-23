@@ -37,10 +37,10 @@ class quic_packet_builder {
     quic_packet* build();
 
    protected:
-    tls_direction_t get_direction();
-    uint8 get_msb();
+    tls_direction_t get_direction() const;
+    uint8 get_msb() const;
     tls_session* get_session();
-    bool is_construct();
+    bool is_construct() const;
 
    private:
     uint8 _type;

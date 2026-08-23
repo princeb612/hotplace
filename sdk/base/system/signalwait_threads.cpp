@@ -139,7 +139,7 @@ void signalwait_threads::signal_and_wait_all(int reserved) {
 
 size_t signalwait_threads::capacity() const { return _capacity; }
 
-size_t signalwait_threads::running() {
+size_t signalwait_threads::running() const {
     size_t size = 0;
 
     critical_section_guard guard(_lock);
@@ -175,7 +175,7 @@ return_t signalwait_threads::ready_to_join(threadid_t tid) {
 
     critical_section_guard guard(_lock);
 
-    SIGNALWAITTHREADS_MAP::iterator iter = _container.find(tid);
+    auto iter = _container.find(tid);
     if (_container.end() == iter) {
         throw exception(errorcode_t::unexpected);
     } else {

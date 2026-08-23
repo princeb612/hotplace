@@ -31,7 +31,7 @@ bool custom_credentials::verify(http_authentication_provider* provider, const st
     openssl_digest dgst;
     std::string password_hash;
     dgst.digest("sha512", password, password_hash, encoding_t::encoding_base64url);
-    std::map<std::string, std::string>::iterator iter = _custom_credential.find(username);
+    auto iter = _custom_credential.find(username);
     if (_custom_credential.end() != iter) {
         if (password_hash == iter->second) {
             ret = true;

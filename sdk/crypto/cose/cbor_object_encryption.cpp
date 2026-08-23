@@ -25,8 +25,6 @@ namespace crypto {
 
 cbor_object_encryption::cbor_object_encryption() {}
 
-cbor_object_encryption::~cbor_object_encryption() {}
-
 return_t cbor_object_encryption::encrypt(cose_context_t* handle, crypto_key* key, cose_alg_t method, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
     cbor_object_signing_encryption cose;

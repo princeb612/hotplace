@@ -47,11 +47,11 @@ return_t cose_binary::set(cbor_data* object) { return _payload.parse_payload(obj
 
 cose_data& cose_binary::data() { return _payload; }
 
-bool cose_binary::empty() { return _payload.is_binary_empty(); }
+bool cose_binary::empty() const { return _payload.is_binary_empty(); }
 
-size_t cose_binary::size() { return _payload.sizeof_binary(); }
+size_t cose_binary::size() const { return _payload.sizeof_binary(); }
 
-void cose_binary::get(binary_t& bin) { _payload.get_binary(bin); }
+void cose_binary::get(binary_t& bin) const { _payload.get_binary(bin); }
 
 cose_binary& cose_binary::clear() {
     _payload.clear();

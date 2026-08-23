@@ -63,7 +63,7 @@ class network_protocol {
      * @brief   constraints
      */
     virtual return_t set_constraints(protocol_constraints_t id, size_t value);
-    virtual size_t get_constraints(protocol_constraints_t id);
+    virtual size_t get_constraints(protocol_constraints_t id) const;
 
     /**
      * @brief   id
@@ -75,7 +75,7 @@ class network_protocol {
      *      is_h3 = protocol->is_kind_of(stream, size);  // compare [0x2, 'h', '3']
      *  }
      */
-    virtual bool use_alpn();
+    bool use_alpn() const;
 
     int addref();
     int release();
@@ -163,7 +163,6 @@ class network_protocol_group {
     t_shared_reference<network_protocol_group> _shared;
 
     typedef std::map<std::string, network_protocol*> protocol_map_t;
-    typedef std::pair<protocol_map_t::iterator, bool> protocol_map_pib_t;
 
     critical_section _lock;
     protocol_map_t _protocols;

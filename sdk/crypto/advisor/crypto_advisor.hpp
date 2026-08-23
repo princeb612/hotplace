@@ -50,9 +50,9 @@ class crypto_advisor {
      * @param   hint_advisor_t& hint [out]
      * @sa      ktyof_evp_pkey
      */
-    return_t hintof_pkey(const EVP_PKEY* pkey, hint_advisor_t& hint);
-    return_t hintof_name(const char* name, hint_advisor_t& hint);
-    return_t hintof_ossl_nid(uint32 nid, hint_advisor_t& hint);
+    return_t hintof_pkey(const EVP_PKEY* pkey, hint_advisor_t& hint) const;
+    return_t hintof_name(const char* name, hint_advisor_t& hint) const;
+    return_t hintof_ossl_nid(uint32 nid, hint_advisor_t& hint) const;
 
     ///////////////////////////////////////////////////////////////////////////
     // crypt
@@ -70,15 +70,15 @@ class crypto_advisor {
      *      size_t ivsize = sizeof_iv(blockcipher);
      *      size_t blocksize = sizeof_block(blockcipher);
      */
-    const hint_blockcipher_t* hintof_blockcipher(crypt_algorithm_t alg);
-    const hint_blockcipher_t* hintof_blockcipher(const char* alg);
-    const hint_blockcipher_t* hintof_blockcipher(const std::string& alg);
-    const hint_blockcipher_t* hintof_blockcipher(crypto_scheme_t scheme);
+    const hint_blockcipher_t* hintof_blockcipher(crypt_algorithm_t alg) const;
+    const hint_blockcipher_t* hintof_blockcipher(const char* alg) const;
+    const hint_blockcipher_t* hintof_blockcipher(const std::string& alg) const;
+    const hint_blockcipher_t* hintof_blockcipher(crypto_scheme_t scheme) const;
     /**
      * @brief find blockcipher hint
      * @param const EVP_CIPHER* cipher [in]
      */
-    const hint_blockcipher_t* find_evp_cipher(const EVP_CIPHER* cipher);
+    const hint_blockcipher_t* find_evp_cipher(const EVP_CIPHER* cipher) const;
 
     /**
      * @brief find cipher method
@@ -91,22 +91,22 @@ class crypto_advisor {
      *          can be nullptr
      *          for example, seed deprecated since openssl 3.0
      */
-    const EVP_CIPHER* find_evp_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode);
-    const EVP_CIPHER* find_evp_cipher(const char* name);
-    const EVP_CIPHER* find_evp_cipher(const std::string& name);
+    const EVP_CIPHER* find_evp_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode) const;
+    const EVP_CIPHER* find_evp_cipher(const char* name) const;
+    const EVP_CIPHER* find_evp_cipher(const std::string& name) const;
     /**
      * @brief hint
      * @param const char* name [in] ex. "aes-128-cbc"
      */
-    const hint_cipher_t* hintof_cipher(const char* name);
-    const hint_cipher_t* hintof_cipher(const std::string& name);
-    const hint_cipher_t* hintof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode);
-    const hint_cipher_t* hintof_cipher(crypto_scheme_t scheme);
+    const hint_cipher_t* hintof_cipher(const char* name) const;
+    const hint_cipher_t* hintof_cipher(const std::string& name) const;
+    const hint_cipher_t* hintof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode) const;
+    const hint_cipher_t* hintof_cipher(crypto_scheme_t scheme) const;
     /**
      * @brief hint
      * @param const EVP_CIPHER* cipher [in]
      */
-    const hint_cipher_t* hintof_cipher(const EVP_CIPHER* cipher);
+    const hint_cipher_t* hintof_cipher(const EVP_CIPHER* cipher) const;
     /**
      * @brief find cipher string
      * @param crypt_algorithm_t algorithm [in] crypt_algorithm_t
@@ -119,7 +119,7 @@ class crypto_advisor {
      *          // return EVP_aes_128_cbc ()
      *          EVP_CIPHER_free(evp_cipher);
      */
-    const char* nameof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode);
+    const char* nameof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode) const;
     /**
      * @brief   for_each
      * @ example
@@ -129,8 +129,8 @@ class crypto_advisor {
      *          };
      *          advisor->for_each_cipher(query_cipher);
      */
-    return_t for_each_cipher(std::function<void(const char*, uint32)> f);
-    return_t for_each_cipher(std::function<void(const hint_cipher_t*)> func);
+    return_t for_each_cipher(std::function<void(const char*, uint32)> f) const;
+    return_t for_each_cipher(std::function<void(const hint_cipher_t*)> func) const;
 
     ///////////////////////////////////////////////////////////////////////////
     // digest
@@ -143,14 +143,14 @@ class crypto_advisor {
      * @remarks
      *          const EVP_MD* sha3_512 = (const EVP_MD*) find_evp_md (hash_algorithm_t::sha3_512); // EVP_sha3_512 ()
      */
-    const EVP_MD* find_evp_md(hash_algorithm_t algorithm);
-    const EVP_MD* find_evp_md(signature_t sig);
-    const EVP_MD* find_evp_md(jws_t sig);
-    const EVP_MD* find_evp_md(const char* name);
-    const EVP_MD* find_evp_md(const std::string& name);
-    const hint_digest_t* hintof_digest(hash_algorithm_t algorithm);
-    const hint_digest_t* hintof_digest(const char* name);
-    const hint_digest_t* hintof_digest(const std::string& name);
+    const EVP_MD* find_evp_md(hash_algorithm_t algorithm) const;
+    const EVP_MD* find_evp_md(signature_t sig) const;
+    const EVP_MD* find_evp_md(jws_t sig) const;
+    const EVP_MD* find_evp_md(const char* name) const;
+    const EVP_MD* find_evp_md(const std::string& name) const;
+    const hint_digest_t* hintof_digest(hash_algorithm_t algorithm) const;
+    const hint_digest_t* hintof_digest(const char* name) const;
+    const hint_digest_t* hintof_digest(const std::string& name) const;
 
     /**
      * @brief find md string
@@ -162,7 +162,7 @@ class crypto_advisor {
      *          EVP_MD* evp_md = EVP_MD_fetch (nullptr, "sha3-256", nullptr);
      *          // return EVP_sha3_256 ()
      */
-    const char* nameof_md(hash_algorithm_t algorithm);
+    const char* nameof_md(hash_algorithm_t algorithm) const;
     /**
      * @example
      *          auto query_md = [&](const char* feature, uint32 spec) -> void {
@@ -171,8 +171,8 @@ class crypto_advisor {
      *          };
      *          advisor->for_each_md(query_md);
      */
-    return_t for_each_md(std::function<void(const char*, uint32)> f);
-    return_t for_each_md(std::function<void(const hint_digest_t*)> f);
+    return_t for_each_md(std::function<void(const char*, uint32)> f) const;
+    return_t for_each_md(std::function<void(const hint_digest_t*)> f) const;
 
     ///////////////////////////////////////////////////////////////////////////
     // curve
@@ -185,8 +185,8 @@ class crypto_advisor {
      *          };
      *          advisor->for_each_curve(query_curve);
      */
-    return_t for_each_curve(std::function<void(const char*, uint32)> f);
-    return_t for_each_curve_hint(std::function<void(const hint_curve_t*)> f);
+    return_t for_each_curve(std::function<void(const char*, uint32)> f) const;
+    return_t for_each_curve_hint(std::function<void(const hint_curve_t*)> f) const;
     /**
      * @brief hint
      * @param uint32 nid [in] see ec_curve_t
@@ -194,15 +194,15 @@ class crypto_advisor {
      * @return const hint_curve_t*
      * @sa hintof_curve
      */
-    const hint_curve_t* hintof_curve_nid(uint32 nid);
+    const hint_curve_t* hintof_curve_nid(uint32 nid) const;
 
     /**
      * @brief hint (syn. hintof_curve)
      * @param const char* name [in]
      * @remarks cover NIST, X9.62, X9.63, SEC
      */
-    const hint_curve_t* hintof_curve_name(const char* name);
-    const hint_curve_t* hintof_curve_name(const std::string& name);
+    const hint_curve_t* hintof_curve_name(const char* name) const;
+    const hint_curve_t* hintof_curve_name(const std::string& name) const;
     /**
      * @brief hint (syn. hintof_curve_name)
      * @param const char* curve [in]
@@ -211,13 +211,13 @@ class crypto_advisor {
      * @sa hintof_curve_nid
      * @remarks cover NIST, X9.62, X9.63, SEC
      */
-    const hint_curve_t* hintof_curve(const char* curve);
-    const hint_curve_t* hintof_curve(const std::string& curve);
+    const hint_curve_t* hintof_curve(const char* curve) const;
+    const hint_curve_t* hintof_curve(const std::string& curve) const;
     /*
      * @brief   hint
      * @return  return nullptr if pkey is not EC_KEY
      */
-    const hint_curve_t* hintof_curve_eckey(const EVP_PKEY* pkey);
+    const hint_curve_t* hintof_curve_eckey(const EVP_PKEY* pkey) const;
     /**
      * @brief nid
      * @param const char* curve [in] P-256, P-384, P521, Ed25519, Ed448, X25519, X448
@@ -234,7 +234,7 @@ class crypto_advisor {
      *      if following method needed, use nidof_evp_pkey
      *      >> return_t nidof_ec_curve (EVP_PKEY* pkey, uint32& nid);
      */
-    return_t nidof_ec_curve(const char* curve, uint32& nid);
+    return_t nidof_ec_curve(const char* curve, uint32& nid) const;
 
     /**
      * @brief kty
@@ -247,7 +247,7 @@ class crypto_advisor {
      *          Ed25519, Ed448, X25519, X448    | crypto_kty_t::kty_okp
      *          --------------------------------+----------------
      */
-    return_t ktyof_ec_curve(const char* curve, uint32& kty);
+    return_t ktyof_ec_curve(const char* curve, uint32& kty) const;
     /**
      * @brief kty
      * @param const EVP_PKEY* pkey [in]
@@ -258,14 +258,14 @@ class crypto_advisor {
      *          OKP
      * @return error code (see error.hpp)
      */
-    return_t ktyof_ec_curve(const EVP_PKEY* pkey, std::string& kty);
+    return_t ktyof_ec_curve(const EVP_PKEY* pkey, std::string& kty) const;
     /**
      * @brief kty
      * @param const EVP_PKEY* pkey [in]
      * @param crypto_kty_t& kty [out] crypto_kty_t::kty_oct, crypto_kty_t::kty_rsa, crypto_kty_t::kty_ec, crypto_kty_t::kty_okp
      * @return error code (see error.hpp)
      */
-    return_t ktyof_ec_curve(const EVP_PKEY* pkey, crypto_kty_t& kty);
+    // return_t ktyof_ec_curve(const EVP_PKEY* pkey, crypto_kty_t& kty) const;
     /**
      * @brief "alg" from key
      * @param const EVP_PKEY* pkey [in]
@@ -277,14 +277,14 @@ class crypto_advisor {
      *              advisor->nameof_ec_curve (pkey, curve_name);
      *          }
      */
-    return_t nameof_ec_curve(const EVP_PKEY* pkey, std::string& curve_name);
-    return_t nameof_ec_curve(uint32 nid, std::string& curve_name);
+    return_t nameof_ec_curve(const EVP_PKEY* pkey, std::string& curve_name) const;
+    // return_t nameof_ec_curve(uint32 nid, std::string& curve_name) const;
 
     ///////////////////////////////////////////////////////////////////////////
     // sign
     ///////////////////////////////////////////////////////////////////////////
-    hash_algorithm_t get_algorithm(signature_t sig);
-    hash_algorithm_t get_algorithm(jws_t sig);
+    hash_algorithm_t get_algorithm(signature_t sig) const;
+    hash_algorithm_t get_algorithm(jws_t sig) const;
 
     /**
      * @brief hint
@@ -292,31 +292,31 @@ class crypto_advisor {
      *          signature_t::hs256 series, signature_t::rs256 series, signature_t::es256 series, signature_t::ps256 series, signature_t::eddsa
      * @return const hint_signature_t*
      */
-    const hint_signature_t* hintof_signature(signature_t sig);
+    const hint_signature_t* hintof_signature(signature_t sig) const;
     /**
      * @brief kind of
      * @param const EVP_PKEY* pkey [in]
      * @param signature_t sig [in]
      * @return true if match, false if not
      */
-    bool is_kindof(const EVP_PKEY* pkey, signature_t sig);
+    bool is_kindof(const EVP_PKEY* pkey, signature_t sig) const;
 
-    uint16 unitsizeof_ecdsa(hash_algorithm_t alg);
-    uint16 sizeof_ecdsa(hash_algorithm_t alg);
-    uint16 sizeof_signature(signature_t sig);
+    uint16 unitsizeof_ecdsa(hash_algorithm_t alg) const;
+    uint16 sizeof_ecdsa(hash_algorithm_t alg) const;
+    uint16 sizeof_signature(signature_t sig) const;
 
     /**
      * @brief TLS signature scheme
      * @param uint16 scheme [in] tls_sigscheme_t
      */
-    const hint_sigscheme_t* hintof_sigscheme(signature_t scheme);
-    const hint_sigscheme_t* hintof_sigscheme(tls_sigscheme_t scheme);
-    const hint_sigscheme_t* hintof_sig_nid(uint32 nid);
-    const hint_sigscheme_t* hintof_sigscheme(const char* scheme);
-    const hint_sigscheme_t* hintof_sigscheme(const std::string& scheme);
+    const hint_sigscheme_t* hintof_sigscheme(signature_t scheme) const;
+    const hint_sigscheme_t* hintof_sigscheme(tls_sigscheme_t scheme) const;
+    const hint_sigscheme_t* hintof_sig_nid(uint32 nid) const;
+    const hint_sigscheme_t* hintof_sigscheme(const char* scheme) const;
+    const hint_sigscheme_t* hintof_sigscheme(const std::string& scheme) const;
 
-    return_t for_each_sigscheme(std::function<void(tls_sigscheme_t, uint32)> f);
-    return_t for_each_sigscheme(std::function<void(const hint_sigscheme_t*)> f);
+    return_t for_each_sigscheme(std::function<void(tls_sigscheme_t, uint32)> f) const;
+    return_t for_each_sigscheme(std::function<void(const hint_sigscheme_t*)> f) const;
 
     ///////////////////////////////////////////////////////////////////////////
     // key
@@ -327,19 +327,19 @@ class crypto_advisor {
      * @param   crypto_kty_t kty [in]
      * @param   std::string& name [out]
      */
-    return_t nameof_kty(crypto_kty_t kty, std::string& name);
-    const char* nameof_kty(crypto_kty_t kty);
-    crypto_kty_t ktyof_nid(uint32 nid);
-    crypto_kty_t ktyof_name(const std::string& name);
-    return_t ktyof_evp_pkey(const EVP_PKEY* pkey, crypto_kty_t& kty, uint32& nid);
-    uint32 nidof_name(const std::string& name);
+    return_t nameof_kty(crypto_kty_t kty, std::string& name) const;
+    const char* nameof_kty(crypto_kty_t kty) const;
+    crypto_kty_t ktyof_nid(uint32 nid) const;
+    crypto_kty_t ktyof_name(const std::string& name) const;
+    return_t ktyof_evp_pkey(const EVP_PKEY* pkey, crypto_kty_t& kty, uint32& nid) const;
+    uint32 nidof_name(const std::string& name) const;
 
     // "x" to crypt_item_t::x
-    crypt_item_t itemof(const std::string& name);
+    crypt_item_t itemof(const std::string& name) const;
     // crypt_item_t::x to "x"
-    const char* nameof(crypt_item_t item);
+    const char* nameof(crypt_item_t item) const;
     // description of item
-    const char* valueof_crypt_item(crypto_kty_t kty, crypt_item_t item);
+    const char* valueof_crypt_item(crypto_kty_t kty, crypt_item_t item) const;
 
     ///////////////////////////////////////////////////////////////////////////
     // JOSE
@@ -358,9 +358,9 @@ class crypto_advisor {
      *          advisor->for_each_jwe (lambda_jwe);
      *          advisor->for_each_jws (lambda_jws);
      */
-    return_t for_each_jwa(std::function<void(const hint_jose_encryption_t*)> f);
-    return_t for_each_jwe(std::function<void(const hint_jose_encryption_t*)> f);
-    return_t for_each_jws(std::function<void(const hint_signature_t*)> f);
+    return_t for_each_jwa(std::function<void(const hint_jose_encryption_t*)> f) const;
+    return_t for_each_jwe(std::function<void(const hint_jose_encryption_t*)> f) const;
+    return_t for_each_jws(std::function<void(const hint_signature_t*)> f) const;
 
     /**
      * @brief hint
@@ -372,7 +372,7 @@ class crypto_advisor {
      * @example
      *          const hint_jose_encryption_t* alg_info = advisor->hintof_jose_algorithm (alg);
      */
-    const hint_jose_encryption_t* hintof_jose_algorithm(jwa_t alg);
+    const hint_jose_encryption_t* hintof_jose_algorithm(jwa_t alg) const;
     /**
      * @brief hint
      * @param jwe_t enc [in]
@@ -381,14 +381,14 @@ class crypto_advisor {
      * @example
      *          const hint_jose_encryption_t* enc_info = advisor->hintof_jose_encryption (enc);
      */
-    const hint_jose_encryption_t* hintof_jose_encryption(jwe_t enc);
+    const hint_jose_encryption_t* hintof_jose_encryption(jwe_t enc) const;
     /**
      * @brief hint
      * @param jws_t sig [in]
      *          jws_t::hs256 series, jws_t::rs256 series, jws_t::es256 series, jws_t::ps256 series, jws_t::eddsa
      * @return const hint_signature_t*
      */
-    const hint_signature_t* hintof_jose_signature(jws_t sig);
+    const hint_signature_t* hintof_jose_signature(jws_t sig) const;
     /**
      * @brief hint
      * @param const char* alg [in]
@@ -399,21 +399,21 @@ class crypto_advisor {
      *          "PBES2-HS256+A128KW" series
      * @return const hint_jose_encryption_t*
      */
-    const hint_jose_encryption_t* hintof_jose_algorithm(const char* alg);
+    const hint_jose_encryption_t* hintof_jose_algorithm(const char* alg) const;
     /**
      * @brief hint
      * @param const char* enc [in]
      *          "A128CBC-HS256" series, "A128GCM" series
      * @return const hint_jose_encryption_t*
      */
-    const hint_jose_encryption_t* hintof_jose_encryption(const char* enc);
+    const hint_jose_encryption_t* hintof_jose_encryption(const char* enc) const;
     /**
      * @brief hint
      * @param const char* sig [in]
      *          "HS256" series, "RS256" series, "ES256" series, "PS256" series, "EdDSA"
      * @return const hint_signature_t*
      */
-    const hint_signature_t* hintof_jose_signature(const char* sig);
+    const hint_signature_t* hintof_jose_signature(const char* sig) const;
     /**
      * @brief JWA
      * @param jwa_t alg [in]
@@ -436,7 +436,7 @@ class crypto_advisor {
      *          PBES2-HS384+A192KW
      *          PBES2-HS512+A256KW
      */
-    const char* nameof_jose_algorithm(jwa_t alg);
+    const char* nameof_jose_algorithm(jwa_t alg) const;
     /**
      * @brief JWE
      * @param jwe_t enc [in]
@@ -448,7 +448,7 @@ class crypto_advisor {
      *          A192GCM
      *          A256GCM
      */
-    const char* nameof_jose_encryption(jwe_t enc);
+    const char* nameof_jose_encryption(jwe_t enc) const;
     /**
      * @brief JWS
      * @param jws_t enc [in]
@@ -467,7 +467,7 @@ class crypto_advisor {
      *          PS512
      *          EdDSA
      */
-    const char* nameof_jose_signature(jws_t sig);
+    const char* nameof_jose_signature(jws_t sig) const;
     /**
      * @brief type
      * @param const char* alg [in]
@@ -493,7 +493,7 @@ class crypto_advisor {
      *          "PBES2-HS512+A256KW"| jwa_t::pbes2_hs512_a256kw
      *          --------------------+-----------------------------
      */
-    return_t typeof_jose_algorithm(const char* alg, jwa_t& type);
+    return_t typeof_jose_algorithm(const char* alg, jwa_t& type) const;
     /**
      * @brief type
      * @param const char* enc [in]
@@ -508,7 +508,7 @@ class crypto_advisor {
      *          "A256GCM"           | jwe_t::a256gcm
      *          --------------------+------------------------
      */
-    return_t typeof_jose_encryption(const char* enc, jwe_t& type);
+    return_t typeof_jose_encryption(const char* enc, jwe_t& type) const;
     /**
      * @brief type
      * @param const char* sig [in]
@@ -530,39 +530,39 @@ class crypto_advisor {
      *          "EdDSA"             | jws_t::eddsa
      *          --------------------+-----------
      */
-    return_t typeof_jose_signature(const char* sig, jws_t& type);
+    return_t typeof_jose_signature(const char* sig, jws_t& type) const;
     /**
      * @brief kind of
      * @param const EVP_PKEY* pkey [in]
      * @param tls_group_t group [in]
      * @return true if match, false if not
      */
-    bool is_kindof(const EVP_PKEY* pkey, tls_group_t group);
+    bool is_kindof(const EVP_PKEY* pkey, tls_group_t group) const;
     /**
      * @brief kind of
      * @param const EVP_PKEY* pkey [in]
      * @param jwa_t alg [in]
      * @return true if match, false if not
      */
-    bool is_kindof(const EVP_PKEY* pkey, jwa_t alg);
+    bool is_kindof(const EVP_PKEY* pkey, jwa_t alg) const;
     /**
      * @brief kind of
      * @param const EVP_PKEY* pkey [in]
      * @param jws_t sig [in]
      * @return true if match, false if not
      */
-    bool is_kindof(const EVP_PKEY* pkey, jws_t sig);
+    bool is_kindof(const EVP_PKEY* pkey, jws_t sig) const;
     /**
      * @brief kind of
      * @param const EVP_PKEY* pkey [in]
      * @param const char* alg [in] JOSE algorithm/signature
      * @return true if match, false if not
      */
-    bool is_kindof(const EVP_PKEY* pkey, const char* alg);
+    bool is_kindof(const EVP_PKEY* pkey, const char* alg) const;
 
-    jws_t sigof(signature_t sig);
+    jws_t sigof(signature_t sig) const;
 
-    signature_t sigof(jws_t sig);
+    signature_t sigof(jws_t sig) const;
 
     ///////////////////////////////////////////////////////////////////////////
     // COSE
@@ -575,45 +575,45 @@ class crypto_advisor {
      *          };
      *          advisor->for_each_cose(query_cose);
      */
-    return_t for_each_cose(std::function<void(const char*, uint32)> f);
-    return_t for_each_cose(std::function<void(const hint_cose_algorithm_t*)> f);
+    return_t for_each_cose(std::function<void(const char*, uint32)> f) const;
+    return_t for_each_cose(std::function<void(const hint_cose_algorithm_t*)> f) const;
     /**
      * @brief hint
      * @param cose_alg_t sig [in]
      * @return const hint_cose_algorithm_t*
      */
-    const hint_cose_algorithm_t* hintof_cose_algorithm(cose_alg_t alg);
-    const hint_cose_algorithm_t* hintof_cose_algorithm(int32 alg);
+    const hint_cose_algorithm_t* hintof_cose_algorithm(cose_alg_t alg) const;
+    const hint_cose_algorithm_t* hintof_cose_algorithm(int32 alg) const;
     /**
      * @brief hint
      * @param const char* alg [in]
      * @return const hint_cose_algorithm_t*
      */
-    const hint_cose_algorithm_t* hintof_cose_algorithm(const char* alg);
-    const hint_cose_algorithm_t* hintof_cose_algorithm(const std::string& alg);
+    const hint_cose_algorithm_t* hintof_cose_algorithm(const char* alg) const;
+    const hint_cose_algorithm_t* hintof_cose_algorithm(const std::string& alg) const;
 
-    const hint_curve_t* hintof_curve(cose_ec_curve_t curve);
+    const hint_curve_t* hintof_curve(cose_ec_curve_t curve) const;
 
     /**
      * @brief COSE (name decribed in RFC)
      */
-    const char* nameof_cose_algorithm(cose_alg_t alg);
+    const char* nameof_cose_algorithm(cose_alg_t alg) const;
     /**
      * @brief kind of
      * @param const EVP_PKEY* pkey [in]
      * @param cose_alg_t alg [in]
      * @return true if match, false if not
      */
-    bool is_kindof(const EVP_PKEY* pkey, cose_alg_t alg);
+    bool is_kindof(const EVP_PKEY* pkey, cose_alg_t alg) const;
 
-    cose_kty_t cose_ktyof(crypto_kty_t kty);
-    crypto_kty_t ktyof(cose_kty_t kty);
+    cose_kty_t cose_ktyof(crypto_kty_t kty) const;
+    crypto_kty_t ktyof(cose_kty_t kty) const;
 
-    crypt_category_t categoryof(cose_alg_t alg);
-    signature_t sigof(cose_alg_t sig);
+    crypt_category_t categoryof(cose_alg_t alg) const;
+    signature_t sigof(cose_alg_t sig) const;
 
-    cose_ec_curve_t cose_curveof(uint32 nid);
-    uint32 nidof(cose_ec_curve_t curve);
+    cose_ec_curve_t cose_curveof(uint32 nid) const;
+    uint32 nidof(cose_ec_curve_t curve) const;
 
     ///////////////////////////////////////////////////////////////////////////
     // TLS
@@ -623,14 +623,14 @@ class crypto_advisor {
      * @param uint16 group [in] TLS supported group
      * @return const hint_curve_t*
      */
-    const hint_curve_t* hintof_curve_tls_group(tls_group_t group);
-    const hint_group_t* hintof_tls_group(tls_group_t group);
-    const hint_group_t* hintof_tls_group(const std::string& name);
-    void enum_tls_group(std::function<void(const hint_group_t*)> func);
-    const hint_group_t* hintof_tls_group_nid(uint32 nid);
+    const hint_curve_t* hintof_curve_tls_group(tls_group_t group) const;
+    const hint_group_t* hintof_tls_group(tls_group_t group) const;
+    const hint_group_t* hintof_tls_group(const std::string& name) const;
+    void enum_tls_group(std::function<void(const hint_group_t*)> func) const;
+    const hint_group_t* hintof_tls_group_nid(uint32 nid) const;
 
-    return_t for_each_tls_group(std::function<void(tls_group_t, uint32)> f);
-    return_t for_each_tls_group(std::function<void(const hint_group_t*)> f);
+    return_t for_each_tls_group(std::function<void(tls_group_t, uint32)> f) const;
+    return_t for_each_tls_group(std::function<void(const hint_group_t*)> f) const;
 
     ///////////////////////////////////////////////////////////////////////////
     // etc
@@ -758,13 +758,13 @@ class crypto_advisor {
      *   ML-KEM
      *     ML-KEM-512, ML-KEM-768, ML-KEM-1024
      */
-    uint32 query_feature(const char* feature, uint32 spec = 0);
-    uint32 query_feature(const std::string& feature, uint32 spec = 0);
-    bool check_minimum_version(unsigned long osslver);
+    uint32 query_feature(const char* feature, uint32 spec = 0) const;
+    uint32 query_feature(const std::string& feature, uint32 spec = 0) const;
+    bool check_minimum_version(unsigned long osslver) const;
     /**
      * @sa  advisor_feature_t
      */
-    void for_each_features(std::function<void(const char* name, uint32 spec)> fn);
+    void for_each_features(std::function<void(const char* name, uint32 spec)> fn) const;
 
     /**
      * @brief   cookie secret
@@ -777,14 +777,14 @@ class crypto_advisor {
      */
     void get_cookie_secret(uint8 key, size_t secret_size, binary_t& secret);
 
-    std::string nameof_authenticated_encryption(uint16 code);
+    std::string nameof_authenticated_encryption(uint16 code) const;
 
     ///////////////////////////////////////////////////////////////////////////
     // openssl-3.0 ENCODER
     ///////////////////////////////////////////////////////////////////////////
 
-    return_t get_encoding_params(key_encoding_t encoding, key_encoding_params_t& enc);
-    std::string nameof_encoding(key_encoding_t encoding);
+    return_t get_encoding_params(key_encoding_t encoding, key_encoding_params_t& enc) const;
+    std::string nameof_encoding(key_encoding_t encoding) const;
 
    protected:
     return_t load();

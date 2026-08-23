@@ -86,7 +86,7 @@ http3_frame* http3_frame_builder::build() {
     return frame;
 }
 
-h3_frame_t http3_frame_builder::get_type() { return _type; }
+h3_frame_t http3_frame_builder::get_type() const { return _type; }
 
 }  // namespace net
 }  // namespace hotplace

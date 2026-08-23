@@ -16,11 +16,11 @@ namespace crypto {
 
 cipher_encrypt::cipher_encrypt(crypt_algorithm_t alg, crypt_mode_t mode) : _alg(alg), _mode(mode) { _shared.make_share(this); }
 
-return_t cipher_encrypt::encrypt(const binary_t& key, const binary_t& iv, const binary_t& plaintext, binary_t& ciphertext) {
+return_t cipher_encrypt::encrypt(const binary_t& key, const binary_t& iv, const binary_t& plaintext, binary_t& ciphertext) const {
     return encrypt(key, iv, plaintext.data(), plaintext.size(), ciphertext);
 }
 
-return_t cipher_encrypt::encrypt(const binary_t& key, const binary_t& iv, const byte_t* stream, size_t size, binary_t& ciphertext) {
+return_t cipher_encrypt::encrypt(const binary_t& key, const binary_t& iv, const byte_t* stream, size_t size, binary_t& ciphertext) const {
     return_t ret = errorcode_t::success;
     openssl_crypt crypt;
     crypt_context_t* handle = nullptr;
@@ -32,11 +32,11 @@ return_t cipher_encrypt::encrypt(const binary_t& key, const binary_t& iv, const 
     return ret;
 }
 
-return_t cipher_encrypt::decrypt(const binary_t& key, const binary_t& iv, const binary_t& ciphertext, binary_t& plaintext) {
+return_t cipher_encrypt::decrypt(const binary_t& key, const binary_t& iv, const binary_t& ciphertext, binary_t& plaintext) const {
     return decrypt(key, iv, ciphertext.data(), ciphertext.size(), plaintext);
 }
 
-return_t cipher_encrypt::decrypt(const binary_t& key, const binary_t& iv, const byte_t* stream, size_t size, binary_t& plaintext) {
+return_t cipher_encrypt::decrypt(const binary_t& key, const binary_t& iv, const byte_t* stream, size_t size, binary_t& plaintext) const {
     return_t ret = errorcode_t::success;
     openssl_crypt crypt;
     crypt_context_t* handle = nullptr;

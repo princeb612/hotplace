@@ -49,10 +49,10 @@ class json_object_encryption {
      *          jose.close (handle_encrypt);
      *          jose.close (handle_decrypt);
      */
-    return_t encrypt(jose_context_t* context, jwe_t enc, jwa_t alg, const binary_t& input, std::string& output,
-                     jose_serialization_t type = jose_serialization_t::jose_compact);
-    return_t encrypt(jose_context_t* context, jwe_t enc, jwa_t alg, const std::string& input, std::string& output,
-                     jose_serialization_t type = jose_serialization_t::jose_compact);
+    static return_t encrypt(jose_context_t* context, jwe_t enc, jwa_t alg, const binary_t& input, std::string& output,
+                            jose_serialization_t type = jose_serialization_t::jose_compact);
+    static return_t encrypt(jose_context_t* context, jwe_t enc, jwa_t alg, const std::string& input, std::string& output,
+                            jose_serialization_t type = jose_serialization_t::jose_compact);
     /**
      * @brief encrypt
      * @param jose_context_t* context [in]
@@ -97,10 +97,10 @@ class json_object_encryption {
      *          ret = jose.encrypt (handle_encrypt, jwe_t::a128cbc_hs256, algs, to_string (input), encrypted, jose_serialization_t::jose_json);
      *          jose.close (handle_encrypt);
      */
-    return_t encrypt(jose_context_t* context, jwe_t enc, const std::list<jwa_t>& algs, const binary_t& input, std::string& output,
-                     jose_serialization_t type = jose_serialization_t::jose_compact);
-    return_t encrypt(jose_context_t* context, jwe_t enc, const std::list<jwa_t>& algs, const std::string& input, std::string& output,
-                     jose_serialization_t type = jose_serialization_t::jose_compact);
+    static return_t encrypt(jose_context_t* context, jwe_t enc, const std::list<jwa_t>& algs, const binary_t& input, std::string& output,
+                            jose_serialization_t type = jose_serialization_t::jose_compact);
+    static return_t encrypt(jose_context_t* context, jwe_t enc, const std::list<jwa_t>& algs, const std::string& input, std::string& output,
+                            jose_serialization_t type = jose_serialization_t::jose_compact);
     /**
      * @brief decrypt
      * @param jose_context_t* context [in]
@@ -119,7 +119,7 @@ class json_object_encryption {
      *          ret = jose.decrypt (handle_decrypt, encrypted, output, result);
      *          jose.close (handle_decrypt);
      */
-    return_t decrypt(jose_context_t* context, const std::string& input, binary_t& output, bool& result);
+    static return_t decrypt(jose_context_t* context, const std::string& input, binary_t& output, bool& result);
 
    protected:
     /**
@@ -132,7 +132,7 @@ class json_object_encryption {
      * @return error code (see error.hpp)
      * @remarks see json_object_signing_encryption::encrypt
      */
-    return_t doencrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const binary_t& input, binary_t& output);
+    static return_t doencrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const binary_t& input, binary_t& output);
     /**
      * @brief decrypt
      * @param jose_context_t* handle
@@ -143,7 +143,7 @@ class json_object_encryption {
      * @return error code (see error.hpp)
      * @remarks see json_object_signing_encryption::decrypt
      */
-    return_t dodecrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const binary_t& input, binary_t& output);
+    static return_t dodecrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const binary_t& input, binary_t& output);
     /**
      * @brief decrypt
      * @param jose_context_t* handle
@@ -155,14 +155,14 @@ class json_object_encryption {
      * @return error code (see error.hpp)
      * @remarks see json_object_signing_encryption::decrypt
      */
-    return_t dodecrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const char* kid, const binary_t& input, binary_t& output);
+    static return_t dodecrypt(jose_context_t* handle, jwe_t enc, jwa_t alg, const char* kid, const binary_t& input, binary_t& output);
 
     /**
      * @brief constraints
      * @param jwa_t alg [in]
      * @param const EVP_PKEY* pkey [in]
      */
-    return_t check_constraints(jwa_t alg, const EVP_PKEY* pkey);
+    static return_t check_constraints(jwa_t alg, const EVP_PKEY* pkey);
 
     class composer {
        public:
@@ -173,7 +173,7 @@ class json_object_encryption {
          * @param std::string& output [out]
          * @param jose_serialization_t type [inopt]
          */
-        return_t compose_encryption(jose_context_t* context, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
+        static return_t compose_encryption(jose_context_t* context, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
         /**
          * @brief update tag after AESGCMKW
          * @param const std::string& source_encoded [in]
@@ -181,7 +181,7 @@ class json_object_encryption {
          * @param binary_t& aad [out]
          * @param std::string& output_encoded [out]
          */
-        return_t compose_encryption_aead_header(const std::string& source_encoded, const binary_t& tag, binary_t& aad, std::string& output_encoded);
+        static return_t compose_encryption_aead_header(const std::string& source_encoded, const binary_t& tag, binary_t& aad, std::string& output_encoded);
         /**
          * @brief encryption
          * @param jwe_t enc [in]
@@ -190,13 +190,13 @@ class json_object_encryption {
          *          compose recipient and header
          *          see also docompose_protected_header, docompose_encryption_recipient_random
          */
-        return_t compose_encryption_dorandom(jose_context_t* context, jwe_t enc, std::list<jwa_t> const& algs);
+        static return_t compose_encryption_dorandom(jose_context_t* context, jwe_t enc, std::list<jwa_t> const& algs);
         /**
          * @brief parse
          * @param jose_context_t* context [in]
          * @param const char* input [in] compact, flattened, serialization
          */
-        return_t parse_decryption(jose_context_t* context, const char* input);
+        static return_t parse_decryption(jose_context_t* context, const char* input);
 
        protected:
         /**
@@ -210,7 +210,7 @@ class json_object_encryption {
          * @remarks
          *      docompose_protected_header (header, jwe_t::a128cbc_hs256, jwa_t::unknown, jose_compose_t::jose_enc_alg, "");
          */
-        return_t docompose_protected_header(binary_t& header, jwe_t enc, jwa_t alg, jose_compose_t flag, const std::string& kid, uint32 flags = 0);
+        static return_t docompose_protected_header(binary_t& header, jwe_t enc, jwa_t alg, jose_compose_t flag, const std::string& kid, uint32 flags = 0);
         /**
          * @brief header
          * @param binary_t& header [out]
@@ -222,8 +222,8 @@ class json_object_encryption {
          * @param crypt_variantmap_t& variantmap [in]
          * @param uint32 flags [inopt] see setoption
          */
-        return_t docompose_encryption_header_parameter(binary_t& header, jwe_t enc, jwa_t alg, jose_compose_t flag, const std::string& kid, crypt_datamap_t& datamap,
-                                                       crypt_variantmap_t& variantmap, uint32 flags = 0);
+        static return_t docompose_encryption_header_parameter(binary_t& header, jwe_t enc, jwa_t alg, jose_compose_t flag, const std::string& kid,
+                                                              crypt_datamap_t& datamap, crypt_variantmap_t& variantmap, uint32 flags = 0);
         /**
          * @brief recipient
          * @param jwa_t alg [in]
@@ -238,8 +238,8 @@ class json_object_encryption {
          *      jwa_group_t::aesgcmkw : iv, tag
          *      jwa_group_t::pbes_hs_aeskw : p2s, p2c
          */
-        return_t docompose_encryption_recipient_random(jwa_t alg, const EVP_PKEY* pkey, jose_recipient_t& recipient, crypt_datamap_t& datamap,
-                                                       crypt_variantmap_t& variantmap);
+        static return_t docompose_encryption_recipient_random(jwa_t alg, const EVP_PKEY* pkey, jose_recipient_t& recipient, crypt_datamap_t& datamap,
+                                                              crypt_variantmap_t& variantmap);
         /**
          * @brief decrypt
          * @param jose_context_t* context [in]
@@ -252,8 +252,8 @@ class json_object_encryption {
          * @param jwe_t& type [out]
          * @param jose_encryption_t& item [out]
          */
-        return_t doparse_decryption(jose_context_t* context, const char* protected_header, const char* encrypted_key, const char* iv, const char* ciphertext,
-                                    const char* tag, void* json_root, jwe_t& type, jose_encryption_t& item);
+        static return_t doparse_decryption(jose_context_t* context, const char* protected_header, const char* encrypted_key, const char* iv, const char* ciphertext,
+                                           const char* tag, void* json_root, jwe_t& type, jose_encryption_t& item);
         /**
          * @brief decrypt
          * @param jose_context_t* context [in]
@@ -264,8 +264,8 @@ class json_object_encryption {
          * @param jwa_t& type [out]
          * @param jose_recipient_t& recipient [out]
          */
-        return_t doparse_decryption_recipient(jose_context_t* context, const char* protected_header, const char* encrypted_key, void* json_root,
-                                              void* json_recipient_header, jwa_t& type, jose_recipient_t& recipient);
+        static return_t doparse_decryption_recipient(jose_context_t* context, const char* protected_header, const char* encrypted_key, void* json_root,
+                                                     void* json_recipient_header, jwa_t& type, jose_recipient_t& recipient);
     };
 };
 

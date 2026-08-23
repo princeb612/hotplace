@@ -144,9 +144,9 @@ void tls_composer::set_maxver(tls_version_t version) {
     }
 }
 
-uint16 tls_composer::get_minver() { return _minspec; }
+uint16 tls_composer::get_minver() const { return _minspec; }
 
-uint16 tls_composer::get_maxver() { return _maxspec; }
+uint16 tls_composer::get_maxver() const { return _maxspec; }
 
 }  // namespace net
 }  // namespace hotplace

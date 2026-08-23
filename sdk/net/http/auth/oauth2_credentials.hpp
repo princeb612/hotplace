@@ -44,7 +44,7 @@ class t_tokens {
     return_t find(TYPE_T key, OBJECT_T* object = nullptr, token_handler_t handler = nullptr) {
         return_t ret = errorcode_t::success;
         __try2 {
-            typename tokens_map_t::iterator iter = _tokens.find(key);
+            auto iter = _tokens.find(key);
             if (_tokens.end() == iter) {
                 ret = errorcode_t::not_found;
                 __leave2;
@@ -65,7 +65,7 @@ class t_tokens {
     return_t remove(TYPE_T key, token_handler_t handler = nullptr) {
         return_t ret = errorcode_t::success;
         __try2 {
-            typename tokens_map_t::iterator iter = _tokens.find(key);
+            auto iter = _tokens.find(key);
             if (_tokens.end() == iter) {
                 ret = errorcode_t::not_found;
                 __leave2;
@@ -124,7 +124,7 @@ class t_expirable {
         dt.gettimespec(&ts);
         time_t now = ts.tv_sec;
 
-        for (typename expires_t::iterator iter = _expires.begin(); iter != _expires.end();) {
+        for (auto iter = _expires.begin(); iter != _expires.end();) {
             if (now > iter->first) {
                 // past
                 if (handler) {
@@ -162,14 +162,13 @@ template <typename OBJECT_T>
 class t_expirable_tokens : t_expirable<OBJECT_T> {
    public:
     typedef typename std::set<OBJECT_T> tokens_set_t;
-    typedef typename std::pair<typename tokens_set_t::iterator, bool> tokens_set_pib_t;
     typedef typename std::function<void(OBJECT_T)> token_handler_t;
 
     t_expirable_tokens() : t_expirable<OBJECT_T>() {}
 
     virtual return_t insert(time_t time, OBJECT_T object, token_handler_t handler = nullptr) {
         return_t ret = errorcode_t::success;
-        tokens_set_pib_t pib = _tokens.insert(object);
+        auto pib = _tokens.insert(object);
         if (pib.second) {
             t_expirable<OBJECT_T>::insert(time, object, handler);
         } else {
@@ -181,7 +180,7 @@ class t_expirable_tokens : t_expirable<OBJECT_T> {
     virtual return_t find(OBJECT_T object) {
         return_t ret = errorcode_t::success;
         expire();
-        typename tokens_set_t::iterator iter = _tokens.find(object);
+        auto iter = _tokens.find(object);
         if (_tokens.end() == iter) {
             ret = errorcode_t::not_found;
         }
@@ -191,7 +190,7 @@ class t_expirable_tokens : t_expirable<OBJECT_T> {
     virtual return_t expire(token_handler_t handler = nullptr) {
         return_t ret = errorcode_t::success;
         t_expirable<OBJECT_T>::expire([&](OBJECT_T object) -> void {
-            typename tokens_set_t::iterator iter = _tokens.find(object);
+            auto iter = _tokens.find(object);
             if (_tokens.end() != iter) {
                 if (handler) {
                     handler(*iter);
@@ -363,7 +362,6 @@ class oauth2_credentials {
 
     typedef std::multimap<std::string, std::string> user_clientid_t;  // multimap<userid, client_id>
     typedef std::map<std::string, webapp_t> webapps_t;                // map<client_id, webapp_t>
-    typedef std::pair<webapps_t::iterator, bool> webapps_pib_t;
     user_clientid_t _user_clientid;
     webapps_t _webapps;
 

@@ -143,7 +143,7 @@ class basic_stream : public stream_t {
      * @brief   compare
      * @param   basic_stream other [in]
      */
-    int compare(const basic_stream& other);
+    int compare(const basic_stream& other) const;
     /**
      * @brief   compare
      * @param   basic_stream lhs [in]

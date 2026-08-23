@@ -31,8 +31,8 @@ class http2_frame_alt_svc : public http2_frame {
 
     void set_origin(const binary_t& origin);
     void set_altsvc(const binary_t& altsvc);
-    const binary_t& get_origin();
-    const binary_t& get_altsvc();
+    const binary_t& get_origin() const;
+    const binary_t& get_altsvc() const;
 
    protected:
     virtual return_t do_read_body(const byte_t* stream, size_t size, size_t& pos);

@@ -72,7 +72,7 @@ class cbor_array : public cbor_object {
     cbor_array& operator<<(cbor_map* object);
 
     virtual size_t size() const;
-    cbor_object* operator[](size_t index);
+    cbor_object* operator[](size_t index) const;
     std::list<cbor_object*>& accessor();
 
     virtual int addref();

@@ -80,9 +80,9 @@ void http_resource::doload_resources_h1() {
     }
 }
 
-std::string http_resource::get_method(http_method_t method) {
+std::string http_resource::get_method(http_method_t method) const {
     std::string resource;
-    t_maphint<http_method_t, std::string> hint(_methods);
+    t_maphint_const<http_method_t, std::string> hint(_methods);
     hint.find(method, &resource);
     return resource;
 }

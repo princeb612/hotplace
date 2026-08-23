@@ -103,9 +103,9 @@ return_t http3_frames::for_each(std::function<return_t(http3_frame*)> func) { re
 
 http3_frame* http3_frames::getat(size_t index, bool upref) { return _frames.getat(index, upref); }
 
-bool http3_frames::empty() { return _frames.empty(); }
+bool http3_frames::empty() const { return _frames.empty(); }
 
-size_t http3_frames::size() { return _frames.size(); }
+size_t http3_frames::size() const { return _frames.size(); }
 
 void http3_frames::clear() { _frames.clear(); }
 

@@ -44,15 +44,16 @@ void string_set::union_with(const string_set& other) {
     // see t_range_set
     uint8 lhs_inverted = is_inverted() ? 1 : 0;
     uint8 rhs_inverted = other.is_inverted() ? 1 : 0;
-    if ((0 == lhs_inverted) && (0 == (lhs_inverted ^ rhs_inverted))) {
+    uint8 res_xor = (lhs_inverted ^ rhs_inverted);
+    if ((0 == lhs_inverted) && (0 == res_xor)) {
         add(other);
-    } else if ((0 == lhs_inverted) && (1 == (lhs_inverted ^ rhs_inverted))) {
+    } else if ((0 == lhs_inverted) && (1 == res_xor)) {
         string_set temp(other);
         temp.subtract(*this);
         *this = std::move(temp);  // other.is_inverted=true
-    } else if ((1 == lhs_inverted) && (1 == (lhs_inverted ^ rhs_inverted))) {
+    } else if ((1 == lhs_inverted) && (1 == res_xor)) {
         subtract(other);  // is_inverted=true
-    } else if ((1 == lhs_inverted) && (0 == (lhs_inverted ^ rhs_inverted))) {
+    } else if ((1 == lhs_inverted) && (0 == res_xor)) {
         intersect(other);  // is_inverted=true
     }
 }
@@ -60,13 +61,14 @@ void string_set::union_with(const string_set& other) {
 void string_set::erase_from(const string_set& other) {
     uint8 lhs_inverted = is_inverted() ? 1 : 0;
     uint8 rhs_inverted = other.is_inverted() ? 1 : 0;
-    if ((0 == lhs_inverted) && (0 == (lhs_inverted ^ rhs_inverted))) {
+    uint8 res_xor = (lhs_inverted ^ rhs_inverted);
+    if ((0 == lhs_inverted) && (0 == res_xor)) {
         subtract(other);  // is_inverted=false
-    } else if ((0 == lhs_inverted) && (1 == (lhs_inverted ^ rhs_inverted))) {
+    } else if ((0 == lhs_inverted) && (1 == res_xor)) {
         intersect(other);  // is_inverted=false
-    } else if ((1 == lhs_inverted) && (1 == (lhs_inverted ^ rhs_inverted))) {
+    } else if ((1 == lhs_inverted) && (1 == res_xor)) {
         add(other);  // is_inverted=true
-    } else if ((1 == lhs_inverted) && (0 == (lhs_inverted ^ rhs_inverted))) {
+    } else if ((1 == lhs_inverted) && (0 == res_xor)) {
         string_set temp(other);
         temp.intersect(*this);
         *this = std::move(temp);  // other.is_inverted=false
@@ -76,15 +78,16 @@ void string_set::erase_from(const string_set& other) {
 void string_set::intersect_with(const string_set& other) {
     uint8 lhs_inverted = is_inverted() ? 1 : 0;
     uint8 rhs_inverted = other.is_inverted() ? 1 : 0;
-    if ((0 == lhs_inverted) && (0 == (lhs_inverted ^ rhs_inverted))) {
+    uint8 res_xor = (lhs_inverted ^ rhs_inverted);
+    if ((0 == lhs_inverted) && (0 == res_xor)) {
         intersect(other);  // is_inverted=false
-    } else if ((0 == lhs_inverted) && (1 == (lhs_inverted ^ rhs_inverted))) {
+    } else if ((0 == lhs_inverted) && (1 == res_xor)) {
         subtract(other);  // is_inverted=false
-    } else if ((1 == lhs_inverted) && (1 == (lhs_inverted ^ rhs_inverted))) {
+    } else if ((1 == lhs_inverted) && (1 == res_xor)) {
         string_set temp(other);
         temp.subtract(*this);
         *this = std::move(temp);  // other.is_inverted=false
-    } else if ((1 == lhs_inverted) && (0 == (lhs_inverted ^ rhs_inverted))) {
+    } else if ((1 == lhs_inverted) && (0 == res_xor)) {
         add(other);  // is_inverted=true
     }
 }

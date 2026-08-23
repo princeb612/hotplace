@@ -22,10 +22,10 @@ class crypto_encrypt {
     friend class crypto_encrypt_builder;
 
    public:
-    return_t encrypt(const EVP_PKEY* pkey, const binary_t& plaintext, binary_t& ciphertext);
-    return_t encrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& ciphertext);
-    return_t decrypt(const EVP_PKEY* pkey, const binary_t& ciphertext, binary_t& plaintext);
-    return_t decrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& plaintext);
+    return_t encrypt(const EVP_PKEY* pkey, const binary_t& plaintext, binary_t& ciphertext) const;
+    return_t encrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& ciphertext) const;
+    return_t decrypt(const EVP_PKEY* pkey, const binary_t& ciphertext, binary_t& plaintext) const;
+    return_t decrypt(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& plaintext) const;
 
     void addref();
     void release();

@@ -141,14 +141,14 @@ class trace_advisor {
     static trace_advisor* get_instance();
     void load();
 
-    std::string nameof_category(trace_category_t category);
-    void get_names(trace_category_t category, trace_event_t event, std::string& cvalue, std::string& evalue);
+    std::string nameof_category(trace_category_t category) const;
+    void get_names(trace_category_t category, trace_event_t event, std::string& cvalue, std::string& evalue) const;
 
    protected:
     trace_advisor();
 
    private:
-    critical_section _lock;
+    mutable critical_section _lock;
     static trace_advisor _instance;
 
     typedef std::map<trace_event_t, std::string> event_map_t;

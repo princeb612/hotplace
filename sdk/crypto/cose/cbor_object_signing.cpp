@@ -23,8 +23,6 @@ namespace crypto {
 
 cbor_object_signing::cbor_object_signing() {}
 
-cbor_object_signing::~cbor_object_signing() {}
-
 return_t cbor_object_signing::sign(cose_context_t* handle, crypto_key* key, cose_alg_t method, const binary_t& input, binary_t& output) {
     return_t ret = errorcode_t::success;
 

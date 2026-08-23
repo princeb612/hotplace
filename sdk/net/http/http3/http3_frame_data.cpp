@@ -65,7 +65,7 @@ return_t http3_frame_data::set_contents(const std::string& contents) {
     return ret;
 }
 
-std::string http3_frame_data::get_contents() {
+std::string http3_frame_data::get_contents() const {
     std::string value;
     value = to_string(_payload);
     return value;

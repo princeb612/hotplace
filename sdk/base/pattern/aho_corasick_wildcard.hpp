@@ -22,9 +22,9 @@ namespace hotplace {
  * @brief   Aho Corasick + wildcard
  * @remarks
  *
- *          review or reflection ... Soo Han, Kim (princeb612.kr@gmail.com)
+ *          review ... Soo Han, Kim (princeb612.kr@gmail.com)
  *
- *          // sketch.1 ... aho corasick + wildcard
+ *          sketch.1 ... aho corasick + wildcard
  *
  *          1. wildcard single(?)
  *             it's so good to understand the Aho-Corasick algorithm
@@ -62,7 +62,7 @@ namespace hotplace {
  *                    h-s            (1..3)(7)
  *                       h--s        (4..7)(7)
  *
- *          // sketch.2 - starting position of wildcard * pattern
+ *          sketch.2 - starting position of wildcard * pattern
  *
  *          0. premise
  *             "ahishers" as an input
@@ -211,7 +211,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T, memberof_t> {
             }
         }
     }
-    virtual void dosearch(const T* source, size_t size, std::map<size_t, std::set<size_t>>& result) {
+    virtual void dosearch(const T* source, size_t size, std::map<size_t, std::set<size_t>>& result) const override {
         if (source) {
             typedef std::pair<trienode*, size_t> pair_t;
             std::set<pair_t> visit;
@@ -236,7 +236,6 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T, memberof_t> {
                 auto pair = q.front();  // gdb problem in MINGW (const auto& pair)
                 trienode* current = pair.first;
                 const auto& i = pair.second;
-                // visit.insert({current, i});
                 q.pop();
 
                 const BT& t = _memberof(source, i);
@@ -329,7 +328,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T, memberof_t> {
         }
     }
 
-    virtual void get_result(const std::map<size_t, std::set<size_t>>& ordered, std::multimap<range_t, size_t>& result, size_t size) {
+    virtual void get_result(const std::map<size_t, std::set<size_t>>& ordered, std::multimap<range_t, size_t>& result, size_t size) const override {
         for (const auto& pair : ordered) {
             const auto& v = pair.first;
             const auto& positions = pair.second;
@@ -394,7 +393,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T, memberof_t> {
     }
 
    private:
-    bool has_wildcard(trienode* node) { return node->flag > 0; } /* check node->flag & (flag_single | flag_any) */
+    bool has_wildcard(trienode* node) const { return node->flag > 0; } /* check node->flag & (flag_single | flag_any) */
     BT _wildcard_single;
     BT _wildcard_any;
 

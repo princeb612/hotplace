@@ -93,7 +93,7 @@ class cose_data {
 
    protected:
     cose_data& set_owner(cose_recipient* layer);
-    cose_recipient* get_owner();
+    cose_recipient* get_owner() const;
 
     /**
      * @brief   cbor_data for protected
@@ -128,7 +128,7 @@ class cose_data {
 
     bool is_binary_empty() const;
     size_t sizeof_binary() const;
-    void get_binary(binary_t& bin);
+    void get_binary(binary_t& bin) const;
 
     class cose_key {
        public:

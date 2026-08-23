@@ -18,7 +18,7 @@ crypto_sign_digestsign::crypto_sign_digestsign() : crypto_sign(hash_algorithm_t{
 
 crypto_sign_digestsign::~crypto_sign_digestsign() {}
 
-return_t crypto_sign_digestsign::sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) {
+return_t crypto_sign_digestsign::sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags) const {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey || nullptr == stream) {
@@ -32,7 +32,7 @@ return_t crypto_sign_digestsign::sign(const EVP_PKEY* pkey, const byte_t* stream
     return ret;
 }
 
-return_t crypto_sign_digestsign::verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) {
+return_t crypto_sign_digestsign::verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags) const {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey || nullptr == stream) {
@@ -46,7 +46,7 @@ return_t crypto_sign_digestsign::verify(const EVP_PKEY* pkey, const byte_t* stre
     return ret;
 }
 
-return_t crypto_sign_digestsign::sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags) {
+return_t crypto_sign_digestsign::sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags) const {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey) {
@@ -60,7 +60,7 @@ return_t crypto_sign_digestsign::sign(const EVP_PKEY* pkey, const binary_t& inpu
     return ret;
 }
 
-return_t crypto_sign_digestsign::verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags) {
+return_t crypto_sign_digestsign::verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags) const {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pkey) {

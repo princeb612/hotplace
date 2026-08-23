@@ -135,7 +135,6 @@ class t_mlfq {
     typedef typename std::queue<TYPENAME_T*> mlfq_queue_t;  // control by reference counter (see binder operation)
     typedef typename std::set<TYPENAME_T*> mlfq_set_t;
     typedef typename std::map<int, mlfq_queue_t> mlfq_map_t;
-    typedef typename std::pair<typename mlfq_map_t::iterator, bool> mlfq_map_pib_t;
 
    private:
     BINDER_T _binder;
@@ -178,8 +177,8 @@ return_t t_mlfq<TYPENAME_T, BINDER_T>::post(int pri, TYPENAME_T* source, void* p
         _size++;
 
         mlfq_queue_t clean_q;
-        mlfq_map_pib_t pib = _mfq.insert(std::make_pair(pri, clean_q));
-        typename mlfq_map_t::iterator qit = pib.first;
+        auto pib = _mfq.insert(std::make_pair(pri, clean_q));
+        auto qit = pib.first;
         mlfq_queue_t& q = qit->second;
         q.push(source);
 
@@ -226,7 +225,7 @@ return_t t_mlfq<TYPENAME_T, BINDER_T>::get(int* pri, TYPENAME_T** source, uint32
                     TYPENAME_T* object = rit->second.front();  // gotcha
 
                     // search a workingset
-                    typename mlfq_set_t::iterator workset_iter = _workingset.find(object);
+                    auto workset_iter = _workingset.find(object);
                     if (_workingset.end() == workset_iter) {
                         ret = errorcode_t::canceled;
                     } else {
@@ -260,7 +259,7 @@ return_t t_mlfq<TYPENAME_T, BINDER_T>::cancel(TYPENAME_T* source, void* param) {
 
     // delete from workingset
     critical_section_guard guard(_lock);
-    typename mlfq_set_t::iterator iter = _workingset.find(source);
+    auto iter = _workingset.find(source);
     if (_workingset.end() != iter) {
         _binder.binder(mlfq_binder_operation_t::binder_p, source, param);  // reference counter --
         _workingset.erase(iter);
@@ -284,7 +283,7 @@ return_t t_mlfq<TYPENAME_T, BINDER_T>::clear(void* param) {
             TYPENAME_T* source = q.front();
             q.pop();
 
-            typename mlfq_set_t::iterator iter = _workingset.find(source);
+            auto iter = _workingset.find(source);
             if (_workingset.end() != iter) {
                 _binder.binder(mlfq_binder_operation_t::binder_p, source, param);  // reference counter --
                 _workingset.erase(iter);

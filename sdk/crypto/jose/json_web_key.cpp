@@ -66,7 +66,7 @@ return_t json_web_key::load_ownspec(crypto_key* cryptokey, const char* buffer, s
     return ret;
 }
 
-return_t json_web_key::write(crypto_key* cryptokey, keyflag_t mode, stream_t* stream, int flag) {
+return_t json_web_key::write(const crypto_key* cryptokey, keyflag_t mode, stream_t* stream, int flag) {
     return_t ret = errorcode_t::success;
     if (key_ownspec == mode) {
         ret = write(cryptokey, stream, flag);
@@ -318,7 +318,7 @@ return_t jwk_serialize_t(json_mapper_t mapper, void (*callback)(char* data, TYPE
     return ret;
 }
 
-static void json_writer(crypto_key_object* key, void* param) {
+static void json_writer(const crypto_key_object* key, void* param) {
     json_mapper_t* mapper = (json_mapper_t*)param;
 
     __try2 {
@@ -344,7 +344,7 @@ static void json_writer(crypto_key_object* key, void* param) {
     __finally2 {}
 }
 
-return_t json_web_key::write(crypto_key* cryptokey, std::string& buf, int flag) {
+return_t json_web_key::write(const crypto_key* cryptokey, std::string& buf, int flag) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -367,7 +367,7 @@ return_t json_web_key::write(crypto_key* cryptokey, std::string& buf, int flag) 
     return ret;
 }
 
-return_t json_web_key::write(crypto_key* cryptokey, stream_t* buf, int flag) {
+return_t json_web_key::write(const crypto_key* cryptokey, stream_t* buf, int flag) {
     return_t ret = errorcode_t::success;
 
     __try2 {

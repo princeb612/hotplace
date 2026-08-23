@@ -56,7 +56,7 @@ class ansi_string : public stream_t {
     return_t vaprintf(const char* fmt, valist ap);
 
     const char* c_str() const;
-    size_t find(char* data);
+    size_t find(char* data) const;
 
     /**
      * @brief replace
@@ -72,11 +72,11 @@ class ansi_string : public stream_t {
     return_t ltrim();
     return_t rtrim();
     /* std::string::find */
-    size_t find_first_of(const char* find, size_t offset = 0);
-    size_t find_not_first_of(const char* find, size_t offset = 0);
+    size_t find_first_of(const char* find, size_t offset = 0) const;
+    size_t find_not_first_of(const char* find, size_t offset = 0) const;
     /* std::string::rfind */
-    size_t find_last_of(const char* find);
-    size_t find_not_last_of(const char* find);
+    size_t find_last_of(const char* find) const;
+    size_t find_not_last_of(const char* find) const;
     /**
      * @brief
      * @param size_t pos [in] current position
@@ -96,7 +96,7 @@ class ansi_string : public stream_t {
      */
     return_t getline(size_t pos, size_t* brk, ansi_string& line);
 
-    int compare(const ansi_string& buf);
+    int compare(const ansi_string& buf) const;
     static int compare(const ansi_string& lhs, const ansi_string& rhs);
 
     virtual void autoindent(uint8 indent);

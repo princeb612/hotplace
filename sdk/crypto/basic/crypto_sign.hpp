@@ -93,10 +93,10 @@ class crypto_sign {
    public:
     virtual ~crypto_sign();
 
-    virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0) = 0;
-    virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0) = 0;
-    virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0) = 0;
-    virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0) = 0;
+    virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0) const = 0;
+    virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0) const = 0;
+    virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0) const = 0;
+    virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0) const = 0;
 
     void set_saltlen(int saltlen);  // RSA PSS (-1)
 
@@ -122,50 +122,50 @@ class crypto_sign_digest : public crypto_sign {
    public:
     crypto_sign_digest(hash_algorithm_t hashalg);
 
-    virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
-    virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);
-    virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0);
-    virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0);
+    virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0) const;
+    virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0) const;
+    virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0) const;
+    virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0) const;
 };
 
 class crypto_sign_hmac : public crypto_sign {
    public:
     crypto_sign_hmac(hash_algorithm_t hashalg);
 
-    virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
-    virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);
-    virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0);
-    virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0);
+    virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0) const;
+    virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0) const;
+    virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0) const;
+    virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0) const;
 };
 
 class crypto_sign_rsa_pkcs1 : public crypto_sign {
    public:
     crypto_sign_rsa_pkcs1(hash_algorithm_t hashalg);
 
-    virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
-    virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);
-    virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0);
-    virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0);
+    virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0) const;
+    virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0) const;
+    virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0) const;
+    virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0) const;
 };
 
 class crypto_sign_ecdsa : public crypto_sign {
    public:
     crypto_sign_ecdsa(hash_algorithm_t hashalg);
 
-    virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
-    virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);
-    virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0);
-    virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0);
+    virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0) const;
+    virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0) const;
+    virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0) const;
+    virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0) const;
 };
 
 class crypto_sign_rsa_pss : public crypto_sign {
    public:
     crypto_sign_rsa_pss(hash_algorithm_t hashalg);
 
-    virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
-    virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);
-    virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0);
-    virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0);
+    virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0) const;
+    virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0) const;
+    virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0) const;
+    virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0) const;
 };
 
 class crypto_sign_digestsign : public crypto_sign {
@@ -173,10 +173,10 @@ class crypto_sign_digestsign : public crypto_sign {
     crypto_sign_digestsign();
     virtual ~crypto_sign_digestsign();
 
-    virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
-    virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);
-    virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0);
-    virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0);
+    virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0) const;
+    virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0) const;
+    virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0) const;
+    virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0) const;
 
    protected:
     crypto_kty_t _kty;
@@ -192,10 +192,10 @@ class crypto_sign_dsa : public crypto_sign {
    public:
     crypto_sign_dsa(hash_algorithm_t hashalg = hash_algorithm_t{});
 
-    virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0);
-    virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0);
-    virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0);
-    virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0);
+    virtual return_t sign(const EVP_PKEY* pkey, const byte_t* stream, size_t size, binary_t& signature, uint32 flags = 0) const;
+    virtual return_t verify(const EVP_PKEY* pkey, const byte_t* stream, size_t size, const binary_t& signature, uint32 flags = 0) const;
+    virtual return_t sign(const EVP_PKEY* pkey, const binary_t& input, binary_t& signature, uint32 flags = 0) const;
+    virtual return_t verify(const EVP_PKEY* pkey, const binary_t& input, const binary_t& signature, uint32 flags = 0) const;
 };
 
 class crypto_sign_mldsa : public crypto_sign_digestsign {

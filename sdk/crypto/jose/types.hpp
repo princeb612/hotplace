@@ -59,7 +59,6 @@ typedef struct _jose_recipient_t {
     _jose_recipient_t() : alg_info(nullptr), pkey(nullptr), epk(nullptr), p2c(0) {}
 } jose_recipient_t;
 typedef std::map<jwa_t, jose_recipient_t> jose_recipients_t;
-typedef std::pair<jose_recipients_t::iterator, bool> jose_recipients_pib_t;
 
 /**
  * @brief encryption

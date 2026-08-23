@@ -149,7 +149,7 @@ const wchar_t* wide_string::c_str() const {
     return data ? const_cast<const wchar_t*>(data) : L"";
 }
 
-size_t wide_string::find(wchar_t* data) { return bufferio::wfind_first_of(_handle, data); }
+size_t wide_string::find(wchar_t* data) const { return bufferio::wfind_first_of(_handle, data); }
 
 return_t wide_string::replace(const wchar_t* from, const wchar_t* to, size_t begin, int flag) { return bufferio::wreplace(_handle, from, to, begin, flag); }
 
@@ -194,13 +194,13 @@ return_t wide_string::rtrim() {
     return ret;
 }
 
-size_t wide_string::find_first_of(const wchar_t* find, size_t offset) { return bufferio::wfind_first_of(_handle, find, offset); }
+size_t wide_string::find_first_of(const wchar_t* find, size_t offset) const { return bufferio::wfind_first_of(_handle, find, offset); }
 
-size_t wide_string::find_not_first_of(const wchar_t* find, size_t offset) { return bufferio::wfind_not_first_of(_handle, find, offset); }
+size_t wide_string::find_not_first_of(const wchar_t* find, size_t offset) const { return bufferio::wfind_not_first_of(_handle, find, offset); }
 
-size_t wide_string::find_last_of(const wchar_t* find) { return bufferio::wfind_last_of(_handle, find); }
+size_t wide_string::find_last_of(const wchar_t* find) const { return bufferio::wfind_last_of(_handle, find); }
 
-size_t wide_string::find_not_last_of(const wchar_t* find) { return bufferio::wfind_not_last_of(_handle, find); }
+size_t wide_string::find_not_last_of(const wchar_t* find) const { return bufferio::wfind_not_last_of(_handle, find); }
 
 // getline subfunction
 static int isnewline(int c) {
@@ -241,7 +241,7 @@ return_t wide_string::getline(size_t pos, size_t* brk, wide_string& line) {
     return ret;
 }
 
-int wide_string::compare(const wide_string& other) { return wcscmp(c_str(), other.c_str()); }
+int wide_string::compare(const wide_string& other) const { return wcscmp(c_str(), other.c_str()); }
 
 int wide_string::compare(const wide_string& lhs, const wide_string& rhs) { return wcscmp(lhs.c_str(), rhs.c_str()); }
 

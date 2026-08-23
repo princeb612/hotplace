@@ -44,7 +44,8 @@ class json_object_signing {
      *          jose.verify (jose_context, jws_result, result);
      *          jose.close (jose_context);
      */
-    return_t sign(jose_context_t* context, jws_t method, const std::string& input, std::string& output, jose_serialization_t type = jose_serialization_t::jose_compact);
+    static return_t sign(jose_context_t* context, jws_t method, const std::string& input, std::string& output,
+                         jose_serialization_t type = jose_serialization_t::jose_compact);
     /**
      * @brief sign
      * @param jose_context_t* context [in]
@@ -71,8 +72,8 @@ class json_object_signing {
      *          jose.verify (jose_context, jws_result, result);
      *          jose.close (jose_context);
      */
-    return_t sign(jose_context_t* context, std::list<jws_t> const& methods, const std::string& input, std::string& output,
-                  jose_serialization_t type = jose_serialization_t::jose_compact);
+    static return_t sign(jose_context_t* context, std::list<jws_t> const& methods, const std::string& input, std::string& output,
+                         jose_serialization_t type = jose_serialization_t::jose_compact);
     /**
      * @brief sign
      * @param jose_context_t* context [in]
@@ -95,8 +96,8 @@ class json_object_signing {
      *          jose.verify (jose_context, jws_result, result);
      *          jose.close (jose_context);
      */
-    return_t sign(jose_context_t* context, const std::string& protected_header, const std::string& input, std::string& output,
-                  jose_serialization_t type = jose_serialization_t::jose_compact);
+    static return_t sign(jose_context_t* context, const std::string& protected_header, const std::string& input, std::string& output,
+                         jose_serialization_t type = jose_serialization_t::jose_compact);
     /**
      * @brief sign
      * @param jose_context_t* context [in]
@@ -106,8 +107,8 @@ class json_object_signing {
      * @param jose_serialization_t type [inopt]
      * @return error code (see error.hpp)
      */
-    return_t sign(jose_context_t* context, std::list<std::string> const& headers, const std::string& input, std::string& output,
-                  jose_serialization_t type = jose_serialization_t::jose_compact);
+    static return_t sign(jose_context_t* context, std::list<std::string> const& headers, const std::string& input, std::string& output,
+                         jose_serialization_t type = jose_serialization_t::jose_compact);
     /**
      * @brief verify
      * @param jose_context_t* context [in]
@@ -115,7 +116,7 @@ class json_object_signing {
      * @param bool& result [out]
      * @return error code (see error.hpp)
      */
-    return_t verify(jose_context_t* context, const std::string& input, bool& result);
+    static return_t verify(jose_context_t* context, const std::string& input, bool& result);
 
    protected:
     /**
@@ -126,7 +127,7 @@ class json_object_signing {
      * @param binary_t& output [out]
      * @remarks see json_object_signing_encryption::sign
      */
-    return_t dosign(crypto_key* key, jws_t method, const binary_t& input, binary_t& output);
+    static return_t dosign(crypto_key* key, jws_t method, const binary_t& input, binary_t& output);
     /**
      * @brief sign and return signature and kid
      * @param crypto_key* key [in]
@@ -136,7 +137,7 @@ class json_object_signing {
      * @param std::string& kid [out]
      * @remarks see json_object_signing_encryption::sign
      */
-    return_t dosign(crypto_key* key, jws_t method, const binary_t& input, binary_t& output, std::string& kid);
+    static return_t dosign(crypto_key* key, jws_t method, const binary_t& input, binary_t& output, std::string& kid);
     /**
      * @brief verify
      * @param crypto_key* key [in]
@@ -146,7 +147,7 @@ class json_object_signing {
      * @param bool& result [out]
      * @remarks see json_object_signing_encryption::verify
      */
-    return_t doverify(crypto_key* key, jws_t method, const binary_t& input, const binary_t& output, bool& result);
+    static return_t doverify(crypto_key* key, jws_t method, const binary_t& input, const binary_t& output, bool& result);
     /**
      * @brief verify with kid
      * @param crypto_key* key [in]
@@ -157,14 +158,14 @@ class json_object_signing {
      * @param bool& result [out]
      * @remarks see json_object_signing_encryption::verify
      */
-    return_t doverify(crypto_key* key, const char* kid, jws_t method, const binary_t& input, const binary_t& output, bool& result);
+    static return_t doverify(crypto_key* key, const char* kid, jws_t method, const binary_t& input, const binary_t& output, bool& result);
 
     /**
      * @brief constraints
      * @param jws_t sig [in]
      * @param const EVP_PKEY* pkey [in]
      */
-    return_t check_constraints(jws_t sig, const EVP_PKEY* pkey);
+    static return_t check_constraints(jws_t sig, const EVP_PKEY* pkey);
 
     class composer {
        public:
@@ -174,7 +175,7 @@ class json_object_signing {
          * @param jose_context_t* context [in]
          * @param const char* signature [in]
          */
-        return_t parse_signature(jose_context_t* context, const char* signature);
+        static return_t parse_signature(jose_context_t* context, const char* signature);
         /**
          * @brief parse
          * @param jose_context_t* context [in]
@@ -182,14 +183,14 @@ class json_object_signing {
          * @param jws_t& method [out]
          * @param std::string& keyid [out]
          */
-        return_t parse_signature_protected_header(jose_context_t* context, const char* protected_header, jws_t& method, std::string& keyid);
+        static return_t parse_signature_protected_header(jose_context_t* context, const char* protected_header, jws_t& method, std::string& keyid);
         /**
          * @brief write
          * @param jose_context_t* context [in]
          * @param std::string& signature [out]
          * @param jose_serialization_t type [inopt]
          */
-        return_t compose_signature(jose_context_t* context, std::string& signature, jose_serialization_t type = jose_serialization_t::jose_compact);
+        static return_t compose_signature(jose_context_t* context, std::string& signature, jose_serialization_t type = jose_serialization_t::jose_compact);
     };
 };
 

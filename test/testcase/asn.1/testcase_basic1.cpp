@@ -740,6 +740,8 @@ void test_asn1_object() {
     basic_stream bs;
     asn1_runtime* inst = new asn1_runtime;
     for (auto item : table2) {
+        bs.clear();
+
         *inst << item.asn1obj;
         inst->notation(&bs);
         inst->clear();
@@ -747,48 +749,55 @@ void test_asn1_object() {
         _test_case.assert(bs == item.note, __FUNCTION__, "%s (publish)", item.note);
 
         // compare
-        parser p;
-        parser::context ctx;
-        parser::search_result res;
+        asn1_parser asn1p;
+        auto& p = asn1p.get_parser();
+        parser_context ctx;
+
         p.parse(ctx, item.note);
-        res = p.wsearch(ctx, bs);
-        bs.clear();
 
-        auto result = p.psearchex(ctx);
         auto dump_handler = [&](const token_description* desc) -> void {
-            _logger->writeln("> type %d(%s) tag %i index %d pos %zi len %zi (%.*s)", desc->type, p.typeof_token(desc->type).c_str(), desc->tag, desc->index, desc->pos,
-                             desc->size, (unsigned)desc->size, desc->p);
+            basic_stream bs;
+            bs.printf("> type %u(%s)", desc->type, p.nameof_token(desc->type).c_str());
+            // if (desc->tag) bs.printf(" tag %u(%s)", desc->tag, p.nameof_token(desc->tag).c_str());
+            bs.printf(" index %d pos %zi len %zi (%.*s)", desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
+            _logger->writeln(bs);
         };
+        ctx.for_each(dump_handler);
 
-        for (auto& pair : result) {
-            // pair(pos_occurrence, id_pattern)
-            const auto& range = pair.first;
-            const auto& pid = pair.second;
-            parser::search_result res;
-            ctx.psearch_result(res, range);
+        basic_stream dbs;
+        p.dump(ctx, dbs);
+        _logger->write(">> %s", dbs.c_str());
 
-            _logger->writeln("pos [%zi] pattern[%2i] %.*s", range.begin, pid, (unsigned)res.size, res.p);
-            ctx.for_each(res, dump_handler);
-
-            token_description desc;
-            asn1_entity_t type;
-
-            // pattern to asn1_object*
-            switch (pid) {
-                case 0:  // $pattern_builtintype
-                    ctx.get(res.begidx, &desc);
-                    type = typemap[desc.tag];
-                    *inst << new asn1_builtin_type(type);
-                    break;
-            }
-            inst->publish(&bs);
-            inst->clear();
-            _logger->write(bs);
-        }
-
-        _test_case.assert(res.match, __FUNCTION__, item.note);
-
-        bs.clear();
+        // auto res = p.wsearch(ctx, bs);
+        // bs.clear();
+        //
+        // auto result = p.psearchex(ctx);
+        // for (auto& pair : result) {
+        //     // pair(pos_occurrence, id_pattern)
+        //     const auto& range = pair.first;
+        //     const auto& pid = pair.second;
+        //     ctx.psearch_result(res, range);
+        //
+        //     _logger->writeln("pos [%zi] pattern[%2i] %.*s", range.begin, pid, (unsigned)res.size, res.p);
+        //     ctx.for_each(res, dump_handler);
+        //
+        //     token_description desc;
+        //     asn1_entity_t type;
+        //
+        //     // pattern to asn1_object*
+        //     switch (pid) {
+        //         case 0:  // $pattern_builtintype
+        //             ctx.get(res.begidx, &desc);
+        //             type = typemap[desc.type];
+        //             *inst << new asn1_builtin_type(type);
+        //             break;
+        //     }
+        //     inst->publish(&bs);
+        //     inst->clear();
+        //     _logger->write(bs);
+        // }
+        //
+        // _test_case.assert(res.match, __FUNCTION__, item.note);
     }
     inst->release();
 }

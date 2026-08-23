@@ -96,7 +96,7 @@ class crypto_keygen {
      * @remarks clear all crypt_item_t
      */
     crypto_keygen& build();
-    return_t result();
+    // return_t result();
 
     /**
      * @brief   OCT

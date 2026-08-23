@@ -14,6 +14,7 @@
 #define __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_ASN1REFERENCEDTYPE__
 
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_type.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/types.hpp>
 
 namespace hotplace {
 namespace io {

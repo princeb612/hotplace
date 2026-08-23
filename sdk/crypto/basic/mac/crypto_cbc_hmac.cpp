@@ -70,7 +70,7 @@ crypto_cbc_hmac& crypto_cbc_hmac::set_flag(uint16 flag) {
 
 uint16 crypto_cbc_hmac::get_flag() const { return _flag; }
 
-return_t crypto_cbc_hmac::split_key(const binary_t key, binary_t& enckey, binary_t& mackey) {
+return_t crypto_cbc_hmac::split_key(const binary_t key, binary_t& enckey, binary_t& mackey) const {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     __try2 {
@@ -123,14 +123,14 @@ return_t crypto_cbc_hmac::split_key(const binary_t key, binary_t& enckey, binary
  * case MtE : ciphertext = ENC (plaintext || tag || pad)
  */
 return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const binary_t& plaintext,
-                                  binary_t& ciphertext) {
+                                  binary_t& ciphertext) const {
     return_t ret = errorcode_t::success;
     ret = encrypt(enckey, mackey, iv, aad, plaintext.data(), plaintext.size(), ciphertext);
     return ret;
 }
 
 return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const byte_t* plaintext, size_t plainsize,
-                                  binary_t& ciphertext) {
+                                  binary_t& ciphertext) const {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_crypt crypt;
@@ -248,14 +248,14 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
 }
 
 return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const binary_t& ciphertext,
-                                  binary_t& plaintext) {
+                                  binary_t& plaintext) const {
     return_t ret = errorcode_t::success;
     ret = decrypt(enckey, mackey, iv, aad, ciphertext.data(), ciphertext.size(), plaintext);
     return ret;
 }
 
 return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const byte_t* ciphertext, size_t ciphersize,
-                                  binary_t& plaintext) {
+                                  binary_t& plaintext) const {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_crypt crypt;
@@ -366,14 +366,14 @@ return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey
 
 /* separated tag */
 return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const binary_t& plaintext,
-                                  binary_t& ciphertext, binary_t& tag) {
+                                  binary_t& ciphertext, binary_t& tag) const {
     return_t ret = errorcode_t::success;
     ret = encrypt(enckey, mackey, iv, aad, plaintext.data(), plaintext.size(), ciphertext, tag);
     return ret;
 }
 
 return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const byte_t* plaintext, size_t plainsize,
-                                  binary_t& ciphertext, binary_t& tag) {
+                                  binary_t& ciphertext, binary_t& tag) const {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_crypt crypt;
@@ -447,14 +447,14 @@ return_t crypto_cbc_hmac::encrypt(const binary_t& enckey, const binary_t& mackey
 }
 
 return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const binary_t& ciphertext,
-                                  binary_t& plaintext, const binary_t& tag) {
+                                  binary_t& plaintext, const binary_t& tag) const {
     return_t ret = errorcode_t::success;
     ret = decrypt(enckey, mackey, iv, aad, ciphertext.data(), ciphertext.size(), plaintext, tag);
     return ret;
 }
 
 return_t crypto_cbc_hmac::decrypt(const binary_t& enckey, const binary_t& mackey, const binary_t& iv, const binary_t& aad, const byte_t* ciphertext, size_t ciphersize,
-                                  binary_t& plaintext, const binary_t& tag) {
+                                  binary_t& plaintext, const binary_t& tag) const {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
     openssl_crypt crypt;

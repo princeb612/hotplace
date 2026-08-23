@@ -24,7 +24,7 @@ void test_mlkem_keygen() {
     ret = keychain.add_ossl3(&key, NID_ML_KEM_1024, keydesc("ML-KEM-1024"));
     _test_case.test(ret, __FUNCTION__, "ML-KEM-1024");
 
-    auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
+    auto dump_crypto_key = [&](const crypto_key_object* item, void*) -> void {
         auto kid = item->get_desc().get_kid_cstr();
         auto pkey = key.find(kid);
         _test_case.assert(nullptr != pkey, __FUNCTION__, "find %s", kid);
@@ -59,7 +59,7 @@ void test_mlkem_keyuse_routine(tls_group_t group, const binary_t& share) {
 
         ret = keyexchange.keystore(group, &key, "store", share);
         _test_case.test(ret, __FUNCTION__, "store %s", name);
-        auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
+        auto dump_crypto_key = [&](const crypto_key_object* item, void*) -> void {
             auto kid = item->get_desc().get_kid_cstr();
 
             _logger->write([&](basic_stream& bs) -> void {

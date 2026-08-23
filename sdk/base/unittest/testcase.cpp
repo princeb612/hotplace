@@ -268,8 +268,8 @@ void test_case::vtest(return_t result, const char* test_function, const char* me
         topic = _testcase_per_threads[tid];
 
         test_status_t clean_status;
-        unittest_map_pib_t pib = _test_map.emplace(topic, clean_status);
-        unittest_map_t::iterator it = pib.first;
+        auto pib = _test_map.emplace(topic, clean_status);
+        auto it = pib.first;
         test_status_t& status = it->second;
 
         switch (category) {
@@ -534,7 +534,7 @@ void test_case::report_unittest(basic_stream& stream) {
     stream << "\n";
 
     for (const auto& testcase : _test_list) {
-        unittest_map_t::iterator map_iter = _test_map.find(testcase);
+        auto map_iter = _test_map.find(testcase);
         const test_status_t& status = map_iter->second;
 
         stream << "@ " << constexpr_testcase << " \"" << testcase.c_str() << "\" " << constexpr_success << " " << status._test_stat._count_success;
@@ -612,7 +612,7 @@ void test_case::report_cases(basic_stream& stream) {
     stream << constexpr_pass << " " << constexpr_fail << " " << constexpr_skip << " " << constexpr_trivial << " " << constexpr_case << "\n";
 
     for (const auto& testcase : _test_list) {
-        unittest_map_t::iterator map_iter = _test_map.find(testcase);
+        auto map_iter = _test_map.find(testcase);
         const test_status_t& status = map_iter->second;
 
         console_colored_stream << _concolor.turnon();

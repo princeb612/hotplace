@@ -115,19 +115,7 @@ void test_decode_strongly_typed2() {
     }
 }
 
-void test_decode_strongly_typed3() {
-    _test_case.begin("stronly-typed");
-    //
-}
-
-void test_decode_strongly_typed4() {
-    _test_case.begin("stronly-typed");
-    //
-}
-
 void testcase_basic3() {
     test_decode_strongly_typed1();
     test_decode_strongly_typed2();
-    test_decode_strongly_typed3();
-    test_decode_strongly_typed4();
 }

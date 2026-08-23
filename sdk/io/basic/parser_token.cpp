@@ -17,13 +17,14 @@
 namespace hotplace {
 namespace io {
 
-parser::token::token() : _type(0), _tag(0), _pos(0), _size(0), _line(1), _index(-1) {}
+parser_token::parser_token() : _tokenid(0), /*_tag(0),*/ _pos(0), _size(0), _line(1), _index(-1) {}
 
-parser::token::token(const parser::token& other) : _type(other._type), _tag(other._tag), _pos(other._pos), _size(other._size), _line(other._line), _index(other._index) {}
+parser_token::parser_token(const parser_token& other)
+    : _tokenid(other._tokenid), /*_tag(other._tag),*/ _pos(other._pos), _size(other._size), _line(other._line), _index(other._index) {}
 
-parser::token& parser::token::init() {
-    _type = 0;
-    _tag = 0;
+parser_token& parser_token::init() {
+    _tokenid = 0;
+    // _tag = 0;
     _pos = 0;
     _size = 0;
     _line = 1;
@@ -31,58 +32,58 @@ parser::token& parser::token::init() {
     return *this;
 }
 
-parser::token& parser::token::increase() {
+parser_token& parser_token::increase() {
     _size++;
     return *this;
 }
 
-parser::token& parser::token::set_type(uint32 type) {
-    _type = type;
+parser_token& parser_token::set_type(uint32 type) {
+    _tokenid = type;
     return *this;
 }
 
-parser::token& parser::token::set_tag(uint32 tag) {
-    _tag = tag;
-    return *this;
-}
+// parser_token& parser_token::set_tag(uint32 tag) {
+//     _tag = tag;
+//     return *this;
+// }
 
-parser::token& parser::token::update_pos(size_t pos) {
+parser_token& parser_token::update_pos(size_t pos) {
     _pos = pos;
     return *this;
 }
 
-parser::token& parser::token::update_size(size_t size) {
+parser_token& parser_token::update_size(size_t size) {
     _size = size;
     return *this;
 }
 
-parser::token& parser::token::newline() {
+parser_token& parser_token::newline() {
     _line++;
     return *this;
 }
 
-parser::token& parser::token::set_index(uint32 idx) {
+parser_token& parser_token::set_index(uint32 idx) {
     _index = idx;
     return *this;
 }
 
-uint32 parser::token::get_index() const { return _index; }
+uint32 parser_token::get_index() const { return _index; }
 
-uint32 parser::token::get_type() const { return _type; }
+uint32 parser_token::get_tokenid() const { return _tokenid; }
 
-uint32 parser::token::get_tag() const { return _tag; }
+// uint32 parser_token::get_tag() const { return _tag; }
 
-size_t parser::token::get_pos() const { return _pos; }
+size_t parser_token::get_pos() const { return _pos; }
 
-size_t parser::token::get_size() const { return _size; }
+size_t parser_token::get_size() const { return _size; }
 
-size_t parser::token::get_line() const { return _line; }
+size_t parser_token::get_line() const { return _line; }
 
-bool parser::token::empty() { return 0 == _size; }
+bool parser_token::empty() const { return 0 == _size; }
 
-size_t parser::token::size() { return _size; }
+size_t parser_token::size() const { return _size; }
 
-std::string parser::token::as_string(const char* p) {
+std::string parser_token::as_string(const char* p) const {
     std::string obj;
     if (p) {
         obj.insert(obj.end(), p + _pos, p + _pos + _size);
@@ -90,13 +91,13 @@ std::string parser::token::as_string(const char* p) {
     return obj;
 }
 
-void parser::token::visit(const char* p, std::function<void(const parser::token* t)> f) const {
+void parser_token::visit(const char* p, std::function<void(const parser_token* t)> f) const {
     if (p && f) {
         f(this);
     }
 }
 
-parser::token* parser::token::clone() { return new parser::token(*this); }
+parser_token* parser_token::clone() { return new parser_token(*this); }
 
 }  // namespace io
 }  // namespace hotplace

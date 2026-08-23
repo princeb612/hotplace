@@ -13,7 +13,7 @@
 #define __HOTPLACE_SDK_IO_BASIC_PARSER__
 
 #include <hotplace/sdk/base/nostd/keyvalue.hpp>
-#include <hotplace/sdk/base/pattern/aho_corasick.hpp>
+#include <hotplace/sdk/base/pattern/aho_corasick_parser.hpp>
 #include <hotplace/sdk/base/pattern/trie.hpp>
 #include <hotplace/sdk/base/stream/types.hpp>
 #include <hotplace/sdk/io/types.hpp>
@@ -21,7 +21,7 @@
 namespace hotplace {
 namespace io {
 
-enum token_t {
+enum token_t : uint32 {
     token_unknown = 0,
     token_alpha = 1,       // [a-zA-Z]
     token_number = 2,      // [0-9]
@@ -46,20 +46,26 @@ enum token_t {
     token_comma = 21,      // ,
     token_dot = 22,        // .
     token_newline = 23,    // \n
-    token_and = 24,
-    token_or = 25,
-
-    token_word = 32,         // [a-zA-Z0-9].*
+    token_and = 24,        // &&, |
+    token_or = 25,         // ||
+    token_isequal = 26,    // ==
+    token_notequal = 27,   // !=
+    token_word = 32,       // [a-zA-Z0-9].*
+    token_identifier = token_word,
     token_quot_string = 33,  // \"[a-zA-Z0-9].*\"
-    token_comments = 34,     // parser::token.comments .... until the newline
-    token_assign = 35,
+    token_comments = 34,     // parser_token.comments .... until the newline
+    token_assign = 35,       // =, ::=
     token_lvalue = 36,
     token_emphasis = 37,
     token_type = 38,
-    token_class = 39,
-    token_tag = 40,
+    token_sentence = 39,
+    token_element = 40,
+    token_usertype = 41,
 
     // ASN.1
+    token_asn1 = 0x1000,
+
+    token_builtintype,
     token_bool,
     token_int,
     token_bitstring,
@@ -73,6 +79,7 @@ enum token_t {
     token_embedpdv,
     token_utf8string,
     token_reloid,
+    token_of,
     token_sequence,
     token_sequenceof,
     token_set,
@@ -88,38 +95,186 @@ enum token_t {
     token_visiblestring,  // iso64string
     token_genaralstring,
     token_universalstring,
+    token_cstring,
     token_bmpstring,
     token_date,
     token_timeofday,
     token_datetime,
     token_duration,
+    token_any,
+    token_choice,
 
+    token_boolvalue,
     token_true,
     token_false,
 
+    token_class,
     token_universal,
     token_application,
     token_private,
 
+    token_taggedmode,
     token_implicit,
     token_explicit,
 
-    token_builtintype,
-    token_taggedmode,
+    token_namedtype,
+    token_tag,
+    token_taggedtype,
+    token_referencedtype,
 
-    // reserved
-    token_char,
-    token_usertype,
+    token_union,
+    token_intersection,
+    token_except,
+    token_allexcept,
+
+    token_default,
+
+    token_userdefine = 0x2000,
+};
+
+enum parser_flag_t {
+    flat_lookup_readonly = 1,  // see parser_context::parse
+    flag_repeat,
 };
 
 struct token_description {
     size_t index;
     uint32 type;
-    uint32 tag;
+    // uint32 tag;
     size_t pos;
     size_t size;
     size_t line;
     const char* p;
+};
+
+struct search_result {
+    bool match;
+    const char* p;
+    size_t size;
+    size_t pos;
+    size_t begidx;
+    size_t endidx;
+
+    search_result() : match(false), p(nullptr), size(0), pos(-1), begidx(-1), endidx(-1) {}
+};
+
+class parser_token;
+class parser_context;
+class parser;
+
+/**
+ * @brief   token
+ * @sa      parser::parse
+ */
+class parser_token {
+   public:
+    parser_token();
+    parser_token(const parser_token& other);
+
+    parser_token& init();
+    parser_token& increase();
+    parser_token& set_type(uint32 type);
+    // parser_token& set_tag(uint32 tag);
+    parser_token& update_pos(size_t pos);
+    parser_token& update_size(size_t size);
+    parser_token& newline();
+
+    parser_token& set_index(uint32 idx);
+    uint32 get_index() const;
+    uint32 get_tokenid() const;
+    // uint32 get_tag() const;
+    size_t get_pos() const;
+    size_t get_size() const;
+    size_t get_line() const;
+    bool empty() const;
+    size_t size() const;
+
+    std::string as_string(const char* p) const;
+    void visit(const char* p, std::function<void(const parser_token* t)> f) const;
+
+    parser_token* clone();
+
+   private:
+    uint32 _tokenid;
+    size_t _pos;
+    size_t _size;
+    size_t _line;
+    uint32 _index;  // 0 reserved, start with 1
+};
+
+class parser_context {
+   public:
+    parser_context();
+    ~parser_context();
+
+    return_t lexparse(parser* obj, const char* p, size_t size, uint32 flags = 0);
+
+    /**
+     * @brief   character-level search
+     */
+    // search_result csearch(parser* obj, const char* pattern, size_t size_pattern, size_t pos = 0) const;
+    // search_result csearch(parser* obj, const std::string& pattern, size_t pos = 0) const;
+    // search_result csearch(parser* obj, const basic_stream& pattern, size_t pos = 0) const;
+
+    /**
+     * @brief   word-level search
+     */
+    // search_result wsearch(parser* obj, const parser_context& pattern, size_t pos = 0) const;
+    // search_result wsearch(parser* obj, const char* pattern, size_t size_pattern, size_t pos = 0) const;
+    // search_result wsearch(parser* obj, const std::string& pattern, size_t pos = 0) const;
+    // search_result wsearch(parser* obj, const basic_stream& pattern, size_t pos = 0) const;
+    /**
+     * @brief   word-level comparison
+     */
+    // bool compare(parser* obj, const parser_context& other) const;
+
+    /**
+     * @brief   pattern-level search
+     */
+    // void add_pattern(parser* obj);
+    // std::multimap<range_t, size_t> psearch(parser* obj) const;
+    // std::multimap<range_t, size_t> psearchex(parser* obj) const;
+
+    void clear();
+
+    void for_each(std::function<void(const token_description* desc)> f) const;
+    void for_each(const search_result& res, std::function<void(const token_description* desc)> f) const;
+    void walk(std::function<void(const char* p, const parser_token*)> f);
+
+    // void wsearch_result(search_result& result, size_t idx, size_t size) const;
+    /**
+     * @brief   search_result
+     * @sample
+     *          result = p.psearch(parser_context);
+     *          for (auto [range, pid] : result) {
+     *              search_result res;
+     *              parser_context.psearch_result(res, range, pid);
+     *              _logger->writeln("pos [%i..%i] pattern[%i] %.*s", res.begidx, res.endidx, (int)res.size, res.p);
+     *          }
+     */
+    // void psearch_result(search_result& result, range_t range) const;
+
+    return_t get(size_t index, token_description* desc);
+
+   protected:
+    return_t init(parser* obj, const char* p, size_t size);
+    return_t add_context_token(std::function<bool(int, parser_token*)> hook = nullptr);
+    parser_token& get_token();
+    parser_token* last_token();
+
+   private:
+    parser* _parser;
+    const char* _p;
+    size_t _size;
+    parser_token _token;
+    std::vector<parser_token*> _tokens;
+};
+
+struct tokenptr_to_int_t {
+    uint32 operator()(parser_token* const* source, size_t index) const {
+        const parser_token* t = source[index];
+        return t->get_tokenid();
+    }
 };
 
 /**
@@ -142,156 +297,47 @@ struct token_description {
  *
  *          parser p;
  *          p.add_token("::=", token_assign).add_token("--", token_comments);
- *          parser::context context1;
+ *          parser_context context1;
  *          p.parse(context1, asn1_structure, strlen(asn1_structure));
  *
  *          auto dump_handler = [&](const token_description* desc) -> void {
  *              _logger->writeln("line %zi type %d(%s) index %d pos %zi len %zi (%.*s)",
- *                  desc->line, desc->type, p.typeof_token(desc->type).c_str(),
+ *                  desc->line, desc->type, p.nameof_token(desc->type).c_str(),
  *                  desc->index, desc->pos, desc->size, (int)desc->size, desc->p);
  *          };
  *          context1.for_each(dump_handler);
  */
 class parser {
-   public:
-    enum parser_flag_t {
-        parse_lookup_readonly = 1,  // see parser::context::parse
-    };
-    struct search_result {
-        bool match;
-        const char* p;
-        size_t size;
-        size_t pos;
-        size_t begidx;
-        size_t endidx;
-
-        search_result() : match(false), p(nullptr), size(0), pos(-1), begidx(-1), endidx(-1) {}
-    };
-
-    /**
-     * @brief   parser::token
-     * @sa      parser::parse
-     */
-    class token {
-       public:
-        token();
-        token(const token& other);
-
-        token& init();
-        token& increase();
-        token& set_type(uint32 type);
-        token& set_tag(uint32 tag);
-        token& update_pos(size_t pos);
-        token& update_size(size_t size);
-        token& newline();
-
-        token& set_index(uint32 idx);
-        uint32 get_index() const;
-        uint32 get_type() const;
-        uint32 get_tag() const;
-        size_t get_pos() const;
-        size_t get_size() const;
-        size_t get_line() const;
-        bool empty();
-        size_t size();
-
-        std::string as_string(const char* p);
-        void visit(const char* p, std::function<void(const token* t)> f) const;
-
-        parser::token* clone();
-
-       private:
-        uint32 _type;
-        uint32 _tag;
-        size_t _pos;
-        size_t _size;
-        size_t _line;
-        uint32 _index;  // 0 reserved, start with 1
-    };
-
-    class context {
-       public:
-        context();
-        ~context();
-
-        return_t parse(parser* obj, const char* p, size_t size, uint32 flags = 0);
-
-        /**
-         * @brief   character-level search
-         */
-        search_result csearch(parser* obj, const char* pattern, size_t size_pattern, size_t pos = 0) const;
-        search_result csearch(parser* obj, const std::string& pattern, size_t pos = 0) const;
-        search_result csearch(parser* obj, const basic_stream& pattern, size_t pos = 0) const;
-
-        /**
-         * @brief   word-level search
-         */
-        search_result wsearch(parser* obj, const context& pattern, size_t pos = 0) const;
-        search_result wsearch(parser* obj, const char* pattern, size_t size_pattern, size_t pos = 0) const;
-        search_result wsearch(parser* obj, const std::string& pattern, size_t pos = 0) const;
-        search_result wsearch(parser* obj, const basic_stream& pattern, size_t pos = 0) const;
-        /**
-         * @brief   word-level comparison
-         */
-        bool compare(parser* obj, const parser::context& other) const;
-
-        /**
-         * @brief   pattern-level search
-         */
-        void add_pattern(parser* obj);
-        std::multimap<range_t, size_t> psearch(parser* obj) const;
-        std::multimap<range_t, size_t> psearchex(parser* obj) const;
-
-        void clear();
-
-        void for_each(std::function<void(const token_description* desc)> f) const;
-        void for_each(const search_result& res, std::function<void(const token_description* desc)> f) const;
-        void walk(std::function<void(const char* p, const parser::token*)> f);
-
-        void wsearch_result(search_result& result, size_t idx, size_t size) const;
-        /**
-         * @brief   search_result
-         * @sample
-         *          result = p.psearch(context);
-         *          for (auto [range, pid] : result) {
-         *              parser::search_result res;
-         *              context.psearch_result(res, range, pid);
-         *              _logger->writeln("pos [%i..%i] pattern[%i] %.*s", res.begidx, res.endidx, (int)res.size, res.p);
-         *          }
-         */
-        void psearch_result(search_result& result, range_t range) const;
-
-        return_t get(size_t index, token_description* desc);
-
-       protected:
-        return_t init(parser* obj, const char* p, size_t size);
-        return_t add_context_token(std::function<bool(int, parser::token*)> hook = nullptr);
-        parser::token& get_token();
-        parser::token* last_token();
-
-       private:
-        parser* _parser;
-        const char* _p;
-        size_t _size;
-        parser::token _token;
-        std::vector<parser::token*> _tokens;
-    };
+    friend class parser_context;
 
    public:
     parser();
     ~parser();
 
+    parser(parser&& other) = delete;
+
+    /**
+     * @brief   add token
+     * @param   const std::string& token [in]
+     * @param   uint32 token [in]
+     * @param   uint32 tag [inopt]
+     * @sample
+     *          p.add_token("::=", token_assign).add_token("--", token_comments);
+     */
+    parser& add_token(const std::string& token, uint32 tokenid);
+    std::string nameof_token(uint32 token);
+
     /*
      * @brief   parse
-     * @param   parser::context& context [out]
+     * @param   parser_context& context [out]
      * @param   const char* p [in]
      * @param   size_t size [in]
      * @remarks
      */
-    return_t parse(parser::context& context, const char* p, size_t size);
-    return_t parse(parser::context& context, const char* p);
-    return_t parse(parser::context& context, const std::string& p);
-    return_t parse(parser::context& context, const basic_stream& p);
+    return_t parse(parser_context& context, const char* p, size_t size);
+    return_t parse(parser_context& context, const char* p);
+    return_t parse(parser_context& context, const std::string& p);
+    return_t parse(parser_context& context, const basic_stream& p);
     /**
      * @brief   pattern search (character-level)
      * @param
@@ -300,15 +346,15 @@ class parser {
      *          // character search - KMP N(asn1_structure)=612, M(pattern)=32, O(612+32)
      *          // asn1_sequence 612 bytes
      *          // pattern        32 bytes
-     *          parser::search_result cresult = p.csearch(context1, pattern, 0);
-     *          parser::search_result cresult2 = p.csearch(context1, pattern2, strlen(pattern2), cresult.pos);
+     *          search_result cresult = p.csearch(context1, pattern, 0);
+     *          search_result cresult2 = p.csearch(context1, pattern2, strlen(pattern2), cresult.pos);
      */
-    search_result csearch(const parser::context& context, const char* pattern, size_t size_pattern, size_t pos = 0);
-    search_result csearch(const parser::context& context, const std::string& pattern, size_t pos = 0);
-    search_result csearch(const parser::context& context, const basic_stream& pattern, size_t pos = 0);
+    // search_result csearch(const parser_context& context, const char* pattern, size_t size_pattern, size_t pos = 0);
+    // search_result csearch(const parser_context& context, const std::string& pattern, size_t pos = 0);
+    // search_result csearch(const parser_context& context, const basic_stream& pattern, size_t pos = 0);
     /**
      * @brief   pattern search (word-level)
-     * @param   const parser::context& context [in]
+     * @param   const parser_context& context [in]
      * @param   const char* pattern [in]
      * @param   size_t size_pattern [in]
      * @param   size_t pos [inopt]
@@ -317,12 +363,12 @@ class parser {
      *          // word search - KMP N(context1)=93, M(pattern)=6, O(93+6)
      *          // asn1_structure 93 tokens [1 2 3 4 ... 3 4 21 6 7 33 ... 7 4 -1]
      *          // pattern         6 tokens [            3 4 21 6 7 33           ]
-     *          parser::search_result wresult = p.wsearch(context1, pattern, 0);
-     *          parser::search_result wresult2 = p.wsearch(context1, pattern2, strlen(pattern2), wresult.endidx + 1);
+     *          search_result wresult = p.wsearch(context1, pattern, 0);
+     *          search_result wresult2 = p.wsearch(context1, pattern2, strlen(pattern2), wresult.endidx + 1);
      */
-    search_result wsearch(const parser::context& context, const char* pattern, size_t size_pattern, size_t pos = 0);
-    search_result wsearch(const parser::context& context, const std::string& pattern, size_t pos = 0);
-    search_result wsearch(const parser::context& context, const basic_stream& pattern, size_t pos = 0);
+    // search_result wsearch(const parser_context& context, const char* pattern, size_t size_pattern, size_t pos = 0);
+    // search_result wsearch(const parser_context& context, const std::string& pattern, size_t pos = 0);
+    // search_result wsearch(const parser_context& context, const basic_stream& pattern, size_t pos = 0);
     /**
      * @brief   compare (word-level comparison, ignore white spaces)
      * @param   const char* lhs [in]
@@ -332,9 +378,9 @@ class parser {
      *          constexpr char data2[] = "[APPLICATION  2]  IMPLICIT  INTEGER";
      *          bool test = p.compare(data1, data2); // true
      */
-    static bool compare(parser* obj, const char* lhs, const char* rhs);
-    bool compare(const char* lhs, const char* rhs);
-    bool compare(const parser::context& lhs, const parser::context& rhs);
+    // static bool compare(parser* obj, const char* lhs, const char* rhs);
+    // bool compare(const char* lhs, const char* rhs);
+    // bool compare(const parser_context& lhs, const parser_context& rhs);
 
     /**
      * @brief   multiple pattern search
@@ -351,8 +397,8 @@ class parser {
      *          // pattern : 0      1          3
      *          // tokens  : 0   12 3   4 5 67 8    9 a b   c
      */
-    parser& add_pattern(const char* p, size_t size);
-    parser& add_pattern(const std::string& pattern);
+    // parser& add_pattern(const char* p, size_t size);
+    // parser& add_pattern(const std::string& pattern);
     /**
      * @brief   pattern search (pattern-level)
      * @remarks
@@ -412,7 +458,7 @@ class parser {
      *          p.get_config().set("handle_usertype", 1);
      *          p.parse(context, source);
      *          // after parsing, convert each word to a token object
-     *          // array of parser::token*
+     *          // array of parser_token*
      *          // [0] ChildInformation type token_usertype
      *          // [1] ::= type token_assign
      *          // [2] SET type set
@@ -467,7 +513,7 @@ class parser {
      *          // pattern search
      *          auto result = p.psearch(context);
      *          for (auto [range, pid] : result) {
-     *              parser::search_result res;
+     *              search_result res;
      *              context.psearch_result(res, range, pid);
      *
      *              // all patterns matched
@@ -475,7 +521,7 @@ class parser {
      *          }
      *          auto resultex = p.psearch(context);
      *          for (auto [range, pid] : resultex) {
-     *              parser::search_result res;
+     *              search_result res;
      *              context.psearch_result(res, range, pid);
      *
      *              // merge all overlapping intervals into one and output the result which should have only mutually exclusive intervals
@@ -497,24 +543,15 @@ class parser {
      *          //  pos [ 2] pattern[12] [APPLICATION 3] IMPLICIT VisibleString  // including pattern [0]
      *
      */
-    std::multimap<range_t, size_t> psearch(const parser::context& context);
+    // std::multimap<range_t, size_t> psearch(const parser_context& context);
     /**
      * @brief   pattern search
      * @remarks merge all overlapping patterns
      * @sa      t_range_set
      */
-    std::multimap<range_t, size_t> psearchex(const parser::context& context);
+    // std::multimap<range_t, size_t> psearchex(const parser_context& context);
 
-    /**
-     * @brief   add token
-     * @param   const std::string& token [in]
-     * @param   uint32 attr [inopt]
-     * @param   uint32 tag [inopt]
-     * @sample
-     *          p.add_token("::=", token_assign).add_token("--", token_comments);
-     */
-    parser& add_token(const std::string& token, uint32 attr = 0, uint32 tag = 0);
-    parser& add_tokenn(const char* token, size_t size, uint32 attr, uint32 tag);
+    t_aho_corasick_parser<uint32>* get_ac();
 
     /*
      * @sample
@@ -532,15 +569,16 @@ class parser {
      */
     t_key_value<std::string, uint16>& get_config();
 
-    std::string typeof_token(uint32 type);
-    std::string attrof_token(uint32 attr);
-
     /**
      * @brief   debug dump
      */
-    void dump(const parser::context& context, basic_stream& bs);
+    void dump(const parser_context& context, basic_stream& bs);
 
    protected:
+    /**
+     * @brief   token_t info for debugging
+     */
+    // parser& add_token_id(const std::string& name, uint32 attr);
     /**
      * @brief   lookup
      * @param   const std::string& word [in]
@@ -560,33 +598,32 @@ class parser {
      * @param   size_t size [in]
      * @param   std::string& token_name [out]
      * @param   uint32& token_type [out]
-     * @param   uint32& token_tag [out]
+     // * @param   uint32& token_tag [out]
      */
-    bool lookup(const char* p, size_t size, std::string& token_name, uint32& token_type, uint32& token_tag);
+    bool lookup(const char* p, size_t size, std::string& token_name, uint32& token_type /*, uint32& token_tag*/);
 
    private:
     struct token_attr_tag {
         uint32 attr;
-        uint32 tag;
-        token_attr_tag(uint32 attr, uint32 tag) : attr(attr), tag(tag) {}
+        // uint32 tag;
+        token_attr_tag(uint32 attr) : attr(attr) {}
+        // token_attr_tag(uint32 attr, uint32 tag) : attr(attr), tag(tag) {}
     };
 
-    struct tokenptr_to_int_t {
-        int operator()(token* const* source, size_t index) const {
-            const token* t = source[index];
-            return t->get_type();
-        }
-    };
+    t_trie<char, char, token_attr_tag> _tokens;  // add_token, lookup
+    t_trie<char> _dictionary;                    // lookup, rlookup
+    std::multimap<uint32, std::vector<uint32>> _patterns;
 
-    t_trie<char, char, token_attr_tag> _tokens;           // tokens
-    t_trie<char> _dictionary;                             // lookup
-    t_aho_corasick<int, token*, tokenptr_to_int_t>* _ac;  // multi-pattern search
-    t_key_value<std::string, uint16> _keyvalue;           // get_config
+    t_aho_corasick_parser<uint32>* _acparser;  // token grouping, sub-pattern reduction, and repeat-rule processing
+    t_aho_corasick<uint32, parser_token*, tokenptr_to_int_t>* _ac;
+    t_key_value<std::string, uint16> _keyvalue;  // get_config
 
     // debug
     typedef std::map<uint32, std::string> debug_info;
-    debug_info _token_id;  // typeof_token
+    debug_info _token_dbg;  // nameof_token
 };
+
+token_t ascii2token(byte_t c);
 
 }  // namespace io
 }  // namespace hotplace

@@ -26,7 +26,7 @@ class cbor_simple : public cbor_object {
    public:
     cbor_simple(uint8 value);
 
-    cbor_simple_t simple_type();
+    cbor_simple_t simple_type() const;
     static cbor_simple_t is_kind_of(uint8 first);
     static cbor_simple_t is_kind_of_value(uint8 value);
 

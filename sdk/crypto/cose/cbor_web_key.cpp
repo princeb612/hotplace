@@ -237,7 +237,7 @@ return_t cbor_web_key::do_load(crypto_key* cryptokey, cbor_object* object, int f
     return ret;
 }
 
-return_t cbor_web_key::write(crypto_key* cryptokey, keyflag_t mode, stream_t* stream, int flag) {
+return_t cbor_web_key::write(const crypto_key* cryptokey, keyflag_t mode, stream_t* stream, int flag) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == stream) {
@@ -255,7 +255,7 @@ return_t cbor_web_key::write(crypto_key* cryptokey, keyflag_t mode, stream_t* st
     return ret;
 }
 
-return_t cbor_web_key::write(crypto_key* cryptokey, stream_t* stream, int flag) {
+return_t cbor_web_key::write(const crypto_key* cryptokey, stream_t* stream, int flag) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -282,7 +282,7 @@ typedef struct _cose_mapper_t {
     _cose_mapper_t() : root(nullptr) {}
 } cose_mapper_t;
 
-void cwk_writer(crypto_key_object* key, void* param) {
+static void cwk_writer(const crypto_key_object* key, void* param) {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -387,7 +387,7 @@ void cwk_writer(crypto_key_object* key, void* param) {
     __finally2 {}
 }
 
-return_t cbor_web_key::write(crypto_key* cryptokey, std::string& buf, int flag) {
+return_t cbor_web_key::write(const crypto_key* cryptokey, std::string& buf, int flag) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -402,7 +402,7 @@ return_t cbor_web_key::write(crypto_key* cryptokey, std::string& buf, int flag) 
     return ret;
 }
 
-return_t cbor_web_key::write(crypto_key* cryptokey, binary_t& cbor, int flag) {
+return_t cbor_web_key::write(const crypto_key* cryptokey, binary_t& cbor, int flag) {
     return_t ret = errorcode_t::success;
     cbor_object* root = nullptr;
 
@@ -428,7 +428,7 @@ return_t cbor_web_key::write(crypto_key* cryptokey, binary_t& cbor, int flag) {
     return ret;
 }
 
-return_t cbor_web_key::write(crypto_key* cryptokey, cbor_object** root, int flag) {
+return_t cbor_web_key::write(const crypto_key* cryptokey, cbor_object** root, int flag) {
     return_t ret = errorcode_t::success;
     cbor_array* cbor_root = nullptr;
 
@@ -451,7 +451,7 @@ return_t cbor_web_key::write(crypto_key* cryptokey, cbor_object** root, int flag
     return ret;
 }
 
-return_t cbor_web_key::diagnose(crypto_key* cryptokey, stream_t* stream, int flag) {
+return_t cbor_web_key::diagnose(const crypto_key* cryptokey, stream_t* stream, int flag) {
     return_t ret = errorcode_t::success;
     cbor_object* root = nullptr;
 

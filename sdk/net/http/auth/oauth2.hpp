@@ -156,9 +156,7 @@ class oauth2_provider {
 
    protected:
     typedef std::map<oauth2_grant_t, oauth2_grant_provider*> oauth2_grant_provider_map_t;
-    typedef std::pair<oauth2_grant_provider_map_t::iterator, bool> oauth2_grant_provider_map_pib_t;
     typedef std::map<std::string, oauth2_grant_provider*> oauth2_grant_provider_ref_map_t;
-    typedef std::pair<oauth2_grant_provider_ref_map_t::iterator, bool> oauth2_grant_provider_ref_map_pib_t;
 
     void clear();
     return_t choose(oauth2_grant_provider_ref_map_t& object, const std::string& key, oauth2_grant_provider** provider_upref);

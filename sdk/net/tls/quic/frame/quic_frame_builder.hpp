@@ -55,12 +55,12 @@ class quic_frame_builder {
     quic_frame* build();
 
    protected:
-    quic_frame_t get_type();
+    quic_frame_t get_type() const;
     tls_session* get_session();
-    tls_direction_t get_direction();
-    uint64 get_streamid();
+    tls_direction_t get_direction() const;
+    uint64 get_streamid() const;
     quic_packet* get_packet();
-    bool is_construct();
+    bool is_construct() const;
 
    private:
     quic_frame_t _type;

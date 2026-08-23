@@ -25,7 +25,7 @@ class tls_extension_alps : public tls_extension {
     tls_extension_alps(tls_handshake* handshake);
     virtual ~tls_extension_alps();
 
-    const binary_t& get_alpn();
+    const binary_t& get_alpn() const;
 
    protected:
     virtual return_t do_read_body(tls_direction_t dir, const byte_t* stream, size_t size, size_t& pos);

@@ -93,7 +93,7 @@ class signalwait_threads {
     /**
      * @brief number of threads running
      */
-    size_t running();
+    size_t running() const;
     /**
      * @brief dummy signal handler
      * @return error code (see error.hpp)
@@ -141,10 +141,10 @@ class signalwait_threads {
     void* _thread_callback_param;                                 ///<< parameter
 
     typedef std::map<threadid_t, thread_info*> SIGNALWAITTHREADS_MAP;
-    critical_section _lock;
+    mutable critical_section _lock;
     SIGNALWAITTHREADS_MAP _container;
     SIGNALWAITTHREADS_MAP _readytojoin;
-    semaphore _sem;
+    mutable semaphore _sem;
     std::string _tag;
 };
 

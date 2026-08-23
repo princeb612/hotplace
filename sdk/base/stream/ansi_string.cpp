@@ -160,7 +160,7 @@ const char* ansi_string::c_str() const {
     return data ? const_cast<const char*>(data) : "";
 }
 
-size_t ansi_string::find(char* data) { return bufferio::find_first_of(_handle, data); }
+size_t ansi_string::find(char* data) const { return bufferio::find_first_of(_handle, data); }
 
 return_t ansi_string::replace(const char* from, const char* to, size_t begin, int flag) { return bufferio::replace(_handle, from, to, begin, flag); }
 
@@ -205,13 +205,13 @@ return_t ansi_string::rtrim() {
     return ret;
 }
 
-size_t ansi_string::find_first_of(const char* find, size_t offset) { return bufferio::find_first_of(_handle, find, offset); }
+size_t ansi_string::find_first_of(const char* find, size_t offset) const { return bufferio::find_first_of(_handle, find, offset); }
 
-size_t ansi_string::find_not_first_of(const char* find, size_t offset) { return bufferio::find_not_first_of(_handle, find, offset); }
+size_t ansi_string::find_not_first_of(const char* find, size_t offset) const { return bufferio::find_not_first_of(_handle, find, offset); }
 
-size_t ansi_string::find_last_of(const char* find) { return bufferio::find_last_of(_handle, find); }
+size_t ansi_string::find_last_of(const char* find) const { return bufferio::find_last_of(_handle, find); }
 
-size_t ansi_string::find_not_last_of(const char* find) { return bufferio::find_not_last_of(_handle, find); }
+size_t ansi_string::find_not_last_of(const char* find) const { return bufferio::find_not_last_of(_handle, find); }
 
 static int isnewline(int c) {
     int ret_value = 0;
@@ -250,7 +250,7 @@ return_t ansi_string::getline(size_t pos, size_t* brk, ansi_string& line) {
     return ret;
 }
 
-int ansi_string::compare(const ansi_string& other) { return strcmp(c_str(), other.c_str()); }
+int ansi_string::compare(const ansi_string& other) const { return strcmp(c_str(), other.c_str()); }
 
 int ansi_string::compare(const ansi_string& lhs, const ansi_string& rhs) { return strcmp(lhs.c_str(), rhs.c_str()); }
 

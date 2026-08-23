@@ -26,7 +26,7 @@ bool bearer_credentials::verify(http_authentication_provider* provider, const st
 
     critical_section_guard guard(_lock);
 
-    std::map<std::string, std::string>::iterator iter = _bearer_credential.find(token);
+    auto iter = _bearer_credential.find(token);
     if (iter != _bearer_credential.end()) {
         ret = true;
     }

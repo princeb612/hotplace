@@ -38,7 +38,7 @@ cose_data& cose_data::set_owner(cose_recipient* layer) {
     return *this;
 }
 
-cose_recipient* cose_data::get_owner() { return _layer; }
+cose_recipient* cose_data::get_owner() const { return _layer; }
 
 cose_data& cose_data::add_bool(int key, bool value) {
     variant var(value);
@@ -81,7 +81,7 @@ cose_data& cose_data::add(int key, const unsigned char* value, size_t size) {
 }
 
 cose_data& cose_data::replace(int key, const unsigned char* value, size_t size) {
-    cose_variantmap_t::iterator iter = _data_map.find(key);
+    auto iter = _data_map.find(key);
     if (_data_map.end() != iter) {
         variant var(value, size);
         iter->second = std::move(var);
@@ -172,7 +172,7 @@ cose_data& cose_data::add(cose_alg_t alg, const char* kid, const binary_t& signa
 
 cose_data& cose_data::add(cose_recipient* countersign) {
     cose_countersigns* countersigns = get_owner()->get_countersigns1();
-    cose_variantmap_t::iterator iter = _data_map.find(cose_key_t::counter_sig);
+    auto iter = _data_map.find(cose_key_t::counter_sig);
     if (_data_map.end() == iter) {
         add(cose_key_t::counter_sig, vartype_t::TYPE_COUNTER_SIG, countersigns);
     }
@@ -293,7 +293,7 @@ return_t cose_data::build_protected(cbor_data** object) {
                 auto root = custom::make_unique<cbor_map>();
 
                 for (const auto& key : _order) {
-                    cose_variantmap_t::iterator map_iter = _data_map.find(key);
+                    auto map_iter = _data_map.find(key);
                     variant value = map_iter->second;
                     *(root.get()) << new cbor_pair(new cbor_data(key), new cbor_data(std::move(value)));
                 }
@@ -329,12 +329,12 @@ return_t cose_data::build_protected(cbor_data** object, cose_variantmap_t& unsen
                 auto root = custom::make_unique<cbor_map>();
 
                 for (const auto& key : _order) {
-                    cose_variantmap_t::iterator unsent_iter = unsent.find(key);
+                    auto unsent_iter = unsent.find(key);
                     if (unsent.end() != unsent_iter) {
                         continue;
                     }
 
-                    cose_variantmap_t::iterator map_iter = _data_map.find(key);
+                    auto map_iter = _data_map.find(key);
                     variant value = map_iter->second;
                     *(root.get()) << new cbor_pair(new cbor_data(key), new cbor_data(std::move(value)));
                 }
@@ -367,7 +367,7 @@ return_t cose_data::build_unprotected(cbor_map** object) {
         auto root = custom::make_unique<cbor_map>();
 
         for (const auto& key : _order) {
-            cose_variantmap_t::iterator map_iter = _data_map.find(key);
+            auto map_iter = _data_map.find(key);
             variant value = map_iter->second;
             const variant_t& vt = value.get();
 
@@ -402,12 +402,12 @@ return_t cose_data::build_unprotected(cbor_map** object, cose_variantmap_t& unse
         auto root = custom::make_unique<cbor_map>();
 
         for (const auto& key : _order) {
-            cose_variantmap_t::iterator unsent_iter = unsent.find(key);
+            auto unsent_iter = unsent.find(key);
             if (unsent.end() != unsent_iter) {
                 continue;
             }
 
-            cose_variantmap_t::iterator map_iter = _data_map.find(key);
+            auto map_iter = _data_map.find(key);
             variant value = map_iter->second;
             const variant_t& vt = value.get();
 
@@ -690,7 +690,7 @@ bool cose_data::is_binary_empty() const { return 0 == _payload.size(); }
 
 size_t cose_data::sizeof_binary() const { return _payload.size(); }
 
-void cose_data::get_binary(binary_t& bin) { bin = _payload; }
+void cose_data::get_binary(binary_t& bin) const { bin = _payload; }
 
 }  // namespace crypto
 }  // namespace hotplace

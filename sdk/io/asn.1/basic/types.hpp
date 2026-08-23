@@ -142,7 +142,6 @@ enum asn1_entity_t {
     // SetOfType ::= SET OF Type | SET OF NamedType
     asn1_entity_set_of,
     asn1_entity_choice,
-    asn1_entity_enum_type,
     asn1_entity_any,
 
     asn1_entity_constraint = 0x2000,
@@ -204,8 +203,6 @@ class asn1_enum;
 class asn1_bitstring;  // named bit list
 class asn1_integer;    // named number list
 
-class asn1_runtime;
-class asn1_runtime_context;
 class asn1_encode;
 class asn1_resource;
 

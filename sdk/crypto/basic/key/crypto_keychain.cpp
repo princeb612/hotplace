@@ -202,7 +202,7 @@ return_t crypto_keychain::load_der(crypto_key* cryptokey, const byte_t* buffer, 
     return ret;
 }
 
-return_t crypto_keychain::write(crypto_key* cryptokey, keyflag_t mode, stream_t* stream, int flag) {
+return_t crypto_keychain::write(const crypto_key* cryptokey, keyflag_t mode, stream_t* stream, int flag) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == stream) {
@@ -223,7 +223,7 @@ return_t crypto_keychain::write(crypto_key* cryptokey, keyflag_t mode, stream_t*
     return ret;
 }
 
-return_t crypto_keychain::write_pem(crypto_key* cryptokey, stream_t* stream, int flag) {
+return_t crypto_keychain::write_pem(const crypto_key* cryptokey, stream_t* stream, int flag) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -240,7 +240,7 @@ return_t crypto_keychain::write_pem(crypto_key* cryptokey, stream_t* stream, int
             __leave2;
         }
 
-        auto lambda = [](crypto_key_object* key, void* param) -> void { dump_pem(key->get_pkey(), (BIO*)param); };
+        auto lambda = [](const crypto_key_object* key, void* param) -> void { dump_pem(key->get_pkey(), (BIO*)param); };
 
         cryptokey->for_each(lambda, (void*)out.get());
 
@@ -325,7 +325,7 @@ return_t crypto_keychain::load_file(crypto_key* cryptokey, keyflag_t mode, const
     return ret;
 }
 
-return_t crypto_keychain::write_file(crypto_key* cryptokey, keyflag_t mode, const char* filename, int flag) {
+return_t crypto_keychain::write_file(const crypto_key* cryptokey, keyflag_t mode, const char* filename, int flag) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == cryptokey || nullptr == filename) {

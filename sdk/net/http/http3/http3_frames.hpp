@@ -29,8 +29,8 @@ class http3_frames {
     http3_frames& operator<<(http3_frame* frame);
     return_t for_each(std::function<return_t(http3_frame*)> func);
     http3_frame* getat(size_t index, bool upref = false);
-    bool empty();
-    size_t size();
+    bool empty() const;
+    size_t size() const;
     void clear();
 
    protected:

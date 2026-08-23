@@ -29,7 +29,7 @@ return_t dump_test_data(const char* text, const binary_t& cbor) {
     return ret;
 }
 
-void dump_crypto_key(crypto_key_object* key, void*) {
+void dump_crypto_key(const crypto_key_object* key, void*) {
     const OPTION option = _cmdline->value();  // (*_cmdline).value () is ok
     if (option.dump_keys) {
         uint32 nid = 0;

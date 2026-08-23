@@ -47,7 +47,7 @@ asn1_node& asn1_node::add(asn1_node* child) {
             child->set_parent(this);
         } else {
             child->release();
-            throw exception(errorcode_t::not_available);
+            // throw exception(errorcode_t::not_available);
         }
     }
     return *this;

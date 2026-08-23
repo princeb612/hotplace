@@ -92,7 +92,7 @@ return_t json_object_encryption::encrypt(jose_context_t* handle, jwe_t enc, cons
 
         std::list<jwa_t> algs = jwalgs;
 
-        for (std::list<jwa_t>::iterator it = algs.begin(); it != algs.end();) {
+        for (auto it = algs.begin(); it != algs.end();) {
             if (jwa_t::dir == *it || jwa_t::rsa_1_5 == *it) {
                 // support "dir" for decryption only ...
                 it = algs.erase(it);
@@ -227,7 +227,7 @@ return_t json_object_encryption::doencrypt(jose_context_t* handle, jwe_t enc, jw
             __leave2;
         }
 
-        jose_encryptions_map_t::iterator iter = handle->encryptions.find(enc);
+        auto iter = handle->encryptions.find(enc);
         if (handle->encryptions.end() == iter) {
             ret = errorcode_t::internal_error;
             __leave2;
@@ -444,7 +444,7 @@ return_t json_object_encryption::dodecrypt(jose_context_t* handle, jwe_t enc, jw
             __leave2;
         }
 
-        jose_encryptions_map_t::iterator iter = handle->encryptions.find(enc);
+        auto iter = handle->encryptions.find(enc);
         if (handle->encryptions.end() == iter) {
             ret = errorcode_t::internal_error;
             __leave2;

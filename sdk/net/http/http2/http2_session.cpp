@@ -115,12 +115,12 @@ return_t http2_session::consume(const byte_t* buf, size_t bufsize, http_request*
         uint32 mask = (h2_flag_end_stream | h2_flag_end_headers);
         http_request* req = nullptr;
 
-        flags_pib_t flags_pib = _flags.emplace(stream_id, flags);
+        auto flags_pib = _flags.emplace(stream_id, flags);
         if (false == flags_pib.second) {
             flags_pib.first->second |= flags;
             flags = flags_pib.first->second;
         }
-        headers_t ::iterator iter = _headers.find(stream_id);
+        auto iter = _headers.find(stream_id);
         if (_headers.end() != iter) {
             req = &iter->second;
         } else {

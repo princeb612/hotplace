@@ -567,11 +567,11 @@ return_t cbor_foreach_t(cbor_reader_context_t* handle, void (*function)(unsigned
     return ret;
 }
 
-return_t cbor_reader::cbor_foreach(cbor_reader_context_t* handle, void (*function)(unsigned, cbor_object*, binary_t*), binary_t* param) {
+return_t cbor_reader::cbor_foreach(cbor_reader_context_t* handle, void (*function)(unsigned, cbor_object*, binary_t*), binary_t* param) const {
     return cbor_foreach_t<binary_t>(handle, function, param);
 }
 
-return_t cbor_reader::cbor_foreach(cbor_reader_context_t* handle, void (*function)(unsigned, cbor_object*, stream_t*), stream_t* param) {
+return_t cbor_reader::cbor_foreach(cbor_reader_context_t* handle, void (*function)(unsigned, cbor_object*, stream_t*), stream_t* param) const {
     return cbor_foreach_t<stream_t>(handle, function, param);
 }
 

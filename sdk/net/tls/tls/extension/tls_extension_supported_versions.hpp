@@ -32,7 +32,7 @@ class tls_extension_client_supported_versions : public tls_extension_supported_v
     virtual ~tls_extension_client_supported_versions();
 
     tls_extension_client_supported_versions& add(tls_version_t code);
-    const std::list<tls_version_t>& get_versions();
+    const std::list<tls_version_t>& get_versions() const;
 
    protected:
     virtual return_t do_postprocess(tls_direction_t dir);

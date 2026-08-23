@@ -14,6 +14,7 @@
 #define __HOTPLACE_SDK_IO_ASN1_BASIC_VISITOR_ASN1VISOTOR__
 
 #include <hotplace/sdk/io/asn.1/basic/types.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/types.hpp>
 
 namespace hotplace {
 namespace io {

@@ -35,8 +35,13 @@
     * CBOR
 
 * details
-  * Revision 1056-
+  * Revision 1060-
+    * ASN.1 parser
+  * Revision 1059
+    * [tested] aho corasick parser - token grouping, sub-pattern reduction, and repeat-rule processing
+  * Revision 1056-1058
     * ASN.1 strongly-typed decoding
+    * [tested] sanitizer
   * Revision 1045-1055
     * ASN.1 weakly-typed decoding
   * Revision 1044

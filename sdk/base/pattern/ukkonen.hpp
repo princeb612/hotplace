@@ -73,8 +73,8 @@ class t_ukkonen {
         return *this;
     }
 
-    std::set<size_t> search(const std::vector<T>& pattern) { return search(pattern.data(), pattern.size()); }
-    std::set<size_t> search(const T* pattern, size_t size) {
+    std::set<size_t> search(const std::vector<T>& pattern) const { return search(pattern.data(), pattern.size()); }
+    std::set<size_t> search(const T* pattern, size_t size) const {
         std::set<size_t> result;
         size_t pos = -1;
 
@@ -110,8 +110,8 @@ class t_ukkonen {
         return *this;
     }
 
-    void dump(dump_handler handler) { dump(_root, 0, handler); }
-    void debug(debug_handler handler) { debug(_root, 0, handler); }
+    void dump(dump_handler handler) const { dump(_root, 0, handler); }
+    void debug(debug_handler handler) const { debug(_root, 0, handler); }
 
    private:
     memberof_t _memberof;
@@ -202,7 +202,7 @@ class t_ukkonen {
         }
     }
 
-    void collect_suffix_indices(trienode* node, std::set<size_t>& result) {
+    void collect_suffix_indices(trienode* node, std::set<size_t>& result) const {
         if (node) {
             if (size_t(-1) == node->suffix_index) {
                 for (auto child : node->children) {
@@ -214,14 +214,14 @@ class t_ukkonen {
         }
     }
 
-    void dump(trienode* node, size_t level, dump_handler handler) {
+    void dump(trienode* node, size_t level, dump_handler handler) const {
         for (auto& child : node->children) {
             trienode* item = child.second;
             handler(&_source[item->start], item->length());
             dump(child.second, level + 1, handler);
         }
     }
-    void debug(trienode* node, size_t level, debug_handler handler) {
+    void debug(trienode* node, size_t level, debug_handler handler) const {
         for (auto& child : node->children) {
             trienode* item = child.second;
             handler(node, level, &_source[item->start], item->length());

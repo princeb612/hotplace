@@ -240,7 +240,7 @@ return_t basic_stream::vaprintln(const char* fmt, valist ap) {
     return rc;
 }
 
-int basic_stream::compare(const basic_stream& other) { return compare(*this, other.c_str()); }
+int basic_stream::compare(const basic_stream& other) const { return compare(*this, other.c_str()); }
 
 int basic_stream::compare(const basic_stream& lhs, const basic_stream& rhs) const { return compare(lhs, rhs.c_str()); }
 

@@ -21,7 +21,7 @@ void test_akp() {
     keychain.add_ossl3(&key, "ML-DSA-65", keydesc("ML-DSA-65"));
     keychain.add_ossl3(&key, "ML-DSA-87", keydesc("ML-DSA-87"));
 
-    auto dump_crypto_key = [&](crypto_key_object* item, void*) -> void {
+    auto dump_crypto_key = [&](const crypto_key_object* item, void*) -> void {
         auto pkey = item->get_pkey();
 
         _logger->write([&](basic_stream& bs) -> void {

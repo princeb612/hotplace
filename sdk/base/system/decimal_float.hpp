@@ -66,7 +66,7 @@ class decimal_float {
      *  auto str1 = res.str();     // "1.00000000000000000001e+10"
      *  auto str2 = res.fstr(32);  // "10000000000.0000000001"
      */
-    std::string str();
+    std::string str() const;
     std::string fstr(size_t precision = 32) const;
 
     static int compare(const decimal_float& lhs, const decimal_float& rhs);

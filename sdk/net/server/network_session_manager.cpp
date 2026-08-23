@@ -71,7 +71,7 @@ return_t network_session_manager::find(handle_t event_socket, network_session** 
         }
 
         critical_section_guard guard(_session_lock);
-        network_session_map_t::iterator iter = _session_map.find(event_socket);
+        auto iter = _session_map.find(event_socket);
         if (_session_map.end() == iter) {
             ret = errorcode_t::not_found;
         } else {
@@ -102,7 +102,7 @@ return_t network_session_manager::ready_to_close(handle_t event_socket, network_
         }
 
         critical_section_guard guard(_session_lock);
-        network_session_map_t::iterator iter = _session_map.find(event_socket);
+        auto iter = _session_map.find(event_socket);
         if (_session_map.end() == iter) {
             ret = errorcode_t::not_found;
         } else {

@@ -28,7 +28,7 @@ class http2_frame_settings : public http2_frame {
     virtual ~http2_frame_settings();
 
     http2_frame_settings& add(uint16 id, uint32 value);
-    return_t find(uint16 id, uint32& value);
+    return_t find(uint16 id, uint32& value) const;
 
     virtual void dump(stream_t* s);
 
@@ -38,7 +38,6 @@ class http2_frame_settings : public http2_frame {
 
    private:
     typedef std::map<uint16, uint32> h2_setting_map_t;
-    typedef std::pair<h2_setting_map_t::iterator, bool> h2_setting_map_pib_t;
     h2_setting_map_t _settings;
 };
 

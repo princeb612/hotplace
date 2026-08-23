@@ -40,11 +40,11 @@ class t_aho_corasick_t {
     virtual void insert(const std::vector<T>& pattern) = 0;
     virtual void insert(const T* pattern, size_t size) = 0;
     virtual void build() = 0;
-    virtual std::multimap<range_t, size_t> search(const std::vector<T>& source) = 0;
-    virtual std::multimap<range_t, size_t> search(const T* source, size_t size) = 0;
-    virtual size_t get_pattern_size(size_t index) = 0;
-    virtual void order_by_pattern(const std::multimap<range_t, size_t>& input, std::multimap<size_t, range_t>& output) = 0;
-    virtual return_t get_pattern(size_t index, std::vector<BT>& pattern) = 0;
+    virtual std::multimap<range_t, size_t> search(const std::vector<T>& source) const = 0;
+    virtual std::multimap<range_t, size_t> search(const T* source, size_t size) const = 0;
+    virtual size_t get_pattern_size(size_t index) const = 0;
+    virtual void order_by_pattern(const std::multimap<range_t, size_t>& input, std::multimap<size_t, range_t>& output) const = 0;
+    virtual return_t get_pattern(size_t index, std::vector<BT>& pattern) const = 0;
     virtual void reset() = 0;
 };
 
@@ -100,10 +100,11 @@ class t_aho_corasick : public t_aho_corasick_t<BT, T> {
      * @brief   trie node structure
      */
     struct trienode {
-        std::unordered_map<BT, trienode*> children;
+        std::unordered_map<BT, trienode*> children;        // exact match
+        std::unordered_map<BT, trienode*> group_children;  // group match - see t_aho_corasick_parser
         trienode* failure;
         std::set<size_t> output;
-        uint8 flag;  // reserved
+        uint8 flag;  // single/any see t_aho_corasick_wildcard
 
         trienode() : failure(nullptr), flag(0) {}
         ~trienode() { clear(); }
@@ -112,6 +113,12 @@ class t_aho_corasick : public t_aho_corasick_t<BT, T> {
                 auto child = item.second;
                 delete child;
             }
+            for (auto item : group_children) {
+                auto child = item.second;
+                delete child;
+            }
+            children.clear();
+            group_children.clear();
         }
     };
 
@@ -133,22 +140,15 @@ class t_aho_corasick : public t_aho_corasick_t<BT, T> {
      * @brief   search for patterns
      * @return  std::multimap<range_t, size_t>
      */
-    std::multimap<range_t, size_t> search(const std::vector<T>& source) override {
-        std::map<size_t, std::set<size_t>> ordered;
-        std::multimap<range_t, size_t> result;
-        auto size = source.size();
-        dosearch(source.data(), size, ordered);
-        get_result(ordered, result, size);
-        return result;
-    }
-    std::multimap<range_t, size_t> search(const T* source, size_t size) override {
+    std::multimap<range_t, size_t> search(const std::vector<T>& source) const override { return search(source.data(), source.size()); }
+    std::multimap<range_t, size_t> search(const T* source, size_t size) const override {
         std::map<size_t, std::set<size_t>> ordered;
         std::multimap<range_t, size_t> result;
         dosearch(source, size, ordered);
         get_result(ordered, result, size);
         return result;
     }
-    virtual size_t get_pattern_size(size_t index) {
+    virtual size_t get_pattern_size(size_t index) const {
         size_t size = 0;
         auto iter = _patterns.find(index);
         if (_patterns.end() != iter) {
@@ -169,7 +169,7 @@ class t_aho_corasick : public t_aho_corasick_t<BT, T> {
      *              // do something
      *          }
      */
-    void order_by_pattern(const std::multimap<range_t, size_t>& input, std::multimap<size_t, range_t>& output) override {
+    void order_by_pattern(const std::multimap<range_t, size_t>& input, std::multimap<size_t, range_t>& output) const override {
         output.clear();
         for (auto& pair : input) {
             output.insert({pair.second, pair.first});
@@ -184,7 +184,7 @@ class t_aho_corasick : public t_aho_corasick_t<BT, T> {
         _patterns.clear();
     }
 
-    return_t get_pattern(size_t index, std::vector<BT>& pattern) override {
+    return_t get_pattern(size_t index, std::vector<BT>& pattern) const override {
         return_t ret = errorcode_t::success;
         auto iter = _patterns.find(index);
         if (_patterns.end() != iter) {
@@ -198,25 +198,25 @@ class t_aho_corasick : public t_aho_corasick_t<BT, T> {
 
    protected:
     virtual void doinsert(const T* pattern, size_t size) {
-        if (pattern) {
-            trienode* current = _root;
+        if (nullptr == pattern || 0 == size) return;
 
-            std::vector<BT> pat;
-            for (size_t i = 0; i < size; ++i) {
-                const BT& t = _memberof(pattern, i);
-                pat.push_back(t);
-                trienode* child = current->children[t];
-                if (nullptr == child) {
-                    child = new trienode;
-                    current->children[t] = child;
-                }
-                current = child;
+        trienode* current = _root;
+        std::vector<BT> pat;
+
+        for (size_t i = 0; i < size; ++i) {
+            const BT& t = _memberof(pattern, i);
+            pat.push_back(t);
+            trienode* child = current->children[t];
+            if (nullptr == child) {
+                child = new trienode;
+                current->children[t] = child;
             }
-
-            size_t index = _patterns.size();
-            current->output.insert(index);
-            _patterns.insert({index, std::move(pat)});
+            current = child;
         }
+
+        size_t index = _patterns.size();
+        current->output.insert(index);
+        _patterns.insert({index, std::move(pat)});
     }
     virtual void dobuild() {
         std::queue<trienode*> q;
@@ -260,27 +260,27 @@ class t_aho_corasick : public t_aho_corasick_t<BT, T> {
     /**
      * @brief   search
      */
-    virtual void dosearch(const T* source, size_t size, std::map<size_t, std::set<size_t>>& result) {
-        if (source) {
-            trienode* current = _root;
-            for (size_t i = 0; i < size; ++i) {
-                const BT& t = _memberof(source, i);
-                while ((current != _root) && (current->children.end() == current->children.find(t))) {
-                    current = current->failure;
-                }
+    virtual void dosearch(const T* source, size_t size, std::map<size_t, std::set<size_t>>& result) const {
+        if (nullptr == source) return;
 
-                auto iter = current->children.find(t);
-                if (current->children.end() != iter) {
-                    current = iter->second;
-                    collect_results(current, i, result);
-                }
+        trienode* current = _root;
+        for (size_t i = 0; i < size; ++i) {
+            const BT& t = _memberof(source, i);
+            while ((current != _root) && (current->children.end() == current->children.find(t))) {
+                current = current->failure;
+            }
+
+            auto iter = current->children.find(t);
+            if (current->children.end() != iter) {
+                current = iter->second;
+                collect_results(current, i, result);
             }
         }
     }
     /*
      * @brief   collect results
      */
-    virtual void collect_results(trienode* node, size_t pos, std::map<size_t, std::set<size_t>>& result) {
+    virtual void collect_results(trienode* node, size_t pos, std::map<size_t, std::set<size_t>>& result) const {
         if (node) {
             for (const auto& v : node->output) {
                 // v is an index of a pattern
@@ -289,15 +289,15 @@ class t_aho_corasick : public t_aho_corasick_t<BT, T> {
             }
         }
     }
-    virtual void get_result(const std::map<size_t, std::set<size_t>>& ordered, std::multimap<range_t, size_t>& result, size_t size) {
+    virtual void get_result(const std::map<size_t, std::set<size_t>>& ordered, std::multimap<range_t, size_t>& result, size_t size) const {
         for (const auto& pair : ordered) {
-            const auto& v = pair.first;
+            const auto& pid = pair.first;
             const auto& positions = pair.second;
             for (const auto& pos : positions) {
                 range_t range;
-                range.begin = pos - get_pattern_size(v) + 1;
+                range.begin = pos - get_pattern_size(pid) + 1;
                 range.end = pos;
-                result.insert({range, v});
+                result.insert({range, pid});
             }
         }
     }

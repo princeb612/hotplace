@@ -22,7 +22,7 @@ http_router::http_router() : _http_server(nullptr) {}
 http_router::~http_router() { clear(); }
 
 void http_router::clear() {
-    for (authenticate_map_t::iterator iter = _authenticate_map.begin(); iter != _authenticate_map.end(); iter++) {
+    for (auto iter = _authenticate_map.begin(); iter != _authenticate_map.end(); iter++) {
         http_authentication_provider* provider = iter->second;
         provider->release();
     }
@@ -51,7 +51,7 @@ http_router& http_router::add(const std::string& uri, http_request_handler_t han
     _handler_map.emplace(uri, router);
 
     if (auth_provider) {
-        authenticate_map_pib_t pib = _authenticate_map.emplace(uri, auth_provider);
+        auto pib = _authenticate_map.emplace(uri, auth_provider);
         if (upref) {
             if (pib.second) {
                 auth_provider->addref();
@@ -70,7 +70,7 @@ http_router& http_router::add(const std::string& uri, http_request_function_t ha
     _handler_map.emplace(uri, router);
 
     if (auth_provider) {
-        authenticate_map_pib_t pib = _authenticate_map.emplace(uri, auth_provider);
+        auto pib = _authenticate_map.emplace(uri, auth_provider);
         if (upref) {
             if (pib.second) {
                 auth_provider->addref();
@@ -124,7 +124,7 @@ return_t http_router::route(network_session* session, http_request* request, htt
             critical_section_guard guard(_lock);
 
             auto route_not_found = [&](http_router_t& router) -> void {
-                status_handler_map_t::iterator status_iter = _status_handler_map.find(404);
+                auto status_iter = _status_handler_map.find(404);
                 if (_status_handler_map.end() != status_iter) {
                     router = status_iter->second;
                 }
@@ -132,7 +132,7 @@ return_t http_router::route(network_session* session, http_request* request, htt
 
             const char* uri = request->get_http_uri().get_uripath();
 
-            handler_map_t::iterator iter = _handler_map.find(uri);
+            auto iter = _handler_map.find(uri);
             if (_handler_map.end() != iter) {
                 routing = iter->second;
             } else if (get_html_documents().test()) {
@@ -185,7 +185,7 @@ html_documents& http_router::get_html_documents() { return _http_documents; }
 
 oauth2_provider& http_router::get_oauth2_provider() { return _oauth2; }
 
-bool http_router::get_auth_provider(http_request* request, http_response* response, http_authentication_provider** provider) {
+bool http_router::get_auth_provider(http_request* request, http_response* response, http_authentication_provider** provider) const {
     bool ret_value = false;
     // return_t ret = errorcode_t::success;
     http_authentication_provider* auth_provider = nullptr;

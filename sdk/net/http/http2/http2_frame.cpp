@@ -59,15 +59,15 @@ http2_frame::http2_frame(const http2_frame& other) {
 
 http2_frame::~http2_frame() {}
 
-uint32 http2_frame::get_frame_size() { return t_narrow_cast(sizeof(http2_frame_header_t) + get_payload_size()); }
+uint32 http2_frame::get_frame_size() const { return t_narrow_cast(sizeof(http2_frame_header_t) + get_payload_size()); }
 
-size_t http2_frame::get_payload_size() { return _payload_size; }
+size_t http2_frame::get_payload_size() const { return _payload_size; }
 
-uint8 http2_frame::get_type() { return _type; }
+uint8 http2_frame::get_type() const { return _type; }
 
-uint8 http2_frame::get_flags() { return _flags; }
+uint8 http2_frame::get_flags() const { return _flags; }
 
-uint32 http2_frame::get_stream_id() { return _stream_id; }
+uint32 http2_frame::get_stream_id() const { return _stream_id; }
 
 return_t http2_frame::set_payload_size(size_t size) {
     return_t ret = errorcode_t::success;

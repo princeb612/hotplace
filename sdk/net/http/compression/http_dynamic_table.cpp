@@ -20,7 +20,7 @@ http_dynamic_table::http_dynamic_table() : _type(header_compression_hpack), _tab
 
 http_dynamic_table::~http_dynamic_table() {}
 
-void http_dynamic_table::pick(size_t entry, const std::string& name, std::string& value) {
+void http_dynamic_table::pick(size_t entry, const std::string& name, std::string& value) const {
     critical_section_guard guard(_lock);
     auto iter = _dynamic_reversemap.find(entry);
     if (_dynamic_reversemap.end() != iter) {
@@ -36,9 +36,9 @@ void http_dynamic_table::pick(size_t entry, const std::string& name, std::string
     }
 }
 
-void http_dynamic_table::for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f) {}
+void http_dynamic_table::for_each(std::function<void(size_t, size_t, const std::string&, const std::string&)> f) const {}
 
-void http_dynamic_table::dump(const std::string& desc, std::function<void(const char*, size_t)> f) {}
+void http_dynamic_table::dump(const std::string& desc, std::function<void(const char*, size_t)> f) const {}
 
 bool http_dynamic_table::operator==(const http_dynamic_table& other) { return (_type == other._type) && (_dynamic_map == other._dynamic_map); }
 
@@ -317,19 +317,19 @@ void http_dynamic_table::cancel() {}
 
 void http_dynamic_table::increment(size_t inc) { _ack += inc; }
 
-size_t http_dynamic_table::get_capacity() { return _capacity; }
+size_t http_dynamic_table::get_capacity() const { return _capacity; }
 
-size_t http_dynamic_table::get_tablesize() { return _tablesize; }
+size_t http_dynamic_table::get_tablesize() const { return _tablesize; }
 
-size_t http_dynamic_table::get_entries() { return _inserted - _dropped; }
+size_t http_dynamic_table::get_entries() const { return _inserted - _dropped; }
 
-return_t http_dynamic_table::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) { return errorcode_t::success; }
+return_t http_dynamic_table::query(int cmd, void* req, size_t reqsize, void* resp, size_t& respsize) const { return errorcode_t::success; }
 
-uint8 http_dynamic_table::get_type() { return _type; }
+uint8 http_dynamic_table::get_type() const { return _type; }
 
 void http_dynamic_table::set_type(uint8 type) { _type = type; }
 
-size_t http_dynamic_table::dynamic_map_size() { return _dynamic_map.size(); }
+size_t http_dynamic_table::dynamic_map_size() const { return _dynamic_map.size(); }
 
 void http_dynamic_table::set_debug_hook(std::function<void(trace_category_t, trace_event_t event)> fn) { _hook = fn; }
 

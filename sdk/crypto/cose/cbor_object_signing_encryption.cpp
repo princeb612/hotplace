@@ -35,8 +35,6 @@ namespace crypto {
 
 cbor_object_signing_encryption::cbor_object_signing_encryption() : _builtmap(false) {}
 
-cbor_object_signing_encryption::~cbor_object_signing_encryption() {}
-
 return_t cbor_object_signing_encryption::open(cose_context_t** handle) {
     return_t ret = errorcode_t::success;
 
@@ -89,7 +87,7 @@ return_t cbor_object_signing_encryption::set(cose_context_t* handle, uint32 flag
     return ret;
 }
 
-return_t cbor_object_signing_encryption::get(cose_context_t* handle, uint32& flags, uint32& debug_flags) {
+return_t cbor_object_signing_encryption::get(cose_context_t* handle, uint32& flags, uint32& debug_flags) const {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -209,7 +207,7 @@ return_t cbor_object_signing_encryption::process(cose_context_t* handle, crypto_
         if (1 == results.size()) {
             ret = *results.begin();
         } else {
-            std::set<return_t>::iterator iter = results.find(errorcode_t::not_supported);
+            auto iter = results.find(errorcode_t::not_supported);
             if (results.end() == iter) {
                 ret = errorcode_t::failed;
             } else {
@@ -358,7 +356,7 @@ return_t cbor_object_signing_encryption::preprocess_skeleton(cose_context_t* han
 
         // compose
         cose_alg_t main_alg = cose_alg_t::cose_unknown;
-        std::multimap<crypt_category_t, cose_alg_t>::iterator algmap_iter = algmap.lower_bound(category);
+        auto algmap_iter = algmap.lower_bound(category);
         main_alg = algmap_iter->second;
         body.get_protected().add(cose_key_t::alg, main_alg);
         switch (category) {
@@ -378,9 +376,8 @@ return_t cbor_object_signing_encryption::preprocess_skeleton(cose_context_t* han
         }
 
         if (crypt_category_t::crypt == category || crypt_category_t::mac == category) {
-            std::multimap<crypt_category_t, cose_alg_t>::iterator lower_bound, upper_bound;
-            lower_bound = algmap.lower_bound(crypt_category_t::keydistribution);
-            upper_bound = algmap.upper_bound(crypt_category_t::keydistribution);
+            auto lower_bound = algmap.lower_bound(crypt_category_t::keydistribution);
+            auto upper_bound = algmap.upper_bound(crypt_category_t::keydistribution);
             for (algmap_iter = lower_bound; algmap_iter != upper_bound; algmap_iter++) {
                 cose_alg_t alg = algmap_iter->second;
                 std::string kid;
@@ -438,7 +435,7 @@ return_t cbor_object_signing_encryption::preprocess_random(cose_context_t* handl
         if (1 == results.size()) {
             ret = *results.begin();
         } else {
-            std::set<return_t>::iterator iter = results.find(errorcode_t::not_supported);
+            auto iter = results.find(errorcode_t::not_supported);
             if (results.end() == iter) {
                 ret = errorcode_t::failed;
             } else {

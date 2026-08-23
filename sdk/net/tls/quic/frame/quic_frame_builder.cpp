@@ -71,17 +71,17 @@ quic_frame_builder& quic_frame_builder::construct() {
     return *this;
 }
 
-quic_frame_t quic_frame_builder::get_type() { return _type; }
+quic_frame_t quic_frame_builder::get_type() const { return _type; }
 
 tls_session* quic_frame_builder::get_session() { return _session; }
 
-tls_direction_t quic_frame_builder::get_direction() { return _dir; }
+tls_direction_t quic_frame_builder::get_direction() const { return _dir; }
 
-uint64 quic_frame_builder::get_streamid() { return _streamid; }
+uint64 quic_frame_builder::get_streamid() const { return _streamid; }
 
 quic_packet* quic_frame_builder::get_packet() { return _packet; }
 
-bool quic_frame_builder::is_construct() { return _construct; }
+bool quic_frame_builder::is_construct() const { return _construct; }
 
 quic_frame* quic_frame_builder::build() {
     quic_frame* frame = nullptr;

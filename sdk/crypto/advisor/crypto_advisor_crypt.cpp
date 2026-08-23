@@ -15,18 +15,18 @@
 namespace hotplace {
 namespace crypto {
 
-const hint_blockcipher_t* crypto_advisor::hintof_blockcipher(crypt_algorithm_t alg) {
+const hint_blockcipher_t* crypto_advisor::hintof_blockcipher(crypt_algorithm_t alg) const {
     const hint_blockcipher_t* item = nullptr;
-    t_maphint<crypt_algorithm_t, const hint_blockcipher_t*> hint(_blockcipher_map);
+    t_maphint_const<crypt_algorithm_t, const hint_blockcipher_t*> hint(_blockcipher_map);
     hint.find(alg, &item);
     return item;
 }
 
-const hint_blockcipher_t* crypto_advisor::hintof_blockcipher(const char* alg) { return alg ? hintof_blockcipher(std::string(alg)) : nullptr; }
+const hint_blockcipher_t* crypto_advisor::hintof_blockcipher(const char* alg) const { return alg ? hintof_blockcipher(std::string(alg)) : nullptr; }
 
-const hint_blockcipher_t* crypto_advisor::hintof_blockcipher(const std::string& alg) {
+const hint_blockcipher_t* crypto_advisor::hintof_blockcipher(const std::string& alg) const {
     const hint_blockcipher_t* ret_value = nullptr;
-    t_maphint<std::string, const hint_cipher_t*> hint(_cipher_byname_map);
+    t_maphint_const<std::string, const hint_cipher_t*> hint(_cipher_byname_map);
     const hint_cipher_t* item = nullptr;
     hint.find(alg, &item);
     if (item) {
@@ -35,9 +35,9 @@ const hint_blockcipher_t* crypto_advisor::hintof_blockcipher(const std::string& 
     return ret_value;
 }
 
-const hint_blockcipher_t* crypto_advisor::hintof_blockcipher(crypto_scheme_t scheme) {
+const hint_blockcipher_t* crypto_advisor::hintof_blockcipher(crypto_scheme_t scheme) const {
     const hint_blockcipher_t* ret_value = nullptr;
-    t_maphint<crypto_scheme_t, const hint_cipher_t*> hint(_cipher_scheme_map);
+    t_maphint_const<crypto_scheme_t, const hint_cipher_t*> hint(_cipher_scheme_map);
     const hint_cipher_t* item = nullptr;
     hint.find(scheme, &item);
     if (item) {
@@ -46,25 +46,25 @@ const hint_blockcipher_t* crypto_advisor::hintof_blockcipher(crypto_scheme_t sch
     return ret_value;
 }
 
-const hint_blockcipher_t* crypto_advisor::find_evp_cipher(const EVP_CIPHER* cipher) {
+const hint_blockcipher_t* crypto_advisor::find_evp_cipher(const EVP_CIPHER* cipher) const {
     const hint_blockcipher_t* blockcipher = nullptr;
     return_t ret = errorcode_t::success;
     __try2 {
         const hint_cipher_t* hint = nullptr;
-        t_maphint<const EVP_CIPHER*, const hint_cipher_t*> hint_cipher(_evp_cipher_map);
+        t_maphint_const<const EVP_CIPHER*, const hint_cipher_t*> hint_cipher(_evp_cipher_map);
         ret = hint_cipher.find(cipher, &hint);
         if (errorcode_t::success != ret) {
             __leave2;
         }
 
-        t_maphint<crypt_algorithm_t, const hint_blockcipher_t*> hint_blockcipher(_blockcipher_map);
+        t_maphint_const<crypt_algorithm_t, const hint_blockcipher_t*> hint_blockcipher(_blockcipher_map);
         hint_blockcipher.find(typeof_alg(hint), &blockcipher);
     }
     __finally2 {}
     return blockcipher;
 }
 
-const EVP_CIPHER* crypto_advisor::find_evp_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode) {
+const EVP_CIPHER* crypto_advisor::find_evp_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode) const {
     const EVP_CIPHER* ret_value = nullptr;
     auto key = make_cryptoscheme(algorithm, mode);
     auto iter = _cipher_fetch_map.find((crypto_scheme_t)key);
@@ -74,15 +74,15 @@ const EVP_CIPHER* crypto_advisor::find_evp_cipher(crypt_algorithm_t algorithm, c
     return ret_value;
 }
 
-const EVP_CIPHER* crypto_advisor::find_evp_cipher(const char* name) { return name ? find_evp_cipher(std::string(name)) : nullptr; }
+const EVP_CIPHER* crypto_advisor::find_evp_cipher(const char* name) const { return name ? find_evp_cipher(std::string(name)) : nullptr; }
 
-const EVP_CIPHER* crypto_advisor::find_evp_cipher(const std::string& name) {
+const EVP_CIPHER* crypto_advisor::find_evp_cipher(const std::string& name) const {
     const EVP_CIPHER* ret_value = nullptr;
     t_maphint_const<std::string, const hint_cipher_t*> hint(_cipher_byname_map);
     const hint_cipher_t* item = nullptr;
     hint.find(name, &item);
     if (item) {
-        t_maphint<crypto_scheme_t, cipher_fetch_block_t> hintscheme(_cipher_fetch_map);
+        t_maphint_const<crypto_scheme_t, cipher_fetch_block_t> hintscheme(_cipher_fetch_map);
         cipher_fetch_block_t f;
         hintscheme.find(item->scheme, &f);
         ret_value = f.cipher;
@@ -90,16 +90,16 @@ const EVP_CIPHER* crypto_advisor::find_evp_cipher(const std::string& name) {
     return ret_value;
 }
 
-const hint_cipher_t* crypto_advisor::hintof_cipher(const char* name) { return name ? hintof_cipher(std::string(name)) : nullptr; }
+const hint_cipher_t* crypto_advisor::hintof_cipher(const char* name) const { return name ? hintof_cipher(std::string(name)) : nullptr; }
 
-const hint_cipher_t* crypto_advisor::hintof_cipher(const std::string& name) {
+const hint_cipher_t* crypto_advisor::hintof_cipher(const std::string& name) const {
     const hint_cipher_t* ret_value = nullptr;
-    t_maphint<std::string, const hint_cipher_t*> hint(_cipher_byname_map);
+    t_maphint_const<std::string, const hint_cipher_t*> hint(_cipher_byname_map);
     hint.find(name, &ret_value);
     return ret_value;
 }
 
-const hint_cipher_t* crypto_advisor::hintof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode) {
+const hint_cipher_t* crypto_advisor::hintof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode) const {
     const hint_cipher_t* ret_value = nullptr;
     auto key = make_cryptoscheme(algorithm, mode);
     auto iter = _cipher_fetch_map.find((crypto_scheme_t)key);
@@ -109,23 +109,23 @@ const hint_cipher_t* crypto_advisor::hintof_cipher(crypt_algorithm_t algorithm, 
     return ret_value;
 }
 
-const hint_cipher_t* crypto_advisor::hintof_cipher(const EVP_CIPHER* cipher) {
+const hint_cipher_t* crypto_advisor::hintof_cipher(const EVP_CIPHER* cipher) const {
     const hint_cipher_t* ret_value = nullptr;
     if (cipher) {
-        t_maphint<const EVP_CIPHER*, const hint_cipher_t*> hint(_evp_cipher_map);
+        t_maphint_const<const EVP_CIPHER*, const hint_cipher_t*> hint(_evp_cipher_map);
         hint.find(cipher, &ret_value);
     }
     return ret_value;
 }
 
-const hint_cipher_t* crypto_advisor::hintof_cipher(crypto_scheme_t scheme) {
+const hint_cipher_t* crypto_advisor::hintof_cipher(crypto_scheme_t scheme) const {
     const hint_cipher_t* ret_value = nullptr;
-    t_maphint<crypto_scheme_t, const hint_cipher_t*> hint(_cipher_scheme_map);
+    t_maphint_const<crypto_scheme_t, const hint_cipher_t*> hint(_cipher_scheme_map);
     hint.find(scheme, &ret_value);
     return ret_value;
 }
 
-const char* crypto_advisor::nameof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode) {
+const char* crypto_advisor::nameof_cipher(crypt_algorithm_t algorithm, crypt_mode_t mode) const {
     const char* ret_value = nullptr;
     auto key = make_cryptoscheme(algorithm, mode);
     auto iter = _cipher_fetch_map.find((crypto_scheme_t)key);
@@ -136,7 +136,7 @@ const char* crypto_advisor::nameof_cipher(crypt_algorithm_t algorithm, crypt_mod
     return ret_value;
 }
 
-return_t crypto_advisor::for_each_cipher(std::function<void(const char*, uint32)> f) {
+return_t crypto_advisor::for_each_cipher(std::function<void(const char*, uint32)> f) const {
     return_t ret = errorcode_t::success;
     size_t i = 0;
     for (i = 0; i < sizeof_evp_cipher_methods; i++) {
@@ -152,7 +152,7 @@ return_t crypto_advisor::for_each_cipher(std::function<void(const char*, uint32)
     return ret;
 }
 
-return_t crypto_advisor::for_each_cipher(std::function<void(const hint_cipher_t*)> func) {
+return_t crypto_advisor::for_each_cipher(std::function<void(const hint_cipher_t*)> func) const {
     return_t ret = errorcode_t::success;
     for (size_t i = 0; i < sizeof_evp_cipher_methods; i++) {
         const hint_cipher_t* item = evp_cipher_methods + i;

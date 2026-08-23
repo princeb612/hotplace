@@ -7,15 +7,6 @@
  * Revision History
  * Date         Name                Description
  *
- * Comments
- *  logger_stdout       test
- *  logger_file         test
- *  logger_interval     test
- *  logger_flush_time   test
- *  logger_flush_size   test
- *  logger_rotate_size  not_yet
- *  logger_max_file     not_yet
- *  datefmt             test
  */
 
 #include <fstream>
@@ -23,7 +14,6 @@
 #include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/base/unittest/logger.hpp>
 #include <hotplace/sdk/base/unittest/testcase.hpp>
-#include <iostream>
 
 namespace hotplace {
 
@@ -49,9 +39,9 @@ logger& logger::set_implicit_loglevel(loglevel_t level) {
     return *this;
 }
 
-loglevel_t logger::get_loglevel() { return _log_level; }
+loglevel_t logger::get_loglevel() const { return _log_level; }
 
-loglevel_t logger::get_implicit_loglevel() { return _implicit_level; }
+loglevel_t logger::get_implicit_loglevel() const { return _implicit_level; }
 
 void logger::clear() {
     stop_consumer();
@@ -113,7 +103,7 @@ logger::logger_item* logger::get_context(bool upref) {
     critical_section_guard guard(_lock);
 
     // stream per thread
-    logger_stream_map_t::iterator iter = _logger_stream_map.find(tid);
+    auto iter = _logger_stream_map.find(tid);
     if (_logger_stream_map.end() == iter) {
         item = new logger_item;
         _logger_stream_map.emplace(tid, item);
@@ -149,12 +139,12 @@ logger& logger::operator<<(const basic_stream& msg) {
     return *this;
 }
 
-bool logger::test_logging_stdout() {
+bool logger::test_logging_stdout() const {
     critical_section_guard guard(_lock);
     return _keyvalue.get(logger_t::logger_stdout) ? true : false;
 }
 
-bool logger::test_logging_file() {
+bool logger::test_logging_file() const {
     critical_section_guard guard(_lock);
     uint16 do_file = _keyvalue.get(logger_t::logger_file);
     std::string logfile = _skeyvalue.get("logfile");
@@ -320,7 +310,6 @@ logger& logger::touch(logger_item* item) {
 
 logger& logger::flush(bool check) {
     time_t now = time(nullptr);
-    logger_stream_map_t::iterator iter;
 
     critical_section_guard guard(_lock);  // lock
 

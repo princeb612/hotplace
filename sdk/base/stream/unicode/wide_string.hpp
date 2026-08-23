@@ -50,7 +50,7 @@ class wide_string : public stream_t {
     return_t vprintf(const wchar_t* buf, va_list ap);
 
     const wchar_t* c_str() const;
-    size_t find(wchar_t* data);
+    size_t find(wchar_t* data) const;
 
     /**
      * @brief replace
@@ -68,11 +68,11 @@ class wide_string : public stream_t {
     return_t rtrim();
 
     /* std::string::find */
-    size_t find_first_of(const wchar_t* find, size_t offset = 0);
-    size_t find_not_first_of(const wchar_t* find, size_t offset = 0);
+    size_t find_first_of(const wchar_t* find, size_t offset = 0) const;
+    size_t find_not_first_of(const wchar_t* find, size_t offset = 0) const;
     /* std::string::rfind */
-    size_t find_last_of(const wchar_t* find);
-    size_t find_not_last_of(const wchar_t* find);
+    size_t find_last_of(const wchar_t* find) const;
+    size_t find_not_last_of(const wchar_t* find) const;
 
     /**
      * @brief
@@ -93,7 +93,7 @@ class wide_string : public stream_t {
      */
     return_t getline(size_t pos, size_t* brk, wide_string& line);
 
-    int compare(const wide_string& buf);
+    int compare(const wide_string& buf) const;
     static int compare(const wide_string& lhs, const wide_string& rhs);
 
     virtual void autoindent(uint8 indent);

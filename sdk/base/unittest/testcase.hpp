@@ -171,19 +171,12 @@ class test_case {
 
     typedef std::list<std::string> unittest_index_t;             /* ordered test cases */
     typedef std::map<std::string, test_status_t> unittest_map_t; /* pair (test case, test_status_t) */
-    typedef std::pair<unittest_map_t::iterator, bool> unittest_map_pib_t;
 
     typedef std::list<struct timespec> time_slice_t;
     typedef std::map<arch_t, std::string> testcase_per_thread_t;
     typedef std::map<arch_t, bool> time_flag_per_thread_t;
     typedef std::map<arch_t, struct timespec> timestamp_per_thread_t;
     typedef std::map<arch_t, time_slice_t> time_slice_per_thread_t;
-
-    typedef std::pair<time_slice_t::iterator, bool> time_slice_pib_t;
-    typedef std::pair<testcase_per_thread_t::iterator, bool> testcase_per_thread_pib_t;
-    typedef std::pair<time_flag_per_thread_t::iterator, bool> time_flag_per_thread_pib_t;
-    typedef std::pair<timestamp_per_thread_t::iterator, bool> timestamp_per_thread_pib_t;
-    typedef std::pair<time_slice_per_thread_t::iterator, bool> time_slice_per_thread_pib_t;
 
    protected:
     void report_unittest(basic_stream& stream);

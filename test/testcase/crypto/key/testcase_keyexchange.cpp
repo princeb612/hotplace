@@ -39,9 +39,9 @@ void test_keyexchange_ecdhe(tls_group_t group) {
         {
             _logger->write([&](basic_stream& dbs) -> void {
                 dbs.println("alice %s", name);
-                keystore_alice.for_each([&](crypto_key_object* obj, void*) -> void { dump_key(obj->get_pkey(), &dbs, 15, 4, dump_notrunc); });
+                keystore_alice.for_each([&](const crypto_key_object* obj, void*) -> void { dump_key(obj->get_pkey(), &dbs, 15, 4, dump_notrunc); });
                 dbs.println("bob %s", name);
-                keystore_bob.for_each([&](crypto_key_object* obj, void*) -> void { dump_key(obj->get_pkey(), &dbs, 15, 4, dump_notrunc); });
+                keystore_bob.for_each([&](const crypto_key_object* obj, void*) -> void { dump_key(obj->get_pkey(), &dbs, 15, 4, dump_notrunc); });
             });
         }
 
@@ -93,7 +93,7 @@ void test_keyexchange_mlkem(tls_group_t group) {
     {
         _logger->write([&](basic_stream& dbs) -> void {
             dbs.println("alice %s", name);
-            keystore_alice.for_each([&](crypto_key_object* obj, void*) -> void { dump_key(obj->get_pkey(), &dbs, 15, 4, dump_notrunc); });
+            keystore_alice.for_each([&](const crypto_key_object* obj, void*) -> void { dump_key(obj->get_pkey(), &dbs, 15, 4, dump_notrunc); });
         });
     }
 

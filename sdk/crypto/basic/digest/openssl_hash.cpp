@@ -128,7 +128,7 @@ openssl_hash::openssl_hash() {}
 
 openssl_hash::~openssl_hash() {}
 
-return_t openssl_hash::open(hash_context_t** handle, const char* algorithm, const unsigned char* key, size_t keysize) {
+return_t openssl_hash::open(hash_context_t** handle, const char* algorithm, const unsigned char* key, size_t keysize) const {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -154,9 +154,9 @@ return_t openssl_hash::open(hash_context_t** handle, const char* algorithm, cons
     return ret;
 }
 
-return_t openssl_hash::open(hash_context_t** handle, const char* algorithm, const binary_t& key) { return open(handle, algorithm, key.data(), key.size()); }
+return_t openssl_hash::open(hash_context_t** handle, const char* algorithm, const binary_t& key) const { return open(handle, algorithm, key.data(), key.size()); }
 
-return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm, const unsigned char* key_data, size_t key_size) {
+return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm, const unsigned char* key_data, size_t key_size) const {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -212,11 +212,11 @@ return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm,
     return ret;
 }
 
-return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm, const binary_t& key) {
+return_t openssl_hash::open(hash_context_t** handle, hash_algorithm_t algorithm, const binary_t& key) const {
     return open(handle, algorithm, key.data(), t_narrow_cast(key.size()));
 }
 
-return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key_data, size_t key_size) {
+return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const unsigned char* key_data, size_t key_size) const {
     return_t ret = errorcode_t::success;
     crypto_advisor* advisor = crypto_advisor::get_instance();
 
@@ -262,11 +262,11 @@ return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm
     return ret;
 }
 
-return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const binary_t& key) {
+return_t openssl_hash::open(hash_context_t** handle, crypt_algorithm_t algorithm, crypt_mode_t mode, const binary_t& key) const {
     return open(handle, algorithm, mode, key.data(), key.size());
 }
 
-return_t openssl_hash::close(hash_context_t* handle) {
+return_t openssl_hash::close(hash_context_t* handle) const {
     return_t ret = errorcode_t::success;
     openssl_hash_context_t* context = static_cast<openssl_hash_context_t*>(handle);
 
@@ -288,7 +288,7 @@ return_t openssl_hash::close(hash_context_t* handle) {
     return ret;
 }
 
-return_t openssl_hash::init(hash_context_t* handle) {
+return_t openssl_hash::init(hash_context_t* handle) const {
     return_t ret = errorcode_t::success;
     openssl_hash_context_t* context = static_cast<openssl_hash_context_t*>(handle);
 
@@ -316,7 +316,7 @@ return_t openssl_hash::init(hash_context_t* handle) {
     return ret;
 }
 
-return_t openssl_hash::update(hash_context_t* handle, const byte_t* source_data, size_t source_size) {
+return_t openssl_hash::update(hash_context_t* handle, const byte_t* source_data, size_t source_size) const {
     return_t ret = errorcode_t::success;
     openssl_hash_context_t* context = static_cast<openssl_hash_context_t*>(handle);
 
@@ -350,9 +350,9 @@ return_t openssl_hash::update(hash_context_t* handle, const byte_t* source_data,
     return ret;
 }
 
-return_t openssl_hash::update(hash_context_t* handle, const binary_t& input) { return update(handle, input.data(), input.size()); }
+return_t openssl_hash::update(hash_context_t* handle, const binary_t& input) const { return update(handle, input.data(), input.size()); }
 
-return_t openssl_hash::update(hash_context_t* handle, const byte_t* data, size_t datasize, binary_t& digest) {
+return_t openssl_hash::update(hash_context_t* handle, const byte_t* data, size_t datasize, binary_t& digest) const {
     return_t ret = errorcode_t::success;
     openssl_hash_context_t* context = static_cast<openssl_hash_context_t*>(handle);
     openssl_hash_context_t* handle_dup = nullptr;
@@ -389,9 +389,9 @@ return_t openssl_hash::update(hash_context_t* handle, const byte_t* data, size_t
     return ret;
 }
 
-return_t openssl_hash::update(hash_context_t* handle, const binary_t& input, binary_t& digest) { return update(handle, input.data(), input.size(), digest); }
+return_t openssl_hash::update(hash_context_t* handle, const binary_t& input, binary_t& digest) const { return update(handle, input.data(), input.size(), digest); }
 
-return_t openssl_hash::finalize(hash_context_t* handle, byte_t** hash_data, size_t* hash_size) {
+return_t openssl_hash::finalize(hash_context_t* handle, byte_t** hash_data, size_t* hash_size) const {
     return_t ret = errorcode_t::success;
     // openssl_hash_context_t* context = static_cast<openssl_hash_context_t*>(handle);
     byte_t* buffer_allocated = nullptr;
@@ -416,7 +416,7 @@ return_t openssl_hash::finalize(hash_context_t* handle, byte_t** hash_data, size
     return ret;
 }
 
-return_t openssl_hash::finalize(hash_context_t* handle, binary_t& output) {
+return_t openssl_hash::finalize(hash_context_t* handle, binary_t& output) const {
     return_t ret = errorcode_t::success;
     openssl_hash_context_t* context = static_cast<openssl_hash_context_t*>(handle);
 
@@ -474,7 +474,7 @@ return_t openssl_hash::finalize(hash_context_t* handle, binary_t& output) {
     return ret;
 }
 
-return_t openssl_hash::free_data(void* data) {
+return_t openssl_hash::free_data(void* data) const {
     return_t ret = errorcode_t::success;
 
     if (nullptr != data) {
@@ -483,7 +483,7 @@ return_t openssl_hash::free_data(void* data) {
     return ret;
 }
 
-return_t openssl_hash::hash(hash_context_t* handle, const byte_t* source_data, size_t source_size, binary_t& output) {
+return_t openssl_hash::hash(hash_context_t* handle, const byte_t* source_data, size_t source_size, binary_t& output) const {
     return_t ret = errorcode_t::success;
     openssl_hash_context_t* context = static_cast<openssl_hash_context_t*>(handle);
 
@@ -551,7 +551,7 @@ return_t openssl_hash::hash(hash_context_t* handle, const byte_t* source_data, s
     return ret;
 }
 
-return_t openssl_hash::dup(hash_context_t** duplicated, hash_context_t* handle) {
+return_t openssl_hash::dup(hash_context_t** duplicated, hash_context_t* handle) const {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == duplicated || nullptr == handle) {

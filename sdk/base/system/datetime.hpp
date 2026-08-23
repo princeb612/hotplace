@@ -108,21 +108,21 @@ class datetime {
      */
     bool update_if_elapsed(unsigned long msecs);
 
-    bool elapsed(timespan_t ts);
+    bool elapsed(timespan_t ts) const;
 
-    return_t gettimespec(struct timespec* ts);
-    return_t gettime(struct tm* tm, long* nsec = nullptr);
-    return_t getlocaltime(struct tm* tm, long* nsec = nullptr);
-    return_t getgmtime(struct tm* tm, long* nsec = nullptr);
-    return_t gettime(datetime_t* dt, long* nsec = nullptr);
-    return_t getlocaltime(datetime_t* dt, long* nsec = nullptr);
-    return_t getgmtime(datetime_t* dt, long* nsec = nullptr);
-    return_t getgmtime(stream_t* stream);
-    return_t getfiletime(filetime_t* ft);
+    return_t gettimespec(struct timespec* ts) const;
+    return_t gettime(struct tm* tm, long* nsec = nullptr) const;
+    return_t getlocaltime(struct tm* tm, long* nsec = nullptr) const;
+    return_t getgmtime(struct tm* tm, long* nsec = nullptr) const;
+    return_t gettime(datetime_t* dt, long* nsec = nullptr) const;
+    return_t getlocaltime(datetime_t* dt, long* nsec = nullptr) const;
+    return_t getgmtime(datetime_t* dt, long* nsec = nullptr) const;
+    return_t getgmtime(stream_t* stream) const;
+    return_t getfiletime(filetime_t* ft) const;
     /**
      * @param   int mode    [in] 0 gmtime, 1 localtime
      */
-    return_t getsystemtime(int mode, systemtime_t* ft);
+    return_t getsystemtime(int mode, systemtime_t* ft) const;
 
     datetime& operator=(const time_t& timestamp);
     datetime& operator=(const struct timespec& ts);
@@ -200,7 +200,7 @@ class datetime {
      * @param   basic_stream& bs [out]
      * @param   const std::string& fmt [in] "Y-M-D h:m:s.f" (2024-05-11 12:00:00.000)
      */
-    void format(int mode, basic_stream& bs, const std::string& fmt = "Y-M-D h:m:s.f");
+    void format(int mode, basic_stream& bs, const std::string& fmt = "Y-M-D h:m:s.f") const;
 
    protected:
    private:

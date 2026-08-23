@@ -141,7 +141,6 @@ return_t http_server::startup_server(http_service_t service, uint16 family, uint
 
 return_t http_server::shutdown_server() {
     return_t ret = errorcode_t::success;
-    http_handles_t::iterator iter;
     for (network_multiplexer_context_t* handle : _http_handles) {
         get_network_server().close(handle);
     }
