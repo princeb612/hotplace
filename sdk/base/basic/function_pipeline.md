@@ -8,7 +8,7 @@
 
 1. **Fluent Interface (method chaining)**: `.run()`, `.walk()`, `.walk_failed()` 등의 함수를 이어 붙여 직관적인 pipeline 흐름을 구성할 수 있음
 2. **다양한 return 타입 지원 (C++11 Template)**: 기본 return 타입 `return_t` 외에도 OpenSSL errorcode(`int`, `osslerror_category`) 등 사용자 정의 타입 및 error 카테고리를 지원
-3. **조건부 실행 흐름 평가**: 설정된 판별자(`_discriminant`)에 따라 성공 시에만 다음 단계로 넘어가거나, 실패 시 rollback(`walk_failed`) 단계만 실행하도록 schedule링
+3. **조건부 실행 흐름 평가**: 설정된 판별자(`_discriminant`)에 따라 성공 시에만 다음 단계로 넘어가거나, 실패 시 rollback(`walk_failed`) 단계만 실행하도록 scheduling
 4. **debugging 및 추적 (Trace) 지원**: `DEBUG` 빌드 시 호출된 파일명(`__FILE__`)과 줄 번호(`__LINE__`), 처리된 단계 비율(`processed / total`) 및 마지막 error code를 트레이스 시스템으로 자동 reporting
 
 ---

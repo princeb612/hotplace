@@ -1,4 +1,4 @@
-## [C++11] Base16 encoding/decoding module - published by Gemini
+## Base16 encoding/decoding module - published by Gemini
 
 ---
 

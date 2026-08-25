@@ -1,4 +1,4 @@
-## [C++11] Trie Data Structure (`trie.hpp`) - published by Gemini
+## Trie Data Structure (`trie.hpp`) - published by Gemini
 
 ---
 

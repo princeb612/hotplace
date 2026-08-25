@@ -121,7 +121,7 @@ Aho-Corasick 엔진은 matching되는 즉시 치환하므로, **Specific 룰이 
 
 ```
 
-### 작성 주의사항 체크list
+### 작성 주의사항 checklist
 
 1. **특수 키워드의 이른 그룹화 금지**: 구문 구조 키워드(`token_int`, `token_enum` 등)를 Broad 그룹(`builtintype`)에 성급히 포함시키면 Generic 룰이 삼켜버림.
 2. **원소 token의 완전성 보장**: `repeat_as`에 사용되는 원소 token 내부 구조는 최우선 reduction parse에서 깨끗하게 완전 환원되어야 함.
@@ -208,7 +208,7 @@ Aho-Corasick ruleset은 **단순한 token $\rightarrow$ 복합 구조 $\rightarr
 
 ---
 
-### 요약: 룰 작성 체크list
+### 요약: 룰 작성 checklist
 
 1. [ ] **키워드 검증**: `INTEGER`, `ENUMERATED`, `SEQUENCE` 등 구문 시작 키워드가 일반 그룹(`builtintype` 등)에 묶여서 엉뚱한 Generic 룰을 먼저 트리거하지 않는가?
 2. [ ] **원소 보호**: `repeat_as`에 들어갈 원소(Element)가 일반 `namedtype`이나 `taggedtype`으로 오인되어 먼저 치환될 가능성이 없는가?

@@ -7,7 +7,7 @@
 
 ### 주요 특징
 
-1. **쓰레드별 컨text 격리 (Per-Thread Context Management)**:
+1. **쓰레드별 context 격리 (Per-Thread Context Management)**:
 * 쓰레드 ID(`arch_t tid`)를 키값으로 test case 이름(`_testcase_per_threads`), stopwatch flag(`_time_flag_per_threads`), 타임스탬프(`_timestamp_per_threads`), 구간 시간 Slices(`_time_slice_per_threads`)를 독립적으로 관리함.
 2. **구간 시간 측정 제어 (RAII Timer Control)**:
 * `reset_time()`, `pause_time()`, `resume_time()`, `check_time()`을 제공하여 실제 검증 대상 code 구간만 정밀 측정 가능함.
@@ -176,7 +176,7 @@ int main() {
 | **TODO-BS-04** | `MEDIUM` | **`std::string_view` (C++17 대비) overloading interface 설계**<br>- C++11 규격 유지하되, 뷰 타입 호환 wrapper layer 사전 정의 | `To Do` | `operator<<` 확장 |
 | **TODO-BS-05** | `LOW` | **Wide String (`wchar_t`) 지원 macro 정리**<br>- `_WIN32`/`_WIN64` 전용 코딩 영역 분리 및 POSIX 환경 interface 통합 | `To Do` | platform 추상화 |
 | **TODO-LOG-01** | `HIGH` | **로그 파일 로테이션 (`logger_rotate_size`, `logger_max_file`) 구현**<br>- 파일 크기 초과 시 파일 분할 및 최대 개수 유지 logic 추가 | `To Do` | `logger.cpp` (`flush` 확장) |
-| **TODO-LOG-02** | `MEDIUM` | **종료된 쓰레드 컨text(`_logger_stream_map`) 정리 mechanism 구축**<br>- 쓰레드 종료 시 자원 누수를 막기 위한 가비지 수집 logic 마련 | `To Do` | `logger.cpp`<br> |
+| **TODO-LOG-02** | `MEDIUM` | **종료된 쓰레드 context(`_logger_stream_map`) 정리 mechanism 구축**<br>- 쓰레드 종료 시 자원 누수를 막기 위한 가비지 수집 logic 마련 | `To Do` | `logger.cpp`<br> |
 | **TODO-TC-01** | `HIGH` | **멀티쓰레드 환경 동시 `begin()` 호출 시 stream buffer 충돌 방지**<br>- 쓰레드별 가변 인자(`va_list`) formatting buffer 완전 분리 및 임계 영역 보호 검증 | `To Do` | `testcase.cpp`<br> |
 | **TODO-TC-02** | `MEDIUM` | **JSON / XML 포맷의 리포트 파일 익스포트 option 추가**<br>- CI/CD pipeline(Jenkins, GitHub Actions) 연동을 위한 규격 포맷 출력 mechanism 구현 | `To Do` | `report()` 함수 확장 |
 

@@ -2,7 +2,7 @@
 
 ## 1. 개요 및 설계 구조 (Overview & Architecture)
 
-`logger` module은 builder pattern(Builder Pattern)과 쓰레드별 컨text(Thread-Local Context) 관리를 기반으로 구축된 멀티쓰레드 환경 지원 logging 시스템
+`logger` module은 builder pattern(Builder Pattern)과 쓰레드별 context(Thread-Local Context) 관리를 기반으로 구축된 멀티쓰레드 환경 지원 logging 시스템
 백그라운드 소비 쓰레드(Consumer Thread)를 이용한 지연 flush(Delayed Flush) mechanism을 적용하여 I/O 병목을 최소화
 
 ### 주요 특징
@@ -148,6 +148,6 @@ int main() {
 | **TODO-BS-04** | `MEDIUM` | **`std::string_view` (C++17 대비) overloading interface 설계**<br>- C++11 규격 유지하되, 뷰 타입 호환 wrapper layer 사전 정의 | `To Do` | `operator<<` 확장 |
 | **TODO-BS-05** | `LOW` | **Wide String (`wchar_t`) 지원 macro 정리**<br>- `_WIN32`/`_WIN64` 전용 코딩 영역 분리 및 POSIX 환경 interface 통합 | `To Do` | platform 추상화 |
 | **TODO-LOG-01** | `HIGH` | **로그 파일 로테이션 (`logger_rotate_size`, `logger_max_file`) 구현**<br>- 파일 크기 초과 시 파일 분할 및 최대 개수 유지 logic 추가 | `To Do` | `logger.cpp` (`flush` 확장) |
-| **TODO-LOG-02** | `MEDIUM` | **종료된 쓰레드 컨text(`_logger_stream_map`) 정리 mechanism 구축**<br>- 쓰레드 종료 시 자원 누수를 막기 위한 가비지 수집 logic 마련 | `To Do` | `logger.cpp`<br> |
+| **TODO-LOG-02** | `MEDIUM` | **종료된 쓰레드 context(`_logger_stream_map`) 정리 mechanism 구축**<br>- 쓰레드 종료 시 자원 누수를 막기 위한 가비지 수집 logic 마련 | `To Do` | `logger.cpp`<br> |
 
 ---

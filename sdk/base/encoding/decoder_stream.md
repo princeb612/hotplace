@@ -81,7 +81,7 @@ class decoder_stream {
 
 * **경계 처리 및 분할 decoding (`write`)**:
   * **Base16 / Base64**: 입력 단위(`unitsize`: Base16=2, Base64=4) 미만으로 남은 자릿수를 `_encbuf`에 보관[cite: 50, 51]. 다음 `write` 호출 시 `free_space()`만큼 채워 완전히 구성되면 decoding을 수행하고, 나머지는 몫과 여분으로 나눠 연속 decoding[cite: 50].
-  * **HTTP/2 Huffman**: `http_huffman_coding` 싱글톤을 호출하여 stream decoding 수행[cite: 50].
+  * **HTTP/2 Huffman**: `http_huffman_coding` singleton을 호출하여 stream decoding 수행[cite: 50].
 * **stream 종단 검증 (`flush`)**:
   * `data()` 호출 시 남은 데이터 정리를 위해 자동 실행[cite: 50].
   * Base16/Base64 잔여 유효 데이터 decoding 처리[cite: 50].

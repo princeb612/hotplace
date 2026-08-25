@@ -91,7 +91,7 @@ class encoder_stream {
 * **chunk 단위 데이터 연산 (`write`)**:
   * **Base16**: 입력 block을 즉시 Hex 문자열로 변환하여 출력 buffer에 누적[cite: 49].
   * **Base64 / Base64URL**: 입력 데이터를 3바이트 `unitsize` 경계로 분할 처리[cite: 49]. 미달하는 잔여 데이터는 내부 `_encbuf`에 유지하고, 다음 `write` 호출 시 병합하여 encoding 수행[cite: 49].
-  * **HTTP/2 Huffman (`encoding_h2hcodes`)**: `http_huffman_coding` 싱글톤 pattern을 활용[cite: 49]. 비트 단위 연산으로 `_bitbuf`에 저장 후 8비트(1바이트)가 채워지면 `_bin`에 packing[cite: 49].
+  * **HTTP/2 Huffman (`encoding_h2hcodes`)**: `http_huffman_coding` singleton pattern을 활용[cite: 49]. 비트 단위 연산으로 `_bitbuf`에 저장 후 8비트(1바이트)가 채워지면 `_bin`에 packing[cite: 49].
 * **stream 종료 처리 (`flush`)**:
   * stream이 닫히거나 출력(`str()`, `bin()`)이 요청될 때 `flush()` 호출[cite: 49].
   * Base64 잔여 데이터 padding 처리 및 Huffman 비트 buffer Shift/Padding 후 데이터 마무리[cite: 49].

@@ -61,7 +61,7 @@ C++11 환경에서 다중 pattern matching 및 wildcard 처리 상위 레벨 par
 aho-corasick은 matching된 pattern의 종료 위치(Ending Position)만 return하는 한계가 있음.
 `h*s`와 같은 가변 길이 pattern은 시작 위치를 구하기 위해 첫 wildcard `*` 직전까지의 Prefix(숨은 pattern)를 추적해야 함.
 
-* **`baseof_prefix` (`0x10000000`)**: wildcard 전방 Prefix용 가상 pattern ID 오프셋.
+* **`baseof_prefix` (`0x10000000`)**: wildcard 전방 Prefix용 가상 pattern ID offset.
 * **`hidden_tag_t`**:
   * **`size`**: wildcard 직전까지의 Prefix 길이.
   * **`adjust`**: wildcard를 제외한 실제 확정 pattern 문자 수 (`lengthof(pattern) - lengthof(wildcard_any)`).
