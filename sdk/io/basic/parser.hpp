@@ -58,9 +58,10 @@ enum token_t : uint32 {
     token_lvalue = 36,
     token_emphasis = 37,
     token_type = 38,
-    token_sentence = 39,
+    token_usertype = 39,
     token_element = 40,
-    token_usertype = 41,
+    token_phrase = 41,
+    token_sentence = 42,
 
     // ASN.1
     token_asn1 = 0x1000,
@@ -138,6 +139,7 @@ enum parser_flag_t {
 };
 
 struct token_description {
+    size_t idx;
     size_t index;
     uint32 type;
     // uint32 tag;
@@ -615,7 +617,7 @@ class parser {
     std::multimap<uint32, std::vector<uint32>> _patterns;
 
     t_aho_corasick_parser<uint32>* _acparser;  // token grouping, sub-pattern reduction, and repeat-rule processing
-    t_aho_corasick<uint32, parser_token*, tokenptr_to_int_t>* _ac;
+    // t_aho_corasick<uint32, parser_token*, tokenptr_to_int_t>* _ac;
     t_key_value<std::string, uint16> _keyvalue;  // get_config
 
     // debug

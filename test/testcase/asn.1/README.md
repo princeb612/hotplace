@@ -20,7 +20,22 @@ testvector:
     schema: DER              # [mandatory] "DER"
     items:
       - item: string         # [mandatory]
-        der: hexstring       # [mandatory]
+        der: hexstring       # [mandatory] base16 stream
+````
+
+* ASN.1 YAML schema
+
+````
+testvector:
+  - example: string          # [mandatory] testcase
+    schema: ASN.1            # [mandatory] "ASN.1"
+    values:                  # [optional] if "values" exist, item, type, and value must be present.
+      - item: string         # [mandatory]
+        type: string         # [mandatory] bool/int/string/float/stringarray/intarray/any
+        value:               # depends on type. example - bool true/false, int 1, string "value", real 0.1, intarray [1, 2, 3], stringarray ["A", "B", "C"], any "base16 stream"
+    items:
+      - item: string         # [mandatory] ASN.1 notation
+        der: hexstring       # [mandatory] base16 stream
 ````
 
 #### using pyasn1

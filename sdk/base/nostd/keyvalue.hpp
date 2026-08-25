@@ -355,15 +355,15 @@ typedef t_stringkey_value<std::string> skey_value;
 /**
  * integer value
  */
-template <typename KET, typename TYPE>
+template <typename KEY, typename TYPE>
 class t_key_value {
    public:
-    typedef std::map<KET, TYPE> keyvalue_map_t;
+    typedef std::map<KEY, TYPE> keyvalue_map_t;
 
     t_key_value() {}
     t_key_value(const t_key_value& other) { _keyvalue_map = other._keyvalue_map; }
 
-    t_key_value& set(KET key, const TYPE& value) {
+    t_key_value& set(KEY key, const TYPE& value) {
         critical_section_guard guard(_lock);
         auto pib = _keyvalue_map.insert(std::make_pair(key, value));
         if (false == pib.second) {
@@ -372,13 +372,13 @@ class t_key_value {
 
         return *this;
     }
-    TYPE get(const KET& key) const {
+    TYPE get(const KEY& key) const {
         critical_section_guard guard(_lock);
         auto iter = _keyvalue_map.find(key);
         if (_keyvalue_map.end() != iter) return iter->second;
         return TYPE{};
     }
-    TYPE access(const KET& key, bool get_then_inc) {
+    TYPE access(const KEY& key, bool get_then_inc) {
         critical_section_guard guard(_lock);
         auto value = _keyvalue_map[key];
         if (get_then_inc) {
@@ -386,13 +386,13 @@ class t_key_value {
         }
         return value;
     }
-    TYPE inc(const KET& key) {
+    TYPE inc(const KEY& key) {
         critical_section_guard guard(_lock);
         auto value = _keyvalue_map[key];
         _keyvalue_map[key] = ++value;
         return value;
     }
-    void remove(const KET& key) {
+    void remove(const KEY& key) {
         critical_section_guard guard(_lock);
         auto iter = _keyvalue_map.find(key);
         if (_keyvalue_map.end() != iter) {
@@ -415,6 +415,22 @@ class t_key_value {
             _keyvalue_map = other->_keyvalue_map;
         }
         return ret;
+    }
+
+    /*
+     * @example
+     *          t_key_value<uint32, uint32> frequency;
+     *
+     *          frequency.access(pattern_id, true);
+     *
+     *          _logger->writeln("pattern frequency ... statistics for rule optimization");
+     *          frequency.for_each([](uint32 pid, uint32 cnt) -> void { _logger->writeln("> pattern id %u : %u", pid, cnt); });
+     */
+    void for_each(std::function<void(KEY, TYPE)> f) {
+        critical_section_guard guard(_lock);
+        for (const auto& pair : _keyvalue_map) {
+            f(pair.first, pair.second);
+        }
     }
 
    private:

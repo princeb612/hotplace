@@ -16,9 +16,9 @@
 namespace hotplace {
 namespace io {
 
-parser::parser() : _acparser(nullptr), _ac(nullptr) {
+parser::parser() : _acparser(nullptr) /*, _ac(nullptr)*/ {
     _acparser = new t_aho_corasick_parser<uint32>();
-    _ac = new t_aho_corasick<uint32, parser_token*, tokenptr_to_int_t>();
+    // _ac = new t_aho_corasick<uint32, parser_token*, tokenptr_to_int_t>();
 
     get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1);
 
@@ -127,7 +127,7 @@ parser::parser() : _acparser(nullptr), _ac(nullptr) {
 
 parser::~parser() {
     delete _acparser;
-    delete _ac;
+    // delete _ac;
 }
 
 parser& parser::add_token(const std::string& token_name, uint32 token) {

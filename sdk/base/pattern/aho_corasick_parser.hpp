@@ -20,7 +20,7 @@
 namespace hotplace {
 
 /**
- * @brief   virtual token and sub-pattern reduction
+ * @brief   multi-pattern reduction engine
  * @comments
  *          exact match       : token_id
  *          group match       : token_group
@@ -33,19 +33,6 @@ namespace hotplace {
  *          // sketch
  *          // for more examples ... see testcase_aho_corasick
  *          bool test = false;
- *
- *          // Type1 ::= SEQUENCE {name VisibleString, ok BOOLEAN}
- *          //
- *          // line 1 type 36(lvalue) index 0 pos 0 len 5 (Type1)
- *          // line 1 type 35(assign) index 1 pos 6 len 3 (::=)
- *          // line 1 type 4110(sequence) index 2 pos 10 len 8 (SEQUENCE)
- *          // line 1 type 8(lbrace) index 3 pos 19 len 1 ({)
- *          // line 1 type 32(identifier) index 4 pos 20 len 4 (name)
- *          // line 1 type 4122(visiblestring) index 5 pos 25 len 13 (VisibleString)
- *          // line 1 type 21(comma) index 6 pos 38 len 1 (,)
- *          // line 1 type 32(identifier) index 7 pos 40 len 2 (ok)
- *          // line 1 type 4097(bool) index 8 pos 43 len 7 (BOOLEAN)
- *          // line 1 type 9(rbrace) index 9 pos 50 len 1 (})
  *
  *          t_aho_corasick_parser<uint32> ac;
  *          ac.set_group(token_builtintype, {token_bool, token_int, token_null, token_real, token_visiblestring});
@@ -78,6 +65,19 @@ namespace hotplace {
  *              return (expect == res);
  *          };
  *
+ *          // Type1 ::= SEQUENCE {name VisibleString, ok BOOLEAN}
+ *          //
+ *          // [00] line 1 type 36(lvalue) index 0 pos 0 len 5 (Type1)
+ *          // [01] line 1 type 35(assign) index 1 pos 6 len 3 (::=)
+ *          // [02] line 1 type 4110(sequence) index 2 pos 10 len 8 (SEQUENCE)
+ *          // [03] line 1 type 8(lbrace) index 3 pos 19 len 1 ({)
+ *          // [04] line 1 type 32(identifier) index 4 pos 20 len 4 (name)
+ *          // [05] line 1 type 4122(visiblestring) index 5 pos 25 len 13 (VisibleString)
+ *          // [06] line 1 type 21(comma) index 6 pos 38 len 1 (,)
+ *          // [07] line 1 type 32(identifier) index 7 pos 40 len 2 (ok)
+ *          // [08] line 1 type 4097(bool) index 8 pos 43 len 7 (BOOLEAN)
+ *          // [09] line 1 type 9(rbrace) index 9 pos 50 len 1 (})
+ *
  *          //                            0             1             2               3             4                 5                    6            7
  *          std::vector<uint32> input1 = {token_lvalue, token_assign, token_sequence, token_lbrace, token_identifier, token_visiblestring, token_comma, token_identifier,
  *          //                            8           9
@@ -88,17 +88,17 @@ namespace hotplace {
  *
  *          // Person2 ::= SEQUENCE {name [0] IMPLICIT VisibleString}
  *          //
- *          // line 1 type 36(lvalue) index 20 pos 0 len 7 (Person2)
- *          // line 1 type 35(assign) index 1 pos 8 len 3 (::=)
- *          // line 1 type 4110(sequence) index 2 pos 12 len 8 (SEQUENCE)
- *          // line 1 type 8(lbrace) index 3 pos 21 len 1 ({)
- *          // line 1 type 32(identifier) index 4 pos 22 len 4 (name)
- *          // line 1 type 6(lbracket) index 11 pos 27 len 1 ([)
- *          // line 1 type 2(number) index 21 pos 28 len 1 (0)
- *          // line 1 type 7(rbracket) index 14 pos 29 len 1 (])
- *          // line 1 type 4141(implicit) index 15 pos 31 len 8 (IMPLICIT)
- *          // line 1 type 4122(visiblestring) index 5 pos 40 len 13 (VisibleString)
- *          // line 1 type 9(rbrace) index 9 pos 53 len 1 (})
+ *          // [00] line 1 type 36(lvalue) index 20 pos 0 len 7 (Person2)
+ *          // [01] line 1 type 35(assign) index 1 pos 8 len 3 (::=)
+ *          // [02] line 1 type 4110(sequence) index 2 pos 12 len 8 (SEQUENCE)
+ *          // [03] line 1 type 8(lbrace) index 3 pos 21 len 1 ({)
+ *          // [04] line 1 type 32(identifier) index 4 pos 22 len 4 (name)
+ *          // [05] line 1 type 6(lbracket) index 11 pos 27 len 1 ([)
+ *          // [06] line 1 type 2(number) index 21 pos 28 len 1 (0)
+ *          // [07] line 1 type 7(rbracket) index 14 pos 29 len 1 (])
+ *          // [08] line 1 type 4141(implicit) index 15 pos 31 len 8 (IMPLICIT)
+ *          // [09] line 1 type 4122(visiblestring) index 5 pos 40 len 13 (VisibleString)
+ *          // [10] line 1 type 9(rbrace) index 9 pos 53 len 1 (})
  *
  *          // clang-format off
  *          //                            0             1             2               3             4                 5               6             7

@@ -1,12 +1,12 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
  * @file   function_pipeline.hpp
- * @author Soo Han, Kim (princeb612.kr@gmail.com)
+ * @author Soo Han and Gemini
  * @desc
  *
  * Revision History
  * Date         Name                Description
- * 2026.05.08   Soo Han, Kim        sketch (codename.hotplace Revision 983)
+ * 2026.05.08   Soo Han & Gemini    sketch (codename.hotplace Revision 983)
  */
 
 #ifndef __HOTPLACE_SDK_BASE_BASIC_FUNCTIONPIPELINE__

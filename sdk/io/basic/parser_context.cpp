@@ -453,9 +453,11 @@ parser_token* parser_context::last_token() {
 
 void parser_context::for_each(std::function<void(const token_description* desc)> f) const {
     if (_p && f) {
-        auto handler = [&](const parser_token* t) -> void {
+        size_t idx = 0;
+        auto handler = [this, &f, &idx](const parser_token* t) -> void {
             // compact parameter
             token_description desc;
+            desc.idx = idx++;
             desc.index = t->get_index();
             desc.type = t->get_tokenid();
             // desc.tag = t->get_tag();

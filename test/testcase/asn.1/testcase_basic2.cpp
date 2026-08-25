@@ -481,7 +481,7 @@ void test_testvector_gpt_gemini() {
                     (*value).set("homeOffice");
                     break;
                 case flag_value_der:
-                    (*value).set("id", 1).set("data", base16_decode_rfc("1A 03 61 62 63"));
+                    (*value).set("id", 1).set("data", variant(base16_decode_rfc("1A 03 61 62 63")));
                     break;
                 case flag_value_bitstring:
                     (*value).set("10101010");

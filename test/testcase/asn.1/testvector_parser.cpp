@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   testvector_der.cpp
+ * @file   testvector_parser.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -14,7 +14,9 @@
 void test_yaml_testvector_parser() {
     _test_case.begin("Parser YAML");
 
-    auto lambda_yaml_asn1parser = [](const YAML::Node& example, const YAML::Node& items) -> void {
+    t_key_value<uint32, uint32> frequency;
+
+    auto lambda_yaml_asn1parser = [&frequency](const YAML::Node& example, const YAML::Node& items) -> void {
         asn1_value value(nullptr);
 
         auto values = example["values"];
@@ -34,17 +36,21 @@ void test_yaml_testvector_parser() {
                 } else if (vtype == "bool") {
                     auto vvalue = item["value"].as<bool>(false);
                     value.set(vitem, vvalue);
+                } else if (vtype == "stringarray") {
+                    std::vector<std::string> vvalue = item["value"].as<std::vector<std::string>>();
+                    value.set(vitem, vvalue);
+                } else if (vtype == "intarray") {
+                    std::vector<int> vvalue = item["value"].as<std::vector<int>>();
+                    value.set(vitem, vvalue);
+                } else if (vtype == "any") {
+                    auto vvalue = item["value"].as<std::string>("");
+                    value.set(vitem, variant(base16_decode(vvalue)));
                 }
             }
         }
 
         asn1_parser asn1p;
         auto& p = asn1p.get_parser();
-
-        auto dump_handler = [&](const token_description* desc) -> void {
-            _logger->writeln("line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", desc->line, desc->type, p.nameof_token(desc->type).c_str(), desc->index, desc->pos,
-                             desc->size, (unsigned)desc->size, desc->p);
-        };
 
         for (const auto& item : items) {
             std::string text_item = item["item"].as<std::string>("");
@@ -54,7 +60,29 @@ void test_yaml_testvector_parser() {
             {
                 parser_context context;
                 p.parse(context, text_item);
+
+                std::vector<uint32> pattern;
+                auto dump_handler = [&p, &pattern](const token_description* desc) -> void {
+                    pattern.push_back(desc->type);
+                    _logger->writeln("[%02zu] line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", desc->idx, desc->line, desc->type,
+                                     p.nameof_token(desc->type).c_str(), desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
+                };
                 context.for_each(dump_handler);
+
+                auto ac = p.get_ac();
+                auto res = ac->search(pattern);
+                _logger->writeln(ANSI_ESCAPE "1;34mpattern matching" ANSI_ESCAPE "0m");
+                if (res.empty()) {
+                    _logger->writeln("> no data");
+                } else {
+                    for (auto& pair : res) {
+                        // pair(pos_occurrence, id_pattern)
+                        const auto& range = pair.first;
+                        const auto& pid = pair.second;
+                        frequency.access(pid, true);
+                        _logger->writeln("> pos [%2zi..%2zi] pattern[%i]", range.begin, range.end, pid);
+                    }
+                }
             }
             {
                 asn1_runtime reader;
@@ -80,14 +108,17 @@ void test_yaml_testvector_parser() {
                 });
                 _logger->dump(bin_encoded);
 
-                _test_case.test(test, __FUNCTION__, "read and decode %s", text_item.c_str());
-                _test_case.assert(pos == size, __FUNCTION__, "complete stream consumed %s", text_item.c_str());
+                _test_case.test(test, __FUNCTION__, R"(read and decode "%s")", text_item.c_str());
+                _test_case.assert(pos == size, __FUNCTION__, R"(complete stream consumed "%s")", text_item.c_str());
             }
         }
     };
 
     yaml_testcase test;
     test.add("ASN.1", lambda_yaml_asn1parser).run("testvector_parser.yml");
+
+    _logger->writeln("pattern frequency ... statistics for rule optimization");
+    frequency.for_each([](uint32 pid, uint32 cnt) -> void { _logger->writeln("> pattern id %u : %u", pid, cnt); });
 }
 
 void testcase_testvector_parser() { test_yaml_testvector_parser(); }

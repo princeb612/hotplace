@@ -1,11 +1,12 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
  * @file   floating_point.cpp
- * @author Soo Han, Kim (princeb612.kr@gmail.com)
+ * @author Soo Han and ChatGPT
  * @desc
  *
  * Revision History
  * Date         Name                Description
+ * 2026-05-13   Soo Han & ChatGPT   prototype
  *
  */
 

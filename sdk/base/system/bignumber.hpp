@@ -1,11 +1,13 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
  * @file   bignumber.hpp
- * @author Soo Han, Kim (princeb612.kr@gmail.com)
+ * @author Soo Han and ChatGPT
  * @desc
  *
  * Revision History
  * Date         Name                Description
+ * 2006-03-28   Soo Han & ChatGPT   prototype
+ *
  */
 
 #ifndef __HOTPLACE_SDK_BASE_SYSTEM_BIGNUMBER__

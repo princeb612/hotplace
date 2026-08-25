@@ -45,8 +45,22 @@ class asn1_value {
 
     asn1_value& set(const variant& vt);
     asn1_value& set(std::initializer_list<variant> items);
+    template <typename T>
+    asn1_value& set(std::vector<T> items) {
+        for (const auto& item : items) {
+            _values.emplace("", item);
+        }
+        return *this;
+    }
     asn1_value& set(const std::string& name, const variant& vt);
     asn1_value& set(const std::string& name, std::initializer_list<variant> items);
+    template <typename T>
+    asn1_value& set(const std::string& name, std::vector<T> items) {
+        for (const auto& item : items) {
+            _values.emplace(name, item);
+        }
+        return *this;
+    }
     asn1_value& set(const std::string& name, variant&& vt);
 
     void publish(stream_t* b);

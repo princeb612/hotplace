@@ -6,6 +6,8 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2026-05-21   Soo Han, Kim        prototype (base16, base64)
+ * 2026-06-05   Soo Han and Gemini  huffman coding
  *
  */
 

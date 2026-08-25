@@ -1,6 +1,13 @@
 # hotplace
 
 * Research on personal interests
+  * Most of the hotplace was prototyped and implemented based on what I studied.
+  * using ChatGPT and Gemini for prototyping and reviews since 2026.
+  * The work developed relying on ChatGPT and Gemini is as follows:
+    * bignumber (class bignumber)
+    * floating point (class floating_point)
+      * decimal floating point (class decimal_float)
+      * lossless fractional floating point (class rational_float)
 * ![cmake workflow](https://github.com/princeb612/hotplace/actions/workflows/build.yml/badge.svg)
 * ![codeql workflow](https://github.com/princeb612/hotplace/actions/workflows/codeql.yml/badge.svg)
 * powered by
@@ -38,13 +45,6 @@
   * [build](#build)
   * [custom toolchain](#custom-toolchain)
   * [link](#link)
-
-## implemented by running ChatGPT, Gemini
-
-* bignumber (class bignumber)
-* floating point (class floating_point)
-  * decimal floating point (class decimal_float)
-  * lossless fractional floating point (class rational_float)
 
 ## implemented
 

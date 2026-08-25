@@ -101,24 +101,11 @@ void test_aho_corasick2() {
 }
 
 void test_aho_corasick3() {
-    _test_case.begin("aho_corasick (group and sub-pattern matching)");
+    _test_case.begin("aho_corasick (token grouping, sub-pattern reduction, and repeat-rule processing)");
     bool test = false;
 
-    /**
-     * Type1 ::= SEQUENCE {name VisibleString, ok BOOLEAN}
-     *
-     * line 1 type 36(lvalue) index 0 pos 0 len 5 (Type1)
-     * line 1 type 35(assign) index 1 pos 6 len 3 (::=)
-     * line 1 type 4110(sequence) index 2 pos 10 len 8 (SEQUENCE)
-     * line 1 type 8(lbrace) index 3 pos 19 len 1 ({)
-     * line 1 type 32(identifier) index 4 pos 20 len 4 (name)
-     * line 1 type 4122(visiblestring) index 5 pos 25 len 13 (VisibleString)
-     * line 1 type 21(comma) index 6 pos 38 len 1 (,)
-     * line 1 type 32(identifier) index 7 pos 40 len 2 (ok)
-     * line 1 type 4097(bool) index 8 pos 43 len 7 (BOOLEAN)
-     * line 1 type 9(rbrace) index 9 pos 50 len 1 (})
-     */
     t_aho_corasick_parser<uint32> ac;
+    t_key_value<uint32, uint32> frequency;
 
     enum token_userdeined {
         token_sequencebody = token_userdefine,
@@ -141,57 +128,70 @@ void test_aho_corasick3() {
     ac.set_group(token_class, {token_application, token_private, token_universal});
     ac.set_group(token_taggedmode, {token_implicit, token_explicit});
 
-    ac.insert_as(token_tag, {token_lbracket, token_number, token_rbracket});                                 // pattern 0
-    ac.insert_as(token_tag, {token_lbracket, token_class, token_number, token_rbracket});                    // pattern 1
-    ac.insert_as(token_tag, {token_lbracket, token_number, token_rbracket, token_taggedmode});               // pattern 2
-    ac.insert_as(token_tag, {token_lbracket, token_class, token_number, token_rbracket, token_taggedmode});  // pattern 3
-    ac.insert_as(token_defaultval, {token_default, token_lbrace, token_rbrace});                             // pattern 4
-    ac.insert_as(token_builtintype_default, {token_builtintype, token_defaultval});                          // pattern 5
-    ac.insert_as(token_usertype_default, {token_usertype, token_defaultval});                                // pattern 6
-    ac.insert_as(token_taggedtype, {token_tag, token_builtintype});                                          // pattern 7
-    ac.insert_as(token_taggedtype, {token_tag, token_usertype});                                             // pattern 8
-    ac.insert_as(token_namedtype, {token_identifier, token_builtintype});                                    // pattern 9
-    ac.insert_as(token_namedtype, {token_identifier, token_builtintype_default});                            // pattern 10
-    ac.insert_as(token_namedtype, {token_identifier, token_taggedtype});                                     // pattern 11
-    ac.insert_as(token_namedtype, {token_identifier, token_usertype});                                       // pattern 12
-    ac.insert_as(token_namedtype, {token_identifier, token_usertype_default});                               // pattern 13
+    ac.insert_as(token_tag, {token_lbracket, token_number, token_rbracket});                                 // * pattern 0
+    ac.insert_as(token_tag, {token_lbracket, token_class, token_number, token_rbracket});                    // * pattern 1
+    ac.insert_as(token_tag, {token_lbracket, token_number, token_rbracket, token_taggedmode});               // * pattern 2
+    ac.insert_as(token_tag, {token_lbracket, token_class, token_number, token_rbracket, token_taggedmode});  // * pattern 3
+    ac.insert_as(token_defaultval, {token_default, token_lbrace, token_rbrace});                             // * pattern 4
+    ac.insert_as(token_builtintype_default, {token_builtintype, token_defaultval});                          //   pattern 5
+    ac.insert_as(token_usertype_default, {token_usertype, token_defaultval});                                //   pattern 6
+    ac.insert_as(token_taggedtype, {token_tag, token_builtintype});                                          // * pattern 7
+    ac.insert_as(token_taggedtype, {token_tag, token_usertype});                                             // * pattern 8
+    ac.insert_as(token_namedtype, {token_identifier, token_builtintype});                                    // * pattern 9
+    ac.insert_as(token_namedtype, {token_identifier, token_builtintype_default});                            //   pattern 10
+    ac.insert_as(token_namedtype, {token_identifier, token_taggedtype});                                     // * pattern 11
+    ac.insert_as(token_namedtype, {token_identifier, token_usertype});                                       // * pattern 12
+    ac.insert_as(token_namedtype, {token_identifier, token_usertype_default});                               //   pattern 13
     ac.repeat_as(token_element, token_comma, {token_namedtype, token_taggedtype});                           //
-    ac.insert_as(token_sequencebody, {token_sequence, token_lbrace, token_element, token_rbrace});           // pattern 14
-    ac.insert_as(token_setbody, {token_set, token_lbrace, token_element, token_rbrace});                     // pattern 15
-    ac.insert_as(token_taggedmode, {token_tag, token_sequencebody});                                         // pattern 16
-    ac.insert_as(token_taggedmode, {token_tag, token_setbody});                                              // pattern 17
-    ac.insert_as(token_namednumberelement, {token_identifier, token_lparen, token_number, token_rparen});    // pattern 18
+    ac.insert_as(token_sequencebody, {token_sequence, token_lbrace, token_element, token_rbrace});           // * pattern 14
+    ac.insert_as(token_setbody, {token_set, token_lbrace, token_element, token_rbrace});                     // * pattern 15
+    ac.insert_as(token_taggedtype, {token_tag, token_sequencebody});                                         // * pattern 16
+    ac.insert_as(token_taggedtype, {token_tag, token_setbody});                                              // * pattern 17
+    ac.insert_as(token_namednumberelement, {token_identifier, token_lparen, token_number, token_rparen});    // * pattern 18
     ac.repeat_as(token_namednumberlist, token_comma, {token_namednumberelement});                            //
-    ac.insert_as(token_int, {token_int, token_lbrace, token_namednumberlist, token_rbrace});                 // pattern 19
-    ac.insert_as(token_enumbody, {token_enum, token_lbrace, token_namednumberlist, token_rbrace});           // pattern 20
-    ac.insert_as(token_namedtype, {token_identifier, token_enumbody});                                       // pattern 21
-    ac.insert_as(token_sequenceofbody, {token_sequence, token_of, token_builtintype});                       // pattern 22
-    ac.insert_as(token_sequenceofbody, {token_sequence, token_of, token_usertype});                          // pattern 23
-    ac.insert_as(token_sequenceof_default, {token_sequenceofbody, token_defaultval});                        // pattern 24
-    ac.insert_as(token_setofbody, {token_set, token_of, token_builtintype});                                 // pattern 25
-    ac.insert_as(token_setofbody, {token_set, token_of, token_usertype});                                    // pattern 26
-    ac.insert_as(token_setof_default, {token_setofbody, token_defaultval});                                  // pattern 27
-    ac.insert_as(token_namedtype, {token_identifier, token_sequenceof_default});                             // pattern 28
-    ac.insert_as(token_namedtype, {token_identifier, token_setof_default});                                  // pattern 29
-    ac.insert_as(token_taggedtype, {token_tag, token_usertype});                                             // pattern 30
-    ac.insert_as(token_taggedtype, {token_tag, token_sequencebody});                                         // pattern 31
-    ac.insert_as(token_taggedtype, {token_tag, token_setbody});                                              // pattern 32
-    ac.insert_as(token_taggedtype, {token_tag, token_sequenceof_default});                                   // pattern 33
-    ac.insert_as(token_taggedtype, {token_tag, token_setof_default});                                        // pattern 34
+    ac.insert_as(token_int, {token_int, token_lbrace, token_namednumberlist, token_rbrace});                 // * pattern 19
+    ac.insert_as(token_enumbody, {token_enum, token_lbrace, token_namednumberlist, token_rbrace});           // * pattern 20
+    ac.insert_as(token_namedtype, {token_identifier, token_enumbody});                                       // * pattern 21
+    ac.insert_as(token_sequenceofbody, {token_sequence, token_of, token_builtintype});                       //   pattern 22
+    ac.insert_as(token_sequenceofbody, {token_sequence, token_of, token_usertype});                          // * pattern 23
+    ac.insert_as(token_sequenceof_default, {token_sequenceofbody, token_defaultval});                        // * pattern 24
+    ac.insert_as(token_setofbody, {token_set, token_of, token_builtintype});                                 //   pattern 25
+    ac.insert_as(token_setofbody, {token_set, token_of, token_usertype});                                    //   pattern 26
+    ac.insert_as(token_setof_default, {token_setofbody, token_defaultval});                                  //   pattern 27
+    ac.insert_as(token_namedtype, {token_identifier, token_sequenceof_default});                             //   pattern 28
+    ac.insert_as(token_namedtype, {token_identifier, token_setof_default});                                  //   pattern 29
+    ac.insert_as(token_taggedtype, {token_tag, token_usertype});                                             // * pattern 30
+    ac.insert_as(token_taggedtype, {token_tag, token_sequenceof_default});                                   // * pattern 31
+    ac.insert_as(token_taggedtype, {token_tag, token_setof_default});                                        //   pattern 32
 
     ac.build();
 
-    auto lambda_test = [&ac](const std::vector<uint32>& input, const std::multimap<range_t, size_t>& expect) -> bool {
+    auto lambda_test = [&ac, &frequency](const std::vector<uint32>& input, const std::multimap<range_t, size_t>& expect) -> bool {
         auto res = ac.search(input);
         for (auto& pair : res) {
             // pair(pos_occurrence, id_pattern)
             const auto& range = pair.first;
             const auto& pid = pair.second;
+            frequency.access(pid, true);
             _logger->writeln("pos [%2zi..%2zi] pattern[%i]", range.begin, range.end, pid);
         }
         return (expect == res);
     };
 
+    /**
+     * Type1 ::= SEQUENCE {name VisibleString, ok BOOLEAN}
+     *
+     * [00] line 1 type 36(lvalue) index 0 pos 0 len 5 (Type1)
+     * [01] line 1 type 35(assign) index 1 pos 6 len 3 (::=)
+     * [02] line 1 type 4110(sequence) index 2 pos 10 len 8 (SEQUENCE)
+     * [03] line 1 type 8(lbrace) index 3 pos 19 len 1 ({)
+     * [04] line 1 type 32(identifier) index 4 pos 20 len 4 (name)
+     * [05] line 1 type 4122(visiblestring) index 5 pos 25 len 13 (VisibleString)
+     * [06] line 1 type 21(comma) index 6 pos 38 len 1 (,)
+     * [07] line 1 type 32(identifier) index 7 pos 40 len 2 (ok)
+     * [08] line 1 type 4097(bool) index 8 pos 43 len 7 (BOOLEAN)
+     * [09] line 1 type 9(rbrace) index 9 pos 50 len 1 (})
+     */
     std::vector<uint32> input1 = {token_lvalue,        token_assign, token_sequence,   token_lbrace, token_identifier,  //
                                   token_visiblestring, token_comma,  token_identifier, token_bool,   token_rbrace};
     std::multimap<range_t, size_t> expect1 = {
@@ -430,16 +430,19 @@ void test_aho_corasick3() {
                                   token_assign,     token_lbracket,      token_application, token_number,        token_rbracket,       //
                                   token_implicit,   token_visiblestring};
     std::multimap<range_t, size_t> expect5 = {
-        {range_t(2, 5), 1},    {range_t(2, 6), 3},    {range_t(2, 44), 17},  {range_t(2, 44), 32},  {range_t(7, 44), 15},  {range_t(9, 10), 12},  {range_t(12, 16), 11},
-        {range_t(13, 15), 0},  {range_t(13, 16), 7},  {range_t(18, 19), 12}, {range_t(21, 25), 11}, {range_t(22, 24), 0},  {range_t(22, 25), 8},  {range_t(22, 25), 30},
-        {range_t(27, 31), 11}, {range_t(28, 30), 0},  {range_t(28, 31), 8},  {range_t(28, 31), 30}, {range_t(33, 43), 11}, {range_t(34, 36), 0},  {range_t(34, 37), 2},
-        {range_t(34, 43), 33}, {range_t(38, 40), 23}, {range_t(38, 43), 24}, {range_t(41, 43), 4},  {range_t(47, 57), 15}, {range_t(49, 50), 12}, {range_t(52, 56), 11},
-        {range_t(53, 55), 0},  {range_t(53, 56), 8},  {range_t(53, 56), 30}, {range_t(60, 63), 1},  {range_t(60, 64), 3},  {range_t(60, 75), 16}, {range_t(60, 75), 31},
-        {range_t(65, 75), 14}, {range_t(67, 68), 9},  {range_t(70, 71), 9},  {range_t(73, 74), 9},  {range_t(78, 81), 1},  {range_t(78, 82), 3},  {range_t(78, 83), 7},
-        {range_t(86, 89), 1},  {range_t(86, 90), 3},  {range_t(86, 91), 7},
+        {range_t(2, 5), 1},    {range_t(2, 6), 3},    {range_t(2, 44), 17},  {range_t(7, 44), 15},  {range_t(9, 10), 12},  {range_t(12, 16), 11}, {range_t(13, 15), 0},
+        {range_t(13, 16), 7},  {range_t(18, 19), 12}, {range_t(21, 25), 11}, {range_t(22, 24), 0},  {range_t(22, 25), 8},  {range_t(22, 25), 30}, {range_t(27, 31), 11},
+        {range_t(28, 30), 0},  {range_t(28, 31), 8},  {range_t(28, 31), 30}, {range_t(33, 43), 11}, {range_t(34, 36), 0},  {range_t(34, 37), 2},  {range_t(34, 43), 31},
+        {range_t(38, 40), 23}, {range_t(38, 43), 24}, {range_t(41, 43), 4},  {range_t(47, 57), 15}, {range_t(49, 50), 12}, {range_t(52, 56), 11}, {range_t(53, 55), 0},
+        {range_t(53, 56), 8},  {range_t(53, 56), 30}, {range_t(60, 63), 1},  {range_t(60, 64), 3},  {range_t(60, 75), 16}, {range_t(65, 75), 14}, {range_t(67, 68), 9},
+        {range_t(70, 71), 9},  {range_t(73, 74), 9},  {range_t(78, 81), 1},  {range_t(78, 82), 3},  {range_t(78, 83), 7},  {range_t(86, 89), 1},  {range_t(86, 90), 3},
+        {range_t(86, 91), 7},
     };
     test = lambda_test(input5, expect5);
     _test_case.assert(test, __FUNCTION__, R"(group/sub-pattern/repeat search)");
+
+    _logger->writeln("pattern frequency ... statistics for rule optimization");
+    frequency.for_each([](uint32 pid, uint32 cnt) -> void { _logger->writeln("> pattern id %u : %u", pid, cnt); });
 }
 
 void testcase_aho_corasick() {
