@@ -92,7 +92,7 @@ class decoder_stream {
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | :--- | :--- | :---: | :---: |
-| **#1** | `encoding_base16rfc` 미지원 decoding logic의 구현 및 pipeline 추가 | High | 미진행 |
-| **#2** | `flush()` 내 Base64 잔여 1바이트 오입력 시 오류 code 명시적 세분화 | Medium | 진행 중 |
-| **#3** | `_maxsize` 초과 시 기존 stream buffer의 rollback 및 안전 처리 검증 | Medium | 미진행 |
-| **#4** | C++11 Move assignment 수행 시 내부 buffer 상태 초기화 안전성 강화를 위한 단위 테스트 추가 | Low | 미진행 |
+| **TODO-DECODER-01** | `encoding_base16rfc` 미지원 decoding logic의 구현 및 pipeline 추가 | High | 미진행 |
+| **TODO-DECODER-02** | `flush()` 내 Base64 잔여 1바이트 오입력 시 오류 code 명시적 세분화 | Medium | 진행 중 |
+| **TODO-DECODER-03** | `_maxsize` 초과 시 기존 stream buffer의 rollback 및 안전 처리 검증 | Medium | 미진행 |
+| **TODO-DECODER-04** | C++11 Move assignment 수행 시 내부 buffer 상태 초기화 안전성 강화를 위한 단위 테스트 추가 | Low | 미진행 |

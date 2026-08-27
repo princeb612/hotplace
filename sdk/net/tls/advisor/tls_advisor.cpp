@@ -11,7 +11,7 @@
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/nostd/binary.hpp>
 #include <hotplace/sdk/base/pattern/aho_corasick.hpp>
-#include <hotplace/sdk/base/string/string.hpp>
+#include <hotplace/sdk/base/string/split.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>

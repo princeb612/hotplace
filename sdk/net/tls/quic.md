@@ -58,8 +58,8 @@ class quic_frame_http3_stream;
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `quic_packet_1rtt` 내 Packet Number encoding/decoding(Header Protection 적용) 연산 단위 테스트 추가 | High | 미진행 |
-| **#2** | `quic_frame_ack` 처리 시 ACK Range parsing 유효성 검사 및 둔감화(Ack Eliciting) logic 구현 | High | 미진행 |
-| **#3** | `quic_streams` module 내 stream 수량 제한(Max Streams) 및 흐름 제어(Flow Control Window) monitoring 강화 | Medium | 미진행 |
-| **#4** | `quic_packet_retry` 및 `quic_packet_0rtt` packet에 대한 검증 및 예외 처리 logic 보완 | Medium | 미진행 |
-| **#5** | `quic_frame_http3_stream` 내 HTTP/3 QPACK header 압축 연동 interface 정립 | Low | 미진행 |
+| **TODO-QUIC-01** | `quic_packet_1rtt` 내 Packet Number encoding/decoding(Header Protection 적용) 연산 단위 테스트 추가 | High | 미진행 |
+| **TODO-QUIC-02** | `quic_frame_ack` 처리 시 ACK Range parsing 유효성 검사 및 둔감화(Ack Eliciting) logic 구현 | High | 미진행 |
+| **TODO-QUIC-03** | `quic_streams` module 내 stream 수량 제한(Max Streams) 및 흐름 제어(Flow Control Window) monitoring 강화 | Medium | 미진행 |
+| **TODO-QUIC-04** | `quic_packet_retry` 및 `quic_packet_0rtt` packet에 대한 검증 및 예외 처리 logic 보완 | Medium | 미진행 |
+| **TODO-QUIC-05** | `quic_frame_http3_stream` 내 HTTP/3 QPACK header 압축 연동 interface 정립 | Low | 미진행 |

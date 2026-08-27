@@ -67,6 +67,6 @@ return_t base64_decode(const byte_t* source, size_t source_size, byte_t* buffer,
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | :--- | :--- | :---: | :---: |
-| **#1** | `base64_decode` loop 시 유효하지 않은 Base64 문자에 대한 검증 및 오류 처리 강화 | High | 미진행 |
-| **#2** | Base64URL decoding 시 입력 끝부분 padding(`=`) 생략 건에 대한 완충 정밀 검증 logic 작성 | Medium | 미진행 |
-| **#3** | SIMD/AVX2 적용을 통한 대용량 binary_t Base64 encoding/decoding loop 성능 향상 검토 | Low | 미진행 |
+| **TODO-BASE64-01** | `base64_decode` loop 시 유효하지 않은 Base64 문자에 대한 검증 및 오류 처리 강화 | High | 미진행 |
+| **TODO-BASE64-02** | Base64URL decoding 시 입력 끝부분 padding(`=`) 생략 건에 대한 완충 정밀 검증 logic 작성 | Medium | 미진행 |
+| **TODO-BASE64-03** | SIMD/AVX2 적용을 통한 대용량 binary_t Base64 encoding/decoding loop 성능 향상 검토 | Low | 미진행 |

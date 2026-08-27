@@ -107,6 +107,7 @@
 /* string */
 #include <hotplace/sdk/base/string/constexpr_obfuscate.hpp>
 #include <hotplace/sdk/base/string/obfuscate_string.hpp>
+#include <hotplace/sdk/base/string/split.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/base/string/types.hpp>
 

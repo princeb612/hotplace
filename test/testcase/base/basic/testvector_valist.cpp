@@ -16,15 +16,36 @@ void test_yaml_testvector_valist() {
     auto lambda_yaml_valist_sprintf = [&](const YAML::Node& example, const YAML::Node& items) -> void {
         auto args = example["args"];
 
+        /**
+         * [IMPORTANT] yaml-cpp negative integer value
+         * auto value = static_cast<`cating_type`>(arg["value"].as<`abi_type`>)(0);
+         */
+
         valist va;
         for (const auto& arg : args) {
             std::string type = arg["type"].as<std::string>("");
             if (type == "float") {
                 va << arg["value"].as<float>();
             } else if (type == "int") {
-                va << arg["value"].as<int>();
+                va << arg["value"].as<int>(0);
             } else if (type == "string") {
                 va << arg["value"].as<std::string>("").c_str();
+            } else if (type == "int8") {
+                va << static_cast<int8>(arg["value"].as<int>(0));
+            } else if (type == "uint8") {
+                va << arg["value"].as<uint8>(0);
+            } else if (type == "int16") {
+                va << static_cast<int16>(arg["value"].as<int>(0));
+            } else if (type == "uint16") {
+                va << arg["value"].as<uint16>(0);
+            } else if (type == "int32") {
+                va << static_cast<int32>(arg["value"].as<int>(0));
+            } else if (type == "uint32") {
+                va << arg["value"].as<uint32>(0);
+            } else if (type == "int64") {
+                va << static_cast<int64>(arg["value"].as<long long>(0));
+            } else if (type == "uint64") {
+                va << arg["value"].as<uint64>(0);
             }
         }
 

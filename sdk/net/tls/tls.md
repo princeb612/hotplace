@@ -61,8 +61,8 @@ class sslkeylog_importer;
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `tls_protection_encryption_aead` 내 TLS 1.3 Secret 파생 및 Key Update mechanism 예외 처리 검증 | High | 미진행 |
-| **#2** | `tls_handshake_certificate_verify` 내 Ed25519 및 RSA-PSS 서명 검증 logic 단위 테스트 추가 | High | 미진행 |
-| **#3** | `tls_extension_encrypted_client_hello` (ECH) 사양 변경에 따른 HPKE binding logic 정리 | Medium | 미진행 |
-| **#4** | `dtls_record_arrange` module의 순서 어긋남(Out-of-order) 및 packet 손실 시 재조합 buffer링 최적화 | Medium | 미진행 |
-| **#5** | `sslkeylog_exporter` 및 `sslkeylog_importer` 간 TLS 1.3 Early Secret / Handshake Secret logging 누락 방지 logic 추가 | Low | 미진행 |
+| **TODO-TLS-01** | `tls_protection_encryption_aead` 내 TLS 1.3 Secret 파생 및 Key Update mechanism 예외 처리 검증 | High | 미진행 |
+| **TODO-TLS-02** | `tls_handshake_certificate_verify` 내 Ed25519 및 RSA-PSS 서명 검증 logic 단위 테스트 추가 | High | 미진행 |
+| **TODO-TLS-03** | `tls_extension_encrypted_client_hello` (ECH) 사양 변경에 따른 HPKE binding logic 정리 | Medium | 미진행 |
+| **TODO-TLS-04** | `dtls_record_arrange` module의 순서 어긋남(Out-of-order) 및 packet 손실 시 재조합 buffer링 최적화 | Medium | 미진행 |
+| **TODO-TLS-05** | `sslkeylog_exporter` 및 `sslkeylog_importer` 간 TLS 1.3 Early Secret / Handshake Secret logging 누락 방지 logic 추가 | Low | 미진행 |

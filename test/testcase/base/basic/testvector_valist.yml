@@ -52,3 +52,44 @@ testvector:
         # {2} is a string so 10d is ignored
         # {3} is an integer so s is ignored.
         expect: value={-1}, value="hello world", value=3.141592
+  - example: x64 ABI Boundary & Alignment
+    schema: VALIST
+    args:
+      - type: int
+        value: 256
+      - type: int8
+        value: -3
+      - type: int16
+        value: -300
+      - type: int32
+        value: -2147483648
+      - type: int64
+        value: -2147483649
+      - type: string
+        value: hello world
+      - type: float
+        value: 3.141592
+      - type: uint8
+        value: 3
+      - type: uint16
+        value: 300
+      - type: uint32
+        value: 2147483647
+      - type: uint64
+        value: 21474836478
+    items:
+      - item: item1
+        format: value={1}, value={2}, value={3}, value={4}, value={5}, value={6}, value={7}, value={8}, value={9}, value={10}, value={11}
+        expect: value=256, value=-3, value=-300, value=-340282366920938463463374607429620727808, value=2147483647, value=hello world, value=3.141592, value=3, value=300, value=2147483647, value=4294967294
+      - item: item2
+        format: value={11}, value={10}, value={9}, value={8}, value={7}, value={6}, value={5}, value={4}, value={3}, value={2}, value={1}
+        expect: value=4294967294, value=2147483647, value=300, value=3, value=3.141592, value=hello world, value=2147483647, value=-340282366920938463463374607429620727808, value=-300, value=-3, value=256
+      - item: item3
+        format: value={2}, value={4}, value={6}, value={8}, value={10}, value={1}, value={3}, value={5}, value={7}, value={9}, value={11}
+        expect: value=-3, value=-340282366920938463463374607429620727808, value=hello world, value=3, value=2147483647, value=256, value=-300, value=2147483647, value=3.141592, value=300, value=4294967294
+      - item: item4
+        format: value={1}, value={3}, value={5}, value={7}, value={9}, value={11}, value={2}, value={4}, value={6}, value={8}, value={10}
+        expect: value=256, value=-300, value=2147483647, value=3.141592, value=300, value=4294967294, value=-3, value=-340282366920938463463374607429620727808, value=hello world, value=3, value=2147483647
+      - item: item5
+        format: value={1}, value={11}, value={2}, value={10}, value={3}, value={9}, value={4}, value={8}, value={5}, value={7}, value={6}
+        expect: value=256, value=4294967294, value=-3, value=2147483647, value=-300, value=300, value=-340282366920938463463374607429620727808, value=3, value=2147483647, value=3.141592, value=hello world

@@ -102,9 +102,9 @@ ac->insert_as(token_sentence, {token_lvalue, token_assign, token_phrase});
 
 ---
 
-## 5. AC reduction parser 룰 작성 layer링 원칙
+## 5. AC reduction parser rule 작성 layering 원칙
 
-Aho-Corasick 엔진은 matching되는 즉시 치환하므로, **Specific 룰이 Generic 룰보다 먼저 실행**되도록 단계를 분리해야 함.
+Aho-Corasick 엔진은 matching되는 즉시 치환하므로, **Specific rule이 Generic rule보다 먼저 실행**되도록 단계를 분리해야 함.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -123,9 +123,9 @@ Aho-Corasick 엔진은 matching되는 즉시 치환하므로, **Specific 룰이 
 
 ### 작성 주의사항 checklist
 
-1. **특수 키워드의 이른 그룹화 금지**: 구문 구조 키워드(`token_int`, `token_enum` 등)를 Broad 그룹(`builtintype`)에 성급히 포함시키면 Generic 룰이 삼켜버림.
+1. **특수 키워드의 이른 그룹화 금지**: 구문 구조 키워드(`token_int`, `token_enum` 등)를 Broad 그룹(`builtintype`)에 성급히 포함시키면 Generic rule이 삼켜버림.
 2. **원소 token의 완전성 보장**: `repeat_as`에 사용되는 원소 token 내부 구조는 최우선 reduction parse에서 깨끗하게 완전 환원되어야 함.
-3. **matching 통계 분석 활용**: Specific pattern 실행 전에 Generic pattern의 matching 횟수가 비정상적으로 높다면 룰 충돌 발생 신호임.
+3. **matching 통계 분석 활용**: Specific pattern 실행 전에 Generic pattern의 matching 횟수가 비정상적으로 높다면 rule 충돌 발생 신호임.
 
 ---
 
@@ -159,14 +159,14 @@ Aho-Corasick 엔진은 matching되는 즉시 치환하므로, **Specific 룰이 
 ## 7. Gemini Q&A : ruleset 작성 주의점을 전부 나열해 보면..
 
 상향식(Bottom-Up) reduction을 수행하는 **Aho-Corasick 기반 parser/트랜스파일러**에서 ruleset(Grammar Rules)을 정의할 때 반드시 지켜야 할 주의사항을 정리했습니다.
-Aho-Corasick algorithm은 입력 stream에서 pattern을 발견하는 즉시 가장 빨리/가장 길게 matching된 구간을 치환(Reduce)하려는 성질이 있습니다. 따라서 문맥 자유 문법(CFG) 기반의 LALR parser보다 **token 오염 및 충돌 예방**에 훨씬 세심한 룰 설계가 필요합니다.
+Aho-Corasick algorithm은 입력 stream에서 pattern을 발견하는 즉시 가장 빨리/가장 길게 matching된 구간을 치환(Reduce)하려는 성질이 있습니다. 따라서 문맥 자유 문법(CFG) 기반의 LALR parser보다 **token 오염 및 충돌 예방**에 훨씬 세심한 rule 설계가 필요합니다.
 
 ---
 
 ### 1. 그룹(Group) 및 wildcard 사용 주의점
 
 * **특수 키워드의 그룹 포섭 지양**
-  * 특정 구문 구조(예: `INTEGER { ... }`)에 핵심으로 사용되는 단일 token(`token_int`)을 broad한 그룹(`token_builtintype`)에 묶어두면, 상위 룰이 작동하기 전에 generic한 룰(`token_identifier + token_builtintype`)이 먼저 터져서 구문을 집어삼킵니다.
+  * 특정 구문 구조(예: `INTEGER { ... }`)에 핵심으로 사용되는 단일 token(`token_int`)을 broad한 그룹(`token_builtintype`)에 묶어두면, 상위 rule이 작동하기 전에 generic한 rule(`token_identifier + token_builtintype`)이 먼저 터져서 구문을 집어삼킵니다.
   * **원칙**: 구문 구조의 키워드로 쓰이는 token은 그룹화 시점을 유예하거나, 단독 키워드 pattern을 최우선 reduction 대상에 두어야 합니다.
 * **그룹 간 순환/중복 정의 금지**
   * 그룹 $A$가 그룹 $B$를 포함하고, 그룹 $B$의 구성 요소가 다시 그룹 $A$로 치환되는 pattern이 존재하면 무한 reduction loop나 오버랩 충돌이 발생합니다.
@@ -175,41 +175,41 @@ Aho-Corasick algorithm은 입력 stream에서 pattern을 발견하는 즉시 가
 
 ### 2. reduction 우선순위 및 충돌(Conflict) 제어
 
-* **Specific(구체적) 룰과 Generic(포괄적) 룰의 격리**
-  * 길이/구조가 비슷한 pattern이 경합할 때, 범용 룰이 먼저 환원되면 세부 구문 구조 분석이 불가능해집니다.
+* **Specific(구체적) rule과 Generic(포괄적) rule의 격리**
+  * 길이/구조가 비슷한 pattern이 경합할 때, 범용 rule이 먼저 환원되면 세부 구문 구조 분석이 불가능해집니다.
   * **예시**: `token_identifier ( token_number )` (Specific) vs `token_identifier token_usertype` (Generic)
-  * **원칙**: 가장 명확하고 고유한 문법 요소를 만들어내는 Specific 룰이 항상 먼저 실행되도록 룰 정의 순서 및 트리 레벨을 배치해야 합니다.
+  * **원칙**: 가장 명확하고 고유한 문법 요소를 만들어내는 Specific rule이 항상 먼저 실행되도록 rule 정의 순서 및 트리 레벨을 배치해야 합니다.
 * **좌측 재귀(Left Recursion) 및 과도한 이중 상속 구조 방지**
-  * `A -> A B` 형태의 룰이나 `A -> B`, `B -> A` 형태의 단순 치환 룰이 중첩되면 입력 token의 위치(pos/len) 정보가 왜곡되어 sequence 추적이 실패합니다.
+  * `A -> A B` 형태의 rule이나 `A -> B`, `B -> A` 형태의 단순 치환 rule이 중첩되면 입력 token의 위치(pos/len) 정보가 왜곡되어 sequence 추적이 실패합니다.
 
 ---
 
 ### 3. `repeat_as` (sequence/list) 정의 시 주의점
 
 * **원소(Element) token의 완전성(Atomicity) 확보**
-  * `repeat_as`에 사용되는 원소 token(예: `token_namednumberelement`) 내부 구성 요소가 **단 하나라도 외부 Generic 룰에 의해 먼저 치환되면 `repeat_as` 전체가 무산**됩니다.
-  * **원칙**: `repeat_as`로 묶일 기본 단위는 그 어떤 일반 룰과도 부분 matching이 겹치지 않도록 가장 빠른 단계(Early Pass)에서 완전히 reduction시켜 놓아야 합니다.
+  * `repeat_as`에 사용되는 원소 token(예: `token_namednumberelement`) 내부 구성 요소가 **단 하나라도 외부 Generic rule에 의해 먼저 치환되면 `repeat_as` 전체가 무산**됩니다.
+  * **원칙**: `repeat_as`로 묶일 기본 단위는 그 어떤 일반 rule과도 부분 matching이 겹치지 않도록 가장 빠른 단계(Early Pass)에서 완전히 reduction시켜 놓아야 합니다.
 * **구분자(Delimiter)의 중복 의미 사용 제한**
-  * `repeat_as`에서 구분자로 지정된 token(예: `token_comma`)이 다른 룰의 일반 요소로 섞여 들어가면, list의 경계가 무너지거나 list 생성이 도중에 중단됩니다.
+  * `repeat_as`에서 구분자로 지정된 token(예: `token_comma`)이 다른 rule의 일반 요소로 섞여 들어가면, list의 경계가 무너지거나 list 생성이 도중에 중단됩니다.
 
 ---
 
-### 4. 상향식(Bottom-Up) 단계별 layer링(Layering) 원칙
+### 4. 상향식(Bottom-Up) 단계별 layering(Layering) 원칙
 
 Aho-Corasick ruleset은 **단순한 token $\rightarrow$ 복합 구조 $\rightarrow$ 완성된 문장** 순으로 layer가 엄격히 분리되어야 합니다.
 
-| layer 단계 | 주요 역할 | 룰 예시 | 작성 주의점 |
+| layer 단계 | 주요 역할 | rule 예시 | 작성 주의점 |
 | --- | --- | --- | --- |
-| **Layer 1: Leaf & Tag** | 리터럴, tag, 기본 단위 결합 | `token_tag ::= [ number ]` | 가장 명확한 최소 단위만 환원 |
-| **Layer 2: Element** | list에 들어갈 원소 구조 생성 | `namednumberelement ::= id ( num )` | Generic 룰 개입 절대 차단 |
+| **Layer 1: Leaf & Tag** | literal, tag, 기본 단위 결합 | `token_tag ::= [ number ]` | 가장 명확한 최소 단위만 환원 |
+| **Layer 2: Element** | list에 들어갈 원소 구조 생성 | `namednumberelement ::= id ( num )` | Generic rule 개입 절대 차단 |
 | **Layer 3: Repeat/List** | 동일 원소의 연속체 합성 | `repeat_as(list, comma, {element})` | 원소 및 구분자 순수성 유지 |
 | **Layer 4: Construct/Phrase** | 구조체, 타입 block 완성 | `phrase ::= INTEGER { list }` | 키워드 오염 방지 |
 | **Layer 5: Sentence/Statement** | 최상위 구문 완성 | `sentence ::= lvalue ::= phrase` | 최종 문장 matching |
 
 ---
 
-### 요약: 룰 작성 checklist
+### 요약: rule 작성 checklist
 
-1. [ ] **키워드 검증**: `INTEGER`, `ENUMERATED`, `SEQUENCE` 등 구문 시작 키워드가 일반 그룹(`builtintype` 등)에 묶여서 엉뚱한 Generic 룰을 먼저 트리거하지 않는가?
+1. [ ] **키워드 검증**: `INTEGER`, `ENUMERATED`, `SEQUENCE` 등 구문 시작 키워드가 일반 그룹(`builtintype` 등)에 묶여서 엉뚱한 Generic rule을 먼저 트리거하지 않는가?
 2. [ ] **원소 보호**: `repeat_as`에 들어갈 원소(Element)가 일반 `namedtype`이나 `taggedtype`으로 오인되어 먼저 치환될 가능성이 없는가?
 3. [ ] **통계 활용**: pattern frequency statistics를 확인했을 때, 하위 레벨의 Specific pattern(Pattern 0 등)이 실행되기 전에 상위/범용 pattern(Pattern 14 등)의 matching 횟수가 기형적으로 높지 않은가?

@@ -65,7 +65,7 @@ class crypto_keyexchange {
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | ML-KEM draft-ietf-tls-ecdhe-mlkem 규격 변경에 따른 직렬화 순서 동기화 검증 | High | 진행 중 |
-| **#2** | `crypto_keyexchange` 내 멀티thread reference counting thread 안정성(Thread-safety) test case 추가 | High | 미진행 |
-| **#3** | 지원되지 않는 `tls_group_t` 진입 시 error 로그 생성 및 세부 반환 code 정의 | Medium | 미진행 |
-| **#4** | OpenSSL 3.x PQC provider loading 성능 최적화 및 벤치마크 테스트 구현 | Low | 미진행 |
+| **TODO-KE-01** | ML-KEM draft-ietf-tls-ecdhe-mlkem 규격 변경에 따른 직렬화 순서 동기화 검증 | High | 진행 중 |
+| **TODO-KE-02** | `crypto_keyexchange` 내 멀티thread reference counting thread 안정성(Thread-safety) test case 추가 | High | 미진행 |
+| **TODO-KE-03** | 지원되지 않는 `tls_group_t` 진입 시 error 로그 생성 및 세부 반환 code 정의 | Medium | 미진행 |
+| **TODO-KE-04** | OpenSSL 3.x PQC provider loading 성능 최적화 및 벤치마크 테스트 구현 | Low | 미진행 |

@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include <hotplace/sdk/base/encoding/base16.hpp>
+#include <hotplace/sdk/base/string/split.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 
 namespace hotplace {
@@ -26,6 +27,7 @@ std::string base16_encode_rfc(const std::string& source) {
 
         // pattern 1 [ decimal, decimal, ..., decimal ]
         if (('[' == inpart[0]) && ends_with(inpart, "]")) {
+            // refine
             replace(inpart, "[", "");
             replace(inpart, "]", "");
             replace(inpart, " ", "");
@@ -33,21 +35,58 @@ std::string base16_encode_rfc(const std::string& source) {
             replace(inpart, "\r", "");
             replace(inpart, "\n", "");
             replace(inpart, "-", "");
+
             split_context_t* handle = nullptr;
-            std::string data;
             binary_t temp;
             split_begin(&handle, inpart.c_str(), ",");
-            auto lambda = [&data, &temp](const std::string& item) -> void {
-                int value = atoi(data.c_str());
-                if (value < 256) {
-                    temp.push_back((byte_t)value);
-                }
+            auto lambda = [&temp](const std::string& item) -> bool {
+                int value = atoi(item.c_str());
+                // if empty 0
+                // else if [..., 300, ...]
+                if (value >= 256) return false;
+                temp.push_back((byte_t)value);
+                return true;
             };
-            split_foreach(handle, lambda);
+            auto test = split_foreach(handle, lambda);
             split_end(handle);
-            outpart = std::move(base16_encode(temp));
+
+            // encode
+            if (errorcode_t::success == test) outpart = std::move(base16_encode(temp));
         }
         // pattern 2 hex:hex:...:hex
+        else if (std::string::npos != source.find(":")) {
+            // refine
+            split_context_t* handle = nullptr;
+            std::string temp;
+            std::string refined;
+            for (const auto& e : inpart) {
+                if (('9' >= e && e >= '0') || ('f' >= e && e >= 'a') || ('F' >= e && e >= 'A') || (':' == e)) {
+                    refined.push_back(e);
+                }
+            }
+            split_begin(&handle, refined.c_str(), ":");
+            auto lambda = [&temp](const std::string& item) -> bool {
+                std::string hex = item;
+                // bad case [...:0001f:11b:f::...]
+                // case "0001f"
+                while (hex.size() > 2 && '0' == hex.front()) hex.erase(0, 1);  // pop_front();
+                // case "11b"
+                if (hex.size() > 2) return false;
+                // case "f" or empty
+                while (hex.size() < 2) hex.insert(0, 1, '0');  // push_front('0');
+                // current item size is 2bytes
+                for (const auto& e : hex) {
+                    temp.push_back((byte_t)e);
+                }
+                return true;
+            };
+            auto test = split_chained_foreach(handle, lambda);
+            split_end(handle);
+
+            // encode
+            if (errorcode_t::success == test) outpart = std::move(temp);
+        }
+        // pattern 3 00 01 02 03 ...
         else {
             // single phase
             for (auto e : inpart) {
@@ -77,30 +116,63 @@ binary_t base16_decode_rfc(const std::string& source) {
             replace(inpart, "\n", "");
             replace(inpart, "-", "");
             split_context_t* handle = nullptr;
-            size_t count = 0;
-            std::string data;
-            split_begin(&handle, inpart.c_str(), ",");
-            split_count(handle, count);
-            for (unsigned int i = 0; i < count; i++) {
-                split_get(handle, i, data);
-                int value = atoi(data.c_str());
-                if (value < 256) {
-                    outpart.push_back((byte_t)value);
-                }
-            }
-            split_end(handle);
-        }
-        // pattern 2 hex:hex:...:hex
-        // pattern 3 hex hex ... hex\nhex hex
-        else {
-            // single phase
             std::string temp;
-            for (auto e : inpart) {
-                if (('9' >= e && e >= '0') || ('F' >= e && e >= 'A') || ('f' >= e && e >= 'a') || ('x' == e)) {
-                    temp.push_back(e);
-                }
+            split_begin(&handle, inpart.c_str(), ",");
+            auto lambda = [&temp](const std::string& item) -> bool {
+                int value = atoi(item.c_str());
+                if (value >= 256) return false;
+                temp.push_back((byte_t)value);
+                return true;
+            };
+            auto test = split_chained_foreach(handle, lambda);
+            split_end(handle);
+
+            if (errorcode_t::success != test) {
+                temp.clear();
             }
-            outpart = std::move(base16_decode(temp));
+        } else {
+            // pattern 2 hex:hex:...:hex
+            if (std::string::npos != source.find(":")) {
+                split_context_t* handle = nullptr;
+                std::string temp;
+                std::string refined;
+                for (const auto& e : inpart) {
+                    if (('9' >= e && e >= '0') || ('f' >= e && e >= 'a') || ('F' >= e && e >= 'A') || (':' == e)) refined.push_back(e);
+                }
+                split_begin(&handle, refined.c_str(), ":");
+                auto lambda = [&temp](const std::string& item) -> bool {
+                    std::string hex = item;
+                    // bad case [...:0001f:11b:f::...]
+                    // case "0001f"
+                    while (hex.size() > 2 && '0' == hex.front()) hex.erase(0, 1);  // pop_front();
+                    // case "11b"
+                    if (hex.size() > 2) return false;
+                    // case "f" or empty
+                    while (hex.size() < 2) hex.insert(0, 1, '0');  // push_front('0');
+                    // current item size is 2bytes
+                    for (const auto& e : hex) {
+                        temp.push_back((byte_t)e);
+                    }
+                    return true;
+                };
+                auto test = split_chained_foreach(handle, lambda);
+                split_end(handle);
+
+                // decode
+                if (errorcode_t::success == test) outpart = std::move(base16_decode(temp));
+            }
+            // pattern 3 00 01 02 03 ...
+            else {
+                if (std::string::npos != inpart.find("0x", 0)) inpart.erase(0, 2);
+                // single phase
+                std::string temp;
+                for (auto e : inpart) {
+                    if (('9' >= e && e >= '0') || ('F' >= e && e >= 'A') || ('f' >= e && e >= 'a')) {
+                        temp.push_back(e);
+                    }
+                }
+                outpart = std::move(base16_decode(temp));
+            }
         }
     }
     return outpart;

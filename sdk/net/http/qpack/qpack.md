@@ -41,8 +41,8 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `qpack_dynamic_table.cpp` 내 Relative Index 변환 시 Base Index overflow 및 OOB(Out of Bounds) 예외 처리 강화 | High | 미진행 |
-| **#2** | `qpack_encoder.cpp` 내 Required Insert Count 계산 logic 유효성 및 Unacknowledged Entry Limit 검증 | High | 미진행 |
-| **#3** | `qpack_sdk.cpp` 내 HTTP/3 Stream cancellation 발생 시 QPACK Dynamic Table reference count cleanup 확인 | Medium | 미진행 |
-| **#4** | `qpack_static_table.cpp` 범위 초과 Index 접근 시 safe lookup 예외 처리 보완 | Medium | 미진행 |
-| **#5** | `qpack_encoder.cpp` 내 Huffman Encoding 적용 여부 판단 및 비트 parsing 경계 검증 | Low | 미진행 |
+| **TODO-QPACK-01** | `qpack_dynamic_table.cpp` 내 Relative Index 변환 시 Base Index overflow 및 OOB(Out of Bounds) 예외 처리 강화 | High | 미진행 |
+| **TODO-QPACK-02** | `qpack_encoder.cpp` 내 Required Insert Count 계산 logic 유효성 및 Unacknowledged Entry Limit 검증 | High | 미진행 |
+| **TODO-QPACK-03** | `qpack_sdk.cpp` 내 HTTP/3 Stream cancellation 발생 시 QPACK Dynamic Table reference count cleanup 확인 | Medium | 미진행 |
+| **TODO-QPACK-04** | `qpack_static_table.cpp` 범위 초과 Index 접근 시 safe lookup 예외 처리 보완 | Medium | 미진행 |
+| **TODO-QPACK-05** | `qpack_encoder.cpp` 내 Huffman Encoding 적용 여부 판단 및 비트 parsing 경계 검증 | Low | 미진행 |

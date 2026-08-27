@@ -71,10 +71,5 @@ class t_trie {
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `base64_decode` loop 시 유효하지 않은 Base64 문자에 대한 검증 및 오류 처리 강화 | High | 미진행 |
-| **#2** | Base64URL decoding 시 입력 끝부분 padding(`=`) 생략 건에 대한 완충 정밀 검증 logic 작성 | Medium | 미진행 |
-| **#3** | SIMD/AVX2 적용을 통한 대용량 binary_t Base64 encoding/decoding loop 성능 향상 검토 | Low | 미진행 |
-| **#4** | `t_graph::build_*` 팩토리 method의 Raw Pointer 반환 구조를 `std::unique_ptr` 스마트 pointer로 전환하여 메모리 누수 방지 | High | 미진행 |
-| **#5** | `graph_dijkstra` 구현 시 음수 가중치 간선 검증 및 오류 처리 logic 추가 | Medium | 미진행 |
-| **#6** | `t_trie::erase` 연산 시 `eow` flag 무효화 외에 자식이 없는 부모 node들을 재귀 삭제하는 정리 logic 구현 | Medium | 미진행 |
-| **#7** | `t_trie::dump` 내부 재귀 구현 시 `std::vector` 생성 최소화로 메모리 할당 overhead 개선 | Low | 미진행 |
+| **TODO-TRIE-01** | `t_trie::erase` 연산 시 `eow` flag 무효화 외에 자식이 없는 부모 node들을 재귀 삭제하는 정리 logic 구현 | Medium | 미진행 |
+| **TODO-TRIE-02** | `t_trie::dump` 내부 재귀 구현 시 `std::vector` 생성 최소화로 메모리 할당 overhead 개선 | Low | 미진행 |

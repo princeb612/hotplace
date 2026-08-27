@@ -37,8 +37,8 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `openssl_tls_client_socket.cpp` 내 Non-blocking `SSL_ERROR_WANT_READ` / `SSL_ERROR_WANT_WRITE` 재시도 handling 보완 | High | 미진행 |
-| **#2** | `openssl_tls_context.cpp` 내 인증서 load 실패 및 `SSL_CTX_new` Null Pointer 예외 처리 확인 | High | 미진행 |
-| **#3** | `openssl_dtls_server_socket.cpp` 내 DTLS Cookie Exchange 및 Replay Attack 방지 logic 검증 | High | 미진행 |
-| **#4** | `openssl_server_socket_adapter.cpp` 내 비동기 session 종료 시 `SSL_free` / `SSL_shutdown` 메모리 leak 확인 | Medium | 미진행 |
-| **#5** | `openssl_tls.cpp` 내 ALPN (Application-Layer Protocol Negotiation) protocol 선택 연산 유효성 검토 | Low | 미진행 |
+| **TODO-OSSL-01** | `openssl_tls_client_socket.cpp` 내 Non-blocking `SSL_ERROR_WANT_READ` / `SSL_ERROR_WANT_WRITE` 재시도 handling 보완 | High | 미진행 |
+| **TODO-OSSL-02** | `openssl_tls_context.cpp` 내 인증서 load 실패 및 `SSL_CTX_new` Null Pointer 예외 처리 확인 | High | 미진행 |
+| **TODO-OSSL-03** | `openssl_dtls_server_socket.cpp` 내 DTLS Cookie Exchange 및 Replay Attack 방지 logic 검증 | High | 미진행 |
+| **TODO-OSSL-04** | `openssl_server_socket_adapter.cpp` 내 비동기 session 종료 시 `SSL_free` / `SSL_shutdown` 메모리 leak 확인 | Medium | 미진행 |
+| **TODO-OSSL-05** | `openssl_tls.cpp` 내 ALPN (Application-Layer Protocol Negotiation) protocol 선택 연산 유효성 검토 | Low | 미진행 |

@@ -85,16 +85,20 @@ void test_case::begin(const char* case_name, ...) {
     arch_t tid = get_thread_id();
     basic_stream topic;
 
-    critical_section_guard guard(_lock);
+    {
+        if (nullptr != case_name) {
+            va_list ap;
+            va_start(ap, case_name);
+            topic.vprintf(case_name, ap);
+            va_end(ap);
+        }
 
-    if (nullptr != case_name) {
-        va_list ap;
-        va_start(ap, case_name);
-        topic.vprintf(case_name, ap);
-        va_end(ap);
-        _testcase_per_threads[tid] = topic.c_str();
-    } else {
-        _testcase_per_threads[tid].clear();
+        critical_section_guard guard(_lock);
+        if (nullptr != case_name) {
+            _testcase_per_threads[tid] = topic.c_str();
+        } else {
+            _testcase_per_threads[tid].clear();
+        }
     }
 
     constexpr char constexpr_testcase[] = "[test case] ";

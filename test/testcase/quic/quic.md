@@ -45,8 +45,8 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `testcase_rfc9001.cpp` 내 Header Protection Mask 생성 및 PN 복호화 예외 처리 강화 | High | 미진행 |
-| **#2** | `testcase_construct_1rtt.cpp` 기반 Short Header packet AEAD decryption 유효성 확인 | High | 미진행 |
-| **#3** | `testcase_rfc9369.cpp` QUIC v2 Salt 적용 시 v1/v2 전환 및 Version Negotiation handling 구현 | Medium | 미진행 |
-| **#4** | `testvector_pcap_http3.yml` 데이터 활용 QPACK decoder stream error 예외 제어 보완 | Medium | 미진행 |
-| **#5** | Variable-Length Integer encoding 경계값 overflow test case 추가 | Low | 미진행 |
+| **TODO-QUIC-01** | `testcase_rfc9001.cpp` 내 Header Protection Mask 생성 및 PN 복호화 예외 처리 강화 | High | 미진행 |
+| **TODO-QUIC-02** | `testcase_construct_1rtt.cpp` 기반 Short Header packet AEAD decryption 유효성 확인 | High | 미진행 |
+| **TODO-QUIC-03** | `testcase_rfc9369.cpp` QUIC v2 Salt 적용 시 v1/v2 전환 및 Version Negotiation handling 구현 | Medium | 미진행 |
+| **TODO-QUIC-04** | `testvector_pcap_http3.yml` 데이터 활용 QPACK decoder stream error 예외 제어 보완 | Medium | 미진행 |
+| **TODO-QUIC-05** | Variable-Length Integer encoding 경계값 overflow test case 추가 | Low | 미진행 |

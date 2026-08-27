@@ -54,7 +54,7 @@ class crypto_keygen {
 ### 3. 주요 구현 흐름
 
 * **encoding 및 빌드 (`build`)**:
-  * `set()`으로 수집된 문자열/바이트 파라미터를 지정된 `encoding_t`(Base16/Base64/Base64Url 등)에 맞춰 decoding 수행.
+  * `set()`으로 수집된 문자열/바이트 parameter를 지정된 `encoding_t`(Base16/Base64/Base64Url 등)에 맞춰 decoding 수행.
   * `kty`(Key Type: EC, RSA, OKP, DH 등)에 따라 적절한 `crypto_keychain::add_*` method를 분기 호출.
 * **OpenSSL 3.x decoding/RAW 처리 (`pkey_decode`, `pkey_decode_raw`)**:
   * PEM/DER 형식인 경우 `OSSL_DECODER_CTX` 구조체를 사용하여 decoding 처리.
@@ -66,7 +66,7 @@ class crypto_keygen {
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | ML-KEM, ML-DSA, SLH-DSA algorithm의 `build()` 연동 내부 구현 추가 | High | 진행 중 |
-| **#2** | OpenSSL 3.x 미만 환경(`OPENSSL_VERSION_NUMBER < 0x30000000L`) 예외 처리 검증 | High | 완료 |
-| **#3** | RAW 비밀키/공개키 encoding(`pkey_encode_raw`) 시 algorithm별 buffer 크기 유효성 검사 강화 | Medium | 미진행 |
-| **#4** | `crypto_keygen` class 단위 test case 추가 (P-256, X25519, RSA-PSS 등) | Low | 미진행 |
+| **TODO-KG-01** | ML-KEM, ML-DSA, SLH-DSA algorithm의 `build()` 연동 내부 구현 추가 | High | 진행 중 |
+| **TODO-KG-02** | OpenSSL 3.x 미만 환경(`OPENSSL_VERSION_NUMBER < 0x30000000L`) 예외 처리 검증 | High | 완료 |
+| **TODO-KG-03** | RAW 비밀키/공개키 encoding(`pkey_encode_raw`) 시 algorithm별 buffer 크기 유효성 검사 강화 | Medium | 미진행 |
+| **TODO-KG-04** | `crypto_keygen` class 단위 test case 추가 (P-256, X25519, RSA-PSS 등) | Low | 미진행 |

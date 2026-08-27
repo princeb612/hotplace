@@ -46,8 +46,8 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `testcase_bignumber.cpp` 내 대용량 나눗셈 및 module러 연산 예외 처리 강화 | High | 미진행 |
-| **#2** | `testcase_signalwait_threads.cpp` Spurious Wakeup 방지용 Predicate 조건 검증 보완 | High | 미진행 |
-| **#3** | `testcase_ieee754.cpp` Denormalized Number(비정규화 수) 처리 시 언더플로우 검증 | Medium | 미진행 |
-| **#4** | `testcase_endian.cpp` 64비트 정수형 byte swapping 성능 최적화 | Medium | 미진행 |
-| **#5** | `testcase_datetime.cpp` 타임존(Timezone) 변환 시 윤초(Leap Second) 예외 케이스 추가 | Low | 미진행 |
+| **SYSTEM1** | `testcase_bignumber.cpp` 내 대용량 나눗셈 및 moduler 연산 예외 처리 강화 | High | 미진행 |
+| **SYSTEM2** | `testcase_signalwait_threads.cpp` Spurious Wakeup 방지용 Predicate 조건 검증 보완 | High | 미진행 |
+| **SYSTEM3** | `testcase_ieee754.cpp` Denormalized Number(비정규화 수) 처리 시 언더플로우 검증 | Medium | 미진행 |
+| **SYSTEM4** | `testcase_endian.cpp` 64비트 정수형 byte swapping 성능 최적화 | Medium | 미진행 |
+| **SYSTEM5** | `testcase_datetime.cpp` 타임존(Timezone) 변환 시 윤초(Leap Second) 예외 케이스 추가 | Low | 미진행 |

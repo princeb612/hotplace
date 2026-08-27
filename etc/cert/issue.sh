@@ -1,6 +1,8 @@
 #!/bin/bash
 
 :<< COMMENTS
+@author Soo Han, Kim (princeb612.kr@gmail.com)
+
 1. self-signed certificate
 2. MSYS_NO_PATHCONV=1
    [MINGW issue] do not treat '\' as escape character on MINGW

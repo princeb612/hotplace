@@ -16,7 +16,6 @@
 #include <hotplace/sdk/net/basic/openssl/openssl_tls.hpp>
 #include <hotplace/sdk/net/basic/openssl/openssl_tls_context.hpp>
 #include <hotplace/sdk/net/basic/openssl/sdk.hpp>
-#include <hotplace/sdk/net/tls/sslkeylog_exporter.hpp>
 
 namespace hotplace {
 namespace net {

@@ -30,6 +30,6 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `ipaddr_acl.cpp` 내 IPv6 Subnet Parsing 시 boundary check 및 Malformed IP String Exception Handling 보완 | High | 미진행 |
-| **#2** | `ipaddr_acl.cpp` 내 대규모 ACL Rule Set Lookup 시 Performance Degradation 방지를 위한 Data Structure 최적화 검토 | Medium | 미진행 |
-| **#3** | `ipaddr_acl.hpp` 내 C++11 type safety 및 const correctness 검증 | Low | 미진행 |
+| **TODO-IA-01** | `ipaddr_acl.cpp` 내 IPv6 Subnet Parsing 시 boundary check 및 Malformed IP String Exception Handling 보완 | High | 미진행 |
+| **TODO-IA-02** | `ipaddr_acl.cpp` 내 대규모 ACL Rule Set Lookup 시 Performance Degradation 방지를 위한 Data Structure 최적화 검토 | Medium | 미진행 |
+| **TODO-IA-03** | `ipaddr_acl.hpp` 내 C++11 type safety 및 const correctness 검증 | Low | 미진행 |

@@ -35,7 +35,7 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `testcase_rfc9106.cpp` 내 Argon2 Memory Allocation 실패 시 Boundary Check 및 Safe Free 연산 검증 | High | 미진행 |
-| **#2** | `testcase_rfc7914.cpp` 내 scrypt Large Cost Factor ($N$) 설정 시 Stack/Heap Exhaustion 방지 예외 처리 | High | 미진행 |
-| **#3** | `testvector_rfc5869.cpp` 내 HKDF Expand phase 의 Maximum Output Length ($255 \times \text{HashLen}$) 초과 시 Validation 강화 | Medium | 미진행 |
-| **#4** | `testcase_rfc6070.cpp` 내 PBKDF2 High Iteration Count 연산 시 CPU Spiking 완화 방안 검토 | Low | 미진행 |
+| **CKD1** | `testcase_rfc9106.cpp` 내 Argon2 Memory Allocation 실패 시 Boundary Check 및 Safe Free 연산 검증 | High | 미진행 |
+| **CKD2** | `testcase_rfc7914.cpp` 내 scrypt Large Cost Factor ($N$) 설정 시 Stack/Heap Exhaustion 방지 예외 처리 | High | 미진행 |
+| **CKD3** | `testvector_rfc5869.cpp` 내 HKDF Expand phase 의 Maximum Output Length ($255 \times \text{HashLen}$) 초과 시 Validation 강화 | Medium | 미진행 |
+| **CKD4** | `testcase_rfc6070.cpp` 내 PBKDF2 High Iteration Count 연산 시 CPU Spiking 완화 방안 검토 | Low | 미진행 |

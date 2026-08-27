@@ -40,8 +40,8 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `http2_session.cpp` 내 Client Connection Preface 검증 실패 시 GOAWAY 처리 보완 | High | 미진행 |
-| **#2** | `http2_frame_headers.cpp` 내 CONTINUATION frame interleaving 발생 시 Protocol Error 처리 강화 | High | 미진행 |
-| **#3** | `http2_frame_window_update.cpp` 내 Flow Control Window Overflow 검증 | Medium | 미진행 |
-| **#4** | `http2_serverpush.cpp` 내 Push Stream ID 할당 규칙 (짝수 Stream ID) 준수 여부 확인 | Medium | 미진행 |
-| **#5** | `http2_frame_settings.cpp` 내 SETTINGS ACK 수신 timer Timeout handling 적용 검토 | Low | 미진행 |
+| **TODO-H2-01** | `http2_session.cpp` 내 Client Connection Preface 검증 실패 시 GOAWAY 처리 보완 | High | 미진행 |
+| **TODO-H2-02** | `http2_frame_headers.cpp` 내 CONTINUATION frame interleaving 발생 시 Protocol Error 처리 강화 | High | 미진행 |
+| **TODO-H2-03** | `http2_frame_window_update.cpp` 내 Flow Control Window Overflow 검증 | Medium | 미진행 |
+| **TODO-H2-04** | `http2_serverpush.cpp` 내 Push Stream ID 할당 규칙 (짝수 Stream ID) 준수 여부 확인 | Medium | 미진행 |
+| **TODO-H2-05** | `http2_frame_settings.cpp` 내 SETTINGS ACK 수신 timer Timeout handling 적용 검토 | Low | 미진행 |

@@ -41,8 +41,8 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `http3_frame.cpp` 내 QUIC Varint decoding 시 입력 buffer Boundary 초과 예외 처리 보완 | High | 미진행 |
-| **#2** | `http3_frame_settings.cpp` http3_frame_settings.cpp 내 Control Stream 중복 SETTINGS 수신 처리 및 QPACK Dynamic Table sync 검증 | High | 미진행 |
-| **#3** | `http3_frame_priority_update.cpp` 내 RFC 9218 Priority Element ID boundary validation 검증 | Medium | 미진행 |
-| **#4** | `http3_frame_unknown.cpp` 내 미지원 frame 수신 시 Stream 무시(Ignore) mechanism 검증 | Medium | 미진행 |
-| **#5** | `http3_frame_metadata.cpp` 내 확장 METADATA frame 바이트 boundary 체크 연산 적용 검토 | Low | 미진행 |
+| **TODO-H3-01** | `http3_frame.cpp` 내 QUIC Varint decoding 시 입력 buffer Boundary 초과 예외 처리 보완 | High | 미진행 |
+| **TODO-H3-02** | `http3_frame_settings.cpp` http3_frame_settings.cpp 내 Control Stream 중복 SETTINGS 수신 처리 및 QPACK Dynamic Table sync 검증 | High | 미진행 |
+| **TODO-H3-03** | `http3_frame_priority_update.cpp` 내 RFC 9218 Priority Element ID boundary validation 검증 | Medium | 미진행 |
+| **TODO-H3-04** | `http3_frame_unknown.cpp` 내 미지원 frame 수신 시 Stream 무시(Ignore) mechanism 검증 | Medium | 미진행 |
+| **TODO-H3-05** | `http3_frame_metadata.cpp` 내 확장 METADATA frame 바이트 boundary 체크 연산 적용 검토 | Low | 미진행 |

@@ -30,6 +30,7 @@
     * [aho_corasick](sdk/base/pattern/aho_corasick.md)
     * [aho_corasick_parser](sdk/base/pattern/aho_corasick_parser.md)
     * [trie](sdk/base/pattern/trie.md)
+    * [obfuscate](sdk/base/string/obfuscate.md]
   * io
     * [README](sdk/io/README.md)
     * [ASN.1](sdk/io/asn.1/basic/README.md)
@@ -67,19 +68,22 @@
     * [server](sdk/net/server/README.md)
     * [TLS](sdk/net/tls/README.md)
   * net - published by Gemini
-    * [ipaddr_acl](sdk/net/basic/ipaddr/ipaddr_acl.md)
+    * [network_server](sdk/net/server/network_server.md)
     * [openssl](sdk/net/basic/openssl/openssl.md)
     * [trial](sdk/net/basic/trial/trial.md)
-    * [auth](sdk/net/http/auth/auth.md)
-    * [compression](sdk/net/http/compression/compression.md)
-    * [HPACK](sdk/net/http/hpack/hpack.md)
-    * [HTTP](sdk/net/http/http.md)
-    * [HTTP2](sdk/net/http/http2/http2.md)
-    * [HTTP3](sdk/net/http/http3/http3.md)
-    * [QPACK](sdk/net/http/qpack/qpack.md)
-    * [network_server](sdk/net/server/network_server.md)
-    * [QUIC](sdk/net/tls/quic.md)
+    * [ipaddr_acl](sdk/net/basic/ipaddr/ipaddr_acl.md)
     * [TLS](sdk/net/tls/tls.md)
+    * [dtls_record_publisher](sdk/net/tls/dtls_record_publisher.md]
+    * [quic_packet_publisher](sdk/net/tls/quic_packet_publisher.md]
+    * [sslkeylog](sdk/net/tls/sslkeylog.md]
+    * [HTTP](sdk/net/http/http.md)
+    * [auth](sdk/net/http/auth/auth.md)
+    * [HPACK](sdk/net/http/hpack/hpack.md)
+    * [compression](sdk/net/http/compression/compression.md)
+    * [HTTP2](sdk/net/http/http2/http2.md)
+    * [QPACK](sdk/net/http/qpack/qpack.md)
+    * [HTTP3](sdk/net/http/http3/http3.md)
+    * [QUIC](sdk/net/tls/quic.md)
 * applet
   * [README](test/applet/README.md)
   * [dtlsserver](test/applet/dtlsserver/README.md)

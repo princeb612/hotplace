@@ -13,6 +13,7 @@
 t_shared_instance<semaphore> _mutex;
 
 return_t thread_routine(void* param) {
+    _test_case.begin("thread");
     _logger->writeln("thread started");
 
     _logger->writeln("wait for signal");

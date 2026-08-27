@@ -67,7 +67,7 @@ namespace hotplace {
  *      _test_case.assert (..); // check time, same in assert method
  * @remarks
  *      MSVC variable arguments ambiguity ... / va_list
- *      so, prefix 'v' to functions that use the va_list parameter
+ *      so, prefixed 'v' to functions that use the va_list parameter
  */
 class test_case {
    public:

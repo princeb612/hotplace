@@ -1,3 +1,4 @@
+
 ## Base16 encoding/decoding module - published by Gemini
 
 ---
@@ -9,7 +10,7 @@
   * **high-level interface**: `std::string`, `binary_t`, `basic_stream` 등 다양한 container간 변환 지원.
   * **low-level 성능 최적화**: `snprintf` 대신 bit shift 연산 및 lookup table 기반 직접 변환 방식 적용 (`conv_fast`, `hex_digits`).
   * **RFC 다양한 pattern 지원 (`base16_encode_rfc`, `base16_decode_rfc`)**:
-    * RFC 7516 style의 배열 형태 `[227, 197, 117, ...]` 10진수 리터럴 parsing.
+    * RFC 7516 style의 배열 형태 `[227, 197, 117, ...]` 10진수 literal parsing.
     * RFC 7539 style의 `00:01:02:...` 구분자 포함 Hex pattern 및 공백/줄바꿈 포함 포맷 처리.
   * **홀수 길이 Hex decoding 지원**: NIST CAVP test vector 지원을 위한 홀수(odd size) 길이 decoding 지원.
   * **`0x` 접두사 자동 스킵**: decoding 시 "0x" 접두사 자동 감지 및 건너뛰기.
@@ -59,8 +60,8 @@ return_t base16_decode(const char* source, size_t size, byte_t* buf, size_t* buf
 
 ### 4. TODO list
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
-| :--- | :--- | :---: | :---: |
-| **#1** | `base16_decode_rfc`의 10진수 배열 parsing 시 `atoi` 대신 안전한 정수 변환 함수로 대체 | High | 미진행 |
-| **#2** | `base16_encode_rfc`에서 콜론(`:`) 구분 포맷 생성 option flag 추가 | Medium | 미진행 |
-| **#3** | SIMD/AVX2 명령어셋을 활용한 Low-level encoding/decoding loop 성능 개선 검토 | Low | 미진행 |
+| ID | 우선순위 | 작업 항목 (Task Description) | 상태 (Status) | 비고 |
+| --- | --- | --- | --- | --- | --- |
+| ~~**TODO-ENC-01**~~ | `HIGH` | **`base16_encode_rfc` / `base16_decode_rfc` 리팩토링 및 예외 처리 반영** | `Fixed` | `base16rfc.cpp` 반영 완료 |
+| ~~**TODO-ENC-02**~~ | `LOW` | **`test_base16_rfc` 경계조건/잘못된 입력 검증 케이스 추가**<br><br><br>- 범위 초과(`300`), 홀수 Hex, `0x` 접두사 포함 테스트 케이스 반영 완료 | `Fixed` | `testcase_base16.cpp` 반영 완료 |
+| **TODO-ENC-03** | `LOW` | **SIMD/AVX2 벡터화 가속 검토** | `Postponed` | 이식성 고려 및 PQC/PKCS#11 연동 검토 후 재개 |

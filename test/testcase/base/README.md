@@ -101,7 +101,7 @@ testvector:
   - example: string                         # [mandatory] testcase
     schema: VALIST                          # [mandatory] "VALIST SPRINTF"
     args:
-      - type: "float"|"string"|"int"        # [mandatory]
+      - type: string                        # [mandatory] "float"|"string"|"int"|"int8"|"uint8"|"int16"|"uint16"|"int32"|"uint32"|"int64"|"uint64"
         value: string                       # [mandatory]
     items:
       - item: string

@@ -32,8 +32,8 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `linux/multiplexer_epoll.cpp` 내 `epoll_wait` EINTR return 시 retry logic 및 error handling 보완 | High | 미진행 |
-| **#2** | `windows/multiplexer_iocp.cpp` 내 GQCS completion key null pointer check 및 overlapped memory layout 검증 | High | 미진행 |
-| **#3** | `multiplexer_controller.cpp` 내 event loop terminate 시 worker thread join 및 socket cleanup race condition 확인 | High | 미진행 |
-| **#4** | `multiplexer.hpp` 내 edge-triggered (EPOLLET) 및 level-triggered option 설정 확장성 검토 | Medium | 미진행 |
-| **#5** | Linux/Windows platform별 non-blocking socket set flag abstraction 유효성 확인 | Low | 미진행 |
+| **TODO-MP-01** | `linux/multiplexer_epoll.cpp` 내 `epoll_wait` EINTR return 시 retry logic 및 error handling 보완 | High | 미진행 |
+| **TODO-MP-02** | `windows/multiplexer_iocp.cpp` 내 GQCS completion key null pointer check 및 overlapped memory layout 검증 | High | 미진행 |
+| **TODO-MP-03** | `multiplexer_controller.cpp` 내 event loop terminate 시 worker thread join 및 socket cleanup race condition 확인 | High | 미진행 |
+| **TODO-MP-04** | `multiplexer.hpp` 내 edge-triggered (EPOLLET) 및 level-triggered option 설정 확장성 검토 | Medium | 미진행 |
+| **TODO-MP-05** | Linux/Windows platform별 non-blocking socket set flag abstraction 유효성 확인 | Low | 미진행 |

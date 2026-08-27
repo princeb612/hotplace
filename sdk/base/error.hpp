@@ -332,24 +332,27 @@ enum class error_category_t : uint8 {
 struct return_t {
     uint32 code;
 
-    return_t() : code(static_cast<uint32>(errorcode_t::success)) {}
-    return_t(uint32 value) : code(value) {}
-    return_t(int value) : code(static_cast<uint32>(value)) {}
-    return_t(errorcode_t value) : code(static_cast<uint32>(value)) {}
+    // 1. 기본 생성자에 constexpr 및 noexcept 추가 (Literal Type 조건 충족)
+    constexpr return_t() noexcept : code(static_cast<uint32>(errorcode_t::success)) {}
+
+    constexpr return_t(uint32 value) noexcept : code(value) {}
+    constexpr return_t(int value) noexcept : code(static_cast<uint32>(value)) {}
+    constexpr return_t(errorcode_t value) noexcept : code(static_cast<uint32>(value)) {}
+
 #if defined _WIN32 || defined WIN32
     // MINGW64, MSVC
-    return_t(HRESULT value) : code(static_cast<uint32>(value)) {}
+    constexpr return_t(HRESULT value) noexcept : code(static_cast<uint32>(value)) {}
 #endif
 #if defined _MSC_VER
-    return_t(unsigned long value) : code(static_cast<uint32>(value)) {}
+    constexpr return_t(unsigned long value) noexcept : code(static_cast<uint32>(value)) {}
 #endif
 
     std::string error_code() const;
     std::string error_message() const;
     error_category_t category() const;
 
-    constexpr operator uint32() const { return code; }
-    constexpr operator errorcode_t() const { return static_cast<errorcode_t>(code); }
+    constexpr operator uint32() const noexcept { return code; }
+    constexpr operator errorcode_t() const noexcept { return static_cast<errorcode_t>(code); }
 
     return_t& operator=(uint32 value) noexcept {
         this->code = value;
@@ -391,6 +394,13 @@ struct return_t {
 
     constexpr bool operator==(errorcode_t other) const noexcept { return this->code == static_cast<uint32>(other); }
     constexpr bool operator!=(errorcode_t other) const noexcept { return this->code != static_cast<uint32>(other); }
+
+    constexpr bool operator==(uint32 other) const noexcept { return this->code == other; }
+    constexpr bool operator!=(uint32 other) const noexcept { return this->code != other; }
+    constexpr bool operator<(uint32 other) const noexcept { return this->code < other; }
+    constexpr bool operator<=(uint32 other) const noexcept { return this->code <= other; }
+    constexpr bool operator>(uint32 other) const noexcept { return this->code > other; }
+    constexpr bool operator>=(uint32 other) const noexcept { return this->code >= other; }
 };
 
 typedef struct _error_description {

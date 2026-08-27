@@ -81,7 +81,7 @@ class huffman_coding {
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `encode` loop 내 1비트 단위 전송을 bit shift 기반 buffer링으로 최적화 (성능 개선) | High | 미진행 |
-| **#2** | `decoding` 과정의 `std::string que` 문자열 기반 비트 queue를 정수형 비트 buffer 방식으로 refactoring | High | 미진행 |
-| **#3** | RFC 7541 Appendix B 정적 huffman code에 대한 대용량 stream 단위 테스트 추가 | Medium | 진행 중 |
-| **#4** | C++11 `constexpr` 활용 가능한 encoding table compile-time 생성 검토 | Low | 미진행 |
+| **TODO-HC-01** | `encode` loop 내 1비트 단위 전송을 bit shift 기반 buffer링으로 최적화 (성능 개선) | High | 미진행 |
+| **TODO-HC-02** | `decoding` 과정의 `std::string que` 문자열 기반 비트 queue를 정수형 비트 buffer 방식으로 refactoring | High | 미진행 |
+| **TODO-HC-03** | RFC 7541 Appendix B 정적 huffman code에 대한 대용량 stream 단위 테스트 추가 | Medium | 진행 중 |
+| **TODO-HC-04** | C++11 `constexpr` 활용 가능한 encoding table compile-time 생성 검토 | Low | 미진행 |

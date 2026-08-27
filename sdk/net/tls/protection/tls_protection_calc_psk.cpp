@@ -21,7 +21,6 @@
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_kdf.hpp>
 #include <hotplace/sdk/crypto/basic/transcript_hash.hpp>
-#include <hotplace/sdk/net/tls/sslkeylog_exporter.hpp>
 #include <hotplace/sdk/net/tls/tls_advisor.hpp>
 #include <hotplace/sdk/net/tls/tls_protection.hpp>
 #include <hotplace/sdk/net/tls/tls_session.hpp>

@@ -40,8 +40,8 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `http_dynamic_table.cpp` 내 동적 table 용량 제어 시 memory allocation 예외 처리 보완 | High | 미진행 |
-| **#2** | `http_header_compression_stream.hpp` stream pipeline 경계 비트 바이트 alignment 확인 | High | 미진행 |
-| **#3** | `types.hpp` 내 enum/struct 정의 확장성 및 C++11 type safety 검증 | Medium | 미진행 |
-| **#4** | `http_static_table.cpp` 무효한 index 참조 시 safe access 예외 handling 보완 | Medium | 미진행 |
-| **#5** | `http_header_compression.cpp` 대용량 header block 입력 시 buffer overflow 검증 | Low | 미진행 |
+| **TODO-HC-01** | `http_dynamic_table.cpp` 내 동적 table 용량 제어 시 memory allocation 예외 처리 보완 | High | 미진행 |
+| **TODO-HC-02** | `http_header_compression_stream.hpp` stream pipeline 경계 비트 바이트 alignment 확인 | High | 미진행 |
+| **TODO-HC-03** | `types.hpp` 내 enum/struct 정의 확장성 및 C++11 type safety 검증 | Medium | 미진행 |
+| **TODO-HC-04** | `http_static_table.cpp` 무효한 index 참조 시 safe access 예외 handling 보완 | Medium | 미진행 |
+| **TODO-HC-05** | `http_header_compression.cpp` 대용량 header block 입력 시 buffer overflow 검증 | Low | 미진행 |

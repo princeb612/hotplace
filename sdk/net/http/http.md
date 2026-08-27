@@ -9,7 +9,7 @@
   * **message 및 protocol parsing**: HTTP Request/Response, Header, URI, Status Code parsing 및 직렬화 연산 (`http_request`, `http_response`, `http_header`, `http_uri`, `http_protocol`).
   * **server/client facade**: builder pattern 기반 HTTP Server 구성 및 비동기 HTTP Client 통신 제어 (`http_server`, `http_server_builder`, `http_client`).
   * **인증 및 routing**: Basic/Digest 등 HTTP 인증 parsing/해결 및 URI mapping routing 연산 (`http_authentication_provider`, `http_authentication_resolver`, `http_router`).
-  * **HTML Document redering**: 정적/동적 HTML 문서 생성 및 resource 응답 헬퍼 (`html_documents`).
+  * **HTML Document redering**: 정적/동적 HTML 문서 생성 및 resource 응답 helper (`html_documents`).
 
 ---
 
@@ -39,8 +39,8 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `http_request.cpp` 내 Malformed URI 및 Chunked Body parsing 시 OOB/Null Pointer 예외 처리 보완 | High | 미진행 |
-| **#2** | `http_server.cpp` 내 Connection Keep-Alive Timeout 발생 시 socket session Graceful Close 확인 | High | 미진행 |
-| **#3** | `http_authentication_resolver.cpp` Digest 인증 계산 시 MD5/SHA256 hash validation 검증 | Medium | 미진행 |
-| **#4** | `http_router.cpp` Dynamic Path Parameter (Wildcard Path) mapping 정규식 연산 확인 | Medium | 미진행 |
-| **#5** | `html_documents.cpp` 내 HTML Special Character Entity Escaping 연산 적용 검토 | Low | 미진행 |
+| **TODO-HTTP-01** | `http_request.cpp` 내 Malformed URI 및 Chunked Body parsing 시 OOB/Null Pointer 예외 처리 보완 | High | 미진행 |
+| **TODO-HTTP-02** | `http_server.cpp` 내 Connection Keep-Alive Timeout 발생 시 socket session Graceful Close 확인 | High | 미진행 |
+| **TODO-HTTP-03** | `http_authentication_resolver.cpp` Digest 인증 계산 시 MD5/SHA256 hash validation 검증 | Medium | 미진행 |
+| **TODO-HTTP-04** | `http_router.cpp` Dynamic Path Parameter (Wildcard Path) mapping 정규식 연산 확인 | Medium | 미진행 |
+| **TODO-HTTP-05** | `html_documents.cpp` 내 HTML Special Character Entity Escaping 연산 적용 검토 | Low | 미진행 |

@@ -35,7 +35,7 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `testvector_rfc7539.cpp` 내 ChaCha20-Poly1305 Nonce Reuse 및 Tag Mismatch 에 대한 Exception Handling 검증 | High | 미진행 |
-| **#2** | `testcase_aead_ccm.cpp` 내 Invalid Tag / AAD mismatch 발생 시 Memory Corruption 및 Buffer Overflow 검증 | High | 미진행 |
-| **#3** | `testvector_cavp_blockciphers.cpp` 내 대용량 CAVP YML Parsing 연산 최적화 | Medium | 미진행 |
-| **#4** | `testvector_rfc3394.cpp` 내 AES Key Wrap / Unwrap 연산 시 Key Data Memory Wipe 검증 | Low | 미진행 |
+| **TODO-CC-01** | `testvector_rfc7539.cpp` 내 ChaCha20-Poly1305 Nonce Reuse 및 Tag Mismatch 에 대한 Exception Handling 검증 | High | 미진행 |
+| **TODO-CC-02** | `testcase_aead_ccm.cpp` 내 Invalid Tag / AAD mismatch 발생 시 Memory Corruption 및 Buffer Overflow 검증 | High | 미진행 |
+| **TODO-CC-03** | `testvector_cavp_blockciphers.cpp` 내 대용량 CAVP YML Parsing 연산 최적화 | Medium | 미진행 |
+| **TODO-CC-04** | `testvector_rfc3394.cpp` 내 AES Key Wrap / Unwrap 연산 시 Key Data Memory Wipe 검증 | Low | 미진행 |

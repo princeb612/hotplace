@@ -28,11 +28,29 @@ std::string return_t::error_message() const {
     }
 #if defined _WIN32 || defined WIN32
     char* message_buffer = nullptr;
-    size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, code,
+    DWORD win32_code = code;
+    if (HRESULT_FACILITY(code) == FACILITY_WIN32) {
+        win32_code = HRESULT_CODE(code);
+    }
+    size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, win32_code,
                                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&message_buffer, 0, NULL);
 
-    std::string msg(message_buffer, size);
-    LocalFree(message_buffer);
+    // CRT Debug Error Dialog / Crash - Gemini
+    //  std::string(nullptr, 0) // even if 0 == size
+    //    _ASSERTE(s != nullptr) -> MSVC (Windows CRT Debug) - /MDd /MTd
+    std::string msg;
+    if (0 == size || nullptr == message_buffer) {
+        msg = "unknown";  // do nothing
+    } else {
+        msg.assign(message_buffer, size);
+
+        LocalFree(message_buffer);
+
+        // case message_buffer ends with \r\n
+        while ((false == msg.empty()) && (msg.back() == '\r' || msg.back() == '\n')) {
+            msg.pop_back();
+        }
+    }
     return msg;
 #else
     char buf[256];
@@ -51,18 +69,18 @@ return_t get_lasterror(int code, int flags) {
     return_t ret = errorcode_t::success;
 #if defined __linux__
     // errno.h 1~133
-    // netdb.h -1~-105 to errorcode_t
+    // netdb.h -1~-105
     if (code < 0) {
         if (EAI_SYSTEM == code) {
-            ret = (errno > 0) ? errno : static_cast<uint32>(errorcode_t::internal_error);
+            ret = (errno > 0 && errno <= 4095) ? static_cast<uint32>(errno) : static_cast<uint32>(errorcode_t::internal_error);
         } else {
-            // POSIX errno
-            // kernel error code
-            // EAI_
-            uint32 eai_offset_code = static_cast<uint32>(errorcode_t::error_eai_base) + static_cast<uint32>(-code);
-            ret = eai_offset_code;
+            // kernel negative errno (-EINVAL, -ENOENT, ...)
+            // if not kernel mode... negative errno is EAI_*
+            uint32 abs_code = static_cast<uint32>(-code);
+            ret = (abs_code >= 1 && abs_code <= 105) ? static_cast<uint32>(errorcode_t::error_eai_base) + abs_code : static_cast<uint32>(errorcode_t::out_of_range);
         }
     } else if (code > 0) {
+        // POSIX errno
         ret = code;
     } else {
         ret = errorcode_t::success;

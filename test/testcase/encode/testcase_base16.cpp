@@ -171,27 +171,93 @@ void test_base16_oddsize() {
     _test_case.assert(66 == bin_test.size(), __FUNCTION__, "odd size");
 }
 
-void do_dump_base16_rfc(const char* text, const char* input) {
+void do_encode_base16_rfc(const char* text, const char* input, const char* expect) {
     basic_stream bs;
 
     std::string encoded = base16_encode_rfc(input);
     binary_t decoded = base16_decode(encoded);
-    dump_memory(decoded, &bs, 16, 4);
-    _logger->writeln("%s\n  input   %s\n  encoded %s\n  decoded\n%s", text, input, encoded.c_str(), bs.c_str());
+    binary_t decode_expect = base16_decode(expect);
+
+    valist va;
+    va << encoded << decoded << decode_expect;
+    _logger->write([&va](basic_stream& dbs) -> void {
+        dbs.vaprintln("encoded {1:x}", va);
+        dbs.vaprintln("decoded {2:x}", va);
+        dbs.vaprintln("compare {3:x}", va);
+    });
+
+    _test_case.assert(decoded == decode_expect, __FUNCTION__, "%s", text);
+}
+
+void do_decode_base16_rfc(const char* text, const char* input, const char* expect) {
+    binary_t decoded = base16_decode_rfc(input);
+    binary_t decode_expect = base16_decode(expect);
+
+    valist va;
+    va << decoded << decode_expect;
+    _logger->write([&va](basic_stream& dbs) -> void {
+        dbs.vaprintln("decoded {1:x}", va);
+        dbs.vaprintln("compare {2:x}", va);
+    });
+    _test_case.assert(decoded == decode_expect, __FUNCTION__, "%s", text);
 }
 
 void test_base16_rfc() {
     _test_case.begin("base16_rfc");
 
-    constexpr char expr1[] = "[227, 197, 117, 252, 2, 219, 233, 68, 180, 225, 77, 219]";  // e3 c5 75 fc 2 db e9 44 b4 e1 4d db
+    // [NOTE]
+    // expect format : base16 (not base16 RFC)
+
+    // encode
+    constexpr char expr1[] = "[227, 197, 117, 252, 2, 219, 233, 68, 180, 225, 77, 219]";
+    constexpr char expect1[] = "E3C575FC02DBE944B4E14DDB";
     constexpr char expr2[] = "00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f:10:11:12:13:14:15:16:17:18:19:1a:1b:1c:1d:1e:1f";
+    constexpr char expect2[] = "000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F";
     constexpr char expr3[] =
         "80 81 82 83 84 85 86 87 88 89 8a 8b 8c 8d 8e 8f"
         "90 91 92 93 94 95 96 97 98 99 9a 9b 9c 9d 9e 9f";
+    constexpr char expect3[] = "808182838485868788898A8B8C8D8E8F909192939495969798999A9B9C9D9E9F";
+    // bad case - skip 02 07 and ..
+    constexpr char expr4[] = "00:01::03:04:05:06::08:09:0a:0b:0c:0d:0e:0f:10:11::13:14:15:16:17:18:19:1a:1b:1c:1d::1f";
+    constexpr char expect4[] = "000100030405060008090A0B0C0D0E0F101100131415161718191A1B1C1D001F";
+    // bad case - skip 197 252 ...
+    constexpr char expr5[] = "[227, , 117, , 2, , 233, , 180, , 77, ]";
+    constexpr char expect5[] = "E30075000200E900B4004D";
 
-    do_dump_base16_rfc("case1", expr1);
-    do_dump_base16_rfc("case2", expr2);
-    do_dump_base16_rfc("case3", expr3);
+    do_encode_base16_rfc("case1", expr1, expect1);
+    do_encode_base16_rfc("case2", expr2, expect2);
+    do_encode_base16_rfc("case3", expr3, expect3);
+
+    // bad case - empty token
+    do_encode_base16_rfc("case4", expr4, expect4);
+    do_encode_base16_rfc("case5", expr5, expect5);
+
+    // 0x prefix
+    constexpr char expr6[] = "0x000102030405060708090a0b0c0d0e0f 101112131415161718191a1b1c1d1e1f";
+    constexpr char expect6[] = "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
+    // `0x prefix` + `white space`
+    constexpr char expr7[] = "0x\t00 0102030405060708090a0b0c0d0e0f 101112131415161718191a1b1c1d1e1f";
+    constexpr char expect7[] = "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
+    // white space
+    constexpr char expr8[] = "00 01\t02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f\n\n10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f";
+    constexpr char expect8[] = "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
+    // odd size
+    constexpr char expr9[] = "f 01\t02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f\n\n10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f";
+    constexpr char expect9[] = "0f0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
+
+    do_decode_base16_rfc("case6", expr6, expect6);
+    do_decode_base16_rfc("case7", expr7, expect7);
+    do_decode_base16_rfc("case8", expr8, expect8);
+    do_decode_base16_rfc("case9", expr9, expect9);
+
+    // bad case - invalid input ... 300 ...
+    constexpr char expr10[] = "[227, 197, 300, 252, 2, 219, 233, 68, 180, 225, 77, 219]";
+    // bad case - invalid input ... 101 ... 105 ...
+    constexpr char expr11[] = "00:101::03:04:105:06::08:09:0a:0b:0c:0d:0e:0f:10:11::13:14:15:16:17:18:19:1a:1b:1c:1d::1f";
+    auto encode10 = base16_decode_rfc(expr10);
+    auto encode11 = base16_decode_rfc(expr11);
+    _test_case.assert(encode10.empty(), __FUNCTION__, "case10");
+    _test_case.assert(encode11.empty(), __FUNCTION__, "case11");
 }
 
 void testcase_base16() {

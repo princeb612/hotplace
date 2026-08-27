@@ -11,7 +11,7 @@
  */
 
 #include <hotplace/sdk/base/nostd/binary.hpp>
-#include <hotplace/sdk/base/string/string.hpp>
+#include <hotplace/sdk/base/string/split.hpp>
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/crypto_keychain.hpp>
 #include <hotplace/sdk/crypto/basic/evp_pkey.hpp>

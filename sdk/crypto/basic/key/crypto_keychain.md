@@ -35,8 +35,8 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `crypto_keychain_ossl3.cpp` 내 OpenSSL 3.0 EVP_PKEY context allocation 실패 시 error handling 보완 | High | 미진행 |
-| **#2** | `crypto_keyexchange.cpp` 내 Shared Secret 계산 과정 메모리 leak 및 data race 검증 | High | 미진행 |
-| **#3** | `crypto_keychain_ec_compressed.cpp` 내 EC point decompression 연산 시 invalid point validation 강화 | High | 미진행 |
-| **#4** | `crypto_keychain_rsa.cpp` 내 key generation timing attack 방지 및 secure padding 적용 확인 | Medium | 미진행 |
-| **#5** | `crypto_keychain_okp.cpp` 내 Ed25519 / X25519 key derivation performance profiling 검토 | Low | 미진행 |
+| **TODO-KEYCHAIN-01** | `crypto_keychain_ossl3.cpp` 내 OpenSSL 3.0 EVP_PKEY context allocation 실패 시 error handling 보완 | High | 미진행 |
+| **TODO-KEYCHAIN-02** | `crypto_keyexchange.cpp` 내 Shared Secret 계산 과정 메모리 leak 및 data race 검증 | High | 미진행 |
+| **TODO-KEYCHAIN-03** | `crypto_keychain_ec_compressed.cpp` 내 EC point decompression 연산 시 invalid point validation 강화 | High | 미진행 |
+| **TODO-KEYCHAIN-04** | `crypto_keychain_rsa.cpp` 내 key generation timing attack 방지 및 secure padding 적용 확인 | Medium | 미진행 |
+| **TODO-KEYCHAIN-05** | `crypto_keychain_okp.cpp` 내 Ed25519 / X25519 key derivation performance profiling 검토 | Low | 미진행 |

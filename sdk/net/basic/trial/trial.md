@@ -38,8 +38,8 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `tls_composer_quic_handshake.cpp` 내 QUIC Transport Parameters validation 및 Boundary check 보완 | High | 미진행 |
-| **#2** | `secure_prosumer.cpp` 내 비동기 데이터 송수신 buffer 접근 시 Data Race 및 Race Condition 예외 처리 확인 | High | 미진행 |
-| **#3** | `trial_dtls_client_socket.cpp` 및 `trial_dtls_server_socket.cpp` 내 DTLS socket binding, Handshake 및 Packet Reordering 구현 | High | 미진행 |
-| **#4** | `trial_quic_server_socket.cpp` 내 Connection ID (CID) Routing 및 Demuxing 연산 유효성 검증 | Medium | 미진행 |
-| **#5** | `trial_server_socket_adapter.cpp` 내 socket close 시 resource leak 및 dangling pointer 검증 | Low | 미진행 |
+| **TODO-TRIAL-01** | `tls_composer_quic_handshake.cpp` 내 QUIC Transport Parameters validation 및 Boundary check 보완 | High | 미진행 |
+| **TODO-TRIAL-02** | `secure_prosumer.cpp` 내 비동기 데이터 송수신 buffer 접근 시 Data Race 및 Race Condition 예외 처리 확인 | High | 미진행 |
+| **TODO-TRIAL-03** | `trial_dtls_client_socket.cpp` 및 `trial_dtls_server_socket.cpp` 내 DTLS socket binding, Handshake 및 Packet Reordering 구현 | High | 미진행 |
+| **TODO-TRIAL-04** | `trial_quic_server_socket.cpp` 내 Connection ID (CID) Routing 및 Demuxing 연산 유효성 검증 | Medium | 미진행 |
+| **TODO-TRIAL-05** | `trial_server_socket_adapter.cpp` 내 socket close 시 resource leak 및 dangling pointer 검증 | Low | 미진행 |

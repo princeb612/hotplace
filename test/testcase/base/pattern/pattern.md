@@ -45,8 +45,8 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `testcase_ukkonen.cpp` 내 대용량 문자열 처리 시 메모리 누수 방지 및 node 할당 optimization | High | 미진행 |
-| **#2** | `testcase_aho_corasick_wildcard.cpp` wildcard 연속 입력 시 상태 전이 예외 처리 보완 | High | 미진행 |
-| **#3** | `testvector_regex.cpp` NFA 변환 과정에서 Backtracking 성능 저하 방지 logic 검증 | Medium | 미진행 |
-| **#4** | `testcase_kmp.cpp` 내 KMP failure function 계산 시 OOB 접근 예외 처리 강화 | Medium | 미진행 |
-| **#5** | `testvector_ahocorasick.yml` 내 특수문자 및 공백 포함 pattern test case 추가 | Low | 미진행 |
+| **TODO-PAT-01** | `testcase_ukkonen.cpp` 내 대용량 문자열 처리 시 메모리 누수 방지 및 node 할당 optimization | High | 미진행 |
+| **TODO-PAT-02** | `testcase_aho_corasick_wildcard.cpp` wildcard 연속 입력 시 상태 전이 예외 처리 보완 | High | 미진행 |
+| **TODO-PAT-03** | `testvector_regex.cpp` NFA 변환 과정에서 Backtracking 성능 저하 방지 logic 검증 | Medium | 미진행 |
+| **TODO-PAT-04** | `testcase_kmp.cpp` 내 KMP failure function 계산 시 OOB 접근 예외 처리 강화 | Medium | 미진행 |
+| **TODO-PAT-05** | `testvector_ahocorasick.yml` 내 특수문자 및 공백 포함 pattern test case 추가 | Low | 미진행 |

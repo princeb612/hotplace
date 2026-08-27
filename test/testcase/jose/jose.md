@@ -57,7 +57,7 @@ class json_object_signing_encryption;
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `json_object_encryption`에서 AES-GCM 및 ChaCha20-Poly1305 등 AEAD 암호화 tag 검증 logic 정밀화 | High | 미진행 |
-| **#2** | `json_web_key` parsing 시 지원되지 않는 algorithm(alg) 또는 키 타입(kty) 예외 처리 logic 강화 | High | 미진행 |
-| **#3** | `json_object_signing_composer` 및 `encryption_composer` 메모리 복사 최소화를 위한 Rvalue Reference/Move 세터 추가 | Medium | 미진행 |
-| **#4** | JWK 키 세트(JWKS) 다중 키 검색 및 `kid` 기반 키 matching 성능 향상 algorithm 개선 | Low | 미진행 |
+| **TODO-JOSE-01** | `json_object_encryption`에서 AES-GCM 및 ChaCha20-Poly1305 등 AEAD 암호화 tag 검증 logic 정밀화 | High | 미진행 |
+| **TODO-JOSE-02** | `json_web_key` parsing 시 지원되지 않는 algorithm(alg) 또는 키 타입(kty) 예외 처리 logic 강화 | High | 미진행 |
+| **TODO-JOSE-03** | `json_object_signing_composer` 및 `encryption_composer` 메모리 복사 최소화를 위한 Rvalue Reference/Move 세터 추가 | Medium | 미진행 |
+| **TODO-JOSE-04** | JWK 키 세트(JWKS) 다중 키 검색 및 `kid` 기반 키 matching 성능 향상 algorithm 개선 | Low | 미진행 |

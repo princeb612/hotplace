@@ -35,8 +35,8 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `testcase_bufferio.cpp` 내 선형 buffer Boundary offset 이동 연산 시 OOB(Out of Bounds) 및 Null Pointer 예외 처리 강화 | High | 미진행 |
-| **#2** | `testcase_stream.cpp` 대용량 binary stream 읽기 시 EOD(End of Data) 감지 logic 보완 | High | 미진행 |
-| **#3** | `testcase_bufferio.cpp` 내 multi-thread 환경 Safe Buffer Access Locking mechanism 확인 | Medium | 미진행 |
-| **#4** | `testcase_stream.cpp` floating point 및 가수부 stream 직렬화 유효성 검증 | Medium | 미진행 |
-| **#5** | `testcase_bufferio.cpp` Zero-copy Memory Copy 최적화 연산 적용 여부 검토 | Low | 미진행 |
+| **TODO-STREAM-01** | `testcase_bufferio.cpp` 내 선형 buffer Boundary offset 이동 연산 시 OOB(Out of Bounds) 및 Null Pointer 예외 처리 강화 | High | 미진행 |
+| **TODO-STREAM-02** | `testcase_stream.cpp` 대용량 binary stream 읽기 시 EOD(End of Data) 감지 logic 보완 | High | 미진행 |
+| **TODO-STREAM-03** | `testcase_bufferio.cpp` 내 multi-thread 환경 Safe Buffer Access Locking mechanism 확인 | Medium | 미진행 |
+| **TODO-STREAM-04** | `testcase_stream.cpp` floating point 및 가수부 stream 직렬화 유효성 검증 | Medium | 미진행 |
+| **TODO-STREAM-05** | `testcase_bufferio.cpp` Zero-copy Memory Copy 최적화 연산 적용 여부 검토 | Low | 미진행 |

@@ -33,7 +33,7 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `testcase_key_mlkem.cpp` 내 PQC ML-KEM algorithm 연산 시 memory boundary 및 secret key leakage 검증 | High | 미진행 |
-| **#2** | `testvector_rfc7919.cpp` 내 RFC 7919 FFDHE group parameters parsing 연산 예외 처리 보완 | High | 미진행 |
-| **#3** | `testcase_hpke.cpp` 내 Single-shot 및 Export-only HPKE mode testcase 추가 작성 | Medium | 미진행 |
-| **#4** | `testvector_keyshare.cpp` 내 YAML deserialization 시 malformed YAML input 에 대한 validation 강화 | Low | 미진행 |
+| **TODO-CK-01** | `testcase_key_mlkem.cpp` 내 PQC ML-KEM algorithm 연산 시 memory boundary 및 secret key leakage 검증 | High | 미진행 |
+| **TODO-CK-02** | `testvector_rfc7919.cpp` 내 RFC 7919 FFDHE group parameters parsing 연산 예외 처리 보완 | High | 미진행 |
+| **TODO-CK-03** | `testcase_hpke.cpp` 내 Single-shot 및 Export-only HPKE mode testcase 추가 작성 | Medium | 미진행 |
+| **TODO-CK-04** | `testvector_keyshare.cpp` 내 YAML deserialization 시 malformed YAML input 에 대한 validation 강화 | Low | 미진행 |

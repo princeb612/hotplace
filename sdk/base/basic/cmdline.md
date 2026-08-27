@@ -6,11 +6,11 @@
 
 ### 주요 특징
 
-1. **커스텀 option 구조체 연동**: 구조체/class template(`T`)을 타입 파라미터로 받아, parsing 결과를 해당 구조체 객체에 직접 binding
+1. **커스텀 option 구조체 연동**: 구조체/class template(`T`)을 type parameter로 받아, parsing 결과를 해당 구조체 객체에 직접 binding
 2. **Fluent Interface & Move Semantics**: `<<` 연산자와 이동 생성자/이동 대입 연산자(Move Semantics)를 통해 option 등록을 chaining 방식으로 명확하게 작성할 수 있음
 3. **선택적/필수 및 값 동반 flag 제어**:
-* `preced()`: 인자 뒤에 값이 반드시 따라오는 option (예: `-in FILENAME`).
-* `optional()`: 생략 가능한 option (설정하지 않으면 필수 option으로 지정됨).
+  * `preced()`: 인자 뒤에 값이 반드시 따라오는 option (예: `-in FILENAME`).
+  * `optional()`: 생략 가능한 option (설정하지 않으면 필수 option으로 지정됨).
 4. **ANSI 색상 지원 Help 출력**: 필수 항목과 parsing 여부를 구분하여 terminal 화면에 시각적으로 guide(`help()`)를 제공.
 
 ---
@@ -117,10 +117,10 @@ int main(int argc, char** argv) {
 
 | ID | 우선순위 | 작업 항목 (Task Description) | 상태 (Status) | 비고 |
 | --- | --- | --- | --- | --- |
-| **TODO-CL-01** | `HIGH` | **GCC 4.8.5 `noexcept = default` 호환성 점검**<br>- header 내 주석 처리된 `GCC 4.8.5 bug` 대응 code 제거 가능 여부 테스트 및 C++11 표준 보완 | `To Do` | 이동 생성자/대입연산자 |
-| **TODO-CL-02** | `HIGH` | **중복 option 입력 처리 정책 검토**<br>- command line에 동일한 option이 중복 입력되었을 때 덮어쓰기/error return 중 선택 정책 추가 | `In Progress` | `parse()` loop 내 처리 |
+| ~~TODO-CL-01~~ | `HIGH` | **GCC 4.8.5 `noexcept = default` 호환성 점검**<br>- header 내 주석 처리된 `GCC 4.8.5 bug` 대응 code 제거 가능 여부 테스트 및 C++11 표준 보완 | `Won't Fix` | 이동 생성자/대입연산자 |
+| ~~TODO-CL-02~~ | `HIGH` | **중복 option 입력 처리 정책 검토**<br>- command line에 동일한 option이 중복 입력되었을 때 덮어쓰기/error return 중 선택 정책 추가 | `Won't Fix` | `parse()` loop 내 처리 |
 | **TODO-CL-03** | `MEDIUM` | **Short/Long option 앨리어싱(Aliasing) 지원**<br>- `-i` / `--input` 형태의 별칭 token binding 기능 지원 검토 | `To Do` | `_args` 맵 구조 개선 |
 | **TODO-CL-04** | `MEDIUM` | **`help()` 함수 출력 포맷 다변화 및 개행 처리 개선**<br>- ANSI escape code 사용 불가 환경(Windows 구버전 등) switch flag 제공 | `To Do` | Console API 연동 |
-| **TODO-CL-05** | `LOW` | **소멸자 및 가상 함수 구조 정리**<br>- `t_cmdline_t` 및 `t_cmdarg_t` class의 상속 여부에 따른 Virtual Destructor 명시 검토 | `In Progress` | Header 문서화 |
+| ~~**TODO-CL-05**~~ | `LOW` | **소멸자 및 가상 함수 구조 정리**<br>- `t_cmdline_t` 및 `t_cmdarg_t` class의 상속 여부에 따른 Virtual Destructor 명시 검토 | `Fixed` | final 처리 |
 
 ---

@@ -35,7 +35,7 @@ class t_cmdline_t;
  * @remarks see t_cmdline_t
  */
 template <typename T>
-class t_cmdarg_t {
+class t_cmdarg_t final {
     template <typename>
     friend class t_cmdline_t;
 
@@ -165,10 +165,10 @@ return_t t_cmdarg_t<T>::bind(T& source, const char* param) {
  *  std::cout << "keygen "  << opt.keygen << std::endl;
  */
 template <typename T>
-class t_cmdline_t {
+class t_cmdline_t final {
    public:
-    t_cmdline_t();
-    ~t_cmdline_t();
+    t_cmdline_t() = default;
+    ~t_cmdline_t() = default;
 
     /*
      * @brief add handler
@@ -198,12 +198,6 @@ class t_cmdline_t {
     cmdline_args_map_t _args;   // arguments
     cmdline_args_set_t _mandatory;
 };
-
-template <typename T>
-t_cmdline_t<T>::t_cmdline_t() {}
-
-template <typename T>
-t_cmdline_t<T>::~t_cmdline_t() {}
 
 template <typename T>
 t_cmdline_t<T>& t_cmdline_t<T>::operator<<(t_cmdarg_t<T>&& cmd) {

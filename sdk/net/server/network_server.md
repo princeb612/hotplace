@@ -37,8 +37,8 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `network_server.cpp` 내 accept loop error 발생 시 FD leak 예외 처리 강화 | High | 미진행 |
-| **#2** | `network_session_manager.cpp` 내 비동기 session cleanup 시 data race 및 dangling pointer 검증 | High | 미진행 |
-| **#3** | `network_stream.cpp` 내 Ring Buffer overflow 및 Boundary condition handling 확인 | Medium | 미진행 |
-| **#4** | `server_conf.cpp` 내 설정 파일 validation 및 invalid input handling 보완 | Medium | 미진행 |
-| **#5** | `network_protocol_group.cpp` 내 멀티 protocol routing performance profiling 검토 | Low | 미진행 |
+| **TODO-NS-01** | `network_server.cpp` 내 accept loop error 발생 시 FD leak 예외 처리 강화 | High | 미진행 |
+| **TODO-NS-02** | `network_session_manager.cpp` 내 비동기 session cleanup 시 data race 및 dangling pointer 검증 | High | 미진행 |
+| **TODO-NS-03** | `network_stream.cpp` 내 Ring Buffer overflow 및 Boundary condition handling 확인 | Medium | 미진행 |
+| **TODO-NS-04** | `server_conf.cpp` 내 설정 파일 validation 및 invalid input handling 보완 | Medium | 미진행 |
+| **TODO-NS-05** | `network_protocol_group.cpp` 내 멀티 protocol routing performance profiling 검토 | Low | 미진행 |

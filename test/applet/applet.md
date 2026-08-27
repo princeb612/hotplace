@@ -4,7 +4,7 @@
 
 ### 1. tcpserver1 (Multiplexer interface 기반 TCP server)
 
-* **주요 역할**: I/O Multiplexer(Select/Epoll 등) 기반 Event Loop 제어를 이용한 비동기 TCP server 기본 동작 구현.
+* **주요 역할**: I/O Multiplexer(IOCP/Epoll 등) 기반 Event Loop 제어를 이용한 비동기 TCP server 기본 동작 구현.
 * **핵심 동작 mechanism**:
   * Multiplexer 객체에 TCP Listening Socket 등록 후 Event Loop 진입.
   * client 접속 및 Read/Write 이벤트 발생 시 Handler Callback 수행.
@@ -22,7 +22,7 @@
 * **주요 역할**: `network_server` high-level 추상화 interface를 활용한 캡슐화된 TCP server 동작 구현.
 * **핵심 동작 mechanism**:
   * `network_server` 객체 생성 및 포트/protocol 설정 후 `start()` 호출.
-  * 내부 thread 풀 및 socket life-cycle을 추상화된 server 이벤트 protocol로 제어.
+  * 내부 thread pool 및 socket life-cycle을 추상화된 server 이벤트 protocol로 제어.
 * **TODO list**:
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
@@ -57,7 +57,7 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | 비대칭 UDP 송수신 traffic 시 thread 풀 병목 현상 점검 | High | 미진행 |
+| **#1** | 비대칭 UDP 송수신 traffic 시 thread pool 병목 현상 점검 | High | 미진행 |
 | **#2** | `network_server` stop 시 pending datagram dump 처리 | Low | 미진행 |
 
 ---
@@ -117,5 +117,5 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | HPACK Dynamic Table Management overflow 예외 처리 검증 | High | 미진행 |
-| **#2** | HTTP/2 Stream Flow Control (WINDOW_UPDATE) 제어 연산 확인 | Medium | 미진행 |
+| **TODO-APP-01** | HPACK Dynamic Table Management overflow 예외 처리 검증 | High | 미진행 |
+| **TODO-APP-02** | HTTP/2 Stream Flow Control (WINDOW_UPDATE) 제어 연산 확인 | Medium | 미진행 |

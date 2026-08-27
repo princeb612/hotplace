@@ -50,44 +50,65 @@ struct error_traits;
 /* hotplace return_t/errorcode_t */
 template <>
 struct error_traits<return_t> {
-    static return_t value_success() { return errorcode_t::success; }
-    static return_t value_exception() { return errorcode_t::exception_caught; }
-    static return_t value_invalid_parameter() { return errorcode_t::invalid_parameter; }
-    static return_t value_internal_error() { return errorcode_t::internal_error; }
-    static bool is_success(return_t code) { return (code == errorcode_t::success) || (code == errorcode_t::expect_failure); }
+    static constexpr return_t value_success() noexcept { return errorcode_t::success; }
+    static constexpr return_t value_exception() noexcept { return errorcode_t::exception_caught; }
+    static constexpr return_t value_invalid_parameter() noexcept { return errorcode_t::invalid_parameter; }
+    static constexpr return_t value_internal_error() noexcept { return errorcode_t::internal_error; }
+
+    static constexpr bool is_success(return_t code) noexcept { return (code == errorcode_t::success) || (code == errorcode_t::expect_failure); }
+
     static bool is_not_fail(return_t code) {
         auto category = error_advisor::get_instance()->categoryof(code);
         return (error_category_t::error_category_severe != category);
     }
-    static return_t to_return_t(return_t code) { return code; }
-    static return_t from_return_t(return_t code) { return code; }
+
+    static constexpr return_t to_return_t(return_t code) noexcept { return code; }
+    static constexpr return_t from_return_t(return_t code) noexcept { return code; }
+
+    static constexpr bool compare(return_t lhs, return_t rhs) noexcept { return lhs == rhs; }
 };
 
 /* linux errno */
 template <>
 struct error_traits<int, errno_category> {
-    static int value_success() { return 0; }
-    static int value_exception() { return /* eai_fail */ -4; }
-    static int value_invalid_parameter() { return /* ebadrqc */ 56; }
-    static int value_internal_error() { return /* eai_fail */ -4; }
-    static bool is_success(int code) { return code == 0; }
-    static bool is_not_fail(int code) { return code == 0; }
-    static return_t to_return_t(int code) { return is_success(code) ? errorcode_t::success : errorcode_t::internal_error; }
-    static int from_return_t(return_t code) { return error_traits<return_t>::is_success(code) ? value_success() : value_internal_error(); }
+    static constexpr int value_success() noexcept { return 0; }
+    static constexpr int value_exception() noexcept { return -4; /* eai_fail */ }
+    static constexpr int value_invalid_parameter() noexcept { return 56; /* ebadrqc */ }
+    static constexpr int value_internal_error() noexcept { return -4; /* eai_fail */ }
+
+    static constexpr bool is_success(int code) noexcept { return code == 0; }
+    static constexpr bool is_not_fail(int code) noexcept { return code == 0; }
+
+    static constexpr return_t to_return_t(int code) noexcept { return is_success(code) ? errorcode_t::success : errorcode_t::internal_error; }
+    static constexpr int from_return_t(return_t code) noexcept { return error_traits<return_t>::is_success(code) ? value_success() : value_internal_error(); }
+
+    static constexpr bool compare(int lhs, return_t rhs) noexcept { return to_return_t(lhs) == rhs; }
+    static constexpr bool compare(return_t lhs, int rhs) noexcept { return lhs == to_return_t(rhs); }
 };
 
 /* openssl specialization */
 template <>
 struct error_traits<int, osslerror_category> {
-    static int value_success() { return 1; }
-    static int value_exception() { return -1; }
-    static int value_invalid_parameter() { return 0; }
-    static int value_internal_error() { return 0; }
-    static bool is_success(int code) { return code > 0; }
-    static bool is_not_fail(int code) { return code > 0; }
-    static return_t to_return_t(int code) { return is_success(code) ? errorcode_t::success : errorcode_t::error_openssl_inside; }
-    static int from_return_t(return_t code) { return error_traits<return_t>::is_success(code) ? value_success() : value_internal_error(); }
+    static constexpr int value_success() noexcept { return 1; }
+    static constexpr int value_exception() noexcept { return -1; }
+    static constexpr int value_invalid_parameter() noexcept { return 0; }
+    static constexpr int value_internal_error() noexcept { return 0; }
+
+    // OpenSSL 성공 판단 조건 수정: code > 0
+    static constexpr bool is_success(int code) noexcept { return code > 0; }
+    static constexpr bool is_not_fail(int code) noexcept { return code > 0; }
+
+    static constexpr return_t to_return_t(int code) noexcept { return is_success(code) ? errorcode_t::success : errorcode_t::error_openssl_inside; }
+    static constexpr int from_return_t(return_t code) noexcept { return error_traits<return_t>::is_success(code) ? value_success() : value_internal_error(); }
+
+    static constexpr bool compare(int lhs, return_t rhs) noexcept { return to_return_t(lhs) == rhs; }
+    static constexpr bool compare(return_t lhs, int rhs) noexcept { return lhs == to_return_t(rhs); }
 };
+
+template <typename T, typename errno_category>
+constexpr inline return_t to_return_t(T code) noexcept {
+    return error_traits<T, errno_category>::to_return_t_const(code);
+}
 
 }  // namespace hotplace
 

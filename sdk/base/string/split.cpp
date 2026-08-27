@@ -9,7 +9,7 @@
  */
 
 #include <hotplace/sdk/base/nostd/memory.hpp>
-#include <hotplace/sdk/base/string/string.hpp>
+#include <hotplace/sdk/base/string/split.hpp>
 
 namespace hotplace {
 

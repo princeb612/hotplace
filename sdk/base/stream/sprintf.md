@@ -21,7 +21,7 @@ namespace hotplace {
 // sprintf formatting 함수 (valist 기반)
 return_t sprintf(stream_t* stream, const char* fmt, valist va);
 
-// C++11 Variadic Template 기반 make_valist 헬퍼 함수
+// C++11 Variadic Template 기반 make_valist helper 함수
 template <typename T>
 void make_valist(valist& va, T arg) {
     va << arg;
@@ -62,7 +62,7 @@ return_t vprintf(stream_t* stream, const char* fmt, Args... args);
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | :--- | :--- | :---: | :---: |
-| **#1** | 정규표현식 parsing 단계를 Aho-Corasick 또는 커스텀 parser로 대체하여 formatting 속도 개선 | High | 미진행 |
-| **#2** | `TYPE_BINARY` 데이터의 16진수 출력 시 줄바꿈/padding 서식 option 확장 | Medium | 미진행 |
-| **#3** | `vprintf` template의 C++11 환경 호환성 검토 및 lambda 캡처 구조 단순화 | Medium | 진행 중 |
-| **#4** | 잘못된 포맷 문자열 입력 시 예외 제어 검증 및 단위 test case 보강 | Low | 미진행 |
+| **TODO-SPRINTF-01** | 정규표현식 parsing 단계를 Aho-Corasick 또는 커스텀 parser로 대체하여 formatting 속도 개선 | High | 미진행 |
+| **TODO-SPRINTF-02** | `TYPE_BINARY` 데이터의 16진수 출력 시 줄바꿈/padding 서식 option 확장 | Medium | 미진행 |
+| **TODO-SPRINTF-03** | `vprintf` template의 C++11 환경 호환성 검토 및 lambda 캡처 구조 단순화 | Medium | 진행 중 |
+| **TODO-SPRINTF-04** | 잘못된 포맷 문자열 입력 시 예외 제어 검증 및 단위 test case 보강 | Low | 미진행 |

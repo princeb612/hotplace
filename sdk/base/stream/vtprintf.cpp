@@ -6,10 +6,9 @@
  *
  * Revision History
  * Date         Name                Description
- * 2017.07.26   Soo Han, Kim        sprintf support {1} {2} ... using valist (codename.grape Revision 371)
  */
 
-#include <hotplace/sdk/base/basic/valist.hpp>
+#include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/encoding/base16.hpp>
 #include <hotplace/sdk/base/pattern/aho_corasick.hpp>
 #include <hotplace/sdk/base/stream/types.hpp>

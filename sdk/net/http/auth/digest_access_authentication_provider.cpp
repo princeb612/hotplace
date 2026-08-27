@@ -10,7 +10,6 @@
  * Date         Name                Description
  */
 
-#include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_prng.hpp>
 #include <hotplace/sdk/net/http/auth/digest_access_authentication_provider.hpp>

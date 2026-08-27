@@ -65,7 +65,7 @@ class cbor_reader {
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `cbor_reader::parse` 중 부정형(Indefinite Length) binary/text stream parsing 경계 검증 정밀화 | High | 미진행 |
-| **#2** | `cbor_object` 계열의 수동 reference counting(`addref`/`release`) 구조를 `std::shared_ptr` 기반 표준 C++11 모델로 refactoring 검토 | Medium | 미진행 |
-| **#3** | `cbor_encode` 성능 최적화를 위한 임시 buffer 재할당 최소화 및 메모리 풀링 적용 | Low | 미진행 |
-| **#4** | `testvector_cbor.yml`에 최신 RFC 8949 추가 Edge Case test vector 확장 및 debug 출력 logic 개선 | Low | 미진행 |
+| **TODO-CBOR-01** | `cbor_reader::parse` 중 부정형(Indefinite Length) binary/text stream parsing 경계 검증 정밀화 | High | 미진행 |
+| **TODO-CBOR-02** | `cbor_object` 계열의 수동 reference counting(`addref`/`release`) 구조를 `std::shared_ptr` 기반 표준 C++11 모델로 refactoring 검토 | Medium | 미진행 |
+| **TODO-CBOR-03** | `cbor_encode` 성능 최적화를 위한 임시 buffer 재할당 최소화 및 메모리 풀링 적용 | Low | 미진행 |
+| **TODO-CBOR-04** | `testvector_cbor.yml`에 최신 RFC 8949 추가 Edge Case test vector 확장 및 debug 출력 logic 개선 | Low | 미진행 |

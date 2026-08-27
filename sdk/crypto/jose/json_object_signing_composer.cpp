@@ -9,6 +9,8 @@
  * Date         Name                Description
  */
 
+#include <hotplace/sdk/base/string/split.hpp>
+#include <hotplace/sdk/base/string/string.hpp>  // format
 #include <hotplace/sdk/crypto/advisor/crypto_advisor.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_hash.hpp>
 #include <hotplace/sdk/crypto/basic/openssl_sdk.hpp>
@@ -16,7 +18,6 @@
 #include <hotplace/sdk/crypto/jose/json_object_signing.hpp>
 #include <hotplace/sdk/crypto/jose/json_object_signing_encryption.hpp>
 #include <hotplace/sdk/io/basic/json.hpp>
-#include <hotplace/sdk/io/string/string.hpp>
 
 namespace hotplace {
 namespace crypto {

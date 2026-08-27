@@ -33,8 +33,8 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `crypto_key_extract.cpp` 내 extract 연산 시 memory boundary check 및 buffer overflow 예외 처리 보완 | High | 미진행 |
-| **#2** | `crypto_key_search.cpp` 내 invalid key ID/attribute 조회 시 null pointer 예외 처리 검증 | High | 미진행 |
-| **#3** | `crypto_key_object.cpp` 내 raw pointer 참조 시 memory leak 및 dangling pointer 예외 처리 확인 | High | 미진행 |
-| **#4** | `crypto_key_get_key.cpp` 내 raw key data export 시 sensitive data masking 및 secure memory wipe 적용 검토 | Medium | 미진행 |
-| **#5** | `crypto_key.cpp` 내 key format validation 연산 강화 | Low | 미진행 |
+| **TODO-KEY-01** | `crypto_key_extract.cpp` 내 extract 연산 시 memory boundary check 및 buffer overflow 예외 처리 보완 | High | 미진행 |
+| **TODO-KEY-02** | `crypto_key_search.cpp` 내 invalid key ID/attribute 조회 시 null pointer 예외 처리 검증 | High | 미진행 |
+| **TODO-KEY-03** | `crypto_key_object.cpp` 내 raw pointer 참조 시 memory leak 및 dangling pointer 예외 처리 확인 | High | 미진행 |
+| **TODO-KEY-04** | `crypto_key_get_key.cpp` 내 raw key data export 시 sensitive data masking 및 secure memory wipe 적용 검토 | Medium | 미진행 |
+| **TODO-KEY-05** | `crypto_key.cpp` 내 key format validation 연산 강화 | Low | 미진행 |

@@ -70,7 +70,7 @@ class crypto_cbc_hmac {
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | JOSE 모드 HMAC Tag 연산 시 Constant-time 비교 함수 적용 (Timing Attack 방지) | High | 미진행 |
-| **#2** | `tls_mac_then_encrypt` 복호화 시 padding 검증 및 오류 처리 logic 보강 (Lucky Thirteen 공격 대비) | High | 미진행 |
-| **#3** | `split_key` 단위 테스트 및 JWE A128CBC-HS256 벡터 검증 케이스 추가 | Medium | 진행 중 |
-| **#4** | C++11 `std::shared_ptr` 기반 내부 참조 관리 refactoring 검토 | Low | 미진행 |
+| **TODO-CBCHMAC-01** | JOSE 모드 HMAC Tag 연산 시 Constant-time 비교 함수 적용 (Timing Attack 방지) | High | 미진행 |
+| **TODO-CBCHMAC-02** | `tls_mac_then_encrypt` 복호화 시 padding 검증 및 오류 처리 logic 보강 (Lucky Thirteen 공격 대비) | High | 미진행 |
+| **TODO-CBCHMAC-03** | `split_key` 단위 테스트 및 JWE A128CBC-HS256 벡터 검증 케이스 추가 | Medium | 진행 중 |
+| **TODO-CBCHMAC-04** | C++11 `std::shared_ptr` 기반 내부 참조 관리 refactoring 검토 | Low | 미진행 |

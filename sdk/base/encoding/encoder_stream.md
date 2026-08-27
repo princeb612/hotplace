@@ -104,7 +104,7 @@ class encoder_stream {
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | :--- | :--- | :---: | :---: |
-| **#1** | Base128(LEB128/VLQ) encoding module의 `encoder_stream` pipeline 통합 | High | 미진행 |
-| **#2** | `_maxsize` 초과 시 예외 처리 logic 안전성 강화 및 커스텀 allocator 연동 | Medium | 진행 중 |
-| **#3** | C++11 `std::is_constructible` 활용을 통한 `operator<<` template 지원 확장 | Medium | 미진행 |
-| **#4** | Zlib/Deflate 등 압축 algorithm stream encoder 확장 구조 검토 | Low | 미진행 |
+| **TODO-ENCODER-01** | Base128(LEB128/VLQ) encoding module의 `encoder_stream` pipeline 통합 | High | 미진행 |
+| **TODO-ENCODER-02** | `_maxsize` 초과 시 예외 처리 logic 안전성 강화 및 커스텀 allocator 연동 | Medium | 진행 중 |
+| **TODO-ENCODER-03** | C++11 `std::is_constructible` 활용을 통한 `operator<<` template 지원 확장 | Medium | 미진행 |
+| **TODO-ENCODER-04** | Zlib/Deflate 등 압축 algorithm stream encoder 확장 구조 검토 | Low | 미진행 |

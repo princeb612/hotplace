@@ -36,7 +36,7 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `testcase_transcript_hash.cpp` 내 TLS 1.3 Handshake Context Reset 시 Memory Corruption 예외 처리 검증 | High | 미진행 |
-| **#2** | `testcase_rfc6238.cpp` 내 32-bit time_t Overflow (Year 2038 Problem) 예외 처리 확인 | High | 미진행 |
-| **#3** | `testcase_rfc4493.cpp` 내 AES-CMAC Invalid Key Size 입력 시 Boundary Check 보완 | Medium | 미진행 |
-| **#4** | `testcase_openssl_hash.cpp` 내 EVP_MD_CTX 생명주기 관리 시 Resource Leak 여부 static analysis 검증 | Low | 미진행 |
+| **TODO-CH-01** | `testcase_transcript_hash.cpp` 내 TLS 1.3 Handshake Context Reset 시 Memory Corruption 예외 처리 검증 | High | 미진행 |
+| **TODO-CH-02** | `testcase_rfc6238.cpp` 내 32-bit time_t Overflow (Year 2038 Problem) 예외 처리 확인 | High | 미진행 |
+| **TODO-CH-03** | `testcase_rfc4493.cpp` 내 AES-CMAC Invalid Key Size 입력 시 Boundary Check 보완 | Medium | 미진행 |
+| **TODO-CH-04** | `testcase_openssl_hash.cpp` 내 EVP_MD_CTX 생명주기 관리 시 Resource Leak 여부 static analysis 검증 | Low | 미진행 |

@@ -38,8 +38,8 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `digest_access_authentication_provider.cpp` 내 Stale Nonce 처리 및 Nonce Replay Attack 방지 logic 보완 | High | 미진행 |
-| **#2** | `oauth2.cpp` 내 Token Expiry 시간 계산 시 System Clock desync 예외 처리 강화 | High | 미진행 |
-| **#3** | `rfc2617_digest.cpp` 내 MD5 외 SHA-256 Digest Algorithm 지원 검증 | Medium | 미진행 |
-| **#4** | `basic_credentials.cpp` 내 Base64 decoding 시 Invalid Format 문자열 Input validation 강화 | Medium | 미진행 |
-| **#5** | `custom_credentials.cpp` 내 Multi-tenant 환경 커스텀 header parsing 확장성 확인 | Low | 미진행 |
+| **TODO-AUTH-01** | `digest_access_authentication_provider.cpp` 내 Stale Nonce 처리 및 Nonce Replay Attack 방지 logic 보완 | High | 미진행 |
+| **TODO-AUTH-02** | `oauth2.cpp` 내 Token Expiry 시간 계산 시 System Clock desync 예외 처리 강화 | High | 미진행 |
+| **TODO-AUTH-03** | `rfc2617_digest.cpp` 내 MD5 외 SHA-256 Digest Algorithm 지원 검증 | Medium | 미진행 |
+| **TODO-AUTH-04** | `basic_credentials.cpp` 내 Base64 decoding 시 Invalid Format 문자열 Input validation 강화 | Medium | 미진행 |
+| **TODO-AUTH-05** | `custom_credentials.cpp` 내 Multi-tenant 환경 커스텀 header parsing 확장성 확인 | Low | 미진행 |

@@ -38,8 +38,8 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `hpack_dynamic_table.cpp` Table Size Update 시 용량 축소 과정 overflow 및 Eviction 예외 처리 보완 | High | 미진행 |
-| **#2** | `hpack_encoder.cpp` 내 Huffman Encoding encoder 구현 유효성 및 경계 비트 바이트 alignment 확인 | High | 미진행 |
-| **#3** | `hpack_static_table.cpp` 정적 table 범위 초과 Index 접근 시 OOB 처리 검증 | Medium | 미진행 |
-| **#4** | Dynamic Table Entry 추가 시 32바이트 Overhead 가산 기준 정확성 검증 | Medium | 미진행 |
-| **#5** | `hpack_encoder.cpp` 내 N-bit Prefix Integer encoding 대용량 값 입력 시 buffer overflow 예외 처리 확인 | Low | 미진행 |
+| **TODO-HPACK-01** | `hpack_dynamic_table.cpp` Table Size Update 시 용량 축소 과정 overflow 및 Eviction 예외 처리 보완 | High | 미진행 |
+| **TODO-HPACK-02** | `hpack_encoder.cpp` 내 Huffman Encoding encoder 구현 유효성 및 경계 비트 바이트 alignment 확인 | High | 미진행 |
+| **TODO-HPACK-03** | `hpack_static_table.cpp` 정적 table 범위 초과 Index 접근 시 OOB 처리 검증 | Medium | 미진행 |
+| **TODO-HPACK-04** | Dynamic Table Entry 추가 시 32바이트 Overhead 가산 기준 정확성 검증 | Medium | 미진행 |
+| **TODO-HPACK-05** | `hpack_encoder.cpp` 내 N-bit Prefix Integer encoding 대용량 값 입력 시 buffer overflow 예외 처리 확인 | Low | 미진행 |

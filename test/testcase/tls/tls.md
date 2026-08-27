@@ -45,8 +45,8 @@
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | --- | --- | --- | --- |
-| **#1** | `testcase_mlkem_encoding.cpp` 내 ML-KEM 키 교환 및 TLS 1.3 KeyShare 확장 parsing 유효성 검증 | High | 미진행 |
-| **#2** | `testcase_dtls_record_arrange.cpp` 기반 DTLS 1.3 handshake packet 손실 시 재전송 timer logic 검증 | High | 미진행 |
-| **#3** | `testcase_tls12_aead.cpp` 내 AES-GCM 및 ChaCha20-Poly1305 AEAD tag 검증 예외 처리 보완 | Medium | 미진행 |
-| **#4** | `testcase_helloretryrequest.cpp` 내 HRR 응답 시 KeyShare 재요청 및 Handshake Context 업데이트 logic 확인 | Medium | 미진행 |
-| **#5** | `dump_clienthello.cpp` parser 내 Unrecognized Extension debugging logging 정교화 | Low | 미진행 |
+| **TODO-TLS-01** | `testcase_mlkem_encoding.cpp` 내 ML-KEM 키 교환 및 TLS 1.3 KeyShare 확장 parsing 유효성 검증 | High | 미진행 |
+| **TODO-TLS-02** | `testcase_dtls_record_arrange.cpp` 기반 DTLS 1.3 handshake packet 손실 시 재전송 timer logic 검증 | High | 미진행 |
+| **TODO-TLS-03** | `testcase_tls12_aead.cpp` 내 AES-GCM 및 ChaCha20-Poly1305 AEAD tag 검증 예외 처리 보완 | Medium | 미진행 |
+| **TODO-TLS-04** | `testcase_helloretryrequest.cpp` 내 HRR 응답 시 KeyShare 재요청 및 Handshake Context 업데이트 logic 확인 | Medium | 미진행 |
+| **TODO-TLS-05** | `dump_clienthello.cpp` parser 내 Unrecognized Extension debugging logging 정교화 | Low | 미진행 |

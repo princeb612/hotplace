@@ -56,7 +56,7 @@ class cbor_object_signing_encryption;
 * **인증 및 암호화 연산 (`cbor_object_signing_encryption_*`)**:
   * 암호화(`_crypt`), 서명(`_sign`), MAC(`_mac`) 처리 module이 분리되어 있어, COSE 사양에 따른 Sign1/Encrypt0 단일 layer 구조부터 다중 Recipient를 포함하는 복합 구조까지 유연하게 구성[cite: 51].
 * **header 및 수신자 관리 (`cose_protected`, `cose_recipient`)**:
-  * Protected header는 무결성 검증 대상(CBOR bstr encoding)으로 처리되며, `cose_recipients`는 각 수신자별 키 분배(Key Transport/Key Agreement) 파라미터를 계층적으로 유지[cite: 51].
+  * Protected header는 무결성 검증 대상(CBOR bstr encoding)으로 처리되며, `cose_recipients`는 각 수신자별 키 분배(Key Transport/Key Agreement) parameter를 계층적으로 유지[cite: 51].
 
 ---
 
@@ -64,7 +64,7 @@ class cbor_object_signing_encryption;
 
 | 번호 | 작업 내용 | 우선순위 | 진행 상황 |
 | :--- | :--- | :---: | :---: |
-| **#1** | `cbor_object_encryption` 내 AES-CCM 및 AES-GCM algorithm 처리 시 Nonce/IV 크기 검증 강화 | High | 미진행 |
-| **#2** | `cose_countersign` 사양(RFC 9052) 기반의 Countersign V2 구조 호환성 검증 및 예외 처리 logic 구현 | High | 미진행 |
-| **#3** | `cose_composer` builder 내 header parameter 중복 설정 방지 및 유효성 검사 logic 추가 | Medium | 미진행 |
-| **#4** | `cose_key` parsing 시 OKP(Ed25519/X25519) 곡선 키 mapping 확장 및 validation 강화 | Medium | 미진행 |
+| **TODO-COSE-01** | `cbor_object_encryption` 내 AES-CCM 및 AES-GCM algorithm 처리 시 Nonce/IV 크기 검증 강화 | High | 미진행 |
+| **TODO-COSE-02** | `cose_countersign` 사양(RFC 9052) 기반의 Countersign V2 구조 호환성 검증 및 예외 처리 logic 구현 | High | 미진행 |
+| **TODO-COSE-03** | `cose_composer` builder 내 header parameter 중복 설정 방지 및 유효성 검사 logic 추가 | Medium | 미진행 |
+| **TODO-COSE-04** | `cose_key` parsing 시 OKP(Ed25519/X25519) 곡선 키 mapping 확장 및 validation 강화 | Medium | 미진행 |

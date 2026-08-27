@@ -427,6 +427,11 @@ void valist::build() {
             // save a pointer to the beginning of the free space for this argument
             vdata = &(((char*)(arg_list))[pos]);
 
+#if defined DEBUG
+            uintptr_t addr = reinterpret_cast<uintptr_t>(vdata);
+            assert((addr % VLIST_CHUNK_SIZE) == 0);  // misaligned
+#endif
+
             // increment the amount of allocated space (to provide the correct offset and size for next time)
             pos += padded_size;
 
@@ -436,6 +441,13 @@ void valist::build() {
         }
 
 #else
+
+        // MSVC CRT
+        // - va_assign
+        // - va_assign_type_promotion_int
+        // verification
+        // - Application Verifier
+        // - MSVC C++ Sanitizer(/fsanitize=address)
 
         va_list ap;
         union va_union u;
