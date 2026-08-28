@@ -1,19 +1,28 @@
-## decoder stream module (`decoder_stream.cpp` / `decoder_stream.hpp`) - published by Gemini
+# Decoder Stream (`decoder_stream`) - published by Gemini
+
+## 1. Overview & Key Features
+
+The `decoder_stream` module is a C++11 pipeline stream module that receives encoded data (Base16, Base64, Base64URL, HTTP/2 Huffman Coding) input on a chunk-by-chunk basis, accumulates and decodes it, and restores it into final binary data (`binary_t`).
+
+* **Chunk Streaming Decoding**: Ensures stream continuity by maintaining unaligned residual data below standard decoding units (Base16: 2 chars, Base64: 4 chars) inside an internal buffer (`_encbuf`).
+* **HTTP/2 Huffman Decoding & Padding Validation**: Precisely manages bit-level Huffman coding residual bits (`_huffbuf`) and strictly validates EOS padding specifications and bit validity upon stream termination.
+* **Chaining Operator Overloading**: Provides template Perfect Forwarding and method chaining interfaces including `operator<<`, `operator+=`, and `add()`.
+* **C++11 Metaprogramming Optimization**: Leverages Move Semantics, Perfect Forwarding (`std::forward`), and default copy/move constructors and assignment operators to improve memory transfer efficiency.
 
 ---
 
-### 1. 개요 및 주요 특징
+## 2. Key Implementation Areas & Technical Elements
 
-* **module 역할**: chunk(Chunk) 단위로 입력되는 encoding 데이터(Base16, Base64, Base64URL, HTTP/2 Huffman Coding)를 누적 및 decoding하여 binary 데이터(`binary_t`)로 복원하는 stream class.
-* **주요 기능**:
-  * **chunk 스트리밍 decoding**: encoding 단위(Base16: 2자, Base64: 4자)에 맞춰 끊어지지 않은 잔여 데이터를 내부 buffer(`_encbuf`)에 저장하여 stream의 연속성을 보장.
-  * **HTTP/2 huffman decoding 지원**: 비트 단위 huffman coding 잔여 비트(`_huffbuf`)를 관리하며 EOS padding의 유효성을 검증.
-  * **stream 연산자 overloading**: `operator<<`, `operator+=`, `add()` 등 template 완벽 전달(Perfect Forwarding) 및 method chaining 지원.
-* **C++11 특징**: Move Semantics, perfect forwarding (`std::forward`), default move/copy 생성자 활용.
+* **Unaligned Chunk Boundary Buffer**: Temporarily stores truncated inputs below 2 characters (Base16) or 4 characters (Base64) inside `_encbuf` and merges them with subsequent input chunks to resume normal decoding.
+* **HTTP/2 EOS Bit-Padding Compliance**: Validates that all residual bit padding consists of '1's per HTTP/2 RFC 7540 rules, detecting unaligned padding bits of 8 bits or greater or corrupted EOS bits to safeguard data integrity.
+* **Two-Phase Flush Finalization**: Triggers a final `flush()` upon `data()` invocation to perform ultimate validity checks on accumulated buffers and return precise error codes.
+* **Zero-Copy Stream Trait Integration**: Adopts C++11 default move semantics to prevent redundant deep buffer copies when transferring or passing stream instances.
 
 ---
 
-### 2. 주요 class 및 데이터 구조
+## 3. Major Data Structures, Classes & API Reference
+
+### `decoder_stream` Class Declaration
 
 ```cpp
 namespace hotplace {
@@ -22,7 +31,7 @@ class decoder_stream {
    public:
     decoder_stream(encoding_t enc);
 
-    // 복사 및 이동 생성자/대입 연산자 (C++11 default)
+    // Copy and move constructors / assignment operators (C++11 default)
     decoder_stream(const decoder_stream& other) = default;
     decoder_stream(decoder_stream&& other) = default;
     decoder_stream& operator=(const decoder_stream& other) = default;
@@ -32,10 +41,10 @@ class decoder_stream {
     size_t get_maxsize() const;
     encoding_t get_encoding() const;
 
-    // 최종 복원된 binary 데이터 추출 (내부적으로 flush 호출)
+    // Extracts final restored binary data (invokes flush() internally)
     binary_t data();
 
-    // 입력 쓰기 interface
+    // Input writing interfaces
     return_t write(const char* data, size_t size);
     return_t write(const byte_t* data, size_t size);
 
@@ -56,7 +65,7 @@ class decoder_stream {
     return_t flush();
 
    private:
-    struct encbuf_t {  // chunk 경계 미달 데이터 보관 buffer
+    struct encbuf_t {  // Buffer for holding unaligned chunk boundary data
         char buf[5];
         uint8 len;     // [0..4]
         uint8 unitsize(encoding_t encoding);
@@ -66,33 +75,69 @@ class decoder_stream {
 
     encoding_t _encoding;
     size_t _maxsize;
-    binary_t _buffer;       // decoding 완료된 binary 결과 저장소
-    encbuf_t _encbuf;       // Base16(2바이트), Base64(4바이트) 임시 buffer
-    std::string _huffbuf;   // huffman 코딩용 비트 buffer
+    binary_t _buffer;       // Decoded binary output storage
+    encbuf_t _encbuf;       // Base16 (2 bytes), Base64 (4 bytes) temporary buffer
+    std::string _huffbuf;   // Bit buffer for Huffman coding
 };
 
 }  // namespace hotplace
 ```
-[cite: 50, 51]
+[cite: 13]
 
 ---
 
-### 3. 핵심 동작 mechanism
+## 4. Operational Principles[cite: 13]
+1. **Boundary Handling & Split Decoding (`write`)**:
+   * **Base16 / Base64**: Holds digits below the required `unitsize` (Base16=2, Base64=4) inside `_encbuf`[cite: 13]. Upon subsequent `write` calls, completes a block by filling up to `free_space()` to decode, and continuously decodes the remaining data in unit splits[cite: 13].
+   * **HTTP/2 Huffman**: Invokes the `http_huffman_coding` singleton to perform bit-sequence parsing and decoding consecutively[cite: 13].
+2. **Stream Termination Handling (`flush`)**:
+   * Automatically executes `flush()` when `data()` is invoked to finalize residual data[cite: 13].
+   * Decodes remaining Base16/Base64 data blocks[cite: 13].
+   * **Huffman Coding Padding Validation**: Returns `errorcode_t::bad_data` upon detecting integrity errors where residual padding bits (`_huffbuf`) exceed 8 bits or are not filled entirely with '1's (EOS bit specification)[cite: 13].
+3. **Memory Boundary Protection**:
+   * Preemptively blocks encoded inputs exceeding limits when `_maxsize` is configured, preventing buffer overflows[cite: 13].
 
-* **경계 처리 및 분할 decoding (`write`)**:
-  * **Base16 / Base64**: 입력 단위(`unitsize`: Base16=2, Base64=4) 미만으로 남은 자릿수를 `_encbuf`에 보관[cite: 50, 51]. 다음 `write` 호출 시 `free_space()`만큼 채워 완전히 구성되면 decoding을 수행하고, 나머지는 몫과 여분으로 나눠 연속 decoding[cite: 50].
-  * **HTTP/2 Huffman**: `http_huffman_coding` singleton을 호출하여 stream decoding 수행[cite: 50].
-* **stream 종단 검증 (`flush`)**:
-  * `data()` 호출 시 남은 데이터 정리를 위해 자동 실행[cite: 50].
-  * Base16/Base64 잔여 유효 데이터 decoding 처리[cite: 50].
-  * **huffman coding padding 검증**: padding 비트(`_huffbuf`)가 8비트 이상이거나 모두 '1'(EOS 비트 규격)로 채워지지 않은 경우 `errorcode_t::bad_data` 반환[cite: 50].
 ---
 
-### 4. TODO list
+## 5. Usage Example (C++11 Standard)[cite: 13]
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
-| :--- | :--- | :---: | :---: |
-| **TODO-DECODER-01** | `encoding_base16rfc` 미지원 decoding logic의 구현 및 pipeline 추가 | High | 미진행 |
-| **TODO-DECODER-02** | `flush()` 내 Base64 잔여 1바이트 오입력 시 오류 code 명시적 세분화 | Medium | 진행 중 |
-| **TODO-DECODER-03** | `_maxsize` 초과 시 기존 stream buffer의 rollback 및 안전 처리 검증 | Medium | 미진행 |
-| **TODO-DECODER-04** | C++11 Move assignment 수행 시 내부 buffer 상태 초기화 안전성 강화를 위한 단위 테스트 추가 | Low | 미진행 |
+```cpp
+#include <iostream>
+#include <hotplace/sdk/base/basic/decoder_stream.hpp>
+
+int main() {
+    using namespace hotplace;
+
+    // 1. Create Base64 decoder stream instance
+    decoder_stream stream(encoding_t::encoding_base64);
+
+    // 2. Use stream operators for split chunk data input
+    std::string chunk1 = "SGVsbG8g"; // "Hello "
+    std::string chunk2 = "V29ybGQh"; // "World!"
+
+    stream << chunk1;
+    stream << chunk2;
+
+    // 3. Extract decoded binary data (flush() invoked internally)
+    binary_t decoded_bin = stream.data();
+    std::string decoded_str(decoded_bin.begin(), decoded_bin.end());
+
+    std::cout << "Decoded String: " << decoded_str << std::endl;
+
+    return 0;
+}
+
+```
+
+---
+
+## 6. TODO List
+
+| ID | Priority | Task Description | Status | Remarks |
+| --- | --- | --- | --- | --- |
+| **TODO-DECODER-01** | `HIGH` | **Expand `encoding_base16rfc` Decoding Pipeline**<br><br>- Implement explicit decoding logic for unsupported `encoding_base16rfc` and integrate into pipeline | `Postponed` | Not started |
+| **TODO-DECODER-02** | `MEDIUM` | **Refine Base64 Residual Byte Mismatch Error Codes**<br><br>- Explicitly refine error codes and exception handling for single residual byte misinputs within `flush()` | `In Progress` | In progress |
+| **TODO-DECODER-03** | `MEDIUM` | **Build Buffer Overrun Rollback & Safety Handling**<br><br>- Implement rollback and exception safety verification logic for existing stream buffers on `_maxsize` overrun | `Postponed` | Not started |
+| **TODO-DECODER-04** | `LOW` | **Add Unit Tests for Buffer Reset Safety on Move Assignment**<br><br>- Implement unit tests to strengthen buffer state reset safety during C++11 Move assignment | `Postponed` | Not started |
+
+---

@@ -1,48 +1,48 @@
-## QPACK (HTTP/3 Header Compression) module - published by Gemini
+## QPACK (HTTP/3 Header Compression) - published by Gemini
 
 ---
 
-### 1. 개요 및 주요 특징
+### 1. Overview and Key Features
 
-* **module 역할**: HTTP/3 표준(RFC 9204) 기반 header 압축/해제, Encoder/Decoder stream 분리 제어 및 정적/동적 table 연산 module.
-* **주요 기능**:
-  * **Static Table parsing 및 조회**: RFC 9204 기준 99개 정적 header 항목 Index mapping 및 Key-Value lookup 연산 (`qpack_static_table.cpp`, `qpack_static_table.hpp`).
-  * **Dynamic Table 및 절대/상대 Indexing**: Encoder/Decoder stream 상에서 Absolute Index와 Relative Index 간 변환 연산, Capacity 기반 Eviction 처리 (`qpack_dynamic_table.cpp`, `qpack_dynamic_table.hpp`).
-  * **QPACK Encoder 연산**: Field Line encoding, Prefix Integer / Literal 표현 연산 및 Encoder Stream 명령어 생성 (`qpack_encoder.cpp`, `qpack_encoder.hpp`).
-  * **QPACK SDK facade 및 interface**: QPACK 통합 처리 facade 및 외부 연동 interface 제공 (`qpack_sdk.cpp`).
-
----
-
-### 2. 핵심 구현 영역 및 기술 요소
-
-* **Static Table lookup 연산 (`qpack_static_table.cpp`, `qpack_static_table.hpp`)**:
-  * RFC 9204 규격의 99개 정적 table 항목에 대한 $O(1)$ 빠른 Index 접근 및 검색 연산 수행.
-* **Dynamic Table 및 Index 변환 연산 (`qpack_dynamic_table.cpp`, `qpack_dynamic_table.hpp`)**:
-  * HTTP/3 Head-of-Line Blocking 방지를 위한 Absolute Index <-> Relative Index / Post-Base Index 변환 제어.
-  * 동적 table 메모리 제한 초과 시 FIFO 방식의 Entry Eviction 및 Entry Count 관리 연산.
-* **QPACK Encoder 및 Instruction 생성 (`qpack_encoder.cpp`, `qpack_encoder.hpp`)**:
-  * Required Insert Count 및 Base Index 계산을 통한 Field Line encoding.
-  * Literal Field Line with Name Reference / Literal Name encoding 연산 지원.
-* **QPACK SDK 연동 interface (`qpack_sdk.cpp`)**:
-  * HTTP/3 protocol layer와 QPACK Encoder/Decoder 간 가교 역할을 하는 C++11 facade interface.
+* **Module Role**: An HTTP/3 standard (RFC 9204)-based header compression/decompression, separate Encoder/Decoder stream control, and static/dynamic table operations module.
+* **Key Features**:
+  * **Static Table Parsing and Lookup**: Performs index mapping and key-value lookup operations for the 99 static header entries defined in RFC 9204 (`qpack_static_table.cpp`, `qpack_static_table.hpp`).
+  * **Dynamic Table and Absolute/Relative Indexing**: Performs conversion operations between Absolute Index and Relative Index over Encoder/Decoder streams, alongside capacity-based eviction handling (`qpack_dynamic_table.cpp`, `qpack_dynamic_table.hpp`).
+  * **QPACK Encoder Operations**: Handles field line encoding, prefix integer / literal representation operations, and generates encoder stream instructions (`qpack_encoder.cpp`, `qpack_encoder.hpp`).
+  * **QPACK SDK Facade and Interface**: Provides an integrated QPACK processing facade and external integration interfaces (`qpack_sdk.cpp`).
 
 ---
 
-### 3. 핵심 동작 mechanism
+### 2. Core Implementation Areas and Technical Elements
+
+* **Static Table Lookup Operations (`qpack_static_table.cpp`, `qpack_static_table.hpp`)**:
+  * Executes fast $O(1)$ index access and lookup operations for the 99 static table entries specified in RFC 9204.
+* **Dynamic Table and Index Conversion Operations (`qpack_dynamic_table.cpp`, `qpack_dynamic_table.hpp`)**:
+  * Controls conversions between Absolute Index <-> Relative Index / Post-Base Index to prevent HTTP/3 head-of-line blocking.
+  * Manages FIFO-based entry eviction and entry count tracking when exceeding dynamic table memory limits.
+* **QPACK Encoder and Instruction Generation (`qpack_encoder.cpp`, `qpack_encoder.hpp`)**:
+  * Performs field line encoding by computing Required Insert Count and Base Index.
+  * Supports literal field line encoding operations with name reference / literal name representation.
+* **QPACK SDK Integration Interface (`qpack_sdk.cpp`)**:
+  * Provides a C++11 facade interface serving as a bridge between the HTTP/3 protocol layer and the QPACK Encoder/Decoder.
+
+---
+
+### 3. Core Operating Mechanism
 
 * **Index Translation Mechanism (`qpack_dynamic_table.cpp`)**:
-  * 동적 table 항목 접근 시 Absolute Index를 기준점(Base)에 따라 Relative Index 및 Post-Base Index로 변환하여 header block encoding 수행.
+  * When accessing dynamic table entries, translates Absolute Indices into Relative Indices or Post-Base Indices relative to a reference base point to perform header block encoding.
 * **Header Field Encoding & Stream Handling (`qpack_encoder.cpp`, `qpack_sdk.cpp`)**:
-  * 입력받은 HTTP/3 header list를 Static/Dynamic Table mapping 여부에 따라 변환하고 Encoder Stream 명령어를 조립하여 전송.
+  * Converts incoming HTTP/3 header lists depending on static/dynamic table mapping status, then assembles and transmits encoder stream instructions.
 
 ---
 
-### 4. TODO list
+### 4. TODO List Tracker
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **TODO-QPACK-01** | `qpack_dynamic_table.cpp` 내 Relative Index 변환 시 Base Index overflow 및 OOB(Out of Bounds) 예외 처리 강화 | High | 미진행 |
-| **TODO-QPACK-02** | `qpack_encoder.cpp` 내 Required Insert Count 계산 logic 유효성 및 Unacknowledged Entry Limit 검증 | High | 미진행 |
-| **TODO-QPACK-03** | `qpack_sdk.cpp` 내 HTTP/3 Stream cancellation 발생 시 QPACK Dynamic Table reference count cleanup 확인 | Medium | 미진행 |
-| **TODO-QPACK-04** | `qpack_static_table.cpp` 범위 초과 Index 접근 시 safe lookup 예외 처리 보완 | Medium | 미진행 |
-| **TODO-QPACK-05** | `qpack_encoder.cpp` 내 Huffman Encoding 적용 여부 판단 및 비트 parsing 경계 검증 | Low | 미진행 |
+| **TODO-QPACK-01** | Strengthen Base Index overflow and out-of-bounds (OOB) exception handling during Relative Index conversion in `qpack_dynamic_table.cpp`<br> | High | Open |
+| **TODO-QPACK-02** | Verify Required Insert Count calculation logic validity and unacknowledged entry limits in `qpack_encoder.cpp`<br> | High | Open |
+| **TODO-QPACK-03** | Verify QPACK dynamic table reference count cleanup upon HTTP/3 stream cancellation in `qpack_sdk.cpp`<br> | Medium | Open |
+| **TODO-QPACK-04** | Supplement safe lookup exception handling when accessing static table indices out of range in `qpack_static_table.cpp`<br> | Medium | Open |
+| **TODO-QPACK-05** | Check Huffman encoding decision logic and bit parsing boundary checks in `qpack_encoder.cpp`<br> | Low | Open |

@@ -1,19 +1,30 @@
-## encoding stream module (`encoder_stream`) - published by Gemini
+# Encoding Stream (`encoder_stream`) - published by Gemini
+
+## 1. Overview & Key Features
+
+
+
+The `encoder_stream` module is a core C++11 encoding module that flexibly processes various encoding algorithms (Base16, Base64, Base64URL, HTTP/2 Huffman Coding) using a pipeline stream pattern.
+
+* **Multi-Encoding Standard Support**: Provides unified interface support for major security and communication standards including Base16 (Standard/RFC), Base64 (Standard/URL), and HTTP/2 Huffman Coding.
+* **Chunk-Based Streaming Operations**: Utilizes internal buffers (`encbuf_t` and `bitbuf_t`) to seamlessly concatenate and encode unaligned data inputs on a chunk-by-chunk basis.
+* **Type Traits & Endianness Auto-Control**: Employs SFINAE and C++11 `is_integral` operator overloads to support automatic Big/Little Endian conversion for integer inputs alongside `binary_t`/`std::string` conversions.
+* **C++11 Metaprogramming Optimization**: Combines SFINAE (`std::enable_if`), Type Traits (`encoder_stream_traits`), Perfect Forwarding (`std::forward`), and Move Semantics to minimize redundant memory copies.
 
 ---
 
-### 1. 개요 및 주요 특징
+## 2. Key Implementation Areas & Technical Elements
 
-* **module 역할**: 다양한 encoding algorithm(Base16, Base64, Base64URL, HTTP/2 Huffman Coding)을 stream 방식으로 데이터 encoding을 수행하는 module.
-* **주요 기능**:
-  * **멀티 encoding 지원**: Base16 (표준/RFC), Base64 (표준/URL), HTTP/2 Huffman Coding 지원.
-  * **스트리밍 분할 데이터 처리**: `encbuf_t`(3바이트 경계) 및 `bitbuf_t`(비트 단위) 내부 buffer를 사용하여 chunk(Chunk) 단위 입력을 매끄럽게 처리.
-  * **Type Traits 기반 자동 변환**: SFINAE 및 C++11 `is_integral` 연산자 overloading을 이용해 정수형(Big/Little Endian 변환 포함), 문자열, binary_t 스트리밍 지원.
-* **C++11 특징**: SFINAE (`std::enable_if`), Type Traits (`encoder_stream_traits`), Perfect Forwarding (`std::forward`), Move Semantics 활용.
+* **Stateful Buffer Streaming Pipeline**: Regardless of input data size, retains residual unaligned bytes—3-byte boundaries for Base64 or bit-level boundaries for Huffman—within internal buffer state to process continuous streaming reliably.
+* **HTTP/2 Huffman Bit-Packing Architecture**: Leverages a singleton-managed Huffman encoding table to bind data bit by bit, transferring it to the final binary buffer once an 8-bit byte accumulates.
+* **Endian-Aware Type Traits Shift**: Automatically converts byte order and serializes integer stream operator (`<<`) inputs according to the configured endianness settings.
+* **Reserve-Commit Stream Trait Binding**: Applies `encoder_stream_traits` to pre-allocate memory for `std::string` and `binary_t` containers, reducing heap allocation overhead.
 
 ---
 
-### 2. 주요 class 및 데이터 구조
+## 3. Major Data Structures, Classes & API Reference
+
+### `encoder_stream` Class Declaration
 
 ```cpp
 namespace hotplace {
@@ -22,7 +33,7 @@ class encoder_stream {
    public:
     encoder_stream(encoding_t enc, bool use_bigendian = true);
 
-    // buffer 설정 및 관리
+    // Buffer configuration and management interfaces
     encoder_stream& set_maxsize(size_t size);
     size_t get_maxsize() const;
     encoding_t get_encoding() const;
@@ -30,10 +41,10 @@ class encoder_stream {
     bool is_bigendian() const;
 
     encoder_stream& clear();
-    std::string str();   // flush() 후 std::string 결과 반환
-    binary_t bin();      // flush() 후 binary_t 결과 반환
+    std::string str();   // Executes flush() and returns std::string result
+    binary_t bin();      // Executes flush() and returns binary_t result
 
-    // 데이터 쓰기 interface
+    // Data writing interface
     return_t write(const byte_t* data, size_t size);
 
     template <typename T>
@@ -42,11 +53,11 @@ class encoder_stream {
     template <typename T>
     encoder_stream& operator+=(T&& value);
 
-    // 정수형 타입 stream 연산자 (Endianness 변환 적용)
+    // Integer type stream operator (Automatic Endianness conversion applied)
     template <typename T, typename std::enable_if<custom::is_integral<T>::value && !std::is_same<T, bool>::value, int>::type = 0>
     encoder_stream& operator<<(T value);
 
-    // 기타 타입 연산자 overloading
+    // Operator overloading interfaces
     encoder_stream& operator<<(bool value);
     encoder_stream& operator<<(const char* value);
     encoder_stream& operator<<(const std::string& value);
@@ -54,10 +65,10 @@ class encoder_stream {
     encoder_stream& operator<<(const basic_stream& value);
 
    protected:
-    return_t flush(); // 남은 내부 buffer padding 및 최종 처리
+    return_t flush(); // Flushes residual internal buffer padding and finalizes stream
 
    private:
-    struct encbuf_t {  // Base64 3-byte 단위 처리 buffer
+    struct encbuf_t {  // Base64 3-byte chunk processing buffer
         byte_t buf[3];
         uint8 len;
         uint8 unitsize(encoding_t encoding);
@@ -65,7 +76,7 @@ class encoder_stream {
         void reset();
     };
 
-    struct bitbuf_t {  // Huffman coding 비트 단위 처리 buffer
+    struct bitbuf_t {  // Huffman coding bit-level processing buffer
         uint8 buf;
         uint8 len;
         void reset();
@@ -82,29 +93,60 @@ class encoder_stream {
 
 }  // namespace hotplace
 ```
-[cite: 49, 50]
+[cite: 11]
 
 ---
 
-### 3. 핵심 동작 mechanism
-
-* **chunk 단위 데이터 연산 (`write`)**:
-  * **Base16**: 입력 block을 즉시 Hex 문자열로 변환하여 출력 buffer에 누적[cite: 49].
-  * **Base64 / Base64URL**: 입력 데이터를 3바이트 `unitsize` 경계로 분할 처리[cite: 49]. 미달하는 잔여 데이터는 내부 `_encbuf`에 유지하고, 다음 `write` 호출 시 병합하여 encoding 수행[cite: 49].
-  * **HTTP/2 Huffman (`encoding_h2hcodes`)**: `http_huffman_coding` singleton pattern을 활용[cite: 49]. 비트 단위 연산으로 `_bitbuf`에 저장 후 8비트(1바이트)가 채워지면 `_bin`에 packing[cite: 49].
-* **stream 종료 처리 (`flush`)**:
-  * stream이 닫히거나 출력(`str()`, `bin()`)이 요청될 때 `flush()` 호출[cite: 49].
-  * Base64 잔여 데이터 padding 처리 및 Huffman 비트 buffer Shift/Padding 후 데이터 마무리[cite: 49].
-* **타입 특성화 기법 (`encoder_stream_traits`)**:
-  * `std::string` 및 `binary_t` container에 대해 메모리 pre-allocation 및 direct writing interface 제공[cite: 51].
+## 4. Operational Principles[cite: 11]
+1. **Chunk Input Operations (`write`)**:
+   * **Base16**: Immediately converts input blocks to hexadecimal strings upon receipt and accumulates them in the output buffer[cite: 11].
+   * **Base64 / Base64URL**: Splits and encodes input data into 3-byte `unitsize` chunks[cite: 11]. Remaining data under 3 bytes is stored in `_encbuf` and merged during the next `write` invocation[cite: 11].
+   * **HTTP/2 Huffman**: Substitutes data into bit sequences via a singleton object (`http_huffman_coding`) and stores them in `_bitbuf`, packing them into the output byte array (`_bin`) whenever 8 bits accumulate[cite: 11].
+2. **Stream Termination Handling (`flush`)**:
+   * Automatically invokes `flush()` when closing the stream or requesting final output (`str()`, `bin()`)[cite: 11].
+   * Finalizes the encoding stream by handling residual Base64 byte padding (`=`) and bit buffer shifting/padding for Huffman coding[cite: 11].
+3. **Type Specialization & Memory Management**:
+   * Executes a reserve pipeline based on `encoder_stream_traits` to pre-allocate memory, preventing dynamic reallocation overhead during data insertion[cite: 11].
 
 ---
 
-### 4. TODO list
+## 5. Usage Example (C++11 Standard)[cite: 11]
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
-| :--- | :--- | :---: | :---: |
-| **TODO-ENCODER-01** | Base128(LEB128/VLQ) encoding module의 `encoder_stream` pipeline 통합 | High | 미진행 |
-| **TODO-ENCODER-02** | `_maxsize` 초과 시 예외 처리 logic 안전성 강화 및 커스텀 allocator 연동 | Medium | 진행 중 |
-| **TODO-ENCODER-03** | C++11 `std::is_constructible` 활용을 통한 `operator<<` template 지원 확장 | Medium | 미진행 |
-| **TODO-ENCODER-04** | Zlib/Deflate 등 압축 algorithm stream encoder 확장 구조 검토 | Low | 미진행 |
+```cpp
+#include <iostream>
+#include <hotplace/sdk/base/basic/encoder_stream.hpp>
+
+int main() {
+    using namespace hotplace;
+
+    // 1. Create Base64 encoder stream
+    encoder_stream stream(encoding_t::encoding_base64);
+
+    // 2. Inject chunk data of various types using stream operators
+    uint32_t header_val = 0x12345678;
+    std::string body_text = "Stream Encoding Test";
+
+    stream << header_val;  // Inject byte after endianness conversion
+    stream << body_text;   // Inject string data
+
+    // 3. Extract final encoded string (flush() called internally)
+    std::string encoded_result = stream.str();
+    std::cout << "Encoded Base64 Output: " << encoded_result << std::endl;
+
+    return 0;
+}
+
+```
+
+---
+
+## 6. TODO List
+
+| ID | Priority | Task Description | Status | Remarks |
+| --- | --- | --- | --- | --- |
+| **TODO-ENCODER-01** | `HIGH` | **Base128 (LEB128/VLQ) Pipeline Integration**<br><br>- Expand parameter support to integrate Base128 (LEB128/VLQ) encoding into the `encoder_stream` pipeline | `Postponed` | Not started |
+| **TODO-ENCODER-02** | `MEDIUM` | **Strengthen Buffer Overflow Safety & Custom Allocator Binding**<br><br>- Enhance precision of exception handling logic on `_maxsize` overrun and bind custom memory allocators | `In Progress` | In progress |
+| **TODO-ENCODER-03** | `MEDIUM` | **Expand C++11 SFINAE Operator Support**<br><br>- Extend `operator<<` template type support using C++11 `std::is_constructible` metaprogramming | `Postponed` | Not started |
+| **TODO-ENCODER-04** | `LOW` | **Review Stream Encoder Extension Architecture for Compression**<br><br>- Design and review extended pipeline encoder structures for compression algorithms such as Zlib/Deflate | `Postponed` | Not started |
+
+---

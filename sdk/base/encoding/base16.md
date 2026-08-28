@@ -1,67 +1,109 @@
+# Base16 Encoding/Decoding (`base16`) - published by Gemini
 
-## Base16 encoding/decoding module - published by Gemini
+## 1. Overview & Key Features
 
----
+The `base16` module is a core C++11 module responsible for RFC 4648-compliant Base16 (Hex) encoding, decoding, and handling RFC standard patterns.
 
-### 1. 개요 및 주요 특징
-
-* **module 역할**: RFC 4648 규격을 준수하는 Base16(Hex) encoding, decoding 및 RFC pattern 처리 module.
-* **주요 기능**:
-  * **high-level interface**: `std::string`, `binary_t`, `basic_stream` 등 다양한 container간 변환 지원.
-  * **low-level 성능 최적화**: `snprintf` 대신 bit shift 연산 및 lookup table 기반 직접 변환 방식 적용 (`conv_fast`, `hex_digits`).
-  * **RFC 다양한 pattern 지원 (`base16_encode_rfc`, `base16_decode_rfc`)**:
-    * RFC 7516 style의 배열 형태 `[227, 197, 117, ...]` 10진수 literal parsing.
-    * RFC 7539 style의 `00:01:02:...` 구분자 포함 Hex pattern 및 공백/줄바꿈 포함 포맷 처리.
-  * **홀수 길이 Hex decoding 지원**: NIST CAVP test vector 지원을 위한 홀수(odd size) 길이 decoding 지원.
-  * **`0x` 접두사 자동 스킵**: decoding 시 "0x" 접두사 자동 감지 및 건너뛰기.
-* **C++11 특징**:
-  * `custom::encoder_stream_traits` 및 SFINAE (`std::enable_if`) 기반 메모리 2단계 확보(Reserve-Commit) template 처리.
-  * Move semantics (`std::move`)를 통한 임시 객체 반환 최적화.
+* **High-Performance Low-Level Conversion**: Applies direct conversion based on bitwise shift operations and bitmap lookup tables (`conv_fast`, `hex_digits`) instead of `snprintf` to deliver optimal conversion speeds.
+* **Flexible High-Level Interface**: Supports direct conversions between various C++ standard/custom containers such as `std::string`, `binary_t`, and `basic_stream`.
+* **RFC-Specific Format Processing (`base16_encode_rfc`, `base16_decode_rfc`)**:
+  * Supports parsing decimal array literals (`[227, 197, 117, ...]`) in RFC 7516 style.
+  * Supports delimiter formats (`00:01:02:...`) in RFC 7539 style, as well as handling data containing spaces and line breaks.
+* **Special Format & Validation Features**: Includes odd-size length decoding support for NIST CAVP test vectors and automatic detection/skipping of "0x" prefixes.
+* **C++11 Metaprogramming & Move Semantics**: Implements a two-phase memory allocation pattern (Reserve-Commit) based on SFINAE (`std::enable_if`) and `custom::encoder_stream_traits`, while optimizing temporary object returns via Move Semantics (`std::move`).
 
 ---
 
-### 2. 주요 API 및 계층 구조
+## 2. Key Implementation Areas & Technical Elements
 
-**High-Level API (`hotplace` namespace)**
+* **Lookup Table & Bitwise Speedup**: Maximizes encoding and decoding throughput by eliminating string formatting overhead and processing serialization via bit manipulation and lookup tables.
+* **Reserve-Commit Memory Pattern**: Prevents unnecessary memory reallocations and guarantees safety during dynamic buffer allocation through a two-stage memory allocation template mechanism.
+* **Leading Zero Neutral Comparison**: Removes leading '0' characters via `base16_compare` to compare semantic equality at the byte stream level.
+* **Flexible Input Parsing Pipeline**: Features a specialized decoder pipeline that flexibly suppresses or parses RFC format-specific delimiters (colons, commas, brackets, etc.) and prefixes (`0x`).
 
-* `base16_encode(...)`: 다양한 입력을 Hex 문자열 또는 container로 encoding.
-* `base16_decode(...)`: Hex 문자열을 `binary_t` 또는 지정 container로 decoding.
-* `base16_encode_rfc(...)` / `base16_decode_rfc(...)`: 10진수 배열, 콜론/공백 구분 포맷 대응 API.
-* `base16_compare(...)`: 앞자리 '0' (Leading Zero) 제거 후 의미적 바이트 동등성 비교.
+---
 
-**Low-Level C-Style API (`hotplace::lowlevel` namespace)**
+## 3. Major Data Structures, Classes & API Reference
+
+### Core C-Style API (`hotplace::lowlevel` namespace)
 
 ```cpp
 namespace hotplace {
 namespace lowlevel {
 
-// buffer 크기 산출 및 1차/2차 메모리 복사 방식
+// Low-level functions for buffer size calculation (Phase 1) and memory copy conversion (Phase 2)
 return_t base16_encode(const byte_t* source, size_t size, char* buf, size_t* buflen, uint32 flags = 0);
 return_t base16_decode(const char* source, size_t size, byte_t* buf, size_t* buflen);
 
 }  // namespace lowlevel
 }  // namespace hotplace
+
 ```
-[cite: 55, 56]
+
+### Main High-Level APIs
+
+| API Name | Description & Functionality |
+| --- | --- |
+| `base16_encode(...)` | Encodes binary input data of various types into Hex strings or containers. |
+| `base16_decode(...)` | Decodes Hex strings into `binary_t` or specified containers. |
+| `base16_encode_rfc(...)` / `base16_decode_rfc(...)` | APIs handling decimal array literals, colon/space/line break delimited formats. |
+| `base16_compare(...)` | Compares semantic byte equality after stripping leading zeros ('0'). |
 
 ---
 
-### 3. 핵심 동작 mechanism
+## 4. Operational Principles
 
-* **2단계 buffer 할당 (Reserve & Commit pattern)**:
-  * 1차 호출: `buf`를 `nullptr`로 설정하여 필요한 buffer 크기(`size_reserve`) 산출 후 `errorcode_t::insufficient_buffer` 반환[cite: 53, 55].
-  * 2차 호출: `traits::reserve`로 메모리 확보 후 실제 encoding/decoding 실행 및 `traits::commit`으로 바이트 크기 확정[cite: 53].
-* **flag option (`flags`)**:
-  * `encoding_flag_t::encoding_base16_capital`: 대문자 Hex 사용 ("0123456789ABCDEF")[cite: 55].
-  * `encoding_flag_t::encoding_base16_space`: 바이트 간 공백(' ') 구분자 추가[cite: 55].
-  * `encoding_notrunc`: 기존 출력 buffer Truncate 생략 후 이어 쓰기[cite: 53].
+1. **Two-Phase Buffer Allocation (Reserve & Commit Pattern)**:
+  * **Phase 1 Call**: Passes `nullptr` to the `buf` pointer to receive the required buffer size (`size_reserve`) and gets an `errorcode_t::insufficient_buffer` status.
+  * **Phase 2 Call**: Allocates memory corresponding to that size via `traits::reserve`, executes the actual conversion, and finalizes the size via `traits::commit`.
+2. **Encoding Flag Control (`flags`)**:
+  * `encoding_flag_t::encoding_base16_capital`: Outputs in uppercase Hex ("0123456789ABCDEF").
+  * `encoding_flag_t::encoding_base16_space`: Adds space (' ') delimiters between bytes.
+  * `encoding_notrunc`: Appends data without truncating the existing output buffer.
+3. **RFC Decoding Preprocessing**: Iterates through input to apply `0x` prefix skipping, ignoring comma (`,`) and colon (`:`) delimiters, and adjusting the upper nibble for odd-length inputs to restore the byte array.
 
 ---
 
-### 4. TODO list
+## 5. Usage Example (C++11 Standard)
 
-| ID | 우선순위 | 작업 항목 (Task Description) | 상태 (Status) | 비고 |
-| --- | --- | --- | --- | --- | --- |
-| ~~**TODO-ENC-01**~~ | `HIGH` | **`base16_encode_rfc` / `base16_decode_rfc` 리팩토링 및 예외 처리 반영** | `Fixed` | `base16rfc.cpp` 반영 완료 |
-| ~~**TODO-ENC-02**~~ | `LOW` | **`test_base16_rfc` 경계조건/잘못된 입력 검증 케이스 추가**<br><br><br>- 범위 초과(`300`), 홀수 Hex, `0x` 접두사 포함 테스트 케이스 반영 완료 | `Fixed` | `testcase_base16.cpp` 반영 완료 |
-| **TODO-ENC-03** | `LOW` | **SIMD/AVX2 벡터화 가속 검토** | `Postponed` | 이식성 고려 및 PQC/PKCS#11 연동 검토 후 재개 |
+```cpp
+#include <iostream>
+#include <string>
+#include <hotplace/sdk/base/basic/base16.hpp>
+
+int main() {
+    using namespace hotplace;
+
+    // 1. Basic Encoding & Decoding
+    std::string text = "Hello Base16!";
+    std::string encoded = base16_encode(text);
+    std::cout << "Encoded: " << encoded << std::endl;
+
+    binary_t decoded_bin;
+    base16_decode(encoded, decoded_bin);
+
+    // 2. RFC Format Decoding (Decimal Array Format)
+    std::string rfc_dec_array = "[72, 101, 108, 108, 111]";
+    binary_t rfc_decoded;
+    base16_decode_rfc(rfc_dec_array, rfc_decoded);
+
+    // 3. RFC Format Encoding (Uppercase + Delimiter)
+    std::string rfc_encoded = base16_encode(text, encoding_flag_t::encoding_base16_capital | encoding_flag_t::encoding_base16_space);
+    std::cout << "RFC Format Encoded: " << rfc_encoded << std::endl;
+
+    return 0;
+}
+
+```
+
+---
+
+## 6. TODO List
+
+| ID | Priority | Task Description | Status | Remarks |
+| --- | --- | --- | --- | --- |
+| ~~**TODO-ENC-01**~~ | `HIGH` | **Refactor `base16_encode_rfc` / `base16_decode_rfc` & Apply Exception Handling** | `Fixed` | Reflected in `base16rfc.cpp`<br> |
+| ~~**TODO-ENC-02**~~ | `LOW` | **Add `test_base16_rfc` Boundary Condition / Invalid Input Test Cases**<br><br>- Reflected test cases for overflow (`300`), odd Hex, and `0x` prefix inclusion | `Fixed` | Reflected in `testcase_base16.cpp`<br> |
+| **TODO-ENC-03** | `LOW` | **Review SIMD/AVX2 Vectorization Acceleration**<br><br>- Implement acceleration after reviewing portability and PQC/PKCS#11 integration | `Postponed` | Postponed pending portability and integration review |
+
+---

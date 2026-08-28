@@ -1,46 +1,48 @@
-# `payload` 및 `payload_member` - published by Gemini
-
-## 1. 개요 및 설계 목적 (Overview & Design Pattern)
-
-`payload` module은 네트워크 protocol packet(TLS, DTLS, QUIC 등)의 직렬화(Serialization/Write) 및 역직렬화(Deserialization/Read/Parse)를 유연하게 처리하기 위해 설계된 C++11 builder pattern 기반 데이터 parsing framework.
-
-### 주요 특징
-
-1. **유연한 field metadata 구성 (`payload_member`)**:
-* 정수형(int8~uint128), 엔디안(Big/Little Endian), 가변 길이 binary, 문자열, Bignumber, Encoded 타입 자동 추상화.
-2. **동적 field 참조 연산 (`set_reference_value`)**:
-* 특정 field의 길이가 이전 field의 값에 의존하는 구조(예: Length Field -> Payload)를 자동 binding 처리.
-3. **조건부 field 및 그룹 제어 (`set_group`, `set_condition`)**:
-* 특정 flag나 header 값에 따라 하위 그룹을 활성화/비활성화(`set_group`)하거나 후킹 callback(`set_condition`)을 실행하여 동적 parsing 지원.
-4. **추측성 가변 parsing (Heuristic Reading)**:
-* 가변 길이를 알 수 없는 항목(`list_size_unknown`)이 존재하는 경우, 전체 buffer 크기 대비 잔여 영역을 추론하여 slicing parsing 수행.
+# `payload` and `payload_member` - published by Gemini
 
 ---
 
-## 2. 핵심 class 및 API 구조 분석 (API Reference)
+## 1. Overview & Design Pattern
 
-### 주요 class 역할
+The `payload` module is a C++11 builder pattern-based data parsing framework designed for flexible serialization (Write) and deserialization (Read/Parse) of network protocol packets (TLS, DTLS, QUIC, etc.).
 
-* **`payload_member`**: packet 내부의 단일 데이터 항목 단위. 엔디안 변환, 메모리 할당, reference 연산 담당.
-* **`payload_encoded`**: 가변 길이 표현 방식(예: QUIC variable-length integer 등) interface 규격.
-* **`payload`**: 여러 `payload_member`를 chaining으로 등록하여 binary 데이터를 읽고 쓰거나 조건별 해석을 총괄하는 container.
+### Key Features
 
-### 주요 method 분석
+1. **Flexible Field Metadata Configuration (`payload_member`)**:
+  * Automatic abstraction for integer types (int8 to uint128), endianness (Big/Little Endian), variable-length binary, strings, Bignumbers, and encoded types.
+2. **Dynamic Field Reference Operations (`set_reference_value`)**:
+  * Automatic binding for structures where a specific field's length depends on the value of a preceding field (e.g., Length Field -> Payload).
+3. **Conditional Fields and Group Control (`set_group`, `set_condition`)**:
+  * Supports dynamic parsing by enabling/disabling subgroups (`set_group`) or triggering hook callbacks (`set_condition`) based on specific flag or header values.
+4. **Heuristic Reading (Speculative Variable Parsing)**:
+  * Performs slicing parsing by inferring remaining area relative to total buffer size when items of unknown length (`list_size_unknown`) exist.
 
-| class / method | 역할 및 기능 |
+---
+
+## 2. API Reference & Core Class Structure
+
+### Core Class Roles
+
+* **`payload_member`**: Represents a single data item inside a packet. Handles endianness conversion, memory allocation, and reference operations.
+* **`payload_encoded`**: Interface specification for variable-length representation schemes (e.g., QUIC variable-length integer, etc.).
+* **`payload`**: Container that registers multiple `payload_member` instances via chaining to manage binary reading/writing and conditional parsing.
+
+### Core Methods Analysis
+
+| Class / Method | Role & Description |
 | --- | --- |
-| **`payload::operator<<`** | `unique_ptr` 또는 `t_pointer_proxy` 기반으로 field를 직관적으로 chaining 추가. |
-| **`set_reference_value(name, ref, mult)`** | `name` field의 크기를 `ref` field의 값 $\times$ `mult` 크기로 동적 지정. |
-| **`set_condition(name, hook)`** | `name` field가 parsing된 후 호출할 callback 함수 등록 (그룹 조건 동적 변경 가능). |
-| **`read(ptr, size, pos)`** | binary stream에서 등록된 member 순서대로 데이터를 읽어 parsing 수행. |
-| **`write(bin, groups)`** | 현재 구성된 member들 중 활성화된 그룹의 데이터를 binary stream으로 직렬화 출력. |
-| **`t_value_of<T>(name)`** | parsing된 member의 값을 지정한 타입 $T$로 안전하게 추출. |
+| **`payload::operator<<`** | Intuitively chain-adds fields based on `unique_ptr` or `t_pointer_proxy`. |
+| **`set_reference_value(name, ref, mult)`** | Dynamically sets the size of the `name` field to the value of `ref` field $\times$ `mult` size. |
+| **`set_condition(name, hook)`** | Registers a callback function to be executed after the `name` field is parsed (enables dynamic group condition modification). |
+| **`read(ptr, size, pos)`** | Reads and parses data from a binary stream in the order of registered members. |
+| **`write(bin, groups)`** | Serializes and outputs active group data from registered members to a binary stream. |
+| **`t_value_of<T>(name)`** | Safely extracts the value of a parsed member cast to type $T$. |
 
 ---
 
-## 3. C++11 기반 실습 code (C++11 Example Usage)
+## 3. C++11 Example Usage
 
-`C++11` 규격 준수
+Complies with `C++11` standard:
 
 ```cpp
 #include <iostream>
@@ -97,18 +99,14 @@ int main() {
 
 ---
 
-## 4. 프로그래밍 TODO list 및 우선순위 관리 (TODO List)
+## 4. TODO List Tracker
 
-`payload` module의 안정성 확보 및 성능 향상을 위한 번호 체계 기반 TODO 항목
+ID-based TODO tracker for ensuring module stability and performance optimization:
 
-### 📌 TODO List Tracker
-
-| ID | 우선순위 | 작업 항목 (Task Description) | 상태 (Status) | 비고 |
+| ID | Priority | Task Description | Status | Remarks |
 | --- | --- | --- | --- | --- |
-| **TODO-PL-01** | `HIGH` | **`read()` 함수 내 `list_size_unknown` 예외 처리 강화**<br>- 미지 크기 member가 2개 이상일 때 예외 반환 처리 검증 및 가변 길이 bound 검사 보완 | `In Progress` | `read()` 2차 패스 logic |
-| **TODO-PL-02** | `HIGH` | **`payload_member` 메모리 생성/소멸 누수 검증**<br>- RAW pointer 전달 방식 대신 `std::unique_ptr` 소유권 이전 구조로 통일 | `To Do` | `operator<<` 정리 |
-| **TODO-PL-03** | `MEDIUM` | **`doread` 내 엔디안 변환 유틸리티 최적화**<br>- `ntoh16`/`ntoh32`/`ntoh64` 외 24비트, 48비트 mapping 시 바이트 offset 경계 검사 강화 | `To Do` | `doread()` 수치 변환 |
-| **TODO-PL-04** | `MEDIUM` | **`set_condition` 멀티 훅(Hook) 순서 보장 검토**<br>- `std::multimap` 기반 callback 저장 시 동일 키 등록 callback 실행 순서 신뢰성 확보 | `In Progress` | `_cond_map` 구조 |
-| **TODO-PL-05** | `LOW` | **`payload::write` 시 그룹 filtering 성능 개선**<br>- `std::set<std::string>` 조회 overhead를 줄이기 위한 hash/flag 기반 그룹 식별자 전환 검토 | `To Do` | 직렬화 성능 향상 |
-
----
+| **TODO-PL-01** | `HIGH` | **Strengthen `list_size_unknown` exception handling in `read()**`<br><br>- Verify exception return handling when 2+ unknown-size members exist and supplement variable-length bound checks | `In Progress` | `read()` 2nd pass logic |
+| **TODO-PL-02** | `HIGH` | **Verify memory allocation/deallocation leak in `payload_member**`<br><br>- Standardize ownership transfer structure to `std::unique_ptr` instead of RAW pointer passing | `To Do` | Clean up `operator<<`<br> |
+| **TODO-PL-03** | `MEDIUM` | **Optimize endian conversion utilities inside `doread**`<br><br>- Strengthen byte offset boundary checks when mapping 24-bit/48-bit numbers besides `ntoh16`/`ntoh32`/`ntoh64`<br> | `To Do` | `doread()` value conversion |
+| **TODO-PL-04** | `MEDIUM` | **Review execution order guarantees for multi-hooks in `set_condition**`<br><br>- Ensure reliability of callback execution order when registering identical keys in `std::multimap`<br> | `In Progress` | `_cond_map` structure |
+| **TODO-PL-05** | `LOW` | **Improve group filtering performance during `payload::write**`<br><br>- Consider switching to hash/flag-based group identifiers to reduce `std::set<std::string>` lookup overhead | `To Do` | Improve serialization performance |

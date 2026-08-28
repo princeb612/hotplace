@@ -1,35 +1,35 @@
-## IP Address ACL module - published by Gemini
+## IP Address ACL - published by Gemini
 
 ---
 
-### 1. 개요 및 주요 특징
+### 1. Overview and Key Features
 
-* **module 역할**: IP 주소 기반 Access Control List (ACL) 검증 및 네트워크 접근 제어 관리 module.
-* **주요 기능**:
-  * **IP Rule Matching**: Specific IP 주소 및 Subnet (CIDR) 범위 기반 허용/거부 rule matching 연산 (`ipaddr_acl.cpp`).
-  * **ACL Management Abstraction**: C++11 기반 IP ACL policy 저장, 수정을 위한 data structure 및 class interface 제공 (`ipaddr_acl.hpp`).
+* **Module Role**: An IP address-based Access Control List (ACL) verification and network access control management module.
+* **Key Features**:
+  * **IP Rule Matching**: Performs allow/deny rule matching operations based on specific IP addresses and subnet (CIDR) ranges (`ipaddr_acl.cpp`).
+  * **ACL Management Abstraction**: Provides data structures and class interfaces for storing and modifying C++11-based IP ACL policies (`ipaddr_acl.hpp`).
 
 ---
 
-### 2. 핵심 구현 영역 및 기술 요소
+### 2. Core Implementation Areas and Technical Elements
 
 * **IP ACL Core Operations (`ipaddr_acl.cpp`, `ipaddr_acl.hpp`)**:
-  * IPv4 / IPv6 주소 parsing 및 subnet range lookup 연산.
-  * 허용(Allow) / 거부(Deny) rule evaluation 우선순위 제어 연산.
+  * Handles IPv4 / IPv6 address parsing and subnet range lookup operations.
+  * Controls evaluation priority between Allow and Deny rules.
 
 ---
 
-### 3. 핵심 동작 mechanism
+### 3. Core Operating Mechanism
 
 * **IP Address Evaluation Flow (`ipaddr_acl.cpp`)**:
-  * client IP 주소 입력 수신 -> `ipaddr_acl` rule list lookup -> Subnet CIDR match 및 Policy(Allow/Deny) 검증 -> 접근 허용 여부 bool 값 반환 연산 수행.
+  * Receives client IP address input -> Performs `ipaddr_acl` rule list lookup -> Verifies Subnet CIDR match and Policy (Allow/Deny) -> Returns a boolean result indicating whether access is granted.
 
 ---
 
-### 4. TODO list
+### 4. TODO List Tracker
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **TODO-IA-01** | `ipaddr_acl.cpp` 내 IPv6 Subnet Parsing 시 boundary check 및 Malformed IP String Exception Handling 보완 | High | 미진행 |
-| **TODO-IA-02** | `ipaddr_acl.cpp` 내 대규모 ACL Rule Set Lookup 시 Performance Degradation 방지를 위한 Data Structure 최적화 검토 | Medium | 미진행 |
-| **TODO-IA-03** | `ipaddr_acl.hpp` 내 C++11 type safety 및 const correctness 검증 | Low | 미진행 |
+| **TODO-IA-01** | Supplement boundary checks and malformed IP string exception handling during IPv6 subnet parsing in `ipaddr_acl.cpp`<br> | High | Open |
+| **TODO-IA-02** | Review data structure optimizations to prevent performance degradation during large-scale ACL rule set lookups in `ipaddr_acl.cpp`<br> | Medium | Open |
+| **TODO-IA-03** | Verify C++11 type safety and const correctness in `ipaddr_acl.hpp`<br> | Low | Open |

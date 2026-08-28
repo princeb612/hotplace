@@ -1,45 +1,45 @@
-## HTTP Authentication & OAuth2 module - published by Gemini
+## HTTP Authentication & OAuth2 - published by Gemini
 
 ---
 
-### 1. 개요 및 주요 특징
+### 1. Overview and Key Features
 
-* **module 역할**: RFC 2617 (Basic/Digest), Bearer token 및 OAuth2 protocol 기반 인증/인가 mechanism 제공 module.
-* **주요 기능**:
-  * **Basic Authentication**: Base64 기반 Credentials parsing 및 Provider 검증 (`basic_authentication_provider.cpp`, `basic_credentials.cpp`).
-  * **Bearer Authentication**: OAuth2 / JWT Access Token 기반 Bearer 인증 처리 (`bearer_authentication_provider.cpp`, `bearer_credentials.cpp`).
-  * **Digest Access Authentication**: RFC 2617 규격 기반 Nonce, Response Hash 연산 및 Digest 인증 제어 (`digest_access_authentication_provider.cpp`, `digest_credentials.cpp`, `rfc2617_digest.cpp`).
-  * **OAuth2 Framework**: OAuth2 Grant Type 및 Access Token 발행/관리 연산 (`oauth2.cpp`, `oauth2_credentials.cpp`).
-  * **Custom Credentials**: 사용자 정의 확장 인증 구조 지원 (`custom_credentials.cpp`).
+* **Module Role**: A module providing authentication and authorization mechanisms based on RFC 2617 (Basic/Digest), Bearer token, and OAuth2 protocols.
+* **Key Features**:
+  * **Basic Authentication**: Parses Base64-based credentials and performs provider verification (`basic_authentication_provider.cpp`, `basic_credentials.cpp`).
+  * **Bearer Authentication**: Handles Bearer authentication based on OAuth2 / JWT Access Tokens (`bearer_authentication_provider.cpp`, `bearer_credentials.cpp`).
+  * **Digest Access Authentication**: Manages Digest authentication and calculates nonce and response hashes in compliance with RFC 2617 specifications (`digest_access_authentication_provider.cpp`, `digest_credentials.cpp`, `rfc2617_digest.cpp`).
+  * **OAuth2 Framework**: Handles OAuth2 grant types and access token issuance/management operations (`oauth2.cpp`, `oauth2_credentials.cpp`).
+  * **Custom Credentials**: Supports user-defined extensible authentication structures (`custom_credentials.cpp`).
 
 ---
 
-### 2. 핵심 구현 영역 및 기술 요소
+### 2. Core Implementation Areas and Technical Elements
 
 * **Basic & Bearer Credentials Handling (`basic_credentials.cpp`, `bearer_credentials.cpp`)**:
-  * `Authorization` header encoding parsing 연산 및 사용자 Credentials 추출.
+  * Parses `Authorization` header encoding and extracts user credentials.
 * **Digest Access Authentication & RFC 2617 Algorithm (`digest_access_authentication_provider.cpp`, `rfc2617_digest.cpp`)**:
-  * Nonce, Opaque, Realm, QOP(Quality of Protection) parsing 연산 및 MD5/SHA256 Response Digest 계산 수행.
+  * Parses Nonce, Opaque, Realm, and QOP (Quality of Protection) while computing MD5/SHA256 Response Digests.
 * **OAuth2 Protocol Implementation (`oauth2.cpp`, `oauth2_credentials.cpp`)**:
-  * Client Credentials, Authorization Code 등 OAuth2 flow 구현 및 Access/Refresh Token lifecycle 관리.
+  * Implements OAuth2 flows (such as Client Credentials and Authorization Code) and manages Access/Refresh Token lifecycles.
 
 ---
 
-### 3. 핵심 동작 mechanism
+### 3. Core Operating Mechanism
 
 * **Digest Response Verification Flow (`digest_access_authentication_provider.cpp`)**:
-  * 수신된 `Authorization: Digest ...` header parsing -> `rfc2617_digest` 함수 호출 -> HA1, HA2, Response Digest 연산 수행 후 client 송신 값과 비교 검증.
+  * Parses incoming `Authorization: Digest ...` header -> Calls `rfc2617_digest` function -> Computes HA1, HA2, and Response Digest -> Verifies result against client-submitted value.
 * **OAuth2 Token Validation Flow (`oauth2.cpp`)**:
-  * Request Token 포함 여부 검사 -> Token Expiry 및 Scope verification 연산 -> 유효한 session 승인 처리.
+  * Checks for request token presence -> Verifies token expiry and scope -> Approves valid session.
 
 ---
 
-### 4. TODO list
+### 4. TODO List Tracker
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **TODO-AUTH-01** | `digest_access_authentication_provider.cpp` 내 Stale Nonce 처리 및 Nonce Replay Attack 방지 logic 보완 | High | 미진행 |
-| **TODO-AUTH-02** | `oauth2.cpp` 내 Token Expiry 시간 계산 시 System Clock desync 예외 처리 강화 | High | 미진행 |
-| **TODO-AUTH-03** | `rfc2617_digest.cpp` 내 MD5 외 SHA-256 Digest Algorithm 지원 검증 | Medium | 미진행 |
-| **TODO-AUTH-04** | `basic_credentials.cpp` 내 Base64 decoding 시 Invalid Format 문자열 Input validation 강화 | Medium | 미진행 |
-| **TODO-AUTH-05** | `custom_credentials.cpp` 내 Multi-tenant 환경 커스텀 header parsing 확장성 확인 | Low | 미진행 |
+| **TODO-AUTH-01** | Supplement stale nonce handling and nonce replay attack prevention logic in `digest_access_authentication_provider.cpp`<br> | High | Open |
+| **TODO-AUTH-02** | Strengthen system clock desynchronization exception handling during token expiry calculation in `oauth2.cpp`<br> | High | Open |
+| **TODO-AUTH-03** | Verify SHA-256 digest algorithm support alongside MD5 in `rfc2617_digest.cpp`<br> | Medium | Open |
+| **TODO-AUTH-04** | Strengthen input validation for invalid format strings during Base64 decoding in `basic_credentials.cpp`<br> | Medium | Open |
+| **TODO-AUTH-05** | Verify extensibility of custom header parsing for multi-tenant environments in `custom_credentials.cpp`<br> | Low | Open |

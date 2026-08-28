@@ -1,21 +1,28 @@
 # `function_pipeline` - published by Gemini
 
-## 1. 개요 및 설계 목적 (Overview & Design Pattern)
+## 1. Overview & Key Features
 
-`function_pipeline` module은 여러 단계의 작업(함수 call)을 chaining(Fluent Interface/Method Chaining) 기법으로 엮어 **오류 발생 시 연속 실행을 제어하고, resource 해제(rollback) 및 예외 처리를 깔끔하게 캡슐화**하기 위한 체인 pattern(Chain Pattern) 기반 class template
+The `function_pipeline` module is a C++11 class template based on the Chain Pattern, designed to chain multi-step tasks (function calls) via a Fluent Interface (Method Chaining). It controls sequential execution upon errors and cleanly encapsulates resource release (rollback) and exception handling.
 
-### 주요 특징
-
-1. **Fluent Interface (method chaining)**: `.run()`, `.walk()`, `.walk_failed()` 등의 함수를 이어 붙여 직관적인 pipeline 흐름을 구성할 수 있음
-2. **다양한 return 타입 지원 (C++11 Template)**: 기본 return 타입 `return_t` 외에도 OpenSSL errorcode(`int`, `osslerror_category`) 등 사용자 정의 타입 및 error 카테고리를 지원
-3. **조건부 실행 흐름 평가**: 설정된 판별자(`_discriminant`)에 따라 성공 시에만 다음 단계로 넘어가거나, 실패 시 rollback(`walk_failed`) 단계만 실행하도록 scheduling
-4. **debugging 및 추적 (Trace) 지원**: `DEBUG` 빌드 시 호출된 파일명(`__FILE__`)과 줄 번호(`__LINE__`), 처리된 단계 비율(`processed / total`) 및 마지막 error code를 트레이스 시스템으로 자동 reporting
+* **Fluent Interface (Method Chaining)**: Enables constructing an intuitive pipeline flow by chaining functions such as `.run()`, `.walk()`, and `.walk_failed()`.
+* **Support for Diverse Return Types (C++11 Template)**: Supports custom types and error categories such as OpenSSL error codes (`int`, `osslerror_category`) in addition to the default return type `return_t`.
+* **Conditional Execution Flow Evaluation**: Schedules execution based on a configured discriminant (`_discriminant`), advancing to the next step only on success, or executing only the rollback (`walk_failed`) phase upon failure.
+* **Debugging & Trace Support**: Automatically reports the called filename (`__FILE__`), line number (`__LINE__`), processed step ratio (`processed / total`), and last error code to the trace system in `DEBUG` builds.
 
 ---
 
-## 2. 핵심 class 및 API 구조 분석 (API Reference)
+## 2. Key Implementation Areas & Technical Elements
 
-### template 정의
+* **Fluent Interface Chaining Mechanism**: Provides a declarative programming style that allows declaring a series of operations sequentially by leveraging self-referencing operators (returning `*this`).
+* **Discriminant Evaluation-Based Conditional Branching**: Branches control flow based on internal discriminant states, executing the next step (`run`) only when previous execution results satisfy normal conditions.
+* **Guaranteed Rollback & Cleanup Pattern**: Safely and cohesively manages rollback logic (`walk_failed`) executed on task failure, and garbage collection/release tasks (`walk_always`) executed regardless of success or failure at the pipeline level.
+* **Exception Isolation**: Captures runtime exceptions occurring during external pipeline execution via `run_trycatch` statements, translating them into an internal pipeline error state (`value_exception`) to prevent abnormal system termination.
+
+---
+
+## 3. Major Data Structures, Classes & API Reference
+
+### Template Definition
 
 ```cpp
 template <typename T = return_t, typename category = void>
@@ -23,22 +30,29 @@ class function_pipeline;
 
 ```
 
-### 주요 method 분석
+### Key Method Analysis
 
-| 구분 | method / macro | 설명 |
+| Category | Method / Macro | Description |
 | --- | --- | --- |
-| **parameter 검증** | `test_parameter(checker)` | 사전 검증 lambda 실행. 실패 시 `value_invalid_parameter()` 세팅. |
-| **조건 설정** | `goahead_if_success()`<br>`goahead_if_not_fail()` | 성공 또는 치명적 error가 아닐 때 다음 작업 실행하도록 판별 기준 변경. |
-| **핵심 실행** | `run(func)`<br>`run_pipe(lambda)` | 핵심 logic(함수)을 실행. 이전 작업이 성공일 때만 수행됨. |
-| **예외 안전 실행** | `run_trycatch(func)` | 예외 발생 시 `value_exception()`을 세팅하고 pipeline을 중단. |
-| **부수 작업 (Walk)** | `walk(func)`<br>`walk_failed(func)` | 반환값이 없는 보조 작업 실행. `walk_failed`는 앞선 작업 실패 시 (rollback 목적) 실행. |
-| **결과 취득** | `result()` / `passed()`<br>`result_to_return_t()` | 최종 반환 code 취득 및 성공 여부 확인. `return_t` 포맷 변환 지원. |
+| **Parameter Validation** | `test_parameter(checker)` | Executes pre-validation lambda. Sets `value_invalid_parameter()` on failure. |
+| **Condition Setup** | `goahead_if_success()`<br><br>`goahead_if_not_fail()` | Changes evaluation criteria to proceed with next task when successful or non-fatal error occurs. |
+| **Core Execution** | `run(func)`<br><br>`run_pipe(lambda)` | Executes core logic (function). Performed only when the preceding operation succeeds. |
+| **Exception-Safe Execution** | `run_trycatch(func)` | Sets `value_exception()` and halts pipeline when an exception occurs. |
+| **Side Work (Walk)** | `walk(func)`<br><br>`walk_failed(func)` | Executes auxiliary operations without return values. `walk_failed` executes on preceding task failure (for rollback). |
+| **Result Retrieval** | `result()` / `passed()`<br><br>`result_to_return_t()` | Retrieves final return code and checks success status. Supports format conversion to `return_t`. |
 
 ---
 
-## 3. C++11 기반 실습 code (C++11 Example Usage)
+## 4. Operational Principles
 
-`C++11` 규격
+1. **Parameter & Pre-processing Validation**: Executes `test_parameter()` to perform validity checks; if validation fails, subsequent pipeline execution is immediately blocked and transitioned to a parameter error state.
+2. **Pipeline Step Traversal**: Evaluates return values of previous steps based on the designated discrimination policy (`_discriminant`) when calling `run()`. Executes registered lambda functions when conditions are met, and implicitly skips execution of subsequent `run()` functions upon error.
+3. **Error Detection & Rollback Execution**: If an error occurs in intermediate steps, the pipeline state transitions to failure, triggering execution of blocking, release, and rollback logic registered in `walk_failed()`.
+4. **Final Settlement & Tracing**: Performs common resource cleanup tasks registered in `walk_always()` upon pipeline completion, settling executed steps and success status to convert into a final return code (`return_t`).
+
+---
+
+## 5. Usage Example (C++11 Standard)
 
 ```cpp
 #include <iostream>
@@ -112,22 +126,18 @@ int main() {
 
     return pipeline.result_to_return_t();
 }
+
 ```
 
 ---
 
-## 4. 프로그래밍 TODO list 및 우선순위 관리 (TODO List)
+## 6. TODO List
 
-`function_pipeline` module의 고도화 및 유지보수를 위한 번호 체계 기반 TODO 항목
-
-### 📌 TODO List Tracker
-
-| ID | 우선순위 | 작업 항목 (Task Description) | 상태 (Status) | 비고 |
+| ID | Priority | Task Description | Status | Remarks |
 | --- | --- | --- | --- | --- |
-| **TODO-FP-01** | `HIGH` | **C++11 `std::move` 기반 lambda 캡처 성능 최적화 검토**<br>- 복사 비용이 큰 객체의 우회 방지 및 우측값 참조 활용 확장 | `To Do` | `runner` 구조 개선 |
-| **TODO-FP-02** | `HIGH` | **DEBUG 모드 내 `run_pipe` macro 일관성 검증**<br>- `__FILE__`, `__LINE__` 추적 누락 구간 점검 및 비-debug 빌드와의 interface 정합성 확인 | `In Progress` | `set_tracer` 및 `handle_result` |
-| **TODO-FP-03** | `MEDIUM` | **비동기/Future 대응 pipeline 확장 설계**<br>- `std::future` / 비동기 lambda pattern 결합 가능 여부 조사 | `To Do` | 차기 버전 고려 |
-| **TODO-FP-04** | `MEDIUM` | **C++11 error 카테고리 trait 확장**<br>- `error_traits` template의 커스텀 error 타입 추가 등록 및 변환 unit test 작성 | `To Do` | `osslerror_category` 외 추가 |
-| **TODO-FP-05** | `LOW` | **단구현 레벨 소스 code 내부 주석 영문화 검수**<br>- Doxygen tag 형식 정합성 및 영문 표현 가독성 보완 | `In Progress` | Header 문서화 |
+| **TODO-FP-01** | `HIGH` | **Review C++11 `std::move` based lambda capture performance optimization**<br><br>- Prevent bypass of high copy-cost objects and expand rvalue reference utilization. | `To Do` | Refactor `runner` structure |
+| **TODO-FP-02** | `HIGH` | **Verify `run_pipe` macro consistency in DEBUG mode**<br><br>- Inspect missing `__FILE__` and `__LINE__` tracking sections and verify interface alignment with non-debug builds. | `In Progress` | `set_tracer` and `handle_result` |
+| **TODO-FP-03** | `MEDIUM` | **Design asynchronous/Future-compatible pipeline extension**<br><br>- Investigate feasibility of combining `std::future` / async lambda patterns. | `To Do` | Consider for future versions |
+| **TODO-FP-04** | `MEDIUM` | **Expand C++11 error category trait**<br><br>- Register additional custom error types in `error_traits` template and write conversion unit tests. | `To Do` | Add beyond `osslerror_category` |
 
 ---

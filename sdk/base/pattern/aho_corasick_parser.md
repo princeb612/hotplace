@@ -158,8 +158,8 @@ Aho-Corasick 엔진은 matching되는 즉시 치환하므로, **Specific rule이
 
 ## 7. Gemini Q&A : ruleset 작성 주의점을 전부 나열해 보면..
 
-상향식(Bottom-Up) reduction을 수행하는 **Aho-Corasick 기반 parser/트랜스파일러**에서 ruleset(Grammar Rules)을 정의할 때 반드시 지켜야 할 주의사항을 정리했습니다.
-Aho-Corasick algorithm은 입력 stream에서 pattern을 발견하는 즉시 가장 빨리/가장 길게 matching된 구간을 치환(Reduce)하려는 성질이 있습니다. 따라서 문맥 자유 문법(CFG) 기반의 LALR parser보다 **token 오염 및 충돌 예방**에 훨씬 세심한 rule 설계가 필요합니다.
+* 상향식(Bottom-Up) reduction을 수행하는 **Aho-Corasick 기반 parser/트랜스파일러**에서 ruleset(Grammar Rules)을 정의할 때 반드시 지켜야 할 주의사항을 정리했습니다.
+* Aho-Corasick algorithm은 입력 stream에서 pattern을 발견하는 즉시 가장 빨리/가장 길게 matching된 구간을 치환(Reduce)하려는 성질이 있습니다. 따라서 문맥 자유 문법(CFG) 기반의 LALR parser보다 **token 오염 및 충돌 예방**에 훨씬 세심한 rule 설계가 필요합니다.
 
 ---
 

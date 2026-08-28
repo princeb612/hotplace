@@ -1,44 +1,44 @@
-## OpenSSL module - published by Gemini
+## OpenSSL - published by Gemini
 
 ---
 
-### 1. 개요 및 주요 특징
+### 1. Overview and Key Features
 
-* **module 역할**: OpenSSL library 기반 TLS/DTLS 암호화 session 관리, SSL Context wrapping 및 보안 client/server socket 구현 module.
-* **주요 기능**:
-  * **SSL/TLS Context Management**: SSL_CTX 생성, 인증서/개인키 load 및 SSL option 관리 연산 (`openssl_tls_context.cpp`, `openssl_tls_context_sdk.cpp`).
-  * **TLS & DTLS Socket Abstraction**: OpenSSL 기반 TLS/DTLS client 및 server socket handling 연산 (`openssl_tls_client_socket.cpp`, `openssl_tls_server_socket.cpp`, `openssl_dtls_client_socket.cpp`, `openssl_dtls_server_socket.cpp`).
-  * **Server Socket Adapter**: OpenSSL server socket instance를 기존 network loop에 binding하는 adapter 연산 (`openssl_server_socket_adapter.cpp`).
-  * **OpenSSL Engine Abstraction & SDK**: OpenSSL 공통 pipeline 및 interface wrapping (`openssl_tls.cpp`, `sdk.cpp`).
+* **Module Role**: An OpenSSL library-based TLS/DTLS encrypted session management, SSL Context wrapping, and secure client/server socket implementation module.
+* **Key Features**:
+  * **SSL/TLS Context Management**: Handles `SSL_CTX` creation, certificate/private key loading, and SSL option management operations (`openssl_tls_context.cpp`, `openssl_tls_context_sdk.cpp`).
+  * **TLS & DTLS Socket Abstraction**: OpenSSL-based TLS/DTLS client and server socket handling operations (`openssl_tls_client_socket.cpp`, `openssl_tls_server_socket.cpp`, `openssl_dtls_client_socket.cpp`, `openssl_dtls_server_socket.cpp`).
+  * **Server Socket Adapter**: Binds OpenSSL server socket instances to existing network loops (`openssl_server_socket_adapter.cpp`).
+  * **OpenSSL Engine Abstraction & SDK**: Wraps common OpenSSL pipelines and interfaces (`openssl_tls.cpp`, `sdk.cpp`).
 
 ---
 
-### 2. 핵심 구현 영역 및 기술 요소
+### 2. Core Implementation Areas and Technical Elements
 
 * **SSL Context & Engine Management (`openssl_tls_context.cpp`, `openssl_tls.cpp`)**:
-  * `SSL_CTX` 생명주기 관리, CA 인증서 검증 load 및 C++11 wrapper 객체 관리 연산.
+  * Manages `SSL_CTX` lifecycles, loads CA certificates for verification, and handles C++11 wrapper objects.
 * **TLS Socket Operations (`openssl_tls_client_socket.cpp`, `openssl_tls_server_socket.cpp`)**:
-  * `SSL_connect`, `SSL_accept` 기반 Non-blocking TLS Handshake 및 비동기 Read/Write 연산 처리.
+  * Handles non-blocking TLS handshakes and asynchronous read/write operations based on `SSL_connect` and `SSL_accept`.
 * **DTLS Socket Implementation (`openssl_dtls_client_socket.cpp`, `openssl_dtls_server_socket.cpp`)**:
-  * UDP 기반 Datagram TLS (DTLS) session wrapping 및 Handshake 연산 처리.
+  * Wraps UDP-based Datagram TLS (DTLS) sessions and processes handshake operations.
 * **Server Adapter Integration (`openssl_server_socket_adapter.cpp`)**:
-  * 비동기 server socket 연결 수신 시 OpenSSL SSL session 자동 binding 연산 수행.
+  * Automatically binds OpenSSL SSL sessions upon receiving asynchronous server socket connections.
 
 ---
 
-### 3. 핵심 동작 mechanism
+### 3. Core Operating Mechanism
 
 * **OpenSSL Handshake & Session Flow (`openssl_tls_context.cpp`, `openssl_tls_client_socket.cpp`)**:
-  * `openssl_tls_context` 생성 및 인증서/키 load -> client/server socket binding (`openssl_tls_client_socket` / `openssl_tls_server_socket`) -> `SSL_do_handshake` 호출 및 Handshake 완료 -> 암호화된 stream Read/Write 연산 수행.
+  * Creates `openssl_tls_context` and loads certificates/keys -> Binds client/server sockets (`openssl_tls_client_socket` / `openssl_tls_server_socket`) -> Calls `SSL_do_handshake` and completes handshake -> Executes encrypted stream read/write operations.
 
 ---
 
-### 4. TODO list
+### 4. TODO List Tracker
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **TODO-OSSL-01** | `openssl_tls_client_socket.cpp` 내 Non-blocking `SSL_ERROR_WANT_READ` / `SSL_ERROR_WANT_WRITE` 재시도 handling 보완 | High | 미진행 |
-| **TODO-OSSL-02** | `openssl_tls_context.cpp` 내 인증서 load 실패 및 `SSL_CTX_new` Null Pointer 예외 처리 확인 | High | 미진행 |
-| **TODO-OSSL-03** | `openssl_dtls_server_socket.cpp` 내 DTLS Cookie Exchange 및 Replay Attack 방지 logic 검증 | High | 미진행 |
-| **TODO-OSSL-04** | `openssl_server_socket_adapter.cpp` 내 비동기 session 종료 시 `SSL_free` / `SSL_shutdown` 메모리 leak 확인 | Medium | 미진행 |
-| **TODO-OSSL-05** | `openssl_tls.cpp` 내 ALPN (Application-Layer Protocol Negotiation) protocol 선택 연산 유효성 검토 | Low | 미진행 |
+| **TODO-OSSL-01** | Supplement retry handling for non-blocking `SSL_ERROR_WANT_READ` / `SSL_ERROR_WANT_WRITE` in `openssl_tls_client_socket.cpp`<br> | High | Open |
+| **TODO-OSSL-02** | Verify exception handling for certificate loading failures and null pointers from `SSL_CTX_new` in `openssl_tls_context.cpp`<br> | High | Open |
+| **TODO-OSSL-03** | Verify DTLS Cookie Exchange and replay attack prevention logic in `openssl_dtls_server_socket.cpp`<br> | High | Open |
+| **TODO-OSSL-04** | Check for memory leaks during `SSL_free` / `SSL_shutdown` upon asynchronous session termination in `openssl_server_socket_adapter.cpp`<br> | Medium | Open |
+| **TODO-OSSL-05** | Verify ALPN (Application-Layer Protocol Negotiation) protocol selection operations in `openssl_tls.cpp`<br> | Low | Open |

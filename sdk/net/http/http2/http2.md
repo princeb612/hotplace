@@ -1,47 +1,47 @@
-## HTTP/2 frame 및 session pipeline module - published by Gemini
+## HTTP/2 Frame & Session Pipeline - published by Gemini
 
 ---
 
-### 1. 개요 및 주요 특징
+### 1. Overview and Key Features
 
-* **module 역할**: RFC 7540 규격 기반 HTTP/2 binary frame 생성/parsing, session multiplexing 및 server push 제어 module.
-* **주요 기능**:
-  * **HTTP/2 Frame 직렬화/역직렬화**: DATA, HEADERS, PRIORITY, RST_STREAM, SETTINGS, PUSH_PROMISE, PING, GOAWAY, WINDOW_UPDATE, CONTINUATION, ALT_SVC frame handling (`http2_frame*.cpp`).
-  * **Frame Builder facade**: builder pattern 기반 frame header 및 바이트 payload 조립 (`http2_frame_builder.cpp`, `http2_frame_builder.hpp`).
-  * **HTTP/2 Session & Stream multiplexing**: 단일 TCP 연결 상에서 stream life-cycle 및 flow control 제어 (`http2_session.cpp`, `http2_session.hpp`).
-  * **Server Push 제어**: PUSH_PROMISE frame 연동 및 서브 resource 자원 push pipeline 연산 (`http2_serverpush.cpp`, `http2_serverpush.hpp`).
+* **Module Role**: An HTTP/2 binary frame generation/parsing, session multiplexing, and server push control module based on RFC 7540 specifications.
+* **Key Features**:
+  * **HTTP/2 Frame Serialization/Deserialization**: Handles DATA, HEADERS, PRIORITY, RST_STREAM, SETTINGS, PUSH_PROMISE, PING, GOAWAY, WINDOW_UPDATE, CONTINUATION, and ALT_SVC frames (`http2_frame*.cpp`).
+  * **Frame Builder Facade**: Assembles frame headers and byte payloads using the builder pattern (`http2_frame_builder.cpp`, `http2_frame_builder.hpp`).
+  * **HTTP/2 Session & Stream Multiplexing**: Manages stream lifecycles and flow control over a single TCP connection (`http2_session.cpp`, `http2_session.hpp`).
+  * **Server Push Control**: Integrates PUSH_PROMISE frames and handles sub-resource push pipelines (`http2_serverpush.cpp`, `http2_serverpush.hpp`).
 
 ---
 
-### 2. 핵심 구현 영역 및 기술 요소
+### 2. Core Implementation Areas and Technical Elements
 
-* **binary Frame Header 및 Type-Specific Parsing (`http2_frame.cpp`, `http2_frame_*.cpp`)**:
-  * 9바이트 공통 frame header (Length, Type, Flags, Stream ID) parsing 연산.
-  * 각 frame type별 payload decoding 및 Flag (END_STREAM, END_HEADERS, ACK 등) 상태 검증.
+* **Binary Frame Header and Type-Specific Parsing (`http2_frame.cpp`, `http2_frame_*.cpp`)**:
+  * Parses the 9-byte common frame header (Length, Type, Flags, Stream ID).
+  * Decodes payloads per frame type and validates flag states (END_STREAM, END_HEADERS, ACK, etc.).
 * **HTTP/2 Session Management (`http2_session.cpp`)**:
-  * Connection Preface (`PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n`) 검증 및 session 초기화.
-  * Multi-stream 상태 추적, SETTINGS Exchange 및 Stream Flow Control (WINDOW_UPDATE) 관리.
+  * Validates the Connection Preface (`PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n`) and initializes sessions.
+  * Tracks multi-stream states, manages SETTINGS exchanges, and handles Stream Flow Control (WINDOW_UPDATE).
 * **Server Push & Protocol Handling (`http2_serverpush.cpp`, `http2_protocol.cpp`)**:
-  * client 요청 기반 약속된 response stream 생성 및 PUSH_PROMISE frame encoding.
+  * Generates promised response streams based on client requests and encodes PUSH_PROMISE frames.
 
 ---
 
-### 3. 핵심 동작 mechanism
+### 3. Core Operating Mechanism
 
 * **Frame Parsing & Dispatch Flow (`http2_session.cpp`, `http2_frame_builder.cpp`)**:
-  * 수신 바이트 stream parsing -> 9바이트 Frame Header 읽기 -> Type에 해당하는 `http2_frame_*` 객체 생성 -> `http2_session` steering dispatch.
-  * HEADERS / CONTINUATION frame 수신 시 hpack_encoder 및 hpack_dynamic_table pipeline으로 Header Block Fragment를 전달하여 압축 해제 연산 수행
+  * Parses incoming byte stream -> Reads 9-byte Frame Header -> Creates corresponding `http2_frame_*` object based on Type -> Dispatches to `http2_session` steering pipeline.
+  * Upon receiving HEADERS / CONTINUATION frames, forwards Header Block Fragments to the `hpack_encoder` and `hpack_dynamic_table` pipeline to perform decompression operations.
 * **Stream Flow Control & Window Management (`http2_frame_window_update.cpp`)**:
-  * stream 및 Connection 수준의 수신 Window 크기 monitoring -> 바이트 소비 시 WINDOW_UPDATE frame 전송.
+  * Monitors receive window sizes at both stream and connection levels -> Transmits WINDOW_UPDATE frames as bytes are consumed.
 
 ---
 
-### 4. TODO list
+### 4. TODO List Tracker
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **TODO-H2-01** | `http2_session.cpp` 내 Client Connection Preface 검증 실패 시 GOAWAY 처리 보완 | High | 미진행 |
-| **TODO-H2-02** | `http2_frame_headers.cpp` 내 CONTINUATION frame interleaving 발생 시 Protocol Error 처리 강화 | High | 미진행 |
-| **TODO-H2-03** | `http2_frame_window_update.cpp` 내 Flow Control Window Overflow 검증 | Medium | 미진행 |
-| **TODO-H2-04** | `http2_serverpush.cpp` 내 Push Stream ID 할당 규칙 (짝수 Stream ID) 준수 여부 확인 | Medium | 미진행 |
-| **TODO-H2-05** | `http2_frame_settings.cpp` 내 SETTINGS ACK 수신 timer Timeout handling 적용 검토 | Low | 미진행 |
+| **TODO-H2-01** | Supplement GOAWAY processing upon Client Connection Preface validation failure in `http2_session.cpp`<br> | High | Open |
+| **TODO-H2-02** | Strengthen protocol error handling when CONTINUATION frame interleaving occurs in `http2_frame_headers.cpp`<br> | High | Open |
+| **TODO-H2-03** | Verify flow control window overflow conditions in `http2_frame_window_update.cpp`<br> | Medium | Open |
+| **TODO-H2-04** | Verify compliance with Push Stream ID allocation rules (even-numbered Stream IDs) in `http2_serverpush.cpp`<br> | Medium | Open |
+| **TODO-H2-05** | Review applying timeout handling timers for SETTINGS ACK receipts in `http2_frame_settings.cpp`<br> | Low | Open |

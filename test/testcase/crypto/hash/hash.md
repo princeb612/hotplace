@@ -1,42 +1,42 @@
-## Hash & HMAC / OTP Engine Test Suite - published by Gemini
+## Hash & HMAC / OTP - published by Gemini
 
 ---
 
-### 1. 개요 및 주요 특징
+### 1. Overview and Key Features
 
-* **module 역할**: Hash 함수, HMAC 및 OTP (HOTP/TOTP), Transcript Hash 연산의 unit test 및 표준 RFC Test Vector 검증 module (`hash/`).
-* **주요 기능**:
-  * **OpenSSL Hash Engine Verification**: OpenSSL wrapper 기반 hash 연산 동작 검증 (`testcase_openssl_hash.cpp`).
-  * **Standard RFC Test Vector Parsing**: RFC 4226 (HOTP), RFC 4231 (HMAC-SHA-224/256/384/512), RFC 4493 (AES-CMAC), RFC 6238 (TOTP) 규격 검증 (`testcase_rfc4226.cpp`, `testcase_rfc4231.cpp`, `testcase_rfc4493.cpp`, `testcase_rfc6238.cpp`).
-  * **Handshake Transcript Hash Verification**: TLS/QUIC handshake 과정에서 사용하는 Transcript Hash 연산 검증 (`testcase_transcript_hash.cpp`).
+* **Module Role**: A unit test and standard RFC Test Vector verification module for Hash functions, HMAC, OTP (HOTP/TOTP), and Transcript Hash operations (`hash/`).
+* **Key Features**:
+  * **OpenSSL Hash Engine Verification**: Verifies hash operations based on OpenSSL wrapper integration (`testcase_openssl_hash.cpp`).
+  * **Standard RFC Test Vector Parsing**: Verifies compliance with RFC 4226 (HOTP), RFC 4231 (HMAC-SHA-224/256/384/512), RFC 4493 (AES-CMAC), and RFC 6238 (TOTP) specifications (`testcase_rfc4226.cpp`, `testcase_rfc4231.cpp`, `testcase_rfc4493.cpp`, `testcase_rfc6238.cpp`).
+  * **Handshake Transcript Hash Verification**: Verifies Transcript Hash operations used during TLS/QUIC handshake processes (`testcase_transcript_hash.cpp`).
 
 ---
 
-### 2. 핵심 구현 영역 및 기술 요소
+### 2. Core Implementation Areas and Technical Elements
 
 * **OpenSSL & Transcript Hash Testcases (`testcase_openssl_hash.cpp`, `testcase_transcript_hash.cpp`)**:
-  * OpenSSL 기반 SHA-2 / SHA-3 hash 연산 및 Digest 누적 연산 검증.
-  * TLS 1.3 Handshake message 누적에 따른 Transcript Hash 업데이트 및 Digest 추출 연산 확인.
+  * Verifies OpenSSL-based SHA-2 / SHA-3 hash operations and digest accumulation.
+  * Verifies Transcript Hash updates and digest extraction operations as TLS 1.3 handshake messages accumulate.
 * **RFC Standard Testcases (`testcase_rfc*.cpp`)**:
-  * **RFC 4226 (HOTP)**: HMAC-SHA-1 기반 Event-based OTP 생성 및 Truncation 연산 테스트.
-  * **RFC 4231 (HMAC)**: HMAC-SHA-224/256/384/512 표준 키/입력 데이터 test vector parsing 및 검증.
-  * **RFC 4493 (AES-CMAC)**: AES-128 기반 Cipher-based MAC 연산 및 Subkey 생성 검증.
-  * **RFC 6238 (TOTP)**: Time-based OTP 생성 및 시간 스텝 단위 token parsing 테스트.
+  * **RFC 4226 (HOTP)**: Tests HMAC-SHA-1-based event-based OTP generation and truncation operations.
+  * **RFC 4231 (HMAC)**: Parses and verifies standard key/input data test vectors for HMAC-SHA-224/256/384/512.
+  * **RFC 4493 (AES-CMAC)**: Verifies AES-128-based Cipher-based MAC operations and subkey generation.
+  * **RFC 6238 (TOTP)**: Tests Time-based OTP generation and token parsing per time step.
 
 ---
 
-### 3. 핵심 동작 mechanism
+### 3. Core Operating Mechanism
 
 * **Hash & OTP Verification Flow (`testcase_rfc*.cpp`)**:
-  * RFC Known Input 주입 -> Hash / HMAC / CMAC / OTP 연산 수행 -> Known Output 과 결과 byte-by-byte comparison 연산 수행.
+  * Injects RFC Known Inputs $\rightarrow$ Executes Hash / HMAC / CMAC / OTP operations $\rightarrow$ Performs byte-by-byte comparison operations between results and Known Outputs.
 
 ---
 
-### 4. TODO list
+### 4. TODO List Tracker
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **TODO-CH-01** | `testcase_transcript_hash.cpp` 내 TLS 1.3 Handshake Context Reset 시 Memory Corruption 예외 처리 검증 | High | 미진행 |
-| **TODO-CH-02** | `testcase_rfc6238.cpp` 내 32-bit time_t Overflow (Year 2038 Problem) 예외 처리 확인 | High | 미진행 |
-| **TODO-CH-03** | `testcase_rfc4493.cpp` 내 AES-CMAC Invalid Key Size 입력 시 Boundary Check 보완 | Medium | 미진행 |
-| **TODO-CH-04** | `testcase_openssl_hash.cpp` 내 EVP_MD_CTX 생명주기 관리 시 Resource Leak 여부 static analysis 검증 | Low | 미진행 |
+| **TODO-CH-01** | Verify memory corruption exception handling upon TLS 1.3 Handshake Context Reset in `testcase_transcript_hash.cpp` | High | Open |
+| **TODO-CH-02** | Verify 32-bit `time_t` overflow (Year 2038 Problem) exception handling in `testcase_rfc6238.cpp` | High | Open |
+| **TODO-CH-03** | Supplement boundary checks for invalid key size inputs in `testcase_rfc4493.cpp` (AES-CMAC) | Medium | Open |
+| **TODO-CH-04** | Perform static analysis verification for resource leaks during `EVP_MD_CTX` lifecycle management in `testcase_openssl_hash.cpp` | Low | Open |

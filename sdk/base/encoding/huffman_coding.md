@@ -1,19 +1,28 @@
-## huffman coding module (`huffman_coding`) - published by Gemini
+# Huffman Coding (`huffman_coding`) - published by Gemini
+
+## 1. Overview & Key Features
+
+The `huffman_coding` module is a C++11 Huffman Encoding/Decoding processing module designed to support general data compression/restoration and HTTP/2 HPACK (RFC 7541) header compression mechanisms.
+
+* **Dynamic Learning & Inference (Learn/Infer)**: Dynamic Huffman Tree and code generation by tracking symbol byte frequencies within the input stream.
+* **Pre-Defined Table Loading (Imports)**: Flexible loading of pre-defined Huffman Code tables, including the RFC 7541 static table standard.
+* **Bit-Level Encoding/Decoding**: High-speed bitstream processing leveraging a dedicated encoding cache array (`_encode_cache`) combined with a prefix search trie structure (`_trie`).
+* **C++11 Metaprogramming Optimization**: Applies SFINAE template control via `std::enable_if`, lambda expressions, and Fluent Interface patterns.
 
 ---
 
-### 1. 개요 및 주요 특징
+## 2. Key Implementation Areas & Technical Elements
 
-* **module 역할**: 데이터 압축 및 복원, HPACK(RFC 7541) 기반 HTTP/2 header 압축용 huffman encoding/decoding 처리 module.
-* **주요 기능**:
-  * **자동 학습 (Learn/Infer)**: stream 내 바이트 빈도수를 측정하여 huffman tree를 동적으로 생성 및 code 생성.
-  * **사전 정의 code loading (Imports)**: RFC 7541 표준 등의 고정 huffman table 지원.
-  * **비트 단위 encoding/decoding**: 캐시 구조체(`_encode_cache`) 및 트라이(`t_trie`) 구조를 활용한 비트 stream 처리.
-* **C++11 특징**: `std::enable_if` 기반 template metaprogramming(SFINAE), lambda 함수 사용.
+* **Fast Lookup Encoding Cache**: Pre-calculates bit codes (`bit_code`) and bit lengths (`bit_len`) for encoding target symbols (0–256) into a 256-entry cache table (`_encode_cache`) to significantly boost lookup speeds.
+* **Trie-based Prefix Scan Decoding**: Converts incoming byte streams sequentially into bit characters while performing prefix matching through the `t_trie<char>` trie data structure for rapid restoration to original symbols.
+* **RFC 7541 EOS Padding Enforcement**: Strictly enforces padding logic that fills residual bit space with MSB '1' bits upon encoding completion, aligning with specifications defining minimum code length as 5 bits or more.
+* **Expected Size Calculator**: Provides an `expect()` API to scan original input data prior to stream encoding to predict final compressed byte sizes in advance.
 
 ---
 
-### 2. 주요 class 구성 및 데이터 구조
+## 3. Major Data Structures, Classes & API Reference
+
+### `huffman_coding` Class Declaration
 
 ```cpp
 namespace hotplace {
@@ -27,20 +36,20 @@ class huffman_coding {
 
     void reset();
 
-    // 동적 빈도 기반 huffman code 생성 (Fluent Interface)
+    // Dynamic frequency-based huffman code generation (Fluent Interface)
     huffman_coding& operator<<(const char* s);
     huffman_coding& load(const char* s);
     huffman_coding& learn();
     huffman_coding& infer();
 
-    // 사전 정의 table loading
+    // Pre-defined table loading
     huffman_coding& imports(const hc_code_t* table);
     huffman_coding& imports(const std::map<uint8, std::string>& m);
 
-    // 예상 압축 크기 계산 (Byte 단위)
+    // Expected compressed size calculation (in Bytes)
     return_t expect(const byte_t* source, size_t size, size_t& size_expected) const;
 
-    // encoding / decoding template method
+    // Encoding / decoding template methods
     template <typename T, ...>
     return_t encode(T& streambuf, const byte_t* source, size_t size, bool usepad = true) const;
 
@@ -53,35 +62,73 @@ class huffman_coding {
         uint8 bit_len;
     };
 
-    measure_tree_t _measure;     // 심볼별 빈도수 측정
-    btree_t _btree;               // 가중치 기준 트리 병합
+    measure_tree_t _measure;     // Symbol frequency measurement
+    btree_t _btree;               // Weight-based tree merging
     codetable_t _codetable;       // Sym -> Bit String mapping
-    t_trie<char> _trie;           // decoding용 Prefix Scan Trie
-    encode_cache_t _encode_cache[256 + 1]; // encoding 고속화 캐시
+    t_trie<char> _trie;           // Prefix Scan Trie for decoding
+    encode_cache_t _encode_cache[256 + 1]; // Encoding speedup cache
 };
 
 }  // namespace hotplace
 ```
+[cite: 15]
 
 ---
 
-### 3. 핵심 동작 mechanism
+## 4. Operational Principles[cite: 15]
 
-* **encoding 처리 (`encode`)**:
-  * `_encode_cache` 배열을 참조하여 `sym`에 대응하는 `bit_code`와 `bit_len`을 획득.
-  * 비트 연산을 통해 8비트(1 바이트) 단위로 packing 후 stream buffer에 push.
-  * EOS padding 처리: 최소 code 길이가 5비트 이상인 경우 RFC 7541 표준 규격(MSB 1 채움)에 맞춰 padding 적용.
-* **decoding 처리 (`decode` / `decoding`)**:
-  * 바이트 stream을 비트 문자열(`'0'`, `'1'`) 형태로 전환하며 queue(`que`)에 축적.
-  * Prefix 탐색에 최적화된 트라이 자료구조(`_trie.scan`)를 이용해 matching되는 심볼을 직렬 추출.
+1. **Dynamic Learning & Encoding Process (`learn` / `encode`)**:
+   * Parses input text to record symbol frequencies in `_measure`, merging weight-based trees to construct `btree_t` and `_codetable`[cite: 15].
+   * Upon calling `encode`, references the `_encode_cache` array to perform bitwise operations and bit-packs into 8-bit (1-byte) units before pushing to the output stream buffer[cite: 15].
+2. **Trie-Based Decoding Process (`decode`)**:
+   * Accumulates incoming byte streams into a bit-level queue (`que`)[cite: 15].
+   * Continuously emits matched original symbols using `_trie.scan`, a trie data structure optimized for prefix scanning[cite: 15].
+3. **Termination Padding Control**:
+   * Applies RFC 7541 padding bit rules based on the `usepad` option for trailing unaligned bits during encoding finalization[cite: 15].
 
 ---
 
-### 4. TODO list
+## 5. Usage Example (C++11 Standard)[cite: 15]
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
-| --- | --- | --- | --- |
-| **TODO-HC-01** | `encode` loop 내 1비트 단위 전송을 bit shift 기반 buffer링으로 최적화 (성능 개선) | High | 미진행 |
-| **TODO-HC-02** | `decoding` 과정의 `std::string que` 문자열 기반 비트 queue를 정수형 비트 buffer 방식으로 refactoring | High | 미진행 |
-| **TODO-HC-03** | RFC 7541 Appendix B 정적 huffman code에 대한 대용량 stream 단위 테스트 추가 | Medium | 진행 중 |
-| **TODO-HC-04** | C++11 `constexpr` 활용 가능한 encoding table compile-time 생성 검토 | Low | 미진행 |
+```cpp
+#include <iostream>
+#include <hotplace/sdk/base/basic/huffman_coding.hpp>
+
+int main() {
+    using namespace hotplace;
+
+    huffman_coding hc;
+
+    // 1. Train frequency and infer codes from input string (Fluent Interface)
+    std::string sample_data = "hello hotplace huffman stream";
+    hc << sample_data.c_str();
+    hc.learn().infer();
+
+    // 2. Perform compression (encode)
+    basic_stream encoded_stream;
+    hc.encode(encoded_stream, (const byte_t*)sample_data.data(), sample_data.size());
+
+    // 3. Perform restoration (decode)
+    basic_stream decoded_stream;
+    hc.decode(decoded_stream, (const byte_t*)encoded_stream.data(), encoded_stream.size());
+
+    std::string result((const char*)decoded_stream.data(), decoded_stream.size());
+    std::cout << "Decoded Result: " << result << std::endl;
+
+    return 0;
+}
+
+```
+
+---
+
+## 6. TODO List
+
+| ID | Priority | Task Description | Status | Remarks |
+| --- | --- | --- | --- | --- |
+| **TODO-HC-01** | `HIGH` | **Optimize Bit Packing Buffering via Bit Shift**<br><br>- Refactor 1-bit transfer logic inside `encode` loop to bit shift-based buffering for performance improvement | `Postponed` | Not started |
+| **TODO-HC-02** | `HIGH` | **Refactor Decoding Queue to Integer Bit Buffer**<br><br>- Convert `std::string que` bit queue in `decoding` process to integer bit buffer mechanism | `Postponed` | Not started |
+| **TODO-HC-03** | `MEDIUM` | **Add RFC 7541 Static Code Large Stream Tests**<br><br>- Expand unit test cases for large streams using RFC 7541 Appendix B static Huffman Code table | `In Progress` | In progress |
+| **TODO-HC-04** | `LOW` | **Review C++11 `constexpr` Compile-Time Encoding Table Generation**<br><br>- Investigate compile-time constant creation of Huffman encoding tables using `constexpr` | `Postponed` | Not started |
+
+---

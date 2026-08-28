@@ -8,7 +8,7 @@
   * [study] CBOR/COSE (RFC 7049, 8949, 8152)
 
 * understanding
-  * Revision 1031-
+  * Revision 1032-
     * ASN.1 runtime
   * Revision 927-933 (Tag 1.92, Revision 957)
     * MSVC environment (beta status) - application verifier (basics)

@@ -30,7 +30,7 @@
     * [aho_corasick](sdk/base/pattern/aho_corasick.md)
     * [aho_corasick_parser](sdk/base/pattern/aho_corasick_parser.md)
     * [trie](sdk/base/pattern/trie.md)
-    * [obfuscate](sdk/base/string/obfuscate.md]
+    * [obfuscate](sdk/base/string/obfuscate.md)
   * io
     * [README](sdk/io/README.md)
     * [ASN.1](sdk/io/asn.1/basic/README.md)
@@ -73,9 +73,9 @@
     * [trial](sdk/net/basic/trial/trial.md)
     * [ipaddr_acl](sdk/net/basic/ipaddr/ipaddr_acl.md)
     * [TLS](sdk/net/tls/tls.md)
-    * [dtls_record_publisher](sdk/net/tls/dtls_record_publisher.md]
-    * [quic_packet_publisher](sdk/net/tls/quic_packet_publisher.md]
-    * [sslkeylog](sdk/net/tls/sslkeylog.md]
+    * [dtls_record_publisher](sdk/net/tls/dtls_record_publisher.md)
+    * [quic_packet_publisher](sdk/net/tls/quic_packet_publisher.md)
+    * [sslkeylog](sdk/net/tls/sslkeylog.md)
     * [HTTP](sdk/net/http/http.md)
     * [auth](sdk/net/http/auth/auth.md)
     * [HPACK](sdk/net/http/hpack/hpack.md)

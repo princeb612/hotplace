@@ -1,23 +1,29 @@
 # `t_cmdline_t` & `t_cmdarg_t` - published by Gemini
 
-## 1. 개요 및 설계 목적 (Overview & Design Pattern)
+## 1. Overview & Key Features
 
-`cmdline.hpp` module은 Command Line Arguments parsing을 타입 안전(Type-safe)하고 직관적으로 처리하기 위해 설계된 C++11 template 기반 parser
+The `cmdline.hpp` module is a C++11 template-based parser designed to handle Command Line Arguments in a type-safe and intuitive manner.
 
-### 주요 특징
-
-1. **커스텀 option 구조체 연동**: 구조체/class template(`T`)을 type parameter로 받아, parsing 결과를 해당 구조체 객체에 직접 binding
-2. **Fluent Interface & Move Semantics**: `<<` 연산자와 이동 생성자/이동 대입 연산자(Move Semantics)를 통해 option 등록을 chaining 방식으로 명확하게 작성할 수 있음
-3. **선택적/필수 및 값 동반 flag 제어**:
-  * `preced()`: 인자 뒤에 값이 반드시 따라오는 option (예: `-in FILENAME`).
-  * `optional()`: 생략 가능한 option (설정하지 않으면 필수 option으로 지정됨).
-4. **ANSI 색상 지원 Help 출력**: 필수 항목과 parsing 여부를 구분하여 terminal 화면에 시각적으로 guide(`help()`)를 제공.
+* **Custom Option Structure Binding**: Takes a custom struct/class template (`T`) as a type parameter and directly binds the parsing results to an instance of that type.
+* **Fluent Interface & Move Semantics**: Leverages the `<<` operator along with move constructors and move assignment operators to enable clear, chained option registration.
+* **Optional/Required & Parameter Flag Control**:
+  * `preced()`: Specifies an option that must be followed by a value parameter (e.g., `-in FILENAME`).
+  * `optional()`: Specifies an optional parameter (options are treated as required by default if not set).
+* **ANSI Color-Supported Help Output**: Provides visual guidance (`help()`) on the terminal screen by distinguishing required options and parsing statuses.
 
 ---
 
-## 2. 핵심 class 및 API 구조 분석 (API Reference)
+## 2. Key Implementation Areas & Technical Elements
 
-### flag 정의
+* **Move Semantics-Based Chaining**: Actively utilizes `rvalue` references and move semantics to prevent unnecessary copying during option object creation and registration, enabling a Fluent Interface.
+* **Callback Binding**: Binds execution logic for each parsed argument using `std::function` lambda expressions, decoupling the parser from user-defined data structures.
+* **Strict Validation**: Validates missing mandatory options, duplicate token registrations, and missing trailing values (`preced`) during the parsing phase, returning error codes accordingly.
+
+---
+
+## 3. Major Data Structures, Classes & API Reference
+
+### Flag Definitions
 
 ```cpp
 enum cmdline_flag_t : uint32 {
@@ -27,25 +33,33 @@ enum cmdline_flag_t : uint32 {
 
 ```
 
-### 주요 class 및 method
+### Core Classes & Methods
 
-| class / method | 역할 및 기능 |
+| Class / Method | Description & Functionality |
 | --- | --- |
-| **`t_cmdarg_t<T>`** | 개별 command line option 정의 class. |
-| `t_cmdarg_t(token, desc, func)` | option token명, 설명, binding callback lambda(`std::function`)를 등록함. |
-| `.preced()` | 인자가 후속 값(value)을 요구함을 지정. (`lvalue` / `rvalue` method chaining 지원). |
-| `.optional()` | option을 선택 사항으로 지정. (지정하지 않을 경우 필수 option으로 취급). |
-| **`t_cmdline_t<T>`** | option 모음 관리 및 parsing 수행 class. |
-| `operator<<(t_cmdarg_t&&)` | option 객체를 이동 생성으로 등록함 (중복 token 발생 시 예외 던짐). |
-| `parse(argc, argv)` | command line 인자를 순회하며 등록된 lambda를 호출하고 필수 option 누락 여부를 검증함. |
-| `value()` | parsing 결과가 담긴 타입 `T` 객체의 상수 참조 반환. |
-| `help()` | 등록된 option 목록 및 도움말을 formatted text로 출력. |
+| **`t_cmdarg_t<T>`** | Class defining an individual command line option. |
+| `t_cmdarg_t(token, desc, func)` | Registers option token name, description, and binding callback lambda (`std::function`). |
+| `.preced()` | Specifies that the argument requires a subsequent value parameter. (Supports `lvalue` / `rvalue` method chaining). |
+| `.optional()` | Marks the option as optional. (Treated as mandatory if not invoked). |
+| **`t_cmdline_t<T>`** | Class managing the option collection and executing parsing. |
+| `operator<<(t_cmdarg_t&&)` | Registers an option object via move construction (throws an exception on duplicate tokens). |
+| `parse(argc, argv)` | Iterates through command line arguments, invokes registered lambdas, and verifies missing required options. |
+| `value()` | Returns a constant reference to the parsed result object of type `T`. |
+| `help()` | Outputs registered option list and help text as formatted text. |
 
 ---
 
-## 3. C++11 기반 실습 code (C++11 Example Usage)
+## 4. Operational Principles
 
-`C++11` 규격에 준수
+1. **Option Registration Phase**: Registers `t_cmdarg_t` instances into the parser object (`t_cmdline_t`) using `operator<<`. Custom lambda callbacks and flags are stored by token in an internal container/map.
+2. **Parsing & Traversal Phase (`parse`)**: Iterates through `argc` and `argv` to verify matching tokens.
+  * If the `preced` flag is set, the subsequent token is extracted as a parameter value and passed to the bound lambda callback.
+  * If a required option (without the `optional` flag) is missing from `argv`, a parsing error code is returned.
+3. **Result Collection**: The user-defined structure `T` is populated through callbacks executed during parsing, and the final result can be retrieved via `value()` upon successful parsing.
+
+---
+
+## 5. Usage Example (C++11 Standard)
 
 ```cpp
 #include <iostream>
@@ -109,18 +123,14 @@ int main(int argc, char** argv) {
 
 ---
 
-## 4. 프로그래밍 TODO list 및 우선순위 관리 (TODO List)
+## 6. TODO List
 
-`cmdline.hpp` module의 고도화 및 유지보수를 위한 번호 체계 기반 TODO 항목
-
-### 📌 TODO List Tracker
-
-| ID | 우선순위 | 작업 항목 (Task Description) | 상태 (Status) | 비고 |
+| ID | Priority | Task Description | Status | Remarks |
 | --- | --- | --- | --- | --- |
-| ~~TODO-CL-01~~ | `HIGH` | **GCC 4.8.5 `noexcept = default` 호환성 점검**<br>- header 내 주석 처리된 `GCC 4.8.5 bug` 대응 code 제거 가능 여부 테스트 및 C++11 표준 보완 | `Won't Fix` | 이동 생성자/대입연산자 |
-| ~~TODO-CL-02~~ | `HIGH` | **중복 option 입력 처리 정책 검토**<br>- command line에 동일한 option이 중복 입력되었을 때 덮어쓰기/error return 중 선택 정책 추가 | `Won't Fix` | `parse()` loop 내 처리 |
-| **TODO-CL-03** | `MEDIUM` | **Short/Long option 앨리어싱(Aliasing) 지원**<br>- `-i` / `--input` 형태의 별칭 token binding 기능 지원 검토 | `To Do` | `_args` 맵 구조 개선 |
-| **TODO-CL-04** | `MEDIUM` | **`help()` 함수 출력 포맷 다변화 및 개행 처리 개선**<br>- ANSI escape code 사용 불가 환경(Windows 구버전 등) switch flag 제공 | `To Do` | Console API 연동 |
-| ~~**TODO-CL-05**~~ | `LOW` | **소멸자 및 가상 함수 구조 정리**<br>- `t_cmdline_t` 및 `t_cmdarg_t` class의 상속 여부에 따른 Virtual Destructor 명시 검토 | `Fixed` | final 처리 |
+| ~~TODO-CL-01~~ | `HIGH` | **Inspect GCC 4.8.5 `noexcept = default` compatibility**<br><br>- Test whether workarounds for `GCC 4.8.5 bug` in header comments can be removed and complement C++11 standard compliance. | `Won't Fix` | Move constructor/assignment operator |
+| ~~TODO-CL-02~~ | `HIGH` | **Review duplicate option input handling policy**<br><br>- Add selectable policy between overwrite/error return when duplicate options are passed via command line. | `Won't Fix` | Existing `duplicate` handling is standard policy |
+| **TODO-CL-03** | `MEDIUM` | **Support Short/Long option aliasing**<br><br>- Review supporting alias token binding functionality like `-i` / `--input`. | `To Do` | Refactor `_args` map structure |
+| **TODO-CL-04** | `MEDIUM` | **Diversify `help()` output formatting and improve line break handling**<br><br>- Provide switch flag for environments unable to use ANSI escape codes (e.g., legacy Windows). | `To Do` | Console API integration |
+| ~~**TODO-CL-05**~~ | `LOW` | **Clean up destructor and virtual function structures**<br><br>- Review explicit Virtual Destructor specification based on inheritance of `t_cmdline_t` and `t_cmdarg_t` classes. | `Fixed` | Marked as final |
 
 ---

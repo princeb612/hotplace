@@ -1,42 +1,42 @@
-## 입출력 buffer 및 stream module - published by Gemini
+## Input/Output Buffer & Stream - published by Gemini
 
 ---
 
-### 1. 개요 및 주요 특징
+### 1. Overview and Key Features
 
-* **module 역할**: 메모리 buffer 기반 I/O 연산 및 stream 입출력 parsing 제어 module.
-* **주요 기능**:
-  * **buffer 입출력 처리**: 메모리 buffer Read/Write, buffer 연산 및 바이트 stream parsing (`testcase_bufferio.cpp`).
-  * **stream 제어**: Custom Stream class 구현, stream pipeline 및 바이트 오더 처리 (`testcase_stream.cpp`).
-
----
-
-### 2. 핵심 구현 영역 및 기술 요소
-
-* **메모리 buffer I/O 및 바이트 parsing (`testcase_bufferio.cpp`)**:
-  * 고성능 데이터 처리를 위한 Read/Write pointer 제어 및 buffer Boundary 검증.
-  * overflow/언더플로우 방지용 바이트 레벨 유효성 검사.
-* **stream 데이터 handling 및 pipeline (`testcase_stream.cpp`)**:
-  * stream 기반 직렬화(Serialization) 및 역직렬화(Deserialization) 연산.
-  * 바이트 오더(Byte Order) 변환 및 stream 상태(State) flag 제어.
+* **Module Role**: A module controlling memory buffer-based I/O operations and stream input/output parsing.
+* **Key Features**:
+  * **Buffer I/O Processing**: Performs memory buffer read/write operations, buffer manipulation, and byte stream parsing (`testcase_bufferio.cpp`).
+  * **Stream Control**: Implements custom stream classes, stream pipelines, and byte-order handling (`testcase_stream.cpp`).
 
 ---
 
-### 3. 핵심 동작 mechanism
+### 2. Core Implementation Areas and Technical Elements
+
+* **Memory Buffer I/O and Byte Parsing (`testcase_bufferio.cpp`)**:
+  * Controls read/write pointers and performs buffer boundary validation for high-performance data processing.
+  * Implements byte-level validity checks to prevent overflows and underflows.
+* **Stream Data Handling and Pipeline (`testcase_stream.cpp`)**:
+  * Executes stream-based serialization and deserialization operations.
+  * Handles byte-order conversions and stream state flag controls.
+
+---
+
+### 3. Core Operating Mechanism
 
 * **Buffer I/O Read/Write (`testcase_bufferio.cpp`)**:
-  * buffer 내 데이터를 읽거나 쓸 때 internal offset 위치를 이동시키며 Boundary 조건 검사 연산 수행.
+  * Advances the internal offset position while evaluating boundary conditions when reading from or writing to the buffer.
 * **Stream Pipeline Parsing (`testcase_stream.cpp`)**:
-  * stream buffer에 순차적으로 들어오는 바이트 흐름을 parsing하여 타겟 데이터 타입으로 변환.
+  * Parses incoming sequential byte streams in the stream buffer and converts them into target data types.
 
 ---
 
-### 4. TODO list
+### 4. TODO List Tracker
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **TODO-STREAM-01** | `testcase_bufferio.cpp` 내 선형 buffer Boundary offset 이동 연산 시 OOB(Out of Bounds) 및 Null Pointer 예외 처리 강화 | High | 미진행 |
-| **TODO-STREAM-02** | `testcase_stream.cpp` 대용량 binary stream 읽기 시 EOD(End of Data) 감지 logic 보완 | High | 미진행 |
-| **TODO-STREAM-03** | `testcase_bufferio.cpp` 내 multi-thread 환경 Safe Buffer Access Locking mechanism 확인 | Medium | 미진행 |
-| **TODO-STREAM-04** | `testcase_stream.cpp` floating point 및 가수부 stream 직렬화 유효성 검증 | Medium | 미진행 |
-| **TODO-STREAM-05** | `testcase_bufferio.cpp` Zero-copy Memory Copy 최적화 연산 적용 여부 검토 | Low | 미진행 |
+| **TODO-STREAM-01** | Strengthen Out-of-Bounds (OOB) and null pointer exception handling during linear buffer boundary offset operations in `testcase_bufferio.cpp`<br> | High | Open |
+| **TODO-STREAM-02** | Supplement End of Data (EOD) detection logic when reading large binary streams in `testcase_stream.cpp`<br> | High | Open |
+| **TODO-STREAM-03** | Verify thread-safe buffer access locking mechanisms in multi-threaded environments within `testcase_bufferio.cpp`<br> | Medium | Open |
+| **TODO-STREAM-04** | Validate floating-point and mantissa stream serialization in `testcase_stream.cpp`<br> | Medium | Open |
+| **TODO-STREAM-05** | Review the application of zero-copy memory copy optimization operations in `testcase_bufferio.cpp`<br> | Low | Open |

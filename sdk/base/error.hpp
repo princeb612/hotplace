@@ -332,7 +332,7 @@ enum class error_category_t : uint8 {
 struct return_t {
     uint32 code;
 
-    // 1. 기본 생성자에 constexpr 및 noexcept 추가 (Literal Type 조건 충족)
+    // 1. constexpr, noexcept (Literal Type)
     constexpr return_t() noexcept : code(static_cast<uint32>(errorcode_t::success)) {}
 
     constexpr return_t(uint32 value) noexcept : code(value) {}

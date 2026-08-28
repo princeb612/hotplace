@@ -1,39 +1,39 @@
-## Key Engine Test Suite & Test Vectors - published by Gemini
+# Key - published by Gemini
 
 ---
 
-### 1. 개요 및 주요 특징
+### 1. Overview and Key Features
 
-* **module 역할**: 암호화 키 생성, 비대칭키 algorithm(RSA, DSA, EC, DH, FFDHE, HPKE, ML-KEM), DER encoding 및 Key Exchange 검증을 위한 unit test suite 및 test vector 검증 module (`key/`).
-* **주요 기능**:
-  * **Asymmetric & Post-Quantum Key Testing**: RSA, DSA, EC, DH, FFDHE 및 post-quantum cryptography ML-KEM, HPKE test case 수행 (`testcase_key_rsa.cpp`, `testcase_key_mlkem.cpp`, `testcase_hpke.cpp` 등).
-  * **Key Generation & Key Exchange Verification**: 키 생성 연산 및 DH/ECDH Key Exchange 올바름 검증 (`testcase_keygen.cpp`, `testcase_keyexchange.cpp`).
-  * **Test Vector Validation**: YAML 규격 기반 외부 test vector (RFC 7919 FFDHE 등) load 및 parsing 검증 (`testvector_keygen.cpp`, `testvector_keyshare.cpp`, `testvector_rfc7919.cpp`).
+* **Module Role**: A unit test suite and test vector verification module for cryptographic key generation, asymmetric key algorithms (RSA, DSA, EC, DH, FFDHE, HPKE, ML-KEM), DER encoding, and key exchange verification (`key/`).
+* **Key Features**:
+  * **Asymmetric & Post-Quantum Key Testing**: Executes test cases for RSA, DSA, EC, DH, FFDHE, and post-quantum cryptography (ML-KEM, HPKE) (`testcase_key_rsa.cpp`, `testcase_key_mlkem.cpp`, `testcase_hpke.cpp`, etc.).
+  * **Key Generation & Key Exchange Verification**: Verifies the correctness of key generation operations and DH/ECDH key exchanges (`testcase_keygen.cpp`, `testcase_keyexchange.cpp`).
+  * **Test Vector Validation**: Loads, parses, and verifies external YAML-based test vectors, including RFC 7919 FFDHE (`testvector_keygen.cpp`, `testvector_keyshare.cpp`, `testvector_rfc7919.cpp`).
 
 ---
 
-### 2. 핵심 구현 영역 및 기술 요소
+### 2. Core Implementation Areas and Technical Elements
 
 * **Algorithm Specific Testcases (`testcase_*.cpp`)**:
-  * **RSA / DSA / EC / DH / FFDHE**: 비대칭 키 생성, parameter 유효성 검증 및 DER encoding/decoding 연산 테스트 (`testcase_der.cpp`, `testcase_curves.cpp`).
-  * **HPKE / ML-KEM**: C++11 기반 Hybrid Public Key Encryption 및 PQC (Post-Quantum Cryptography) ML-KEM algorithm 검증 (`testcase_hpke.cpp`, `testcase_key_mlkem.cpp`).
+  * **RSA / DSA / EC / DH / FFDHE**: Tests asymmetric key generation, parameter validation, and DER encoding/decoding operations (`testcase_der.cpp`, `testcase_curves.cpp`).
+  * **HPKE / ML-KEM**: Verifies C++11-based Hybrid Public Key Encryption and PQC (Post-Quantum Cryptography) ML-KEM algorithms (`testcase_hpke.cpp`, `testcase_key_mlkem.cpp`).
 * **Test Vector Engine (`testvector_*.cpp`, `*.yml`)**:
-  * YAML 파일 (`testvector_keygen.yml`, `testvector_keyshare.yml`, `testvector_rfc7919.yml`) 기반 Known Answer Test (KAT) 데이터 parsing 및 연산 비교 검증.
+  * Parses Known Answer Test (KAT) data from YAML files (`testvector_keygen.yml`, `testvector_keyshare.yml`, `testvector_rfc7919.yml`) and executes comparison verification.
 
 ---
 
-### 3. 핵심 동작 mechanism
+### 3. Core Operating Mechanism
 
 * **Test Vector Execution Flow (`testvector_*.cpp`)**:
-  * YAML test vector load 및 parsing -> Known input (Seed, Private Key 등) 주입 -> Crypto Key Module 연산 수행 -> Known output (Public Key, Shared Secret) 과 결과 byte-by-byte comparison 연산 수행.
+  * Loads and parses YAML test vectors $\rightarrow$ Injects known inputs (Seed, Private Key, etc.) $\rightarrow$ Performs Crypto Key Module operations $\rightarrow$ Executes byte-by-byte comparison operations to ensure results match known outputs (Public Key, Shared Secret).
 
 ---
 
-### 4. TODO list
+### 4. TODO List Tracker
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **TODO-CK-01** | `testcase_key_mlkem.cpp` 내 PQC ML-KEM algorithm 연산 시 memory boundary 및 secret key leakage 검증 | High | 미진행 |
-| **TODO-CK-02** | `testvector_rfc7919.cpp` 내 RFC 7919 FFDHE group parameters parsing 연산 예외 처리 보완 | High | 미진행 |
-| **TODO-CK-03** | `testcase_hpke.cpp` 내 Single-shot 및 Export-only HPKE mode testcase 추가 작성 | Medium | 미진행 |
-| **TODO-CK-04** | `testvector_keyshare.cpp` 내 YAML deserialization 시 malformed YAML input 에 대한 validation 강화 | Low | 미진행 |
+| **TODO-CK-01** | Verify memory boundary safety and secret key leakage during PQC ML-KEM algorithm operations in `testcase_key_mlkem.cpp`<br> | High | Open |
+| **TODO-CK-02** | Supplement exception handling during parsing of RFC 7919 FFDHE group parameters in `testvector_rfc7919.cpp`<br> | High | Open |
+| **TODO-CK-03** | Write additional test cases for Single-shot and Export-only HPKE modes in `testcase_hpke.cpp`<br> | Medium | Open |
+| **TODO-CK-04** | Strengthen validation against malformed YAML inputs during YAML deserialization in `testvector_keyshare.cpp`<br> | Low | Open |

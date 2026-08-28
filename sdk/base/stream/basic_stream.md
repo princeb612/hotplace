@@ -1,90 +1,94 @@
-# `basic_stream` 및 `bufferio` framework - published by Gemini
-
-## 1. 개요 및 설계 목적 (Overview & Design Pattern)
-
-`basic_stream` module은 내부 데이터 chunk(Chunk) 관리 layer인 `bufferio`와 타입 처리 layer인 `traits_printf`를 결합하여 만든 동적 stream buffer class
-C++ 표준 `std::stringstream`의 입출력 가용성과 C style buffer 처리의 메모리/속도 효율성을 동시에 제공
-
-### 주요 특징
-
-1. **분할 chunk 기반 동적 메모리 관리 (`bufferio`)**:
-  * chunk list(`bufferin_queue_t`) 방식으로 데이터를 할당하여 잦은 `realloc` overhead 최소화.
-  * 읽기 요청(`c_str()`, `data()`) 시 단일 연통 메모리로 자동 재구성(Flattening).
-2. **타입 trait 기반 Printf pipeline (`printf_traits`)**:
-  * 정수, 열거형(enum), 실수 타입을 metaprogramming으로 자동 추상화하여 format string(`%d`, `%u`, `%f` 등) mapping.
-  * 복잡한 SFINAE 조건문을 `printf_traits`로 단일화하여 유지보수성 향상.
-3. **강한 예외 보장 (Strong Exception Guarantee)**:
-  * 복사 대입 연산자(`operator=`)에 Copy-and-Swap 관용구 적용.
-4. **stream 커스텀 확장성 (`encoder_stream_traits`)**:
-  * `custom::encoder_stream_traits<basic_stream>` 특수화를 통해 외부 encoder/decoder algorithm과 직접 결합 가능.
+제공해주신 `basic_stream` 및 `bufferio` 문서 [source: 6]를 영문으로 변환하였습니다.
 
 ---
 
-## 2. 핵심 class 및 구조 분석 (API Reference)
+## `basic_stream` and `bufferio` - published by Gemini
 
-### 주요 구성요소
+### 1. Overview and Design Pattern
 
-* **`bufferio`**: 메모리 chunk 할당(`extend`), 병합, C-string 변환, slicing(`cut`), 삽입(`insert`) 등 low-level 동적 buffer 조작 담당.
-* **`printf_traits`**: C++ 타입을 C-Style `printf` 서식 지정자 및 캐스팅 타입으로 자동 변환해 주는 metaprogramming trait.
-* **`basic_stream`**: `stream_t` interface를 구현하며 연산자 overloading(`<<`, `+=`, `==`) 및 C++ style stream interface 제공.
+The `basic_stream` module is a dynamic stream buffer class created by combining `bufferio` (the internal data chunk management layer) and `traits_printf` (the type handling layer).
+It simultaneously offers the I/O usability of the C++ standard `std::stringstream` and the memory/speed efficiency of C-style buffer processing.
 
-### 주요 method 분석
+#### Key Features
 
-| class / method | 역할 및 기능 |
+1. **Chunk-Based Dynamic Memory Management (`bufferio`)**:
+  * Allocates data via a chunk list (`bufferin_queue_t`) to minimize frequent `realloc` overhead.
+  * Automatically flattens into a single contiguous block upon read requests (`c_str()`, `data()`).
+2. **Type-Trait-Based Printf Pipeline (`printf_traits`)**:
+  * Automatically abstracts integer, enum, and floating-point types using metaprogramming to map format strings (`%d`, `%u`, `%f`, etc.).
+  * Simplifies complex SFINAE conditions into `printf_traits` to improve maintainability.
+3. **Strong Exception Guarantee**:
+  * Applies the Copy-and-Swap idiom to the copy assignment operator (`operator=`).
+4. **Stream Custom Extensibility (`encoder_stream_traits`)**:
+  * Integrates directly with external encoder/decoder algorithms via `custom::encoder_stream_traits<basic_stream>` specialization.
+
+---
+
+### 2. Core Classes and API Reference
+
+#### Key Components
+
+* **`bufferio`**: Handles low-level dynamic buffer operations such as memory chunk allocation (`extend`), merging, C-string conversion, slicing (`cut`), and insertion (`insert`).
+* **`printf_traits`**: Metaprogramming traits that automatically convert C++ types into C-style `printf` format specifiers and casting types.
+* **`basic_stream`**: Implements the `stream_t` interface, providing operator overloading (`<<`, `+=`, `==`) and a C++ style stream interface.
+
+#### Major Methods Analysis
+
+| Class / Method | Description and Functionality |
 | --- | --- |
-| **`basic_stream::operator<<`** | 원시 타입, `std::string`, `binary_t`, `bignumber`, `variant` 등을 stream에 순차 직렬화. |
-| **`basic_stream::printf` / `println`** | 가변 인자를 받아 내부 `bufferio::vprintf`를 호출해 데이터 추가. |
-| **`basic_stream::vaprintf`** | 커스텀 `valist` 객체와 포맷 template(`{1}`, `{2:04x}` 등)을 조합하여 가변 formatting 출력. |
-| **`basic_stream::cut(pos, len)`** | 지정한 위치부터 `len` 크기만큼 buffer chunk를 재조정하여 삭제. |
-| **`basic_stream::insert(pos, ptr, len)`** | 지정한 위치에 신규 메모리 chunk를 분할 삽입. |
-| **`basic_stream::resize(s)`** | buffer 크기를 변경. 줄어들면 `cut`, 늘어나면 `fill(0)`을 수행. |
+| **`basic_stream::operator<<`** | Sequentially serializes primitive types, `std::string`, `binary_t`, `bignumber`, `variant`, etc. into the stream. |
+| **`basic_stream::printf` / `println**` | Receives variadic arguments and calls internal `bufferio::vprintf` to append data. |
+| **`basic_stream::vaprintf`** | Combines custom `valist` objects with format templates (`{1}`, `{2:04x}`, etc.) for formatted output. |
+| **`basic_stream::cut(pos, len)`** | Adjusts the buffer chunk to delete `len` bytes starting from `pos`. |
+| **`basic_stream::insert(pos, ptr, len)`** | Splits and inserts a new memory chunk at the specified position. |
+| **`basic_stream::resize(s)`** | Changes buffer size; performs `cut` when shrinking, and `fill(0)` when expanding. |
+
 ---
 
-## 3. 핵심 내부 동작 원리 (Internal Architecture)
+### 3. Internal Architecture
 
-### 3.1. 타입 trait mapping pipeline (`printf_traits`)
+#### 3.1. Type-Trait Mapping Pipeline (`printf_traits`)
 
-가변 타입의 `operator<<` 호출 시, `printf_traits`가 다음 과정을 통해 C style `printf` 서식을 도출함:
+When calling `operator<<` with variable types, `printf_traits` derives C-style `printf` format specifiers through the following pipeline:
 
 ```
 [Input Type T]
       │
       ▼
-std::decay<T>::type ──► Enum 여부 검사 (integral_type)
+std::decay<T>::type ──► Enum Check (integral_type)
       │
       ▼
-크기(sizeof) & Signed 여부 판별
+Size (sizeof) & Signedness Check
       │
       ▼
-cast_type (int / unsigned int / long long 등) 선정
+Select cast_type (int / unsigned int / long long, etc.)
       │
       ▼
-format_specifier_traits<BT, final_type>::spec ("%d", "%u", "%lld" 등) 추출
+Extract format_specifier_traits<BT, final_type>::spec ("%d", "%u", "%lld", etc.)
+
 ```
 
-* **성능 최적화**: 단일 `char` 및 `const char*`는 `printf` 서식 parsing overhead를 피하기 위해 `bufferio::write`로 직접 메모리 복사 수행.
+* **Performance Optimization**: Single `char` and `const char*` perform direct memory copying via `bufferio::write` to avoid `printf` format parsing overhead.
 
-### 3.2. 메모리 chunk 병합 (Buffer Flattening)
+#### 3.2. Buffer Flattening
 
-`bufferio`는 내부적으로 `std::list<bufferio_t*>` 구조를 사용하여 쓰기 작업 시 block 단위로 메모리를 할당함.
+`bufferio` uses an internal `std::list<bufferio_t*>` structure to allocate memory in block units during write operations.
 
 ```
 [Write Operations]
 Queue: [Block 1 (1024b)] -> [Block 2 (1024b)] -> [Block 3 (256b)]
 
 [c_str() / data() Call]
-1. 연속된 단일 block 할당 (Total Size)
-2. Queue의 모든 block 데이터 복사 & NUL padding 붙임
-3. 기존 Queue block 해제 후 단일 block으로 대체
+1. Allocate a single contiguous block (Total Size)
+2. Copy all block data from Queue & append NUL padding
+3. Release original Queue blocks and replace with single block
 Result: [Single Contiguous Block (2304b)]
 
 ```
 
 ---
 
-## 4. C++11 기반 사용 예시 (C++11 Example Usage)
-
-`C++11` 규격
+### 4. C++11 Usage Example
 
 ```cpp
 #include <iostream>
@@ -128,36 +132,31 @@ int main() {
     run_basic_stream_sample();
     return 0;
 }
+
 ```
 
 ---
 
-## 5. 프로그래밍 TODO list 및 우선순위 관리 (TODO List)
+### 5. TODO List Tracker
 
-`basic_stream` 및 `bufferio` pipeline 관련 개발 관리 항목
-
-### 📌 TODO List Tracker
-
-| ID | 우선순위 | 작업 항목 (Task Description) | 상태 (Status) | 비고 |
+| ID | Priority | Task Description | Status | Remarks |
 | --- | --- | --- | --- | --- |
-| **TODO-BS-01** | `HIGH` | **`bufferio::insert` 락 범위 최적화**<br>- chunk 분할 및 메모리 할당 중 예외 발생 시 safeguard 및 락 경합 범위 축소 | `Postponed` | `bufferio.cpp`<br> |
-| ~~**TODO-BS-02**~~ | `HIGH` | **128-bit 정수형 포맷 서식 지정자 cross-platform 검증**<br>- `__SIZEOF_INT128__` 지원 환경에서 `%I128i` / `%I128u` 서식 문자열 호환성 검토 | `No change required` | 기존 테스트 케이스 `testcase_stream.cpp` |
-| ~~**TODO-BS-03**~~ | `MEDIUM` | **`basic_stream::fill` 대용량 padding 속도 향상**<br>- Chunk size (256 bytes) 기반 `memset` 할당 loop의 block 단위 우회 최적화 | `No change required` | `basic_stream.cpp`<br> |
-| **TODO-BS-04** | `MEDIUM` | **`std::string_view` (C++17 대비) overloading interface 설계**<br>- C++11 규격 유지하되, 뷰 타입 호환 wrapper layer 사전 정의 | `To Do` | `operator<<` 확장 |
-| **TODO-BS-05** | `LOW` | **Wide String 오버헤드 절감을 위한 플랫폼 경계 재정의**<br><br>- Linux: `char*` (UTF-8) 중심 처리로 4바이트 `wchar_t` 할당 축소<br><br>- Windows: Win32 API 호출부(`ansi2wide`/`wide2ansi`) 영역으로 `wchar_t` 변환 격리 | `To Do` | `unicode/` & `windows/` <br> |
+| **TODO-BS-01** | `HIGH` | **Optimize lock scope in `bufferio::insert**`<br><br>- Add safeguards and narrow lock contention scope during chunk splitting and memory allocation exceptions | `Postponed` | `bufferio.cpp`<br> |
+| ~~**TODO-BS-02**~~ | `HIGH` | **Cross-platform verification of 128-bit integer format specifiers**<br><br>- Review `%I128i` / `%I128u` format string compatibility under `__SIZEOF_INT128__` supported environments | `No change required` | Existing test case `testcase_stream.cpp`<br> |
+| ~~**TODO-BS-03**~~ | `MEDIUM` | **Improve large padding speed in `basic_stream::fill**`<br><br>- Optimize bypass of `memset` allocation loop based on chunk size (256 bytes) | `No change required` | `basic_stream.cpp`<br> |
+| **TODO-BS-04** | `MEDIUM` | **Design `std::string_view` overloading interface (for C++17)**<br><br>- Maintain C++11 standard while pre-defining a view-type compatible wrapper layer | `To Do` | `operator<<` extension |
+| **TODO-BS-05** | `LOW` | **Redefine platform boundaries to reduce Wide String overhead**<br><br>- Linux: Focus on `char*` (UTF-8) processing to minimize 4-byte `wchar_t` allocations<br><br>- Windows: Isolate `wchar_t` conversions to Win32 API call sites (`ansi2wide`/`wide2ansi`) | `To Do` | `unicode/` & `windows/`<br> |
 
-* TODO-BS-05 : 크로스 플랫폼 추상화 방향 재정의
+* **TODO-BS-05: Redefining Cross-Platform Abstraction Direction**
   * **Linux / POSIX**:
-    * `char*` / `std::string` (UTF-8)을 기본 및 유일한 내부 스트림 버퍼 타입으로 사용.
-    * `wchar_t` 관련 함수(`bufferio_wcs`, `printf_wcs`)는 POSIX 환경에서 호출 자체를 경고 처리하거나 단순 UTF-8 내보내기/변환 래퍼로 최소화.
+    * Use `char*` / `std::string` (UTF-8) as the primary and only internal stream buffer type.
+    * Deprecate or minimize `wchar_t` related functions (`bufferio_wcs`, `printf_wcs`) into simple UTF-8 output/conversion wrappers in POSIX environments.
   * **Windows**:
-    * Win32 API(`W` 버전에 해당하는 System Call) 연동을 위해 **UTF-16 LE(`wchar_t`, 2bytes)** 변환이 필요한 접점(`windows/ansi2wide.cpp`, `wide2ansi.cpp`) 내부에서만 조건부 컴파일(`_WIN32`)로 한정 처리.
-    * Windows 역사의 유산: UCS-2와 UTF-16
-      * **과거 Windows NT 시절**: 유니코드 초기 규격(16비트로 모든 문자를 표현 가능하다고 믿었던 시절)의 **UCS-2(Fixed 2-byte)** 방식을 OS API의 기본 문자열(`wchar_t`) 체계로 채택했습니다. 이때부터 Windows는 이를 단순히 "UNICODE"라고 불렀습니다.
-      * **이후 확장 (UTF-16)**: 유니코드 범위가 확장되면서 2바이트만으로 모든 문자를 표현할 수 없게 되자, 2바이트~4바이트 가변 길이 인코딩 방식인 **UTF-16** 기법(서로게이트 페어, Surrogate Pair)이 도입되었습니다.
-      * **현재의 Windows API**: 내부적으로는 **UTF-16 Little Endian** 인코딩을 기반으로 동작하지만, C/C++ Header 및 Win32 API 매크로 명칭(`UNICODE`, `WCHAR`, `LPCWSTR`)에 과거의 명칭이 그대로 남아 있어 'Windows 유니코드'와 'UTF-16'이 혼용되곤 합니다.
-    * POSIX(Linux) `wchar_t`와의 결정적 차이
-      * **Windows**: `wchar_t`를 2바이트(UTF-16 LE)로 정의하며, Win32 API(`CreateWindowW`, `CreateFileW` 등)의 네이티브 인코딩으로 사용합니다.
-      * **Linux/POSIX**: `wchar_t`를 4바이트(UTF-32/UCS-4)로 정의하며, OS 기본 시스템 콜과 파일 시스템 표준은 UTF-8(`char*`)을 사용합니다.
-
----
+    * Enforce conditional compilation (`_WIN32`) only at points requiring **UTF-16 LE (`wchar_t`, 2 bytes)** conversion (`windows/ansi2wide.cpp`, `wide2ansi.cpp`) for Win32 API interoperability.
+    * **Historical Context: UCS-2 and UTF-16**:
+      * *Windows NT Era*: Adopted **UCS-2 (Fixed 2-byte)** encoding as the default system string (`wchar_t`) model for OS APIs, commonly referred to as "UNICODE".
+      * *UTF-16 Expansion*: As Unicode expanded, **UTF-16** (Surrogate Pairs, 2 to 4 bytes variable) was introduced to support code points outside the Basic Multilingual Plane.
+      * *Current Windows API*: Operates on **UTF-16 Little Endian** internally, though legacy naming (`UNICODE`, `WCHAR`, `LPCWSTR`) persists across headers and macros.
+    * **Key Differences from POSIX (Linux) `wchar_t**`:
+      * *Windows*: `wchar_t` is defined as 2 bytes (UTF-16 LE) and used as the native encoding for Win32 API functions (`CreateWindowW`, `CreateFileW`, etc.).
+      * *Linux/POSIX*: `wchar_t` is defined as 4 bytes (UTF-32/UCS-4), while standard system calls and filesystems default to UTF-8 (`char*`).

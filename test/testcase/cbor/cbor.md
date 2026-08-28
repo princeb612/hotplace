@@ -1,27 +1,29 @@
 ## CBOR (Concise Binary Object Representation) - published by Gemini
 
-### 1. 개요 및 주요 특징
+---
 
-* **module 역할**: RFC 8949 (구 RFC 7049) 표준 규격을 준수하여 binary 기반 데이터 구조를 encoding, decoding, parsing 처리하는 C++11 library module.
-* **주요 기능**:
-  * **표준 test vector 검증**: `testcase_rfc7049.cpp`, `testvector_cbor.cpp`, `testvector_cbor.yml` 기반의 RFC 공식 검증 테스터 구성.
-  * **객체 모델 기반 설계**: `cbor_object` 상속 구조로 정수/데이터(`cbor_data`), 문자열/바이트열(`cbor_tstrings`, `cbor_bstrings`), 배열/맵(`cbor_array`, `cbor_map`), tag/간단한 값(`cbor_simple`) 표현.
-  * **직렬화 및 binary decoding**: `cbor_encode`를 통한 stream binary 생성 및 `cbor_reader` 기반의 parsing/객체 트리 복원.
-  * **방문자 pattern & 전송 구조**: `cbor_visitor`를 통한 AST 순회/dump 기능 및 `cbor_publisher` pattern 지원.
-* **C++11 특징**:
-  * reference counting(`addref`/`release`) style 방식의 resource 제어 및 메모리 life-cycle 관리.
-  * `std::vector<uint8_t>`, `std::string` 및 C++11 STL mechanism 중심의 데이터 이동 연산.
+### 1. Overview and Key Features
+
+* **Module Role**: A C++11 library module that encodes, decodes, and parses binary-based data structures in compliance with the RFC 8949 (formerly RFC 7049) standard specification.
+* **Key Features**:
+  * **Standard Test Vector Verification**: Configures official RFC verification testers based on `testcase_rfc7049.cpp`, `testvector_cbor.cpp`, and `testvector_cbor.yml`.
+  * **Object-Model-Based Design**: Inherits from `cbor_object` to represent integers/data (`cbor_data`), text/byte strings (`cbor_tstrings`, `cbor_bstrings`), arrays/maps (`cbor_array`, `cbor_map`), and tags/simple values (`cbor_simple`).
+  * **Serialization and Binary Decoding**: Generates stream binaries via `cbor_encode` and reconstructs object trees through `cbor_reader` parsing.
+  * **Visitor Pattern & Transmission Structure**: Supports AST traversal/dumping via `cbor_visitor` and the `cbor_publisher` pattern.
+* **C++11 Features**:
+  * Resource control and memory lifecycle management using a reference counting (`addref`/`release`) style approach.
+  * Data transfer operations centered around `std::vector<uint8_t>`, `std::string`, and C++11 STL mechanisms.
 
 ---
 
-### 2. 주요 class 및 API 구조
+### 2. Core Classes and API Structure
 
-**CBOR core 객체 및 검증 테스터**
+**CBOR Core Objects and Verification Tester**
 
 ```cpp
 namespace hotplace {
 
-// 최상위 추상 데이터 객체
+// Top-level abstract data object
 class cbor_object {
    public:
     virtual cbor_type_t type() const = 0;
@@ -29,7 +31,7 @@ class cbor_object {
     virtual int release();
 };
 
-// CBOR encoder 및 decoder
+// CBOR encoder and decoder
 class cbor_encode {
    public:
     cbor_encode& encode(const cbor_object* object, binary_t& stream);
@@ -46,26 +48,26 @@ class cbor_reader {
 
 ---
 
-### 3. 핵심 동작 mechanism
+### 3. Core Operating Mechanism
 
-* **주요 타입별 class 구조**:
-  * `cbor_data`: Unsigned/Negative Integer 및 Floating-point 수치 데이터 표현.
-  * `cbor_bstrings` / `cbor_tstrings`: Byte String 및 UTF-8 Text String binary 제어.
-  * `cbor_array` / `cbor_map`: 요소의 순차열 및 Key-Value mapping 객체 관리.
-  * `cbor_simple`: Simple Value(true/false/null/undefined) 및 Tagged 데이터 처리.
-* **RFC 8949 / RFC 7049 표준 검증 mechanism**:
-  * `testvector_cbor.yml` 및 `testcase_rfc7049.cpp`에 명시된 RFC 표준 test vector 집합을 parsing하여, binary encoding/decoding 결과가 규격과 완벽히 일치하는지 자동 검증.
-* **encoding & decoding 연산**:
-  * `cbor_encode`: Major Type Header(3비트 Major Type + 5비트 Additional Info) 조합 후 데이터 payload를 `binary_t` stream에 순차 기록.
-  * `cbor_reader`: binary stream의 header 영역을 해석하여 대응되는 `cbor_object` 파생 개체를 동적 생성 및 트리를 복원.
+* **Class Structure by Key Type**:
+  * `cbor_data`: Represents unsigned/negative integer and floating-point numerical data.
+  * `cbor_bstrings` / `cbor_tstrings`: Controls byte strings and UTF-8 text string binaries.
+  * `cbor_array` / `cbor_map`: Manages sequential element lists and key-value mapping objects.
+  * `cbor_simple`: Handles simple values (true/false/null/undefined) and tagged data.
+* **RFC 8949 / RFC 7049 Standard Verification Mechanism**:
+  * Parses standard RFC test vectors specified in `testvector_cbor.yml` and `testcase_rfc7049.cpp` to automatically verify that binary encoding and decoding results strictly align with the specification.
+* **Encoding & Decoding Operations**:
+  * `cbor_encode`: Combines the Major Type Header (3-bit Major Type + 5-bit Additional Information) and sequentially writes the data payload into a `binary_t` stream.
+  * `cbor_reader`: Interprets the header region of the binary stream to dynamically instantiate corresponding `cbor_object` derived objects and reconstruct the tree.
 
 ---
 
-### 4. TODO list
+### 4. TODO List Tracker
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **TODO-CBOR-01** | `cbor_reader::parse` 중 부정형(Indefinite Length) binary/text stream parsing 경계 검증 정밀화 | High | 미진행 |
-| **TODO-CBOR-02** | `cbor_object` 계열의 수동 reference counting(`addref`/`release`) 구조를 `std::shared_ptr` 기반 표준 C++11 모델로 refactoring 검토 | Medium | 미진행 |
-| **TODO-CBOR-03** | `cbor_encode` 성능 최적화를 위한 임시 buffer 재할당 최소화 및 메모리 풀링 적용 | Low | 미진행 |
-| **TODO-CBOR-04** | `testvector_cbor.yml`에 최신 RFC 8949 추가 Edge Case test vector 확장 및 debug 출력 logic 개선 | Low | 미진행 |
+| **TODO-CBOR-01** | Refine boundary validation when parsing indefinite-length binary/text streams in `cbor_reader::parse`<br> | High | Open |
+| **TODO-CBOR-02** | Evaluate refactoring manual reference counting (`addref`/`release`) in `cbor_object` classes to a standard C++11 `std::shared_ptr`-based model | Medium | Open |
+| **TODO-CBOR-03** | Minimize temporary buffer reallocations and apply memory pooling to optimize `cbor_encode` performance | Low | Open |
+| **TODO-CBOR-04** | Extend `testvector_cbor.yml` with recent RFC 8949 edge cases and improve debug log outputs | Low | Open |

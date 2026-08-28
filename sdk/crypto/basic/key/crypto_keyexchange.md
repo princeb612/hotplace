@@ -1,19 +1,19 @@
-## OpenSSL 기반 TLS 키 교환 및 PQC/hybrid KEM module (`crypto_keyexchange`) 분석 - published by Gemini
+## Analysis of OpenSSL-based TLS Key Exchange and PQC/Hybrid KEM - published by Gemini
 
 ---
 
-### 1. 개요 및 핵심 개념
+### 1. Overview and Core Concepts
 
-* **module 역할**: TLS 1.3 algorithm 규격 기반 ECDHE, ML-KEM 및 ECDHE-MLKEM hybrid 키 교환 mechanism을 추상화하여 제공.
-* **C++11 및 설계 특징**:
-  * OpenSSL 기반 PQC (ML-KEM) 및 ECDH algorithm 지원.
-  * reference counting(`t_shared_reference`) 기반 resource/life-cycle 관리 (`addref`, `release`).
-  * `__try2`, `__leave2`, `__finally2` macro 구조를 통한 단일 진출점 기반 error handling pattern 적용.
-  * RFC/Draft 스펙에 정의된 hybrid 결합 방식(EC/OKP와 ML-KEM 순서 조합) 지원.
+* **Module Role**: Provides abstraction for ECDHE, ML-KEM, and ECDHE-MLKEM hybrid key exchange mechanisms based on TLS 1.3 algorithm specifications.
+* **C++11 and Design Features**:
+  * Supports OpenSSL-based PQC (ML-KEM) and ECDH algorithms.
+  * Resource and lifecycle management (`addref`, `release`) based on reference counting (`t_shared_reference`).
+  * Single-exit error handling pattern applied using `__try2`, `__leave2`, and `__finally2` macro structures.
+  * Supports hybrid combination schemes (combining EC/OKP with ML-KEM sequence) defined in RFC/Draft specifications.
 
 ---
 
-### 2. 주요 class 및 핵심 method
+### 2. Main Class and Core Methods
 
 ```cpp
 namespace hotplace {
@@ -47,25 +47,26 @@ class crypto_keyexchange {
 
 ---
 
-### 3. 주요 구현 흐름
+### 3. Key Implementation Flow
 
-* **키 생성 (`keygen`)**:
-  * `crypto_advisor`에서 지정된 `tls_group_t` hint 정보를 수집.
-  * 단일 algorithm 또는 hybrid 조합(`tls_flag_hybrid`) 여부에 따라 키쌍을 생성 및 공개키(`share`) 바이트열 binding.
-* **키 캡슐화 (`encaps`)**:
-  * client의 공개키 `share` 수신 후 `keystore()`를 통해 임시 저장.
-  * ML-KEM 캡슐화 수행(`pqc.encapsule`) 후 `keycapsule` 및 공유비밀키(`sharedsecret`) 도출.
-  * hybrid 그룹인 경우 ECDH 키 합의 결과를 규격에 맞춰 직렬화 결합 (`secp256r1mlkem768`: EC || ML-KEM, `x25519mlkem768`: ML-KEM || X25519).
-* **키 디캡슐화 (`decaps`)**:
-  * 캡슐화 데이터 규격 검증 후 비밀키를 통한 `pqc.decapsule` 수행.
-  * hybrid 연산 결과 조합을 거쳐 최종 `sharedsecret` 복원.
+* **Key Generation (`keygen`)**:
+  * Collects specified `tls_group_t` hint information from `crypto_advisor`.
+  * Generates key pairs and binds the public key (`share`) byte sequence depending on whether it is a single algorithm or a hybrid combination (`tls_flag_hybrid`).
+* **Key Encapsulation (`encaps`)**:
+  * Receives client's public key `share` and temporarily stores it via `keystore()`.
+  * Executes ML-KEM encapsulation (`pqc.encapsule`) to derive the `keycapsule` and shared secret key (`sharedsecret`).
+  * For hybrid groups, serializes and combines ECDH key agreement results according to specification (`secp256r1mlkem768`: EC || ML-KEM, `x25519mlkem768`: ML-KEM || X25519).
+* **Key Decapsulation (`decaps`)**:
+  * Validates encapsulated data specifications and executes `pqc.decapsule` using the private key.
+  * Combines hybrid operation results to recover the final `sharedsecret`.
+
 ---
 
-### 4. TODO list
+### 4. TODO List Tracker
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **TODO-KE-01** | ML-KEM draft-ietf-tls-ecdhe-mlkem 규격 변경에 따른 직렬화 순서 동기화 검증 | High | 진행 중 |
-| **TODO-KE-02** | `crypto_keyexchange` 내 멀티thread reference counting thread 안정성(Thread-safety) test case 추가 | High | 미진행 |
-| **TODO-KE-03** | 지원되지 않는 `tls_group_t` 진입 시 error 로그 생성 및 세부 반환 code 정의 | Medium | 미진행 |
-| **TODO-KE-04** | OpenSSL 3.x PQC provider loading 성능 최적화 및 벤치마크 테스트 구현 | Low | 미진행 |
+| **TODO-KE-01** | Verify serialization order synchronization according to ML-KEM draft-ietf-tls-ecdhe-mlkem specification updates | High | In Progress |
+| **TODO-KE-02** | Add multithread reference counting thread-safety test cases within `crypto_keyexchange`<br> | High | Open |
+| **TODO-KE-03** | Define error logging and detailed return codes upon entering unsupported `tls_group_t`<br> | Medium | Open |
+| **TODO-KE-04** | Implement OpenSSL 3.x PQC provider loading performance optimization and benchmark tests | Low | Open |

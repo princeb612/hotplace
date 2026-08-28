@@ -1,43 +1,43 @@
-## Network Client Test Module - published by Gemini
+## Network Client - published by Gemini
 
 ---
 
-### 1. 개요 및 주요 특징
+### 1. Overview and Key Features
 
-* **module 역할**: TCP, UDP, TLS, DTLS, QUIC protocol별 client socket의 연동 및 송수신 동작 검증을 위한 테스트 module (`test_netclient.cpp`).
-* **주요 기능**:
-  * **Multi-Protocol Client Testing**: Naive, OpenSSL, Trial 기반 socket의 연결, 데이터 송수신 (`send`, `read`, `more`, `sendto`, `recvfrom`) 연산 테스트.
-  * **TLS / DTLS Engine Switching**: OpenSSL SDK 연동 방식 (`openssl_tls_client_socket`, `openssl_dtls_client_socket`)과 내부 구현 방식 (`trial_tls_client_socket`, `trial_dtls_client_socket`) 조건부 비교 테스트.
-  * **Stack Allocation Optimization**: OS platform별 stack buffer 할당 (`__GNUC__` VLA (Variable-Length Array) vs `_MSC_VER` `_alloca`) 연산.
+* **Module Role**: A test module (`test_netclient.cpp`) for verifying the integration, transmission, and reception operations of client sockets across TCP, UDP, TLS, DTLS, and QUIC protocols.
+* **Key Features**:
+  * **Multi-Protocol Client Testing**: Tests connection and data transmission/reception (`send`, `read`, `more`, `sendto`, `recvfrom`) operations for Naive-, OpenSSL-, and Trial-based sockets.
+  * **TLS / DTLS Engine Switching**: Provides conditional comparison testing between OpenSSL SDK integration implementations (`openssl_tls_client_socket`, `openssl_dtls_client_socket`) and internal implementations (`trial_tls_client_socket`, `trial_dtls_client_socket`).
+  * **Stack Allocation Optimization**: Handles stack buffer allocations across operating system platforms (`__GNUC__` VLA (Variable-Length Array) vs. `_MSC_VER` `_alloca`).
 
 ---
 
-### 2. 핵심 구현 영역 및 기술 요소
+### 2. Core Implementation Areas and Technical Elements
 
 * **TCP / UDP Client Testing (`tcp_client`, `udp_client`)**:
-  * Command line option flags에 따라 naive 또는 trial socket 객체 생성 및 연결 연산.
-  * `more_data` 반환 code에 따른 stream buffer 누적 처리 연산.
+  * Creates and connects naive or trial socket objects according to command-line option flags.
+  * Processes stream buffer accumulation based on `more_data` return codes.
 * **TLS Client Testing (`tls_client`, `tls_client2`)**:
-  * **`tls_client`**: `SSL_CTX` 생성 및 `openssl_tls` wrapper 연동 기반 TLS 1.2 / 1.3 handshake 및 송수신 검증.
-  * **`tls_client2`**: OpenSSL CTX 직접 노출 없이 `trial_tls_client_socket`을 이용한 TLS session 연산.
+  * **`tls_client`**: Verifies TLS 1.2 / 1.3 handshakes and transmission/reception based on `SSL_CTX` creation and `openssl_tls` wrapper integration.
+  * **`tls_client2`**: Executes TLS session operations using `trial_tls_client_socket` without directly exposing OpenSSL CTX.
 * **DTLS Client Testing (`dtls_client`, `dtls_client2`)**:
-  * **`dtls_client`**: OpenSSL 기반 DTLS client socket 연산.
-  * **`dtls_client2`**: Trial 기반 DTLS client socket 연산 및 record publisher option (fragment size, multi handshakes) 설정 검증.
+  * **`dtls_client`**: Executes OpenSSL-based DTLS client socket operations.
+  * **`dtls_client2`**: Executes Trial-based DTLS client socket operations and verifies record publisher option settings (fragment size, multi handshakes).
 
 ---
 
-### 3. 핵심 동작 mechanism
+### 3. Core Operating Mechanism
 
 * **Client Socket Lifecycle & Test Flow (`test_netclient.cpp`)**:
-  * Command line option parsing -> socket 객체 생성 (Naive / OpenSSL / Trial) -> `connect` 또는 `open` 실행 -> 송수신 loop 수행 (`send` / `read` / `more`) -> `__finally2` block 내 socket `close`, resource cleanup 및 test case 결과 기록 연산 수행.
+  * Command-line option parsing $\rightarrow$ Socket object creation (Naive / OpenSSL / Trial) $\rightarrow$ `connect` or `open` execution $\rightarrow$ Transmission/reception loop execution (`send` / `read` / `more`) $\rightarrow$ Socket `close`, resource cleanup inside the `__finally2` block, and test case result logging.
 
 ---
 
-### 4. TODO list
+### 4. TODO List Tracker
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **#1** | `quic_client()` 내 tls_composer QUIC feature, trial_quic_client_socket 및 trial_quic_server_socket 연동 구현 | High | 미진행 |
-| **#2** | `tcp_client()`, `tls_client()` 내 VLA (`char buffer[option.bufsize]`) 및 `_alloca` 사용 시 stack overflow 가능성 검증 및 dynamic buffer 대체 검토 | High | 미진행 |
-| **#3** | `dtls_client2()` 내 `trial_dtls_client_socket` 미구현 stub 해제 후 actual handshake 연산 검증 | Medium | 미진행 |
-| **#4** | `tls_client()` 내 `SSL_CTX_free` 및 `openssl_cleanup` 호출 시 resource leak 여부 static analysis 검증 | Low | 미진행 |
+| **TODO-NC-01** | Implement integration of `tls_composer` QUIC features, `trial_quic_client_socket`, and `trial_quic_server_socket` within `quic_client()`<br> | High | Open |
+| **TODO-NC-02** | Verify potential stack overflows when using VLAs (`char buffer[option.bufsize]`) and `_alloca` in `tcp_client()` and `tls_client()`, and evaluate replacing them with dynamic buffers | High | Open |
+| **TODO-NC-03** | Remove unimplemented stubs in `dtls_client2()` for `trial_dtls_client_socket` and verify actual handshake operations | Medium | Open |
+| **TODO-NC-04** | Perform static analysis verification for resource leaks upon calling `SSL_CTX_free` and `openssl_cleanup` in `tls_client()`<br> | Low | Open |

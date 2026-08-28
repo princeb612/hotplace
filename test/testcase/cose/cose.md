@@ -1,45 +1,45 @@
-## COSE (CBOR Object Signing and Encryption) - published by Gemini
+# COSE (CBOR Object Signing and Encryption) - published by Gemini
 
 ---
 
-### 1. 개요 및 주요 특징
+### 1. Overview and Key Features
 
-* **module 역할**: RFC 8152, RFC 8778, RFC 9052(COSE) 표준 규격 및 최신 PQC(post-quantum cryptography, ML-DSA) 사양을 준수하여 binary/CBOR 기반 암호화, 서명, MAC 및 키 검증을 수행하는 C++11 library module.
-* **주요 기능**:
-  * **RFC 공식 test vector 검증**: RFC 8152, RFC 8392(CWT), RFC 8778, RFC 9338 및 AKP(ML-DSA 44/65/87) test vector 기반 자동화 검증 수행.
-  * **COSE message 구조 처리**: Protected/Unprotected Header (`cose_protected`, `cose_unprotected`), Payload, Recipient (`cose_recipient`, `cose_recipients`), Countersign (`cose_countersign`, `cose_countersigns`) 등 parameter 제어.
-  * **암호화 / 서명 / MAC 연산**: `cbor_object_encryption`(COSE_Encrypt/COSE_Encrypt0), `cbor_object_signing`(COSE_Sign/COSE_Sign1) 및 MAC 연산 지원.
-  * **다중 layer 및 builder 구조**: `cose_composer` builder pattern 및 서명/암호화 중첩 연산(`cbor_object_signing_encryption_*`) 제공.
-  * **COSE Key 관리**: `cose_key` 및 `cbor_web_key`를 통한 COSE Key / COSE Key Set parsing 및 mapping.
-* **C++11 특징**:
-  * builder pattern 기반 chaining interface 구현 및 `std::vector<uint8_t>` 중심 binary 제어.
-  * 공통 데이터 타입 및 상수 추상화를 위한 `types.hpp` 활용.
+* **Module Role**: A C++11 library module that performs binary/CBOR-based encryption, signing, MAC generation, and key validation in compliance with RFC 8152, RFC 8778, RFC 9052 (COSE) standard specifications, and the latest PQC (post-quantum cryptography, ML-DSA) specifications.
+* **Key Features**:
+  * **RFC Official Test Vector Verification**: Executes automated verification based on RFC 8152, RFC 8392 (CWT), RFC 8778, RFC 9338, and AKP (ML-DSA 44/65/87) test vectors.
+  * **COSE Message Structure Handling**: Manages parameters such as Protected/Unprotected Headers (`cose_protected`, `cose_unprotected`), Payload, Recipient (`cose_recipient`, `cose_recipients`), and Countersign (`cose_countersign`, `cose_countersigns`).
+  * **Encryption / Signing / MAC Operations**: Supports `cbor_object_encryption` (COSE_Encrypt/COSE_Encrypt0), `cbor_object_signing` (COSE_Sign/COSE_Sign1), and MAC operations.
+  * **Multi-Layer and Builder Structure**: Provides the `cose_composer` builder pattern and nested signing/encryption operations (`cbor_object_signing_encryption_*`).
+  * **COSE Key Management**: Parses and maps COSE Keys / COSE Key Sets via `cose_key` and `cbor_web_key`.
+* **C++11 Features**:
+  * Implements a builder pattern-based chaining interface and handles binary data centered around `std::vector<uint8_t>`.
+  * Utilizes `types.hpp` for common data types and constant abstraction.
 
 ---
 
-### 2. 주요 class 및 API 구조
+### 2. Core Classes and API Structure
 
-**COSE core 객체 및 message 구성 요소**
+**COSE Core Objects and Message Components**
 
 ```cpp
 namespace hotplace {
 
-// COSE 키 및 Header 관리
+// COSE Key and Header Management
 class cose_key;
 class cbor_web_key;
 class cose_protected;
 class cose_unprotected;
 
-// 수신자 및 이중 서명 구조체
+// Recipient and Countersign Structures
 class cose_recipient;
 class cose_recipients;
 class cose_countersign;
 class cose_countersigns;
 
-// COSE message builder
+// COSE Message Builder
 class cose_composer;
 
-// COSE 암호화 / 서명 / MAC 연산 class
+// COSE Encryption / Signing / MAC Operation Classes
 class cbor_object_encryption;
 class cbor_object_signing;
 class cbor_object_signing_encryption;
@@ -50,24 +50,24 @@ class cbor_object_signing_encryption;
 
 ---
 
-### 3. 핵심 동작 mechanism
+### 3. Core Operating Mechanism
 
-* **message 조립 (`cose_composer`)**:
-  * Protected/Unprotected header 속성을 설정하고 Payload 및 Recipient/Countersign 객체를 결합하여 최종 CBOR encoding된 COSE message 구조 생성.
-* **표준 & PQC 검증 mechanism (`testcase_rfc8152.cpp`, `testcase_akp.cpp`)**:
-  * RFC 8152/8778/9338 사양의 진단 포맷(`.diag`) 및 CBOR binary(`.cbor`) test vector 비교 검증.
-  * ML-DSA(44/65/87) 기반 PQC(Algorithmic Key Pair) post-quantum cryptography 서명 test vector 연동 검증.
-* **인증 및 암호화 연산 (`cbor_object_signing_encryption_*`)**:
-  * 암호화(`_crypt`), 서명(`_sign`), MAC(`_mac`) module이 분리되어 Sign1/Encrypt0 단일 layer부터 다중 Recipient 포함 복합 구조까지 처리.
+* **Message Assembly (`cose_composer`)**:
+  * Configures Protected/Unprotected header properties and combines Payload, Recipient, and Countersign objects to generate the final CBOR-encoded COSE message structure.
+* **Standard & PQC Verification Mechanism (`testcase_rfc8152.cpp`, `testcase_akp.cpp`)**:
+  * Cross-verifies diagnostic format (`.diag`) and CBOR binary (`.cbor`) test vectors under RFC 8152/8778/9338 specifications.
+  * Verifies post-quantum cryptography signature test vectors based on ML-DSA (44/65/87) Algorithmic Key Pairs (AKP).
+* **Authentication and Encryption Operations (`cbor_object_signing_encryption_*`)**:
+  * Separates encryption (`_crypt`), signing (`_sign`), and MAC (`_mac`) modules to handle operations ranging from single-layer Sign1/Encrypt0 structures to complex structures with multiple recipients.
 
 ---
 
-### 4. TODO list
+### 4. TODO List Tracker
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **TODO-COSE-01** | `cbor_object_encryption` 내 AES-CCM 및 AES-GCM algorithm 처리 시 Nonce/IV 크기 검증 강화 | High | 미진행 |
-| **TODO-COSE-02** | `cose_countersign` 사양(RFC 9052) 기반의 Countersign V2 구조 호환성 검증 및 예외 처리 logic 구현 | High | 미진행 |
-| **TODO-COSE-03** | `cose_composer` builder 내 header parameter 중복 설정 방지 및 유효성 검사 logic 추가 | Medium | 미진행 |
-| **TODO-COSE-04** | `cose_key` parsing 시 OKP(Ed25519/X25519) 곡선 키 mapping 확장 및 validation 강화 | Medium | 미진행 |
-| **TODO-COSE-05** | ML-DSA(PQC) algorithm 연산 시 키 길이가 유효하지 않을 경우의 예외 세분화 및 error code 정밀화 | Medium | 미진행 |
+| **TODO-COSE-01** | Strengthen Nonce/IV size validation when processing AES-CCM and AES-GCM algorithms in `cbor_object_encryption`<br> | High | Open |
+| **TODO-COSE-02** | Verify Countersign V2 structure compatibility based on the RFC 9052 specification and implement exception handling logic in `cose_countersign`<br> | High | Open |
+| **TODO-COSE-03** | Add validation logic and prevent duplicate header parameter configurations within the `cose_composer` builder | Medium | Open |
+| **TODO-COSE-04** | Expand OKP (Ed25519/X25519) curve key mapping and strengthen validation when parsing `cose_key`<br> | Medium | Open |
+| **TODO-COSE-05** | Refine error codes and specialize exceptions when key lengths are invalid during ML-DSA (PQC) algorithm operations | Medium | Open |

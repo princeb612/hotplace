@@ -1,40 +1,44 @@
+Here is the translated document for the SSLKEYLOGFILE module in English:
+
+---
+
 ## SSLKEYLOGFILE - published by Gemini
 
 ---
 
-### 1. 개요 및 주요 특징
+### 1. Overview and Key Features
 
-* **module 역할**: TLS 1.2, TLS 1.3, DTLS 및 QUIC (QUICv1, QUICv2) protocol 통신 과정에서 암호화 key schedule 정보를 외부로 추출/주입하는 keylog 제어 module
-* **주요 기능**:
-  * **Keylog Export 및 Callback 연동 (`sslkeylog_exporter`)**: TLS 1.2 master secret, TLS 1.3/QUIC traffic secret 계산 시점에 SSLKEYLOGFILE 규격의 텍스트 생성 및 사용자 정의 callback 함수 연동.
-  * **Keylog Import 및 Session Binding (`sslkeylog_importer`)**: 외부 SSLKEYLOGFILE 텍스트 릴레이를 파싱하여 `tls_session` 객체에 secret 데이터를 수동 주입하고 암호화 세션 복호화 지원.
-
----
-
-### 2. protocol별 핵심 구현 영역 및 기술 요소
-
-* **SSLKEYLOG Export 연동 (`sslkeylog_exporter.hpp`, `tls_protection_calc.cpp`)**:
-  * `tls_protection::calc` 키 파생 단계에서 Singleton 객체를 통해 `CLIENT_RANDOM`, `CLIENT_HANDSHAKE_TRAFFIC_SECRET`, `SERVER_TRAFFIC_SECRET_0` 등의 keylog 텍스트를 자동 생성.
-  * `set_tls_keylog_callback()`을 통해 외부 logger 및 Wireshark 연동용 stream hook 지정 가능.
-* **SSLKEYLOG Import 및 Session 매핑 (`sslkeylog_importer.hpp`)**:
-  * `operator<<` 텍스트 스트림 입력 방식을 지원하여 `CLIENT_RANDOM` 바이너리 키 기반으로 세션별 `tls_secret_t` 매핑 데이터 구축.
-  * `attach()` 메서드로 `tls_session` 상태 변화 이벤트(`session_status_changed`)를 감지하고 secret 동기화 유지.
+* **Module Role**: A keylog control module that extracts and injects encryption key schedule information during TLS 1.2, TLS 1.3, DTLS, and QUIC (QUICv1, QUICv2) protocol communications.
+* **Key Features**:
+  * **Keylog Export & Callback Integration (`sslkeylog_exporter`)**: Generates text in the SSLKEYLOGFILE format and triggers user-defined callback functions at the exact moment TLS 1.2 master secrets or TLS 1.3/QUIC traffic secrets are calculated.
+  * **Keylog Import & Session Binding (`sslkeylog_importer`)**: Parses external SSLKEYLOGFILE text relays to manually inject secret data into `tls_session` objects, enabling decryption of encrypted sessions.
 
 ---
 
-### 3. 핵심 동작 mechanism
+### 2. Protocol-Specific Implementation Areas and Technical Elements
 
-* **TLS Key Schedule 연동 키 추출 (`sslkeylog_exporter::log`)**:
-  * ClientHello/ServerHello/Finished 단계 처리 시 `tls_protection::calc` 내부에서 `sslkeylog_exporter::get_instance()->log()`를 호출하여 real-time secret 추출 연산 수행.
-* **Secret 주입 및 Session 복호화 연동 (`sslkeylog_importer::attach`)**:
-  * 미리 파싱된 secret_map 데이터를 기반으로 대상 `tls_session` 세션에서 pre-master secret 대신 전달받은 keylog 값을 직접 채택하도록 설정.
+* **SSLKEYLOG Export Integration (`sslkeylog_exporter.hpp`, `tls_protection_calc.cpp`)**:
+  * Automatically generates keylog text entries such as `CLIENT_RANDOM`, `CLIENT_HANDSHAKE_TRAFFIC_SECRET`, and `SERVER_TRAFFIC_SECRET_0` via a Singleton object during the `tls_protection::calc` key derivation phase.
+  * Supports stream hook specification for external loggers and Wireshark integration via `set_tls_keylog_callback()`.
+* **SSLKEYLOG Import & Session Mapping (`sslkeylog_importer.hpp`)**:
+  * Supports `operator<<` text stream input to construct per-session `tls_secret_t` mapping data based on binary `CLIENT_RANDOM` keys.
+  * Detects session status changes (`session_status_changed`) via the `attach()` method to maintain secret synchronization with `tls_session`.
 
 ---
 
-### 4. TODO list
+### 3. Core Operating Mechanism
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 | 비고 |
+* **TLS Key Schedule Key Extraction (`sslkeylog_exporter::log`)**:
+  * Calls `sslkeylog_exporter::get_instance()->log()` inside `tls_protection::calc` during ClientHello/ServerHello/Finished message processing to perform real-time secret extraction.
+* **Secret Injection & Session Decryption Integration (`sslkeylog_importer::attach`)**:
+  * Configures target `tls_session` instances to adopt keylog values received from pre-parsed secret map data instead of pre-master secrets.
+
+---
+
+### 4. TODO List Tracker
+
+| No. | Task Description | Priority | Status | Remarks |
 | --- | --- | --- | --- | --- |
-| **TODO-SKL-01** | `sslkeylog_importer.hpp` 내 SSLKEYLOGFILE 텍스트 파일 경로 입력 기반 자동 파싱/로딩 `load_file()` API 구현 | High | 미진행 | `sslkeylog_importer.hpp`<br> |
-| **TODO-SKL-02** | `tls_protection_calc.cpp` 연동 QUIC / QUICv2 Initial Secret Keylog Exporter/Importer 동작 유효성 검증 | Medium | 진행 중 | `tls_protection_calc.cpp`<br> |
-| **TODO-SKL-03** | 다중 스레드 환경에서 `sslkeylog_exporter::log()` 동시 호출 시 race condition 방지를 위한 critical section 검토 | Low | 미진행 | `sslkeylog_exporter.hpp`<br> |
+| **TODO-SKL-01** | Implement a `load_file()` API in `sslkeylog_importer.hpp` to enable automatic parsing and loading based on SSLKEYLOGFILE text file paths | High | Open | `sslkeylog_importer.hpp`<br> |
+| **TODO-SKL-02** | Verify QUIC / QUICv2 Initial Secret Keylog Exporter/Importer behavior integrated with `tls_protection_calc.cpp`<br> | Medium | In Progress | `tls_protection_calc.cpp`<br> |
+| **TODO-SKL-03** | Review critical section usage to prevent race conditions during concurrent `sslkeylog_exporter::log()` calls in multi-threaded environments | Low | Open | `sslkeylog_exporter.hpp`<br> |

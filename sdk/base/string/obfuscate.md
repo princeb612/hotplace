@@ -1,193 +1,200 @@
-# Compile-time & Runtime String Obfuscation (문자열 난독화) - published by Gemini
+## Compile-time & Runtime String Obfuscation - published by Gemini
 
-## 1. 개요 및 설계 목적 (Overview & Design Pattern)
+### 1. Overview and Design Pattern
 
-본 module은 C++11 runtime 환경과 C++14 `constexpr` compile-time 특성을 활용하여, 바이너리 내에 평문(Plaintext) literal 문자열이 노출되는 것을 방지하기 위해 설계된 **Compile-Time String Obfuscation Library**
+This module is a **Runtime/Compile-Time String Obfuscation Library** designed to prevent sensitive plaintext literal strings from being exposed in binary files by taking advantage of C++11 runtime features and C++14 `constexpr` compile-time capabilities.
 
-### 주요 특징
+#### Key Features
 
-* **compile-time 난독화 (Compile-time Encryption)**: C++14 `constexpr` 및 시드(XOR key, 난수 seed)를 활용해 문자열 literal을 compile-time에 난독화 데이터 배열로 전환.
-* **리버스 엔지니어링 방지**: `strings` 명령어나 바이너리 de-compiler(IDA, Ghidra 등)를 통한 민감 정보(API Key, 내부 URL, password 등) 추출 차단.
-* **C++11 Runtime & C++14 Compile-time 규격 준수**:
-  * **Runtime**: C++11 기반 실행환경 지원.
-  * **Compile-time**: C++14의 완화된 `constexpr` 제약 조건과 `<utility>` 표준 유틸리티(`std::make_index_sequence`, `std::index_sequence`)를 활용하여 구현.
-* **RAII 및 자동 메모리 소거**: runtime 복호화 객체 생성 시 메모리에 복호화된 문자열을 배치하고, 객체 소멸 시 메모리를 소거(Zeroize/Clear)하여 메모리 덤프 공격에 대비.
+* **Compile-time Encryption**: Transforms string literals into obfuscated data arrays at compile time using C++14 `constexpr` templates and customizable factor keys.
+* **Anti-Reverse Engineering**: Blocks extraction of sensitive information (such as API keys, internal URLs, and passwords) via the `strings` command or binary decompilers (e.g., IDA, Ghidra).
+* **C++11 Runtime & C++14 Compile-time Compliance**:
+  * **Runtime**: Supports dynamic data ingestion via stream operators (`<<`, `+=`, `assign`, `append`) under C++11 execution environments.
+  * **Compile-time**: Evaluated at compile-time using C++14 `constexpr` constructor body capabilities.
+* **Stream & Binary Interoperability**: Decrypted dynamic content easily transfers to standard output channels or stream types (`std::string`, `basic_stream`, `binary_t`).
 
 ---
 
-## 2. 핵심 class, struct 및 API 구조 분석 (API Reference)
+### 2. Core Classes, Structs, and API Reference
 
-### 1) `constexpr_obfuscate.hpp` (Compile-time Helper)
+#### 1) `constexpr_obfuscate.hpp` (Compile-time Helper)
 
-C++14 compile-time 시점에 난독화 키를 생성하고 문자열 바이트 배열을 XOR 변환하는 메타프로그래밍 구조체
+C++14 compile-time template class and helper macros that perform additive factor transformation on string byte arrays.
 
 ```cpp
-#include <utility>
-#include <cstddef>
-#include <cstdint>
+#ifndef __HOTPLACE_SDK_BASE_STRING_CONSTEXPROBFUSCATE__
+#define __HOTPLACE_SDK_BASE_STRING_CONSTEXPROBFUSCATE__
+
+#include <hotplace/sdk/base/types.hpp>
 
 namespace hotplace {
 
-// Compile-time XOR Obfuscator (C++14 constexpr & index_sequence)
-template <std::size_t N, uint8_t KEY>
-class constexpr_obfuscator {
-public:
-    // C++14 constexpr constructor: Evaluates XOR encryption at compile time using std::index_sequence
-    template <std::size_t... Is>
-    constexpr constexpr_obfuscator(const char (&str)[N], std::index_sequence<Is...>)
-        : data_{ static_cast<char>(str[Is] ^ KEY)... } {}
+#if __cplusplus >= 201402L  // C++14
 
-    constexpr const char* get() const { return data_; }
-    constexpr std::size_t size() const { return N; }
+#define define_constexpr_obf(var, x) constexpr auto var = CONSTEXPR_OBF(x)
+#define CONSTEXPR_OBF(x) t_constexpr_obf<RTL_NUMBER_OF(x)>(x)
+#define CONSTEXPR_OBF_F(f, x) t_constexpr_obf<RTL_NUMBER_OF(x), f>(x)
+#define CONSTEXPR_OBF_STR(x) x.load_string()
+#define CONSTEXPR_OBF_CSTR(x) x.load_string().c_str()
 
-    char data_[N];
+template <uint32 N, uint8 F = 0x30>
+class t_constexpr_obf {
+   public:
+    constexpr t_constexpr_obf(const char* source);
+
+    std::string load_string() const;
+    size_t size() const;
+
+   private:
+    char buf[N + 1] = { 0, };
+    uint8 factor = F;
 };
 
-} // namespace hotplace
+#endif
+
+}  // namespace hotplace
+
+#endif
 
 ```
 
-### 2) `obfuscate_string.hpp` & `obfuscate_string.cpp` (Runtime Interface)
+#### 2) `obfuscate_string.hpp` (Runtime Interface)
 
-C++11 runtime 시점에 난독화된 데이터를 복호화하고, 사용 완료 후 안전하게 해제하는 wrapper class
+Class for obfuscating and stream-processing strings dynamically at runtime.
 
 ```cpp
-#include <cstddef>
-#include <cstdint>
+#ifndef __HOTPLACE_SDK_BASE_STRING_OBFUSCATESTRING__
+#define __HOTPLACE_SDK_BASE_STRING_OBFUSCATESTRING__
+
+#include <hotplace/sdk/base/stream/types.hpp>
+#include <string>
 
 namespace hotplace {
 
-// C++11 Runtime RAII Wrapper
 class obfuscate_string {
-public:
-    // Decrypts encrypted data at runtime using XOR key
-    obfuscate_string(const char* encrypted_data, std::size_t len, uint8_t key);
+   public:
+    obfuscate_string();
+    obfuscate_string(const char* source);
+    obfuscate_string(std::string& source);
+    obfuscate_string(basic_stream& source);
     ~obfuscate_string();
 
-    // Returns decrypted C-style string
-    const char* c_str() const;
-    std::size_t length() const;
+    // Data Assignment and Insertion
+    obfuscate_string& assign(const char* source, size_t size);
+    obfuscate_string& append(const char* source, size_t size);
 
-    // Zeroizes and frees memory buffer
-    void clear();
+    // Capacity and Comparison
+    size_t size() const;
+    bool empty() const;
+    bool compare(obfuscate_string& o) const;
 
-private:
-    char* decrypted_buffer_;
-    std::size_t size_;
+    // Overloaded Operators
+    obfuscate_string& operator=(const char* source);
+    obfuscate_string& operator=(std::string& source);
+    obfuscate_string& operator=(basic_stream& source);
+
+    obfuscate_string& operator+=(const char* source);
+    obfuscate_string& operator+=(std::string& source);
+    obfuscate_string& operator+=(basic_stream& source);
+
+    obfuscate_string& operator<<(const char* source);
+    obfuscate_string& operator<<(std::string& source);
+    obfuscate_string& operator<<(basic_stream& source);
+
+    bool operator==(obfuscate_string& o) const;
+    bool operator!=(obfuscate_string& o) const;
+
+    // Stream Output Friend Operators
+    friend std::string& operator<<(std::string& lhs, const obfuscate_string& rhs);
+    friend basic_stream& operator<<(basic_stream& lhs, const obfuscate_string& rhs);
+    friend binary_t& operator<<(binary_t& lhs, const obfuscate_string& rhs);
+
+   protected:
+    void startup();
+    void cleanup();
+
+   private:
+    uint32 _flags;
+    byte_t _factor;
+    binary_t _contents;
 };
 
-} // namespace hotplace
+}  // namespace hotplace
+
+#endif
 
 ```
 
-### 3) 주요 API 및 macro
-
-| 구분 | 이름 | 설명 |
-| --- | --- | --- |
-| **macro** | `OBFUSCATE_STR(str)` | C++14 compile-time 난독화 및 C++11 runtime 임시 복호화 객체 생성 helper |
-| **핵심 macro** | `OBFUSCATE_KEY` | `__TIME__` 또는 `__LINE__` 기반 난수 키 생성 macro |
-| **클래스** | `obfuscate_string` | C++11 runtime 버퍼 관리 및 메모리 Zeroize 담당 RAII 객체 |
-| **helper 함수** | `decrypt_buffer()` | 난독화된 버퍼를 XOR 복호화하는 runtime 내부 함수 |
-
 ---
 
-## 3. C++11 Runtime / C++14 Compile-time 실습 code (Example Usage)
+### 3. Usage Examples
+
+#### 1) Compile-time Obfuscation Example (`t_constexpr_obf`)
 
 ```cpp
 #include <iostream>
-#include <utility>
-#include <cstring>
-#include <cstddef>
-#include <cstdint>
+#include <hotplace/sdk/base/string/constexpr_obfuscate.hpp>
 
-// Helper macro for compile-time string obfuscation key
-#define OBFUSCATE_KEY 0x5A
+void example_constexpr_obf() {
+#if __cplusplus >= 201402L  // C++14
+    constexpr auto temp1 = hotplace::t_constexpr_obf<24>("ninety nine red balloons");
+    constexpr auto temp2 = CONSTEXPR_OBF("wild wild world");
+    define_constexpr_obf(temp3, "still a man hears what he wants to hear and disregards the rest");
 
-namespace hotplace {
-
-// Encrypted string container evaluated at compile-time (C++14 constexpr & std::index_sequence)
-template <std::size_t N, uint8_t KEY>
-class constexpr_obfuscated_data {
-public:
-    template <std::size_t... Is>
-    constexpr constexpr_obfuscated_data(const char (&str)[N], std::index_sequence<Is...>)
-        : encrypted_data_{ static_cast<char>(str[Is] ^ KEY)... } {}
-
-    constexpr const char* data() const { return encrypted_data_; }
-    constexpr std::size_t size() const { return N; }
-    constexpr uint8_t key() const { return KEY; }
-
-private:
-    char encrypted_data_[N];
-};
-
-// RAII Wrapper for C++11 runtime decryption
-class obfuscate_string {
-public:
-    obfuscate_string(const char* enc_data, std::size_t size, uint8_t key)
-        : size_(size), buffer_(new char[size]) {
-        // Perform XOR decryption at C++11 runtime
-        for (std::size_t i = 0; i < size_; ++i) {
-            buffer_[i] = enc_data[i] ^ key;
-        }
-    }
-
-    ~obfuscate_string() {
-        clear();
-    }
-
-    const char* c_str() const {
-        return buffer_;
-    }
-
-    std::size_t length() const {
-        return size_;
-    }
-
-    void clear() {
-        if (buffer_ != nullptr) {
-            // Zeroize sensitive buffer before deallocation
-            std::memset(buffer_, 0, size_);
-            delete[] buffer_;
-            buffer_ = nullptr;
-        }
-    }
-
-private:
-    std::size_t size_;
-    char* buffer_;
-};
-
-} // namespace hotplace
-
-int main() {
-    // Compile-time obfuscation evaluated using C++14 std::make_index_sequence
-    static constexpr hotplace::constexpr_obfuscated_data<14, OBFUSCATE_KEY> enc_str(
-        "Sensitive_Key", std::make_index_sequence<14>{}
-    );
-
-    // Runtime decryption using C++11 RAII wrapper
-    hotplace::obfuscate_string dec_str(enc_str.data(), enc_str.size(), enc_str.key());
-
-    std::cout << "[Obfuscation Test]" << std::endl;
-    std::cout << " - Decrypted String : " << dec_str.c_str() << std::endl;
-    std::cout << " - String Length   : " << dec_str.length() << std::endl;
-
-    return 0;
+    std::cout << CONSTEXPR_OBF_CSTR(temp1) << std::endl;
+    std::cout << CONSTEXPR_OBF_CSTR(temp2) << std::endl;
+    std::cout << CONSTEXPR_OBF_CSTR(temp3) << std::endl;
+#endif
 }
 
 ```
+
+#### 2) Runtime Obfuscation & Stream Operators Example (`obfuscate_string`)
+
+```cpp
+#include <cstring>
+#include <string>
+#include <hotplace/sdk/base/stream/types.hpp>
+#include <hotplace/sdk/base/string/obfuscate_string.hpp>
+
+void example_runtime_obf() {
+    using namespace hotplace;
+
+    char helloworld[] = {'h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', 0};
+
+    // Constructor initialization
+    obfuscate_string obf = helloworld;
+    obfuscate_string obf2 = helloworld;
+
+    // Stream extraction into binary container
+    binary_t bin;
+    bin << obf;
+
+    // Stream extraction into standard string
+    std::string str;
+    str << obf;
+
+    // Appending dynamic data
+    obf << helloworld;
+    obf2 << helloworld;
+
+    // Comparison verification
+    if (obf == obf2) {
+        // Both containers hold identical obfuscated content
+    }
+}
+
+```
+
 ---
 
-## 4. 프로그래밍 TODO list 및 우선순위 관리 (TODO List)
+### 4. TODO List Tracker
 
-### 📌 TODO List Tracker
-
-| ID | 우선순위 | 작업 항목 (Task Description) | 상태 (Status) | 비고 |
+| ID | Priority | Task Description | Status | Remarks |
 | --- | --- | --- | --- | --- |
-| **TODO-OBF-01** | `HIGH` | **동적 시드(Dynamic Seed) 기반 Compile-time 키 생성 구현**<br>- `__TIME__` / `__LINE__` 기반 C++14 `constexpr` 시드 생성 알고리즘 보완 | `To Do` | `constexpr_obfuscate.hpp` |
-| **TODO-OBF-02** | `HIGH` | **다중 바이트 XOR / AES-CTR compile-time 알고리즘 확장**<br>- C++14 `constexpr` 제어문을 활용한 가변 길이 키 스트림 난독화 적용 | `In Progress` | 난독화 강도 향상 |
-| **TODO-OBF-03** | `MEDIUM` | **runtime 메모리 Zeroize 보장 함수 적용**<br>- 최적화에 의해 `memset`이 생략되지 않도록 `volatile` 키워드 또는 `RtlSecureZeroMemory` 처리 | `To Do` | `obfuscate_string.cpp` |
-| **TODO-OBF-04** | `MEDIUM` | **C++11 호환 `std::string_view` 유사 캐스팅 연산자 추가**<br>- C++11 표준 범위 내 오버로드 연산자 확장 | `To Do` | 편의 기능 보완 |
-| **TODO-OBF-05** | `MEDIUM` | **C++11 / C++14 버전 분리 검증 조건문 추가**<br>- `#if __cplusplus >= 201402L` 전처리기 조건문 기반 타깃 분리 처리 | `To Do` | 호환성 보장 |
-| **TODO-OBF-06** | `LOW` | **Obfuscator 사용 예제 작성 및 주석 검수**<br>- C++14 `constexpr` / C++11 runtime 명시적 영문 주석 검수 및 Doxygen 추가 | `In Progress` | 문서화 작업 |
+| **TODO-OBF-01** | `HIGH` | **Implement Dynamic Seed-based Compile-time Key Generation**<br><br>- Enhance C++14 `constexpr` key generation using dynamic factors/seeds | `To Do` | `constexpr_obfuscate.hpp`<br> |
+| **TODO-OBF-02** | `HIGH` | **Extend Multi-byte XOR / AES-CTR Compile-time Algorithms**<br><br>- Upgrade factor-based algorithm to multi-byte keystream obfuscation leveraging C++14 `constexpr`<br> | `In Progress` | Enhance obfuscation strength |
+| **TODO-OBF-03** | `MEDIUM` | **Apply Guaranteed Runtime Memory Zeroing Functions**<br><br>- Ensure `cleanup()` zeroizes `_contents` memory securely to prevent sensitive data leakage | `To Do` | `obfuscate_string.cpp`<br> |
+| **TODO-OBF-04** | `MEDIUM` | **Add C++11 Compatible `std::string_view`-like Casting Operators**<br><br>- Extend interface operators within C++11 standard scope for smoother stream integration | `To Do` | Supplement convenience features |
+| **TODO-OBF-05** | `MEDIUM` | **Add C++11 / C++14 Version Separation Verification Conditionals**<br><br>- Ensure strict separation of `t_constexpr_obf` using `#if __cplusplus >= 201402L` preprocessor guards | `To Do` | Ensure compatibility |
+| **TODO-OBF-06** | `LOW` | **Write Obfuscator Usage Examples and Review Comments**<br><br>- Add explicit Doxygen comments and usage examples for `t_constexpr_obf` and `obfuscate_string`<br> | `In Progress` | Documentation tasks |

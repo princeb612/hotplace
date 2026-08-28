@@ -16,9 +16,12 @@
 #include <hotplace/sdk/base/stream.hpp>
 #include <hotplace/sdk/base/types.hpp>
 
-#define __try2 do
-#define __finally2 while (0);
+/* Single Exit Point Error Handling */
+// clang-format off
+#define __try2 do {
+#define __finally2 } while (0);
 #define __leave2 break
+// clang-format on
 
 #ifdef __cplusplus
 #define __trynew try

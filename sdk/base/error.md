@@ -1,22 +1,28 @@
+# Universal Error Handler (`return_t`) - published by Gemini
 
-# `return_t` - published by Gemini
+## 1. Overview & Key Features
 
-## 1. 개요 및 설계 목적 (Overview & Design Pattern)
+The `return_t` structure is a C++11 universal error handling wrapper designed to unify disparate error code systems from operating systems (Linux `errno`, Windows `DWORD`/`HRESULT`) and external libraries (OpenSSL, ODBC, etc.) into a single, cohesive type.
 
-`return_t` 구조체는 OS(Linux `errno`, Windows `DWORD`/`HRESULT`) 및 외부 라이브러리(OpenSSL, ODBC 등)의 서로 다른 오류 코드 체계를 단일 타입으로 통합 관리하기 위해 설계된 **Universal Error Handling wrapper**.
-
-### 주요 특징
-
-1. **이종 플랫폼/라이브러리 에러 타입 통합**: Linux `errno`/`EAI_*`, Windows API `GetLastError()`, `HRESULT` 및 사용자 정의 에러 코드(`errorcode_t`)를 통합 수용.
-2. **투명한 타입 변환 (Implicit/Explicit Conversion)**: `uint32`, `int`, `errorcode_t`, `HRESULT` 등에 대한 생성자 및 대입 연산자, `constexpr` 캐스팅 연산자를 제공하여 기존 코드와의 하위 호환성 및 편의성 보장.
-3. **오류 metadata 및 카테고리화 제공**: `error_advisor` singleton 클래스와 연동되어 단순 숫자값을 넘어서 에러 이름(`error_code`), 설명 메시지(`error_message`), 심각도 및 속성에 따른 분류(`category`) 기능 제공.
-4. **`function_pipeline` module 및 `error_traits`와의 결합**: `error_traits<return_t>` 특수화를 통해 체인 구조의 pipeline에서 성공/실패 여부를 판단하는 표준 타입으로 활용.
+* **Heterogeneous Platform/Library Error Integration**: Unifies Linux `errno`/`EAI_*`, Windows API `GetLastError()`, `HRESULT`, and user-defined error codes (`errorcode_t`).
+* **Transparent Type Conversions**: Provides implicit/explicit constructors, assignment operators, and `constexpr` casting operators for `uint32`, `int`, `errorcode_t`, and `HRESULT`, ensuring full backward compatibility and seamless integration with existing codebases.
+* **Metadata & Categorization Support**: Integrates with the `error_advisor` singleton class to provide error names (`error_code`), detailed description messages (`error_message`), and classification by severity/attributes (`category`).
+* **Pipeline & Error Traits Integration**: Specializes `error_traits<return_t>` to act as the standard interface for validating success/failure states within `function_pipeline` execution chains.
 
 ---
 
-## 2. 핵심 class, struct 및 API 구조 분석 (API Reference)
+## 2. Key Implementation Areas & Technical Elements
 
-### 1) `return_t` 구조체
+* **Implicit/Explicit Type Bridging**: Enables seamless conversion to and from integer and enum types, allowing developers to extend error handling return types without refactoring overhead.
+* **Advisor-Driven Metadata Lookup**: Employs an internal mapping table (`error_descriptions`) managed by the `error_advisor` singleton, minimizing runtime string parsing overhead while supplying rich logging metadata.
+* **OS Error Abstraction (`get_lasterror`)**: Abstracts system-level and socket-level errors across different operating systems into standardized `return_t` instances.
+* **Pipeline-Aware Error Traits**: Leverages `error_traits` specialization (`is_success`, `is_not_fail`) to quickly determine whether to proceed with or interrupt execution pipelines.
+
+---
+
+## 3. Major Data Structures, Classes & API Reference
+
+### 1) `return_t` Struct & `error_advisor` Class Declaration
 
 ```cpp
 namespace hotplace {
@@ -35,21 +41,10 @@ struct return_t {
 
     constexpr operator uint32() const { return code; }
     constexpr operator errorcode_t() const { return static_cast<errorcode_t>(code); }
-
-    // 대입 및 비교 연산자 (uint32, int, errorcode_t 등 지원)
-    ...
 };
 
-}
-```[cite: 4]
-
-### 2) `error_advisor` 클래스 (Singleton)
-
-오류 코드와 메시지의 매핑 테이블(`error_descriptions`)을 내부적으로 관리하며 metadata 조회를 담당[cite: 5, 6].
-
-```cpp
 class error_advisor {
-public:
+   public:
     static error_advisor* get_instance();
 
     bool error_code(return_t error, std::string& code);
@@ -57,33 +52,42 @@ public:
     bool error_message(return_t error, std::string& code, std::string& message);
 
     error_category_t categoryof(return_t code);
-    ...
 };
+
+}  // namespace hotplace
 ```
-[cite: 6]
+[cite: 17]
 
-### 3) 주요 API 및 열거형
+### 2) Core APIs, Constants & Enum Reference[cite: 17]
 
-| 구분 | 이름 | 설명 |
+| Category | Identifier | Description |
 | --- | --- | --- |
-| **상수 영역** | `ERROR_CODE_BEGIN` (`0xef010000`) | `hotplace` 전용 치명적 에러 코드 시작 offset[cite: 4]. |
-| | `WARN_CODE_BEGIN` (`0xff010000`) | 경고 및 비치명적 에러 코드 시작 offset[cite: 4]. |
-| **에러 카테고리** | `error_category_t` | `success`, `expect_failure`, `severe`, `not_supported`, `low_security`, `trivial`, `warn` 분류[cite: 4]. |
-| **helper 함수** | `get_lasterror(code, flags)` | OS 또는 소켓 API의 시스템 에러를 취득하여 `return_t`로 변환[cite: 3, 4]. |
-| **특수화 템플릿** | `error_traits<return_t>` | 성공 여부 검증(`is_success`, `is_not_fail`) 및 pipeline 연동 인터페이스[cite: 6]. |
+| **Constants** | `ERROR_CODE_BEGIN` (`0xef010000`) | Starting offset for `hotplace` critical error codes[cite: 17]. |
+| | `WARN_CODE_BEGIN` (`0xff010000`) | Starting offset for warnings and non-fatal error codes[cite: 17]. |
+| **Error Categories** | `error_category_t` | Categorization enum: `success`, `expect_failure`, `severe`, `not_supported`, `low_security`, `trivial`, `warn`[cite: 17]. |
+| **Helper Functions** | `get_lasterror(code, flags)` | Retrieves OS or Socket API errors and converts them into `return_t`[cite: 17]. |
+| **Template Specialization** | `error_traits<return_t>` | Provides success/failure validation (`is_success`, `is_not_fail`) for pipeline integration[cite: 17]. |
 
 ---
 
-## 3. C++11 기반 실습 code (C++11 Example Usage)
+## 4. Operational Principles[cite: 17]
+1. **Error Code Construction & Conversion**:
+   * Initializes to `errorcode_t::success` by default and utilizes C++11 `constexpr` conversion operators for zero-overhead compile-time comparisons with existing `uint32` and `errorcode_t` conditions[cite: 17].
+2. **Error Metadata Lookup (`error_advisor`)**:
+   * Calling `error_code()`, `error_message()`, or `category()` queries the `error_advisor::get_instance()` singleton to map numeric values back to human-readable code names, description messages, and severity categories[cite: 17].
+3. **Platform Error Capture & Pipeline Dispatch**:
+   * `get_lasterror()` captures platform-specific error states and wraps them into `return_t`, while `error_traits<return_t>` allows execution pipelines to evaluate success/failure states instantly[cite: 17].
 
-`C++11` 규격
+---
+
+## 5. Usage Example (C++11 Standard)[cite: 17]
 
 ```cpp
 #include <iostream>
 #include <hotplace/sdk/base/error.hpp>
 #include <hotplace/sdk/base/system/error.hpp>
 
-// 모의 API 함수
+// Mock API Function
 hotplace::return_t do_something(bool fail) {
     if (fail) {
         return hotplace::errorcode_t::invalid_parameter;
@@ -94,14 +98,14 @@ hotplace::return_t do_something(bool fail) {
 int main() {
     using namespace hotplace;
 
-    // 1. return_t 생성 및 대입 연산
+    // 1. Instantiation and assignment
     return_t ret = do_something(false);
 
     if (ret == errorcode_t::success) {
         std::cout << "[SUCCESS] Code: " << ret.code << std::endl;
     }
 
-    // 2. 에러 발생 및 metadata 출력
+    // 2. Error handling and metadata retrieval
     ret = do_something(true);
 
     if (ret != errorcode_t::success) {
@@ -112,33 +116,24 @@ int main() {
                   << static_cast<int>(ret.category()) << std::endl;
     }
 
-    // 3. 시스템 에러 변환 (get_lasterror)
-    return_t sys_err = get_lasterror(-1); // OS 에러 연동 테스트
+    // 3. System error translation (get_lasterror)
+    return_t sys_err = get_lasterror(-1);
     std::cout << "System Error Code String: " << sys_err.error_code() << std::endl;
 
     return 0;
 }
 ```
+[cite: 17]
 
 ---
 
-## 4. 프로그래밍 TODO list 및 우선순위 관리 (TODO List)
+## 6. TODO List[cite: 17]
 
-`return_t` 및 `error_advisor` module의 고도화를 위한 번호 체계 기반 TODO 항목
-
-`error.md`의 **TODO List Tracker**의 **TODO 1, 2, 3** 항목 상태(Status)를 반영하여 업데이트한 전체 테이블은 다음과 같습니다.
-
----
-
-## 4. 프로그래밍 TODO list 및 우선순위 관리 (TODO List)
-
-`return_t` 및 `error_advisor` module의 고도화를 위한 번호 체계 기반 TODO 항목
-
-### 📌 TODO List Tracker
-
-| ID | 우선순위 | 작업 항목 (Task Description) | 상태 (Status) | 비고 |
+| ID | Priority | Task Description | Status | Remarks |
 | --- | --- | --- | --- | --- |
-| ~~TODO-RET-01~~ | `HIGH` | **C++11 `constexpr` 비교 연산자 범위 확장**<br><br>- `return_t`와 다양한 정수형 타입 간의 compile-time 비교 연산자 추가 보완 | `Fixed`` | `error.hpp` 내 `constexpr` 보완 |
-| ~~TODO-RET-02~~ | `HIGH` | **Linux `EAI_*` 에러 offset 변환 구간 OOB 검증 강화**<br><br>- `get_lasterror` 처리 시 시스템 범위 초과 에러 코드에 대한 예외 처리 보완 | `Fixed` | `error.cpp` 수정 |
-| **TODO-RET-03** | `MEDIUM` | **`error_advisor` 동적 에러 테이블 등록 API 구현**<br><br>- module별 커스텀 에러 정의 및 메시지 runtime 등록 기능 확충 | `To Do` | singleton 확장 |
-| ~~**TODO-RET-04**~~ | `MEDIUM` | **Windows `HRESULT`/`DWORD` 에러 문자열 포맷팅 서식 최적화**<br><br><br>- `FormatMessageA` 실패시 NPE 검증, `FACILITY_WIN32` 변환 및 `\r\n` 트림 처리 | `Fixed` | `error.cpp` 반영 |
+| **TODO-RET-01** | `HIGH` | **Expand C++11 `constexpr` Comparison Operators**<br>- Add compile-time comparison operators between `return_t` and various integer types | `Fixed` | Enhanced `constexpr` in `error.hpp`[cite: 17] |
+| **TODO-RET-02** | `HIGH` | **Strengthen Linux `EAI_*` Error Offset OOB Validation**<br>- Enhance exception handling for out-of-bound system error codes in `get_lasterror` | `Fixed` | Modified `error.cpp`[cite: 17] |
+| **TODO-RET-03** | `MEDIUM` | **Implement Dynamic Error Registration API in `error_advisor`**<br>- Add runtime registration interface for module-specific custom error definitions and messages | `Postponed` | Pending singleton extension[cite: 17] |
+| **TODO-RET-04** | `MEDIUM` | **Optimize Windows `HRESULT`/`DWORD` Formatting**<br>- Add null pointer checks on `FormatMessageA` failure, handle `FACILITY_WIN32` conversion, and trim `\r\n` | `Fixed` | Applied in `error.cpp`[cite: 17] |
+
+---

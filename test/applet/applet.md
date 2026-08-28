@@ -1,121 +1,129 @@
-## server 애플릿(Server Applet) - published by Gemini
+## Server Applet - published by Gemini
 
 ---
 
-### 1. tcpserver1 (Multiplexer interface 기반 TCP server)
+### 1. tcpserver1 (Multiplexer Interface-Based TCP Server)
 
-* **주요 역할**: I/O Multiplexer(IOCP/Epoll 등) 기반 Event Loop 제어를 이용한 비동기 TCP server 기본 동작 구현.
-* **핵심 동작 mechanism**:
-  * Multiplexer 객체에 TCP Listening Socket 등록 후 Event Loop 진입.
-  * client 접속 및 Read/Write 이벤트 발생 시 Handler Callback 수행.
-* **TODO list**:
+* **Primary Role**: Implements basic asynchronous TCP server operations using event loop control based on an I/O Multiplexer (IOCP/Epoll, etc.).
+* **Core Operating Mechanism**:
+  * Registers a TCP listening socket with the Multiplexer object and enters the event loop.
+  * Executes handler callbacks upon client connection, read, and write events.
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+* **TODO List**:
+
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **#1** | Socket Read 이벤트 발생 시 partial read/write 처리 handling 보완 | High | 미진행 |
-| **#2** | Multiplexer Shutdown 시 client session cleanup 처리 검증 | Medium | 미진행 |
+| **TODO-TS1-01** | Enhance partial read/write handling when socket read events occur | High | Open |
+| **TODO-TS1-02** | Verify client session cleanup handling during Multiplexer shutdown | Medium | Open |
 
 ---
 
-### 2. tcpserver2 (Network Server interface 기반 TCP server)
+### 2. tcpserver2 (Network Server Interface-Based TCP Server)
 
-* **주요 역할**: `network_server` high-level 추상화 interface를 활용한 캡슐화된 TCP server 동작 구현.
-* **핵심 동작 mechanism**:
-  * `network_server` 객체 생성 및 포트/protocol 설정 후 `start()` 호출.
-  * 내부 thread pool 및 socket life-cycle을 추상화된 server 이벤트 protocol로 제어.
-* **TODO list**:
+* **Primary Role**: Implements encapsulated TCP server operations utilizing the high-level `network_server` abstraction interface.
+* **Core Operating Mechanism**:
+  * Instantiates a `network_server` object, configures port and protocol settings, and invokes `start()`.
+  * Controls internal thread pool and socket lifecycles via abstracted server event protocols.
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+* **TODO List**:
+
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **#1** | `network_server` session 파괴 시 메모리 누수 유무 검증 | High | 미진행 |
-| **#2** | 동시 접속 자원 제한 (Max Connection) 설정 interface 적용 | Medium | 미진행 |
+| **TODO-TS2-01** | Verify memory leaks during `network_server` session destruction | High | Open |
+| **TODO-TS2-02** | Apply an interface to configure concurrent connection resource limits (Max Connections) | Medium | Open |
 
 ---
 
-### 3. udpserver1 (Multiplexer interface 기반 UDP server)
+### 3. udpserver1 (Multiplexer Interface-Based UDP Server)
 
-* **주요 역할**: I/O Multiplexer 제어를 통한 비연결성(Connectionless) UDP socket 이벤트 처리.
-* **핵심 동작 mechanism**:
-  * UDP socket을 Multiplexer에 등록하고 데이터 수신 Read 이벤트 대기.
-  * `recvfrom` / `sendto` 연산을 통한 Datagram 동기 처리 및 socket 이벤트 dispatch.
-* **TODO list**:
+* **Primary Role**: Handles connectionless UDP socket events via I/O Multiplexer control.
+* **Core Operating Mechanism**:
+  * Registers a UDP socket with the Multiplexer and waits for data reception read events.
+  * Performs synchronous processing of datagrams and dispatches socket events via `recvfrom` / `sendto` operations.
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+* **TODO List**:
+
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **#1** | UDP Datagram buffer overflow 발생 시 packet Drop handling 강화 | High | 미진행 |
-| **#2** | Multiplexer 내 Client IP/Port 관리용 데이터 구조 보완 | Medium | 미진행 |
+| **TODO-US1-01** | Strengthen packet drop handling upon UDP datagram buffer overflow | High | Open |
+| **TODO-US1-02** | Supplement data structures for client IP/Port management within the Multiplexer | Medium | Open |
 
 ---
 
-### 4. udpserver2 (Network Server interface 기반 UDP server)
+### 4. udpserver2 (Network Server Interface-Based UDP Server)
 
-* **주요 역할**: `network_server` 추상화 layer 기반 UDP Datagram server 구현.
-* **핵심 동작 mechanism**:
-  * UDP server 속성으로 `network_server` 초기화 후 서비스 실행.
-  * Datagram 수신 및 송신 핸들러 연결을 통한 비동기 UDP session 제어.
-* **TODO list**:
+* **Primary Role**: Implements a UDP datagram server built on top of the `network_server` abstraction layer.
+* **Core Operating Mechanism**:
+  * Initializes `network_server` with UDP server attributes and executes the service.
+  * Controls asynchronous UDP sessions by binding datagram receive and transmit handlers.
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+* **TODO List**:
+
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **#1** | 비대칭 UDP 송수신 traffic 시 thread pool 병목 현상 점검 | High | 미진행 |
-| **#2** | `network_server` stop 시 pending datagram dump 처리 | Low | 미진행 |
+| **TODO-US2-01** | Check for thread pool bottlenecks during asymmetric UDP send/receive traffic | High | Open |
+| **TODO-US2-02** | Handle pending datagram dumps upon stopping `network_server`<br> | Low | Open |
 
 ---
 
-### 5. tlsserver (Network Server interface 기반 TLS server)
+### 5. tlsserver (Network Server Interface-Based TLS Server)
 
-* **주요 역할**: OpenSSL 및 Hotplace 보안 framework 연동 TLS(Transport Layer Security) 암호화 server 구현.
-* **핵심 동작 mechanism**:
-  * SSL Context 초기화, 인증서(`cert.pem`) 및 개인키(`key.pem`) loading.
-  * TLS Handshake 수행 및 암호화 채널(Encrypted Channel)을 통한 Read/Write 연산.
-* **TODO list**:
+* **Primary Role**: Implements an encrypted TLS (Transport Layer Security) server integrating OpenSSL and the Hotplace security framework.
+* **Core Operating Mechanism**:
+  * Initializes the SSL Context and loads certificates (`cert.pem`) and private keys (`key.pem`).
+  * Performs TLS handshakes and manages read/write operations over encrypted channels.
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+* **TODO List**:
+
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **#1** | TLS Handshake 실패 시 SSL Error Code 상세 logging 보완 | High | 미진행 |
-| **#2** | TLS 1.2 / TLS 1.3 Ciphersuite 호환성 및 DH Parameter 세팅 확인 | Medium | 미진행 |
+| **TODO-TS-01** | Supplement detailed logging of SSL error codes upon TLS handshake failures | High | Open |
+| **TODO-TS-02** | Verify TLS 1.2 / TLS 1.3 ciphersuite compatibility and DH parameter settings | Medium | Open |
 
 ---
 
-### 6. dtlsserver (Network Server interface 기반 DTLS server)
+### 6. dtlsserver (Network Server Interface-Based DTLS Server)
 
-* **주요 역할**: Datagram 기반 TLS(DTLS) 암호화 통신 server 구현.
-* **핵심 동작 mechanism**:
-  * UDP socket 상에서 DTLS Context를 생성하고 DTLS Cookie Exchange 및 Handshake 연산 수행.
-  * packet 손실 및 재전송 timer를 고려한 Secure Datagram 송수신 제어.
-* **TODO list**:
+* **Primary Role**: Implements a datagram-based TLS (DTLS) encrypted communication server.
+* **Core Operating Mechanism**:
+  * Creates a DTLS context over UDP sockets and executes DTLS cookie exchanges and handshake operations.
+  * Controls secure datagram transmission while accounting for packet loss and retransmission timers.
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+* **TODO List**:
+
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **#1** | DTLS Handshake Packet Loss 발생 시 Retransmission timer logic 검증 | High | 미진행 |
-| **#2** | DTLS Client Cookie Verification 연산 오류 handling 보완 | Medium | 미진행 |
+| **TODO-DS-01** | Verify retransmission timer logic during DTLS handshake packet loss | High | Open |
+| **TODO-DS-02** | Improve handling of DTLS client cookie verification calculation errors | Medium | Open |
 
 ---
 
-### 7. httpserver1 (HTTP Server interface 기반 HTTP/1.1 server)
+### 7. httpserver1 (HTTP Server Interface-Based HTTP/1.1 Server)
 
-* **주요 역할**: `http_server` interface 기반 HTTP/1.1 Request/Response protocol parsing 및 정적 resource web server 동작 구현.
-* **핵심 동작 mechanism**:
-  * HTTP Method(GET, POST 등), URI, Header 및 Body parsing.
-  * `index.html`, `signin.html`, `style.css` 정적 routing 및 HTTP Response redering.
-* **TODO list**:
+* **Primary Role**: Implements HTTP/1.1 request/response protocol parsing and static resource web server operations using the `http_server` interface.
+* **Core Operating Mechanism**:
+  * Parses HTTP methods (GET, POST, etc.), URIs, headers, and bodies.
+  * Handles static routing for `index.html`, `signin.html`, `style.css`, and renders HTTP responses.
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+* **TODO List**:
+
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **#1** | HTTP/1.1 Keep-Alive Connection Timeout 처리 logic 확인 | High | 미진행 |
-| **#2** | POST Body parsing 시 Chunked Transfer Encoding 예외 처리 보완 | Medium | 미진행 |
+| **TODO-HS1-01** | Verify HTTP/1.1 keep-alive connection timeout handling logic | High | Open |
+| **TODO-HS1-02** | Supplement chunked transfer encoding exception handling during POST body parsing | Medium | Open |
 
 ---
 
-### 8. httpserver2 (HTTP Server interface 기반 HTTP/2 server)
+### 8. httpserver2 (HTTP Server Interface-Based HTTP/2 Server)
 
-* **주요 역할**: `http_server` interface 기반 HTTP/2 binary frame 및 다중화(Multiplexing) 지원 server 구현.
-* **핵심 동작 mechanism**:
-  * HTTP/2 Frame(SETTINGS, HEADERS, DATA 등) parsing 및 HPACK header 압축 해제.
-  * 단일 TCP 연결 상에서 Multi-Stream session dispatch 및 정적 resource 전달.
-* **TODO list**:
+* **Primary Role**: Implements an HTTP/2 server supporting binary frames and multiplexing based on the `http_server` interface.
+* **Core Operating Mechanism**:
+  * Parses HTTP/2 frames (SETTINGS, HEADERS, DATA, etc.) and decompresses HPACK headers.
+  * Dispatches multi-stream sessions and serves static resources over a single TCP connection.
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+* **TODO List**:
+
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **TODO-APP-01** | HPACK Dynamic Table Management overflow 예외 처리 검증 | High | 미진행 |
-| **TODO-APP-02** | HTTP/2 Stream Flow Control (WINDOW_UPDATE) 제어 연산 확인 | Medium | 미진행 |
+| **TODO-TODO-HS2-01** | Verify HPACK dynamic table management overflow exception handling | High | Open |
+| **TODO-TODO-HS2-02** | Verify HTTP/2 stream flow control (`WINDOW_UPDATE`) control operations | Medium | Open |

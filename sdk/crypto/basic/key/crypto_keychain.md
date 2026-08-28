@@ -1,42 +1,46 @@
-## Crypto Keychain module - published by Gemini
+Here is the translated document for the `Crypto Keychain` module in English:
 
 ---
 
-### 1. 개요 및 주요 특징
-
-* **module 역할**: algorithm별 암호화 키 저장소 관리, OpenSSL 3.0 provider 연동 및 Key Exchange handling module.
-* **주요 기능**:
-  * **Algorithm Specific Keychains**: RSA, EC, DH, DSA, OCT, OKP algorithm별 키 저장 및 관리 연산 (`crypto_keychain_rsa.cpp`, `crypto_keychain_ec.cpp`, `crypto_keychain_dh.cpp` 등).
-  * **EC Point Compression Formatting**: Elliptic Curve 압축/비압축 포맷 지원 (`crypto_keychain_ec_compressed.cpp`, `crypto_keychain_ec_uncompressed.cpp`).
-  * **OpenSSL 3.0 Provider Abstraction**: OpenSSL 3.0 EVP_PKEY 연동 및 키 storage backend interface (`crypto_keychain_ossl3.cpp`).
-  * **Key Exchange Operations**: DH/ECDH Key Agreement 및 shared secret 파생 연산 (`crypto_keyexchange.cpp`).
+## Crypto Keychain - published by Gemini
 
 ---
 
-### 2. 핵심 구현 영역 및 기술 요소
+### 1. Overview and Key Features
+
+* **Module Role**: Manages algorithm-specific encryption key repositories, handles OpenSSL 3.0 provider integration, and manages Key Exchange operations.
+* **Key Features**:
+  * **Algorithm Specific Keychains**: Key storage and management operations per algorithm type, including RSA, EC, DH, DSA, OCT, and OKP (`crypto_keychain_rsa.cpp`, `crypto_keychain_ec.cpp`, `crypto_keychain_dh.cpp`, etc.).
+  * **EC Point Compression Formatting**: Supports compressed and uncompressed formats for Elliptic Curve points (`crypto_keychain_ec_compressed.cpp`, `crypto_keychain_ec_uncompressed.cpp`).
+  * **OpenSSL 3.0 Provider Abstraction**: Integrates with OpenSSL 3.0 `EVP_PKEY` and key storage backend interfaces (`crypto_keychain_ossl3.cpp`).
+  * **Key Exchange Operations**: Executes DH/ECDH Key Agreement and shared secret derivation operations (`crypto_keyexchange.cpp`).
+
+---
+
+### 2. Core Implementation Areas and Technical Elements
 
 * **Algorithm Keychain Implementations (`crypto_keychain_*.cpp`)**:
-  * algorithm별(RSA, EC, DH, DSA, OCT, OKP) 키쌍 생성 및 store 관리.
+  * Manages key pair generation and storage across various algorithms (RSA, EC, DH, DSA, OCT, OKP).
 * **EC Point Format Handling (`crypto_keychain_ec_compressed.cpp`, `crypto_keychain_ec_uncompressed.cpp`)**:
-  * 타원곡선 좌표 압축/비압축 직렬화 연산 지원.
+  * Supports elliptic curve point compression and decompression serialization operations.
 * **OpenSSL 3 Integration & Key Exchange (`crypto_keychain_ossl3.cpp`, `crypto_keyexchange.cpp`)**:
-  * OpenSSL 3.0 Provider API backend 연동 및 Key Agreement 연산.
+  * Connects with the OpenSSL 3.0 Provider API backend and executes Key Agreement operations.
 
 ---
 
-### 3. 핵심 동작 mechanism
+### 3. Core Operating Mechanism
 
 * **Keychain Generation & Key Exchange Flow (`crypto_keychain.cpp`, `crypto_keyexchange.cpp`)**:
-  * keychain 조회/생성 요청 -> algorithm provider(`crypto_keychain_ossl3`) 연동 -> 키쌍 할당 -> `crypto_keyexchange` pipeline을 통한 Shared Secret 파생 연산 수행.
+  * Receive keychain lookup/generation request -> Integrate with algorithm provider (`crypto_keychain_ossl3`) -> Allocate key pair -> Derive Shared Secret through the `crypto_keyexchange` pipeline.
 
 ---
 
-### 4. TODO list
+### 4. TODO List Tracker
 
-| 번호 | 작업 내용 | 우선순위 | 진행 상황 |
+| No. | Task Description | Priority | Status |
 | --- | --- | --- | --- |
-| **TODO-KEYCHAIN-01** | `crypto_keychain_ossl3.cpp` 내 OpenSSL 3.0 EVP_PKEY context allocation 실패 시 error handling 보완 | High | 미진행 |
-| **TODO-KEYCHAIN-02** | `crypto_keyexchange.cpp` 내 Shared Secret 계산 과정 메모리 leak 및 data race 검증 | High | 미진행 |
-| **TODO-KEYCHAIN-03** | `crypto_keychain_ec_compressed.cpp` 내 EC point decompression 연산 시 invalid point validation 강화 | High | 미진행 |
-| **TODO-KEYCHAIN-04** | `crypto_keychain_rsa.cpp` 내 key generation timing attack 방지 및 secure padding 적용 확인 | Medium | 미진행 |
-| **TODO-KEYCHAIN-05** | `crypto_keychain_okp.cpp` 내 Ed25519 / X25519 key derivation performance profiling 검토 | Low | 미진행 |
+| **TODO-KEYCHAIN-01** | Supplement error handling for OpenSSL 3.0 `EVP_PKEY` context allocation failures in `crypto_keychain_ossl3.cpp`<br> | High | Open |
+| **TODO-KEYCHAIN-02** | Validate memory leaks and data races during Shared Secret computation in `crypto_keyexchange.cpp`<br> | High | Open |
+| **TODO-KEYCHAIN-03** | Strengthen invalid point validation during EC point decompression operations in `crypto_keychain_ec_compressed.cpp`<br> | High | Open |
+| **TODO-KEYCHAIN-04** | Verify key generation timing attack mitigations and secure padding applications in `crypto_keychain_rsa.cpp`<br> | Medium | Open |
+| **TODO-KEYCHAIN-05** | Review performance profiling for Ed25519 / X25519 key derivation in `crypto_keychain_okp.cpp`<br> | Low | Open |

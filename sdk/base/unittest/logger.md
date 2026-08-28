@@ -1,85 +1,83 @@
-# `logger` framework - published by Gemini
+## `logger` - published by Gemini
 
-## 1. 개요 및 설계 구조 (Overview & Architecture)
+### 1. Overview and Architecture
 
-`logger` module은 builder pattern(Builder Pattern)과 쓰레드별 context(Thread-Local Context) 관리를 기반으로 구축된 멀티쓰레드 환경 지원 logging 시스템
-백그라운드 소비 쓰레드(Consumer Thread)를 이용한 지연 flush(Delayed Flush) mechanism을 적용하여 I/O 병목을 최소화
+* The `logger` module is a logging system supporting multithreaded environments, built upon the Builder Pattern and thread-local context management.
+* It applies a delayed flush mechanism using a background consumer thread to minimize I/O bottlenecks.
 
-### 주요 특징
+#### Key Features
 
-1. **builder pattern 기반 객체 생성 (`logger_builder`)**:
-* `logger_builder`를 통해 표준 출력, 파일 저장, flush 주기/크기, 시간 포맷, 테스트케이스 binding 등을 chaining 형태로 설정 후 빌드함.
-2. **쓰레드별 데이터 격리 (`logger_item`)**:
-* 쓰레드 ID(`tid`)별로 독립된 `basic_stream` buffer를 mapping하여 쓰레드 간 동기화 overhead 최소화.
-* reference counting(`t_shared_reference`) 기반으로 안전한 메모리 생명주기 관리함.
-3. **지연 쓰기 및 소비자 쓰레드 (Deferred Flushing & Consumer Thread)**:
-* 백그라운드 쓰레드가 일정 주기(`logger_interval`)마다 파일 buffer(`delayed`)의 크기 및 시간을 감지해 일괄 flush 수행.
-4. **ANSI 콘솔 색상 지원 (`console_color`)**:
-* style, 전경색, 배경색을 지정하여 terminal 로그 가독성 향상.
-5. **메모리 dump 기능 (`dump`, `hdump`)**:
-* binary 데이터 및 메모리 주소를 헥사(Hex) dump 형태로 직렬화 출력함.
+1. **Builder Pattern-Based Object Creation (`logger_builder`)**:
+* Uses chaining via `logger_builder` to configure standard output, file storage, flush interval/size, time format, test-case bindings, and build the logger instance.
+2. **Thread-Level Data Isolation (`logger_item`)**:
+* Maps an independent `basic_stream` buffer per thread ID (`tid`) to minimize synchronization overhead between threads.
+* Manages memory lifecycle safely based on reference counting (`t_shared_reference`).
+3. **Deferred Flushing & Consumer Thread**:
+* A background thread detects buffer size and elapsed time of the file buffer (`delayed`) at regular intervals (`logger_interval`) to perform batch flushes.
+4. **ANSI Console Color Support (`console_color`)**:
+* Enhances terminal log readability by allowing specification of style, foreground color, and background color.
+5. **Memory Dump Functions (`dump`, `hdump`)**:
+* Serializes binary data and memory addresses into hexadecimal (Hex) dump formats for output.
 
 ---
 
-## 2. 핵심 class 및 구조 분석 (API Reference)
+### 2. Core Classes and API Reference
 
-### 주요 구성요소
+#### Key Components
 
-* **`logger_builder`**: 로거의 주요 설정값(콘솔, 파일, flush 조건 등)을 조합하고 ASCII 아트 배너 출력 후 `logger` instance 생성함.
-* **`logger_item`**: 쓰레드별로 할당되는 구조체로, 실시간 출력용 buffer(`bs`), 파일 flush용 지연 buffer(`delayed`), 타임스탬프 및 참조 카운트 보유함.
-* **`logger`**: thread 세이프 logging, 레벨 filtering, 메모리 dump, ANSI 컬러 출력 등 핵심 interface 제공함.
+* **`logger_builder`**: Combines main configuration parameters of the logger (console, file, flush conditions, etc.), outputs ASCII art banners, and creates `logger` instances.
+* **`logger_item`**: A structure allocated per thread holding a real-time output buffer (`bs`), a delayed buffer for file flushing (`delayed`), timestamps, and reference counts.
+* **`logger`**: Provides core interfaces such as thread-safe logging, log level filtering, memory dumps, and ANSI color outputs.
 
-### 주요 method 분석
+#### Key Methods
 
-| class / method | 역할 및 기능 |
+| Class / Method | Description |
 | --- | --- |
-| **`logger_builder::set_logfile`** | 파일 logging 활성화 및 출력 로그 파일 경로 지정함. |
-| **`logger::writeln` / `write`** | 포맷 문자열(`vprintf`), `std::string`, `basic_stream`, `stream_t*`, lambda 함수 형태 데이터를 출력 buffer에 기입함. |
-| **`logger::consoleln`** | 콘솔 전용 출력을 수행함. |
-| **`logger::dump` / `hdump`** | 메모리 주소 및 binary 데이터를 Hex dump 형태로 출력 buffer에 기록함 (header 지정 가능). |
-| **`logger::flush`** | 지연 buffer(`delayed`)에 적재된 로그를 체크하여 파일로 한 번에 쓰기 수행함. |
-| **`logger::setcolor` / `colorln`** | 콘솔 style 및 색상을 설정하여 컬러 로그 출력함. |
+| **`logger_builder::set_logfile`** | Enables file logging and specifies the output log file path. |
+| **`logger::writeln` / `write**` | Writes format strings (`vprintf`), `std::string`, `basic_stream`, `stream_t*`, or lambda function data to output buffers. |
+| **`logger::consoleln`** | Performs console-exclusive output. |
+| **`logger::dump` / `hdump**` | Writes memory addresses and binary data in Hex dump format to the output buffer (headers supported). |
+| **`logger::flush`** | Checks logs accumulated in the delayed buffer (`delayed`) and writes them to the file in a single operation. |
+| **`logger::setcolor` / `colorln**` | Sets console styles and colors to produce colored log output. |
 
 ---
 
-## 3. 핵심 내부 동작 원리 (Internal Architecture)
+### 3. Core Internal Architecture
 
-### 3.1. 쓰레드별 buffer 격리 (Thread-Local Context Flow)
+#### 3.1. Thread-Local Context Flow
 
-로그 요청 시 쓰레드 ID 기반으로 buffer를 격리하여 동시 쓰기 시 경합 최소화함:
-
-```
-[Thread A] ──► get_context() ──► TID A 검색 ──► logger_item A (bs / delayed)
-                                                      │
-                                                      ▼
-                                            basic_stream 데이터 기록
-                                                      │
-                                                      ▼
-                                         touch() 호출 -> 지연 buffer 이관
+Isolates buffers based on thread IDs upon log requests to minimize contention during concurrent writes:
 
 ```
+[Thread A] ──► get_context() ──► Lookup TID A ──► logger_item A (bs / delayed)
+                                                         │
+                                                         ▼
+                                             Write basic_stream data
+                                                         │
+                                                         ▼
+                                       Call touch() -> Transfer to delayed buffer
 
-### 3.2. 비동기 flush pipeline (Async Flushing Pipeline)
+```
 
-백그라운드 쓰레드 `consumer`가 주기적으로 실행되며 `flush(true)` 호출함:
+#### 3.2. Async Flushing Pipeline
+
+The background thread `consumer` executes periodically and invokes `flush(true)`:
 
 ```
 [Consumer Thread]
       │
-      ▼ (interval 마다 대기)
+      ▼ (Waits per interval)
   flush(check = true)
       │
-      ├─► 조건 검사: (현재 시간 - timestamp >= flush_time) OR (bs.size() >= flush_size)
+      ├─► Condition Check: (Current Time - timestamp >= flush_time) OR (bs.size() >= flush_size)
       │
-      └─► 조건 충족 시: std::ofstream (ios::app)으로 파일에 일괄 기입 후 bs.clear()
+      └─► When met: Batch write to file via std::ofstream (ios::app) -> bs.clear()
 
 ```
 
 ---
 
-## 4. C++11 기반 사용 예시 (C++11 Example Usage)
-
-`C++11` 규격
+### 4. C++11 Usage Example
 
 ```cpp
 #include <iostream>
@@ -134,15 +132,9 @@ int main() {
 
 ---
 
-## 5. 프로그래밍 TODO list 및 우선순위 관리 (TODO List)
+### 5. TODO List Tracker
 
-`logger` module 관련 개발 관리 항목
-
-### 📌 TODO List Tracker
-
-| ID | 우선순위 | 작업 항목 (Task Description) | 상태 (Status) | 비고 |
+| ID | Priority | Task Description | Status | Remarks |
 | --- | --- | --- | --- | --- |
-| **TODO-LOG-01** | `HIGH` | **로그 파일 로테이션 (`logger_rotate_size`, `logger_max_file`) 구현**<br>- 파일 크기 초과 시 파일 분할 및 최대 개수 유지 logic 추가 | `To Do` | `logger.cpp` (`flush` 확장) |
-| **TODO-LOG-02** | `MEDIUM` | **종료된 쓰레드 context(`_logger_stream_map`) 정리 mechanism 구축**<br>- 쓰레드 종료 시 자원 누수를 막기 위한 가비지 수집 logic 마련 | `To Do` | `logger.cpp`<br> |
-
----
+| **TODO-LOG-01** | `HIGH` | **Implement log file rotation (`logger_rotate_size`, `logger_max_file`)**<br><br>- Add logic to split files when size limits are exceeded and maintain maximum file counts | `To Do` | `logger.cpp` (Extend `flush`) |
+| **TODO-LOG-02** | `MEDIUM` | **Build thread context (`_logger_stream_map`) cleanup mechanism for exited threads**<br><br>- Implement garbage collection logic to prevent resource leaks upon thread termination | `To Do` | `logger.cpp`<br> |
