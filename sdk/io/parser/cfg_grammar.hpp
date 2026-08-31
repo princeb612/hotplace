@@ -42,8 +42,10 @@ enum class parser_action_t {
 };
 
 struct parser_action {
-    parser_action_t type = parser_action_t::error;
-    int target = -1;  // next state on shift, rule id on reduce
+    parser_action_t type;
+    int target;  // next state on shift, rule id on reduce
+
+    parser_action(parser_action_t a = parser_action_t::error, int t = -1) : type(a), target(t) {}
 };
 
 struct parser_production {
