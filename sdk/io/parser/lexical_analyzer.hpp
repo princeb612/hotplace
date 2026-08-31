@@ -15,6 +15,7 @@
 #include <hotplace/sdk/base/nostd/keyvalue.hpp>
 #include <hotplace/sdk/base/pattern/trie.hpp>
 #include <hotplace/sdk/base/stream/types.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/io/parser/types.hpp>
 #include <hotplace/sdk/io/types.hpp>
 #include <vector>
@@ -208,6 +209,8 @@ class lexical_analyzer {
     bool lookup(const char* p, size_t size, std::string& token_name, uint32& token_type /*, uint32& token_tag*/);
 
    private:
+    mutable critical_section _lock;
+
     struct token_attr_tag {
         uint32 attr;
         // uint32 tag;

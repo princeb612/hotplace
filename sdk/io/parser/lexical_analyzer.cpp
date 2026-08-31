@@ -17,17 +17,12 @@
 namespace hotplace {
 namespace io {
 
-lexical_analyzer::lexical_analyzer() {
-    // set handle_quoted to 1
-    get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1);
-    // nameof_token
-    auto resource = parser_resource::get_instance();
-    resource->for_each(parser_resource_type_t::token_type_basic, [this](uint32 token, const std::string& name) -> void { _token_dbg.emplace(token, name); });
-}
+lexical_analyzer::lexical_analyzer() {}
 
 lexical_analyzer::~lexical_analyzer() {}
 
 lexical_analyzer& lexical_analyzer::add_token(const std::string& token_name, uint32 token) {
+    critical_section_guard guard(_lock);
     if (false == token_name.empty()) {
         _lextoken.add(token_name.c_str(), token_name.size(), new token_attr_tag(token));
         _token_dbg.emplace(token, token_name);  // do not overwrite
@@ -83,6 +78,17 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
     return_t ret = errorcode_t::success;
     unsigned error_lookup = 0;
     __try2 {
+        if (_token_dbg.empty()) {
+            critical_section_guard guard(_lock);
+            if (_token_dbg.empty()) {
+                // set handle_quoted to 1
+                get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1);
+                // nameof_token
+                auto resource = parser_resource::get_instance();
+                resource->for_each(parser_resource_type_t::token_type_basic, [this](uint32 token, const std::string& name) -> void { _token_dbg.emplace(token, name); });
+            }
+        }
+
         if (nullptr == p) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
@@ -294,6 +300,7 @@ t_key_value<std::string, uint16>& lexical_analyzer::get_config() { return _keyva
 bool lexical_analyzer::lookup(const std::string& word, int& index, uint32 flags) {
     bool ret = true;
     int idx = -1;
+    critical_section_guard guard(_lock);
     if (flat_lookup_readonly & flags) {
         idx = _dictionary.find(word.c_str(), word.size());
         if (-1 == idx) {
@@ -311,6 +318,7 @@ bool lexical_analyzer::lookup(const std::string& word, int& index, uint32 flags)
 bool lexical_analyzer::rlookup(int index, std::string& word) {
     bool ret = true;
     std::vector<char> arr;
+    critical_section_guard guard(_lock);
     ret = _dictionary.lookup(index, arr);
     if (ret) {
         word.assign(arr.data(), arr.size());
@@ -324,6 +332,8 @@ bool lexical_analyzer::lookup(const char* p, size_t size, std::string& token_nam
         if (nullptr == p) {
             __leave2;
         }
+
+        critical_section_guard guard(_lock);
 
         token_type = 0;
         // token_tag = 0;
