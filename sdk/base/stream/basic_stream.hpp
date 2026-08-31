@@ -26,6 +26,7 @@
 #include <hotplace/sdk/base/basic/types.hpp>
 #include <hotplace/sdk/base/nostd/traits_printf.hpp>
 #include <hotplace/sdk/base/stream/stream.hpp>
+#include <hotplace/sdk/base/stream/stream_policy.hpp>
 #include <hotplace/sdk/base/stream/types.hpp>
 #include <hotplace/sdk/base/system/types.hpp>
 #include <iostream>
@@ -40,6 +41,7 @@ class valist;
 class basic_stream : public stream_t {
    public:
     basic_stream();
+    basic_stream(const local_stream_policy& policy);
     /**
      * @brief   constructor
      * @param   const char* data [in]

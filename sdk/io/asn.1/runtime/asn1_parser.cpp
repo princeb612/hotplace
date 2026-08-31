@@ -11,138 +11,278 @@
  */
 
 #include <hotplace/sdk/io/asn.1/runtime/asn1_parser.hpp>
+#include <hotplace/sdk/io/parser/parser_resource.hpp>
 
 namespace hotplace {
 namespace io {
 
-asn1_parser::asn1_parser() { prepare(); }
+asn1_parser asn1_parser::_instance;
 
-parser& asn1_parser::get_parser() { return _parser; }
+asn1_parser* asn1_parser::get_instance() {
+    _instance.load();
+    return &_instance;
+}
 
-void asn1_parser::prepare() {
-    auto& p = _parser;
+asn1_parser::asn1_parser() : _flag(0) {}
 
-    p.add_token("BOOLEAN", token_bool);
-    p.add_token("INTEGER", token_int);
-    p.add_token("BIT STRING", token_bitstring);
-    p.add_token("OCTET STRING", token_octstring);
-    p.add_token("NULL", token_null);
-    p.add_token("OBJECT IDENTIFIER", token_oid);
-    p.add_token("ObjectDescriptor", token_objdesc);
-    p.add_token("EXTERNAL", token_extern);
-    p.add_token("REAL", token_real);
-    p.add_token("ENUMERATED", token_enum);
-    p.add_token("EMBEDDED PDV", token_embedpdv);
-    p.add_token("UTF8String", token_utf8string);
-    p.add_token("RELATIVE-OID", token_reloid);
-    p.add_token("OF", token_of);
-    p.add_token("SEQUENCE", token_sequence);
-    p.add_token("SET", token_set);
-    p.add_token("NumericString", token_numstring);
-    p.add_token("PrintableString", token_printstring);
-    p.add_token("TeletexString", token_t61string);
-    p.add_token("VideotexString", token_visiblestring);
-    p.add_token("IA5String", token_ia5string);
-    p.add_token("UTCTime", token_utctime);
-    p.add_token("GeneralizedTime", token_generalizedtime);
-    p.add_token("GraphicString", token_graphicstring);
-    p.add_token("VisibleString", token_visiblestring);
-    p.add_token("GeneralString", token_genaralstring);
-    p.add_token("UniversalString", token_universalstring);
-    p.add_token("CHARACTER STRING", token_cstring);
-    p.add_token("BMPString", token_bmpstring);
-    p.add_token("DATE", token_date);
-    p.add_token("TIME-OF-DAY", token_timeofday);
-    p.add_token("DATE-TIME", token_datetime);
-    p.add_token("DURATION", token_duration);
-    p.add_token("CHOICE", token_choice);
-    p.add_token("ANY", token_any);
+void asn1_parser::load() {
+    if (0 == _flag) {
+        critical_section_guard guard(_lock);
+        if (0 == _flag) {
+            prepare();
+            _flag = 1;
+        }
+    }
+}
 
-    p.add_token("::=", token_assign);
-    p.add_token("--", token_comments);
-    p.add_token("TRUE", token_true);
-    p.add_token("FALSE", token_false);
-    p.add_token("tagged mode", token_taggedmode);
-    p.add_token("class", token_class);
-    p.add_token("UNIVERSAL", token_universal);
-    p.add_token("APPLICATION", token_application);
-    p.add_token("PRIVATE", token_private);
-    p.add_token("IMPLICIT", token_implicit);
-    p.add_token("EXPLICIT", token_explicit);
-    p.add_token("|", token_union);
-    p.add_token("INTERSECTION", token_intersection);
-    p.add_token("EXCEPT", token_except);
-    p.add_token("ALL EXCEPT", token_allexcept);
-    p.add_token("DEFAULT", token_default);
+bool asn1_parser::prepare() {
+    auto resource = parser_resource::get_instance();
 
-    auto ac = p.get_ac();
+    // handle_quoted to 1
+    get_lex().get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1);
+    // ASN.1 tokens
+    resource->for_each(parser_resource_type_t::token_type_asn1, [this](uint32 token, const std::string& name) -> void { get_lex().add_token(name, token); });
 
-    enum token_userdeined {
-        token_sequencebody = token_userdefine,
-        token_setbody,
-        token_namednumberlist,
-        token_namednumberelement,
-        token_enumelement,
-        token_enumerations,
-        token_enumbody,
-        token_sequenceofbody,
-        token_setofbody,
-        token_defaultval,
-        token_builtintype_default,
-        token_usertype_default,
-        token_sequenceof_default,
-        token_setof_default,
-    };
+    // get several CFG symbols from the lexical analyzer token.
 
-    ac->set_group(token_builtintype, {token_bool, token_int, token_null, token_oid, token_real, token_utf8string, token_visiblestring});
-    ac->set_group(token_class, {token_application, token_private, token_universal});
-    ac->set_group(token_taggedmode, {token_implicit, token_explicit});
+    auto symid = resource->nameof(token_identifier);     // "identifier"
+    auto symnum = resource->nameof(token_number);        // "number"
+    auto symfp = resource->nameof(token_floatingpoint);  // "floatingpoint"
+    auto symqs = resource->nameof(token_quot_string);    // quot_string"
 
-    ac->insert_as(token_tag, {token_lbracket, token_number, token_rbracket});                                 // pattern 0
-    ac->insert_as(token_tag, {token_lbracket, token_class, token_number, token_rbracket});                    // pattern 1
-    ac->insert_as(token_tag, {token_lbracket, token_number, token_rbracket, token_taggedmode});               // pattern 2
-    ac->insert_as(token_tag, {token_lbracket, token_class, token_number, token_rbracket, token_taggedmode});  // pattern 3
-    ac->insert_as(token_defaultval, {token_default, token_lbrace, token_rbrace});                             // pattern 4
-    ac->insert_as(token_builtintype_default, {token_builtintype, token_defaultval});                          // pattern 5
-    ac->insert_as(token_usertype_default, {token_usertype, token_defaultval});                                // pattern 6
-    ac->insert_as(token_taggedtype, {token_tag, token_builtintype});                                          // pattern 7
-    ac->insert_as(token_taggedtype, {token_tag, token_usertype});                                             // pattern 8
-    ac->insert_as(token_namedtype, {token_identifier, token_builtintype});                                    // pattern 9
-    ac->insert_as(token_namedtype, {token_identifier, token_builtintype_default});                            // pattern 10
-    ac->insert_as(token_namedtype, {token_identifier, token_taggedtype});                                     // pattern 11
-    ac->insert_as(token_namedtype, {token_identifier, token_usertype});                                       // pattern 12
-    ac->insert_as(token_namedtype, {token_identifier, token_usertype_default});                               // pattern 13
-    ac->repeat_as(token_element, token_comma, {token_namedtype, token_taggedtype});                           //
-    ac->insert_as(token_sequencebody, {token_sequence, token_lbrace, token_element, token_rbrace});           // pattern 14
-    ac->insert_as(token_setbody, {token_set, token_lbrace, token_element, token_rbrace});                     // pattern 15
-    ac->insert_as(token_taggedmode, {token_tag, token_sequencebody});                                         // pattern 16
-    ac->insert_as(token_taggedmode, {token_tag, token_setbody});                                              // pattern 17
-    ac->insert_as(token_namednumberelement, {token_identifier, token_lparen, token_number, token_rparen});    // pattern 18
-    ac->repeat_as(token_namednumberlist, token_comma, {token_namednumberelement});                            //
-    ac->insert_as(token_int, {token_int, token_lbrace, token_namednumberlist, token_rbrace});                 // pattern 19
-    ac->insert_as(token_enumbody, {token_enum, token_lbrace, token_namednumberlist, token_rbrace});           // pattern 20
-    ac->insert_as(token_namedtype, {token_identifier, token_enumbody});                                       // pattern 21
-    ac->insert_as(token_sequenceofbody, {token_sequence, token_of, token_builtintype});                       // pattern 22
-    ac->insert_as(token_sequenceofbody, {token_sequence, token_of, token_usertype});                          // pattern 23
-    ac->insert_as(token_sequenceof_default, {token_sequenceofbody, token_defaultval});                        // pattern 24
-    ac->insert_as(token_setofbody, {token_set, token_of, token_builtintype});                                 // pattern 25
-    ac->insert_as(token_setofbody, {token_set, token_of, token_usertype});                                    // pattern 26
-    ac->insert_as(token_setof_default, {token_setofbody, token_defaultval});                                  // pattern 27
-    ac->insert_as(token_namedtype, {token_identifier, token_sequenceof_default});                             // pattern 28
-    ac->insert_as(token_namedtype, {token_identifier, token_setof_default});                                  // pattern 29
-    ac->insert_as(token_taggedtype, {token_tag, token_usertype});                                             // pattern 30
-    ac->insert_as(token_taggedtype, {token_tag, token_sequencebody});                                         // pattern 31
-    ac->insert_as(token_taggedtype, {token_tag, token_setbody});                                              // pattern 32
-    ac->insert_as(token_taggedtype, {token_tag, token_sequenceof_default});                                   // pattern 33
-    ac->insert_as(token_taggedtype, {token_tag, token_setof_default});                                        // pattern 34
+    // CFG - production, terminal, non-terminal, start symbol
+    cfg_grammar grammar;
+    grammar
+        // Top level & Assignments
+        .add_production("S'", {"Statement"})
+        .add_production("Statement", {"Assignment"})
+        .add_production("Statement", {"TypeSpec"})
+        .add_production("Statement", {"Constraint"})
+        .add_production("Assignment", {symid, "::=", "TypeSpec"})
+        .add_production("Assignment", {symid, "::=", "TypeSpec", "Constraint"})
+        // Structural Statements
+        .add_production("StatementSequence", {"SEQUENCE", "Constraint", "{", "FieldList", "}"})
+        .add_production("StatementSequence", {"SEQUENCE", "{", "FieldList", "}"})
+        .add_production("StatementSequence", {"SEQUENCE", "Constraint", "{", "}"})
+        .add_production("StatementSequence", {"SEQUENCE", "{", "}"})
+        .add_production("StatementSequenceOf", {"SEQUENCE", "SizeConstraint", "OF", "TypeSpec"})
+        .add_production("StatementSequenceOf", {"SEQUENCE", "Constraint", "OF", "TypeSpec"})
+        .add_production("StatementSequenceOf", {"SEQUENCE", "OF", "TypeSpec"})
+        .add_production("StatementSetOf", {"SET", "SizeConstraint", "OF", "TypeSpec"})
+        .add_production("StatementSetOf", {"SET", "Constraint", "OF", "TypeSpec"})
+        .add_production("StatementSetOf", {"SET", "OF", "TypeSpec"})
+        .add_production("SizeConstraint", {"SIZE", "Constraint"})
+        .add_production("StatementSet", {"SET", "Constraint", "{", "FieldList", "}"})
+        .add_production("StatementSet", {"SET", "{", "FieldList", "}"})
+        .add_production("StatementSet", {"SET", "Constraint", "{", "}"})
+        .add_production("StatementSet", {"SET", "{", "}"})
+        .add_production("StatementChoice", {"CHOICE", "Constraint", "{", "FieldList", "}"})
+        .add_production("StatementChoice", {"CHOICE", "{", "FieldList", "}"})
+        .add_production("StatementChoice", {"CHOICE", "Constraint", "{", "}"})
+        .add_production("StatementChoice", {"CHOICE", "{", "}"})
+        // Field & Field List
+        .add_production("FieldList", {"FieldList", ",", "Field"})
+        .add_production("FieldList", {"Field"})
+        .add_production("Field", {symid, "TypeSpec"})
+        .add_production("Field", {symid, "TypeSpec", "Constraint"})
+        .add_production("Field", {symid, "TypeSpec", "FieldOpt"})
+        .add_production("Field", {symid, "TypeSpec", "Constraint", "FieldOpt"})
+        .add_production("FieldOpt", {"OPTIONAL"})
+        .add_production("FieldOpt", {"DEFAULT", symid})
+        .add_production("FieldOpt", {"DEFAULT", symnum})
+        .add_production("FieldOpt", {"DEFAULT", "{", "}"})
+        // Type Spec Definition
+        .add_production("TypeSpec", {"TypeBase"})
+        .add_production("TypeSpec", {"EnumType"})
+        .add_production("TypeSpec", {"StatementSequence"})
+        .add_production("TypeSpec", {"StatementSequenceOf"})
+        .add_production("TypeSpec", {"StatementSet"})
+        .add_production("TypeSpec", {"StatementSetOf"})
+        .add_production("TypeSpec", {"StatementChoice"})
+        .add_production("TypeBase", {"SimpleType"})
+        .add_production("TypeBase", {"TaggedType"})
+        .add_production("TypeBase", {symid})
+        // Tagged Type Productions
+        .add_production("TaggedType", {"[", "TagClass", symnum, "]", "TagSpec", "TypeSpec"})
+        .add_production("TaggedType", {"[", "TagClass", symnum, "]", "TypeSpec"})
+        .add_production("TaggedType", {"[", symnum, "]", "TagSpec", "TypeSpec"})
+        .add_production("TaggedType", {"[", symnum, "]", "TypeSpec"})
+        // Tag Class & Spec
+        .add_production("TagClass", {"UNIVERSAL"})
+        .add_production("TagClass", {"APPLICATION"})
+        .add_production("TagClass", {"PRIVATE"})
+        .add_production("TagSpec", {"IMPLICIT"})
+        .add_production("TagSpec", {"EXPLICIT"})
+        // Enum Type
+        .add_production("EnumType", {"ENUMERATED", "{", "EnumList", "}"})
+        .add_production("EnumList", {"EnumList", ",", "EnumItem"})
+        .add_production("EnumList", {"EnumItem"})
+        .add_production("EnumItem", {symid, "(", symnum, ")"})
+        // Simple Type List
+        .add_production("SimpleType", {"BOOLEAN"})
+        .add_production("SimpleType", {"INTEGER"})
+        .add_production("SimpleType", {"INTEGER", "{", "EnumList", "}"})
+        .add_production("SimpleType", {"BIT STRING"})
+        .add_production("SimpleType", {"BIT STRING", "{", "EnumList", "}"})
+        .add_production("SimpleType", {"OCTET STRING"})
+        .add_production("SimpleType", {"NULL"})
+        .add_production("SimpleType", {"OBJECT IDENTIFIER"})
+        .add_production("SimpleType", {"REAL"})
+        .add_production("SimpleType", {"UTF8String"})
+        .add_production("SimpleType", {"RELATIVE-OID"})
+        .add_production("SimpleType", {"TIME"})
+        .add_production("SimpleType", {"NumericString"})
+        .add_production("SimpleType", {"PrintableString"})
+        .add_production("SimpleType", {"TeletexString"})
+        .add_production("SimpleType", {"T61String"})
+        .add_production("SimpleType", {"VideotexString"})
+        .add_production("SimpleType", {"IA5String"})
+        .add_production("SimpleType", {"UTCTime"})
+        .add_production("SimpleType", {"GeneralizedTime"})
+        .add_production("SimpleType", {"GraphicString"})
+        .add_production("SimpleType", {"VisibleString"})
+        .add_production("SimpleType", {"ISO646String"})
+        .add_production("SimpleType", {"GeneralString"})
+        .add_production("SimpleType", {"UniversalString"})
+        .add_production("SimpleType", {"CHARACTER STRING"})
+        .add_production("SimpleType", {"BMPString"})
+        .add_production("SimpleType", {"DATE"})
+        .add_production("SimpleType", {"TIME-OF-DAY"})
+        .add_production("SimpleType", {"DATE-TIME"})
+        .add_production("SimpleType", {"DURATION"})
+        .add_production("SimpleType", {"ANY"})
+        // Constraints Grammar
+        .add_production("Constraint", {"(", "ConstraintExpr", ")"})
+        .add_production("ConstraintExpr", {"SubtypeElementSet"})
+        .add_production("ConstraintExpr", {"ALL EXCEPT", "SubtypeElementSet"})
+        .add_production("ConstraintExpr", {"ALL", "EXCEPT", "SubtypeElementSet"})
+        .add_production("SubtypeElementSet", {"SubtypeElementSet", "|", "IntersectionElement"})
+        .add_production("SubtypeElementSet", {"SubtypeElementSet", ",", "IntersectionElement"})
+        .add_production("SubtypeElementSet", {"SubtypeElementSet", "EXCEPT", "IntersectionElement"})
+        .add_production("SubtypeElementSet", {"IntersectionElement"})
+        .add_production("IntersectionElement", {"IntersectionElement", "INTERSECTION", "PrimaryElement"})
+        .add_production("IntersectionElement", {"PrimaryElement"})
+        .add_production("PrimaryElement", {"ValueElement"})
+        .add_production("PrimaryElement", {"ValueElement", "..", "ValueElement"})
+        .add_production("PrimaryElement", {"SIZE", "Constraint"})
+        .add_production("PrimaryElement", {"(", "ConstraintExpr", ")"})
+        .add_production("ValueElement", {symid})
+        .add_production("ValueElement", {symnum})
+        .add_production("ValueElement", {symfp})
+        .add_production("ValueElement", {symqs})
+        .add_production("ValueElement", {"MIN"})
+        .add_production("ValueElement", {"MAX"})
+        .add_production("ValueElement", {"TRUE"})
+        .add_production("ValueElement", {"FALSE"});
 
-    ac->build();
+    // Terminals
+    grammar.add_terminal("::=")
+        .add_terminal("{")
+        .add_terminal("}")
+        .add_terminal(",")
+        .add_terminal("[")
+        .add_terminal("]")
+        .add_terminal("(")
+        .add_terminal(")")
+        .add_terminal("..")
+        .add_terminal("|")
+        .add_terminal("INTERSECTION")
+        .add_terminal("EXCEPT")
+        .add_terminal("ALL EXCEPT")
+        .add_terminal("ALL")
+        .add_terminal("SIZE")
+        .add_terminal("MIN")
+        .add_terminal("MAX")
+        .add_terminal("OPTIONAL")
+        .add_terminal("SEQUENCE")
+        .add_terminal("SET")
+        .add_terminal("CHOICE")
+        .add_terminal("OF")
+        .add_terminal("BOOLEAN")
+        .add_terminal("INTEGER")
+        .add_terminal("REAL")
+        .add_terminal("ENUMERATED")
+        .add_terminal("OBJECT IDENTIFIER")
+        .add_terminal("RELATIVE-OID")
+        .add_terminal("UTCTime")
+        .add_terminal("GeneralizedTime")
+        .add_terminal("UTF8String")
+        .add_terminal("VisibleString")
+        .add_terminal("IA5String")
+        .add_terminal("OCTET STRING")
+        .add_terminal("BIT STRING")
+        .add_terminal("NULL")
+        .add_terminal("ANY")
+        .add_terminal("DEFAULT")
+        .add_terminal("TRUE")
+        .add_terminal("FALSE")
+        .add_terminal("UNIVERSAL")
+        .add_terminal("APPLICATION")
+        .add_terminal("PRIVATE")
+        .add_terminal("IMPLICIT")
+        .add_terminal("EXPLICIT")
+        .add_terminal(symid)
+        .add_terminal(symnum)
+        .add_terminal(symfp)
+        .add_terminal(symqs)
+        .add_terminal("$");
+
+    get_lalr().set_grammar(std::move(grammar));
+
+    return get_lalr().build_table();
 }
 
 return_t asn1_parser::parse(asn1_runtime* runtime, const char* notation) {
-    if (nullptr == runtime || nullptr == notation) return errorcode_t::invalid_parameter;
-    return errorcode_t::success;
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == runtime || nullptr == notation) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        // lexical analyzer
+        lexical_context context;
+
+        ret = get_lex().parse(context, notation);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        // LALR tokens
+        std::vector<parser_token> tokens;
+
+        auto lambda = [&](const token_description* desc) -> bool {
+            bool test = true;
+            const auto& type = desc->type;
+            std::string token(desc->p, desc->size);
+            switch (type) {
+                case token_lvalue: {
+                    tokens.push_back({token_identifier, token});
+                } break;
+                case token_comments:
+                    test = false;  // stop at comments
+                    break;
+                default: {
+                    tokens.push_back({type, token});
+                }
+            }
+            return test;
+        };
+        context.for_each(lambda);
+        tokens.push_back({token_eof, "$"});
+
+        // LALR(1) parse
+        ret = get_lalr().parse(tokens);
+
+        // TODO new asn1_object at runtime ...
+    }
+    __finally2 {}
+    return ret;
 }
+
+lexical_analyzer& asn1_parser::get_lex() { return _lex; }
+
+lalr_parser& asn1_parser::get_lalr() { return _lalr; }
 
 }  // namespace io
 }  // namespace hotplace

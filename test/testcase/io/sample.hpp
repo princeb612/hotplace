@@ -13,9 +13,10 @@
 #include <hotplace/test/test.hpp>
 
 struct OPTION : public CMDLINEOPTION {
+    bool flag_mlfq;
     bool flag_netlink;
 
-    OPTION() : CMDLINEOPTION(), flag_netlink(false) {}
+    OPTION() : CMDLINEOPTION(), flag_mlfq(false), flag_netlink(false) {}
 };
 
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
@@ -27,5 +28,7 @@ void testcase_filestream();
 
 void testcase_mlfq();
 void testcase_netlink();
+
+void testcase_parser();
 
 #endif

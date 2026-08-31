@@ -27,6 +27,14 @@ wide_string::wide_string() : stream_t(), _handle(nullptr) {
     }
 }
 
+wide_string::wide_string(const local_stream_policy& policy) : stream_t(), _handle(nullptr) {
+    size_t allocsize = policy.get_allocsize();
+    auto test = bufferio::open(&_handle, allocsize, sizeof(wchar_t), bufferio_context_flag_t::memzero_free);
+    if (errorcode_t::success != test) {
+        throw std::runtime_error("wide_string.ctor");
+    }
+}
+
 wide_string::wide_string(const wchar_t* data, ...) : wide_string() {
     // delegating constructor
     va_list ap;

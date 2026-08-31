@@ -32,6 +32,7 @@ int main(int argc, char** argv) {
 #endif
         << t_cmdarg_t<OPTION>("-l", "log file", [](OPTION& o, const char* param) -> void { o.log = 1; }).optional()
         << t_cmdarg_t<OPTION>("-t", "log time", [](OPTION& o, const char* param) -> void { o.time = 1; }).optional()
+        << t_cmdarg_t<OPTION>("-mlfq", "test mlfq", [](OPTION& o, const char* param) -> void { o.flag_mlfq = true; }).optional()
         << t_cmdarg_t<OPTION>("-netlink", "test netlink", [](OPTION& o, const char* param) -> void { o.flag_netlink = true; }).optional();
 
     _cmdline->parse(argc, argv);
@@ -59,10 +60,14 @@ int main(int argc, char** argv) {
 
     testcase_filestream();
 
-    testcase_mlfq();
+    if (option.flag_mlfq) {
+        testcase_mlfq();
+    }
     if (option.flag_netlink) {
         testcase_netlink();
     }
+
+    testcase_parser();
 
     _logger->flush();
 

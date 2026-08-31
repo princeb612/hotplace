@@ -16,7 +16,6 @@
 #include <hotplace/sdk/base/stream/lowlevel/bufferio.hpp>
 #include <hotplace/sdk/base/stream/lowlevel/printf.hpp>
 #include <hotplace/sdk/base/stream/sprintf.hpp>
-#include <hotplace/sdk/base/stream/stream_policy.hpp>
 #include <hotplace/sdk/base/stream/unicode/wide_string.hpp>
 #include <hotplace/sdk/base/string/string.hpp>
 
@@ -24,6 +23,14 @@ namespace hotplace {
 
 ansi_string::ansi_string() : stream_t(), _handle(nullptr) {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
+    auto test = bufferio::open(&_handle, allocsize, sizeof(char), bufferio_context_flag_t::memzero_free);
+    if (errorcode_t::success != test) {
+        throw std::runtime_error("ansi_string.ctor");
+    }
+}
+
+ansi_string::ansi_string(const local_stream_policy& policy) : stream_t(), _handle(nullptr) {
+    size_t allocsize = policy.get_allocsize();
     auto test = bufferio::open(&_handle, allocsize, sizeof(char), bufferio_context_flag_t::memzero_free);
     if (errorcode_t::success != test) {
         throw std::runtime_error("ansi_string.ctor");

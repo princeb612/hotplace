@@ -49,68 +49,43 @@ void test_yaml_testvector_parser() {
             }
         }
 
-        asn1_parser asn1p;
-        auto& p = asn1p.get_parser();
-
+        return_t test = errorcode_t::success;
         for (const auto& item : items) {
             std::string text_item = item["item"].as<std::string>("");
             std::string text_der = item["der"].as<std::string>("");
             binary_t bin = base16_decode_rfc(text_der);
 
-            {
-                parser_context context;
-                p.parse(context, text_item);
+            asn1_runtime reader;
+            size_t pos = 0;
+            auto stream = bin.data();
+            auto size = bin.size();
+            test = reader.read_weakly_typed(stream, size, pos);
 
-                std::vector<uint32> pattern;
-                auto dump_handler = [&p, &pattern](const token_description* desc) -> void {
-                    pattern.push_back(desc->type);
-                    _logger->writeln("[%02zu] line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", desc->idx, desc->line, desc->type,
-                                     p.nameof_token(desc->type).c_str(), desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
-                };
-                context.for_each(dump_handler);
+            basic_stream bs_type;
+            basic_stream bs_value;
+            binary_t bin_encoded;
+            reader.notation(&bs_type);
+            reader.publish(&bs_value);
+            reader.publish(&bin_encoded);
 
-                auto ac = p.get_ac();
-                auto res = ac->search(pattern);
-                _logger->writeln(ANSI_ESCAPE "1;34mpattern matching" ANSI_ESCAPE "0m");
-                if (res.empty()) {
-                    _logger->writeln("> no data");
-                } else {
-                    for (auto& pair : res) {
-                        // pair(pos_occurrence, id_pattern)
-                        const auto& range = pair.first;
-                        const auto& pid = pair.second;
-                        frequency.access(pid, true);
-                        _logger->writeln("> pos [%2zi..%2zi] pattern[%i]", range.begin, range.end, pid);
-                    }
-                }
-            }
-            {
-                asn1_runtime reader;
-                size_t pos = 0;
-                auto stream = bin.data();
-                auto size = bin.size();
-                auto test = reader.read_weakly_typed(stream, size, pos);
+            _logger->write([&](basic_stream& dbs) -> void {
+                valist va;
+                va << bs_type << bs_value << bin_encoded;
+                dbs.println("decode and encode");
+                dbs.vaprintln("> notation {1}", va);
+                dbs.vaprintln("> value    {2}", va);
+                dbs.vaprintln("> DER      {3:x}", va);
+            });
+            _logger->dump(bin_encoded);
 
-                basic_stream bs_type;
-                basic_stream bs_value;
-                binary_t bin_encoded;
-                reader.notation(&bs_type);
-                reader.publish(&bs_value);
-                reader.publish(&bin_encoded);
+            _test_case.test(test, __FUNCTION__, R"(read and decode "%s")", text_item.c_str());
+            _test_case.assert(pos == size, __FUNCTION__, R"(complete stream consumed "%s")", text_item.c_str());
 
-                _logger->write([&](basic_stream& dbs) -> void {
-                    valist va;
-                    va << bs_type << bs_value << bin_encoded;
-                    dbs.println("decode and encode");
-                    dbs.vaprintln("> notation {1}", va);
-                    dbs.vaprintln("> value    {2}", va);
-                    dbs.vaprintln("> DER      {3:x}", va);
-                });
-                _logger->dump(bin_encoded);
-
-                _test_case.test(test, __FUNCTION__, R"(read and decode "%s")", text_item.c_str());
-                _test_case.assert(pos == size, __FUNCTION__, R"(complete stream consumed "%s")", text_item.c_str());
-            }
+            // TODO new asn1_object at runtime ...
+            auto asn1p = asn1_parser::get_instance();
+            asn1_runtime runtime;
+            test = asn1p->parse(&runtime, text_item.c_str());
+            _test_case.test(test, __FUNCTION__, "ASN.1 parse : %s", text_item.c_str());
         }
     };
 

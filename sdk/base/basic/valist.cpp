@@ -9,6 +9,8 @@
  * 2016.02.19   Soo Han, Kim        dynamic_va_list (codename.merlin Revision 3152)
  */
 
+#include <assert.h>
+
 #include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/nostd/exception.hpp>

@@ -18,7 +18,6 @@
 /* basic */
 #include <hotplace/sdk/io/basic/json.hpp>
 #include <hotplace/sdk/io/basic/oid.hpp>
-#include <hotplace/sdk/io/basic/parser.hpp>
 #include <hotplace/sdk/io/basic/payload.hpp>
 #include <hotplace/sdk/io/basic/types.hpp>
 #include <hotplace/sdk/io/basic/zlib.hpp>
@@ -37,6 +36,12 @@
 #include <hotplace/sdk/io/cbor/cbor_simple.hpp>
 #include <hotplace/sdk/io/cbor/cbor_tstrings.hpp>
 #include <hotplace/sdk/io/cbor/cbor_visitor.hpp>
+
+/* parser */
+#include <hotplace/sdk/io/parser/lalr_parser.hpp>
+#include <hotplace/sdk/io/parser/lexical_analyzer.hpp>
+#include <hotplace/sdk/io/parser/parser_resource.hpp>
+#include <hotplace/sdk/io/parser/types.hpp>
 
 /* stream */
 #include <hotplace/sdk/io/stream/file_stream.hpp>

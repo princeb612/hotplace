@@ -249,27 +249,33 @@ enum seek_t {
 /**
  * @remarks
  *          where  0 seek_begin, 1 seek_set, 2 seek_end
+ * @param   const container_t& c
+ * @param   typename std::function<void(typename container_t::const_iterator, int)>
  */
 
-template <typename container_t>
-void for_each_const(const container_t& c, typename std::function<void(typename container_t::const_iterator, int)> f) {
+template <typename container_t, typename callback_t>
+void for_each_const(const container_t& c, callback_t f) {
     if (c.size()) {
         auto iter = c.begin();
         f(iter++, seek_t::seek_begin);
-        while (c.end() != iter) {
-            f(iter++, seek_t::seek_move);
+        for (; c.end() != iter; ++iter) {
+            f(iter, seek_t::seek_move);
         }
         f(c.end(), seek_t::seek_end);
     }
 }
 
-template <typename container_t>
-void for_each(container_t& c, typename std::function<void(typename container_t::iterator, int)> f) {
+/**
+ * @param container_t& c
+ * @param typename std::function<void(typename container_t::iterator, int)> f
+ */
+template <typename container_t, typename callback_t>
+void for_each(container_t& c, callback_t f) {
     if (c.size()) {
         auto iter = c.begin();
         f(iter++, seek_t::seek_begin);
-        while (c.end() != iter) {
-            f(iter++, seek_t::seek_move);
+        for (; c.end() != iter; ++iter) {
+            f(iter, seek_t::seek_move);
         }
         f(c.end(), seek_t::seek_end);
     }
@@ -322,6 +328,29 @@ void print(const container_t& c, stream_type& s, const std::string& mark_prologu
                 break;
             case seek_t::seek_move:
                 s << mark_delimiter << *iter;
+                break;
+            case seek_t::seek_end:
+                s << mark_epilogue;
+                break;
+        }
+    };
+    for_each_const<container_t>(c, lambda);
+}
+
+template <typename container_t, typename stream_type>
+void print(const container_t& c, stream_type& s, std::function<void(typename container_t::const_iterator, stream_type&)> f, const std::string& mark_prologue = "[",
+           const std::string& mark_delimiter = ", ", const std::string& mark_epilogue = "]") {
+    auto lambda = [&s, &f, &mark_prologue, &mark_delimiter, &mark_epilogue](typename container_t::const_iterator iter, int where) -> void {
+        switch (where) {
+            case seek_t::seek_begin:
+                s << mark_prologue << "{";
+                f(iter, s);
+                s << "}";
+                break;
+            case seek_t::seek_move:
+                s << mark_delimiter << "{";
+                f(iter, s);
+                s << "}";
                 break;
             case seek_t::seek_end:
                 s << mark_epilogue;

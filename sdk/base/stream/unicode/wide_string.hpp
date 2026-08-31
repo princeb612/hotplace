@@ -14,6 +14,7 @@
 #define __HOTPLACE_SDK_BASE_STREAM_WIDESTRING__
 
 #include <hotplace/sdk/base/nostd/traits_printf.hpp>
+#include <hotplace/sdk/base/stream/stream_policy.hpp>
 #include <hotplace/sdk/base/stream/types.hpp>
 #include <ostream>
 
@@ -26,6 +27,7 @@ namespace hotplace {
 class wide_string : public stream_t {
    public:
     wide_string();
+    wide_string(const local_stream_policy& policy);
     wide_string(const wchar_t* data, ...);
 
     wide_string(const wide_string& other);

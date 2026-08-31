@@ -40,7 +40,7 @@
     * [ASN.1](sdk/io/asn.1/runtime/README.md)
     * [CBOR](sdk/io/cbor/README.md)
   * io - published by Gemini
-    * [parser](sdk/io/basic/parser.md)
+    * [parser](sdk/io/parser/parser.md)
     * [payload](sdk/io/basic/payload.md)
     * [CBOR](sdk/io/cbor/cbor.md)
     * [multiplexer](sdk/io/system/multiplexer.md)

@@ -269,6 +269,7 @@ enum class errorcode_t : uint32 {
     /* 0xef010048 4009820232 */ ambiguous,
     /* 0xef010049 4009820233 */ miscast_unsigned,
     /* 0xef01004a 4009820234 */ miscast_narrow,
+    /* 0xef01004b 4009820235 */ conflict_detected,
 
     /* 0xef010080 4009820288 */ internal_error_0 = 0xef010080,
     /* 0xef010081 4009820289 */ internal_error_1,

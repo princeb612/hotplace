@@ -15,6 +15,7 @@
 
 #include <hotplace/sdk/base/basic/types.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/unittest/types.hpp>
 #include <ostream>
 
 namespace hotplace {

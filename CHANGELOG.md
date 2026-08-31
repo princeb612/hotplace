@@ -8,7 +8,7 @@
   * [study] CBOR/COSE (RFC 7049, 8949, 8152)
 
 * understanding
-  * Revision 1032-
+  * Revision 1031-
     * ASN.1 runtime
   * Revision 927-933 (Tag 1.92, Revision 957)
     * MSVC environment (beta status) - application verifier (basics)
@@ -35,7 +35,7 @@
     * CBOR
 
 * details
-  * Revision 1063-
+  * Revision 1064-
     * ASN.1 parser
   * Revision 1059
     * [tested] aho corasick parser - token grouping, sub-pattern reduction, and repeat-rule processing

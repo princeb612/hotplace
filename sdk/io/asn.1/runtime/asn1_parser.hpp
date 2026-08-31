@@ -14,9 +14,11 @@
 #define __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1PARSER__
 
 #include <hotplace/sdk/base/nostd/tree.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
-#include <hotplace/sdk/io/basic/parser.hpp>
+#include <hotplace/sdk/io/parser/lalr_parser.hpp>
+#include <hotplace/sdk/io/parser/lexical_analyzer.hpp>
 
 namespace hotplace {
 namespace io {
@@ -28,21 +30,31 @@ namespace io {
  */
 class asn1_parser {
    public:
+    static asn1_parser* get_instance();
+
     struct asn1_token_t {
         int token;
     };
-    asn1_parser();
 
-    parser& get_parser();
-
+    // TODO new asn1_object at runtime ...
     return_t parse(asn1_runtime* runtime, const char* notation);
 
+    lexical_analyzer& get_lex();
+    lalr_parser& get_lalr();
+
    protected:
-    void prepare();
+    asn1_parser();
+
+    void load();
+    bool prepare();
 
    private:
-    parser _parser;
-    t_tree<asn1_token_t> _tree;
+    static asn1_parser _instance;
+
+    critical_section _lock;
+    lexical_analyzer _lex;
+    lalr_parser _lalr;
+    int _flag;
 };
 
 }  // namespace io

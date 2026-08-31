@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   parser_ascii.cpp
+ * @file   ascii_tokens.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -11,7 +11,7 @@
  *
  */
 
-#include <hotplace/sdk/io/basic/parser.hpp>
+#include <hotplace/sdk/io/parser/types.hpp>
 
 namespace hotplace {
 namespace io {

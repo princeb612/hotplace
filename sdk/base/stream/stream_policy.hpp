@@ -6,6 +6,8 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2026.08.31   Soo Han, Kim        local_stream_policy
+ *
  */
 
 #ifndef __HOTPLACE_SDK_BASE_STREAM_STREAMPOLICY__
@@ -23,6 +25,7 @@
 namespace hotplace {
 
 /**
+ * @brief   global policy
  * @remarks
  *          stream_policy* pol = stream_policy::get_instance();
  *          pol->set_allocsize(1 << 5);
@@ -42,6 +45,18 @@ class stream_policy {
 
     typedef std::map<std::string, size_t> basic_stream_policy_map_t;
     basic_stream_policy_map_t _config;
+};
+
+/**
+ * @brief   local policy
+ */
+class local_stream_policy {
+   public:
+    local_stream_policy(size_t allocsize);
+    size_t get_allocsize() const;
+
+   private:
+    size_t _allocsize;
 };
 
 }  // namespace hotplace

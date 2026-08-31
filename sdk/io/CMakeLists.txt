@@ -18,6 +18,8 @@ file (GLOB FILEGROUP_SDK_HEADER_IO
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/loader/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/basic/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/cbor/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/parser/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/parser/resource/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/stream/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/string/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/system/*.hpp
@@ -37,6 +39,8 @@ file (GLOB FILEGROUP_SDK_SOURCE_IO
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/loader/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/basic/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/cbor/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/parser/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/parser/resource/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/string/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/stream/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/system/*.cpp

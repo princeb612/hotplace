@@ -14,6 +14,7 @@
 #define __HOTPLACE_SDK_BASE_STREAM_ANSISTRING__
 
 #include <hotplace/sdk/base/nostd/traits_printf.hpp>
+#include <hotplace/sdk/base/stream/stream_policy.hpp>
 #include <hotplace/sdk/base/stream/types.hpp>
 #include <ostream>
 
@@ -25,6 +26,7 @@ namespace hotplace {
 class ansi_string : public stream_t {
    public:
     ansi_string();
+    ansi_string(const local_stream_policy& policy);
     ansi_string(const char* data, ...);
 
     /**

@@ -27,7 +27,6 @@
 #include <hotplace/sdk/base/stream/lowlevel/bufferio.hpp>
 #include <hotplace/sdk/base/stream/lowlevel/printf.hpp>
 #include <hotplace/sdk/base/stream/sprintf.hpp>
-#include <hotplace/sdk/base/stream/stream_policy.hpp>
 #include <hotplace/sdk/base/stream/vtprintf.hpp>
 #include <hotplace/sdk/base/system/bignumber.hpp>
 
@@ -35,6 +34,14 @@ namespace hotplace {
 
 basic_stream::basic_stream() : stream_t(), _handle(nullptr) {
     size_t allocsize = stream_policy::get_instance()->get_allocsize();
+    auto test = bufferio::open(&_handle, allocsize, 1);  // new _handle
+    if (errorcode_t::success != test) {
+        throw std::runtime_error("basic_stream.ctor");
+    }
+}
+
+basic_stream::basic_stream(const local_stream_policy& policy) : stream_t(), _handle(nullptr) {
+    size_t allocsize = policy.get_allocsize();
     auto test = bufferio::open(&_handle, allocsize, 1);  // new _handle
     if (errorcode_t::success != test) {
         throw std::runtime_error("basic_stream.ctor");

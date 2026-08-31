@@ -1,87 +1,91 @@
-# Aho-Corasick & Wildcard - published by Gemini
+# Aho-Corasick & Wildcard
 
-## 1. class 계층 구조 및 역할 분담
+## 1. Class Hierarchy and Separation of Responsibilities
 
-C++11 환경에서 다중 pattern matching 및 wildcard 처리 상위 레벨 parser를 지지하는 핵심 C++ library 구조
+A core C++ library structure for supporting multi-pattern matching and a higher-level parser that handles wildcards in a C++11 environment.
 
-```
+```text
 ┌──────────────────────────────────────────────────────────┐
-│  t_aho_corasick_t<BT, T>                                 │ (순수 가상 interface class)[cite: 3]
+│  t_aho_corasick_t<BT, T>                                 │ (pure virtual interface class)
 └─────────────────────────────┬────────────────────────────┘
                               │
                               ▼
 ┌──────────────────────────────────────────────────────────┐
-│  t_aho_corasick<BT, T, memberof_t>                       │ (기본 aho-corasick algorithm)[cite: 3]
+│  t_aho_corasick<BT, T, memberof_t>                       │ (basic Aho-Corasick algorithm)
 └─────────────────────────────┬────────────────────────────┘
                               │
                               ▼
 ┌──────────────────────────────────────────────────────────┐
-│  t_aho_corasick_wildcard<BT, T, memberof_t>              │ (단일/임의 wildcard 확장)[cite: 4]
+│  t_aho_corasick_wildcard<BT, T, memberof_t>              │ (single/arbitrary wildcard extension)
 └──────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. 기본 엔진 (`t_aho_corasick`) 핵심 mechanism
+## 2. Core Mechanism of the Basic Engine (`t_aho_corasick`)
 
-### ① `trienode` 구조체 design
+### ① `trienode` Structure Design
 
-* **`children`**: 정확한 키값 matching을 위한 자식 node trie.
-* **`group_children`**: 추후 parser 연동 시 그룹 matching을 확장하기 위해 미리 확보된 trie node 맵.
-* **`failure`**: 탐색 실패 시 되돌아갈 Failure Link (aho-corasick의 핵심).
-* **`output`**: 해당 node 위치에서 완결되는 pattern ID들의 집합 (`std::set<size_t>`).
+* **`children`**: A map of child trie nodes used for exact key-value matching.
+* **`group_children`**: A trie-node map reserved in advance for future extensions to group matching when integrating with a parser.
+* **`failure`**: The Failure Link to fall back to when a search fails. This is a core mechanism of the Aho-Corasick algorithm.
+* **`output`**: A set of pattern IDs (`std::set<size_t>`) that terminate at the current node.
 
-### ② algorithm 3단계 life-cycle
+### ② Three-Stage Algorithm Life Cycle
 
-1. **`doinsert()`**: pattern 등록
+1. **`doinsert()`**: Register patterns
 
-* 입력 sequence를 순회하며 Trie node를 생성하고, pattern의 마지막 node의 `output`에 pattern ID를 추가.
+   * Traverse the input sequence, create trie nodes as necessary, and add the pattern ID to the `output` set of the pattern's final node.
 
-2. **`dobuild()`**: Failure Link 및 Output Merge 구축 (BFS)
+2. **`dobuild()`**: Build Failure Links and merge Outputs (BFS)
 
-* 너비 우선 탐색(BFS)을 통해 각 node의 Failure Link를 형성.
-* Failure Link가 가리키는 node의 `output` 목록을 현재 node의 `output`에 합침(Merge).
+   * Construct the Failure Links of each node using breadth-first search (BFS).
+   * Merge the `output` list of the node pointed to by the Failure Link into the current node's `output` list.
 
-3. **`dosearch()` / `collect_results()**`: text 탐색 및 결과 수집
+3. **`dosearch()` / `collect_results()`**: Search the text and collect results
 
-* 소스 stream을 1회 스캔($O(N)$)하면서 trie 상태를 이행하고, matching 발생 시 종료 위치와 pattern ID를 결과 맵에 수집.
+   * Scan the source stream once in **O(N)** time, transition through the trie states, and collect the ending position and pattern ID in the result map whenever a match occurs.
 
 ---
 
-## 3. wildcard 확장 엔진 (`aho_corasick_wildcard`) mechanism
+## 3. Wildcard Extension Engine (`aho_corasick_wildcard`)
 
-단일 문자 wildcard(`?`, `flag_single`)와 가변 길이 문자열 wildcard(`*`, `flag_any`)를 지원하기 위한 핵심 확장 logic
+Core extension logic for supporting both single-character wildcards (`?`, `flag_single`) and variable-length string wildcards (`*`, `flag_any`).
 
-### ① BFS 기반 탐색 queue(`std::queue`)로의 전환
+### ① Switching to a BFS-Based Search Queue (`std::queue`)
 
-기본 `t_aho_corasick`은 단일 loop 기반 탐색을 수행하지만, wildcard `*` 탐색 시 생성되는 다중 분기 경로(Branching Paths)를 추적하기 위해 `dosearch`를 **`std::queue<pair_t>` 및 방문 상태 맵(`visit`) 기반의 너비 탐색 방식**으로 재구현
+The basic `t_aho_corasick` performs a search using a single loop. However, because searching for the wildcard `*` can generate multiple branching paths, `dosearch` is reimplemented using a breadth-first search approach based on **`std::queue<pair_t>`** and a visited-state map (`visit`) to track these branching paths.
 
-### ② 시작 위치(Starting Position) 보정을 위한 `_hidden` tag 기법
+### ② `_hidden` Tag Technique for Adjusting the Starting Position
 
-aho-corasick은 matching된 pattern의 종료 위치(Ending Position)만 return하는 한계가 있음.
-`h*s`와 같은 가변 길이 pattern은 시작 위치를 구하기 위해 첫 wildcard `*` 직전까지의 Prefix(숨은 pattern)를 추적해야 함.
+Aho-Corasick has a limitation in that it returns only the **ending position** of a matched pattern.
 
-* **`baseof_prefix` (`0x10000000`)**: wildcard 전방 Prefix용 가상 pattern ID offset.
+For a variable-length pattern such as `h*s`, the starting position must be determined by tracking the prefix—the hidden pattern—located before the first wildcard `*`.
+
+* **`baseof_prefix` (`0x10000000`)**: A virtual pattern ID offset used for prefixes preceding a wildcard.
 * **`hidden_tag_t`**:
-  * **`size`**: wildcard 직전까지의 Prefix 길이.
-  * **`adjust`**: wildcard를 제외한 실제 확정 pattern 문자 수 (`lengthof(pattern) - lengthof(wildcard_any)`).
-  * **`modes`**: `*pattern` (startswith) 및 `pattern*` (endswith) 형태 보정 flag.
 
-### ③ wildcard 범위 계산 방식 (`get_result`)
+  * **`size`**: Length of the prefix preceding the wildcard.
+  * **`adjust`**: Number of actual fixed pattern characters excluding the wildcard (`lengthof(pattern) - lengthof(wildcard_any)`).
+  * **`modes`**: Adjustment flags for `*pattern` (startswith) and `pattern*` (endswith) forms.
 
-1. `hello*world` pattern 등록 시 `hello`를 가상 Prefix pattern(`PID + 0x10000000`)으로 트리거.
-2. 탐색 시 `world` 종료 위치($Pos_{end}$)가 감지되면, 저장된 Prefix 위치 목록에서 $Pos_{end} - Adjust + 1$ 이하인 가장 가까운 `hello`의 위치를 `find_lessthan_or_equal`로 찾아내어 정확한 시작 범위 `range_t(begin, end)`를 복원.
+### ③ Wildcard Range Calculation (`get_result`)
+
+1. When registering the pattern `hello*world`, register `hello` as a virtual prefix pattern (`PID + 0x10000000`) to trigger prefix matching.
+2. During the search, when the ending position of `world` (`Pos_end`) is detected, find the nearest occurrence of `hello` whose position is less than or equal to `Pos_end - Adjust + 1` from the stored prefix-position list using `find_lessthan_or_equal`.
+3. Restore the exact matching range as `range_t(begin, end)`.
 
 ---
 
-## 4. 소스 code 기반 활용 pattern snippet
+## 4. Usage Pattern Snippets Based on the Source Code
 
-### ① 유연한 타입 변환 핸들러 (`memberof_t`)
+### ① Flexible Type Conversion Handler (`memberof_t`)
 
-`t_aho_corasick`은 template metaprogramming을 통해 단순 문자열(`char`)뿐만 아니라 **pointer 기반 구조체/token stream 배열**도 탐색 가능.
+Through template metaprogramming, `t_aho_corasick` can search not only simple strings (`char`) but also pointer-based structures or token-stream arrays.
 
 ```cpp
-// token 객체 pointer 배열에서 type field를 획득하는 member 추출 Functor 예시[cite: 3]
+// Example of a member extraction functor that obtains the type field
+// from an array of token object pointers.
 struct token { int type; };
 
 auto memberof = [](token* const* source, size_t idx) -> int {
@@ -89,14 +93,14 @@ auto memberof = [](token* const* source, size_t idx) -> int {
     return p->type;
 };
 
-// token* 배열 스케일의 Aho-Corasick 구축[cite: 3]
+// Construct an Aho-Corasick instance for a token* array.
 t_aho_corasick<int, token*> ac(memberof);
 ```
 
-### ② 대소문자 무시(Ignore Case) 및 wildcard 동시 지원
+### ② Simultaneous Ignore-Case and Wildcard Support
 
 ```cpp
-// 대소문자를 구분하지 않는 memberof_tolower_handler 적용[cite: 3, 4]
+// Apply memberof_tolower_handler to perform case-insensitive matching.
 t_aho_corasick_wildcard<char, char, memberof_tolower_handler> ac('?', '*');
 
 ac.insert("we *ing", 7);
@@ -109,14 +113,16 @@ auto result = ac.search(source, strlen(source));
 
 ---
 
-## 5. C++11 구현 특징 및 refactoring 노트
+## 5. C++11 Implementation Characteristics and Refactoring Notes
 
-1. **std::function 억제 및 Functor 대체 (2026.05.19 Revision 1003)**
-* lambda/`std::function` 호출에 따른 runtime 간섭 overhead 및 가상 함수 호출을 줄이기 위해, template 인자 `memberof_t` 기반 Functor 구조로 전환하여 compile-time 인라인화를 유도
+1. **Replacing `std::function` with Functors (Revision 1003, 2026.05.19)**
 
-2. **`std::multimap` 및 Hash 함수 사용**
-* 구문 비교를 위해 커스텀 hash 함수 `universal_pairhash` 기반의 `unordered_multiset`을 이용한 `equal()` template 함수를 제공
+   * To reduce runtime overhead caused by lambda/`std::function` calls and virtual function calls, the implementation was changed to a functor-based structure using the template parameter `memberof_t`, encouraging compile-time inlining.
 
-3. **Queue 기반 탐색 overhead 주의사항 (주석 4번)**
-* 대용량 데이터 탐색 시 `q` 및 `visit` 중복 방지 queue에 메모리가 누적될 수 있으므로, 이미 통과된 text 범위의 `visit` record를 지속적으로 정리(Pruning)하는 최적화 여지가 남아 있음
+2. **Use of `std::multimap` and Hash Functions**
 
+   * For syntax comparison, an `equal()` template function is provided using an `unordered_multiset` based on the custom hash function `universal_pairhash`.
+
+3. **Considerations Regarding Queue-Based Search Overhead (Comment #4)**
+
+   * When searching large amounts of data, memory may accumulate in the `q` and `visit` structures used to prevent duplicate queue entries. There is still room for optimization by continuously pruning `visit` records corresponding to text ranges that have already been processed.

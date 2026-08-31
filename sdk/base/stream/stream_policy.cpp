@@ -6,6 +6,8 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2026.08.31   Soo Han, Kim        local_stream_policy
+ *
  */
 
 #include <ctype.h>
@@ -35,5 +37,9 @@ stream_policy& stream_policy::set_allocsize(size_t allocsize) {
 }
 
 size_t stream_policy::get_allocsize() { return _config["allocsize"]; }
+
+local_stream_policy::local_stream_policy(size_t allocsize) { _allocsize = (basic_stream_policy_minsize < allocsize) ? allocsize : basic_stream_policy_minsize; }
+
+size_t local_stream_policy::get_allocsize() const { return _allocsize; }
 
 }  // namespace hotplace
