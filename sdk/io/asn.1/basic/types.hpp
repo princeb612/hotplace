@@ -249,6 +249,7 @@ using asn1_constraint_union_i = asn1_constraint_union<asn1_native_int_t>;
 using asn1_constraint_from_s = asn1_constraint_from<std::string>;
 using asn1_constraint_single_value_s = asn1_constraint_single_value<std::string>;
 using asn1_constraint_union_s = asn1_constraint_union<std::string>;
+using asn1_constraint_pattern_s = asn1_constraint_pattern<std::string>;
 
 class asn1_node;
 class asn1_constructed_node;

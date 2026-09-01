@@ -109,6 +109,8 @@ const parser_token_resource parser_asn1_tokens[] = {
     {token_except, "EXCEPT"},
     {token_allexcept, "ALL EXCEPT"},
     {token_size, "SIZE"},
+    {token_from, "FROM"},
+    {token_pattern, "PATTERN"},
     {token_default, "DEFAULT"},
     {token_optional, "OPTIONAL"},
     {token_min, "MIN"},

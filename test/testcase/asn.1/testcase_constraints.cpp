@@ -214,6 +214,12 @@ void test_testvector_constraints() {
                                     new asn1_constraint_range_i(1, 20)));
                 })
             }));
+    auto const_pattern = asn1_referenced_type::define("PhoneNumber",
+            asn1_builder::build(asn1_entity_utf8string,
+                        [&](asn1_object* builtin) -> void {
+                            builtin->get_constraints().add(
+                                new asn1_constraint_pattern_s("[0-9]{3}-[0-9]{4}-[0-9]{4}"));
+                        }));
     // clang-format on
 
     enum testvector_flag_t : uint8 {
@@ -250,6 +256,7 @@ void test_testvector_constraints() {
         flag_value_nested130_short,
         flag_value_nested30_long,
         flag_value_nested30_empty,
+        flag_value_pat1,
     };
 
     struct testvector {
@@ -307,6 +314,7 @@ void test_testvector_constraints() {
         {"nested constraint", cons_nested->clone(), "Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))}", false, flag_value_nested130_short},
         {"nested constraint", cons_nested->clone(), "Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))}", false, flag_value_nested30_long},
         {"nested constraint", cons_nested->clone(), "Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))}", false, flag_value_nested30_empty},
+        {"pattern", const_pattern, R"(PhoneNumber ::= UTF8String (PATTERN "[0-9]{3}-[0-9]{4}-[0-9]{4}"))", true, flag_value_pat1},
     };
 
     for (const auto& item : table) {
@@ -423,6 +431,9 @@ void test_testvector_constraints() {
                 break;
             case flag_value_nested30_empty:
                 (*value).set("age", 30).set("name", "");
+                break;
+            case flag_value_pat1:
+                (*value).set("", "010-1234-5678");
                 break;
         }
 

@@ -21,8 +21,17 @@ namespace io {
 template <typename T>
 class asn1_constraint_pattern : public asn1_constraint<T> {
    public:
-    asn1_constraint_pattern() : asn1_constraint<T>(asn1_entity_constraint_pattern) {}
+    asn1_constraint_pattern(const std::string& pattern) : asn1_constraint<T>(asn1_entity_constraint_pattern), _pattern(pattern) {}
     virtual ~asn1_constraint_pattern() = default;
+
+    asn1_constraint_pattern* clone() { return new asn1_constraint_pattern(*this); }
+
+    virtual void accept(asn1_constraint_evaluator<T>* v) { v->get_result_set().insert(_pattern); }
+
+    virtual void represent(stream_t* s, const asn1_object* object, const asn1_value* value = nullptr) const { s->printf(R"(PATTERN "%s")", _pattern.c_str()); }
+
+   private:
+    std::string _pattern;
 };
 
 }  // namespace io

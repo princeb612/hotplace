@@ -300,7 +300,9 @@ t_key_value<std::string, uint16>& lexical_analyzer::get_config() { return _keyva
 bool lexical_analyzer::lookup(const std::string& word, int& index, uint32 flags) {
     bool ret = true;
     int idx = -1;
+
     critical_section_guard guard(_lock);
+
     if (flat_lookup_readonly & flags) {
         idx = _dictionary.find(word.c_str(), word.size());
         if (-1 == idx) {
@@ -318,7 +320,9 @@ bool lexical_analyzer::lookup(const std::string& word, int& index, uint32 flags)
 bool lexical_analyzer::rlookup(int index, std::string& word) {
     bool ret = true;
     std::vector<char> arr;
+
     critical_section_guard guard(_lock);
+
     ret = _dictionary.lookup(index, arr);
     if (ret) {
         word.assign(arr.data(), arr.size());
@@ -333,11 +337,12 @@ bool lexical_analyzer::lookup(const char* p, size_t size, std::string& token_nam
             __leave2;
         }
 
-        critical_section_guard guard(_lock);
-
         token_type = 0;
         // token_tag = 0;
         token_attr_tag* tag = nullptr;
+
+        critical_section_guard guard(_lock);
+
         size_t len = _lextoken.lookup(p, size, &tag);
         if (len) {
             token_name.assign(p, len);

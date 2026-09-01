@@ -103,13 +103,13 @@ enum token_t : uint32 {
     token_choice,
 
     token_boolvalue,
-    token_true,
-    token_false,
+    token_true,   // TRUE
+    token_false,  // FALSE
 
     token_class,
-    token_universal,
-    token_application,
-    token_private,
+    token_universal,    // UNIVERSAL
+    token_application,  // APPLICATION
+    token_private,      // PRIVATE
 
     token_taggedmode,
     token_implicit,
@@ -120,17 +120,19 @@ enum token_t : uint32 {
     token_taggedtype,
     token_referencedtype,
 
-    token_union,
-    token_intersection,
-    token_except,
-    token_allexcept,
-    token_size,
-    token_min,
-    token_max,
-    token_fromto,
+    token_union,         // |
+    token_intersection,  // INTERSECTION
+    token_except,        // EXCEPT
+    token_allexcept,     // ALL EXCEPT
+    token_size,          // SIZE
+    token_from,          // FROM
+    token_pattern,       // PATTERN
+    token_min,           // MIN
+    token_max,           // MAX
+    token_fromto,        // ..
 
-    token_default,
-    token_optional,
+    token_default,   // DEFAULT
+    token_optional,  // OPTIONAL
 
     token_userdefine = 0x2000,
 

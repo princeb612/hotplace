@@ -216,6 +216,72 @@ void test_valist_empty() {
     _test_case.assert(dbs.empty(), __FUNCTION__, "empty binary");
 }
 
+void test_valist_abi_boundary_alignment() {
+    _test_case.begin("valist");
+
+#if defined __GNUC__
+// (int32)-2147483648 sign-extension overflow problem fixed
+#define VAL1 -2147483648
+#define VAL2 -2147483649
+#else  // _MSC_VER
+#define VAL1 -2147483648LL
+#define VAL2 -2147483649LL
+#endif
+
+    valist va;
+    va << 256 << -3 << -300 << VAL1 << VAL2 << "hello world" << 3.141592 << 3 << 300 << 2147483647 << 21474836478;
+    valist va2;
+    va2 << 256 << -3 << -300 << (int32)VAL1 << (int64)VAL2 << "hello world" << 3.141592 << 3 << 300 << (int32)2147483647 << (int64)21474836478;
+    valist va3;
+    va3 << 256 << -3 << -300 << (int64)VAL1 << (int64)VAL2 << "hello world" << 3.141592 << 3 << 300 << (int32)2147483647 << (int64)21474836478;
+
+    struct testvector {
+        const char* format;
+        const char* expect;
+    };
+    testvector table[] = {
+        {
+            "value={1}, value={2}, value={3}, value={4}, value={5}, value={6}, value={7}, value={8}, value={9}, value={10}, value={11}",
+            "value=256, value=-3, value=-300, value=-2147483648, value=-2147483649, value=hello world, value=3.141592, value=3, value=300, value=2147483647, "
+            "value=21474836478",
+        },
+        {
+            "value={11}, value={10}, value={9}, value={8}, value={7}, value={6}, value={5}, value={4}, value={3}, value={2}, value={1}",
+            "value=21474836478, value=2147483647, value=300, value=3, value=3.141592, value=hello world, value=-2147483649, value=-2147483648, value=-300, value=-3, "
+            "value=256",
+        },
+        {
+            "value={2}, value={4}, value={6}, value={8}, value={10}, value={1}, value={3}, value={5}, value={7}, value={9}, value={11}",
+            "value=-3, value=-2147483648, value=hello world, value=3, value=2147483647, value=256, value=-300, value=-2147483649, value=3.141592, value=300, "
+            "value=21474836478",
+        },
+        {
+            "value={1}, value={3}, value={5}, value={7}, value={9}, value={11}, value={2}, value={4}, value={6}, value={8}, value={10}",
+            "value=256, value=-300, value=-2147483649, value=3.141592, value=300, value=21474836478, value=-3, value=-2147483648, value=hello world, value=3, "
+            "value=2147483647",
+        },
+        {
+            "value={1}, value={11}, value={2}, value={10}, value={3}, value={9}, value={4}, value={8}, value={5}, value={7}, value={6}",
+            "value=256, value=21474836478, value=-3, value=2147483647, value=-300, value=300, value=-2147483648, value=3, value=-2147483649, value=3.141592, value=hello "
+            "world",
+        },
+    };
+
+    auto lambda = [&table](valist& v) -> void {
+        for (const auto& entry : table) {
+            basic_stream bs;
+            sprintf(&bs, entry.format, v);
+            _logger->writeln("result %s", bs.c_str());
+            _logger->writeln("expect %s", entry.expect);
+            _test_case.assert(bs == entry.expect, __FUNCTION__, "%s", entry.format);
+        }
+    };
+
+    lambda(va);
+    lambda(va2);
+    lambda(va3);
+}
+
 void testcase_valist() {
     test_valist_sprintf();
     test_valist_cpp14();
@@ -223,4 +289,5 @@ void testcase_valist() {
     test_valist_formatstring();
     test_valist_binary();
     test_valist_empty();
+    test_valist_abi_boundary_alignment();
 }

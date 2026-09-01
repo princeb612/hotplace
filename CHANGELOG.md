@@ -35,6 +35,9 @@
     * CBOR
 
 * details
+  * Revision 1067
+    * [fixed] valist sign-extension overflow problem
+    * [tested] ASN.1 PATTERN
   * Revision 1064-
     * ASN.1 parser
   * Revision 1059

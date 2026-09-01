@@ -183,6 +183,9 @@ class asn1_constraints {
                             test = visitor.get_result_set().match(temp);
                             if (false == test) break;
                         }
+                    } else if (asn1_entity_constraint_pattern == entity) {
+                        test = visitor.get_result_set().regex(s);
+                        if (false == test) break;
                     } else {
                         test = visitor.get_result_set().contains(s);
                     }

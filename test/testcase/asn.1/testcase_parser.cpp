@@ -70,6 +70,7 @@ void test_asn1parser() {
         {R"(type ::= INTEGER (ALL EXCEPT 1..10))"},
         {R"(type ::= INTEGER (0..255))"},
         {R"(type ::= OCTET STRING (SIZE(16)))"},
+        {R"(name ::= IA5String (FROM ("ABC")))"},
         {R"(Numbers ::= SEQUENCE SIZE(1..4) OF INTEGER)"},
         {R"(Flags ::= BIT STRING (SIZE(8)))"},
         {R"(Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))})"},

@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/test/testcase/base/sample.hpp>
+#include <string>
 
 void test_yaml_testvector_valist() {
     _test_case.begin("valist YAML");
@@ -56,6 +57,7 @@ void test_yaml_testvector_valist() {
 
             basic_stream bs;
             sprintf(&bs, text_fmt.c_str(), va);
+            _logger->writeln("fmt %s", text_fmt.c_str());
             _logger->writeln("out %s", bs.c_str());
             _logger->writeln("exp %s", text_exp.c_str());
             _test_case.assert(bs == text_exp, __FUNCTION__, "%s format string %s", text_itm.c_str(), text_fmt.c_str());

@@ -9,6 +9,7 @@
  */
 
 #include <hotplace/sdk/base/nostd/string_set.hpp>
+#include <hotplace/sdk/base/pattern/regex.hpp>
 
 namespace hotplace {
 
@@ -39,6 +40,20 @@ void string_set::erase(const std::string& value) { subtract(value); }
 bool string_set::contains(const std::string& value) { return has(value); }
 
 bool string_set::match(const std::string& value) { return find(value); }
+
+bool string_set::regex(const std::string& value) {
+    bool ret = false;
+    for (const auto& item : _set) {
+        size_t pos = 0;
+        std::list<std::string> tokens;
+        regex_token(value, item, pos, tokens);
+        if (false == tokens.empty()) {
+            ret = true;
+            break;
+        }
+    }
+    return ret;
+}
 
 void string_set::union_with(const string_set& other) {
     // see t_range_set

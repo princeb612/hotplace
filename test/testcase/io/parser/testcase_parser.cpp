@@ -193,6 +193,8 @@ void test_lalr() {
             .add_production("PrimaryElement", {"ValueElement"})
             .add_production("PrimaryElement", {"ValueElement", "..", "ValueElement"})
             .add_production("PrimaryElement", {"SIZE", "Constraint"})
+            .add_production("PrimaryElement", {"FROM", "Constraint"})
+            .add_production("PrimaryElement", {"PATTERN", symqs})
             .add_production("PrimaryElement", {"(", "ConstraintExpr", ")"})
             .add_production("ValueElement", {symid})
             .add_production("ValueElement", {symnum})
@@ -219,6 +221,8 @@ void test_lalr() {
             .add_terminal("ALL EXCEPT")
             .add_terminal("ALL")
             .add_terminal("SIZE")
+            .add_terminal("FROM")
+            .add_terminal("PATTERN")
             .add_terminal("MIN")
             .add_terminal("MAX")
             .add_terminal("OPTIONAL")
@@ -322,6 +326,7 @@ void test_lalr() {
             {R"(type ::= INTEGER (ALL EXCEPT 1..10))"},
             {R"(type ::= INTEGER (0..255))"},
             {R"(type ::= OCTET STRING (SIZE(16)))"},
+            {R"(name ::= IA5String (FROM ("ABC")))"},
             {R"(Numbers ::= SEQUENCE SIZE(1..4) OF INTEGER)"},
             {R"(Flags ::= BIT STRING (SIZE(8)))"},
             {R"(Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))})"},
@@ -330,6 +335,7 @@ void test_lalr() {
             {R"(RestrictedInt ::= INTEGER (1..100))"},
             {R"(LimitedInt ::= INTEGER (MIN..1000))"},
             {R"(MultiSize ::= OCTET STRING (SIZE (1..10, 20..30)))"},
+            {R"(PhoneNumber ::= UTF8String (PATTERN "[0-9]{3}-[0-9]{4}-[0-9]{4}")))"},
             // clang-format off
             {R"(PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {name Name, title [0] VisibleString, number EmployeeNumber, dateOfHire [1] Date, nameOfSpouse [2] Name, children [3] IMPLICIT SEQUENCE OF ChildInformation DEFAULT {}})"},
             // clang-format on

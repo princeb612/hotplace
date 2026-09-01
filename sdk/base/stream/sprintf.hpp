@@ -97,16 +97,16 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va);
  */
 
 template <typename T>
-void make_valist(valist& va, T arg) {
-    va << arg;
+void make_valist(valist& va, T&& arg) {
+    va << std::forward<T>(arg);
 }
 
 #if __cplusplus >= 201103L  // c++11
 
 template <typename T, typename... Args>
-void make_valist(valist& va, T arg, Args... args) {
-    va << arg;
-    make_valist(va, args...);
+void make_valist(valist& va, T&& arg, Args&&... args) {
+    va << std::forward<T>(arg);
+    make_valist(va, std::forward<Args>(args)...);
 }
 
 #if __cplusplus >= 201402L  // c++14
@@ -117,15 +117,14 @@ void make_valist(valist& va, T arg, Args... args) {
  * @param Args...       args    [in] parameter pack (c++11)
  */
 template <class... Args>
-return_t vprintf(stream_t* stream, const char* fmt, Args... args) {
-    auto s = [&stream, fmt, args...] {
-        valist va;
+return_t vprintf(stream_t* stream, const char* fmt, Args&&... args) {
+    if (nullptr == stream || nullptr == fmt) {
+        return errorcode_t::invalid_parameter;
+    }
 
-        make_valist(va, args...);
-        return sprintf(stream, fmt, va);
-    };
-
-    return s();
+    valist va;
+    make_valist(va, std::forward<Args>(args)...);
+    return sprintf(stream, fmt, va);
 }
 
 #endif  // c++14

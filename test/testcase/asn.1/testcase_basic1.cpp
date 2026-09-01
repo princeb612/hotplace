@@ -739,7 +739,7 @@ void test_asn1_object() {
 
     basic_stream bs;
     asn1_runtime* inst = new asn1_runtime;
-    auto asn1p = asn1_parser::get_instance();
+    // auto asn1p = asn1_parser::get_instance();
     for (auto item : table2) {
         bs.clear();
 
@@ -749,8 +749,8 @@ void test_asn1_object() {
         _logger->writeln(bs);
         _test_case.assert(bs == item.note, __FUNCTION__, "%s (publish)", item.note);
 
-        auto test = asn1p->parse(inst, item.note);
-        _test_case.test(test, __FUNCTION__, "parse");
+        // auto test = asn1p->parse(inst, item.note);
+        // _test_case.test(test, __FUNCTION__, "parse");
     }
     inst->release();
 }

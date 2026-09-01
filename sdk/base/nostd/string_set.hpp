@@ -36,6 +36,7 @@ class string_set {
     void erase(const std::string& value);
     bool contains(const std::string& value);
     bool match(const std::string& value);
+    bool regex(const std::string& value);
 
     void union_with(const string_set& other);
     void erase_from(const string_set& other);

@@ -92,22 +92,22 @@ state stack           token                 action
 
 trace
 ```
-state       lookahead
+state       lookahead                   action
 ----------------------------------------------------------------
-0           ... id (S49) ...
-0 49        ... ::= (S84) ...
-0 49 84     ... VisibleString (S47) ...
-0 49 84 47  ... $ (R75) ...
-0 49 84     pop size(rhs of 75), stacktop 84, push 84:SimpleType -> 30
-0 49 84 30  ... $ (R38) ...
-0 49 84     pop size(rhs of 38), stacktop 84, push 84:TypeBase -> 41
-0 49 84 41  ... $ (R32) ...
-0 49 84     pop size(rhs of 32), stacktop 84, push 84:TypeSpec -> 118
-0 49 84 118 ... $ (R4) ...
-0           pop size(rhs of 4), stacktop 0, push 0:Assignment -> 3
-0 3         ... $ (R1) ...
-0           pop size(rhs of 1), stacktop 0, 0:Statement -> 31
-0 31        ... $ (A0) ...
+0           ... id (S49) ...            shift 49, push 49
+0 49        ... ::= (S84) ...           shift 84, push 84
+0 49 84     ... VisibleString (S47) ... shift 47, push 47
+0 49 84 47  ... $ (R75) ...             reduce 75
+0 49 84     pop size(rhs of 75),        stacktop 84, push 84:SimpleType -> 30
+0 49 84 30  ... $ (R38) ...             reduce 38
+0 49 84     pop size(rhs of 38),        stacktop 84, push 84:TypeBase -> 41
+0 49 84 41  ... $ (R32) ...             reduce 32
+0 49 84     pop size(rhs of 32),        stacktop 84, push 84:TypeSpec -> 118
+0 49 84 118 ... $ (R4) ...              reduce 4
+0           pop size(rhs of 4),         stacktop 0, push 0:Assignment -> 3
+0 3         ... $ (R1) ...              reduce 1
+0           pop size(rhs of 1),         stacktop 0, 0:Statement -> 31
+0 31        ... $ (A0) ...              accept
 ----------------------------------------------------------------
 
 ACTION table

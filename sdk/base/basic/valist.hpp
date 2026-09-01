@@ -17,6 +17,7 @@
 #include <hotplace/sdk/base/basic/variant.hpp>
 #include <hotplace/sdk/base/stream/types.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
+#include <utility>
 #include <vector>
 
 namespace hotplace {
@@ -29,19 +30,6 @@ typedef struct _valist_gcc_x64_t {
 } valist_gcc_x64_t[1];
 
 typedef struct _valist_t {
-    /**
-     * @brief va_list to va_list
-     *
-     * 1. operator =
-     *    cf. gcc do not work
-     *    e.g. union { va_list ap; void* ptr; } u; u.ptr = ptr; va_list ap = u.ap;
-     * 2. treat a pointer
-     *    cf. msc do not work
-     *    e.g. union { va_list ap; void* ptr; } u; u.ptr = ptr; va_list ap; *ap = *u.ap;
-     * 3. va_copy
-     *    cf. The va_start(), va_arg(), and va_end() macros conform to C89.  C99 defines the va_copy() macro.
-     *    e.g. union { va_list ap; void* ptr; } u; u.ptr = ptr; va_list ap; va_copy(ap, u.ap);
-     */
     union {
         va_list ap;   /* va_list type */
         void* va_ptr; /* linux, windows */
@@ -87,18 +75,16 @@ class valist {
    public:
     valist();
     valist(const valist& object);
+    valist(valist&& object) noexcept;
     ~valist();
 
-    /**
-     * @brief assign
-     * @param const valist& object [in]
-     * @return *this
-     */
     valist& assign(const valist& object);
     valist& assign(const std::vector<variant_t>& args);
-    /**
-     * @brief add
-     */
+
+    valist& operator=(const valist& object);
+    valist& operator=(valist&& object) noexcept;
+
+    /* primitive & pointer types */
     valist& operator<<(bool value);
     valist& operator<<(char value);
     valist& operator<<(unsigned char value);
@@ -119,7 +105,6 @@ class valist {
     valist& operator<<(const binary_t& value);
     valist& operator<<(const variant_t& v);
     valist& operator<<(variant_t&& v);
-    valist& operator=(const valist& object);
     /**
      * @brief clear
      */
@@ -156,6 +141,13 @@ class valist {
     void insert(variant_t&& v);
 
    private:
+    template <typename T>
+    valist& append(T&& value) {
+        variant v(std::forward<T>(value));
+        insert(std::move(v.get()));
+        return *this;
+    }
+
     typedef std::vector<variant_t> args_t;
 
     valist_t _type;
