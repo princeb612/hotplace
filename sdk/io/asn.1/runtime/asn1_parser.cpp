@@ -43,7 +43,7 @@ bool asn1_parser::prepare() {
     // ASN.1 tokens
     resource->for_each(parser_resource_type_t::token_type_asn1, [this](uint32 token, const std::string& name) -> void { get_lex().add_token(name, token); });
 
-    // get several CFG symbols from the lexical analyzer token.
+    // get several CFG symbols from the lexical analyzer.
 
     auto symid = resource->nameof(token_identifier);     // "identifier"
     auto symnum = resource->nameof(token_number);        // "number"

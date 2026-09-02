@@ -335,7 +335,7 @@ void test_lalr() {
             {R"(RestrictedInt ::= INTEGER (1..100))"},
             {R"(LimitedInt ::= INTEGER (MIN..1000))"},
             {R"(MultiSize ::= OCTET STRING (SIZE (1..10, 20..30)))"},
-            {R"(PhoneNumber ::= UTF8String (PATTERN "[0-9]{3}-[0-9]{4}-[0-9]{4}")))"},
+            {R"(PhoneNumber ::= UTF8String (PATTERN "[0-9]{3}-[0-9]{4}-[0-9]{4}"))"},
             // clang-format off
             {R"(PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {name Name, title [0] VisibleString, number EmployeeNumber, dateOfHire [1] Date, nameOfSpouse [2] Name, children [3] IMPLICIT SEQUENCE OF ChildInformation DEFAULT {}})"},
             // clang-format on

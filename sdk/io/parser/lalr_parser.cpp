@@ -548,6 +548,7 @@ bool lalr_parser::generate_lalr_tables() {
         }
     }
 
+#if defined DEBUG
     // Helper lambda for debug printing actions
     auto format_action = [&](const parser_action& act) -> std::string {
         if (act.type == parser_action_t::shift) {
@@ -560,6 +561,7 @@ bool lalr_parser::generate_lalr_tables() {
         }
         return "Error";
     };
+#endif
 
     for (size_t i = 0; i < lalr_states.size(); ++i) {
         for (const auto& item : lalr_states[i]) {

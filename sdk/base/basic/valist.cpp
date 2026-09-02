@@ -70,7 +70,13 @@ valist& valist::operator=(valist&& object) noexcept {
 valist& valist::operator<<(bool value) { return append(value); }
 valist& valist::operator<<(char value) { return append(value); }
 valist& valist::operator<<(unsigned char value) { return append(value); }
-valist& valist::operator<<(short value) { return append(value); }
+valist& valist::operator<<(short value) {
+#if defined __linux__
+    return append((int32)value);
+#elif defined _WIN32 || defined _WIN64
+    return append(value);
+#endif
+}
 valist& valist::operator<<(unsigned short value) { return append(value); }
 
 valist& valist::operator<<(int value) {
@@ -320,6 +326,11 @@ void valist::build() {
          *  compiler warning      -        O
          */
 #if defined __linux__
+        // clang-format off
+        #define va_assign_type_promotion_int(x) { int32 temp = x; native_data = &temp; native_data_size = sizeof(int32); }
+        #define va_assign_type_promotion_uint(x) { uint32 temp = x; native_data = &temp; native_data_size = sizeof(uint32); }
+        #define va_assign_type_promotion_double(x) { double temp = x; native_data = &temp; native_data_size = sizeof(double); }
+        // clang-format on
 
         int pos = 0;
         for (const auto& vt : _args) {
@@ -329,6 +340,10 @@ void valist::build() {
             void* vdata = nullptr;
 
             switch (vt.type) {
+                case vartype_t::TYPE_BOOL:
+                    native_data = &(vt.data.b);
+                    native_data_size = sizeof(bool);
+                    break;
                 case vartype_t::TYPE_CHAR:
                 case vartype_t::TYPE_INT8:
                     native_data = &(vt.data.c);
@@ -439,6 +454,9 @@ void valist::build() {
 
         for (const auto& vt : _args) {
             switch (vt.type) {
+                case vartype_t::TYPE_BOOL:
+                    va_assign(ap, va_assign_type_promotion_int(bool), vt.data.b);
+                    break;
                 case vartype_t::TYPE_CHAR:
                 case vartype_t::TYPE_INT8:
                     va_assign(ap, va_assign_type_promotion_int(char), vt.data.c);

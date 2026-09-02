@@ -228,13 +228,6 @@ void test_valist_abi_boundary_alignment() {
 #define VAL2 -2147483649LL
 #endif
 
-    valist va;
-    va << 256 << -3 << -300 << VAL1 << VAL2 << "hello world" << 3.141592 << 3 << 300 << 2147483647 << 21474836478;
-    valist va2;
-    va2 << 256 << -3 << -300 << (int32)VAL1 << (int64)VAL2 << "hello world" << 3.141592 << 3 << 300 << (int32)2147483647 << (int64)21474836478;
-    valist va3;
-    va3 << 256 << -3 << -300 << (int64)VAL1 << (int64)VAL2 << "hello world" << 3.141592 << 3 << 300 << (int32)2147483647 << (int64)21474836478;
-
     struct testvector {
         const char* format;
         const char* expect;
@@ -277,9 +270,23 @@ void test_valist_abi_boundary_alignment() {
         }
     };
 
+    // windows va~va3
+    valist va;
+    va << 256 << -3 << -300 << VAL1 << VAL2 << "hello world" << 3.141592 << 3 << 300 << 2147483647 << 21474836478;
     lambda(va);
+
+    valist va2;
+    va2 << 256 << -3 << -300 << (int32)VAL1 << (int64)VAL2 << "hello world" << 3.141592 << 3 << 300 << (int32)2147483647 << (int64)21474836478;
     lambda(va2);
+
+    valist va3;
+    va3 << 256 << -3 << -300 << (int64)VAL1 << (int64)VAL2 << "hello world" << 3.141592 << 3 << 300 << (int32)2147483647 << (int64)21474836478;
     lambda(va3);
+
+    // linux va4
+    valist va4;
+    va4 << 256 << -3 << (int16)-300 << (int64)VAL1 << (int64)VAL2 << "hello world" << 3.141592 << 3 << 300 << (int32)2147483647 << (int64)21474836478;
+    lambda(va4);
 }
 
 void testcase_valist() {

@@ -413,24 +413,41 @@ return_t ipaddr_acl::determine(const sockaddr_storage_t* sockaddr, bool& accept)
 ipaddr_t ipaddr_acl::convert_addr(const char* addr, int& family) {
     ipaddr_t ret_value = 0;
 
-    if (nullptr != addr) {
-        char addr_buf[16];
-        memset(addr_buf, 0, sizeof(addr_buf));
-        const char* temp = strstr(addr, ":");
-        if (nullptr == temp) {
+    __try2 {
+        if (addr == nullptr) {
+            __leave2;
+        }
+
+        uint8_t addr_buf[16] = {};
+        family = AF_UNSPEC;
+
+        // IPv4
+        if (inet_pton(AF_INET, addr, addr_buf) == 1) {
+            uint32 value = 0;
+            memcpy(&value, addr_buf, sizeof(value));
+
             family = AF_INET;
-            inet_pton(family, addr, (void*)&addr_buf);
-            ret_value = ntoh32(*(uint32*)addr_buf);
-        } else {
+            ret_value = ntoh32(value);
+            __leave2;
+        }
+
+        // IPv6
+        if (inet_pton(AF_INET6, addr, addr_buf) == 1) {
+            ipaddr_t value = 0;
+            memcpy(&value, addr_buf, sizeof(value));
+
+#if defined(__SIZEOF_INT128__)
             family = AF_INET6;
-            inet_pton(family, addr, (void*)&addr_buf);
-#if defined __SIZEOF_INT128__
-            ret_value = ntoh128(*(ipaddr_t*)addr_buf);
+            ret_value = ntoh128(value);
 #else
-            ret_value = ntoh32(*(ipaddr_t*)addr_buf);
+            family = AF_INET6;
+            ret_value = ntoh32(value);
 #endif
+            __leave2;
         }
     }
+    __finally2 {}
+
     return ret_value;
 }
 

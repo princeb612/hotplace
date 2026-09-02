@@ -79,8 +79,9 @@ void test_asn1parser() {
         {R"(RestrictedInt ::= INTEGER (1..100))"},
         {R"(LimitedInt ::= INTEGER (MIN..1000))"},
         {R"(MultiSize ::= OCTET STRING (SIZE (1..10, 20..30)))"},
+        {R"(PhoneNumber ::= UTF8String (PATTERN "[0-9]{3}-[0-9]{4}-[0-9]{4}"))"},
         // clang-format off
-            {R"(PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {name Name, title [0] VisibleString, number EmployeeNumber, dateOfHire [1] Date, nameOfSpouse [2] Name, children [3] IMPLICIT SEQUENCE OF ChildInformation DEFAULT {}})"},
+        {R"(PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {name Name, title [0] VisibleString, number EmployeeNumber, dateOfHire [1] Date, nameOfSpouse [2] Name, children [3] IMPLICIT SEQUENCE OF ChildInformation DEFAULT {}})"},
         // clang-format on
         {R"(ChildInformation ::= SET { name Name, dateOfBirth [0] Date})"},
         {R"(Name ::= [APPLICATION 1] IMPLICIT SEQUENCE { givenName VisibleString, initial VisibleString, familyName VisibleString})"},
@@ -118,6 +119,11 @@ void test_asn1parser() {
         {R"(SEQUENCE {name VisibleString, title [0] VisibleString OPTIONAL})"},
         {R"(SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))})"},
         {R"([APPLICATION 1] IMPLICIT SEQUENCE { givenName VisibleString, initial VisibleString, familyName VisibleString})"},
+        //
+        {R"(SET OF INTEGER)"},
+        {R"(Names ::= SET OF VisibleString)"},
+        {R"(SET OF VisibleString)"},
+        {R"(Numbers ::= SET OF INTEGER)"},
     };
 
     auto asn1p = asn1_parser::get_instance();
