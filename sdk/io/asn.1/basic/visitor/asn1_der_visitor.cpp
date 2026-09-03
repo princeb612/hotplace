@@ -31,11 +31,13 @@ void asn1_der_visitor::visit(asn1_object* object) {
     asn1_visitor visitor(_runtime, lambda);
     visitor.visit(object);
 
+#if 0
 #if defined DEBUG
     if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
         trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal,
                           [&](basic_stream& dbs) -> void { print_ast(object, dbs, asn1_ast_flag_ansicolor); });
     }
+#endif
 #endif
 
     // chain encoding

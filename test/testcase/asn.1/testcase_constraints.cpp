@@ -437,6 +437,9 @@ void test_testvector_constraints() {
                 break;
         }
 
+        asn1_runtime runtime;
+        parse_notation(&runtime, item.notation);
+
         bool test = type->validate(value);
         _test_case.assert(test == item.expect, __FUNCTION__, "evaluation %s : %s", item.text, item.notation);
 

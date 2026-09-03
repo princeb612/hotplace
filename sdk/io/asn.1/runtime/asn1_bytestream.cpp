@@ -79,6 +79,7 @@ return_t asn1_bytestream::read_node(const byte_t* stream, size_t size, size_t& p
         bool is_constructed = (ident & asn1_tag_constructed) != 0;
         auto node = tree->add_node(item, parent);
 
+#if defined DEBUG
         if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
             trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
                 auto depth = node->depth();
@@ -115,6 +116,7 @@ return_t asn1_bytestream::read_node(const byte_t* stream, size_t size, size_t& p
                 dbs.vaprintf("- node {1} I {2:02X} ({3}) T {4} ({5}) L {6}\n", va);
             });
         }
+#endif
 
         if (is_constructed && len) {
             size_t cpos = tpos;

@@ -141,6 +141,14 @@ enum token_t : uint32 {
 
 token_t ascii2token(byte_t c);
 
+class cfg_grammar;
+class lalr_parser;
+class lexical_analyzer;
+class lexical_context;
+class lexical_token;
+class parse_tree;
+class parse_resource;
+
 }  // namespace io
 }  // namespace hotplace
 

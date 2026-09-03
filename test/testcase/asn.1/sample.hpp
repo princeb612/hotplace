@@ -14,6 +14,8 @@
 
 #include <hotplace/test/test.hpp>
 
+void parse_notation(asn1_runtime* runtime, const char* notation);
+
 void testcase_basic1();
 void testcase_basic2();
 void testcase_constraints();

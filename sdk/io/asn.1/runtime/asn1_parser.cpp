@@ -48,7 +48,7 @@ bool asn1_parser::prepare() {
     auto symid = resource->nameof(token_identifier);     // "identifier"
     auto symnum = resource->nameof(token_number);        // "number"
     auto symfp = resource->nameof(token_floatingpoint);  // "floatingpoint"
-    auto symqs = resource->nameof(token_quot_string);    // quot_string"
+    auto symqs = resource->nameof(token_quot_string);    // "quot_string"
 
     // CFG - production, terminal, non-terminal, start symbol
     cfg_grammar grammar;
@@ -58,6 +58,8 @@ bool asn1_parser::prepare() {
         .add_production("Statement", {"Assignment"})
         .add_production("Statement", {"TypeSpec"})
         .add_production("Statement", {"Constraint"})
+        .add_production("Statement", {"Field"})
+        .add_production("Statement", {"Tag"})
         .add_production("Assignment", {symid, "::=", "TypeSpec"})
         .add_production("Assignment", {symid, "::=", "TypeSpec", "Constraint"})
         // Structural Statements
@@ -103,10 +105,11 @@ bool asn1_parser::prepare() {
         .add_production("TypeBase", {"TaggedType"})
         .add_production("TypeBase", {symid})
         // Tagged Type Productions
-        .add_production("TaggedType", {"[", "TagClass", symnum, "]", "TagSpec", "TypeSpec"})
-        .add_production("TaggedType", {"[", "TagClass", symnum, "]", "TypeSpec"})
-        .add_production("TaggedType", {"[", symnum, "]", "TagSpec", "TypeSpec"})
-        .add_production("TaggedType", {"[", symnum, "]", "TypeSpec"})
+        .add_production("TaggedType", {"Tag", "TagSpec", "TypeSpec"})
+        .add_production("TaggedType", {"Tag", "TypeSpec"})
+        // Tag ::= "[" Class ClassNumber "]"
+        .add_production("Tag", {"[", "TagClass", symnum, "]"})
+        .add_production("Tag", {"[", symnum, "]"})
         // Tag Class & Spec
         .add_production("TagClass", {"UNIVERSAL"})
         .add_production("TagClass", {"APPLICATION"})
@@ -236,7 +239,7 @@ bool asn1_parser::prepare() {
     return get_lalr().build_table();
 }
 
-return_t asn1_parser::parse(asn1_runtime* runtime, const char* notation) {
+return_t asn1_parser::parse(asn1_runtime* runtime, const char* notation, parse_tree* pt) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == runtime || nullptr == notation) {
@@ -276,7 +279,7 @@ return_t asn1_parser::parse(asn1_runtime* runtime, const char* notation) {
         tokens.push_back({token_eof, "$"});
 
         // LALR(1) parse
-        ret = get_lalr().parse(tokens);
+        ret = get_lalr().parse(tokens, pt);
 
         // TODO new asn1_object at runtime ...
     }

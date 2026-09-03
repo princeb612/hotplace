@@ -55,18 +55,20 @@ void test_yaml_testvector_parser() {
             std::string text_der = item["der"].as<std::string>("");
             binary_t bin = base16_decode_rfc(text_der);
 
-            asn1_runtime reader;
+            asn1_runtime runtime;
             size_t pos = 0;
             auto stream = bin.data();
             auto size = bin.size();
-            test = reader.read_weakly_typed(stream, size, pos);
+            test = runtime.read_weakly_typed(stream, size, pos);
+            _test_case.test(test, __FUNCTION__, R"(read and decode "%s")", text_item.c_str());
+            _test_case.assert(pos == size, __FUNCTION__, R"(complete stream consumed "%s")", text_item.c_str());
 
             basic_stream bs_type;
             basic_stream bs_value;
             binary_t bin_encoded;
-            reader.notation(&bs_type);
-            reader.publish(&bs_value);
-            reader.publish(&bin_encoded);
+            runtime.notation(&bs_type);
+            runtime.publish(&bs_value);
+            runtime.publish(&bin_encoded);
 
             _logger->write([&](basic_stream& dbs) -> void {
                 valist va;
@@ -77,15 +79,11 @@ void test_yaml_testvector_parser() {
                 dbs.vaprintln("> DER      {3:x}", va);
             });
             _logger->dump(bin_encoded);
-
-            _test_case.test(test, __FUNCTION__, R"(read and decode "%s")", text_item.c_str());
-            _test_case.assert(pos == size, __FUNCTION__, R"(complete stream consumed "%s")", text_item.c_str());
+            // not support - BIT STRING, ENUMERATED
+            // _test_case.assert(bin == bin_encoded, __FUNCTION__, "encode");
 
             // TODO new asn1_object at runtime ...
-            auto asn1p = asn1_parser::get_instance();
-            asn1_runtime runtime;
-            test = asn1p->parse(&runtime, text_item.c_str());
-            _test_case.test(test, __FUNCTION__, "ASN.1 parse : %s", text_item.c_str());
+            parse_notation(&runtime, text_item.c_str());
         }
     };
 

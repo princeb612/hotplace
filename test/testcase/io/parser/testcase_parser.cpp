@@ -78,7 +78,7 @@ void test_lalr() {
         auto symid = resource->nameof(token_identifier);     // "identifier"
         auto symnum = resource->nameof(token_number);        // "number"
         auto symfp = resource->nameof(token_floatingpoint);  // "floatingpoint"
-        auto symqs = resource->nameof(token_quot_string);    // quot_string"
+        auto symqs = resource->nameof(token_quot_string);    // "quot_string"
 
         g
             // Top level & Assignments
@@ -86,6 +86,8 @@ void test_lalr() {
             .add_production("Statement", {"Assignment"})
             .add_production("Statement", {"TypeSpec"})
             .add_production("Statement", {"Constraint"})
+            .add_production("Statement", {"Field"})
+            .add_production("Statement", {"Tag"})
             .add_production("Assignment", {symid, "::=", "TypeSpec"})
             .add_production("Assignment", {symid, "::=", "TypeSpec", "Constraint"})
             // Structural Statements
@@ -131,10 +133,11 @@ void test_lalr() {
             .add_production("TypeBase", {"TaggedType"})
             .add_production("TypeBase", {symid})
             // Tagged Type Productions
-            .add_production("TaggedType", {"[", "TagClass", symnum, "]", "TagSpec", "TypeSpec"})
-            .add_production("TaggedType", {"[", "TagClass", symnum, "]", "TypeSpec"})
-            .add_production("TaggedType", {"[", symnum, "]", "TagSpec", "TypeSpec"})
-            .add_production("TaggedType", {"[", symnum, "]", "TypeSpec"})
+            .add_production("TaggedType", {"Tag", "TagSpec", "TypeSpec"})
+            .add_production("TaggedType", {"Tag", "TypeSpec"})
+            // Tag ::= "[" Class ClassNumber "]"
+            .add_production("Tag", {"[", "TagClass", symnum, "]"})
+            .add_production("Tag", {"[", symnum, "]"})
             // Tag Class & Spec
             .add_production("TagClass", {"UNIVERSAL"})
             .add_production("TagClass", {"APPLICATION"})
@@ -380,6 +383,9 @@ void test_lalr() {
             {R"(Names ::= SET OF VisibleString)"},
             {R"(SET OF VisibleString)"},
             {R"(Numbers ::= SET OF INTEGER)"},
+            //
+            {R"(name VisibleString)"},
+            {R"([APPLICATION 30])"},
         };
 
         for (const auto& entry : table) {

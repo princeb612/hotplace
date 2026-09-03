@@ -38,6 +38,8 @@ void lalr_parser::set_grammar(cfg_grammar&& g) {
     _is_table_built = false;
 }
 
+const cfg_grammar& lalr_parser::get_cfg_grammar() const { return _grammar; }
+
 // LALR(1) dynamic table creation
 return_t lalr_parser::build_table() {
     return_t ret = errorcode_t::success;
@@ -133,7 +135,7 @@ return_t lalr_parser::build_table() {
 }
 
 // Perform dynamically generated table-based parsing
-return_t lalr_parser::parse(const std::vector<parser_token>& tokens) const {
+return_t lalr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* pt) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -240,6 +242,8 @@ return_t lalr_parser::parse(const std::vector<parser_token>& tokens) const {
                 trace_stack.push_back(trace);
 #endif
 
+                if (pt) pt->on_shift(typestring, current_token.value);
+
                 state_stack.push(act.target);
                 token_idx++;
             }
@@ -251,6 +255,8 @@ return_t lalr_parser::parse(const std::vector<parser_token>& tokens) const {
                 trace.action << "reduce -> Rule " << rule.id << " (" << rule.lhs << ")";
                 trace_stack.push_back(trace);
 #endif
+
+                if (pt) pt->on_reduce(rule.lhs, rule.rhs.size());
 
                 for (size_t i = 0; i < rule.rhs.size(); ++i) {
                     if (false == state_stack.empty()) {

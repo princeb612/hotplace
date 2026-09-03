@@ -126,11 +126,9 @@ void test_asn1parser() {
         {R"(Numbers ::= SET OF INTEGER)"},
     };
 
-    auto asn1p = asn1_parser::get_instance();
     for (const auto& item : table) {
         asn1_runtime runtime;
-        auto test = asn1p->parse(&runtime, item.notation);
-        _test_case.test(test, __FUNCTION__, "%s", item.notation);
+        parse_notation(&runtime, item.notation);
     }
 }
 

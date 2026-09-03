@@ -17,6 +17,17 @@ t_shared_instance<logger> _logger;
 struct OPTION : public CMDLINEOPTION {};
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
+void parse_notation(asn1_runtime* runtime, const char* notation) {
+    auto asn1p = asn1_parser::get_instance();
+    parse_tree pt;
+    auto test = asn1p->parse(runtime, notation, &pt);
+    basic_stream bs;
+    pt.get_root()->print(bs);
+    _logger->colorln("parser tree");
+    _logger->write(bs);
+    _test_case.test(test, __FUNCTION__, "parse : %s", notation);
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);

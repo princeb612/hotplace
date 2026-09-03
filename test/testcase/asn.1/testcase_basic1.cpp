@@ -506,13 +506,6 @@ void do_dump_asn1(asn1_value* object, const char* expect, const char* text) {
             dbs.vaprintln("DER      {2:x}", va);
         });
 
-        // decode
-        // - [x] bool
-        // - [x] integer
-        // - [x] read
-        // - [ ] oct string
-        // - [ ] bit string
-        // - [ ] xxx string
         {
             asn1_runtime reader;
             size_t pos = 0;
