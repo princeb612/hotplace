@@ -8,6 +8,8 @@
  * Date         Name                Description
  */
 
+#include <cstddef>
+#include <cstring>
 #include <hotplace/test/testcase/base/sample.hpp>
 
 static void test_basic_allocation() {
