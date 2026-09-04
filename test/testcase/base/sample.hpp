@@ -32,6 +32,7 @@ struct pattern_t {
 
 extern t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
+void testcase_builtinmemory();
 void testcase_cmdline();
 void testcase_testvector_cmdline();
 void testcase_dumpmemory();

@@ -23,6 +23,7 @@
 #include <hotplace/sdk/base/types.hpp>
 
 /* basic */
+#include <hotplace/sdk/base/basic/builtinmemory.hpp>
 #include <hotplace/sdk/base/basic/cmdline.hpp>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/basic/function_pipeline.hpp>
@@ -38,6 +39,7 @@
 #include <hotplace/sdk/base/encoding/encoder_stream.hpp>
 #include <hotplace/sdk/base/encoding/http_huffman_coding.hpp>
 #include <hotplace/sdk/base/encoding/huffman_coding.hpp>
+#include <hotplace/sdk/base/encoding/radix64.hpp>
 
 /* encoding/lowlevel */
 #include <hotplace/sdk/base/encoding/lowlevel/base16.hpp>

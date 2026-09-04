@@ -24,12 +24,10 @@ void str_to_oid(const char* value, size_t size, oid_t& oid) {
     return_t ret = errorcode_t::success;
     size_t pos = 0;
     size_t brk = 0;
-    while (errorcode_t::success == ret) {
-        ret = scan(value, size, pos, &brk, ".");
-
-        unsigned node = t_atoi_n<unsigned>(value + pos, (errorcode_t::success == ret) ? brk - pos - 1 : brk - pos);
+    while (errorcode_t::success == scan(value, size, pos, &brk, ".")) {
+        unsigned node = t_atoi_n<unsigned>(value + pos, brk - pos);
         oid.insert(oid.end(), node);
-        pos = brk;
+        pos = brk + 1;
     }
 }
 

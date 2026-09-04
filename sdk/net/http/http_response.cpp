@@ -89,43 +89,42 @@ return_t http_response::open(const char* response, size_t size_response) {
 
         size_t line = 1;
         size_t pos = 0, epos = 0;
-        while (true) {
+        std::string token;
+        do {
             ret_getline = getline(response, size_response, pos, &epos);
             if (errorcode_t::success != ret_getline) {
                 break;
             }
 
-            std::string token, str(response + pos, epos - pos);
+            std::string str(response + pos, epos - pos);
             size_t tpos = 0;
             token = tokenize(str, ": ", tpos);
             token = rtrim(token);
 
-            if (0 == token.size()) {
-                break;
-            }
-
-            if ((epos <= size_response) && (tpos < size_response)) { /* if token (space, colon) not found */
-                while (isspace(str[tpos])) {
-                    tpos++; /* swallow trailing spaces */
-                }
-                if (1 == line) {
-                    size_t lpos = 0;
-                    tokenize(str, " ", lpos);
-                    std::string status = tokenize(str, " ", lpos);
-                    _statuscode = atoi(status.c_str());
-                } else {
-                    std::string remain = tokenize(str, "\r\n", tpos);  // std::string remain = str.substr(tpos);
-                    _header.add(token, remain);
+            if (false == token.empty()) {
+                if ((epos <= size_response) && (tpos < size_response)) { /* if token (space, colon) not found */
+                    while (isspace(str[tpos])) {
+                        tpos++; /* swallow trailing spaces */
+                    }
+                    if (1 == line) {
+                        size_t lpos = 0;
+                        tokenize(str, " ", lpos);
+                        std::string status = tokenize(str, " ", lpos);
+                        _statuscode = atoi(status.c_str());
+                    } else {
+                        std::string remain = tokenize(str, "\r\n", tpos);  // std::string remain = str.substr(tpos);
+                        _header.add(token, remain);
+                    }
                 }
             }
 
-            pos = epos;
+            pos = epos + 1;
             line++;
-        }
+        } while (false == token.empty());
 
-        if (size_response > epos) {
-            byte_t* content = (byte_t*)response + epos;
-            size_t content_size = size_response - epos;
+        if (size_response > pos) {
+            byte_t* content = (byte_t*)response + pos;
+            size_t content_size = size_response - pos;
 
             // RFC 2616 3.5 Content Codings
             // RFC 2616 14.11 Content-Encoding

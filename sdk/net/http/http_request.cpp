@@ -88,43 +88,42 @@ return_t http_request::open_h1(const char* request, size_t size_request, uint32 
 
         size_t line = 1;
         size_t epos = 0;
-        while (true) {
+        std::string token;
+        do {
             ret_getline = getline(request, size_request, pos, &epos);
             if (errorcode_t::success != ret_getline) {
                 break;
             }
 
-            std::string token, str(request + pos, epos - pos);
+            std::string str(request + pos, epos - pos);
             size_t tpos = 0;
             token = tokenize(str, ": ", tpos);
             token = rtrim(token);
 
-            if (0 == token.size()) {
-                break;
-            }
+            if (false == token.empty()) {
+                if ((epos <= size_request) && (tpos < size_request)) { /* if token (space, colon) not found */
+                    while (isspace(str[tpos])) {
+                        tpos++; /* swallow trailing spaces */
+                    }
+                    if (1 == line) {
+                        _method = token; /* first token aka GET, POST, ... */
 
-            if ((epos <= size_request) && (tpos < size_request)) { /* if token (space, colon) not found */
-                while (isspace(str[tpos])) {
-                    tpos++; /* swallow trailing spaces */
-                }
-                if (1 == line) {
-                    _method = token; /* first token aka GET, POST, ... */
-
-                    size_t zpos = tpos;
-                    uri = tokenize(str, " ", zpos);
-                    _uri.open(uri);
-                } else {
-                    std::string remain = tokenize(str, "\r\n", tpos);  // std::string remain = str.substr(tpos);
-                    _header.add(token, remain);
+                        size_t zpos = tpos;
+                        uri = tokenize(str, " ", zpos);
+                        _uri.open(uri);
+                    } else {
+                        std::string remain = tokenize(str, "\r\n", tpos);  // std::string remain = str.substr(tpos);
+                        _header.add(token, remain);
+                    }
                 }
             }
 
-            pos = epos;
+            pos = epos + 1;
             line++;
-        }
+        } while (false == token.empty());
 
-        if (size_request > epos) {
-            _content.assign(request + epos, size_request - epos);
+        if (size_request > pos) {
+            _content.assign(request + pos, size_request - pos);
         }
 
         open_uri(uri, flags);

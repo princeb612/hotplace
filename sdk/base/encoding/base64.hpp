@@ -125,6 +125,9 @@ std::string base64_decode_careful(const std::string& source, encoding_t encoding
  */
 std::string base64_decode_careful(const char* source, size_t source_size, encoding_t encoding = encoding_t::encoding_base64);
 
+return_t base64_encode_multiline(const byte_t* data, size_t data_size, uint16 column, std::string& encoded);
+return_t base64_decode_multiline(const char* encoded, size_t encoded_size, binary_t& decoded);
+
 }  // namespace hotplace
 
 #endif

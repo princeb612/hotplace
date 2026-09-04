@@ -39,7 +39,7 @@ void test_string_getline() {
         ltrim(rtrim(line));
         _logger->writeln("%s", line.c_str());
 
-        pos = brk;
+        pos = brk + 1;
     }
 
     _test_case.assert(true, __FUNCTION__, "getline");
@@ -232,7 +232,7 @@ void test_string_scan() {
             break;
         }
         printf("position isspace %zi\n", brk);
-        pos = brk;
+        pos = brk + 1;
     }
     _test_case.assert(true, __FUNCTION__, "scan");
 
@@ -253,7 +253,7 @@ void test_string_scan2() {
             break;
         }
         printf("position %zi\n", brk);
-        pos = brk + strlen(match);
+        pos = brk + strlen(match) + 1;
     }
     _test_case.assert(true, __FUNCTION__, "scan");
 

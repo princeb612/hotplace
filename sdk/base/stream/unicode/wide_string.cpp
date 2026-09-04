@@ -211,7 +211,7 @@ size_t wide_string::find_last_of(const wchar_t* find) const { return bufferio::w
 size_t wide_string::find_not_last_of(const wchar_t* find) const { return bufferio::wfind_not_last_of(_handle, find); }
 
 // getline subfunction
-static int isnewline(int c) {
+static int wisnewline(int c) {
     int ret_value = 0;
 
     // match \f, \v, \r, \n
@@ -237,7 +237,7 @@ return_t wide_string::getline(size_t pos, size_t* brk, wide_string& line) {
         size_t datasize = size();
 
         bufferio::lock(_handle);
-        ret = scan(p, datasize, pos, brk, &isnewline);
+        ret = scan(p, datasize, pos, brk, &wisnewline);
         if (errorcode_t::success == ret) {
             line.write((void*)(p + pos), *brk - pos);
             line.trim();

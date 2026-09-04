@@ -23,5 +23,6 @@ void testcase_testvector_der();
 void testcase_parser();
 void testcase_testvector_parser();
 void testcase_basic3();
+void testcase_construct();
 
 #endif

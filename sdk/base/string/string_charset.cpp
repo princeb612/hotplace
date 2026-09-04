@@ -50,13 +50,13 @@ return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t*
         }
 
         const TCHAR* pos = stream + startpos;
-        const TCHAR* epos = stream + sizestream;
+        const TCHAR* epos = stream + sizestream - 1;
         const TCHAR* p = stream + startpos;
 
-        while (0 == (*func)(*p) && p < epos) {
+        while ((p < epos) && (0 == (*func)(*p))) {
             p++;
         }
-        *brk = startpos + p - pos + 1;
+        *brk = startpos + p - pos;
     }
     __finally2 {}
 
@@ -86,9 +86,8 @@ return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t*
         size_t pos = kmp.search(stream, sizestream, match, sizematch, startpos);
         if (size_t(-1) == pos) {
             *brk = sizestream;
-            ret = errorcode_t::not_found;
         } else {
-            *brk = pos + 1;
+            *brk = pos;
         }
     }
     __finally2 {}

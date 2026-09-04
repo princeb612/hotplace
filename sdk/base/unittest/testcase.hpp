@@ -6,7 +6,8 @@
  *
  * Revision History
  * Date         Name                Description
- * 2023.08.15   Soo Han, Kim        elapsed time
+ * 2017.07.13   Soo Han, Kim        prototype (codename.grape Revision 288)
+ * 2023.08.15   Soo Han, Kim        elapsed time (codename.hotplace Revision 9)
  */
 
 #ifndef __HOTPLACE_SDK_BASE_UNITEST_TESTCASE__

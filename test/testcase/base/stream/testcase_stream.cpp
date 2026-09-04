@@ -120,7 +120,7 @@ void test_stream_getline() {
             l++;
         }
 
-        pos = brk;
+        pos = brk + 1;
     }
     _test_case.assert(4 == l, __FUNCTION__, "getline");
 }

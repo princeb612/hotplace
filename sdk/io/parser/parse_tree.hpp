@@ -37,16 +37,14 @@ struct parse_treenode {
     parse_treenode(const parse_treenode&) = delete;
     parse_treenode& operator=(const parse_treenode&) = delete;
 
-    void accept(parse_tree_visitor* visitor);
+    bool is_terminal() const;
 
     void print(basic_stream& bs, int depth = 0) const;
 };
 
 class parse_tree {
-   private:
-    std::list<parse_treenode*> _node_stack;
-
    public:
+    parse_tree() = default;
     ~parse_tree();
 
     void clear();
@@ -63,18 +61,57 @@ class parse_tree {
 
     parse_treenode* get_root() const;
 
-    void accept(parse_tree_visitor* visitor);
-};
+    void accept(parse_tree_visitor* visitor) const;
 
-class parse_tree_visitor {
-   public:
-    parse_tree_visitor(std::function<void(parse_treenode*)>);
-
-    void visit(parse_tree* tree);
-    void describe(parse_treenode* node);
+   protected:
+    void visit(parse_treenode* node, parse_tree_visitor* visitor) const;
 
    private:
-    std::function<void(parse_treenode*)> _func;
+    std::list<parse_treenode*> _node_stack;
+};
+
+/**
+ * @@brief  post-order traversal
+ * @example
+ *          _logger->colorln("replay");
+ *          int idx = 0;
+ *          auto lambda = [&idx](parser_action_t type, parse_treenode* node) -> void {
+ *              _logger->writeln([&](basic_stream& dbs) -> void {
+ *                  dbs << "[" << idx++ << "] ";
+ *                  switch (type) {
+ *                      case parser_action_t::shift:
+ *                          dbs << "shift  ";
+ *                          break;
+ *                      case parser_action_t::reduce:
+ *                          dbs << "reduce ";
+ *                          break;
+ *                      default:
+ *                          break;
+ *                  }
+ *                  valist va;
+ *                  va << node->symbol << node->value;
+ *                  dbs.vaprintf("{1}", va);
+ *                  if ((false == node->value.empty()) && (node->symbol != node->value)) {
+ *                      dbs.vaprintf(" ({2})", va);
+ *                  }
+ *                  if (parser_action_t::reduce == type) {
+ *                      dbs << " RHS [" << node->children.size() << "]";
+ *                  }
+ *              });
+ *          };
+ *          parse_tree_visitor visitor(lambda);
+ *          pt.accept(&visitor);
+ */
+class parse_tree_visitor {
+   public:
+    parse_tree_visitor(std::function<void(parser_action_t, parse_treenode*)>);
+    ~parse_tree_visitor() = default;
+
+    void on_shift(parse_treenode* node);
+    void on_reduce(parse_treenode* node);
+
+   private:
+    std::function<void(parser_action_t, parse_treenode*)> _func;
 };
 
 }  // namespace io

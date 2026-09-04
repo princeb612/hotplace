@@ -79,7 +79,6 @@ class valist {
     ~valist();
 
     valist& assign(const valist& object);
-    valist& assign(const std::vector<variant_t>& args);
 
     valist& operator=(const valist& object);
     valist& operator=(valist&& object) noexcept;

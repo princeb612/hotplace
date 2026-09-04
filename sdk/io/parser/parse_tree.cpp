@@ -24,7 +24,7 @@ parse_treenode::~parse_treenode() {
     children.clear();
 }
 
-void parse_treenode::accept(parse_tree_visitor* visitor) { visitor->describe(this); }
+bool parse_treenode::is_terminal() const { return children.empty() && false == value.empty(); }
 
 void parse_treenode::print(basic_stream& bs, int depth) const {
     bs.fill(depth << 1, ' ');
@@ -68,20 +68,33 @@ parse_treenode* parse_tree::get_root() const {
     return nullptr;
 }
 
-void parse_tree::accept(parse_tree_visitor* visitor) {
+void parse_tree::accept(parse_tree_visitor* visitor) const {
     if (visitor) {
         auto root = get_root();
-        if (root) root->accept(visitor);
+        if (root) {
+            visit(root, visitor);
+        }
     }
 }
 
-parse_tree_visitor::parse_tree_visitor(std::function<void(parse_treenode*)> func) : _func(func) {}
-
-void parse_tree_visitor::visit(parse_tree* tree) {
-    if (_func && tree) tree->accept(this);
+void parse_tree::visit(parse_treenode* node, parse_tree_visitor* visitor) const {
+    if (node && visitor) {
+        if (node->is_terminal()) {
+            visitor->on_shift(node);
+        } else {
+            for (parse_treenode* child : node->children) {
+                visit(child, visitor);
+            }
+            visitor->on_reduce(node);
+        }
+    }
 }
 
-void parse_tree_visitor::describe(parse_treenode* node) { _func(node); }
+parse_tree_visitor::parse_tree_visitor(std::function<void(parser_action_t, parse_treenode*)> func) : _func(func) {}
+
+void parse_tree_visitor::on_shift(parse_treenode* node) { _func(parser_action_t::shift, node); }
+
+void parse_tree_visitor::on_reduce(parse_treenode* node) { _func(parser_action_t::reduce, node); }
 
 }  // namespace io
 }  // namespace hotplace

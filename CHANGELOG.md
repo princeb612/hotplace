@@ -35,13 +35,20 @@
     * CBOR
 
 * details
+  * Revision 1070
+    * parse tree visitor
+    * builtinmemory, builtinpool
+    * base64 multiline
+    * radix64
+    * [fixed] scan
   * Revision 1069
-    * [added] parse tree
+    * parse tree
   * Revision 1067
     * [fixed] valist sign-extension overflow problem
     * [tested] ASN.1 PATTERN
-  * Revision 1064-
-    * ASN.1 parser
+  * Revision 1064
+    * CFG grammar
+    * LALR parser
   * Revision 1059
     * [tested] aho corasick parser - token grouping, sub-pattern reduction, and repeat-rule processing
   * Revision 1056-1058

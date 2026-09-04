@@ -6,6 +6,8 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2008.04.16   Soo Han, Kim        created (codename.merlin)
+ * 2024.05.12   Soo Han, Kim        reboot (codename.hotplace Revision 524)
  *
  */
 

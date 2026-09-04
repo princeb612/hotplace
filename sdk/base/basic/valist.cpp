@@ -35,15 +35,6 @@ valist& valist::assign(const valist& object) {
     return *this;
 }
 
-valist& valist::assign(const std::vector<variant_t>& args) {
-    critical_section_guard guard(_lock);
-
-    _args = args;  // copy vector
-    _modified = true;
-
-    return *this;
-}
-
 valist& valist::operator=(const valist& object) { return assign(object); }
 
 valist& valist::operator=(valist&& object) noexcept {

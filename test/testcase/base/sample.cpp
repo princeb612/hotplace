@@ -59,6 +59,7 @@ int main(int argc, char** argv) {
         _test_case.attach(_logger);
     }
 
+    testcase_builtinmemory();
     testcase_cmdline();
     testcase_testvector_cmdline();
     testcase_dumpmemory();

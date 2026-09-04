@@ -220,17 +220,6 @@ size_t ansi_string::find_last_of(const char* find) const { return bufferio::find
 
 size_t ansi_string::find_not_last_of(const char* find) const { return bufferio::find_not_last_of(_handle, find); }
 
-static int isnewline(int c) {
-    int ret_value = 0;
-
-    // match \f, \v, \r, \n
-    // except space, \t
-    if (0x20 != c && 0x9 != c) {
-        ret_value = isspace(c);
-    }
-    return ret_value;
-}
-
 return_t ansi_string::getline(size_t pos, size_t* brk, ansi_string& line) {
     return_t ret = errorcode_t::success;
 

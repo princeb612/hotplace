@@ -40,7 +40,7 @@ void replace(std::wstring& source, const std::wstring& a, const std::wstring& b)
  * @param const char* stream [in]
  * @param size_t sizestream [in]
  * @param size_t startpos [in]
- * @param size_t *brk [out]
+ * @param size_t *brk [out] break position
  * @param int (*func)(int) [in]
  * @example
  *  const char* data = "hello world\n ";
@@ -52,7 +52,7 @@ void replace(std::wstring& source, const std::wstring& a, const std::wstring& b)
  *          break;
  *      }
  *      printf ("position isspace %zi\n", brk); // in order 6, 12, 13
- *      pos = brk;
+ *      pos = brk + 1;
  *  }
  */
 return_t scan(const char* stream, size_t sizestream, size_t startpos, size_t* brk, int (*func)(int));
@@ -65,7 +65,7 @@ return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t*
  * @param const char* stream [in]
  * @param size_t sizestream [in]
  * @param size_t startpos [in]
- * @param size_t *brk [out]
+ * @param size_t *brk [out] break position
  * @param const char* match [in]
  * @example
  *  const char* data = "hello world\n wide world\n";
@@ -78,7 +78,7 @@ return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t*
  *          break;
  *      }
  *      printf ("position %zi\n", brk); // in order 7, 19
- *      pos = brk + strlen (match);
+ *      pos = brk + strlen (match) + 1;
  *  }
  */
 return_t scan(const char* stream, size_t sizestream, size_t startpos, size_t* brk, const char* match);
@@ -107,13 +107,24 @@ return_t scan(const wchar_t* stream, size_t sizestream, size_t startpos, size_t*
  *      ltrim (rtrim (line));
  *      printf ("%s\n", line.c_str ());
  *
- *      pos = brk;
+ *      pos = brk + 1;
  *  }
  */
 return_t getline(const char* stream, size_t sizestream, size_t startpos, size_t* brk);
 #if defined _WIN32 || defined _WIN64
 return_t getline(const wchar_t* stream, size_t sizestream, size_t startpos, size_t* brk);
 #endif
+
+static inline int isnewline(int c) {
+    int ret_value = 0;
+
+    // match \f, \v, \r, \n
+    // except space, \t
+    if (0x20 != c && 0x9 != c) {
+        ret_value = isspace(c);
+    }
+    return ret_value;
+}
 
 }  // namespace hotplace
 

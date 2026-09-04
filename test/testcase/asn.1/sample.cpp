@@ -73,6 +73,7 @@ int main(int argc, char** argv) {
     testcase_parser();
     testcase_testvector_parser();
     testcase_basic3();
+    testcase_construct();
 
     _logger->flush();
 

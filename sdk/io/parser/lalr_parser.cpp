@@ -229,7 +229,8 @@ return_t lalr_parser::parse(const std::vector<parser_token>& tokens, parse_tree*
                 }
                 trace.state_stack << "]";
 
-                trace.current_token << current_token.value << " (" << current_token.type << ")";
+                trace.current_token << current_token.value;
+                if (typestring != current_token.value) trace.current_token << " (" << typestring << ")";
 #endif
             }
 
@@ -252,7 +253,7 @@ return_t lalr_parser::parse(const std::vector<parser_token>& tokens, parse_tree*
                 const auto& rule = rules[act.target];
 
 #if defined DEBUG
-                trace.action << "reduce -> Rule " << rule.id << " (" << rule.lhs << ")";
+                trace.action << "reduce -> Rule " << rule.id << " (" << rule.lhs << ") RHS[" << rule.rhs.size() << "]";
                 trace_stack.push_back(trace);
 #endif
 

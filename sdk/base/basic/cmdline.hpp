@@ -6,7 +6,9 @@
  *
  * Revision History
  * Date         Name                Description
- *
+ * 2010.06.02   Soo Han, Kim        created (codename.merlin Revision 150)
+ * 2020.03.14   Soo Han, Kim        template class (codename.unicorn Revision 127)
+ * 2026.05.22   Soo Han, Kim        refactor (codename.hotplace Revision 1055)
  */
 
 #ifndef __HOTPLACE_SDK_BASE_BASIC_CMDLINE__
