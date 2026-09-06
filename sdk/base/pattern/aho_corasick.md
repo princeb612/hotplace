@@ -116,13 +116,8 @@ auto result = ac.search(source, strlen(source));
 ## 5. C++11 Implementation Characteristics and Refactoring Notes
 
 1. **Replacing `std::function` with Functors (Revision 1003, 2026.05.19)**
-
    * To reduce runtime overhead caused by lambda/`std::function` calls and virtual function calls, the implementation was changed to a functor-based structure using the template parameter `memberof_t`, encouraging compile-time inlining.
-
 2. **Use of `std::multimap` and Hash Functions**
-
    * For syntax comparison, an `equal()` template function is provided using an `unordered_multiset` based on the custom hash function `universal_pairhash`.
-
 3. **Considerations Regarding Queue-Based Search Overhead (Comment #4)**
-
-   * When searching large amounts of data, memory may accumulate in the `q` and `visit` structures used to prevent duplicate queue entries. There is still room for optimization by continuously pruning `visit` records corresponding to text ranges that have already been processed.
+   [fixed] ~~* When searching large amounts of data, memory may accumulate in the `q` and `visit` structures used to prevent duplicate queue entries. There is still room for optimization by continuously pruning `visit` records corresponding to text ranges that have already been processed.~~

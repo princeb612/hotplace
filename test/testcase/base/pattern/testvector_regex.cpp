@@ -75,6 +75,34 @@ void test_yaml_testvector_regex() {
             }
             _test_case.assert(tokens_results == tokens_expect, __FUNCTION__, "regex #3 results as std::list<std::map<size_t, range_t>>");
         }
+
+        // results as std::list<range_t>, regex interface
+        {
+            regex_context_t* handle = nullptr;
+            size_t pos = 0;
+            regex re;
+            return_t ret = errorcode_t::success;
+            __try2 {
+                ret = re.open(&handle, expr.c_str());
+                if (errorcode_t::success != ret) {
+                    __leave2;
+                }
+                ret = re.search(handle, input.c_str(), input.size(), pos, tokens_range);
+                if (errorcode_t::success != ret) {
+                    __leave2;
+                }
+            }
+            __finally2 { re.close(handle); }
+
+            // rebuild
+            tokens_results.clear();
+            for (const auto& range : tokens_range) {
+                auto res = input.substr(range.begin, range.end - range.begin);
+                _logger->writeln("result %s", res.c_str());
+                tokens_results.push_back(res);
+            }
+            _test_case.assert(tokens_results == tokens_expect, __FUNCTION__, "regex #4 results as std::list<range_t> and regex interface");
+        }
     };
 
     auto lambda_yaml_regex = [&](const YAML::Node& example, const YAML::Node& items) -> void {

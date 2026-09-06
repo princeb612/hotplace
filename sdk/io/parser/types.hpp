@@ -21,38 +21,38 @@ enum token_t : uint32 {
     token_unknown = 0,
     token_alpha = 1,                // [a-zA-Z]
     token_number = 2,               // [0-9]
-    token_floatingpoint = 3,        //
-    token_space = 4,                // whitespace
-    token_lparen = 5,               // (parentheses)
-    token_rparen = 6,               // (parentheses)
-    token_lbracket = 7,             // [brackets]
-    token_rbracket = 8,             // [brackets]
-    token_lbrace = 9,               // {braces}
-    token_rbrace = 10,              // {braces}
-    token_squote = 11,              // '
-    token_dquote = 12,              // "
-    token_greater = 13,             // >
-    token_lesser = 14,              // <
-    token_equal = 15,               // =
-    token_plus = 16,                // +
-    token_minus = 17,               // -
-    token_multi = 18,               // *
-    token_divide = 19,              // /
-    token_colon = 20,               // :
-    token_semicolon = 21,           // ;
-    token_comma = 22,               // ,
-    token_dot = 23,                 // .
-    token_newline = 24,             // \n
-    token_and = 25,                 // &&, |
-    token_or = 26,                  // ||
-    token_isequal = 27,             // ==
-    token_notequal = 28,            // !=
-    token_word = 29,                // [a-zA-Z0-9].*
+    token_word = 3,                 // [a-zA-Z0-9].*
     token_identifier = token_word,  //
-    token_quot_string = 30,         // \"[a-zA-Z0-9].*\"
-    token_comments = 31,            // lexical_token.comments .... until the newline
-    token_assign = 32,              // =, ::=
-    token_lvalue = 33,
+    token_floatingpoint = 4,        //
+    token_space = 5,                // whitespace
+    token_lparen = 6,               // (parentheses)
+    token_rparen = 7,               // (parentheses)
+    token_lbracket = 8,             // [brackets]
+    token_rbracket = 9,             // [brackets]
+    token_lbrace = 10,              // {braces}
+    token_rbrace = 11,              // {braces}
+    token_comments = 12,            // lexical_token.comments .... until the newline
+    token_assign = 13,              // =, ::=
+    token_lvalue = 14,              //
+    token_squote = 15,              // '
+    token_dquote = 16,              // "
+    token_greater = 17,             // >
+    token_lesser = 18,              // <
+    token_equal = 19,               // =
+    token_plus = 20,                // +
+    token_minus = 21,               // -
+    token_multi = 22,               // *
+    token_divide = 23,              // /
+    token_colon = 24,               // :
+    token_semicolon = 25,           // ;
+    token_comma = 26,               // ,
+    token_dot = 27,                 // .
+    token_newline = 28,             // \n
+    token_and = 29,                 // &&, |
+    token_or = 30,                  // ||
+    token_isequal = 31,             // ==
+    token_notequal = 32,            // !=
+    token_quot_string = 33,         // \"[a-zA-Z0-9].*\"
     token_emphasis = 34,
     token_type = 35,
     token_usertype = 36,

@@ -76,3 +76,46 @@ testvector:
       expr: ([0-9]{3}-[0-9]{4}-[0-9]{4})
       results:
       - "010-1234-5678"
+    - item: floating point
+      input: "3.141592"
+      expr: |-
+        ^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$
+      results:
+      - "3.141592"
+    - item: floating point
+      input: "-1.0e-5"
+      expr: |-
+        ^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$
+      results:
+      - "-1.0e-5"
+    - item: floating point
+      input: "-1.0E3"
+      expr: |-
+        ^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$
+      results:
+      - "-1.0E3"
+    - item: floating point (bad format)
+      input: "3..141592"
+      expr: |-
+        ^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$
+      results:
+    - item: floating point (bad format)
+      input: "0.0."
+      expr: |-
+        ^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$
+      results:
+    - item: floating point (bad format)
+      input: "-1..0e-5"
+      expr: |-
+        ^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$
+      results:
+    - item: floating point (bad format)
+      input: "-1.0Ee-5"
+      expr: |-
+        ^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$
+      results:
+    - item: floating point (bad format)
+      input: "-1.0-5e"
+      expr: |-
+        ^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$
+      results:

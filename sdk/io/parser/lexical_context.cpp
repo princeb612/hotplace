@@ -27,7 +27,6 @@ return_t lexical_context::init(const char* p, size_t size) {
     return_t ret = errorcode_t::success;
     _p = p;
     _size = size;
-    // get_token().init();
     clear();
     return ret;
 }
@@ -36,48 +35,28 @@ return_t lexical_context::add_context_lextoken(const lexical_token& token, std::
     return_t ret = errorcode_t::success;
     bool ret_hook = true;
     __try2 {
-        if (token.size()) {
-            lexical_token* newone = token.clone();
-            if (hook) {
-                ret_hook = hook(0, newone);
-                if (false == ret_hook) {
-                    ret = errorcode_t::not_exist;
-                    __leave2;
-                }
-            }
-            _lextoken.push_back(newone);
-            if (hook) {
-                ret_hook = hook(1, newone);
-                if (false == ret_hook) {
-                    ret = errorcode_t::not_exist;
-                    __leave2;
-                }
-            }
-            // [merge] token_floatingpoint
-            if ((token_number == newone->get_tokenid()) && (_lextoken.size() > 2)) {
-                // idx-2  token_number
-                // idx-1  token_dot
-                // idx    token_number
-                auto iter = _lextoken.rbegin();
-                auto p = *++iter;
-                if (token_dot == p->get_tokenid()) {
-                    auto pp = *++iter;
-                    if (token_number == pp->get_tokenid()) {
-                        if ((p->_pos == pp->_pos + pp->_size) && (newone->_pos == p->_pos + p->_size)) {
-                            auto token = new lexical_token(*pp);
-                            token->set_type(token_floatingpoint);
-                            token->_size += p->_size + newone->_size;
-                            delete pp;
-                            delete p;
-                            delete newone;
-                            _lextoken.resize(_lextoken.size() - 3);
-                            _lextoken.push_back(token);
-                        }
-                    }
-                }
-            }
-        } else {
+        if (token.empty()) {
             ret = errorcode_t::empty;
+            __leave2;
+        }
+
+        lexical_token* newone = token.clone();
+        if (hook) {
+            ret_hook = hook(0, newone);  // pre-action
+            if (false == ret_hook) {
+                ret = errorcode_t::not_exist;
+                delete newone;
+                __leave2;
+            }
+        }
+        _lextoken.push_back(newone);
+        if (hook) {
+            ret_hook = hook(1, newone);  // post-action
+            if (false == ret_hook) {
+                ret = errorcode_t::not_exist;
+                // newone already pushed into _lextoken
+                __leave2;
+            }
         }
     }
     __finally2 {}

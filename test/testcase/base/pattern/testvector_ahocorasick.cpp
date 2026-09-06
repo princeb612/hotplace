@@ -109,7 +109,7 @@ void test_yaml_testvector_ahocorasick() {
                 bs.printf("%*s", (int)r.begin, "");
                 bs << input.substr(r.begin, r.end - r.begin + 1);
                 bs.fill(input.size() - r.end, '-');
-                bs.println(R"(> pattern "%.*s")", pattern.size(), pattern.data());
+                bs.println(R"(> pattern "%.*s" [%zi, %zi])", pattern.size(), pattern.data(), r.begin, r.end);
             }
         };
         _logger->write(lambda_graphic);

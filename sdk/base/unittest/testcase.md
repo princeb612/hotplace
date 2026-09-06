@@ -78,7 +78,7 @@ Result codes are automatically categorized and processed statistically via `erro
 ```
 [Result return_t] ──► advisor->categoryof(result)
                            │
-                           ├─► success / expect_failure ──► Increments _count_success (Cyan/Default)
+                           ├─► success / expect_failure ──► Increments _count_success (Default/Cyan)
                            ├─► severe                  ──► Increments _count_fail (Red)
                            ├─► not_supported           ──► Increments _count_not_supported (Cyan)
                            └─► trivial / warn / low    ──► Increments _count_trivial (Yellow)

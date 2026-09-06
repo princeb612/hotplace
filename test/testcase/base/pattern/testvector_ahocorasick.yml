@@ -171,3 +171,21 @@ testvector:
         "be??use": [[17, 23], [50, 56]]
         "we *ing": [[0, 15], [58, 72]]
         "we * old": [[25, 35], [38, 48]]
+    - item: test 24 (**)
+      input: We don't playing because we grow old; we grow old because we stop playing.
+      option: [wildcards, ignorecase]
+      pattern:
+        "????ing": [[9, 15], [66, 72]]
+        "we": [[0, 1], [25, 26], [38, 39], [58, 59]]
+        "be??use": [[17, 23], [50, 56]]
+        "we **ing": [[0, 15], [58, 72]]
+        "we ** old": [[25, 35], [38, 48]]
+    - item: test 25 (**, startswith_wildcard_any, endswith_wildcard_any)
+      input: We don't playing because we grow old; we grow old because we stop playing.
+      option: [wildcards, ignorecase]
+      pattern:
+        "????ing": [[9, 15], [66, 72]]
+        "we*": [[0, 73], [25, 73], [38, 73], [58, 73]]
+        "be??use": [[17, 23], [50, 56]]
+        "**ing": [[0, 15], [0, 72]]
+        "we * old": [[25, 35], [38, 48]]

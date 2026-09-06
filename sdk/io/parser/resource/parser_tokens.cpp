@@ -14,7 +14,7 @@
 namespace hotplace {
 namespace io {
 
-const parser_token_resource parser_basic_tokens[] = {
+const parser_token_resource parser_symbol_tokens[] = {
     {token_alpha, "alpha"},
     {token_number, "num"},        // number
     {token_floatingpoint, "fp"},  // floatingpoint
@@ -54,6 +54,19 @@ const parser_token_resource parser_basic_tokens[] = {
     {token_element, "element"},
     {token_phrase, "phrase"},
     {token_sentence, "sentence"},
+};
+const size_t sizeof_parser_symbol_tokens = RTL_NUMBER_OF(parser_symbol_tokens);
+
+const parser_token_resource parser_basic_tokens[] = {
+    // clang-format off
+    {token_lparen, "("},
+    {token_rparen, ")"},
+    {token_lbracket, "["},
+    {token_rbracket, "]"},
+    {token_lbrace, "{"},
+    {token_rbrace, "}"},
+    {token_colon, ";"},
+    // clang-format on
 };
 const size_t sizeof_parser_basic_tokens = RTL_NUMBER_OF(parser_basic_tokens);
 

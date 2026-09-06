@@ -19,6 +19,54 @@ static void prepare_asn1_tokens(lexical_analyzer& lex) {
     resource->for_each(parser_resource_type_t::token_type_asn1, [&lex](uint32 token, const std::string& name) -> void { lex.add_token(name, token); });
 }
 
+void test_options() {
+    _test_case.begin("lexical analyzer");
+    struct testvector {
+        const char* notation = {nullptr};
+        size_t tokens = {0};
+        uint32 first = {token_unknown};
+        int16 handle_comments = {0};
+        int16 handle_lvalue_usertype = {0};
+    } table[] = {
+        {R"(Type ::= VisibleString ("A" | "B" | "C" | "D"))", 12, token_lvalue, 0, 0},             //
+        {"Type ::= SEQUENCE {} -- empty SEQUENCE", 8, token_lvalue, 0},                            // "--" as comments, cf. prepare_asn1_tokens
+        {"Type ::= SEQUENCE {} -- empty SEQUENCE", 6, token_lvalue, 1},                            // "-- empty SEQUENCE" as comments
+        {"Type1 ::= SEQUENCE {name VisibleString, ok BOOLEAN} -- SEQUENCE", 12, token_lvalue, 0},  //
+        {"Type1 ::= SEQUENCE {name VisibleString, ok BOOLEAN} -- SEQUENCE", 11, token_lvalue, 1},  // "-- SEQUENCE" as comments
+        {"Type ::= SEQUENCE {} -- empty SEQUENCE", 6, token_usertype, 1, 1},                       // Type (usertype not lvalue)
+        {"Name ::= VisibleString", 3, token_usertype, 1, 1},                                       // Name (usertype not lvalue)
+        {"Type1 ::= SEQUENCE {name Name, ok BOOLEAN} -- SEQUENCE", 11, token_usertype, 1, 1},      // Type1, Name (usertype)
+        {"Name2 ::= [APPLICATION 1] IMPLICIT SEQUENCE { givenName VisibleString, initial VisibleString, familyName VisibleString}", 18, token_usertype, 1, 1},
+        {R"(Type ::= INTEGER (1..10 | 20..30))", 12, token_lvalue, 0, 0},
+    };
+
+    lexical_analyzer lex;
+    lexical_context context;  // shares context to test previously defined usertype
+
+    lex.prepare();
+    prepare_asn1_tokens(lex);
+
+    for (const auto& entry : table) {
+        _logger->colorln(entry.notation);
+
+        lex.get_config().set("handle_comments", entry.handle_comments).set("handle_lvalue_usertype", entry.handle_lvalue_usertype);
+        auto test = lex.parse(context, entry.notation, strlen(entry.notation));
+
+        uint32 cnt = 0;
+        uint32 first = token_unknown;
+        auto dump_handler = [&lex, &cnt, &first](const token_description* desc) -> bool {
+            if (0 == cnt) first = desc->type;
+            _logger->writeln("[%03u] line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", cnt++, desc->line, desc->type, lex.nameof_token(desc->type).c_str(),
+                             desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
+            return true;
+        };
+        context.for_each(dump_handler);
+        _test_case.test(test, __FUNCTION__, "parse usertype");
+        _test_case.assert(entry.tokens == cnt, __FUNCTION__, "handle_comments %i handle_lvalue_usertype %i", entry.handle_comments, entry.handle_lvalue_usertype);
+        _test_case.assert(entry.first == first, __FUNCTION__, "first token type %s", lex.nameof_token(first).c_str());
+    }
+}
+
 void test_lexical() {
     _test_case.begin("lexical analyzer");
 
@@ -40,6 +88,7 @@ void test_lexical() {
 
     // load basic tokens only
 
+    lex.prepare();
     lex.parse(context, asn1_structure, strlen(asn1_structure));
     uint32 cnt = 0;
 
@@ -54,6 +103,7 @@ void test_lexical() {
 
     // load ASN.1 tokens
     prepare_asn1_tokens(lex);
+    lex.get_config().set("handle_lvalue_usertype", 1);
 
     lex.add_token("::=", token_assign).add_token("--", token_comments);
     lex.parse(context, asn1_structure, strlen(asn1_structure));
@@ -72,13 +122,16 @@ void test_lalr() {
     bool result = true;
 
     __try2 {
+        lex.prepare();
         prepare_asn1_tokens(lex);
+        lex.get_config().set("handle_lvalue_usertype", 1);
 
         auto resource = parser_resource::get_instance();
         auto symid = resource->nameof(token_identifier);     // "identifier"
         auto symnum = resource->nameof(token_number);        // "number"
         auto symfp = resource->nameof(token_floatingpoint);  // "floatingpoint"
         auto symqs = resource->nameof(token_quot_string);    // "quot_string"
+        auto symuser = resource->nameof(token_usertype);     // "usertype"
 
         g
             // Top level & Assignments
@@ -87,9 +140,16 @@ void test_lalr() {
             .add_production("Statement", {"TypeSpec"})
             .add_production("Statement", {"Constraint"})
             .add_production("Statement", {"Field"})
-            .add_production("Statement", {"Tag"})
-            .add_production("Assignment", {symid, "::=", "TypeSpec"})
-            .add_production("Assignment", {symid, "::=", "TypeSpec", "Constraint"})
+            .add_production("Statement", {"TagPrefix"})
+
+            // Assignment: LHS (asn1_referenced_type::define 시점)
+            .add_production("Assignment", {"DefinedType", "::=", "TypeSpec"})
+            .add_production("Assignment", {"DefinedType", "::=", "TypeSpec", "Constraint"})
+
+            // LHS type definition symbol
+            .add_production("DefinedType", {symuser})
+            .add_production("DefinedType", {symid})
+
             // Structural Statements
             .add_production("StatementSequence", {"SEQUENCE", "Constraint", "{", "FieldList", "}"})
             .add_production("StatementSequence", {"SEQUENCE", "{", "FieldList", "}"})
@@ -110,6 +170,7 @@ void test_lalr() {
             .add_production("StatementChoice", {"CHOICE", "{", "FieldList", "}"})
             .add_production("StatementChoice", {"CHOICE", "Constraint", "{", "}"})
             .add_production("StatementChoice", {"CHOICE", "{", "}"})
+
             // Field & Field List
             .add_production("FieldList", {"FieldList", ",", "Field"})
             .add_production("FieldList", {"Field"})
@@ -117,10 +178,16 @@ void test_lalr() {
             .add_production("Field", {symid, "TypeSpec", "Constraint"})
             .add_production("Field", {symid, "TypeSpec", "FieldOpt"})
             .add_production("Field", {symid, "TypeSpec", "Constraint", "FieldOpt"})
+            .add_production("Field", {symuser, "TypeSpec"})
+            .add_production("Field", {symuser, "TypeSpec", "Constraint"})
+            .add_production("Field", {symuser, "TypeSpec", "FieldOpt"})
+            .add_production("Field", {symuser, "TypeSpec", "Constraint", "FieldOpt"})
             .add_production("FieldOpt", {"OPTIONAL"})
             .add_production("FieldOpt", {"DEFAULT", symid})
+            .add_production("FieldOpt", {"DEFAULT", symuser})
             .add_production("FieldOpt", {"DEFAULT", symnum})
             .add_production("FieldOpt", {"DEFAULT", "{", "}"})
+
             // Type Spec Definition
             .add_production("TypeSpec", {"TypeBase"})
             .add_production("TypeSpec", {"EnumType"})
@@ -129,26 +196,36 @@ void test_lalr() {
             .add_production("TypeSpec", {"StatementSet"})
             .add_production("TypeSpec", {"StatementSetOf"})
             .add_production("TypeSpec", {"StatementChoice"})
+
+            // RHS referenced type symbol (asn1_referenced_type::refer 시점)
             .add_production("TypeBase", {"SimpleType"})
             .add_production("TypeBase", {"TaggedType"})
-            .add_production("TypeBase", {symid})
+            .add_production("TypeBase", {"ReferencedType"})
+
+            .add_production("ReferencedType", {symuser})
+            .add_production("ReferencedType", {symid})
+
             // Tagged Type Productions
-            .add_production("TaggedType", {"Tag", "TagSpec", "TypeSpec"})
-            .add_production("TaggedType", {"Tag", "TypeSpec"})
-            // Tag ::= "[" Class ClassNumber "]"
-            .add_production("Tag", {"[", "TagClass", symnum, "]"})
-            .add_production("Tag", {"[", symnum, "]"})
+            .add_production("TaggedType", {"TagPrefix", "TagSpec", "TypeSpec"})
+            .add_production("TaggedType", {"TagPrefix", "TypeSpec"})
+
+            // TagPrefix
+            .add_production("TagPrefix", {"[", "TagClass", symnum, "]"})
+            .add_production("TagPrefix", {"[", symnum, "]"})
+
             // Tag Class & Spec
             .add_production("TagClass", {"UNIVERSAL"})
             .add_production("TagClass", {"APPLICATION"})
             .add_production("TagClass", {"PRIVATE"})
             .add_production("TagSpec", {"IMPLICIT"})
             .add_production("TagSpec", {"EXPLICIT"})
+
             // Enum Type
             .add_production("EnumType", {"ENUMERATED", "{", "EnumList", "}"})
             .add_production("EnumList", {"EnumList", ",", "EnumItem"})
             .add_production("EnumList", {"EnumItem"})
             .add_production("EnumItem", {symid, "(", symnum, ")"})
+
             // Simple Type List
             .add_production("SimpleType", {"BOOLEAN"})
             .add_production("SimpleType", {"INTEGER"})
@@ -182,6 +259,7 @@ void test_lalr() {
             .add_production("SimpleType", {"DATE-TIME"})
             .add_production("SimpleType", {"DURATION"})
             .add_production("SimpleType", {"ANY"})
+
             // Constraints Grammar
             .add_production("Constraint", {"(", "ConstraintExpr", ")"})
             .add_production("ConstraintExpr", {"SubtypeElementSet"})
@@ -200,6 +278,7 @@ void test_lalr() {
             .add_production("PrimaryElement", {"PATTERN", symqs})
             .add_production("PrimaryElement", {"(", "ConstraintExpr", ")"})
             .add_production("ValueElement", {symid})
+            .add_production("ValueElement", {symuser})
             .add_production("ValueElement", {symnum})
             .add_production("ValueElement", {symfp})
             .add_production("ValueElement", {symqs})
@@ -257,6 +336,7 @@ void test_lalr() {
             .add_terminal("IMPLICIT")
             .add_terminal("EXPLICIT")
             .add_terminal(symid)
+            .add_terminal(symuser)
             .add_terminal(symnum)
             .add_terminal(symfp)
             .add_terminal(symqs)
@@ -278,6 +358,7 @@ void test_lalr() {
             const char* notation;
         };
 
+        // [NOTE] LHS is always camelcase no lowercase (cf. usertype)
         testvector table[] = {
             // Assignment
             {R"(Type1 ::= VisibleString)"},
@@ -310,26 +391,26 @@ void test_lalr() {
             {R"(Test ::= SEQUENCE {id INTEGER, data ANY})"},
             {R"(OptTest ::= SEQUENCE {name VisibleString, title [0] VisibleString OPTIONAL})"},
             // Constraints
-            {R"(type ::= INTEGER (1))"},
-            {R"(type ::= INTEGER (1 | 2))"},
-            {R"(type ::= INTEGER (1 | 2 | 3 | 6))"},
-            {R"(type ::= VisibleString ("A" | "B" | "C" | "D"))"},
-            {R"(type ::= INTEGER (1..10 | 20..30))"},
-            {R"(type ::= INTEGER ((1..100) INTERSECTION (50..200)))"},
-            {R"(type ::= INTEGER (1..100 EXCEPT 50))"},
-            {R"(type ::= INTEGER ((1..10 | 20..30) EXCEPT (5 | 25)))"},
-            {R"(temperature ::= REAL (0.0..100.0))"},
-            {R"(positive ::= REAL (0.0..MAX))"},
-            {R"(negative ::= REAL (MIN..0.0))"},
-            {R"(type ::= REAL (0.0..100.0 EXCEPT 50.0))"},
-            {R"(name ::= IA5String (SIZE(1)))"},
-            {R"(name ::= IA5String (SIZE(1 | 2 | 5)))"},
-            {R"(name ::= IA5String (SIZE(1..20)))"},
-            {R"(type ::= INTEGER (1..50 EXCEPT 20..30))"},
-            {R"(type ::= INTEGER (ALL EXCEPT 1..10))"},
-            {R"(type ::= INTEGER (0..255))"},
-            {R"(type ::= OCTET STRING (SIZE(16)))"},
-            {R"(name ::= IA5String (FROM ("ABC")))"},
+            {R"(Type ::= INTEGER (1))"},
+            {R"(Type ::= INTEGER (1 | 2))"},
+            {R"(Type ::= INTEGER (1 | 2 | 3 | 6))"},
+            {R"(Type ::= VisibleString ("A" | "B" | "C" | "D"))"},
+            {R"(Type ::= INTEGER (1..10 | 20..30))"},
+            {R"(Type ::= INTEGER ((1..100) INTERSECTION (50..200)))"},
+            {R"(Type ::= INTEGER (1..100 EXCEPT 50))"},
+            {R"(Type ::= INTEGER ((1..10 | 20..30) EXCEPT (5 | 25)))"},
+            {R"(Temperature ::= REAL (0.0..100.0))"},
+            {R"(Positive ::= REAL (0.0..MAX))"},
+            {R"(Negative ::= REAL (MIN..0.0))"},
+            {R"(Type ::= REAL (0.0..100.0 EXCEPT 50.0))"},
+            {R"(Name ::= IA5String (SIZE(1)))"},
+            {R"(Name ::= IA5String (SIZE(1 | 2 | 5)))"},
+            {R"(Name ::= IA5String (SIZE(1..20)))"},
+            {R"(Type ::= INTEGER (1..50 EXCEPT 20..30))"},
+            {R"(Type ::= INTEGER (ALL EXCEPT 1..10))"},
+            {R"(Type ::= INTEGER (0..255))"},
+            {R"(Type ::= OCTET STRING (SIZE(16)))"},
+            {R"(Name ::= IA5String (FROM ("ABC")))"},
             {R"(Numbers ::= SEQUENCE SIZE(1..4) OF INTEGER)"},
             {R"(Flags ::= BIT STRING (SIZE(8)))"},
             {R"(Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))})"},
@@ -395,13 +476,17 @@ void test_lalr() {
             lex.parse(context, entry.notation);
 
             uint32 cnt = 0;
-            auto dump_handler = [&](const token_description* desc) -> bool {
+            auto lambda = [&](const token_description* desc) -> bool {
                 bool ret = true;
                 const auto& type = desc->type;
                 std::string token(desc->p, desc->size);
                 switch (type) {
                     case token_lvalue: {
-                        tokens.push_back({token_identifier, token});
+                        tokens.push_back({token_identifier, symid});
+                    } break;
+                    case token_usertype: {
+                        // 사용자 정의 타입 토큰 유지
+                        tokens.push_back({token_usertype, symuser});
                     } break;
                     case token_comments:
                         ret = false;  // stop at comments
@@ -414,7 +499,7 @@ void test_lalr() {
                                  desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
                 return ret;
             };
-            context.for_each(dump_handler);
+            context.for_each(lambda);
             tokens.push_back({token_eof, "$"});
 
             ret = lalr.parse(tokens);
@@ -427,6 +512,7 @@ void test_lalr() {
 }
 
 void testcase_parser() {
+    test_options();
     test_lexical();
     test_lalr();
 }

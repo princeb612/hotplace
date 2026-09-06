@@ -10,6 +10,8 @@
  * see README.md
  */
 
+#include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_parser.hpp>
 #include <hotplace/sdk/io/parser/parser_resource.hpp>
 
@@ -36,12 +38,37 @@ void asn1_parser::load() {
 }
 
 bool asn1_parser::prepare() {
-    auto resource = parser_resource::get_instance();
-
+    auto& lex = get_lex();
     // handle_quoted to 1
-    get_lex().get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1);
+    lex.get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1).set("handle_lvalue_usertype", 1);
+    lex.prepare();
+
+    auto resource = parser_resource::get_instance();
     // ASN.1 tokens
-    resource->for_each(parser_resource_type_t::token_type_asn1, [this](uint32 token, const std::string& name) -> void { get_lex().add_token(name, token); });
+    resource->for_each(parser_resource_type_t::token_type_asn1, [&lex](uint32 token, const std::string& name) -> void { lex.add_token(name, token); });
+
+    /**
+     *                 source
+     *                   │
+     *                   ▼
+     *              lexical pass
+     *                   │
+     *           ┌───────┴───────┐
+     *           │               │
+     *        tokens           lvalues
+     *                           │
+     *                           ▼
+     *                     rlookup names
+     *                           │
+     *                           ▼
+     *                   token_usertype
+     *                           │
+     *                           ▼
+     *                 token reclassification
+     *                           │
+     *                           ▼
+     *                         LALR
+     */
 
     // get several CFG symbols from the lexical analyzer.
 
@@ -49,6 +76,7 @@ bool asn1_parser::prepare() {
     auto symnum = resource->nameof(token_number);        // "number"
     auto symfp = resource->nameof(token_floatingpoint);  // "floatingpoint"
     auto symqs = resource->nameof(token_quot_string);    // "quot_string"
+    auto symuser = resource->nameof(token_usertype);     // "usertype"
 
     // CFG - production, terminal, non-terminal, start symbol
     cfg_grammar grammar;
@@ -59,9 +87,16 @@ bool asn1_parser::prepare() {
         .add_production("Statement", {"TypeSpec"})
         .add_production("Statement", {"Constraint"})
         .add_production("Statement", {"Field"})
-        .add_production("Statement", {"Tag"})
-        .add_production("Assignment", {symid, "::=", "TypeSpec"})
-        .add_production("Assignment", {symid, "::=", "TypeSpec", "Constraint"})
+        .add_production("Statement", {"TagPrefix"})
+
+        // Assignment: LHS (asn1_referenced_type::define 시점)
+        .add_production("Assignment", {"DefinedType", "::=", "TypeSpec"})
+        .add_production("Assignment", {"DefinedType", "::=", "TypeSpec", "Constraint"})
+
+        // LHS type definition symbol
+        .add_production("DefinedType", {symuser})
+        .add_production("DefinedType", {symid})
+
         // Structural Statements
         .add_production("StatementSequence", {"SEQUENCE", "Constraint", "{", "FieldList", "}"})
         .add_production("StatementSequence", {"SEQUENCE", "{", "FieldList", "}"})
@@ -82,6 +117,7 @@ bool asn1_parser::prepare() {
         .add_production("StatementChoice", {"CHOICE", "{", "FieldList", "}"})
         .add_production("StatementChoice", {"CHOICE", "Constraint", "{", "}"})
         .add_production("StatementChoice", {"CHOICE", "{", "}"})
+
         // Field & Field List
         .add_production("FieldList", {"FieldList", ",", "Field"})
         .add_production("FieldList", {"Field"})
@@ -89,10 +125,16 @@ bool asn1_parser::prepare() {
         .add_production("Field", {symid, "TypeSpec", "Constraint"})
         .add_production("Field", {symid, "TypeSpec", "FieldOpt"})
         .add_production("Field", {symid, "TypeSpec", "Constraint", "FieldOpt"})
+        .add_production("Field", {symuser, "TypeSpec"})
+        .add_production("Field", {symuser, "TypeSpec", "Constraint"})
+        .add_production("Field", {symuser, "TypeSpec", "FieldOpt"})
+        .add_production("Field", {symuser, "TypeSpec", "Constraint", "FieldOpt"})
         .add_production("FieldOpt", {"OPTIONAL"})
         .add_production("FieldOpt", {"DEFAULT", symid})
+        .add_production("FieldOpt", {"DEFAULT", symuser})
         .add_production("FieldOpt", {"DEFAULT", symnum})
         .add_production("FieldOpt", {"DEFAULT", "{", "}"})
+
         // Type Spec Definition
         .add_production("TypeSpec", {"TypeBase"})
         .add_production("TypeSpec", {"EnumType"})
@@ -101,26 +143,36 @@ bool asn1_parser::prepare() {
         .add_production("TypeSpec", {"StatementSet"})
         .add_production("TypeSpec", {"StatementSetOf"})
         .add_production("TypeSpec", {"StatementChoice"})
+
+        // RHS referenced type symbol (asn1_referenced_type::refer 시점)
         .add_production("TypeBase", {"SimpleType"})
         .add_production("TypeBase", {"TaggedType"})
-        .add_production("TypeBase", {symid})
+        .add_production("TypeBase", {"ReferencedType"})
+
+        .add_production("ReferencedType", {symuser})
+        .add_production("ReferencedType", {symid})
+
         // Tagged Type Productions
-        .add_production("TaggedType", {"Tag", "TagSpec", "TypeSpec"})
-        .add_production("TaggedType", {"Tag", "TypeSpec"})
-        // Tag ::= "[" Class ClassNumber "]"
-        .add_production("Tag", {"[", "TagClass", symnum, "]"})
-        .add_production("Tag", {"[", symnum, "]"})
+        .add_production("TaggedType", {"TagPrefix", "TagSpec", "TypeSpec"})
+        .add_production("TaggedType", {"TagPrefix", "TypeSpec"})
+
+        // TagPrefix
+        .add_production("TagPrefix", {"[", "TagClass", symnum, "]"})
+        .add_production("TagPrefix", {"[", symnum, "]"})
+
         // Tag Class & Spec
         .add_production("TagClass", {"UNIVERSAL"})
         .add_production("TagClass", {"APPLICATION"})
         .add_production("TagClass", {"PRIVATE"})
         .add_production("TagSpec", {"IMPLICIT"})
         .add_production("TagSpec", {"EXPLICIT"})
+
         // Enum Type
         .add_production("EnumType", {"ENUMERATED", "{", "EnumList", "}"})
         .add_production("EnumList", {"EnumList", ",", "EnumItem"})
         .add_production("EnumList", {"EnumItem"})
         .add_production("EnumItem", {symid, "(", symnum, ")"})
+
         // Simple Type List
         .add_production("SimpleType", {"BOOLEAN"})
         .add_production("SimpleType", {"INTEGER"})
@@ -154,6 +206,7 @@ bool asn1_parser::prepare() {
         .add_production("SimpleType", {"DATE-TIME"})
         .add_production("SimpleType", {"DURATION"})
         .add_production("SimpleType", {"ANY"})
+
         // Constraints Grammar
         .add_production("Constraint", {"(", "ConstraintExpr", ")"})
         .add_production("ConstraintExpr", {"SubtypeElementSet"})
@@ -172,6 +225,7 @@ bool asn1_parser::prepare() {
         .add_production("PrimaryElement", {"PATTERN", symqs})
         .add_production("PrimaryElement", {"(", "ConstraintExpr", ")"})
         .add_production("ValueElement", {symid})
+        .add_production("ValueElement", {symuser})
         .add_production("ValueElement", {symnum})
         .add_production("ValueElement", {symfp})
         .add_production("ValueElement", {symqs})
@@ -229,6 +283,7 @@ bool asn1_parser::prepare() {
         .add_terminal("IMPLICIT")
         .add_terminal("EXPLICIT")
         .add_terminal(symid)
+        .add_terminal(symuser)
         .add_terminal(symnum)
         .add_terminal(symfp)
         .add_terminal(symqs)
@@ -257,6 +312,13 @@ return_t asn1_parser::parse(asn1_runtime* runtime, const char* notation, parse_t
 
         // LALR tokens
         std::vector<parser_token> tokens;
+#if defined DEBUG
+        uint32 cnt = 0;
+#endif
+
+        auto resource = parser_resource::get_instance();
+        auto symid = resource->nameof(token_identifier);  // "identifier"
+        auto symuser = resource->nameof(token_usertype);  // "usertype"
 
         auto lambda = [&](const token_description* desc) -> bool {
             bool test = true;
@@ -264,22 +326,36 @@ return_t asn1_parser::parse(asn1_runtime* runtime, const char* notation, parse_t
             std::string token(desc->p, desc->size);
             switch (type) {
                 case token_lvalue: {
-                    tokens.push_back({token_identifier, token});
+                    tokens.push_back({token_identifier, symid});
+                } break;
+                case token_usertype: {
+                    // 사용자 정의 타입 토큰 유지
+                    tokens.push_back({token_usertype, symuser});
                 } break;
                 case token_comments:
-                    test = false;  // stop at comments
+                    ret = false;  // stop at comments
                     break;
                 default: {
                     tokens.push_back({type, token});
                 }
             }
+
+#if defined DEBUG
+            if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
+                trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
+                    dbs.println("[%03u] line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", cnt++, desc->line, desc->type, get_lex().nameof_token(desc->type).c_str(),
+                                desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
+                });
+            }
+#endif
+
             return test;
         };
         context.for_each(lambda);
         tokens.push_back({token_eof, "$"});
 
         // LALR(1) parse
-        ret = get_lalr().parse(tokens, pt);
+        ret = get_lalr().parse(tokens);
 
         // TODO new asn1_object at runtime ...
     }

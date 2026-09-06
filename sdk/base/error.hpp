@@ -312,13 +312,13 @@ enum class errorcode_t : uint32 {
  * @sa error_advisor::categoryof
  */
 enum class error_category_t : uint8 {
-    error_category_success = 0,         // success
-    error_category_expect_failure = 1,  // success (negative test)
-    error_category_severe = 2,          // severe error
-    error_category_not_supported = 3,   // do not support (OS, third party library - not supporeted feature)
-    error_category_low_security = 4,    // do not support (security vulnerability policy violation)
-    error_category_trivial = 5,         // debugging purpose
-    error_category_warn = 6,            // warning (general)
+    error_category_success = 0,         // success, unittest "pass", white
+    error_category_expect_failure = 1,  // success (negative test), unittest "expt", cyan
+    error_category_severe = 2,          // severe error, unittest "fail", red
+    error_category_not_supported = 3,   // do not support (OS, third party library - not supporeted feature), unittest "skip", cyan
+    error_category_low_security = 4,    // do not support (security vulnerability policy violation), unittest "triv", yellow
+    error_category_trivial = 5,         // debugging purpose, unittest "triv", yellow
+    error_category_warn = 6,            // warning (general), unittest "triv", yellow
 };
 
 /**

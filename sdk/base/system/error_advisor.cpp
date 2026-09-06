@@ -9,8 +9,10 @@
  * 2026.05.26   Soo Han and Gemini  refactoring
  */
 
+#include <hotplace/sdk/base/error.hpp>
 #include <hotplace/sdk/base/nostd/utility.hpp>
 #include <hotplace/sdk/base/system/error.hpp>
+#include <hotplace/sdk/base/unittest/console_color.hpp>
 
 namespace hotplace {
 
@@ -292,11 +294,22 @@ void error_advisor::build() {
                 const error_description* item = error_descriptions + i;
                 _table.emplace(item->error, item);
             }
+
+            // clang-format off
+            // consistency (see test_case)
+            _error_category_map.emplace(error_category_t::error_category_success, error_category_hint{error_category_t::error_category_success, console_color_t::white, "pass", "success"});
+            _error_category_map.emplace(error_category_t::error_category_expect_failure, error_category_hint{error_category_t::error_category_expect_failure, console_color_t::cyan, "expt", "expect failure"});
+            _error_category_map.emplace(error_category_t::error_category_severe, error_category_hint{error_category_t::error_category_severe, console_color_t::red, "fail", "severe"});
+            _error_category_map.emplace(error_category_t::error_category_not_supported, error_category_hint{error_category_t::error_category_not_supported, console_color_t::cyan, "skip", "not supported"});
+            _error_category_map.emplace(error_category_t::error_category_low_security, error_category_hint{error_category_t::error_category_low_security, console_color_t::yellow, "skip", "low security"});
+            _error_category_map.emplace(error_category_t::error_category_trivial, error_category_hint{error_category_t::error_category_trivial, console_color_t::yellow, "triv", "trivial"});
+            _error_category_map.emplace(error_category_t::error_category_warn, error_category_hint{error_category_t::error_category_warn, console_color_t::yellow, "triv", "warn"});
+            // clang-format on
         }
     }
 }
 
-bool error_advisor::error_code(return_t error, std::string& code) {
+bool error_advisor::error_code(return_t error, std::string& code) const {
     bool ret = false;
     code.clear();
 
@@ -310,7 +323,7 @@ bool error_advisor::error_code(return_t error, std::string& code) {
     return ret;
 }
 
-bool error_advisor::error_message(return_t error, std::string& message) {
+bool error_advisor::error_message(return_t error, std::string& message) const {
     bool ret = false;
     message.clear();
 
@@ -324,7 +337,7 @@ bool error_advisor::error_message(return_t error, std::string& message) {
     return ret;
 }
 
-bool error_advisor::error_message(return_t error, std::string& code, std::string& message) {
+bool error_advisor::error_message(return_t error, std::string& code, std::string& message) const {
     bool ret = false;
     message.clear();
 
@@ -339,7 +352,7 @@ bool error_advisor::error_message(return_t error, std::string& code, std::string
     return ret;
 }
 
-error_category_t error_advisor::categoryof(return_t rc) {
+error_category_t error_advisor::categoryof(return_t rc) const {
     const uint32 val = rc.code;
 
     if (0 == val) return error_category_t::error_category_success;
@@ -374,6 +387,12 @@ error_category_t error_advisor::categoryof(return_t rc) {
 #endif
 
     return error_category_t::error_category_severe;
+}
+
+const error_category_hint* error_advisor::hintof(return_t code) const {
+    auto category = categoryof(code);
+    auto iter = _error_category_map.find(category);
+    return (_error_category_map.end() != iter) ? &iter->second : nullptr /* it doesn't reach here. */;
 }
 
 }  // namespace hotplace

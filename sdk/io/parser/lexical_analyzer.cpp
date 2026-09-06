@@ -11,22 +11,20 @@
  *
  */
 
+#include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/io/parser/lexical_analyzer.hpp>
 #include <hotplace/sdk/io/parser/parser_resource.hpp>
 
 namespace hotplace {
 namespace io {
 
-lexical_analyzer::lexical_analyzer() {}
+lexical_analyzer::lexical_analyzer() : _load(0) {}
 
 lexical_analyzer::~lexical_analyzer() {}
 
 lexical_analyzer& lexical_analyzer::add_token(const std::string& token_name, uint32 token) {
-    critical_section_guard guard(_lock);
-    if (false == token_name.empty()) {
-        _lextoken.add(token_name.c_str(), token_name.size(), new token_attr_tag(token));
-        _token_dbg.emplace(token, token_name);  // do not overwrite
-    }
+    _lextoken.add(token_name.c_str(), token_name.size(), new token_attr_tag(token));
+    _token_dbg.emplace(token, token_name);  // do not overwrite
     return *this;
 }
 
@@ -39,57 +37,98 @@ std::string lexical_analyzer::nameof_token(uint32 token) {
     return id;
 }
 
-static bool is_number(const std::string& s) {
-    if (s.empty()) return false;
+void lexical_analyzer::prepare() {
+    if (0 == _load) {
+        critical_section_guard guard(_lock);
+        if (0 == _load) {
+            get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1);
 
-    size_t i = 0;
+            auto resource = parser_resource::get_instance();
+            resource->for_each(parser_resource_type_t::token_type_symbol, [this](uint32 token, const std::string& name) -> void { _token_dbg.emplace(token, name); });
+            resource->for_each(parser_resource_type_t::token_type_basic, [this](uint32 token, const std::string& name) -> void { add_token(name, token); });
 
-    if (s[i] == '+' || s[i] == '-') ++i;
-
-    bool digit = false;
-    bool dot = false;
-    bool exp = false;
-
-    for (; i < s.size(); ++i) {
-        char c = s[i];
-
-        if (std::isdigit(static_cast<unsigned char>(c))) {
-            digit = true;
-            continue;
+            _load = 1;
         }
-        if ((c == '.') && (false == dot) && (false == exp)) {
-            dot = true;
-            continue;
-        }
-        if ((c == 'e' || c == 'E') && digit && (false == exp)) {
-            exp = true;
-            digit = false;
-            if (i + 1 < s.size() && (s[i + 1] == '+' || s[i + 1] == '-')) {
-                ++i;
-            }
-            continue;
-        }
-        return false;
     }
-    return digit;
+}
+
+// Gemini
+static size_t scan_float(const char* p, size_t rem_len) {
+    if (nullptr == p || 0 == rem_len) return 0;
+
+    size_t idx = 0;
+    bool has_digits = false;
+    bool has_dot = false;
+
+    if (idx < rem_len && (p[idx] == '+' || p[idx] == '-')) {
+        idx++;
+    }
+
+    while (idx < rem_len && ::isdigit((byte_t)p[idx])) {
+        idx++;
+        has_digits = true;
+    }
+
+    if (idx < rem_len && p[idx] == '.') {
+        if (idx + 1 < rem_len && p[idx + 1] == '.') {
+            return 0;
+        }
+        has_dot = true;
+        idx++;
+
+        while (idx < rem_len && ::isdigit((byte_t)p[idx])) {
+            idx++;
+            has_digits = true;
+        }
+    }
+
+    if (false == has_dot || false == has_digits) {
+        return 0;
+    }
+
+    if (idx < rem_len && (p[idx] == 'e' || p[idx] == 'E')) {
+        size_t e_start = idx;
+        idx++;
+        if (idx < rem_len && (p[idx] == '+' || p[idx] == '-')) {
+            idx++;
+        }
+        size_t e_digits = 0;
+        while (idx < rem_len && ::isdigit((byte_t)p[idx])) {
+            idx++;
+            e_digits++;
+        }
+        if (0 == e_digits) {
+            idx = e_start;
+        }
+    }
+
+    return idx;
+}
+
+static bool is_delimiter(uint32 token) {
+    bool ret = false;
+    switch (token) {
+        case token_lbrace:
+        case token_rbrace:
+        case token_lbracket:
+        case token_rbracket:
+        case token_lparen:
+        case token_rparen:
+        case token_comma:
+        case token_space:
+            ret = true;
+            break;
+        default:
+            break;
+    }
+    return ret;
 }
 
 return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t size, uint32 flags) {
     return_t ret = errorcode_t::success;
     unsigned error_lookup = 0;
     __try2 {
-        if (_token_dbg.empty()) {
-            critical_section_guard guard(_lock);
-            if (_token_dbg.empty()) {
-                // set handle_quoted to 1
-                get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1);
-                // nameof_token
-                auto resource = parser_resource::get_instance();
-                resource->for_each(parser_resource_type_t::token_type_basic, [this](uint32 token, const std::string& name) -> void { _token_dbg.emplace(token, name); });
-            }
-        }
-
-        if (nullptr == p) {
+        if (nullptr == p || 0 == size) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -110,6 +149,7 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
         auto type_of = [&](char c) -> token_t { return ascii2token((byte_t)c); };
         auto hook = [&](int where, lexical_token* t) -> bool {
             bool ret_hook = true;
+            // pre-action
             if (0 == where) {
                 switch (token.get_tokenid()) {
                     case token_assign:
@@ -122,22 +162,12 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
                             }
                         }
                         break;
-                    case token_word: {
-                        std::string ts = t->as_string(p);
-                        // bool test = std::all_of(ts.begin(), ts.end(), ::isdigit);
-                        // if (test) t->set_type(token_number);
-                        if (is_number(ts)) {
-                            if (ts.find('.') != std::string::npos || ts.find('e') != std::string::npos || ts.find('E') != std::string::npos) {
-                                t->set_type(token_floatingpoint);
-                            } else {
-                                t->set_type(token_number);
-                            }
-                        }
-                    } break;
                     default:
                         break;
                 }
-            } else {
+            }
+            // post-action
+            else {
                 int entry_no = 0;
                 switch (t->get_tokenid()) {
                     case token_comments:
@@ -159,16 +189,51 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
                 }
                 t->set_index(entry_no);
             }
-            // token.set_tag(0);
+
             return ret_hook;
-        };
+        };  // enc of hook
 
         context.init(p, size);
 
-        for (size_t pos = 0; (pos < size) && (0 == error_lookup); pos++) {
+        for (size_t pos = 0; (pos < size) && (0 == error_lookup); ++pos) {
             char c = p[pos];
             token_t type = type_of(c);
+            size_t chunk_size = 0;  // lookahead
 
+            if (false == comments && false == quot) {
+                if (token_alpha == type) {
+                    // alpha [alpha | number] +
+                    const char* cur = p + pos;
+                    const char* end = p + size;
+                    while (cur < end) {
+                        auto t = type_of(*cur);
+                        if (token_alpha == t || token_number == t)
+                            ++cur;
+                        else
+                            break;
+                    }
+                    chunk_size = cur - (p + pos);
+                } else if (token_number == type) {
+                    // number ... stop at the delimiter
+                    const char* cur = p + pos;
+                    const char* end = p + size;
+                    const char* dot = nullptr;
+                    while (cur < end) {
+                        auto t = type_of(*cur);
+                        if (is_delimiter(t)) break;
+                        if (token_dot == t) {
+                            if (dot) {
+                                // second dot not allowed
+                                cur = dot;  // rollback
+                                break;
+                            }
+                            dot = cur;
+                        }
+                        ++cur;
+                    }
+                    chunk_size = cur - (p + pos);
+                }
+            }
             // comments
             if (comments && handle_comments) {
                 if (token_newline == type) {
@@ -178,31 +243,17 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
                     token.update_pos(pos + 1).update_size(0).newline();
                 } else {
                     token.increase();
+
+                    uint32 t = 0;
+                    size_t tpos = pos;
+                    while (true) {
+                        t = type_of(p[++tpos]);
+                        if (token_newline == t || 0 == t) break;
+                        token.increase();
+                    }
+                    pos = tpos - 1;
                 }
                 continue;
-            }
-
-            // lexical_token
-            if (handle_token) {
-                std::string item;
-                uint32 token_type = 0;
-                // uint32 token_tag = 0;
-                bool match = lookup(p + pos, size - pos, item, token_type /*, token_tag*/);
-                if (match) {
-                    context.add_context_lextoken(token, hook);
-
-                    token.set_type(token_type) /*.set_tag(token_tag)*/;
-                    if ((token_comments == token_type) && handle_comments) {
-                        comments = true;
-                        token.increase();
-                    } else {
-                        token.update_pos(pos).update_size(item.size());
-                        context.add_context_lextoken(token, hook);
-                        pos += (item.size() - 1);
-                        token.update_pos(pos + 1).update_size(0);
-                    }
-                    continue;
-                }
             }
 
             // quoted string
@@ -231,17 +282,101 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
             if (quot) {
                 token.increase();
             } else {
+                if (token_space == type) {
+                    context.add_context_lextoken(token, hook);
+                    token.update_pos(pos + 1).update_size(0);
+                    continue;
+                }
+
+                // lexical_token
+                if ((token.empty() || is_delimiter(type)) && (handle_comments || handle_token)) {
+                    std::string item;
+                    uint32 lookup_type = 0;
+                    bool match = lookup(p + pos, size - pos, item, lookup_type);
+                    if (match) {
+                        if ((token_comments == lookup_type) && handle_comments) {
+                            token.set_type(lookup_type);
+                            token.update_pos(pos).update_size(item.size());
+                            pos += (item.size() - 1);
+                            comments = true;
+                            continue;
+                        } else if (handle_token && (false == quot) && (false == comments)) {
+                            if (is_delimiter(lookup_type)) {
+                                context.add_context_lextoken(token, hook);
+
+                                // punctuators
+                                token.set_type(lookup_type);
+                                token.update_pos(pos).update_size(item.size());
+                                context.add_context_lextoken(token, hook);
+                                token.update_pos(pos + item.size()).update_size(0);
+                                continue;
+                            } else if (token_usertype == lookup_type) {
+                                if (false == token.empty()) {
+                                    if (token_word == token.get_tokenid()) {
+                                        token.update_size(item.size());
+                                        pos += (item.size() - 1);
+                                        continue;
+                                    }
+                                } else {
+                                    // test boundary
+                                    if (chunk_size == item.size()) {
+                                        token.set_type(lookup_type);
+                                        token.update_pos(pos).update_size(item.size());
+                                        context.add_context_lextoken(token, hook);
+                                        pos += (item.size() - 1);
+                                        token.update_pos(pos + 1).update_size(0);
+                                        continue;
+                                    }
+                                }
+                            } else {
+                                context.add_context_lextoken(token, hook);
+
+                                token.set_type(lookup_type);
+                                token.update_pos(pos).update_size(item.size());
+                                context.add_context_lextoken(token, hook);
+                                pos += (item.size() - 1);
+                                token.update_pos(pos + 1).update_size(0);
+                                continue;
+                            }
+                        }
+                    }
+                }
+
                 // tokenize
                 switch (type) {
                     case token_alpha:
-                    case token_number:
-                        token.set_type(token_word).increase();
-                        break;
-                    case token_space:
+                        token.set_type(token_word).update_size(chunk_size);
                         context.add_context_lextoken(token, hook);
-
+                        pos += (chunk_size - 1);
                         token.update_pos(pos + 1).update_size(0);
                         break;
+                    case token_number: {
+                        size_t float_len = scan_float(p + pos, size - pos);
+                        if (float_len > 0) {
+                            context.add_context_lextoken(token, hook);
+
+                            // token_floatingpoint
+                            token.set_type(token_floatingpoint).update_pos(pos).update_size(float_len);
+                            context.add_context_lextoken(token, hook);
+
+                            pos += (float_len - 1);
+                            token.update_pos(pos + 1).update_size(0);
+                            break;
+                        }
+
+                        if (token_number == type) {
+                            // token_number
+                            token.set_type(token_number);
+                        } else {
+                            context.add_context_lextoken(token, hook);
+
+                            token.set_type(type);
+                        }
+                        token.update_pos(pos).update_size(chunk_size);
+                        context.add_context_lextoken(token, hook);
+                        pos += (chunk_size - 1);
+                        token.update_pos(pos + 1).update_size(0);
+                    } break;
                     case token_newline:
                         context.add_context_lextoken(token, hook);
 
@@ -264,16 +399,16 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
         }
         context.add_context_lextoken(token, hook);
 
+        // a preprocessing step that reclassifies identifier tokens of the same spelling using the set of l-value identifiers found in the lexical pass
         if (handle_lvalue_usertype) {
             for (auto idx : lvalues) {
                 std::string ts;
-                rlookup(idx, ts);
-                // printf("idx %i %s\n", idx, ts.c_str());
-                add_token(ts, token_usertype);
-                auto liter = index.lower_bound(ts);
-                auto uiter = index.upper_bound(ts);
-                for (auto iter = liter; iter != uiter; iter++) {
-                    iter->second->set_type(token_usertype);
+                if (rlookup(idx, ts)) {
+                    add_token(ts, token_usertype);
+                    auto range = index.equal_range(ts);
+                    for (auto iter = range.first; iter != range.second; ++iter) {
+                        iter->second->set_type(token_usertype);
+                    }
                 }
             }
         }

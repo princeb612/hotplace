@@ -229,7 +229,7 @@ class t_trie {
         return index;
     }
     /**
-     * @brief   scan first occurrence
+     * @brief   scan longest match occurrence (greedy match)
      * @sample
      *          // huffman coding
      *          t_trie<char> trie;
@@ -261,20 +261,33 @@ class t_trie {
         int index = -1;
         if (input) {
             trienode* current = _root;
+            int matched_index = -1;
+            TP* matched_tag = nullptr;
+            size_t matched_pos = pos;
+
             for (size_t i = pos; i < size; ++i) {
                 const BT& t = _memberof(input, i);
                 auto item = current->children.find(t);
                 if (current->children.end() == item) {
-                    pos = size;
-                    return -1;  // not found
+                    break;  // no more matching child nodes
                 }
                 current = item->second;
                 if (current->eow) {
-                    gettag(current, tag);
-                    index = current->index;
-                    pos = i + 1;
-                    break;
+                    // update longest pattern (continue without breaking)
+                    matched_index = current->index;
+                    gettag(current, &matched_tag);
+                    matched_pos = i + 1;
                 }
+            }
+
+            if (-1 != matched_index) {
+                index = matched_index;
+                pos = matched_pos;
+                if (tag) {
+                    *tag = matched_tag;
+                }
+            } else {
+                pos = size;  // handle search termination on matching failure
             }
         }
         return index;
@@ -305,7 +318,7 @@ class t_trie {
     }
 
     /**
-     * @brief   lookup
+     * @brief   lookup longest prefix match
      * @param   const T* pattern [in]
      * @param   size_t size [in]
      * @param   TP** tag [outopt] nullptr
@@ -325,22 +338,26 @@ class t_trie {
      */
     size_t lookup(const T* input, size_t size, TP** tag = nullptr) const {
         size_t len = 0;
-        bool eow = false;
         if (input) {
             trienode* current = _root;
+            TP* matched_tag = nullptr;
+
             for (size_t i = 0; i < size; ++i) {
                 const BT& t = _memberof(input, i);
                 auto iter = current->children.find(t);
                 if (current->children.end() == iter) {
-                    return 0;
+                    break;  // since there are no child nodes, return the maximum length found so far.
                 }
                 current = iter->second;
-                eow = current->eow;
-                if (eow) {
-                    gettag(current, tag);
+                if (current->eow) {
+                    // longest matching length and tag update
                     len = i + 1;
-                    break;
+                    gettag(current, &matched_tag);
                 }
+            }
+
+            if (len > 0 && tag) {
+                *tag = matched_tag;
             }
         }
         return len;

@@ -46,12 +46,12 @@ void regex_token(const std::string& input, const std::string& expr, size_t& pos,
     }
 }
 
-void regex_token(const char* input, size_t len, const char* expr, size_t& pos, std::list<range_t>& tokens) {
+void regex_token(const char* input, size_t size, const char* expr, size_t& pos, std::list<range_t>& tokens) {
     tokens.clear();
 
     if (input && expr) {
         std::list<std::map<size_t, range_t>> ranges;
-        regex_tokens(input, len, expr, pos, ranges);
+        regex_tokens(input, size, expr, pos, ranges);
 
         for (auto range : ranges) {
             tokens.push_back(range[0]);
@@ -59,14 +59,14 @@ void regex_token(const char* input, size_t len, const char* expr, size_t& pos, s
     }
 }
 
-void regex_tokens(const char* input, size_t len, const char* expr, size_t& pos, std::list<std::map<size_t, range_t>>& tokens) {
+void regex_tokens(const char* input, size_t size, const char* expr, size_t& pos, std::list<std::map<size_t, range_t>>& tokens) {
     tokens.clear();
 
 #if defined USE_STDREGEX
-    if (input && expr && (pos < len)) {
+    if (input && expr && (pos < size)) {
         std::regex re_expr(expr);
         auto start = pos;
-        auto re_begin = std::cregex_iterator(input + start, input + len, re_expr);
+        auto re_begin = std::cregex_iterator(input + start, input + size, re_expr);
         auto re_end = std::cregex_iterator();
 
         for (std::cregex_iterator iter = re_begin; iter != re_end; ++iter) {
@@ -109,8 +109,8 @@ void regex_tokens(const char* input, size_t len, const char* expr, size_t& pos, 
             __leave2;
         }
 
-        while (pos < len) {
-            rc = pcre_exec(re, nullptr, input, len, pos, PCRE_NOTEMPTY, ovector.data(), ovector.size());
+        while (pos < size) {
+            rc = pcre_exec(re, nullptr, input, size, pos, PCRE_NOTEMPTY, ovector.data(), ovector.size());
 
             if (PCRE_ERROR_NOMATCH == rc) {
                 break;
@@ -131,7 +131,7 @@ void regex_tokens(const char* input, size_t len, const char* expr, size_t& pos, 
 
                 pos = ovector[1];
                 if (ovector[0] == ovector[1]) {
-                    if (pos < len) {
+                    if (pos < size) {
                         ++pos;
                     } else {
                         break;
@@ -146,6 +146,148 @@ void regex_tokens(const char* input, size_t len, const char* expr, size_t& pos, 
         }
     }
 #endif
+}
+
+#if defined USE_STDREGEX
+struct regex_context_t {
+    std::regex re;
+};
+#elif defined USE_PCRE
+struct regex_context_t {
+    pcre* re = {nullptr};
+};
+#endif
+
+return_t regex::open(regex_context_t** context, const char* expr) {
+    return_t ret = errorcode_t::success;
+    regex_context_t* handle = nullptr;
+    __try2 {
+        if (nullptr == context || nullptr == expr) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        try {
+            handle = new regex_context_t;
+        } catch (const std::bad_alloc&) {
+            ret = errorcode_t::out_of_memory;
+            __leave2;
+        }
+
+#if defined USE_STDREGEX
+        std::regex re(expr);
+        handle->re = std::move(re);
+#elif defined USE_PCRE
+        int eoffset = 0;
+        const char* err = nullptr;
+        re = pcre_compile(expr, 0, &err, &eoffset, nullptr);
+        if (nullptr == re) {
+            ret = errorcode_t::internal_error;
+            __leave2;
+        }
+        handle->re = re;
+#endif
+        *context = handle;
+    }
+    __finally2 {
+        if (errorcode_t::success != ret) {
+            if (nullptr != handle) {
+                delete handle;
+            }
+        }
+    }
+    return ret;
+}
+
+return_t regex::search(regex_context_t* context, const char* input, size_t size, std::list<range_t>& tokens) {
+    size_t pos = 0;
+    return search(context, input, size, pos, tokens);
+}
+
+return_t regex::search(regex_context_t* context, const char* input, size_t size, size_t& pos, std::list<range_t>& tokens) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == context || nullptr == input || 0 == size) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        tokens.clear();
+
+#if defined USE_STDREGEX
+        auto start = pos;
+        auto re_begin = std::cregex_iterator(input + start, input + size, context->re);
+        auto re_end = std::cregex_iterator();
+
+        for (std::cregex_iterator iter = re_begin; iter != re_end; ++iter) {
+            const std::cmatch& match = *iter;
+
+            if (false == match.empty()) {
+                if (match[0].matched) {
+                    size_t begin = start + match.position(0);
+                    size_t end = begin + match.length(0);
+
+                    if (begin != end) {
+                        tokens.push_back(range_t(begin, end));
+                    }
+                }
+            }
+        }
+#elif defined USE_PCRE
+        while (pos < size) {
+            rc = pcre_exec(re, nullptr, input, size, pos, PCRE_NOTEMPTY, ovector.data(), ovector.size());
+
+            if (PCRE_ERROR_NOMATCH == rc) {
+                break;
+            } else if (rc < 0) {
+                break;
+            } else {
+                std::map<size_t, range_t> item;
+                for (int i = 0; i < rc; ++i) {
+                    auto begin = ovector[2 * i];
+                    auto end = ovector[2 * i + 1];
+                    if (begin != -1) {
+                        item.emplace(i, range_t(begin, end));
+                    }
+                }
+                if (false == item.empty()) {
+                    tokens.push_back(std::move(item));
+                }
+
+                pos = ovector[1];
+                if (ovector[0] == ovector[1]) {
+                    if (pos < size) {
+                        ++pos;
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+#endif
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t regex::close(regex_context_t* context) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == context) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+#if defined USE_STDREGEX
+        // do nothing
+#elif defined USE_PCRE
+        if (context->re) {
+            pcre_free(context->re);
+        }
+#endif
+        delete context;
+    }
+    __finally2 {}
+    return ret;
 }
 
 }  // namespace hotplace

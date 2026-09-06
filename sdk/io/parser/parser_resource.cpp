@@ -34,6 +34,7 @@ void parser_resource::load() {
 }
 
 void parser_resource::load_basic_tokens() {
+    for_each(parser_resource_type_t::token_type_symbol, [this](uint32 token, const std::string& name) -> void { _token_names.emplace(token, name); });
     for_each(parser_resource_type_t::token_type_basic, [this](uint32 token, const std::string& name) -> void { _token_names.emplace(token, name); });
 }
 

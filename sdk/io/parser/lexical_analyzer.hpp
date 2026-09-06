@@ -18,6 +18,7 @@
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/io/parser/types.hpp>
 #include <hotplace/sdk/io/types.hpp>
+#include <map>
 #include <vector>
 
 namespace hotplace {
@@ -151,6 +152,9 @@ class lexical_analyzer {
     lexical_analyzer& add_token(const std::string& token, uint32 tokenid);
     std::string nameof_token(uint32 token);
 
+    /* load token */
+    void prepare();
+
     /*
      * @brief   parse
      * @param   lexical_context& context [out]
@@ -204,7 +208,6 @@ class lexical_analyzer {
      * @param   size_t size [in]
      * @param   std::string& token_name [out]
      * @param   uint32& token_type [out]
-     // * @param   uint32& token_tag [out]
      */
     bool lookup(const char* p, size_t size, std::string& token_name, uint32& token_type /*, uint32& token_tag*/);
 
@@ -213,20 +216,18 @@ class lexical_analyzer {
 
     struct token_attr_tag {
         uint32 attr;
-        // uint32 tag;
         token_attr_tag(uint32 attr) : attr(attr) {}
-        // token_attr_tag(uint32 attr, uint32 tag) : attr(attr), tag(tag) {}
     };
 
     t_trie<char, char, token_attr_tag> _lextoken;  // add_token, lookup
     t_trie<char> _dictionary;                      // lookup, rlookup
-    std::multimap<uint32, std::vector<uint32>> _patterns;
 
     t_key_value<std::string, uint16> _keyvalue;  // get_config
 
     // debug
     typedef std::map<uint32, std::string> debug_info;
     debug_info _token_dbg;  // nameof_token
+    int _load;
 };
 
 }  // namespace io

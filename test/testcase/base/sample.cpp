@@ -85,15 +85,15 @@ int main(int argc, char** argv) {
     testcase_tree();
     testcase_vector();
 
-    testcase_aho_corasick();
-    testcase_aho_corasick_wildcard();
-    testcase_testvector_ahocorasick();
     testcase_kmp();
     testcase_testvector_kmp();
-    testcase_suffixtree();
-    testcase_testvector_regex();
+    testcase_aho_corasick();
     testcase_trie();
+    testcase_suffixtree();
     testcase_ukkonen();
+    testcase_aho_corasick_wildcard();
+    testcase_testvector_ahocorasick();
+    testcase_testvector_regex();
     testcase_wildcard();
 
     testcase_bufferio();

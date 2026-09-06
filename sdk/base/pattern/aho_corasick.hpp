@@ -105,8 +105,9 @@ class t_aho_corasick : public t_aho_corasick_t<BT, T> {
         trienode* failure;
         std::set<size_t> output;
         uint8 flag;  // single/any see t_aho_corasick_wildcard
+        size_t last_visited;
 
-        trienode() : failure(nullptr), flag(0) {}
+        trienode() : failure(nullptr), flag(0), last_visited(0) {}
         ~trienode() { clear(); }
         void clear() {
             for (auto item : children) {

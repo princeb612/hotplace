@@ -401,6 +401,29 @@ void test_testvector_gpt_gemini() {
         for (const auto& item : table) {
             basic_stream bs;
             binary_t bin;
+            /**
+             * GPT review : create an empty value context that can bind values ​​based on this semantic schema object.
+             *
+             *                 schema
+             *                   │
+             *                   ▼
+             *              asn1_object
+             *                   │
+             *              instantiate()
+             *                   │
+             *                   ▼
+             *               asn1_value
+             *                   │
+             *          ┌────────┴────────┐
+             *          │                 │
+             *       "name"            "inner.child.name"
+             *          │                 │
+             *          └────────┬────────┘
+             *                   ▼
+             *                visitor
+             *                /       \
+             *              DER     constraint
+             */
             auto value = item.obj->instantiate();
             switch (item.flag) {
                 case flag_blank:
@@ -539,9 +562,12 @@ void test_testvector_gpt_gemini() {
             _test_case.assert(bin == base16_decode_rfc(item.der), __FUNCTION__, "%s : %s", item.name, item.der);
 
             {
-                // if (item.debug) {
-                //     int breakpoint = 1;
-                // }
+#if defined DEBUG
+                if (item.debug) {
+                    int breakpoint = 1;
+                    (void)breakpoint;  // spoof
+                }
+#endif
                 asn1_runtime runtime;
                 parse_notation(&runtime, item.notation);
 

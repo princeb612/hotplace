@@ -439,6 +439,7 @@ void test_x690_encoding_value() {
         // test instantiate asn1_builtin_type and set value
         {
             auto builtin = new asn1_builtin_type(entry.entity);
+            // create an empty value context that can bind values ​​based on this semantic schema object.
             auto value = builtin->instantiate();
             binary_t bin;
             basic_stream bs;
@@ -630,6 +631,7 @@ void test_x690_encoding_typevalue() {
     };
 
     for (auto item : _table) {
+        // create an empty value context that can bind values ​​based on this semantic schema object.
         auto inst = item.obj->instantiate();
         inst->set(item.var);
 
@@ -661,6 +663,7 @@ void test_x690_8_9_sequence() {
 
     auto seq = new asn1_sequence;
     *seq << new asn1_builtin_type("name", asn1_entity_ia5string) << new asn1_builtin_type("ok", asn1_entity_boolean);
+    // create an empty value context that can bind values ​​based on this semantic schema object.
     auto value = seq->instantiate();
     (*value).set("name", "Smith").set("ok", true);
 

@@ -1,7 +1,7 @@
-### documents
+## study notes
 
-[logger](logger.md)
-[testcase](testcase.md)
+* [logger](logger.md)
+* [testcase](testcase.md)
 
 ### sketch
 

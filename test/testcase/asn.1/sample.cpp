@@ -18,14 +18,25 @@ struct OPTION : public CMDLINEOPTION {};
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
 void parse_notation(asn1_runtime* runtime, const char* notation) {
-    auto asn1p = asn1_parser::get_instance();
-    parse_tree pt;
-    auto test = asn1p->parse(runtime, notation, &pt);
-    basic_stream bs;
-    pt.get_root()->print(bs);
-    _logger->colorln("parser tree");
-    _logger->write(bs);
-    _test_case.test(test, __FUNCTION__, "parse : %s", notation);
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == notation) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        auto asn1p = asn1_parser::get_instance();
+        parse_tree pt;
+        ret = asn1p->parse(runtime, notation, &pt);
+        auto root = pt.get_root();
+        if (root) {
+            basic_stream bs;
+            root->print(bs);
+            _logger->colorln("parser tree");
+            _logger->write(bs);
+        }
+    }
+    __finally2 { _test_case.test(ret, __FUNCTION__, "parse : %s", notation); }
 }
 
 int main(int argc, char** argv) {

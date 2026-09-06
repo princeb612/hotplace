@@ -19,6 +19,7 @@ namespace hotplace {
 namespace io {
 
 enum parser_resource_type_t : uint32 {
+    token_type_symbol = 0,
     token_type_basic = 1,
     token_type_asn1 = 2,
 };
@@ -27,6 +28,8 @@ struct parser_token_resource {
     const char* name;
 };
 
+extern const parser_token_resource parser_symbol_tokens[];
+extern const size_t sizeof_parser_symbol_tokens;
 extern const parser_token_resource parser_basic_tokens[];
 extern const size_t sizeof_parser_basic_tokens;
 extern const parser_token_resource parser_asn1_tokens[];
@@ -40,11 +43,18 @@ class parser_resource {
 
     template <typename F>
     void for_each(parser_resource_type_t type, F func) const {
-        auto array = parser_basic_tokens;
-        size_t size = sizeof_parser_basic_tokens;
-        if (token_type_asn1 == type) {
+        const parser_token_resource* array = nullptr;
+        size_t size = 0;
+        if (token_type_symbol == type) {
+            array = parser_symbol_tokens;
+            size = sizeof_parser_symbol_tokens;
+        } else if (token_type_asn1 == type) {
             array = parser_asn1_tokens;
             size = sizeof_parser_asn1_tokens;
+        } else {
+            // default case token_type_symbol
+            array = parser_basic_tokens;
+            size = sizeof_parser_basic_tokens;
         }
         for (size_t i = 0; i < size; ++i) {
             const auto& item = array[i];

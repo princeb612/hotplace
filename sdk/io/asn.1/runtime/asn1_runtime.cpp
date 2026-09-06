@@ -153,7 +153,7 @@ void asn1_runtime::update_linkage(asn1_object* object) {
                 }
                 auto parent = object->get_parent();  // asn1_entity_tagged_type
                 if (parent)
-                    update_linkage(parent);
+                    update_linkage(parent);  // constructed bit/explicit propagation
                 else
                     update_linkage(ref->get_object());
             }

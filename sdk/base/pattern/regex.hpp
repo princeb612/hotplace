@@ -38,6 +38,30 @@ void regex_token(const char* input, size_t len, const char* expr, size_t& pos, s
  */
 void regex_tokens(const char* input, size_t len, const char* expr, size_t& pos, std::list<std::map<size_t, range_t>>& tokens);
 
+struct regex_context_t;  // encapsulation structure
+/**
+ * @remarks
+ *          frontend    regex
+ *          backend     std::regex or pcre
+ *
+ *          Regular expressions library (since C++11) https://en.cppreference.com/w/cpp/regex
+ *          The GNU C++ standard library supports <regex>, but not until GCC version 4.9.0.
+ *          undefined reference to re_expr/sregex_iterator/smatch in GCC 4.8.5 (fixed in GCC 4.9.0)
+ */
+class regex final {
+   public:
+    regex() = default;
+    ~regex() = default;
+
+    regex(const regex&) = delete;
+    regex(regex&&) = delete;
+
+    static return_t open(regex_context_t** context, const char* expr);
+    static return_t search(regex_context_t* context, const char* input, size_t size, std::list<range_t>& tokens);
+    static return_t search(regex_context_t* context, const char* input, size_t size, size_t& pos, std::list<range_t>& tokens);
+    static return_t close(regex_context_t* context);
+};
+
 }  // namespace hotplace
 
 #endif

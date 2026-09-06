@@ -203,7 +203,6 @@ void test_case::vtest(return_t result, const char* test_function, const char* me
         critical_section_guard guard(_lock);
 
         console_color_t color = console_color_t::yellow;
-        auto category = advisor->categoryof(result);
 
         unittest_item_t item;
         memcpy(&item._time, &elapsed, sizeof(elapsed));
@@ -220,30 +219,32 @@ void test_case::vtest(return_t result, const char* test_function, const char* me
         auto it = pib.first;
         test_status_t& status = it->second;
 
-        switch (category) {
+        auto hint = advisor->hintof(result);
+        switch (hint->category) {
             case error_category_t::error_category_success:  // pass
+                // override testcase color
                 _total._count_success++;
                 status._test_stat._count_success++;
                 break;
             case error_category_t::error_category_expect_failure:  // pass
-                color = console_color_t::cyan;
+                color = hint->color;
                 _total._count_success++;
                 status._test_stat._count_success++;
                 break;
             case error_category_t::error_category_severe:  // fail
-                color = console_color_t::red;
+                color = hint->color;
                 _total._count_fail++;
                 status._test_stat._count_fail++;
                 break;
             case error_category_t::error_category_not_supported:  // skip
-                color = console_color_t::cyan;
+                color = hint->color;
                 _total._count_not_supported++;
                 status._test_stat._count_not_supported++;
                 break;
             case error_category_t::error_category_low_security:  // triv
             case error_category_t::error_category_trivial:
             case error_category_t::error_category_warn:
-                color = console_color_t::yellow;
+                color = hint->color;
                 _total._count_trivial++;
                 status._test_stat._count_trivial++;
                 break;
@@ -260,8 +261,8 @@ void test_case::vtest(return_t result, const char* test_function, const char* me
         }
 
         basic_stream stream;
-        stream.printf(ANSI_ESCAPE "1;%im[%08x]" ANSI_ESCAPE "33m[%s] %s" ANSI_ESCAPE "0m", CONSOLE_COLOR_FG + color, result, test_function ? test_function : "",
-                      title.c_str());
+        stream.printf(ANSI_ESCAPE "1;%im[%s][%08x]" ANSI_ESCAPE "33m[%s] %s" ANSI_ESCAPE "0m", CONSOLE_COLOR_FG + color, hint->testname.c_str(), result,
+                      test_function ? test_function : "", title.c_str());
 
         if (_logger) {
             _logger->writeln(stream);
@@ -289,7 +290,7 @@ constexpr char constexpr_pass[] = "pass";
 constexpr char constexpr_fail[] = "fail";
 constexpr char constexpr_skip[] = "skip";
 constexpr char constexpr_trivial[] = "triv";
-constexpr char constexpr_warn[] = "warn";
+// constexpr char constexpr_warn[] = "warn";
 constexpr char constexpr_blah[] = "    ";
 constexpr char constexpr_expect_failure[] = "expt";
 
@@ -335,26 +336,24 @@ void test_case::dump_list_into_stream(const unittest_list_t& array, basic_stream
             funcname = item._test_function;
         }
 
-        auto category = advisor->categoryof(item._result);
-        switch (category) {
+        auto hint = advisor->hintof(item._result);
+        switch (hint->category) {
             case error_category_t::error_category_success:
-                cprint(console_colored_stream, _concolor, console_color_t::white, fgcolor, constexpr_pass);
+                cprint(console_colored_stream, _concolor, hint->color, fgcolor, hint->testname.c_str());
                 break;
             case error_category_t::error_category_expect_failure:
-                cprint(console_colored_stream, _concolor, console_color_t::cyan, fgcolor, constexpr_expect_failure);
+                cprint(console_colored_stream, _concolor, hint->color, fgcolor, hint->testname.c_str());
                 break;
             case error_category_t::error_category_severe:
-                cprint(console_colored_stream, _concolor, console_color_t::red, fgcolor, constexpr_fail);
+                cprint(console_colored_stream, _concolor, hint->color, fgcolor, hint->testname.c_str());
                 break;
             case error_category_t::error_category_not_supported:
-                cprint(console_colored_stream, _concolor, console_color_t::cyan, fgcolor, constexpr_skip);
+                cprint(console_colored_stream, _concolor, hint->color, fgcolor, hint->testname.c_str());
                 break;
             case error_category_t::error_category_low_security:
             case error_category_t::error_category_trivial:
-                cprint(console_colored_stream, _concolor, console_color_t::yellow, fgcolor, constexpr_trivial);
-                break;
             case error_category_t::error_category_warn:
-                cprint(console_colored_stream, _concolor, console_color_t::green, fgcolor, constexpr_warn);
+                cprint(console_colored_stream, _concolor, hint->color, fgcolor, hint->testname.c_str());
                 break;
             default:
                 cprint(console_colored_stream, _concolor, console_color_t::green, fgcolor, constexpr_blah);

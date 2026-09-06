@@ -19,15 +19,25 @@
 
 namespace hotplace {
 
+enum console_color_t : uint8;
+
+struct error_category_hint {
+    error_category_t category;  // auto hint = hintof(errorcode_t::success);
+    console_color_t color;      // test_case color (sometimes override this color e.g. unittest line is yellow)
+    std::string testname;       // unittest name i.e. "pass", "expt", "fail", "skip", "triv", "warn"
+    std::string longname;       // "success", "expect_failure", "severe", ...
+};
+
 class error_advisor {
    public:
     static error_advisor* get_instance();
 
-    bool error_code(return_t error, std::string& code);
-    bool error_message(return_t error, std::string& message);
-    bool error_message(return_t error, std::string& code, std::string& message);
+    bool error_code(return_t error, std::string& code) const;
+    bool error_message(return_t error, std::string& message) const;
+    bool error_message(return_t error, std::string& code, std::string& message) const;
 
-    error_category_t categoryof(return_t code);
+    error_category_t categoryof(return_t code) const;
+    const error_category_hint* hintof(return_t code) const;
 
    protected:
     error_advisor();
@@ -37,8 +47,10 @@ class error_advisor {
     static error_advisor _instance;
 
     typedef std::map<return_t, const error_description*> error_description_map_t;
-    critical_section _lock;
+    typedef std::map<error_category_t, const error_category_hint> error_category_map_t;
+    mutable critical_section _lock;
     error_description_map_t _table;
+    error_category_map_t _error_category_map;
 };
 
 struct errno_category {};

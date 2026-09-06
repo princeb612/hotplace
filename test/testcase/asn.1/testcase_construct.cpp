@@ -12,6 +12,43 @@
 
 #include "sample.hpp"
 
+/**
+ * GPT review
+ *
+ * [sandbox] The stage of experimenting with semantic construction without breaking existing parser tests.
+ *
+ * The current focus is ★ semantic construction:
+ *
+ *   ASN.1 notation
+ *       │
+ *       │ LALR parse
+ *       ▼
+ *   parse tree
+ *       │
+ *       │ semantic construction ★
+ *       ▼
+ *   asn1_runtime
+ *       │
+ *       │ schema/type lookup
+ *       ▼
+ *   runtime ASN.1 object
+ *       │
+ *       ├── encode
+ *       ├── decode
+ *       └── strongly typed object
+ *
+ * after the semantic construction experiment is completed, this will be integrated into asn1_strongly_typed/asn1_parser.
+ * the resulting runtime object model can then serve as the basis for c++ source generation.
+ *
+ *   runtime ASN.1 object
+ *       │
+ *       ▼
+ *   C++ generator
+ *       │
+ *       ▼
+ *   C++ source
+ */
+
 void test_construct_babystep() {
     _test_case.begin("construct");
     /**

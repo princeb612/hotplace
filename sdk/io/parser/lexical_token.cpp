@@ -14,14 +14,12 @@
 namespace hotplace {
 namespace io {
 
-lexical_token::lexical_token() : _tokenid(0), /*_tag(0),*/ _pos(0), _size(0), _line(1), _index(-1) {}
+lexical_token::lexical_token() : _tokenid(0), _pos(0), _size(0), _line(1), _index(-1) {}
 
-lexical_token::lexical_token(const lexical_token& other)
-    : _tokenid(other._tokenid), /*_tag(other._tag),*/ _pos(other._pos), _size(other._size), _line(other._line), _index(other._index) {}
+lexical_token::lexical_token(const lexical_token& other) : _tokenid(other._tokenid), _pos(other._pos), _size(other._size), _line(other._line), _index(other._index) {}
 
 lexical_token& lexical_token::init() {
     _tokenid = 0;
-    // _tag = 0;
     _pos = 0;
     _size = 0;
     _line = 1;
@@ -38,11 +36,6 @@ lexical_token& lexical_token::set_type(uint32 type) {
     _tokenid = type;
     return *this;
 }
-
-// lexical_token& lexical_token::set_tag(uint32 tag) {
-//     _tag = tag;
-//     return *this;
-// }
 
 lexical_token& lexical_token::update_pos(size_t pos) {
     _pos = pos;
@@ -67,8 +60,6 @@ lexical_token& lexical_token::set_index(uint32 idx) {
 uint32 lexical_token::get_index() const { return _index; }
 
 uint32 lexical_token::get_tokenid() const { return _tokenid; }
-
-// uint32 lexical_token::get_tag() const { return _tag; }
 
 size_t lexical_token::get_pos() const { return _pos; }
 

@@ -9,6 +9,7 @@
  * 2024.08.23   Soo Han, Kim        wildcards (codename.hotplace Revision 578)
  * 2026.05.19   Soo Han, Kim        replace std::function with functor (codename.hotplace Revision 1003)
  * 2026.06.29   Soo Han, Kim        code review - Gemini (reset fixed)
+ * 2026.09.04   Soo Han, Gemini/GPT optimized dosearch lambda enqueue, normalize multiple * to single *
  */
 
 #ifndef __HOTPLACE_SDK_BASE_PATTERN_AHOCORASICKWILDCARD__
@@ -39,7 +40,7 @@ namespace hotplace {
  *             also added order_by_pattern member function (have shape-shifting overhead but is easy to search by pattern id)
  *             supplement some case about the endswith_wildcard_any and startswith_wildcard_any
  *          4. comments
- *             lambda enqueue - working with large data sets, may be able to reduce overhead by deleting data that is no longer accessed...
+ *             [fixed] ~~lambda enqueue - working with large data sets, may be able to reduce overhead by deleting data that is no longer accessed...~~
  *
  *          pattern
  *                  his her hers ?is h?r h*s
@@ -169,8 +170,11 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T, memberof_t> {
             int modes = 0;  // begins with *, ends with * (see hidden_tag_mode_t)
 
             std::vector<BT> pat;
+            bool normalize_any = false;  // ** to *
             for (size_t i = 0; i < size; ++i) {
                 const BT& t = _memberof(pattern, i);
+                if (normalize_any && (_wildcard_any == t)) continue;  // skip
+                normalize_any = (_wildcard_any == t);
                 pat.push_back(t);
 
                 trienode* child = current->children[t];
@@ -212,56 +216,63 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T, memberof_t> {
         }
     }
     virtual void dosearch(const T* source, size_t size, std::map<size_t, std::set<size_t>>& result) const override {
-        if (source) {
-            typedef std::pair<trienode*, size_t> pair_t;
-            std::set<pair_t> visit;
-            std::queue<pair_t> q;
+        if (nullptr == source || 0 == size) {
+            return;
+        }
 
-            // remember without duplicates
-            // [TODO] see 4. comments
-            auto enqueue = [&](trienode* node, size_t idx) -> void {
-                if (idx < size) {
-                    pair_t p = {node, idx};
-                    auto iter = visit.find(p);
-                    if (visit.end() == iter) {
-                        q.push(p);
-                        visit.insert(p);
-                    }
+        std::queue<trienode*> q;
+        std::queue<trienode*> next;
+
+        _root->last_visited = 0;
+        q.push(_root);
+
+        for (size_t i = 0; i < size && false == q.empty(); ++i) {
+            const size_t current_step = i + 1;
+
+            const BT& t = _memberof(source, i);
+
+            // O(1) prevent duplicate searches
+            auto enqueue = [&](trienode* node) -> void {
+                if (nullptr == node) {
+                    return;
+                }
+
+                if (node->last_visited != current_step) {
+                    node->last_visited = current_step;
+                    next.push(node);
                 }
             };
 
-            enqueue(_root, 0);
-
             while (false == q.empty()) {
-                auto pair = q.front();  // gdb problem in MINGW (const auto& pair)
-                trienode* current = pair.first;
-                const auto& i = pair.second;
+                trienode* current = q.front();
                 q.pop();
-
-                const BT& t = _memberof(source, i);
 
                 while ((current != _root) && (current->children.end() == current->children.find(t)) && (false == has_wildcard(current))) {
                     current = current->failure;
                 }
+
                 auto iter = current->children.find(t);
+
                 if (current->children.end() != iter) {
                     // case - found t
                     auto node = iter->second;
+
                     collect_results(node, i, result);
-                    enqueue(node, i + 1);
+                    enqueue(node);
 
                     // case - sibling single
                     if (current->flag & flag_single) {
                         auto single = current->children[_wildcard_single];
-                        enqueue(single, i + 1);
+                        enqueue(single);
                     }
+
                     // case - sibling any
                     if (current->flag & flag_any) {
                         auto any = current->children[_wildcard_any];
                         while (any->flag & flag_any) {
                             any = any->children[_wildcard_any];
                         }
-                        enqueue(any, i + 1);
+                        enqueue(any);
                     }
 
                     // yield - case not t
@@ -270,29 +281,31 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T, memberof_t> {
                         // case sibling single
                         if (fail->flag & flag_single) {
                             auto single = fail->children[_wildcard_single];
-                            enqueue(single, i + 1);
+                            enqueue(single);
                         }
+
                         // case sibling any
                         if (fail->flag & flag_any) {
                             auto any = fail->children[_wildcard_any];
                             while (any->flag & flag_any) {
                                 any = any->children[_wildcard_any];
                             }
-                            enqueue(any, i + 1);
+                            enqueue(any);
                         }
                     }
                 } else if (has_wildcard(current)) {
                     // case - not t but single
                     if (current->flag & flag_single) {
                         auto single = current->children[_wildcard_single];
+
                         collect_results(single, i, result);
-                        enqueue(single, i + 1);
+                        enqueue(single);
                     }
+
                     // case - not t but sibling any
                     if (current->flag & flag_any) {
-                        enqueue(current, i + 1);
+                        enqueue(current);
 
-                        // case - make multple * to one *
                         auto temp = current->children[_wildcard_any];
                         while (temp->flag & flag_any) {
                             temp = temp->children[_wildcard_any];
@@ -303,7 +316,7 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T, memberof_t> {
                         if (temp->children.end() != iter) {
                             auto child = iter->second;
                             collect_results(child, i, result);
-                            enqueue(child, i + 1);
+                            enqueue(child);
                         }
                     }
 
@@ -314,17 +327,19 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T, memberof_t> {
                         if (fail->children.end() != iter) {
                             auto child = iter->second;
                             collect_results(child, i, result);
-                            enqueue(child, i + 1);
+                            enqueue(child);
                         }
                     }
 
                     // yield - root
-                    enqueue(_root, i + 1);
+                    enqueue(_root);
                 } else {
                     // yield - root
-                    enqueue(_root, i + 1);
+                    enqueue(_root);
                 }
             }
+
+            q.swap(next);
         }
     }
 
