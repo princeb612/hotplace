@@ -22,11 +22,11 @@ static void prepare_asn1_tokens(lexical_analyzer& lex) {
 void test_options() {
     _test_case.begin("lexical analyzer");
     struct testvector {
-        const char* notation = {nullptr};
-        size_t tokens = {0};
-        uint32 first = {token_unknown};
-        int16 handle_comments = {0};
-        int16 handle_lvalue_usertype = {0};
+        const char* notation;
+        size_t tokens;
+        uint32 first;
+        int16 handle_comments;
+        int16 handle_lvalue_usertype;
     } table[] = {
         {R"(Type ::= VisibleString ("A" | "B" | "C" | "D"))", 12, token_lvalue, 0, 0},             //
         {"Type ::= SEQUENCE {} -- empty SEQUENCE", 8, token_lvalue, 0},                            // "--" as comments, cf. prepare_asn1_tokens
