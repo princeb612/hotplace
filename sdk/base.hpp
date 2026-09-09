@@ -70,7 +70,6 @@
 #include <hotplace/sdk/base/nostd/range_set.hpp>
 #include <hotplace/sdk/base/nostd/set.hpp>
 #include <hotplace/sdk/base/nostd/string_set.hpp>
-#include <hotplace/sdk/base/nostd/tagged_range_set.hpp>
 #include <hotplace/sdk/base/nostd/traits.hpp>
 #include <hotplace/sdk/base/nostd/traits_encoder.hpp>
 #include <hotplace/sdk/base/nostd/traits_printf.hpp>

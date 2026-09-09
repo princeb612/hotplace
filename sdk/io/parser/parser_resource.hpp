@@ -18,11 +18,6 @@
 namespace hotplace {
 namespace io {
 
-enum parser_resource_type_t : uint32 {
-    token_type_symbol = 0,
-    token_type_basic = 1,
-    token_type_asn1 = 2,
-};
 struct parser_token_resource {
     uint32 token;
     const char* name;
@@ -32,8 +27,6 @@ extern const parser_token_resource parser_symbol_tokens[];
 extern const size_t sizeof_parser_symbol_tokens;
 extern const parser_token_resource parser_basic_tokens[];
 extern const size_t sizeof_parser_basic_tokens;
-extern const parser_token_resource parser_asn1_tokens[];
-extern const size_t sizeof_parser_asn1_tokens;
 
 class parser_resource {
    public:
@@ -42,23 +35,20 @@ class parser_resource {
     std::string nameof(uint32 token) const;
 
     template <typename F>
-    void for_each(parser_resource_type_t type, F func) const {
+    void for_each(resource_type_t type, F&& func) const {
         const parser_token_resource* array = nullptr;
         size_t size = 0;
-        if (token_type_symbol == type) {
+        if (resource_type_t::token_type_symbol == type) {
             array = parser_symbol_tokens;
             size = sizeof_parser_symbol_tokens;
-        } else if (token_type_asn1 == type) {
-            array = parser_asn1_tokens;
-            size = sizeof_parser_asn1_tokens;
-        } else {
-            // default case token_type_symbol
-            array = parser_basic_tokens;
-            size = sizeof_parser_basic_tokens;
-        }
-        for (size_t i = 0; i < size; ++i) {
-            const auto& item = array[i];
-            func(item.token, item.name);
+            if (resource_type_t::token_type_basic == type) {
+                array = parser_basic_tokens;
+                size = sizeof_parser_basic_tokens;
+            }
+            for (size_t i = 0; i < size; ++i) {
+                const auto& item = array[i];
+                std::forward<F>(func)(item.token, item.name);
+            }
         }
     }
 
@@ -67,7 +57,6 @@ class parser_resource {
 
     void load();
     void load_basic_tokens();
-    void load_asn1_tokens();
 
    private:
     mutable critical_section _lock;

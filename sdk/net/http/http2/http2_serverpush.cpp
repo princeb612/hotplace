@@ -60,10 +60,8 @@ size_t http2_serverpush::is_promised(http_request* request, http_server* server)
 
             critical_section_guard guard(_lock);
 
-            auto lbound = _server_push_map.lower_bound(uri);
-            auto ubound = _server_push_map.upper_bound(uri);
-
-            ret = std::distance(lbound, ubound);
+            auto range = _server_push_map.equal_range(uri);
+            ret = std::distance(range.first, range.second);
         }
     }
     __finally2 {}
@@ -88,9 +86,8 @@ return_t http2_serverpush::push_promise(http_request* request, http_server* serv
             critical_section_guard guard(_lock);
 
             auto uri = request->get_http_uri().get_uri();
-            auto lbound = _server_push_map.lower_bound(uri);
-            auto ubound = _server_push_map.upper_bound(uri);
-            for (auto iter = lbound; iter != ubound; iter++) {
+            auto range = _server_push_map.equal_range(uri);
+            for (auto iter = range.first; iter != range.second; iter++) {
                 const auto& promise = iter->second;
                 q.push(promise);
             }
@@ -128,9 +125,8 @@ return_t http2_serverpush::push(http_request* request, http_server* server, netw
             critical_section_guard guard(_lock);
 
             auto uri = request->get_http_uri().get_uri();
-            auto lbound = _server_push_map.lower_bound(uri);
-            auto ubound = _server_push_map.upper_bound(uri);
-            for (auto iter = lbound; iter != ubound; iter++) {
+            auto range = _server_push_map.equal_range(uri);
+            for (auto iter = range.first; iter != range.second; iter++) {
                 const auto& promise = iter->second;
                 q.push(promise);
             }

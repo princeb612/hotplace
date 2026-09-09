@@ -15,8 +15,8 @@ static void prepare_asn1_tokens(lexical_analyzer& lex) {
     // handle_quoted to 1
     lex.get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1);
     // ASN.1 tokens
-    auto resource = parser_resource::get_instance();
-    resource->for_each(parser_resource_type_t::token_type_asn1, [&lex](uint32 token, const std::string& name) -> void { lex.add_token(name, token); });
+    auto resource = asn1_resource::get_instance();
+    resource->for_each(resource_type_t::token_type_asn1, [&lex](uint32 token, const std::string& name) -> void { lex.add_token(name, token); });
 }
 
 void test_options() {
@@ -86,9 +86,9 @@ void test_lexical() {
     lexical_analyzer lex;
     lexical_context context;
 
-    // load basic tokens only
-
     lex.prepare();
+
+    _logger->colorln("basic tokens + handle_lvalue_usertype 0");
     lex.parse(context, asn1_structure, strlen(asn1_structure));
     uint32 cnt = 0;
 
@@ -102,6 +102,7 @@ void test_lexical() {
     _test_case.assert(105 == cnt, __FUNCTION__, "tokenize");
 
     // load ASN.1 tokens
+    _logger->colorln("ASN.1 tokens + handle_lvalue_usertype 1");
     prepare_asn1_tokens(lex);
     lex.get_config().set("handle_lvalue_usertype", 1);
 
@@ -482,11 +483,7 @@ void test_lalr() {
                 std::string token(desc->p, desc->size);
                 switch (type) {
                     case token_lvalue: {
-                        tokens.push_back({token_identifier, symid});
-                    } break;
-                    case token_usertype: {
-                        // 사용자 정의 타입 토큰 유지
-                        tokens.push_back({token_usertype, symuser});
+                        tokens.push_back({token_identifier, token});
                     } break;
                     case token_comments:
                         ret = false;  // stop at comments
@@ -502,7 +499,48 @@ void test_lalr() {
             context.for_each(lambda);
             tokens.push_back({token_eof, "$"});
 
-            ret = lalr.parse(tokens);
+            parse_tree pt;
+            ret = lalr.parse(tokens, &pt);
+
+            {
+                _logger->colorln("parse tree - re-trace");
+                uint32 idx = 0;
+                auto lambda = [&idx](parser_action_t type, parse_treenode* node) -> void {
+                    _logger->writeln([&](basic_stream& dbs) -> void {
+                        valist va;
+                        va << idx++ << node->symbol << node->value << node->children.size();
+                        dbs.vaprintf("[{1:03i}] ", va);
+                        switch (type) {
+                            case parser_action_t::shift:
+                                dbs << "shift  ";
+                                break;
+                            case parser_action_t::reduce:
+                                dbs << "reduce ";
+                                break;
+                            default:
+                                break;
+                        }
+                        dbs.vaprintf("{2}", va);
+                        if ((false == node->value.empty()) && (node->symbol != node->value)) {
+                            dbs.vaprintf(" ({3})", va);
+                        }
+                        if (parser_action_t::reduce == type) {
+                            dbs.vaprintf(" RHS [{4}]", va);
+                        }
+                    });
+                };
+                parse_tree_visitor visitor(lambda);
+                pt.accept(&visitor);
+            }
+            {
+                _logger->colorln("parser tree - graph");
+                auto root = pt.get_root();
+                if (root) {
+                    basic_stream bs;
+                    root->print(bs);
+                    _logger->write(bs);
+                }
+            }
 
             _logger->writeln("LALR parsing %s.", (errorcode_t::success == ret) ? "completed successfully" : "failed");
             _test_case.test(ret, __FUNCTION__, "parse %s", entry.notation);

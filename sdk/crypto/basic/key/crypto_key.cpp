@@ -178,9 +178,8 @@ void crypto_key::for_each(std::function<void(const crypto_key_object*, void*)> f
 
 void crypto_key::erase(const std::string& kid) {
     critical_section_guard guard(_lock);
-    auto lbound = _key_map.lower_bound(kid);
-    auto ubound = _key_map.upper_bound(kid);
-    for (auto iter = lbound; iter != ubound;) {
+    auto range = _key_map.equal_range(kid);
+    for (auto iter = range.first; iter != range.second;) {
         auto pkey = iter->second.get_pkey();
         _key_map.erase(iter++);
         EVP_PKEY_free((EVP_PKEY*)pkey);  // reference counter --

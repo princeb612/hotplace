@@ -390,7 +390,7 @@ class t_aho_corasick_parser : public t_aho_corasick<BT, T, memberof_t> {
                 auto iter = target.find(key);
                 child->failure = (target.end() != iter) ? iter->second : _root;
 
-                for (auto item : child->failure->output) {
+                for (const auto& item : child->failure->output) {
                     child->output.insert(item);
                 }
             }

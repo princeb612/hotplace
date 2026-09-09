@@ -162,7 +162,7 @@ return_t dtls_record_publisher::publish(tls_record* record, tls_direction_t dir,
                     spl.run(lambda_split);
 
                     // write record
-                    for (auto item : records) {
+                    for (auto& item : records) {
                         binary_t bin;
                         item->write(dir, bin);
                         container.push_back(std::move(bin));

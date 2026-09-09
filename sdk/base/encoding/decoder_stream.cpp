@@ -158,7 +158,7 @@ return_t decoder_stream::flush() {
                 if (_huffbuf.size() >= 8) {
                     ret = errorcode_t::bad_data;
                 } else {
-                    for (char e : _huffbuf) {
+                    for (const auto& e : _huffbuf) {
                         if ('1' != e) {
                             ret = errorcode_t::bad_data;
                             break;

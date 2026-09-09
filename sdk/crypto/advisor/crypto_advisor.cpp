@@ -406,7 +406,7 @@ return_t crypto_advisor::build() {
             {"X25519MLKEM768", 0x30500000},
             {"SecP384r1MLKEM1024", 0x30500000},
         };
-        for (auto item : _table) {
+        for (const auto& item : _table) {
             _features.emplace(item.feature, advisor_feature_version);
             _versions.emplace(item.feature, item.version);
         }
@@ -476,7 +476,7 @@ bool crypto_advisor::check_minimum_version(unsigned long osslver) const {
 
 void crypto_advisor::for_each_features(std::function<void(const char* name, uint32 spec)> fn) const {
     if (fn) {
-        for (auto item : _features) {
+        for (const auto& item : _features) {
             fn(item.first.c_str(), item.second);
         }
     }

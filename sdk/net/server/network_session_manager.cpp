@@ -119,11 +119,11 @@ return_t network_session_manager::ready_to_close(handle_t event_socket, network_
 
 void network_session_manager::shutdown() {
     critical_section_guard guard(_session_lock);
-    for (auto item : _session_map) {
+    for (auto& item : _session_map) {
         item.second->release();
     }
     _session_map.clear();
-    for (auto item : _dgram_session_map) {
+    for (auto& item : _dgram_session_map) {
         item.second->release();
     }
     _dgram_session_map.clear();

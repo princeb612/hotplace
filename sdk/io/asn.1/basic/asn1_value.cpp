@@ -107,9 +107,8 @@ bool asn1_value::find(const std::string& name) const { return _values.count(name
 
 bool asn1_value::find(const std::string& name, std::list<variant>& values, uint16 vtflags) const {
     bool ret = false;
-    auto liter = _values.lower_bound(name);
-    auto uiter = _values.upper_bound(name);
-    for (auto iter = liter; iter != uiter; ++iter) {
+    auto range = _values.equal_range(name);
+    for (auto iter = range.first; iter != range.second; ++iter) {
         const auto& v = iter->second;
         auto flag = v.flag();
         if (vtflags & flag) {
@@ -122,9 +121,8 @@ bool asn1_value::find(const std::string& name, std::list<variant>& values, uint1
 
 bool asn1_value::find(const std::string& name, std::list<std::string>& values, uint16 vtflags) const {
     bool ret = false;
-    auto liter = _values.lower_bound(name);
-    auto uiter = _values.upper_bound(name);
-    for (auto iter = liter; iter != uiter; ++iter) {
+    auto range = _values.equal_range(name);
+    for (auto iter = range.first; iter != range.second; ++iter) {
         const auto& v = iter->second;
         auto flag = v.flag();
         if (vtflags & flag) {
@@ -163,10 +161,8 @@ void asn1_value::write(binary_t& bin, const asn1_object* object, const std::stri
 void asn1_value::encode_sequenceof_value(binary_t& bin, const asn1_object* object, const std::string& name) const {
     if (nullptr == object) return;
 
-    auto liter = _values.lower_bound(name);
-    auto uiter = _values.upper_bound(name);
-    for (auto iter = liter; iter != uiter; ++iter) {
-        // auto ident = object->get_ident();
+    auto range = _values.equal_range(name);
+    for (auto iter = range.first; iter != range.second; ++iter) {
         auto entity = object->get_entity();
 
         const variant& v = iter->second;
@@ -186,10 +182,8 @@ void asn1_value::encode_setof_value(binary_t& bin, const asn1_object* object, co
 
     std::set<binary_t> ordered;
 
-    auto liter = _values.lower_bound(name);
-    auto uiter = _values.upper_bound(name);
-    for (auto iter = liter; iter != uiter; ++iter) {
-        // auto ident = object->get_ident();
+    auto range = _values.equal_range(name);
+    for (auto iter = range.first; iter != range.second; ++iter) {
         auto entity = object->get_entity();
 
         const variant& v = iter->second;

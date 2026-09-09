@@ -21,11 +21,9 @@ match_result_t http_static_table::match(uint32 flags, const std::string& name, c
     index = 0;
 
     __try2 {
-        auto liter = _static_table.lower_bound(name);
-        auto uiter = _static_table.upper_bound(name);
-
-        for (auto iter = liter; iter != uiter; iter++) {
-            if (iter == liter) {
+        auto range = _static_table.equal_range(name);
+        for (auto iter = range.first; iter != range.second; iter++) {
+            if (iter == range.first) {
                 index = iter->second.second;  // :path: /sample/path
                 state = match_result_t::key_matched;
             }

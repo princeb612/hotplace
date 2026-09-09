@@ -108,7 +108,7 @@ asn1_ast_descriptor asn1_ast_visitor::describe(const asn1_object* object) const 
                 detail << "[";
                 if (false == asn1_is_context(classtype)) detail << resource->get_class_name(classtype).c_str() << " ";
                 detail << cn << "]";
-                if (tagtype) detail << " " << resource->get_tagtype_name(tagtype);
+                if (tagtype) detail << " " << resource->nameof_mode(tagtype);
             }
         } break;
         case asn1_entity_builtin_type:

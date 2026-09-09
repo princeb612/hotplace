@@ -26,6 +26,8 @@ parse_treenode::~parse_treenode() {
 
 bool parse_treenode::is_terminal() const { return children.empty() && false == value.empty(); }
 
+size_t parse_treenode::sizeof_rhs() const { return children.size(); }
+
 void parse_treenode::print(basic_stream& bs, int depth) const {
     bs.fill(depth << 1, ' ');
     bs << symbol;

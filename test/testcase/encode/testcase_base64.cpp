@@ -369,6 +369,7 @@ void test_rfc4880_6_6() {
     while (errorcode_t::success == getline(message, size, pos, &brk)) {
         std::string line(message + pos, brk - pos);
         _logger->writeln(line);
+        if (0 == brk - pos) handle_message = true;
         if (handle_message && false == line.empty()) {
             if (line[0] == '=') {
                 handle_message = false;
@@ -378,7 +379,6 @@ void test_rfc4880_6_6() {
                 cleartext += line;
             }
         }
-        if (0 == brk - pos) handle_message = true;
         pos = brk + 1;
     }
 

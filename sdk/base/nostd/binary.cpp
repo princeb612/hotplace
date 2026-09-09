@@ -6,6 +6,7 @@
  *
  * Revision History
  * Date         Name                Description
+ *
  */
 
 #include <stdarg.h>
@@ -26,7 +27,6 @@ return_t binary_append(binary_t& target, const std::string& value) {
     if (true == value.empty()) {
         // do nothing
     } else {
-        target.reserve(target.size() + value.size());
         target.insert(target.end(), value.begin(), value.end());
     }
     return errorcode_t::success;
@@ -36,7 +36,6 @@ return_t binary_append(binary_t& target, const binary_t& value) {
     if (true == value.empty()) {
         // do nothing
     } else {
-        target.reserve(target.size() + value.size());
         target.insert(target.end(), value.begin(), value.end());
     }
     return errorcode_t::success;
@@ -49,7 +48,6 @@ return_t binary_append(binary_t& target, const char* value) {
     } else {
         const size_t len = strlen(value);
         if (0 != len) {
-            target.reserve(target.size() + len);
             target.insert(target.end(), value, value + len);
         }
     }
@@ -62,7 +60,6 @@ return_t binary_append(binary_t& target, const char* buf, size_t size) {
         ret = errorcode_t::invalid_parameter;
     } else {
         if (0 != size) {
-            target.reserve(target.size() + size);
             target.insert(target.end(), buf, buf + size);
         }
     }
@@ -75,7 +72,6 @@ return_t binary_append(binary_t& target, const byte_t* buf, size_t size) {
         ret = errorcode_t::invalid_parameter;
     } else {
         if (0 != size) {
-            target.reserve(target.size() + size);
             target.insert(target.end(), buf, buf + size);
         }
     }
@@ -87,8 +83,7 @@ return_t binary_append(binary_t& target, const byte_t* buf, size_t from, size_t 
     if ((nullptr == buf) || (from >= to)) {
         ret = errorcode_t::invalid_parameter;
     } else {
-        const size_t len = to - from;
-        target.reserve(target.size() + len);
+        // const size_t len = to - from;
         target.insert(target.end(), buf + from, buf + to);
     }
     return ret;
@@ -110,21 +105,28 @@ return_t binary_load(binary_t& target, size_t bnlen, const byte_t* data, size_t 
 
 return_t binary_fill(binary_t& target, size_t count, const byte_t& value) {
     if (count > 0) {
-        const size_t pos = target.size();
-        target.resize(pos + count);
-        memset(target.data() + pos, value, count);
+        target.insert(target.end(), count, value);
     }
     return errorcode_t::success;
 }
 
 std::string to_string(const binary_t& bin) {
-    if (true == bin.empty()) {
-        return std::string();
-    } else {
-        return std::string(reinterpret_cast<const char*>(bin.data()), bin.size());
+    std::string value;
+    if (false == bin.empty()) {
+        std::string temp(reinterpret_cast<const char*>(bin.data()), bin.size());
+        value = std::move(temp);
     }
+    return value;
 }
 
-binary_t to_binary(const std::string& source) { return binary_t(source.begin(), source.end()); }
+binary_t to_binary(const std::string& source) {
+    binary_t value;
+    if (false == source.empty()) {
+        const byte_t* p = reinterpret_cast<const byte_t*>(source.data());
+        binary_t temp(p, p + source.size());
+        value = std::move(temp);
+    }
+    return value;
+}
 
 }  // namespace hotplace

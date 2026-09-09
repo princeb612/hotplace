@@ -40,7 +40,7 @@ class t_ukkonen {
 
         trienode(size_t start = -1, size_t end = -1) : start(start), end(end), suffix_index(-1), suffix_link(nullptr) {}
         ~trienode() {
-            for (auto item : children) {
+            for (auto& item : children) {
                 delete item.second;
             }
         }
@@ -193,7 +193,7 @@ class t_ukkonen {
 
     void set_suffixindex(trienode* node, size_t height) {
         if (node) {
-            for (auto child : node->children) {
+            for (const auto& child : node->children) {
                 set_suffixindex(child.second, height + child.second->length());
             }
             if (node->children.empty()) {
@@ -205,7 +205,7 @@ class t_ukkonen {
     void collect_suffix_indices(trienode* node, std::set<size_t>& result) const {
         if (node) {
             if (size_t(-1) == node->suffix_index) {
-                for (auto child : node->children) {
+                for (const auto& child : node->children) {
                     collect_suffix_indices(child.second, result);
                 }
             } else {
@@ -215,14 +215,14 @@ class t_ukkonen {
     }
 
     void dump(trienode* node, size_t level, dump_handler handler) const {
-        for (auto& child : node->children) {
+        for (const auto& child : node->children) {
             trienode* item = child.second;
             handler(&_source[item->start], item->length());
             dump(child.second, level + 1, handler);
         }
     }
     void debug(trienode* node, size_t level, debug_handler handler) const {
-        for (auto& child : node->children) {
+        for (const auto& child : node->children) {
             trienode* item = child.second;
             handler(node, level, &_source[item->start], item->length());
             debug(child.second, level + 1, handler);

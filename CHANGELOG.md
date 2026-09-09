@@ -35,11 +35,13 @@
     * CBOR
 
 * details
+  * Revision 1074
+    * asn1_publisher - first baby step, toddling
   * Revision 1072
-    * [fixed] t_aho_corasick_wildcard::dosearch
-    * [fixed] t_trie scan, lookup
-    * [changed] lexical_analyzer prepare, parse
-    * asn1_parser::lexical_analyzer handle_lvalue_usertype applied
+    * [fixed] t_aho_corasick_wildcard - dosearch
+    * [fixed] t_trie - scan, lookup
+    * [changed] lexical_analyzer - optimized
+    * asn1_parser - usertype applied
   * Revision 1070
     * parse tree visitor
     * builtinmemory, builtinpool

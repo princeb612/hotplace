@@ -21,6 +21,7 @@
 #include <map>
 #include <queue>
 #include <set>
+#include <unordered_set>
 #include <vector>
 
 namespace hotplace {
@@ -137,10 +138,20 @@ class t_graph {
             return *this;
         }
     };
+
+    friend bool operator==(const edge& lhs, const edge& rhs) { return (lhs._from == rhs._from) && (lhs._to == rhs._to); }
+    struct edge_hash {
+        std::size_t operator()(const edge& e) const {
+            std::size_t h1 = std::hash<T>{}(e._from);
+            std::size_t h2 = std::hash<T>{}(e._to);
+            return h1 ^ (h2 << 1);
+        }
+    };
+
     /**
      * @brief   tag
      * @comments
-     *          std::map<edge, tag>
+     *          std::unordered_map<edge, tag>
      *              edge::weight, direction - unchangable
      *              tag::label, distance - changable
      */
@@ -174,7 +185,7 @@ class t_graph {
     friend bool operator<(const edge& lhs, const edge& rhs) { return (lhs._from < rhs._from) || (lhs._from == rhs._from && lhs._to < rhs._to); }
 
     typedef std::set<vertex> unordered_vertices_t;
-    typedef std::set<edge> unordered_edges_t;
+    typedef std::unordered_set<edge, edge_hash> unordered_edges_t;
     typedef std::list<vertex> ordered_vertices_t;
     typedef std::list<edge> ordered_edges_t;
 
@@ -193,14 +204,14 @@ class t_graph {
     t_graph& add_vertex(const vertex& v) {
         auto pib = _unordered_vertices.insert(v);
         if (pib.second) {
-            _ordered_vertices.push_back(*pib.first);
+            _ordered_vertices.emplace_back(*pib.first);
         }
         return *this;
     }
     t_graph& add_vertex(vertex&& v) {
         auto pib = _unordered_vertices.insert(std::move(v));
         if (pib.second) {
-            _ordered_vertices.push_back(*pib.first);
+            _ordered_vertices.emplace_back(*pib.first);
         }
         return *this;
     }
@@ -234,7 +245,7 @@ class t_graph {
             if (pib.second) {
                 add_vertex(e._from).add_vertex(e._to);
 
-                _ordered_edges.push_back(e);
+                _ordered_edges.emplace_back(e);
 
                 if (graph_undirected == e._direction) {
                     _unordered_edges.insert(edge(e._to, e._from, e._weight, e._direction));
@@ -255,7 +266,7 @@ class t_graph {
             auto pib = _unordered_edges.insert(std::move(e));
             if (pib.second) {
                 add_vertex(pib.first->_from).add_vertex(pib.first->_to);
-                _ordered_edges.push_back(*pib.first);
+                _ordered_edges.emplace_back(*pib.first);
                 if (graph_undirected == pib.first->_direction) {
                     _unordered_edges.insert(edge(pib.first->_to, pib.first->_from, pib.first->_weight, pib.first->_direction));
                 }
@@ -322,9 +333,15 @@ class t_graph {
                 _neighbours.emplace(item, neighbour_t());
             }
             for (const auto& item : _g._unordered_edges) {
-                _neighbours[item._from].insert(item._to);
+                auto it_from = _neighbours.find(item._from);
+                if (_neighbours.end() != it_from) {
+                    it_from->second.emplace(item._to);
+                }
                 if (graph_undirected == item._direction) {
-                    _neighbours[item._to].insert(item._from);
+                    auto it_to = _neighbours.find(item._to);
+                    if (_neighbours.end() != it_to) {
+                        it_to->second.emplace(item._from);
+                    }
                 }
             }
         }
@@ -391,8 +408,8 @@ class t_graph {
 
         const t_graph<T>& _g;
 
-        std::map<T, neighbour_t> _neighbours;
-        std::map<T, bool> _visit;
+        std::unordered_map<T, neighbour_t> _neighbours;
+        std::unordered_map<T, bool> _visit;
     };
 
     class graph_adjacent_list : public graph_search {
@@ -402,7 +419,7 @@ class t_graph {
 
        protected:
         typedef std::list<T> result_t;
-        typedef std::map<T, result_t> results_map_t;
+        typedef std::unordered_map<T, result_t> results_map_t;
         typedef typename graph_search::visitor_t visitor_t;
 
         virtual void do_setup() { _results.clear(); }
@@ -415,7 +432,7 @@ class t_graph {
                     __leave2;
                 }
                 for (const auto& neighbour : nit->second) {
-                    result.push_back(neighbour);
+                    result.emplace_back(neighbour);
                 }
             }
             __finally2 {}
@@ -424,7 +441,7 @@ class t_graph {
         virtual void do_traverse(const T& u, visitor_t f) { f(u, u, 0, _results[u]); }
 
        private:
-        std::map<T, result_t> _results;
+        std::unordered_map<T, result_t> _results;
     };
 
     /*
@@ -450,38 +467,34 @@ class t_graph {
 
        protected:
         typedef std::list<T> result_t;
-        typedef std::map<T, result_t> results_map_t;
+        typedef std::unordered_map<T, result_t> results_map_t;
         typedef typename graph_search::visitor_t visitor_t;
 
         virtual void do_setup() { _results.clear(); }
 
         virtual void do_learn(const T& u) {
             auto& result = this->_results[u];
-            result.push_back(u);
+            result.emplace_back(u);
             learn_recursive(u, u, result);
         }
         void learn_recursive(const T& v, const T& u, result_t& result) {
-            __try2 {
-                this->visit(u);
+            this->visit(u);
 
-                auto nit = this->_neighbours.find(u);
-                if (this->_neighbours.end() == nit) {
-                    __leave2;
-                }
+            auto nit = this->_neighbours.find(u);
+            if (this->_neighbours.end() != nit) {
                 for (const auto& neighbour : nit->second) {
                     if (this->visit(neighbour)) {
-                        result.push_back(neighbour);
+                        result.emplace_back(neighbour);
                         learn_recursive(v, neighbour, result);
                     }
                 }
             }
-            __finally2 {}
         }
 
         virtual void do_traverse(const T& u, visitor_t f) { f(u, u, 0, _results[u]); }
 
        private:
-        std::map<T, result_t> _results;
+        std::unordered_map<T, result_t> _results;
     };
 
     /*
@@ -500,7 +513,7 @@ class t_graph {
 
        protected:
         typedef std::list<T> result_t;
-        typedef std::map<T, result_t> results_map_t;
+        typedef std::unordered_map<T, result_t> results_map_t;
         typedef typename graph_search::visitor_t visitor_t;
 
         virtual void do_setup() { _results.clear(); }
@@ -510,7 +523,7 @@ class t_graph {
             auto& neighbours = this->_neighbours;
 
             this->visit(u);
-            result.push_back(u);
+            result.emplace_back(u);
 
             std::queue<T> q;
             q.push(u);
@@ -525,7 +538,7 @@ class t_graph {
                 }
                 for (const auto& neighbour : nit->second) {
                     if (this->visit(neighbour)) {
-                        result.push_back(neighbour);
+                        result.emplace_back(neighbour);
                         q.push(neighbour);
                     }
                 }
@@ -535,7 +548,7 @@ class t_graph {
         virtual void do_traverse(const T& u, visitor_t f) { f(u, u, 0, _results[u]); }
 
        private:
-        std::map<T, result_t> _results;
+        std::unordered_map<T, result_t> _results;
     };
 
     /*
@@ -590,7 +603,7 @@ class t_graph {
                 dist[temp] = graph_search::graph_infinite;
             }
 
-            pq.push({0, u});
+            pq.emplace(0, u);
             dist[u] = 0;
 
             while (false == pq.empty()) {
@@ -611,52 +624,54 @@ class t_graph {
                     int distance = dist[v] + weight;
                     if (dist[neighbour] > distance) {
                         dist[neighbour] = distance;
-                        pq.push({distance, neighbour});
+                        pq.emplace(distance, neighbour);
 
                         path[neighbour].clear();  // clear longer one
-                        path[neighbour].insert({distance, v});
+                        path[neighbour].emplace(distance, v);
                     } else if (dist[neighbour] == distance) {
-                        path[neighbour].insert({distance, v});  // same distance
+                        path[neighbour].emplace(distance, v);  // same distance
                     }
                 }
             }
 
-            _dist.insert({u, dist});
-            _path.insert({u, path});
+            _dist.emplace(u, std::move(dist));
+            _path.emplace(u, std::move(path));
         }
 
         virtual void do_infer(const T& u) {
             route_t route;
-            for (auto path : _path[u]) {
+            for (const auto& path : _path[u]) {
                 const T& to = path.first;
-                for (auto section : path.second) {
+                for (const auto& section : path.second) {
                     int distance = section.first;
                     const T& from = section.second;
-                    auto iter = route.insert({edge(u, to, distance), std::list<T>()});
-                    std::list<T>& l = iter->second;
-                    l.push_back(from);
-                    l.push_back(to);
+                    auto iter = route.emplace(edge(u, to, distance), std::list<T>());
+                    auto& l = iter->second;
+                    l.emplace_back(from);
+                    l.emplace_back(to);
                 }
             }
 
             route_t route_branch;
             std::function<void(const edge& e, std::list<T>&)> filler;
             filler = [&](const edge& e, std::list<T>& lst) -> void {
-                T head = *lst.begin();
-                while (u != head) {
-                    auto& section = _path[u].find(head)->second;
-                    auto iter = section.begin();
-                    head = iter->second;  // update head -- while (u != head)
+                if (false == lst.empty()) {
+                    T head = *lst.begin();
+                    while (u != head) {
+                        auto& section = _path[u].find(head)->second;
+                        auto iter = section.begin();
+                        head = iter->second;  // update head -- while (u != head)
 
-                    for (iter++; section.end() != iter; iter++) {          // alternative section
-                        std::list<T> list_branch = lst;                    // branch list
-                        const T& head_branch = iter->second;               // select alternative neighbour
-                        list_branch.push_front(head_branch);               // into branch list
-                        filler(e, list_branch);                            // fill
-                        route_branch.insert({e, std::move(list_branch)});  // insert branch list into branch route
+                        for (iter++; section.end() != iter; iter++) {         // alternative section
+                            auto list_branch = lst;                           // branch list
+                            const T& head_branch = iter->second;              // select alternative neighbour
+                            list_branch.push_front(head_branch);              // into branch list
+                            filler(e, list_branch);                           // fill
+                            route_branch.emplace(e, std::move(list_branch));  // insert branch list into branch route
+                        }
+
+                        lst.push_front(head);  // head into list
                     }
-
-                    lst.push_front(head);  // head into list
                 }
             };
 
@@ -666,23 +681,22 @@ class t_graph {
                 filler(e, lst_origin);           // handle origin list or branch list if alternative available
             }
             for (auto& item : route_branch) {  // merge into route
-                route.insert({item.first, std::move(item.second)});
+                route.emplace(item.first, std::move(item.second));
             }
-            _route.insert({u, route});
+            _route.emplace(u, std::move(route));
         }
 
         virtual void do_traverse(const T& u, visitor_t f) {
-            for (auto route : _route[u]) {
+            for (const auto& route : _route[u]) {
                 const edge& e = route.first;
                 f(e._from, e._to, e._weight, route.second);
             }
         }
         virtual void do_traverse(const T& from, const T& to, visitor_t f) {
-            route_t route = _route[from];
+            const auto& route = _route[from];
             edge e(from, to);
-            auto lbound = route.lower_bound(e);
-            auto ubound = route.upper_bound(e);
-            for (auto iter = lbound; ubound != iter; iter++) {
+            auto range = route.equal_range(e);
+            for (auto iter = range.first; range.second != iter; iter++) {
                 f(from, to, iter->first._weight, iter->second);
             }
         }
@@ -695,20 +709,20 @@ class t_graph {
          * @sa      learn, _dist
          *
          * (gdb) p _dist
-         * $1 = std::map with 1 element = {[0] = std::map with 9 elements =
+         * $1 = std::unordered_map with 1 element = {[0] = std::unordered_map with 9 elements =
          *       {[0] = 0, [1] = 4, [2] = 12, [3] = 19, [4] = 21, [5] = 11, [6] = 9, [7] = 8, [8] = 14}}
          *
          * it can be interpreted as from->to(weight)
          *      0->0(0), 0->1(4), 0->2(12), ..., 0->8(14)
          */
-        typedef std::map<T, int> distance_t;
+        typedef std::unordered_map<T, int> distance_t;
 
         /**
          * @brief   shortest path
          * @sa      learn, _path
          *
          * (gdb) p _path
-         * $2 = std::map with 1 element = {[0] = std::map with 8 elements = {
+         * $2 = std::unordered_map with 1 element = {[0] = std::unordered_map with 8 elements = {
          *       [1] = std::multimap with 1 element = {[4] = 0},
          *       [2] = std::multimap with 1 element = {[12] = 1},
          *       [3] = std::multimap with 1 element = {[19] = 2},
@@ -721,8 +735,8 @@ class t_graph {
          *  it can be interpreted as from->to(weight) and prev->to
          *      0->1( 4) and 0->1, 0->2(12) and 1->2, ..., 0->8(14) and 2->8
          */
-        typedef std::multimap<int, T> section_t;  // <distance, from>
-        typedef std::map<T, section_t> path_t;    // map<to, section_t>
+        typedef std::multimap<int, T> section_t;          // <distance, from>
+        typedef std::unordered_map<T, section_t> path_t;  // map<to, section_t>
 
         /*
          * @brief   edge(from, to, distance) and list<T>
@@ -749,9 +763,12 @@ class t_graph {
          */
         typedef std::multimap<edge, std::list<T>> route_t;
 
-        std::map<T, distance_t> _dist;
-        std::map<T, path_t> _path;
-        std::map<T, route_t> _route;
+        // insert, lookup
+        // std::map           O(logN)
+        // std::unordered_map O(1)
+        std::unordered_map<T, distance_t> _dist;
+        std::unordered_map<T, path_t> _path;
+        std::unordered_map<T, route_t> _route;
     };
 
     graph_adjacent_list* build_adjacent() { return new graph_adjacent_list(*this); }

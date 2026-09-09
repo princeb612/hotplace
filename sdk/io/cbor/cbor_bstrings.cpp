@@ -106,7 +106,7 @@ void cbor_bstrings::represent(binary_t* b) {
         enc.encode(*b, cbor_major_t::bstr, cbor_control_t::cbor_control_begin, this);
 
         // for each member
-        for (auto item : _array) {
+        for (const auto& item : _array) {
             item->represent(b);
         }
 

@@ -420,7 +420,7 @@ oauth2_provider& oauth2_provider::apply(http_router& router) {
 
 void oauth2_provider::clear() {
     critical_section_guard guard(_lock);
-    for (auto item : _providers) {
+    for (auto& item : _providers) {
         oauth2_grant_provider* provider = item.second;
         provider->release();
     }

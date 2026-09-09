@@ -40,7 +40,7 @@ void regex_token(const std::string& input, const std::string& expr, size_t& pos,
     std::list<std::map<size_t, range_t>> ranges;
     regex_tokens(input.c_str(), input.size(), expr.c_str(), pos, ranges);
 
-    for (auto range : ranges) {
+    for (auto& range : ranges) {
         auto match = range[0];  // full match
         tokens.push_back(input.substr(match.begin, match.end - match.begin));
     }
@@ -53,7 +53,7 @@ void regex_token(const char* input, size_t size, const char* expr, size_t& pos, 
         std::list<std::map<size_t, range_t>> ranges;
         regex_tokens(input, size, expr, pos, ranges);
 
-        for (auto range : ranges) {
+        for (auto& range : ranges) {
             tokens.push_back(range[0]);
         }
     }

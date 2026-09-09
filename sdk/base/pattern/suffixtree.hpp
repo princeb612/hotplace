@@ -43,7 +43,7 @@ class t_suffixtree {
 
         trienode() {}
         ~trienode() {
-            for (auto item : children) {
+            for (auto& item : children) {
                 delete item.second;
             }
         }

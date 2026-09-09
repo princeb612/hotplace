@@ -36,8 +36,8 @@ class asn1_parser {
         int token;
     };
 
-    // TODO new asn1_object at runtime ...
     return_t parse(asn1_runtime* runtime, const char* notation, parse_tree* pt = nullptr);
+    return_t parse(asn1_runtime* runtime, lexical_context& context, const char* notation, parse_tree* pt = nullptr);
 
     lexical_analyzer& get_lex();
     lalr_parser& get_lalr();

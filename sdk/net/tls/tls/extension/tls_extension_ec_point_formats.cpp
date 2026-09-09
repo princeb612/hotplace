@@ -32,7 +32,7 @@ return_t tls_extension_ec_point_formats::do_postprocess(tls_direction_t dir) {
     auto session = get_handshake()->get_session();
     auto& protection = session->get_tls_protection();
     auto& protection_context = protection.get_protection_context();
-    for (auto epf : _ec_point_formats) {
+    for (const auto& epf : _ec_point_formats) {
         protection_context.add_ec_point_format(epf);
     }
     return ret;
@@ -70,7 +70,7 @@ return_t tls_extension_ec_point_formats::do_read_body(tls_direction_t dir, const
         }
 
         {
-            for (auto epf : formats) {
+            for (const auto& epf : formats) {
                 add(epf);
             }
         }
@@ -82,7 +82,7 @@ return_t tls_extension_ec_point_formats::do_read_body(tls_direction_t dir, const
 
                 dbs.println("   > %s (%i ent.)", constexpr_formats, len);
                 uint8 i = 0;
-                for (auto fmt : _ec_point_formats) {
+                for (const auto& fmt : _ec_point_formats) {
                     dbs.println("     [%i] 0x%02x(%i) %s", i++, fmt, fmt, tlsadvisor->nameof_ec_point_format(fmt).c_str());
                 }
             });
@@ -99,7 +99,7 @@ return_t tls_extension_ec_point_formats::do_write_body(tls_direction_t dir, bina
         uint8 cbsize_formats = 0;
         binary_t bin_formats;
         {
-            for (auto epf : _ec_point_formats) {
+            for (const auto& epf : _ec_point_formats) {
                 // RFC 9325 4.2.1
                 // Note that [RFC8422] deprecates all but the uncompressed point format.
                 // Therefore, if the client sends an ec_point_formats extension, the ECPointFormatList MUST contain a single element, "uncompressed".

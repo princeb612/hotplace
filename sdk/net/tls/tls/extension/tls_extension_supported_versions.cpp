@@ -38,7 +38,7 @@ return_t tls_extension_client_supported_versions::do_postprocess(tls_direction_t
     auto& protection = session->get_tls_protection();
     auto& protection_context = protection.get_protection_context();
     protection_context.clear_supported_versions();
-    for (auto ver : _versions) {
+    for (const auto& ver : _versions) {
         protection_context.add_supported_version(ver);
     }
     return ret;
@@ -73,7 +73,7 @@ return_t tls_extension_client_supported_versions::do_read_body(tls_direction_t d
 
                 dbs.println("    > %s (%i ent.)", constexpr_versions, count);
                 int i = 0;
-                for (auto ver : _versions) {
+                for (const auto& ver : _versions) {
                     dbs.println("      [%i] 0x%04x %s", i++, ver, tlsadvisor->nameof_tls_version(ver).c_str());
                 }
             });
@@ -90,7 +90,7 @@ return_t tls_extension_client_supported_versions::do_write_body(tls_direction_t 
         uint8 cbsize_versions = 0;
         binary_t bin_versions;
         {
-            for (auto ver : _versions) {
+            for (const auto& ver : _versions) {
                 binary_append(bin_versions, ver, hton16);
             }
             cbsize_versions = t_narrow_cast(bin_versions.size());

@@ -1,5 +1,14 @@
 # hotplace
 
+````
+ _   _           _             _
+| | | |   ___   | |_   _ __   | |   __ _    ___    ___
+| |_| |  / _ \  | __| | '_ \  | |  / _` |  / __|  / _ \
+|  _  | | (_) | | |_  | |_) | | | | (_| | | (__  |  __/
+|_| |_|  \___/   \__| | .__/  |_|  \__,_|  \___|  \___|
+                      |_|
+````
+
 * Research on personal interests
   * Most of the hotplace was prototyped and implemented based on what I studied.
   * using ChatGPT and Gemini for prototyping and reviews since 2026.
@@ -8,6 +17,8 @@
     * floating point (class floating_point)
       * decimal floating point (class decimal_float)
       * lossless fractional floating point (class rational_float)
+  * documents
+    * [Documented with GPT-5.6 Luna — study, reconstruction & review](docs/README.md)
 * ![cmake workflow](https://github.com/princeb612/hotplace/actions/workflows/build.yml/badge.svg)
 * ![codeql workflow](https://github.com/princeb612/hotplace/actions/workflows/codeql.yml/badge.svg)
 * powered by

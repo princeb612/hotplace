@@ -14,6 +14,7 @@
 
 #include <hotplace/test/test.hpp>
 
+void dump_parse_tree(asn1_runtime* runtime, const parse_tree* pt);
 void parse_notation(asn1_runtime* runtime, const char* notation);
 
 void testcase_basic1();
@@ -23,6 +24,6 @@ void testcase_testvector_der();
 void testcase_parser();
 void testcase_testvector_parser();
 void testcase_basic3();
-void testcase_construct();
+void testcase_publish();
 
 #endif

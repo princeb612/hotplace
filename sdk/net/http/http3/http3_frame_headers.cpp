@@ -48,7 +48,7 @@ return_t http3_frame_headers::do_read_payload(const byte_t* stream, size_t size,
         if (istraceable(trace_category_t::trace_category_net)) {
             trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_http3, [&](basic_stream& dbs) -> void {
                 uint32 mask = qpack_decode_index | qpack_decode_nameref | qpack_decode_namevalue;
-                for (auto entry : kv) {
+                for (const auto& entry : kv) {
                     if (mask & entry.flags) {
                         dbs.println("> %s: %s", entry.name.c_str(), entry.value.c_str());
                     }

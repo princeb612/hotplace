@@ -19,6 +19,16 @@
 namespace hotplace {
 namespace io {
 
+struct asn1_entity_resource_t {
+    asn1_entity_t type;
+    const char* token;
+    asn1_perm_t permission;
+    uint32 tokenid;
+};
+
+extern const struct asn1_entity_resource_t resource_asn1_entities[];
+extern const size_t sizeof_resource_asn1_entities;
+
 class asn1_resource {
    public:
     static asn1_resource* get_instance();
@@ -28,12 +38,22 @@ class asn1_resource {
     asn1_entity_t get_entity(const std::string& name) const;
     asn1_perm_t get_perm(asn1_entity_t entity) const;
     std::string get_class_name(int c) const;
+    uint8 get_class(const std::string& name) const;
     /**
-     * @brief   IMPLICIT/EXPLICIT
+     * @brief   IMPLICIT/EXPLICIT/DEFAULT/OPTIONAL
      */
-    std::string get_tagtype_name(uint16 t) const;
+    std::string nameof_mode(uint16 t) const;
+    uint8 valueof_mode(const std::string& name) const;
 
-    void for_each_type_name(std::function<void(asn1_entity_t, const std::string&)> f) const;
+    template <typename F>  // void(uint32 tokenid, const std::string& name)
+    void for_each(resource_type_t type, F f) const {
+        for (size_t i = 0; i < sizeof_resource_asn1_entities; ++i) {
+            auto entry = resource_asn1_entities[i];
+            if (entry.tokenid && entry.token) {
+                std::forward<F>(f)(entry.tokenid, entry.token);
+            }
+        }
+    }
 
    protected:
     asn1_resource();
@@ -48,6 +68,9 @@ class asn1_resource {
     std::map<std::string, asn1_entity_t> _type_rid;
     std::map<asn1_entity_t, asn1_perm_t> _type_perm;
     std::map<int, std::string> _class_id;
+    std::map<std::string, int> _class_rid;
+    std::map<int, std::string> _mode_id;
+    std::map<std::string, int> _mode_rid;
 };
 
 }  // namespace io

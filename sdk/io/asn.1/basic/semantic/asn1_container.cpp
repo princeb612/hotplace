@@ -42,7 +42,7 @@ asn1_container::~asn1_container() {}
 asn1_container* asn1_container::clone() { return new asn1_container(*this); }
 
 asn1_container* asn1_container::addref() {
-    for (auto item : _list) {
+    for (auto& item : _list) {
         item->addref();
     }
     asn1_object::addref();
@@ -50,7 +50,7 @@ asn1_container* asn1_container::addref() {
 }
 
 void asn1_container::release() {
-    for (auto item : _list) {
+    for (auto& item : _list) {
         item->release();
     }
     asn1_object::release();
@@ -146,20 +146,20 @@ bool asn1_container::represent(binary_t* b, const asn1_value* value, uint16 flag
     switch (entity) {
         case asn1_entity_sequence: {
             // asn1_sequence : asn1_container
-            for (auto item : _list) {
+            for (const auto& item : _list) {
                 item->represent(b, value);
             }
         } break;
         case asn1_entity_set: {
             // asn1_set : asn1_container
-            for (auto item : _map) {
+            for (const auto& item : _map) {
                 auto obj = item.second;
                 obj->represent(b, value);
             }
         } break;
         case asn1_entity_choice: {
             // asn1_choice : asn1_container
-            for (auto item : _map) {
+            for (const auto& item : _map) {
                 auto obj = item.second;
                 auto test = obj->represent(b, value, asn1_visitor_choice);
                 if (test) break;

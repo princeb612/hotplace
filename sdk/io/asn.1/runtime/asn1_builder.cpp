@@ -11,7 +11,7 @@
  *
  */
 
-#include <hotplace/sdk/io/asn.1/basic/asn1_builder.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_any.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_builtin_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_enum.hpp>
@@ -21,6 +21,8 @@
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tagged_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/builtin/asn1_bitstring.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/builtin/asn1_integer.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_builder.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_publisher.hpp>
 
 namespace hotplace {
 namespace io {
@@ -51,6 +53,13 @@ asn1_object* asn1_builder::build(uint8 ident, uint64 tag, uint32 flags) {
         }
     }
     return obj;
+}
+
+asn1_object* asn1_builder::buildtag(uint8 ident, uint64 tag, uint8 mode) { return new asn1_tag(ident, tag, mode); }
+
+asn1_object* asn1_builder::buildtag(const std::string& type, uint64 tag, uint8 mode) {
+    auto resource = asn1_resource::get_instance();
+    return new asn1_tag(resource->get_class(type), tag, mode);
 }
 
 asn1_object* asn1_builder::build(asn1_entity_t entity, std::function<void(asn1_object*)> f) {
@@ -122,6 +131,11 @@ asn1_object* asn1_builder::build(asn1_object* object, std::function<void(asn1_ob
         f(object);
     }
     return object;
+}
+
+return_t asn1_builder::build(const parse_tree* pt, asn1_object** object) {
+    asn1_publisher reassembly;
+    return reassembly.build(pt, object);
 }
 
 }  // namespace io

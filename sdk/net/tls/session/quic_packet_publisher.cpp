@@ -463,7 +463,7 @@ return_t quic_packet_publisher::publish(tls_direction_t dir, std::function<void(
         }
 
         std::list<binary_t> container;
-        for (auto space : spaces) {
+        for (const auto& space : spaces) {
             uint32 flags = get_flags();
             if (spaces.size() > 1) {
                 if (*spaces.rbegin() != space) {

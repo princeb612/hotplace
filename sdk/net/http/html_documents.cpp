@@ -63,7 +63,7 @@ bool html_documents::get_local(const std::string& uri, std::string& local) const
     size_t pos = 0;
     pos = uri.find("..");
     if (std::string::npos == pos) {
-        for (auto item : _urimap) {
+        for (const auto& item : _urimap) {
             pos = uri.find(item.first);
             if (std::string::npos != pos) {
                 local = uri;

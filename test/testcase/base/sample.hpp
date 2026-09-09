@@ -57,6 +57,7 @@ void testcase_range();
 void testcase_set();
 void testcase_tree();
 void testcase_vector();
+void testcase_bitset();
 
 void testcase_aho_corasick();
 void testcase_aho_corasick_wildcard();

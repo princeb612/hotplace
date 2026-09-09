@@ -40,7 +40,7 @@ asn1_runtime::asn1_runtime(const asn1_runtime& other) : asn1_runtime() { *this =
 asn1_runtime::~asn1_runtime() { clear(); }
 
 asn1_runtime& asn1_runtime::operator=(const asn1_runtime& other) {
-    for (auto item : other._types) {
+    for (const auto& item : other._types) {
         auto type = item->clone();
 
         add(type);
@@ -178,7 +178,7 @@ void asn1_runtime::for_each(std::function<void(asn1_value*)> f) const {
 void asn1_runtime::notation(stream_t* s) {
     asn1_notation_visitor notation(s);
     auto nl = _types.size() > 1;
-    for (auto item : _types) {
+    for (const auto& item : _types) {
         notation.visit(item);
         if (nl) s->printf("\n");
     }
@@ -241,7 +241,7 @@ void asn1_runtime::set_automatic(uint8 runas) { _automatic = runas; }
 uint8 asn1_runtime::runas_automatic() { return _automatic; }
 
 void asn1_runtime::clear() {
-    for (auto item : _types) item->release();
+    for (auto& item : _types) item->release();
     for (auto& pair : _values) pair.second->release();
     _types.clear();
     _values.clear();

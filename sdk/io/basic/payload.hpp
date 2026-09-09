@@ -367,7 +367,7 @@ class payload {
 
     template <typename F>  // void(payload_member*)
     payload& for_each(F func) {
-        for (auto item : _members) {
+        for (const auto& item : _members) {
             func(item);
         }
         return *this;

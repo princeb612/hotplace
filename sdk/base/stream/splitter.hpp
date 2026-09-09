@@ -163,8 +163,8 @@ return_t splitter<DESCRIPTOR_T>::run(std::function<void(uint32, const byte_t*, s
 
     size_t pre = 0;
     // size_t group = 0;
-    for (auto item : _list) {
-        byte_t* blockstream = nullptr;
+    for (const auto& item : _list) {
+        const byte_t* blockstream = nullptr;
         size_t blocksize = 0;
         if (splitter_noalloc & item.flags) {
             blockstream = item.stream;

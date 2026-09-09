@@ -65,7 +65,7 @@ bool asn1_constraints::validate(const asn1_object* node, const asn1_value* value
     if (nullptr == node || nullptr == value) return false;
 
     if (false == _constraints.empty()) {
-        for (auto item : _constraints) {
+        for (auto& item : _constraints) {
             bool test = false;
             auto entity = item->get_entity();
             if (asn1_entity_constraint_size == entity) {

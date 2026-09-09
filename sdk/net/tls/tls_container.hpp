@@ -94,7 +94,7 @@ class t_tls_container {
         return_t ret = errorcode_t::success;
         if (func) {
             critical_section_guard guard(_lock);
-            for (auto item : _members) {
+            for (const auto& item : _members) {
                 ret = func(item);
                 if (errorcode_t::success != ret) {
                     break;
@@ -136,7 +136,7 @@ class t_tls_container {
     size_t size() const { return _members.size(); }
     void clear() {
         critical_section_guard guard(_lock);
-        for (auto item : _members) {
+        for (auto& item : _members) {
             item->release();
         }
         _members.clear();

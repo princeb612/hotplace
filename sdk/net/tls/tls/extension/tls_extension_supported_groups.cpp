@@ -43,7 +43,7 @@ return_t tls_extension_supported_groups::do_postprocess(tls_direction_t dir) {
     auto& protection_context = protection.get_protection_context();
 
     protection_context.clear_supported_groups();
-    for (auto curve : _supported_groups) {
+    for (const auto& curve : _supported_groups) {
         auto hint = advisor->hintof_tls_group(curve);
         if (hint && (tls_flag_support & hint->flags)) {
             protection_context.add_supported_group(curve);
@@ -87,7 +87,7 @@ return_t tls_extension_supported_groups::do_read_body(tls_direction_t dir, const
 
                 dbs.println("   > %s (%i ent.)", constexpr_curves, curves);
                 int i = 0;
-                for (auto curve : _supported_groups) {
+                for (const auto& curve : _supported_groups) {
                     dbs.println("     [%i] 0x%04x(%i) %s", i++, curve, curve, tlsadvisor->nameof_group(curve).c_str());
                 }
             });
@@ -106,7 +106,7 @@ return_t tls_extension_supported_groups::do_write_body(tls_direction_t dir, bina
         uint16 cbsize_supported_groups = 0;
         binary_t bin_supported_groups;
         {
-            for (auto curve : _supported_groups) {
+            for (const auto& curve : _supported_groups) {
                 auto hint = advisor->hintof_tls_group(curve);
                 if (hint && (tls_flag_support & hint->flags)) {
                     binary_append(bin_supported_groups, curve, hton16);

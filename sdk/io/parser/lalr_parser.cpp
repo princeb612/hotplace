@@ -57,60 +57,59 @@ return_t lalr_parser::build_table() {
 #if defined DEBUG
         if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
             trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
+                print_style_t style(2);  // indent 2
+
+                auto lambda_lr0_goto = [](typename std::map<std::pair<uint32, std::string>, uint32>::const_iterator it, basic_stream& dbs) -> void {
+                    dbs << "(" << it->first.first << ":" << it->first.second << ") -> " << it->second;
+                };
+                auto lambda_action = [](typename std::map<std::pair<uint32, std::string>, parser_action>::const_iterator it, basic_stream& dbs) -> void {
+                    dbs << "(" << it->first.first << ":" << it->first.second << ") -> ";
+                    auto action = it->second.type;
+                    auto target = it->second.target;
+                    if (parser_action_t::shift == action)
+                        dbs << "shift";
+                    else if (parser_action_t::reduce == action)
+                        dbs << "reduce";
+                    else if (parser_action_t::accept == action)
+                        dbs << "accept";
+                    else if (parser_action_t::error == action)
+                        dbs << "error";
+                    dbs << " target " << target;
+                };
+
 #if 0
+                auto lambda_first_follow = [](typename std::map<std::string, std::set<std::string>>::const_iterator it, basic_stream& dbs) -> void {
+                    dbs << it->first << " -> ";
+                    print<std::set<std::string>, basic_stream>(it->second, dbs);
+                };
+
+                auto lambda_lr0 = [&style](typename std::vector<std::set<LR0_item>>::const_iterator it, basic_stream& dbs) -> void {
+                    auto lambda = [](typename std::set<LR0_item>::const_iterator it, basic_stream& dbs) -> void {
+                        const auto& item = *it;
+                        dbs << "production_id " << item.production_id << " dot_pos " << item.dot_pos;
+                    };
+                    print(*it, dbs, lambda, style.next(2));  // nested indent += 2
+                };
+
                 dbs << "FIRST\n";
-                print_pair<std::map<std::string, std::set<std::string>>, basic_stream>(
-                    _first_sets, dbs, [](typename std::map<std::string, std::set<std::string>>::const_iterator it, basic_stream& dbs) -> void {
-                        dbs << it->first << " -> ";
-                        print<std::set<std::string>, basic_stream>(it->second, dbs);
-                    });
+                print_pair(_first_sets, dbs, lambda_first_follow, style);
                 dbs << "\n";
                 dbs << "FOLLOW\n";
-                print_pair<std::map<std::string, std::set<std::string>>, basic_stream>(
-                    _follow_sets, dbs, [](typename std::map<std::string, std::set<std::string>>::const_iterator it, basic_stream& dbs) -> void {
-                        dbs << it->first << " -> ";
-                        print<std::set<std::string>, basic_stream>(it->second, dbs);
-                    });
+                print_pair(_follow_sets, dbs, lambda_first_follow, style);
                 dbs << "\n";
                 dbs << "LR0 STATE\n";
-                print<std::vector<std::set<LR0_item>>, basic_stream>(
-                    _lr0_states, dbs,
-                    [](typename std::vector<std::set<LR0_item>>::const_iterator it, basic_stream& dbs) -> void { 
-                     print<std::set<LR0_item>, basic_stream>(*it, dbs, [](typename std::set<LR0_item>::const_iterator it, basic_stream& dbs) -> void {
-                        const auto& item = *it;
-                        dbs << "prod_id " << item.prod_id << " dot_pos " << item.dot_pos;
-                     });
-                });
+                print(_lr0_states, dbs, lambda_lr0, style);
                 dbs << "\n";
                 dbs << "LR1 GOTO\n";
-                print_pair<std::map<std::pair<int, std::string>, int>, basic_stream>(
-                    _lr0_goto, dbs, [](typename std::map<std::pair<int, std::string>, int>::const_iterator it, basic_stream& dbs) -> void {
-                        dbs << "(" << it->first.first << ":" << it->first.second << ") -> " << it->second;
-                    });
+                print_pair(_lr0_goto, dbs, lambda_lr0_goto, style);
                 dbs << "\n";
 #endif
+
                 dbs << "ACTION\n";
-                print_pair<std::map<std::pair<int, std::string>, parser_action>, basic_stream>(
-                    _action_table, dbs, [](typename std::map<std::pair<int, std::string>, parser_action>::const_iterator it, basic_stream& dbs) -> void {
-                        dbs << "(" << it->first.first << ":" << it->first.second << ") -> ";
-                        auto action = it->second.type;
-                        auto target = it->second.target;
-                        if (parser_action_t::shift == action)
-                            dbs << "shift";
-                        else if (parser_action_t::reduce == action)
-                            dbs << "reduce";
-                        else if (parser_action_t::accept == action)
-                            dbs << "accept";
-                        else if (parser_action_t::error == action)
-                            dbs << "error";
-                        dbs << " target " << target;
-                    });
+                print_pair(_action_table, dbs, lambda_action, style);
                 dbs << "\n";
                 dbs << "GOTO\n";
-                print_pair<std::map<std::pair<int, std::string>, int>, basic_stream>(
-                    _goto_table, dbs, [](typename std::map<std::pair<int, std::string>, int>::const_iterator it, basic_stream& dbs) -> void {
-                        dbs << "(" << it->first.first << ":" << it->first.second << ") -> " << it->second;
-                    });
+                print_pair(_goto_table, dbs, lambda_lr0_goto, style);
                 dbs << "\n";
                 dbs.println("LALR table generated.");
             });
@@ -151,7 +150,7 @@ return_t lalr_parser::parse(const std::vector<parser_token>& tokens, parse_tree*
         }
 
         auto resource = parser_resource::get_instance();
-        std::stack<int> state_stack;
+        std::stack<uint32> state_stack;
         state_stack.push(0);
 
         size_t token_idx = 0;
@@ -178,7 +177,7 @@ return_t lalr_parser::parse(const std::vector<parser_token>& tokens, parse_tree*
                 break;
             }
 
-            int current_state = state_stack.top();
+            uint32 current_state = state_stack.top();
             parser_token current_token = tokens[token_idx];
 
             std::string typestring;
@@ -187,7 +186,8 @@ return_t lalr_parser::parse(const std::vector<parser_token>& tokens, parse_tree*
                 case token_number:
                 case token_floatingpoint:
                 case token_quot_string:
-                    typestring = resource->nameof(current_token.type);
+                case token_usertype:
+                    typestring = resource->nameof(current_token.type); /* read token symbol string */
                     break;
                 default:
                     typestring = current_token.value;
@@ -215,8 +215,8 @@ return_t lalr_parser::parse(const std::vector<parser_token>& tokens, parse_tree*
 
             // state_stack
             {
-                std::stack<int> temp = state_stack;
-                std::vector<int> states;
+                std::stack<uint32> temp = state_stack;
+                std::vector<uint32> states;
                 while (false == temp.empty()) {
                     states.push_back(temp.top());
                     temp.pop();
@@ -269,7 +269,7 @@ return_t lalr_parser::parse(const std::vector<parser_token>& tokens, parse_tree*
                     break;
                 }
 
-                int top_state = state_stack.top();
+                uint32 top_state = state_stack.top();
                 auto goto_key = std::make_pair(top_state, rule.lhs);
                 auto goto_it = _goto_table.find(goto_key);
                 if (goto_it == _goto_table.end()) {
@@ -417,7 +417,7 @@ std::set<LR0_item> lalr_parser::closure_lr0(std::set<LR0_item> items) const {
         added = false;
         std::set<LR0_item> new_items = items;
         for (const auto& item : items) {
-            const auto& rule = rules[item.prod_id];
+            const auto& rule = rules[item.production_id];
             if (item.dot_pos < rule.rhs.size()) {
                 std::string B = rule.rhs[item.dot_pos];
                 if (_grammar.is_non_terminal(B)) {
@@ -445,16 +445,16 @@ void lalr_parser::build_lr0_states() {
     std::set<LR0_item> start_set = closure_lr0({{0, 0}});
     _lr0_states.push_back(start_set);
 
-    std::queue<int> worklist;
+    std::queue<uint32> worklist;
     worklist.push(0);
 
     while (false == worklist.empty()) {
-        int state_id = worklist.front();
+        uint32 state_id = worklist.front();
         worklist.pop();
 
         std::set<std::string> symbols;
         for (const auto& item : _lr0_states[state_id]) {
-            const auto& rule = rules[item.prod_id];
+            const auto& rule = rules[item.production_id];
             if (item.dot_pos < rule.rhs.size()) {
                 symbols.insert(rule.rhs[item.dot_pos]);
             }
@@ -463,24 +463,24 @@ void lalr_parser::build_lr0_states() {
         for (const auto& sym : symbols) {
             std::set<LR0_item> goto_items;
             for (const auto& item : _lr0_states[state_id]) {
-                const auto& rule = rules[item.prod_id];
+                const auto& rule = rules[item.production_id];
                 if (item.dot_pos < rule.rhs.size() && rule.rhs[item.dot_pos] == sym) {
-                    goto_items.insert({item.prod_id, item.dot_pos + 1});
+                    goto_items.insert({item.production_id, item.dot_pos + 1});
                 }
             }
             std::set<LR0_item> next_state = closure_lr0(goto_items);
 
-            int existing_state = -1;
+            uint32 existing_state = -1;
             for (size_t i = 0; i < _lr0_states.size(); ++i) {
                 if (_lr0_states[i] == next_state) {
-                    existing_state = static_cast<int>(i);
+                    existing_state = static_cast<uint32>(i);
                     break;
                 }
             }
 
-            if (existing_state == -1) {
+            if (existing_state == (uint32)-1) {
                 _lr0_states.push_back(next_state);
-                existing_state = static_cast<int>(_lr0_states.size() - 1);
+                existing_state = static_cast<uint32>(_lr0_states.size() - 1);
                 worklist.push(existing_state);
             }
 
@@ -514,7 +514,7 @@ bool lalr_parser::generate_lalr_tables() {
                 std::set<LR1_item> next_expanded = expanded;
 
                 for (const auto& item : expanded) {
-                    const auto& rule = rules[item.prod_id];
+                    const auto& rule = rules[item.production_id];
                     if (item.dot_pos < rule.rhs.size()) {
                         std::string B = rule.rhs[item.dot_pos];
                         if (_grammar.is_non_terminal(B)) {
@@ -543,11 +543,11 @@ bool lalr_parser::generate_lalr_tables() {
             lalr_states[i] = expanded;
 
             for (const auto& item : lalr_states[i]) {
-                const auto& rule = rules[item.prod_id];
+                const auto& rule = rules[item.production_id];
                 if (item.dot_pos < rule.rhs.size()) {
                     std::string sym = rule.rhs[item.dot_pos];
-                    int next_st = _lr0_goto[{static_cast<int>(i), sym}];
-                    if (lalr_states[next_st].insert({item.prod_id, item.dot_pos + 1, item.lookahead}).second) {
+                    uint32 next_st = _lr0_goto[{static_cast<uint32>(i), sym}];
+                    if (lalr_states[next_st].insert({item.production_id, item.dot_pos + 1, item.lookahead}).second) {
                         changed = true;
                     }
                 }
@@ -572,13 +572,13 @@ bool lalr_parser::generate_lalr_tables() {
 
     for (size_t i = 0; i < lalr_states.size(); ++i) {
         for (const auto& item : lalr_states[i]) {
-            const auto& rule = rules[item.prod_id];
+            const auto& rule = rules[item.production_id];
 
             if (item.dot_pos < rule.rhs.size()) {
                 std::string sym = rule.rhs[item.dot_pos];
                 if (terminals.count(sym)) {
-                    int next_st = _lr0_goto[{static_cast<int>(i), sym}];
-                    auto key = std::make_pair(static_cast<int>(i), sym);
+                    uint32 next_st = _lr0_goto[{static_cast<uint32>(i), sym}];
+                    auto key = std::make_pair(static_cast<uint32>(i), sym);
                     parser_action new_act = {parser_action_t::shift, next_st};
 
                     if (_action_table.count(key)) {
@@ -600,11 +600,11 @@ bool lalr_parser::generate_lalr_tables() {
                     }
                 }
             } else {
-                if (item.prod_id == 0) {
-                    _action_table[{static_cast<int>(i), "$"}] = {parser_action_t::accept, 0};
+                if (item.production_id == 0) {
+                    _action_table[{static_cast<uint32>(i), "$"}] = {parser_action_t::accept, 0};
                 } else {
-                    auto key = std::make_pair(static_cast<int>(i), item.lookahead);
-                    parser_action new_act = {parser_action_t::reduce, item.prod_id};
+                    auto key = std::make_pair(static_cast<uint32>(i), item.lookahead);
+                    parser_action new_act = {parser_action_t::reduce, item.production_id};
 
                     if (_action_table.count(key)) {
                         parser_action old_act = _action_table[key];

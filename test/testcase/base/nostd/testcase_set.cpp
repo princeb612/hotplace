@@ -9,76 +9,8 @@
 
 #include <hotplace/test/testcase/base/sample.hpp>
 
-/**
- * merge overlapping intervals
- * https://www.geeksforgeeks.org/merging-intervals/
- * applied parser::psearchex
- */
-void test_range_set1() {
-    _test_case.begin("set");
-    t_tagged_range_set<int, int> rs;
-    typedef t_tagged_range_set<int, int>::interval interval;
-    typedef std::vector<interval> result;
-    result res;
-    result expect;
-
-    auto func = [&](result::const_iterator iter, int where, basic_stream& bs) -> void {
-        switch (where) {
-            case seek_t::seek_begin:
-                bs << "{";
-                bs << "{" << iter->begin << "," << iter->end << "}";
-                break;
-            case seek_t::seek_move:
-                bs << ",";
-                bs << "{" << iter->begin << "," << iter->end << "}";
-                break;
-            case seek_t::seek_end:
-                bs << "}";
-                break;
-        }
-    };
-
-    auto lambda_log = [&](basic_stream& bs) -> void { for_each<result, basic_stream>(res, func, bs); };
-
-    expect = {interval(1, 9, 0)};
-    rs.clear().add(6, 8).add(1, 9).add(2, 4).add(4, 7);
-    res = rs.merge();
-    // {1, 9}
-    _logger->writeln(lambda_log);
-    _test_case.assert(res == expect, __FUNCTION__, "test #1");
-
-    expect = {interval(1, 4, 0), interval(6, 8, 0), interval(9, 10, 0)};
-    // expect = {{1,4,0},{6,8,0},{9,10,0}};
-    rs.clear().add(9, 10).add(6, 8).add(1, 3).add(2, 4).add(6, 8);  // partially duplicated
-    res = rs.merge();
-    // {1, 4}, {6, 8}, {9, 10}
-    _logger->writeln(lambda_log);
-    _test_case.assert(res == expect, __FUNCTION__, "test #2");
-
-    expect = {interval(1, 8, 4), interval(9, 10, 3)};
-    rs.clear().add(9, 10, 3).add(6, 8, 2).add(1, 3, 0).add(2, 4, 1).add(1, 8, 4);
-    res = rs.merge();
-    // {1, 8}, {9, 10}
-    _logger->writeln(lambda_log);
-    _test_case.assert(res == expect, __FUNCTION__, "test #3");
-
-    expect = {interval(1, 8, 4), interval(9, 10, 3)};
-    rs.clear().add(9, 10, 3).add(6, 8, 2).add(1, 3, 0).add(2, 4, 1).add(1, 8, 4);
-    res = rs.merge();
-    // {1, 8}, {9, 10}
-    _logger->writeln(lambda_log);
-    _test_case.assert(res == expect, __FUNCTION__, "test #4");
-
-    expect = {interval(1, 8, 4)};
-    rs.clear().add(1, 8, 4);
-    res = rs.merge();
-    // {1, 8}
-    _logger->writeln(lambda_log);
-    _test_case.assert(res == expect, __FUNCTION__, "test #5");
-}
-
-void test_range_set2() {
-    _test_case.begin("set");
+static void test_range_set_basics() {
+    _test_case.begin("rangeset");
 
     {
         using range_set = t_range_set<size_t>;
@@ -139,8 +71,8 @@ void test_range_set2() {
     }
 }
 
-void test_ack() {
-    _test_case.begin("set");
+static void test_pnk_ack() {
+    _test_case.begin("rangeset");
 
     using range_set = t_range_set<uint32>;
 
@@ -228,9 +160,8 @@ void test_ack() {
     }
 }
 
-void test_subtraction() {
-    _test_case.begin("set");
-    // [retransmission] check PKN not acknowledged
+static void test_pnk_ack_subtraction() {
+    _test_case.begin("rangeset");
 
     {
         using range_set = t_range_set<uint32>;
@@ -359,8 +290,8 @@ void dump(t_range_set<t_range_value<T>>& rs, basic_stream& dbs) {
     });
 }
 
-void test_range_set3() {
-    _test_case.begin("set");
+static void test_range_set_minmax() {
+    _test_case.begin("rangeset");
     t_range_set<t_range_value<int>> rs;
     basic_stream bs;
 
@@ -416,8 +347,8 @@ void test_range_set3() {
     }
 }
 
-void test_range_set4() {
-    _test_case.begin("set");
+static void test_range_set_open_closed() {
+    _test_case.begin("rangeset");
     {
         // [1.0..1.5)(3.5..4.0]
         using range_set = t_range_set<float>;
@@ -510,7 +441,7 @@ void test_range_set4() {
     }
 }
 
-void test_set() {
+static void test_set() {
     bool has = false;
     // t_set_runtime<int>
     {
@@ -602,12 +533,11 @@ void test_set() {
 }
 
 void testcase_set() {
-    test_range_set1();
-    test_range_set2();
-    // RFC 9000 19.3 ACK Frames
-    test_ack();
-    test_subtraction();
-    test_range_set3();
-    test_range_set4();
+    test_range_set_basics();       // add
+    test_range_set_value();        // interval
+    test_pnk_ack();                // RFC 9000 19.3 ACK Frames
+    test_pnk_ack_subtraction();    // [retransmission] check PKN not acknowledged
+    test_range_set_minmax();       // MIN, MAX
+    test_range_set_open_closed();  // open, closed
     test_set();
 }

@@ -25,9 +25,8 @@ void http_dynamic_table::pick(size_t entry, const std::string& name, std::string
     auto iter = _dynamic_reversemap.find(entry);
     if (_dynamic_reversemap.end() != iter) {
         const std::string& key = iter->second.first;
-        auto lbound = _dynamic_map.lower_bound(key);
-        auto ubound = _dynamic_map.upper_bound(key);
-        for (auto bound = lbound; bound != ubound; bound++) {
+        auto range = _dynamic_map.equal_range(key);
+        for (auto bound = range.first; bound != range.second; bound++) {
             const auto& ent = bound->second;
             if (entry == ent.second) {
                 value = ent.first;
@@ -49,12 +48,11 @@ match_result_t http_dynamic_table::match(uint32 flags, const std::string& name, 
 
     critical_section_guard guard(_lock);
 
-    auto lbound = _dynamic_map.lower_bound(name);
-    auto ubound = _dynamic_map.upper_bound(name);
     std::priority_queue<size_t> pq;
     std::priority_queue<size_t> nr;
 
-    for (auto iter = lbound; iter != ubound; iter++) {
+    auto range = _dynamic_map.equal_range(name);
+    for (auto iter = range.first; iter != range.second; iter++) {
         const auto& k = iter->first;
         const auto& v = iter->second;  // pair(value, entry)
         const auto& val = v.first;
@@ -147,10 +145,8 @@ return_t http_dynamic_table::select(uint32 flags, size_t index, std::string& nam
             if (_dynamic_reversemap.end() != riter) {
                 const auto& pne = riter->second;  // pair(name, entry size)
                 const auto& nam = pne.first;
-                auto lbound = _dynamic_map.lower_bound(nam);
-                auto ubound = _dynamic_map.upper_bound(nam);
-
-                for (auto iter = lbound; iter != ubound; iter++) {
+                auto range = _dynamic_map.equal_range(nam);
+                for (auto iter = range.first; iter != range.second; iter++) {
                     const auto& pve = iter->second;  // pair(value, entry)
                     const auto& val = pve.first;
                     const auto& ent = pve.second;
@@ -250,10 +246,8 @@ return_t http_dynamic_table::evict() {
 
             _tablesize -= entrysize;
 
-            auto lbound = _dynamic_map.lower_bound(name);
-            auto ubound = _dynamic_map.upper_bound(name);
-
-            for (auto iter = lbound; iter != ubound; iter++) {
+            auto range = _dynamic_map.equal_range(name);
+            for (auto iter = range.first; iter != range.second; iter++) {
                 const auto& v = iter->second;  // pair(value, entry)
 #if defined DEBUG
                 const auto& val = v.first;

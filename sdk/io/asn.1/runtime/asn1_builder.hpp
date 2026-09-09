@@ -10,10 +10,12 @@
  * see README.md
  */
 
-#ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_ASN1SEMANTICBUILDER__
-#define __HOTPLACE_SDK_IO_ASN1_BASIC_ASN1SEMANTICBUILDER__
+#ifndef __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1BUILDER__
+#define __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1BUILDER__
 
 #include <hotplace/sdk/io/asn.1/basic/types.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/types.hpp>
+#include <hotplace/sdk/io/parser/types.hpp>
 
 namespace hotplace {
 namespace io {
@@ -33,11 +35,15 @@ class asn1_builder {
     asn1_builder();
 
     static asn1_object* build(uint8 ident, uint64 tag, uint32 flags = 0);
+    static asn1_object* buildtag(uint8 ident, uint64 tag, uint8 mode = asn1_automatic);
+    static asn1_object* buildtag(const std::string& type, uint64 tag, uint8 mode = asn1_automatic);
 
     static asn1_object* build(asn1_entity_t entity, std::function<void(asn1_object*)> f = nullptr);
     static asn1_object* build(const std::string& name, asn1_entity_t entity, std::function<void(asn1_object*)> f = nullptr);
 
     static asn1_object* build(asn1_object* object, std::function<void(asn1_object*)> f = nullptr);
+
+    static return_t build(const parse_tree* pt, asn1_object** object);
 };
 
 }  // namespace io

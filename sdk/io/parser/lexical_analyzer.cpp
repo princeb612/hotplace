@@ -6,6 +6,9 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2009.11.23   Soo Han, Kim        created (codename.merlin)
+ * 2024.06.06   Soo Han, Kim        reboot (codename.hotplace)
+ * 2026.09.06   Soo Han, Kim        optimize the tokenization loop step by pre-scanning and batch processing the chunk_size upon entering alpha/number tokens.
  *
  * comments
  *
@@ -44,8 +47,8 @@ void lexical_analyzer::prepare() {
             get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1);
 
             auto resource = parser_resource::get_instance();
-            resource->for_each(parser_resource_type_t::token_type_symbol, [this](uint32 token, const std::string& name) -> void { _token_dbg.emplace(token, name); });
-            resource->for_each(parser_resource_type_t::token_type_basic, [this](uint32 token, const std::string& name) -> void { add_token(name, token); });
+            resource->for_each(resource_type_t::token_type_symbol, [this](uint32 token, const std::string& name) -> void { _token_dbg.emplace(token, name); });
+            resource->for_each(resource_type_t::token_type_basic, [this](uint32 token, const std::string& name) -> void { add_token(name, token); });
 
             _load = 1;
         }

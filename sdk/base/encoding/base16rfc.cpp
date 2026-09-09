@@ -89,7 +89,7 @@ std::string base16_encode_rfc(const std::string& source) {
         // pattern 3 00 01 02 03 ...
         else {
             // single phase
-            for (auto e : inpart) {
+            for (const auto& e : inpart) {
                 if (('9' >= e && e >= '0') || ('f' >= e && e >= 'a') || ('F' >= e && e >= 'A') || ('x' == e)) {
                     outpart.push_back(e);
                 }
@@ -166,7 +166,7 @@ binary_t base16_decode_rfc(const std::string& source) {
                 if (std::string::npos != inpart.find("0x", 0)) inpart.erase(0, 2);
                 // single phase
                 std::string temp;
-                for (auto e : inpart) {
+                for (const auto& e : inpart) {
                     if (('9' >= e && e >= '0') || ('F' >= e && e >= 'A') || ('f' >= e && e >= 'a')) {
                         temp.push_back(e);
                     }

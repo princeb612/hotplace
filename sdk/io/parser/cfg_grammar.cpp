@@ -23,14 +23,15 @@ namespace io {
 cfg_grammar::cfg_grammar() {}
 
 cfg_grammar& cfg_grammar::add_production(const std::string& lhs, const std::vector<std::string>& rhs) {
-    int id = _productions.size();
+    uint32 id = _productions.size();  // uint32 production_id
     _productions.push_back({id, lhs, rhs});
     _non_terminals.insert(lhs);
 #if defined DEBUG
     if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
         trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
             dbs.printf("[%i] lhs:%s rhs:", id, lhs.c_str());
-            print<std::vector<std::string>, basic_stream>(rhs, dbs, "{", ",", "}");
+            print_style_t style("{", ",", "}");
+            print(rhs, dbs, style);
             dbs << "\n";
         });
     }

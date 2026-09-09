@@ -60,6 +60,10 @@ bool asn1_tag::is_explicit() const {
     return (asn1_explicit == mode);
 }
 
+void asn1_tag::as_implicit() { _tag_mode = asn1_implicit; }
+
+void asn1_tag::as_explicit() { _tag_mode = asn1_explicit; }
+
 void asn1_tag::represent(stream_t* s, const asn1_value* value) const {
     if (s) {
         if (get_class() & asn1_class_mask) {
@@ -76,7 +80,7 @@ void asn1_tag::represent(stream_t* s, const asn1_value* value) const {
             s->printf("]");
 
             if (get_tag_type()) {
-                s->printf(" %s", resource->get_tagtype_name(get_tag_type()).c_str());
+                s->printf(" %s", resource->nameof_mode(get_tag_type()).c_str());
             }
         }
     }

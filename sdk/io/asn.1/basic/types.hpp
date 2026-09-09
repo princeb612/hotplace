@@ -92,6 +92,7 @@ static inline bool asn1_is_primitive(uint8 c) { return asn1_tag_primitive == (c 
 static inline bool asn1_is_constructed(uint8 c) { return asn1_tag_constructed == (c & asn1_tag_mask); }
 
 enum asn1_entity_t {
+    asn1_entity_unknown = 0,
     asn1_entity_boolean = asn1_tag_boolean,
     asn1_entity_integer = asn1_tag_integer,
     asn1_entity_bitstring = asn1_tag_bitstring,

@@ -86,7 +86,7 @@ void http_resource::for_each_h2_frame_flag_names(uint8 type, uint8 flags, std::f
         switch (type) {
             case h2_frame_t::h2_frame_settings:
             case h2_frame_t::h2_frame_ping:
-                for (auto item : _h2_frame_flags2) {
+                for (const auto& item : _h2_frame_flags2) {
                     uint8 flag = item.first;
                     if (flags & flag) {
                         func(flag, item.second);
@@ -94,7 +94,7 @@ void http_resource::for_each_h2_frame_flag_names(uint8 type, uint8 flags, std::f
                 }
                 break;
             default:
-                for (auto item : _h2_frame_flags) {
+                for (const auto& item : _h2_frame_flags) {
                     uint8 flag = item.first;
                     if (flags & flag) {
                         func(flag, item.second);

@@ -34,44 +34,37 @@ namespace io {
  *  keyword : non-terminal set, terminal set, production set, start symbol
  */
 
-enum class parser_action_t {
-    shift,
-    reduce,
-    accept,
-    error,  // conflict
-};
-
 struct parser_action {
     parser_action_t type;
-    int target;  // next state on shift, rule id on reduce
+    uint32 target;  // next state on shift, rule id on reduce
 
-    parser_action(parser_action_t a = parser_action_t::error, int t = -1) : type(a), target(t) {}
+    parser_action(parser_action_t a = parser_action_t::error, uint32 t = -1) : type(a), target(t) {}
 };
 
 struct parser_production {
-    int id;
+    uint32 id;
     std::string lhs;
     std::vector<std::string> rhs;
 };
 
 struct LR0_item {
-    int prod_id;
+    uint32 production_id;
     size_t dot_pos;
 
     bool operator<(const LR0_item& other) const {
-        if (prod_id != other.prod_id) return prod_id < other.prod_id;
+        if (production_id != other.production_id) return production_id < other.production_id;
         return dot_pos < other.dot_pos;
     }
-    bool operator==(const LR0_item& other) const { return prod_id == other.prod_id && dot_pos == other.dot_pos; }
+    bool operator==(const LR0_item& other) const { return production_id == other.production_id && dot_pos == other.dot_pos; }
 };
 
 struct LR1_item {
-    int prod_id;
+    uint32 production_id;
     size_t dot_pos;
     std::string lookahead;
 
     bool operator<(const LR1_item& other) const {
-        if (prod_id != other.prod_id) return prod_id < other.prod_id;
+        if (production_id != other.production_id) return production_id < other.production_id;
         if (dot_pos != other.dot_pos) return dot_pos < other.dot_pos;
         return lookahead < other.lookahead;
     }

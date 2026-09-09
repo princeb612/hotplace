@@ -85,11 +85,11 @@ class lalr_parser {
     std::map<std::string, std::set<std::string>> _first_sets;
     std::map<std::string, std::set<std::string>> _follow_sets;
     std::vector<std::set<LR0_item>> _lr0_states;
-    std::map<std::pair<int, std::string>, int> _lr0_goto;
+    std::map<std::pair<uint32, std::string>, uint32> _lr0_goto;
 
     // essential LALR parsing tables
-    std::map<std::pair<int, std::string>, parser_action> _action_table;
-    std::map<std::pair<int, std::string>, int> _goto_table;
+    std::map<std::pair<uint32, std::string>, parser_action> _action_table;
+    std::map<std::pair<uint32, std::string>, uint32> _goto_table;
 };
 
 }  // namespace io

@@ -46,7 +46,7 @@ void asn1_any::represent(stream_t* s, const asn1_value* value) const {
     switch (type) {
         case asn1_default:
         case asn1_optional: {
-            s->printf(" %s", resource->get_tagtype_name(type).c_str());
+            s->printf(" %s", resource->nameof_mode(type).c_str());
         } break;
         default: {
         } break;

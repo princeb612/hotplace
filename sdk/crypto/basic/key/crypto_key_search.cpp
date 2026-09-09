@@ -555,10 +555,8 @@ const EVP_PKEY* crypto_key::find(const char* kid, crypto_use_t use, bool up_ref)
         if (kid) {
             k = kid;
 
-            auto lower_bound = _key_map.lower_bound(k);
-            auto upper_bound = _key_map.upper_bound(k);
-
-            for (auto iter = lower_bound; iter != upper_bound; iter++) {
+            auto range = _key_map.equal_range(k);
+            for (auto iter = range.first; iter != range.second; iter++) {
                 const auto& item = iter->second;
                 bool test = find_discriminant(item, kid, nullptr, crypto_kty_t::kty_unknown, crypto_kty_t::kty_unknown, use, 0);  // using map, so don't care SEARCH_KID
                 if (test) {
@@ -588,9 +586,6 @@ const EVP_PKEY* crypto_key::find(const char* kid, crypto_kty_t kt, crypto_use_t 
         if (kid) {
             k = kid;
 
-            auto lower_bound = _key_map.lower_bound(k);
-            auto upper_bound = _key_map.upper_bound(k);
-
             crypto_kty_t alt = crypto_kty_t::kty_unknown;
             if (crypto_kty_t::kty_ec == kt) {
                 alt = crypto_kty_t::kty_okp;
@@ -601,7 +596,8 @@ const EVP_PKEY* crypto_key::find(const char* kid, crypto_kty_t kt, crypto_use_t 
                 flags |= SEARCH_KTY;
             }
 
-            for (auto iter = lower_bound; iter != upper_bound; iter++) {
+            auto range = _key_map.equal_range(k);
+            for (auto iter = range.first; iter != range.second; iter++) {
                 const auto& item = iter->second;
                 bool test = find_discriminant(item, kid, nullptr, kt, alt, use, flags);
                 if (test) {
@@ -632,10 +628,8 @@ const EVP_PKEY* crypto_key::find_nid(const char* kid, uint32 nid, crypto_use_t u
         if (kid) {
             k = kid;
 
-            auto lower_bound = _key_map.lower_bound(k);
-            auto upper_bound = _key_map.upper_bound(k);
-
-            for (auto iter = lower_bound; iter != upper_bound; iter++) {
+            auto range = _key_map.equal_range(k);
+            for (auto iter = range.first; iter != range.second; iter++) {
                 const auto& item = iter->second;
                 auto pkey = item.get_pkey();
                 uint32 id = 0;
@@ -668,10 +662,8 @@ const EVP_PKEY* crypto_key::find(const char* kid, tls_group_t group, crypto_use_
         if (kid) {
             k = kid;
 
-            auto lower_bound = _key_map.lower_bound(k);
-            auto upper_bound = _key_map.upper_bound(k);
-
-            for (auto iter = lower_bound; iter != upper_bound; iter++) {
+            auto range = _key_map.equal_range(k);
+            for (auto iter = range.first; iter != range.second; iter++) {
                 const auto& item = iter->second;
                 bool test = find_discriminant<tls_group_t>(item, kid, group, kty_unknown, kty_unknown, use, SEARCH_ALG);
                 if (test) {
@@ -717,10 +709,8 @@ const EVP_PKEY* crypto_key::find(const char* kid, jwa_t alg, crypto_use_t use, b
             crypto_kty_t kt = alg_info->kty;
             crypto_kty_t alt = alg_info->alt;
 
-            auto lower_bound = _key_map.lower_bound(k);
-            auto upper_bound = _key_map.upper_bound(k);
-
-            for (auto iter = lower_bound; iter != upper_bound; iter++) {
+            auto range = _key_map.equal_range(k);
+            for (auto iter = range.first; iter != range.second; iter++) {
                 const auto& item = iter->second;
                 bool test = find_discriminant(item, kid, alg_str, kt, alt, use, SEARCH_ALG);
                 if (test) {
@@ -763,10 +753,8 @@ const EVP_PKEY* crypto_key::find(const char* kid, signature_t alg, crypto_use_t 
 
             crypto_kty_t kt = typeof_kty(alg_info);
 
-            auto lower_bound = _key_map.lower_bound(k);
-            auto upper_bound = _key_map.upper_bound(k);
-
-            for (auto iter = lower_bound; iter != upper_bound; iter++) {
+            auto range = _key_map.equal_range(k);
+            for (auto iter = range.first; iter != range.second; iter++) {
                 const auto& item = iter->second;
                 bool test = find_discriminant(item, kid, alg_str, kt, crypto_kty_t::kty_unknown, use, SEARCH_ALG);
                 if (test) {
@@ -809,10 +797,8 @@ const EVP_PKEY* crypto_key::find(const char* kid, jws_t alg, crypto_use_t use, b
 
             crypto_kty_t kt = typeof_kty(alg_info);
 
-            auto lower_bound = _key_map.lower_bound(k);
-            auto upper_bound = _key_map.upper_bound(k);
-
-            for (auto iter = lower_bound; iter != upper_bound; iter++) {
+            auto range = _key_map.equal_range(k);
+            for (auto iter = range.first; iter != range.second; iter++) {
                 const auto& item = iter->second;
                 bool test = find_discriminant(item, kid, alg_str, kt, crypto_kty_t::kty_unknown, use, SEARCH_ALG);
                 if (test) {
@@ -870,10 +856,8 @@ const X509* crypto_key::find_x509(const char* kid, crypto_kty_t kty, crypto_use_
                 flags |= SEARCH_KTY;
             }
 
-            auto lower_bound = _key_map.lower_bound(k);
-            auto upper_bound = _key_map.upper_bound(k);
-
-            for (auto iter = lower_bound; iter != upper_bound; iter++) {
+            auto range = _key_map.equal_range(k);
+            for (auto iter = range.first; iter != range.second; iter++) {
                 const auto& item = iter->second;
                 bool test = find_discriminant(item, kid, nullptr, kty, crypto_kty_t::kty_unknown, use, flags);
                 if (test) {
@@ -925,10 +909,8 @@ return_t crypto_key::reference(crypto_key* skeys, crypto_kty_t kty, const char* 
 
         critical_section_guard guard(_lock);
 
-        auto lower_bound = skeys->_key_map.lower_bound(sname);
-        auto upper_bound = skeys->_key_map.upper_bound(sname);
-
-        for (auto iter = lower_bound; iter != upper_bound; iter++) {
+        auto range = _key_map.equal_range(sname);
+        for (auto iter = range.first; iter != range.second; iter++) {
             const auto& item = iter->second;
             bool test = find_discriminant(item, sname, nullptr, kty, crypto_kty_t::kty_unknown, use_any, SEARCH_KID | SEARCH_KTY);
             if (test) {

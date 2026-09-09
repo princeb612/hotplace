@@ -36,24 +36,24 @@ return_t escape_url(const char* url, stream_t* s, uint32 flags) {
         constexpr char mark[] = "-_.!~*'()";       // RFC 2396 2.3. Unreserved Characters
         constexpr char delims[] = "<>#%%\"";       // RFC 2396 2.4.3. Excluded US-ASCII Characters
 
-        for (auto elem : lowalpha) {
+        for (const auto& elem : lowalpha) {
             charmap.insert(elem);
         }
-        for (auto elem : upalpha) {
+        for (const auto& elem : upalpha) {
             charmap.insert(elem);
         }
-        for (auto elem : digit) {
-            charmap.insert(elem);
-        }
-
-        for (auto elem : reserved) {
-            charmap.insert(elem);
-        }
-        for (auto elem : mark) {
+        for (const auto& elem : digit) {
             charmap.insert(elem);
         }
 
-        for (auto elem : delims) {
+        for (const auto& elem : reserved) {
+            charmap.insert(elem);
+        }
+        for (const auto& elem : mark) {
+            charmap.insert(elem);
+        }
+
+        for (const auto& elem : delims) {
             charmap.insert(elem);
         }
 

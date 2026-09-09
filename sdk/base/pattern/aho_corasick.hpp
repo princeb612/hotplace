@@ -110,11 +110,11 @@ class t_aho_corasick : public t_aho_corasick_t<BT, T> {
         trienode() : failure(nullptr), flag(0), last_visited(0) {}
         ~trienode() { clear(); }
         void clear() {
-            for (auto item : children) {
+            for (auto& item : children) {
                 auto child = item.second;
                 delete child;
             }
-            for (auto item : group_children) {
+            for (auto& item : group_children) {
                 auto child = item.second;
                 delete child;
             }
@@ -252,7 +252,7 @@ class t_aho_corasick : public t_aho_corasick_t<BT, T> {
                 }
 
                 // merge output lists (pattern ids)
-                for (auto item : child->failure->output) {
+                for (const auto& item : child->failure->output) {
                     child->output.insert(item);  // cf. std::set merge c++17
                 }
             }

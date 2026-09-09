@@ -62,7 +62,7 @@ return_t tls_extension_psk_key_exchange_modes::do_read_body(tls_direction_t dir,
 
                 dbs.println("   > %s", constexpr_modes);
                 int i = 0;
-                for (auto m : _modes) {
+                for (const auto& m : _modes) {
                     dbs.println("     [%i] %i %s", i++, m, tlsadvisor->nameof_psk_key_exchange_mode(m).c_str());
                 }
             });
@@ -78,7 +78,7 @@ return_t tls_extension_psk_key_exchange_modes::do_write_body(tls_direction_t dir
     uint8 cbsize_modes = 0;
     binary_t bin_modes;
     {
-        for (auto m : _modes) {
+        for (const auto& m : _modes) {
             binary_append(bin_modes, m);
         }
         cbsize_modes = t_narrow_cast(bin_modes.size());

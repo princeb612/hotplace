@@ -136,7 +136,7 @@ class huffman_coding {
      */
     template <typename F>
     void exports(F fn) const {
-        for (auto item : _codetable) {
+        for (const auto& item : _codetable) {
             fn(item.first, item.second.c_str());
         }
     }
@@ -291,7 +291,7 @@ class huffman_coding {
             return ret;
         }
 
-        for (char e : que) {
+        for (const auto& e : que) {
             if ('1' != e) {
                 if (0 == (huffman_coding_flags::manual_decode & flags)) {
                     return errorcode_t::bad_data;

@@ -11,7 +11,6 @@
  *
  */
 
-#include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_ast_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
 

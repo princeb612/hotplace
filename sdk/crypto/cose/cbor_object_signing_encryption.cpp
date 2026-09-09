@@ -376,9 +376,8 @@ return_t cbor_object_signing_encryption::preprocess_skeleton(cose_context_t* han
         }
 
         if (crypt_category_t::crypt == category || crypt_category_t::mac == category) {
-            auto lower_bound = algmap.lower_bound(crypt_category_t::keydistribution);
-            auto upper_bound = algmap.upper_bound(crypt_category_t::keydistribution);
-            for (algmap_iter = lower_bound; algmap_iter != upper_bound; algmap_iter++) {
+            auto range = algmap.equal_range(crypt_category_t::keydistribution);
+            for (algmap_iter = range.first; algmap_iter != range.second; algmap_iter++) {
                 cose_alg_t alg = algmap_iter->second;
                 std::string kid;
                 key->select(kid, alg);

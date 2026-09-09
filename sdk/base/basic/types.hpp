@@ -23,6 +23,14 @@
 
 namespace hotplace {
 
+// for_each resources
+enum class resource_type_t : uint32 {
+    token_type_symbol = 0,
+    token_type_basic = 1,
+    token_type_asn1 = 2,
+    // ...
+};
+
 class http_huffman_coding;
 class huffman_coding;
 class valist;

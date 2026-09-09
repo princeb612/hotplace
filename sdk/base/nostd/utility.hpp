@@ -305,107 +305,234 @@ void for_each(container_t& c, typename std::function<void(typename container_t::
     }
 }
 
+struct print_style_t {
+    std::string prologue;
+    std::string delimiter;
+    std::string epilogue;
+    size_t indent;
+    size_t step;
+
+    print_style_t(const std::string& p = "[", const std::string& d = ", ", const std::string& e = "]", size_t i = 0, size_t s = 0)
+        : prologue(p), delimiter(d), epilogue(e), indent(i), step(s) {}
+
+    print_style_t(size_t i, size_t s = 0) : prologue("["), delimiter(", "), epilogue("]"), indent(i), step(s) {}
+
+    print_style_t next(size_t default_step = 1) const {
+        size_t next_step = (0 == step) ? default_step : step;
+        return print_style_t(prologue, delimiter, epilogue, indent + next_step, next_step);
+    }
+
+    // forming nested levels with custom brackets/separators
+    print_style_t next(const std::string& p, const std::string& d, const std::string& e, size_t default_step = 1) const {
+        size_t next_step = (0 == step) ? default_step : step;
+        return print_style_t(p, d, e, indent + next_step, next_step);
+    }
+
+    size_t get_parent_indent() const { return (indent >= step) ? (indent - step) : 0; }
+};
+
 /**
  * @brief   util
  * @sample
+ *          // case #1 - print list (default style)
  *          std::list<int> result = {1, 2, 3};
  *          basic_stream bs;
- *          print<std::list<int>, basic_stream>(result, bs);
+ *          print(result, bs);
  *          std::cout << bs << std::endl; // [1, 2, 3]
  *
+ *          // case #2 - print set (default style)
  *          std::set<int> result = {2, 3, 4};
  *          basic_stream bs;
- *          print<std::set<int>, basic_stream>(result, bs);
+ *          print(result, bs);
  *          std::cout << bs << std::endl; // [2, 3, 4]
- */
-template <typename container_t, typename stream_type>
-void print(const container_t& c, stream_type& s, const std::string& mark_prologue = "[", const std::string& mark_delimiter = ", ",
-           const std::string& mark_epilogue = "]") {
-    auto lambda = [&s, &mark_prologue, &mark_delimiter, &mark_epilogue](typename container_t::const_iterator iter, int where) -> void {
-        switch (where) {
-            case seek_t::seek_begin:
-                s << mark_prologue << *iter;
-                break;
-            case seek_t::seek_move:
-                s << mark_delimiter << *iter;
-                break;
-            case seek_t::seek_end:
-                s << mark_epilogue;
-                break;
-        }
-    };
-    for_each_const<container_t>(c, lambda);
-}
-
-template <typename container_t, typename stream_type>
-void print(const container_t& c, stream_type& s, std::function<void(typename container_t::const_iterator, stream_type&)> f, const std::string& mark_prologue = "[",
-           const std::string& mark_delimiter = ", ", const std::string& mark_epilogue = "]") {
-    auto lambda = [&s, &f, &mark_prologue, &mark_delimiter, &mark_epilogue](typename container_t::const_iterator iter, int where) -> void {
-        switch (where) {
-            case seek_t::seek_begin:
-                s << mark_prologue << "{";
-                f(iter, s);
-                s << "}";
-                break;
-            case seek_t::seek_move:
-                s << mark_delimiter << "{";
-                f(iter, s);
-                s << "}";
-                break;
-            case seek_t::seek_end:
-                s << mark_epilogue;
-                break;
-        }
-    };
-    for_each_const<container_t>(c, lambda);
-}
-
-template <typename container_t, typename stream_type>
-void print_pair(const container_t& c, stream_type& s, const std::string& mark_prologue = "[", const std::string& mark_delimiter = ", ",
-                const std::string& mark_epilogue = "]") {
-    auto lambda = [&s, &mark_prologue, &mark_delimiter, &mark_epilogue](typename container_t::const_iterator iter, int where) -> void {
-        switch (where) {
-            case seek_t::seek_begin:
-                s << mark_prologue << "{" << iter->first << "," << iter->second << "}";
-                break;
-            case seek_t::seek_move:
-                s << mark_delimiter << "{" << iter->first << "," << iter->second << "}";
-                break;
-            case seek_t::seek_end:
-                s << mark_epilogue;
-                break;
-        }
-    };
-    for_each_const<container_t>(c, lambda);
-}
-
-/**
- * @brief   util
- * @sample
+ *
+ *          // case #3 - print map (default style)
  *          typedef std::unordered_map<BT, trienode*> children_t;
  *          auto handler = [&](typename children_t::const_iterator iter, basic_stream& bs) -> void {
  *              bs.printf("%c, %p", iter->first, iter->second);
  *          };
- *          print_pair<children_t, basic_stream>(node->children, bs, handler);
+ *          print_pair(node->children, bs, handler);
  *          _logger->writeln("children : %s", bs.c_str());
+ *
+ *          // declare style (indentation 2)
+ *          print_style_t style(2);
+ *
+ *          // case #4 - indentation style
+ *          std::map<std::pair<int, std::string>, parser_action> action_table;
+ *          // insert into action_table and then ...
+ *          auto lambda_action = [](typename std::map<std::pair<int, std::string>, parser_action>::const_iterator it, basic_stream& dbs) -> void {
+ *              dbs << "(" << it->first.first << ":" << it->first.second << ") -> ";
+ *              auto action = it->second.type;
+ *              auto target = it->second.target;
+ *              if (parser_action_t::shift == action)
+ *                  dbs << "shift";
+ *              else if (parser_action_t::reduce == action)
+ *                  dbs << "reduce";
+ *              else if (parser_action_t::accept == action)
+ *                  dbs << "accept";
+ *              else if (parser_action_t::error == action)
+ *                  dbs << "error";
+ *              dbs << " target " << target;
+ *          };
+ *          dbs << "ACTION\n";
+ *          print_pair(action_table, dbs, lambda_action, style);
+ *
+ *          // case #5 - nested indentation
+ *          std::vector<std::set<LR0_item>> lr0_states;
+ *          // insert into lr0_states and then ...
+ *          auto lambda_lr0 = [&style](typename std::vector<std::set<LR0_item>>::const_iterator it, basic_stream& dbs) -> void {
+ *              auto lambda = [](typename std::set<LR0_item>::const_iterator it, basic_stream& dbs) -> void {
+ *                  const auto& item = *it;
+ *                  dbs << "prod_id " << item.prod_id << " dot_pos " << item.dot_pos;
+ *              };
+ *              print(*it, dbs, lambda, style.next(2));  // nested indent += 2
+ *          };
+ *          dbs << "LR0 STATE\n";
+ *          print(lr0_states, dbs, lambda_lr0, style);
+ *
  */
 template <typename container_t, typename stream_type>
-void print_pair(const container_t& c, stream_type& s, std::function<void(typename container_t::const_iterator, stream_type&)> f, const std::string& mark_prologue = "[",
-                const std::string& mark_delimiter = ", ", const std::string& mark_epilogue = "]") {
-    auto lambda = [&s, &f, &mark_prologue, &mark_delimiter, &mark_epilogue](typename container_t::const_iterator iter, int where) -> void {
+void print(const container_t& c, stream_type& s, const print_style_t& style = print_style_t()) {
+    auto lambda = [&s, &style](typename container_t::const_iterator iter, int where) -> void {
+        const char* endl_str = (style.indent > 0) ? "\n" : "";
+
         switch (where) {
             case seek_t::seek_begin:
-                s << mark_prologue << "{";
+                s << style.prologue << endl_str;
+                if (style.indent > 0) {
+                    s.fill(style.indent, ' ');
+                }
+                s << *iter;
+                break;
+            case seek_t::seek_move:
+                s << style.delimiter << endl_str;
+                if (style.indent > 0) {
+                    s.fill(style.indent, ' ');
+                }
+                s << *iter;
+                break;
+            case seek_t::seek_end:
+                s << endl_str;
+                if (style.indent > 0) {
+                    auto parent_indent = style.get_parent_indent();
+                    if (parent_indent > 0) {
+                        s.fill(parent_indent, ' ');
+                    }
+                }
+                s << style.epilogue;
+                break;
+        }
+    };
+    for_each_const<container_t>(c, lambda);
+}
+
+template <typename container_t, typename stream_type, typename functor_t>
+void print(const container_t& c, stream_type& s, functor_t f, const print_style_t& style = print_style_t()) {
+    auto lambda = [&s, &f, &style](typename container_t::const_iterator iter, int where) -> void {
+        const char* endl_str = (style.indent > 0) ? "\n" : "";
+
+        switch (where) {
+            case seek_t::seek_begin:
+                s << style.prologue << endl_str;
+                if (style.indent > 0) {
+                    s.fill(style.indent, ' ');
+                }
+                s << "{";
                 f(iter, s);
                 s << "}";
                 break;
             case seek_t::seek_move:
-                s << mark_delimiter << "{";
+                s << style.delimiter << endl_str;
+                if (style.indent > 0) {
+                    s.fill(style.indent, ' ');
+                }
+                s << "{";
                 f(iter, s);
                 s << "}";
                 break;
             case seek_t::seek_end:
-                s << mark_epilogue;
+                s << endl_str;
+                if (style.indent > 0) {
+                    auto parent_indent = style.get_parent_indent();
+                    if (parent_indent > 0) {
+                        s.fill(parent_indent, ' ');
+                    }
+                }
+                s << style.epilogue;
+                break;
+        }
+    };
+    for_each_const<container_t>(c, lambda);
+}
+
+template <typename container_t, typename stream_type>
+void print_pair(const container_t& c, stream_type& s, const print_style_t& style = print_style_t()) {
+    auto lambda = [&s, &style](typename container_t::const_iterator iter, int where) -> void {
+        const char* endl_str = (style.indent > 0) ? "\n" : "";
+
+        switch (where) {
+            case seek_t::seek_begin:
+                s << style.prologue << endl_str;
+                if (style.indent > 0) {
+                    s.fill(style.indent, ' ');
+                }
+                s << "{" << iter->first << "," << iter->second << "}";
+                break;
+            case seek_t::seek_move:
+                s << style.delimiter << endl_str;
+                if (style.indent > 0) {
+                    s.fill(style.indent, ' ');
+                }
+                s << "{" << iter->first << "," << iter->second << "}";
+                break;
+            case seek_t::seek_end:
+                s << endl_str;
+                if (style.indent > 0) {
+                    auto parent_indent = style.get_parent_indent();
+                    if (parent_indent > 0) {
+                        s.fill(parent_indent, ' ');
+                    }
+                }
+                s << style.epilogue;
+                break;
+        }
+    };
+    for_each_const<container_t>(c, lambda);
+}
+
+template <typename container_t, typename stream_type, typename functor_t>
+void print_pair(const container_t& c, stream_type& s, functor_t f, const print_style_t& style = print_style_t()) {
+    auto lambda = [&s, &f, &style](typename container_t::const_iterator iter, int where) -> void {
+        const char* endl_str = (style.indent > 0) ? "\n" : "";
+
+        switch (where) {
+            case seek_t::seek_begin:
+                s << style.prologue << endl_str;
+                if (style.indent > 0) {
+                    s.fill(style.indent, ' ');
+                }
+                s << "{";
+                f(iter, s);
+                s << "}";
+                break;
+            case seek_t::seek_move:
+                s << style.delimiter << endl_str;
+                if (style.indent > 0) {
+                    s.fill(style.indent, ' ');
+                }
+                s << "{";
+                f(iter, s);
+                s << "}";
+                break;
+            case seek_t::seek_end:
+                s << endl_str;
+                if (style.indent > 0) {
+                    auto parent_indent = style.get_parent_indent();
+                    if (parent_indent > 0) {
+                        s.fill(parent_indent, ' ');
+                    }
+                }
+                s << style.epilogue;
                 break;
         }
     };

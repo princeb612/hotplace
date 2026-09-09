@@ -16,15 +16,12 @@
 #include <hotplace/sdk/base/nostd/tree.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/io/parser/cfg_grammar.hpp>
+#include <hotplace/sdk/io/parser/types.hpp>
 #include <memory>
 #include <stack>
 
 namespace hotplace {
 namespace io {
-
-struct parse_treenode;
-class parse_tree;
-class parse_tree_visitor;
 
 struct parse_treenode {
     std::string symbol;
@@ -38,6 +35,9 @@ struct parse_treenode {
     parse_treenode& operator=(const parse_treenode&) = delete;
 
     bool is_terminal() const;
+    // if 0 == sizeof_rhs then is_terminal == true
+    // if 0 != sizeof_rhs then is_nonterminal == true
+    size_t sizeof_rhs() const;
 
     void print(basic_stream& bs, int depth = 0) const;
 };

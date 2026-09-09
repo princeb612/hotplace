@@ -47,6 +47,7 @@ int main(int argc, char** argv) {
         builder.set_timeformat("[Y-M-D h:m:s.f]");
     }
     _logger.make_share(builder.build());
+    _logger->setcolor(bold, cyan);
 
     if (option.debug) {
         auto lambda_tracedebug = [&](trace_category_t category, trace_event_t event, stream_t* s) -> void { _logger->write(s); };

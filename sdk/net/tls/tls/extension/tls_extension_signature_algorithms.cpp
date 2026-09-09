@@ -40,7 +40,7 @@ return_t tls_extension_signature_algorithms::do_postprocess(tls_direction_t dir)
     auto& protection = session->get_tls_protection();
     auto& protection_context = protection.get_protection_context();
     protection_context.clear_signature_algorithms();
-    for (auto alg : _algorithms) {
+    for (const auto& alg : _algorithms) {
         protection_context.add_signature_algorithm(alg);
     }
     return ret;
@@ -76,7 +76,7 @@ return_t tls_extension_signature_algorithms::do_read_body(tls_direction_t dir, c
 
                 dbs.println("   > %s (%i ent.)", constexpr_algorithms, count);
                 int i = 0;
-                for (auto alg : _algorithms) {
+                for (const auto& alg : _algorithms) {
                     std::string name;
                     auto hint = advisor->hintof_sigscheme(alg);
                     if (hint) {
@@ -98,7 +98,7 @@ return_t tls_extension_signature_algorithms::do_write_body(tls_direction_t dir, 
         uint16 cbsize_algorithms = 0;
         binary_t bin_algorithms;
         {
-            for (auto alg : _algorithms) {
+            for (const auto& alg : _algorithms) {
                 binary_append(bin_algorithms, alg, hton16);
             }
             cbsize_algorithms = t_narrow_cast(bin_algorithms.size());

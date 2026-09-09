@@ -141,12 +141,24 @@ enum token_t : uint32 {
 
 token_t ascii2token(byte_t c);
 
+using native_token_t = std::underlying_type<token_t>::type;
+
+enum class parser_action_t {
+    shift,
+    reduce,
+    accept,
+    error,  // conflict
+};
+
+struct parse_treenode;
+
 class cfg_grammar;
 class lalr_parser;
 class lexical_analyzer;
 class lexical_context;
 class lexical_token;
 class parse_tree;
+class parse_tree_visitor;
 class parse_resource;
 
 }  // namespace io

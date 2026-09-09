@@ -306,7 +306,7 @@ void huffman_coding::dump() const {
 
 void huffman_coding::build_cache(uint8 sym, const std::string code) {
     uint32 bit_code = 0;
-    for (char ch : code) {
+    for (const auto& ch : code) {
         bit_code <<= 1;
         if (ch == '1') bit_code |= 1;
     }

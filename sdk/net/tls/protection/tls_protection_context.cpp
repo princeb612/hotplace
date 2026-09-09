@@ -75,7 +75,7 @@ void protection_context::clear_keyshare_groups() {
 
 void protection_context::for_each_cipher_suites(std::function<void(uint16, bool*)> fn) const {
     bool cont = false;
-    for (auto item : _cipher_suites) {
+    for (const auto& item : _cipher_suites) {
         fn(item, &cont);
         if (cont) {
             break;
@@ -85,7 +85,7 @@ void protection_context::for_each_cipher_suites(std::function<void(uint16, bool*
 
 void protection_context::for_each_signature_algorithms(std::function<void(tls_sigscheme_t, bool*)> fn) const {
     bool cont = false;
-    for (auto item : _signature_algorithms) {
+    for (const auto& item : _signature_algorithms) {
         fn(item, &cont);
         if (cont) {
             break;
@@ -95,7 +95,7 @@ void protection_context::for_each_signature_algorithms(std::function<void(tls_si
 
 void protection_context::for_each_supported_groups(std::function<void(tls_group_t, bool*)> fn) const {
     bool cont = false;
-    for (auto item : _supported_groups) {
+    for (const auto& item : _supported_groups) {
         fn(item, &cont);
         if (cont) {
             break;
@@ -105,7 +105,7 @@ void protection_context::for_each_supported_groups(std::function<void(tls_group_
 
 void protection_context::for_each_supported_versions(std::function<void(tls_version_t, bool*)> fn) const {
     bool cont = false;
-    for (auto item : _supported_versions) {
+    for (const auto& item : _supported_versions) {
         fn(item, &cont);
         if (cont) {
             break;
@@ -115,7 +115,7 @@ void protection_context::for_each_supported_versions(std::function<void(tls_vers
 
 void protection_context::for_each_ec_point_formats(std::function<void(uint8, bool*)> fn) const {
     bool cont = false;
-    for (auto item : _ec_point_formats) {
+    for (const auto& item : _ec_point_formats) {
         fn(item, &cont);
         if (cont) {
             break;
@@ -125,7 +125,7 @@ void protection_context::for_each_ec_point_formats(std::function<void(uint8, boo
 
 void protection_context::for_each_keyshare_groups(std::function<void(tls_group_t, bool*)> fn) const {
     bool cont = false;
-    for (auto item : _keyshare_set) {
+    for (const auto& item : _keyshare_set) {
         fn(item, &cont);
         if (cont) {
             break;
@@ -192,7 +192,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
         }
 
         {
-            for (auto cs : other._cipher_suites) {  // request
+            for (const auto& cs : other._cipher_suites) {  // request
                 auto hint = tlsadvisor->hintof_cipher_suite(cs);
                 if (hint && (tls_flag_support & hint->flags)) {
                     {
@@ -245,7 +245,7 @@ return_t protection_context::select_from(const protection_context& other, tls_se
         {
             auto lambda_select_cs = [this, &tlsadvisor, &cs_map, &spec](tls_version_t ver) -> bool {
                 bool ret_value = false;
-                for (auto cs : cs_map[ver]) {
+                for (const auto& cs : cs_map[ver]) {
                     spec = ver;
                     add_supported_version(ver);
                     add_cipher_suite(cs);
@@ -395,7 +395,7 @@ tls_group_t protection_context::get0_keyshare_group() {
 tls_sigscheme_t protection_context::select_signature_algorithm(crypto_kty_t kty) {
     tls_sigscheme_t ret_value = tls_sigscheme_t{};
     auto advisor = crypto_advisor::get_instance();
-    for (auto item : _signature_algorithms) {
+    for (const auto& item : _signature_algorithms) {
         auto hint = advisor->hintof_sigscheme(item);
         if (hint) {
             if ((tls_flag_support & hint->flags) && (hint->kty == kty)) {

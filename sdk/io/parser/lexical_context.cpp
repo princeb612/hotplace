@@ -12,7 +12,6 @@
  */
 
 #include <hotplace/sdk/base/nostd/exception.hpp>
-#include <hotplace/sdk/base/nostd/tagged_range_set.hpp>
 #include <hotplace/sdk/base/pattern/kmp.hpp>
 #include <hotplace/sdk/io/parser/lexical_analyzer.hpp>
 
@@ -64,7 +63,7 @@ return_t lexical_context::add_context_lextoken(const lexical_token& token, std::
 }
 
 void lexical_context::clear() {
-    for (auto item : _lextoken) {
+    for (auto& item : _lextoken) {
         delete item;
     }
     _lextoken.clear();
@@ -120,7 +119,7 @@ void lexical_context::for_each(std::function<bool(const token_description* desc)
         };
 
         bool ret = false;
-        for (auto item : _lextoken) {
+        for (const auto& item : _lextoken) {
             ret = item->visit(_p, handler);
             if (false == ret) {
                 break;
@@ -157,7 +156,7 @@ void lexical_context::for_each(const search_result& res, std::function<bool(cons
 
 void lexical_context::walk(std::function<void(const char* p, const lexical_token*)> f) {
     if (_p && f) {
-        for (auto item : _lextoken) {
+        for (const auto& item : _lextoken) {
             f(_p, item);
         }
     }

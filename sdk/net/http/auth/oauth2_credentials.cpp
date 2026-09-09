@@ -110,9 +110,8 @@ return_t oauth2_credentials::remove(const std::string& client_id) {
         }
 
         {
-            auto liter = _user_clientid.lower_bound(userid);
-            auto uiter = _user_clientid.upper_bound(userid);
-            for (auto iter = liter; iter != uiter; iter++) {
+            auto range = _user_clientid.equal_range(userid);
+            for (auto iter = range.first; iter != range.second; iter++) {
                 if (iter->second == client_id) {
                     _user_clientid.erase(iter);
                     break;
@@ -157,9 +156,8 @@ return_t oauth2_credentials::list(const std::string& userid, std::list<std::stri
         critical_section_guard guard(_lock);
 
         {
-            auto liter = _user_clientid.lower_bound(userid);
-            auto uiter = _user_clientid.upper_bound(userid);
-            for (auto iter = liter; iter != uiter; iter++) {
+            auto range = _user_clientid.equal_range(userid);
+            for (auto iter = range.first; iter != range.second; iter++) {
                 clientids.push_back(iter->second);
             }
         }

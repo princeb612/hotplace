@@ -215,7 +215,7 @@ return_t tls_handshake_client_hello::do_postprocess(tls_direction_t dir, const b
 
         auto& protection_context = protection.get_protection_context();
         {
-            for (auto cs : _cipher_suites) {
+            for (const auto& cs : _cipher_suites) {
                 protection_context.add_cipher_suite(cs);
             }
 
@@ -370,12 +370,12 @@ return_t tls_handshake_client_hello::do_read_body(tls_direction_t dir, const byt
                 dbs.println(" > %s %s", constexpr_cookie, base16_encode(cookie).c_str());
                 dbs.println(" > %s %04x(%i ent.)", constexpr_cipher_suite_len, cipher_suite_len, cipher_suite_len >> 1);
                 i = 0;
-                for (auto cs : _cipher_suites) {
+                for (const auto& cs : _cipher_suites) {
                     dbs.println("   [%i] 0x%04x %s", i++, cs, tlsadvisor->nameof_tls_cipher_suite(cs).c_str());
                 }
                 dbs.println(" > %s %i", constexpr_compression_method_len, compression_method_len);
                 i = 0;
-                for (auto compr : _compression_methods) {
+                for (const auto& compr : _compression_methods) {
                     dbs.println("   [%i] 0x%02x %s", i++, compr, tlsadvisor->nameof_compression_method(compr).c_str());
                 }
                 dbs.println(" > %s 0x%04x(%i)", constexpr_extension_len, extension_len, extension_len);
@@ -427,7 +427,7 @@ return_t tls_handshake_client_hello::do_write_body(tls_direction_t dir, binary_t
 
         auto legacy_version = protection.get_lagacy_version();
         binary_t cipher_suites;
-        for (uint16 cs : _cipher_suites) {
+        for (const auto& cs : _cipher_suites) {
             binary_append(cipher_suites, cs, hton16);
         }
 

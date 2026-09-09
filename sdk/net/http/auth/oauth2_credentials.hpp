@@ -84,7 +84,7 @@ class t_tokens {
     return_t clear(token_handler_t handler = nullptr) {
         return_t ret = errorcode_t::success;
         if (handler) {
-            for (auto item : _tokens) {
+            for (const auto& item : _tokens) {
                 handler(item.second);
             }
         }
@@ -142,7 +142,7 @@ class t_expirable {
     virtual return_t clear(token_handler_t handler = nullptr) {
         return_t ret = errorcode_t::success;
         if (handler) {
-            for (auto item : _expires) {
+            for (const auto& item : _expires) {
                 handler(item.second);
             }
         }

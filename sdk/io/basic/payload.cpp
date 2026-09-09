@@ -114,9 +114,8 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
             item->read(ptr, size_ptr, offset, size_read);
             if (false == _cond_map.empty()) {
                 const auto& name = item->get_name();
-                auto lbound = _cond_map.lower_bound(name);
-                auto ubound = _cond_map.upper_bound(name);
-                for (auto iter = lbound; iter != ubound; iter++) {
+                auto range = _cond_map.equal_range(name);
+                for (auto iter = range.first; iter != range.second; iter++) {
                     auto cond = iter->second;
                     if (cond.hook) {
                         cond.hook(this, item);
@@ -125,7 +124,7 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
             }
         };
 
-        for (auto item : _members) {
+        for (auto& item : _members) {
             bool condition = get_group_condition(item->get_group());
             if (false == condition) {
                 continue;
@@ -193,7 +192,7 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
             list_size_unknown.clear();
             offset = pos;
 
-            for (auto item : _members) {
+            for (auto& item : _members) {
                 bool condition = get_group_condition(item->get_group());
                 if (false == condition) {
                     continue;
@@ -206,7 +205,7 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
                     offset += size_item;
                 } else {
                     // once read
-                    auto item = *iter;
+                    auto& item = *iter;
                     auto space = item->get_space();
                     offset += space;
                 }
@@ -227,7 +226,7 @@ return_t payload::read(const byte_t* base, size_t size, size_t& pos) {
 
 return_t payload::write(binary_t& bin) {
     return_t ret = errorcode_t::success;
-    for (auto item : _members) {
+    for (auto& item : _members) {
         bool condition = get_group_condition(item->get_group());
         if (condition) {
             item->write(bin);
@@ -239,7 +238,7 @@ return_t payload::write(binary_t& bin) {
 return_t payload::write(binary_t& bin, const std::set<std::string>& groups) {
     return_t ret = errorcode_t::success;
     bool condition = false;
-    for (auto item : _members) {
+    for (auto& item : _members) {
         condition = false;
         const auto& group = item->get_group();
         if (group.empty()) {
@@ -270,7 +269,7 @@ payload_member* payload::select(const std::string& name) const {
 
 size_t payload::offset_of(const std::string& name) const {
     size_t offset = 0;
-    for (auto item : _members) {
+    for (auto& item : _members) {
         if (false == get_group_condition(item->get_group())) {
             continue;
         }
@@ -284,7 +283,7 @@ size_t payload::offset_of(const std::string& name) const {
 
 size_t payload::size_estimated() const {
     size_t ret_value = 0;
-    for (auto item : _members) {
+    for (auto& item : _members) {
         bool condition = get_group_condition(item->get_group());
         if (false == condition) {
             continue;
@@ -297,7 +296,7 @@ size_t payload::size_estimated() const {
 
 size_t payload::size_occupied() const {
     size_t ret_value = 0;
-    for (auto item : _members) {
+    for (auto& item : _members) {
         bool condition = get_group_condition(item->get_group());
         if (false == condition) {
             continue;
@@ -309,7 +308,7 @@ size_t payload::size_occupied() const {
 }
 
 payload& payload::clear() {
-    for (auto item : _members) {
+    for (auto& item : _members) {
         delete item;
     }
     _cond_map.clear();

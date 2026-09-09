@@ -184,7 +184,7 @@ return_t tls_composer::construct_client_hello(tls_handshake** handshake, tls_ses
                                 session->reset_session_status();
                             } else {
                                 auto lambda = [&keyshare, &groups_set, &groups_keyshare](std::list<tls_group_t> members) -> void {
-                                    for (auto group : members) {
+                                    for (const auto& group : members) {
                                         if (groups_set.count(group)) {
                                             keyshare->add(group);
                                             groups_keyshare.insert(group);

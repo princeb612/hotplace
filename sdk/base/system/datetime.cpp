@@ -483,7 +483,7 @@ void datetime::format(int mode, basic_stream& bs, const std::string& fmt) const 
     valist va;
 
     timespec_to_datetime(mode, _timespec, &dt);
-    for (auto item : fmt) {
+    for (const auto& item : fmt) {
         switch (item) {
             case 'Y':
                 fmtbs << "%04d";

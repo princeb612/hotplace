@@ -40,9 +40,6 @@ bool is_kind_of_container_of(asn1_entity_t entity);
 
 bool evaluate(const asn1_object* obj, const std::string& value);
 
-return_t print_ast(const asn1_object* object, basic_stream& bs, uint32 flags = asn1_ast_flag_ansicolor);
-return_t print_ast(const asn1_runtime* object, basic_stream& bs, uint32 flags = asn1_ast_flag_ansicolor);
-
 }  // namespace io
 }  // namespace hotplace
 

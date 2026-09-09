@@ -40,6 +40,9 @@ class asn1_tag : public asn1_object {
     bool is_implicit() const;
     bool is_explicit() const;
 
+    void as_implicit();
+    void as_explicit();
+
    protected:
     virtual void represent(stream_t* s, const asn1_value* value = nullptr) const;
     virtual bool represent(binary_t* b, const asn1_value* value = nullptr, uint16 flags = 0) const;

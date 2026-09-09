@@ -54,7 +54,7 @@ class t_trie {
 
         trienode() : eow(false), index(-1), value(BT()), parent(nullptr) {}
         virtual ~trienode() {
-            for (auto item : children) {
+            for (auto& item : children) {
                 delete item.second;
             }
         }

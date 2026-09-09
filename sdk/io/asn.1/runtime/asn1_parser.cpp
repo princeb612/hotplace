@@ -12,6 +12,7 @@
 
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
+#include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_parser.hpp>
 #include <hotplace/sdk/io/parser/parser_resource.hpp>
 
@@ -43,9 +44,9 @@ bool asn1_parser::prepare() {
     lex.get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1).set("handle_lvalue_usertype", 1);
     lex.prepare();
 
-    auto resource = parser_resource::get_instance();
     // ASN.1 tokens
-    resource->for_each(parser_resource_type_t::token_type_asn1, [&lex](uint32 token, const std::string& name) -> void { lex.add_token(name, token); });
+    auto asn1resource = asn1_resource::get_instance();
+    asn1resource->for_each(resource_type_t::token_type_asn1, [&lex](uint32 token, const std::string& name) -> void { lex.add_token(name, token); });
 
     /**
      *                 source
@@ -72,6 +73,7 @@ bool asn1_parser::prepare() {
 
     // get several CFG symbols from the lexical analyzer.
 
+    auto resource = parser_resource::get_instance();
     auto symid = resource->nameof(token_identifier);     // "identifier"
     auto symnum = resource->nameof(token_number);        // "number"
     auto symfp = resource->nameof(token_floatingpoint);  // "floatingpoint"
@@ -299,11 +301,22 @@ return_t asn1_parser::parse(asn1_runtime* runtime, const char* notation, parse_t
     __try2 {
         if (nullptr == runtime || nullptr == notation) {
             ret = errorcode_t::invalid_parameter;
-            __leave2;
         }
 
-        // lexical analyzer
         lexical_context context;
+        ret = parse(runtime, context, notation, pt);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t asn1_parser::parse(asn1_runtime* runtime, lexical_context& context, const char* notation, parse_tree* pt) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == runtime || nullptr == notation) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
 
         ret = get_lex().parse(context, notation);
         if (errorcode_t::success != ret) {
@@ -328,10 +341,6 @@ return_t asn1_parser::parse(asn1_runtime* runtime, const char* notation, parse_t
                 case token_lvalue: {
                     tokens.push_back({token_identifier, symid});
                 } break;
-                case token_usertype: {
-                    // 사용자 정의 타입 토큰 유지
-                    tokens.push_back({token_usertype, symuser});
-                } break;
                 case token_comments:
                     ret = false;  // stop at comments
                     break;
@@ -355,7 +364,7 @@ return_t asn1_parser::parse(asn1_runtime* runtime, const char* notation, parse_t
         tokens.push_back({token_eof, "$"});
 
         // LALR(1) parse
-        ret = get_lalr().parse(tokens);
+        ret = get_lalr().parse(tokens, pt);
 
         // TODO new asn1_object at runtime ...
     }

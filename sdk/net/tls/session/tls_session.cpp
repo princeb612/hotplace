@@ -310,7 +310,7 @@ void tls_session::schedule_extension(tls_extension* extension) {
 void tls_session::select_into_scheduled_extension(tls_extensions* extensions) {
     if (extensions) {
         critical_section_guard guard(_lock);
-        for (auto ext : _extension_list) {
+        for (const auto& ext : _extension_list) {
             extensions->add(ext, true);
             ext->release();
         }

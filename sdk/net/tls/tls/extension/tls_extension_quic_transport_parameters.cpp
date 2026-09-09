@@ -53,7 +53,7 @@ return_t tls_extension_quic_transport_parameters::do_read_body(tls_direction_t d
 return_t tls_extension_quic_transport_parameters::do_write_body(tls_direction_t dir, binary_t& bin) {
     return_t ret = errorcode_t::success;
     critical_section_guard guard(_lock);
-    for (auto item : _params) {
+    for (const auto& item : _params) {
         write_quic_param(item.first, item.second, bin);
     }
     return ret;
@@ -149,7 +149,7 @@ return_t tls_extension_quic_transport_parameters::read_quic_params(const byte_t*
         if (istraceable(trace_category_t::trace_category_net)) {
             trace_debug_event(trace_category_t::trace_category_net, trace_event_t::trace_event_tls_extension, [&](basic_stream& dbs) -> void {
                 tls_advisor* tlsadvisor = tls_advisor::get_instance();
-                for (auto item : params) {
+                for (const auto& item : params) {
                     auto param_id = item.first;
                     const auto& v = item.second.get();
 

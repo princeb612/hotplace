@@ -80,11 +80,8 @@ return_t binary_append(binary_t& target, T value, transformer_t func) {
     make_unsigned_t unsigned_value = static_cast<make_unsigned_t>(value);
     make_unsigned_t final_value = (func) ? func(unsigned_value) : unsigned_value;
 
-    const auto pos = target.size();
-    const auto rsize = pos + sizeof(T);
-    target.reserve(rsize);
-    target.resize(rsize);
-    memcpy(target.data() + pos, &final_value, sizeof(T));
+    const byte_t* p = reinterpret_cast<const byte_t*>(&final_value);
+    target.insert(target.end(), p, p + sizeof(T));
     return errorcode_t::success;
 }
 
@@ -93,12 +90,9 @@ return_t binary_append(binary_t& target, T value) {
     using make_unsigned_t = typename custom::make_unsigned<T>::type;
 
     make_unsigned_t final_value = static_cast<make_unsigned_t>(value);
+    const byte_t* p = reinterpret_cast<const byte_t*>(&final_value);
 
-    const auto pos = target.size();
-    const auto rsize = pos + sizeof(T);
-    target.reserve(rsize);
-    target.resize(rsize);
-    memcpy(target.data() + pos, &final_value, sizeof(T));
+    target.insert(target.end(), p, p + sizeof(T));
     return errorcode_t::success;
 }
 
@@ -152,19 +146,25 @@ return_t binary_append_n(binary_t& target, uint32 bnlen, T value, transformer_t 
     make_unsigned_t unsigned_value = static_cast<make_unsigned_t>(value);
     make_unsigned_t final_value = (func) ? func(unsigned_value) : unsigned_value;
 
-    const size_t pos = target.size();
     uint32 tsize = sizeof(T);
     size_t toffset = 0;
     if (bnlen < tsize) {
         toffset = tsize - bnlen;
         tsize = bnlen;
     }
-    target.reserve(pos + bnlen);
-    target.resize(pos + bnlen);
+
+    // 1. accurately secure the total required capacity in advance (to prevent double reallocation).
+    target.reserve(target.size() + bnlen);
+
+    // 2. if upper byte padding (0x00) is required, you must insert additional data using padding.
     if (bnlen > tsize) {
-        memset(target.data() + pos, 0, bnlen - tsize);  // fill 0
+        target.insert(target.end(), bnlen - tsize, byte_t(0));
     }
-    memcpy(target.data() + pos + (bnlen - tsize), reinterpret_cast<const byte_t*>(&final_value) + toffset, tsize);
+
+    // 3. actual value byte range insert (no zero-initialization)
+    const byte_t* p = reinterpret_cast<const byte_t*>(&final_value) + toffset;
+    target.insert(target.end(), p, p + tsize);
+
     return errorcode_t::success;
 }
 
@@ -174,19 +174,22 @@ return_t binary_append_n(binary_t& target, uint32 bnlen, T value) {
 
     make_unsigned_t final_value = static_cast<make_unsigned_t>(value);
 
-    const size_t pos = target.size();
     uint32 tsize = sizeof(T);
     size_t toffset = 0;
     if (bnlen < tsize) {
         toffset = tsize - bnlen;
         tsize = bnlen;
     }
-    target.reserve(pos + bnlen);
-    target.resize(pos + bnlen);
+
+    target.reserve(target.size() + bnlen);
+
     if (bnlen > tsize) {
-        memset(target.data() + pos, 0, bnlen - tsize);  // fill 0
+        target.insert(target.end(), bnlen - tsize, byte_t(0));
     }
-    memcpy(target.data() + pos + (bnlen - tsize), reinterpret_cast<const byte_t*>(&final_value) + toffset, tsize);
+
+    const byte_t* p = reinterpret_cast<const byte_t*>(&final_value) + toffset;
+    target.insert(target.end(), p, p + tsize);
+
     return errorcode_t::success;
 }
 
@@ -242,38 +245,32 @@ static inline binary_t& operator<<(binary_t& lhs, uint8 rhs) {
 }
 
 static inline binary_t& operator<<(binary_t& lhs, uint16 rhs) {
-    lhs.reserve(lhs.size() + sizeof(uint16));
     binary_append(lhs, rhs, hton16);
     return lhs;
 }
 
 static inline binary_t& operator<<(binary_t& lhs, uint24_t rhs) {
-    lhs.reserve(lhs.size() + rhs.capacity());
     lhs.insert(lhs.end(), rhs.data, rhs.data + rhs.capacity());
     return lhs;
 }
 
 static inline binary_t& operator<<(binary_t& lhs, uint32 rhs) {
-    lhs.reserve(lhs.size() + sizeof(uint32));
     binary_append(lhs, rhs, hton32);
     return lhs;
 }
 
 static inline binary_t& operator<<(binary_t& lhs, uint48_t rhs) {
-    lhs.reserve(lhs.size() + rhs.capacity());
     lhs.insert(lhs.end(), rhs.data, rhs.data + rhs.capacity());
     return lhs;
 }
 
 static inline binary_t& operator<<(binary_t& lhs, uint64 rhs) {
-    lhs.reserve(lhs.size() + sizeof(uint64));
     binary_append(lhs, rhs, hton64);
     return lhs;
 }
 
 #if defined __SIZEOF_INT128__
 static inline binary_t& operator<<(binary_t& lhs, uint128 rhs) {
-    lhs.reserve(lhs.size() + sizeof(uint128));
     binary_append(lhs, rhs, hton128);
     return lhs;
 }
@@ -283,7 +280,6 @@ static inline binary_t& operator<<(binary_t& lhs, char* rhs) {
     if (nullptr != rhs) {
         const size_t len = strlen(rhs);
         if (0 != len) {
-            lhs.reserve(lhs.size() + len);
             lhs.insert(lhs.end(), rhs, rhs + len);
         }
     }
@@ -292,7 +288,6 @@ static inline binary_t& operator<<(binary_t& lhs, char* rhs) {
 
 static inline binary_t& operator<<(binary_t& lhs, const std::string& rhs) {
     if (false == rhs.empty()) {
-        lhs.reserve(lhs.size() + rhs.size());
         lhs.insert(lhs.end(), rhs.begin(), rhs.end());
     }
     return lhs;
@@ -300,7 +295,6 @@ static inline binary_t& operator<<(binary_t& lhs, const std::string& rhs) {
 
 static inline binary_t& operator<<(binary_t& lhs, const binary_t& rhs) {
     if (false == rhs.empty()) {
-        lhs.reserve(lhs.size() + rhs.size());
         lhs.insert(lhs.end(), rhs.begin(), rhs.end());
     }
     return lhs;
@@ -346,16 +340,14 @@ T t_binary_to_integer(const byte_t* bstr, size_t size, return_t& errorcode) {
         size_t tsize = sizeof(T);
         if (tsize <= size) {
             memcpy(&value, bstr, tsize);  // value = *reinterpret_cast<const T*>(bstr);
-            if (tsize > 1) {
-                value = convert_endian(value);  // host endian
-            }
         } else {
             binary_t bin;
             binary_load(bin, tsize, bstr, size);
             memcpy(&value, bin.data(), tsize);  // value = *reinterpret_cast<const T*>(bin.data());
-            if (tsize > 1) {
-                value = convert_endian(value);  // host endian
-            }
+        }
+
+        if (tsize > 1) {
+            value = convert_endian(value);  // host endian
         }
     }
     __finally2 {}
