@@ -14,7 +14,8 @@ template <typename T>
 void do_test_graph(t_graph<T>& graph, const T& start) {
     auto traverse_handler = [](const T& from, const T&, int, const std::list<T>& v) -> void {
         basic_stream bs;
-        print<std::list<T>, basic_stream>(v, bs, "", ", ", "");
+        print_style_t style("", ", ", "");
+        print(v, bs, style);
         basic_stream out;
         out << from << " : " << bs;
         _logger->writeln(out);
@@ -49,7 +50,8 @@ template <typename T>
 void do_test_graph_shortest_path(t_graph<T>& graph, const T& start) {
     auto traverse_handler = [](const T& from, const T& to, int distance, const std::list<T>& v) -> void {
         basic_stream bs;
-        print<std::list<T>, basic_stream>(v, bs, "", " -> ", "");
+        print_style_t style("", " -> ", "");
+        print(v, bs, style);
         basic_stream out;
         out << "path[" << from << "->" << to << "] " << bs << " (distance : " << distance << ")";
         _logger->writeln(out);
@@ -65,7 +67,8 @@ template <typename T>
 void do_test_graph_shortest_path(t_graph<T>& graph, const T& start, const T& end) {
     auto traverse_handler = [&](const T& from, const T& to, int distance, const std::list<T>& v) -> void {
         basic_stream bs;
-        print<std::list<T>, basic_stream>(v, bs, "", " -> ", "");
+        print_style_t style("", " -> ", "");
+        print(v, bs, style);
         basic_stream out;
         out << "path[" << from << "->" << to << "] " << bs << " (distance : " << distance << ")";
         _logger->writeln(out);

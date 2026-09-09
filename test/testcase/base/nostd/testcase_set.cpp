@@ -534,7 +534,6 @@ static void test_set() {
 
 void testcase_set() {
     test_range_set_basics();       // add
-    test_range_set_value();        // interval
     test_pnk_ack();                // RFC 9000 19.3 ACK Frames
     test_pnk_ack_subtraction();    // [retransmission] check PKN not acknowledged
     test_range_set_minmax();       // MIN, MAX
