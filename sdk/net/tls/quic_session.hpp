@@ -14,7 +14,6 @@
 
 #include <hotplace/sdk/base/nostd/binaries.hpp>
 #include <hotplace/sdk/base/nostd/keyvalue.hpp>
-#include <hotplace/sdk/base/nostd/range_set.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/net/http/qpack/qpack_dynamic_table.hpp>
 #include <hotplace/sdk/net/http/qpack/qpack_encoder.hpp>

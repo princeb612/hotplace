@@ -7,7 +7,7 @@
  * Revision History
  * Date         Name                Description
  * 2026.06.29   Soo Han and Gemini  MIN, MAX applied
- * 2026.09.07   Soo Han and Gemini  has, merge_internal, subtract optimization
+ * 2026.09.09   Soo Han and Gemini  rollback (codename.hotplace Revision 1074)
  *
  */
 
@@ -369,30 +369,27 @@ class t_range_set {
     t_range_set& subtract(T value) { return subtract(value, value); }
     t_range_set& subtract(T start, T end) {
         critical_section_guard guard(_lock);
-        merge_internal();
 
-        if (false == _arr.empty()) {
-            std::vector<t_interval<T>> result;
-            result.reserve(_arr.size() + 2);  // securing predictable space
+        t_range_set<T> temp;
+        temp._arr = std::move(_arr);
+        temp.merge_internal();
 
-            auto erased_type = range_traits<T>::erased_type();
-            for (const auto& item : _arr) {
-                if ((item.end < start) || (end < item.begin)) {
-                    result.push_back(item);
-                } else {
-                    if (item.begin < start) {
-                        range_flag_t updated_end_flag = erased_type ? range_flag_t::open : range_flag_t::closed;
-                        result.push_back(t_interval<T>(item.begin, range_traits<T>::prev(start), item.begin_flag, updated_end_flag));
-                    }
-                    if (end < item.end) {
-                        range_flag_t updated_begin_flag = erased_type ? range_flag_t::open : range_flag_t::closed;
-                        result.push_back(t_interval<T>(range_traits<T>::next(end), item.end, updated_begin_flag, item.end_flag));
-                    }
+        auto erased_type = range_traits<T>::erased_type();
+        for (const auto& item : temp._arr) {
+            if ((item.end < start) || (end < item.begin)) {
+                _arr.push_back(item);
+            } else {
+                if (item.begin < start) {
+                    range_flag_t updated_end_flag = erased_type ? range_flag_t::open : range_flag_t::closed;
+                    _arr.push_back(t_interval<T>(item.begin, range_traits<T>::prev(start), item.begin_flag, updated_end_flag));
+                }
+                if (end < item.end) {
+                    range_flag_t updated_begin_flag = erased_type ? range_flag_t::open : range_flag_t::closed;
+                    _arr.push_back(t_interval<T>(range_traits<T>::next(end), item.end, updated_begin_flag, item.end_flag));
                 }
             }
-            _arr = std::move(result);
-            set_modified();
         }
+        set_modified();
         return *this;
     }
     t_range_set& subtract(const t_interval<T>& value) { return subtract(value.begin, value.end); }
@@ -454,21 +451,21 @@ class t_range_set {
         critical_section_guard guard(_lock);
         merge_internal();
 
-        if (false == _arr.empty()) {
-            auto it = std::upper_bound(_arr.begin(), _arr.end(), value, [](const T& val, const t_interval<T>& item) { return val < item.begin; });
-            if (it != _arr.begin()) {
-                --it;  // section where value >= item.begin is possible
-                bool lower_cond = (it->begin_flag == range_flag_t::closed) ? (it->begin <= value) : (it->begin < value);
-                if (lower_cond) {
-                    bool upper_cond = (it->end_flag == range_flag_t::closed) ? (value <= it->end) : (value < it->end);
-                    if (upper_cond) {
-                        return !_invert;
-                    }
+        for (const auto& item : _arr) {
+            if (item.begin > value) {
+                break;
+            }
+
+            bool lower_cond = (item.begin_flag == range_flag_t::closed) ? (item.begin <= value) : (item.begin < value);
+            if (lower_cond) {
+                bool upper_cond = (item.end_flag == range_flag_t::closed) ? (value <= item.end) : (value < item.end);
+                if (upper_cond) {
+                    return (false == _invert) ? true : false;
                 }
             }
         }
 
-        return _invert;
+        return (false == _invert) ? false : true;
     }
     bool has(const t_interval<T>& interval, bool merge_always = true) {
         critical_section_guard guard(_lock);
@@ -596,13 +593,6 @@ class t_range_set {
             size_t index = 0;
             for (size_t i = 1; i < _arr.size(); ++i) {
                 if (range_traits<T>::is_mergeable_with(_arr[index], _arr[i])) {
-                    // begin_flag correction (closed takes precedence when starting points are the same)
-                    if (_arr[index].begin == _arr[i].begin) {
-                        if (_arr[i].begin_flag == range_flag_t::closed) {
-                            _arr[index].begin_flag = range_flag_t::closed;
-                        }
-                    }
-
                     if (_arr[index].end < _arr[i].end) {
                         _arr[index].end = _arr[i].end;
                         _arr[index].end_flag = _arr[i].end_flag;

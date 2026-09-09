@@ -35,7 +35,9 @@
     * CBOR
 
 * details
-  * Revision 1075
+  * Revision 1076
+    * t_range_set - rollback
+    * [fixed] test_case - result
   * Revision 1074
     * asn1_publisher - first baby step, toddling
   * Revision 1072

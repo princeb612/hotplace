@@ -238,9 +238,11 @@ owned by this topic.
 
 ## Publication
 
+```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
 │ Edition 1 · Revision 1072            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
+```

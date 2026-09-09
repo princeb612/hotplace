@@ -130,10 +130,10 @@ class test_case {
     /**
      * @brief   result indicator
      * @return
-     *          errorcode_t::internal_error
-     *          errorcode_t::success
+     *          EXIT_SUCCESS 0
+     *          EXIT_FAILURE 1
      */
-    return_t result() const;
+    int result() const;
 
     void lock();
     void unlock();

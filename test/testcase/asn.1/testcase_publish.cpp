@@ -47,7 +47,7 @@
  *   C++ source
  */
 
-void test_construct_babystep() {
+void test_publish_babystep() {
     _test_case.begin("publish");
     /**
      *  Type1 ::= VisibleString
@@ -114,7 +114,7 @@ void test_construct_babystep() {
     _test_case.assert(bs == "Type1 ::= VisibleString", __FUNCTION__, "first baby step");
 }
 
-void test_publish() {
+void test_publish_toddling() {
     _test_case.begin("publish");
 
     struct testvector {
@@ -165,6 +165,6 @@ void test_publish() {
 }
 
 void testcase_publish() {
-    test_construct_babystep();
-    test_publish();
+    test_publish_babystep();
+    test_publish_toddling();
 }
