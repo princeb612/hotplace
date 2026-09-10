@@ -14,6 +14,7 @@
 #define __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_ASN1CONTAINER__
 
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_type.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_unknown_container.hpp>
 
 namespace hotplace {
 namespace io {
@@ -42,6 +43,9 @@ class asn1_container : public asn1_type {
     asn1_container& add(const std::initializer_list<asn1_object*>& items);
     asn1_container& operator<<(asn1_object* other);
     asn1_container& add(asn1_object* other);
+
+    asn1_container& set(asn1_unknown_container& c);
+    asn1_container& add(asn1_unknown_container& c);
 
     bool for_each(std::function<bool(asn1_object*)>) const;
 

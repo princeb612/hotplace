@@ -49,7 +49,7 @@ asn1_integer& asn1_integer::add(const std::initializer_list<std::pair<std::strin
     return *this;
 }
 
-asn1_integer& asn1_integer::add(const asn1_namednumberlist& nml) {
+asn1_integer& asn1_integer::add(const asn1_namedlist& nml) {
     for (const auto& item : nml._container) {
         _reverse.emplace(item.first, item.second);
         _nnl.emplace(item.second, item.first);

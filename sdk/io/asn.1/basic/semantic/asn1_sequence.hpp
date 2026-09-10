@@ -48,9 +48,6 @@ class asn1_sequence : public asn1_container {
     virtual asn1_sequence* clone();
     virtual asn1_sequence* addref();
 
-    asn1_sequence& set(asn1_unknown_container&& unknown);
-    asn1_sequence& add(asn1_unknown_container& unknown);
-
    protected:
 };
 

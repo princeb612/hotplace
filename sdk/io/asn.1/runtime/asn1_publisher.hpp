@@ -27,6 +27,7 @@ struct asn1_semantic_node {
     std::string symbol;
     std::string value;
     asn1_object* object;
+    asn1_option option;
 
     asn1_semantic_node() : object(nullptr) {}
     ~asn1_semantic_node() {
@@ -39,6 +40,7 @@ struct asn1_semantic_node {
         value = other.value;
         if (other.object) other.object->addref();  // shallow copy
         object = other.object;
+        option = other.option;
         return *this;
     }
     asn1_semantic_node(asn1_semantic_node&& other) : asn1_semantic_node() { *this = std::move(other); }
@@ -46,11 +48,16 @@ struct asn1_semantic_node {
         symbol = std::move(other.symbol);
         value = std::move(other.value);
         std::swap(object, other.object);
+        option = std::move(other.option);
         return *this;
     }
 
     asn1_object* get() const { return object; }
-    void release() { object = nullptr; }  // releases the ownership
+    // releases the ownership
+    void release() {
+        object = nullptr;
+        option.release();
+    }
 };
 
 class asn1_publisher_context {

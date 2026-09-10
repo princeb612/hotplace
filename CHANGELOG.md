@@ -35,7 +35,10 @@
     * CBOR
 
 * details
+  * Revision 1078
+    * asn1_publisher - CHOICE, DEFAULT, OPTIONAL
   * Revision 1077
+    * asn1_publisher - Named Number List, Named Bit List, ENUMERATED
   * Revision 1076
     * t_range_set - rollback
     * [fixed] test_case - result

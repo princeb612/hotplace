@@ -78,14 +78,12 @@ asn1_object* asn1_builder::build(asn1_entity_t entity, std::function<void(asn1_o
         case asn1_entity_numstring:
         case asn1_entity_printstring:
         case asn1_entity_teletexstring:
-        // case asn1_entity_t61string:
         case asn1_entity_videotexstring:
         case asn1_entity_ia5string:
         case asn1_entity_utctime:
         case asn1_entity_generalizedtime:
         case asn1_entity_graphicstring:
         case asn1_entity_visiblestring:
-        // case asn1_entity_iso646string:
         case asn1_entity_generalstring:
         case asn1_entity_universalstring:
         case asn1_entity_cstring:
@@ -110,6 +108,9 @@ asn1_object* asn1_builder::build(asn1_entity_t entity, std::function<void(asn1_o
             break;
         case asn1_entity_enum:
             object = new asn1_enum;
+            break;
+        case asn1_entity_any:
+            object = new asn1_any;
             break;
         default:
             break;

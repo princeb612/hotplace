@@ -48,7 +48,7 @@ asn1_bitstring& asn1_bitstring::add(const std::initializer_list<std::pair<std::s
     return *this;
 }
 
-asn1_bitstring& asn1_bitstring::add(const asn1_namednumberlist& nml) {
+asn1_bitstring& asn1_bitstring::add(const asn1_namedlist& nml) {
     for (const auto& item : nml._container) {
         _reverse.emplace(item.first, item.second);
         _nbl.emplace(item.second, item.first);

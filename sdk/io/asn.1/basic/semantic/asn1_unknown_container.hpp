@@ -22,15 +22,19 @@ namespace io {
 // sketch - simple and intermediate role
 //   asn1_sequence << asn1_unknown_container
 class asn1_unknown_container : public asn1_type {
-    friend class asn1_sequence;
+    friend class asn1_container;
 
    public:
     asn1_unknown_container() : asn1_type(asn1_entity_unknown_container) {}
-    ~asn1_unknown_container() {}
+    ~asn1_unknown_container() { clear(); }
 
     asn1_unknown_container& operator<<(asn1_object* item) {
         if (item) _container.emplace_back(item);
         return *this;
+    }
+    void clear() {
+        for (auto& item : _container) item->release();
+        _container.clear();
     }
 
    private:

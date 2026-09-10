@@ -110,6 +110,14 @@ asn1_object& asn1_object::set_default_value(variant_t&& value) {
     return *this;
 }
 
+asn1_object& asn1_object::set_option(asn1_option& option) {
+    if (_default) delete _default;
+    _component_type = option.type;
+    _default = option.defvalue;
+    option.release();  // this own option.defvalue
+    return *this;
+}
+
 void asn1_object::set_tag(asn1_tag* tag) {
     if (_tag) _tag->release();
     _tag = tag;

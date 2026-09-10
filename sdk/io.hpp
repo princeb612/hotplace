@@ -84,6 +84,7 @@
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_container_of.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_enum.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_information_object.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_namedlist.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object_class.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_referenced_type.hpp>

@@ -207,6 +207,8 @@ class asn1_choice;
 class asn1_enum;
 class asn1_bitstring;  // named bit list
 class asn1_integer;    // named number list
+class asn1_namedlist;
+class asn1_unknown_container;
 
 class asn1_encode;
 class asn1_resource;

@@ -62,7 +62,7 @@ asn1_enum& asn1_enum::add(const std::initializer_list<std::pair<std::string, asn
     return *this;
 }
 
-asn1_enum& asn1_enum::add(const asn1_namednumberlist& nml) {
+asn1_enum& asn1_enum::add(const asn1_namedlist& nml) {
     for (const auto& item : nml._container) {
         _reverse.emplace(item.first, item.second);
         _enum.emplace(item.second, item.first);

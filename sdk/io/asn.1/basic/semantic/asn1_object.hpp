@@ -43,6 +43,42 @@ struct asn1_default_t {
     }
 };
 
+struct asn1_option {
+    uint16 type;
+    asn1_default_t* defvalue;
+
+    asn1_option() : type(0), defvalue(nullptr) {}
+    ~asn1_option() {
+        if (defvalue) delete defvalue;
+    }
+    asn1_option(const asn1_option& other) { *this = other; }
+    asn1_option(asn1_option&& other) { *this = std::move(other); }
+
+    asn1_option& operator=(const asn1_option& other) {
+        clear();
+        type = other.type;
+        if (other.defvalue) defvalue = new asn1_default_t(*other.defvalue);
+        return *this;
+    }
+    asn1_option& operator=(asn1_option&& other) {
+        clear();
+        type = other.type;
+        defvalue = other.defvalue;
+        other.release();
+        return *this;
+    }
+
+    // releases the ownership
+    void release() { defvalue = nullptr; }
+    void clear() {
+        type = 0;
+        if (defvalue) {
+            delete defvalue;
+            defvalue = nullptr;
+        }
+    }
+};
+
 /**
  * @brief   ASN.1
  */
@@ -83,6 +119,7 @@ class asn1_object {
     asn1_tag* get_tag() const;
     variant_t get_default_value() const;
     std::string resolve_name() const;
+    asn1_object& set_option(asn1_option& option);
 
     // NamedType ::= identifier Type
     bool is_named_type() const;

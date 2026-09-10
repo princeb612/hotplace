@@ -14,7 +14,7 @@
 #define __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_BUILTIN_ASN1BITSTRING__
 
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_builtin_type.hpp>
-#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_namednumberlist.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_namedlist.hpp>
 
 namespace hotplace {
 namespace io {
@@ -45,7 +45,7 @@ class asn1_bitstring : public asn1_builtin_type {
 
     asn1_bitstring& operator<<(const std::initializer_list<std::pair<std::string, asn1_native_int_t>> items);
     asn1_bitstring& add(const std::initializer_list<std::pair<std::string, asn1_native_int_t>> items);
-    asn1_bitstring& add(const asn1_namednumberlist& nml);
+    asn1_bitstring& add(const asn1_namedlist& nml);
 
    protected:
     virtual void represent(stream_t* s, const asn1_value* value = nullptr) const;

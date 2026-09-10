@@ -125,11 +125,15 @@ void test_publish_toddling() {
         {"Type3 ::= [2] EXPLICIT Type2"},
         {"Type4 ::= [APPLICATION 7] IMPLICIT Type3"},
         {"Type5 ::= [2] IMPLICIT Type2"},
+        {"Int1 ::= INTEGER"},
+        {"BitStr1 ::= BIT STRING"},
+        {"OctStr1 ::= OCTET STRING"},
         {"Null1 ::= NULL"},
         {"Real1 ::= REAL"},
         {"Oid1 ::= OBJECT IDENTIFIER"},
-        {"RelOid1 ::= RELATIVE-OID"},
-        // {"Location ::= INTEGER {homeOffice(0), fieldOffice(1), roving(2)}"},
+        {"Oid1 ::= OBJECT IDENTIFIER"},
+        {"Time1 ::= UTCTime"},
+        {"Time2 ::= GeneralizedTime"},
 
         // - "Field"
         // - "FieldList"
@@ -139,12 +143,43 @@ void test_publish_toddling() {
 
         {"Seq1 ::= SEQUENCE {name VisibleString}"},
         {"Seq2 ::= SEQUENCE {name VisibleString, ok BOOLEAN}"},
-        {"Outer ::= SEQUENCE {Inner SEQUENCE {name VisibleString}}"},
+        {"Numbers ::= SEQUENCE OF INTEGER"},
+        {"Names ::= SEQUENCE OF VisibleString"},
+        {"Outer1 ::= SEQUENCE {Inner SEQUENCE {name VisibleString}}"},
+        {"Outer2 ::= SEQUENCE {inner SEQUENCE {child SEQUENCE {name VisibleString}}}"},
+        {"Outer3 ::= SEQUENCE {inner [0] EXPLICIT SEQUENCE {name VisibleString}}"},
+
+        {"Set1 ::= SET {z BOOLEAN, a INTEGER}"},
+        {"IntSet ::= SET OF INTEGER"},
+        {"TaggedSeq ::= [APPLICATION 10] IMPLICIT SEQUENCE {id INTEGER}"},
 
         // "EnumList"
         {"Location ::= INTEGER {homeOffice(0), fieldOffice(1), roving(2)}"},
         {"Flags ::= BIT STRING {read(0), write(1), execute(2)}"},
         {"Color ::= ENUMERATED {red(0), green(1), blue(2)}"},
+        {"Person ::= SEQUENCE {name VisibleString, color ENUMERATED {red(0), green(1), blue(2)}}"},
+
+        // CHOICE
+        {"Value1 ::= CHOICE {i INTEGER, s VisibleString}"},
+        {"Value2 ::= [0] EXPLICIT CHOICE {i INTEGER, s VisibleString}"},
+        {"Person1 ::= SEQUENCE {id CHOICE {num INTEGER, name VisibleString}}"},
+        {"Value ::= CHOICE {i [0] IMPLICIT INTEGER, s [1] IMPLICIT VisibleString}"},
+        {"Person2 ::= SEQUENCE {firstName VisibleString, lastName VisibleString}"},
+
+        // DEFAULT, OPTIONAL
+        {"SeqOpt ::= SEQUENCE {id INTEGER, optField VisibleString OPTIONAL, defField INTEGER DEFAULT 10}"},
+        // ANY
+        {"Test ::= SEQUENCE {id INTEGER, data ANY}"},
+
+        // testcase_basic2.cpp
+        {"SEQUENCE {name VisibleString, ok BOOLEAN}"},
+        {"SET {a INTEGER, b BOOLEAN}"},
+        {"SET OF VisibleString"},
+        {"long VisibleString"},
+        {"MultiByteTag1 ::= [APPLICATION 128] IMPLICIT INTEGER"},
+        {"MultiByteTag2 ::= [APPLICATION 201] IMPLICIT INTEGER"},
+        {"SEQUENCE {}"},
+        {"SEQUENCE {name [0] IMPLICIT VisibleString}"},
     };
 
     asn1_runtime runtime;     // automatic

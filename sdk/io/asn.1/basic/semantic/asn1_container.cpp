@@ -102,6 +102,31 @@ asn1_container& asn1_container::add(asn1_object* other) {
     return *this;
 }
 
+asn1_container& asn1_container::set(std::list<asn1_object*>&& l) {
+    clear();
+    for (const auto& item : l) {
+        auto entity = item->get_entity();
+        _map.emplace(entity, item);
+        item->set_parent(this);
+    }
+    _list = std::move(l);
+    return *this;
+}
+
+asn1_container& asn1_container::add(std::list<asn1_object*>& l) {
+    for (const auto& item : l) {
+        auto entity = item->get_entity();
+        _map.emplace(entity, item);
+        item->set_parent(this);
+    }
+    _list.splice(_list.end(), l);
+    return *this;
+}
+
+asn1_container& asn1_container::set(asn1_unknown_container& c) { return set(std::move(c._container)); }
+
+asn1_container& asn1_container::add(asn1_unknown_container& c) { return add(c._container); }
+
 bool asn1_container::for_each(std::function<bool(asn1_object*)> f) const {
     if (f) {
         for (const auto& item : _list) {
@@ -183,18 +208,6 @@ void asn1_container::clear() {
     }
     _list.clear();
     _map.clear();
-}
-
-asn1_container& asn1_container::set(std::list<asn1_object*>&& l) {
-    clear();
-    _list = std::move(l);
-    return *this;
-}
-
-asn1_container& asn1_container::add(std::list<asn1_object*>& l) {
-    clear();
-    _list.splice(_list.end(), l);
-    return *this;
 }
 
 }  // namespace io
