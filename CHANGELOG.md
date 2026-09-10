@@ -35,6 +35,7 @@
     * CBOR
 
 * details
+  * Revision 1077
   * Revision 1076
     * t_range_set - rollback
     * [fixed] test_case - result

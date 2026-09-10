@@ -23,7 +23,7 @@ void dump_parse_tree(asn1_runtime* runtime, const parse_tree* pt) {
     _logger->colorln("parse tree - re-trace");
     {
         uint32 idx = 0;
-        auto lambda = [&idx](parser_action_t type, parse_treenode* node) -> void {
+        auto lambda = [&idx](parser_action_t type, parse_treenode* node) -> return_t {
             _logger->writeln([&](basic_stream& dbs) -> void {
                 valist va;
                 va << idx++ << node->symbol << node->value << node->children.size();
@@ -46,6 +46,7 @@ void dump_parse_tree(asn1_runtime* runtime, const parse_tree* pt) {
                     dbs.vaprintf(" RHS [{4}]", va);
                 }
             });
+            return errorcode_t::success;
         };
         parse_tree_visitor visitor(lambda);
         pt->accept(&visitor);

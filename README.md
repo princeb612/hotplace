@@ -17,8 +17,8 @@
     * floating point (class floating_point)
       * decimal floating point (class decimal_float)
       * lossless fractional floating point (class rational_float)
-  * documents
-    * [Documented with GPT-5.6 Luna — study, reconstruction & review](docs/README.md)
+* documents
+  * [Documented with GPT-5.6 Luna — study, reconstruction & review](docs/README.md)
 * ![cmake workflow](https://github.com/princeb612/hotplace/actions/workflows/build.yml/badge.svg)
 * ![codeql workflow](https://github.com/princeb612/hotplace/actions/workflows/codeql.yml/badge.svg)
 * powered by

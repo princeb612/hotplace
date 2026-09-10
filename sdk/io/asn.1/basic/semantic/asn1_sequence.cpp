@@ -42,5 +42,17 @@ asn1_sequence* asn1_sequence::addref() {
     return this;
 }
 
+asn1_sequence& asn1_sequence::set(asn1_unknown_container&& unknown) {
+    asn1_container::clear();
+    asn1_container::set(std::move(unknown._container));
+    return *this;
+}
+
+asn1_sequence& asn1_sequence::add(asn1_unknown_container& unknown) {
+    asn1_container::clear();
+    asn1_container::add(unknown._container);
+    return *this;
+}
+
 }  // namespace io
 }  // namespace hotplace

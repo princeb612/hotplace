@@ -80,6 +80,7 @@
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_any.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_builtin_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_choice.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_container.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_container_of.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_enum.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_information_object.hpp>
@@ -93,6 +94,7 @@
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tag.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tagged_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_type.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_unknown_container.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
 
 /* asn.1/basic/semantic/builtin */

@@ -74,7 +74,7 @@ const struct asn1_entity_resource_t resource_asn1_entities[] = {
     {asn1_entity_set, "SET", asn1_perm_constructed, token_set},
 
     {asn1_entity_builtin_type, "builtin type", asn1_perm_none},
-    {asn1_entity_named_type, "named type", asn1_perm_none},
+    // {asn1_entity_named_type, "named type", asn1_perm_none},
     {asn1_entity_referenced_type, "referenced type", asn1_perm_none},
     {asn1_entity_tag, "tag", asn1_perm_none},
     {asn1_entity_tagged_type, "tagged type", asn1_perm_none},

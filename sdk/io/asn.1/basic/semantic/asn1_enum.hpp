@@ -13,6 +13,7 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_ASN1ENUM__
 #define __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_ASN1ENUM__
 
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_namednumberlist.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_type.hpp>
 
 namespace hotplace {
@@ -44,6 +45,7 @@ class asn1_enum : public asn1_type {
     asn1_enum& add(const std::string& en, asn1_native_int_t value);
     asn1_enum& operator<<(const std::initializer_list<std::pair<std::string, asn1_native_int_t>>& items);
     asn1_enum& add(const std::initializer_list<std::pair<std::string, asn1_native_int_t>>& items);
+    asn1_enum& add(const asn1_namednumberlist& nml);
 
     virtual asn1_entity_t get_component_entity() const;
     virtual bool have_constraints() const;

@@ -45,6 +45,8 @@ class asn1_container : public asn1_type {
 
     bool for_each(std::function<bool(asn1_object*)>) const;
 
+    void clear();
+
    protected:
     asn1_container(asn1_entity_t entity, const std::string& name, asn1_object* object);
     asn1_container(asn1_entity_t entity, const std::string& name, const std::initializer_list<std::pair<std::string, asn1_entity_t>>& items);
@@ -56,6 +58,9 @@ class asn1_container : public asn1_type {
      * @remarks It returns true in most cases, but the CHOICE returns true only if processed.
      */
     virtual bool represent(binary_t* b, const asn1_value* value = nullptr, uint16 flags = 0) const;
+
+    asn1_container& set(std::list<asn1_object*>&& l);
+    asn1_container& add(std::list<asn1_object*>& l);
 
    private:
     std::list<asn1_object*> _list;             // 1..*

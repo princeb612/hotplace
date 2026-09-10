@@ -61,10 +61,10 @@ class parse_tree {
 
     parse_treenode* get_root() const;
 
-    void accept(parse_tree_visitor* visitor) const;
+    return_t accept(parse_tree_visitor* visitor) const;
 
    protected:
-    void visit(parse_treenode* node, parse_tree_visitor* visitor) const;
+    return_t visit(parse_treenode* node, parse_tree_visitor* visitor) const;
 
    private:
     std::list<parse_treenode*> _node_stack;
@@ -72,10 +72,11 @@ class parse_tree {
 
 /**
  * @@brief  post-order traversal
+ * @remarks if the visitor callback routine returns error, the visit is aborted.
  * @example
  *          _logger->colorln("replay");
  *          int idx = 0;
- *          auto lambda = [&idx](parser_action_t type, parse_treenode* node) -> void {
+ *          auto lambda = [&idx](parser_action_t type, parse_treenode* node) -> return_t {
  *              _logger->writeln([&](basic_stream& dbs) -> void {
  *                  dbs << "[" << idx++ << "] ";
  *                  switch (type) {
@@ -98,20 +99,21 @@ class parse_tree {
  *                      dbs << " RHS [" << node->children.size() << "]";
  *                  }
  *              });
+ *              return errorcode_t::success;
  *          };
  *          parse_tree_visitor visitor(lambda);
  *          pt.accept(&visitor);
  */
 class parse_tree_visitor {
    public:
-    parse_tree_visitor(std::function<void(parser_action_t, parse_treenode*)>);
+    parse_tree_visitor(std::function<return_t(parser_action_t, parse_treenode*)>);
     ~parse_tree_visitor() = default;
 
-    void on_shift(parse_treenode* node);
-    void on_reduce(parse_treenode* node);
+    return_t on_shift(parse_treenode* node);
+    return_t on_reduce(parse_treenode* node);
 
    private:
-    std::function<void(parser_action_t, parse_treenode*)> _func;
+    std::function<return_t(parser_action_t, parse_treenode*)> _func;
 };
 
 }  // namespace io

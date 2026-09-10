@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   asn1_publisher
+ * @file   asn1_publisher.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -86,7 +86,7 @@ class asn1_publisher {
     using handler_t = std::function<return_t(parse_treenode*, asn1_publisher_context&)>;
 
     template <typename F>
-    void register_handler(const std::string& name, F&& handler) {
+    void add_handler(const std::string& name, F&& handler) {
         if (false == name.empty()) {
             _handler_map[name] = std::forward<F>(handler);
         }

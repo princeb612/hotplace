@@ -11,6 +11,7 @@
  *
  */
 
+#include <hotplace/sdk/base/nostd/utility.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/builtin/asn1_integer.hpp>
@@ -48,6 +49,14 @@ asn1_integer& asn1_integer::add(const std::initializer_list<std::pair<std::strin
     return *this;
 }
 
+asn1_integer& asn1_integer::add(const asn1_namednumberlist& nml) {
+    for (const auto& item : nml._container) {
+        _reverse.emplace(item.first, item.second);
+        _nnl.emplace(item.second, item.first);
+    }
+    return *this;
+}
+
 void asn1_integer::represent(stream_t* s, const asn1_value* value) const {
     asn1_builtin_type::represent(s, value);
 
@@ -55,10 +64,10 @@ void asn1_integer::represent(stream_t* s, const asn1_value* value) const {
         s->printf(" {");
         if (false == _reverse.empty()) {
             auto iter = _reverse.begin();
-            s->printf("%s(%i)", iter->second.c_str(), iter->first);
+            s->printf("%s(%I64i)", iter->second.c_str(), iter->first);
             ++iter;
             while (_reverse.end() != iter) {
-                s->printf(", %s(%i)", iter->second.c_str(), iter->first);
+                s->printf(", %s(%I64i)", iter->second.c_str(), iter->first);
                 ++iter;
             }
         }

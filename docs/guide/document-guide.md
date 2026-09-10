@@ -1,6 +1,6 @@
 # Document Guide
 
-Edition 1 · Based on hotplace Revision 1072
+Edition 1 · Based on hotplace Revision 1076
 
 ## Purpose
 
@@ -59,7 +59,7 @@ Each document records its source baseline:
 
 ```text
 Edition: 1
-Based on: Revision 1072
+Based on: Revision 1076
 ```
 
 ## Reading Density
@@ -72,7 +72,7 @@ repeated explanations, and source dumps.
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1072            │
+│ Edition 1 · Revision 1076            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘

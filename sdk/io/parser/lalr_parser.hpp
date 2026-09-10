@@ -65,9 +65,9 @@ class lalr_parser {
     return_t build_table();
 
     /**
-     * perform dynamically generated table-based parsing
-     * @param const std::vector<parser_token>& tokens [in]
-     * @param parse_tree* pt [outopt] generate parse tree if necessary
+     * @remarks perform dynamically generated table-based parsing
+     * @param   const std::vector<parser_token>& tokens [in]
+     * @param   parse_tree* pt [outopt] generate parse tree if necessary
      */
     return_t parse(const std::vector<parser_token>& tokens, parse_tree* pt = nullptr);
 

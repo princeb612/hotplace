@@ -129,16 +129,22 @@ void test_publish_toddling() {
         {"Real1 ::= REAL"},
         {"Oid1 ::= OBJECT IDENTIFIER"},
         {"RelOid1 ::= RELATIVE-OID"},
+        // {"Location ::= INTEGER {homeOffice(0), fieldOffice(1), roving(2)}"},
 
-        // TODO
         // - "Field"
         // - "FieldList"
         //   - sketch : asn1_unknown_container
         // - "StatementSequence"
-        //   - sketch : auto container = new asn1_sequence(std::move(unknown_container));
+        //   - sketch : sequence->set(std::move(*unknown_container));
 
-        // {"Seq1 ::= SEQUENCE {name VisibleString, ok BOOLEAN}"},
-        // {"Outer ::= SEQUENCE {Inner SEQUENCE {name VisibleString}}"},
+        {"Seq1 ::= SEQUENCE {name VisibleString}"},
+        {"Seq2 ::= SEQUENCE {name VisibleString, ok BOOLEAN}"},
+        {"Outer ::= SEQUENCE {Inner SEQUENCE {name VisibleString}}"},
+
+        // "EnumList"
+        {"Location ::= INTEGER {homeOffice(0), fieldOffice(1), roving(2)}"},
+        {"Flags ::= BIT STRING {read(0), write(1), execute(2)}"},
+        {"Color ::= ENUMERATED {red(0), green(1), blue(2)}"},
     };
 
     asn1_runtime runtime;     // automatic

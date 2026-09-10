@@ -14,6 +14,7 @@
 #define __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_ASN1SEQUENCE__
 
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_container.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/asn1_unknown_container.hpp>
 
 namespace hotplace {
 namespace io {
@@ -46,6 +47,9 @@ class asn1_sequence : public asn1_container {
 
     virtual asn1_sequence* clone();
     virtual asn1_sequence* addref();
+
+    asn1_sequence& set(asn1_unknown_container&& unknown);
+    asn1_sequence& add(asn1_unknown_container& unknown);
 
    protected:
 };

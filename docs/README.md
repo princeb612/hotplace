@@ -1,6 +1,6 @@
 # hotplace study
 
-**Edition 1 · Revision 1072**
+**Edition 1 · Revision 1076**
 
 
 > A compact study map of the hotplace project.
@@ -19,6 +19,8 @@ Topic documents use that structure without repeating the guide.
 
 - [HPACK](hpack/README.md)
 - [HTTP/2](http2/README.md)
+- [QUIC](quic/README.md)
+- [TLS](tls/README.md)
 
 The map will grow only when a topic deserves its own document.
 
@@ -43,6 +45,8 @@ The map will grow only when a topic deserves its own document.
                     HTTP/3
                       │
                     QUIC
+                   ╱   ╲
+                 TLS   UDP
 ```
 
 The diagram shows relationships, not ownership. Each topic document
@@ -54,7 +58,7 @@ adjacent questions.
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1072            │
+│ Edition 1 · Revision 1076            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘

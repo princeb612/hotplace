@@ -177,5 +177,25 @@ bool asn1_container::represent(binary_t* b, const asn1_value* value, uint16 flag
     return true;
 }
 
+void asn1_container::clear() {
+    for (auto& item : _list) {
+        item->release();
+    }
+    _list.clear();
+    _map.clear();
+}
+
+asn1_container& asn1_container::set(std::list<asn1_object*>&& l) {
+    clear();
+    _list = std::move(l);
+    return *this;
+}
+
+asn1_container& asn1_container::add(std::list<asn1_object*>& l) {
+    clear();
+    _list.splice(_list.end(), l);
+    return *this;
+}
+
 }  // namespace io
 }  // namespace hotplace

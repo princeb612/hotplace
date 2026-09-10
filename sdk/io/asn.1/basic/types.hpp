@@ -131,7 +131,7 @@ enum asn1_entity_t {
     asn1_entity_syntax = 0x1000,
     asn1_entity_builtin_type,
     // NamedType ::= identifier Type
-    asn1_entity_named_type,
+    // asn1_entity_named_type,
     // ReferencedType ::= DefinedType | UsefulType | SelectionType | TypeFromObject | ValueSetFromObjects -- type assignment
     asn1_entity_referenced_type,
     // TaggedType ::= Tag Type | Tag IMPLICIT Type | Tag EXPLICIT Type
@@ -144,6 +144,10 @@ enum asn1_entity_t {
     asn1_entity_set_of,
     asn1_entity_choice,
     asn1_entity_any,
+
+    asn1_entity_container,
+    asn1_entity_unknown_container,
+    asn1_entity_namednumberlist,
 
     asn1_entity_constraint = 0x2000,
     asn1_entity_constraint_union,

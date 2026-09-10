@@ -70,33 +70,40 @@ parse_treenode* parse_tree::get_root() const {
     return nullptr;
 }
 
-void parse_tree::accept(parse_tree_visitor* visitor) const {
-    if (visitor) {
-        auto root = get_root();
-        if (root) {
-            visit(root, visitor);
-        }
-    }
+return_t parse_tree::accept(parse_tree_visitor* visitor) const {
+    if (nullptr == visitor) return errorcode_t::invalid_parameter;
+
+    auto root = get_root();
+    if (nullptr == root) return errorcode_t::no_data;
+
+    return visit(root, visitor);
 }
 
-void parse_tree::visit(parse_treenode* node, parse_tree_visitor* visitor) const {
+return_t parse_tree::visit(parse_treenode* node, parse_tree_visitor* visitor) const {
+    return_t ret = errorcode_t::success;
+    // if the visitor callback routine returns false, the visit is aborted.
     if (node && visitor) {
         if (node->is_terminal()) {
-            visitor->on_shift(node);
+            ret = visitor->on_shift(node);
+            if (errorcode_t::success != ret) return ret;
         } else {
             for (parse_treenode* child : node->children) {
-                visit(child, visitor);
+                ret = visit(child, visitor);
+                if (errorcode_t::success != ret) return ret;
             }
-            visitor->on_reduce(node);
+
+            ret = visitor->on_reduce(node);
+            if (errorcode_t::success != ret) return ret;
         }
     }
+    return ret;
 }
 
-parse_tree_visitor::parse_tree_visitor(std::function<void(parser_action_t, parse_treenode*)> func) : _func(func) {}
+parse_tree_visitor::parse_tree_visitor(std::function<return_t(parser_action_t, parse_treenode*)> func) : _func(func) {}
 
-void parse_tree_visitor::on_shift(parse_treenode* node) { _func(parser_action_t::shift, node); }
+return_t parse_tree_visitor::on_shift(parse_treenode* node) { return _func(parser_action_t::shift, node); }
 
-void parse_tree_visitor::on_reduce(parse_treenode* node) { _func(parser_action_t::reduce, node); }
+return_t parse_tree_visitor::on_reduce(parse_treenode* node) { return _func(parser_action_t::reduce, node); }
 
 }  // namespace io
 }  // namespace hotplace
