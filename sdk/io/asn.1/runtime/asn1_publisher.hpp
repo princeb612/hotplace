@@ -101,6 +101,7 @@ class asn1_publisher {
 
    protected:
     void prepare();
+    void prepare_constraints();
     return_t default_handler(parse_treenode* node, asn1_publisher_context& st);
 
    private:

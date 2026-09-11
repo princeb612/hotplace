@@ -129,13 +129,15 @@ void regex_tokens(const char* input, size_t size, const char* expr, size_t& pos,
                     tokens.push_back(std::move(item));
                 }
 
-                pos = ovector[1];
-                if (ovector[0] == ovector[1]) {
+                auto len = ovector[1] - ovector[0];
+                if (0 == len) {
                     if (pos < size) {
                         ++pos;
                     } else {
                         break;
                     }
+                } else {
+                    pos = ovector[1];
                 }
             }
         }
@@ -180,7 +182,7 @@ return_t regex::open(regex_context_t** context, const char* expr) {
 #elif defined USE_PCRE
         int eoffset = 0;
         const char* err = nullptr;
-        re = pcre_compile(expr, 0, &err, &eoffset, nullptr);
+        auto re = pcre_compile(expr, 0, &err, &eoffset, nullptr);
         if (nullptr == re) {
             ret = errorcode_t::internal_error;
             __leave2;
@@ -234,33 +236,32 @@ return_t regex::search(regex_context_t* context, const char* input, size_t size,
             }
         }
 #elif defined USE_PCRE
+        std::vector<int> ovector;
+        ovector.resize(30);  // multiples of 3
+
         while (pos < size) {
-            rc = pcre_exec(re, nullptr, input, size, pos, PCRE_NOTEMPTY, ovector.data(), ovector.size());
+            auto rc = pcre_exec(context->re, nullptr, input, size, pos, PCRE_NOTEMPTY, ovector.data(), ovector.size());
 
             if (PCRE_ERROR_NOMATCH == rc) {
                 break;
             } else if (rc < 0) {
                 break;
             } else {
-                std::map<size_t, range_t> item;
-                for (int i = 0; i < rc; ++i) {
-                    auto begin = ovector[2 * i];
-                    auto end = ovector[2 * i + 1];
-                    if (begin != -1) {
-                        item.emplace(i, range_t(begin, end));
-                    }
-                }
-                if (false == item.empty()) {
-                    tokens.push_back(std::move(item));
+                if (rc > 0) {
+                    auto begin = ovector[0];
+                    auto end = ovector[1];
+                    if (-1 != begin) tokens.push_back(range_t(begin, end));
                 }
 
-                pos = ovector[1];
-                if (ovector[0] == ovector[1]) {
+                auto len = ovector[1] - ovector[0];
+                if (0 == len) {
                     if (pos < size) {
                         ++pos;
                     } else {
                         break;
                     }
+                } else {
+                    pos = ovector[1];
                 }
             }
         }

@@ -695,7 +695,16 @@ void test_x690_time() {
     datetime_t dt(1991, 5, 6, 16, 45, 40);
     binary_t bin;
     asn1_encode enc;
+#if defined __linux__
+    basic_stream bs_old_tz;
+    const char* old_tz = std::getenv("TZ");
+    bs_old_tz = old_tz;
+    setenv("TZ", "Asia/Seoul", 1);
+#endif
     enc.utctime(bin, dt, -420);
+#if defined __linux__
+    if (false == bs_old_tz.empty()) setenv("TZ", bs_old_tz.c_str(), 1);
+#endif
     _logger->writeln("%s", base16_encode(bin).c_str());
     _test_case.assert(bin == base16_decode_rfc("17 0d 39 31 30 35 30 36 32 33 34 35 34 30 5a"), __FUNCTION__, "X.690 UTCTime");
 }

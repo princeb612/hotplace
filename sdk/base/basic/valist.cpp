@@ -112,7 +112,7 @@ valist& valist::operator<<(unsigned long long value) { return append((uint64)val
 
 valist& valist::operator<<(float value) {
     /* default argument promotions
-     * ¡®float¡¯ is promoted to ¡®double¡¯ when passed through ¡®...¡¯
+     * â€˜floatâ€™ is promoted to â€˜doubleâ€™ when passed through â€˜...â€™
      */
     return append((double)value);
 }

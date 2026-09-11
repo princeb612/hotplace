@@ -16,6 +16,7 @@
 
 void dump_parse_tree(asn1_runtime* runtime, const parse_tree* pt);
 void parse_notation(asn1_runtime* runtime, const char* notation);
+void parse_reconst_notation(asn1_runtime* runtime, lexical_context& context, const char* notation);
 
 void testcase_basic1();
 void testcase_basic2();

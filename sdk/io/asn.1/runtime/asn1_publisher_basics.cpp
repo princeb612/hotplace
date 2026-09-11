@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   asn1_publisher_handler.cpp
+ * @file   asn1_publisher_basics.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *

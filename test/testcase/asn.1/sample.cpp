@@ -78,6 +78,32 @@ void parse_notation(asn1_runtime* runtime, const char* notation) {
     __finally2 { _test_case.test(ret, __FUNCTION__, "parse : %s", notation); }
 }
 
+void parse_reconst_notation(asn1_runtime* runtime, lexical_context& context, const char* notation) {
+    // asn1_publisher applied
+    // - StatementSequence, StatementSequenceOf, StatementSet, StatementSetOf, StatementChoice, FieldList, Field, FieldOpt
+    // - TypeSpec, TypeBase, ReferencedType, TaggedType, TagPrefix, EnumType, EnumList, EnumItem, SimpleType
+
+    if (nullptr == notation) return;
+
+    auto parser = asn1_parser::get_instance();
+
+    // parse
+    parse_tree pt;
+    parser->parse(runtime, context, notation, &pt);
+    dump_parse_tree(runtime, &pt);
+
+    // reconstruction
+    basic_stream bs;
+    asn1_object* obj = nullptr;
+    asn1_builder::build(&pt, &obj);
+    if (obj) {
+        obj->publish(&bs);
+        obj->release();
+    }
+    _logger->writeln("parse and publish %s", bs.c_str());
+    _test_case.assert(bs == notation, __FUNCTION__, "test %s", notation);
+}
+
 int main(int argc, char** argv) {
 #ifdef __MINGW32__
     setvbuf(stdout, 0, _IOLBF, 1 << 20);

@@ -34,7 +34,7 @@ void test_yaml_testvector_valist() {
             } else if (type == "int8") {
                 va << static_cast<int8>(arg["value"].as<int>(0));
             } else if (type == "uint8") {
-                va << arg["value"].as<uint8>(0);
+                va << static_cast<uint8>(arg["value"].as<unsigned int>(0));
             } else if (type == "int16") {
                 va << static_cast<int16>(arg["value"].as<int>(0));
             } else if (type == "uint16") {

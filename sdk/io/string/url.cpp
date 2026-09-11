@@ -164,7 +164,7 @@ return_t split_url(const char* src, url_info_t* info) {
         // constexpr char mark[] = "-_.!~*'()";       // RFC 2396 2.3. Unreserved Characters
         // constexpr char delims[] = "<>#%%\"";       // RFC 2396 2.4.3. Excluded US-ASCII Characters
 
-        regex_token(url, "^/[a-zA-Z0-9-_.!~*'()/]*", pos, tokens);  // unreserved characters
+        regex_token(url, "/[a-zA-Z0-9-_.!~*'()/]*", pos, tokens);  // unreserved characters
         if (tokens.size()) {
             info->uripath = *tokens.begin();
         }

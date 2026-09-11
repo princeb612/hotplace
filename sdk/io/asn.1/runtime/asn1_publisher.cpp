@@ -32,6 +32,7 @@ return_t asn1_publisher::build(const parse_tree* pt, asn1_object** object) {
         *object = nullptr;
 
         prepare();
+        prepare_constraints();
 
         asn1_publisher_context context;
 

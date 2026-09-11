@@ -35,6 +35,8 @@
     * CBOR
 
 * details
+  * Revision 1079
+    * [tested] gcc 4.8.5
   * Revision 1078
     * asn1_publisher - CHOICE, DEFAULT, OPTIONAL
   * Revision 1077

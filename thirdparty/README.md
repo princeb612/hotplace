@@ -5,13 +5,14 @@
 
 * thirdparty
 
-| OSS          | brief       | description                                                              |
-| --           | --          | --                                                                       |
-| openssl      | CRYPTO, TLS | general-purpose cryptography and secure communication                    |
-| jansson      | JSON        | encoding, decoding and manipulating JSON data                            |
-| zlib         | compression | A Massively Spiffy Yet Delicately Unobtrusive Compression Library        |
-| liboqs       | PQC         | quantum-safe cryptographic algorithms                                    |
-| oqs-provider | PQC         | quantum-safe cryptography (QSC) in a standard OpenSSL (3.x) distribution |
+| OSS          | brief       |           | description                                                              |
+| --           | --          | --        | --                                                                       |
+| openssl      | CRYPTO, TLS | mandatory | general-purpose cryptography and secure communication                    |
+| jansson      | JSON        | mandatory | encoding, decoding and manipulating JSON data                            |
+| zlib         | compression | mandatory | A Massively Spiffy Yet Delicately Unobtrusive Compression Library        |
+| yaml-cpp     | YAML        | mandatory | yaml                                                                     |
+| liboqs       | PQC         | optional  | quantum-safe cryptographic algorithms                                    |
+| oqs-provider | PQC         | optional  | quantum-safe cryptography (QSC) in a standard OpenSSL (3.x) distribution |
 
 * summary
   * openssl 1.1.1 or newer

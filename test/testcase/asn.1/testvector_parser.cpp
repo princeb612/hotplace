@@ -50,40 +50,44 @@ void test_yaml_testvector_parser() {
         }
 
         return_t test = errorcode_t::success;
+        lexical_context context;
+        asn1_runtime runtime;  // automatic
         for (const auto& item : items) {
             std::string text_item = item["item"].as<std::string>("");
             std::string text_der = item["der"].as<std::string>("");
             binary_t bin = base16_decode_rfc(text_der);
 
-            asn1_runtime runtime;
-            size_t pos = 0;
-            auto stream = bin.data();
-            auto size = bin.size();
-            test = runtime.read_weakly_typed(stream, size, pos);
-            _test_case.test(test, __FUNCTION__, R"(read and decode "%s")", text_item.c_str());
-            _test_case.assert(pos == size, __FUNCTION__, R"(complete stream consumed "%s")", text_item.c_str());
+            {
+                asn1_runtime runtime;
+                size_t pos = 0;
+                auto stream = bin.data();
+                auto size = bin.size();
+                test = runtime.read_weakly_typed(stream, size, pos);
+                _test_case.test(test, __FUNCTION__, R"(read and decode "%s")", text_item.c_str());
+                _test_case.assert(pos == size, __FUNCTION__, R"(complete stream consumed "%s")", text_item.c_str());
 
-            basic_stream bs_type;
-            basic_stream bs_value;
-            binary_t bin_encoded;
-            runtime.notation(&bs_type);
-            runtime.publish(&bs_value);
-            runtime.publish(&bin_encoded);
+                basic_stream bs_type;
+                basic_stream bs_value;
+                binary_t bin_encoded;
+                runtime.notation(&bs_type);
+                runtime.publish(&bs_value);
+                runtime.publish(&bin_encoded);
 
-            _logger->write([&](basic_stream& dbs) -> void {
-                valist va;
-                va << bs_type << bs_value << bin_encoded;
-                dbs.println("decode and encode");
-                dbs.vaprintln("> notation {1}", va);
-                dbs.vaprintln("> value    {2}", va);
-                dbs.vaprintln("> DER      {3:x}", va);
-            });
-            _logger->dump(bin_encoded);
-            // not support - BIT STRING, ENUMERATED
-            // _test_case.assert(bin == bin_encoded, __FUNCTION__, "encode");
+                _logger->write([&](basic_stream& dbs) -> void {
+                    valist va;
+                    va << bs_type << bs_value << bin_encoded;
+                    dbs.println("decode and encode");
+                    dbs.vaprintln("> notation {1}", va);
+                    dbs.vaprintln("> value    {2}", va);
+                    dbs.vaprintln("> DER      {3:x}", va);
+                });
+                _logger->dump(bin_encoded);
+            }
 
-            // TODO new asn1_object at runtime ...
-            parse_notation(&runtime, text_item.c_str());
+            // asn1_publisher applied
+            // - StatementSequence, StatementSequenceOf, StatementSet, StatementSetOf, StatementChoice, FieldList, Field, FieldOpt
+            // - TypeSpec, TypeBase, ReferencedType, TaggedType, TagPrefix, EnumType, EnumList, EnumItem, SimpleType
+            parse_reconst_notation(&runtime, context, text_item.c_str());
         }
     };
 

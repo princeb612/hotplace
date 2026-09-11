@@ -27,6 +27,14 @@
 #include <set>
 #include <unordered_map>
 
+#if defined __GNUC__
+#if ((__GNUC__ == 4) && (__GNUC_MINOR__ == 8))
+namespace std {
+using ::max_align_t;
+}
+#endif
+#endif
+
 namespace hotplace {
 
 constexpr uint32 BUILTINMEMORY_SIGNATURE = 0x48535548;  // "HUSH" my old ID... I can't use it anymore because require long IDs these days...
@@ -148,6 +156,22 @@ template <typename T>
 class builtinpool_allocator {
    public:
     using value_type = T;
+#if defined __GNUC__
+#if ((__GNUC__ == 4) && (__GNUC_MINOR__ == 8))
+    // gcc 4.8.x
+    using pointer = T*;
+    using const_pointer = const T*;
+    using reference = T&;
+    using const_reference = const T&;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
+    // definition of rebind struct for compatibility with gcc 4.8.x and earlier environments
+    template <typename U>
+    struct rebind {
+        typedef builtinpool_allocator<U> other;
+    };
+#endif
+#endif
 
     // 1. default constructor: creates its own expandable builtinpool internally (default size of 1mb)
     builtinpool_allocator() : _pool(std::make_shared<builtinpool>(nullptr, 0, builtinpool_policy::expandable, BUILTINMEMORY_EXPANSION_SIZE)) {}
@@ -185,6 +209,22 @@ class builtinpool_allocator {
             _pool->deallocate(p);
         }
     }
+
+#if defined __GNUC__
+#if ((__GNUC__ == 4) && (__GNUC_MINOR__ == 8))
+    // added construct/destroy implementations for gcc 4.8.x compatibility
+    template <typename U, typename... Args>
+    void construct(U* p, Args&&... args) {
+        ::new (static_cast<void*>(p)) U(std::forward<Args>(args)...);
+    }
+    template <typename U>
+    void destroy(U* p) {
+        if (nullptr != p) {
+            p->~U();
+        }
+    }
+#endif
+#endif
 
     template <typename U>
     bool operator==(const builtinpool_allocator<U>& other) const noexcept {
