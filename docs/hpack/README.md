@@ -260,7 +260,3 @@ document is synchronized with a newer edition.
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
 ```
-
-## Related Documents
-
-- [HTTP/2](../http2/README.md)

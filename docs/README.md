@@ -1,6 +1,6 @@
 # hotplace study
 
-**Edition 1 · Revision 1076**
+**Edition 1 · Revision 1078**
 
 
 > A compact study map of the hotplace project.
@@ -17,6 +17,8 @@ Topic documents use that structure without repeating the guide.
 
 ## Topic Map
 
+- [Error Model](error/README.md)
+- [COSE / JOSE](cose_jose/README.md)
 - [HPACK](hpack/README.md)
 - [HTTP/2](http2/README.md)
 - [QUIC](quic/README.md)

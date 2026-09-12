@@ -30,6 +30,8 @@ class asn1_constraint_t {
     virtual void accept(asn1_constraint_visitor* v) = 0;
     virtual void represent(stream_t* s, const asn1_object* object, const asn1_value* value = nullptr) const = 0;
 
+    virtual type_category_t type() const = 0;
+
     virtual void addref() = 0;
     virtual void release() = 0;
 };

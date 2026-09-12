@@ -258,6 +258,8 @@ const error_description error_descriptions[] = {
     errordef(miscast_unsigned, "negative integer to unsigned type"),
     errordef(miscast_narrow, "narrow conversion"),
     errordef(conflict_detected, "confilict detected"),
+    errordef(invalid_handle, "invalid handle"),
+    errordef(syntax_error, "syntax error"),
 
     errordef(not_supported, "not supported"),
     errordef(expect_failure, "expect failure (negative test)"),

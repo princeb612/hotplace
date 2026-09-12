@@ -590,6 +590,60 @@ return_t variant::to_string(std::string& target) const {
     return ret;
 }
 
+variant variant::minvalue() {
+    variant_t vt;
+    vt.type = vartype_t::TYPE_MINVALUE;
+    return variant(std::move(vt));
+}
+
+variant variant::maxvalue() {
+    variant_t vt;
+    vt.type = vartype_t::TYPE_MAXVALUE;
+    return variant(std::move(vt));
+}
+
+bool variant::is_null() const { return vartype_t::TYPE_NULL == _vt.type; }
+
+bool variant::is_int() const { return (vt_flag_int & _vt.flag) ? true : false; }
+
+bool variant::is_float() const { return (vt_flag_float & _vt.flag) ? true : false; }
+
+bool variant::is_string() const { return (vt_flag_string & _vt.flag) ? true : false; }
+
+bool variant::is_binary() const { return (vt_flag_binary & _vt.flag) ? true : false; }
+
+bool variant::is_usertype() const { return (vt_flag_user_type & _vt.flag) ? true : false; }
+
+bool variant::is_minvalue() const { return vartype_t::TYPE_MINVALUE == _vt.type; }
+
+bool variant::is_maxvalue() const { return vartype_t::TYPE_MAXVALUE == _vt.type; }
+
+bool variant::is_coalescable_with(const variant& other) const {
+    auto lflag = _vt.flag;
+    auto rflag = other._vt.flag;
+    if (vt_flag_int & lflag) {
+        if (vt_flag_int & rflag)
+            return true;
+        else if (other.is_maxvalue())
+            return true;
+    } else if (vt_flag_float & lflag) {
+        if (vt_flag_float & rflag)
+            return true;
+        else if (other.is_maxvalue())
+            return true;
+    } else if (vt_flag_string & lflag) {
+        if (vt_flag_string & rflag) return true;
+    } else if (vt_flag_binary & lflag) {
+        if (vt_flag_binary & rflag) return true;
+    } else if (is_minvalue()) {
+        if ((vt_flag_int | vt_flag_float) & rflag)
+            return true;
+        else if (other.is_maxvalue())
+            return true;
+    }
+    return false;
+}
+
 variant& variant::operator=(const variant& other) {
     _vt = other._vt;
     return *this;

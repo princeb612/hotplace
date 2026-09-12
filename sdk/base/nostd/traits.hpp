@@ -159,6 +159,24 @@ template <> struct make_unsigned<uint128> { using type = uint128; };
 
 }  // namespace custom
 
+enum class type_category_t {
+    unknown,
+    integral,        // int, char, bool (std::is_integral) + int64, uint64 (custom::is_integral)
+    floating_point,  // float, double (std::is_floating_point)
+    cstring          // std::string, char*
+};
+
+template <typename T>
+struct get_type_category {
+    using decay_t = typename std::decay<T>::type;
+
+    static const type_category_t value =  //
+        custom::is_integral<decay_t>::value      ? type_category_t::integral
+        : std::is_floating_point<decay_t>::value ? type_category_t::floating_point
+        : (std::is_same<decay_t, const char*>::value || std::is_same<decay_t, char*>::value || std::is_same<decay_t, std::string>::value) ? type_category_t::cstring
+                                                                                                                                          : type_category_t::unknown;
+};
+
 }  // namespace hotplace
 
 #endif

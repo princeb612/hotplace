@@ -25,6 +25,11 @@ namespace hotplace {
 #define ERROR_CODE_BEGIN 0xef010000
 #define WARN_CODE_BEGIN 0xff010000
 
+/*
+ * runtime isolation (Linux / Winodws)
+ *   separation of cross-platform compilation: windows and linux builds are clearly separated at the binary level,
+ *   and runtime behavior accommodates errors specific to a single OS environment only.
+ */
 enum class errorcode_t : uint32 {
     success = 0,
 
@@ -270,6 +275,8 @@ enum class errorcode_t : uint32 {
     /* 0xef010049 4009820233 */ miscast_unsigned,
     /* 0xef01004a 4009820234 */ miscast_narrow,
     /* 0xef01004b 4009820235 */ conflict_detected,
+    /* 0xef01004c 4009820236 */ invalid_handle,
+    /* 0xef01004d 4009820237 */ syntax_error,
 
     /* 0xef010080 4009820288 */ internal_error_0 = 0xef010080,
     /* 0xef010081 4009820289 */ internal_error_1,
@@ -333,7 +340,7 @@ enum class error_category_t : uint8 {
 struct return_t {
     uint32 code;
 
-    // 1. constexpr, noexcept (Literal Type)
+    // constexpr, noexcept (Literal Type)
     constexpr return_t() noexcept : code(static_cast<uint32>(errorcode_t::success)) {}
 
     constexpr return_t(uint32 value) noexcept : code(value) {}
@@ -343,9 +350,6 @@ struct return_t {
 #if defined _WIN32 || defined WIN32
     // MINGW64, MSVC
     constexpr return_t(HRESULT value) noexcept : code(static_cast<uint32>(value)) {}
-#endif
-#if defined _MSC_VER
-    constexpr return_t(unsigned long value) noexcept : code(static_cast<uint32>(value)) {}
 #endif
 
     std::string error_code() const;
@@ -373,12 +377,6 @@ struct return_t {
         return *this;
     }
 #endif
-#if defined _MSC_VER
-    return_t& operator=(unsigned long value) noexcept {
-        this->code = static_cast<uint32>(value);
-        return *this;
-    }
-#endif
 
     constexpr bool operator<(const return_t& other) const noexcept { return this->code < other.code; }
     constexpr bool operator<=(const return_t& other) const noexcept { return this->code <= other.code; }
@@ -396,12 +394,27 @@ struct return_t {
     constexpr bool operator==(errorcode_t other) const noexcept { return this->code == static_cast<uint32>(other); }
     constexpr bool operator!=(errorcode_t other) const noexcept { return this->code != static_cast<uint32>(other); }
 
+    // uint32
     constexpr bool operator==(uint32 other) const noexcept { return this->code == other; }
     constexpr bool operator!=(uint32 other) const noexcept { return this->code != other; }
     constexpr bool operator<(uint32 other) const noexcept { return this->code < other; }
     constexpr bool operator<=(uint32 other) const noexcept { return this->code <= other; }
     constexpr bool operator>(uint32 other) const noexcept { return this->code > other; }
     constexpr bool operator>=(uint32 other) const noexcept { return this->code >= other; }
+
+    // int (signed - SQL_ERROR ...)
+    constexpr bool operator==(int other) const noexcept { return static_cast<int>(this->code) == other; }
+    constexpr bool operator!=(int other) const noexcept { return false == (*this == other); }
+
+    friend constexpr bool operator==(int lhs, const return_t& rhs) noexcept { return rhs == lhs; }
+    friend constexpr bool operator!=(int lhs, const return_t& rhs) noexcept { return false == (rhs == lhs); }
+
+    // long (signed long - Windows LONG/HRESULT/WAIT_TIMEOUT ...)
+    constexpr bool operator==(long other) const noexcept { return static_cast<long>(this->code) == other; }
+    constexpr bool operator!=(long other) const noexcept { return false == (*this == other); }
+
+    friend constexpr bool operator==(long lhs, const return_t& rhs) noexcept { return rhs == lhs; }
+    friend constexpr bool operator!=(long lhs, const return_t& rhs) noexcept { return false == (rhs == lhs); }
 };
 
 typedef struct _error_description {

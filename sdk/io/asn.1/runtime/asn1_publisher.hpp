@@ -13,7 +13,9 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1PUBLISHER__
 #define __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1PUBLISHER__
 
+#include <hotplace/sdk/base/nostd/traits.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint.hpp>
 #include <hotplace/sdk/io/asn.1/basic/types.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/types.hpp>
 #include <hotplace/sdk/io/parser/types.hpp>
@@ -24,14 +26,29 @@ namespace hotplace {
 namespace io {
 
 struct asn1_semantic_node {
+    // parse_tree
     std::string symbol;
     std::string value;
+
+    // asn1_object*
     asn1_object* object;
     asn1_option option;
 
-    asn1_semantic_node() : object(nullptr) {}
+    // constraints
+    variant v;
+    variant v_to;
+    type_category_t cons_type;
+    union {
+        asn1_constraint_t* u;
+        asn1_constraint<asn1_native_int_t>* i;
+        asn1_constraint<double>* f;
+        asn1_constraint<std::string>* s;
+    } cons;
+
+    asn1_semantic_node() : object(nullptr), cons_type(type_category_t::unknown) { cons.u = nullptr; }
     ~asn1_semantic_node() {
         if (object) object->release();
+        if (cons.u) cons.u->release();
     }
 
     asn1_semantic_node(const asn1_semantic_node& other) : asn1_semantic_node() { *this = other; }
@@ -41,6 +58,11 @@ struct asn1_semantic_node {
         if (other.object) other.object->addref();  // shallow copy
         object = other.object;
         option = other.option;
+        v = other.v;
+        v_to = other.v_to;
+        cons_type = other.cons_type;
+        if (other.cons.u) other.cons.u->addref();
+        cons.u = other.cons.u;
         return *this;
     }
     asn1_semantic_node(asn1_semantic_node&& other) : asn1_semantic_node() { *this = std::move(other); }
@@ -49,6 +71,10 @@ struct asn1_semantic_node {
         value = std::move(other.value);
         std::swap(object, other.object);
         option = std::move(other.option);
+        v = std::move(other.v);
+        v_to = std::move(other.v_to);
+        std::swap(cons_type, other.cons_type);
+        std::swap(cons, other.cons);
         return *this;
     }
 
@@ -57,6 +83,7 @@ struct asn1_semantic_node {
     void release() {
         object = nullptr;
         option.release();
+        cons.u = nullptr;
     }
 };
 

@@ -195,6 +195,8 @@ enum class vartype_t {
     TYPE_JBYTE = 269,      // JNI signed char
     TYPE_JCHAR = 270,      // JNI unsigned short
     TYPE_JSTRING = 271,    // JNI java/lang/String
+    TYPE_MINVALUE = 272,   // -inf
+    TYPE_MAXVALUE = 273,   // +inf
 
     TYPE_RESERVED = 0x1000,           //
     TYPE_STATIC_KEY = TYPE_RESERVED,  //
@@ -500,6 +502,32 @@ class variant {
      */
     return_t to_string(std::string& target) const;
 
+    static variant minvalue();
+    static variant maxvalue();
+
+    bool is_null() const;
+    bool is_int() const;
+    bool is_float() const;
+    bool is_string() const;
+    bool is_binary() const;
+    bool is_usertype() const;
+    bool is_minvalue() const;
+    bool is_maxvalue() const;
+    /**
+     * @remarks checks if 'other' can logically follow 'this' variant in sequence.
+     *          this operation is non-symmetric (order-dependent).
+     *          A.is_coalescable_with(B) != B.is_coalescable_with(A)
+     *
+     *          for examples
+     *            int-maxvalue, minvalue-int
+     *            float-maxvalue, minvalue-float
+     *            int, int
+     *            float, float
+     *            int8, int32
+     *            float, double
+     */
+    bool is_coalescable_with(const variant& other) const;
+
     variant& operator=(const variant_t& other);
     variant& operator=(variant_t&& other);
 
@@ -576,6 +604,107 @@ class variant {
     template <typename T>
     variant& operator=(T&& value) {
         return set(std::forward<T>(value));
+    }
+
+    /**
+     * @brief   get integral type value (int8~128, bool, char, etc.)
+     */
+    template <typename T, typename std::enable_if<custom::is_integral<typename std::decay<T>::type>::value &&
+                                                      ((variant_traits<typename std::decay<T>::type>::flags & vt_mask_standalone) == vt_mask_standalone),
+                                                  int>::type = 0>
+    T value() const {
+        using decay_type = typename std::decay<T>::type;
+        using traits = variant_traits<decay_type>;
+
+        T val = T();
+
+        // 1. direct match: return stored value directly if type matches
+        if (_vt.type == traits::type) {
+            val = _vt.data.*(traits::member);
+        }
+        // 2. integer fallback: safely call t_vtoi (T is guaranteed integral)
+        else if (0 != (vt_flag_int & traits::flags)) {
+            val = t_vtoi<decay_type>(_vt);
+        }
+
+        return val;
+    }
+
+    /**
+     * @brief   get floating point type value (float, double)
+     */
+    template <typename T, typename std::enable_if<std::is_floating_point<typename std::decay<T>::type>::value &&
+                                                      ((variant_traits<typename std::decay<T>::type>::flags & vt_mask_standalone) == vt_mask_standalone),
+                                                  int>::type = 0>
+    T value() const {
+        using decay_type = typename std::decay<T>::type;
+        using traits = variant_traits<decay_type>;
+
+        T val = T();
+
+        // 1. direct match: return stored value directly if type matches
+        if (_vt.type == traits::type) {
+            val = _vt.data.*(traits::member);
+        }
+        // 2. floating point fallback logic
+        else if (0 != (vt_flag_float & traits::flags)) {
+            if (vartype_t::TYPE_FLOAT == _vt.type) {
+                val = static_cast<T>(_vt.data.f);
+            } else if (vartype_t::TYPE_DOUBLE == _vt.type) {
+                val = static_cast<T>(_vt.data.d);
+            } else if (0 != (vt_flag_int & _vt.flag)) {
+                // convert stored integer to float/double
+                val = static_cast<T>(t_vtoi<int64>(_vt));
+            }
+        }
+
+        return val;
+    }
+
+    bool is_composite() const { return vt_mask_composite == (_vt.flag & vt_mask_composite); }
+
+    /**
+     * @brief   Get composite type pointer value (char*, byte_t*, etc.)
+     * @param   out_size [out, optional] Receives size if composite
+     */
+    template <typename T, typename std::enable_if<((variant_traits<custom::vt_remove_ptr_const_t<T>>::flags & vt_mask_composite) == vt_mask_composite), int>::type = 0>
+    T value(size_t* out_size = nullptr) const {
+        using traits = variant_traits<custom::vt_remove_ptr_const_t<T>>;
+
+        T val = nullptr;
+
+        if (_vt.type == traits::type || (true == is_composite() && 0 != _vt.data.p)) {
+            val = reinterpret_cast<T>(_vt.data.*(traits::member));
+
+            if (nullptr != out_size) {
+                if (true == is_composite()) {
+                    // Use _vt.size for NSTRING/BSTRING, or fallback to strlen for C-string
+                    *out_size = (0 != _vt.size) ? _vt.size : (val ? strlen((const char*)val) : 0);
+                } else {
+                    *out_size = 0;
+                }
+            }
+        }
+
+        return val;
+    }
+
+    /**
+     * @brief   get value with out-parameter (returns size if composite)
+     */
+    template <typename T>
+    bool get_value(T& out_val, size_t* out_size = nullptr) const {
+        bool ret = false;
+
+        using decay_type = typename std::decay<T>::type;
+        using traits = variant_traits<custom::vt_remove_ptr_const_t<decay_type>>;
+
+        if (_vt.type == traits::type) {
+            out_val = value<decay_type>(out_size);
+            ret = true;
+        }
+
+        return ret;
     }
 
     // variant& operator=(const void* value);

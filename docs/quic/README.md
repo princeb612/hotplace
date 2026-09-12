@@ -381,10 +381,3 @@ only when a relationship becomes useful to explain a real study path.
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
 ```
-
-## Related Documents
-
-- [TLS](../tls/README.md)
-- [HTTP/3](../http3/README.md)
-- [Network Server](../network_server/README.md)
-- [PCAPNG](../pcapng/README.md)

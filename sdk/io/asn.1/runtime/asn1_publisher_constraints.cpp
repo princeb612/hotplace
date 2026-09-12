@@ -11,18 +11,294 @@
  *
  */
 
+#include <hotplace/sdk/base/nostd/atoi.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_all_except.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_except.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_from.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_intersection.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_range.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_single_value.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_size.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_union.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_builder.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_publisher.hpp>
 #include <hotplace/sdk/io/parser/parse_tree.hpp>
 #include <hotplace/sdk/io/parser/parser_resource.hpp>
+#include <string>
 
 namespace hotplace {
 namespace io {
 
 void asn1_publisher::prepare_constraints() {
-    // TODO
+    auto resource = asn1_resource::get_instance();
+
+    add_handler("Constraint", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("Constraint", {"(", "ConstraintExpr", ")"})
+
+        auto size = node->sizeof_rhs();
+        std::vector<asn1_semantic_node> rhs(size);
+        for (size_t i = 0; i < size; ++i) {
+            rhs[size - 1 - i] = context.pop();
+        }
+
+        asn1_semantic_node asn;
+        asn.symbol = node->symbol;
+        if (3 == size) {
+            asn.cons.u = rhs[1].cons.u;
+            rhs[1].release();
+        }
+
+        context.push(std::move(asn));
+
+        return errorcode_t::success;
+    });
+    add_handler("ConstraintExpr", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("ConstraintExpr", {"SubtypeElementSet"})
+        // production("ConstraintExpr", {"ALL EXCEPT", "SubtypeElementSet"})
+        // production("ConstraintExpr", {"ALL", "EXCEPT", "SubtypeElementSet"})
+
+        auto size = node->sizeof_rhs();
+        std::vector<asn1_semantic_node> rhs(size);
+        for (size_t i = 0; i < size; ++i) {
+            rhs[size - 1 - i] = context.pop();
+        }
+
+        asn1_semantic_node asn;
+        asn.symbol = node->symbol;
+
+        if (1 == size) {
+            asn.cons = rhs[0].cons;
+            rhs[0].release();
+        } else {
+            auto next = (3 == size) ? 2 : 1;
+            auto type = rhs[next].cons.u->type();
+            asn1_constraint_t* cons = nullptr;
+
+            if (type_category_t::integral == type) {
+                cons = new asn1_constraint_all_except_i(rhs[next].cons.i);
+            } else if (type_category_t::floating_point == type) {
+                cons = new asn1_constraint_all_except_f(rhs[next].cons.f);
+            } else if (type_category_t::cstring == type) {
+                cons = new asn1_constraint_all_except_s(rhs[next].cons.s);
+            }
+            asn.cons.u = cons;
+            rhs[next].release();
+        }
+
+        context.push(std::move(asn));
+
+        return errorcode_t::success;
+    });
+    add_handler("SubtypeElementSet", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("SubtypeElementSet", {"SubtypeElementSet", "|", "SubtypeElement"})
+        // production("SubtypeElementSet", {"SubtypeElementSet", ",", "SubtypeElement"})
+        // production("SubtypeElementSet", {"SubtypeElementSet", "UNION", "SubtypeElement"})
+        // production("SubtypeElementSet", {"SubtypeElementSet", "EXCEPT", "SubtypeElement"})
+        // production("SubtypeElementSet", {"SubtypeElement"})
+
+        auto size = node->sizeof_rhs();
+        std::vector<asn1_semantic_node> rhs(size);
+        for (size_t i = 0; i < size; ++i) {
+            rhs[size - 1 - i] = context.pop();
+        }
+
+        asn1_semantic_node asn;
+        asn.symbol = node->symbol;
+        if (1 == size) {
+            asn.cons = rhs[0].cons;
+            rhs[0].release();
+        } else if (3 == size) {
+            if (rhs[1].symbol == "|" || rhs[1].symbol == "," || rhs[1].symbol == "UNION") {
+                auto type = rhs[2].cons.u->type();
+                asn1_constraint_t* cons = nullptr;
+
+                if (type_category_t::integral == type) {
+                    cons = new asn1_constraint_union_i(rhs[0].cons.i, rhs[2].cons.i);
+                } else if (type_category_t::floating_point == type) {
+                    cons = new asn1_constraint_union_f(rhs[0].cons.f, rhs[2].cons.f);
+                } else if (type_category_t::cstring == type) {
+                    cons = new asn1_constraint_union_s(rhs[0].cons.s, rhs[2].cons.s);
+                }
+                asn.cons.u = cons;
+                rhs[0].release();
+                rhs[2].release();
+            } else if (rhs[1].symbol == "EXCEPT") {
+                auto type = rhs[2].cons.u->type();
+                asn1_constraint_t* cons = nullptr;
+
+                if (type_category_t::integral == type) {
+                    cons = new asn1_constraint_except_i(rhs[0].cons.i, rhs[2].cons.i);
+                } else if (type_category_t::floating_point == type) {
+                    cons = new asn1_constraint_except_f(rhs[0].cons.f, rhs[2].cons.f);
+                } else if (type_category_t::cstring == type) {
+                    cons = new asn1_constraint_except_s(rhs[0].cons.s, rhs[2].cons.s);
+                }
+                asn.cons.u = cons;
+                rhs[0].release();
+                rhs[2].release();
+            }
+        }
+
+        context.push(std::move(asn));
+
+        return errorcode_t::success;
+    });
+    add_handler("SubtypeElement", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("SubtypeElement", {"SubtypeElement", "^", "PrimaryElement"})
+        // production("SubtypeElement", {"SubtypeElement", "INTERSECTION", "PrimaryElement"})
+        // production("SubtypeElement", {"PrimaryElement"})
+
+        auto size = node->sizeof_rhs();
+        std::vector<asn1_semantic_node> rhs(size);
+        for (size_t i = 0; i < size; ++i) {
+            rhs[size - 1 - i] = context.pop();
+        }
+
+        asn1_semantic_node asn;
+        asn.symbol = node->symbol;
+
+        if (1 == size) {
+            asn.cons = rhs[0].cons;
+            rhs[0].release();
+        } else if (3 == size) {
+            if (rhs[1].symbol == "^" || rhs[1].symbol == "INTERSECTION") {
+                auto type = rhs[2].cons.u->type();
+                asn1_constraint_t* cons = nullptr;
+
+                if (type_category_t::integral == type) {
+                    cons = new asn1_constraint_intersection_i(rhs[0].cons.i, rhs[2].cons.i);
+                } else if (type_category_t::floating_point == type) {
+                    cons = new asn1_constraint_intersection_f(rhs[0].cons.f, rhs[2].cons.f);
+                } else if (type_category_t::cstring == type) {
+                    cons = new asn1_constraint_intersection_s(rhs[0].cons.s, rhs[2].cons.s);
+                }
+                asn.cons.u = cons;
+                rhs[0].release();
+                rhs[2].release();
+            }
+        }
+
+        context.push(std::move(asn));
+
+        return errorcode_t::success;
+    });
+    add_handler("PrimaryElement", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("PrimaryElement", {"ValueElement"})
+        // production("PrimaryElement", {"ValueElement", "..", "ValueElement"})
+        // production("PrimaryElement", {"ValueElement", "..", "<", "ValueElement"}) // exclusive range support
+        // production("PrimaryElement", {"SIZE", "Constraint"})
+        // production("PrimaryElement", {"FROM", "Constraint"})
+        // production("PrimaryElement", {"PATTERN", symqs})
+        // production("PrimaryElement", {"(", "ConstraintExpr", ")"})
+
+        auto size = node->sizeof_rhs();
+        std::vector<asn1_semantic_node> rhs(size);
+        for (size_t i = 0; i < size; ++i) {
+            rhs[size - 1 - i] = context.pop();
+        }
+
+        auto& rhs_firstelem = rhs[0];
+
+        //     bool is_coalescable = from.is_coalescable_with(to);
+
+        asn1_semantic_node asn;
+        asn.symbol = node->symbol;
+
+        if ("ValueElement" == rhs_firstelem.symbol) {
+            if (1 == size) {
+                asn1_constraint_t* cons = nullptr;
+                if (rhs_firstelem.v.is_int()) {
+                    cons = new asn1_constraint_single_value_i(rhs_firstelem.v.value<int64>());
+                } else if (rhs_firstelem.v.is_float()) {
+                    cons = new asn1_constraint_single_value_f(rhs_firstelem.v.value<double>());
+                } else if (rhs_firstelem.v.is_string()) {
+                    size_t len = 0;
+                    auto p = rhs_firstelem.v.value<const char*>(&len);
+                    cons = new asn1_constraint_single_value_s(std::string(p, len));
+                }
+                asn.cons.u = cons;
+            } else {
+                size_t next = (size == 4) ? 3 : 2;
+                auto& rhs_secondelem = rhs[next];
+
+                asn1_constraint_t* cons = nullptr;
+                if (rhs_firstelem.v.is_int() && rhs_secondelem.v.is_int()) {
+                    cons = new asn1_constraint_range_i(rhs_firstelem.v.value<int64>(), rhs_secondelem.v.value<int64>());
+                } else if (rhs_firstelem.v.is_float() && rhs_secondelem.v.is_float()) {
+                    cons = new asn1_constraint_range_f(rhs_firstelem.v.value<double>(), rhs_secondelem.v.value<double>());
+                } else if (rhs_firstelem.v.is_minvalue()) {
+                    if (rhs_secondelem.v.is_int()) {
+                        cons = new asn1_constraint_range_i(range_type_t::minvalue, rhs_secondelem.v.value<int64>());
+                    } else if (rhs_secondelem.v.is_float()) {
+                        cons = new asn1_constraint_range_f(range_type_t::minvalue, rhs_secondelem.v.value<double>());
+                    } else if (rhs_secondelem.v.is_maxvalue()) {
+                        cons = new asn1_constraint_range_f(range_type_t::minvalue, range_type_t::maxvalue);
+                    }
+                } else if (rhs_secondelem.v.is_maxvalue()) {
+                    if (rhs_firstelem.v.is_int()) {
+                        cons = new asn1_constraint_range_i(rhs_firstelem.v.value<int64>(), range_type_t::maxvalue);
+                    } else if (rhs_firstelem.v.is_float()) {
+                        cons = new asn1_constraint_range_i(rhs_firstelem.v.value<double>(), range_type_t::maxvalue);
+                    }
+                }
+                asn.cons.u = cons;
+            }
+        } else if ("SIZE" == rhs_firstelem.symbol) {
+            // TODO
+        } else if ("FROM" == rhs_firstelem.symbol) {
+            // TODO
+        } else if ("PATTERN" == rhs_firstelem.symbol) {
+            // TODO
+        } else if ("ConstraintExpr" == rhs[1].symbol) {
+            // TODO
+        }
+
+        context.push(std::move(asn));
+
+        return errorcode_t::success;
+    });
+    add_handler("ValueElement", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("ValueElement", {symid})
+        // production("ValueElement", {symuser})
+        // production("ValueElement", {symqs})
+        // production("ValueElement", {"MIN"})
+        // production("ValueElement", {"MAX"})
+        // production("ValueElement", {"TRUE"})
+        // production("ValueElement", {"FALSE"})
+        // production("ValueElement", {symnum})
+        // production("ValueElement", {symfp})
+
+        auto rhs_valueelem = context.pop();
+
+        auto pr = parser_resource::get_instance();
+        auto symqs = pr->nameof(token_quot_string);
+        auto symnum = pr->nameof(token_number);
+        auto symfp = pr->nameof(token_floatingpoint);
+
+        asn1_semantic_node asn;
+        asn.symbol = node->symbol;
+        if (symqs == rhs_valueelem.symbol) {
+            std::string qs = rhs_valueelem.value;
+            auto lambda_quot = [](const int& c) -> bool { return (('\"' == c) || '\'' == c) ? true : false; };
+            qs.erase(qs.begin(), std::find_if(qs.begin(), qs.end(), [&lambda_quot](int c) { return (false == lambda_quot(c)); }));
+            qs.erase(std::find_if(qs.rbegin(), qs.rend(), [&lambda_quot](int c) { return (false == lambda_quot(c)); }).base(), qs.end());
+            asn.v.set(qs);
+        } else if (symnum == rhs_valueelem.symbol) {
+            asn.v.set(t_atoi<asn1_native_int_t>(rhs_valueelem.value));
+        } else if (symfp == rhs_valueelem.symbol) {
+            asn.v.set(atof(rhs_valueelem.value.c_str()));
+        } else if ("MIN" == rhs_valueelem.symbol) {
+            asn.v = variant::minvalue();
+        } else if ("MAX" == rhs_valueelem.symbol) {
+            asn.v = variant::maxvalue();
+        }
+
+        context.push(std::move(asn));
+
+        return errorcode_t::success;
+    });
 }
 
 }  // namespace io

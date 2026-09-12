@@ -67,6 +67,8 @@ class asn1_constraint : public asn1_constraint_t {
     asn1_constraint<T>* get_parent() const { return _parent; }
     void set_parent(asn1_constraint<T>* parent) { _parent = parent; }
 
+    virtual type_category_t type() const { return get_type_category<T>::value; }
+
     virtual void addref() { _shared.addref(); }
     virtual void release() { _shared.delref(); }
 

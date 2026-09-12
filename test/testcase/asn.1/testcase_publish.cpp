@@ -114,7 +114,7 @@ void test_publish_babystep() {
     _test_case.assert(bs == "Type1 ::= VisibleString", __FUNCTION__, "first baby step");
 }
 
-void test_publish_toddling() {
+void test_publish_basics() {
     _test_case.begin("publish");
 
     struct testvector {
@@ -184,28 +184,35 @@ void test_publish_toddling() {
 
     asn1_runtime runtime;     // automatic
     lexical_context context;  // share usertype
-    auto parser = asn1_parser::get_instance();
 
     for (const auto& entry : table) {
-        parse_tree pt;
-        parser->parse(&runtime, context, entry.notation, &pt);
-        dump_parse_tree(&runtime, &pt);
+        parse_reconst_notation(&runtime, context, entry.notation);
+    }
+}
 
-        {
-            basic_stream bs;
-            asn1_object* obj = nullptr;
-            asn1_builder::build(&pt, &obj);
-            if (obj) {
-                obj->publish(&bs);
-                obj->release();
-            }
-            _logger->writeln("parse and publish %s", bs.c_str());
-            _test_case.assert(bs == entry.notation, __FUNCTION__, "test %s", entry.notation);
-        }
+void test_publish_constraints() {
+    _test_case.begin("publish");
+    struct testvector {
+        const char* notation;
+    } table[] = {
+        {"Type1 ::= INTEGER (1)"},
+        {"Type2 ::= INTEGER (1 | 2)"},
+        {"Type3 ::= INTEGER (1 | 2 | 3 | 6)"},
+        // {R"(Type4 ::= VisibleString ("A" | "B" | "C" | "D"))"},  -- still bug
+        {"Type5 ::= INTEGER (1..10 | 20..30)"},
+        // {"Type6 ::= INTEGER ((1..100) INTERSECTION (50..200))"},  -- still bug
+    };
+
+    asn1_runtime runtime;     // automatic
+    lexical_context context;  // share usertype
+
+    for (const auto& entry : table) {
+        parse_reconst_notation(&runtime, context, entry.notation);
     }
 }
 
 void testcase_publish() {
     test_publish_babystep();
-    test_publish_toddling();
+    test_publish_basics();
+    test_publish_constraints();  // babystep
 }

@@ -68,7 +68,6 @@ struct error_traits<return_t> {
     static constexpr return_t value_internal_error() noexcept { return errorcode_t::internal_error; }
 
     static constexpr bool is_success(return_t code) noexcept { return (code == errorcode_t::success) || (code == errorcode_t::expect_failure); }
-
     static bool is_not_fail(return_t code) {
         auto category = error_advisor::get_instance()->categoryof(code);
         return (error_category_t::error_category_severe != category);
@@ -106,7 +105,6 @@ struct error_traits<int, osslerror_category> {
     static constexpr int value_invalid_parameter() noexcept { return 0; }
     static constexpr int value_internal_error() noexcept { return 0; }
 
-    // OpenSSL 성공 판단 조건 수정: code > 0
     static constexpr bool is_success(int code) noexcept { return code > 0; }
     static constexpr bool is_not_fail(int code) noexcept { return code > 0; }
 

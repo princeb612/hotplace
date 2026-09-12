@@ -247,10 +247,9 @@ return_t odbc_query::fetch(odbc_record* odbc_record_ptr) {
 
         /*
          * MSSQLServer issue
-         *
-         * stored procedure 를 실행했을 때 SQLFetch 가 SQL_ERROR (-1) 리턴
-         * - procedure 가 cursor 를 사용할 때 print 를 사용하지 말 것...
-         * - 잘못된 커서 사용 오류로 실패한다.
+         * SQLFetch returns SQL_ERROR (-1) when the stored procedure is executed
+         * - do not use print statements when the procedure uses a cursor...
+         * - It fails due to an error caused by improper cursor usage.
          */
         ret_sql = SQLFetch(_stmt_handle);
 #if (ODBCVER >= 0x0300)
@@ -404,10 +403,10 @@ return_t odbc_query::fetch(odbc_record* odbc_record_ptr) {
                 byte_t* pData = bio.data();
                 size_t dwDataSize = bio.size();
 
-                if (dwDataSize == 0) { /* 미리 준비한 버퍼를 사용해 데이터를 가져온 경우 */
+                if (dwDataSize == 0) { /* when data is retrieved using a pre-prepared buffer */
                     __try_new_catch(odbc_field_ptr, new odbc_field(nCol, nColumnType, nColumnType, nDataLen > 0 ? (int)nDataLen : 1, (unsigned char*)DataBuf, pFieldRef),
                                     ret, __leave2);
-                } else { /* 메모리 스트림을 사용해 큰 데이터를 가져온 경우 */
+                } else { /* when retrieving large amounts of data using a memory stream */
                     __try_new_catch(odbc_field_ptr,
                                     new odbc_field(nCol, nColumnType, nColumnType, dwDataSize > 0 ? (int)dwDataSize : 1, (unsigned char*)pData, pFieldRef), ret,
                                     __leave2);
@@ -417,7 +416,7 @@ return_t odbc_query::fetch(odbc_record* odbc_record_ptr) {
                 *odbc_record_ptr << odbc_field_ptr;
             }
             __finally2 {
-                if (errorcode_t::success != ret) { /* 실패에 대한 메모리 해제 책임 */
+                if (errorcode_t::success != ret) { /* memory deallocation upon failure */
                     odbc_record_ptr->clear();
                 }
             }
@@ -426,7 +425,7 @@ return_t odbc_query::fetch(odbc_record* odbc_record_ptr) {
         }
     }
     __finally2 {
-        if (SQL_ERROR == ret_sql) {
+        if (false == error_traits<SQLRETURN, odbc_category>::is_success(ret_sql)) {  // if (SQL_ERROR == ret_sql) {
             if (nullptr != _stmt_handle) {
                 odbc_diagnose::get_instance()->diagnose(SQL_HANDLE_STMT, _stmt_handle);
             }

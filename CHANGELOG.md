@@ -35,6 +35,7 @@
     * CBOR
 
 * details
+  * Revision 1080
   * Revision 1079
     * [tested] gcc 4.8.5
   * Revision 1078

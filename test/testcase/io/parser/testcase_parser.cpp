@@ -143,7 +143,7 @@ void test_lalr() {
             .add_production("Statement", {"Field"})
             .add_production("Statement", {"TagPrefix"})
 
-            // Assignment: LHS (asn1_referenced_type::define Ω√¡°)
+            // Assignment: LHS (asn1_referenced_type::define ÏãúÏ†ê)
             .add_production("Assignment", {"DefinedType", "::=", "TypeSpec"})
             .add_production("Assignment", {"DefinedType", "::=", "TypeSpec", "Constraint"})
 
@@ -199,7 +199,7 @@ void test_lalr() {
             .add_production("TypeSpec", {"StatementSetOf"})
             .add_production("TypeSpec", {"StatementChoice"})
 
-            // RHS referenced type symbol (asn1_referenced_type::refer Ω√¡°)
+            // RHS referenced type symbol (asn1_referenced_type::refer ÏãúÏ†ê)
             .add_production("TypeBase", {"SimpleType"})
             .add_production("TypeBase", {"TaggedType"})
             .add_production("TypeBase", {"ReferencedType"})
@@ -265,20 +265,27 @@ void test_lalr() {
             // Constraints Grammar
             .add_production("Constraint", {"(", "ConstraintExpr", ")"})
             .add_production("ConstraintExpr", {"SubtypeElementSet"})
-            .add_production("ConstraintExpr", {"ALL EXCEPT", "SubtypeElementSet"})
             .add_production("ConstraintExpr", {"ALL", "EXCEPT", "SubtypeElementSet"})
-            .add_production("SubtypeElementSet", {"SubtypeElementSet", "|", "IntersectionElement"})
-            .add_production("SubtypeElementSet", {"SubtypeElementSet", ",", "IntersectionElement"})
-            .add_production("SubtypeElementSet", {"SubtypeElementSet", "EXCEPT", "IntersectionElement"})
-            .add_production("SubtypeElementSet", {"IntersectionElement"})
-            .add_production("IntersectionElement", {"IntersectionElement", "INTERSECTION", "PrimaryElement"})
-            .add_production("IntersectionElement", {"PrimaryElement"})
+            .add_production("ConstraintExpr", {"ALL EXCEPT", "SubtypeElementSet"})  // lexical analyzer
+            // Union Level
+            .add_production("SubtypeElementSet", {"SubtypeElementSet", "|", "SubtypeElement"})
+            .add_production("SubtypeElementSet", {"SubtypeElementSet", ",", "SubtypeElement"})
+            .add_production("SubtypeElementSet", {"SubtypeElementSet", "UNION", "SubtypeElement"})
+            .add_production("SubtypeElementSet", {"SubtypeElementSet", "EXCEPT", "SubtypeElement"})
+            .add_production("SubtypeElementSet", {"SubtypeElement"})
+            // Intersection Level
+            .add_production("SubtypeElement", {"SubtypeElement", "^", "PrimaryElement"})
+            .add_production("SubtypeElement", {"SubtypeElement", "INTERSECTION", "PrimaryElement"})
+            .add_production("SubtypeElement", {"PrimaryElement"})
+            // Primary Elements
             .add_production("PrimaryElement", {"ValueElement"})
             .add_production("PrimaryElement", {"ValueElement", "..", "ValueElement"})
+            .add_production("PrimaryElement", {"ValueElement", "..", "<", "ValueElement"})  // exclusive range support
             .add_production("PrimaryElement", {"SIZE", "Constraint"})
             .add_production("PrimaryElement", {"FROM", "Constraint"})
             .add_production("PrimaryElement", {"PATTERN", symqs})
             .add_production("PrimaryElement", {"(", "ConstraintExpr", ")"})
+            // Value Elements
             .add_production("ValueElement", {symid})
             .add_production("ValueElement", {symuser})
             .add_production("ValueElement", {symnum})

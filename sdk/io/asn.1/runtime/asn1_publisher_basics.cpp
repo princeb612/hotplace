@@ -42,6 +42,7 @@ void asn1_publisher::prepare() {
 
     auto resource = asn1_resource::get_instance();
 
+    // "Statement"
     add_handler("Assignment", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("Assignment", {"DefinedType", "::=", "TypeSpec"})
         // production("Assignment", {"DefinedType", "::=", "TypeSpec", "Constraint"})
@@ -58,6 +59,12 @@ void asn1_publisher::prepare() {
         asn1_semantic_node asn;
         asn.symbol = node->symbol;
         asn.object = asn1_referenced_type::define(rhs_deftype.value, rhs_typespec.object);
+
+        if (4 == size) {
+            auto& rhs_cons = rhs[3];
+            rhs_typespec.object->get_constraints().add(rhs_cons.cons.u);
+            rhs_cons.release();
+        }
 
         rhs_typespec.release();  // asn own rhs_typespec.object
 
@@ -90,6 +97,12 @@ void asn1_publisher::prepare() {
             container = static_cast<asn1_unknown_container*>(rhs_fieldlist.object);
             sequence->set(*container);
             // rhs_fieldlist.release();
+        }
+        auto citer = index.find("Constraint");
+        if (index.end() != citer) {
+            auto& rhs_cons = rhs[iter->second];
+            sequence->get_constraints().add(rhs_cons.cons.u);
+            rhs_cons.release();
         }
 
         asn1_semantic_node asn;
@@ -300,6 +313,12 @@ void asn1_publisher::prepare() {
             if (index.end() != iter) {
                 auto& rhs_fieldopt = rhs[iter->second];
                 asn.object->set_option(rhs_fieldopt.option);
+            }
+            auto citer = index.find("Constraint");
+            if (index.end() != citer) {
+                auto& rhs_cons = rhs[iter->second];
+                asn.object->get_constraints().add(rhs_cons.cons.u);
+                rhs_cons.release();
             }
         }
 
