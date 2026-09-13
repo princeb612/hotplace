@@ -14,6 +14,7 @@
 #define __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_CONSTRAINTS_ASN1CONSTRAINTPATTERN__
 
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint.hpp>
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_single_value.hpp>
 
 namespace hotplace {
 namespace io {
@@ -22,6 +23,16 @@ template <typename T>
 class asn1_constraint_pattern : public asn1_constraint<T> {
    public:
     asn1_constraint_pattern(const std::string& pattern) : asn1_constraint<T>(asn1_entity_constraint_pattern), _pattern(pattern) {}
+    asn1_constraint_pattern(asn1_constraint<T>* cons) : asn1_constraint<T>(asn1_entity_constraint_pattern) {
+        // assert((std::is_same<typename std::decay<T>::type, std::string>::value));
+        auto sv = static_cast<asn1_constraint_single_value<T>*>(cons);
+        if (nullptr == sv) {
+            throw exception(errorcode_t::not_specified);
+        }
+        _pattern = std::move(sv->_value);
+        cons->release();
+    }
+
     virtual ~asn1_constraint_pattern() = default;
 
     asn1_constraint_pattern* clone() { return new asn1_constraint_pattern(*this); }

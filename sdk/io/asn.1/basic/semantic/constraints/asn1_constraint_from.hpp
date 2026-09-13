@@ -37,6 +37,7 @@ template <typename T>
 class asn1_constraint_from : public asn1_constraint<T> {
    public:
     asn1_constraint_from(asn1_constraint<T>* cons) : asn1_constraint_from() {
+        // assert((std::is_same<typename std::decay<T>::type, std::string>::value));
         if (nullptr == cons) {
             throw exception(errorcode_t::not_specified);
         }

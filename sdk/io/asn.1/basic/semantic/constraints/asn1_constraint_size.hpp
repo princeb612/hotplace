@@ -13,6 +13,7 @@
 #ifndef __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_CONSTRAINTS_ASN1CONSTRAINTSIZE__
 #define __HOTPLACE_SDK_IO_ASN1_BASIC_SEMANTIC_CONSTRAINTS_ASN1CONSTRAINTSIZE__
 
+#include <hotplace/sdk/base/nostd/traits.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint.hpp>
 
 namespace hotplace {
@@ -33,6 +34,7 @@ template <typename T>
 class asn1_constraint_size : public asn1_constraint<T> {
    public:
     asn1_constraint_size(asn1_constraint<T>* cons) : asn1_constraint_size() {
+        // assert(custom::is_integral<typename std::decay<T>::type>::value);
         if (nullptr == cons) {
             throw exception(errorcode_t::not_specified);
         }

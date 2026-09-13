@@ -251,7 +251,7 @@ bool asn1_object::validate(const asn1_value* value) {
     return validate_node(this, value);
 }
 
-bool asn1_object::validate_node(const asn1_object* node, const asn1_value* value) {
+bool asn1_object::validate_node(const asn1_object* node, const asn1_value* value) const {
     if (nullptr == value) return false;
 
     while (node) {

@@ -15,6 +15,9 @@ void test_testvector_constraints() {
     _test_case.begin("ASN.1 constraints");
 
     // clang-format off
+    // auto type_bool =
+    //     asn1_referenced_type::define("type",
+    //         asn1_builder::build(asn1_entity_boolean));
     auto cons_single_type1 =
         asn1_referenced_type::define("type",
             asn1_builder::build(asn1_entity_integer,
@@ -183,6 +186,18 @@ void test_testvector_constraints() {
                                 new asn1_constraint_from_s(
                                     new asn1_constraint_single_value_s("ABC")));
                         }));
+    auto cons_ie5string_alphabet2 =
+        asn1_referenced_type::define("name2",
+            asn1_builder::build(asn1_entity_ia5string,
+                        [&](asn1_object* builtin) -> void {
+                            builtin->get_constraints()
+                                .add(
+                                    new asn1_constraint_from_s(
+                                        new asn1_constraint_single_value_s("ABCDEF")))
+                                .add(
+                                    new asn1_constraint_size_i(
+                                        new asn1_constraint_single_value_i(4)));
+                        }));
     auto cons_sequence_of_range =
         asn1_referenced_type::define("Numbers",
             asn1_builder::build(new asn1_sequence_of(asn1_entity_integer),
@@ -190,6 +205,14 @@ void test_testvector_constraints() {
                             builtin->get_constraints().add(
                                 new asn1_constraint_size_i(
                                     new asn1_constraint_range_i(1, 4)));
+                        }));
+    auto cons_set_of_range =
+        asn1_referenced_type::define("Tags",
+            asn1_builder::build(new asn1_set_of(asn1_entity_ia5string),
+                        [&](asn1_object* builtin) -> void {
+                            builtin->get_constraints().add(
+                                new asn1_constraint_size_i(
+                                    new asn1_constraint_range_i(2, 4)));
                         }));
     auto cons_bitstring = asn1_referenced_type::define("Flags",
             asn1_builder::build(asn1_entity_bitstring,
@@ -236,6 +259,8 @@ void test_testvector_constraints() {
         flag_value_a,
         flag_value_abc,
         flag_value_abcd,
+        flag_value_abcde,
+        flag_value_defg,
         flag_value_octstring16,
         flag_value_octstring32,
         flag_value_string16,
@@ -246,6 +271,8 @@ void test_testvector_constraints() {
         flag_value_floatm1,
         flag_seqof_int3,
         flag_seqof_int5,
+        flag_seqof_strset3,
+        flag_seqof_strset5,
         flag_value_bitstring8,
         flag_value_bitstring16,
         flag_value_red,
@@ -257,6 +284,8 @@ void test_testvector_constraints() {
         flag_value_nested30_long,
         flag_value_nested30_empty,
         flag_value_pat1,
+        flag_value_true,
+        flag_value_false,
     };
 
     struct testvector {
@@ -266,6 +295,9 @@ void test_testvector_constraints() {
         bool expect;
         testvector_flag_t flag;
     } table[] = {
+        // {"boolean", type_bool, "type ::= BOOLEAN", true, flag_value_true},
+        // {"boolean", type_bool->clone(), "type ::= BOOLEAN", true, flag_value_false},
+        // {"boolean", type_bool->clone(), "type ::= BOOLEAN", false, flag_value_abc},
         {"single value", cons_single_type1, "type ::= INTEGER (1)", true, flag_value_int1},
         {"single value", cons_single_type2, "type ::= INTEGER (1 | 2)", false, flag_value_int5},
         {"single value", cons_single_type3, "type ::= INTEGER (1 | 2 | 3 | 6)", true, flag_value_int2},
@@ -301,8 +333,13 @@ void test_testvector_constraints() {
         {"alphabet constraint", cons_ie5string_alphabet, R"(name ::= IA5String (FROM ("ABC")))", true, flag_value_a},
         {"alphabet constraint", cons_ie5string_alphabet->clone(), R"(name ::= IA5String (FROM ("ABC")))", true, flag_value_abc},
         {"alphabet constraint", cons_ie5string_alphabet->clone(), R"(name ::= IA5String (FROM ("ABC")))", false, flag_value_abcd},
+        {"alphabet constraint", cons_ie5string_alphabet2, R"(name2 ::= IA5String (FROM ("ABCDEF") SIZE(4)))", true, flag_value_abcd},
+        {"alphabet constraint", cons_ie5string_alphabet2->clone(), R"(name2 ::= IA5String (FROM ("ABCDEF") SIZE(4)))", false, flag_value_abcde},  // not allowed size 5
+        {"alphabet constraint", cons_ie5string_alphabet2->clone(), R"(name2 ::= IA5String (FROM ("ABCDEF") SIZE(4)))", false, flag_value_defg},   // not allowed g
         {"size range", cons_sequence_of_range, "Numbers ::= SEQUENCE SIZE(1..4) OF INTEGER", true, flag_seqof_int3},
         {"size range", cons_sequence_of_range->clone(), "Numbers ::= SEQUENCE SIZE(1..4) OF INTEGER", false, flag_seqof_int5},
+        {"size range", cons_set_of_range, "Tags ::= SET SIZE(2..4) OF IA5String", true, flag_seqof_strset3},
+        {"size range", cons_set_of_range->clone(), "Tags ::= SET SIZE(2..4) OF IA5String", false, flag_seqof_strset5},
         {"bitstring", cons_bitstring, "Flags ::= BIT STRING (SIZE(8))", true, flag_value_bitstring8},
         {"bitstring", cons_bitstring->clone(), "Flags ::= BIT STRING (SIZE(8))", false, flag_value_bitstring16},
         {"enum", cons_enum, "Color ::= ENUMERATED {red(0), green(1), blue(2)}", true, flag_value_red},
@@ -372,6 +409,12 @@ void test_testvector_constraints() {
             case flag_value_abcd:
                 (*value).set("ABCD");
                 break;
+            case flag_value_abcde:
+                (*value).set("ABCDE");
+                break;
+            case flag_value_defg:
+                (*value).set("ABCDEFG");
+                break;
             case flag_value_octstring16:
                 (*value).set("000102030405060708090a0b0c0d0e0f");
                 break;
@@ -408,6 +451,12 @@ void test_testvector_constraints() {
             case flag_seqof_int5:
                 (*value).set({1, 2, 3, 4, 5});
                 break;
+            case flag_seqof_strset3:
+                (*value).set({"A", "AB", "ABC"});
+                break;
+            case flag_seqof_strset5:
+                (*value).set({"A", "AB", "ABC", "ABCD", "ABCDE"});
+                break;
             case flag_value_red:
                 (*value).set("red");
                 break;
@@ -435,13 +484,22 @@ void test_testvector_constraints() {
             case flag_value_pat1:
                 (*value).set("", "010-1234-5678");
                 break;
+            case flag_value_true:
+                (*value).set("", true);
+                break;
+            case flag_value_false:
+                (*value).set("", false);
+                break;
         }
 
         asn1_runtime runtime;
         parse_notation(&runtime, item.notation);
 
         bool test = type->validate(value);
-        _test_case.assert(test == item.expect, __FUNCTION__, "evaluation %s : %s", item.text, item.notation);
+        if (item.expect)
+            _test_case.assert(test, __FUNCTION__, "evaluation %s : %s", item.text, item.notation);
+        else
+            _test_case.nassert(test, __FUNCTION__, "evaluation %s : %s", item.text, item.notation);
 
         value->release();
         type->release();

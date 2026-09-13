@@ -30,6 +30,8 @@ namespace io {
  */
 template <typename T>
 class asn1_constraint_single_value : public asn1_constraint<T> {
+    friend class asn1_constraint_pattern<T>;
+
    public:
     asn1_constraint_single_value(const T& value) : asn1_constraint_single_value() { _value = value; }
     asn1_constraint_single_value(T&& value) : asn1_constraint_single_value() { _value = std::move(value); }

@@ -52,7 +52,7 @@ void dump_parse_tree(asn1_runtime* runtime, const parse_tree* pt) {
         pt->accept(&visitor);
     }
 
-    _logger->colorln("parser tree - graph");
+    _logger->colorln("parse tree - graph");
     {
         auto root = pt->get_root();
         if (root) {

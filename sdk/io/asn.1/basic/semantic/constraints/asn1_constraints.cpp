@@ -11,6 +11,7 @@
  *
  */
 
+#include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_container.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraints.hpp>
 
 namespace hotplace {
@@ -41,7 +42,12 @@ asn1_constraints& asn1_constraints::add(asn1_constraint_t* cons, std::function<v
         if (f) {
             f(cons);
         }
-        _constraints.push_back(cons);
+        if (asn1_entity_constraint_container == cons->get_entity()) {
+            auto container = static_cast<asn1_constraint_container*>(cons);
+            _constraints.splice(_constraints.end(), container->_list);
+        } else {
+            _constraints.push_back(cons);
+        }
     }
     return *this;
 }
@@ -50,12 +56,18 @@ bool asn1_constraints::empty() const { return _constraints.empty(); }
 
 void asn1_constraints::represent(stream_t* s, const asn1_object* object, const asn1_value* value) const {
     if (false == _constraints.empty()) {
-        for (auto& item : _constraints) {
-            bool parenthesis = (false == is_kind_of_container_of(object));
+        bool parenthesis = (false == is_kind_of_container_of(object));
+        if (false == _constraints.empty()) {
             s->printf(" ");
             if (parenthesis) s->printf("(");
+        }
+        size_t i = 0;
+        for (auto& item : _constraints) {
+            if (0 != i++) s->printf(" ");
             asn1_constraint_notation_visitor visitor(s, object);
             item->accept(&visitor);
+        }
+        if (false == _constraints.empty()) {
             if (parenthesis) s->printf(")");
         }
     }

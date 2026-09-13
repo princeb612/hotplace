@@ -100,6 +100,7 @@ class test_case {
      * @param   const char* test_function [in]
      * @param   const char* message [inopt]
      * @desc    check result and time
+     * @remarks
      */
     void assert(bool expect, const char* test_function, const char* message, ...);
     void vassert(bool expect, const char* test_function, const char* message, va_list ap);

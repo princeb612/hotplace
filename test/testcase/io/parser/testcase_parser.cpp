@@ -166,7 +166,6 @@ void test_lalr() {
             .add_production("StatementSetOf", {"SET", "SizeConstraint", "OF", "TypeSpec"})
             .add_production("StatementSetOf", {"SET", "Constraint", "OF", "TypeSpec"})
             .add_production("StatementSetOf", {"SET", "OF", "TypeSpec"})
-            .add_production("SizeConstraint", {"SIZE", "Constraint"})
             .add_production("StatementChoice", {"CHOICE", "Constraint", "{", "FieldList", "}"})
             .add_production("StatementChoice", {"CHOICE", "{", "FieldList", "}"})
             .add_production("StatementChoice", {"CHOICE", "Constraint", "{", "}"})
@@ -262,35 +261,44 @@ void test_lalr() {
             .add_production("SimpleType", {"DURATION"})
             .add_production("SimpleType", {"ANY"})
 
-            // Constraints Grammar
+            // 1. Constraints Grammar Top-Level
             .add_production("Constraint", {"(", "ConstraintExpr", ")"})
+
+            // 2. Constraint Expression & Element Sets
             .add_production("ConstraintExpr", {"SubtypeElementSet"})
-            .add_production("ConstraintExpr", {"ALL", "EXCEPT", "SubtypeElementSet"})
-            .add_production("ConstraintExpr", {"ALL EXCEPT", "SubtypeElementSet"})  // lexical analyzer
-            // Union Level
+            .add_production("ConstraintExpr", {"ALL EXCEPT", "SubtypeElementSet"})  // lexer supports single token (token_allexcept)
+
+            // SubtypeElementSet: Handles Union, Except, and consecutive constraints (Intersection) connected by spaces.
             .add_production("SubtypeElementSet", {"SubtypeElementSet", "|", "SubtypeElement"})
             .add_production("SubtypeElementSet", {"SubtypeElementSet", ",", "SubtypeElement"})
             .add_production("SubtypeElementSet", {"SubtypeElementSet", "UNION", "SubtypeElement"})
             .add_production("SubtypeElementSet", {"SubtypeElementSet", "EXCEPT", "SubtypeElement"})
+            // support for implicit intersection/range constraints (e.g., from(...) size(...))
+            .add_production("SubtypeElementSet", {"SubtypeElementSet", "SubtypeElement"})
             .add_production("SubtypeElementSet", {"SubtypeElement"})
-            // Intersection Level
+
+            // SubtypeElement: Explicit Intersection Level
             .add_production("SubtypeElement", {"SubtypeElement", "^", "PrimaryElement"})
             .add_production("SubtypeElement", {"SubtypeElement", "INTERSECTION", "PrimaryElement"})
             .add_production("SubtypeElement", {"PrimaryElement"})
-            // Primary Elements
+
+            // 3. Primary Elements (SIZE, FROM, PATTERN, Range, Parenthesized)
             .add_production("PrimaryElement", {"ValueElement"})
             .add_production("PrimaryElement", {"ValueElement", "..", "ValueElement"})
-            .add_production("PrimaryElement", {"ValueElement", "..", "<", "ValueElement"})  // exclusive range support
+            .add_production("PrimaryElement", {"ValueElement", "..", "<", "ValueElement"})
             .add_production("PrimaryElement", {"SIZE", "Constraint"})
             .add_production("PrimaryElement", {"FROM", "Constraint"})
             .add_production("PrimaryElement", {"PATTERN", symqs})
-            .add_production("PrimaryElement", {"(", "ConstraintExpr", ")"})
-            // Value Elements
+            .add_production("PrimaryElement", {"(", "ConstraintExpr", ")"})  // parenthesis recursive structure
+
+            .add_production("SizeConstraint", {"SIZE", "Constraint"})
+
+            // 4. Value Elements
             .add_production("ValueElement", {symid})
             .add_production("ValueElement", {symuser})
             .add_production("ValueElement", {symnum})
             .add_production("ValueElement", {symfp})
-            .add_production("ValueElement", {symqs})
+            .add_production("ValueElement", {symqs})  // quoted string token for processing "ABCDEF"
             .add_production("ValueElement", {"MIN"})
             .add_production("ValueElement", {"MAX"})
             .add_production("ValueElement", {"TRUE"})

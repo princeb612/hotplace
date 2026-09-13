@@ -179,7 +179,7 @@ class asn1_object {
     /**
      * @brief   validate constraints
      */
-    bool validate_node(const asn1_object* node, const asn1_value* value);
+    bool validate_node(const asn1_object* node, const asn1_value* value) const;
 
    private:
     uint8 _ident;

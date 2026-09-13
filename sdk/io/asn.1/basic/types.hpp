@@ -161,6 +161,7 @@ enum asn1_entity_t {
     asn1_entity_constraint_pattern,
     asn1_entity_constraint_including,
     asn1_entity_constraint_containing,
+    asn1_entity_constraint_container,  // dedicated container cf. ("SubtypeElementSet", {"SubtypeElementSet", "SubtypeElement"})
 };
 
 enum asn1_tagtype_t {
@@ -191,6 +192,8 @@ enum asn1_visitor_flag_t : uint16 {
 enum asn1_ast_flags : uint32 {
     asn1_ast_flag_ansicolor = 1 << 0,
 };
+
+using asn1_native_int_t = int64;
 
 class asn1_object;
 class asn1_type;
@@ -227,42 +230,6 @@ class asn1_constraint_evaluator;
 
 class asn1_constraint_t;
 class asn1_constraints;
-// clang-format off
-template <typename T> class asn1_constraint;
-template <typename T> class asn1_constraint_union;
-template <typename T> class asn1_constraint_intersection;
-template <typename T> class asn1_constraint_except;
-template <typename T> class asn1_constraint_all_except;
-template <typename T> class asn1_constraint_from;
-template <typename T> class asn1_constraint_pattern;
-template <typename T> class asn1_constraint_range;
-template <typename T> class asn1_constraint_single_value;
-template <typename T> class asn1_constraint_size;
-// clang-format on
-
-using asn1_native_int_t = int64;
-using asn1_constraint_all_except_f = asn1_constraint_all_except<double>;
-using asn1_constraint_except_f = asn1_constraint_except<double>;
-using asn1_constraint_intersection_f = asn1_constraint_intersection<double>;
-using asn1_constraint_range_f = asn1_constraint_range<double>;
-using asn1_constraint_single_value_f = asn1_constraint_single_value<double>;
-using asn1_constraint_size_f = asn1_constraint_size<double>;
-using asn1_constraint_union_f = asn1_constraint_union<double>;
-using asn1_constraint_all_except_i = asn1_constraint_all_except<asn1_native_int_t>;
-using asn1_constraint_except_i = asn1_constraint_except<asn1_native_int_t>;
-using asn1_constraint_intersection_i = asn1_constraint_intersection<asn1_native_int_t>;
-using asn1_constraint_range_i = asn1_constraint_range<asn1_native_int_t>;
-using asn1_constraint_single_value_i = asn1_constraint_single_value<asn1_native_int_t>;
-using asn1_constraint_size_i = asn1_constraint_size<asn1_native_int_t>;
-using asn1_constraint_union_i = asn1_constraint_union<asn1_native_int_t>;
-using asn1_constraint_all_except_s = asn1_constraint_all_except<std::string>;
-using asn1_constraint_except_s = asn1_constraint_except<std::string>;
-using asn1_constraint_intersection_s = asn1_constraint_intersection<std::string>;
-using asn1_constraint_from_s = asn1_constraint_from<std::string>;
-using asn1_constraint_range_s = asn1_constraint_range<std::string>;
-using asn1_constraint_single_value_s = asn1_constraint_single_value<std::string>;
-using asn1_constraint_union_s = asn1_constraint_union<std::string>;
-using asn1_constraint_pattern_s = asn1_constraint_pattern<std::string>;
 
 class asn1_node;
 class asn1_constructed_node;

@@ -57,6 +57,11 @@ bool is_kind_of(const asn1_object* object, asn1_entity_t entity) {
         return false;
 }
 
+bool is_kind_of_boolean(const asn1_object* object) {
+    if (nullptr == object) return false;
+    return is_kind_of_boolean(get_entity(object));
+}
+
 bool is_kind_of_integer(const asn1_object* object) {
     if (nullptr == object) return false;
     return is_kind_of_integer(get_entity(object));
@@ -85,6 +90,15 @@ bool is_kind_of_container(const asn1_object* object) {
 bool is_kind_of_container_of(const asn1_object* object) {
     if (nullptr == object) return false;
     return is_kind_of_container_of(get_entity(object, true));
+}
+
+bool is_kind_of_boolean(asn1_entity_t entity) {
+    switch (entity) {
+        case asn1_entity_boolean:
+            return true;
+        default:
+            return false;
+    }
 }
 
 bool is_kind_of_integer(asn1_entity_t entity) {

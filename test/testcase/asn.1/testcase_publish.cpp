@@ -195,12 +195,34 @@ void test_publish_constraints() {
     struct testvector {
         const char* notation;
     } table[] = {
-        {"Type1 ::= INTEGER (1)"},
-        {"Type2 ::= INTEGER (1 | 2)"},
-        {"Type3 ::= INTEGER (1 | 2 | 3 | 6)"},
-        // {R"(Type4 ::= VisibleString ("A" | "B" | "C" | "D"))"},  -- still bug
-        {"Type5 ::= INTEGER (1..10 | 20..30)"},
-        // {"Type6 ::= INTEGER ((1..100) INTERSECTION (50..200))"},  -- still bug
+        {R"(Type1 ::= INTEGER (1))"},
+        {R"(Type2 ::= INTEGER (1 | 2))"},
+        {R"(Type3 ::= INTEGER (1 | 2 | 3 | 6))"},
+        {R"(Type4 ::= VisibleString ("A" | "B" | "C" | "D"))"},
+        {R"(Type5 ::= INTEGER (1..10 | 20..30))"},
+        {R"(Type6 ::= INTEGER ((1..100) INTERSECTION (50..200)))"},
+        {R"(Type7 ::= INTEGER (1..100 EXCEPT 50))"},
+        {R"(Type8 ::= INTEGER ((1..10 | 20..30) EXCEPT (5 | 25)))"},
+        {R"(Type9 ::= INTEGER (1..50 EXCEPT 20..30))"},
+        {R"(Type10 ::= INTEGER (ALL EXCEPT 1..10))"},
+        {R"(Flags ::= BIT STRING (SIZE(8)))"},
+        {R"(Oct1 ::= OCTET STRING (SIZE(16)))"},
+        {R"(Temperature ::= REAL (0.0..100.0))"},
+        {R"(Positive ::= REAL (0.0..MAX))"},
+        {R"(Negative ::= REAL (MIN..0.0))"},
+        {R"(Real1 ::= REAL (0.0..100.0 EXCEPT 50.0))"},
+        {R"(Name1 ::= IA5String (SIZE(1)))"},
+        {R"(Name2 ::= IA5String (SIZE(1 | 2 | 5)))"},
+        {R"(Name3 ::= IA5String (SIZE(1..20)))"},
+        {R"(Name4 ::= IA5String (FROM ("ABC")))"},
+        {R"(Numbers ::= SEQUENCE SIZE(1..4) OF INTEGER)"},
+        {R"(Tags ::= SET SIZE(2..4) OF IA5String)"},
+        {R"(Color ::= ENUMERATED {red(0), green(1), blue(2)})"},
+
+        {R"(Name5 ::= IA5String (FROM ("ABCDEF") SIZE(4)))"},
+
+        {R"(Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))})"},
+        {R"(PhoneNumber ::= UTF8String (PATTERN "[0-9]{3}-[0-9]{4}-[0-9]{4}"))"},
     };
 
     asn1_runtime runtime;     // automatic

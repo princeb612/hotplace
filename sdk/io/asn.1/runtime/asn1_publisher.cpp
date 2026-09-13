@@ -44,15 +44,22 @@ return_t asn1_publisher::build(const parse_tree* pt, asn1_object** object) {
                 asn.value = node->value;
                 context.push(std::move(asn));
             } else if (parser_action_t::reduce == action) {
+                auto size = context.size();
+                auto rhs = node->sizeof_rhs();
                 auto iter = _handler_map.find(node->symbol);
                 if (_handler_map.end() != iter) {
                     test = iter->second(node, context);
                 } else {
                     auto size = node->sizeof_rhs();
-                    if (context.size() < size)
+                    if (context.size() < size) {
                         test = errorcode_t::invalid_context;
-                    else
+                        throw;  // CHECK
+                    } else {
                         test = default_handler(node, context);
+                    }
+                }
+                if (context.size() != (size - rhs + 1)) {
+                    throw;  // CHECK
                 }
             }
             return test;

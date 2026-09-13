@@ -96,11 +96,10 @@ void asn1_publisher::prepare() {
             auto& rhs_fieldlist = rhs[iter->second];
             container = static_cast<asn1_unknown_container*>(rhs_fieldlist.object);
             sequence->set(*container);
-            // rhs_fieldlist.release();
         }
         auto citer = index.find("Constraint");
         if (index.end() != citer) {
-            auto& rhs_cons = rhs[iter->second];
+            auto& rhs_cons = rhs[citer->second];
             sequence->get_constraints().add(rhs_cons.cons.u);
             rhs_cons.release();
         }
@@ -131,9 +130,17 @@ void asn1_publisher::prepare() {
 
         auto iter = index.find("TypeSpec");
         if (index.end() != iter) {
-            auto& rhs_fieldlist = rhs[iter->second];
-            sequenceof = new asn1_sequence_of(rhs_fieldlist.object);
-            rhs_fieldlist.release();
+            auto& rhs_typespec = rhs[iter->second];
+            sequenceof = new asn1_sequence_of(rhs_typespec.object);
+            rhs_typespec.release();
+        }
+
+        if (4 == size) {
+            auto& rhs_second = rhs[1];
+            if ("SizeConstraint" == rhs_second.symbol || "Constraint" == rhs_second.symbol) {
+                sequenceof->get_constraints().add(rhs_second.cons.u);
+                rhs_second.release();
+            }
         }
 
         asn1_semantic_node asn;
@@ -160,20 +167,26 @@ void asn1_publisher::prepare() {
             index.emplace(it.symbol, idx);
         }
 
-        auto sequence = new asn1_set;
+        auto setobj = new asn1_set;
 
         asn1_unknown_container* container = nullptr;
         auto iter = index.find("FieldList");
         if (index.end() != iter) {
             auto& rhs_fieldlist = rhs[iter->second];
             container = static_cast<asn1_unknown_container*>(rhs_fieldlist.object);
-            sequence->set(*container);
+            setobj->set(*container);
             // rhs_fieldlist.release();
+        }
+        auto citer = index.find("Constraint");
+        if (index.end() != citer) {
+            auto& rhs_cons = rhs[citer->second];
+            setobj->get_constraints().add(rhs_cons.cons.u);
+            rhs_cons.release();
         }
 
         asn1_semantic_node asn;
         asn.symbol = node->symbol;
-        asn.object = sequence;
+        asn.object = setobj;
         context.push(std::move(asn));
 
         return errorcode_t::success;
@@ -197,9 +210,17 @@ void asn1_publisher::prepare() {
 
         auto iter = index.find("TypeSpec");
         if (index.end() != iter) {
-            auto& rhs_fieldlist = rhs[iter->second];
-            setof = new asn1_set_of(rhs_fieldlist.object);
-            rhs_fieldlist.release();
+            auto& rhs_typespec = rhs[iter->second];
+            setof = new asn1_set_of(rhs_typespec.object);
+            rhs_typespec.release();
+        }
+
+        if (4 == size) {
+            auto& rhs_second = rhs[1];
+            if ("SizeConstraint" == rhs_second.symbol || "Constraint" == rhs_second.symbol) {
+                setof->get_constraints().add(rhs_second.cons.u);
+                rhs_second.release();
+            }
         }
 
         asn1_semantic_node asn;
@@ -235,6 +256,12 @@ void asn1_publisher::prepare() {
             container = static_cast<asn1_unknown_container*>(rhs_fieldlist.object);
             choice->set(*container);
             // rhs_fieldlist.release();
+        }
+        auto citer = index.find("Constraint");
+        if (index.end() != citer) {
+            auto& rhs_cons = rhs[citer->second];
+            choice->get_constraints().add(rhs_cons.cons.u);
+            rhs_cons.release();
         }
 
         asn1_semantic_node asn;
@@ -316,7 +343,7 @@ void asn1_publisher::prepare() {
             }
             auto citer = index.find("Constraint");
             if (index.end() != citer) {
-                auto& rhs_cons = rhs[iter->second];
+                auto& rhs_cons = rhs[citer->second];
                 asn.object->get_constraints().add(rhs_cons.cons.u);
                 rhs_cons.release();
             }

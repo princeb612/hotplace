@@ -46,6 +46,7 @@ enum variant_flag_t : uint16 {
     vt_flag_composite = 1 << 2,                                 // characteristic : true if size_t required    e.g. func(char*, size_t)
     vt_flag_negative = 1 << 8,                                  // behavioral     : true if a combination of uint64 and negative tags (CBOR)
     vt_flag_free = 1 << 9,                                      // behavioral     : free
+    vt_flag_bool = 1 << 10,                                     // attribute      : int8~int128
     vt_flag_int = 1 << 11,                                      // attribute      : int8~int128
     vt_flag_float = 1 << 12,                                    // attribute      : float, double
     vt_flag_string = 1 << 13,                                   // attribute      : string
@@ -101,7 +102,7 @@ enum variant_flag_t : uint16 {
     X(byte_t*, TYPE_BSTRING, 5, bstr, (vt_flag_composite | vt_flag_binary | vt_flag_free))                       \
     VARIANT_XGROUP_EMT_CHAR(X)                                                                                   \
     X(wchar_t, TYPE_WCHAR, 8, wc, (vt_flag_standalone))                                                          \
-    X(bool, TYPE_BOOL, 16, b, (vt_flag_standalone))
+    X(bool, TYPE_BOOL, 16, b, (vt_flag_standalone | vt_flag_bool))
 #define VARIANT_XGROUP_EMIT(X)                                           \
     X(int8, TYPE_INT8, 17, i8, (vt_flag_standalone | vt_flag_int))       \
     X(uint8, TYPE_UINT8, 18, ui8, (vt_flag_standalone | vt_flag_int))    \

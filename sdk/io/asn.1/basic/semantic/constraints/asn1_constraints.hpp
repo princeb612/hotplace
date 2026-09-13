@@ -72,7 +72,9 @@ class asn1_constraints {
         auto name = nameof(object);  // object->resolve_name()
 
         uint16 flags = 0;
-        if (is_kind_of_integer(object))
+        if (is_kind_of_boolean(object))
+            flags = vt_flag_bool;
+        else if (is_kind_of_integer(object))
             flags = vt_flag_int;
         else if (is_kind_of_real(object))
             flags = vt_flag_float;
@@ -109,6 +111,8 @@ class asn1_constraints {
                         // BIT STRING and any other xxxSTRING
                         test = visitor.get_result_set().contains(size);
                     }
+                } else if (vt_flag_bool & flags) {
+                    test = true;
                 } else if (vt_flag_int & flags) {
                     auto t = t_vtoi<int64>(vt.get());
                     test = visitor.get_result_set().contains(t);
