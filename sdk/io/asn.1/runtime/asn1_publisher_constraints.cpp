@@ -80,9 +80,9 @@ void asn1_publisher::prepare_constraints() {
 
             if (type_category_t::integral == type) {
                 cons = new asn1_constraint_all_except_i(rhs[next].cons.i);
-            } else if (type_category_t::floating_point == type) {
+            } else if (type_category_t::real == type) {
                 cons = new asn1_constraint_all_except_f(rhs[next].cons.f);
-            } else if (type_category_t::cstring == type) {
+            } else if (type_category_t::literal == type) {
                 cons = new asn1_constraint_all_except_s(rhs[next].cons.s);
             } else {
                 cons = new asn1_constraint_all_except_f(rhs[next].cons.f);
@@ -127,9 +127,9 @@ void asn1_publisher::prepare_constraints() {
 
                 if (type_category_t::integral == type) {
                     cons = new asn1_constraint_union_i(rhs[0].cons.i, rhs[2].cons.i);
-                } else if (type_category_t::floating_point == type) {
+                } else if (type_category_t::real == type) {
                     cons = new asn1_constraint_union_f(rhs[0].cons.f, rhs[2].cons.f);
-                } else if (type_category_t::cstring == type) {
+                } else if (type_category_t::literal == type) {
                     cons = new asn1_constraint_union_s(rhs[0].cons.s, rhs[2].cons.s);
                 } else {
                     cons = new asn1_constraint_union_f(rhs[0].cons.f, rhs[2].cons.f);
@@ -143,9 +143,9 @@ void asn1_publisher::prepare_constraints() {
 
                 if (type_category_t::integral == type) {
                     cons = new asn1_constraint_except_i(rhs[0].cons.i, rhs[2].cons.i);
-                } else if (type_category_t::floating_point == type) {
+                } else if (type_category_t::real == type) {
                     cons = new asn1_constraint_except_f(rhs[0].cons.f, rhs[2].cons.f);
-                } else if (type_category_t::cstring == type) {
+                } else if (type_category_t::literal == type) {
                     cons = new asn1_constraint_except_s(rhs[0].cons.s, rhs[2].cons.s);
                 } else {
                     cons = new asn1_constraint_except_f(rhs[0].cons.f, rhs[2].cons.f);
@@ -184,9 +184,9 @@ void asn1_publisher::prepare_constraints() {
 
                 if (type_category_t::integral == type) {
                     cons = new asn1_constraint_intersection_i(rhs[0].cons.i, rhs[2].cons.i);
-                } else if (type_category_t::floating_point == type) {
+                } else if (type_category_t::real == type) {
                     cons = new asn1_constraint_intersection_f(rhs[0].cons.f, rhs[2].cons.f);
-                } else if (type_category_t::cstring == type) {
+                } else if (type_category_t::literal == type) {
                     cons = new asn1_constraint_intersection_s(rhs[0].cons.s, rhs[2].cons.s);
                 } else {
                     cons = new asn1_constraint_intersection_f(rhs[0].cons.f, rhs[2].cons.f);
@@ -203,17 +203,23 @@ void asn1_publisher::prepare_constraints() {
     });
     add_handler("PrimaryElement", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("PrimaryElement", {"ValueElement"})
-        // production("PrimaryElement", {"ValueElement", "..", "ValueElement"})
-        // production("PrimaryElement", {"ValueElement", "..", "<", "ValueElement"}) // exclusive range support
+        // production("PrimaryElement", {"ValueElement", "..", "ValueElement"})             // [from, to]
+        // production("PrimaryElement", {"ValueElement", "..", "<", "ValueElement"})        // [from, to)
+        // production("PrimaryElement", {"ValueElement", "<", "..", "ValueElement"})        // (from, to]
+        // production("PrimaryElement", {"ValueElement", "<", "..", "<", "ValueElement"})   // (from, to)
         // production("PrimaryElement", {"SIZE", "Constraint"})
         // production("PrimaryElement", {"FROM", "Constraint"})
         // production("PrimaryElement", {"PATTERN", symqs})
-        // production("PrimaryElement", {"(", "ConstraintExpr", ")"})
+        // production("PrimaryElement", {"(", "ConstraintExpr", ")"})  // parenthesis recursive structure
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
+        std::unordered_map<std::string, size_t> index;
         for (size_t i = 0; i < size; ++i) {
-            rhs[size - 1 - i] = context.pop();
+            size_t idx = size - 1 - i;
+            rhs[idx] = context.pop();
+            auto& it = rhs[idx];
+            index.emplace(it.symbol, idx);
         }
 
         auto& rhs_first = rhs[0];
@@ -233,28 +239,41 @@ void asn1_publisher::prepare_constraints() {
                 }
                 asn.cons.u = cons;
             } else {
-                // ..
-                size_t next = (size == 4) ? 3 : 2;
+                // .., <.., ..<, <..<
+                auto iter = index.find("..");
+                auto lhs_flag = range_flag_t::closed;
+                auto rhs_flag = range_flag_t::closed;
+                if (index.end() != iter) {
+                    auto fromto = iter->second;
+                    if ("<" == rhs[fromto - 1].symbol) lhs_flag = range_flag_t::open;
+                    if ("<" == rhs[fromto + 1].symbol) rhs_flag = range_flag_t::open;
+                }
+
+                size_t next = size - 1;
                 auto& rhs_second = rhs[next];
 
                 asn1_constraint_t* cons = nullptr;
                 if (rhs_first.v.is_int() && rhs_second.v.is_int()) {
-                    cons = new asn1_constraint_range_i(rhs_first.v.value<int64>(), rhs_second.v.value<int64>());
+                    cons = new asn1_constraint_range_i(rhs_first.v.value<int64>(), rhs_second.v.value<int64>(), lhs_flag, rhs_flag);
                 } else if (rhs_first.v.is_float() && rhs_second.v.is_float()) {
-                    cons = new asn1_constraint_range_f(rhs_first.v.value<double>(), rhs_second.v.value<double>());
+                    cons = new asn1_constraint_range_f(rhs_first.v.value<double>(), rhs_second.v.value<double>(), lhs_flag, rhs_flag);
+                } else if (rhs_first.v.is_string() && rhs_second.v.is_string()) {
+                    std::string qs_lhs = rhs_first.v.value<const char*>();
+                    std::string qs_rhs = rhs_second.v.value<const char*>();
+                    cons = new asn1_constraint_range_s(qs_lhs, qs_rhs, lhs_flag, rhs_flag);
                 } else if (rhs_first.v.is_minvalue()) {
                     if (rhs_second.v.is_int()) {
-                        cons = new asn1_constraint_range_i(range_type_t::minvalue, rhs_second.v.value<int64>());
+                        cons = new asn1_constraint_range_i(range_type_t::minvalue, rhs_second.v.value<int64>(), lhs_flag, rhs_flag);
                     } else if (rhs_second.v.is_float()) {
-                        cons = new asn1_constraint_range_f(range_type_t::minvalue, rhs_second.v.value<double>());
+                        cons = new asn1_constraint_range_f(range_type_t::minvalue, rhs_second.v.value<double>(), lhs_flag, rhs_flag);
                     } else if (rhs_second.v.is_maxvalue()) {
-                        cons = new asn1_constraint_range_f(range_type_t::minvalue, range_type_t::maxvalue);
+                        cons = new asn1_constraint_range_f(range_type_t::minvalue, range_type_t::maxvalue, lhs_flag, rhs_flag);
                     }
                 } else if (rhs_second.v.is_maxvalue()) {
                     if (rhs_first.v.is_int()) {
-                        cons = new asn1_constraint_range_i(rhs_first.v.value<int64>(), range_type_t::maxvalue);
+                        cons = new asn1_constraint_range_i(rhs_first.v.value<int64>(), range_type_t::maxvalue, lhs_flag, rhs_flag);
                     } else if (rhs_first.v.is_float()) {
-                        cons = new asn1_constraint_range_f(rhs_first.v.value<double>(), range_type_t::maxvalue);
+                        cons = new asn1_constraint_range_f(rhs_first.v.value<double>(), range_type_t::maxvalue, lhs_flag, rhs_flag);
                     }
                 }
                 asn.cons.u = cons;
@@ -270,7 +289,7 @@ void asn1_publisher::prepare_constraints() {
         } else if ("FROM" == rhs_first.symbol) {
             auto& rhs_second = rhs[1];
             asn1_constraint_t* cons = nullptr;
-            if (type_category_t::cstring == rhs_second.cons.u->type()) {
+            if (type_category_t::literal == rhs_second.cons.u->type()) {
                 cons = new asn1_constraint_from_s(rhs_second.cons.s);
                 rhs_second.release();
             }
@@ -280,10 +299,8 @@ void asn1_publisher::prepare_constraints() {
             std::string& qs = rhs_second.value;
             if (false == qs.empty()) qs.erase(qs.begin());
             if (false == qs.empty()) qs.pop_back();
-
             auto cons = new asn1_constraint_pattern_s(qs);
             rhs_second.release();
-
             asn.cons.u = cons;
         } else if (1 < size) {
             if ("ConstraintExpr" == rhs[1].symbol) {

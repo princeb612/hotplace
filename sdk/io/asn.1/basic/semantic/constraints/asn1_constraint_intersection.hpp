@@ -125,9 +125,30 @@ class asn1_constraint_intersection : public asn1_constraint<T> {
 
     virtual void represent(stream_t* s, const asn1_object* object, const asn1_value* value = nullptr) const {
         if (_lhs && _rhs) {
+            bool lparen = false;
+            bool rparen = false;
+            auto lentity = _lhs->get_entity();
+            auto rentity = _rhs->get_entity();
+            auto lambda_check_paren = [](asn1_entity_t entity) -> bool {
+                switch (entity) {
+                    case asn1_entity_constraint_single:
+                    case asn1_entity_constraint_range:
+                    case asn1_entity_constraint_union:
+                        return true;
+                    default:
+                        return false;
+                }
+            };
+            if (lambda_check_paren(lentity)) lparen = true;
+            if (lambda_check_paren(rentity)) rparen = true;
+
+            if (lparen) s->printf("(");
             _lhs->represent(s, object, value);
+            if (lparen) s->printf(")");
             s->printf(" INTERSECTION ");
+            if (rparen) s->printf("(");
             _rhs->represent(s, object, value);
+            if (rparen) s->printf(")");
         } else {
             // throw
         }

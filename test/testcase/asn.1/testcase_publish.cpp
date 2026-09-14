@@ -194,6 +194,7 @@ void test_publish_constraints() {
     _test_case.begin("publish");
     struct testvector {
         const char* notation;
+        const char* expect;
     } table[] = {
         {R"(Type1 ::= INTEGER (1))"},
         {R"(Type2 ::= INTEGER (1 | 2))"},
@@ -205,6 +206,8 @@ void test_publish_constraints() {
         {R"(Type8 ::= INTEGER ((1..10 | 20..30) EXCEPT (5 | 25)))"},
         {R"(Type9 ::= INTEGER (1..50 EXCEPT 20..30))"},
         {R"(Type10 ::= INTEGER (ALL EXCEPT 1..10))"},
+        {R"(Type11 ::= INTEGER ((1..100) INTERSECTION (10..50 | 60..90)))"},
+        {R"(Type12 ::= INTEGER (1..100 EXCEPT (20 | 30 | 40)))"},
         {R"(Flags ::= BIT STRING (SIZE(8)))"},
         {R"(Oct1 ::= OCTET STRING (SIZE(16)))"},
         {R"(Temperature ::= REAL (0.0..100.0))"},
@@ -215,26 +218,41 @@ void test_publish_constraints() {
         {R"(Name2 ::= IA5String (SIZE(1 | 2 | 5)))"},
         {R"(Name3 ::= IA5String (SIZE(1..20)))"},
         {R"(Name4 ::= IA5String (FROM ("ABC")))"},
+        {R"(Name5 ::= IA5String (FROM ("ABCDEF") SIZE(4)))"},  // FROM + SIZE
+        {R"(Name6 ::= IA5String (SIZE(1..10 | 20..30)))"},
         {R"(Numbers ::= SEQUENCE SIZE(1..4) OF INTEGER)"},
         {R"(Tags ::= SET SIZE(2..4) OF IA5String)"},
         {R"(Color ::= ENUMERATED {red(0), green(1), blue(2)})"},
 
-        {R"(Name5 ::= IA5String (FROM ("ABCDEF") SIZE(4)))"},
-
         {R"(Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))})"},
         {R"(PhoneNumber ::= UTF8String (PATTERN "[0-9]{3}-[0-9]{4}-[0-9]{4}"))"},
+
+        /* struct field constraints */
+        {R"(ComplexSeq ::= SEQUENCE {id INTEGER (1..MAX), code OCTET STRING (SIZE(4 | 8)), description UTF8String (SIZE(1..255) PATTERN "[a-zA-Z0-9]+") OPTIONAL})"},
+        /* deep nesting */
+        {R"(Nested1 ::= INTEGER (((1..10))))", R"(Nested1 ::= INTEGER (1..10))"},
+        {R"(Nested2 ::= IA5String ((SIZE(1..10) INTERSECTION FROM("ABC"))))", R"(Nested2 ::= IA5String (SIZE(1..10) INTERSECTION FROM ("ABC")))"},
+
+        {R"(TypeInclusive ::= INTEGER (0..100))"},     // [0, 100]
+        {R"(TypeExclusive1 ::= INTEGER (0..<100))"},   // [0, 100)
+        {R"(TypeExclusive2 ::= INTEGER (0<..100))"},   // (0, 100]
+        {R"(TypeExclusive3 ::= INTEGER (0<..<100))"},  // (0, 100)
+        {R"(TypeExclusive4 ::= REAL (0.0..<1.0))"},
+
+        {R"(Name7 ::= IA5String (FROM ("A".."Z")))"},
+        {R"(Name8 ::= IA5String (FROM ("A".."Z" | "a".."z" | "0".."9")))"},
     };
 
     asn1_runtime runtime;     // automatic
     lexical_context context;  // share usertype
 
     for (const auto& entry : table) {
-        parse_reconst_notation(&runtime, context, entry.notation);
+        parse_reconst_notation(&runtime, context, entry.notation, entry.expect);
     }
 }
 
 void testcase_publish() {
     test_publish_babystep();
     test_publish_basics();
-    test_publish_constraints();  // babystep
+    test_publish_constraints();
 }

@@ -22,15 +22,21 @@
 
 namespace hotplace {
 
-enum class set_type_t {
-    integer = 0,
-    real,
-    string,
-};
-
-template <typename T, typename std::enable_if<custom::is_integral<typename std::decay<T>::type>::value || std::is_floating_point<typename std::decay<T>::type>::value ||
-                                                  std::is_same<T, std::string>::value,
-                                              int>::type = 0>
+/*
+ * concrete_set_t
+ *   if is_same<T, std::string> string_set
+ *   else t_range_set<t_range_value<T>>
+ *
+ * t_set_runtime::concrete_set_t is t_interval<t_range_value<int>>
+ *   .insert_range(range_type_t::minvalue, 0)                              // [MIN, 0]
+ *   .insert_range(1, 2)                                                   // [1, 2]
+ *   .insert_range(interval(3, 5, range_flag_t::open, range_flag_t::open)  // (3, 5)
+ */
+template <typename T,                                                                                 //
+          typename std::enable_if<custom::is_integral<typename std::decay<T>::type>::value ||         //
+                                      std::is_floating_point<typename std::decay<T>::type>::value ||  //
+                                      std::is_same<T, std::string>::value,
+                                  int>::type = 0>
 class t_set_runtime {
    public:
     using decayed_t = typename std::decay<T>::type;
@@ -53,16 +59,16 @@ class t_set_runtime {
     }
 
     template <typename U = decayed_t, typename std::enable_if<custom::is_integral<U>::value, int>::type = 0>
-    set_type_t type() const {
-        return set_type_t::integer;
+    type_category_t type() const {
+        return type_category_t::integral;
     }
     template <typename U = decayed_t, typename std::enable_if<std::is_floating_point<U>::value, int>::type = 0>
-    set_type_t type() const {
-        return set_type_t::real;
+    type_category_t type() const {
+        return type_category_t::real;
     }
     template <typename U = decayed_t, typename std::enable_if<std::is_same<U, std::string>::value, int>::type = 0>
-    set_type_t type() const {
-        return set_type_t::string;
+    type_category_t type() const {
+        return type_category_t::literal;
     }
 
     t_set_runtime& reset() {
@@ -77,12 +83,12 @@ class t_set_runtime {
         _target->erase(value);
         return *this;
     }
-    bool contains(const decayed_t& value) { return _target->contains(value); }
+    bool contains(const decayed_t& value) const { return _target->contains(value); }
 
     template <typename U = decayed_t>
     typename std::enable_if<std::is_same<U, std::string>::value, bool>::type  //
-    match(const decayed_t& value) {
-        return _target->match(value);
+    from(const decayed_t& value) {
+        return _target->from(value);
     }
 
     template <typename U = decayed_t>
@@ -97,31 +103,51 @@ class t_set_runtime {
         return _target->contains(value);
     }
 
+    // 1) primitive types and types allowing implicit conversion (including std::string)
     template <typename U = decayed_t>
-    typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, t_set_runtime&>::type  //
-    insert_range(const U& start, const U& end) {
-        _target->insert_range(start, end);
-        return *this;
-    }
-    template <typename U = decayed_t>
-    typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, t_set_runtime&>::type  //
-    erase_range(const U& start, const U& end) {
-        _target->erase_range(start, end);
+    typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value || std::is_same<U, std::string>::value, t_set_runtime&>::type  //
+    insert_range(const U& start, const U& end, range_flag_t sflag = range_flag_t::closed, range_flag_t eflag = range_flag_t::closed) {
+        _target->insert_range(static_cast<T>(start), static_cast<T>(end), sflag, eflag);
         return *this;
     }
 
     template <typename U = decayed_t>
     typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, t_set_runtime&>::type  //
-    insert_range(const t_range_value<U>& start, const t_range_value<U>& end) {
-        _target->insert_range(start, end);
+    erase_range(const U& start, const U& end, range_flag_t sflag = range_flag_t::closed, range_flag_t eflag = range_flag_t::closed) {
+        _target->erase_range(static_cast<T>(start), static_cast<T>(end), sflag, eflag);
         return *this;
     }
+
+    // 2) when passed directly in the form of t_range_value<U> (when specifying MIN and MAX)
     template <typename U = decayed_t>
-    typename std::enable_if<custom::is_integral<U>::valu || std::is_floating_point<U>::value, t_set_runtime&>::type  //
-    erase_range(const t_range_value<U>& start, const t_range_value<U>& end) {
-        _target->erase_range(start, end);
+    typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, t_set_runtime&>::type  //
+    insert_range(const t_range_value<U>& start, const t_range_value<U>& end, range_flag_t sflag = range_flag_t::closed, range_flag_t eflag = range_flag_t::closed) {
+        _target->insert_range(start, end, sflag, eflag);
         return *this;
     }
+
+    template <typename U = decayed_t>
+    typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, t_set_runtime&>::type  //
+    erase_range(const t_range_value<U>& start, const t_range_value<U>& end, range_flag_t sflag = range_flag_t::closed, range_flag_t eflag = range_flag_t::closed) {
+        _target->erase_range(start, end, sflag, eflag);
+        return *this;
+    }
+
+    // 3) when passed directly in the form of t_interval<t_range_value<U>>
+    template <typename U = decayed_t>
+    typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, t_set_runtime&>::type  //
+    insert_range(const t_interval<t_range_value<U>>& interval) {
+        _target->insert_range(interval);
+        return *this;
+    }
+
+    template <typename U = decayed_t>
+    typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, t_set_runtime&>::type  //
+    erase_range(const t_interval<t_range_value<U>>& interval) {
+        _target->erase_range(interval);
+        return *this;
+    }
+
     t_set_runtime& union_with(const t_set_runtime<T>& other) {
         _target->union_with(*other._target);
         return *this;
@@ -144,7 +170,7 @@ class t_set_runtime {
     bool is_inverted() const { return _target->is_inverted(); }
 
     bool operator==(const t_set_runtime& other) { return _target->operator==(*other._target); }
-    bool operator!=(const t_set_runtime& other) { return (*this == other) ? false : true; }
+    bool operator!=(const t_set_runtime& other) { return (false == (*this == other)); }
 
     void addref() { _shared.addref(); }
     void release() { _shared.delref(); }

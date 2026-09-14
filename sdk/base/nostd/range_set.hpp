@@ -24,20 +24,6 @@
 
 namespace hotplace {
 
-enum class range_type_t : int8 {
-    minvalue = -1,    // -inf
-    ninf = minvalue,  // negative inf
-    value = 0,        // value
-    maxvalue = 1,     // +inf
-    inf = maxvalue,   // positive inf
-};
-enum class range_flag_t : uint8 {
-    excluded = 0,       // open
-    open = excluded,    //
-    included = 1,       // closed
-    closed = included,  //
-};
-
 template <typename T>
 struct t_interval {
     T begin;
@@ -49,9 +35,17 @@ struct t_interval {
     t_interval(T start, T end, range_flag_t sflag = range_flag_t::closed, range_flag_t eflag = range_flag_t::closed)
         : begin(start < end ? start : end), end(start < end ? end : start), begin_flag(sflag), end_flag(eflag) {}
     t_interval(const t_interval& other) : begin(other.begin), end(other.end), begin_flag(other.begin_flag), end_flag(other.end_flag) {}
+    t_interval(t_interval&& other) : begin(std::move(other.begin)), end(std::move(other.end)), begin_flag(other.begin_flag), end_flag(other.end_flag) {}
     t_interval& operator=(const t_interval& other) {
         begin = other.begin;
         end = other.end;
+        begin_flag = other.begin_flag;
+        end_flag = other.end_flag;
+        return *this;
+    }
+    t_interval& operator=(t_interval&& other) {
+        begin = std::move(other.begin);
+        end = std::move(other.end);
         begin_flag = other.begin_flag;
         end_flag = other.end_flag;
         return *this;
@@ -151,9 +145,9 @@ struct t_range_value {
         return *this;
     }
     template <typename U>
-    t_range_value& operator=(const U& value) {
+    t_range_value& operator=(const U& v) {
         type = range_type_t::value;
-        value = value;
+        value = v;
         return *this;
     }
 
@@ -444,6 +438,41 @@ class t_range_set {
             }
         }
         set_modified();
+        return *this;
+    }
+
+    // range_flag_t
+    template <typename U>
+    t_range_set& insert_range(const U& start, const U& end, range_flag_t sflag = range_flag_t::closed, range_flag_t eflag = range_flag_t::closed) {
+        add(t_interval<T>(t_range_value<U>(start), t_range_value<U>(end), sflag, eflag));
+        return *this;
+    }
+
+    template <typename U>
+    t_range_set& erase_range(const U& start, const U& end, range_flag_t sflag = range_flag_t::closed, range_flag_t eflag = range_flag_t::closed) {
+        subtract(t_interval<T>(t_range_value<U>(start), t_range_value<U>(end), sflag, eflag));
+        return *this;
+    }
+
+    // t_range_value<T> and range_flag_t
+    t_range_set& insert_range(const T& start, const T& end, range_flag_t sflag = range_flag_t::closed, range_flag_t eflag = range_flag_t::closed) {
+        add(t_interval<T>(start, end, sflag, eflag));
+        return *this;
+    }
+
+    t_range_set& erase_range(const T& start, const T& end, range_flag_t sflag = range_flag_t::closed, range_flag_t eflag = range_flag_t::closed) {
+        subtract(t_interval<T>(start, end, sflag, eflag));
+        return *this;
+    }
+
+    // t_interval<t_range_value<T>>
+    t_range_set& insert_range(const t_interval<T>& interval) {
+        add(interval);
+        return *this;
+    }
+
+    t_range_set& erase_range(const t_interval<T>& interval) {
+        subtract(interval);
         return *this;
     }
 

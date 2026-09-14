@@ -54,6 +54,9 @@ void asn1_builtin_type::represent(stream_t* s, const asn1_value* value) const {
             } else {
                 s->printf("%s", resource->get_entity_name(get_ident(), entity).c_str());
             }
+
+            get_constraints().represent(s, this, value);
+
             auto type = get_component_type();
             switch (type) {
                 case asn1_default:
@@ -67,8 +70,6 @@ void asn1_builtin_type::represent(stream_t* s, const asn1_value* value) const {
                 s->printf(" ");
                 vtprintf(s, get_default_value(), vtprintf_style_t::vtprintf_style_asn1);
             }
-
-            get_constraints().represent(s, this, value);
         }
     }
 }

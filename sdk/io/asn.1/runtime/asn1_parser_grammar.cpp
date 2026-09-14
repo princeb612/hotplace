@@ -211,8 +211,10 @@ bool asn1_parser::prepare() {
 
         // 3. Primary Elements (SIZE, FROM, PATTERN, Range, Parenthesized)
         .add_production("PrimaryElement", {"ValueElement"})
-        .add_production("PrimaryElement", {"ValueElement", "..", "ValueElement"})
-        .add_production("PrimaryElement", {"ValueElement", "..", "<", "ValueElement"})
+        .add_production("PrimaryElement", {"ValueElement", "..", "ValueElement"})            // [from, to]
+        .add_production("PrimaryElement", {"ValueElement", "..", "<", "ValueElement"})       // [from, to)
+        .add_production("PrimaryElement", {"ValueElement", "<", "..", "ValueElement"})       // (from, to]
+        .add_production("PrimaryElement", {"ValueElement", "<", "..", "<", "ValueElement"})  // (from, to)
         .add_production("PrimaryElement", {"SIZE", "Constraint"})
         .add_production("PrimaryElement", {"FROM", "Constraint"})
         .add_production("PrimaryElement", {"PATTERN", symqs})
@@ -240,6 +242,7 @@ bool asn1_parser::prepare() {
         .add_terminal("]")
         .add_terminal("(")
         .add_terminal(")")
+        .add_terminal("<")
         .add_terminal("..")
         .add_terminal("|")
         .add_terminal("INTERSECTION")

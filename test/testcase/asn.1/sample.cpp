@@ -78,10 +78,12 @@ void parse_notation(asn1_runtime* runtime, const char* notation) {
     __finally2 { _test_case.test(ret, __FUNCTION__, "parse : %s", notation); }
 }
 
-void parse_reconst_notation(asn1_runtime* runtime, lexical_context& context, const char* notation) {
+void parse_reconst_notation(asn1_runtime* runtime, lexical_context& context, const char* notation, const char* expect) {
     // asn1_publisher applied
     // - StatementSequence, StatementSequenceOf, StatementSet, StatementSetOf, StatementChoice, FieldList, Field, FieldOpt
     // - TypeSpec, TypeBase, ReferencedType, TaggedType, TagPrefix, EnumType, EnumList, EnumItem, SimpleType
+
+    // expect can be nullptr
 
     if (nullptr == notation) return;
 
@@ -101,7 +103,10 @@ void parse_reconst_notation(asn1_runtime* runtime, lexical_context& context, con
         obj->release();
     }
     _logger->writeln("parse and publish %s", bs.c_str());
-    _test_case.assert(bs == notation, __FUNCTION__, "test %s", notation);
+    if (expect)
+        _test_case.assert(bs == expect, __FUNCTION__, "test %s", notation);  // output the input notation for the unittest line
+    else
+        _test_case.assert(bs == notation, __FUNCTION__, "test %s", notation);
 }
 
 int main(int argc, char** argv) {

@@ -22,6 +22,17 @@
 
 namespace hotplace {
 
+// "a".."z"
+struct string_range {
+    std::string begin;
+    std::string end;
+    range_flag_t begin_flag;
+    range_flag_t end_flag;
+
+    string_range(const std::string& s, const std::string& e, range_flag_t bf = range_flag_t::closed, range_flag_t ef = range_flag_t::closed)
+        : begin(s), end(e), begin_flag(bf), end_flag(ef) {}
+};
+
 class string_set {
    public:
     string_set();
@@ -34,9 +45,8 @@ class string_set {
     void reset();
     void insert(const std::string& value);
     void erase(const std::string& value);
-    bool contains(const std::string& value);
-    bool match(const std::string& value);
-    bool regex(const std::string& value);
+    bool contains(const std::string& value) const;
+    bool regex(const std::string& value) const;
 
     void union_with(const string_set& other);
     void erase_from(const string_set& other);
@@ -52,13 +62,21 @@ class string_set {
     string_set& subtract(const std::string& value);
     string_set& subtract(const string_set& other);
     string_set& intersect(const string_set& other);
-    bool has(const std::string& value);
-    bool has(const string_set& other);
-    bool find(const std::string& value);
+    string_set& insert_range(const std::string& begin, const std::string& end,  //
+                             range_flag_t begin_flag = range_flag_t::closed, range_flag_t end_flag = range_flag_t::closed);
+    string_set& erase_range(const std::string& begin, const std::string& end, range_flag_t begin_flag = range_flag_t::closed,
+                            range_flag_t end_flag = range_flag_t::closed);
+    bool has(const std::string& value) const;
+    bool has(const string_set& other) const;
+    bool from(const std::string& value) const;
+
+   protected:
+    bool exist_in_range(const std::string& value) const;
 
    private:
     bool _invert;
     std::multiset<std::string> _set;
+    std::vector<string_range> _ranges;
 };
 
 }  // namespace hotplace

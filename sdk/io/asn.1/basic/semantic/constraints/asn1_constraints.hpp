@@ -181,15 +181,9 @@ class asn1_constraints {
                 if (vt_flag_string & flags) {
                     auto s = vt.to_str();
                     if (asn1_entity_constraint_from == entity) {
-                        for (const auto& item : s) {
-                            std::string temp;
-                            temp.push_back(item);
-                            test = visitor.get_result_set().match(temp);
-                            if (false == test) break;
-                        }
+                        test = visitor.get_result_set().from(s);
                     } else if (asn1_entity_constraint_pattern == entity) {
                         test = visitor.get_result_set().regex(s);
-                        if (false == test) break;
                     } else {
                         test = visitor.get_result_set().contains(s);
                     }

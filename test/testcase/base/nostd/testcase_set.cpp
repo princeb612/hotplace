@@ -439,6 +439,78 @@ static void test_range_set_open_closed() {
         _test_case.assert(false == rs.has(2.0), __FUNCTION__, "false == has(2.0)");
         _test_case.assert(false == rs.has(3.5), __FUNCTION__, "false == has(3.5)");
     }
+    {
+        t_set_runtime<int> runtime;
+        runtime.insert_range(t_range_value<int>(range_type_t::minvalue), t_range_value<int>(-1), range_flag_t::closed, range_flag_t::open)
+            .insert_range(1, 10, range_flag_t::open, range_flag_t::open)
+            .insert_range(12, 15, range_flag_t::open, range_flag_t::open)
+            .insert_range(15, 20, range_flag_t::closed, range_flag_t::open);
+
+        struct testvector {
+            int value;
+            bool expect;
+        } table[] = {
+            {-2, true}, {-1, false}, {1, false}, {2, true}, {9, true}, {10, false}, {12, false}, {15, true}, {20, false}, {30, false},
+        };
+        for (const auto& entry : table) {
+            _test_case.assert(entry.expect == runtime.contains(entry.value), __FUNCTION__, "%s == contains(%i)", entry.expect ? "true" : "false", entry.value);
+        }
+    }
+}
+
+static void test_string_set() {
+    _test_case.begin("string_set");
+    enum method {
+        method_has,
+        method_from,
+        method_regex,
+    };
+    struct testvector {
+        method how;
+        const char* key;
+        bool expect;
+    };
+    auto test_lambda = [](const testvector& item, string_set& strset, const char* func, const char* text) -> void {
+        bool found = false;
+        if (method_has == item.how) {
+            found = strset.has(item.key);
+        } else if (method_from == item.how) {
+            found = strset.from(item.key);
+        } else if (method_regex == item.how) {
+            found = strset.regex(item.key);
+        }
+        const char* methodstr[] = {"has", "from", "regex"};
+        _test_case.assert(item.expect == found, func, R"(%s %s("%s") -> %s)", text, methodstr[item.how], item.key, found ? "true" : "false");
+    };
+
+    {
+        string_set strset;
+        strset.add("ABC");
+        strset.add("XYZ");
+
+        testvector table[] = {
+            {method_has, "ABC", true}, {method_has, "ABCD", false}, {method_has, "XYZ", true},  {method_has, "xyz", false},
+            {method_from, "AB", true}, {method_from, "BC", true},   {method_from, "CD", false},
+        };
+
+        for (const auto& item : table) {
+            test_lambda(item, strset, __FUNCTION__, "case1");
+        }
+    }
+    {
+        string_set strset;
+        strset.add("XYZ");
+        strset.insert_range(std::string("a"), std::string("z"));
+
+        testvector table[] = {
+            {method_has, "a", true},    {method_has, "A", false},   {method_has, "x", true},     {method_has, "z", true},
+            {method_from, "abc", true}, {method_from, "xyz", true}, {method_from, "ABC", false},
+        };
+
+        for (const auto& item : table) {
+            test_lambda(item, strset, __FUNCTION__, "case2");
+        }
+    }
 }
 
 static void test_set() {
@@ -529,6 +601,12 @@ static void test_set() {
         runtime.union_with(other);
         has = runtime.contains("banana");
         _test_case.assert(true == has, __FUNCTION__, "#8 contains");
+
+        runtime.insert_range(std::string("a"), std::string("z"));
+        has = runtime.contains("a");
+        _test_case.assert(true == has, __FUNCTION__, "#9 contains");
+        has = runtime.contains("A");
+        _test_case.assert(false == has, __FUNCTION__, "#10 contains");
     }
 }
 
@@ -538,5 +616,6 @@ void testcase_set() {
     test_pnk_ack_subtraction();    // [retransmission] check PKN not acknowledged
     test_range_set_minmax();       // MIN, MAX
     test_range_set_open_closed();  // open, closed
+    test_string_set();
     test_set();
 }

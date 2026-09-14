@@ -62,8 +62,9 @@ void asn1_publisher::prepare() {
 
         if (4 == size) {
             auto& rhs_cons = rhs[3];
-            rhs_typespec.object->get_constraints().add(rhs_cons.cons.u);
-            rhs_cons.release();
+            auto cons = rhs_cons.cons.u;
+            rhs_typespec.object->get_constraints().add(cons);
+            if (asn1_entity_constraint_container != cons->get_entity()) rhs_cons.release();
         }
 
         rhs_typespec.release();  // asn own rhs_typespec.object
@@ -100,8 +101,9 @@ void asn1_publisher::prepare() {
         auto citer = index.find("Constraint");
         if (index.end() != citer) {
             auto& rhs_cons = rhs[citer->second];
-            sequence->get_constraints().add(rhs_cons.cons.u);
-            rhs_cons.release();
+            auto cons = rhs_cons.cons.u;
+            sequence->get_constraints().add(cons);
+            if (asn1_entity_constraint_container != cons->get_entity()) rhs_cons.release();
         }
 
         asn1_semantic_node asn;
@@ -136,10 +138,11 @@ void asn1_publisher::prepare() {
         }
 
         if (4 == size) {
-            auto& rhs_second = rhs[1];
-            if ("SizeConstraint" == rhs_second.symbol || "Constraint" == rhs_second.symbol) {
-                sequenceof->get_constraints().add(rhs_second.cons.u);
-                rhs_second.release();
+            auto& rhs_cons = rhs[1];
+            if ("SizeConstraint" == rhs_cons.symbol || "Constraint" == rhs_cons.symbol) {
+                auto cons = rhs_cons.cons.u;
+                sequenceof->get_constraints().add(cons);
+                if (asn1_entity_constraint_container != cons->get_entity()) rhs_cons.release();
             }
         }
 
@@ -180,8 +183,9 @@ void asn1_publisher::prepare() {
         auto citer = index.find("Constraint");
         if (index.end() != citer) {
             auto& rhs_cons = rhs[citer->second];
-            setobj->get_constraints().add(rhs_cons.cons.u);
-            rhs_cons.release();
+            auto cons = rhs_cons.cons.u;
+            setobj->get_constraints().add(cons);
+            if (asn1_entity_constraint_container != cons->get_entity()) rhs_cons.release();
         }
 
         asn1_semantic_node asn;
@@ -216,10 +220,11 @@ void asn1_publisher::prepare() {
         }
 
         if (4 == size) {
-            auto& rhs_second = rhs[1];
-            if ("SizeConstraint" == rhs_second.symbol || "Constraint" == rhs_second.symbol) {
-                setof->get_constraints().add(rhs_second.cons.u);
-                rhs_second.release();
+            auto& rhs_cons = rhs[1];
+            if ("SizeConstraint" == rhs_cons.symbol || "Constraint" == rhs_cons.symbol) {
+                auto cons = rhs_cons.cons.u;
+                setof->get_constraints().add(cons);
+                if (asn1_entity_constraint_container != cons->get_entity()) rhs_cons.release();
             }
         }
 
@@ -260,8 +265,9 @@ void asn1_publisher::prepare() {
         auto citer = index.find("Constraint");
         if (index.end() != citer) {
             auto& rhs_cons = rhs[citer->second];
-            choice->get_constraints().add(rhs_cons.cons.u);
-            rhs_cons.release();
+            auto cons = rhs_cons.cons.u;
+            choice->get_constraints().add(cons);
+            if (asn1_entity_constraint_container != cons->get_entity()) rhs_cons.release();
         }
 
         asn1_semantic_node asn;
@@ -344,8 +350,9 @@ void asn1_publisher::prepare() {
             auto citer = index.find("Constraint");
             if (index.end() != citer) {
                 auto& rhs_cons = rhs[citer->second];
-                asn.object->get_constraints().add(rhs_cons.cons.u);
-                rhs_cons.release();
+                auto cons = rhs_cons.cons.u;
+                asn.object->get_constraints().add(cons);
+                if (asn1_entity_constraint_container != cons->get_entity()) rhs_cons.release();
             }
         }
 

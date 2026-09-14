@@ -22,12 +22,21 @@ string_set::string_set(string_set&& other) : string_set() { *this = std::move(ot
 string_set::~string_set() {}
 
 string_set& string_set::operator=(const string_set& other) {
-    _set = other._set;
+    if (this != &other) {
+        _set = other._set;
+        _ranges = other._ranges;
+        _invert = other._invert;
+    }
     return *this;
 }
 
 string_set& string_set::operator=(string_set&& other) {
-    _set = std::move(other._set);
+    if (this != &other) {
+        _set = std::move(other._set);
+        _ranges = std::move(other._ranges);
+        _invert = other._invert;
+        other._invert = false;
+    }
     return *this;
 }
 
@@ -37,11 +46,9 @@ void string_set::insert(const std::string& value) { add(value); }
 
 void string_set::erase(const std::string& value) { subtract(value); }
 
-bool string_set::contains(const std::string& value) { return has(value); }
+bool string_set::contains(const std::string& value) const { return has(value); }
 
-bool string_set::match(const std::string& value) { return find(value); }
-
-bool string_set::regex(const std::string& value) {
+bool string_set::regex(const std::string& value) const {
     bool ret = false;
     for (const auto& item : _set) {
         size_t pos = 0;
@@ -51,6 +58,9 @@ bool string_set::regex(const std::string& value) {
             ret = true;
             break;
         }
+    }
+    if (true == _invert) {
+        ret = !ret;
     }
     return ret;
 }
@@ -118,6 +128,8 @@ string_set& string_set::invert() {
 
 string_set& string_set::clear() {
     _set.clear();
+    _ranges.clear();
+    _invert = false;
     return *this;
 }
 
@@ -140,57 +152,158 @@ string_set& string_set::subtract(const std::string& value) {
 }
 
 string_set& string_set::subtract(const string_set& other) {
-    if (this == &other) return *this;
+    if (this == &other) {
+        clear();
+    } else {
+        for (const auto& item : other._set) {
+            erase(item);
+        }
 
-    for (const auto& item : other._set) erase(item);
-
+        if (false == _set.empty()) {
+            auto it = _set.begin();
+            while (it != _set.end()) {
+                if (other.exist_in_range(*it)) {
+                    it = _set.erase(it);
+                } else {
+                    ++it;
+                }
+            }
+        }
+    }
     return *this;
 }
 
 string_set& string_set::intersect(const string_set& other) {
     if (this == &other) return *this;
 
-    string_set temp(*this);
-    clear();
+    std::multiset<std::string> temp_set;
     for (const auto& item : _set) {
-        if (temp.has(item)) {
-            _set.insert(item);
+        if (other.contains(item)) {
+            temp_set.insert(item);
         }
     }
+    _set = std::move(temp_set);
+
+    std::vector<string_range> temp_ranges;
+    for (const auto& range : _ranges) {
+        if (other.has(range.begin) && other.has(range.end)) {
+            temp_ranges.push_back(range);
+        }
+    }
+    _ranges = std::move(temp_ranges);
 
     return *this;
 }
 
-bool string_set::has(const std::string& value) {
-    auto test = _set.count(value) > 0;
-    if (false == _invert)
-        return test;
-    else
-        return !test;
+string_set& string_set::insert_range(const std::string& begin, const std::string& end, range_flag_t begin_flag, range_flag_t end_flag) {
+    _ranges.emplace_back(begin, end, begin_flag, end_flag);
+    return *this;
 }
 
-bool string_set::has(const string_set& other) {
-    if (this == &other) return true;
+string_set& string_set::erase_range(const std::string& begin, const std::string& end, range_flag_t begin_flag, range_flag_t end_flag) {
+    // 1. remove individual strings falling within the specified range from _set
+    auto it = _set.begin();
+    while (it != _set.end()) {
+        const std::string& val = *it;
+        bool start_ok = (range_flag_t::closed == begin_flag) ? (val >= begin) : (val > begin);
+        bool end_ok = (range_flag_t::closed == end_flag) ? (val <= end) : (val < end);
 
-    if (other._set.empty()) return true;
-
-    for (const auto& item : other._set) {
-        auto expect = (false == _invert) ? false : true;
-        if (expect == has(item)) {
-            return false;
+        if (start_ok && end_ok) {
+            it = _set.erase(it);
+        } else {
+            ++it;
         }
     }
 
+    // 2. split or shrink intervals by comparing with existing _ranges intervals.
+    std::vector<string_range> updated_ranges;
+    for (const auto& r : _ranges) {
+        // complete non-overlap condition: the existing range does not overlap with the removal range at all.
+        if (r.end < begin || r.begin > end) {
+            updated_ranges.push_back(r);
+            continue;
+        }
+
+        // create the remaining left section
+        if (r.begin < begin) {
+            range_flag_t left_eflag = (range_flag_t::closed == begin_flag) ? range_flag_t::open : range_flag_t::closed;
+            updated_ranges.emplace_back(r.begin, begin, r.begin_flag, left_eflag);
+        }
+
+        // create the remaining section on the right
+        if (r.end > end) {
+            range_flag_t right_bflag = (range_flag_t::closed == end_flag) ? range_flag_t::open : range_flag_t::closed;
+            updated_ranges.emplace_back(end, r.end, right_bflag, r.end_flag);
+        }
+    }
+
+    _ranges = std::move(updated_ranges);
+    return *this;
+}
+
+bool string_set::has(const std::string& value) const {
+    auto test = _set.count(value) > 0;
+    if (false == test) {
+        test = exist_in_range(value);
+    }
+    return _invert ? !test : test;
+}
+
+bool string_set::has(const string_set& other) const {
+    if (this == &other) return true;
+    // TODO true == other._invert
+
+    auto expect_fail = _invert ? true : false;
+
+    for (const auto& item : other._set) {
+        if (expect_fail == has(item)) {
+            return false;
+        }
+    }
+    for (const auto& range : other._ranges) {
+        if (expect_fail == has(range.begin) || expect_fail == has(range.end)) {
+            return false;
+        }
+    }
     return true;
 }
 
-/* ASN.1 FROM */
-bool string_set::find(const std::string& value) {
-    for (const auto& item : _set) {
-        auto pos = item.find_first_of(value);
-        if (std::string::npos != pos) return true;
+bool string_set::exist_in_range(const std::string& value) const {
+    bool exist = false;
+    for (const auto& range : _ranges) {
+        bool match_start = (range_flag_t::closed == range.begin_flag) ? (value >= range.begin) : (value > range.begin);
+        if (false == match_start) {
+            continue;
+        }
+
+        bool match_end = (range_flag_t::closed == range.end_flag) ? (value <= range.end) : (value < range.end);
+        if (true == match_end) {
+            exist = true;
+            break;
+        }
     }
-    return false;
+    return exist;
+}
+
+/* ASN.1 FROM */
+bool string_set::from(const std::string& value) const {
+    for (const auto& ch : value) {
+        std::string temp;
+        temp.push_back(ch);
+        bool found = false;
+        for (const auto& item : _set) {
+            auto pos = item.find_first_of(temp);
+            if (std::string::npos != pos) {
+                found = true;
+                break;
+            }
+        }
+        if (false == found) {
+            auto test = exist_in_range(temp);
+            if (false == test) return false;
+        }
+    }
+    return true;
 }
 
 }  // namespace hotplace

@@ -7,6 +7,9 @@
  * Revision History
  * Date         Name                Description
  * 2023.08.15   Soo Han, Kim        elapsed time
+ * 2017.07.13   Soo Han, Kim        prototype (codename.grape Revision 288)
+ * 2023.08.15   Soo Han, Kim        reboot (codename.hotplace Revision 9)
+ *
  */
 
 #include <algorithm>
@@ -337,28 +340,7 @@ void test_case::dump_list_into_stream(const unittest_list_t& array, basic_stream
         }
 
         auto hint = advisor->hintof(item._result);
-        switch (hint->category) {
-            case error_category_t::error_category_success:
-                cprint(console_colored_stream, _concolor, hint->color, fgcolor, hint->testname.c_str());
-                break;
-            case error_category_t::error_category_expect_failure:
-                cprint(console_colored_stream, _concolor, hint->color, fgcolor, hint->testname.c_str());
-                break;
-            case error_category_t::error_category_severe:
-                cprint(console_colored_stream, _concolor, hint->color, fgcolor, hint->testname.c_str());
-                break;
-            case error_category_t::error_category_not_supported:
-                cprint(console_colored_stream, _concolor, hint->color, fgcolor, hint->testname.c_str());
-                break;
-            case error_category_t::error_category_low_security:
-            case error_category_t::error_category_trivial:
-            case error_category_t::error_category_warn:
-                cprint(console_colored_stream, _concolor, hint->color, fgcolor, hint->testname.c_str());
-                break;
-            default:
-                cprint(console_colored_stream, _concolor, console_color_t::green, fgcolor, constexpr_blah);
-                break;
-        }
+        cprint(console_colored_stream, _concolor, hint->color, fgcolor, hint->testname.c_str());
 
         std::string error_message_string;
         std::string errormsg;

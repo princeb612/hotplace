@@ -36,7 +36,7 @@ enum token_t : uint32 {
     token_squote = 15,              // '
     token_dquote = 16,              // "
     token_greater = 17,             // >
-    token_lesser = 18,              // <
+    token_lesser = 18,              // <, less-than indicator, exclusive boundary indicator
     token_equal = 19,               // =
     token_plus = 20,                // +
     token_minus = 21,               // -
@@ -128,7 +128,8 @@ enum token_t : uint32 {
     token_pattern,       // PATTERN
     token_min,           // MIN
     token_max,           // MAX
-    token_fromto,        // ..
+    token_fromto,        // .. range separator, range operator
+    token_range = token_fromto,
 
     token_default,   // DEFAULT
     token_optional,  // OPTIONAL

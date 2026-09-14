@@ -119,6 +119,8 @@ static bool is_delimiter(uint32 token) {
         case token_rparen:
         case token_comma:
         case token_space:
+        case token_lesser:
+        case token_greater:
             ret = true;
             break;
         default:

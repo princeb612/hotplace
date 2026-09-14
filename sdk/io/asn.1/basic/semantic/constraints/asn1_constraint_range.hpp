@@ -35,10 +35,58 @@ namespace io {
 template <typename T>
 class asn1_constraint_range : public asn1_constraint<T> {
    public:
-    asn1_constraint_range(t_range_value<T> low, t_range_value<T> high) : asn1_constraint_range() {
+    using decayed_t = typename std::decay<T>::type;
+
+    template <typename U = decayed_t,  //
+              typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, int>::type = 0>
+    asn1_constraint_range(const U& low, const U& high, range_flag_t low_flag = range_flag_t::closed, range_flag_t high_flag = range_flag_t::closed)
+        : asn1_constraint_range() {
+        _low = t_range_value<U>(low);
+        _high = t_range_value<U>(high);
+        _low_flag = low_flag;
+        _high_flag = high_flag;
+    }
+
+    template <typename U = decayed_t,  //
+              typename std::enable_if<std::is_same<U, std::string>::value, int>::type = 0>
+    asn1_constraint_range(const U& low, const U& high, range_flag_t low_flag = range_flag_t::closed, range_flag_t high_flag = range_flag_t::closed)
+        : asn1_constraint_range() {
         _low = low;
         _high = high;
+        _low_flag = low_flag;
+        _high_flag = high_flag;
     }
+
+    template <typename U = decayed_t,  //
+              typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, int>::type = 0>
+    asn1_constraint_range(range_type_t low_type, const U& high, range_flag_t low_flag = range_flag_t::closed, range_flag_t high_flag = range_flag_t::closed)
+        : asn1_constraint_range() {
+        _low = t_range_value<U>(low_type);
+        _high = t_range_value<U>(high);
+        _low_flag = low_flag;
+        _high_flag = high_flag;
+    }
+
+    template <typename U = decayed_t,  //
+              typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, int>::type = 0>
+    asn1_constraint_range(const U& low, range_type_t high_type, range_flag_t low_flag = range_flag_t::closed, range_flag_t high_flag = range_flag_t::closed)
+        : asn1_constraint_range() {
+        _low = t_range_value<U>(low);
+        _high = t_range_value<U>(high_type);
+        _low_flag = low_flag;
+        _high_flag = high_flag;
+    }
+
+    template <typename U = decayed_t,  //
+              typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, int>::type = 0>
+    asn1_constraint_range(range_type_t low_type, range_type_t high_type, range_flag_t low_flag = range_flag_t::closed, range_flag_t high_flag = range_flag_t::closed)
+        : asn1_constraint_range() {
+        _low = t_range_value<U>(low_type);
+        _high = t_range_value<U>(high_type);
+        _low_flag = low_flag;
+        _high_flag = high_flag;
+    }
+
     virtual ~asn1_constraint_range() = default;
 
     asn1_constraint_range* clone() { return new asn1_constraint_range<T>(*this); }
@@ -56,39 +104,40 @@ class asn1_constraint_range : public asn1_constraint<T> {
     }
 
    protected:
-    asn1_constraint_range() : asn1_constraint<T>(asn1_entity_constraint_range), _low(T()), _high(T()) {}
+    asn1_constraint_range()
+        : asn1_constraint<T>(asn1_entity_constraint_range), _low(T()), _high(T()), _low_flag(range_flag_t::closed), _high_flag(range_flag_t::closed) {}
     asn1_constraint_range(const asn1_constraint_range& other) : asn1_constraint_range() { *this = other; }
     asn1_constraint_range(asn1_constraint_range&& other) : asn1_constraint_range() { *this = std::move(other); }
     asn1_constraint_range& operator=(const asn1_constraint_range& other) {
         _low = other._low;
         _high = other._high;
+        _low_flag = other._low_flag;
+        _high_flag = other._high_flag;
         return *this;
     }
     asn1_constraint_range& operator=(asn1_constraint_range&& other) {
         _low = std::move(other._low);
         _high = std::move(other._high);
+        std::swap(_low_flag, other._low_flag);
+        std::swap(_high_flag, other._high_flag);
         return *this;
     }
 
-    virtual void accept(asn1_constraint_evaluator<T>* v) { v->get_result_set().insert_range(_low, _high); }
+    virtual void accept(asn1_constraint_evaluator<T>* v) { do_accept(v); }
+
+    template <typename U = decayed_t,  //
+              typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, int>::type = 0>
+    void do_accept(asn1_constraint_evaluator<T>* v) {
+        v->get_result_set().insert_range(_low, _high, _low_flag, _high_flag);
+    }
+
+    template <typename U = decayed_t,  //
+              typename std::enable_if<std::is_same<U, std::string>::value, int>::type = 0>
+    void do_accept(asn1_constraint_evaluator<T>* v) {
+        v->get_result_set().insert_range(_low.value, _high.value, _low_flag, _high_flag);
+    }
 
     virtual void represent(stream_t* s, const asn1_object* object, const asn1_value* value = nullptr) const {
-        auto parenthesis = false;
-        auto parent = asn1_constraint<T>::get_parent();
-        if (parent) {
-            auto entity = parent->get_entity();
-            switch (entity) {
-                case asn1_entity_constraint_intersection:
-                    parenthesis = true;
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        if (parenthesis) {
-            s->printf("(");
-        }
         switch (_low.type) {
             case range_type_t::minvalue:
                 s->printf("MIN");
@@ -101,8 +150,10 @@ class asn1_constraint_range : public asn1_constraint<T> {
                 s->printf("MAX");
                 break;
         }
+        if (range_flag_t::open == _low_flag) s->printf("<");
         if (_low != _high) {
             s->printf("..");
+            if (range_flag_t::open == _high_flag) s->printf("<");
             switch (_high.type) {
                 case range_type_t::minvalue:
                     s->printf("MIN");
@@ -116,14 +167,13 @@ class asn1_constraint_range : public asn1_constraint<T> {
                     break;
             }
         }
-        if (parenthesis) {
-            s->printf(")");
-        }
     }
 
    private:
     t_range_value<T> _low;
     t_range_value<T> _high;
+    range_flag_t _low_flag;
+    range_flag_t _high_flag;
 };
 
 }  // namespace io
