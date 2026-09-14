@@ -29,8 +29,6 @@ class asn1_strongly_typed {
     return_t read(asn1_runtime* target, const std::string& name, const byte_t* stream, size_t size, size_t& pos);
 
    protected:
-    return_t read_node(asn1_bytestream::TLV_node* node, asn1_object* object);
-
    private:
 };
 

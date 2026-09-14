@@ -6,8 +6,10 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2026.09.14   Soo Han and Gemini  topological sort
  *
- * graph online https://graphonline.ru/en/
+ * online references
+ * - graph online https://graphonline.ru/en/
  */
 
 #ifndef __HOTPLACE_SDK_BASE_GRAPH_GRAPH__
@@ -21,6 +23,7 @@
 #include <map>
 #include <queue>
 #include <set>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -280,6 +283,69 @@ class t_graph {
     const unordered_edges_t& get_unordered_edges() const { return _unordered_edges; }
     const ordered_vertices_t& get_ordered_vertices() const { return _ordered_vertices; }
     const ordered_edges_t& get_ordered_edges() const { return _ordered_edges; }
+
+    bool topological_sort(std::list<T>& sorted_list) const {
+        auto& _vertices = _unordered_vertices;
+        auto& _edges = _unordered_edges;
+
+        sorted_list.clear();
+
+        if (true == _vertices.empty()) {
+            return true;
+        }
+
+        std::map<T, size_t> in_degree;
+        for (const auto& v : _vertices) {
+            in_degree[v] = 0;
+        }
+
+        // 1. calculate in-degrees
+        for (const auto& edge : _edges) {
+            auto iter = in_degree.find(edge._to);
+            if (in_degree.end() != iter) {
+                ++(iter->second);
+            }
+        }
+
+        // 2. queue vertices with in-degree 0
+        std::queue<T> q;
+        for (const auto& item : in_degree) {
+            if (0 == item.second) {
+                q.push(item.first);
+            }
+        }
+
+        std::map<T, std::set<T>> adj;
+        for (const auto& edge : _edges) {
+            adj[edge._from].insert(edge._to);
+        }
+
+        // 3. Kahn's Algorithm
+        while (false == q.empty()) {
+            T current = std::move(q.front());
+            q.pop();
+
+            sorted_list.push_back(current);
+
+            auto iter = adj.find(current);
+            if (adj.end() != iter) {
+                for (const auto& neighbor : iter->second) {
+                    auto deg_iter = in_degree.find(neighbor);
+                    if (in_degree.end() != deg_iter && 0 == --(deg_iter->second)) {
+                        q.push(neighbor);
+                    }
+                }
+            }
+        }
+
+        // cycle detection: if sorted count != vertices count, return false
+        if (sorted_list.size() != _vertices.size()) {
+            sorted_list.clear();
+            return false;
+        }
+
+        return true;
+    }
 
    private:
     unordered_vertices_t _unordered_vertices;

@@ -210,6 +210,42 @@ void test_testvector_constraints() {
                                     new asn1_constraint_size_i(
                                         new asn1_constraint_range_i(1, 4)));
                         }));
+    auto cons_ie5string_alphabet4 =
+        asn1_referenced_type::define("name4",
+            asn1_builder::build(asn1_entity_ia5string,
+                        [&](asn1_object* builtin) -> void {
+                            builtin->get_constraints()
+                                .add(
+                                    new asn1_constraint_from_s(
+                                        new asn1_constraint_union_s(
+                                            {
+                                                new asn1_constraint_range_s(std::string("0"), std::string("9")),
+                                                new asn1_constraint_range_s(std::string("a"), std::string("z")),
+                                                new asn1_constraint_range_s(std::string("A"), std::string("Z"))
+                                            }
+                                        )))
+                                .add(
+                                    new asn1_constraint_size_i(
+                                        new asn1_constraint_range_i(1, 4)));
+                        }));
+    auto cons_ie5string_alphabet5 =
+        asn1_referenced_type::define("name5",
+            asn1_builder::build(asn1_entity_ia5string,
+                        [&](asn1_object* builtin) -> void {
+                            builtin->get_constraints()
+                                .add(
+                                    new asn1_constraint_from_s(
+                                        new asn1_constraint_union_s(
+                                            {
+                                                new asn1_constraint_range_s(std::string("0"), std::string("9"), range_flag_t::open, range_flag_t::open),
+                                                new asn1_constraint_range_s(std::string("a"), std::string("z")),
+                                                new asn1_constraint_range_s(std::string("A"), std::string("Z"))
+                                            }
+                                        )))
+                                .add(
+                                    new asn1_constraint_size_i(
+                                        new asn1_constraint_range_i(1, 4)));
+                        }));
     auto cons_sequence_of_range =
         asn1_referenced_type::define("Numbers",
             asn1_builder::build(new asn1_sequence_of(asn1_entity_integer),
@@ -316,67 +352,68 @@ void test_testvector_constraints() {
         // {"boolean", type_bool, "type ::= BOOLEAN", true, flag_value_true},
         // {"boolean", type_bool->clone(), "type ::= BOOLEAN", true, flag_value_false},
         // {"boolean", type_bool->clone(), "type ::= BOOLEAN", false, flag_value_abc},
-        // {"single value", cons_single_type1, "type ::= INTEGER (1)", true, flag_value_int1},
-        // {"single value", cons_single_type2, "type ::= INTEGER (1 | 2)", false, flag_value_int5},
-        // {"single value", cons_single_type3, "type ::= INTEGER (1 | 2 | 3 | 6)", true, flag_value_int2},
-        // {"single value", cons_single_type4, R"(type ::= VisibleString ("A" | "B" | "C" | "D"))", true, flag_value_a},
-        // {"range", cons_range_type1, "type ::= INTEGER (1..10 | 20..30)", true, flag_value_int5},
-        // {"range", cons_range_type1->clone(), "type ::= INTEGER (1..10 | 20..30)", false, flag_value_int15},
-        // {"range", cons_range_type2, "type ::= INTEGER ((1..100) INTERSECTION (50..200))", false, flag_value_int15},
-        // {"range", cons_range_type2->clone(), "type ::= INTEGER ((1..100) INTERSECTION (50..200))", true, flag_value_int50},
-        // {"range", cons_range_type2->clone(), "type ::= INTEGER ((1..100) INTERSECTION (50..200))", true, flag_value_int100},
-        // {"range", cons_range_type3, "type ::= INTEGER (1..100 EXCEPT 50)", true, flag_value_int100},
-        // {"range", cons_range_type3->clone(), "type ::= INTEGER (1..100 EXCEPT 50)", false, flag_value_int50},
-        // {"range", cons_range_type4, "type ::= INTEGER ((1..10 | 20..30) EXCEPT (5 | 25))", true, flag_value_int2},
-        // {"range", cons_range_type4->clone(), "type ::= INTEGER ((1..10 | 20..30) EXCEPT (5 | 25))", false, flag_value_int5},
-        // {"range", cons_range_type5, "temperature ::= REAL (0.0..100.0)", true, flag_value_float0},
-        // {"range", cons_range_type5->clone(), "temperature ::= REAL (0.0..100.0)", false, flag_value_floatm1},
-        // {"range", cons_range_type6, "positive ::= REAL (0.0..MAX)", true, flag_value_float0},
-        // {"range", cons_range_type7, "negative ::= REAL (MIN..0.0)", true, flag_value_float0},
-        // {"range", cons_range_type8, "type ::= REAL (0.0..100.0 EXCEPT 50.0)", true, flag_value_float0},
-        // {"range", cons_range_type8->clone(), "type ::= REAL (0.0..100.0 EXCEPT 50.0)", false, flag_value_float50},
-        // {"size", cons_size_type1, "name ::= IA5String (SIZE(1))", true, flag_value_a},
-        // {"size", cons_size_type2, "name ::= IA5String (SIZE(1 | 2 | 5))", false, flag_value_string20},
-        // {"size", cons_size_type3, "name ::= IA5String (SIZE(1..20))", true, flag_value_string20},
-        // {"except", cons_except_type1, "type ::= INTEGER (1..50 EXCEPT 20..30)", true, flag_value_int5},
-        // {"all except", cons_allexcept_type1, "type ::= INTEGER (ALL EXCEPT 1..10)", true, flag_value_int50},
-        // {"all except", cons_allexcept_type1->clone(), "type ::= INTEGER (ALL EXCEPT 1..10)", false, flag_value_int1},
-        // {"integer range", cons_integer_range, "type ::= INTEGER (0..255)", true, flag_value_int0},
-        // {"integer range", cons_integer_range->clone(), "type ::= INTEGER (0..255)", true, flag_value_int255},
-        // {"integer range", cons_integer_range->clone(), "type ::= INTEGER (0..255)", false, flag_value_int256},
-        // {"integer range", cons_integer_range->clone(), "type ::= INTEGER (0..255)", false, flag_value_intm1},
-        // {"oct string size", cons_octstring_size, "type ::= OCTET STRING (SIZE(16))", true, flag_value_octstring16},
-        // {"oct string size", cons_octstring_size->clone(), "type ::= OCTET STRING (SIZE(16))", false, flag_value_octstring32},
-        // {"oct string size", cons_octstring_size->clone(), "type ::= OCTET STRING (SIZE(16))", false, flag_value_string16},
-        // {"alphabet constraint", cons_ie5string_alphabet, R"(name ::= IA5String (FROM ("ABC")))", true, flag_value_a},
-        // {"alphabet constraint", cons_ie5string_alphabet->clone(), R"(name ::= IA5String (FROM ("ABC")))", true, flag_value_abc},
-        // {"alphabet constraint", cons_ie5string_alphabet->clone(), R"(name ::= IA5String (FROM ("ABC")))", false, flag_value_abcd},
-        // {"alphabet constraint", cons_ie5string_alphabet2, R"(name2 ::= IA5String (FROM ("ABCDEF") SIZE(4)))", true, flag_value_abcd},
-        // {"alphabet constraint", cons_ie5string_alphabet2->clone(), R"(name2 ::= IA5String (FROM ("ABCDEF") SIZE(4)))", false, flag_value_abcde},     // not allowed
-        // size 5
-        // {"alphabet constraint", cons_ie5string_alphabet2->clone(), R"(name2 ::= IA5String (FROM ("ABCDEF") SIZE(4)))", false, flag_value_defg},      // not allowed g
-        // {"alphabet constraint", cons_ie5string_alphabet3, R"(name3 ::= IA5String (FROM ("a".."z") SIZE(1..4)))", true, flag_value_red},              // lower cases
-        // {"alphabet constraint", cons_ie5string_alphabet3->clone(), R"(name3 ::= IA5String (FROM ("a".."z") SIZE(1..4)))", false, flag_value_green},  // 5 letters
-        {"alphabet constraint", cons_ie5string_alphabet3->clone(), R"(name3 ::= IA5String (FROM ("a".."z") SIZE(1..4)))", false, flag_value_abcd},  // upper cases
-        // {"size range", cons_sequence_of_range, "Numbers ::= SEQUENCE SIZE(1..4) OF INTEGER", true, flag_seqof_int3},
-        // {"size range", cons_sequence_of_range->clone(), "Numbers ::= SEQUENCE SIZE(1..4) OF INTEGER", false, flag_seqof_int5},
-        // {"size range", cons_set_of_range, "Tags ::= SET SIZE(2..4) OF IA5String", true, flag_seqof_strset3},
-        // {"size range", cons_set_of_range->clone(), "Tags ::= SET SIZE(2..4) OF IA5String", false, flag_seqof_strset5},
-        // {"bitstring", cons_bitstring, "Flags ::= BIT STRING (SIZE(8))", true, flag_value_bitstring8},
-        // {"bitstring", cons_bitstring->clone(), "Flags ::= BIT STRING (SIZE(8))", false, flag_value_bitstring16},
-        // {"enum", cons_enum, "Color ::= ENUMERATED {red(0), green(1), blue(2)}", true, flag_value_red},
-        // {"enum", cons_enum->clone(), "Color ::= ENUMERATED {red(0), green(1), blue(2)}", true, flag_value_green},
-        // {"enum", cons_enum->clone(), "Color ::= ENUMERATED {red(0), green(1), blue(2)}", true, flag_value_blue},
-        // {"enum", cons_enum->clone(), "Color ::= ENUMERATED {red(0), green(1), blue(2)}", false, flag_value_yellow},
-        // {"enum", cons_enum->clone(), "Color ::= ENUMERATED {red(0), green(1), blue(2)}", false, flag_value_int1},
-        // {"nested constraint", cons_nested, "Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))}", true, flag_value_nested30_short},
-        // {"nested constraint", cons_nested->clone(), "Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))}", false, flag_value_nested130_short},
-        // {"nested constraint", cons_nested->clone(), "Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))}", false, flag_value_nested30_long},
-        // {"nested constraint", cons_nested->clone(), "Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))}", false, flag_value_nested30_empty},
-        // {"pattern", const_pattern, R"(PhoneNumber ::= UTF8String (PATTERN "[0-9]{3}-[0-9]{4}-[0-9]{4}"))", true, flag_value_pat1},
-        // {"exclusive boundary", cons_exclusive_boundary, "Exclusive1 ::= INTEGER (0..<100)", false, flag_value_int100},
-        // {"exclusive boundary", cons_exclusive_boundary->clone(), "Exclusive1 ::= INTEGER (0..<100)", true, flag_value_int50},
-        // {"exclusive boundary", cons_exclusive_boundary->clone(), "Exclusive1 ::= INTEGER (0..<100)", true, flag_value_int0},
+        {"single value", cons_single_type1, "type ::= INTEGER (1)", true, flag_value_int1},
+        {"single value", cons_single_type2, "type ::= INTEGER (1 | 2)", false, flag_value_int5},
+        {"single value", cons_single_type3, "type ::= INTEGER (1 | 2 | 3 | 6)", true, flag_value_int2},
+        {"single value", cons_single_type4, R"(type ::= VisibleString ("A" | "B" | "C" | "D"))", true, flag_value_a},
+        {"range", cons_range_type1, "type ::= INTEGER (1..10 | 20..30)", true, flag_value_int5},
+        {"range", cons_range_type1->clone(), "type ::= INTEGER (1..10 | 20..30)", false, flag_value_int15},
+        {"range", cons_range_type2, "type ::= INTEGER ((1..100) INTERSECTION (50..200))", false, flag_value_int15},
+        {"range", cons_range_type2->clone(), "type ::= INTEGER ((1..100) INTERSECTION (50..200))", true, flag_value_int50},
+        {"range", cons_range_type2->clone(), "type ::= INTEGER ((1..100) INTERSECTION (50..200))", true, flag_value_int100},
+        {"range", cons_range_type3, "type ::= INTEGER (1..100 EXCEPT 50)", true, flag_value_int100},
+        {"range", cons_range_type3->clone(), "type ::= INTEGER (1..100 EXCEPT 50)", false, flag_value_int50},
+        {"range", cons_range_type4, "type ::= INTEGER ((1..10 | 20..30) EXCEPT (5 | 25))", true, flag_value_int2},
+        {"range", cons_range_type4->clone(), "type ::= INTEGER ((1..10 | 20..30) EXCEPT (5 | 25))", false, flag_value_int5},
+        {"range", cons_range_type5, "temperature ::= REAL (0.0..100.0)", true, flag_value_float0},
+        {"range", cons_range_type5->clone(), "temperature ::= REAL (0.0..100.0)", false, flag_value_floatm1},
+        {"range", cons_range_type6, "positive ::= REAL (0.0..MAX)", true, flag_value_float0},
+        {"range", cons_range_type7, "negative ::= REAL (MIN..0.0)", true, flag_value_float0},
+        {"range", cons_range_type8, "type ::= REAL (0.0..100.0 EXCEPT 50.0)", true, flag_value_float0},
+        {"range", cons_range_type8->clone(), "type ::= REAL (0.0..100.0 EXCEPT 50.0)", false, flag_value_float50},
+        {"size", cons_size_type1, "name ::= IA5String (SIZE(1))", true, flag_value_a},
+        {"size", cons_size_type2, "name ::= IA5String (SIZE(1 | 2 | 5))", false, flag_value_string20},
+        {"size", cons_size_type3, "name ::= IA5String (SIZE(1..20))", true, flag_value_string20},
+        {"except", cons_except_type1, "type ::= INTEGER (1..50 EXCEPT 20..30)", true, flag_value_int5},
+        {"all except", cons_allexcept_type1, "type ::= INTEGER (ALL EXCEPT 1..10)", true, flag_value_int50},
+        {"all except", cons_allexcept_type1->clone(), "type ::= INTEGER (ALL EXCEPT 1..10)", false, flag_value_int1},
+        {"integer range", cons_integer_range, "type ::= INTEGER (0..255)", true, flag_value_int0},
+        {"integer range", cons_integer_range->clone(), "type ::= INTEGER (0..255)", true, flag_value_int255},
+        {"integer range", cons_integer_range->clone(), "type ::= INTEGER (0..255)", false, flag_value_int256},
+        {"integer range", cons_integer_range->clone(), "type ::= INTEGER (0..255)", false, flag_value_intm1},
+        {"oct string size", cons_octstring_size, "type ::= OCTET STRING (SIZE(16))", true, flag_value_octstring16},
+        {"oct string size", cons_octstring_size->clone(), "type ::= OCTET STRING (SIZE(16))", false, flag_value_octstring32},
+        {"oct string size", cons_octstring_size->clone(), "type ::= OCTET STRING (SIZE(16))", false, flag_value_string16},
+        {"alphabet constraint", cons_ie5string_alphabet, R"(name ::= IA5String (FROM ("ABC")))", true, flag_value_a},
+        {"alphabet constraint", cons_ie5string_alphabet->clone(), R"(name ::= IA5String (FROM ("ABC")))", true, flag_value_abc},
+        {"alphabet constraint", cons_ie5string_alphabet->clone(), R"(name ::= IA5String (FROM ("ABC")))", false, flag_value_abcd},
+        {"alphabet constraint", cons_ie5string_alphabet2, R"(name2 ::= IA5String (FROM ("ABCDEF") SIZE(4)))", true, flag_value_abcd},
+        {"alphabet constraint", cons_ie5string_alphabet2->clone(), R"(name2 ::= IA5String (FROM ("ABCDEF") SIZE(4)))", false, flag_value_abcde},     // not allowed size 5
+        {"alphabet constraint", cons_ie5string_alphabet2->clone(), R"(name2 ::= IA5String (FROM ("ABCDEF") SIZE(4)))", false, flag_value_defg},      // not allowed g
+        {"alphabet constraint", cons_ie5string_alphabet3, R"(name3 ::= IA5String (FROM ("a".."z") SIZE(1..4)))", true, flag_value_red},              // lower cases
+        {"alphabet constraint", cons_ie5string_alphabet3->clone(), R"(name3 ::= IA5String (FROM ("a".."z") SIZE(1..4)))", false, flag_value_green},  // 5 letters
+        {"alphabet constraint", cons_ie5string_alphabet3->clone(), R"(name3 ::= IA5String (FROM ("a".."z") SIZE(1..4)))", false, flag_value_abcd},   // upper cases
+        {"alphabet constraint", cons_ie5string_alphabet4, R"(name4 ::= IA5String (FROM ("0".."9" | "a".."z" | "A".."Z") SIZE(1..4)))", true, flag_value_red},
+        {"alphabet constraint", cons_ie5string_alphabet5, R"(name5 ::= IA5String (FROM ("0"<..<"9" | "a".."z" | "A".."Z") SIZE(1..4)))", true, flag_value_red},
+        {"size range", cons_sequence_of_range, "Numbers ::= SEQUENCE SIZE(1..4) OF INTEGER", true, flag_seqof_int3},
+        {"size range", cons_sequence_of_range->clone(), "Numbers ::= SEQUENCE SIZE(1..4) OF INTEGER", false, flag_seqof_int5},
+        {"size range", cons_set_of_range, "Tags ::= SET SIZE(2..4) OF IA5String", true, flag_seqof_strset3},
+        {"size range", cons_set_of_range->clone(), "Tags ::= SET SIZE(2..4) OF IA5String", false, flag_seqof_strset5},
+        {"bitstring", cons_bitstring, "Flags ::= BIT STRING (SIZE(8))", true, flag_value_bitstring8},
+        {"bitstring", cons_bitstring->clone(), "Flags ::= BIT STRING (SIZE(8))", false, flag_value_bitstring16},
+        {"enum", cons_enum, "Color ::= ENUMERATED {red(0), green(1), blue(2)}", true, flag_value_red},
+        {"enum", cons_enum->clone(), "Color ::= ENUMERATED {red(0), green(1), blue(2)}", true, flag_value_green},
+        {"enum", cons_enum->clone(), "Color ::= ENUMERATED {red(0), green(1), blue(2)}", true, flag_value_blue},
+        {"enum", cons_enum->clone(), "Color ::= ENUMERATED {red(0), green(1), blue(2)}", false, flag_value_yellow},
+        {"enum", cons_enum->clone(), "Color ::= ENUMERATED {red(0), green(1), blue(2)}", false, flag_value_int1},
+        {"nested constraint", cons_nested, "Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))}", true, flag_value_nested30_short},
+        {"nested constraint", cons_nested->clone(), "Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))}", false, flag_value_nested130_short},
+        {"nested constraint", cons_nested->clone(), "Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))}", false, flag_value_nested30_long},
+        {"nested constraint", cons_nested->clone(), "Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))}", false, flag_value_nested30_empty},
+        {"pattern", const_pattern, R"(PhoneNumber ::= UTF8String (PATTERN "[0-9]{3}-[0-9]{4}-[0-9]{4}"))", true, flag_value_pat1},
+        {"exclusive boundary", cons_exclusive_boundary, "Exclusive1 ::= INTEGER (0..<100)", false, flag_value_int100},
+        {"exclusive boundary", cons_exclusive_boundary->clone(), "Exclusive1 ::= INTEGER (0..<100)", true, flag_value_int50},
+        {"exclusive boundary", cons_exclusive_boundary->clone(), "Exclusive1 ::= INTEGER (0..<100)", true, flag_value_int0},
     };
 
     for (const auto& item : table) {

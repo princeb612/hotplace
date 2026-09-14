@@ -6,8 +6,8 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2026.09.14   Soo Han and Gemini  resolve, is_resolvable
  *
- * see README.md
  */
 
 #ifndef __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1RUNTIME__
@@ -15,7 +15,9 @@
 
 #include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
+#include <hotplace/sdk/io/parser/lexical_analyzer.hpp>
 #include <set>
+#include <unordered_map>
 
 namespace hotplace {
 namespace io {
@@ -33,8 +35,20 @@ class asn1_runtime {
 
     asn1_runtime* clone();
 
+    return_t add_schema(const std::string& schema);
     return_t add(asn1_object* item);
-    asn1_runtime& add(asn1_object* item, std::function<void(asn1_object*)> f);
+    template <typename F>  // void(asn1_object*)
+    asn1_runtime& add(asn1_object* item, F&& f = nullptr) {
+        if (item) {
+            if (f) {
+                std::forward<F>(f)(item);
+                ;
+            }
+            add(item);
+        }
+        return *this;
+    }
+    asn1_runtime& operator<<(const std::string& schema);
     asn1_runtime& operator<<(asn1_object* item);
 
     return_t set(asn1_object* item, asn1_value* value);
@@ -51,11 +65,6 @@ class asn1_runtime {
      */
     return_t read_weakly_typed(const byte_t* stream, size_t size, size_t& pos);
 
-    // strongly-typed
-    return_t add_schema(const std::string& schema, asn1_object* item);
-    // TODO
-    // - add_schema skip from_schema
-    asn1_object* from_schema(const std::string& schema);
     /**
      * @brief   strongly-typed
      * @sample
@@ -67,9 +76,9 @@ class asn1_runtime {
      * asn1_tagged_type(asn1_class_context, 2, asn1_explicit, asn1_referenced_type::refer("type2")));
      *
      *          asn1_runtime runtime;
-     *          runtime.add_schema(schema1, type1);
-     *          runtime.add_schema(schema2, type2);
-     *          runtime.add_schema(schema3, type3);
+     *          runtime.add_schema(schema1);
+     *          runtime.add_schema(schema2);
+     *          runtime.add_schema(schema3);
      *
      *          const char* bytestream = "A2 07 43 05 4A 6F 6E 65 73";
      *          binary_t bin_stream = base16_decode_rfc(bytestream);
@@ -89,8 +98,26 @@ class asn1_runtime {
     void publish(const std::string& name, stream_t* s);
     void publish(const std::string& name, binary_t* b);
 
-    // replace reference
-    void update_linkage(asn1_object* object);
+    /**
+     * @brief   resolves dependencies starting from a specific root type name.
+     */
+    bool resolve(const std::string& name, std::list<std::string>& names) const;
+    /**
+     * @brief   resolves dependencies for all types registered in the dictionary.
+     */
+    bool resolve(std::list<std::string>& names) const;
+
+    bool is_resolvable(const std::string& name) const;
+    bool is_resolvable(asn1_object* object) const;
+    /**
+     * check if all references in dictionary
+     */
+    bool is_resolvable() const;
+
+    /**
+     * propagation constructed bit (EXPLICIT) and replace reference
+     */
+    return_t update_linkage(asn1_object* object);
 
     void set_name(const std::string& name);
     std::string get_name();
@@ -117,13 +144,14 @@ class asn1_runtime {
    private:
     t_shared_reference<asn1_runtime> _shared;
 
-    std::map<std::string, asn1_object*> _dictionary;
+    mutable critical_section _lock;
+    std::unordered_map<std::string, asn1_object*> _dictionary;
     std::list<asn1_object*> _types;
     std::map<asn1_object*, asn1_value*> _values;
     std::map<asn1_object*, std::string> _schema;  // strongly-typed
     std::string _name;
-    // parser _parser;
     uint8 _automatic;
+    lexical_context _lexcontext;
 };
 
 }  // namespace io

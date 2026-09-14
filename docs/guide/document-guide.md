@@ -1,6 +1,6 @@
 # Document Guide
 
-Edition 1 · Based on hotplace Revision 1076
+Edition 1 · Based on hotplace Revision 1083
 
 ## Purpose
 
@@ -59,7 +59,7 @@ Each document records its source baseline:
 
 ```text
 Edition: 1
-Based on: Revision 1076
+Based on: Revision 1083
 ```
 
 ## Reading Density

@@ -114,7 +114,5 @@ return_t asn1_strongly_typed::read(asn1_runtime* target, const std::string& name
     return errorcode_t::success;
 }
 
-return_t asn1_strongly_typed::read_node(asn1_bytestream::TLV_node* node, asn1_object* object) { return errorcode_t::success; }
-
 }  // namespace io
 }  // namespace hotplace

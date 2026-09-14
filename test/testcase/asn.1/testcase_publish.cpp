@@ -241,6 +241,10 @@ void test_publish_constraints() {
 
         {R"(Name7 ::= IA5String (FROM ("A".."Z")))"},
         {R"(Name8 ::= IA5String (FROM ("A".."Z" | "a".."z" | "0".."9")))"},
+        {R"(Name9 ::= IA5String (FROM ("A"<.."Z")))"},
+        {R"(Name10 ::= IA5String (FROM ("A"..<"Z")))"},
+        {R"(Name11 ::= IA5String (FROM ("A"<..<"Z")))"},
+        {R"(Name12 ::= IA5String (FROM ("A"<..<"Z" | "a".."z")))"},
     };
 
     asn1_runtime runtime;     // automatic

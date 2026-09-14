@@ -135,8 +135,8 @@ asn1_object* asn1_builder::build(asn1_object* object, std::function<void(asn1_ob
 }
 
 return_t asn1_builder::build(const parse_tree* pt, asn1_object** object) {
-    asn1_publisher reassembly;
-    return reassembly.build(pt, object);
+    asn1_publisher publisher;
+    return publisher.build(pt, object);
 }
 
 }  // namespace io

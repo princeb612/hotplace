@@ -21,7 +21,7 @@
 namespace hotplace {
 namespace io {
 
-asn1_visitor::asn1_visitor(asn1_runtime* runtime, std::function<void(asn1_object*)> func) : _runtime(runtime), _func(func) {}
+asn1_visitor::asn1_visitor(const asn1_runtime* runtime, std::function<void(asn1_object*)> func) : _runtime(runtime), _func(func) {}
 
 void asn1_visitor::visit(asn1_object* object) {
     if (nullptr == object) return;

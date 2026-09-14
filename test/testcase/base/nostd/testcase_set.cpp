@@ -601,12 +601,43 @@ static void test_set() {
         runtime.union_with(other);
         has = runtime.contains("banana");
         _test_case.assert(true == has, __FUNCTION__, "#8 contains");
+    }
 
+    {
+        t_set_runtime<std::string> runtime;
+        t_set_runtime<std::string> other;
+
+        runtime.insert_range(std::string("0"), std::string("9"));
         runtime.insert_range(std::string("a"), std::string("z"));
-        has = runtime.contains("a");
-        _test_case.assert(true == has, __FUNCTION__, "#9 contains");
-        has = runtime.contains("A");
-        _test_case.assert(false == has, __FUNCTION__, "#10 contains");
+        runtime.insert_range(std::string("A"), std::string("Z"));
+
+        runtime.erase_range(std::string("A"), std::string("Z"), range_flag_t::open, range_flag_t::open);
+
+        has = runtime.contains(std::string("A"));
+        _test_case.assert(true == has, __FUNCTION__, "after erase %c", 'A');
+        for (char ch = 'B'; ch <= 'Y'; ++ch) {
+            has = runtime.contains(std::string(1, ch));
+            _test_case.assert(false == has, __FUNCTION__, "after erase %c", ch);
+        }
+        has = runtime.contains(std::string("Z"));
+        _test_case.assert(true == has, __FUNCTION__, "after erase %c", 'Z');
+
+        for (char ch = 'a'; ch <= 'z'; ++ch) {
+            has = runtime.contains(std::string(1, ch));
+            _test_case.assert(true == has, __FUNCTION__, "before intersection %c", ch);
+        }
+
+        other.insert_range(std::string("a"), std::string("f"));
+        runtime.intersect_with(other);
+
+        for (char ch = 'a'; ch <= 'f'; ++ch) {
+            has = runtime.contains(std::string(1, ch));
+            _test_case.assert(true == has, __FUNCTION__, "after intersection %c", ch);
+        }
+        for (char ch = 'g'; ch <= 'z'; ++ch) {
+            has = runtime.contains(std::string(1, ch));
+            _test_case.assert(false == has, __FUNCTION__, "after intersection %c", ch);
+        }
     }
 }
 

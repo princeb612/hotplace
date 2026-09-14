@@ -760,82 +760,6 @@ void test_asn1_object() {
     inst->release();
 }
 
-void test_x690_annex_a_1() {
-    _test_case.begin("X.690 A.1");
-
-    // PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {
-    //      name Name,
-    //      title [0] VisibleString,
-    //      number EmployeeNumber,
-    //      dateOfHire [1] Date,
-    //      nameOfSpouse [2] Name,
-    //      children [3] IMPLICIT SEQUENCE OF ChildInformation DEFAULT {}}
-    // ChildInformation ::= SET {name Name, dateOfBirth [0] Date}
-    // Name ::= [APPLICATION 1] IMPLICIT SEQUENCE {givenName VisibleString, initial VisibleString, familyName VisibleString}
-    // EmployeeNumber ::= [APPLICATION 2] IMPLICIT INTEGER
-    // Date ::= [APPLICATION 3] IMPLICIT VisibleString
-
-    auto runtime = new asn1_runtime;
-
-    // clang-format off
-    *runtime << asn1_referenced_type::define("PersonnelRecord",
-                new asn1_tagged_type(asn1_class_application, 0, asn1_implicit,
-                    new asn1_set({
-                        asn1_referenced_type::refer("name", "Name"),
-                        new asn1_tagged_type("title", asn1_class_context, 0, asn1_automatic, asn1_entity_visiblestring),
-                        asn1_referenced_type::refer("number", "EmployeeNumber"),
-                        new asn1_tagged_type("dateOfHire", asn1_class_context, 1, asn1_automatic, asn1_referenced_type::refer("Date")),
-                        new asn1_tagged_type("nameOfSpouse", asn1_class_context, 2, asn1_automatic, asn1_referenced_type::refer("Name")),
-                        new asn1_tagged_type("children", asn1_class_context, 3, asn1_implicit, new asn1_sequence_of(asn1_referenced_type::refer("ChildInformation")))
-                        // TODO DEFAULT {}
-                    })));
-    *runtime << asn1_referenced_type::define("ChildInformation",
-                new asn1_set({
-                    asn1_referenced_type::refer("name", "Name"),
-                    new asn1_tagged_type("dateOfBirth", asn1_class_context, 0, asn1_automatic, asn1_referenced_type::refer("Date"))
-                }));
-    *runtime << asn1_referenced_type::define("Name",
-                new asn1_tagged_type(asn1_class_application, 1, asn1_implicit,
-                    new asn1_sequence({
-                        {"givenName", asn1_entity_visiblestring},
-                        {"initial", asn1_entity_visiblestring},
-                        {"familyName", asn1_entity_visiblestring}
-                    })));
-    *runtime << asn1_referenced_type::define("EmployeeNumber", new asn1_tagged_type(asn1_class_application, 2, asn1_implicit, asn1_entity_integer));
-    *runtime << asn1_referenced_type::define("Date", new asn1_tagged_type(asn1_class_application, 3, asn1_implicit, asn1_entity_visiblestring));
-    // clang-format on
-
-    basic_stream bs_type;
-    basic_stream bs_value;
-    binary_t bin_value;
-
-    runtime->notation(&bs_type);
-    // runtime->publish(&bs_value);
-    // runtime->publish(&bin_value);
-
-    basic_stream ast;
-    print_ast(runtime, ast);
-    _logger->write(ast);
-
-    _logger->write([&](basic_stream& dbs) -> void {
-        valist va;
-        va << bs_type << bs_value << bin_value;
-        dbs.println("type");
-        dbs.vaprintln("{1}", va);
-        dbs.println("value");
-        // dbs.vaprintln("{2}", va);
-        dbs.println("DER");
-        // dbs.vaprintln("{3:x}", va);
-    });
-
-    runtime->release();
-}
-
-void test_x690_annex_a_2() {
-    //
-    //
-}
-
 void testcase_basic1() {
     // studying ...
     test_x690_8_1_2_identifier_octects();
@@ -846,8 +770,4 @@ void testcase_basic1() {
     test_x690_8_9_sequence();
     test_x690_time();
     test_asn1_object();
-
-    // project reboot - TODO
-    test_x690_annex_a_1();
-    test_x690_annex_a_2();
 }

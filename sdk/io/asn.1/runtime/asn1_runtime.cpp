@@ -6,11 +6,12 @@
  *
  * Revision History
  * Date         Name                Description
- *
- * comments
+ * 2026.09.14   Soo Han and Gemini  resolve, is_resolvable
  *
  */
 
+#include <hotplace/sdk/base/basic/valist.hpp>
+#include <hotplace/sdk/base/graph/graph.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
@@ -19,6 +20,10 @@
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_tagged_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_der_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_notation_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/basic/visitor/asn1_visitor.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_builder.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_parser.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_publisher.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_strongly_typed.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_weakly_typed.hpp>
@@ -28,8 +33,6 @@ namespace io {
 
 asn1_runtime::asn1_runtime() {
     _shared.make_share(this);
-    // get_parser().get_config().set("handle_quot_as_unquoted", 1);
-    // get_parser().add_token("::=", token_assign).add_token("--", token_comments);
     _automatic = asn1_explicit;
 }
 
@@ -40,6 +43,8 @@ asn1_runtime::asn1_runtime(const asn1_runtime& other) : asn1_runtime() { *this =
 asn1_runtime::~asn1_runtime() { clear(); }
 
 asn1_runtime& asn1_runtime::operator=(const asn1_runtime& other) {
+    critical_section_guard guard(_lock);
+
     for (const auto& item : other._types) {
         auto type = item->clone();
 
@@ -55,10 +60,71 @@ asn1_runtime& asn1_runtime::operator=(const asn1_runtime& other) {
 
 asn1_runtime* asn1_runtime::clone() { return new asn1_runtime(*this); }
 
+return_t asn1_runtime::add_schema(const std::string& schema) {
+    return_t ret = errorcode_t::success;
+    auto parser = asn1_parser::get_instance();
+
+    // parse
+    parse_tree pt;
+    parser->parse(this, _lexcontext, schema.c_str(), &pt);
+
+#if defined DEBUG
+    if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
+        trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
+            uint32 idx = 0;
+            auto lambda = [&idx, &dbs](parser_action_t type, parse_treenode* node) -> return_t {
+                valist va;
+                va << idx++ << node->symbol << node->value << node->children.size();
+                dbs.vaprintf("[{1:03i}] ", va);
+                switch (type) {
+                    case parser_action_t::shift:
+                        dbs << "shift  ";
+                        break;
+                    case parser_action_t::reduce:
+                        dbs << "reduce ";
+                        break;
+                    default:
+                        break;
+                }
+                dbs.vaprintf("{2}", va);
+                if ((false == node->value.empty()) && (node->symbol != node->value)) {
+                    dbs.vaprintf(" ({3})", va);
+                }
+                if (parser_action_t::reduce == type) {
+                    dbs.vaprintf(" RHS [{4}]", va);
+                }
+                dbs << "\n";
+
+                return errorcode_t::success;
+            };
+            parse_tree_visitor visitor(lambda);
+            pt.accept(&visitor);
+        });
+    }
+#endif
+
+    // reconstruction
+    basic_stream bs;
+    asn1_object* object = nullptr;
+
+    asn1_publisher publisher;
+    ret = publisher.build(&pt, &object);
+    if (errorcode_t::success != ret) return ret;
+
+    critical_section_guard guard(_lock);
+    auto pib = _schema.emplace(object, schema);
+    if (false == pib.second) return errorcode_t::already_exist;
+
+    return add(object);
+}
+
 return_t asn1_runtime::add(asn1_object* item) {
     if (nullptr == item) return errorcode_t::invalid_parameter;
 
+    critical_section_guard guard(_lock);
+
     _types.push_back(item);
+
     const std::string& name = item->get_name();
     if (false == name.empty()) {
         _dictionary.emplace(name, item);
@@ -67,11 +133,8 @@ return_t asn1_runtime::add(asn1_object* item) {
     return errorcode_t::success;
 }
 
-asn1_runtime& asn1_runtime::add(asn1_object* item, std::function<void(asn1_object*)> f) {
-    if (item && f) {
-        f(item);
-        add(item);
-    }
+asn1_runtime& asn1_runtime::operator<<(const std::string& schema) {
+    add_schema(schema);
     return *this;
 }
 
@@ -80,16 +143,10 @@ asn1_runtime& asn1_runtime::operator<<(asn1_object* item) {
     return *this;
 }
 
-return_t asn1_runtime::add_schema(const std::string& schema, asn1_object* item) {
-    if (nullptr == item) return errorcode_t::invalid_parameter;
-    auto pib = _schema.emplace(item, schema);
-    if (false == pib.second) return errorcode_t::already_exist;
-    return add(item);
-}
-
 return_t asn1_runtime::set(asn1_object* item, asn1_value* value) {
     return_t ret = errorcode_t::success;
     if (item && value) {
+        critical_section_guard guard(_lock);
         auto pib = _values.emplace(item, value);
         if (false == pib.second) {
             ret = errorcode_t::already_exist;
@@ -101,6 +158,7 @@ return_t asn1_runtime::set(asn1_object* item, asn1_value* value) {
 
 asn1_object* asn1_runtime::get(const std::string& name) const {
     asn1_object* ret_value = nullptr;
+    critical_section_guard guard(_lock);
     if (name.empty() && (1 == _types.size())) {
         ret_value = *_types.begin();
     } else {
@@ -115,6 +173,7 @@ asn1_object* asn1_runtime::get(const std::string& name) const {
 asn1_value* asn1_runtime::get(asn1_object* item) const {
     asn1_value* ret_value = nullptr;
     if (item) {
+        critical_section_guard guard(_lock);
         auto iter = _values.find(item);
         if (_values.end() != iter) {
             ret_value = iter->second;
@@ -133,8 +192,164 @@ return_t asn1_runtime::read(const std::string& name, const byte_t* stream, size_
     return strongtype.read(this, name, stream, size, pos);
 }
 
-void asn1_runtime::update_linkage(asn1_object* object) {
-    if (nullptr == object) return;
+bool asn1_runtime::resolve(const std::string& name, std::list<std::string>& names) const {
+    names.clear();
+
+    if (_dictionary.end() == _dictionary.find(name)) {
+        return false;
+    }
+
+    // 1. collect only relevant sub-dependency nodes starting from 'name'
+    std::set<std::string> sub_nodes;
+    std::queue<std::string> q;
+
+    q.push(name);
+    sub_nodes.insert(name);
+
+    bool missing_reference = false;
+
+    while (false == q.empty()) {
+        std::string current = std::move(q.front());
+        q.pop();
+
+        auto iter = _dictionary.find(current);
+        if (_dictionary.end() == iter || nullptr == iter->second) {
+            missing_reference = true;
+            break;
+        }
+
+        auto lambda = [&](asn1_object* sub_item) -> void {
+            if (nullptr != sub_item && asn1_entity_referenced_type == sub_item->get_entity()) {
+                auto ref = static_cast<asn1_referenced_type*>(sub_item);
+                if (ref->is_reference()) {
+                    const std::string& ref_name = ref->get_reference();
+
+                    // Check if referenced type exists in dictionary
+                    if (_dictionary.end() == _dictionary.find(ref_name)) {
+                        missing_reference = true;
+                        return;
+                    }
+
+                    if (sub_nodes.end() == sub_nodes.find(ref_name)) {
+                        sub_nodes.insert(ref_name);
+                        q.push(ref_name);
+                    }
+                }
+            }
+        };
+
+        asn1_visitor visitor(this, lambda);
+        visitor.visit(iter->second);
+
+        if (true == missing_reference) {
+            break;
+        }
+    }
+
+    if (true == missing_reference) {
+        return false;
+    }
+
+    // 2. build local sub-graph
+    t_graph<std::string> sub_graph;
+    for (const auto& node_name : sub_nodes) {
+        sub_graph.add_vertex(node_name);
+    }
+
+    for (const auto& node_name : sub_nodes) {
+        asn1_object* object = _dictionary.at(node_name);
+
+        auto lambda = [&](asn1_object* sub_item) -> void {
+            if (nullptr != sub_item && asn1_entity_referenced_type == sub_item->get_entity()) {
+                auto ref = static_cast<asn1_referenced_type*>(sub_item);
+                if (ref->is_reference()) {
+                    const std::string& ref_name = ref->get_reference();
+                    if (sub_nodes.end() != sub_nodes.find(ref_name) && node_name != ref_name) {
+                        sub_graph.add_directed_edge(ref_name, node_name);
+                    }
+                }
+            }
+        };
+
+        asn1_visitor visitor(this, lambda);
+        visitor.visit(object);
+    }
+
+    // 3. perform topological sort for local sub-graph
+    return sub_graph.topological_sort(names);
+}
+
+bool asn1_runtime::resolve(std::list<std::string>& names) const {
+    names.clear();
+
+    if (true == _dictionary.empty()) {
+        return true;
+    }
+
+    t_graph<std::string> graph;
+    // for (const auto& item : _dictionary) {
+    //     graph.add_vertex(item.first);
+    // }
+
+    bool missing_reference = false;
+
+    // build graph edges
+    for (const auto& item : _dictionary) {
+        const std::string& type_name = item.first;
+        asn1_object* object = item.second;
+
+        if (nullptr == object) {
+            return false;
+        }
+
+        auto lambda = [&](asn1_object* sub_item) -> void {
+            if (nullptr != sub_item && asn1_entity_referenced_type == sub_item->get_entity()) {
+                auto ref = static_cast<asn1_referenced_type*>(sub_item);
+                if (ref->is_reference()) {
+                    const std::string& ref_name = ref->get_reference();
+
+                    // check if referenced type exists in dictionary
+                    if (_dictionary.end() == _dictionary.find(ref_name)) {
+                        missing_reference = true;
+                        return;
+                    }
+
+                    if (type_name != ref_name) {
+                        graph.add_directed_edge(ref_name, type_name);
+                    }
+                }
+            }
+        };
+
+        asn1_visitor visitor(this, lambda);
+        visitor.visit(object);
+
+        if (true == missing_reference) {
+            return false;
+        }
+    }
+
+    // delegate topological sort and cycle check to t_graph
+    return graph.topological_sort(names);
+}
+
+bool asn1_runtime::is_resolvable(const std::string& name) const {
+    std::list<std::string> resolved_names;
+    return resolve(name, resolved_names);
+}
+
+bool asn1_runtime::is_resolvable(asn1_object* object) const {
+    if (nullptr == object) return false;
+    return is_resolvable(object->get_name());
+}
+
+bool asn1_runtime::is_resolvable() const {
+    std::list<std::string> names;
+    return resolve(names);
+}
+
+return_t asn1_runtime::update_linkage(asn1_object* object) {
+    if (nullptr == object) return errorcode_t::invalid_parameter;
 
     auto entity = object->get_entity();
     switch (entity) {
@@ -147,7 +362,7 @@ void asn1_runtime::update_linkage(asn1_object* object) {
             if (ref->is_reference()) {
                 if (nullptr == ref->get_object()) {
                     auto schema = get(ref->get_reference());
-                    if (nullptr == schema) throw exception(errorcode_t::not_found);
+                    if (nullptr == schema) return errorcode_t::not_found;
                     auto clone = schema->clone();
                     ref->set_object(clone);
                 }
@@ -161,6 +376,7 @@ void asn1_runtime::update_linkage(asn1_object* object) {
         default: {
         } break;
     }
+    return errorcode_t::success;
 }
 
 void asn1_runtime::for_each(std::function<void(asn1_object*)> f) const {

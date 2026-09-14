@@ -3,7 +3,7 @@
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1076            │
+│ Edition 1 · Revision 1078            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
@@ -338,6 +338,310 @@ transport + security + provider
              ↓
         server_socket
 ```
+
+### TLS Accept Prosumer Model
+
+TLS acceptance is a distinct producer/consumer boundary before a secure session exists. TCP `accept()` is kept separate from the potentially longer `ssl_accept()` operation.
+
+```text
+TCP listen socket
+      │
+      ▼
+ producer / accept
+      │
+      │ TCP accept()
+      ▼
+ accept_queue
+      │
+      ▼
+ TLS accept worker(s)
+      │
+      │ ssl_accept()
+      ▼
+ network_session
+      │
+      ▼
+ session event queue
+      │
+      ▼
+ normal consumer(s)
+```
+
+The two queues have different responsibilities:
+
+| Queue | Boundary | Purpose |
+|---|---|---|
+| `accept_queue` | accepted socket → secure session | defer TLS handshake work |
+| session `event_queue` | session I/O → protocol processing | schedule produce/consume work |
+
+`server_conf` exposes `serverconf_concurrent_tls_accept`. This multiplicity applies to the TLS-accept stage rather than TCP `accept()` itself:
+
+```text
+                    accept_queue
+                         │
+             ┌───────────┼───────────┐
+             ▼           ▼           ▼
+          worker 1    worker 2    worker N
+             │           │           │
+             └───────────┼───────────┘
+                         ▼
+                    tls_accept()
+                         │
+                         ▼
+                  session_accepted()
+```
+
+The current source also gives the queue an explicit lifecycle. During shutdown, TLS accept workers are stopped and pending entries are drained/closed rather than being left outside the server lifecycle.
+
+Conceptually, the TCP/TLS path is therefore:
+
+```text
+accept TCP client
+      │
+      ▼
+accept control / address policy
+      │
+      ├── plain TCP ───────────────► session_accepted()
+      │
+      └── TLS
+           │
+           ▼
+      accept_context → queue
+           │
+           ▼
+      TLS accept worker
+           │
+           ▼
+      server_socket::tls_accept()
+           │
+           ▼
+      session_accepted()
+```
+
+This is different from the ordinary session consumer path. The first queue crosses the **socket → secure session** boundary; the second crosses the **session I/O → protocol** boundary.
+
+### Stream boundary is not protocol boundary
+
+A network stream only supplies an ordered byte sequence. The protocol layer decides what those bytes mean and where a complete message ends.
+
+```text
+TCP stream
+   │
+   ▼
+network_stream
+   │
+   ├── queued chunks
+   ├── t_chain
+   └── basic_stream
+   │
+   ▼
+protocol detection / framing
+   │
+   ├── incomplete
+   ├── complete
+   ├── forged
+   ├── crash
+   └── too large
+   │
+   ▼
+consume(message_size)
+   │
+   └── preserve remainder
+```
+
+Consequently, a stream read is not necessarily one protocol message. One read may contain a partial message or several complete messages.
+
+### Payload assembly becomes protocol framing
+
+If `network_stream` is viewed only as a payload assembler, it looks like a generic byte-buffer utility. Its more interesting role appears when the surrounding protocol layers are placed on top of it.
+
+Different protocols impose different boundaries on the byte sequence:
+
+```text
+                    ordered / packetized input
+                              │
+             ┌────────────────┼────────────────┐
+             │                │                │
+             ▼                ▼                ▼
+          TCP stream       TLS record       UDP datagram
+             │                │                │
+             ▼                ▼                ▼
+       network_stream    TLS parser       QUIC packet
+             │                │                │
+             │          ┌─────┴─────┐           │
+             │          │           │           │
+             │       record      handshake      │
+             │          │           │           │
+             │          │      extensions       │
+             │          │                       │
+             ▼          ▼                       ▼
+        HTTP/1.x     TLS-protected          QUIC frames
+        message      application data            │
+             │                                  │
+             ▼                                  ▼
+        HTTP/2 frame                         HTTP/3 data
+```
+
+The important point is that **payload and framing are relative to a layer**.
+
+For example, an HTTP/2 frame is a message boundary at the HTTP/2 layer, but its bytes are carried inside TLS application-data records when HTTP/2 runs over TLS. A TLS handshake message is itself framed inside TLS records, and its extension fields are further structured inside the handshake message.
+
+QUIC is deliberately different: QUIC packets are packetized over UDP, and TLS 1.3 handshake bytes are carried in QUIC `CRYPTO` frames. They are not wrapped in ordinary TLS records inside QUIC.
+
+Thus the same byte-oriented infrastructure participates in several distinct framing models:
+
+```text
+HTTP/2 over TCP + TLS
+
+HTTP/2 frame
+      │
+      ▼
+TLS application-data record
+      │
+      ▼
+TCP byte stream
+      │
+      ▼
+network_stream
+
+
+TLS handshake over TCP
+
+TLS handshake message
+      │
+      ▼
+TLS record
+      │
+      ▼
+TCP byte stream
+      │
+      ▼
+network_stream
+
+
+HTTP/3 / QUIC
+
+HTTP/3 frame
+      │
+      ▼
+QUIC packet / QUIC frame
+      │
+      ▼
+UDP datagram
+
+
+TLS handshake over QUIC
+
+TLS handshake message
+      │
+      ▼
+QUIC CRYPTO frame
+      │
+      ▼
+QUIC packet
+      │
+      ▼
+UDP datagram
+```
+
+This explains why the server infrastructure should not be documented as merely "reading a payload". It provides the transport/session boundary from which protocol-specific framing can be applied.
+
+### One read does not imply one protocol unit
+
+The same principle appears repeatedly at different layers:
+
+```text
+transport input
+      │
+      ▼
+accumulate bytes / packet
+      │
+      ▼
+identify protocol unit
+      │
+      ├── incomplete ──► wait for more input
+      │
+      └── complete
+             │
+             ▼
+        consume exactly
+        one protocol unit
+             │
+             ▼
+        preserve remainder
+```
+
+Examples:
+
+- TCP may split one TLS record across multiple reads.
+- One TCP read may contain several TLS records.
+- A TLS record may contain handshake bytes that must be accumulated until a complete handshake message is available.
+- One HTTP/2 frame may arrive together with the next frame.
+- A QUIC UDP datagram may contain multiple QUIC frames, while a QUIC frame may carry only part of a higher-level stream message.
+
+The boundary therefore moves upward as each protocol interprets the bytes produced by the layer below.
+
+### Layered framing model
+
+A useful way to read the current network stack is:
+
+```text
+application message
+       │
+       ▼
+protocol framing
+       │
+       ├── HTTP/1.x message
+       ├── HTTP/2 frame
+       └── HTTP/3 frame
+       │
+       ▼
+security / transport framing
+       │
+       ├── TLS record
+       └── QUIC packet / frame
+       │
+       ▼
+transport delivery
+       │
+       ├── TCP byte stream
+       └── UDP datagram
+```
+
+TLS handshake extensions fit inside this hierarchy rather than beside it:
+
+```text
+TLS record
+   │
+   ▼
+TLS handshake message
+   │
+   ▼
+extension vector
+   │
+   ├── extension type
+   └── extension-specific payload
+```
+
+For QUIC, the lower relationship changes:
+
+```text
+QUIC packet
+   │
+   ▼
+CRYPTO frame
+   │
+   ▼
+TLS handshake bytes
+   │
+   ▼
+TLS handshake message
+   │
+   ▼
+TLS extension
+```
+
+The protocol stack is therefore better understood as **successive interpretation of boundaries**, not as one universal stream parser.
 
 ## Flow
 

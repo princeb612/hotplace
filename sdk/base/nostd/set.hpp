@@ -112,7 +112,7 @@ class t_set_runtime {
     }
 
     template <typename U = decayed_t>
-    typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value, t_set_runtime&>::type  //
+    typename std::enable_if<custom::is_integral<U>::value || std::is_floating_point<U>::value || std::is_same<U, std::string>::value, t_set_runtime&>::type  //
     erase_range(const U& start, const U& end, range_flag_t sflag = range_flag_t::closed, range_flag_t eflag = range_flag_t::closed) {
         _target->erase_range(static_cast<T>(start), static_cast<T>(end), sflag, eflag);
         return *this;

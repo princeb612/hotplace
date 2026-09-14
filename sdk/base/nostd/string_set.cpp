@@ -176,18 +176,31 @@ string_set& string_set::subtract(const string_set& other) {
 string_set& string_set::intersect(const string_set& other) {
     if (this == &other) return *this;
 
+    // filter _set
     std::multiset<std::string> temp_set;
     for (const auto& item : _set) {
-        if (other.contains(item)) {
+        if (other.has(item)) {
             temp_set.insert(item);
         }
     }
     _set = std::move(temp_set);
 
+    // intersect _ranges with other._ranges
     std::vector<string_range> temp_ranges;
-    for (const auto& range : _ranges) {
-        if (other.has(range.begin) && other.has(range.end)) {
-            temp_ranges.push_back(range);
+    for (const auto& r1 : _ranges) {
+        for (const auto& r2 : other._ranges) {
+            std::string n_begin = (r1.begin > r2.begin) ? r1.begin : r2.begin;
+            std::string n_end = (r1.end < r2.end) ? r1.end : r2.end;
+
+            if (n_begin <= n_end) {
+                range_flag_t b_flag = (n_begin == r1.begin) ? r1.begin_flag : r2.begin_flag;
+                range_flag_t e_flag = (n_end == r1.end) ? r1.end_flag : r2.end_flag;
+
+                if (n_begin == n_end && (range_flag_t::open == b_flag || range_flag_t::open == e_flag)) {
+                    continue;
+                }
+                temp_ranges.emplace_back(n_begin, n_end, b_flag, e_flag);
+            }
         }
     }
     _ranges = std::move(temp_ranges);
@@ -201,7 +214,9 @@ string_set& string_set::insert_range(const std::string& begin, const std::string
 }
 
 string_set& string_set::erase_range(const std::string& begin, const std::string& end, range_flag_t begin_flag, range_flag_t end_flag) {
-    // 1. remove individual strings falling within the specified range from _set
+    if (begin > end) return *this;
+
+    // 1. erase individual items in _set
     auto it = _set.begin();
     while (it != _set.end()) {
         const std::string& val = *it;
@@ -215,23 +230,32 @@ string_set& string_set::erase_range(const std::string& begin, const std::string&
         }
     }
 
-    // 2. split or shrink intervals by comparing with existing _ranges intervals.
+    // 2. split or trim ranges
     std::vector<string_range> updated_ranges;
     for (const auto& r : _ranges) {
-        // complete non-overlap condition: the existing range does not overlap with the removal range at all.
+        // Complete non-overlap check considering boundary flags
+        bool no_overlap = false;
         if (r.end < begin || r.begin > end) {
+            no_overlap = true;
+        } else if (r.end == begin && (range_flag_t::open == r.end_flag || range_flag_t::open == begin_flag)) {
+            no_overlap = true;
+        } else if (r.begin == end && (range_flag_t::open == r.begin_flag || range_flag_t::open == end_flag)) {
+            no_overlap = true;
+        }
+
+        if (true == no_overlap) {
             updated_ranges.push_back(r);
             continue;
         }
 
-        // create the remaining left section
-        if (r.begin < begin) {
+        // Left remaining part
+        if (r.begin < begin || (r.begin == begin && range_flag_t::closed == r.begin_flag && range_flag_t::open == begin_flag)) {
             range_flag_t left_eflag = (range_flag_t::closed == begin_flag) ? range_flag_t::open : range_flag_t::closed;
             updated_ranges.emplace_back(r.begin, begin, r.begin_flag, left_eflag);
         }
 
-        // create the remaining section on the right
-        if (r.end > end) {
+        // Right remaining part
+        if (r.end > end || (r.end == end && range_flag_t::closed == r.end_flag && range_flag_t::open == end_flag)) {
             range_flag_t right_bflag = (range_flag_t::closed == end_flag) ? range_flag_t::open : range_flag_t::closed;
             updated_ranges.emplace_back(end, r.end, right_bflag, r.end_flag);
         }

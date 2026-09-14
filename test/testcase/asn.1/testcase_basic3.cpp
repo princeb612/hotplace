@@ -21,16 +21,19 @@ static void testcode_strongly_typed(asn1_runtime& runtime, const testvector& ent
     auto name = entry.obj->get_name();
     binary_t bin_stream = base16_decode_rfc(entry.stream);
 
+    // read byte stream
     auto stream = bin_stream.data();
     auto size = bin_stream.size();
     size_t pos = 0;
     runtime.read(name, stream, size, pos);
 
+    // runtime publish ASN.1 notation and DER
     basic_stream bs_notation;
     runtime.notation(name, &bs_notation);
     binary_t bin_der;
     runtime.publish(name, &bin_der);
 
+    // dump
     _logger->write([&](basic_stream& bs) -> void {
         valist va;
         va << bs_notation << bin_stream << bin_der;
@@ -39,6 +42,7 @@ static void testcode_strongly_typed(asn1_runtime& runtime, const testvector& ent
         bs.vaprintln("re-encoded {3:x}", va);
     });
 
+    // comparision
     _test_case.assert(bs_notation == entry.schema, __FUNCTION__, "schema %s", entry.schema);
     _test_case.assert(bin_stream == bin_der, __FUNCTION__, "DER    %s", entry.schema);
 }
@@ -63,15 +67,16 @@ void test_decode_strongly_typed1() {
     auto schema8 = "Type8 ::= [APPLICATION 7] IMPLICIT Type7";
     auto type8 = asn1_referenced_type::define("Type8", new asn1_tagged_type(asn1_class_application, 7, asn1_implicit, asn1_referenced_type::refer("Type7")));
 
+    // reconstruct sematic asn1_object* from ASN.1 notation
     asn1_runtime runtime;
-    runtime.add_schema(schema1, type1);
-    runtime.add_schema(schema2, type2);
-    runtime.add_schema(schema3, type3);
-    runtime.add_schema(schema4, type4);
-    runtime.add_schema(schema5, type5);
-    runtime.add_schema(schema6, type6);
-    runtime.add_schema(schema7, type7);
-    runtime.add_schema(schema8, type8);
+    runtime.add_schema(schema1);
+    runtime.add_schema(schema2);
+    runtime.add_schema(schema3);
+    runtime.add_schema(schema4);
+    runtime.add_schema(schema5);
+    runtime.add_schema(schema6);
+    runtime.add_schema(schema7);
+    runtime.add_schema(schema8);
 
     // clang-format off
     struct testvector table[] = {
@@ -88,6 +93,7 @@ void test_decode_strongly_typed1() {
 
     for (const auto& entry : table) {
         testcode_strongly_typed(runtime, entry);
+        entry.obj->release();
     }
 }
 
@@ -107,15 +113,95 @@ void test_decode_strongly_typed2() {
     // clang-format on
 
     asn1_runtime runtime;
-    runtime.add_schema(schema1, type1);
-    runtime.add_schema(schema2, type2);
+    runtime.add_schema(schema1);
+    runtime.add_schema(schema2);
 
     for (const auto& entry : table) {
         testcode_strongly_typed(runtime, entry);
+        entry.obj->release();
     }
+}
+
+void test_resolve_dependencies() {
+    _test_case.begin("resolve reference dependencies");
+
+    /*
+    reference dependency
+      PersonnelRecord (Name, EmployeeNumber, Date, Name, ChildInformation)
+      ChildInformation (Name, Date)
+      Name
+      EmployeeNumber
+      Date
+
+    resolve
+      Name, EmployeeNumber, Date -> ChildInformation -> PersonnelRecord
+      */
+
+    const char* item1 =
+        R"(PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {name Name, title [0] VisibleString, number EmployeeNumber, dateOfHire [1] Date, nameOfSpouse [2] Name, children [3] IMPLICIT SEQUENCE OF ChildInformation DEFAULT {}})";
+    const char* item2 = R"(ChildInformation ::= SET {name Name, dateOfBirth [0] Date})";
+    const char* item3 = R"(Name ::= [APPLICATION 1] IMPLICIT SEQUENCE {givenName VisibleString, initial VisibleString, familyName VisibleString})";
+    const char* item4 = R"(EmployeeNumber ::= [APPLICATION 2] IMPLICIT INTEGER)";
+    const char* item5 = R"(Date ::= [APPLICATION 3] IMPLICIT VisibleString)";
+
+    asn1_runtime runtime;
+    runtime << item1 << item2 << item3 << item4 << item5;
+
+    basic_stream bs;
+    runtime.publish(&bs);
+    _logger->writeln(bs);
+
+    std::list<std::string> names;
+    runtime.resolve(names);
+
+    auto lambda_print = [](const std::list<std::string>& names) -> void {
+        auto lambda = [](typename std::list<std::string>::const_iterator it, basic_stream& dbs) -> void { dbs << *it; };
+
+        basic_stream dumps;
+        dumps << "resolved order : ";
+        print(names, dumps, lambda);
+        _logger->writeln(dumps);
+    };
+
+    lambda_print(names);
+
+    std::list<std::string> expect = {"Date", "EmployeeNumber", "Name", "ChildInformation", "PersonnelRecord"};
+    _test_case.assert(names == expect, __FUNCTION__, "resolve");
+
+    runtime.resolve("ChildInformation", names);
+    lambda_print(names);
+    std::list<std::string> expect_childinfo = {"Date", "Name", "ChildInformation"};
+    _test_case.assert(names == expect_childinfo, __FUNCTION__, "resolve ChildInformation");
+
+    runtime.resolve("PersonnelRecord", names);
+    lambda_print(names);
+    _test_case.assert(names == expect, __FUNCTION__, "resolve PersonnelRecord");
+
+    bool test = false;
+    test = runtime.is_resolvable();
+    _test_case.assert(test, __FUNCTION__, "is_resolvable");
+    test = runtime.is_resolvable("ChildInformation");
+    _test_case.assert(test, __FUNCTION__, "is_resolvable(ChildInformation)");
+    test = runtime.is_resolvable("PersonnelRecord");
+    _test_case.assert(test, __FUNCTION__, "is_resolvable(PersonnelRecord)");
+
+    const char* item6 = R"(ChildInformation2 ::= SET {name Name2, dateOfBirth [0] Date2})";
+    runtime << item6;
+    test = runtime.is_resolvable();
+    _test_case.nassert(test, __FUNCTION__, "unresolved references exist");
+    test = runtime.is_resolvable("ChildInformation2");
+    _test_case.nassert(test, __FUNCTION__, "unresolved references exist");
+    test = runtime.is_resolvable("ChildInformation");
+    _test_case.assert(test, __FUNCTION__, "resolved references");
+
+    runtime.resolve("ChildInformation", names);
+    lambda_print(names);
+    _test_case.assert(names == expect_childinfo, __FUNCTION__, "resolve ChildInformation");
 }
 
 void testcase_basic3() {
     test_decode_strongly_typed1();
     test_decode_strongly_typed2();
+
+    test_resolve_dependencies();
 }

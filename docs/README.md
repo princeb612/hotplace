@@ -1,6 +1,6 @@
 # hotplace study
 
-**Edition 1 · Revision 1078**
+**Edition 1 · Revision 1083**
 
 
 > A compact study map of the hotplace project.
@@ -17,6 +17,7 @@ Topic documents use that structure without repeating the guide.
 
 ## Topic Map
 
+- [ASN.1 Semantic Construction](asn1/README.md)
 - [Error Model](error/README.md)
 - [COSE / JOSE](cose_jose/README.md)
 - [HPACK](hpack/README.md)
@@ -60,7 +61,7 @@ adjacent questions.
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1076            │
+│ Edition 1 · Revision 1083            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
