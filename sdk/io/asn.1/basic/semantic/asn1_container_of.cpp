@@ -51,6 +51,25 @@ void asn1_container_of::represent(stream_t* s, const asn1_value* value) const {
         s->printf(" OF ");
 
         get_object()->represent(s, value);
+
+        auto resource = asn1_resource::get_instance();
+        auto type = get_component_type();
+        switch (type) {
+            case asn1_default:
+            case asn1_optional: {
+                s->printf(" %s", resource->nameof_mode(type).c_str());
+            } break;
+            default: {
+            } break;
+        }
+        if (asn1_default == type) {
+            s->printf(" ");
+            if (get_default()) {
+                vtprintf(s, get_default_value(), vtprintf_style_t::vtprintf_style_asn1);
+            } else {
+                s->printf("{}");
+            }
+        }
     }
 }
 

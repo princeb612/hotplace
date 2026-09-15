@@ -68,7 +68,11 @@ void asn1_builtin_type::represent(stream_t* s, const asn1_value* value) const {
             }
             if (asn1_default == type) {
                 s->printf(" ");
-                vtprintf(s, get_default_value(), vtprintf_style_t::vtprintf_style_asn1);
+                if (get_default()) {
+                    vtprintf(s, get_default_value(), vtprintf_style_t::vtprintf_style_asn1);
+                } else {
+                    s->printf("{}");
+                }
             }
         }
     }

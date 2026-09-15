@@ -143,7 +143,7 @@ void test_lalr() {
             .add_production("Statement", {"Field"})
             .add_production("Statement", {"TagPrefix"})
 
-            // Assignment: LHS (asn1_referenced_type::define 시점)
+            // Assignment: LHS (at the time of asn1_referenced_type::define)
             .add_production("Assignment", {"DefinedType", "::=", "TypeSpec"})
             .add_production("Assignment", {"DefinedType", "::=", "TypeSpec", "Constraint"})
 
@@ -198,7 +198,7 @@ void test_lalr() {
             .add_production("TypeSpec", {"StatementSetOf"})
             .add_production("TypeSpec", {"StatementChoice"})
 
-            // RHS referenced type symbol (asn1_referenced_type::refer 시점)
+            // RHS referenced type symbol (asn1_referenced_type::refer time)
             .add_production("TypeBase", {"SimpleType"})
             .add_production("TypeBase", {"TaggedType"})
             .add_production("TypeBase", {"ReferencedType"})

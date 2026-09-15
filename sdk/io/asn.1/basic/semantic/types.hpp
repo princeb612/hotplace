@@ -31,6 +31,7 @@ bool is_kind_of_cstring(const asn1_object* object);
 bool is_kind_of_bstring(const asn1_object* object);
 bool is_kind_of_container(const asn1_object* object);
 bool is_kind_of_container_of(const asn1_object* object);
+bool is_default_or_optional(const asn1_object* object);
 
 bool is_kind_of_boolean(asn1_entity_t entity);
 bool is_kind_of_integer(asn1_entity_t entity);

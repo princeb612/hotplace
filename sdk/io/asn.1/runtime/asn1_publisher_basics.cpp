@@ -345,7 +345,24 @@ void asn1_publisher::prepare() {
             auto iter = index.find("FieldOpt");
             if (index.end() != iter) {
                 auto& rhs_fieldopt = rhs[iter->second];
-                asn.object->set_option(rhs_fieldopt.option);
+
+                /**
+                 * To ensure compliance with the ASN.1 standard grammar and prevent Shift/Reduce conflicts in the LALR(1) parser, the grammar was kept clean by
+                 * restricting the `DEFAULT` syntax to the `Field` production level. Instead, leveraging the AST structure where `TaggedType` acts as a decorator, the
+                 * issue was resolved by clearly separating responsibilities so that the `Publisher` layer propagates (unwraps) the `DEFAULT` option to the actual object
+                 * contained within the `TaggedType`.
+                 */
+                if (asn1_entity_tagged_type == asn.object->get_entity()) {
+                    auto tagobj = dynamic_cast<asn1_tagged_type*>(asn.object);
+                    if (tagobj) {
+                        auto child = tagobj->get_object();
+                        if (child) {
+                            child->set_option(rhs_fieldopt.option);  // child own option
+                        }
+                    }
+                } else {
+                    asn.object->set_option(rhs_fieldopt.option);  // asn own option
+                }
             }
             auto citer = index.find("Constraint");
             if (index.end() != citer) {

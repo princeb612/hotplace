@@ -92,6 +92,11 @@ bool is_kind_of_container_of(const asn1_object* object) {
     return is_kind_of_container_of(get_entity(object, true));
 }
 
+bool is_default_or_optional(const asn1_object* object) {
+    if (nullptr == object) return false;
+    return ((object->is_default()) || (object->is_optional()));
+}
+
 bool is_kind_of_boolean(asn1_entity_t entity) {
     switch (entity) {
         case asn1_entity_boolean:

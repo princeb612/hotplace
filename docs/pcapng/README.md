@@ -3,7 +3,7 @@
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1076            │
+│ Edition 1 · Revision 1083            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
@@ -167,6 +167,124 @@ test/testcase/tls/tls13/
 ```
 
 The MLKEM vector set extends the same capture-replay idea across multiple TLS 1.3 hybrid groups. This is an important sign that PCAP-based verification became part of the implementation's regression machinery rather than remaining only a debugging convenience.
+
+### Capture Is a Boundary-Aware Test Vector
+
+The capture-replay path does not simply feed a `.pcapng` file back into a socket. The repository converts the relevant observed protocol units into YAML test-vector items and feeds those units into protocol-specific readers.
+
+```text
+real wire traffic
+      ↓
+   PCAPNG
+      ↓
+protocol observation / annotation
+      ↓
+YAML test vector
+      ↓
+protocol-specific replay
+      ├── TLS / DTLS → tls_session
+      └── HTTP/3 → QUIC packet reader + QUIC/TLS sessions
+      ↓
+protocol state / alerts
+      ↓
+test_case result
+```
+
+This distinction is important: the regression artifact preserves **protocol boundaries** rather than depending on the original network timing or socket behavior.
+
+### TLS / DTLS Replay
+
+`test/testcase/tls/testvector_pcap.cpp` reads a `PCAP SIMPLE` YAML example. Each item supplies a direction and a hexadecimal record. The runner creates a `tls_session`, imports the listed SSL key-log secrets, and passes each record to the TLS session.
+
+```text
+YAML example
+ ├── protocol: TLS / DTLS
+ ├── secrets
+ └── items
+       ├── dir: from_client / from_server
+       └── record: hexadecimal bytes
+                 ↓
+          base16_decode
+                 ↓
+             dump_record
+                 ↓
+           tls_session
+                 ↓
+             alert check
+                 ↓
+            test result
+```
+
+The key log is therefore not the packet payload itself. It is auxiliary state that makes encrypted traffic interpretable by the TLS session during replay.
+
+### HTTP/3 / QUIC Replay
+
+The QUIC test uses the same general idea but exposes an additional framing layer.
+
+`test/testcase/quic/testvector_pcap.cpp` creates both a TLS session and a QUIC session, attaches the SSL key-log importer to both, and processes YAML items according to their protocol field.
+
+For `QUIC` items, the hexadecimal frame/packet data is decoded and passed to `quic_packets::read()`.
+
+```text
+HTTP/3 capture
+      ↓
+YAML
+      ├── QUIC packet/frame item
+      │       ↓
+      │   quic_packets::read()
+      │       ↓
+      │   QUIC state / TLS handshake
+      │
+      └── TLS 1.3 item
+              ↓
+          TLS session context
+```
+
+The accompanying `testvector_pcap_http3.yml` records the observed sequence of QUIC Initial/Handshake/Application packets, CRYPTO frames, ACKs, STREAM frames, and other transport activity. This makes the HTTP/3 vector particularly useful for studying how several framing layers coexist:
+
+```text
+UDP datagram
+    ↓
+QUIC packet
+    ↓
+QUIC frame
+    ├── CRYPTO
+    │     ↓
+    │   TLS handshake bytes
+    │
+    └── STREAM
+          ↓
+       HTTP/3 stream data
+```
+
+The capture therefore complements the network-server framing model: it preserves concrete examples of the boundaries that the runtime protocol stack must interpret.
+
+### Why Capture-Replay Matters
+
+A live interoperability test answers:
+
+> Does the implementation communicate correctly with an external peer?
+
+Capture-replay answers a different question:
+
+> Does the implementation continue to interpret a previously observed protocol sequence in the expected way?
+
+The two forms are complementary:
+
+```text
+external peer
+     ↓
+ live interoperability
+     ↓
+ captured behavior
+     ↓
+ reproducible vector
+     ↓
+ implementation regression
+```
+
+This is especially useful when protocol state is complicated or encrypted. The captured sequence and corresponding key material make a previously observed interaction reproducible without requiring the original external peer to be present.
+
 
 ## Development → Verification
 

@@ -148,8 +148,12 @@ void test_resolve_dependencies() {
     runtime << item1 << item2 << item3 << item4 << item5;
 
     basic_stream bs;
-    runtime.publish(&bs);
+    runtime.notation(&bs);
     _logger->writeln(bs);
+
+    bs.clear();
+    runtime.notation("PersonnelRecord", &bs);
+    _test_case.assert(bs == item1, __FUNCTION__, "notation PersonnelRecord");
 
     std::list<std::string> names;
     runtime.resolve(names);

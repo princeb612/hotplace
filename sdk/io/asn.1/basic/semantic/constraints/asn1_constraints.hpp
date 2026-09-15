@@ -95,30 +95,37 @@ class asn1_constraints {
         } else {
             // asn1_entity_builtin_type
             bool test = false;
-            for (const auto& vt : values) {
-                if (asn1_entity_constraint_size == entity) {
-                    auto size = vt.to_str().size();
-                    auto oent = get_entity(object);
-                    if (asn1_entity_octstring == oent) {
-                        // OCTET STRING
-                        if (size % 2) {
-                            test = false;
+            if (values.empty()) {
+                if (is_default_or_optional(object))
+                    return true;
+                else
+                    return false;
+            } else {
+                for (const auto& vt : values) {
+                    if (asn1_entity_constraint_size == entity) {
+                        auto size = vt.to_str().size();
+                        auto oent = get_entity(object);
+                        if (asn1_entity_octstring == oent) {
+                            // OCTET STRING
+                            if (size % 2) {
+                                test = false;
+                            } else {
+                                size /= 2;
+                                test = visitor.get_result_set().contains(size);
+                            }
                         } else {
-                            size /= 2;
+                            // BIT STRING and any other xxxSTRING
                             test = visitor.get_result_set().contains(size);
                         }
-                    } else {
-                        // BIT STRING and any other xxxSTRING
-                        test = visitor.get_result_set().contains(size);
+                    } else if (vt_flag_bool & flags) {
+                        test = true;
+                    } else if (vt_flag_int & flags) {
+                        auto t = t_vtoi<int64>(vt.get());
+                        test = visitor.get_result_set().contains(t);
                     }
-                } else if (vt_flag_bool & flags) {
-                    test = true;
-                } else if (vt_flag_int & flags) {
-                    auto t = t_vtoi<int64>(vt.get());
-                    test = visitor.get_result_set().contains(t);
+                    dump(vt, test);
+                    if (false == test) return false;
                 }
-                dump(vt, test);
-                if (false == test) return false;
             }
             return true;
         }

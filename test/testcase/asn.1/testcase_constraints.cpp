@@ -16,17 +16,17 @@ void test_testvector_constraints() {
 
     // clang-format off
     // auto type_bool =
-    //     asn1_referenced_type::define("type",
+    //     asn1_referenced_type::define("Type",
     //         asn1_builder::build(asn1_entity_boolean));
     auto cons_single_type1 =
-        asn1_referenced_type::define("type",
+        asn1_referenced_type::define("Type",
             asn1_builder::build(asn1_entity_integer,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_single_value_i(1));
                         }));
     auto cons_single_type2 =
-        asn1_referenced_type::define("type",
+        asn1_referenced_type::define("Type",
             asn1_builder::build(asn1_entity_integer,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
@@ -35,21 +35,21 @@ void test_testvector_constraints() {
                                     new asn1_constraint_single_value_i(2)));
                         }));
     auto cons_single_type3 =
-        asn1_referenced_type::define("type",
+        asn1_referenced_type::define("Type",
             asn1_builder::build(asn1_entity_integer,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_union_i({1, 2, 3, 6}));
                         }));
     auto cons_single_type4 =
-        asn1_referenced_type::define("type",
+        asn1_referenced_type::define("Type",
             asn1_builder::build(asn1_entity_visiblestring,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_union_s({"A", "B", "C", "D"}));
                         }));
     auto cons_range_type1 =
-        asn1_referenced_type::define("type",
+        asn1_referenced_type::define("Type",
             asn1_builder::build(asn1_entity_integer,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
@@ -59,7 +59,7 @@ void test_testvector_constraints() {
                         }));
     // 50..100
     auto cons_range_type2 =
-        asn1_referenced_type::define("type",
+        asn1_referenced_type::define("Type",
             asn1_builder::build(asn1_entity_integer,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
@@ -69,7 +69,7 @@ void test_testvector_constraints() {
                         }));
     // 1..49 | 51..100
     auto cons_range_type3 =
-        asn1_referenced_type::define("type",
+        asn1_referenced_type::define("Type",
             asn1_builder::build(asn1_entity_integer,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
@@ -79,7 +79,7 @@ void test_testvector_constraints() {
                         }));
     // 1..4 | 6..10 | 20..24 | 26..30
     auto cons_range_type4 =
-        asn1_referenced_type::define("type",
+        asn1_referenced_type::define("Type",
             asn1_builder::build(asn1_entity_integer,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
@@ -92,28 +92,28 @@ void test_testvector_constraints() {
                                         new asn1_constraint_single_value_i(25))));
                         }));
     auto cons_range_type5 =
-        asn1_referenced_type::define("temperature",
+        asn1_referenced_type::define("Temperature",
             asn1_builder::build(asn1_entity_real,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_range_f(0.0, 100.0));
                         }));
     auto cons_range_type6 =
-        asn1_referenced_type::define("positive",
+        asn1_referenced_type::define("Positive",
             asn1_builder::build(asn1_entity_real,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_range_f(0.0, range_type_t::maxvalue));
                         }));
     auto cons_range_type7 =
-        asn1_referenced_type::define("negative",
+        asn1_referenced_type::define("Negative",
             asn1_builder::build(asn1_entity_real,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_range_f(range_type_t::minvalue, 0.0));
                         }));
     auto cons_range_type8 =
-        asn1_referenced_type::define("type",
+        asn1_referenced_type::define("Type",
             asn1_builder::build(asn1_entity_real,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
@@ -122,7 +122,7 @@ void test_testvector_constraints() {
                                     new asn1_constraint_single_value_f(50.0)));
                         }));
     auto cons_size_type1 =
-        asn1_referenced_type::define("name",
+        asn1_referenced_type::define("Name",
             asn1_builder::build(asn1_entity_ia5string,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
@@ -130,7 +130,7 @@ void test_testvector_constraints() {
                                     new asn1_constraint_single_value_i(1)));
                         }));
     auto cons_size_type2 =
-        asn1_referenced_type::define("name",
+        asn1_referenced_type::define("Name",
             asn1_builder::build(asn1_entity_ia5string,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
@@ -138,7 +138,7 @@ void test_testvector_constraints() {
                                     new asn1_constraint_union_i({1, 2, 5})));
                         }));
     auto cons_size_type3 =
-        asn1_referenced_type::define("name",
+        asn1_referenced_type::define("Name",
             asn1_builder::build(asn1_entity_ia5string,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
@@ -146,7 +146,7 @@ void test_testvector_constraints() {
                                     new asn1_constraint_range_i(1, 20)));
                         }));
     auto cons_except_type1 =
-        asn1_referenced_type::define("type",
+        asn1_referenced_type::define("Type",
             asn1_builder::build(asn1_entity_integer,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
@@ -155,7 +155,7 @@ void test_testvector_constraints() {
                                     new asn1_constraint_range_i(20, 30)));
                         }));
     auto cons_allexcept_type1 =
-        asn1_referenced_type::define("type",
+        asn1_referenced_type::define("Type",
             asn1_builder::build(asn1_entity_integer,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
@@ -164,14 +164,14 @@ void test_testvector_constraints() {
                         }));
 
     auto cons_integer_range =
-        asn1_referenced_type::define("type",
+        asn1_referenced_type::define("Type",
             asn1_builder::build(asn1_entity_integer,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
                                 new asn1_constraint_range_i(0, 255));
                         }));
     auto cons_octstring_size =
-        asn1_referenced_type::define("type",
+        asn1_referenced_type::define("Type",
             asn1_builder::build(asn1_entity_octstring,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
@@ -179,7 +179,7 @@ void test_testvector_constraints() {
                                     new asn1_constraint_single_value_i(16)));
                         }));
     auto cons_ie5string_alphabet =
-        asn1_referenced_type::define("name",
+        asn1_referenced_type::define("Name",
             asn1_builder::build(asn1_entity_ia5string,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints().add(
@@ -187,7 +187,7 @@ void test_testvector_constraints() {
                                     new asn1_constraint_single_value_s("ABC")));
                         }));
     auto cons_ie5string_alphabet2 =
-        asn1_referenced_type::define("name2",
+        asn1_referenced_type::define("Name2",
             asn1_builder::build(asn1_entity_ia5string,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints()
@@ -199,7 +199,7 @@ void test_testvector_constraints() {
                                         new asn1_constraint_single_value_i(4)));
                         }));
     auto cons_ie5string_alphabet3 =
-        asn1_referenced_type::define("name3",
+        asn1_referenced_type::define("Name3",
             asn1_builder::build(asn1_entity_ia5string,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints()
@@ -211,7 +211,7 @@ void test_testvector_constraints() {
                                         new asn1_constraint_range_i(1, 4)));
                         }));
     auto cons_ie5string_alphabet4 =
-        asn1_referenced_type::define("name4",
+        asn1_referenced_type::define("Name4",
             asn1_builder::build(asn1_entity_ia5string,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints()
@@ -229,7 +229,7 @@ void test_testvector_constraints() {
                                         new asn1_constraint_range_i(1, 4)));
                         }));
     auto cons_ie5string_alphabet5 =
-        asn1_referenced_type::define("name5",
+        asn1_referenced_type::define("Name5",
             asn1_builder::build(asn1_entity_ia5string,
                         [&](asn1_object* builtin) -> void {
                             builtin->get_constraints()
@@ -340,6 +340,8 @@ void test_testvector_constraints() {
         flag_value_pat1,
         flag_value_true,
         flag_value_false,
+        flag_value_age30_noname,
+        flag_value_nameonly,
     };
 
     struct testvector {
@@ -349,52 +351,52 @@ void test_testvector_constraints() {
         bool expect;
         testvector_flag_t flag;
     } table[] = {
-        // {"boolean", type_bool, "type ::= BOOLEAN", true, flag_value_true},
-        // {"boolean", type_bool->clone(), "type ::= BOOLEAN", true, flag_value_false},
-        // {"boolean", type_bool->clone(), "type ::= BOOLEAN", false, flag_value_abc},
-        {"single value", cons_single_type1, "type ::= INTEGER (1)", true, flag_value_int1},
-        {"single value", cons_single_type2, "type ::= INTEGER (1 | 2)", false, flag_value_int5},
-        {"single value", cons_single_type3, "type ::= INTEGER (1 | 2 | 3 | 6)", true, flag_value_int2},
-        {"single value", cons_single_type4, R"(type ::= VisibleString ("A" | "B" | "C" | "D"))", true, flag_value_a},
-        {"range", cons_range_type1, "type ::= INTEGER (1..10 | 20..30)", true, flag_value_int5},
-        {"range", cons_range_type1->clone(), "type ::= INTEGER (1..10 | 20..30)", false, flag_value_int15},
-        {"range", cons_range_type2, "type ::= INTEGER ((1..100) INTERSECTION (50..200))", false, flag_value_int15},
-        {"range", cons_range_type2->clone(), "type ::= INTEGER ((1..100) INTERSECTION (50..200))", true, flag_value_int50},
-        {"range", cons_range_type2->clone(), "type ::= INTEGER ((1..100) INTERSECTION (50..200))", true, flag_value_int100},
-        {"range", cons_range_type3, "type ::= INTEGER (1..100 EXCEPT 50)", true, flag_value_int100},
-        {"range", cons_range_type3->clone(), "type ::= INTEGER (1..100 EXCEPT 50)", false, flag_value_int50},
-        {"range", cons_range_type4, "type ::= INTEGER ((1..10 | 20..30) EXCEPT (5 | 25))", true, flag_value_int2},
-        {"range", cons_range_type4->clone(), "type ::= INTEGER ((1..10 | 20..30) EXCEPT (5 | 25))", false, flag_value_int5},
-        {"range", cons_range_type5, "temperature ::= REAL (0.0..100.0)", true, flag_value_float0},
-        {"range", cons_range_type5->clone(), "temperature ::= REAL (0.0..100.0)", false, flag_value_floatm1},
-        {"range", cons_range_type6, "positive ::= REAL (0.0..MAX)", true, flag_value_float0},
-        {"range", cons_range_type7, "negative ::= REAL (MIN..0.0)", true, flag_value_float0},
-        {"range", cons_range_type8, "type ::= REAL (0.0..100.0 EXCEPT 50.0)", true, flag_value_float0},
-        {"range", cons_range_type8->clone(), "type ::= REAL (0.0..100.0 EXCEPT 50.0)", false, flag_value_float50},
-        {"size", cons_size_type1, "name ::= IA5String (SIZE(1))", true, flag_value_a},
-        {"size", cons_size_type2, "name ::= IA5String (SIZE(1 | 2 | 5))", false, flag_value_string20},
-        {"size", cons_size_type3, "name ::= IA5String (SIZE(1..20))", true, flag_value_string20},
-        {"except", cons_except_type1, "type ::= INTEGER (1..50 EXCEPT 20..30)", true, flag_value_int5},
-        {"all except", cons_allexcept_type1, "type ::= INTEGER (ALL EXCEPT 1..10)", true, flag_value_int50},
-        {"all except", cons_allexcept_type1->clone(), "type ::= INTEGER (ALL EXCEPT 1..10)", false, flag_value_int1},
-        {"integer range", cons_integer_range, "type ::= INTEGER (0..255)", true, flag_value_int0},
-        {"integer range", cons_integer_range->clone(), "type ::= INTEGER (0..255)", true, flag_value_int255},
-        {"integer range", cons_integer_range->clone(), "type ::= INTEGER (0..255)", false, flag_value_int256},
-        {"integer range", cons_integer_range->clone(), "type ::= INTEGER (0..255)", false, flag_value_intm1},
-        {"oct string size", cons_octstring_size, "type ::= OCTET STRING (SIZE(16))", true, flag_value_octstring16},
-        {"oct string size", cons_octstring_size->clone(), "type ::= OCTET STRING (SIZE(16))", false, flag_value_octstring32},
-        {"oct string size", cons_octstring_size->clone(), "type ::= OCTET STRING (SIZE(16))", false, flag_value_string16},
-        {"alphabet constraint", cons_ie5string_alphabet, R"(name ::= IA5String (FROM ("ABC")))", true, flag_value_a},
-        {"alphabet constraint", cons_ie5string_alphabet->clone(), R"(name ::= IA5String (FROM ("ABC")))", true, flag_value_abc},
-        {"alphabet constraint", cons_ie5string_alphabet->clone(), R"(name ::= IA5String (FROM ("ABC")))", false, flag_value_abcd},
-        {"alphabet constraint", cons_ie5string_alphabet2, R"(name2 ::= IA5String (FROM ("ABCDEF") SIZE(4)))", true, flag_value_abcd},
-        {"alphabet constraint", cons_ie5string_alphabet2->clone(), R"(name2 ::= IA5String (FROM ("ABCDEF") SIZE(4)))", false, flag_value_abcde},     // not allowed size 5
-        {"alphabet constraint", cons_ie5string_alphabet2->clone(), R"(name2 ::= IA5String (FROM ("ABCDEF") SIZE(4)))", false, flag_value_defg},      // not allowed g
-        {"alphabet constraint", cons_ie5string_alphabet3, R"(name3 ::= IA5String (FROM ("a".."z") SIZE(1..4)))", true, flag_value_red},              // lower cases
-        {"alphabet constraint", cons_ie5string_alphabet3->clone(), R"(name3 ::= IA5String (FROM ("a".."z") SIZE(1..4)))", false, flag_value_green},  // 5 letters
-        {"alphabet constraint", cons_ie5string_alphabet3->clone(), R"(name3 ::= IA5String (FROM ("a".."z") SIZE(1..4)))", false, flag_value_abcd},   // upper cases
-        {"alphabet constraint", cons_ie5string_alphabet4, R"(name4 ::= IA5String (FROM ("0".."9" | "a".."z" | "A".."Z") SIZE(1..4)))", true, flag_value_red},
-        {"alphabet constraint", cons_ie5string_alphabet5, R"(name5 ::= IA5String (FROM ("0"<..<"9" | "a".."z" | "A".."Z") SIZE(1..4)))", true, flag_value_red},
+        // {"boolean", type_bool, "Type ::= BOOLEAN", true, flag_value_true},
+        // {"boolean", type_bool->clone(), "Type ::= BOOLEAN", true, flag_value_false},
+        // {"boolean", type_bool->clone(), "Type ::= BOOLEAN", false, flag_value_abc},
+        {"single value", cons_single_type1, "Type ::= INTEGER (1)", true, flag_value_int1},
+        {"single value", cons_single_type2, "Type ::= INTEGER (1 | 2)", false, flag_value_int5},
+        {"single value", cons_single_type3, "Type ::= INTEGER (1 | 2 | 3 | 6)", true, flag_value_int2},
+        {"single value", cons_single_type4, R"(Type ::= VisibleString ("A" | "B" | "C" | "D"))", true, flag_value_a},
+        {"range", cons_range_type1, "Type ::= INTEGER (1..10 | 20..30)", true, flag_value_int5},
+        {"range", cons_range_type1->clone(), "Type ::= INTEGER (1..10 | 20..30)", false, flag_value_int15},
+        {"range", cons_range_type2, "Type ::= INTEGER ((1..100) INTERSECTION (50..200))", false, flag_value_int15},
+        {"range", cons_range_type2->clone(), "Type ::= INTEGER ((1..100) INTERSECTION (50..200))", true, flag_value_int50},
+        {"range", cons_range_type2->clone(), "Type ::= INTEGER ((1..100) INTERSECTION (50..200))", true, flag_value_int100},
+        {"range", cons_range_type3, "Type ::= INTEGER (1..100 EXCEPT 50)", true, flag_value_int100},
+        {"range", cons_range_type3->clone(), "Type ::= INTEGER (1..100 EXCEPT 50)", false, flag_value_int50},
+        {"range", cons_range_type4, "Type ::= INTEGER ((1..10 | 20..30) EXCEPT (5 | 25))", true, flag_value_int2},
+        {"range", cons_range_type4->clone(), "Type ::= INTEGER ((1..10 | 20..30) EXCEPT (5 | 25))", false, flag_value_int5},
+        {"range", cons_range_type5, "Temperature ::= REAL (0.0..100.0)", true, flag_value_float0},
+        {"range", cons_range_type5->clone(), "Temperature ::= REAL (0.0..100.0)", false, flag_value_floatm1},
+        {"range", cons_range_type6, "Positive ::= REAL (0.0..MAX)", true, flag_value_float0},
+        {"range", cons_range_type7, "Negative ::= REAL (MIN..0.0)", true, flag_value_float0},
+        {"range", cons_range_type8, "Type ::= REAL (0.0..100.0 EXCEPT 50.0)", true, flag_value_float0},
+        {"range", cons_range_type8->clone(), "Type ::= REAL (0.0..100.0 EXCEPT 50.0)", false, flag_value_float50},
+        {"size", cons_size_type1, "Name ::= IA5String (SIZE(1))", true, flag_value_a},
+        {"size", cons_size_type2, "Name ::= IA5String (SIZE(1 | 2 | 5))", false, flag_value_string20},
+        {"size", cons_size_type3, "Name ::= IA5String (SIZE(1..20))", true, flag_value_string20},
+        {"except", cons_except_type1, "Type ::= INTEGER (1..50 EXCEPT 20..30)", true, flag_value_int5},
+        {"all except", cons_allexcept_type1, "Type ::= INTEGER (ALL EXCEPT 1..10)", true, flag_value_int50},
+        {"all except", cons_allexcept_type1->clone(), "Type ::= INTEGER (ALL EXCEPT 1..10)", false, flag_value_int1},
+        {"integer range", cons_integer_range, "Type ::= INTEGER (0..255)", true, flag_value_int0},
+        {"integer range", cons_integer_range->clone(), "Type ::= INTEGER (0..255)", true, flag_value_int255},
+        {"integer range", cons_integer_range->clone(), "Type ::= INTEGER (0..255)", false, flag_value_int256},
+        {"integer range", cons_integer_range->clone(), "Type ::= INTEGER (0..255)", false, flag_value_intm1},
+        {"oct string size", cons_octstring_size, "Type ::= OCTET STRING (SIZE(16))", true, flag_value_octstring16},
+        {"oct string size", cons_octstring_size->clone(), "Type ::= OCTET STRING (SIZE(16))", false, flag_value_octstring32},
+        {"oct string size", cons_octstring_size->clone(), "Type ::= OCTET STRING (SIZE(16))", false, flag_value_string16},
+        {"alphabet constraint", cons_ie5string_alphabet, R"(Name ::= IA5String (FROM ("ABC")))", true, flag_value_a},
+        {"alphabet constraint", cons_ie5string_alphabet->clone(), R"(Name ::= IA5String (FROM ("ABC")))", true, flag_value_abc},
+        {"alphabet constraint", cons_ie5string_alphabet->clone(), R"(Name ::= IA5String (FROM ("ABC")))", false, flag_value_abcd},
+        {"alphabet constraint", cons_ie5string_alphabet2, R"(Name2 ::= IA5String (FROM ("ABCDEF") SIZE(4)))", true, flag_value_abcd},
+        {"alphabet constraint", cons_ie5string_alphabet2->clone(), R"(Name2 ::= IA5String (FROM ("ABCDEF") SIZE(4)))", false, flag_value_abcde},     // not allowed size 5
+        {"alphabet constraint", cons_ie5string_alphabet2->clone(), R"(Name2 ::= IA5String (FROM ("ABCDEF") SIZE(4)))", false, flag_value_defg},      // not allowed g
+        {"alphabet constraint", cons_ie5string_alphabet3, R"(Name3 ::= IA5String (FROM ("a".."z") SIZE(1..4)))", true, flag_value_red},              // lower cases
+        {"alphabet constraint", cons_ie5string_alphabet3->clone(), R"(Name3 ::= IA5String (FROM ("a".."z") SIZE(1..4)))", false, flag_value_green},  // 5 letters
+        {"alphabet constraint", cons_ie5string_alphabet3->clone(), R"(Name3 ::= IA5String (FROM ("a".."z") SIZE(1..4)))", false, flag_value_abcd},   // upper cases
+        {"alphabet constraint", cons_ie5string_alphabet4, R"(Name4 ::= IA5String (FROM ("0".."9" | "a".."z" | "A".."Z") SIZE(1..4)))", true, flag_value_red},
+        {"alphabet constraint", cons_ie5string_alphabet5, R"(Name5 ::= IA5String (FROM ("0"<..<"9" | "a".."z" | "A".."Z") SIZE(1..4)))", true, flag_value_red},
         {"size range", cons_sequence_of_range, "Numbers ::= SEQUENCE SIZE(1..4) OF INTEGER", true, flag_seqof_int3},
         {"size range", cons_sequence_of_range->clone(), "Numbers ::= SEQUENCE SIZE(1..4) OF INTEGER", false, flag_seqof_int5},
         {"size range", cons_set_of_range, "Tags ::= SET SIZE(2..4) OF IA5String", true, flag_seqof_strset3},
@@ -410,6 +412,8 @@ void test_testvector_constraints() {
         {"nested constraint", cons_nested->clone(), "Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))}", false, flag_value_nested130_short},
         {"nested constraint", cons_nested->clone(), "Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))}", false, flag_value_nested30_long},
         {"nested constraint", cons_nested->clone(), "Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))}", false, flag_value_nested30_empty},
+        {"nested constraint", cons_nested->clone(), "Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))}", false, flag_value_age30_noname},
+        {"nested constraint", cons_nested->clone(), "Person ::= SEQUENCE {age INTEGER (0..120), name UTF8String (SIZE(1..20))}", false, flag_value_nameonly},
         {"pattern", const_pattern, R"(PhoneNumber ::= UTF8String (PATTERN "[0-9]{3}-[0-9]{4}-[0-9]{4}"))", true, flag_value_pat1},
         {"exclusive boundary", cons_exclusive_boundary, "Exclusive1 ::= INTEGER (0..<100)", false, flag_value_int100},
         {"exclusive boundary", cons_exclusive_boundary->clone(), "Exclusive1 ::= INTEGER (0..<100)", true, flag_value_int50},
@@ -542,6 +546,12 @@ void test_testvector_constraints() {
                 break;
             case flag_value_nested30_empty:
                 (*value).set("age", 30).set("name", "");
+                break;
+            case flag_value_age30_noname:
+                (*value).set("age", 30);
+                break;
+            case flag_value_nameonly:
+                (*value).set("name", "Alice");
                 break;
             case flag_value_pat1:
                 (*value).set("", "010-1234-5678");

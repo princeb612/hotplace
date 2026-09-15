@@ -35,10 +35,11 @@
     * CBOR
 
 * details
+  * Revision 1084
   * Revision 1083
     * string_set - erase_range, intersect
     * graph - topological sort
-    * asn1_runtime - resolve, is_resolved
+    * asn1_runtime - resolve, is_resolvable
   * Revision 1082
     * asn1_publisher - Constraints
       * exclusive boundary (1..<256, 1<..256, 1<..<256)

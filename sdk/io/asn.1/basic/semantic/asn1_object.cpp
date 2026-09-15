@@ -130,6 +130,8 @@ void asn1_object::set_object(asn1_object* object) {
     if (object) object->set_parent(this);
 }
 
+asn1_default_t* asn1_object::get_default() const { return _default; }
+
 asn1_entity_t asn1_object::get_entity() const { return _entity; }
 
 asn1_entity_t asn1_object::get_component_entity() const { return _entity; }
@@ -220,6 +222,8 @@ bool asn1_object::is_constructed() const { return (_ident & asn1_tag_mask) ? tru
 bool asn1_object::is_tagged() const { return _tag ? true : false; }
 
 bool asn1_object::is_default() const { return asn1_default == _component_type; }
+
+bool asn1_object::is_optional() const { return asn1_optional == _component_type; }
 
 void asn1_object::suppress() {
     _suppress = true;

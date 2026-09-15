@@ -131,6 +131,7 @@ class asn1_object {
     bool is_tagged() const;
     // DEFAULT
     bool is_default() const;
+    bool is_optional() const;
 
     asn1_object& as_default();
     asn1_object& as_optional();
@@ -162,6 +163,7 @@ class asn1_object {
     asn1_object& set_default_value(variant_t&& value);
     void set_tag(asn1_tag* tag);
     void set_object(asn1_object* object);
+    asn1_default_t* get_default() const;
 
     /**
      * @brief   accept (asn1_ast_visitor, asn1_notation_visitor)
