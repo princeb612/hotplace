@@ -37,15 +37,18 @@
     * CBOR
 
 * details
-  * Revision 1085
+  * Revision 1086
+    * [sketch] ASN.1 loader and compiler
   * Revision 1083
+    * asn1_publisher - Constraints
+      * string range ("a"..<"z", "a"<.."z", "a"<..<"z")
     * string_set - erase_range, intersect
     * graph - topological sort
     * asn1_runtime - resolve, is_resolvable
   * Revision 1082
     * asn1_publisher - Constraints
       * exclusive boundary (1..<256, 1<..256, 1<..<256)
-      * string range ("a".."z")
+      * string range ("a".."z)
   * Revision 1081
     * asn1_publisher - Constraints
   * Revision 1079

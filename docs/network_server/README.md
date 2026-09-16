@@ -1118,3 +1118,102 @@ The important current boundary is therefore clear: the common server/session arc
 ```
 
 QUIC is related to the transport/security side but should remain a bounded adjacent topic until its integration with the common server/session model is complete.
+
+## Network Server Conceptual Model
+
+The network-server path can be understood as a sequence of responsibility boundaries rather than as a sequence of class calls.
+
+```text
+                         NETWORK SERVER
+                              │
+                    ┌─────────┴─────────┐
+                    │                   │
+                 Accept              Existing session
+                    │                   │
+                    └─────────┬─────────┘
+                              ▼
+                       network_session
+                              │
+                       scheduling/event
+                              ▼
+                       network_stream
+                              │
+                       byte accumulation
+                              ▼
+                  network_protocol_group
+                              │
+                     protocol detection
+                              ▼
+                       network_protocol
+                              │
+                     protocol framing
+                              ▼
+                        message_size
+                              │
+                     generic consumption
+                              ▼
+                  concrete protocol/session
+                              │
+                    protocol state/meaning
+                              ▼
+                       application dispatch
+```
+
+The layers can be summarized by the question each one answers:
+
+| Boundary | Question |
+|---|---|
+| Accept | Who is connecting? |
+| Session | Which connection/session is being serviced? |
+| Event queue | When should that session be processed? |
+| Stream | Which bytes have arrived and remain unconsumed? |
+| Protocol group | Which protocol can own these bytes? |
+| Protocol | Where is the next complete protocol unit? |
+| Protocol state | What does that unit mean in the protocol state machine? |
+| Application | What should the application do with the resulting meaning? |
+
+This model also clarifies several boundaries that otherwise look similar.
+
+**Detection is not framing.** Detection selects a protocol from accumulated bytes. Framing determines the next consumable unit after a protocol has been selected.
+
+**Framing is not interpretation.** `message_size` identifies the boundary to consume; protocol-specific state gives the consumed unit its meaning.
+
+**A transport read is not a protocol message.** TCP may fragment one protocol unit across reads or combine several protocol units in one read. The stream layer therefore has to preserve accumulation and remainder independently of transport read boundaries.
+
+**A protocol unit is not necessarily an application message.** HTTP/2 demonstrates this directly: a complete frame can update connection/stream state without yet representing a complete application request.
+
+The resulting conceptual contract is:
+
+```text
+transport
+   │
+   │ delivery
+   ▼
+session
+   │
+   │ scheduling
+   ▼
+stream
+   │
+   │ accumulated bytes
+   ▼
+protocol group
+   │
+   │ ownership
+   ▼
+protocol
+   │
+   │ boundary
+   ▼
+stream consumption
+   │
+   │ complete protocol unit
+   ▼
+protocol state
+   │
+   │ meaning
+   ▼
+application
+```
+
+This is the stable architectural view of the current network-server implementation: **lower layers manage delivery and boundaries; higher layers recover protocol and application meaning.**

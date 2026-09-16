@@ -1,6 +1,25 @@
-### ASN.1 Compiler (asn1c) Flow - Gemini
+### ASN.1 Compiler (asn1c) Flow Sketch - Gemini
 
-#### 1. Output Artifacts and Build Structure
+> based on Revision 1083
+
+#### 1. CLI Utility (asn1c) Command Option Design
+
+- A. Basic Execution Format
+  ```
+  Bash
+  asn1c [options] <asn1_file_1> [<asn1_file_2> ...]
+  ```
+- B. CLI Option Specification
+  | Option | Short Name | Description | Remarks |
+  | -- | -- | -- | -- |
+  | --output-dir <dir> | -o | Output directory for generated source code | Default: ./ |
+  | --namespace <ns> | -n | Name of the generated C++ namespace | E.g., generated |
+  | --codec <type> | -c | Default codec type (der only) | Default: der |
+  | --enable-constraint | | Enable/disable generation of constraint check code (SIZE, RANGE, etc.) | Default: Enabled |
+  | --verbose | -v | Output detailed logs for parsing AST and generation | For debugging |
+  | --help | -h | Display command help | |
+
+#### 2. Output Artifacts and Build Structure
 The asn1c compiler takes a .asn1 schema file as input and generates C++11-based data models, encoder/decoder source code, and build scripts.
 
 - A. Generated File Composition
@@ -30,23 +49,6 @@ The asn1c compiler takes a .asn1 schema file as input and generates C++11-based 
         // GCC / MinGW64-related definitions
     #endif
     ```
-
-#### 2. CLI Utility (asn1c) Command Option Design
-
-- A. Basic Execution Format
-  ```
-  Bash
-  asn1c [options] <asn1_file_1> [<asn1_file_2> ...]
-  ```
-- B. CLI Option Specification
-  | Option | Short Name | Description | Remarks |
-  | -- | -- | -- | -- |
-  | --output-dir <dir> | -o | Output directory for generated source code | Default: ./ |
-  | --namespace <ns> | -n | Name of the generated C++ namespace | E.g., generated |
-  | --codec <type> | -c | Default codec type (der only) | Default: der |
-  | --enable-constraint | | Enable/disable generation of constraint check code (SIZE, RANGE, etc.) | Default: Enabled |
-  | --verbose | -v | Output detailed logs for parsing AST and generation | For debugging |
-  | --help | -h | Display command help | |
 
 #### 3. Implementation Scope and C++ Type Mapping Specification
 
