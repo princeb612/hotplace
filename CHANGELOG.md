@@ -8,6 +8,8 @@
   * [study] CBOR/COSE (RFC 7049, 8949, 8152)
 
 * understanding
+  * Revision 1085-
+    * ASN.1 compiler
   * Revision 1031-
     * ASN.1 runtime
   * Revision 927-933 (Tag 1.92, Revision 957)
@@ -35,7 +37,7 @@
     * CBOR
 
 * details
-  * Revision 1084
+  * Revision 1085
   * Revision 1083
     * string_set - erase_range, intersect
     * graph - topological sort

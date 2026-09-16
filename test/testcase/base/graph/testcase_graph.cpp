@@ -81,6 +81,18 @@ void do_test_graph_shortest_path(t_graph<T>& graph, const T& start, const T& end
     delete shortest;
 }
 
+template <typename T>
+void do_test_graph_topological_sort(t_graph<T>& g, const std::list<T>& expect) {
+    std::list<T> sorted;
+    g.topological_sort(sorted);
+    basic_stream bs;
+    auto lambda = [](typename std::list<T>::const_iterator it, basic_stream& dbs) -> void { dbs << *it; };
+    print(sorted, bs, lambda);
+    _logger->writeln(bs);
+
+    _test_case.assert(expect == sorted, __FUNCTION__, "topological sort");
+}
+
 void test_graph1() {
     _test_case.begin("graph<int>");
 
@@ -99,6 +111,8 @@ void test_graph1() {
         .add_directed_edge(5, 4)
         .add_directed_edge(5, 7)
         .add_directed_edge(7, 6);
+    std::list<int> expect = {1, 2, 5, 4, 3, 7, 6};
+    do_test_graph_topological_sort(g, expect);
 
     // Shortest-Path Algorithms
     // undirected.jpg
@@ -203,6 +217,11 @@ void test_graph2() {
     do_test_graph<std::string>(g, "get up");
     do_test_graph_shortest_path<std::string>(g, "get up");
     do_test_graph_shortest_path<std::string>(g, "get up", "dream");
+
+    std::list<std::string> expect =  //
+        {"get up", "eat breakfast", "brush teeth (morning)", "go to work", "work",     "go home",
+         "shower", "eat dinner",    "brush teeth (evening)", "go to bed",  "watch tv", "dream"};
+    do_test_graph_topological_sort(g, expect);
 }
 
 void testcase_graph() {
