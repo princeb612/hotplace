@@ -1,5 +1,11 @@
 ### understanding TLS
 
+* RFCs
+  * [RFC 5246](https://datatracker.ietf.org/doc/html/rfc5246) [summary](rfc5246.md)
+  * [RFC 6347](https://datatracker.ietf.org/doc/html/rfc6347) [summary](rfc6347.md)
+  * [RFC 8446](https://datatracker.ietf.org/doc/html/rfc8446) [summary](rfc8446.md)
+  * [RFC 9147](https://datatracker.ietf.org/doc/html/rfc9147) [summary](rfc9147.md)
+
 * TLS references
   * RFC 8446 The Transport Layer Security (TLS) Protocol Version 1.3
   * RFC 8446 Example Handshake Traces for TLS 1.3

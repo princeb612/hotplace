@@ -87,7 +87,7 @@ void test_yaml_testvector_parser() {
             // asn1_publisher applied
             // - StatementSequence, StatementSequenceOf, StatementSet, StatementSetOf, StatementChoice, FieldList, Field, FieldOpt
             // - TypeSpec, TypeBase, ReferencedType, TaggedType, TagPrefix, EnumType, EnumList, EnumItem, SimpleType
-            parse_reconst_notation(&runtime, context, text_item.c_str());
+            parse_reconst_notation(&runtime, text_item.c_str());
         }
     };
 

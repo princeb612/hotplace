@@ -24,6 +24,7 @@ class asn1_bytestream;
 class asn1_weakly_typed;
 class asn1_strongly_typed;
 class asn1_parser;
+class asn1_publisher;
 class asn1_runtime;
 class asn1_runtime_context;
 

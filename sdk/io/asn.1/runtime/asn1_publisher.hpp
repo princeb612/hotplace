@@ -115,9 +115,9 @@ class asn1_publisher {
     asn1_publisher();
     ~asn1_publisher();
 
-    return_t build(const parse_tree* pt, asn1_object** object);
+    return_t build(asn1_runtime* runtime, const parse_tree* pt, asn1_object** object);
 
-    using handler_t = std::function<return_t(parse_treenode*, asn1_publisher_context&)>;
+    using handler_t = std::function<return_t(asn1_runtime*, parse_treenode*, asn1_publisher_context&)>;
 
     template <typename F>
     void add_handler(const std::string& name, F&& handler) {
@@ -127,9 +127,9 @@ class asn1_publisher {
     }
 
    protected:
-    void prepare();
+    void prepare_basics();
     void prepare_constraints();
-    return_t default_handler(parse_treenode* node, asn1_publisher_context& st);
+    return_t default_handler(asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& st);
 
    private:
     std::unordered_map<std::string, handler_t> _handler_map;

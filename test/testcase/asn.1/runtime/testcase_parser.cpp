@@ -10,7 +10,7 @@
  * comments
  */
 
-#include "sample.hpp"
+#include <hotplace/test/testcase/asn.1/sample.hpp>
 
 void test_asn1parser() {
     _test_case.begin("asn1_parser");

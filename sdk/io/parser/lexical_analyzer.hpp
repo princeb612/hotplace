@@ -152,8 +152,9 @@ class lexical_analyzer {
     lexical_analyzer& add_token(const std::string& token, uint32 tokenid);
     std::string nameof_token(uint32 token);
 
+    lexical_analyzer& clear();
     /* load token */
-    void prepare();
+    lexical_analyzer& prepare();
 
     /*
      * @brief   parse

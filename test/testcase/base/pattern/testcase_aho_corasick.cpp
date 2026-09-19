@@ -104,7 +104,7 @@ void test_aho_corasick3() {
     _test_case.begin("aho_corasick (token grouping, sub-pattern reduction, and repeat-rule processing)");
     bool test = false;
 
-    t_aho_corasick_parser<uint32> ac;
+    t_aho_corasick_reducer<uint32> ac;
     t_key_value<uint32, uint32> frequency;
 
     enum token_userdeined {

@@ -34,6 +34,7 @@ file (GLOB FILEGROUP_SDK_SOURCE_IO
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/semantic/constraints/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/structural/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/visitor/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/resource/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/runtime/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/compiler/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/loader/*.cpp

@@ -11,7 +11,7 @@
  *
  */
 
-#include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_choice.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_enum.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_namedlist.hpp>
@@ -34,7 +34,7 @@
 namespace hotplace {
 namespace io {
 
-void asn1_publisher::prepare() {
+void asn1_publisher::prepare_basics() {
     // default_handler
     //   DefinedType
     //   TypeBase
@@ -43,7 +43,7 @@ void asn1_publisher::prepare() {
     auto resource = asn1_resource::get_instance();
 
     // "Statement"
-    add_handler("Assignment", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("Assignment", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("Assignment", {"DefinedType", "::=", "TypeSpec"})
         // production("Assignment", {"DefinedType", "::=", "TypeSpec", "Constraint"})
 
@@ -73,7 +73,7 @@ void asn1_publisher::prepare() {
 
         return errorcode_t::success;
     });
-    add_handler("StatementSequence", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("StatementSequence", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("StatementSequence", {"SEQUENCE", "Constraint", "{", "FieldList", "}"})
         // production("StatementSequence", {"SEQUENCE", "{", "FieldList", "}"})
         // production("StatementSequence", {"SEQUENCE", "Constraint", "{", "}"})
@@ -113,7 +113,7 @@ void asn1_publisher::prepare() {
 
         return errorcode_t::success;
     });
-    add_handler("StatementSequenceOf", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("StatementSequenceOf", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("StatementSequenceOf", {"SEQUENCE", "SizeConstraint", "OF", "TypeSpec"})
         // production("StatementSequenceOf", {"SEQUENCE", "Constraint", "OF", "TypeSpec"})
         // production("StatementSequenceOf", {"SEQUENCE", "OF", "TypeSpec"})
@@ -154,7 +154,7 @@ void asn1_publisher::prepare() {
 
         return errorcode_t::success;
     });
-    add_handler("StatementSet", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("StatementSet", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("StatementSet", {"SET", "Constraint", "{", "FieldList", "}"})
         // production("StatementSet", {"SET", "{", "FieldList", "}"})
         // production("StatementSet", {"SET", "Constraint", "{", "}"})
@@ -195,7 +195,7 @@ void asn1_publisher::prepare() {
 
         return errorcode_t::success;
     });
-    add_handler("StatementSetOf", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("StatementSetOf", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("StatementSetOf", {"SET", "SizeConstraint", "OF", "TypeSpec"})
         // production("StatementSetOf", {"SET", "Constraint", "OF", "TypeSpec"})
         // production("StatementSetOf", {"SET", "OF", "TypeSpec"})
@@ -236,7 +236,7 @@ void asn1_publisher::prepare() {
 
         return errorcode_t::success;
     });
-    add_handler("StatementChoice", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("StatementChoice", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("StatementChoice", {"CHOICE", "Constraint", "{", "FieldList", "}"})
         // production("StatementChoice", {"CHOICE", "{", "FieldList", "}"})
         // production("StatementChoice", {"CHOICE", "Constraint", "{", "}"})
@@ -276,7 +276,7 @@ void asn1_publisher::prepare() {
         context.push(std::move(asn));
         return errorcode_t::success;
     });
-    add_handler("FieldList", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("FieldList", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("FieldList", {"FieldList", ",", "Field"})
         // production("FieldList", {"Field"})
 
@@ -314,7 +314,7 @@ void asn1_publisher::prepare() {
 
         return errorcode_t::success;
     });
-    add_handler("Field", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("Field", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("Field", {symid, "TypeSpec"})
         // production("Field", {symid, "TypeSpec", "Constraint"})
         // production("Field", {symid, "TypeSpec", "FieldOpt"})
@@ -377,7 +377,7 @@ void asn1_publisher::prepare() {
 
         return errorcode_t::success;
     });
-    add_handler("FieldOpt", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("FieldOpt", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("FieldOpt", {"OPTIONAL"})
         // production("FieldOpt", {"DEFAULT", symnum})
         // production("FieldOpt", {"DEFAULT", symqs})
@@ -410,7 +410,7 @@ void asn1_publisher::prepare() {
 
         return errorcode_t::success;
     });
-    add_handler("ReferencedType", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("ReferencedType", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         return_t ret = errorcode_t::success;
         __try2 {
             // pop and push, simply modify
@@ -421,7 +421,7 @@ void asn1_publisher::prepare() {
         __finally2 {}
         return ret;
     });
-    add_handler("TaggedType", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("TaggedType", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("TaggedType", {"TagPrefix", "TagSpec", "TypeSpec"})
         // production("TaggedType", {"TagPrefix", "TypeSpec"})
 
@@ -454,7 +454,7 @@ void asn1_publisher::prepare() {
 
         return errorcode_t::success;
     });
-    add_handler("TagPrefix", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("TagPrefix", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("TagPrefix", {"[", "TagClass", symnum, "]"})
         // production("TagPrefix", {"[", symnum, "]"})
 
@@ -474,7 +474,7 @@ void asn1_publisher::prepare() {
 
         return errorcode_t::success;
     });
-    add_handler("EnumType", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("EnumType", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
         for (size_t i = 0; i < size; ++i) {
@@ -498,7 +498,7 @@ void asn1_publisher::prepare() {
 
         return errorcode_t::success;
     });
-    add_handler("EnumList", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("EnumList", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("EnumList", {"EnumList", ",", "EnumItem"})
         // production("EnumList", {"EnumItem"})
 
@@ -528,7 +528,7 @@ void asn1_publisher::prepare() {
 
         return errorcode_t::success;
     });
-    add_handler("EnumItem", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("EnumItem", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("EnumItem", {symid, "(", symnum, ")"})
 
         auto size = node->sizeof_rhs();
@@ -550,7 +550,7 @@ void asn1_publisher::prepare() {
 
         return errorcode_t::success;
     });
-    add_handler("SimpleType", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("SimpleType", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         auto size = node->sizeof_rhs();  // 1, 4
         std::vector<asn1_semantic_node> rhs(size);
         for (size_t i = 0; i < size; ++i) {
@@ -580,7 +580,7 @@ void asn1_publisher::prepare() {
     });
 }
 
-return_t asn1_publisher::default_handler(parse_treenode* node, asn1_publisher_context& context) {
+return_t asn1_publisher::default_handler(asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) {
     return_t ret = errorcode_t::success;
 
     // pop and push

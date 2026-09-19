@@ -158,7 +158,7 @@ void test_resolve_dependencies() {
     std::list<std::string> names;
     runtime.resolve(names);
 
-    auto lambda_print = [](const std::list<std::string>& names) -> void {
+    auto lambda_print_stringlist = [](const std::list<std::string>& names) -> void {
         auto lambda = [](typename std::list<std::string>::const_iterator it, basic_stream& dbs) -> void { dbs << *it; };
 
         basic_stream dumps;
@@ -167,18 +167,18 @@ void test_resolve_dependencies() {
         _logger->writeln(dumps);
     };
 
-    lambda_print(names);
+    lambda_print_stringlist(names);
 
     std::list<std::string> expect = {"Date", "EmployeeNumber", "Name", "ChildInformation", "PersonnelRecord"};
     _test_case.assert(names == expect, __FUNCTION__, "resolve");
 
     runtime.resolve("ChildInformation", names);
-    lambda_print(names);
+    lambda_print_stringlist(names);
     std::list<std::string> expect_childinfo = {"Date", "Name", "ChildInformation"};
     _test_case.assert(names == expect_childinfo, __FUNCTION__, "resolve ChildInformation");
 
     runtime.resolve("PersonnelRecord", names);
-    lambda_print(names);
+    lambda_print_stringlist(names);
     _test_case.assert(names == expect, __FUNCTION__, "resolve PersonnelRecord");
 
     bool test = false;
@@ -199,7 +199,7 @@ void test_resolve_dependencies() {
     _test_case.assert(test, __FUNCTION__, "resolved references");
 
     runtime.resolve("ChildInformation", names);
-    lambda_print(names);
+    lambda_print_stringlist(names);
     _test_case.assert(names == expect_childinfo, __FUNCTION__, "resolve ChildInformation");
 }
 

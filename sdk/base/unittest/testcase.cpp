@@ -28,6 +28,8 @@ namespace hotplace {
 
 test_case::test_case() : _logger(nullptr) { reset_time(); }
 
+constexpr char constexpr_testcase[] = "test case";
+
 void test_case::begin(const char* case_name, ...) {
     arch_t tid = get_thread_id();
     basic_stream topic;
@@ -48,11 +50,10 @@ void test_case::begin(const char* case_name, ...) {
         }
     }
 
-    constexpr char constexpr_testcase[] = "[test case] ";
-
     basic_stream stream;
     t_stream_binder<basic_stream, console_color> console_colored_stream(stream);
-    console_colored_stream << _concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::cyan) << constexpr_testcase << topic.c_str();
+    console_colored_stream << _concolor.turnon().set_style(console_style_t::bold).set_fgcolor(console_color_t::cyan) << "[" << constexpr_testcase << "] "
+                           << topic.c_str();
     console_colored_stream << _concolor.turnoff();
     if (_logger) {
         _logger->writeln(stream);
@@ -231,8 +232,8 @@ void test_case::vtest(return_t result, const char* test_function, const char* me
                 break;
             case error_category_t::error_category_expect_failure:  // pass
                 color = hint->color;
-                _total._count_success++;
-                status._test_stat._count_success++;
+                _total._count_expect_failure++;
+                status._test_stat._count_expect_failure++;
                 break;
             case error_category_t::error_category_severe:  // fail
                 color = hint->color;
@@ -289,25 +290,18 @@ void test_case::vntest(return_t result, const char* test_function, const char* m
 }
 
 constexpr char constexpr_success[] = "success";
-constexpr char constexpr_pass[] = "pass";
-constexpr char constexpr_fail[] = "fail";
-constexpr char constexpr_skip[] = "skip";
-constexpr char constexpr_trivial[] = "triv";
-// constexpr char constexpr_warn[] = "warn";
-constexpr char constexpr_blah[] = "    ";
-constexpr char constexpr_expect_failure[] = "expt";
-
 constexpr char constexpr_report[] = "report";
-constexpr char constexpr_testcase[] = "test case";
 constexpr char constexpr_result[] = "result";
 constexpr char constexpr_errorcode[] = "errorcode";
 constexpr char constexpr_function[] = "test function";
 constexpr char constexpr_time[] = "time";
 constexpr char constexpr_message[] = "message";
 
-#define cprint(stream, concolor, color1, color2, msg) \
-    stream << concolor.set_fgcolor(color1) << msg;    \
-    stream << concolor.set_fgcolor(color2);
+static inline void cprint(t_stream_binder<basic_stream, console_color>& stream, console_color& concolor, console_color_t color1, console_color_t color2,
+                          const std::string& message) {
+    stream << concolor.set_fgcolor(color1) << message;
+    stream << concolor.set_fgcolor(color2);  // older linux
+}
 
 void test_case::dump_list_into_stream(const unittest_list_t& array, basic_stream& stream, uint32 flags) {
     error_advisor* advisor = error_advisor::get_instance();
@@ -340,7 +334,7 @@ void test_case::dump_list_into_stream(const unittest_list_t& array, basic_stream
         }
 
         auto hint = advisor->hintof(item._result);
-        cprint(console_colored_stream, _concolor, hint->color, fgcolor, hint->testname.c_str());
+        cprint(console_colored_stream, _concolor, hint->color, fgcolor, hint->testname);
 
         std::string error_message_string;
         std::string errormsg;
@@ -454,6 +448,13 @@ void test_case::report_unittest(basic_stream& stream) {
     // compose
     //
 
+    auto advisor = error_advisor::get_instance();
+    auto hint_pass = advisor->hintof(error_category_t::error_category_success);
+    auto hint_expt = advisor->hintof(error_category_t::error_category_expect_failure);
+    auto hint_fail = advisor->hintof(error_category_t::error_category_severe);
+    auto hint_skip = advisor->hintof(error_category_t::error_category_not_supported);
+    auto hint_triv = advisor->hintof(error_category_t::error_category_trivial);  // error_category_low_security, error_category_warn
+
     critical_section_guard guard(_lock);
 
     console_colored_stream << _concolor.turnon().set_style(console_style_t::bold);
@@ -467,19 +468,24 @@ void test_case::report_unittest(basic_stream& stream) {
         const test_status_t& status = map_iter->second;
 
         stream << "@ " << constexpr_testcase << " \"" << testcase.c_str() << "\" " << constexpr_success << " " << status._test_stat._count_success;
+        if (status._test_stat._count_expect_failure) {
+            stream << " ";
+            cprint(console_colored_stream, _concolor, hint_expt->color, fgcolor, hint_expt->testname);
+            stream << " " << status._test_stat._count_expect_failure;
+        }
         if (status._test_stat._count_fail) {
             stream << " ";
-            cprint(console_colored_stream, _concolor, console_color_t::red, fgcolor, constexpr_fail);
+            cprint(console_colored_stream, _concolor, hint_fail->color, fgcolor, hint_fail->testname);
             stream << " " << status._test_stat._count_fail;
         }
         if (status._test_stat._count_not_supported) {
             stream << " ";
-            cprint(console_colored_stream, _concolor, console_color_t::cyan, fgcolor, constexpr_skip);
+            cprint(console_colored_stream, _concolor, hint_skip->color, fgcolor, hint_skip->testname);
             stream << " " << status._test_stat._count_not_supported;
         }
         if (status._test_stat._count_trivial) {
             stream << " ";
-            cprint(console_colored_stream, _concolor, console_color_t::yellow, fgcolor, constexpr_trivial);
+            cprint(console_colored_stream, _concolor, hint_triv->color, fgcolor, hint_skip->testname);
             stream << " " << status._test_stat._count_trivial;
         }
         stream << "\n";
@@ -494,21 +500,26 @@ void test_case::report_unittest(basic_stream& stream) {
     }
 
     stream << "# ";
-    cprint(console_colored_stream, _concolor, console_color_t::white, fgcolor, constexpr_pass);
+    cprint(console_colored_stream, _concolor, hint_pass->color, fgcolor, hint_pass->testname);
     stream << " " << _total._count_success;
+    if (_total._count_expect_failure) {
+        stream << " ";
+        cprint(console_colored_stream, _concolor, hint_expt->color, fgcolor, hint_expt->testname);
+        stream << " " << _total._count_expect_failure;
+    }
     if (_total._count_fail) {
         stream << " ";
-        cprint(console_colored_stream, _concolor, console_color_t::red, fgcolor, constexpr_fail);
+        cprint(console_colored_stream, _concolor, hint_fail->color, fgcolor, hint_fail->testname);
         stream << " " << _total._count_fail;
     }
     if (_total._count_not_supported) {
         stream << " ";
-        cprint(console_colored_stream, _concolor, console_color_t::cyan, fgcolor, constexpr_skip);
+        cprint(console_colored_stream, _concolor, hint_skip->color, fgcolor, hint_skip->testname);
         stream << " " << _total._count_not_supported;
     }
     if (_total._count_trivial) {
         stream << " ";
-        cprint(console_colored_stream, _concolor, console_color_t::yellow, fgcolor, constexpr_trivial);
+        cprint(console_colored_stream, _concolor, hint_triv->color, fgcolor, hint_triv->testname);
         stream << " " << _total._count_trivial;
     }
     stream << "\n";
@@ -530,6 +541,13 @@ void test_case::report_cases(basic_stream& stream) {
     // compose
     //
 
+    auto advisor = error_advisor::get_instance();
+    auto hint_pass = advisor->hintof(error_category_t::error_category_success);
+    auto hint_expt = advisor->hintof(error_category_t::error_category_expect_failure);
+    auto hint_fail = advisor->hintof(error_category_t::error_category_severe);
+    auto hint_skip = advisor->hintof(error_category_t::error_category_not_supported);
+    auto hint_triv = advisor->hintof(error_category_t::error_category_trivial);  // error_category_low_security, error_category_warn
+
     constexpr char constexpr_brief[] = "brief";
     constexpr char constexpr_case[] = "case";
 
@@ -538,7 +556,8 @@ void test_case::report_cases(basic_stream& stream) {
     console_colored_stream << _concolor.turnon().set_style(console_style_t::bold);
 
     stream << constexpr_brief << "\n";
-    stream << constexpr_pass << " " << constexpr_fail << " " << constexpr_skip << " " << constexpr_trivial << " " << constexpr_case << "\n";
+    stream << hint_pass->testname << " " << hint_expt->testname << " " << hint_fail->testname << " " << hint_skip->testname << " " << hint_triv->testname << " "
+           << constexpr_case << "\n";
 
     for (const auto& testcase : _test_list) {
         auto map_iter = _test_map.find(testcase);
@@ -546,17 +565,19 @@ void test_case::report_cases(basic_stream& stream) {
 
         console_colored_stream << _concolor.turnon();
         if (status._test_stat._count_fail) {
-            console_colored_stream << _concolor.set_fgcolor(console_color_t::red);
+            console_colored_stream << _concolor.set_fgcolor(hint_fail->color);
+        } else if (status._test_stat._count_expect_failure) {
+            console_colored_stream << _concolor.set_fgcolor(hint_expt->color);
         } else if (status._test_stat._count_not_supported) {
-            console_colored_stream << _concolor.set_fgcolor(console_color_t::cyan);
+            console_colored_stream << _concolor.set_fgcolor(hint_skip->color);
         } else if (status._test_stat._count_trivial) {
-            console_colored_stream << _concolor.set_fgcolor(console_color_t::yellow);
+            console_colored_stream << _concolor.set_fgcolor(hint_triv->color);
         } else {
-            console_colored_stream << _concolor.set_fgcolor(console_color_t::white);
+            console_colored_stream << _concolor.set_fgcolor(hint_pass->color);
         }
 
-        stream.printf("%4i %4i %4i %4i %s\n", status._test_stat._count_success, status._test_stat._count_fail, status._test_stat._count_not_supported,
-                      status._test_stat._count_trivial, testcase.c_str());
+        stream.printf("%4i %4i %4i %4i %4i %s\n", status._test_stat._count_success, status._test_stat._count_expect_failure, status._test_stat._count_fail,
+                      status._test_stat._count_not_supported, status._test_stat._count_trivial, testcase.c_str());
 
         console_colored_stream << _concolor.set_fgcolor(console_color_t::white);
     }

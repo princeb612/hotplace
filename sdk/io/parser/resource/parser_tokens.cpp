@@ -16,8 +16,8 @@ namespace io {
 
 const parser_token_resource parser_symbol_tokens[] = {
     {token_alpha, "alpha"},
-    {token_number, "num"},        // number
-    {token_floatingpoint, "fp"},  // floatingpoint
+    {token_number, SYMBOL_NUM},        // number
+    {token_floatingpoint, SYMBOL_FP},  // floatingpoint
     {token_space, "space"},
     {token_lparen, "lparen"},
     {token_rparen, "rparen"},
@@ -43,14 +43,14 @@ const parser_token_resource parser_symbol_tokens[] = {
     {token_or, "or"},
     {token_isequal, "=="},
     {token_notequal, "!="},
-    {token_identifier, "id"},  // identifier
-    {token_quot_string, "quot_string"},
+    {token_identifier, SYMBOL_ID},  // identifier
+    {token_quot_string, SYMBOL_QSTR},
     {token_comments, "comments"},
     {token_assign, "assign"},
     {token_lvalue, "lvalue"},
     {token_emphasis, "emphasis"},
     {token_type, "type"},
-    {token_usertype, "usertype"},
+    {token_usertype, SYMBOL_USERTYPE},
     {token_element, "element"},
     {token_phrase, "phrase"},
     {token_sentence, "sentence"},

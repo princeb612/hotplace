@@ -41,9 +41,10 @@ void lalr_parser::set_grammar(cfg_grammar&& g) {
 const cfg_grammar& lalr_parser::get_cfg_grammar() const { return _grammar; }
 
 // LALR(1) dynamic table creation
-return_t lalr_parser::build_table() {
+return_t lalr_parser::learn() {
     return_t ret = errorcode_t::success;
 
+    critical_section_guard guard(_lock);
     __try2 {
         compute_first_and_follow_sets();
         build_lr0_states();
@@ -60,12 +61,13 @@ return_t lalr_parser::build_table() {
                 print_style_t style(2);  // indent 2
 
                 auto lambda_lr0_goto = [](typename std::map<std::pair<uint32, std::string>, uint32>::const_iterator it, basic_stream& dbs) -> void {
-                    dbs << "(" << it->first.first << ":" << it->first.second << ") -> " << it->second;
+                    dbs << "{" << it->first.first << ":\"" << it->first.second << "\"} -> " << it->second;
                 };
                 auto lambda_action = [](typename std::map<std::pair<uint32, std::string>, parser_action>::const_iterator it, basic_stream& dbs) -> void {
-                    dbs << "(" << it->first.first << ":" << it->first.second << ") -> ";
+                    dbs << "{" << it->first.first << ":\"" << it->first.second << "\"} -> ";
                     auto action = it->second.type;
                     auto target = it->second.target;
+                    dbs << "{";
                     if (parser_action_t::shift == action)
                         dbs << "shift";
                     else if (parser_action_t::reduce == action)
@@ -74,7 +76,7 @@ return_t lalr_parser::build_table() {
                         dbs << "accept";
                     else if (parser_action_t::error == action)
                         dbs << "error";
-                    dbs << " target " << target;
+                    dbs << ", " << target << "}";
                 };
 
 #if 0
@@ -131,6 +133,23 @@ return_t lalr_parser::build_table() {
     }
 
     return ret;
+}
+
+return_t lalr_parser::import(const std::vector<parser_production>& productions, const std::map<std::pair<uint32, std::string>, parser_action>& action_table,
+                             const std::map<std::pair<uint32, std::string>, uint32>& goto_table) {
+    return_t ret = errorcode_t::success;
+    critical_section_guard guard(_lock);
+    _grammar.clear();
+    _grammar._productions = productions;
+    _action_table = action_table;
+    _goto_table = goto_table;
+    _is_table_built = true;
+    return ret;
+}
+
+bool lalr_parser::ready() const {
+    critical_section_guard guard(_lock);
+    return _is_table_built;
 }
 
 // Perform dynamically generated table-based parsing

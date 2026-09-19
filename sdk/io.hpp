@@ -68,11 +68,11 @@
 #endif
 
 /* asn.1 */
-#include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/types.hpp>
 
 /* asn.1/basic */
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/basic/types.hpp>
 

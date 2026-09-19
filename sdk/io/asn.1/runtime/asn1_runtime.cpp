@@ -13,6 +13,7 @@
 #include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/base/graph/graph.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_value.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
@@ -22,11 +23,11 @@
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_notation_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_builder.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_parser.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_publisher.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_strongly_typed.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_weakly_typed.hpp>
+#include <hotplace/sdk/io/parser/parser_resource.hpp>
 
 namespace hotplace {
 namespace io {
@@ -60,13 +61,42 @@ asn1_runtime& asn1_runtime::operator=(const asn1_runtime& other) {
 
 asn1_runtime* asn1_runtime::clone() { return new asn1_runtime(*this); }
 
+void asn1_runtime::load() {
+    if (false == get_parser().ready()) {
+        auto& lex = get_lexer();
+        // handle_quoted to 1
+        lex.get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1).set("handle_lvalue_usertype", 1);
+        lex.prepare();
+
+        // ASN.1 tokens
+        auto asn1resource = asn1_resource::get_instance();
+        asn1resource->for_each(resource_type_t::token_type_asn1, [&lex](uint32 token, const std::string& name) -> void { lex.add_token(name, token); });
+
+        /*
+        // CFG - production, terminal, non-terminal, start symbol
+        cfg_grammar grammar;
+        for (const auto& item : asn1_productions) {
+            grammar.add_production(item.lhs, item.rhs);
+        }
+        for (const auto& item : asn1_terminals) {
+            grammar.add_terminal(item);
+        }
+
+        get_parser().set_grammar(std::move(grammar));
+
+        get_parser().learn();  // heavy
+        */
+
+        get_parser().import(asn1_productions, asn1_action_table, asn1_goto_table);
+    }
+}
+
 return_t asn1_runtime::add_schema(const std::string& schema) {
     return_t ret = errorcode_t::success;
-    auto parser = asn1_parser::get_instance();
 
     // parse
     parse_tree pt;
-    parser->parse(this, _lexcontext, schema.c_str(), &pt);
+    parse(schema.c_str(), &pt);
 
 #if defined DEBUG
     if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
@@ -108,7 +138,7 @@ return_t asn1_runtime::add_schema(const std::string& schema) {
     asn1_object* object = nullptr;
 
     asn1_publisher publisher;
-    ret = publisher.build(&pt, &object);
+    ret = publisher.build(this, &pt, &object);
     if (errorcode_t::success != ret) return ret;
 
     critical_section_guard guard(_lock);
@@ -182,6 +212,10 @@ asn1_value* asn1_runtime::get(asn1_object* item) const {
     return ret_value;
 }
 
+lexical_analyzer& asn1_runtime::get_lexer() { return _lex; }
+
+lalr_parser& asn1_runtime::get_parser() { return _lalr; }
+
 return_t asn1_runtime::read_weakly_typed(const byte_t* stream, size_t size, size_t& pos) {
     asn1_weakly_typed weaktype;
     return weaktype.read(this, stream, size, pos);
@@ -190,6 +224,68 @@ return_t asn1_runtime::read_weakly_typed(const byte_t* stream, size_t size, size
 return_t asn1_runtime::read(const std::string& name, const byte_t* stream, size_t size, size_t& pos) {
     asn1_strongly_typed strongtype;
     return strongtype.read(this, name, stream, size, pos);
+}
+
+return_t asn1_runtime::parse(const char* notation, parse_tree* pt) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        load();
+
+        if (nullptr == notation) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
+        ret = get_lexer().parse(_lexcontext, notation);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        // LALR tokens
+        std::vector<parser_token> tokens;
+#if defined DEBUG
+        uint32 cnt = 0;
+#endif
+
+        auto resource = parser_resource::get_instance();
+        auto symid = resource->nameof(token_identifier);  // "identifier"
+        auto symuser = resource->nameof(token_usertype);  // "usertype"
+
+        auto lambda = [&](const token_description* desc) -> bool {
+            bool test = true;
+            const auto& type = desc->type;
+            std::string token(desc->p, desc->size);
+            switch (type) {
+                case token_lvalue: {
+                    tokens.push_back({token_identifier, symid});
+                } break;
+                case token_comments:
+                    ret = false;  // stop at comments
+                    break;
+                default: {
+                    tokens.push_back({type, token});
+                }
+            }
+
+#if defined DEBUG
+            if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
+                trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
+                    dbs.println("[%03u] line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", cnt++, desc->line, desc->type,
+                                get_lexer().nameof_token(desc->type).c_str(), desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
+                });
+            }
+#endif
+
+            return test;
+        };
+        _lexcontext.for_each(lambda);
+        tokens.push_back({token_eof, "$"});
+
+        // LALR(1) parse
+        ret = get_parser().parse(tokens, pt);
+    }
+    __finally2 {}
+    return ret;
 }
 
 bool asn1_runtime::resolve(const std::string& name, std::list<std::string>& names) const {
@@ -252,9 +348,6 @@ bool asn1_runtime::resolve(const std::string& name, std::list<std::string>& name
 
     // 2. build local sub-graph
     t_graph<std::string> sub_graph;
-    for (const auto& node_name : sub_nodes) {
-        sub_graph.add_vertex(node_name);
-    }
 
     for (const auto& node_name : sub_nodes) {
         asn1_object* object = _dictionary.at(node_name);
@@ -287,9 +380,6 @@ bool asn1_runtime::resolve(std::list<std::string>& names) const {
     }
 
     t_graph<std::string> graph;
-    // for (const auto& item : _dictionary) {
-    //     graph.add_vertex(item.first);
-    // }
 
     bool missing_reference = false;
 
@@ -467,10 +557,6 @@ void asn1_runtime::clear() {
 void asn1_runtime::addref() { _shared.addref(); }
 
 void asn1_runtime::release() { _shared.delref(); }
-
-// parser& asn1_runtime::get_parser() { return _parser; }
-//
-// const parser::context& asn1_runtime::get_rule_context() const { return _rule; }
 
 }  // namespace io
 }  // namespace hotplace

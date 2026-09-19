@@ -1,0 +1,37 @@
+-- 1. Structure of module identifiers assigned an OID (Object Identifier)
+-- ModuleIdentifier -> symid OidValue
+-- OidValue -> { iso(1) standard(0) ... }
+CryptographicModule { iso(1) identified-organization(3) dod(6) internet(1) security(5) mechanisms(5) }
+DEFINITIONS AUTOMATIC TAGS ::=
+BEGIN
+
+    -- 2. Parameterized Symbol Export support (symid { })
+    -- Symbol -> symid { }
+    EXPORTS
+        Container{},
+        CustomErrorCode;
+
+    -- 3. Definition of Parameterized Type (Notation Area)
+    Container {TypeParam} ::= SEQUENCE {
+        header  INTEGER,
+        data    TypeParam
+    }
+
+    CustomErrorCode ::= INTEGER (1000..9999)
+
+END
+
+-- 4. External module importing a parameterized symbol from the OID module
+ConsumerModule DEFINITIONS EXPLICIT TAGS EXTENSIBILITY IMPLIED ::=
+BEGIN
+
+    -- 5. Import and Parameterized Symbol Import from Other Modules Containing OIDs
+    -- SymbolsFromModule -> SymbolList FROM ModuleIdentifier
+    IMPORTS
+        Container{},
+        CustomErrorCode
+    FROM CryptographicModule { iso(1) identified-organization(3) dod(6) internet(1) security(5) mechanisms(5) };
+
+    Payload ::= Container { OCTET STRING }
+
+END

@@ -39,8 +39,6 @@ namespace hotplace {
  *             after failing several times, search results includes range_t (see search/dosearch method)
  *             also added order_by_pattern member function (have shape-shifting overhead but is easy to search by pattern id)
  *             supplement some case about the endswith_wildcard_any and startswith_wildcard_any
- *          4. comments
- *             [fixed] ~~lambda enqueue - working with large data sets, may be able to reduce overhead by deleting data that is no longer accessed...~~
  *
  *          pattern
  *                  his her hers ?is h?r h*s
@@ -146,6 +144,8 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T, memberof_t> {
     using t_aho_corasick<BT, T, memberof_t>::_root;
     using t_aho_corasick<BT, T, memberof_t>::_patterns;
     using t_aho_corasick<BT, T, memberof_t>::_memberof;
+    using t_aho_corasick<BT, T, memberof_t>::apply_greedy_filter;
+    using t_aho_corasick<BT, T, memberof_t>::greedy_filter;
     using t_aho_corasick<BT, T, memberof_t>::collect_results;
     using t_aho_corasick<BT, T, memberof_t>::get_pattern_size;
 
@@ -404,6 +404,9 @@ class t_aho_corasick_wildcard : public t_aho_corasick<BT, T, memberof_t> {
                     }
                 }
             }
+        }
+        if (apply_greedy_filter()) {
+            result = greedy_filter(result);
         }
     }
 

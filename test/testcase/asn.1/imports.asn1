@@ -1,0 +1,45 @@
+-- ==========================================
+-- 1. Base Module Definition
+-- ==========================================
+CommonDefinitions DEFINITIONS AUTOMATIC TAGS ::=
+BEGIN
+
+    -- Export all symbols or specify explicitly
+    EXPORTS
+        AlgorithmIdentifier,
+        ProtocolVersion;
+
+    -- Type Definitions
+    ProtocolVersion ::= INTEGER {
+        v1(1),
+        v2(2),
+        v3(3)
+    }
+
+    AlgorithmIdentifier ::= SEQUENCE {
+        algorithm   OBJECT IDENTIFIER,
+        parameters  ANY OPTIONAL
+    }
+
+END
+
+-- ==========================================
+-- 2. Consumer Module Definition
+-- ==========================================
+SecureMessageModule DEFINITIONS AUTOMATIC TAGS ::=
+BEGIN
+
+    -- Import symbols from the base module
+    IMPORTS
+        AlgorithmIdentifier,
+        ProtocolVersion
+    FROM CommonDefinitions;
+
+    -- Usage of Imported Types
+    SecurePayload ::= SEQUENCE {
+        version     ProtocolVersion,
+        algo        AlgorithmIdentifier,
+        encrypted   OCTET STRING
+    }
+
+END

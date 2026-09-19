@@ -1,12 +1,8 @@
-#### memo
+#### References
 
-* QUIC initial packet number
-  * https://quic.xargs.org
-    * client 0
-    * server 0
-  * RFC 9001, RFC 9369
-    * client 0
-    * server 1
+* [RFC 9000](https://datatracker.ietf.org/doc/html/rfc9000) [summary](rfc9000.md)
+* [RFC 9001](https://datatracker.ietf.org/doc/html/rfc9001) [summary](rfc9001.md)
+* [RFC 9369](https://datatracker.ietf.org/doc/html/rfc9369) [summary](rfc9369.md)
 
 #### RFC 9000
 

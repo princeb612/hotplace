@@ -1,26 +1,31 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   aho_corasick_parser.hpp
+ * @file   aho_corasick_reducer.hpp
  * @author Soo Han and Gemini
  * @desc   an extended Aho-Corasick automaton supporting token grouping,
- *         sub-pattern reduction, and repeat-rule processing (Parser/Reducer).
+ *         sub-pattern reduction, block suppression (treat_as), and repeat-rule processing (Parser/Reducer).
  *
  * Revision History
  * Date         Name                Description
- * 2026-08-23   Soo Han & Gemini    added virtual token reduction loop, repeat_as handling,
+ * 2026.08.23   Soo Han & Gemini    added virtual token reduction loop, repeat_as handling,
  *                                  and span coordinate mapping for nested pattern matching.
+ * 2026.09.19   Soo Han & Gemini    treat_as block reduction
+ *                                  collapsing the entire sequence from start to finish into a single atomic token
  */
 
-#ifndef __HOTPLACE_SDK_BASE_PATTERN_AHOCORASICKPARSER__
-#define __HOTPLACE_SDK_BASE_PATTERN_AHOCORASICKPARSER__
+#ifndef __HOTPLACE_SDK_BASE_PATTERN_AHOCORASICKREDUCER__
+#define __HOTPLACE_SDK_BASE_PATTERN_AHOCORASICKREDUCER__
 
+#include <algorithm>
 #include <hotplace/sdk/base/pattern/aho_corasick.hpp>
 #include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 namespace hotplace {
 
 /**
- * @brief   multi-pattern reduction engine
+ * @brief   linear token reducer
  * @comments
  *          exact match       : token_id
  *          group match       : token_group
@@ -30,11 +35,11 @@ namespace hotplace {
  *                              [token_namedtype] -> token_element
  *                              [token_element, token_taggedtype] -> token_element
  * @example
- *          // sketch
+ *          // sketch #1
  *          // for more examples ... see testcase_aho_corasick
  *          bool test = false;
  *
- *          t_aho_corasick_parser<uint32> ac;
+ *          t_aho_corasick_reducer<uint32> ac;
  *          ac.set_group(token_builtintype, {token_bool, token_int, token_null, token_real, token_visiblestring});
  *          ac.set_group(token_class, {token_application, token_private, token_universal});
  *          ac.set_group(token_taggedmode, {token_implicit, token_explicit});
@@ -109,54 +114,82 @@ namespace hotplace {
  *          std::multimap<range_t, size_t> expect2 = {{range_t(2, 10), 7}, {range_t(4, 9), 6}, {range_t(5, 7), 1}, {range_t(5, 8), 3}, {range_t(5, 9), 5}};
  *          test = lambda_test(input2, expect2);
  *          _test_case.assert(test, __FUNCTION__, R"(group/sub-pattern/repeat search)");
+ *
+ *          // sketch #2
+ *          // collapsing the entire sequence from start to finish into a single atomic token
+ *          struct memberof_parser_token {
+ *              uint32 operator()(const parser_token* source, size_t idx) const { return (nullptr != source) ? (uint32)source[idx].type : 0; }
+ *          };
+ *          enum vtoken_t : native_token_t {
+ *              vtoken_symbol = token_userdefine + 1,  // symbol group
+ *              vtoken_header_clause,                  // DEFINITIONS ... ::= BEGIN
+ *              vtoken_exports_clause,
+ *              vtoken_imports_clause,
+ *              vtoken_header_block_start,
+ *              vtoken_header_block_end,
+ *              vtoken_exports_clause_start,
+ *              vtoken_exports_clause_end,
+ *              vtoken_imports_clause_start,
+ *              vtoken_imports_clause_end,
+ *          };
+ *
+ *          t_aho_corasick_reducer<uint32, parser_token, memberof_parser_token> reducer;
+ *
+ *          reducer.set_group(vtoken_symbol, {token_identifier, token_usertype});
+ *
+ *          reducer.insert_as(vtoken_header_block_start, {vtoken_symbol, token_definitions});
+ *          reducer.insert_as(vtoken_header_block_end, {token_assign, token_begin});
+ *          reducer.insert_as(vtoken_exports_clause_start, {token_exports});
+ *          reducer.insert_as(vtoken_imports_clause_start, {token_imports});
+ *          reducer.insert_as(vtoken_exports_clause_end, {token_semicolon});
+ *
+ *          reducer.treat_as(vtoken_header_clause, {vtoken_header_block_start}, {vtoken_header_block_end});
+ *          reducer.treat_as(vtoken_exports_clause, {vtoken_exports_clause_start}, {vtoken_exports_clause_end});
+ *          reducer.treat_as(vtoken_imports_clause, {vtoken_imports_clause_start}, {vtoken_exports_clause_end});
+ *
+ *          reducer.build();
+ *          reducer.set_greedy_filter(true);
+ *
  */
 template <typename BT = char, typename T = BT, typename memberof_t = memberof_defhandler<BT, T>>
-class t_aho_corasick_parser : public t_aho_corasick<BT, T, memberof_t> {
+class t_aho_corasick_reducer : public t_aho_corasick<BT, T, memberof_t> {
    public:
     typedef typename t_aho_corasick<BT, T, memberof_t>::trienode trienode;
     using t_aho_corasick<BT, T, memberof_t>::_root;
     using t_aho_corasick<BT, T, memberof_t>::_patterns;
     using t_aho_corasick<BT, T, memberof_t>::_memberof;
+    using t_aho_corasick<BT, T, memberof_t>::apply_greedy_filter;
+    using t_aho_corasick<BT, T, memberof_t>::greedy_filter;
     using t_aho_corasick<BT, T, memberof_t>::search;
     using t_aho_corasick<BT, T, memberof_t>::collect_results;
 
-    struct pattern_info {
+    struct pattern_info_t {
         size_t pid;
         size_t length;
         BT as_token;  // 0 or virtual token id
         bool is_virtual;
     };
-    struct token_span {
+    struct token_span_t {
         size_t orig_begin;
         size_t orig_end;
     };
-    struct repeat_info {
-        BT virtual_token;                      // virtual token to be reduced (e.g., token_element)
+    struct repeat_rule_t {
+        BT virtual_token;                      // virtual token to be reduced
         BT delimiter_token;                    // delimiter token (none if 0)
         std::unordered_set<BT> target_tokens;  // target token set
     };
+    struct treat_rule_t {
+        BT virtual_token;
+        std::vector<BT> begin_pattern;
+        std::vector<BT> end_pattern;
+    };
 
    public:
-    t_aho_corasick_parser(memberof_t memberof = memberof_t()) : t_aho_corasick<BT, T, memberof_t>(memberof) {}
+    t_aho_corasick_reducer(memberof_t memberof = memberof_t()) : t_aho_corasick<BT, T, memberof_t>(memberof) {}
 
     void insert(const std::vector<T>& pattern) override { doinsert_as(pattern.data(), pattern.size(), 0, false); }
     void insert(const T* pattern, size_t size) override { doinsert_as(pattern, size, 0, false); }
-    void insert_as(BT virtual_token, const std::vector<T>& pattern) { doinsert_as(pattern.data(), pattern.size(), virtual_token, true); }
-    void insert_as(BT virtual_token, const T* pattern, size_t size) { doinsert_as(pattern, size, virtual_token, true); }
 
-    // 1) repeat_as with delimiter (e.g., token_element, token_comma, {token_namedtype, token_taggedtype})
-    void repeat_as(BT virtual_token, BT delimiter_token, const std::vector<BT>& target_tokens) {
-        repeat_info info;
-        info.virtual_token = virtual_token;
-        info.delimiter_token = delimiter_token;
-        for (const auto& t : target_tokens) {
-            info.target_tokens.insert(t);
-        }
-        _repeat_rules.push_back(std::move(info));
-    }
-
-    // 2) repeat_as without a delimiter
-    void repeat_as(BT virtual_token, const std::vector<BT>& target_tokens) { repeat_as(virtual_token, 0, target_tokens); }
     /**
      * @brief   group
      */
@@ -166,12 +199,80 @@ class t_aho_corasick_parser : public t_aho_corasick<BT, T, memberof_t> {
             _token_to_groups[member].insert(group_id);
         }
     }
+    /**
+     * @brief   insert virtual token
+     */
+    void insert_as(BT virtual_token, const std::vector<T>& pattern) { doinsert_as(pattern.data(), pattern.size(), virtual_token, true); }
+    void insert_as(BT virtual_token, const T* pattern, size_t size) { doinsert_as(pattern, size, virtual_token, true); }
+
+    /**
+     * @brief   repeat virtual token
+     * @remarks mutual exclusion with treat_as
+     *          1) repeat_as with delimiter (e.g., token_element, token_comma, {token_namedtype, token_taggedtype})
+     *          2) repeat_as without a delimiter
+     * @sa      treat_as
+     */
+    void repeat_as(BT virtual_token, BT delimiter_token, const std::vector<BT>& target_tokens) {
+        repeat_rule_t info;
+        info.virtual_token = virtual_token;
+        info.delimiter_token = delimiter_token;
+        for (const auto& t : target_tokens) {
+            info.target_tokens.insert(t);
+        }
+        _repeat_rules.push_back(std::move(info));
+    }
+    void repeat_as(BT virtual_token, const std::vector<BT>& target_tokens) { repeat_as(virtual_token, 0, target_tokens); }
+    /**
+     * @brief   [simple is the best] to overcome limitations in a simple way...
+     * @remarks
+     *          1) mutual exclusion with repeat_as
+     *
+     *          2) The simplest and most definitive method to completely bypass complex state machines based on Aho-Corasick or Tries,
+     *          effectively collapsing the entire sequence from start to finish into a single atomic token.
+     *
+     *          // sketch
+     *          token_identifier DEFINITION ... ::= BEGIN
+     *            CommonDefinitions DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+     *            ConsumerModule DEFINITIONS EXPLICIT TAGS EXTENSIBILITY IMPLIED ::= BEGIN
+     *            CryptographicModule { iso(1) identified-organization(3) dod(6) internet(1) security(5) mechanisms(5) } DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+     *          EXPORTS ... ;
+     *            EXPORTS Container{}, CustomErrorCode;
+     *          IMPORTS ... ;
+     *            IMPORTS AlgorithmIdentifier, ProtocolVersion FROM CommonDefinitions;
+     *            IMPORTS Container{}, CustomErrorCode FROM CryptographicModule { iso(1) identified-organization(3) dod(6) internet(1) security(5) mechanisms(5) };
+     */
+    // treat_as rules (Single token overloads)
+    void treat_as(BT virtual_token, BT begin, BT end) { treat_as(virtual_token, std::vector<BT>{begin}, std::vector<BT>{end}); }
+
+    // treat_as rules (Vector sequence overloads)
+    void treat_as(BT virtual_token, const std::vector<BT>& begin_pattern, const std::vector<BT>& end_pattern) {
+        if ((begin_pattern.empty()) || (end_pattern.empty())) return;
+
+        // 1. treat_rule_t
+        treat_rule_t rule;
+        rule.virtual_token = virtual_token;
+        rule.begin_pattern = begin_pattern;
+        rule.end_pattern = end_pattern;
+
+        _treat_rules.push_back(rule);
+
+        // 2. _pattern_info_map
+        size_t new_pid = _pattern_info_map.size();
+
+        pattern_info_t info;
+        info.pid = new_pid;
+        info.length = 0;
+        info.as_token = virtual_token;
+        info.is_virtual = true;
+
+        _pattern_info_map[new_pid] = info;
+    }
 
     // search method overriding (sub-pattern reduction integration)
     std::multimap<range_t, size_t> search(const std::vector<T>& source) const override { return search(source.data(), source.size()); }
 
     std::multimap<range_t, size_t> search(const T* source, size_t size) const override {
-        if ((nullptr == source) || size == 0) return {};
+        if ((nullptr == source) || 0 == size) return {};
 
         std::vector<BT> stream;
         stream.reserve(size);
@@ -179,7 +280,7 @@ class t_aho_corasick_parser : public t_aho_corasick<BT, T, memberof_t> {
             stream.push_back(_memberof(source, i));
         }
 
-        std::vector<token_span> spans(size);
+        std::vector<token_span_t> spans(size);
         for (size_t i = 0; i < size; ++i) {
             spans[i] = {i, i};
         }
@@ -192,7 +293,7 @@ class t_aho_corasick_parser : public t_aho_corasick<BT, T, memberof_t> {
 
             std::map<size_t, std::set<size_t>> ordered;
             std::multimap<range_t, size_t> step_res;
-            dosearch(stream.data(), stream.size(), ordered);
+            dosearch_bt(stream.data(), stream.size(), ordered);
             this->get_result(ordered, step_res, stream.size());
 
             // 1. scale the matching result after transforming the original coordinates.
@@ -211,10 +312,9 @@ class t_aho_corasick_parser : public t_aho_corasick<BT, T, memberof_t> {
             for (size_t i = 0; i < vec_res.size(); ++i) {
                 size_t pid = vec_res[i].second;
                 auto iter = _pattern_info_map.find(pid);
-                if (iter != _pattern_info_map.end() && iter->second.is_virtual) {
+                if ((iter != _pattern_info_map.end()) && (iter->second.is_virtual)) {
                     size_t len = vec_res[i].first.end - vec_res[i].first.begin + 1;
-                    // maximal munch: longer length wins, or tie-break with virtual priority
-                    if (len > max_len || (len == max_len && !target_is_virtual)) {
+                    if ((len > max_len) || ((len == max_len) && (false == target_is_virtual))) {
                         max_len = len;
                         target_idx = static_cast<int>(i);
                         target_is_virtual = true;
@@ -223,18 +323,18 @@ class t_aho_corasick_parser : public t_aho_corasick<BT, T, memberof_t> {
             }
 
             // 3. perform virtual token reduction (in-place swap & erase optimization)
-            if (target_idx != -1) {
+            if (-1 != target_idx) {
                 const range_t& cur_range = vec_res[target_idx].first;
                 size_t pid = vec_res[target_idx].second;
                 const BT& vtoken = _pattern_info_map.at(pid).as_token;
 
-                token_span reduced_span = {spans[cur_range.begin].orig_begin, spans[cur_range.end].orig_end};
-
+                token_span_t reduced_span = {spans[cur_range.begin].orig_begin, spans[cur_range.end].orig_end};
                 size_t reduce_len = cur_range.end - cur_range.begin;
+
                 stream[cur_range.begin] = vtoken;
                 spans[cur_range.begin] = reduced_span;
 
-                if (reduce_len > 0) {
+                if (0 < reduce_len) {
                     stream.erase(stream.begin() + cur_range.begin + 1, stream.begin() + cur_range.end + 1);
                     spans.erase(spans.begin() + cur_range.begin + 1, spans.begin() + cur_range.end + 1);
                 }
@@ -244,58 +344,35 @@ class t_aho_corasick_parser : public t_aho_corasick<BT, T, memberof_t> {
                 continue;  // since the virtual pattern has been reduced, the next pass
             }
 
-            // 4. repeat_as rule evaluation and greedy reduction
-            for (const auto& rule : _repeat_rules) {
-                for (size_t i = 0; i < stream.size(); ++i) {
-                    // Case A: single target_token -> virtual_token promotion
-                    if (rule.target_tokens.count(stream[i]) > 0) {
-                        stream[i] = rule.virtual_token;
-                        reduced = true;
-                        break;
-                    }
-
-                    // Case B: [virtual_token] + [delimiter] + [target_token or virtual_token] chain absorption
-                    if (stream[i] == rule.virtual_token) {
-                        size_t next_idx = i + 1;
-
-                        if (rule.delimiter_token != 0) {
-                            if (next_idx < stream.size() && stream[next_idx] == rule.delimiter_token) {
-                                size_t elem_idx = next_idx + 1;
-                                if (elem_idx < stream.size() && (stream[elem_idx] == rule.virtual_token || rule.target_tokens.count(stream[elem_idx]) > 0)) {
-                                    // reduce the [i .. elem_idx] interval to a single virtual_token
-                                    spans[i].orig_end = spans[elem_idx].orig_end;
-
-                                    stream.erase(stream.begin() + i + 1, stream.begin() + elem_idx + 1);
-                                    spans.erase(spans.begin() + i + 1, spans.begin() + elem_idx + 1);
-
-                                    reduced = true;
-                                    break;
-                                }
-                            }
-                        } else {
-                            // continuous repetition without delimiters
-                            if (next_idx < stream.size() && (stream[next_idx] == rule.virtual_token || rule.target_tokens.count(stream[next_idx]) > 0)) {
-                                spans[i].orig_end = spans[next_idx].orig_end;
-
-                                stream.erase(stream.begin() + i + 1, stream.begin() + next_idx + 1);
-                                spans.erase(spans.begin() + i + 1, spans.begin() + next_idx + 1);
-                                reduced = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (reduced) break;
+            // 4. Evaluate treat_as rules first
+            bool treat_as_applied = apply_treat_rules(stream, spans, unique_results);
+            if (true == treat_as_applied) {
+                reduced = true;
+                continue;  // Skip repeat_as completely when treat_as was executed
             }
+
+            // 5. Evaluate repeat_as rules (Mutual exclusion with treat_as)
+            reduced = apply_repeat_rules(stream, spans);
         }
 
         std::multimap<range_t, size_t> final_results;
         for (const auto& item : unique_results) {
             final_results.insert({item.first, item.second});
         }
+        if (apply_greedy_filter()) {
+            final_results = greedy_filter(final_results);
+        }
         return final_results;
     }
 
+    size_t get_pid_by_virtual_token(BT vtoken) const {
+        for (const auto& pair : _pattern_info_map) {
+            if ((true == pair.second.is_virtual) && (vtoken == pair.second.as_token)) {
+                return pair.second.pid;
+            }
+        }
+        return static_cast<size_t>(-1);
+    }
     size_t get_pattern_size(size_t index) const override {
         auto iter = _pattern_info_map.find(index);
         return (iter != _pattern_info_map.end()) ? iter->second.length : 0;
@@ -314,11 +391,105 @@ class t_aho_corasick_parser : public t_aho_corasick<BT, T, memberof_t> {
         _group_ids.clear();
         _token_to_groups.clear();
         _repeat_rules.clear();
+        _treat_rules.clear();
     }
 
    protected:
+    // Helper function for treat_as evaluation (< 50 lines, early return)
+    bool apply_treat_rules(std::vector<BT>& stream, std::vector<token_span_t>& spans, std::set<std::pair<range_t, size_t>>& unique_results) const {
+        if ((stream.empty()) || (_treat_rules.empty())) {
+            return false;
+        }
+
+        for (const auto& rule : _treat_rules) {
+            const auto& b_pat = rule.begin_pattern;
+            const auto& e_pat = rule.end_pattern;
+
+            if ((b_pat.empty()) || (e_pat.empty())) {
+                continue;
+            }
+
+            for (size_t i = 0; i + b_pat.size() <= stream.size(); ++i) {
+                if (false == std::equal(b_pat.begin(), b_pat.end(), stream.begin() + i)) {
+                    continue;
+                }
+
+                size_t search_start = i + b_pat.size();
+                size_t end_idx = stream.size();
+                bool found = false;
+
+                for (size_t j = search_start; j + e_pat.size() <= stream.size(); ++j) {
+                    if (true == std::equal(e_pat.begin(), e_pat.end(), stream.begin() + j)) {
+                        end_idx = j + e_pat.size() - 1;
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (true == found) {
+                    range_t reduced_range = {spans[i].orig_begin, spans[end_idx].orig_end};
+
+                    // treat_as 축소 결과를 unique_results에 등록
+                    // pid는 _pattern_info_map에서 해당 virtual_token을 가지는 pid를 찾거나 별도 매핑 사용
+                    size_t target_pid = get_pid_by_virtual_token(rule.virtual_token);
+                    if (static_cast<size_t>(-1) != target_pid) {
+                        unique_results.insert({reduced_range, target_pid});
+                    }
+
+                    spans[i].orig_end = spans[end_idx].orig_end;
+                    stream[i] = rule.virtual_token;
+
+                    stream.erase(stream.begin() + i + 1, stream.begin() + end_idx + 1);
+                    spans.erase(spans.begin() + i + 1, spans.begin() + end_idx + 1);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    // Helper function for repeat_as evaluation (< 50 lines, early return)
+    bool apply_repeat_rules(std::vector<BT>& stream, std::vector<token_span_t>& spans) const {
+        if ((stream.empty()) || (_repeat_rules.empty())) {
+            return false;
+        }
+
+        for (const auto& rule : _repeat_rules) {
+            for (size_t i = 0; i < stream.size(); ++i) {
+                if (rule.target_tokens.count(stream[i]) > 0) {
+                    stream[i] = rule.virtual_token;
+                    return true;
+                }
+
+                if (stream[i] == rule.virtual_token) {
+                    size_t next_idx = i + 1;
+                    if (0 != rule.delimiter_token) {
+                        if ((next_idx < stream.size()) && (stream[next_idx] == rule.delimiter_token)) {
+                            size_t elem_idx = next_idx + 1;
+                            if ((elem_idx < stream.size()) && ((stream[elem_idx] == rule.virtual_token) || (rule.target_tokens.count(stream[elem_idx]) > 0))) {
+                                spans[i].orig_end = spans[elem_idx].orig_end;
+                                stream.erase(stream.begin() + i + 1, stream.begin() + elem_idx + 1);
+                                spans.erase(spans.begin() + i + 1, spans.begin() + elem_idx + 1);
+                                return true;
+                            }
+                        }
+                    } else {
+                        if ((next_idx < stream.size()) && ((stream[next_idx] == rule.virtual_token) || (rule.target_tokens.count(stream[next_idx]) > 0))) {
+                            spans[i].orig_end = spans[next_idx].orig_end;
+                            stream.erase(stream.begin() + i + 1, stream.begin() + next_idx + 1);
+                            spans.erase(spans.begin() + i + 1, spans.begin() + next_idx + 1);
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     void doinsert_as(const T* pattern, size_t size, BT virtual_token, bool is_virtual) {
-        if (nullptr == pattern || size == 0) return;
+        if ((nullptr == pattern) || (0 == size)) {
+            return;
+        }
 
         trienode* current = _root;
         std::vector<BT> pat;
@@ -347,7 +518,7 @@ class t_aho_corasick_parser : public t_aho_corasick<BT, T, memberof_t> {
         size_t index = _patterns.size();
         current->output.insert(index);
 
-        pattern_info info;
+        pattern_info_t info;
         info.pid = index;
         info.length = size;
         info.as_token = virtual_token;
@@ -405,6 +576,52 @@ class t_aho_corasick_parser : public t_aho_corasick<BT, T, memberof_t> {
         }
     }
 
+    void dosearch_bt(const BT* stream, size_t size, std::map<size_t, std::set<size_t>>& result) const {
+        if ((nullptr == stream) || (0 == size)) return;
+
+        auto find_next = [this](trienode* node, const BT& token) -> trienode* {
+            auto exactmatch_iter = node->children.find(token);
+            if (node->children.end() != exactmatch_iter) {
+                return exactmatch_iter->second;
+            }
+
+            auto groupmatch_iter = _token_to_groups.find(token);
+            if (_token_to_groups.end() != groupmatch_iter) {
+                for (const BT& gid : groupmatch_iter->second) {
+                    auto git = node->group_children.find(gid);
+                    if (node->group_children.end() != git) {
+                        return git->second;
+                    }
+                }
+            }
+            return nullptr;
+        };
+
+        trienode* current = _root;
+        for (size_t i = 0; i < size; ++i) {
+            const BT& t = stream[i];
+
+            trienode* next_node = nullptr;
+            while (current != _root) {
+                next_node = find_next(current, t);
+                if (nullptr != next_node) {
+                    break;
+                }
+                current = current->failure;
+            }
+
+            if (nullptr == next_node) {
+                next_node = find_next(_root, t);
+            }
+
+            if (nullptr != next_node) {
+                current = next_node;
+                collect_results(current, i, result);
+            } else {
+                current = static_cast<trienode*>(_root);
+            }
+        }
+    }
     /**
      * @brief   search
      */
@@ -450,8 +667,9 @@ class t_aho_corasick_parser : public t_aho_corasick<BT, T, memberof_t> {
    protected:
     std::unordered_map<BT, std::unordered_set<BT>> _token_to_groups;  // group match
     std::unordered_set<BT> _group_ids;                                // group match
-    std::unordered_map<size_t, pattern_info> _pattern_info_map;       // sub-pattern match
-    std::vector<repeat_info> _repeat_rules;                           // repeat match
+    std::unordered_map<size_t, pattern_info_t> _pattern_info_map;     // sub-pattern match
+    std::vector<repeat_rule_t> _repeat_rules;                         // repeat match
+    std::vector<treat_rule_t> _treat_rules;
 };
 
 }  // namespace hotplace

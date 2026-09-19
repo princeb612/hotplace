@@ -12,7 +12,7 @@
  */
 
 #include <hotplace/sdk/base/nostd/atoi.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_all_except.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint_container.hpp>
@@ -36,7 +36,7 @@ namespace io {
 void asn1_publisher::prepare_constraints() {
     auto resource = asn1_resource::get_instance();
 
-    add_handler("Constraint", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("Constraint", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("Constraint", {"(", "ConstraintExpr", ")"})
 
         auto size = node->sizeof_rhs();
@@ -56,7 +56,7 @@ void asn1_publisher::prepare_constraints() {
 
         return errorcode_t::success;
     });
-    add_handler("ConstraintExpr", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("ConstraintExpr", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("ConstraintExpr", {"SubtypeElementSet"})
         // production("ConstraintExpr", {"ALL EXCEPT", "SubtypeElementSet"})
         // production("ConstraintExpr", {"ALL", "EXCEPT", "SubtypeElementSet"})
@@ -95,7 +95,7 @@ void asn1_publisher::prepare_constraints() {
 
         return errorcode_t::success;
     });
-    add_handler("SubtypeElementSet", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("SubtypeElementSet", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("SubtypeElementSet", {"SubtypeElementSet", "|", "SubtypeElement"})
         // production("SubtypeElementSet", {"SubtypeElementSet", ",", "SubtypeElement"})
         // production("SubtypeElementSet", {"SubtypeElementSet", "UNION", "SubtypeElement"})
@@ -160,7 +160,7 @@ void asn1_publisher::prepare_constraints() {
 
         return errorcode_t::success;
     });
-    add_handler("SubtypeElement", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("SubtypeElement", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("SubtypeElement", {"SubtypeElement", "^", "PrimaryElement"})
         // production("SubtypeElement", {"SubtypeElement", "INTERSECTION", "PrimaryElement"})
         // production("SubtypeElement", {"PrimaryElement"})
@@ -201,7 +201,7 @@ void asn1_publisher::prepare_constraints() {
 
         return errorcode_t::success;
     });
-    add_handler("PrimaryElement", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("PrimaryElement", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("PrimaryElement", {"ValueElement"})
         // production("PrimaryElement", {"ValueElement", "..", "ValueElement"})             // [from, to]
         // production("PrimaryElement", {"ValueElement", "..", "<", "ValueElement"})        // [from, to)
@@ -313,7 +313,7 @@ void asn1_publisher::prepare_constraints() {
 
         return errorcode_t::success;
     });
-    add_handler("SizeConstraint", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("SizeConstraint", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("SizeConstraint", {"SIZE", "Constraint"})
 
         auto size = node->sizeof_rhs();
@@ -337,7 +337,7 @@ void asn1_publisher::prepare_constraints() {
 
         return errorcode_t::success;
     });
-    add_handler("ValueElement", [resource](parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("ValueElement", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("ValueElement", {symid})
         // production("ValueElement", {symuser})
         // production("ValueElement", {symqs})

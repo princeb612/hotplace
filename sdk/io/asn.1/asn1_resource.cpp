@@ -12,7 +12,7 @@
  */
 
 #include <hotplace/sdk/base/string/string.hpp>  // format
-#include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 #include <hotplace/sdk/io/parser/types.hpp>
 
 namespace hotplace {
@@ -103,6 +103,16 @@ const struct asn1_entity_resource_t resource_asn1_entities[] = {
     {asn1_entity_syntax, "MIN", asn1_perm_none, token_min},
     {asn1_entity_syntax, "MAX", asn1_perm_none, token_max},
     {asn1_entity_syntax, "..", asn1_perm_none, token_fromto},
+    {asn1_entity_syntax, "DEFINITIONS", asn1_perm_none, token_definitions},
+    {asn1_entity_syntax, "AUTOMATIC", asn1_perm_none, token_automatic},
+    {asn1_entity_syntax, "BEGIN", asn1_perm_none, token_begin},
+    {asn1_entity_syntax, "END", asn1_perm_none, token_end},
+    {asn1_entity_syntax, "TAGS", asn1_perm_none, token_tags},
+    {asn1_entity_syntax, "EXPORTS", asn1_perm_none, token_exports},
+    {asn1_entity_syntax, "IMPORTS", asn1_perm_none, token_imports},
+    {asn1_entity_syntax, "ALL", asn1_perm_none, token_all},
+    {asn1_entity_syntax, "EXTENSIBILITY", asn1_perm_none, token_extensibility},
+    {asn1_entity_syntax, "IMPLIED", asn1_perm_none, token_implied},
 };
 const size_t sizeof_resource_asn1_entities = RTL_NUMBER_OF(resource_asn1_entities);
 

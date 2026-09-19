@@ -11,8 +11,8 @@
  *
  */
 
+#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/basic/asn1_encode.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_builtin_type.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_container_of.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>

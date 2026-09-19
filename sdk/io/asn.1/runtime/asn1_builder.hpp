@@ -43,7 +43,7 @@ class asn1_builder {
 
     static asn1_object* build(asn1_object* object, std::function<void(asn1_object*)> f = nullptr);
 
-    static return_t build(const parse_tree* pt, asn1_object** object);
+    static return_t build(asn1_runtime* runtime, const parse_tree* pt, asn1_object** object);
 };
 
 }  // namespace io

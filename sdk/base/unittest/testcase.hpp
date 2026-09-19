@@ -158,12 +158,12 @@ class test_case {
     typedef std::list<unittest_item_t> unittest_list_t;
     typedef struct _test_stat_t {
         uint32 _count_success;
+        uint32 _count_expect_failure;
         uint32 _count_fail;
         uint32 _count_not_supported;
         uint32 _count_low_security;
         uint32 _count_trivial;
-        uint32 _count_expect_failure;
-        _test_stat_t() : _count_success(0), _count_fail(0), _count_not_supported(0), _count_low_security(0), _count_trivial(0), _count_expect_failure(0) {}
+        _test_stat_t() : _count_success(0), _count_expect_failure(0), _count_fail(0), _count_not_supported(0), _count_low_security(0), _count_trivial(0) {}
     } test_stat_t;
     typedef struct _test_status_t {
         unittest_list_t _test_list;

@@ -13,6 +13,7 @@
 #define __HOTPLACE_SDK_BASE_UNITTEST_TYPES__
 
 #include <hotplace/sdk/base/basic/types.hpp>
+#include <string>
 
 namespace hotplace {
 
@@ -40,6 +41,10 @@ class t_stream_binder {
         if (rvalue) {
             _stream.printf("%s", rvalue);
         }
+        return *this;
+    }
+    t_stream_binder<STREAM_T, BINDER>& operator<<(const std::string& rvalue) {
+        _stream << rvalue;
         return *this;
     }
     t_stream_binder<STREAM_T, BINDER>& operator<<(int rvalue) {

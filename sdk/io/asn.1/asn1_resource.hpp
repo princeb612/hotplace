@@ -14,7 +14,11 @@
 #define __HOTPLACE_SDK_IO_ASN1_BASIC_ASN1RESOURCE__
 
 #include <hotplace/sdk/base/system/critical_section.hpp>
-#include <hotplace/sdk/io/asn.1/basic/types.hpp>
+#include <hotplace/sdk/io/asn.1/types.hpp>
+#include <hotplace/sdk/io/parser/types.hpp>
+#include <map>
+#include <set>
+#include <vector>
 
 namespace hotplace {
 namespace io {
@@ -72,6 +76,11 @@ class asn1_resource {
     std::map<int, std::string> _mode_id;
     std::map<std::string, int> _mode_rid;
 };
+
+extern const std::vector<parser_production> asn1_productions;
+extern const std::set<std::string> asn1_terminals;
+extern const std::map<std::pair<uint32, std::string>, parser_action> asn1_action_table;
+extern const std::map<std::pair<uint32, std::string>, uint32> asn1_goto_table;
 
 }  // namespace io
 }  // namespace hotplace

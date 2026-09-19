@@ -38,6 +38,7 @@ class error_advisor {
 
     error_category_t categoryof(return_t code) const;
     const error_category_hint* hintof(return_t code) const;
+    const error_category_hint* hintof(error_category_t category) const;
 
    protected:
     error_advisor();

@@ -54,5 +54,11 @@ bool cfg_grammar::is_terminal(const std::string& sym) const { return _terminals.
 
 bool cfg_grammar::is_non_terminal(const std::string& sym) const { return _non_terminals.count(sym) > 0; }
 
+void cfg_grammar::clear() {
+    _productions.clear();
+    _terminals.clear();
+    _non_terminals.clear();
+}
+
 }  // namespace io
 }  // namespace hotplace

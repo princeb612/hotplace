@@ -79,7 +79,7 @@
 
 /* pattern */
 #include <hotplace/sdk/base/pattern/aho_corasick.hpp>
-#include <hotplace/sdk/base/pattern/aho_corasick_parser.hpp>
+#include <hotplace/sdk/base/pattern/aho_corasick_reducer.hpp>
 #include <hotplace/sdk/base/pattern/aho_corasick_wildcard.hpp>
 #include <hotplace/sdk/base/pattern/kmp.hpp>
 #include <hotplace/sdk/base/pattern/pattern.hpp>

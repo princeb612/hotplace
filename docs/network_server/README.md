@@ -717,44 +717,45 @@ protocol dispatch
 These two cases explain why `network_stream` must retain state across individual I/O events.
 
 
-### Network Session as the Processing Unit
+### I/O Multiplexing to Protocol Processing: One Session Abstraction
 
-The server's producer/consumer boundary is organized around `network_session`, not around individual read buffers.
+The common processing unit across the I/O and protocol layers is `network_session`, rather than an individual socket read or protocol message.
 
 ```text
-I/O event
-   │
-   ▼
-network_server
-   │
-   ▼
-network_session::produce()
-   │
-   ├── stream socket
-   │      └── TLS/plain read
-   │
-   └── datagram socket
-          └── UDP/DTLS receive
-   │
-   ▼
+OS / transport
+      ↓
+socket + multiplexer
+      ↓
+network_session
+      ├── accept path → TLS accept
+      └── event path  → event_queue
+      ↓
 network_stream
-   │
-   ▼
-event_queue
-   │
-   ▼
-network_session::consume()
-   │
-   ▼
-request stream
-   │
-   ▼
-protocol interpretation
+      ↓
+network_protocol_group
+      ↓
+network_protocol
+      ↓
+application callback
 ```
 
-The queue therefore schedules a session that has work to process. The received bytes remain associated with that session's stream.
+The accept queue and the session event queue therefore represent different lifecycle boundaries:
 
-### Raw Stream and Composed Request
+```text
+accepted socket
+      ↓
+accept_queue
+      ↓
+TLS accept / session establishment
+      ↓
+network_session
+      ↓
+event_queue
+      ↓
+protocol processing
+```
+
+#### Raw Stream and Composed Request
 
 `network_session` keeps two `network_stream` objects with different roles:
 
@@ -764,29 +765,25 @@ network_session
  └── _request  composed/processed request stream
 ```
 
-`produce()` places newly received data into `_stream`. `consume()` then reads `_stream` into `_request` through `network_stream::read(protocol_group, ...)` and returns the resulting `network_stream_data` chain.
-
-This separates **arrival** from **protocol consumption**:
+`produce()` places newly received data into `_stream`. `consume()` reads `_stream` through the protocol-aware stream path and produces the data that reaches the callback.
 
 ```text
 socket read
     ↓
 _stream
     ↓
-network_stream::read()
+network_stream::read(protocol_group, ...)
     ↓
 _request
-    ↓
-network_stream::consume()
     ↓
 callback
 ```
 
-The distinction is important because transport reads do not necessarily correspond to protocol messages.
+This separates **arrival** from **protocol consumption**. A transport read is therefore not assumed to be an application message.
 
-### Event Queue Schedules Sessions
+#### Event Queue Schedules Sessions
 
-`network_server` owns an `event_queue` based on `t_mlfq<network_session>`. `network_session::produce()` pushes the session when new stream data is available, using the session priority.
+`network_server` owns an `event_queue` based on `t_mlfq<network_session>`. `network_session::produce()` schedules the session when new stream data is available, using the session priority.
 
 ```text
 new input
@@ -795,60 +792,18 @@ session->produce(...)
    ↓
 stream receives data
    ↓
-event_queue.push(session priority, session)
+event_queue.push(session)
    ↓
 consumer
-   ↓
-event_queue.pop(...)
    ↓
 session->consume(...)
 ```
 
-The queue is consequently a **work scheduler**, while `network_stream` is the **data accumulator**.
+The queue is consequently a **work scheduler**, while `network_stream` remains the **data accumulator**.
 
-The session is reference-counted while crossing this producer/consumer boundary. The consumer releases the session after its queued work is consumed.
+#### From Transport Input to Protocol Callback
 
-### Stream Accumulation Is the Framing Boundary
-
-`network_stream::produce()` stores each received buffer as a `network_stream_data` object. `network_stream::write()` can either transfer the queued data directly or invoke protocol-aware `do_writep()`.
-
-Protocol-aware processing accumulates queued buffers into a `basic_stream`, then asks `network_protocol_group::is_kind_of()` whether the accumulated bytes identify a protocol and whether more data is required.
-
-```text
-network_stream_data
-       │
-       ▼
-  basic_stream
-       │
-       ▼
-protocol_group::is_kind_of()
-       │
-       ├── more_data ──→ accumulate more input
-       │
-       └── success
-              │
-              ▼
-      network_protocol::read_stream()
-              │
-              ▼
-        protocol_state
-              │
-       ┌──────┼─────────┐
-       ▼      ▼         ▼
-   complete  error    more work
-       │
-       ▼
- message_size
-       │
-       ▼
- remaining bytes stay queued
-```
-
-A single socket read may therefore produce only part of a protocol unit, or several protocol units. The stream layer preserves this distinction instead of assuming a one-read/one-message relationship.
-
-### From Transport Input to Protocol Callback
-
-After `network_session::consume()` has processed the stream, the consumer receives a chain of `network_stream_data`. Each resulting buffer is dispatched through the server callback with the session, socket information, data pointer, size, and address.
+The resulting path is:
 
 ```text
 transport input
@@ -864,11 +819,11 @@ network_stream_data
 network_server callback
 ```
 
-This makes the callback boundary different from the socket-read boundary: the callback sees data after the stream/protocol processing stage.
+The callback boundary is therefore different from the socket-read boundary: data reaches the application after stream and protocol processing.
 
-### Relationship to TLS and Protocol Framing
+#### Relation to TLS and Protocol Framing
 
-The session pipeline provides the missing middle layer between the earlier TLS accept model and protocol framing model:
+The session abstraction connects the earlier TLS-accept boundary to the protocol-framing boundary:
 
 ```text
 accept / TLS accept
@@ -877,7 +832,7 @@ network_session
         ↓
 producer
         ↓
-transport/security read
+transport / security read
         ↓
 network_stream
         ↓
@@ -885,62 +840,38 @@ event_queue
         ↓
 consumer
         ↓
-request stream
+protocol detection / framing
         ↓
-protocol framing
-        ↓
-HTTP / TLS / other protocol handling
-        ↓
-callback
+application callback
 ```
 
-For stream transports, TLS is consumed before application protocol framing when the session uses a TLS-capable server socket. For datagram transports, the corresponding path preserves the datagram address while feeding the stream abstraction.
+The event machinery does not need to know protocol message boundaries. Transport/security handling, stream accumulation, protocol interpretation, and application dispatch remain separate responsibilities.
 
-The resulting architecture can be understood as three separate responsibilities:
+### Protocol Detection and Dispatch Boundary
 
-```text
-I/O scheduling       data accumulation       protocol interpretation
-─────────────        ────────────────        ───────────────────────
-multiplexer          network_stream          network_protocol_group
-producer             network_session         network_protocol
-event_queue          request stream           callback
-```
-
-The separation allows the same session/event machinery to support different transport and protocol combinations without making the event queue itself aware of protocol message boundaries.
-
-### Protocol Group as Detection and Dispatch Boundary
-
-`network_stream` does not need to know the concrete application protocol in advance. The protocol group provides the detection boundary between accumulated bytes and a concrete `network_protocol`.
+`network_protocol_group` is the boundary between accumulated bytes and a concrete `network_protocol`.
 
 ```text
 network_stream
-      │
-      ▼
- accumulated bytes
-      │
-      ▼
+      ↓
+accumulated bytes
+      ↓
 network_protocol_group::is_kind_of()
       │
       ├── more data
-      │
       ├── matched protocol
-      │
       └── invalid / no match
-      │
-      ▼
+      ↓
 network_protocol
-      │
-      ▼
+      ↓
 read_stream()
 ```
 
-The group therefore has two related responsibilities: determine whether the available bytes are sufficient to identify a protocol, and select the protocol object that should consume the stream.
+The group determines whether the available input is sufficient to identify a protocol and selects the protocol object that can consume it. This keeps protocol recognition out of the generic session and queue machinery.
 
-This keeps protocol recognition out of the generic session and queue machinery.
+#### Detection Is Incremental
 
-### Detection Is Incremental
-
-Protocol detection is performed against the bytes currently available in the stream. A protocol recognizer can report that more data is required before a decision can be made.
+Protocol detection operates on the bytes currently accumulated in the stream. A recognizer may require more input before a decision can be made.
 
 ```text
 read event
@@ -950,18 +881,14 @@ network_stream
 current accumulated bytes
    ↓
 is_kind_of()
-   ├── more_data ──→ keep accumulating
-   │
-   ├── matched ────→ protocol::read_stream()
-   │
-   └── invalid ────→ error / discard path
+   ├── more_data → keep accumulating
+   ├── matched   → protocol::read_stream()
+   └── invalid   → error / discard path
 ```
 
-This is important for TCP and TLS because a transport read boundary is not a protocol boundary. The first read may contain only a prefix of a recognizable message.
+This is especially important for stream transports, where a single read may contain only a prefix of a recognizable protocol unit.
 
-The same abstraction also supports protocol groups containing multiple candidate protocol handlers: recognition happens before the selected protocol's stream reader consumes the data.
-
-### Detection and Framing Are Separate Decisions
+#### Detection and Framing Are Separate Decisions
 
 Protocol detection answers:
 
@@ -971,29 +898,23 @@ Protocol framing answers:
 
 > How many bytes form the next complete unit of that protocol?
 
-The stream pipeline consequently has two stages:
-
 ```text
 bytes
-  │
-  ▼
+  ↓
 protocol detection
-  │
-  ▼
+  ↓
 concrete protocol
-  │
-  ▼
+  ↓
 protocol framing / read_stream
-  │
-  ▼
+  ↓
 message boundary
 ```
 
-This distinction prevents `network_stream` from becoming a collection of protocol-specific parsers. It owns accumulation and the handoff boundary; the concrete protocol owns interpretation of its own framing.
+The distinction prevents `network_stream` from becoming a collection of protocol-specific parsers. The stream layer accumulates data and provides the handoff boundary; the concrete protocol interprets its own framing.
 
-### Relation to the Layered Framing Model
+#### Relation to the Layered Framing Model
 
-The detection boundary sits between generic transport/session handling and protocol-specific framing:
+The detection boundary sits between generic session handling and protocol-specific framing:
 
 ```text
 TCP / TLS / UDP input
@@ -1005,22 +926,18 @@ network_stream
 protocol_group
         │
         ├── detect
-        │
-        ▼
+        ↓
 concrete protocol
         │
         ├── HTTP/1.x
         ├── HTTP/2
         ├── TLS
         └── other registered protocols
-        │
-        ▼
+        ↓
 protocol framing
 ```
 
-For QUIC, packet parsing is a more explicit transport/protocol boundary because QUIC packets already carry their own packet structure. The same conceptual distinction remains useful: identify the protocol context first, then let the concrete reader interpret its framing.
-
-The resulting architecture is therefore not simply a byte stream parser. It is a staged interpretation pipeline:
+The overall processing model is therefore:
 
 ```text
 transport delivery
@@ -1035,6 +952,81 @@ protocol framing
       ↓
 application/protocol message
 ```
+
+## Flow
+
+### TCP
+
+```text
+multiplexer
+    ↓
+read event
+    ↓
+network_server
+    ↓
+network_session::produce()
+    ↓
+plain/TLS read
+    ↓
+network_stream
+    ↓
+event queue
+    ↓
+network_session::consume()
+    ↓
+protocol group
+    ↓
+application
+```
+
+### UDP / DTLS
+
+```text
+UDP event
+    ↓
+session lookup / creation
+    ↓
+plain/DTLS datagram processing
+    ↓
+protocol processing
+    ↓
+application
+```
+
+### Multiple protocol messages in one read
+
+```text
+one socket read
+       │
+       ▼
+┌─────────────────────────────┐
+│ message A │ message B │ ... │
+└─────────────────────────────┘
+       │
+       ├── consume A
+       │
+       └── preserve B ...
+```
+
+### Partial message
+
+```text
+read #1
+   ↓
+partial message
+   ↓
+network_stream retains it
+   ↓
+read #2
+   ↓
+complete message
+   ↓
+protocol dispatch
+```
+
+These two cases explain why `network_stream` must retain state across individual I/O events.
+
+
 
 ## Study & Verification
 
@@ -1118,102 +1110,3 @@ The important current boundary is therefore clear: the common server/session arc
 ```
 
 QUIC is related to the transport/security side but should remain a bounded adjacent topic until its integration with the common server/session model is complete.
-
-## Network Server Conceptual Model
-
-The network-server path can be understood as a sequence of responsibility boundaries rather than as a sequence of class calls.
-
-```text
-                         NETWORK SERVER
-                              │
-                    ┌─────────┴─────────┐
-                    │                   │
-                 Accept              Existing session
-                    │                   │
-                    └─────────┬─────────┘
-                              ▼
-                       network_session
-                              │
-                       scheduling/event
-                              ▼
-                       network_stream
-                              │
-                       byte accumulation
-                              ▼
-                  network_protocol_group
-                              │
-                     protocol detection
-                              ▼
-                       network_protocol
-                              │
-                     protocol framing
-                              ▼
-                        message_size
-                              │
-                     generic consumption
-                              ▼
-                  concrete protocol/session
-                              │
-                    protocol state/meaning
-                              ▼
-                       application dispatch
-```
-
-The layers can be summarized by the question each one answers:
-
-| Boundary | Question |
-|---|---|
-| Accept | Who is connecting? |
-| Session | Which connection/session is being serviced? |
-| Event queue | When should that session be processed? |
-| Stream | Which bytes have arrived and remain unconsumed? |
-| Protocol group | Which protocol can own these bytes? |
-| Protocol | Where is the next complete protocol unit? |
-| Protocol state | What does that unit mean in the protocol state machine? |
-| Application | What should the application do with the resulting meaning? |
-
-This model also clarifies several boundaries that otherwise look similar.
-
-**Detection is not framing.** Detection selects a protocol from accumulated bytes. Framing determines the next consumable unit after a protocol has been selected.
-
-**Framing is not interpretation.** `message_size` identifies the boundary to consume; protocol-specific state gives the consumed unit its meaning.
-
-**A transport read is not a protocol message.** TCP may fragment one protocol unit across reads or combine several protocol units in one read. The stream layer therefore has to preserve accumulation and remainder independently of transport read boundaries.
-
-**A protocol unit is not necessarily an application message.** HTTP/2 demonstrates this directly: a complete frame can update connection/stream state without yet representing a complete application request.
-
-The resulting conceptual contract is:
-
-```text
-transport
-   │
-   │ delivery
-   ▼
-session
-   │
-   │ scheduling
-   ▼
-stream
-   │
-   │ accumulated bytes
-   ▼
-protocol group
-   │
-   │ ownership
-   ▼
-protocol
-   │
-   │ boundary
-   ▼
-stream consumption
-   │
-   │ complete protocol unit
-   ▼
-protocol state
-   │
-   │ meaning
-   ▼
-application
-```
-
-This is the stable architectural view of the current network-server implementation: **lower layers manage delivery and boundaries; higher layers recover protocol and application meaning.**

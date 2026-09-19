@@ -15,6 +15,7 @@
 
 #include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
+#include <hotplace/sdk/io/parser/lalr_parser.hpp>
 #include <hotplace/sdk/io/parser/lexical_analyzer.hpp>
 #include <set>
 #include <unordered_map>
@@ -40,10 +41,7 @@ class asn1_runtime {
     template <typename F>  // void(asn1_object*)
     asn1_runtime& add(asn1_object* item, F&& f = nullptr) {
         if (item) {
-            if (f) {
-                std::forward<F>(f)(item);
-                ;
-            }
+            if (f) std::forward<F>(f)(item);
             add(item);
         }
         return *this;
@@ -54,6 +52,9 @@ class asn1_runtime {
     return_t set(asn1_object* item, asn1_value* value);
     asn1_object* get(const std::string& name) const;
     asn1_value* get(asn1_object* item) const;
+
+    lexical_analyzer& get_lexer();
+    lalr_parser& get_parser();
 
     /**
      * @brief   weakly-typed (schema-less)
@@ -88,6 +89,12 @@ class asn1_runtime {
      *          runtime.read("type3", stream, size, pos);
      */
     return_t read(const std::string& name, const byte_t* stream, size_t size, size_t& pos);
+    /**
+     * @brief parse
+     * @param const char* notation [in]
+     * @param parse_tree* pt [inopt]
+     */
+    return_t parse(const char* notation, parse_tree* pt = nullptr);
 
     void for_each(std::function<void(asn1_object*)> f) const;
     void for_each(std::function<void(asn1_value*)> f) const;
@@ -139,6 +146,7 @@ class asn1_runtime {
     void release();
 
    protected:
+    void load();
     return_t postread(const byte_t* stream, size_t size);
 
    private:
@@ -151,7 +159,11 @@ class asn1_runtime {
     std::map<asn1_object*, std::string> _schema;  // strongly-typed
     std::string _name;
     uint8 _automatic;
+
+    bool _parser_ready;
     lexical_context _lexcontext;
+    lexical_analyzer _lex;
+    lalr_parser _lalr;
 };
 
 }  // namespace io

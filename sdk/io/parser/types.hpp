@@ -16,6 +16,23 @@
 namespace hotplace {
 namespace io {
 
+/**
+ * runtime
+ *   auto symid = token_resource::get_instance()->nameof(token_identifier);
+ *
+ * compile-time
+ *   SYMBOL_FP       | token_floatingpoint | "fp"
+ *   SYMBOL_ID       | token_identifier    | "id"
+ *   SYMBOL_NUM      | token_number        | "num"
+ *   SYMBOL_QSTR     | token_quot_string   | "quot_string"
+ *   SYMBOL_USERTYPE | token_usertype      | "usertype"
+ */
+#define SYMBOL_FP "fp"
+#define SYMBOL_ID "id"
+#define SYMBOL_NUM "num"
+#define SYMBOL_QSTR "quot_string"
+#define SYMBOL_USERTYPE "usertype"
+
 enum token_t : uint32 {
     token_unknown = 0,
     token_alpha = 1,                // [a-zA-Z]
@@ -40,6 +57,7 @@ enum token_t : uint32 {
     token_equal = 19,               // =
     token_plus = 20,                // +
     token_minus = 21,               // -
+    token_dash = token_minus,       //
     token_multi = 22,               // *
     token_divide = 23,              // /
     token_colon = 24,               // :
@@ -134,6 +152,17 @@ enum token_t : uint32 {
     token_default,   // DEFAULT
     token_optional,  // OPTIONAL
 
+    token_definitions,
+    token_automatic,
+    token_begin,
+    token_end,
+    token_tags,
+    token_exports,
+    token_imports,
+    token_all,
+    token_extensibility,
+    token_implied,
+
     token_userdefine = 0x2000,
 
     token_eof = 0xffffffff,
@@ -148,6 +177,36 @@ enum class parser_action_t {
     reduce,
     accept,
     error,  // conflict
+};
+
+struct parser_action {
+    parser_action_t type;
+    uint32 target;  // next state on shift, rule id on reduce
+
+    parser_action(parser_action_t a = parser_action_t::error, uint32 t = -1) : type(a), target(t) {}
+};
+
+struct parser_production {
+    uint32 id;
+    std::string lhs;
+    std::vector<std::string> rhs;
+};
+
+struct parser_token {
+    uint32 type;        // symbol, see token_t
+    std::string value;  // lexeme
+
+    parser_token() : type(0), value() {}
+    parser_token(uint32 t) : type(t), value() {}
+    parser_token(uint32 t, const std::string& v) : type(t), value(v) {}
+
+    bool operator<(const parser_token& other) const {
+        if (type != other.type) return type < other.type;
+        return value < other.value;
+    }
+    bool operator==(const parser_token& other) const { return (type == other.type) && (value == other.value); }
+    bool operator!=(const parser_token& other) const { return !(*this == other); }
+    bool operator!=(int null_val) const { return static_cast<int>(type) != null_val; }
 };
 
 struct parse_treenode;

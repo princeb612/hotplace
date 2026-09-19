@@ -1,0 +1,149 @@
+testvector:
+  - example: "aho corasick reduction (treat_as)"
+    schema: PARSER
+    items:
+      - item: "simple"
+        asn1: |
+          EmployeeModule DEFINITIONS ::= BEGIN
+          END
+        expect:
+          header_clause: [[0, 3]]
+          exports_clause: []
+          imports_clause: []
+      - item: "Module with OID and EXPORTS/IMPORTS"
+        asn1: |
+          CryptographicModule { iso(1) org(3) } DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+            EXPORTS Container{}, CustomErrorCode;
+            IMPORTS TypeA FROM BaseModule;
+          END
+        expect:
+          header_clause: [[0, 15]]
+          exports_clause: [[16, 22]]
+          imports_clause: [[23, 27]]
+      - item: "EXPORTS ALL Clause"
+        asn1: |
+          ExportAllModule DEFINITIONS ::= BEGIN
+              EXPORTS ALL;
+          END
+        expect:
+            header_clause: [[0, 3]]
+            exports_clause: [[4, 6]]
+            imports_clause: []
+      - item: "example"
+        asn1: |
+          -- https://www.oss.com/asn1/resources/asn1-made-simple/example.html
+          MyShopPurchaseOrders DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+          PurchaseOrder ::= SEQUENCE {
+              dateOfOrder DATE,
+              customer    CustomerInfo,
+              items       ListOfItems
+          }
+
+          CustomerInfo ::= SEQUENCE {
+              companyName    VisibleString (SIZE (3..50)),
+              billingAddress Address,
+              contactPhone   NumericString (SIZE (7..12))
+          }
+
+          Address ::= SEQUENCE {
+              street  VisibleString (SIZE (5..50)) OPTIONAL,
+              city    VisibleString (SIZE (2..30)),
+              state   VisibleString (SIZE(2) ^ FROM ("A".."Z")),
+              zipCode NumericString (SIZE(5 | 9))
+          }
+
+          ListOfItems ::= SEQUENCE (SIZE(1..100)) OF Item
+
+          Item ::= SEQUENCE {
+              itemCode        INTEGER (1..99999),
+              color           VisibleString ("Black" | "Blue" | "Brown"),
+              power           INTEGER (110 | 220),
+              deliveryTime    INTEGER (8..12 | 14..19),
+              quantity        INTEGER (1..1000),
+              unitPrice       REAL (1.00 .. 9999.00),
+              isTaxable       BOOLEAN
+          }
+
+          END
+        expect:
+          header_clause: [[0, 5]]
+          exports_clause: []
+          imports_clause: []
+      - item: "imports"
+        asn1: |
+          CryptographicModule { iso(1) identified-organization(3) dod(6) internet(1) security(5) mechanisms(5) }
+          DEFINITIONS AUTOMATIC TAGS ::=
+          BEGIN
+
+              EXPORTS
+                  Container{},
+                  CustomErrorCode;
+
+              Container {TypeParam} ::= SEQUENCE {
+                  header  INTEGER,
+                  data    TypeParam
+              }
+
+              CustomErrorCode ::= INTEGER (1000..9999)
+
+          END
+
+          ConsumerModule DEFINITIONS EXPLICIT TAGS EXTENSIBILITY IMPLIED ::=
+          BEGIN
+
+              IMPORTS
+                  Container{},
+                  CustomErrorCode
+              FROM CryptographicModule { iso(1) identified-organization(3) dod(6) internet(1) security(5) mechanisms(5) };
+
+              Payload ::= Container { OCTET STRING }
+
+          END
+        expect:
+          header_clause: [[0, 31], [61, 68]]
+          exports_clause: [[32, 38]]
+          imports_clause: [[69, 103]]
+      - item: "imports"
+        asn1: |
+          CommonDefinitions DEFINITIONS AUTOMATIC TAGS ::=
+          BEGIN
+              EXPORTS
+                  AlgorithmIdentifier,
+                  ProtocolVersion;
+
+              ProtocolVersion ::= INTEGER { v1(1), v2(2), v3(3) }
+              AlgorithmIdentifier ::= SEQUENCE { algorithm OBJECT IDENTIFIER, parameters ANY OPTIONAL }
+          END
+
+          SecureMessageModule DEFINITIONS AUTOMATIC TAGS ::=
+          BEGIN
+              IMPORTS
+                  AlgorithmIdentifier,
+                  ProtocolVersion
+              FROM CommonDefinitions;
+
+              SecurePayload ::= SEQUENCE { version ProtocolVersion, algo AlgorithmIdentifier, encrypted OCTET STRING }
+          END
+        expect:
+          header_clause: [[0, 5], [42, 47]]
+          exports_clause: [[6, 10]]
+          imports_clause: [[48, 54]]
+      - item: "parameterized"
+        asn1: |
+          GenericContainerModule DEFINITIONS AUTOMATIC TAGS ::=
+          BEGIN
+          
+              Envelope {TypeParameter} ::= SEQUENCE {
+                  version     INTEGER,
+                  messageId   OCTET STRING (SIZE(16)),
+                  payload     TypeParameter
+              }
+          
+              ActualMessage ::= Envelope { INTEGER }
+          
+          END
+        expect:
+          header_clause: [[0, 5]]
+          exports_clause: []
+          imports_clause: []

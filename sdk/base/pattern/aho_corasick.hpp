@@ -101,7 +101,7 @@ class t_aho_corasick : public t_aho_corasick_t<BT, T> {
      */
     struct trienode {
         std::unordered_map<BT, trienode*> children;        // exact match
-        std::unordered_map<BT, trienode*> group_children;  // group match - see t_aho_corasick_parser
+        std::unordered_map<BT, trienode*> group_children;  // group match - see t_aho_corasick_reducer
         trienode* failure;
         std::set<size_t> output;
         uint8 flag;  // single/any see t_aho_corasick_wildcard
@@ -124,8 +124,11 @@ class t_aho_corasick : public t_aho_corasick_t<BT, T> {
     };
 
    public:
-    t_aho_corasick(memberof_t memberof = memberof_t()) : t_aho_corasick_t<BT, T>(), _root(new trienode), _memberof(memberof) {}
+    t_aho_corasick(memberof_t memberof = memberof_t()) : t_aho_corasick_t<BT, T>(), _root(new trienode), _memberof(memberof), _greedy_filter(false) {}
     virtual ~t_aho_corasick() { dodestroy(); }
+
+    void set_greedy_filter(bool how) { _greedy_filter = how; }
+    bool apply_greedy_filter() const { return _greedy_filter; }
 
     /**
      * @brief   insert a pattern into the trie
@@ -195,6 +198,56 @@ class t_aho_corasick : public t_aho_corasick_t<BT, T> {
             pattern.clear();
         }
         return ret;
+    }
+
+    // Gemini: Standard greedy match filtering logic.
+    // Filters out overlapping lower-priority matches and resolves token ambiguity
+    // before feeding the reduced token stream into the LALR parser.
+    static std::multimap<range_t, size_t> greedy_filter(const std::multimap<range_t, size_t>& input) {
+        std::multimap<range_t, size_t> result;
+
+        std::vector<std::pair<range_t, size_t>> v = greedy_filter_v(input);
+        for (const auto& item : v) {
+            result.insert(item);
+        }
+
+        return result;
+    }
+
+    // Gemini: Greedy filtering for token reduction based on Aho-Corasick matches.
+    // Applies a greedy strategy to select the longest non-overlapping match
+    // or prioritize predefined virtual tokens to avoid unnecessary parser backtracking.
+    static std::vector<std::pair<range_t, size_t>> greedy_filter_v(const std::multimap<range_t, size_t>& input) {
+        std::vector<std::pair<range_t, size_t>> result;
+
+        if (false == input.empty()) {
+            // 1. convert to list and sort by:
+            //    primary: range.begin (ascending)
+            //    secondary: range.width() (descending - longest first)
+            std::vector<std::pair<range_t, size_t>> items(input.begin(), input.end());
+
+            std::sort(items.begin(), items.end(), [](const std::pair<range_t, size_t>& a, const std::pair<range_t, size_t>& b) -> bool {
+                if (a.first.begin != b.first.begin) {
+                    return a.first.begin < b.first.begin;
+                }
+                return a.first.width() > b.first.width();  // longest match priority
+            });
+
+            // 2. greedy filtering: skip matches covered by previously selected longest range
+            size_t last_end = 0;
+            bool isfirst = true;
+
+            for (const auto& item : items) {
+                const range_t& range = item.first;
+
+                if ((true == isfirst) || (range.begin > last_end)) {
+                    result.push_back(item);
+                    last_end = range.end;
+                    isfirst = false;
+                }
+            }
+        }
+        return result;
     }
 
    protected:
@@ -301,6 +354,9 @@ class t_aho_corasick : public t_aho_corasick_t<BT, T> {
                 result.insert({range, pid});
             }
         }
+        if (apply_greedy_filter()) {
+            result = greedy_filter(result);
+        }
     }
 
     virtual void dodestroy() { delete _root; }
@@ -309,6 +365,7 @@ class t_aho_corasick : public t_aho_corasick_t<BT, T> {
     trienode* _root;
     std::unordered_map<size_t, std::vector<BT>> _patterns;
     memberof_t _memberof;
+    bool _greedy_filter;
 };
 
 // @refer   Gemini

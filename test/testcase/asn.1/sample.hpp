@@ -16,7 +16,7 @@
 
 void dump_parse_tree(asn1_runtime* runtime, const parse_tree* pt);
 void parse_notation(asn1_runtime* runtime, const char* notation);
-void parse_reconst_notation(asn1_runtime* runtime, lexical_context& context, const char* notation, const char* expect = nullptr);
+void parse_reconst_notation(asn1_runtime* runtime, const char* notation, const char* expect = nullptr);
 
 void testcase_basic1();
 void testcase_basic2();
@@ -26,5 +26,6 @@ void testcase_parser();
 void testcase_testvector_parser();
 void testcase_basic3();
 void testcase_publish();
+void testcase_loader();
 
 #endif

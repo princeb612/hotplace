@@ -5,7 +5,7 @@
 #
 
 set (module asn.1)
-file (GLOB SOURCE_FILES *.cpp)
+file (GLOB SOURCE_FILES *.cpp runtime/*.cpp loader/*.cpp)
 file (GLOB HEADER_FILES *.hpp ${PROJECT_SOURCE_DIR}/*.hpp)
 
 file (GLOB DATA_FILES *.asn1 *.yml)

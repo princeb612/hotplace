@@ -393,6 +393,10 @@ error_category_t error_advisor::categoryof(return_t rc) const {
 
 const error_category_hint* error_advisor::hintof(return_t code) const {
     auto category = categoryof(code);
+    return hintof(category);
+}
+
+const error_category_hint* error_advisor::hintof(error_category_t category) const {
     auto iter = _error_category_map.find(category);
     return (_error_category_map.end() != iter) ? &iter->second : nullptr /* it doesn't reach here. */;
 }

@@ -40,7 +40,14 @@ std::string lexical_analyzer::nameof_token(uint32 token) {
     return id;
 }
 
-void lexical_analyzer::prepare() {
+lexical_analyzer& lexical_analyzer::clear() {
+    critical_section_guard guard(_lock);
+    _lextoken.reset();
+    _dictionary.reset();
+    return *this;
+}
+
+lexical_analyzer& lexical_analyzer::prepare() {
     if (0 == _load) {
         critical_section_guard guard(_lock);
         if (0 == _load) {
@@ -53,6 +60,7 @@ void lexical_analyzer::prepare() {
             _load = 1;
         }
     }
+    return *this;
 }
 
 // Gemini
@@ -160,10 +168,13 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
                     case token_assign:
                         lvalue = context.last_lextoken();
                         if (lvalue) {
-                            lvalue->set_type(token_lvalue);
-                            token.set_type(token_assign);
-                            if (handle_lvalue_usertype) {
-                                lvalues.insert(lvalue->get_index());
+                            // case token_identifier token_assign
+                            if (token_identifier == lvalue->get_tokenid() || token_usertype == lvalue->get_tokenid()) {
+                                lvalue->set_type(token_lvalue);
+                                token.set_type(token_assign);
+                                if (handle_lvalue_usertype) {
+                                    lvalues.insert(lvalue->get_index());
+                                }
                             }
                         }
                         break;
@@ -208,14 +219,26 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
             if (false == comments && false == quot) {
                 if (token_alpha == type) {
                     // alpha [alpha | number] +
+                    // ASN.1 style ... alpha-alpha (but alpha--alpha not allowd)
                     const char* cur = p + pos;
                     const char* end = p + size;
+                    const char* dash = nullptr;
                     while (cur < end) {
                         auto t = type_of(*cur);
-                        if (token_alpha == t || token_number == t)
+                        if (token_alpha == t || token_number == t) {
                             ++cur;
-                        else
+                            dash = nullptr;
+                        } else if (token_dash == t) {
+                            if (dash) {
+                                // second dot not allowed
+                                cur = dash;
+                                break;
+                            }
+                            dash = cur;
+                            ++cur;
+                        } else {
                             break;
+                        }
                     }
                     chunk_size = cur - (p + pos);
                 } else if (token_number == type) {
@@ -404,7 +427,30 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
         }
         context.add_context_lextoken(token, hook);
 
-        // a preprocessing step that reclassifies identifier tokens of the same spelling using the set of l-value identifiers found in the lexical pass
+        /**
+         * a preprocessing step that reclassifies identifier tokens of the same spelling using the set of l-value identifiers found in the lexical pass
+         *
+         *                 source
+         *                   │
+         *                   ▼
+         *              lexical pass
+         *                   │
+         *           ┌───────┴───────┐
+         *           │               │
+         *        tokens           lvalues
+         *                           │
+         *                           ▼
+         *                     rlookup names
+         *                           │
+         *                           ▼
+         *                   token_usertype
+         *                           │
+         *                           ▼
+         *                 token reclassification
+         *                           │
+         *                           ▼
+         *                         LALR
+         */
         if (handle_lvalue_usertype) {
             for (auto idx : lvalues) {
                 std::string ts;

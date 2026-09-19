@@ -34,19 +34,6 @@ namespace io {
  *  keyword : non-terminal set, terminal set, production set, start symbol
  */
 
-struct parser_action {
-    parser_action_t type;
-    uint32 target;  // next state on shift, rule id on reduce
-
-    parser_action(parser_action_t a = parser_action_t::error, uint32 t = -1) : type(a), target(t) {}
-};
-
-struct parser_production {
-    uint32 id;
-    std::string lhs;
-    std::vector<std::string> rhs;
-};
-
 struct LR0_item {
     uint32 production_id;
     size_t dot_pos;
@@ -70,12 +57,9 @@ struct LR1_item {
     }
 };
 
-struct parser_token {
-    uint32 type;        // symbol, see token_t
-    std::string value;  // lexeme
-};
-
 class cfg_grammar {
+    friend class lalr_parser;
+
    public:
     cfg_grammar();
     cfg_grammar(const cfg_grammar& other) = default;
@@ -93,6 +77,8 @@ class cfg_grammar {
 
     bool is_terminal(const std::string& sym) const;
     bool is_non_terminal(const std::string& sym) const;
+
+    void clear();
 
    private:
     std::vector<parser_production> _productions;

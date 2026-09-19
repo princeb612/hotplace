@@ -309,13 +309,16 @@ struct print_style_t {
     std::string prologue;
     std::string delimiter;
     std::string epilogue;
+    std::string pair_lbrace;
+    std::string pair_sep;
+    std::string pair_rbrace;
     size_t indent;
     size_t step;
 
     print_style_t(const std::string& p = "[", const std::string& d = ", ", const std::string& e = "]", size_t i = 0, size_t s = 0)
-        : prologue(p), delimiter(d), epilogue(e), indent(i), step(s) {}
+        : prologue(p), delimiter(d), epilogue(e), pair_lbrace("{"), pair_rbrace("}"), indent(i), step(s) {}
 
-    print_style_t(size_t i, size_t s = 0) : prologue("["), delimiter(", "), epilogue("]"), indent(i), step(s) {}
+    print_style_t(size_t i, size_t s = 0) : prologue("["), delimiter(", "), epilogue("]"), pair_lbrace("{"), pair_rbrace("}"), indent(i), step(s) {}
 
     print_style_t next(size_t default_step = 1) const {
         size_t next_step = (0 == step) ? default_step : step;
@@ -329,6 +332,26 @@ struct print_style_t {
     }
 
     size_t get_parent_indent() const { return (indent >= step) ? (indent - step) : 0; }
+
+    void set_element(const std::string& lhs, const std::string& sep, const std::string& rhs) {
+        pair_lbrace = lhs;
+        pair_sep = sep;
+        pair_rbrace = rhs;
+    }
+    void use_naked() {
+        use_naked_style();
+        use_naked_element();
+    }
+    void use_naked_style() {
+        prologue.clear();
+        delimiter.clear();
+        epilogue.clear();
+    }
+    void use_naked_element() {
+        pair_lbrace.clear();
+        pair_sep.clear();
+        pair_rbrace.clear();
+    }
 };
 
 /**
@@ -437,18 +460,18 @@ void print(const container_t& c, stream_type& s, functor_t f, const print_style_
                 if (style.indent > 0) {
                     s.fill(style.indent, ' ');
                 }
-                s << "{";
+                s << style.pair_lbrace;
                 f(iter, s);
-                s << "}";
+                s << style.pair_rbrace;
                 break;
             case seek_t::seek_move:
                 s << style.delimiter << endl_str;
                 if (style.indent > 0) {
                     s.fill(style.indent, ' ');
                 }
-                s << "{";
+                s << style.pair_lbrace;
                 f(iter, s);
-                s << "}";
+                s << style.pair_rbrace;
                 break;
             case seek_t::seek_end:
                 s << endl_str;
@@ -476,14 +499,14 @@ void print_pair(const container_t& c, stream_type& s, const print_style_t& style
                 if (style.indent > 0) {
                     s.fill(style.indent, ' ');
                 }
-                s << "{" << iter->first << "," << iter->second << "}";
+                s << style.pair_lbrace << iter->first << style.pair_sep << iter->second << style.pair_rbrace;
                 break;
             case seek_t::seek_move:
                 s << style.delimiter << endl_str;
                 if (style.indent > 0) {
                     s.fill(style.indent, ' ');
                 }
-                s << "{" << iter->first << "," << iter->second << "}";
+                s << style.pair_lbrace << iter->first << style.pair_sep << iter->second << style.pair_rbrace;
                 break;
             case seek_t::seek_end:
                 s << endl_str;
@@ -511,18 +534,18 @@ void print_pair(const container_t& c, stream_type& s, functor_t f, const print_s
                 if (style.indent > 0) {
                     s.fill(style.indent, ' ');
                 }
-                s << "{";
+                s << style.pair_lbrace;
                 f(iter, s);
-                s << "}";
+                s << style.pair_rbrace;
                 break;
             case seek_t::seek_move:
                 s << style.delimiter << endl_str;
                 if (style.indent > 0) {
                     s.fill(style.indent, ' ');
                 }
-                s << "{";
+                s << style.pair_lbrace;
                 f(iter, s);
-                s << "}";
+                s << style.pair_rbrace;
                 break;
             case seek_t::seek_end:
                 s << endl_str;

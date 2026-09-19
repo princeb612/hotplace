@@ -77,6 +77,25 @@ struct t_comparator_base {
     bool operator()(const T& lhs, const T& rhs) const { return comparator_t{}(lhs, rhs); }
 };
 
+// @refer   Gemini
+struct universal_pairhash {
+    template <typename T1, typename T2>
+    std::size_t operator()(const std::pair<T1, T2>& p) const {
+#if __cplusplus >= 201402L  // c++14
+        using P1 = std::decay_t<T1>;
+        using P2 = std::decay_t<T2>;
+#else
+        using P1 = typename std::decay<T1>::type;
+        using P2 = typename std::decay<T2>::type;
+#endif
+
+        auto h1 = std::hash<P1>{}(p.first);
+        auto h2 = std::hash<P2>{}(p.second);
+
+        return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
+    }
+};
+
 }  // namespace hotplace
 
 #endif

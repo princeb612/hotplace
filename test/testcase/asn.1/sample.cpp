@@ -70,15 +70,15 @@ void parse_notation(asn1_runtime* runtime, const char* notation) {
             __leave2;
         }
 
-        auto asn1p = asn1_parser::get_instance();
+        asn1_parser parser;
         parse_tree pt;
-        ret = asn1p->parse(runtime, notation, &pt);
+        ret = parser.parse(runtime, notation, &pt);
         dump_parse_tree(runtime, &pt);
     }
     __finally2 { _test_case.test(ret, __FUNCTION__, "parse : %s", notation); }
 }
 
-void parse_reconst_notation(asn1_runtime* runtime, lexical_context& context, const char* notation, const char* expect) {
+void parse_reconst_notation(asn1_runtime* runtime, const char* notation, const char* expect) {
     // asn1_publisher applied
     // - StatementSequence, StatementSequenceOf, StatementSet, StatementSetOf, StatementChoice, FieldList, Field, FieldOpt
     // - TypeSpec, TypeBase, ReferencedType, TaggedType, TagPrefix, EnumType, EnumList, EnumItem, SimpleType
@@ -87,17 +87,15 @@ void parse_reconst_notation(asn1_runtime* runtime, lexical_context& context, con
 
     if (nullptr == notation) return;
 
-    auto parser = asn1_parser::get_instance();
-
     // parse
     parse_tree pt;
-    parser->parse(runtime, context, notation, &pt);
+    runtime->parse(notation, &pt);
     dump_parse_tree(runtime, &pt);
 
     // reconstruction
     basic_stream bs;
     asn1_object* obj = nullptr;
-    asn1_builder::build(&pt, &obj);
+    asn1_builder::build(runtime, &pt, &obj);
     if (obj) {
         obj->publish(&bs);
         obj->release();
@@ -153,8 +151,9 @@ int main(int argc, char** argv) {
     testcase_testvector_der();
     testcase_parser();
     testcase_testvector_parser();
-    testcase_basic3();
     testcase_publish();
+    testcase_basic3();
+    testcase_loader();
 
     _logger->flush();
 

@@ -10,7 +10,7 @@
  * comments
  */
 
-#include "sample.hpp"
+#include <hotplace/test/testcase/asn.1/sample.hpp>
 
 /**
  * GPT review
@@ -103,9 +103,10 @@ void test_publish_babystep() {
 
     dump_parse_tree(nullptr, &pt);
 
+    asn1_runtime runtime;
     basic_stream bs;
     asn1_object* obj = nullptr;
-    asn1_builder::build(&pt, &obj);
+    asn1_builder::build(&runtime, &pt, &obj);
     if (obj) {
         obj->publish(&bs);
         obj->release();
@@ -182,11 +183,10 @@ void test_publish_basics() {
         {"SEQUENCE {name [0] IMPLICIT VisibleString}"},
     };
 
-    asn1_runtime runtime;     // automatic
-    lexical_context context;  // share usertype
+    asn1_runtime runtime;  // automatic, share lexical_context
 
     for (const auto& entry : table) {
-        parse_reconst_notation(&runtime, context, entry.notation);
+        parse_reconst_notation(&runtime, entry.notation);
     }
 }
 
@@ -251,7 +251,7 @@ void test_publish_constraints() {
     lexical_context context;  // share usertype
 
     for (const auto& entry : table) {
-        parse_reconst_notation(&runtime, context, entry.notation, entry.expect);
+        parse_reconst_notation(&runtime, entry.notation, entry.expect);
     }
 }
 

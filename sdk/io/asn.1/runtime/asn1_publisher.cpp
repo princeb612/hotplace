@@ -21,7 +21,7 @@ asn1_publisher::asn1_publisher() {}
 
 asn1_publisher::~asn1_publisher() {}
 
-return_t asn1_publisher::build(const parse_tree* pt, asn1_object** object) {
+return_t asn1_publisher::build(asn1_runtime* runtime, const parse_tree* pt, asn1_object** object) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == pt || nullptr == object) {
@@ -31,7 +31,7 @@ return_t asn1_publisher::build(const parse_tree* pt, asn1_object** object) {
 
         *object = nullptr;
 
-        prepare();
+        prepare_basics();
         prepare_constraints();
 
         asn1_publisher_context context;
@@ -48,14 +48,14 @@ return_t asn1_publisher::build(const parse_tree* pt, asn1_object** object) {
                 auto rhs = node->sizeof_rhs();
                 auto iter = _handler_map.find(node->symbol);
                 if (_handler_map.end() != iter) {
-                    test = iter->second(node, context);
+                    test = iter->second(runtime, node, context);
                 } else {
                     auto size = node->sizeof_rhs();
                     if (context.size() < size) {
                         test = errorcode_t::invalid_context;
                         throw;  // CHECK
                     } else {
-                        test = default_handler(node, context);
+                        test = default_handler(runtime, node, context);
                     }
                 }
                 if (context.size() != (size - rhs + 1)) {

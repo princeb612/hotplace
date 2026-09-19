@@ -6,6 +6,14 @@
   * RFC 9369 QUIC Version 2
   * https://quic.xargs.org/
 
+* QUIC initial packet number
+  * https://quic.xargs.org
+    * client 0
+    * server 0
+  * RFC 9001, RFC 9369
+    * client 0
+    * server 1
+
 #### YAML schema
 
 * PCAP schema

@@ -8,9 +8,9 @@
   * [study] CBOR/COSE (RFC 7049, 8949, 8152)
 
 * understanding
-  * Revision 1085-
-    * ASN.1 compiler
-  * Revision 1031-
+  * Revision 1086-
+    * ASN.1 loader
+  * Revision 1031-1084
     * ASN.1 runtime
   * Revision 927-933 (Tag 1.92, Revision 957)
     * MSVC environment (beta status) - application verifier (basics)
@@ -37,6 +37,8 @@
     * CBOR
 
 * details
+  * Revision 1087
+    * aho corasick reducer - block reduction
   * Revision 1086
     * [sketch] ASN.1 loader and compiler
   * Revision 1083

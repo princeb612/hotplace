@@ -7,7 +7,9 @@
  * Revision History
  * Date         Name                Description
  *
- * see README.md
+ * Loading symbols for the lexical analyzer and building the LALR ACTION and GOTO tables were heavy tasks.
+ * Although the initial design was a simple singleton, it was modified to pre-build and load the ACTION and GOTO tables.
+ * As the lexical analyzer and context were shifted to runtime, this adopted a lightweight proxy interface structure.
  */
 
 #ifndef __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1PARSER__
@@ -15,7 +17,7 @@
 
 #include <hotplace/sdk/base/nostd/tree.hpp>
 #include <hotplace/sdk/base/system/critical_section.hpp>
-#include <hotplace/sdk/io/asn.1/basic/asn1_resource.hpp>
+#include <hotplace/sdk/io/asn.1/asn1_resource.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
 #include <hotplace/sdk/io/parser/lalr_parser.hpp>
 #include <hotplace/sdk/io/parser/lexical_analyzer.hpp>
@@ -27,34 +29,13 @@ namespace io {
  * @brief   parser
  * @remarks
  *          transform : notation -> token tree -> asn1_object*
+ *
  */
 class asn1_parser {
    public:
-    static asn1_parser* get_instance();
-
-    struct asn1_token_t {
-        int token;
-    };
-
-    return_t parse(asn1_runtime* runtime, const char* notation, parse_tree* pt = nullptr);
-    return_t parse(asn1_runtime* runtime, lexical_context& context, const char* notation, parse_tree* pt = nullptr);
-
-    lexical_analyzer& get_lex();
-    lalr_parser& get_lalr();
-
-   protected:
     asn1_parser();
 
-    void load();
-    bool prepare();
-
-   private:
-    static asn1_parser _instance;
-
-    critical_section _lock;
-    lexical_analyzer _lex;
-    lalr_parser _lalr;
-    int _flag;
+    return_t parse(asn1_runtime* runtime, const char* notation, parse_tree* pt = nullptr) const;
 };
 
 }  // namespace io

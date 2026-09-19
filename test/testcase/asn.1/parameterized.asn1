@@ -1,0 +1,14 @@
+GenericContainerModule DEFINITIONS AUTOMATIC TAGS ::=
+BEGIN
+
+    -- TypeParameter를 인자로 받는 래퍼(Wrapper) 구조체
+    Envelope {TypeParameter} ::= SEQUENCE {
+        version     INTEGER,
+        messageId   OCTET STRING (SIZE(16)),
+        payload     TypeParameter
+    }
+
+    -- 실제 적용 예시
+    ActualMessage ::= Envelope { INTEGER }
+
+END
