@@ -10,7 +10,7 @@
 * understanding
   * Revision 1086-
     * ASN.1 loader
-  * Revision 1031-1084
+  * Revision 1031-1084 (Tag 1.139, Revision 1084)
     * ASN.1 runtime
   * Revision 927-933 (Tag 1.92, Revision 957)
     * MSVC environment (beta status) - application verifier (basics)
@@ -37,11 +37,14 @@
     * CBOR
 
 * details
+  * Revision 1089
+    * context-aware parser switching pattern
+      * travel_ranges - enum class trigger_t {level, edge}
   * Revision 1088
-    * CFG for ASN.1 module - pre-built ACTION, GOTO table
+    * CFG for ASN.1 module
   * Revision 1087
     * aho corasick reducer - block reduction
-    * CFG for ASN.1 notation - pre-built ACTION, GOTO table
+    * lalr_parser - import
   * Revision 1086
     * [sketch] ASN.1 loader and compiler
   * Revision 1083

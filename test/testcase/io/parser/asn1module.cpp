@@ -38,6 +38,7 @@ return_t prepare_asn1module_reducer(asn1module_reducer_t& ac) {
     ac.insert_as(vtoken_exports_clause_start, {token_exports});
     ac.insert_as(vtoken_imports_clause_start, {token_imports});
     ac.insert_as(vtoken_exports_clause_end, {token_semicolon});
+    ac.insert_as(vtoken_endof_module, {token_end});
 
     ac.treat_as(vtoken_header_clause, {vtoken_header_block_start}, {vtoken_header_block_end});
     ac.treat_as(vtoken_exports_clause, {vtoken_exports_clause_start}, {vtoken_exports_clause_end});

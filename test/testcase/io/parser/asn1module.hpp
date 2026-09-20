@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   sample.hpp
+ * @file   asn1module.hpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -26,6 +26,7 @@ enum vtoken_t : native_token_t {
     vtoken_exports_clause_end,
     vtoken_imports_clause_start,
     vtoken_imports_clause_end,
+    vtoken_endof_module,
 };
 
 struct memberof_parser_token {

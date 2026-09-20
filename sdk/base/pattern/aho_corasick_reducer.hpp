@@ -34,6 +34,9 @@ namespace hotplace {
  *          repeat match      : greedy loop
  *                              [token_namedtype] -> token_element
  *                              [token_element, token_taggedtype] -> token_element
+ *
+ *          block match       : [start, ..., finish] -> token_element
+ *
  * @remarks
  *          The member function `_as` handles virtual tokens.
  * @example

@@ -20,14 +20,18 @@ void test_yaml_testvector_parser() {
         asn1_value value(nullptr);
 
         return_t test = errorcode_t::success;
-        lexical_context context;
+        // lexical_context context;
         asn1_runtime runtime;  // automatic
-        for (const auto& item : items) {
-            std::string text_item = item["item"].as<std::string>("");
-            std::string text_asn1 = item["asn1"].as<std::string>("");
-            auto expect_node = item["expect"];
 
-            std::multimap<std::string, range_t> expects;
+        /**
+         * expect:
+         *   range: [[0, 5], [10, 15]
+         * results
+         *   "range", {0, 5}
+         *   "range", {10, 15}
+         */
+        auto lambda_makemap_string_ranges = [](const YAML::Node& expect_node, std::multimap<std::string, range_t>& expects) -> void {
+            expects.clear();
 
             if (expect_node && expect_node.IsMap()) {
                 for (const auto& pattern : expect_node) {
@@ -49,7 +53,6 @@ void test_yaml_testvector_parser() {
                                         } else {
                                             r.end = value;
                                             expects.emplace(key, r);
-                                            // _logger->writeln("- %s [%zi, %zi]", key.c_str(), r.begin, r.end);
                                         }
                                         ++pos;
                                     }
@@ -59,6 +62,18 @@ void test_yaml_testvector_parser() {
                     }
                 }
             }
+        };
+
+        for (const auto& item : items) {
+            std::string text_item = item["item"].as<std::string>("");
+            std::string text_asn1 = item["asn1"].as<std::string>("");
+
+            std::multimap<std::string, range_t> expects;
+            lambda_makemap_string_ranges(item["expect"], expects);
+            std::multimap<std::string, range_t> expect_lt;
+            lambda_makemap_string_ranges(item["level_trigger"], expect_lt);
+            std::multimap<std::string, range_t> expect_et;
+            lambda_makemap_string_ranges(item["edge_trigger"], expect_et);
 
             std::vector<parser_token> tokens;
             std::multimap<range_t, size_t> results;
@@ -68,7 +83,7 @@ void test_yaml_testvector_parser() {
 
             // the rule ID may change if `prepare_asn1module_reducer` is modified.
 
-            std::multimap<std::string, range_t> formatted;
+            std::multimap<std::string, range_t> result_formatted;
             for (const auto& pair : results) {
                 const auto& r = pair.first;
                 auto pid = pair.second;
@@ -76,22 +91,43 @@ void test_yaml_testvector_parser() {
                 std::string key;
                 switch (pid) {
                     case 6:
-                        key = "header_clause";
+                        key = "end_module";
                         break;
                     case 7:
-                        key = "exports_clause";
+                        key = "header_clause";
                         break;
                     case 8:
+                        key = "exports_clause";
+                        break;
+                    case 9:
                         key = "imports_clause";
                         break;
                     default:
                         break;
                 }
 
-                formatted.emplace(key, r);
+                result_formatted.emplace(key, r);
             }
-            bool cmp = equal(expects, formatted);
+            bool cmp = equal(expects, result_formatted);
             _test_case.assert(cmp, __FUNCTION__, "compare expected header, exports, imports");
+
+            std::multimap<std::string, range_t> result_lt;
+            auto lambda_undercontrol = [&result_lt](matched_t type, hotplace::range_t r, size_t pid) -> bool {
+                result_lt.emplace((matched_t::match == type) ? "matched" : "unmatched", r);
+                _logger->writeln("under control of %s [%zi..%zi]", (matched_t::match == type) ? "module parser" : "notation parser", r.begin, r.end);
+                return true;  // if return false, stops
+            };
+            travel_ranges(trigger_t::level, results, lambda_undercontrol);
+            _test_case.assert(result_lt == expect_lt, __FUNCTION__, "level trigger");
+
+            std::multimap<std::string, range_t> result_et;
+            auto lambda_switch = [&result_et](matched_t type, hotplace::range_t r, size_t pid) -> bool {
+                result_et.emplace((matched_t::match == type) ? "matched" : "unmatched", r);
+                _logger->writeln("switch to %s [%zi..%zi]", (matched_t::match == type) ? "module parser" : "notation parser", r.begin, r.end);
+                return true;  // if return false, stops
+            };
+            travel_ranges(trigger_t::edge, results, lambda_switch);
+            _test_case.assert(result_et == expect_et, __FUNCTION__, "edge trigger");
         }
     };
 

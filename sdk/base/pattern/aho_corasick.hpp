@@ -383,6 +383,156 @@ bool equal(const std::multimap<KEY, VALUE>& m1, const std::multimap<KEY, VALUE>&
     return ret;
 }
 
+/**
+ * @brief   find unmatched ranges
+ * @param   const std::multimap<range_t, size_t>& results [in] sorted results
+ * @param   std::vector<range_t>& unmatched [out]
+ * @examples
+ *          auto results = ac.search(...);
+ *          // find gaps, unmatched (unlike invert, find empty spaces)
+ *          find_unmatched_ranges(results, unmatched);
+ */
+return_t find_unmatched_ranges(const std::multimap<range_t, size_t>& results, std::vector<range_t>& unmatched);
+
+enum class matched_t { unmatched, match };
+enum class trigger_t {
+    level,  // level triggered – continuous transmission of a 'state'
+    edge,   // edge-triggered – signals the 'moment of change'
+};
+
+/**
+ * @examples
+ *          // sketch
+ *          travel_ranges(trigger_t::level, results, [](matched_t type, hotplace::range_t r, size_t pid) -> bool {
+ *              if (matched_t::unmatched == type) {
+ *                  // handling of all unmatched areas
+ *              }
+ *              return true;
+ *          });
+ *          travel_ranges(trigger_t::edge, results, [](matched_t type, hotplace::range_t r, size_t pid) -> bool {
+ *              // detecting the edge where change occurs
+ *              return true;
+ *          });
+ */
+template <typename F>
+return_t travel_ranges(trigger_t trigger, const std::multimap<hotplace::range_t, size_t>& results, F&& func) {
+    return_t ret = errorcode_t::success;
+
+    if (results.empty()) return errorcode_t::empty;
+
+    size_t current_cursor = results.begin()->first.begin;
+
+    if (trigger_t::level == trigger) {
+        // level triggered: emit every individual range sequentially
+        for (const auto& pair : results) {
+            const auto& r = pair.first;
+            size_t pid = pair.second;
+
+            // unmatched gap
+            if (current_cursor < r.begin) {
+                hotplace::range_t gap;
+                gap.begin = current_cursor;
+                gap.end = r.begin - 1;
+
+                if (gap.begin <= gap.end) {
+                    bool keep_going = func(matched_t::unmatched, gap, 0);
+                    if (false == keep_going) return errorcode_t::no_more;
+                }
+            }
+
+            // matched interval
+            if (r.begin >= current_cursor) {
+                bool keep_going = func(matched_t::match, r, pid);
+                if (false == keep_going) return errorcode_t::no_more;
+
+                current_cursor = r.end + 1;
+            }
+        }
+    } else {
+        // edge triggered: coalesce consecutive same-type states  and emit only on state transitions
+        bool has_pending = false;
+        matched_t pending_type = matched_t::unmatched;
+        hotplace::range_t pending_range;
+        size_t pending_pid = 0;
+
+        for (const auto& pair : results) {
+            const auto& r = pair.first;
+            size_t pid = pair.second;
+
+            // 1. check unmatched gap
+            if (current_cursor < r.begin) {
+                hotplace::range_t gap;
+                gap.begin = current_cursor;
+                gap.end = r.begin - 1;
+
+                if (gap.begin <= gap.end) {
+                    // edge transition check (match -> unmatched)
+                    if (has_pending) {
+                        if (matched_t::unmatched == pending_type) {
+                            pending_range.end = gap.end;
+                        } else {
+                            bool keep_going = func(pending_type, pending_range, pending_pid);
+                            if (false == keep_going) {
+                                has_pending = false;
+                                break;
+                            }
+                            pending_type = matched_t::unmatched;
+                            pending_range = gap;
+                            pending_pid = 0;
+                        }
+                    } else {
+                        has_pending = true;
+                        pending_type = matched_t::unmatched;
+                        pending_range = gap;
+                        pending_pid = 0;
+                    }
+                }
+            }
+
+            // 2. check matched interval
+            if (r.begin >= current_cursor) {
+                if (has_pending) {
+                    if (matched_t::match == pending_type) {
+                        // merge consecutive matches into a single continuous range
+                        pending_range.end = std::max(pending_range.end, r.end);
+                    } else {
+                        // state changed (unmatched -> match): emit pending unmatched range
+                        bool keep_going = func(pending_type, pending_range, pending_pid);
+                        if (false == keep_going) {
+                            has_pending = false;
+                            break;
+                        }
+                        pending_type = matched_t::match;
+                        pending_range = r;
+                        pending_pid = pid;
+                    }
+                } else {
+                    has_pending = true;
+                    pending_type = matched_t::match;
+                    pending_range = r;
+                    pending_pid = pid;
+                }
+
+                current_cursor = r.end + 1;
+            }
+        }
+
+        // flush final pending range
+        if (has_pending) {
+            func(pending_type, pending_range, pending_pid);
+        }
+    }
+
+    return ret;
+}
+
+/**
+ * @param trigger_t trigger [in] trigger_t::level
+ * @param const std::multimap<hotplace::range_t, size_t>& results [in] sorted results
+ * @param std::function<bool(matched_t, hotplace::range_t, size_t)> func [in]
+ */
+return_t travel_ranges(trigger_t trigger, const std::multimap<hotplace::range_t, size_t>& results, std::function<bool(matched_t, hotplace::range_t, size_t)> func);
+
 }  // namespace hotplace
 
 #endif

@@ -50,10 +50,10 @@
  *                                                          │
  *                                                          │ switch
  *                                                          │
- *                  ┌───────────────────────────────────────┼───────────────────────────────────────┐
- *                  ▼                                       ▼                                       ▼
- *       1) module definition                    2) ASN.1 notation                           3) OID
- *        -> LALR Module parser                   -> LALR notation parser                     -> OID parser
+ *                                       ┌──────────────────┴─────────────────────┐
+ *                                       ▼                                        ▼
+ *                            1) module definition                    2) ASN.1 notation
+ *                             -> LALR Module parser                   -> LALR notation parser
  *
  *
  *       return_t asn1_parser::parse(asn1_runtime* runtime, const char* notation, parse_tree* pt = nullptr) const;

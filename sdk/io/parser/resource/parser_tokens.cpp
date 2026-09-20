@@ -54,6 +54,7 @@ const parser_token_resource parser_symbol_tokens[] = {
     {token_element, "element"},
     {token_phrase, "phrase"},
     {token_sentence, "sentence"},
+    {token_eof, "$"},
 };
 const size_t sizeof_parser_symbol_tokens = RTL_NUMBER_OF(parser_symbol_tokens);
 
