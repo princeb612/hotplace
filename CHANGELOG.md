@@ -37,33 +37,36 @@
     * CBOR
 
 * details
+  * Revision 1088
+    * CFG for ASN.1 module - pre-built ACTION, GOTO table
   * Revision 1087
     * aho corasick reducer - block reduction
+    * CFG for ASN.1 notation - pre-built ACTION, GOTO table
   * Revision 1086
     * [sketch] ASN.1 loader and compiler
   * Revision 1083
-    * asn1_publisher - Constraints
+    * generates a semantic asn1_object\* using the parse tree (asn1_publisher)
       * string range ("a"..<"z", "a"<.."z", "a"<..<"z")
     * string_set - erase_range, intersect
     * graph - topological sort
     * asn1_runtime - resolve, is_resolvable
   * Revision 1082
-    * asn1_publisher - Constraints
+    * generates a semantic asn1_object\* using the parse tree (asn1_publisher)
       * exclusive boundary (1..<256, 1<..256, 1<..<256)
       * string range ("a".."z)
   * Revision 1081
-    * asn1_publisher - Constraints
+    * generates a semantic asn1_object\* using the parse tree (asn1_publisher) - Constraints
   * Revision 1079
     * [tested] gcc 4.8.5
   * Revision 1078
-    * asn1_publisher - CHOICE, DEFAULT, OPTIONAL
+    * generates a semantic asn1_object\* using the parse tree (asn1_publisher) - CHOICE, DEFAULT, OPTIONAL
   * Revision 1077
-    * asn1_publisher - Named Number List, Named Bit List, ENUMERATED
+    * generates a semantic asn1_object\* using the parse tree (asn1_publisher) - Named Number List, Named Bit List, ENUMERATED
   * Revision 1076
     * t_range_set - rollback
     * [fixed] test_case - result
   * Revision 1074
-    * asn1_publisher - first baby step, toddling
+    * generates a semantic asn1_object\* using the parse tree (asn1_publisher) - first baby step, toddling
   * Revision 1072
     * [fixed] t_aho_corasick_wildcard - dosearch
     * [fixed] t_trie - scan, lookup
@@ -81,8 +84,8 @@
     * [fixed] valist sign-extension overflow problem
     * [tested] ASN.1 PATTERN
   * Revision 1064
-    * CFG grammar
     * LALR parser
+    * CFG for ASN.1 notation
   * Revision 1059
     * [tested] aho corasick parser - token grouping, sub-pattern reduction, and repeat-rule processing
   * Revision 1056-1058

@@ -29,6 +29,24 @@ testvector:
             header_clause: [[0, 3]]
             exports_clause: [[4, 6]]
             imports_clause: []
+      - item: "parameterized"
+        asn1: |
+          GenericContainerModule DEFINITIONS AUTOMATIC TAGS ::=
+          BEGIN
+          
+              Envelope {TypeParameter} ::= SEQUENCE {
+                  version     INTEGER,
+                  messageId   OCTET STRING (SIZE(16)),
+                  payload     TypeParameter
+              }
+          
+              ActualMessage ::= Envelope { INTEGER }
+          
+          END
+        expect:
+          header_clause: [[0, 5]]
+          exports_clause: []
+          imports_clause: []
       - item: "example"
         asn1: |
           -- https://www.oss.com/asn1/resources/asn1-made-simple/example.html
@@ -70,7 +88,7 @@ testvector:
           header_clause: [[0, 5]]
           exports_clause: []
           imports_clause: []
-      - item: "imports"
+      - item: "example2"
         asn1: |
           CryptographicModule { iso(1) identified-organization(3) dod(6) internet(1) security(5) mechanisms(5) }
           DEFINITIONS AUTOMATIC TAGS ::=
@@ -129,21 +147,3 @@ testvector:
           header_clause: [[0, 5], [42, 47]]
           exports_clause: [[6, 10]]
           imports_clause: [[48, 54]]
-      - item: "parameterized"
-        asn1: |
-          GenericContainerModule DEFINITIONS AUTOMATIC TAGS ::=
-          BEGIN
-          
-              Envelope {TypeParameter} ::= SEQUENCE {
-                  version     INTEGER,
-                  messageId   OCTET STRING (SIZE(16)),
-                  payload     TypeParameter
-              }
-          
-              ActualMessage ::= Envelope { INTEGER }
-          
-          END
-        expect:
-          header_clause: [[0, 5]]
-          exports_clause: []
-          imports_clause: []

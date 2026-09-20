@@ -9,6 +9,7 @@
  * 2023.09.01   Soo Han, Kim        refactor
  */
 
+#include <hotplace/test/testcase/io/parser/asn1module.hpp>
 #include <hotplace/test/testcase/io/sample.hpp>
 
 void test_yaml_testvector_parser() {
@@ -61,7 +62,7 @@ void test_yaml_testvector_parser() {
 
             std::vector<parser_token> tokens;
             std::multimap<range_t, size_t> results;
-            test = ac_search(ac, text_asn1.c_str(), tokens, results);
+            test = ac_search(ac, text_asn1.c_str(), text_asn1.size(), tokens, results);
             ac_printall(ac, tokens, results);
             _test_case.test(test, __FUNCTION__, R"(item "%s")", text_item.c_str());
 

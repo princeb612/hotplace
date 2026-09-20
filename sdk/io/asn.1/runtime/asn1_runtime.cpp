@@ -69,16 +69,16 @@ void asn1_runtime::load() {
         lex.prepare();
 
         // ASN.1 tokens
-        auto asn1resource = asn1_resource::get_instance();
-        asn1resource->for_each(resource_type_t::token_type_asn1, [&lex](uint32 token, const std::string& name) -> void { lex.add_token(name, token); });
+        auto resource = parser_resource::get_instance();
+        resource->for_each(resource_type_t::token_type_asn1, [&lex](uint32 token, const std::string& name) -> void { lex.add_token(name, token); });
 
         /*
         // CFG - production, terminal, non-terminal, start symbol
         cfg_grammar grammar;
-        for (const auto& item : asn1_productions) {
+        for (const auto& item : asn1_notation_productions) {
             grammar.add_production(item.lhs, item.rhs);
         }
-        for (const auto& item : asn1_terminals) {
+        for (const auto& item : asn1_notation_terminals) {
             grammar.add_terminal(item);
         }
 
@@ -87,7 +87,7 @@ void asn1_runtime::load() {
         get_parser().learn();  // heavy
         */
 
-        get_parser().import(asn1_productions, asn1_action_table, asn1_goto_table);
+        get_parser().import(asn1_notation_productions, asn1_notation_action_table, asn1_notation_goto_table);
     }
 }
 

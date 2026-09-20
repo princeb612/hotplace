@@ -63,183 +63,82 @@ The purpose of these examples is not to establish an inferred chronology, but to
 
 ## Conceptual
 
-### Event → session → message
-
-The central processing model is:
+The network server is organized around a session-oriented processing model. I/O multiplexing determines **when a session should be processed**, the stream layer preserves **what bytes have arrived**, and the protocol layer determines **how those bytes form meaningful units**.
 
 ```text
-I/O event
-   ↓
-server event handling
-   ↓
-session produce
-   ↓
-stream / datagram assembly
-   ↓
-session consume
-   ↓
-protocol parsing
-   ↓
-application dispatch
-```
-
-The important separation is:
-
-```text
-OS I/O
-   │
-   ▼
-transport/session
-   │
-   ▼
-bytes
-   │
-   ▼
-protocol message
-   │
-   ▼
-application
-```
-
-A socket event is not itself a protocol event. A read is not necessarily a complete message. `network_server` coordinates the transitions without making the socket layer responsible for protocol semantics.
-
-### Producer / consumer separation
-
-```text
-multiplexer
-    │
-    │ I/O event
-    ▼
- producer
-    │
-    ▼
-network_session::produce()
-    │
-    ├── TLS / plain stream
-    └── DTLS / plain datagram
-    │
-    ▼
- stream / datagram state
-    │
-    ▼
- event queue
-    │
-    ▼
- consumer
-    │
-    ▼
-network_session::consume()
-    │
-    ▼
-protocol group
-```
-
-This separation is one of the useful architectural ideas in the current implementation. Production is concerned with receiving and preparing transport data; consumption is concerned with interpreting it.
-
-### Event queue and priority
-
-The consumer side uses a session event queue. The queue is not simply a socket-read queue: protocol processing can influence the priority with which session work is processed.
-
-```text
-received data
-     ↓
-session becomes work
-     ↓
-event queue
-     ↓
-priority-aware processing
-     ↓
-consume
-     ↓
-protocol result
-```
-
-The benefit is that protocol-level urgency can affect scheduling while the multiplexer/socket layer remains protocol-independent.
-
-### Stream boundary ≠ protocol boundary
-
-`network_stream` is **not a ring buffer**.
-
-Its role is to retain received chunks and assemble enough input for protocol-aware interpretation.
-
-```text
-socket reads
-    │
-    ├── chunk A
-    ├── chunk B
-    └── chunk C
-          ↓
-    network_stream
-          ↓
-      t_chain
-          ↓
-    basic_stream
-          ↓
- protocol detection
-          ↓
-network_protocol::read_stream()
-          ↓
- ┌────────┬────────┬────────┬────────┐
- │complete│ forged │ crash  │ large  │
- └────────┴────────┴────────┴────────┘
-```
-
-A protocol message may end inside a queued chunk, while additional bytes for the next message are already present. Therefore the consumed length can be smaller than the available input, and the remainder must survive for the next consume operation.
-
-This is a protocol-message assembly mechanism, not a fixed-size circular storage abstraction.
-
-### Stream and datagram are different boundaries
-
-```text
-TCP
-  socket reads
-       ↓
-  byte stream
-       ↓
-  protocol framing
-       ↓
-  message
-
-UDP
-  datagram
-       ↓
-  datagram processing
-       ↓
-  protocol message
-```
-
-For TCP, transport boundaries do not provide message boundaries. For UDP, the datagram boundary already exists at the transport interface.
-
-### Security remains below protocol dispatch
-
-```text
-TLS
- │
- ▼
-TCP stream
- │
- ▼
+I/O readiness
+      ↓
 network_session
- │
- ▼
+      ↓
 network_stream
- │
- ▼
-protocol
-
-DTLS
- │
- ▼
-UDP datagram
- │
- ▼
-network_session
- │
- ▼
-protocol
+      ↓
+protocol recognition
+      ↓
+protocol framing / state
+      ↓
+application callback
 ```
 
-This keeps TLS/DTLS as transport-security processing rather than application protocol processing.
+The important boundary is therefore not the socket read itself, but the transition from transport bytes to protocol meaning.
+
+```text
+transport delivery
+      ↓
+session scheduling
+      ↓
+byte accumulation
+      ↓
+protocol interpretation
+      ↓
+application meaning
+```
+
+### Responsibility Boundaries
+
+| Layer | Responsibility |
+|---|---|
+| socket / multiplexer | detect transport readiness and deliver I/O events |
+| network_session | represent the ongoing connection as a schedulable unit |
+| event_queue | schedule session work |
+| network_stream | accumulate and preserve received bytes |
+| network_protocol_group | recognize which protocol can interpret the bytes |
+| network_protocol | establish protocol-specific boundaries and state |
+| application callback | consume the interpreted result |
+
+This separation allows transport-specific behavior, stream accumulation, protocol framing, and application dispatch to evolve independently.
+
+### One Read Is Not One Message
+
+A read operation only reports available transport data. It does not imply a protocol boundary.
+
+```text
+one read
+   ├── partial protocol unit
+   ├── exactly one unit
+   └── multiple units
+```
+
+The stream therefore preserves the input until the protocol layer can determine the appropriate boundary.
+
+### Protocol Interpretation Is Layered
+
+Protocol meaning is recovered progressively rather than in one step:
+
+```text
+transport
+   ↓
+record / packet
+   ↓
+protocol unit
+   ↓
+protocol state
+   ↓
+application message
+```
+
+For example, TLS records carry TLS handshake messages, while HTTP/2 frames carry HTTP/2 protocol events. QUIC uses packets and frames while carrying TLS handshake bytes through CRYPTO frames.
+
+The network server's common session/stream machinery stops at the boundary where concrete protocol semantics take over.
 
 ## Structural
 
@@ -643,79 +542,6 @@ TLS extension
 
 The protocol stack is therefore better understood as **successive interpretation of boundaries**, not as one universal stream parser.
 
-## Flow
-
-### TCP
-
-```text
-multiplexer
-    ↓
-read event
-    ↓
-network_server
-    ↓
-network_session::produce()
-    ↓
-plain/TLS read
-    ↓
-network_stream
-    ↓
-event queue
-    ↓
-network_session::consume()
-    ↓
-protocol group
-    ↓
-application
-```
-
-### UDP / DTLS
-
-```text
-UDP event
-    ↓
-session lookup / creation
-    ↓
-plain/DTLS datagram processing
-    ↓
-protocol processing
-    ↓
-application
-```
-
-### Multiple protocol messages in one read
-
-```text
-one socket read
-       │
-       ▼
-┌─────────────────────────────┐
-│ message A │ message B │ ... │
-└─────────────────────────────┘
-       │
-       ├── consume A
-       │
-       └── preserve B ...
-```
-
-### Partial message
-
-```text
-read #1
-   ↓
-partial message
-   ↓
-network_stream retains it
-   ↓
-read #2
-   ↓
-complete message
-   ↓
-protocol dispatch
-```
-
-These two cases explain why `network_stream` must retain state across individual I/O events.
-
 
 ### I/O Multiplexing to Protocol Processing: One Session Abstraction
 
@@ -953,6 +779,8 @@ protocol framing
 application/protocol message
 ```
 
+
+
 ## Flow
 
 ### TCP
@@ -1025,6 +853,7 @@ protocol dispatch
 ```
 
 These two cases explain why `network_stream` must retain state across individual I/O events.
+
 
 
 

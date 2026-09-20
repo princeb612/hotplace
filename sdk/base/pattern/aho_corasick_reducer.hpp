@@ -2,14 +2,14 @@
 /**
  * @file   aho_corasick_reducer.hpp
  * @author Soo Han and Gemini
- * @desc   an extended Aho-Corasick automaton supporting token grouping,
- *         sub-pattern reduction, block suppression (treat_as), and repeat-rule processing (Parser/Reducer).
+ * @desc   an extended Aho-Corasick automaton supporting token grouping, sub-pattern reduction,
+ *         block suppression (treat_as), and repeat-rule processing (Parser/Reducer).
  *
  * Revision History
  * Date         Name                Description
  * 2026.08.23   Soo Han & Gemini    added virtual token reduction loop, repeat_as handling,
  *                                  and span coordinate mapping for nested pattern matching.
- * 2026.09.19   Soo Han & Gemini    treat_as block reduction
+ * 2026.09.19   Soo Han & Gemini    block reduction (treat_as)
  *                                  collapsing the entire sequence from start to finish into a single atomic token
  */
 
@@ -34,15 +34,17 @@ namespace hotplace {
  *          repeat match      : greedy loop
  *                              [token_namedtype] -> token_element
  *                              [token_element, token_taggedtype] -> token_element
+ * @remarks
+ *          The member function `_as` handles virtual tokens.
  * @example
  *          // sketch #1
  *          // for more examples ... see testcase_aho_corasick
  *          bool test = false;
  *
  *          t_aho_corasick_reducer<uint32> ac;
- *          ac.set_group(token_builtintype, {token_bool, token_int, token_null, token_real, token_visiblestring});
- *          ac.set_group(token_class, {token_application, token_private, token_universal});
- *          ac.set_group(token_taggedmode, {token_implicit, token_explicit});
+ *          ac.group_as(token_builtintype, {token_bool, token_int, token_null, token_real, token_visiblestring});
+ *          ac.group_as(token_class, {token_application, token_private, token_universal});
+ *          ac.group_as(token_taggedmode, {token_implicit, token_explicit});
  *          ac.insert_as(token_namedtype, {token_identifier, token_builtintype});
  *          ac.insert_as(token_tag, {token_lbracket, token_number, token_rbracket});
  *          ac.insert_as(token_tag, {token_lbracket, token_class, token_number, token_rbracket});
@@ -117,6 +119,7 @@ namespace hotplace {
  *
  *          // sketch #2
  *          // collapsing the entire sequence from start to finish into a single atomic token
+ *
  *          struct memberof_parser_token {
  *              uint32 operator()(const parser_token* source, size_t idx) const { return (nullptr != source) ? (uint32)source[idx].type : 0; }
  *          };
@@ -135,7 +138,7 @@ namespace hotplace {
  *
  *          t_aho_corasick_reducer<uint32, parser_token, memberof_parser_token> reducer;
  *
- *          reducer.set_group(vtoken_symbol, {token_identifier, token_usertype});
+ *          reducer.group_as(vtoken_symbol, {token_identifier, token_usertype});
  *
  *          reducer.insert_as(vtoken_header_block_start, {vtoken_symbol, token_definitions});
  *          reducer.insert_as(vtoken_header_block_end, {token_assign, token_begin});
@@ -193,7 +196,7 @@ class t_aho_corasick_reducer : public t_aho_corasick<BT, T, memberof_t> {
     /**
      * @brief   group
      */
-    void set_group(BT group_id, const std::vector<BT>& members) {
+    void group_as(BT group_id, const std::vector<BT>& members) {
         _group_ids.insert(group_id);
         for (const auto& member : members) {
             _token_to_groups[member].insert(group_id);
@@ -429,8 +432,8 @@ class t_aho_corasick_reducer : public t_aho_corasick<BT, T, memberof_t> {
                 if (true == found) {
                     range_t reduced_range = {spans[i].orig_begin, spans[end_idx].orig_end};
 
-                    // treat_as 축소 결과를 unique_results에 등록
-                    // pid는 _pattern_info_map에서 해당 virtual_token을 가지는 pid를 찾거나 별도 매핑 사용
+                    // add the treat_as reduction result to unique_results
+                    // for the PID, find the PID with the corresponding virtual_token in _pattern_info_map or use a separate mapping
                     size_t target_pid = get_pid_by_virtual_token(rule.virtual_token);
                     if (static_cast<size_t>(-1) != target_pid) {
                         unique_results.insert({reduced_range, target_pid});

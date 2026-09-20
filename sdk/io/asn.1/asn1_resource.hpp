@@ -27,7 +27,6 @@ struct asn1_entity_resource_t {
     asn1_entity_t type;
     const char* token;
     asn1_perm_t permission;
-    uint32 tokenid;
 };
 
 extern const struct asn1_entity_resource_t resource_asn1_entities[];
@@ -49,16 +48,6 @@ class asn1_resource {
     std::string nameof_mode(uint16 t) const;
     uint8 valueof_mode(const std::string& name) const;
 
-    template <typename F>  // void(uint32 tokenid, const std::string& name)
-    void for_each(resource_type_t type, F f) const {
-        for (size_t i = 0; i < sizeof_resource_asn1_entities; ++i) {
-            auto entry = resource_asn1_entities[i];
-            if (entry.tokenid && entry.token) {
-                std::forward<F>(f)(entry.tokenid, entry.token);
-            }
-        }
-    }
-
    protected:
     asn1_resource();
     void load_resource();
@@ -77,10 +66,20 @@ class asn1_resource {
     std::map<std::string, int> _mode_rid;
 };
 
-extern const std::vector<parser_production> asn1_productions;
-extern const std::set<std::string> asn1_terminals;
-extern const std::map<std::pair<uint32, std::string>, parser_action> asn1_action_table;
-extern const std::map<std::pair<uint32, std::string>, uint32> asn1_goto_table;
+/**
+ * S' -> Statement
+ * S' -> ModuleDefinition -> AssignmentList -> Statement
+ *
+ * If these two paths coexist in a single LALR parsing table, their lookahead sets overlap during the calculation of the state closure, making a conflict unavoidable.
+ */
+extern const std::vector<parser_production> asn1_notation_productions;
+extern const std::vector<parser_production> asn1_module_productions;
+extern const std::set<std::string> asn1_notation_terminals;
+extern const std::set<std::string> asn1_module_terminals;
+extern const std::map<std::pair<uint32, std::string>, parser_action> asn1_notation_action_table;
+extern const std::map<std::pair<uint32, std::string>, parser_action> asn1_module_action_table;
+extern const std::map<std::pair<uint32, std::string>, uint32> asn1_notation_goto_table;
+extern const std::map<std::pair<uint32, std::string>, uint32> asn1_module_goto_table;
 
 }  // namespace io
 }  // namespace hotplace

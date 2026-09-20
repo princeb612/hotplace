@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 parser_action_t::shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   asn1_lalr_terminals.cpp
+ * @file   asn1_notation_terminals.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -16,7 +16,7 @@ namespace hotplace {
 namespace io {
 
 // clang-format off
-const std::set<std::string> asn1_terminals = //
+const std::set<std::string> asn1_notation_terminals = //
 {
  {"DEFINITIONS"},
  {"BEGIN"},

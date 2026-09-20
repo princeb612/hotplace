@@ -124,9 +124,9 @@ void test_aho_corasick3() {
         token_setof_default,
     };
 
-    ac.set_group(token_builtintype, {token_bool, token_int, token_null, token_oid, token_real, token_utf8string, token_visiblestring});
-    ac.set_group(token_class, {token_application, token_private, token_universal});
-    ac.set_group(token_taggedmode, {token_implicit, token_explicit});
+    ac.group_as(token_builtintype, {token_bool, token_int, token_null, token_oid, token_real, token_utf8string, token_visiblestring});
+    ac.group_as(token_class, {token_application, token_private, token_universal});
+    ac.group_as(token_taggedmode, {token_implicit, token_explicit});
 
     ac.insert_as(token_tag, {token_lbracket, token_number, token_rbracket});                                 // * pattern 0
     ac.insert_as(token_tag, {token_lbracket, token_class, token_number, token_rbracket});                    // * pattern 1

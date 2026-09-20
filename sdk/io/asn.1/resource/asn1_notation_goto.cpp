@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 parser_action_t::shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   asn1_lalr_goto.cpp
+ * @file   asn1_notation_goto.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -16,7 +16,7 @@ namespace hotplace {
 namespace io {
 
 // clang-format off
-const std::map<std::pair<uint32, std::string>, uint32> asn1_goto_table =  //
+const std::map<std::pair<uint32, std::string>, uint32> asn1_notation_goto_table =  //
 {
  {{0, "Assignment"}, 3},
  {{0, "Constraint"}, 9},

@@ -9,6 +9,8 @@
  *
  */
 
+#include <hotplace/test/testcase/io/parser/asn1module.hpp>
+
 #include "sample.hpp"
 
 struct testvector {
@@ -203,9 +205,116 @@ void test_resolve_dependencies() {
     _test_case.assert(names == expect_childinfo, __FUNCTION__, "resolve ChildInformation");
 }
 
+void test_ac_asn1module() {
+    _test_case.begin("LALR parser - aho corasick reduction");
+
+    // sketch - context-aware parser switching pattern
+
+    asn1module_reducer_t ac;
+    prepare_asn1module_reducer(ac);
+
+    struct testvector {
+        const char* file;
+    } table[] = {
+        {"example.asn1"}, {"example2.asn1"}, {"imports.asn1"}, {"parameterized.asn1"}, {"userprofile.asn1"},
+    };
+
+    for (const auto& entry : table) {
+        file_stream fs;
+        fs.open(entry.file);
+        fs.begin_mmap();
+        auto test = ac_search_and_printall(ac, (char*)fs.data(), fs.size());
+        _test_case.test(test, __FUNCTION__, R"(test "%s")", entry.file);
+    }
+}
+
+void test_lalr_asn1module() {
+    _test_case.begin("LALR parser - ASN.1 Module grammar");
+    struct testvector {
+        const char* text;
+        const char* notation;
+    } table[] = {
+        // clang-format off
+        {"id DEFINITIONS ::= BEGIN .... END",
+         R"(EmployeeModule DEFINITIONS ::= BEGIN
+              ....
+            END)"},
+        {"id DEFINITIONS AUTOMATIC TAGS ::= BEGIN EXPORTS ....; IMPORTS .... FROM id; END",
+         R"(CryptographicModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+              EXPORTS Container{}, CustomErrorCode;
+              IMPORTS TypeA FROM BaseModule;
+              ....
+            END)"},
+        {"id DEFINITIONS ::= BEGIN EXPORTS ALL; END",
+         R"(ExportAllModule DEFINITIONS ::= BEGIN
+              EXPORTS ALL;
+              ....
+            END)"},
+        {"id DEFINITIONS ::= BEGIN IMPORTS .... FROM id; END",
+         R"(ConsumerModule DEFINITIONS EXPLICIT TAGS EXTENSIBILITY IMPLIED ::= BEGIN
+              IMPORTS
+                  Container{},
+                  CustomErrorCode
+              FROM CryptographicModule;
+              ....
+            END)"},
+        // clang-format on
+    };
+
+    lalr_parser lalr_asn1module;
+    prepare_asn1module_grammar(lalr_asn1module);
+
+    for (const auto& entry : table) {
+        test_asn1parser(lalr_asn1module, entry.text, entry.notation);
+    }
+}
+
+void test_lalr_asn1module_oid() {
+    _test_case.begin("LALR parser - ASN.1 Module+OID grammar");
+    struct testvector {
+        const char* text;
+        const char* notation;
+    } table[] = {
+        // clang-format off
+        {"id DEFINITIONS AUTOMATIC TAGS ::= BEGIN EXPORTS ....; IMPORTS .... FROM id; END",
+         R"(CryptographicModule { iso(1) org(3) } DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+              EXPORTS Container{}, CustomErrorCode;
+              IMPORTS TypeA FROM BaseModule;
+              ....
+            END)"},
+        {"id DEFINITIONS ::= BEGIN IMPORTS .... FROM id; END",
+         R"(CryptographicModule { iso(1) identified-organization(3) dod(6) internet(1) security(5) mechanisms(5) }
+            DEFINITIONS EXPLICIT TAGS EXTENSIBILITY IMPLIED ::= BEGIN
+              IMPORTS
+                  Container{},
+                  CustomErrorCode
+              FROM CryptographicModule { iso(1) identified-organization(3) dod(6) internet(1) security(5) mechanisms(5) };
+              ....
+            END)"},
+        // clang-format on
+    };
+
+    lalr_parser lalr_asn1module;
+    prepare_asn1module_grammar(lalr_asn1module);
+
+    for (const auto& entry : table) {
+        test_asn1parser(lalr_asn1module, entry.text, entry.notation);
+    }
+}
+
+void test_context_switch() {
+    _test_case.begin("LALR parser - context-switch");
+    //
+}
+
 void testcase_basic3() {
     test_decode_strongly_typed1();
     test_decode_strongly_typed2();
 
     test_resolve_dependencies();
+
+    test_ac_asn1module();
+    test_lalr_asn1module();
+    test_lalr_asn1module_oid();
+    test_context_switch();
 }

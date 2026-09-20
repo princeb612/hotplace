@@ -76,6 +76,7 @@ enum token_t : uint32 {
     token_element = 37,
     token_phrase = 38,
     token_sentence = 39,
+    token_ellipsis = 40,
 
     // ASN.1
     token_asn1 = 0x1000,
@@ -154,9 +155,9 @@ enum token_t : uint32 {
 
     token_definitions,
     token_automatic,
+    token_tags,
     token_begin,
     token_end,
-    token_tags,
     token_exports,
     token_imports,
     token_all,
