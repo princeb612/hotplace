@@ -29,10 +29,25 @@ cfg_grammar& cfg_grammar::add_production(const std::string& lhs, const std::vect
 #if defined DEBUG
     if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
         trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
-            dbs.printf("[%i] lhs:%s rhs:", id, lhs.c_str());
-            print_style_t style("{", ",", "}");
-            print(rhs, dbs, style);
-            dbs << "\n";
+            // written to be suitable for generating pre-built LALR(1), GLR production
+            print_style_t style("{", ", ", "}");
+            style.set_element("", ", ", "");
+
+            dbs.printf("%i, R\"(%s)\", ", id, lhs.c_str());
+            print(
+                rhs, dbs,
+                [](const std::vector<std::string>::const_iterator iter, basic_stream& dbs) -> void {
+                    const auto& value = *iter;
+                    static std::map<std::string, std::string> table = {
+                        {"id", "SYMBOL_ID"}, {"usertype", "SYMBOL_USERTYPE"}, {"num", "SYMBOL_NUM"}, {"fp", "SYMBOL_FP"}, {"quot_string", "SYMBOL_QSTR"}};
+                    auto table_it = table.find(value);
+                    if (table.end() != table_it)
+                        dbs << table_it->second;
+                    else
+                        dbs << "\"" << *iter << "\"";
+                },
+                style);
+            dbs << "},\n";
         });
     }
 #endif

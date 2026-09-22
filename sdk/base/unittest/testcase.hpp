@@ -7,7 +7,14 @@
  * Revision History
  * Date         Name                Description
  * 2017.07.13   Soo Han, Kim        prototype (codename.grape Revision 288)
- * 2023.08.15   Soo Han, Kim        reboot (codename.hotplace Revision 9)
+ * 2023.08.15   Soo Han, Kim        reboot - assert, test, report (codename.hotplace Revision 9)
+ * 2023.08.25   Soo Han, Kim        time control - reset, pause, resume (codename.hotplace Revision 97)
+ * 2023.08.28   Soo Han, Kim        test_case_notimecheck (RAII) (codename.hotplace Revision 125)
+ * 2024.03.25   Soo Han, Kim        failed section (codename.hotplace Revision 476)
+ * 2024.05.20   Soo Han, Kim        logger integration (codename.hotplace Revision 534)
+ * 2025.01.04   Soo Han, Kim        negative test - nassert, ntest (codename.hotplace Revision 681)
+ * 2026.05.09   Soo Han, Kim        figlet (codename.hotplace Revision 985)
+ * 2026.09.09   Soo Han, Kim        return EXIT_SUCCESS or EXIT_FAILURE (codename.hotplace Revision 1076)
  *
  */
 

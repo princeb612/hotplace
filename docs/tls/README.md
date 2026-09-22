@@ -1,195 +1,587 @@
 # TLS
 
-> Edition 1 · Revision 1072  
+> Edition 1 · Revision 1084  
 > Documented with GPT-5.6 Luna — study, reconstruction & review
 
 ## Context
 
-TLS is one of the most connected protocol areas in hotplace. It is not treated only as an encryption helper; it sits between transport, handshake, certificate, application protocol, and QUIC-related processing. The current study therefore connects TLS with TCP, UDP/DTLS, QUIC, HTTPS, ASN.1/X.509, and the KEM/PQC study area.
+TLS is one of the largest protocol study areas in hotplace. It is not implemented as a single encryption component. The implementation spans protocol records, handshake messages, extensions, session state, transcript processing, key negotiation, key schedule, record protection, DTLS-specific processing, QUIC integration, and transport-facing handshake orchestration.
+
+The most useful way to understand the implementation is to separate three questions:
 
 ```text
-                         ASN.1
-                           │
-                      X.509 / cert
-                           │
-                           ▼
-TCP ───────────────────── TLS ─────────────────── HTTPS
-                           │
-                ┌──────────┼──────────┐
-                │          │          │
-                ▼          ▼          ▼
-              DTLS        QUIC      KEM/PQC
-                │          │
-               UDP       HTTP/3
+What is on the wire?
+        ↓
+How does the handshake change session meaning?
+        ↓
+Which cryptographic state protects the next bytes?
 ```
 
-The important context is the path by which these topics meet. HPACK/QPACK study led into HTTP/2 and HTTP/3, while QUIC required a deeper understanding of TLS 1.3 handshake messages, extensions, key schedule, and packet protection. TLS/X.509 structures in turn brought ASN.1 back into focus.
+Those questions map to different layers of the source rather than to one monolithic TLS class.
+
+```text
+                    TLS session
+                        │
+        ┌───────────────┼────────────────┐
+        │               │                │
+        ▼               ▼                ▼
+   wire protocol    handshake/state   protection
+        │               │                │
+     record         extensions       secrets
+     handshake      negotiation      transcript
+     extension      authentication   key/IV
+        │               │             encrypt/decrypt
+        └───────────────┼────────────────┘
+                        │
+                  transport use
+              TCP / DTLS / QUIC
+```
 
 ## History
 
-The available development record shows TLS becoming a central study area while QUIC was being developed. The study moved from protocol understanding and concrete TLS handshake construction toward the cryptographic protection required by QUIC. During this process, TLS 1.2 and TLS 1.3 were examined, RFC 8448 examples were constructed, handshake extensions and HelloRetryRequest were explored, and packet-level traces were used for verification.
+The CHANGELOG places TLS development across several distinct study stages.
 
-The TLS work also exposed the relationship between certificates/X.509 and ASN.1. ASN.1 was later revisited as an independent topic and is currently still under runtime development. QUIC packet/frame work and PCAP-based study have progressed substantially; the remaining work includes the `trial_tls_composer` handshake path and integration with `network_server`. These are recorded as current status rather than treated as completed design.
+- Revisions 650–672: direct TLS/DTLS understanding, including `tls13.xargs.org`, `tls12.xargs.org`, and `dtls.xargs.org`.
+- Revisions 673–680: RFC 8448 TLS 1.3 handshake examples, including HelloRetryRequest, resumed 0-RTT, client authentication, and compatibility mode.
+- Revisions 682–776: TLS/DTLS client-side development and network integration.
+- Revisions 777–804: server integration with TLS, HTTP/1.1, and HTTP/2.
+- Revisions 740–789: TLS 1.2 protection, certificates, CBC/GCM/CCM, Extended Master Secret, and key-share related work.
+- Revisions 762–781: DTLS reconstruction, fragmentation, and cipher testing.
+- Revisions 788–902: broader TLS 1.2/TLS 1.3 cipher and key-exchange coverage.
+- Revisions 889–902: PQC/KEM work and TLS 1.3 ML-KEM hybrid groups.
+- Revision 905: DTLS built-in reorder support.
+- Revisions 953 and 999: TLS 1.3 ML-DSA certificate study and subsequent SLH-DSA study.
+- Revision 994: TLS/HTTP/2/QUIC rollback checkpoint.
+- Revision 1015 onward: renewed DTLS/TLS verification and cross-platform testing.
+
+The chronology shows TLS evolving from protocol understanding into a reusable protocol/cryptographic implementation, then becoming a dependency for QUIC. The current source retains all of those layers.
 
 ## Conceptual
 
-### TLS as a protocol boundary
+### TLS is a state-changing protocol, not only encryption
 
-TLS coordinates negotiation, authentication-related material, handshake state, transcript state, key schedule, and protected application data. Encryption and decryption are only one part of that boundary.
+A TLS record can carry handshake, alert, change-cipher-spec compatibility traffic, or application data. Reading a record can therefore change the interpretation of subsequent records.
 
-### TLS 1.2 and TLS 1.3
+```text
+record
+  ↓
+handshake message
+  ↓
+session negotiation
+  ↓
+transcript / secrets / protection state
+  ↓
+next record is interpreted under new state
+```
 
-The project studies both versions, with TLS 1.3 being particularly important to QUIC. The distinction matters because QUIC does not simply carry ordinary TLS records; TLS handshake messages are carried through QUIC CRYPTO frames and the resulting secrets drive QUIC packet protection.
+The encryption operation is consequently downstream of protocol state.
 
-### TLS and its neighboring protocols
+### Three interacting state domains
 
-- **TCP ↔ TLS**: TLS runs over a reliable byte stream.
-- **UDP ↔ DTLS**: DTLS provides the TLS-style security model over datagrams while accounting for datagram transport behavior.
-- **TLS ↔ QUIC**: QUIC uses TLS 1.3 for the handshake and derives packet-protection keys from the TLS key schedule.
-- **TLS ↔ HTTPS**: HTTPS is the application-facing use of HTTP over a TLS-protected transport.
-- **TLS ↔ ASN.1/X.509**: certificate structures introduce ASN.1-defined data into the TLS study.
-- **TLS ↔ KEM/PQC**: key-establishment mechanisms form a connected cryptographic study area.
+The implementation can be understood as three related state domains:
+
+```text
+Protocol state
+  ├─ TLS version
+  ├─ negotiated cipher suite
+  ├─ handshake message status
+  ├─ extensions / selected parameters
+  └─ alerts
+
+Cryptographic state
+  ├─ transcript hash
+  ├─ pre-master / shared secret
+  ├─ traffic secrets
+  ├─ key / IV
+  └─ record number / protection space
+
+Transport framing state
+  ├─ TLS record boundaries
+  ├─ DTLS epoch / sequence
+  ├─ DTLS handshake fragmentation
+  └─ QUIC packet number space
+```
+
+`tls_session` is the meeting point of these domains; the concrete wire structures remain in record, handshake, extension, and QUIC modules.
+
+### TLS 1.2 and TLS 1.3 are different protection models
+
+TLS 1.2 retains the older master-secret/key-block model and supports CBC/HMAC as well as AEAD suites. TLS 1.3 uses a transcript-driven HKDF key schedule and traffic secrets, with AEAD record protection.
+
+The implementation therefore keeps the common session/protection interface while branching internally according to version and protection mode.
+
+### TLS and QUIC share the handshake, not the record layer
+
+QUIC uses TLS 1.3 handshake semantics and key schedule, but does not carry TLS handshake messages inside ordinary TLS records.
+
+```text
+TLS over TCP
+    TLS handshake
+        ↓
+    TLS record
+        ↓
+    TCP stream
+
+TLS inside QUIC
+    TLS handshake bytes
+        ↓
+    QUIC CRYPTO frame
+        ↓
+    QUIC packet
+        ↓
+    QUIC packet protection
+```
+
+This distinction explains why `tls_session` and `tls_protection` are reusable from the QUIC implementation while TLS record classes remain separate from QUIC packet classes.
 
 ## Structural
 
-The current implementation separates TLS protocol composition, cryptographic protection, secure byte processing, and transport/socket integration.
+### The TLS implementation layers
 
 ```text
-TLS handshake composition
-        │
-        ├── TLS session state
-        ├── handshake messages / extensions
-        └── QUIC handshake composition
-                 │
-                 ▼
-          QUIC CRYPTO frames
-
-TLS protection
-        │
-        ├── negotiation
-        ├── transcript
-        ├── key schedule / secrets
-        └── encrypt / decrypt
-
-secure byte processing
-        │
-        ├── TLS / DTLS record processing
-        └── QUIC protected packet processing
-
-transport integration
-        │
-        ├── TCP / TLS
-        ├── UDP / DTLS
-        └── QUIC
+tls_session
+     │
+     ├── protection_context
+     │      └── negotiation
+     │
+     ├── tls_protection
+     │      ├── transcript
+     │      ├── key schedule
+     │      ├── secrets
+     │      └── encryption / decryption
+     │
+     ├── tls_handshake
+     │      └── concrete handshake messages
+     │
+     ├── tls_extension
+     │      └── concrete extensions
+     │
+     ├── tls_record
+     │      └── record content types
+     │
+     └── transport-specific session support
+            ├── DTLS
+            └── QUIC
 ```
 
-Current source anchors include `sdk/net/basic/trial/tls_composer.hpp`, `sdk/net/basic/trial/tls_composer_quic_handshake.cpp`, `sdk/net/tls/`, and `sdk/net/tls/quic/`. The transport-facing trial socket path is represented by `trial_tls_server_socket` and related server-socket abstractions. These names are navigation anchors; the conceptual roles above are the stable description.
+The class names are useful navigation anchors, but the stable structure is **session → protocol objects → cryptographic protection → transport integration**.
+
+### Record layer
+
+`tls_record` owns the record boundary and common header/protection handling. Concrete record classes represent content types such as handshake, alert, application data, and compatibility change-cipher-spec traffic.
+
+```text
+incoming bytes
+      ↓
+tls_record::read()
+      ↓
+record header
+      ↓
+record body
+      ↓
+optional decrypt
+      ↓
+content-specific reader
+```
+
+For writing, the direction is reversed:
+
+```text
+content object
+      ↓
+record body
+      ↓
+record protection
+      ↓
+record header
+      ↓
+wire bytes
+```
+
+The record layer therefore connects protocol framing to cryptographic protection.
+
+### Handshake layer
+
+`tls_handshake` provides the common lifecycle:
+
+```text
+read/write
+   ↓
+header
+   ↓
+preprocess
+   ↓
+body
+   ↓
+postprocess
+   ↓
+scheduled follow-up work
+```
+
+Concrete classes implement message-specific bodies such as ClientHello, ServerHello, Certificate, CertificateVerify, EncryptedExtensions, Finished, NewSessionTicket, and the TLS 1.2 key-exchange messages.
+
+The important point is that `do_postprocess()` is not merely cleanup. Handshake processing can update transcript state, derive secrets, change protection state, schedule extensions, or affect the next handshake action.
+
+### Extension layer
+
+Extensions are modeled as another protocol object family below handshake messages.
+
+```text
+Handshake
+   │
+   └── extension vector
+          ├── supported_versions
+          ├── supported_groups
+          ├── key_share
+          ├── signature_algorithms
+          ├── server_name
+          ├── ALPN
+          ├── PSK
+          ├── early_data
+          ├── QUIC transport parameters
+          └── other / unknown
+```
+
+This is important because TLS 1.3 moves much of the negotiation surface into extensions. The extension classes therefore participate in both wire decoding and semantic negotiation.
+
+### Negotiation
+
+`protection_context` stores the offered/available cryptographic parameters and performs selection.
+
+```text
+ClientHello
+   ├── cipher suites
+   ├── supported versions
+   ├── supported groups
+   ├── signature algorithms
+   └── key-share groups
+             │
+             ▼
+      protection_context
+             │
+             ▼
+      negotiated parameters
+```
+
+The result feeds `tls_protection`, which then uses the selected version, cipher suite, hash, and key-exchange material to establish cryptographic state.
+
+### Transcript and key schedule
+
+`tls_protection` owns the bridge between handshake semantics and cryptographic state.
+
+For TLS 1.3 the implementation follows the conceptual sequence:
+
+```text
+ClientHello / ServerHello
+          ↓
+      key agreement
+          ↓
+      shared secret
+          ↓
+      early / handshake secrets
+          ↓
+  client/server handshake traffic secrets
+          ↓
+       application secrets
+          ↓
+        key + IV
+          ↓
+       record/packet protection
+```
+
+The transcript hash is part of this calculation rather than an independent logging feature.
+
+For TLS 1.2 the path is different:
+
+```text
+pre-master secret
+      ↓
+master secret
+      ↓
+key block
+ ├── client MAC secret
+ ├── server MAC secret
+ ├── client write key
+ ├── server write key
+ ├── client IV
+ └── server IV
+```
+
+The common protection object hides these version-specific derivation paths behind the session.
+
+### Protection and encryption
+
+The protection implementation separates:
+
+```text
+tls_protection
+   ├── negotiation
+   ├── transcript
+   ├── secret calculation
+   └── protection API
+          │
+          ├── AEAD
+          ├── CBC/HMAC
+          └── header/AAD/IV construction
+```
+
+The AEAD implementation is therefore not the TLS protocol itself. It consumes protocol-derived keying material and record metadata.
+
+For TLS 1.2, AAD incorporates sequence number, content type, version, and length. DTLS additionally incorporates epoch and the datagram sequence number.
+
+### Session as the state hub
+
+`tls_session` keeps per-direction information, protection status, record numbers, alerts, scheduled handshakes/extensions, and the selected session type:
+
+```text
+tls_session
+ ├── direction[client/server]
+ │    ├── handshake status
+ │    ├── protection enabled
+ │    ├── record number / packet space
+ │    └── alerts
+ │
+ ├── tls_protection
+ ├── handshake queue
+ ├── scheduled extensions
+ ├── DTLS support
+ └── QUIC support
+```
+
+This explains why TLS, DTLS, and QUIC can share the same session/protection foundation while keeping different wire formats.
+
+### DTLS specialization
+
+DTLS reuses TLS handshake semantics but adds datagram-specific state:
+
+```text
+DTLS record
+ ├── epoch
+ ├── record sequence
+ └── fragment
+
+DTLS handshake
+ ├── message sequence
+ ├── fragment offset
+ └── fragment length
+```
+
+The implementation contains explicit reconstruction handling for fragmented handshake messages and keeps epoch/sequence information in session state.
+
+### Transport-facing orchestration
+
+The protocol objects do not themselves define the entire socket handshake loop. `tls_composer` and the trial socket classes provide the orchestration layer.
+
+```text
+trial socket
+    ↓
+tls_composer
+    ↓
+construct / send handshake records
+    ↓
+receive / parse peer records
+    ↓
+tls_session state changes
+    ↓
+next handshake action
+```
+
+The same composer family also has a QUIC handshake path, showing where TLS semantics meet transport-specific packet construction.
 
 ## Flow
 
-### TCP + TLS
+### TLS 1.3 full handshake
 
 ```text
-TCP byte stream
-    ↓
-TLS handshake
-    ↓
-TLS session / protection state
-    ↓
+ClientHello
+  ├── supported_versions
+  ├── key_share
+  ├── signature_algorithms
+  └── other extensions
+        ↓
+ServerHello
+  ├── selected version
+  ├── selected cipher suite
+  └── key_share
+        ↓
+shared secret / handshake secrets
+        ↓
+EncryptedExtensions
+        ↓
+Certificate / CertificateVerify
+        ↓
+Finished
+        ↓
+application traffic secrets
+        ↓
 protected application data
 ```
 
-### UDP + DTLS
+### TLS 1.3 PSK / 0-RTT
+
+```text
+ClientHello
+ ├── pre_shared_key
+ ├── psk_key_exchange_modes
+ ├── early_data
+ └── optional key_share
+        ↓
+resumption / early secret
+        ↓
+0-RTT application data
+        ↓
+ServerHello
+        ↓
+handshake traffic secrets
+        ↓
+Finished
+        ↓
+1-RTT application data
+```
+
+### TLS 1.2
+
+```text
+ClientHello
+   ↓
+ServerHello
+   ↓
+Certificate / key exchange
+   ↓
+ClientKeyExchange
+   ↓
+pre-master secret
+   ↓
+master secret / key block
+   ↓
+ChangeCipherSpec / Finished
+   ↓
+protected application data
+```
+
+### DTLS
 
 ```text
 UDP datagrams
     ↓
-DTLS handshake / record processing
+DTLS record
     ↓
-DTLS protection state
+epoch / sequence
     ↓
-application data
+handshake fragment
+    ↓
+reassembly
+    ↓
+TLS handshake processing
 ```
 
 ### TLS + QUIC
 
 ```text
-TLS handshake message
-    ↓
-QUIC CRYPTO frame
-    ↓
-QUIC packet
-    ↓
-packet protection
-    ↓
-peer receives / processes TLS handshake
+TLS ClientHello / ServerHello / ...
+              ↓
+        TLS session state
+              ↓
+       QUIC CRYPTO frame
+              ↓
+          QUIC packet
+              ↓
+      QUIC packet protection
 ```
 
-The QUIC path is the important structural distinction: TLS remains responsible for handshake semantics and key establishment, while QUIC owns packetization, transport frames, packet number spaces, and packet protection integration.
+The TLS key schedule is therefore shared conceptually with QUIC, while QUIC owns packet numbering, packet protection layout, and frame transport.
 
 ## Study & Verification
 
-The study material is organized around the questions that shaped the implementation rather than around testcase names.
+### Protocol understanding
 
-### TLS protocol understanding and construction
+The repository contains dedicated understanding cases for TLS 1.2, TLS 1.3, and DTLS:
 
-TLS 1.2 and TLS 1.3 behavior was studied through dedicated understanding and construction cases. The current verification anchors include `testcase_understand_tls12`, `testcase_understand_tls13`, and `testcase_construct_tls`.
+- `testcase_understand_tls12`
+- `testcase_understand_tls13`
+- `testcase_understand_dtls`
 
-### RFC 8448 examples
+These are useful because they preserve the protocol reasoning separately from the production implementation.
 
-Concrete TLS 1.3 handshake examples from RFC 8448 were reconstructed through `testcase_rfc8448_2` through `testcase_rfc8448_7`. These cases serve as executable protocol study material, connecting specification values with the implementation's handshake construction and cryptographic state.
+### RFC 8448 executable traces
 
-### Cryptographic protection
+`testcase_rfc8448_2` through `testcase_rfc8448_7` reconstruct the RFC 8448 TLS 1.3 examples, covering simple 1-RTT, HelloRetryRequest, resumed 0-RTT, client authentication, and compatibility-mode paths.
 
-AEAD processing, pre-master-secret handling, transcript-related state, and key derivation were explored through cases including `testcase_tls12_aead` and `testcase_pre_master_secret`.
+### Construction tests
 
-### Extensions and HelloRetryRequest
+`testcase_construct_tls`, `testcase_construct_dtls12_1`, `testcase_construct_dtls12_2`, and `testcase_construct_dtls13` exercise construction of protocol objects rather than relying only on live sockets.
 
-Handshake extension processing and HelloRetryRequest behavior were examined through `testcase_helloretryrequest`, providing a concrete trace for the less-linear TLS 1.3 handshake path.
+### Cryptographic tests
 
-### Packet traces / PCAP
+Representative tests include:
 
-PCAP-based vectors are used to connect abstract protocol understanding with real wire-level behavior. `testvector_pcap` is the current source anchor for this part of the study.
+- `testcase_pre_master_secret`
+- `testcase_tls12_aead`
+- `testcase_mlkem_encoding`
+
+The implementation also contains SSLKEYLOG import/export support, which connects derived TLS secrets to encrypted traffic analysis and replay.
+
+### Interoperability and capture replay
+
+The TLS test tree contains real client/server traces for:
+
+```text
+TLS 1.2
+TLS 1.3
+DTLS 1.2
+HTTP/1.1 over TLS
+HTTP/2 over TLS
+TLS 1.3 ML-KEM / hybrid groups
+```
+
+The PCAP/YAML replay tests connect these captures to reproducible protocol verification.
 
 ## Status
 
-| Area | Current state |
+| Area | Revision 1084 state |
 |---|---|
-| TLS 1.2 | implemented / studied |
-| TLS 1.3 | implemented / studied |
-| Handshake composition | substantial |
-| Cryptographic protection | substantial |
-| DTLS path | implemented / studied |
-| QUIC / TLS relationship | substantial |
-| QUIC packet / frame work | substantial |
-| QUIC PCAP study | completed as a study stage |
-| `trial_tls_composer` handshake | remaining |
-| `network_server` integration | remaining |
-| ASN.1 runtime | separate ongoing topic |
-| KEM / PQC | connected study area |
+| TLS 1.2 protocol / protection | implemented and extensively tested |
+| TLS 1.3 protocol / protection | implemented and extensively tested |
+| TLS handshake messages | broad implementation |
+| TLS extensions | broad implementation |
+| Transcript / key schedule | implemented |
+| AEAD / CBC-HMAC protection | implemented and tested |
+| DTLS 1.2 | implemented and tested |
+| DTLS fragmentation / reconstruction | implemented and tested |
+| TLS 1.3 ML-KEM / hybrid key exchange | tested |
+| TLS 1.3 ML-DSA certificate path | tested |
+| Real TCP/TLS interoperability | tested |
+| HTTP/1.1 / HTTP/2 over TLS | tested |
+| PCAP + SSLKEYLOG replay | implemented and tested |
+| QUIC TLS handshake integration | substantial / ongoing |
+| `tls_composer` QUIC integration | remaining integration work exists |
+| `network_server` integration | active adjacent work |
 
-## Related Documents
+The remaining items should not be read as a lack of TLS protocol implementation. Most of the TLS protocol and cryptographic foundation is already a substantial completed study/implementation area; the open work is primarily at the orchestration and transport-integration boundaries.
 
-The relationships are intentionally kept small at this stage and can grow with the document set.
+## Related topics
 
 ```text
-TLS
-├── ASN.1 / X.509
-├── HTTP / HTTPS
-├── DTLS
-├── QUIC
-│   └── HTTP/3
-└── KEM / PQC
+                    ASN.1 / X.509
+                          │
+                          ▼
+TCP ────────────────►  TLS  ◄────────────── KEM / PQC
+                          │
+                 ┌────────┴────────┐
+                 │                 │
+                DTLS              QUIC
+                 │                 │
+                UDP              HTTP/3
 ```
 
-Current related topics: HPACK, HTTP/2, and the planned ASN.1, QUIC, HTTP/3, and QPACK documents.
+TLS therefore owns the handshake/security semantics shared with QUIC, while TCP/DTLS/QUIC own their respective transport or packet boundaries.
 
 ---
 
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1072            │
+│ Edition 1 · Revision 1084            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘

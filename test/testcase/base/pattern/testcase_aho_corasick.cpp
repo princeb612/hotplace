@@ -122,6 +122,12 @@ void test_aho_corasick3() {
         token_usertype_default,
         token_sequenceof_default,
         token_setof_default,
+        token_builtintype,
+        token_class,
+        token_taggedmode,
+        token_tag,
+        token_taggedtype,
+        token_namedtype,
     };
 
     ac.group_as(token_builtintype, {token_bool, token_int, token_null, token_oid, token_real, token_utf8string, token_visiblestring});

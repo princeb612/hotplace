@@ -65,7 +65,7 @@ void asn1_runtime::load() {
     if (false == get_parser().ready()) {
         auto& lex = get_lexer();
         // handle_quoted to 1
-        lex.get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1).set("handle_lvalue_usertype", 1);
+        lex.get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1).set("handle_lvalue_usertype", 1).set("handle_asn1parameterized", 1);
         lex.prepare();
 
         // ASN.1 tokens

@@ -14,6 +14,7 @@
  *
  */
 
+#include <deque>
 #include <hotplace/sdk/base/string/string.hpp>
 #include <hotplace/sdk/io/parser/lexical_analyzer.hpp>
 #include <hotplace/sdk/io/parser/parser_resource.hpp>
@@ -153,7 +154,8 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
         uint16 handle_token = get_config().get("handle_token");
         uint16 handle_quot_as_unquoted = get_config().get("handle_quot_as_unquoted");
         uint16 handle_lvalue_usertype = get_config().get("handle_lvalue_usertype");
-        std::set<uint32> lvalues;
+        uint16 handle_asn1parameterized = get_config().get("handle_asn1parameterized");  // context-sensitive lexing
+        std::map<size_t, uint32> retypes;                                                // idx, natice_token_t
         std::multimap<std::string, lexical_token*> index;
         lexical_token* lvalue = nullptr;
         bool comments = false;
@@ -168,12 +170,62 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
                     case token_assign:
                         lvalue = context.last_lextoken();
                         if (lvalue) {
-                            // case token_identifier token_assign
                             if (token_identifier == lvalue->get_tokenid() || token_usertype == lvalue->get_tokenid()) {
+                                // case token_identifier token_assign
                                 lvalue->set_type(token_lvalue);
                                 token.set_type(token_assign);
                                 if (handle_lvalue_usertype) {
-                                    lvalues.insert(lvalue->get_index());
+                                    retypes.emplace(lvalue->get_index(), token_usertype);
+                                }
+                            }
+                            if (handle_asn1parameterized && (token_rbrace == lvalue->get_tokenid())) {
+                                std::deque<lexical_token*> tokenq;
+                                native_token_t last_tokenid = token_unknown;
+
+                                auto lambda = [&tokenq, &last_tokenid](lexical_token* token) -> bool {
+                                    auto tokenid = token->get_tokenid();
+                                    if ((token_identifier == tokenid) || (token_lbrace == tokenid) || (token_rbrace == tokenid) || (token_comma == tokenid) ||
+                                        (token_colon == tokenid) || is_asn1type(tokenid)) {
+                                        tokenq.push_front(token);
+
+                                        if ((token_identifier == tokenid) && (token_lbrace == last_tokenid)) {
+                                            return false;
+                                        }
+                                    } else {
+                                        while (false == tokenq.empty()) tokenq.pop_back();
+                                        return false;
+                                    }
+
+                                    last_tokenid = tokenid;
+                                    return true;
+                                };
+                                context.reverse_for_each(lambda);
+
+                                auto size = tokenq.size();
+                                if (4 <= size) {
+                                    last_tokenid = token_unknown;
+                                    while (false == tokenq.empty()) {
+                                        auto front = tokenq.front();
+                                        auto tokenid = front->get_tokenid();
+                                        switch (tokenid) {
+                                            case token_identifier:
+                                                if (token_unknown == last_tokenid) {
+                                                    front->set_type(token_userparamtype);
+                                                    retypes.emplace(front->get_index(), token_userparamtype);
+                                                } else if ((token_lbrace == last_tokenid) || (token_comma == last_tokenid)) {
+                                                    front->set_type(token_paramtype);
+                                                    retypes.emplace(front->get_index(), token_paramtype);
+                                                } else if (token_colon == last_tokenid) {
+                                                    front->set_type(token_paramvalue);
+                                                    retypes.emplace(front->get_index(), token_paramvalue);
+                                                }
+                                                break;
+                                            default:
+                                                break;
+                                        }
+                                        last_tokenid = tokenid;
+                                        tokenq.pop_front();
+                                    }
                                 }
                             }
                         }
@@ -437,7 +489,7 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
          *                   │
          *           ┌───────┴───────┐
          *           │               │
-         *        tokens           lvalues
+         *        tokens           retypes
          *                           │
          *                           ▼
          *                     rlookup names
@@ -451,14 +503,16 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
          *                           ▼
          *                         LALR
          */
-        if (handle_lvalue_usertype) {
-            for (auto idx : lvalues) {
+        if (false == retypes.empty()) {
+            for (const auto& pair : retypes) {
+                auto idx = pair.first;
+                auto type = pair.second;
                 std::string ts;
                 if (rlookup(idx, ts)) {
-                    add_token(ts, token_usertype);
+                    add_token(ts, type);
                     auto range = index.equal_range(ts);
                     for (auto iter = range.first; iter != range.second; ++iter) {
-                        iter->second->set_type(token_usertype);
+                        iter->second->set_type(type);
                     }
                 }
             }

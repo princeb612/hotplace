@@ -6,6 +6,15 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2024.04.20   Soo Han, Kim        HTTP/2 (codename.hotplace Revision 498)
+ *                                  - fixed length member (uint8, uint16, uint32_24_t, uint32, uint64, uint128)
+ *                                  - binary_t, group control, reference value
+ * 2024.11.03   Soo Han, Kim        QUIC (codename.hotplace Revision 643)
+ *                                  - variable length member (payload_encoded)
+ * 2024.11.19   Soo Han, Kim        HTTP/2, TLS (codename.hotplace Revision 650)
+ *                                  - uint24_t, multiple concept
+ * 2024.12.18   Soo Han, Kim        hook-based group control (codename.hotplace Revision 670)
+ *
  */
 
 #ifndef __HOTPLACE_SDK_IO_BASIC_PAYLOAD__

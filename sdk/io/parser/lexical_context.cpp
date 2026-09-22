@@ -162,5 +162,11 @@ void lexical_context::walk(std::function<void(const char* p, const lexical_token
     }
 }
 
+void lexical_context::reverse_for_each(std::function<bool(lexical_token*)> func) {
+    if (func) {
+        reverse_for_each(func);
+    }
+}
+
 }  // namespace io
 }  // namespace hotplace

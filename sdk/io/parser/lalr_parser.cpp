@@ -58,24 +58,35 @@ return_t lalr_parser::learn() {
 #if defined DEBUG
         if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
             trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
-                print_style_t style(2);  // indent 2
+                print_style_t style("{", ", ", "}", 2);  // indent 2
 
+                // written to be suitable for generating pre-built LALR(1) GOTO
                 auto lambda_lr0_goto = [](typename std::map<std::pair<uint32, std::string>, uint32>::const_iterator it, basic_stream& dbs) -> void {
-                    dbs << "{" << it->first.first << ":\"" << it->first.second << "\"} -> " << it->second;
+                    dbs << "{" << it->first.first << ", \"" << it->first.second << "\"}, " << it->second;
                 };
+                // written to be suitable for generating pre-built LALR(1) ACTION
                 auto lambda_action = [](typename std::map<std::pair<uint32, std::string>, parser_action>::const_iterator it, basic_stream& dbs) -> void {
-                    dbs << "{" << it->first.first << ":\"" << it->first.second << "\"} -> ";
+                    static std::map<std::string, std::string> table = {
+                        {"id", "SYMBOL_ID"}, {"usertype", "SYMBOL_USERTYPE"}, {"num", "SYMBOL_NUM"}, {"fp", "SYMBOL_FP"}, {"quot_string", "SYMBOL_QSTR"}};
+
+                    dbs << "{" << it->first.first << ", ";
+                    auto table_it = table.find(it->first.second);
+                    if (table.end() != table_it)
+                        dbs << table_it->second;
+                    else
+                        dbs << "\"" << it->first.second << "\"";
+                    dbs << "}, ";
                     auto action = it->second.type;
                     auto target = it->second.target;
                     dbs << "{";
                     if (parser_action_t::shift == action)
-                        dbs << "shift";
+                        dbs << "parser_action_t::shift";
                     else if (parser_action_t::reduce == action)
-                        dbs << "reduce";
+                        dbs << "parser_action_t::reduce";
                     else if (parser_action_t::accept == action)
-                        dbs << "accept";
+                        dbs << "parser_action_t::accept";
                     else if (parser_action_t::error == action)
-                        dbs << "error";
+                        dbs << "parser_action_t::error";
                     dbs << ", " << target << "}";
                 };
 
@@ -206,7 +217,10 @@ return_t lalr_parser::parse(const std::vector<parser_token>& tokens, parse_tree*
                 case token_floatingpoint:
                 case token_quot_string:
                 case token_usertype:
-                    typestring = resource->nameof(current_token.type); /* read token symbol string */
+                case token_userparamtype:
+                case token_paramtype:
+                case token_paramvalue:
+                    typestring = resource->nameof(current_token.type); /* context-sensitive */
                     break;
                 default:
                     typestring = current_token.value;
@@ -219,8 +233,8 @@ return_t lalr_parser::parse(const std::vector<parser_token>& tokens, parse_tree*
                 if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
                     trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
                         valist va;
-                        va << current_state << current_token.value << current_token.type;
-                        dbs.vaprintln("no parser_action for state {1} with token {2} ({3})", va);
+                        va << current_state << typestring << current_token.value << current_token.type;
+                        dbs.vaprintln("no parser_action for state {1}:{2} with token {3} ({4})", va);
                     });
                 }
 #endif

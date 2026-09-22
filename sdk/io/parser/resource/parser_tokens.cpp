@@ -54,6 +54,9 @@ const parser_token_resource parser_symbol_tokens[] = {
     {token_element, "element"},
     {token_phrase, "phrase"},
     {token_sentence, "sentence"},
+    {token_userparamtype, "userparamtype"},
+    {token_paramtype, "paramtype"},
+    {token_paramvalue, "paramvalue"},
     {token_eof, "$"},
 };
 const size_t sizeof_parser_symbol_tokens = RTL_NUMBER_OF(parser_symbol_tokens);
@@ -73,6 +76,9 @@ const parser_token_resource parser_basic_tokens[] = {
 const size_t sizeof_parser_basic_tokens = RTL_NUMBER_OF(parser_basic_tokens);
 
 const struct parser_token_resource parser_asn1_tokens[] = {
+    {token_assign, "::="},
+    {token_comments, "--"},
+
     {token_bool, "BOOLEAN"},
     {token_int, "INTEGER"},
     {token_bitstring, "BIT STRING"},
@@ -105,41 +111,45 @@ const struct parser_token_resource parser_asn1_tokens[] = {
     {token_duration, "DURATION"},
     {token_any, "ANY"},
 
-    {token_all, "ALL"},
-    {token_allexcept, "ALL EXCEPT"},
-    {token_application, "APPLICATION"},
-    {token_assign, "::="},
-    {token_automatic, "AUTOMATIC"},
-    {token_begin, "BEGIN"},
-    {token_choice, "CHOICE"},
-    {token_comments, "--"},
-    {token_default, "DEFAULT"},
-    {token_definitions, "DEFINITIONS"},
-    {token_end, "END"},
-    {token_except, "EXCEPT"},
-    {token_explicit, "EXPLICIT"},
-    {token_exports, "EXPORTS"},
-    {token_extensibility, "EXTENSIBILITY"},
-    {token_false, "FALSE"},
-    {token_from, "FROM"},
-    {token_fromto, ".."},
-    {token_implicit, "IMPLICIT"},
-    {token_implied, "IMPLIED"},
-    {token_imports, "IMPORTS"},
-    {token_intersection, "INTERSECTION"},
-    {token_max, "MAX"},
-    {token_min, "MIN"},
-    {token_of, "OF"},
-    {token_optional, "OPTIONAL"},
-    {token_pattern, "PATTERN"},
-    {token_private, "PRIVATE"},
     {token_sequence, "SEQUENCE"},
     {token_set, "SET"},
-    {token_size, "SIZE"},
-    {token_tags, "TAGS"},
+    {token_choice, "CHOICE"},
+    {token_of, "OF"},
+
     {token_true, "TRUE"},
-    {token_union, "|"},
+    {token_false, "FALSE"},
+
     {token_universal, "UNIVERSAL"},
+    {token_application, "APPLICATION"},
+    {token_private, "PRIVATE"},
+
+    {token_implicit, "IMPLICIT"},
+    {token_explicit, "EXPLICIT"},
+
+    {token_default, "DEFAULT"},
+    {token_optional, "OPTIONAL"},
+
+    {token_union, "|"},
+    {token_intersection, "INTERSECTION"},
+    {token_except, "EXCEPT"},
+    {token_allexcept, "ALL EXCEPT"},
+    {token_size, "SIZE"},
+    {token_from, "FROM"},
+    {token_pattern, "PATTERN"},
+    {token_max, "MAX"},
+    {token_min, "MIN"},
+    {token_range, ".."},
+
+    {token_definitions, "DEFINITIONS"},
+    {token_automatic, "AUTOMATIC"},
+    {token_tags, "TAGS"},
+    {token_begin, "BEGIN"},
+    {token_end, "END"},
+    {token_exports, "EXPORTS"},
+    {token_imports, "IMPORTS"},
+    {token_all, "ALL"},
+    {token_extensibility, "EXTENSIBILITY"},
+    {token_implied, "IMPLIED"},
 };
 const size_t sizeof_parser_asn1_tokens = RTL_NUMBER_OF(parser_asn1_tokens);
 

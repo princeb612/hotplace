@@ -56,14 +56,14 @@ namespace io {
  *                  return error;
  *          }
  */
-class lalr_parser {
+class lalr_parser : public parser_t {
    public:
     lalr_parser() = default;
     explicit lalr_parser(const cfg_grammar& g);
     explicit lalr_parser(cfg_grammar&& g);
 
-    void set_grammar(const cfg_grammar& g);
-    void set_grammar(cfg_grammar&& g);
+    virtual void set_grammar(const cfg_grammar& g);
+    virtual void set_grammar(cfg_grammar&& g);
 
     const cfg_grammar& get_cfg_grammar() const;
 
@@ -80,18 +80,19 @@ class lalr_parser {
      *          lalr_parser lalr;
      *          lalr.import(asn1_productions, asn1_action_table, asn1_goto_table);
      */
-    return_t learn();
-    return_t import(const std::vector<parser_production>& productions, const std::map<std::pair<uint32, std::string>, parser_action>& action_table,
+    virtual return_t learn();
+    return_t import(const std::vector<parser_production>& productions,                            //
+                    const std::map<std::pair<uint32, std::string>, parser_action>& action_table,  //                                             //
                     const std::map<std::pair<uint32, std::string>, uint32>& goto_table);
 
-    bool ready() const;
+    virtual bool ready() const;
 
     /**
      * @remarks perform dynamically generated table-based parsing
      * @param   const std::vector<parser_token>& tokens [in]
      * @param   parse_tree* pt [outopt] generate parse tree if necessary
      */
-    return_t parse(const std::vector<parser_token>& tokens, parse_tree* pt = nullptr);
+    virtual return_t parse(const std::vector<parser_token>& tokens, parse_tree* pt = nullptr);
 
    protected:
     void compute_first_and_follow_sets();

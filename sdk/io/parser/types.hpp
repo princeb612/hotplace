@@ -81,7 +81,7 @@ enum token_t : uint32 {
     // ASN.1
     token_asn1 = 0x1000,
 
-    token_builtintype,
+    // token_builtintype,
     token_bool,
     token_int,
     token_bitstring,
@@ -95,11 +95,6 @@ enum token_t : uint32 {
     token_embedpdv,
     token_utf8string,
     token_reloid,
-    token_of,
-    token_sequence,
-    token_sequenceof,
-    token_set,
-    token_setof,
     token_numstring,
     token_printstring,
     token_t61string,  // teletexstring
@@ -118,25 +113,33 @@ enum token_t : uint32 {
     token_datetime,
     token_duration,
     token_any,
-    token_choice,
 
-    token_boolvalue,
+    token_sequence,
+    // token_sequenceof,
+    token_set,
+    // token_setof,
+    token_choice,
+    token_of,
+
+    // token_boolvalue,
     token_true,   // TRUE
     token_false,  // FALSE
-
-    token_class,
+    // token_class,
     token_universal,    // UNIVERSAL
     token_application,  // APPLICATION
     token_private,      // PRIVATE
 
-    token_taggedmode,
+    // token_taggedmode,
     token_implicit,
     token_explicit,
 
-    token_namedtype,
-    token_tag,
-    token_taggedtype,
-    token_referencedtype,
+    token_default,   // DEFAULT
+    token_optional,  // OPTIONAL
+
+    // token_namedtype,
+    // token_tag,
+    // token_taggedtype,
+    // token_referencedtype,
 
     token_union,         // |
     token_intersection,  // INTERSECTION
@@ -147,11 +150,8 @@ enum token_t : uint32 {
     token_pattern,       // PATTERN
     token_min,           // MIN
     token_max,           // MAX
-    token_fromto,        // .. range separator, range operator
-    token_range = token_fromto,
-
-    token_default,   // DEFAULT
-    token_optional,  // OPTIONAL
+    token_range,         // .. range separator, range operator
+    token_fromto = token_range,
 
     token_definitions,
     token_automatic,
@@ -163,6 +163,10 @@ enum token_t : uint32 {
     token_all,
     token_extensibility,
     token_implied,
+
+    token_userparamtype,
+    token_paramtype,
+    token_paramvalue,
 
     token_userdefine = 0x2000,
 
@@ -220,6 +224,19 @@ class lexical_token;
 class parse_tree;
 class parse_tree_visitor;
 class parse_resource;
+
+class parser_t {
+   public:
+    virtual ~parser_t() = default;
+
+    virtual void set_grammar(const cfg_grammar& g) = 0;
+    virtual void set_grammar(cfg_grammar&& grammar) = 0;
+    virtual return_t learn() = 0;
+    virtual bool ready() const = 0;
+    virtual return_t parse(const std::vector<parser_token>& tokens, parse_tree* pt = nullptr) = 0;
+};
+
+static inline bool is_asn1type(native_token_t id) { return (token_bool <= id) && (token_of >= id); }
 
 }  // namespace io
 }  // namespace hotplace

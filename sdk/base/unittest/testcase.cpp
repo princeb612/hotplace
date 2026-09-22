@@ -6,7 +6,6 @@
  *
  * Revision History
  * Date         Name                Description
- * 2023.08.15   Soo Han, Kim        elapsed time
  * 2017.07.13   Soo Han, Kim        prototype (codename.grape Revision 288)
  * 2023.08.15   Soo Han, Kim        reboot (codename.hotplace Revision 9)
  *
@@ -485,7 +484,7 @@ void test_case::report_unittest(basic_stream& stream) {
         }
         if (status._test_stat._count_trivial) {
             stream << " ";
-            cprint(console_colored_stream, _concolor, hint_triv->color, fgcolor, hint_skip->testname);
+            cprint(console_colored_stream, _concolor, hint_triv->color, fgcolor, hint_triv->testname);
             stream << " " << status._test_stat._count_trivial;
         }
         stream << "\n";

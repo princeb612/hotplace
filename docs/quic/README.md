@@ -1,382 +1,707 @@
 # QUIC
 
-**Edition 1 · Revision 1076**
+**Edition 1 · Revision 1084**
 
-QUIC is a transport protocol built over UDP, but in hotplace it is also a
-meeting point for TLS 1.3, packet protection, stream transport, and HTTP/3.
-The document therefore treats QUIC as a protocol boundary rather than as a
-collection of packet and frame classes.
+QUIC is a transport protocol built over UDP, but in hotplace it is more useful to understand QUIC as the meeting point of four independently meaningful mechanisms:
+
+```text
+                    TLS 1.3
+                       │
+                 handshake / keys
+                       │
+                       ▼
+UDP ──────────────── QUIC ─────────────── HTTP/3
+                       │
+             ┌─────────┴─────────┐
+             ▼                   ▼
+          packets              streams
+             │                   │
+             ▼                   ▼
+           frames             application
+```
+
+QUIC therefore cannot be reduced to either “UDP with reliability” or “TLS over UDP”. Its packet protection, connection state, stream transport, loss/acknowledgement behavior, and TLS handshake integration form one transport system while retaining distinct ownership boundaries.
 
 ## Context
 
-The study path into QUIC is not isolated. HTTP/2 and HPACK lead toward the
-header-compression problem, while HTTP/3 moves that problem onto QUIC streams.
-TLS 1.3 is carried by QUIC CRYPTO frames and supplies the handshake and key
-material used by QUIC packet protection.
+The QUIC work in hotplace grew out of the TLS 1.3 study. RFC 9001 then provides the bridge: TLS supplies handshake semantics and key material, while QUIC transports TLS handshake bytes in CRYPTO frames and applies the resulting secrets to QUIC packet protection.
+
+The surrounding study path is:
 
 ```text
-                 TLS 1.3
-                    │
-                    │ handshake / secrets
-                    ▼
-UDP ────────────── QUIC ────────────── HTTP/3
-                    │                    │
-                    │                    └── QPACK
-                    │
-             Packet / Frame
-                    │
-                    ▼
-                  PCAP
+HPACK / QPACK
+      ↓
+HTTP/2
+      ↓
+QUIC RFC 9000 / RFC 9001
+      ↓
+QUIC packet / frame / stream
+      ↓
+HTTP/3
+      ↓
+capture / replay verification
 ```
 
-The ownership boundary is intentional: QUIC owns transport packets, frames,
-connection state, streams, and packet protection; TLS owns the TLS handshake
-and cryptographic protocol; HTTP/3 owns application protocol frames and
-QPACK. Traffic captures and test vectors connect the layers without making
-one layer responsible for another.
+This also explains why QUIC touches several areas of the repository:
+
+- `sdk/net/tls/quic/` — QUIC protocol model
+- `sdk/net/tls/quic/frame/` — frame types
+- `sdk/net/tls/quic/packet/` — packet types and protection
+- `sdk/net/tls/quic/quic_encoded*` — QUIC variable-length encoding
+- TLS protection — handshake and packet-protection key material
+- HTTP/3 — stream/application interpretation
+- PCAP/YAML test vectors — reproducible wire-level verification
 
 ## History
 
-The CHANGELOG provides the chronological index for the current reconstruction.
-The QUIC study appears together with the TLS study, and later entries record
-RFC 9000/RFC 9001 work, QUIC Version 2 (RFC 9369), and HTTP/3 traffic
-verification.
+The CHANGELOG provides the chronological index.
 
-The concrete study path visible in the project is:
+Important anchors include:
+
+- Revision 626: QPACK RFC 9204 tested.
+- Revision 634–635: HPACK/QPACK tested.
+- Revision 646: RFC 9001 Client Initial / Server Initial study.
+- Revision 647: RFC 9001 Retry and TLS 1.3 study.
+- Revision 714: `quic.xargs.org` study.
+- Revision 716: RFC 9369 QUIC Version 2 study.
+- Revision 823: RFC 9204 tested.
+- Revision 824: QPACK fix.
+- Later TLS/PQC work expanded the TLS foundation used by QUIC.
+
+The historical relationship is therefore more informative than treating QUIC as an isolated feature:
 
 ```text
-TLS 1.3 study
-    │
-    ├── RFC 9001 / QUIC TLS protection
-    │
-    ▼
-QUIC packet / frame study
-    │
-    ├── RFC 9000
-    ├── RFC 9369
-    └── packet construction
-    │
-    ▼
-HTTP/3 traffic / PCAP study
+HTTP/2 / HPACK
+       ↓
+TLS 1.3
+       ↓
+RFC 9001
+       ↓
+QUIC packet + frame implementation
+       ↓
+RFC 9369 / QUIC v2
+       ↓
+HTTP/3 / capture replay
 ```
-
-The project history also records earlier QUIC verification at Revision 646
-(Client Initial / Server Initial), Revision 647 (Retry), Revision 714
-(quic.xargs.org), and Revision 716 (RFC 9369). These entries are useful as
-historical anchors; they are not treated as a complete narrative of every
-development step.
 
 ## Conceptual
 
-### Packet
+### QUIC has multiple packet protection spaces
 
-A QUIC packet carries a packet header and protected payload. The packet type
-determines the header form and the protection space used by the implementation.
+The packet type determines which cryptographic context is used.
 
-The current model distinguishes:
+```text
+Initial
+  └── Initial secrets
 
-- Initial
-- 0-RTT
-- Handshake
-- Retry
-- Version Negotiation
-- 1-RTT
+Handshake
+  └── Handshake traffic secrets
 
-### Frame
+0-RTT
+  └── 0-RTT traffic secret
 
-Frames are the transport-level units carried inside QUIC packets. The current
-implementation includes, among others, ACK, CRYPTO, STREAM, PING, PADDING,
-RESET_STREAM, STOP_SENDING, NEW_CONNECTION_ID, NEW_TOKEN, and
-CONNECTION_CLOSE.
+1-RTT
+  └── application traffic secrets
+```
 
-A packet is therefore not the same conceptual unit as a frame:
+Retry and Version Negotiation are special: they are not protected in the same way as ordinary encrypted packets.
+
+The implementation consequently needs both packet-type dispatch and protection-space state.
+
+### Packet and frame are different units
+
+A QUIC packet is the transport/protection container:
 
 ```text
 QUIC packet
-    │
-    ├── header
-    │
-    └── protected payload
-           │
-           ├── frame
-           ├── frame
-           └── ...
+ ├── header
+ └── protected payload
+       ├── frame
+       ├── frame
+       └── frame
 ```
 
-### TLS binding
+A frame is the protocol operation carried inside that packet.
 
-QUIC does not carry TLS records as its transport format. TLS handshake
-messages are carried through QUIC CRYPTO frames, while the resulting traffic
-secrets are used by QUIC packet protection.
+Examples include:
+
+```text
+ACK
+CRYPTO
+STREAM
+PING
+PADDING
+RESET_STREAM
+STOP_SENDING
+NEW_CONNECTION_ID
+NEW_TOKEN
+CONNECTION_CLOSE
+```
+
+This distinction becomes important when reading the source: packet parsing establishes the protection boundary, while frame parsing establishes transport semantics.
+
+### TLS is embedded through CRYPTO frames
+
+QUIC does not carry TLS records.
 
 ```text
 TLS handshake message
-        │
-        ▼
-    CRYPTO frame
-        │
-        ▼
-   QUIC packet
+        ↓
+TLS handshake bytes
+        ↓
+CRYPTO frame
+        ↓
+QUIC packet
 ```
 
-This distinction is central to understanding the TLS/QUIC implementation.
-
-### Streams
-
-QUIC provides multiplexed streams within one connection. Stream frames carry
-application data, while stream state and connection state remain part of the
-QUIC transport model.
-
-For HTTP/3, the stream payload is subsequently interpreted as HTTP/3 frames,
-and header blocks use QPACK.
+The reverse path is:
 
 ```text
-QUIC STREAM
-    │
-    ▼
-HTTP/3 stream data
-    │
-    ├── HTTP/3 frame
-    └── header block → QPACK
+QUIC packet
+   ↓
+decrypt
+   ↓
+CRYPTO frame
+   ↓
+TLS handshake bytes
+   ↓
+TLS handshake parser
 ```
 
-### Packet protection
+This is one of the central architectural boundaries in the implementation.
 
-Packet protection has two related but distinct operations: header protection
-and payload protection. Packet-number reconstruction and protection-space
-state participate in the decoding path.
+### Streams provide ordered application transport
 
-The current implementation also represents QUIC v1/v2-specific key material
-and labels through the TLS protection layer.
+A QUIC connection contains multiple streams.
+
+```text
+QUIC connection
+ ├── stream 0
+ ├── stream 1
+ ├── stream 2
+ └── ...
+```
+
+A STREAM frame carries a portion of one stream:
+
+```text
+STREAM frame
+ ├── stream id
+ ├── offset
+ ├── optional FIN
+ └── stream data
+```
+
+HTTP/3 then interprets the ordered stream data as HTTP/3 frames and QPACK-encoded header blocks.
+
+### Variable-length encoding is part of the protocol model
+
+QUIC uses a compact variable-length integer encoding for many fields. The implementation isolates this representation in `quic_encoded` and related helpers.
+
+```text
+value
+  ↓
+QUIC variable-length integer
+  ├── 1 byte
+  ├── 2 bytes
+  ├── 4 bytes
+  └── 8 bytes
+```
+
+Some protocol fields are additionally length-prefixed byte sequences:
+
+```text
+length(varint)
+     ↓
+data
+```
+
+This is where the generic `payload_encoded` model meets QUIC-specific wire representation.
+
+### Packet protection has two layers
+
+QUIC packet protection consists conceptually of:
+
+```text
+packet payload
+     ↓
+AEAD encryption
+     ↓
+ciphertext
+
+packet header
+     ↓
+header protection
+     ↓
+protected header fields
+```
+
+Header protection is not the same operation as payload AEAD. Packet-number encoding/reconstruction participates in the boundary between them.
 
 ## Structural
 
-The current source separates QUIC into packet, frame, session, and publishing
-responsibilities.
+### Overall source model
 
 ```text
-                    quic_session
-                         │
-          ┌──────────────┼──────────────┐
-          ▼              ▼              ▼
-     CID / settings   packet nums    quic_streams
-                         │
-                         ▼
-                  quic_packet_publisher
-                         │
-               ┌─────────┴─────────┐
-               ▼                   ▼
-          quic_packets          TLS handshake
-               │
-               ▼
-          quic_packet
-               │
-               ▼
-          quic_frames
-               │
-        ┌──────┴─────────┐
-        ▼                ▼
-   transport frames   HTTP/3 stream
+                         quic_session
+                              │
+             ┌────────────────┼────────────────┐
+             │                │                │
+             ▼                ▼                ▼
+        connection CID   packet numbers    quic_streams
+             │                │                │
+             └────────────────┼────────────────┘
+                              ▼
+                    packet construction/
+                       publishing
+                              │
+                              ▼
+                         quic_packet
+                              │
+                    ┌─────────┴─────────┐
+                    ▼                   ▼
+                 header              frames
+                    │                   │
+                    │            ┌──────┴──────┐
+                    │            ▼             ▼
+                    │         CRYPTO        STREAM
+                    │            │             │
+                    ▼            ▼             ▼
+             packet protection  TLS          HTTP/3
 ```
 
-Important current source anchors are:
+The implementation separates **connection state**, **packet representation**, **frame representation**, and **publishing/construction**.
 
-- `sdk/net/tls/quic/` — QUIC packet/frame model.
-- `sdk/net/tls/quic/packet/` — packet parsing, writing, header protection,
-  and packet-type-specific behavior.
-- `sdk/net/tls/quic/frame/` — frame parsing and writing.
-- `sdk/net/tls/quic_session.hpp` — connection-level state.
-- `sdk/net/tls/quic_streams.hpp` — stream state.
-- `sdk/net/tls/quic_packet_publisher.hpp` — packet construction and the
-  connection point between TLS, QUIC frames, and HTTP/3 stream payloads.
-- `sdk/net/basic/trial/tls_composer_quic_handshake.cpp` — composition of
-  TLS 1.3 handshake messages into QUIC packets.
+### Packet family
 
-The class names above are source anchors, not the narrative itself. The
-important structural idea is the separation between protocol state, packet
-representation, frame representation, and packet publishing.
+The packet directory contains concrete packet forms:
 
-## Flow
+```text
+quic_packet
+ ├── Initial
+ ├── Handshake
+ ├── 0-RTT
+ ├── 1-RTT
+ ├── Retry
+ └── Version Negotiation
+```
 
-### Receiving a packet
+This is not merely an inheritance hierarchy. Each packet type has different header fields, packet-number behavior, and protection requirements.
+
+### Packet parsing boundary
+
+The receiving path is conceptually:
 
 ```text
 UDP datagram
-    │
-    ▼
-QUIC packet parser
-    │
-    ├── packet header
-    ├── protection space
-    ├── header unprotection
-    ├── packet number
-    └── payload decryption
-             │
-             ▼
-          frames
-             │
-      ┌──────┴──────┐
-      ▼             ▼
-   CRYPTO        STREAM
-      │             │
-      ▼             ▼
-     TLS          HTTP/3
+   ↓
+packet type / header form
+   ↓
+header fields
+   ↓
+protection context
+   ↓
+header unprotection
+   ↓
+packet number reconstruction
+   ↓
+AEAD payload decryption
+   ↓
+frame parsing
 ```
 
-### TLS handshake
+The order matters. Frames cannot be interpreted until the protected payload has been recovered.
+
+### Frame model
+
+`quic_frame` is the common frame abstraction. Concrete implementations represent frame-specific fields and semantics.
 
 ```text
-TLS ClientHello / ServerHello / ...
-              │
-              ▼
-        CRYPTO frame
-              │
-              ▼
-         QUIC packet
-              │
-              ▼
-      packet publisher
+quic_frame
+   ├── ACK
+   ├── CRYPTO
+   ├── STREAM
+   ├── PING
+   ├── PADDING
+   ├── RESET_STREAM
+   ├── STOP_SENDING
+   ├── NEW_CONNECTION_ID
+   ├── NEW_TOKEN
+   ├── CONNECTION_CLOSE
+   └── other registered frame types
 ```
 
-The current trial handshake composer explicitly publishes the ClientHello
-with HTTP/3 ALPN and QUIC transport parameters, then continues the handshake
-through QUIC packet protection spaces.
+`quic_frames` acts as the collection/dispatch boundary for a packet's frame sequence.
 
-### HTTP/3 traffic
+### CRYPTO frame is the TLS bridge
+
+The CRYPTO frame is structurally simple but architecturally important:
 
 ```text
-HTTP/3 application data
-        │
-        ▼
-     QUIC STREAM
-        │
-        ▼
-HTTP/3 frame parser
-        │
-        ├── control / settings
-        ├── HEADERS
-        └── DATA
-                │
-             QPACK
+CRYPTO
+ ├── offset
+ ├── length
+ └── TLS handshake bytes
 ```
 
-This is why HTTP/3 should refer to QUIC for transport behavior rather than
-duplicating packet-level concepts.
+The frame does not interpret TLS messages. It transports the bytes into the TLS layer.
+
+This keeps the ownership boundary clean:
+
+```text
+QUIC → CRYPTO framing
+TLS  → handshake interpretation
+```
+
+### STREAM frame is the application bridge
+
+Similarly:
+
+```text
+STREAM
+ ├── stream id
+ ├── offset
+ ├── FIN
+ └── application bytes
+```
+
+The QUIC layer manages stream delivery semantics. HTTP/3 interprets the resulting stream bytes.
+
+```text
+QUIC STREAM
+      ↓
+HTTP/3
+      ↓
+HTTP/3 frame
+      ↓
+QPACK / application semantics
+```
+
+### `quic_encoded`
+
+`quic_encoded` is the QUIC-specific representation used where the wire format is a variable-length integer or a length-prefixed data item.
+
+Conceptually:
+
+```text
+quic_encoded
+ ├── integer value
+ │      └── encoded width
+ │
+ └── data value
+        ├── data length
+        ├── encoded length
+        └── data bytes
+```
+
+Its relationship with the generic payload layer is important:
+
+```text
+payload_member
+      ↓
+payload_encoded
+      ↓
+quic_encoded
+      ↓
+QUIC wire encoding
+```
+
+Thus QUIC-specific compact encoding remains outside the generic payload implementation.
+
+### Packet publisher
+
+`quic_packet_publisher` is a construction/orchestration boundary.
+
+It connects:
+
+```text
+TLS state
+   +
+QUIC packet
+   +
+QUIC frames
+   +
+HTTP/3 stream payload
+```
+
+This is particularly visible in the trial QUIC handshake path, where TLS handshake messages are converted into CRYPTO frames and then published into appropriate QUIC packets.
+
+### Connection and stream state
+
+`quic_session` represents connection-level state, while `quic_streams` manages stream-level organization.
+
+The conceptual separation is:
+
+```text
+connection
+ ├── connection identifiers
+ ├── version
+ ├── packet-number spaces
+ ├── TLS / protection state
+ └── streams
+       ├── stream id
+       ├── offset
+       ├── direction
+       └── application data
+```
+
+The transport can therefore multiplex independent ordered streams without turning each stream into a separate connection.
+
+## Flow
+
+### Initial packet
+
+The RFC 9001 test path makes the complete construction chain visible:
+
+```text
+DCID / SCID / version
+        ↓
+Initial header
+        ↓
+CRYPTO frame
+        ↓
+TLS ClientHello
+        ↓
+PADDING
+        ↓
+packet payload
+        ↓
+Initial AEAD
+        ↓
+header protection
+        ↓
+wire packet
+```
+
+The Initial packet is special because its protection keys are derived from the Destination Connection ID and the QUIC version, before the normal TLS handshake secrets are available.
+
+### Handshake packet
+
+After the TLS handshake progresses:
+
+```text
+TLS handshake state
+       ↓
+Handshake traffic secret
+       ↓
+CRYPTO frame(s)
+       ↓
+Handshake packet
+       ↓
+AEAD + header protection
+```
+
+ACK frames may coexist with CRYPTO frames in the same packet.
+
+### 1-RTT packet
+
+After handshake keys become available:
+
+```text
+application / HTTP3 data
+       ↓
+STREAM frame(s)
+       ↓
+1-RTT packet
+       ↓
+payload AEAD
+       ↓
+header protection
+       ↓
+UDP datagram
+```
+
+### Receiving path
+
+```text
+UDP datagram
+     ↓
+packet classification
+     ↓
+header protection removal
+     ↓
+packet number reconstruction
+     ↓
+AEAD decryption
+     ↓
+frame sequence
+     ├── ACK       → acknowledgement state
+     ├── CRYPTO    → TLS handshake
+     ├── STREAM    → stream state / HTTP3
+     ├── PING      → connection behavior
+     └── other     → frame-specific processing
+```
+
+### HTTP/3 path
+
+```text
+HTTP request
+    ↓
+HTTP/3 frame
+    ↓
+QUIC STREAM
+    ↓
+QUIC packet
+    ↓
+UDP
+```
+
+Receiving reverses the path:
+
+```text
+UDP
+ ↓
+QUIC packet
+ ↓
+STREAM frame
+ ↓
+ordered stream data
+ ↓
+HTTP/3 frame
+ ↓
+HEADERS / DATA
+ ↓
+QPACK / application
+```
+
+### QUIC version 2
+
+QUIC v2 keeps the packet/frame architecture but changes version-specific wire/protection parameters. The implementation therefore keeps version-dependent constants and labels separate from the common packet/frame machinery.
+
+The RFC 9369 test area is useful here because it verifies that the common QUIC model can be exercised with version-specific protection details.
 
 ## Study & Verification
 
-The QUIC study is represented by both construction-oriented and
-RFC-oriented material.
-
 ### RFC 9000
 
-The transport protocol study covers packet and frame structures, variable
-length integers, connection IDs, ACK ranges, STREAM/CRYPTO behavior, and
-construction of QUIC packets.
-
-Current study anchors include:
-
-- `testcase_rfc9000.cpp`
-- `testcase_construct_quic.cpp`
-- `testcase_quic.cpp`
+`testcase_rfc9000.cpp` provides protocol-level verification for the QUIC transport behavior.
 
 ### RFC 9001
 
-The TLS/QUIC security boundary is examined through QUIC-specific key
-derivation, packet protection, header protection, and packet-number handling.
+`testcase_rfc9001.cpp` reconstructs the RFC 9001 packet examples, including:
 
-Current study anchor:
+- Initial secrets
+- client Initial
+- server Initial
+- packet protection
+- packet header protection
+- CRYPTO frame contents
+- TLS handshake bytes
 
-- `testcase_rfc9001.cpp`
+The Initial test explicitly checks expected unprotected/protected headers and final encrypted packet bytes.
+
+This is valuable because it verifies the complete chain rather than testing only individual crypto primitives.
 
 ### RFC 9369
 
-QUIC Version 2 is studied separately because it changes version-specific
-values and packet/key derivation details while retaining the broader QUIC
-transport model.
+`testcase_rfc9369.cpp` verifies QUIC Version 2 behavior and its version-specific protection details.
 
-Current study anchor:
+### Construction tests
 
-- `testcase_rfc9369.cpp`
+`testcase_construct_quic.cpp` and `testcase_construct_1rtt.cpp` exercise construction of packet/frame objects directly.
 
-### 1-RTT construction
+These complement the RFC vectors:
 
-The transition from handshake protection to application traffic is examined
-through 1-RTT packet construction.
+```text
+construction test
+      +
+RFC known-answer test
+      +
+real traffic replay
+```
 
-Current study anchor:
+### HTTP/3 capture replay
 
-- `testcase_construct_1rtt.cpp`
+The HTTP/3 test area contains:
 
-### Captured traffic
+```text
+http3.pcapng
+sslkeylog
+testvector_pcap_http3.yml
+```
 
-The HTTP/3 capture vector is particularly important because it connects the
-abstract packet/frame model to real traffic. The current YAML vector records a
-packet-by-packet sequence containing Initial, Handshake, and 1-RTT traffic,
-ACK ranges, CRYPTO frames, STREAM frames, and HTTP/3 activity.
+This provides a bridge between real traffic and deterministic replay.
 
-Current anchors:
+The verification chain is:
 
-- `testvector_pcap.cpp`
-- `testvector_pcap_http3.yml`
-
-The latest uploaded source archive was expected to contain additional
-`.pcapng` material. In the archive inspected for Revision 1076, the actual
-file list contains the YAML representation and the TLS `.pcap` capture, but no
-file with a `.pcapng` extension was present. The YAML itself identifies the
-source capture as `http3.pcapng` and contains the packet trace used by the
-test. This discrepancy is recorded rather than guessed.
+```text
+real HTTP/3 traffic
+      ↓
+PCAPNG
+      ↓
+SSL key log
+      ↓
+YAML packet/frame vector
+      ↓
+QUIC/TLS replay
+      ↓
+HTTP/3 interpretation
+```
 
 ## Status
 
-| Area | Current state |
-| --- | --- |
-| QUIC packet parsing/building | implemented |
-| QUIC frame parsing/building | implemented |
-| RFC 9000 study | implemented/studied |
-| RFC 9001 study | implemented/studied |
-| RFC 9369 study | implemented/studied |
-| 1-RTT construction | implemented/studied |
-| TLS 1.3 handshake composition | substantial |
-| HTTP/3 stream integration | substantial |
-| HTTP/3 captured-traffic verification | implemented/studied |
-| QUIC `network_server` integration | not treated as complete |
-| TLS composer / server integration | remaining work |
+| Area | Revision 1084 state |
+|---|---|
+| QUIC packet model | implemented |
+| QUIC frame model | broad implementation |
+| Initial / Handshake / 0-RTT / 1-RTT | implemented |
+| Retry / Version Negotiation | implemented |
+| QUIC variable-length encoding | implemented |
+| packet number / header protection | implemented |
+| AEAD packet protection | implemented |
+| TLS 1.3 handshake integration | implemented/tested |
+| RFC 9000 vectors | present |
+| RFC 9001 vectors | present |
+| RFC 9369 / QUIC v2 | tested |
+| HTTP/3 stream path | implemented/tested |
+| PCAP/YAML replay | implemented |
+| broader loss/congestion/transport scheduling | separate / evolving area |
 
-The status intentionally does not turn every open implementation question into
-a TODO list. Current source, tests, and traffic vectors are the authority for
-what has actually been implemented or verified.
+The current checkpoint therefore represents a substantial QUIC protocol study and implementation. The remaining breadth should be treated as transport-system work rather than as a reason to collapse TLS, packet, frame, and stream responsibilities into one layer.
 
-## Related documents
+## Related topics
 
 ```text
-TLS ───────────────► QUIC ───────────────► HTTP/3
- │                    │                      │
- │                    └── Packet / Frame     └── QPACK
- │
- └── ASN.1 / X.509
-
-HTTP/2 ─────────────► HPACK
+                     TLS 1.3
+                        │
+                 handshake / keys
+                        │
+                        ▼
+UDP ──────────────── QUIC ─────────────── HTTP/3
+                        │                    │
+                  packet / frame           QPACK
+                        │
+                     stream
+                        │
+                      payload
 ```
 
-Ownership remains separate:
+The relationship to the previous payload and TLS studies is especially direct:
 
-- TLS owns the TLS protocol and cryptographic handshake.
-- QUIC owns UDP-based transport, packet/frame state, streams, and QUIC packet
-  protection.
-- HTTP/3 owns the application protocol carried by QUIC streams.
-- QPACK owns HTTP/3 header compression.
-- HPACK owns HTTP/2 header compression.
+```text
+payload
+   ↓
+TLS handshake / extensions
+   ↓
+QUIC CRYPTO frame
+   ↓
+QUIC packet
+   ↓
+UDP
+   ↓
+HTTP/3 STREAM
+   ↓
+HTTP/3 frame
+```
 
-The relationship map belongs in the project-level study index and should grow
-only when a relationship becomes useful to explain a real study path.
+This gives the current documentation set a useful vertical path from binary field construction to security protocol semantics to transport packetization to application protocol behavior.
 
-## Publication
+---
 
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1076            │
+│ Edition 1 · Revision 1084            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘

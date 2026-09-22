@@ -109,6 +109,15 @@ class lexical_context {
     void for_each(std::function<bool(const token_description* desc)> f) const;
     void for_each(const search_result& res, std::function<bool(const token_description* desc)> f) const;
     void walk(std::function<void(const char* p, const lexical_token*)> f);
+    template <typename F>
+    void reverse_for_each(F&& func) {
+        bool keep_going = false;
+        for (auto iter = _lextoken.rbegin(); iter != _lextoken.rend(); ++iter) {
+            keep_going = std::forward<F>(func)(*iter);
+            if (false == keep_going) break;
+        }
+    }
+    void reverse_for_each(std::function<bool(lexical_token*)> func);
 
     return_t get(size_t index, token_description* desc);
 

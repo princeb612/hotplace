@@ -27,8 +27,10 @@ void test_yaml_testvector_parser() {
          * expect:
          *   range: [[0, 5], [10, 15]
          * results
-         *   "range", {0, 5}
-         *   "range", {10, 15}
+         *  {
+         *   {"range", {0, 5}},
+         *   {"range", {10, 15}}
+         *  }
          */
         auto lambda_makemap_string_ranges = [](const YAML::Node& expect_node, std::multimap<std::string, range_t>& expects) -> void {
             expects.clear();
@@ -113,8 +115,8 @@ void test_yaml_testvector_parser() {
 
             std::multimap<std::string, range_t> result_lt;
             auto lambda_undercontrol = [&result_lt](matched_t type, hotplace::range_t r, size_t pid) -> bool {
-                result_lt.emplace((matched_t::match == type) ? "matched" : "unmatched", r);
-                _logger->writeln("under control of %s [%zi..%zi]", (matched_t::match == type) ? "module parser" : "notation parser", r.begin, r.end);
+                result_lt.emplace((matched_t::matched == type) ? "matched" : "unmatched", r);
+                _logger->writeln("under control of %s [%zi..%zi]", (matched_t::matched == type) ? "module parser" : "notation parser", r.begin, r.end);
                 return true;  // if return false, stops
             };
             travel_ranges(trigger_t::level, results, lambda_undercontrol);
@@ -122,8 +124,8 @@ void test_yaml_testvector_parser() {
 
             std::multimap<std::string, range_t> result_et;
             auto lambda_switch = [&result_et](matched_t type, hotplace::range_t r, size_t pid) -> bool {
-                result_et.emplace((matched_t::match == type) ? "matched" : "unmatched", r);
-                _logger->writeln("switch to %s [%zi..%zi]", (matched_t::match == type) ? "module parser" : "notation parser", r.begin, r.end);
+                result_et.emplace((matched_t::matched == type) ? "matched" : "unmatched", r);
+                _logger->writeln("switch to %s [%zi..%zi]", (matched_t::matched == type) ? "module parser" : "notation parser", r.begin, r.end);
                 return true;  // if return false, stops
             };
             travel_ranges(trigger_t::edge, results, lambda_switch);

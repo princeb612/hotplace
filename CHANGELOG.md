@@ -37,6 +37,9 @@
     * CBOR
 
 * details
+  * Revision 1090
+    * GLR parser
+    * CFG for ASN.1 notation, module, parameterized (except information object class)
   * Revision 1089
     * context-aware parser switching pattern
       * travel_ranges - enum class trigger_t {level, edge}

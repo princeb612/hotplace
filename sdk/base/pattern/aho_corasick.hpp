@@ -394,7 +394,7 @@ bool equal(const std::multimap<KEY, VALUE>& m1, const std::multimap<KEY, VALUE>&
  */
 return_t find_unmatched_ranges(const std::multimap<range_t, size_t>& results, std::vector<range_t>& unmatched);
 
-enum class matched_t { unmatched, match };
+enum class matched_t { unmatched, matched };
 enum class trigger_t {
     level,  // level triggered – continuous transmission of a 'state'
     edge,   // edge-triggered – signals the 'moment of change'
@@ -442,7 +442,7 @@ return_t travel_ranges(trigger_t trigger, const std::multimap<hotplace::range_t,
 
             // matched interval
             if (r.begin >= current_cursor) {
-                bool keep_going = func(matched_t::match, r, pid);
+                bool keep_going = func(matched_t::matched, r, pid);
                 if (false == keep_going) return errorcode_t::no_more;
 
                 current_cursor = r.end + 1;
@@ -492,7 +492,7 @@ return_t travel_ranges(trigger_t trigger, const std::multimap<hotplace::range_t,
             // 2. check matched interval
             if (r.begin >= current_cursor) {
                 if (has_pending) {
-                    if (matched_t::match == pending_type) {
+                    if (matched_t::matched == pending_type) {
                         // merge consecutive matches into a single continuous range
                         pending_range.end = std::max(pending_range.end, r.end);
                     } else {
@@ -502,13 +502,13 @@ return_t travel_ranges(trigger_t trigger, const std::multimap<hotplace::range_t,
                             has_pending = false;
                             break;
                         }
-                        pending_type = matched_t::match;
+                        pending_type = matched_t::matched;
                         pending_range = r;
                         pending_pid = pid;
                     }
                 } else {
                     has_pending = true;
-                    pending_type = matched_t::match;
+                    pending_type = matched_t::matched;
                     pending_range = r;
                     pending_pid = pid;
                 }
