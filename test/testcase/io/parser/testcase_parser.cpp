@@ -118,40 +118,10 @@ void test_lexical() {
 // };
 // }  // namespace std
 
-parser_t& get_lalr_parser_asn1notation() {
-    static lalr_parser parser;
-    static int lalr_parser_ready = 0;
-    if (0 == lalr_parser_ready) {
-        prepare_asn1notation_grammar(parser);
-        lalr_parser_ready = 1;
-    }
-    return parser;
-}
-
-parser_t& get_glr_parser_asn1parameterized() {
-    static glr_parser parser;
-    static int glr_parser_ready = 0;
-    if (0 == glr_parser_ready) {
-        prepare_asn1parameterized_grammar(parser);
-        glr_parser_ready = 1;
-    }
-    return parser;
-}
-
-parser_t& get_glr_parser_asn1() {
-    static glr_parser parser;
-    static int glr_parser_ready = 0;
-    if (0 == glr_parser_ready) {
-        prepare_asn1_grammar(parser);
-        glr_parser_ready = 1;
-    }
-    return parser;
-}
-
 void test_lalr_asn1notation() {
-    _test_case.begin("LALR parser");
+    _test_case.begin("LALR/GLR parser");
 
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
 
     struct testvector {
         const char* notation;
@@ -280,44 +250,50 @@ void test_lalr_asn1notation() {
 }
 
 void test_lalr_asn1parameterized() {
-    _test_case.begin("LALR parser");
+    _test_case.begin("GLR parser");
 
-    return_t ret = errorcode_t::success;
+    // return_t ret = errorcode_t::success;
 
+    enum test_flag_t : uint16 {
+        item_asn1param = 1 << 0,
+        item_asn1ioc = 1 << 1,
+    };
     struct testvector {
+        uint16 flag;
         const char* notation;
     };
 
     testvector table[] = {
         // parameterized assignment
-        {R"(Envelope {TypeParam} ::= SEQUENCE {version INTEGER, payload TypeParam})"},
-        {R"(KeyValuePair {KeyType, ValueType} ::= SEQUENCE {key KeyType, value ValueType})"},
-        {R"(BoundedArray {ElementType, INTEGER : MaxSize} ::= SEQUENCE {length INTEGER (0..MaxSize), elements SEQUENCE (SIZE(1..MaxSize)) OF ElementType})"},
+        {item_asn1param | item_asn1ioc, R"(Envelope {TypeParam} ::= SEQUENCE {version INTEGER, payload TypeParam})"},
+        {item_asn1param | item_asn1ioc, R"(KeyValuePair {KeyType, ValueType} ::= SEQUENCE {key KeyType, value ValueType})"},
+        {item_asn1param | item_asn1ioc,
+         R"(BoundedArray {ElementType, INTEGER : MaxSize} ::= SEQUENCE {length INTEGER (0..MaxSize), elements SEQUENCE (SIZE(1..MaxSize)) OF ElementType})"},
 
         // parameterized type reference
-        {R"(IntegerEnvelope ::= Envelope {INTEGER})"},
-        {R"(OctetEnvelope ::= Envelope {OCTET STRING})"},
-        {R"(StringToIntMap ::= KeyValuePair {UTF8String, INTEGER})"},
-        {R"(NestedMap ::= KeyValuePair {UTF8String, KeyValuePair {INTEGER, OCTET STRING}})"},
-        {R"(SmallIntArray ::= BoundedArray {INTEGER, 10})"},
-        {R"(LargeStringArray ::= BoundedArray {PrintableString, 256})"},
+        {item_asn1param | item_asn1ioc, R"(IntegerEnvelope ::= Envelope {INTEGER})"},
+        {item_asn1param | item_asn1ioc, R"(OctetEnvelope ::= Envelope {OCTET STRING})"},
+        {item_asn1param | item_asn1ioc, R"(StringToIntMap ::= KeyValuePair {UTF8String, INTEGER})"},
+        {item_asn1param | item_asn1ioc, R"(NestedMap ::= KeyValuePair {UTF8String, KeyValuePair {INTEGER, OCTET STRING}})"},
+        {item_asn1param | item_asn1ioc, R"(SmallIntArray ::= BoundedArray {INTEGER, 10})"},
+        {item_asn1param | item_asn1ioc, R"(LargeStringArray ::= BoundedArray {PrintableString, 256})"},
 
         // information object class
-        // {R"(CAPABILITY-SET ::= CLASS {&id INTEGER UNIQUE, &Type} WITH SYNTAX {&Type IDENTIFIED BY &id})"},
-        // {R"(GenericMessage {CAPABILITY-SET : SupportedSet} ::= SEQUENCE {messageId CAPABILITY-SET.&id ({SupportedSet}), content CAPABILITY-SET.&Type
-        // ({SupportedSet}{@messageId})})"},
-        // {R"(MyMessage ::= GenericMessage {MyCapabilitySet})"},
+        {item_asn1ioc, R"(CAPABILITY-SET ::= CLASS {&id INTEGER UNIQUE, &Type} WITH SYNTAX {&Type IDENTIFIED BY &id})"},
+        {item_asn1ioc,
+         R"(GenericMessage {CAPABILITY-SET : SupportedSet} ::= SEQUENCE {messageId CAPABILITY-SET.&id ({SupportedSet}), content CAPABILITY-SET.&Type ({SupportedSet}{@messageId})})"},
+        {item_asn1ioc, R"(MyMessage ::= GenericMessage {MyCapabilitySet})"},
     };
 
-    auto lambda_test = [&table](parser_t& parser) -> void {
+    auto lambda_test = [&table](test_flag_t flag, parser_t& parser) -> void {
         for (const auto& entry : table) {
-            test_asn1parser(parser, entry.notation, entry.notation);
+            if (entry.flag & flag) test_asn1parser(parser, entry.notation, entry.notation);
         }
     };
     _logger->writeln("GLR parser - ASN.1 CFG for parametersized");
-    lambda_test(get_glr_parser_asn1parameterized());
+    lambda_test(item_asn1param, get_glr_parser_asn1parameterized());
     _logger->writeln("GLR parser - ASN.1 CFG");
-    lambda_test(get_glr_parser_asn1());
+    lambda_test(item_asn1ioc, get_glr_parser_asn1());
 }
 
 void testcase_parser() {

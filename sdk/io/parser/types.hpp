@@ -56,27 +56,31 @@ enum token_t : uint32 {
     token_lesser = 18,              // <, less-than indicator, exclusive boundary indicator
     token_equal = 19,               // =
     token_plus = 20,                // +
-    token_minus = 21,               // -
-    token_dash = token_minus,       //
-    token_multi = 22,               // *
-    token_divide = 23,              // /
+    token_dash = 21,                // -
+    token_minus = token_dash,       //
+    token_asterisk = 22,            // *
+    token_multi = token_asterisk,   //
+    token_slash = 23,               // /
+    token_divide = token_slash,     //
     token_colon = 24,               // :
     token_semicolon = 25,           // ;
     token_comma = 26,               // ,
     token_dot = 27,                 // .
     token_newline = 28,             // \n
-    token_and = 29,                 // &&, |
+    token_amp = 29,                 // &, |
+    token_and = token_amp,          //
     token_or = 30,                  // ||
     token_isequal = 31,             // ==
     token_notequal = 32,            // !=
     token_quot_string = 33,         // \"[a-zA-Z0-9].*\"
-    token_emphasis = 34,
-    token_type = 35,
-    token_usertype = 36,
-    token_element = 37,
-    token_phrase = 38,
-    token_sentence = 39,
-    token_ellipsis = 40,
+    token_at = 34,
+    token_emphasis = 35,
+    token_type = 36,
+    token_usertype = 37,
+    token_element = 38,
+    token_phrase = 39,
+    token_sentence = 40,
+    token_ellipsis = 41,
 
     // ASN.1
     token_asn1 = 0x1000,
@@ -153,20 +157,27 @@ enum token_t : uint32 {
     token_range,         // .. range separator, range operator
     token_fromto = token_range,
 
+    // module
     token_definitions,
     token_automatic,
     token_tags,
     token_begin,
     token_end,
+    // exports/imports
     token_exports,
     token_imports,
     token_all,
     token_extensibility,
     token_implied,
-
+    // parameterized
     token_userparamtype,
     token_paramtype,
     token_paramvalue,
+    // information object class
+    token_class,
+    token_with,
+    token_syntax,
+    token_unique,
 
     token_userdefine = 0x2000,
 

@@ -798,15 +798,17 @@ return_t prepare_asn1_grammar(parser_t& parser) {
         auto symparamvalue = resource->nameof(token_paramvalue);        // "paramvalue"
         auto symassign = resource->nameof(token_assign);                // "::="
 
-        // Single Top-Level Entry Point
         cfg_grammar grammar;
 
-        grammar.add_production("S'", {"Start"}).add_production("Start", {"ModuleDefinition"}).add_production("Start", {"StatementList"});
+        grammar
+            // Single Top-Level Entry Point
+            .add_production("S'", {"Start"})
 
-        // =========================================================================
-        // 2. Module Definition Rules
-        // =========================================================================
-        grammar.add_production("ModuleDefinition", {"ModuleHeader", "ModuleBody", "StatementList", "END"})
+            .add_production("Start", {"ModuleDefinition"})
+            .add_production("Start", {"StatementList"})
+
+            // Module Definition
+            .add_production("ModuleDefinition", {"ModuleHeader", "ModuleBody", "StatementList", "END"})
             .add_production("ModuleDefinition", {"ModuleHeader", "StatementList", "END"})
             .add_production("ModuleDefinition", {"ModuleHeader", "END"})
 
@@ -834,6 +836,7 @@ return_t prepare_asn1_grammar(parser_t& parser) {
             .add_production("ModuleBody", {"ExportsClause", "ImportsClause"})
             .add_production("ModuleBody", {"ImportsClause", "ExportsClause"})
 
+            // EXPORTS/IMPORTS
             .add_production("ExportsClause", {"EXPORTS", "SymbolList", ";"})
             .add_production("ExportsClause", {"EXPORTS", "ALL", ";"})
 
@@ -848,12 +851,10 @@ return_t prepare_asn1_grammar(parser_t& parser) {
             .add_production("SymbolItem", {symuser})
             .add_production("SymbolItem", {symid})
             .add_production("SymbolItem", {symuser, "{", "}"})
-            .add_production("SymbolItem", {symid, "{", "}"});
+            .add_production("SymbolItem", {symid, "{", "}"})
 
-        // =========================================================================
-        // 3. Statement & Assignment Rules
-        // =========================================================================
-        grammar.add_production("StatementList", {"StatementList", "Statement"})
+            // Statements
+            .add_production("StatementList", {"StatementList", "Statement"})
             .add_production("StatementList", {"Statement"})
 
             .add_production("Statement", {"Assignment"})
@@ -861,30 +862,32 @@ return_t prepare_asn1_grammar(parser_t& parser) {
             .add_production("Statement", {"Constraint"})
             .add_production("Statement", {"Field"})
             .add_production("Statement", {"TagPrefix"})
+            .add_production("Statement", {"ObjectClassAssignment"})
 
             // Parameterized Assignment
             .add_production("Assignment", {symuserparamtype, "{", "DummyParamList", "}", symassign, "TypeSpec"})
             .add_production("Assignment", {symuserparamtype, "{", "DummyParamList", "}", symassign, "TypeSpec", "Constraint"})
             .add_production("Assignment", {symuser, "{", "DummyParamList", "}", symassign, "TypeSpec"})
             .add_production("Assignment", {symuser, "{", "DummyParamList", "}", symassign, "TypeSpec", "Constraint"})
+            .add_production("Assignment", {symparamtype, "{", "DummyParamList", "}", symassign, "TypeSpec"})
+            .add_production("Assignment", {symparamtype, "{", "DummyParamList", "}", symassign, "TypeSpec", "Constraint"})
             // Normal Assignment
             .add_production("Assignment", {"DefinedType", symassign, "TypeSpec"})
             .add_production("Assignment", {"DefinedType", symassign, "TypeSpec", "Constraint"})
 
             .add_production("DefinedType", {symuser})
             .add_production("DefinedType", {symuserparamtype})
+            .add_production("DefinedType", {symparamtype})
             .add_production("DefinedType", {symid})
 
             .add_production("DummyParamList", {"DummyParamList", ",", "DummyParam"})
             .add_production("DummyParamList", {"DummyParam"})
-            .add_production("DummyParam", {symparamtype})
             .add_production("DummyParam", {symparamtype, ":", symparamvalue})
-            .add_production("DummyParam", {"TypeSpec", ":", symparamvalue});
+            .add_production("DummyParam", {symparamtype, ":", symuser})
+            .add_production("DummyParam", {symparamtype})
+            .add_production("DummyParam", {"TypeSpec", ":", symparamvalue})
 
-        // =========================================================================
-        // 4. Structural Types & Field Specifications
-        // =========================================================================
-        grammar.add_production("StatementSequence", {"SEQUENCE", "Constraint", "{", "FieldList", "}"})
+            .add_production("StatementSequence", {"SEQUENCE", "Constraint", "{", "FieldList", "}"})
             .add_production("StatementSequence", {"SEQUENCE", "{", "FieldList", "}"})
             .add_production("StatementSequence", {"SEQUENCE", "Constraint", "{", "}"})
             .add_production("StatementSequence", {"SEQUENCE", "{", "}"})
@@ -916,12 +919,9 @@ return_t prepare_asn1_grammar(parser_t& parser) {
 
             .add_production("FieldOpt", {"OPTIONAL"})
             .add_production("FieldOpt", {"DEFAULT", "ValueElement"})
-            .add_production("FieldOpt", {"DEFAULT", "{", "}"});
+            .add_production("FieldOpt", {"DEFAULT", "{", "}"})
 
-        // =========================================================================
-        // 5. Type Specification & Referenced Types
-        // =========================================================================
-        grammar.add_production("TypeSpec", {"TypeBase"})
+            .add_production("TypeSpec", {"TypeBase"})
             .add_production("TypeSpec", {"EnumType"})
             .add_production("TypeSpec", {"StatementSequence"})
             .add_production("TypeSpec", {"StatementSequenceOf"})
@@ -933,18 +933,51 @@ return_t prepare_asn1_grammar(parser_t& parser) {
             .add_production("TypeBase", {"TaggedType"})
             .add_production("TypeBase", {"ReferencedType"})
 
+            // Information Object Class
+            .add_production("ObjectClassAssignment", {symparamtype, symassign, "CLASS", "{", "FieldSpecList", "}"})
+            .add_production("ObjectClassAssignment", {symparamtype, symassign, "CLASS", "{", "FieldSpecList", "}", "WITH", "SYNTAX", "{", "SyntaxList", "}"})
+            .add_production("ObjectClassAssignment", {symuser, symassign, "CLASS", "{", "FieldSpecList", "}"})
+            .add_production("ObjectClassAssignment", {symuser, symassign, "CLASS", "{", "FieldSpecList", "}", "WITH", "SYNTAX", "{", "SyntaxList", "}"})
+
+            .add_production("FieldSpecList", {"FieldSpecList", ",", "FieldSpec"})
+            .add_production("FieldSpecList", {"FieldSpec"})
+            .add_production("FieldSpec", {"&", symid, "TypeSpec"})
+            .add_production("FieldSpec", {"&", symid, "TypeSpec", "UNIQUE"})
+            .add_production("FieldSpec", {"&", symparamtype})
+            .add_production("FieldSpec", {"&", symuser})
+            .add_production("FieldSpec", {"&", symid})
+
+            .add_production("SyntaxList", {"SyntaxList", "SyntaxItem"})
+            .add_production("SyntaxList", {"SyntaxItem"})
+            .add_production("SyntaxItem", {"&", symuser})
+            .add_production("SyntaxItem", {"&", symparamtype})
+            .add_production("SyntaxItem", {"&", symid})
+            .add_production("SyntaxItem", {symuser})
+            .add_production("SyntaxItem", {symparamtype})
+            .add_production("SyntaxItem", {symid})
+
             .add_production("ReferencedType", {symid})
             .add_production("ReferencedType", {symuser})
             .add_production("ReferencedType", {symparamtype})
             .add_production("ReferencedType", {symuserparamtype})
             .add_production("ReferencedType", {symuserparamtype, "{", "ActualParamList", "}"})
             .add_production("ReferencedType", {symuser, "{", "ActualParamList", "}"})
+            .add_production("ReferencedType", {symparamtype, "{", "ActualParamList", "}"})
             .add_production("ReferencedType", {symid, "{", "ActualParamList", "}"})
+
+            .add_production("ReferencedType", {symparamtype, ".", "&", symid})
+            .add_production("ReferencedType", {symparamtype, ".", "&", symuser})
+            .add_production("ReferencedType", {symparamtype, ".", "&", symparamtype})
+            .add_production("ReferencedType", {symuser, ".", "&", symid})
+            .add_production("ReferencedType", {symuser, ".", "&", symuser})
+            .add_production("ReferencedType", {symuser, ".", "&", symparamtype})
 
             .add_production("ActualParamList", {"ActualParamList", ",", "ActualParam"})
             .add_production("ActualParamList", {"ActualParam"})
             .add_production("ActualParam", {"TypeSpec"})
             .add_production("ActualParam", {symparamvalue})
+            .add_production("ActualParam", {symparamtype})
+            .add_production("ActualParam", {symuser})
             .add_production("ActualParam", {symnum})
             .add_production("ActualParam", {symfp})
             .add_production("ActualParam", {symqs})
@@ -998,12 +1031,10 @@ return_t prepare_asn1_grammar(parser_t& parser) {
             .add_production("SimpleType", {"TIME-OF-DAY"})
             .add_production("SimpleType", {"DATE-TIME"})
             .add_production("SimpleType", {"DURATION"})
-            .add_production("SimpleType", {"ANY"});
+            .add_production("SimpleType", {"ANY"})
 
-        // =========================================================================
-        // 6. Constraints Grammar
-        // =========================================================================
-        grammar.add_production("Constraint", {"(", "ConstraintExpr", ")"})
+            // Constraints
+            .add_production("Constraint", {"(", "ConstraintExpr", ")"})
             .add_production("ConstraintExpr", {"SubtypeElementSet"})
             .add_production("ConstraintExpr", {"ALL EXCEPT", "SubtypeElementSet"})
 
@@ -1027,6 +1058,12 @@ return_t prepare_asn1_grammar(parser_t& parser) {
             .add_production("PrimaryElement", {"FROM", "Constraint"})
             .add_production("PrimaryElement", {"PATTERN", symqs})
             .add_production("PrimaryElement", {"(", "ConstraintExpr", ")"})
+            .add_production("PrimaryElement", {"{", symuser, "}"})
+            .add_production("PrimaryElement", {"{", symparamtype, "}"})
+            .add_production("PrimaryElement", {"{", symparamvalue, "}"})
+            .add_production("PrimaryElement", {"{", symparamvalue, "}", "{", "@", symid, "}"})
+            .add_production("PrimaryElement", {"{", symparamtype, "}", "{", "@", symid, "}"})
+            .add_production("PrimaryElement", {"{", symuser, "}", "{", "@", symid, "}"})
 
             .add_production("SizeConstraint", {"SIZE", "Constraint"})
 
@@ -1040,65 +1077,46 @@ return_t prepare_asn1_grammar(parser_t& parser) {
             .add_production("ValueElement", {"TRUE"})
             .add_production("ValueElement", {"FALSE"});
 
-        // =========================================================================
-        // 7. Terminals Registration
-        // =========================================================================
-        grammar.add_terminal(symassign)
-            .add_terminal(":")
-            .add_terminal("{")
-            .add_terminal("}")
-            .add_terminal(",")
-            .add_terminal(";")
-            .add_terminal("[")
-            .add_terminal("]")
+        // Terminals
+        grammar.add_terminal(symnum)
+            .add_terminal(symid)
+            .add_terminal(symfp)
             .add_terminal("(")
             .add_terminal(")")
+            .add_terminal("[")
+            .add_terminal("]")
+            .add_terminal("{")
+            .add_terminal("}")
+            .add_terminal(symassign)
             .add_terminal("<")
-            .add_terminal("..")
-            .add_terminal("|")
-            .add_terminal("^")
-            .add_terminal("INTERSECTION")
-            .add_terminal("UNION")
-            .add_terminal("EXCEPT")
-            .add_terminal("ALL EXCEPT")
-            .add_terminal("ALL")
-            .add_terminal("SIZE")
-            .add_terminal("FROM")
-            .add_terminal("PATTERN")
-            .add_terminal("MIN")
-            .add_terminal("MAX")
-            .add_terminal("OPTIONAL")
-            .add_terminal("SEQUENCE")
-            .add_terminal("SET")
-            .add_terminal("CHOICE")
-            .add_terminal("OF")
-            .add_terminal("DEFINITIONS")
-            .add_terminal("AUTOMATIC")
-            .add_terminal("EXPLICIT")
-            .add_terminal("IMPLICIT")
-            .add_terminal("TAGS")
-            .add_terminal("EXTENSIBILITY")
-            .add_terminal("IMPLIED")
-            .add_terminal("EXPORTS")
-            .add_terminal("IMPORTS")
-            .add_terminal("BEGIN")
-            .add_terminal("END")
+            .add_terminal(":")
+            .add_terminal(";")
+            .add_terminal(",")
+            .add_terminal(".")
+            .add_terminal("&")
+            .add_terminal(symqs)
+            .add_terminal("@")
+            .add_terminal(symuser)
+
             .add_terminal("BOOLEAN")
             .add_terminal("INTEGER")
+            .add_terminal("BIT STRING")
+            .add_terminal("OCTET STRING")
+            .add_terminal("NULL")
+            .add_terminal("OBJECT IDENTIFIER")
             .add_terminal("REAL")
             .add_terminal("ENUMERATED")
-            .add_terminal("OBJECT IDENTIFIER")
-            .add_terminal("RELATIVE-OID")
-            .add_terminal("UTCTime")
-            .add_terminal("GeneralizedTime")
             .add_terminal("UTF8String")
-            .add_terminal("VisibleString")
+            .add_terminal("RELATIVE-OID")
             .add_terminal("PrintableString")
             .add_terminal("TeletexString")
             .add_terminal("T61String")
             .add_terminal("VideotexString")
             .add_terminal("IA5String")
+            .add_terminal("UTCTime")
+            .add_terminal("GeneralizedTime")
             .add_terminal("GraphicString")
+            .add_terminal("VisibleString")
             .add_terminal("ISO646String")
             .add_terminal("GeneralString")
             .add_terminal("UniversalString")
@@ -1108,24 +1126,57 @@ return_t prepare_asn1_grammar(parser_t& parser) {
             .add_terminal("TIME-OF-DAY")
             .add_terminal("DATE-TIME")
             .add_terminal("DURATION")
-            .add_terminal("OCTET STRING")
-            .add_terminal("BIT STRING")
-            .add_terminal("NULL")
             .add_terminal("ANY")
-            .add_terminal("DEFAULT")
+
+            .add_terminal("SEQUENCE")
+            .add_terminal("SET")
+            .add_terminal("CHOICE")
+            .add_terminal("OF")
+
             .add_terminal("TRUE")
             .add_terminal("FALSE")
             .add_terminal("UNIVERSAL")
             .add_terminal("APPLICATION")
             .add_terminal("PRIVATE")
-            .add_terminal(symid)
-            .add_terminal(symuser)
+
+            .add_terminal("IMPLICIT")
+            .add_terminal("EXPLICIT")
+            .add_terminal("DEFAULT")
+            .add_terminal("OPTIONAL")
+
+            .add_terminal("UNION")
+            .add_terminal("|")
+            .add_terminal("INTERSECTION")
+            .add_terminal("^")
+            .add_terminal("EXCEPT")
+            .add_terminal("ALL EXCEPT")
+            .add_terminal("SIZE")
+            .add_terminal("FROM")
+            .add_terminal("PATTERN")
+            .add_terminal("MIN")
+            .add_terminal("MAX")
+            .add_terminal("..")
+
+            .add_terminal("DEFINITIONS")
+            .add_terminal("AUTOMATIC")
+            .add_terminal("TAGS")
+            .add_terminal("BEGIN")
+            .add_terminal("END")
+            .add_terminal("EXPORTS")
+            .add_terminal("IMPORTS")
+            .add_terminal("ALL")
+            .add_terminal("EXTENSIBILITY")
+            .add_terminal("IMPLIED")
+
             .add_terminal(symuserparamtype)
             .add_terminal(symparamtype)
             .add_terminal(symparamvalue)
-            .add_terminal(symnum)
-            .add_terminal(symfp)
-            .add_terminal(symqs)
+
+            .add_terminal("CLASS")
+            .add_terminal("WITH")
+            .add_terminal("SYNTAX")
+            .add_terminal("UNIQUE")
+
             .add_terminal("$");
 
         parser.set_grammar(std::move(grammar));
@@ -1225,4 +1276,34 @@ void dump_parse_tree(parse_tree& pt) {
             _logger->write(bs);
         }
     }
+}
+
+parser_t& get_lalr_parser_asn1notation() {
+    static lalr_parser parser;
+    static int lalr_parser_ready = 0;
+    if (0 == lalr_parser_ready) {
+        prepare_asn1notation_grammar(parser);
+        lalr_parser_ready = 1;
+    }
+    return parser;
+}
+
+parser_t& get_glr_parser_asn1parameterized() {
+    static glr_parser parser;
+    static int glr_parser_ready = 0;
+    if (0 == glr_parser_ready) {
+        prepare_asn1parameterized_grammar(parser);
+        glr_parser_ready = 1;
+    }
+    return parser;
+}
+
+parser_t& get_glr_parser_asn1() {
+    static glr_parser parser;
+    static int glr_parser_ready = 0;
+    if (0 == glr_parser_ready) {
+        prepare_asn1_grammar(parser);
+        glr_parser_ready = 1;
+    }
+    return parser;
 }

@@ -1,12 +1,12 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file    lalr_parser.hpp
+ * @file    glr_parser.hpp
  * @author  Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc    Context-aware parser switching architecture for complex grammars (e.g., ASN.1)
  *
  * Revision History
  * Date         Name                Description
- * 2026.08.29   Soo Han and Gemini  study
+ * 2026.09.22   Soo Han and Gemini  study
  *
  * GLR (Generalized LR) Parser
  * Parser Type | Deterministic Grammar (Time) | Ambiguous / Worst-Case Grammar (Time) | Space Complexity

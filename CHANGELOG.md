@@ -37,9 +37,11 @@
     * CBOR
 
 * details
+  * Revision 1091
+    * CFG for ASN.1 information object class
   * Revision 1090
     * GLR parser
-    * CFG for ASN.1 notation, module, parameterized (except information object class)
+    * CFG for ASN.1 parameterized
   * Revision 1089
     * context-aware parser switching pattern
       * travel_ranges - enum class trigger_t {level, edge}
@@ -90,7 +92,7 @@
     * [fixed] valist sign-extension overflow problem
     * [tested] ASN.1 PATTERN
   * Revision 1064
-    * LALR parser
+    * LALR(1) parser
     * CFG for ASN.1 notation
   * Revision 1059
     * [tested] aho corasick parser - token grouping, sub-pattern reduction, and repeat-rule processing

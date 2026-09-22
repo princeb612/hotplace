@@ -31,20 +31,21 @@ const parser_token_resource parser_symbol_tokens[] = {
     {token_lesser, "lesser"},
     {token_equal, "equal"},
     {token_plus, "plus"},
-    {token_minus, "minus"},
-    {token_multi, "multi"},
-    {token_divide, "divide"},
+    {token_dash, "dash"},
+    {token_asterisk, "asterisk"},
+    {token_slash, "slash"},
     {token_colon, "colon"},
     {token_semicolon, "semicolon"},
     {token_comma, "comma"},
     {token_dot, "dot"},
     {token_newline, "newline"},
-    {token_and, "and"},
+    {token_amp, "amp"},
     {token_or, "or"},
     {token_isequal, "=="},
     {token_notequal, "!="},
     {token_identifier, SYMBOL_ID},  // identifier
     {token_quot_string, SYMBOL_QSTR},
+    {token_at, "at"},
     {token_comments, "comments"},
     {token_assign, "assign"},
     {token_lvalue, "lvalue"},
@@ -139,17 +140,23 @@ const struct parser_token_resource parser_asn1_tokens[] = {
     {token_max, "MAX"},
     {token_min, "MIN"},
     {token_range, ".."},
-
+    // module
     {token_definitions, "DEFINITIONS"},
     {token_automatic, "AUTOMATIC"},
     {token_tags, "TAGS"},
     {token_begin, "BEGIN"},
     {token_end, "END"},
+    // exports/imports
     {token_exports, "EXPORTS"},
     {token_imports, "IMPORTS"},
     {token_all, "ALL"},
     {token_extensibility, "EXTENSIBILITY"},
     {token_implied, "IMPLIED"},
+    // information object class
+    {token_class, "CLASS"},
+    {token_with, "WITH"},
+    {token_syntax, "SYNTAX"},
+    {token_unique, "UNIQUE"},
 };
 const size_t sizeof_parser_asn1_tokens = RTL_NUMBER_OF(parser_asn1_tokens);
 
