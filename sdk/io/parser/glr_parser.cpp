@@ -17,6 +17,7 @@
 #include <hotplace/sdk/base/unittest/console_color.hpp>
 #include <hotplace/sdk/io/parser/glr_parser.hpp>
 #include <hotplace/sdk/io/parser/parser_resource.hpp>
+#include <hotplace/sdk/io/parser/parser_sdk.hpp>
 #include <iomanip>
 #include <iostream>
 #include <queue>
@@ -53,10 +54,10 @@ return_t glr_parser::learn() {
 
     critical_section_guard guard(_lock);
     __try2 {
-        compute_first_and_follow_sets();
-        build_lr0_states();
+        compute_first_and_follow_sets(_grammar, _context);
+        build_lr0_states(_grammar, _context, _goto_table);
 
-        if (false == generate_glr_tables()) {
+        if (false == generate_glr_tables(_grammar, _context, _goto_table, _action_table)) {
             _is_table_built = false;
             ret = errorcode_t::not_ready;
             __leave2;
@@ -110,10 +111,7 @@ return_t glr_parser::learn() {
         _is_table_built = true;
     }
     __finally2 {
-        _first_sets.clear();
-        _follow_sets.clear();
-        _lr0_states.clear();
-        _lr0_goto.clear();
+        _context.clear();
 
         if (errorcode_t::success != ret) {
             _action_table.clear();
@@ -291,237 +289,6 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
     __finally2;
 
     return ret;
-}
-
-void glr_parser::compute_first_and_follow_sets() {
-    const auto& rules = _grammar.get_productions();
-    const auto& terminals = _grammar.get_terminals();
-
-    for (const auto& term : terminals) {
-        _first_sets[term].insert(term);
-    }
-
-    bool changed = true;
-    while (changed) {
-        changed = false;
-        for (const auto& rule : rules) {
-            if (rule.rhs.empty()) continue;
-
-            std::string first_rhs = rule.rhs[0];
-            size_t prev_size = _first_sets[rule.lhs].size();
-
-            for (const auto& sym : _first_sets[first_rhs]) {
-                _first_sets[rule.lhs].insert(sym);
-            }
-
-            if (_first_sets[rule.lhs].size() > prev_size) {
-                changed = true;
-            }
-        }
-    }
-
-    _follow_sets["S'"].insert("$");
-    changed = true;
-    while (changed) {
-        changed = false;
-        for (const auto& rule : rules) {
-            for (size_t i = 0; i < rule.rhs.size(); ++i) {
-                std::string B = rule.rhs[i];
-                if (false == _grammar.is_non_terminal(B)) continue;
-
-                size_t prev_size = _follow_sets[B].size();
-
-                if (i + 1 < rule.rhs.size()) {
-                    std::string beta = rule.rhs[i + 1];
-                    for (const auto& sym : _first_sets[beta]) {
-                        _follow_sets[B].insert(sym);
-                    }
-                } else {
-                    for (const auto& sym : _follow_sets[rule.lhs]) {
-                        _follow_sets[B].insert(sym);
-                    }
-                }
-
-                if (_follow_sets[B].size() > prev_size) {
-                    changed = true;
-                }
-            }
-        }
-    }
-}
-
-std::set<LR0_item> glr_parser::closure_lr0(std::set<LR0_item> items) const {
-    const auto& rules = _grammar.get_productions();
-    bool added = true;
-    while (added) {
-        added = false;
-        std::set<LR0_item> new_items = items;
-        for (const auto& item : items) {
-            const auto& rule = rules[item.production_id];
-            if (item.dot_pos < rule.rhs.size()) {
-                std::string B = rule.rhs[item.dot_pos];
-                if (_grammar.is_non_terminal(B)) {
-                    for (const auto& r : rules) {
-                        if (r.lhs == B) {
-                            if (new_items.insert({r.id, 0}).second) {
-                                added = true;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        items = new_items;
-    }
-    return items;
-}
-
-void glr_parser::build_lr0_states() {
-    const auto& rules = _grammar.get_productions();
-    _lr0_states.clear();
-    _lr0_goto.clear();
-    _goto_table.clear();
-
-    std::set<LR0_item> start_set = closure_lr0({{0, 0}});
-    _lr0_states.push_back(start_set);
-
-    std::queue<uint32> worklist;
-    worklist.push(0);
-
-    while (false == worklist.empty()) {
-        uint32 state_id = worklist.front();
-        worklist.pop();
-
-        std::set<std::string> symbols;
-        for (const auto& item : _lr0_states[state_id]) {
-            const auto& rule = rules[item.production_id];
-            if (item.dot_pos < rule.rhs.size()) {
-                symbols.insert(rule.rhs[item.dot_pos]);
-            }
-        }
-
-        for (const auto& sym : symbols) {
-            std::set<LR0_item> goto_items;
-            for (const auto& item : _lr0_states[state_id]) {
-                const auto& rule = rules[item.production_id];
-                if (item.dot_pos < rule.rhs.size() && rule.rhs[item.dot_pos] == sym) {
-                    goto_items.insert({item.production_id, item.dot_pos + 1});
-                }
-            }
-            std::set<LR0_item> next_state = closure_lr0(goto_items);
-
-            uint32 existing_state = -1;
-            for (size_t i = 0; i < _lr0_states.size(); ++i) {
-                if (_lr0_states[i] == next_state) {
-                    existing_state = static_cast<uint32>(i);
-                    break;
-                }
-            }
-
-            if (existing_state == (uint32)-1) {
-                _lr0_states.push_back(next_state);
-                existing_state = static_cast<uint32>(_lr0_states.size() - 1);
-                worklist.push(existing_state);
-            }
-
-            _lr0_goto[{state_id, sym}] = existing_state;
-
-            if (_grammar.is_non_terminal(sym)) {
-                _goto_table[{state_id, sym}] = existing_state;
-            }
-        }
-    }
-}
-
-bool glr_parser::generate_glr_tables() {
-    const auto& rules = _grammar.get_productions();
-    const auto& terminals = _grammar.get_terminals();
-
-    std::vector<std::set<LR1_item>> lalr_states(_lr0_states.size());
-    _action_table.clear();
-    lalr_states[0].insert({0, 0, "$"});
-
-    bool changed = true;
-    while (changed) {
-        changed = false;
-        for (size_t i = 0; i < _lr0_states.size(); ++i) {
-            std::set<LR1_item> expanded = lalr_states[i];
-            bool closure_changed = true;
-
-            while (closure_changed) {
-                closure_changed = false;
-                std::set<LR1_item> next_expanded = expanded;
-
-                for (const auto& item : expanded) {
-                    const auto& rule = rules[item.production_id];
-                    if (item.dot_pos < rule.rhs.size()) {
-                        std::string B = rule.rhs[item.dot_pos];
-                        if (_grammar.is_non_terminal(B)) {
-                            std::set<std::string> lookaheads;
-                            if (item.dot_pos + 1 < rule.rhs.size()) {
-                                std::string beta = rule.rhs[item.dot_pos + 1];
-                                lookaheads = _first_sets[beta];
-                            } else {
-                                lookaheads.insert(item.lookahead);
-                            }
-
-                            for (const auto& r : rules) {
-                                if (r.lhs == B) {
-                                    for (const auto& la : lookaheads) {
-                                        if (next_expanded.insert({r.id, 0, la}).second) {
-                                            closure_changed = true;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                expanded = next_expanded;
-            }
-            lalr_states[i] = expanded;
-
-            for (const auto& item : lalr_states[i]) {
-                const auto& rule = rules[item.production_id];
-                if (item.dot_pos < rule.rhs.size()) {
-                    std::string sym = rule.rhs[item.dot_pos];
-                    uint32 next_st = _lr0_goto[{static_cast<uint32>(i), sym}];
-                    if (lalr_states[next_st].insert({item.production_id, item.dot_pos + 1, item.lookahead}).second) {
-                        changed = true;
-                    }
-                }
-            }
-        }
-    }
-
-    // Insert actions into std::multimap without conflict rejections
-    for (size_t i = 0; i < lalr_states.size(); ++i) {
-        for (const auto& item : lalr_states[i]) {
-            const auto& rule = rules[item.production_id];
-
-            if (item.dot_pos < rule.rhs.size()) {
-                std::string sym = rule.rhs[item.dot_pos];
-                if (terminals.count(sym)) {
-                    uint32 next_st = _lr0_goto[{static_cast<uint32>(i), sym}];
-                    auto key = std::make_pair(static_cast<uint32>(i), sym);
-                    parser_action new_act = {parser_action_t::shift, next_st};
-
-                    _action_table.insert({key, new_act});
-                }
-            } else {
-                if (0 == item.production_id) {
-                    _action_table.insert({{static_cast<uint32>(i), "$"}, {parser_action_t::accept, 0}});
-                } else {
-                    auto key = std::make_pair(static_cast<uint32>(i), item.lookahead);
-                    parser_action new_act = {parser_action_t::reduce, item.production_id};
-
-                    _action_table.insert({key, new_act});
-                }
-            }
-        }
-    }
-
-    return true;
 }
 
 }  // namespace io

@@ -73,13 +73,13 @@ class asn1_resource {
  * If these two paths coexist in a single LALR parsing table, their lookahead sets overlap during the calculation of the state closure, making a conflict unavoidable.
  */
 extern const std::vector<parser_production> asn1_notation_productions;
-extern const std::vector<parser_production> asn1_module_productions;
 extern const std::set<std::string> asn1_notation_terminals;
-extern const std::set<std::string> asn1_module_terminals;
 extern const std::map<std::pair<uint32, std::string>, parser_action> asn1_notation_action_table;
-extern const std::map<std::pair<uint32, std::string>, parser_action> asn1_module_action_table;
 extern const std::map<std::pair<uint32, std::string>, uint32> asn1_notation_goto_table;
-extern const std::map<std::pair<uint32, std::string>, uint32> asn1_module_goto_table;
+extern const std::vector<parser_production> asn1_allin1_productions;
+extern const std::multimap<std::pair<uint32, std::string>, parser_action> asn1_allin1_action_table;
+extern const std::map<std::pair<uint32, std::string>, uint32> asn1_allin1_goto_table;
+extern const std::set<std::string> asn1_allin1_terminals;
 
 }  // namespace io
 }  // namespace hotplace

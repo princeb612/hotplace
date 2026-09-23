@@ -38,6 +38,17 @@ return_t asn1_publisher::build(asn1_runtime* runtime, const parse_tree* pt, asn1
 
         auto lambda = [&](parser_action_t action, parse_treenode* node) -> return_t {
             return_t test = errorcode_t::success;
+#if defined DEBUG
+            if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
+                trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
+                    if (parser_action_t::shift == action)
+                        dbs << "shift";
+                    else if (parser_action_t::reduce == action)
+                        dbs << "reduce";
+                    dbs.println(" symbol %s RHS[%zi]", node->symbol.c_str(), node->sizeof_rhs());
+                });
+            }
+#endif
             if (parser_action_t::shift == action) {
                 asn1_semantic_node asn;
                 asn.symbol = node->symbol;

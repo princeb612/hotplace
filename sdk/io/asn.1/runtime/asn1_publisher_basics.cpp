@@ -37,7 +37,6 @@ namespace io {
 void asn1_publisher::prepare_basics() {
     // default_handler
     //   DefinedType
-    //   TypeBase
     //   TypeSpec
 
     auto resource = asn1_resource::get_instance();
@@ -73,11 +72,11 @@ void asn1_publisher::prepare_basics() {
 
         return errorcode_t::success;
     });
-    add_handler("StatementSequence", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("StatementSequence", {"SEQUENCE", "Constraint", "{", "FieldList", "}"})
-        // production("StatementSequence", {"SEQUENCE", "{", "FieldList", "}"})
-        // production("StatementSequence", {"SEQUENCE", "Constraint", "{", "}"})
-        // production("StatementSequence", {"SEQUENCE", "{", "}"})
+    add_handler("SequenceTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("SequenceTypeSpec", {"SEQUENCE", "Constraint", "{", "FieldList", "}"})
+        // production("SequenceTypeSpec", {"SEQUENCE", "{", "FieldList", "}"})
+        // production("SequenceTypeSpec", {"SEQUENCE", "Constraint", "{", "}"})
+        // production("SequenceTypeSpec", {"SEQUENCE", "{", "}"})
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
@@ -113,10 +112,10 @@ void asn1_publisher::prepare_basics() {
 
         return errorcode_t::success;
     });
-    add_handler("StatementSequenceOf", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("StatementSequenceOf", {"SEQUENCE", "SizeConstraint", "OF", "TypeSpec"})
-        // production("StatementSequenceOf", {"SEQUENCE", "Constraint", "OF", "TypeSpec"})
-        // production("StatementSequenceOf", {"SEQUENCE", "OF", "TypeSpec"})
+    add_handler("SequenceOfTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("SequenceOfTypeSpec", {"SEQUENCE", "SizeConstraint", "OF", "TypeSpec"})
+        // production("SequenceOfTypeSpec", {"SEQUENCE", "Constraint", "OF", "TypeSpec"})
+        // production("SequenceOfTypeSpec", {"SEQUENCE", "OF", "TypeSpec"})
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
@@ -154,11 +153,11 @@ void asn1_publisher::prepare_basics() {
 
         return errorcode_t::success;
     });
-    add_handler("StatementSet", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("StatementSet", {"SET", "Constraint", "{", "FieldList", "}"})
-        // production("StatementSet", {"SET", "{", "FieldList", "}"})
-        // production("StatementSet", {"SET", "Constraint", "{", "}"})
-        // production("StatementSet", {"SET", "{", "}"})
+    add_handler("SetTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("SetTypeSpec", {"SET", "Constraint", "{", "FieldList", "}"})
+        // production("SetTypeSpec", {"SET", "{", "FieldList", "}"})
+        // production("SetTypeSpec", {"SET", "Constraint", "{", "}"})
+        // production("SetTypeSpec", {"SET", "{", "}"})
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
@@ -195,10 +194,10 @@ void asn1_publisher::prepare_basics() {
 
         return errorcode_t::success;
     });
-    add_handler("StatementSetOf", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("StatementSetOf", {"SET", "SizeConstraint", "OF", "TypeSpec"})
-        // production("StatementSetOf", {"SET", "Constraint", "OF", "TypeSpec"})
-        // production("StatementSetOf", {"SET", "OF", "TypeSpec"})
+    add_handler("SetOfTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("SetOfTypeSpec", {"SET", "SizeConstraint", "OF", "TypeSpec"})
+        // production("SetOfTypeSpec", {"SET", "Constraint", "OF", "TypeSpec"})
+        // production("SetOfTypeSpec", {"SET", "OF", "TypeSpec"})
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
@@ -236,11 +235,11 @@ void asn1_publisher::prepare_basics() {
 
         return errorcode_t::success;
     });
-    add_handler("StatementChoice", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("StatementChoice", {"CHOICE", "Constraint", "{", "FieldList", "}"})
-        // production("StatementChoice", {"CHOICE", "{", "FieldList", "}"})
-        // production("StatementChoice", {"CHOICE", "Constraint", "{", "}"})
-        // production("StatementChoice", {"CHOICE", "{", "}"})
+    add_handler("ChoiceTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("ChoiceTypeSpec", {"CHOICE", "Constraint", "{", "FieldList", "}"})
+        // production("ChoiceTypeSpec", {"CHOICE", "{", "FieldList", "}"})
+        // production("ChoiceTypeSpec", {"CHOICE", "Constraint", "{", "}"})
+        // production("ChoiceTypeSpec", {"CHOICE", "{", "}"})
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
@@ -317,8 +316,8 @@ void asn1_publisher::prepare_basics() {
     add_handler("Field", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("Field", {symid, "TypeSpec"})
         // production("Field", {symid, "TypeSpec", "Constraint"})
-        // production("Field", {symid, "TypeSpec", "FieldOpt"})
-        // production("Field", {symid, "TypeSpec", "Constraint", "FieldOpt"})
+        // production("Field", {symid, "TypeSpec", "FieldSpecifier"})
+        // production("Field", {symid, "TypeSpec", "Constraint", "FieldSpecifier"})
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
@@ -342,15 +341,15 @@ void asn1_publisher::prepare_basics() {
         if (asn.object) {
             asn.object->set_name(rhs_symid.value);
 
-            auto iter = index.find("FieldOpt");
+            auto iter = index.find("FieldSpecifier");
             if (index.end() != iter) {
                 auto& rhs_fieldopt = rhs[iter->second];
 
                 /**
                  * To ensure compliance with the ASN.1 standard grammar and prevent Shift/Reduce conflicts in the LALR(1) parser, the grammar was kept clean by
-                 * restricting the `DEFAULT` syntax to the `Field` production level. Instead, leveraging the AST structure where `TaggedType` acts as a decorator, the
+                 * restricting the `DEFAULT` syntax to the `Field` production level. Instead, leveraging the AST structure where `TaggedTypeSpec` acts as a decorator, the
                  * issue was resolved by clearly separating responsibilities so that the `Publisher` layer propagates (unwraps) the `DEFAULT` option to the actual object
-                 * contained within the `TaggedType`.
+                 * contained within the `TaggedTypeSpec`.
                  */
                 if (asn1_entity_tagged_type == asn.object->get_entity()) {
                     auto tagobj = dynamic_cast<asn1_tagged_type*>(asn.object);
@@ -377,11 +376,11 @@ void asn1_publisher::prepare_basics() {
 
         return errorcode_t::success;
     });
-    add_handler("FieldOpt", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("FieldOpt", {"OPTIONAL"})
-        // production("FieldOpt", {"DEFAULT", symnum})
-        // production("FieldOpt", {"DEFAULT", symqs})
-        // production("FieldOpt", {"DEFAULT", "{", "}"})
+    add_handler("FieldSpecifier", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("FieldSpecifier", {"OPTIONAL"})
+        // production("FieldSpecifier", {"DEFAULT", symnum})
+        // production("FieldSpecifier", {"DEFAULT", symqs})
+        // production("FieldSpecifier", {"DEFAULT", "{", "}"})
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
@@ -410,7 +409,7 @@ void asn1_publisher::prepare_basics() {
 
         return errorcode_t::success;
     });
-    add_handler("ReferencedType", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("ReferencedTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         return_t ret = errorcode_t::success;
         __try2 {
             // pop and push, simply modify
@@ -421,9 +420,9 @@ void asn1_publisher::prepare_basics() {
         __finally2 {}
         return ret;
     });
-    add_handler("TaggedType", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("TaggedType", {"TagPrefix", "TagSpec", "TypeSpec"})
-        // production("TaggedType", {"TagPrefix", "TypeSpec"})
+    add_handler("TaggedTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("TaggedTypeSpec", {"TagPrefix", "TagSpec", "TypeSpec"})
+        // production("TaggedTypeSpec", {"TagPrefix", "TypeSpec"})
 
         auto size = node->sizeof_rhs();
 
@@ -474,7 +473,7 @@ void asn1_publisher::prepare_basics() {
 
         return errorcode_t::success;
     });
-    add_handler("EnumType", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("EnumTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
         for (size_t i = 0; i < size; ++i) {
@@ -550,7 +549,7 @@ void asn1_publisher::prepare_basics() {
 
         return errorcode_t::success;
     });
-    add_handler("SimpleType", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("SimpleTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         auto size = node->sizeof_rhs();  // 1, 4
         std::vector<asn1_semantic_node> rhs(size);
         for (size_t i = 0; i < size; ++i) {
@@ -562,8 +561,8 @@ void asn1_publisher::prepare_basics() {
 
         auto obj = asn1_builder::build(entity);
         if (4 == size) {
-            // production("SimpleType", {"INTEGER", "{", "EnumList", "}"})
-            // production("SimpleType", {"BIT STRING", "{", "EnumList", "}"})
+            // production("SimpleTypeSpec", {"INTEGER", "{", "EnumList", "}"})
+            // production("SimpleTypeSpec", {"BIT STRING", "{", "EnumList", "}"})
             auto& rhs_enumlist = rhs[2];
             auto container = static_cast<asn1_namedlist*>(rhs_enumlist.object);
             if ("INTEGER" == rhs_simpletype.symbol) ((asn1_integer*)obj)->add(*container);

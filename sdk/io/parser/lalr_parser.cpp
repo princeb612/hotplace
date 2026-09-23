@@ -17,6 +17,7 @@
 #include <hotplace/sdk/base/unittest/console_color.hpp>
 #include <hotplace/sdk/io/parser/lalr_parser.hpp>
 #include <hotplace/sdk/io/parser/parser_resource.hpp>
+#include <hotplace/sdk/io/parser/parser_sdk.hpp>
 #include <iomanip>
 #include <iostream>
 #include <queue>
@@ -46,10 +47,10 @@ return_t lalr_parser::learn() {
 
     critical_section_guard guard(_lock);
     __try2 {
-        compute_first_and_follow_sets();
-        build_lr0_states();
+        compute_first_and_follow_sets(_grammar, _context);
+        build_lr0_states(_grammar, _context, _goto_table);
 
-        if (false == generate_lalr_tables()) {
+        if (false == generate_lalr1_tables(_grammar, _context, _goto_table, _action_table)) {
             _is_table_built = false;
             ret = errorcode_t::conflict_detected;
             __leave2;
@@ -132,10 +133,7 @@ return_t lalr_parser::learn() {
         _is_table_built = true;
     }
     __finally2 {
-        _first_sets.clear();
-        _follow_sets.clear();
-        _lr0_states.clear();
-        _lr0_goto.clear();
+        _context.clear();
 
         if (errorcode_t::success != ret) {
             _action_table.clear();
@@ -384,284 +382,6 @@ return_t lalr_parser::parse(const std::vector<parser_token>& tokens, parse_tree*
     __finally2;
 
     return ret;
-}
-
-void lalr_parser::compute_first_and_follow_sets() {
-    const auto& rules = _grammar.get_productions();
-    const auto& terminals = _grammar.get_terminals();
-
-    for (const auto& term : terminals) {
-        _first_sets[term].insert(term);
-    }
-
-    bool changed = true;
-    while (changed) {
-        changed = false;
-        for (const auto& rule : rules) {
-            if (rule.rhs.empty()) continue;
-
-            std::string first_rhs = rule.rhs[0];
-            size_t prev_size = _first_sets[rule.lhs].size();
-
-            for (const auto& sym : _first_sets[first_rhs]) {
-                _first_sets[rule.lhs].insert(sym);
-            }
-
-            if (_first_sets[rule.lhs].size() > prev_size) {
-                changed = true;
-            }
-        }
-    }
-
-    _follow_sets["S'"].insert("$");
-    changed = true;
-    while (changed) {
-        changed = false;
-        for (const auto& rule : rules) {
-            for (size_t i = 0; i < rule.rhs.size(); ++i) {
-                std::string B = rule.rhs[i];
-                if (false == _grammar.is_non_terminal(B)) continue;
-
-                size_t prev_size = _follow_sets[B].size();
-
-                if (i + 1 < rule.rhs.size()) {
-                    std::string beta = rule.rhs[i + 1];
-                    for (const auto& sym : _first_sets[beta]) {
-                        _follow_sets[B].insert(sym);
-                    }
-                } else {
-                    for (const auto& sym : _follow_sets[rule.lhs]) {
-                        _follow_sets[B].insert(sym);
-                    }
-                }
-
-                if (_follow_sets[B].size() > prev_size) {
-                    changed = true;
-                }
-            }
-        }
-    }
-}
-
-std::set<LR0_item> lalr_parser::closure_lr0(std::set<LR0_item> items) const {
-    const auto& rules = _grammar.get_productions();
-    bool added = true;
-    while (added) {
-        added = false;
-        std::set<LR0_item> new_items = items;
-        for (const auto& item : items) {
-            const auto& rule = rules[item.production_id];
-            if (item.dot_pos < rule.rhs.size()) {
-                std::string B = rule.rhs[item.dot_pos];
-                if (_grammar.is_non_terminal(B)) {
-                    for (const auto& r : rules) {
-                        if (r.lhs == B) {
-                            if (new_items.insert({r.id, 0}).second) {
-                                added = true;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        items = new_items;
-    }
-    return items;
-}
-
-void lalr_parser::build_lr0_states() {
-    const auto& rules = _grammar.get_productions();
-    _lr0_states.clear();
-    _lr0_goto.clear();
-    _goto_table.clear();
-
-    std::set<LR0_item> start_set = closure_lr0({{0, 0}});
-    _lr0_states.push_back(start_set);
-
-    std::queue<uint32> worklist;
-    worklist.push(0);
-
-    while (false == worklist.empty()) {
-        uint32 state_id = worklist.front();
-        worklist.pop();
-
-        std::set<std::string> symbols;
-        for (const auto& item : _lr0_states[state_id]) {
-            const auto& rule = rules[item.production_id];
-            if (item.dot_pos < rule.rhs.size()) {
-                symbols.insert(rule.rhs[item.dot_pos]);
-            }
-        }
-
-        for (const auto& sym : symbols) {
-            std::set<LR0_item> goto_items;
-            for (const auto& item : _lr0_states[state_id]) {
-                const auto& rule = rules[item.production_id];
-                if (item.dot_pos < rule.rhs.size() && rule.rhs[item.dot_pos] == sym) {
-                    goto_items.insert({item.production_id, item.dot_pos + 1});
-                }
-            }
-            std::set<LR0_item> next_state = closure_lr0(goto_items);
-
-            uint32 existing_state = -1;
-            for (size_t i = 0; i < _lr0_states.size(); ++i) {
-                if (_lr0_states[i] == next_state) {
-                    existing_state = static_cast<uint32>(i);
-                    break;
-                }
-            }
-
-            if (existing_state == (uint32)-1) {
-                _lr0_states.push_back(next_state);
-                existing_state = static_cast<uint32>(_lr0_states.size() - 1);
-                worklist.push(existing_state);
-            }
-
-            _lr0_goto[{state_id, sym}] = existing_state;
-
-            if (_grammar.is_non_terminal(sym)) {
-                _goto_table[{state_id, sym}] = existing_state;
-            }
-        }
-    }
-}
-
-bool lalr_parser::generate_lalr_tables() {
-    const auto& rules = _grammar.get_productions();
-    const auto& terminals = _grammar.get_terminals();
-    bool has_conflict = false;
-    std::vector<std::set<LR1_item>> lalr_states(_lr0_states.size());
-
-    _action_table.clear();
-    lalr_states[0].insert({0, 0, "$"});
-
-    bool changed = true;
-    while (changed) {
-        changed = false;
-        for (size_t i = 0; i < _lr0_states.size(); ++i) {
-            std::set<LR1_item> expanded = lalr_states[i];
-            bool closure_changed = true;
-
-            while (closure_changed) {
-                closure_changed = false;
-                std::set<LR1_item> next_expanded = expanded;
-
-                for (const auto& item : expanded) {
-                    const auto& rule = rules[item.production_id];
-                    if (item.dot_pos < rule.rhs.size()) {
-                        std::string B = rule.rhs[item.dot_pos];
-                        if (_grammar.is_non_terminal(B)) {
-                            std::set<std::string> lookaheads;
-                            if (item.dot_pos + 1 < rule.rhs.size()) {
-                                std::string beta = rule.rhs[item.dot_pos + 1];
-                                lookaheads = _first_sets[beta];
-                            } else {
-                                lookaheads.insert(item.lookahead);
-                            }
-
-                            for (const auto& r : rules) {
-                                if (r.lhs == B) {
-                                    for (const auto& la : lookaheads) {
-                                        if (next_expanded.insert({r.id, 0, la}).second) {
-                                            closure_changed = true;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                expanded = next_expanded;
-            }
-            lalr_states[i] = expanded;
-
-            for (const auto& item : lalr_states[i]) {
-                const auto& rule = rules[item.production_id];
-                if (item.dot_pos < rule.rhs.size()) {
-                    std::string sym = rule.rhs[item.dot_pos];
-                    uint32 next_st = _lr0_goto[{static_cast<uint32>(i), sym}];
-                    if (lalr_states[next_st].insert({item.production_id, item.dot_pos + 1, item.lookahead}).second) {
-                        changed = true;
-                    }
-                }
-            }
-        }
-    }
-
-#if defined DEBUG
-    // Helper lambda for debug printing actions
-    auto format_action = [&](const parser_action& act) -> std::string {
-        if (act.type == parser_action_t::shift) {
-            return "Shift(" + std::to_string(act.target) + ")";
-        } else if (act.type == parser_action_t::reduce) {
-            const auto& r = rules[act.target];
-            return "Reduce(" + std::to_string(act.target) + ": " + r.lhs + ")";
-        } else if (act.type == parser_action_t::accept) {
-            return "Accept";
-        }
-        return "Error";
-    };
-#endif
-
-    for (size_t i = 0; i < lalr_states.size(); ++i) {
-        for (const auto& item : lalr_states[i]) {
-            const auto& rule = rules[item.production_id];
-
-            if (item.dot_pos < rule.rhs.size()) {
-                std::string sym = rule.rhs[item.dot_pos];
-                if (terminals.count(sym)) {
-                    uint32 next_st = _lr0_goto[{static_cast<uint32>(i), sym}];
-                    auto key = std::make_pair(static_cast<uint32>(i), sym);
-                    parser_action new_act = {parser_action_t::shift, next_st};
-
-                    if (_action_table.count(key)) {
-                        parser_action old_act = _action_table[key];
-                        if (old_act.type != new_act.type || old_act.target != new_act.target) {
-#if defined DEBUG
-                            if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
-                                trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
-                                    dbs << "[CONFLICT DETECTED] state " << i << " on symbol '" << sym << "': " << format_action(old_act) << " vs "
-                                        << format_action(new_act) << "\n";
-                                });
-                            }
-#endif
-
-                            has_conflict = true;
-                        }
-                    } else {
-                        _action_table[key] = new_act;
-                    }
-                }
-            } else {
-                if (item.production_id == 0) {
-                    _action_table[{static_cast<uint32>(i), "$"}] = {parser_action_t::accept, 0};
-                } else {
-                    auto key = std::make_pair(static_cast<uint32>(i), item.lookahead);
-                    parser_action new_act = {parser_action_t::reduce, item.production_id};
-
-                    if (_action_table.count(key)) {
-                        parser_action old_act = _action_table[key];
-                        if (old_act.type != new_act.type || old_act.target != new_act.target) {
-#if defined DEBUG
-                            if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
-                                trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
-                                    dbs << "[CONFLICT DETECTED] state " << i << " on lookahead '" << item.lookahead << "': " << format_action(old_act) << " vs "
-                                        << format_action(new_act) << "\n";
-                                    dbs << "  - attempted rule: " << rule.id << " -> " << rule.lhs << "\n";
-                                });
-                            }
-#endif
-                            has_conflict = true;
-                        }
-                    } else {
-                        _action_table[key] = new_act;
-                    }
-                }
-            }
-        }
-    }
-
-    return !has_conflict;
 }
 
 }  // namespace io

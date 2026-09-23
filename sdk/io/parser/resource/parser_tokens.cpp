@@ -16,61 +16,70 @@ namespace io {
 
 const parser_token_resource parser_symbol_tokens[] = {
     {token_alpha, "alpha"},
-    {token_number, SYMBOL_NUM},        // number
-    {token_floatingpoint, SYMBOL_FP},  // floatingpoint
-    {token_space, "space"},
-    {token_lparen, "lparen"},
-    {token_rparen, "rparen"},
-    {token_lbracket, "lbracket"},
-    {token_rbracket, "rbracket"},
-    {token_lbrace, "lbrace"},
-    {token_rbrace, "rbrace"},
-    {token_squote, "squote"},
-    {token_dquote, "dquote"},
-    {token_greater, "greater"},
-    {token_lesser, "lesser"},
-    {token_equal, "equal"},
-    {token_plus, "plus"},
-    {token_dash, "dash"},
-    {token_asterisk, "asterisk"},
-    {token_slash, "slash"},
-    {token_colon, "colon"},
-    {token_semicolon, "semicolon"},
-    {token_comma, "comma"},
-    {token_dot, "dot"},
-    {token_newline, "newline"},
     {token_amp, "amp"},
-    {token_or, "or"},
-    {token_isequal, "=="},
-    {token_notequal, "!="},
-    {token_identifier, SYMBOL_ID},  // identifier
-    {token_quot_string, SYMBOL_QSTR},
-    {token_at, "at"},
-    {token_comments, "comments"},
     {token_assign, "assign"},
-    {token_lvalue, "lvalue"},
-    {token_emphasis, "emphasis"},
-    {token_type, "type"},
-    {token_usertype, SYMBOL_USERTYPE},
+    {token_asterisk, "*"},
+    {token_at, "at"},
+    {token_backtick, "`"},
+    {token_bslash, "\\"},
+    {token_caret, "^"},
+    {token_colon, "colon"},
+    {token_comma, "comma"},
+    {token_comments, "comments"},
+    {token_dash, "dash"},
+    {token_dot, "dot"},
+    {token_dquote, "dquote"},
     {token_element, "element"},
+    {token_emphasis, "emphasis"},
+    {token_equal, "equal"},
+    {token_exclamation, "!"},
+    {token_floatingpoint, SYMBOL_FP},  // floatingpoint
+    {token_greater, "greater"},
+    {token_identifier, SYMBOL_ID},  // identifier
+    {token_isequal, "=="},
+    {token_lbrace, "lbrace"},
+    {token_lbracket, "lbracket"},
+    {token_lesser, "lesser"},
+    {token_lparen, "lparen"},
+    {token_lvalue, "lvalue"},
+    {token_newline, "newline"},
+    {token_notequal, "!="},
+    {token_number, SYMBOL_NUM},  // number
+    {token_paramtype, SYMBOL_PARAMTYPE},
+    {token_paramvalue, SYMBOL_PARAMVALUE},
+    {token_percent, "%"},
     {token_phrase, "phrase"},
+    {token_pipe, "|"},
+    {token_plus, "+"},
+    {token_question, "?"},
+    {token_quot_string, SYMBOL_QSTR},
+    {token_rbrace, "rbrace"},
+    {token_rbracket, "rbracket"},
+    {token_rparen, "rparen"},
+    {token_semicolon, "semicolon"},
     {token_sentence, "sentence"},
-    {token_userparamtype, "userparamtype"},
-    {token_paramtype, "paramtype"},
-    {token_paramvalue, "paramvalue"},
+    {token_sharp, "#"},
+    {token_slash, "/"},
+    {token_space, "space"},
+    {token_squote, "squote"},
+    {token_tilde, "~"},
+    {token_type, "type"},
+    {token_underline, "_"},
+    {token_userparamtype, SYMBOL_USERPARAMTYPE},
+    {token_usertype, SYMBOL_USERTYPE},
     {token_eof, "$"},
 };
 const size_t sizeof_parser_symbol_tokens = RTL_NUMBER_OF(parser_symbol_tokens);
 
 const parser_token_resource parser_basic_tokens[] = {
     // clang-format off
-    {token_lparen, "("},
-    {token_rparen, ")"},
-    {token_lbracket, "["},
-    {token_rbracket, "]"},
-    {token_lbrace, "{"},
-    {token_rbrace, "}"},
     {token_colon, ":"},
+    {token_lbrace, "{"},
+    {token_lbracket, "["},
+    {token_lparen, "("},
+    {token_rbrace, "}"},
+    {token_rbracket, "]"},
+    {token_rparen, ")"},
     {token_semicolon, ";"},
     // clang-format on
 };
@@ -80,6 +89,7 @@ const struct parser_token_resource parser_asn1_tokens[] = {
     {token_assign, "::="},
     {token_comments, "--"},
 
+    // BitStringType ~ RelativeOIDType
     {token_bool, "BOOLEAN"},
     {token_int, "INTEGER"},
     {token_bitstring, "BIT STRING"},
@@ -111,25 +121,27 @@ const struct parser_token_resource parser_asn1_tokens[] = {
     {token_datetime, "DATE-TIME"},
     {token_duration, "DURATION"},
     {token_any, "ANY"},
-
+    // SequenceType ~ SetOfType
     {token_sequence, "SEQUENCE"},
     {token_set, "SET"},
     {token_choice, "CHOICE"},
     {token_of, "OF"},
 
+    // BooleanValue
     {token_true, "TRUE"},
     {token_false, "FALSE"},
-
+    // Class
     {token_universal, "UNIVERSAL"},
     {token_application, "APPLICATION"},
     {token_private, "PRIVATE"},
-
+    // cf. Tag
     {token_implicit, "IMPLICIT"},
     {token_explicit, "EXPLICIT"},
-
+    // cf. NamedType
     {token_default, "DEFAULT"},
     {token_optional, "OPTIONAL"},
 
+    // constraints
     {token_union, "|"},
     {token_intersection, "INTERSECTION"},
     {token_except, "EXCEPT"},

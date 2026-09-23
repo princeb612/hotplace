@@ -33,7 +33,7 @@ cfg_grammar& cfg_grammar::add_production(const std::string& lhs, const std::vect
             print_style_t style("{", ", ", "}");
             style.set_element("", ", ", "");
 
-            dbs.printf("%i, R\"(%s)\", ", id, lhs.c_str());
+            dbs.printf(" {%i, \"%s\", ", id, lhs.c_str());
             print(
                 rhs, dbs,
                 [](const std::vector<std::string>::const_iterator iter, basic_stream& dbs) -> void {

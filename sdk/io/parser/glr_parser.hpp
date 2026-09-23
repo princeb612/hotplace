@@ -12,6 +12,14 @@
  * Parser Type | Deterministic Grammar (Time) | Ambiguous / Worst-Case Grammar (Time) | Space Complexity
  * LALR(1)     | O(n)                         | Fails / Conflicts out                 | O(n) (stack) + label size
  * GLR         | O(n)                         | O(n^3) (general) to O(n^4)+           | O(n^p) or graph structured stack
+ *
+ * GLR dynamic table creation vs. importing pre-built tables
+ *
+ *   ASN.1 production (measured based on approximately 140 productions.)
+ *          |time       |message
+ *   learn  |3.003206025|build parsing table
+ *   import |0.000022600|import parsing table
+ *
  */
 
 #ifndef __HOTPLACE_SDK_IO_PARSER_GLRPARSER__
@@ -66,25 +74,13 @@ class glr_parser : public parser_t {
         gss_node(uint32 s, std::shared_ptr<gss_node> p, parse_treenode* node = nullptr) : state(s), parent(p), tree_node(node) {}
     };
 
-    void compute_first_and_follow_sets();
-    std::set<LR0_item> closure_lr0(std::set<LR0_item> items) const;
-    void build_lr0_states();
-
-    /**
-     * @brief generates GLR tables (allows multiple actions per state-token pair).
-     */
-    bool generate_glr_tables();
-
    private:
     mutable critical_section _lock;
     cfg_grammar _grammar;
     bool _is_table_built = false;
 
     // temporary tables for table generation
-    std::map<std::string, std::set<std::string>> _first_sets;
-    std::map<std::string, std::set<std::string>> _follow_sets;
-    std::vector<std::set<LR0_item>> _lr0_states;
-    std::map<std::pair<uint32, std::string>, uint32> _lr0_goto;
+    parser_temporary_context_t _context;
 
     // GLR parsing tables: multi-action table allows conflicts to co-exist
     std::multimap<std::pair<uint32, std::string>, parser_action> _action_table;

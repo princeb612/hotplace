@@ -169,7 +169,7 @@ return_t ac_search_and_printall(const asn1module_reducer_t& ac, const char* inpu
 
 return_t prepare_asn1notation_grammar(parser_t& parser) {
     return_t ret = errorcode_t::success;
-#if 1
+
     auto resource = parser_resource::get_instance();
     auto symid = resource->nameof(token_identifier);     // "identifier"
     auto symnum = resource->nameof(token_number);        // symnum
@@ -192,52 +192,50 @@ return_t prepare_asn1notation_grammar(parser_t& parser) {
 
         .add_production("DefinedType", {symuser})
 
-        .add_production("StatementSequence", {"SEQUENCE", "Constraint", "{", "FieldList", "}"})
-        .add_production("StatementSequence", {"SEQUENCE", "{", "FieldList", "}"})
-        .add_production("StatementSequence", {"SEQUENCE", "Constraint", "{", "}"})
-        .add_production("StatementSequence", {"SEQUENCE", "{", "}"})
-        .add_production("StatementSequenceOf", {"SEQUENCE", "SizeConstraint", "OF", "TypeSpec"})
-        .add_production("StatementSequenceOf", {"SEQUENCE", "Constraint", "OF", "TypeSpec"})
-        .add_production("StatementSequenceOf", {"SEQUENCE", "OF", "TypeSpec"})
-        .add_production("StatementSet", {"SET", "Constraint", "{", "FieldList", "}"})
-        .add_production("StatementSet", {"SET", "{", "FieldList", "}"})
-        .add_production("StatementSet", {"SET", "Constraint", "{", "}"})
-        .add_production("StatementSet", {"SET", "{", "}"})
-        .add_production("StatementSetOf", {"SET", "SizeConstraint", "OF", "TypeSpec"})
-        .add_production("StatementSetOf", {"SET", "Constraint", "OF", "TypeSpec"})
-        .add_production("StatementSetOf", {"SET", "OF", "TypeSpec"})
-        .add_production("StatementChoice", {"CHOICE", "Constraint", "{", "FieldList", "}"})
-        .add_production("StatementChoice", {"CHOICE", "{", "FieldList", "}"})
-        .add_production("StatementChoice", {"CHOICE", "Constraint", "{", "}"})
-        .add_production("StatementChoice", {"CHOICE", "{", "}"})
+        .add_production("SequenceTypeSpec", {"SEQUENCE", "Constraint", "{", "FieldList", "}"})
+        .add_production("SequenceTypeSpec", {"SEQUENCE", "{", "FieldList", "}"})
+        .add_production("SequenceTypeSpec", {"SEQUENCE", "Constraint", "{", "}"})
+        .add_production("SequenceTypeSpec", {"SEQUENCE", "{", "}"})
+        .add_production("SequenceOfTypeSpec", {"SEQUENCE", "SizeConstraint", "OF", "TypeSpec"})
+        .add_production("SequenceOfTypeSpec", {"SEQUENCE", "Constraint", "OF", "TypeSpec"})
+        .add_production("SequenceOfTypeSpec", {"SEQUENCE", "OF", "TypeSpec"})
+        .add_production("SetTypeSpec", {"SET", "Constraint", "{", "FieldList", "}"})
+        .add_production("SetTypeSpec", {"SET", "{", "FieldList", "}"})
+        .add_production("SetTypeSpec", {"SET", "Constraint", "{", "}"})
+        .add_production("SetTypeSpec", {"SET", "{", "}"})
+        .add_production("SetOfTypeSpec", {"SET", "SizeConstraint", "OF", "TypeSpec"})
+        .add_production("SetOfTypeSpec", {"SET", "Constraint", "OF", "TypeSpec"})
+        .add_production("SetOfTypeSpec", {"SET", "OF", "TypeSpec"})
+        .add_production("ChoiceTypeSpec", {"CHOICE", "Constraint", "{", "FieldList", "}"})
+        .add_production("ChoiceTypeSpec", {"CHOICE", "{", "FieldList", "}"})
+        .add_production("ChoiceTypeSpec", {"CHOICE", "Constraint", "{", "}"})
+        .add_production("ChoiceTypeSpec", {"CHOICE", "{", "}"})
 
         .add_production("FieldList", {"FieldList", ",", "Field"})
         .add_production("FieldList", {"Field"})
         .add_production("Field", {symid, "TypeSpec"})
         .add_production("Field", {symid, "TypeSpec", "Constraint"})
-        .add_production("Field", {symid, "TypeSpec", "FieldOpt"})
-        .add_production("Field", {symid, "TypeSpec", "Constraint", "FieldOpt"})
-        .add_production("FieldOpt", {"OPTIONAL"})
-        .add_production("FieldOpt", {"DEFAULT", symnum})
-        .add_production("FieldOpt", {"DEFAULT", symqs})
-        .add_production("FieldOpt", {"DEFAULT", "{", "}"})
+        .add_production("Field", {symid, "TypeSpec", "FieldSpecifier"})
+        .add_production("Field", {symid, "TypeSpec", "Constraint", "FieldSpecifier"})
+        .add_production("FieldSpecifier", {"OPTIONAL"})
+        .add_production("FieldSpecifier", {"DEFAULT", symnum})
+        .add_production("FieldSpecifier", {"DEFAULT", symqs})
+        .add_production("FieldSpecifier", {"DEFAULT", "{", "}"})
 
-        .add_production("TypeSpec", {"TypeBase"})
-        .add_production("TypeSpec", {"EnumType"})
-        .add_production("TypeSpec", {"StatementSequence"})
-        .add_production("TypeSpec", {"StatementSequenceOf"})
-        .add_production("TypeSpec", {"StatementSet"})
-        .add_production("TypeSpec", {"StatementSetOf"})
-        .add_production("TypeSpec", {"StatementChoice"})
+        .add_production("TypeSpec", {"SimpleTypeSpec"})
+        .add_production("TypeSpec", {"TaggedTypeSpec"})
+        .add_production("TypeSpec", {"ReferencedTypeSpec"})
+        .add_production("TypeSpec", {"EnumTypeSpec"})
+        .add_production("TypeSpec", {"SequenceTypeSpec"})
+        .add_production("TypeSpec", {"SequenceOfTypeSpec"})
+        .add_production("TypeSpec", {"SetTypeSpec"})
+        .add_production("TypeSpec", {"SetOfTypeSpec"})
+        .add_production("TypeSpec", {"ChoiceTypeSpec"})
 
-        .add_production("TypeBase", {"SimpleType"})
-        .add_production("TypeBase", {"TaggedType"})
-        .add_production("TypeBase", {"ReferencedType"})
+        .add_production("ReferencedTypeSpec", {"Identifier"})
 
-        .add_production("ReferencedType", {symid})
-
-        .add_production("TaggedType", {"TagPrefix", "TagSpec", "TypeSpec"})
-        .add_production("TaggedType", {"TagPrefix", "TypeSpec"})
+        .add_production("TaggedTypeSpec", {"TagPrefix", "TagSpec", "TypeSpec"})
+        .add_production("TaggedTypeSpec", {"TagPrefix", "TypeSpec"})
 
         .add_production("TagPrefix", {"[", "TagClass", symnum, "]"})
         .add_production("TagPrefix", {"[", symnum, "]"})
@@ -248,43 +246,43 @@ return_t prepare_asn1notation_grammar(parser_t& parser) {
         .add_production("TagSpec", {"IMPLICIT"})
         .add_production("TagSpec", {"EXPLICIT"})
 
-        .add_production("EnumType", {"ENUMERATED", "{", "EnumList", "}"})
+        .add_production("EnumTypeSpec", {"ENUMERATED", "{", "EnumList", "}"})
         .add_production("EnumList", {"EnumList", ",", "EnumItem"})
         .add_production("EnumList", {"EnumItem"})
         .add_production("EnumItem", {symid, "(", symnum, ")"})
 
-        .add_production("SimpleType", {"BOOLEAN"})
-        .add_production("SimpleType", {"INTEGER"})
-        .add_production("SimpleType", {"INTEGER", "{", "EnumList", "}"})
-        .add_production("SimpleType", {"BIT STRING"})
-        .add_production("SimpleType", {"BIT STRING", "{", "EnumList", "}"})
-        .add_production("SimpleType", {"OCTET STRING"})
-        .add_production("SimpleType", {"NULL"})
-        .add_production("SimpleType", {"OBJECT IDENTIFIER"})
-        .add_production("SimpleType", {"REAL"})
-        .add_production("SimpleType", {"UTF8String"})
-        .add_production("SimpleType", {"RELATIVE-OID"})
-        .add_production("SimpleType", {"TIME"})
-        .add_production("SimpleType", {"NumericString"})
-        .add_production("SimpleType", {"PrintableString"})
-        .add_production("SimpleType", {"TeletexString"})
-        .add_production("SimpleType", {"T61String"})
-        .add_production("SimpleType", {"VideotexString"})
-        .add_production("SimpleType", {"IA5String"})
-        .add_production("SimpleType", {"UTCTime"})
-        .add_production("SimpleType", {"GeneralizedTime"})
-        .add_production("SimpleType", {"GraphicString"})
-        .add_production("SimpleType", {"VisibleString"})
-        .add_production("SimpleType", {"ISO646String"})
-        .add_production("SimpleType", {"GeneralString"})
-        .add_production("SimpleType", {"UniversalString"})
-        .add_production("SimpleType", {"CHARACTER STRING"})
-        .add_production("SimpleType", {"BMPString"})
-        .add_production("SimpleType", {"DATE"})
-        .add_production("SimpleType", {"TIME-OF-DAY"})
-        .add_production("SimpleType", {"DATE-TIME"})
-        .add_production("SimpleType", {"DURATION"})
-        .add_production("SimpleType", {"ANY"})
+        .add_production("SimpleTypeSpec", {"BOOLEAN"})
+        .add_production("SimpleTypeSpec", {"INTEGER"})
+        .add_production("SimpleTypeSpec", {"INTEGER", "{", "EnumList", "}"})
+        .add_production("SimpleTypeSpec", {"BIT STRING"})
+        .add_production("SimpleTypeSpec", {"BIT STRING", "{", "EnumList", "}"})
+        .add_production("SimpleTypeSpec", {"OCTET STRING"})
+        .add_production("SimpleTypeSpec", {"NULL"})
+        .add_production("SimpleTypeSpec", {"OBJECT IDENTIFIER"})
+        .add_production("SimpleTypeSpec", {"REAL"})
+        .add_production("SimpleTypeSpec", {"UTF8String"})
+        .add_production("SimpleTypeSpec", {"RELATIVE-OID"})
+        .add_production("SimpleTypeSpec", {"TIME"})
+        .add_production("SimpleTypeSpec", {"NumericString"})
+        .add_production("SimpleTypeSpec", {"PrintableString"})
+        .add_production("SimpleTypeSpec", {"TeletexString"})
+        .add_production("SimpleTypeSpec", {"T61String"})
+        .add_production("SimpleTypeSpec", {"VideotexString"})
+        .add_production("SimpleTypeSpec", {"IA5String"})
+        .add_production("SimpleTypeSpec", {"UTCTime"})
+        .add_production("SimpleTypeSpec", {"GeneralizedTime"})
+        .add_production("SimpleTypeSpec", {"GraphicString"})
+        .add_production("SimpleTypeSpec", {"VisibleString"})
+        .add_production("SimpleTypeSpec", {"ISO646String"})
+        .add_production("SimpleTypeSpec", {"GeneralString"})
+        .add_production("SimpleTypeSpec", {"UniversalString"})
+        .add_production("SimpleTypeSpec", {"CHARACTER STRING"})
+        .add_production("SimpleTypeSpec", {"BMPString"})
+        .add_production("SimpleTypeSpec", {"DATE"})
+        .add_production("SimpleTypeSpec", {"TIME-OF-DAY"})
+        .add_production("SimpleTypeSpec", {"DATE-TIME"})
+        .add_production("SimpleTypeSpec", {"DURATION"})
+        .add_production("SimpleTypeSpec", {"ANY"})
 
         .add_production("Constraint", {"(", "ConstraintExpr", ")"})
 
@@ -313,6 +311,9 @@ return_t prepare_asn1notation_grammar(parser_t& parser) {
         .add_production("PrimaryElement", {"(", "ConstraintExpr", ")"})
 
         .add_production("SizeConstraint", {"SIZE", "Constraint"})
+
+        .add_production("Identifier", {symuser})
+        .add_production("Identifier", {symid})
 
         .add_production("ValueElement", {symnum})
         .add_production("ValueElement", {symfp})
@@ -384,20 +385,20 @@ return_t prepare_asn1notation_grammar(parser_t& parser) {
 
     ret = parser.learn();
     _logger->writeln("LALR table generation %s", (errorcode_t::success == ret) ? "success" : "failure");
-    _test_case.test(ret, __FUNCTION__, "build parsing table");
-#else
-    parser.import(asn1_notation_productions, asn1_notation_action_table, asn1_notation_goto_table);
-#endif
+    _test_case.test(ret, __FUNCTION__, "LALR(1) parser - ASSN.1 for Notation (build parsing table)");
+    return ret;
+}
+
+return_t import_asn1notation_grammar(lalr_parser& parser) {
+    return_t ret = errorcode_t::success;
+    ret = parser.import(asn1_notation_productions, asn1_notation_action_table, asn1_notation_goto_table);
+    _test_case.test(ret, __FUNCTION__, "LALR(1) parser - ASSN.1 for Notation (import parsing table)");
     return ret;
 }
 
 return_t prepare_asn1module_grammar(parser_t& parser) {
     return_t ret = errorcode_t::success;
 
-    // TODO
-    // The lexer passes all tokens between BEGIN and END in the form of Epsilon.
-
-#if 1
     auto resource = parser_resource::get_instance();
 
     auto symid = resource->nameof(token_identifier);     // "identifier"
@@ -429,7 +430,7 @@ return_t prepare_asn1module_grammar(parser_t& parser) {
         .add_production("ModuleHeader", {"ModuleId", "{", "OidComponentList", "}", "DEFINITIONS", "TagDefault", symassign, "BEGIN"})
         .add_production("ModuleHeader", {"ModuleId", "{", "OidComponentList", "}", "DEFINITIONS", symassign, "BEGIN"})
 
-        .add_production("ModuleId", {symuser})
+        // .add_production("ModuleId", {symuser})
         .add_production("ModuleId", {symid})
 
         // Header Defaults
@@ -445,7 +446,7 @@ return_t prepare_asn1module_grammar(parser_t& parser) {
         .add_production("ModuleBody", {"ExportsClause", "ImportsClause"})
         .add_production("ModuleBody", {"ImportsClause", "ExportsClause"})
 
-        .add_production("Statement", {"...."})
+        .add_production("Statement", {"...."})  // for a test PoC
 
         // Exports Clause
         .add_production("ExportsClause", {"EXPORTS", "SymbolList", ";"})
@@ -463,9 +464,9 @@ return_t prepare_asn1module_grammar(parser_t& parser) {
         .add_production("SymbolList", {"SymbolList", ",", "SymbolItem"})
         .add_production("SymbolList", {"SymbolItem"})
 
-        .add_production("SymbolItem", {symuser})
+        // .add_production("SymbolItem", {symuser})
         .add_production("SymbolItem", {symid})
-        .add_production("SymbolItem", {symuser, "{", "}"})
+        // .add_production("SymbolItem", {symuser, "{", "}"})
         .add_production("SymbolItem", {symid, "{", "}"});
 
     // Terminals Registration
@@ -506,17 +507,14 @@ return_t prepare_asn1module_grammar(parser_t& parser) {
 
     ret = parser.learn();
     _logger->writeln("LALR table generation %s", (errorcode_t::success == ret) ? "success" : "failure");
-    _test_case.test(ret, __FUNCTION__, "build parsing table");
-#else
-    parser.import(asn1_module_productions, asn1_module_action_table, asn1_module_goto_table);
-    _test_case.test(ret, __FUNCTION__, "load pre-built table");
-#endif
+    _test_case.test(ret, __FUNCTION__, "LALR(1) parser - ASSN.1 for Module (build parsing table)");
+
     return ret;
 }
 
 return_t prepare_asn1parameterized_grammar(parser_t& parser) {
     return_t ret = errorcode_t::success;
-#if 1
+
     auto resource = parser_resource::get_instance();
     // Fetch terminal symbol string representations
     auto symid = resource->nameof(token_identifier);                // "identifier"
@@ -539,84 +537,82 @@ return_t prepare_asn1parameterized_grammar(parser_t& parser) {
         .add_production("Statement", {"Field"})
         .add_production("Statement", {"TagPrefix"})
 
-        .add_production("Assignment", {symuserparamtype, "{", "DummyParamList", "}", "::=", "TypeSpec"})
-        .add_production("Assignment", {symuserparamtype, "{", "DummyParamList", "}", "::=", "TypeSpec", "Constraint"})
+        .add_production("Assignment", {symuserparamtype, "{", "TemplateParamList", "}", "::=", "TypeSpec"})
+        .add_production("Assignment", {symuserparamtype, "{", "TemplateParamList", "}", "::=", "TypeSpec", "Constraint"})
         .add_production("Assignment", {"DefinedType", "::=", "TypeSpec"})
         .add_production("Assignment", {"DefinedType", "::=", "TypeSpec", "Constraint"})
 
         .add_production("DefinedType", {symuser})
 
-        .add_production("DummyParamList", {"DummyParamList", ",", "DummyParam"})
-        .add_production("DummyParamList", {"DummyParam"})
+        .add_production("TemplateParamList", {"TemplateParamList", ",", "TemplateParam"})
+        .add_production("TemplateParamList", {"TemplateParam"})
 
-        .add_production("DummyParam", {symparamtype})
-        .add_production("DummyParam", {"TypeSpec", ":", symparamvalue})
-        .add_production("DummyParam", {symparamtype, ":", symparamvalue})
+        .add_production("TemplateParam", {symparamtype})
+        .add_production("TemplateParam", {"TypeSpec", ":", symparamvalue})
+        .add_production("TemplateParam", {symparamtype, ":", symparamvalue})
 
-        .add_production("StatementSequence", {"SEQUENCE", "Constraint", "{", "FieldList", "}"})
-        .add_production("StatementSequence", {"SEQUENCE", "{", "FieldList", "}"})
-        .add_production("StatementSequence", {"SEQUENCE", "Constraint", "{", "}"})
-        .add_production("StatementSequence", {"SEQUENCE", "{", "}"})
+        .add_production("SequenceTypeSpec", {"SEQUENCE", "Constraint", "{", "FieldList", "}"})
+        .add_production("SequenceTypeSpec", {"SEQUENCE", "{", "FieldList", "}"})
+        .add_production("SequenceTypeSpec", {"SEQUENCE", "Constraint", "{", "}"})
+        .add_production("SequenceTypeSpec", {"SEQUENCE", "{", "}"})
 
-        .add_production("StatementSequenceOf", {"SEQUENCE", "SizeConstraint", "OF", "TypeSpec"})
-        .add_production("StatementSequenceOf", {"SEQUENCE", "Constraint", "OF", "TypeSpec"})
-        .add_production("StatementSequenceOf", {"SEQUENCE", "OF", "TypeSpec"})
+        .add_production("SequenceOfTypeSpec", {"SEQUENCE", "SizeConstraint", "OF", "TypeSpec"})
+        .add_production("SequenceOfTypeSpec", {"SEQUENCE", "Constraint", "OF", "TypeSpec"})
+        .add_production("SequenceOfTypeSpec", {"SEQUENCE", "OF", "TypeSpec"})
 
-        .add_production("StatementSet", {"SET", "Constraint", "{", "FieldList", "}"})
-        .add_production("StatementSet", {"SET", "{", "FieldList", "}"})
-        .add_production("StatementSet", {"SET", "Constraint", "{", "}"})
-        .add_production("StatementSet", {"SET", "{", "}"})
+        .add_production("SetTypeSpec", {"SET", "Constraint", "{", "FieldList", "}"})
+        .add_production("SetTypeSpec", {"SET", "{", "FieldList", "}"})
+        .add_production("SetTypeSpec", {"SET", "Constraint", "{", "}"})
+        .add_production("SetTypeSpec", {"SET", "{", "}"})
 
-        .add_production("StatementSetOf", {"SET", "SizeConstraint", "OF", "TypeSpec"})
-        .add_production("StatementSetOf", {"SET", "Constraint", "OF", "TypeSpec"})
-        .add_production("StatementSetOf", {"SET", "OF", "TypeSpec"})
+        .add_production("SetOfTypeSpec", {"SET", "SizeConstraint", "OF", "TypeSpec"})
+        .add_production("SetOfTypeSpec", {"SET", "Constraint", "OF", "TypeSpec"})
+        .add_production("SetOfTypeSpec", {"SET", "OF", "TypeSpec"})
 
-        .add_production("StatementChoice", {"CHOICE", "Constraint", "{", "FieldList", "}"})
-        .add_production("StatementChoice", {"CHOICE", "{", "FieldList", "}"})
-        .add_production("StatementChoice", {"CHOICE", "Constraint", "{", "}"})
-        .add_production("StatementChoice", {"CHOICE", "{", "}"})
+        .add_production("ChoiceTypeSpec", {"CHOICE", "Constraint", "{", "FieldList", "}"})
+        .add_production("ChoiceTypeSpec", {"CHOICE", "{", "FieldList", "}"})
+        .add_production("ChoiceTypeSpec", {"CHOICE", "Constraint", "{", "}"})
+        .add_production("ChoiceTypeSpec", {"CHOICE", "{", "}"})
 
         .add_production("FieldList", {"FieldList", ",", "Field"})
         .add_production("FieldList", {"Field"})
 
         .add_production("Field", {symid, "TypeSpec"})
         .add_production("Field", {symid, "TypeSpec", "Constraint"})
-        .add_production("Field", {symid, "TypeSpec", "FieldOpt"})
-        .add_production("Field", {symid, "TypeSpec", "Constraint", "FieldOpt"})
+        .add_production("Field", {symid, "TypeSpec", "FieldSpecifier"})
+        .add_production("Field", {symid, "TypeSpec", "Constraint", "FieldSpecifier"})
 
-        .add_production("FieldOpt", {"OPTIONAL"})
-        .add_production("FieldOpt", {"DEFAULT", "ValueElement"})
-        .add_production("FieldOpt", {"DEFAULT", "{", "}"})
+        .add_production("FieldSpecifier", {"OPTIONAL"})
+        .add_production("FieldSpecifier", {"DEFAULT", "ValueElement"})
+        .add_production("FieldSpecifier", {"DEFAULT", "{", "}"})
 
-        .add_production("TypeSpec", {"TypeBase"})
-        .add_production("TypeSpec", {"EnumType"})
-        .add_production("TypeSpec", {"StatementSequence"})
-        .add_production("TypeSpec", {"StatementSequenceOf"})
-        .add_production("TypeSpec", {"StatementSet"})
-        .add_production("TypeSpec", {"StatementSetOf"})
-        .add_production("TypeSpec", {"StatementChoice"})
+        .add_production("TypeSpec", {"SimpleTypeSpec"})
+        .add_production("TypeSpec", {"TaggedTypeSpec"})
+        .add_production("TypeSpec", {"ReferencedTypeSpec"})
+        .add_production("TypeSpec", {"EnumTypeSpec"})
+        .add_production("TypeSpec", {"SequenceTypeSpec"})
+        .add_production("TypeSpec", {"SequenceOfTypeSpec"})
+        .add_production("TypeSpec", {"SetTypeSpec"})
+        .add_production("TypeSpec", {"SetOfTypeSpec"})
+        .add_production("TypeSpec", {"ChoiceTypeSpec"})
 
-        .add_production("TypeBase", {"SimpleType"})
-        .add_production("TypeBase", {"TaggedType"})
-        .add_production("TypeBase", {"ReferencedType"})
+        .add_production("ReferencedTypeSpec", {"Identifier"})
+        .add_production("ReferencedTypeSpec", {symparamtype})
+        .add_production("ReferencedTypeSpec", {symuserparamtype, "{", "TemplateArgumentList", "}"})
+        .add_production("ReferencedTypeSpec", {symid, "{", "TemplateArgumentList", "}"})
 
-        .add_production("ReferencedType", {symid})
-        .add_production("ReferencedType", {symparamtype})
-        .add_production("ReferencedType", {symuserparamtype, "{", "ActualParamList", "}"})
-        .add_production("ReferencedType", {symid, "{", "ActualParamList", "}"})
+        .add_production("TemplateArgumentList", {"TemplateArgumentList", ",", "TemplateArgument"})
+        .add_production("TemplateArgumentList", {"TemplateArgument"})
 
-        .add_production("ActualParamList", {"ActualParamList", ",", "ActualParam"})
-        .add_production("ActualParamList", {"ActualParam"})
+        .add_production("TemplateArgument", {"TypeSpec"})
+        .add_production("TemplateArgument", {symnum})
+        .add_production("TemplateArgument", {symfp})
+        .add_production("TemplateArgument", {symqs})
+        .add_production("TemplateArgument", {"TRUE"})
+        .add_production("TemplateArgument", {"FALSE"})
 
-        .add_production("ActualParam", {"TypeSpec"})
-        .add_production("ActualParam", {symnum})
-        .add_production("ActualParam", {symfp})
-        .add_production("ActualParam", {symqs})
-        .add_production("ActualParam", {"TRUE"})
-        .add_production("ActualParam", {"FALSE"})
-
-        .add_production("TaggedType", {"TagPrefix", "TagSpec", "TypeSpec"})
-        .add_production("TaggedType", {"TagPrefix", "TypeSpec"})
+        .add_production("TaggedTypeSpec", {"TagPrefix", "TagSpec", "TypeSpec"})
+        .add_production("TaggedTypeSpec", {"TagPrefix", "TypeSpec"})
 
         .add_production("TagPrefix", {"[", "TagClass", symnum, "]"})
         .add_production("TagPrefix", {"[", symnum, "]"})
@@ -628,43 +624,43 @@ return_t prepare_asn1parameterized_grammar(parser_t& parser) {
         .add_production("TagSpec", {"IMPLICIT"})
         .add_production("TagSpec", {"EXPLICIT"})
 
-        .add_production("EnumType", {"ENUMERATED", "{", "EnumList", "}"})
+        .add_production("EnumTypeSpec", {"ENUMERATED", "{", "EnumList", "}"})
         .add_production("EnumList", {"EnumList", ",", "EnumItem"})
         .add_production("EnumList", {"EnumItem"})
         .add_production("EnumItem", {symid, "(", symnum, ")"})
 
-        .add_production("SimpleType", {"BOOLEAN"})
-        .add_production("SimpleType", {"INTEGER"})
-        .add_production("SimpleType", {"INTEGER", "{", "EnumList", "}"})
-        .add_production("SimpleType", {"BIT STRING"})
-        .add_production("SimpleType", {"BIT STRING", "{", "EnumList", "}"})
-        .add_production("SimpleType", {"OCTET STRING"})
-        .add_production("SimpleType", {"NULL"})
-        .add_production("SimpleType", {"OBJECT IDENTIFIER"})
-        .add_production("SimpleType", {"REAL"})
-        .add_production("SimpleType", {"UTF8String"})
-        .add_production("SimpleType", {"RELATIVE-OID"})
-        .add_production("SimpleType", {"TIME"})
-        .add_production("SimpleType", {"NumericString"})
-        .add_production("SimpleType", {"PrintableString"})
-        .add_production("SimpleType", {"TeletexString"})
-        .add_production("SimpleType", {"T61String"})
-        .add_production("SimpleType", {"VideotexString"})
-        .add_production("SimpleType", {"IA5String"})
-        .add_production("SimpleType", {"UTCTime"})
-        .add_production("SimpleType", {"GeneralizedTime"})
-        .add_production("SimpleType", {"GraphicString"})
-        .add_production("SimpleType", {"VisibleString"})
-        .add_production("SimpleType", {"ISO646String"})
-        .add_production("SimpleType", {"GeneralString"})
-        .add_production("SimpleType", {"UniversalString"})
-        .add_production("SimpleType", {"CHARACTER STRING"})
-        .add_production("SimpleType", {"BMPString"})
-        .add_production("SimpleType", {"DATE"})
-        .add_production("SimpleType", {"TIME-OF-DAY"})
-        .add_production("SimpleType", {"DATE-TIME"})
-        .add_production("SimpleType", {"DURATION"})
-        .add_production("SimpleType", {"ANY"})
+        .add_production("SimpleTypeSpec", {"BOOLEAN"})
+        .add_production("SimpleTypeSpec", {"INTEGER"})
+        .add_production("SimpleTypeSpec", {"INTEGER", "{", "EnumList", "}"})
+        .add_production("SimpleTypeSpec", {"BIT STRING"})
+        .add_production("SimpleTypeSpec", {"BIT STRING", "{", "EnumList", "}"})
+        .add_production("SimpleTypeSpec", {"OCTET STRING"})
+        .add_production("SimpleTypeSpec", {"NULL"})
+        .add_production("SimpleTypeSpec", {"OBJECT IDENTIFIER"})
+        .add_production("SimpleTypeSpec", {"REAL"})
+        .add_production("SimpleTypeSpec", {"UTF8String"})
+        .add_production("SimpleTypeSpec", {"RELATIVE-OID"})
+        .add_production("SimpleTypeSpec", {"TIME"})
+        .add_production("SimpleTypeSpec", {"NumericString"})
+        .add_production("SimpleTypeSpec", {"PrintableString"})
+        .add_production("SimpleTypeSpec", {"TeletexString"})
+        .add_production("SimpleTypeSpec", {"T61String"})
+        .add_production("SimpleTypeSpec", {"VideotexString"})
+        .add_production("SimpleTypeSpec", {"IA5String"})
+        .add_production("SimpleTypeSpec", {"UTCTime"})
+        .add_production("SimpleTypeSpec", {"GeneralizedTime"})
+        .add_production("SimpleTypeSpec", {"GraphicString"})
+        .add_production("SimpleTypeSpec", {"VisibleString"})
+        .add_production("SimpleTypeSpec", {"ISO646String"})
+        .add_production("SimpleTypeSpec", {"GeneralString"})
+        .add_production("SimpleTypeSpec", {"UniversalString"})
+        .add_production("SimpleTypeSpec", {"CHARACTER STRING"})
+        .add_production("SimpleTypeSpec", {"BMPString"})
+        .add_production("SimpleTypeSpec", {"DATE"})
+        .add_production("SimpleTypeSpec", {"TIME-OF-DAY"})
+        .add_production("SimpleTypeSpec", {"DATE-TIME"})
+        .add_production("SimpleTypeSpec", {"DURATION"})
+        .add_production("SimpleTypeSpec", {"ANY"})
 
         .add_production("Constraint", {"(", "ConstraintExpr", ")"})
 
@@ -693,6 +689,9 @@ return_t prepare_asn1parameterized_grammar(parser_t& parser) {
         .add_production("PrimaryElement", {"(", "ConstraintExpr", ")"})
 
         .add_production("SizeConstraint", {"SIZE", "Constraint"})
+
+        .add_production("Identifier", {symuser})
+        .add_production("Identifier", {symid})
 
         .add_production("ValueElement", {symparamvalue})
         .add_production("ValueElement", {symnum})
@@ -772,10 +771,7 @@ return_t prepare_asn1parameterized_grammar(parser_t& parser) {
 
     ret = parser.learn();
     _logger->writeln("LALR table generation %s", (errorcode_t::success == ret) ? "success" : "failure");
-    _test_case.test(ret, __FUNCTION__, "build parsing table");
-#else
-    parser.import(asn1_notation_productions, asn1_notation_action_table, asn1_notation_goto_table);
-#endif
+    _test_case.test(ret, __FUNCTION__, "GLR parser - ASSN.1 for Parameterized (build parsing table)");
     return ret;
 }
 
@@ -819,7 +815,7 @@ return_t prepare_asn1_grammar(parser_t& parser) {
             .add_production("ModuleHeader", {"ModuleId", "{", "OidComponentList", "}", "DEFINITIONS", "TagDefault", symassign, "BEGIN"})
             .add_production("ModuleHeader", {"ModuleId", "{", "OidComponentList", "}", "DEFINITIONS", symassign, "BEGIN"})
 
-            .add_production("ModuleId", {symuser})
+            // .add_production("ModuleId", {symuser})
             .add_production("ModuleId", {symid})
 
             .add_production("OidComponentList", {"OidComponentList", "OidComponent"})
@@ -848,10 +844,8 @@ return_t prepare_asn1_grammar(parser_t& parser) {
 
             .add_production("SymbolList", {"SymbolList", ",", "SymbolItem"})
             .add_production("SymbolList", {"SymbolItem"})
-            .add_production("SymbolItem", {symuser})
-            .add_production("SymbolItem", {symid})
-            .add_production("SymbolItem", {symuser, "{", "}"})
-            .add_production("SymbolItem", {symid, "{", "}"})
+            .add_production("SymbolItem", {"Identifier"})
+            .add_production("SymbolItem", {"Identifier", "{", "}"})
 
             // Statements
             .add_production("StatementList", {"StatementList", "Statement"})
@@ -865,73 +859,66 @@ return_t prepare_asn1_grammar(parser_t& parser) {
             .add_production("Statement", {"ObjectClassAssignment"})
 
             // Parameterized Assignment
-            .add_production("Assignment", {symuserparamtype, "{", "DummyParamList", "}", symassign, "TypeSpec"})
-            .add_production("Assignment", {symuserparamtype, "{", "DummyParamList", "}", symassign, "TypeSpec", "Constraint"})
-            .add_production("Assignment", {symuser, "{", "DummyParamList", "}", symassign, "TypeSpec"})
-            .add_production("Assignment", {symuser, "{", "DummyParamList", "}", symassign, "TypeSpec", "Constraint"})
-            .add_production("Assignment", {symparamtype, "{", "DummyParamList", "}", symassign, "TypeSpec"})
-            .add_production("Assignment", {symparamtype, "{", "DummyParamList", "}", symassign, "TypeSpec", "Constraint"})
+            .add_production("Assignment", {symuserparamtype, "{", "TemplateParamList", "}", symassign, "TypeSpec"})
+            .add_production("Assignment", {symuserparamtype, "{", "TemplateParamList", "}", symassign, "TypeSpec", "Constraint"})
             // Normal Assignment
             .add_production("Assignment", {"DefinedType", symassign, "TypeSpec"})
             .add_production("Assignment", {"DefinedType", symassign, "TypeSpec", "Constraint"})
 
             .add_production("DefinedType", {symuser})
             .add_production("DefinedType", {symuserparamtype})
-            .add_production("DefinedType", {symparamtype})
-            .add_production("DefinedType", {symid})
 
-            .add_production("DummyParamList", {"DummyParamList", ",", "DummyParam"})
-            .add_production("DummyParamList", {"DummyParam"})
-            .add_production("DummyParam", {symparamtype, ":", symparamvalue})
-            .add_production("DummyParam", {symparamtype, ":", symuser})
-            .add_production("DummyParam", {symparamtype})
-            .add_production("DummyParam", {"TypeSpec", ":", symparamvalue})
+            .add_production("TemplateParamList", {"TemplateParamList", ",", "TemplateParam"})
+            .add_production("TemplateParamList", {"TemplateParam"})
+            .add_production("TemplateParam", {symparamtype, ":", symparamvalue})
+            .add_production("TemplateParam", {symparamtype, ":", symuser})
+            .add_production("TemplateParam", {symparamtype})
+            .add_production("TemplateParam", {"TypeSpec", ":", symparamvalue})
 
-            .add_production("StatementSequence", {"SEQUENCE", "Constraint", "{", "FieldList", "}"})
-            .add_production("StatementSequence", {"SEQUENCE", "{", "FieldList", "}"})
-            .add_production("StatementSequence", {"SEQUENCE", "Constraint", "{", "}"})
-            .add_production("StatementSequence", {"SEQUENCE", "{", "}"})
+            .add_production("SequenceTypeSpec", {"SEQUENCE", "Constraint", "{", "FieldList", "}"})
+            .add_production("SequenceTypeSpec", {"SEQUENCE", "{", "FieldList", "}"})
+            .add_production("SequenceTypeSpec", {"SEQUENCE", "Constraint", "{", "}"})
+            .add_production("SequenceTypeSpec", {"SEQUENCE", "{", "}"})
 
-            .add_production("StatementSequenceOf", {"SEQUENCE", "SizeConstraint", "OF", "TypeSpec"})
-            .add_production("StatementSequenceOf", {"SEQUENCE", "Constraint", "OF", "TypeSpec"})
-            .add_production("StatementSequenceOf", {"SEQUENCE", "OF", "TypeSpec"})
+            .add_production("SequenceOfTypeSpec", {"SEQUENCE", "SizeConstraint", "OF", "TypeSpec"})
+            .add_production("SequenceOfTypeSpec", {"SEQUENCE", "Constraint", "OF", "TypeSpec"})
+            .add_production("SequenceOfTypeSpec", {"SEQUENCE", "OF", "TypeSpec"})
 
-            .add_production("StatementSet", {"SET", "Constraint", "{", "FieldList", "}"})
-            .add_production("StatementSet", {"SET", "{", "FieldList", "}"})
-            .add_production("StatementSet", {"SET", "Constraint", "{", "}"})
-            .add_production("StatementSet", {"SET", "{", "}"})
+            .add_production("SetTypeSpec", {"SET", "Constraint", "{", "FieldList", "}"})
+            .add_production("SetTypeSpec", {"SET", "{", "FieldList", "}"})
+            .add_production("SetTypeSpec", {"SET", "Constraint", "{", "}"})
+            .add_production("SetTypeSpec", {"SET", "{", "}"})
 
-            .add_production("StatementSetOf", {"SET", "SizeConstraint", "OF", "TypeSpec"})
-            .add_production("StatementSetOf", {"SET", "Constraint", "OF", "TypeSpec"})
-            .add_production("StatementSetOf", {"SET", "OF", "TypeSpec"})
+            .add_production("SetOfTypeSpec", {"SET", "SizeConstraint", "OF", "TypeSpec"})
+            .add_production("SetOfTypeSpec", {"SET", "Constraint", "OF", "TypeSpec"})
+            .add_production("SetOfTypeSpec", {"SET", "OF", "TypeSpec"})
 
-            .add_production("StatementChoice", {"CHOICE", "Constraint", "{", "FieldList", "}"})
-            .add_production("StatementChoice", {"CHOICE", "{", "FieldList", "}"})
-            .add_production("StatementChoice", {"CHOICE", "Constraint", "{", "}"})
-            .add_production("StatementChoice", {"CHOICE", "{", "}"})
+            .add_production("ChoiceTypeSpec", {"CHOICE", "Constraint", "{", "FieldList", "}"})
+            .add_production("ChoiceTypeSpec", {"CHOICE", "{", "FieldList", "}"})
+            .add_production("ChoiceTypeSpec", {"CHOICE", "Constraint", "{", "}"})
+            .add_production("ChoiceTypeSpec", {"CHOICE", "{", "}"})
 
             .add_production("FieldList", {"FieldList", ",", "Field"})
             .add_production("FieldList", {"Field"})
             .add_production("Field", {symid, "TypeSpec"})
             .add_production("Field", {symid, "TypeSpec", "Constraint"})
-            .add_production("Field", {symid, "TypeSpec", "FieldOpt"})
-            .add_production("Field", {symid, "TypeSpec", "Constraint", "FieldOpt"})
+            .add_production("Field", {symid, "TypeSpec", "FieldSpecifier"})
+            .add_production("Field", {symid, "TypeSpec", "Constraint", "FieldSpecifier"})
 
-            .add_production("FieldOpt", {"OPTIONAL"})
-            .add_production("FieldOpt", {"DEFAULT", "ValueElement"})
-            .add_production("FieldOpt", {"DEFAULT", "{", "}"})
+            .add_production("FieldSpecifier", {"OPTIONAL"})
+            .add_production("FieldSpecifier", {"DEFAULT", "ValueElement"})
+            .add_production("FieldSpecifier", {"DEFAULT", "{", "}"})
 
-            .add_production("TypeSpec", {"TypeBase"})
-            .add_production("TypeSpec", {"EnumType"})
-            .add_production("TypeSpec", {"StatementSequence"})
-            .add_production("TypeSpec", {"StatementSequenceOf"})
-            .add_production("TypeSpec", {"StatementSet"})
-            .add_production("TypeSpec", {"StatementSetOf"})
-            .add_production("TypeSpec", {"StatementChoice"})
-
-            .add_production("TypeBase", {"SimpleType"})
-            .add_production("TypeBase", {"TaggedType"})
-            .add_production("TypeBase", {"ReferencedType"})
+            .add_production("TypeSpec", {"SimpleTypeSpec"})
+            .add_production("TypeSpec", {"TaggedTypeSpec"})
+            .add_production("TypeSpec", {"ReferencedTypeSpec"})
+            .add_production("TypeSpec", {"ClassFieldTypeSpec"})
+            .add_production("TypeSpec", {"EnumTypeSpec"})
+            .add_production("TypeSpec", {"SequenceTypeSpec"})
+            .add_production("TypeSpec", {"SequenceOfTypeSpec"})
+            .add_production("TypeSpec", {"SetTypeSpec"})
+            .add_production("TypeSpec", {"SetOfTypeSpec"})
+            .add_production("TypeSpec", {"ChoiceTypeSpec"})
 
             // Information Object Class
             .add_production("ObjectClassAssignment", {symparamtype, symassign, "CLASS", "{", "FieldSpecList", "}"})
@@ -956,36 +943,35 @@ return_t prepare_asn1_grammar(parser_t& parser) {
             .add_production("SyntaxItem", {symparamtype})
             .add_production("SyntaxItem", {symid})
 
-            .add_production("ReferencedType", {symid})
-            .add_production("ReferencedType", {symuser})
-            .add_production("ReferencedType", {symparamtype})
-            .add_production("ReferencedType", {symuserparamtype})
-            .add_production("ReferencedType", {symuserparamtype, "{", "ActualParamList", "}"})
-            .add_production("ReferencedType", {symuser, "{", "ActualParamList", "}"})
-            .add_production("ReferencedType", {symparamtype, "{", "ActualParamList", "}"})
-            .add_production("ReferencedType", {symid, "{", "ActualParamList", "}"})
+            .add_production("ReferencedTypeSpec", {symid})
+            .add_production("ReferencedTypeSpec", {symuser})
+            .add_production("ReferencedTypeSpec", {symparamtype})
+            .add_production("ReferencedTypeSpec", {symuserparamtype})
+            .add_production("ReferencedTypeSpec", {symuserparamtype, "{", "TemplateArgumentList", "}"})
+            .add_production("ReferencedTypeSpec", {symuser, "{", "TemplateArgumentList", "}"})
+            .add_production("ReferencedTypeSpec", {symparamtype, "{", "TemplateArgumentList", "}"})
+            .add_production("ReferencedTypeSpec", {symid, "{", "TemplateArgumentList", "}"})
 
-            .add_production("ReferencedType", {symparamtype, ".", "&", symid})
-            .add_production("ReferencedType", {symparamtype, ".", "&", symuser})
-            .add_production("ReferencedType", {symparamtype, ".", "&", symparamtype})
-            .add_production("ReferencedType", {symuser, ".", "&", symid})
-            .add_production("ReferencedType", {symuser, ".", "&", symuser})
-            .add_production("ReferencedType", {symuser, ".", "&", symparamtype})
+            .add_production("ClassFieldTypeSpec", {symparamtype, "ClassFieldReference"})
+            .add_production("ClassFieldTypeSpec", {symuser, "ClassFieldReference"})
+            .add_production("ClassFieldReference", {".", "&", symid})
+            .add_production("ClassFieldReference", {".", "&", symuser})
+            .add_production("ClassFieldReference", {".", "&", symparamtype})
 
-            .add_production("ActualParamList", {"ActualParamList", ",", "ActualParam"})
-            .add_production("ActualParamList", {"ActualParam"})
-            .add_production("ActualParam", {"TypeSpec"})
-            .add_production("ActualParam", {symparamvalue})
-            .add_production("ActualParam", {symparamtype})
-            .add_production("ActualParam", {symuser})
-            .add_production("ActualParam", {symnum})
-            .add_production("ActualParam", {symfp})
-            .add_production("ActualParam", {symqs})
-            .add_production("ActualParam", {"TRUE"})
-            .add_production("ActualParam", {"FALSE"})
+            .add_production("TemplateArgumentList", {"TemplateArgumentList", ",", "TemplateArgument"})
+            .add_production("TemplateArgumentList", {"TemplateArgument"})
+            .add_production("TemplateArgument", {"TypeSpec"})
+            .add_production("TemplateArgument", {symparamvalue})
+            .add_production("TemplateArgument", {symparamtype})
+            .add_production("TemplateArgument", {symuser})
+            .add_production("TemplateArgument", {symnum})
+            .add_production("TemplateArgument", {symfp})
+            .add_production("TemplateArgument", {symqs})
+            .add_production("TemplateArgument", {"TRUE"})
+            .add_production("TemplateArgument", {"FALSE"})
 
-            .add_production("TaggedType", {"TagPrefix", "TagSpec", "TypeSpec"})
-            .add_production("TaggedType", {"TagPrefix", "TypeSpec"})
+            .add_production("TaggedTypeSpec", {"TagPrefix", "TagSpec", "TypeSpec"})
+            .add_production("TaggedTypeSpec", {"TagPrefix", "TypeSpec"})
             .add_production("TagPrefix", {"[", "TagClass", symnum, "]"})
             .add_production("TagPrefix", {"[", symnum, "]"})
             .add_production("TagClass", {"UNIVERSAL"})
@@ -994,44 +980,44 @@ return_t prepare_asn1_grammar(parser_t& parser) {
             .add_production("TagSpec", {"IMPLICIT"})
             .add_production("TagSpec", {"EXPLICIT"})
 
-            .add_production("EnumType", {"ENUMERATED", "{", "EnumList", "}"})
+            .add_production("EnumTypeSpec", {"ENUMERATED", "{", "EnumList", "}"})
             .add_production("EnumList", {"EnumList", ",", "EnumItem"})
             .add_production("EnumList", {"EnumItem"})
             .add_production("EnumItem", {symid, "(", symnum, ")"})
 
             // Simple Built-in Types
-            .add_production("SimpleType", {"BOOLEAN"})
-            .add_production("SimpleType", {"INTEGER"})
-            .add_production("SimpleType", {"INTEGER", "{", "EnumList", "}"})
-            .add_production("SimpleType", {"BIT STRING"})
-            .add_production("SimpleType", {"BIT STRING", "{", "EnumList", "}"})
-            .add_production("SimpleType", {"OCTET STRING"})
-            .add_production("SimpleType", {"NULL"})
-            .add_production("SimpleType", {"OBJECT IDENTIFIER"})
-            .add_production("SimpleType", {"REAL"})
-            .add_production("SimpleType", {"UTF8String"})
-            .add_production("SimpleType", {"RELATIVE-OID"})
-            .add_production("SimpleType", {"TIME"})
-            .add_production("SimpleType", {"NumericString"})
-            .add_production("SimpleType", {"PrintableString"})
-            .add_production("SimpleType", {"TeletexString"})
-            .add_production("SimpleType", {"T61String"})
-            .add_production("SimpleType", {"VideotexString"})
-            .add_production("SimpleType", {"IA5String"})
-            .add_production("SimpleType", {"UTCTime"})
-            .add_production("SimpleType", {"GeneralizedTime"})
-            .add_production("SimpleType", {"GraphicString"})
-            .add_production("SimpleType", {"VisibleString"})
-            .add_production("SimpleType", {"ISO646String"})
-            .add_production("SimpleType", {"GeneralString"})
-            .add_production("SimpleType", {"UniversalString"})
-            .add_production("SimpleType", {"CHARACTER STRING"})
-            .add_production("SimpleType", {"BMPString"})
-            .add_production("SimpleType", {"DATE"})
-            .add_production("SimpleType", {"TIME-OF-DAY"})
-            .add_production("SimpleType", {"DATE-TIME"})
-            .add_production("SimpleType", {"DURATION"})
-            .add_production("SimpleType", {"ANY"})
+            .add_production("SimpleTypeSpec", {"BOOLEAN"})
+            .add_production("SimpleTypeSpec", {"INTEGER"})
+            .add_production("SimpleTypeSpec", {"INTEGER", "{", "EnumList", "}"})
+            .add_production("SimpleTypeSpec", {"BIT STRING"})
+            .add_production("SimpleTypeSpec", {"BIT STRING", "{", "EnumList", "}"})
+            .add_production("SimpleTypeSpec", {"OCTET STRING"})
+            .add_production("SimpleTypeSpec", {"NULL"})
+            .add_production("SimpleTypeSpec", {"OBJECT IDENTIFIER"})
+            .add_production("SimpleTypeSpec", {"REAL"})
+            .add_production("SimpleTypeSpec", {"UTF8String"})
+            .add_production("SimpleTypeSpec", {"RELATIVE-OID"})
+            .add_production("SimpleTypeSpec", {"TIME"})
+            .add_production("SimpleTypeSpec", {"NumericString"})
+            .add_production("SimpleTypeSpec", {"PrintableString"})
+            .add_production("SimpleTypeSpec", {"TeletexString"})
+            .add_production("SimpleTypeSpec", {"T61String"})
+            .add_production("SimpleTypeSpec", {"VideotexString"})
+            .add_production("SimpleTypeSpec", {"IA5String"})
+            .add_production("SimpleTypeSpec", {"UTCTime"})
+            .add_production("SimpleTypeSpec", {"GeneralizedTime"})
+            .add_production("SimpleTypeSpec", {"GraphicString"})
+            .add_production("SimpleTypeSpec", {"VisibleString"})
+            .add_production("SimpleTypeSpec", {"ISO646String"})
+            .add_production("SimpleTypeSpec", {"GeneralString"})
+            .add_production("SimpleTypeSpec", {"UniversalString"})
+            .add_production("SimpleTypeSpec", {"CHARACTER STRING"})
+            .add_production("SimpleTypeSpec", {"BMPString"})
+            .add_production("SimpleTypeSpec", {"DATE"})
+            .add_production("SimpleTypeSpec", {"TIME-OF-DAY"})
+            .add_production("SimpleTypeSpec", {"DATE-TIME"})
+            .add_production("SimpleTypeSpec", {"DURATION"})
+            .add_production("SimpleTypeSpec", {"ANY"})
 
             // Constraints
             .add_production("Constraint", {"(", "ConstraintExpr", ")"})
@@ -1058,12 +1044,14 @@ return_t prepare_asn1_grammar(parser_t& parser) {
             .add_production("PrimaryElement", {"FROM", "Constraint"})
             .add_production("PrimaryElement", {"PATTERN", symqs})
             .add_production("PrimaryElement", {"(", "ConstraintExpr", ")"})
-            .add_production("PrimaryElement", {"{", symuser, "}"})
-            .add_production("PrimaryElement", {"{", symparamtype, "}"})
-            .add_production("PrimaryElement", {"{", symparamvalue, "}"})
-            .add_production("PrimaryElement", {"{", symparamvalue, "}", "{", "@", symid, "}"})
-            .add_production("PrimaryElement", {"{", symparamtype, "}", "{", "@", symid, "}"})
-            .add_production("PrimaryElement", {"{", symuser, "}", "{", "@", symid, "}"})
+            .add_production("PrimaryElement", {"ObjectSetSpec"})
+            .add_production("PrimaryElement", {"ObjectSetSpec", "RelationalConstraint"})
+
+            .add_production("ObjectSetSpec", {"{", symuser, "}"})
+            .add_production("ObjectSetSpec", {"{", symparamtype, "}"})
+            .add_production("ObjectSetSpec", {"{", symparamvalue, "}"})
+
+            .add_production("RelationalConstraint", {"{", "@", symid, "}"})
 
             .add_production("SizeConstraint", {"SIZE", "Constraint"})
 
@@ -1184,9 +1172,16 @@ return_t prepare_asn1_grammar(parser_t& parser) {
         _logger->writeln("building GLR parsing table for integrated ASN.1 grammar...");
         ret = parser.learn();
         _logger->writeln("GLR table generation %s", (errorcode_t::success == ret) ? "success" : "failure");
-        _test_case.test(ret, __FUNCTION__, "build integrated parsing table");
+        _test_case.test(ret, __FUNCTION__, "GLR parser - ASSN.1 for All-in-One (build parsing table)");
     }
     __finally2 {}
+    return ret;
+}
+
+return_t import_asn1_grammar(glr_parser& parser) {
+    return_t ret = errorcode_t::success;
+    ret = parser.import(asn1_allin1_productions, asn1_allin1_action_table, asn1_allin1_goto_table);
+    _test_case.test(ret, __FUNCTION__, "GLR parser - ASSN.1 for All-in-One (import parsing table)");
     return ret;
 }
 
@@ -1280,30 +1275,36 @@ void dump_parse_tree(parse_tree& pt) {
 
 parser_t& get_lalr_parser_asn1notation() {
     static lalr_parser parser;
-    static int lalr_parser_ready = 0;
-    if (0 == lalr_parser_ready) {
-        prepare_asn1notation_grammar(parser);
-        lalr_parser_ready = 1;
-    }
+    static const return_t ready = prepare_asn1notation_grammar(parser);
+    (void)ready;
+    return parser;
+}
+
+parser_t& get_lalr_parser_asn1notation_imported() {
+    static lalr_parser parser;
+    static const return_t ready = import_asn1notation_grammar(parser);
+    (void)ready;
     return parser;
 }
 
 parser_t& get_glr_parser_asn1parameterized() {
     static glr_parser parser;
-    static int glr_parser_ready = 0;
-    if (0 == glr_parser_ready) {
-        prepare_asn1parameterized_grammar(parser);
-        glr_parser_ready = 1;
-    }
+    static const return_t ready = prepare_asn1parameterized_grammar(parser);
+    (void)ready;
     return parser;
 }
 
 parser_t& get_glr_parser_asn1() {
     static glr_parser parser;
-    static int glr_parser_ready = 0;
-    if (0 == glr_parser_ready) {
-        prepare_asn1_grammar(parser);
-        glr_parser_ready = 1;
-    }
+    static const return_t ready = prepare_asn1_grammar(parser);
+    ;
+    (void)ready;
+    return parser;
+}
+
+parser_t& get_glr_parser_asn1_imported() {
+    static glr_parser parser;
+    static const return_t ready = import_asn1_grammar(parser);
+    (void)ready;
     return parser;
 }

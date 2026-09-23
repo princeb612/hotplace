@@ -15,10 +15,6 @@
 
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/io/parser/types.hpp>
-#include <map>
-#include <set>
-#include <stack>
-#include <vector>
 
 namespace hotplace {
 namespace io {
@@ -33,29 +29,6 @@ namespace io {
  *     S is the start variable (or start symbol), used to represent the whole sentence (or program). It must be an element of V.
  *  keyword : non-terminal set, terminal set, production set, start symbol
  */
-
-struct LR0_item {
-    uint32 production_id;
-    size_t dot_pos;
-
-    bool operator<(const LR0_item& other) const {
-        if (production_id != other.production_id) return production_id < other.production_id;
-        return dot_pos < other.dot_pos;
-    }
-    bool operator==(const LR0_item& other) const { return production_id == other.production_id && dot_pos == other.dot_pos; }
-};
-
-struct LR1_item {
-    uint32 production_id;
-    size_t dot_pos;
-    std::string lookahead;
-
-    bool operator<(const LR1_item& other) const {
-        if (production_id != other.production_id) return production_id < other.production_id;
-        if (dot_pos != other.dot_pos) return dot_pos < other.dot_pos;
-        return lookahead < other.lookahead;
-    }
-};
 
 class cfg_grammar {
     friend class glr_parser;

@@ -37,6 +37,7 @@
     * CBOR
 
 * details
+  * Revision 1092
   * Revision 1091
     * CFG for ASN.1 information object class
   * Revision 1090

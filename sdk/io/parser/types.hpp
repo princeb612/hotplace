@@ -12,6 +12,10 @@
 #define __HOTPLACE_SDK_IO_PARSER_TYPES__
 
 #include <hotplace/sdk/io/types.hpp>
+#include <map>
+#include <set>
+#include <stack>
+#include <vector>
 
 namespace hotplace {
 namespace io {
@@ -32,55 +36,74 @@ namespace io {
 #define SYMBOL_NUM "num"
 #define SYMBOL_QSTR "quot_string"
 #define SYMBOL_USERTYPE "usertype"
+#define SYMBOL_USERPARAMTYPE "userparamtype"
+#define SYMBOL_PARAMTYPE "paramtype"
+#define SYMBOL_PARAMVALUE "paramvalue"
 
 enum token_t : uint32 {
     token_unknown = 0,
-    token_alpha = 1,                // [a-zA-Z]
-    token_number = 2,               // [0-9]
-    token_word = 3,                 // [a-zA-Z0-9].*
+    token_newline = 0x0a,             // \n
+    token_space = 0x20,               // whitespace
+    token_exclamation = 0x21,         //
+    token_dquote = 0x22,              // "
+    token_sharp = 0x23,               // #
+    token_dollar = 0x24,              // $
+    token_percent = 0x25,             // %
+    token_amp = 0x26,                 // &, |
+    token_and = token_amp,            //
+    token_squote = 0x27,              // '
+    token_apostrophe = token_squote,  //
+    token_lparen = 0x28,              // (parentheses
+    token_rparen = 0x29,              // parentheses)
+    token_asterisk = 0x2a,            // *
+    token_multi = token_asterisk,     //
+    token_plus = 0x2b,                // +
+    token_comma = 0x2c,               // ,
+    token_dash = 0x2d,                // -
+    token_minus = token_dash,         //
+    token_dot = 0x2e,                 // .
+    token_slash = 0x2f,               // /
+    token_divide = token_slash,       //
+    token_number = 0x30,              // [0-9]
+    token_colon = 0x3a,               // :
+    token_semicolon = 0x3b,           // ;
+    token_lesser = 0x3c,              // <, less-than indicator, exclusive boundary indicator
+    token_equal = 0x3d,               // =
+    token_greater = 0x3e,             // >
+    token_question = 0x3f,            // >
+    token_at = 0x40,                  // @
+    token_alpha = 0x41,               // [a-zA-Z]
+    token_lbracket = 0x5b,            // [
+    token_bslash = 0x5c,              // '\\'
+    token_rbracket = 0x5d,            // ]
+    token_caret = 0x5e,               // ^
+    token_underline = 0x5f,           // _
+    token_backtick = 0x60,            // `
+    token_grave = token_backtick,     //
+    token_lbrace = 0x7b,              // {
+    token_pipe = 0x7c,                // |
+    token_or = token_pipe,            //
+    token_rbrace = 0x7d,              // }
+    token_tilde = 0x7e,               // ~
+
+    token_symbol = 0x100,
+    token_word,                     // [a-zA-Z0-9].*
+    token_id = token_word,          //
     token_identifier = token_word,  //
-    token_floatingpoint = 4,        //
-    token_space = 5,                // whitespace
-    token_lparen = 6,               // (parentheses)
-    token_rparen = 7,               // (parentheses)
-    token_lbracket = 8,             // [brackets]
-    token_rbracket = 9,             // [brackets]
-    token_lbrace = 10,              // {braces}
-    token_rbrace = 11,              // {braces}
-    token_comments = 12,            // lexical_token.comments .... until the newline
-    token_assign = 13,              // =, ::=
-    token_lvalue = 14,              //
-    token_squote = 15,              // '
-    token_dquote = 16,              // "
-    token_greater = 17,             // >
-    token_lesser = 18,              // <, less-than indicator, exclusive boundary indicator
-    token_equal = 19,               // =
-    token_plus = 20,                // +
-    token_dash = 21,                // -
-    token_minus = token_dash,       //
-    token_asterisk = 22,            // *
-    token_multi = token_asterisk,   //
-    token_slash = 23,               // /
-    token_divide = token_slash,     //
-    token_colon = 24,               // :
-    token_semicolon = 25,           // ;
-    token_comma = 26,               // ,
-    token_dot = 27,                 // .
-    token_newline = 28,             // \n
-    token_amp = 29,                 // &, |
-    token_and = token_amp,          //
-    token_or = 30,                  // ||
-    token_isequal = 31,             // ==
-    token_notequal = 32,            // !=
-    token_quot_string = 33,         // \"[a-zA-Z0-9].*\"
-    token_at = 34,
-    token_emphasis = 35,
-    token_type = 36,
-    token_usertype = 37,
-    token_element = 38,
-    token_phrase = 39,
-    token_sentence = 40,
-    token_ellipsis = 41,
+    token_floatingpoint,            //
+    token_comments,                 // lexical_token.comments .... until the newline
+    token_assign,                   // =, ::=
+    token_lvalue,                   //
+    token_isequal,                  // ==
+    token_notequal,                 // !=
+    token_quot_string,              // \"[a-zA-Z0-9].*\"
+    token_emphasis,
+    token_type,
+    token_usertype,
+    token_element,
+    token_phrase,
+    token_sentence,
+    token_ellipsis,
 
     // ASN.1
     token_asn1 = 0x1000,
@@ -119,31 +142,21 @@ enum token_t : uint32 {
     token_any,
 
     token_sequence,
-    // token_sequenceof,
     token_set,
-    // token_setof,
     token_choice,
     token_of,
 
-    // token_boolvalue,
-    token_true,   // TRUE
-    token_false,  // FALSE
-    // token_class,
+    token_true,         // TRUE
+    token_false,        // FALSE
     token_universal,    // UNIVERSAL
     token_application,  // APPLICATION
     token_private,      // PRIVATE
 
-    // token_taggedmode,
     token_implicit,
     token_explicit,
 
     token_default,   // DEFAULT
     token_optional,  // OPTIONAL
-
-    // token_namedtype,
-    // token_tag,
-    // token_taggedtype,
-    // token_referencedtype,
 
     token_union,         // |
     token_intersection,  // INTERSECTION
@@ -179,7 +192,7 @@ enum token_t : uint32 {
     token_syntax,
     token_unique,
 
-    token_userdefine = 0x2000,
+    token_userdefine = 0x2000,  // 0~0x1fff reserved
 
     token_eof = 0xffffffff,
 };
@@ -226,6 +239,52 @@ struct parser_token {
 };
 
 struct parse_treenode;
+
+struct LR0_item {
+    uint32 production_id;
+    size_t dot_pos;
+
+    bool operator<(const LR0_item& other) const {
+        if (production_id != other.production_id) return production_id < other.production_id;
+        return dot_pos < other.dot_pos;
+    }
+    bool operator==(const LR0_item& other) const { return production_id == other.production_id && dot_pos == other.dot_pos; }
+};
+
+struct LR1_item {
+    uint32 production_id;
+    size_t dot_pos;
+    std::string lookahead;
+
+    bool operator<(const LR1_item& other) const {
+        if (production_id != other.production_id) return production_id < other.production_id;
+        if (dot_pos != other.dot_pos) return dot_pos < other.dot_pos;
+        return lookahead < other.lookahead;
+    }
+};
+
+typedef std::vector<parser_production> parser_production_t;
+typedef std::set<std::string> parser_terminals_t;
+typedef std::map<std::string, std::set<std::string>> parser_first_sets_t;
+typedef std::map<std::string, std::set<std::string>> parser_follow_sets_t;
+typedef std::vector<std::set<LR0_item>> parser_lr0_states_t;
+typedef std::map<std::pair<uint32, std::string>, uint32> parser_lr0_goto_t;
+typedef std::map<std::pair<uint32, std::string>, uint32> parser_goto_table_t;
+typedef std::map<std::pair<uint32, std::string>, parser_action> parser_lalr1_action_table_t;
+typedef std::multimap<std::pair<uint32, std::string>, parser_action> parser_glr_action_table_t;
+
+struct parser_temporary_context_t {
+    std::map<std::string, std::set<std::string>> first_sets;
+    std::map<std::string, std::set<std::string>> follow_sets;
+    std::vector<std::set<LR0_item>> lr0_states;
+    std::map<std::pair<uint32, std::string>, uint32> lr0_goto;
+    void clear() {
+        first_sets.clear();
+        follow_sets.clear();
+        lr0_states.clear();
+        lr0_goto.clear();
+    }
+};
 
 class cfg_grammar;
 class lalr_parser;

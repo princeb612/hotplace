@@ -18,14 +18,6 @@ namespace io {
 // clang-format off
 const std::set<std::string> asn1_notation_terminals = //
 {
- {"DEFINITIONS"},
- {"BEGIN"},
- {"END"},
- {"TAGS"},
- {"AUTOMATIC"},
- {"EXPORTS"},
- {"IMPORTS"},
- {";"},
  {"::="},
  {"{"},
  {"}"},

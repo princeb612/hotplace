@@ -45,17 +45,21 @@ return_t ac_search_and_printall(const asn1module_reducer_t& ac, const char* inpu
 
 // LALR(1)
 return_t prepare_asn1notation_grammar(parser_t& parser);
+return_t import_asn1notation_grammar(lalr_parser& parser);
 return_t prepare_asn1module_grammar(parser_t& parser);
 // GLR
 return_t prepare_asn1parameterized_grammar(parser_t& parser);
 return_t prepare_asn1_grammar(parser_t& parser);
+return_t import_asn1_grammar(glr_parser& parser);
 
 void test_asn1parser(parser_t& parser, const char* text, const char* input);
 void test_asn1parser(lexical_analyzer& lexer, parser_t& parser, const char* text, const char* input);
 void dump_parse_tree(parse_tree& pt);
 
 parser_t& get_lalr_parser_asn1notation();
+parser_t& get_lalr_parser_asn1notation_imported();
 parser_t& get_glr_parser_asn1parameterized();
 parser_t& get_glr_parser_asn1();
+parser_t& get_glr_parser_asn1_imported();
 
 #endif

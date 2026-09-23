@@ -95,21 +95,13 @@ class lalr_parser : public parser_t {
     virtual return_t parse(const std::vector<parser_token>& tokens, parse_tree* pt = nullptr);
 
    protected:
-    void compute_first_and_follow_sets();
-    std::set<LR0_item> closure_lr0(std::set<LR0_item> items) const;
-    void build_lr0_states();
-    bool generate_lalr_tables();
-
    private:
     mutable critical_section _lock;
     cfg_grammar _grammar;
     bool _is_table_built = false;
 
     // temporary tables for table generation
-    std::map<std::string, std::set<std::string>> _first_sets;
-    std::map<std::string, std::set<std::string>> _follow_sets;
-    std::vector<std::set<LR0_item>> _lr0_states;
-    std::map<std::pair<uint32, std::string>, uint32> _lr0_goto;
+    parser_temporary_context_t _context;
 
     // essential LALR parsing tables
     std::map<std::pair<uint32, std::string>, parser_action> _action_table;

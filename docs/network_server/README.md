@@ -367,18 +367,18 @@ Different protocols impose different boundaries on the byte sequence:
              ▼                ▼                ▼
        network_stream    TLS parser       QUIC packet
              │                │                │
-             │          ┌─────┴─────┐           │
-             │          │           │           │
-             │       record      handshake      │
-             │          │           │           │
-             │          │      extensions       │
-             │          │                       │
-             ▼          ▼                       ▼
-        HTTP/1.x     TLS-protected          QUIC frames
-        message      application data            │
-             │                                  │
-             ▼                                  ▼
-        HTTP/2 frame                         HTTP/3 data
+             │          ┌─────┴─────┐          │
+             │          │           │          │
+             │       record      handshake     │
+             │          │           │          │
+             │          │      extensions      │
+             │          │                      │
+             ▼          ▼                      ▼
+        HTTP/1.x     TLS-protected         QUIC frames
+        message      application data          │
+             │                                 │
+             ▼                                 ▼
+        HTTP/2 frame                        HTTP/3 data
 ```
 
 The important point is that **payload and framing are relative to a layer**.
@@ -932,7 +932,7 @@ The important current boundary is therefore clear: the common server/session arc
              TLS             DTLS         application
               │                │           protocols
               ▼                ▼                │
-             TCP              UDP              ▼
+             TCP              UDP               ▼
                                               HTTP
                                                 │
                                                HTTP/2

@@ -95,8 +95,7 @@ void test_publish_babystep() {
     pt.on_reduce("DefinedType", 1);
     pt.on_shift("::=", "::=");
     pt.on_shift("VisibleString", "VisibleString");
-    pt.on_reduce("SimpleType", 1);
-    pt.on_reduce("TypeBase", 1);
+    pt.on_reduce("SimpleTypeSpec", 1);
     pt.on_reduce("TypeSpec", 1);
     pt.on_reduce("Assignment", 3);
     pt.on_reduce("Statement", 1);

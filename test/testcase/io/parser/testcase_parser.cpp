@@ -119,8 +119,6 @@ void test_lexical() {
 // }  // namespace std
 
 void test_lalr_asn1notation() {
-    _test_case.begin("LALR/GLR parser");
-
     // return_t ret = errorcode_t::success;
 
     struct testvector {
@@ -133,26 +131,32 @@ void test_lalr_asn1notation() {
         {R"(Type1 ::= VisibleString)"},
         {R"(Type2 ::= [APPLICATION 3] IMPLICIT Type1)"},
         {R"(Type3 ::= [2] EXPLICIT Type2)"},
-        {R"(Type1 ::= REAL)"},
+        {R"(Type4 ::= [APPLICATION 7] IMPLICIT Type3)"},
+        {R"(Type5 ::= [2] IMPLICIT Type2)"},
+        {R"(Type6 ::= [2] EXPLICIT Type1)"},
+        {R"(Type7 ::= [1] EXPLICIT Type1)"},
+        {R"(Type8 ::= [2] EXPLICIT Type7)"},
+        {R"(Type9 ::= [3] EXPLICIT Type8)"},
+        {R"(Real1 ::= REAL)"},
         {R"(Product ::= SEQUENCE {id VisibleString})"},
         {R"(Location ::= INTEGER {homeOffice(0), fieldOffice(1), roving(2)})"},
         {R"(Flags ::= BIT STRING {read(0), write(1), execute(2)})"},
-        {R"(Flags ::= BIT STRING)"},
+        {R"(Flags2 ::= BIT STRING)"},
         {R"(Data ::= OCTET STRING)"},
         {R"(Oid ::= OBJECT IDENTIFIER)"},
         {R"(RelOid ::= RELATIVE-OID)"},
-        {R"(Time ::= UTCTime)"},
-        {R"(Time ::= GeneralizedTime)"},
+        {R"(Time1 ::= UTCTime)"},
+        {R"(Time2 ::= GeneralizedTime)"},
         {R"(Color ::= ENUMERATED {red(0), green(1), blue(2)})"},
         {R"(Type ::= SEQUENCE {})"},
-        {R"(Type1 ::= SEQUENCE {name VisibleString, ok BOOLEAN})"},
+        {R"(Seq1 ::= SEQUENCE {name VisibleString, ok BOOLEAN})"},
         {R"(Person2 ::= SEQUENCE {name [0] IMPLICIT VisibleString})"},
         {R"(Person3 ::= SEQUENCE {name VisibleString, age INTEGER DEFAULT 20})"},
         {R"(Outer1 ::= SEQUENCE {inner SEQUENCE {name VisibleString}})"},
         {R"(Outer2 ::= SEQUENCE {inner [0] EXPLICIT SEQUENCE {name VisibleString}})"},
         {R"(Outer ::= SEQUENCE {inner SEQUENCE {child SEQUENCE {name VisibleString}}})"},
         {R"(Numbers ::= SEQUENCE OF INTEGER)"},
-        {R"(Type1 ::= SET {z BOOLEAN, a INTEGER})"},
+        {R"(Set1 ::= SET {z BOOLEAN, a INTEGER})"},
         {R"(Value ::= CHOICE {i INTEGER, s VisibleString})"},
         {R"(Value2 ::= CHOICE {i [0] IMPLICIT INTEGER, s [1] IMPLICIT VisibleString})"},
         {R"(Value3 ::= [0] EXPLICIT CHOICE {i INTEGER, s VisibleString})"},
@@ -243,15 +247,17 @@ void test_lalr_asn1notation() {
             test_asn1parser(parser, entry.notation, entry.notation);
         }
     };
-    _logger->writeln("LALR(1) parser");
+    _test_case.begin("LALR(1) parser - ASN.1 for Notation");
     lambda_test(get_lalr_parser_asn1notation());
-    _logger->writeln("GLR parser");
+    _test_case.begin("LALR(1) parser - ASN.1 for Notation (imported)");
+    lambda_test(get_lalr_parser_asn1notation_imported());
+    _test_case.begin("GLR parser - ASN.1 for All-in-One");
     lambda_test(get_glr_parser_asn1());
+    _test_case.begin("GLR parser - ASN.1 for All-in-One (imported)");
+    lambda_test(get_glr_parser_asn1_imported());
 }
 
 void test_lalr_asn1parameterized() {
-    _test_case.begin("GLR parser");
-
     // return_t ret = errorcode_t::success;
 
     enum test_flag_t : uint16 {
@@ -290,9 +296,9 @@ void test_lalr_asn1parameterized() {
             if (entry.flag & flag) test_asn1parser(parser, entry.notation, entry.notation);
         }
     };
-    _logger->writeln("GLR parser - ASN.1 CFG for parametersized");
+    _test_case.begin("GLR parser - ASN.1 for parametersized");
     lambda_test(item_asn1param, get_glr_parser_asn1parameterized());
-    _logger->writeln("GLR parser - ASN.1 CFG");
+    _test_case.begin("GLR parser - ASN.1 All-in-One");
     lambda_test(item_asn1ioc, get_glr_parser_asn1());
 }
 
