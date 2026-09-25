@@ -9,114 +9,19 @@
  *
  */
 
-#include <hotplace/test/testcase/io/parser/asn1module.hpp>
 #include <hotplace/test/testcase/io/sample.hpp>
 
-void test_options() {
-    _test_case.begin("lexical analyzer");
-    struct testvector {
-        const char* notation;
-        size_t tokens;
-        uint32 first;
-        int16 handle_comments;
-        int16 handle_lvalue_usertype;
-    } table[] = {
-        {R"(Type ::= VisibleString ("A" | "B" | "C" | "D"))", 12, token_lvalue, 0, 0},             //
-        {"Type ::= SEQUENCE {} -- empty SEQUENCE", 8, token_lvalue, 0},                            // "--" as comments, cf. prepare_lexer_asn1
-        {"Type ::= SEQUENCE {} -- empty SEQUENCE", 6, token_lvalue, 1},                            // "-- empty SEQUENCE" as comments
-        {"Type1 ::= SEQUENCE {name VisibleString, ok BOOLEAN} -- SEQUENCE", 12, token_lvalue, 0},  //
-        {"Type1 ::= SEQUENCE {name VisibleString, ok BOOLEAN} -- SEQUENCE", 11, token_lvalue, 1},  // "-- SEQUENCE" as comments
-        {"Type ::= SEQUENCE {} -- empty SEQUENCE", 6, token_usertype, 1, 1},                       // Type (usertype not lvalue)
-        {"Name ::= VisibleString", 3, token_usertype, 1, 1},                                       // Name (usertype not lvalue)
-        {"Type1 ::= SEQUENCE {name Name, ok BOOLEAN} -- SEQUENCE", 11, token_usertype, 1, 1},      // Type1, Name (usertype)
-        {"Name2 ::= [APPLICATION 1] IMPLICIT SEQUENCE { givenName VisibleString, initial VisibleString, familyName VisibleString}", 18, token_usertype, 1, 1},
-        {"Type ::= INTEGER (1..10 | 20..30)", 12, token_lvalue, 0, 0},
-    };
+#include "asn1_cfg_parameterized.hpp"
+#include "asn1module.hpp"
 
-    lexical_analyzer lexer;  // shares context to test previously defined usertype
-    lexical_context context;
-
-    for (const auto& entry : table) {
-        _logger->colorln(entry.notation);
-
-        // usertype already in dictionary, reset it first
-        prepare_lexer_asn1(lexer);
-        lexer.get_config().set("handle_comments", entry.handle_comments).set("handle_lvalue_usertype", entry.handle_lvalue_usertype);
-
-        auto test = lexer.parse(context, entry.notation, strlen(entry.notation));
-
-        uint32 cnt = 0;
-        uint32 first = token_unknown;
-        auto dump_handler = [&lexer, &cnt, &first](const token_description* desc) -> bool {
-            if (0 == cnt) first = desc->type;
-            _logger->writeln("[%03u] line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", cnt++, desc->line, desc->type, lexer.nameof_token(desc->type).c_str(),
-                             desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
-            return true;
-        };
-        context.for_each(dump_handler);
-        _test_case.test(test, __FUNCTION__, "parse usertype");
-        _test_case.assert(entry.tokens == cnt, __FUNCTION__, "handle_comments %i handle_lvalue_usertype %i %i tokens", entry.handle_comments,
-                          entry.handle_lvalue_usertype, cnt);
-        _test_case.assert(entry.first == first, __FUNCTION__, "first token type %s", lexer.nameof_token(first).c_str());
-    }
-}
-
-void test_lexical() {
-    _test_case.begin("lexical analyzer");
-
-    constexpr char asn1_structure[] =
-        R"(PersonnelRecord ::= [APPLICATION 0] IMPLICIT SET {
-                name Name,
-                title [0] VisibleString,
-                number EmployeeNumber,
-                dateOfHire [1] Date,
-                nameOfSpouse [2] Name,
-                children [3] IMPLICIT SEQUENCE OF ChildInformation DEFAULT {} }
-            ChildInformation ::= SET { name Name, dateOfBirth [0] Date}
-            Name ::= [APPLICATION 1] IMPLICIT SEQUENCE { givenName VisibleString, initial VisibleString, familyName VisibleString}
-            EmployeeNumber ::= [APPLICATION 2] IMPLICIT INTEGER
-            Date ::= [APPLICATION 3] IMPLICIT VisibleString -- YYYYMMDD)";
-
-    lexical_analyzer lexer;
-    lexical_context context;
-
-    lexer.prepare();
-
-    _logger->colorln("basic tokens + handle_lvalue_usertype 0");
-    lexer.parse(context, asn1_structure, strlen(asn1_structure));
-    uint32 cnt = 0;
-
-    auto dump_handler = [&lexer, &cnt](const token_description* desc) -> bool {
-        _logger->writeln("[%03u] line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", cnt++, desc->line, desc->type, lexer.nameof_token(desc->type).c_str(),
-                         desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
-        return true;
-    };
-
-    context.for_each(dump_handler);
-    _test_case.assert(105 == cnt, __FUNCTION__, "tokenize");
-
-    // load ASN.1 tokens
-    _logger->colorln("ASN.1 tokens + handle_lvalue_usertype 1");
-    prepare_lexer_asn1(lexer);
-    lexer.get_config().set("handle_lvalue_usertype", 1);
-
-    lexer.add_token("::=", token_assign).add_token("--", token_comments);
-    lexer.parse(context, asn1_structure, strlen(asn1_structure));
-    cnt = 0;
-    context.for_each(dump_handler);
-    _test_case.assert(93 == cnt, __FUNCTION__, "tokenize");
-}
-
-// namespace std {
-// template <>
-// struct hash<parser_token> {
-//     size_t operator()(const parser_token& tok) const noexcept {
-//         size_t h1 = std::hash<uint32>{}(tok.type);
-//         size_t h2 = std::hash<std::string>{}(tok.value);
-//         return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
-//     }
-// };
-// }  // namespace std
+/**
+ * CFG ASN.1 Noation
+ * - LALR(1)
+ * - GLR(1)
+ *
+ * incubate ASN.1 parameterized, module, information object class
+ * - tests related to the `module` and `information object class` have been moved to `testcase/asn.1`, where the `*.asn1` files are located.
+ */
 
 void test_lalr_asn1notation() {
     // return_t ret = errorcode_t::success;
@@ -248,13 +153,21 @@ void test_lalr_asn1notation() {
         }
     };
     _test_case.begin("LALR(1) parser - ASN.1 for Notation");
-    lambda_test(get_lalr_parser_asn1notation());
+    auto& p1 = get_lalr1_parser_asn1_notation_by_build();
+    _test_case.assert(p1.ready(), __FUNCTION__, "LALR(1) parser build table for Notation");
+    lambda_test(p1);
     _test_case.begin("LALR(1) parser - ASN.1 for Notation (imported)");
-    lambda_test(get_lalr_parser_asn1notation_imported());
+    auto& p2 = get_lalr1_parser_asn1_notation_by_import();
+    _test_case.assert(p2.ready(), __FUNCTION__, "LALR(1) parser import table for Notation");
+    lambda_test(p2);
     _test_case.begin("GLR parser - ASN.1 for All-in-One");
-    lambda_test(get_glr_parser_asn1());
+    auto& p3 = get_glr_parser_asn1_by_build();
+    _test_case.assert(p3.ready(), __FUNCTION__, "GLR parser build table for Notation, Module, Parameterized, Information Object Class");
+    lambda_test(p3);
     _test_case.begin("GLR parser - ASN.1 for All-in-One (imported)");
-    lambda_test(get_glr_parser_asn1_imported());
+    auto& p4 = get_glr_parser_asn1_by_import();
+    _test_case.assert(p4.ready(), __FUNCTION__, "GLR parser import table for Notation, Module, Parameterized, Information Object Class");
+    lambda_test(p4);
 }
 
 void test_lalr_asn1parameterized() {
@@ -297,14 +210,16 @@ void test_lalr_asn1parameterized() {
         }
     };
     _test_case.begin("GLR parser - ASN.1 for parametersized");
-    lambda_test(item_asn1param, get_glr_parser_asn1parameterized());
+    auto& p1 = get_glr_parser_asn1_paramerized_by_build();
+    _test_case.assert(p1.ready(), __FUNCTION__, "LALR(1) parser build table for Parameterized");
+    lambda_test(item_asn1param, p1);
     _test_case.begin("GLR parser - ASN.1 All-in-One");
-    lambda_test(item_asn1ioc, get_glr_parser_asn1());
+    auto& p2 = get_glr_parser_asn1_by_build();
+    _test_case.assert(p2.ready(), __FUNCTION__, "GLR parser build table for Notation, Module, Parameterized, Information Object Class");
+    lambda_test(item_asn1ioc, p2);
 }
 
 void testcase_parser() {
-    test_options();
-    test_lexical();
     test_lalr_asn1notation();
     test_lalr_asn1parameterized();
 }

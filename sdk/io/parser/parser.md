@@ -2027,8 +2027,8 @@ int main() {
             << std::endl;
 
   std::cout << "\n--- Full LALR(1) Parser Test ---" << std::endl;
-  FullLALRParser lalr_parser(tokens);
-  std::cout << "Result: " << (lalr_parser.parse() ? "SUCCESS" : "FAILED")
+  FullLALRParser lalr1_parser(tokens);
+  std::cout << "Result: " << (lalr1_parser.parse() ? "SUCCESS" : "FAILED")
             << std::endl;
 
   return 0;

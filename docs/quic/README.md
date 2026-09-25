@@ -1,6 +1,6 @@
 # QUIC
 
-**Edition 1 · Revision 1084**
+**Edition 1 · Revision 1090**
 
 QUIC is a transport protocol built over UDP, but in hotplace it is more useful to understand QUIC as the meeting point of four independently meaningful mechanisms:
 
@@ -51,6 +51,46 @@ This also explains why QUIC touches several areas of the repository:
 - TLS protection — handshake and packet-protection key material
 - HTTP/3 — stream/application interpretation
 - PCAP/YAML test vectors — reproducible wire-level verification
+
+### Reading Path
+
+A first reading of QUIC should follow the boundary where each mechanism becomes
+necessary:
+
+```text
+UDP datagrams
+     ↓
+QUIC packets
+     ↓
+frames and packet protection
+     ↓
+connection / loss / acknowledgement state
+     ↓
+streams and application data
+     ↓
+HTTP/3 interpretation
+```
+
+TLS enters this path at the handshake boundary rather than below every QUIC
+operation:
+
+```text
+TLS handshake
+     ↓
+CRYPTO frames
+     ↓
+QUIC packets
+     ↓
+UDP
+
+STREAM frames
+     ↓
+QUIC streams
+     ↓
+HTTP/3
+```
+
+The two paths meet inside a QUIC connection but retain different ownership.
 
 ## History
 
@@ -237,6 +277,28 @@ protected header fields
 ```
 
 Header protection is not the same operation as payload AEAD. Packet-number encoding/reconstruction participates in the boundary between them.
+
+## Cross-Topic Boundary
+
+QUIC is the transport/protocol boundary between UDP delivery and HTTP/3 stream semantics. Its relationship with TLS is deliberately asymmetric: TLS supplies handshake semantics and derived key material, while QUIC owns packets, frames, packet numbers, streams, and QUIC packet protection.
+
+```text
+TLS handshake message
+        ↓
+   CRYPTO frame
+        ↓
+   QUIC packet
+        ↓
+       UDP
+
+HTTP/3
+   ↓
+QUIC stream
+   ↓
+QUIC packet/frame
+```
+
+The CRYPTO frame transports TLS handshake bytes; it does not reinterpret TLS messages. Likewise, HTTP/3 interprets QUIC stream data but does not own QUIC packet protection.
 
 ## Structural
 
@@ -638,9 +700,39 @@ QUIC/TLS replay
 HTTP/3 interpretation
 ```
 
+## Cross-Topic Verification
+
+QUIC verification combines protocol vectors with captured traffic because packet protection and TLS handshake processing are coupled across layers. The repository keeps the responsibilities distinct even when one test exercises both.
+
+```text
+RFC 9000 / 9001 / 9369
+          │
+          ├── known packet / protection vectors
+          │
+real HTTP/3 traffic
+          │
+          ▼
+        PCAPNG
+          │
+      SSLKEYLOG
+          │
+          ▼
+   YAML capture vector
+          │
+      ┌───┴────┐
+      ▼        ▼
+    QUIC      TLS
+      │        │
+      └───┬────┘
+          ▼
+      HTTP/3 interpretation
+```
+
+This makes the verification boundary explicit: QUIC owns packet/frame/stream interpretation, TLS owns the handshake and secrets used by QUIC, and HTTP/3 interprets stream data above QUIC.
+
 ## Status
 
-| Area | Revision 1084 state |
+| Area | Revision 1090 state |
 |---|---|
 | QUIC packet model | implemented |
 | QUIC frame model | broad implementation |
@@ -653,7 +745,7 @@ HTTP/3 interpretation
 | RFC 9000 vectors | present |
 | RFC 9001 vectors | present |
 | RFC 9369 / QUIC v2 | tested |
-| HTTP/3 stream path | implemented/tested |
+| HTTP/3 stream transport path | exercised/tested on the QUIC side |
 | PCAP/YAML replay | implemented |
 | broader loss/congestion/transport scheduling | separate / evolving area |
 
@@ -701,7 +793,7 @@ This gives the current documentation set a useful vertical path from binary fiel
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1084            │
+│ Edition 1 · Revision 1090            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘

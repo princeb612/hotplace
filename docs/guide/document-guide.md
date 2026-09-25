@@ -1,6 +1,6 @@
 # Document Guide
 
-Edition 1 · Based on hotplace Revision 1083
+Edition 1 · Based on hotplace Revision 1090
 
 ## Purpose
 
@@ -55,11 +55,14 @@ source relationships and study chronology.
 
 ## Revision / Edition
 
-Each document records its source baseline:
+Each document records the source baseline used for that document. A topic may
+retain an older baseline when its content has not required re-audit; that does
+not mean the rest of the study map is frozen at that revision. The project
+map itself records the current study baseline.
 
 ```text
 Edition: 1
-Based on: Revision 1083
+Based on: Revision <topic baseline>
 ```
 
 ## Reading Density
@@ -72,7 +75,7 @@ repeated explanations, and source dumps.
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1076            │
+│ Edition 1 · Revision 1090            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘

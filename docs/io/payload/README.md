@@ -38,6 +38,53 @@ QUIC packet ──┘
 
 The protocol class still owns protocol semantics. `payload` owns the local binary layout needed to move between those semantics and bytes.
 
+## Reading path
+
+A first-time reader should approach `payload` from the protocol side rather than from its classes. The question is:
+
+> **A protocol already knows what its fields mean. How does that field description become bytes, and how do bytes become those fields again?**
+
+That gives the following path:
+
+```text
+protocol meaning
+      ↓
+field layout
+      ↓
+payload / payload_member
+      ↓
+wire bytes
+```
+
+The reverse path is equally important:
+
+```text
+wire bytes
+      ↓
+payload traversal
+      ↓
+field values
+      ↓
+protocol interpretation
+```
+
+This is why `payload` should not be read as a protocol parser by itself. It solves the **local binary layout problem**; the surrounding protocol still decides what the extracted fields mean, what state they change, and whether the resulting message is valid.
+
+The reader can then follow three recurring patterns:
+
+```text
+fixed field
+    → known width
+
+length-dependent field
+    → earlier field determines width
+
+conditional / encoded field
+    → protocol state or representation rules determine participation/encoding
+```
+
+These patterns explain most of the later HTTP/2, TLS, and QUIC examples in this document.
+
 ## History
 
 The current `CHANGELOG.md` records the development milestones of HTTP/2, TLS, DTLS, QUIC, and related protocol work, but does not identify a separate milestone for `payload` itself. Therefore this document does not assign an origin revision or infer a development motivation from file dates.
@@ -175,6 +222,36 @@ payload_member
 The concrete example in Revision 1084 is `quic_encoded`, which implements QUIC variable-length integer encoding and can also bind that length encoding to associated data.
 
 This is important because QUIC's encoding is not modeled by adding QUIC branches to `payload`. Instead, the protocol-specific representation is injected through the generic encoded interface.
+
+## Cross-Topic Boundary
+
+`payload` is the boundary between **protocol-defined field meaning** and **binary field layout**. It is deliberately below protocol semantics and above raw byte movement.
+
+```text
+protocol
+  │ owns meaning / state / validation
+  ▼
+payload
+  │ owns field layout / size / representation
+  ▼
+bytes
+```
+
+This explains why the same payload mechanism can appear in HTTP/2, TLS, DTLS, and QUIC without making those protocols variants of one implementation. The shared part is the recurring binary-layout problem; the protocol-specific meaning remains outside the generic layer.
+
+For QUIC in particular, `quic_encoded` is the handoff point where a protocol-specific representation enters the generic layout mechanism:
+
+```text
+QUIC semantic value
+      ↓
+quic_encoded
+      ↓
+payload_member
+      ↓
+QUIC wire bytes
+```
+
+The reverse direction reconstructs the semantic value before QUIC applies its own protocol rules.
 
 ## Structural
 
@@ -518,16 +595,16 @@ The module therefore fits the project as a reusable **protocol payload reader/wr
 
 ## Related topics
 
-- [HTTP/2](../http2/README.md) — frame layouts, flags, padding, and priority fields.
-- [TLS](../tls/README.md) — record, handshake, extension, and protection structures.
-- [QUIC](../quic/README.md) — variable-length integers, packet/frame layouts, and TLS integration.
-- [Network Server](../network_server/README.md) — the higher-level path from transport/session processing to protocol framing.
+- [HTTP/2](../../http2/README.md) — frame layouts, flags, padding, and priority fields.
+- [TLS](../../tls/README.md) — record, handshake, extension, and protection structures.
+- [QUIC](../../quic/README.md) — variable-length integers, packet/frame layouts, and TLS integration.
+- [Network Server](../../network_server/README.md) — the higher-level path from transport/session processing to protocol framing.
 
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1084            │
-│ Documented with GPT-5.6 Sol          │
+│ Edition 1 · Revision 1090            │
+│ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
 ```

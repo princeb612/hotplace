@@ -62,6 +62,8 @@ class glr_parser : public parser_t {
      */
     virtual return_t parse(const std::vector<parser_token>& tokens, parse_tree* pt = nullptr);
 
+    virtual parser_type_t get_type() const;
+
    protected:
     /**
      * @brief internal node for Graph-Structured Stack (GSS)

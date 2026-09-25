@@ -40,7 +40,7 @@
 /* parser */
 #include <hotplace/sdk/io/parser/cfg_grammar.hpp>
 #include <hotplace/sdk/io/parser/glr_parser.hpp>
-#include <hotplace/sdk/io/parser/lalr_parser.hpp>
+#include <hotplace/sdk/io/parser/lalr1_parser.hpp>
 #include <hotplace/sdk/io/parser/lexical_analyzer.hpp>
 #include <hotplace/sdk/io/parser/parse_tree.hpp>
 #include <hotplace/sdk/io/parser/parser_resource.hpp>

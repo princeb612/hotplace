@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 parser_action_t::shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   asn1_notation_productions.cpp
+ * @file   asn1_allin1_productions.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *

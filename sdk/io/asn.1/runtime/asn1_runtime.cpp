@@ -214,7 +214,7 @@ asn1_value* asn1_runtime::get(asn1_object* item) const {
 
 lexical_analyzer& asn1_runtime::get_lexer() { return _lex; }
 
-lalr_parser& asn1_runtime::get_parser() { return _lalr; }
+lalr1_parser& asn1_runtime::get_parser() { return _lalr; }
 
 return_t asn1_runtime::read_weakly_typed(const byte_t* stream, size_t size, size_t& pos) {
     asn1_weakly_typed weaktype;

@@ -30,6 +30,33 @@ The important boundary is therefore:
 
 The same primitive can consequently appear in different protocol contexts without making the primitive implementation responsible for the protocol semantics.
 
+### Reading Path
+
+A first reading of the crypto area is easiest if it follows a requirement from a
+consumer protocol down to a reusable operation, then back up to the protocol that
+gives the result its meaning:
+
+```text
+TLS / COSE / JOSE requirement
+          ↓
+algorithm and key selection
+          ↓
+crypto operation / key material
+          ↓
+provider-backed execution
+          ↓
+protocol-specific result and state
+```
+
+This keeps two questions separate: **what cryptographic capability is needed?**
+and **what does the protocol do with the result?** The first question belongs to
+`crypto`; the second remains with TLS, COSE, JOSE, or another consumer.
+
+For a reader, this boundary is easiest to follow by asking two questions: **what
+cryptographic operation is required, and which protocol gives that operation its
+meaning and state?** The first question belongs here; the second belongs to TLS,
+COSE, JOSE, or another consumer.
+
 ## History
 
 The cryptographic area grew together with the protocols that consumed it. The CHANGELOG provides several useful checkpoints:
@@ -466,7 +493,7 @@ A failure at a higher layer therefore does not automatically imply a primitive f
 
 ## Status
 
-At Revision 1084, `sdk/crypto` is a substantial shared cryptographic substrate rather than an isolated algorithm collection.
+At Revision 1090, `sdk/crypto` is a substantial shared cryptographic substrate rather than an isolated algorithm collection. The later ASN.1/parser work does not change this ownership boundary; ASN.1 schema semantics remain outside the crypto layer.
 
 Implemented/used areas include:
 
@@ -489,5 +516,5 @@ The most important structural conclusion is that `sdk/crypto` should be read as 
 - [TLS](../tls/README.md) — handshake, transcript, key schedule, record protection, and transport integration
 - [COSE / JOSE](../cose_jose/README.md) — security-object semantics and protocol-specific signing/encryption/key representations
 - [QUIC](../quic/README.md) — packet/frame/stream processing and TLS integration
-- [Payload](../payload/README.md) — generic binary field layout and encoding substrate
+- [Payload](../io/payload/README.md) — generic binary field layout and encoding substrate
 - [Network Server](../network_server/README.md) — I/O, session, protocol detection, framing, and dispatch

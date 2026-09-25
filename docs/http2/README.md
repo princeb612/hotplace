@@ -1,6 +1,6 @@
 # HTTP/2
 
-**Edition 1 · Revision 1072**
+**Edition 1 · Revision 1090**
 
 [← Document Guide](../guide/document-guide.md) · [Project document map](../README.md) · [HPACK](../hpack/README.md)
 
@@ -91,7 +91,24 @@ fields inside the header block**.
 ### Relationship to HPACK
 
 HPACK is not an alternative HTTP/2 frame type. It is the header
-compression/representation mechanism used for HTTP/2 header blocks.
+representation mechanism used for HTTP/2 header blocks.
+
+The later HTTP/3 path asks a related question under a different transport model:
+
+```text
+HTTP/2
+  └── Header Block ──► HPACK
+
+HTTP/3
+  └── Field Section ─► QPACK
+                       │
+                       ▼
+                      QUIC
+```
+
+This is a conceptual continuation, not a claim that HTTP/3 is implemented by
+reusing the HTTP/2/HPACK layer. HTTP/2 owns its frame and stream semantics;
+HTTP/3 uses QUIC streams and has its own header-field representation mechanism.
 
 See [HPACK](../hpack/README.md) for:
 
@@ -100,6 +117,43 @@ See [HPACK](../hpack/README.md) for:
 - string encoding and Huffman coding
 - dynamic table state
 - encoder/decoder behavior
+
+
+### Relationship to `network_server` and `http_server`
+
+HTTP/2 does not own socket readiness or session scheduling. The common server layer delivers the input to the HTTP server, and the HTTP server passes an HTTP/2 session to the frame-processing path.
+
+```text
+network_server
+      ↓
+http_server::consume()
+      ↓
+http2_session
+      ↓
+HTTP/2 frames
+      ↓
+HEADERS → header block → HPACK
+      ↓
+http_request
+```
+
+This is the concrete application-facing boundary for the current HTTP/2 server path.
+
+## Cross-Topic Boundary
+
+HTTP/2 begins after the transport/session boundary and defines its own frame, stream, and connection semantics. HPACK belongs specifically to HTTP/2 header-block representation.
+
+```text
+network_server
+      ↓
+TCP / TLS application data
+      ↓
+HTTP/2 frame
+      ├── stream / connection semantics
+      └── HEADERS → header block → HPACK
+```
+
+`network_server` does not decide what an HTTP/2 frame means, and HPACK does not own the HTTP/2 frame layer. This keeps transport orchestration, HTTP semantics, and header compression as separate concerns.
 
 ## Structural
 
@@ -221,6 +275,26 @@ The same approach is used elsewhere in the project: protocol
 understanding is developed alongside executable examples, vectors,
 and traffic analysis.
 
+## Cross-Topic Verification
+
+HTTP/2 verification sits between protocol-specific vectors and transport captures. Frame tests and HPACK vectors verify deterministic representation, while TLS/PCAP captures can verify the same framing when HTTP/2 runs over a real secure connection.
+
+```text
+HTTP/2 frame / HPACK vectors
+            │
+            ├── deterministic checks
+            │
+            ▼
+        HTTP/2 parser
+            ▲
+            │
+        TLS / PCAPNG
+            │
+         real traffic
+```
+
+PCAPNG belongs to the observation/reproduction boundary; HTTP/2 remains responsible for frame and stream semantics, and HPACK remains responsible for header-block representation.
+
 ## Status
 
 | Area | Current state |
@@ -241,7 +315,7 @@ owned by this topic.
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1072            │
+│ Edition 1 · Revision 1090            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘

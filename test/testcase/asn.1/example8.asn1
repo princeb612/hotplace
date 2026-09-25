@@ -1,0 +1,18 @@
+InfoObjectModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+-- 1. CLASS Definition
+ERROR-CLASS ::= CLASS {
+    &errorCode   INTEGER UNIQUE,
+    &Type        
+} WITH SYNTAX {
+    CODE &errorCode
+    TYPE &Type
+}
+
+-- 2. Object Definition using Class
+SystemError ERROR-CLASS ::= {
+    CODE 101
+    TYPE IA5String
+}
+
+END

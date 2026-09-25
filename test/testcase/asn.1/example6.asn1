@@ -1,0 +1,27 @@
+EdgeCaseModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+EXPORTS ALL;
+
+-- 1. Explicit/Implicit Tagging & CHOICE
+TaggedType ::= SEQUENCE {
+    explicitField [0] EXPLICIT INTEGER,
+    implicitField [1] IMPLICIT OCTET STRING OPTIONAL,
+    choiceField   [2] ChoiceType
+}
+
+ChoiceType ::= CHOICE {
+    aName [0] IA5String,
+    bName [1] INTEGER
+}
+
+-- 2. Basic Constraints (SIZE, Range)
+RestrictedString ::= UTF8String (SIZE (1..32))
+
+-- 3. ENUMERATED
+Status ::= ENUMERATED {
+    ok(0),
+    fail(1),
+    unknown(2)
+}
+
+END

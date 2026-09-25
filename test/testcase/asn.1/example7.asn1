@@ -1,0 +1,17 @@
+ComplexTypeModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+-- 1. SEQUENCE OF & SET OF
+IntList ::= SEQUENCE OF INTEGER
+
+UserSet ::= SET OF SEQUENCE {
+    userId   INTEGER,
+    userName IA5String
+}
+
+-- 2. SET Structure
+ConfigRecord ::= SET {
+    timeout [0] INTEGER OPTIONAL,
+    enabled [1] BOOLEAN
+}
+
+END

@@ -67,11 +67,15 @@ class asn1_resource {
 };
 
 /**
- * S' -> Statement
- * S' -> ModuleDefinition -> AssignmentList -> Statement
- *
- * If these two paths coexist in a single LALR parsing table, their lookahead sets overlap during the calculation of the state closure, making a conflict unavoidable.
+ * LALR(1) vs GLR grammar
+ *  LALR(1) CFG for ASN.1 Notation
+ *  GLR     CFG for ASN.1 Notation, Module, Parameterized, Information Object Class
  */
+parser_t& get_lalr1_parser_asn1_notation_by_build();
+parser_t& get_lalr1_parser_asn1_notation_by_import();
+parser_t& get_glr_parser_asn1_by_build();
+parser_t& get_glr_parser_asn1_by_import();
+
 extern const std::vector<parser_production> asn1_notation_productions;
 extern const std::set<std::string> asn1_notation_terminals;
 extern const std::map<std::pair<uint32, std::string>, parser_action> asn1_notation_action_table;

@@ -3,7 +3,7 @@
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1083            │
+│ Edition 1 · Revision 1090            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
@@ -43,6 +43,24 @@ The important subject is therefore the **processing model** rather than any indi
 ```
 
 This layer is where hotplace's common server machinery becomes reusable across plain TCP/UDP and secure TLS/DTLS paths.
+
+## Why this layer exists
+
+A socket read is too low-level to be the unit of server processing, while an application message is too high-level to be known by the transport layer. `network_server` exists between those two points.
+
+```text
+socket / multiplexer
+        ↓
+     session
+        ↓
+  accumulated bytes
+        ↓
+ protocol framing/state
+        ↓
+ application message
+```
+
+The central problem is therefore **where to preserve transport-independent execution state while allowing each protocol to define its own message boundaries**. This explains the session, stream, protocol-group, and dispatch boundaries described below.
 
 ## History
 
@@ -139,6 +157,22 @@ application message
 For example, TLS records carry TLS handshake messages, while HTTP/2 frames carry HTTP/2 protocol events. QUIC uses packets and frames while carrying TLS handshake bytes through CRYPTO frames.
 
 The network server's common session/stream machinery stops at the boundary where concrete protocol semantics take over.
+
+## Cross-Topic Boundary
+
+`network_server` provides the execution context in which protocol layers consume transport input; it does not own the semantics of those protocols.
+
+```text
+network_server
+  │
+  ├── TCP stream ──► TLS record ──► HTTP/1.1 or HTTP/2
+  │
+  ├── UDP datagram ──► DTLS / protocol-specific processing
+  │
+  └── UDP datagram ──► QUIC packet/frame ──► HTTP/3
+```
+
+The important distinction is that the common server layer owns **when and where processing occurs**, while TLS, QUIC, HTTP/2, and HTTP/3 own **what the bytes mean**. The current HTTP/3 server path is especially important to read as a boundary: QUIC endpoint selection exists, but the HTTP/3 request-consumption path is not yet connected to `http_server` in the same way as HTTP/1.1 and HTTP/2.
 
 ## Structural
 
@@ -905,9 +939,36 @@ sdk/net/server/
   types.hpp
 ```
 
+## Cross-Topic Verification
+
+Verification at the network-server boundary is different from protocol-vector verification. The server layer is primarily exercised through executable I/O paths, while TLS, QUIC, and HTTP topics provide protocol-specific vectors and captures.
+
+```text
+protocol vectors / captures
+          │
+          ▼
+   protocol implementation
+          │
+          ▼
+    network_server
+          │
+   ┌──────┼────────┐
+   ▼      ▼        ▼
+  TCP    TLS/DTLS  QUIC
+   │      │        │
+   └──────┴────────┘
+          ▼
+      session/event
+          │
+          ▼
+      application
+```
+
+PCAPNG is therefore useful for checking the traffic observed around this boundary, but it does not replace the network-server tests that verify session scheduling, stream retention, event ordering, and transport integration. The current QUIC boundary remains incomplete at the common `network_server` level.
+
 ## Status
 
-| Area | Revision 1076 |
+| Area | Revision 1090 |
 |---|---|
 | TCP server path | Implemented |
 | UDP server path | Implemented |

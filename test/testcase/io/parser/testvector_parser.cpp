@@ -12,6 +12,11 @@
 #include <hotplace/test/testcase/io/parser/asn1module.hpp>
 #include <hotplace/test/testcase/io/sample.hpp>
 
+/**
+ * PoC
+ * - context-aware parser switching
+ * - lexer swtiches to LALR(1) parsers
+ */
 void test_yaml_testvector_parser() {
     t_aho_corasick_reducer<uint32, parser_token, memberof_parser_token> ac;
     prepare_asn1module_reducer(ac);

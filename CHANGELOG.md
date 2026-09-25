@@ -37,7 +37,8 @@
     * CBOR
 
 * details
-  * Revision 1092
+  * Revision 1093
+    * CFG for ASN.1 extension marker version 1 and 2
   * Revision 1091
     * CFG for ASN.1 information object class
   * Revision 1090

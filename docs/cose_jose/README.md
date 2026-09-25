@@ -1,6 +1,6 @@
 # COSE / JOSE — CBOR, JSON, Keys & Key Exchange
 
-**Edition 1 · Revision 1078**
+**Edition 1 · Revision 1090**
 
 ## Context
 
@@ -32,6 +32,30 @@ COSE and JOSE occupy a similar role in `hotplace`: they define application-level
 ```
 
 The important relationship is not that COSE and JOSE share one wire format. They share a **security-object problem space** and rely on common cryptographic key infrastructure.
+
+## Reading Path
+
+A first reading is easier if the security-object problem is separated from the
+cryptographic operation that eventually executes it:
+
+```text
+application data
+      ↓
+COSE / JOSE security object
+      ↓
+algorithm + key representation
+      ↓
+crypto operation
+      ↓
+serialized security object
+```
+
+The middle boundary is the important one. A COSE_Key or JWK describes a key in a
+standard security-object format, while `crypto_key` and `crypto_keychain` provide
+the project-level key material and selection mechanisms used to perform an
+operation. The same distinction appears when TLS consumes `crypto`: the protocol
+selects and sequences the operation, while `crypto` performs the reusable
+cryptographic work.
 
 ## History
 
@@ -86,6 +110,29 @@ security object
 ```
 
 The object layer owns representation and protocol semantics. The crypto layer owns key material and primitive operations.
+
+## Cross-Topic Boundary
+
+The relationship with `crypto` is intentionally one-way in terms of semantic
+ownership:
+
+```text
+COSE / JOSE
+  │ security-object semantics
+  │ algorithm identifiers
+  │ recipient / signing / encryption structure
+  ▼
+crypto
+  │ key material
+  │ operation execution
+  │ algorithm vocabulary
+  ▼
+OpenSSL / OQS provider path
+```
+
+TLS reaches the same crypto substrate through a different protocol state machine.
+That makes TLS and COSE/JOSE **parallel consumers of common cryptographic
+capabilities**, not layers of one security-object protocol.
 
 ## Structural
 
@@ -178,7 +225,7 @@ This separation matters because a COSE Key or JWK is not itself the underlying c
 
 ### Key exchange
 
-`crypto_keyexchange` is another layer below COSE/JOSE and is especially relevant to recipient/key-management algorithms.
+`crypto_keyexchange` is another layer below COSE/JOSE. It provides cryptographic key-establishment operations that a security-object layer may invoke; the COSE/JOSE layer still owns the protocol-specific recipient/key-management structure and algorithm identifiers.
 
 ```text
 peer public share
@@ -200,7 +247,7 @@ shared secret   encapsulation
 
 The current implementation exposes `keygen`, `exchange`, `encaps`, and `decaps`.
 
-The same abstraction is used for classical ECDH/ECDHE-style agreement and ML-KEM-based operations, including hybrid groups used by the TLS-related crypto infrastructure.
+The abstraction covers classical ECDH-style agreement and KEM-oriented operations, including ML-KEM. TLS and COSE/JOSE may consume related key-establishment capabilities, but each protocol defines its own wire-level and state-machine semantics.
 
 ## Flow
 
@@ -395,7 +442,7 @@ That makes the testcase tree a second layer of documentation for the implementat
 
 ## Status
 
-As of Revision 1078:
+The latest explicitly recorded implementation checkpoint is Revision 1078:
 
 - CBOR is an established lower serialization layer.
 - COSE is implemented as a structured security-object layer over CBOR.

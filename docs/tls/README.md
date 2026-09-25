@@ -1,6 +1,6 @@
 # TLS
 
-> Edition 1 · Revision 1084  
+> Edition 1 · Revision 1090  
 > Documented with GPT-5.6 Luna — study, reconstruction & review
 
 ## Context
@@ -36,6 +36,32 @@ Those questions map to different layers of the source rather than to one monolit
                   transport use
               TCP / DTLS / QUIC
 ```
+
+### Reading Path
+
+A first reading of TLS is easier if the implementation is followed from protocol
+meaning to protection rather than from individual classes:
+
+```text
+wire record / handshake
+        ↓
+negotiation and session state
+        ↓
+transcript and key schedule
+        ↓
+traffic secrets / protection
+        ↓
+transport-specific use
+   ┌────┼───────────┐
+   ↓    ↓           ↓
+  TCP  DTLS        QUIC
+   │    │           │
+ TLS record     CRYPTO frame
+```
+
+This also explains the later QUIC boundary: the TLS handshake remains TLS
+semantics, while the transport carrying those handshake bytes may be TCP records,
+DTLS records, or QUIC CRYPTO frames.
 
 ## History
 
@@ -104,6 +130,14 @@ Transport framing state
 
 `tls_session` is the meeting point of these domains; the concrete wire structures remain in record, handshake, extension, and QUIC modules.
 
+### TLS consumes cryptography; it does not own the primitive substrate
+TLS selects and composes cryptographic operations according to handshake state, negotiated parameters, transcript state, and protocol version. The reusable key, hash, MAC, signature, AEAD, and key-exchange capabilities belong to `sdk/crypto`; TLS owns when and why those operations are invoked and how their results change protocol state.
+
+This is the same boundary seen from the other direction in COSE/JOSE: those
+security-object layers also select keys and algorithms, but they add their own
+message, recipient, and serialization semantics. `crypto` therefore answers the
+operation question; the consuming protocol answers the meaning-and-state question.
+
 ### TLS 1.2 and TLS 1.3 are different protection models
 
 TLS 1.2 retains the older master-secret/key-block model and supports CBC/HMAC as well as AEAD suites. TLS 1.3 uses a transcript-driven HKDF key schedule and traffic secrets, with AEAD record protection.
@@ -133,6 +167,36 @@ TLS inside QUIC
 ```
 
 This distinction explains why `tls_session` and `tls_protection` are reusable from the QUIC implementation while TLS record classes remain separate from QUIC packet classes.
+
+## Cross-Topic Boundary
+
+TLS owns the handshake, transcript/key schedule, authentication negotiation, and TLS record protection semantics. It uses the shared `crypto` substrate rather than defining the underlying cryptographic primitives.
+
+For ordinary TLS/HTTP operation:
+
+```text
+HTTP/1.1 or HTTP/2
+        ↓
+   TLS application data
+        ↓
+    TLS record
+        ↓
+     TCP stream
+```
+
+For QUIC, the wire relationship changes:
+
+```text
+TLS handshake bytes
+        ↓
+   QUIC CRYPTO frame
+        ↓
+    QUIC packet
+        ↓
+        UDP
+```
+
+Thus TLS semantics are reused by QUIC without turning QUIC into a TLS-record transport.
 
 ## Structural
 
@@ -536,9 +600,35 @@ TLS 1.3 ML-KEM / hybrid groups
 
 The PCAP/YAML replay tests connect these captures to reproducible protocol verification.
 
+## Cross-Topic Verification
+
+TLS verification uses several complementary forms rather than a single test style. RFC examples verify protocol-defined constructions; cryptographic tests isolate protection primitives and state transitions; interoperability captures verify real wire behavior; PCAP/YAML replay makes selected traffic reproducible.
+
+```text
+TLS study
+   ├── RFC examples / known vectors
+   ├── construction tests
+   ├── crypto tests
+   └── interoperability
+            │
+            ▼
+          PCAPNG
+            │
+        SSLKEYLOG
+            │
+            ▼
+       YAML replay
+            │
+      ┌─────┴─────┐
+      ▼           ▼
+    TLS/DTLS     QUIC/TLS
+```
+
+The last branch is intentionally shared with QUIC: TLS supplies handshake semantics and key material, while QUIC replay owns QUIC packet/frame interpretation. PCAPNG is the observation artifact; it does not become part of TLS's protocol semantics.
+
 ## Status
 
-| Area | Revision 1084 state |
+| Area | Revision 1090 state |
 |---|---|
 | TLS 1.2 protocol / protection | implemented and extensively tested |
 | TLS 1.3 protocol / protection | implemented and extensively tested |
@@ -581,7 +671,7 @@ TLS therefore owns the handshake/security semantics shared with QUIC, while TCP/
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1084            │
+│ Edition 1 · Revision 1090            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘

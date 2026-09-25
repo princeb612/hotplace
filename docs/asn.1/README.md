@@ -1,6 +1,6 @@
 # ASN.1 Semantic Construction — Notation to Runtime Object
 
-**Edition 1 · Revision 1083**
+**Edition 1 · Revision 1090**
 
 ## Context
 
@@ -11,6 +11,30 @@ This document owns the question:
 > How does textual ASN.1 become a semantic runtime schema?
 
 It connects the parser, parse tree, semantic construction, runtime ASN.1 types, and constraint model. Encoding/decoding behavior remains owned by the corresponding ASN.1 runtime topics and tests.
+
+For a reader, the important transition is **syntax → meaning**. The parser can
+recognize the notation, but it does not by itself create the runtime type/reference
+relationships that the rest of ASN.1 processing needs.
+
+## Why this boundary exists
+
+The existing ASN.1 runtime already knows how to represent types, references, tags, and constraints. The missing bridge was a reliable way to take **human-written ASN.1 notation** and construct those semantic objects.
+
+That is why the work proceeds in stages:
+
+```text
+ASN.1 text
+   ↓
+parser understands syntax
+   ↓
+parse tree preserves structure
+   ↓
+publisher interprets meaning
+   ↓
+runtime owns the resulting schema
+```
+
+Reading the document in that direction explains why `parse_tree`, `asn1_publisher`, and `asn1_runtime` are separate concerns rather than three names for the same operation.
 
 ## History
 
@@ -28,8 +52,15 @@ The CHANGELOG gives the following development path:
 - **Revision 1078** — CHOICE, DEFAULT, OPTIONAL
 - **Revision 1081–1082** — constraints in `asn1_publisher`, including exclusive boundaries and string ranges
 - **Revision 1083** — `string_set` `erase_range`, `intersect`
+- **Revision 1086** — ASN.1 loader/compiler sketch
+- **Revision 1087** — LALR parser import
+- **Revision 1088** — CFG for ASN.1 module
+- **Revision 1089** — context-aware parser switching pattern
+- **Revision 1090** — GLR parser and broader CFG experiments
 
 The history shows the transition from an ASN.1 runtime model, through parser infrastructure, toward semantic reconstruction of that model from notation.
+
+At Revision 1090, this transition is still experimental. The production `asn1_runtime` path remains LALR-based. The integrated CFG covers ASN.1 notation, module, parameterized constructs, and information object class. GLR application remains experimental, while loader integration is a later step.
 
 ## Conceptual
 
@@ -354,7 +385,7 @@ The loop verifies structural reconstruction rather than only parser acceptance.
 
 ## Status
 
-At Revision 1083:
+At Revision 1090:
 
 - ASN.1 notation parsing has CFG/LALR infrastructure and a parse-tree representation.
 - Parse-tree visitation exposes the shift/reduce sequence used for reconstruction.
@@ -363,5 +394,6 @@ At Revision 1083:
 - Constraints have been integrated into the same semantic-construction path, including range/string-range handling and compound constraint operations.
 - The resulting runtime representation is an existing `asn1_object*` model rather than a separate notation-only representation.
 - Revision 1083 marks the current constraint-supporting `string_set` operations as part of this completed reconstruction stage.
+- Revisions 1086–1090 begin a separate parser/loader study: broader CFG coverage, parser switching, and GLR experimentation. The integrated CFG now covers notation, module, parameterized constructs, and information object class, but the experimental GLR path is not yet the production `asn1_runtime` parser.
 
-The next natural question is no longer how to create a runtime object from notation, but how that runtime schema participates in the broader runtime workflow: type lookup, value construction, encoding/decoding, and possible C++ source generation.
+The next parser question is how the broader grammar can be parsed and then mapped into semantic construction. Loader integration and broader runtime workflow remain later stages.

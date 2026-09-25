@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file    lalr_parser.hpp
+ * @file    lalr1_parser.hpp
  * @author  Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc    Context-aware parser switching architecture for complex grammars (e.g., ASN.1)
  *
@@ -15,10 +15,15 @@
  *   learn  |0.004224046|build parsing table
  *   import |0.000004737|import parsing table
  *
+ * S' -> Statement
+ * S' -> ModuleDefinition -> AssignmentList -> Statement
+ *
+ * If these two paths coexist in a single LALR parsing table, their lookahead sets overlap during the calculation of the state closure, making a conflict unavoidable.
+ *
  */
 
-#ifndef __HOTPLACE_SDK_IO_PARSER_LALRPARSER__
-#define __HOTPLACE_SDK_IO_PARSER_LALRPARSER__
+#ifndef __HOTPLACE_SDK_IO_PARSER_LALR1PARSER__
+#define __HOTPLACE_SDK_IO_PARSER_LALR1PARSER__
 
 #include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/io/parser/cfg_grammar.hpp>
@@ -56,11 +61,11 @@ namespace io {
  *                  return error;
  *          }
  */
-class lalr_parser : public parser_t {
+class lalr1_parser : public parser_t {
    public:
-    lalr_parser() = default;
-    explicit lalr_parser(const cfg_grammar& g);
-    explicit lalr_parser(cfg_grammar&& g);
+    lalr1_parser() = default;
+    explicit lalr1_parser(const cfg_grammar& g);
+    explicit lalr1_parser(cfg_grammar&& g);
 
     virtual void set_grammar(const cfg_grammar& g);
     virtual void set_grammar(cfg_grammar&& g);
@@ -73,11 +78,11 @@ class lalr_parser : public parser_t {
      *          cfg_grammar grammar;
      *          grammar.add_production(...);
      *          grammar.add_terminal(...);
-     *          lalr_parser lalr(std::move(grammar));
+     *          lalr1_parser lalr(std::move(grammar));
      *          lalr.build();
      *
      *          // import prebuild
-     *          lalr_parser lalr;
+     *          lalr1_parser lalr;
      *          lalr.import(asn1_productions, asn1_action_table, asn1_goto_table);
      */
     virtual return_t learn();
@@ -93,6 +98,8 @@ class lalr_parser : public parser_t {
      * @param   parse_tree* pt [outopt] generate parse tree if necessary
      */
     virtual return_t parse(const std::vector<parser_token>& tokens, parse_tree* pt = nullptr);
+
+    virtual parser_type_t get_type() const;
 
    protected:
    private:

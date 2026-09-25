@@ -1,6 +1,6 @@
 # HPACK
 
-Edition 1 · Based on hotplace Revision 1072
+Edition 1 · Based on hotplace Revision 1090
 
 > This document follows the [Document Guide](../guide/document-guide.md).
 
@@ -23,13 +23,46 @@ HTTP/2
 The HTTP/2 frame model belongs to the HTTP/2 document. Here it is shown only
 to establish HPACK's position.
 
-HPACK is also part of the later study path:
+HPACK is one branch of the HTTP header-field representation problem:
 
 ```text
-HPACK → HTTP/2
-  │
-  └→ QPACK → HTTP/3 → QUIC
+HTTP/2 ──► Header Block ──► HPACK
+
+HTTP/3 ──► Field Section ──► QPACK
+              │
+              ▼
+             QUIC
 ```
+
+HPACK and QPACK address related representation problems, but they belong to
+different protocol contexts. HPACK is the HTTP/2 mechanism; QPACK is the
+HTTP/3 mechanism designed for QUIC's multiplexed transport model. This
+document focuses on HPACK; the HTTP/3 document keeps the QPACK relationship
+at the protocol boundary.
+
+## Why QPACK Appears Here
+
+The reason QPACK appears in an HPACK document is not that QPACK is an extension
+of HPACK in the source tree. It is the next step in the same study question:
+**how should HTTP header fields be represented efficiently when the surrounding
+transport and protocol model changes?**
+
+The important reading boundary is therefore:
+
+```text
+HTTP/2
+  ↓
+HPACK
+
+HTTP/3
+  ↓
+QPACK
+  ↓
+QUIC streams / multiplexing
+```
+
+The two mechanisms should be compared at the conceptual boundary, not merged
+into one implementation story.
 
 ## History
 
@@ -255,7 +288,7 @@ document is synchronized with a newer edition.
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1072            │
+│ Edition 1 · Revision 1090            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘

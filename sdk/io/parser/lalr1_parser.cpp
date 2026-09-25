@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file   lalr_parser.cpp
+ * @file   lalr1_parser.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
  * @desc
  *
@@ -15,7 +15,7 @@
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/base/unittest/console_color.hpp>
-#include <hotplace/sdk/io/parser/lalr_parser.hpp>
+#include <hotplace/sdk/io/parser/lalr1_parser.hpp>
 #include <hotplace/sdk/io/parser/parser_resource.hpp>
 #include <hotplace/sdk/io/parser/parser_sdk.hpp>
 #include <iomanip>
@@ -25,24 +25,24 @@
 namespace hotplace {
 namespace io {
 
-lalr_parser::lalr_parser(const cfg_grammar& g) : _grammar(g) {}
+lalr1_parser::lalr1_parser(const cfg_grammar& g) : _grammar(g) {}
 
-lalr_parser::lalr_parser(cfg_grammar&& g) : _grammar(std::move(g)) {}
+lalr1_parser::lalr1_parser(cfg_grammar&& g) : _grammar(std::move(g)) {}
 
-void lalr_parser::set_grammar(const cfg_grammar& g) {
+void lalr1_parser::set_grammar(const cfg_grammar& g) {
     _grammar = g;
     _is_table_built = false;
 }
 
-void lalr_parser::set_grammar(cfg_grammar&& g) {
+void lalr1_parser::set_grammar(cfg_grammar&& g) {
     _grammar = std::move(g);
     _is_table_built = false;
 }
 
-const cfg_grammar& lalr_parser::get_cfg_grammar() const { return _grammar; }
+const cfg_grammar& lalr1_parser::get_cfg_grammar() const { return _grammar; }
 
 // LALR(1) dynamic table creation
-return_t lalr_parser::learn() {
+return_t lalr1_parser::learn() {
     return_t ret = errorcode_t::success;
 
     critical_section_guard guard(_lock);
@@ -144,8 +144,8 @@ return_t lalr_parser::learn() {
     return ret;
 }
 
-return_t lalr_parser::import(const std::vector<parser_production>& productions, const std::map<std::pair<uint32, std::string>, parser_action>& action_table,
-                             const std::map<std::pair<uint32, std::string>, uint32>& goto_table) {
+return_t lalr1_parser::import(const std::vector<parser_production>& productions, const std::map<std::pair<uint32, std::string>, parser_action>& action_table,
+                              const std::map<std::pair<uint32, std::string>, uint32>& goto_table) {
     return_t ret = errorcode_t::success;
     critical_section_guard guard(_lock);
     _grammar.clear();
@@ -156,13 +156,13 @@ return_t lalr_parser::import(const std::vector<parser_production>& productions, 
     return ret;
 }
 
-bool lalr_parser::ready() const {
+bool lalr1_parser::ready() const {
     critical_section_guard guard(_lock);
     return _is_table_built;
 }
 
 // Perform dynamically generated table-based parsing
-return_t lalr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* pt) {
+return_t lalr1_parser::parse(const std::vector<parser_token>& tokens, parse_tree* pt) {
     return_t ret = errorcode_t::success;
 
     __try2 {
@@ -383,6 +383,8 @@ return_t lalr_parser::parse(const std::vector<parser_token>& tokens, parse_tree*
 
     return ret;
 }
+
+parser_type_t lalr1_parser::get_type() const { return parser_type_t::lalr1; }
 
 }  // namespace io
 }  // namespace hotplace

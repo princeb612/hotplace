@@ -68,6 +68,7 @@ int main(int argc, char** argv) {
         testcase_netlink();
     }
 
+    testcase_lexer();
     testcase_parser();
     testcase_testvector_parser();
 

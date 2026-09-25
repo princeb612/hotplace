@@ -29,6 +29,7 @@ void testcase_filestream();
 void testcase_mlfq();
 void testcase_netlink();
 
+void testcase_lexer();
 void testcase_parser();
 void testcase_testvector_parser();
 

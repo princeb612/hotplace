@@ -68,6 +68,8 @@ const parser_token_resource parser_symbol_tokens[] = {
     {token_userparamtype, SYMBOL_USERPARAMTYPE},
     {token_usertype, SYMBOL_USERTYPE},
     {token_eof, "$"},
+    {token_ellipsis, "ellipsis"},
+    {token_range, "range"},
 };
 const size_t sizeof_parser_symbol_tokens = RTL_NUMBER_OF(parser_symbol_tokens);
 
@@ -88,6 +90,7 @@ const size_t sizeof_parser_basic_tokens = RTL_NUMBER_OF(parser_basic_tokens);
 const struct parser_token_resource parser_asn1_tokens[] = {
     {token_assign, "::="},
     {token_comments, "--"},
+    {token_ellipsis, "..."},
 
     // BitStringType ~ RelativeOIDType
     {token_bool, "BOOLEAN"},
@@ -106,12 +109,14 @@ const struct parser_token_resource parser_asn1_tokens[] = {
     {token_numstring, "NumericString"},
     {token_printstring, "PrintableString"},
     {token_t61string, "TeletexString"},
+    {token_t61string, "T61String"},
     {token_videotexstring, "VideotexString"},
     {token_ia5string, "IA5String"},
     {token_utctime, "UTCTime"},
     {token_generalizedtime, "GeneralizedTime"},
     {token_graphicstring, "GraphicString"},
     {token_visiblestring, "VisibleString"},
+    {token_visiblestring, "ISO646String"},
     {token_genaralstring, "GeneralString"},
     {token_universalstring, "UniversalString"},
     {token_cstring, "CHARACTER STRING"},
@@ -144,6 +149,7 @@ const struct parser_token_resource parser_asn1_tokens[] = {
     // constraints
     {token_union, "|"},
     {token_intersection, "INTERSECTION"},
+    {token_intersection, "INTERSECT"},
     {token_except, "EXCEPT"},
     {token_allexcept, "ALL EXCEPT"},
     {token_size, "SIZE"},

@@ -1,6 +1,6 @@
 # HTTP/3 — Study Boundary & Current State
 
-> Edition 1 · Revision 1076
+> Edition 1 · Revision 1090
 
 ## Context
 
@@ -30,7 +30,9 @@ HTTP/3
 The current source contains an HTTP/3 frame/protocol area, but this document does
 **not** describe HTTP/3 as a completed implementation. Its purpose in Edition 1 is
 to preserve the current study boundary and the relationship between HTTP/3, QUIC,
-and QPACK.
+and QPACK. The HTTP server builder can select a QUIC service and `h3` ALPN, but the
+current `http_server::consume()` path dispatches HTTP/1.1 and HTTP/2 requests; it does
+not yet provide an equivalent HTTP/3 request-consumption path.
 
 ## History
 
@@ -51,7 +53,7 @@ semantics supplied by HTTP/3.
   and transport-level control.
 - **HTTP/3 frames** carry HTTP protocol information over QUIC streams.
 - **Control Stream** carries connection-level HTTP/3 control information.
-- **QPACK** provides HTTP field compression for HTTP/3.
+- **QPACK** provides the header-field representation mechanism for HTTP/3.
 - **Request/response streams** carry the HTTP message exchange using HTTP/3 frames.
 
 The most important relationship for this project is therefore:
@@ -69,6 +71,49 @@ HTTP/3 frame sequence
 
 HTTP/3 should not be used as a second name for QUIC. The two layers have different
 responsibilities and should remain separate in the documentation.
+
+### Reading Path
+
+The simplest way to enter this topic is to start where QUIC has already delivered
+ordered stream bytes:
+
+```text
+QUIC packet / protection
+        ↓
+QUIC stream delivery
+        ↓
+HTTP/3 frame boundary
+        ↓
+HTTP/3 control / request semantics
+        ↓
+HTTP message meaning
+```
+
+QPACK belongs at the header-field representation boundary inside this path. It
+does not replace HTTP/3 semantics, and it does not become part of QUIC transport.
+
+Its relationship to HPACK is useful for orientation: both address efficient HTTP
+header-field representation, but QPACK is defined for HTTP/3 and the QUIC
+multiplexed transport model rather than being an HTTP/2 HPACK implementation
+carried forward unchanged.
+
+## Cross-Topic Boundary
+
+At the protocol level, HTTP/3 starts at the QUIC stream boundary rather than at a TCP byte-stream boundary. In the current hotplace server integration, the QUIC endpoint configuration exists one step earlier, while HTTP/3 request dispatch remains a study/implementation boundary. QUIC owns packetization, transport state, and stream delivery; HTTP/3 interprets stream bytes as HTTP/3 frames and control/request semantics.
+
+```text
+UDP
+ ↓
+QUIC packet / frame
+ ↓
+QUIC stream
+ ↓
+HTTP/3 frame
+ ↓
+HTTP semantics
+```
+
+TLS remains part of QUIC's handshake and key-material path, but HTTP/3 does not consume ordinary TLS records. This distinction is important when relating the HTTP/3, QUIC, and TLS documents.
 
 ## Structural
 
@@ -160,6 +205,30 @@ belong to QUIC/TLS documentation; HTTP message framing belongs here.
 
 The current HTTP/3 source should be read together with the surrounding study areas.
 
+### HPACK and QPACK as a reading bridge
+
+The easiest way to connect the HTTP/2 and HTTP/3 documents is to keep the
+problem constant while changing the surrounding protocol model:
+
+```text
+HTTP/2 frame
+    ↓
+Header Block
+    ↓
+HPACK
+
+HTTP/3 frame
+    ↓
+Field Section
+    ↓
+QPACK
+    ↓
+QUIC stream / multiplexing
+```
+
+This comparison explains why QPACK appears in the HTTP/3 story without making
+HPACK and QPACK one implementation layer.
+
 ### Related studies
 
 - HTTP/2 frame study: `test/testcase/net/http/testcase_http2_frame.cpp`
@@ -193,6 +262,26 @@ QUIC Packet
 
 This keeps HTTP/3 as a bridge between the already-studied HTTP/2/HPACK world and
 the QUIC/QPACK implementation areas without overstating project completion.
+
+## Cross-Topic Verification
+
+HTTP/3 verification must be read as a layered path because the current project does not claim a complete HTTP/3 stack. Existing QUIC capture replay demonstrates the lower boundary, while HTTP/3 frame/QPACK work provides protocol-specific study material.
+
+```text
+real HTTP/3 traffic
+        │
+      PCAPNG
+        │
+   QUIC packet replay
+        │
+   QUIC streams
+        │
+ HTTP/3 frame study
+        │
+      QPACK
+```
+
+This is a verification relationship, not a claim of end-to-end HTTP/3 server support. The current status boundary remains explicit in this document.
 
 ## Status
 
@@ -237,7 +326,7 @@ HTTP/3 ──► QPACK
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1076            │
+│ Edition 1 · Revision 1090            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘

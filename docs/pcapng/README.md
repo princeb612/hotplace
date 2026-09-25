@@ -3,7 +3,7 @@
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1083            │
+│ Edition 1 · Revision 1090            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
@@ -14,6 +14,26 @@
 PCAPNG is not treated as a binary collection to be packaged with the documentation. The repository captures are **development and verification traces** connecting implementation work with real wire traffic.
 
 The large `.pcapng` files remain in the source repository. This document records their role and provides source-relative anchors.
+
+## Why capture belongs in the study map
+
+A protocol implementation can pass unit tests and still behave differently on the wire when it meets a real peer. Captures provide the missing connection between **what the code is expected to do** and **what actually happened during interoperability**.
+
+```text
+protocol idea
+    ↓
+implementation
+    ↓
+real peer / client
+    ↓
+wire behavior
+    ↓
+PCAPNG
+    ↓
+analysis / replay / regression
+```
+
+PCAPNG is therefore documented as a cross-cutting verification boundary, not as another protocol layer. The protocol documents explain the meaning of the captured traffic; this document explains how the observation becomes reusable evidence.
 
 ## Conceptual
 
@@ -126,6 +146,36 @@ trial TLS debug trace
 ```
 
 That correspondence is a living development artifact: it lets implementation changes be compared against both protocol semantics and observed traffic.
+
+## Cross-Topic Verification
+
+PCAPNG is a verification boundary shared by the protocol topics rather than another protocol layer. It connects observed wire traffic to the protocol-specific state machines and, where available, deterministic replay vectors.
+
+```text
+implementation / interoperability
+            │
+            ▼
+         PCAPNG
+            │
+      ┌─────┼─────────┐
+      ▼     ▼         ▼
+     TLS   QUIC    HTTP/2 / HTTP/3
+      │     │         │
+      └─────┼─────────┘
+            ▼
+     protocol replay
+            │
+            ▼
+       test result
+```
+
+The important distinction is between three verification forms:
+
+- **Deterministic vectors** verify known protocol constructions or byte sequences.
+- **Interoperability captures** show that the implementation can exchange real traffic with external implementations.
+- **Capture replay** turns selected observations into repeatable regression input.
+
+The PCAPNG document therefore records the observation/reproduction boundary. The TLS, QUIC, HTTP/2, and HTTP/3 documents remain responsible for explaining what their protocol-specific replay means.
 
 ## Capture-Replay
 

@@ -104,6 +104,7 @@ enum token_t : uint32 {
     token_phrase,
     token_sentence,
     token_ellipsis,
+    token_extension_marker = token_ellipsis,  // ...
 
     // ASN.1
     token_asn1 = 0x1000,
@@ -130,7 +131,7 @@ enum token_t : uint32 {
     token_utctime,
     token_generalizedtime,
     token_graphicstring,
-    token_visiblestring,  // iso64string
+    token_visiblestring,  // iso646string
     token_genaralstring,
     token_universalstring,
     token_cstring,
@@ -159,7 +160,7 @@ enum token_t : uint32 {
     token_optional,  // OPTIONAL
 
     token_union,         // |
-    token_intersection,  // INTERSECTION
+    token_intersection,  // INTERSECTION, INTERSECT
     token_except,        // EXCEPT
     token_allexcept,     // ALL EXCEPT
     token_size,          // SIZE
@@ -200,6 +201,12 @@ enum token_t : uint32 {
 token_t ascii2token(byte_t c);
 
 using native_token_t = std::underlying_type<token_t>::type;
+
+enum class parser_type_t {
+    unknown,
+    lalr1,
+    glr,
+};
 
 enum class parser_action_t {
     shift,
@@ -287,7 +294,7 @@ struct parser_temporary_context_t {
 };
 
 class cfg_grammar;
-class lalr_parser;
+class lalr1_parser;
 class lexical_analyzer;
 class lexical_context;
 class lexical_token;
@@ -304,6 +311,7 @@ class parser_t {
     virtual return_t learn() = 0;
     virtual bool ready() const = 0;
     virtual return_t parse(const std::vector<parser_token>& tokens, parse_tree* pt = nullptr) = 0;
+    virtual parser_type_t get_type() const = 0;
 };
 
 static inline bool is_asn1type(native_token_t id) { return (token_bool <= id) && (token_of >= id); }

@@ -32,7 +32,7 @@ namespace io {
 
 class cfg_grammar {
     friend class glr_parser;
-    friend class lalr_parser;
+    friend class lalr1_parser;
 
    public:
     cfg_grammar();

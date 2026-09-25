@@ -15,7 +15,7 @@
 
 #include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/types.hpp>
-#include <hotplace/sdk/io/parser/lalr_parser.hpp>
+#include <hotplace/sdk/io/parser/lalr1_parser.hpp>
 #include <hotplace/sdk/io/parser/lexical_analyzer.hpp>
 #include <set>
 #include <unordered_map>
@@ -54,7 +54,7 @@ class asn1_runtime {
     asn1_value* get(asn1_object* item) const;
 
     lexical_analyzer& get_lexer();
-    lalr_parser& get_parser();
+    lalr1_parser& get_parser();
 
     /**
      * @brief   weakly-typed (schema-less)
@@ -163,7 +163,7 @@ class asn1_runtime {
     bool _parser_ready;
     lexical_context _lexcontext;
     lexical_analyzer _lex;
-    lalr_parser _lalr;
+    lalr1_parser _lalr;
 };
 
 }  // namespace io

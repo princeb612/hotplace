@@ -11,6 +11,7 @@
 
 #include <hotplace/test/testcase/io/parser/asn1module.hpp>
 
+#include "asn1_cfg_module.hpp"
 #include "sample.hpp"
 
 struct testvector {
@@ -216,7 +217,8 @@ void test_ac_asn1module() {
     struct testvector {
         const char* file;
     } table[] = {
-        {"example.asn1"}, {"example2.asn1"}, {"imports.asn1"}, {"parameterized.asn1"}, {"userprofile.asn1"},
+        {"example1.asn1"}, {"example2.asn1"}, {"example3.asn1"}, {"example4.asn1"},  {"example5.asn1"},  {"example6.asn1"},
+        {"example7.asn1"}, {"example8.asn1"}, {"example9.asn1"}, {"example10.asn1"}, {"example11.asn1"},
     };
 
     for (const auto& entry : table) {
@@ -261,11 +263,8 @@ void test_lalr_asn1module() {
         // clang-format on
     };
 
-    lalr_parser lalr_asn1module;
-    prepare_asn1module_grammar(lalr_asn1module);
-
     for (const auto& entry : table) {
-        test_asn1parser(lalr_asn1module, entry.text, entry.notation);
+        test_asn1parser(get_glr_parser_asn1_module_by_build(), entry.text, entry.notation, FLAG_DUMMY_POC_TOKEN);
     }
 }
 
@@ -294,17 +293,41 @@ void test_lalr_asn1module_oid() {
         // clang-format on
     };
 
-    lalr_parser lalr_asn1module;
-    prepare_asn1module_grammar(lalr_asn1module);
-
     for (const auto& entry : table) {
-        test_asn1parser(lalr_asn1module, entry.text, entry.notation);
+        test_asn1parser(get_glr_parser_asn1_module_by_build(), entry.text, entry.notation, FLAG_DUMMY_POC_TOKEN);
     }
 }
 
-void test_context_switch() {
-    _test_case.begin("LALR parser - context-switch");
-    //
+void test_glr_asn1module() {
+    _test_case.begin("GLR parser");
+
+    struct testvector {
+        const char* file;
+    } table[] = {
+        {"example1.asn1"},
+        {"example2.asn1"},
+        {"example3.asn1"},
+        {"example4.asn1"},
+        {"example5.asn1"},
+        {"example6.asn1"},
+        {"example7.asn1"},
+        {"example8.asn1"},
+        // extension markser version 1 and 2
+        {"example9.asn1"},
+        {"example10.asn1"},
+        {"example11.asn1"},
+    };
+
+    for (const auto& entry : table) {
+        file_stream fs;
+        fs.open(entry.file);
+        fs.begin_mmap();
+
+        basic_stream bs;
+        bs.write(fs.data(), fs.size());
+
+        test_asn1parser(get_glr_parser_asn1_by_build(), entry.file, bs.c_str());
+    }
 }
 
 void testcase_basic3() {
@@ -316,5 +339,5 @@ void testcase_basic3() {
     test_ac_asn1module();
     test_lalr_asn1module();
     test_lalr_asn1module_oid();
-    test_context_switch();
+    test_glr_asn1module();
 }

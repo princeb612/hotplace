@@ -1,6 +1,6 @@
 # hotplace study
 
-**Edition 1 · Revision 1084**
+**Edition 1 · Revision 1090**
 
 > A compact study map of the hotplace project.
 > The documents record concepts, relationships, development traces,
@@ -14,7 +14,50 @@
 The document structure and writing rules are defined once in the guide.
 Topic documents use that structure without repeating the guide.
 
-## Topic Map
+## How to Read This Study
+
+The map is organized around the questions a reader is likely to ask, not around
+the source-tree directory structure. A first reading can follow this path:
+
+```text
+project foundation
+      ↓
+structured I/O
+      ↓
+syntax / representation
+      ↓
+semantic models
+      ↓
+protocol and security state
+      ↓
+transport / server execution
+      ↓
+observation and verification
+```
+
+This is a reading path, not a build dependency graph. The useful question at
+each step is **why the next boundary became necessary**. The topic documents
+then provide the detailed history, structure, flow, and verification for that
+boundary. For a first reading, it is often clearer to choose one of these
+paths rather than read every topic in order:
+
+```text
+structured-data path
+Base → IO → Parser / Payload → ASN.1
+
+security path
+Base → Crypto → TLS → QUIC → HTTP/3
+Base → Crypto → COSE / JOSE
+
+network path
+Base → IO → Network Server → HTTP/2 / HTTP Server
+
+verification path
+any topic → interoperability / vectors → PCAPNG / replay
+```
+
+Each path is a learning route, not a claim about source dependency or
+development chronology.
 
 The documents are grouped by the question they primarily own. The grouping
 is not a dependency hierarchy: a topic may use another layer without owning
@@ -22,23 +65,31 @@ its concepts.
 
 ### Foundation
 
+- [Build](build/README.md)
 - [Error Model](error/README.md)
-- [Payload](payload/README.md)
+- [SDK Base](base/README.md)
+- [SDK I/O](io/README.md)
+- [Parser](io/parser/README.md)
+- [Payload](io/payload/README.md)
 
-`error` describes the common error/result model. `payload` describes the
-generic binary field-layout and reader/writer substrate used by higher-level
-protocol and security structures.
+`base` describes the reusable foundation for representation, algorithms,
+portability, runtime support, and verification. `io` describes the transition
+from generic representation to structured input/output, including payload,
+parser, CBOR, and ASN.1. `error` describes the common error/result model.
+`payload` describes the generic binary field-layout and reader/writer
+substrate used by higher-level protocol and security structures.
 
 ### Cryptographic and Security Semantics
 
 - [Cryptography](crypto/README.md)
 - [TLS](tls/README.md)
 - [COSE / JOSE](cose_jose/README.md)
-- [ASN.1 Semantic Construction](asn1/README.md)
+- [Parser / ASN.1 Semantic Construction](asn.1/README.md)
 
 `crypto` owns cryptographic keys and operations. TLS, JOSE, and COSE use that
-substrate but own their own protocol/security-object semantics. ASN.1 owns
-notation, parsing, semantic construction, and runtime schema/object meaning.
+substrate but own their own protocol/security-object semantics. Parser owns
+generic syntax processing; ASN.1 owns ASN.1 notation, semantic construction,
+and runtime schema/object meaning.
 
 ### Network and Protocol Processing
 
@@ -49,10 +100,11 @@ notation, parsing, semantic construction, and runtime schema/object meaning.
 - [HTTP/3](http3/README.md)
 - [QUIC](quic/README.md)
 
-These documents describe progressively higher protocol meaning over transport
-I/O. `network_server` owns session, scheduling, stream accumulation, protocol
-detection, framing consumption, and dispatch; individual protocol documents
-own their protocol semantics.
+These documents describe different boundaries that meet around transport I/O.
+They should not be read as one strictly increasing protocol stack:
+`network_server` owns session, scheduling, stream accumulation, protocol
+detection, framing consumption, and dispatch, while individual protocol
+documents own their protocol semantics.
 
 ### Observation and Reproduction
 
@@ -64,42 +116,39 @@ reproducible protocol test vectors.
 
 ## Relationship
 
-The overall relationship is better understood as **several interacting
-dimensions**, rather than one linear stack.
+The overall relationship is easier to understand as several interacting
+dimensions rather than as one strict stack. The following map is a reading aid:
 
 ```text
-                         APPLICATION / OBJECT SEMANTICS
-        ┌──────────────────────┬───────────────────────┬─────────────────────┐
-        │                      │                       │                     │
-      ASN.1                 COSE / JOSE              HTTP/1.x             HTTP/2
-        │                      │                       │                     │
-        │                      │                       │                   HPACK
-        │                      │                       │                     │
-        │                      └──────────┐            │                     │
-        │                                 │            │                     │
-        │                              crypto          │                     │
-        │                                 │            │                     │
-        │                              TLS ────────────┴─────────────────────┤
-        │                                 │                                  │
-        │                                 │                              HTTP/3
-        │                                 │                                  │
-        │                                 └──────────────┐                 QUIC
-        │                                                ▼                   │
-        │                                                ◄───────────────────┘
-        │                                                │
-        └────────────────────────────────────────────────┘
-                                                         │
-                                              network_server
-                                                         │
-                                      ┌──────────────────┴──────────────────┐
-                                      │                                     │
-                                     TCP                                   UDP
-                                      │                                     │
-                                      └──────────────────┬──────────────────┘
-                                                         │
-                                                      I/O/session
-                                                         │
-                                                      payload
+                         semantic meaning
+        ┌────────────────────┼─────────────────────┐
+        │                    │                     │
+      ASN.1              COSE / JOSE          HTTP semantics
+        │                    │                ┌────┴────┐
+        │                    │              HTTP/2    HTTP/3
+        │                    │                │         │
+        │                    │              HPACK      │
+        │                    │                │         │
+        └──────────────┬─────┴────────────────┴─────────┘
+                       │
+                 representation /
+                 cryptographic mechanisms
+                       │
+              ┌────────┴────────┐
+              │                 │
+           payload            crypto
+                                │
+                       ┌────────┴────────┐
+                       │                 │
+                      TLS              QUIC
+                       │                 │
+                       └────────┬────────┘
+                                │
+                         network_server
+                                │
+                         TCP / UDP / I/O
+                                │
+                          PCAPNG / replay
 ```
 
 The diagram is intentionally conceptual:
@@ -113,7 +162,6 @@ The diagram is intentionally conceptual:
   selection. PQC fits here as additional cryptographic operations and key
   types.
 - **TLS** owns handshake, transcript, key schedule, record protection, and
-  its
   transport integration. It consumes `crypto` rather than defining the
   underlying cryptographic algorithms.
 - **COSE / JOSE** own security-object and algorithm-container semantics,
@@ -131,49 +179,45 @@ The diagram is intentionally conceptual:
 
 ### Layer Ownership
 
-A useful way to read the repository is:
+A useful way to read the repository is to separate **meaning**, **mechanism**,
+and **execution**:
 
 ```text
-meaning
+meaning / protocol semantics
   │
   ├── ASN.1 notation / schema semantics
   ├── COSE / JOSE security-object semantics
-  ├── HTTP protocol semantics
-  └── TLS / QUIC protocol state
+  └── HTTP / TLS / QUIC protocol semantics
         │
-        ▼
-representation
-  │
-  └── payload / encoding / protocol field layout
-        │
-        ▼
-cryptographic substrate
-  │
-  └── crypto
-        │
-        ├── TLS
-        ├── COSE
-        ├── JOSE
-        └── PQC algorithms
-        │
-        ▼
-transport execution
-  │
-  └── network_server
-        │
-        ├── TCP
-        ├── UDP / DTLS
-        └── QUIC
-        │
-        ▼
-observation / verification
-  │
-  └── PCAPNG / capture-replay
+        ├───────────────┐
+        ▼               ▼
+representation     cryptographic substrate
+  │                    │
+  └── payload           └── crypto
+                           │
+                           ├── TLS
+                           ├── COSE / JOSE
+                           └── PQC algorithms
+        │                    │
+        └──────────┬─────────┘
+                   ▼
+             transport execution
+                   │
+                   └── network_server
+                         │
+                         ├── TCP
+                         ├── UDP / DTLS
+                         └── QUIC
+                               │
+                               ▼
+                       observation / verification
+                               │
+                               └── PCAPNG / replay
 ```
 
 This is not a strict call graph. It is a **topic ownership map**: each arrow
-means that the upper topic may depend on concepts from the lower topic, while
-the lower topic should not absorb the upper topic's protocol semantics.
+means that a topic may consume concepts or mechanisms from another topic.
+Shared substrates should not absorb the protocol semantics of their consumers.
 
 ## Important Cross-Topic Relationships
 
@@ -275,54 +319,75 @@ This makes PCAPNG a bridge between **implementation behavior** and
 
 ## Reading the Repository
 
-The recommended reading direction is not a single fixed sequence.
+A first-time reader does not need to follow the source tree or the development chronology. The documents are arranged so that the project can be understood by following the problems that led from one layer to the next.
 
-For protocol execution:
-
-```text
-network_server
-    → HTTP / QUIC
-    → TLS
-    → crypto / payload
-```
-
-For cryptographic/security semantics:
+A useful first pass is:
 
 ```text
-crypto
-    → TLS
-    → COSE / JOSE
-    → PQC-related work
+1. Build / Base
+      ↓
+2. IO foundation
+      ↓
+3. representation / syntax mechanisms
+      ├── Payload
+      └── Parser
+      ↓
+4. choose a semantic path
+      ├── ASN.1 → semantic construction → runtime
+      ├── Crypto → TLS / COSE / JOSE
+      └── Payload → network protocols
+      ↓
+5. Network Server
+      ↓
+6. HTTP/2 / QUIC / HTTP/3
+      ↓
+7. PCAPNG / verification
 ```
 
-For binary representation:
+This is a **reading path**, not a dependency graph. It is useful because each step answers a question raised by the previous one:
+
+- **Build / Base** — what common foundation does the project assume?
+- **IO foundation** — where do reusable stream, representation, and structured-data mechanisms live?
+- **Payload / Parser** — how are bytes laid out and how is language structure recognized?
+- **ASN.1** — how does recognized syntax become a semantic schema and runtime object?
+- **Crypto / TLS / COSE / JOSE** — how are cryptographic operations and security semantics organized?
+- **Network Server** — how does arriving transport data become scheduled, accumulated, and dispatched work?
+- **HTTP / QUIC** — how do concrete protocol semantics sit on top of those transport mechanisms?
+- **PCAPNG** — how are real implementation behaviors observed and turned into reproducible evidence?
+
+The reader can then branch according to interest:
 
 ```text
-payload
-    → protocol/security structures
-    → TLS / QUIC / HTTP
+                 hotplace
+                    │
+          ┌─────────┼─────────┐
+          ▼         ▼         ▼
+       ASN.1     Security   Network
+          │         │         │
+ parser → runtime  crypto    server
+                    │         │
+                 TLS/JOSE   HTTP/QUIC
+                              │
+                           PCAPNG
 ```
 
-For schema and semantic construction:
+The purpose of the documents is not to make the reader memorize class names. A topic should first explain **why the concept exists, what problem it solves, and where its boundary is**; source names are then provided as anchors for deeper inspection.
+
+For implementation verification, read the protocol document together with its verification material rather than treating a capture or testcase as an independent topic:
 
 ```text
-ASN.1 notation
-    → parser
-    → semantic construction
-    → runtime object/schema
+concept
+  ↓
+implementation
+  ↓
+interoperability / vector
+  ↓
+PCAPNG or replay
+  ↓
+observed result
 ```
 
-For implementation verification:
-
-```text
-live interoperability
-    → PCAPNG
-    → capture-replay
-    → testcase / vector
-```
-
-These are complementary reading paths through the same project, not competing
-architectures.
+These are complementary reading paths through the same project, not competing architectures.
 
 ## Relationship vs. History
 
@@ -338,7 +403,7 @@ this map does not imply that it was developed later.
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1084            │
+│ Edition 1 · Revision 1090            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘

@@ -3,7 +3,7 @@
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1078            │
+│ Edition 1 · Revision 1090            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
@@ -15,7 +15,7 @@ The HTTP server layer connects the generic `network_server` infrastructure with 
 
 It is therefore more useful to understand `http_server` as an orchestration layer than as an HTTP parser. Network events are converted into protocol-aware requests, routed through authentication and URI handling, and finally delivered to the application.
 
-The current implementation provides an HTTP/1.1 and HTTP/2 server path, with TLS integration and an HTTP/3/QUIC configuration path present in the builder.
+The current server execution path provides HTTP/1.1 and HTTP/2, with TLS integration. The builder also contains an HTTP/3/QUIC endpoint configuration path, but that path is not connected to the same HTTP request-consumption flow yet.
 
 ## History
 
@@ -49,7 +49,7 @@ HTTP server
     │
     ├── HTTP/1.1 protocol
     ├── HTTP/2 protocol
-    └── HTTP/3 configuration path
+    └── HTTP/3/QUIC endpoint configuration (current boundary)
     │
     ▼
 network_server
@@ -131,6 +131,28 @@ Consequently, stream boundaries are not HTTP message boundaries.
 
 UDP provides datagram boundaries, but the protocol above UDP may still have its own reconstruction rules. DTLS is an example.
 
+## Cross-Topic Boundary
+
+`http_server` is the application-facing orchestration layer above `network_server`. It selects/configures HTTP protocol handling, but does not replace the common session and transport machinery.
+
+```text
+application handler
+       ↑
+   http_request
+       ↑
+HTTP/1.1 / HTTP/2 request path
+       ↑
+network_server
+
+HTTP/3/QUIC configuration
+       ↑
+http_server_builder
+       ↑
+TCP / TLS or QUIC / UDP
+```
+
+The HTTP/3 entry is currently a configuration/source path rather than part of the HTTP request-consumption path. In particular, `startup_server()` selects the QUIC socket for `service_http3`, while the current registration/consume path adds HTTP/1.1 and optionally HTTP/2 protocol handlers. This is why the presence of an HTTP/3 endpoint in the builder should not be read as a completed end-to-end HTTP/3 server.
+
 ## Structural
 
 ### `http_server`
@@ -160,7 +182,7 @@ service_https  → TLS over TCP
 service_http3  → QUIC
 ```
 
-The server then registers the HTTP protocol handlers with the underlying network server.
+The server registers the HTTP/1.1 protocol handler and, when enabled, the HTTP/2 protocol handler with the underlying network server. The current HTTP/3 service selection does not add an HTTP/3 protocol handler to this path.
 
 ### Protocol selection
 
@@ -217,13 +239,11 @@ The builder opens the requested endpoints and selects ALPN according to the enab
 
 ```text
 HTTP/3 enabled → h3
-otherwise
-HTTP/2 enabled → h2
-otherwise
-HTTP/1.1       → http/1.1
+otherwise if HTTP/2 enabled → h2
+otherwise              → http/1.1
 ```
 
-The HTTP/3 path is present in the builder through the QUIC service, but it should not be interpreted as proof that the complete HTTP/3 server integration is finished.
+This ALPN selection describes the configured TLS/QUIC endpoint. It does not by itself establish that the corresponding HTTP protocol is connected to the request-consumption path; HTTP/3 remains outside the current `consume()` dispatch flow.
 
 ### Router as the application boundary
 
@@ -513,7 +533,7 @@ This makes packet captures part of the development feedback loop: they can expos
 
 ## Status
 
-As of Revision 1078 / Release 1.137:
+The latest explicitly recorded HTTP server implementation checkpoint is Revision 1078 / Release 1.137:
 
 - HTTP/1.1 server path — implemented and tested.
 - HTTP/2 server path — implemented and tested.

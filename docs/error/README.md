@@ -406,7 +406,7 @@ The broad `test/testcase` tree consequently benefits from the same result vocabu
 
 ## Status
 
-As of Revision 1078:
+The latest explicitly recorded implementation checkpoint is Revision 1078:
 
 - `errorcode_t` and `return_t` provide the common result representation.
 - `error_advisor` provides error-code/message lookup and category interpretation.

@@ -136,6 +136,8 @@ return_t glr_parser::import(const std::vector<parser_production>& productions, c
 
 return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* pt) {
     return_t ret = errorcode_t::success;
+    size_t shifted = 0;
+    size_t token_idx = 0;
 
     __try2 {
         if (false == _is_table_built) {
@@ -147,7 +149,6 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
         std::vector<std::shared_ptr<gss_node>> active_heads;
         active_heads.push_back(std::make_shared<gss_node>(0, nullptr, nullptr));
 
-        size_t token_idx = 0;
         size_t num_tokens = tokens.size();
         const auto& rules = _grammar.get_productions();
 
@@ -256,6 +257,7 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
                             if (nullptr != pt) {
                                 pt->on_shift(typestring, current_token.value);
                             }
+                            ++shifted;
                             next_heads.push_back(std::make_shared<gss_node>(act.target, head));
                         }
                     }
@@ -268,8 +270,8 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
                 if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
                     trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
                         valist va;
-                        va << typestring << current_token.value << current_token.type;
-                        dbs.vaprintln("no parser_action for state {1} with token {2} ({3})", va);
+                        va << typestring << current_token.value << current_token.type << token_idx;
+                        dbs.vaprintln("no parser_action for state {1} with token {2} ({3}) at [{4:03zi}]", va);
                     });
                 }
 #endif
@@ -279,17 +281,30 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
 
             // increment the input token index and replace the stack head only after a successful shift.
             active_heads = std::move(next_heads);
-            token_idx++;
+            ++token_idx;
         }
 
         if (false == accepted) {
             ret = errorcode_t::syntax_error;
+            __leave2;
         }
     }
-    __finally2;
+    __finally2 {
+#if defined DEBUG
+        if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
+            trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
+                valist va;
+                va << tokens.size() << token_idx << shifted;
+                dbs.vaprintln("tokens {1} token index {2} shifted {3}", va);
+            });
+        }
+#endif
+    }
 
     return ret;
 }
+
+parser_type_t glr_parser::get_type() const { return parser_type_t::glr; }
 
 }  // namespace io
 }  // namespace hotplace
