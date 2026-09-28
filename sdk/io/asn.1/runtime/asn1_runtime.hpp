@@ -54,7 +54,7 @@ class asn1_runtime {
     asn1_value* get(asn1_object* item) const;
 
     lexical_analyzer& get_lexer();
-    lalr1_parser& get_parser();
+    parser_t& get_parser();
 
     /**
      * @brief   weakly-typed (schema-less)
@@ -163,7 +163,8 @@ class asn1_runtime {
     bool _parser_ready;
     lexical_context _lexcontext;
     lexical_analyzer _lex;
-    lalr1_parser _lalr;
+    // lalr1_parser _lalr;
+    int _ready;
 };
 
 }  // namespace io

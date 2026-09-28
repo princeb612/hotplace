@@ -260,6 +260,7 @@ const error_description error_descriptions[] = {
     errordef(conflict_detected, "confilict detected"),
     errordef(invalid_handle, "invalid handle"),
     errordef(syntax_error, "syntax error"),
+    errordef(premature_state, "premature state"),
 
     errordef(not_supported, "not supported"),
     errordef(expect_failure, "expect failure (negative test)"),

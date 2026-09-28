@@ -15,6 +15,7 @@
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/base/unittest/console_color.hpp>
+#include <hotplace/sdk/io/parser/binary_parsing_table.hpp>
 #include <hotplace/sdk/io/parser/lalr1_parser.hpp>
 #include <hotplace/sdk/io/parser/parser_resource.hpp>
 #include <hotplace/sdk/io/parser/parser_sdk.hpp>
@@ -41,6 +42,8 @@ void lalr1_parser::set_grammar(cfg_grammar&& g) {
 
 const cfg_grammar& lalr1_parser::get_cfg_grammar() const { return _grammar; }
 
+cfg_grammar& lalr1_parser::get_cfg_grammar() { return _grammar; }
+
 // LALR(1) dynamic table creation
 return_t lalr1_parser::learn() {
     return_t ret = errorcode_t::success;
@@ -66,7 +69,7 @@ return_t lalr1_parser::learn() {
                     dbs << "{" << it->first.first << ", \"" << it->first.second << "\"}, " << it->second;
                 };
                 // written to be suitable for generating pre-built LALR(1) ACTION
-                auto lambda_action = [](typename std::map<std::pair<uint32, std::string>, parser_action>::const_iterator it, basic_stream& dbs) -> void {
+                auto lambda_action = [](typename std::map<std::pair<uint32, std::string>, parser_action_state>::const_iterator it, basic_stream& dbs) -> void {
                     static std::map<std::string, std::string> table = {
                         {"id", "SYMBOL_ID"}, {"usertype", "SYMBOL_USERTYPE"}, {"num", "SYMBOL_NUM"}, {"fp", "SYMBOL_FP"}, {"quot_string", "SYMBOL_QSTR"}};
 
@@ -144,21 +147,16 @@ return_t lalr1_parser::learn() {
     return ret;
 }
 
-return_t lalr1_parser::import(const std::vector<parser_production>& productions, const std::map<std::pair<uint32, std::string>, parser_action>& action_table,
-                              const std::map<std::pair<uint32, std::string>, uint32>& goto_table) {
-    return_t ret = errorcode_t::success;
-    critical_section_guard guard(_lock);
-    _grammar.clear();
-    _grammar._productions = productions;
-    _action_table = action_table;
-    _goto_table = goto_table;
-    _is_table_built = true;
-    return ret;
-}
-
 bool lalr1_parser::ready() const {
     critical_section_guard guard(_lock);
     return _is_table_built;
+}
+
+void lalr1_parser::clear() {
+    critical_section_guard guard(_lock);
+    _is_table_built = false;
+    _action_table.clear();
+    _goto_table.clear();
 }
 
 // Perform dynamically generated table-based parsing
@@ -232,7 +230,7 @@ return_t lalr1_parser::parse(const std::vector<parser_token>& tokens, parse_tree
                     trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
                         valist va;
                         va << current_state << typestring << current_token.value << current_token.type;
-                        dbs.vaprintln("no parser_action for state {1}:{2} with token {3} ({4})", va);
+                        dbs.vaprintln("no parser_action_state for state {1}:{2} with token {3} ({4})", va);
                     });
                 }
 #endif
@@ -265,7 +263,7 @@ return_t lalr1_parser::parse(const std::vector<parser_token>& tokens, parse_tree
 #endif
             }
 
-            parser_action act = act_it->second;
+            parser_action_state act = act_it->second;
 
             // 1. Shift
             if (act.type == parser_action_t::shift) {
@@ -384,7 +382,39 @@ return_t lalr1_parser::parse(const std::vector<parser_token>& tokens, parse_tree
     return ret;
 }
 
+return_t lalr1_parser::build(binary_parsing_table* table) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == table) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        for (const auto& item : _action_table) {
+            table->buildup_action(item.first.first, item.first.second, item.second);
+        }
+        for (const auto& item : _goto_table) {
+            table->buildup_goto(item.first.first, item.first.second, item.second);
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
 parser_type_t lalr1_parser::get_type() const { return parser_type_t::lalr1; }
+
+return_t lalr1_parser::buildup_action(uint32 state, const std::string& lookahead, parser_action_state action) {
+    return_t ret = errorcode_t::success;
+    _action_table.emplace(std::make_pair(state, lookahead), action);
+    return ret;
+}
+
+return_t lalr1_parser::buildup_goto(uint32 state, const std::string& nonterm, uint32 next_state) {
+    return_t ret = errorcode_t::success;
+    _goto_table.emplace(std::make_pair(state, nonterm), next_state);
+    return ret;
+}
+
+void lalr1_parser::imported() { _is_table_built = true; }
 
 }  // namespace io
 }  // namespace hotplace

@@ -38,3 +38,20 @@
     * ./test-netclient -P tls12 -T -k --trace
   * TLS 1.3
     * ./test-netclient -P tls13 -T -k --trace
+
+#### related implementation
+
+* [sdk/net](../../../sdk/net/README.md)
+* [sdk/net/tls](../../../sdk/net/tls/README.md)
+
+#### test sources
+
+* `sample.cpp`
+* `sample.hpp`
+* `test_netclient.cpp`
+
+#### test data / build files
+
+* `CMakeLists.txt`
+
+The applet is the client-side counterpart used with the TCP/UDP/TLS/DTLS and HTTP server applets listed above.

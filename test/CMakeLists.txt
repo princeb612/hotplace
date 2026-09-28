@@ -6,3 +6,4 @@
 
 add_subdirectory (testcase)
 add_subdirectory (applet)
+add_subdirectory (tool)

@@ -116,11 +116,12 @@ return_t prepare_lalr1_parser_asn1_module(parser_t& parser) {
 
     parser.set_grammar(std::move(grammar));
 
-    _logger->writeln("building LALR(1) parsing table dynamically...");
+    std::string name = resource->nameof(parser.get_type());
+    _logger->writeln("building %s parsing table dynamically...", name.c_str());
 
     ret = parser.learn();
-    _logger->writeln("LALR table generation %s", (errorcode_t::success == ret) ? "success" : "failure");
-    _test_case.test(ret, __FUNCTION__, "LALR(1) parser - ASSN.1 for Module (build parsing table)");
+    _logger->writeln("%s parsing table generation %s", name.c_str(), (errorcode_t::success == ret) ? "success" : "failure");
+    _test_case.test(ret, __FUNCTION__, "%s parser - ASSN.1 for Module (build parsing table)", name.c_str());
 
     return ret;
 }

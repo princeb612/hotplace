@@ -40,11 +40,8 @@
  *
  *   runtime ASN.1 object
  *       │
- *       ▼
- *   C++ generator
- *       │
- *       ▼
- *   C++ source
+ *       ├── Loader
+ *       └── C++ generator
  */
 
 void test_publish_babystep() {

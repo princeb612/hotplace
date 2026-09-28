@@ -76,15 +76,6 @@ parser_t& get_lalr1_parser_asn1_notation_by_import();
 parser_t& get_glr_parser_asn1_by_build();
 parser_t& get_glr_parser_asn1_by_import();
 
-extern const std::vector<parser_production> asn1_notation_productions;
-extern const std::set<std::string> asn1_notation_terminals;
-extern const std::map<std::pair<uint32, std::string>, parser_action> asn1_notation_action_table;
-extern const std::map<std::pair<uint32, std::string>, uint32> asn1_notation_goto_table;
-extern const std::vector<parser_production> asn1_allin1_productions;
-extern const std::multimap<std::pair<uint32, std::string>, parser_action> asn1_allin1_action_table;
-extern const std::map<std::pair<uint32, std::string>, uint32> asn1_allin1_goto_table;
-extern const std::set<std::string> asn1_allin1_terminals;
-
 }  // namespace io
 }  // namespace hotplace
 

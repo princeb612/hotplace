@@ -193,6 +193,10 @@ fi
 # build
 mkdir -p ${builddir}
 cmake -G "${generator}" -B ${builddir} -DCMAKE_BUILD_TYPE=${target}
+
+# unzip -f etc/parsingtable/parsingtable.zip -d ${builddir}/test/testcase/io
+# unzip -f etc/parsingtable/parsingtable.zip -d ${builddir}/test/testcase/asn.1
+
 if [[ $do_makefile = 1 ]]; then
     exit
 fi

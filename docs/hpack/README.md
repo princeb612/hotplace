@@ -201,7 +201,7 @@ Representation
    ↓         ↓
  table    name/value
  lookup      │
-   └────┬─────┘
+   └────┬────┘
         ↓
    table update
         ↓

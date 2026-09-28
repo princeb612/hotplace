@@ -38,6 +38,7 @@
 #include <hotplace/sdk/io/cbor/cbor_visitor.hpp>
 
 /* parser */
+#include <hotplace/sdk/io/parser/binary_parsing_table.hpp>
 #include <hotplace/sdk/io/parser/cfg_grammar.hpp>
 #include <hotplace/sdk/io/parser/glr_parser.hpp>
 #include <hotplace/sdk/io/parser/lalr1_parser.hpp>

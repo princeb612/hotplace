@@ -381,9 +381,9 @@ struct print_style_t {
  *          print_style_t style(2);
  *
  *          // case #4 - indentation style
- *          std::map<std::pair<int, std::string>, parser_action> action_table;
+ *          std::map<std::pair<int, std::string>, parser_action_state> action_table;
  *          // insert into action_table and then ...
- *          auto lambda_action = [](typename std::map<std::pair<int, std::string>, parser_action>::const_iterator it, basic_stream& dbs) -> void {
+ *          auto lambda_action = [](typename std::map<std::pair<int, std::string>, parser_action_state>::const_iterator it, basic_stream& dbs) -> void {
  *              dbs << "(" << it->first.first << ":" << it->first.second << ") -> ";
  *              auto action = it->second.type;
  *              auto target = it->second.target;

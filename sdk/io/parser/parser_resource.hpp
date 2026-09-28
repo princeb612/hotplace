@@ -56,6 +56,7 @@ class parser_resource {
             std::forward<F>(func)(item.token, item.name);
         }
     }
+    std::string nameof(parser_type_t type);
 
    protected:
     parser_resource();

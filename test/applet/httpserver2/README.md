@@ -23,3 +23,22 @@ rm .run
   - [x] libssl
   - [x] trial
   - [x] ALPN
+
+#### related implementation
+
+* [sdk/net/http](../../../sdk/net/http/README.md)
+* [sdk/net/tls](../../../sdk/net/tls/README.md)
+
+#### test sources
+
+* `run_server.cpp`
+* `sample.cpp`
+* `sample.hpp`
+
+#### test data / build files
+
+* `CMakeLists.txt`
+* `index.html`
+* `pcap/` — captured HTTP/2 verification cases
+
+`CMakeLists.txt` builds the applet with `maketest` and copies `index.html` into the build directory.

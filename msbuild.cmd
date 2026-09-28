@@ -16,10 +16,16 @@ if not exist %builddir% (
 
 cmake -G "%generator%" -B %builddir% -DCMAKE_BUILD_TYPE=%target% -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DSUPPORT_PCH=1
 
+rem using tar - Windows 10 (1803) and later
+rem tar -xf etc\parsingtable\parsingtable.zip -C %builddir%\test\testcase\io
+rem tar -xf etc\parsingtable\parsingtable.zip -C %builddir%\test\testcase\asn.1
+
 set MAKEFLAGS='-j 8'
 
 cmake --build %builddir% --config %target% -j 4
 
-cd %builddir%
-ctest -C %target%
-cd ..
+if %errorlevel% equ 0 (
+  cd %builddir%
+  ctest -C %target%
+  cd ..
+)

@@ -250,6 +250,23 @@ function (maketest module_name group_source group_header module_dependency modul
     endif ()
 endfunction ()
 
+function (maketool module_name group_source group_header module_dependency module_library ctest)
+    message (STATUS "maketest ${module_name} ${group_source} ${group_header} ${module_dependency} ${module_library}")
+    message (STATUS "\\- ${module_name}")
+    message (STATUS "\\- module_dependency ${${module_dependency}}")
+    message (STATUS "\\- module_library ${${module_library}}")
+    message (STATUS "\\- ctest ${ctest}")
+    add_executable (${module_name} ${${group_source}})
+    target_link_libraries (${module_name} ${${module_dependency}} ${${module_library}})
+    add_dependencies (${module_name} ${${module_dependency}})
+    if(SUPPORT_PCH)
+        target_precompile_headers(${module_name} PRIVATE ${${group_header}})
+    endif ()
+    if (${ctest})
+        add_test (NAME ${module_name} COMMAND ${module_name})
+    endif ()
+endfunction ()
+
 # -Ixxx
 include_directories (..)
 include_directories (${SET_THIRDPARTY_DIR}/include)

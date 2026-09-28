@@ -56,3 +56,24 @@ rm .run
   - [x] TLS 1.2
     - [x] curl
       - [x] SSLKEYLOGFILE=sslkeylog curl -s https://localhost:9000/ -k -v --tlsv1.2 --tls-max 1.2 --http1.1 --ciphers TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+
+#### related implementation
+
+* [sdk/net/http](../../../sdk/net/http/README.md)
+* [sdk/net/tls](../../../sdk/net/tls/README.md)
+
+#### test sources
+
+* `run_server.cpp`
+* `sample.cpp`
+* `sample.hpp`
+
+#### test data / build files
+
+* `CMakeLists.txt`
+* `index.html`
+* `signin.html`
+* `style.css`
+* `pcap/` — captured HTTP/1.1 verification cases
+
+`CMakeLists.txt` builds the applet with `maketest` and copies the HTML/CSS files into the build directory.

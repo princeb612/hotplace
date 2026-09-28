@@ -23,3 +23,20 @@
     * [x] client
       * [x] openssl s_client -connect localhost:9000 -state -msg -trace -debug -keylogfile sslkeylog -tls1_3 -groups MLKEM512:MLKEM768:MLKEM1024
       * [x] openssl s_client -connect localhost:9000 -state -debug -trace -keylogfile sslkeylog -tls1_3 --curves SecP256r1MLKEM768
+
+#### related implementation
+
+* [sdk/net/tls](../../../sdk/net/tls/README.md)
+
+#### test sources
+
+* `run_server.cpp`
+* `sample.cpp`
+* `sample.hpp`
+
+#### test data / build files
+
+* `CMakeLists.txt`
+* `pcap/` — captured TLS/HTTP verification cases
+
+The applet provides the server endpoint for TLS 1.2/1.3 and the TLS 1.3 post-quantum experiments documented above.

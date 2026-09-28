@@ -1,6 +1,6 @@
 # Parser — Grammar to Parse Structure
 
-**Edition 1 · Revision 1090**
+**Edition 1 · Revision 1093**
 
 ## Context
 
@@ -23,9 +23,11 @@ The CHANGELOG gives the following parser-oriented sequence:
 - **Revision 1087** — `lalr1_parser` import
 - **Revision 1088** — CFG for ASN.1 module
 - **Revision 1089** — context-aware parser switching pattern
-- **Revision 1090** — GLR parser and integrated CFG work covering ASN.1 notation, module, parameterized constructs, and information object class.
+- **Revision 1090** — GLR parser and integrated CFG work covering ASN.1 notation, module, parameterized constructs, and information object class
+- **Revision 1091** — CFG for ASN.1 information object class
+- **Revision 1093** — CFG for ASN.1 extension marker versions 1 and 2.
 
-The important direction is not a replacement of LALR by GLR at Revision 1090. It is an experiment to determine whether a broader ASN.1 grammar can be represented and parsed without forcing every ambiguity into the existing deterministic path.
+The important direction is not a replacement of LALR by GLR at Revision 1093. The broader CFG/GLR grammar experiment has reached a commit-ready checkpoint; the production runtime parser remains a separate integration concern.
 
 ## Why the parser has become a separate study topic
 
@@ -132,7 +134,7 @@ ASN.1 language
     runtime         path
 ```
 
-At Revision 1090, the unified CFG is the study object. Its grammar coverage is broader than the current production runtime parser, which remains LALR-based.
+At Revision 1093, the unified CFG is the study object. Its grammar coverage is broader than the current production runtime parser, which remains LALR-based.
 
 ### Parser result and semantic construction
 
@@ -222,13 +224,13 @@ publisher expansion
 loader integration later
 ```
 
-Loader integration is therefore a later stage. The existence of `asn1_loader` source files does not mean that the Revision 1090 parser experiment has already been absorbed into the loader architecture.
+Loader integration is therefore a later stage. The existence of `asn1_loader` source files does not mean that the Revision 1093 parser experiment has already been absorbed into the loader architecture.
 
 ## Study & Verification
 
 The parser study should verify the layers independently before combining them:
 
-1. **CFG coverage** — confirm that notation, module, parameterized constructs, and information-object-class grammar can be represented by the intended unified CFG.
+1. **CFG coverage** — confirm that notation, module, parameterized constructs, information-object-class, and extension-marker grammar can be represented by the intended unified CFG.
 2. **LALR baseline** — preserve the existing ASN.1 runtime parser behavior while the new grammar is being explored.
 3. **GLR experiment** — exercise the broader grammar and observe where multiple parse paths are produced.
 4. **Semantic construction** — determine how each parse result maps to semantic values and eventually to `asn1_object*` or related runtime structures.
@@ -249,13 +251,14 @@ runtime schema/object
 
 ## Status
 
-At Revision 1090:
+At Revision 1093:
 
 - `asn1_runtime` still uses `lalr1_parser` for its ASN.1 parsing path.
 - The parser layer contains both LALR and GLR implementations.
-- The integrated CFG covers ASN.1 notation, module, parameterized constructs, and information object class. The current work is validating this grammar with the GLR path; this does not yet replace the LALR-based production runtime path.
+- The integrated CFG now covers ASN.1 notation, module, parameterized constructs, information object class, and extension marker versions 1 and 2.
+- The GLR grammar/CFG experiment has reached a commit-ready state; this does not yet replace the LALR-based production runtime path.
 - Context-aware parser switching has been explored as a way to keep parser selection dependent on grammar/context.
-- GLR is currently the experimental mechanism being applied to validate the integrated CFG; it is not yet the production ASN.1 runtime parser.
+- GLR remains the experimental parsing mechanism for the broader grammar; production `asn1_runtime` integration is a separate later step.
 - `asn1_publisher` remains the semantic-construction boundary. Broader grammar coverage is expected to require additional handlers.
 - Loader integration is later work, after parser/semantic construction boundaries stabilize.
 

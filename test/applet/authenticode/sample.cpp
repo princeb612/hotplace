@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
 
     openssl_cleanup();
 
-    _logger->flush();
+    if (_logger) _logger->flush();
 
     _test_case.report(5);
     _cmdline->help();

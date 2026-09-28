@@ -37,6 +37,9 @@
     * CBOR
 
 * details
+  * Revision 1094
+    * [parsing table binary file layout](sdk/io/parser/README.md)
+      * read, write, and import dedicated table files containing Productions, ACTION, GOTO, and terminal data.
   * Revision 1093
     * CFG for ASN.1 extension marker version 1 and 2
   * Revision 1091
@@ -51,7 +54,7 @@
     * CFG for ASN.1 module
   * Revision 1087
     * aho corasick reducer - block reduction
-    * lalr_parser - import
+    * lalr1_parser - import
   * Revision 1086
     * [sketch] ASN.1 loader and compiler
   * Revision 1083

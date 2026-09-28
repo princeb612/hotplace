@@ -14,6 +14,6 @@
     - $ ./test-netclient -v -d -P tls13 -T
     - $ ./test-netclient -v -d -P tls12 -T
   - files
-    - [server](README_ubuntu20_server.md)
-    - [client](README_ubuntu20_client_tls13.md.md)
-    - [client](README_ubuntu20_client_tls12.md.md)
+    - [server](ubuntu20_server.md)
+    - [client](ubuntu20_client_tls13.md)
+    - [client](ubuntu20_client_tls12.md)

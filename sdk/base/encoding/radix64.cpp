@@ -11,30 +11,11 @@
  *
  */
 
+#include <hotplace/sdk/base/basic/crc.hpp>
 #include <hotplace/sdk/base/encoding/base64.hpp>
 #include <hotplace/sdk/base/system/endian.hpp>
 
 namespace hotplace {
-
-#define CRC24_INIT 0xB704CEL
-#define CRC24_POLY 0x1864CFBL
-
-uint32 crc24(const unsigned char* octets, size_t len) {
-    uint32 crc = CRC24_INIT;
-    if (octets && len) {
-        int i = 0;
-        while (len--) {
-            crc ^= (*octets++) << 16;
-            for (i = 0; i < 8; i++) {
-                crc <<= 1;
-                if (crc & 0x1000000) {
-                    crc ^= CRC24_POLY;
-                }
-            }
-        }
-    }
-    return crc & 0xFFFFFFL;
-}
 
 return_t radix64_armor_encode(const byte_t* data, size_t data_size, std::string& encoded, std::string& crc) {
     return_t ret = errorcode_t::success;

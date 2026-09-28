@@ -15,6 +15,7 @@
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
 #include <hotplace/sdk/base/unittest/console_color.hpp>
+#include <hotplace/sdk/io/parser/binary_parsing_table.hpp>
 #include <hotplace/sdk/io/parser/glr_parser.hpp>
 #include <hotplace/sdk/io/parser/parser_resource.hpp>
 #include <hotplace/sdk/io/parser/parser_sdk.hpp>
@@ -43,9 +44,19 @@ void glr_parser::set_grammar(cfg_grammar&& g) {
 
 const cfg_grammar& glr_parser::get_cfg_grammar() const { return _grammar; }
 
+cfg_grammar& glr_parser::get_cfg_grammar() { return _grammar; }
+
 bool glr_parser::ready() const {
     critical_section_guard guard(_lock);
     return _is_table_built;
+}
+
+void glr_parser::clear() {
+    critical_section_guard guard(_lock);
+    _is_table_built = false;
+    _context.clear();
+    _action_table.clear();
+    _goto_table.clear();
 }
 
 // Dynamic GLR multi-action table creation
@@ -72,7 +83,7 @@ return_t glr_parser::learn() {
                     dbs << "{" << it->first.first << ", \"" << it->first.second << "\"}, " << it->second;
                 };
 
-                auto lambda_action = [](typename std::multimap<std::pair<uint32, std::string>, parser_action>::const_iterator it, basic_stream& dbs) -> void {
+                auto lambda_action = [](typename std::multimap<std::pair<uint32, std::string>, parser_action_state>::const_iterator it, basic_stream& dbs) -> void {
                     static std::map<std::string, std::string> table = {
                         {"id", "SYMBOL_ID"}, {"usertype", "SYMBOL_USERTYPE"}, {"num", "SYMBOL_NUM"}, {"fp", "SYMBOL_FP"}, {"quot_string", "SYMBOL_QSTR"}};
 
@@ -119,18 +130,6 @@ return_t glr_parser::learn() {
         }
     }
 
-    return ret;
-}
-
-return_t glr_parser::import(const std::vector<parser_production>& productions, const std::multimap<std::pair<uint32, std::string>, parser_action>& action_table,
-                            const std::map<std::pair<uint32, std::string>, uint32>& goto_table) {
-    return_t ret = errorcode_t::success;
-    critical_section_guard guard(_lock);
-    _grammar.clear();
-    _grammar._productions = productions;
-    _action_table = action_table;
-    _goto_table = goto_table;
-    _is_table_built = true;
     return ret;
 }
 
@@ -271,7 +270,7 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
                     trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
                         valist va;
                         va << typestring << current_token.value << current_token.type << token_idx;
-                        dbs.vaprintln("no parser_action for state {1} with token {2} ({3}) at [{4:03zi}]", va);
+                        dbs.vaprintln("no parser_action_state for state {1} with token {2} ({3}) at [{4:03zi}]", va);
                     });
                 }
 #endif
@@ -304,7 +303,39 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
     return ret;
 }
 
+return_t glr_parser::build(binary_parsing_table* table) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == table) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        for (const auto& item : _action_table) {
+            table->buildup_action(item.first.first, item.first.second, item.second);
+        }
+        for (const auto& item : _goto_table) {
+            table->buildup_goto(item.first.first, item.first.second, item.second);
+        }
+    }
+    __finally2 {}
+    return ret;
+}
+
 parser_type_t glr_parser::get_type() const { return parser_type_t::glr; }
+
+return_t glr_parser::buildup_action(uint32 state, const std::string& lookahead, parser_action_state action) {
+    return_t ret = errorcode_t::success;
+    _action_table.emplace(std::make_pair(state, lookahead), action);
+    return ret;
+}
+
+return_t glr_parser::buildup_goto(uint32 state, const std::string& nonterm, uint32 next_state) {
+    return_t ret = errorcode_t::success;
+    _goto_table.emplace(std::make_pair(state, nonterm), next_state);
+    return ret;
+}
+
+void glr_parser::imported() { _is_table_built = true; }
 
 }  // namespace io
 }  // namespace hotplace

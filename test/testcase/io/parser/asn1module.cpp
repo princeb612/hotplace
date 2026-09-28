@@ -70,7 +70,7 @@ return_t ac_search(const asn1module_reducer_t& ac, const char* input, size_t siz
         lexer.parse(context, input, size);  // ASN1 file
 
         // make tokens
-        uint32 cnt = 0;
+        size_t cnt = 0;
         auto lambda = [&](const token_description* desc) -> bool {
             bool ret = true;
             const auto& type = desc->type;
@@ -88,7 +88,7 @@ return_t ac_search(const asn1module_reducer_t& ac, const char* input, size_t siz
                 }
             }
             if (token_comments != type) {
-                _logger->writeln("[%03u] line %zi type %d(%s) index %d pos %zi len %zi line %zi (%.*s)", cnt, desc->line, desc->type,
+                _logger->writeln("[%03zu] line %zi type %d(%s) index %d pos %zi len %zi line %zi (%.*s)", cnt, desc->line, desc->type,
                                  lexer.nameof_token(desc->type).c_str(), desc->index, desc->pos, desc->size, desc->line, desc->size, desc->p);
                 cnt = tokens.size();
             }
@@ -187,7 +187,7 @@ void test_asn1parser(lexical_analyzer& lexer, parser_t& parser, const char* text
 
     lexer.parse(context, input);
 
-    uint32 cnt = 0;
+    size_t cnt = 0;
     auto lambda = [&](const token_description* desc) -> bool {
         bool ret = true;
         const auto& type = desc->type;
@@ -204,7 +204,7 @@ void test_asn1parser(lexical_analyzer& lexer, parser_t& parser, const char* text
             }
         }
         if (token_comments != type) {
-            _logger->writeln("[%03u] line %zi type %d(%s) index %d pos %zi len %zi line %zi (%.*s)", cnt, desc->line, desc->type, lexer.nameof_token(desc->type).c_str(),
+            _logger->writeln("[%03zu] line %zi type %d(%s) index %d pos %zi len %zi line %zi (%.*s)", cnt, desc->line, desc->type, lexer.nameof_token(desc->type).c_str(),
                              desc->index, desc->pos, desc->size, desc->line, desc->size, desc->p);
             cnt = tokens.size();
         }

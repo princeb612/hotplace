@@ -69,5 +69,15 @@ std::string parser_resource::nameof(resource_type_t type, uint32 token) const {
     return value;
 }
 
+std::string parser_resource::nameof(parser_type_t type) {
+    std::string name;
+    if (parser_type_t::lalr1 == type) {
+        name = "LALR(1)";
+    } else if (parser_type_t::glr == type) {
+        name = "GLR";
+    }
+    return name;
+}
+
 }  // namespace io
 }  // namespace hotplace

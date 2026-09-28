@@ -285,7 +285,8 @@ The current parser experiments are therefore not separate from the loader work. 
 [x] memory input entry point exists
 [x] lower-level runtime schema construction exists
 [x] semantic publisher exists
-[~] integrated ASN.1 grammar / GLR experiments
+[x] integrated ASN.1 grammar / GLR grammar checkpoint
+[~] GLR → semantic construction / runtime integration
 [~] Module semantic model
 [ ] Module extraction in loader
 [ ] Module-level tagging configuration in loader

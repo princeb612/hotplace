@@ -2,7 +2,6 @@
 /**
  * @file    lalr1_parser.hpp
  * @author  Soo Han, Kim (princeb612.kr@gmail.com)
- * @desc    Context-aware parser switching architecture for complex grammars (e.g., ASN.1)
  *
  * Revision History
  * Date         Name                Description
@@ -70,27 +69,23 @@ class lalr1_parser : public parser_t {
     virtual void set_grammar(const cfg_grammar& g);
     virtual void set_grammar(cfg_grammar&& g);
 
-    const cfg_grammar& get_cfg_grammar() const;
+    virtual const cfg_grammar& get_cfg_grammar() const;
+    virtual cfg_grammar& get_cfg_grammar();
 
     /**
+     * @brief   load productions, terminals and generate string table
      * @examples
      *          // build dynamically
      *          cfg_grammar grammar;
      *          grammar.add_production(...);
      *          grammar.add_terminal(...);
      *          lalr1_parser lalr(std::move(grammar));
-     *          lalr.build();
-     *
-     *          // import prebuild
-     *          lalr1_parser lalr;
-     *          lalr.import(asn1_productions, asn1_action_table, asn1_goto_table);
+     *          lalr.build();  // action and goto table
      */
     virtual return_t learn();
-    return_t import(const std::vector<parser_production>& productions,                            //
-                    const std::map<std::pair<uint32, std::string>, parser_action>& action_table,  //                                             //
-                    const std::map<std::pair<uint32, std::string>, uint32>& goto_table);
 
     virtual bool ready() const;
+    virtual void clear();
 
     /**
      * @remarks perform dynamically generated table-based parsing
@@ -98,10 +93,20 @@ class lalr1_parser : public parser_t {
      * @param   parse_tree* pt [outopt] generate parse tree if necessary
      */
     virtual return_t parse(const std::vector<parser_token>& tokens, parse_tree* pt = nullptr);
+    /**
+     * @brief   action and goto table
+     * @param   binary_parsing_table* table [in]
+     */
+    virtual return_t build(binary_parsing_table* table);
 
     virtual parser_type_t get_type() const;
 
    protected:
+    // import
+    virtual return_t buildup_action(uint32 state, const std::string& lookahead, parser_action_state action);
+    virtual return_t buildup_goto(uint32 state, const std::string& nonterm, uint32 next_state);
+    virtual void imported();
+
    private:
     mutable critical_section _lock;
     cfg_grammar _grammar;
@@ -111,8 +116,8 @@ class lalr1_parser : public parser_t {
     parser_temporary_context_t _context;
 
     // essential LALR parsing tables
-    std::map<std::pair<uint32, std::string>, parser_action> _action_table;
-    std::map<std::pair<uint32, std::string>, uint32> _goto_table;
+    parser_lalr1_action_table_t _action_table;
+    parser_goto_table_t _goto_table;
 };
 
 }  // namespace io

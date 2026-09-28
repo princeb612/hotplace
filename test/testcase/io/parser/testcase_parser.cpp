@@ -219,7 +219,17 @@ void test_lalr_asn1parameterized() {
     lambda_test(item_asn1ioc, p2);
 }
 
+void test_load_parsingtable() {
+    return_t ret = errorcode_t::success;
+    const char* file = "asn1notation.ptb";
+    lalr1_parser parser;
+    binary_parsing_table pt;
+    ret = pt.read(file, parser);
+    _test_case.test(ret, __FUNCTION__, "read %s", file);
+}
+
 void testcase_parser() {
     test_lalr_asn1notation();
     test_lalr_asn1parameterized();
+    test_load_parsingtable();
 }

@@ -1,43 +1,16 @@
-#### Subtype Notation and Value Sets
-* https://obj-sys.com/asn1tutorial/node18.html
+# ASN.1 Constraints
 
-````
-SingleValue:
-Divisors-of-6 ::= INTEGER (1 | 2 | 3 | 6)
+ASN.1 constraint support and the notation used to describe subtype/value-set restrictions.
 
-ContainedSubtype:
-Divisors-of-18 ::= INTEGER (INCLUDES Divisors-of-6 | 9 | 18)
+## Documents
 
-ValueRange:
-TeenAgeYears ::= (13 .. 19)
+- [Subtype notation and value sets](subtype-notation.md)
 
-Permitted Alphabet:
-BooleanValue ::= IA5String (FROM ('T' | 'F'))
+## Related areas
 
-SizeConstraint:
-BaseballTeamRoster ::= SET SIZE (1..25) OF PlayerNames
-````
+- `../../` — ASN.1 basic type model
+- `../../../runtime/` — runtime representation of ASN.1 types
 
-| Type              | SV | CS | VR | SR | AL | IS |
-| --                | -- | -- | -- | -- | -- | -- |
-| Boolean           | Y  | Y  | N  | N  | N  | N  |
-| Integer           | Y  | Y  | Y  | N  | N  | N  |
-| Enumerated        | Y  | Y  | N  | N  | N  | N  |
-| Real              | Y  | Y  | Y  | N  | N  | N  |
-| Object Identifier | Y  | Y  | N  | N  | N  | N  |
-| Bit String        | Y  | Y  | N  | Y  | N  | N  |
-| Octet String      | Y  | Y  | N  | Y  | N  | N  |
-| Character String  | Y  | Y  | N  | Y  | Y  | N  |
-| Sequence          | Y  | Y  | N  | N  | N  | Y  |
-| Sequence-of       | Y  | Y  | N  | Y  | N  | Y  |
-| Set               | Y  | Y  | N  | N  | N  | Y  |
-| Set-of            | Y  | Y  | N  | Y  | N  | Y  |
-| Any               | Y  | Y  | N  | N  | N  | N  |
-| Choice            | Y  | Y  | N  | N  | N  | Y  |
+## Related tests
 
-SV : Single Value
-CS : Contained SubType
-VR : Value Range
-SR : Size Range
-AL : Alphabet Limitation
-IS : Inner Substring
+- `test/testcase/asn.1/`

@@ -32,7 +32,7 @@
 namespace hotplace {
 namespace io {
 
-asn1_runtime::asn1_runtime() {
+asn1_runtime::asn1_runtime() : _ready(0) {
     _shared.make_share(this);
     _automatic = asn1_explicit;
 }
@@ -62,7 +62,7 @@ asn1_runtime& asn1_runtime::operator=(const asn1_runtime& other) {
 asn1_runtime* asn1_runtime::clone() { return new asn1_runtime(*this); }
 
 void asn1_runtime::load() {
-    if (false == get_parser().ready()) {
+    if (0 == _ready) {
         auto& lex = get_lexer();
         // handle_quoted to 1
         lex.get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1).set("handle_lvalue_usertype", 1).set("handle_asn1parameterized", 1);
@@ -87,7 +87,8 @@ void asn1_runtime::load() {
         get_parser().learn();  // heavy
         */
 
-        get_parser().import(asn1_notation_productions, asn1_notation_action_table, asn1_notation_goto_table);
+        // get_parser().import(asn1_notation_productions, asn1_notation_action_table, asn1_notation_goto_table);
+        _ready = 1;
     }
 }
 
@@ -214,7 +215,10 @@ asn1_value* asn1_runtime::get(asn1_object* item) const {
 
 lexical_analyzer& asn1_runtime::get_lexer() { return _lex; }
 
-lalr1_parser& asn1_runtime::get_parser() { return _lalr; }
+parser_t& asn1_runtime::get_parser() {
+    // return _lalr;
+    return get_lalr1_parser_asn1_notation_by_build();
+}
 
 return_t asn1_runtime::read_weakly_typed(const byte_t* stream, size_t size, size_t& pos) {
     asn1_weakly_typed weaktype;

@@ -20,6 +20,7 @@ file (GLOB FILEGROUP_SDK_HEADER_IO
     ${PROJECT_SOURCE_DIR}/sdk/io/cbor/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/parser/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/parser/resource/*.hpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/parser/tools/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/stream/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/string/*.hpp
     ${PROJECT_SOURCE_DIR}/sdk/io/system/*.hpp
@@ -34,17 +35,22 @@ file (GLOB FILEGROUP_SDK_SOURCE_IO
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/semantic/constraints/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/structural/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/basic/visitor/*.cpp
-    ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/resource/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/runtime/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/compiler/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/loader/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/resource/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/basic/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/cbor/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/parser/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/parser/resource/*.cpp
+    ${PROJECT_SOURCE_DIR}/sdk/io/parser/tools/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/string/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/stream/*.cpp
     ${PROJECT_SOURCE_DIR}/sdk/io/system/*.cpp
+)
+
+file (GLOB FILEGROUP_SDK_SOURCE_IO_RESOURCE
+    ${PROJECT_SOURCE_DIR}/sdk/io/asn.1/resource/table/*.cpp
 )
 
 file (GLOB FILEGROUP_SDK_SOURCE_IO_LINUX
@@ -66,12 +72,15 @@ file (GLOB FILEGROUP_SDK_SOURCE_IO_WIN32_UNICODE
 )
 
 set_source_files_properties(${FILEGROUP_SDK_SOURCE_IO_WIN32_UNICODE} PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+set_source_files_properties(${FILEGROUP_SDK_SOURCE_IO_RESOURCE} PROPERTIES COMPILE_FLAGS "-g0 -O1 -Wa,-mbig-obj")
+endif ()
 
 if (UNIX)
-    set (FILEGROUP_SDK_IO ${FILEGROUP_SDK_HEADER_IO} ${FILEGROUP_SDK_SOURCE_IO} ${FILEGROUP_SDK_SOURCE_IO_LINUX})
+    set (FILEGROUP_SDK_IO ${FILEGROUP_SDK_HEADER_IO} ${FILEGROUP_SDK_SOURCE_IO} ${FILEGROUP_SDK_SOURCE_IO_RESOURCE} ${FILEGROUP_SDK_SOURCE_IO_LINUX})
     set (PLATFORM_LIB_SDK_IO z)
 elseif (WIN32)
-    set (FILEGROUP_SDK_IO ${FILEGROUP_SDK_HEADER_IO} ${FILEGROUP_SDK_SOURCE_IO} ${FILEGROUP_SDK_SOURCE_IO_WIN32} ${FILEGROUP_SDK_SOURCE_IO_WIN32_UNICODE})
+    set (FILEGROUP_SDK_IO ${FILEGROUP_SDK_HEADER_IO} ${FILEGROUP_SDK_SOURCE_IO} ${FILEGROUP_SDK_SOURCE_IO_RESOURCE} ${FILEGROUP_SDK_SOURCE_IO_WIN32} ${FILEGROUP_SDK_SOURCE_IO_WIN32_UNICODE})
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         set (PLATFORM_LIB_SDK_IO ws2_32 z)
     elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")

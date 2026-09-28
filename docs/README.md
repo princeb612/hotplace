@@ -1,6 +1,6 @@
 # hotplace study
 
-**Edition 1 · Revision 1090**
+**Edition 1 · Revision 1093**
 
 > A compact study map of the hotplace project.
 > The documents record concepts, relationships, development traces,
@@ -22,6 +22,8 @@ the source-tree directory structure. A first reading can follow this path:
 ```text
 project foundation
       ↓
+execution / verification support
+      ↓
 structured I/O
       ↓
 syntax / representation
@@ -34,6 +36,26 @@ transport / server execution
       ↓
 observation and verification
 ```
+
+The execution/verification line is part of the common foundation rather than a
+separate application subsystem:
+
+```text
+base
+ │
+ ├── common representation / runtime
+ │
+ └── execution / verification support
+       │
+       ├── cmdline      → execution conditions
+       ├── testcase     → concrete test execution
+       ├── test_case    → assertion / result
+       └── logger       → observation / presentation
+```
+
+The detailed error/result semantics remain in the Error Model document. The
+root map only records the architectural relationship so that a reader does not
+mistake these facilities for protocol-specific test code.
 
 This is a reading path, not a build dependency graph. The useful question at
 each step is **why the next boundary became necessary**. The topic documents
@@ -67,6 +89,7 @@ its concepts.
 
 - [Build](build/README.md)
 - [Error Model](error/README.md)
+- [Testcase Infrastructure](testcase/README.md)
 - [SDK Base](base/README.md)
 - [SDK I/O](io/README.md)
 - [Parser](io/parser/README.md)
@@ -127,7 +150,7 @@ dimensions rather than as one strict stack. The following map is a reading aid:
         │                    │                ┌────┴────┐
         │                    │              HTTP/2    HTTP/3
         │                    │                │         │
-        │                    │              HPACK      │
+        │                    │              HPACK       │
         │                    │                │         │
         └──────────────┬─────┴────────────────┴─────────┘
                        │
@@ -153,6 +176,7 @@ dimensions rather than as one strict stack. The following map is a reading aid:
 
 The diagram is intentionally conceptual:
 
+- **ASN.1** currently includes a broader CFG/GLR grammar checkpoint through Revision 1093, including information object class and extension marker versions 1 and 2; the production runtime parser remains LALR-based.
 - **ASN.1** describes a language-to-semantic-object path. It is not simply
   another network layer.
 - **Payload** is a reusable binary representation mechanism. It supports
@@ -175,7 +199,9 @@ The diagram is intentionally conceptual:
   socket/multiplexer, session, event queue, stream accumulation, protocol
   detection, framing, consumption, and dispatch.
 - **PCAPNG** cuts across the stack. It records actual wire behavior and can
-  later become a reproducible capture-replay test vector.
+  become a reproducible capture-replay test vector. A replay vector verifies the
+  protocol path it feeds; it does not by itself prove end-to-end server
+  integration.
 
 ### Layer Ownership
 
@@ -192,7 +218,7 @@ meaning / protocol semantics
         ├───────────────┐
         ▼               ▼
 representation     cryptographic substrate
-  │                    │
+  │                     │
   └── payload           └── crypto
                            │
                            ├── TLS
@@ -403,8 +429,15 @@ this map does not imply that it was developed later.
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1090            │
+│ Edition 1 · Revision 1093            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘
 ```
+
+## Working Drafts
+
+Important study context discovered during reconstruction is temporarily preserved
+under [`draft/`](draft/README.md) before being compressed into the topic document
+that owns it. Drafts are intentionally more exploratory than the final study
+maps so that useful reasoning and diagrams are not lost between conversations.

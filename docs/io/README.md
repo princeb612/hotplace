@@ -56,7 +56,7 @@ The current IO layer reflects several major development lines that accumulated o
 
 The historical record also shows that these areas were developed in support of higher-level protocol work. HTTP/2, TLS, QUIC, COSE/CBOR, and ASN.1 all required reusable representation and parsing mechanisms.
 
-Recent Revision 1090 work is especially important for the parser side. ASN.1 is currently experimenting with an integrated CFG covering notation, module, parameterized constructs, and information object class. GLR application is under experimental validation, while `asn1_runtime` remains based on the LALR parser and loader integration is later work.
+Recent Revisions 1091 and 1093 extend the integrated ASN.1 CFG with information object class and extension marker versions 1 and 2. The GLR grammar experiment has reached a commit-ready checkpoint, while `asn1_runtime` remains based on the LALR parser and loader integration is later work.
 
 Therefore the IO history should be read as several converging processing paths rather than as one subsystem designed at once.
 
@@ -171,7 +171,7 @@ The path is not a mandatory dependency chain. It is a way to understand why the 
 
 ### Major areas
 
-The Revision 1090 source tree contains these major IO areas:
+The Revision 1093 source tree contains these major IO areas:
 
 ```text
 sdk/io
@@ -342,7 +342,7 @@ AST / structural node
 semantic ASN.1 object/type
 ```
 
-At Revision 1090 the parser study is still in transition. The integrated CFG is being validated through the GLR experiment, while `asn1_runtime` remains on the LALR path. The loader has not yet absorbed this experimental path.
+At Revision 1093 the broader CFG/GLR grammar study has reached a commit-ready checkpoint. `asn1_runtime` remains on the LALR path, and the loader has not yet absorbed the broader grammar/runtime path.
 
 ### CBOR
 
@@ -504,14 +504,14 @@ protocol state
 application
 ```
 
-### ASN.1 path at Revision 1090
+### ASN.1 path at Revision 1093
 
 ```text
 ASN.1 notation
       ↓
 integrated CFG
       ↓
-LALR parser             GLR = next experiment
+LALR parser             GLR = broader grammar path
       ↓
 parse result
       ↓
@@ -520,7 +520,7 @@ ASN.1 publisher / semantic construction
 asn1_runtime
 ```
 
-This is deliberately different from saying that GLR has replaced LALR or that the new loader path is already integrated.
+This is deliberately different from saying that GLR has replaced LALR or that the broader grammar has already been integrated into the production loader/runtime path.
 
 ### CBOR path
 
@@ -600,13 +600,13 @@ This is why IO changes can affect apparently unrelated TLS/QUIC/network tests.
 
 ## Status
 
-At Revision 1090:
+At Revision 1093:
 
 - `sdk/io` is established as the common structured-data and representation layer below crypto/network.
 - Stream and platform abstractions provide reusable input/output mechanisms.
 - `payload` provides a reusable binary layout mechanism for protocol structures.
 - Parser infrastructure supports lexical analysis, CFG, LALR, GLR experimentation, and parse-tree construction.
-- ASN.1 provides a substantial syntax → semantic-object pipeline. The integrated CFG now spans notation, module, parameterized constructs, and information object class, with GLR validation underway; the production runtime path remains LALR-based.
+- ASN.1 provides a substantial syntax → semantic-object pipeline. The integrated CFG now spans notation, module, parameterized constructs, information object class, and extension marker versions 1 and 2; the production runtime path remains LALR-based.
 - CBOR provides a separate structured-data representation used by higher security/data layers.
 - Compression and other representation utilities remain supporting facilities within IO.
 - Platform-specific source realization remains below the common IO abstraction.

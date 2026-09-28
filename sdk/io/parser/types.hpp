@@ -215,11 +215,11 @@ enum class parser_action_t {
     error,  // conflict
 };
 
-struct parser_action {
+struct parser_action_state {
     parser_action_t type;
     uint32 target;  // next state on shift, rule id on reduce
 
-    parser_action(parser_action_t a = parser_action_t::error, uint32 t = -1) : type(a), target(t) {}
+    parser_action_state(parser_action_t a = parser_action_t::error, uint32 t = -1) : type(a), target(t) {}
 };
 
 struct parser_production {
@@ -270,21 +270,23 @@ struct LR1_item {
     }
 };
 
-typedef std::vector<parser_production> parser_production_t;
+typedef std::vector<parser_production> parser_productions_t;
+typedef std::map<std::pair<uint32, std::string>, parser_action_state> parser_lalr1_action_table_t;
+typedef std::multimap<std::pair<uint32, std::string>, parser_action_state> parser_glr_action_table_t;
+typedef std::map<std::pair<uint32, std::string>, uint32> parser_goto_table_t;
 typedef std::set<std::string> parser_terminals_t;
+typedef std::set<std::string> parser_nonterminals_t;
+
 typedef std::map<std::string, std::set<std::string>> parser_first_sets_t;
 typedef std::map<std::string, std::set<std::string>> parser_follow_sets_t;
 typedef std::vector<std::set<LR0_item>> parser_lr0_states_t;
 typedef std::map<std::pair<uint32, std::string>, uint32> parser_lr0_goto_t;
-typedef std::map<std::pair<uint32, std::string>, uint32> parser_goto_table_t;
-typedef std::map<std::pair<uint32, std::string>, parser_action> parser_lalr1_action_table_t;
-typedef std::multimap<std::pair<uint32, std::string>, parser_action> parser_glr_action_table_t;
 
 struct parser_temporary_context_t {
-    std::map<std::string, std::set<std::string>> first_sets;
-    std::map<std::string, std::set<std::string>> follow_sets;
-    std::vector<std::set<LR0_item>> lr0_states;
-    std::map<std::pair<uint32, std::string>, uint32> lr0_goto;
+    parser_first_sets_t first_sets;
+    parser_follow_sets_t follow_sets;
+    parser_lr0_states_t lr0_states;
+    parser_lr0_goto_t lr0_goto;
     void clear() {
         first_sets.clear();
         follow_sets.clear();
@@ -293,14 +295,16 @@ struct parser_temporary_context_t {
     }
 };
 
-class cfg_grammar;
-class lalr1_parser;
 class lexical_analyzer;
 class lexical_context;
 class lexical_token;
+class cfg_grammar;
+class lalr1_parser;
+class glr_parser;
 class parse_tree;
 class parse_tree_visitor;
 class parse_resource;
+class binary_parsing_table;
 
 class parser_t {
    public:
@@ -308,10 +312,19 @@ class parser_t {
 
     virtual void set_grammar(const cfg_grammar& g) = 0;
     virtual void set_grammar(cfg_grammar&& grammar) = 0;
+    virtual const cfg_grammar& get_cfg_grammar() const = 0;
+    virtual cfg_grammar& get_cfg_grammar() = 0;
     virtual return_t learn() = 0;
     virtual bool ready() const = 0;
+    virtual void clear() = 0;
     virtual return_t parse(const std::vector<parser_token>& tokens, parse_tree* pt = nullptr) = 0;
+    virtual return_t build(binary_parsing_table* table) = 0;
     virtual parser_type_t get_type() const = 0;
+
+    // import
+    virtual return_t buildup_action(uint32 state, const std::string& lookahead, parser_action_state action) = 0;
+    virtual return_t buildup_goto(uint32 state, const std::string& nonterm, uint32 next_state) = 0;
+    virtual void imported() = 0;
 };
 
 static inline bool is_asn1type(native_token_t id) { return (token_bool <= id) && (token_of >= id); }

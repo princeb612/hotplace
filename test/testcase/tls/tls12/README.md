@@ -2,26 +2,26 @@
 
 - [sslkeylog](sslkeylog)
 - tls12etm_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256.pcapng
-  - [server](README_tls12etm_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_server.md)
-  - [client](README_tls12etm_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_client.md)
+  - [server](tls12etm_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256-server.md)
+  - [client](tls12etm_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256-client.md)
 - tls12etm_TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384.pcapng
-  - [server](README_tls12etm_TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_server.md)
-  - [client](README_tls12etm_TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_client.md)
+  - [server](tls12etm_TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384-server.md)
+  - [client](tls12etm_TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384-client.md)
 - tls12mte_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256.pcapng
-  - [server](README_tls12mte_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_server.md)
-  - [client](README_tls12mte_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_client.md)
+  - [server](tls12mte_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256-server.md)
+  - [client](tls12mte_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256-client.md)
 - tls12no_renogotiation.pcapng
-  - [server](README_tls12no_renegotiation_server.md)
-  - [client](README_tls12no_renegotiation_client.md)
+  - [server](tls12no_renegotiation-server.md)
+  - [client](tls12no_renegotiation-client.md)
 - tls12renogotiation.pcapng
-  - [server](README_tls12renegotiation_server.md)
-  - [client](README_tls12renegotiation_client.md)
+  - [server](tls12renegotiation-server.md)
+  - [client](tls12renegotiation-client.md)
 - tls12_TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384.pcapng
-  - [server](README_tls12_TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384_server.md)
-  - [client](README_tls12_TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384_client.md)
+  - [server](tls12_TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384-server.md)
+  - [client](tls12_TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384-client.md)
 - tls12_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256.pcapng
-  - [server](README_tls12_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256_server.md)
-  - [client](README_tls12_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256_client.md)
+  - [server](tls12_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256-server.md)
+  - [client](tls12_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256-client.md)
 - tls12_TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256.pcapng
-  - [server](README_tls12_TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256_server.md)
-  - [client](README_tls12_TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256_client.md)
+  - [server](tls12_TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256-server.md)
+  - [client](tls12_TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256-client.md)

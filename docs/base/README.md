@@ -170,11 +170,48 @@ Base supplies the mechanism for representing/reporting an error; TLS, ASN.1, HTT
 
 This separation is one reason the error model can be reused across otherwise unrelated modules.
 
-### Verification support
+### Execution and verification support
 
-`unittest` belongs in base because test infrastructure is used throughout the repository.
+The base layer also contains the common machinery used to **run and observe** the repository's test programs. These mechanisms are not protocol-specific; they provide the execution conditions, test-result handling, and presentation used by many higher-level test suites.
 
-Its role is not to define protocol tests. It provides the common assertion, test-case, reporting, and verification mechanics used by higher-level test suites.
+A useful conceptual boundary is:
+
+```text
+command-line conditions
+        │
+        ▼
+    testcase execution
+        │
+        ▼
+     test_case
+        │
+        ├── assertion / result
+        │
+        ▼
+   logger / console
+```
+
+`cmdline` / `t_cmdarg_t` describes command-line arguments and binds them to an option object. It belongs to the execution side of the infrastructure: it determines the conditions under which a test or program is run rather than deciding the semantic meaning of a test result.
+
+`unittest` provides the common verification side. `test_case` is the result and aggregation boundary used by the test infrastructure, while `testcase` functions/suites organize concrete test execution around that boundary.
+
+`logger` and console presentation remain an observation/output path rather than the owner of pass/fail semantics. This distinction is important enough to keep the conceptual responsibilities separate:
+
+```text
+cmdline
+   = execution conditions
+
+testcase
+   = concrete test execution / grouping
+
+test_case
+   = assertion, result, aggregation
+
+logger / console
+   = result observation / presentation
+```
+
+The detailed error/result relationship is documented in [Error Model](../error/README.md).
 
 ## Structural
 

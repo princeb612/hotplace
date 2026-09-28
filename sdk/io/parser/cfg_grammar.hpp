@@ -45,9 +45,9 @@ class cfg_grammar {
     cfg_grammar& add_production(const std::string& lhs, const std::vector<std::string>& rhs);
     cfg_grammar& add_terminal(const std::string& term);
 
-    const std::vector<parser_production>& get_productions() const;
-    const std::set<std::string>& get_terminals() const;
-    const std::set<std::string>& get_non_terminals() const;
+    const parser_productions_t& get_productions() const;
+    const parser_terminals_t& get_terminals() const;
+    const parser_nonterminals_t& get_non_terminals() const;
 
     bool is_terminal(const std::string& sym) const;
     bool is_non_terminal(const std::string& sym) const;
@@ -55,9 +55,9 @@ class cfg_grammar {
     void clear();
 
    private:
-    std::vector<parser_production> _productions;
-    std::set<std::string> _terminals;
-    std::set<std::string> _non_terminals;
+    parser_productions_t _productions;
+    parser_terminals_t _terminals;
+    parser_nonterminals_t _non_terminals;
 };
 
 }  // namespace io

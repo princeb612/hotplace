@@ -233,7 +233,7 @@ bool generate_lalr1_tables(const cfg_grammar& grammar, parser_temporary_context_
 
 #if defined DEBUG
     // Helper lambda for debug printing actions
-    auto format_action = [&](const parser_action& act) -> std::string {
+    auto format_action = [&](const parser_action_state& act) -> std::string {
         if (act.type == parser_action_t::shift) {
             return "Shift(" + std::to_string(act.target) + ")";
         } else if (act.type == parser_action_t::reduce) {
@@ -255,10 +255,10 @@ bool generate_lalr1_tables(const cfg_grammar& grammar, parser_temporary_context_
                 if (terminals.count(sym)) {
                     uint32 next_st = lr0_goto[{static_cast<uint32>(i), sym}];
                     auto key = std::make_pair(static_cast<uint32>(i), sym);
-                    parser_action new_act = {parser_action_t::shift, next_st};
+                    parser_action_state new_act = {parser_action_t::shift, next_st};
 
                     if (action_table.count(key)) {
-                        parser_action old_act = action_table[key];
+                        parser_action_state old_act = action_table[key];
                         if (old_act.type != new_act.type || old_act.target != new_act.target) {
 #if defined DEBUG
                             if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
@@ -280,10 +280,10 @@ bool generate_lalr1_tables(const cfg_grammar& grammar, parser_temporary_context_
                     action_table[{static_cast<uint32>(i), "$"}] = {parser_action_t::accept, 0};
                 } else {
                     auto key = std::make_pair(static_cast<uint32>(i), item.lookahead);
-                    parser_action new_act = {parser_action_t::reduce, item.production_id};
+                    parser_action_state new_act = {parser_action_t::reduce, item.production_id};
 
                     if (action_table.count(key)) {
-                        parser_action old_act = action_table[key];
+                        parser_action_state old_act = action_table[key];
                         if (old_act.type != new_act.type || old_act.target != new_act.target) {
 #if defined DEBUG
                             if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
@@ -382,7 +382,7 @@ bool generate_glr_tables(const cfg_grammar& grammar, parser_temporary_context_t&
                 if (terminals.count(sym)) {
                     uint32 next_st = lr0_goto[{static_cast<uint32>(i), sym}];
                     auto key = std::make_pair(static_cast<uint32>(i), sym);
-                    parser_action new_act = {parser_action_t::shift, next_st};
+                    parser_action_state new_act = {parser_action_t::shift, next_st};
 
                     action_table.insert({key, new_act});
                 }
@@ -391,7 +391,7 @@ bool generate_glr_tables(const cfg_grammar& grammar, parser_temporary_context_t&
                     action_table.insert({{static_cast<uint32>(i), "$"}, {parser_action_t::accept, 0}});
                 } else {
                     auto key = std::make_pair(static_cast<uint32>(i), item.lookahead);
-                    parser_action new_act = {parser_action_t::reduce, item.production_id};
+                    parser_action_state new_act = {parser_action_t::reduce, item.production_id};
 
                     action_table.insert({key, new_act});
                 }

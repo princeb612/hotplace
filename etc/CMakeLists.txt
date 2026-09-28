@@ -6,3 +6,5 @@
 
 # copy certificates
 add_subdirectory (cert)
+# copy parsing table
+add_subdirectory (parsingtable)

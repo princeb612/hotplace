@@ -35,10 +35,6 @@ namespace hotplace {
 namespace io {
 
 void asn1_publisher::prepare_basics() {
-    // default_handler
-    //   DefinedType
-    //   TypeSpec
-
     auto resource = asn1_resource::get_instance();
 
     // "Statement"
@@ -73,8 +69,8 @@ void asn1_publisher::prepare_basics() {
         return errorcode_t::success;
     });
     add_handler("SequenceTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("SequenceTypeSpec", {"SEQUENCE", "Constraint", "{", "FieldList", "}"})
-        // production("SequenceTypeSpec", {"SEQUENCE", "{", "FieldList", "}"})
+        // production("SequenceTypeSpec", {"SEQUENCE", "Constraint", "{", "ComponentTypeList", "}"})
+        // production("SequenceTypeSpec", {"SEQUENCE", "{", "ComponentTypeList", "}"})
         // production("SequenceTypeSpec", {"SEQUENCE", "Constraint", "{", "}"})
         // production("SequenceTypeSpec", {"SEQUENCE", "{", "}"})
 
@@ -91,7 +87,7 @@ void asn1_publisher::prepare_basics() {
         auto sequence = new asn1_sequence;
 
         asn1_unknown_container* container = nullptr;
-        auto iter = index.find("FieldList");
+        auto iter = index.find("ComponentTypeList");
         if (index.end() != iter) {
             auto& rhs_fieldlist = rhs[iter->second];
             container = static_cast<asn1_unknown_container*>(rhs_fieldlist.object);
@@ -154,8 +150,8 @@ void asn1_publisher::prepare_basics() {
         return errorcode_t::success;
     });
     add_handler("SetTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("SetTypeSpec", {"SET", "Constraint", "{", "FieldList", "}"})
-        // production("SetTypeSpec", {"SET", "{", "FieldList", "}"})
+        // production("SetTypeSpec", {"SET", "Constraint", "{", "ComponentTypeList", "}"})
+        // production("SetTypeSpec", {"SET", "{", "ComponentTypeList", "}"})
         // production("SetTypeSpec", {"SET", "Constraint", "{", "}"})
         // production("SetTypeSpec", {"SET", "{", "}"})
 
@@ -172,7 +168,7 @@ void asn1_publisher::prepare_basics() {
         auto setobj = new asn1_set;
 
         asn1_unknown_container* container = nullptr;
-        auto iter = index.find("FieldList");
+        auto iter = index.find("ComponentTypeList");
         if (index.end() != iter) {
             auto& rhs_fieldlist = rhs[iter->second];
             container = static_cast<asn1_unknown_container*>(rhs_fieldlist.object);
@@ -236,8 +232,8 @@ void asn1_publisher::prepare_basics() {
         return errorcode_t::success;
     });
     add_handler("ChoiceTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("ChoiceTypeSpec", {"CHOICE", "Constraint", "{", "FieldList", "}"})
-        // production("ChoiceTypeSpec", {"CHOICE", "{", "FieldList", "}"})
+        // production("ChoiceTypeSpec", {"CHOICE", "Constraint", "{", "ComponentTypeList", "}"})
+        // production("ChoiceTypeSpec", {"CHOICE", "{", "ComponentTypeList", "}"})
         // production("ChoiceTypeSpec", {"CHOICE", "Constraint", "{", "}"})
         // production("ChoiceTypeSpec", {"CHOICE", "{", "}"})
 
@@ -254,7 +250,7 @@ void asn1_publisher::prepare_basics() {
         auto choice = new asn1_choice;
 
         asn1_unknown_container* container = nullptr;
-        auto iter = index.find("FieldList");
+        auto iter = index.find("ComponentTypeList");
         if (index.end() != iter) {
             auto& rhs_fieldlist = rhs[iter->second];
             container = static_cast<asn1_unknown_container*>(rhs_fieldlist.object);
@@ -275,9 +271,9 @@ void asn1_publisher::prepare_basics() {
         context.push(std::move(asn));
         return errorcode_t::success;
     });
-    add_handler("FieldList", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("FieldList", {"FieldList", ",", "Field"})
-        // production("FieldList", {"Field"})
+    add_handler("ComponentTypeList", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("ComponentTypeList", {"ComponentTypeList", ",", "ComponentType"})
+        // production("ComponentTypeList", {"ComponentType"})
 
         auto size = node->sizeof_rhs();
 
@@ -313,11 +309,30 @@ void asn1_publisher::prepare_basics() {
 
         return errorcode_t::success;
     });
-    add_handler("Field", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("Field", {symid, "TypeSpec"})
-        // production("Field", {symid, "TypeSpec", "Constraint"})
-        // production("Field", {symid, "TypeSpec", "FieldSpecifier"})
-        // production("Field", {symid, "TypeSpec", "Constraint", "FieldSpecifier"})
+    add_handler("NamedType", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("NamedType", {symid, "TypeSpec"})
+        auto rhs_typespec = context.pop();  // TypeSpec
+        auto rhs_symid = context.pop();     // symid or symuser
+
+        asn1_semantic_node asn;
+        asn.symbol = node->symbol;
+        asn.object = rhs_typespec.object;
+
+        rhs_typespec.release();  // asn own rhs_typespec.object
+
+        if (asn.object) {
+            asn.object->set_name(rhs_symid.value);
+        }
+
+        context.push(std::move(asn));
+
+        return errorcode_t::success;
+    });
+    add_handler("ComponentType", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("ComponentType", {"NamedType"})
+        // production("ComponentType", {"NamedType", "Constraint"})
+        // production("ComponentType", {"NamedType", "FieldSpecifier"})
+        // production("ComponentType", {"NamedType", "Constraint", "FieldSpecifier"})
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
@@ -329,27 +344,24 @@ void asn1_publisher::prepare_basics() {
             index.emplace(it.symbol, idx);
         }
 
-        auto& rhs_typespec = rhs[1];  // TypeSpec
-        auto& rhs_symid = rhs[0];     // symid or symuser
+        auto& rhs_namedtype = rhs[0];
 
         asn1_semantic_node asn;
         asn.symbol = node->symbol;
-        asn.object = rhs_typespec.object;
+        asn.object = rhs_namedtype.object;
 
-        rhs_typespec.release();  // asn own rhs_typespec.object
+        rhs_namedtype.release();  // asn own rhs_namedtype.object
 
         if (asn.object) {
-            asn.object->set_name(rhs_symid.value);
-
             auto iter = index.find("FieldSpecifier");
             if (index.end() != iter) {
                 auto& rhs_fieldopt = rhs[iter->second];
 
                 /**
                  * To ensure compliance with the ASN.1 standard grammar and prevent Shift/Reduce conflicts in the LALR(1) parser, the grammar was kept clean by
-                 * restricting the `DEFAULT` syntax to the `Field` production level. Instead, leveraging the AST structure where `TaggedTypeSpec` acts as a decorator, the
-                 * issue was resolved by clearly separating responsibilities so that the `Publisher` layer propagates (unwraps) the `DEFAULT` option to the actual object
-                 * contained within the `TaggedTypeSpec`.
+                 * restricting the `DEFAULT` syntax to the `ComponentType` production level. Instead, leveraging the AST structure where `TaggedTypeSpec` acts as a
+                 * decorator, the issue was resolved by clearly separating responsibilities so that the `Publisher` layer propagates (unwraps) the `DEFAULT` option to the
+                 * actual object contained within the `TaggedTypeSpec`.
                  */
                 if (asn1_entity_tagged_type == asn.object->get_entity()) {
                     auto tagobj = dynamic_cast<asn1_tagged_type*>(asn.object);
@@ -378,8 +390,7 @@ void asn1_publisher::prepare_basics() {
     });
     add_handler("FieldSpecifier", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("FieldSpecifier", {"OPTIONAL"})
-        // production("FieldSpecifier", {"DEFAULT", symnum})
-        // production("FieldSpecifier", {"DEFAULT", symqs})
+        // production("FieldSpecifier", {"DEFAULT", "ValueElement"})
         // production("FieldSpecifier", {"DEFAULT", "{", "}"})
 
         auto size = node->sizeof_rhs();
@@ -388,28 +399,57 @@ void asn1_publisher::prepare_basics() {
             rhs[size - 1 - i] = context.pop();
         }
 
-        auto parser_resource = parser_resource::get_instance();
+        // auto parser_resource = parser_resource::get_instance();
         auto& rhs_type = rhs[0];
 
         asn1_semantic_node asn;
         asn.symbol = node->symbol;
         asn.option.type = resource->valueof_mode(rhs_type.symbol);
         if (2 == size) {
-            auto& rhs_symval = rhs[1];
-            variant v;
-            if (parser_resource->nameof(token_number) == rhs_symval.symbol) {
-                v = t_atoi<asn1_native_int_t>(rhs_symval.value);
-            } else if (parser_resource->nameof(token_quot_string) == rhs_symval.symbol) {
-                v = rhs_symval.value;
-            }
-            asn.option.defvalue = new asn1_default_t(std::move(v.get()));
+            auto& rhs_valueelem = rhs[1];  // ValueElement
+            // variant v;
+            // if (parser_resource->nameof(token_number) == rhs_valueelem.symbol) {
+            //     v = t_atoi<asn1_native_int_t>(rhs_valueelem.value);
+            // } else if (parser_resource->nameof(token_quot_string) == rhs_valueelem.symbol) {
+            //     v = rhs_valueelem.value;
+            // }
+            // asn.option.defvalue = new asn1_default_t(std::move(v.get()));
+            asn.option.defvalue = new asn1_default_t(std::move(rhs_valueelem.v.get()));
         }
 
         context.push(std::move(asn));
 
         return errorcode_t::success;
     });
+    add_handler("ValueElement", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("ValueElement", {symnum})
+        // production("ValueElement", {symfp})
+        // production("ValueElement", {symqs})
+        // production("ValueElement", {"MIN"})
+        // production("ValueElement", {"MAX"})
+        // production("ValueElement", {"TRUE"})
+        // production("ValueElement", {"FALSE"});
+        auto& rhs = context.top();
+
+        auto parser_resource = parser_resource::get_instance();
+
+        asn1_semantic_node asn;
+        if (parser_resource->nameof(token_number) == rhs.symbol) {
+            asn.v = t_atoi<asn1_native_int_t>(rhs.value);
+        } else if (parser_resource->nameof(token_floatingpoint) == rhs.symbol) {
+            asn.v = atof(rhs.value.c_str());
+        } else if (parser_resource->nameof(token_quot_string) == rhs.symbol) {
+            asn.v = rhs.value;
+        } else if ("MIN" == rhs.symbol) {
+            asn.v = variant::minvalue();
+        } else if ("MAX" == rhs.symbol) {
+            asn.v = variant::maxvalue();
+        }
+
+        return errorcode_t::success;
+    });
     add_handler("ReferencedTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("ReferencedTypeSpec", {"Identifier"})
         return_t ret = errorcode_t::success;
         __try2 {
             // pop and push, simply modify
@@ -584,6 +624,11 @@ return_t asn1_publisher::default_handler(asn1_runtime* runtime, parse_treenode* 
 
     // pop and push
     // simply modify top
+
+    // Statement
+    // DefinedType
+    // TypeSpec
+    // Identifier
 
     auto& top = context.top();
     top.symbol = node->symbol;

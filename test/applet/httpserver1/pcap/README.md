@@ -2,5 +2,5 @@
 
 - [sslkeylog](sslkeylog)
 - httpserver1-mldsa.pcapng
-  - [curl](README_client-mldsa.md)
-  - [httpserver1](README_server-mldsa.md)
+  - [curl](httpserver1-mldsa-client.md)
+  - [httpserver1](httpserver1-mldsa-server.md)

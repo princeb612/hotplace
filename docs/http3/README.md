@@ -283,6 +283,22 @@ real HTTP/3 traffic
 
 This is a verification relationship, not a claim of end-to-end HTTP/3 server support. The current status boundary remains explicit in this document.
 
+## Capture-replay boundary
+
+The HTTP/3 capture-replay material verifies protocol processing around QUIC/TLS packets and stream data. It is a protocol-level verification path, not a statement that the HTTP/3 request path is already integrated into `http_server`.
+
+```text
+HTTP/3 capture
+      ↓
+QUIC packet replay
+      ↓
+QUIC / TLS state
+      ↓
+HTTP/3 stream data
+```
+
+This keeps two questions separate: **can the implementation interpret the observed HTTP/3/QUIC traffic?** and **is that protocol path connected to the server's application request dispatch?** The current study answers the former through replay while the latter remains an integration boundary.
+
 ## Status
 
 | Area | Current state |

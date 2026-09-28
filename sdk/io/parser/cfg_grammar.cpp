@@ -59,11 +59,11 @@ cfg_grammar& cfg_grammar::add_terminal(const std::string& term) {
     return *this;
 }
 
-const std::vector<parser_production>& cfg_grammar::get_productions() const { return _productions; }
+const parser_productions_t& cfg_grammar::get_productions() const { return _productions; }
 
-const std::set<std::string>& cfg_grammar::get_terminals() const { return _terminals; }
+const parser_terminals_t& cfg_grammar::get_terminals() const { return _terminals; }
 
-const std::set<std::string>& cfg_grammar::get_non_terminals() const { return _non_terminals; }
+const parser_nonterminals_t& cfg_grammar::get_non_terminals() const { return _non_terminals; }
 
 bool cfg_grammar::is_terminal(const std::string& sym) const { return _terminals.count(sym) > 0; }
 

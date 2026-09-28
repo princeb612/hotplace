@@ -307,7 +307,7 @@ QUIC frame
        HTTP/3 stream data
 ```
 
-The capture therefore complements the network-server framing model: it preserves concrete examples of the boundaries that the runtime protocol stack must interpret.
+The capture therefore complements the network-server framing model: it preserves concrete examples of the boundaries that the protocol stack must interpret. For the current HTTP/3 vector, the replay path is a QUIC/TLS protocol test path; it should not be read as evidence that HTTP/3 request dispatch is already connected to `http_server`.
 
 ### Why Capture-Replay Matters
 

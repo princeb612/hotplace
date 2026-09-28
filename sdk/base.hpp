@@ -25,6 +25,7 @@
 /* basic */
 #include <hotplace/sdk/base/basic/builtinmemory.hpp>
 #include <hotplace/sdk/base/basic/cmdline.hpp>
+#include <hotplace/sdk/base/basic/crc.hpp>
 #include <hotplace/sdk/base/basic/dump_memory.hpp>
 #include <hotplace/sdk/base/basic/function_pipeline.hpp>
 #include <hotplace/sdk/base/basic/types.hpp>
@@ -92,6 +93,7 @@
 /* stream */
 #include <hotplace/sdk/base/stream/ansi_string.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
+#include <hotplace/sdk/base/stream/binary_stream.hpp>
 #include <hotplace/sdk/base/stream/split.hpp>
 #include <hotplace/sdk/base/stream/splitter.hpp>
 #include <hotplace/sdk/base/stream/sprintf.hpp>

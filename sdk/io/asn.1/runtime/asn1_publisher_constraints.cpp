@@ -121,7 +121,7 @@ void asn1_publisher::prepare_constraints() {
             rhs[1].release();
             asn.cons.u = cons;
         } else if (3 == size) {
-            if (rhs[1].symbol == "|" || rhs[1].symbol == "," || rhs[1].symbol == "UNION") {
+            if (rhs[1].symbol == "UnionOperation") {
                 auto type = rhs[2].cons.u->type();
                 asn1_constraint_t* cons = nullptr;
 
@@ -178,7 +178,7 @@ void asn1_publisher::prepare_constraints() {
             asn.cons = rhs[0].cons;
             rhs[0].release();
         } else if (3 == size) {
-            if (rhs[1].symbol == "^" || rhs[1].symbol == "INTERSECTION") {
+            if (rhs[1].symbol == "IntersectOperation") {
                 auto type = rhs[2].cons.u->type();
                 asn1_constraint_t* cons = nullptr;
 
