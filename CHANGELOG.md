@@ -37,6 +37,7 @@
     * CBOR
 
 * details
+  * Revision 1095
   * Revision 1094
     * [parsing table binary file layout](sdk/io/parser/README.md)
       * read, write, and import dedicated table files containing Productions, ACTION, GOTO, and terminal data.
