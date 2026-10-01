@@ -61,19 +61,9 @@ class glr_parser : public parser_t {
     virtual return_t build(binary_parsing_table* table);
 
     virtual parser_type_t get_type() const;
+    virtual uint16 get_version() const;
 
    protected:
-    /**
-     * @brief internal node for Graph-Structured Stack (GSS)
-     */
-    struct gss_node {
-        uint32 state;
-        std::shared_ptr<gss_node> parent;
-        parse_treenode* tree_node;
-
-        gss_node(uint32 s, std::shared_ptr<gss_node> p, parse_treenode* node = nullptr) : state(s), parent(p), tree_node(node) {}
-    };
-
     // import
     virtual return_t buildup_action(uint32 state, const std::string& lookahead, parser_action_state action);
     virtual return_t buildup_goto(uint32 state, const std::string& nonterm, uint32 next_state);

@@ -69,6 +69,7 @@ int main(int argc, char** argv) {
     testcase_variant();
 
     testcase_graph();
+    testcase_gss();
 
     testcase_avltree();
     testcase_binary();

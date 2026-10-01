@@ -14,9 +14,13 @@
 
 #include <hotplace/test/test.hpp>
 
+#define FLAG_DUMMY_POC_TOKEN 1
+
 void dump_parse_tree(asn1_runtime* runtime, const parse_tree* pt);
 void parse_notation(asn1_runtime* runtime, const char* notation);
 void parse_reconst_notation(asn1_runtime* runtime, const char* notation, const char* expect = nullptr);
+void test_asn1parser(parser_t& parser, const char* text, const char* input, uint16 flags);
+void test_asn1parser(lexical_analyzer& lexer, parser_t& parser, const char* text, const char* input, uint16 flags);
 
 void testcase_basic1();
 void testcase_basic2();

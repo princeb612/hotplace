@@ -34,7 +34,8 @@ namespace io {
 
 asn1_runtime::asn1_runtime() : _ready(0) {
     _shared.make_share(this);
-    _automatic = asn1_explicit;
+    _tagdefault = asn1_explicit;
+    _extensibility = static_cast<uint8>(asn1_extensibility_t::none);
 }
 
 asn1_runtime::asn1_runtime(const std::string& name) : asn1_runtime() { _name = name; }
@@ -216,8 +217,10 @@ asn1_value* asn1_runtime::get(asn1_object* item) const {
 lexical_analyzer& asn1_runtime::get_lexer() { return _lex; }
 
 parser_t& asn1_runtime::get_parser() {
-    // return _lalr;
-    return get_lalr1_parser_asn1_notation_by_build();
+    // return get_lalr1_parser_asn1_notation_by_build();
+    // return get_lalr1_parser_asn1_notation_by_import();
+    // return get_glr_parser_asn1_by_build();
+    return get_glr_parser_asn1_by_import();
 }
 
 return_t asn1_runtime::read_weakly_typed(const byte_t* stream, size_t size, size_t& pos) {
@@ -264,19 +267,22 @@ return_t asn1_runtime::parse(const char* notation, parse_tree* pt) {
                     tokens.push_back({token_identifier, symid});
                 } break;
                 case token_comments:
-                    ret = false;  // stop at comments
                     break;
                 default: {
                     tokens.push_back({type, token});
+                    break;
                 }
             }
 
 #if defined DEBUG
-            if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
-                trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
-                    dbs.println("[%03u] line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", cnt++, desc->line, desc->type,
-                                get_lexer().nameof_token(desc->type).c_str(), desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
-                });
+            if (token_comments != type) {
+                if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
+                    trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
+                        dbs.println("[%03u] line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", cnt, desc->line, desc->type,
+                                    get_lexer().nameof_token(desc->type).c_str(), desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
+                        cnt = tokens.size();
+                    });
+                }
             }
 #endif
 
@@ -546,9 +552,13 @@ void asn1_runtime::set_name(const std::string& name) { _name = name; }
 
 std::string asn1_runtime::get_name() { return _name; }
 
-void asn1_runtime::set_automatic(uint8 runas) { _automatic = runas; }
+void asn1_runtime::set_tagdefault(uint8 value) { _tagdefault = value; }
 
-uint8 asn1_runtime::runas_automatic() { return _automatic; }
+uint8 asn1_runtime::get_tagdefault() { return _tagdefault; }
+
+void asn1_runtime::set_extensibility(uint8 value) { _extensibility = value; }
+
+uint8 asn1_runtime::get_extensibility() { return _extensibility; }
 
 void asn1_runtime::clear() {
     for (auto& item : _types) item->release();

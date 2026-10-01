@@ -12,8 +12,8 @@ generation
 
 - test/tool/makeparsingtable
 ```
-  makeparsingtable -o asn1notation.ptb
-  makeparsingtable -o asn1.ptb -glr
+  ./makeparsingtable -o asn1notation.ptb
+  ./makeparsingtable -o asn1.ptb -glr
 ```
 
 testcase

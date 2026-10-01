@@ -51,6 +51,7 @@
 
 /* graph */
 #include <hotplace/sdk/base/graph/graph.hpp>
+#include <hotplace/sdk/base/graph/gss.hpp>
 
 /* nostd */
 #include <hotplace/sdk/base/nostd/atoi.hpp>

@@ -28,6 +28,7 @@
 #include <hotplace/sdk/io/asn.1/basic/semantic/builtin/asn1_integer.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_builder.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_publisher.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime_context.hpp>
 #include <hotplace/sdk/io/parser/parse_tree.hpp>
 #include <hotplace/sdk/io/parser/parser_resource.hpp>
 
@@ -37,42 +38,90 @@ namespace io {
 void asn1_publisher::prepare_basics() {
     auto resource = asn1_resource::get_instance();
 
-    // "Statement"
-    add_handler("Assignment", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("Assignment", {"DefinedType", "::=", "TypeSpec"})
-        // production("Assignment", {"DefinedType", "::=", "TypeSpec", "Constraint"})
-
-        auto size = node->sizeof_rhs();  // 3 or 4
+    add_handler("ModuleStatementList", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        //
+        return errorcode_t::success;
+    });
+    add_handler("ModuleStatement", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        //
+        return errorcode_t::success;
+    });
+    add_handler("ModuleBegin", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        //
+        return errorcode_t::success;
+    });
+    add_handler("ModuleDefinition", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
+        std::unordered_map<std::string, size_t> index;
         for (size_t i = 0; i < size; ++i) {
-            rhs[size - 1 - i] = context.pop();
+            size_t idx = size - 1 - i;
+            rhs[idx] = context.pop();
+            auto& it = rhs[idx];
+            index.emplace(it.symbol, idx);
         }
-
-        auto& rhs_typespec = rhs[2];
-        auto& rhs_deftype = rhs[0];
 
         asn1_semantic_node asn;
         asn.symbol = node->symbol;
-        asn.object = asn1_referenced_type::define(rhs_deftype.value, rhs_typespec.object);
 
-        if (4 == size) {
-            auto& rhs_cons = rhs[3];
-            auto cons = rhs_cons.cons.u;
-            rhs_typespec.object->get_constraints().add(cons);
-            if (asn1_entity_constraint_container != cons->get_entity()) rhs_cons.release();
+        auto iter = index.find("TagDefault");
+        if (index.end() != iter) {
+            auto& rhs_tagdefault = rhs[iter->second];
+            asn.module.tagdefault = rhs_tagdefault.module.tagdefault;
         }
-
-        rhs_typespec.release();  // asn own rhs_typespec.object
+        iter = index.find("ExtensionDefault");
+        if (index.end() != iter) {
+            auto& rhs_ext = rhs[iter->second];
+            asn.module.exensibility = rhs_ext.module.exensibility;
+        }
 
         context.push(std::move(asn));
 
         return errorcode_t::success;
     });
-    add_handler("SequenceTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("SequenceTypeSpec", {"SEQUENCE", "Constraint", "{", "ComponentTypeList", "}"})
-        // production("SequenceTypeSpec", {"SEQUENCE", "{", "ComponentTypeList", "}"})
-        // production("SequenceTypeSpec", {"SEQUENCE", "Constraint", "{", "}"})
-        // production("SequenceTypeSpec", {"SEQUENCE", "{", "}"})
+    add_handler("TagDefault", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("TagDefault", {"EXPLICIT", "TAGS"})
+        // production("TagDefault", {"IMPLICIT", "TAGS"})
+        // production("TagDefault", {"AUTOMATIC", "TAGS"})
+
+        auto rhs_tags = context.pop();
+        auto rhs_taggingmode = context.pop();
+
+        asn1_semantic_node asn;
+        asn.symbol = node->symbol;
+
+        if ("EXPLICIT" == rhs_taggingmode.symbol) {
+            asn.module.tagdefault = asn1_explicit;
+        } else {
+            asn.module.tagdefault = asn1_implicit;
+        }
+
+        context.push(std::move(asn));
+
+        return errorcode_t::success;
+    });
+    add_handler("ExtensionDefault", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        auto size = node->sizeof_rhs();
+        for (size_t i = 0; i < size; ++size) context.pop();
+
+        asn1_semantic_node asn;
+        asn.symbol = node->symbol;
+        asn.module.exensibility = asn1_extensibility_t::extension_implied;
+
+        context.push(std::move(asn));
+        return errorcode_t::success;
+    });
+    add_handler("StatementList", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("StatementList", {"StatementList", "Statement"})
+        // production("StatementList", {"Statement"})
+
+        return errorcode_t::success;
+    });
+    add_handler("TypeAssignment", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("TypeAssignment", {"DefinedType", symassign, "Type"})
+        // production("TypeAssignment", {"DefinedType", symassign, "Type", "Constraint"})
+        // production("TypeAssignment", {symuserparamtype, "{", "ParameterList", "}", symassign, "Type"})
+        // production("TypeAssignment", {symuserparamtype, "{", "ParameterList", "}", symassign, "Type", "Constraint"})
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
@@ -84,24 +133,98 @@ void asn1_publisher::prepare_basics() {
             index.emplace(it.symbol, idx);
         }
 
-        auto sequence = new asn1_sequence;
+        asn1_semantic_node asn;
+        asn.symbol = node->symbol;
 
-        asn1_unknown_container* container = nullptr;
+        auto iter = index.find("DefinedType");
+        if (index.end() != iter) {
+            auto& rhs_deftype = rhs[iter->second];
+
+            auto& rhs_typespec = rhs[2];
+
+            asn.object = asn1_referenced_type::define(rhs_deftype.value, rhs_typespec.object);
+
+            iter = index.find("Constraint");
+            if (index.end() != iter) {
+                auto& rhs_cons = rhs[iter->second];
+                auto cons = rhs_cons.cons.u;
+                rhs_typespec.object->get_constraints().add(cons);
+                if (asn1_entity_constraint_container != cons->get_entity()) rhs_cons.release();
+            }
+
+            rhs_typespec.release();  // asn own rhs_typespec.object
+        }
+        // TODO parameterized
+
+        context.push(std::move(asn));
+        return errorcode_t::success;
+    });
+    add_handler("ExtensionAdditions",
+                [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t { return errorcode_t::success; });
+    add_handler("ComponentTypeLists", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("ComponentTypeLists", {"Constraint", "{", "ComponentTypeList", "ExtensionAdditions", "}"})
+        // production("ComponentTypeLists", {"{", "ComponentTypeList", "ExtensionAdditions", "}"})
+        // production("ComponentTypeLists", {"Constraint", "{", "ComponentTypeList", "}"})
+        // production("ComponentTypeLists", {"{", "ComponentTypeList", "}"})
+        // production("ComponentTypeLists", {"Constraint", "{", "}"})
+        // production("ComponentTypeLists", {"{", "}"})
+
+        auto size = node->sizeof_rhs();
+        std::vector<asn1_semantic_node> rhs(size);
+        std::unordered_map<std::string, size_t> index;
+        for (size_t i = 0; i < size; ++i) {
+            size_t idx = size - 1 - i;
+            rhs[idx] = context.pop();
+            auto& it = rhs[idx];
+            index.emplace(it.symbol, idx);
+        }
+
+        asn1_semantic_node asn;
+        asn.symbol = node->symbol;
+
         auto iter = index.find("ComponentTypeList");
         if (index.end() != iter) {
             auto& rhs_fieldlist = rhs[iter->second];
-            container = static_cast<asn1_unknown_container*>(rhs_fieldlist.object);
-            sequence->set(*container);
+            asn.object = rhs_fieldlist.object;
+            rhs_fieldlist.release();  // asn own asn1_unknown_container
         }
         auto citer = index.find("Constraint");
         if (index.end() != citer) {
             auto& rhs_cons = rhs[citer->second];
-            auto cons = rhs_cons.cons.u;
-            sequence->get_constraints().add(cons);
-            if (asn1_entity_constraint_container != cons->get_entity()) rhs_cons.release();
+            asn.cons = rhs_cons.cons;
+            rhs_cons.release();  // asn own constraints
+        }
+
+        context.push(std::move(asn));
+
+        return errorcode_t::success;
+    });
+    add_handler("SequenceTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("SequenceTypeSpec", {"SEQUENCE", "ComponentTypeLists"})
+
+        auto size = node->sizeof_rhs();
+        std::vector<asn1_semantic_node> rhs(size);
+        std::unordered_map<std::string, size_t> index;
+        for (size_t i = 0; i < size; ++i) {
+            size_t idx = size - 1 - i;
+            rhs[idx] = context.pop();
+            auto& it = rhs[idx];
+            index.emplace(it.symbol, idx);
         }
 
         asn1_semantic_node asn;
+        auto sequence = new asn1_sequence;
+        asn1_unknown_container* container = nullptr;
+        auto& rhs_body = rhs[1];
+
+        container = static_cast<asn1_unknown_container*>(rhs_body.object);
+        if (container) sequence->set(*container);  // move
+
+        auto cons = rhs_body.cons.u;
+        if (cons) sequence->get_constraints().add(cons);
+
+        rhs_body.release();  // sequence own container and constraints
+
         asn.symbol = node->symbol;
         asn.object = sequence;
         context.push(std::move(asn));
@@ -109,9 +232,9 @@ void asn1_publisher::prepare_basics() {
         return errorcode_t::success;
     });
     add_handler("SequenceOfTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("SequenceOfTypeSpec", {"SEQUENCE", "SizeConstraint", "OF", "TypeSpec"})
-        // production("SequenceOfTypeSpec", {"SEQUENCE", "Constraint", "OF", "TypeSpec"})
-        // production("SequenceOfTypeSpec", {"SEQUENCE", "OF", "TypeSpec"})
+        // production("SequenceOfTypeSpec", {"SEQUENCE", "SizeConstraint", "OF", "Type"})
+        // production("SequenceOfTypeSpec", {"SEQUENCE", "Constraint", "OF", "Type"})
+        // production("SequenceOfTypeSpec", {"SEQUENCE", "OF", "Type"})
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
@@ -125,7 +248,7 @@ void asn1_publisher::prepare_basics() {
 
         asn1_sequence_of* sequenceof = nullptr;
 
-        auto iter = index.find("TypeSpec");
+        auto iter = index.find("Type");
         if (index.end() != iter) {
             auto& rhs_typespec = rhs[iter->second];
             sequenceof = new asn1_sequence_of(rhs_typespec.object);
@@ -150,10 +273,7 @@ void asn1_publisher::prepare_basics() {
         return errorcode_t::success;
     });
     add_handler("SetTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("SetTypeSpec", {"SET", "Constraint", "{", "ComponentTypeList", "}"})
-        // production("SetTypeSpec", {"SET", "{", "ComponentTypeList", "}"})
-        // production("SetTypeSpec", {"SET", "Constraint", "{", "}"})
-        // production("SetTypeSpec", {"SET", "{", "}"})
+        // production("SetTypeSpec", {"SET", "ComponentTypeLists"})
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
@@ -165,35 +285,29 @@ void asn1_publisher::prepare_basics() {
             index.emplace(it.symbol, idx);
         }
 
-        auto setobj = new asn1_set;
-
-        asn1_unknown_container* container = nullptr;
-        auto iter = index.find("ComponentTypeList");
-        if (index.end() != iter) {
-            auto& rhs_fieldlist = rhs[iter->second];
-            container = static_cast<asn1_unknown_container*>(rhs_fieldlist.object);
-            setobj->set(*container);
-            // rhs_fieldlist.release();
-        }
-        auto citer = index.find("Constraint");
-        if (index.end() != citer) {
-            auto& rhs_cons = rhs[citer->second];
-            auto cons = rhs_cons.cons.u;
-            setobj->get_constraints().add(cons);
-            if (asn1_entity_constraint_container != cons->get_entity()) rhs_cons.release();
-        }
-
         asn1_semantic_node asn;
+        auto set = new asn1_set;
+        asn1_unknown_container* container = nullptr;
+        auto& rhs_body = rhs[1];
+
+        container = static_cast<asn1_unknown_container*>(rhs_body.object);
+        if (container) set->set(*container);  // move
+
+        auto cons = rhs_body.cons.u;
+        if (cons) set->get_constraints().add(cons);
+
+        rhs_body.release();  // set own container and constraints
+
         asn.symbol = node->symbol;
-        asn.object = setobj;
+        asn.object = set;
         context.push(std::move(asn));
 
         return errorcode_t::success;
     });
     add_handler("SetOfTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("SetOfTypeSpec", {"SET", "SizeConstraint", "OF", "TypeSpec"})
-        // production("SetOfTypeSpec", {"SET", "Constraint", "OF", "TypeSpec"})
-        // production("SetOfTypeSpec", {"SET", "OF", "TypeSpec"})
+        // production("SetOfTypeSpec", {"SET", "SizeConstraint", "OF", "Type"})
+        // production("SetOfTypeSpec", {"SET", "Constraint", "OF", "Type"})
+        // production("SetOfTypeSpec", {"SET", "OF", "Type"})
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
@@ -207,7 +321,7 @@ void asn1_publisher::prepare_basics() {
 
         asn1_set_of* setof = nullptr;
 
-        auto iter = index.find("TypeSpec");
+        auto iter = index.find("Type");
         if (index.end() != iter) {
             auto& rhs_typespec = rhs[iter->second];
             setof = new asn1_set_of(rhs_typespec.object);
@@ -232,10 +346,7 @@ void asn1_publisher::prepare_basics() {
         return errorcode_t::success;
     });
     add_handler("ChoiceTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("ChoiceTypeSpec", {"CHOICE", "Constraint", "{", "ComponentTypeList", "}"})
-        // production("ChoiceTypeSpec", {"CHOICE", "{", "ComponentTypeList", "}"})
-        // production("ChoiceTypeSpec", {"CHOICE", "Constraint", "{", "}"})
-        // production("ChoiceTypeSpec", {"CHOICE", "{", "}"})
+        // production("ChoiceTypeSpec", {"CHOICE", "ComponentTypeLists"})
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
@@ -247,28 +358,23 @@ void asn1_publisher::prepare_basics() {
             index.emplace(it.symbol, idx);
         }
 
-        auto choice = new asn1_choice;
-
-        asn1_unknown_container* container = nullptr;
-        auto iter = index.find("ComponentTypeList");
-        if (index.end() != iter) {
-            auto& rhs_fieldlist = rhs[iter->second];
-            container = static_cast<asn1_unknown_container*>(rhs_fieldlist.object);
-            choice->set(*container);
-            // rhs_fieldlist.release();
-        }
-        auto citer = index.find("Constraint");
-        if (index.end() != citer) {
-            auto& rhs_cons = rhs[citer->second];
-            auto cons = rhs_cons.cons.u;
-            choice->get_constraints().add(cons);
-            if (asn1_entity_constraint_container != cons->get_entity()) rhs_cons.release();
-        }
-
         asn1_semantic_node asn;
+        auto choice = new asn1_choice;
+        asn1_unknown_container* container = nullptr;
+        auto& rhs_body = rhs[1];
+
+        container = static_cast<asn1_unknown_container*>(rhs_body.object);
+        if (container) choice->set(*container);  // move
+
+        auto cons = rhs_body.cons.u;
+        if (cons) choice->get_constraints().add(cons);
+
+        rhs_body.release();  // choice own container and constraints
+
         asn.symbol = node->symbol;
         asn.object = choice;
         context.push(std::move(asn));
+
         return errorcode_t::success;
     });
     add_handler("ComponentTypeList", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
@@ -310,8 +416,8 @@ void asn1_publisher::prepare_basics() {
         return errorcode_t::success;
     });
     add_handler("NamedType", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("NamedType", {symid, "TypeSpec"})
-        auto rhs_typespec = context.pop();  // TypeSpec
+        // production("NamedType", {symid, "Type"})
+        auto rhs_typespec = context.pop();  // Type
         auto rhs_symid = context.pop();     // symid or symuser
 
         asn1_semantic_node asn;
@@ -331,8 +437,8 @@ void asn1_publisher::prepare_basics() {
     add_handler("ComponentType", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         // production("ComponentType", {"NamedType"})
         // production("ComponentType", {"NamedType", "Constraint"})
-        // production("ComponentType", {"NamedType", "FieldSpecifier"})
-        // production("ComponentType", {"NamedType", "Constraint", "FieldSpecifier"})
+        // production("ComponentType", {"NamedType", "OptionalitySpec"})
+        // production("ComponentType", {"NamedType", "Constraint", "OptionalitySpec"})
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
@@ -353,7 +459,7 @@ void asn1_publisher::prepare_basics() {
         rhs_namedtype.release();  // asn own rhs_namedtype.object
 
         if (asn.object) {
-            auto iter = index.find("FieldSpecifier");
+            auto iter = index.find("OptionalitySpec");
             if (index.end() != iter) {
                 auto& rhs_fieldopt = rhs[iter->second];
 
@@ -388,10 +494,10 @@ void asn1_publisher::prepare_basics() {
 
         return errorcode_t::success;
     });
-    add_handler("FieldSpecifier", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("FieldSpecifier", {"OPTIONAL"})
-        // production("FieldSpecifier", {"DEFAULT", "ValueElement"})
-        // production("FieldSpecifier", {"DEFAULT", "{", "}"})
+    add_handler("OptionalitySpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("OptionalitySpec", {"OPTIONAL"})
+        // production("OptionalitySpec", {"DEFAULT", "ValueElement"})
+        // production("OptionalitySpec", {"DEFAULT", "{", "}"})
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
@@ -449,20 +555,19 @@ void asn1_publisher::prepare_basics() {
         return errorcode_t::success;
     });
     add_handler("ReferencedTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("ReferencedTypeSpec", {"Identifier"})
-        return_t ret = errorcode_t::success;
-        __try2 {
-            // pop and push, simply modify
-            auto& top = context.top();
-            top.symbol = node->symbol;
-            top.object = asn1_referenced_type::refer(top.value);
-        }
-        __finally2 {}
-        return ret;
+        // production("ReferencedTypeSpec", {"TypeIdentifier"})
+
+        // pop and push, simply modify
+        auto& top = context.top();
+        top.symbol = node->symbol;
+        top.object = asn1_referenced_type::refer(top.value);
+
+        return errorcode_t::success;
     });
     add_handler("TaggedTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("TaggedTypeSpec", {"TagPrefix", "TagSpec", "TypeSpec"})
-        // production("TaggedTypeSpec", {"TagPrefix", "TypeSpec"})
+        // production("TaggedTypeSpec", {"TagSpec", "IMPLICIT", "Type"})
+        // production("TaggedTypeSpec", {"TagSpec", "EXPLICIT", "Type"})
+        // production("TaggedTypeSpec", {"TagSpec", "Type"})
 
         auto size = node->sizeof_rhs();
 
@@ -493,9 +598,9 @@ void asn1_publisher::prepare_basics() {
 
         return errorcode_t::success;
     });
-    add_handler("TagPrefix", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("TagPrefix", {"[", "TagClass", symnum, "]"})
-        // production("TagPrefix", {"[", symnum, "]"})
+    add_handler("TagSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("TagSpec", {"[", "TagClass", symnum, "]"})
+        // production("TagSpec", {"[", symnum, "]"})
 
         auto size = node->sizeof_rhs();  // 3 or 4
 
@@ -513,7 +618,7 @@ void asn1_publisher::prepare_basics() {
 
         return errorcode_t::success;
     });
-    add_handler("EnumTypeSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("EnumeratedType", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
         for (size_t i = 0; i < size; ++i) {
@@ -537,9 +642,9 @@ void asn1_publisher::prepare_basics() {
 
         return errorcode_t::success;
     });
-    add_handler("EnumList", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("EnumList", {"EnumList", ",", "EnumItem"})
-        // production("EnumList", {"EnumItem"})
+    add_handler("Enumerations", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("Enumerations", {"Enumerations", ",", "Enumeration"})
+        // production("Enumerations", {"Enumeration"})
 
         auto size = node->sizeof_rhs();
 
@@ -567,8 +672,8 @@ void asn1_publisher::prepare_basics() {
 
         return errorcode_t::success;
     });
-    add_handler("EnumItem", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("EnumItem", {symid, "(", symnum, ")"})
+    add_handler("Enumeration", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("Enumeration", {symid, "(", symnum, ")"})
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
@@ -601,8 +706,8 @@ void asn1_publisher::prepare_basics() {
 
         auto obj = asn1_builder::build(entity);
         if (4 == size) {
-            // production("SimpleTypeSpec", {"INTEGER", "{", "EnumList", "}"})
-            // production("SimpleTypeSpec", {"BIT STRING", "{", "EnumList", "}"})
+            // production("SimpleTypeSpec", {"INTEGER", "{", "Enumerations", "}"})
+            // production("SimpleTypeSpec", {"BIT STRING", "{", "Enumerations", "}"})
             auto& rhs_enumlist = rhs[2];
             auto container = static_cast<asn1_namedlist*>(rhs_enumlist.object);
             if ("INTEGER" == rhs_simpletype.symbol) ((asn1_integer*)obj)->add(*container);
@@ -624,11 +729,6 @@ return_t asn1_publisher::default_handler(asn1_runtime* runtime, parse_treenode* 
 
     // pop and push
     // simply modify top
-
-    // Statement
-    // DefinedType
-    // TypeSpec
-    // Identifier
 
     auto& top = context.top();
     top.symbol = node->symbol;

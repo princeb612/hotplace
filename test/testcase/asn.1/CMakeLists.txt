@@ -8,7 +8,6 @@ set (module asn.1)
 file (GLOB SOURCE_FILES
     *.cpp
     runtime/*.cpp loader/*.cpp
-    ${PROJECT_SOURCE_DIR}/test/testcase/io/parser/asn1module.cpp
 )
 file (GLOB HEADER_FILES *.hpp ${PROJECT_SOURCE_DIR}/*.hpp)
 

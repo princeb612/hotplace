@@ -55,6 +55,20 @@ return_t asn1_runtime_context::set(asn1_runtime* runtime) {
     return ret;
 }
 
+bool asn1_runtime_context::set(const std::string& name) {
+    critical_section_guard guard(_lock);
+
+    auto iter = _contexts.find(name);
+    if (_contexts.end() == iter) {
+        auto runtime = new asn1_runtime(name);
+        set(runtime);  // addref
+        runtime->release();
+    } else {
+        _current = iter->second;
+    }
+    return true;
+}
+
 bool asn1_runtime_context::select(const std::string& name) {
     critical_section_guard guard(_lock);
 

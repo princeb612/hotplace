@@ -30,6 +30,13 @@ struct asn1_semantic_node {
     std::string symbol;
     std::string value;
 
+    // module
+    struct {
+        std::string name;
+        asn1_taggingmode_t tagdefault;
+        asn1_extensibility_t exensibility;
+    } module;
+
     // asn1_object*
     asn1_object* object;
     asn1_option option;
@@ -45,7 +52,10 @@ struct asn1_semantic_node {
         asn1_constraint<std::string>* s;
     } cons;
 
-    asn1_semantic_node() : object(nullptr), cons_type(type_category_t::unknown) { cons.u = nullptr; }
+    asn1_semantic_node() : object(nullptr), cons_type(type_category_t::unknown) {
+        module.tagdefault = asn1_explicit;
+        cons.u = nullptr;
+    }
     ~asn1_semantic_node() {
         if (object) object->release();
         if (cons.u) cons.u->release();

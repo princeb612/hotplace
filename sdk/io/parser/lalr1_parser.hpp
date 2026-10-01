@@ -100,6 +100,7 @@ class lalr1_parser : public parser_t {
     virtual return_t build(binary_parsing_table* table);
 
     virtual parser_type_t get_type() const;
+    virtual uint16 get_version() const;
 
    protected:
     // import

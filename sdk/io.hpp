@@ -131,6 +131,9 @@
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_notation_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_visitor.hpp>
 
+/* asn.1/loader */
+#include <hotplace/sdk/io/asn.1/loader/asn1_loader.hpp>
+
 /* asn.1/runtime */
 #include <hotplace/sdk/io/asn.1/runtime/asn1_builder.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_bytestream.hpp>

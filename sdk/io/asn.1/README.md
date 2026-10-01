@@ -8,6 +8,7 @@ ASN.1 support in hotplace covers notation, parsing, basic type/constraint repres
 - `compiler/` — compiler-oriented ASN.1 processing and generation flow
 - `loader/` — loading and interpretation flow
 - `runtime/` — runtime object/type representation and examples
+- `resource/` — parser configuration/resource sources used by the ASN.1 parser setup
 
 ## Detailed documents
 
@@ -18,6 +19,16 @@ ASN.1 support in hotplace covers notation, parsing, basic type/constraint repres
 - [Compiler flow](compiler/compiler-flow.md)
 - [Loader flow](loader/loader-flow.md)
 - [Runtime examples](runtime/runtime-examples.md)
+
+## Implementation records
+
+- [ASN.1 object model](basic/asn1-object-model.md)
+- [ASN.1 structural node model](basic/asn1-node.md)
+- [ASN.1 visitor architecture](basic/asn1-visitor.md)
+- [ASN.1 constraints](basic/semantic/constraints/asn1_constraints.md)
+- [ASN.1 runtime](runtime/asn1_runtime.md)
+- [ASN.1 loader](loader/asn1_loader.md)
+- [ASN.1 compiler direction](compiler/asn1-compiler.md)
 
 ## Related areas
 

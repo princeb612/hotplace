@@ -92,4 +92,4 @@ Use `floating_point` when exact decimal/rational arithmetic is the concern. Use 
 
 ## Status
 
-This is a low-level system utility supporting representation inspection and floating-point format conversion. It is not intended to replace the exact arithmetic types documented in `floating-point.md`.
+This is a low-level system utility supporting representation inspection and floating-point format conversion. It is not intended to replace the exact arithmetic types documented in `floating_point.md`.

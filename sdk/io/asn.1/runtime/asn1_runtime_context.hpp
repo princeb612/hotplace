@@ -31,6 +31,7 @@ class asn1_runtime_context {
 
     // name "<DEFAULT>" reserved
     return_t set(asn1_runtime* runtime);
+    bool set(const std::string& name);
     bool select(const std::string& name);
     bool remove(const std::string& name);
     asn1_runtime* current();

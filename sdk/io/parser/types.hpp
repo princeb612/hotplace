@@ -15,6 +15,7 @@
 #include <map>
 #include <set>
 #include <stack>
+#include <unordered_map>
 #include <vector>
 
 namespace hotplace {
@@ -270,7 +271,7 @@ struct LR1_item {
     }
 };
 
-typedef std::vector<parser_production> parser_productions_t;
+typedef std::map<uint32, parser_production> parser_productions_t;
 typedef std::map<std::pair<uint32, std::string>, parser_action_state> parser_lalr1_action_table_t;
 typedef std::multimap<std::pair<uint32, std::string>, parser_action_state> parser_glr_action_table_t;
 typedef std::map<std::pair<uint32, std::string>, uint32> parser_goto_table_t;
@@ -320,6 +321,7 @@ class parser_t {
     virtual return_t parse(const std::vector<parser_token>& tokens, parse_tree* pt = nullptr) = 0;
     virtual return_t build(binary_parsing_table* table) = 0;
     virtual parser_type_t get_type() const = 0;
+    virtual uint16 get_version() const = 0;
 
     // import
     virtual return_t buildup_action(uint32 state, const std::string& lookahead, parser_action_state action) = 0;

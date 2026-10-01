@@ -394,3 +394,31 @@ case client_key_exchange
   end
 end
 ```
+
+#### implementation areas
+
+* [protection](protection/README.md) - key schedule, transcript hash and record protection related material
+* [session](session/README.md) - TLS/DTLS/QUIC session support
+* [advisor](advisor/README.md) - algorithm and parameter selection helpers
+* [QUIC](quic/README.md) - QUIC transport and TLS integration
+* `tls/` - TLS record, handshake and extension implementations
+
+#### related tests
+
+* [TLS testcase](../../../test/testcase/tls/README.md)
+* `test/testcase/tls/tls12/`
+* `test/testcase/tls/tls13/`
+* `test/testcase/tls/dtls12/`
+
+#### related areas
+
+* `sdk/crypto/` - cipher, digest, MAC, KDF and key/signature support
+* `sdk/net/http/` - HTTP/2 and HTTP/3 protocol layers above TLS/QUIC
+* `sdk/net/basic/` - secure socket and transport integration
+
+## Module records
+
+- [TLS message model](tls-message-model.md) — record, handshake and extension implementation boundaries
+- [TLS protection and session model](tls-protection-and-session.md) — protection state, key schedule, session and SSLKEYLOG integration
+- [TLS advisor](tls_advisor.md) — TLS/DTLS/QUIC identifier and parameter mapping
+- [QUIC and TLS integration](quic-tls-integration.md) — TLS 1.3 key material and QUIC packet/frame boundary

@@ -6,6 +6,9 @@
 
 # copy test.sh to xxx/build/test/testcase/
 file (COPY test.sh DESTINATION ${PROJECT_SOURCE_DIR}/${SET_BUILDDIR}/test/testcase/)
+file (GLOB ASN1_FILES etc/asn.1/*.asn1)
+file (COPY ${ASN1_FILES} DESTINATION ${PROJECT_SOURCE_DIR}/${SET_BUILDDIR}/test/testcase/asn.1/)
+file (COPY ${ASN1_FILES} DESTINATION ${PROJECT_SOURCE_DIR}/${SET_BUILDDIR}/test/testcase/io/)
 
 # base
 add_subdirectory (base)

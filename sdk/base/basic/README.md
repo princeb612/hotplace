@@ -8,10 +8,10 @@ These components are not tied to one protocol or subsystem. They provide common 
 
 | Topic | Role |
 |---|---|
-| [builtin memory](builtin-memory.md) | Memory pool, expansion, reallocation, and allocator adapters |
+| [builtin memory](builtinmemory.md) | Memory pool, expansion, reallocation, and allocator adapters |
 | [command line](cmdline.md) | Template-based command-line argument registration and parsing |
-| [memory dump](dump-memory.md) | Hexadecimal/ASCII representation of memory and binary values |
-| [function pipeline](function-pipeline.md) | Conditional execution and error-state propagation |
+| [memory dump](dump_memory.md) | Hexadecimal/ASCII representation of memory and binary values |
+| [function pipeline](function_pipeline.md) | Conditional execution and error-state propagation |
 | [dynamic `va_list`](valist.md) | Construction of a platform-specific `va_list` from stored arguments |
 | [variant](variant.md) | Common runtime value/type representation and conversion |
 

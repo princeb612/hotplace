@@ -79,3 +79,30 @@ mindmap
 | br               | content-encoding      | LZ77 + Huffman + Context Modeling  | BREACH attack |
 | zstd             | content-encoding      | LZ77 + Finite State Entropy        |               |
 | identity         | content-encoding      | N/A                                |               |
+
+#### Module records
+
+- [HTTP core model](http-core-model.md) — request/response, header, URI, router and common object relationships
+- [HTTP server/client flow](http-server-client.md) — network integration and application dispatch
+- [HTTP protocol stack](http-protocol-stack.md) — HTTP/1.x and HTTP/2 protocol interpretation and framing boundary
+
+## implementation areas
+
+* [auth](auth/README.md)
+* [compression](compression/README.md)
+* [HPACK](hpack/README.md)
+* [HTTP/1.x](http1/README.md)
+* [HTTP/2](http2/README.md)
+* [HTTP/3](http3/README.md)
+* [QPACK](qpack/README.md)
+
+#### related tests
+
+* [HTTP testcase](../../../test/testcase/net/http/README.md)
+* [HPACK testcase](../../../test/testcase/net/hpack/README.md)
+* [QPACK testcase](../../../test/testcase/net/qpack/README.md)
+
+#### related areas
+
+* `sdk/net/tls/` - TLS/QUIC transport used by HTTP/3
+* `sdk/crypto/` - authentication and cryptographic support

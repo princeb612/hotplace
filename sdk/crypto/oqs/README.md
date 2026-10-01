@@ -1,69 +1,40 @@
+# OQS / Post-Quantum Cryptography
 
-#### PQC
+`sdk/crypto/oqs` is hotplace's adapter for the OpenSSL 3 `oqsprovider` provider. It does not implement the post-quantum algorithms itself; it discovers provider algorithms and exposes common KEM/signature operations through `pqc_oqs`.
 
-[Post-Quantum Cryptography](https://seed.kisa.or.kr/kisa/ngc/pqc.do)
-NIST 2022
-|                    |               |                                                            |
-| --                 | --            | --                                                         |
-| Crystals-Kyber     | Lattice-based | ML-KEM (Module Lattice-Based Key Encapsulation Mechanism)  |
-| Crystals-Dilithium | Lattice-based | DL-DSA (Dilithium Digital Signature Algorithm)             |
-| FALCON             | Lattice-based | FN-DSA (Falcon Digital Signature Algorithm)                |
-| SPHINCS+           | Hash-based    | SLH-DSA (Stateless Hash-Based Digital Signature Algorithm) |
+## Implementation
 
-- oqs-provider
-  - KEM
-    - p256_mlkem512
-    - x25519_mlkem512
-  - DSA
-    - p256_mldsa44
-    - rsa3072_mldsa44
-    - p384_mldsa65
-    - p521_mldsa87
-    - falcon512
-    - p256_falcon512
-    - rsa3072_falcon512
-    - falconpadded512
-    - p256_falconpadded512
-    - rsa3072_falconpadded512
-    - falcon1024
-    - p521_falcon1024
-    - falconpadded1024
-    - p521_falconpadded1024
-    - sphincssha2128fsimple
-    - p256_sphincssha2128fsimple
-    - rsa3072_sphincssha2128fsimple
-    - sphincssha2128ssimple
-    - p256_sphincssha2128ssimple
-    - rsa3072_sphincssha2128ssimple
-    - sphincssha2192fsimple
-    - p384_sphincssha2192fsimple
-    - sphincsshake128fsimple
-    - p256_sphincsshake128fsimple
-    - rsa3072_sphincsshake128fsimple
-    - mayo1
-    - p256_mayo1
-    - mayo2
-    - p256_mayo2
-    - mayo3
-    - p384_mayo3
-    - mayo5
-    - p521_mayo5
-    - CROSSrsdp128balanced
-    - OV_Is_pkc
-    - p256_OV_Is_pkc
-    - OV_Ip_pkc
-    - p256_OV_Ip_pkc
-    - OV_Is_pkc_skc
-    - p256_OV_Is_pkc_skc
-    - OV_Ip_pkc_skc
-    - p256_OV_Ip_pkc_skc
-    - snova2454
-    - p256_snova2454
-    - snova2454esk
-    - p256_snova2454esk
-    - snova37172
-    - p256_snova37172
-    - snova2455
-    - p384_snova2455
-    - snova2965
-    - p521_snova2965
+- `oqs/oqs.hpp`, `oqs.cpp` — provider context, algorithm discovery, key generation, key serialization, KEM, and signature operations.
+- `oqs/types.hpp` — OQS provider context and discovered algorithm state.
+- `oqs_alg_oid_registered` — marks provider algorithms for which hotplace can resolve an OID through OpenSSL's NID mapping.
+
+## Main flow
+
+```text
+OpenSSL 3 OSSL_LIB_CTX
+    ↓
+load default provider + oqsprovider
+    ↓
+query KEM / SIGNATURE operations
+    ↓
+pqc_oqs
+    ├── keygen / encode / decode
+    ├── encapsule / decapsule
+    └── sign / verify
+    ↓
+crypto/basic / OpenSSL EVP_PKEY
+```
+
+## Related documentation
+
+- `oqs-provider.md` — existing study/test notes for the external provider and remaining test-vector work.
+- `../basic/` — OpenSSL PQC and common key/crypto abstractions used by the adapter.
+- `../advisor/` — algorithm/OID metadata used to identify supported algorithms.
+
+## Tests
+
+- `test/testcase/crypto/pqc/oqs/testcase_oqs_encode.cpp`
+- `test/testcase/crypto/pqc/oqs/testcase_oqs_kem.cpp`
+- `test/testcase/crypto/pqc/oqs/testcase_oqs_dsa.cpp`
+
+The test suite requires the external `oqsprovider` module to be installed where OpenSSL can load it. The tests enumerate provider algorithms and exercise only entries marked as OID-registered.

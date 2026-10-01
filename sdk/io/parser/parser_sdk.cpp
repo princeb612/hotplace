@@ -34,7 +34,8 @@ void compute_first_and_follow_sets(const cfg_grammar& grammar, parser_temporary_
     bool changed = true;
     while (changed) {
         changed = false;
-        for (const auto& rule : rules) {
+        for (const auto& pair : rules) {
+            const auto rule = pair.second;
             if (rule.rhs.empty()) continue;
 
             std::string first_rhs = rule.rhs[0];
@@ -54,7 +55,8 @@ void compute_first_and_follow_sets(const cfg_grammar& grammar, parser_temporary_
     changed = true;
     while (changed) {
         changed = false;
-        for (const auto& rule : rules) {
+        for (const auto& pair : rules) {
+            const auto rule = pair.second;
             for (size_t i = 0; i < rule.rhs.size(); ++i) {
                 std::string B = rule.rhs[i];
                 if (false == grammar.is_non_terminal(B)) continue;
@@ -87,11 +89,12 @@ std::set<LR0_item> closure_lr0(const cfg_grammar& grammar, std::set<LR0_item> it
         added = false;
         std::set<LR0_item> new_items = items;
         for (const auto& item : items) {
-            const auto& rule = rules[item.production_id];
+            const auto& rule = grammar.get_production(item.production_id);
             if (item.dot_pos < rule.rhs.size()) {
                 std::string B = rule.rhs[item.dot_pos];
                 if (grammar.is_non_terminal(B)) {
-                    for (const auto& r : rules) {
+                    for (const auto& production : rules) {
+                        const auto& r = production.second;
                         if (r.lhs == B) {
                             if (new_items.insert({r.id, 0}).second) {
                                 added = true;
@@ -107,7 +110,7 @@ std::set<LR0_item> closure_lr0(const cfg_grammar& grammar, std::set<LR0_item> it
 }
 
 void build_lr0_states(const cfg_grammar& grammar, parser_temporary_context_t& context, parser_goto_table_t& goto_table) {
-    const auto& rules = grammar.get_productions();
+    // const auto& rules = grammar.get_productions();
     auto& lr0_states = context.lr0_states;
     auto& lr0_goto = context.lr0_goto;
     lr0_states.clear();
@@ -126,7 +129,7 @@ void build_lr0_states(const cfg_grammar& grammar, parser_temporary_context_t& co
 
         std::set<std::string> symbols;
         for (const auto& item : lr0_states[state_id]) {
-            const auto& rule = rules[item.production_id];
+            const auto& rule = grammar.get_production(item.production_id);
             if (item.dot_pos < rule.rhs.size()) {
                 symbols.insert(rule.rhs[item.dot_pos]);
             }
@@ -135,7 +138,7 @@ void build_lr0_states(const cfg_grammar& grammar, parser_temporary_context_t& co
         for (const auto& sym : symbols) {
             std::set<LR0_item> goto_items;
             for (const auto& item : lr0_states[state_id]) {
-                const auto& rule = rules[item.production_id];
+                const auto& rule = grammar.get_production(item.production_id);
                 if (item.dot_pos < rule.rhs.size() && rule.rhs[item.dot_pos] == sym) {
                     goto_items.insert({item.production_id, item.dot_pos + 1});
                 }
@@ -190,7 +193,7 @@ bool generate_lalr1_tables(const cfg_grammar& grammar, parser_temporary_context_
                 std::set<LR1_item> next_expanded = expanded;
 
                 for (const auto& item : expanded) {
-                    const auto& rule = rules[item.production_id];
+                    const auto& rule = grammar.get_production(item.production_id);
                     if (item.dot_pos < rule.rhs.size()) {
                         std::string B = rule.rhs[item.dot_pos];
                         if (grammar.is_non_terminal(B)) {
@@ -202,7 +205,8 @@ bool generate_lalr1_tables(const cfg_grammar& grammar, parser_temporary_context_
                                 lookaheads.insert(item.lookahead);
                             }
 
-                            for (const auto& r : rules) {
+                            for (const auto& production : rules) {
+                                const auto& r = production.second;
                                 if (r.lhs == B) {
                                     for (const auto& la : lookaheads) {
                                         if (next_expanded.insert({r.id, 0, la}).second) {
@@ -219,7 +223,7 @@ bool generate_lalr1_tables(const cfg_grammar& grammar, parser_temporary_context_
             lalr_states[i] = expanded;
 
             for (const auto& item : lalr_states[i]) {
-                const auto& rule = rules[item.production_id];
+                const auto& rule = grammar.get_production(item.production_id);
                 if (item.dot_pos < rule.rhs.size()) {
                     std::string sym = rule.rhs[item.dot_pos];
                     uint32 next_st = lr0_goto[{static_cast<uint32>(i), sym}];
@@ -237,7 +241,7 @@ bool generate_lalr1_tables(const cfg_grammar& grammar, parser_temporary_context_
         if (act.type == parser_action_t::shift) {
             return "Shift(" + std::to_string(act.target) + ")";
         } else if (act.type == parser_action_t::reduce) {
-            const auto& r = rules[act.target];
+            const auto& r = grammar.get_production(act.target);
             return "Reduce(" + std::to_string(act.target) + ": " + r.lhs + ")";
         } else if (act.type == parser_action_t::accept) {
             return "Accept";
@@ -248,7 +252,7 @@ bool generate_lalr1_tables(const cfg_grammar& grammar, parser_temporary_context_
 
     for (size_t i = 0; i < lalr_states.size(); ++i) {
         for (const auto& item : lalr_states[i]) {
-            const auto& rule = rules[item.production_id];
+            const auto& rule = grammar.get_production(item.production_id);
 
             if (item.dot_pos < rule.rhs.size()) {
                 std::string sym = rule.rhs[item.dot_pos];
@@ -331,7 +335,7 @@ bool generate_glr_tables(const cfg_grammar& grammar, parser_temporary_context_t&
                 std::set<LR1_item> next_expanded = expanded;
 
                 for (const auto& item : expanded) {
-                    const auto& rule = rules[item.production_id];
+                    const auto& rule = grammar.get_production(item.production_id);
                     if (item.dot_pos < rule.rhs.size()) {
                         std::string B = rule.rhs[item.dot_pos];
                         if (grammar.is_non_terminal(B)) {
@@ -343,7 +347,8 @@ bool generate_glr_tables(const cfg_grammar& grammar, parser_temporary_context_t&
                                 lookaheads.insert(item.lookahead);
                             }
 
-                            for (const auto& r : rules) {
+                            for (const auto& production : rules) {
+                                const auto& r = production.second;
                                 if (r.lhs == B) {
                                     for (const auto& la : lookaheads) {
                                         if (next_expanded.insert({r.id, 0, la}).second) {
@@ -360,7 +365,7 @@ bool generate_glr_tables(const cfg_grammar& grammar, parser_temporary_context_t&
             lalr_states[i] = expanded;
 
             for (const auto& item : lalr_states[i]) {
-                const auto& rule = rules[item.production_id];
+                const auto& rule = grammar.get_production(item.production_id);
                 if (item.dot_pos < rule.rhs.size()) {
                     std::string sym = rule.rhs[item.dot_pos];
                     uint32 next_st = lr0_goto[{static_cast<uint32>(i), sym}];
@@ -375,7 +380,7 @@ bool generate_glr_tables(const cfg_grammar& grammar, parser_temporary_context_t&
     // Insert actions into std::multimap without conflict rejections
     for (size_t i = 0; i < lalr_states.size(); ++i) {
         for (const auto& item : lalr_states[i]) {
-            const auto& rule = rules[item.production_id];
+            const auto& rule = grammar.get_production(item.production_id);
 
             if (item.dot_pos < rule.rhs.size()) {
                 std::string sym = rule.rhs[item.dot_pos];

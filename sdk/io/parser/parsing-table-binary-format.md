@@ -1,5 +1,7 @@
 ### parsing table binary file layout
 
+> applied revision 1094
+
 ```
 +-------------------------------------------------------+
 | File Header (20 bytes)                                |

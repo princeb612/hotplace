@@ -164,15 +164,22 @@ enum asn1_entity_t {
     asn1_entity_constraint_container,  // dedicated container cf. ("SubtypeElementSet", {"SubtypeElementSet", "SubtypeElement"})
 };
 
-enum asn1_tagtype_t {
-    // tagging mode
+enum asn1_taggingmode_t : uint8 {
+    // tag, tagdefault
     asn1_automatic = 0,
     asn1_implicit = 1,
     asn1_explicit = 2,
+};
 
-    // component type
+enum asn1_specifier_t : uint8 {
+    // specifier
     asn1_default = 3,
     asn1_optional = 4,
+};
+
+enum class asn1_extensibility_t : uint8 {
+    none,
+    extension_implied,
 };
 
 enum asn1_perm_t : uint8 {

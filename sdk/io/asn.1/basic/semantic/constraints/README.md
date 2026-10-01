@@ -4,7 +4,8 @@ ASN.1 constraint support and the notation used to describe subtype/value-set res
 
 ## Documents
 
-- [Subtype notation and value sets](subtype-notation.md)
+- [ASN.1 constraints](asn1_constraints.md) — implementation record
+- [Subtype notation and value sets](subtype-notation.md) — study/reference
 
 ## Related areas
 

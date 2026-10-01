@@ -132,3 +132,15 @@
 
              Figure 5: Interaction Summary between QUIC and TLS
 ```
+
+#### implementation areas
+
+* [frame](frame/README.md)
+* [packet](packet/README.md)
+* [TLS integration](../README.md)
+
+#### related areas
+
+* `sdk/net/http/http3/` - HTTP/3 above QUIC
+* `sdk/net/tls/` - TLS 1.3 handshake and key schedule used by QUIC
+* `sdk/crypto/` - packet protection cryptography

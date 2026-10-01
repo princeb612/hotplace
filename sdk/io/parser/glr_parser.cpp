@@ -11,6 +11,7 @@
  */
 
 #include <hotplace/sdk/base/basic/valist.hpp>
+#include <hotplace/sdk/base/graph/gss.hpp>
 #include <hotplace/sdk/base/nostd/utility.hpp>
 #include <hotplace/sdk/base/stream/basic_stream.hpp>
 #include <hotplace/sdk/base/system/trace.hpp>
@@ -25,6 +26,10 @@
 
 namespace hotplace {
 namespace io {
+
+using parse_gss = gss<uint32, parse_treenode*>;
+using parse_gss_node = parse_gss::node_type;
+using parse_gss_node_ptr = parse_gss::node_ptr;
 
 glr_parser::glr_parser(const cfg_grammar& g) : _grammar(g), _is_table_built(false) {}
 
@@ -59,7 +64,6 @@ void glr_parser::clear() {
     _goto_table.clear();
 }
 
-// Dynamic GLR multi-action table creation
 return_t glr_parser::learn() {
     return_t ret = errorcode_t::success;
 
@@ -84,16 +88,7 @@ return_t glr_parser::learn() {
                 };
 
                 auto lambda_action = [](typename std::multimap<std::pair<uint32, std::string>, parser_action_state>::const_iterator it, basic_stream& dbs) -> void {
-                    static std::map<std::string, std::string> table = {
-                        {"id", "SYMBOL_ID"}, {"usertype", "SYMBOL_USERTYPE"}, {"num", "SYMBOL_NUM"}, {"fp", "SYMBOL_FP"}, {"quot_string", "SYMBOL_QSTR"}};
-
-                    dbs << "{" << it->first.first << ", ";
-                    auto table_it = table.find(it->first.second);
-                    if (table.end() != table_it)
-                        dbs << table_it->second;
-                    else
-                        dbs << "\"" << it->first.second << "\"";
-                    dbs << "}, ";
+                    dbs << "{" << it->first.first << ", " << "\"" << it->first.second << "\"" << "}, ";
                     auto action = it->second.type;
                     auto target = it->second.target;
                     dbs << "{";
@@ -145,15 +140,15 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
         }
 
         auto resource = parser_resource::get_instance();
-        std::vector<std::shared_ptr<gss_node>> active_heads;
-        active_heads.push_back(std::make_shared<gss_node>(0, nullptr, nullptr));
+
+        // Initialize GSS stack with state 0
+        parse_gss stack;
+        stack.push_root(0, nullptr);
 
         size_t num_tokens = tokens.size();
-        const auto& rules = _grammar.get_productions();
-
         bool accepted = false;
 
-        while (false == active_heads.empty()) {
+        while (false == stack.get_heads().empty()) {
             parser_token current_token;
             std::string typestring;
 
@@ -178,13 +173,9 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
                 typestring = "$";
             }
 
-            // PHASE 1: perform all applicable REDUCE and ACCEPT operations at the current token (typestring) position.
-            std::vector<std::shared_ptr<gss_node>> reduce_queue = active_heads;
-            std::set<std::pair<uint32, std::shared_ptr<gss_node>>> visited_states;
-
-            for (const auto& h : active_heads) {
-                visited_states.insert({h->state, h->parent});
-            }
+            // PHASE 1: REDUCE and ACCEPT operations using GSS Pop/Retrace
+            std::vector<parse_gss_node_ptr> reduce_queue = stack.get_heads();
+            std::set<std::pair<uint32, parse_gss_node_ptr>> visited_reductions;
 
             size_t q_idx = 0;
             while (q_idx < reduce_queue.size()) {
@@ -200,35 +191,35 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
                             accepted = true;
                         }
                     } else if (parser_action_t::reduce == act.type) {
-                        const auto& rule = rules[act.target];
+                        const auto& rule = _grammar.get_production(act.target);
                         size_t rhs_len = rule.rhs.size();
 
-                        auto ancestor = head;
-                        for (size_t i = 0; i < rhs_len && nullptr != ancestor; ++i) {
-                            ancestor = ancestor->parent;
-                        }
+                        // Utilize gss::pop (retrace_paths) to safely collect all paths
+                        stack.pop(head, rhs_len, [&](const std::vector<parse_gss_node_ptr>& path) {
+                            if (path.empty()) return;
 
-                        if (nullptr != ancestor) {
+                            // The end of the path represents the ancestor stack node after reduction
+                            parse_gss_node_ptr ancestor = path.back();
+
                             auto goto_key = std::make_pair(ancestor->state, rule.lhs);
                             auto goto_it = _goto_table.find(goto_key);
                             if (goto_it != _goto_table.end()) {
                                 uint32 goto_state = goto_it->second;
 
-                                auto state_pair = std::make_pair(goto_state, ancestor);
-                                // add to the queue only if the state+ancestor combination has not been visited yet.
-                                if (0 == visited_states.count(state_pair)) {
-                                    visited_states.insert(state_pair);
+                                auto visit_key = std::make_pair(goto_state, ancestor);
+                                if (0 == visited_reductions.count(visit_key)) {
+                                    visited_reductions.insert(visit_key);
 
                                     if (nullptr != pt) {
                                         pt->on_reduce(rule.lhs, rhs_len);
                                     }
 
-                                    auto new_head = std::make_shared<gss_node>(goto_state, ancestor);
+                                    // Push new reduced stack node connected to ancestor
+                                    auto new_head = stack.push(ancestor, goto_state, nullptr);
                                     reduce_queue.push_back(new_head);
-                                    active_heads.push_back(new_head);  // also included in the set of shift candidates
                                 }
                             }
-                        }
+                        });
                     }
                 }
             }
@@ -239,10 +230,11 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
             }
 
             // PHASE 2: Execute SHIFT (advance token_idx only upon success)
-            std::vector<std::shared_ptr<gss_node>> next_heads;
+            std::vector<parse_gss_node_ptr> next_heads;
             std::set<uint32> next_states;
+            bool do_shift = false;
 
-            for (const auto& head : active_heads) {
+            for (const auto& head : stack.get_heads()) {
                 auto key = std::make_pair(head->state, typestring);
                 auto range = _action_table.equal_range(key);
 
@@ -250,21 +242,26 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
                     const auto& act = it->second;
 
                     if (parser_action_t::shift == act.type) {
-                        // 중복 Shift 노드 병합 (GSS Merge)
                         if (0 == next_states.count(act.target)) {
                             next_states.insert(act.target);
-                            if (nullptr != pt) {
-                                pt->on_shift(typestring, current_token.value);
-                            }
-                            ++shifted;
-                            next_heads.push_back(std::make_shared<gss_node>(act.target, head));
+
+                            // Shift new node connected to current head
+                            auto new_shift_head = stack.create_node(act.target, nullptr);
+                            new_shift_head->add_parent(head);
+                            next_heads.push_back(new_shift_head);
+
+                            do_shift = true;
                         }
                     }
                 }
             }
 
-            // syntax error if no further shifting is possible
-            if (next_heads.empty()) {
+            if (do_shift) {
+                if (nullptr != pt) {
+                    pt->on_shift(typestring, current_token.value);
+                }
+                ++shifted;
+            } else if (next_heads.empty()) {
 #if defined DEBUG
                 if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
                     trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
@@ -278,8 +275,12 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
                 __leave2;
             }
 
-            // increment the input token index and replace the stack head only after a successful shift.
-            active_heads = std::move(next_heads);
+            // Update active heads for next token shift step
+            stack.clear_heads();
+            for (const auto& nh : next_heads) {
+                stack.add_head(nh);
+            }
+
             ++token_idx;
         }
 
@@ -322,6 +323,8 @@ return_t glr_parser::build(binary_parsing_table* table) {
 }
 
 parser_type_t glr_parser::get_type() const { return parser_type_t::glr; }
+
+uint16 glr_parser::get_version() const { return 1; }
 
 return_t glr_parser::buildup_action(uint32 state, const std::string& lookahead, parser_action_state action) {
     return_t ret = errorcode_t::success;

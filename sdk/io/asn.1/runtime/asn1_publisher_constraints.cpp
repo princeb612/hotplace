@@ -37,7 +37,7 @@ void asn1_publisher::prepare_constraints() {
     auto resource = asn1_resource::get_instance();
 
     add_handler("Constraint", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("Constraint", {"(", "ConstraintExpr", ")"})
+        // production("Constraint", {"(", "ConstraintSpec", ")"})
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
@@ -56,10 +56,10 @@ void asn1_publisher::prepare_constraints() {
 
         return errorcode_t::success;
     });
-    add_handler("ConstraintExpr", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("ConstraintExpr", {"SubtypeElementSet"})
-        // production("ConstraintExpr", {"ALL EXCEPT", "SubtypeElementSet"})
-        // production("ConstraintExpr", {"ALL", "EXCEPT", "SubtypeElementSet"})
+    add_handler("ConstraintSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("ConstraintSpec", {"SubtypeElementSetSpec"})
+        // production("ConstraintSpec", {"ALL EXCEPT", "SubtypeElementSetSpec"})
+        // production("ConstraintSpec", {"ALL", "EXCEPT", "SubtypeElementSetSpec"})
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
@@ -95,13 +95,13 @@ void asn1_publisher::prepare_constraints() {
 
         return errorcode_t::success;
     });
-    add_handler("SubtypeElementSet", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("SubtypeElementSet", {"SubtypeElementSet", "|", "SubtypeElement"})
-        // production("SubtypeElementSet", {"SubtypeElementSet", ",", "SubtypeElement"})
-        // production("SubtypeElementSet", {"SubtypeElementSet", "UNION", "SubtypeElement"})
-        // production("SubtypeElementSet", {"SubtypeElementSet", "EXCEPT", "SubtypeElement"})
-        // production("SubtypeElementSet", {"SubtypeElementSet", "SubtypeElement"})
-        // production("SubtypeElementSet", {"SubtypeElement"})
+    add_handler("SubtypeElementSetSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+        // production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "|", "SubtypeElement"})
+        // production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", ",", "SubtypeElement"})
+        // production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "UNION", "SubtypeElement"})
+        // production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "EXCEPT", "SubtypeElement"})
+        // production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "SubtypeElement"})
+        // production("SubtypeElementSetSpec", {"SubtypeElement"})
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
@@ -210,7 +210,7 @@ void asn1_publisher::prepare_constraints() {
         // production("PrimaryElement", {"SIZE", "Constraint"})
         // production("PrimaryElement", {"FROM", "Constraint"})
         // production("PrimaryElement", {"PATTERN", symqs})
-        // production("PrimaryElement", {"(", "ConstraintExpr", ")"})  // parenthesis recursive structure
+        // production("PrimaryElement", {"(", "ConstraintSpec", ")"})  // parenthesis recursive structure
 
         auto size = node->sizeof_rhs();
         std::vector<asn1_semantic_node> rhs(size);
@@ -303,7 +303,7 @@ void asn1_publisher::prepare_constraints() {
             rhs_second.release();
             asn.cons.u = cons;
         } else if (1 < size) {
-            if ("ConstraintExpr" == rhs[1].symbol) {
+            if ("ConstraintSpec" == rhs[1].symbol) {
                 asn.cons = rhs[1].cons;
                 rhs[1].release();
             }

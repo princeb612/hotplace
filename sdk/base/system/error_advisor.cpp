@@ -181,86 +181,94 @@ const error_description error_descriptions[] = {
     errordef(eai_idn_encode, "IDN encoding failed"),
 #endif
     errordef(success, "success"),
+
     errordef(internal_error, "internal error"),
+    errordef(failed, "failed"),
+    errordef(unexpected, "unexpected"),
+    errordef(unknown, "unknown"),
+    errordef(exception_caught, "exception caught"),
+    errordef(assert_failed, "assert_failed"),
+
     errordef(out_of_memory, "out of memory"),
     errordef(insufficient_buffer, "insufficient buffer"),
+    errordef(empty, "empty"),
+    errordef(full, "full"),
+    errordef(max_reached, "max reached"),
+    errordef(exceed, "exceed the designed size"),
+    errordef(insufficient, "insufficient"),
+
     errordef(invalid_parameter, "invalid parameter"),
-    errordef(invalid_context, "invalid context"),
+    errordef(illegal_parameter, "illegal parameter"),  // ie. invalid_parameter + verify
     errordef(invalid_pointer, "invalid pointer"),
+    errordef(invalid_handle, "invalid handle"),
+    errordef(bad_data, "bad data"),
+    errordef(bad_format, "bad format"),
+    errordef(too_large_data, "too large data"),
+    errordef(out_of_range, "out of range"),
+    errordef(overflow, "overflow"),
+    errordef(divide_by_zero, "e.g. divide by zero"),
+    errordef(mismatch, "mismatch"),
+    errordef(different_type, "different type"),
+    errordef(narrow_type, "narrow type"),
+    errordef(miscast_unsigned, "negative integer to unsigned type"),
+    errordef(miscast_narrow, "narrow conversion"),
+    errordef(syntax_error, "syntax error"),
+
+    errordef(no_init, "not initialized"),
+    errordef(not_ready, "not ready"),
+    errordef(not_open, "not open"),
+    errordef(closed, "closed"),
+    errordef(not_available, "not available"),
+    errordef(invalid_context, "invalid context"),
+    errordef(premature_state, "premature state"),
+    errordef(blocked, "blocked"),
+    errordef(canceled, "canceled"),
+    errordef(abandoned, "abandoned"),
+    errordef(expired, "expired"),
+    errordef(low_version, "low version"),
+
+    errordef(missing_certificate, "certificate"),
+    errordef(cipher_failure, "cipher"),
+    errordef(digest_failure, "digest"),
+    errordef(verification_failure, "verification"),
+    errordef(integrity_error, "integrity error"),
+    errordef(violation, "violation"),
+    errordef(confidential, "confidential"),
+    errordef(suspicious, "suspicious"),
+
+    errordef(socket_failure, "socket"),
+    errordef(bind_failure, "bind"),
+    errordef(connect_failure, "connect"),
+    errordef(handshake_failure, "handshake"),
+    errordef(negotiation_failure, "negotiation failed"),
+    errordef(send_failure, "send"),
+    errordef(recv_failure, "recv"),
+    errordef(disconnect, "disconnect"),
+    errordef(no_session, "no session specified"),
+
     errordef(not_exist, "not exist"),
     errordef(not_found, "not found"),
     errordef(already_exist, "already exist"),
     errordef(already_assigned, "already assigned"),
-    errordef(not_open, "not open"),
-    errordef(not_available, "not available"),
-    errordef(not_ready, "not ready"),
-    errordef(no_init, "not initialized"),
-    errordef(exception_caught, "exception caught"),
-    errordef(bad_data, "bad data"),
-    errordef(bad_format, "bad format"),
-    errordef(overflow, "overflow"),
-    errordef(empty, "empty"),
-    errordef(full, "full"),
-    errordef(out_of_range, "out of range"),
-    errordef(mismatch, "mismatch"),
-    errordef(integrity, "integrity error"),
-    errordef(expired, "expired"),
-    errordef(canceled, "canceled"),
-    errordef(invalid_request, "invalid request"),  // RFC 6749 4.1.2.1. Error Response
-    errordef(bad_response, "bad response"),
-    errordef(unexpected, "unexpected"),
-    errordef(max_reached, "max reached"),
-    errordef(failed, "failed"),
-    errordef(blocked, "blocked"),
     errordef(duplicate, "duplicate"),
-    errordef(closed, "closed"),
-    errordef(disconnect, "disconnect"),
-    errordef(cipher_failure, "cipher"),
-    errordef(digest_failure, "digest"),
-    errordef(verification_failure, "verification"),
-    errordef(no_session, "no session specified"),
+    errordef(conflict_detected, "confilict detected"),
     errordef(query_failure, "query"),
     errordef(fetch_failure, "fetch"),
-    errordef(insufficient, "insufficient"),
-    errordef(confidential, "confidential"),
-    errordef(suspicious, "suspicious"),
-    errordef(unknown, "unknown"),
     errordef(inaccurate, "inaccurate"),
-    errordef(unauthorized_client, "unauthorized client"),                               // RFC 6749 4.1.2.1. Error Response
-    errordef(access_denied, "access denied"),                                           // RFC 6749 4.1.2.1. Error Response
-    errordef(unsupported_response_type, "unsupported response type"),                   // RFC 6749 4.1.2.1. Error Response
-    errordef(invalid_scope, "The requested scope is invalid, unknown, or malformed."),  // RFC 6749 4.1.2.1. Error Response
-    errordef(server_error, "server error"),                                             // RFC 6749 4.1.2.1. Error Response
-    errordef(temporarily_unavailable, "temporarily unavailable"),                       // RFC 6749 4.1.2.1. Error Response
-    errordef(invalid_client, "invalid_client"),                                         // RFC 6749 5.2. Error Response
-    errordef(invalid_grant, "invalid_grant"),                                           // RFC 6749 5.2. Error Response
-    errordef(unsupported_grant_type, "unsupported_grant_type"),                         // RFC 6749 5.2. Error Response
-    errordef(assert_failed, "assert_failed"),
-    errordef(socket_failure, "socket"),
-    errordef(bind_failure, "bind"),
-    errordef(handshake_failure, "handshake"),
-    errordef(connect_failure, "connect"),
-    errordef(send_failure, "send"),
-    errordef(recv_failure, "recv"),
-    errordef(abandoned, "abandoned"),
-    errordef(different_type, "different type"),
-    errordef(narrow_type, "narrow type"),
-    errordef(narrow_type, "narrow type"),
-    errordef(missing_certificate, "certificate"),
-    errordef(exceed, "exceed the designed size"),
-    errordef(divide_by_zero, "e.g. divide by zero"),
-    errordef(not_specified, "not specified"),
-    errordef(negotiation_failure, "negotiation failed"),
-    errordef(illegal_parameter, "illegal parameter"),  // ie. invalid_parameter + verify
-    errordef(too_large_data, "too large data"),
-    errordef(violation, "violation"),
     errordef(ambiguous, "ambiguous"),
-    errordef(miscast_unsigned, "negative integer to unsigned type"),
-    errordef(miscast_narrow, "narrow conversion"),
-    errordef(conflict_detected, "confilict detected"),
-    errordef(invalid_handle, "invalid handle"),
-    errordef(syntax_error, "syntax error"),
-    errordef(premature_state, "premature state"),
+    errordef(not_specified, "not specified"),
+    errordef(bad_request, "bad request"),
+    errordef(bad_response, "bad response"),
+    errordef(invalid_request, "invalid request"),                                       // RFC 6749 4.1.2.1. Error Response
+    errordef(server_error, "server error"),                                             // RFC 6749 4.1.2.1. Error Response
+    errordef(access_denied, "access denied"),                                           // RFC 6749 4.1.2.1. Error Response
+    errordef(unauthorized_client, "unauthorized client"),                               // RFC 6749 4.1.2.1. Error Response
+    errordef(unsupported_response_type, "unsupported response type"),                   // RFC 6749 4.1.2.1. Error Response
+    errordef(unsupported_grant_type, "unsupported_grant_type"),                         // RFC 6749 5.2. Error Response
+    errordef(temporarily_unavailable, "temporarily unavailable"),                       // RFC 6749 4.1.2.1. Error Response
+    errordef(invalid_scope, "The requested scope is invalid, unknown, or malformed."),  // RFC 6749 4.1.2.1. Error Response
+    errordef(invalid_grant, "invalid_grant"),                                           // RFC 6749 5.2. Error Response
+    errordef(invalid_client, "invalid_client"),                                         // RFC 6749 5.2. Error Response
 
     errordef(not_supported, "not supported"),
     errordef(expect_failure, "expect failure (negative test)"),

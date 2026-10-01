@@ -45,7 +45,7 @@ bool asn1_tag::is_implicit() const {
     if (mode == asn1_automatic) {
         auto contexts = asn1_runtime_context::get_instance();
         auto runtime = contexts->current();
-        mode = runtime->runas_automatic();
+        mode = runtime->get_tagdefault();
     }
     return (asn1_implicit == mode);
 }
@@ -55,7 +55,7 @@ bool asn1_tag::is_explicit() const {
     if (mode == asn1_automatic) {
         auto contexts = asn1_runtime_context::get_instance();
         auto runtime = contexts->current();
-        mode = runtime->runas_automatic();
+        mode = runtime->get_tagdefault();
     }
     return (asn1_explicit == mode);
 }

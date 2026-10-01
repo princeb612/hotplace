@@ -30,7 +30,8 @@ return_t binary_parsing_table::learn(parser_t* parser) {
     clear();
 
     auto& grammar = parser->get_cfg_grammar();
-    for (const auto& production : grammar.get_productions()) {
+    for (const auto& pair : grammar.get_productions()) {
+        const auto& production = pair.second;
         _string_index.emplace(production.lhs, 0);
         for (const auto& item : production.rhs) {
             _string_index.emplace(item, 0);
@@ -49,7 +50,8 @@ return_t binary_parsing_table::learn(parser_t* parser) {
     }
 
     // production
-    for (const auto& production : grammar.get_productions()) {
+    for (const auto& pair : grammar.get_productions()) {
+        const auto& production = pair.second;
         buildup_production(production);
     }
     // terminal
@@ -92,8 +94,8 @@ return_t binary_parsing_table::buildup_production(const parser_production& item)
     production_t production;
     production.id = _production_table.size();
     production.lhs = lookup(item.lhs);
-    for (const auto& item : item.rhs) {
-        auto idx = lookup(item);
+    for (const auto& rhs : item.rhs) {
+        auto idx = lookup(rhs);
         production.rhs.push_back(idx);
     }
     _production_table.push_back(std::move(production));
@@ -174,31 +176,36 @@ return_t binary_parsing_table::read(const std::string& filename, parser_t& parse
             return ret;
         }
         if (pos < 20) {
-            ret = errorcode_t::bad_data;
+            ret = errorcode_t::bad_format;
             return ret;
         }
 
         auto magic = pl.t_value_of<uint32>("magic");
         if (0x48505400 != magic) {
-            ret = errorcode_t::bad_data;
+            ret = errorcode_t::bad_format;
             return ret;
         }
-        auto endian = pl.t_value_of<uint32>("endian");
+        auto version = pl.t_value_of<uint16>("version");
+        if (version < parser.get_version()) {
+            ret = errorcode_t::low_version;
+            return ret;
+        }
+        auto endian = pl.t_value_of<uint16>("endian");
         if (0x1234 != endian) {
-            ret = errorcode_t::bad_data;
+            ret = errorcode_t::bad_format;
             return ret;
         }
         crc = pl.t_value_of<uint32>("crc32");
-        bodysize = pl.t_value_of<uint32>("size");
+        bodysize = pl.t_value_of<uint64>("size");
     }
 
     if ((size - pos) != bodysize) {
-        ret = errorcode_t::bad_data;
+        ret = errorcode_t::bad_format;
         return ret;
     }
     auto checksum = crc32(stream + pos, size - pos);
     if (checksum != crc) {
-        ret = errorcode_t::mismatch;
+        ret = errorcode_t::integrity_error;
         return ret;
     }
 
@@ -395,7 +402,7 @@ return_t binary_parsing_table::read(const std::string& filename, parser_t& parse
     return ret;
 }
 
-return_t binary_parsing_table::write(const std::string& filename) {
+return_t binary_parsing_table::write(const std::string& filename, parser_t& parser) {
     return_t ret = errorcode_t::success;
 
     binary_t bin;
@@ -470,7 +477,7 @@ return_t binary_parsing_table::write(const std::string& filename) {
         auto crc = crc32(bin.data(), bin.size());
         auto size = bin.size();
         binary_stream bs;
-        bs.set_endian(true).append(uint32(0x48505400)).append(uint16(0)).append(uint16(0x1234)).append(uint32(crc)).append(uint64(size));
+        bs.set_endian(true).append(uint32(0x48505400)).append(uint16(parser.get_version())).append(uint16(0x1234)).append(uint32(crc)).append(uint64(size));
 
         const auto& temp = bs.get();
         bin.insert(bin.begin(), temp.begin(), temp.end());

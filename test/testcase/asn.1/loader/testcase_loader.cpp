@@ -12,9 +12,15 @@
 
 #include <hotplace/test/testcase/asn.1/sample.hpp>
 
-void test_asn1loader() {
-    _test_case.begin("loader");
-    //
+void test_asn1loader_babystep() {
+    _test_case.begin("loader - example1.asn1");
+
+    const char* testfile = "example1.asn1";
+    return_t ret = errorcode_t::success;
+
+    asn1_loader loader;
+    // ret = loader.load_file(testfile);
+    // _test_case.test(ret, __FUNCTION__, "loader %s", testfile);
 }
 
-void testcase_loader() { test_asn1loader(); }
+void testcase_loader() { test_asn1loader_babystep(); }

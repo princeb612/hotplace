@@ -181,9 +181,9 @@ void test_asn1parser(lexical_analyzer& lexer, parser_t& parser, const char* text
 
     lexical_context context;
 
-    if (FLAG_DUMMY_POC_TOKEN == flags) {
-        lexer.add_token("....", token_ellipsis);  // tokens replaced via block reduction for the PoC
-    }
+    // if (FLAG_DUMMY_POC_TOKEN == flags) {
+    //     lexer.add_token("....", token_ellipsis);  // tokens replaced via block reduction for the PoC
+    // }
 
     lexer.parse(context, input);
 

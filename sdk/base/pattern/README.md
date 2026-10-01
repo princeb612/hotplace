@@ -1,10 +1,15 @@
-### Pattern matching and string search
+# Pattern
 
-This directory contains pattern-matching and string-search implementations used by the SDK.
+`sdk/base/pattern` contains reusable string/pattern matching algorithms. The most project-specific part is the Aho-Corasick family, which has evolved from ordinary multi-pattern matching into token grouping/reduction used by parser work.
 
-The source includes:
-- Aho-Corasick matching, wildcard handling and the Aho-Corasick reducer.
-- KMP, trie, suffix-tree and Ukkonen-style structures.
-- Wildcard and regular-expression support.
+## Documents
+- [Aho-Corasick](aho_corasick.md) — automaton, wildcard extension and reducer
+- [Search algorithms](search-algorithms.md) — KMP, trie, suffix tree and Ukkonen structures
+- [Wildcard and regex](wildcard-and-regex.md) — wildcard matching and regular expressions
 
-The Aho-Corasick reducer is used where parsed/tokenized text needs to be reduced into higher-level matches. The implementations are reusable base facilities rather than protocol-specific parsers.
+## Related areas
+- `sdk/io/parser/` — parser/token processing
+- `sdk/io/string/` — URL parsing uses regex
+
+## Related tests
+- `test/testcase/base/pattern/`

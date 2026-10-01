@@ -76,7 +76,7 @@ class binary_parsing_table {
     // read
     return_t read(const std::string& filename, parser_t& parser);
     // write
-    return_t write(const std::string& filename);
+    return_t write(const std::string& filename, parser_t& parser);
 
    protected:
     void clear();

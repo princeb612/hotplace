@@ -5,6 +5,7 @@ Structural nodes represent parsed/decoded ASN.1 structure independently from the
 ## Documents
 
 - [Structural representation study](structural.md)
+- `../asn1-node.md` — implementation-level structural node record
 
 ## Related areas
 

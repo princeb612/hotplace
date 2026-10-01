@@ -131,14 +131,23 @@ class asn1_runtime {
 
     /**
      * - module-level
-     *   - MyModule DEFINITIONS ::= BEGIN ...
-     *   - MyModule DEFINITIONS IMPLICIT TAGS ::= BEGIN ...
-     *   - MyModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN ...
-     * - default EXPLICIT
+     *   - MyModule DEFINITIONS ::= BEGIN ...                -- EXPLICIT
+     *   - MyModule DEFINITIONS IMPLICIT TAGS ::= BEGIN ...  -- IMPLICIT
+     *   - MyModule DEFINITIONS EXPLICIT TAGS ::= BEGIN ...  -- EXPLICIT
+     *   - MyModule DEFINITIONS AUTOMATIC TAGS ::= BEGIN ... -- IMPLICIT, [0], [1], ...
+     *
      * - CHOICE, ANY MUST be EXPLICIT
      */
-    void set_automatic(uint8 runas);
-    uint8 runas_automatic();
+    void set_tagdefault(uint8 value);
+    uint8 get_tagdefault();
+    /**
+     * @remarks
+     *  The EXTENSIBILITY IMPLIED syntax is a setting that causes the compiler
+     *  to implicitly treat all extensible structures defined within a module
+     *  as having the specified attribute, even if it is not explicitly written.
+     */
+    void set_extensibility(uint8 value);
+    uint8 get_extensibility();
 
     void clear();
 
@@ -158,12 +167,12 @@ class asn1_runtime {
     std::map<asn1_object*, asn1_value*> _values;
     std::map<asn1_object*, std::string> _schema;  // strongly-typed
     std::string _name;
-    uint8 _automatic;
+    uint8 _tagdefault;
+    uint8 _extensibility;
 
     bool _parser_ready;
     lexical_context _lexcontext;
     lexical_analyzer _lex;
-    // lalr1_parser _lalr;
     int _ready;
 };
 

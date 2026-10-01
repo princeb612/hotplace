@@ -62,6 +62,50 @@ void dump_parse_tree(asn1_runtime* runtime, const parse_tree* pt) {
         }
     }
 }
+
+void dump_parse_tree(parse_tree& pt) {
+    {
+        _logger->colorln("parse tree - re-trace");
+        uint32 idx = 0;
+        auto lambda = [&idx](parser_action_t type, parse_treenode* node) -> return_t {
+            _logger->writeln([&](basic_stream& dbs) -> void {
+                valist va;
+                va << idx++ << node->symbol << node->value << node->children.size();
+                dbs.vaprintf("[{1:03i}] ", va);
+                switch (type) {
+                    case parser_action_t::shift:
+                        dbs << "shift  ";
+                        break;
+                    case parser_action_t::reduce:
+                        dbs << "reduce ";
+                        break;
+                    default:
+                        break;
+                }
+                dbs.vaprintf("{2}", va);
+                if ((false == node->value.empty()) && (node->symbol != node->value)) {
+                    dbs.vaprintf(" ({3})", va);
+                }
+                if (parser_action_t::reduce == type) {
+                    dbs.vaprintf(" RHS [{4}]", va);
+                }
+            });
+            return errorcode_t::success;
+        };
+        parse_tree_visitor visitor(lambda);
+        pt.accept(&visitor);
+    }
+    {
+        _logger->colorln("parser tree - graph");
+        auto root = pt.get_root();
+        if (root) {
+            basic_stream bs;
+            root->print(bs);
+            _logger->write(bs);
+        }
+    }
+}
+
 void parse_notation(asn1_runtime* runtime, const char* notation) {
     return_t ret = errorcode_t::success;
     __try2 {
@@ -105,6 +149,73 @@ void parse_reconst_notation(asn1_runtime* runtime, const char* notation, const c
         _test_case.assert(bs == expect, __FUNCTION__, "test %s", notation);  // output the input notation for the unittest line
     else
         _test_case.assert(bs == notation, __FUNCTION__, "test %s", notation);
+}
+
+return_t prepare_lexer_asn1(lexical_analyzer& lexer) {
+    lexer.clear().prepare();
+    auto resource = parser_resource::get_instance();
+    resource->for_each(resource_type_t::token_type_asn1, [&lexer](uint32 token, const std::string& name) -> void { lexer.add_token(name, token); });
+    lexer.get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1);
+    return errorcode_t::success;
+}
+
+return_t prepare_lexer_asn1_usertype(lexical_analyzer& lexer) {
+    prepare_lexer_asn1(lexer);
+    lexer.get_config().set("handle_lvalue_usertype", 1).set("handle_asn1parameterized", 1);
+    return errorcode_t::success;
+}
+
+void test_asn1parser(parser_t& parser, const char* text, const char* input, uint16 flags) {
+    lexical_analyzer lexer;
+    prepare_lexer_asn1_usertype(lexer);
+    return test_asn1parser(lexer, parser, text, input, flags);
+}
+
+void test_asn1parser(lexical_analyzer& lexer, parser_t& parser, const char* text, const char* input, uint16 flags) {
+    return_t ret = errorcode_t::success;
+    std::vector<parser_token> tokens;
+
+    lexical_context context;
+
+    if (FLAG_DUMMY_POC_TOKEN == flags) {
+        lexer.add_token("....", token_ellipsis);  // tokens replaced via block reduction for the PoC
+    }
+
+    lexer.parse(context, input);
+
+    size_t cnt = 0;
+    auto lambda = [&](const token_description* desc) -> bool {
+        bool ret = true;
+        const auto& type = desc->type;
+        std::string token(desc->p, desc->size);
+        switch (type) {
+            case token_lvalue: {
+                tokens.push_back({token_identifier, token});
+            } break;
+            case token_comments:
+                break;
+            default: {
+                tokens.push_back({type, token});
+                break;
+            }
+        }
+        if (token_comments != type) {
+            _logger->writeln("[%03zu] line %zi type %d(%s) index %d pos %zi len %zi line %zi (%.*s)", cnt, desc->line, desc->type, lexer.nameof_token(desc->type).c_str(),
+                             desc->index, desc->pos, desc->size, desc->line, desc->size, desc->p);
+            cnt = tokens.size();
+        }
+        return ret;
+    };
+    context.for_each(lambda);
+    tokens.push_back({token_eof, "$"});
+
+    parse_tree pt;
+    ret = parser.parse(tokens, &pt);
+
+    dump_parse_tree(pt);
+
+    _logger->writeln("parsing %s.", (errorcode_t::success == ret) ? "completed successfully" : "failed");
+    _test_case.test(ret, __FUNCTION__, "parse %s", text);
 }
 
 int main(int argc, char** argv) {

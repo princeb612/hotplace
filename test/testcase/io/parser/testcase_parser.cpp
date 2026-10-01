@@ -14,6 +14,43 @@
 #include "asn1_cfg_parameterized.hpp"
 #include "asn1module.hpp"
 
+void test_ac_reducer() {
+    _test_case.begin("aho corasick reduction");
+
+    // sketch - context-aware parser switching pattern
+
+    asn1module_reducer_t ac;
+    prepare_asn1module_reducer(ac);
+
+    struct testvector {
+        const char* file;
+    } table[] = {
+        {"example1.asn1"}, {"example2.asn1"}, {"example3.asn1"}, {"example4.asn1"},  {"example5.asn1"},  {"example6.asn1"},
+        {"example7.asn1"}, {"example8.asn1"}, {"example9.asn1"}, {"example10.asn1"}, {"example11.asn1"},
+    };
+
+    for (const auto& entry : table) {
+        file_stream fs;
+        fs.open(entry.file);
+        fs.begin_mmap();
+        auto test = ac_search_and_printall(ac, (char*)fs.data(), fs.size());
+        _test_case.test(test, __FUNCTION__, R"(test "%s")", entry.file);
+    }
+}
+
+void test_load_parsingtable() {
+    _test_case.begin("load binary parsing table");
+    return_t ret = errorcode_t::success;
+    const char* file = "asn1notation.ptb";
+    lalr1_parser parser;
+    binary_parsing_table pt;
+    ret = pt.read(file, parser);
+    _test_case.test(ret, __FUNCTION__, "read %s", file);
+
+    const char* notation = "Type1 ::= VisibleString";
+    test_asn1parser(parser, notation, notation);
+}
+
 /**
  * CFG ASN.1 Noation
  * - LALR(1)
@@ -23,7 +60,7 @@
  * - tests related to the `module` and `information object class` have been moved to `testcase/asn.1`, where the `*.asn1` files are located.
  */
 
-void test_lalr_asn1notation() {
+void test_asn1_notation() {
     // return_t ret = errorcode_t::success;
 
     struct testvector {
@@ -170,7 +207,7 @@ void test_lalr_asn1notation() {
     lambda_test(p4);
 }
 
-void test_lalr_asn1parameterized() {
+void test_asn1_parameterized() {
     // return_t ret = errorcode_t::success;
 
     enum test_flag_t : uint16 {
@@ -219,17 +256,9 @@ void test_lalr_asn1parameterized() {
     lambda_test(item_asn1ioc, p2);
 }
 
-void test_load_parsingtable() {
-    return_t ret = errorcode_t::success;
-    const char* file = "asn1notation.ptb";
-    lalr1_parser parser;
-    binary_parsing_table pt;
-    ret = pt.read(file, parser);
-    _test_case.test(ret, __FUNCTION__, "read %s", file);
-}
-
 void testcase_parser() {
-    test_lalr_asn1notation();
-    test_lalr_asn1parameterized();
+    test_ac_reducer();
     test_load_parsingtable();
+    test_asn1_notation();
+    test_asn1_parameterized();
 }

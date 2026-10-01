@@ -27,18 +27,18 @@ class asn1_loader {
      * @examples
      *          // sketch
      *          auto rtcontext = asn1_runtime_context::get_instance();
-     *          loader.load_file("userprofile.asn1", name);
-     *          rtcontext->select(name);
+     *          loader.load_file("userprofile.asn1");
+     *          auto runtime = rtcontext->current();
      */
-    static return_t load_file(const char* asn1file, std::string& name);
+    static return_t load_file(const char* asn1file);
     /**
      * @examples
      *          // sketch
      *          auto rtcontext = asn1_runtime_context::get_instance();
-     *          loader.load_file(asn1stream, asn1size, name);
-     *          rtcontext->select(name);
+     *          loader.load_file(asn1stream, asn1size);
+     *          auto runtime = rtcontext->current();
      */
-    static return_t load(const char* asn1, size_t size, std::string& name);
+    static return_t load(const char* asn1, size_t size);
 };
 
 }  // namespace io

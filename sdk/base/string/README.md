@@ -1,7 +1,16 @@
-### String utilities
+# Base String
 
-This directory contains general string helpers.
+`sdk/base/string` contains general-purpose string scanning, formatting, splitting and replacement helpers, plus the project's string-obfuscation experiments.
 
-The implementation covers formatting, replacement/scanning, splitting, character-set handling and the project’s string-obfuscation utilities. The constexpr obfuscation experiment is kept here separately because its usefulness depends on the C++11-era implementation constraints.
+This is the general string layer; `sdk/io/string` is the I/O/protocol-facing string layer.
 
-Unicode-specific implementation is kept under the `unicode` subdirectory.
+## Documents
+- [string](string.md) — scan, getline, replace, formatting and token helpers
+- [split](split.md) — reusable split context and iteration API
+- [obfuscation](obfuscation.md) — runtime and C++14 constexpr obfuscation experiments
+
+## Related tests
+- `test/testcase/base/string/testcase_string.cpp`
+
+## Source
+- `sdk/base/string/`

@@ -4,6 +4,7 @@ The ASN.1 loader connects parsed ASN.1 descriptions with the project's type/runt
 
 ## Documents
 
+- [Loader implementation record](asn1_loader.md)
 - [Loader flow](loader-flow.md)
 
 ## Related areas

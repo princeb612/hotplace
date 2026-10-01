@@ -27,12 +27,12 @@ encoding
 ## Protocol-specific encoding
 
 - [Radix-64](radix64.md) — RFC 4880 Radix-64 armor support built on Base64 plus CRC-24.
-- [Huffman coding](huffman-coding.md) — generic Huffman coding and the HTTP/2 Huffman code table defined by RFC 7541.
+- [Huffman coding](huffman_coding.md) — generic Huffman coding and the HTTP/2 Huffman code table defined by RFC 7541.
 
 ## Streaming
 
-- [Encoder stream](encoder-stream.md) — stateful encoding across multiple input chunks.
-- [Decoder stream](decoder-stream.md) — stateful decoding across multiple encoded chunks.
+- [Encoder stream](encoder_stream.md) — stateful encoding across multiple input chunks.
+- [Decoder stream](decoder_stream.md) — stateful decoding across multiple encoded chunks.
 
 The streaming classes share the same encoding implementations rather than defining separate algorithms. They retain incomplete encoding units between `write()` calls and complete them in `flush()`.
 

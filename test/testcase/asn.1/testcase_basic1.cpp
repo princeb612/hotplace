@@ -618,6 +618,7 @@ void test_x690_encoding_typevalue() {
          "X.690 8.23 T61String"},  // // replace Â C2 for ' 27
 
         // X.690 8.14 encoding of a tagged value
+        // With ASN.1 type definitions (in an explicit tagging environment)
         // case 1. Type1 ::= VisibleString
         {type1, variant("Jones"), "1A 05 4A 6F 6E 65 73", "X.690 8.14 Type1"},
         // case 2. Type2 ::= [Application 3] IMPLICIT Type1

@@ -198,105 +198,143 @@ enum class errorcode_t : uint32 {
 
 #endif
 
-    /* 0xef010000 4009820160 */ internal_error = ERROR_CODE_BEGIN + 0,
-    /* 0xef010001 4009820161 */ out_of_memory,
-    /* 0xef010002 4009820162 */ insufficient_buffer,
-    /* 0xef010003 4009820163 */ invalid_parameter,
-    /* 0xef010004 4009820164 */ invalid_context,
-    /* 0xef010005 4009820165 */ invalid_pointer,
-    /* 0xef010006 4009820166 */ not_exist,
-    /* 0xef010007 4009820167 */ not_found,
-    /* 0xef010008 4009820168 */ already_exist,
-    /* 0xef010009 4009820169 */ already_assigned,
-    /* 0xef01000a 4009820170 */ not_open,
-    /* 0xef01000b 4009820171 */ not_available,
-    /* 0xef01000c 4009820172 */ not_ready,
-    /* 0xef01000d 4009820173 */ no_init,
-    /* 0xef01000e 4009820174 */ exception_caught,
-    /* 0xef01000f 4009820175 */ bad_data,
-    /* 0xef010010 4009820176 */ bad_format,
-    /* 0xef010011 4009820177 */ overflow,
-    /* 0xef010012 4009820178 */ empty,
-    /* 0xef010013 4009820179 */ full,
-    /* 0xef010014 4009820180 */ out_of_range,
-    /* 0xef010015 4009820181 */ mismatch,
-    /* 0xef010016 4009820182 */ integrity,
-    /* 0xef010017 4009820183 */ expired,
-    /* 0xef010018 4009820184 */ canceled,
-    /* 0xef010019 4009820185 */ bad_request,
-    /*                       */ invalid_request = bad_request,
-    /* 0xef01001a 4009820186 */ bad_response,
-    /* 0xef01001b 4009820187 */ unexpected,
-    /* 0xef01001c 4009820188 */ max_reached,
-    /* 0xef01001d 4009820189 */ failed,
-    /* 0xef01001e 4009820190 */ blocked,
-    /* 0xef01001f 4009820191 */ duplicate,
-    /* 0xef010020 4009820192 */ closed,
-    /* 0xef010021 4009820193 */ disconnect,
-    /* 0xef010022 4009820194 */ cipher_failure,
-    /* 0xef010023 4009820195 */ digest_failure,
-    /* 0xef010024 4009820196 */ verification_failure,
-    /* 0xef010025 4009820197 */ no_session,
-    /* 0xef010026 4009820198 */ query_failure,
-    /* 0xef010027 4009820199 */ fetch_failure,
-    /* 0xef010028 4009820200 */ insufficient,
-    /* 0xef010029 4009820201 */ confidential,
-    /* 0xef01002a 4009820202 */ suspicious,
-    /* 0xef01002b 4009820203 */ unknown,
-    /* 0xef01002c 4009820204 */ inaccurate,
-    /* 0xef01002d 4009820205 */ unauthorized_client,
-    /* 0xef01002e 4009820206 */ access_denied,
-    /* 0xef01002f 4009820207 */ unsupported_response_type,
-    /* 0xef010030 4009820208 */ invalid_scope,
-    /* 0xef010031 4009820209 */ server_error,
-    /* 0xef010032 4009820210 */ temporarily_unavailable,
-    /* 0xef010033 4009820211 */ invalid_client,
-    /* 0xef010034 4009820212 */ invalid_grant,
-    /* 0xef010035 4009820213 */ unsupported_grant_type,
-    /* 0xef010036 4009820214 */ assert_failed,
-    /* 0xef010037 4009820215 */ socket_failure,
-    /* 0xef010038 4009820216 */ bind_failure,
-    /* 0xef010039 4009820217 */ handshake_failure,
-    /* 0xef01003a 4009820218 */ connect_failure,
-    /* 0xef01003b 4009820219 */ send_failure,
-    /* 0xef01003c 4009820220 */ recv_failure,
-    /* 0xef01003d 4009820221 */ abandoned,
-    /* 0xef01003e 4009820222 */ different_type,
-    /* 0xef01003f 4009820223 */ narrow_type,
-    /* 0xef010040 4009820224 */ missing_certificate,
-    /* 0xef010041 4009820225 */ exceed,
-    /* 0xef010042 4009820226 */ divide_by_zero,
-    /* 0xef010043 4009820227 */ not_specified,
-    /* 0xef010044 4009820228 */ negotiation_failure,
-    /* 0xef010045 4009820229 */ illegal_parameter,
-    /* 0xef010046 4009820230 */ too_large_data,
-    /* 0xef010047 4009820231 */ violation,
-    /* 0xef010048 4009820232 */ ambiguous,
-    /* 0xef010049 4009820233 */ miscast_unsigned,
-    /* 0xef01004a 4009820234 */ miscast_narrow,
-    /* 0xef01004b 4009820235 */ conflict_detected,
-    /* 0xef01004c 4009820236 */ invalid_handle,
-    /* 0xef01004d 4009820237 */ syntax_error,
-    /* 0xef01004e 4009820238 */ premature_state,
+    /* -------------------------------------------------------------------------
+     * General System & Internal Errors
+     * Core system failures, assertions, and unclassified errors.
+     * ------------------------------------------------------------------------- */
+    /* 0xef010000 4009820160 */ internal_error = ERROR_CODE_BEGIN + 0x0000,
+    /* 0xef010001 4009820161 */ failed,
+    /* 0xef010002 4009820162 */ unexpected,
+    /* 0xef010003 4009820163 */ unknown,
+    /* 0xef010004 4009820164 */ exception_caught,
+    /* 0xef010005 4009820165 */ assert_failed,
+    /* -------------------------------------------------------------------------
+     * Resource & Memory Management
+     * Allocation failures, capacity limits, and buffer operations.
+     * ------------------------------------------------------------------------- */
+    /* 0xef011000 4009824256 */ out_of_memory = ERROR_CODE_BEGIN + 0x1000,
+    /* 0xef011001 4009824257 */ insufficient_buffer,
+    /* 0xef011002 4009824258 */ empty,
+    /* 0xef011003 4009824259 */ full,
+    /* 0xef011004 4009824260 */ max_reached,
+    /* 0xef011005 4009824261 */ exceed,
+    /* 0xef011006 4009824262 */ insufficient,
+    /* -------------------------------------------------------------------------
+     * Parameter, Data & Type Validation
+     * Input validation, type conversions, format issues, and arithmetic errors.
+     * ------------------------------------------------------------------------- */
+    /* 0xef012000 4009828352 */ invalid_parameter = ERROR_CODE_BEGIN + 0x2000,
+    /* 0xef012001 4009828353 */ illegal_parameter,
+    /* 0xef012002 4009828354 */ invalid_pointer,
+    /* 0xef012003 4009828355 */ invalid_handle,
+    /* 0xef012004 4009828356 */ bad_data,
+    /* 0xef012005 4009828357 */ bad_format,
+    /* 0xef012006 4009828358 */ too_large_data,
+    /* 0xef012007 4009828359 */ out_of_range,
+    /* 0xef012008 4009828360 */ overflow,
+    /* 0xef012009 4009828361 */ divide_by_zero,
+    /* 0xef01200a 4009828362 */ mismatch,
+    /* 0xef01200b 4009828363 */ different_type,
+    /* 0xef01200c 4009828364 */ narrow_type,
+    /* 0xef01200d 4009828365 */ miscast_unsigned,
+    /* 0xef01200e 4009828366 */ miscast_narrow,
+    /* 0xef01200f 4009828367 */ syntax_error,
+    /* -------------------------------------------------------------------------
+     * State, Lifecycle & Flow Control
+     * Initialization, availability, state machine, and operation status.
+     * ------------------------------------------------------------------------- */
+    /* 0xef013000 4009832448 */ no_init = ERROR_CODE_BEGIN + 0x3000,
+    /* 0xef013001 4009832449 */ not_ready,
+    /* 0xef013002 4009832450 */ not_open,
+    /* 0xef013003 4009832451 */ closed,
+    /* 0xef013004 4009832452 */ not_available,
+    /* 0xef013005 4009832453 */ invalid_context,
+    /* 0xef013006 4009832454 */ premature_state,
+    /* 0xef013007 4009832455 */ blocked,
+    /* 0xef013008 4009832456 */ canceled,
+    /* 0xef013009 4009832457 */ abandoned,
+    /* 0xef01300a 4009832458 */ expired,
+    /* 0xef01300b 4009832459 */ low_version,
+    /* -------------------------------------------------------------------------
+     * Security, Authentication & Integrity
+     * Authorization, client/grant validation, crypto, and data integrity.
+     * ------------------------------------------------------------------------- */
+    /* 0xef014000 4009836544 */ missing_certificate = ERROR_CODE_BEGIN + 0x4000,
+    /* 0xef014001 4009836545 */ cipher_failure,
+    /* 0xef014002 4009836546 */ digest_failure,
+    /* 0xef014003 4009836547 */ verification_failure,
+    /* 0xef014004 4009836548 */ integrity_error,
+    /* 0xef014005 4009836549 */ violation,
+    /* 0xef014006 4009836550 */ confidential,
+    /* 0xef014007 4009836551 */ suspicious,
+    /* -------------------------------------------------------------------------
+     * Network, Communication & Socket
+     * Low-level socket, handshake, connection state, and transmission.
+     * ------------------------------------------------------------------------- */
+    /* 0xef015000 4009840640 */ socket_failure = ERROR_CODE_BEGIN + 0x5000,
+    /* 0xef015001 4009840641 */ bind_failure,
+    /* 0xef015002 4009840642 */ connect_failure,
+    /* 0xef015003 4009840643 */ handshake_failure,
+    /* 0xef015004 4009840644 */ negotiation_failure,
+    /* 0xef015005 4009840645 */ send_failure,
+    /* 0xef015006 4009840646 */ recv_failure,
+    /* 0xef015007 4009840647 */ disconnect,
+    /* 0xef015008 4009840648 */ no_session,
+    /* -------------------------------------------------------------------------
+     * Request, Protocol & Query Operations
+     * High-level requests/responses, lookups, and data queries.
+     * ------------------------------------------------------------------------- */
+    /* 0xef016000 4009844736 */ not_exist = ERROR_CODE_BEGIN + 0x6000,
+    /* 0xef016001 4009844737 */ not_found,
+    /* 0xef016002 4009844738 */ already_exist,
+    /* 0xef016003 4009844739 */ already_assigned,
+    /* 0xef016004 4009844740 */ duplicate,
+    /* 0xef016005 4009844741 */ conflict_detected,
+    /* 0xef016006 4009844742 */ query_failure,
+    /* 0xef016007 4009844743 */ fetch_failure,
+    /* 0xef016008 4009844744 */ inaccurate,
+    /* 0xef016009 4009844745 */ ambiguous,
+    /* 0xef01600a 4009844746 */ not_specified,
+    /* 0xef01600b 4009844747 */ bad_request,
+    /* 0xef01600c 4009844748 */ bad_response,               //
+    /* 0xef01600d 4009844749 */ invalid_request,            // Separate from bad_request (RFC 6749)
+    /* 0xef01600e 4009844750 */ server_error,               // RFC 6749 server_error (Moved from Network/System)
+    /* 0xef01600f 4009844751 */ access_denied,              // RFC 6749 access_denied
+    /* 0xef016010 4009844752 */ unauthorized_client,        // RFC 6749 unauthorized_client
+    /* 0xef016011 4009844753 */ unsupported_response_type,  // RFC 6749 unsupported_response_type
+    /* 0xef016012 4009844754 */ unsupported_grant_type,     // RFC 6749 unsupported_grant_type
+    /* 0xef016013 4009844755 */ temporarily_unavailable,    // RFC 6749
+    /* 0xef016014 4009844756 */ invalid_scope,              // RFC 6749 invalid_scope
+    /* 0xef016015 4009844757 */ invalid_grant,              // RFC 6749 invalid_grant
+    /* 0xef016016 4009844758 */ invalid_client,             // RFC 6749 invalid_client
 
-    /* 0xef010080 4009820288 */ internal_error_0 = 0xef010080,
-    /* 0xef010081 4009820289 */ internal_error_1,
-    /* 0xef010082 4009820290 */ internal_error_2,
-    /* 0xef010083 4009820291 */ internal_error_3,
-    /* 0xef010084 4009820292 */ internal_error_4,
-    /* 0xef010085 4009820293 */ internal_error_5,
-    /* 0xef010086 4009820294 */ internal_error_6,
-    /* 0xef010087 4009820295 */ internal_error_7,
-    /* 0xef010088 4009820296 */ internal_error_8,
-    /* 0xef010089 4009820297 */ internal_error_9,
-    /* 0xef01008a 4009820298 */ internal_error_10,
-    /* 0xef01008b 4009820299 */ internal_error_11,
-    /* 0xef01008c 4009820300 */ internal_error_12,
-    /* 0xef01008d 4009820301 */ internal_error_13,
-    /* 0xef01008e 4009820302 */ internal_error_14,
-    /* 0xef01008f 4009820303 */ internal_error_15,
-    /* 0xef010090 4009820304 */ error_openssl_inside,
+    /* -------------------------------------------------------------------------
+     * debugging purpose
+     * ------------------------------------------------------------------------- */
+    /* 0xef017000 4009848832 */ internal_error_0 = ERROR_CODE_BEGIN + 0x7000,
+    /* 0xef017001 4009848833 */ internal_error_1,
+    /* 0xef017002 4009848834 */ internal_error_2,
+    /* 0xef017003 4009848835 */ internal_error_3,
+    /* 0xef017004 4009848836 */ internal_error_4,
+    /* 0xef017005 4009848837 */ internal_error_5,
+    /* 0xef017006 4009848838 */ internal_error_6,
+    /* 0xef017007 4009848839 */ internal_error_7,
+    /* 0xef017008 4009848840 */ internal_error_8,
+    /* 0xef017009 4009848841 */ internal_error_9,
+    /* 0xef01700a 4009848842 */ internal_error_10,
+    /* 0xef01700b 4009848843 */ internal_error_11,
+    /* 0xef01700c 4009848844 */ internal_error_12,
+    /* 0xef01700d 4009848845 */ internal_error_13,
+    /* 0xef01700e 4009848846 */ internal_error_14,
+    /* 0xef01700f 4009848847 */ internal_error_15,
+    /* -------------------------------------------------------------------------
+     * third party
+     * ------------------------------------------------------------------------- */
+    /* 0xef018000 4009852928 */ error_openssl_inside = ERROR_CODE_BEGIN + 0x8000,
 
+    /* -------------------------------------------------------------------------
+     * warning
+     * ------------------------------------------------------------------------- */
     /* 0xff010000 4278255616 */ not_supported = WARN_CODE_BEGIN + 0,
     /* 0xff010001 4278255617 */ expect_failure,
     /* 0xff010002 4278255618 */ low_security,

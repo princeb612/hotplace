@@ -279,7 +279,7 @@ return_t lalr1_parser::parse(const std::vector<parser_token>& tokens, parse_tree
             }
             // 2. Reduce
             else if (act.type == parser_action_t::reduce) {
-                const auto& rule = rules[act.target];
+                const auto& rule = _grammar.get_production(act.target);
 
 #if defined DEBUG
                 trace.action << "reduce -> Rule " << rule.id << " (" << rule.lhs << ") RHS[" << rule.rhs.size() << "]";
@@ -311,7 +311,7 @@ return_t lalr1_parser::parse(const std::vector<parser_token>& tokens, parse_tree
                         });
                     }
 #endif
-                    ret = errorcode_t::no_data;
+                    ret = errorcode_t::not_found;
                     break;
                 }
 
@@ -401,6 +401,8 @@ return_t lalr1_parser::build(binary_parsing_table* table) {
 }
 
 parser_type_t lalr1_parser::get_type() const { return parser_type_t::lalr1; }
+
+uint16 lalr1_parser::get_version() const { return 1; }
 
 return_t lalr1_parser::buildup_action(uint32 state, const std::string& lookahead, parser_action_state action) {
     return_t ret = errorcode_t::success;

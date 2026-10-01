@@ -4,6 +4,7 @@ Compiler-oriented ASN.1 processing in hotplace, including parsing, semantic proc
 
 ## Documents
 
+- [Compiler implementation record](asn1-compiler.md)
 - [Compiler flow](compiler-flow.md)
 
 ## Related areas

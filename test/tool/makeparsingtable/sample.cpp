@@ -21,19 +21,22 @@ struct OPTION : public CMDLINEOPTION {
 };
 t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
-return_t test1() {
+parser_t& get_parser(parser_type_t type) {
+    if (parser_type_t::glr == type) {
+        return get_glr_parser_asn1_by_build();
+    } else /* if (parser_type_t::lalr1 == type) */ {
+        return get_lalr1_parser_asn1_notation_by_build();
+    }
+}
+return_t generate_parsing_table() {
     return_t ret = errorcode_t::success;
     const OPTION& option = _cmdline->value();
 
     binary_parsing_table pt;
-    if (parser_type_t::glr == option.type) {
-        auto& parser = get_glr_parser_asn1_by_build();
-        pt.learn(&parser);
-    } else /* if (parser_type_t::lalr1 == option.type) */ {
-        auto& parser = get_lalr1_parser_asn1_notation_by_build();
-        pt.learn(&parser);
-    }
-    pt.write(option.outfile);
+    auto& parser = get_parser(option.type);
+    if (false == parser.ready()) return errorcode_t::not_ready;
+    pt.learn(&parser);
+    ret = pt.write(option.outfile, parser);
 
     return ret;
 }
@@ -90,7 +93,7 @@ int main(int argc, char** argv) {
             set_trace_level(option.trace_level);
         }
 
-        test1();
+        ret = generate_parsing_table();
     }
     __finally2 {}
 

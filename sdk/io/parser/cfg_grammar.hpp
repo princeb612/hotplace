@@ -46,6 +46,7 @@ class cfg_grammar {
     cfg_grammar& add_terminal(const std::string& term);
 
     const parser_productions_t& get_productions() const;
+    const parser_production& get_production(uint32 id) const;
     const parser_terminals_t& get_terminals() const;
     const parser_nonterminals_t& get_non_terminals() const;
 

@@ -1,4 +1,4 @@
-/* vim: set tabstop=4 parser_action_t::shiftwidth=4 softtabstop=4 expandtab smarttab : */
+/* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
  * @file   asn1_cfg_lalr1.cpp
  * @author Soo Han, Kim (princeb612.kr@gmail.com)
@@ -55,93 +55,98 @@ return_t prepare_lalr1_parser_asn1notation(parser_t& parser) {
         .add_production("S'", {"Statement"})
 
         .add_production("Statement", {"Assignment"})
-        .add_production("Statement", {"TypeSpec"})
-        .add_production("Statement", {"Constraint"})
+        .add_production("Statement", {"Type"})
         .add_production("Statement", {"ComponentType"})
-        .add_production("Statement", {"TagPrefix"})
+        .add_production("Statement", {"TagSpec"})
 
-        .add_production("Assignment", {"DefinedType", symassign, "TypeSpec"})
-        .add_production("Assignment", {"DefinedType", symassign, "TypeSpec", "Constraint"})
+        .add_production("Assignment", {"TypeAssignment"})
+
+        // Standard Type TypeAssignment
+        .add_production("TypeAssignment", {"DefinedType", symassign, "Type"})
+        .add_production("TypeAssignment", {"DefinedType", symassign, "Type", "Constraint"})
 
         .add_production("DefinedType", {symuser})
 
-        .add_production("TypeSpec", {"SimpleTypeSpec"})
-        .add_production("TypeSpec", {"TaggedTypeSpec"})
-        .add_production("TypeSpec", {"ReferencedTypeSpec"})
-        .add_production("TypeSpec", {"EnumTypeSpec"})
-        .add_production("TypeSpec", {"SequenceTypeSpec"})
-        .add_production("TypeSpec", {"SequenceOfTypeSpec"})
-        .add_production("TypeSpec", {"SetTypeSpec"})
-        .add_production("TypeSpec", {"SetOfTypeSpec"})
-        .add_production("TypeSpec", {"ChoiceTypeSpec"})
+        .add_production("Type", {"SimpleTypeSpec"})
+        .add_production("Type", {"TaggedTypeSpec"})
+        .add_production("Type", {"ReferencedTypeSpec"})
+        .add_production("Type", {"EnumeratedType"})
+        .add_production("Type", {"SequenceTypeSpec"})
+        .add_production("Type", {"SequenceOfTypeSpec"})
+        .add_production("Type", {"SetTypeSpec"})
+        .add_production("Type", {"SetOfTypeSpec"})
+        .add_production("Type", {"ChoiceTypeSpec"})
 
+        // ComponentTypeList rules for SEQUENCE / SET / CHOICE
         .add_production("ComponentTypeList", {"ComponentTypeList", ",", "ComponentType"})
         .add_production("ComponentTypeList", {"ComponentType"})
 
-        .add_production("SequenceTypeSpec", {"SEQUENCE", "Constraint", "{", "ComponentTypeList", "}"})
-        .add_production("SequenceTypeSpec", {"SEQUENCE", "{", "ComponentTypeList", "}"})
-        .add_production("SequenceTypeSpec", {"SEQUENCE", "Constraint", "{", "}"})
-        .add_production("SequenceTypeSpec", {"SEQUENCE", "{", "}"})
+        // SEQUECE, SET, CHOICE
+        .add_production("ComponentTypeLists", {"Constraint", "{", "ComponentTypeList", "}"})
+        .add_production("ComponentTypeLists", {"{", "ComponentTypeList", "}"})
+        .add_production("ComponentTypeLists", {"Constraint", "{", "}"})
+        .add_production("ComponentTypeLists", {"{", "}"})
 
-        .add_production("SequenceOfTypeSpec", {"SEQUENCE", "SizeConstraint", "OF", "TypeSpec"})
-        .add_production("SequenceOfTypeSpec", {"SEQUENCE", "Constraint", "OF", "TypeSpec"})
-        .add_production("SequenceOfTypeSpec", {"SEQUENCE", "OF", "TypeSpec"})
+        // Constructed Types (SEQUENCE, SET, CHOICE)
+        .add_production("SequenceTypeSpec", {"SEQUENCE", "ComponentTypeLists"})
+        .add_production("SetTypeSpec", {"SET", "ComponentTypeLists"})
+        .add_production("ChoiceTypeSpec", {"CHOICE", "ComponentTypeLists"})
 
-        .add_production("SetTypeSpec", {"SET", "Constraint", "{", "ComponentTypeList", "}"})
-        .add_production("SetTypeSpec", {"SET", "{", "ComponentTypeList", "}"})
-        .add_production("SetTypeSpec", {"SET", "Constraint", "{", "}"})
-        .add_production("SetTypeSpec", {"SET", "{", "}"})
+        // SEQUENCE OF
+        .add_production("SequenceOfTypeSpec", {"SEQUENCE", "SizeConstraint", "OF", "Type"})
+        .add_production("SequenceOfTypeSpec", {"SEQUENCE", "Constraint", "OF", "Type"})
+        .add_production("SequenceOfTypeSpec", {"SEQUENCE", "OF", "Type"})
 
-        .add_production("SetOfTypeSpec", {"SET", "SizeConstraint", "OF", "TypeSpec"})
-        .add_production("SetOfTypeSpec", {"SET", "Constraint", "OF", "TypeSpec"})
-        .add_production("SetOfTypeSpec", {"SET", "OF", "TypeSpec"})
+        // SET OF
+        .add_production("SetOfTypeSpec", {"SET", "SizeConstraint", "OF", "Type"})
+        .add_production("SetOfTypeSpec", {"SET", "Constraint", "OF", "Type"})
+        .add_production("SetOfTypeSpec", {"SET", "OF", "Type"})
 
-        .add_production("ChoiceTypeSpec", {"CHOICE", "Constraint", "{", "ComponentTypeList", "}"})
-        .add_production("ChoiceTypeSpec", {"CHOICE", "{", "ComponentTypeList", "}"})
-        .add_production("ChoiceTypeSpec", {"CHOICE", "Constraint", "{", "}"})
-        .add_production("ChoiceTypeSpec", {"CHOICE", "{", "}"})
-
-        .add_production("NamedType", {symid, "TypeSpec"})
+        // id + Type
+        .add_production("NamedType", {symid, "Type"})
 
         .add_production("ComponentType", {"NamedType"})
         .add_production("ComponentType", {"NamedType", "Constraint"})
-        .add_production("ComponentType", {"NamedType", "FieldSpecifier"})
-        .add_production("ComponentType", {"NamedType", "Constraint", "FieldSpecifier"})
+        .add_production("ComponentType", {"NamedType", "OptionalitySpec"})
+        .add_production("ComponentType", {"NamedType", "Constraint", "OptionalitySpec"})
 
-        .add_production("FieldSpecifier", {"OPTIONAL"})
-        .add_production("FieldSpecifier", {"DEFAULT", "ValueElement"})
-        .add_production("FieldSpecifier", {"DEFAULT", "{", "}"})
+        .add_production("OptionalitySpec", {"OPTIONAL"})
+        .add_production("OptionalitySpec", {"DEFAULT", "ValueElement"})
+        .add_production("OptionalitySpec", {"DEFAULT", "{", "}"})
 
-        .add_production("Identifier", {symuser})
-        .add_production("Identifier", {symid})
+        .add_production("TypeIdentifier", {symuser})
+        .add_production("TypeIdentifier", {symid})
 
-        .add_production("ReferencedTypeSpec", {"Identifier"})
+        .add_production("ReferencedTypeSpec", {"TypeIdentifier"})
 
-        .add_production("TaggedTypeSpec", {"TagPrefix", "TagSpec", "TypeSpec"})
-        .add_production("TaggedTypeSpec", {"TagPrefix", "TypeSpec"})
+        // Tagged Type Specifications
+        // TaggedType ::= Tag Type | Tag IMPLICIT Type | Tag EXPLICIT Type
+        .add_production("TaggedTypeSpec", {"TagSpec", "IMPLICIT", "Type"})
+        .add_production("TaggedTypeSpec", {"TagSpec", "EXPLICIT", "Type"})
+        .add_production("TaggedTypeSpec", {"TagSpec", "Type"})
 
-        .add_production("TagPrefix", {"[", "TagClass", symnum, "]"})
-        .add_production("TagPrefix", {"[", symnum, "]"})
+        // Tag ::= "[" Class ClassNumber "]"
+        .add_production("TagSpec", {"[", "UNIVERSAL", symnum, "]"})
+        .add_production("TagSpec", {"[", "APPLICATION", symnum, "]"})
+        .add_production("TagSpec", {"[", "PRIVATE", symnum, "]"})
+        .add_production("TagSpec", {"[", symnum, "]"})
 
-        .add_production("TagClass", {"UNIVERSAL"})
-        .add_production("TagClass", {"APPLICATION"})
-        .add_production("TagClass", {"PRIVATE"})
+        .add_production("EnumeratedType", {"ENUMERATED", "{", "Enumerations", "}"})
 
-        .add_production("TagSpec", {"IMPLICIT"})
-        .add_production("TagSpec", {"EXPLICIT"})
+        // ENUMERATED
+        .add_production("Enumerations", {"Enumerations", ",", "Enumeration"})
+        .add_production("Enumerations", {"Enumeration"})
+        // INTEGER { a(1), b(2) }
+        .add_production("Enumeration", {symid, "(", symnum, ")"})
+        // ENUMERATED { red, green, blue }
+        .add_production("Enumeration", {symid})
 
-        .add_production("EnumTypeSpec", {"ENUMERATED", "{", "EnumList", "}"})
-
-        .add_production("EnumList", {"EnumList", ",", "EnumItem"})
-        .add_production("EnumList", {"EnumItem"})
-
-        .add_production("EnumItem", {symid, "(", symnum, ")"})
-
+        // Simple Built-in Types
         .add_production("SimpleTypeSpec", {"BOOLEAN"})
         .add_production("SimpleTypeSpec", {"INTEGER"})
-        .add_production("SimpleTypeSpec", {"INTEGER", "{", "EnumList", "}"})
+        .add_production("SimpleTypeSpec", {"INTEGER", "{", "Enumerations", "}"})
         .add_production("SimpleTypeSpec", {"BIT STRING"})
-        .add_production("SimpleTypeSpec", {"BIT STRING", "{", "EnumList", "}"})
+        .add_production("SimpleTypeSpec", {"BIT STRING", "{", "Enumerations", "}"})
         .add_production("SimpleTypeSpec", {"OCTET STRING"})
         .add_production("SimpleTypeSpec", {"NULL"})
         .add_production("SimpleTypeSpec", {"OBJECT IDENTIFIER"})
@@ -169,15 +174,15 @@ return_t prepare_lalr1_parser_asn1notation(parser_t& parser) {
         .add_production("SimpleTypeSpec", {"DURATION"})
         .add_production("SimpleTypeSpec", {"ANY"})
 
-        .add_production("Constraint", {"(", "ConstraintExpr", ")"})
+        .add_production("Constraint", {"(", "ConstraintSpec", ")"})
 
-        .add_production("ConstraintExpr", {"SubtypeElementSet"})
-        .add_production("ConstraintExpr", {"ALL EXCEPT", "SubtypeElementSet"})  // lexer supports single token (token_allexcept)
+        .add_production("ConstraintSpec", {"SubtypeElementSetSpec"})
+        .add_production("ConstraintSpec", {"ALL EXCEPT", "SubtypeElementSetSpec"})  // lexer supports single token (token_allexcept)
 
-        .add_production("SubtypeElementSet", {"SubtypeElementSet", "UnionOperation", "SubtypeElement"})
-        .add_production("SubtypeElementSet", {"SubtypeElementSet", "EXCEPT", "SubtypeElement"})
-        .add_production("SubtypeElementSet", {"SubtypeElementSet", "SubtypeElement"})
-        .add_production("SubtypeElementSet", {"SubtypeElement"})
+        .add_production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "UnionOperation", "SubtypeElement"})
+        .add_production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "EXCEPT", "SubtypeElement"})
+        .add_production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "SubtypeElement"})
+        .add_production("SubtypeElementSetSpec", {"SubtypeElement"})
 
         .add_production("SubtypeElement", {"SubtypeElement", "IntersectOperation", "PrimaryElement"})
         .add_production("SubtypeElement", {"PrimaryElement"})
@@ -197,7 +202,7 @@ return_t prepare_lalr1_parser_asn1notation(parser_t& parser) {
         .add_production("PrimaryElement", {"SIZE", "Constraint"})
         .add_production("PrimaryElement", {"FROM", "Constraint"})
         .add_production("PrimaryElement", {"PATTERN", symqs})
-        .add_production("PrimaryElement", {"(", "ConstraintExpr", ")"})
+        .add_production("PrimaryElement", {"(", "ConstraintSpec", ")"})
 
         .add_production("SizeConstraint", {"SIZE", "Constraint"})
 
@@ -298,7 +303,7 @@ return_t prepare_lalr1_parser_asn1notation(parser_t& parser) {
 
     return parser.learn();
     // _logger->writeln("LALR table generation %s", (errorcode_t::success == ret) ? "success" : "failure");
-    // _test_case.test(ret, __FUNCTION__, "LALR(1) parser - ASSN.1 for Notation (build parsing table)");
+    // _test_case.test(ret, __FUNCTION__, "LALR(1) parser - ASN.1 for Notation (build parsing table)");
 }
 
 }  // namespace io

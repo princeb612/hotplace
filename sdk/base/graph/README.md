@@ -1,9 +1,12 @@
-### Graph utilities
+# Graph
 
-This directory provides the generic graph data structures used by the SDK.
+`sdk/base/graph` provides a generic weighted graph model and graph algorithms used as a reusable base facility.
 
-- `t_graph` and related `vertex`/`edge` types provide graph representation.
-- `graph_search` contains graph traversal/search support.
-- Direction, labels, tags and edge hashing are part of the graph model.
+## Documents
+- [graph](graph.md) — graph representation, search helpers, shortest path and topological sort
 
-The implementation is a reusable base utility rather than a protocol-specific graph module.
+## Related tests
+- `test/testcase/base/graph/testcase_graph.cpp`
+
+## Source
+- `sdk/base/graph/graph.hpp`

@@ -42,6 +42,7 @@ void testcase_testvector_valist();
 void testcase_variant();
 
 void testcase_graph();
+void testcase_gss();
 
 void testcase_avltree();
 void testcase_binary();

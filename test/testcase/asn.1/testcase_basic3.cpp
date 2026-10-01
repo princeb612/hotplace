@@ -206,30 +206,6 @@ void test_resolve_dependencies() {
     _test_case.assert(names == expect_childinfo, __FUNCTION__, "resolve ChildInformation");
 }
 
-void test_ac_asn1module() {
-    _test_case.begin("LALR parser - aho corasick reduction");
-
-    // sketch - context-aware parser switching pattern
-
-    asn1module_reducer_t ac;
-    prepare_asn1module_reducer(ac);
-
-    struct testvector {
-        const char* file;
-    } table[] = {
-        {"example1.asn1"}, {"example2.asn1"}, {"example3.asn1"}, {"example4.asn1"},  {"example5.asn1"},  {"example6.asn1"},
-        {"example7.asn1"}, {"example8.asn1"}, {"example9.asn1"}, {"example10.asn1"}, {"example11.asn1"},
-    };
-
-    for (const auto& entry : table) {
-        file_stream fs;
-        fs.open(entry.file);
-        fs.begin_mmap();
-        auto test = ac_search_and_printall(ac, (char*)fs.data(), fs.size());
-        _test_case.test(test, __FUNCTION__, R"(test "%s")", entry.file);
-    }
-}
-
 void test_lalr_asn1module() {
     _test_case.begin("LALR parser - ASN.1 Module grammar");
     struct testvector {
@@ -318,6 +294,9 @@ void test_glr_asn1module() {
         {"example11.asn1"},
     };
 
+    auto& parser = get_glr_parser_asn1_by_import();
+    _test_case.assert(parser.ready(), __FUNCTION__, "GLR parser import table for Notation, Module, Parameterized, Information Object Class");
+
     for (const auto& entry : table) {
         file_stream fs;
         fs.open(entry.file);
@@ -326,7 +305,7 @@ void test_glr_asn1module() {
         basic_stream bs;
         bs.write(fs.data(), fs.size());
 
-        test_asn1parser(get_glr_parser_asn1_by_build(), entry.file, bs.c_str());
+        test_asn1parser(parser, entry.file, bs.c_str());
     }
 }
 
@@ -336,7 +315,6 @@ void testcase_basic3() {
 
     test_resolve_dependencies();
 
-    test_ac_asn1module();
     test_lalr_asn1module();
     test_lalr_asn1module_oid();
     test_glr_asn1module();

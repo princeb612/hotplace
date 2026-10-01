@@ -62,3 +62,23 @@ mindmap
     * https://wiki.wireshark.org/samplecaptures
   * The SSLKEYLOGFILE Format for TLS
     * https://www.ietf.org/archive/id/draft-thomson-tls-keylogfile-00.html
+
+#### related implementation
+
+* [basic](basic/README.md) - socket and secure socket implementations
+* [server](server/README.md) - network server, multiplexer and session management
+* [http](http/README.md) - HTTP/1.x, HTTP/2 and HTTP/3 related implementation
+* [tls](tls/README.md) - TLS/DTLS/QUIC implementation and protocol study
+
+#### related tests
+
+* [network testcase](../../test/testcase/net/README.md)
+* [TLS testcase](../../test/testcase/tls/README.md)
+* [HPACK testcase](../../test/testcase/net/hpack/README.md)
+* [QPACK testcase](../../test/testcase/net/qpack/README.md)
+
+#### related areas
+
+* `sdk/crypto/` - cryptographic primitives and protocol cryptography used by TLS/QUIC/HTTP authentication
+* `sdk/io/` - parser, encoding and binary data handling used by network protocols
+* `sdk/base/` - streams, strings, system utilities and common runtime support

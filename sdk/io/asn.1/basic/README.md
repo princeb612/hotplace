@@ -9,6 +9,17 @@
 - [Structural representation](structural/structural.md) — ASN.1 structural node model
 - [Subtype notation](semantic/constraints/subtype-notation.md) — subtype notation and value sets
 
+## Implementation records
+
+- [ASN.1 object model](asn1-object-model.md)
+- [ASN.1 structural node model](asn1-node.md)
+- [ASN.1 visitor architecture](asn1-visitor.md)
+- [ASN.1 semantic constraints](semantic/constraints/asn1_constraints.md)
+
+- `semantic/` — semantic type/object hierarchy
+- `structural/` — structural node hierarchy
+- `visitor/` — traversal and interpretation visitors
+
 ## Related areas
 
 - `../runtime/` — runtime ASN.1 types and objects
