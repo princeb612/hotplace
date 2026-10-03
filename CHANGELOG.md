@@ -37,6 +37,8 @@
     * CBOR
 
 * details
+  * Revision 1097
+    * ASN.1 Loader - baby step
   * Revision 1096
     * graph-structured stack
     * [fixed] parse tree of GLR parser

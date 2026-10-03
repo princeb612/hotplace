@@ -28,6 +28,29 @@ class asn1_publisher;
 class asn1_runtime;
 class asn1_runtime_context;
 
+enum class asn1_build_t {
+    unknown,
+    module_definition,  // module definition (.asn1)
+    assignments,        // no module definition and assignment
+    non_assignment,     // non-assignment (SimpleType, Tag, etc.)
+};
+
+struct asn1_build_resultset {
+    asn1_build_t type{asn1_build_t::unknown};
+    std::vector<std::string> module_names;
+    asn1_object* object{nullptr};
+
+    asn1_build_resultset() = default;
+    asn1_build_resultset(const asn1_build_resultset&) = delete;
+    asn1_build_resultset& operator=(const asn1_build_resultset&) = delete;
+    ~asn1_build_resultset() { clear(); }
+    // remove all asn1_runtime from asn1_runtime_context
+    void clear();
+    // do not remove asn1_runtime
+    void release_name(const std::string& name);
+    void moveto(const std::string& prefix, const std::string& target);
+};
+
 return_t print_ast(const asn1_object* object, basic_stream& bs, uint32 flags = asn1_ast_flag_ansicolor);
 return_t print_ast(const asn1_runtime* object, basic_stream& bs, uint32 flags = asn1_ast_flag_ansicolor);
 

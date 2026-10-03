@@ -12,6 +12,7 @@
  *                                  regex applied
  * 2026.05.20   Soo Han, Kim        the format specifier 's' in TYPE_BINARY, it outputs a character if it is printable, and '.' otherwise.
  * 2026.06.10   Soo Han, Kim        the format specifier 'x' in TYPE_BINARY, base16 encoding.
+ * 2026.10.03   Soo Han, Kim        the format specifier 'h' in case of integer, no 0x prefixed hexdecimal representation
  *
  */
 
@@ -115,11 +116,16 @@ return_t sprintf(stream_t* stream, const char* fmt, valist va) {
                                     dest.insert(dest.begin(), '%');
                                     break;
                                 case 'x':
-                                case 'X':
+                                case 'X':  // 0x prefixed
                                     dest = std::move(temp);
                                     dest.insert(dest.begin(), '%');
                                     dest.insert(dest.begin(), 'x');
                                     dest.insert(dest.begin(), '0');
+                                    break;
+                                case 'h':  // without 0x prefix
+                                    temp.back() = 'x';
+                                    dest = std::move(temp);
+                                    dest.insert(dest.begin(), '%');
                                     break;
                             }
                         } else if (vt_flag_string & vflag) {

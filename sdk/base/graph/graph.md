@@ -1,5 +1,15 @@
 # Graph
 
+## Publication
+
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1096
+Documented with GPT-5.6 Luna
+— source identity, implementation detail & relationships
+```
+
+
 `graph.hpp` implements `t_graph<T>`, a generic graph whose vertices contain user-defined values and whose edges carry weight and direction.
 
 ## Model
@@ -13,6 +23,20 @@ The graph supports:
 - traversal/search state kept separately from the graph representation
 
 The implementation uses internal vertex/edge/tag structures and hash/set/list containers. Self-edges are normalized to weight zero.
+
+## Relationship to the graph-structured stack
+
+`graph.hpp` and `gss.hpp` serve different purposes. `t_graph<T>` is a general graph with graph algorithms; `gss<STATE, VALUE>` is a stack-shaped graph specifically useful for retaining shared parent paths. The GLR parser uses the latter, not the weighted graph search classes described below.
+
+```text
+t_graph<T>                    gss<STATE, VALUE>
+   │                                │
+   ├── BFS / DFS                    ├── heads
+   ├── Dijkstra                     ├── parent paths
+   └── topological sort             └── retrace for reduction
+```
+
+See [gss](gss.md).
 
 ## Search algorithms
 

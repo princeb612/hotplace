@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file    lalr1_parser.hpp
+ * @file   lalr1_parser.hpp
  * @author  Soo Han, Kim (princeb612.kr@gmail.com)
  *
  * Revision History

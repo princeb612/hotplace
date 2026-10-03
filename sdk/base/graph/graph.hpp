@@ -6,6 +6,7 @@
  *
  * Revision History
  * Date         Name                Description
+ * 2024.05.18   Soo Han, Kim        adjacent list, DFS, BFS, dijkstra (hotplace revision 528)
  * 2026.09.14   Soo Han and Gemini  topological sort
  *
  * online references

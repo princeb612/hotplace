@@ -17,53 +17,7 @@ t_shared_instance<logger> _logger;
 struct OPTION : public CMDLINEOPTION {};
 t_shared_instance<t_cmdline_t<OPTION>> _cmdline;
 
-void dump_parse_tree(asn1_runtime* runtime, const parse_tree* pt) {
-    if (nullptr == pt) return;
-
-    _logger->colorln("parse tree - re-trace");
-    {
-        uint32 idx = 0;
-        auto lambda = [&idx](parser_action_t type, parse_treenode* node) -> return_t {
-            _logger->writeln([&](basic_stream& dbs) -> void {
-                valist va;
-                va << idx++ << node->symbol << node->value << node->children.size();
-                dbs.vaprintf("[{1:03i}] ", va);
-                switch (type) {
-                    case parser_action_t::shift:
-                        dbs << "shift  ";
-                        break;
-                    case parser_action_t::reduce:
-                        dbs << "reduce ";
-                        break;
-                    default:
-                        break;
-                }
-                dbs.vaprintf("{2}", va);
-                if ((false == node->value.empty()) && (node->symbol != node->value)) {
-                    dbs.vaprintf(" ({3})", va);
-                }
-                if (parser_action_t::reduce == type) {
-                    dbs.vaprintf(" RHS [{4}]", va);
-                }
-            });
-            return errorcode_t::success;
-        };
-        parse_tree_visitor visitor(lambda);
-        pt->accept(&visitor);
-    }
-
-    _logger->colorln("parse tree - graph");
-    {
-        auto root = pt->get_root();
-        if (root) {
-            basic_stream bs;
-            root->print(bs);
-            _logger->write(bs);
-        }
-    }
-}
-
-void dump_parse_tree(parse_tree& pt) {
+void dump_parse_tree(const parse_tree* pt) {
     {
         _logger->colorln("parse tree - re-trace");
         uint32 idx = 0;
@@ -93,11 +47,11 @@ void dump_parse_tree(parse_tree& pt) {
             return errorcode_t::success;
         };
         parse_tree_visitor visitor(lambda);
-        pt.accept(&visitor);
+        pt->accept(&visitor);
     }
     {
         _logger->colorln("parser tree - graph");
-        auto root = pt.get_root();
+        auto root = pt->get_root();
         if (root) {
             basic_stream bs;
             root->print(bs);
@@ -116,33 +70,28 @@ void parse_notation(asn1_runtime* runtime, const char* notation) {
 
         asn1_parser parser;
         parse_tree pt;
-        ret = parser.parse(runtime, notation, &pt);
-        dump_parse_tree(runtime, &pt);
+        ret = parser.parse(notation, &pt);
+        dump_parse_tree(&pt);
     }
     __finally2 { _test_case.test(ret, __FUNCTION__, "parse : %s", notation); }
 }
 
 void parse_reconst_notation(asn1_runtime* runtime, const char* notation, const char* expect) {
-    // asn1_publisher applied
-    // - StatementSequence, StatementSequenceOf, StatementSet, StatementSetOf, StatementChoice, FieldList, Field, FieldOpt
-    // - TypeSpec, TypeBase, ReferencedType, TaggedType, TagPrefix, EnumType, EnumList, EnumItem, SimpleType
-
-    // expect can be nullptr
-
     if (nullptr == notation) return;
 
     // parse
     parse_tree pt;
-    runtime->parse(notation, &pt);
-    dump_parse_tree(runtime, &pt);
+    asn1_parser parser;
+    parser.parse(notation, &pt);
+    dump_parse_tree(&pt);
 
     // reconstruction
     basic_stream bs;
-    asn1_object* obj = nullptr;
-    asn1_builder::build(runtime, &pt, &obj);
-    if (obj) {
-        obj->publish(&bs);
-        obj->release();
+    asn1_build_resultset result;
+    asn1_publisher publisher;
+    publisher.build(&pt, result);
+    if (result.object) {
+        result.object->publish(&bs);
     }
     _logger->writeln("parse and publish %s", bs.c_str());
     if (expect)
@@ -212,7 +161,7 @@ void test_asn1parser(lexical_analyzer& lexer, parser_t& parser, const char* text
     parse_tree pt;
     ret = parser.parse(tokens, &pt);
 
-    dump_parse_tree(pt);
+    dump_parse_tree(&pt);
 
     _logger->writeln("parsing %s.", (errorcode_t::success == ret) ? "completed successfully" : "failed");
     _test_case.test(ret, __FUNCTION__, "parse %s", text);
@@ -256,10 +205,24 @@ int main(int argc, char** argv) {
         set_trace_level(option.trace_level);
     }
 
+    _test_case.begin("LALR(1) parser - ASN.1 for Notation");
+    auto& p1 = get_lalr1_parser_asn1_notation_by_build();
+    _test_case.assert(p1.ready(), __FUNCTION__, "LALR(1) parser build table for Notation");
+    _test_case.begin("LALR(1) parser - ASN.1 for Notation (imported)");
+    auto& p2 = get_lalr1_parser_asn1_notation_by_import();
+    _test_case.assert(p2.ready(), __FUNCTION__, "LALR(1) parser import table for Notation");
+    _test_case.begin("GLR parser - ASN.1 for All-in-One");
+    auto& p3 = get_glr_parser_asn1_by_build();
+    _test_case.assert(p3.ready(), __FUNCTION__, "GLR parser build table for Notation, Module, Parameterized, Information Object Class");
+    _test_case.begin("GLR parser - ASN.1 for All-in-One (imported)");
+    auto& p4 = get_glr_parser_asn1_by_import();
+    _test_case.assert(p4.ready(), __FUNCTION__, "GLR parser import table for Notation, Module, Parameterized, Information Object Class");
+
     testcase_basic1();
     testcase_basic2();
     testcase_constraints();
     testcase_testvector_der();
+
     testcase_parser();
     testcase_testvector_parser();
     testcase_publish();

@@ -11,8 +11,10 @@
 
 #include <hotplace/sdk/io/asn.1/loader/asn1_loader.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_parser.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_publisher.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
 #include <hotplace/sdk/io/parser/lexical_analyzer.hpp>
+#include <hotplace/sdk/io/parser/parse_tree.hpp>
 #include <hotplace/sdk/io/stream/file_stream.hpp>
 
 namespace hotplace {
@@ -22,10 +24,10 @@ asn1_loader::asn1_loader() {}
 
 asn1_loader::~asn1_loader() {}
 
-return_t asn1_loader::load_file(const char* asn1file) {
+return_t asn1_loader::load_file(const char* asn1file, parse_tree* pt) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == asn1file) {
+        if (nullptr == asn1file || nullptr == pt) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
@@ -40,22 +42,28 @@ return_t asn1_loader::load_file(const char* asn1file) {
             __leave2;
         }
 
-        ret = load((char*)fs.data(), fs.size());
+        ret = load((char*)fs.data(), fs.size(), pt);
     }
     __finally2 {}
     return ret;
 }
 
-return_t asn1_loader::load(const char* asn1, size_t size) {
+return_t asn1_loader::load(const char* asn1, size_t size, parse_tree* pt) {
     return_t ret = errorcode_t::success;
 
     __try2 {
-        asn1_runtime runtime;
-        asn1_parser parser;
-        parse_tree pt;
+        if (nullptr == pt) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+
         std::string buf(asn1, size);
 
-        parser.parse(&runtime, buf.c_str(), &pt);
+        asn1_parser parser;
+        ret = parser.parse(buf.c_str(), pt);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
     }
     __finally2 {}
 

@@ -33,15 +33,15 @@
 namespace hotplace {
 
 template <typename STATE, typename VALUE>
-class gss_node : public std::enable_shared_from_this<gss_node<STATE, VALUE>> {
+class t_gss_node : public std::enable_shared_from_this<t_gss_node<STATE, VALUE>> {
    public:
-    using ptr = std::shared_ptr<gss_node<STATE, VALUE>>;
+    using ptr = std::shared_ptr<t_gss_node<STATE, VALUE>>;
 
     STATE state;
     VALUE value;
     std::vector<ptr> parents;
 
-    gss_node(const STATE& s, const VALUE& v) : state(s), value(v) {}
+    t_gss_node(const STATE& s, const VALUE& v) : state(s), value(v) {}
 
     void add_parent(ptr parent_node) {
         if (parent_node) {
@@ -49,7 +49,7 @@ class gss_node : public std::enable_shared_from_this<gss_node<STATE, VALUE>> {
         }
     }
 
-    void traverse(std::function<void(const ptr&)> visitor, std::unordered_set<gss_node*>& visited) {
+    void traverse(std::function<void(const ptr&)> visitor, std::unordered_set<t_gss_node*>& visited) {
         if (visited.find(this) != visited.end()) {
             return;
         }
@@ -64,7 +64,7 @@ class gss_node : public std::enable_shared_from_this<gss_node<STATE, VALUE>> {
         }
     }
 
-    void retrace(size_t depth, std::vector<ptr>& current_path, std::function<void(const std::vector<ptr>&)> callback, std::unordered_set<gss_node*>& visited) {
+    void retrace(size_t depth, std::vector<ptr>& current_path, std::function<void(const std::vector<ptr>&)> callback, std::unordered_set<t_gss_node*>& visited) {
         current_path.push_back(this->shared_from_this());
 
         if (depth == 0) {
@@ -91,9 +91,9 @@ class gss_node : public std::enable_shared_from_this<gss_node<STATE, VALUE>> {
 };
 
 template <typename STATE, typename VALUE>
-class gss {
+class t_gss {
    public:
-    using node_type = gss_node<STATE, VALUE>;
+    using node_type = t_gss_node<STATE, VALUE>;
     using node_ptr = typename node_type::ptr;
 
    private:
@@ -101,7 +101,7 @@ class gss {
     std::unordered_multimap<STATE, node_ptr> node_map;
 
    public:
-    gss() = default;
+    t_gss() = default;
 
     node_ptr create_node(const STATE& state, const VALUE& value) {
         auto new_node = std::make_shared<node_type>(state, value);

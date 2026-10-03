@@ -42,8 +42,6 @@ class asn1_builder {
     static asn1_object* build(const std::string& name, asn1_entity_t entity, std::function<void(asn1_object*)> f = nullptr);
 
     static asn1_object* build(asn1_object* object, std::function<void(asn1_object*)> f = nullptr);
-
-    static return_t build(asn1_runtime* runtime, const parse_tree* pt, asn1_object** object);
 };
 
 }  // namespace io

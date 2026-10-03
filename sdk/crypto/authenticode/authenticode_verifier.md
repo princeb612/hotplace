@@ -1,5 +1,15 @@
 # Authenticode Verifier
 
+## Publication
+
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1096
+Documented with GPT-5.6 Luna
+— source identity, implementation detail & relationships
+```
+
+
 `authenticode_verifier` is the orchestration layer for Authenticode verification.
 
 ## Context
@@ -37,6 +47,27 @@ For the PE engine this gives the PKCS#7 signature data. The verifier then:
 5. verifies the PKCS#7/certificate side of the signature.
 
 A digest mismatch is returned as `digest_failure` before certificate verification is accepted.
+
+## PE-specific boundary
+
+The verifier does not treat the entire PE file as a normal file digest. The PE plugin supplies the Authenticode image-digest calculation and extraction boundary:
+
+```text
+PE image
+   │
+   ├── PE headers / checksum exclusions
+   ├── certificate table exclusion
+   └── Authenticode hashing rules
+            │
+            ▼
+     calculated image digest
+            │
+            ├── compare with SpcIndirectDataContent digest
+            │
+            └── continue to signer/certificate verification
+```
+
+This is why `authenticode_plugin_pe` is separate from the generic verifier orchestration: PE layout rules belong to the format plugin, while trust/signature orchestration belongs to `authenticode_verifier`.
 
 ## Trust handling
 

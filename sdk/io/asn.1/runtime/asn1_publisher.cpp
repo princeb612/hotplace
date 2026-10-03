@@ -17,19 +17,17 @@
 namespace hotplace {
 namespace io {
 
-asn1_publisher::asn1_publisher() {}
+asn1_publisher::asn1_publisher() : _id(0) {}
 
 asn1_publisher::~asn1_publisher() {}
 
-return_t asn1_publisher::build(asn1_runtime* runtime, const parse_tree* pt, asn1_object** object) {
+return_t asn1_publisher::build(const parse_tree* pt, asn1_build_resultset& result) {
     return_t ret = errorcode_t::success;
     __try2 {
-        if (nullptr == pt || nullptr == object) {
+        if (nullptr == pt) {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-
-        *object = nullptr;
 
         prepare_basics();
         prepare_constraints();
@@ -59,18 +57,18 @@ return_t asn1_publisher::build(asn1_runtime* runtime, const parse_tree* pt, asn1
                 auto rhs = node->sizeof_rhs();
                 auto iter = _handler_map.find(node->symbol);
                 if (_handler_map.end() != iter) {
-                    test = iter->second(runtime, node, context);
+                    test = iter->second(node, context, result);
                 } else {
                     auto size = node->sizeof_rhs();
                     if (context.size() < size) {
                         test = errorcode_t::invalid_context;
                         throw;  // CHECK
                     } else {
-                        test = default_handler(runtime, node, context);
+                        test = default_handler(node, context, result);
                     }
                 }
                 if (context.size() != (size - rhs + 1)) {
-                    throw;  // CHECK
+                    throw;  // CHECK... handler needs to be modified
                 }
             }
             return test;
@@ -87,8 +85,9 @@ return_t asn1_publisher::build(asn1_runtime* runtime, const parse_tree* pt, asn1
         }
 
         auto top = context.pop();
-        *object = top.object;
-        top.release();  // *object own top.object
+        if (asn1_build_t::unknown == result.type) result.type = asn1_build_t::non_assignment;
+        result.object = top.object;
+        top.release();
     }
     __finally2 {}
     return ret;

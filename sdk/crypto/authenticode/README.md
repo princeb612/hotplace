@@ -1,5 +1,15 @@
 # Windows Authenticode Verification
 
+## Publication
+
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1096
+Documented with GPT-5.6 Luna
+— source identity, implementation detail & relationships
+```
+
+
 `sdk/crypto/authenticode` implements the project's Windows Authenticode verification path. The scope is deliberately narrow: inspect a signed PE file, extract its Authenticode/PKCS#7 data, verify the embedded digest and certificate/signature information, and perform the PE-specific checks needed by the verifier.
 
 This is **not** a general-purpose digital-certificate or PKI framework.

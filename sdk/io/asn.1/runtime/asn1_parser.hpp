@@ -35,7 +35,26 @@ class asn1_parser {
    public:
     asn1_parser();
 
-    return_t parse(asn1_runtime* runtime, const char* notation, parse_tree* pt = nullptr) const;
+    return_t parse(const char* notation, parse_tree* pt = nullptr);
+    /**
+     * @example
+     *          // sketch
+     *          asn1_build_resultset result;
+     *          asn1_builder::build(&pt, result);
+     */
+    return_t parse(const char* notation, asn1_build_resultset& result);
+
+    lexical_analyzer& get_lexer();
+    parser_t& get_parser();
+
+   protected:
+    void load();
+
+   private:
+    mutable critical_section _lock;
+    lexical_context _lexcontext;
+    lexical_analyzer _lex;
+    int _ready;
 };
 
 }  // namespace io

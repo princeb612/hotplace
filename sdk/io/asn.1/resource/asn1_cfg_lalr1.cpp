@@ -50,10 +50,13 @@ return_t prepare_lalr1_parser_asn1notation(parser_t& parser) {
     auto symassign = resource->nameof(token_assign);     // symassign
 
     cfg_grammar grammar;
+    // 1. Root & Entry Points (Supports Multiple Modules, Single Module, Standalone Statements)
     grammar
         // Top level & Assignments
         .add_production("S'", {"Statement"})
 
+        // 2. Module Definition & Exports/Imports (ITU-T X.680)
+        // 3. Statements & Assignments (Standard & Parameterized)
         .add_production("Statement", {"Assignment"})
         .add_production("Statement", {"Type"})
         .add_production("Statement", {"ComponentType"})
@@ -67,6 +70,7 @@ return_t prepare_lalr1_parser_asn1notation(parser_t& parser) {
 
         .add_production("DefinedType", {symuser})
 
+        // 4. Type Specifications & Extension Markers (Version 1 & 2)
         .add_production("Type", {"SimpleTypeSpec"})
         .add_production("Type", {"TaggedTypeSpec"})
         .add_production("Type", {"ReferencedTypeSpec"})
@@ -77,11 +81,24 @@ return_t prepare_lalr1_parser_asn1notation(parser_t& parser) {
         .add_production("Type", {"SetOfTypeSpec"})
         .add_production("Type", {"ChoiceTypeSpec"})
 
+        // Referenced Types
+        .add_production("TypeIdentifier", {symuser})
+        .add_production("TypeIdentifier", {symid})
+
+        .add_production("ReferencedTypeSpec", {"TypeIdentifier"})
+
+        // id + Type
+        .add_production("NamedType", {symid, "Type"})
+
+        .add_production("ComponentType", {"NamedType"})
+        .add_production("ComponentType", {"NamedType", "Constraint"})
+        .add_production("ComponentType", {"NamedType", "OptionalitySpec"})
+        .add_production("ComponentType", {"NamedType", "Constraint", "OptionalitySpec"})
+
         // ComponentTypeList rules for SEQUENCE / SET / CHOICE
         .add_production("ComponentTypeList", {"ComponentTypeList", ",", "ComponentType"})
         .add_production("ComponentTypeList", {"ComponentType"})
 
-        // SEQUECE, SET, CHOICE
         .add_production("ComponentTypeLists", {"Constraint", "{", "ComponentTypeList", "}"})
         .add_production("ComponentTypeLists", {"{", "ComponentTypeList", "}"})
         .add_production("ComponentTypeLists", {"Constraint", "{", "}"})
@@ -102,22 +119,9 @@ return_t prepare_lalr1_parser_asn1notation(parser_t& parser) {
         .add_production("SetOfTypeSpec", {"SET", "Constraint", "OF", "Type"})
         .add_production("SetOfTypeSpec", {"SET", "OF", "Type"})
 
-        // id + Type
-        .add_production("NamedType", {symid, "Type"})
-
-        .add_production("ComponentType", {"NamedType"})
-        .add_production("ComponentType", {"NamedType", "Constraint"})
-        .add_production("ComponentType", {"NamedType", "OptionalitySpec"})
-        .add_production("ComponentType", {"NamedType", "Constraint", "OptionalitySpec"})
-
         .add_production("OptionalitySpec", {"OPTIONAL"})
         .add_production("OptionalitySpec", {"DEFAULT", "ValueElement"})
         .add_production("OptionalitySpec", {"DEFAULT", "{", "}"})
-
-        .add_production("TypeIdentifier", {symuser})
-        .add_production("TypeIdentifier", {symid})
-
-        .add_production("ReferencedTypeSpec", {"TypeIdentifier"})
 
         // Tagged Type Specifications
         // TaggedType ::= Tag Type | Tag IMPLICIT Type | Tag EXPLICIT Type
@@ -131,6 +135,7 @@ return_t prepare_lalr1_parser_asn1notation(parser_t& parser) {
         .add_production("TagSpec", {"[", "PRIVATE", symnum, "]"})
         .add_production("TagSpec", {"[", symnum, "]"})
 
+        // Enum Specifications
         .add_production("EnumeratedType", {"ENUMERATED", "{", "Enumerations", "}"})
 
         // ENUMERATED
@@ -174,6 +179,16 @@ return_t prepare_lalr1_parser_asn1notation(parser_t& parser) {
         .add_production("SimpleTypeSpec", {"DURATION"})
         .add_production("SimpleTypeSpec", {"ANY"})
 
+        // 5. Information Object Class & Field Reference (ITU-T X.681)
+        .add_production("ValueElement", {symnum})
+        .add_production("ValueElement", {symfp})
+        .add_production("ValueElement", {symqs})
+        .add_production("ValueElement", {"MIN"})
+        .add_production("ValueElement", {"MAX"})
+        .add_production("ValueElement", {"TRUE"})
+        .add_production("ValueElement", {"FALSE"})
+
+        // 6. Constraints & Subtype Specifications (ITU-T X.682 - Ambiguity Fixed)
         .add_production("Constraint", {"(", "ConstraintSpec", ")"})
 
         .add_production("ConstraintSpec", {"SubtypeElementSetSpec"})
@@ -204,16 +219,9 @@ return_t prepare_lalr1_parser_asn1notation(parser_t& parser) {
         .add_production("PrimaryElement", {"PATTERN", symqs})
         .add_production("PrimaryElement", {"(", "ConstraintSpec", ")"})
 
-        .add_production("SizeConstraint", {"SIZE", "Constraint"})
+        .add_production("SizeConstraint", {"SIZE", "Constraint"});
 
-        .add_production("ValueElement", {symnum})
-        .add_production("ValueElement", {symfp})
-        .add_production("ValueElement", {symqs})
-        .add_production("ValueElement", {"MIN"})
-        .add_production("ValueElement", {"MAX"})
-        .add_production("ValueElement", {"TRUE"})
-        .add_production("ValueElement", {"FALSE"});
-
+    // 7. Terminals Registration
     grammar.add_terminal(symnum)
         .add_terminal(symid)
         .add_terminal(symfp)

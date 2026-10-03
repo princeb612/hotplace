@@ -9,16 +9,40 @@
                       |_|
 ````
 
+## Introduction
+
 * Research on personal interests
-  * Most of the hotplace was prototyped and implemented based on what I studied.
-  * using ChatGPT and Gemini for prototyping and reviews since 2026.
-  * The work developed relying on ChatGPT and Gemini is as follows:
-    * bignumber (class bignumber)
-    * floating point (class floating_point)
-      * decimal floating point (class decimal_float)
-      * lossless fractional floating point (class rational_float)
-* documents
-  * [Documented with GPT-5.6 Luna — review](docs/README.md)
+* Starting in 2026, actively utilizing AIs like GPT and Gemini.
+
+## Documentation
+
+GPT-5.6 Luna
+* [/docs](docs/README.md)
+* [/review](review/README.md)
+* [Project Review](review/project-review.md)
+---
+* Hotplace documentation can be understood as three complementary layers:
+  
+  ```text
+                           hotplace documentation
+                                    │
+               ┌────────────────────┼────────────────────┐
+               │                    │                    │
+               ▼                    ▼                    ▼
+          source-tree             /docs               /review
+            docs                study flow       architecture review
+               │                    │                    │
+               │                    │                    │
+        "what is here?"       "how did I learn?"   "how are these
+               │                    │                things connected?"
+               │                    │                    │
+               ▼                    ▼                    ▼
+         directory/module       conceptual         cross-cutting
+         identity + details    progression       relationships/evolution
+  ```
+
+## Summary
+
 * ![cmake workflow](https://github.com/princeb612/hotplace/actions/workflows/build.yml/badge.svg)
 * ![codeql workflow](https://github.com/princeb612/hotplace/actions/workflows/codeql.yml/badge.svg)
 * powered by
@@ -57,7 +81,7 @@
   * [custom toolchain](#custom-toolchain)
   * [link](#link)
 
-## implemented
+## Implemented
 
 * TLS,DTLS,QUIC
   * [RFC 2246 The TLS Protocol Version 1.0](https://datatracker.ietf.org/doc/html/rfc2246)
@@ -134,7 +158,7 @@
 * Authenticode
   * Digital Certificate verification (plugin_msi, plugin_cabinet excluded)
 
-## applied
+## Applied
 
 * OpenSSL
   * [RFC 2104 HMAC: Keyed-Hashing for Message Authentication](https://datatracker.ietf.org/doc/html/rfc2104)
@@ -167,10 +191,10 @@
 * IEEE 754
   * half/single/double precision floating point
 
-## not applied
+## Not applied
 
 
-## studying
+## Studying
 
 * HTTP/1.1
   * RFC 2817 Upgrading to TLS Within HTTP/1.1
@@ -212,7 +236,7 @@
 * Format String Syntax
   * https://fmt.dev/dev/syntax/
 
-## next time
+## Next time
 
 * Compression
   * RFC 7932 Brotli Compressed Data Format

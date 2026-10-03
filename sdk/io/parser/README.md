@@ -1,5 +1,15 @@
 # Parser
 
+## Publication
+
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1096
+Documented with GPT-5.6 Luna
+— source identity, implementation detail & relationships
+```
+
+
 `sdk/io/parser` is hotplace's grammar-driven parsing infrastructure. It provides lexical tokenization, CFG grammar representation, parsing-table generation, LALR/GLR execution, and parse-tree construction.
 
 The subsystem is consumed directly by ASN.1 and can also be used independently for grammar experiments.
@@ -28,6 +38,10 @@ cfg_grammar
       parser execution
        ├── lalr1_parser
        └── glr_parser
+            │
+            ▼
+      graph-structured
+       stack (GSS)
             │
             ▼
         parse_tree

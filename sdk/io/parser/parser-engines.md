@@ -1,5 +1,15 @@
 # LALR and GLR Parser Engines
 
+## Publication
+
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1096
+Documented with GPT-5.6 Luna
+— source identity, implementation detail & relationships
+```
+
+
 ## Role
 
 The parser engines consume grammar tables and a token sequence and execute SHIFT/REDUCE style parsing.
@@ -9,16 +19,21 @@ parser tokens
      │
      ▼
 parser engine
- ┌───┴────────┐
- ▼            ▼
-LALR(1)       GLR
- │            │
- ▼            ▼
-deterministic graph-structured stack
- ACTION/GOTO  multiple paths
- └─────┬────────┘
-       ▼
-   parse_tree
+ ┌───┴──────────────┐
+ ▼                  ▼
+LALR(1)             GLR
+ │                  │
+ │                  ▼
+ │              graph-structured
+ │                  stack (GSS)
+ │                  │
+ │          ┌───────┴────────┐
+ │          ▼                ▼
+ │       REDUCE           SHIFT paths
+ │          │                │
+ └──────────┴────────────────┘
+              ▼
+          parse_tree
 ```
 
 Both engines implement the common `parser_t` interface.
@@ -71,7 +86,7 @@ The ASN.1 parser currently relies on this deterministic path for its grammar.
 
 `glr_parser` provides a generalized LR execution path.
 
-Instead of requiring one unique action path at every point, it can preserve multiple parsing paths using a graph-structured stack.
+Instead of requiring one unique action path at every point, it preserves multiple active paths using `gss<uint32, parse_treenode*>`. Each GSS node carries a parser state and an optional parse-tree node, while parent links retain alternative stack histories.
 
 Conceptually:
 
@@ -85,11 +100,38 @@ Conceptually:
                 \       /
                  graph stack
                      │
+             gss::pop/retrace_paths
+                     │
                      ▼
                  parse tree
 ```
 
 This makes GLR useful for grammar situations where deterministic LALR parsing cannot directly represent all alternatives.
+
+## GLR reduction flow
+
+The current implementation processes reductions before shifting the next token. For a REDUCE action, it calls `gss::pop(head, rhs_len, ...)`, computes the GOTO state from each returned ancestor, suppresses duplicate reduction work with a `(goto_state, ancestor)` key, and pushes the reduced head back into the GSS.
+
+```text
+active GSS heads
+      │
+      ▼
+ REDUCE action
+      │
+      ▼
+gss::pop(rhs_len)
+      │
+      ▼
+ancestor paths
+      │
+      ▼
+GOTO(ancestor, lhs)
+      │
+      ▼
+new GSS head
+```
+
+This is the concrete implementation reason `sdk/base/graph/gss.hpp` is part of the parser's dependency chain.
 
 ## Why both engines exist
 

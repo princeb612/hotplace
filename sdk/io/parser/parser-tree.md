@@ -1,5 +1,15 @@
 # Parse Tree
 
+## Publication
+
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1096
+Documented with GPT-5.6 Luna
+— source identity, implementation detail & relationships
+```
+
+
 ## Role
 
 `parse_tree` records the syntactic structure produced by parser SHIFT/REDUCE actions.
@@ -15,7 +25,7 @@ parser action
                  parse_tree
 ```
 
-It is the bridge between parser mechanics and higher-level semantic construction.
+It is the bridge between parser mechanics and higher-level semantic construction. In the current GLR path, the parser reports reductions while GSS paths are being reduced, so the parse tree is the first shared representation after parser execution and before domain-specific semantic objects are built.
 
 ## parse_treenode
 
@@ -70,6 +80,25 @@ The tree can therefore be:
 - consumed by higher-level processing
 
 without making the parser engine itself responsible for semantic interpretation.
+
+## Parser → semantic construction
+
+The parse tree deliberately stops at syntax. It records grammar symbols, token values and child relationships; it does not know ASN.1-specific concepts such as `SEQUENCE`, `DEFAULT`, tags, references or constraints.
+
+```text
+generic parser
+      │
+      ▼
+  parse_tree
+      │
+      ├── ASN.1 publisher/builder
+      │       ▼
+      │   asn1_object
+      │
+      └── other grammar consumers
+```
+
+This boundary is important for keeping `sdk/io/parser` reusable. ASN.1 semantic construction belongs under `sdk/io/asn.1`, while `parse_tree` remains a generic parser result.
 
 ## Parser → semantic construction
 

@@ -56,7 +56,7 @@ The current IO layer reflects several major development lines that accumulated o
 
 The historical record also shows that these areas were developed in support of higher-level protocol work. HTTP/2, TLS, QUIC, COSE/CBOR, and ASN.1 all required reusable representation and parsing mechanisms.
 
-Recent Revisions 1091 and 1093 extend the integrated ASN.1 CFG with information object class and extension marker versions 1 and 2. The GLR grammar experiment has reached a commit-ready checkpoint, while `asn1_runtime` remains based on the LALR parser and loader integration is later work.
+Revisions 1091 and 1093 extend the integrated ASN.1 CFG with information object class and extension marker versions 1 and 2. Revisions 1094–1096 continue the parser infrastructure work with external parsing-table import, graph-structured-stack support for GLR, and parse-tree construction fixes. `asn1_runtime` remains based on the LALR parser and loader integration is later work.
 
 Therefore the IO history should be read as several converging processing paths rather than as one subsystem designed at once.
 
@@ -342,7 +342,7 @@ AST / structural node
 semantic ASN.1 object/type
 ```
 
-At Revision 1093 the broader CFG/GLR grammar study has reached a commit-ready checkpoint. `asn1_runtime` remains on the LALR path, and the loader has not yet absorbed the broader grammar/runtime path.
+At Revision 1096 the broader CFG/GLR grammar study has progressed from the grammar checkpoint to a graph-structured-stack implementation and parse-tree fixes. `asn1_runtime` remains on the LALR path, and the loader has not yet absorbed the broader grammar/runtime path.
 
 ### CBOR
 
@@ -504,7 +504,7 @@ protocol state
 application
 ```
 
-### ASN.1 path at Revision 1093
+### ASN.1 path at Revision 1096
 
 ```text
 ASN.1 notation
@@ -600,12 +600,12 @@ This is why IO changes can affect apparently unrelated TLS/QUIC/network tests.
 
 ## Status
 
-At Revision 1093:
+At Revision 1096:
 
 - `sdk/io` is established as the common structured-data and representation layer below crypto/network.
 - Stream and platform abstractions provide reusable input/output mechanisms.
 - `payload` provides a reusable binary layout mechanism for protocol structures.
-- Parser infrastructure supports lexical analysis, CFG, LALR, GLR experimentation, and parse-tree construction.
+- Parser infrastructure supports lexical analysis, CFG, LALR, GLR experimentation, graph-structured-stack support, and parse-tree construction.
 - ASN.1 provides a substantial syntax → semantic-object pipeline. The integrated CFG now spans notation, module, parameterized constructs, information object class, and extension marker versions 1 and 2; the production runtime path remains LALR-based.
 - CBOR provides a separate structured-data representation used by higher security/data layers.
 - Compression and other representation utilities remain supporting facilities within IO.

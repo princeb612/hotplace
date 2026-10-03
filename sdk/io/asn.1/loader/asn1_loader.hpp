@@ -14,6 +14,7 @@
 
 #include <hotplace/sdk/io/asn.1/basic/types.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/types.hpp>
+#include <hotplace/sdk/io/parser/types.hpp>
 
 namespace hotplace {
 namespace io {
@@ -28,17 +29,18 @@ class asn1_loader {
      *          // sketch
      *          auto rtcontext = asn1_runtime_context::get_instance();
      *          loader.load_file("userprofile.asn1");
-     *          auto runtime = rtcontext->current();
      */
-    static return_t load_file(const char* asn1file);
+    static return_t load_file(const char* asn1file, parse_tree* pt);
     /**
      * @examples
      *          // sketch
      *          auto rtcontext = asn1_runtime_context::get_instance();
      *          loader.load_file(asn1stream, asn1size);
-     *          auto runtime = rtcontext->current();
      */
-    static return_t load(const char* asn1, size_t size);
+    static return_t load(const char* asn1, size_t size, parse_tree* pt);
+
+   private:
+    std::vector<std::string> _module_names;
 };
 
 }  // namespace io

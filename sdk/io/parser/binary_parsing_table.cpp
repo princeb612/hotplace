@@ -1,6 +1,6 @@
 /* vim: set tabstop=4 shiftwidth=4 softtabstop=4 expandtab smarttab : */
 /**
- * @file    binary_parsing_table.cpp
+ * @file   binary_parsing_table.cpp
  * @author  Soo Han, Kim (princeb612.kr@gmail.com)
  *
  * Revision History
@@ -176,37 +176,31 @@ return_t binary_parsing_table::read(const std::string& filename, parser_t& parse
             return ret;
         }
         if (pos < 20) {
-            ret = errorcode_t::bad_format;
-            return ret;
+            return errorcode_t::bad_format;
         }
 
         auto magic = pl.t_value_of<uint32>("magic");
         if (0x48505400 != magic) {
-            ret = errorcode_t::bad_format;
-            return ret;
+            return errorcode_t::bad_format;
         }
         auto version = pl.t_value_of<uint16>("version");
         if (version < parser.get_version()) {
-            ret = errorcode_t::low_version;
-            return ret;
+            return errorcode_t::low_version;
         }
         auto endian = pl.t_value_of<uint16>("endian");
         if (0x1234 != endian) {
-            ret = errorcode_t::bad_format;
-            return ret;
+            return errorcode_t::bad_format;
         }
         crc = pl.t_value_of<uint32>("crc32");
         bodysize = pl.t_value_of<uint64>("size");
     }
 
     if ((size - pos) != bodysize) {
-        ret = errorcode_t::bad_format;
-        return ret;
+        return errorcode_t::bad_format;
     }
     auto checksum = crc32(stream + pos, size - pos);
     if (checksum != crc) {
-        ret = errorcode_t::integrity_error;
-        return ret;
+        return errorcode_t::integrity_error;
     }
 
     // BLOCK1 - string table

@@ -1,5 +1,15 @@
 # ASN.1 Runtime
 
+## Publication
+
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1096
+Documented with GPT-5.6 Luna
+— source identity, implementation detail & relationships
+```
+
+
 `asn1_runtime` is the runtime layer that turns ASN.1 notation and DER/BER byte streams into the project's ASN.1 object model, and can publish that model back to ASN.1 notation or DER.
 
 This layer sits between the ASN.1 syntax/parser side and the semantic ASN.1 types under `basic/`. It is also the point where weakly typed decoded data can be promoted into semantic objects and where strongly typed schema definitions are resolved and decoded.
@@ -39,6 +49,24 @@ asn1_object semantic model
 ```
 
 The important point is that `asn1_runtime` is not itself the ASN.1 grammar parser. `asn1_parser` handles the notation-to-parse-tree step; the runtime layer builds, stores, resolves, decodes, and publishes the resulting semantic objects.
+
+## Runtime context
+
+`asn1_runtime` instances can also be selected through `asn1_runtime_context`. The context keeps named runtime instances and a current/default runtime, so code that operates on ASN.1 definitions can select which schema/object registry is active without making every caller carry the runtime instance directly.
+
+```text
+             asn1_runtime_context
+                      |
+          +-----------+-----------+
+          |                       |
+     named runtimes          current/default
+          |                       |
+          +-----------+-----------+
+                      v
+                asn1_runtime
+```
+
+This is a runtime-management concern rather than part of ASN.1 parsing or DER encoding. The distinction matters when tracing source code: `asn1_runtime_context` selects the runtime, while `asn1_runtime` owns schemas, objects, references, and encode/decode operations.
 
 ## Main components
 
@@ -166,6 +194,34 @@ semantic ASN.1 object
 ```
 
 `testcase_basic3.cpp` verifies this by registering schemas, reading DER, publishing ASN.1 notation and DER again, and comparing the regenerated representation with the expected schema and original DER stream.
+
+## Constraint path
+
+Constraint processing crosses the generic parser/runtime boundary rather than living entirely in `asn1_runtime`:
+
+```text
+ASN.1 notation
+      │
+      ▼
+parser / parse_tree
+      │
+      ▼
+asn1_builder / publisher
+      │
+      ▼
+asn1_object + constraint tree
+      │
+      ▼
+asn1_constraint_evaluator
+      │
+      ▼
+t_set_runtime<T>
+   ┌──┴──────┐
+   ▼         ▼
+range_set  string_set
+```
+
+This makes the ownership of each concern visible: syntax belongs to `sdk/io/parser`, semantic constraint nodes and their evaluation belong to `sdk/io/asn.1/basic`, and the reusable value-domain machinery belongs to `sdk/base/nostd`.
 
 ## Constraints
 

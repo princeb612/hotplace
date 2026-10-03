@@ -3,10 +3,10 @@
 ## network_server
 
 | dev    | support | platform |
-| --     | --       | --       |
-| epoll  | O        | linux    |
-| iocp   | O        | windows  |
-| kqueue | X        |          |
+| --     | --      | --       |
+| epoll  | O       | linux    |
+| iocp   | O       | windows  |
+| kqueue | X       |          |
 
 ```text
 muliplexer

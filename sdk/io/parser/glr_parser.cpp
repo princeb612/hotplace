@@ -27,7 +27,7 @@
 namespace hotplace {
 namespace io {
 
-using parse_gss = gss<uint32, parse_treenode*>;
+using parse_gss = t_gss<uint32, parse_treenode*>;
 using parse_gss_node = parse_gss::node_type;
 using parse_gss_node_ptr = parse_gss::node_ptr;
 
@@ -194,7 +194,7 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
                         const auto& rule = _grammar.get_production(act.target);
                         size_t rhs_len = rule.rhs.size();
 
-                        // Utilize gss::pop (retrace_paths) to safely collect all paths
+                        // Utilize t_gss::pop (retrace_paths) to safely collect all paths
                         stack.pop(head, rhs_len, [&](const std::vector<parse_gss_node_ptr>& path) {
                             if (path.empty()) return;
 

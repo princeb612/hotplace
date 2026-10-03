@@ -37,8 +37,8 @@ class asn1_tag : public asn1_object {
     uint8 get_class() const;
     uint64 get_class_number() const;
     uint8 get_tag_type() const;
-    bool is_implicit() const;
-    bool is_explicit() const;
+    bool is_implicit(asn1_runtime* runtime) const;
+    bool is_explicit(asn1_runtime* runtime) const;
 
     void as_implicit();
     void as_explicit();

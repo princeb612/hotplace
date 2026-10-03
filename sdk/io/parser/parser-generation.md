@@ -1,5 +1,15 @@
 # Parser Grammar and Table Generation
 
+## Publication
+
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1096
+Documented with GPT-5.6 Luna
+— source identity, implementation detail & relationships
+```
+
+
 ## Role
 
 The generation layer turns a context-free grammar into parser states and ACTION/GOTO tables.
@@ -84,6 +94,33 @@ and GOTO entries map a state plus non-terminal to the next state.
 GLR keeps the table representation suitable for ambiguous/conflicting grammar paths rather than requiring the deterministic LALR engine to resolve every conflict.
 
 The execution side uses a graph-structured stack, documented with the GLR engine.
+
+## LALR and GLR as one generation pipeline
+
+The important source-tree distinction is that LALR and GLR share the grammar and table-generation infrastructure, but their execution semantics differ:
+
+```text
+                         cfg_grammar
+                             │
+                             ▼
+                    table-generation code
+                       │            │
+                       ▼            ▼
+                 LALR actions   GLR actions
+                       │            │
+                       └──────┬─────┘
+                              ▼
+                    binary_parsing_table
+                              │
+                    ┌─────────┴─────────┐
+                    ▼                   ▼
+                lalr1_parser        glr_parser
+                                        │
+                                        ▼
+                                      GSS
+```
+
+The binary table is therefore a reusable execution artifact, not a separate parser algorithm.
 
 ## Binary parsing table
 

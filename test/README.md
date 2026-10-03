@@ -20,11 +20,18 @@ hotplace verification
 ├─ MinGW64 / GCC
 │    └─ ctest + Application Verifier
 │
-├─ CentOS 7
-│    └─ Sanitizer + ctest
-│
 ├─ Ubuntu 20
-│    └─ test.sh
+│    └─ ctest + Sanitizer
+│
+├─ CentOS 7 (gcc 4.8.5)
+│    └─ ctest + test.sh
+│         └─ Valgrind
+│              ├─ memcheck
+│              ├─ helgrind
+│              └─ drd
+│
+├─ Rocky 8
+│    └─ ctest + test.sh
 │         └─ Valgrind
 │              ├─ memcheck
 │              ├─ helgrind
@@ -74,12 +81,12 @@ Some applets require external interaction or runtime data such as HTML/CSS or pa
 root CMakeLists.txt
        │
        ▼
-     test/
-   ┌───┼────┐
-   ▼   ▼    ▼
+      test/
+   ┌──────┼──────┐
+   ▼      ▼      ▼
 testcase applet tool
-   │          │
-   │          └─ parsing table generation
+   │             │
+   │             └─ parsing table generation
    │
    └─ test executables
 ```

@@ -1,6 +1,6 @@
 # hotplace study
 
-**Edition 1 · Revision 1093**
+**Edition 1 · Revision 1096**
 
 > A compact study map of the hotplace project.
 > The documents record concepts, relationships, development traces,
@@ -176,7 +176,7 @@ dimensions rather than as one strict stack. The following map is a reading aid:
 
 The diagram is intentionally conceptual:
 
-- **ASN.1** currently includes a broader CFG/GLR grammar checkpoint through Revision 1093, including information object class and extension marker versions 1 and 2; the production runtime parser remains LALR-based.
+- **ASN.1** currently includes a broader CFG/GLR grammar checkpoint through Revision 1096, including information object class and extension marker versions 1 and 2, with the GLR parser now using a graph-structured stack (GSS) and corrected parse-tree construction; the production runtime parser remains LALR-based.
 - **ASN.1** describes a language-to-semantic-object path. It is not simply
   another network layer.
 - **Payload** is a reusable binary representation mechanism. It supports
@@ -429,7 +429,7 @@ this map does not imply that it was developed later.
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1093            │
+│ Edition 1 · Revision 1096            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘

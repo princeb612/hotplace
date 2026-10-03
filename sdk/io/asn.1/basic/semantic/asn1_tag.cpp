@@ -40,22 +40,18 @@ uint64 asn1_tag::get_class_number() const { return _class_number; }
 
 uint8 asn1_tag::get_tag_type() const { return _tag_mode; }
 
-bool asn1_tag::is_implicit() const {
+bool asn1_tag::is_implicit(asn1_runtime* runtime) const {
     auto mode = _tag_mode;
     if (mode == asn1_automatic) {
-        auto contexts = asn1_runtime_context::get_instance();
-        auto runtime = contexts->current();
-        mode = runtime->get_tagdefault();
+        mode = runtime ? runtime->get_tagdefault() : asn1_explicit;
     }
     return (asn1_implicit == mode);
 }
 
-bool asn1_tag::is_explicit() const {
+bool asn1_tag::is_explicit(asn1_runtime* runtime) const {
     auto mode = _tag_mode;
     if (mode == asn1_automatic) {
-        auto contexts = asn1_runtime_context::get_instance();
-        auto runtime = contexts->current();
-        mode = runtime->get_tagdefault();
+        mode = runtime ? runtime->get_tagdefault() : asn1_explicit;
     }
     return (asn1_explicit == mode);
 }

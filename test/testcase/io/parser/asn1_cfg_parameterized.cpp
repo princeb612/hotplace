@@ -78,6 +78,23 @@ return_t prepare_glr_parser_asn1_parameterized(parser_t& parser) {
         .add_production("Type", {"SetOfTypeSpec"})
         .add_production("Type", {"ChoiceTypeSpec"})
 
+        .add_production("TypeIdentifier", {symuser})
+        .add_production("TypeIdentifier", {symid})
+
+        .add_production("ReferencedTypeSpec", {"TypeIdentifier"})
+        .add_production("ReferencedTypeSpec", {symparamtype})
+        .add_production("ReferencedTypeSpec", {symuserparamtype})
+        .add_production("ReferencedTypeSpec", {symuserparamtype, "{", "ActualParameterList", "}"})
+        .add_production("ReferencedTypeSpec", {symparamtype, "{", "ActualParameterList", "}"})
+        .add_production("ReferencedTypeSpec", {symid, "{", "ActualParameterList", "}"})
+
+        .add_production("NamedType", {symid, "Type"})
+
+        .add_production("ComponentType", {"NamedType"})
+        .add_production("ComponentType", {"NamedType", "Constraint"})
+        .add_production("ComponentType", {"NamedType", "OptionalitySpec"})
+        .add_production("ComponentType", {"NamedType", "Constraint", "OptionalitySpec"})
+
         .add_production("ComponentTypeList", {"ComponentTypeList", ",", "ComponentType"})
         .add_production("ComponentTypeList", {"ComponentType"})
 
@@ -103,26 +120,9 @@ return_t prepare_glr_parser_asn1_parameterized(parser_t& parser) {
         .add_production("FieldList", {"FieldList", ",", "ComponentType"})
         .add_production("FieldList", {"ComponentType"})
 
-        .add_production("NamedType", {symid, "Type"})
-
-        .add_production("ComponentType", {"NamedType"})
-        .add_production("ComponentType", {"NamedType", "Constraint"})
-        .add_production("ComponentType", {"NamedType", "OptionalitySpec"})
-        .add_production("ComponentType", {"NamedType", "Constraint", "OptionalitySpec"})
-
         .add_production("OptionalitySpec", {"OPTIONAL"})
         .add_production("OptionalitySpec", {"DEFAULT", "ValueElement"})
         .add_production("OptionalitySpec", {"DEFAULT", "{", "}"})
-
-        .add_production("TypeIdentifier", {symuser})
-        .add_production("TypeIdentifier", {symid})
-
-        .add_production("ReferencedTypeSpec", {"TypeIdentifier"})
-        .add_production("ReferencedTypeSpec", {symparamtype})
-        .add_production("ReferencedTypeSpec", {symuserparamtype})
-        .add_production("ReferencedTypeSpec", {symuserparamtype, "{", "ActualParameterList", "}"})
-        .add_production("ReferencedTypeSpec", {symparamtype, "{", "ActualParameterList", "}"})
-        .add_production("ReferencedTypeSpec", {symid, "{", "ActualParameterList", "}"})
 
         .add_production("ActualParameterList", {"ActualParameterList", ",", "ActualParameter"})
         .add_production("ActualParameterList", {"ActualParameter"})
@@ -190,6 +190,15 @@ return_t prepare_glr_parser_asn1_parameterized(parser_t& parser) {
         .add_production("SimpleTypeSpec", {"DURATION"})
         .add_production("SimpleTypeSpec", {"ANY"})
 
+        .add_production("ValueElement", {symparamvalue})
+        .add_production("ValueElement", {symnum})
+        .add_production("ValueElement", {symfp})
+        .add_production("ValueElement", {symqs})
+        .add_production("ValueElement", {"MIN"})
+        .add_production("ValueElement", {"MAX"})
+        .add_production("ValueElement", {"TRUE"})
+        .add_production("ValueElement", {"FALSE"})
+
         // 5. Information Object Class & Field Reference (ITU-T X.681)
         // 6. Constraints & Subtype Specifications (ITU-T X.682 - Ambiguity Fixed)
         .add_production("Constraint", {"(", "ConstraintSpec", ")"})
@@ -222,16 +231,7 @@ return_t prepare_glr_parser_asn1_parameterized(parser_t& parser) {
         .add_production("PrimaryElement", {"PATTERN", symqs})
         .add_production("PrimaryElement", {"(", "ConstraintSpec", ")"})
 
-        .add_production("SizeConstraint", {"SIZE", "Constraint"})
-
-        .add_production("ValueElement", {symparamvalue})
-        .add_production("ValueElement", {symnum})
-        .add_production("ValueElement", {symfp})
-        .add_production("ValueElement", {symqs})
-        .add_production("ValueElement", {"MIN"})
-        .add_production("ValueElement", {"MAX"})
-        .add_production("ValueElement", {"TRUE"})
-        .add_production("ValueElement", {"FALSE"});
+        .add_production("SizeConstraint", {"SIZE", "Constraint"});
 
     // 7. Terminals Registration
     grammar.add_terminal("::=")

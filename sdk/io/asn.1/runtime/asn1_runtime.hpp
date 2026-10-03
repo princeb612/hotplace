@@ -53,9 +53,6 @@ class asn1_runtime {
     asn1_object* get(const std::string& name) const;
     asn1_value* get(asn1_object* item) const;
 
-    lexical_analyzer& get_lexer();
-    parser_t& get_parser();
-
     /**
      * @brief   weakly-typed (schema-less)
      * @sample
@@ -89,12 +86,6 @@ class asn1_runtime {
      *          runtime.read("type3", stream, size, pos);
      */
     return_t read(const std::string& name, const byte_t* stream, size_t size, size_t& pos);
-    /**
-     * @brief parse
-     * @param const char* notation [in]
-     * @param parse_tree* pt [inopt]
-     */
-    return_t parse(const char* notation, parse_tree* pt = nullptr);
 
     void for_each(std::function<void(asn1_object*)> f) const;
     void for_each(std::function<void(asn1_value*)> f) const;
@@ -155,7 +146,6 @@ class asn1_runtime {
     void release();
 
    protected:
-    void load();
     return_t postread(const byte_t* stream, size_t size);
 
    private:
@@ -169,11 +159,6 @@ class asn1_runtime {
     std::string _name;
     uint8 _tagdefault;
     uint8 _extensibility;
-
-    bool _parser_ready;
-    lexical_context _lexcontext;
-    lexical_analyzer _lex;
-    int _ready;
 };
 
 }  // namespace io

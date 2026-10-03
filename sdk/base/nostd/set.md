@@ -1,5 +1,15 @@
 # t_set_runtime
 
+## Publication
+
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1096
+Documented with GPT-5.6 Luna
+— source identity, implementation detail & relationships
+```
+
+
 `t_set_runtime<T>` is the runtime-facing set abstraction used when the concrete representation depends on the value type.
 
 Its important role in hotplace is not to implement a third kind of set. It selects the appropriate concrete set implementation and exposes one common operation surface to callers such as the ASN.1 constraint evaluator.
@@ -61,6 +71,26 @@ asn1_constraint_evaluator<T>
 ```
 
 This is the key connection between `sdk/base/nostd` and the ASN.1 semantic layer: the set implementation remains a generic `nostd` facility, while ASN.1 supplies the meaning of the operations.
+
+## Source-level evaluator boundary
+
+The evaluator stores a `t_set_runtime<T>` directly and returns it through `get_result_set()`. This makes the dependency direction explicit:
+
+```text
+sdk/io/asn.1/basic/visitor
+        │
+        ▼
+asn1_constraint_evaluator<T>
+        │
+        ▼
+sdk/base/nostd/t_set_runtime<T>
+        │
+   ┌────┴────┐
+   ▼         ▼
+range_set  string_set
+```
+
+The `nostd` layer knows how to construct and combine sets. The ASN.1 visitor layer decides what a `UNION`, `INTERSECTION`, `EXCEPT`, `ALL EXCEPT`, `SIZE`, `FROM` or other supported constraint means.
 
 ## ASN.1 constraint composition
 

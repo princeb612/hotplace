@@ -1,5 +1,15 @@
 # t_range_set
 
+## Publication
+
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1096
+Documented with GPT-5.6 Luna
+— source identity, implementation detail & relationships
+```
+
+
 `t_range_set` is hotplace's generic set implementation for ordered values represented as individual points and intervals. It is a general `nostd` utility, not an ASN.1-specific class.
 
 It is also the numeric backend selected by `t_set_runtime<T>` for integral and floating-point values.
@@ -58,6 +68,29 @@ contains()         membership query
 ```
 
 The internal representation is kept normalized so that overlapping ranges can be merged instead of being retained as many redundant intervals.
+
+## Constraint evaluation path
+
+The source-level relationship is more precise than simply saying that ASN.1 “uses” `t_range_set`:
+
+```text
+ASN.1 constraint object tree
+            │
+            ▼
+ asn1_constraint_evaluator<T>
+            │
+            ▼
+      t_set_runtime<T>
+            │
+      ┌─────┴─────┐
+      ▼           ▼
+ numeric values  string values
+      │           │
+      ▼           ▼
+ t_range_set   string_set
+```
+
+`asn1_constraint_evaluator<T>::get_result_set()` exposes the runtime set, while `t_set_runtime<T>` selects the concrete backend. `t_range_set` therefore implements the numeric domain operations; it does not interpret ASN.1 syntax itself.
 
 ## Why ASN.1 uses it
 

@@ -11,6 +11,7 @@
  * 2026.05.06   Soo Han, Kim        format string syntax e.g. {1:02x} {1:3d} {2:-10s} (codename.hotplace Revision 977)
  * 2026.05.20   Soo Han, Kim        the format specifier 's' in TYPE_BINARY, it outputs a character if it is printable, and '.' otherwise.
  * 2026.06.10   Soo Han, Kim        the format specifier 'x' in TYPE_BINARY, base16 encoding.
+ * 2026.10.03   Soo Han, Kim        the format specifier 'h' in case of integer, no 0x prefixed hexdecimal representation
  *
  */
 

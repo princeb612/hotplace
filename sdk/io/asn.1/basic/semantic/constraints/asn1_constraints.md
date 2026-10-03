@@ -1,5 +1,15 @@
 # ASN.1 Constraints
 
+## Publication
+
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1096
+Documented with GPT-5.6 Luna
+— source identity, implementation detail & relationships
+```
+
+
 ## Role
 
 The constraint implementation under `sdk/io/asn.1/basic/semantic/constraints` represents the semantic form of ASN.1 subtype/value constraints.
@@ -35,6 +45,22 @@ This lets the same constraint definition participate in:
 - constraint composition
 
 The semantic ASN.1 object owns/associates its constraints, so a type and its restrictions remain together.
+
+## Concrete constraint forms
+
+The current implementation represents individual constraint forms as semantic nodes under `asn1_constraint`, rather than encoding every form directly into the evaluator. The rev1096 source tree contains concrete nodes for: 
+
+- `asn1_constraint_range` — ordered/range restrictions
+- `asn1_constraint_single_value` — a single permitted value
+- `asn1_constraint_size` — SIZE-derived restrictions
+- `asn1_constraint_pattern` — pattern-based string restrictions
+- `asn1_constraint_union` — union of constraint domains
+- `asn1_constraint_intersection` — intersection of domains
+- `asn1_constraint_except` — subtraction from a domain
+- `asn1_constraint_all_except` — complement-style restriction
+- `asn1_constraint_from` / related container forms — subtype/alphabet-style composition
+
+The evaluator does not replace these nodes. It visits them and accumulates their meaning in `t_set_runtime<T>`. This is the important implementation boundary: **constraint classes describe the semantic operation; the evaluator executes that operation against a value-domain representation**.
 
 ## Constraint categories
 
@@ -139,6 +165,26 @@ This allows the same constraint tree to be used for both representation and exec
           v                   v
     ASN.1 notation      value validation
 ```
+
+## Evaluation implementation map
+
+The current evaluator-to-set relationship is implemented as a concrete runtime chain:
+
+```text
+asn1_constraint
+      │
+      ▼
+asn1_constraint_evaluator<T>
+      │
+      │ get_result_set()
+      ▼
+t_set_runtime<T>
+      │
+      ├── numeric / real → t_range_set<t_range_value<T>>
+      └── std::string    → string_set
+```
+
+The evaluator performs semantic traversal of the constraint tree; `t_set_runtime` supplies the type-dependent representation. This separation lets the generic set implementation remain under `sdk/base/nostd` while the meaning of ASN.1 constraint nodes remains under `sdk/io/asn.1`.
 
 ## Relationship with the ASN.1 object model
 

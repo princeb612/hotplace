@@ -22,7 +22,6 @@
 #include <hotplace/sdk/io/asn.1/basic/semantic/builtin/asn1_bitstring.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/builtin/asn1_integer.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_builder.hpp>
-#include <hotplace/sdk/io/asn.1/runtime/asn1_publisher.hpp>
 
 namespace hotplace {
 namespace io {
@@ -132,11 +131,6 @@ asn1_object* asn1_builder::build(asn1_object* object, std::function<void(asn1_ob
         f(object);
     }
     return object;
-}
-
-return_t asn1_builder::build(asn1_runtime* runtime, const parse_tree* pt, asn1_object** object) {
-    asn1_publisher publisher;
-    return publisher.build(runtime, pt, object);
 }
 
 }  // namespace io

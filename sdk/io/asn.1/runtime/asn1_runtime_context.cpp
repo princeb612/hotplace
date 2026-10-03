@@ -11,6 +11,8 @@
  *
  */
 
+#include <hotplace/sdk/base/basic/valist.hpp>
+#include <hotplace/sdk/base/system/datetime.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_runtime_context.hpp>
 
@@ -21,7 +23,7 @@ asn1_runtime_context asn1_runtime_context::_instance;
 
 asn1_runtime_context* asn1_runtime_context::get_instance() { return &_instance; }
 
-asn1_runtime_context::asn1_runtime_context() : _current(nullptr), _default(nullptr) {}
+asn1_runtime_context::asn1_runtime_context() : _default(nullptr) {}
 
 asn1_runtime_context::~asn1_runtime_context() {
     critical_section_guard guard(_lock);
@@ -34,7 +36,7 @@ asn1_runtime_context::~asn1_runtime_context() {
     if (_default) _default->release();
 }
 
-return_t asn1_runtime_context::set(asn1_runtime* runtime) {
+return_t asn1_runtime_context::add(asn1_runtime* runtime) {
     return_t ret = errorcode_t::success;
     __try2 {
         if (nullptr == runtime) {
@@ -46,7 +48,6 @@ return_t asn1_runtime_context::set(asn1_runtime* runtime) {
         auto pib = _contexts.emplace(runtime->get_name(), runtime);
         if (pib.second) {
             runtime->addref();
-            _current = runtime;
         } else {
             ret = errorcode_t::already_exist;
         }
@@ -55,28 +56,35 @@ return_t asn1_runtime_context::set(asn1_runtime* runtime) {
     return ret;
 }
 
-bool asn1_runtime_context::set(const std::string& name) {
+asn1_runtime* asn1_runtime_context::add(const std::string& name) {
     critical_section_guard guard(_lock);
 
     auto iter = _contexts.find(name);
     if (_contexts.end() == iter) {
         auto runtime = new asn1_runtime(name);
-        set(runtime);  // addref
-        runtime->release();
+        _contexts.emplace(name, runtime);
+        return runtime;
     } else {
-        _current = iter->second;
+        return iter->second;
     }
-    return true;
 }
 
-bool asn1_runtime_context::select(const std::string& name) {
+asn1_runtime* asn1_runtime_context::get(const std::string& name) const {
     critical_section_guard guard(_lock);
+    auto iter = _contexts.find(name);
+    if (_contexts.end() == iter) {
+        return nullptr;
+    } else {
+        return iter->second;
+    }
+}
 
+bool asn1_runtime_context::exist(const std::string& name) const {
+    critical_section_guard guard(_lock);
     auto iter = _contexts.find(name);
     if (_contexts.end() == iter) {
         return false;
     } else {
-        _current = iter->second;
         return true;
     }
 }
@@ -92,14 +100,11 @@ bool asn1_runtime_context::remove(const std::string& name) {
         runtime->release();
 
         _contexts.erase(iter);
-        _current = (_default ? _default : nullptr);
         return true;
     }
 }
 
-asn1_runtime* asn1_runtime_context::current() { return _current ? _current : use_default(); }
-
-asn1_runtime* asn1_runtime_context::use_default() {
+asn1_runtime* asn1_runtime_context::get_default() {
     const auto name = "<DEFAULT>";
 
     if (nullptr == _default) {
@@ -108,7 +113,40 @@ asn1_runtime* asn1_runtime_context::use_default() {
             _default = new asn1_runtime(name);
         }
     }
-    return _current = _default;
+    return _default;
+}
+
+static std::string temp_prefix = "_TEMP_";
+
+std::string asn1_runtime_context::temp_name() const {
+    std::string name;
+    struct timespec ts;
+    datetime now;
+    now.gettimespec(&ts);
+
+    basic_stream bs;
+    valist va;
+
+    va << temp_prefix << ts.tv_sec << ts.tv_nsec;
+    bs.vaprintf("{1}{2:h}{3:h}", va);  // _TEMP_6ac10ffb17321ca4
+
+    name = bs.c_str();
+    return name;
+}
+
+void asn1_runtime_context::sweep_temp() {
+    const std::string prefix = temp_prefix;
+
+    critical_section_guard guard(_lock);
+
+    // Find first key >= temp_prefix in O(log N)
+    auto it = _contexts.lower_bound(prefix);
+
+    while (it != _contexts.end() && (0 == it->first.compare(0, prefix.size(), prefix))) {
+        auto runtime = it->second;
+        runtime->release();
+        it = _contexts.erase(it);
+    }
 }
 
 }  // namespace io

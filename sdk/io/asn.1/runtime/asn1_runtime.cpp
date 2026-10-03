@@ -23,6 +23,7 @@
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_notation_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/basic/visitor/asn1_visitor.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_builder.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_parser.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_publisher.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_strongly_typed.hpp>
@@ -32,7 +33,7 @@
 namespace hotplace {
 namespace io {
 
-asn1_runtime::asn1_runtime() : _ready(0) {
+asn1_runtime::asn1_runtime() {
     _shared.make_share(this);
     _tagdefault = asn1_explicit;
     _extensibility = static_cast<uint8>(asn1_extensibility_t::none);
@@ -62,43 +63,13 @@ asn1_runtime& asn1_runtime::operator=(const asn1_runtime& other) {
 
 asn1_runtime* asn1_runtime::clone() { return new asn1_runtime(*this); }
 
-void asn1_runtime::load() {
-    if (0 == _ready) {
-        auto& lex = get_lexer();
-        // handle_quoted to 1
-        lex.get_config().set("handle_comments", 1).set("handle_quoted", 1).set("handle_token", 1).set("handle_lvalue_usertype", 1).set("handle_asn1parameterized", 1);
-        lex.prepare();
-
-        // ASN.1 tokens
-        auto resource = parser_resource::get_instance();
-        resource->for_each(resource_type_t::token_type_asn1, [&lex](uint32 token, const std::string& name) -> void { lex.add_token(name, token); });
-
-        /*
-        // CFG - production, terminal, non-terminal, start symbol
-        cfg_grammar grammar;
-        for (const auto& item : asn1_notation_productions) {
-            grammar.add_production(item.lhs, item.rhs);
-        }
-        for (const auto& item : asn1_notation_terminals) {
-            grammar.add_terminal(item);
-        }
-
-        get_parser().set_grammar(std::move(grammar));
-
-        get_parser().learn();  // heavy
-        */
-
-        // get_parser().import(asn1_notation_productions, asn1_notation_action_table, asn1_notation_goto_table);
-        _ready = 1;
-    }
-}
-
 return_t asn1_runtime::add_schema(const std::string& schema) {
     return_t ret = errorcode_t::success;
 
     // parse
+    asn1_parser parser;
     parse_tree pt;
-    parse(schema.c_str(), &pt);
+    parser.parse(schema.c_str(), &pt);
 
 #if defined DEBUG
     if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
@@ -137,16 +108,19 @@ return_t asn1_runtime::add_schema(const std::string& schema) {
 
     // reconstruction
     basic_stream bs;
-    asn1_object* object = nullptr;
 
     asn1_publisher publisher;
-    ret = publisher.build(this, &pt, &object);
+    asn1_build_resultset result;
+    ret = publisher.build(&pt, result);
     if (errorcode_t::success != ret) return ret;
+
+    auto object = result.object;
 
     critical_section_guard guard(_lock);
     auto pib = _schema.emplace(object, schema);
     if (false == pib.second) return errorcode_t::already_exist;
 
+    object->addref();  // this own object
     return add(object);
 }
 
@@ -214,15 +188,6 @@ asn1_value* asn1_runtime::get(asn1_object* item) const {
     return ret_value;
 }
 
-lexical_analyzer& asn1_runtime::get_lexer() { return _lex; }
-
-parser_t& asn1_runtime::get_parser() {
-    // return get_lalr1_parser_asn1_notation_by_build();
-    // return get_lalr1_parser_asn1_notation_by_import();
-    // return get_glr_parser_asn1_by_build();
-    return get_glr_parser_asn1_by_import();
-}
-
 return_t asn1_runtime::read_weakly_typed(const byte_t* stream, size_t size, size_t& pos) {
     asn1_weakly_typed weaktype;
     return weaktype.read(this, stream, size, pos);
@@ -231,71 +196,6 @@ return_t asn1_runtime::read_weakly_typed(const byte_t* stream, size_t size, size
 return_t asn1_runtime::read(const std::string& name, const byte_t* stream, size_t size, size_t& pos) {
     asn1_strongly_typed strongtype;
     return strongtype.read(this, name, stream, size, pos);
-}
-
-return_t asn1_runtime::parse(const char* notation, parse_tree* pt) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        load();
-
-        if (nullptr == notation) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-
-        ret = get_lexer().parse(_lexcontext, notation);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
-
-        // LALR tokens
-        std::vector<parser_token> tokens;
-#if defined DEBUG
-        uint32 cnt = 0;
-#endif
-
-        auto resource = parser_resource::get_instance();
-        auto symid = resource->nameof(token_identifier);  // "identifier"
-        auto symuser = resource->nameof(token_usertype);  // "usertype"
-
-        auto lambda = [&](const token_description* desc) -> bool {
-            bool test = true;
-            const auto& type = desc->type;
-            std::string token(desc->p, desc->size);
-            switch (type) {
-                case token_lvalue: {
-                    tokens.push_back({token_identifier, symid});
-                } break;
-                case token_comments:
-                    break;
-                default: {
-                    tokens.push_back({type, token});
-                    break;
-                }
-            }
-
-#if defined DEBUG
-            if (token_comments != type) {
-                if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
-                    trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
-                        dbs.println("[%03u] line %zi type %d(%s) index %d pos %zi len %zi (%.*s)", cnt, desc->line, desc->type,
-                                    get_lexer().nameof_token(desc->type).c_str(), desc->index, desc->pos, desc->size, (unsigned)desc->size, desc->p);
-                        cnt = tokens.size();
-                    });
-                }
-            }
-#endif
-
-            return test;
-        };
-        _lexcontext.for_each(lambda);
-        tokens.push_back({token_eof, "$"});
-
-        // LALR(1) parse
-        ret = get_parser().parse(tokens, pt);
-    }
-    __finally2 {}
-    return ret;
 }
 
 bool asn1_runtime::resolve(const std::string& name, std::list<std::string>& names) const {
@@ -455,7 +355,7 @@ return_t asn1_runtime::update_linkage(asn1_object* object) {
     switch (entity) {
         case asn1_entity_tagged_type: {
             auto tagtype = (asn1_tagged_type*)object;
-            tagtype->update_linkage();
+            tagtype->update_linkage(this);
         } break;
         case asn1_entity_referenced_type: {
             auto ref = (asn1_referenced_type*)object;

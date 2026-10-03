@@ -1,4 +1,40 @@
-### parsing table binary file layout
+# Parsing Table Binary Format
+
+## Publication
+
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1096
+Documented with GPT-5.6 Luna
+— source identity, implementation detail & relationships
+```
+
+
+The binary parsing table is the serialized execution artifact produced from the parser grammar-generation stage. It stores the string/terminal/production tables plus ACTION and GOTO entries needed by the parser engines.
+
+The format documented here is the **Revision 1094 format**, still the source-tree baseline at Revision 1096. When the binary format changes, the format revision should be updated independently of the documentation publication revision.
+
+## Generation and consumption
+
+```text
+cfg_grammar
+    │
+    ▼
+table generation
+    │
+    ▼
+binary_parsing_table
+    │
+    ├── write → parsing-table binary file
+    │
+    └── read/import
+          │
+       ┌──┴──┐
+       ▼     ▼
+     LALR    GLR
+```
+
+## File layout
 
 > applied revision 1094
 

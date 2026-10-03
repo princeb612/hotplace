@@ -100,15 +100,14 @@ void test_publish_babystep() {
     pt.on_reduce("Assignment", 1);
     pt.on_reduce("Statement", 1);
 
-    dump_parse_tree(nullptr, &pt);
+    dump_parse_tree(&pt);
 
-    asn1_runtime runtime;
     basic_stream bs;
-    asn1_object* obj = nullptr;
-    asn1_builder::build(&runtime, &pt, &obj);
-    if (obj) {
-        obj->publish(&bs);
-        obj->release();
+    asn1_build_resultset result;
+    asn1_publisher publisher;
+    publisher.build(&pt, result);
+    if (result.object) {
+        result.object->publish(&bs);
     }
     _logger->writeln("parse and publish %s", bs.c_str());
     _test_case.assert(bs == "Type1 ::= VisibleString", __FUNCTION__, "first baby step");

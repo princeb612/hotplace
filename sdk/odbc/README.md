@@ -1,8 +1,49 @@
+## Publication
+
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1096
+Documented with GPT-5.6 Luna
+— source identity, implementation detail & relationships
+```
+
 ### ODBC integration
 
 This directory contains the ODBC integration layer used by hotplace when database connectivity is required.
 
 The public ODBC types are defined in `types.hpp`; the concrete implementation is under `basic/`. The implementation is intentionally a thin hotplace-oriented wrapper around the native ODBC handle model rather than a database-specific abstraction.
+
+#### Ownership and flow
+
+The module deliberately separates handle/lifecycle ownership from result traversal:
+
+```text
+odbc_connector
+    │
+    ├── environment / connection handles
+    │
+    ▼
+odbc_query
+    │
+    ├── statement handle
+    ├── parameter binding
+    └── execution / SQLMoreResults
+    │
+    ▼
+odbc_record
+    │
+    └── odbc_field
+
+odbc_diagnose
+    ▲
+    │ diagnostics from connector/query/field operations
+
+odbc_sinker
+    ▲
+    │ readiness / sink integration around query execution
+```
+
+The classes therefore map to different stages of the native ODBC handle model instead of hiding ODBC behind a database-specific ORM abstraction.
 
 #### Main flow
 

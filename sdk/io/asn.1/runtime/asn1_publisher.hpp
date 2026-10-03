@@ -14,6 +14,7 @@
 #define __HOTPLACE_SDK_IO_ASN1_RUNTIME_ASN1PUBLISHER__
 
 #include <hotplace/sdk/base/nostd/traits.hpp>
+#include <hotplace/sdk/base/system/critical_section.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint.hpp>
 #include <hotplace/sdk/io/asn.1/basic/types.hpp>
@@ -32,7 +33,6 @@ struct asn1_semantic_node {
 
     // module
     struct {
-        std::string name;
         asn1_taggingmode_t tagdefault;
         asn1_extensibility_t exensibility;
     } module;
@@ -95,6 +95,18 @@ struct asn1_semantic_node {
         option.release();
         cons.u = nullptr;
     }
+    asn1_semantic_node& release_object() {
+        object = nullptr;
+        return *this;
+    }
+    asn1_semantic_node& release_option() {
+        option.release();
+        return *this;
+    }
+    asn1_semantic_node& release_constraint() {
+        cons.u = nullptr;
+        return *this;
+    }
 };
 
 class asn1_publisher_context {
@@ -125,9 +137,28 @@ class asn1_publisher {
     asn1_publisher();
     ~asn1_publisher();
 
-    return_t build(asn1_runtime* runtime, const parse_tree* pt, asn1_object** object);
+    /**
+     * @brief   build
+     * @param   const parse_tree* pt [in] pointer of parse tree
+     * @param   asn1_build_resultset& result [out] unified result container
+     * @remarks
+     *          - Module definition:
+     *              Result type set to `module_definition`.
+     *              Module names populated in `result.module_names`.
+     *              Accessible via `asn1_runtime_context::get_instance()`.
+     *
+     *          - No module definition and assignment:
+     *              Result type set to `assignments`.
+     *              Temporary runtime generated with Base16 timestamp key.
+     *              Stored in `result.runtime`.
+     *
+     *          - Non-assignment:
+     *              Result type set to `non_assignment`.
+     *              Semantic object stored in `result.object`.
+     */
+    return_t build(const parse_tree* pt, asn1_build_resultset& result);
 
-    using handler_t = std::function<return_t(asn1_runtime*, parse_treenode*, asn1_publisher_context&)>;
+    using handler_t = std::function<return_t(parse_treenode*, asn1_publisher_context&, asn1_build_resultset& result)>;
 
     template <typename F>
     void add_handler(const std::string& name, F&& handler) {
@@ -139,10 +170,15 @@ class asn1_publisher {
    protected:
     void prepare_basics();
     void prepare_constraints();
-    return_t default_handler(asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& st);
+    return_t default_handler(parse_treenode* node, asn1_publisher_context& st, asn1_build_resultset& result);
 
    private:
+    mutable critical_section _lock;
     std::unordered_map<std::string, handler_t> _handler_map;
+    std::string _module_id;
+    std::map<size_t, std::string> _module_map;
+    std::map<std::string, size_t> _module_lookup;
+    size_t _id;
 };
 
 }  // namespace io

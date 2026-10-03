@@ -12,7 +12,7 @@
 
 void test_traverse() {
     _test_case.begin("GSS traverse");
-    gss<int, std::string> stack;
+    t_gss<int, std::string> stack;
 
     /*
      *     n1 ("A1") \
@@ -36,7 +36,7 @@ void test_traverse() {
     size_t total_visits = 0;
 
     // Traverse from head node (n3)
-    stack.traverse_all([&](const gss_node<int, std::string>::ptr& node) {
+    stack.traverse_all([&](const t_gss_node<int, std::string>::ptr& node) {
         total_visits++;
         visited_values.insert(node->value);
         _logger->writeln([&node](basic_stream& dbs) -> void {
@@ -53,7 +53,7 @@ void test_traverse() {
 
     // Traverse starting specifically from n3
     _logger->writeln("traverse starting from node_ptr");
-    stack.traverse_from(n3, [](const gss_node<int, std::string>::ptr& node) {
+    stack.traverse_from(n3, [](const t_gss_node<int, std::string>::ptr& node) {
         _logger->writeln([&node](basic_stream& dbs) -> void {
             dbs << "Visited Node - State: " << node->state << ", Value: " << node->value << ", Parent Count: " << node->parents.size();
         });
@@ -62,10 +62,10 @@ void test_traverse() {
 
     _logger->writeln("traverse from predicator");
     stack.traverse_where(
-        [](const gss<int, std::string>::node_ptr& node) {
+        [](const t_gss<int, std::string>::node_ptr& node) {
             return node->value == "Merge";  // node->state == 3
         },
-        [](const gss<int, std::string>::node_ptr& node) {
+        [](const t_gss<int, std::string>::node_ptr& node) {
             _logger->writeln([&node](basic_stream& dbs) -> void {
                 dbs << "Visited Node - State: " << node->state << ", Value: " << node->value << ", Parent Count: " << node->parents.size();
             });
@@ -73,7 +73,7 @@ void test_traverse() {
     _test_case.assert(true, __FUNCTION__, "traverse from predicator");
 
     _logger->writeln("traverse by state");
-    stack.traverse_by_state(3, [](const gss<int, std::string>::node_ptr& node) {
+    stack.traverse_by_state(3, [](const t_gss<int, std::string>::node_ptr& node) {
         _logger->writeln([&node](basic_stream& dbs) -> void {
             dbs << "Visited Node - State: " << node->state << ", Value: " << node->value << ", Parent Count: " << node->parents.size();
         });
@@ -84,7 +84,7 @@ void test_traverse() {
 void test_linear_retrace() {
     // Test Case 1: Simple linear stack retrace
     _test_case.begin("GSS retrace");
-    gss<int, std::string> stack;
+    t_gss<int, std::string> stack;
 
     auto n0 = stack.create_node(0, "Root");
     auto n1 = stack.create_node(1, "A");
@@ -94,7 +94,7 @@ void test_linear_retrace() {
     n2->add_parent(n1);
 
     size_t path_count = 0;
-    stack.retrace_paths(n2, 2, [&](const std::vector<gss_node<int, std::string>::ptr>& path) {
+    stack.retrace_paths(n2, 2, [&](const std::vector<t_gss_node<int, std::string>::ptr>& path) {
         path_count++;
         // Expected path: n2 -> n1 -> n0
         _test_case.assert(path.size() == 3, __FUNCTION__, "assert #1");
@@ -109,7 +109,7 @@ void test_linear_retrace() {
 void test_fork_and_merge_retrace() {
     // Test Case 2: Branching and merging stack (Ambiguity simulation)
     _test_case.begin("GSS retrace - fork and merge - Ambiguity simulation");
-    gss<int, std::string> stack;
+    t_gss<int, std::string> stack;
 
     /*
      *     n1 ("A1") \
@@ -130,7 +130,7 @@ void test_fork_and_merge_retrace() {
     n3->add_parent(n2);
 
     size_t path_count = 0;
-    stack.retrace_paths(n3, 2, [&](const std::vector<gss_node<int, std::string>::ptr>& path) {
+    stack.retrace_paths(n3, 2, [&](const std::vector<t_gss_node<int, std::string>::ptr>& path) {
         path_count++;
         _test_case.assert(path.size() == 3, __FUNCTION__, "assert #1");
         _test_case.assert(path[0]->value == "Merge", __FUNCTION__, "assert #2");

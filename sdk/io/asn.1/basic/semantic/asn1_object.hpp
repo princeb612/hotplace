@@ -152,7 +152,7 @@ class asn1_object {
     virtual bool have_constraints() const;
     bool validate(const asn1_value* value);
 
-    virtual void update_linkage();
+    virtual void update_linkage(asn1_runtime* runtime);
 
    protected:
     asn1_object(asn1_entity_t entity, const std::string& name = "", asn1_object* object = nullptr, asn1_tag* tag = nullptr);

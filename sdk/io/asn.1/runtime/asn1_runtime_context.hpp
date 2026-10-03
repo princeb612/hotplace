@@ -29,14 +29,41 @@ class asn1_runtime_context {
     asn1_runtime_context(const asn1_runtime_context& other) = delete;
     asn1_runtime_context(asn1_runtime_context&& other) = delete;
 
-    // name "<DEFAULT>" reserved
-    return_t set(asn1_runtime* runtime);
-    bool set(const std::string& name);
-    bool select(const std::string& name);
-    bool remove(const std::string& name);
-    asn1_runtime* current();
+    asn1_runtime_context& operator=(const asn1_runtime_context& other) = delete;
+    asn1_runtime_context& operator=(asn1_runtime_context&& other) = delete;
 
-    asn1_runtime* use_default();
+    // name "<DEFAULT>" reserved
+    /*
+     * @brief   add
+     */
+    return_t add(asn1_runtime* runtime);
+    /*
+     * @brief   add
+     */
+    asn1_runtime* add(const std::string& name);
+    /*
+     * @brief   get
+     * @return  runtime pointer if exists, otherwise nullptr
+     */
+    asn1_runtime* get(const std::string& name) const;
+    /*
+     * @brief   exist
+     * @return  true if exists, otherwise false
+     */
+    bool exist(const std::string& name) const;
+    /*
+     * @brief   remove registered runtime by name
+     * @remarks if the target for deletion is _current, it resets _current to _default
+     * @return  true if exists, otherwise false
+     */
+    bool remove(const std::string& name);
+    /*
+     * @brief    default runtime
+     */
+    asn1_runtime* get_default();
+
+    std::string temp_name() const;
+    void sweep_temp();
 
    protected:
     asn1_runtime_context();
@@ -46,7 +73,6 @@ class asn1_runtime_context {
 
     mutable critical_section _lock;
     std::map<std::string, asn1_runtime*> _contexts;
-    asn1_runtime* _current;
     asn1_runtime* _default;
 };
 

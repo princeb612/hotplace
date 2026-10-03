@@ -1,6 +1,6 @@
 # Parser — Grammar to Parse Structure
 
-**Edition 1 · Revision 1093**
+**Edition 1 · Revision 1096**
 
 ## Context
 
@@ -26,8 +26,11 @@ The CHANGELOG gives the following parser-oriented sequence:
 - **Revision 1090** — GLR parser and integrated CFG work covering ASN.1 notation, module, parameterized constructs, and information object class
 - **Revision 1091** — CFG for ASN.1 information object class
 - **Revision 1093** — CFG for ASN.1 extension marker versions 1 and 2.
+- **Revision 1094** — parser-table binary layout and external table import.
+- **Revision 1095** — build infrastructure changes supporting the parser-table workflow.
+- **Revision 1096** — graph-structured stack (GSS) support for GLR and parse-tree construction fixes.
 
-The important direction is not a replacement of LALR by GLR at Revision 1093. The broader CFG/GLR grammar experiment has reached a commit-ready checkpoint; the production runtime parser remains a separate integration concern.
+The important direction is still not a replacement of LALR by GLR. By Revision 1096, the broader CFG/GLR grammar experiment has progressed from the grammar checkpoint into graph-structured-stack support and corrected parse-tree construction; the production runtime parser remains a separate integration concern.
 
 ## Why the parser has become a separate study topic
 
@@ -107,6 +110,25 @@ broader ASN.1 CFG
 
 The purpose of the experiment is to make the grammar itself more expressive where a deterministic LALR table would otherwise require grammar-specific conflict avoidance or restructuring.
 
+### Graph-structured stack
+
+Revision 1096 introduces a graph-structured stack (GSS) for the GLR path. Instead of treating every parser branch as an independent linear stack, the GSS allows stack paths to share nodes while preserving multiple parent paths. This provides the structure needed for GLR reductions and path reconstruction without changing the production `asn1_runtime` parser from LALR.
+
+Conceptually:
+
+```text
+GLR parser
+    ↓
+GSS node graph
+    ├── shared stack nodes
+    ├── multiple parent paths
+    └── path reconstruction
+             ↓
+        parse structure
+```
+
+The Revision 1096 work also corrects parse-tree construction for the GLR path. These changes improve the experimental GLR mechanism; they do not mean that GLR semantic construction has been integrated into `asn1_runtime`.
+
 A GLR parse does not by itself create an ASN.1 runtime object. The resulting semantic alternatives still need a construction policy.
 
 ## Structural
@@ -134,7 +156,7 @@ ASN.1 language
     runtime         path
 ```
 
-At Revision 1093, the unified CFG is the study object. Its grammar coverage is broader than the current production runtime parser, which remains LALR-based.
+At Revision 1096, the unified CFG remains the study object. Its grammar coverage is broader than the current production runtime parser, which remains LALR-based.
 
 ### Parser result and semantic construction
 
@@ -224,7 +246,7 @@ publisher expansion
 loader integration later
 ```
 
-Loader integration is therefore a later stage. The existence of `asn1_loader` source files does not mean that the Revision 1093 parser experiment has already been absorbed into the loader architecture.
+Loader integration is therefore a later stage. The existence of `asn1_loader` source files does not mean that the Revision 1096 parser experiment has already been absorbed into the loader architecture.
 
 ## Study & Verification
 
@@ -251,12 +273,12 @@ runtime schema/object
 
 ## Status
 
-At Revision 1093:
+At Revision 1096:
 
 - `asn1_runtime` still uses `lalr1_parser` for its ASN.1 parsing path.
 - The parser layer contains both LALR and GLR implementations.
 - The integrated CFG now covers ASN.1 notation, module, parameterized constructs, information object class, and extension marker versions 1 and 2.
-- The GLR grammar/CFG experiment has reached a commit-ready state; this does not yet replace the LALR-based production runtime path.
+- The GLR grammar/CFG experiment has progressed to GSS-based parsing, with parse-tree construction fixes; this does not yet replace the LALR-based production runtime path.
 - Context-aware parser switching has been explored as a way to keep parser selection dependent on grammar/context.
 - GLR remains the experimental parsing mechanism for the broader grammar; production `asn1_runtime` integration is a separate later step.
 - `asn1_publisher` remains the semantic-construction boundary. Broader grammar coverage is expected to require additional handlers.

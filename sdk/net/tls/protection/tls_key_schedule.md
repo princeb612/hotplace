@@ -46,7 +46,7 @@ Client MAC      Server MAC     Client Enc      Server Enc      Client Write    S
  │
  ▼
 Early Secret ───┬───> [ HKDF-Expand-Label ] ───> Client Early Traffic Secret ───> early key / iv
- │               └───> [ HKDF-Expand-Label ] ───> Early Exporter Master Secret
+ │              └───> [ HKDF-Expand-Label ] ───> Early Exporter Master Secret
  ▼
 [ Derive-Secret("derived", "") ]
  │

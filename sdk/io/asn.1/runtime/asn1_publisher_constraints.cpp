@@ -36,7 +36,7 @@ namespace io {
 void asn1_publisher::prepare_constraints() {
     auto resource = asn1_resource::get_instance();
 
-    add_handler("Constraint", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("Constraint", [this, resource](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
         // production("Constraint", {"(", "ConstraintSpec", ")"})
 
         auto size = node->sizeof_rhs();
@@ -56,7 +56,7 @@ void asn1_publisher::prepare_constraints() {
 
         return errorcode_t::success;
     });
-    add_handler("ConstraintSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("ConstraintSpec", [this, resource](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
         // production("ConstraintSpec", {"SubtypeElementSetSpec"})
         // production("ConstraintSpec", {"ALL EXCEPT", "SubtypeElementSetSpec"})
         // production("ConstraintSpec", {"ALL", "EXCEPT", "SubtypeElementSetSpec"})
@@ -95,7 +95,7 @@ void asn1_publisher::prepare_constraints() {
 
         return errorcode_t::success;
     });
-    add_handler("SubtypeElementSetSpec", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("SubtypeElementSetSpec", [this, resource](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
         // production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "|", "SubtypeElement"})
         // production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", ",", "SubtypeElement"})
         // production("SubtypeElementSetSpec", {"SubtypeElementSetSpec", "UNION", "SubtypeElement"})
@@ -160,7 +160,7 @@ void asn1_publisher::prepare_constraints() {
 
         return errorcode_t::success;
     });
-    add_handler("SubtypeElement", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    add_handler("SubtypeElement", [this, resource](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
         // production("SubtypeElement", {"SubtypeElement", "^", "PrimaryElement"})
         // production("SubtypeElement", {"SubtypeElement", "INTERSECTION", "PrimaryElement"})
         // production("SubtypeElement", {"PrimaryElement"})
@@ -201,7 +201,9 @@ void asn1_publisher::prepare_constraints() {
 
         return errorcode_t::success;
     });
-    add_handler("PrimaryElement", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    // UnionOperation
+    // IntersectOperation
+    add_handler("PrimaryElement", [this, resource](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
         // production("PrimaryElement", {"ValueElement"})
         // production("PrimaryElement", {"ValueElement", "..", "ValueElement"})             // [from, to]
         // production("PrimaryElement", {"ValueElement", "..", "<", "ValueElement"})        // [from, to)
@@ -313,7 +315,9 @@ void asn1_publisher::prepare_constraints() {
 
         return errorcode_t::success;
     });
-    add_handler("SizeConstraint", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
+    // ObjectSetSpec
+    // RelationalConstraint
+    add_handler("SizeConstraint", [this, resource](parse_treenode* node, asn1_publisher_context& context, asn1_build_resultset& result) -> return_t {
         // production("SizeConstraint", {"SIZE", "Constraint"})
 
         auto size = node->sizeof_rhs();
@@ -332,45 +336,6 @@ void asn1_publisher::prepare_constraints() {
             rhs_second.release();
         }
         asn.cons.u = cons;
-
-        context.push(std::move(asn));
-
-        return errorcode_t::success;
-    });
-    add_handler("ValueElement", [resource](asn1_runtime* runtime, parse_treenode* node, asn1_publisher_context& context) -> return_t {
-        // production("ValueElement", {symid})
-        // production("ValueElement", {symuser})
-        // production("ValueElement", {symqs})
-        // production("ValueElement", {"MIN"})
-        // production("ValueElement", {"MAX"})
-        // production("ValueElement", {"TRUE"})
-        // production("ValueElement", {"FALSE"})
-        // production("ValueElement", {symnum})
-        // production("ValueElement", {symfp})
-
-        auto rhs_valueelem = context.pop();
-
-        auto pr = parser_resource::get_instance();
-        auto symqs = pr->nameof(token_quot_string);
-        auto symnum = pr->nameof(token_number);
-        auto symfp = pr->nameof(token_floatingpoint);
-
-        asn1_semantic_node asn;
-        asn.symbol = node->symbol;
-        if (symqs == rhs_valueelem.symbol) {
-            std::string& qs = rhs_valueelem.value;
-            if (false == qs.empty()) qs.erase(qs.begin());
-            if (false == qs.empty()) qs.pop_back();
-            asn.v.set_string(qs);
-        } else if (symnum == rhs_valueelem.symbol) {
-            asn.v.set(t_atoi<asn1_native_int_t>(rhs_valueelem.value));
-        } else if (symfp == rhs_valueelem.symbol) {
-            asn.v.set(atof(rhs_valueelem.value.c_str()));
-        } else if ("MIN" == rhs_valueelem.symbol) {
-            asn.v = variant::minvalue();
-        } else if ("MAX" == rhs_valueelem.symbol) {
-            asn.v = variant::maxvalue();
-        }
 
         context.push(std::move(asn));
 

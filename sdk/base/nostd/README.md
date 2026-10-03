@@ -1,5 +1,15 @@
 # nostd
 
+## Publication
+
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1096
+Documented with GPT-5.6 Luna
+— source identity, implementation detail & relationships
+```
+
+
 `sdk/base/nostd` is hotplace's C++11-oriented STL-style utility layer. It supplies containers and helpers without making newer standard-library facilities a prerequisite for the project.
 
 The directory is intentionally a collection rather than a single abstraction, so the module records group related headers by role instead of creating one document per small header.

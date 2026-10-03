@@ -171,8 +171,7 @@ enum asn1_taggingmode_t : uint8 {
     asn1_explicit = 2,
 };
 
-enum asn1_specifier_t : uint8 {
-    // specifier
+enum asn1_optionality_t : uint8 {
     asn1_default = 3,
     asn1_optional = 4,
 };
