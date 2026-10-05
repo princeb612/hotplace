@@ -14,6 +14,8 @@
 #define __HOTPLACE_SDK_IO_ASN1_BASIC_ASN1RESOURCE__
 
 #include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_publisher.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/types.hpp>
 #include <hotplace/sdk/io/asn.1/types.hpp>
 #include <hotplace/sdk/io/parser/types.hpp>
 #include <map>
@@ -45,8 +47,10 @@ class asn1_resource {
     /**
      * @brief   IMPLICIT/EXPLICIT/DEFAULT/OPTIONAL
      */
-    std::string nameof_mode(uint16 t) const;
+    std::string nameof_mode(uint16 t, bool ismodule = false) const;
     uint8 valueof_mode(const std::string& name) const;
+
+    asn1_publisher* get_publisher();
 
    protected:
     asn1_resource();
@@ -60,10 +64,12 @@ class asn1_resource {
     std::map<asn1_entity_t, std::string> _type_id;
     std::map<std::string, asn1_entity_t> _type_rid;
     std::map<asn1_entity_t, asn1_perm_t> _type_perm;
-    std::map<int, std::string> _class_id;
+    std::map<uint16, std::string> _class_id;
     std::map<std::string, int> _class_rid;
-    std::map<int, std::string> _mode_id;
+    std::map<uint16, std::string> _mode_id;
     std::map<std::string, int> _mode_rid;
+
+    asn1_publisher _publisher;
 };
 
 /**

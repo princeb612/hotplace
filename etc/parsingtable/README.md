@@ -22,3 +22,12 @@ testcase
   unzip parsingtable.zip -d test/testcase/io
   unzip parsingtable.zip -d test/testcase/asn.1
 ```
+
+## Publication
+
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1097
+Documented with GPT-5.6 Luna
+— source identity, implementation detail & relationships
+```

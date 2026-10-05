@@ -477,7 +477,7 @@ void test_x690_encoding_value() {
             basic_stream bs_type;
             basic_stream bs_value;
             binary_t bin;
-            reader.notation(&bs_type);
+            reader.represent(&bs_type);
             reader.publish(&bs_value);
             reader.publish(&bin);
 
@@ -515,7 +515,7 @@ void do_dump_asn1(asn1_value* object, const char* expect, const char* text) {
             basic_stream bs_type;
             basic_stream bs_value;
             binary_t bin_recode;
-            reader.notation(&bs_type);
+            reader.represent(&bs_type);
             reader.publish(&bs_value);
             reader.publish(&bin_recode);
 
@@ -749,7 +749,7 @@ void test_asn1_object() {
         bs.clear();
 
         *inst << item.asn1obj;
-        inst->notation(&bs);
+        inst->represent(&bs);
         inst->clear();
         _logger->writeln(bs);
         _test_case.assert(bs == item.note, __FUNCTION__, "%s (publish)", item.note);

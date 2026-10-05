@@ -75,8 +75,9 @@ void asn1_tag::represent(stream_t* s, const asn1_value* value) const {
 
             s->printf("]");
 
-            if (get_tag_type()) {
-                s->printf(" %s", resource->nameof_mode(get_tag_type()).c_str());
+            auto tagtype = get_tag_type();
+            if (asn1_automatic != tagtype) {
+                s->printf(" %s", resource->nameof_mode(tagtype).c_str());
             }
         }
     }

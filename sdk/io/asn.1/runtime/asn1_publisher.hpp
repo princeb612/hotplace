@@ -32,19 +32,33 @@ struct asn1_semantic_node {
     std::string value;
 
     // module
-    struct {
-        asn1_taggingmode_t tagdefault;
-        asn1_extensibility_t exensibility;
+    struct moduledefault {
+        asn1_taggingmode_t tagdefault{asn1_tagdefault};
+        asn1_extensibility_t extensibility{asn1_extensibility_t::none};
+
+        moduledefault() = default;
+        moduledefault(const moduledefault& other) { *this = other; }
+        moduledefault(moduledefault&& other) { *this = std::move(other); }
+        moduledefault& operator=(const moduledefault& other) {
+            tagdefault = other.tagdefault;
+            extensibility = other.extensibility;
+            return *this;
+        }
+        moduledefault& operator=(moduledefault&& other) {
+            std::swap(tagdefault, other.tagdefault);
+            std::swap(extensibility, other.extensibility);
+            return *this;
+        }
     } module;
 
     // asn1_object*
-    asn1_object* object;
+    asn1_object* object{nullptr};
     asn1_option option;
 
     // constraints
     variant v;
     variant v_to;
-    type_category_t cons_type;
+    type_category_t cons_type{type_category_t::unknown};
     union {
         asn1_constraint_t* u;
         asn1_constraint<asn1_native_int_t>* i;
@@ -52,10 +66,7 @@ struct asn1_semantic_node {
         asn1_constraint<std::string>* s;
     } cons;
 
-    asn1_semantic_node() : object(nullptr), cons_type(type_category_t::unknown) {
-        module.tagdefault = asn1_explicit;
-        cons.u = nullptr;
-    }
+    asn1_semantic_node() { cons.u = nullptr; }
     ~asn1_semantic_node() {
         if (object) object->release();
         if (cons.u) cons.u->release();
@@ -65,6 +76,7 @@ struct asn1_semantic_node {
     asn1_semantic_node& operator=(const asn1_semantic_node& other) {
         symbol = other.symbol;
         value = other.value;
+        module = other.module;
         if (other.object) other.object->addref();  // shallow copy
         object = other.object;
         option = other.option;
@@ -79,6 +91,7 @@ struct asn1_semantic_node {
     asn1_semantic_node& operator=(asn1_semantic_node&& other) {
         symbol = std::move(other.symbol);
         value = std::move(other.value);
+        module = std::move(other.module);
         std::swap(object, other.object);
         option = std::move(other.option);
         v = std::move(other.v);
@@ -132,9 +145,15 @@ class asn1_publisher_context {
     std::stack<asn1_semantic_node> _stack;
 };
 
+/**
+ * @comments
+ *          auto publisher = asn1_resource::get_instance()->get_publisher();
+ *          publisher->parse(pt, result);
+ */
 class asn1_publisher {
+    friend class asn1_resource;
+
    public:
-    asn1_publisher();
     ~asn1_publisher();
 
     /**
@@ -158,27 +177,37 @@ class asn1_publisher {
      */
     return_t build(const parse_tree* pt, asn1_build_resultset& result);
 
-    using handler_t = std::function<return_t(parse_treenode*, asn1_publisher_context&, asn1_build_resultset& result)>;
+    // function pointer
+    using handler_t = return_t (*)(parse_treenode*, asn1_publisher_context&, asn1_build_resultset&);
 
-    template <typename F>
-    void add_handler(const std::string& name, F&& handler) {
-        if (false == name.empty()) {
-            _handler_map[name] = std::forward<F>(handler);
-        }
-    }
+    void add_handler(const std::string& name, handler_t handler);
+
+    bool prepare();
+    bool ready() const;
 
    protected:
-    void prepare_basics();
-    void prepare_constraints();
+    asn1_publisher();
+
     return_t default_handler(parse_treenode* node, asn1_publisher_context& st, asn1_build_resultset& result);
+
+    uint16 make_key(parser_t* parser);
 
    private:
     mutable critical_section _lock;
     std::unordered_map<std::string, handler_t> _handler_map;
-    std::string _module_id;
-    std::map<size_t, std::string> _module_map;
-    std::map<std::string, size_t> _module_lookup;
-    size_t _id;
+    // std::unordered_map<uint32, std::vector<handler_t>> _handler_flat_map;
+    bool _ready;
+
+    /**
+     * @brief   notation
+     * @sa      add_hander
+     */
+    void prepare_basics();
+    /**
+     * @brief   constraints
+     * @sa      add_hander
+     */
+    void prepare_constraints();
 };
 
 }  // namespace io

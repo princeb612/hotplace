@@ -1,6 +1,6 @@
 # Hotplace Network Session Architecture
 
-> **Review baseline:** Revision 1096
+> **Review baseline:** Revision 1097
 
 The network layer can be viewed as a progression from platform socket primitives toward protocol-facing session objects.
 
@@ -54,13 +54,6 @@ A hotplace `network_stream` should not automatically be interpreted as a one-to-
 
 ---
 
-## Publication
+**GPT Review**
 
-```text
-┌──────────────────────────────────────────────┐
-│ hotplace architecture review                 │
-│ Revision 1096                                │
-│ Documented with GPT-5.6 Luna                 │
-│ — architecture, evolution & relationships    │
-└──────────────────────────────────────────────┘
-```
+Reviewed against the hotplace source/documentation state around **revision 1097**.

@@ -35,14 +35,41 @@ class asn1_parser {
    public:
     asn1_parser();
 
-    return_t parse(const char* notation, parse_tree* pt = nullptr);
     /**
-     * @example
-     *          // sketch
-     *          asn1_build_resultset result;
-     *          asn1_builder::build(&pt, result);
+     * @brief   parse
+     * @param   const char* notation [in]
+     * @param   size_t size [in]
+     * @param   asn1_build_resultset& result [out]
+     * @remarks
+     *          sketch
+     *          notation -> tokens -> parse tree -> result
      */
     return_t parse(const char* notation, asn1_build_resultset& result);
+    return_t parse(const char* notation, size_t size, asn1_build_resultset& result);
+    /**
+     * @param   const char* notation [in]
+     * @param   size_t size [in]
+     * @param   parse_tree* pt [out]
+     */
+    return_t parse(const char* notation, parse_tree* pt);
+    return_t parse(const char* notation, size_t size, parse_tree* pt);
+
+    /**
+     * @param   const char* notation [in]
+     * @param   size_t size [in]
+     * @param   std::vector<parser_token>& tokens [out]
+     */
+    return_t to_tokens(const char* notation, size_t size, std::vector<parser_token>& tokens);
+    /**
+     * @param   const std::vector<parser_token>& tokens [in]
+     * @param   parse_tree* pt [out]
+     */
+    return_t to_parsetree(const std::vector<parser_token>& tokens, parse_tree* pt);
+    /**
+     * @param   parse_tree* pt [in]
+     * @param   asn1_build_resultset& result [out]
+     */
+    return_t to_result(parse_tree* pt, asn1_build_resultset& result);
 
     lexical_analyzer& get_lexer();
     parser_t& get_parser();

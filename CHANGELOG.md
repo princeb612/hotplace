@@ -37,6 +37,8 @@
     * CBOR
 
 * details
+  * Revision 1098
+    * [fixed] datetime, time_diff, system_gettime and test_case time representation
   * Revision 1097
     * ASN.1 Loader - baby step
   * Revision 1096

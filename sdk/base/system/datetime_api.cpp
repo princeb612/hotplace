@@ -31,7 +31,7 @@ return_t time_diff(struct timespec& ts, struct timespec begin, struct timespec e
     __try2 {
         memset(&ts, 0, sizeof(ts));
 
-        if (begin.tv_sec > end.tv_sec) {
+        if ((begin.tv_sec > end.tv_sec) || ((begin.tv_sec == end.tv_sec) && (begin.tv_nsec > end.tv_nsec))) {
             ret = errorcode_t::bad_request;
             __leave2;
         }
@@ -113,14 +113,15 @@ void system_gettime(int clockid, struct timespec& ts) {
         res /= 10;
         res -= 11644473600000000ULL;
         ts.tv_sec = res / 1000000UL;
-        ts.tv_nsec = res % 1000000UL;
+        ts.tv_nsec = (res % 1000000UL) * 1000ULL;
     } else if (CLOCK_MONOTONIC == clockid) {
         LARGE_INTEGER freq;
         LARGE_INTEGER counter;
         QueryPerformanceFrequency(&freq);
         QueryPerformanceCounter(&counter);
         ts.tv_sec = counter.QuadPart / freq.QuadPart;
-        ts.tv_nsec = t_justdoit((counter.QuadPart % freq.QuadPart) * 1000000000LL / freq.QuadPart);
+        uint64 remainder = counter.QuadPart % freq.QuadPart;
+        ts.tv_nsec = static_cast<long>((remainder * 1000000000ULL) / freq.QuadPart);
     } else if (CLOCK_BOOTTIME == clockid) {
         // realtimeapiset.h, kernel32.dll, 	Mincore.lib
         typedef VOID (*QUERYINTERRUPTTIMEPRECISE)(ULONGLONG* lpInterruptTimePrecise);

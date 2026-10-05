@@ -31,9 +31,11 @@ using parse_gss = t_gss<uint32, parse_treenode*>;
 using parse_gss_node = parse_gss::node_type;
 using parse_gss_node_ptr = parse_gss::node_ptr;
 
-glr_parser::glr_parser(const cfg_grammar& g) : _grammar(g), _is_table_built(false) {}
+glr_parser::glr_parser() : _is_table_built(false) { _shared.make_share(this); }
 
-glr_parser::glr_parser(cfg_grammar&& g) : _grammar(std::move(g)), _is_table_built(false) {}
+glr_parser::glr_parser(const cfg_grammar& g) : glr_parser() { _grammar = g; }
+
+glr_parser::glr_parser(cfg_grammar&& g) : glr_parser() { _grammar = std::move(g); }
 
 void glr_parser::set_grammar(const cfg_grammar& g) {
     critical_section_guard guard(_lock);
@@ -59,6 +61,7 @@ bool glr_parser::ready() const {
 void glr_parser::clear() {
     critical_section_guard guard(_lock);
     _is_table_built = false;
+    _is_imported = false;
     _context.clear();
     _action_table.clear();
     _goto_table.clear();
@@ -79,7 +82,7 @@ return_t glr_parser::learn() {
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
+        if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_debug)) {
             trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
                 print_style_t style("{", ", ", "}", 2);
 
@@ -138,6 +141,8 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
             ret = errorcode_t::not_ready;
             __leave2;
         }
+
+        if (pt) pt->set_parser(this);
 
         auto resource = parser_resource::get_instance();
 
@@ -211,7 +216,7 @@ return_t glr_parser::parse(const std::vector<parser_token>& tokens, parse_tree* 
                                     visited_reductions.insert(visit_key);
 
                                     if (nullptr != pt) {
-                                        pt->on_reduce(rule.lhs, rhs_len);
+                                        pt->on_reduce(act.target, rule.lhs, rhs_len);
                                     }
 
                                     // Push new reduced stack node connected to ancestor
@@ -338,7 +343,16 @@ return_t glr_parser::buildup_goto(uint32 state, const std::string& nonterm, uint
     return ret;
 }
 
-void glr_parser::imported() { _is_table_built = true; }
+void glr_parser::import_completed() {
+    _is_table_built = true;
+    _is_imported = true;
+}
+
+bool glr_parser::imported() const { return _is_imported; }
+
+void glr_parser::addref() { _shared.addref(); }
+
+void glr_parser::release() { _shared.delref(); }
 
 }  // namespace io
 }  // namespace hotplace

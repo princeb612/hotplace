@@ -6,7 +6,7 @@ The documents here are not replacements for the source-tree `README.md` files an
 
 ## Source Baseline
 
-- Source revision: 1096
+- Source revision: 1097
 - Review scope: source-tree architecture and development relationships
 - Companion study area: `/docs`
 - Source-tree documentation: directory/module `README.md` and topic Markdown files
@@ -71,13 +71,13 @@ It does not use an Edition number. Its baseline is simply the source revision be
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
-│ Revision 1096                                │
+│ Revision 1097                                │
 │ Documented with GPT-5.6 Luna                 │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘
 ```
 
-The review layer is therefore expected to evolve from revision to revision without becoming Edition 2, Edition 3, and so on.
+The review layer therefore evolves by source revision and does not adopt a separate edition-numbering scheme.
 
 ## 2. Current Review Map
 
@@ -186,7 +186,7 @@ semantically implemented
 fully supported feature
 ```
 
-This distinction is especially important for the loader work beginning around revision 1096.
+This distinction is especially important for the loader work beginning around revision 1097.
 
 ---
 
@@ -581,16 +581,16 @@ The source-tree documentation remains the authoritative local description of a m
 
 Each review document should identify the source revision it describes.
 
-For revision 1096:
+For revision 1097:
 
 ```text
-Source Baseline: Revision 1096
+Source Baseline: Revision 1097
 ```
 
 When the implementation changes materially:
 
 ```text
-Revision 1096
+Revision 1097
       ↓
 source changes
       ↓
@@ -603,37 +603,19 @@ The review documents should not imply that every statement remains valid forever
 
 In particular, parser production names, ASN.1 loader capabilities, protocol resource tables, and implementation status can change between revisions.
 
-## 8. Source-Tree Verification Notes
+Revision 1097 is the first review pass in which the ASN.1 production/rule names are stable enough to use directly in the parser review, and the parser-to-semantic reconstruction path has become an explicit implementation milestone.
 
-The revision-1096 source-tree comparison found one documentation baseline mismatch that should be corrected in the source tree itself:
+## 8. Current Review Status
 
-- `sdk/io/asn.1/loader/asn1_loader.md` still states **revision 1095** in its implementation-status section.
-- The source tree under review is revision 1096.
-- The document should be updated to describe the 1096 implementation state before being treated as a current loader reference.
+The revision-1097 pass has two concrete outcomes:
 
-This is a documentation-baseline correction, not evidence that the loader implementation itself became complete in revision 1096. The implementation-status distinction remains important:
+1. **Source-tree documentation correction:** stale 1094/1095 current-state markers in the revision-1096 source documentation were corrected. Historical documents that explicitly describe older baselines (for example the loader/compiler flow notes based on revisions 1083/1085) were intentionally left unchanged.
+2. **ASN.1 review update:** the parser/semantic-runtime documents now treat revision 1097 as the point where production/rule names are stable enough for direct architectural discussion, LALR(1)/GLR production switching is part of the reconstruction story, and semantic reconstruction of ASN.1 notation is an explicit milestone. The loader is described as having taken a first integration step, not as completed.
 
-```text
-revision 1096 source
-        │
-        ├── loader interface exists
-        ├── file/mmap entry path exists
-        └── load() remains a skeleton
-```
+The remaining review documents were re-read for stale names, mixed revision baselines, and cross-reference consistency. No material 1097-specific architectural change was identified in those axes, so they retain their established relationship models.
 
-A second normalization was made inside this review set: `binary-construction-abstraction.md` now uses revision 1096 as its single review baseline rather than a mixed 1094–1096 baseline.
 
-The review layer therefore distinguishes:
-
-```text
-source-tree document correction
-        ≠
-implementation feature completion
-```
-
-## 9. Current Review Status
-
-At revision 1096, the review layer has established these major axes:
+At revision 1097, the review layer has established these major axes:
 
 ```text
 1. Parser evolution
@@ -646,7 +628,7 @@ At revision 1096, the review layer has established these major axes:
 8. Authenticode cross-cutting verification path
 ```
 
-These eight documents are sufficient to form an initial architecture-review map.
+These review documents form the current architecture-review map. The 1097 pass updates the parser/ASN.1 axis while retaining the other documents where no material revision-specific change was identified.
 
 The next review pass should therefore focus on **cross-referencing and correction**, rather than automatically creating another document for every subsystem.
 
@@ -655,8 +637,31 @@ The next review pass should therefore focus on **cross-referencing and correctio
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
-│ Revision 1096                                │
+│ Revision 1097                                │
 │ Documented with GPT-5.6 Luna                 │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘
 ```
+
+
+## Revision 1097 ASN.1 parser milestone
+
+Revision 1097 is the first review baseline where the ASN.1 production/rule
+vocabulary is stable enough to use directly in the architecture review.
+
+The key change is:
+
+```text
+production / rule vocabulary
+        ↓
+LALR(1) / GLR parser selection
+        ↓
+semantic reconstruction
+        ↓
+ASN.1 runtime
+        ↓
+loader integration
+```
+
+The review therefore treats 1097 as a semantic-reconstruction milestone,
+not merely another parsing-table revision.

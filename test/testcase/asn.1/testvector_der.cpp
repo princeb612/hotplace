@@ -30,7 +30,7 @@ void test_yaml_testvector_der() {
                 basic_stream bs_type;
                 basic_stream bs_value;
                 binary_t bin_encoded;
-                reader.notation(&bs_type);
+                reader.represent(&bs_type);
                 reader.publish(&bs_value);
                 reader.publish(&bin_encoded);
 

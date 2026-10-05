@@ -604,40 +604,6 @@ epoll handle 4 unbind 3
 - event_loop_test_broken : broken detected
 [00000000][tls_client2] client 127.0.0.1:9000
 ================================================================================
-report
-@ test case "" success 2
---------------------------------------------------------------------------------
-result|errorcode |test function       |time       |message
- pass |0x00000000|tls_client2         |0.000352334|connect
- pass |0x00000000|tls_client2         |2.001320831|client 127.0.0.1:9000
---------------------------------------------------------------------------------
-# pass 2
---------------------------------------------------------------------------------
-brief
-pass fail skip low case
-   2    0    0   0
---------------------------------------------------------------------------------
-sort by time (top 2)
---------------------------------------------------------------------------------
-result|errorcode |test function       |time       |message
- pass |0x00000000|tls_client2         |2.001320831|client 127.0.0.1:9000
- pass |0x00000000|tls_client2         |0.000352334|connect
---------------------------------------------------------------------------------
-help
--v           verbose
--d           debug/trace
--D arg       trace level 0|2
--l           log file
--t           log time
--b arg       bufsize (1500)
--a arg       address (127.0.0.1)
--p arg       port (9000)
--P arg     v protocol tcp|udp|tls|tls13|tls12|dtls (1 tcp, 2 udp, 3 tls, 4 dtls)
--c arg       count (1)
--T           use trial
--h           HTTP/1.1
--m arg       message
--etm         TLS 1.2 EtM (trial_tls_client_socket)
 ````
 
 [TOC](README.md)

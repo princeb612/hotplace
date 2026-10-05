@@ -33,11 +33,7 @@
 namespace hotplace {
 namespace io {
 
-asn1_runtime::asn1_runtime() {
-    _shared.make_share(this);
-    _tagdefault = asn1_explicit;
-    _extensibility = static_cast<uint8>(asn1_extensibility_t::none);
-}
+asn1_runtime::asn1_runtime() { _shared.make_share(this); }
 
 asn1_runtime::asn1_runtime(const std::string& name) : asn1_runtime() { _name = name; }
 
@@ -109,9 +105,9 @@ return_t asn1_runtime::add_schema(const std::string& schema) {
     // reconstruction
     basic_stream bs;
 
-    asn1_publisher publisher;
+    auto publisher = asn1_resource::get_instance()->get_publisher();
     asn1_build_resultset result;
-    ret = publisher.build(&pt, result);
+    ret = publisher->build(&pt, result);
     if (errorcode_t::success != ret) return ret;
 
     auto object = result.object;
@@ -391,12 +387,25 @@ void asn1_runtime::for_each(std::function<void(asn1_value*)> f) const {
     }
 }
 
-void asn1_runtime::notation(stream_t* s) {
+void asn1_runtime::represent(stream_t* s) {
+    auto resource = asn1_resource::get_instance();
     asn1_notation_visitor notation(s);
+    if (_is_module) {
+        s->printf("%s %s", _name.c_str(), "DEFINITIONS ");
+        if (asn1_tagdefault != _tagdefault) s->printf("%s TAGS ", resource->nameof_mode(_tagdefault, true).c_str());
+        if (_extensibility) {
+            s->printf("EXTENSIBILITY IMPLIED ");
+        }
+        s->printf("::= BEGIN\n");
+    }
+    // TODO : OID, EXPORTS, IMPORTS
     auto nl = _types.size() > 1;
     for (const auto& item : _types) {
         notation.visit(item);
         if (nl) s->printf("\n");
+    }
+    if (_is_module) {
+        s->printf("END\n");
     }
 }
 
@@ -418,7 +427,7 @@ void asn1_runtime::publish(binary_t* b) {
     }
 }
 
-void asn1_runtime::notation(const std::string& name, stream_t* s) {
+void asn1_runtime::represent(const std::string& name, stream_t* s) {
     auto schema = get(name);
     if (nullptr == schema) return;
 
@@ -459,6 +468,13 @@ uint8 asn1_runtime::get_tagdefault() { return _tagdefault; }
 void asn1_runtime::set_extensibility(uint8 value) { _extensibility = value; }
 
 uint8 asn1_runtime::get_extensibility() { return _extensibility; }
+
+asn1_runtime& asn1_runtime::as_module() {
+    _is_module = true;
+    return *this;
+}
+
+bool asn1_runtime::is_module() const { return _is_module; }
 
 void asn1_runtime::clear() {
     for (auto& item : _types) item->release();

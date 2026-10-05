@@ -1,6 +1,6 @@
 # Hotplace Binary Construction Abstraction
 
-> **Review baseline:** Revision 1096
+> **Review baseline:** Revision 1097
 
 Binary construction appears repeatedly in hotplace without forming one universal serialization framework.
 
@@ -33,13 +33,6 @@ The important pattern is not “all binary builders use one class”; it is that
 
 ---
 
-## Publication
+**GPT Review**
 
-```text
-┌──────────────────────────────────────────────┐
-│ hotplace architecture review                 │
-│ Revision 1096                                │
-│ Documented with GPT-5.6 Luna                 │
-│ — architecture, evolution & relationships    │
-└──────────────────────────────────────────────┘
-```
+Reviewed against the hotplace source/documentation state around **revision 1097**; no material 1097 architectural change was identified in this axis.

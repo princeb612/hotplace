@@ -2,13 +2,17 @@
 
 ## Review scope
 
-This review describes the relationship between `sdk/crypto/advisor`, `sdk/net/tls/advisor`, and the OpenSSL-facing crypto layer as they exist in revision 1096.
+This review describes the relationship between `sdk/crypto/advisor`, `sdk/net/tls/advisor`, and the OpenSSL-facing crypto layer as they exist in revision 1097.
 
 The important distinction is that these are **two related vocabulary/metadata layers**, not a single generic dictionary:
 
 - `crypto_advisor` describes cryptographic identities, algorithms, parameters, aliases, and backend mappings.
 - `tls_advisor` describes protocol identifiers used by TLS, DTLS, and QUIC.
 - OpenSSL is a backend representation used by the crypto implementation and by the advisor mapping layer; it is not the conceptual owner of either vocabulary.
+
+## 1097 review pass
+
+This document was rechecked as part of the revision-1097 architecture review. No material revision-1097 architectural change was identified in this axis; the document therefore preserves the established 1096 relationship model rather than inventing a new revision-specific change.
 
 ## 1. Two advisor domains
 
@@ -125,7 +129,7 @@ identifier knowledge
 
 ## 4. `tls_advisor`: protocol identity
 
-Revision 1096 makes the TLS side broader than a TLS cipher-suite table.
+The reviewed TLS side is broader than a TLS cipher-suite table; the 1097 pass found no material architectural change to this distinction.
 
 The `tls_advisor` resource family covers identifiers and parameters for:
 
@@ -372,14 +376,14 @@ This makes the advisors a **translation and consistency layer** rather than a cr
 
 ## Review status
 
-Revision 1096 provides enough structure to distinguish the two advisor domains clearly. Future revisions may add or reorganize resource tables, but the architectural distinction should remain useful as long as protocol identifiers and cryptographic identities remain separate concerns.
+The 1097 review confirms that the existing structure is sufficient to distinguish the two advisor domains clearly. Future revisions may add or reorganize resource tables, but the architectural distinction should remain useful as long as protocol identifiers and cryptographic identities remain separate concerns.
 
 ## Publication
 
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
-│ Revision 1096                                │
+│ Revision 1097                                │
 │ Documented with GPT-5.6 Luna                 │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘

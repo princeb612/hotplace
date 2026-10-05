@@ -1,6 +1,6 @@
 # ASN.1 Semantic Construction — Notation to Runtime Object
 
-**Edition 1 · Revision 1096**
+**Edition 1 · Revision 1097**
 
 ## Context
 
@@ -62,10 +62,11 @@ The CHANGELOG gives the following development path:
 - **Revision 1094** — parser-table binary layout and external table import
 - **Revision 1095** — build infrastructure changes supporting the parser-table workflow
 - **Revision 1096** — graph-structured stack (GSS) support for GLR and parse-tree construction fixes
+- **Revision 1097** — ASN.1 loader baby step: file/memory input now reaches the parser and produces a `parse_tree`
 
 The history shows the transition from an ASN.1 runtime model, through parser infrastructure, toward semantic reconstruction of that model from notation.
 
-At Revision 1096, the broader grammar experiment has progressed from the CFG checkpoint to graph-structured-stack support and corrected GLR parse-tree construction. The production `asn1_runtime` path remains LALR-based. The integrated CFG covers ASN.1 notation, module, parameterized constructs, information object class, and extension marker versions 1 and 2. GLR-to-runtime semantic integration and loader integration remain later steps.
+At Revision 1097, the broader grammar experiment remains on the GLR/GSS path while the production `asn1_runtime` path remains LALR-based. Revision 1097 also adds the first working loader step: ASN.1 file or memory input can be passed through `asn1_loader` to produce a `parse_tree`. The loader does not yet construct a Module or register the resulting semantic objects into `asn1_runtime`; the test keeps publisher construction as a separate step.
 
 ## Conceptual
 
@@ -390,7 +391,7 @@ The loop verifies structural reconstruction rather than only parser acceptance.
 
 ## Status
 
-At Revision 1096:
+At Revision 1097:
 
 - ASN.1 notation parsing has CFG/LALR infrastructure and a parse-tree representation.
 - Parse-tree visitation exposes the shift/reduce sequence used for reconstruction.
@@ -399,6 +400,6 @@ At Revision 1096:
 - Constraints have been integrated into the same semantic-construction path, including range/string-range handling and compound constraint operations.
 - The resulting runtime representation is an existing `asn1_object*` model rather than a separate notation-only representation.
 - Revision 1083 marks the current constraint-supporting `string_set` operations as part of this completed reconstruction stage.
-- Revisions 1086–1096 continue a separate parser/loader study: broader CFG coverage, parser switching, external parser-table import, and GLR experimentation. The integrated CFG now covers notation, module, parameterized constructs, information object class, and extension marker versions 1 and 2. By Revision 1096, the GLR path includes graph-structured-stack support and corrected parse-tree construction, while the production `asn1_runtime` parser remains LALR-based.
+- Revisions 1086–1097 continue a separate parser/loader study: broader CFG coverage, parser switching, external parser-table import, and GLR experimentation. The integrated CFG now covers notation, module, parameterized constructs, information object class, and extension marker versions 1 and 2. By Revision 1096, the GLR path includes graph-structured-stack support and corrected parse-tree construction, while the production `asn1_runtime` parser remains LALR-based. Revision 1097 adds a working loader-to-`parse_tree` entry point, but not Module/runtime orchestration.
 
 The next parser question is how the stabilized broader grammar can be connected to semantic construction without disturbing the existing LALR runtime path. Loader integration and broader runtime workflow remain later stages.

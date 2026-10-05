@@ -50,7 +50,7 @@ class asn1_tag : public asn1_object {
    private:
     uint8 _class_type;     // Application
     uint64 _class_number;  // 1
-    uint8 _tag_mode;       // IMPLICIT
+    uint8 _tag_mode;       // EXPLICIT, IMPLICIT
 };
 
 }  // namespace io

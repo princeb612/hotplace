@@ -100,10 +100,7 @@ void asn1_resource::doload_resource() {
             {asn1_class_context, ""},                 // CONTEXT
         };
         type_table mode_table[] = {
-            {asn1_implicit, "IMPLICIT"},
-            {asn1_explicit, "EXPLICIT"},
-            {asn1_default, "DEFAULT"},
-            {asn1_optional, "OPTIONAL"},
+            {asn1_automatic, "AUTOMATIC"}, {asn1_implicit, "IMPLICIT"}, {asn1_explicit, "EXPLICIT"}, {asn1_default, "DEFAULT"}, {asn1_optional, "OPTIONAL"},
         };
 
         for (const auto& entry : class_table) {
@@ -183,8 +180,9 @@ uint8 asn1_resource::get_class(const std::string& name) const {
     return type;
 }
 
-std::string asn1_resource::nameof_mode(uint16 t) const {
+std::string asn1_resource::nameof_mode(uint16 t, bool ismodule) const {
     std::string name;
+    if ((false == ismodule) && (asn1_automatic == t)) return name;
     auto iter = _mode_id.find(t);
     if (_mode_id.end() != iter) {
         name = iter->second;
@@ -199,6 +197,11 @@ uint8 asn1_resource::valueof_mode(const std::string& name) const {
         value = iter->second;
     }
     return value;
+}
+
+asn1_publisher* asn1_resource::get_publisher() {
+    _publisher.prepare();
+    return &_publisher;
 }
 
 }  // namespace io

@@ -2,7 +2,7 @@
 
 ## Context
 
-`asn1_loader` is the planned entry point for turning an `.asn1` source file or memory buffer into a Module-level `asn1_runtime` environment.
+`asn1_loader` is the entry point for bringing an `.asn1` source file or memory buffer into the ASN.1 processing flow. At Revision 1097 it performs the first concrete step: parsing the input into a `parse_tree`. Module-level `asn1_runtime` construction remains future work.
 
 The loader is not intended to replace the parser or publisher.
 
@@ -20,7 +20,7 @@ semantic construction
 asn1_runtime
 ```
 
-The parser and semantic construction layers are being developed first so that the loader can eventually compose them rather than reimplement them.
+The parser and semantic construction layers remain separate so that the loader composes them rather than reimplementing them.
 
 ## Target responsibility
 
@@ -44,30 +44,24 @@ The resulting runtime is an environment in which the Module's schemas can be loo
 
 ## Current state
 
-The current implementation intentionally starts the loader interface but does not yet implement Module construction.
+At Revision 1097 the loader has reached its first working step. `asn1_loader::load_file()` opens and memory-maps the source, then `load()` invokes the existing `asn1_parser` and returns a `parse_tree`. Module construction and runtime registration are still not implemented by the loader.
 
-`asn1_loader::load_file()` currently handles file input and forwards the contents to `load()`.
-
-`asn1_loader::load()` is currently a stub.
-
-Therefore the following diagram describes the **target architecture**, not the current implementation:
+The current flow is therefore:
 
 ```text
-.asn1 file
+.asn1 file / memory
     ↓
 asn1_loader
     ↓
-Module parsing
+asn1_parser
     ↓
-Module metadata
-    ├── name
-    └── tagging mode
+parse_tree
     ↓
-semantic construction
-    ↓
-schema registration
+asn1_publisher   (separate current test step)
     ↓
 asn1_runtime
+
+Module extraction, Module metadata, and loader-owned runtime registration remain future stages.
 ```
 
 The existing working lower-level path is currently provided by `asn1_runtime::add_schema()`:

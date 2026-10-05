@@ -582,7 +582,7 @@ void test_testvector_gpt_gemini() {
                     basic_stream bs_type;
                     basic_stream bs_value;
                     binary_t bin_recode;
-                    runtime.notation(&bs_type);
+                    runtime.represent(&bs_type);
                     runtime.publish(&bs_value);
                     runtime.publish(&bin_recode);
                     if (item.weakflag == flag_type_only) {

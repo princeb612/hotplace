@@ -26,9 +26,11 @@
 namespace hotplace {
 namespace io {
 
-lalr1_parser::lalr1_parser(const cfg_grammar& g) : _grammar(g) {}
+lalr1_parser::lalr1_parser() { _shared.make_share(this); }
 
-lalr1_parser::lalr1_parser(cfg_grammar&& g) : _grammar(std::move(g)) {}
+lalr1_parser::lalr1_parser(const cfg_grammar& g) : lalr1_parser() { _grammar = g; }
+
+lalr1_parser::lalr1_parser(cfg_grammar&& g) : lalr1_parser() { _grammar = std::move(g); }
 
 void lalr1_parser::set_grammar(const cfg_grammar& g) {
     _grammar = g;
@@ -60,26 +62,15 @@ return_t lalr1_parser::learn() {
         }
 
 #if defined DEBUG
-        if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_trace)) {
+        if (istraceable(trace_category_t::trace_category_internal, loglevel_t::loglevel_debug)) {
             trace_debug_event(trace_category_t::trace_category_internal, trace_event_t::trace_event_internal, [&](basic_stream& dbs) -> void {
                 print_style_t style("{", ", ", "}", 2);  // indent 2
 
-                // written to be suitable for generating pre-built LALR(1) GOTO
                 auto lambda_lr0_goto = [](typename std::map<std::pair<uint32, std::string>, uint32>::const_iterator it, basic_stream& dbs) -> void {
                     dbs << "{" << it->first.first << ", \"" << it->first.second << "\"}, " << it->second;
                 };
-                // written to be suitable for generating pre-built LALR(1) ACTION
                 auto lambda_action = [](typename std::map<std::pair<uint32, std::string>, parser_action_state>::const_iterator it, basic_stream& dbs) -> void {
-                    static std::map<std::string, std::string> table = {
-                        {"id", "SYMBOL_ID"}, {"usertype", "SYMBOL_USERTYPE"}, {"num", "SYMBOL_NUM"}, {"fp", "SYMBOL_FP"}, {"quot_string", "SYMBOL_QSTR"}};
-
-                    dbs << "{" << it->first.first << ", ";
-                    auto table_it = table.find(it->first.second);
-                    if (table.end() != table_it)
-                        dbs << table_it->second;
-                    else
-                        dbs << "\"" << it->first.second << "\"";
-                    dbs << "}, ";
+                    dbs << "{" << it->first.first << ", " << "\"" << it->first.second << "\"" << "}, ";
                     auto action = it->second.type;
                     auto target = it->second.target;
                     dbs << "{";
@@ -155,6 +146,7 @@ bool lalr1_parser::ready() const {
 void lalr1_parser::clear() {
     critical_section_guard guard(_lock);
     _is_table_built = false;
+    _is_imported = false;
     _action_table.clear();
     _goto_table.clear();
 }
@@ -175,13 +167,15 @@ return_t lalr1_parser::parse(const std::vector<parser_token>& tokens, parse_tree
             __leave2;
         }
 
+        if (pt) pt->set_parser(this);
+
         auto resource = parser_resource::get_instance();
         std::stack<uint32> state_stack;
         state_stack.push(0);
 
         size_t token_idx = 0;
 
-        const auto& rules = _grammar.get_productions();
+        // const auto& rules = _grammar.get_productions();
 #if defined DEBUG
         struct trace_info {
             basic_stream state_stack;
@@ -265,6 +259,10 @@ return_t lalr1_parser::parse(const std::vector<parser_token>& tokens, parse_tree
 
             parser_action_state act = act_it->second;
 
+#if defined DEBUG
+            trace.action << "ACTION[" << current_state << ":" << typestring << "] ";
+#endif
+
             // 1. Shift
             if (act.type == parser_action_t::shift) {
 #if defined DEBUG
@@ -282,11 +280,12 @@ return_t lalr1_parser::parse(const std::vector<parser_token>& tokens, parse_tree
                 const auto& rule = _grammar.get_production(act.target);
 
 #if defined DEBUG
+                // act.target (rule.id)
                 trace.action << "reduce -> Rule " << rule.id << " (" << rule.lhs << ") RHS[" << rule.rhs.size() << "]";
                 trace_stack.push_back(trace);
 #endif
 
-                if (pt) pt->on_reduce(rule.lhs, rule.rhs.size());
+                if (pt) pt->on_reduce(act.target, rule.lhs, rule.rhs.size());
 
                 for (size_t i = 0; i < rule.rhs.size(); ++i) {
                     if (false == state_stack.empty()) {
@@ -315,6 +314,10 @@ return_t lalr1_parser::parse(const std::vector<parser_token>& tokens, parse_tree
                     break;
                 }
 
+#if defined DEBUG
+                auto& trace_action = *trace_stack.rbegin();
+                trace_action.action << " -> GOTO[" << top_state << ":" << rule.lhs << "] -> state " << goto_it->second;
+#endif
                 state_stack.push(goto_it->second);
             }
             // 3. Accept
@@ -416,7 +419,16 @@ return_t lalr1_parser::buildup_goto(uint32 state, const std::string& nonterm, ui
     return ret;
 }
 
-void lalr1_parser::imported() { _is_table_built = true; }
+void lalr1_parser::import_completed() {
+    _is_table_built = true;
+    _is_imported = true;
+}
+
+bool lalr1_parser::imported() const { return _is_imported; }
+
+void lalr1_parser::addref() { _shared.addref(); }
+
+void lalr1_parser::release() { _shared.delref(); }
 
 }  // namespace io
 }  // namespace hotplace

@@ -1,6 +1,6 @@
 # Hotplace TLS → DTLS → QUIC Development Path
 
-> **Review baseline:** Revision 1096
+> **Review baseline:** Revision 1097
 
 The TLS, DTLS, and QUIC work is best understood as a development path rather than three unrelated implementations.
 
@@ -48,13 +48,6 @@ The important point is not a simple linear feature checklist: earlier abstractio
 
 ---
 
-## Publication
+**GPT Review**
 
-```text
-┌──────────────────────────────────────────────┐
-│ hotplace architecture review                 │
-│ Revision 1096                                │
-│ Documented with GPT-5.6 Luna                 │
-│ — architecture, evolution & relationships    │
-└──────────────────────────────────────────────┘
-```
+Reviewed against the hotplace source/documentation state around **revision 1097**.

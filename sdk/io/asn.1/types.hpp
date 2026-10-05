@@ -23,7 +23,7 @@ namespace io {
  *          https://www.oss.com/asn1_runtime/resources/asn1_runtime-made-simple/asn1_runtime-quick-reference.html
  *          https://www.oss.com/asn1_runtime/resources/asn1_runtime-made-simple/asn1_runtime-quick-reference/asn1_runtime-tags.html
  */
-enum asn1_tag_t {
+enum asn1_tag_t : uint16 {
     asn1_tag_boolean = 1,           // BOOLEAN
     asn1_tag_integer = 2,           // INTEGER
     asn1_tag_bitstring = 3,         // BIT STRING
@@ -91,7 +91,7 @@ static inline bool asn1_is_private(uint8 c) { return asn1_class_private == (c & 
 static inline bool asn1_is_primitive(uint8 c) { return asn1_tag_primitive == (c & asn1_tag_mask); }
 static inline bool asn1_is_constructed(uint8 c) { return asn1_tag_constructed == (c & asn1_tag_mask); }
 
-enum asn1_entity_t {
+enum asn1_entity_t : uint16 {
     asn1_entity_unknown = 0,
     asn1_entity_boolean = asn1_tag_boolean,
     asn1_entity_integer = asn1_tag_integer,
@@ -166,14 +166,15 @@ enum asn1_entity_t {
 
 enum asn1_taggingmode_t : uint8 {
     // tag, tagdefault
-    asn1_automatic = 0,
-    asn1_implicit = 1,
-    asn1_explicit = 2,
+    asn1_tagdefault = 0,
+    asn1_automatic = 1,
+    asn1_implicit = 2,
+    asn1_explicit = 3,
 };
 
 enum asn1_optionality_t : uint8 {
-    asn1_default = 3,
-    asn1_optional = 4,
+    asn1_default = 4,
+    asn1_optional = 5,
 };
 
 enum class asn1_extensibility_t : uint8 {

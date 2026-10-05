@@ -1,6 +1,6 @@
 # hotplace study
 
-**Edition 1 · Revision 1096**
+**Edition 1 · Revision 1097**
 
 > A compact study map of the hotplace project.
 > The documents record concepts, relationships, development traces,
@@ -429,7 +429,7 @@ this map does not imply that it was developed later.
 ```text
 ┌──────────────────────────────────────┐
 │ hotplace study                       │
-│ Edition 1 · Revision 1096            │
+│ Edition 1 · Revision 1097            │
 │ Documented with GPT-5.6 Luna         │
 │ — study, reconstruction & review     │
 └──────────────────────────────────────┘

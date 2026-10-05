@@ -47,6 +47,7 @@ class cfg_grammar {
 
     const parser_productions_t& get_productions() const;
     const parser_production& get_production(uint32 id) const;
+    uint32 get_production_id(const std::string& rule) const;
     const parser_terminals_t& get_terminals() const;
     const parser_nonterminals_t& get_non_terminals() const;
 
@@ -57,6 +58,7 @@ class cfg_grammar {
 
    private:
     parser_productions_t _productions;
+    parser_production_lookup_t _production_lookup;
     parser_terminals_t _terminals;
     parser_nonterminals_t _non_terminals;
 };

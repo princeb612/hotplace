@@ -4,16 +4,21 @@
 
 `asn1_loader` is the file/stream entry point intended to load an ASN.1 notation source into the hotplace ASN.1 processing flow.
 
-At revision 1095, the loader is **not yet a completed parser-to-runtime implementation**. The public interface and file-loading path exist, while the actual `load(const char*, size_t, std::string&)` operation is still a skeleton.
+At revision 1097, the loader has taken its first implementation step: `load_file()` maps the source and `load()` passes the in-memory notation to `asn1_parser`, producing a `parse_tree`. Publishing that tree into runtime objects remains a separate second stage.
 
-## Current implementation
+## Publication
 
-The module exposes two static entry points:
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1097
+Documented with GPT-5.6 Luna
+— source identity, implementation detail & relationships
+```
 
 - `asn1_loader::load_file()` — opens an ASN.1 source file through `file_stream`, memory-maps it, and forwards the buffer to `load()`.
-- `asn1_loader::load()` — intended to process an in-memory ASN.1 notation buffer; currently returns success without performing the loading operation.
+- `asn1_loader::load()` — constructs an in-memory buffer and invokes `asn1_parser::parse()` to populate the supplied `parse_tree`.
 
-The intended usage shown in the header is:
+The current implementation is intentionally split into loading/parsing and publishing/runtime construction:
 
 ```text
 ASN.1 file / memory
@@ -22,17 +27,24 @@ ASN.1 file / memory
    asn1_loader
         |
         v
- ASN.1 parsing / runtime context
+   asn1_parser
         |
         v
-asn1_runtime_context::select(name)
+    parse_tree
+        |
+        v
+  asn1_publisher
+        |
+        v
+asn1_runtime_context
+        |
+        v
+ runtime objects
 ```
-
-The `name` output parameter is intended to identify the loaded module/schema for later selection through `asn1_runtime_context`.
 
 ## Relation to the parser and runtime
 
-The loader sits between external ASN.1 notation and the parser/runtime pipeline.
+The loader is the file/memory entry point into the parser pipeline. It does not publish the parse tree itself; `asn1_publisher` performs the next semantic/runtime construction step.
 
 ```text
 ASN.1 source
@@ -65,9 +77,7 @@ This keeps filesystem handling separate from the actual ASN.1 processing operati
 
 ## Current status
 
-The important point for future maintenance is that this module is a **defined integration point, not a finished loader**.
-
-The existing `loader-flow.md` describes a broader loader flow, but the revision-1095 source should be treated as authoritative for implementation status.
+Revision 1097 is a **baby step**: file loading and parsing are implemented, while publishing is exercised as a separate stage by the loader testcase. The broader `loader-flow.md` remains an earlier design/study sketch and should not be read as a statement of the current implementation status.
 
 ## Related source
 
@@ -81,7 +91,7 @@ The existing `loader-flow.md` describes a broader loader flow, but the revision-
 - `test/testcase/asn.1/loader/testcase_loader.cpp`
 - `test/testcase/asn.1/loader/`
 
-The loader testcase currently establishes the testcase entry point but does not yet exercise a completed loading pipeline.
+The loader testcase exercises the two stages separately: `loader.load_file()` builds the parse tree, then `asn1_publisher::build()` publishes it and exposes module/runtime objects through `asn1_runtime_context`.
 
 ## Related documents
 

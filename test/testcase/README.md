@@ -1,5 +1,14 @@
 # test/testcase
 
+## Publication
+
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1097
+Documented with GPT-5.6 Luna
+— source identity, implementation detail & relationships
+```
+
 `test/testcase` is the automated verification layer for the SDK. Test groups are organized primarily by the feature/protocol boundary they verify, and each group is built as a `test-<module>` executable.
 
 ## Test groups
@@ -50,16 +59,17 @@ CTest is the normal automated test entry point in the MinGW64/GCC development en
 
 ## Environment-specific verification
 
-The repository deliberately uses different diagnostic layers for different environments:
+The repository uses CTest as the normal testcase execution baseline. Additional diagnostic tools depend on the target environment:
 
 | Environment | Primary execution | Additional verification |
 |---|---|---|
 | MinGW64 / GCC | `ctest` | Application Verifier |
-| CentOS 7 | `ctest` | Sanitizer |
-| Ubuntu 20 | `test.sh` | Valgrind: `memcheck`, `helgrind`, `drd` |
+| Ubuntu 20 | `ctest` | Sanitizer |
+| CentOS 7 (gcc 4.8.5) | `ctest` | `test.sh` → Valgrind: `memcheck`, `helgrind`, `drd` |
+| Rocky 8 | `ctest` | `test.sh` → Valgrind: `memcheck`, `helgrind`, `drd` |
 | Windows / MSVC | `ctest` | Application Verifier |
 
-This is part of the project's compatibility/verification strategy rather than four equivalent ways of launching the same script. In particular, Ubuntu 20 is the environment where the repository's `test.sh` + Valgrind pass is used.
+`test.sh` is therefore an additional Valgrind verification path on CentOS 7 and Rocky 8, not the primary testcase execution mechanism. A testcase being registered with CTest does not imply that every environment runs it through the same diagnostic tool.
 
 ## Running `test.sh`
 
@@ -98,7 +108,7 @@ When Valgrind is available, `test.sh` runs each selected executable through:
 - `helgrind` — thread synchronization checking
 - `drd` — thread error checking
 
-The reports are written as `report-memcheck`, `report-helgrind`, and `report-drd` in the corresponding build directory. This pass is the Ubuntu 20 verification path; it is not the general CTest mechanism.
+The reports are written as `report-memcheck`, `report-helgrind`, and `report-drd` in the corresponding build directory. This pass is the CentOS 7 / Rocky 8 Valgrind verification path; it is not the general CTest mechanism.
 
 Some runnable network applets are intentionally excluded from the automatic `test.sh` pass because they require user interaction or external peers. Those belong under `test/applet`.
 

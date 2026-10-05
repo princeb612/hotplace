@@ -69,7 +69,7 @@ void test_yaml_testvector_parser() {
                 basic_stream bs_type;
                 basic_stream bs_value;
                 binary_t bin_encoded;
-                runtime.notation(&bs_type);
+                runtime.represent(&bs_type);
                 runtime.publish(&bs_value);
                 runtime.publish(&bin_encoded);
 

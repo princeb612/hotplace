@@ -201,8 +201,8 @@ return_t lexical_analyzer::parse(lexical_context& context, const char* p, size_t
                                 };
                                 context.reverse_for_each(lambda);
 
-                                auto size = tokenq.size();
-                                if (4 <= size) {
+                                auto qsize = tokenq.size();
+                                if (4 <= qsize) {
                                     last_tokenid = token_unknown;
                                     while (false == tokenq.empty()) {
                                         auto front = tokenq.front();

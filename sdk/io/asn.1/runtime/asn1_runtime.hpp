@@ -89,10 +89,10 @@ class asn1_runtime {
 
     void for_each(std::function<void(asn1_object*)> f) const;
     void for_each(std::function<void(asn1_value*)> f) const;
-    void notation(stream_t* s);
+    void represent(stream_t* s);
     void publish(stream_t* s);
     void publish(binary_t* b);
-    void notation(const std::string& name, stream_t* s);
+    void represent(const std::string& name, stream_t* s);
     void publish(const std::string& name, stream_t* s);
     void publish(const std::string& name, binary_t* b);
 
@@ -140,6 +140,9 @@ class asn1_runtime {
     void set_extensibility(uint8 value);
     uint8 get_extensibility();
 
+    asn1_runtime& as_module();
+    bool is_module() const;
+
     void clear();
 
     void addref();
@@ -157,8 +160,9 @@ class asn1_runtime {
     std::map<asn1_object*, asn1_value*> _values;
     std::map<asn1_object*, std::string> _schema;  // strongly-typed
     std::string _name;
-    uint8 _tagdefault;
-    uint8 _extensibility;
+    uint8 _tagdefault{asn1_explicit};
+    uint8 _extensibility{uint8(asn1_extensibility_t::none)};
+    bool _is_module{false};
 };
 
 }  // namespace io

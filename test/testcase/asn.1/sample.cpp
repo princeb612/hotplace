@@ -88,8 +88,8 @@ void parse_reconst_notation(asn1_runtime* runtime, const char* notation, const c
     // reconstruction
     basic_stream bs;
     asn1_build_resultset result;
-    asn1_publisher publisher;
-    publisher.build(&pt, result);
+    auto publisher = asn1_resource::get_instance()->get_publisher();
+    publisher->build(&pt, result);
     if (result.object) {
         result.object->publish(&bs);
     }
@@ -231,7 +231,7 @@ int main(int argc, char** argv) {
 
     _logger->flush();
 
-    _test_case.report(5);
+    _test_case.report(30);
     _cmdline->help();
     return _test_case.result();
 }

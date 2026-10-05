@@ -63,6 +63,16 @@ void test_load_parsingtable() {
 void test_asn1_notation() {
     // return_t ret = errorcode_t::success;
 
+    _test_case.begin("LALR(1) and GLR parser");
+    auto& p1 = get_lalr1_parser_asn1_notation_by_build();
+    _test_case.assert(p1.ready(), __FUNCTION__, "LALR(1) parser build table for Notation");
+    auto& p2 = get_lalr1_parser_asn1_notation_by_import();
+    _test_case.assert(p2.ready(), __FUNCTION__, "LALR(1) parser import table for Notation");
+    auto& p3 = get_glr_parser_asn1_by_build();
+    _test_case.assert(p3.ready(), __FUNCTION__, "GLR parser build table for Notation, Module, Parameterized, Information Object Class");
+    auto& p4 = get_glr_parser_asn1_by_import();
+    _test_case.assert(p4.ready(), __FUNCTION__, "GLR parser import table for Notation, Module, Parameterized, Information Object Class");
+
     struct testvector {
         const char* notation;
     };
@@ -190,20 +200,12 @@ void test_asn1_notation() {
         }
     };
     _test_case.begin("LALR(1) parser - ASN.1 for Notation");
-    auto& p1 = get_lalr1_parser_asn1_notation_by_build();
-    _test_case.assert(p1.ready(), __FUNCTION__, "LALR(1) parser build table for Notation");
     lambda_test(p1);
     _test_case.begin("LALR(1) parser - ASN.1 for Notation (imported)");
-    auto& p2 = get_lalr1_parser_asn1_notation_by_import();
-    _test_case.assert(p2.ready(), __FUNCTION__, "LALR(1) parser import table for Notation");
     lambda_test(p2);
     _test_case.begin("GLR parser - ASN.1 for All-in-One");
-    auto& p3 = get_glr_parser_asn1_by_build();
-    _test_case.assert(p3.ready(), __FUNCTION__, "GLR parser build table for Notation, Module, Parameterized, Information Object Class");
     lambda_test(p3);
     _test_case.begin("GLR parser - ASN.1 for All-in-One (imported)");
-    auto& p4 = get_glr_parser_asn1_by_import();
-    _test_case.assert(p4.ready(), __FUNCTION__, "GLR parser import table for Notation, Module, Parameterized, Information Object Class");
     lambda_test(p4);
 }
 

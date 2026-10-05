@@ -25,22 +25,27 @@ class asn1_loader {
     ~asn1_loader();
 
     /**
+     * @param   const char* asn1file [in]
+     * @param   parse_tree* pt [out]
      * @examples
      *          // sketch
      *          auto rtcontext = asn1_runtime_context::get_instance();
      *          loader.load_file("userprofile.asn1");
      */
-    static return_t load_file(const char* asn1file, parse_tree* pt);
+    return_t load_file(const char* asn1file, parse_tree* pt);
     /**
+     * @param   const char* asn1 [in]
+     * @param   size_t size [in]
+     * @param   parse_tree* pt [out]
      * @examples
      *          // sketch
      *          auto rtcontext = asn1_runtime_context::get_instance();
      *          loader.load_file(asn1stream, asn1size);
      */
-    static return_t load(const char* asn1, size_t size, parse_tree* pt);
+    return_t load(const char* asn1, size_t size, parse_tree* pt);
 
-   private:
-    std::vector<std::string> _module_names;
+    return_t asn1file_to_tokens(asn1_parser* parser, const char* asn1file, std::vector<parser_token>& tokens);
+    return_t asn1_to_tokens(asn1_parser* parser, const char* asn1, size_t size, std::vector<parser_token>& tokens);
 };
 
 }  // namespace io

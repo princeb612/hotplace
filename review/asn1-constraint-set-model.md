@@ -1,6 +1,6 @@
 # ASN.1 Constraint → Set Model
 
-> **Review baseline:** Revision 1096
+> **Review baseline:** Revision 1097
 
 This review connects ASN.1 constraint evaluation with the generic set infrastructure.
 
@@ -41,13 +41,6 @@ This is why the topic belongs in `review/`: the implementation crosses `sdk/base
 
 ---
 
-## Publication
+**GPT Review**
 
-```text
-┌──────────────────────────────────────────────┐
-│ hotplace architecture review                 │
-│ Revision 1096                                │
-│ Documented with GPT-5.6 Luna                 │
-│ — architecture, evolution & relationships    │
-└──────────────────────────────────────────────┘
-```
+Reviewed against the hotplace source/documentation state around **revision 1097**.

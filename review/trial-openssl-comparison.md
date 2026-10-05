@@ -1,6 +1,6 @@
 # Hotplace Trial / OpenSSL Comparison Architecture
 
-> **Review baseline:** Revision 1096
+> **Review baseline:** Revision 1097
 
 The trial/OpenSSL workflow is best understood as a comparison and verification architecture.
 
@@ -62,13 +62,6 @@ This review intentionally avoids inventing a detailed trial executable inventory
 
 ---
 
-## Publication
+**GPT Review**
 
-```text
-┌──────────────────────────────────────────────┐
-│ hotplace architecture review                 │
-│ Revision 1096                                │
-│ Documented with GPT-5.6 Luna                 │
-│ — architecture, evolution & relationships    │
-└──────────────────────────────────────────────┘
-```
+Reviewed against the hotplace source/documentation state around **revision 1097**.

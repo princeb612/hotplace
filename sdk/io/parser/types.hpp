@@ -203,13 +203,13 @@ token_t ascii2token(byte_t c);
 
 using native_token_t = std::underlying_type<token_t>::type;
 
-enum class parser_type_t {
+enum class parser_type_t : uint8 {
     unknown,
     lalr1,
     glr,
 };
 
-enum class parser_action_t {
+enum class parser_action_t : uint8 {
     shift,
     reduce,
     accept,
@@ -272,6 +272,7 @@ struct LR1_item {
 };
 
 typedef std::map<uint32, parser_production> parser_productions_t;
+typedef std::map<std::string, uint32> parser_production_lookup_t;
 typedef std::map<std::pair<uint32, std::string>, parser_action_state> parser_lalr1_action_table_t;
 typedef std::multimap<std::pair<uint32, std::string>, parser_action_state> parser_glr_action_table_t;
 typedef std::map<std::pair<uint32, std::string>, uint32> parser_goto_table_t;
@@ -326,7 +327,11 @@ class parser_t {
     // import
     virtual return_t buildup_action(uint32 state, const std::string& lookahead, parser_action_state action) = 0;
     virtual return_t buildup_goto(uint32 state, const std::string& nonterm, uint32 next_state) = 0;
-    virtual void imported() = 0;
+    virtual void import_completed() = 0;
+    virtual bool imported() const = 0;
+
+    virtual void addref() = 0;
+    virtual void release() = 0;
 };
 
 static inline bool is_asn1type(native_token_t id) { return (token_bool <= id) && (token_of >= id); }

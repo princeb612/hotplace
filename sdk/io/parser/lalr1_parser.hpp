@@ -11,8 +11,8 @@
  *
  *   ASN.1 production (measured based on approximately 130 productions.)
  *          |time       |message
- *   learn  |0.004224046|build parsing table
- *   import |0.000004737|import parsing table
+ *   learn  |0.444620100|build parsing table
+ *   import |0.032957500|import parsing table
  *
  * S' -> Statement
  * S' -> ModuleDefinition -> AssignmentList -> Statement
@@ -25,6 +25,7 @@
 #define __HOTPLACE_SDK_IO_PARSER_LALR1PARSER__
 
 #include <hotplace/sdk/base/system/critical_section.hpp>
+#include <hotplace/sdk/base/system/shared_instance.hpp>
 #include <hotplace/sdk/io/parser/cfg_grammar.hpp>
 #include <hotplace/sdk/io/parser/parse_tree.hpp>
 
@@ -62,7 +63,7 @@ namespace io {
  */
 class lalr1_parser : public parser_t {
    public:
-    lalr1_parser() = default;
+    lalr1_parser();
     explicit lalr1_parser(const cfg_grammar& g);
     explicit lalr1_parser(cfg_grammar&& g);
 
@@ -102,16 +103,22 @@ class lalr1_parser : public parser_t {
     virtual parser_type_t get_type() const;
     virtual uint16 get_version() const;
 
+    virtual bool imported() const;
+    virtual void addref();
+    virtual void release();
+
    protected:
     // import
     virtual return_t buildup_action(uint32 state, const std::string& lookahead, parser_action_state action);
     virtual return_t buildup_goto(uint32 state, const std::string& nonterm, uint32 next_state);
-    virtual void imported();
+    virtual void import_completed();
 
    private:
+    t_shared_reference<lalr1_parser> _shared;
     mutable critical_section _lock;
     cfg_grammar _grammar;
-    bool _is_table_built = false;
+    bool _is_table_built{false};
+    bool _is_imported{false};
 
     // temporary tables for table generation
     parser_temporary_context_t _context;

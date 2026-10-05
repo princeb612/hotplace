@@ -1,6 +1,6 @@
 # Parser — Grammar to Parse Structure
 
-**Edition 1 · Revision 1096**
+**Edition 1 · Revision 1097**
 
 ## Context
 
@@ -29,6 +29,7 @@ The CHANGELOG gives the following parser-oriented sequence:
 - **Revision 1094** — parser-table binary layout and external table import.
 - **Revision 1095** — build infrastructure changes supporting the parser-table workflow.
 - **Revision 1096** — graph-structured stack (GSS) support for GLR and parse-tree construction fixes.
+- **Revision 1097** — first ASN.1 loader step: file/memory input is parsed into a `parse_tree`; Module/runtime orchestration remains separate.
 
 The important direction is still not a replacement of LALR by GLR. By Revision 1096, the broader CFG/GLR grammar experiment has progressed from the grammar checkpoint into graph-structured-stack support and corrected parse-tree construction; the production runtime parser remains a separate integration concern.
 
@@ -246,7 +247,7 @@ publisher expansion
 loader integration later
 ```
 
-Loader integration is therefore a later stage. The existence of `asn1_loader` source files does not mean that the Revision 1096 parser experiment has already been absorbed into the loader architecture.
+Revision 1097 now gives `asn1_loader` a working parser-entry role: file or memory input is passed to the ASN.1 parser and returned as a `parse_tree`. This is still not full loader integration: Module construction, semantic publication, and runtime registration remain separate stages.
 
 ## Study & Verification
 
@@ -257,7 +258,7 @@ The parser study should verify the layers independently before combining them:
 3. **GLR experiment** — exercise the broader grammar and observe where multiple parse paths are produced.
 4. **Semantic construction** — determine how each parse result maps to semantic values and eventually to `asn1_object*` or related runtime structures.
 5. **Publisher expansion** — add handlers only as grammar coverage produces new semantic categories.
-6. **Loader integration** — connect the stabilized semantic/runtime path to the loader after the parser and publisher boundaries are understood.
+6. **Loader integration** — extend the new loader parser-entry step toward Module construction and runtime registration after the parser and publisher boundaries are stable.
 
 The verification target is therefore not simply “GLR parses ASN.1.” It is the complete boundary:
 
@@ -273,7 +274,7 @@ runtime schema/object
 
 ## Status
 
-At Revision 1096:
+At Revision 1097:
 
 - `asn1_runtime` still uses `lalr1_parser` for its ASN.1 parsing path.
 - The parser layer contains both LALR and GLR implementations.
@@ -282,7 +283,7 @@ At Revision 1096:
 - Context-aware parser switching has been explored as a way to keep parser selection dependent on grammar/context.
 - GLR remains the experimental parsing mechanism for the broader grammar; production `asn1_runtime` integration is a separate later step.
 - `asn1_publisher` remains the semantic-construction boundary. Broader grammar coverage is expected to require additional handlers.
-- Loader integration is later work, after parser/semantic construction boundaries stabilize.
+- Revision 1097 adds the first working loader step from ASN.1 input to `parse_tree`; Module/runtime orchestration remains later work.
 
 ## Related topics
 

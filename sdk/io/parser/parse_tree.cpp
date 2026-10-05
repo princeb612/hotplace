@@ -15,7 +15,7 @@
 namespace hotplace {
 namespace io {
 
-parse_treenode::parse_treenode(const std::string& sym, const std::string& val) : symbol(sym), value(val) {}
+parse_treenode::parse_treenode(const std::string& sym, const std::string& val) : symbol(sym), value(val), rule_id((uint32)-1) {}
 
 parse_treenode::~parse_treenode() {
     for (parse_treenode* child : children) {
@@ -45,12 +45,19 @@ void parse_tree::clear() {
         delete node;
     }
     _node_stack.clear();
+    if (_parser) {
+        _parser->release();
+        _parser = nullptr;
+    }
 }
 
 void parse_tree::on_shift(const std::string& token_symbol, const std::string& token_value) { _node_stack.push_back(new parse_treenode(token_symbol, token_value)); }
 
-void parse_tree::on_reduce(const std::string& lhs_symbol, size_t rhs_count) {
+void parse_tree::on_reduce(const std::string& lhs_symbol, size_t rhs_count) { return on_reduce((uint32)-1, lhs_symbol, rhs_count); }
+
+void parse_tree::on_reduce(uint32 rule_id, const std::string& lhs_symbol, size_t rhs_count) {
     parse_treenode* parent = new parse_treenode(lhs_symbol);
+    if ((uint32)-1 != rule_id) parent->rule_id = rule_id;
 
     if (rhs_count > 0) {
         auto first = std::prev(_node_stack.end(), rhs_count);
@@ -78,6 +85,21 @@ return_t parse_tree::accept(parse_tree_visitor* visitor) const {
 
     return visit(root, visitor);
 }
+
+void parse_tree::set_parser(parser_t* parser) {
+    if (_parser != parser) {
+        if (_parser) {
+            _parser->release();
+            _parser = nullptr;
+        }
+        if (parser) {
+            _parser = parser;
+            parser->addref();
+        }
+    }
+}
+
+parser_t* parse_tree::get_parser() const { return _parser; }
 
 return_t parse_tree::visit(parse_treenode* node, parse_tree_visitor* visitor) const {
     return_t ret = errorcode_t::success;

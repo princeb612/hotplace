@@ -27,6 +27,7 @@ struct parse_treenode {
     std::string symbol;
     std::string value;
     std::list<parse_treenode*> children;
+    uint32 rule_id;  // to avoid performing an additional lookup for the non-terminal (LHS).
 
     parse_treenode(const std::string& sym, const std::string& val = "");
     ~parse_treenode();
@@ -58,16 +59,38 @@ class parse_tree {
      * 3. Push the newly created parent node $A$ back onto the node stack.
      */
     void on_reduce(const std::string& lhs_symbol, size_t rhs_count);
+    // set_parser first then on_reduce(rule_id, lhs, rhs_count);
+    void on_reduce(uint32 rule_id, const std::string& lhs_symbol, size_t rhs_count);
 
     parse_treenode* get_root() const;
 
     return_t accept(parse_tree_visitor* visitor) const;
+
+    /*
+     * @brief   attach parser object
+     * @remarks preparations for using a 'flat map'
+     *          // sketch
+     *          std::vector<handler_t> table;  // flat map
+     *          auto handler = table[rule_id];
+     *          handler(parameter);
+     * @example
+     *          // sketch
+     *          auto parser = get_parser();
+     *          if (parser) {
+     *              auto& cfg = parser->get_cfg_grammar();
+     *              auto rule = cfg.get_production(rule_id);
+     *              auto ruleid = cfg.get_production_id(rule);
+     *          }
+     */
+    void set_parser(parser_t* parser);
+    parser_t* get_parser() const;
 
    protected:
     return_t visit(parse_treenode* node, parse_tree_visitor* visitor) const;
 
    private:
     std::list<parse_treenode*> _node_stack;
+    parser_t* _parser{nullptr};
 };
 
 /**

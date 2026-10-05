@@ -26,6 +26,7 @@ cfg_grammar::cfg_grammar() {}
 cfg_grammar& cfg_grammar::add_production(const std::string& lhs, const std::vector<std::string>& rhs) {
     uint32 id = _productions.size();  // uint32 production_id
     _productions.emplace(id, parser_production{id, lhs, rhs});
+    _production_lookup.emplace(lhs, id);
     _non_terminals.insert(lhs);
 
 #if defined DEBUG
@@ -60,6 +61,15 @@ const parser_production& cfg_grammar::get_production(uint32 id) const {
     }
 }
 
+uint32 cfg_grammar::get_production_id(const std::string& rule) const {
+    uint32 id = uint32(-1);
+    auto it = _production_lookup.find(rule);
+    if (_production_lookup.end() != it) {
+        id = it->second;
+    }
+    return id;
+}
+
 const parser_terminals_t& cfg_grammar::get_terminals() const { return _terminals; }
 
 const parser_nonterminals_t& cfg_grammar::get_non_terminals() const { return _non_terminals; }
@@ -70,6 +80,7 @@ bool cfg_grammar::is_non_terminal(const std::string& sym) const { return _non_te
 
 void cfg_grammar::clear() {
     _productions.clear();
+    _production_lookup.clear();
     _terminals.clear();
     _non_terminals.clear();
 }

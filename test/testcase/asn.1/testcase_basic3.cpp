@@ -32,7 +32,7 @@ static void testcode_strongly_typed(asn1_runtime& runtime, const testvector& ent
 
     // runtime publish ASN.1 notation and DER
     basic_stream bs_notation;
-    runtime.notation(name, &bs_notation);
+    runtime.represent(name, &bs_notation);
     binary_t bin_der;
     runtime.publish(name, &bin_der);
 
@@ -151,11 +151,11 @@ void test_resolve_dependencies() {
     runtime << item1 << item2 << item3 << item4 << item5;
 
     basic_stream bs;
-    runtime.notation(&bs);
+    runtime.represent(&bs);
     _logger->writeln(bs);
 
     bs.clear();
-    runtime.notation("PersonnelRecord", &bs);
+    runtime.represent("PersonnelRecord", &bs);
     _test_case.assert(bs == item1, __FUNCTION__, "notation PersonnelRecord");
 
     std::list<std::string> names;

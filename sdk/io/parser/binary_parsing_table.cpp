@@ -390,7 +390,7 @@ return_t binary_parsing_table::read(const std::string& filename, parser_t& parse
             parser.buildup_goto(item.state, rlookup(item.nonterminal), item.next_state);
         }
 
-        parser.imported();
+        parser.import_completed();
     }
 
     return ret;

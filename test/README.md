@@ -1,5 +1,14 @@
 # test
 
+## Publication
+
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1097
+Documented with GPT-5.6 Luna
+— source identity, implementation detail & relationships
+```
+
 `test` is hotplace's verification and runnable-example area. It is not a single test framework; it contains three different kinds of executable material:
 
 ```text

@@ -22,7 +22,69 @@ namespace io {
 
 asn1_parser::asn1_parser() : _ready(0) {}
 
+return_t asn1_parser::parse(const char* notation, asn1_build_resultset& result) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == notation) {
+            __leave2;
+        }
+        ret = parse(notation, strlen(notation), result);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t asn1_parser::parse(const char* notation, size_t size, asn1_build_resultset& result) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == notation) {
+            ret = errorcode_t::invalid_parameter;
+            __leave2;
+        }
+        parse_tree pt;
+        ret = parse(notation, &pt);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+
+        ret = to_result(&pt, result);
+    }
+    __finally2 {}
+    return ret;
+}
+
 return_t asn1_parser::parse(const char* notation, parse_tree* pt) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == notation || nullptr == pt) {
+            __leave2;
+        }
+        ret = parse(notation, strlen(notation), pt);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t asn1_parser::parse(const char* notation, size_t size, parse_tree* pt) {
+    return_t ret = errorcode_t::success;
+    __try2 {
+        if (nullptr == notation || nullptr == pt) {
+            __leave2;
+        }
+
+        std::vector<parser_token> tokens;
+
+        ret = to_tokens(notation, size, tokens);
+        if (errorcode_t::success != ret) {
+            __leave2;
+        }
+        ret = to_parsetree(tokens, pt);
+    }
+    __finally2 {}
+    return ret;
+}
+
+return_t asn1_parser::to_tokens(const char* notation, size_t size, std::vector<parser_token>& tokens) {
     return_t ret = errorcode_t::success;
     __try2 {
         load();
@@ -37,8 +99,9 @@ return_t asn1_parser::parse(const char* notation, parse_tree* pt) {
             __leave2;
         }
 
+        tokens.clear();
+
         // LALR tokens
-        std::vector<parser_token> tokens;
 #if defined DEBUG
         uint32 cnt = 0;
 #endif
@@ -79,32 +142,16 @@ return_t asn1_parser::parse(const char* notation, parse_tree* pt) {
         };
         _lexcontext.for_each(lambda);
         tokens.push_back({token_eof, "$"});
-
-        // LALR(1) parse
-        ret = get_parser().parse(tokens, pt);
     }
     __finally2 {}
     return ret;
 }
 
-return_t asn1_parser::parse(const char* notation, asn1_build_resultset& result) {
-    return_t ret = errorcode_t::success;
-    __try2 {
-        if (nullptr == notation) {
-            ret = errorcode_t::invalid_parameter;
-            __leave2;
-        }
-        parse_tree pt;
-        ret = parse(notation, &pt);
-        if (errorcode_t::success != ret) {
-            __leave2;
-        }
+return_t asn1_parser::to_parsetree(const std::vector<parser_token>& tokens, parse_tree* pt) { return get_parser().parse(tokens, pt); }
 
-        asn1_publisher publisher;
-        ret = publisher.build(&pt, result);
-    }
-    __finally2 {}
-    return ret;
+return_t asn1_parser::to_result(parse_tree* pt, asn1_build_resultset& result) {
+    auto publisher = asn1_resource::get_instance()->get_publisher();
+    return publisher->build(pt, result);
 }
 
 lexical_analyzer& asn1_parser::get_lexer() { return _lex; }

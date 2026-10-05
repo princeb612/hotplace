@@ -54,18 +54,18 @@ void test_publish_babystep() {
      *  [002] line 1 type 4118(VisibleString) index 2 pos 10 len 13 line 1 (VisibleString)
      *  LALR(1) Dynamic Parsing Execution Trace
      *  state stack           token             action
-     *  ---------------------------------------------------------------------------------
-     *  [ 0 ]                 Type1 (usertype)  shift -> State 54
-     *  [ 0 54 ]              ::=               reduce -> Rule 8 (DefinedType) RHS[1]
-     *  [ 0 13 ]              ::=               shift -> State 60
-     *  [ 0 13 60 ]           VisibleString     shift -> State 51
-     *  [ 0 13 60 51 ]        $                 reduce -> Rule 76 (SimpleTypeSpec) RHS[1]
-     *  [ 0 13 60 37 ]        $                 reduce -> Rule 9 (Type) RHS[1]
-     *  [ 0 13 60 112 ]       $                 reduce -> Rule 6 (TypeAssignment) RHS[3]
-     *  [ 0 45 ]              $                 reduce -> Rule 5 (Assignment) RHS[1]
-     *  [ 0 2 ]               $                 reduce -> Rule 1 (Statement) RHS[1]
-     *  [ 0 38 ]              $                 accept
-     *  ---------------------------------------------------------------------------------
+     *  -------------------------------------------------------------------------------------------------------------------------------------
+     *  [ 0 ]                 Type1 (usertype)  ACTION[0:usertype] shift -> State 54
+     *  [ 0 54 ]              ::=               ACTION[54:::=] reduce -> Rule 8 (DefinedType) RHS[1] -> GOTO[0:DefinedType] -> state 13
+     *  [ 0 13 ]              ::=               ACTION[13:::=] shift -> State 60
+     *  [ 0 13 60 ]           VisibleString     ACTION[60:VisibleString] shift -> State 51
+     *  [ 0 13 60 51 ]        $                 ACTION[51:$] reduce -> Rule 76 (SimpleTypeSpec) RHS[1] -> GOTO[60:SimpleTypeSpec] -> state 37
+     *  [ 0 13 60 37 ]        $                 ACTION[37:$] reduce -> Rule 9 (Type) RHS[1] -> GOTO[60:Type] -> state 112
+     *  [ 0 13 60 112 ]       $                 ACTION[112:$] reduce -> Rule 6 (TypeAssignment) RHS[3] -> GOTO[0:TypeAssignment] -> state 45
+     *  [ 0 45 ]              $                 ACTION[45:$] reduce -> Rule 5 (Assignment) RHS[1] -> GOTO[0:Assignment] -> state 2
+     *  [ 0 2 ]               $                 ACTION[2:$] reduce -> Rule 1 (Statement) RHS[1] -> GOTO[0:Statement] -> state 38
+     *  [ 0 38 ]              $                 ACTION[38:$] accept
+     *  -------------------------------------------------------------------------------------------------------------------------------------
      *  parse tree - re-trace
      *  [000] shift  usertype (Type1)
      *  [001] reduce DefinedType RHS [1]
@@ -104,8 +104,8 @@ void test_publish_babystep() {
 
     basic_stream bs;
     asn1_build_resultset result;
-    asn1_publisher publisher;
-    publisher.build(&pt, result);
+    auto publisher = asn1_resource::get_instance()->get_publisher();
+    publisher->build(&pt, result);
     if (result.object) {
         result.object->publish(&bs);
     }

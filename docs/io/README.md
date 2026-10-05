@@ -342,7 +342,7 @@ AST / structural node
 semantic ASN.1 object/type
 ```
 
-At Revision 1096 the broader CFG/GLR grammar study has progressed from the grammar checkpoint to a graph-structured-stack implementation and parse-tree fixes. `asn1_runtime` remains on the LALR path, and the loader has not yet absorbed the broader grammar/runtime path.
+At Revision 1097 the loader has taken its first working step: `asn1_loader::load_file()` and `load()` now feed ASN.1 input into the existing parser and produce a `parse_tree`. The loader still does not own Module construction or parser-to-runtime orchestration; semantic construction remains a separate publisher step and `asn1_runtime` remains on the LALR path.
 
 ### CBOR
 
@@ -504,16 +504,18 @@ protocol state
 application
 ```
 
-### ASN.1 path at Revision 1096
+### ASN.1 path at Revision 1097
 
 ```text
 ASN.1 notation
+      ↓
+asn1_loader
       ↓
 integrated CFG
       ↓
 LALR parser             GLR = broader grammar path
       ↓
-parse result
+parse_tree
       ↓
 ASN.1 publisher / semantic construction
       ↓
@@ -600,19 +602,19 @@ This is why IO changes can affect apparently unrelated TLS/QUIC/network tests.
 
 ## Status
 
-At Revision 1096:
+At Revision 1097:
 
 - `sdk/io` is established as the common structured-data and representation layer below crypto/network.
 - Stream and platform abstractions provide reusable input/output mechanisms.
 - `payload` provides a reusable binary layout mechanism for protocol structures.
-- Parser infrastructure supports lexical analysis, CFG, LALR, GLR experimentation, graph-structured-stack support, and parse-tree construction.
+- Parser infrastructure supports lexical analysis, CFG, LALR, GLR experimentation, graph-structured-stack support, and parse-tree construction. The ASN.1 loader now provides the first working file/memory-to-parse-tree entry point.
 - ASN.1 provides a substantial syntax → semantic-object pipeline. The integrated CFG now spans notation, module, parameterized constructs, information object class, and extension marker versions 1 and 2; the production runtime path remains LALR-based.
 - CBOR provides a separate structured-data representation used by higher security/data layers.
 - Compression and other representation utilities remain supporting facilities within IO.
 - Platform-specific source realization remains below the common IO abstraction.
 - Further file-by-file documentation would mostly inventory implementations rather than reveal a new architectural boundary.
 
-The next useful deep dives, if needed, are individual topics rather than another broad `sdk/io` pass: **parser/GLR**, **ASN.1 semantic construction**, or **payload**.
+The loader remains an integration step above parser/semantic construction; Module/runtime orchestration is still future work.
 
 ## Related topics
 

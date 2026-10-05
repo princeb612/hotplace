@@ -1,5 +1,14 @@
 # ASN.1
 
+## Publication
+
+```text
+hotplace source-tree documentation
+Edition 1 · Revision 1097
+Documented with GPT-5.6 Luna
+— source identity, implementation detail & relationships
+```
+
 ASN.1 support in hotplace covers notation, parsing, basic type/constraint representation, structural nodes, runtime representation, loading, and compiler-oriented processing.
 
 ## Directory map
@@ -9,6 +18,8 @@ ASN.1 support in hotplace covers notation, parsing, basic type/constraint repres
 - `loader/` — loading and interpretation flow
 - `runtime/` — runtime object/type representation and examples
 - `resource/` — parser configuration/resource sources used by the ASN.1 parser setup
+
+The loader currently represents the first implemented step of the ASN.1 file-to-parse-tree path; publishing the resulting tree into runtime objects is exercised separately.
 
 ## Detailed documents
 

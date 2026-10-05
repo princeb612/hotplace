@@ -31,14 +31,14 @@ namespace hotplace {
 
 datetime::datetime() { update(); }
 
-datetime::datetime(const datetime& other) { memcpy(&_timespec, &other._timespec, sizeof(struct timespec)); }
+datetime::datetime(const datetime& other) { _timespec = other._timespec; }
 
 datetime::datetime(const time_t& t, long* nsec) {
     _timespec.tv_sec = t;
     _timespec.tv_nsec = (nsec) ? *nsec : 0;
 }
 
-datetime::datetime(const struct timespec& ts) { memcpy(&_timespec, &ts, sizeof(struct timespec)); }
+datetime::datetime(const struct timespec& ts) { _timespec = ts; }
 
 datetime::datetime(const datetime_t& dt, long* nsec) {
     datetime_to_timespec(dt, _timespec);
@@ -64,7 +64,7 @@ bool datetime::update_if_elapsed(unsigned long msecs) {
     temp += ts;
 
     if (now >= temp) {
-        memcpy(&_timespec, &now._timespec, sizeof(struct timespec));
+        _timespec = now._timespec;
         ret = true;
     }
 
@@ -90,7 +90,7 @@ return_t datetime::gettimespec(struct timespec* ts) const {
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-        memcpy(ts, &_timespec, sizeof(struct timespec));
+        *ts = _timespec;
     }
     __finally2 {}
     return ret;
@@ -139,7 +139,7 @@ return_t datetime::getgmtime(stream_t* stream) const {
 
         datetime_t dt;
         getgmtime(&dt);
-        printf("%04d-%02d-%02dT%02d:%02d:%02dZ", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
+        stream->printf("%04d-%02d-%02dT%02d:%02d:%02dZ", dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
     }
     __finally2 {}
     return ret;
@@ -154,9 +154,9 @@ return_t datetime::getfiletime(filetime_t* ft) const {
             __leave2;
         }
 
-        int64 ll = __to_int64(_timespec.tv_sec, 10000000) + 116444736000000000LL;
-        ft->low = (uint32)ll;
-        ft->high = ((uint64)11 >> 32);
+        int64 ll = __to_int64(_timespec.tv_sec, 10000000) + (_timespec.tv_nsec / 100) + 116444736000000000LL;
+        ft->low = (uint32)(ll & 0xFFFFFFFF);
+        ft->high = (uint32)((uint64)ll >> 32);
     }
     __finally2 {}
     return ret;
@@ -176,7 +176,7 @@ datetime& datetime::operator=(const time_t& timestamp) {
 }
 
 datetime& datetime::operator=(const struct timespec& ts) {
-    memcpy(&_timespec, &ts, sizeof(struct timespec));
+    _timespec = ts;
     return *this;
 }
 
@@ -191,7 +191,7 @@ datetime& datetime::operator=(const systemtime_t& st) {
 }
 
 datetime& datetime::operator>>(struct timespec& ts) {
-    memcpy(&ts, &_timespec, sizeof(struct timespec));
+    ts = _timespec;
     return *this;
 }
 
@@ -279,11 +279,8 @@ bool datetime::operator<(const datetime& other) const {
 datetime& datetime::operator+=(const timespan_t& ts) {
     _timespec.tv_sec += ts.days * 60 * 60 * 24;
     _timespec.tv_sec += ts.seconds;
-    long nsec = (_timespec.tv_nsec) + (ts.milliseconds * EXP6);
-
-    if (nsec >= EXP9) {
-        _timespec.tv_sec++;
-    }
+    long nsec = _timespec.tv_nsec + (ts.milliseconds * EXP6);
+    _timespec.tv_sec += (nsec / EXP9);
     _timespec.tv_nsec = nsec % EXP9;
     return *this;
 }
@@ -291,13 +288,13 @@ datetime& datetime::operator+=(const timespan_t& ts) {
 datetime& datetime::operator-=(const timespan_t& ts) {
     _timespec.tv_sec -= ts.days * 60 * 60 * 24;
     _timespec.tv_sec -= ts.seconds;
-    long nsec = (_timespec.tv_nsec) - (ts.milliseconds * EXP6);
-
+    long nsec = _timespec.tv_nsec - (ts.milliseconds * EXP6);
     if (nsec < 0) {
-        _timespec.tv_sec--;
-        _timespec.tv_nsec = (nsec + EXP9) % EXP9;
+        long sec_borrow = (-nsec + EXP9 - 1) / EXP9;
+        _timespec.tv_sec -= sec_borrow;
+        _timespec.tv_nsec = nsec + (sec_borrow * EXP9);
     } else {
-        _timespec.tv_nsec = nsec % EXP9;
+        _timespec.tv_nsec = nsec;
     }
     return *this;
 }
@@ -452,8 +449,14 @@ return_t datetime::filetime_to_timespec(const filetime_t& ft, struct timespec& t
     int64 i64 = *(int64*)&ft;
 
     i64 -= 116444736000000000LL;
-    ts.tv_sec = i64 / 10000000;
-    ts.tv_nsec = i64 % 10000000 * 100;
+    int64 sec = i64 / 10000000;
+    int64 nsec = (i64 % 10000000) * 100;
+    if (nsec < 0) {
+        sec -= 1;
+        nsec += EXP9;
+    }
+    ts.tv_sec = sec;
+    ts.tv_nsec = nsec;
     return ret;
 }
 

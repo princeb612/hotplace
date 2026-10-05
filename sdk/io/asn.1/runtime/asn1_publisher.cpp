@@ -11,15 +11,32 @@
  *
  */
 
+#include <hotplace/sdk/base/nostd/exception.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_publisher.hpp>
 #include <hotplace/sdk/io/parser/parse_tree.hpp>
 
 namespace hotplace {
 namespace io {
 
-asn1_publisher::asn1_publisher() : _id(0) {}
+asn1_publisher::asn1_publisher() : _ready(false) {}
 
 asn1_publisher::~asn1_publisher() {}
+
+bool asn1_publisher::prepare() {
+    if (false == _ready) {
+        critical_section_guard guard(_lock);
+        if (false == _ready) {
+            prepare_basics();
+            prepare_constraints();
+            _ready = true;
+        }
+    }
+    return _ready;
+}
+
+bool asn1_publisher::ready() const { return _ready; }
+
+void asn1_publisher::add_handler(const std::string& name, handler_t handler) { _handler_map[name] = handler; }
 
 return_t asn1_publisher::build(const parse_tree* pt, asn1_build_resultset& result) {
     return_t ret = errorcode_t::success;
@@ -28,9 +45,6 @@ return_t asn1_publisher::build(const parse_tree* pt, asn1_build_resultset& resul
             ret = errorcode_t::invalid_parameter;
             __leave2;
         }
-
-        prepare_basics();
-        prepare_constraints();
 
         asn1_publisher_context context;
 
@@ -68,7 +82,7 @@ return_t asn1_publisher::build(const parse_tree* pt, asn1_build_resultset& resul
                     }
                 }
                 if (context.size() != (size - rhs + 1)) {
-                    throw;  // CHECK... handler needs to be modified
+                    throw exception(errorcode_t::not_implemented);  // CHECK... handler needs to be modified
                 }
             }
             return test;
@@ -91,6 +105,16 @@ return_t asn1_publisher::build(const parse_tree* pt, asn1_build_resultset& resul
     }
     __finally2 {}
     return ret;
+}
+
+uint16 asn1_publisher::make_key(parser_t* parser) {
+    uint16 value = 0;
+    if (parser) {
+        value = static_cast<uint8>(parser->get_type());
+        value <<= 8;
+        value |= parser->imported() ? 1 : 0;
+    }
+    return value;
 }
 
 }  // namespace io

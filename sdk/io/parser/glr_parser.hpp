@@ -16,8 +16,8 @@
  *
  *   ASN.1 production (measured based on approximately 140 productions.)
  *          |time       |message
- *   learn  |3.003206025|build parsing table
- *   import |0.000022600|import parsing table
+ *   learn  |1.508053400|build parsing table
+ *   import |0.345352900|import parsing table
  *
  */
 
@@ -33,7 +33,7 @@ namespace io {
 
 class glr_parser : public parser_t {
    public:
-    glr_parser() = default;
+    glr_parser();
     explicit glr_parser(const cfg_grammar& g);
     explicit glr_parser(cfg_grammar&& g);
 
@@ -63,16 +63,22 @@ class glr_parser : public parser_t {
     virtual parser_type_t get_type() const;
     virtual uint16 get_version() const;
 
+    virtual bool imported() const;
+    virtual void addref();
+    virtual void release();
+
    protected:
     // import
     virtual return_t buildup_action(uint32 state, const std::string& lookahead, parser_action_state action);
     virtual return_t buildup_goto(uint32 state, const std::string& nonterm, uint32 next_state);
-    virtual void imported();
+    virtual void import_completed();
 
    private:
+    t_shared_reference<glr_parser> _shared;
     mutable critical_section _lock;
     cfg_grammar _grammar;
-    bool _is_table_built = false;
+    bool _is_table_built{false};
+    bool _is_imported{false};
 
     // temporary tables for table generation
     parser_temporary_context_t _context;

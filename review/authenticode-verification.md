@@ -6,9 +6,13 @@ The scope is deliberately narrow: this is a review of the implementation path us
 
 ## Source Baseline
 
-- Source tree: hotplace revision 1096
+- Source tree: hotplace revision 1097
 - Primary area: `sdk/crypto/authenticode/`
 - Practical sample: `test/applet/authenticode/sample.cpp`
+
+## 1097 review pass
+
+This document was rechecked as part of the revision-1097 architecture review. No material revision-1097 architectural change was identified in this axis; the document therefore preserves the established 1096 relationship model rather than inventing a new revision-specific change.
 
 ## 1. Why Authenticode Is Interesting in the Architecture
 
@@ -396,7 +400,7 @@ The important point is that **ASN.1 is a conceptual/data-format relationship her
 
 ## 13. Current Status
 
-As of revision 1096:
+As of revision 1097:
 
 - PE Authenticode verification is the documented implementation scope.
 - The verifier uses a plugin-oriented architecture.
@@ -426,7 +430,7 @@ As of revision 1096:
 ```text
 ┌──────────────────────────────────────────────┐
 │ hotplace architecture review                 │
-│ Revision 1096                                │
+│ Revision 1097                                │
 │ Documented with GPT-5.6 Luna                 │
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘

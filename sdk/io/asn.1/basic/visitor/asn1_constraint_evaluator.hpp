@@ -20,6 +20,24 @@
 namespace hotplace {
 namespace io {
 
+/**
+ * @brief   evaluator
+ * @sa      asn1_constraints::validate
+ * @remarks
+ *          auto cons_single_type1 =
+ *              asn1_referenced_type::define("Type",
+ *                  asn1_builder::build(asn1_entity_integer,
+ *                              [&](asn1_object* builtin) -> void {
+ *                                  builtin->get_constraints().add(
+ *                                      new asn1_constraint_single_value_i(1));
+ *                              }));
+ *          cons_single_type1->instantiate();
+ *          value->set(1);
+ *          auto isvalid = cons_single_type1->validate(value);  // call validate -> get_constraints().validate
+ *          // do something
+ *          cons_single_type1->release();
+ */
+
 template <typename T>
 class asn1_constraint_evaluator : public asn1_constraint_visitor {
    public:
