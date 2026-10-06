@@ -76,7 +76,7 @@ void test_publish_babystep() {
      *  [006] reduce TypeAssignment RHS [3]
      *  [007] reduce Assignment RHS [1]
      *  [008] reduce Statement RHS [1]
-     *  parser tree - graph
+     *  parse tree - graph
      *  Statement
      *    Assignment
      *      TypeAssignment

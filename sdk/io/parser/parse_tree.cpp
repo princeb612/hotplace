@@ -10,6 +10,7 @@
  *
  */
 
+#include <hotplace/sdk/base/basic/valist.hpp>
 #include <hotplace/sdk/io/parser/parse_tree.hpp>
 
 namespace hotplace {
@@ -119,6 +120,43 @@ return_t parse_tree::visit(parse_treenode* node, parse_tree_visitor* visitor) co
         }
     }
     return ret;
+}
+
+void parse_tree::print(int mode, basic_stream& bs) const {
+    if (1 == mode) {
+        auto root = get_root();
+        if (root) {
+            root->print(bs);
+        }
+    } else {
+        uint32 idx = 0;
+        auto lambda = [&idx, &bs](parser_action_t type, parse_treenode* node) -> return_t {
+            valist va;
+            va << idx++ << node->symbol << node->value << node->children.size();
+            bs.vaprintf("[{1:03i}] ", va);
+            switch (type) {
+                case parser_action_t::shift:
+                    bs << "shift  ";
+                    break;
+                case parser_action_t::reduce:
+                    bs << "reduce ";
+                    break;
+                default:
+                    break;
+            }
+            bs.vaprintf("{2}", va);
+            if ((false == node->value.empty()) && (node->symbol != node->value)) {
+                bs.vaprintf(" ({3})", va);
+            }
+            if (parser_action_t::reduce == type) {
+                bs.vaprintf(" RHS [{4}]", va);
+            }
+            bs << "\n";
+            return errorcode_t::success;
+        };
+        parse_tree_visitor visitor(lambda);
+        accept(&visitor);
+    }
 }
 
 parse_tree_visitor::parse_tree_visitor(std::function<return_t(parser_action_t, parse_treenode*)> func) : _func(func) {}

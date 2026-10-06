@@ -48,7 +48,6 @@ struct asn1_build_resultset {
     void clear();
     // do not remove asn1_runtime
     void release_name(const std::string& name);
-    void moveto(const std::string& prefix, const std::string& target);
 };
 
 return_t print_ast(const asn1_object* object, basic_stream& bs, uint32 flags = asn1_ast_flag_ansicolor);

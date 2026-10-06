@@ -95,11 +95,14 @@ void asn1_publisher::prepare_basics() {
             asn.symbol = node->symbol;
             auto module_id = rhs_id.value;
             auto runtime = rtcontext->add(module_id);
-            runtime->as_module();
 
             result.type = asn1_build_t::module_definition;
             result.module_names.push_back(module_id);
-            result.moveto("_TEMP_", module_id);
+
+            context.get_runtime().as_module();  // as module
+
+            auto rtmodule = rtcontext->add(module_id);
+            *rtmodule = std::move(context.get_runtime());
 
             auto iter = index.find("TagDefault");
             if (index.end() != iter) {
@@ -201,6 +204,16 @@ void asn1_publisher::prepare_basics() {
                 index.emplace(it.symbol, idx);
             }
 
+            asn1_exports exports;
+            auto iter = index.find("ALL");
+            if (index.end() != iter) {
+                exports.type = asn1_exports_t::all;
+            } else {
+                exports.type = asn1_exports_t::list;
+                exports.symbols = std::move(context.get_symbols());
+            }
+            context.get_runtime().export_symbol(std::move(exports));
+
             asn1_semantic_node asn;
             asn.symbol = node->symbol;
             context.push(std::move(asn));
@@ -242,6 +255,15 @@ void asn1_publisher::prepare_basics() {
                 index.emplace(it.symbol, idx);
             }
 
+            asn1_symbol_module symbol_module;
+            auto iter = index.find("ModuleIdentifier");
+            if (index.end() != iter) {
+                auto& rhs_moduleid = rhs[iter->second];
+                symbol_module.outer_module = rhs_moduleid.value;
+            }
+            symbol_module.symbols = std::move(context.get_symbols());
+            context.get_runtime().import_symbol(std::move(symbol_module));
+
             asn1_semantic_node asn;
             asn.symbol = node->symbol;
             context.push(std::move(asn));
@@ -261,6 +283,12 @@ void asn1_publisher::prepare_basics() {
                 rhs[idx] = context.pop();
                 auto& it = rhs[idx];
                 index.emplace(it.symbol, idx);
+            }
+
+            auto iter = index.find("Symbol");
+            if (index.end() != iter) {
+                auto& rhs_symbol = rhs[iter->second];
+                context.get_symbols().push_back(rhs_symbol.value);
             }
 
             asn1_semantic_node asn;
@@ -337,7 +365,7 @@ void asn1_publisher::prepare_basics() {
             // production("TypeAssignment", {symuserparamtype, "{", "ParameterList", "}", symassign, "Type"})
             // production("TypeAssignment", {symuserparamtype, "{", "ParameterList", "}", symassign, "Type", "Constraint"})
 
-            auto rtcontext = asn1_runtime_context::get_instance();
+            // auto rtcontext = asn1_runtime_context::get_instance();
 
             auto size = node->sizeof_rhs();
             std::vector<asn1_semantic_node> rhs(size);
@@ -369,13 +397,9 @@ void asn1_publisher::prepare_basics() {
                 }
 
                 {
-                    auto temp = rtcontext->temp_name();
-                    auto runtime = rtcontext->add(temp);
-                    runtime->add(asn.object);
-                    asn.object->addref();
-
                     result.type = asn1_build_t::assignments;
-                    result.module_names.push_back(temp);
+                    context.get_runtime().add(asn.object);
+                    asn.object->addref();
                 }
 
                 rhs_typespec.release();  // asn own rhs_typespec.object

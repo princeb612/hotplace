@@ -225,42 +225,10 @@ void test_asn1parser(lexical_analyzer& lexer, parser_t& parser, const char* text
 void dump_parse_tree(parse_tree& pt) {
     {
         _logger->colorln("parse tree - re-trace");
-        uint32 idx = 0;
-        auto lambda = [&idx](parser_action_t type, parse_treenode* node) -> return_t {
-            _logger->writeln([&](basic_stream& dbs) -> void {
-                valist va;
-                va << idx++ << node->symbol << node->value << node->children.size();
-                dbs.vaprintf("[{1:03i}] ", va);
-                switch (type) {
-                    case parser_action_t::shift:
-                        dbs << "shift  ";
-                        break;
-                    case parser_action_t::reduce:
-                        dbs << "reduce ";
-                        break;
-                    default:
-                        break;
-                }
-                dbs.vaprintf("{2}", va);
-                if ((false == node->value.empty()) && (node->symbol != node->value)) {
-                    dbs.vaprintf(" ({3})", va);
-                }
-                if (parser_action_t::reduce == type) {
-                    dbs.vaprintf(" RHS [{4}]", va);
-                }
-            });
-            return errorcode_t::success;
-        };
-        parse_tree_visitor visitor(lambda);
-        pt.accept(&visitor);
+        _logger->write([&pt](basic_stream& dbs) -> void { pt.print(0, dbs); });
     }
     {
-        _logger->colorln("parser tree - graph");
-        auto root = pt.get_root();
-        if (root) {
-            basic_stream bs;
-            root->print(bs);
-            _logger->write(bs);
-        }
+        _logger->colorln("parse tree - graph");
+        _logger->write([&pt](basic_stream& dbs) -> void { pt.print(1, dbs); });
     }
 }

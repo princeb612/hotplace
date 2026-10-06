@@ -432,6 +432,21 @@ DTLS handshake
 
 The implementation contains explicit reconstruction handling for fragmented handshake messages and keeps epoch/sequence information in session state.
 
+The DTLS path is useful to read as a receive/send pair rather than as a larger TLS record API. On receive, `dtls_record_arrange` reconstructs an ordered record view from datagram-oriented input, using epoch and record sequence information before records are handed to TLS processing. On send, `dtls_record_publisher` performs the opposite boundary work: TLS handshake material is split into DTLS handshake fragments and published as DTLS records suitable for datagram transport.
+
+```text
+receive                                      send
+datagram                                     TLS handshake
+   ↓                                              ↓
+dtls_record_arrange                         dtls_record_publisher
+   ↓                                              ↓
+ordered DTLS records                       fragmented DTLS records
+   ↓                                              ↓
+TLS processing                              datagram output
+```
+
+This makes an important distinction from the TLS stream model: DTLS must explicitly handle datagram ordering, epoch/sequence state, retransmission-related processing, and handshake fragmentation.
+
 ### Transport-facing orchestration
 
 The protocol objects do not themselves define the entire socket handshake loop. `tls_composer` and the trial socket classes provide the orchestration layer.

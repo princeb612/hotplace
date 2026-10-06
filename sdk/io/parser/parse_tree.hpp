@@ -85,6 +85,13 @@ class parse_tree {
     void set_parser(parser_t* parser);
     parser_t* get_parser() const;
 
+    /**
+     * @brief   print
+     * @param   int mode [in] 0 re-trace, 1 graph, otherwise re-trace
+     * @param   basic_stream& dbs [out]
+     */
+    void print(int mode, basic_stream& bs) const;
+
    protected:
     return_t visit(parse_treenode* node, parse_tree_visitor* visitor) const;
 

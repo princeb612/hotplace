@@ -18,6 +18,7 @@
 #include <hotplace/sdk/io/asn.1/basic/semantic/asn1_object.hpp>
 #include <hotplace/sdk/io/asn.1/basic/semantic/constraints/asn1_constraint.hpp>
 #include <hotplace/sdk/io/asn.1/basic/types.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/types.hpp>
 #include <hotplace/sdk/io/parser/types.hpp>
 #include <stack>
@@ -141,8 +142,13 @@ class asn1_publisher_context {
     size_t size() const { return _stack.size(); }
     bool empty() const { return _stack.empty(); }
 
+    asn1_runtime& get_runtime() { return _runtime; };
+    std::vector<std::string>& get_symbols() { return _symbols; }
+
    private:
     std::stack<asn1_semantic_node> _stack;
+    asn1_runtime _runtime;              // ModuleDefinition, TypeAssignment
+    std::vector<std::string> _symbols;  // SymbolList
 };
 
 /**

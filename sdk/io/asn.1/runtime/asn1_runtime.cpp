@@ -26,6 +26,7 @@
 #include <hotplace/sdk/io/asn.1/runtime/asn1_parser.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_publisher.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_runtime.hpp>
+#include <hotplace/sdk/io/asn.1/runtime/asn1_runtime_context.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_strongly_typed.hpp>
 #include <hotplace/sdk/io/asn.1/runtime/asn1_weakly_typed.hpp>
 #include <hotplace/sdk/io/parser/parser_resource.hpp>
@@ -39,10 +40,13 @@ asn1_runtime::asn1_runtime(const std::string& name) : asn1_runtime() { _name = n
 
 asn1_runtime::asn1_runtime(const asn1_runtime& other) : asn1_runtime() { *this = other; }
 
+asn1_runtime::asn1_runtime(asn1_runtime&& other) : asn1_runtime() { *this = std::move(other); }
+
 asn1_runtime::~asn1_runtime() { clear(); }
 
 asn1_runtime& asn1_runtime::operator=(const asn1_runtime& other) {
-    critical_section_guard guard(_lock);
+    critical_section_guard outer_guard(other._lock);
+    critical_section_guard inner_guard(_lock);
 
     for (const auto& item : other._types) {
         auto type = item->clone();
@@ -54,6 +58,29 @@ asn1_runtime& asn1_runtime::operator=(const asn1_runtime& other) {
             _values.emplace(type, new asn1_value(*value));
         }
     }
+
+    _exports = other._exports;
+    _imports = other._imports;
+
+    return *this;
+}
+
+asn1_runtime& asn1_runtime::operator=(asn1_runtime&& other) {
+    critical_section_guard outer_guard(other._lock);
+    critical_section_guard inner_guard(_lock);
+
+    _dictionary = std::move(other._dictionary);
+    _types = std::move(other._types);
+    _values = std::move(other._values);
+    _schema = std::move(other._schema);
+
+    std::swap(_tagdefault, other._tagdefault);
+    std::swap(_extensibility, other._extensibility);
+    std::swap(_is_module, other._is_module);
+
+    _exports = std::move(other._exports);
+    _imports = std::move(other._imports);
+
     return *this;
 }
 
@@ -165,7 +192,20 @@ asn1_object* asn1_runtime::get(const std::string& name) const {
         ret_value = *_types.begin();
     } else {
         auto iter = _dictionary.find(name);
-        if (_dictionary.end() != iter) {
+        if (_dictionary.end() == iter) {
+            auto rtcontext = asn1_runtime_context::get_instance();
+            for (const auto& module : _imports) {
+                for (const auto& symbol : module.symbols) {
+                    if (symbol == name) {
+                        auto outer = rtcontext->get(module.outer_module);
+                        if (outer) {
+                            ret_value = outer->get(symbol);
+                        }
+                        break;
+                    }
+                }
+            }
+        } else {
             ret_value = iter->second;
         }
     }
@@ -194,12 +234,32 @@ return_t asn1_runtime::read(const std::string& name, const byte_t* stream, size_
     return strongtype.read(this, name, stream, size, pos);
 }
 
+asn1_object* asn1_runtime::search(const std::string& name) const {
+    auto iter = _dictionary.find(name);
+    if (_dictionary.end() != iter) {
+        return iter->second;
+    } else {
+        if (false == _imports.empty()) {
+            auto rtcontext = asn1_runtime_context::get_instance();
+            for (const auto& module : _imports) {
+                for (const auto& symbol : module.symbols) {
+                    if (symbol == name) {
+                        auto outer = rtcontext->get(module.outer_module);
+                        if (outer) {
+                            return outer->get(symbol);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return nullptr;
+}
+
 bool asn1_runtime::resolve(const std::string& name, std::list<std::string>& names) const {
     names.clear();
 
-    if (_dictionary.end() == _dictionary.find(name)) {
-        return false;
-    }
+    if (nullptr == search(name)) return false;
 
     // 1. collect only relevant sub-dependency nodes starting from 'name'
     std::set<std::string> sub_nodes;
@@ -214,8 +274,8 @@ bool asn1_runtime::resolve(const std::string& name, std::list<std::string>& name
         std::string current = std::move(q.front());
         q.pop();
 
-        auto iter = _dictionary.find(current);
-        if (_dictionary.end() == iter || nullptr == iter->second) {
+        auto current_obj = search(current);
+        if (nullptr == current_obj) {
             missing_reference = true;
             break;
         }
@@ -227,7 +287,8 @@ bool asn1_runtime::resolve(const std::string& name, std::list<std::string>& name
                     const std::string& ref_name = ref->get_reference();
 
                     // Check if referenced type exists in dictionary
-                    if (_dictionary.end() == _dictionary.find(ref_name)) {
+                    auto ref_obj = search(ref_name);
+                    if (nullptr == ref_obj) {
                         missing_reference = true;
                         return;
                     }
@@ -241,7 +302,7 @@ bool asn1_runtime::resolve(const std::string& name, std::list<std::string>& name
         };
 
         asn1_visitor visitor(this, lambda);
-        visitor.visit(iter->second);
+        visitor.visit(current_obj);
 
         if (true == missing_reference) {
             break;
@@ -305,7 +366,8 @@ bool asn1_runtime::resolve(std::list<std::string>& names) const {
                     const std::string& ref_name = ref->get_reference();
 
                     // check if referenced type exists in dictionary
-                    if (_dictionary.end() == _dictionary.find(ref_name)) {
+                    auto ref_obj = search(ref_name);
+                    if (nullptr == ref_obj) {
                         missing_reference = true;
                         return;
                     }
@@ -391,20 +453,51 @@ void asn1_runtime::represent(stream_t* s) {
     auto resource = asn1_resource::get_instance();
     asn1_notation_visitor notation(s);
     if (_is_module) {
+        // ... DEFINITIONS ... ::= BEGIN
+        // TODO OID
         s->printf("%s %s", _name.c_str(), "DEFINITIONS ");
         if (asn1_tagdefault != _tagdefault) s->printf("%s TAGS ", resource->nameof_mode(_tagdefault, true).c_str());
         if (_extensibility) {
             s->printf("EXTENSIBILITY IMPLIED ");
         }
         s->printf("::= BEGIN\n");
+
+        // EXPORTS
+        if (asn1_exports_t::all == _exports.type) {
+            s->printf("EXPORTS ALL\n");
+        }
+        if ((asn1_exports_t::list == _exports.type) && (false == _exports.symbols.empty())) {
+            s->printf("EXPORTS ");
+            auto size = _exports.symbols.size();
+            for (size_t i = 0; i < size; ++i) {
+                if (0 != i) s->printf(", ");
+                s->printf("%s", _exports.symbols[i].c_str());
+            }
+            s->printf(";\n");
+        }
+        // IMPORTS
+        if (false == _imports.empty()) {
+            for (auto iter = _imports.begin(); iter != _imports.end(); ++iter) {
+                const auto& symbol_module = *iter;
+                const auto& outer_module = symbol_module.outer_module;
+                const auto& symbols = symbol_module.symbols;
+                s->printf("IMPORTS ");
+                size_t idx = 0;
+                for (auto symiter = symbols.begin(); symiter != symbols.end(); ++symiter, ++idx) {
+                    if (0 != idx) s->printf(", ");
+                    s->printf("%s", (*symiter).c_str());
+                }
+                s->printf(" FROM %s;\n", outer_module.c_str());
+            }
+        }
     }
-    // TODO : OID, EXPORTS, IMPORTS
     auto nl = _types.size() > 1;
     for (const auto& item : _types) {
         notation.visit(item);
         if (nl) s->printf("\n");
     }
     if (_is_module) {
+        if (false == nl) s->printf("\n");
         s->printf("END\n");
     }
 }
@@ -476,12 +569,38 @@ asn1_runtime& asn1_runtime::as_module() {
 
 bool asn1_runtime::is_module() const { return _is_module; }
 
+asn1_runtime& asn1_runtime::export_symbol(const asn1_exports& exports) {
+    _exports = exports;
+    return *this;
+}
+
+asn1_runtime& asn1_runtime::export_symbol(asn1_exports&& exports) {
+    _exports = std::move(exports);
+    return *this;
+}
+
+asn1_runtime& asn1_runtime::import_symbol(const asn1_symbol_module& symbol_module) {
+    _imports.push_back(symbol_module);
+    return *this;
+}
+
+asn1_runtime& asn1_runtime::import_symbol(asn1_symbol_module&& symbol_module) {
+    _imports.push_back(std::move(symbol_module));
+    return *this;
+}
+
+const asn1_exports& asn1_runtime::get_exports() const { return _exports; }
+
+const std::list<asn1_symbol_module>& asn1_runtime::get_imports() const { return _imports; }
+
 void asn1_runtime::clear() {
     for (auto& item : _types) item->release();
     for (auto& pair : _values) pair.second->release();
     _types.clear();
     _values.clear();
     _schema.clear();
+    _exports.clear();
+    _imports.clear();
 }
 
 void asn1_runtime::addref() { _shared.addref(); }

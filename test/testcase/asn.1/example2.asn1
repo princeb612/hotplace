@@ -1,0 +1,27 @@
+UserProfile-Module DEFINITIONS AUTOMATIC TAGS ::=
+BEGIN
+
+    -- 1. Main structure containing user information
+    UserProfile ::= SEQUENCE {
+        id          INTEGER (1..4294967295),        -- ID starting from 1 (range-limited)
+        username    IA5String (SIZE(3..20)),        -- User ID (3–20 characters)
+        isActive    BOOLEAN,                        -- Activation Status
+        role        UserRole,                       -- Use the enumeration defined below
+        aliases     SEQUENCE OF IA5String OPTIONAL, -- List of nicknames (optional)
+        contact     ContactInfo                     -- Contact Information (CHOICE type)
+    }
+
+    -- 2. ENUMERATED Definition
+    UserRole ::= ENUMERATED {
+        admin(0),
+        user(1),
+        guest(2)
+    }
+
+    -- 3. CHOICE type definition (select either email or phone number)
+    ContactInfo ::= CHOICE {
+        email       IA5String,
+        phoneNumber IA5String
+    }
+
+END

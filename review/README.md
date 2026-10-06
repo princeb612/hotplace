@@ -10,7 +10,6 @@ The documents here are not replacements for the source-tree `README.md` files an
 - Review scope: source-tree architecture and development relationships
 - Companion study area: `/docs`
 - Source-tree documentation: directory/module `README.md` and topic Markdown files
-- Review documents are cross-references, not replacements for those source-tree documents.
 
 ## 1. Three Documentation Layers
 
@@ -77,7 +76,7 @@ It does not use an Edition number. Its baseline is simply the source revision be
 └──────────────────────────────────────────────┘
 ```
 
-The review layer therefore evolves by source revision and does not adopt a separate edition-numbering scheme.
+The review layer is therefore expected to evolve from revision to revision without becoming "Edition 2", "Edition 3", and so on.
 
 ## 2. Current Review Map
 
@@ -86,35 +85,35 @@ The current documents cover several different cross-cutting relationships.
 ```text
                                   hotplace
                                      │
-        ┌────────────────────────────┼────────────────────────────┐
-        │                            │                            │
-        ▼                            ▼                            ▼
-      parser                        ASN.1                       crypto
-        │                            │                            │
-        │                     ┌──────┴──────┐               ┌─────┴─────┐
-        │                     │             │               │           │
-        ▼                     ▼             ▼               ▼           ▼
- parser evolution       semantic/runtime constraints    advisor   Authenticode
-        │                     │             │               │           │
-        └─────────────────────┴─────────────┘               │           │
-                                      │                     │           │
-                                      ▼                     ▼           ▼
-                                data / identity       tls_advisor    OpenSSL
-                                      │                     │           │
-                                      └──────────┬──────────┘           │
-                                                 ▼                      │
-                                            TLS / DTLS / QUIC           │
-                                                 │                      │
-                                                 ▼                      │
-                                          network/session               │
-                                                                        │
-                                                                        ▼
+        ┌────────────────────────────┼─────────────────────────────┐
+        │                            │                             │
+        ▼                            ▼                             ▼
+      parser                        ASN.1                        crypto
+        │                            │                             │
+        │                     ┌──────┴──────┐                ┌─────┴─────┐
+        │                     │             │                │           │
+        ▼                     ▼             ▼                ▼           ▼
+ parser evolution       semantic/runtime constraints     advisor   Authenticode
+        │                     │             │                │           │
+        └─────────────────────┴─────────────┘                │           │
+                                      │                      │           │
+                                      ▼                      ▼           ▼
+                                data / identity        tls_advisor    OpenSSL
+                                      │                      │           │
+                                      └──────────┬───────────┘           │
+                                                 ▼                       │
+                                            TLS / DTLS / QUIC            │
+                                                 │                       │
+                                                 ▼                       │
+                                          network/session                │
+                                                                         │
+                                                                         ▼
                                                                PE / PKCS#7 / X.509
 ```
 
 ## 3. Review Documents
 
-### `parser-evolution.md`
+### `hotplace-parser-evolution.md`
 
 **Primary relationship**
 
@@ -136,9 +135,7 @@ binary `.ptb` parsing table
 
 **Source-tree connections**
 
-- [`sdk/io/parser/`](../sdk/io/parser/README.md)
-- [`sdk/io/parser/lalr-vs-glr.md`](../sdk/io/parser/lalr-vs-glr.md)
-- [`sdk/io/parser/parsing-table-binary-format.md`](../sdk/io/parser/parsing-table-binary-format.md)
+- `sdk/io/parser/`
 - `test/tool/makeparsingtable`
 - `etc/parsingtable/`
 - ASN.1 parser resources
@@ -169,11 +166,11 @@ runtime object
 
 **Source-tree connections**
 
-- [`sdk/io/parser/`](../sdk/io/parser/README.md)
-- [`sdk/io/asn.1/basic/`](../sdk/io/asn.1/basic/README.md)
-- [`sdk/io/asn.1/loader/`](../sdk/io/asn.1/loader/README.md)
-- [`sdk/io/asn.1/compiler/`](../sdk/io/asn.1/compiler/README.md)
-- [`sdk/io/asn.1/runtime/`](../sdk/io/asn.1/runtime/README.md)
+- `sdk/io/parser/`
+- `sdk/io/asn.1/basic/`
+- `sdk/io/asn.1/loader/`
+- `sdk/io/asn.1/compiler/`
+- `sdk/io/asn.1/runtime/`
 - ASN.1 testcase sources
 
 **Important distinction**
@@ -186,7 +183,7 @@ semantically implemented
 fully supported feature
 ```
 
-This distinction is especially important for the loader work beginning around revision 1097.
+This distinction is especially important for the loader work beginning around revision 1096.
 
 ---
 
@@ -206,9 +203,9 @@ t_set_runtime<T>
 
 **Source-tree connections**
 
-- [`sdk/io/asn.1/basic/semantic/constraints/`](../sdk/io/asn.1/basic/semantic/constraints/README.md)
-- [`sdk/base/nostd/range_set.md`](../sdk/base/nostd/range_set.md)
-- [`sdk/base/nostd/string_set.md`](../sdk/base/nostd/string_set.md)
+- `sdk/io/asn.1/basic/semantic/constraints/`
+- `sdk/base/nostd/range_set*`
+- `sdk/base/nostd/string_set*`
 - `test/testcase/asn.1/testcase_constraints.cpp`
 - `test/testcase/base/nostd/testcase_set.cpp`
 
@@ -235,8 +232,8 @@ binary construction
 
 **Source-tree connections**
 
-- [`sdk/base/stream/binary_stream.md`](../sdk/base/stream/binary_stream.md)
-- [`sdk/io/basic/payload.md`](../sdk/io/basic/payload.md)
+- `sdk/base/stream/`
+- `sdk/io/basic/payload`
 - HTTP/TLS/QUIC implementations
 - parsing-table generation tools
 
@@ -271,9 +268,8 @@ multiplexer
 
 **Source-tree connections**
 
-- [`sdk/io/system/`](../sdk/io/system/README.md)
-- [`sdk/net/server/network_session.md`](../sdk/net/server/network_session.md)
-- [`sdk/net/server/network-stream-and-protocol.md`](../sdk/net/server/network-stream-and-protocol.md)
+- `sdk/io/system/`
+- `sdk/net/`
 - TLS/HTTP/QUIC protocol implementations
 
 **Architectural point**
@@ -300,11 +296,11 @@ QUIC
 
 **Source-tree connections**
 
-- [`sdk/net/tls/`](../sdk/net/tls/README.md)
-- [`sdk/net/tls/protection/`](../sdk/net/tls/protection/README.md)
-- [`sdk/net/tls/quic/`](../sdk/net/tls/quic/README.md)
+- `sdk/net/tls/`
+- `sdk/net/dtls/`
+- `sdk/net/quic/`
 - crypto implementation
-- [`sdk/io/basic/payload.md`](../sdk/io/basic/payload.md)
+- payload
 - network/session
 
 **Architectural point**
@@ -321,7 +317,7 @@ tls_advisor
 
 ---
 
-### `crypto-advisor-tls-advisor.md`
+### `crypto-advisor-tls-advisor-review-rev1096.md`
 
 **Primary relationship**
 
@@ -342,9 +338,8 @@ crypto_advisor   tls_advisor
 
 **Source-tree connections**
 
-- [`sdk/crypto/advisor/`](../sdk/crypto/advisor/README.md)
-- [`sdk/crypto/advisor/crypto_advisor.md`](../sdk/crypto/advisor/crypto_advisor.md)
-- [`sdk/net/tls/advisor/`](../sdk/net/tls/advisor/README.md)
+- `sdk/crypto/advisor/`
+- `sdk/net/tls/tls_advisor.*`
 - crypto primitives
 - TLS / QUIC resource definitions
 - OpenSSL integration
@@ -361,7 +356,7 @@ They intersect at the point where protocol identifiers refer to cryptographic me
 
 ---
 
-### `authenticode-verification.md`
+### `hotplace-authenticode-verification.md`
 
 **Primary relationship**
 
@@ -381,11 +376,9 @@ OpenSSL
 
 **Source-tree connections**
 
-- [`sdk/crypto/authenticode/`](../sdk/crypto/authenticode/README.md)
-- [`sdk/crypto/authenticode/authenticode_verifier.md`](../sdk/crypto/authenticode/authenticode_verifier.md)
-- [`sdk/crypto/authenticode/authenticode-pe-plugin.md`](../sdk/crypto/authenticode/authenticode-pe-plugin.md)
-- [`sdk/io/stream/file_stream.md`](../sdk/io/stream/file_stream.md)
-- [`sdk/io/string/`](../sdk/io/string/README.md)
+- `sdk/crypto/authenticode/`
+- `sdk/io/stream/file_stream`
+- `sdk/io/string/`
 - OpenSSL integration
 - ASN.1 / PKCS#7 concepts
 
@@ -473,6 +466,26 @@ crypto_advisor
 This is the current 1096 view of the advisor layer.
 
 ---
+
+### Protocol state → wire unit
+
+The DTLS and QUIC publisher/arrangement components add a useful architectural observation:
+
+```text
+protocol state
+     │
+     ├── construction → publisher → wire unit
+     │
+     └── reconstruction → arrange → usable input
+```
+
+`dtls_record_publisher`, `dtls_record_arrange`, and `quic_packet_publisher` are not
+being treated as one class family. They are evidence of a repeated boundary in which
+protocol-specific semantics are materialized into, or reconstructed from, wire-oriented
+units.
+
+This is a stronger review observation than simply noting that the components live in
+different directories: the architectural interest is the responsibility boundary itself.
 
 ### TLS → DTLS → QUIC
 
@@ -603,17 +616,7 @@ The review documents should not imply that every statement remains valid forever
 
 In particular, parser production names, ASN.1 loader capabilities, protocol resource tables, and implementation status can change between revisions.
 
-Revision 1097 is the first review pass in which the ASN.1 production/rule names are stable enough to use directly in the parser review, and the parser-to-semantic reconstruction path has become an explicit implementation milestone.
-
 ## 8. Current Review Status
-
-The revision-1097 pass has two concrete outcomes:
-
-1. **Source-tree documentation correction:** stale 1094/1095 current-state markers in the revision-1096 source documentation were corrected. Historical documents that explicitly describe older baselines (for example the loader/compiler flow notes based on revisions 1083/1085) were intentionally left unchanged.
-2. **ASN.1 review update:** the parser/semantic-runtime documents now treat revision 1097 as the point where production/rule names are stable enough for direct architectural discussion, LALR(1)/GLR production switching is part of the reconstruction story, and semantic reconstruction of ASN.1 notation is an explicit milestone. The loader is described as having taken a first integration step, not as completed.
-
-The remaining review documents were re-read for stale names, mixed revision baselines, and cross-reference consistency. No material 1097-specific architectural change was identified in those axes, so they retain their established relationship models.
-
 
 At revision 1097, the review layer has established these major axes:
 
@@ -628,7 +631,7 @@ At revision 1097, the review layer has established these major axes:
 8. Authenticode cross-cutting verification path
 ```
 
-These review documents form the current architecture-review map. The 1097 pass updates the parser/ASN.1 axis while retaining the other documents where no material revision-specific change was identified.
+These review axes form the current architecture-review map. The 1097 pass adds a more explicit protocol-state → wire-unit boundary observation without creating another subsystem-specific review file.
 
 The next review pass should therefore focus on **cross-referencing and correction**, rather than automatically creating another document for every subsystem.
 
@@ -642,26 +645,3 @@ The next review pass should therefore focus on **cross-referencing and correctio
 │ — architecture, evolution & relationships    │
 └──────────────────────────────────────────────┘
 ```
-
-
-## Revision 1097 ASN.1 parser milestone
-
-Revision 1097 is the first review baseline where the ASN.1 production/rule
-vocabulary is stable enough to use directly in the architecture review.
-
-The key change is:
-
-```text
-production / rule vocabulary
-        ↓
-LALR(1) / GLR parser selection
-        ↓
-semantic reconstruction
-        ↓
-ASN.1 runtime
-        ↓
-loader integration
-```
-
-The review therefore treats 1097 as a semantic-reconstruction milestone,
-not merely another parsing-table revision.

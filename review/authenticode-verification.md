@@ -1,6 +1,8 @@
-# Authenticode Verification as a Cross-Cutting Example
+# Authenticode Verification Architecture
 
-This review records how `sdk/crypto/authenticode` fits into the wider hotplace architecture.
+## Review thesis
+
+**Authenticode is architecturally interesting because one verification decision must keep PE-specific image rules, signed-data verification, and certificate trust distinct while still producing one coherent verification result.**
 
 The scope is deliberately narrow: this is a review of the implementation path used to verify Windows Authenticode signatures in PE files. It is not a general-purpose PKI or digital-certificate study.
 
@@ -14,9 +16,9 @@ The scope is deliberately narrow: this is a review of the implementation path us
 
 This document was rechecked as part of the revision-1097 architecture review. No material revision-1097 architectural change was identified in this axis; the document therefore preserves the established 1096 relationship model rather than inventing a new revision-specific change.
 
-## 1. Why Authenticode Is Interesting in the Architecture
+## 1. Verification as a composition of distinct responsibilities
 
-Authenticode is a small subsystem, but it crosses several otherwise separate areas of hotplace:
+The verifier is not one large cryptographic operation. It composes several responsibilities that have different meanings: the PE plugin determines what image bytes are covered by Authenticode, the signed-data path determines what digest was signed, and the trust path determines whether the signer can be trusted.
 
 ```text
                          Windows PE file
@@ -46,7 +48,7 @@ Authenticode is a small subsystem, but it crosses several otherwise separate are
                          OpenSSL APIs
 ```
 
-This makes Authenticode a useful example of how hotplace combines:
+The resulting verification path combines:
 
 - `sdk/io/stream` for file access
 - PE-specific binary parsing
@@ -101,9 +103,9 @@ PE file
   ├── PE CheckSum field ── special ──┤
   ├── security directory ── special ─┤
   └── certificate table ── excluded ─┘
-                                    │
-                                    ▼
-                         Authenticode image digest
+                                     │
+                                     ▼
+                          Authenticode image digest
 ```
 
 That calculated digest is later compared with the digest carried by the signed Authenticode data.
@@ -229,7 +231,7 @@ The current source treats CRL download/cache handling as an evolving area. The s
 
 This is a good example of why the review layer should record **actual implementation boundaries and current status**, rather than presenting every surrounding facility as a finished general-purpose framework.
 
-## 7. `file_stream` Connection
+## 7. Reusing the existing file-I/O boundary
 
 The PE file itself is accessed through the existing stream layer.
 
@@ -243,16 +245,7 @@ authenticode_verifier
        PE
 ```
 
-The connection is small but architecturally useful: Authenticode does not introduce a private file-I/O abstraction merely to process PE files.
-
-This is one of the concrete relationships between:
-
-```text
-sdk/io/stream
-        ▲
-        │
-sdk/crypto/authenticode
-```
+The connection is small but architecturally useful: Authenticode does not introduce a private file-I/O abstraction merely to process PE files. The verifier can concentrate on verification policy while the existing stream abstraction remains responsible for opening and reading the file.
 
 ## 8. Relation to the Crypto Layer
 
@@ -362,7 +355,7 @@ There is no dedicated `test/testcase/crypto/authenticode/` tree in the current s
 
 That means the applet is currently the most direct executable example of the subsystem.
 
-## 12. Cross-Cutting Architecture Map
+## 12. Architectural relationships
 
 Authenticode can be placed into the wider hotplace map as follows:
 
@@ -396,7 +389,7 @@ file_stream  string        │                 │
                               ASN.1 concept
 ```
 
-The important point is that **ASN.1 is a conceptual/data-format relationship here, while `file_stream`, PE parsing, and OpenSSL are direct implementation relationships**.
+The important distinction is between **direct implementation responsibilities** and **conceptual relationships**. `file_stream`, PE-specific digest rules, and OpenSSL PKCS#7/X.509 APIs participate directly in the verification path. ASN.1 is relevant because PKCS#7 and related structures are ASN.1-based, but the current Authenticode implementation does not route those structures through hotplace's ASN.1 runtime.
 
 ## 13. Current Status
 

@@ -2,7 +2,11 @@
 
 > **Review baseline:** Revision 1097
 
-The trial/OpenSSL workflow is best understood as a comparison and verification architecture.
+## Review thesis
+
+**The trial/OpenSSL environment is a verification architecture in which an independent implementation provides comparison evidence, while debug state and wire captures connect a protocol result back to the exact conditions that produced it.**
+
+## Comparison model
 
 ```text
 same protocol / same crypto parameters
@@ -18,7 +22,9 @@ same protocol / same crypto parameters
           comparison
 ```
 
-OpenSSL is an independent comparison axis, not an absolute correctness oracle.
+OpenSSL is therefore an independent comparison axis, not an absolute correctness oracle. Agreement is evidence; disagreement is a diagnostic signal that must be explained from the protocol state and parameters.
+
+## Comparison directions
 
 Useful directions include:
 
@@ -28,9 +34,20 @@ OpenSSL client  → hotplace server
 hotplace client → hotplace server
 ```
 
-The comparison should record conditions such as TLS version, cipher suite, group/curve, signature algorithm, and certificate/key type.
+The comparison is strongest when the conditions are explicit:
 
-The strongest practical workflow combines debug information and actual wire data:
+- TLS version
+- cipher suite
+- group / curve
+- signature algorithm
+- certificate / key type
+- relevant protocol extensions and transport conditions
+
+Without those conditions, a byte-level difference may be impossible to interpret.
+
+## From intermediate state to wire result
+
+The practical verification path combines implementation diagnostics with actual network data:
 
 ```text
 hotplace debug log
@@ -47,18 +64,37 @@ hotplace debug log
           wire-level result
 ```
 
-Trial belongs to the execution/verification layer around the protocol implementation rather than being the protocol implementation itself.
+This creates two complementary forms of evidence. Debug information explains **why** the implementation produced a value; packet capture shows **what actually crossed the wire**.
+
+## Why the comparison architecture matters
+
+The important relationship is not that hotplace happens to use OpenSSL. The important relationship is that an external implementation is deliberately placed outside the implementation under test, creating an independent reference path for protocol and cryptographic behavior.
+
+That makes trial material part of the project's verification architecture rather than part of the protocol implementation itself.
+
+## Strengths
+
+- Independent implementations expose interoperability and cryptographic-state mismatches.
+- Intermediate values make failures easier to localize than final packet comparison alone.
+- Packet captures provide evidence at the actual protocol boundary.
+- Bidirectional trials distinguish implementation-specific assumptions from protocol behavior.
+
+## Costs and limitations
+
+OpenSSL cannot by itself prove that hotplace is correct. Two implementations can agree while sharing an incorrect assumption, and they can disagree because of configuration or protocol-version differences. Trial results therefore need their parameters and evidence preserved.
+
+## Current state
+
+Revision 1097 retains the trial/OpenSSL workflow as a comparison and verification layer around protocol development. Exact executable inventory is intentionally not expanded here where source-level relationships were not verified during this review pass.
 
 ### Related source / documents
 
-- trial/client/server related source
-- TLS/DTLS/QUIC implementations
+- trial / client / server related source
+- TLS / DTLS / QUIC implementations
 - OpenSSL comparison material
-- packet capture/test data
-- crypto advisor/dictionary documentation
+- packet capture / test data
+- crypto advisor / TLS advisor documentation
 - network session documentation
-
-This review intentionally avoids inventing a detailed trial executable inventory where exact source-level relationships were not available during this review pass.
 
 ---
 

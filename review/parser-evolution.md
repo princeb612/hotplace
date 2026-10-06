@@ -2,7 +2,11 @@
 
 > **Review baseline:** Revision 1097
 
-Hotplace's parser is best understood as an evolution.
+## Review thesis
+
+**The parser's architectural evolution is a progression from parser mechanics toward explicit generated resources and semantic production vocabulary, with GLR becoming the mechanism for handling broader grammar structure rather than simply replacing LALR.**
+
+## Evolution path
 
 ```text
 lexer / CFG / LALR(1)
@@ -20,7 +24,36 @@ external binary parsing tables
 .ptb resources
 ```
 
-The move toward GLR and the growth of the action table eventually made generated parser data a build concern. External `.ptb` resources separate that generated data from the source/build itself.
+The important story is not simply that the parser changed algorithms. Each stage exposed a new pressure on the surrounding architecture: context-sensitive switching complicated parser control, GLR expanded the grammar strategy, table size made generated data expensive to keep inside the source representation, and the resulting `.ptb` resources became explicit build inputs.
+
+## From parser experiments to GLR
+
+Early work explored lexer/CFG/LALR(1) parsing and context-aware switching ideas. The Aho-Corasick reducer experiments belong to that stage: they investigated how parsing decisions could be reduced or redirected according to context.
+
+The eventual move to GLR changed the architecture more substantially. GLR allowed the broader ASN.1 grammar to be represented without forcing every ambiguity or structural choice into a single deterministic LALR path.
+
+For ASN.1, revision 1097 also makes the distinction between parser paths concrete:
+
+```text
+LALR(1)
+  └── notation-oriented grammar
+       └── semantic reconstruction
+
+GLR
+  └── broader grammar
+       ├── ModuleDefinition
+       ├── EXPORTS / IMPORTS
+       ├── parameterized assignments
+       ├── ValueAssignment
+       ├── ObjectClassAssignment
+       └── InformationObjectAssignment
+```
+
+The architectural point is therefore not “GLR replaced LALR.” The two paths have different semantic scopes and can participate in the same ASN.1 processing strategy.
+
+## Generated parsing tables become resources
+
+As the parsing/action table grew, generated parser state stopped being a convenient detail of source code and became a resource that needed an explicit lifecycle.
 
 ```text
 test/tool/makeparsingtable
@@ -31,35 +64,18 @@ binary_parsing_table::learn()
           ↓
 etc/parsingtable/parsingtable.zip
           ↓
-CMake configure/generate
+CMake configure / generate
+          ↓
+build / test resources
 ```
 
-For ASN.1, `asn1notation.ptb` and `asn1.ptb` have different purposes and should not be treated as interchangeable.
+This separation has a practical consequence: parser behavior depends on both the grammar/generation source and the generated table resource. The build system therefore becomes part of parser reproducibility rather than merely a wrapper around compilation.
 
-Revision 1097 is the concrete boundary for production/rule naming. Earlier parser experiments remain historical stages, but the grammar can now be discussed using the stabilized ASN.1 production/rule vocabulary rather than only describing the parser in generic LALR/GLR terms.
+## Production vocabulary becomes semantic vocabulary
 
-### Related source / documents
+Revision 1097 is also a useful boundary because ASN.1 production/rule names are stable enough to discuss the grammar in semantic terms.
 
-- `sdk/io/parser/`
-- `test/tool/makeparsingtable`
-- `etc/parsingtable/`
-- `sdk/io/asn.1/`
-- `sdk/io/parser/parser-generation.md`
-- `sdk/io/parser/parsing-table-binary-format.md`
-
----
-
-**GPT Review**
-
-Reviewed against the hotplace source/documentation state around **revision 1097**.
-
-
-## 12. Production / Rule Vocabulary at Revision 1097
-
-Revision 1097 is a useful point to stop describing the ASN.1 grammar only in
-terms of "LALR versus GLR" and start naming the actual grammar structure.
-
-The LALR(1) notation grammar has a compact notation-oriented hierarchy:
+The notation-oriented hierarchy includes:
 
 ```text
 Statement
@@ -79,72 +95,69 @@ Statement
               └── Constraint
 ```
 
-Constructed components are represented explicitly through:
+Constructed types continue through `ComponentTypeLists`, `ComponentTypeList`, `ComponentType`, and `NamedType`, while constraints proceed through `ConstraintSpec`, `SubtypeElementSetSpec`, `SubtypeElement`, and `PrimaryElement`.
+
+These names matter architecturally because they are the vocabulary used to connect grammar reduction with semantic reconstruction. They are no longer merely parser-internal labels.
+
+## Resource roles
+
+For ASN.1, the generated resources have different purposes:
 
 ```text
-ComponentTypeList
-  └── ComponentType
-        └── NamedType
-              └── Type
-
-ComponentType
-  ├── NamedType
-  ├── NamedType + Constraint
-  ├── NamedType + OptionalitySpec
-  └── NamedType + Constraint + OptionalitySpec
+asn1notation.ptb → notation parsing / semantic construction
+asn1.ptb         → broader loader grammar
 ```
 
-Constraint grammar is also now concrete enough to use directly in the review:
+Keeping these roles distinct prevents a large parsing table from being treated as proof of complete ASN.1 language support.
+
+## Why the evolution matters
+
+The parser evolution can be summarized as a chain of architectural consequences:
 
 ```text
-Constraint
-  └── ConstraintSpec
-        ├── SubtypeElementSetSpec
-        │     └── SubtypeElement
-        │           └── PrimaryElement
-        └── ALL EXCEPT SubtypeElementSetSpec
-
-PrimaryElement
-  ├── ValueElement
-  ├── range forms
-  ├── SIZE Constraint
-  ├── FROM Constraint
-  ├── PATTERN string
-  └── nested ConstraintSpec
+more expressive grammar
+        ↓
+more complex parser state
+        ↓
+larger generated tables
+        ↓
+externalized parser resources
+        ↓
+explicit build integration
+        ↓
+stable production vocabulary
+        ↓
+semantic reconstruction
 ```
 
-The GLR grammar extends this vocabulary to module-level ASN.1:
+This is why the parser history matters to the rest of hotplace: the parser did not evolve in isolation. Its changes affected resource generation, build integration, ASN.1 semantic construction, and eventually the loader path.
 
-```text
-Start
-  └── ModuleStatementList
-        └── ModuleStatement
-              └── ModuleDefinition
-                    ├── ModuleIdentifier
-                    ├── TagDefault
-                    ├── ExtensionDefault
-                    └── ModuleBody
-                          ├── Exports
-                          ├── Imports
-                          └── AssignmentList
-```
+## Strengths
 
-Within assignments, revision 1097 exposes the intended semantic domains more
-clearly:
+- The parser architecture evolved in response to concrete grammar and table-size pressures.
+- Generated parser data has an explicit resource lifecycle.
+- LALR(1) and GLR can serve different grammar scopes.
+- Stable production names provide a bridge from grammar structure to semantic reconstruction.
 
-```text
-Assignment
-  ├── TypeAssignment
-  ├── ValueAssignment
-  ├── ObjectClassAssignment
-  └── InformationObjectAssignment
-```
+## Costs and limitations
 
-Parameterized type assignment and parameter lists are represented by
-`ParameterList` / `Parameter`, while object-class-related grammar is present
-as part of the broader GLR grammar.
+The resulting system has more moving parts than a parser whose tables are generated and discarded during compilation. Grammar changes, table generation, packaged resources, and build configuration must remain synchronized. The coexistence of LALR(1) and GLR also means that parser selection is part of the architecture rather than a transparent implementation detail.
 
-The important architectural point is not that every production above is
-already fully implemented semantically. Rather, the grammar vocabulary is now
-stable enough that parser behavior, semantic reconstruction, and loader work
-can be discussed using the actual names from the implementation.
+## Current state
+
+Revision 1097 provides a useful architectural boundary: ASN.1 production/rule names are stable enough to describe the semantic path, LALR(1)/GLR switching is part of the implementation strategy, and external `.ptb` resources are an established part of parser generation and build integration.
+
+### Related source / documents
+
+- `sdk/io/parser/`
+- `test/tool/makeparsingtable`
+- `etc/parsingtable/`
+- `sdk/io/asn.1/`
+- `sdk/io/parser/parser-generation.md`
+- `sdk/io/parser/parsing-table-binary-format.md`
+
+---
+
+**GPT Review**
+
+Reviewed against the hotplace source/documentation state around **revision 1097**.

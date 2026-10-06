@@ -37,6 +37,9 @@
     * CBOR
 
 * details
+  * Revision 1099
+    * ASN.1 EXPORTS, IMPORTS
+    * asn1_runtime update_linkage, is_resolvable, resolve
   * Revision 1098
     * [fixed] datetime, time_diff, system_gettime and test_case time representation
   * Revision 1097

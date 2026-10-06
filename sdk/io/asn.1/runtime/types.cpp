@@ -39,26 +39,5 @@ void asn1_build_resultset::release_name(const std::string& name) {
     }
 }
 
-void asn1_build_resultset::moveto(const std::string& prefix, const std::string& target) {
-    auto rtcontext = asn1_runtime_context::get_instance();
-    auto targetrt = rtcontext->get(target);
-    if (targetrt) {
-        std::vector<std::string> temp_names;
-        for (const auto& item : module_names) {
-            if (0 == item.compare(0, prefix.size(), prefix)) {
-                auto runtime = rtcontext->get(item);
-                runtime->for_each([targetrt](asn1_object* obj) -> void {
-                    obj->addref();
-                    targetrt->add(obj);
-                });
-                rtcontext->remove(item);
-            } else {
-                temp_names.push_back(item);
-            }
-        }
-        module_names = std::move(temp_names);
-    }
-}
-
 }  // namespace io
 }  // namespace hotplace

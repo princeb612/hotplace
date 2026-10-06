@@ -89,7 +89,7 @@ state stack           token                 action
 [ 0 3 ]               $ (4294967295)        reduce -> Rule 1 (Statement)
 [ 0 31 ]              $ (4294967295)        accept
 
-parser tree
+parse tree
 Statement
   Assignment
     id (Type1)

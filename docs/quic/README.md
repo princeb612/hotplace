@@ -472,21 +472,29 @@ Thus QUIC-specific compact encoding remains outside the generic payload implemen
 
 ### Packet publisher
 
-`quic_packet_publisher` is a construction/orchestration boundary.
+`quic_packet_publisher` is a session-level construction boundary between higher-level protocol state and the QUIC wire packet.
 
 It connects:
 
 ```text
-TLS state
-   +
-QUIC packet
-   +
-QUIC frames
-   +
-HTTP/3 stream payload
+TLS handshake      HTTP/3 / QPACK      QUIC frame state
+      │                  │                    │
+      └──────────────┬───┴────────────────────┘
+                     ↓
+             quic_packet_publisher
+                     ↓
+                QUIC packet
 ```
 
-This is particularly visible in the trial QUIC handshake path, where TLS handshake messages are converted into CRYPTO frames and then published into appropriate QUIC packets.
+The TLS path is particularly important: TLS handshake bytes are not wrapped in TLS records when carried by QUIC. They become QUIC `CRYPTO` frame data and are then published into QUIC packets. Application data follows the corresponding `STREAM` frame path. ACK and PADDING are also packet-level construction inputs.
+
+```text
+TLS handshake → CRYPTO frame ─┐
+HTTP/3 data  → STREAM frame  ─┼→ quic_packet_publisher → QUIC packet
+ACK / PADDING ────────────────┘
+```
+
+This is the QUIC counterpart to the DTLS send-side publisher: both are session-facing construction boundaries, but QUIC constructs a packet containing frames rather than a DTLS record containing a handshake fragment.
 
 ### Connection and stream state
 

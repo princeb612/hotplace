@@ -1,5 +1,9 @@
 # Crypto Advisor, TLS Advisor, and Backend Identity
 
+## Review thesis
+
+**The advisor architecture separates cryptographic identity from protocol identity and backend representation, so that TLS/QUIC vocabulary, cryptographic meaning, and OpenSSL mappings remain related without becoming one dictionary or one implementation layer.**
+
 ## Review scope
 
 This review describes the relationship between `sdk/crypto/advisor`, `sdk/net/tls/advisor`, and the OpenSSL-facing crypto layer as they exist in revision 1097.
@@ -261,7 +265,7 @@ cryptographic identity
      └── protocol-specific advisor
 ```
 
-This is one reason the advisor layer belongs in the cross-cutting architecture review: its information is consumed by several otherwise separate areas rather than being local to `sdk/crypto`.
+The important relationship here is not that the source spans several directories. It is that an object identifier or algorithm name can acquire different meanings at different architectural levels, and the advisor layer provides a place to normalize those meanings without moving protocol semantics into the crypto backend.
 
 ## 9. Resource tables are part of the architecture
 
@@ -338,11 +342,11 @@ The advisor layer sits beside, rather than inside, the protocol state machines a
 
 This is intentionally not a strict call graph. It is an architectural dependency picture: protocol code needs protocol identifiers, and crypto code needs cryptographic identity/backend mappings.
 
-## 12. Why this is a useful review boundary
+## 12. Architectural consequence
 
 The advisor layer is easy to misunderstand if each file is read independently. The interesting part is not the individual lookup function; it is the fact that hotplace maintains several identifier vocabularies and translates between them.
 
-The cross-cutting relationship is therefore:
+The architectural relationship is therefore:
 
 ```text
        protocol vocabulary

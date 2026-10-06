@@ -19,9 +19,70 @@
 #include <hotplace/sdk/io/parser/lexical_analyzer.hpp>
 #include <set>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace hotplace {
 namespace io {
+
+enum class asn1_exports_t {
+    list = 0,
+    all,
+};
+
+struct asn1_exports {
+    asn1_exports_t type{asn1_exports_t::list};
+    std::vector<std::string> symbols;
+
+    asn1_exports() = default;
+    asn1_exports(asn1_exports_t t, const std::vector<std::string>& sym) {
+        type = t;
+        symbols = sym;
+    }
+    asn1_exports(asn1_exports_t t, std::vector<std::string>&& sym) {
+        type = t;
+        symbols = std::move(sym);
+    }
+    asn1_exports(const asn1_exports& other) { *this = other; }
+    asn1_exports(asn1_exports&& other) { *this = std::move(other); }
+    asn1_exports& operator=(const asn1_exports& other) {
+        type = other.type;
+        symbols = other.symbols;
+        return *this;
+    }
+    asn1_exports& operator=(asn1_exports&& other) {
+        std::swap(type, other.type);
+        symbols = std::move(other.symbols);
+        return *this;
+    }
+    void clear() {
+        type = asn1_exports_t::list;
+        symbols.clear();
+    }
+    bool operator==(const asn1_exports& other) const { return (type == other.type) && (symbols == other.symbols); }
+};
+struct asn1_symbol_module {
+    std::string outer_module;
+    std::vector<std::string> symbols;
+
+    asn1_symbol_module() = default;
+    asn1_symbol_module(const std::string m, const std::vector<std::string>& sym) {
+        outer_module = m;
+        symbols = sym;
+    }
+    asn1_symbol_module(const asn1_symbol_module& other) { *this = other; }
+    asn1_symbol_module(asn1_symbol_module&& other) { *this = std::move(other); }
+    asn1_symbol_module& operator=(const asn1_symbol_module& other) {
+        outer_module = other.outer_module;
+        symbols = other.symbols;
+        return *this;
+    }
+    asn1_symbol_module& operator=(asn1_symbol_module&& other) {
+        outer_module = std::move(other.outer_module);
+        symbols = std::move(other.symbols);
+        return *this;
+    }
+    bool operator==(const asn1_symbol_module& other) const { return (outer_module == other.outer_module) && (symbols == other.symbols); }
+};
 
 class asn1_runtime {
     friend class asn1_weakly_typed;
@@ -30,9 +91,11 @@ class asn1_runtime {
     asn1_runtime();
     asn1_runtime(const std::string& name);
     asn1_runtime(const asn1_runtime& other);
+    asn1_runtime(asn1_runtime&& other);
     virtual ~asn1_runtime();
 
     asn1_runtime& operator=(const asn1_runtime& other);
+    asn1_runtime& operator=(asn1_runtime&& other);
 
     asn1_runtime* clone();
 
@@ -97,6 +160,10 @@ class asn1_runtime {
     void publish(const std::string& name, binary_t* b);
 
     /**
+     * search dictionary or imports table
+     */
+    asn1_object* search(const std::string& name) const;
+    /**
      * @brief   resolves dependencies starting from a specific root type name.
      */
     bool resolve(const std::string& name, std::list<std::string>& names) const;
@@ -143,6 +210,13 @@ class asn1_runtime {
     asn1_runtime& as_module();
     bool is_module() const;
 
+    asn1_runtime& export_symbol(const asn1_exports& exports);
+    asn1_runtime& export_symbol(asn1_exports&& exports);
+    asn1_runtime& import_symbol(const asn1_symbol_module& symbol_module);
+    asn1_runtime& import_symbol(asn1_symbol_module&& symbol_module);
+    const asn1_exports& get_exports() const;
+    const std::list<asn1_symbol_module>& get_imports() const;
+
     void clear();
 
     void addref();
@@ -156,6 +230,7 @@ class asn1_runtime {
 
     mutable critical_section _lock;
     std::unordered_map<std::string, asn1_object*> _dictionary;
+
     std::list<asn1_object*> _types;
     std::map<asn1_object*, asn1_value*> _values;
     std::map<asn1_object*, std::string> _schema;  // strongly-typed
@@ -163,6 +238,9 @@ class asn1_runtime {
     uint8 _tagdefault{asn1_explicit};
     uint8 _extensibility{uint8(asn1_extensibility_t::none)};
     bool _is_module{false};
+
+    asn1_exports _exports;
+    std::list<asn1_symbol_module> _imports;
 };
 
 }  // namespace io
