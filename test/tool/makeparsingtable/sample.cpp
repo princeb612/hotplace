@@ -22,10 +22,11 @@ struct OPTION : public CMDLINEOPTION {
 t_shared_instance<t_cmdline_t<OPTION> > _cmdline;
 
 parser_t& get_parser(parser_type_t type) {
+    auto advisor = asn1_advisor::get_instance();
     if (parser_type_t::glr == type) {
-        return get_glr_parser_asn1_by_build();
+        return advisor->get_parser_by_build();
     } else /* if (parser_type_t::lalr1 == type) */ {
-        return get_lalr1_parser_asn1_notation_by_build();
+        return advisor->get_notation_parser_by_build();
     }
 }
 return_t generate_parsing_table() {
